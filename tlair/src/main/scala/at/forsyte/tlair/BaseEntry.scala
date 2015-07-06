@@ -7,6 +7,6 @@ package at.forsyte.tlair
  *
  * @author konnov
  */
-abstract class BaseEntry(uid: Int) {
+abstract class BaseEntry(val uid: Int, val filename: String, locRange: LocRange) {
 
 }
