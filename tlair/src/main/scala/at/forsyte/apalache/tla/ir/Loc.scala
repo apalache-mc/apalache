@@ -1,4 +1,4 @@
-package at.forsyte.tlair
+package at.forsyte.apalache.tla.ir
 
 /**
  * A location in a text file characterized by line number and column.

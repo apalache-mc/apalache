@@ -1,4 +1,4 @@
-package at.forsyte.tlair
+package at.forsyte.apalache.tla.ir
 
 /**
  * A range in a file.

@@ -1,4 +1,4 @@
-package at.forsyte.tlair
+package at.forsyte.apalache.tla.ir
 
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -7,7 +7,7 @@ import org.junit.runner.RunWith
 /**
  * Tests for Loc
  *
- * @see at.forsyte.tlair.Loc
+ * @see at.forsyte.apalache.tlair.Loc
  *
  * @author konnov
  */
