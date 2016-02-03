@@ -7,8 +7,8 @@ package at.forsyte.apalache.tla.ir
  */
 class Module(val origin: Origin,
               val uniqueName: String,
-              val consts: List[UserOpDecl],
-              val vars: List[UserOpDecl],
-              val ops: List[UserOpDef],
+              val constants: List[UserOpDecl],
+              val variables: List[UserOpDecl],
+              val operators: List[UserOpDef],
               val assumptions: List[Assumption],
               val theorems: List[Theorem])
