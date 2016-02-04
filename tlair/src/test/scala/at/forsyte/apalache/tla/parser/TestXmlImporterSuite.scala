@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.parser
 
-import at.forsyte.apalache.tla.ir.Kind
+import at.forsyte.apalache.tla.ir._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -16,8 +16,9 @@ import org.scalatest.junit.JUnitRunner
 class TestXmlImporterSuite extends FunSuite {
   test("empty spec") {
     val xml = <modules><context></context></modules>
-    val spec = new XmlImporter().parse(xml)
+    val (spec, errors) = new XmlImporter().parse(xml)
     assert(0 == spec.modules.size)
+    assert(errors.isEmpty)
   }
 
   test("malformed xml") {
@@ -46,7 +47,8 @@ class TestXmlImporterSuite extends FunSuite {
         </ModuleNode>
       </modules>
 
-    val spec = new XmlImporter().parse(xml)
+    val (spec, errors) = new XmlImporter().parse(xml)
+    assert(errors.isEmpty)
     assert(1 == spec.modules.size)
     val module = spec.modules.head
     assert("HourClock" == module.uniqueName)
@@ -93,7 +95,8 @@ class TestXmlImporterSuite extends FunSuite {
       </ModuleNode>
     </modules>
 
-    val spec = new XmlImporter().parse(xml)
+    val (spec, errors) = new XmlImporter().parse(xml)
+    assert(errors.isEmpty)
     assert(1 == spec.modules.size)
     val module = spec.modules.head
     assert(1 == module.variables.size)
@@ -247,16 +250,82 @@ class TestXmlImporterSuite extends FunSuite {
         </ModuleNode>
       </modules>
 
-    val spec = new XmlImporter().parse(xml)
+    val (spec, errors) = new XmlImporter().parse(xml)
+    assert(errors.isEmpty)
     assert(1 == spec.modules.size)
     val module = spec.modules.head
     assert(1 == module.operators.size)
 
+    // the standard things
     val op = module.operators.head
     assert(1 == op.origin.locRange.start.colno)
     assert(4 == op.origin.locRange.start.lineno)
     assert(27 == op.origin.locRange.end.colno)
     assert(4 == op.origin.locRange.end.lineno)
     assert(1 == op.origin.level)
+    assert("HourClock" == op.origin.filename)
+
+    // the parameters
+    assert(op.params.isEmpty)
+
+    // and now the body
+    op.body match {
+      case app: OpApply =>
+        assert(4 == app.origin.locRange.start.lineno)
+        assert(4 == app.origin.locRange.end.lineno)
+        assert(12 == app.origin.locRange.start.colno)
+        assert(27 == app.origin.locRange.end.colno)
+        assert("HourClock" == app.origin.filename)
+        assert(1 == app.origin.level)
+
+        // the operator is actually a built-in operator
+        app.oper match {
+          case bop: BuiltinOp =>
+            assert("=" == bop.uniqueName)
+            assert("--TLA+ BUILTINS--" == bop.origin.filename)
+            assert(0 == bop.origin.level)
+            assert(2 == bop.params.size)
+            val param0 = bop.params.head
+            val param1 = bop.params.tail.head
+            assert("Formal_0" == param0.uniqueName)
+            assert(param0.isLeibniz)
+            assert(0 == param0.arity)
+            assert("Formal_1" == param1.uniqueName)
+            assert(param1.isLeibniz)
+            assert(0 == param1.arity)
+
+          case _ =>
+            fail("Expected BuiltinOp")
+        }
+
+        assert(2 == app.args.length)
+
+        def isHr(operand: TlaNode): Unit = operand match {
+          case opapp: OpApply =>
+            assert(12 == opapp.origin.locRange.start.colno)
+            assert(13 == opapp.origin.locRange.end.colno)
+            assert(4 == opapp.origin.locRange.start.lineno)
+            assert(4 == opapp.origin.locRange.end.lineno)
+            assert("HourClock" == opapp.origin.filename)
+            assert(1 == opapp.origin.level)
+
+            opapp.oper match {
+              case d: UserOpDecl =>
+                assert("hr" == d.uniqueName)
+
+              case _ =>
+                fail("Expected hr")
+            }
+
+          case _ =>
+            fail("Expected OpApply as the 0th operand")
+        }
+
+        isHr(app.args.head)
+        isHr(app.args.tail.head)
+
+      case _ =>
+        fail("Expected OpApply")
+    }
   }
 }
