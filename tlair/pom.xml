@@ -12,8 +12,9 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <scoverage.plugin.version>1.1.1</scoverage.plugin.version>
+        <scoverage.aggregate>true</scoverage.aggregate>
     </properties>
-
 
     <repositories>
         <repository>
@@ -149,6 +150,46 @@
                     </args>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.scoverage</groupId>
+                <artifactId>scoverage-maven-plugin</artifactId>
+                <version>${scoverage.plugin.version}</version>
+                <configuration>
+                    <scalaVersion>2.11.7</scalaVersion>
+                    <!-- other parameters -->
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal> <!-- or integration-check -->
+                        </goals>
+                        <phase>prepare-package</phase> <!-- or any other phase -->
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.scoverage</groupId>
+                <artifactId>scoverage-maven-plugin</artifactId>
+                <version>${scoverage.plugin.version}</version>
+                <configuration>
+                    <aggregate>true</aggregate>
+                    <highlighting>true</highlighting>
+                </configuration>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>report</report>
+                            <!-- or <report>integration-report</report> -->
+                            <!-- or <report>report-only</report> -->
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+        </plugins>
+    </reporting>
 </project>
