@@ -9,7 +9,7 @@ import org.scalatest.junit.JUnitRunner
  * Tests for the low-level intermediate representation.
  */
 @RunWith(classOf[JUnitRunner])
-class TestLir extends FunSuite {
+class TestLirValues extends FunSuite {
   test("create booleans") {
     val b = TlaBool(false)
     assert(!b.value)
