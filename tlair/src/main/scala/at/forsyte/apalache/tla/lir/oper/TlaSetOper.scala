@@ -29,9 +29,28 @@ object TlaSetOper {
     override val name = "\\cap"
   }
 
+  /** the standard \subseteq operator */
   val subseteq = new TlaSetOper {
     override val arity = FixedArity(2)
     override val name = "\\subseteq"
+  }
+
+  /** the standard \subset operator */
+  val subset = new TlaSetOper {
+    override val arity = FixedArity(2)
+    override val name = "\\subset"
+  }
+
+  /** the standard \supset operator */
+  val supset = new TlaSetOper {
+    override val arity = FixedArity(2)
+    override val name = "\\supset"
+  }
+
+  /** the standard \supseteq operator */
+  val supseteq = new TlaSetOper {
+    override val arity = FixedArity(2)
+    override val name = "\\supseteq"
   }
 
   val setminus = new TlaSetOper {
@@ -51,8 +70,10 @@ object TlaSetOper {
     override val name = "map"
   }
 
-  /** TLA SUBSET, i.e., the set of all subsets (of a given set) */
-  val subset = new TlaSetOper {
+  /** TLA SUBSET, i.e., the set of all subsets (of a given set).
+    We use the name 'powerset' to avoid confusion with \subset and \subseteq.
+    */
+  val powerset = new TlaSetOper {
     override val arity = FixedArity(1)
     override val name = "SUBSET"
   }

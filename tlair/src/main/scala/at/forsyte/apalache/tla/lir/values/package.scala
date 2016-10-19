@@ -2,9 +2,6 @@ package at.forsyte.apalache.tla.lir
 
 package values {
 
-  /** the base class for all TLA+ objects */
-  abstract class TlaValue
-
   /** an integer value (unbounded as in TLA+) */
   case class TlaInt(value: BigInt) extends TlaValue {
     def isNatural = {
@@ -31,7 +28,7 @@ package values {
   abstract class TlaSet extends TlaValue
 
   /** an explicit representation of a set */
-  case class TlaEnumSet(value: Set[TlaValue]) extends TlaSet
+  case class TlaEnumSet(values: TlaValue*) extends TlaSet
 
   /** a predefined set, e.g., the set of all integers */
   abstract class TlaBuiltinSet extends TlaSet {

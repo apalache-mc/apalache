@@ -43,21 +43,21 @@ class TestLirValues extends FunSuite {
   }
 
   test("create a set") {
-    val c = TlaEnumSet(Set(TlaInt(1), TlaInt(2), TlaInt(3)))
-    assert(c.value.size == 3)
-    assert(c.value == Set(TlaInt(1), TlaInt(2), TlaInt(3)))
+    val c = TlaEnumSet(TlaInt(1), TlaInt(2), TlaInt(3))
+    assert(c.values.size == 3)
+    assert(c.values == Set(TlaInt(1), TlaInt(2), TlaInt(3)))
   }
 
   test("create a set of functions") {
-    val dom = TlaEnumSet(Set(TlaInt(1), TlaInt(2)))
-    val range = TlaEnumSet(Set(TlaInt(2), TlaInt(3)))
+    val dom = TlaEnumSet(TlaInt(1), TlaInt(2))
+    val range = TlaEnumSet(TlaInt(2), TlaInt(3))
     val s = TlaFunSet(dom, range)
     assert(s.elemDomain == dom)
     assert(s.elemRange == range)
   }
 
   test("define a function") {
-    val dom = TlaEnumSet(Set(TlaInt(1), TlaInt(2)))
+    val dom = TlaEnumSet(TlaInt(1), TlaInt(2))
     val f = TlaFun(dom)
     assert(f.domain == dom)
   }

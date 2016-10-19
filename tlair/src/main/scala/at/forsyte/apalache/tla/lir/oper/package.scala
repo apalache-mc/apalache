@@ -1,13 +1,11 @@
 package at.forsyte.apalache.tla.lir
 
-import at.forsyte.apalache.tla.lir.values.TlaValue
-
 /**
  * Operators.
  */
 package oper {
 
-/**
+  /**
      The levels of the operators: State (reasons about current state), Action (reasons about a pair of states),
      and Temporal (reasons about executions).
     */
@@ -39,6 +37,13 @@ package oper {
     def interpretation: Interpretation.Value
     /* the number of arguments the operator has */
     def arity: OperArity
+
+    def isCorrectArity(a: Int): Boolean = {
+      arity match {
+        case AnyArity() => a >= 0
+        case FixedArity(n) => a == n
+      }
+    }
   }
 
   object TlaOper {
