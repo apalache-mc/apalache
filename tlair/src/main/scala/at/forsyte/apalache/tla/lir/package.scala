@@ -13,7 +13,9 @@ package lir {
   /** a variable as defined by VARIABLE */
   class TlaVar(val name: String) extends TlaValue
 
-  /** A scope in which constants and variables are declared */
+  /** A scope in which constants and variables are declared.
+    * TODO: use the scope!
+    */
   trait TlaScope {
     def declareConst(name: String): TlaConst
     def declareVar(name: String): TlaVar

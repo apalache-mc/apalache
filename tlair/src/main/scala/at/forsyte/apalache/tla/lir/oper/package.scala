@@ -10,7 +10,7 @@ package oper {
      and Temporal (reasons about executions).
     */
   object Level extends Enumeration {
-    val State, Transition, Temporal = Value
+    val State, Action, Temporal = Value
   }
 
   /**
@@ -29,6 +29,8 @@ package oper {
   abstract class OperArity
   case class AnyArity() extends OperArity
   case class FixedArity(n: Int) extends OperArity
+  case class AnyOddArity() extends OperArity
+  case class AnyEvenArity() extends OperArity
 
   /** An abstract operator */
   abstract class TlaOper {
@@ -42,6 +44,8 @@ package oper {
       arity match {
         case AnyArity() => a >= 0
         case FixedArity(n) => a == n
+        case AnyOddArity() => a >= 1 && a % 2 == 1
+        case AnyEvenArity() => a >= 0 && a % 2 == 0
       }
     }
   }
@@ -61,6 +65,14 @@ package oper {
       val level = Level.State
       val interpretation = Interpretation.Predefined
       val arity = FixedArity(2)
+    }
+
+    /** The CHOOSE operator */
+    val choose = new TlaOper {/* the number of arguments the operator has */
+      override def name: String = "CHOOSE"
+      override def arity: OperArity = FixedArity(3)
+      override def level: Level.Value = Level.State
+      override def interpretation: Interpretation.Value = Interpretation.Predefined
     }
   }
 

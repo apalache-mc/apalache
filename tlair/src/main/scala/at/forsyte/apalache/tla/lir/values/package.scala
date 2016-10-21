@@ -9,6 +9,11 @@ package values {
     }
   }
 
+  /** A decimal value d_1...d_k.d_k+1...d_m.
+    * Since we represent the decimal value with BigDecimal, one should take care of rounding results.
+    */
+  case class TlaDecimal(value: BigDecimal) extends TlaValue
+
   /** A really real number, not a float.
       For the moment, we don't know what to do about it. */
   case class TlaReal()
