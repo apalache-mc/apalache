@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.lir
 
+import at.forsyte.apalache.tla.lir.predef.TlaIntSet
 import at.forsyte.apalache.tla.lir.values._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -42,22 +43,8 @@ class TestLirValues extends FunSuite {
     assert("x" == c.name)
   }
 
-  test("create a set") {
-    val c = TlaEnumSet(TlaInt(1), TlaInt(2), TlaInt(3))
-    assert(c.values.size == 3)
-    assert(c.values == Set(TlaInt(1), TlaInt(2), TlaInt(3)))
-  }
-
-  test("create a set of functions") {
-    val dom = TlaEnumSet(TlaInt(1), TlaInt(2))
-    val range = TlaEnumSet(TlaInt(2), TlaInt(3))
-    val s = TlaFunSet(dom, range)
-    assert(s.elemDomain == dom)
-    assert(s.elemRange == range)
-  }
-
   test("define a function") {
-    val dom = TlaEnumSet(TlaInt(1), TlaInt(2))
+    val dom = TlaIntSet()
     val f = TlaFun(dom)
     assert(f.domain == dom)
   }

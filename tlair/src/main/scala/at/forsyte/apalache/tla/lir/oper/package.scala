@@ -8,6 +8,10 @@ package oper {
   /**
      The levels of the operators: State (reasons about current state), Action (reasons about a pair of states),
      and Temporal (reasons about executions).
+
+
+     XXX: We are not using levels any more, since they seem to be type information, which needs static analysis.
+     In the future, we will compute levels automatically.
     */
   object Level extends Enumeration {
     val State, Action, Temporal = Value
@@ -31,11 +35,11 @@ package oper {
   case class FixedArity(n: Int) extends OperArity
   case class AnyOddArity() extends OperArity
   case class AnyEvenArity() extends OperArity
+  case class AnyPositiveArity() extends OperArity
 
-  /** An abstract operator */
+/** An abstract operator */
   abstract class TlaOper {
     def name: String
-    def level: Level.Value
     def interpretation: Interpretation.Value
     /* the number of arguments the operator has */
     def arity: OperArity
@@ -46,6 +50,7 @@ package oper {
         case FixedArity(n) => a == n
         case AnyOddArity() => a >= 1 && a % 2 == 1
         case AnyEvenArity() => a >= 0 && a % 2 == 0
+        case AnyPositiveArity() => a > 0
       }
     }
   }
@@ -54,7 +59,6 @@ package oper {
     /** Equality of two TLA+ objects */
     val eq = new TlaOper {
       val name = "="
-      val level = Level.State
       val interpretation = Interpretation.Predefined
       val arity = FixedArity(2)
     }
@@ -62,7 +66,6 @@ package oper {
     /** Inequality of two TLA+ objects */
     val ne = new TlaOper {
       val name = "/="
-      val level = Level.State
       val interpretation = Interpretation.Predefined
       val arity = FixedArity(2)
     }
@@ -71,7 +74,6 @@ package oper {
     val choose = new TlaOper {/* the number of arguments the operator has */
       override def name: String = "CHOOSE"
       override def arity: OperArity = FixedArity(3)
-      override def level: Level.Value = Level.State
       override def interpretation: Interpretation.Value = Interpretation.Predefined
     }
   }

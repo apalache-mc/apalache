@@ -1,13 +1,12 @@
 package at.forsyte.apalache.tla
 
 package lir {
-  import at.forsyte.apalache.tla.lir.oper.{FixedArity, TlaOper}
+  import at.forsyte.apalache.tla.lir.oper._
 
-
-  /** the base class for all TLA+ objects */
+  /** the base class for the universe of objects used in TLA+ */
   abstract class TlaValue
 
-/** a constant as defined by CONSTANT */
+  /** a constant as defined by CONSTANT */
   class TlaConst(val name: String) extends TlaValue
 
   /** a variable as defined by VARIABLE */
@@ -52,6 +51,7 @@ package lir {
 
   /** A TLA+ expression */
   abstract class TlaEx
+
   /** just using a TLA+ value */
   case class ValEx(value: TlaValue) extends TlaEx
 
@@ -70,6 +70,16 @@ package lir {
 
 
   /** An operator definition, e.g. A == 1 + 2, or B(x, y) == x + y, or (C(f(_, _), x, y) == f(x, y) */
-  class TlaOperDef(val name: String, val formalParams: List[Param], val body: TlaEx)
+  class TlaOperDef(val name: String, val formalParams: List[Param], val body: TlaEx) {
+    val operName = name
+    def createOperator(): TlaOper = {
+      // TODO: maybe we should define a user-instantiated operator instead of an anonymous class
+      new TlaOper {
+        override def arity: OperArity = FixedArity(formalParams.length)
+        override def interpretation: Interpretation.Value = Interpretation.User
+        override def name: String = operName
+      }
+    }
+  }
 
 }

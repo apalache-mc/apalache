@@ -1,7 +1,11 @@
 package at.forsyte.apalache.tla.lir
 
+import javax.imageio.metadata.IIOMetadataFormat
+
+import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSetOper, TlaBoolOper}
-import at.forsyte.apalache.tla.lir.values.{TlaStr, TlaInt, TlaEnumSet}
+import at.forsyte.apalache.tla.lir.predef.TlaEmptySet
+import at.forsyte.apalache.tla.lir.values.{TlaStr, TlaInt}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -25,9 +29,9 @@ class TestTlaExpr extends FunSuite {
 
   test("using set operations") {
     // x = {1, 2, "hello"}
-    val x = ValEx(new TlaEnumSet(TlaInt(1), TlaInt(2), TlaStr("hello")))
+    val x = OperEx(TlaSetOper.enumSet, ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaStr("hello")))
     // y = {4}
-    val y = ValEx(new TlaEnumSet(TlaInt(4)))
+    val y = OperEx(TlaSetOper.enumSet, ValEx(TlaInt(4)))
     // x \cup y
     OperEx(TlaSetOper.cup, x, y)
     // x \cap y
@@ -59,9 +63,9 @@ class TestTlaExpr extends FunSuite {
 
   test("wrong arity in set operations") {
     // x = {1, 2, "hello"}
-    val x = ValEx(new TlaEnumSet(TlaInt(1), TlaInt(2), TlaStr("hello")))
+    val x = OperEx(TlaSetOper.enumSet, ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaStr("hello")))
     // y = {4}
-    val y = ValEx(new TlaEnumSet(TlaInt(4)))
+    val y = OperEx(TlaSetOper.enumSet, ValEx(TlaInt(4)))
 
     def expectWrongArity(op: TlaOper, args: TlaEx*) = {
       try {
@@ -93,10 +97,49 @@ class TestTlaExpr extends FunSuite {
     expectWrongArity(TlaSetOper.union, x, y)
   }
 
+  test("the empty set") {
+    // this is the way to use the empty set
+    TlaEmptySet()
+    // this is the wrong way to define the empty set
+    try {
+      OperEx(TlaSetOper.enumSet)
+      fail("Expected an IllegalArgumentException")
+    } catch {
+      case _: IllegalArgumentException => () // OK
+    }
+
+    // an intersection with another set
+    OperEx(TlaSetOper.cap,
+      ValEx(TlaEmptySet()),
+      OperEx(TlaSetOper.enumSet, ValEx(TlaInt(1)))
+    )
+  }
+
   test("strange set operations") {
     // We can write something like 2 \cup {4}. TLA Toolbox would not complain.
     OperEx(TlaSetOper.cup,
       ValEx(TlaInt(2)),
-      ValEx(new TlaEnumSet(TlaInt(4))))
+      OperEx(TlaSetOper.enumSet, ValEx(TlaInt(4))))
+  }
+
+  test("declaring and using operators") {
+    val odef = new TlaOperDef("A", List(new SimpleParam("x"), new SimpleParam("y")),
+      OperEx(TlaBoolOper.and,
+        OperEx(TlaActionOper.tlaPrime, ValEx(new TlaVar("x"))),
+        ValEx(new TlaVar("y"))
+      )
+    )
+
+    // this is the way to use a user-defined operator
+    val applyA = odef.createOperator()
+    OperEx(applyA, ValEx(new TlaVar("a")), ValEx(new TlaVar("b")))
+
+    // we should get an exception when the number of arguments is incorrect
+    try {
+      OperEx(applyA, ValEx(new TlaVar("a")))
+      fail("Expected an IllegalArgumentException")
+    } catch {
+      case _: IllegalArgumentException => () // OK
+    }
   }
 }

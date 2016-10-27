@@ -4,11 +4,28 @@ package at.forsyte.apalache.tla.lir.oper
  * Set operators.
  */
 abstract class TlaSetOper extends TlaOper {
-  override def level: Level.Value = Level.State
   override def interpretation: Interpretation.Value = Interpretation.Predefined
 }
 
 object TlaSetOper {
+  /**
+    Define a set by enumerating its elements, i.e., {e_1, ..., e_k}
+    Note that we explicitly forbid to construct an empty set using this operator.
+    To construct an empty set, use emptySet.
+   */
+  val enumSet = new TlaSetOper {
+    override val arity = AnyPositiveArity()
+    override val name = "{...}"
+  }
+
+  /**
+   * Construct a set of functions from a set S to a set T, i.e., [S -> T].
+   */
+  val funSet = new TlaSetOper {
+    override def arity: OperArity = FixedArity(2)
+    override def name: String = "[S -> T]"
+  }
+
   val in = new TlaSetOper {
     override val arity = FixedArity(2)
     override val name = "\\in"

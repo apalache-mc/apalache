@@ -7,7 +7,6 @@ import at.forsyte.apalache.tla.lir.oper._
  */
 package object temporal {
   abstract class TemporalOper extends TlaOper {
-    override def level: Level.Value = Level.Temporal
     override def interpretation: Interpretation.Value = Interpretation.Predefined
   }
 

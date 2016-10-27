@@ -4,7 +4,6 @@ package at.forsyte.apalache.tla.lir.oper
  * Function operators.
  */
 abstract class TlaFunOper extends TlaOper {
-  override def level: Level.Value = Level.State
   override def interpretation: Interpretation.Value = Interpretation.Predefined
 }
 
