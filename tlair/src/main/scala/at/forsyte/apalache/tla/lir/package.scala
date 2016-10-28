@@ -27,26 +27,19 @@ package lir {
     */
   abstract class Param {
     def name: String
-    def arity: Int
+    def arity: OperArity
   }
 
   /** An ordinary expression, e.g., x */
   case class SimpleParam(name: String) extends Param {
-    override def arity = 0
+    override def arity: OperArity = FixedArity(0)
   }
 
   /** A function signature, e.g., f(_, _) */
-  case class OperParam(oper: TlaOper) extends Param {
-    require(oper.arity match { case FixedArity(_) => true; case _ => false }, "Formal parameters should have fixed arity")
+  case class OperParam(name: String, arity: OperArity) extends Param with TlaOper {
+    override def interpretation: Interpretation.Value = Interpretation.Signature
 
-    override def name = oper.name
-
-    override def arity =
-      oper.arity match {
-        case FixedArity(n) => n
-        case _ => throw new IllegalStateException("Non-fixed arity") // it should not happen together with 'require'
-      }
-
+    require(arity match { case FixedArity(_) => true; case _ => false }, "Formal parameters should have fixed arity")
   }
 
   /** A TLA+ expression */
@@ -58,7 +51,11 @@ package lir {
   /** applying an operator, including the one defined by OperFormalParam */
   case class OperEx(oper: TlaOper, args: TlaEx*) extends TlaEx {
     require(oper.isCorrectArity(args.size), "unexpected arity %d".format(args.size))
+    require(oper.areCompatibleArgs(args: _*), "the arguments are not compatible with the operator signature")
   }
+
+  /** converting an operator into a value (to pass an operator as an argument of another operator) */
+  case class OperRefEx(oper: TlaOper) extends TlaEx
 
   /**
     Using a formal parameter, which is not an OperFormalParam.
@@ -78,6 +75,18 @@ package lir {
         override def arity: OperArity = FixedArity(formalParams.length)
         override def interpretation: Interpretation.Value = Interpretation.User
         override def name: String = operName
+
+        override def areCompatibleArgs(args: TlaEx*): Boolean = {
+          def isArgGood(pair: Tuple2[Param, TlaEx]) = {
+            (pair._1, pair._2) match {
+              case (_: SimpleParam, _: ValEx) => true
+              case (_: SimpleParam, _: OperEx) => true
+              case (_: OperParam, _: OperRefEx) => true
+              case _ => false
+            }
+          }
+          (formalParams zip args).forall(isArgGood)
+        }
       }
     }
   }

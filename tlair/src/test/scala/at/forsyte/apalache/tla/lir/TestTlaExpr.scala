@@ -3,9 +3,9 @@ package at.forsyte.apalache.tla.lir
 import javax.imageio.metadata.IIOMetadataFormat
 
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
-import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSetOper, TlaBoolOper}
-import at.forsyte.apalache.tla.lir.predef.TlaEmptySet
-import at.forsyte.apalache.tla.lir.values.{TlaStr, TlaInt}
+import at.forsyte.apalache.tla.lir.oper._
+import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaEmptySet}
+import at.forsyte.apalache.tla.lir.values.{TlaUserSet, TlaStr, TlaInt}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -115,6 +115,17 @@ class TestTlaExpr extends FunSuite {
     )
   }
 
+  test("set constructors") {
+    // declare sets whose contents we don't know
+    val set1 = new TlaUserSet()
+    val set2 = new TlaUserSet()
+    // there is only one set of integers
+    val intSet = TlaIntSet()
+
+    val rhs = OperEx(TlaSetOper.cup, ValEx(set2), ValEx(intSet))
+    OperEx(TlaOper.eq, ValEx(set1), rhs)
+  }
+
   test("strange set operations") {
     // We can write something like 2 \cup {4}. TLA Toolbox would not complain.
     OperEx(TlaSetOper.cup,
@@ -122,7 +133,28 @@ class TestTlaExpr extends FunSuite {
       OperEx(TlaSetOper.enumSet, ValEx(TlaInt(4))))
   }
 
-  test("declaring and using operators") {
+  test("declaring an order 0 operator") {
+    val odef = new TlaOperDef("A", List(),
+      OperEx(TlaBoolOper.and,
+        OperEx(TlaActionOper.tlaPrime, ValEx(new TlaVar("x"))),
+        ValEx(new TlaVar("y"))
+      )
+    )
+
+    // this is the way to use a user-defined operator
+    val applyA = odef.createOperator()
+    OperEx(applyA)
+
+    // we should get an exception when the number of arguments is incorrect
+    try {
+      OperEx(applyA, ValEx(new TlaVar("a")))
+      fail("Expected an IllegalArgumentException")
+    } catch {
+      case _: IllegalArgumentException => () // OK
+    }
+  }
+
+  test("declaring an order 1 operator") {
     val odef = new TlaOperDef("A", List(new SimpleParam("x"), new SimpleParam("y")),
       OperEx(TlaBoolOper.and,
         OperEx(TlaActionOper.tlaPrime, ValEx(new TlaVar("x"))),
@@ -137,6 +169,43 @@ class TestTlaExpr extends FunSuite {
     // we should get an exception when the number of arguments is incorrect
     try {
       OperEx(applyA, ValEx(new TlaVar("a")))
+      fail("Expected an IllegalArgumentException")
+    } catch {
+      case _: IllegalArgumentException => () // OK
+    }
+  }
+
+  test("compatibility of the signatures") {
+    // f(_, _)
+    val fOper = new OperParam("f", FixedArity(2))
+
+    try {
+      OperEx(TlaSetOper.cup, OperRefEx(fOper), OperRefEx(fOper))
+      fail("Expected an IllegalArgumentException")
+    } catch {
+      case _: IllegalArgumentException => () // OK
+    }
+  }
+
+  test("declaring an order 2 operator") {
+    // f(_, _)
+    val fOper = new OperParam("f", FixedArity(2))
+
+    // A(f(_, _), x, y) == f(x, y)
+    val odef = new TlaOperDef("A", List(fOper, new SimpleParam("x"), new SimpleParam("y")),
+      OperEx(fOper,
+        ValEx(new TlaVar("x")),
+        ValEx(new TlaVar("y"))
+      )
+    )
+
+    // this is the way to use a user-defined operator
+    val applyA = odef.createOperator()
+    OperEx(applyA, OperRefEx(TlaSetOper.cup), ValEx(new TlaVar("a")), ValEx(new TlaVar("b")))
+
+    // we should get an exception when passing anything different from OperRefEx as the first argument
+    try {
+      OperEx(applyA, ValEx(new TlaVar("a")), ValEx(new TlaVar("b")), ValEx(new TlaVar("b")))
       fail("Expected an IllegalArgumentException")
     } catch {
       case _: IllegalArgumentException => () // OK
