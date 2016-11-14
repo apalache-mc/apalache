@@ -73,7 +73,7 @@ trait TlaOper {
         case _ => true
       }
     }
-    args.forall(isArgGood)
+    args.forall(isArgGood _)
   }
 }
 
@@ -100,7 +100,7 @@ object TlaOper {
     override def interpretation: Interpretation.Value = Interpretation.Predefined
   }
 
-  /** The CHOOSE operator: CHOOSE x \in S: p */
+  /** The CHOOSE operator: CHOOSE x : p */
   val chooseUnbounded = new TlaOper {
     /* the number of arguments the operator has */
     override def name: String = "CHOOSE2"
