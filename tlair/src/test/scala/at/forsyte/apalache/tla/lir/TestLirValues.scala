@@ -34,12 +34,12 @@ class TestLirValues extends FunSuite {
 
 
   test("create a constant") {
-    val c = new TlaConst("x")
+    val c = new TlaConstDecl("x")
     assert("x" == c.name)
   }
 
   test("create a variable") {
-    val c = new TlaVar("x")
+    val c = new TlaVarDecl("x")
     assert("x" == c.name)
   }
 

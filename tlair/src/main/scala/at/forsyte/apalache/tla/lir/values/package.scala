@@ -16,7 +16,7 @@ package values {
 
   /** A really real number, not a float.
       For the moment, we don't know what to do about it. */
-  case class TlaReal()
+  case class TlaReal() extends TlaValue
 
   /** a boolean */
   case class TlaBool(value: Boolean) extends TlaValue
@@ -25,19 +25,19 @@ package values {
 
   object TlaTrue extends TlaBool(true)
 
-  /** a function */
-  case class TlaFun(domain: TlaSet) extends TlaValue
-
   /** an abstract set */
-  abstract class TlaSet extends TlaValue
+  abstract class TlaSet() extends TlaValue
 
   /** a predefined set, e.g., the set of all integers */
-  abstract class TlaPredefSet extends TlaSet {
+  abstract class TlaPredefSet() extends TlaSet {
     val name: String
   }
 
   /** A set defined by the user */
-  class TlaUserSet extends TlaSet
+  case class TlaUserSet() extends TlaSet
+
+  /** a function */
+  case class TlaFun(domain: TlaSet) extends TlaValue
 
   /** a string */
   case class TlaStr(value: String) extends TlaValue

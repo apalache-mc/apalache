@@ -5,7 +5,7 @@ import javax.imageio.metadata.IIOMetadataFormat
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaEmptySet}
-import at.forsyte.apalache.tla.lir.values.{TlaUserSet, TlaStr, TlaInt}
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaUserSet, TlaStr, TlaInt}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -16,14 +16,14 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TestTlaExpr extends FunSuite {
   test("create a conjunction") {
-    val x = ValEx(new TlaVar("x"))
-    val y = ValEx(new TlaVar("y"))
+    val x = NameEx("x")
+    val y = NameEx("y")
     val e = OperEx(TlaBoolOper.and, x, y)
 
     e match {
-      case OperEx(TlaBoolOper.and, ValEx(i: TlaVar), ValEx(j: TlaVar)) =>
-        assert(i.name == "x")
-        assert(j.name == "y")
+      case OperEx(TlaBoolOper.and, NameEx(i: String), NameEx(j: String)) =>
+        assert(i == "x")
+        assert(j == "y")
     }
   }
 
@@ -55,7 +55,7 @@ class TestTlaExpr extends FunSuite {
     // UNION x
     OperEx(TlaSetOper.union, x)
     // { i \in x : i \in y }
-    val i = ValEx(new TlaVar("i"))
+    val i = NameEx("i")
     OperEx(TlaSetOper.filter, i, x, OperEx(TlaSetOper.in, i, y))
     // { i \cup y : i \in x }
     OperEx(TlaSetOper.map, OperEx(TlaSetOper.cup, i, y), i, x)
@@ -134,10 +134,11 @@ class TestTlaExpr extends FunSuite {
   }
 
   test("declaring an order 0 operator") {
-    val odef = new TlaOperDef("A", List(),
+    // A == x' /\ y
+    val odef = new TlaOperDecl("A", List(),
       OperEx(TlaBoolOper.and,
-        OperEx(TlaActionOper.tlaPrime, ValEx(new TlaVar("x"))),
-        ValEx(new TlaVar("y"))
+        OperEx(TlaActionOper.tlaPrime, NameEx("x")),
+        NameEx("y")
       )
     )
 
@@ -147,7 +148,7 @@ class TestTlaExpr extends FunSuite {
 
     // we should get an exception when the number of arguments is incorrect
     try {
-      OperEx(applyA, ValEx(new TlaVar("a")))
+      OperEx(applyA, NameEx("a"))
       fail("Expected an IllegalArgumentException")
     } catch {
       case _: IllegalArgumentException => () // OK
@@ -155,32 +156,21 @@ class TestTlaExpr extends FunSuite {
   }
 
   test("declaring an order 1 operator") {
-    val odef = new TlaOperDef("A", List(new SimpleParam("x"), new SimpleParam("y")),
+    // A(x, y) == x' /\ y
+    val odef = new TlaOperDecl("A", List(SimpleFormalParam("x"), SimpleFormalParam("y")),
       OperEx(TlaBoolOper.and,
-        OperEx(TlaActionOper.tlaPrime, ValEx(new TlaVar("x"))),
-        ValEx(new TlaVar("y"))
+        OperEx(TlaActionOper.tlaPrime, NameEx("x")),
+        NameEx("y")
       )
     )
 
     // this is the way to use a user-defined operator
     val applyA = odef.createOperator()
-    OperEx(applyA, ValEx(new TlaVar("a")), ValEx(new TlaVar("b")))
+    OperEx(applyA, NameEx("a"), NameEx("b"))
 
     // we should get an exception when the number of arguments is incorrect
     try {
-      OperEx(applyA, ValEx(new TlaVar("a")))
-      fail("Expected an IllegalArgumentException")
-    } catch {
-      case _: IllegalArgumentException => () // OK
-    }
-  }
-
-  test("compatibility of the signatures") {
-    // f(_, _)
-    val fOper = new OperParam("f", FixedArity(2))
-
-    try {
-      OperEx(TlaSetOper.cup, OperRefEx(fOper), OperRefEx(fOper))
+      OperEx(applyA, NameEx("a"))
       fail("Expected an IllegalArgumentException")
     } catch {
       case _: IllegalArgumentException => () // OK
@@ -189,26 +179,38 @@ class TestTlaExpr extends FunSuite {
 
   test("declaring an order 2 operator") {
     // f(_, _)
-    val fOper = new OperParam("f", FixedArity(2))
+    val fOper = new OperFormalParam("f", FixedArity(2))
 
     // A(f(_, _), x, y) == f(x, y)
-    val odef = new TlaOperDef("A", List(fOper, new SimpleParam("x"), new SimpleParam("y")),
-      OperEx(fOper,
-        ValEx(new TlaVar("x")),
-        ValEx(new TlaVar("y"))
+    val odef = new TlaOperDecl("A",
+        List(fOper, new SimpleFormalParam("x"), new SimpleFormalParam("y")),
+      OperEx(TlaOper.apply,
+        NameEx("f"),
+        NameEx("x"),
+        NameEx("y")
       )
     )
 
     // this is the way to use a user-defined operator
     val applyA = odef.createOperator()
-    OperEx(applyA, OperRefEx(TlaSetOper.cup), ValEx(new TlaVar("a")), ValEx(new TlaVar("b")))
+    OperEx(applyA, NameEx(TlaSetOper.cup.name), NameEx("a"), NameEx("b"))
 
-    // we should get an exception when passing anything different from OperRefEx as the first argument
-    try {
-      OperEx(applyA, ValEx(new TlaVar("a")), ValEx(new TlaVar("b")), ValEx(new TlaVar("b")))
-      fail("Expected an IllegalArgumentException")
-    } catch {
-      case _: IllegalArgumentException => () // OK
-    }
+    // The following expression does not make a lot of sense, but it is legal to construct such one.
+    // Later, there will be a plugin to detect inconsistent expressions like this.
+    OperEx(applyA, NameEx("a"), NameEx("b"), NameEx("b"))
   }
+
+
+  test("existentials") {
+    val ex1 =
+      OperEx(TlaBoolOper.existsUnbounded, NameEx("x"),
+        OperEx(TlaOper.eq, NameEx("x"), NameEx("x"))
+    )
+    val ex2 =
+      OperEx(TlaBoolOper.existsUnbounded, NameEx("x"),
+        OperEx(TlaOper.eq, NameEx("x"), NameEx("x"))
+      )
+    val conj = OperEx(TlaBoolOper.and, ex1, ex2)
+  }
+
 }

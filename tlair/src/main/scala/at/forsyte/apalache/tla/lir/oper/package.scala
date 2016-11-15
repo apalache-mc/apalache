@@ -62,19 +62,6 @@ trait TlaOper {
       case AnyPositiveArity() => a > 0
     }
   }
-
-  /** Check arguments for compatibility with the operator.
-      By default, we forbid to pass a name of an operator as an argument.
-    */
-  def areCompatibleArgs(args: TlaEx*): Boolean = {
-    def isArgGood(arg: TlaEx) = {
-      arg match {
-        case _: OperRefEx => false
-        case _ => true
-      }
-    }
-    args.forall(isArgGood _)
-  }
 }
 
 object TlaOper {
@@ -90,6 +77,13 @@ object TlaOper {
     val name = "/="
     val interpretation = Interpretation.Predefined
     val arity = FixedArity(2)
+  }
+
+  /** Operator application by name, e.g, OperEx(apply, f, x, y) calls f(x, y). */
+  val apply = new TlaOper {
+    override def arity: OperArity = AnyPositiveArity()
+    override def interpretation: Interpretation.Value = Interpretation.Predefined
+    override def name: String = "_()"
   }
 
   /** The CHOOSE operator: CHOOSE x \in S: p */
