@@ -81,7 +81,7 @@ object TlaSetOper {
     override val name = "filter"
   }
 
-  /** A set replacement: { e: x \in S } */
+  /** A set reacement: { e: x \in S } */
   val map = new TlaSetOper {
     override val arity = FixedArity(3)
     override val name = "map"
@@ -102,5 +102,16 @@ object TlaSetOper {
   val union = new TlaSetOper {
     override val arity = FixedArity(1)
     override val name = "UNION"
+  }
+
+  /**
+    Define a cartesian product of one or more sets.
+    Note that we explicitly forbid to construct an empty set using this operator.
+    To construct an empty set, use emptySet.
+    */
+  val product = new TlaSetOper {
+    override val arity = AnyPositiveArity()
+    override val name = "x"
+
   }
 }
