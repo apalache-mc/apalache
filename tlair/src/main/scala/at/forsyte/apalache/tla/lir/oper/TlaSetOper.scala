@@ -26,6 +26,14 @@ object TlaSetOper {
     override def name: String = "[S -> T]"
   }
 
+  /**
+    * Construct a set of sequences from a set S i.e., Seq(S).
+    */
+  val seqSet = new TlaSetOper {
+    override def arity: OperArity = FixedArity(1)
+    override def name: String = "Seq(_)"
+  }
+
   val in = new TlaSetOper {
     override val arity = FixedArity(2)
     override val name = "\\in"

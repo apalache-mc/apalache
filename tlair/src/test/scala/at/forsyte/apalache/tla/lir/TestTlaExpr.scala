@@ -137,7 +137,7 @@ class TestTlaExpr extends FunSuite {
     // A == x' /\ y
     val odef = new TlaOperDecl("A", List(),
       OperEx(TlaBoolOper.and,
-        OperEx(TlaActionOper.tlaPrime, NameEx("x")),
+        OperEx(TlaActionOper.prime, NameEx("x")),
         NameEx("y")
       )
     )
@@ -159,7 +159,7 @@ class TestTlaExpr extends FunSuite {
     // A(x, y) == x' /\ y
     val odef = new TlaOperDecl("A", List(SimpleFormalParam("x"), SimpleFormalParam("y")),
       OperEx(TlaBoolOper.and,
-        OperEx(TlaActionOper.tlaPrime, NameEx("x")),
+        OperEx(TlaActionOper.prime, NameEx("x")),
         NameEx("y")
       )
     )
