@@ -122,4 +122,5 @@ object TlaSetOper {
     override val name = "\\times"
 
   }
+
 }

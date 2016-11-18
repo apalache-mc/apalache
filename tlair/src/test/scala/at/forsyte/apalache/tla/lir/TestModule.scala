@@ -5,9 +5,9 @@ package at.forsyte.apalache.tla.lir
   */
 
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
+import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.TlaInt
-
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -277,6 +277,130 @@ class TestModule extends FunSuite{
                                  )
                          )
 
+    /**
+      * SndAck == /\ ackQ'     = Append( ackQ, rBit )
+      *           /\ UNCHANGED   << msgQ, sBit, sAck, rBit, sent, rcvd >>
+      */
+    val SndAck =
+        new TlaOperDecl( "SndAck",
+                         List(),
+                         OperEx( TlaBoolOper.and,
+                                 OperEx( TlaOper.eq,
+                                         OperEx( TlaActionOper.prime,
+                                                 NameEx( "ackQ" )
+                                                 ),
+                                         OperEx( TlaSeqOper.append,
+                                                 NameEx( "ackQ" ),
+                                                 NameEx( "rBit" )
+                                                 )
+                                         ),
+                                 OperEx( TlaActionOper.unchanged,
+                                         OperEx( TlaSeqOper.enumSeq,
+                                                 NameEx( "msgQ" ),
+                                                 NameEx( "sBit" ),
+                                                 NameEx( "sAck" ),
+                                                 NameEx( "rBit" ),
+                                                 NameEx( "sent" ),
+                                                 NameEx( "rcvd" )
+                                                 )
+                                         )
+                                 )
+                         )
+
+    /**
+      * RcvAck == /\ ackQ      # <<>>
+      *           /\ ackQ'     = Tail( ackQ )
+      *           /\ sAck'     = Head( ackQ )
+      *           /\ UNCHANGED   << msgQ, sBit, rBit, sent, rcvd >>
+      */
+    val RcvAck =
+        new TlaOperDecl( "RcvAck",
+                         List(),
+                         OperEx( TlaBoolOper.and,
+                                 OperEx( TlaOper.ne,
+                                         NameEx( "ackQ" ),
+                                         emptySeq
+                                         ),
+                                 OperEx( TlaOper.eq,
+                                         OperEx( TlaActionOper.prime,
+                                                 NameEx( "ackQ" )
+                                                 ),
+                                         OperEx( TlaSeqOper.tail,
+                                                 NameEx( "ackQ" )
+                                                 )
+                                         ),
+                                 OperEx( TlaOper.eq,
+                                         OperEx( TlaActionOper.prime,
+                                                 NameEx( "sAck" )
+                                                 ),
+                                         OperEx( TlaSeqOper.head,
+                                                 NameEx( "ackQ" )
+                                                 )
+                                         ),
+                                 OperEx( TlaActionOper.unchanged,
+                                         OperEx( TlaSeqOper.enumSeq,
+                                                 NameEx( "msgQ" ),
+                                                 NameEx( "sBit" ),
+                                                 NameEx( "rBit" ),
+                                                 NameEx( "sent" ),
+                                                 NameEx( "rcvd" )
+                                                 )
+                                         )
+                                 )
+                         )
+    /**
+      * Lose( q ) == /\ q # <<>>
+      *              /\ \exists i \in 1 .. Len( q ) :
+      *                 q' = [ j \in 1 .. ( Len( q ) - 1 ) |-> IF j < i THEN q[ j ]
+      *                                                                 ELSE q[ j + 1 ] ]
+      *              /\ UNCHANGED << sBit, sAck, rBit, sent, rcvd >>
+      */
+    val Lose =
+        new TlaOperDecl( "Lose",
+                         List( SimpleFormalParam( "q" ) ),
+                         OperEx( TlaBoolOper.exists,
+                                 NameEx( "i" ),
+                                 OperEx( TlaArithOper.dotdot,
+                                         ValEx( TlaInt( 1 ) ),
+                                         OperEx( TlaSeqOper.len,
+                                                 NameEx( "q" )
+                                                 )
+                                         ),
+                                 OperEx( TlaOper.eq,
+                                         OperEx( TlaActionOper.prime,
+                                                 NameEx( "q" )
+                                                 ),
+                                         OperEx( TlaFunOper.funDef,
+                                                 NameEx( "j" ),
+                                                 OperEx( TlaArithOper.dotdot,
+                                                         ValEx( TlaInt( 1 ) ),
+                                                         OperEx( TlaArithOper.minus,
+                                                                 OperEx( TlaSeqOper.len,
+                                                                         NameEx( "q" )
+                                                                         ),
+                                                                 ValEx( TlaInt ( 1 ) )
+                                                                 )
+                                                         ),
+                                                 OperEx( TlaControlOper.ifThenElse //,
+                                                         //IF,
+                                                         //THEN,
+                                                         //ELSE
+                                                         )
+                                                 )
+                                         )
+                                 )
+                         )
+
+    /**
+      * LoseMsg == Lose( msgQ ) /\ UNCHANGED ackQ
+      */
+    val LoseMsg = 1
+
+    /**
+      * LoseAck == Lose( ackQ ) /\ UNCHANGED msgQ
+      *
+      */
+    val LoseAck = 1
 
 
   }
