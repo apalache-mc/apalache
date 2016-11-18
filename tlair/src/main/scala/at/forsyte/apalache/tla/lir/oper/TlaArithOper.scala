@@ -45,4 +45,9 @@ object TlaArithOper {
     override def name: String = "^"
   }
 
+  val dotdot = new TlaArithOper {
+    override val arity = FixedArity(2)
+    override val name = "_.._"
+  }
+
 }
