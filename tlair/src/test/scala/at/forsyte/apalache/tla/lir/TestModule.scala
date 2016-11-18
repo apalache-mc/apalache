@@ -93,7 +93,7 @@ class TestModule extends FunSuite{
                                  OperEx( TlaSetOper.in,
                                          NameEx( "msgQ" ),
                                          OperEx( TlaSetOper.seqSet,
-                                                 OperEx( TlaSetOper.product,
+                                                 OperEx( TlaSetOper.times,
                                                          ZeroOneSet,
                                                          NameEx( "Data" )
                                                          )
@@ -153,7 +153,7 @@ class TestModule extends FunSuite{
                                          OperEx( TlaActionOper.prime,
                                                  NameEx( "sBit" )
                                                  ),
-                                         OperEx( TlaArithmeticOper.minus,
+                                         OperEx( TlaArithOper.minus,
                                                  ValEx( TlaInt( 1 ) ),
                                                  NameEx( "sBit" )
                                                  )

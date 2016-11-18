@@ -89,7 +89,7 @@ object TlaSetOper {
     override val name = "filter"
   }
 
-  /** A set reacement: { e: x \in S } */
+  /** A set mapping: { e: x \in S } */
   val map = new TlaSetOper {
     override val arity = FixedArity(3)
     override val name = "map"
@@ -117,9 +117,9 @@ object TlaSetOper {
     Note that we explicitly forbid to construct an empty set using this operator.
     To construct an empty set, use emptySet.
     */
-  val product = new TlaSetOper {
+  val times = new TlaSetOper {
     override val arity = AnyPositiveArity()
-    override val name = "x"
+    override val name = "\\times"
 
   }
 }
