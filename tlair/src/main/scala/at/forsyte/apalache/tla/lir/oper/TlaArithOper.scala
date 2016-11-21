@@ -50,4 +50,28 @@ object TlaArithOper {
     override val name = "_.._"
   }
 
+  val lt = new TlaArithOper {/* the number of arguments the operator has */
+  override def arity: OperArity = FixedArity(2)
+
+    override def name: String = "<"
+  }
+
+  val gt = new TlaArithOper {/* the number of arguments the operator has */
+  override def arity: OperArity = FixedArity(2)
+
+    override def name: String = ">"
+  }
+
+  val le = new TlaArithOper {/* the number of arguments the operator has */
+  override def arity: OperArity = FixedArity(2)
+
+    override def name: String = "<="
+  }
+
+  val ge = new TlaArithOper {/* the number of arguments the operator has */
+  override def arity: OperArity = FixedArity(2)
+
+    override def name: String = ">="
+  }
+
 }

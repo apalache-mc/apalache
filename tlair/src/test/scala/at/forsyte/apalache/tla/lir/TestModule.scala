@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.TlaInt
+import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -32,6 +33,8 @@ class TestModule extends FunSuite{
     /** Constants {0,1} and <<>> */
     val ZeroOneSet = OperEx(TlaSetOper.enumSet, ValEx(TlaInt(0)), ValEx(TlaInt(1)))
     val emptySeq = OperEx(TlaSeqOper.enumSeq)
+
+    /**---------------------------------------------------------------------------------------------------------------*/
 
     /**
       * ABInit = /\ msgQ =   <<>>
@@ -127,6 +130,8 @@ class TestModule extends FunSuite{
                                          )
                                  )
                          )
+
+    /**---------------------------------------------------------------------------------------------------------------*/
 
     /**
       * SndNewValue(d) == /\ sAck      = sBit
@@ -381,10 +386,22 @@ class TestModule extends FunSuite{
                                                                  ValEx( TlaInt ( 1 ) )
                                                                  )
                                                          ),
-                                                 OperEx( TlaControlOper.ifThenElse //,
-                                                         //IF,
-                                                         //THEN,
-                                                         //ELSE
+                                                 OperEx( TlaControlOper.ifThenElse ,
+                                                         OperEx( TlaArithOper.lt,
+                                                                 NameEx( "j" ),
+                                                                 NameEx( "i" )
+                                                                 ),
+                                                         OperEx( TlaFunOper.app,
+                                                                 NameEx( "q" ),
+                                                                 NameEx( "j")
+                                                                 ),
+                                                         OperEx( TlaFunOper.app,
+                                                                 NameEx( "q" ),
+                                                                 OperEx( TlaArithOper.plus,
+                                                                         NameEx( "j" ),
+                                                                         ValEx( TlaInt(1) )
+                                                                         )
+                                                                 )
                                                          )
                                                  )
                                          )
@@ -394,15 +411,134 @@ class TestModule extends FunSuite{
     /**
       * LoseMsg == Lose( msgQ ) /\ UNCHANGED ackQ
       */
-    val LoseMsg = 1
+    val LoseMsg =
+        new TlaOperDecl( "LoseMsg",
+                         List(),
+                         OperEx( TlaBoolOper.and,
+                                 OperEx( TlaOper.apply,
+                                         NameEx( "Lose" ),
+                                         NameEx( "msgQ" )
+                                         ),
+                                 OperEx( TlaActionOper.unchanged,
+                                         NameEx( "ackQ" )
+                                         )
+                                 )
+                         )
 
     /**
       * LoseAck == Lose( ackQ ) /\ UNCHANGED msgQ
-      *
       */
-    val LoseAck = 1
+    val LoseAck =
+        new TlaOperDecl( "LoseAck",
+                         List(),
+                         OperEx( TlaBoolOper.and,
+                                 OperEx( TlaOper.apply,
+                                         NameEx( "Lose" ),
+                                         NameEx( "ackQ" )
+                                         ),
+                                 OperEx( TlaActionOper.unchanged,
+                                         NameEx( "msgQ" )
+                                         )
+                                 )
+                         )
+
+    /**
+      * ABNext == \/ \exists d \in Data : SndNewValue(d)
+      *           \/ ReSndMsg \/ RcvMsg \/ SndAck \/ RcvAck
+      *           \/ LoseMsg \/ LoseAck
+      */
+    val ABNext =
+    new TlaOperDecl( "ABNext",
+                     List(),
+                     OperEx( TlaBoolOper.or,
+                             OperEx( TlaBoolOper.exists,
+                                     NameEx( "d" ),
+                                     NameEx( "Data" ),
+                                     OperEx( TlaOper.apply,
+                                             NameEx( "SndNewValue" ),
+                                             NameEx( "d" )
+                                             )
+                                     ),
+                             NameEx( "ReSndMsg" ),
+                             NameEx( "RcvMsg" ),
+                             NameEx( "SndAck" ),
+                             NameEx( "RcvAck" ),
+                             NameEx( "LoseMsg" ),
+                             NameEx( "LoseAck" )
+                             )
+                     )
+
+    /**---------------------------------------------------------------------------------------------------------------*/
+
+    /**
+      * abvars == << msgQ, ackQ, sBit, sAck, rBit, sent, rcvd >>
+      */
+    val abvars =
+        new TlaOperDecl( "abvars",               // NOTE: Is this really an operator? Seems contrived.
+                         List(),
+                         OperEx( TlaSeqOper.enumSeq,
+                                 NameEx( "msgQ" ),
+                                 NameEx( "ackQ" ),
+                                 NameEx( "sBit" ),
+                                 NameEx( "sAck" ),
+                                 NameEx( "rBit" ),
+                                 NameEx( "sent" ),
+                                 NameEx( "rcvd" )
+                                 )
+                         )
+
+    /**
+      * ABFairness == /\ WF_abvars( ReSndMsg ) /\ WF_abvars( SndAck )
+      *               /\ SF_abvars( RcvMsg ) /\ SF_abvars( RcvAck )
+      */
+    val ABFairness =
+        new TlaOperDecl( "AbFairness",
+                         List(),
+                         OperEx( TlaBoolOper.and,
+                                 OperEx( TlaTempOper.weakFairness,
+                                         NameEx( "abvars" ),
+                                         NameEx( "ReSndMsg" )
+                                         ),
+                                 OperEx( TlaTempOper.weakFairness,
+                                         NameEx( "abvars" ),
+                                         NameEx( "SndAck" )
+                                         ) ,
+                                 OperEx( TlaTempOper.strongFairness,
+                                         NameEx( "abvars" ),
+                                         NameEx( "RcvMsg" )
+                                         ),
+                                 OperEx( TlaTempOper.strongFairness,
+                                         NameEx( "abvars" ),
+                                         NameEx( "RcvAck" )
+                                         )
+                                 )
+                         )
+
+    /**---------------------------------------------------------------------------------------------------------------*/
+
+    /**
+      * ABSpec == ABInit /\ [][ABNext]_abvars /\ ABFairness
+      */
+
+    val ABSpec =
+        new TlaOperDecl( "ABSpec",
+                         List(),
+                         OperEx( TlaBoolOper.and,
+                                 NameEx( "ABInit" ),
+                                 OperEx( TlaActionOper.stutter,
+                                         NameEx( "ABNext" ),
+                                         NameEx( "abvars" )
+                                         ),
+                                 NameEx( "ABFairness" )
+                                 )
+                         )
+
+    /**---------------------------------------------------------------------------------------------------------------*/
+
+    /**
+      * THEOREM ABSpec => []( ABTypeInv )
+      */
 
 
   }
-
 }
