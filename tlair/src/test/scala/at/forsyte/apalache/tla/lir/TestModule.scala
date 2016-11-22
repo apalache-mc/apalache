@@ -32,7 +32,7 @@ class TestModule extends FunSuite{
 
     /** Constants {0,1} and <<>> */
     val ZeroOneSet = OperEx(TlaSetOper.enumSet, ValEx(TlaInt(0)), ValEx(TlaInt(1)))
-    val emptySeq = OperEx(TlaFunOper.tupleDef)
+    val emptySeq = OperEx(TlaFunOper.tuple)
 
     /**---------------------------------------------------------------------------------------------------------------*/
 
@@ -169,7 +169,7 @@ class TestModule extends FunSuite{
                                                  ),
                                          OperEx( TlaSeqOper.append,
                                                  NameEx( "msgQ" ),
-                                                 OperEx( TlaFunOper.tupleDef,
+                                                 OperEx( TlaFunOper.tuple,
                                                          OperEx( TlaActionOper.prime,
                                                                  NameEx( "sBit" )
                                                          ),
@@ -178,7 +178,7 @@ class TestModule extends FunSuite{
                                                  )
                                          ),
                                  OperEx( TlaActionOper.unchanged,
-                                         OperEx( TlaFunOper.tupleDef,
+                                         OperEx( TlaFunOper.tuple,
                                                  NameEx( "ackQ" ),
                                                  NameEx( "sAck" ),
                                                  NameEx( "rBit" ),
@@ -207,14 +207,14 @@ class TestModule extends FunSuite{
                                                  ),
                                          OperEx( TlaSeqOper.append,
                                                  NameEx( "msgQ" ),
-                                                 OperEx( TlaFunOper.tupleDef,
+                                                 OperEx( TlaFunOper.tuple,
                                                          NameEx( "sBit" ),
                                                          NameEx( "sent" )
                                                          )
                                                  )
                                          ),
                                  OperEx( TlaActionOper.unchanged,
-                                         OperEx( TlaFunOper.tupleDef,
+                                         OperEx( TlaFunOper.tuple,
                                                  NameEx( "ackQ" ),
                                                  NameEx( "sBit" ),
                                                  NameEx( "sAck" ),
@@ -272,7 +272,7 @@ class TestModule extends FunSuite{
                                                  )
                                          ),
                                  OperEx( TlaActionOper.unchanged,
-                                         OperEx( TlaFunOper.tupleDef,
+                                         OperEx( TlaFunOper.tuple,
                                                  NameEx( "ackQ" ),
                                                  NameEx( "sBit" ),
                                                  NameEx( "sAck" ),
@@ -300,7 +300,7 @@ class TestModule extends FunSuite{
                                                  )
                                          ),
                                  OperEx( TlaActionOper.unchanged,
-                                         OperEx( TlaFunOper.tupleDef,
+                                         OperEx( TlaFunOper.tuple,
                                                  NameEx( "msgQ" ),
                                                  NameEx( "sBit" ),
                                                  NameEx( "sAck" ),
@@ -343,7 +343,7 @@ class TestModule extends FunSuite{
                                                  )
                                          ),
                                  OperEx( TlaActionOper.unchanged,
-                                         OperEx( TlaFunOper.tupleDef,
+                                         OperEx( TlaFunOper.tuple,
                                                  NameEx( "msgQ" ),
                                                  NameEx( "sBit" ),
                                                  NameEx( "rBit" ),
@@ -476,7 +476,7 @@ class TestModule extends FunSuite{
     val abvars =
         new TlaOperDecl( "abvars",               // NOTE: Is this really an operator? Seems contrived.
                          List(),
-                         OperEx( TlaFunOper.tupleDef,
+                         OperEx( TlaFunOper.tuple,
                                  NameEx( "msgQ" ),
                                  NameEx( "ackQ" ),
                                  NameEx( "sBit" ),

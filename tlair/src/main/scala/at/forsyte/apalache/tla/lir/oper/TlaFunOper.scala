@@ -9,9 +9,18 @@ abstract class TlaFunOper extends TlaOper {
 
 object TlaFunOper {
   /**
-  Define a tuple by listing its elements, i.e., < e_1, ..., e_k >
+    * a function constructor like the one for the records: k_1 |-> v_1, ..., k_n |-> v_n
     */
-  val tupleDef = new TlaSeqOper {
+  val enum = new TlaFunOper {
+    override def arity: OperArity = AnyEvenArity()
+    override def name: String = "fun-enum"
+  }
+
+  /**
+    Define a tuple by listing its elements, i.e., < e_1, ..., e_k >.
+    One can use enum to achieve the same effect.
+    */
+  val tuple = new TlaFunOper {
     override val arity = AnyArity()
     override val name = "<...>"
   }
@@ -35,17 +44,9 @@ object TlaFunOper {
     override def name: String = "fun-def"
   }
 
-  /**
-    * a function constructor like the one for the records: k_1 |-> v_1, ..., k_n |-> v_n
-    */
-  val enum = new TlaFunOper {
-    override def arity: OperArity = AnyEvenArity()
-    override def name: String = "fun-enum"
-  }
-
   /** [f EXCEPT ![i1] = e_1, ![i_2] = e_2, ..., ![i_k] = e_k] */
   val except = new TlaFunOper {
-    override def arity: OperArity = AnyArity()
+    override def arity: OperArity = AnyOddArity()
 
     override def name: String = "EXCEPT"
   }
