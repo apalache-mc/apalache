@@ -5,18 +5,14 @@ package at.forsyte.apalache.tla.lir.oper
   */
 
 abstract class TlaSeqOper extends TlaOper {
-  override def interpretation: Interpretation.Value = Interpretation.Predefined
+  override def interpretation: Interpretation.Value = Interpretation.StandardLib
 }
 
+/**
+  * The standard module of Sequences. Note that there is no standard constructor for a sequence.
+  * Use the tuples constructor, @see TlaOper.
+  */
 object TlaSeqOper {
-
-  /**
-  Define a sequence by listing its elements, i.e., < e_1, ..., e_k >
-    */
-  val enumSeq = new TlaSeqOper {
-    override val arity = AnyArity()
-    override val name = "<...>"
-  }
 
   val head = new TlaSeqOper {
     override val arity = FixedArity(1)

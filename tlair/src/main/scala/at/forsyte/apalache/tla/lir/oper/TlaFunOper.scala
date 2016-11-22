@@ -8,6 +8,14 @@ abstract class TlaFunOper extends TlaOper {
 }
 
 object TlaFunOper {
+  /**
+  Define a tuple by listing its elements, i.e., < e_1, ..., e_k >
+    */
+  val tupleDef = new TlaSeqOper {
+    override val arity = AnyArity()
+    override val name = "<...>"
+  }
+
   /** f[e] */
   val app = new TlaFunOper {
     override val arity: OperArity = FixedArity(2)
