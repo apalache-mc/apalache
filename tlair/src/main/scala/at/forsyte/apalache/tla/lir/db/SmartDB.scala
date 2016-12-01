@@ -1,16 +1,35 @@
 package at.forsyte.apalache.tla.lir.db
 
 import at.forsyte.apalache.tla.lir.cleaner.Cleaner.IDType
+import at.forsyte.apalache.tla.lir.TlaEx
+import at.forsyte.apalache.tla.lir.plugins.IDAllocator
+
 import collection.mutable.HashMap
 
 /**
-  * Wraps a HashMap with fixed key type
+  * Wraps a HashMap, performs some kind of evaluation (subclass-specific) and stores that information
   */
-class Database[ValType](name: String) {
-  protected val dbMap : HashMap[IDType, ValType] = HashMap()
+abstract trait SmartDB[ ValType ] {
+  val name: String
+  protected val dbMap : HashMap[ IDType, ValType ] = HashMap()
 
-  def apply( key: IDType ): Option[ValType] =  dbMap.get( key )
+  def evaluate( key : IDType ) : Option[ ValType ]
 
-  def remove( key : IDType) : Unit = dbMap.remove(key)
+  def apply( key: IDType ) : Option[ ValType ] =  {
+    val res = dbMap.get( key )
+    // If key exists then just return it
+    if ( res != None ) {
+      return res
+    }
+    else{
+      // Lazy processing
+      return evaluate( key )
+    }
+  }
 
+  def has( key : IDType ) : Boolean = dbMap.contains( key )
+
+  def remove( key : IDType) : Unit = dbMap.remove( key )
 }
+
+

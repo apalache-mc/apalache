@@ -13,10 +13,16 @@ package lir {
   }
   
   /** a constant as defined by CONSTANT */
-  class TlaConstDecl(val name: String) extends TlaDecl
+  case class TlaConstDecl(val name: String) extends TlaDecl
   
   /** a variable as defined by VARIABLE */
-  class TlaVarDecl(val name: String) extends TlaDecl
+  case class TlaVarDecl(val name: String) extends TlaDecl
+
+  /** a module included by EXTENDS */
+  case class TlaModuleDecl(val name: String) extends TlaDecl
+
+  /** a spec, given by a list of declarations and a list of expressions */
+  class TlaSpec( val name: String, val declarations: List[TlaDecl] )
   
   
   /**
@@ -44,22 +50,38 @@ package lir {
   }
   
   /** An abstract TLA+ expression */
-  abstract class TlaEx
-  
+  abstract class TlaEx{
+    var ID : Int = 0
+    def toNiceString( nTab: Int = 0) = ""
+    override def toString: String = toNiceString()
+
+  }
+
   /** just using a TLA+ value */
-  case class ValEx(value: TlaValue) extends TlaEx
-  
+  case class ValEx(value: TlaValue) extends TlaEx{
+    override def toNiceString( nTab : Int = 0): String = ("  " *nTab) + "( ValEx: " + value.toString + " , id:" + ID + " )"
+  }
+
   /** refering to a variable, constant, operator, etc. by a name. */
-  case class NameEx(name: String) extends TlaEx
-  
+  case class NameEx(name: String) extends TlaEx{
+    override def toNiceString( nTab: Int = 0 ): String = ("  " *nTab) + "( NameEx: " + name + " , id: " + ID + " )"
+  }
+
   /** applying an operator, including the one defined by OperFormalParam */
   case class OperEx(oper: TlaOper, args: TlaEx*) extends TlaEx {
     require(oper.isCorrectArity(args.size), "unexpected arity %d".format(args.size))
+    override def toNiceString( nTab : Int = 0 ): String = {
+      ("  " *nTab) + "( OperEx: " +
+        oper.name + ",\n" +
+        args.map( (x : TlaEx) => x.toNiceString( nTab + 1 )).mkString(",\n") +
+        ",\n" + ("  " *nTab) + "  id: " + ID + "\n"+ ("  " *nTab) + ")"
+    }
+
   }
   
   
   /** An operator definition, e.g. A == 1 + 2, or B(x, y) == x + y, or (C(f(_, _), x, y) == f(x, y) */
-  class TlaOperDecl(val name: String, val formalParams: List[FormalParam], val body: TlaEx)
+  case class TlaOperDecl(val name: String, val formalParams: List[FormalParam], val body: TlaEx)
       extends TlaDecl {
 
     def createOperator(): TlaOper = {
