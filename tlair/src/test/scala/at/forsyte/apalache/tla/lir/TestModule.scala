@@ -18,6 +18,10 @@ import org.scalatest.junit.JUnitRunner
 class TestModule extends FunSuite{
   test("AlternatingBit module from Lamport's book") {
 
+    /** EXTENDS Naturals, Sequences */
+    val Naturals = new TlaModuleDecl( "Naturals" )
+    val Sequences = new TlaModuleDecl( "Sequences" )
+
     /** CONSTANTS Data */
     val Data = new TlaConstDecl("Data")
 
