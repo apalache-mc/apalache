@@ -9,7 +9,7 @@ import collection.mutable.HashMap
 /**
   * Wraps a HashMap, performs some kind of evaluation (subclass-specific) and stores that information
   */
-abstract trait SmartDB[ ValType ] {
+abstract class SmartDB[ ValType ] {
   val name: String
   protected val dbMap : HashMap[ IDType, ValType ] = HashMap()
 

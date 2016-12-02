@@ -55,26 +55,30 @@ package lir {
     def toNiceString( nTab: Int = 0) = ""
     override def toString: String = toNiceString()
 
+    val indent : Int = 4
+    val tab : String = " " *indent
+
+
   }
 
   /** just using a TLA+ value */
   case class ValEx(value: TlaValue) extends TlaEx{
-    override def toNiceString( nTab : Int = 0): String = ("  " *nTab) + "( ValEx: " + value.toString + " , id:" + ID + " )"
+    override def toNiceString( nTab : Int = 0): String = (tab *nTab) + "( ValEx: " + value.toString + " , id:" + ID + " )"
   }
 
   /** refering to a variable, constant, operator, etc. by a name. */
   case class NameEx(name: String) extends TlaEx{
-    override def toNiceString( nTab: Int = 0 ): String = ("  " *nTab) + "( NameEx: " + name + " , id: " + ID + " )"
+    override def toNiceString( nTab: Int = 0 ): String = (tab *nTab) + "( NameEx: " + name + " , id: " + ID + " )"
   }
 
   /** applying an operator, including the one defined by OperFormalParam */
   case class OperEx(oper: TlaOper, args: TlaEx*) extends TlaEx {
     require(oper.isCorrectArity(args.size), "unexpected arity %d".format(args.size))
     override def toNiceString( nTab : Int = 0 ): String = {
-      ("  " *nTab) + "( OperEx: " +
+      (tab *nTab) + "( OperEx: " +
         oper.name + ",\n" +
         args.map( (x : TlaEx) => x.toNiceString( nTab + 1 )).mkString(",\n") +
-        ",\n" + ("  " *nTab) + "  id: " + ID + "\n"+ ("  " *nTab) + ")"
+        ",\n" + (tab *nTab) + "  id: " + ID + "\n"+ (tab *nTab) + ")"
     }
 
   }

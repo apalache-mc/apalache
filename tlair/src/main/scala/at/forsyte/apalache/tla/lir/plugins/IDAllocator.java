@@ -41,4 +41,9 @@ public class IDAllocator<ValType> {
     public int nextID(){
         return m_ID_to_Val.size();
     }
+
+    public void reset() {
+        m_ID_to_Val.clear();
+        m_Val_to_ID.clear();
+    }
 }
