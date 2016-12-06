@@ -3,8 +3,11 @@ package at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaTrue, TlaFalse}
-import at.forsyte.apalache.tla.lir.cleaner.Cleaner
-import at.forsyte.apalache.tla.lir.plugins.BasicSubstitutions
+
+import at.forsyte.apalache.tla.lir.plugins.{Identifier, BasicSubstitutions}
+import at.forsyte.apalache.tla.lir.db.EquivalenceDB
+
+
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -83,7 +86,7 @@ class TestIDAllocation extends FunSuite{
     val spec = new TlaSpec( "someSum", List( TlaOperDecl( "", List( ), sum ) ) )
 
     //val spec = new TlaSpec("Test spec.", List(SndNewValue))
-    Cleaner.clean( spec )
+//    Cleaner.clean( spec )
 
     def show( thisSpec : TlaSpec) = {
       thisSpec.declarations.foreach(
@@ -93,25 +96,39 @@ class TestIDAllocation extends FunSuite{
       )
     }
 
+    /*
     println( "With computable addition\n" )
     show( spec )
 
-    println( "\nWithout computable addition" )
-    show( Cleaner.deliterize( spec ) )
-
     println( "\nFully reduced" )
     show( Cleaner.clean( BasicSubstitutions.sub( spec ) ) )
+    */
+
 
     val redundantbool = OperEx( TlaOper.eq,
       OperEx( TlaBoolOper.and, NameEx( "x" ), ValEx( TlaTrue ) ),
       OperEx( TlaBoolOper.or, ValEx( TlaFalse ), NameEx( "x" ) )
     )
 
+
+
     val spec2 = new TlaSpec( "boolSimplification", List( TlaOperDecl( "", List( ), redundantbool ) ) )
-    println( "Redundant bool\n" )
-    show( Cleaner.clean( spec2 ) )
+    println( "\nRedundant bool\n" )
+    val spc = Identifier.identify( spec2 )
+    show( spc )
     println( "\nFully reduced" )
-    show( Cleaner.clean( BasicSubstitutions.sub( spec2 ) ) )
+    show( Identifier.identify( BasicSubstitutions.sub( spec2 ) ) )
+
+
+    val eqdb : EquivalenceDB = new EquivalenceDB
+
+    eqdb.processAll(spc)
+
+    println("\n")
+    for( a <- 0 until 12 ){ //Cleaner.nAllocated() ){
+      println( UID( a ) +  " -> " +  eqdb( UID( a ) ).getOrElse( None ) )
+    }
+
 
 
   }

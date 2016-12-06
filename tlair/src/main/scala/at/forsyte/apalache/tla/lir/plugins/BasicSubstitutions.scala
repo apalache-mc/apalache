@@ -12,7 +12,7 @@ package object BasicSubstitutions {
   def substitute( tlaEx: TlaEx ): TlaEx = {
     def resub( tlaEx : TlaEx ) : TlaEx = {
       tlaEx match{
-        case OperEx( o , xs @ _* ) =>  //OperEx( o, xs.map( substitute ): _* )
+        case OperEx( o , xs @ _* ) =>
         {
           val newxs = xs.map( substitute )
           if (xs == newxs) tlaEx

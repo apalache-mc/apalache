@@ -51,7 +51,7 @@ package lir {
   
   /** An abstract TLA+ expression */
   abstract class TlaEx{
-    var ID : Int = 0
+    var ID : UID = UID( -1 )
     def toNiceString( nTab: Int = 0) = ""
     override def toString: String = toNiceString()
 
@@ -108,5 +108,9 @@ package lir {
  * @param declarations all kinds of declarations
  */
   class TlaModule(val name: String, val imports: Seq[String], declarations: Seq[TlaDecl])
+
+
+  abstract class IDType
+  case class UID( id: Int ) extends IDType
 
 }
