@@ -112,5 +112,7 @@ package lir {
 
   abstract class IDType
   case class UID( id: Int ) extends IDType
+  case class EID( id: Int ) extends IDType
+
 
 }

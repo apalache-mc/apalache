@@ -5,6 +5,11 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
 
 /**
+  * REFACTOR WITH SPECHANDLER!!!
+  */
+
+
+/**
   * Created by jkukovec on 12/2/16.
   */
 package object BasicSubstitutions {

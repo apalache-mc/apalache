@@ -6,22 +6,31 @@ package at.forsyte.apalache.tla.lir
 
 package object SpecHandler {
 
-  def handleEx( ex : TlaEx, exFun : TlaEx => Unit ) : TlaEx = {
+  def handleEx( ex : TlaEx, exFun : TlaEx => Unit = { _ => } ) : TlaEx = {
     exFun( ex )
     ex match {
       case OperEx( oper, args @ _* ) =>
         args.foreach(
          handleEx( _ , exFun )
         )
-      case _ => ex
+      case _ =>
     }
     return ex
   }
 
-  def handleOperBody( decl : TlaDecl, bodyFun : TlaEx => TlaEx ) : TlaDecl = {
+  def handleOperBody( decl : TlaDecl,
+                      bodyFun : TlaEx => TlaEx,
+                      nameFun : String => Unit = { _ => },
+                      paramsFun: List[FormalParam] => Unit = { _ => }
+                    ) : TlaDecl = {
     decl match{
-      case TlaOperDecl( _, _, body ) => bodyFun( body )
-      case _ => decl
+      case TlaOperDecl( name, params, body ) => {
+        nameFun( name )
+        paramsFun( params )
+        bodyFun( body )
+        //return TlaOperDecl( name, params, bodyFun( body ) )
+      }
+      case _ =>
     }
     return decl
   }
@@ -31,8 +40,12 @@ package object SpecHandler {
     return spec
   }
 
-  def handleWithExFun( spec : TlaSpec, exFun : TlaEx => Unit ) : TlaSpec = {
-    return handleDecl( spec, handleOperBody( _, handleEx( _, exFun ) ) )
+  def handleWithFun( spec : TlaSpec,
+                     exFun : TlaEx => Unit = { _ => },
+                     nameFun : String => Unit = { _ => },
+                     paramsFun: List[FormalParam] => Unit = { _ => }
+                     ) : TlaSpec = {
+    return handleDecl( spec, handleOperBody( _, handleEx( _, exFun ), nameFun, paramsFun) )
   }
 
 }

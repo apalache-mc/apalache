@@ -1,35 +1,35 @@
 package at.forsyte.apalache.tla.lir.db
 
-import java.util
-
 import at.forsyte.apalache.tla.lir.plugins.{IDAllocator, Identifier}
 import at.forsyte.apalache.tla.lir._
 import java.util.Vector
 
-import scala.collection.immutable.Set
-
-case class EID( id : Int ) extends IDType
+import scala.collection.mutable.Set
 
 /**
   * Created by jkukovec on 12/2/16.
   */
-class EquivalenceDB extends SmartDB[ EID ]{
+object EquivalenceDB extends UIDB[ EID ]{
   override val name = "EquivalenceDB"
 
   private val eqClasses : Vector[ Set[ UID ] ] = new Vector[ Set[ UID ] ]()
 
   private val allocator : IDAllocator[ TlaEx ] = new IDAllocator[ TlaEx ]
 
-  private def allocateEID( ex: TlaEx ) : Unit = allocator.allocate( ex )
-
-  def nKeys() : Int = allocator.nextID()
-
-  private def assignID( ex : TlaEx ) : Unit = {
-    apply( ex.ID )
-
+  private def allocateEID( ex: TlaEx ) : Unit = {
+    val nStart = allocator.nextID()
+    val eid = allocator.allocate( ex )
+    if( nStart == allocator.nextID() ) // no new alloc, id exists
+      eqClasses.elementAt( eid ).add( ex.ID )
+    else{
+      eqClasses.add( Set[UID]( ex.ID ) )
+    }
   }
 
-  override def evaluate( key: UID ): Option[ EID ] = {
+  def getFromEx( tlaEx : TlaEx ) : EID = EID( allocator.getID( tlaEx ) )
+  def getEx( eid : EID ) : Option[TlaEx] = Option( allocator.getVal( eid.id ) )
+
+  override protected def evaluate( key: UID ): Option[ EID ] = {
 
     def subroutine( ex: TlaEx  ) : Int = {
       SpecHandler.handleEx( ex, allocateEID )
@@ -38,9 +38,29 @@ class EquivalenceDB extends SmartDB[ EID ]{
     Identifier.getEx( key ).map( ex => EID( subroutine( ex ) ) )
   }
 
-  def processAll( spec : TlaSpec ) : TlaSpec = SpecHandler.handleWithExFun( spec, assignID )
+  def processAll( spec : TlaSpec ) : TlaSpec = {
+    SpecHandler.handleWithFun( spec, x => apply( x.ID ) )
+  }
 
   def areEquiv( k1 : UID, k2: UID ) : Boolean = this( k1 ) == this( k2 )
 
+  def getRep( eid: EID ) : Option[ UID ] = {
+    return getEqClass( eid ).map( _.head )
+  }
+
+  def getEqClass( key: UID ) : Option[ Set[ UID ] ] = {
+    return this( key ).map( ( eid : EID ) => eqClasses.elementAt( eid.id ) )
+  }
+  def getEqClass( eid: EID ) : Option[ Set[ UID ] ] = {
+    val id = eid.id
+    if( id < 0 || id >= eqClasses.size() ) return None
+    else return Some( eqClasses.elementAt( id ) )
+  }
+
+  override def reset() = {
+    super.reset()
+    allocator.reset()
+    eqClasses.clear()
+  }
 
 }
