@@ -13,6 +13,14 @@ package object Identifier {
 
   private val expressions : Vector[TlaEx] = new Vector[TlaEx]
 
+  def print() : Unit = {
+    println( "\nIdentifier:\n" )
+    for ( a <- 0 until expressions.size() ) {
+      println( a +  " -> " + expressions.get(a) )
+    }
+  }
+
+
   def reset() : Unit = expressions.clear()
 
   def getEx( uid : UID ) : Option[TlaEx] = {
@@ -30,7 +38,7 @@ package object Identifier {
     expressions.add( ex )
   }
 
-  def identify( spec : TlaSpec ) : TlaSpec = SpecHandler.handleWithFun( spec, assignID )
+  def identify( spec : TlaSpec ) : TlaSpec = SpecHandler.handleWithExFun( spec, assignID )
   def identify( decl : TlaDecl ) : TlaDecl = SpecHandler.handleOperBody( decl , SpecHandler.handleEx( _, assignID ) )
   def identify( ex : TlaEx ) : TlaEx = SpecHandler.handleEx( ex, assignID )
 

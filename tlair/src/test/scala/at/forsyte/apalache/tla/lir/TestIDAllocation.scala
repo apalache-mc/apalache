@@ -1,13 +1,11 @@
 package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
+import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaTrue, TlaFalse}
-
-import at.forsyte.apalache.tla.lir.plugins.{Identifier, BasicSubstitutions, OperatorSubstitution, OperatorDB}
-import at.forsyte.apalache.tla.lir.db.{EquivalenceDB}
-
-
+import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
+import at.forsyte.apalache.tla.lir.plugins.{BasicSubstitutions, Identifier, OperatorDB, OperatorSubstitution}
+import at.forsyte.apalache.tla.lir.db.EquivalenceDB
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -96,6 +94,39 @@ class TestIDAllocation extends FunSuite{
   val specSnd = new TlaSpec("Test spec.", List(SndNewValue))
   val specSum = new TlaSpec( "someSum", List( TlaOperDecl( "", List( ), sum ) ) )
   val specBool = new TlaSpec( "boolSimplification", List( TlaOperDecl( "", List( ), redundantbool ) ) )
+  val specRec =
+    new TlaSpec(
+      "Recursive arity1",
+      List(
+        TlaOperDecl(
+          "Op",
+          List( SimpleFormalParam( "x" ) ),
+          OperEx(
+            TlaControlOper.ifThenElse,
+            OperEx(
+              TlaOper.eq,
+              NameEx( "x" ),
+              ValEx( TlaInt( 0 ) )
+            ),
+            ValEx( TlaInt( 0 ) ),
+            OperEx(
+              TlaArithOper.plus,
+              ValEx( TlaInt( 1 ) ),
+              OperEx(
+                TlaOper.apply,
+                NameEx( "Op" ),
+                OperEx(
+                  TlaArithOper.minus,
+                  NameEx( "x" ),
+                  ValEx( TlaInt( 1 ) )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+
 
   ignore("Check ID allocation for basic operator") {
 
@@ -192,33 +223,70 @@ class TestIDAllocation extends FunSuite{
 
   }
 
-  test( "Test operator DB" ){
+  ignore( "Test operator DB" ){
 
-    EquivalenceDB.reset()
     Identifier.reset()
+    EquivalenceDB.reset()
+    OperatorDB.reset()
 
-    val a = NameEx( "a" )
-
-    val spec = new TlaSpec( "attributes",
+    val spec2 = new TlaSpec( "attributes",
       List(
-        TlaOperDecl( "A1", List( ), a ),
-        TlaOperDecl( "A2", List( ), a )
+        TlaOperDecl( "A1", List( ), NameEx( "a" ) ),
+        TlaOperDecl( "A2", List( ), NameEx( "a" ) )
       )
     )
 
+    val spec = specSnd
+
     Identifier.identify( spec )
+
+    Identifier.print()
 
     EquivalenceDB.processAll( spec )
 
-    val eid1 = EquivalenceDB( UID( 0 ) )
-    val eid2 = EquivalenceDB( UID( 1 ) )
+    OperatorSubstitution.extract( spec )
 
-    println( OperatorDB.size() )
-    println( OperatorDB( eid1.get ) )
-    println( OperatorDB( eid2.get ) )
 
+    Identifier.print()
+    EquivalenceDB.print()
+    OperatorDB.print()
+
+    OperatorDB.reset()
     EquivalenceDB.reset()
     Identifier.reset()
+
+  }
+
+  test( "Test operator DB substitution and recursion check" ){
+
+    OperatorDB.reset()
+    EquivalenceDB.reset()
+    Identifier.reset()
+
+    val spec = specRec
+    val spec2 = specSum
+
+    Identifier.identify( spec )
+    EquivalenceDB.processAll( spec )
+    OperatorSubstitution.extract( spec )
+
+    Identifier.identify( spec2 )
+    EquivalenceDB.processAll( spec2 )
+    OperatorSubstitution.extract( spec2 )
+
+    Identifier.print()
+    EquivalenceDB.print()
+    OperatorDB.print()
+
+    assert( OperatorDB.isRecursive( EID( 7 ) ) == Some(true) )
+    assert( OperatorDB.isRecursive( EID( 14 ) ) == Some(false) )
+    assert( OperatorDB.isRecursive( EID( -1 ) ) == None )
+
+
+    OperatorDB.reset()
+    EquivalenceDB.reset()
+    Identifier.reset()
+
 
   }
 

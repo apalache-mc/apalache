@@ -39,7 +39,7 @@ object EquivalenceDB extends UIDB[ EID ]{
   }
 
   def processAll( spec : TlaSpec ) : TlaSpec = {
-    SpecHandler.handleWithFun( spec, x => apply( x.ID ) )
+    SpecHandler.handleWithExFun( spec, x => apply( x.ID ) )
   }
 
   def areEquiv( k1 : UID, k2: UID ) : Boolean = this( k1 ) == this( k2 )

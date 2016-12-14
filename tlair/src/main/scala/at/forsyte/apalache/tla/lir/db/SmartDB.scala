@@ -18,8 +18,25 @@ abstract trait DB[ KeyType, ValType ] {
   def remove( key : KeyType) : Unit = dbMap.remove( key )
 
   def reset() : Unit = dbMap.clear()
+
+  def print(): Unit = {
+    println( "\n" + name + ": \n" )
+    for ( a <- dbMap.iterator ) {
+      println( a._1 + " -> " + a._2 )
+    }
+  }
+
+
 }
 abstract trait SmartDB[ KeyType, ValType ] extends DB[ KeyType, ValType ] {
+
+  @deprecated
+  override def set( key: KeyType, value: ValType ) : Unit = {
+    val calculated = evaluate( key )
+    // If calculated value is different from the user value, do nothing (?)
+    if( calculated != None && calculated.get == value) super.set( key, value )
+  }
+
   protected def evaluate( key : KeyType ) : Option[ ValType ]
 
   override def apply( key: KeyType ) : Option[ ValType ] =  {

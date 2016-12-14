@@ -19,16 +19,11 @@ package object SpecHandler {
   }
 
   def handleOperBody( decl : TlaDecl,
-                      bodyFun : TlaEx => TlaEx,
-                      nameFun : String => Unit = { _ => },
-                      paramsFun: List[FormalParam] => Unit = { _ => }
+                      bodyFun : TlaEx => TlaEx
                     ) : TlaDecl = {
     decl match{
       case TlaOperDecl( name, params, body ) => {
-        nameFun( name )
-        paramsFun( params )
-        bodyFun( body )
-        //return TlaOperDecl( name, params, bodyFun( body ) )
+        return TlaOperDecl( name, params, bodyFun( body ) )
       }
       case _ =>
     }
@@ -36,16 +31,24 @@ package object SpecHandler {
   }
 
   def handleDecl( spec: TlaSpec, declFun : TlaDecl => TlaDecl ) : TlaSpec = {
-    spec.declarations.foreach( declFun )
+    spec.declarations.map( declFun )
     return spec
   }
 
-  def handleWithFun( spec : TlaSpec,
-                     exFun : TlaEx => Unit = { _ => },
-                     nameFun : String => Unit = { _ => },
-                     paramsFun: List[FormalParam] => Unit = { _ => }
+  def handleWithExFun( spec : TlaSpec,
+                       exFun : TlaEx => Unit = { _ => }
                      ) : TlaSpec = {
-    return handleDecl( spec, handleOperBody( _, handleEx( _, exFun ), nameFun, paramsFun) )
+    return handleDecl( spec, handleOperBody( _, handleEx( _, exFun ) ) )
+  }
+
+  def handleWithOperDeclFun( spec : TlaSpec,
+                             declFun : TlaOperDecl => TlaOperDecl
+                           ) : TlaSpec = {
+    return handleDecl( spec, (x : TlaDecl) => x match {
+      case TlaOperDecl( _, _, _ ) => declFun( x.asInstanceOf[TlaOperDecl] )
+      case _ => x
+    })
+
   }
 
 }
