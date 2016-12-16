@@ -72,61 +72,50 @@ package object OperatorSubstitution {
 
   def extract( spec: TlaSpec ) : Unit = SpecHandler.sideeffectDecl( spec, extractOper )
 
-
-  protected def subEx( tlaEx: TlaEx ) : TlaEx = {
-    tlaEx match {
-      case OperEx( TlaOper.apply, nameEx, args @ _* ) => {
-        val nameEID = EquivalenceDB( nameEx.ID )
-      }
-      case _ =>
-    }
-
-    return  tlaEx
-  }
-
   protected def replaceAll( tlaEx : TlaEx, replacedEx: TlaEx, newEx: TlaEx) : TlaEx = {
     def swap( arg: TlaEx) : TlaEx =
-      if ( arg == replacedEx ) return newEx
-      else return arg
+      if ( arg == replacedEx ) return newEx.duplicate()
+      else return arg.duplicate()
 
-    val ret = SpecHandler.getNewEx( tlaEx, swap )
-    return ret
+    return SpecHandler.getNewEx( tlaEx, swap )
 
 
   }
+
+  trait ArityMismatch extends Exception
 
   def applyReplace( tlaEx: TlaEx ) : TlaEx = {
     def getBodyOrSelf( ex: TlaEx ) =
       OperatorDB.body( EquivalenceDB.getFromEx( ex ) ).getOrElse( ex )
     tlaEx match {
       case NameEx( _ ) => {
-        return getBodyOrSelf( tlaEx )
+        val ret = getBodyOrSelf( tlaEx )
+        if (ret != tlaEx) Identifier.identify(ret)
+        return ret.duplicate()
       }
       case OperEx( TlaOper.apply, oper, args@_* ) => {
         val mapval = OperatorDB( EquivalenceDB.getFromEx( oper ) )
-        if (mapval == None) return tlaEx
+        if (mapval == None) return tlaEx.duplicate()
         var body = EquivalenceDB.getEx( mapval.get._2 ).get
         val params = mapval.get._1
         if( params.size != args.size ){
-          return tlaEx // arity mismatch
+          throw new ArityMismatch {} // arity mismatch
         }
         else{
           params.zip(args).foreach(
             pair => body = replaceAll( body, NameEx( pair._1.name ), pair._2 )
           )
-          Identifier.identify(body)
-          return body
+          return body.duplicate()
         }
       }
-      case _ => return tlaEx
+      case _ => return tlaEx.duplicate()
     }
 
   }
 
   // Non- recursive assumed
   def substituteOper( spec: TlaSpec ) : TlaSpec = {
-    SpecHandler.getNewWithExFun(spec, applyReplace)
-    return spec
+    return SpecHandler.getNewWithExFun(spec, applyReplace, Identifier.identify )
   }
 
 

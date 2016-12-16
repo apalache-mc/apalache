@@ -355,24 +355,30 @@ class TestIDAllocation extends FunSuite{
     val spec = specOper
 
 
-
     Identifier.identify( spec )
     EquivalenceDB.processAll( spec )
     OperatorSubstitution.extract( spec )
 
-//    Identifier.print()
+    println( spec.declarations.reverse.head )
+
+    //    Identifier.print()
 //    EquivalenceDB.print()
 //    OperatorDB.print()
 
-//    val retSpc = OperatorSubstitution.substituteOper( spec )
+    val retSpc = OperatorSubstitution.substituteOper( spec )
 
-    val ex = OperEx( TlaOper.apply, NameEx("A"), ValEx( TlaInt(0) ) )
-    Identifier.identify( ex )
-    EquivalenceDB( ex.ID )
+    println( spec.declarations.reverse.head )
 
-    println( ex )
+    println( retSpc.declarations.reverse.head )
 
-    println( OperatorSubstitution.applyReplace( ex ) )
+//
+//    val ex = OperEx( TlaOper.apply, NameEx("A"), ValEx( TlaInt(0) ) )
+//    Identifier.identify( ex )
+//    EquivalenceDB( ex.ID )
+//
+//    println( ex )
+//
+//    println( OperatorSubstitution.applyReplace( ex ) )
 
     println("--------------------------")
 
@@ -381,7 +387,6 @@ class TestIDAllocation extends FunSuite{
 //    )
 //    println( ex )
 
-//    println( retSpc.declarations.reverse.head )
 
     OperatorDB.reset()
     EquivalenceDB.reset()

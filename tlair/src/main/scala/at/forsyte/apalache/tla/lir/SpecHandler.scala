@@ -7,32 +7,37 @@ package at.forsyte.apalache.tla.lir
 package object SpecHandler {
 
   def getNewEx( ex : TlaEx, exFun : TlaEx => TlaEx = { x => x } ) : TlaEx = {
-    if( ex.isInstanceOf[OperEx] ){
-      val newargs = ex.asInstanceOf[OperEx].args.map(
+    val newEx = exFun(ex)
+    if( newEx.isInstanceOf[OperEx] ){
+      val newargs = newEx.asInstanceOf[OperEx].args.map(
         getNewEx( _ , exFun )
       )
-      val newEx = OperEx( ex.asInstanceOf[OperEx].oper, newargs: _*)
-      newEx.ID = ex.ID
-      return exFun( newEx )
+      return OperEx( newEx.asInstanceOf[OperEx].oper, newargs: _*)
     }
-    else return exFun(ex)
+    else return newEx
   }
 
   def sideeffectEx( ex : TlaEx, exFun : TlaEx => Unit = { _ => } ) : Unit = {
+    exFun(ex)
     if( ex.isInstanceOf[OperEx] ){
       ex.asInstanceOf[OperEx].args.map(
         sideeffectEx( _ , exFun )
       )
     }
-    exFun(ex)
   }
 
   def getNewOperBody( decl : TlaDecl,
-                      bodyFun : TlaEx => TlaEx
+                      bodyFun : TlaEx => TlaEx,
+                      postBodySideeffect : TlaEx => Unit = { _ => }
                     ) : TlaDecl = {
     decl match{
       case TlaOperDecl( name, params, body ) => {
-        return decl.asInstanceOf[TlaOperDecl].copy( body = bodyFun( body ) )
+        val newbody = bodyFun( body )
+        if( newbody == body ) return decl
+        else {
+          postBodySideeffect( newbody )
+          return decl.asInstanceOf[TlaOperDecl].copy( body = newbody )
+        }
       }
       case _ => return decl
     }
@@ -53,9 +58,10 @@ package object SpecHandler {
   }
 
   def getNewWithExFun( spec : TlaSpec,
-                       exFun : TlaEx => TlaEx = { x => x }
+                       exFun : TlaEx => TlaEx = { x => x },
+                       postBodySideeffect : TlaEx => Unit = { _ => }
                      ) : TlaSpec = {
-    return getNewDecl( spec, getNewOperBody( _, getNewEx( _, exFun ) ) )
+    return getNewDecl( spec, getNewOperBody( _, getNewEx( _, exFun ), postBodySideeffect ) )
   }
 
   def sideeffectWithExFun( spec : TlaSpec,

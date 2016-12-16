@@ -58,17 +58,29 @@ package lir {
     val indent : Int = 4
     val tab : String = " " *indent
 
+    def duplicate() : TlaEx
 
   }
 
   /** just using a TLA+ value */
   case class ValEx(value: TlaValue) extends TlaEx{
     override def toNiceString( nTab : Int = 0): String = (tab *nTab) + "( ValEx: " + value.toString + " , id:" + ID + " )"
+
+    override def duplicate( ): ValEx = {
+      val ret = new ValEx( value )
+      ret.ID = ID
+      return ret
+    }
   }
 
   /** refering to a variable, constant, operator, etc. by a name. */
   case class NameEx(name: String) extends TlaEx{
     override def toNiceString( nTab: Int = 0 ): String = (tab *nTab) + "( NameEx: " + name + " , id: " + ID + " )"
+    override def duplicate( ): NameEx = {
+      val ret = new NameEx( name )
+      ret.ID = ID
+      return ret
+    }
   }
 
   /** applying an operator, including the one defined by OperFormalParam */
@@ -79,6 +91,12 @@ package lir {
         oper.name + ",\n" +
         args.map( (x : TlaEx) => x.toNiceString( nTab + 1 )).mkString(",\n") +
         ",\n" + (tab *nTab) + "  id: " + ID + "\n"+ (tab *nTab) + ")"
+    }
+
+    override def duplicate( ): OperEx = {
+      val ret = new OperEx( oper, args:_* )
+      ret.ID = ID
+      return ret
     }
 
   }
