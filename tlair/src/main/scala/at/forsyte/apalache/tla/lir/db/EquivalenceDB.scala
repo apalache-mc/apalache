@@ -32,14 +32,14 @@ object EquivalenceDB extends UIDB[ EID ]{
   override protected def evaluate( key: UID ): Option[ EID ] = {
 
     def subroutine( ex: TlaEx  ) : Int = {
-      SpecHandler.handleEx( ex, allocateEID )
+      SpecHandler.sideeffectEx( ex, allocateEID )
       allocator.getID( ex )
     }
     Identifier.getEx( key ).map( ex => EID( subroutine( ex ) ) )
   }
 
-  def processAll( spec : TlaSpec ) : TlaSpec = {
-    SpecHandler.handleWithExFun( spec, x => apply( x.ID ) )
+  def processAll( spec : TlaSpec ) : Unit = {
+    SpecHandler.sideeffectWithExFun( spec, x => apply( x.ID ) )
   }
 
   def areEquiv( k1 : UID, k2: UID ) : Boolean = this( k1 ) == this( k2 )

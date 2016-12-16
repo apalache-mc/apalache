@@ -38,9 +38,9 @@ package object Identifier {
     expressions.add( ex )
   }
 
-  def identify( spec : TlaSpec ) : TlaSpec = SpecHandler.handleWithExFun( spec, assignID )
-  def identify( decl : TlaDecl ) : TlaDecl = SpecHandler.handleOperBody( decl , SpecHandler.handleEx( _, assignID ) )
-  def identify( ex : TlaEx ) : TlaEx = SpecHandler.handleEx( ex, assignID )
+  def identify( spec : TlaSpec ) : Unit = SpecHandler.sideeffectWithExFun( spec, assignID )
+  def identify( decl : TlaDecl ) : Unit = SpecHandler.sideeffectOperBody( decl , SpecHandler.sideeffectEx( _, assignID ) )
+  def identify( ex : TlaEx ) : Unit = SpecHandler.sideeffectEx( ex, assignID )
 
 
 }

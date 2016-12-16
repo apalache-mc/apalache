@@ -127,6 +127,64 @@ class TestIDAllocation extends FunSuite{
       )
     )
 
+  val ABody =
+    OperEx(
+      TlaArithOper.plus,
+      NameEx( "x" ),
+      ValEx( TlaInt( 1 ) )
+    )
+  val plusOne =
+    new TlaOperDecl(
+      "A",
+      List(SimpleFormalParam( "x" )),
+      ABody
+    )
+
+  val emc2 =
+    new TlaOperDecl(
+      "Esub",
+      List(),
+      OperEx(
+        TlaArithOper.mult,
+        NameEx( "m" ),
+        OperEx(
+          TlaArithOper.exp,
+          NameEx( "c" ),
+          ValEx( TlaInt( 2 ) )
+        )
+      )
+    )
+
+  val importantTheorem =
+    new TlaOperDecl(
+      "thrm",
+      List(),
+      OperEx(
+        TlaBoolOper.and,
+//        OperEx(
+//          TlaOper.eq,
+//          NameEx( "E" ),
+//          NameEx( "Esub" )
+//        ),
+        OperEx(
+          TlaOper.eq,
+          ValEx( TlaInt( 1 ) ),
+          OperEx(
+            TlaOper.apply,
+            NameEx( "A" ),
+            ValEx( TlaInt( 0 ) )
+          )
+        )
+      )
+    )
+
+  val specOper = new TlaSpec(
+    "Replace operators",
+    List( plusOne, /*emc2,*/ importantTheorem)
+  )
+
+
+
 
   ignore("Check ID allocation for basic operator") {
 
@@ -138,7 +196,8 @@ class TestIDAllocation extends FunSuite{
     show( spec )
 
     println( "\nspecSnd after: \n" )
-    show( Identifier.identify( spec ) )
+    Identifier.identify( spec )
+    show( spec )
 
     Identifier.reset()
 
@@ -155,7 +214,9 @@ class TestIDAllocation extends FunSuite{
     show( spec )
 
     println( "\nspecSum after: \n" )
-    show( Identifier.identify( BasicSubstitutions.sub( spec ) ) )
+    val after = BasicSubstitutions.sub( spec )
+    Identifier.identify( after )
+    show( after )
 
     val spec2 = specBool
 
@@ -163,7 +224,9 @@ class TestIDAllocation extends FunSuite{
     show( spec2 )
 
     println( "\nspecBool after: \n" )
-    show( Identifier.identify( BasicSubstitutions.sub( spec2 ) ) )
+    val after2 =  BasicSubstitutions.sub( spec2 )
+    Identifier.identify( after2 )
+    show( after2 )
 
     Identifier.reset()
 
@@ -229,13 +292,6 @@ class TestIDAllocation extends FunSuite{
     EquivalenceDB.reset()
     OperatorDB.reset()
 
-    val spec2 = new TlaSpec( "attributes",
-      List(
-        TlaOperDecl( "A1", List( ), NameEx( "a" ) ),
-        TlaOperDecl( "A2", List( ), NameEx( "a" ) )
-      )
-    )
-
     val spec = specSnd
 
     Identifier.identify( spec )
@@ -257,7 +313,7 @@ class TestIDAllocation extends FunSuite{
 
   }
 
-  test( "Test operator DB substitution and recursion check" ){
+  ignore( "Test operator DB recursion check" ){
 
     OperatorDB.reset()
     EquivalenceDB.reset()
@@ -274,12 +330,12 @@ class TestIDAllocation extends FunSuite{
     EquivalenceDB.processAll( spec2 )
     OperatorSubstitution.extract( spec2 )
 
-    Identifier.print()
-    EquivalenceDB.print()
-    OperatorDB.print()
+//    Identifier.print()
+//    EquivalenceDB.print()
+//    OperatorDB.print()
 
-    assert( OperatorDB.isRecursive( EID( 7 ) ) == Some(true) )
-    assert( OperatorDB.isRecursive( EID( 14 ) ) == Some(false) )
+    assert( OperatorDB.isRecursive( EquivalenceDB.getFromEx( NameEx( "Op" ) ) ) == Some(true) )
+    assert( OperatorDB.isRecursive( EquivalenceDB.getFromEx( NameEx( "" ) ) ) == Some(false) )
     assert( OperatorDB.isRecursive( EID( -1 ) ) == None )
 
 
@@ -290,4 +346,47 @@ class TestIDAllocation extends FunSuite{
 
   }
 
-}
+  test( "Test operator DB substitution" ) {
+
+    OperatorDB.reset()
+    EquivalenceDB.reset()
+    Identifier.reset()
+
+    val spec = specOper
+
+
+
+    Identifier.identify( spec )
+    EquivalenceDB.processAll( spec )
+    OperatorSubstitution.extract( spec )
+
+//    Identifier.print()
+//    EquivalenceDB.print()
+//    OperatorDB.print()
+
+//    val retSpc = OperatorSubstitution.substituteOper( spec )
+
+    val ex = OperEx( TlaOper.apply, NameEx("A"), ValEx( TlaInt(0) ) )
+    Identifier.identify( ex )
+    EquivalenceDB( ex.ID )
+
+    println( ex )
+
+    println( OperatorSubstitution.applyReplace( ex ) )
+
+    println("--------------------------")
+
+//    val newex = OperatorSubstitution.applyReplace(
+//      Identifier.identify( ex  )
+//    )
+//    println( ex )
+
+//    println( retSpc.declarations.reverse.head )
+
+    OperatorDB.reset()
+    EquivalenceDB.reset()
+    Identifier.reset()
+
+  }
+
+  }

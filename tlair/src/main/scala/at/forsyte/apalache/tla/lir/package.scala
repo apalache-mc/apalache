@@ -22,7 +22,7 @@ package lir {
   case class TlaModuleDecl(val name: String) extends TlaDecl
 
   /** a spec, given by a list of declarations and a list of expressions */
-  class TlaSpec( val name: String, val declarations: List[TlaDecl] )
+  case class TlaSpec( val name: String, val declarations: List[TlaDecl] )
   
   
   /**

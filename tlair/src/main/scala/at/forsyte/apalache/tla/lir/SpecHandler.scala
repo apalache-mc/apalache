@@ -6,49 +6,62 @@ package at.forsyte.apalache.tla.lir
 
 package object SpecHandler {
 
-  def handleEx( ex : TlaEx, exFun : TlaEx => Unit = { _ => } ) : TlaEx = {
-    exFun( ex )
-    ex match {
-      case OperEx( oper, args @ _* ) =>
-        args.foreach(
-         handleEx( _ , exFun )
-        )
-      case _ =>
+  def getNewEx( ex : TlaEx, exFun : TlaEx => TlaEx = { x => x } ) : TlaEx = {
+    if( ex.isInstanceOf[OperEx] ){
+      val newargs = ex.asInstanceOf[OperEx].args.map(
+        getNewEx( _ , exFun )
+      )
+      val newEx = OperEx( ex.asInstanceOf[OperEx].oper, newargs: _*)
+      newEx.ID = ex.ID
+      return exFun( newEx )
     }
-    return ex
+    else return exFun(ex)
   }
 
-  def handleOperBody( decl : TlaDecl,
+  def sideeffectEx( ex : TlaEx, exFun : TlaEx => Unit = { _ => } ) : Unit = {
+    if( ex.isInstanceOf[OperEx] ){
+      ex.asInstanceOf[OperEx].args.map(
+        sideeffectEx( _ , exFun )
+      )
+    }
+    exFun(ex)
+  }
+
+  def getNewOperBody( decl : TlaDecl,
                       bodyFun : TlaEx => TlaEx
                     ) : TlaDecl = {
     decl match{
       case TlaOperDecl( name, params, body ) => {
-        return TlaOperDecl( name, params, bodyFun( body ) )
+        return decl.asInstanceOf[TlaOperDecl].copy( body = bodyFun( body ) )
       }
-      case _ =>
+      case _ => return decl
     }
-    return decl
   }
 
-  def handleDecl( spec: TlaSpec, declFun : TlaDecl => TlaDecl ) : TlaSpec = {
+  def sideeffectOperBody( decl : TlaDecl,
+                          bodyFun : TlaEx => Unit
+                        ) : Unit = {
+    if( decl.isInstanceOf[TlaOperDecl] ) bodyFun( decl.asInstanceOf[TlaOperDecl].body )
+  }
+
+  def getNewDecl( spec: TlaSpec, declFun : TlaDecl => TlaDecl ) : TlaSpec = {
+    return spec.copy( declarations = spec.declarations.map( declFun ) )
+  }
+
+  def sideeffectDecl( spec: TlaSpec, declFun : TlaDecl => Unit ) : Unit = {
     spec.declarations.map( declFun )
-    return spec
   }
 
-  def handleWithExFun( spec : TlaSpec,
-                       exFun : TlaEx => Unit = { _ => }
+  def getNewWithExFun( spec : TlaSpec,
+                       exFun : TlaEx => TlaEx = { x => x }
                      ) : TlaSpec = {
-    return handleDecl( spec, handleOperBody( _, handleEx( _, exFun ) ) )
+    return getNewDecl( spec, getNewOperBody( _, getNewEx( _, exFun ) ) )
   }
 
-  def handleWithOperDeclFun( spec : TlaSpec,
-                             declFun : TlaOperDecl => TlaOperDecl
-                           ) : TlaSpec = {
-    return handleDecl( spec, (x : TlaDecl) => x match {
-      case TlaOperDecl( _, _, _ ) => declFun( x.asInstanceOf[TlaOperDecl] )
-      case _ => x
-    })
-
+  def sideeffectWithExFun( spec : TlaSpec,
+                           exFun : TlaEx => Unit = { _ => }
+                         ) : Unit = {
+    sideeffectDecl( spec, sideeffectOperBody( _, sideeffectEx( _, exFun ) ) )
   }
 
 }
