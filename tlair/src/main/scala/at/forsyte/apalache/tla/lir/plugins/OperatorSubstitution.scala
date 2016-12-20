@@ -104,6 +104,8 @@ package object OperatorSubstitution {
           params.zip(args).foreach(
             pair => body = replaceAll( body, NameEx( pair._1.name ), pair._2 )
           )
+          Identifier.identify( body )
+          OriginDB.set(body.ID, tlaEx.ID)
           return body
         }
       }

@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
-import at.forsyte.apalache.tla.lir.plugins.{BasicSubstitutions, Identifier, OperatorDB, OperatorSubstitution}
+import at.forsyte.apalache.tla.lir.plugins._
 import at.forsyte.apalache.tla.lir.db.EquivalenceDB
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -192,14 +192,16 @@ class TestIDAllocation extends FunSuite{
     OperatorDB.reset()
     EquivalenceDB.reset()
     Identifier.reset()
+    OriginDB.reset()
 
     f()
   }
 
   def printDBs(): Unit ={
-        Identifier.print()
-        EquivalenceDB.print()
-        OperatorDB.print()
+    Identifier.print()
+    EquivalenceDB.print()
+    OperatorDB.print()
+    OriginDB.print()
   }
 
   def printSpec( spec:TlaSpec ): Unit ={
@@ -439,6 +441,9 @@ class TestIDAllocation extends FunSuite{
       //    println( OperatorSubstitution.applyReplace( ex ) )
 
       println( "--------------------------" )
+
+      OriginDB.print()
+
 
       //    val newex = OperatorSubstitution.applyReplace(
       //      Identifier.identify( ex  )
