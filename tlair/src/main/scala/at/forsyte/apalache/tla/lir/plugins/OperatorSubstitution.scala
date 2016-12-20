@@ -17,7 +17,7 @@ object OperatorDB extends DB[ EID, ( List[FormalParam], EID ) ]{
 
   def body( eid: EID ) : Option[ TlaEx ] =
     apply( eid ).map(
-      x => EquivalenceDB.getEx( x._2 )
+      x => EquivalenceDB.getEx( x._2 ).map( _.duplicate( identified = false ) )
     ).getOrElse( None )
 
 
@@ -28,15 +28,14 @@ object OperatorDB extends DB[ EID, ( List[FormalParam], EID ) ]{
     }
 
     var recursive : Boolean = false
-    def checkForSelf( tlaEx: TlaEx ) : TlaEx ={
+    def checkForSelf( tlaEx: TlaEx ) : Unit ={
       tlaEx match{
         case NameEx( name ) => if( name == opName ) recursive = true
         case _ =>
       }
-      return tlaEx
     }
     return body( eid ).map(
-      { x => SpecHandler.getNewEx( x, checkForSelf ); recursive }
+      { x => SpecHandler.sideeffectEx( x, checkForSelf ); recursive }
     )
 
   }
@@ -74,7 +73,9 @@ package object OperatorSubstitution {
 
   protected def replaceAll( tlaEx : TlaEx, replacedEx: TlaEx, newEx: TlaEx) : TlaEx = {
     def swap( arg: TlaEx) : TlaEx =
-      if ( arg == replacedEx ) return newEx.duplicate()
+      if ( arg == replacedEx ) {
+        return newEx.duplicate( identified = false )
+      }
       else return arg.duplicate()
 
     return SpecHandler.getNewEx( tlaEx, swap )
@@ -82,40 +83,40 @@ package object OperatorSubstitution {
 
   }
 
-  trait ArityMismatch extends Exception
+  class ArityMismatch extends Exception
 
-  def applyReplace( tlaEx: TlaEx ) : TlaEx = {
+  protected def applyReplace( tlaEx: TlaEx ) : TlaEx = {
     def getBodyOrSelf( ex: TlaEx ) =
       OperatorDB.body( EquivalenceDB.getFromEx( ex ) ).getOrElse( ex )
     tlaEx match {
       case NameEx( _ ) => {
-        val ret = getBodyOrSelf( tlaEx )
-        if (ret != tlaEx) Identifier.identify(ret)
-        return ret.duplicate()
+        return getBodyOrSelf( tlaEx )
       }
       case OperEx( TlaOper.apply, oper, args@_* ) => {
         val mapval = OperatorDB( EquivalenceDB.getFromEx( oper ) )
-        if (mapval == None) return tlaEx.duplicate()
+        if (mapval == None) return tlaEx
         var body = EquivalenceDB.getEx( mapval.get._2 ).get
         val params = mapval.get._1
         if( params.size != args.size ){
-          throw new ArityMismatch {} // arity mismatch
+          throw new ArityMismatch // arity mismatch
         }
         else{
           params.zip(args).foreach(
             pair => body = replaceAll( body, NameEx( pair._1.name ), pair._2 )
           )
-          return body.duplicate()
+          return body
         }
       }
-      case _ => return tlaEx.duplicate()
+      case _ => return tlaEx
     }
 
   }
 
   // Non- recursive assumed
   def substituteOper( spec: TlaSpec ) : TlaSpec = {
-    return SpecHandler.getNewWithExFun(spec, applyReplace, Identifier.identify )
+    val retspc = SpecHandler.getNewWithExFun( spec.duplicate(), applyReplace )
+    Identifier.identify( retspc )
+    return retspc
   }
 
 

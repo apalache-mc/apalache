@@ -7,12 +7,12 @@ package at.forsyte.apalache.tla.lir
 package object SpecHandler {
 
   def getNewEx( ex : TlaEx, exFun : TlaEx => TlaEx = { x => x } ) : TlaEx = {
-    val newEx = exFun(ex)
+    val newEx = exFun( ex )
     if( newEx.isInstanceOf[OperEx] ){
-      val newargs = newEx.asInstanceOf[OperEx].args.map(
-        getNewEx( _ , exFun )
-      )
-      return OperEx( newEx.asInstanceOf[OperEx].oper, newargs: _*)
+      val oldargs =  newEx.asInstanceOf[OperEx].args
+      val newargs = oldargs.map( getNewEx( _ , exFun ) )
+      if( newargs == oldargs ) return newEx
+      else return OperEx( newEx.asInstanceOf[OperEx].oper, newargs: _*)
     }
     else return newEx
   }

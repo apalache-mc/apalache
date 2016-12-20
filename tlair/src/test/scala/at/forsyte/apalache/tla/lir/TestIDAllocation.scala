@@ -159,8 +159,8 @@ class TestIDAllocation extends FunSuite{
     new TlaOperDecl(
       "thrm",
       List(),
-      OperEx(
-        TlaBoolOper.and,
+//      OperEx(
+//        TlaBoolOper.and,
 //        OperEx(
 //          TlaOper.eq,
 //          NameEx( "E" ),
@@ -168,14 +168,18 @@ class TestIDAllocation extends FunSuite{
 //        ),
         OperEx(
           TlaOper.eq,
-          ValEx( TlaInt( 1 ) ),
+          OperEx(
+            TlaArithOper.minus,
+            ValEx( TlaInt( 2 ) ),
+            ValEx( TlaInt( 1 ) )
+          ),
           OperEx(
             TlaOper.apply,
             NameEx( "A" ),
             ValEx( TlaInt( 0 ) )
           )
         )
-      )
+//      )
     )
 
   val specOper = new TlaSpec(
@@ -184,6 +188,24 @@ class TestIDAllocation extends FunSuite{
   )
 
 
+  def sterileRun( f: () => Unit ): Unit ={
+    OperatorDB.reset()
+    EquivalenceDB.reset()
+    Identifier.reset()
+
+    f()
+  }
+
+  def printDBs(): Unit ={
+        Identifier.print()
+        EquivalenceDB.print()
+        OperatorDB.print()
+  }
+
+  def printSpec( spec:TlaSpec ): Unit ={
+    println("\n" + spec.name + ":\n")
+    spec.declarations.foreach( println )
+  }
 
 
   ignore("Check ID allocation for basic operator") {
@@ -262,8 +284,8 @@ class TestIDAllocation extends FunSuite{
     val a1 = NameEx( "a" )
     val a2 = NameEx( "a" )
 
-    a1.ID = UID( 99 )
-    a2.ID = UID( 42 )
+    a1 setID UID( 99 )
+    a2 setID UID( 42 )
 
     val spec = new TlaSpec( "attributes", List( TlaOperDecl( "A1", List( ), a1 ), TlaOperDecl( "A2", List( ), a2 ) ) )
 
@@ -346,52 +368,87 @@ class TestIDAllocation extends FunSuite{
 
   }
 
+  ignore( "Test deep copy" ){
+    def copytest(): Unit ={
+      val spec1 = specSnd
+      val spec2 = specSnd
+
+      println("No deep copy:\n")
+
+      Identifier.identify( spec1 )
+
+      println("Spec1 before")
+      printSpec( spec1 )
+
+      Identifier.identify( spec2 )
+
+      println("Spec1 after")
+      printSpec(spec1)
+      println("Spec2")
+      printSpec(spec2)
+
+      println("Deep copy:\n")
+
+      val spec3 = specSnd.duplicate()
+      Identifier.identify( spec3 )
+
+      println("Spec1")
+
+      printSpec(spec1)
+
+      println("Spec2")
+      printSpec(spec2)
+
+      println("Spec3")
+      printSpec(spec3)
+
+    }
+
+    sterileRun( copytest )
+  }
+
   test( "Test operator DB substitution" ) {
 
-    OperatorDB.reset()
-    EquivalenceDB.reset()
-    Identifier.reset()
+    def subtest() : Unit = {
+      val spec = specOper.duplicate()
 
-    val spec = specOper
-
-
-    Identifier.identify( spec )
-    EquivalenceDB.processAll( spec )
-    OperatorSubstitution.extract( spec )
-
-    println( spec.declarations.reverse.head )
-
-    //    Identifier.print()
-//    EquivalenceDB.print()
-//    OperatorDB.print()
-
-    val retSpc = OperatorSubstitution.substituteOper( spec )
-
-    println( spec.declarations.reverse.head )
-
-    println( retSpc.declarations.reverse.head )
-
-//
-//    val ex = OperEx( TlaOper.apply, NameEx("A"), ValEx( TlaInt(0) ) )
-//    Identifier.identify( ex )
-//    EquivalenceDB( ex.ID )
-//
-//    println( ex )
-//
-//    println( OperatorSubstitution.applyReplace( ex ) )
-
-    println("--------------------------")
-
-//    val newex = OperatorSubstitution.applyReplace(
-//      Identifier.identify( ex  )
-//    )
-//    println( ex )
+      Identifier.identify( spec )
+      EquivalenceDB.processAll( spec )
+      OperatorSubstitution.extract( spec )
 
 
-    OperatorDB.reset()
-    EquivalenceDB.reset()
-    Identifier.reset()
+      //      printSpec( spec )
 
+      //    Identifier.print()
+      //    EquivalenceDB.print()
+      //    OperatorDB.print()
+
+      val retSpc = OperatorSubstitution.substituteOper( spec )
+
+      printSpec( spec )
+
+      printSpec( retSpc )
+
+      //
+      //    val ex = OperEx( TlaOper.apply, NameEx("A"), ValEx( TlaInt(0) ) )
+      //    Identifier.identify( ex )
+      //    EquivalenceDB( ex.ID )
+      //
+      //    println( ex )
+      //
+      //    println( OperatorSubstitution.applyReplace( ex ) )
+
+      println( "--------------------------" )
+
+      //    val newex = OperatorSubstitution.applyReplace(
+      //      Identifier.identify( ex  )
+      //    )
+      //    println( ex )
+
+    }
+
+
+    sterileRun( subtest )
   }
 
   }

@@ -27,7 +27,9 @@ object EquivalenceDB extends UIDB[ EID ]{
   }
 
   def getFromEx( tlaEx : TlaEx ) : EID = EID( allocator.getID( tlaEx ) )
-  def getEx( eid : EID ) : Option[TlaEx] = Option( allocator.getVal( eid.id ) )
+
+  /** returns unidentified expression */
+  def getEx( eid : EID ) : Option[TlaEx] = Option( allocator.getVal( eid.id ) ).map( _.duplicate( identified = false ) )
 
   override protected def evaluate( key: UID ): Option[ EID ] = {
 

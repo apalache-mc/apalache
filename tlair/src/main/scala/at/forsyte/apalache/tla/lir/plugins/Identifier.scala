@@ -34,8 +34,10 @@ package object Identifier {
   def size() : Int = expressions.size()
 
   private def assignID( ex: TlaEx ) : Unit = {
-    ex.ID = UID( expressions.size() )
-    expressions.add( ex )
+    if( ex.ID == UID( -1 ) ){
+      ex.setID( UID( expressions.size() ) )
+      expressions.add( ex )
+    }
   }
 
   def identify( spec : TlaSpec ) : Unit = SpecHandler.sideeffectWithExFun( spec, assignID )

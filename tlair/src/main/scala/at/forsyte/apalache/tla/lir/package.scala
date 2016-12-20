@@ -10,19 +10,30 @@ package lir {
   /** a declaration, e.g., of a variable, constant, or an operator */
   abstract class TlaDecl {
     def name: String
+    def duplicate(): TlaDecl
   }
   
   /** a constant as defined by CONSTANT */
-  case class TlaConstDecl(val name: String) extends TlaDecl
+  case class TlaConstDecl(val name: String) extends TlaDecl{
+    override def duplicate( ): TlaConstDecl =  TlaConstDecl( name )
+  }
   
   /** a variable as defined by VARIABLE */
-  case class TlaVarDecl(val name: String) extends TlaDecl
+  case class TlaVarDecl(val name: String) extends TlaDecl{
+    override def duplicate( ): TlaVarDecl =  TlaVarDecl( name )
+  }
 
   /** a module included by EXTENDS */
-  case class TlaModuleDecl(val name: String) extends TlaDecl
+  case class TlaModuleDecl(val name: String) extends TlaDecl{
+    override def duplicate( ): TlaModuleDecl =  TlaModuleDecl( name )
+  }
 
   /** a spec, given by a list of declarations and a list of expressions */
-  case class TlaSpec( val name: String, val declarations: List[TlaDecl] )
+  case class TlaSpec( val name: String, val declarations: List[TlaDecl] ){
+    def duplicate() : TlaSpec = {
+      return TlaSpec( name, declarations.map( _.duplicate() ) )
+    }
+  }
   
   
   /**
@@ -48,17 +59,40 @@ package lir {
       },
       "Formal parameters should have fixed arity")
   }
+
+
+  trait Identifiable{
+
+    class IDReallocationError extends Exception
+
+    protected var m_ID : UID = UID( -1 )
+    protected var canSet: Boolean = true
+    def setID( newID: UID ) = {
+      if( canSet ) m_ID = {
+        canSet = false
+        newID
+      }
+      else throw new IDReallocationError
+    }
+    def ID : UID = m_ID
+
+    def forget(): Unit ={
+      m_ID = UID( -1 )
+      canSet = true
+    }
+
+  }
   
   /** An abstract TLA+ expression */
-  abstract class TlaEx{
-    var ID : UID = UID( -1 )
+  abstract class TlaEx extends  Identifiable{
+
     def toNiceString( nTab: Int = 0) = ""
     override def toString: String = toNiceString()
 
     val indent : Int = 4
     val tab : String = " " *indent
 
-    def duplicate() : TlaEx
+    def duplicate( identified: Boolean = true ) : TlaEx
 
   }
 
@@ -66,9 +100,12 @@ package lir {
   case class ValEx(value: TlaValue) extends TlaEx{
     override def toNiceString( nTab : Int = 0): String = (tab *nTab) + "( ValEx: " + value.toString + " , id:" + ID + " )"
 
-    override def duplicate( ): ValEx = {
+    override def duplicate( identified: Boolean = true ): ValEx = {
       val ret = new ValEx( value )
-      ret.ID = ID
+      if (identified) {
+        ret.m_ID = m_ID
+        ret.canSet = canSet
+      }
       return ret
     }
   }
@@ -76,14 +113,20 @@ package lir {
   /** refering to a variable, constant, operator, etc. by a name. */
   case class NameEx(name: String) extends TlaEx{
     override def toNiceString( nTab: Int = 0 ): String = (tab *nTab) + "( NameEx: " + name + " , id: " + ID + " )"
-    override def duplicate( ): NameEx = {
+    override def duplicate( identified: Boolean = true ): NameEx = {
       val ret = new NameEx( name )
-      ret.ID = ID
+      if (identified) {
+        ret.m_ID = m_ID
+        ret.canSet = canSet
+      }
       return ret
     }
   }
 
   /** applying an operator, including the one defined by OperFormalParam */
+
+  /** NOTE: Scala does not auto-generate copy for OperEx, because args are variable */
+
   case class OperEx(oper: TlaOper, args: TlaEx*) extends TlaEx {
     require(oper.isCorrectArity(args.size), "unexpected arity %d".format(args.size))
     override def toNiceString( nTab : Int = 0 ): String = {
@@ -93,10 +136,18 @@ package lir {
         ",\n" + (tab *nTab) + "  id: " + ID + "\n"+ (tab *nTab) + ")"
     }
 
-    override def duplicate( ): OperEx = {
-      val ret = new OperEx( oper, args:_* )
-      ret.ID = ID
+    override def duplicate( identified: Boolean = true ): OperEx = {
+      val ret = new OperEx( oper, args.map( _.duplicate( identified ) ) : _* ) // deep copy
+      if (identified) {
+        ret.m_ID = m_ID
+        ret.canSet = canSet
+      }
       return ret
+    }
+
+    def deepForget( ): Unit = {
+      forget()
+      args.foreach( _.forget )
     }
 
   }
@@ -116,6 +167,10 @@ package lir {
         override def name: String = TlaOperDecl.this.name
       }
     }
+
+    override def duplicate( ): TlaOperDecl =  TlaOperDecl( name, formalParams, body.duplicate() )
+
+
   }
 
 /**
