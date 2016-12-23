@@ -17,7 +17,7 @@ object OperatorDB extends DB[ EID, ( List[FormalParam], EID ) ]{
 
   def body( eid: EID ) : Option[ TlaEx ] =
     apply( eid ).map(
-      x => EquivalenceDB.getEx( x._2 ).map( _.duplicate( identified = false ) )
+      x => EquivalenceDB.getEx( x._2 ).map( _.deepCopy( identified = false ) )
     ).getOrElse( None )
 
 
@@ -44,7 +44,6 @@ object OperatorDB extends DB[ EID, ( List[FormalParam], EID ) ]{
 
 object OriginDB extends DB[ UID, UID ] {
   override val name = "OriginDB"
-
 }
 
 
@@ -74,9 +73,9 @@ package object OperatorSubstitution {
   protected def replaceAll( tlaEx : TlaEx, replacedEx: TlaEx, newEx: TlaEx) : TlaEx = {
     def swap( arg: TlaEx) : TlaEx =
       if ( arg == replacedEx ) {
-        return newEx.duplicate( identified = false )
+        return newEx.deepCopy( identified = false )
       }
-      else return arg.duplicate()
+      else return arg.deepCopy()
 
     return SpecHandler.getNewEx( tlaEx, swap )
 
@@ -116,7 +115,7 @@ package object OperatorSubstitution {
 
   // Non- recursive assumed
   def substituteOper( spec: TlaSpec ) : TlaSpec = {
-    val retspc = SpecHandler.getNewWithExFun( spec.duplicate(), applyReplace )
+    val retspc = SpecHandler.getNewWithExFun( spec.deepCopy(), applyReplace )
     Identifier.identify( retspc )
     return retspc
   }

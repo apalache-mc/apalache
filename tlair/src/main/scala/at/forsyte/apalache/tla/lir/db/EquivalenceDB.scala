@@ -29,7 +29,7 @@ object EquivalenceDB extends UIDB[ EID ]{
   def getFromEx( tlaEx : TlaEx ) : EID = EID( allocator.getID( tlaEx ) )
 
   /** returns unidentified expression */
-  def getEx( eid : EID ) : Option[TlaEx] = Option( allocator.getVal( eid.id ) ).map( _.duplicate( identified = false ) )
+  def getEx( eid : EID ) : Option[TlaEx] = Option( allocator.getVal( eid.id ) ).map( _.deepCopy( identified = false ) )
 
   override protected def evaluate( key: UID ): Option[ EID ] = {
 
@@ -44,20 +44,25 @@ object EquivalenceDB extends UIDB[ EID ]{
     SpecHandler.sideeffectWithExFun( spec, x => apply( x.ID ) )
   }
 
-  def areEquiv( k1 : UID, k2: UID ) : Boolean = this( k1 ) == this( k2 )
+  def areEquiv( k1: UID, k2: UID ) : Boolean = this( k1 ) == this( k2 )
 
   def getRep( eid: EID ) : Option[ UID ] = {
     return getEqClass( eid ).map( _.head )
   }
 
   def getEqClass( key: UID ) : Option[ Set[ UID ] ] = {
-    return this( key ).map( ( eid : EID ) => eqClasses.elementAt( eid.id ) )
+    return this( key ).map( getEqClass ).getOrElse(None)
   }
   def getEqClass( eid: EID ) : Option[ Set[ UID ] ] = {
     val id = eid.id
     if( id < 0 || id >= eqClasses.size() ) return None
     else return Some( eqClasses.elementAt( id ) )
   }
+  def getEqClass( tlaEx: TlaEx ) : Option[ Set[ UID ] ] = {
+    return getEqClass( getFromEx( tlaEx ) )
+  }
+
+  def nClasses() : Int = eqClasses.size()
 
   override def reset() = {
     super.reset()

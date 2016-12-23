@@ -20,7 +20,7 @@ package object SpecHandler {
   def sideeffectEx( ex : TlaEx, exFun : TlaEx => Unit = { _ => } ) : Unit = {
     exFun(ex)
     if( ex.isInstanceOf[OperEx] ){
-      ex.asInstanceOf[OperEx].args.map(
+      ex.asInstanceOf[OperEx].args.foreach(
         sideeffectEx( _ , exFun )
       )
     }
@@ -54,7 +54,7 @@ package object SpecHandler {
   }
 
   def sideeffectDecl( spec: TlaSpec, declFun : TlaDecl => Unit ) : Unit = {
-    spec.declarations.map( declFun )
+    spec.declarations.foreach( declFun )
   }
 
   def getNewWithExFun( spec : TlaSpec,

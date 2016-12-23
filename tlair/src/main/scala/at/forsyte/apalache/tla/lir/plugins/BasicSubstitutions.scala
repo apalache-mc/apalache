@@ -52,7 +52,7 @@ package object BasicSubstitutions {
     }
   }
 
-  def performOnEx( f: TlaEx => TlaEx, spec : TlaSpec ) : TlaSpec = {
+  def performOnEx( spec : TlaSpec , f: TlaEx => TlaEx ) : TlaSpec = {
     new TlaSpec( spec.name,
       spec.declarations.map(
         (x : TlaDecl) => x match{
@@ -63,7 +63,7 @@ package object BasicSubstitutions {
     )
   }
 
-  def sub( spec : TlaSpec ) : TlaSpec = performOnEx( substitute, spec )
+  def sub( spec : TlaSpec ) : TlaSpec = performOnEx( spec, substitute )
 
 
 }

@@ -3,12 +3,15 @@ package at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
+import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir.plugins._
 import at.forsyte.apalache.tla.lir.db.EquivalenceDB
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
+
+import scala.collection.mutable.Set
+import Identifiable.IDReallocationError
 
 /**
   * Created by jkukovec on 11/30/16.
@@ -51,7 +54,7 @@ class TestIDAllocation extends FunSuite{
                                              NameEx( "sBit" )
                                      ),
                                      OperEx( TlaArithOper.minus,
-                                             ValEx( TlaInt( 1 ) ),
+                                             IntEx( 1 ),
                                              NameEx( "sBit" )
                                      )
                              ),
@@ -81,8 +84,8 @@ class TestIDAllocation extends FunSuite{
     )
 
   val sum = OperEx( TlaOper.eq,
-    OperEx( TlaArithOper.plus, ValEx( TlaInt( 4 ) ), ValEx( TlaInt( 0 ) ) ),
-    OperEx( TlaArithOper.plus, ValEx( TlaInt( 2 ) ), ValEx( TlaInt( 2 ) ) )
+    OperEx( TlaArithOper.plus, IntEx( 4 ), IntEx( 0 ) ),
+    OperEx( TlaArithOper.plus, IntEx( 2 ), IntEx( 2 ) )
   )
 
   val redundantbool = OperEx( TlaOper.eq,
@@ -92,8 +95,8 @@ class TestIDAllocation extends FunSuite{
 
 
   val specSnd = new TlaSpec("Test spec.", List(SndNewValue))
-  val specSum = new TlaSpec( "someSum", List( TlaOperDecl( "", List( ), sum ) ) )
-  val specBool = new TlaSpec( "boolSimplification", List( TlaOperDecl( "", List( ), redundantbool ) ) )
+  val specSum = new TlaSpec( "someSum", List( TlaOperDecl( "sum", List( ), sum ) ) )
+  val specBool = new TlaSpec( "boolSimplification", List( TlaOperDecl( "redundant bool", List( ), redundantbool ) ) )
   val specRec =
     new TlaSpec(
       "Recursive arity1",
@@ -106,19 +109,19 @@ class TestIDAllocation extends FunSuite{
             OperEx(
               TlaOper.eq,
               NameEx( "x" ),
-              ValEx( TlaInt( 0 ) )
+              IntEx( 0 )
             ),
-            ValEx( TlaInt( 0 ) ),
+            IntEx( 0 ),
             OperEx(
               TlaArithOper.plus,
-              ValEx( TlaInt( 1 ) ),
+              IntEx( 1 ),
               OperEx(
                 TlaOper.apply,
                 NameEx( "Op" ),
                 OperEx(
                   TlaArithOper.minus,
                   NameEx( "x" ),
-                  ValEx( TlaInt( 1 ) )
+                  IntEx( 1 )
                 )
               )
             )
@@ -131,7 +134,7 @@ class TestIDAllocation extends FunSuite{
     OperEx(
       TlaArithOper.plus,
       NameEx( "x" ),
-      ValEx( TlaInt( 1 ) )
+      IntEx( 1 )
     )
   val plusOne =
     new TlaOperDecl(
@@ -150,7 +153,7 @@ class TestIDAllocation extends FunSuite{
         OperEx(
           TlaArithOper.exp,
           NameEx( "c" ),
-          ValEx( TlaInt( 2 ) )
+          IntEx( 2 )
         )
       )
     )
@@ -170,13 +173,17 @@ class TestIDAllocation extends FunSuite{
           TlaOper.eq,
           OperEx(
             TlaArithOper.minus,
-            ValEx( TlaInt( 2 ) ),
-            ValEx( TlaInt( 1 ) )
+            IntEx( 2 ),
+            IntEx( 1 )
           ),
           OperEx(
-            TlaOper.apply,
-            NameEx( "A" ),
-            ValEx( TlaInt( 0 ) )
+            TlaArithOper.plus,
+            OperEx(
+              TlaOper.apply,
+              NameEx( "A" ),
+              IntEx( 0 )
+            ),
+            IntEx( 0 )
           )
         )
 //      )
@@ -210,199 +217,236 @@ class TestIDAllocation extends FunSuite{
   }
 
 
-  ignore("Check ID allocation for basic operator") {
+  test("Check ID allocation for basic operator") {
 
-    val spec = specSnd
+    def idtest() {
+      val spec = specSnd.deepCopy()
 
-    Identifier.reset()
+//      printSpec( spec )
 
-    println( "\nspecSnd before: \n" )
-    show( spec )
+      Identifier.identify( spec )
+//      printSpec( spec )
 
-    println( "\nspecSnd after: \n" )
-    Identifier.identify( spec )
-    show( spec )
+      var existsUnassigned = false
+      var nInvoked = 0
+      val uidset : Set[UID] = Set()
+      def checkForUA( tlaEx: TlaEx ): Unit = {
+        if( tlaEx.ID == UID( -1 ) ) existsUnassigned = true
+        else{
+          nInvoked = nInvoked + 1
+          uidset.add( tlaEx.ID )
+        }
+      }
+      SpecHandler.sideeffectWithExFun( spec, checkForUA )
 
-    Identifier.reset()
+      assert( !existsUnassigned && uidset.size == nInvoked )
 
-
-  }
-
-  ignore("Check basic substitution") {
-
-    val spec = specSum
-
-    Identifier.reset()
-
-    println( "\nspecSum before:\n" )
-    show( spec )
-
-    println( "\nspecSum after: \n" )
-    val after = BasicSubstitutions.sub( spec )
-    Identifier.identify( after )
-    show( after )
-
-    val spec2 = specBool
-
-    println( "\nspecBool before:\n" )
-    show( spec2 )
-
-    println( "\nspecBool after: \n" )
-    val after2 =  BasicSubstitutions.sub( spec2 )
-    Identifier.identify( after2 )
-    show( after2 )
-
-    Identifier.reset()
-
-
-  }
-
-  ignore("Check equivalence") {
-
-    val spec = specSnd
-    Identifier.reset()
-
-    Identifier.identify( spec )
-
-    println( "\nspec: \n" )
-    show( specSnd )
-
-    EquivalenceDB.processAll( spec )
-
-    println("\nEquivalence IDs/classes: \n")
-    for( a <- 0 until EquivalenceDB.size() ){
-      println( UID( a ) +  " -> " +  EquivalenceDB( UID( a ) ).getOrElse( None ) + " , " + EquivalenceDB.getEqClass( UID( a ) ).getOrElse( None ))
     }
 
-    EquivalenceDB.reset()
+    sterileRun( idtest )
+
 
   }
 
-  ignore( "check attributes" ){
+  test("Check basic substitution") {
 
-    EquivalenceDB.reset()
-    Identifier.reset()
+    def bSub() {
+      val spec = specSum.deepCopy( )
 
-    val a1 = NameEx( "a" )
-    val a2 = NameEx( "a" )
+//      printSpec( spec )
+      val after = BasicSubstitutions.sub( spec )
+//      Identifier.identify( after )
+//      printSpec( after )
 
-    a1 setID UID( 99 )
-    a2 setID UID( 42 )
+      assert(
+        after.declarations.size == 1
+        &&
+        after.declarations.head == TlaOperDecl( "sum", Nil , ValEx( TlaTrue ) )
+      )
 
-    val spec = new TlaSpec( "attributes", List( TlaOperDecl( "A1", List( ), a1 ), TlaOperDecl( "A2", List( ), a2 ) ) )
+      val spec2 = specBool.deepCopy()
 
-    Identifier.identify( spec )
+//      printSpec( spec2 )
 
 
-    EquivalenceDB.processAll( spec )
+      val after2 = BasicSubstitutions.sub( spec2 )
+//      Identifier.identify( after2 )
+//      printSpec( after2 )
 
-    println( EquivalenceDB.size() )
+      assert(
+        after2.declarations.size == 1
+        &&
+        after2.declarations.head == TlaOperDecl( "redundant bool", Nil , ValEx( TlaTrue ) )
+      )
 
-    println("\nEquivalence IDs/classes: \n")
-    for( a <- 0 until EquivalenceDB.size() ){
-      println( UID( a ) +  " -> " +  EquivalenceDB( UID( a ) ).getOrElse( None ) + " , " + EquivalenceDB.getEqClass( UID( a ) ).getOrElse( None ))
+
     }
 
-    println( EquivalenceDB.getEx( EID( 0 ) ) )
-
-    EquivalenceDB.reset()
-    Identifier.reset()
+    sterileRun( bSub )
 
   }
 
-  ignore( "Test operator DB" ){
+  test("Check equivalence") {
 
-    Identifier.reset()
-    EquivalenceDB.reset()
-    OperatorDB.reset()
+    def eqCheck() {
+      val spec = specSnd.deepCopy()
 
-    val spec = specSnd
+      Identifier.identify( spec )
 
-    Identifier.identify( spec )
+//      printSpec( spec )
 
-    Identifier.print()
+      EquivalenceDB.processAll( spec )
 
-    EquivalenceDB.processAll( spec )
+//      println("\nEquivalence IDs/classes: \n")
+//      for( a <- 0 until EquivalenceDB.size() ){
+//        println( UID( a ) +  " -> " +  EquivalenceDB( UID( a ) ).getOrElse( None ) + " , " + EquivalenceDB.getEqClass( UID( a ) ).getOrElse( None ))
+//      }
 
-    OperatorSubstitution.extract( spec )
+      var okAll = true
 
+      def okEQC( tlaEx: TlaEx ) : Unit = {
+        val eqc = EquivalenceDB.getEqClass( tlaEx )
+        okAll = (
+                okAll
+                &&
+                eqc.nonEmpty
+                &&
+                eqc.get.nonEmpty
+                &&
+                eqc.get.forall( Identifier.getEx( _ ).contains( tlaEx ) )
+                )
+      }
 
-    Identifier.print()
-    EquivalenceDB.print()
-    OperatorDB.print()
+      SpecHandler.sideeffectWithExFun( spec, okEQC )
 
-    OperatorDB.reset()
-    EquivalenceDB.reset()
-    Identifier.reset()
-
-  }
-
-  ignore( "Test operator DB recursion check" ){
-
-    OperatorDB.reset()
-    EquivalenceDB.reset()
-    Identifier.reset()
-
-    val spec = specRec
-    val spec2 = specSum
-
-    Identifier.identify( spec )
-    EquivalenceDB.processAll( spec )
-    OperatorSubstitution.extract( spec )
-
-    Identifier.identify( spec2 )
-    EquivalenceDB.processAll( spec2 )
-    OperatorSubstitution.extract( spec2 )
-
-//    Identifier.print()
-//    EquivalenceDB.print()
-//    OperatorDB.print()
-
-    assert( OperatorDB.isRecursive( EquivalenceDB.getFromEx( NameEx( "Op" ) ) ) == Some(true) )
-    assert( OperatorDB.isRecursive( EquivalenceDB.getFromEx( NameEx( "" ) ) ) == Some(false) )
-    assert( OperatorDB.isRecursive( EID( -1 ) ) == None )
+      assert( okAll )
 
 
-    OperatorDB.reset()
-    EquivalenceDB.reset()
-    Identifier.reset()
-
+    }
+    sterileRun( eqCheck )
 
   }
 
-  ignore( "Test deep copy" ){
-    def copytest(): Unit ={
-      val spec1 = specSnd
-      val spec2 = specSnd
+  test( "Check attributes" ){
 
-      println("No deep copy:\n")
+    def checkAtt() {
 
-      Identifier.identify( spec1 )
+      val a1 = NameEx( "a" )
+      val a2 = NameEx( "a" )
 
-      println("Spec1 before")
-      printSpec( spec1 )
+      val spec =
+        TlaSpec(
+          "attributes",
+          List(
+            TlaOperDecl( "A1", List( ), a1 ),
+            TlaOperDecl( "A2", List( ), a2 )
+          )
+        )
+
+      try {
+        Identifier.identify( spec )
+
+        a1 setID UID( 99 )
+        a2 setID UID( 42 )
+
+        assert( false )
+      }
+      catch {
+        case err: IDReallocationError =>
+        case err2 => assert( false )
+      }
+
+
+      EquivalenceDB.processAll( spec )
+
+      assert( EquivalenceDB.nClasses() == 1 )
+//
+//      println( "\nEquivalence IDs/classes: \n" )
+//      for ( a <- 0 until EquivalenceDB.size( ) ) {
+//        println( UID( a ) + " -> " + EquivalenceDB( UID( a ) ).getOrElse( None ) + " , " + EquivalenceDB.getEqClass( UID( a ) ).getOrElse( None ) )
+//      }
+
+//      println( EquivalenceDB.getEx( EID( 0 ) ) )
+
+    }
+
+    sterileRun( checkAtt )
+
+  }
+
+  test( "Test operator DB" ){
+
+    def operTest(){
+      val spec = specSnd.deepCopy()
+
+      Identifier.identify( spec )
+
+//      Identifier.print()
+
+      EquivalenceDB.processAll( spec )
+
+      OperatorSubstitution.extract( spec )
+
+      val operinfo = OperatorDB( EquivalenceDB.getFromEx( NameEx( "SndNewValue" ) ) )
+
+      assert(
+        operinfo.nonEmpty
+        &&
+        operinfo.get._1.size == 1
+        &&
+        EquivalenceDB.getEx(operinfo.get._2).contains(
+          specSnd.declarations.head.asInstanceOf[TlaOperDecl].body
+        )
+      )
+
+//      OperatorDB.print()
+
+      //    printDBs()
+    }
+
+    sterileRun( operTest )
+
+  }
+
+  test( "Test operator DB recursion check" ){
+
+    def recCheck() {
+
+      val spec = specRec.deepCopy()
+      val spec2 = specSum.deepCopy()
+
+      Identifier.identify( spec )
+      EquivalenceDB.processAll( spec )
+      OperatorSubstitution.extract( spec )
 
       Identifier.identify( spec2 )
+      EquivalenceDB.processAll( spec2 )
+      OperatorSubstitution.extract( spec2 )
 
-      println("Spec1 after")
-      printSpec(spec1)
-      println("Spec2")
-      printSpec(spec2)
+      assert( OperatorDB.isRecursive( EquivalenceDB.getFromEx( NameEx( "Op" ) ) ).contains( true ) )
+      assert( OperatorDB.isRecursive( EquivalenceDB.getFromEx( NameEx( "sum" ) ) ).contains( false ) )
+      assert( OperatorDB.isRecursive( EID( -1 ) ).isEmpty )
 
-      println("Deep copy:\n")
 
-      val spec3 = specSnd.duplicate()
+    }
+
+    sterileRun( recCheck )
+
+
+  }
+
+  test( "Test deep copy" ){
+    def copytest(): Unit ={
+      val spec1 = specSnd.deepCopy()
+      val spec2 = spec1
+      val spec3 = spec1.deepCopy()
+
+
+      Identifier.identify( spec1 )
+      Identifier.identify( spec2 )
       Identifier.identify( spec3 )
 
-      println("Spec1")
-
-      printSpec(spec1)
-
-      println("Spec2")
-      printSpec(spec2)
-
-      println("Spec3")
-      printSpec(spec3)
+      assert( spec1.identical(spec2) && !spec1.identical(spec3) )
 
     }
 
@@ -411,47 +455,76 @@ class TestIDAllocation extends FunSuite{
 
   test( "Test operator DB substitution" ) {
 
-    def subtest() : Unit = {
-      val spec = specOper.duplicate()
+    def
+    subtest() : Unit = {
+      val spec = specOper.deepCopy()
 
       Identifier.identify( spec )
       EquivalenceDB.processAll( spec )
       OperatorSubstitution.extract( spec )
 
-
-      //      printSpec( spec )
-
-      //    Identifier.print()
-      //    EquivalenceDB.print()
-      //    OperatorDB.print()
-
       val retSpc = OperatorSubstitution.substituteOper( spec )
 
-      printSpec( spec )
+      assert( retSpc.declarations.head == spec.declarations.head )
+      assert( retSpc.declarations.reverse.head.isInstanceOf[TlaOperDecl]
+        &&
+        retSpc.declarations.reverse.head.asInstanceOf[TlaOperDecl].body ==
+          OperEx( TlaOper.eq,
+            OperEx( TlaArithOper.minus, IntEx( 2 ), IntEx( 1 ) ),
+            OperEx( TlaArithOper.plus,
+              OperEx( TlaArithOper.plus,
+                IntEx( 0 ),
+                IntEx( 1 )
+              ),
+              IntEx( 0 )
+            )
+          )
+      )
 
-      printSpec( retSpc )
+      // the origin of 0 + 1 is A(0)
+      val UID1 = OriginDB( retSpc.declarations
+        .reverse.head.asInstanceOf[TlaOperDecl]
+        .body.asInstanceOf[OperEx]
+        .args.tail.head.asInstanceOf[OperEx].args.head.ID
+      )
 
-      //
-      //    val ex = OperEx( TlaOper.apply, NameEx("A"), ValEx( TlaInt(0) ) )
-      //    Identifier.identify( ex )
-      //    EquivalenceDB( ex.ID )
-      //
-      //    println( ex )
-      //
-      //    println( OperatorSubstitution.applyReplace( ex ) )
-
-      println( "--------------------------" )
-
-      OriginDB.print()
+      val UID2 = spec.declarations
+        .reverse.head.asInstanceOf[TlaOperDecl]
+        .body.asInstanceOf[OperEx]
+        .args.tail.head.asInstanceOf[OperEx].args.head.ID
 
 
-      //    val newex = OperatorSubstitution.applyReplace(
-      //      Identifier.identify( ex  )
-      //    )
-      //    println( ex )
+      assert( UID1.contains( UID2 ) )
+
+       // the 0 in the + 0 has the same ID
+      val UID3 = retSpc.declarations
+        .reverse.head.asInstanceOf[TlaOperDecl]
+        .body.asInstanceOf[OperEx]
+        .args.head.asInstanceOf[OperEx].args.tail.head.ID
+
+      val UID4 = spec.declarations
+        .reverse.head.asInstanceOf[TlaOperDecl]
+        .body.asInstanceOf[OperEx]
+        .args.head.asInstanceOf[OperEx].args.tail.head.ID
+
+      assert( UID3 == UID4 )
+
+      // the 2-1 has the same ID and subIDs in both expressions (i.e. is identical)
+
+      assert( retSpc.declarations
+        .reverse.head.asInstanceOf[TlaOperDecl]
+        .body.asInstanceOf[OperEx]
+        .args.tail.head.asInstanceOf[OperEx].args.tail.head.identical(
+        spec.declarations
+          .reverse.head.asInstanceOf[TlaOperDecl]
+          .body.asInstanceOf[OperEx]
+          .args.tail.head.asInstanceOf[OperEx].args.tail.head
+          )
+
+      )
+
 
     }
-
 
     sterileRun( subtest )
   }

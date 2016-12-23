@@ -62,14 +62,15 @@ case class NoError() extends PluginError
   */
 abstract class Plugin() {
     val name : String
-    val dependencies : List[String] = List()
-    var input: List[TlaSpec] = List()
-    var output: List[TlaSpec] = List()
+    // Database dependencies
+    val dependencies : List[String] = Nil
+    var input: TlaSpec = null
+    var output: TlaSpec = null
     var throwError : PluginError = NoError()
 
-    def run( newInput: List[TlaSpec] ) : Unit = {
+    def run( newInput: TlaSpec ) : Unit = {
         input = newInput
-        output = List()
+        output = null
         throwError = NoError()
         if ( translate() ) {
             PluginController.getNext() match {

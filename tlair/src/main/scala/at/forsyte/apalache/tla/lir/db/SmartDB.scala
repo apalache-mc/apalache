@@ -3,7 +3,9 @@ package at.forsyte.apalache.tla.lir.db
 import at.forsyte.apalache.tla.lir.{UID, EID}
 import collection.mutable.HashMap
 
-abstract trait DB[ KeyType, ValType ] {
+abstract trait Database
+
+abstract trait DB[ KeyType, ValType ] extends Database{
   val name: String
   protected val dbMap : HashMap[ KeyType, ValType ] = HashMap()
 
