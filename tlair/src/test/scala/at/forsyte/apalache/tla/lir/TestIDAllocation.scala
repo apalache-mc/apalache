@@ -196,10 +196,10 @@ class TestIDAllocation extends FunSuite{
 
 
   def sterileRun( f: () => Unit ): Unit ={
-    OperatorDB.reset()
-    EquivalenceDB.reset()
+    OperatorDB.clear()
+    EquivalenceDB.clear()
     Identifier.reset()
-    OriginDB.reset()
+    OriginDB.clear()
 
     f()
   }

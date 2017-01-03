@@ -3,54 +3,117 @@ package at.forsyte.apalache.tla.lir.db
 import at.forsyte.apalache.tla.lir.{UID, EID}
 import collection.mutable.HashMap
 
-abstract trait Database
+abstract class DBContainer[KeyType, ValType]{
+  def put( key: KeyType, value: ValType ) : Unit
+  def get( key: KeyType ) : Option[ValType]
+  def size() : Int
+  def contains( key: KeyType ) : Boolean
+  def remove( key: KeyType ) : Unit
+  def clear() : Unit
+  def iterator() : Iterator[(KeyType,ValType)]
+}
 
-abstract trait DB[ KeyType, ValType ] extends Database{
+class HashMapWrapper[ KeyType, ValType ] extends DBContainer[ KeyType, ValType ] {
+  private val map : HashMap[ KeyType, ValType ] = HashMap()
+  def put( key: KeyType, value: ValType ) : Unit = {
+    map.put( key, value )
+  }
+  def get( key: KeyType ) : Option[ValType] = {
+    return map.get( key )
+  }
+  def size() : Int = {
+    return map.size
+  }
+  def contains( key: KeyType ) : Boolean ={
+    return map.contains( key )
+  }
+  def remove( key: KeyType ) : Unit = {
+    map.remove( key )
+  }
+  def clear() : Unit ={
+    map.clear()
+  }
+  def iterator() : Iterator[(KeyType,ValType)] = {
+    return map.iterator
+  }
+}
+
+/**
+  * Basic database, storing a ValType for each KeyType.
+  *
+  * Values must be explicitly set for each key.
+  */
+abstract class DB[ KeyType,
+                   ValType
+                 ]( dbContainer : DBContainer[ KeyType, ValType ] =
+                    new HashMapWrapper[ KeyType, ValType ]) {
   val name: String
-  protected val dbMap : HashMap[ KeyType, ValType ] = HashMap()
+//  protected val dbMap : HashMap[ KeyType, ValType ] = HashMap()
 
-  def set( key: KeyType, value: ValType ) : Unit = dbMap.put( key, value )
+  def put( key: KeyType, value: ValType ) : Unit = dbContainer.put( key, value )
 
-  def apply( key: KeyType ) : Option[ ValType ] = return dbMap.get( key )
+  def apply( key: KeyType ) : Option[ ValType ] = return dbContainer.get( key )
 
-  def size() : Int = dbMap.size
+  def size() : Int = dbContainer.size()
 
-  def has( key : KeyType ) : Boolean = dbMap.contains( key )
+  def contains( key : KeyType ) : Boolean = dbContainer.contains( key )
 
-  def remove( key : KeyType) : Unit = dbMap.remove( key )
+  def remove( key : KeyType) : Unit = dbContainer.remove( key )
 
-  def reset() : Unit = dbMap.clear()
+  def clear() : Unit = dbContainer.clear()
 
   def print(): Unit = {
     println( "\n" + name + ": \n" )
-    for ( a <- dbMap.iterator ) {
+    for ( a <- dbContainer.iterator ) {
       println( a._1 + " -> " + a._2 )
     }
   }
-
-
 }
-abstract trait SmartDB[ KeyType, ValType ] extends DB[ KeyType, ValType ] {
+
+/**
+  * A subclass of DB, which automatically calculates and stores the value associated with a given key.
+  *
+  * Emulates function memoization.
+  */
+abstract class SmartDB[ KeyType,
+                        ValType
+                      ]( dbContainer : DBContainer[ KeyType, ValType ] =
+                         new HashMapWrapper[ KeyType, ValType ])
+                      extends DB[ KeyType, ValType ](dbContainer) {
+
+  class ValueMismatch(expected: Option[ValType], actual: ValType) extends Exception
 
   @deprecated
-  override def set( key: KeyType, value: ValType ) : Unit = {
+  /**
+    * Since SmartDBs calculate their values it is ill-advised to use set explicitly.
+    * In particular, the override will calculate its own expected value and compare it with
+    * the provided one. If they do not match, a ValueMismatch exception is thrown.
+    */
+  override def put( key: KeyType, value: ValType ) : Unit = {
     val calculated = evaluate( key )
-    // If calculated value is different from the user value, do nothing (?)
-    if( calculated != None && calculated.get == value) super.set( key, value )
+    /** If calculated value is different from the user value, throw */
+    if( calculated.nonEmpty && calculated.get == value) dbContainer.put( key, value )
+    else throw new ValueMismatch(calculated, value)
+
   }
 
+  /** Abstract method to be implemented. */
   protected def evaluate( key : KeyType ) : Option[ ValType ]
 
   override def apply( key: KeyType ) : Option[ ValType ] =  {
-    val res = dbMap.get( key )
-    // If key exists then just return it
-    if ( res != None ) {
+    val res = dbContainer.get( key )
+    /**
+      * If the key's value has already been calculated, return it.
+      */
+    if ( res.nonEmpty ) {
       return res
     }
+    /**
+      * Otherwise, evaluate and store.
+      */
     else{
-      // Lazy processing + saving
       def lambda( x: ValType ) : ValType = {
-        dbMap.put( key, x )
+        dbContainer.put( key, x )
         return x
       }
       return evaluate( key ).map( lambda )
@@ -61,6 +124,10 @@ abstract trait SmartDB[ KeyType, ValType ] extends DB[ KeyType, ValType ] {
 /**
   * Wraps a HashMap, performs some kind of evaluation (subclass-specific) and stores that information
   */
-abstract trait UIDB[ ValType ] extends SmartDB[ UID, ValType ]
-abstract trait EIDB[ ValType ] extends SmartDB[ EID, ValType ]
+abstract class UIDB[ ValType ]( dbContainer : DBContainer[ UID, ValType ] =
+                                new HashMapWrapper[ UID, ValType ])
+                              extends SmartDB[ UID, ValType ]
+abstract class EIDB[ ValType ] ( dbContainer : DBContainer[ EID, ValType ] =
+                                 new HashMapWrapper[ EID, ValType ])
+                              extends SmartDB[ EID, ValType ]
 

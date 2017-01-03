@@ -1,10 +1,17 @@
 package at.forsyte.apalache.tla.lir.plugins
 
+import at.forsyte.apalache.tla.lir.db._
 import at.forsyte.apalache.tla.lir._
 import java.util.Vector
 
-
 // REWRITE AS DB[Int, TlaEx]
+
+//object PrimaryDB extends DB[ Int, TlaEx] {
+//  override val name = "PrimaryDB"
+//
+//
+//}
+
 
 /**
   * Created by jkukovec on 11/28/16.

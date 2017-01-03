@@ -64,7 +64,7 @@ package object OperatorSubstitution {
     val bodyEID = EquivalenceDB( thisDecl.body.ID )
 
     if( nameEID.nonEmpty && bodyEID.nonEmpty ) {
-      OperatorDB.set( nameEID.get, (params, bodyEID.get) )
+      OperatorDB.put( nameEID.get, (params, bodyEID.get) )
     }
   }
 
@@ -104,7 +104,7 @@ package object OperatorSubstitution {
             pair => body = replaceAll( body, NameEx( pair._1.name ), pair._2 )
           )
           Identifier.identify( body )
-          OriginDB.set(body.ID, tlaEx.ID)
+          OriginDB.put(body.ID, tlaEx.ID)
           return body
         }
       }
