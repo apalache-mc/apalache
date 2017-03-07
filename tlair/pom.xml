@@ -148,7 +148,9 @@
         </plugins>
     </build>
 
-    <reporting>
+    <!-- FIXME: temporarily disabled the reporting tools -->
+
+    <!--reporting>
         <plugins>
             <plugin>
                 <groupId>org.scoverage</groupId>
@@ -161,13 +163,11 @@
                 <reportSets>
                     <reportSet>
                         <reports>
-                            <report>report</report>
-                            <!-- or <report>integration-report</report> -->
-                            <!-- or <report>report-only</report> -->
+                            <report>report</report>  // integration-report, report-only
                         </reports>
                     </reportSet>
                 </reportSets>
             </plugin>
         </plugins>
-    </reporting>
+    </reporting-->
 </project>
