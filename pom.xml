@@ -15,8 +15,6 @@
         <module>tlair</module>
     </modules>
 
-    build broken
-
     <!-- project-global settings -->
     <build>
         <pluginManagement>
