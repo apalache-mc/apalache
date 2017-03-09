@@ -7,43 +7,26 @@
     <version>0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>tlair</name>
+    <name>tla-import</name>
     <url>https://github.com/konnov/apalache</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <scoverage.plugin.version>1.1.1</scoverage.plugin.version>
+        <scoverage.plugin.version>1.3.0</scoverage.plugin.version>
         <scoverage.aggregate>true</scoverage.aggregate>
     </properties>
-
-    <repositories>
-        <repository>
-            <id>scala-tools.org</id>
-            <name>Scala-tools Maven2 Repository</name>
-            <url>http://scala-tools.org/repo-releases</url>
-        </repository>
-    </repositories>
-
-    <pluginRepositories>
-        <pluginRepository>
-            <id>scala-tools.org</id>
-            <name>Scala-tools Maven2 Repository</name>
-            <url>http://scala-tools.org/repo-releases</url>
-        </pluginRepository>
-    </pluginRepositories>
 
     <!-- the profile settings are copied from:
          https://github.com/scala/scala-module-dependency-sample/blob/master/maven-sample/pom.xml -->
     <profiles>
         <profile>
-            <id>scala-2.11</id>
+            <id>scala-2.12</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <scalaVersion>2.11.4</scalaVersion>
-                <!-- change to "2.11" once Scala 2.11.0 final is out -->
-                <scalaBinaryVersion>2.11</scalaBinaryVersion>
+                <scalaVersion>2.12.0</scalaVersion>
+                <scalaBinaryVersion>2.12</scalaBinaryVersion>
             </properties>
             <dependencies>
                 <dependency>
@@ -54,64 +37,36 @@
                 <dependency>
                     <groupId>org.scala-lang.modules</groupId>
                     <artifactId>scala-xml_${scalaBinaryVersion}</artifactId>
-                    <version>1.0.3</version>
+                    <version>1.0.6</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.scala-lang.modules</groupId>
+                    <artifactId>scala-parser-combinators_${scalaBinaryVersion}</artifactId>
+                    <version>1.0.4</version>
                 </dependency>
                 <dependency>
                     <groupId>org.scalatest</groupId>
                     <artifactId>scalatest_${scalaBinaryVersion}</artifactId>
-                    <version>2.2.4</version>
+                    <version>3.0.0</version>
                     <scope>test</scope>
                 </dependency>
-                <!--dependency>
-                    <groupId>org.scala-lang.modules</groupId>
-                    <artifactId>scala-parser-combinators_${scalaBinaryVersion}</artifactId>
-                    <version>1.0.3</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.scala-lang.modules</groupId>
-                    <artifactId>scala-swing_${scalaBinaryVersion}</artifactId>
-                    <version>1.0.1</version>
-                </dependency-->
             </dependencies>
         </profile>
-        <!--profile>
-            <id>scala-2.10</id>
-            <properties>
-                <scalaVersion>2.10.4</scalaVersion>
-                <scalaBinaryVersion>2.10</scalaBinaryVersion>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>scala-library</artifactId>
-                    <version>${scalaVersion}</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>scala-swing</artifactId>
-                    <version>${scalaVersion}</version>
-                </dependency>
-            </dependencies>
-        </profile-->
     </profiles>
 
     <dependencies>
-        <!--dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-library</artifactId>
-            <version>2.11.2</version>
-        </dependency>
         <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-xml</artifactId>
-            <version>2.11.2</version>
+            <groupId>at.forsyte.apalache</groupId>
+            <artifactId>tlair</artifactId>
+            <version>0.1-SNAPSHOT</version>
         </dependency>
+
         <dependency>
-            <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.11</artifactId>
-            <version>2.2.4</version>
-            <scope>test</scope>
-        </dependency-->
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.5</version>
+        </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -121,24 +76,45 @@
     </dependencies>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>net.alchim31.maven</groupId>
+                    <artifactId>scala-maven-plugin</artifactId>
+                    <version>3.2.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>2.0.2</version>
+                    <configuration>
+                        <source>1.8</source>
+                        <target>1.8</target>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.0</version>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                </configuration>
-            </plugin>
+            <!-- compile scala and java code -->
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
                 <version>3.1.6</version>
+
                 <executions>
                     <execution>
+                        <id>scala-compile-first</id>
+                        <phase>process-resources</phase>
                         <goals>
+                            <goal>add-source</goal>
                             <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>scala-test-compile</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
                             <goal>testCompile</goal>
                         </goals>
                     </execution>
@@ -150,12 +126,26 @@
                     </args>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.scoverage</groupId>
                 <artifactId>scoverage-maven-plugin</artifactId>
                 <version>${scoverage.plugin.version}</version>
                 <configuration>
-                    <scalaVersion>2.11.7</scalaVersion>
+                    <scalaVersion>${scalaBinaryVersion}</scalaVersion>
                     <!-- other parameters -->
                 </configuration>
                 <executions>
@@ -183,9 +173,7 @@
                 <reportSets>
                     <reportSet>
                         <reports>
-                            <report>report</report>
-                            <!-- or <report>integration-report</report> -->
-                            <!-- or <report>report-only</report> -->
+                            <report>report</report>  <!-- integration-report, report-only -->
                         </reports>
                     </reportSet>
                 </reportSets>

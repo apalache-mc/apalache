@@ -17,6 +17,8 @@ import scala.xml.{Elem, Node}
  * @see tla2sany.XMLExporter
  *
  * @todo do a preliminary structure check with XML schema?
+  *
+  * @deprecated use at.forsyte.apalache.tla.SanyImporter
  *
  * @author konnov
  */

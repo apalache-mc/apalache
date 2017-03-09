@@ -2,6 +2,8 @@ package at.forsyte.apalache.tla.parser
 
 /**
  * A general exception reported by XmlImporter
+  *
+  * @deprecated
  *
  * @author konnov
  */

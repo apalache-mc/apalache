@@ -4,6 +4,8 @@ import scala.xml.XML
 
 /**
  * A command-line to check how good our parser is.
+  *
+  * @deprecated
  *
  * @author Igor Konnov
  */
