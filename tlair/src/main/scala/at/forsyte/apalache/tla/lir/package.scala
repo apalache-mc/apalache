@@ -218,7 +218,7 @@ package lir {
  * @param imports the names of imported modules
  * @param declarations all kinds of declarations
  */
-  class TlaModule(val name: String, val imports: Seq[String], declarations: Seq[TlaDecl])
+  class TlaModule(val name: String, val imports: Seq[String], val declarations: Seq[TlaDecl])
 
 
   abstract class IDType
