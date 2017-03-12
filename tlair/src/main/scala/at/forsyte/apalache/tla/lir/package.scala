@@ -96,10 +96,13 @@ package lir {
   /** An abstract TLA+ expression */
   abstract class TlaEx extends  Identifiable{
 
+    // TODO: hey, use power of Scala! Move toNiceString out of here and introduce a PrettyPrinter class.
     def toNiceString( nTab: Int = 0) = ""
     override def toString: String = toNiceString()
 
+    // TODO: goes to PrettyPrinter
     protected val indent : Int = 4
+    // TODO: goes to PrettyPrinter
     protected val tab : String = " " *indent
 
     def deepCopy( identified: Boolean = true ) : TlaEx
