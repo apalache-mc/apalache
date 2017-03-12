@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaDecimal, TlaInt, TlaStr}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -81,6 +81,25 @@ class TestSanyImporter extends FunSuite {
     }
   }
 
+  test("constant operator (decimal)") {
+    val text =
+      """---- MODULE constop ----
+        |MyOp == 123.456
+        |================================
+      """.stripMargin
+
+    val (rootName, modules) = new SanyImporter().load("constop", Source.fromString(text))
+    val mod = expectModule("constop", rootName, modules)
+    assert(1 == mod.declarations.size)
+
+    mod.declarations.head match {
+      case actionDecl: TlaOperDecl =>
+        assert("MyOp" == actionDecl.name)
+        assert(0 == actionDecl.formalParams.length)
+        assert(ValEx(TlaDecimal(BigDecimal("123.456"))) == actionDecl.body)
+    }
+  }
+
   test("constant operator (string)") {
     val text =
       """---- MODULE constop ----
@@ -97,6 +116,44 @@ class TestSanyImporter extends FunSuite {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(ValEx(TlaStr("Hello")) == actionDecl.body)
+    }
+  }
+
+  test("constant operator (FALSE)") {
+    val text =
+      """---- MODULE constop ----
+        |MyOp == FALSE
+        |================================
+      """.stripMargin
+
+    val (rootName, modules) = new SanyImporter().load("constop", Source.fromString(text))
+    val mod = expectModule("constop", rootName, modules)
+    assert(1 == mod.declarations.size)
+
+    mod.declarations.head match {
+      case actionDecl: TlaOperDecl =>
+        assert("MyOp" == actionDecl.name)
+        assert(0 == actionDecl.formalParams.length)
+        assert(ValEx(TlaBool(false)) == actionDecl.body)
+    }
+  }
+
+  test("constant operator (TRUE)") {
+    val text =
+      """---- MODULE constop ----
+        |MyOp == TRUE
+        |================================
+      """.stripMargin
+
+    val (rootName, modules) = new SanyImporter().load("constop", Source.fromString(text))
+    val mod = expectModule("constop", rootName, modules)
+    assert(1 == mod.declarations.size)
+
+    mod.declarations.head match {
+      case actionDecl: TlaOperDecl =>
+        assert("MyOp" == actionDecl.name)
+        assert(0 == actionDecl.formalParams.length)
+        assert(ValEx(TlaBool(true)) == actionDecl.body)
     }
   }
 
