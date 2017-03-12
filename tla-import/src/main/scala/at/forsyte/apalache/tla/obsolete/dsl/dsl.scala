@@ -1,6 +1,6 @@
 import scala.collection.mutable
 
-package at.forsyte.apalache.tla.dsl {
+package at.forsyte.apalache.tla.obsolete.dsl {
 
 
 /**

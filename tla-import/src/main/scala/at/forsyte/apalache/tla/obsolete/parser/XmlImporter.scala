@@ -1,8 +1,8 @@
-package at.forsyte.apalache.tla.parser
+package at.forsyte.apalache.tla.obsolete.parser
 
 import String.format
 
-import at.forsyte.apalache.tla.ir._
+import at.forsyte.apalache.tla.obsolete.ir._
 
 import scala.collection.immutable.TreeSet
 import scala.xml.{Elem, Node}

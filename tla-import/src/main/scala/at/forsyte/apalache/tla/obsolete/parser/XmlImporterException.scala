@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.parser
+package at.forsyte.apalache.tla.obsolete.parser
 
 /**
  * A general exception reported by XmlImporter

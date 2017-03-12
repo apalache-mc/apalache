@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.parser
+package at.forsyte.apalache.tla.obsolete.parser
 
 import scala.xml.XML
 

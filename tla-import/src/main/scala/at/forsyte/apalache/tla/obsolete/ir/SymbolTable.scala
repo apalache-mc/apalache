@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.ir
+package at.forsyte.apalache.tla.obsolete.ir
 
 /**
  * A place where all the definitions and declarations are kept.

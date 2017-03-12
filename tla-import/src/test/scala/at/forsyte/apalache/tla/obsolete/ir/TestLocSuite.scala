@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.ir
+package at.forsyte.apalache.tla.obsolete.ir
 
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner

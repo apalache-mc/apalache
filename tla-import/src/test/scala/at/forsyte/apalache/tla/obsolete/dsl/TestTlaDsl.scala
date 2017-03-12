@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.dsl
+package at.forsyte.apalache.tla.obsolete.dsl
 
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite

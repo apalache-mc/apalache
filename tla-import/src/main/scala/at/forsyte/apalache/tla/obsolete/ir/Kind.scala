@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.ir
+package at.forsyte.apalache.tla.obsolete.ir
 
 /**
  * An entity kind, which mirrors the kind of a tla2sany.semantic.SemanticNode.

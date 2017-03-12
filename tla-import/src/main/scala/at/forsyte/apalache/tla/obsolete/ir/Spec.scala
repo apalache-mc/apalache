@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.ir
+package at.forsyte.apalache.tla.obsolete.ir
 
 /**
  * A complete TLA specification

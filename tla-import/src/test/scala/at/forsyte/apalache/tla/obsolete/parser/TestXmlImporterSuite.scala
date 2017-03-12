@@ -1,6 +1,6 @@
-package at.forsyte.apalache.tla.parser
+package at.forsyte.apalache.tla.obsolete.parser
 
-import at.forsyte.apalache.tla.ir._
+import at.forsyte.apalache.tla.obsolete.ir._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -8,7 +8,7 @@ import org.scalatest.junit.JUnitRunner
 /**
   * Tests for XmlImporter
   *
-  * @see at.forsyte.apalache.tla.parser.XmlImporter
+  * @see at.forsyte.apalache.tla.obsolete.parser.XmlImporter
   *
   * @author konnov
   */
