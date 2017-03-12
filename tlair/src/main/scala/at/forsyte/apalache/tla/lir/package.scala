@@ -189,21 +189,30 @@ package lir {
 
   }
 
+  /**
+    * A user-defined operator that is created from an operator declaration.
+    * Normally, user-defined operators are created from the operator declarations.
+    *
+    * @see TlaOperDecl
+    *
+    * @param name operator name
+    * @param arity operator arity
+    * @param decl the declaration, from which the operator was instantiated
+    */
+  class TlaUserOper(val name: String, val arity: OperArity, val decl: TlaOperDecl) extends TlaOper {
+    override def interpretation = Interpretation.User
+  }
 
-  /** An operator definition, e.g. A == 1 + 2, or B(x, y) == x + y, or (C(f(_, _), x, y) == f(x, y) */
+
+  /**
+    * An operator definition, e.g. A == 1 + 2, or B(x, y) == x + y, or (C(f(_, _), x, y) == f(x, y).
+    * As in the case of built-in operators, every operator declaration carries a single operator instance,
+    * which is stored in the public field 'operator'.
+    */
   case class TlaOperDecl( name: String, formalParams: List[FormalParam], body: TlaEx )
       extends TlaDecl {
 
-    def createOperator(): TlaOper = {
-      // TODO: maybe we should define a user-instantiated operator instead of an anonymous class
-      new TlaOper {
-        override def arity: OperArity = FixedArity(formalParams.length)
-
-        override def interpretation: Interpretation.Value = Interpretation.User
-
-        override def name: String = TlaOperDecl.this.name
-      }
-    }
+    val operator: TlaUserOper = new TlaUserOper(name, FixedArity(formalParams.length), this)
 
     override def deepCopy( ): TlaOperDecl =  TlaOperDecl( name, formalParams, body.deepCopy() )
 
@@ -211,7 +220,6 @@ package lir {
       case TlaOperDecl( oname, oparams, obody ) => name == oname && formalParams == oparams && body.identical( obody )
       case _ => false
     }
-
   }
 
 /**

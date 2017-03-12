@@ -60,14 +60,18 @@ object TlaSetOper {
     override val name = "\\subseteq"
   }
 
-  /** the standard \subset operator */
-  val subset = new TlaSetOper {
-    override val arity = FixedArity(1)
+  /**
+    * The standard \subset operator.
+    *
+    * WARNING: Do not confuse with SUBSET that is implemented by TlaSetOper.powerset.
+    */
+  val subsetProper = new TlaSetOper {
+    override val arity = FixedArity(2)
     override val name = "\\subset"
   }
 
   /** the standard \supset operator */
-  val supset = new TlaSetOper {
+  val supsetProper = new TlaSetOper {
     override val arity = FixedArity(2)
     override val name = "\\supset"
   }
@@ -102,6 +106,13 @@ object TlaSetOper {
     override val arity = FixedArity(1)
     override val name = "SUBSET"
   }
+
+  /**
+    * An alias for powerset, as TLA+ has this (rather confusing) keyword for the powerset.
+    *
+    * WARNING: Do not confuse with subsetProper, that is, a proper subset relation.
+    */
+  val SUBSET: TlaSetOper = powerset
 
   /** TLA UNION, i.e., the union of all elements (of a given set).
 

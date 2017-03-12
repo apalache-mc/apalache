@@ -43,11 +43,11 @@ class TestTlaExpr extends FunSuite {
     // x \setminus y
     OperEx(TlaSetOper.setminus, x, y)
     // x \subset y
-    OperEx(TlaSetOper.subset, x, y)
+    OperEx(TlaSetOper.subsetProper, x, y)
     // x \subseteq y
     OperEx(TlaSetOper.subseteq, x, y)
     // x \supset y
-    OperEx(TlaSetOper.supset, x, y)
+    OperEx(TlaSetOper.supsetProper, x, y)
     // x \supseteq y
     OperEx(TlaSetOper.supseteq, x, y)
     // SUBSET y
@@ -84,11 +84,11 @@ class TestTlaExpr extends FunSuite {
     // x \setminus y
     expectWrongArity(TlaSetOper.setminus, y)
     // x \subset y
-    expectWrongArity(TlaSetOper.subset, x)
+    expectWrongArity(TlaSetOper.subsetProper, x)
     // x \subseteq y
     expectWrongArity(TlaSetOper.subseteq, x)
     // x \supset y
-    expectWrongArity(TlaSetOper.supset, x)
+    expectWrongArity(TlaSetOper.supsetProper, x)
     // x \supseteq y
     expectWrongArity(TlaSetOper.supseteq, x)
     // SUBSET y
@@ -143,7 +143,7 @@ class TestTlaExpr extends FunSuite {
     )
 
     // this is the way to use a user-defined operator
-    val applyA = odef.createOperator()
+    val applyA = odef.operator
     OperEx(applyA)
 
     // we should get an exception when the number of arguments is incorrect
@@ -165,7 +165,7 @@ class TestTlaExpr extends FunSuite {
     )
 
     // this is the way to use a user-defined operator
-    val applyA = odef.createOperator()
+    val applyA = odef.operator
     OperEx(applyA, NameEx("a"), NameEx("b"))
 
     // we should get an exception when the number of arguments is incorrect
@@ -192,7 +192,7 @@ class TestTlaExpr extends FunSuite {
     )
 
     // this is the way to use a user-defined operator
-    val applyA = odef.createOperator()
+    val applyA = odef.operator
     OperEx(applyA, NameEx(TlaSetOper.cup.name), NameEx("a"), NameEx("b"))
 
     // The following expression does not make a lot of sense, but it is legal to construct such one.
