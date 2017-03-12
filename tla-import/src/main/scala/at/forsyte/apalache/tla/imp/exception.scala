@@ -12,7 +12,7 @@ package at.forsyte.apalache.tla.imp
   *
   * @author konnov
   */
-class SanyException(val message: String) extends Exception
+class SanyException(message: String) extends Exception(message)
 
 
 /**

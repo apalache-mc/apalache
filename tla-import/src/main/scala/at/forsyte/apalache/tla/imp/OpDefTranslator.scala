@@ -11,6 +11,6 @@ import tla2sany.semantic.OpDefNode
   */
 class OpDefTranslator {
   def translate(node: OpDefNode): TlaOperDecl = {
-    TlaOperDecl(node.getName.toString, List(), new ExprNodeTranslator().translate(node.getBody))
+    TlaOperDecl(node.getName.toString, List(), new ExprOrOpArgNodeTranslator().translate(node.getBody))
   }
 }

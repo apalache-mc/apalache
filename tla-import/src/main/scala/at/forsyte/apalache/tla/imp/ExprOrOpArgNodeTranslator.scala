@@ -9,8 +9,8 @@ import tla2sany.semantic._
   *
   * @author konnov
   */
-class ExprNodeTranslator {
-  def translate: ExprNode => TlaEx = {
+class ExprOrOpArgNodeTranslator {
+  def translate: ExprOrOpArgNode => TlaEx = {
       // as tlatools do not provide us with a visitor pattern, we have to enumerate classes here
       case num: NumeralNode =>
         translateNumeral(num)
