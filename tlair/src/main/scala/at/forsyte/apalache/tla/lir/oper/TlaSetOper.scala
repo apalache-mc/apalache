@@ -62,7 +62,7 @@ object TlaSetOper {
 
   /** the standard \subset operator */
   val subset = new TlaSetOper {
-    override val arity = FixedArity(2)
+    override val arity = FixedArity(1)
     override val name = "\\subset"
   }
 
