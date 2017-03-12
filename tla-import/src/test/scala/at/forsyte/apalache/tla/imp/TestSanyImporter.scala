@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.tla.lir.{TlaConstDecl, TlaModule, TlaVarDecl}
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -58,22 +59,58 @@ class TestSanyImporter extends FunSuite {
     mod.declarations.head match {
       case constDecl: TlaConstDecl =>
         assert("n" == constDecl.name)
-
-      case _ =>
-        fail("Expected a declaration of constant n")
     }
   }
 
+  test("constant operator (int)") {
+    val text =
+      """---- MODULE constop ----
+        |MyOp == 1
+        |================================
+      """.stripMargin
+
+    val (rootName, modules) = new SanyImporter().load("constop", Source.fromString(text))
+    val mod = expectModule("constop", rootName, modules)
+    assert(1 == mod.declarations.size)
+
+    mod.declarations.head match {
+      case actionDecl: TlaOperDecl =>
+        assert("MyOp" == actionDecl.name)
+        assert(0 == actionDecl.formalParams.length)
+        assert(ValEx(TlaInt(1)) == actionDecl.body)
+    }
+  }
+
+  test("constant operator (string)") {
+    val text =
+      """---- MODULE constop ----
+        |MyOp == "Hello"
+        |================================
+      """.stripMargin
+
+    val (rootName, modules) = new SanyImporter().load("constop", Source.fromString(text))
+    val mod = expectModule("constop", rootName, modules)
+    assert(1 == mod.declarations.size)
+
+    mod.declarations.head match {
+      case actionDecl: TlaOperDecl =>
+        assert("MyOp" == actionDecl.name)
+        assert(0 == actionDecl.formalParams.length)
+        assert(ValEx(TlaStr("Hello")) == actionDecl.body)
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////
   private def expectModule(expectedRootName: String, rootName: String, modules: Map[String, TlaModule]): TlaModule = {
     assert(expectedRootName == rootName)
     assert(1 == modules.size)
     val root = modules.get(rootName)
     root match {
-      case None =>
-        fail("Module " + rootName + " not found")
-
       case Some(mod) =>
         mod
+
+      case None =>
+        fail("Module " + rootName + " not found")
     }
   }
 }
