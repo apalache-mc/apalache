@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.tla.lir.{TlaOperDecl, ValEx}
+import at.forsyte.apalache.tla.lir.{TlaDecl, TlaOperDecl, ValEx}
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import tla2sany.semantic.OpDefNode
 
@@ -9,8 +9,8 @@ import tla2sany.semantic.OpDefNode
   *
   * @author konnov
   */
-class OpDefTranslator {
+class OpDefTranslator(context: Context) {
   def translate(node: OpDefNode): TlaOperDecl = {
-    TlaOperDecl(node.getName.toString, List(), new ExprOrOpArgNodeTranslator().translate(node.getBody))
+    TlaOperDecl(node.getName.toString, List(), new ExprOrOpArgNodeTranslator(context).translate(node.getBody))
   }
 }

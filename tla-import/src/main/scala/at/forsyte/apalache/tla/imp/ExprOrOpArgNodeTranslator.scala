@@ -9,22 +9,22 @@ import tla2sany.semantic._
   *
   * @author konnov
   */
-class ExprOrOpArgNodeTranslator {
+class ExprOrOpArgNodeTranslator(context: Context) {
   def translate: ExprOrOpArgNode => TlaEx = {
-      // as tlatools do not provide us with a visitor pattern, we have to enumerate classes here
-      case num: NumeralNode =>
-        translateNumeral(num)
+    // as tlatools do not provide us with a visitor pattern, we have to enumerate classes here
+    case num: NumeralNode =>
+      translateNumeral(num)
 
-      case str: StringNode =>
-        translateString(str)
+    case str: StringNode =>
+      translateString(str)
 
-      case dec: DecimalNode =>
-        translateDecimal(dec)
+    case dec: DecimalNode =>
+      translateDecimal(dec)
 
-      case opApp: OpApplNode =>
-        new OpApplTranslator().translate(opApp)
+    case opApp: OpApplNode =>
+      new OpApplTranslator(context).translate(opApp)
 
-      case n: ExprNode => throw new SanyImporterException("Unexpected subclass of tla2sany.ExprNode: " + n.getClass)
+    case n: ExprNode => throw new SanyImporterException("Unexpected subclass of tla2sany.ExprNode: " + n.getClass)
   }
 
   private def translateNumeral(node: NumeralNode) =
@@ -35,7 +35,7 @@ class ExprOrOpArgNodeTranslator {
     }
 
   private def translateString(str: StringNode) =
-    // internalize the string, so several occurences of the same string are kept as the same object
+  // internalize the string, so several occurences of the same string are kept as the same object
     ValEx(TlaStr(str.getRep.toString.intern()))
 
   private def translateDecimal(dec: DecimalNode) =
