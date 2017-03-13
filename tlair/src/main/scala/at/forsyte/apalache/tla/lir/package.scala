@@ -201,6 +201,21 @@ package lir {
     */
   class TlaUserOper(val name: String, val arity: OperArity, val decl: TlaOperDecl) extends TlaOper {
     override def interpretation = Interpretation.User
+
+    // as this is not a case class, we have to carefully define equality and hashCode
+    override def equals(that: scala.Any): Boolean = {
+      that match {
+        case that: TlaUserOper =>
+          that.name == name && that.arity == arity && that.decl == decl
+
+        case _ =>
+          false
+      }
+    }
+
+    override def hashCode(): Int = {
+      31 * (31 * name.hashCode + arity.hashCode()) + decl.hashCode()
+    }
   }
 
 

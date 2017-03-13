@@ -22,7 +22,7 @@ object TlaFunOper {
     */
   val tuple = new TlaFunOper {
     override val arity = AnyArity()
-    override val name = "<...>"
+    override val name = "<<...>>"
   }
 
   /** f[e] */
