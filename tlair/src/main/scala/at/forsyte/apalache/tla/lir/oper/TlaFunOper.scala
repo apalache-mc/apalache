@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla.lir.oper
 
+import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
+
 /**
  * Function operators.
  */
@@ -24,6 +26,15 @@ object TlaFunOper {
     override val arity = AnyArity()
     override val name = "<<...>>"
   }
+
+  /**
+    * A short-hand constructor for tuples.
+    *
+    * @param elems tuple elements
+    * @return a new OperEx(tuple, elems: _*)
+    */
+  def mkTuple(elems: TlaEx*): OperEx =
+    OperEx(tuple, elems: _*)
 
   /** f[e] */
   val app = new TlaFunOper {
