@@ -5,7 +5,8 @@ import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaOper, TlaSe
 import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
 import at.forsyte.apalache.tla.lir._
-import tla2sany.semantic.{ASTConstants, ExprNode, FormalParamNode, OpApplNode}
+import at.forsyte.apalache.tla.lir.control.TlaControlOper
+import tla2sany.semantic._
 
 /**
   * Translate operator applications. As many TLA+ happen to be operators, this class will be complex...
@@ -23,6 +24,7 @@ class OpApplTranslator(context: Context) {
         translateConstOper(node)
       }
     } else {
+      // non-constant operators
       if (node.getOperator.getKind == ASTConstants.BuiltInKind) {
         translateBuiltin(node)
       } else {
@@ -30,6 +32,8 @@ class OpApplTranslator(context: Context) {
       }
     }
   }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // a built-in operator with zero arguments, that is, a built-in constant
   private def translateBuiltinConst(node: OpApplNode) = {
@@ -64,22 +68,32 @@ class OpApplTranslator(context: Context) {
 
   // a non-constant built-in operator
   private def translateBuiltin(node: OpApplNode) = {
-    val args = node.getArgs.toList.map {
-      new ExprOrOpArgNodeTranslator(context).translate(_)
-    }
     val opcode = node.getOperator.getName.toString
     OpApplTranslator.simpleOpcodeToTlaOper.get(opcode) match {
       case Some(op) => // the simple translation rule applies
         // if the arities do not match, there must be a problem:
         // either in the definition of the IR operator, or in the map opcodeToIrOp
         assert(op.isCorrectArity(node.getArgs.length))
+        val exTran = new ExprOrOpArgNodeTranslator(context)
+        val args = node.getArgs.toList.map (exTran.translate)
         OperEx(op, args: _*)
 
       case None => // a more complicated translation rule is needed
-        if (OpApplTranslator.quantOpcodeToTlaOper.contains(opcode)) {
-          mkQuantifiedBuiltin(node, opcode, args)
-        } else {
-          throw new SanyImporterException("Unsupported operator: " + node.getOperator.getName)
+        opcode match {
+          case "$BoundedChoose" | "$BoundedExists" | "$BoundedForall" =>
+            val exTran = new ExprOrOpArgNodeTranslator(context)
+            val args = node.getArgs.toList.map (exTran.translate)
+            mkQuantifiedBuiltin(node, opcode, args)
+
+          case "$Case" =>
+            // we cannot translate the arguments right here, as in case of OTHER, the guard is just null.
+            mkCaseBuiltin(node)
+
+          case "$Except" =>
+            mkExceptBuiltin(node)
+
+          case _ =>
+            throw new SanyImporterException("Unsupported operator: " + opcode)
         }
     }
   }
@@ -88,6 +102,7 @@ class OpApplTranslator(context: Context) {
   private def mkQuantifiedBuiltin(node: OpApplNode, opcode: String, args: Seq[TlaEx]): TlaEx = {
     assert(args.length == 1)
     val (pred: TlaEx) = args.head
+
     /**
       * The following comment is copied verbatim from tla2sany.semantic.OpApplNode:
       *
@@ -103,7 +118,9 @@ class OpApplTranslator(context: Context) {
     //
     //   \E u \in V: \E x \in S: \E y \in S: \E <<z, w>> \in R : P
     sealed abstract class QExp
+
     case class QVar(param: FormalParamNode, bound: ExprNode) extends QExp
+
     case class QTuple(params: List[FormalParamNode], bound: ExprNode) extends QExp
 
     val paramsAndBounds = node.getBdedQuantSymbolLists.toList.zip(node.getBdedQuantBounds)
@@ -116,13 +133,16 @@ class OpApplTranslator(context: Context) {
 
       case ((params: Array[FormalParamNode], bound: ExprNode), false) =>
         // it's an expression like x, y \in S
-        params.toList.map { p => QVar(p, bound) }
+        params.toList.map {
+          p => QVar(p, bound)
+        }
     }
     // flatten the list
     val qexps = List.concat(qexpListList: _*)
     // recursively construct a chain of expressions, e.g., \E x \in S: (\E y \in S: P)
     val oper = OpApplTranslator.quantOpcodeToTlaOper(opcode)
     val expTrans = new ExprOrOpArgNodeTranslator(context)
+
     def toExpr(xs: List[QExp]): TlaEx =
       xs match {
         case Nil =>
@@ -134,7 +154,9 @@ class OpApplTranslator(context: Context) {
 
         case QTuple(params, bound) :: es =>
           val nested = toExpr(es)
-          val names = params map { p => NameEx(p.getName.toString) }
+          val names = params map {
+            p => NameEx(p.getName.toString)
+          }
           // construct a tuple expression
           val tuple = OperEx(TlaFunOper.tuple, names: _*)
           // and then a quantifer over this tuple expression
@@ -142,6 +164,53 @@ class OpApplTranslator(context: Context) {
       }
 
     toExpr(qexps)
+  }
+
+  private def unpackPairs(exTran: ExprOrOpArgNodeTranslator)(pairNodes: List[ExprOrOpArgNode]) = {
+    pairNodes.map {
+      case arg: OpApplNode =>
+        assert("$Pair" == arg.getOperator.getName.toString)
+        val pair = arg.getArgs
+        assert(2 == pair.length)
+        (exTran.translate(pair.head), exTran.translate(pair.tail.head))
+
+      case e =>
+        throw new SanyImporterException("Expected a pair, found: " + e)
+    }.foldLeft(List[TlaEx]()) {
+      case (lst, (g, e)) => e :: g :: lst
+    }.reverse
+  }
+
+  private def mkCaseBuiltin(node: OpApplNode): TlaEx = {
+    val exTran = new ExprOrOpArgNodeTranslator(context)
+    val (others, options) = node.getArgs.toList.partition {
+      case n: OpApplNode => n.getArgs.head == null
+      case _ => false
+    }
+    assert(others.length <= 1) // what use are several OTHERs?
+
+    val interleaved = unpackPairs(exTran)(options)
+
+    if (others.isEmpty) {
+      OperEx(TlaControlOper.caseNoOther, interleaved: _*)
+    } else {
+      val other = exTran.translate(others.head.asInstanceOf[OpApplNode].getArgs.apply(1))
+      OperEx(TlaControlOper.caseWithOther, other +: interleaved: _*)
+    }
+  }
+
+  private def mkExceptBuiltin(node: OpApplNode): TlaEx = {
+    val exTran = new ExprOrOpArgNodeTranslator(context)
+    node.getArgs.toList match {
+      case (fnode: OpApplNode) :: pairNodes =>
+        val fun = exTran.translate(fnode)
+        // Note that -- as in TLA tools -- the updated indices are represented with sequences (i.e., tuples),
+        // in order to support multidimensional arrays
+        OperEx(TlaFunOper.except, fun +: unpackPairs(exTran)(pairNodes): _*)
+
+      case _ =>
+        throw new SanyImporterException("Unexpected structure of EXCEPT")
+    }
   }
 }
 
@@ -176,12 +245,21 @@ object OpApplTranslator {
     ("UNCHANGED", TlaActionOper.unchanged),
     ("\\cdot", TlaActionOper.composition),
     ("-+->", TlaTempOper.guarantees),
-    ("$AngleAct", TlaActionOper.nostutter)
+    ("$AngleAct", TlaActionOper.nostutter),
+    ("$Tuple", TlaFunOper.tuple),
+    ("$Pair", TlaFunOper.tuple),
+    ("$ConjList", TlaBoolOper.and),
+    ("$DisjList", TlaBoolOper.or),
+    ("$Seq", TlaFunOper.tuple)
   )
   // A mapping from the opcodes of quantified operators (\E, \A, CHOOSE) to our IR operators.
   val quantOpcodeToTlaOper: Map[String, TlaOper] = Map(
     ("$BoundedChoose", TlaOper.chooseBounded),
     ("$BoundedExists", TlaBoolOper.exists),
     ("$BoundedForall", TlaBoolOper.forall)
+  )
+  // A mapping for other operators
+  val otherOpcodeToTlaOper: Map[String, TlaOper] = Map(
+    ("$Case", TlaControlOper.caseNoOther)
   )
 }

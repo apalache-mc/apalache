@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
+import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
 import at.forsyte.apalache.tla.lir.values._
@@ -277,25 +278,29 @@ class TestSanyImporter extends FunSuite {
         |BoundedChoose == CHOOSE y \in x: TRUE
         |BoundedExists == \E y \in x: TRUE
         |BoundedForall == \A y \in x: TRUE
+        |CartesianProd == x \X x \X x
+        |Pair == <<1, 2>>
+        |Tuple == <<1, 2, 3>>
+        |Case == CASE 1 -> 2 [] 3 -> 4 [] 5 -> 6
+        |CaseOther == CASE 1 -> 2 [] 3 -> 4 [] 5 -> 6 [] OTHER -> 7
+        |ConjList == /\ FALSE
+        |            /\ TRUE
+        |            /\ FALSE
+        |DisjList == \/ FALSE
+        |            \/ TRUE
+        |            \/ FALSE
+        |Except == [ x EXCEPT ![0] = 1 ]
+        |
         |================================
         |""".stripMargin
 
-    //        |CartesianProd == ????????????
-    //        |Case == ??????????
-    //        |ConjList == /\ FALSE
-    //        |            /\ TRUE
-    //        |DisjList == \/ FALSE
-    //        |            \/ TRUE
-    //        |Except == [ x EXCEPT ![0] = 1 ]
     //        |FcnApply == x[0]
     //        |FcnConstructor == { y \in x |-> y }
     //        |IfThenElse == IF TRUE THEN FALSE ELSE TRUE
     //        |NonRecursiveFcnSpec == ??????????
-    //        |Pair == <<1, 2>> ?????
     //        |RcdConstructor == { "a" |-> 1, "b" |-> 2 }
     //        |RcdSelect == x.foo
     //        |RecursiveFcnSpec == ????????
-    //        |Seq == <<1, 2, 3>>
     //        |SetEnumerate == { 1, 2, 3 }
     //        |SetOfAll == ???
     //        |SetOfFcns == [ x -> x ]
@@ -354,15 +359,39 @@ class TestSanyImporter extends FunSuite {
     assertTlaDecl("Enabled", OperEx(TlaActionOper.enabled, NameEx("x")))(mod.declarations(23))
     assertTlaDecl("Unchanged", OperEx(TlaActionOper.unchanged, NameEx("x")))(mod.declarations(24))
     assertTlaDecl("Cdot", OperEx(TlaActionOper.composition, OperEx(trueOper), OperEx(trueOper)))(mod.declarations(25))
-    assertTlaDecl("Guarantees", OperEx(TlaTempOper.guarantees, OperEx(trueOper), OperEx(trueOper)))(mod.declarations(26))
-    assertTlaDecl("Angleact", OperEx(TlaActionOper.nostutter, OperEx(trueOper), NameEx("x")))(mod.declarations(27))
-    assertTlaDecl("BoundedChoose", OperEx(TlaOper.chooseBounded, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))(mod.declarations(28))
-    assertTlaDecl("BoundedExists", OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))(mod.declarations(29))
-    assertTlaDecl("BoundedForall", OperEx(TlaBoolOper.forall, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))(mod.declarations(30))
+    assertTlaDecl("Guarantees",
+      OperEx(TlaTempOper.guarantees, OperEx(trueOper), OperEx(trueOper)))(mod.declarations(26))
+    assertTlaDecl("Angleact",
+      OperEx(TlaActionOper.nostutter, OperEx(trueOper), NameEx("x")))(mod.declarations(27))
+    assertTlaDecl("BoundedChoose",
+      OperEx(TlaOper.chooseBounded, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))(mod.declarations(28))
+    assertTlaDecl("BoundedExists",
+      OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))(mod.declarations(29))
+    assertTlaDecl("BoundedForall",
+      OperEx(TlaBoolOper.forall, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))(mod.declarations(30))
+    assertTlaDecl("CartesianProd",
+      OperEx(TlaSetOper.times, NameEx("x"), NameEx("x"), NameEx("x")))(mod.declarations(31))
+    assertTlaDecl("Pair", OperEx(TlaFunOper.tuple, ValEx(TlaInt(1)), ValEx(TlaInt(2))))(mod.declarations(32))
+    assertTlaDecl("Tuple",
+      OperEx(TlaFunOper.tuple, ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaInt(3))))(mod.declarations(33))
+    assertTlaDecl("Case",
+      OperEx(TlaControlOper.caseNoOther, 1.to(6).map(i => ValEx(TlaInt(i))): _*))(mod.declarations(34))
+    assertTlaDecl("CaseOther",
+      OperEx(TlaControlOper.caseWithOther, (7 +: 1.to(6)).map(i => ValEx(TlaInt(i))): _*))(mod.declarations(35))
+    assertTlaDecl("ConjList",
+      OperEx(TlaBoolOper.and, List(TlaFalse, TlaTrue, TlaFalse).map(b => ValEx(b)): _*))(mod.declarations(36))
+    assertTlaDecl("DisjList",
+      OperEx(TlaBoolOper.or, List(TlaFalse, TlaTrue, TlaFalse).map(b => ValEx(b)): _*))(mod.declarations(37))
+    assertTlaDecl("Except",
+      OperEx(TlaFunOper.except,
+        NameEx("x"), TlaFunOper.mkTuple(ValEx(TlaInt(0))), ValEx(TlaInt(1))
+      ))(mod.declarations(38))
   }
 
   test("composite quantifiers") {
-    // one can write tricky combinations of bound variables in TLA+
+    // One can write tricky combinations of bound variables in TLA+.
+    // We translate all of them uniformly:
+    //   every quantified expression has exactly one bound variable or a tuple of variables.
     val text =
       """---- MODULE composite ----
         |VARIABLE X, Z
@@ -388,25 +417,58 @@ class TestSanyImporter extends FunSuite {
 
     assertTlaDecl("Q1",
       OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("X"),
-        OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("X"), ValEx(TlaTrue))))
-      mod.declarations(1)
+        OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("X"), ValEx(TlaTrue)))) (mod.declarations(2))
     assertTlaDecl("Q2",
       OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("X"),
-        OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("X"), ValEx(TlaTrue))))
-      mod.declarations(2)
-    assertTlaDecl("Q4",
+        OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("X"), ValEx(TlaTrue)))) (mod.declarations(3))
+    assertTlaDecl("Q3",
       OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("X"),
         OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("X"),
           OperEx(TlaBoolOper.exists, NameEx("z"), NameEx("Z"),
-            ValEx(TlaTrue)))))
-      mod.declarations(3)
+            ValEx(TlaTrue))))) (mod.declarations(4))
     assertTlaDecl("Q4",
       OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("X"),
         OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("X"),
           OperEx(TlaBoolOper.exists, OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")), NameEx("Z"),
             OperEx(TlaBoolOper.exists, NameEx("z"), NameEx("Z"),
-              ValEx(TlaTrue))))))
-      mod.declarations(4)
+              ValEx(TlaTrue)))))) (mod.declarations(5))
+  }
+
+  test("complex updates") {
+    // One can write tricky combinations of EXCEPT arguments.
+    val text =
+      """---- MODULE updates ----
+        |VARIABLE f
+        |E1 == [ f EXCEPT ![0] = 1, ![2] = 3 ]
+        |E2 == [ f EXCEPT ![0][1][2] = 3 ]
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter().load("updates", Source.fromString(text))
+    val mod = expectModule("updates", rootName, modules)
+
+    def assertTlaDecl(name: String, body: TlaEx): TlaDecl => Unit = {
+      case d: TlaOperDecl =>
+        assert(name == d.name)
+        assert(0 == d.formalParams.length)
+        assert(body == d.body)
+
+      case _ =>
+        fail("Expected a TlaDecl")
+    }
+
+    assertTlaDecl("E1",
+      OperEx(TlaFunOper.except,
+        NameEx("f"),
+        TlaFunOper.mkTuple(ValEx(TlaInt(0))), ValEx(TlaInt(1)),
+        TlaFunOper.mkTuple(ValEx(TlaInt(2))), ValEx(TlaInt(3))
+      ))(mod.declarations(1))
+    assertTlaDecl("E2",
+      OperEx(TlaFunOper.except,
+        NameEx("f"),
+        TlaFunOper.mkTuple(ValEx(TlaInt(0)), ValEx(TlaInt(1)), ValEx(TlaInt(2))),
+          ValEx(TlaInt(3))
+      ))(mod.declarations(2))
   }
 
   ////////////////////////////////////////////////////////////////////
