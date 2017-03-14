@@ -14,6 +14,11 @@ import tla2sany.semantic._
   * @author konnov
   */
 class OpApplTranslator(context: Context) {
+  // we use the following case classes to represent the bound variables in many quantified expressions
+  private sealed abstract class QExp
+  private case class QVar(param: FormalParamNode, bound: ExprNode) extends QExp
+  private case class QTuple(params: List[FormalParamNode], bound: ExprNode) extends QExp
+
   def translate(node: OpApplNode): TlaEx = {
     if (node.getArgs.length == 0) {
       if (node.getOperator.getKind == ASTConstants.BuiltInKind) {
@@ -55,6 +60,9 @@ class OpApplTranslator(context: Context) {
       case ASTConstants.VariableDeclKind =>
         NameEx(oper.getName.toString.intern())
 
+      case ASTConstants.FormalParamKind =>
+        NameEx(oper.getName.toString.intern())
+
       case ASTConstants.UserDefinedOpKind =>
         context.declarationsMap.get(oper.getName.toString) match {
           case Some(d: TlaOperDecl) =>
@@ -92,17 +100,16 @@ class OpApplTranslator(context: Context) {
           case "$Except" =>
             mkExceptBuiltin(node)
 
+          case "$FcnConstructor" =>
+            mkFunCtorBuiltin(node)
+
           case _ =>
             throw new SanyImporterException("Unsupported operator: " + opcode)
         }
     }
   }
 
-  // construct an operator for an expression that introduces a variable
-  private def mkQuantifiedBuiltin(node: OpApplNode, opcode: String, args: Seq[TlaEx]): TlaEx = {
-    assert(args.length == 1)
-    val (pred: TlaEx) = args.head
-
+  private def extractQuantifiedVariables(node: OpApplNode): List[QExp] = {
     /**
       * The following comment is copied verbatim from tla2sany.semantic.OpApplNode:
       *
@@ -112,16 +119,6 @@ class OpApplTranslator(context: Context) {
       *  - isBdedQuantATuple() returns the array of booleans [ false, false, true ]
       *  - getBdedQuantBounds() returns the array of nodes [ V, S, R ]
       */
-
-    // In contrast to TLA tools, we unfold quantified expressions,
-    // that is, the example above will be translated into:
-    //
-    //   \E u \in V: \E x \in S: \E y \in S: \E <<z, w>> \in R : P
-    sealed abstract class QExp
-
-    case class QVar(param: FormalParamNode, bound: ExprNode) extends QExp
-
-    case class QTuple(params: List[FormalParamNode], bound: ExprNode) extends QExp
 
     val paramsAndBounds = node.getBdedQuantSymbolLists.toList.zip(node.getBdedQuantBounds)
     val paramsAndBoundsAndTuples = paramsAndBounds.zip(node.isBdedQuantATuple)
@@ -138,10 +135,22 @@ class OpApplTranslator(context: Context) {
         }
     }
     // flatten the list
-    val qexps = List.concat(qexpListList: _*)
+    List.concat(qexpListList: _*)
+  }
+
+  // construct an operator for an expression that introduces a variable
+  private def mkQuantifiedBuiltin(node: OpApplNode, opcode: String, args: Seq[TlaEx]): TlaEx = {
+    assert(args.length == 1)
+    val (pred: TlaEx) = args.head
+    val qexps = extractQuantifiedVariables(node)
+    // In contrast to TLA tools, we unfold quantified expressions,
+    // that is, the expression \E u \in V,  x, y \in S,  <<z, w>> \in R  :  P above will be translated into:
+    //
+    //   \E u \in V: \E x \in S: \E y \in S: \E <<z, w>> \in R : P
+
     // recursively construct a chain of expressions, e.g., \E x \in S: (\E y \in S: P)
     val oper = OpApplTranslator.quantOpcodeToTlaOper(opcode)
-    val expTrans = new ExprOrOpArgNodeTranslator(context)
+    val exTran = new ExprOrOpArgNodeTranslator(context)
 
     def toExpr(xs: List[QExp]): TlaEx =
       xs match {
@@ -150,7 +159,7 @@ class OpApplTranslator(context: Context) {
 
         case QVar(param, bound) :: es =>
           val nested = toExpr(es)
-          OperEx(oper, NameEx(param.getName.toString), expTrans.translate(bound), nested)
+          OperEx(oper, NameEx(param.getName.toString), exTran.translate(bound), nested)
 
         case QTuple(params, bound) :: es =>
           val nested = toExpr(es)
@@ -160,12 +169,35 @@ class OpApplTranslator(context: Context) {
           // construct a tuple expression
           val tuple = OperEx(TlaFunOper.tuple, names: _*)
           // and then a quantifer over this tuple expression
-          OperEx(oper, tuple, expTrans.translate(bound), nested)
+          OperEx(oper, tuple, exTran.translate(bound), nested)
       }
 
     toExpr(qexps)
   }
 
+  // translate an expression for a function constructor, e.g., [ x \in X |-> e ]
+  private def mkFunCtorBuiltin(node: OpApplNode): TlaEx = {
+    val qexps = extractQuantifiedVariables(node)
+    val exTran = new ExprOrOpArgNodeTranslator(context)
+    val body = exTran.translate(node.getArgs.head) // e.g., e in the example above
+    val boundVars = qexps.foldLeft(List[TlaEx]()) {
+      (list, qe) =>
+        qe match {
+          case QVar(param, bound) =>
+            exTran.translate(bound) ::
+              NameEx(param.getName.toString) ::
+              list
+
+          case QTuple(params, bound) =>
+            exTran.translate(bound) ::
+              TlaFunOper.mkTuple(params.map { p => NameEx(p.getName.toString) } : _*) ::
+              list
+        }
+    }.reverse
+    OperEx(TlaFunOper.funDef, body +: boundVars :_*)
+  }
+
+  // translate a list of pairs into an interleaved list of IR expressions
   private def unpackPairs(exTran: ExprOrOpArgNodeTranslator)(pairNodes: List[ExprOrOpArgNode]) = {
     pairNodes.map {
       case arg: OpApplNode =>
@@ -250,7 +282,8 @@ object OpApplTranslator {
     ("$Pair", TlaFunOper.tuple),
     ("$ConjList", TlaBoolOper.and),
     ("$DisjList", TlaBoolOper.or),
-    ("$Seq", TlaFunOper.tuple)
+    ("$Seq", TlaFunOper.tuple),
+    ("$FcnApply", TlaFunOper.app)
   )
   // A mapping from the opcodes of quantified operators (\E, \A, CHOOSE) to our IR operators.
   val quantOpcodeToTlaOper: Map[String, TlaOper] = Map(

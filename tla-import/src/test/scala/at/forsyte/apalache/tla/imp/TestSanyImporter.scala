@@ -290,12 +290,12 @@ class TestSanyImporter extends FunSuite {
         |            \/ TRUE
         |            \/ FALSE
         |Except == [ x EXCEPT ![0] = 1 ]
+        |FcnApply == x[1]
+        |FcnCtor == [ y \in x |-> y \cup y ]
         |
         |================================
         |""".stripMargin
 
-    //        |FcnApply == x[0]
-    //        |FcnConstructor == { y \in x |-> y }
     //        |IfThenElse == IF TRUE THEN FALSE ELSE TRUE
     //        |NonRecursiveFcnSpec == ??????????
     //        |RcdConstructor == { "a" |-> 1, "b" |-> 2 }
@@ -386,9 +386,13 @@ class TestSanyImporter extends FunSuite {
       OperEx(TlaFunOper.except,
         NameEx("x"), TlaFunOper.mkTuple(ValEx(TlaInt(0))), ValEx(TlaInt(1))
       ))(mod.declarations(38))
+    assertTlaDecl("FcnApply", OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(1))))(mod.declarations(39))
+    val cup = OperEx(TlaSetOper.cup, NameEx("y"), NameEx("y"))
+    assertTlaDecl("FcnCtor",
+      OperEx(TlaFunOper.funDef, cup, NameEx("y"), NameEx("x")))(mod.declarations(40))
   }
 
-  test("composite quantifiers") {
+  test("funCtor quantifiers") {
     // One can write tricky combinations of bound variables in TLA+.
     // We translate all of them uniformly:
     //   every quantified expression has exactly one bound variable or a tuple of variables.
@@ -469,6 +473,58 @@ class TestSanyImporter extends FunSuite {
         TlaFunOper.mkTuple(ValEx(TlaInt(0)), ValEx(TlaInt(1)), ValEx(TlaInt(2))),
           ValEx(TlaInt(3))
       ))(mod.declarations(2))
+  }
+
+  test("complex function ctors") {
+    // One can write tricky combinations of bound variables in function constructors.
+    val text =
+    """---- MODULE funCtor ----
+      |VARIABLE X, Z
+      |C1 == [ x \in X, y \in X |-> TRUE ]
+      |C2 == [ x, y \in X |-> TRUE ]
+      |C3 == [ x, y \in X, z \in Z |-> TRUE]
+      |C4 == [ x, y \in X, <<a, b>> \in Z, z \in Z |-> TRUE ]
+      |================================
+      |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter().load("funCtor", Source.fromString(text))
+    val mod = expectModule("funCtor", rootName, modules)
+
+    def assertTlaDecl(name: String, body: TlaEx): TlaDecl => Unit = {
+      case d: TlaOperDecl =>
+        assert(name == d.name)
+        assert(0 == d.formalParams.length)
+        assert(body == d.body)
+
+      case _ =>
+        fail("Expected a TlaDecl")
+    }
+
+    assertTlaDecl("C1",
+      OperEx(TlaFunOper.funDef,
+        ValEx(TlaTrue),
+        NameEx("x"), NameEx("X"),
+        NameEx("y"), NameEx("X"))) (mod.declarations(2))
+    assertTlaDecl("C2",
+      OperEx(TlaFunOper.funDef,
+        ValEx(TlaTrue),
+        NameEx("x"), NameEx("X"),
+        NameEx("y"), NameEx("X"))) (mod.declarations(3))
+    assertTlaDecl("C3",
+      OperEx(TlaFunOper.funDef,
+        ValEx(TlaTrue),
+        NameEx("x"), NameEx("X"),
+        NameEx("y"), NameEx("X"),
+        NameEx("z"), NameEx("Z")
+      )) (mod.declarations(4))
+    assertTlaDecl("C4",
+      OperEx(TlaFunOper.funDef,
+        ValEx(TlaTrue),
+        NameEx("x"), NameEx("X"),
+        NameEx("y"), NameEx("X"),
+        TlaFunOper.mkTuple(NameEx("a"), NameEx("b")), NameEx("Z"),
+        NameEx("z"), NameEx("Z")
+      )) (mod.declarations(5))
   }
 
   ////////////////////////////////////////////////////////////////////

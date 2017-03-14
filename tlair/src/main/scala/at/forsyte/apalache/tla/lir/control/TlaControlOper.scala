@@ -42,7 +42,7 @@ object TlaControlOper {
   }
 
   /**
-    * The LET x_1 = e_1, ..., x_k = e_k in A. The arguments are always an ood-length list
+    * The LET x_1 = e_1, ..., x_k = e_k in A. The arguments are always an odd-length list
     * of the following structure: A, x_1, e_1, ..., x_k, e_k.
     * The rationale is that (1) args.head gives us the body, and (2) args.tail gives us
     * an interleaved list of bound variables and bound expressions.

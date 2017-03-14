@@ -48,9 +48,17 @@ object TlaFunOper {
     override val name: String = "DOMAIN"
   }
 
-  /** [ x \in S |-> e ] */
+  /**
+    * A function constructor: [ x \in S |-> e ]. Similar to \E and \A, one can use many combinations
+    * of variables and tuples, e.g., [ x, y \in S, <<a, b>> \in S |-> e ]. We translate function constructors
+    * in a list of fixed structure, where the defining expression comes first and every variables (or a tuple)
+    * comes with its bounding set, e.g., (e, x, S, y, S, <<a, b>>, S).
+    *
+    * The arguments are always an odd-length list
+    * of the following structure: body, x_1, R_1, ..., x_k, R_k.
+    */
   val funDef = new TlaFunOper {
-    override def arity: OperArity = FixedArity(3)
+    override def arity: OperArity = AnyOddArity()
 
     override def name: String = "fun-def"
   }
