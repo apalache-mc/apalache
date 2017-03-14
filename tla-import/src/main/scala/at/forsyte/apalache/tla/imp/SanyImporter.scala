@@ -47,7 +47,7 @@ class SanyImporter {
       throwOnError(specObj)
       // do the translation
       val modmap = specObj.getExternalModuleTable.getModuleNodes.foldLeft(Map[String, TlaModule]()) {
-        (map, node) => map + (node.getName.toString -> new ModuleTranslator().translate(node))
+        (map, node) => map + (node.getName.toString -> ModuleTranslator().translate(node))
       }
 
       Tuple2(specObj.getName, modmap)

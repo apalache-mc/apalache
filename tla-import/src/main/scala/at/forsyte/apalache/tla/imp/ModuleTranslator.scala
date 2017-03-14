@@ -17,9 +17,15 @@ class ModuleTranslator {
       (ctx, node) => ctx.push(TlaVarDecl(node.getName.toString))
     }
     val context = node.getOpDefs.toList.foldLeft(context2) {
-      (ctx, node) => ctx.push(new OpDefTranslator(ctx).translate(node))
+      (ctx, node) => ctx.push(OpDefTranslator(ctx).translate(node))
     }
     // TODO: add the source info into a proper database
     new TlaModule(node.getName.toString, Seq(), context.declarations)
+  }
+}
+
+object ModuleTranslator {
+  def apply(): ModuleTranslator = {
+    new ModuleTranslator()
   }
 }

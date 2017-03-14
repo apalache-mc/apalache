@@ -22,7 +22,7 @@ class ExprOrOpArgNodeTranslator(context: Context) {
       translateDecimal(dec)
 
     case opApp: OpApplNode =>
-      new OpApplTranslator(context).translate(opApp)
+      OpApplTranslator(context).translate(opApp)
 
     case n: ExprNode => throw new SanyImporterException("Unexpected subclass of tla2sany.ExprNode: " + n.getClass)
   }
@@ -45,4 +45,10 @@ class ExprOrOpArgNodeTranslator(context: Context) {
       // the normal math exponent is the negated scale
       ValEx(TlaDecimal(BigDecimal(dec.mantissa(), -dec.exponent())))
     }
+}
+
+object ExprOrOpArgNodeTranslator {
+  def apply(context: Context): ExprOrOpArgNodeTranslator = {
+    new ExprOrOpArgNodeTranslator(context)
+  }
 }

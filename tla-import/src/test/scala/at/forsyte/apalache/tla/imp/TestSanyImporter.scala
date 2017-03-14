@@ -314,10 +314,12 @@ class TestSanyImporter extends FunSuite {
         |================================
         |""".stripMargin
 
-    // TODO: figure out what the following operators are...
+    // TODO: implement the following functions
+    //        |nonRecursiveFcnSpec[y \in x] == y \cup x
+    //        |recursiveFcnSpec[y \in x] == recursiveFcnSpec[y]
+
+    // TODO: figure out what this operator is
     //
-    //        |NonRecursiveFcnSpec == ??????????
-    //        |RecursiveFcnSpec == ????????
     //        |TemporalWhile == ????
 
     val (rootName, modules) = new SanyImporter().load("builtins", Source.fromString(text))
@@ -608,6 +610,32 @@ class TestSanyImporter extends FunSuite {
         TlaFunOper.mkTuple(NameEx("a"), NameEx("b")), NameEx("Z"),
         NameEx("z"), NameEx("Z")
       )) (mod.declarations(5))
+  }
+
+  test("level-1 operators") {
+    // operators with basic parameters, that is, no operator is passed as a parameter
+    val text =
+    """---- MODULE level1Operators ----
+      |VARIABLE x, y
+      |A(i, j) == i \cup j
+      |================================
+      |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter().load("level1Operators", Source.fromString(text))
+    val mod = expectModule("level1Operators", rootName, modules)
+
+    def assertTlaDecl(name: String, params: List[FormalParam], body: TlaEx): TlaDecl => Unit = {
+      case d: TlaOperDecl =>
+        assert(name == d.name)
+        assert(params == d.formalParams)
+        assert(body == d.body)
+
+      case _ =>
+        fail("Expected a TlaDecl")
+    }
+
+    assertTlaDecl("A", List(SimpleFormalParam("i"), SimpleFormalParam("j")),
+      OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j"))) (mod.declarations(2))
   }
 
   ////////////////////////////////////////////////////////////////////

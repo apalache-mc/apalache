@@ -11,6 +11,15 @@ import tla2sany.semantic.OpDefNode
   */
 class OpDefTranslator(context: Context) {
   def translate(node: OpDefNode): TlaOperDecl = {
-    TlaOperDecl(node.getName.toString, List(), new ExprOrOpArgNodeTranslator(context).translate(node.getBody))
+    val params = node.getParams.toList map FormalParamTranslator().translate
+
+    TlaOperDecl(node.getName.toString.intern(), params,
+      ExprOrOpArgNodeTranslator(context).translate(node.getBody))
+  }
+}
+
+object OpDefTranslator {
+  def apply(context: Context): OpDefTranslator = {
+    new OpDefTranslator(context)
   }
 }

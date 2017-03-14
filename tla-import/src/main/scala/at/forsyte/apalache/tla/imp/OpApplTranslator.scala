@@ -92,20 +92,20 @@ class OpApplTranslator(context: Context) {
         // if the arities do not match, there must be a problem:
         // either in the definition of the IR operator, or in the map opcodeToIrOp
         assert(op.isCorrectArity(node.getArgs.length))
-        val exTran = new ExprOrOpArgNodeTranslator(context)
+        val exTran = ExprOrOpArgNodeTranslator(context)
         val args = node.getArgs.toList.map(exTran.translate)
         OperEx(op, args: _*)
 
       case None => // a more complicated translation rule is needed
         opcode match {
           case "$BoundedChoose" | "$BoundedExists" | "$BoundedForall" =>
-            val exTran = new ExprOrOpArgNodeTranslator(context)
+            val exTran = ExprOrOpArgNodeTranslator(context)
             val args = node.getArgs.toList.map(exTran.translate)
             mkBoundedQuantifiedBuiltin(node, opcode, args)
 
           case "$TemporalExists" | "$TemporalForall" |
                "$UnboundedChoose" | "$UnboundedExists" | "$UnboundedForall" =>
-            val exTran = new ExprOrOpArgNodeTranslator(context)
+            val exTran = ExprOrOpArgNodeTranslator(context)
             val args = node.getArgs.toList.map(exTran.translate)
             mkUnboundedQuantifiedBuiltin(node, opcode, args)
 
@@ -180,7 +180,7 @@ class OpApplTranslator(context: Context) {
 
     // recursively construct a chain of expressions, e.g., \E x \in S: (\E y \in S: P)
     val oper = OpApplTranslator.quantOpcodeToTlaOper(opcode)
-    val exTran = new ExprOrOpArgNodeTranslator(context)
+    val exTran = ExprOrOpArgNodeTranslator(context)
 
     def toExpr(xs: List[BExp]): TlaEx =
       xs match {
@@ -242,7 +242,7 @@ class OpApplTranslator(context: Context) {
   // translate an expression for a function constructor, e.g., [ x \in X |-> e ] or a set comprehension { e : x \in X }
   private def mkBoundCtorBuiltin(oper: TlaOper, node: OpApplNode): TlaEx = {
     val qexps = extractBoundedQuantifiedVariables(node)
-    val exTran = new ExprOrOpArgNodeTranslator(context)
+    val exTran = ExprOrOpArgNodeTranslator(context)
     val body = exTran.translate(node.getArgs.head)
     // e.g., e in the example above
     val boundVars = qexps.foldLeft(List[TlaEx]()) {
@@ -287,14 +287,14 @@ class OpApplTranslator(context: Context) {
     * </ul>
     */
   private def mkPairsCtorBuiltin(oper: TlaOper, node: OpApplNode): TlaEx = {
-    val exTran = new ExprOrOpArgNodeTranslator(context)
+    val exTran = ExprOrOpArgNodeTranslator(context)
     val interleaved = unpackPairs(exTran)(node.getArgs.toList)
     OperEx(oper, interleaved: _*)
   }
 
   // create a CASE operator
   private def mkCaseBuiltin(node: OpApplNode): TlaEx = {
-    val exTran = new ExprOrOpArgNodeTranslator(context)
+    val exTran = ExprOrOpArgNodeTranslator(context)
     val (others, options) = node.getArgs.toList.partition {
       case n: OpApplNode => n.getArgs.head == null
       case _ => false
@@ -312,7 +312,7 @@ class OpApplTranslator(context: Context) {
   }
 
   private def mkExceptBuiltin(node: OpApplNode): TlaEx = {
-    val exTran = new ExprOrOpArgNodeTranslator(context)
+    val exTran = ExprOrOpArgNodeTranslator(context)
     node.getArgs.toList match {
       case (fnode: OpApplNode) :: pairNodes =>
         val fun = exTran.translate(fnode)
@@ -327,6 +327,10 @@ class OpApplTranslator(context: Context) {
 }
 
 object OpApplTranslator {
+  def apply(context: Context): OpApplTranslator = {
+    new OpApplTranslator(context)
+  }
+
   /**
     * A mapping from the Tlatools operator code to our IR operators.
     * This simple mapping does not apply to CHOOSE, \E, and \A.
