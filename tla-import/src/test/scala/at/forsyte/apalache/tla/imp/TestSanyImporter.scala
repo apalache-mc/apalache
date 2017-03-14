@@ -243,7 +243,9 @@ class TestSanyImporter extends FunSuite {
   }
 
   test("built-in operators") {
-    // following the operator table from tla2sany.semantic.BuiltInLevel.LevelData
+    // Following the operator table from tla2sany.semantic.BuiltInLevel.LevelData.
+    // Here we test the very basic application of every operator.
+    // For more advanced expressions, see the individual tests for each operator.
     val text =
       """---- MODULE builtins ----
         |VARIABLES x
@@ -292,29 +294,31 @@ class TestSanyImporter extends FunSuite {
         |Except == [ x EXCEPT ![0] = 1 ]
         |FcnApply == x[1]
         |FcnCtor == [ y \in x |-> y \cup y ]
+        |IfThenElse == IF TRUE THEN FALSE ELSE TRUE
+        |RcdCtor == [ a |-> 1, b |-> 2 ]
+        |RcdSelect == x.foo
+        |SetEnumerate == { 1, 2, 3 }
+        |SetOfFcns == [ x -> x ]
+        |SetOfRcds == [ a: x, b: x ]
+        |StrongFairness == SF_x(True)
+        |WeakFairness == WF_x(True)
+        |SquareAct == [True]_x
+        |TemporalExists == \EE y : True
+        |TemporalForall == \AA y : True
+        |UnboundedChoose == CHOOSE y: TRUE
+        |UnboundedExists == \E y: TRUE
+        |UnboundedForall == \A y: TRUE
+        |SetOfAll == { 1: y \in x }
+        |SubsetOf == { y \in x: TRUE }
         |
         |================================
         |""".stripMargin
 
-    //        |IfThenElse == IF TRUE THEN FALSE ELSE TRUE
+    // TODO: figure out what the following operators are...
+    //
     //        |NonRecursiveFcnSpec == ??????????
-    //        |RcdConstructor == { "a" |-> 1, "b" |-> 2 }
-    //        |RcdSelect == x.foo
     //        |RecursiveFcnSpec == ????????
-    //        |SetEnumerate == { 1, 2, 3 }
-    //        |SetOfAll == ???
-    //        |SetOfFcns == [ x -> x ]
-    //        |SetOfRcds == { "a": x, "b": x }
-    //        |StrongFairness == SF????
-    //        |SquareAct == [True]_x
-    //        |TemporalExists == \EE x???
-    //        |TemporalForall == \AA x???
     //        |TemporalWhile == ????
-    //        |Tuple == <<1, 2, 3>>
-    //        |UnboundedChoose ==
-    //        |UnboundedExists ==
-    //        |UnboundedForall ==
-    //        |WeakFairness == ...
 
     val (rootName, modules) = new SanyImporter().load("builtins", Source.fromString(text))
     val mod = expectModule("builtins", rootName, modules)
@@ -390,6 +394,40 @@ class TestSanyImporter extends FunSuite {
     val cup = OperEx(TlaSetOper.cup, NameEx("y"), NameEx("y"))
     assertTlaDecl("FcnCtor",
       OperEx(TlaFunOper.funDef, cup, NameEx("y"), NameEx("x")))(mod.declarations(40))
+    assertTlaDecl("IfThenElse",
+      OperEx(TlaControlOper.ifThenElse, ValEx(TlaTrue), ValEx(TlaFalse), ValEx(TlaTrue)))(mod.declarations(41))
+    assertTlaDecl("RcdCtor",
+      OperEx(TlaFunOper.enum,
+        ValEx(TlaStr("a")), ValEx(TlaInt(1)), ValEx(TlaStr("b")), ValEx(TlaInt(2))))(mod.declarations(42))
+    assertTlaDecl("RcdSelect",
+      OperEx(TlaFunOper.app,
+        NameEx("x"), ValEx(TlaStr("foo"))))(mod.declarations(43))
+    assertTlaDecl("SetEnumerate",
+      OperEx(TlaSetOper.enumSet, ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaInt(3))))(mod.declarations(44))
+    assertTlaDecl("SetOfFcns", OperEx(TlaSetOper.funSet, NameEx("x"), NameEx("x")))(mod.declarations(45))
+    assertTlaDecl("SetOfRcds",
+      OperEx(TlaSetOper.recSet,
+        ValEx(TlaStr("a")), NameEx("x"), ValEx(TlaStr("b")), NameEx("x")))(mod.declarations(46))
+    assertTlaDecl("StrongFairness",
+      OperEx(TlaTempOper.strongFairness, NameEx("x"), OperEx(trueOper)))(mod.declarations(47))
+    assertTlaDecl("WeakFairness",
+      OperEx(TlaTempOper.weakFairness, NameEx("x"), OperEx(trueOper)))(mod.declarations(48))
+    assertTlaDecl("SquareAct",
+      OperEx(TlaActionOper.stutter, OperEx(trueOper), NameEx("x")))(mod.declarations(49))
+    assertTlaDecl("TemporalExists",
+      OperEx(TlaTempOper.EE, NameEx("y"), OperEx(trueOper)))(mod.declarations(50))
+    assertTlaDecl("TemporalForall",
+      OperEx(TlaTempOper.AA, NameEx("y"), OperEx(trueOper)))(mod.declarations(51))
+    assertTlaDecl("UnboundedChoose",
+      OperEx(TlaOper.chooseUnbounded, NameEx("y"), ValEx(TlaTrue)))(mod.declarations(52))
+    assertTlaDecl("UnboundedExists",
+      OperEx(TlaBoolOper.existsUnbounded, NameEx("y"), ValEx(TlaTrue)))(mod.declarations(53))
+    assertTlaDecl("UnboundedForall",
+      OperEx(TlaBoolOper.forallUnbounded, NameEx("y"), ValEx(TlaTrue)))(mod.declarations(54))
+    assertTlaDecl("SetOfAll",
+      OperEx(TlaSetOper.map, ValEx(TlaInt(1)), NameEx("y"), NameEx("x")))(mod.declarations(55))
+    assertTlaDecl("SubsetOf",
+      OperEx(TlaSetOper.filter, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))(mod.declarations(56))
   }
 
   test("funCtor quantifiers") {
@@ -403,6 +441,7 @@ class TestSanyImporter extends FunSuite {
         |Q2 == \E x, y \in X: TRUE
         |Q3 == \E x, y \in X, z \in Z: TRUE
         |Q4 == \E x, y \in X, <<a, b>> \in Z, z \in Z: TRUE
+        |Q5 == \E x, y: TRUE
         |================================
         |""".stripMargin
 
@@ -436,6 +475,9 @@ class TestSanyImporter extends FunSuite {
           OperEx(TlaBoolOper.exists, OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")), NameEx("Z"),
             OperEx(TlaBoolOper.exists, NameEx("z"), NameEx("Z"),
               ValEx(TlaTrue)))))) (mod.declarations(5))
+    assertTlaDecl("Q5",
+      OperEx(TlaBoolOper.existsUnbounded, NameEx("x"),
+        OperEx(TlaBoolOper.existsUnbounded, NameEx("y"), ValEx(TlaTrue)))) (mod.declarations(6))
   }
 
   test("complex updates") {
@@ -473,6 +515,47 @@ class TestSanyImporter extends FunSuite {
         TlaFunOper.mkTuple(ValEx(TlaInt(0)), ValEx(TlaInt(1)), ValEx(TlaInt(2))),
           ValEx(TlaInt(3))
       ))(mod.declarations(2))
+  }
+
+  test("complex record selects") {
+    // Testing that multiple field accesses work as expected
+    val text =
+      """---- MODULE selects ----
+        |VARIABLE f
+        |S1 == f.a.b
+        |S2 == f.a.b.c
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter().load("selects", Source.fromString(text))
+    val mod = expectModule("selects", rootName, modules)
+
+    def assertTlaDecl(name: String, body: TlaEx): TlaDecl => Unit = {
+      case d: TlaOperDecl =>
+        assert(name == d.name)
+        assert(0 == d.formalParams.length)
+        assert(body == d.body)
+
+      case _ =>
+        fail("Expected a TlaDecl")
+    }
+
+    assertTlaDecl("S1",
+      OperEx(TlaFunOper.app,
+        OperEx(TlaFunOper.app,
+          NameEx("f"),
+          ValEx(TlaStr("a"))),
+        ValEx(TlaStr("b")))
+    ) (mod.declarations(1))
+    assertTlaDecl("S2",
+      OperEx(TlaFunOper.app,
+        OperEx(TlaFunOper.app,
+          OperEx(TlaFunOper.app,
+            NameEx("f"),
+            ValEx(TlaStr("a"))),
+          ValEx(TlaStr("b"))),
+        ValEx(TlaStr("c")))
+    ) (mod.declarations(2))
   }
 
   test("complex function ctors") {

@@ -35,13 +35,17 @@ package object temporal {
       override def arity: OperArity = FixedArity(2)
     }
 
-    /** The weak fairness operator */
+    /**
+      * The weak fairness operator WF_x(A). The argument order is: (x, A).
+      */
     val weakFairness = new TlaTempOper {
       override def name: String = "WF"
       override def arity: OperArity = FixedArity(2)
     }
 
-    /** The strong fairness operator */
+    /**
+      * The strong fairness operator SF_x(A). The argument order is: (x, A)
+      */
     val strongFairness = new TlaTempOper {
       override def name: String = "SF"
       override def arity: OperArity = FixedArity(2)

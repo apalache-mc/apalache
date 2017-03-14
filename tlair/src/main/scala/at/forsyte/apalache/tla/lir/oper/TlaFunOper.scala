@@ -11,7 +11,9 @@ abstract class TlaFunOper extends TlaOper {
 
 object TlaFunOper {
   /**
-    * a function constructor like the one for the records: k_1 |-> v_1, ..., k_n |-> v_n
+    * A function constructor like the one for the records: [ k_1 |-> v_1, ..., k_n |-> v_n ].
+    * The order of the arguments is: (k_1, v_1, ..., k_n, v_n).
+    * Note that in case of records, k_1, ..., k_n are strings, that is, ValEx(TlaStr(...)), not NameEx.
     */
   val enum = new TlaFunOper {
     override def arity: OperArity = AnyEvenArity()
@@ -36,7 +38,10 @@ object TlaFunOper {
   def mkTuple(elems: TlaEx*): OperEx =
     OperEx(tuple, elems: _*)
 
-  /** f[e] */
+  /**
+    * A function application, e.g., f[e].
+    * The order of the arguments is: (f, e).
+    */
   val app = new TlaFunOper {
     override val arity: OperArity = FixedArity(2)
     override val name: String = "fun-app"
@@ -63,7 +68,10 @@ object TlaFunOper {
     override def name: String = "fun-def"
   }
 
-  /** [f EXCEPT ![i1] = e_1, ![i_2] = e_2, ..., ![i_k] = e_k] */
+  /**
+    * A function update, e.g., [f EXCEPT ![i_1] = e_1, ![i_2] = e_2, ..., ![i_k] = e_k].
+    * The order of the arguments is as follows: (f, i_1, e_1, ..., i_k, e_k).
+    */
   val except = new TlaFunOper {
     override def arity: OperArity = AnyOddArity()
 

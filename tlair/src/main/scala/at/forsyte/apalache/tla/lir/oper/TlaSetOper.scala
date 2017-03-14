@@ -27,6 +27,15 @@ object TlaSetOper {
   }
 
   /**
+    * Construct a set of records, e.g., [ f_1: S_1, ..., f_k: S_k ].
+    * The order of the arguments is as follows: (f_1, S_1, ..., f_k, S_k).
+    */
+  val recSet = new TlaSetOper {
+    override def arity: OperArity = AnyEvenArity()
+    override def name: String = "$SetOfRcds"
+  }
+
+  /**
     * Construct a set of sequences from a set S i.e., Seq(S).
     */
   val seqSet = new TlaSetOper {
@@ -82,20 +91,27 @@ object TlaSetOper {
     override val name = "\\supseteq"
   }
 
+  /** the standard set difference */
   val setminus = new TlaSetOper {
     override val arity = FixedArity(2)
     override val name = "\\setminus"
   }
 
-  /** A restricted set comprehension: { x \in S : p } */
+  /**
+    * A restricted set comprehension: { x \in S : p }.
+    * The argument order is: (x, S, p). Note that x may be a tuple.
+    */
   val filter = new TlaSetOper {
     override val arity = FixedArity(3)
     override val name = "filter"
   }
 
-  /** A set mapping: { e: x \in S } */
+  /**
+    * A set mapping: { e: x_1 \in S_1, ..., x_k \in S_k }.
+    * The argument order is: (e, x_1, S_1, ..., x_k, S_k)
+    */
   val map = new TlaSetOper {
-    override val arity = FixedArity(3)
+    override val arity = AnyOddArity()
     override val name = "map"
   }
 
