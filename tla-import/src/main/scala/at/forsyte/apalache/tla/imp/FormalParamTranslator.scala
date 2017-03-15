@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.tla.lir.{FormalParam, SimpleFormalParam}
+import at.forsyte.apalache.tla.lir.oper.FixedArity
+import at.forsyte.apalache.tla.lir.{FormalParam, OperFormalParam, SimpleFormalParam}
 import tla2sany.semantic.FormalParamNode
 
 /**
@@ -10,8 +11,11 @@ import tla2sany.semantic.FormalParamNode
   */
 class FormalParamTranslator {
   def translate(param: FormalParamNode): FormalParam = {
-    assert(0 == param.getArity)
-    SimpleFormalParam(param.getName.toString.intern())
+    if (param.getArity == 0) {
+      SimpleFormalParam(param.getName.toString.intern())
+    } else {
+      OperFormalParam(param.getName.toString.intern(), FixedArity(param.getArity))
+    }
   }
 }
 

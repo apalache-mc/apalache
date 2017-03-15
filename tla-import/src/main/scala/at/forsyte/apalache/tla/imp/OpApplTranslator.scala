@@ -40,15 +40,31 @@ class OpApplTranslator(context: Context) {
       }
     } else {
       // non-constant operators
-      if (node.getOperator.getKind == ASTConstants.BuiltInKind) {
-        translateBuiltin(node)
-      } else {
-        throw new SanyImporterException("Unsupported operator type: " + node.getOperator)
+      node.getOperator.getKind match {
+        case ASTConstants.BuiltInKind =>
+          translateBuiltin(node)
+
+        case ASTConstants.FormalParamKind =>
+          translateFormalParam(node)
+
+        case _ =>
+          throw new SanyImporterException("Unsupported operator type: " + node.getOperator)
       }
     }
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // translate an operator application that uses a parameter operator, i.e.,
+  // in A(B(_)) == B(1), translate the application B(1)
+  private def translateFormalParam(node: OpApplNode): TlaEx = {
+    val oper = node.getOperator.asInstanceOf[FormalParamNode]
+    // FIXME: should we extract the parameter from the context???
+    val formalParam = FormalParamTranslator().translate(oper).asInstanceOf[OperFormalParam]
+    val exTran = ExprOrOpArgNodeTranslator(context)
+    val args = node.getArgs.toList.map { p => exTran.translate(p) }
+    OperEx(new OperFormalParamOper(formalParam), args: _*)
+  }
 
   // a built-in operator with zero arguments, that is, a built-in constant
   private def translateBuiltinConst(node: OpApplNode) = {

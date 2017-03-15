@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.imp
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.control.TlaControlOper
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
 import at.forsyte.apalache.tla.lir.values._
 import org.junit.runner.RunWith
@@ -636,6 +636,34 @@ class TestSanyImporter extends FunSuite {
 
     assertTlaDecl("A", List(SimpleFormalParam("i"), SimpleFormalParam("j")),
       OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j"))) (mod.declarations(2))
+  }
+
+  test("level-2 operators") {
+    // operators with parameters that are themselves operators with parameters
+    val text =
+      """---- MODULE level2Operators ----
+        |VARIABLE x, y
+        |A(i, j, f(_)) == f(i \cup j)
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter().load("level2Operators", Source.fromString(text))
+    val mod = expectModule("level2Operators", rootName, modules)
+
+    def assertTlaDecl(name: String, params: List[FormalParam], body: TlaEx): TlaDecl => Unit = {
+      case d: TlaOperDecl =>
+        assert(name == d.name)
+        assert(params == d.formalParams)
+        assert(body == d.body)
+
+      case _ =>
+        fail("Expected a TlaDecl")
+    }
+
+    assertTlaDecl("A",
+      List(SimpleFormalParam("i"), SimpleFormalParam("j"), OperFormalParam("f", FixedArity(1))),
+      OperEx(new OperFormalParamOper(OperFormalParam("f", FixedArity(1))),
+        OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j")))) (mod.declarations(2))
   }
 
   ////////////////////////////////////////////////////////////////////

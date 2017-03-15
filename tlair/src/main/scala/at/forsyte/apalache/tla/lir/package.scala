@@ -69,6 +69,31 @@ package lir {
       "Formal parameters should have fixed arity")
   }
 
+  /**
+    * An operator that is not defined, but corresponds to a formal parameter of another operator.
+    *
+    * @param param the formal parameter of an operator
+    */
+  class OperFormalParamOper(val param: OperFormalParam) extends TlaOper {
+    override def name: String = param.name
+
+    override def interpretation: Interpretation.Value = Interpretation.User
+
+    override def arity: OperArity = param.arity
+
+    override def hashCode(): Int = param.hashCode()
+
+    override def equals(other: scala.Any): Boolean = {
+      other match {
+        case that: OperFormalParamOper =>
+          param == that.param
+
+        case _ =>
+          false
+      }
+    }
+  }
+
 
   trait Identifiable{
     protected var m_ID : UID = UID( -1 )
@@ -154,7 +179,10 @@ package lir {
 
   /** applying an operator, including the one defined by OperFormalParam */
 
-  /** NOTE: Scala does not auto-generate copy for OperEx, because args are variable */
+  /**
+    * NOTE: Scala does not auto-generate copy for OperEx, because args are variable
+    * IK: Let's discuss it. To my understanding, case classes copy their parameters without any problem.
+    */
 
   case class OperEx(oper: TlaOper, args: TlaEx*) extends TlaEx {
     require(oper.isCorrectArity(args.size), "unexpected arity %d".format(args.size))
