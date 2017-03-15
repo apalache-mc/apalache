@@ -19,8 +19,11 @@ class ModuleTranslator {
     val context = node.getOpDefs.toList.foldLeft(context2) {
       (ctx, node) => ctx.push(OpDefTranslator(ctx).translate(node))
     }
+    val imported = node.getExtendedModuleSet.toArray(Array[ModuleNode]()).map {
+      mn => mn.getName.toString.intern()
+    }
     // TODO: add the source info into a proper database
-    new TlaModule(node.getName.toString, Seq(), context.declarations)
+    new TlaModule(node.getName.toString, imported, context.declarations)
   }
 }
 

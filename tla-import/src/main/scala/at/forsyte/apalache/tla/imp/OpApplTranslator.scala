@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.control.TlaControlOper
+import at.forsyte.apalache.tla.lir.predef.TlaEmptySet
 import tla2sany.semantic._
 
 /**
@@ -70,8 +71,9 @@ class OpApplTranslator(context: Context) {
   private def translateBuiltinConst(node: OpApplNode) = {
     // comparing the name seems to be the only way of learning about the actual operator
     node.getOperator.getName.toString match {
-      case "FALSE" => ValEx(TlaFalse) // here we disagree with tlatools and treat FALSE as a built-in value
-      case "TRUE" => ValEx(TlaTrue) // ditto
+      case "FALSE" => ValEx(TlaFalse)               // we disagree with tlatools and treat FALSE as a built-in value
+      case "TRUE" => ValEx(TlaTrue)                 // ditto
+      case "$SetEnumerate" => ValEx(TlaEmptySet)  // in our IR, the empty set is a value, not an operator
       case _ => throw new SanyImporterException("Unsupported constant built-in operator: " + node.getOperator)
     }
   }

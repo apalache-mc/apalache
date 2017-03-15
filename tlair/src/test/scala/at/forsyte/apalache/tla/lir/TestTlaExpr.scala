@@ -99,7 +99,7 @@ class TestTlaExpr extends FunSuite {
 
   test("the empty set") {
     // this is the way to use the empty set
-    TlaEmptySet()
+    TlaEmptySet
     // this is the wrong way to define the empty set
     try {
       OperEx(TlaSetOper.enumSet)
@@ -110,17 +110,17 @@ class TestTlaExpr extends FunSuite {
 
     // an intersection with another set
     OperEx(TlaSetOper.cap,
-      ValEx(TlaEmptySet()),
+      ValEx(TlaEmptySet),
       OperEx(TlaSetOper.enumSet, ValEx(TlaInt(1)))
     )
   }
 
   test("set constructors") {
     // declare sets whose contents we don't know
-    val set1 = new TlaUserSet()
-    val set2 = new TlaUserSet()
+    val set1 = TlaUserSet()
+    val set2 = TlaUserSet()
     // there is only one set of integers
-    val intSet = TlaIntSet()
+    val intSet = TlaIntSet
 
     val rhs = OperEx(TlaSetOper.cup, ValEx(set2), ValEx(intSet))
     OperEx(TlaOper.eq, ValEx(set1), rhs)

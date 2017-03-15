@@ -44,7 +44,7 @@ class TestLirValues extends FunSuite {
   }
 
   test("define a function") {
-    val dom = TlaIntSet()
+    val dom = TlaIntSet
     val f = TlaFun(dom)
     assert(f.domain == dom)
   }
