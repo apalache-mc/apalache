@@ -346,112 +346,115 @@ class TestSanyImporter extends FunSuite {
 
     val (rootName, modules) = new SanyImporter().load("builtins", Source.fromString(text))
     val mod = expectSingleModule("builtins", rootName, modules)
+    val root = modules(rootName)
 
-    def assertTlaDecl(name: String, body: TlaEx): TlaDecl => Unit = {
-      case d: TlaOperDecl =>
-        assert(name == d.name)
-        assert(0 == d.formalParams.length)
-        assert(body == d.body)
+    def assertTlaDecl(expectedName: String, body: TlaEx): Unit = {
+      root.declarations.find { _.name == expectedName} match {
+        case Some(d: TlaOperDecl) =>
+          assert(expectedName == d.name)
+          assert(0 == d.formalParams.length)
+          assert(body == d.body)
 
-      case _ =>
-        fail("Expected a TlaDecl")
+        case _ =>
+          fail("Expected a TlaDecl")
+      }
     }
 
     val trueOperDecl = mod.declarations(1)
-    assertTlaDecl("True", ValEx(TlaTrue))(trueOperDecl)
+    assertTlaDecl("True", ValEx(TlaTrue))
     val trueOper = TlaOperDecl("True", List(), ValEx(TlaTrue)).operator
     assert(OperEx(trueOper) == OperEx(trueOper))
 
 
-    assertTlaDecl("Eq", OperEx(TlaOper.eq, ValEx(TlaFalse), ValEx(TlaTrue)))(mod.declarations(2))
-    assertTlaDecl("Ne", OperEx(TlaOper.ne, ValEx(TlaFalse), ValEx(TlaTrue)))(mod.declarations(3))
-    assertTlaDecl("Prime", OperEx(TlaActionOper.prime, NameEx("x")))(mod.declarations(4))
-    assertTlaDecl("Not", OperEx(TlaBoolOper.not, NameEx("x")))(mod.declarations(5))
-    assertTlaDecl("Or", OperEx(TlaBoolOper.or, ValEx(TlaFalse), ValEx(TlaTrue)))(mod.declarations(6))
-    assertTlaDecl("And", OperEx(TlaBoolOper.and, ValEx(TlaFalse), ValEx(TlaTrue)))(mod.declarations(7))
-    assertTlaDecl("Equiv", OperEx(TlaBoolOper.equiv, ValEx(TlaFalse), ValEx(TlaTrue)))(mod.declarations(8))
-    assertTlaDecl("Implies", OperEx(TlaBoolOper.implies, ValEx(TlaFalse), ValEx(TlaTrue)))(mod.declarations(9))
-    assertTlaDecl("Subset", OperEx(TlaSetOper.SUBSET, NameEx("x")))(mod.declarations(10))
-    assertTlaDecl("Union", OperEx(TlaSetOper.union, NameEx("x")))(mod.declarations(11))
-    assertTlaDecl("Domain", OperEx(TlaFunOper.domain, NameEx("x")))(mod.declarations(12))
-    assertTlaDecl("Subseteq", OperEx(TlaSetOper.subseteq, NameEx("x"), NameEx("x")))(mod.declarations(13))
-    assertTlaDecl("In", OperEx(TlaSetOper.in, NameEx("x"), NameEx("x")))(mod.declarations(14))
-    assertTlaDecl("Notin", OperEx(TlaSetOper.notin, NameEx("x"), NameEx("x")))(mod.declarations(15))
-    assertTlaDecl("Setminus", OperEx(TlaSetOper.setminus, NameEx("x"), NameEx("x")))(mod.declarations(16))
-    assertTlaDecl("Cap", OperEx(TlaSetOper.cap, NameEx("x"), NameEx("x")))(mod.declarations(17))
-    assertTlaDecl("Cup", OperEx(TlaSetOper.cup, NameEx("x"), NameEx("x")))(mod.declarations(18))
-    assertTlaDecl("Times", OperEx(TlaSetOper.times, NameEx("x"), NameEx("x")))(mod.declarations(19))
-    assertTlaDecl("LeadsTo", OperEx(TlaTempOper.leadsTo, ValEx(TlaTrue), ValEx(TlaTrue)))(mod.declarations(20))
-    assertTlaDecl("Box", OperEx(TlaTempOper.box, ValEx(TlaTrue)))(mod.declarations(21))
-    assertTlaDecl("Diamond", OperEx(TlaTempOper.diamond, ValEx(TlaTrue)))(mod.declarations(22))
-    assertTlaDecl("Enabled", OperEx(TlaActionOper.enabled, NameEx("x")))(mod.declarations(23))
-    assertTlaDecl("Unchanged", OperEx(TlaActionOper.unchanged, NameEx("x")))(mod.declarations(24))
-    assertTlaDecl("Cdot", OperEx(TlaActionOper.composition, OperEx(trueOper), OperEx(trueOper)))(mod.declarations(25))
+    assertTlaDecl("Eq", OperEx(TlaOper.eq, ValEx(TlaFalse), ValEx(TlaTrue)))
+    assertTlaDecl("Ne", OperEx(TlaOper.ne, ValEx(TlaFalse), ValEx(TlaTrue)))
+    assertTlaDecl("Prime", OperEx(TlaActionOper.prime, NameEx("x")))
+    assertTlaDecl("Not", OperEx(TlaBoolOper.not, NameEx("x")))
+    assertTlaDecl("Or", OperEx(TlaBoolOper.or, ValEx(TlaFalse), ValEx(TlaTrue)))
+    assertTlaDecl("And", OperEx(TlaBoolOper.and, ValEx(TlaFalse), ValEx(TlaTrue)))
+    assertTlaDecl("Equiv", OperEx(TlaBoolOper.equiv, ValEx(TlaFalse), ValEx(TlaTrue)))
+    assertTlaDecl("Implies", OperEx(TlaBoolOper.implies, ValEx(TlaFalse), ValEx(TlaTrue)))
+    assertTlaDecl("Subset", OperEx(TlaSetOper.SUBSET, NameEx("x")))
+    assertTlaDecl("Union", OperEx(TlaSetOper.union, NameEx("x")))
+    assertTlaDecl("Domain", OperEx(TlaFunOper.domain, NameEx("x")))
+    assertTlaDecl("Subseteq", OperEx(TlaSetOper.subseteq, NameEx("x"), NameEx("x")))
+    assertTlaDecl("In", OperEx(TlaSetOper.in, NameEx("x"), NameEx("x")))
+    assertTlaDecl("Notin", OperEx(TlaSetOper.notin, NameEx("x"), NameEx("x")))
+    assertTlaDecl("Setminus", OperEx(TlaSetOper.setminus, NameEx("x"), NameEx("x")))
+    assertTlaDecl("Cap", OperEx(TlaSetOper.cap, NameEx("x"), NameEx("x")))
+    assertTlaDecl("Cup", OperEx(TlaSetOper.cup, NameEx("x"), NameEx("x")))
+    assertTlaDecl("Times", OperEx(TlaSetOper.times, NameEx("x"), NameEx("x")))
+    assertTlaDecl("LeadsTo", OperEx(TlaTempOper.leadsTo, ValEx(TlaTrue), ValEx(TlaTrue)))
+    assertTlaDecl("Box", OperEx(TlaTempOper.box, ValEx(TlaTrue)))
+    assertTlaDecl("Diamond", OperEx(TlaTempOper.diamond, ValEx(TlaTrue)))
+    assertTlaDecl("Enabled", OperEx(TlaActionOper.enabled, NameEx("x")))
+    assertTlaDecl("Unchanged", OperEx(TlaActionOper.unchanged, NameEx("x")))
+    assertTlaDecl("Cdot", OperEx(TlaActionOper.composition, OperEx(trueOper), OperEx(trueOper)))
     assertTlaDecl("Guarantees",
-      OperEx(TlaTempOper.guarantees, OperEx(trueOper), OperEx(trueOper)))(mod.declarations(26))
+      OperEx(TlaTempOper.guarantees, OperEx(trueOper), OperEx(trueOper)))
     assertTlaDecl("Angleact",
-      OperEx(TlaActionOper.nostutter, OperEx(trueOper), NameEx("x")))(mod.declarations(27))
+      OperEx(TlaActionOper.nostutter, OperEx(trueOper), NameEx("x")))
     assertTlaDecl("BoundedChoose",
-      OperEx(TlaOper.chooseBounded, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))(mod.declarations(28))
+      OperEx(TlaOper.chooseBounded, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))
     assertTlaDecl("BoundedExists",
-      OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))(mod.declarations(29))
+      OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))
     assertTlaDecl("BoundedForall",
-      OperEx(TlaBoolOper.forall, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))(mod.declarations(30))
+      OperEx(TlaBoolOper.forall, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))
     assertTlaDecl("CartesianProd",
-      OperEx(TlaSetOper.times, NameEx("x"), NameEx("x"), NameEx("x")))(mod.declarations(31))
-    assertTlaDecl("Pair", OperEx(TlaFunOper.tuple, ValEx(TlaInt(1)), ValEx(TlaInt(2))))(mod.declarations(32))
+      OperEx(TlaSetOper.times, NameEx("x"), NameEx("x"), NameEx("x")))
+    assertTlaDecl("Pair", OperEx(TlaFunOper.tuple, ValEx(TlaInt(1)), ValEx(TlaInt(2))))
     assertTlaDecl("Tuple",
-      OperEx(TlaFunOper.tuple, ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaInt(3))))(mod.declarations(33))
+      OperEx(TlaFunOper.tuple, ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaInt(3))))
     assertTlaDecl("Case",
-      OperEx(TlaControlOper.caseNoOther, 1.to(6).map(i => ValEx(TlaInt(i))): _*))(mod.declarations(34))
+      OperEx(TlaControlOper.caseNoOther, 1.to(6).map(i => ValEx(TlaInt(i))): _*))
     assertTlaDecl("CaseOther",
-      OperEx(TlaControlOper.caseWithOther, (7 +: 1.to(6)).map(i => ValEx(TlaInt(i))): _*))(mod.declarations(35))
+      OperEx(TlaControlOper.caseWithOther, (7 +: 1.to(6)).map(i => ValEx(TlaInt(i))): _*))
     assertTlaDecl("ConjList",
-      OperEx(TlaBoolOper.and, List(TlaFalse, TlaTrue, TlaFalse).map(b => ValEx(b)): _*))(mod.declarations(36))
+      OperEx(TlaBoolOper.and, List(TlaFalse, TlaTrue, TlaFalse).map(b => ValEx(b)): _*))
     assertTlaDecl("DisjList",
-      OperEx(TlaBoolOper.or, List(TlaFalse, TlaTrue, TlaFalse).map(b => ValEx(b)): _*))(mod.declarations(37))
+      OperEx(TlaBoolOper.or, List(TlaFalse, TlaTrue, TlaFalse).map(b => ValEx(b)): _*))
     assertTlaDecl("Except",
       OperEx(TlaFunOper.except,
         NameEx("x"), TlaFunOper.mkTuple(ValEx(TlaInt(0))), ValEx(TlaInt(1))
-      ))(mod.declarations(38))
-    assertTlaDecl("FcnApply", OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(1))))(mod.declarations(39))
+      ))
+    assertTlaDecl("FcnApply", OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(1))))
     val cup = OperEx(TlaSetOper.cup, NameEx("y"), NameEx("y"))
     assertTlaDecl("FcnCtor",
-      OperEx(TlaFunOper.funDef, cup, NameEx("y"), NameEx("x")))(mod.declarations(40))
+      OperEx(TlaFunOper.funDef, cup, NameEx("y"), NameEx("x")))
     assertTlaDecl("IfThenElse",
-      OperEx(TlaControlOper.ifThenElse, ValEx(TlaTrue), ValEx(TlaFalse), ValEx(TlaTrue)))(mod.declarations(41))
+      OperEx(TlaControlOper.ifThenElse, ValEx(TlaTrue), ValEx(TlaFalse), ValEx(TlaTrue)))
     assertTlaDecl("RcdCtor",
       OperEx(TlaFunOper.enum,
-        ValEx(TlaStr("a")), ValEx(TlaInt(1)), ValEx(TlaStr("b")), ValEx(TlaInt(2))))(mod.declarations(42))
+        ValEx(TlaStr("a")), ValEx(TlaInt(1)), ValEx(TlaStr("b")), ValEx(TlaInt(2))))
     assertTlaDecl("RcdSelect",
       OperEx(TlaFunOper.app,
-        NameEx("x"), ValEx(TlaStr("foo"))))(mod.declarations(43))
+        NameEx("x"), ValEx(TlaStr("foo"))))
     assertTlaDecl("SetEnumerate",
-      OperEx(TlaSetOper.enumSet, ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaInt(3))))(mod.declarations(44))
-    assertTlaDecl("SetOfFcns", OperEx(TlaSetOper.funSet, NameEx("x"), NameEx("x")))(mod.declarations(45))
+      OperEx(TlaSetOper.enumSet, ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaInt(3))))
+    assertTlaDecl("SetOfFcns", OperEx(TlaSetOper.funSet, NameEx("x"), NameEx("x")))
     assertTlaDecl("SetOfRcds",
       OperEx(TlaSetOper.recSet,
-        ValEx(TlaStr("a")), NameEx("x"), ValEx(TlaStr("b")), NameEx("x")))(mod.declarations(46))
+        ValEx(TlaStr("a")), NameEx("x"), ValEx(TlaStr("b")), NameEx("x")))
     assertTlaDecl("StrongFairness",
-      OperEx(TlaTempOper.strongFairness, NameEx("x"), OperEx(trueOper)))(mod.declarations(47))
+      OperEx(TlaTempOper.strongFairness, NameEx("x"), OperEx(trueOper)))
     assertTlaDecl("WeakFairness",
-      OperEx(TlaTempOper.weakFairness, NameEx("x"), OperEx(trueOper)))(mod.declarations(48))
+      OperEx(TlaTempOper.weakFairness, NameEx("x"), OperEx(trueOper)))
     assertTlaDecl("SquareAct",
-      OperEx(TlaActionOper.stutter, OperEx(trueOper), NameEx("x")))(mod.declarations(49))
+      OperEx(TlaActionOper.stutter, OperEx(trueOper), NameEx("x")))
     assertTlaDecl("TemporalExists",
-      OperEx(TlaTempOper.EE, NameEx("y"), OperEx(trueOper)))(mod.declarations(50))
+      OperEx(TlaTempOper.EE, NameEx("y"), OperEx(trueOper)))
     assertTlaDecl("TemporalForall",
-      OperEx(TlaTempOper.AA, NameEx("y"), OperEx(trueOper)))(mod.declarations(51))
+      OperEx(TlaTempOper.AA, NameEx("y"), OperEx(trueOper)))
     assertTlaDecl("UnboundedChoose",
-      OperEx(TlaOper.chooseUnbounded, NameEx("y"), ValEx(TlaTrue)))(mod.declarations(52))
+      OperEx(TlaOper.chooseUnbounded, NameEx("y"), ValEx(TlaTrue)))
     assertTlaDecl("UnboundedExists",
-      OperEx(TlaBoolOper.existsUnbounded, NameEx("y"), ValEx(TlaTrue)))(mod.declarations(53))
+      OperEx(TlaBoolOper.existsUnbounded, NameEx("y"), ValEx(TlaTrue)))
     assertTlaDecl("UnboundedForall",
-      OperEx(TlaBoolOper.forallUnbounded, NameEx("y"), ValEx(TlaTrue)))(mod.declarations(54))
+      OperEx(TlaBoolOper.forallUnbounded, NameEx("y"), ValEx(TlaTrue)))
     assertTlaDecl("SetOfAll",
-      OperEx(TlaSetOper.map, ValEx(TlaInt(1)), NameEx("y"), NameEx("x")))(mod.declarations(55))
+      OperEx(TlaSetOper.map, ValEx(TlaInt(1)), NameEx("y"), NameEx("x")))
     assertTlaDecl("SubsetOf",
-      OperEx(TlaSetOper.filter, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))(mod.declarations(56))
+      OperEx(TlaSetOper.filter, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))
   }
 
   test("funCtor quantifiers") {
