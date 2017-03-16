@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
-import at.forsyte.apalache.tla.lir.control.TlaControlOper
+import at.forsyte.apalache.tla.lir.control.{LetInOper, TlaControlOper}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.predef._
 import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
@@ -714,6 +714,43 @@ class TestSanyImporter extends FunSuite {
       OperEx(aDecl.operator, ValEx(TlaInt(0)), ValEx(TlaInt(1)), NameEx("B")))(mod.declarations(4))
   }
 
+  test("let-in") {
+    val text =
+      """---- MODULE let ----
+        |A == LET X == 1 IN X
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter().load("let", Source.fromString(text))
+    assert(1 == modules.size)
+    // the root module and naturals
+    val root = modules(rootName)
+
+    def assertTlaDecl(expectedName: String, body: TlaEx): Unit = {
+      root.declarations.find { _.name == expectedName} match {
+        case Some(d: TlaOperDecl) =>
+          assert(expectedName == d.name)
+          assert(0 == d.formalParams.length)
+          assert(body == d.body)
+
+        case _ =>
+          fail("Expected a TlaDecl")
+      }
+    }
+
+    // the root module contains its own declarations and the declarations by FiniteSets
+    root.declarations.find { _.name == "A" } match {
+      case Some(TlaOperDecl(_, _, OperEx(o: LetInOper, body))) =>
+        assert(1 == o.defs.length)
+        val xDecl = o.defs.head
+        assert("X" == xDecl.name)
+        assert(0 == xDecl.formalParams.length)
+        assert(ValEx(TlaInt(1)) == xDecl.body)
+        // although "X" might seem to be a variable, it is actually an operator without any arguments
+        assert(OperEx(xDecl.operator) == body)
+    }
+  }
+
   test("module imports") {
     // operators with parameters that are themselves operators with parameters
     val text =
@@ -898,6 +935,43 @@ class TestSanyImporter extends FunSuite {
     assertTlaDecl("UnaryMinus", OperEx(TlaArithOper.uminus, ValEx(TlaInt(2))))
     assertTlaDecl("RealDiv", OperEx(TlaArithOper.realDiv, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
   }
+
+/*
+  FiniteSets extend Sequences, which open the Pandora box... Temporarily disabled.
+
+  test("module finitesets") {
+    // check that the FiniteSets module is imported properly
+    val text =
+      """---- MODULE finitesets ----
+        |EXTENDS FiniteSets
+        |IsFinSet == IsFiniteSet(BOOLEAN)
+        |Card == Cardinality(BOOLEAN)
+        |
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter().load("finitesets", Source.fromString(text))
+    assert(2 == modules.size)
+    // the root module and naturals
+    val root = modules(rootName)
+
+    def assertTlaDecl(expectedName: String, body: TlaEx): Unit = {
+      root.declarations.find { _.name == expectedName} match {
+        case Some(d: TlaOperDecl) =>
+          assert(expectedName == d.name)
+          assert(0 == d.formalParams.length)
+          assert(body == d.body)
+
+        case _ =>
+          fail("Expected a TlaDecl")
+      }
+    }
+
+    // the root module contains its own declarations and the declarations by FiniteSets
+    assertTlaDecl("IsFinSet", OperEx(TlaFiniteSetOper.isFiniteSet, ValEx(TlaBoolSet)))
+    assertTlaDecl("Card", OperEx(TlaFiniteSetOper.cardinality, ValEx(TlaBoolSet)))
+  }
+  */
 
   ////////////////////////////////////////////////////////////////////
   private def expectSingleModule(expectedRootName: String, rootName: String, modules: Map[String, TlaModule]): TlaModule = {

@@ -1,12 +1,12 @@
 package at.forsyte.apalache.tla.imp
 
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
+import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaEmptySet, TlaStrSet}
 import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
-import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.control.TlaControlOper
-import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaEmptySet, TlaStrSet}
 import tla2sany.semantic._
 
 /**
@@ -92,6 +92,7 @@ class OpApplTranslator(val context: Context) {
       case "BOOLEAN" => ValEx(TlaBoolSet)         // ditto
       case "STRING" => ValEx(TlaStrSet)           // ditto
       case "$SetEnumerate" => ValEx(TlaEmptySet)  // in our IR, the empty set is a value, not an operator
+      case "$Tuple" => OperEx(TlaFunOper.tuple)   // just an empty tuple/sequence
       case _ => throw new SanyImporterException("Unsupported constant built-in operator: " + node.getOperator)
     }
   }

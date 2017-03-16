@@ -1,8 +1,11 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.tla.lir.{NameEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.control.LetInOper
 import at.forsyte.apalache.tla.lir.values.{TlaDecimal, TlaInt, TlaStr}
 import tla2sany.semantic._
+
+import scala.collection.JavaConverters._
 
 /**
   * Translate a TLA+ expression.
@@ -28,6 +31,9 @@ class ExprOrOpArgNodeTranslator(context: Context) {
       // we just pass the name of the argument without any extra information
       NameEx(arg.getName.toString.intern())
 
+    case letIn: LetInNode =>
+      translateLetIn(letIn)
+
     case n =>
       throw new SanyImporterException("Unexpected subclass of tla2sany.ExprOrOpArgNode: " + n.getClass)
   }
@@ -50,6 +56,23 @@ class ExprOrOpArgNodeTranslator(context: Context) {
       // the normal math exponent is the negated scale
       ValEx(TlaDecimal(BigDecimal(dec.mantissa(), -dec.exponent())))
     }
+
+  private def translateLetIn(letIn: LetInNode): TlaEx = {
+    // Accumulate definitions as in ModuleTranslator.
+    // (As ModuleNode does not implement Context, we cannot reuse the code from there.)
+
+    // we only go through the operator definitions, as one cannot define constants or variables with Let-In.
+    val innerContext = letIn.context.getOpDefs.elements.asScala.foldLeft(Context()) {
+      case (ctx, node: OpDefNode) =>
+        ctx.push(OpDefTranslator(context.disjointUnion(ctx)).translate(node))
+
+      case (_, other) =>
+        throw new SanyImporterException("Expected OpDefNode, found: " + other.getClass)
+    }
+    val oper = new LetInOper(innerContext.declarations.map {d => d.asInstanceOf[TlaOperDecl]})
+    val body = ExprOrOpArgNodeTranslator(context.disjointUnion(innerContext)).translate(letIn.getBody)
+    OperEx(oper, body)
+  }
 }
 
 object ExprOrOpArgNodeTranslator {

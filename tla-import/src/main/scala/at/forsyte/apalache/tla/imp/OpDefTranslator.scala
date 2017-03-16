@@ -1,11 +1,10 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.tla.lir.{TlaDecl, TlaOperDecl, ValEx}
-import at.forsyte.apalache.tla.lir.values.TlaInt
+import at.forsyte.apalache.tla.lir.TlaOperDecl
 import tla2sany.semantic.OpDefNode
 
 /**
-  * Translate an operator to a TlaOper.
+  * Translate an operator definition to a TlaOper.
   *
   * @author konnov
   */

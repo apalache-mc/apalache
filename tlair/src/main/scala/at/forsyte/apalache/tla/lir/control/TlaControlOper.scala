@@ -3,10 +3,11 @@ package at.forsyte.apalache.tla.lir.control
 import at.forsyte.apalache.tla.lir.oper._
 
 /**
- * Control-flow operators
- */
+  * Control-flow operators
+  */
 abstract class TlaControlOper extends TlaOper {
   override def interpretation: Interpretation.Value = Interpretation.Predefined
+
 }
 
 object TlaControlOper {
@@ -38,18 +39,6 @@ object TlaControlOper {
   val ifThenElse = new TlaControlOper {
     override val name: String = "IF-THEN-ELSE"
     override val arity: OperArity = FixedArity(3)
-    override val interpretation: Interpretation.Value = Interpretation.Predefined
-  }
-
-  /**
-    * The LET x_1 = e_1, ..., x_k = e_k in A. The arguments are always an odd-length list
-    * of the following structure: A, x_1, e_1, ..., x_k, e_k.
-    * The rationale is that (1) args.head gives us the body, and (2) args.tail gives us
-    * an interleaved list of bound variables and bound expressions.
-    */
-  val letIn = new TlaControlOper {
-    override val name: String = "LET-IN"
-    override val arity: OperArity = AnyOddArity()
     override val interpretation: Interpretation.Value = Interpretation.Predefined
   }
 }
