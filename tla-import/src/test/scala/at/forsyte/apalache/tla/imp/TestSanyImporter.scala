@@ -333,6 +333,7 @@ class TestSanyImporter extends FunSuite {
       |SetOfAll == { 1: y \in x }
       |SubsetOf == { y \in x: TRUE }
       |Boolean == BOOLEAN
+      |String == STRING
       |
       |================================
       |""".stripMargin
@@ -457,6 +458,7 @@ class TestSanyImporter extends FunSuite {
     assertTlaDecl("SubsetOf",
       OperEx(TlaSetOper.filter, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))
     assertTlaDecl("Boolean", ValEx(TlaBoolSet))
+    assertTlaDecl("String", ValEx(TlaStrSet))
   }
 
   test("funCtor quantifiers") {
