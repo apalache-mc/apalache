@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.predef.{TlaEmptySet, TlaIntSet, TlaNatSet, TlaRealSet}
+import at.forsyte.apalache.tla.lir.predef._
 import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
 import at.forsyte.apalache.tla.lir.values._
 import org.junit.runner.RunWith
@@ -332,6 +332,7 @@ class TestSanyImporter extends FunSuite {
       |UnboundedForall == \A y: TRUE
       |SetOfAll == { 1: y \in x }
       |SubsetOf == { y \in x: TRUE }
+      |Boolean == BOOLEAN
       |
       |================================
       |""".stripMargin
@@ -455,6 +456,7 @@ class TestSanyImporter extends FunSuite {
       OperEx(TlaSetOper.map, ValEx(TlaInt(1)), NameEx("y"), NameEx("x")))
     assertTlaDecl("SubsetOf",
       OperEx(TlaSetOper.filter, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))
+    assertTlaDecl("Boolean", ValEx(TlaBoolSet))
   }
 
   test("funCtor quantifiers") {
