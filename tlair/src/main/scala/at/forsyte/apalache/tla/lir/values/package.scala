@@ -4,11 +4,12 @@ package values {
 
   /** an integer value (unbounded as in TLA+) */
   case class TlaInt(value: BigInt) extends TlaValue {
-    def isNatural = {
+    def isNatural: Boolean = {
       value >= 0
     }
   }
 
+  // TODO: do we want to have a less ad hoc solution, e.g., an object with all handy constructors?
   object IntEx{
     def apply( n : BigInt ) : ValEx = ValEx( TlaInt( n ) )
   }
@@ -29,6 +30,9 @@ package values {
 
   object TlaTrue extends TlaBool(true)
 
+  /** a string */
+  case class TlaStr(value: String) extends TlaValue
+
   /** an abstract set */
   abstract class TlaSet() extends TlaValue
 
@@ -45,9 +49,10 @@ package values {
     */
   case class TlaUserSet() extends TlaSet
 
-  /** a function */
+  /**
+    * A function.
+    *
+    * FIXME: It is not clear, why we need this object at all, as all functions are created with operators.
+    */
   case class TlaFun(domain: TlaSet) extends TlaValue
-
-  /** a string */
-  case class TlaStr(value: String) extends TlaValue
 }
