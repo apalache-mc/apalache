@@ -7,7 +7,6 @@ import at.forsyte.apalache.tla.lir.TlaModule
 import org.apache.commons.io.output.WriterOutputStream
 import tla2sany.drivers.SANY
 import tla2sany.modanalyzer.SpecObj
-import tla2sany.semantic.ModuleNode
 import util.SimpleFilenameToStream
 
 import scala.io.Source

@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.predef.{TlaEmptySet, TlaNatSet}
+import at.forsyte.apalache.tla.lir.predef.{TlaEmptySet, TlaIntSet, TlaNatSet, TlaRealSet}
 import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
 import at.forsyte.apalache.tla.lir.values._
 import org.junit.runner.RunWith
@@ -20,6 +20,7 @@ import scala.io.Source
   */
 @RunWith(classOf[JUnitRunner])
 class TestSanyImporter extends FunSuite {
+
   test("empty module") {
     val text =
       """---- MODULE justASimpleTest ----
@@ -268,72 +269,72 @@ class TestSanyImporter extends FunSuite {
     // Here we test the very basic application of every operator.
     // For more advanced expressions, see the individual tests for each operator.
     val text =
-      """---- MODULE builtins ----
-        |VARIABLES x
-        |True == TRUE
-        |
-        |Eq == FALSE = TRUE
-        |Ne == FALSE /= TRUE
-        |Prime == x'
-        |Not == ~x
-        |Or == FALSE \/ TRUE
-        |And == FALSE /\ TRUE
-        |Equiv == FALSE <=> TRUE
-        |Implies == FALSE => TRUE
-        |Subset == SUBSET x
-        |Union == UNION x
-        |Domain == DOMAIN x
-        |Subseteq == x \subseteq x
-        |In == x \in x
-        |Notin == x \notin x
-        |Setminus == x \ x
-        |Cap == x \cap x
-        |Cup == x \cup x
-        |Times == x \X x
-        |LeadsTo == TRUE ~> TRUE
-        |Box == []TRUE
-        |Diamond == <>TRUE
-        |Enabled == ENABLED x
-        |Unchanged == UNCHANGED x
-        |Cdot == (True \cdot True)
-        |Guarantees == True -+-> True
-        |Angleact == <<True>>_x
-        |BoundedChoose == CHOOSE y \in x: TRUE
-        |BoundedExists == \E y \in x: TRUE
-        |BoundedForall == \A y \in x: TRUE
-        |CartesianProd == x \X x \X x
-        |Pair == <<1, 2>>
-        |Tuple == <<1, 2, 3>>
-        |Case == CASE 1 -> 2 [] 3 -> 4 [] 5 -> 6
-        |CaseOther == CASE 1 -> 2 [] 3 -> 4 [] 5 -> 6 [] OTHER -> 7
-        |ConjList == /\ FALSE
-        |            /\ TRUE
-        |            /\ FALSE
-        |DisjList == \/ FALSE
-        |            \/ TRUE
-        |            \/ FALSE
-        |Except == [ x EXCEPT ![0] = 1 ]
-        |FcnApply == x[1]
-        |FcnCtor == [ y \in x |-> y \cup y ]
-        |IfThenElse == IF TRUE THEN FALSE ELSE TRUE
-        |RcdCtor == [ a |-> 1, b |-> 2 ]
-        |RcdSelect == x.foo
-        |SetEnumerate == { 1, 2, 3 }
-        |SetOfFcns == [ x -> x ]
-        |SetOfRcds == [ a: x, b: x ]
-        |StrongFairness == SF_x(True)
-        |WeakFairness == WF_x(True)
-        |SquareAct == [True]_x
-        |TemporalExists == \EE y : True
-        |TemporalForall == \AA y : True
-        |UnboundedChoose == CHOOSE y: TRUE
-        |UnboundedExists == \E y: TRUE
-        |UnboundedForall == \A y: TRUE
-        |SetOfAll == { 1: y \in x }
-        |SubsetOf == { y \in x: TRUE }
-        |
-        |================================
-        |""".stripMargin
+    """---- MODULE builtins ----
+      |VARIABLES x
+      |True == TRUE
+      |
+      |Eq == FALSE = TRUE
+      |Ne == FALSE /= TRUE
+      |Prime == x'
+      |Not == ~x
+      |Or == FALSE \/ TRUE
+      |And == FALSE /\ TRUE
+      |Equiv == FALSE <=> TRUE
+      |Implies == FALSE => TRUE
+      |Subset == SUBSET x
+      |Union == UNION x
+      |Domain == DOMAIN x
+      |Subseteq == x \subseteq x
+      |In == x \in x
+      |Notin == x \notin x
+      |Setminus == x \ x
+      |Cap == x \cap x
+      |Cup == x \cup x
+      |Times == x \X x
+      |LeadsTo == TRUE ~> TRUE
+      |Box == []TRUE
+      |Diamond == <>TRUE
+      |Enabled == ENABLED x
+      |Unchanged == UNCHANGED x
+      |Cdot == (True \cdot True)
+      |Guarantees == True -+-> True
+      |Angleact == <<True>>_x
+      |BoundedChoose == CHOOSE y \in x: TRUE
+      |BoundedExists == \E y \in x: TRUE
+      |BoundedForall == \A y \in x: TRUE
+      |CartesianProd == x \X x \X x
+      |Pair == <<1, 2>>
+      |Tuple == <<1, 2, 3>>
+      |Case == CASE 1 -> 2 [] 3 -> 4 [] 5 -> 6
+      |CaseOther == CASE 1 -> 2 [] 3 -> 4 [] 5 -> 6 [] OTHER -> 7
+      |ConjList == /\ FALSE
+      |            /\ TRUE
+      |            /\ FALSE
+      |DisjList == \/ FALSE
+      |            \/ TRUE
+      |            \/ FALSE
+      |Except == [ x EXCEPT ![0] = 1 ]
+      |FcnApply == x[1]
+      |FcnCtor == [ y \in x |-> y \cup y ]
+      |IfThenElse == IF TRUE THEN FALSE ELSE TRUE
+      |RcdCtor == [ a |-> 1, b |-> 2 ]
+      |RcdSelect == x.foo
+      |SetEnumerate == { 1, 2, 3 }
+      |SetOfFcns == [ x -> x ]
+      |SetOfRcds == [ a: x, b: x ]
+      |StrongFairness == SF_x(True)
+      |WeakFairness == WF_x(True)
+      |SquareAct == [True]_x
+      |TemporalExists == \EE y : True
+      |TemporalForall == \AA y : True
+      |UnboundedChoose == CHOOSE y: TRUE
+      |UnboundedExists == \E y: TRUE
+      |UnboundedForall == \A y: TRUE
+      |SetOfAll == { 1: y \in x }
+      |SubsetOf == { y \in x: TRUE }
+      |
+      |================================
+      |""".stripMargin
 
     // TODO: implement the following functions
     //        |nonRecursiveFcnSpec[y \in x] == y \cup x
@@ -458,15 +459,15 @@ class TestSanyImporter extends FunSuite {
     // We translate all of them uniformly:
     //   every quantified expression has exactly one bound variable or a tuple of variables.
     val text =
-      """---- MODULE composite ----
-        |VARIABLE X, Z
-        |Q1 == \E x \in X: \E y \in X: TRUE
-        |Q2 == \E x, y \in X: TRUE
-        |Q3 == \E x, y \in X, z \in Z: TRUE
-        |Q4 == \E x, y \in X, <<a, b>> \in Z, z \in Z: TRUE
-        |Q5 == \E x, y: TRUE
-        |================================
-        |""".stripMargin
+    """---- MODULE composite ----
+      |VARIABLE X, Z
+      |Q1 == \E x \in X: \E y \in X: TRUE
+      |Q2 == \E x, y \in X: TRUE
+      |Q3 == \E x, y \in X, z \in Z: TRUE
+      |Q4 == \E x, y \in X, <<a, b>> \in Z, z \in Z: TRUE
+      |Q5 == \E x, y: TRUE
+      |================================
+      |""".stripMargin
 
     val (rootName, modules) = new SanyImporter().load("composite", Source.fromString(text))
     val mod = expectSingleModule("composite", rootName, modules)
@@ -483,24 +484,24 @@ class TestSanyImporter extends FunSuite {
 
     assertTlaDecl("Q1",
       OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("X"),
-        OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("X"), ValEx(TlaTrue)))) (mod.declarations(2))
+        OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("X"), ValEx(TlaTrue))))(mod.declarations(2))
     assertTlaDecl("Q2",
       OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("X"),
-        OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("X"), ValEx(TlaTrue)))) (mod.declarations(3))
+        OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("X"), ValEx(TlaTrue))))(mod.declarations(3))
     assertTlaDecl("Q3",
       OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("X"),
         OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("X"),
           OperEx(TlaBoolOper.exists, NameEx("z"), NameEx("Z"),
-            ValEx(TlaTrue))))) (mod.declarations(4))
+            ValEx(TlaTrue)))))(mod.declarations(4))
     assertTlaDecl("Q4",
       OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("X"),
         OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("X"),
           OperEx(TlaBoolOper.exists, OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")), NameEx("Z"),
             OperEx(TlaBoolOper.exists, NameEx("z"), NameEx("Z"),
-              ValEx(TlaTrue)))))) (mod.declarations(5))
+              ValEx(TlaTrue))))))(mod.declarations(5))
     assertTlaDecl("Q5",
       OperEx(TlaBoolOper.existsUnbounded, NameEx("x"),
-        OperEx(TlaBoolOper.existsUnbounded, NameEx("y"), ValEx(TlaTrue)))) (mod.declarations(6))
+        OperEx(TlaBoolOper.existsUnbounded, NameEx("y"), ValEx(TlaTrue))))(mod.declarations(6))
   }
 
   test("complex updates") {
@@ -510,6 +511,7 @@ class TestSanyImporter extends FunSuite {
         |VARIABLE f
         |E1 == [ f EXCEPT ![0] = 1, ![2] = 3 ]
         |E2 == [ f EXCEPT ![0][1][2] = 3 ]
+        |E3 == [ f EXCEPT ![0,1,2] = 3 ]
         |================================
         |""".stripMargin
 
@@ -536,8 +538,14 @@ class TestSanyImporter extends FunSuite {
       OperEx(TlaFunOper.except,
         NameEx("f"),
         TlaFunOper.mkTuple(ValEx(TlaInt(0)), ValEx(TlaInt(1)), ValEx(TlaInt(2))),
-          ValEx(TlaInt(3))
+        ValEx(TlaInt(3))
       ))(mod.declarations(2))
+    assertTlaDecl("E3",
+      OperEx(TlaFunOper.except,
+        NameEx("f"),
+        TlaFunOper.mkTuple(TlaFunOper.mkTuple(ValEx(TlaInt(0)), ValEx(TlaInt(1)), ValEx(TlaInt(2)))),
+          ValEx(TlaInt(3))
+      ))(mod.declarations(3))
   }
 
   test("complex record selects") {
@@ -569,7 +577,7 @@ class TestSanyImporter extends FunSuite {
           NameEx("f"),
           ValEx(TlaStr("a"))),
         ValEx(TlaStr("b")))
-    ) (mod.declarations(1))
+    )(mod.declarations(1))
     assertTlaDecl("S2",
       OperEx(TlaFunOper.app,
         OperEx(TlaFunOper.app,
@@ -578,20 +586,20 @@ class TestSanyImporter extends FunSuite {
             ValEx(TlaStr("a"))),
           ValEx(TlaStr("b"))),
         ValEx(TlaStr("c")))
-    ) (mod.declarations(2))
+    )(mod.declarations(2))
   }
 
   test("complex function ctors") {
     // One can write tricky combinations of bound variables in function constructors.
     val text =
-    """---- MODULE funCtor ----
-      |VARIABLE X, Z
-      |C1 == [ x \in X, y \in X |-> TRUE ]
-      |C2 == [ x, y \in X |-> TRUE ]
-      |C3 == [ x, y \in X, z \in Z |-> TRUE]
-      |C4 == [ x, y \in X, <<a, b>> \in Z, z \in Z |-> TRUE ]
-      |================================
-      |""".stripMargin
+      """---- MODULE funCtor ----
+        |VARIABLE X, Z
+        |C1 == [ x \in X, y \in X |-> TRUE ]
+        |C2 == [ x, y \in X |-> TRUE ]
+        |C3 == [ x, y \in X, z \in Z |-> TRUE]
+        |C4 == [ x, y \in X, <<a, b>> \in Z, z \in Z |-> TRUE ]
+        |================================
+        |""".stripMargin
 
     val (rootName, modules) = new SanyImporter().load("funCtor", Source.fromString(text))
     val mod = expectSingleModule("funCtor", rootName, modules)
@@ -610,19 +618,19 @@ class TestSanyImporter extends FunSuite {
       OperEx(TlaFunOper.funDef,
         ValEx(TlaTrue),
         NameEx("x"), NameEx("X"),
-        NameEx("y"), NameEx("X"))) (mod.declarations(2))
+        NameEx("y"), NameEx("X")))(mod.declarations(2))
     assertTlaDecl("C2",
       OperEx(TlaFunOper.funDef,
         ValEx(TlaTrue),
         NameEx("x"), NameEx("X"),
-        NameEx("y"), NameEx("X"))) (mod.declarations(3))
+        NameEx("y"), NameEx("X")))(mod.declarations(3))
     assertTlaDecl("C3",
       OperEx(TlaFunOper.funDef,
         ValEx(TlaTrue),
         NameEx("x"), NameEx("X"),
         NameEx("y"), NameEx("X"),
         NameEx("z"), NameEx("Z")
-      )) (mod.declarations(4))
+      ))(mod.declarations(4))
     assertTlaDecl("C4",
       OperEx(TlaFunOper.funDef,
         ValEx(TlaTrue),
@@ -630,17 +638,19 @@ class TestSanyImporter extends FunSuite {
         NameEx("y"), NameEx("X"),
         TlaFunOper.mkTuple(NameEx("a"), NameEx("b")), NameEx("Z"),
         NameEx("z"), NameEx("Z")
-      )) (mod.declarations(5))
+      ))(mod.declarations(5))
   }
 
   test("level-1 operators") {
     // operators with basic parameters, that is, no operator is passed as a parameter
     val text =
-    """---- MODULE level1Operators ----
-      |VARIABLE x, y
-      |A(i, j) == i \cup j
-      |================================
-      |""".stripMargin
+      """---- MODULE level1Operators ----
+        |VARIABLE x, y
+        |A(i, j) == i \cup j
+        |i ** j == i \cap j
+        |C == A(1, 2)
+        |================================
+        |""".stripMargin
 
     val (rootName, modules) = new SanyImporter().load("level1Operators", Source.fromString(text))
     val mod = expectSingleModule("level1Operators", rootName, modules)
@@ -656,7 +666,12 @@ class TestSanyImporter extends FunSuite {
     }
 
     assertTlaDecl("A", List(SimpleFormalParam("i"), SimpleFormalParam("j")),
-      OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j"))) (mod.declarations(2))
+      OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j")))(mod.declarations(2))
+    assertTlaDecl("**", List(SimpleFormalParam("i"), SimpleFormalParam("j")),
+      OperEx(TlaSetOper.cap, NameEx("i"), NameEx("j")))(mod.declarations(3))
+    val aDecl = mod.declarations(2).asInstanceOf[TlaOperDecl]
+    assertTlaDecl("C", List(),
+      OperEx(aDecl.operator, ValEx(TlaInt(1)), ValEx(TlaInt(2))))(mod.declarations(4))
   }
 
   test("level-2 operators") {
@@ -665,6 +680,8 @@ class TestSanyImporter extends FunSuite {
       """---- MODULE level2Operators ----
         |VARIABLE x, y
         |A(i, j, f(_)) == f(i \cup j)
+        |B(z) == z
+        |C == A(0, 1, B)
         |================================
         |""".stripMargin
 
@@ -684,7 +701,10 @@ class TestSanyImporter extends FunSuite {
     assertTlaDecl("A",
       List(SimpleFormalParam("i"), SimpleFormalParam("j"), OperFormalParam("f", FixedArity(1))),
       OperEx(new OperFormalParamOper(OperFormalParam("f", FixedArity(1))),
-        OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j")))) (mod.declarations(2))
+        OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j"))))(mod.declarations(2))
+    val aDecl = mod.declarations(2).asInstanceOf[TlaOperDecl]
+    assertTlaDecl("C", List(),
+      OperEx(aDecl.operator, ValEx(TlaInt(0)), ValEx(TlaInt(1)), NameEx("B")))(mod.declarations(4))
   }
 
   test("module imports") {
@@ -697,7 +717,8 @@ class TestSanyImporter extends FunSuite {
         |""".stripMargin
 
     val (rootName, modules) = new SanyImporter().load("imports", Source.fromString(text))
-    assert(2 == modules.size) // the root module and naturals
+    assert(2 == modules.size)
+    // the root module and naturals
     val root = modules(rootName)
     // the root module contains its own declarations (none in this test) and the declarations by Naturals
     assert(root.declarations.nonEmpty)
@@ -712,21 +733,163 @@ class TestSanyImporter extends FunSuite {
     val text =
       """---- MODULE nats ----
         |EXTENDS Naturals
-        |A == Nat
+        |NatSet == Nat
+        |Plus == 3 + 2
+        |Minus == 3 - 2
+        |Mult == 3 * 2
+        |Power == 3 ^ 2
+        |Less == 3 < 2
+        |Greater == 3 > 2
+        |Leq == 3 <= 2
+        |Geq == 3 >= 2
+        |Mod == 3 % 2
+        |Div == 3 \div 2
+        |Range == 2 .. 3
         |
         |================================
         |""".stripMargin
 
     val (rootName, modules) = new SanyImporter().load("nats", Source.fromString(text))
-    assert(2 == modules.size) // the root module and naturals
+    assert(2 == modules.size)
+    // the root module and naturals
     val root = modules(rootName)
-    // the root module contains its own declarations (none in this test) and the declarations by Naturals
-    val A = root.declarations.last
-    assert("A" == A.name)
-    A match {
-      case d: TlaOperDecl =>
-        assert(ValEx(TlaNatSet) == d.body)
+
+    def assertTlaDecl(expectedName: String, body: TlaEx): Unit = {
+      root.declarations.find { _.name == expectedName} match {
+        case Some(d: TlaOperDecl) =>
+          assert(expectedName == d.name)
+          assert(0 == d.formalParams.length)
+          assert(body == d.body)
+
+        case _ =>
+          fail("Expected a TlaDecl")
+      }
     }
+
+    // the root module contains its own declarations and the declarations by Naturals
+    assertTlaDecl("NatSet", ValEx(TlaNatSet))
+    assertTlaDecl("Plus", OperEx(TlaArithOper.plus, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Minus", OperEx(TlaArithOper.minus, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Mult", OperEx(TlaArithOper.mult, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Power", OperEx(TlaArithOper.exp, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Less", OperEx(TlaArithOper.lt, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Greater", OperEx(TlaArithOper.gt, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Leq", OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Geq", OperEx(TlaArithOper.ge, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Mod", OperEx(TlaArithOper.mod, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Div", OperEx(TlaArithOper.realDiv, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Range", OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(3))))
+  }
+
+  test("module ints") {
+    // check that the Integers module is imported properly
+    val text =
+      """---- MODULE ints ----
+        |EXTENDS Integers
+        |IntSet == Int
+        |Plus == 3 + 2
+        |Minus == 3 - 2
+        |Mult == 3 * 2
+        |Power == 3 ^ 2
+        |Less == 3 < 2
+        |Greater == 3 > 2
+        |Leq == 3 <= 2
+        |Geq == 3 >= 2
+        |Mod == 3 % 2
+        |Div == 3 \div 2
+        |Range == 2 .. 3
+        |UnaryMinus == -2
+        |
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter().load("ints", Source.fromString(text))
+    assert(3 == modules.size) // Integers extends Naturals
+    val root = modules(rootName)
+
+    def assertTlaDecl(expectedName: String, body: TlaEx): Unit = {
+      root.declarations.find { _.name == expectedName} match {
+        case Some(d: TlaOperDecl) =>
+          assert(expectedName == d.name)
+          assert(0 == d.formalParams.length)
+          assert(body == d.body)
+
+        case _ =>
+          fail("Expected a TlaDecl")
+      }
+    }
+
+    // the root module contains its own declarations and the declarations by Integers
+    assertTlaDecl("IntSet", ValEx(TlaIntSet))
+    assertTlaDecl("Plus", OperEx(TlaArithOper.plus, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Minus", OperEx(TlaArithOper.minus, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Mult", OperEx(TlaArithOper.mult, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Power", OperEx(TlaArithOper.exp, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Less", OperEx(TlaArithOper.lt, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Greater", OperEx(TlaArithOper.gt, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Leq", OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Geq", OperEx(TlaArithOper.ge, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Mod", OperEx(TlaArithOper.mod, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Div", OperEx(TlaArithOper.realDiv, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Range", OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(3))))
+    assertTlaDecl("UnaryMinus", OperEx(TlaArithOper.uminus, ValEx(TlaInt(2))))
+  }
+
+  test("module reals") {
+    // check that the Reals module is imported properly
+    val text =
+      """---- MODULE reals ----
+        |EXTENDS Reals
+        |RealSet == Real
+        |Inf == Infinity
+        |Plus == 3 + 2
+        |Minus == 3 - 2
+        |Mult == 3 * 2
+        |Power == 3 ^ 2
+        |Less == 3 < 2
+        |Greater == 3 > 2
+        |Leq == 3 <= 2
+        |Geq == 3 >= 2
+        |Mod == 3 % 2
+        |Div == 3 \div 2
+        |Range == 2 .. 3
+        |UnaryMinus == -2
+        |RealDiv == 3 / 2
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter().load("reals", Source.fromString(text))
+    assert(4 == modules.size) // Reals include Integers that include Naturals
+    val root = modules(rootName)
+    // the root module contains its own declarations and the declarations by Integers
+
+    def assertTlaDecl(expectedName: String, body: TlaEx): Unit = {
+      root.declarations.find { _.name == expectedName} match {
+        case Some(d: TlaOperDecl) =>
+          assert(expectedName == d.name)
+          assert(0 == d.formalParams.length)
+          assert(body == d.body)
+
+        case _ =>
+          fail("Expected a TlaDecl")
+      }
+    }
+
+    assertTlaDecl("RealSet", ValEx(TlaRealSet))
+    assertTlaDecl("Inf", ValEx(TlaRealInfinity))
+    assertTlaDecl("Plus", OperEx(TlaArithOper.plus, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Minus", OperEx(TlaArithOper.minus, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Mult", OperEx(TlaArithOper.mult, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Power", OperEx(TlaArithOper.exp, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Less", OperEx(TlaArithOper.lt, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Greater", OperEx(TlaArithOper.gt, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Leq", OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Geq", OperEx(TlaArithOper.ge, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Mod", OperEx(TlaArithOper.mod, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Div", OperEx(TlaArithOper.realDiv, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    assertTlaDecl("Range", OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(3))))
+    assertTlaDecl("UnaryMinus", OperEx(TlaArithOper.uminus, ValEx(TlaInt(2))))
+    assertTlaDecl("RealDiv", OperEx(TlaArithOper.realDiv, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
   }
 
   ////////////////////////////////////////////////////////////////////

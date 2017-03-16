@@ -10,11 +10,11 @@ import at.forsyte.apalache.tla.lir.predef.TlaEmptySet
 import tla2sany.semantic._
 
 /**
-  * Translate operator applications. As many TLA+ happen to be operators, this class will be complex...
+  * Translate operator applications. As many TLA+ expressions are defined via operators, this class is quite complex.
   *
   * @author konnov
   */
-class OpApplTranslator(context: Context) {
+class OpApplTranslator(val context: Context) {
 
   // we use the following case classes to represent the bound variables with a range in many quantified expressions
   private sealed abstract class BExp
@@ -48,6 +48,9 @@ class OpApplTranslator(context: Context) {
         case ASTConstants.FormalParamKind =>
           translateFormalParam(node)
 
+        case ASTConstants.UserDefinedOpKind =>
+          translateUserOperator(node)
+
         case _ =>
           throw new SanyImporterException("Unsupported operator type: " + node.getOperator)
       }
@@ -55,6 +58,19 @@ class OpApplTranslator(context: Context) {
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // call a user-defined operator
+  private def translateUserOperator(node: OpApplNode) = {
+    val opcode = node.getOperator.getName.toString
+    context.declarationsMap(opcode) match {
+      case decl: TlaOperDecl =>
+        val exTran = ExprOrOpArgNodeTranslator(context)
+        OperEx(decl.operator, node.getArgs.toList.map { p => exTran.translate(p) }: _*)
+
+      case _ =>
+        throw new SanyImporterException("Cannot find an operator declaration: " + opcode)
+    }
+  }
 
   // translate an operator application that uses a parameter operator, i.e.,
   // in A(B(_)) == B(1), translate the application B(1)
@@ -69,7 +85,7 @@ class OpApplTranslator(context: Context) {
 
   // a built-in operator with zero arguments, that is, a built-in constant
   private def translateBuiltinConst(node: OpApplNode) = {
-    // comparing the name seems to be the only way of learning about the actual operator
+    // comparing the name seems to be the only reasonable way of learning about the actual operator
     node.getOperator.getName.toString match {
       case "FALSE" => ValEx(TlaFalse)               // we disagree with tlatools and treat FALSE as a built-in value
       case "TRUE" => ValEx(TlaTrue)                 // ditto

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.tla.lir.{TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{NameEx, TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.values.{TlaDecimal, TlaInt, TlaStr}
 import tla2sany.semantic._
 
@@ -22,9 +22,14 @@ class ExprOrOpArgNodeTranslator(context: Context) {
       translateDecimal(dec)
 
     case opApp: OpApplNode =>
-      OpApplTranslator(context).translate(opApp)
+      OpApplProxy(OpApplTranslator(context)).translate(opApp)
 
-    case n: ExprNode => throw new SanyImporterException("Unexpected subclass of tla2sany.ExprNode: " + n.getClass)
+    case arg: OpArgNode =>
+      // we just pass the name of the argument without any extra information
+      NameEx(arg.getName.toString.intern())
+
+    case n =>
+      throw new SanyImporterException("Unexpected subclass of tla2sany.ExprOrOpArgNode: " + n.getClass)
   }
 
   private def translateNumeral(node: NumeralNode) =
