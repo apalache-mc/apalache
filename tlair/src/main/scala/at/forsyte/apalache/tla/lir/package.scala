@@ -6,13 +6,24 @@ package lir {
 
   /** the base class for the universe of objects used in TLA+ */
   abstract class TlaValue
-  
+
   /** a declaration, e.g., of a variable, constant, or an operator */
   abstract class TlaDecl {
     def name: String
     def deepCopy(): TlaDecl
     def identical( other: TlaDecl ) : Boolean
   }
+
+  // TODO: add TlaAssumeDecl and TlaTheoremDecl
+
+  /**
+    * A module as a basic unit that contains declarations.
+    *
+    * @param name the module name
+    * @param imports the names of imported modules
+    * @param declarations all kinds of declarations
+    */
+  class TlaModule(val name: String, val imports: Seq[String], val declarations: Seq[TlaDecl])
 
   /** a constant as defined by CONSTANT */
   case class TlaConstDecl(name: String) extends TlaDecl{
@@ -27,13 +38,23 @@ package lir {
 
   }
 
-  /** a module included by EXTENDS */
+
+  ///////////////// DISCUSSION
+  /**
+    * A module included by EXTENDS.
+    *
+    * FIXME: shall we remove this one, as there is no obvious for it? Just use TlaModule.
+    */
   case class TlaModuleDecl(name: String) extends TlaDecl{
     override def deepCopy( ): TlaModuleDecl =  TlaModuleDecl( name )
     override def identical( other: TlaDecl ): Boolean = this == other
   }
 
-  /** a spec, given by a list of declarations and a list of expressions */
+  /**
+    * A spec, given by a list of declarations and a list of expressions.
+    *
+    * FIXME: a candidate for removal. Just use TlaModule?
+    */
   case class TlaSpec( name: String, declarations: List[TlaDecl] ){
     def deepCopy() : TlaSpec = {
       return TlaSpec( name, declarations.map( _.deepCopy() ) )
@@ -43,6 +64,7 @@ package lir {
         && declarations.zip( other.declarations ).forall( pa => pa._1.identical( pa._2 ) )
         )
   }
+  ///////////////// END of DISCUSSION
 
 
   /**
@@ -148,6 +170,8 @@ package lir {
       return ret
     }
 
+    // REVIEW: don't we want to maintain the invariant that two expressions with the same ID have the same structure?
+    // In this case, we don't need a deep comparison like this. Igor.
     override def identical( other: TlaEx ): Boolean = {
       other match{
         case ValEx( v ) => v == value && other.ID == ID
@@ -210,6 +234,7 @@ package lir {
       }
     }
 
+    // TODO: what is that and why do we need it?
     def deepForget( ): Unit = {
       forget()
       args.foreach( _.forget() )
@@ -252,8 +277,7 @@ package lir {
     * As in the case of built-in operators, every operator declaration carries a single operator instance,
     * which is stored in the public field 'operator'.
     */
-  case class TlaOperDecl( name: String, formalParams: List[FormalParam], body: TlaEx )
-      extends TlaDecl {
+  case class TlaOperDecl( name: String, formalParams: List[FormalParam], body: TlaEx ) extends TlaDecl {
 
     val operator: TlaUserOper = new TlaUserOper(name, FixedArity(formalParams.length), this)
 
@@ -264,15 +288,6 @@ package lir {
       case _ => false
     }
   }
-
-/**
- * A module declaration.
- *
- * @param name the module name
- * @param imports the names of imported modules
- * @param declarations all kinds of declarations
- */
-  class TlaModule(val name: String, val imports: Seq[String], val declarations: Seq[TlaDecl])
 
 
   abstract class IDType
