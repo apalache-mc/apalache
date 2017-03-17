@@ -61,8 +61,10 @@ class ExprOrOpArgNodeTranslator(context: Context) {
     // Accumulate definitions as in ModuleTranslator.
     // (As ModuleNode does not implement Context, we cannot reuse the code from there.)
 
-    // we only go through the operator definitions, as one cannot define constants or variables with Let-In.
-    val innerContext = letIn.context.getOpDefs.elements.asScala.foldLeft(Context()) {
+    // We only go through the operator definitions, as one cannot define constants or variables with Let-In.
+    // For some reason, multiple definitions come in the reverse order in the letIn.context.
+    // Hence, we reverse the list first.
+    val innerContext = letIn.context.getOpDefs.elements.asScala.toList.reverse.foldLeft(Context()) {
       case (ctx, node: OpDefNode) =>
         ctx.push(OpDefTranslator(context.disjointUnion(ctx)).translate(node))
 
