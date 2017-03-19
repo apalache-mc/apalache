@@ -166,9 +166,10 @@ class OpApplTranslator(val context: Context, val recStatus: RecursionStatus) {
           case "$Except" =>
             mkExceptBuiltin(node)
 
-          case "$FcnConstructor" | "$NonRecursiveFcnSpec" =>
+          case "$FcnConstructor" | "$NonRecursiveFcnSpec" | "$RecursiveFcnSpec" =>
             // Note that we always translate a non-recursive function definition as just a function constructor,
             // i.e., f(x \in S) == e in TLA+ is translated into f == [x \in S |-> e] in our IR.
+            // Recursive functions are also postprocessed by OpDefTranslator.
             mkBoundCtorBuiltin(TlaFunOper.funDef, node)
 
           case "$SetOfAll" =>
@@ -184,11 +185,6 @@ class OpApplTranslator(val context: Context, val recStatus: RecursionStatus) {
 
           case "$SetOfRcds" =>
             mkPairsCtorBuiltin(TlaSetOper.recSet, node)
-
-            /*
-          case "$NonRecursiveFcnSpec" =>
-            mkNonRecFun(node)
-            */
 
           case _ =>
             throw new SanyImporterException("Unsupported operator: " + opcode)

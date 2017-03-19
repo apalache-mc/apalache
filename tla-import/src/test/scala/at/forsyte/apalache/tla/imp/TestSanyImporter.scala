@@ -1,12 +1,12 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.control.{LetInOper, TlaControlOper}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.predef._
 import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
 import at.forsyte.apalache.tla.lir.values._
+import at.forsyte.apalache.tla.lir.{OperEx, _}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -707,8 +707,8 @@ class TestSanyImporter extends FunSuite {
 
     assertTlaDecl("A",
       List(SimpleFormalParam("i"), SimpleFormalParam("j"), OperFormalParam("f", FixedArity(1))),
-      OperEx(new OperFormalParamOper(OperFormalParam("f", FixedArity(1))),
-        OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j"))))(mod.declarations(2))
+      OperEx(OperFormalParamOper("f", 1),
+        OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j")))) (mod.declarations(2))
     val aDecl = mod.declarations(2).asInstanceOf[TlaOperDecl]
     assertTlaDecl("C", List(),
       OperEx(aDecl.operator, ValEx(TlaInt(0)), ValEx(TlaInt(1)), NameEx("B")))(mod.declarations(4))
@@ -758,7 +758,8 @@ class TestSanyImporter extends FunSuite {
     val text =
       """---- MODULE let ----
         |A ==
-        |  LET RECURSIVE X
+        |  LET f[x \in BOOLEAN] == f[x]
+        |   RECURSIVE X
         |    X == X
         |  IN X
         |================================
@@ -772,10 +773,22 @@ class TestSanyImporter extends FunSuite {
     // the root module contains its own declarations and the declarations by FiniteSets
     root.declarations.find { _.name == "A" } match {
       case Some(TlaOperDecl(_, _, OperEx(o: LetInOper, body))) =>
-        assert(1 == o.defs.length)
-        val xDecl = o.defs.head
+        assert(2 == o.defs.length)
+        val fDecl = o.defs.head
+        assert("f" == fDecl.name)
+        val expectedBody =
+          OperEx(TlaFunOper.funDef,
+            OperEx(TlaFunOper.app,
+              OperEx(OperFormalParamOper("f", 0)),
+              NameEx("x")),
+            NameEx("x"),
+            ValEx(TlaBoolSet)
+          )
+
+        assert(expectedBody == fDecl.body)
+        val xDecl = o.defs(1)
         assert("X" == xDecl.name)
-        assert(OperEx(new OperFormalParamOper(OperFormalParam("X", FixedArity(0)))) == xDecl.body)
+        assert(OperEx(OperFormalParamOper("X", 0)) == xDecl.body)
         assert(OperEx(xDecl.operator) == body)
     }
   }
@@ -826,17 +839,17 @@ class TestSanyImporter extends FunSuite {
 
     // in the recursive sections, the calls to recursive operators should be replaced with OperFormalParam(...)
     assertRec("R", 1,
-      OperEx(new OperFormalParamOper(OperFormalParam("R", FixedArity(1))), NameEx("n")))
+      OperEx(OperFormalParamOper("R", 1), NameEx("n")))
 
     assertRec("A", 1,
-      OperEx(new OperFormalParamOper(OperFormalParam("B", FixedArity(1))), NameEx("n")))
+      OperEx(OperFormalParamOper("B", 1), NameEx("n")))
     assertRec("B", 1,
-      OperEx(new OperFormalParamOper(OperFormalParam("C", FixedArity(1))), NameEx("n")))
+      OperEx(OperFormalParamOper("C", 1), NameEx("n")))
     assertRec("C", 1,
-      OperEx(new OperFormalParamOper(OperFormalParam("A", FixedArity(1))), NameEx("n")))
+      OperEx(OperFormalParamOper("A", 1), NameEx("n")))
 
     assertRec("X", 0,
-      OperEx(new OperFormalParamOper(OperFormalParam("X", FixedArity(0)))))
+      OperEx(OperFormalParamOper("X", 0)))
 
     // however, in non-recursive sections, the calls to recursive operators are just normal OperEx(operator, ...)
     root.declarations.find { _.name == "D" } match {
@@ -875,11 +888,9 @@ class TestSanyImporter extends FunSuite {
       """---- MODULE globalFuns ----
         |CONSTANT S
         |nonRecFun[x \in S] == x
+        |recFun[x \in S] == recFun[x]
         |================================
         |""".stripMargin
-
-
-//    recFun[x \in S] == recFun[x]
 
     val (rootName, modules) = new SanyImporter().load("globalFuns", Source.fromString(text))
     assert(1 == modules.size)
@@ -898,9 +909,33 @@ class TestSanyImporter extends FunSuite {
       }
     }
 
-    // a non-recursive function becomes a constant operator that always returns an equivalent function
+    // a non-recursive function becomes a nullary operator that always returns an equivalent function
     assertTlaDecl("nonRecFun",
       OperEx(TlaFunOper.funDef, NameEx("x"), NameEx("x"), NameEx("S"))
+    )
+
+    // a recursive function becomes a recursive nullary operator
+    // that returns a function defined w.r.t. the recursive operator
+
+    def assertTlaRecDecl(expectedName: String, body: TlaEx): Unit = {
+      root.declarations.find { _.name == expectedName} match {
+        case Some(d: TlaRecOperDecl) =>
+          assert(expectedName == d.name)
+          assert(0 == d.formalParams.length)
+          assert(body == d.body)
+
+        case _ =>
+          fail("Expected a TlaDecl")
+      }
+    }
+
+    assertTlaRecDecl("recFun",
+      OperEx(TlaFunOper.funDef,
+        OperEx(TlaFunOper.app,
+          OperEx(OperFormalParamOper("recFun", 0)),
+          NameEx("x")),
+        NameEx("x"),
+        NameEx("S"))
     )
   }
 

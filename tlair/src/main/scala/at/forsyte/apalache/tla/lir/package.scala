@@ -116,6 +116,12 @@ package lir {
     }
   }
 
+  object OperFormalParamOper {
+    // a handy constructor
+    def apply(name: String, nparams: Int): OperFormalParamOper =
+      new OperFormalParamOper(OperFormalParam(name, FixedArity(nparams)))
+  }
+
 
   trait Identifiable{
     protected var m_ID : UID = UID( -1 )

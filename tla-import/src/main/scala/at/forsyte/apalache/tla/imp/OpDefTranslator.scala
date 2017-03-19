@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.tla.lir.{TlaOperDecl, TlaRecOperDecl}
-import tla2sany.semantic.OpDefNode
+import at.forsyte.apalache.tla.lir._
+import tla2sany.semantic.{OpApplNode, OpDefNode}
 
 /**
   * Translate an operator definition to a TlaOper.
@@ -14,18 +14,40 @@ class OpDefTranslator(context: Context) {
 
     val nodeName = node.getName.toString.intern()
     if (!node.getInRecursive) {
-      // non-recursive declarations are easy
-      TlaOperDecl(nodeName, params,
-        ExprOrOpArgNodeTranslator(context, OutsideRecursion()).translate(node.getBody))
+      node.getBody match {
+        case app: OpApplNode if "$RecursiveFcnSpec" == app.getOperator.getName.toString =>
+          // this is a definition of a recursive function
+          val body = ExprOrOpArgNodeTranslator(context, OutsideRecursion()).translate(node.getBody)
+          // declare a nullary recursive operator instead of a recursive function
+          val newBody = replaceFunWithOper(nodeName, body)
+          new TlaRecOperDecl(nodeName, List(), newBody)
+
+        case _ =>
+          // non-recursive declarations are easy
+          TlaOperDecl(nodeName, params,
+            ExprOrOpArgNodeTranslator(context, OutsideRecursion()).translate(node.getBody))
+      }
     } else {
-      // Introduce a dummy copy of the operator declaration.
-//      val dummy = new TlaRecOperDecl(nodeName, params, NullEx)
-      // Translate the body. The translator will translate the applications of
-      // the dummy operator as applications of a formal parameter.
+      // in recursive declarations, the applications of recursive operators are replaced by calls to formal parameters
       val body = ExprOrOpArgNodeTranslator(context, InsideRecursion()).translate(node.getBody)
-      // Finally, return the recursive operator declaration.
       new TlaRecOperDecl(nodeName, params, body)
     }
+  }
+
+  private def replaceFunWithOper(name: String, body: TlaEx): TlaEx = {
+    val oper = OperFormalParamOper(name, 0)
+
+    def replace(e: TlaEx): TlaEx = e match {
+      case NameEx(n) if n == name =>
+        OperEx(oper)
+
+      case OperEx(o, args@_*) =>
+        OperEx(o, args map replace: _*)
+
+      case _ => e
+    }
+
+    replace(body)
   }
 }
 
