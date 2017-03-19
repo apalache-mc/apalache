@@ -753,6 +753,33 @@ class TestSanyImporter extends FunSuite {
     }
   }
 
+  // LET-IN with recursive operators
+  test("let-in-rec") {
+    val text =
+      """---- MODULE let ----
+        |A ==
+        |  LET RECURSIVE X
+        |    X == X
+        |  IN X
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter().load("let", Source.fromString(text))
+    assert(1 == modules.size)
+    // the root module and naturals
+    val root = modules(rootName)
+
+    // the root module contains its own declarations and the declarations by FiniteSets
+    root.declarations.find { _.name == "A" } match {
+      case Some(TlaOperDecl(_, _, OperEx(o: LetInOper, body))) =>
+        assert(1 == o.defs.length)
+        val xDecl = o.defs.head
+        assert("X" == xDecl.name)
+        assert(OperEx(new OperFormalParamOper(OperFormalParam("X", FixedArity(0)))) == xDecl.body)
+        assert(OperEx(xDecl.operator) == body)
+    }
+  }
+
   test("recursive operators") {
     val text =
       """---- MODULE recOpers ----
