@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaOper}
 import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaNatSet, TlaRealSet}
-import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaRealInfinity}
+import at.forsyte.apalache.tla.lir.values.TlaRealInfinity
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, TlaValue, ValEx}
 import tla2sany.semantic._
 
@@ -26,7 +26,7 @@ class OpApplProxy(standardTranslator: OpApplTranslator) {
             case _ =>
               OpApplProxy.libraryOperators.get(modAndName) match {
                 case Some(oper: TlaOper) =>
-                  val exTran = ExprOrOpArgNodeTranslator(standardTranslator.context)
+                  val exTran = ExprOrOpArgNodeTranslator(standardTranslator.context, standardTranslator.recStatus)
                   OperEx(oper, node.getArgs.map { p => exTran.translate(p)} :_*)
 
                 case _ =>

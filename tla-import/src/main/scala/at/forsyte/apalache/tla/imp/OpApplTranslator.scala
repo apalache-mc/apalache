@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.imp
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.control.TlaControlOper
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaEmptySet, TlaStrSet}
 import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
@@ -14,7 +14,7 @@ import tla2sany.semantic._
   *
   * @author konnov
   */
-class OpApplTranslator(val context: Context) {
+class OpApplTranslator(val context: Context, val recStatus: RecursionStatus) {
 
   // we use the following case classes to represent the bound variables with a range in many quantified expressions
   private sealed abstract class BExp
@@ -62,13 +62,32 @@ class OpApplTranslator(val context: Context) {
   // call a user-defined operator
   private def translateUserOperator(node: OpApplNode) = {
     val opcode = node.getOperator.getName.toString
-    context.declarationsMap(opcode) match {
-      case decl: TlaOperDecl =>
-        val exTran = ExprOrOpArgNodeTranslator(context)
-        OperEx(decl.operator, node.getArgs.toList.map { p => exTran.translate(p) }: _*)
+    val exTran = ExprOrOpArgNodeTranslator(context, recStatus)
 
-      case _ =>
-        throw new SanyImporterException("Cannot find an operator declaration: " + opcode)
+    def translateNonRec() = {
+      context.declarationsMap.get(opcode) match {
+        case Some(decl: TlaOperDecl) =>
+          val args = node.getArgs.toList.map { p => exTran.translate(p) }
+          OperEx(decl.operator, args: _*)
+
+        case _ =>
+          throw new SanyImporterException("Unexpected user operator: " + node)
+      }
+    }
+
+    if (recStatus == InsideRecursion()) {
+      node.getOperator match {
+        case oper: OpDefNode if oper.getInRecursive =>
+          // this is a placeholder for a recursive call, replace it with a usage of a formal parameter
+          val args = node.getArgs.toList.map { p => exTran.translate(p) }
+          val recParam = OperFormalParam(opcode, FixedArity(args.length))
+          OperEx(new OperFormalParamOper(recParam), args: _*)
+
+        case _ =>
+          translateNonRec()
+      }
+    } else {
+      translateNonRec()
     }
   }
 
@@ -78,7 +97,7 @@ class OpApplTranslator(val context: Context) {
     val oper = node.getOperator.asInstanceOf[FormalParamNode]
     // FIXME: should we extract the parameter from the context???
     val formalParam = FormalParamTranslator().translate(oper).asInstanceOf[OperFormalParam]
-    val exTran = ExprOrOpArgNodeTranslator(context)
+    val exTran = ExprOrOpArgNodeTranslator(context, recStatus)
     val args = node.getArgs.toList.map { p => exTran.translate(p) }
     OperEx(new OperFormalParamOper(formalParam), args: _*)
   }
@@ -111,13 +130,7 @@ class OpApplTranslator(val context: Context) {
         NameEx(oper.getName.toString.intern())
 
       case ASTConstants.UserDefinedOpKind =>
-        context.declarationsMap.get(oper.getName.toString) match {
-          case Some(d: TlaOperDecl) =>
-            OperEx(d.operator)
-
-          case _ =>
-            throw new SanyImporterException("User-defined operator %s not found".format(oper.getName.toString))
-        }
+        translateUserOperator(node)
     }
   }
 
@@ -129,20 +142,20 @@ class OpApplTranslator(val context: Context) {
         // if the arities do not match, there must be a problem:
         // either in the definition of the IR operator, or in the map opcodeToIrOp
         assert(op.isCorrectArity(node.getArgs.length))
-        val exTran = ExprOrOpArgNodeTranslator(context)
+        val exTran = ExprOrOpArgNodeTranslator(context, recStatus)
         val args = node.getArgs.toList.map(exTran.translate)
         OperEx(op, args: _*)
 
       case None => // a more complicated translation rule is needed
         opcode match {
           case "$BoundedChoose" | "$BoundedExists" | "$BoundedForall" =>
-            val exTran = ExprOrOpArgNodeTranslator(context)
+            val exTran = ExprOrOpArgNodeTranslator(context, recStatus)
             val args = node.getArgs.toList.map(exTran.translate)
             mkBoundedQuantifiedBuiltin(node, opcode, args)
 
           case "$TemporalExists" | "$TemporalForall" |
                "$UnboundedChoose" | "$UnboundedExists" | "$UnboundedForall" =>
-            val exTran = ExprOrOpArgNodeTranslator(context)
+            val exTran = ExprOrOpArgNodeTranslator(context, recStatus)
             val args = node.getArgs.toList.map(exTran.translate)
             mkUnboundedQuantifiedBuiltin(node, opcode, args)
 
@@ -153,7 +166,9 @@ class OpApplTranslator(val context: Context) {
           case "$Except" =>
             mkExceptBuiltin(node)
 
-          case "$FcnConstructor" =>
+          case "$FcnConstructor" | "$NonRecursiveFcnSpec" =>
+            // Note that we always translate a non-recursive function definition as just a function constructor,
+            // i.e., f(x \in S) == e in TLA+ is translated into f == [x \in S |-> e] in our IR.
             mkBoundCtorBuiltin(TlaFunOper.funDef, node)
 
           case "$SetOfAll" =>
@@ -169,6 +184,11 @@ class OpApplTranslator(val context: Context) {
 
           case "$SetOfRcds" =>
             mkPairsCtorBuiltin(TlaSetOper.recSet, node)
+
+            /*
+          case "$NonRecursiveFcnSpec" =>
+            mkNonRecFun(node)
+            */
 
           case _ =>
             throw new SanyImporterException("Unsupported operator: " + opcode)
@@ -217,7 +237,7 @@ class OpApplTranslator(val context: Context) {
 
     // recursively construct a chain of expressions, e.g., \E x \in S: (\E y \in S: P)
     val oper = OpApplTranslator.quantOpcodeToTlaOper(opcode)
-    val exTran = ExprOrOpArgNodeTranslator(context)
+    val exTran = ExprOrOpArgNodeTranslator(context, recStatus)
 
     def toExpr(xs: List[BExp]): TlaEx =
       xs match {
@@ -279,7 +299,7 @@ class OpApplTranslator(val context: Context) {
   // translate an expression for a function constructor, e.g., [ x \in X |-> e ] or a set comprehension { e : x \in X }
   private def mkBoundCtorBuiltin(oper: TlaOper, node: OpApplNode): TlaEx = {
     val qexps = extractBoundedQuantifiedVariables(node)
-    val exTran = ExprOrOpArgNodeTranslator(context)
+    val exTran = ExprOrOpArgNodeTranslator(context, recStatus)
     val body = exTran.translate(node.getArgs.head)
     // e.g., e in the example above
     val boundVars = qexps.foldLeft(List[TlaEx]()) {
@@ -324,14 +344,14 @@ class OpApplTranslator(val context: Context) {
     * </ul>
     */
   private def mkPairsCtorBuiltin(oper: TlaOper, node: OpApplNode): TlaEx = {
-    val exTran = ExprOrOpArgNodeTranslator(context)
+    val exTran = ExprOrOpArgNodeTranslator(context, recStatus)
     val interleaved = unpackPairs(exTran)(node.getArgs.toList)
     OperEx(oper, interleaved: _*)
   }
 
   // create a CASE operator
   private def mkCaseBuiltin(node: OpApplNode): TlaEx = {
-    val exTran = ExprOrOpArgNodeTranslator(context)
+    val exTran = ExprOrOpArgNodeTranslator(context, recStatus)
     val (others, options) = node.getArgs.toList.partition {
       case n: OpApplNode => n.getArgs.head == null
       case _ => false
@@ -349,7 +369,7 @@ class OpApplTranslator(val context: Context) {
   }
 
   private def mkExceptBuiltin(node: OpApplNode): TlaEx = {
-    val exTran = ExprOrOpArgNodeTranslator(context)
+    val exTran = ExprOrOpArgNodeTranslator(context, recStatus)
     node.getArgs.toList match {
       case (fnode: OpApplNode) :: pairNodes =>
         val fun = exTran.translate(fnode)
@@ -364,8 +384,8 @@ class OpApplTranslator(val context: Context) {
 }
 
 object OpApplTranslator {
-  def apply(context: Context): OpApplTranslator = {
-    new OpApplTranslator(context)
+  def apply(context: Context, recStatus: RecursionStatus): OpApplTranslator = {
+    new OpApplTranslator(context, recStatus)
   }
 
   /**

@@ -753,6 +753,130 @@ class TestSanyImporter extends FunSuite {
     }
   }
 
+  test("recursive operators") {
+    val text =
+      """---- MODULE recOpers ----
+        |EXTENDS Naturals
+        |
+        |CONSTANT S
+        |RECURSIVE R(_)
+        |R(n) == R(n)
+        |RECURSIVE A(_), B(_), C(_)
+        |A(n) == B(n)
+        |B(n) == C(n)
+        |C(n) == A(n)
+        |
+        |D(n) == A(n)
+        |
+        |RECURSIVE X
+        |X == X
+        |
+        |RECURSIVE F(_)
+        |F(n) == IF n = 0 THEN 1 ELSE n * F(n - 1)
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter().load("recOpers", Source.fromString(text))
+    assert(2 == modules.size)
+    // the root module and naturals
+    val root = modules(rootName)
+
+    def assertRec(name: String, nparams: Int, expectedBody: TlaEx) = {
+      root.declarations.find { _.name == name } match {
+        case Some(d: TlaRecOperDecl) =>
+          // We expect that R in the declaration body is referred by a formal parameter with the same name R.
+          // The caveat here is that the formal parameter R does not appear in the list of the R's formal parameters,
+          // but it is accessible via the field recParam.
+          val recParam = OperFormalParam(name, FixedArity(nparams))
+          assert(recParam == d.recParam)
+          val RInTheBody = new OperFormalParamOper(recParam)
+          assert(d.body == expectedBody)
+
+        case _ =>
+          fail("expected TlaRecOperDecl")
+      }
+    }
+
+    // in the recursive sections, the calls to recursive operators should be replaced with OperFormalParam(...)
+    assertRec("R", 1,
+      OperEx(new OperFormalParamOper(OperFormalParam("R", FixedArity(1))), NameEx("n")))
+
+    assertRec("A", 1,
+      OperEx(new OperFormalParamOper(OperFormalParam("B", FixedArity(1))), NameEx("n")))
+    assertRec("B", 1,
+      OperEx(new OperFormalParamOper(OperFormalParam("C", FixedArity(1))), NameEx("n")))
+    assertRec("C", 1,
+      OperEx(new OperFormalParamOper(OperFormalParam("A", FixedArity(1))), NameEx("n")))
+
+    assertRec("X", 0,
+      OperEx(new OperFormalParamOper(OperFormalParam("X", FixedArity(0)))))
+
+    // however, in non-recursive sections, the calls to recursive operators are just normal OperEx(operator, ...)
+    root.declarations.find { _.name == "D" } match {
+      case Some(d: TlaOperDecl) =>
+        val A = root.declarations.find { _.name == "A" }.get.asInstanceOf[TlaOperDecl]
+        assert(OperEx(A.operator, NameEx("n")) == d.body)
+
+      case _ =>
+        fail("Expected TlaOperDecl")
+    }
+
+    // of course, we want to see the factorial
+    root.declarations.find { _.name == "F"} match {
+      case Some(d: TlaRecOperDecl) =>
+        // We expect that F in the declaration body is referred by a formal parameter with the same name F.
+        // The caveat here is that the formal parameter F does not appear in the list of the F's formal parameters,
+        // but it is accessible via the field recParam.
+        val recParam = OperFormalParam("F", FixedArity(1))
+        assert(recParam == d.recParam)
+        val FInTheBody = new OperFormalParamOper(recParam)
+        val ite = OperEx(TlaControlOper.ifThenElse,
+          OperEx(TlaOper.eq, NameEx("n"), ValEx(TlaInt(0))),
+          ValEx(TlaInt(1)),
+          OperEx(TlaArithOper.mult, NameEx("n"),
+              OperEx(FInTheBody, OperEx(TlaArithOper.minus, NameEx("n"), ValEx(TlaInt(1)))))
+        )
+        assert(d.body == ite)
+
+      case _ =>
+        fail("expected TlaRecOperDecl")
+    }
+  }
+
+  test("global-funs") {
+    val text =
+      """---- MODULE globalFuns ----
+        |CONSTANT S
+        |nonRecFun[x \in S] == x
+        |================================
+        |""".stripMargin
+
+
+//    recFun[x \in S] == recFun[x]
+
+    val (rootName, modules) = new SanyImporter().load("globalFuns", Source.fromString(text))
+    assert(1 == modules.size)
+    // the root module and naturals
+    val root = modules(rootName)
+
+    def assertTlaDecl(expectedName: String, body: TlaEx): Unit = {
+      root.declarations.find { _.name == expectedName} match {
+        case Some(d: TlaOperDecl) =>
+          assert(expectedName == d.name)
+          assert(0 == d.formalParams.length)
+          assert(body == d.body)
+
+        case _ =>
+          fail("Expected a TlaDecl")
+      }
+    }
+
+    // a non-recursive function becomes a constant operator that always returns an equivalent function
+    assertTlaDecl("nonRecFun",
+      OperEx(TlaFunOper.funDef, NameEx("x"), NameEx("x"), NameEx("S"))
+    )
+  }
+
   test("module imports") {
     // operators with parameters that are themselves operators with parameters
     val text =

@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.tla.lir.{TlaConstDecl, TlaDecl, TlaModule, TlaVarDecl}
-import tla2sany.semantic.{ExprOrOpArgNode, ModuleNode, OpDefNode}
+import at.forsyte.apalache.tla.lir.{TlaConstDecl, TlaModule, TlaVarDecl}
+import tla2sany.semantic.ModuleNode
 
 /**
   * Translate a tla2tools ModuleNode to a TlaModule.

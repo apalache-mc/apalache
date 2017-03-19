@@ -12,7 +12,7 @@ import scala.collection.JavaConverters._
   *
   * @author konnov
   */
-class ExprOrOpArgNodeTranslator(context: Context) {
+class ExprOrOpArgNodeTranslator(context: Context, recStatus: RecursionStatus) {
   def translate: ExprOrOpArgNode => TlaEx = {
     // as tlatools do not provide us with a visitor pattern, we have to enumerate classes here
     case num: NumeralNode =>
@@ -25,7 +25,7 @@ class ExprOrOpArgNodeTranslator(context: Context) {
       translateDecimal(dec)
 
     case opApp: OpApplNode =>
-      OpApplProxy(OpApplTranslator(context)).translate(opApp)
+      OpApplProxy(OpApplTranslator(context, recStatus)).translate(opApp)
 
     case arg: OpArgNode =>
       // we just pass the name of the argument without any extra information
@@ -64,6 +64,8 @@ class ExprOrOpArgNodeTranslator(context: Context) {
     // We only go through the operator definitions, as one cannot define constants or variables with Let-In.
     // For some reason, multiple definitions come in the reverse order in the letIn.context.
     // Hence, we reverse the list first.
+    //
+    // TODO: properly handle recursive declarations
     val innerContext = letIn.context.getOpDefs.elements.asScala.toList.reverse.foldLeft(Context()) {
       case (ctx, node: OpDefNode) =>
         ctx.push(OpDefTranslator(context.disjointUnion(ctx)).translate(node))
@@ -72,13 +74,13 @@ class ExprOrOpArgNodeTranslator(context: Context) {
         throw new SanyImporterException("Expected OpDefNode, found: " + other.getClass)
     }
     val oper = new LetInOper(innerContext.declarations.map {d => d.asInstanceOf[TlaOperDecl]})
-    val body = ExprOrOpArgNodeTranslator(context.disjointUnion(innerContext)).translate(letIn.getBody)
+    val body = ExprOrOpArgNodeTranslator(context.disjointUnion(innerContext), recStatus).translate(letIn.getBody)
     OperEx(oper, body)
   }
 }
 
 object ExprOrOpArgNodeTranslator {
-  def apply(context: Context): ExprOrOpArgNodeTranslator = {
-    new ExprOrOpArgNodeTranslator(context)
+  def apply(context: Context, recStatus: RecursionStatus): ExprOrOpArgNodeTranslator = {
+    new ExprOrOpArgNodeTranslator(context, recStatus)
   }
 }

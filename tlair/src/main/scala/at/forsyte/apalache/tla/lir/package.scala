@@ -11,6 +11,7 @@ package lir {
   abstract class TlaDecl {
     def name: String
     def deepCopy(): TlaDecl
+    // why do we need it here?
     def identical( other: TlaDecl ) : Boolean
   }
 
@@ -38,6 +39,33 @@ package lir {
 
   }
 
+  /**
+    * A global function declaration, e.g., f(x \in S) == x + 1.
+    * This is not an operator declaration, which is captured by TlaOperDecl!
+    *
+    * TODO: we do not need this kind of declarations, as they can be simulated by an operator. Remove.
+    *
+    * @param name function name
+    *
+    * @param boundParams parameters bound to sets. Each tuple has two elements of the structure:
+    *                    (1) NameEx(...) for a bound variable, or
+    *                        OperEx(TlaFunOper.tuple, NameEx(...), ..., NameEx(...)) for a tuple of parameters, and
+    *                    (2) TlaEx for the bounding set (no restrictions).
+    *
+    * @param body the expression that defines the function body
+    */
+  case class TlaFunDecl(name: String, boundParams: List[Tuple2[TlaEx, TlaEx]], body: TlaEx) extends TlaDecl {
+    require(message = "The left-hand side of each parameter should be a NameEx or a tuple",
+      requirement = boundParams.forall {
+        case (NameEx(_), _) => true
+        case (OperEx(TlaFunOper.tuple, _), _) => true
+        case _ => false
+      }
+    )
+
+    override def deepCopy(): TlaDecl = TlaFunDecl(name, boundParams, body)
+    override def identical(other: TlaDecl): Boolean = this == other
+  }
 
   ///////////////// DISCUSSION
   /**
@@ -70,7 +98,7 @@ package lir {
   /**
   A formal parameter of an operator.
     */
-  abstract class FormalParam {
+  sealed abstract class FormalParam {
     def name: String
 
     def arity: OperArity
@@ -140,9 +168,8 @@ package lir {
     class IDReallocationError extends Exception
   }
 
-  /** An abstract TLA+ expression */
-  abstract class TlaEx extends  Identifiable{
-
+  /** An abstract TLA+ expression. Note that the class is sealed, so we allow only a limited set of values. */
+  sealed abstract class TlaEx extends Identifiable {
     // TODO: hey, use power of Scala! Move toNiceString out of here and introduce a PrettyPrinter class.
     def toNiceString( nTab: Int = 0) = ""
     override def toString: String = toNiceString()
@@ -150,11 +177,21 @@ package lir {
     // TODO: goes to PrettyPrinter
     protected val indent : Int = 4
     // TODO: goes to PrettyPrinter
-    protected val tab : String = " " *indent
+    protected val tab : String = " " * indent
 
     def deepCopy( identified: Boolean = true ) : TlaEx
     def identical( other: TlaEx ) : Boolean
+  }
 
+  /**
+    * This is a special expression that indicates that this expression does not have a meaningful value.
+    * For instance, this expression can be used as the body of a library operator, which by default have
+    * gibberish definitions by SANY.
+    * We could use Option[TlaEx], but that would introduce unnecessary many pattern matches, as NoneEx will be rare.
+    */
+  object NullEx extends TlaEx {
+    override def deepCopy(identified: Boolean): TlaEx = NullEx
+    override def identical(other: TlaEx): Boolean = this eq other
   }
 
   /** just using a TLA+ value */
@@ -171,7 +208,7 @@ package lir {
     }
 
     // REVIEW: don't we want to maintain the invariant that two expressions with the same ID have the same structure?
-    // In this case, we don't need a deep comparison like this. Igor.
+    // In this case, we don't need a deep comparison like this. -- Igor.
     override def identical( other: TlaEx ): Boolean = {
       other match{
         case ValEx( v ) => v == value && other.ID == ID
@@ -181,16 +218,16 @@ package lir {
 
   }
 
-  /** refering to a variable, constant, operator, etc. by a name. */
+  /** referring to a variable, constant, operator, etc. by a name. */
   case class NameEx(name: String) extends TlaEx{
     override def toNiceString( nTab: Int = 0 ): String = (tab *nTab) + "( NameEx: " + name + " , id: " + ID + " )"
-    override def deepCopy( identified: Boolean = true ): NameEx = {
-      val ret = NameEx( name )
+    override def deepCopy(identified: Boolean = true): NameEx = {
+      val ex = NameEx(name)
       if (identified) {
-        ret.m_ID = m_ID
-        ret.canSet = canSet
+        ex.m_ID = m_ID
+        ex.canSet = canSet
       }
-      return ret
+      ex
     }
 
     override def identical( other: TlaEx ): Boolean = {
@@ -201,7 +238,7 @@ package lir {
     }
   }
 
-  /** applying an operator, including the one defined by OperFormalParam */
+  // applying an operator, including the one defined by OperFormalParam
 
   /**
     * NOTE: Scala does not auto-generate copy for OperEx, because args are variable
@@ -218,12 +255,12 @@ package lir {
     }
 
     override def deepCopy( identified: Boolean = true ): OperEx = {
-      val ret = new OperEx( oper, args.map( _.deepCopy( identified ) ) : _* ) // deep copy
+      val ex = OperEx( oper, args.map( _.deepCopy( identified ) ) : _* ) // deep copy
       if (identified) {
-        ret.m_ID = m_ID
-        ret.canSet = canSet
+        ex.m_ID = m_ID
+        ex.canSet = canSet
       }
-      return ret
+      ex
     }
 
     override def identical( other: TlaEx ): Boolean = {
@@ -273,9 +310,18 @@ package lir {
 
 
   /**
-    * An operator definition, e.g. A == 1 + 2, or B(x, y) == x + y, or (C(f(_, _), x, y) == f(x, y).
-    * As in the case of built-in operators, every operator declaration carries a single operator instance,
-    * which is stored in the public field 'operator'.
+    * <p>An operator definition, e.g. A == 1 + 2, or B(x, y) == x + y, or (C(f(_, _), x, y) == f(x, y).</p>
+    *
+    * <p>As in the case with the built-in operators, every operator declaration carries a single operator instance,
+    * which is stored in the public field 'operator'. However, if the operator is recursive, then the operator body
+    * does not contain OperEx(this.operator, ...), but it does contain OperFormalOperParam(this.name),
+    * see TlaRecOperDecl.</p>
+    *
+    * @see TlaRecOperDecl
+    *
+    * @param name operator name
+    * @param formalParams formal parameters
+    * @param body operator definition, that is a TLA+ expression that captures the operator definition
     */
   case class TlaOperDecl( name: String, formalParams: List[FormalParam], body: TlaEx ) extends TlaDecl {
 
@@ -283,8 +329,41 @@ package lir {
 
     override def deepCopy( ): TlaOperDecl =  TlaOperDecl( name, formalParams, body.deepCopy() )
 
-    override def identical( other: TlaDecl ): Boolean = other match{
+    override def identical( other: TlaDecl ): Boolean = other match {
       case TlaOperDecl( oname, oparams, obody ) => name == oname && formalParams == oparams && body.identical( obody )
+      case _ => false
+    }
+  }
+
+  /**
+    * <p>A declaration of a recursive operator. This class extends TlaOperDecl, so in most of the cases one can treat
+    * this object just as an operator declaration. However, if one wants to get more details about
+    * the recursive definition, one can cast the object to TlaRecOperDecl and get these details.</p>
+    *
+    * <p>Note that we deliberately declare this class as a child of TlaOperDecl, not a case class. By doing so,
+    * we avoid one more case in case enumeration. However, one can always match TlaRecOperDecl in pattern matching.</p>
+    *
+    * <p>To keep the classes compact, we do not provide a method like isRecursive in TlaDecl.
+    * One can use foo.isInstance[TlaRecOperDecl].</p>
+    *
+    * @param name operator name
+    * @param formalParams formal parameters (not including the special recParam that points to the operator itself)
+    * @param body operator definition, which can call the operator itself via OperFormalParamOper(recParam, ...)
+    */
+  class TlaRecOperDecl(name: String, formalParams: List[FormalParam], body: TlaEx)
+      extends TlaOperDecl(name, formalParams, body) {
+    /**
+      * The formal parameter that is used in the operator body to refer to the operator itself.
+      * Note that this parameter is not included in the list formalParams.
+      */
+    val recParam = OperFormalParam(name, FixedArity(formalParams.length))
+
+    override def hashCode(): Int = super.hashCode()
+
+    override def equals(o: scala.Any): Boolean = o match {
+      case that: TlaRecOperDecl =>
+        super.equals(that)
+
       case _ => false
     }
   }
