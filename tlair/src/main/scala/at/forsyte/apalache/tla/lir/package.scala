@@ -39,34 +39,6 @@ package lir {
 
   }
 
-  /**
-    * A global function declaration, e.g., f(x \in S) == x + 1.
-    * This is not an operator declaration, which is captured by TlaOperDecl!
-    *
-    * TODO: we do not need this kind of declarations, as they can be simulated by an operator. Remove.
-    *
-    * @param name function name
-    *
-    * @param boundParams parameters bound to sets. Each tuple has two elements of the structure:
-    *                    (1) NameEx(...) for a bound variable, or
-    *                        OperEx(TlaFunOper.tuple, NameEx(...), ..., NameEx(...)) for a tuple of parameters, and
-    *                    (2) TlaEx for the bounding set (no restrictions).
-    *
-    * @param body the expression that defines the function body
-    */
-  case class TlaFunDecl(name: String, boundParams: List[Tuple2[TlaEx, TlaEx]], body: TlaEx) extends TlaDecl {
-    require(message = "The left-hand side of each parameter should be a NameEx or a tuple",
-      requirement = boundParams.forall {
-        case (NameEx(_), _) => true
-        case (OperEx(TlaFunOper.tuple, _), _) => true
-        case _ => false
-      }
-    )
-
-    override def deepCopy(): TlaDecl = TlaFunDecl(name, boundParams, body)
-    override def identical(other: TlaDecl): Boolean = this == other
-  }
-
   ///////////////// DISCUSSION
   /**
     * A module included by EXTENDS.
