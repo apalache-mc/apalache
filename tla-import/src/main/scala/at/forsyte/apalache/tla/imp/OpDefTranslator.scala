@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.oper.TlaOper
 import tla2sany.semantic.{OpApplNode, OpDefNode}
 
 /**
@@ -11,8 +12,8 @@ import tla2sany.semantic.{OpApplNode, OpDefNode}
 class OpDefTranslator(context: Context) {
   def translate(node: OpDefNode): TlaOperDecl = {
     val params = node.getParams.toList map FormalParamTranslator().translate
-
     val nodeName = node.getName.toString.intern()
+
     if (!node.getInRecursive) {
       node.getBody match {
         case app: OpApplNode if "$RecursiveFcnSpec" == app.getOperator.getName.toString =>
@@ -35,11 +36,9 @@ class OpDefTranslator(context: Context) {
   }
 
   private def replaceFunWithOper(name: String, body: TlaEx): TlaEx = {
-    val oper = OperFormalParamOper(name, 0)
-
     def replace(e: TlaEx): TlaEx = e match {
       case NameEx(n) if n == name =>
-        OperEx(oper)
+        OperEx(TlaOper.apply, NameEx(n))
 
       case OperEx(o, args@_*) =>
         OperEx(o, args map replace: _*)

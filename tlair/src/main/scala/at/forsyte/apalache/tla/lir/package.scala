@@ -91,36 +91,9 @@ package lir {
       "Formal parameters should have fixed arity")
   }
 
-  /**
-    * An operator that is not defined, but corresponds to a formal parameter of another operator.
-    *
-    * @param param the formal parameter of an operator
-    */
-  class OperFormalParamOper(val param: OperFormalParam) extends TlaOper {
-    override def name: String = param.name
 
-    override def interpretation: Interpretation.Value = Interpretation.User
 
-    override def arity: OperArity = param.arity
 
-    override def hashCode(): Int = param.hashCode()
-
-    override def equals(other: scala.Any): Boolean = {
-      other match {
-        case that: OperFormalParamOper =>
-          param == that.param
-
-        case _ =>
-          false
-      }
-    }
-  }
-
-  object OperFormalParamOper {
-    // a handy constructor
-    def apply(name: String, nparams: Int): OperFormalParamOper =
-      new OperFormalParamOper(OperFormalParam(name, FixedArity(nparams)))
-  }
 
 
   trait Identifiable{
@@ -325,16 +298,11 @@ package lir {
     * One can use foo.isInstance[TlaRecOperDecl].</p>
     *
     * @param name operator name
-    * @param formalParams formal parameters (not including the special recParam that points to the operator itself)
-    * @param body operator definition, which can call the operator itself via OperFormalParamOper(recParam, ...)
+    * @param formalParams formal parameters
+    * @param body operator definition, which can call the operator itself via OperEx(TlaOper.apply, NameEx(name), ...)
     */
   class TlaRecOperDecl(name: String, formalParams: List[FormalParam], body: TlaEx)
       extends TlaOperDecl(name, formalParams, body) {
-    /**
-      * The formal parameter that is used in the operator body to refer to the operator itself.
-      * Note that this parameter is not included in the list formalParams.
-      */
-    val recParam = OperFormalParam(name, FixedArity(formalParams.length))
 
     override def hashCode(): Int = super.hashCode()
 

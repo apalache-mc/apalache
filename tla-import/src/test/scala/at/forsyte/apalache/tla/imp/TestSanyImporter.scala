@@ -707,7 +707,7 @@ class TestSanyImporter extends FunSuite {
 
     assertTlaDecl("A",
       List(SimpleFormalParam("i"), SimpleFormalParam("j"), OperFormalParam("f", FixedArity(1))),
-      OperEx(OperFormalParamOper("f", 1),
+      OperEx(TlaOper.apply, NameEx("f"),
         OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j")))) (mod.declarations(2))
     val aDecl = mod.declarations(2).asInstanceOf[TlaOperDecl]
     assertTlaDecl("C", List(),
@@ -743,8 +743,7 @@ class TestSanyImporter extends FunSuite {
         val zDecl = o.defs(2)
         zDecl match {
           case TlaOperDecl("Z", List(OperFormalParam("f", FixedArity(1)), SimpleFormalParam("a")), _) =>
-            assert(OperEx(new OperFormalParamOper(OperFormalParam("f", FixedArity(1))),
-              NameEx("a")) == zDecl.body)
+            assert(OperEx(TlaOper.apply, NameEx("f"), NameEx("a")) == zDecl.body)
         }
         assert(0 == xDecl.formalParams.length)
         assert(ValEx(TlaInt(1)) == xDecl.body)
@@ -779,7 +778,7 @@ class TestSanyImporter extends FunSuite {
         val expectedBody =
           OperEx(TlaFunOper.funDef,
             OperEx(TlaFunOper.app,
-              OperEx(OperFormalParamOper("f", 0)),
+              OperEx(TlaOper.apply, NameEx("f")),
               NameEx("x")),
             NameEx("x"),
             ValEx(TlaBoolSet)
@@ -788,7 +787,7 @@ class TestSanyImporter extends FunSuite {
         assert(expectedBody == fDecl.body)
         val xDecl = o.defs(1)
         assert("X" == xDecl.name)
-        assert(OperEx(OperFormalParamOper("X", 0)) == xDecl.body)
+        assert(OperEx(TlaOper.apply, NameEx("X")) == xDecl.body)
         assert(OperEx(xDecl.operator) == body)
     }
   }
@@ -828,8 +827,6 @@ class TestSanyImporter extends FunSuite {
           // The caveat here is that the formal parameter R does not appear in the list of the R's formal parameters,
           // but it is accessible via the field recParam.
           val recParam = OperFormalParam(name, FixedArity(nparams))
-          assert(recParam == d.recParam)
-          val RInTheBody = new OperFormalParamOper(recParam)
           assert(d.body == expectedBody)
 
         case _ =>
@@ -839,17 +836,17 @@ class TestSanyImporter extends FunSuite {
 
     // in the recursive sections, the calls to recursive operators should be replaced with OperFormalParam(...)
     assertRec("R", 1,
-      OperEx(OperFormalParamOper("R", 1), NameEx("n")))
+      OperEx(TlaOper.apply, NameEx("R"), NameEx("n")))
 
     assertRec("A", 1,
-      OperEx(OperFormalParamOper("B", 1), NameEx("n")))
+      OperEx(TlaOper.apply, NameEx("B"), NameEx("n")))
     assertRec("B", 1,
-      OperEx(OperFormalParamOper("C", 1), NameEx("n")))
+      OperEx(TlaOper.apply, NameEx("C"), NameEx("n")))
     assertRec("C", 1,
-      OperEx(OperFormalParamOper("A", 1), NameEx("n")))
+      OperEx(TlaOper.apply, NameEx("A"), NameEx("n")))
 
     assertRec("X", 0,
-      OperEx(OperFormalParamOper("X", 0)))
+      OperEx(TlaOper.apply, NameEx("X")))
 
     // however, in non-recursive sections, the calls to recursive operators are just normal OperEx(operator, ...)
     root.declarations.find { _.name == "D" } match {
@@ -868,13 +865,11 @@ class TestSanyImporter extends FunSuite {
         // The caveat here is that the formal parameter F does not appear in the list of the F's formal parameters,
         // but it is accessible via the field recParam.
         val recParam = OperFormalParam("F", FixedArity(1))
-        assert(recParam == d.recParam)
-        val FInTheBody = new OperFormalParamOper(recParam)
         val ite = OperEx(TlaControlOper.ifThenElse,
           OperEx(TlaOper.eq, NameEx("n"), ValEx(TlaInt(0))),
           ValEx(TlaInt(1)),
           OperEx(TlaArithOper.mult, NameEx("n"),
-              OperEx(FInTheBody, OperEx(TlaArithOper.minus, NameEx("n"), ValEx(TlaInt(1)))))
+              OperEx(TlaOper.apply, NameEx("F"), OperEx(TlaArithOper.minus, NameEx("n"), ValEx(TlaInt(1)))))
         )
         assert(d.body == ite)
 
@@ -932,7 +927,7 @@ class TestSanyImporter extends FunSuite {
     assertTlaRecDecl("recFun",
       OperEx(TlaFunOper.funDef,
         OperEx(TlaFunOper.app,
-          OperEx(OperFormalParamOper("recFun", 0)),
+          OperEx(TlaOper.apply, NameEx("recFun")),
           NameEx("x")),
         NameEx("x"),
         NameEx("S"))
@@ -1124,7 +1119,6 @@ class TestSanyImporter extends FunSuite {
     assertTlaDecl("RealDiv", OperEx(TlaArithOper.realDiv, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
   }
 
-  /*
   test("module seqs") {
     // check that the FiniteSets module is imported properly
     val text =
@@ -1135,7 +1129,7 @@ class TestSanyImporter extends FunSuite {
         |""".stripMargin
 
     val (rootName, modules) = new SanyImporter().load("sequences", Source.fromString(text))
-    assert(2 == modules.size)
+    assert(3 == modules.size) // Naturals, Sequences, and our module
     // the root module and naturals
     val root = modules(rootName)
 
@@ -1156,6 +1150,7 @@ class TestSanyImporter extends FunSuite {
 //    assertTlaDecl("Card", OperEx(TlaFiniteSetOper.cardinality, ValEx(TlaBoolSet)))
   }
 
+  /*
     // FiniteSets extend Sequences, which open the Pandora box... Temporarily disabled.
     test("module finitesets") {
       // check that the FiniteSets module is imported properly
@@ -1169,8 +1164,7 @@ class TestSanyImporter extends FunSuite {
           |""".stripMargin
 
       val (rootName, modules) = new SanyImporter().load("finitesets", Source.fromString(text))
-      assert(2 == modules.size)
-      // the root module and naturals
+      assert(4 == modules.size) // Naturals, Sequences, FiniteSets, and our module
       val root = modules(rootName)
 
       def assertTlaDecl(expectedName: String, body: TlaEx): Unit = {

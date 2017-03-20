@@ -71,7 +71,7 @@ class OpApplTranslator(val context: Context, val recStatus: RecursionStatus) {
           OperEx(decl.operator, args: _*)
 
         case _ =>
-          throw new SanyImporterException("Unexpected user operator: " + node)
+          throw new SanyImporterException("User operator %s is not found in the translation context: %s".format(opcode, node))
       }
     }
 
@@ -81,7 +81,7 @@ class OpApplTranslator(val context: Context, val recStatus: RecursionStatus) {
           // this is a placeholder for a recursive call, replace it with a usage of a formal parameter
           val args = node.getArgs.toList.map { p => exTran.translate(p) }
           val recParam = OperFormalParam(opcode, FixedArity(args.length))
-          OperEx(new OperFormalParamOper(recParam), args: _*)
+          OperEx(TlaOper.apply, NameEx(opcode) +: args: _*)
 
         case _ =>
           translateNonRec()
@@ -99,7 +99,7 @@ class OpApplTranslator(val context: Context, val recStatus: RecursionStatus) {
     val formalParam = FormalParamTranslator().translate(oper).asInstanceOf[OperFormalParam]
     val exTran = ExprOrOpArgNodeTranslator(context, recStatus)
     val args = node.getArgs.toList.map { p => exTran.translate(p) }
-    OperEx(new OperFormalParamOper(formalParam), args: _*)
+    OperEx(TlaOper.apply, NameEx(formalParam.name) +: args: _*)
   }
 
   // a built-in operator with zero arguments, that is, a built-in constant
