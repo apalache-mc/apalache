@@ -16,6 +16,13 @@ public class IDAllocator<ValType> {
         m_Val_to_ID = new HashMap<>();
     }
 
+    public int predict( ValType p_new ){
+        if( m_Val_to_ID.containsKey( p_new ) ) {
+            return m_Val_to_ID.get( p_new );
+        }
+        else return m_ID_to_Val.size();
+    }
+
     public int allocate( ValType p_new ) {
         if( m_Val_to_ID.containsKey( p_new ) ) {
             return m_Val_to_ID.get( p_new );

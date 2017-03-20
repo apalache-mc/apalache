@@ -11,91 +11,99 @@ class PluginTree
   * may be executed in parallel)
   */
 object PluginController {
-    //val allocator : IDAllocator[String] = new IDAllocator[String]();
-    var plugins: PluginTree = new PluginTree()
-    val maxParallel: Int = 1
+  //val allocator : IDAllocator[String] = new IDAllocator[String]();
+  var plugins: PluginTree = new PluginTree()
+  val maxParallel: Int = 1
 
-    /**
-      * Creates a plugin graph carrying dependency information. If plugin p1 depends on p2 then there must exist a path
-      * from p2 to p1. If a cycle is found in the graph, the process must fail (circular dependency).
-      * This guarantees a DAG upon successful execution.
-      *
-      * @param plugins - The plugins, in arbitrary order.
-      */
-    def makePluginTree( plugins: List[ Plugin ] ): Unit = {
-        // Allocate all plugins, later use only IDs
-        //plugins.foreach( (p : Plugin ) => allocator.allocate( p.name ) )
+  /**
+    * Creates a plugin graph carrying dependency information. If plugin p1 depends on p2 then there must exist a path
+    * from p2 to p1. If a cycle is found in the graph, the process must fail (circular dependency).
+    * This guarantees a DAG upon successful execution.
+    *
+    * @param plugins - The plugins, in arbitrary order.
+    */
+  def makePluginTree( plugins: List[ Plugin ] ): Unit = {
+    // Allocate all plugins, later use only IDs
+    //plugins.foreach( (p : Plugin ) => allocator.allocate( p.name ) )
 
-        val depMap : HashMap[String, String] = HashMap()
-        plugins.foreach(
-            (p : Plugin ) =>  p.dependencies.foreach(
-                ( pluginName : String ) => depMap.put( p.name, pluginName )
-            )
-        )
+    val depMap : HashMap[String, String] = HashMap()
+    plugins.foreach(
+      (p : Plugin ) =>  p.dependencies.foreach(
+        ( pluginName : String ) => depMap.put( p.name, pluginName )
+      )
+    )
 
-    }
+  }
 
-    /**
-      * Sets the input ot all top level (fully independent) plugins. A plugin is considered fully independent if it has
-      * no dependencies on any other plugins.
-      *
-      * @param tlaSpec The initial input of all fully independent plugins.
-      */
-    def prepareInput( tlaSpec: TlaSpec ): Unit = {} // TODO
+  /**
+    * Sets the input ot all top level (fully independent) plugins. A plugin is considered fully independent if it has
+    * no dependencies on any other plugins.
+    *
+    * @param tlaSpec The initial input of all fully independent plugins.
+    */
+  def prepareInput( tlaSpec: TlaSpec ): Unit = {} // TODO
 
-    def getNext( ) : Option[Plugin] = { // TODO
-        None
-    }
+  def getNext( ) : Option[Plugin] = { // TODO
+    None
+  }
 
-    def getPrevious( ) : Option[Plugin] = { // TODO
-        None
-    }
+  def getPrevious( ) : Option[Plugin] = { // TODO
+    None
+  }
 
 }
 
-abstract class PluginError
+abstract class PluginError extends Exception
 
 case class NoError() extends PluginError
+case class ActualError() extends PluginError
+
 
 /**
   *
   */
 abstract class Plugin() {
-    val name : String
-    // Database dependencies
-    val dependencies : List[String] = Nil
-    var input: TlaSpec = null
-    var output: TlaSpec = null
-    var throwError : PluginError = NoError()
+  val name : String
+  /** Database dependencies */
+  val dependencies : List[String]
+  var input: TlaSpec = null
+  var output: TlaSpec = null
+  var throwError : PluginError = NoError()
 
-    def run( newInput: TlaSpec ) : Unit = {
-        input = newInput
-        output = null
-        throwError = NoError()
-        if ( translate() ) {
-            PluginController.getNext() match {
-                case Some( p ) => p.run( output )
-                case _ => return //end
-            }
-        } else {
-            PluginController.getPrevious() match {
-                case Some( p ) => p.refine( throwError )
-                case _ => return // actual error
-            }
-        }
+  private def pushForward(): Unit ={
+    PluginController.getNext() match {
+      case Some( p ) => p.run( output )
+      case _ => return // end
     }
+  }
 
-    /**
-      * Performs processing on the input (plugin-specific reimplement).
-      * On success, sets output and returns true.
-      * On failure, sets throwError and returns false.
-      */
-    def translate(): Boolean
+  def run( newInput: TlaSpec ) : Unit = {
+    input = newInput
+    output = null
+    throwError = NoError( )
+    translate( )
+  }
 
-    /**
-      * Similar to translate, but only called as a response to an error down the chain
-      */
-    def refine( x : Any ): Boolean
-    //def refine( err : PluginError ): Boolean
+  /**
+    * Performs processing on the input (plugin-specific reimplement).
+    * On failure, sets throwError.
+    */
+  protected def translate() : Unit
+
+  /**
+    * Similar to run, but only called as a response to an error down the chain
+    */
+  def refine( err : PluginError ): Unit = {
+    output = null
+    throwError = NoError( )
+    reTranslate( err: PluginError )
+  }
+
+  /**
+    * Performs alternative processing on the input, responding to some PluginError down the chain (plugin-specific reimplement).
+    * On failure, sets throwError.
+    */
+  protected def reTranslate( err: PluginError ): Unit
+
 }
 

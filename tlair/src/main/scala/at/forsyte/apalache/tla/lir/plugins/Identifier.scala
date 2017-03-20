@@ -6,50 +6,58 @@ import java.util.Vector
 
 // REWRITE AS DB[Int, TlaEx]
 
-//object PrimaryDB extends DB[ Int, TlaEx] {
-//  override val name = "PrimaryDB"
-//
-//
-//}
+object UniqueDB extends DB[ UID, TlaEx ] {
+  override val name = "UniqueDB"
 
+  private val expressions : Vector[ TlaEx ] = new Vector[ TlaEx ]
 
-/**
-  * Created by jkukovec on 11/28/16.
-  */
-package object Identifier {
+  override def apply( key: UID ): Option[ TlaEx ] = {
+    if( key.id < 0 || key.id >= expressions.size() ) return None
+    else return Some( expressions.elementAt( key.id ) )
+  }
+  override def size() : Int = expressions.size()
 
-  private val expressions : Vector[TlaEx] = new Vector[TlaEx]
-
-  def print() : Unit = {
-    println( "\nIdentifier:\n" )
-    for ( a <- 0 until expressions.size() ) {
-      println( a +  " -> " + expressions.get(a) )
+  override def contains( key : UID ) : Boolean = 0 until expressions.size() contains key.id
+  override def clear() : Unit = expressions.clear()
+  override def print(): Unit = {
+    println( "\n" + name + ": \n" )
+    for ( i <- 0 until expressions.size()  ) {
+      println( UID( i ) + " -> " + expressions.get( i ) )
     }
   }
 
-
-  def reset() : Unit = expressions.clear()
-
-  def getEx( uid : UID ) : Option[TlaEx] = {
-    val x = uid.id
-    if( x< 0 || x >= expressions.size() )
-      return None
-    else
-      return Some( expressions.get( x ) )
-  }
-
-  def size() : Int = expressions.size()
-
-  private def assignID( ex: TlaEx ) : Unit = {
+  def add( ex: TlaEx ) : Unit = {
     if( ex.ID == UID( -1 ) ){
       ex.setID( UID( expressions.size() ) )
       expressions.add( ex )
     }
   }
 
-  def identify( spec : TlaSpec ) : Unit = SpecHandler.sideeffectWithExFun( spec, assignID )
-  def identify( decl : TlaDecl ) : Unit = SpecHandler.sideeffectOperBody( decl , SpecHandler.sideeffectEx( _, assignID ) )
-  def identify( ex : TlaEx ) : Unit = SpecHandler.sideeffectEx( ex, assignID )
+}
 
+
+/**
+  * Created by jkukovec on 11/28/16.
+  */
+package object Identifier {
+  def identify( spec : TlaSpec ) : Unit = SpecHandler.sideeffectWithExFun( spec, UniqueDB.add )
+  def identify( decl : TlaDecl ) : Unit = SpecHandler.sideeffectOperBody( decl , SpecHandler.sideeffectEx( _, UniqueDB.add ) )
+  def identify( ex : TlaEx ) : Unit = SpecHandler.sideeffectEx( ex, UniqueDB.add )
+}
+
+package object FirstPass extends Plugin {
+  override val name = "FirstPass"
+  override val dependencies : List[String] = Nil
+
+  /** Cannot produce errors (?)*/
+  override def translate(): Unit = {
+    output = input.deepCopy()
+    SpecHandler.sideeffectWithExFun( output, UniqueDB.add )
+  }
+
+  override def reTranslate( err: PluginError ): Unit = {
+    /** Forwards errors */
+    throwError = err
+  }
 
 }
