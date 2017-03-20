@@ -161,8 +161,6 @@ object TLATypeDB extends SmartHashMapDB[ TlaEx, TLAType ]{
         /** TODO, just take tau1? */
       }
 
-      case
-
 
       /** DEFAULT */
       case _ => return TypeFail()

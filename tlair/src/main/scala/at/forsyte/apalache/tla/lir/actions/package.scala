@@ -65,7 +65,6 @@ package object actions {
       */
     val composition = new TlaActionOper {
       override def name: String = "\\cdot"
-
       override def arity: OperArity = FixedArity(2)
     }
   }
