@@ -359,7 +359,7 @@ class TestIDAllocation extends FunSuite{
       }
       catch {
         case err: IDReallocationError =>
-        case err2 => assert( false )
+        case _ : Throwable => assert( false )
       }
 
 

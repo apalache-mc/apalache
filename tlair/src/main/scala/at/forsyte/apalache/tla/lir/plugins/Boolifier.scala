@@ -1,3 +1,4 @@
+/*
 package at.forsyte.apalache.tla.lir.plugins
 
 import at.forsyte.apalache.tla.lir._
@@ -41,7 +42,7 @@ object BoolDB extends SmartHashMapDB[ TlaEx, BoolifierType ]{
         case TlaOper.ne => return BoolT()
         case TlaOper.apply => {
           val body = OperatorDB.body( EquivalenceDB.getRaw( args.head ) )
-          body
+          //body
 
           return PossibleBoolT()
         }
@@ -60,9 +61,9 @@ object BoolDB extends SmartHashMapDB[ TlaEx, BoolifierType ]{
         case TlaSetOper.in => return BoolT()
         case TlaSetOper.notin => return BoolT()
         case TlaSetOper.subseteq => return BoolT()
-        case TlaSetOper.subset => return BoolT()
+        case TlaSetOper.subsetProper => return BoolT()
         case TlaSetOper.supseteq => return BoolT()
-        case TlaSetOper.supset => return BoolT()
+        case TlaSetOper.supsetProper => return BoolT()
 
         case oper if
           oper.isInstanceOf[TlaBoolOper] ||
@@ -100,3 +101,5 @@ object Boolifier extends Plugin {
 
   }
 }
+
+*/

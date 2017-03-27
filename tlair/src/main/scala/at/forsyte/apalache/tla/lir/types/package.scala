@@ -1,3 +1,4 @@
+/*
 package at.forsyte.apalache.tla.lir.types
 
 import at.forsyte.apalache.tla.lir.db._
@@ -174,3 +175,4 @@ package object types {
 
 
 }
+*/
