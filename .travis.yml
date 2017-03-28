@@ -5,6 +5,8 @@ jdk:
 
 notifications:
     email:
+      recipients:
+        apalache-build@forsyte.at
       on_success: change
       on_failure: always
 
