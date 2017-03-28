@@ -11,8 +11,6 @@
     <name>APALACHE project</name>
     <url>https://github.com/konnov/apalache</url>
 
-    this-build-is-broken-intentionally
-
     <modules>
         <module>tlair</module>
         <module>tla-import</module>
