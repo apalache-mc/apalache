@@ -1,0 +1,40 @@
+\documentclass[a4paper, 12pt]{article}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsfonts}
+\usepackage{algorithm}
+\usepackage{amsmath}
+
+\title{Identifying Assignments}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+TLA+ specifications require the user to define a next-state formula (hereafter referred to as $next$) , describing the possible values of variables after a transition. 
+While the language itself is not particularly limiting with respect to the forms of the formulas, the current implementation of TLC imposes the following restrictions:
+\begin{itemize}
+\item If a variable is declared, its prime must be given in $next$ (possibly implicitly with $\textsc{UNCHANGED}$)
+\item The set of possible values a prime may take must be finite.
+\end{itemize}
+
+These restrictions are necessary in order to avoid an infinite state space. As such, we shall adopt these assumptions as well.
+We consider formulas to be terms of the form $l = r$, joined with arbitrary boolean connectives. 
+This is because all terms of the form $l \in r$ must have finite sets as right-hand sides, so they are equivalent to $l = r_1 \vee \dots \vee l = r_n$. We can eliminate quantifiers by a similar argument. Thus, without loss of generality, we assume all our terms are equalities.
+
+In addition to the above, there are other, less fundamental, restrictions imposed by TLC, one of them being the importance of term order. For example, the formula $y' = x' \wedge x'=1$ is rejected by TLC, because it processes terms in left-to-right order, assigning variables as it sees them, even though it is trivial to see that $x' = 1 = y'$ satisfies the formula. Our tool aims to disregard such ordering, as long as there exists an order of variable assignment, such that:
+\begin{itemize}
+\item every variable is assigned once
+\item if an assignment features other primed variables in its right-hand side, all of them have already been assigned, i.e. assignments are not undefined or cyclical
+\end{itemize}
+We will, however, adhere to the requirement that a term may only be considered an assignment if its left-hand side is a single primed variable.
+
+Another formalization we would like to introduce is the distinction of comparison and assignment. Consider the formula $x' = 2 \wedge y' = 1 \wedge x' = 1 + y'$. It is again easy to see that $y'=1, x' = 2$ satisfies the formula even though the formula itself has two equalities of the form $x' = r$. Our approach is to consider only one equality per primed variable an assignment, denoted $v' \leftarrow r$, and the rest as comparisons, denoted $v' =_c r$. We extend the notion of comparison to all other equalities that either feature multiple variables or non-primes on the left-hand side.
+
+In light of that, our goal is to determine, given a formula, whether we can select variable assignments and their order in accordance with the rules above and thus label every equality as either assignment or comparison. It is worth noting that, should multiple possibilities for assignment exist (e.g. the formula $x' = 3 \wedge x' =2$), the satisfiability of the formula does not depend on the choice of assignment, if the value being assigned and the value being compered are not equal, the formula is unsatisfiable in any case.
+
+
+
+\end{document}
