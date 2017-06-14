@@ -33,7 +33,9 @@ We will, however, adhere to the requirement that a term may only be considered a
 
 Another formalization we would like to introduce is the distinction of comparison and assignment. Consider the formula $x' = 2 \wedge y' = 1 \wedge x' = 1 + y'$. It is again easy to see that $y'=1, x' = 2$ satisfies the formula even though the formula itself has two equalities of the form $x' = r$. Our approach is to consider only one equality per primed variable an assignment, denoted $v' \leftarrow r$, and the rest as comparisons, denoted $v' =_c r$. We extend the notion of comparison to all other equalities that either feature multiple variables or non-primes on the left-hand side.
 
-In light of that, our goal is to determine, given a formula, whether we can select variable assignments and their order in accordance with the rules above and thus label every equality as either assignment or comparison. It is worth noting that, should multiple possibilities for assignment exist (e.g. the formula $x' = 3 \wedge x' =2$), the satisfiability of the formula does not depend on the choice of assignment, if the value being assigned and the value being compered are not equal, the formula is unsatisfiable in any case.
+In light of that, our goal is to determine, given a formula, whether we can select variable assignments and their order in accordance with the rules above and thus label every equality as either assignment or comparison. It is worth noting that, should multiple possibilities for assignment exist (e.g. the formula $x' = 3 \wedge x' =2$), the satisfiability of the formula does not depend on the choice of assignment, if the value being assigned and the value being compered are not equal, the formula is unsatisfiable in any case
+
+Initially, let us assume the formula comes in DNF, we will consider general forms afterwards. From a DNF formula, we consider a single conjunctive clause of the form $c = l_1 = r_1 \wedge \dots \wedge l_n = r_n \wedge \phi$ where $\phi$ contains all terms that cannot ever be interpreted as assignment. Since the terms in $\phi$ are not relevant for our procedure, we can assume w.l.o.g. $\phi = \top$.
 
 
 
