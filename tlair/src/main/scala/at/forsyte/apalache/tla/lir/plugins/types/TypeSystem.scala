@@ -110,8 +110,8 @@ object PowSet{
   }
 }
 
-object FunSet{
-  def apply( domain: FinSet, codomain: FinSet ) : FinSet = {
-
-  }
-}
+//object FunSet{
+//  def apply( domain: FinSet, codomain: FinSet ) : FinSet = {
+//
+//  }
+//}
