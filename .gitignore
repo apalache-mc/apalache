@@ -3,3 +3,5 @@
 out
 target
 .directory
+docs/*
+!docs/*.tex
