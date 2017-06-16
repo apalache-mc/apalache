@@ -82,10 +82,17 @@ abstract class GroundCell extends ConstMemCell
 case class IntCell( i: Int ) extends GroundCell
 case class BoolCell( b: Boolean ) extends GroundCell
 case class StrCell( s: String ) extends GroundCell
+case class SymbCell( s: String ) extends GroundCell
 
 case class SetCell( elements: ConstMemCell* ) extends ConstMemCell {
   def size: Int = elements.size
   def removeDuplicates(): SetCell = SetCell( elements.distinct:_* )
   def normalized() : SetCell = SetCell( elements.distinct.sortWith( TotalOrder(_,_) ):_* )
   def <=( other: SetCell ) : Boolean = true
+
+  override def toString: String = {
+    var s = "{ "
+    for (el <- elements ) s = s +  el.toString + ", "
+    return s + " }"
+  }
 }
