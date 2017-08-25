@@ -31,7 +31,7 @@ class TestAssignments extends FunSuite {
         else NameEx(rhs)
       )
     }
-    def makeLeaf( lhs: String ) : OperEx = makeLeafFull(lhs, lhs, false )
+    def makeLeaf( lhs: String ) : OperEx = makeLeafFull(lhs, lhs , false )
 
 
     def makeLeafBranches( oper: TlaOper, names: String* ) : OperEx = {
