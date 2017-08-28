@@ -25,14 +25,14 @@ package object assignments{
 
   def toSmt2( phi : BoolFormula, varSym: String = "A", fnSym : String = "R" ) : String = {
     phi match{
-      case False() => "false"
+      case False() => "false" //"( false )"
       case And( args@_* ) => "( and %s )".format( args.map( toSmt2( _, varSym, fnSym ) ).mkString(" ") )
       case Or( args@_* ) => "( or %s )".format( args.map( toSmt2( _, varSym, fnSym ) ).mkString(" ") )
       case Neg( arg : BoolFormula ) => "( not %s )".format( toSmt2( arg ) )
       case Implies( lhs, rhs ) => "( => %s %s )".format( toSmt2( lhs ), toSmt2( rhs ) )
-      case Variable( id: Int ) => varSym + "_" + id
-      case LtFns( i: Int, j: Int ) => "( < %s(%s) %s(%s) )".format( fnSym, i, fnSym, j )
-      case NeFns( i: Int, j: Int ) => "( not ( = %s(%s) %s(%s) ) )".format( fnSym, i, fnSym, j )
+      case Variable( id: Int ) => varSym + "_" + id //"( %s_%s )".format( varSym, id )
+      case LtFns( i: Int, j: Int ) => "( < ( %s %s ) ( %s %s ) )".format( fnSym, i, fnSym, j )
+      case NeFns( i: Int, j: Int ) => "( not ( = ( %s %s ) ( %s %s ) ) )".format( fnSym, i, fnSym, j )
     }
   }
 
@@ -185,7 +185,7 @@ package object assignments{
              p_phi : OperEx,
              p_varSym : String = "A",
              p_fnSym : String = "R"
-           ) : Option[Seq[TlaEx]] = {
+           ) : String = {
 
     val ( seen, deps, deltas ) = massProcess(p_phi, p_vars)
 
@@ -224,19 +224,16 @@ package object assignments{
 
 //    val phiS = And( ( aargs ++ rargs ++ injargs ++ exOneargs ).toSeq:_* )
 
-    val typedecls = seen.map( "(declare-fun %s_%s () Bool)".format( p_varSym, _ ) ).mkString("\n")
-    val fndecls = "\n(declare-fun %s (Int) Bool)\n".format( p_fnSym)
-    val constraints = ( aargsSMT ++ rargsSMT ++ injargsSMT ++ exOneargsSMT ).toSeq.mkString("\n")
+    val logic = "( set-logic QF_UFLIA )\n"
+    val typedecls = seen.map( "( declare-fun %s_%s () Bool )".format( p_varSym, _ ) ).mkString("\n")
+    val fndecls = "\n( declare-fun %s ( Int ) Int )\n".format( p_fnSym)
+    val constraints = ( aargsSMT ++ rargsSMT ++ injargsSMT ++ exOneargsSMT ).toSeq.map(
+      str => "( assert %s )".format( str )
+    ).mkString("\n")
+    val end = "\n( check-sat )\n( get-model )\n( exit )"
 
-    val smt = typedecls + fndecls + constraints
+    return logic + typedecls + fndecls + constraints + end
 
-    print(smt)
-
-
-    // TODO:
-    // - Construct Phi_S
-
-    return Some( Seq() )
   }
 
 }

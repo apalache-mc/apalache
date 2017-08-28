@@ -7,6 +7,9 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
+import java.io._
+
+
 /**
   * Tests for the assignment solver
   */
@@ -31,7 +34,7 @@ class TestAssignments extends FunSuite {
         else NameEx(rhs)
       )
     }
-    def makeLeaf( lhs: String ) : OperEx = makeLeafFull(lhs, lhs , false )
+    def makeLeaf( lhs: String ) : OperEx = makeLeafFull( lhs, lhs , false )
 
 
     def makeLeafBranches( oper: TlaOper, names: String* ) : OperEx = {
@@ -43,32 +46,55 @@ class TestAssignments extends FunSuite {
     }
 
 
-    val Phi1 = makeLeafBranches( TlaBoolOper.and, "0", "1" )
+    val phi1 = makeLeafBranches( TlaBoolOper.and, "0", "1" )
 
-    val Phi2 = OperEx(  TlaBoolOper.and,
+    val phi2 = OperEx(  TlaBoolOper.and,
                         makeLeafBranches( TlaBoolOper.or, "2", "3" ),
                         makeLeafBranches( TlaBoolOper.or, "4", "5" )
     )
 
-    val Phi3 =
+    val phi3 =
       OperEx(
         TlaBoolOper.or,
-        Phi1,
-        Phi2
+        phi1,
+        phi2
     )
 
-    val Phi4=
+    val phi4=
       OperEx(
         TlaBoolOper.and,
-        Phi3,
+        phi3,
         makeLeafBranches( TlaBoolOper.and, "6", "7" )
 
 
       )
 
-    Identifier.identify( Phi4 )
+    Identifier.identify( phi4 )
 
-    assignments.apply(vars, Phi4)
+//    val spec = assignments.apply(vars, phi4)
+
+
+    val phi5 = makeLeafFull( "a", "b", true )
+    val phi6 = makeLeafFull( "b", "a", true )
+    val phi7 = OperEx( TlaBoolOper.and, phi5, phi6 )
+    val phi8 = makeLeafFull( "b", "2", false )
+    val phi9 = OperEx( TlaBoolOper.or, phi7, phi8 )
+    val phi10 = makeLeafFull( "a", "1", false )
+    val phi11 = OperEx( TlaBoolOper.and, phi9, phi10 )
+
+    Identifier.identify( phi11 )
+
+
+    val vars2 = Set[NameEx]( NameEx( "a" ), NameEx( "b" ) )
+
+
+    val spec = assignments.apply(vars2, phi11 )
+
+    //print( new File(".").getCanonicalPath )
+
+    val pw = new PrintWriter(new File( "../test/tla/testSpec.smt2" ) )
+    pw.write(spec)
+    pw.close()
 
   }
 

@@ -5,3 +5,5 @@ target
 .directory
 docs/*
 !docs/*.tex
+
+test/tla/testSpec\.smt2
