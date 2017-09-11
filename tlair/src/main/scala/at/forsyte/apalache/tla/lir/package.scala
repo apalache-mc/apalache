@@ -122,8 +122,11 @@ package lir {
   /** An abstract TLA+ expression. Note that the class is sealed, so we allow only a limited set of values. */
   sealed abstract class TlaEx extends Identifiable {
     // TODO: hey, use power of Scala! Move toNiceString out of here and introduce a PrettyPrinter class.
+    // No need, toString suffices, you can just call print( ex ) which invokes it by default.
     def toNiceString( nTab: Int = 0) = ""
     override def toString: String = toNiceString()
+
+    def toSimpleString: String = ""
 
     // TODO: goes to PrettyPrinter
     protected val indent : Int = 4
@@ -148,7 +151,7 @@ package lir {
   /** just using a TLA+ value */
   case class ValEx(value: TlaValue) extends TlaEx{
     override def toNiceString( nTab : Int = 0): String = (tab *nTab) + "( ValEx: " + value.toString + " , id:" + ID + " )"
-
+    override def toSimpleString: String = value.toString
     override def deepCopy( identified: Boolean = true ): ValEx = {
       val ret = ValEx( value )
       if (identified) {
@@ -172,6 +175,7 @@ package lir {
   /** referring to a variable, constant, operator, etc. by a name. */
   case class NameEx(name: String) extends TlaEx{
     override def toNiceString( nTab: Int = 0 ): String = (tab *nTab) + "( NameEx: " + name + " , id: " + ID + " )"
+    override def toSimpleString: String = name
     override def deepCopy(identified: Boolean = true): NameEx = {
       val ex = NameEx(name)
       if (identified) {
@@ -204,6 +208,21 @@ package lir {
         args.map( (x : TlaEx) => x.toNiceString( nTab + 1 )).mkString(",\n") +
         ",\n" + (tab *nTab) + "  id: " + ID + "\n"+ (tab *nTab) + ")"
     }
+
+    override def toSimpleString: String = {
+      oper.arity match{
+        case FixedArity(n) => {
+          n match {
+            case 1 => args.head.toSimpleString + oper.name
+            case 2 => args.head.toSimpleString + " " + oper.name + " " + args.tail.head.toSimpleString
+            case _ => oper.name +"(" + args.map( _.toSimpleString ).mkString(", ") + ")"
+          }
+        }
+        case _ => oper.name +"(" + args.map( _.toSimpleString ).mkString(", ") + ")"
+
+      }
+    }
+
 
     override def deepCopy( identified: Boolean = true ): OperEx = {
       val ex = OperEx( oper, args.map( _.deepCopy( identified ) ) : _* ) // deep copy
