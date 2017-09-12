@@ -1,6 +1,5 @@
-package at.forsyte.apalache.tla.testing
+package at.forsyte.apalache.tla.assignments
 
-import com.microsoft.z3._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.actions._
@@ -100,9 +99,7 @@ class TestAssignments extends FunSuite {
 
     val fname = testFolderPath + name1 + ".smt2"
 
-    val spec1 = assignments.makeSpec(vars1, phi, Some(fname) )
-
-    val ret = assignments.getOrder(spec1)
+    val ret =  assignmentSolver.getOrder(vars1, phi, fname )
 
     assert( ret.nonEmpty )
 

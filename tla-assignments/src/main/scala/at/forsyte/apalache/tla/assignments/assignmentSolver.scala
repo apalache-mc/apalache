@@ -4,17 +4,19 @@
 // \squsubset : ⊏
 // \iff : ⇔
 
-package at.forsyte.apalache.tla.lir
+package at.forsyte.apalache.tla.assignments
 
-import scala.collection.immutable.{HashMap, Map, Set}
 import java.io._
 
-import com.microsoft.z3._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.plugins.UniqueDB
+import at.forsyte.apalache.tla.lir.{UID, _}
+import com.microsoft.z3._
 
-package object assignments{
+import scala.collection.immutable.{Map, Set}
+
+object assignmentSolver{
 
   /**
     * Symbols to be used for variable, resp. function, names in SMT.

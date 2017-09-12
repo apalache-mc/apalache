@@ -3,11 +3,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>at.forsyte.apalache</groupId>
-    <artifactId>tla-allTests</artifactId>
+    <artifactId>tla-assignments</artifactId>
     <version>0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>tla-allTests</name>
+    <name>tla-assignments</name>
     <url>https://github.com/konnov/apalache</url>
 
     <properties>
