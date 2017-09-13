@@ -16,16 +16,24 @@ import com.microsoft.z3._
 
 import scala.collection.immutable.{Map, Set}
 
+/**
+  * Object equipped with methods for solving the assignment problem.
+  *
+  * =Instructions For Use=
+  *   1. Extract a set of variables and the next formula from your TLA specification.
+  *   1. Do one of the following:
+  *     a. To produce a good assignment strategy, call [[[[assignmentSolver#getOrder(p_vars:scala\.collection\.immutable\.Set[at\.forsyte\.apalache\.tla\.lir\.NameEx],p_phi:at\.forsyte\.apalache\.tla\.lir\.OperEx,p_fileName:String):Option[Seq[(at\.forsyte\.apalache\.tla\.lir\.UID,Boolean)]]* getOrder]]]].
+  *     a. To produce an SMT file or specification for later use, call [[assignmentSolver#makeSpec makeSpec]].
+  */
 object assignmentSolver{
 
-  /**
-    * Symbols to be used for variable, resp. function, names in SMT.
-    */
+  /** Symbol to be used for variable names in SMT. */
   protected var m_varSym = "A"
+  /** Symbol to be used for the function name in SMT. */
   protected var m_fnSym = "R"
 
   /**
-    * Should be immutable, since the names a re arbitrary anyway.
+    * Should be immutable, since the names are arbitrary anyway.
     * Otherwise, there could be problems with names changing mid-execution.
     */
   //  def varSym : String = m_varSym
@@ -484,6 +492,7 @@ object assignmentSolver{
     *        component specifies whether the candidate is chosen as an assigment in the
     *        good assignment strategy found by the internal methods. The pairs are sorted by the
     *        ranking function, in ascending order.
+    * @see [[[[getOrder(p_vars:scala\.collection\.immutable\.Set[at\.forsyte\.apalache\.tla\.lir\.NameEx],p_phi:at\.forsyte\.apalache\.tla\.lir\.OperEx,p_fileName:String):Option[Seq[(at\.forsyte\.apalache\.tla\.lir\.UID,Boolean)]]* getOrder]]]]
     */
   def getOrder( p_spec : String ) : Option[Seq[(UID,Boolean)]] = {
     /** Initialize a context and solver */
