@@ -2,7 +2,31 @@ language: java
 
 jdk:
     - oraclejdk8
-    
+
+python:
+    - "2.7"
+
+sudo: required # z3
+
+os:
+    - linux
+
+# need to compile z3
+addons:
+  apt:
+    packages:
+    - gcc-7
+    - g++-7
+
+before_install:
+  - git clone https://github.com/Z3Prover/z3 ~/build/z3repo
+  - pushd ~/builds/z3repo
+  - python scripts/mk_make.py --java
+  - cd build
+  - make
+  - sudo make install
+  - popd
+
 branches:
   only:
   - master
