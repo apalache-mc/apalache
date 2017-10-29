@@ -69,6 +69,11 @@
             <artifactId>tlair</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>at.forsyte.apalache</groupId>
+            <artifactId>tla-import</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
 
         <dependency>
             <groupId>commons-io</groupId>
