@@ -30,6 +30,7 @@ before_install:
 branches:
   only:
   - master
+  - unstable
 
 notifications:
     email:
