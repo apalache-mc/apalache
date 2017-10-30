@@ -4,7 +4,10 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.ValEx
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
 
-class LogicConstRule extends RewritingRule {
+/**
+  * Implements the rules: SE-LOGIC-CONST{1,2}
+   */
+class LogicConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.rex match {
       case TlaRex(ValEx(TlaFalse)) => true

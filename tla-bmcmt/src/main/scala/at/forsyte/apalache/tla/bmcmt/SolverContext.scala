@@ -1,7 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import com.microsoft.z3.{Context, Status}
-
 /**
   * A context that stores the SMT constraints that are generated in the course of symbolic exploration.
   */
@@ -23,10 +21,22 @@ trait SolverContext {
   def popTo(level: Int)
 
   /**
-    * Assert that a given predicate holds
+    * Introduce a new predicate.
+    * @return the name of the new predicate
+    */
+  def createPred(): String
+
+  /**
+    * Assert that a given predicate holds.
     * @param predName a predicate name
     */
   def assertPred(predName: String): Unit
+
+  /**
+    * Assert than an expression holds.
+    * @param expr an expression in SMTLIB2
+    */
+  def assertSmt2(expr: String): Unit
 
   /**
     * Is the current context satisfiable?
@@ -35,7 +45,7 @@ trait SolverContext {
     */
   def isSat(): Boolean
 
-  /**
+    /**
     * Get the name of a constantly false predicate.
     * @return the name of a Boolean variable that is equivalent to False.
     */
@@ -48,37 +58,3 @@ trait SolverContext {
   def predTrue(): String
 }
 
-/**
-  * An implementation of a SolverContext with Z3.
-  */
-class Z3SolverContext extends SolverContext {
-  var level: Int = 0
-  val predFalse = "_pred0"
-  val predTrue = "_pred1"
-  private val z3context: Context = new Context()
-  private val z3solver = z3context.mkSolver()
-
-  /**
-    * Dispose whatever has to be disposed in the end.
-    */
-  override def dispose(): Unit = {
-    z3context.close()
-  }
-
-  /**
-    * Assert that a given predicate holds
-    *
-    * @param predName a predicate name
-    */
-  override def assertPred(predName: String): Unit = {
-
-  }
-
-  override def popTo(newLevel: Int) = {
-    level = newLevel
-  }
-
-  override def isSat(): Boolean = {
-    z3solver.check() == Status.SATISFIABLE
-  }
-}
