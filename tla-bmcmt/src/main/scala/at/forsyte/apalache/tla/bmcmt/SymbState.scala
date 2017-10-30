@@ -21,4 +21,8 @@ class SymbState(val rex: Rex,
   def setBinding(newBinding: Binding) = {
     new SymbState(rex, arena, newBinding, solverCtx)
   }
+
+  def setSolverCtx(context: SolverContext) = {
+    new SymbState(rex, arena, binding, context)
+  }
 }

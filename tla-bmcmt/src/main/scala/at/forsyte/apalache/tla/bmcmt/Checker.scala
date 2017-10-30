@@ -72,7 +72,7 @@ class Checker(mod: TlaModule, initOp: TlaOperDecl, nextOp: TlaOperDecl) {
   }
 
   private def smallStep(state: SymbState, dir: SearchDirection): SymbState = {
-    rewriter.rewrite(state, dir) match {
+    rewriter.rewriteOnce(state, dir) match {
       case Done(nextState) =>
         // converged to the normal form
         nextState
@@ -81,12 +81,6 @@ class Checker(mod: TlaModule, initOp: TlaOperDecl, nextOp: TlaOperDecl) {
         // more translation steps are needed
         // TODO: place a guard on the number of recursive calls
         smallStep(nextState, FastForward())
-
-      case StateSplit(numBranches) =>
-        // create a branching point
-        stack = new Branchpoint(state, numBranches, state.solverCtx.level) :: stack
-        // and continue with the branch 0
-        smallStep(state, FollowBranch(0))
 
       case NoRule() =>
         // no rule applies, a problem in the tool?

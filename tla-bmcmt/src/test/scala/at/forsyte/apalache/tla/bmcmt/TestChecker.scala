@@ -10,7 +10,7 @@ import scala.io.Source
 
 @RunWith(classOf[JUnitRunner])
 class TestChecker extends FunSuite {
-  test("check Boolean constants") {
+  test("Init is FALSE") {
     // prepare the input
     val text =
       """---- MODULE boolconst ----
@@ -19,18 +19,74 @@ class TestChecker extends FunSuite {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("boolconst", Source.fromString(text))
-    val mod = expectSingleModule("boolconst", rootName, modules)
-    val init = expectOperatorDeclaration("Init", 0, mod)
-    val next = expectOperatorDeclaration("Next", 1, mod)
+    val (mod: TlaModule, init: TlaOperDecl, next: TlaOperDecl) = importTla("boolconst", text)
     // initialize the model checker
     val checker = new Checker(mod, init, next)
     // check for 10 steps
-    val outcome = checker.check(10)
+    val outcome = checker.check(1)
     assert(Checker.Outcome.Deadlock == outcome)
   }
 
+  test("Init is TRUE") {
+    // prepare the input
+    val text =
+      """---- MODULE boolconst ----
+        |Init == TRUE
+        |Next == TRUE
+        |================================
+      """.stripMargin
+
+    val (mod: TlaModule, init: TlaOperDecl, next: TlaOperDecl) = importTla("boolconst", text)
+    // initialize the model checker
+    val checker = new Checker(mod, init, next)
+    // check for 10 steps
+    val outcome = checker.check(1)
+    assert(Checker.Outcome.NoError == outcome)
+  }
+
+  test("Init is TRUE or FALSE") {
+    // prepare the input
+    val text =
+      """---- MODULE boolconst ----
+        |Init == TRUE \/ FALSE
+        |Next == TRUE
+        |================================
+      """.stripMargin
+
+    val (mod: TlaModule, init: TlaOperDecl, next: TlaOperDecl) = importTla("boolconst", text)
+    // initialize the model checker
+    val checker = new Checker(mod, init, next)
+    // check for 10 steps
+    val outcome = checker.check(1)
+    assert(Checker.Outcome.NoError == outcome)
+  }
+
+  test("Init is TRUE and TRUE") {
+    // prepare the input
+    val text =
+      """---- MODULE boolconst ----
+        |Init == TRUE /\ TRUE
+        |Next == TRUE
+        |================================
+      """.stripMargin
+
+    val (mod: TlaModule, init: TlaOperDecl, next: TlaOperDecl) = importTla("boolconst", text)
+    // initialize the model checker
+    val checker = new Checker(mod, init, next)
+    // check for 10 steps
+    val outcome = checker.check(1)
+    assert(Checker.Outcome.NoError == outcome)
+  }
+
   ////////////////////////////////////////////////////////////////////
+  private def importTla(name: String, text: String) = {
+    val (rootName, modules) = new SanyImporter().load(name, Source.fromString(text))
+    val mod = expectSingleModule(name, rootName, modules)
+    val init = expectOperatorDeclaration("Init", 0, mod)
+    val next = expectOperatorDeclaration("Next", 1, mod)
+    (mod, init, next)
+  }
+
   private def expectOperatorDeclaration(expectedName: String, idx: Int, mod: TlaModule): TlaOperDecl = {
     mod.declarations(idx) match {
       case decl: TlaOperDecl =>
