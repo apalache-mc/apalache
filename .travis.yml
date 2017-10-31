@@ -18,18 +18,9 @@ addons:
 
 # locally compile z3 and make it available via LD_LIBRARY_PATH
 before_install:
-  - git clone https://github.com/Z3Prover/z3 ~/build/z3repo
-  - mkdir ~/build/lib
-  - pushd ~/build/z3repo
-  - python scripts/mk_make.py --java -p ~/build/lib/
-  - cd build
-  - make
-  - make install
-  - export LD_LIBRARY_PATH=~/build/lib
-  - popd
-  - cp ~/build/lib/com.microsoft.z3.jar ~/3rdpartylib
   - pushd 3rdparty
   - ./install-local.sh
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$PWD/lib"
   - popd
 
 branches:
