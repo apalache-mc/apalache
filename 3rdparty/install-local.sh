@@ -4,6 +4,8 @@
 #
 # If you upgrade the jars, change the versions accordingly.
 
+set -e
+
 D=`dirname $0` && D=`cd $D; pwd`
 
 echo "Downloading and compiling z3..."
@@ -23,7 +25,7 @@ echo "Done with TLA2Tools"
 echo "Installing Z3 and TLA2Tools in your local cache..."
 
 mvn -f z3-pom.xml install install:install-file \
-    "-Dfile=com.microsoft.z3.jar" "-DpomFile=z3-pom.xml"
+    "-Dfile=lib/com.microsoft.z3.jar" "-DpomFile=z3-pom.xml"
 
 mvn -f tla2tools-pom.xml install install:install-file \
     "-Dfile=tla2tools.jar" "-DpomFile=tla2tools-pom.xml"
