@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter._
-import at.forsyte.apalache.tla.bmcmt.rules.{AndRule, LogicConstRule, OrRule}
+import at.forsyte.apalache.tla.bmcmt.rules._
 
 object SymbStateRewriter {
 
@@ -37,7 +37,9 @@ object SymbStateRewriter {
   * This is the place where all the action regarding the operational semantics is happening.
   */
 class SymbStateRewriter {
-  private val rules = List(new LogicConstRule(this), new OrRule(this), new AndRule(this))
+  private val rules =
+    List(new LogicConstRule(this), new SubstRule(this),
+      new OrRule(this), new AndRule(this), new NegRule(this))
 
   def rewriteOnce(state: SymbState, dir: SearchDirection): RewritingResult = {
     state.rex match {
@@ -100,7 +102,7 @@ class SymbStateRewriter {
       }
     }
 
-    val pair = process(state, rexes.reverse)
+    val pair = process(state, rexes.toList.reverse)
     (pair._1.setRex(state.rex), pair._2)
   }
 }
