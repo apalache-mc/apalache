@@ -15,8 +15,8 @@ os:
 addons:
   apt:
     packages:
-    - gcc-7
-    - g++-7
+    - gcc-4.7
+    - g++-4.7
 
 before_install:
   - git clone https://github.com/Z3Prover/z3 ~/build/z3repo
