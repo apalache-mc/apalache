@@ -4,10 +4,17 @@
                              http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.microsoft.lamport</groupId>
-    <artifactId>com.microsoft.lamport.tla2tools</artifactId>
-    <packaging>pom</packaging>
+    <groupId>org.lamport.tla</groupId>
+    <artifactId>tla2tools</artifactId>
+    <packaging>jar</packaging>
     <version>2.0.0-2017-10-06</version>
     <name>TLA2 Tools</name>
     <url>https://lamport.azurewebsites.net/tla/tools.html</url>
+
+    <!--repositories>
+        <repository>
+            <id>offline-local</id>
+            <url>file:///${user.home}/.apalache/apalache-local/</url>
+        </repository>
+    </repositories-->
 </project>
