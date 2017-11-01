@@ -1,28 +1,30 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.lir.TlaEx
+
 /**
   * A state of symbolic execution.
   *
   * @author Igor Konnov
   */
-class SymbState(val rex: Rex,
+class SymbState(val ex: TlaEx,
                 val arena: Arena,
                 val binding: Binding,
                 val solverCtx: SolverContext) {
 
-  def setRex(newRex: Rex) = {
-    new SymbState(newRex, arena, binding, solverCtx)
+  def setRex(nex: TlaEx): SymbState = {
+    new SymbState(nex, arena, binding, solverCtx)
   }
 
-  def setArena(newArena: Arena) = {
-    new SymbState(rex, newArena, binding, solverCtx)
+  def setArena(newArena: Arena): SymbState = {
+    new SymbState(ex, newArena, binding, solverCtx)
   }
 
-  def setBinding(newBinding: Binding) = {
-    new SymbState(rex, arena, newBinding, solverCtx)
+  def setBinding(newBinding: Binding): SymbState = {
+    new SymbState(ex, arena, newBinding, solverCtx)
   }
 
-  def setSolverCtx(context: SolverContext) = {
-    new SymbState(rex, arena, binding, context)
+  def setSolverCtx(context: SolverContext): SymbState = {
+    new SymbState(ex, arena, binding, context)
   }
 }

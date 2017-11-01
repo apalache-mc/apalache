@@ -6,19 +6,21 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 /**
   * Implements the rules: SE-BOOL-NEG{1,2,3,4,5}.
+  *
+  * @author Igor Konnov
   */
 class NegRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
-    symbState.rex match {
-      case TlaRex(OperEx(TlaBoolOper.not, _)) => true
+    symbState.ex match {
+      case OperEx(TlaBoolOper.not, _) => true
       case _ => false
     }
   }
 
-  override def apply(state: SymbState, dir: SymbStateRewriter.SearchDirection): SymbState = {
-    state.rex match {
-      case TlaRex(OperEx(TlaBoolOper.not, ex: TlaEx)) =>
-        state.setRex(TlaRex(rewriteNot(ex)))
+  override def apply(state: SymbState): SymbState = {
+    state.ex match {
+      case OperEx(TlaBoolOper.not, ex: TlaEx) =>
+        state.setRex(rewriteNot(ex))
 
       case _ =>
         throw new RewriterException("NegRule is not applicable")

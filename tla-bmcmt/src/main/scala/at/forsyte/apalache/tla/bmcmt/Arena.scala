@@ -1,12 +1,26 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.types.{CellType, UnknownType}
+import at.forsyte.apalache.tla.bmcmt.types.{BoolType, CellType, FinSetType, UnknownType}
+import at.forsyte.apalache.tla.lir.OperEx
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 
 import scala.collection.immutable.HashMap
 
 object Arena {
-  def create(): Arena = {
-    new Arena(0, new ArenaCell(-1, UnknownType()), new HashMap())
+  def create(solverContext: SolverContext): Arena = {
+    val arena = new Arena(solverContext, 0, new ArenaCell(-1, UnknownType()), List(), new HashMap())
+    // by convention, the first cells have the following semantics: 0 stores FALSE, 1 stores TRUE, 2 stores BOOLEAN
+    val newArena = arena.appendCellWithoutDeclaration(BoolType())
+      .appendCellWithoutDeclaration(BoolType())
+      .appendCellWithoutDeclaration(FinSetType(BoolType()))
+    // declare the cells in SMT
+    solverContext.declareCell(newArena.cellFalse())
+    solverContext.declareCell(newArena.cellTrue())
+    solverContext.declareCell(newArena.cellBoolean())
+    solverContext.assertCellExpr(OperEx(TlaOper.ne, newArena.cellFalse().toNameEx, newArena.cellTrue().toNameEx))
+    // link c_BOOLEAN to c_FALSE and c_TRUE
+    newArena.appendHas(newArena.cellBoolean(), newArena.cellFalse())
+        .appendHas(newArena.cellBoolean(), newArena.cellTrue())
   }
 }
 
@@ -17,14 +31,27 @@ object Arena {
   *
   * @author Igor Konnov
   */
-class Arena private(val cellCount: Int,
-                    val topCell: ArenaCell,
+class Arena private(val solverContext: SolverContext,
+                    val cellCount: Int, val topCell: ArenaCell,
+                    val cells: List[ArenaCell],
                     private val hasEdges: Map[ArenaCell, List[ArenaCell]]) {
   // since the edges in arenas have different structure, for the moment, we keep them in different maps
   /*
     private val domEdges: Map[ArenaCell, ArenaCell] = new HashMap[ArenaCell, ArenaCell]
     private val codomEdges: Map[ArenaCell, ArenaCell] = new HashMap[ArenaCell, ArenaCell]
   */
+
+  def cellFalse(): ArenaCell = {
+    cells.head
+  }
+
+  def cellTrue(): ArenaCell = {
+    cells.tail.head
+  }
+
+  def cellBoolean(): ArenaCell = {
+    cells.tail.tail.head
+  }
 
   /**
     * Append a new cell to arena. This method returns a new arena, not the new cell.
@@ -34,8 +61,26 @@ class Arena private(val cellCount: Int,
     * @return new arena
     */
   def appendCell(cellType: CellType): Arena = {
+    val newArena = appendCellWithoutDeclaration(cellType)
+    val newCell = newArena.topCell
+    solverContext.declareCell(newCell)
+    cellType match {
+      case BoolType() =>
+        def eq(l: ArenaCell, r: ArenaCell) = {
+          OperEx(TlaOper.eq, l.toNameEx, r.toNameEx)
+        }
+        val cons = OperEx(TlaBoolOper.or, newCell.mkTlaEq(cellFalse()), newCell.mkTlaEq(cellTrue()))
+        solverContext.assertCellExpr(cons)
+
+      case _ =>
+        ()
+    }
+    newArena
+  }
+
+  protected def appendCellWithoutDeclaration(cellType: CellType): Arena = {
     val newCell = new ArenaCell(cellCount, cellType)
-    new Arena(cellCount + 1, newCell, hasEdges)
+    new Arena(solverContext, cellCount + 1, newCell, cells :+ newCell, hasEdges)
   }
 
   /**
@@ -52,7 +97,7 @@ class Arena private(val cellCount: Int,
         case None => List(elemCell)
       }
 
-    new Arena(cellCount, topCell, hasEdges + (setCell -> es))
+    new Arena(solverContext, cellCount, topCell, cells, hasEdges + (setCell -> es))
   }
 
   /**

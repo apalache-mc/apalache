@@ -12,7 +12,7 @@ package object types {
   case class UnknownType() extends CellType
 
   /**
-    * A Boolean type.
+    * A Boolean cell type.
     */
   case class BoolType() extends CellType
 

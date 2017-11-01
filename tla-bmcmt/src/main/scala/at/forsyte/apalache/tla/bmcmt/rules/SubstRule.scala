@@ -4,23 +4,25 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.NameEx
 
 /**
-  * Implements the rules SE-SUBST1
+  * Implements the rule SE-SUBST1.
+  *
+  * @author Igor Konnov
    */
 class SubstRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(state: SymbState): Boolean = {
-    state.rex match {
-      case TlaRex(NameEx(x)) =>
+    state.ex match {
+      case NameEx(x) =>
         state.binding.contains(x)
 
       case _ => false
     }
   }
 
-  override def apply(state: SymbState, dir: SymbStateRewriter.SearchDirection): SymbState = {
-    state.rex match {
-      case TlaRex(NameEx(x)) =>
+  override def apply(state: SymbState): SymbState = {
+    state.ex match {
+      case NameEx(x) =>
         val cell = state.binding.apply(x)
-        state.setRex(TlaRex(NameEx(cell.toString)))
+        state.setRex(NameEx(cell.toString))
 
       case _ =>
         throw new RewriterException("SubstRule is not applicable")

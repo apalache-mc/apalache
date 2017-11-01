@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla
 
-import at.forsyte.apalache.tla.lir.TlaEx
+import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
 
 import scala.collection.immutable.HashMap
 
@@ -11,21 +11,27 @@ package object bmcmt {
   type Binding = HashMap[String, ArenaCell]
 
   /**
-    * Our symbolic machine receives and produces two kinds of rewriting expressions (REX):
-    * (1) a TLA+ expression, and (2) a name of a Boolean variable that is equivalent to
-    * the rewriting result in SMT.
+    * Given a name, e.g., as NameEx("name"), test, whether this name corresponds to a cell.
+    * @param name variable name
+    * @return true iff it is a cell name
     */
-  abstract class Rex
+  def isCellName(name: String): Boolean = {
+    name.startsWith(ArenaCell.namePrefix)
+  }
 
   /**
-    * A TLA+ expression.
-    * @param tlaEx a TLA+ expression to be translated
+    * Check, whether a TLA expression is a cell. If so, return its name.
+    *
+    * @param e a TLA expression
+    * @return the cell name
+    * @throws InvalidTlaExException if the expression is not a cell
     */
-  case class TlaRex(tlaEx: TlaEx) extends Rex
+  def cellToString(e: TlaEx): String = {
+    e match {
+      case NameEx(name) if isCellName(name) =>
+          name
 
-  /**
-    * A Boolean variable in SMT.
-    * @param predName a variable name
-    */
-  case class PredRex(predName: String) extends Rex
+      case _ => throw new CheckerException("Expected a cell, found: %s".format(e))
+    }
+  }
 }
