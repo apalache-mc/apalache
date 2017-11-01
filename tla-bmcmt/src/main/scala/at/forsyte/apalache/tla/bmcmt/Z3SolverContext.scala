@@ -1,17 +1,19 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import com.microsoft.z3.{BoolExpr, Context, Status}
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
+import com.microsoft.z3._
 
 /**
   * An implementation of a SolverContext with Z3.
+  *
+  * @author Igor Konnov
   */
 class Z3SolverContext extends SolverContext {
   var level: Int = 0
-  var numPreds = 2
-  val predFalse = "TLB_pred0"
-  val predTrue = "TLB_pred1"
   private val z3context: Context = new Context()
   private val z3solver = z3context.mkSolver()
+  private val cellSort: UninterpretedSort = z3context.mkUninterpretedSort("Cell")
 
   /**
     * Dispose whatever has to be disposed in the end.
@@ -21,49 +23,87 @@ class Z3SolverContext extends SolverContext {
   }
 
   /**
-    * Assert that a given predicate holds
+    * Declare a constant for an arena cell.
     *
-    * @param predName a predicate name
+    * @param cell a (previously undeclared) cell
     */
-  override def assertPred(predName: String): Unit = {
-    z3solver.add(predToBoolExpr(predName))
+  override def declareCell(cell: ArenaCell): Unit = {
+    z3context.mkConstDecl(cell.toString, cellSort)
   }
 
   /**
-    * Introduce a new predicate.
-    * @return the name of the new predicate
+    * Assert that a Boolean TLA+ expression holds true.
+    *
+    * @param ex a simplified TLA+ expression over cells
     */
-  override def createPred(): String = {
-    val name = "TLB_pred" + numPreds
-    numPreds += 1
-    z3context.mkBoolConst(name)
-    name
+  def assertCellExpr(ex: TlaEx): Unit = {
+    z3solver.add(toBoolExpr(ex).asInstanceOf[BoolExpr])
+  }
+
+
+  /**
+    * Push SMT context
+    */
+  override def push(): Unit = {
+    z3solver.push()
+    level += 1
   }
 
   /**
-    * Assert than an expression holds.
-    * @param expr_s an expression in SMTLIB2
+    * Pop SMT context
     */
-  def assertSmt2(expr_s: String): Unit = {
-    z3context.parseSMTLIBString(expr_s, Array(), Array(), Array(), Array())
-    z3solver.add(z3context.getSMTLIBFormulas().toSeq: _*)
+  override def pop(): Unit = {
+    if (level > 0) {
+      z3solver.pop()
+      level -= 1
+    }
   }
 
-  override def popTo(newLevel: Int) = {
-    level = newLevel
+  override def popTo(newLevel: Int): Unit = {
+    if (level > newLevel) {
+      z3solver.pop(level - newLevel)
+      level = newLevel
+    }
   }
 
-  override def isSat(): Boolean = {
+  override def sat(): Boolean = {
     z3solver.check() == Status.SATISFIABLE
   }
 
-  private def predToBoolExpr(predName: String): BoolExpr = {
-    if (predFalse == predName) {
-      z3context.mkBool(false)
-    } else if (predTrue == predName) {
-      z3context.mkBool(true)
-    } else {
-      z3context.mkBoolConst(predName)
+  private def toBoolExpr(ex: TlaEx): Expr = {
+    ex match {
+      case NameEx(name) =>
+        if (!isCellName(name)) {
+          throw new InvalidTlaExException("Expected a cell, found name: " + name, ex)
+        }
+        z3context.mkConst(name, cellSort)
+
+      case OperEx(TlaOper.eq, lhs, rhs) =>
+        z3context.mkEq(toBoolExpr(lhs), toBoolExpr(rhs))
+
+      case OperEx(TlaOper.ne, lhs, rhs) =>
+        z3context.mkNot(z3context.mkEq(toBoolExpr(lhs), toBoolExpr(rhs)))
+
+      case OperEx(TlaBoolOper.and, es@_*) =>
+        val newEs = es.map(e => toBoolExpr(e).asInstanceOf[BoolExpr])
+        z3context.mkAnd(newEs: _*)
+
+      case OperEx(TlaBoolOper.or, es@_*) =>
+        val newEs = es.map(e => toBoolExpr(e).asInstanceOf[BoolExpr])
+        z3context.mkOr(newEs: _*)
+
+      case OperEx(TlaBoolOper.implies, lhs, rhs) =>
+        val lhsZ3 = toBoolExpr(lhs).asInstanceOf[BoolExpr]
+        val rhsZ3 = toBoolExpr(rhs).asInstanceOf[BoolExpr]
+        z3context.mkImplies(lhsZ3, rhsZ3)
+
+      case OperEx(TlaBoolOper.equiv, lhs, rhs) =>
+        val lhsZ3 = toBoolExpr(lhs).asInstanceOf[BoolExpr]
+        val rhsZ3 = toBoolExpr(rhs).asInstanceOf[BoolExpr]
+        z3context.mkEq(lhsZ3, rhsZ3)
+
+      case _ =>
+        throw new InvalidTlaExException("Unexpected TLA+ expression", ex)
     }
   }
 }

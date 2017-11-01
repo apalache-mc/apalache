@@ -2,7 +2,8 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.Checker.Outcome
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter._
-import at.forsyte.apalache.tla.lir.{TlaModule, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.oper.TlaOper
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaModule, TlaOperDecl}
 
 object Checker {
   object Outcome extends Enumeration {
@@ -26,7 +27,8 @@ class Checker(mod: TlaModule, initOp: TlaOperDecl, nextOp: TlaOperDecl) {
     * @return a verification outcome
     */
   def check(numSteps: Int): Outcome.Value = {
-    val initState = new SymbState(TlaRex(initOp.body), Arena.create(), new Binding, new Z3SolverContext)
+    val solverContext = new Z3SolverContext
+    val initState = new SymbState(initOp.body, Arena.create(solverContext), new Binding, solverContext)
     // create a dummy branching point, just to have the initial state on the stack
     stack = List(new Branchpoint(initState, 1, initState.solverCtx.level))
     // TODO: use Next, currently we use only Init
@@ -51,16 +53,20 @@ class Checker(mod: TlaModule, initOp: TlaOperDecl, nextOp: TlaOperDecl) {
       // keep exploring the other branches
       val branchNo = point.exploredBranchesCnt
       point.exploredBranchesCnt += 1
-      val finalState = smallStep(point.state, FollowBranch(branchNo))
-      finalState.rex match {
-        case PredRex(predName) =>
-          finalState.solverCtx.assertPred(predName)
+      val finalState = smallStep(point.state)
+      finalState.ex match {
+        case NameEx(name) =>
+          if (isCellName(name)) {
+            finalState.solverCtx.assertCellExpr(OperEx(TlaOper.eq, finalState.ex, finalState.arena.cellTrue().toNameEx))
+          } else {
+            throw new CheckerException("Expected a Boolean cell, found a name: " + name)
+          }
 
         case _ =>
-          throw new CheckerException("Expected an SMT predicate, found a TLA expression")
+          throw new CheckerException("Expected a Boolean cell, found a TLA expression")
       }
 
-      if (!finalState.solverCtx.isSat()) {
+      if (!finalState.solverCtx.sat()) {
         // the current symbolic state is not feasible
         Outcome.Deadlock
       } else {
@@ -71,8 +77,8 @@ class Checker(mod: TlaModule, initOp: TlaOperDecl, nextOp: TlaOperDecl) {
     }
   }
 
-  private def smallStep(state: SymbState, dir: SearchDirection): SymbState = {
-    rewriter.rewriteOnce(state, dir) match {
+  private def smallStep(state: SymbState): SymbState = {
+    rewriter.rewriteOnce(state) match {
       case Done(nextState) =>
         // converged to the normal form
         nextState
@@ -80,7 +86,7 @@ class Checker(mod: TlaModule, initOp: TlaOperDecl, nextOp: TlaOperDecl) {
       case Continue(nextState) =>
         // more translation steps are needed
         // TODO: place a guard on the number of recursive calls
-        smallStep(nextState, FastForward())
+        smallStep(nextState)
 
       case NoRule() =>
         // no rule applies, a problem in the tool?
