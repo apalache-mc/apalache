@@ -66,9 +66,6 @@ class Arena private(val solverContext: SolverContext,
     solverContext.declareCell(newCell)
     cellType match {
       case BoolType() =>
-        def eq(l: ArenaCell, r: ArenaCell) = {
-          OperEx(TlaOper.eq, l.toNameEx, r.toNameEx)
-        }
         val cons = OperEx(TlaBoolOper.or, newCell.mkTlaEq(cellFalse()), newCell.mkTlaEq(cellTrue()))
         solverContext.assertCellExpr(cons)
 
