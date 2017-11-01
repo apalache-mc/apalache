@@ -6,33 +6,28 @@ import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, ValEx}
 import org.junit.runner.RunWith
-import org.junit.{After, Before}
-import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
+import org.scalatest.{BeforeAndAfter, FunSuite}
 
 @RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriter extends FunSuite {
+class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
   private var solverContext: SolverContext = new Z3SolverContext()
   private var arena: Arena = Arena.create(solverContext)
 
-  @Before
-  def setup(): Unit = {
+  before {
     solverContext = new Z3SolverContext()
     arena = Arena.create(solverContext)
   }
 
-  @After
-  def teardown(): Unit = {
+  after {
     solverContext.dispose()
   }
 
   test("SE-SUBST1: x[cell/x] ~~> cell") {
-    val solverCtx = new Z3SolverContext()
-    val arena = Arena.create(solverCtx)
     val newArena = arena.appendCell(UnknownType())
     val cell = newArena.topCell
     val binding = new Binding() + ("x" -> cell)
-    val state = new SymbState(NameEx("x"), arena, binding, solverCtx)
+    val state = new SymbState(NameEx("x"), arena, binding, solverContext)
     new SymbStateRewriter().rewriteOnce(state) match {
       case SymbStateRewriter.Done(nextState) =>
         val expected = NameEx("$C$%d".format(cell.id))
@@ -46,8 +41,7 @@ class TestSymbStateRewriter extends FunSuite {
 
   test("SE-BOX-FALSE: FALSE ~~> c_FALSE") {
     val ex = ValEx(TlaFalse)
-    val solverCtx = new Z3SolverContext()
-    val state = new SymbState(ex, Arena.create(solverCtx), new Binding, solverCtx)
+    val state = new SymbState(ex, arena, new Binding, solverContext)
     new SymbStateRewriter().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected = NameEx("$C$0")
@@ -60,8 +54,7 @@ class TestSymbStateRewriter extends FunSuite {
   }
 
   test("SE-SET-BOOLEAN: BOOLEAN ~~> c_BOOLEAN") {
-    val solverCtx = new Z3SolverContext()
-    val state = new SymbState(ValEx(TlaBoolSet), Arena.create(solverCtx), new Binding, solverCtx)
+    val state = new SymbState(ValEx(TlaBoolSet), arena, new Binding, solverContext)
     new SymbStateRewriter().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected = NameEx("$C$2")
@@ -75,8 +68,7 @@ class TestSymbStateRewriter extends FunSuite {
 
   test("SE-BOX-TRUE: TRUE ~~> c_TRUE") {
     val ex = ValEx(TlaTrue)
-    val solverCtx = new Z3SolverContext()
-    val state = new SymbState(ex, Arena.create(solverCtx), new Binding, solverCtx)
+    val state = new SymbState(ex, arena, new Binding, solverContext)
     new SymbStateRewriter().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected = NameEx("$C$1")
@@ -89,9 +81,8 @@ class TestSymbStateRewriter extends FunSuite {
   }
 
   test("""SE-BOOL-NEG1: ~(x \/ y) ~~> ~x /\ ~y""") {
-    val solverCtx = new Z3SolverContext()
     val ex = OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.or, NameEx("x"), NameEx("y")))
-    val state = new SymbState(ex, Arena.create(solverCtx), new Binding, solverCtx)
+    val state = new SymbState(ex, arena, new Binding, solverContext)
     new SymbStateRewriter().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected = OperEx(TlaBoolOper.and,
@@ -106,9 +97,8 @@ class TestSymbStateRewriter extends FunSuite {
   }
 
   test("""SE-BOOL-NEG2: ~(x /\ y) ~~> ~x \/ ~y""") {
-    val solverCtx = new Z3SolverContext()
     val ex = OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.and, NameEx("x"), NameEx("y")))
-    val state = new SymbState(ex, Arena.create(solverCtx), new Binding, solverCtx)
+    val state = new SymbState(ex, arena, new Binding, solverContext)
     new SymbStateRewriter().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected = OperEx(TlaBoolOper.or,
@@ -123,9 +113,8 @@ class TestSymbStateRewriter extends FunSuite {
   }
 
   test("SE-BOOL-NEG3: ~(x => y) ~~> x /\\ ~y") {
-    val solverCtx = new Z3SolverContext()
     val ex = OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.implies, NameEx("x"), NameEx("y")))
-    val state = new SymbState(ex, Arena.create(solverCtx), new Binding, solverCtx)
+    val state = new SymbState(ex, arena, new Binding, solverContext)
     new SymbStateRewriter().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected = OperEx(TlaBoolOper.and,
@@ -140,9 +129,8 @@ class TestSymbStateRewriter extends FunSuite {
   }
 
   test("SE-BOOL-NEG4: ~(x <=> y) ~~> ~x <=> y") {
-    val solverCtx = new Z3SolverContext()
     val ex = OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.equiv, NameEx("x"), NameEx("y")))
-    val state = new SymbState(ex, Arena.create(solverCtx), new Binding, solverCtx)
+    val state = new SymbState(ex, arena, new Binding, solverContext)
     new SymbStateRewriter().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected = OperEx(TlaBoolOper.equiv,
@@ -157,9 +145,8 @@ class TestSymbStateRewriter extends FunSuite {
   }
 
   test("SE-BOOL-NEG5: ~~x ~~> x") {
-    val solverCtx = new Z3SolverContext()
     val ex = OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.not, NameEx("x")))
-    val state = new SymbState(ex, Arena.create(solverCtx), new Binding, solverCtx)
+    val state = new SymbState(ex, arena, new Binding, solverContext)
     new SymbStateRewriter().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         assert(NameEx("x") == nextState.ex)
@@ -172,10 +159,9 @@ class TestSymbStateRewriter extends FunSuite {
   }
 
   test("""SE-BOOL-NEG6: ~\E x \in S: p ~~> \A x \in S: ~p""") {
-    val solverCtx = new Z3SolverContext()
     val ex = OperEx(TlaBoolOper.not,
       OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("S"), NameEx("p")))
-    val state = new SymbState(ex, Arena.create(solverCtx), new Binding, solverCtx)
+    val state = new SymbState(ex, arena, new Binding, solverContext)
     new SymbStateRewriter().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected = OperEx(TlaBoolOper.forall, NameEx("x"), NameEx("S"),
@@ -190,10 +176,9 @@ class TestSymbStateRewriter extends FunSuite {
   }
 
   test("""SE-BOOL-NEG7: ~\A x \in S: p ~~> \E x \in S: ~p""") {
-    val solverCtx = new Z3SolverContext()
     val ex = OperEx(TlaBoolOper.not,
       OperEx(TlaBoolOper.forall, NameEx("x"), NameEx("S"), NameEx("p")))
-    val state = new SymbState(ex, Arena.create(solverCtx), new Binding, solverCtx)
+    val state = new SymbState(ex, arena, new Binding, solverContext)
     new SymbStateRewriter().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected = OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("S"),
@@ -209,8 +194,7 @@ class TestSymbStateRewriter extends FunSuite {
 
   test("""SE-AND1: FALSE /\ TRUE ~~> c_FALSE""") {
     val ex = OperEx(TlaBoolOper.and, ValEx(TlaFalse), ValEx(TlaTrue))
-    val solverCtx = new Z3SolverContext()
-    val state = new SymbState(ex, Arena.create(solverCtx), new Binding, solverCtx)
+    val state = new SymbState(ex, arena, new Binding, solverContext)
     new SymbStateRewriter().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         assert(NameEx(nextState.arena.cellFalse().toString) == nextState.ex)
@@ -222,24 +206,23 @@ class TestSymbStateRewriter extends FunSuite {
   }
 
   test("""SE-AND4: c_1 /\ c_2 ~~> c_new""") {
-    val solverCtx = new Z3SolverContext()
-    var arena = Arena.create(solverCtx).appendCell(BoolType())
+    arena = arena.appendCell(BoolType())
     val c1 = arena.topCell
     arena = arena.appendCell(BoolType())
     val c2 = arena.topCell
 
     val ex = OperEx(TlaBoolOper.and, c1.toNameEx, c2.toNameEx)
-    val state = new SymbState(ex, arena, new Binding, solverCtx)
+    val state = new SymbState(ex, arena, new Binding, solverContext)
     new SymbStateRewriter().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
           case NameEx(name) =>
             assert(isCellName(name))
-            solverCtx.push()
-            assert(solverCtx.sat())
-            solverCtx.assertCellExpr(OperEx(TlaOper.eq, c1.toNameEx, arena.cellFalse().toNameEx))
-            solverCtx.assertCellExpr(OperEx(TlaOper.eq, nextState.ex, arena.cellTrue().toNameEx))
-            assert(!solverCtx.sat())
+            solverContext.push()
+            assert(solverContext.sat())
+            solverContext.assertCellExpr(OperEx(TlaOper.eq, c1.toNameEx, arena.cellFalse().toNameEx))
+            solverContext.assertCellExpr(OperEx(TlaOper.eq, nextState.ex, arena.cellTrue().toNameEx))
+            assert(!solverContext.sat())
 
           case _ =>
             fail("Unexpected rewriting result")
@@ -252,8 +235,7 @@ class TestSymbStateRewriter extends FunSuite {
 
   test("""SE-OR1: FALSE \/ TRUE ~~> c_TRUE""") {
     val ex = OperEx(TlaBoolOper.or, ValEx(TlaFalse), ValEx(TlaTrue))
-    val solverCtx = new Z3SolverContext()
-    val state = new SymbState(ex, Arena.create(solverCtx), new Binding, solverCtx)
+    val state = new SymbState(ex, arena, new Binding, solverContext)
     new SymbStateRewriter().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         assert(NameEx(nextState.arena.cellTrue().toString) == nextState.ex)
@@ -265,25 +247,24 @@ class TestSymbStateRewriter extends FunSuite {
   }
 
   test("""SE-OR4: c_1 \/ c_2 ~~> c_new""") {
-    val solverCtx = new Z3SolverContext()
-    var arena = Arena.create(solverCtx).appendCell(BoolType())
+    arena = arena.appendCell(BoolType())
     val c1 = arena.topCell
     arena = arena.appendCell(BoolType())
     val c2 = arena.topCell
 
     val ex = OperEx(TlaBoolOper.or, c1.toNameEx, c2.toNameEx)
-    val state = new SymbState(ex, arena, new Binding, solverCtx)
+    val state = new SymbState(ex, arena, new Binding, solverContext)
     new SymbStateRewriter().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
           case NameEx(name) =>
             assert(isCellName(name))
-            solverCtx.assertCellExpr(OperEx(TlaOper.eq, c1.toNameEx, arena.cellFalse().toNameEx))
-            solverCtx.assertCellExpr(OperEx(TlaOper.eq, nextState.ex, arena.cellTrue().toNameEx))
-            solverCtx.push()
-            assert(solverCtx.sat())
-            solverCtx.assertCellExpr(OperEx(TlaOper.eq, c2.toNameEx, arena.cellFalse().toNameEx))
-            assert(!solverCtx.sat())
+            solverContext.assertCellExpr(OperEx(TlaOper.eq, c1.toNameEx, arena.cellFalse().toNameEx))
+            solverContext.assertCellExpr(OperEx(TlaOper.eq, nextState.ex, arena.cellTrue().toNameEx))
+            solverContext.push()
+            assert(solverContext.sat())
+            solverContext.assertCellExpr(OperEx(TlaOper.eq, c2.toNameEx, arena.cellFalse().toNameEx))
+            assert(!solverContext.sat())
 
           case _ =>
             fail("Unexpected rewriting result")
