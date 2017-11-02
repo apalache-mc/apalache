@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 import com.microsoft.z3._
 
@@ -14,6 +14,11 @@ class Z3SolverContext extends SolverContext {
   private val z3context: Context = new Context()
   private val z3solver = z3context.mkSolver()
   private val cellSort: UninterpretedSort = z3context.mkUninterpretedSort("Cell")
+  /**
+    * Uninterpreted predicate in(c, d) that expresses whether c is a member of d.
+    */
+  private val inFun: FuncDecl =
+    z3context.mkFuncDecl("in", Array[Sort](cellSort, cellSort), z3context.getBoolSort)
 
   /**
     * Dispose whatever has to be disposed in the end.
@@ -102,8 +107,17 @@ class Z3SolverContext extends SolverContext {
         val rhsZ3 = toBoolExpr(rhs).asInstanceOf[BoolExpr]
         z3context.mkEq(lhsZ3, rhsZ3)
 
+      case OperEx(TlaBoolOper.not, e) =>
+        val exZ3 = toBoolExpr(e).asInstanceOf[BoolExpr]
+        z3context.mkNot(exZ3)
+
+      case OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName)) =>
+        val elem = z3context.mkConst(elemName, cellSort)
+        val set = z3context.mkConst(setName, cellSort)
+        z3context.mkApp(inFun, elem, set)
+
       case _ =>
-        throw new InvalidTlaExException("Unexpected TLA+ expression", ex)
+        throw new InvalidTlaExException("Unexpected TLA+ expression: " + ex, ex)
     }
   }
 }

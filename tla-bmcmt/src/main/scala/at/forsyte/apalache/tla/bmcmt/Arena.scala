@@ -7,8 +7,12 @@ import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import scala.collection.immutable.HashMap
 
 object Arena {
+  protected val falseName: String = ArenaCell.namePrefix + "0"
+  protected val trueName: String = ArenaCell.namePrefix + "1"
+  protected val booleanName: String = ArenaCell.namePrefix + "2"
+
   def create(solverContext: SolverContext): Arena = {
-    val arena = new Arena(solverContext, 0, new ArenaCell(-1, UnknownType()), List(), new HashMap())
+    val arena = new Arena(solverContext, 0, new ArenaCell(-1, UnknownType()), HashMap(), new HashMap())
     // by convention, the first cells have the following semantics: 0 stores FALSE, 1 stores TRUE, 2 stores BOOLEAN
     val newArena = arena.appendCellWithoutDeclaration(BoolType())
       .appendCellWithoutDeclaration(BoolType())
@@ -33,7 +37,7 @@ object Arena {
   */
 class Arena private(val solverContext: SolverContext,
                     val cellCount: Int, val topCell: ArenaCell,
-                    val cells: List[ArenaCell],
+                    val cellMap: Map[String, ArenaCell],
                     private val hasEdges: Map[ArenaCell, List[ArenaCell]]) {
   // since the edges in arenas have different structure, for the moment, we keep them in different maps
   /*
@@ -42,15 +46,25 @@ class Arena private(val solverContext: SolverContext,
   */
 
   def cellFalse(): ArenaCell = {
-    cells.head
+    cellMap(Arena.falseName)
   }
 
   def cellTrue(): ArenaCell = {
-    cells.tail.head
+    cellMap(Arena.trueName)
   }
 
   def cellBoolean(): ArenaCell = {
-    cells.tail.tail.head
+    cellMap(Arena.booleanName)
+  }
+
+  /**
+    * Find a cell by its name.
+    *
+    * @param name the name returned by ArenaCell.toString
+    * @return the cell, if it exists
+    */
+  def findCellByName(name: String): ArenaCell = {
+    cellMap(name)
   }
 
   /**
@@ -77,7 +91,7 @@ class Arena private(val solverContext: SolverContext,
 
   protected def appendCellWithoutDeclaration(cellType: CellType): Arena = {
     val newCell = new ArenaCell(cellCount, cellType)
-    new Arena(solverContext, cellCount + 1, newCell, cells :+ newCell, hasEdges)
+    new Arena(solverContext, cellCount + 1, newCell, cellMap + (newCell.toString -> newCell), hasEdges)
   }
 
   /**
@@ -94,7 +108,7 @@ class Arena private(val solverContext: SolverContext,
         case None => List(elemCell)
       }
 
-    new Arena(solverContext, cellCount, topCell, cells, hasEdges + (setCell -> es))
+    new Arena(solverContext, cellCount, topCell, cellMap, hasEdges + (setCell -> es))
   }
 
   /**

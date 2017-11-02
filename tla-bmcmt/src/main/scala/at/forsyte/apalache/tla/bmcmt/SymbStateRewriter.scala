@@ -26,7 +26,9 @@ class SymbStateRewriter {
   private val substRule = new SubstRule(this)
   private val rules =
     List(substRule, new BoolBoxRule(this),
-      new OrRule(this), new AndRule(this), new NegRule(this))
+      new OrRule(this), new AndRule(this), new NegRule(this),
+      new SetCtorRule(this)
+    ) /////////////
 
   def rewriteOnce(state: SymbState): RewritingResult = {
     state.ex match {
