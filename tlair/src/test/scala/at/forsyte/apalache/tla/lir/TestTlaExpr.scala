@@ -1,18 +1,16 @@
 package at.forsyte.apalache.tla.lir
 
-import javax.imageio.metadata.IIOMetadataFormat
-
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaEmptySet}
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaUserSet, TlaStr, TlaInt}
+import at.forsyte.apalache.tla.lir.predef.TlaIntSet
+import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr, TlaUserSet}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
 /**
- * Tests for the TLA+ expressions that we can construct.
- */
+  * Tests for the TLA+ expressions that we can construct.
+  */
 @RunWith(classOf[JUnitRunner])
 class TestTlaExpr extends FunSuite {
   test("create a conjunction") {
@@ -69,9 +67,11 @@ class TestTlaExpr extends FunSuite {
 
     def expectWrongArity(op: TlaOper, args: TlaEx*) = {
       try {
-        OperEx(op, args:_*)
+        OperEx(op, args: _*)
         fail("Expected an IllegalArgumentException")
-      } catch { case _: IllegalArgumentException => }
+      } catch {
+        case _: IllegalArgumentException =>
+      }
     }
     // x \cup y y
     expectWrongArity(TlaSetOper.cup, x, y, y)
@@ -98,19 +98,14 @@ class TestTlaExpr extends FunSuite {
   }
 
   test("the empty set") {
-    // this is the way to use the empty set
-    TlaEmptySet
+    // this is the old way to use the only empty set, not anymore
+    // TlaEmptySet
     // this is the wrong way to define the empty set
-    try {
-      OperEx(TlaSetOper.enumSet)
-      fail("Expected an IllegalArgumentException")
-    } catch {
-      case _: IllegalArgumentException => () // OK
-    }
+    OperEx(TlaSetOper.enumSet)
 
     // an intersection with another set
     OperEx(TlaSetOper.cap,
-      ValEx(TlaEmptySet),
+      OperEx(TlaSetOper.enumSet),
       OperEx(TlaSetOper.enumSet, ValEx(TlaInt(1)))
     )
   }
@@ -183,7 +178,7 @@ class TestTlaExpr extends FunSuite {
 
     // A(f(_, _), x, y) == f(x, y)
     val odef = new TlaOperDecl("A",
-        List(fOper, new SimpleFormalParam("x"), new SimpleFormalParam("y")),
+      List(fOper, new SimpleFormalParam("x"), new SimpleFormalParam("y")),
       OperEx(TlaOper.apply,
         NameEx("f"),
         NameEx("x"),
@@ -205,7 +200,7 @@ class TestTlaExpr extends FunSuite {
     val ex1 =
       OperEx(TlaBoolOper.existsUnbounded, NameEx("x"),
         OperEx(TlaOper.eq, NameEx("x"), NameEx("x"))
-    )
+      )
     val ex2 =
       OperEx(TlaBoolOper.existsUnbounded, NameEx("x"),
         OperEx(TlaOper.eq, NameEx("x"), NameEx("x"))

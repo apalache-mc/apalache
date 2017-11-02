@@ -239,7 +239,7 @@ class TestSanyImporter extends FunSuite {
       case actionDecl: TlaOperDecl =>
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
-        assert(ValEx(TlaEmptySet) == actionDecl.body)
+        assert(OperEx(TlaSetOper.enumSet) == actionDecl.body)
     }
   }
 
