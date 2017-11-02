@@ -299,4 +299,31 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
         fail("Unexpected rewriting result")
     }
   }
+
+  test("""SE-SET-IN1: \FALSE \in {\FALSE, \TRUE} ~~> c_pred""") {
+    val ex =
+      OperEx(TlaSetOper.in,
+        ValEx(TlaFalse),
+        OperEx(TlaSetOper.enumSet, ValEx(TlaFalse), ValEx(TlaTrue)))
+    val state = new SymbState(ex, arena, new Binding, solverContext)
+    new SymbStateRewriter().rewriteOnce(state) match {
+      case SymbStateRewriter.Continue(nextState) =>
+        nextState.ex match {
+          case predEx @ NameEx(name) =>
+            assert(isCellName(name))
+            solverContext.push()
+            solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellFalse().toNameEx, predEx))
+            assert(!solverContext.sat())
+            solverContext.pop()
+            solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellTrue().toNameEx, predEx))
+            assert(solverContext.sat())
+
+          case _ =>
+            fail("Unexpected rewriting result")
+        }
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
 }
