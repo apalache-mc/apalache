@@ -14,7 +14,7 @@ object TlaSetOper {
     To construct an empty set, use emptySet.
    */
   val enumSet = new TlaSetOper {
-    override val arity = AnyPositiveArity()
+    override val arity = AnyArity() // FIX: we allow zero arguments as well
     override val name = "{...}"
   }
 

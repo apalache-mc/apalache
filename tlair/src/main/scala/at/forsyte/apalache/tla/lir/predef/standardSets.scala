@@ -3,13 +3,6 @@ package at.forsyte.apalache.tla.lir.predef
 import at.forsyte.apalache.tla.lir.values.TlaPredefSet
 
 /**
-  * The empty set (we assume that there is just one empty set).
-  */
-object TlaEmptySet extends TlaPredefSet {
-  override val name: String = "EMPTY"
-}
-
-/**
   * The standard set of booleans. Of course, one can explicitly construct the set { FALSE, TRUE }.
   */
 object TlaBoolSet extends TlaPredefSet {
