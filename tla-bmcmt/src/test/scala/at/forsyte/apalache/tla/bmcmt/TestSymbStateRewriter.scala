@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.types.{BoolType, UnknownType}
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, ValEx}
@@ -264,6 +264,31 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
             solverContext.push()
             assert(solverContext.sat())
             solverContext.assertCellExpr(OperEx(TlaOper.eq, c2.toNameEx, arena.cellFalse().toNameEx))
+            assert(!solverContext.sat())
+
+          case _ =>
+            fail("Unexpected rewriting result")
+        }
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SET-CTOR[1-2]: {x, y, z} ~~> c_set""") {
+    val ex = OperEx(TlaSetOper.enumSet, NameEx("x"), NameEx("y"), NameEx("z"))
+    val binding = new Binding + ("x" -> arena.cellFalse()) +
+      ("y" -> arena.cellTrue()) + ("z" -> arena.cellFalse())
+    val state = new SymbState(ex, arena, binding, solverContext)
+    new SymbStateRewriter().rewriteOnce(state) match {
+      case SymbStateRewriter.Continue(nextState) =>
+        nextState.ex match {
+          case set @ NameEx(name) =>
+            assert(isCellName(name))
+            solverContext.assertCellExpr(OperEx(TlaSetOper.in, arena.cellFalse().toNameEx, set))
+            assert(solverContext.sat())
+            solverContext.assertCellExpr(OperEx(TlaBoolOper.not,
+              OperEx(TlaSetOper.in, arena.cellTrue().toNameEx, set)))
             assert(!solverContext.sat())
 
           case _ =>
