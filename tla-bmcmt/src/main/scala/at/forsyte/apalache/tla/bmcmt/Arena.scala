@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.types.{BoolType, CellType, FinSetType, UnknownType}
-import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
+import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 import scala.collection.immutable.HashMap
 
@@ -24,7 +24,7 @@ object Arena {
     solverContext.assertCellExpr(OperEx(TlaOper.ne, newArena.cellFalse().toNameEx, newArena.cellTrue().toNameEx))
     // link c_BOOLEAN to c_FALSE and c_TRUE
     newArena.appendHas(newArena.cellBoolean(), newArena.cellFalse())
-        .appendHas(newArena.cellBoolean(), newArena.cellTrue())
+      .appendHas(newArena.cellBoolean(), newArena.cellTrue())
   }
 }
 
@@ -62,9 +62,22 @@ class Arena private(val solverContext: SolverContext,
     *
     * @param name the name returned by ArenaCell.toString
     * @return the cell, if it exists
+    * @throws NoSuchElementException when no cell is found
     */
   def findCellByName(name: String): ArenaCell = {
     cellMap(name)
+  }
+
+  /**
+    * Find a cell by the name contained in a name expression.
+    *
+    * @param nameEx a name expression that follows the cell naming convention.
+    * @return the found cell
+    * @throws InvalidTlaExException if the name does not follow the convention
+    * @throws NoSuchElementException when no cell is found
+    */
+  def findCellByNameEx(nameEx: TlaEx): ArenaCell = {
+    cellMap(cellToString(nameEx))
   }
 
   /**
@@ -122,5 +135,17 @@ class Arena private(val solverContext: SolverContext,
       case Some(list) => list
       case None => List()
     }
+  }
+
+  /**
+    * Check, whether two cells are connected with a 'has' edge.
+    *
+    * @param src an edge origin
+    * @param dst an edge destination
+    * @return true, if src has an edge to dst labelled with 'has'
+    */
+  def isLinkedViaHas(src: ArenaCell, dst: ArenaCell): Boolean = {
+    def default(c: ArenaCell): List[ArenaCell] = List()
+    hasEdges.applyOrElse(src, default).contains(dst)
   }
 }
