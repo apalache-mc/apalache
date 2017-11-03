@@ -17,6 +17,13 @@ class CheckerException(message: String) extends Exception(message)
 class RewriterException(message: String) extends CheckerException(message)
 
 /**
+  * This exception is thrown in case of problems with SMT encoding.
+  *
+  * @param message error message
+  */
+class SmtEncodingException(message: String) extends CheckerException(message)
+
+/**
   * This exception is thrown when the structure of a TLA+ expression is unexpected.
   * @param message error message
   * @param ex the problematic expression
