@@ -23,6 +23,7 @@ object SymbStateRewriter {
 class SymbStateRewriter {
   // don't try to rewrite the same rule more than RECURSION_LIMIT times
   private val RECURSION_LIMIT: Int = 1000000
+  private val coercion = new Coercion(this)
   private val substRule = new SubstRule(this)
   private val rules =
     List(substRule, new BoolBoxRule(this),
@@ -33,7 +34,7 @@ class SymbStateRewriter {
   def rewriteOnce(state: SymbState): RewritingResult = {
     state.ex match {
       case NameEx(name) =>
-        if (isCellName(name)) {
+        if (CellTheory().hasConst(name)) {
           // nothing to rewrite, we have a cell or a predicate
           Done(state)
         } else if (substRule.isApplicable(state)) {
@@ -109,5 +110,16 @@ class SymbStateRewriter {
 
     val pair = process(state, es.toList.reverse)
     (pair._1.setRex(state.ex), pair._2)
+  }
+
+  /**
+    * Coerce the state expression from the current theory to another theory.
+    *
+    * @param state a symbolic state
+    * @param targetTheory a target theory
+    * @return a new symbolic state, if possible
+    */
+  def coerce(state: SymbState, targetTheory: Theory): SymbState = {
+    coercion.coerce(state, targetTheory)
   }
 }

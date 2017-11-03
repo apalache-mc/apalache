@@ -5,10 +5,6 @@ import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
 object ArenaCell {
-  /**
-    * The prefix of all cells.
-    */
-  val namePrefix = "$C$"
 }
 
 /**
@@ -18,7 +14,7 @@ object ArenaCell {
   */
 class ArenaCell(val id: Int, val cellType: CellType) {
   override def toString: String = {
-    "%s%d".format(ArenaCell.namePrefix, id)
+    "%s%d".format(CellTheory().namePrefix, id)
   }
 
   def toNameEx: NameEx = {

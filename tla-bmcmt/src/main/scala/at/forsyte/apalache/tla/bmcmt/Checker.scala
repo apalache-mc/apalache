@@ -6,9 +6,11 @@ import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaModule, TlaOperDecl}
 
 object Checker {
+
   object Outcome extends Enumeration {
     val NoError, Error, Deadlock = Value
   }
+
 }
 
 /**
@@ -56,15 +58,11 @@ class Checker(mod: TlaModule, initOp: TlaOperDecl, nextOp: TlaOperDecl) {
       point.exploredBranchesCnt += 1
       val finalState = smallStep(point.state)
       finalState.ex match {
-        case NameEx(name) =>
-          if (isCellName(name)) {
-            finalState.solverCtx.assertCellExpr(OperEx(TlaOper.eq, finalState.ex, finalState.arena.cellTrue().toNameEx))
-          } else {
-            throw new CheckerException("Expected a Boolean cell, found a name: " + name)
-          }
+        case NameEx(name) if CellTheory().hasConst(name) =>
+          finalState.solverCtx.assertCellExpr(OperEx(TlaOper.eq, finalState.ex, finalState.arena.cellTrue().toNameEx))
 
         case _ =>
-          throw new CheckerException("Expected a Boolean cell, found a TLA expression")
+          throw new CheckerException("Expected a cell, found a TLA expression")
       }
 
       if (!finalState.solverCtx.sat()) {

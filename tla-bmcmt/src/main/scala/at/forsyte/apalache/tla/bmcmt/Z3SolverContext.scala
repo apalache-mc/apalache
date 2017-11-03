@@ -12,6 +12,8 @@ import com.microsoft.z3._
   */
 class Z3SolverContext extends SolverContext {
   var level: Int = 0
+  var nBoolConsts: Int = 0
+  var nIntConsts: Int = 0
   private val z3context: Context = new Context()
   private val z3solver = z3context.mkSolver()
   private val cellSort: UninterpretedSort = z3context.mkUninterpretedSort("Cell")
@@ -48,6 +50,28 @@ class Z3SolverContext extends SolverContext {
 
 
   /**
+    * Introduce a new Boolean constant.
+    *
+    * @return the name of a new constant
+    */
+  override def introBoolConst(): String = {
+    val name = "%s%d".format(BoolTheory().namePrefix, nBoolConsts)
+    nBoolConsts += 1
+    name
+  }
+
+  /**
+    * Introduce a new integer constant.
+    *
+    * @return the name of a new constant
+    */
+  override def introIntConst(): String = {
+    val name = "%s%d".format(BoolTheory().namePrefix, nIntConsts)
+    nIntConsts += 1
+    name
+  }
+
+  /**
     * Push SMT context
     */
   override def push(): Unit = {
@@ -78,6 +102,7 @@ class Z3SolverContext extends SolverContext {
 
   /**
     * Print the collected constraints in the SMTLIB2 format using Z3 API.
+    *
     * @return a long string of statements in SMTLIB2 format as provided by Z3
     */
   def toSmtlib2: String = {
@@ -87,10 +112,15 @@ class Z3SolverContext extends SolverContext {
   private def toBoolExpr(ex: TlaEx): Expr = {
     ex match {
       case NameEx(name) =>
-        if (!isCellName(name)) {
+        if (CellTheory().hasConst(name)) {
+          z3context.mkConst(name, cellSort)
+        } else if (BoolTheory().hasConst(name)) {
+          z3context.mkBoolConst(name)
+        } else if (IntTheory().hasConst(name)) {
+          z3context.mkIntConst(name)
+        } else {
           throw new InvalidTlaExException("Expected a cell, found name: " + name, ex)
         }
-        z3context.mkConst(name, cellSort)
 
       case ValEx(TlaFalse) =>
         z3context.mkFalse()

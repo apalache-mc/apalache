@@ -23,6 +23,43 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
     solverContext.dispose()
   }
 
+  test("SE-BOX-BOOL1: $B$_i ~~> $C$_j") {
+    val pred = solverContext.introBoolConst()
+    val state = new SymbState(NameEx(pred), BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().coerce(state, CellTheory())
+    nextState.ex match {
+      case NameEx(name) =>
+        assert(CellTheory().hasConst(name))
+        assert(CellTheory() == nextState.theory)
+        assert(solverContext.sat())
+        solverContext.assertCellExpr(OperEx(TlaOper.eq, nextState.ex, nextState.arena.cellFalse().toNameEx))
+        solverContext.assertCellExpr(NameEx(pred))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected coercion result")
+    }
+  }
+
+  test("SE-UNBOX-BOOL1: $C$_j ~~> $B$_i") {
+    arena = arena.appendCell(BoolType())
+    val newCell = arena.topCell
+    val state = new SymbState(newCell.toNameEx, CellTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().coerce(state, BoolTheory())
+    nextState.ex match {
+      case NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        assert(BoolTheory() == nextState.theory)
+        assert(solverContext.sat())
+        solverContext.assertCellExpr(OperEx(TlaOper.eq, newCell.toNameEx, nextState.arena.cellFalse().toNameEx))
+        solverContext.assertCellExpr(NameEx(name))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected coercion result")
+    }
+  }
+
   test("SE-SUBST1: x[cell/x] ~~> cell") {
     val newArena = arena.appendCell(UnknownType())
     val cell = newArena.topCell
@@ -202,7 +239,7 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
           case NameEx(name) =>
-            assert(isCellName(name))
+            assert(CellTheory().hasConst(name))
             solverContext.assertCellExpr(OperEx(TlaOper.eq, cell.toNameEx, arena.cellFalse().toNameEx))
             solverContext.assertCellExpr(OperEx(TlaOper.eq, nextState.ex, arena.cellTrue().toNameEx))
             solverContext.push()
@@ -245,7 +282,7 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
           case NameEx(name) =>
-            assert(isCellName(name))
+            assert(CellTheory().hasConst(name))
             solverContext.push()
             assert(solverContext.sat())
             solverContext.assertCellExpr(OperEx(TlaOper.eq, c1.toNameEx, arena.cellFalse().toNameEx))
@@ -286,7 +323,7 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
           case NameEx(name) =>
-            assert(isCellName(name))
+            assert(CellTheory().hasConst(name))
             solverContext.assertCellExpr(OperEx(TlaOper.eq, c1.toNameEx, arena.cellFalse().toNameEx))
             solverContext.assertCellExpr(OperEx(TlaOper.eq, nextState.ex, arena.cellTrue().toNameEx))
             solverContext.push()
@@ -312,7 +349,7 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
           case set@NameEx(name) =>
-            assert(isCellName(name))
+            assert(CellTheory().hasConst(name))
             solverContext.assertCellExpr(OperEx(TlaSetOper.in, arena.cellFalse().toNameEx, set))
             assert(solverContext.sat())
             solverContext.assertCellExpr(OperEx(TlaBoolOper.not,
@@ -356,7 +393,7 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
           case predEx@NameEx(name) =>
-            assert(isCellName(name))
+            assert(CellTheory().hasConst(name))
             solverContext.push()
             solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellFalse().toNameEx, predEx))
             assert(!solverContext.sat())
@@ -381,7 +418,7 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
     val state = new SymbState(ex, CellTheory(), arena, new Binding, solverContext)
     new SymbStateRewriter().rewriteUntilDone(state).ex match {
       case predEx@NameEx(name) =>
-        assert(isCellName(name))
+        assert(CellTheory().hasConst(name))
         solverContext.push()
         solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellFalse().toNameEx, predEx))
         assert(solverContext.sat())
@@ -406,7 +443,7 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
           case predEx@NameEx(name) =>
-            assert(isCellName(name))
+            assert(CellTheory().hasConst(name))
             solverContext.push()
             // cell = \TRUE
             solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellTrue().toNameEx, cell.toNameEx))
@@ -440,7 +477,7 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
     val state = new SymbState(ex, CellTheory(), arena, new Binding, solverContext)
     new SymbStateRewriter().rewriteUntilDone(state).ex match {
       case predEx@NameEx(name) =>
-        assert(isCellName(name))
+        assert(CellTheory().hasConst(name))
         solverContext.push()
         // cell = \TRUE
         solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellTrue().toNameEx, cell.toNameEx))
@@ -470,7 +507,7 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
     val nextState = new SymbStateRewriter().rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
-        assert(isCellName(name))
+        assert(CellTheory().hasConst(name))
         solverContext.push()
         // and membership holds true
         solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellTrue().toNameEx, predEx))
@@ -496,7 +533,7 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
     val nextState = new SymbStateRewriter().rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
-        assert(isCellName(name))
+        assert(CellTheory().hasConst(name))
         solverContext.push()
         // and membership holds true
         solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellTrue().toNameEx, predEx))
