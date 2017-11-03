@@ -1,11 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
+import at.forsyte.apalache.tla.bmcmt.types.BoolType
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
 /**
-  * Implements the rules: SE-BOOL-NEG{1,2,3,4,5}.
+  * Implements the rules: SE-BOOL-NEG[1-9].
   *
   * @author Igor Konnov
   */
@@ -19,7 +20,21 @@ class NegRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
+      case OperEx(TlaBoolOper.not, ex @NameEx(name)) =>
+        // SE-BOOL-NEG9
+        if (name == state.arena.cellFalse().toString) {
+          state.setRex(state.arena.cellTrue().toNameEx)
+        } else if (name == state.arena.cellTrue().toString) {
+          state.setRex(state.arena.cellFalse().toNameEx)
+        } else {
+          val newArena = state.arena.appendCell(BoolType())
+          val newCell = newArena.topCell
+          state.solverCtx.assertCellExpr(OperEx(TlaOper.ne, ex, newCell.toNameEx))
+          state.setArena(newArena).setRex(newCell.toNameEx)
+        }
+
       case OperEx(TlaBoolOper.not, ex: TlaEx) =>
+        // SE-BOOL-NEG[1-8]
         state.setRex(rewriteNot(ex))
 
       case _ =>

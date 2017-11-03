@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.types.{BoolType, CellType, FinSetType, UnknownType}
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 import scala.collection.immutable.HashMap
@@ -12,19 +12,29 @@ object Arena {
   protected val booleanName: String = ArenaCell.namePrefix + "2"
 
   def create(solverContext: SolverContext): Arena = {
-    val arena = new Arena(solverContext, 0, new ArenaCell(-1, UnknownType()), HashMap(), new HashMap())
+    val arena = new Arena(solverContext, 0,
+      new ArenaCell(-1, UnknownType()),
+      HashMap(),
+      new LazyEquality(solverContext),
+      new HashMap())
     // by convention, the first cells have the following semantics: 0 stores FALSE, 1 stores TRUE, 2 stores BOOLEAN
     val newArena = arena.appendCellWithoutDeclaration(BoolType())
       .appendCellWithoutDeclaration(BoolType())
       .appendCellWithoutDeclaration(FinSetType(BoolType()))
     // declare the cells in SMT
-    solverContext.declareCell(newArena.cellFalse())
-    solverContext.declareCell(newArena.cellTrue())
-    solverContext.declareCell(newArena.cellBoolean())
-    solverContext.assertCellExpr(OperEx(TlaOper.ne, newArena.cellFalse().toNameEx, newArena.cellTrue().toNameEx))
+    val cellFalse = newArena.cellFalse()
+    val cellTrue = newArena.cellTrue()
+    val cellBoolean = newArena.cellBoolean()
+    solverContext.declareCell(cellFalse)
+    solverContext.declareCell(cellTrue)
+    solverContext.declareCell(cellBoolean)
+    solverContext.assertCellExpr(OperEx(TlaOper.ne, cellFalse.toNameEx, cellTrue.toNameEx))
+    // assert in(c_FALSE, c_BOOLEAN) and in(c_TRUE, c_BOOLEAN)
+    solverContext.assertCellExpr(OperEx(TlaSetOper.in, cellFalse.toNameEx, cellBoolean.toNameEx))
+    solverContext.assertCellExpr(OperEx(TlaSetOper.in, cellTrue.toNameEx, cellBoolean.toNameEx))
     // link c_BOOLEAN to c_FALSE and c_TRUE
-    newArena.appendHas(newArena.cellBoolean(), newArena.cellFalse())
-      .appendHas(newArena.cellBoolean(), newArena.cellTrue())
+    newArena.appendHas(cellBoolean, cellFalse)
+      .appendHas(cellBoolean, cellTrue)
   }
 }
 
@@ -38,6 +48,7 @@ object Arena {
 class Arena private(val solverContext: SolverContext,
                     val cellCount: Int, val topCell: ArenaCell,
                     val cellMap: Map[String, ArenaCell],
+                    val lazyEquality: LazyEquality,
                     private val hasEdges: Map[ArenaCell, List[ArenaCell]]) {
   // since the edges in arenas have different structure, for the moment, we keep them in different maps
   /*
@@ -104,7 +115,8 @@ class Arena private(val solverContext: SolverContext,
 
   protected def appendCellWithoutDeclaration(cellType: CellType): Arena = {
     val newCell = new ArenaCell(cellCount, cellType)
-    new Arena(solverContext, cellCount + 1, newCell, cellMap + (newCell.toString -> newCell), hasEdges)
+    new Arena(solverContext, cellCount + 1, newCell,
+      cellMap + (newCell.toString -> newCell), lazyEquality, hasEdges)
   }
 
   /**
@@ -121,7 +133,7 @@ class Arena private(val solverContext: SolverContext,
         case None => List(elemCell)
       }
 
-    new Arena(solverContext, cellCount, topCell, cellMap, hasEdges + (setCell -> es))
+    new Arena(solverContext, cellCount, topCell, cellMap, lazyEquality, hasEdges + (setCell -> es))
   }
 
   /**

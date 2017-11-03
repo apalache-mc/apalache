@@ -23,7 +23,7 @@ class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case OperEx(TlaSetOper.enumSet, elems @ _*) =>
         val (newState: SymbState, newEs: Seq[TlaEx]) =
           rewriter.rewriteSeqUntilDone(state, elems)
-        val cells = newEs.map(e => state.arena.findCellByName(cellToString(e)))
+        val cells = newEs.map(e => newState.arena.findCellByName(cellToString(e)))
         // FIXME: introduce a sum type for the elements?
         var arena = newState.arena.appendCell(FinSetType(UnknownType()))
         val newCell = arena.topCell
