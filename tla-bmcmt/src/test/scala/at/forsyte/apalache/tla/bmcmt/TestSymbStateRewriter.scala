@@ -1,9 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.types.{BoolType, UnknownType}
+import at.forsyte.apalache.tla.bmcmt.types.{BoolType, IntType, UnknownType}
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
-import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
+import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -53,6 +53,51 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
         assert(solverContext.sat())
         solverContext.assertCellExpr(OperEx(TlaOper.eq, newCell.toNameEx, nextState.arena.cellFalse().toNameEx))
         solverContext.assertCellExpr(NameEx(name))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected coercion result")
+    }
+  }
+
+  test("SE-BOX-INT1: $Z$_i ~~> $C$_j") {
+    val intConst = solverContext.introIntConst()
+    val state = new SymbState(NameEx(intConst), IntTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().coerce(state, CellTheory())
+    nextState.ex match {
+      case NameEx(name) =>
+        assert(CellTheory().hasConst(name))
+        assert(CellTheory() == nextState.theory)
+        assert(solverContext.sat())
+        solverContext.assertCellExpr(OperEx(TlaOper.eq, nextState.ex, ValEx(TlaInt(42))))
+        solverContext.push()
+        solverContext.assertCellExpr(OperEx(TlaOper.eq, NameEx(intConst), ValEx(TlaInt(42))))
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.assertCellExpr(OperEx(TlaOper.eq, NameEx(intConst), ValEx(TlaInt(41))))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected coercion result")
+    }
+  }
+
+  test("SE-UNBOX-INT1: $C$_i ~~> $Z$_j") {
+    arena = arena.appendCell(IntType())
+    val newCell = arena.topCell
+    val state = new SymbState(newCell.toNameEx, CellTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().coerce(state, IntTheory())
+    nextState.ex match {
+      case NameEx(name) =>
+        assert(IntTheory().hasConst(name))
+        assert(IntTheory() == nextState.theory)
+        assert(solverContext.sat())
+        solverContext.assertCellExpr(OperEx(TlaOper.eq, nextState.ex, ValEx(TlaInt(42))))
+        solverContext.push()
+        solverContext.assertCellExpr(OperEx(TlaOper.eq, newCell.toNameEx, ValEx(TlaInt(42))))
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.assertCellExpr(OperEx(TlaOper.eq, newCell.toNameEx, ValEx(TlaInt(41))))
         assert(!solverContext.sat())
 
       case _ =>

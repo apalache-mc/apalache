@@ -22,6 +22,9 @@ package object types {
         case (BoolType(), BoolType()) =>
           true
 
+        case (IntType(), IntType()) =>
+          true
+
         case (FinSetType(left), FinSetType(right)) =>
           left.comparableWith(right)
 
@@ -44,6 +47,11 @@ package object types {
     * A Boolean cell type.
     */
   case class BoolType() extends CellType
+
+  /**
+    * An integer cell type.
+    */
+  case class IntType() extends CellType
 
   /**
     * A finite set.
