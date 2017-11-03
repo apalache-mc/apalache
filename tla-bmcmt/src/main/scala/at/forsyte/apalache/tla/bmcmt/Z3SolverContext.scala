@@ -1,11 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 import com.microsoft.z3._
 
 /**
-  * An implementation of a SolverContext with Z3.
+  * An implementation of a SolverContext using Z3.
   *
   * @author Igor Konnov
   */
@@ -75,6 +76,14 @@ class Z3SolverContext extends SolverContext {
     z3solver.check() == Status.SATISFIABLE
   }
 
+  /**
+    * Print the collected constraints in the SMTLIB2 format using Z3 API.
+    * @return a long string of statements in SMTLIB2 format as provided by Z3
+    */
+  def toSmtlib2: String = {
+    z3solver.toString
+  }
+
   private def toBoolExpr(ex: TlaEx): Expr = {
     ex match {
       case NameEx(name) =>
@@ -82,6 +91,12 @@ class Z3SolverContext extends SolverContext {
           throw new InvalidTlaExException("Expected a cell, found name: " + name, ex)
         }
         z3context.mkConst(name, cellSort)
+
+      case ValEx(TlaFalse) =>
+        z3context.mkFalse()
+
+      case ValEx(TlaTrue) =>
+        z3context.mkTrue()
 
       case OperEx(TlaOper.eq, lhs, rhs) =>
         z3context.mkEq(toBoolExpr(lhs), toBoolExpr(rhs))

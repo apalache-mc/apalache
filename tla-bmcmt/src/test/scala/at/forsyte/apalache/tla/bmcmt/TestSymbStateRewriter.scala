@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.types.{BoolType, UnknownType}
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, ValEx}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfter, FunSuite}
@@ -34,7 +34,7 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
         assert(expected == nextState.ex)
         assert(state.arena == nextState.arena)
 
-      case _@x =>
+      case _ =>
         fail("Unexpected rewriting result")
     }
   }
@@ -192,6 +192,34 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
     }
   }
 
+  test("""SE-BOOL-NEG9: ~c_i ~~> c_new""") {
+    arena = arena.appendCell(BoolType())
+    val cell = arena.topCell
+
+    val ex = OperEx(TlaBoolOper.not, cell.toNameEx)
+    val state = new SymbState(ex, arena, new Binding, solverContext)
+    new SymbStateRewriter().rewriteOnce(state) match {
+      case SymbStateRewriter.Continue(nextState) =>
+        nextState.ex match {
+          case NameEx(name) =>
+            assert(isCellName(name))
+            solverContext.assertCellExpr(OperEx(TlaOper.eq, cell.toNameEx, arena.cellFalse().toNameEx))
+            solverContext.assertCellExpr(OperEx(TlaOper.eq, nextState.ex, arena.cellTrue().toNameEx))
+            solverContext.push()
+            assert(solverContext.sat())
+            solverContext.pop()
+            solverContext.assertCellExpr(OperEx(TlaOper.eq, nextState.ex, arena.cellFalse().toNameEx))
+            assert(!solverContext.sat())
+
+          case _ =>
+            fail("Unexpected rewriting result")
+        }
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
   test("""SE-AND1: FALSE /\ TRUE ~~> c_FALSE""") {
     val ex = OperEx(TlaBoolOper.and, ValEx(TlaFalse), ValEx(TlaTrue))
     val state = new SymbState(ex, arena, new Binding, solverContext)
@@ -283,7 +311,7 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
     new SymbStateRewriter().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
-          case set @ NameEx(name) =>
+          case set@NameEx(name) =>
             assert(isCellName(name))
             solverContext.assertCellExpr(OperEx(TlaSetOper.in, arena.cellFalse().toNameEx, set))
             assert(solverContext.sat())
@@ -300,7 +328,25 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
     }
   }
 
-  test("""SE-SET-IN1: \FALSE \in {\FALSE, \TRUE} ~~> c_pred""") {
+  test("""SE-SET-IN1: {} \in {} ~~> c_\FALSE""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val ex = OperEx(TlaSetOper.in, mkSet(), mkSet())
+    val state = new SymbState(ex, arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    assert(nextState.arena.cellFalse().toNameEx == nextState.ex)
+  }
+
+  test("""SE-SET-NOTIN1: {} \notin {} ~~> c_\TRUE""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val ex = OperEx(TlaSetOper.notin, mkSet(), mkSet())
+    val state = new SymbState(ex, arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    assert(nextState.arena.cellTrue().toNameEx == nextState.ex)
+  }
+
+  test("""SE-SET-IN2: \FALSE \in {\FALSE, \TRUE} ~~> c_pred""") {
     val ex =
       OperEx(TlaSetOper.in,
         ValEx(TlaFalse),
@@ -309,7 +355,7 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
     new SymbStateRewriter().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
-          case predEx @ NameEx(name) =>
+          case predEx@NameEx(name) =>
             assert(isCellName(name))
             solverContext.push()
             solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellFalse().toNameEx, predEx))
@@ -321,6 +367,145 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
           case _ =>
             fail("Unexpected rewriting result")
         }
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SET-NOTIN1: \FALSE \notin {\FALSE, \TRUE} ~~> c_pred""") {
+    val ex =
+      OperEx(TlaSetOper.notin,
+        ValEx(TlaFalse),
+        OperEx(TlaSetOper.enumSet, ValEx(TlaFalse), ValEx(TlaTrue)))
+    val state = new SymbState(ex, arena, new Binding, solverContext)
+    new SymbStateRewriter().rewriteUntilDone(state).ex match {
+      case predEx@NameEx(name) =>
+        assert(isCellName(name))
+        solverContext.push()
+        solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellFalse().toNameEx, predEx))
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellTrue().toNameEx, predEx))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SET-IN3: c_i: Bool \in {\TRUE, \TRUE} ~~> c_pred""") {
+    arena = arena.appendCell(BoolType())
+    val cell = arena.topCell
+    val ex =
+      OperEx(TlaSetOper.in,
+        cell.toNameEx,
+        OperEx(TlaSetOper.enumSet, ValEx(TlaTrue), ValEx(TlaTrue)))
+    val state = new SymbState(ex, arena, new Binding, solverContext)
+    new SymbStateRewriter().rewriteOnce(state) match {
+      case SymbStateRewriter.Continue(nextState) =>
+        nextState.ex match {
+          case predEx@NameEx(name) =>
+            assert(isCellName(name))
+            solverContext.push()
+            // cell = \TRUE
+            solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellTrue().toNameEx, cell.toNameEx))
+            // and membership holds true
+            solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellTrue().toNameEx, predEx))
+            assert(solverContext.sat())
+            solverContext.pop()
+            // another query
+            // cell = \FALSE
+            solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellFalse().toNameEx, cell.toNameEx))
+            // and membership holds true
+            solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellTrue().toNameEx, predEx))
+            assert(!solverContext.sat())
+
+          case _ =>
+            fail("Unexpected rewriting result")
+        }
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SET-NOTIN1: c_i: Bool \notin {\TRUE, \TRUE} ~~> c_pred""") {
+    arena = arena.appendCell(BoolType())
+    val cell = arena.topCell
+    val ex =
+      OperEx(TlaSetOper.notin,
+        cell.toNameEx,
+        OperEx(TlaSetOper.enumSet, ValEx(TlaTrue), ValEx(TlaTrue)))
+    val state = new SymbState(ex, arena, new Binding, solverContext)
+    new SymbStateRewriter().rewriteUntilDone(state).ex match {
+      case predEx@NameEx(name) =>
+        assert(isCellName(name))
+        solverContext.push()
+        // cell = \TRUE
+        solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellTrue().toNameEx, cell.toNameEx))
+        // and membership holds true
+        solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellTrue().toNameEx, predEx))
+        assert(!solverContext.sat())
+        solverContext.pop()
+        // another query
+        // cell = \FALSE
+        solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellFalse().toNameEx, cell.toNameEx))
+        // and membership holds true
+        solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellTrue().toNameEx, predEx))
+        assert(solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SET-IN3: {{}, {{}, {}}} \in {{}, {{}, {{}, {}}}} ~~> c_pred""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val left = mkSet(mkSet(), mkSet(mkSet(), mkSet()))
+    val right = mkSet(mkSet(), mkSet(mkSet(), mkSet(mkSet(), mkSet())))
+    val ex = OperEx(TlaSetOper.in, left, right)
+    val state = new SymbState(ex, arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx@NameEx(name) =>
+        assert(isCellName(name))
+        solverContext.push()
+        // and membership holds true
+        solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellTrue().toNameEx, predEx))
+        assert(solverContext.sat())
+        solverContext.pop()
+        // another query
+        // and membership does not hold
+        solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellFalse().toNameEx, predEx))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SET-IN3: {{}, {{{}}}} \in {{}, {{}, {{}}} ~~> c_pred""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val left = mkSet(mkSet(), mkSet(mkSet(mkSet())))
+    val right = mkSet(mkSet(), mkSet(mkSet(), mkSet(mkSet())))
+    val ex = OperEx(TlaSetOper.in, left, right)
+    val state = new SymbState(ex, arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx@NameEx(name) =>
+        assert(isCellName(name))
+        solverContext.push()
+        // and membership holds true
+        solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellTrue().toNameEx, predEx))
+        assert(!solverContext.sat())
+        solverContext.pop()
+        // another query
+        // and membership does not hold
+        solverContext.assertCellExpr(OperEx(TlaOper.eq, arena.cellFalse().toNameEx, predEx))
+        assert(solverContext.sat())
 
       case _ =>
         fail("Unexpected rewriting result")
