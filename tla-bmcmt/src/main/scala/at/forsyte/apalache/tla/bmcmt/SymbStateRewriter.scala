@@ -102,7 +102,7 @@ class SymbStateRewriter {
 
         case r :: tail =>
           val (ts: SymbState, nt: List[TlaEx]) = process(st, tail)
-          val ns = rewriteUntilDone(new SymbState(r, ts.arena, ts.binding, ts.solverCtx))
+          val ns = rewriteUntilDone(new SymbState(r, ts.theory, ts.arena, ts.binding, ts.solverCtx))
           (ns, ns.ex :: nt)
       }
     }
