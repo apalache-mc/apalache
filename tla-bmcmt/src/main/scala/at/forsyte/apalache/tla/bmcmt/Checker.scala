@@ -28,7 +28,8 @@ class Checker(mod: TlaModule, initOp: TlaOperDecl, nextOp: TlaOperDecl) {
     */
   def check(numSteps: Int): Outcome.Value = {
     val solverContext = new Z3SolverContext
-    val initState = new SymbState(initOp.body, Arena.create(solverContext), new Binding, solverContext)
+    val initState = new SymbState(initOp.body, CellTheory(),
+      Arena.create(solverContext), new Binding, solverContext)
     // create a dummy branching point, just to have the initial state on the stack
     stack = List(new Branchpoint(initState, 1, initState.solverCtx.level))
     // TODO: use Next, currently we use only Init

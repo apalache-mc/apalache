@@ -11,6 +11,14 @@ package object bmcmt {
   type Binding = HashMap[String, ArenaCell]
 
   /**
+    * A theory used to evaluate a TLA+ expression: cells, Booleans, and integers.
+    */
+  sealed abstract class Theory
+  case class CellTheory() extends Theory
+  case class BoolTheory() extends Theory
+  case class IntTheory() extends Theory
+
+  /**
     * Given a name, e.g., as NameEx("name"), test, whether this name corresponds to a cell.
     * @param name variable name
     * @return true iff it is a cell name
