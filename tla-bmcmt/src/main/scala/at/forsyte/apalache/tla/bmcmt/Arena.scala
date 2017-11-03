@@ -7,9 +7,9 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 import scala.collection.immutable.HashMap
 
 object Arena {
-  protected val falseName: String = ArenaCell.namePrefix + "0"
-  protected val trueName: String = ArenaCell.namePrefix + "1"
-  protected val booleanName: String = ArenaCell.namePrefix + "2"
+  protected val falseName: String = CellTheory().namePrefix + "0"
+  protected val trueName: String = CellTheory().namePrefix + "1"
+  protected val booleanName: String = CellTheory().namePrefix + "2"
 
   def create(solverContext: SolverContext): Arena = {
     val arena = new Arena(solverContext, 0,
@@ -88,7 +88,7 @@ class Arena private(val solverContext: SolverContext,
     * @throws NoSuchElementException when no cell is found
     */
   def findCellByNameEx(nameEx: TlaEx): ArenaCell = {
-    cellMap(cellToString(nameEx))
+    cellMap(CellTheory().nameExToString(nameEx))
   }
 
   /**

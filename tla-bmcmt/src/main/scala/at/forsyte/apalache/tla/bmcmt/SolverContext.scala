@@ -42,6 +42,18 @@ trait SolverContext {
   def declareCell(cell: ArenaCell): Unit
 
   /**
+    * Introduce a new Boolean constant.
+    * @return the name of a new constant
+    */
+  def introBoolConst(): String
+
+  /**
+    * Introduce a new integer constant.
+    * @return the name of a new constant
+    */
+  def introIntConst(): String
+
+  /**
     * Assert that a Boolean TLA+ expression holds true.
     *
     * @param ex a simplified TLA+ expression over cells
