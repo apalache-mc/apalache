@@ -1095,6 +1095,29 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
     }
   }
 
+  test("SE-INT-CMP1 (composite expressions): 1 + 5 > 6 - 3 ~~> $B$_k") {
+    val left = OperEx(TlaArithOper.plus, ValEx(TlaInt(1)), ValEx(TlaInt(5)))
+    val right = OperEx(TlaArithOper.minus, ValEx(TlaInt(6)), ValEx(TlaInt(3)))
+    val state = new SymbState(OperEx(TlaArithOper.gt, left, right),
+      BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case cmpEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        assert(BoolTheory() == state.theory)
+        assert(solverContext.sat())
+        solverContext.push()
+        solverContext.assertGroundExpr(cmpEx)
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, cmpEx))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
   test("SE-INT-CELL-CMP1: $C$_i: Int >= $C$_j: Int ~~> valInt(...) >= valInt(...)") {
     arena = arena.appendCell(IntT())
     val leftCell = arena.topCell
@@ -1297,4 +1320,76 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
     }
   }
 
+  test("""SE-SET-FILTER[1-2]: {x \in {1,2,3,4} : x % 2 = 0 ~~> {2, 4}""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val set = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaInt(3)), ValEx(TlaInt(4)))
+    val xMod2 = OperEx(TlaArithOper.mod, NameEx("x"), ValEx(TlaInt(2)))
+    val filter = OperEx(TlaOper.eq, xMod2, ValEx(TlaInt(0)))
+    val ex = OperEx(TlaSetOper.filter, NameEx("x"), set, filter)
+    val state = new SymbState(ex, CellTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case newSet @ NameEx(name) =>
+        assert(CellTheory().hasConst(name))
+        solverContext.push()
+        assert(solverContext.sat())
+        // we check actual membership in another test
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SET-FILTER[1-2]: 2 \in {x \in {1,2,3,4} : x % 2 = 0} ~~> $B$k""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val set = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaInt(3)), ValEx(TlaInt(4)))
+    val xMod2 = OperEx(TlaArithOper.mod, NameEx("x"), ValEx(TlaInt(2)))
+    val filter = OperEx(TlaOper.eq, xMod2, ValEx(TlaInt(0)))
+    val filteredSet = OperEx(TlaSetOper.filter, NameEx("x"), set, filter)
+    val inFilteredSet = OperEx(TlaSetOper.in, ValEx(TlaInt(2)), filteredSet)
+
+    val state = new SymbState(inFilteredSet, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case membershipEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(membershipEx)
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, membershipEx))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SET-FILTER[1-2]: 3 \in {x \in {2, 3} : x % 2 = 0} ~~> $B$k""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val set = mkSet(ValEx(TlaInt(2)), ValEx(TlaInt(3)))
+    val xMod2 = OperEx(TlaArithOper.mod, NameEx("x"), ValEx(TlaInt(2)))
+    val filter = OperEx(TlaOper.eq, xMod2, ValEx(TlaInt(0)))
+    val filteredSet = OperEx(TlaSetOper.filter, NameEx("x"), set, filter)
+    val inFilteredSet = OperEx(TlaSetOper.in, ValEx(TlaInt(3)), filteredSet)
+
+    val state = new SymbState(inFilteredSet, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case membershipEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(membershipEx)
+        assert(!solverContext.sat())
+        solverContext.pop()
+        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, membershipEx))
+        assert(solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
 }

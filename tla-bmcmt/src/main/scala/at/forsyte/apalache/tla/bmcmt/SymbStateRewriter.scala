@@ -30,7 +30,8 @@ class SymbStateRewriter {
       new EqRule(this), new NeqRule(this),
       new OrRule(this), new AndRule(this), new NegRule(this),
       new IntCmpRule(this), new IntArithRule(this),
-      new SetCtorRule(this), new SetInRule(this), new SetNotInRule(this)
+      new SetCtorRule(this), new SetInRule(this), new SetNotInRule(this),
+      new SetFilterRule(this)
     ) /////////////
 
   def rewriteOnce(state: SymbState): RewritingResult = {
@@ -89,7 +90,7 @@ class SymbStateRewriter {
 
           case NoRule() =>
             // no rule applies, a problem in the tool?
-            throw new RewriterException("No rule applies")
+            throw new RewriterException("No rule applies to expression: " + st.ex)
         }
       }
     }
