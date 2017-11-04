@@ -25,20 +25,20 @@ class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   override def apply(state: SymbState): SymbState = state.ex match {
-    case OperEx(oper: TlaArithOper, lex @ NameEx(left), rex @ NameEx(right))
+    case OperEx(oper: TlaArithOper, left, right)
       if (oper == TlaArithOper.plus || oper == TlaArithOper.minus
         || oper == TlaArithOper.mult || oper == TlaArithOper.div || oper == TlaArithOper.mod)
     =>
-      val leftState = rewriter.coerce(state.setRex(lex), IntTheory())
-      val rightState = rewriter.coerce(leftState.setRex(rex), IntTheory())
+      val leftState = rewriter.rewriteUntilDone(state.setTheory(IntTheory()).setRex(left))
+      val rightState = rewriter.rewriteUntilDone(state.setTheory(IntTheory()).setRex(right))
       // introduce an integer constant to store the result
-      val intConst = state.solverCtx.introIntConst()
+      val intConst = rightState.solverCtx.introIntConst()
       val cons =
         OperEx(TlaOper.eq,
           NameEx(intConst),
           OperEx(oper, leftState.ex, rightState.ex))
-      state.solverCtx.assertGroundExpr(cons)
-      val finalState = state.setTheory(IntTheory()).setRex(NameEx(intConst))
+      rightState.solverCtx.assertGroundExpr(cons)
+      val finalState = rightState.setTheory(IntTheory()).setRex(NameEx(intConst))
       rewriter.coerce(finalState, state.theory)
 
     case _ =>
