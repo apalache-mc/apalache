@@ -528,6 +528,24 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
     }
   }
 
+  test("""SE-SET-CTOR[1-2]: {1, 3, 5} ~~> c_set""") {
+    val ex = OperEx(TlaSetOper.enumSet, ValEx(TlaInt(1)), ValEx(TlaInt(3)), ValEx(TlaInt(5)))
+    val state = new SymbState(ex, CellTheory(), arena, new Binding, solverContext)
+    new SymbStateRewriter().rewriteOnce(state) match {
+      case SymbStateRewriter.Continue(nextState) =>
+        nextState.ex match {
+          case set@NameEx(name) =>
+            assert(CellTheory().hasConst(name))
+            assert(solverContext.sat())
+          case _ =>
+            fail("Unexpected rewriting result")
+        }
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
   test("""SE-SET-IN1: {} \in {} ~~> $B$0""") {
     def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
 
@@ -535,6 +553,98 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
     val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
     val nextState = new SymbStateRewriter().rewriteUntilDone(state)
     assert(NameEx(solverContext.falseConst) == nextState.ex)
+  }
+
+  test("""SE-SET-IN1: 3 \in {1, 3, 5} ~~> $B$k""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val ex = OperEx(TlaSetOper.in,
+      ValEx(TlaInt(3)),
+      mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(3)), ValEx(TlaInt(5))))
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, predEx))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SET-IN1: {3} \in {1, {3}, {5}} ~~> $B$k""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val ex = OperEx(TlaSetOper.in,
+      mkSet(ValEx(TlaInt(3))),
+      mkSet(ValEx(TlaInt(1)), mkSet(ValEx(TlaInt(3))), mkSet(ValEx(TlaInt(5)))))
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, predEx))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SET-IN1: 2 \in {1, 3, 5} ~~> $B$k""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val ex = OperEx(TlaSetOper.in,
+      ValEx(TlaInt(2)),
+      mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(3)), ValEx(TlaInt(5))))
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assert(!solverContext.sat())
+        solverContext.pop()
+        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, predEx))
+        assert(solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SET-IN1: 3 \in {1, {3}, {5}} ~~> $B$k""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val ex = OperEx(TlaSetOper.in,
+      ValEx(TlaInt(3)),
+      mkSet(ValEx(TlaInt(1)), mkSet(ValEx(TlaInt(3))), mkSet(ValEx(TlaInt(5)))))
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assert(!solverContext.sat())
+        solverContext.pop()
+        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, predEx))
+        assert(solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
   }
 
   test("""SE-SET-NOTIN1: {} \notin {} ~~> $B$1""") {
