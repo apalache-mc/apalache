@@ -28,7 +28,7 @@ class SymbStateRewriter {
   private val rules =
     List(substRule, new BoolConstRule(this), new EqRule(this), new NeqRule(this),
       new OrRule(this), new AndRule(this), new NegRule(this),
-      new IntCmpRule(this),
+      new IntCmpRule(this), new IntArithRule(this),
       new SetCtorRule(this), new SetInRule(this), new SetNotInRule(this)
     ) /////////////
 
