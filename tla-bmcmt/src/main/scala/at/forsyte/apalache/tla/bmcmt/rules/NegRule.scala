@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.BoolType
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
@@ -20,17 +19,33 @@ class NegRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case OperEx(TlaBoolOper.not, ex @NameEx(name)) =>
+      case OperEx(TlaBoolOper.not, subEx @NameEx(name)) =>
         // SE-BOOL-NEG9
-        if (name == state.arena.cellFalse().toString) {
+        if (state.theory == CellTheory()
+            && name == state.arena.cellFalse().toString) {
           state.setRex(state.arena.cellTrue().toNameEx)
-        } else if (name == state.arena.cellTrue().toString) {
+        } else if (state.theory == CellTheory()
+            && name == state.arena.cellTrue().toString) {
           state.setRex(state.arena.cellFalse().toNameEx)
         } else {
-          val newArena = state.arena.appendCell(BoolType())
-          val newCell = newArena.topCell
-          state.solverCtx.assertCellExpr(OperEx(TlaOper.ne, ex, newCell.toNameEx))
-          state.setArena(newArena).setRex(newCell.toNameEx)
+          val pred = state.solverCtx.introBoolConst()
+          val iff =
+            if (BoolTheory().hasConst(name)) {
+              // !pred <=> b
+              OperEx(TlaBoolOper.equiv, subEx, OperEx(TlaBoolOper.not, NameEx(pred)))
+            } else if (CellTheory().hasConst(name)) {
+              // pred <=> c_FALSE
+              OperEx(TlaBoolOper.equiv,
+                NameEx(pred),
+                OperEx(TlaOper.eq, subEx, state.arena.cellFalse().toNameEx))
+            } else {
+              throw new RewriterException("Unexpected theory in NegRule: " + state.theory)
+            }
+
+          state.solverCtx.assertGroundExpr(iff)
+          val finalState = state.setRex(NameEx(pred)).setTheory(BoolTheory())
+          // coerce back, if needed
+          rewriter.coerce(finalState, state.theory)
         }
 
       case OperEx(TlaBoolOper.not, ex: TlaEx) =>

@@ -1,9 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.BoolType
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
+import at.forsyte.apalache.tla.lir.values.TlaTrue
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 
 /**
   * Implements the rules: SE-OR[1-4].
@@ -21,37 +21,63 @@ class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   override def apply(state: SymbState): SymbState = {
-    def isTrue(e: TlaEx) = e == state.arena.cellTrue().toNameEx
-    def isFalse(e: TlaEx) = e == state.arena.cellFalse().toNameEx
-
+    val falseConst = state.solverCtx.falseConst
     state.ex match {
       case OperEx(TlaBoolOper.or, args@_*) =>
-        val (newState: SymbState, newRexes: Seq[TlaEx]) =
-          rewriter.rewriteSeqUntilDone(state, args)
+        // We preprocess the arguments twice: before rewriting them and after rewriting them
+        // Hence, we call preprocessOrCall two times.
+        def mapPreprocessMkOr: SymbState = {
+          val (newState: SymbState, preds: Seq[TlaEx]) =
+            rewriter.rewriteSeqUntilDone(state.setTheory(BoolTheory()), args)
 
-        val noFalses = newRexes.filter(r => !isFalse(r))
-        if (noFalses.isEmpty) {
-          // empty disjunction is always false
-          newState.setRex(newState.arena.cellFalse().toNameEx)
-        } else {
-          if (noFalses.exists(isTrue)) {
-            // one true constant makes the disjunction true
-            newState.setRex(newState.arena.cellTrue().toNameEx)
-          } else {
-            // the boring general case
-            val newArena = newState.arena.appendCell(BoolType())
-            val newCell = newArena.topCell
-            val cmps = noFalses.map(nameEx => OperEx(TlaOper.eq, nameEx, newArena.cellTrue().toNameEx))
+          def mkOr: SymbState = {
+            val newPred = state.solverCtx.introBoolConst()
             val cons = OperEx(TlaBoolOper.equiv,
-              OperEx(TlaOper.eq, newCell.toNameEx, newArena.cellTrue().toNameEx),
-              OperEx(TlaBoolOper.or, cmps: _*))
-            newState.solverCtx.assertCellExpr(cons)
-            newState.setRex(newCell.toNameEx).setArena(newArena)
+              NameEx(newPred),
+              OperEx(TlaBoolOper.or, preds: _*))
+            newState.solverCtx.assertGroundExpr(cons)
+            newState.setRex(NameEx(newPred))
           }
+
+          preprocessOrCall(newState, preds, mkOr)
         }
 
+        val finalState = preprocessOrCall(state, args, mapPreprocessMkOr)
+        rewriter.coerce(finalState, state.theory) // coerce if needed
+
       case _ =>
-        throw new RewriterException("OrRule is not applicable")
+        throw new RewriterException("AndRule is not applicable")
+    }
+  }
+
+  private def preprocessOrCall(state: SymbState, args: Seq[TlaEx],
+                               defaultFun: => SymbState) = {
+    // funny syntax for a function without arguments (similar to Unit-functions in OCaml)
+    def isTrue(ex: TlaEx): Boolean =
+      ex match {
+        case ValEx(TlaTrue) =>
+          true
+
+        case NameEx(name) =>
+          (name == state.arena.cellTrue().toString
+            || name == state.solverCtx.trueConst)
+
+        case _ =>
+          false
+      }
+
+    if (args.isEmpty) {
+      // empty disjunction is always false
+      state.setTheory(BoolTheory())
+        .setRex(NameEx(state.solverCtx.falseConst))
+
+    } else if (args.exists(isTrue)) {
+      // one true makes all true
+      state.setTheory(BoolTheory())
+        .setRex(NameEx(state.solverCtx.trueConst))
+    } else {
+      // note that defaultFun is called only here and thus does not add constraints in the other branches
+      defaultFun
     }
   }
 }

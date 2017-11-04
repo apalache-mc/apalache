@@ -1,9 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.types.{BoolType, FinSetType, FunType, UnknownType}
+import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 
 import scala.collection.mutable
 
@@ -18,10 +18,10 @@ class LazyEquality(solverContext: SolverContext) {
 
   /**
     * Given a pair of cells, generate equality constraints and return a TLA+ expression over cells
-    * that can be used in SolverContext.assertCellExpr.
+    * that can be used in SolverContext.assertGroundExpr.
     *
     * @param arena an arena
-    * @param left left cell to compare
+    * @param left  left cell to compare
     * @param right right cell to compare
     * @return a TLA+ cell expression
     */
@@ -36,20 +36,37 @@ class LazyEquality(solverContext: SolverContext) {
       } else {
         // generate constraints
         (left.cellType, right.cellType) match {
-          case (UnknownType(), UnknownType())
-               | (BoolType(), _) | (_, BoolType()) =>
+          case (UnknownT(), UnknownT())
+               | (BoolT(), _) | (_, BoolT()) =>
             () // do nothing, just use the built-in equality
 
-          case (FinSetType(_), FinSetType(_)) =>
+          case (IntT(), IntT()) =>
+            // compare using two integer constants that will
+            // be compared with valInt(left) and valInt(right)
+            // TODO: find a more optimal solution?
+            val leftInt = solverContext.introIntConst()
+            val rightInt = solverContext.introIntConst()
+            // left = right iff leftInt = rightInt
+            val cellEqIffIntEq = OperEx(TlaBoolOper.equiv,
+              OperEx(TlaOper.eq, left.toNameEx, right.toNameEx),
+              OperEx(TlaOper.eq, NameEx(leftInt), NameEx(rightInt)))
+            // leftInt = valInt(left) and rightInt = valInt(right)
+            val leftIntEqLeftCell = OperEx(TlaOper.eq, NameEx(leftInt), left.toNameEx)
+            val rightIntEqRightCell = OperEx(TlaOper.eq, NameEx(rightInt), right.toNameEx)
+            solverContext.assertGroundExpr(leftIntEqLeftCell)
+            solverContext.assertGroundExpr(rightIntEqRightCell)
+            solverContext.assertGroundExpr(cellEqIffIntEq)
+
+          case (FinSetT(_), FinSetT(_)) =>
             // in general, we need 2 * |X| * |Y| comparisons
             val leftSubsetEqRight = subsetEq(arena, left, right)
             val rightSubsetEqLeft = subsetEq(arena, right, left)
             val eq = OperEx(TlaBoolOper.equiv,
               OperEx(TlaOper.eq, left.toNameEx, right.toNameEx),
               OperEx(TlaBoolOper.and, leftSubsetEqRight, rightSubsetEqLeft))
-            solverContext.assertCellExpr(eq)
+            solverContext.assertGroundExpr(eq)
 
-          case (FunType(_, _), FunType(_, _)) =>
+          case (FunT(_, _), FunT(_, _)) =>
             throw new CheckerException("Comparison of functions is not implemented yet")
 
           case _ =>
@@ -74,6 +91,7 @@ class LazyEquality(solverContext: SolverContext) {
       def notIn(le: ArenaCell) = {
         OperEx(TlaBoolOper.not, OperEx(TlaSetOper.in, le.toNameEx, left.toNameEx))
       }
+
       OperEx(TlaBoolOper.and, leftElems.map(notIn): _*)
     } else {
       // SE-SUBSETEQ3

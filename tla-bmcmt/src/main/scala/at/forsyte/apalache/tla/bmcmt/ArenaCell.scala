@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.types.CellType
+import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
@@ -12,7 +12,7 @@ object ArenaCell {
   *
   * @author Igor Konnov
   */
-class ArenaCell(val id: Int, val cellType: CellType) {
+class ArenaCell(val id: Int, val cellType: CellT) {
   override def toString: String = {
     "%s%d".format(CellTheory().namePrefix, id)
   }

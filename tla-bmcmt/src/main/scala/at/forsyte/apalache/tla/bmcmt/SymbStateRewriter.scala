@@ -26,20 +26,26 @@ class SymbStateRewriter {
   private val coercion = new Coercion(this)
   private val substRule = new SubstRule(this)
   private val rules =
-    List(substRule, new BoolBoxRule(this),
+    List(substRule, new BoolConstRule(this), new EqRule(this),
       new OrRule(this), new AndRule(this), new NegRule(this),
       new SetCtorRule(this), new SetInRule(this), new SetNotInRule(this)
     ) /////////////
 
   def rewriteOnce(state: SymbState): RewritingResult = {
     state.ex match {
+      case NameEx(name) if CellTheory().hasConst(name) =>
+        Done(coerce(state.setTheory(CellTheory()), state.theory))
+
+      case NameEx(name) if BoolTheory().hasConst(name) =>
+        Done(coerce(state.setTheory(BoolTheory()), state.theory))
+
+      case NameEx(name) if IntTheory().hasConst(name) =>
+        Done(coerce(state.setTheory(IntTheory()), state.theory))
+
       case NameEx(name) =>
-        if (CellTheory().hasConst(name)) {
-          // nothing to rewrite, we have a cell or a predicate
-          Done(state)
-        } else if (substRule.isApplicable(state)) {
+        if (substRule.isApplicable(state)) {
           // a variable that can be substituted with a cell
-          Done(substRule.apply(state))
+          Done(coerce(substRule.apply(state), state.theory))
         } else {
           // oh-oh
           NoRule()

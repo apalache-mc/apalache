@@ -6,11 +6,11 @@ import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
 import at.forsyte.apalache.tla.lir.{NameEx, ValEx}
 
 /**
-  * Implements the rules: SE-BOOL-BOX{FALSE,TRUE} and SE-SET-BOOLEAN.
+  * Implements the rules: SE-BOOL-{FALSE,TRUE} and SE-SET-BOOLEAN.
   *
   * @author Igor Konnov
    */
-class BoolBoxRule(rewriter: SymbStateRewriter) extends RewritingRule {
+class BoolConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case ValEx(TlaFalse) => true
@@ -23,10 +23,18 @@ class BoolBoxRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case ValEx(TlaFalse) =>
-        state.setRex(NameEx(state.arena.cellFalse().toString))
+        if (state.theory == CellTheory()) {
+          state.setRex(NameEx(state.arena.cellFalse().toString))
+        } else {
+          state.setRex(NameEx(state.solverCtx.falseConst))
+        }
 
       case ValEx(TlaTrue) =>
-        state.setRex(NameEx(state.arena.cellTrue().toString))
+        if (state.theory == CellTheory()) {
+          state.setRex(NameEx(state.arena.cellTrue().toString))
+        } else {
+          state.setRex(NameEx(state.solverCtx.trueConst))
+        }
 
       case ValEx(TlaBoolSet) =>
         state.setRex(NameEx(state.arena.cellBoolean().toString))

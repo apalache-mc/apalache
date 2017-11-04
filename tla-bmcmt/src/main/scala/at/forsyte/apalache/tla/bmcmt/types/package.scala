@@ -4,32 +4,38 @@ package object types {
   /**
     * A simple type system for the symbolic memory cells.
     */
-  sealed abstract class CellType {
+  sealed abstract class CellT {
     /**
       * Test whether two types may produce objects that are comparable.
       *
       * @param other other type
       * @return true, if objects of the given types may be comparable
       */
-    def comparableWith(other: CellType): Boolean = {
+    def comparableWith(other: CellT): Boolean = {
       (this, other) match {
-        case (UnknownType(), _) =>
+        case (UnknownT(), _) =>
           true
 
-        case (_, UnknownType()) =>
+        case (_, UnknownT()) =>
           true
 
-        case (BoolType(), BoolType()) =>
+        case (BoolT(), BoolT()) =>
           true
 
-        case (IntType(), IntType()) =>
+        case (IntT(), IntT()) =>
           true
 
-        case (FinSetType(left), FinSetType(right)) =>
+        case (FinSetT(left), FinSetT(right)) =>
           left.comparableWith(right)
 
-        case (FunType(leftDom, leftCodom), FunType(rightDom, rightCodom)) =>
+        case (FunT(leftDom, leftCodom), FunT(rightDom, rightCodom)) =>
           leftDom.comparableWith(rightDom) && leftCodom.comparableWith(rightCodom)
+
+        case (SumT(leftTypes), right @ _) =>
+          leftTypes.exists(_.comparableWith(right))
+
+        case (left @ _, SumT(rightTypes)) =>
+          rightTypes.exists(left.comparableWith)
 
         case _ =>
           false
@@ -40,25 +46,29 @@ package object types {
   /**
     * An unknown variable, or a type variable.
     */
-  case class UnknownType() extends CellType {
-  }
+  case class UnknownT() extends CellT
 
   /**
     * A Boolean cell type.
     */
-  case class BoolType() extends CellType
+  case class BoolT() extends CellT
 
   /**
     * An integer cell type.
     */
-  case class IntType() extends CellType
+  case class IntT() extends CellT
+
+  /**
+    * Sum type T1 + ... + Tn.
+    */
+  case class SumT(components: Seq[CellT]) extends CellT
 
   /**
     * A finite set.
     *
     * @param elemType the elements type
     */
-  case class FinSetType(elemType: CellType) extends CellType
+  case class FinSetT(elemType: CellT) extends CellT
 
   /**
     * A function type.
@@ -66,5 +76,5 @@ package object types {
     * @param domType   the type of the domain (must be a finite set).
     * @param codomType type of the co-domain (must be a set).
     */
-  case class FunType(domType: CellType, codomType: CellType) extends CellType
+  case class FunT(domType: CellT, codomType: CellT) extends CellT
 }
