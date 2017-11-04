@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 import com.microsoft.z3._
@@ -142,6 +142,10 @@ class Z3SolverContext extends SolverContext {
           throw new SmtEncodingException("A number constant is too large to fit in Long: " + num)
         }
 
+      case OperEx(oper: TlaArithOper, lex, rex) =>
+        // convert to an arithmetic expression
+        toArithExpr(ex)
+
       case OperEx(TlaOper.eq, lhs@NameEx(lname), rhs@NameEx(rname)) =>
         if (CellTheory().hasConst(lname) && CellTheory().hasConst(rname)) {
           // just comparing cells
@@ -205,6 +209,32 @@ class Z3SolverContext extends SolverContext {
 
       case _ =>
         throw new CheckerException("Incomparable expressions")
+    }
+  }
+
+  private def toArithExpr(ex: TlaEx): Expr = {
+    ex match {
+      case NameEx(name) if IntTheory().hasConst(name) =>
+        z3context.mkIntConst(name)
+
+      case OperEx(TlaArithOper.lt, left, right) =>
+        z3context.mkLt(toArithExpr(left).asInstanceOf[ArithExpr],
+          toArithExpr(right).asInstanceOf[ArithExpr])
+
+      case OperEx(TlaArithOper.le, left, right) =>
+        z3context.mkLe(toArithExpr(left).asInstanceOf[ArithExpr],
+          toArithExpr(right).asInstanceOf[ArithExpr])
+
+      case OperEx(TlaArithOper.gt, left, right) =>
+        z3context.mkGt(toArithExpr(left).asInstanceOf[ArithExpr],
+          toArithExpr(right).asInstanceOf[ArithExpr])
+
+      case OperEx(TlaArithOper.ge, left, right) =>
+        z3context.mkGe(toArithExpr(left).asInstanceOf[ArithExpr],
+          toArithExpr(right).asInstanceOf[ArithExpr])
+
+      case _ =>
+        throw new InvalidTlaExException("Unexpected arithmetic expression: " + ex, ex)
     }
   }
 }
