@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, IntT, UnknownT}
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
@@ -755,6 +755,27 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
     }
   }
 
+  test("""SE-SET-NE1: {{}, {{}}} != {{}, {{}} ~~> $B$... (false)""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val left = mkSet(mkSet(), mkSet(mkSet()))
+    val right = mkSet(mkSet(), mkSet(mkSet()))
+    val ex = OperEx(TlaOper.ne, left, right)
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        // not equal
+        solverContext.assertGroundExpr(predEx)
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
   test("SE-INT-CELL-EQ1: $C$_i: Int = $C$_j: Int ~~> valInt(...) = valInt(...)") {
     arena = arena.appendCell(IntT())
     val leftCell = arena.topCell
@@ -764,7 +785,7 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
       BoolTheory(), arena, new Binding, solverContext)
     val nextState = new SymbStateRewriter().rewriteUntilDone(state)
     nextState.ex match {
-      case NameEx(name) =>
+      case predEx @ NameEx(name) =>
         assert(BoolTheory().hasConst(name))
         assert(BoolTheory() == state.theory)
         assert(solverContext.sat())
@@ -772,20 +793,20 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
         solverContext.push()
         solverContext.assertGroundExpr(OperEx(TlaOper.eq, rightCell.toNameEx, ValEx(TlaInt(22))))
         solverContext.push()
-        solverContext.assertGroundExpr(OperEx(TlaOper.eq, state.ex, ValEx(TlaTrue)))
+        solverContext.assertGroundExpr(predEx)
         assert(solverContext.sat())
         solverContext.pop()
         solverContext.push()
-        solverContext.assertGroundExpr(OperEx(TlaOper.eq, state.ex, ValEx(TlaFalse)))
+        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, predEx))
         assert(!solverContext.sat())
         solverContext.pop()
         solverContext.pop()
         solverContext.assertGroundExpr(OperEx(TlaOper.eq, rightCell.toNameEx, ValEx(TlaInt(1981))))
         solverContext.push()
-        solverContext.assertGroundExpr(OperEx(TlaOper.eq, state.ex, ValEx(TlaFalse)))
+        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, predEx))
         assert(solverContext.sat())
         solverContext.pop()
-        solverContext.assertGroundExpr(OperEx(TlaOper.eq, state.ex, ValEx(TlaTrue)))
+        solverContext.assertGroundExpr(predEx)
         assert(!solverContext.sat())
 
 
@@ -794,13 +815,49 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
     }
   }
 
-  test("""SE-BOOL-EQ1: $B$1 = $B$2 ~~> $B$3""") {
+  test("SE-INT-EQ1: $Z$i = $Z$j ~~> $B$k") {
+    val leftInt = solverContext.introIntConst()
+    val rightInt = solverContext.introIntConst()
+    val state = new SymbState(OperEx(TlaOper.eq, NameEx(leftInt), NameEx(rightInt)),
+      BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        assert(BoolTheory() == state.theory)
+        assert(solverContext.sat())
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, NameEx(leftInt), ValEx(TlaInt(22))))
+        solverContext.push()
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, NameEx(rightInt), ValEx(TlaInt(22))))
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, predEx))
+        assert(!solverContext.sat())
+        solverContext.pop()
+        solverContext.pop()
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, NameEx(rightInt), ValEx(TlaInt(1981))))
+        solverContext.push()
+        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, predEx))
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.assertGroundExpr(predEx)
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-BOOL-NE1: $B$1 != $B$2 ~~> $B$3""") {
     arena = arena.appendCell(BoolT())
     val left = arena.topCell
     arena = arena.appendCell(BoolT())
     val right = arena.topCell
 
-    val ex = OperEx(TlaOper.eq, left.toNameEx, right.toNameEx)
+    val ex = OperEx(TlaOper.ne, left.toNameEx, right.toNameEx)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
     val nextState = new SymbStateRewriter().rewriteUntilDone(state)
     nextState.ex match {
@@ -814,19 +871,50 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
         assert(solverContext.sat())
         solverContext.push()
         solverContext.assertGroundExpr(OperEx(TlaOper.eq, right.toNameEx, arena.cellFalse().toNameEx))
-        assert(solverContext.sat())
+        assert(!solverContext.sat())
         solverContext.pop()
         solverContext.assertGroundExpr(OperEx(TlaOper.eq, right.toNameEx, arena.cellTrue().toNameEx))
-        assert(!solverContext.sat())
+        assert(solverContext.sat())
         solverContext.pop()
         // both true
         solverContext.assertGroundExpr(OperEx(TlaOper.eq, left.toNameEx, arena.cellTrue().toNameEx))
         assert(solverContext.sat())
         solverContext.push()
         solverContext.assertGroundExpr(OperEx(TlaOper.eq, right.toNameEx, arena.cellTrue().toNameEx))
-        assert(solverContext.sat())
+        assert(!solverContext.sat())
         solverContext.pop()
         solverContext.assertGroundExpr(OperEx(TlaOper.eq, right.toNameEx, arena.cellFalse().toNameEx))
+        assert(solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("SE-INT-CELL-CMP1: $C$_i: Int < $C$_j: Int ~~> valInt(...) < valInt(...)") {
+    arena = arena.appendCell(IntT())
+    val leftCell = arena.topCell
+    arena = arena.appendCell(IntT())
+    val rightCell = arena.topCell
+    val state = new SymbState(OperEx(TlaArithOper.lt, leftCell.toNameEx, rightCell.toNameEx),
+      BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case cmpEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        assert(BoolTheory() == state.theory)
+        assert(solverContext.sat())
+        solverContext.assertGroundExpr(cmpEx)
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, leftCell.toNameEx, ValEx(TlaInt(4))))
+        solverContext.push()
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, rightCell.toNameEx, ValEx(TlaInt(22))))
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, rightCell.toNameEx, ValEx(TlaInt(4))))
+        assert(!solverContext.sat())
+        solverContext.pop()
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, rightCell.toNameEx, ValEx(TlaInt(3))))
         assert(!solverContext.sat())
 
       case _ =>
@@ -834,5 +922,133 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
     }
   }
 
+  test("SE-INT-CELL-CMP1: $C$_i: Int <= $C$_j: Int ~~> valInt(...) <= valInt(...)") {
+    arena = arena.appendCell(IntT())
+    val leftCell = arena.topCell
+    arena = arena.appendCell(IntT())
+    val rightCell = arena.topCell
+    val state = new SymbState(OperEx(TlaArithOper.le, leftCell.toNameEx, rightCell.toNameEx),
+      BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case cmpEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        assert(BoolTheory() == state.theory)
+        assert(solverContext.sat())
+        solverContext.assertGroundExpr(cmpEx)
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, leftCell.toNameEx, ValEx(TlaInt(4))))
+        solverContext.push()
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, rightCell.toNameEx, ValEx(TlaInt(22))))
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, rightCell.toNameEx, ValEx(TlaInt(4))))
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, rightCell.toNameEx, ValEx(TlaInt(3))))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("SE-INT-CELL-CMP1: $C$_i: Int > $C$_j: Int ~~> valInt(...) > valInt(...)") {
+    arena = arena.appendCell(IntT())
+    val leftCell = arena.topCell
+    arena = arena.appendCell(IntT())
+    val rightCell = arena.topCell
+    val state = new SymbState(OperEx(TlaArithOper.gt, leftCell.toNameEx, rightCell.toNameEx),
+      BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case cmpEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        assert(BoolTheory() == state.theory)
+        assert(solverContext.sat())
+        solverContext.assertGroundExpr(cmpEx)
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, leftCell.toNameEx, ValEx(TlaInt(4))))
+        solverContext.push()
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, rightCell.toNameEx, ValEx(TlaInt(22))))
+        assert(!solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, rightCell.toNameEx, ValEx(TlaInt(4))))
+        assert(!solverContext.sat())
+        solverContext.pop()
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, rightCell.toNameEx, ValEx(TlaInt(3))))
+        assert(solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("SE-INT-CELL-CMP1: $C$_i: Int >= $C$_j: Int ~~> valInt(...) >= valInt(...)") {
+    arena = arena.appendCell(IntT())
+    val leftCell = arena.topCell
+    arena = arena.appendCell(IntT())
+    val rightCell = arena.topCell
+    val state = new SymbState(OperEx(TlaArithOper.ge, leftCell.toNameEx, rightCell.toNameEx),
+      BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case cmpEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        assert(BoolTheory() == state.theory)
+        assert(solverContext.sat())
+        solverContext.assertGroundExpr(cmpEx)
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, leftCell.toNameEx, ValEx(TlaInt(4))))
+        solverContext.push()
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, rightCell.toNameEx, ValEx(TlaInt(22))))
+        assert(!solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, rightCell.toNameEx, ValEx(TlaInt(4))))
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, rightCell.toNameEx, ValEx(TlaInt(3))))
+        assert(solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("SE-INT-CMP1: $Z$i != $Z$j ~~> $B$k") {
+    val leftInt = solverContext.introIntConst()
+    val rightInt = solverContext.introIntConst()
+    val state = new SymbState(OperEx(TlaOper.ne, NameEx(leftInt), NameEx(rightInt)),
+      BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        assert(BoolTheory() == state.theory)
+        assert(solverContext.sat())
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, NameEx(leftInt), ValEx(TlaInt(22))))
+        solverContext.push()
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, NameEx(rightInt), ValEx(TlaInt(22))))
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assert(!solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, predEx))
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.pop()
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, NameEx(rightInt), ValEx(TlaInt(1981))))
+        solverContext.push()
+        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, predEx))
+        assert(!solverContext.sat())
+        solverContext.pop()
+        solverContext.assertGroundExpr(predEx)
+        assert(solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
 
 }

@@ -12,11 +12,23 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
   */
 class Coercion(val stateRewriter: SymbStateRewriter) {
   def coerce(state: SymbState, targetTheory: Theory): SymbState = {
-    if (targetTheory == state.theory) {
+    // if the expression is a constant, find its theory
+    val exTheory =
+      if (BoolTheory().hasNameEx(state.ex)) {
+        BoolTheory()
+      } else if (IntTheory().hasNameEx(state.ex)) {
+        IntTheory()
+      } else if (CellTheory().hasNameEx(state.ex)) {
+        CellTheory()
+      } else {
+        state.theory // not a constant, assume the state theory
+      }
+
+    if (targetTheory == exTheory) {
       // nothing to do
-      state
+      state.setTheory(targetTheory)
     } else {
-      (state.theory, targetTheory) match {
+      (exTheory, targetTheory) match {
         case (CellTheory(), BoolTheory()) =>
           cellToBool(state)
 
@@ -41,7 +53,7 @@ class Coercion(val stateRewriter: SymbStateRewriter) {
         if (name == state.solverCtx.falseConst) {
           // $B$0 -> $C$0
           state.setRex(state.arena.cellFalse().toNameEx)
-              .setTheory(CellTheory())
+            .setTheory(CellTheory())
         } else if (name == state.solverCtx.trueConst) {
           // $B$1 -> $C$1
           state.setRex(state.arena.cellTrue().toNameEx)

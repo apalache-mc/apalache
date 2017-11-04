@@ -23,6 +23,18 @@ package object bmcmt {
     def hasConst(name: String): Boolean
 
     /**
+      * Check whether a TLA expression is NameEx(name) and hasConst(name) holds true.
+      * @param tlaEx a TLA expression
+      * @return true, if tlaEx is NameEx(name) and name is a name of a theory constant.
+      */
+    def hasNameEx(tlaEx: TlaEx): Boolean = {
+      tlaEx match {
+        case NameEx(name) if hasConst(name) => true
+        case _ => false
+      }
+    }
+
+    /**
       * Check, whether a TLA expression is NameEx and a theory constant.
       * If so, return its name.
       *
