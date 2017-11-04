@@ -5,18 +5,19 @@ import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 
 /**
-  * Integer comparisons: <, <=, >, >=. For equality and inequality, check EqRule and NeqRule.
-  * Implements SE-INT-CMP1.
+  * Integer arithmetic operations: +, -, *, div, mod.
+  * Implements rule SE-INT-ARITH1.
   *
   * @author Igor Konnov
   */
-class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
+class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
-      case OperEx(TlaArithOper.lt, _, _)
-           | OperEx(TlaArithOper.le, _, _)
-           | OperEx(TlaArithOper.gt, _, _)
-           | OperEx(TlaArithOper.ge, _, _)
+      case OperEx(TlaArithOper.plus, _, _)
+           | OperEx(TlaArithOper.minus, _, _)
+           | OperEx(TlaArithOper.mult, _, _)
+           | OperEx(TlaArithOper.div, _, _)
+           | OperEx(TlaArithOper.mod, _, _)
       => true
 
       case _ => false
@@ -25,22 +26,22 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = state.ex match {
     case OperEx(oper: TlaArithOper, lex @ NameEx(left), rex @ NameEx(right))
-      if (oper == TlaArithOper.lt || oper == TlaArithOper.le
-        || oper == TlaArithOper.gt || oper == TlaArithOper.ge)
+      if (oper == TlaArithOper.plus || oper == TlaArithOper.minus
+        || oper == TlaArithOper.mult || oper == TlaArithOper.div || oper == TlaArithOper.mod)
     =>
       val leftState = rewriter.coerce(state.setRex(lex), IntTheory())
       val rightState = rewriter.coerce(leftState.setRex(rex), IntTheory())
-      // compare integers directly in SMT
-      val eqPred = state.solverCtx.introBoolConst()
+      // introduce an integer constant to store the result
+      val intConst = state.solverCtx.introIntConst()
       val cons =
         OperEx(TlaOper.eq,
-          NameEx(eqPred),
+          NameEx(intConst),
           OperEx(oper, leftState.ex, rightState.ex))
       state.solverCtx.assertGroundExpr(cons)
-      val finalState = state.setTheory(BoolTheory()).setRex(NameEx(eqPred))
+      val finalState = state.setTheory(IntTheory()).setRex(NameEx(intConst))
       rewriter.coerce(finalState, state.theory)
 
     case _ =>
-      throw new RewriterException("IntCmpRule is not applicable")
+      throw new RewriterException("IntArithRule is not applicable")
   }
 }

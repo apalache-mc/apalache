@@ -233,6 +233,26 @@ class Z3SolverContext extends SolverContext {
         z3context.mkGe(toArithExpr(left).asInstanceOf[ArithExpr],
           toArithExpr(right).asInstanceOf[ArithExpr])
 
+      case OperEx(TlaArithOper.plus, left, right) =>
+        z3context.mkAdd(toArithExpr(left).asInstanceOf[ArithExpr],
+          toArithExpr(right).asInstanceOf[ArithExpr])
+
+      case OperEx(TlaArithOper.minus, left, right) =>
+        z3context.mkSub(toArithExpr(left).asInstanceOf[ArithExpr],
+          toArithExpr(right).asInstanceOf[ArithExpr])
+
+      case OperEx(TlaArithOper.mult, left, right) =>
+        z3context.mkMul(toArithExpr(left).asInstanceOf[ArithExpr],
+          toArithExpr(right).asInstanceOf[ArithExpr])
+
+      case OperEx(TlaArithOper.div, left, right) =>
+        z3context.mkDiv(toArithExpr(left).asInstanceOf[ArithExpr],
+          toArithExpr(right).asInstanceOf[ArithExpr])
+
+      case OperEx(TlaArithOper.mod, left, right) =>
+        z3context.mkMod(toArithExpr(left).asInstanceOf[IntExpr],
+          toArithExpr(right).asInstanceOf[IntExpr])
+
       case _ =>
         throw new InvalidTlaExException("Unexpected arithmetic expression: " + ex, ex)
     }
