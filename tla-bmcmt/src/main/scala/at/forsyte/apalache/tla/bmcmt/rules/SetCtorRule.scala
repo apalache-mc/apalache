@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.{FinSetType, UnknownType}
+import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, SumT, UnknownT}
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
@@ -21,20 +21,28 @@ class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case OperEx(TlaSetOper.enumSet, elems @ _*) =>
+        // switch to cell theory
         val (newState: SymbState, newEs: Seq[TlaEx]) =
-          rewriter.rewriteSeqUntilDone(state, elems)
-        val cells = newEs.map(e => newState.arena.findCellByName(CellTheory().nameExToString(e)))
-        // FIXME: introduce a sum type for the elements?
-        var arena = newState.arena.appendCell(FinSetType(UnknownType()))
+          rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), elems)
+        val cells = newEs.map(newState.arena.findCellByNameEx)
+        // get the cell types
+        val elemType =
+          cells.map(_.cellType).toSet.toList match {
+            case List() => UnknownT()
+            case hd :: List() => hd
+            case list @ _ => SumT(list)
+          }
+        val arena = newState.arena.appendCell(FinSetT(elemType))
         val newCell = arena.topCell
-        arena = cells.foldLeft(arena)((a, e) => a.appendHas(newCell, e))
+        val newArena = cells.foldLeft(arena)((a, e) => a.appendHas(newCell, e))
         def addIn(c: ArenaCell): Unit = {
           val inExpr = OperEx(TlaSetOper.in, c.toNameEx, newCell.toNameEx)
-          state.solverCtx.assertCellExpr(inExpr)
+          state.solverCtx.assertGroundExpr(inExpr)
         }
         cells.foreach(addIn)
-        state.setArena(arena).setRex(newCell.toNameEx)
-
+        val finalState =
+          state.setArena(newArena).setRex(newCell.toNameEx)
+        rewriter.coerce(finalState, state.theory)
 
       case _ =>
         throw new RewriterException("SetCtorRule is not applicable")

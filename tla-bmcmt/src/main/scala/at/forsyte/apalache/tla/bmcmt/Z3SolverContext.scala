@@ -12,7 +12,7 @@ import com.microsoft.z3._
   */
 class Z3SolverContext extends SolverContext {
   var level: Int = 0
-  var nBoolConsts: Int = 0
+  var nBoolConsts: Int = 2 // $B$0 and $B$1 are always false and true resp.
   var nIntConsts: Int = 0
   private val z3context: Context = new Context()
   private val z3solver = z3context.mkSolver()
@@ -24,6 +24,11 @@ class Z3SolverContext extends SolverContext {
     z3context.mkFuncDecl("in", Array[Sort](cellSort, cellSort), z3context.getBoolSort)
   private val valIntFun: FuncDecl =
     z3context.mkFuncDecl("valInt", cellSort, z3context.getIntSort)
+
+  def falseConst: String = BoolTheory().namePrefix + "0" // $B$0
+  def trueConst: String = BoolTheory().namePrefix + "1"  // $B$1
+  assertGroundExpr(NameEx(trueConst))
+  assertGroundExpr(OperEx(TlaBoolOper.not, NameEx(falseConst)))
 
   /**
     * Dispose whatever has to be disposed in the end.
@@ -46,7 +51,7 @@ class Z3SolverContext extends SolverContext {
     *
     * @param ex a simplified TLA+ expression over cells
     */
-  def assertCellExpr(ex: TlaEx): Unit = {
+  def assertGroundExpr(ex: TlaEx): Unit = {
     z3solver.add(toExpr(ex).asInstanceOf[BoolExpr])
   }
 

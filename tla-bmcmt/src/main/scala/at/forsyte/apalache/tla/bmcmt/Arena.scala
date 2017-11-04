@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.types.{BoolType, CellType, FinSetType, UnknownType}
+import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FinSetT, UnknownT}
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
@@ -13,14 +13,14 @@ object Arena {
 
   def create(solverContext: SolverContext): Arena = {
     val arena = new Arena(solverContext, 0,
-      new ArenaCell(-1, UnknownType()),
+      new ArenaCell(-1, UnknownT()),
       HashMap(),
       new LazyEquality(solverContext),
       new HashMap())
     // by convention, the first cells have the following semantics: 0 stores FALSE, 1 stores TRUE, 2 stores BOOLEAN
-    val newArena = arena.appendCellWithoutDeclaration(BoolType())
-      .appendCellWithoutDeclaration(BoolType())
-      .appendCellWithoutDeclaration(FinSetType(BoolType()))
+    val newArena = arena.appendCellWithoutDeclaration(BoolT())
+      .appendCellWithoutDeclaration(BoolT())
+      .appendCellWithoutDeclaration(FinSetT(BoolT()))
     // declare the cells in SMT
     val cellFalse = newArena.cellFalse()
     val cellTrue = newArena.cellTrue()
@@ -28,10 +28,10 @@ object Arena {
     solverContext.declareCell(cellFalse)
     solverContext.declareCell(cellTrue)
     solverContext.declareCell(cellBoolean)
-    solverContext.assertCellExpr(OperEx(TlaOper.ne, cellFalse.toNameEx, cellTrue.toNameEx))
+    solverContext.assertGroundExpr(OperEx(TlaOper.ne, cellFalse.toNameEx, cellTrue.toNameEx))
     // assert in(c_FALSE, c_BOOLEAN) and in(c_TRUE, c_BOOLEAN)
-    solverContext.assertCellExpr(OperEx(TlaSetOper.in, cellFalse.toNameEx, cellBoolean.toNameEx))
-    solverContext.assertCellExpr(OperEx(TlaSetOper.in, cellTrue.toNameEx, cellBoolean.toNameEx))
+    solverContext.assertGroundExpr(OperEx(TlaSetOper.in, cellFalse.toNameEx, cellBoolean.toNameEx))
+    solverContext.assertGroundExpr(OperEx(TlaSetOper.in, cellTrue.toNameEx, cellBoolean.toNameEx))
     // link c_BOOLEAN to c_FALSE and c_TRUE
     newArena.appendHas(cellBoolean, cellFalse)
       .appendHas(cellBoolean, cellTrue)
@@ -98,14 +98,14 @@ class Arena private(val solverContext: SolverContext,
     * @param cellType a cell type
     * @return new arena
     */
-  def appendCell(cellType: CellType): Arena = {
+  def appendCell(cellType: CellT): Arena = {
     val newArena = appendCellWithoutDeclaration(cellType)
     val newCell = newArena.topCell
     solverContext.declareCell(newCell)
     cellType match {
-      case BoolType() =>
+      case BoolT() =>
         val cons = OperEx(TlaBoolOper.or, newCell.mkTlaEq(cellFalse()), newCell.mkTlaEq(cellTrue()))
-        solverContext.assertCellExpr(cons)
+        solverContext.assertGroundExpr(cons)
 
       case _ =>
         ()
@@ -113,7 +113,7 @@ class Arena private(val solverContext: SolverContext,
     newArena
   }
 
-  protected def appendCellWithoutDeclaration(cellType: CellType): Arena = {
+  protected def appendCellWithoutDeclaration(cellType: CellT): Arena = {
     val newCell = new ArenaCell(cellCount, cellType)
     new Arena(solverContext, cellCount + 1, newCell,
       cellMap + (newCell.toString -> newCell), lazyEquality, hasEdges)
@@ -159,5 +159,27 @@ class Arena private(val solverContext: SolverContext,
   def isLinkedViaHas(src: ArenaCell, dst: ArenaCell): Boolean = {
     def default(c: ArenaCell): List[ArenaCell] = List()
     hasEdges.applyOrElse(src, default).contains(dst)
+  }
+
+  /**
+    * Print the graph structure induced by 'has' edges starting with root.
+    *
+    * @param root a cell to start from
+    */
+  def subgraphToString(root: ArenaCell): String = {
+    val builder = StringBuilder.newBuilder
+    def print(cell: ArenaCell): Unit = {
+      builder.append(cell.id)
+      builder.append(" ")
+      val cells = getHas(cell)
+      if (cells.nonEmpty) {
+        builder.append("has:(")
+        for (c <- cells)
+          print(c)
+        builder.append(")")
+      }
+    }
+    print(root)
+    builder.mkString
   }
 }

@@ -59,7 +59,7 @@ class Checker(mod: TlaModule, initOp: TlaOperDecl, nextOp: TlaOperDecl) {
       val finalState = smallStep(point.state)
       finalState.ex match {
         case NameEx(name) if CellTheory().hasConst(name) =>
-          finalState.solverCtx.assertCellExpr(OperEx(TlaOper.eq, finalState.ex, finalState.arena.cellTrue().toNameEx))
+          finalState.solverCtx.assertGroundExpr(OperEx(TlaOper.eq, finalState.ex, finalState.arena.cellTrue().toNameEx))
 
         case _ =>
           throw new CheckerException("Expected a cell, found a TLA expression")

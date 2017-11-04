@@ -58,7 +58,7 @@ trait SolverContext {
     *
     * @param ex a simplified TLA+ expression over cells
     */
-  def assertCellExpr(ex: TlaEx): Unit
+  def assertGroundExpr(ex: TlaEx): Unit
 
   /**
     * Is the current context satisfiable?
@@ -66,5 +66,19 @@ trait SolverContext {
     * @return true if and only if the context is satisfiable
     */
   def sat(): Boolean
+
+  /**
+    * Get the name of the reserved Boolean constant that is always false
+    * (useful to avoid messing with the keywords).
+    * @return the name (typically, $B$0)
+    */
+  def falseConst: String
+
+  /**
+    * Get the name of the reserved Boolean constant that is always false
+    * (useful to avoid messing with the keywords).
+    * @return the name (typically, $B$1)
+    */
+  def trueConst: String
 }
 

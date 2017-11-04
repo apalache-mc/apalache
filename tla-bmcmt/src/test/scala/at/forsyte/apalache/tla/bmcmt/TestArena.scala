@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.types.{BoolType, FinSetType, UnknownType}
+import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, UnknownT}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -10,19 +10,19 @@ class TestArena extends FunSuite {
   test("create cells") {
     val solverContext = new Z3SolverContext()
     val emptyArena = Arena.create(solverContext)
-    val arena = emptyArena.appendCell(UnknownType())
+    val arena = emptyArena.appendCell(UnknownT())
     assert(emptyArena.cellCount + 1 == arena.cellCount)
-    assert(UnknownType() == arena.topCell.cellType)
-    val arena2 = arena.appendCell(BoolType())
+    assert(UnknownT() == arena.topCell.cellType)
+    val arena2 = arena.appendCell(BoolT())
     assert(emptyArena.cellCount + 2 == arena2.cellCount)
-    assert(BoolType() == arena2.topCell.cellType)
+    assert(BoolT() == arena2.topCell.cellType)
   }
 
   test("add 'has' edges") {
     val solverContext = new Z3SolverContext()
-    val arena = Arena.create(solverContext).appendCell(FinSetType(UnknownType()))
+    val arena = Arena.create(solverContext).appendCell(FinSetT(UnknownT()))
     val set = arena.topCell
-    val arena2 = arena.appendCell(BoolType())
+    val arena2 = arena.appendCell(BoolT())
     val elem = arena2.topCell
     val arena3 = arena2.appendHas(set, elem)
     assert(List(elem) == arena3.getHas(set))

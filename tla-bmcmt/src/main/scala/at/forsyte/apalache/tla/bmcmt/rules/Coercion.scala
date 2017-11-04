@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.{BoolType, IntType}
+import at.forsyte.apalache.tla.bmcmt.types.{BoolT, IntT}
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 
@@ -38,15 +38,26 @@ class Coercion(val stateRewriter: SymbStateRewriter) {
   private def boolToCell(state: SymbState): SymbState = {
     state.ex match {
       case NameEx(name) if BoolTheory().hasConst(name) =>
-        val newArena = state.arena.appendCell(BoolType())
-        val newCell = newArena.topCell
-        val equiv = OperEx(TlaBoolOper.equiv,
-          NameEx(name),
-          OperEx(TlaOper.eq, newCell.toNameEx, newArena.cellTrue().toNameEx))
-        state.solverCtx.assertCellExpr(equiv)
-        state.setArena(newArena)
-          .setRex(newCell.toNameEx)
-          .setTheory(CellTheory())
+        if (name == state.solverCtx.falseConst) {
+          // $B$0 -> $C$0
+          state.setRex(state.arena.cellFalse().toNameEx)
+              .setTheory(CellTheory())
+        } else if (name == state.solverCtx.trueConst) {
+          // $B$1 -> $C$1
+          state.setRex(state.arena.cellTrue().toNameEx)
+            .setTheory(CellTheory())
+        } else {
+          // the general case
+          val newArena = state.arena.appendCell(BoolT())
+          val newCell = newArena.topCell
+          val equiv = OperEx(TlaBoolOper.equiv,
+            NameEx(name),
+            OperEx(TlaOper.eq, newCell.toNameEx, newArena.cellTrue().toNameEx))
+          state.solverCtx.assertGroundExpr(equiv)
+          state.setArena(newArena)
+            .setRex(newCell.toNameEx)
+            .setTheory(CellTheory())
+        }
 
       case _ =>
         throw new InvalidTlaExException("Expected a Boolean predicate, found: " + state.ex, state.ex)
@@ -56,13 +67,24 @@ class Coercion(val stateRewriter: SymbStateRewriter) {
   private def cellToBool(state: SymbState): SymbState = {
     state.ex match {
       case NameEx(name) if CellTheory().hasConst(name) =>
-        val pred = state.solverCtx.introBoolConst()
-        val equiv = OperEx(TlaBoolOper.equiv,
-          NameEx(pred),
-          OperEx(TlaOper.eq, NameEx(name), state.arena.cellTrue().toNameEx))
-        state.solverCtx.assertCellExpr(equiv)
-        state.setRex(NameEx(pred))
-          .setTheory(BoolTheory())
+        if (name == state.arena.cellFalse().toString) {
+          // $C$0 -> $B$0
+          state.setRex(NameEx(state.solverCtx.falseConst))
+            .setTheory(BoolTheory())
+        } else if (name == state.arena.cellTrue().toString) {
+          // $C$1 -> $B$1
+          state.setRex(NameEx(state.solverCtx.trueConst))
+            .setTheory(BoolTheory())
+        } else {
+          // general case
+          val pred = state.solverCtx.introBoolConst()
+          val equiv = OperEx(TlaBoolOper.equiv,
+            NameEx(pred),
+            OperEx(TlaOper.eq, NameEx(name), state.arena.cellTrue().toNameEx))
+          state.solverCtx.assertGroundExpr(equiv)
+          state.setRex(NameEx(pred))
+            .setTheory(BoolTheory())
+        }
 
       case _ =>
         throw new InvalidTlaExException("Expected a cell, found: " + state.ex, state.ex)
@@ -72,10 +94,10 @@ class Coercion(val stateRewriter: SymbStateRewriter) {
   private def intToCell(state: SymbState): SymbState = {
     state.ex match {
       case NameEx(name) if IntTheory().hasConst(name) =>
-        val newArena = state.arena.appendCell(IntType())
+        val newArena = state.arena.appendCell(IntT())
         val newCell = newArena.topCell
         val equiv = OperEx(TlaOper.eq, NameEx(name), newCell.toNameEx)
-        state.solverCtx.assertCellExpr(equiv)
+        state.solverCtx.assertGroundExpr(equiv)
         state.setArena(newArena)
           .setRex(newCell.toNameEx)
           .setTheory(CellTheory())
@@ -90,7 +112,7 @@ class Coercion(val stateRewriter: SymbStateRewriter) {
       case NameEx(name) if CellTheory().hasConst(name) =>
         val intConst = state.solverCtx.introIntConst()
         val equiv = OperEx(TlaOper.eq, NameEx(name), NameEx(intConst))
-        state.solverCtx.assertCellExpr(equiv)
+        state.solverCtx.assertGroundExpr(equiv)
         state.setRex(NameEx(intConst))
           .setTheory(IntTheory())
 
