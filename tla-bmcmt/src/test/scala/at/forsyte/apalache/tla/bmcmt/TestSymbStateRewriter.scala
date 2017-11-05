@@ -1479,8 +1479,10 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
         assert(BoolTheory().hasConst(name))
         assert(solverContext.sat())
         // check equality
+        solverContext.push()
         solverContext.assertGroundExpr(predEx)
         assert(solverContext.sat())
+        solverContext.pop()
         solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, predEx))
         assert(!solverContext.sat())
 
