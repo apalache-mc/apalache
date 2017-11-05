@@ -1462,4 +1462,30 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
         fail("Unexpected rewriting result")
     }
   }
+
+  test("""SE-SET-CUP[1-2]: {1, 3} \cup {3, 4} = {1, 3, 4}""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val left = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(3)))
+    val right = mkSet(ValEx(TlaInt(3)), ValEx(TlaInt(4)))
+    val unionSet = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(3)), ValEx(TlaInt(4)))
+    val cupSet = OperEx(TlaSetOper.cup, left, right)
+    val cupSetEqUnion = OperEx(TlaOper.eq, cupSet, unionSet)
+
+    val state = new SymbState(cupSetEqUnion, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        assert(solverContext.sat())
+        // check equality
+        solverContext.assertGroundExpr(predEx)
+        assert(solverContext.sat())
+        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, predEx))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
 }
