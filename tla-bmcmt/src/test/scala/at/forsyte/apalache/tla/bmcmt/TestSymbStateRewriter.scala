@@ -1320,7 +1320,7 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
     }
   }
 
-  test("""SE-SET-FILTER[1-2]: {x \in {1,2,3,4} : x % 2 = 0 ~~> {2, 4}""") {
+  test("""SE-SET-FILTER[1-2]: {x \in {1,2,3,4} : x % 2 = 0} ~~> {2, 4}""") {
     def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
 
     val set = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaInt(3)), ValEx(TlaInt(4)))
@@ -1377,6 +1377,76 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
     val inFilteredSet = OperEx(TlaSetOper.in, ValEx(TlaInt(3)), filteredSet)
 
     val state = new SymbState(inFilteredSet, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case membershipEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(membershipEx)
+        assert(!solverContext.sat())
+        solverContext.pop()
+        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, membershipEx))
+        assert(solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SET-MAP[1-2]: {x / 3: x \in {1,2,3,4}} ~~> $C$k""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val set = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaInt(3)), ValEx(TlaInt(4)))
+    val mapping = OperEx(TlaArithOper.div, NameEx("x"), ValEx(TlaInt(3)))
+    val mappedSet = OperEx(TlaSetOper.map, mapping, NameEx("x"), set)
+
+    val state = new SymbState(mappedSet, CellTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case membershipEx @ NameEx(name) =>
+        assert(CellTheory().hasConst(name))
+        assert(solverContext.sat())
+        // membership tests are in the tests below
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SET-MAP[1-2]: 0 \in {x / 3: x \in {1,2,3,4}} ~~> $B$k""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val set = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaInt(3)), ValEx(TlaInt(4)))
+    val mapping = OperEx(TlaArithOper.div, NameEx("x"), ValEx(TlaInt(3)))
+    val mappedSet = OperEx(TlaSetOper.map, mapping, NameEx("x"), set)
+    val inMappedSet = OperEx(TlaSetOper.in, ValEx(TlaInt(0)), mappedSet)
+
+    val state = new SymbState(inMappedSet, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case membershipEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(membershipEx)
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, membershipEx))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SET-MAP[1-2]: 2 \in {x / 3: x \in {1,2,3,4}} ~~> $B$k""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val set = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaInt(3)), ValEx(TlaInt(4)))
+    val mapping = OperEx(TlaArithOper.div, NameEx("x"), ValEx(TlaInt(3)))
+    val mappedSet = OperEx(TlaSetOper.map, mapping, NameEx("x"), set)
+    val inMappedSet = OperEx(TlaSetOper.in, ValEx(TlaInt(2)), mappedSet)
+
+    val state = new SymbState(inMappedSet, BoolTheory(), arena, new Binding, solverContext)
     val nextState = new SymbStateRewriter().rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx @ NameEx(name) =>
