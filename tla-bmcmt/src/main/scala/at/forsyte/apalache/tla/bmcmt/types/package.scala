@@ -100,8 +100,8 @@ package object types {
     * A function type.
     *
     * @param domType   the type of the domain (must be a finite set).
-    * @param codomType type of the co-domain (must be a set).
+    * @param resultType result type (not co-domain!)
     */
-  case class FunT(domType: CellT, codomType: CellT) extends CellT
+  case class FunT(domType: CellT, resultType: CellT) extends CellT
 
 }

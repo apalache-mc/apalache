@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.lir.TlaEx
+import com.microsoft.z3.FuncDecl
 
 /**
   * A context that stores the SMT constraints that are generated in the course of symbolic exploration.
@@ -54,6 +55,14 @@ trait SolverContext {
   def introIntConst(): String
 
   /**
+    * Introduce an uninterpreted function associated with a cell.
+    *
+    * @param cell an arena cell
+    * @return a function declaration (also stored in the context)
+    */
+  def getOrIntroCellFun(cell: ArenaCell): FuncDecl
+
+    /**
     * Assert that a Boolean TLA+ expression holds true.
     *
     * @param ex a simplified TLA+ expression over cells
@@ -80,5 +89,13 @@ trait SolverContext {
     * @return the name (typically, $B$1)
     */
   def trueConst: String
+
+  /**
+    * Get the name of the reserved Boolean constant that should be equal true,
+    * whenever a failure occured during an execution
+    *
+    * @return the name (typically, $B$2)
+    */
+  def failConst: String
 }
 
