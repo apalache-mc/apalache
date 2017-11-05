@@ -1468,11 +1468,11 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
 
     val left = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(3)))
     val right = mkSet(ValEx(TlaInt(3)), ValEx(TlaInt(4)))
-    val unionSet = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(3)), ValEx(TlaInt(4)))
+    val expected = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(3)), ValEx(TlaInt(4)))
     val cupSet = OperEx(TlaSetOper.cup, left, right)
-    val cupSetEqUnion = OperEx(TlaOper.eq, cupSet, unionSet)
+    val eqExpected = OperEx(TlaOper.eq, cupSet, expected)
 
-    val state = new SymbState(cupSetEqUnion, BoolTheory(), arena, new Binding, solverContext)
+    val state = new SymbState(eqExpected, BoolTheory(), arena, new Binding, solverContext)
     val nextState = new SymbStateRewriter().rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(name) =>
@@ -1491,17 +1491,44 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
     }
   }
 
-
   test("""SE-SET-CAP[1-2]: {1, 3} \cap {3, 4} = {3}""") {
     def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
 
     val left = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(3)))
     val right = mkSet(ValEx(TlaInt(3)), ValEx(TlaInt(4)))
-    val unionSet = mkSet(ValEx(TlaInt(3)))
+    val expected = mkSet(ValEx(TlaInt(3)))
     val capSet = OperEx(TlaSetOper.cap, left, right)
-    val capSetEqUnion = OperEx(TlaOper.eq, capSet, unionSet)
+    val eqExpected = OperEx(TlaOper.eq, capSet, expected)
 
-    val state = new SymbState(capSetEqUnion, BoolTheory(), arena, new Binding, solverContext)
+    val state = new SymbState(eqExpected, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        assert(solverContext.sat())
+        // check equality
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, predEx))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SET-DIFF[1-2]: {1, 3, 5} \cap {1, 4} = {3, 5}""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val left = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(3)), ValEx(TlaInt(5)))
+    val right = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(4)))
+    val expected = mkSet(ValEx(TlaInt(3)), ValEx(TlaInt(5)))
+    val minusSet = OperEx(TlaSetOper.setminus, left, right)
+    val eqExpected = OperEx(TlaOper.eq, minusSet, expected)
+
+    val state = new SymbState(eqExpected, BoolTheory(), arena, new Binding, solverContext)
     val nextState = new SymbStateRewriter().rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(name) =>
