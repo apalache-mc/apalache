@@ -1,9 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 import com.microsoft.z3._
+
+import scala.collection.mutable
 
 /**
   * An implementation of a SolverContext using Z3.
@@ -12,7 +14,7 @@ import com.microsoft.z3._
   */
 class Z3SolverContext extends SolverContext {
   var level: Int = 0
-  var nBoolConsts: Int = 2 // $B$0 and $B$1 are always false and true resp.
+  var nBoolConsts: Int = 3 // the first three cells are reserved for: false, true, fail
   var nIntConsts: Int = 0
   private val z3context: Context = new Context()
   private val z3solver = z3context.mkSolver()
@@ -22,11 +24,21 @@ class Z3SolverContext extends SolverContext {
     */
   private val inFun: FuncDecl =
     z3context.mkFuncDecl("in", Array[Sort](cellSort, cellSort), z3context.getBoolSort)
+  /**
+    * Uninterpreted function to store integer values of integer cells.
+    */
   private val valIntFun: FuncDecl =
     z3context.mkFuncDecl("valInt", cellSort, z3context.getIntSort)
+  /**
+    * Uninterpreted functions C -> C associated with function cells.
+    */
+  private val cellFuns: mutable.Map[String, FuncDecl] = new mutable.HashMap[String, FuncDecl]()
+
 
   def falseConst: String = BoolTheory().namePrefix + "0" // $B$0
-  def trueConst: String = BoolTheory().namePrefix + "1"  // $B$1
+  def trueConst: String = BoolTheory().namePrefix + "1" // $B$1
+  // this constant should equal true, when a failure occured
+  def failConst: String = BoolTheory().namePrefix + "2" // $B$2
   assertGroundExpr(NameEx(trueConst))
   assertGroundExpr(OperEx(TlaBoolOper.not, NameEx(falseConst)))
 
@@ -76,6 +88,26 @@ class Z3SolverContext extends SolverContext {
     val name = "%s%d".format(IntTheory().namePrefix, nIntConsts)
     nIntConsts += 1
     name
+  }
+
+  /**
+    * Introduce an uninterpreted function associated with a cell.
+    *
+    * @param cell an arena cell
+    * @return a function declaration (also stored in the context)
+    */
+  def getOrIntroCellFun(cell: ArenaCell): FuncDecl = {
+    val cellName = cell.toString
+    cellFuns.get(cellName) match {
+      case Some(funDecl) =>
+        funDecl
+
+      case None =>
+        val name = "fun%d".format(cell.id)
+        val funDecl = z3context.mkFuncDecl(name, cellSort, cellSort)
+        cellFuns.put(cellName, funDecl)
+        funDecl
+    }
   }
 
   /**
@@ -152,11 +184,11 @@ class Z3SolverContext extends SolverContext {
           z3context.mkEq(z3context.mkConst(lname, cellSort), z3context.mkConst(rname, cellSort))
         } else {
           // comparing integers and Boolean to cells, Booleans to Booleans, and Integers to Integers
-          toEqExpr(lhs, rhs, toExpr(lhs), toExpr(rhs))
+          toEqExpr(toExpr(lhs), toExpr(rhs))
         }
 
       case OperEx(TlaOper.eq, lhs, rhs) =>
-        toEqExpr(lhs, rhs, toExpr(lhs), toExpr(rhs))
+        toEqExpr(toExpr(lhs), toExpr(rhs))
 
       case OperEx(TlaOper.ne, lhs, rhs) =>
         z3context.mkNot(toExpr(OperEx(TlaOper.eq, lhs, rhs)).asInstanceOf[BoolExpr])
@@ -188,16 +220,22 @@ class Z3SolverContext extends SolverContext {
         val set = z3context.mkConst(setName, cellSort)
         z3context.mkApp(inFun, elem, set)
 
+      case OperEx(TlaFunOper.app, NameEx(funName), NameEx(argName)) =>
+        // apply the function associated with a cell
+        val fun = cellFuns.apply(funName)
+        val arg = z3context.mkConst(argName, cellSort)
+        z3context.mkApp(fun, arg)
+
       case _ =>
         throw new InvalidTlaExException("Unexpected TLA+ expression: " + ex, ex)
     }
   }
 
-  private def toEqExpr(lhs: TlaEx, rhs: TlaEx, le: Expr, re: Expr) = {
+  private def toEqExpr(le: Expr, re: Expr) = {
     (le, re) match {
       case (_: BoolExpr, _: BoolExpr)
            | (_: IntExpr, _: IntExpr) =>
-        z3context.mkEq(toExpr(lhs), toExpr(rhs))
+        z3context.mkEq(le, re)
 
       case (_: IntExpr, _: Expr) =>
         // comparing an integer constant and a value
@@ -206,6 +244,10 @@ class Z3SolverContext extends SolverContext {
       case (_: Expr, _: IntExpr) =>
         // comparing an integer constant and a value
         z3context.mkEq(z3context.mkApp(valIntFun, le), re)
+
+      case (_: Expr, _: Expr) =>
+        // comparing a cell constant against a function application
+        z3context.mkEq(le, re)
 
       case _ =>
         throw new CheckerException("Incomparable expressions")

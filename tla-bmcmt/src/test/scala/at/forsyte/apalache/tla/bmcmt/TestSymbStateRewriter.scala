@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, IntT, UnknownT}
-import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
@@ -1541,6 +1541,33 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
         solverContext.pop()
         solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, predEx))
         assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-FUN-CTOR[1-2]: [x \in {1,2,3,4} |-> x / 3: ] ~~> $C$k""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val set = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaInt(3)), ValEx(TlaInt(4)))
+    val mapping = OperEx(TlaArithOper.div, NameEx("x"), ValEx(TlaInt(3)))
+    val fun = OperEx(TlaFunOper.funDef, mapping, NameEx("x"), set)
+
+    val state = new SymbState(fun, CellTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case membershipEx @ NameEx(name) =>
+        assert(CellTheory().hasConst(name))
+        assert(solverContext.sat())
+        val cell = nextState.arena.findCellByName(name)
+        cell.cellType match {
+          case FunT(FinSetT(IntT()), IntT()) =>
+            () // OK
+
+          case _ =>
+            fail("Unexpected type")
+        }
 
       case _ =>
         fail("Unexpected rewriting result")
