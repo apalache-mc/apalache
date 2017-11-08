@@ -1,15 +1,15 @@
 package at.forsyte.apalache.tla.assignments
 
-import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.actions._
-import at.forsyte.apalache.tla.lir.plugins.Identifier
 import at.forsyte.apalache.tla.imp.SanyImporter
-
-import scala.io.Source
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.actions._
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.plugins.Identifier
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
+
+import scala.io.Source
 
 
 /**
@@ -74,7 +74,7 @@ class TestAssignments extends FunSuite {
 
     val src1 = Source.fromFile(testFolderPath + name1 + ".tla")
 
-    val (rootName1, modules1) = importer.load(name1, Source.fromFile(testFolderPath + name1 + ".tla") )
+    val (rootName1, modules1) = importer.loadFromSource(name1, Source.fromFile(testFolderPath + name1 + ".tla") )
     val phi_ =
       modules1(rootName1).declarations.find { _.name == "Next"} match {
         case Some(d: TlaOperDecl) =>

@@ -1,5 +1,8 @@
 package at.forsyte.apalache.tla.imp
 
+import java.io.{File, PrintWriter}
+import java.nio.file.Files
+
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.control.{LetInOper, TlaControlOper}
 import at.forsyte.apalache.tla.lir.oper._
@@ -27,7 +30,28 @@ class TestSanyImporter extends FunSuite {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("justASimpleTest", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("justASimpleTest", Source.fromString(text))
+    assert("justASimpleTest" == rootName)
+  }
+
+  test("empty module from a file") {
+    val text =
+      """---- MODULE justASimpleTest ----
+        |================================
+      """.stripMargin
+
+    val tempDir = Files.createTempDirectory("sanyimp").toFile
+    val temp = new File(tempDir, "justASimpleTest.tla")
+    val source = Source.fromString(text)
+    // write the contents to a temporary file
+    val pw = new PrintWriter(temp)
+    try {
+      source.getLines().foreach(line => pw.println(line))
+    } finally {
+      pw.close()
+    }
+
+    val (rootName, modules) = new SanyImporter().loadFromFile(temp)
     assert("justASimpleTest" == rootName)
   }
 
@@ -38,7 +62,7 @@ class TestSanyImporter extends FunSuite {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("onevar", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("onevar", Source.fromString(text))
     val mod = expectSingleModule("onevar", rootName, modules)
     assert(1 == mod.declarations.size)
 
@@ -58,7 +82,7 @@ class TestSanyImporter extends FunSuite {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("oneconst", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("oneconst", Source.fromString(text))
     val mod = expectSingleModule("oneconst", rootName, modules)
     assert(1 == mod.declarations.size)
 
@@ -75,7 +99,7 @@ class TestSanyImporter extends FunSuite {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("constop", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("constop", Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(1 == mod.declarations.size)
 
@@ -94,7 +118,7 @@ class TestSanyImporter extends FunSuite {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("constop", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("constop", Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(1 == mod.declarations.size)
 
@@ -113,7 +137,7 @@ class TestSanyImporter extends FunSuite {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("constop", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("constop", Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(1 == mod.declarations.size)
 
@@ -132,7 +156,7 @@ class TestSanyImporter extends FunSuite {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("constop", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("constop", Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(1 == mod.declarations.size)
 
@@ -151,7 +175,7 @@ class TestSanyImporter extends FunSuite {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("constop", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("constop", Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(1 == mod.declarations.size)
 
@@ -172,7 +196,7 @@ class TestSanyImporter extends FunSuite {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("constop", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("constop", Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(2 == mod.declarations.size)
 
@@ -193,7 +217,7 @@ class TestSanyImporter extends FunSuite {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("constop", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("constop", Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(2 == mod.declarations.size)
 
@@ -212,7 +236,7 @@ class TestSanyImporter extends FunSuite {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("builtinop", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("builtinop", Source.fromString(text))
     val mod = expectSingleModule("builtinop", rootName, modules)
     assert(1 == mod.declarations.size)
 
@@ -231,7 +255,7 @@ class TestSanyImporter extends FunSuite {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("emptyset", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("emptyset", Source.fromString(text))
     val mod = expectSingleModule("emptyset", rootName, modules)
     assert(1 == mod.declarations.size)
 
@@ -252,7 +276,7 @@ class TestSanyImporter extends FunSuite {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("builtinop", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("builtinop", Source.fromString(text))
     val mod = expectSingleModule("builtinop", rootName, modules)
     assert(2 == mod.declarations.size)
 
@@ -346,12 +370,14 @@ class TestSanyImporter extends FunSuite {
     //
     //        |TemporalWhile == ????
 
-    val (rootName, modules) = new SanyImporter().load("builtins", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("builtins", Source.fromString(text))
     val mod = expectSingleModule("builtins", rootName, modules)
     val root = modules(rootName)
 
     def assertTlaDecl(expectedName: String, body: TlaEx): Unit = {
-      root.declarations.find { _.name == expectedName} match {
+      root.declarations.find {
+        _.name == expectedName
+      } match {
         case Some(d: TlaOperDecl) =>
           assert(expectedName == d.name)
           assert(0 == d.formalParams.length)
@@ -476,7 +502,7 @@ class TestSanyImporter extends FunSuite {
       |================================
       |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("composite", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("composite", Source.fromString(text))
     val mod = expectSingleModule("composite", rootName, modules)
 
     def assertTlaDecl(name: String, body: TlaEx): TlaDecl => Unit = {
@@ -522,7 +548,7 @@ class TestSanyImporter extends FunSuite {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("updates", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("updates", Source.fromString(text))
     val mod = expectSingleModule("updates", rootName, modules)
 
     def assertTlaDecl(name: String, body: TlaEx): TlaDecl => Unit = {
@@ -551,7 +577,7 @@ class TestSanyImporter extends FunSuite {
       OperEx(TlaFunOper.except,
         NameEx("f"),
         TlaFunOper.mkTuple(TlaFunOper.mkTuple(ValEx(TlaInt(0)), ValEx(TlaInt(1)), ValEx(TlaInt(2)))),
-          ValEx(TlaInt(3))
+        ValEx(TlaInt(3))
       ))(mod.declarations(3))
   }
 
@@ -565,7 +591,7 @@ class TestSanyImporter extends FunSuite {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("selects", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("selects", Source.fromString(text))
     val mod = expectSingleModule("selects", rootName, modules)
 
     def assertTlaDecl(name: String, body: TlaEx): TlaDecl => Unit = {
@@ -608,7 +634,7 @@ class TestSanyImporter extends FunSuite {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("funCtor", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("funCtor", Source.fromString(text))
     val mod = expectSingleModule("funCtor", rootName, modules)
 
     def assertTlaDecl(name: String, body: TlaEx): TlaDecl => Unit = {
@@ -659,7 +685,7 @@ class TestSanyImporter extends FunSuite {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("level1Operators", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("level1Operators", Source.fromString(text))
     val mod = expectSingleModule("level1Operators", rootName, modules)
 
     def assertTlaDecl(name: String, params: List[FormalParam], body: TlaEx): TlaDecl => Unit = {
@@ -692,7 +718,7 @@ class TestSanyImporter extends FunSuite {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("level2Operators", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("level2Operators", Source.fromString(text))
     val mod = expectSingleModule("level2Operators", rootName, modules)
 
     def assertTlaDecl(name: String, params: List[FormalParam], body: TlaEx): TlaDecl => Unit = {
@@ -708,7 +734,7 @@ class TestSanyImporter extends FunSuite {
     assertTlaDecl("A",
       List(SimpleFormalParam("i"), SimpleFormalParam("j"), OperFormalParam("f", FixedArity(1))),
       OperEx(TlaOper.apply, NameEx("f"),
-        OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j")))) (mod.declarations(2))
+        OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j"))))(mod.declarations(2))
     val aDecl = mod.declarations(2).asInstanceOf[TlaOperDecl]
     assertTlaDecl("C", List(),
       OperEx(aDecl.operator, ValEx(TlaInt(0)), ValEx(TlaInt(1)), NameEx("B")))(mod.declarations(4))
@@ -725,13 +751,15 @@ class TestSanyImporter extends FunSuite {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("let", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("let", Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
 
     // the root module contains its own declarations and the declarations by FiniteSets
-    root.declarations.find { _.name == "A" } match {
+    root.declarations.find {
+      _.name == "A"
+    } match {
       case Some(TlaOperDecl(_, _, OperEx(o: LetInOper, body))) =>
         assert(3 == o.defs.length)
         val xDecl = o.defs.head
@@ -764,13 +792,15 @@ class TestSanyImporter extends FunSuite {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("let", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("let", Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
 
     // the root module contains its own declarations and the declarations by FiniteSets
-    root.declarations.find { _.name == "A" } match {
+    root.declarations.find {
+      _.name == "A"
+    } match {
       case Some(TlaOperDecl(_, _, OperEx(o: LetInOper, body))) =>
         assert(2 == o.defs.length)
         val fDecl = o.defs.head
@@ -815,13 +845,15 @@ class TestSanyImporter extends FunSuite {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("recOpers", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("recOpers", Source.fromString(text))
     assert(2 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
 
     def assertRec(name: String, nparams: Int, expectedBody: TlaEx) = {
-      root.declarations.find { _.name == name } match {
+      root.declarations.find {
+        _.name == name
+      } match {
         case Some(d: TlaRecOperDecl) =>
           // We expect that R in the declaration body is referred by a formal parameter with the same name R.
           // The caveat here is that the formal parameter R does not appear in the list of the R's formal parameters,
@@ -849,9 +881,13 @@ class TestSanyImporter extends FunSuite {
       OperEx(TlaOper.apply, NameEx("X")))
 
     // however, in non-recursive sections, the calls to recursive operators are just normal OperEx(operator, ...)
-    root.declarations.find { _.name == "D" } match {
+    root.declarations.find {
+      _.name == "D"
+    } match {
       case Some(d: TlaOperDecl) =>
-        val A = root.declarations.find { _.name == "A" }.get.asInstanceOf[TlaOperDecl]
+        val A = root.declarations.find {
+          _.name == "A"
+        }.get.asInstanceOf[TlaOperDecl]
         assert(OperEx(A.operator, NameEx("n")) == d.body)
 
       case _ =>
@@ -859,7 +895,9 @@ class TestSanyImporter extends FunSuite {
     }
 
     // of course, we want to see the factorial
-    root.declarations.find { _.name == "F"} match {
+    root.declarations.find {
+      _.name == "F"
+    } match {
       case Some(d: TlaRecOperDecl) =>
         // We expect that F in the declaration body is referred by a formal parameter with the same name F.
         // The caveat here is that the formal parameter F does not appear in the list of the F's formal parameters,
@@ -869,7 +907,7 @@ class TestSanyImporter extends FunSuite {
           OperEx(TlaOper.eq, NameEx("n"), ValEx(TlaInt(0))),
           ValEx(TlaInt(1)),
           OperEx(TlaArithOper.mult, NameEx("n"),
-              OperEx(TlaOper.apply, NameEx("F"), OperEx(TlaArithOper.minus, NameEx("n"), ValEx(TlaInt(1)))))
+            OperEx(TlaOper.apply, NameEx("F"), OperEx(TlaArithOper.minus, NameEx("n"), ValEx(TlaInt(1)))))
         )
         assert(d.body == ite)
 
@@ -887,13 +925,15 @@ class TestSanyImporter extends FunSuite {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("globalFuns", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("globalFuns", Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
 
     def assertTlaDecl(expectedName: String, body: TlaEx): Unit = {
-      root.declarations.find { _.name == expectedName} match {
+      root.declarations.find {
+        _.name == expectedName
+      } match {
         case Some(d: TlaOperDecl) =>
           assert(expectedName == d.name)
           assert(0 == d.formalParams.length)
@@ -913,7 +953,9 @@ class TestSanyImporter extends FunSuite {
     // that returns a function defined w.r.t. the recursive operator
 
     def assertTlaRecDecl(expectedName: String, body: TlaEx): Unit = {
-      root.declarations.find { _.name == expectedName} match {
+      root.declarations.find {
+        _.name == expectedName
+      } match {
         case Some(d: TlaRecOperDecl) =>
           assert(expectedName == d.name)
           assert(0 == d.formalParams.length)
@@ -943,7 +985,7 @@ class TestSanyImporter extends FunSuite {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("imports", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("imports", Source.fromString(text))
     assert(2 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
@@ -976,13 +1018,15 @@ class TestSanyImporter extends FunSuite {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("nats", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("nats", Source.fromString(text))
     assert(2 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
 
     def assertTlaDecl(expectedName: String, body: TlaEx): Unit = {
-      root.declarations.find { _.name == expectedName} match {
+      root.declarations.find {
+        _.name == expectedName
+      } match {
         case Some(d: TlaOperDecl) =>
           assert(expectedName == d.name)
           assert(0 == d.formalParams.length)
@@ -1030,12 +1074,14 @@ class TestSanyImporter extends FunSuite {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("ints", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("ints", Source.fromString(text))
     assert(3 == modules.size) // Integers extends Naturals
     val root = modules(rootName)
 
     def assertTlaDecl(expectedName: String, body: TlaEx): Unit = {
-      root.declarations.find { _.name == expectedName} match {
+      root.declarations.find {
+        _.name == expectedName
+      } match {
         case Some(d: TlaOperDecl) =>
           assert(expectedName == d.name)
           assert(0 == d.formalParams.length)
@@ -1085,13 +1131,15 @@ class TestSanyImporter extends FunSuite {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("reals", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("reals", Source.fromString(text))
     assert(4 == modules.size) // Reals include Integers that include Naturals
     val root = modules(rootName)
     // the root module contains its own declarations and the declarations by Integers
 
     def assertTlaDecl(expectedName: String, body: TlaEx): Unit = {
-      root.declarations.find { _.name == expectedName} match {
+      root.declarations.find {
+        _.name == expectedName
+      } match {
         case Some(d: TlaOperDecl) =>
           assert(expectedName == d.name)
           assert(0 == d.formalParams.length)
@@ -1128,13 +1176,15 @@ class TestSanyImporter extends FunSuite {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter().load("sequences", Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource("sequences", Source.fromString(text))
     assert(3 == modules.size) // Naturals, Sequences, and our module
     // the root module and naturals
     val root = modules(rootName)
 
     def assertTlaDecl(expectedName: String, body: TlaEx): Unit = {
-      root.declarations.find { _.name == expectedName} match {
+      root.declarations.find {
+        _.name == expectedName
+      } match {
         case Some(d: TlaOperDecl) =>
           assert(expectedName == d.name)
           assert(0 == d.formalParams.length)
@@ -1146,8 +1196,8 @@ class TestSanyImporter extends FunSuite {
     }
 
     // the root module contains its own declarations and the declarations by FiniteSets
-//    assertTlaDecl("IsFinSet", OperEx(TlaFiniteSetOper.isFiniteSet, ValEx(TlaBoolSet)))
-//    assertTlaDecl("Card", OperEx(TlaFiniteSetOper.cardinality, ValEx(TlaBoolSet)))
+    //    assertTlaDecl("IsFinSet", OperEx(TlaFiniteSetOper.isFiniteSet, ValEx(TlaBoolSet)))
+    //    assertTlaDecl("Card", OperEx(TlaFiniteSetOper.cardinality, ValEx(TlaBoolSet)))
   }
 
   /*

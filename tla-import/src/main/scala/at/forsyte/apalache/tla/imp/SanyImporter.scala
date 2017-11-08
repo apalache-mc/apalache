@@ -18,6 +18,29 @@ import scala.io.Source
   */
 class SanyImporter {
   /**
+    * Load a TLA+ specification from a file by calling SANY.
+    *
+    * @param file an input file
+    * @return the pair (the root module name, a map of modules)
+    */
+  def loadFromFile(file: File): (String, Map[String, TlaModule]) = {
+    // create a string buffer to write SANY's error messages
+    val errBuf = new StringWriter()
+    // use.toString() to retrieve the error messages
+    val specObj = new SpecObj(file.getAbsolutePath, new SimpleFilenameToStream())
+    // call SANY
+    SANY.frontEndMain(specObj, file.getAbsolutePath, new PrintStream(new WriterOutputStream(errBuf, "UTF8")))
+    // abort on errors
+    throwOnError(specObj)
+    // do the translation
+    val modmap = specObj.getExternalModuleTable.getModuleNodes.foldLeft(Map[String, TlaModule]()) {
+      (map, node) => map + (node.getName.toString -> ModuleTranslator().translate(node))
+    }
+
+    Tuple2(specObj.getName, modmap)
+  }
+
+  /**
     * Load a TLA+ specification from a text source. This method creates a temporary file and saves the source's contents
     * into it, in order to call SANY.
     *
@@ -25,7 +48,7 @@ class SanyImporter {
     * @param source     the text source
     * @return the pair (the root module name, a map of modules)
     */
-  def load(moduleName: String, source: Source): (String, Map[String, TlaModule]) = {
+  def loadFromSource(moduleName: String, source: Source): (String, Map[String, TlaModule]) = {
     val tempDir = Files.createTempDirectory("sanyimp").toFile
     val temp = new File(tempDir, moduleName + ".tla")
     try {
@@ -36,20 +59,7 @@ class SanyImporter {
       } finally {
         pw.close()
       }
-      // create a string buffer to write SANY's error messages
-      val errBuf = new StringWriter()
-      // use.toString() to retrieve the error messages
-      val specObj = new SpecObj(temp.getAbsolutePath, new SimpleFilenameToStream())
-      // call SANY
-      SANY.frontEndMain(specObj, temp.getAbsolutePath, new PrintStream(new WriterOutputStream(errBuf, "UTF8")))
-      // abort on errors
-      throwOnError(specObj)
-      // do the translation
-      val modmap = specObj.getExternalModuleTable.getModuleNodes.foldLeft(Map[String, TlaModule]()) {
-        (map, node) => map + (node.getName.toString -> ModuleTranslator().translate(node))
-      }
-
-      Tuple2(specObj.getName, modmap)
+      loadFromFile(temp)
     } finally {
       temp.delete()
       tempDir.delete()
