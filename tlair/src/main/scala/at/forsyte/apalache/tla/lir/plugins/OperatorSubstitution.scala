@@ -49,7 +49,7 @@ object OriginDB extends HashMapDB[ UID, UID ] {
 
 package object OperatorSubstitution {
 
-  private def extractOper( tlaOperDecl: TlaDecl ) : Unit = {
+  def extractOper( tlaOperDecl: TlaDecl ) : Unit = {
     if( ! tlaOperDecl.isInstanceOf[TlaOperDecl] ) return
     val thisDecl = tlaOperDecl.asInstanceOf[TlaOperDecl]
     val params = thisDecl.formalParams
@@ -123,7 +123,7 @@ package object Substitutor extends Plugin {
   override val name = "Substitutor"
   override val dependencies : List[String] = FirstPass.name :: EquivalencePlugin.name :: Nil
 
-  private def extractOper( tlaOperDecl: TlaDecl ) : Unit = {
+  def extractOper( tlaOperDecl: TlaDecl ) : Unit = {
     tlaOperDecl match {
       case TlaOperDecl( name, params, body ) => {
 
@@ -149,7 +149,7 @@ package object Substitutor extends Plugin {
 
   class ArityMismatch extends Exception
 
-  protected def replaceAll( tlaEx : TlaEx, replacedEx: TlaEx, newEx: TlaEx) : TlaEx = {
+  def replaceAll( tlaEx : TlaEx, replacedEx: TlaEx, newEx: TlaEx) : TlaEx = {
     def swap( arg: TlaEx) : TlaEx =
       if ( arg == replacedEx ) {
         return newEx.deepCopy( identified = false )
@@ -159,13 +159,13 @@ package object Substitutor extends Plugin {
     return SpecHandler.getNewEx( tlaEx, swap )
   }
 
-  protected def applyReplace( tlaEx: TlaEx ) : TlaEx = {
+  def applyReplace( tlaEx: TlaEx ) : TlaEx = {
     def getBodyOrSelf( ex: TlaEx ) =
       OperatorDB.body( EquivalenceDB.getRaw( ex ) ).getOrElse( ex )
     tlaEx match {
       case NameEx( _ ) =>  getBodyOrSelf( tlaEx )
-      case OperEx( TlaOper.apply, oper, args@_* ) => {
-        val mapval = OperatorDB( EquivalenceDB.getRaw( oper ) )
+      case OperEx( oper : TlaUserOper, args@_* ) => {
+        val mapval = OperatorDB( EquivalenceDB.getRaw( NameEx( oper.name) ) )
         if ( mapval.isEmpty ) return tlaEx
         var body = EquivalenceDB.getEx( mapval.get._2 ).get
         val params = mapval.get._1

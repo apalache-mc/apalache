@@ -32,17 +32,18 @@ object Interpretation extends Enumeration {
   val Signature = Value
 }
 
-abstract class OperArity
+class OperArity( cond: Int => Boolean ){
+  val m_cond : Int => Boolean = n => if( n < 0 ) false else cond(n)
+}
+case class AnyArity() extends OperArity( _ => true )
 
-case class AnyArity() extends OperArity
+case class FixedArity(n: Int) extends OperArity( _ == n)
 
-case class FixedArity(n: Int) extends OperArity
+case class AnyOddArity() extends OperArity( _ % 2 == 1)
 
-case class AnyOddArity() extends OperArity
+case class AnyEvenArity() extends OperArity( _ % 2 == 0 )
 
-case class AnyEvenArity() extends OperArity
-
-case class AnyPositiveArity() extends OperArity
+case class AnyPositiveArity() extends OperArity( _ > 0 )
 
 /** An abstract operator */
 trait TlaOper {
@@ -53,15 +54,7 @@ trait TlaOper {
   /* the number of arguments the operator has */
   def arity: OperArity
 
-  def isCorrectArity(a: Int): Boolean = {
-    arity match {
-      case AnyArity() => a >= 0
-      case FixedArity(n) => a == n
-      case AnyOddArity() => a >= 1 && a % 2 == 1
-      case AnyEvenArity() => a >= 0 && a % 2 == 0
-      case AnyPositiveArity() => a > 0
-    }
-  }
+  def isCorrectArity( a:Int ) : Boolean = arity.m_cond(a)
 }
 
 object TlaOper {
@@ -83,13 +76,13 @@ object TlaOper {
   val apply = new TlaOper {
     override def arity: OperArity = AnyPositiveArity()
     override def interpretation: Interpretation.Value = Interpretation.Predefined
-    override def name: String = "_()"
+    override val name: String = "_()"
   }
 
   /** The CHOOSE operator: CHOOSE x \in S: p */
   val chooseBounded = new TlaOper {
     /* the number of arguments the operator has */
-    override def name: String = "CHOOSE3"
+    override val name: String = "CHOOSE3"
     override def arity: OperArity = FixedArity(3)
     override def interpretation: Interpretation.Value = Interpretation.Predefined
   }
@@ -97,7 +90,7 @@ object TlaOper {
   /** The CHOOSE operator: CHOOSE x : p */
   val chooseUnbounded = new TlaOper {
     /* the number of arguments the operator has */
-    override def name: String = "CHOOSE2"
+    override val name: String = "CHOOSE2"
     override def arity: OperArity = FixedArity(2)
     override def interpretation: Interpretation.Value = Interpretation.Predefined
   }

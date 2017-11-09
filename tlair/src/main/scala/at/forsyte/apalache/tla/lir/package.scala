@@ -124,7 +124,7 @@ package lir {
     // TODO: hey, use power of Scala! Move toNiceString out of here and introduce a PrettyPrinter class.
     // No need, toString suffices, you can just call print( ex ) which invokes it by default.
     def toNiceString( nTab: Int = 0) = ""
-    override def toString: String = toNiceString()
+    override def toString: String = toSimpleString // toNiceString()
 
     def toSimpleString: String = ""
 
@@ -146,6 +146,9 @@ package lir {
   object NullEx extends TlaEx {
     override def deepCopy(identified: Boolean): TlaEx = NullEx
     override def identical(other: TlaEx): Boolean = this eq other
+
+    override def toNiceString(nTab: Int): String = "NullEx"
+    override def toSimpleString: String = toNiceString()
   }
 
   /** just using a TLA+ value */

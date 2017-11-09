@@ -487,9 +487,9 @@ object assignmentSolver{
     * the specification `p_spec`.
     * @param p_spec A SMTLIBv2 specification string, as required by the parser method of
     *               com.microsoft.z3.Context.
-    * @return `None`, if the assignment problem has no solution. Otherwise, returns a seqence
+    * @return `None`, if the assignment problem has no solution. Otherwise, returns a sequence
     *        of pairs where the UID component refers to an assignment candidate and the boolean
-    *        component specifies whether the candidate is chosen as an assigment in the
+    *        component specifies whether the candidate is chosen as an assignment in the
     *        good assignment strategy found by the internal methods. The pairs are sorted by the
     *        ranking function, in ascending order.
     * @see [[[[getOrder(p_vars:scala\.collection\.immutable\.Set[at\.forsyte\.apalache\.tla\.lir\.NameEx],p_phi:at\.forsyte\.apalache\.tla\.lir\.OperEx,p_fileName:String):Option[Seq[(at\.forsyte\.apalache\.tla\.lir\.UID,Boolean)]]* getOrder]]]]
@@ -542,16 +542,16 @@ object assignmentSolver{
     * @param p_phi The Next formula.
     * @param p_fileName Optional parameter, if `p_fileName` is nonempty, a file with the complete
     *                   specification is also produced. Set to empty by default.
-    * @return `None`, if the assignment problem has no solution. Otherwise, returns a seqence
+    * @return `None`, if the assignment problem has no solution. Otherwise, returns a sequence
     *        of pairs where the UID component refers to an assignment candidate and the boolean
-    *        component specifies whether the candidate is chosen as an assigment in the
+    *        component specifies whether the candidate is chosen as an assignment in the
     *        good assignment strategy found by the internal methods. The pairs are sorted by the
     *        ranking function, in ascending order.
     * @see [[makeSpec]], [[[[getOrder(p_spec:String):Option[Seq[(at\.forsyte\.apalache\.tla\.lir\.UID,Boolean)]]* getOrder]]]]
     */
   def getOrder( p_vars: Set[NameEx],
                 p_phi : OperEx,
-                p_fileName : String
+                p_fileName : String = ""
               ) : Option[Seq[(UID,Boolean)]] = {
     val spec = makeSpec(p_vars,p_phi,p_fileName)
     /* return */ getOrder( spec )

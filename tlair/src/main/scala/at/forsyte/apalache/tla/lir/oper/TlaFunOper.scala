@@ -16,8 +16,8 @@ object TlaFunOper {
     * Note that in case of records, k_1, ..., k_n are strings, that is, ValEx(TlaStr(...)), not NameEx.
     */
   val enum = new TlaFunOper {
-    override def arity: OperArity = AnyEvenArity()
-    override def name: String = "fun-enum"
+    override def arity: OperArity = new OperArity( k => k >= 2 && k % 2 == 0 )
+    override val name: String = "fun-enum"
   }
 
   /**
@@ -64,9 +64,9 @@ object TlaFunOper {
     * of the following structure: body, x_1, R_1, ..., x_k, R_k.
     */
   val funDef = new TlaFunOper {
-    override def arity: OperArity = AnyOddArity()
+    override def arity: OperArity = new OperArity( k => k >= 3 && k % 2 == 1 )
 
-    override def name: String = "fun-def"
+    override val name: String = "fun-def"
   }
 
   /**
@@ -74,8 +74,8 @@ object TlaFunOper {
     * The order of the arguments is as follows: (f, i_1, e_1, ..., i_k, e_k).
     */
   val except = new TlaFunOper {
-    override def arity: OperArity = AnyOddArity()
+    override def arity: OperArity = new OperArity( k => k >= 3 && k % 2 == 1 )
 
-    override def name: String = "EXCEPT"
+    override val name: String = "EXCEPT"
   }
 }
