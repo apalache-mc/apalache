@@ -7,3 +7,13 @@ docs/*
 !docs/*.tex
 
 test/tla/testSpec\.smt2
+
+3rdparty/bin/
+
+3rdparty/include/
+
+3rdparty/lib/
+
+3rdparty/tla2tools\.jar
+
+3rdparty/z3
