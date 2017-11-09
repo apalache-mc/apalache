@@ -16,6 +16,10 @@ addons:
     - gcc-4.7
     - g++-4.7
 
+cache:
+  directories:
+    - 3rdparty
+
 # locally compile z3 and make it available via LD_LIBRARY_PATH
 before_install:
   - pushd 3rdparty

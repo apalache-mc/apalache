@@ -8,15 +8,18 @@ set -e
 
 D=`dirname $0` && D=`cd $D; pwd`
 
-echo "Downloading and compiling z3..."
-git clone https://github.com/Z3Prover/z3 $D/z3
-pushd $D/z3
-python scripts/mk_make.py --java -p $D/
-cd build
-make && make install # install *.so and *.jar in 3rdparty
-popd
-
-echo "Done with z3"
+if [ -d "$D/z3" && -f "$D/3rdparty/lib/com.microsoft.z3.jar" ]; then
+    echo "Using a cached Z3 build"
+else
+    echo "Downloading and compiling z3..."
+    git clone https://github.com/Z3Prover/z3 $D/z3
+    pushd $D/z3
+    python scripts/mk_make.py --java -p $D/
+    cd build
+    make && make install # install *.so and *.jar in 3rdparty
+    popd
+    echo "Done with z3"
+fi
 
 echo "Downloading TLA2Tools..."
 wget https://tla.msr-inria.inria.fr/tlatoolbox/dist/tla2tools.jar
