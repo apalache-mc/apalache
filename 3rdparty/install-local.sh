@@ -9,7 +9,7 @@ set -e
 D=`dirname $0` && D=`cd $D; pwd`
 
 if [ -d "$D/z3" -a -f "$D/3rdparty/lib/com.microsoft.z3.jar" ]; then
-    echo "Using a cached Z3 build"
+    echo "Using a cached Z3 build..."
 else
     echo "Downloading and compiling z3..."
     git clone https://github.com/Z3Prover/z3 $D/z3
