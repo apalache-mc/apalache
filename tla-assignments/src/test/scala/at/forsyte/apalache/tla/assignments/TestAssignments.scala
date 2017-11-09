@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.plugins.Identifier
+import at.forsyte.apalache.tla.lir.values.TlaInt
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -108,8 +109,8 @@ class TestAssignments extends FunSuite {
   }
 
   test("Check sanitization") {
-    val fileName = "assignmentTest2"
-    val extracted = sanitizer(testFolderPath, fileName)
+    val fileName = "assignmentTest2.tla"
+    val extracted = sanitizer(testFolderPath + fileName)
     assert(extracted.isDefined)
     val (before, after) = extracted.get
     println( "%s \n -> \n %s".format( before, after ) )
@@ -150,7 +151,7 @@ class TestAssignments extends FunSuite {
               TlaActionOper.prime,
               NameEx("b")
             ),
-            IntEx(2)
+            ValEx( TlaInt(2) )
           )
         ),
         OperEx(
@@ -159,7 +160,7 @@ class TestAssignments extends FunSuite {
             TlaActionOper.prime,
             NameEx("a")
           ),
-          IntEx(1)
+          ValEx( TlaInt(1) )
         )
       )
     assert(after == expectedAfter)

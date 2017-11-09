@@ -534,23 +534,24 @@ class TestIDAllocation extends FunSuite{
     sterileRun( subtest )
   }
 
-  test( "Test Plugins" ){
-    def plugtest() : Unit = {
-      val spec = specOper.deepCopy()
-      FirstPass.run(spec)
-      EquivalencePlugin.run(spec)
-      Substitutor.run( spec )
-
-      val spec2 = specOper.deepCopy()
-      Identifier.identify( spec2 )
-      EquivalenceDB.processAll( spec2 )
-      OperatorSubstitution.extract( spec2 )
-      val retSpc = OperatorSubstitution.substituteOper( spec2 )
-
-      assert( retSpc == Substitutor.output )
-    }
-
-    sterileRun( plugtest )
-  }
+  /** Jure, 9.11.2017 : Deprecated, Substitutor methods have changed */
+//  test( "Test Plugins" ){
+//    def plugtest() : Unit = {
+//      val spec = specOper.deepCopy()
+//      FirstPass.run(spec)
+//      EquivalencePlugin.run(spec)
+//      Substitutor.run( spec )
+//
+//      val spec2 = specOper.deepCopy()
+//      Identifier.identify( spec2 )
+//      EquivalenceDB.processAll( spec2 )
+//      OperatorSubstitution.extract( spec2 )
+//      val retSpc = OperatorSubstitution.substituteOper( spec2 )
+//
+//      assert( retSpc == Substitutor.output )
+//    }
+//
+//    sterileRun( plugtest )
+//  }
 
   }

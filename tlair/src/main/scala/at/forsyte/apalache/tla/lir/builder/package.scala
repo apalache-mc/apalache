@@ -76,7 +76,8 @@ package object Builder {
 
   /** TlaArithOper */
   def sum( p_args: TlaEx*  ) : TlaEx = OperEx( TlaArithOper.sum, p_args:_*            )
-  def sum( p_args: BigInt* ) : TlaEx = OperEx( TlaArithOper.sum, p_args.map(value):_* )
+  def sum( p_args: BigInt* )(implicit dummy: DummyImplicit) : TlaEx =
+    OperEx( TlaArithOper.sum, p_args.map(value):_* )
 
   def plus( p_a: TlaEx , p_b: TlaEx  ) : TlaEx = OperEx( TlaArithOper.plus, p_a       , p_b        )
   def plus( p_a: TlaEx , p_b: BigInt ) : TlaEx = OperEx( TlaArithOper.plus, p_a       , value(p_b) )
@@ -92,7 +93,8 @@ package object Builder {
   def uminus( p_a: BigInt ) : TlaEx = OperEx( TlaArithOper.uminus, value(p_a) )
 
   def prod( p_args: TlaEx*  ) : TlaEx = OperEx( TlaArithOper.prod, p_args:_*            )
-  def prod( p_args: BigInt* ) : TlaEx = OperEx( TlaArithOper.prod, p_args.map(value):_* )
+  def prod( p_args: BigInt* )(implicit dummy: DummyImplicit) : TlaEx =
+    OperEx( TlaArithOper.prod, p_args.map(value):_* )
 
   def mult( p_a: TlaEx , p_b: TlaEx  ) : TlaEx = OperEx( TlaArithOper.mult, p_a       , p_b        )
   def mult( p_a: TlaEx , p_b: BigInt ) : TlaEx = OperEx( TlaArithOper.mult, p_a       , value(p_b) )
@@ -234,9 +236,4 @@ package object Builder {
       op => if (op.isCorrectArity(p_args.size)) OperEx( op, p_args:_* ) else NullEx
     ).getOrElse(NullEx)
   }
-
-  def plus( a: TlaEx, b: TlaEx ): TlaEx = OperEx(TlaArithOper.plus, a, b)
-  def plus( a: BigInt, b: BigInt ) : TlaEx = OperEx( TlaArithOper.plus, value(a), value(b) )
-
-
 }
