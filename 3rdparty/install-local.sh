@@ -11,13 +11,19 @@ D=`dirname $0` && D=`cd $D; pwd`
 if [ -f "$D/z3/configure" ]; then
     echo "Using a cached Z3 build..."
 else
-    echo "Downloading and compiling z3..."
+    echo "Checking out z3..."
     git clone https://github.com/Z3Prover/z3 $D/z3
+    pushd $D/z3
+    echo "Configuring z3..."
+    python scripts/mk_make.py --java -p $D/
+    popd
 fi
 
 # install Z3 libraries
+echo "Compiling z3..."
 pushd $D/z3
 python scripts/mk_make.py --java -p $D/
+echo "Installing z3..."
 cd build
 make && make install # install *.so and *.jar in 3rdparty
 popd
