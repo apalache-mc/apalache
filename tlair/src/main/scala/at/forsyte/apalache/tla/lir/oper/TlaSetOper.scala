@@ -23,7 +23,7 @@ object TlaSetOper {
    */
   val funSet = new TlaSetOper {
     override def arity: OperArity = FixedArity(2)
-    override def name: String = "[S -> T]"
+    override val name: String = "[S -> T]"
   }
 
   /**
@@ -32,7 +32,7 @@ object TlaSetOper {
     */
   val recSet = new TlaSetOper {
     override def arity: OperArity = AnyEvenArity()
-    override def name: String = "$SetOfRcds"
+    override val name: String = "$SetOfRcds"
   }
 
   /**
@@ -40,7 +40,7 @@ object TlaSetOper {
     */
   val seqSet = new TlaSetOper {
     override def arity: OperArity = FixedArity(1)
-    override def name: String = "Seq(_)"
+    override val name: String = "Seq(_)"
   }
 
   val in = new TlaSetOper {

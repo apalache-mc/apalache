@@ -65,7 +65,7 @@ object TlaArithOper {
     override def arity = AnyArity()
 
     // empty prod = 1
-    override def name = "PROD"
+    override val name = "PROD"
   }
 
   /**
@@ -74,7 +74,7 @@ object TlaArithOper {
   val mult = new TlaArithOper {
     override def arity: OperArity = FixedArity(2)
 
-    override def name: String = "(*)"
+    override val name: String = "(*)"
   }
 
   /**
@@ -83,7 +83,7 @@ object TlaArithOper {
   val div = new TlaArithOper {
     override def arity: OperArity = FixedArity(2)
 
-    override def name: String = "(\\div)"
+    override val name: String = "(\\div)"
   }
 
   /**
@@ -92,7 +92,7 @@ object TlaArithOper {
   val mod = new TlaArithOper {
     override def arity: OperArity = FixedArity(2)
 
-    override def name: String = "(%)"
+    override val name: String = "(%)"
   }
 
   /**
@@ -101,7 +101,7 @@ object TlaArithOper {
   val realDiv = new TlaArithOper {
     override def arity: OperArity = FixedArity(2)
 
-    override def name: String = "(/)"
+    override val name: String = "(/)"
   }
 
   /**
@@ -110,7 +110,7 @@ object TlaArithOper {
   val exp = new TlaArithOper {
     override def arity: OperArity = FixedArity(2)
 
-    override def name: String = "(^)"
+    override val name: String = "(^)"
   }
 
   /**
@@ -128,7 +128,7 @@ object TlaArithOper {
     /* the number of arguments the operator has */
     override def arity: OperArity = FixedArity(2)
 
-    override def name: String = "(<)"
+    override val name: String = "(<)"
   }
 
   /**
@@ -138,7 +138,7 @@ object TlaArithOper {
     /* the number of arguments the operator has */
     override def arity: OperArity = FixedArity(2)
 
-    override def name: String = "(>)"
+    override val name: String = "(>)"
   }
 
   /**
@@ -148,7 +148,7 @@ object TlaArithOper {
     /* the number of arguments the operator has */
     override def arity: OperArity = FixedArity(2)
 
-    override def name: String = "(<=)"
+    override val name: String = "(<=)"
   }
 
   /**
@@ -158,7 +158,7 @@ object TlaArithOper {
     /* the number of arguments the operator has */
     override def arity: OperArity = FixedArity(2)
 
-    override def name: String = "(>=)"
+    override val name: String = "(>=)"
   }
 
 }

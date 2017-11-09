@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+/** Change name, too ambiguous, especially with TLA Types in the other package -- Jure, 29.10.17 */
 package object types {
 
   /**

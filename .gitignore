@@ -6,6 +6,12 @@ target
 docs/*
 !docs/*.tex
 
+3rdparty/bin
+3rdparty/include
+3rdparty/lib
+3rdparty/z3
+tla2tools.jar
+
 test/tla/testSpec\.smt2
 
 3rdparty/bin/

@@ -17,9 +17,9 @@ import scala.io.Source
   */
 @RunWith(classOf[JUnitRunner])
 class TestAssignments extends FunSuite {
-  test("Check dependency set computation") {
+  val testFolderPath = "src/test/resources/" // "../test/tla/"
 
-    val testFolderPath = "src/test/resources/" // "../test/tla/"
+  test("Check dependency set computation") {
 
     val vars : Set[NameEx] = Range(0,8).map( x => NameEx( x.toString ) ).toSet
 
@@ -105,6 +105,64 @@ class TestAssignments extends FunSuite {
 
     ret.get.foreach( pa => println( "%s -> %s".format( pa._1.id, pa._2 ) ) )
 
+  }
+
+  test("Check sanitization") {
+    val fileName = "assignmentTest2"
+    val extracted = sanitizer(testFolderPath, fileName)
+    assert(extracted.isDefined)
+    val (before, after) = extracted.get
+    println( "%s \n -> \n %s".format( before, after ) )
+
+    val expectedAfter =
+      OperEx(
+        TlaBoolOper.and,
+        OperEx(
+          TlaBoolOper.or,
+          OperEx(
+            TlaBoolOper.and,
+            OperEx(
+              TlaOper.eq,
+              OperEx(
+                TlaActionOper.prime,
+                NameEx("a")
+              ),
+              OperEx(
+                TlaActionOper.prime,
+                NameEx("b")
+              )
+            ),
+            OperEx(
+              TlaOper.eq,
+              OperEx(
+                TlaActionOper.prime,
+                NameEx("b")
+              ),
+              OperEx(
+                TlaActionOper.prime,
+                NameEx("a")
+              )
+            )
+          ),
+          OperEx(
+            TlaOper.eq,
+            OperEx(
+              TlaActionOper.prime,
+              NameEx("b")
+            ),
+            IntEx(2)
+          )
+        ),
+        OperEx(
+          TlaOper.eq,
+          OperEx(
+            TlaActionOper.prime,
+            NameEx("a")
+          ),
+          IntEx(1)
+        )
+      )
+    assert(after == expectedAfter)
   }
 
 }
