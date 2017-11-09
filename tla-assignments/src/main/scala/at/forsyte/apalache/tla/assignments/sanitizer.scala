@@ -3,10 +3,10 @@ package at.forsyte.apalache.tla.assignments
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.plugins.Substitutor.applyReplace
 import at.forsyte.apalache.tla.lir.plugins.{Identifier, OperatorDB, OperatorSubstitution, Substitutor}
 
 import scala.io.Source
+import java.io.File
 
 /**
   * Object responsible for pre-processing input before it is passed to the
@@ -16,10 +16,12 @@ object sanitizer {
   val NEXT_STEP_DEFAULT_NAME = "Next"
 
   // filename without .tla!!
-  def extract( path:String, tlaFname:String, nextStepName: String = NEXT_STEP_DEFAULT_NAME ) : Option[OperEx] = {
+
+
+  def extract( path:String, nextStepName: String = NEXT_STEP_DEFAULT_NAME ) : Option[OperEx] = {
     val importer = new SanyImporter()
 
-    val (rootName, modules) = importer.load(tlaFname, Source.fromFile(path + tlaFname + ".tla") )
+    val (rootName, modules) = importer.loadFromFile( new File(path) )
     val formulaCandidate =
       modules(rootName).declarations.find { _.name == nextStepName} match {
         case Some(d: TlaOperDecl) =>
@@ -76,7 +78,7 @@ object sanitizer {
 
   }
 
-  def apply(path:String, tlaFname:String, nextStepName: String = NEXT_STEP_DEFAULT_NAME ) : Option[(TlaEx,TlaEx)] = {
-    extract(path, tlaFname,nextStepName).map(sanitize)
+  def apply(path:String, nextStepName: String = NEXT_STEP_DEFAULT_NAME ) : Option[(TlaEx,TlaEx)] = {
+    extract(path,nextStepName).map(sanitize)
   }
 }
