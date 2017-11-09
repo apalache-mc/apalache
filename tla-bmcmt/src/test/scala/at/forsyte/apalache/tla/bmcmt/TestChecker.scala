@@ -80,7 +80,7 @@ class TestChecker extends FunSuite {
 
   ////////////////////////////////////////////////////////////////////
   private def importTla(name: String, text: String) = {
-    val (rootName, modules) = new SanyImporter().load(name, Source.fromString(text))
+    val (rootName, modules) = new SanyImporter().loadFromSource(name, Source.fromString(text))
     val mod = expectSingleModule(name, rootName, modules)
     val init = expectOperatorDeclaration("Init", 0, mod)
     val next = expectOperatorDeclaration("Next", 1, mod)
