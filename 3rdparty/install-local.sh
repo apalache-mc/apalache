@@ -16,16 +16,17 @@ else
     pushd $D/z3
     echo "Configuring z3..."
     python scripts/mk_make.py --java -p $D/
+    echo "Compiling z3..."
+    cd build
+    make
     popd
 fi
 
 # install Z3 libraries
-echo "Compiling z3..."
+echo "Compiling and installing z3..."
 pushd $D/z3
-python scripts/mk_make.py --java -p $D/
-echo "Installing z3..."
 cd build
-make && make install # install *.so and *.jar in 3rdparty
+make install # install *.so and *.jar in 3rdparty
 popd
 echo "Done with z3"
 
