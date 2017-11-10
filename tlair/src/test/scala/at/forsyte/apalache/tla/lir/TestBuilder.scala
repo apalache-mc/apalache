@@ -10,12 +10,22 @@ import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestBuilder extends FunSuite {
-  test( "Test garbage" ){
+  test("Test direct methods: Names and values"){
+    val nameBuild = Builder.name("a")
+
+    assert( nameBuild == NameEx("a") )
+  }
+  
+  test("Test operByNameOrNull: garbage"){
     val garbage = Builder.operByNameOrNull("a string that is obviously not an operator name", NullEx, NameEx("arg2"))
     assert(garbage == NullEx)
   }
 
-  test( "Test TlaOper" ){
+  test("Test direct methods: TlaOper"){
+    
+  }
+
+  test("Test operByNameOrNull: TlaOper"){
     val eqBuildBad1 = Builder.operByNameOrNull(TlaOper.eq.name, NameEx("a"))
     val eqBuild = Builder.operByNameOrNull(TlaOper.eq.name, NameEx("a"), NameEx("b"))
     val eqBuildBad2 = Builder.operByNameOrNull(TlaOper.eq.name, NameEx("a"), NameEx("b"), NameEx("c"))
@@ -49,8 +59,7 @@ class TestBuilder extends FunSuite {
     assert(cubBuildBad2 == NullEx)
   }
 
-  test("Test TlaActionOper"){
-
+  test("Test operByNameOrNull: TlaActionOper"){
     val primeBuildBad1 = Builder.operByNameOrNull( TlaActionOper.prime.name )
     val primeBuild = Builder.operByNameOrNull( TlaActionOper.prime.name, NameEx("a") )
     val primeBuildBad2 = Builder.operByNameOrNull( TlaActionOper.prime.name, NameEx("a"), NameEx("b") )
@@ -101,8 +110,7 @@ class TestBuilder extends FunSuite {
 
   }
 
-  test("Test TlaControlOper") {
-
+  test("Test operByNameOrNull: TlaControlOper") {
     val caseNoOtherBuildEmpty = Builder.operByNameOrNull(TlaControlOper.caseNoOther.name)
     val caseNoOtherBuild = Builder.operByNameOrNull(TlaControlOper.caseNoOther.name, NameEx("a"), NameEx("b"))
     val caseNoOtherBuildBad = Builder.operByNameOrNull(TlaControlOper.caseNoOther.name, NameEx("a"), NameEx("b"), NameEx("c") )
@@ -130,8 +138,7 @@ class TestBuilder extends FunSuite {
     assert(iteBuildBad2 == NullEx )
   }
 
-  test("Test TlaTempOper"){
-
+  test("Test operByNameOrNull: TlaTempOper"){
     val AABuildBad1 = Builder.operByNameOrNull(TlaTempOper.AA.name, NameEx("a") )
     val AABuild = Builder.operByNameOrNull(TlaTempOper.AA.name, NameEx("a"), NameEx("b") )
     val AABuildBad2 = Builder.operByNameOrNull(TlaTempOper.AA.name, NameEx("a"), NameEx("b"), NameEx("c") )
@@ -180,7 +187,6 @@ class TestBuilder extends FunSuite {
     assert( guaranteesBuild == OperEx( TlaTempOper.guarantees, NameEx("a"), NameEx("b") ))
     assert( guaranteesBuildBad2 == NullEx )
 
-
     val strongFairnessBuildBad1 = Builder.operByNameOrNull(TlaTempOper.strongFairness.name, NameEx("a") )
     val strongFairnessBuild = Builder.operByNameOrNull(TlaTempOper.strongFairness.name, NameEx("a"), NameEx("b") )
     val strongFairnessBuildBad2 = Builder.operByNameOrNull(TlaTempOper.strongFairness.name, NameEx("a"), NameEx("b"), NameEx("c") )
@@ -196,12 +202,9 @@ class TestBuilder extends FunSuite {
     assert( weakFairnessBuildBad1 == NullEx )
     assert( weakFairnessBuild == OperEx( TlaTempOper.weakFairness, NameEx("a"), NameEx("b") ))
     assert( weakFairnessBuildBad2 == NullEx )
-//    TlaTempOper.strongFairness.name -> TlaTempOper.strongFairness,
-//    TlaTempOper.weakFairness.name   -> TlaTempOper.weakFairness,
   }
 
-  test("Test TlaArithOper"){
-
+  test("Test operByNameOrNull: TlaArithOper"){
     val sumBuild1 = Builder.operByNameOrNull(TlaArithOper.sum.name)
     val sumBuild2 = Builder.operByNameOrNull(TlaArithOper.sum.name, NameEx("a"), NameEx("b"))
 
@@ -319,8 +322,7 @@ class TestBuilder extends FunSuite {
     assert( geBuildBad2 == NullEx )
   }
 
-  test("Test TlaFiniteSetOper"){
-
+  test("Test operByNameOrNull: TlaFiniteSetOper"){
     val cardinalityBuildBad1 = Builder.operByNameOrNull(TlaFiniteSetOper.cardinality.name )
     val cardinalityBuild = Builder.operByNameOrNull(TlaFiniteSetOper.cardinality.name, NameEx("a"))
     val cardinalityBuildBad2 = Builder.operByNameOrNull(TlaFiniteSetOper.cardinality.name, NameEx("a"), NameEx("b"), NameEx("c"))
@@ -339,8 +341,7 @@ class TestBuilder extends FunSuite {
     
   }
 
-  test("Test TlaFunOper"){
-
+  test("Test operByNameOrNull: TlaFunOper"){
     val enumBuildEmpty = Builder.operByNameOrNull(TlaFunOper.enum.name)
     val enumBuild = Builder.operByNameOrNull(TlaFunOper.enum.name, NameEx("a"), NameEx("b"))
     val enumBuildBad = Builder.operByNameOrNull(TlaFunOper.enum.name, NameEx("a"), NameEx("b"), NameEx("c") )
@@ -390,10 +391,9 @@ class TestBuilder extends FunSuite {
     assert(funDefBuildSingle == NullEx )
     assert(funDefBuildBad == NullEx )
     assert(funDefBuild == OperEx( TlaFunOper.funDef, NameEx("a"), NameEx("b"), NameEx("c") ) )
-
   }
 
-  test("Test TlaSeqOper"){
+  test("Test operByNameOrNull: TlaSeqOper"){
 
     assert(true)
 
@@ -411,7 +411,7 @@ class TestBuilder extends FunSuite {
 //    TlaSeqOper.len.name    -> TlaSeqOper.len,
   }
 
-  test("Test TlaSetOper"){
+  test("Test operByNameOrNull: TlaSetOper"){
     assert(true)
 //    TlaSetOper.enumSet.name      -> TlaSetOper.enumSet,
 //    TlaSetOper.in.name           -> TlaSetOper.in,
@@ -433,7 +433,7 @@ class TestBuilder extends FunSuite {
 //    TlaSetOper.union.name        -> TlaSetOper.union
   }
 
-  test(" Test TlaBoolOper "){
+  test("Test operByNameOrNull: TlaBoolOper "){
     assert(true)
 //    TlaBoolOper.and.name -> TlaBoolOper.and,
 //    TlaBoolOper.or.name -> TlaBoolOper.or,
