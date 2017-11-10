@@ -40,6 +40,23 @@ package object Builder {
   def prime_eq( p_name: String, p_rhs: TlaEx ) : TlaEx = eq( prime(p_name), p_rhs )
   def prime_eq( p_name: NameEx, p_rhs: TlaEx ) : TlaEx = eq( prime(p_name), p_rhs )
 
+  /** TlaBoolOper */
+  def and( p_args: TlaEx* ) : TlaEx = OperEx( TlaBoolOper.and, p_args:_* )
+
+  def or( p_args: TlaEx* ) : TlaEx = OperEx( TlaBoolOper.or, p_args:_* )
+
+  def not( p_P: TlaEx ) : TlaEx = OperEx( TlaBoolOper.not, p_P )
+
+  def implies( p_P: TlaEx, p_Q: TlaEx ) : TlaEx = OperEx( TlaBoolOper.implies, p_P, p_Q )
+
+  def equiv( p_P: TlaEx, p_Q: TlaEx ) : TlaEx = OperEx( TlaBoolOper.equiv, p_P, p_Q )
+
+  def forall( p_x: TlaEx, p_S: TlaEx, p_p: TlaEx ) : TlaEx = OperEx( TlaBoolOper.forall, p_x, p_S, p_p )
+  def forall( p_x: TlaEx, p_p: TlaEx ) : TlaEx = OperEx( TlaBoolOper.forallUnbounded, p_x, p_p )
+
+  def exists( p_x: TlaEx, p_S: TlaEx, p_p: TlaEx ) : TlaEx = OperEx( TlaBoolOper.exists, p_x, p_S, p_p )
+  def exists( p_x: TlaEx, p_p: TlaEx ) : TlaEx = OperEx( TlaBoolOper.existsUnbounded, p_x, p_p )
+
   /** TlaActionOper */
   def stutter( p_A: TlaEx  , p_e: TlaEx ) : TlaEx = OperEx( TlaActionOper.stutter  , p_A, p_e )
   def nostutter( p_A: TlaEx, p_e: TlaEx ) : TlaEx = OperEx( TlaActionOper.nostutter, p_A, p_e )
@@ -222,6 +239,16 @@ package object Builder {
       TlaOper.apply.name           -> TlaOper.apply,
       TlaOper.chooseBounded.name   -> TlaOper.chooseBounded,
       TlaOper.chooseUnbounded.name -> TlaOper.chooseUnbounded,
+
+      TlaBoolOper.and.name             -> TlaBoolOper.and,
+      TlaBoolOper.or.name              -> TlaBoolOper.or,
+      TlaBoolOper.not.name             -> TlaBoolOper.not,
+      TlaBoolOper.implies.name         -> TlaBoolOper.implies,
+      TlaBoolOper.equiv.name           -> TlaBoolOper.equiv,
+      TlaBoolOper.forall.name          -> TlaBoolOper.forall,
+      TlaBoolOper.exists.name          -> TlaBoolOper.exists,
+      TlaBoolOper.forallUnbounded.name -> TlaBoolOper.forallUnbounded,
+      TlaBoolOper.existsUnbounded.name -> TlaBoolOper.existsUnbounded,
 
       TlaActionOper.prime.name       -> TlaActionOper.prime,
       TlaActionOper.stutter.name     -> TlaActionOper.stutter,

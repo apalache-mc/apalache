@@ -432,4 +432,17 @@ class TestBuilder extends FunSuite {
 //    TlaSetOper.times.name        -> TlaSetOper.times,
 //    TlaSetOper.union.name        -> TlaSetOper.union
   }
+
+  test(" Test TlaBoolOper "){
+    assert(true)
+//    TlaBoolOper.and.name -> TlaBoolOper.and,
+//    TlaBoolOper.or.name -> TlaBoolOper.or,
+//    TlaBoolOper.not.name -> TlaBoolOper.not,
+//    TlaBoolOper.implies.name -> TlaBoolOper.implies,
+//    TlaBoolOper.equiv.name -> TlaBoolOper.equiv,
+//    TlaBoolOper.forall.name -> TlaBoolOper.forall,
+//    TlaBoolOper.exists.name -> TlaBoolOper.exists,
+//    TlaBoolOper.forallUnbounded.name -> TlaBoolOper.forallUnbounded,
+//    TlaBoolOper.existsUnbounded.name -> TlaBoolOper.existsUnbounded,
+  }
 }
