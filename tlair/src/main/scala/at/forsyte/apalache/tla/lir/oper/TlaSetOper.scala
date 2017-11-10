@@ -111,7 +111,7 @@ object TlaSetOper {
     * The argument order is: (e, x_1, S_1, ..., x_k, S_k)
     */
   val map = new TlaSetOper {
-    override val arity = AnyOddArity()
+    override val arity = new OperArity( k => k >= 3 && k % 2 == 1 )
     override val name = "map"
   }
 

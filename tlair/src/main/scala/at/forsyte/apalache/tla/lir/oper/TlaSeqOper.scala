@@ -30,7 +30,7 @@ object TlaSeqOper {
   }
 
   val concat = new TlaSeqOper {
-    override val arity = FixedArity(1)
+    override val arity = FixedArity(2)
     override val name = "_o_"
   }
 

@@ -147,9 +147,73 @@ package object Builder {
   def ge( p_a: BigInt, p_b: BigInt ) : TlaEx = OperEx( TlaArithOper.ge, value(p_a), value(p_b) )
 
   /** TlaFiniteSetOper */
-    /* TODO */
-//  TlaFiniteSetOper.cardinality.name -> TlaFiniteSetOper.cardinality,
-//  TlaFiniteSetOper.isFiniteSet.name -> TlaFiniteSetOper.isFiniteSet,
+  def card( p_S: TlaEx ) : TlaEx = OperEx( TlaFiniteSetOper.cardinality, p_S )
+
+  def isFinite( p_S: TlaEx ) : TlaEx = OperEx( TlaFiniteSetOper.isFiniteSet, p_S )
+
+  /** TlaFunOper */
+  def app( p_f: TlaEx, p_args: TlaEx* ) : TlaEx = OperEx( TlaFunOper.app, (p_f +: p_args):_* )
+
+  def dom( p_f: TlaEx ) : TlaEx = OperEx( TlaFunOper.domain, p_f )
+
+  def enum( p_k1: TlaEx, p_v1:TlaEx, p_args: TlaEx* ) : TlaEx = OperEx( TlaFunOper.enum, (p_k1 +: p_v1 +:p_args):_* )
+
+  def except( p_f: TlaEx, p_k1: TlaEx, p_v1: TlaEx, p_args: TlaEx* ) : TlaEx =
+    OperEx( TlaFunOper.except, (p_f +: p_k1 +: p_v1 +: p_args):_* )
+
+  def funDef( p_e: TlaEx, p_x: TlaEx, p_S: TlaEx, p_args: TlaEx* ) : TlaEx =
+    OperEx( TlaFunOper.funDef, (p_e +: p_x +: p_S +: p_args):_* )
+
+  def tuple( p_args: TlaEx* ) : TlaEx = OperEx( TlaFunOper.tuple, p_args:_* )
+
+  /** TlaSeqOper */
+  def append( p_s: TlaEx, p_e: TlaEx ) : TlaEx = OperEx( TlaSeqOper.append, p_s, p_e )
+
+  def concat( p_s1: TlaEx, p_s2: TlaEx ) : TlaEx = OperEx( TlaSeqOper.concat, p_s1, p_s2 )
+
+  def head( p_s: TlaEx ) : TlaEx = OperEx( TlaSeqOper.head, p_s )
+
+  def tail( p_s: TlaEx ) : TlaEx = OperEx( TlaSeqOper.tail, p_s )
+
+  def len( p_s: TlaEx ) : TlaEx = OperEx( TlaSeqOper.len, p_s )
+
+  /** TlaSetOper */
+  def enumSet( p_args: TlaEx* ) : TlaEx = OperEx( TlaSetOper.enumSet, p_args:_* )
+
+  def in( p_x: TlaEx, p_S: TlaEx ) : TlaEx = OperEx( TlaSetOper.in, p_x, p_S )
+
+  def notin( p_x: TlaEx, p_S: TlaEx ) : TlaEx = OperEx( TlaSetOper.notin, p_x, p_S )
+
+  def cap( p_S1: TlaEx, p_S2: TlaEx ) : TlaEx = OperEx( TlaSetOper.cap, p_S1, p_S2)
+  
+  def cup( p_S1: TlaEx, p_S2: TlaEx ) : TlaEx = OperEx( TlaSetOper.cup, p_S1, p_S2)
+
+  def union( p_args: TlaEx* ) : TlaEx = OperEx( TlaSetOper.union, p_args:_* )
+
+  def filter( p_x: TlaEx, p_S: TlaEx, p_p: TlaEx ) : TlaEx = OperEx( TlaSetOper.filter, p_x, p_S, p_p )
+
+  def map( p_e: TlaEx, p_x: TlaEx, p_S: TlaEx, p_args: TlaEx* ) : TlaEx =
+    OperEx( TlaSetOper.map, (p_e +: p_x +: p_S +: p_args):_* )
+  
+  def funSet( p_S: TlaEx, p_T: TlaEx ) : TlaEx = OperEx( TlaSetOper.funSet, p_S, p_T)
+
+  def recSet( p_args: TlaEx* ) : TlaEx = OperEx( TlaSetOper.recSet, p_args:_* )
+
+  def seqSet( p_S: TlaEx ) : TlaEx = OperEx( TlaSetOper.seqSet, p_S )
+
+  def subset( p_S1: TlaEx, p_S2: TlaEx ) : TlaEx = OperEx( TlaSetOper.subsetProper, p_S1, p_S2)
+
+  def subseteq( p_S1: TlaEx, p_S2: TlaEx ) : TlaEx = OperEx( TlaSetOper.subseteq, p_S1, p_S2)
+
+  def supset( p_S1: TlaEx, p_S2: TlaEx ) : TlaEx = OperEx( TlaSetOper.supsetProper, p_S1, p_S2)
+
+  def supseteq( p_S1: TlaEx, p_S2: TlaEx ) : TlaEx = OperEx( TlaSetOper.supseteq, p_S1, p_S2)
+
+  def setminus( p_S1: TlaEx, p_S2: TlaEx ) : TlaEx = OperEx( TlaSetOper.setminus, p_S1, p_S2)
+
+  def times( p_S1: TlaEx, p_S2: TlaEx ) : TlaEx = OperEx( TlaSetOper.times, p_S1, p_S2)
+
+  def powSet( p_S: TlaEx ) : TlaEx = OperEx( TlaSetOper.powerset, p_S )
 
   val m_nameMap : Map[String, TlaOper] =
     scala.collection.immutable.Map(
@@ -231,7 +295,11 @@ package object Builder {
       TlaSetOper.union.name        -> TlaSetOper.union
   )
 
-  def oper(p_operName: String, p_args: TlaEx* ) : TlaEx = {
+  def operByName( p_operName: String, p_args: TlaEx* ): Unit ={
+    OperEx( m_nameMap(p_operName), p_args:_*)
+  }
+
+  def operByNameOrNull( p_operName: String, p_args: TlaEx* ) : TlaEx = {
     m_nameMap.get(p_operName).map(
       op => if (op.isCorrectArity(p_args.size)) OperEx( op, p_args:_* ) else NullEx
     ).getOrElse(NullEx)
