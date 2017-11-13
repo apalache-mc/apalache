@@ -1573,4 +1573,37 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
         fail("Unexpected rewriting result")
     }
   }
+
+  test("""SE-FUN-APP[1-3]: f[4] ~~> $C$k""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val set = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaInt(3)), ValEx(TlaInt(4)))
+    val mapping = OperEx(TlaArithOper.mult, NameEx("x"), ValEx(TlaInt(3)))
+    val fun = OperEx(TlaFunOper.funDef, mapping, NameEx("x"), set)
+    val app = OperEx(TlaFunOper.app, fun, ValEx(TlaInt(4)))
+
+    val state = new SymbState(app, CellTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case membershipEx @ NameEx(name) =>
+        assert(CellTheory().hasConst(name))
+        assert(solverContext.sat())
+        val cell = nextState.arena.findCellByName(name)
+        cell.cellType match {
+          case IntT() =>
+            solverContext.assertGroundExpr(OperEx(TlaOper.eq, cell.toNameEx, ValEx(TlaInt(12))))
+            solverContext.push()
+            assert(solverContext.sat())
+            solverContext.pop()
+            solverContext.assertGroundExpr(OperEx(TlaOper.ne, cell.toNameEx, ValEx(TlaInt(12))))
+            assert(!solverContext.sat())
+
+          case _ =>
+            fail("Unexpected type")
+        }
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
 }

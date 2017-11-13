@@ -17,6 +17,7 @@ object Arena {
       HashMap(),
       new LazyEquality(solverContext),
       new HashMap(),
+      new HashMap(),
       new HashMap()
     ) /////
     // by convention, the first cells have the following semantics: 0 stores FALSE, 1 stores TRUE, 2 stores BOOLEAN
@@ -52,13 +53,9 @@ class Arena private(val solverContext: SolverContext,
                     val cellMap: Map[String, ArenaCell],
                     val lazyEquality: LazyEquality,
                     private val hasEdges: Map[ArenaCell, List[ArenaCell]],
-                    private val domEdges: Map[ArenaCell, ArenaCell]) {
-  // since the edges in arenas have different structure, for the moment, we keep them in different maps
-  /*
-    private val domEdges: Map[ArenaCell, ArenaCell] = new HashMap[ArenaCell, ArenaCell]
-    private val codomEdges: Map[ArenaCell, ArenaCell] = new HashMap[ArenaCell, ArenaCell]
-  */
-
+                    private val domEdges: Map[ArenaCell, ArenaCell],
+                    private val cdmEdges: Map[ArenaCell, ArenaCell]
+                   ) {
   def cellFalse(): ArenaCell = {
     cellMap(Arena.falseName)
   }
@@ -119,7 +116,7 @@ class Arena private(val solverContext: SolverContext,
   protected def appendCellWithoutDeclaration(cellType: CellT): Arena = {
     val newCell = new ArenaCell(cellCount, cellType)
     new Arena(solverContext, cellCount + 1, newCell,
-      cellMap + (newCell.toString -> newCell), lazyEquality, hasEdges, domEdges)
+      cellMap + (newCell.toString -> newCell), lazyEquality, hasEdges, domEdges, cdmEdges)
   }
 
   /**
@@ -136,7 +133,7 @@ class Arena private(val solverContext: SolverContext,
         case None => List(elemCell)
       }
 
-    new Arena(solverContext, cellCount, topCell, cellMap, lazyEquality, hasEdges + (setCell -> es), domEdges)
+    new Arena(solverContext, cellCount, topCell, cellMap, lazyEquality, hasEdges + (setCell -> es), domEdges, cdmEdges)
   }
 
   /**
@@ -163,7 +160,23 @@ class Arena private(val solverContext: SolverContext,
     if (domEdges.contains(funCell))
       throw new IllegalStateException("Trying to set function domain, whereas one is already set")
 
-    new Arena(solverContext, cellCount, topCell, cellMap, lazyEquality, hasEdges, domEdges + (funCell -> domCell))
+    new Arena(solverContext,
+      cellCount, topCell, cellMap, lazyEquality, hasEdges, domEdges + (funCell -> domCell), cdmEdges)
+  }
+
+  /**
+    * Set a function co-domain.
+    *
+    * @param funCell a function cell.
+    * @param cdmCell a set cell
+    * @return a new arena
+    */
+  def setCdm(funCell: ArenaCell, cdmCell: ArenaCell): Arena = {
+    if (cdmEdges.contains(funCell))
+      throw new IllegalStateException("Trying to set function co-domain, whereas one is already set")
+
+    new Arena(solverContext,
+      cellCount, topCell, cellMap, lazyEquality, hasEdges, domEdges, cdmEdges + (funCell -> cdmCell))
   }
 
   /**
@@ -174,6 +187,16 @@ class Arena private(val solverContext: SolverContext,
     */
   def getDom(funCell: ArenaCell): ArenaCell = {
     domEdges.apply(funCell)
+  }
+
+  /**
+    * Get the co-domain cell associated with a function.
+    *
+    * @param funCell a function cell.
+    * @return the co-domain cell
+    */
+  def getCdm(funCell: ArenaCell): ArenaCell = {
+    cdmEdges.apply(funCell)
   }
 
   /**

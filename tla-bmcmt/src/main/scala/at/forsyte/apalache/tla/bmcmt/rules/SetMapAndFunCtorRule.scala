@@ -78,10 +78,13 @@ class SetMapAndFunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val (newState: SymbState, resultCells: Seq[ArenaCell], elemType: CellT) =
       mapCells(setState, mapEx, varName, setEx, domainCells)
 
-    // introduce a new cell
+    // introduce a domain cell
     val arena = newState.arena.appendCell(FunT(domainCell.cellType, elemType))
     val funCell = arena.topCell
-    val newArena = arena.setDom(funCell, domainCell)
+    val arena2 = arena.appendCell(FinSetT(elemType)) // co-domain is a finite set of type elemType
+    val codomainCell = arena2.topCell
+    val newArena = arena2.setDom(funCell, domainCell)
+      .setCdm(funCell, codomainCell)
     // associate a function constant with the function cell
     val _ = newArena.solverContext.getOrIntroCellFun(funCell)
 

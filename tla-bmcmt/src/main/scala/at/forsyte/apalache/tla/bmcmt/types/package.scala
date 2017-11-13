@@ -24,6 +24,9 @@ package object types {
         case (BoolT(), BoolT()) =>
           true
 
+        case (ConstT(), ConstT()) =>
+          true
+
         case (IntT(), IntT()) =>
           true
 
@@ -71,9 +74,14 @@ package object types {
   }
 
   /**
-    * An unknown variable, or a type variable.
+    * A type variable.
     */
   case class UnknownT() extends CellT
+
+  /**
+    * A cell constant, that is, just a name.
+    */
+  case class ConstT() extends CellT
 
   /**
     * A Boolean cell type.
