@@ -440,11 +440,7 @@ package object Builder {
                  , p_S2: TlaEx
                  ) : TlaEx = OperEx( TlaSetOper.setminus, p_S1, p_S2)
 
-  def mk_times( p_S1: TlaEx
-              , p_S2: TlaEx
-              ) : TlaEx = OperEx( TlaSetOper.times, p_S1, p_S2)
-
-  def mk_setProd( p_args: TlaEx* ) : TlaEx = OperEx( TlaSetOper.setProd, p_args:_*)
+  def mk_times( p_args: TlaEx* ) : TlaEx = OperEx( TlaSetOper.times, p_args:_*)
 
   def mk_powSet( p_S: TlaEx ) : TlaEx = OperEx( TlaSetOper.powerset, p_S )
 
@@ -535,7 +531,6 @@ package object Builder {
       TlaSetOper.supseteq.name     -> TlaSetOper.supseteq,
       TlaSetOper.supsetProper.name -> TlaSetOper.supsetProper,
       TlaSetOper.times.name        -> TlaSetOper.times,
-      TlaSetOper.setProd.name      -> TlaSetOper.setProd,
       TlaSetOper.union.name        -> TlaSetOper.union
   )
 

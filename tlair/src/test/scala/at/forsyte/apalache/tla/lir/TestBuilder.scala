@@ -126,8 +126,8 @@ class TestBuilder extends FunSuite {
 
   test("Test mk_operByNameOrNull: TlaOper"){
     val eqBuildBad1 = bd.mk_operByNameOrNull( TlaOper.eq.name, n_a )
-    val eqBuild     = bd.mk_operByNameOrNull( TlaOper.eq.name, n_a, n_b)
-    val eqBuildBad2 = bd.mk_operByNameOrNull( TlaOper.eq.name, n_a, n_b, n_c)
+    val eqBuild     = bd.mk_operByNameOrNull( TlaOper.eq.name, n_a, n_b )
+    val eqBuildBad2 = bd.mk_operByNameOrNull( TlaOper.eq.name, n_a, n_b, n_c )
 
     assert( eqBuildBad1 == NullEx )
     assert( eqBuild     == OperEx( TlaOper.eq, n_a, n_b ) )
@@ -419,7 +419,9 @@ class TestBuilder extends FunSuite {
 
     val compositionBuildBad1 = bd.mk_operByNameOrNull( TlaActionOper.composition.name, n_a )
     val compositionBuild     = bd.mk_operByNameOrNull( TlaActionOper.composition.name, n_a, n_b )
-    val compositionBuildBad2 = bd.mk_operByNameOrNull( TlaActionOper.composition.name, n_a, n_b, n_c )
+    val compositionBuildBad2 = bd.mk_operByNameOrNull(
+      TlaActionOper.composition.name, n_a, n_b, n_c
+    )
 
     assert( compositionBuildBad1 == NullEx )
     assert( compositionBuild     == OperEx( TlaActionOper.composition, n_a, n_b ) )
@@ -1017,14 +1019,14 @@ class TestBuilder extends FunSuite {
     val sumBuild2 = bd.mk_operByNameOrNull( TlaArithOper.sum.name, n_a, n_b )
 
     assert( sumBuild1 == OperEx( TlaArithOper.sum ) )
-    assert( sumBuild2 == OperEx( TlaArithOper.sum, n_a,n_b ) )
+    assert( sumBuild2 == OperEx( TlaArithOper.sum, n_a, n_b ) )
 
     val plusBuildBad1 = bd.mk_operByNameOrNull( TlaArithOper.plus.name, n_a )
     val plusBuild     = bd.mk_operByNameOrNull( TlaArithOper.plus.name, n_a, n_b )
     val plusBuildBad2 = bd.mk_operByNameOrNull( TlaArithOper.plus.name, n_a, n_b, n_c )
 
     assert( plusBuildBad1 == NullEx )
-    assert( plusBuild     == OperEx( TlaArithOper.plus, n_a,n_b ) )
+    assert( plusBuild     == OperEx( TlaArithOper.plus, n_a, n_b ) )
     assert( plusBuildBad2 == NullEx )
 
     val minusBuildBad1 = bd.mk_operByNameOrNull( TlaArithOper.minus.name, n_a )
@@ -1032,7 +1034,7 @@ class TestBuilder extends FunSuite {
     val minusBuildBad2 = bd.mk_operByNameOrNull( TlaArithOper.minus.name, n_a, n_b, n_c )
 
     assert( minusBuildBad1 == NullEx )
-    assert( minusBuild     == OperEx( TlaArithOper.minus, n_a,n_b ) )
+    assert( minusBuild     == OperEx( TlaArithOper.minus, n_a, n_b ) )
     assert( minusBuildBad2 == NullEx )
 
     val uminusBuildBad1 = bd.mk_operByNameOrNull( TlaArithOper.uminus.name )
@@ -1047,14 +1049,14 @@ class TestBuilder extends FunSuite {
     val prodBuild2 = bd.mk_operByNameOrNull( TlaArithOper.prod.name, n_a, n_b )
 
     assert( prodBuild1 == OperEx( TlaArithOper.prod ) )
-    assert( prodBuild2 == OperEx( TlaArithOper.prod, n_a,n_b ) )
+    assert( prodBuild2 == OperEx( TlaArithOper.prod, n_a, n_b ) )
 
     val multBuildBad1 = bd.mk_operByNameOrNull( TlaArithOper.mult.name, n_a )
     val multBuild     = bd.mk_operByNameOrNull( TlaArithOper.mult.name, n_a, n_b )
     val multBuildBad2 = bd.mk_operByNameOrNull( TlaArithOper.mult.name, n_a, n_b, n_c )
 
     assert( multBuildBad1 == NullEx )
-    assert( multBuild     == OperEx( TlaArithOper.mult, n_a,n_b ) )
+    assert( multBuild     == OperEx( TlaArithOper.mult, n_a, n_b ) )
     assert( multBuildBad2 == NullEx )
 
     val divBuildBad1 = bd.mk_operByNameOrNull( TlaArithOper.div.name, n_a )
@@ -1062,7 +1064,7 @@ class TestBuilder extends FunSuite {
     val divBuildBad2 = bd.mk_operByNameOrNull( TlaArithOper.div.name, n_a, n_b, n_c )
 
     assert( divBuildBad1 == NullEx )
-    assert( divBuild     == OperEx( TlaArithOper.div, n_a,n_b ) )
+    assert( divBuild     == OperEx( TlaArithOper.div, n_a, n_b ) )
     assert( divBuildBad2 == NullEx )
 
     val modBuildBad1 = bd.mk_operByNameOrNull( TlaArithOper.mod.name, n_a )
@@ -1070,7 +1072,7 @@ class TestBuilder extends FunSuite {
     val modBuildBad2 = bd.mk_operByNameOrNull( TlaArithOper.mod.name, n_a, n_b, n_c )
 
     assert( modBuildBad1 == NullEx )
-    assert( modBuild     == OperEx( TlaArithOper.mod, n_a,n_b ) )
+    assert( modBuild     == OperEx( TlaArithOper.mod, n_a, n_b ) )
     assert( modBuildBad2 == NullEx )
 
     val realDivBuildBad1 = bd.mk_operByNameOrNull( TlaArithOper.realDiv.name, n_a )
@@ -1078,7 +1080,7 @@ class TestBuilder extends FunSuite {
     val realDivBuildBad2 = bd.mk_operByNameOrNull( TlaArithOper.realDiv.name, n_a, n_b, n_c )
 
     assert( realDivBuildBad1 == NullEx )
-    assert( realDivBuild     == OperEx( TlaArithOper.realDiv, n_a,n_b ) )
+    assert( realDivBuild     == OperEx( TlaArithOper.realDiv, n_a, n_b ) )
     assert( realDivBuildBad2 == NullEx )
 
     val expBuildBad1 = bd.mk_operByNameOrNull( TlaArithOper.exp.name, n_a )
@@ -1086,7 +1088,7 @@ class TestBuilder extends FunSuite {
     val expBuildBad2 = bd.mk_operByNameOrNull( TlaArithOper.exp.name, n_a, n_b, n_c )
 
     assert( expBuildBad1 == NullEx )
-    assert( expBuild     == OperEx( TlaArithOper.exp, n_a,n_b ) )
+    assert( expBuild     == OperEx( TlaArithOper.exp, n_a, n_b ) )
     assert( expBuildBad2 == NullEx )
 
     val dotdotBuildBad1 = bd.mk_operByNameOrNull( TlaArithOper.dotdot.name, n_a )
@@ -1094,7 +1096,7 @@ class TestBuilder extends FunSuite {
     val dotdotBuildBad2 = bd.mk_operByNameOrNull( TlaArithOper.dotdot.name, n_a, n_b, n_c )
 
     assert( dotdotBuildBad1 == NullEx )
-    assert( dotdotBuild     == OperEx( TlaArithOper.dotdot, n_a,n_b ) )
+    assert( dotdotBuild     == OperEx( TlaArithOper.dotdot, n_a, n_b ) )
     assert( dotdotBuildBad2 == NullEx )
 
     val ltBuildBad1 = bd.mk_operByNameOrNull( TlaArithOper.lt.name, n_a )
@@ -1102,7 +1104,7 @@ class TestBuilder extends FunSuite {
     val ltBuildBad2 = bd.mk_operByNameOrNull( TlaArithOper.lt.name, n_a, n_b, n_c )
 
     assert( ltBuildBad1 == NullEx )
-    assert( ltBuild     == OperEx( TlaArithOper.lt, n_a,n_b ) )
+    assert( ltBuild     == OperEx( TlaArithOper.lt, n_a, n_b ) )
     assert( ltBuildBad2 == NullEx )
 
     val gtBuildBad1 = bd.mk_operByNameOrNull( TlaArithOper.gt.name, n_a )
@@ -1110,7 +1112,7 @@ class TestBuilder extends FunSuite {
     val gtBuildBad2 = bd.mk_operByNameOrNull( TlaArithOper.gt.name, n_a, n_b, n_c )
 
     assert( gtBuildBad1 == NullEx )
-    assert( gtBuild     == OperEx( TlaArithOper.gt, n_a,n_b ) )
+    assert( gtBuild     == OperEx( TlaArithOper.gt, n_a, n_b ) )
     assert( gtBuildBad2 == NullEx )
 
     val leBuildBad1 = bd.mk_operByNameOrNull( TlaArithOper.le.name, n_a )
@@ -1118,7 +1120,7 @@ class TestBuilder extends FunSuite {
     val leBuildBad2 = bd.mk_operByNameOrNull( TlaArithOper.le.name, n_a, n_b, n_c )
 
     assert( leBuildBad1 == NullEx )
-    assert( leBuild     == OperEx( TlaArithOper.le, n_a,n_b ) )
+    assert( leBuild     == OperEx( TlaArithOper.le, n_a, n_b ) )
     assert( leBuildBad2 == NullEx )
 
     val geBuildBad1 = bd.mk_operByNameOrNull( TlaArithOper.ge.name, n_a )
@@ -1126,7 +1128,7 @@ class TestBuilder extends FunSuite {
     val geBuildBad2 = bd.mk_operByNameOrNull( TlaArithOper.ge.name, n_a, n_b, n_c )
 
     assert( geBuildBad1 == NullEx )
-    assert( geBuild     == OperEx( TlaArithOper.ge, n_a,n_b ) )
+    assert( geBuild     == OperEx( TlaArithOper.ge, n_a, n_b ) )
     assert( geBuildBad2 == NullEx )
   }
 
@@ -1543,15 +1545,11 @@ class TestBuilder extends FunSuite {
 
     assert( setminusBuild == OperEx( TlaSetOper.setminus, n_a, n_b ) )
 
-    val timesBuild = bd.mk_times( n_a, n_b )
+    val timesBuild1 = bd.mk_times( )
+    val timesBuild2 = bd.mk_times( n_a, n_b )
 
-    assert( timesBuild == OperEx( TlaSetOper.times, n_a, n_b ) )
-
-    val setProdBuild1 = bd.mk_setProd( )
-    val setProdBuild2 = bd.mk_setProd( n_a, n_b )
-
-    assert( setProdBuild1 == OperEx( TlaSetOper.setProd ) )
-    assert( setProdBuild2 == OperEx( TlaSetOper.setProd, n_a, n_b ) )
+    assert( timesBuild1 == OperEx( TlaSetOper.times ) )
+    assert( timesBuild2 == OperEx( TlaSetOper.times, n_a, n_b ) )
 
     val powSetBuild = bd.mk_powSet( n_a )
 
@@ -1683,19 +1681,11 @@ class TestBuilder extends FunSuite {
       bd.mk_operByName( TlaSetOper.setminus.name, n_a, n_b, n_c )
     )
 
-    val timesBuild = bd.mk_operByName( TlaSetOper.times.name, n_a, n_b )
+    val timesBuild1 = bd.mk_operByName( TlaSetOper.times.name )
+    val timesBuild2 = bd.mk_operByName( TlaSetOper.times.name, n_a, n_b )
 
-    assertThrows[IllegalArgumentException]( bd.mk_operByName( TlaSetOper.times.name, n_a ) )
-    assert( timesBuild == OperEx( TlaSetOper.times, n_a, n_b ) )
-    assertThrows[IllegalArgumentException](
-      bd.mk_operByName( TlaSetOper.times.name, n_a, n_b, n_c )
-    )
-
-    val setProdBuild1 = bd.mk_operByName( TlaSetOper.setProd.name )
-    val setProdBuild2 = bd.mk_operByName( TlaSetOper.setProd.name, n_a, n_b )
-
-    assert( setProdBuild1 == OperEx( TlaSetOper.setProd ) )
-    assert( setProdBuild2 == OperEx( TlaSetOper.setProd, n_a, n_b ) )
+    assert( timesBuild1 == OperEx( TlaSetOper.times ) )
+    assert( timesBuild2 == OperEx( TlaSetOper.times, n_a, n_b ) )
 
     val powSetBuild = bd.mk_operByName( TlaSetOper.powerset.name, n_a )
 
@@ -1713,149 +1703,141 @@ class TestBuilder extends FunSuite {
     assert( enumSetBuild2 == OperEx( TlaSetOper.enumSet, n_a, n_b ) )
 
     val inBuildBad1 = bd.mk_operByNameOrNull( TlaSetOper.in.name, n_a )
-    val inBuild = bd.mk_operByNameOrNull( TlaSetOper.in.name, n_a, n_b )
+    val inBuild     = bd.mk_operByNameOrNull( TlaSetOper.in.name, n_a, n_b )
     val inBuildBad2 = bd.mk_operByNameOrNull( TlaSetOper.in.name, n_a, n_b, n_c )
 
     assert( inBuildBad1 == NullEx )
-    assert( inBuild == OperEx( TlaSetOper.in, n_a, n_b ) )
+    assert( inBuild     == OperEx( TlaSetOper.in, n_a, n_b ) )
     assert( inBuildBad2 == NullEx )
 
     val notinBuildBad1 = bd.mk_operByNameOrNull( TlaSetOper.notin.name, n_a )
-    val notinBuild = bd.mk_operByNameOrNull( TlaSetOper.notin.name, n_a, n_b )
+    val notinBuild     = bd.mk_operByNameOrNull( TlaSetOper.notin.name, n_a, n_b )
     val notinBuildBad2 = bd.mk_operByNameOrNull( TlaSetOper.notin.name, n_a, n_b, n_c )
 
     assert( notinBuildBad1 == NullEx )
-    assert( notinBuild == OperEx( TlaSetOper.notin, n_a, n_b ) )
+    assert( notinBuild     == OperEx( TlaSetOper.notin, n_a, n_b ) )
     assert( notinBuildBad2 == NullEx )
 
     val capBuildBad1 = bd.mk_operByNameOrNull( TlaSetOper.cap.name, n_a )
-    val capBuild = bd.mk_operByNameOrNull( TlaSetOper.cap.name, n_a, n_b )
+    val capBuild     = bd.mk_operByNameOrNull( TlaSetOper.cap.name, n_a, n_b )
     val capBuildBad2 = bd.mk_operByNameOrNull( TlaSetOper.cap.name, n_a, n_b, n_c )
 
     assert( capBuildBad1 == NullEx )
-    assert( capBuild == OperEx( TlaSetOper.cap, n_a, n_b ) )
+    assert( capBuild     == OperEx( TlaSetOper.cap, n_a, n_b ) )
     assert( capBuildBad2 == NullEx )
 
     val cupBuildBad1 = bd.mk_operByNameOrNull( TlaSetOper.cup.name, n_a )
-    val cupBuild = bd.mk_operByNameOrNull( TlaSetOper.cup.name, n_a, n_b )
+    val cupBuild     = bd.mk_operByNameOrNull( TlaSetOper.cup.name, n_a, n_b )
     val cupBuildBad2 = bd.mk_operByNameOrNull( TlaSetOper.cup.name, n_a, n_b, n_c )
 
     assert( cupBuildBad1 == NullEx )
-    assert( cupBuild == OperEx( TlaSetOper.cup, n_a, n_b ) )
+    assert( cupBuild     == OperEx( TlaSetOper.cup, n_a, n_b ) )
     assert( cupBuildBad2 == NullEx )
 
     val unionBuildBad1 = bd.mk_operByNameOrNull( TlaSetOper.union.name )
-    val unionBuild = bd.mk_operByNameOrNull( TlaSetOper.union.name, n_a )
+    val unionBuild     = bd.mk_operByNameOrNull( TlaSetOper.union.name, n_a )
     val unionBuildBad2 = bd.mk_operByNameOrNull( TlaSetOper.union.name, n_a, n_b )
 
     assert( unionBuildBad1 == NullEx )
-    assert( unionBuild == OperEx( TlaSetOper.union, n_a ) )
+    assert( unionBuild     == OperEx( TlaSetOper.union, n_a ) )
     assert( unionBuildBad2 == NullEx )
 
     val filterBuildBad1 = bd.mk_operByNameOrNull( TlaSetOper.filter.name, n_a, n_b )
-    val filterBuild = bd.mk_operByNameOrNull( TlaSetOper.filter.name, n_a, n_b, n_c )
+    val filterBuild     = bd.mk_operByNameOrNull( TlaSetOper.filter.name, n_a, n_b, n_c )
     val filterBuildBad2 = bd.mk_operByNameOrNull( TlaSetOper.filter.name, n_a, n_b, n_c, n_d )
 
     assert( filterBuildBad1 == NullEx )
-    assert( filterBuild == OperEx( TlaSetOper.filter, n_a, n_b, n_c ) )
+    assert( filterBuild     == OperEx( TlaSetOper.filter, n_a, n_b, n_c ) )
     assert( filterBuildBad2 == NullEx )
 
     val mapBuildBad1 = bd.mk_operByNameOrNull( TlaSetOper.map.name, n_a, n_b )
-    val mapBuild1 = bd.mk_operByNameOrNull( TlaSetOper.map.name, n_a, n_b, n_c )
+    val mapBuild1    = bd.mk_operByNameOrNull( TlaSetOper.map.name, n_a, n_b, n_c )
     val mapBuildBad2 = bd.mk_operByNameOrNull( TlaSetOper.map.name, n_a, n_b, n_c, n_d )
     val mapBuild2 = bd.mk_operByNameOrNull( TlaSetOper.map.name, n_a, n_b, n_c, n_d, n_e )
     
     assert( mapBuildBad1 == NullEx )
-    assert( mapBuild1 == OperEx( TlaSetOper.map, n_a, n_b, n_c ) )
+    assert( mapBuild1    == OperEx( TlaSetOper.map, n_a, n_b, n_c ) )
     assert( mapBuildBad2 == NullEx )
-    assert( mapBuild2 == OperEx( TlaSetOper.map, n_a, n_b, n_c, n_d, n_e ) )
+    assert( mapBuild2    == OperEx( TlaSetOper.map, n_a, n_b, n_c, n_d, n_e ) )
 
     val funSetBuildBad1 = bd.mk_operByNameOrNull( TlaSetOper.funSet.name, n_a )
-    val funSetBuild = bd.mk_operByNameOrNull( TlaSetOper.funSet.name, n_a, n_b )
+    val funSetBuild     = bd.mk_operByNameOrNull( TlaSetOper.funSet.name, n_a, n_b )
     val funSetBuildBad2 = bd.mk_operByNameOrNull( TlaSetOper.funSet.name, n_a, n_b, n_c )
 
     assert( funSetBuildBad1 == NullEx )
-    assert( funSetBuild == OperEx( TlaSetOper.funSet, n_a, n_b ) )
+    assert( funSetBuild     == OperEx( TlaSetOper.funSet, n_a, n_b ) )
     assert( funSetBuildBad2 == NullEx )
 
-    val recSetBuild1 = bd.mk_operByNameOrNull( TlaSetOper.recSet.name )
+    val recSetBuild1    = bd.mk_operByNameOrNull( TlaSetOper.recSet.name )
     val recSetBuildBad1 = bd.mk_operByNameOrNull( TlaSetOper.recSet.name, n_a )
-    val recSetBuild2 = bd.mk_operByNameOrNull( TlaSetOper.recSet.name, n_a, n_b )
+    val recSetBuild2    = bd.mk_operByNameOrNull( TlaSetOper.recSet.name, n_a, n_b )
     val recSetBuildBad2 = bd.mk_operByNameOrNull( TlaSetOper.recSet.name, n_a, n_b, n_c )
 
-    assert( recSetBuild1 == OperEx( TlaSetOper.recSet ) )
+    assert( recSetBuild1    == OperEx( TlaSetOper.recSet ) )
     assert( recSetBuildBad1 == NullEx )
-    assert( recSetBuild2 == OperEx( TlaSetOper.recSet, n_a, n_b ) )
+    assert( recSetBuild2    == OperEx( TlaSetOper.recSet, n_a, n_b ) )
     assert( recSetBuildBad2 == NullEx )
 
     val seqSetBuildBad1 = bd.mk_operByNameOrNull( TlaSetOper.seqSet.name )
-    val seqSetBuild = bd.mk_operByNameOrNull( TlaSetOper.seqSet.name, n_a )
+    val seqSetBuild     = bd.mk_operByNameOrNull( TlaSetOper.seqSet.name, n_a )
     val seqSetBuildBad2 = bd.mk_operByNameOrNull( TlaSetOper.seqSet.name, n_a, n_b )
 
     assert( seqSetBuildBad1 == NullEx )
-    assert( seqSetBuild == OperEx( TlaSetOper.seqSet, n_a ) )
+    assert( seqSetBuild     == OperEx( TlaSetOper.seqSet, n_a ) )
     assert( seqSetBuildBad2 == NullEx )
 
     val subsetBuildBad1 = bd.mk_operByNameOrNull( TlaSetOper.subsetProper.name, n_a )
-    val subsetBuild = bd.mk_operByNameOrNull( TlaSetOper.subsetProper.name, n_a, n_b )
+    val subsetBuild     = bd.mk_operByNameOrNull( TlaSetOper.subsetProper.name, n_a, n_b )
     val subsetBuildBad2 = bd.mk_operByNameOrNull( TlaSetOper.subsetProper.name, n_a, n_b, n_c )
 
     assert( subsetBuildBad1 == NullEx )
-    assert( subsetBuild == OperEx( TlaSetOper.subsetProper, n_a, n_b ) )
+    assert( subsetBuild     == OperEx( TlaSetOper.subsetProper, n_a, n_b ) )
     assert( subsetBuildBad2 == NullEx )
 
     val subseteqBuildBad1 = bd.mk_operByNameOrNull( TlaSetOper.subseteq.name, n_a )
-    val subseteqBuild = bd.mk_operByNameOrNull( TlaSetOper.subseteq.name, n_a, n_b )
+    val subseteqBuild     = bd.mk_operByNameOrNull( TlaSetOper.subseteq.name, n_a, n_b )
     val subseteqBuildBad2 = bd.mk_operByNameOrNull( TlaSetOper.subseteq.name, n_a, n_b, n_c )
 
     assert( subseteqBuildBad1 == NullEx )
-    assert( subseteqBuild == OperEx( TlaSetOper.subseteq, n_a, n_b ) )
+    assert( subseteqBuild     == OperEx( TlaSetOper.subseteq, n_a, n_b ) )
     assert( subseteqBuildBad2 == NullEx )
 
     val supsetBuildBad1 = bd.mk_operByNameOrNull( TlaSetOper.supsetProper.name, n_a )
-    val supsetBuild = bd.mk_operByNameOrNull( TlaSetOper.supsetProper.name, n_a, n_b )
+    val supsetBuild     = bd.mk_operByNameOrNull( TlaSetOper.supsetProper.name, n_a, n_b )
     val supsetBuildBad2 = bd.mk_operByNameOrNull( TlaSetOper.supsetProper.name, n_a, n_b, n_c )
 
     assert( supsetBuildBad1 == NullEx )
-    assert( supsetBuild == OperEx( TlaSetOper.supsetProper, n_a, n_b ) )
+    assert( supsetBuild     == OperEx( TlaSetOper.supsetProper, n_a, n_b ) )
     assert( supsetBuildBad2 == NullEx )
 
     val supseteqBuildBad1 = bd.mk_operByNameOrNull( TlaSetOper.supseteq.name, n_a )
-    val supseteqBuild = bd.mk_operByNameOrNull( TlaSetOper.supseteq.name, n_a, n_b )
+    val supseteqBuild     = bd.mk_operByNameOrNull( TlaSetOper.supseteq.name, n_a, n_b )
     val supseteqBuildBad2 = bd.mk_operByNameOrNull( TlaSetOper.supseteq.name, n_a, n_b, n_c )
 
     assert( supseteqBuildBad1 == NullEx )
-    assert( supseteqBuild == OperEx( TlaSetOper.supseteq, n_a, n_b ) )
+    assert( supseteqBuild     == OperEx( TlaSetOper.supseteq, n_a, n_b ) )
     assert( supseteqBuildBad2 == NullEx )
 
     val setminusBuildBad1 = bd.mk_operByNameOrNull( TlaSetOper.setminus.name, n_a )
-    val setminusBuild = bd.mk_operByNameOrNull( TlaSetOper.setminus.name, n_a, n_b )
+    val setminusBuild     = bd.mk_operByNameOrNull( TlaSetOper.setminus.name, n_a, n_b )
     val setminusBuildBad2 = bd.mk_operByNameOrNull( TlaSetOper.setminus.name, n_a, n_b, n_c )
 
     assert( setminusBuildBad1 == NullEx )
-    assert( setminusBuild == OperEx( TlaSetOper.setminus, n_a, n_b ) )
+    assert( setminusBuild     == OperEx( TlaSetOper.setminus, n_a, n_b ) )
     assert( setminusBuildBad2 == NullEx )
 
-    val timesBuildBad1 = bd.mk_operByNameOrNull( TlaSetOper.times.name, n_a )
-    val timesBuild = bd.mk_operByNameOrNull( TlaSetOper.times.name, n_a, n_b )
-    val timesBuildBad2 = bd.mk_operByNameOrNull( TlaSetOper.times.name, n_a, n_b, n_c )
+    val timesBuild1 = bd.mk_operByNameOrNull( TlaSetOper.times.name )
+    val timesBuild2 = bd.mk_operByNameOrNull( TlaSetOper.times.name, n_a, n_b )
 
-    assert( timesBuildBad1 == NullEx )
-    assert( timesBuild == OperEx( TlaSetOper.times, n_a, n_b ) )
-    assert( timesBuildBad2 == NullEx )
-
-    val setProdBuild1 = bd.mk_operByNameOrNull( TlaSetOper.setProd.name )
-    val setProdBuild2 = bd.mk_operByNameOrNull( TlaSetOper.setProd.name, n_a, n_b )
-
-    assert( setProdBuild1 == OperEx( TlaSetOper.setProd ) )
-    assert( setProdBuild2 == OperEx( TlaSetOper.setProd, n_a, n_b ) )
+    assert( timesBuild1 == OperEx( TlaSetOper.times ) )
+    assert( timesBuild2 == OperEx( TlaSetOper.times, n_a, n_b ) )
 
     val powersetBuildBad1 = bd.mk_operByNameOrNull( TlaSetOper.powerset.name )
-    val powersetBuild = bd.mk_operByNameOrNull( TlaSetOper.powerset.name, n_a )
+    val powersetBuild     = bd.mk_operByNameOrNull( TlaSetOper.powerset.name, n_a )
     val powersetBuildBad2 = bd.mk_operByNameOrNull( TlaSetOper.powerset.name, n_a, n_b )
 
     assert( powersetBuildBad1 == NullEx )
-    assert( powersetBuild == OperEx( TlaSetOper.powerset, n_a ) )
+    assert( powersetBuild     == OperEx( TlaSetOper.powerset, n_a ) )
     assert( powersetBuildBad2 == NullEx )
     
   }
