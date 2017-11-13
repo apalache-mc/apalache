@@ -12,7 +12,7 @@ import at.forsyte.apalache.tla.lir.temporal._
   * @author jkukovec
   */
 
-package object Builder {
+object Builder {
 
   /** Names and values*/
   def mk_name( p_name: String ) : TlaEx = NameEx( p_name )
