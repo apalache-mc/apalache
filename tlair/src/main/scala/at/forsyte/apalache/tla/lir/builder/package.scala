@@ -49,22 +49,6 @@ package object Builder {
                , p_p: TlaEx
                ) : TlaEx = OperEx(TlaOper.chooseBounded  , p_x, p_S, p_p )
 
-  def mk_prime( p_name: String ) : TlaEx = OperEx( TlaActionOper.prime, mk_name( p_name ) )
-  def mk_prime( p_name: NameEx ) : TlaEx = OperEx( TlaActionOper.prime, p_name            )
-
-  def mk_prime_eq( p_name: String
-                 , p_rhs: TlaEx
-                 ) : TlaEx = mk_eq( mk_prime(p_name), p_rhs           )
-  def mk_prime_eq( p_name: NameEx
-                 , p_rhs: TlaEx
-                 ) : TlaEx = mk_eq( mk_prime(p_name), p_rhs           )
-  def mk_prime_eq( p_name: String
-                 , p_rhs : BigInt
-                 ) : TlaEx = mk_eq( mk_prime(p_name), mk_value(p_rhs) )
-  def mk_prime_eq( p_name: NameEx
-                 , p_rhs : BigInt
-                 ) : TlaEx = mk_eq( mk_prime(p_name), mk_value(p_rhs) )
-
   /** TlaBoolOper */
   def mk_and( p_args: TlaEx* ) : TlaEx = OperEx( TlaBoolOper.and, p_args:_* )
 
@@ -97,6 +81,22 @@ package object Builder {
                ) : TlaEx = OperEx( TlaBoolOper.existsUnbounded, p_x, p_p      )
 
   /** TlaActionOper */
+  def mk_prime( p_name: String ) : TlaEx = OperEx( TlaActionOper.prime, mk_name( p_name ) )
+  def mk_prime( p_name: TlaEx  ) : TlaEx = OperEx( TlaActionOper.prime, p_name            )
+
+  def mk_prime_eq( p_name: String
+                 , p_rhs : TlaEx
+                 ) : TlaEx = mk_eq( mk_prime(p_name), p_rhs           )
+  def mk_prime_eq( p_name: TlaEx
+                 , p_rhs : TlaEx
+                 ) : TlaEx = mk_eq( mk_prime(p_name), p_rhs           )
+  def mk_prime_eq( p_name: String
+                 , p_rhs : BigInt
+                 ) : TlaEx = mk_eq( mk_prime(p_name), mk_value(p_rhs) )
+  def mk_prime_eq( p_name: TlaEx
+                 , p_rhs : BigInt
+                 ) : TlaEx = mk_eq( mk_prime(p_name), mk_value(p_rhs) )
+
   def mk_stutter( p_A: TlaEx
                 , p_e: TlaEx
                 ) : TlaEx = OperEx( TlaActionOper.stutter, p_A, p_e )
@@ -114,6 +114,15 @@ package object Builder {
                     ) : TlaEx = OperEx( TlaActionOper.composition, p_A, p_B )
 
   /** TlaControlOper */
+  def mk_case( p_arg1: TlaEx
+             , p_arg2: TlaEx
+             , p_args: TlaEx*
+             ) : TlaEx =
+    if( p_args.size % 2 == 0 )
+      mk_caseSplit( p_arg1, p_arg2, p_args:_* )
+    else
+      mk_caseOther( p_arg1, p_arg2, p_args.head, p_args.tail:_* )
+
   def mk_caseSplit( p_p1  : TlaEx
                   , p_e1  : TlaEx
                   , p_args: TlaEx* /** Expected even size */
@@ -161,7 +170,7 @@ package object Builder {
            ) : TlaEx = OperEx( TlaTempOper.weakFairness, p_e, p_A )
 
   /** TlaArithOper */
-  def mk_sum( p_args: TlaEx*  ) : TlaEx = OperEx( TlaArithOper.sum, p_args:_* )
+  def mk_sum( p_args: TlaEx* ) : TlaEx = OperEx( TlaArithOper.sum, p_args:_* )
 
   def mk_plus( p_a: TlaEx
              , p_b: TlaEx
@@ -330,9 +339,9 @@ package object Builder {
   def mk_isFin( p_S: TlaEx ) : TlaEx = OperEx( TlaFiniteSetOper.isFiniteSet, p_S )
 
   /** TlaFunOper */
-  def mk_app( p_f   : TlaEx
-            , p_args: TlaEx*
-            ) : TlaEx = OperEx( TlaFunOper.app, (p_f +: p_args):_* )
+  def mk_app( p_f: TlaEx
+            , p_e: TlaEx
+            ) : TlaEx = OperEx( TlaFunOper.app, p_f, p_e )
 
   def mk_dom( p_f: TlaEx ) : TlaEx = OperEx( TlaFunOper.domain, p_f )
 
@@ -389,7 +398,7 @@ package object Builder {
             , p_S2: TlaEx
             ) : TlaEx = OperEx( TlaSetOper.cup, p_S1, p_S2)
 
-  def mk_union( p_args: TlaEx* ) : TlaEx = OperEx( TlaSetOper.union, p_args:_* )
+  def mk_union( p_S: TlaEx ) : TlaEx = OperEx( TlaSetOper.union, p_S )
 
   def mk_filter( p_x: TlaEx
                , p_S: TlaEx
@@ -406,7 +415,8 @@ package object Builder {
                , p_T: TlaEx
                ) : TlaEx = OperEx( TlaSetOper.funSet, p_S, p_T)
 
-  def mk_recSet( p_args: TlaEx* ) : TlaEx = OperEx( TlaSetOper.recSet, p_args:_* )
+  def mk_recSet( p_args: TlaEx* /** Expected even size */
+               ) : TlaEx = OperEx( TlaSetOper.recSet, p_args:_* )
 
   def mk_seqSet( p_S: TlaEx ) : TlaEx = OperEx( TlaSetOper.seqSet, p_S )
 
@@ -433,6 +443,8 @@ package object Builder {
   def mk_times( p_S1: TlaEx
               , p_S2: TlaEx
               ) : TlaEx = OperEx( TlaSetOper.times, p_S1, p_S2)
+
+  def mk_setProd( p_args: TlaEx* ) : TlaEx = OperEx( TlaSetOper.setProd, p_args:_*)
 
   def mk_powSet( p_S: TlaEx ) : TlaEx = OperEx( TlaSetOper.powerset, p_S )
 
@@ -523,11 +535,12 @@ package object Builder {
       TlaSetOper.supseteq.name     -> TlaSetOper.supseteq,
       TlaSetOper.supsetProper.name -> TlaSetOper.supsetProper,
       TlaSetOper.times.name        -> TlaSetOper.times,
+      TlaSetOper.setProd.name      -> TlaSetOper.setProd,
       TlaSetOper.union.name        -> TlaSetOper.union
   )
 
-  def mk_operByName( p_operName: String
-                   , p_args    : TlaEx*/** Expected to match operator arity */
+  def mk_operByName(p_operName: String
+                   , p_args    : TlaEx* /** Expected to match operator arity */
                    ): TlaEx= OperEx( m_nameMap(p_operName), p_args:_*)
 
   def mk_operByNameOrNull( p_operName: String

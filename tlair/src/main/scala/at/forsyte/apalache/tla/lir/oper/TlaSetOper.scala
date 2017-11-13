@@ -145,8 +145,14 @@ object TlaSetOper {
     To construct an empty set, use emptySet.
     */
   val times = new TlaSetOper {
-    override val arity = AnyPositiveArity()
+    override val arity = FixedArity(2)
     override val name = "\\times"
+
+  }
+
+  val setProd = new TlaSetOper {
+    override val arity = AnyArity()
+    override val name = "setProd"
 
   }
 
