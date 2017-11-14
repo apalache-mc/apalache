@@ -6,7 +6,7 @@ package at.forsyte.apalache.tla.lir.oper
   * @author konnov
  */
 abstract class TlaFiniteSetOper extends TlaOper {
-  override def interpretation: Interpretation.Value = Interpretation.Predefined
+  override def interpretation: Interpretation.Value = Interpretation.StandardLib
 }
 
 object TlaFiniteSetOper {
