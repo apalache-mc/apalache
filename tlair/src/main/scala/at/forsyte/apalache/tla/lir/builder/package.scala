@@ -1,10 +1,10 @@
 package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.actions._
-import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir.control._
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.temporal._
+import at.forsyte.apalache.tla.lir.values._
 
 /**
   * A builder for TLA expressions
@@ -148,7 +148,7 @@ object Builder {
   def mk_EE( p_x: TlaEx
            , p_F: TlaEx
            ) : TlaEx = OperEx( TlaTempOper.EE, p_x, p_F )
-  
+
   def mk_box( p_F: TlaEx ) : TlaEx = OperEx( TlaTempOper.box, p_F )
 
   def mk_diamond( p_F: TlaEx ) : TlaEx = OperEx( TlaTempOper.diamond, p_F )
@@ -156,7 +156,7 @@ object Builder {
   def mk_guarantees( p_F: TlaEx
                    , p_G: TlaEx
                    ) : TlaEx = OperEx( TlaTempOper.guarantees, p_F, p_G )
-  
+
   def mk_leadsTo( p_F: TlaEx
                 , p_G: TlaEx
                 ) : TlaEx = OperEx( TlaTempOper.leadsTo, p_F, p_G )
@@ -393,7 +393,7 @@ object Builder {
   def mk_cap( p_S1: TlaEx
             , p_S2: TlaEx
             ) : TlaEx = OperEx( TlaSetOper.cap, p_S1, p_S2)
-  
+
   def mk_cup( p_S1: TlaEx
             , p_S2: TlaEx
             ) : TlaEx = OperEx( TlaSetOper.cup, p_S1, p_S2)
@@ -410,7 +410,7 @@ object Builder {
             , p_S   : TlaEx
             , p_args: TlaEx* /** Expected even size */
             ) : TlaEx = OperEx( TlaSetOper.map, (p_e +: p_x +: p_S +: p_args):_* )
-  
+
   def mk_funSet( p_S: TlaEx
                , p_T: TlaEx
                ) : TlaEx = OperEx( TlaSetOper.funSet, p_S, p_T)
@@ -548,3 +548,4 @@ object Builder {
         else NullEx
     ).getOrElse(NullEx)
 }
+|
