@@ -54,6 +54,7 @@ object sanitizer {
       * Tasks:
       *   - Inline operators
       *   - change "a = b" to "a \in B"
+      *   - fix quantifiers
       *   - ???
       *   - profit
       */

@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.plugins.Identifier
-import at.forsyte.apalache.tla.lir.values.TlaInt
+
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -115,55 +115,21 @@ class TestAssignments extends FunSuite {
     val (before, after) = extracted.get
     println( "%s \n -> \n %s".format( before, after ) )
 
-    val expectedAfter =
-      OperEx(
-        TlaBoolOper.and,
-        OperEx(
-          TlaBoolOper.or,
-          OperEx(
-            TlaBoolOper.and,
-            OperEx(
-              TlaOper.eq,
-              OperEx(
-                TlaActionOper.prime,
-                NameEx("a")
-              ),
-              OperEx(
-                TlaActionOper.prime,
-                NameEx("b")
-              )
-            ),
-            OperEx(
-              TlaOper.eq,
-              OperEx(
-                TlaActionOper.prime,
-                NameEx("b")
-              ),
-              OperEx(
-                TlaActionOper.prime,
-                NameEx("a")
-              )
-            )
+    val bd = Builder
+
+    val expected =
+      bd.and(
+        bd.or(
+          bd.and(
+            bd.primeEq( "a", "b" ),
+            bd.primeEq( "b", "a" )
           ),
-          OperEx(
-            TlaOper.eq,
-            OperEx(
-              TlaActionOper.prime,
-              NameEx("b")
-            ),
-            ValEx( TlaInt(2) )
-          )
+          bd.primeEq( "b", 2)
         ),
-        OperEx(
-          TlaOper.eq,
-          OperEx(
-            TlaActionOper.prime,
-            NameEx("a")
-          ),
-          ValEx( TlaInt(1) )
-        )
+        bd.primeEq( "a", 1 )
       )
-    assert(after == expectedAfter)
+
+    assert(after == expected)
   }
 
 }
