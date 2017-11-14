@@ -1,10 +1,10 @@
 package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.actions._
-import at.forsyte.apalache.tla.lir.control._
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.temporal._
 import at.forsyte.apalache.tla.lir.values._
+import at.forsyte.apalache.tla.lir.control._
+import at.forsyte.apalache.tla.lir.temporal._
 
 /**
   * A builder for TLA expressions
@@ -548,4 +548,3 @@ object Builder {
         else NullEx
     ).getOrElse(NullEx)
 }
-|
