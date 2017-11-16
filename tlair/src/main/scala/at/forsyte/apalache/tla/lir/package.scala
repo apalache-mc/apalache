@@ -73,7 +73,8 @@ package lir {
   sealed abstract class FormalParam {
     def name: String
 
-    def arity: OperArity
+    def arity: OperArity   /** Simplify arity to Int, Jure 16.11.2017 */
+
   }
 
   /** An ordinary formal parameter, e.g., x used in A(x) == ... */

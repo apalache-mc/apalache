@@ -5,12 +5,16 @@ import at.forsyte.apalache.tla.lir.control._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.temporal._
 import at.forsyte.apalache.tla.lir.values._
+import at.forsyte.apalache.tla.lir.control.LetInOper
+
+
+/* TODO: LET-IN operator!!! */
 
 /**
   * A builder for TLA expressions.
   *
   * Contains methods for constructing various types of [[TlaEx]] expressions, guaranteeing
-  * correct arity where the arity of the associated [[TlaOper]] is of the type [[FixedArity]].
+  * correct arity where the arity of the associated [[oper.TlaOper TlaOper]] is fixed.
   *
   * @author jkukovec
   */
@@ -19,13 +23,20 @@ object Builder {
   /** Names and values */
   def name( p_name : String ) : TlaEx = NameEx( p_name )
 
-  def value( p_val : BigInt ) : TlaEx = ValEx( TlaInt( p_val ) )
+  def int( p_val : BigInt ) : TlaEx = ValEx( TlaInt( p_val ) )
 
-  def value( p_val : BigDecimal ) : TlaEx = ValEx( TlaDecimal( p_val ) )
+  def decimal( p_val : BigDecimal ) : TlaEx = ValEx( TlaDecimal( p_val ) )
 
-  def value( p_val : Boolean ) : TlaEx = ValEx( TlaBool( p_val ) )
+  def bool( p_val : Boolean ) : TlaEx = ValEx( TlaBool( p_val ) )
 
-  def value( p_val : String ) : TlaEx = ValEx( TlaStr( p_val ) )
+  def str( p_val : String ) : TlaEx = ValEx( TlaStr( p_val ) )
+
+  /** Declarations */
+
+  def declOp( p_name : String,
+              p_body : TlaEx,
+              p_args : FormalParam*
+            ) : TlaOperDecl = TlaOperDecl( p_name, p_args.toList , p_body )
 
   /** TlaOper */
   def eql( p_lhs : TlaEx,
@@ -34,7 +45,7 @@ object Builder {
 
   def eql( p_lhs : TlaEx,
            p_rhs : BigInt
-         ) : TlaEx = OperEx( TlaOper.eq, p_lhs, value( p_rhs ) )
+         ) : TlaEx = OperEx( TlaOper.eq, p_lhs, int( p_rhs ) )
 
   def neql( p_lhs : TlaEx,
             p_rhs : TlaEx
@@ -42,7 +53,7 @@ object Builder {
 
   def neql( p_lhs : TlaEx,
             p_rhs : BigInt
-          ) : TlaEx = OperEx( TlaOper.ne, p_lhs, value( p_rhs ) )
+          ) : TlaEx = OperEx( TlaOper.ne, p_lhs, int( p_rhs ) )
 
   def appOp( p_Op : TlaEx,
              p_args : TlaEx*
@@ -109,11 +120,11 @@ object Builder {
 
   def primeEq( p_name : String,
                p_rhs : BigInt
-             ) : TlaEx = eql( prime( p_name ), value( p_rhs ) )
+             ) : TlaEx = eql( prime( p_name ), int( p_rhs ) )
 
   def primeEq( p_name : TlaEx,
                p_rhs : BigInt
-             ) : TlaEx = eql( prime( p_name ), value( p_rhs ) )
+             ) : TlaEx = eql( prime( p_name ), int( p_rhs ) )
 
   def stutt( p_A : TlaEx,
              p_e : TlaEx
@@ -158,6 +169,10 @@ object Builder {
            p_else : TlaEx
          ) : TlaEx = OperEx( TlaControlOper.ifThenElse, p_cond, p_then, p_else )
 
+  def letIn( p_ex : TlaEx,
+             p_operArgs : TlaOperDecl*
+           ) : TlaEx = OperEx( new LetInOper( p_operArgs.toList ), p_ex )
+
   /** TlaTempOper */
   def AA( p_x : TlaEx,
           p_F : TlaEx
@@ -196,15 +211,15 @@ object Builder {
 
   def plus( p_a : TlaEx,
             p_b : BigInt
-          ) : TlaEx = OperEx( TlaArithOper.plus, p_a, value( p_b ) )
+          ) : TlaEx = OperEx( TlaArithOper.plus, p_a, int( p_b ) )
 
   def plus( p_a : BigInt,
             p_b : TlaEx
-          ) : TlaEx = OperEx( TlaArithOper.plus, value( p_a ), p_b )
+          ) : TlaEx = OperEx( TlaArithOper.plus, int( p_a ), p_b )
 
   def plus( p_a : BigInt,
             p_b : BigInt
-          ) : TlaEx = OperEx( TlaArithOper.plus, value( p_a ), value( p_b ) )
+          ) : TlaEx = OperEx( TlaArithOper.plus, int( p_a ), int( p_b ) )
 
   def minus( p_a : TlaEx,
              p_b : TlaEx
@@ -212,19 +227,19 @@ object Builder {
 
   def minus( p_a : TlaEx,
              p_b : BigInt
-           ) : TlaEx = OperEx( TlaArithOper.minus, p_a, value( p_b ) )
+           ) : TlaEx = OperEx( TlaArithOper.minus, p_a, int( p_b ) )
 
   def minus( p_a : BigInt,
              p_b : TlaEx
-           ) : TlaEx = OperEx( TlaArithOper.minus, value( p_a ), p_b )
+           ) : TlaEx = OperEx( TlaArithOper.minus, int( p_a ), p_b )
 
   def minus( p_a : BigInt,
              p_b : BigInt
-           ) : TlaEx = OperEx( TlaArithOper.minus, value( p_a ), value( p_b ) )
+           ) : TlaEx = OperEx( TlaArithOper.minus, int( p_a ), int( p_b ) )
 
   def uminus( p_a : TlaEx ) : TlaEx = OperEx( TlaArithOper.uminus, p_a )
 
-  def uminus( p_a : BigInt ) : TlaEx = OperEx( TlaArithOper.uminus, value( p_a ) )
+  def uminus( p_a : BigInt ) : TlaEx = OperEx( TlaArithOper.uminus, int( p_a ) )
 
   def prod( p_args : TlaEx* ) : TlaEx = OperEx( TlaArithOper.prod, p_args : _* )
 
@@ -234,15 +249,15 @@ object Builder {
 
   def mult( p_a : TlaEx,
             p_b : BigInt
-          ) : TlaEx = OperEx( TlaArithOper.mult, p_a, value( p_b ) )
+          ) : TlaEx = OperEx( TlaArithOper.mult, p_a, int( p_b ) )
 
   def mult( p_a : BigInt,
             p_b : TlaEx
-          ) : TlaEx = OperEx( TlaArithOper.mult, value( p_a ), p_b )
+          ) : TlaEx = OperEx( TlaArithOper.mult, int( p_a ), p_b )
 
   def mult( p_a : BigInt,
             p_b : BigInt
-          ) : TlaEx = OperEx( TlaArithOper.mult, value( p_a ), value( p_b ) )
+          ) : TlaEx = OperEx( TlaArithOper.mult, int( p_a ), int( p_b ) )
 
   def div( p_a : TlaEx,
            p_b : TlaEx
@@ -250,15 +265,15 @@ object Builder {
 
   def div( p_a : TlaEx
            , p_b : BigInt
-         ) : TlaEx = OperEx( TlaArithOper.div, p_a, value( p_b ) )
+         ) : TlaEx = OperEx( TlaArithOper.div, p_a, int( p_b ) )
 
   def div( p_a : BigInt,
            p_b : TlaEx
-         ) : TlaEx = OperEx( TlaArithOper.div, value( p_a ), p_b )
+         ) : TlaEx = OperEx( TlaArithOper.div, int( p_a ), p_b )
 
   def div( p_a : BigInt,
            p_b : BigInt
-         ) : TlaEx = OperEx( TlaArithOper.div, value( p_a ), value( p_b ) )
+         ) : TlaEx = OperEx( TlaArithOper.div, int( p_a ), int( p_b ) )
 
   def mod( p_a : TlaEx,
            p_b : TlaEx
@@ -266,15 +281,15 @@ object Builder {
 
   def mod( p_a : TlaEx,
            p_b : BigInt
-         ) : TlaEx = OperEx( TlaArithOper.mod, p_a, value( p_b ) )
+         ) : TlaEx = OperEx( TlaArithOper.mod, p_a, int( p_b ) )
 
   def mod( p_a : BigInt,
            p_b : TlaEx
-         ) : TlaEx = OperEx( TlaArithOper.mod, value( p_a ), p_b )
+         ) : TlaEx = OperEx( TlaArithOper.mod, int( p_a ), p_b )
 
   def mod( p_a : BigInt,
            p_b : BigInt
-         ) : TlaEx = OperEx( TlaArithOper.mod, value( p_a ), value( p_b ) )
+         ) : TlaEx = OperEx( TlaArithOper.mod, int( p_a ), int( p_b ) )
 
   def rDiv( p_a : TlaEx,
             p_b : TlaEx
@@ -282,15 +297,15 @@ object Builder {
 
   def rDiv( p_a : TlaEx,
             p_b : BigInt
-          ) : TlaEx = OperEx( TlaArithOper.realDiv, p_a, value( p_b ) )
+          ) : TlaEx = OperEx( TlaArithOper.realDiv, p_a, int( p_b ) )
 
   def rDiv( p_a : BigInt,
             p_b : TlaEx
-          ) : TlaEx = OperEx( TlaArithOper.realDiv, value( p_a ), p_b )
+          ) : TlaEx = OperEx( TlaArithOper.realDiv, int( p_a ), p_b )
 
   def rDiv( p_a : BigInt,
             p_b : BigInt
-          ) : TlaEx = OperEx( TlaArithOper.realDiv, value( p_a ), value( p_b ) )
+          ) : TlaEx = OperEx( TlaArithOper.realDiv, int( p_a ), int( p_b ) )
 
   def exp( p_a : TlaEx,
            p_b : TlaEx
@@ -298,15 +313,15 @@ object Builder {
 
   def exp( p_a : TlaEx,
            p_b : BigInt
-         ) : TlaEx = OperEx( TlaArithOper.exp, p_a, value( p_b ) )
+         ) : TlaEx = OperEx( TlaArithOper.exp, p_a, int( p_b ) )
 
   def exp( p_a : BigInt,
            p_b : TlaEx
-         ) : TlaEx = OperEx( TlaArithOper.exp, value( p_a ), p_b )
+         ) : TlaEx = OperEx( TlaArithOper.exp, int( p_a ), p_b )
 
   def exp( p_a : BigInt,
            p_b : BigInt
-         ) : TlaEx = OperEx( TlaArithOper.exp, value( p_a ), value( p_b ) )
+         ) : TlaEx = OperEx( TlaArithOper.exp, int( p_a ), int( p_b ) )
 
   def dotdot( p_a : TlaEx,
               p_b : TlaEx
@@ -314,15 +329,15 @@ object Builder {
 
   def dotdot( p_a : TlaEx,
               p_b : BigInt
-            ) : TlaEx = OperEx( TlaArithOper.dotdot, p_a, value( p_b ) )
+            ) : TlaEx = OperEx( TlaArithOper.dotdot, p_a, int( p_b ) )
 
   def dotdot( p_a : BigInt,
               p_b : TlaEx
-            ) : TlaEx = OperEx( TlaArithOper.dotdot, value( p_a ), p_b )
+            ) : TlaEx = OperEx( TlaArithOper.dotdot, int( p_a ), p_b )
 
   def dotdot( p_a : BigInt,
               p_b : BigInt
-            ) : TlaEx = OperEx( TlaArithOper.dotdot, value( p_a ), value( p_b ) )
+            ) : TlaEx = OperEx( TlaArithOper.dotdot, int( p_a ), int( p_b ) )
 
   def lt( p_a : TlaEx,
           p_b : TlaEx
@@ -330,15 +345,15 @@ object Builder {
 
   def lt( p_a : TlaEx,
           p_b : BigInt
-        ) : TlaEx = OperEx( TlaArithOper.lt, p_a, value( p_b ) )
+        ) : TlaEx = OperEx( TlaArithOper.lt, p_a, int( p_b ) )
 
   def lt( p_a : BigInt,
           p_b : TlaEx
-        ) : TlaEx = OperEx( TlaArithOper.lt, value( p_a ), p_b )
+        ) : TlaEx = OperEx( TlaArithOper.lt, int( p_a ), p_b )
 
   def lt( p_a : BigInt,
           p_b : BigInt
-        ) : TlaEx = OperEx( TlaArithOper.lt, value( p_a ), value( p_b ) )
+        ) : TlaEx = OperEx( TlaArithOper.lt, int( p_a ), int( p_b ) )
 
   def gt( p_a : TlaEx,
           p_b : TlaEx
@@ -346,15 +361,15 @@ object Builder {
 
   def gt( p_a : TlaEx,
           p_b : BigInt
-        ) : TlaEx = OperEx( TlaArithOper.gt, p_a, value( p_b ) )
+        ) : TlaEx = OperEx( TlaArithOper.gt, p_a, int( p_b ) )
 
   def gt( p_a : BigInt,
           p_b : TlaEx
-        ) : TlaEx = OperEx( TlaArithOper.gt, value( p_a ), p_b )
+        ) : TlaEx = OperEx( TlaArithOper.gt, int( p_a ), p_b )
 
   def gt( p_a : BigInt,
           p_b : BigInt
-        ) : TlaEx = OperEx( TlaArithOper.gt, value( p_a ), value( p_b ) )
+        ) : TlaEx = OperEx( TlaArithOper.gt, int( p_a ), int( p_b ) )
 
   def le( p_a : TlaEx,
           p_b : TlaEx
@@ -362,15 +377,15 @@ object Builder {
 
   def le( p_a : TlaEx,
           p_b : BigInt
-        ) : TlaEx = OperEx( TlaArithOper.le, p_a, value( p_b ) )
+        ) : TlaEx = OperEx( TlaArithOper.le, p_a, int( p_b ) )
 
   def le( p_a : BigInt,
           p_b : TlaEx
-        ) : TlaEx = OperEx( TlaArithOper.le, value( p_a ), p_b )
+        ) : TlaEx = OperEx( TlaArithOper.le, int( p_a ), p_b )
 
   def le( p_a : BigInt,
           p_b : BigInt
-        ) : TlaEx = OperEx( TlaArithOper.le, value( p_a ), value( p_b ) )
+        ) : TlaEx = OperEx( TlaArithOper.le, int( p_a ), int( p_b ) )
 
   def ge( p_a : TlaEx,
           p_b : TlaEx
@@ -378,15 +393,15 @@ object Builder {
 
   def ge( p_a : TlaEx,
           p_b : BigInt
-        ) : TlaEx = OperEx( TlaArithOper.ge, p_a, value( p_b ) )
+        ) : TlaEx = OperEx( TlaArithOper.ge, p_a, int( p_b ) )
 
   def ge( p_a : BigInt,
           p_b : TlaEx
-        ) : TlaEx = OperEx( TlaArithOper.ge, value( p_a ), p_b )
+        ) : TlaEx = OperEx( TlaArithOper.ge, int( p_a ), p_b )
 
   def ge( p_a : BigInt,
           p_b : BigInt
-        ) : TlaEx = OperEx( TlaArithOper.ge, value( p_a ), value( p_b ) )
+        ) : TlaEx = OperEx( TlaArithOper.ge, int( p_a ), int( p_b ) )
 
   /** TlaFiniteSetOper */
   def card( p_S : TlaEx ) : TlaEx = OperEx( TlaFiniteSetOper.cardinality, p_S )

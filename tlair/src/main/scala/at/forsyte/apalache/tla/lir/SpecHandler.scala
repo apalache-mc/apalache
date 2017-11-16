@@ -4,70 +4,81 @@ package at.forsyte.apalache.tla.lir
   * Created by jkukovec on 12/6/16.
   */
 
-package object SpecHandler {
+object SpecHandler {
 
-  def getNewEx( ex : TlaEx, exFun : TlaEx => TlaEx = { x => x } ) : TlaEx = {
-    val newEx = exFun( ex )
-    if( newEx.isInstanceOf[OperEx] ){
-      val oldargs =  newEx.asInstanceOf[OperEx].args
-      val newargs = oldargs.map( getNewEx( _ , exFun ) )
-      if( newargs == oldargs ) return newEx
-      else return OperEx( newEx.asInstanceOf[OperEx].oper, newargs: _*)
-    }
-    else return newEx
-  }
-
-  def sideeffectEx( ex : TlaEx, exFun : TlaEx => Unit = { _ => } ) : Unit = {
-    exFun(ex)
-    if( ex.isInstanceOf[OperEx] ){
-      ex.asInstanceOf[OperEx].args.foreach(
-        sideeffectEx( _ , exFun )
-      )
+  def getNewEx( p_ex : TlaEx,
+                p_exFun : TlaEx => TlaEx = { x => x }
+              ) : TlaEx = {
+    val newEx = p_exFun( p_ex )
+    newEx match {
+      case OperEx( oper, args@_* ) => {
+        val newargs = args.map( getNewEx( _, p_exFun ) )
+        if ( args == newargs ) return newEx
+        else return OperEx( oper, newargs : _* )
+      }
+      case _ => newEx
     }
   }
 
-  def getNewOperBody( decl : TlaDecl,
-                      bodyFun : TlaEx => TlaEx,
-                      postBodySideeffect : TlaEx => Unit = { _ => }
+  def sideeffectEx( p_ex : TlaEx,
+                    p_exFun : TlaEx => Unit = { _ => }
+                  ) : Unit = {
+    p_exFun( p_ex )
+    p_ex match {
+      case OperEx( _, args@_* ) => args.foreach( sideeffectEx( _, p_exFun ) )
+      case _ =>
+    }
+  }
+
+  def getNewOperBody( p_decl : TlaDecl,
+                      p_bodyFun : TlaEx => TlaEx,
+                      p_postBodySideeffect : TlaEx => Unit = { _ => }
                     ) : TlaDecl = {
-    decl match{
+    p_decl match {
       case TlaOperDecl( name, params, body ) => {
-        val newbody = bodyFun( body )
-        if( newbody == body ) return decl
+        val newbody = p_bodyFun( body )
+        if ( newbody == body ) p_decl
         else {
-          postBodySideeffect( newbody )
-          return decl.asInstanceOf[TlaOperDecl].copy( body = newbody )
+          p_postBodySideeffect( newbody )
+          TlaOperDecl( name, params, newbody )
         }
       }
-      case _ => return decl
+      case _ => p_decl
     }
   }
 
-  def sideeffectOperBody( decl : TlaDecl,
-                          bodyFun : TlaEx => Unit
+  def sideeffectOperBody( p_decl : TlaDecl,
+                          p_bodyFun : TlaEx => Unit
                         ) : Unit = {
-    if( decl.isInstanceOf[TlaOperDecl] ) bodyFun( decl.asInstanceOf[TlaOperDecl].body )
+    p_decl match{
+      case TlaOperDecl(_,_, body) => p_bodyFun( body )
+      case _ =>
+    }
   }
 
-  def getNewDecl( spec: TlaSpec, declFun : TlaDecl => TlaDecl ) : TlaSpec = {
-    return spec.copy( declarations = spec.declarations.map( declFun ) )
+  def getNewDecl( p_spec : TlaSpec,
+                  p_declFun : TlaDecl => TlaDecl = { x => x }
+                ) : TlaSpec = {
+    p_spec.copy( declarations = p_spec.declarations.map( p_declFun ) )
   }
 
-  def sideeffectDecl( spec: TlaSpec, declFun : TlaDecl => Unit ) : Unit = {
-    spec.declarations.foreach( declFun )
+  def sideeffectDecl( p_spec : TlaSpec,
+                      p_declFun : TlaDecl => Unit = { _ => }
+                    ) : Unit = {
+    p_spec.declarations.foreach( p_declFun )
   }
 
-  def getNewWithExFun( spec : TlaSpec,
-                       exFun : TlaEx => TlaEx = { x => x },
-                       postBodySideeffect : TlaEx => Unit = { _ => }
+  def getNewWithExFun( p_spec : TlaSpec,
+                       p_exFun : TlaEx => TlaEx = { x => x },
+                       p_postBodySideeffect : TlaEx => Unit = { _ => }
                      ) : TlaSpec = {
-    return getNewDecl( spec, getNewOperBody( _, getNewEx( _, exFun ), postBodySideeffect ) )
+    getNewDecl( p_spec, getNewOperBody( _, getNewEx( _, p_exFun ), p_postBodySideeffect ) )
   }
 
-  def sideeffectWithExFun( spec : TlaSpec,
-                           exFun : TlaEx => Unit = { _ => }
+  def sideeffectWithExFun( p_spec : TlaSpec,
+                           p_exFun : TlaEx => Unit = { _ => }
                          ) : Unit = {
-    sideeffectDecl( spec, sideeffectOperBody( _, sideeffectEx( _, exFun ) ) )
+    sideeffectDecl( p_spec, sideeffectOperBody( _, sideeffectEx( _, p_exFun ) ) )
   }
 
 }

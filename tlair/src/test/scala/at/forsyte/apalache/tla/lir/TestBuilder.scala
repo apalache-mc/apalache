@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
-import at.forsyte.apalache.tla.lir.control.TlaControlOper
+import at.forsyte.apalache.tla.lir.control.{LetInOper, TlaControlOper}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
 import at.forsyte.apalache.tla.lir.values._
@@ -33,10 +33,10 @@ class TestBuilder extends FunSuite {
     val vBool       : Boolean        = false
     val vString     : String         = "a string val"
 
-    val biBuild   = bd.value( vBigInt )
-    val bdBuild   = bd.value( vBigDecimal )
-    val boolBuild = bd.value( vBool )
-    val strBuild  = bd.value( vString )
+    val biBuild   = bd.int( vBigInt )
+    val bdBuild   = bd.decimal( vBigDecimal )
+    val boolBuild = bd.bool( vBool )
+    val strBuild  = bd.str( vString )
 
     assert( biBuild   == ValEx( TlaInt( vBigInt ) ) )
     assert( bdBuild   == ValEx( TlaDecimal( vBigDecimal ) ) )
@@ -429,6 +429,22 @@ class TestBuilder extends FunSuite {
     val iteBuild1 = bd.ite( n_a, n_b, n_c )
 
     assert( iteBuild1 == OperEx( TlaControlOper.ifThenElse, n_a, n_b, n_c ) )
+
+//    val letInBuild1 = bd.letIn( n_a, TlaOperDecl( "b" , List(), n_c ) )
+//    val letInBuild2 =
+//      bd.letIn(
+//        n_a,
+//        TlaOperDecl(
+//          "b" ,
+//          List(
+//            SimpleFormalParam( "x" ),
+//            OperFormalParam( "f", FixedArity( 0 ) )
+//          ),
+//          n_c
+//        )
+//      )
+//
+//    assert( letInBuild1 == OperEx( new LetInOper( List(TlaOperDecl( "b" , List(), n_c ) ) ), n_a ) )
 
   }
 
