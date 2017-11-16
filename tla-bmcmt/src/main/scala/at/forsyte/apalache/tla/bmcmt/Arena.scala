@@ -10,9 +10,10 @@ object Arena {
   protected val falseName: String = CellTheory().namePrefix + "0"
   protected val trueName: String = CellTheory().namePrefix + "1"
   protected val booleanName: String = CellTheory().namePrefix + "2"
+  protected val failureName: String = CellTheory().namePrefix + "3"
 
   def create(solverContext: SolverContext): Arena = {
-    val arena = new Arena(solverContext, 0,
+    var arena = new Arena(solverContext, 0,
       new ArenaCell(-1, UnknownT()),
       HashMap(),
       new LazyEquality(solverContext),
@@ -21,13 +22,13 @@ object Arena {
       new HashMap()
     ) /////
     // by convention, the first cells have the following semantics: 0 stores FALSE, 1 stores TRUE, 2 stores BOOLEAN
-    val newArena = arena.appendCellWithoutDeclaration(BoolT())
+    arena = arena.appendCellWithoutDeclaration(BoolT())
       .appendCellWithoutDeclaration(BoolT())
       .appendCellWithoutDeclaration(FinSetT(BoolT()))
-    // declare the cells in SMT
-    val cellFalse = newArena.cellFalse()
-    val cellTrue = newArena.cellTrue()
-    val cellBoolean = newArena.cellBoolean()
+    // declare Boolean cells in SMT
+    val cellFalse = arena.cellFalse()
+    val cellTrue = arena.cellTrue()
+    val cellBoolean = arena.cellBoolean()
     solverContext.declareCell(cellFalse)
     solverContext.declareCell(cellTrue)
     solverContext.declareCell(cellBoolean)
@@ -36,8 +37,10 @@ object Arena {
     solverContext.assertGroundExpr(OperEx(TlaSetOper.in, cellFalse.toNameEx, cellBoolean.toNameEx))
     solverContext.assertGroundExpr(OperEx(TlaSetOper.in, cellTrue.toNameEx, cellBoolean.toNameEx))
     // link c_BOOLEAN to c_FALSE and c_TRUE
-    newArena.appendHas(cellBoolean, cellFalse)
+    arena = arena.appendHas(cellBoolean, cellFalse)
       .appendHas(cellBoolean, cellTrue)
+    // declare a FAILURE cell that is returned whenever an operation has failed
+    arena.appendCell(BoolT())
   }
 }
 
@@ -56,16 +59,37 @@ class Arena private(val solverContext: SolverContext,
                     private val domEdges: Map[ArenaCell, ArenaCell],
                     private val cdmEdges: Map[ArenaCell, ArenaCell]
                    ) {
+  /**
+    * A fixed cell that equals to false in the Boolean theory.
+    * @return the false cell
+    */
   def cellFalse(): ArenaCell = {
     cellMap(Arena.falseName)
   }
 
+  /**
+    * A fixed cell that equals to true in the Boolean theory
+    * @return the true cell
+    */
   def cellTrue(): ArenaCell = {
     cellMap(Arena.trueName)
   }
 
+  /**
+    * A fixed cell that stores the set {false, true}, that is, the set BOOLEAN in TLA+.
+    * @return the cell for the BOOLEAN set
+    */
   def cellBoolean(): ArenaCell = {
     cellMap(Arena.booleanName)
+  }
+
+  /**
+    * A fixed cell that is returned to indicate an operation failure.
+    *
+    * @return the failure cell
+    */
+  def cellFailure(): ArenaCell = {
+    cellMap(Arena.failureName)
   }
 
   /**
@@ -84,7 +108,7 @@ class Arena private(val solverContext: SolverContext,
     *
     * @param nameEx a name expression that follows the cell naming convention.
     * @return the found cell
-    * @throws InvalidTlaExException if the name does not follow the convention
+    * @throws InvalidTlaExException  if the name does not follow the convention
     * @throws NoSuchElementException when no cell is found
     */
   def findCellByNameEx(nameEx: TlaEx): ArenaCell = {
@@ -208,6 +232,7 @@ class Arena private(val solverContext: SolverContext,
     */
   def isLinkedViaHas(src: ArenaCell, dst: ArenaCell): Boolean = {
     def default(c: ArenaCell): List[ArenaCell] = List()
+
     hasEdges.applyOrElse(src, default).contains(dst)
   }
 
@@ -218,6 +243,7 @@ class Arena private(val solverContext: SolverContext,
     */
   def subgraphToString(root: ArenaCell): String = {
     val builder = StringBuilder.newBuilder
+
     def print(cell: ArenaCell): Unit = {
       builder.append(cell.id)
       builder.append(" ")
@@ -229,6 +255,7 @@ class Arena private(val solverContext: SolverContext,
         builder.append(")")
       }
     }
+
     print(root)
     builder.mkString
   }

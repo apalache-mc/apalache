@@ -1,8 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 /**
@@ -41,18 +43,25 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // SE-FUN-APP3
         val newArena = argState.arena.appendCell(resultType)
         val resultCell = newArena.topCell
+
         // Equation (2): there is a domain element that equals to the argument
-        def mkElemCase(domElem: ArenaCell): TlaEx = {
-          val inDomain = OperEx(TlaSetOper.in, domElem.toNameEx, domainCell.toNameEx)
+        def mkInCase(domElem: ArenaCell): TlaEx = {
+          val inDomain = tla.in(domElem, domainCell)
+          val funEqResult =
+            tla.eql(resultCell, tla.appFun(funCell, domElem)) // translated as function application in SMT
           val eq = newArena.lazyEquality.mkEquality(newArena, domElem, argCell)
-          val funEqResult = OperEx(TlaOper.eq,
-            resultCell.toNameEx,
-            OperEx(TlaFunOper.app, funCell.toNameEx, domElem.toNameEx)) // this is translated as a function application
-          OperEx(TlaBoolOper.and, inDomain, eq, funEqResult)
+          tla.and(inDomain, eq, funEqResult)
         }
-        val elemCells = newArena.getHas(domainCell)
-        newArena.solverContext.assertGroundExpr(OperEx(TlaBoolOper.or, elemCells.map(mkElemCase): _*))
-        // TODO: account for Equation (3), that is, the argument is not equal to any domain element
+        // Equation (3): there is no domain element that equals to the argument
+        def mkNotInCase(domElem: ArenaCell): TlaEx = {
+          val notInDomain = tla.not(tla.in(domElem, domainCell))
+          val notEqualToArgument = tla.not(newArena.lazyEquality.mkEquality(newArena, domElem, argCell))
+          tla.or(notInDomain, notEqualToArgument)
+        }
+
+        val found = tla.or(newArena.getHas(domainCell).map(mkInCase): _*)
+        val notFound = tla.and(newArena.getHas(domainCell).map(mkNotInCase): _*)
+        newArena.solverContext.assertGroundExpr(tla.or(found, notFound))
 
         val finalState = argState
           .setTheory(CellTheory())
