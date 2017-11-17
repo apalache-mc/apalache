@@ -1606,4 +1606,28 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
         fail("Unexpected rewriting result")
     }
   }
+
+  test("""SE-FUN-APP[1-3]: [x \in {1, 2} |-> x][4] ~~> $C$failure""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val set = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(2)))
+    val mapping = NameEx("x")
+    val fun = OperEx(TlaFunOper.funDef, mapping, NameEx("x"), set)
+    val app = OperEx(TlaFunOper.app, fun, ValEx(TlaInt(4)))
+
+    val state = new SymbState(app, CellTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case membershipEx @ NameEx(name) =>
+        assert(CellTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, membershipEx, arena.cellFailure().toNameEx))
+        assert(solverContext.sat())
+        solverContext.assertGroundExpr(OperEx(TlaOper.ne, membershipEx, arena.cellFailure().toNameEx))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
 }
