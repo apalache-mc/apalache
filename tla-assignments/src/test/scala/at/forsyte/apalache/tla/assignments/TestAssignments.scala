@@ -63,8 +63,6 @@ class TestAssignments extends FunSuite {
         TlaBoolOper.and,
         phi3,
         makeLeafBranches( TlaBoolOper.and, "6", "7" )
-
-
       )
 
     Identifier.identify( phi4 )
@@ -104,7 +102,7 @@ class TestAssignments extends FunSuite {
 
     assert( ret.nonEmpty )
 
-    ret.get.foreach( pa => println( "%s -> %s".format( pa._1.id, pa._2 ) ) )
+//    ret.get.foreach( pa => println( "%s -> %s".format( pa._1.id, pa._2 ) ) )
 
   }
 
@@ -113,7 +111,7 @@ class TestAssignments extends FunSuite {
     val extracted = sanitizer(testFolderPath + fileName)
     assert(extracted.isDefined)
     val (before, after) = extracted.get
-    println( "%s \n -> \n %s".format( before, after ) )
+//    println( "%s \n -> \n %s".format( before, after ) )
 
     val bd = Builder
 
@@ -121,12 +119,16 @@ class TestAssignments extends FunSuite {
       bd.and(
         bd.or(
           bd.and(
-            bd.primeEq( "a", "b" ),
-            bd.primeEq( "b", "a" )
+            bd.in( bd.prime( "a" ), bd.enumSet( bd.prime( "b" ) ) ),
+            bd.in( bd.prime( "b" ), bd.enumSet( bd.prime( "a" ) ) )
+//            bd.primeEq( "a", "b" ),
+//            bd.primeEq( "b", "a" )
           ),
-          bd.primeEq( "b", 2)
+          bd.in( bd.prime( "b" ), bd.enumSet( bd.int( 2 ) ) )
+//          bd.primeEq( "b", 2)
         ),
-        bd.primeEq( "a", 1 )
+        bd.in( bd.prime( "a" ), bd.enumSet( bd.int( 1 ) ) )
+//        bd.primeEq( "a", 1 )
       )
 
     assert(after == expected)

@@ -7,14 +7,19 @@ package at.forsyte.apalache.tla.lir
 object SpecHandler {
 
   def getNewEx( p_ex : TlaEx,
-                p_exFun : TlaEx => TlaEx = { x => x }
+                p_exFun : TlaEx => TlaEx = { x => x },
+                p_postFun : (TlaEx, TlaEx) => Unit = { ( _, _ ) => }
               ) : TlaEx = {
     val newEx = p_exFun( p_ex )
     newEx match {
       case OperEx( oper, args@_* ) => {
-        val newargs = args.map( getNewEx( _, p_exFun ) )
-        if ( args == newargs ) return newEx
-        else return OperEx( oper, newargs : _* )
+        val newargs = args.map( getNewEx( _, p_exFun, p_postFun ) )
+        if ( args == newargs ) newEx
+        else {
+          val ret = OperEx( oper, newargs : _* )
+          p_postFun( p_ex, ret )
+          ret
+        }
       }
       case _ => newEx
     }
@@ -50,8 +55,8 @@ object SpecHandler {
   def sideeffectOperBody( p_decl : TlaDecl,
                           p_bodyFun : TlaEx => Unit
                         ) : Unit = {
-    p_decl match{
-      case TlaOperDecl(_,_, body) => p_bodyFun( body )
+    p_decl match {
+      case TlaOperDecl( _, _, body ) => p_bodyFun( body )
       case _ =>
     }
   }
@@ -70,9 +75,10 @@ object SpecHandler {
 
   def getNewWithExFun( p_spec : TlaSpec,
                        p_exFun : TlaEx => TlaEx = { x => x },
+                       p_exPostFun : (TlaEx, TlaEx) => Unit = { ( _, _ ) => },
                        p_postBodySideeffect : TlaEx => Unit = { _ => }
                      ) : TlaSpec = {
-    getNewDecl( p_spec, getNewOperBody( _, getNewEx( _, p_exFun ), p_postBodySideeffect ) )
+    getNewDecl( p_spec, getNewOperBody( _, getNewEx( _, p_exFun, p_exPostFun ), p_postBodySideeffect ) )
   }
 
   def sideeffectWithExFun( p_spec : TlaSpec,

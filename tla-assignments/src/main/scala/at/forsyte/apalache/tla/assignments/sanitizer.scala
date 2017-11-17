@@ -14,8 +14,8 @@ import java.io.File
   */
 object sanitizer {
   val NEXT_STEP_DEFAULT_NAME = "Next"
-
-  // filename without .tla!!
+  val m_bodyDB               = new BodyDB()
+  val m_srcDB                = new SourceDB()
 
 
   def extract( path:String, nextStepName: String = NEXT_STEP_DEFAULT_NAME ) : Option[OperEx] = {
@@ -40,40 +40,49 @@ object sanitizer {
       ).toSet
 
     for {decl <- modules(rootName).declarations if decl.isInstanceOf[TlaOperDecl]}
-      OperatorSubstitution.extractOper(decl.asInstanceOf[TlaOperDecl])
+      OperatorHandler.extractOper( decl, m_bodyDB )
+//      OperatorSubstitution.extractOper(decl.asInstanceOf[TlaOperDecl])
 
 
     if( formulaCandidate == NullEx ) return None
 
-    return Some(formulaCandidate.asInstanceOf[OperEx])
+    Some(formulaCandidate.asInstanceOf[OperEx])
 
   }
 
   def sanitize( expr: TlaEx ): (TlaEx,TlaEx) = {
     /**
       * Tasks:
-      *   - Inline operators
-      *   - change "a = b" to "a \in B"
+      *   - Inline operators  - check
+      *   - change "a = b" to "a \in B" - check
       *   - fix quantifiers
       *   - ???
       *   - profit
       */
 
 
-    val inlined = SpecHandler.getNewEx( expr, Substitutor.applyReplace )
+//    val inlined = SpecHandler.getNewEx( expr, Substitutor.applyReplace )
+    val inlined = OperatorHandler.unfoldMax( expr, m_bodyDB, m_srcDB  )
 
     def rewriteEQ(tlaEx : TlaEx) : TlaEx = {
       tlaEx match {
-        case OperEx( TlaOper.eq, lhs, rhs ) => OperEx(TlaSetOper.in, lhs, OperEx( TlaSetOper.enumSet, rhs ) )
+        case OperEx( TlaOper.eq, lhs, rhs ) => {
+          OperEx(TlaSetOper.in, lhs, OperEx( TlaSetOper.enumSet, rhs ) )
+//          Identifier.identify( ret )
+//          m_srcDB.put( ret.ID, tlaEx.ID )
+//          ret
+        }
         case _ => tlaEx
       }
     }
 
-    val rewritten = SpecHandler.getNewEx( inlined, x => x )//rewriteEQ )
+    val rewritten = OperatorHandler.replaceWithRule( inlined, rewriteEQ, m_srcDB )
+
+//    val rewritten = SpecHandler.getNewEx( inlined, rewriteEQ )
 
     // ???
 
-    Identifier.identify(rewritten)
+//    Identifier.identify(rewritten)
 
     return (expr, rewritten) // profit
 
