@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FinSetT, UnknownT}
+import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
@@ -40,7 +40,7 @@ object Arena {
     arena = arena.appendHas(cellBoolean, cellFalse)
       .appendHas(cellBoolean, cellTrue)
     // declare a FAILURE cell that is returned whenever an operation has failed
-    arena.appendCell(BoolT())
+    arena.appendCell(UnknownT()) // shall it be of a special failure type?
   }
 }
 
