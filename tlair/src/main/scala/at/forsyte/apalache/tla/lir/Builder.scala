@@ -1,14 +1,14 @@
 package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.actions._
-import at.forsyte.apalache.tla.lir.control._
+import at.forsyte.apalache.tla.lir.control.{LetInOper, _}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.temporal._
 import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.lir.control.LetInOper
 
 
 /* TODO: LET-IN operator!!! */
+/* TODO: the argument names should be self-explanatory, e.g., I cannot see how to use funDef (Igor, 19.11.2017) */
 
 /**
   * A builder for TLA expressions.
