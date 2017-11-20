@@ -4,8 +4,7 @@ import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.plugins.Identifier
-
+import at.forsyte.apalache.tla.lir.plugins.{Identifier, UniqueDB}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -132,6 +131,51 @@ class TestAssignments extends FunSuite {
       )
 
     assert(after == expected)
+  }
+
+  test( "Check quantifiers" ){
+
+    val fileName = "assignmentTestQuantifiers.tla"
+    val extracted = sanitizer(testFolderPath + fileName)
+    assert(extracted.isDefined)
+    val (_, after) = extracted.get
+    //    println( "%s \n -> \n %s".format( before, after ) )
+
+    val bd = Builder
+
+    val expected =
+      bd.and(
+        bd.or(
+          bd.and(
+            bd.in( bd.prime( "a" ), bd.enumSet( bd.prime( "b" ) ) ),
+            bd.in( bd.prime( "b" ), bd.enumSet( bd.prime( "a" ) ) )
+            //            bd.primeEq( "a", "b" ),
+            //            bd.primeEq( "b", "a" )
+          ),
+          bd.exists(
+            bd.name("p"),
+            bd.enumSet( bd.int( 1 ), bd.int( 2 ) ),
+            bd.in( bd.prime( "b" ), bd.enumSet( bd.name( "p" ) ) )
+          )
+          //          bd.primeEq( "b", 2)
+        ),
+        bd.in( bd.prime( "a" ), bd.enumSet( bd.int( 1 ) ) )
+        //        bd.primeEq( "a", 1 )
+      )
+
+    assert(after == expected)
+
+    val p_vars : Set[NameEx] = Set( bd.name( "a" ), bd.name( "b" ) )
+
+    val solution = assignmentSolver.getOrder( p_vars , after.asInstanceOf[OperEx] )
+
+    assert( solution.isDefined )
+
+    solution.get.foreach( pa => println( "%s -> %s".format(
+      UniqueDB.apply( pa._1 ).get,
+      pa._2 ) )
+    )
+
   }
 
 }

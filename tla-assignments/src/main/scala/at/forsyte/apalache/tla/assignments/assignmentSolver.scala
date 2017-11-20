@@ -353,6 +353,12 @@ object assignmentSolver{
                 /** If not well-formed, ignore and return empty sets/trivial maps */
                 /* return */ defaultArgs
             }
+
+          /** Added: 20.11. - TODO: test well  */
+          case TlaBoolOper.exists => {
+            /* return */ innerMassProcess( args.tail.tail.head , p_vars)
+          }
+
           /** Other case */
           case _ =>
             /** If the term is of any other form it is just ignored */

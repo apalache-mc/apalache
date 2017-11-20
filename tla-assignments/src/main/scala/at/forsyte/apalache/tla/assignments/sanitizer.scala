@@ -13,9 +13,9 @@ import java.io.File
   * [[at.forsyte.apalache.tla.assignments.assignmentSolver solver]].
   */
 object sanitizer {
-  val NEXT_STEP_DEFAULT_NAME = "Next"
-  val m_bodyDB               = new BodyDB()
-  val m_srcDB                = new SourceDB()
+  protected val NEXT_STEP_DEFAULT_NAME = "Next"
+  protected val m_bodyDB               = new BodyDB()
+  protected val m_srcDB                = new SourceDB()
 
 
   def extract( path:String, nextStepName: String = NEXT_STEP_DEFAULT_NAME ) : Option[OperEx] = {
