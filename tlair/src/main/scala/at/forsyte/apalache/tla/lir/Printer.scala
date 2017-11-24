@@ -6,8 +6,14 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
 import at.forsyte.apalache.tla.lir.values._
 
+/**
+  * Note: consider inmplementing priority of operations. Jure, 24.11.2017
+  */
+
 abstract class Printer {
   def apply( p_ex : TlaEx ) : String
+
+  def apply( p_decl : TlaDecl ) : String = ""
 
 }
 
@@ -45,6 +51,8 @@ object UTFPrinter extends Printer {
   def pad( s : String ) : String = " %s ".format( s )
 
   override def apply( p_ex : TlaEx ) : String = apply( p_ex, false )
+
+
 
   def apply( p_ex : TlaEx, p_rmSpace : Boolean ) : String = {
     def mapMk( seq : Seq[TlaEx],

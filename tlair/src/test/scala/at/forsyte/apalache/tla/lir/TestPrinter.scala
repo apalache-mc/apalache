@@ -1,89 +1,150 @@
 package at.forsyte.apalache.tla.lir
 
-import at.forsyte.apalache.tla.lir.actions.TlaActionOper
-import at.forsyte.apalache.tla.lir.control.{LetInOper, TlaControlOper}
-import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
-import at.forsyte.apalache.tla.lir.values._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
 @RunWith( classOf[JUnitRunner] )
-class TestPrinter extends FunSuite {
+class TestPrinter extends FunSuite with TestingPredefs {
   val bd = Builder
 
   val up = UTFPrinter
   val sp = SimplePrinter
 
   object rmp extends Printer {
-    def apply( p_ex: TlaEx ) : String = UTFPrinter.apply( p_ex, true )
+    def apply( p_ex : TlaEx ) : String = UTFPrinter.apply( p_ex, true )
   }
 
-  val n_a = NameEx( "a" )
-  val n_b = NameEx( "b" )
-  val n_c = NameEx( "c" )
-  val n_d = NameEx( "d" )
-  val n_e = NameEx( "e" )
+  implicit def str( p_ex : TlaEx ) : String = up( p_ex )
 
   test( "Test UTF8" ) {
 
-    val ex = bd.forall( bd.name( "p" ), bd.name( "S" ), bd.le( bd.name( "p" ), bd.name( "q" ) ) )
-    val ret = up( ex )
+    val ALSO_PRINT = false
 
-    val ex2 = bd.mod( n_a, n_b )
+    val eqEx1 : String = bd.eql( n_a, n_b )
+    val eqEx2 : String = bd.eql( bd.plus( n_a, n_b ), bd.minus( n_c, n_d ) )
 
-    println( ret )
-    println( up( ex2 ) )
-    println( up( bd.comp( n_a, n_b ) ) )
+    if ( ALSO_PRINT ) printlns( eqEx1, eqEx2 )
 
-    val caseEx1 = bd.caseAny( n_a, n_a, n_a, n_a, n_a, n_a )
-    val caseEx2 = bd.caseAny( n_a, n_a, n_a, n_a, n_a )
+    assert( eqEx1 == "a = b" )
+    assert( eqEx2 == "(a + b) = (c - d)" )
 
-    println( up( caseEx1 ) )
-    println( up( caseEx2 ) )
+    val neEx1 : String = bd.neql( n_a, n_b )
+    val neEx2 : String = bd.neql( bd.plus( n_a, n_b ), bd.minus( n_c, n_d ) )
 
-    val AAEx1 = bd.AA( n_a, n_b )
+    if ( ALSO_PRINT ) {
+      printsep()
+      printlns( neEx1, neEx2 )
+    }
 
-    println( up( AAEx1 ) )
+    assert( neEx1 == "a %s b".format( up.m_neq ) )
+    assert( neEx2 == "(a + b) %s (c - d)".format( up.m_neq ) )
 
-    val SFEx1 = bd.SF( n_a, n_b )
+    val appEx1 : String = bd.appOp( n_x )
+    val appEx2 : String = bd.appOp( n_x, n_a )
+    val appEx3 : String = bd.appOp( n_x, seq( 3 ) : _* )
+    val appEx4 : String = bd.appOp( n_a, bd.appOp( n_b ) )
+    val appEx5 : String = bd.appOp( n_a, bd.appOp( n_b, n_c ), bd.appOp( n_d, n_e ) )
 
-    println( up( SFEx1 ) )
+    if ( ALSO_PRINT ) {
+      printsep()
+      printlns( appEx1, appEx2, appEx3, appEx4, appEx5 )( true )
+    }
 
-    val appEx1 = bd.appOp( n_a )
-    val appEx2 = bd.appOp( n_a, n_b )
+    assert( appEx1 == "x" )
+    assert( appEx2 == "x(a)" )
+    assert( appEx3 == "x(a, b, c)" )
+    assert( appEx4 == "a(b)" )
+    assert( appEx5 == "a(b(c), d(e))" )
 
-    println( up( appEx1 ) )
-    println( up( appEx2 ) )
+    val chooseEx1 : String = bd.choose( n_x, n_p )
+    val chooseEx2 : String = bd.choose( n_x, n_S, n_p )
+    val chooseEx3 : String = bd.choose( n_x, bd.and( n_p, n_q ) )
+    val chooseEx4 : String = bd.choose( n_x, bd.times( n_S, n_T ), bd.and( n_p, n_q ) )
 
-    val enumFnEx1 = bd.enumFun( n_a, n_b, n_a, n_b, n_c, n_d )
 
-    println( up( enumFnEx1 ) )
+    if ( ALSO_PRINT ) {
+      printsep()
+      printlns( chooseEx1, chooseEx2, chooseEx3, chooseEx4 )
+    }
 
-    val exceptEx1 = bd.except( n_a, n_b, n_c, n_d, n_e )
+    assert( chooseEx1 == "CHOOSE x : p" )
+    assert( chooseEx2 == "CHOOSE x %s S : p".format( up.m_in ) )
+    assert( chooseEx3 == "CHOOSE x : (p %s q)".format( up.m_and ) )
+    assert( chooseEx4 == "CHOOSE x %s (S %s T) : (p %s q)".format( up.m_in, up.m_times, up.m_and ) )
 
-    println( up( exceptEx1 ) )
+    val andEx1 : String = bd.and()
+    val andEx2 : String = bd.and( n_a )
+    val andEx3 : String = bd.and( n_a, n_b )
+    val andEx4 : String = bd.and( n_a, bd.and( n_b, n_c ) )
+    val andEx5 : String = bd.and( n_a, bd.appOp( n_b ) )
 
-    val fnDefEx1 = bd.funDef( n_a, n_b, n_c, n_d, n_e )
+    if ( ALSO_PRINT ) {
+      printsep()
+      printlns( andEx1, andEx2, andEx3, andEx4, andEx5 )
+    }
 
-    println( up( fnDefEx1 ) )
+    assert( andEx1 == "" )
+    assert( andEx2 == "a" )
+    assert( andEx3 == "a %s b".format( up.m_and ) )
+    assert( andEx4 == "a %s (b %s c)".format( up.m_and, up.m_and ) )
+    assert( andEx5 == "a %s b".format( up.m_and ) )
 
-    val tplEx1 = bd.tuple( n_a, n_b, n_c )
+    val orEx1 : String = bd.or()
+    val orEx2 : String = bd.or( n_a )
+    val orEx3 : String = bd.or( n_a, n_b )
+    val orEx4 : String = bd.or( n_a, bd.or( n_b, n_c ) )
+    val orEx5 : String = bd.or( n_a, bd.appOp( n_b ) )
 
-    println( up( tplEx1 ) )
+    if ( ALSO_PRINT ) {
+      printsep()
+      printlns( orEx1, orEx2, orEx3, orEx4, orEx5 )
+    }
 
-    val mapEx1 = bd.map( n_a, n_b, n_c, n_d, n_e )
+    assert( orEx1 == "" )
+    assert( orEx2 == "a" )
+    assert( orEx3 == "a %s b".format( up.m_or ) )
+    assert( orEx4 == "a %s (b %s c)".format( up.m_or, up.m_or ) )
+    assert( orEx5 == "a %s b".format( up.m_or ) )
 
-    println( up( mapEx1 ) )
+    val notEx1 : String = bd.not( n_a )
+    val notEx2 : String = bd.not( bd.and( n_a, n_b ) )
 
-    val timesEx1 = bd.times( n_a, n_b, n_c, n_d )
-    val timesEx2 = bd.times( n_a )
-    val timesEx3 = bd.times()
+    if ( ALSO_PRINT ) {
+      printsep()
+      printlns( notEx1, notEx2 )
+    }
 
-    println( up( timesEx1 ) )
-    println( up( timesEx2 ) )
-    println( up( timesEx3 ) )
+    assert( notEx1 == "%sa".format( up.m_not ) )
+    assert( notEx2 == "%s(a %s b)".format( up.m_not, up.m_and ) )
+
+    val implEx1 : String = bd.impl( n_p, n_q )
+    val implEx2 : String = bd.impl( bd.and( n_p, n_q ), bd.or( n_a, n_b ) )
+    val implEx3 : String = bd.impl( bd.and( n_p ), bd.and( n_q ) )
+
+    if ( ALSO_PRINT ) {
+      printsep()
+      printlns( implEx1, implEx2, implEx3 )
+    }
+
+    assert( implEx1 == "p %s q".format( up.m_impl ) )
+    assert( implEx2 == "(p %s q) %s (a %s b)".format( up.m_and, up.m_impl, up.m_or ) )
+    assert( implEx3 == "p %s q".format( up.m_impl ) )
+
+    val equivEx1 : String = bd.equiv( n_p, n_q )
+    val equivEx2 : String = bd.equiv( bd.and( n_p, n_q ), bd.or( n_a, n_b ) )
+    val equivEx3 : String = bd.equiv( bd.and( n_p ), bd.and( n_q ) )
+
+    if ( ALSO_PRINT ) {
+      printsep()
+      printlns( equivEx1, equivEx2, equivEx3 )
+    }
+
+    assert( equivEx1 == "p %s q".format( up.m_equiv ) )
+    assert( equivEx2 == "(p %s q) %s (a %s b)".format( up.m_and, up.m_equiv, up.m_or ) )
+    assert( equivEx3 == "p %s q".format( up.m_equiv ) )
+
+    val forallEx1 : String = bd.forall( n_a, n_b )
 
 
   }

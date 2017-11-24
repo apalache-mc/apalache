@@ -60,8 +60,8 @@ object Builder {
            ) : OperEx = OperEx( TlaOper.apply, p_Op +: p_args : _* )
 
   def choose( p_x : TlaEx,
-              p_S : TlaEx
-            ) : OperEx = OperEx( TlaOper.chooseUnbounded, p_x, p_S )
+              p_p : TlaEx
+            ) : OperEx = OperEx( TlaOper.chooseUnbounded, p_x, p_p )
 
   def choose( p_x : TlaEx,
               p_S : TlaEx,

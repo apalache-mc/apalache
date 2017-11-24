@@ -10,16 +10,7 @@ import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestBuilder extends FunSuite {
-
-  /** reusable values */
-  val n_a = NameEx("a")
-  val n_b = NameEx("b")
-  val n_c = NameEx("c")
-  val n_d = NameEx("d")
-  val n_e = NameEx("e")
-  val n_f = NameEx("f")
-  val n_g = NameEx("g")
+class TestBuilder extends FunSuite with TestingPredefs  {
 
   import at.forsyte.apalache.tla.lir.{Builder => bd}
 
