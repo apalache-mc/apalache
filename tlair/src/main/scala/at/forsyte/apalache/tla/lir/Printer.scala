@@ -11,7 +11,7 @@ abstract class Printer {
 
 }
 
-object SimplePrinter extends Printer {
+object UTFPrinter extends Printer {
 
   val m_neq       = "\u2260"
   val m_and       = "\u2227"
@@ -39,11 +39,14 @@ object SimplePrinter extends Printer {
   val m_subseteq  = "\u2286"
   val m_supset    = "\u2283"
   val m_supseteq  = "\u2287"
+  val m_setminus  = "\u2216"
+  val m_times     = "\u00D7"
 
   def pad( s : String ) : String = " %s ".format( s )
 
+  override def apply( p_ex : TlaEx ) : String = apply( p_ex, false )
 
-  override def apply( p_ex : TlaEx ) : String = {
+  def apply( p_ex : TlaEx, p_rmSpace : Boolean ) : String = {
     def mapMk( seq : Seq[TlaEx],
                sep : String = ", ",
                fn : TlaEx => String
@@ -85,17 +88,6 @@ object SimplePrinter extends Printer {
 
     def opApp( p_ex : TlaEx ) : String = {
       p_ex match {
-        //        case OperEx( oper, args@_* ) =>
-        //          oper match {
-        //            case (
-        //              TlaBoolOper.and |
-        //              TlaBoolOper.or |
-        //              TlaArithOper.sum |
-        //              TlaArithOper.prod |
-        //
-        //              ) if ( args.size > 1 ) => "(%s)".format( apply( p_ex ) )
-        //            case _ => apply( p_ex )
-        //          }
         case OperEx( TlaSetOper.enumSet, _ ) => apply( p_ex )
         case OperEx( _, args@_* ) if args.size > 1 => "(%s)".format( apply( p_ex ) )
         case _ => apply( p_ex )
@@ -108,8 +100,8 @@ object SimplePrinter extends Printer {
     def mkOpApp( formatString : String, args : TlaEx* ) = formatString.format( args.map( opApp ) : _* )
 
 
-    p_ex match {
-      case NullEx => "[NULL]"
+    val ret = p_ex match {
+      case NullEx => "<[NULL]>"
       case NameEx( name ) => name
       case ValEx( v ) =>
         v match {
@@ -196,29 +188,67 @@ object SimplePrinter extends Printer {
           case TlaSetOper.notin => mkOpApp( "%%s %s %%s".format( m_notin ), args : _* )
           case TlaSetOper.cap => mkOpApp( "%%s %s %%s".format( m_cap ), args : _* )
           case TlaSetOper.cup => mkOpApp( "%%s %s %%s".format( m_cup ), args : _* )
+          case TlaSetOper.filter => mkOpApp( "{%%s %s %%s: %%s}".format( m_in ), args : _* )
+          case TlaSetOper.funSet => mkOpApp( "%%s %s %%s".format( m_rarrow ), args : _* )
+          case TlaSetOper.map => "{%s : %s}".format( apply( args.head ), opAppStrPairs( args.tail, pad( m_in ), ", " ) )
+          case TlaSetOper.powerset => mkOpApp( "SUBSET %s", args : _* )
+          case TlaSetOper.recSet => opAppStrPairs( args, " : ", ", " )
+          case TlaSetOper.seqSet => mkApp( "Seq(%)", args : _* )
+          case TlaSetOper.setminus => mkOpApp( "%%s %s %%s".format( m_setminus ), args : _* )
+          case TlaSetOper.subseteq => mkOpApp( "%%s %s %%s".format( m_subseteq ), args : _* )
+          case TlaSetOper.subsetProper => mkOpApp( "%%s %s %%s".format( m_subset ), args : _* )
+          case TlaSetOper.supseteq => mkOpApp( "%%s %s %%s".format( m_supseteq ), args : _* )
+          case TlaSetOper.supsetProper => mkOpApp( "%%s %s %%s".format( m_supset ), args : _* )
+          case TlaSetOper.times => opAppStr( args, pad( m_times ) )
+          case TlaSetOper.union => mkOpApp( "UNION %s", args : _* )
 
-            /* TODO */
-
-          case TlaSetOper.filter => mkOpApp( "", args : _* )
-          case TlaSetOper.funSet => mkOpApp( "", args : _* )
-          case TlaSetOper.map => mkOpApp( "", args : _* )
-          case TlaSetOper.powerset => mkOpApp( "", args : _* )
-          case TlaSetOper.recSet => mkOpApp( "", args : _* )
-          case TlaSetOper.seqSet => mkOpApp( "", args : _* )
-          case TlaSetOper.setminus => mkOpApp( "", args : _* )
-          case TlaSetOper.subseteq => mkOpApp( "", args : _* )
-          case TlaSetOper.subsetProper => mkOpApp( "", args : _* )
-          case TlaSetOper.supseteq => mkOpApp( "", args : _* )
-          case TlaSetOper.supsetProper => mkOpApp( "", args : _* )
-          case TlaSetOper.times => mkOpApp( "", args : _* )
-          case TlaSetOper.union => mkOpApp( "", args : _* )
-
-          case _ => "TBD"
+          case _ => "<[TBD]>"
         }
 
       case _ => ""
     }
+
+    if ( p_rmSpace ) return ret.replaceAll( " ", "" ) else ret
   }
+}
+
+object SimplePrinter extends Printer {
+
+  def getSimple( p_str : String ) : String = {
+    p_str match {
+      case UTFPrinter.m_neq => "/="
+      case UTFPrinter.m_and => "/\\"
+      case UTFPrinter.m_or => "\\/"
+      case UTFPrinter.m_not => "~"
+      case UTFPrinter.m_in => "\\in"
+      case UTFPrinter.m_notin => "\\notin"
+      case UTFPrinter.m_impl => "=>"
+      case UTFPrinter.m_equiv => "<=>"
+      case UTFPrinter.m_le => "<="
+      case UTFPrinter.m_ge => ">="
+      case UTFPrinter.m_forall => "\\A"
+      case UTFPrinter.m_exists => "\\E"
+      case UTFPrinter.m_cdot => "."
+      case UTFPrinter.m_box => "[]"
+      case UTFPrinter.m_diamond => "<>"
+      case UTFPrinter.m_rarrow => "->"
+      case UTFPrinter.m_ring => "o"
+      case UTFPrinter.m_guarantee => "-+->"
+      case UTFPrinter.m_leadsto => "~>"
+      case UTFPrinter.m_mapto => "|->"
+      case UTFPrinter.m_cap => "\\cap"
+      case UTFPrinter.m_cup => "\\cup"
+      case UTFPrinter.m_subset => "\\subset"
+      case UTFPrinter.m_subseteq => "\\subseteq"
+      case UTFPrinter.m_supset => "\\supset"
+      case UTFPrinter.m_supseteq => "\\supseteq"
+      case UTFPrinter.m_setminus => "\\"
+      case UTFPrinter.m_times => "x"
+      case _ => p_str
+    }
+  }
+  
+  override def apply( p_ex : TlaEx ) : String = UTFPrinter.apply( p_ex ).map( c => getSimple(c.toString ) ).mkString
 }
 
 object FullPrinter extends Printer {

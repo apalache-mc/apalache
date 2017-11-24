@@ -101,6 +101,10 @@ object TlaSetOper {
     * A restricted set comprehension: { x \in S : p }.
     * The argument order is: (x, S, p). Note that x may be a tuple.
     */
+    /**
+      * Should we unify notation with TlaFunOper.funDef? Jure, 24.11.2017
+      * funDef has args (e, (x, S)+ )
+      */
   val filter = new TlaSetOper {
     override val arity = FixedArity(3)
     override val name = "filter"
