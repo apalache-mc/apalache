@@ -18,6 +18,8 @@ import scala.io.Source
 @RunWith(classOf[JUnitRunner])
 class TestAssignments extends FunSuite {
   val testFolderPath = "src/test/resources/" // "../test/tla/"
+  val bd = Builder
+
 
   test("Check dependency set computation") {
 
@@ -112,8 +114,6 @@ class TestAssignments extends FunSuite {
     val (before, after) = extracted.get
 //    println( "%s \n -> \n %s".format( before, after ) )
 
-    val bd = Builder
-
     val expected =
       bd.and(
         bd.or(
@@ -149,18 +149,20 @@ class TestAssignments extends FunSuite {
           bd.and(
             bd.in( bd.prime( "a" ), bd.enumSet( bd.prime( "b" ) ) ),
             bd.in( bd.prime( "b" ), bd.enumSet( bd.prime( "a" ) ) )
-            //            bd.primeEq( "a", "b" ),
-            //            bd.primeEq( "b", "a" )
           ),
           bd.exists(
             bd.name("p"),
             bd.enumSet( bd.int( 1 ), bd.int( 2 ) ),
             bd.in( bd.prime( "b" ), bd.enumSet( bd.name( "p" ) ) )
           )
-          //          bd.primeEq( "b", 2)
         ),
-        bd.in( bd.prime( "a" ), bd.enumSet( bd.int( 1 ) ) )
-        //        bd.primeEq( "a", 1 )
+        bd.in( bd.prime( "a" ), bd.enumSet( bd.int( 1 ) ) ),
+        bd.forall(
+          bd.name( "q" ),
+          bd.enumSet( bd.int( 1 )  ),
+          bd.in( bd.prime( "a" ), bd.enumSet( bd.name( "q" ) ) )
+        )
+
       )
 
     assert(after == expected)
@@ -175,6 +177,26 @@ class TestAssignments extends FunSuite {
       UniqueDB.apply( pa._1 ).get,
       pa._2 ) )
     )
+
+  }
+
+  test("Test markTree"){
+    val fileName = "assignmentTestQuantifiers.tla"
+    val extracted = sanitizer(testFolderPath + fileName).get._2.asInstanceOf[OperEx]
+    val p_vars : Set[NameEx] = Set( bd.name( "a" ), bd.name( "b" ) )
+    val solution = assignmentSolver.getOrder( p_vars , extracted ).get
+
+    val asgns = solution.filter( pa => pa._2 ).map( pa => pa._1 ).toSet
+
+    val labels = assignmentSolver.getSymbNexts( extracted, asgns )
+
+    labels.foreach( pa => println( "%s -> %s".format(
+      UniqueDB.apply( pa._1 ).get,
+      pa._2.map(UniqueDB.apply( _ ).get ) ) )
+    )
+
+
+
 
   }
 

@@ -26,7 +26,7 @@ trait TestingPredefs {
   val arr   : Array[TlaEx] = Array( n_a, n_b, n_c, n_d, n_e, n_f, n_g )
   val arr_s : Seq[TlaEx]   = arr.toSeq
 
-  def seq( n : Int ) : Seq[TlaEx] = arr.slice( 0, n ).toSeq ++ Seq.fill( n - arr.length )( n_x )
+  def seq( n : Int, nSkip : Int = 0 ) : Seq[TlaEx] = arr.slice( nSkip, n + nSkip ).toSeq ++ Seq.fill( n - arr.length )( n_x )
 
   val x_in_S : OperEx = Builder.in( "x", "S" )
 

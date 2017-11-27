@@ -87,4 +87,21 @@ object SpecHandler {
     sideeffectDecl( p_spec, sideeffectOperBody( _, sideeffectEx( _, p_exFun ) ) )
   }
 
+  def bottomUpSideefect[MetaInfo]( p_ex : TlaEx,
+                                   p_leafJudge : TlaEx => Boolean,
+                                   p_leafFun : TlaEx => (Boolean, MetaInfo),
+                                   p_parentFun : (TlaEx, Seq[(Boolean, MetaInfo)]) => (Boolean, MetaInfo),
+                                   p_defalult : MetaInfo
+                                 ) : (Boolean, MetaInfo) = {
+    if ( p_leafJudge( p_ex ) )
+      p_leafFun( p_ex )
+    else
+      p_ex match {
+        case OperEx( _, args@_* ) =>
+          val childVals = args.map( bottomUpSideefect( _, p_leafJudge, p_leafFun, p_parentFun, p_defalult ) )
+          p_parentFun( p_ex, childVals )
+        case _ => ( false, p_defalult )
+      }
+  }
+
 }

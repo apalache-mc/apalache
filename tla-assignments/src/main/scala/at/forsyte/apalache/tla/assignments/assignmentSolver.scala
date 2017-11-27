@@ -286,17 +286,6 @@ object assignmentSolver{
                 )
               ).toMap
 
-            /* Old: used to include filterNot( _.isEmpty )
-
-            processedArgs.map(
-              _._4.get(v)
-            ).filterNot(
-              _.isEmpty
-            ).map(
-              _.head
-            )
-            */
-
             /**
               * The rest we obtain by folding and taking the unions of all components.
               * The default arguments are empty sets as not to impact the result.
@@ -354,7 +343,7 @@ object assignmentSolver{
                 /* return */ defaultArgs
             }
 
-          /** Added: 20.11. - TODO: test well  */
+          /** Added: 20.11.2017 - TODO: test well  */
           case TlaBoolOper.exists => {
             /* return */ innerMassProcess( args.tail.tail.head , p_vars)
           }
@@ -561,6 +550,82 @@ object assignmentSolver{
               ) : Option[Seq[(UID,Boolean)]] = {
     val spec = makeSpec(p_vars,p_phi,p_fileName)
     /* return */ getOrder( spec )
+  }
+
+  def getSymbNexts( p_phi: TlaEx, asgn: Set[UID] ) : collection.mutable.HashMap[UID, Set[UID]] = {
+    /**
+      * Every assignment node "bubbles" up, colors its path. Then, search from root for all
+      */
+
+    def mark( ex : TlaEx,
+              marker : UID,
+              pathLabels : collection.mutable.HashMap[UID, Set[UID]]
+            ) : Unit ={
+      pathLabels.getOrElseUpdate( ex.ID, Set() )
+      pathLabels( ex.ID ) += marker
+    }
+    def markAll( ex: TlaEx,
+                 markers: Set[UID],
+                 pathLabels : collection.mutable.HashMap[UID, Set[UID]]
+               ) : Unit = {
+      pathLabels.getOrElseUpdate( ex.ID, Set() )
+      pathLabels( ex.ID ) ++= markers
+    }
+
+    def leafJudge( ex: TlaEx ) : Boolean =
+      ex match {
+        case OperEx( TlaSetOper.in, OperEx( TlaActionOper.prime, NameEx( _ ) ), _ ) => true
+        case _ => false
+      }
+
+    val default : Set[UID] = Set()
+
+    def leafFun( ex : TlaEx,
+                 asgns : Set[UID],
+                 pathLabels : collection.mutable.HashMap[UID, Set[UID]]
+               ) : (Boolean, Set[UID]) = {
+      if ( asgns.contains( ex.ID ) ) {
+        mark( ex, ex.ID, pathLabels )
+        (true, Set(ex.ID))
+      }
+      else
+        (false, Set())
+    }
+
+    def parentFun( ex: TlaEx,
+                   children : Seq[(Boolean, Set[UID])],
+                   pathLabels: collection.mutable.HashMap[UID, Set[UID]]
+                 ) : (Boolean,Set[UID]) = {
+      children.filter( pa => pa._1 ).foreach( pa => markAll( ex, pa._2, pathLabels  ) )
+      val ret = pathLabels.getOrElse(ex.ID, Set())
+      (ret.nonEmpty, ret)
+    }
+
+    def markTree( ex: TlaEx,
+                  asgns: Set[UID],
+                  pathLabels : collection.mutable.HashMap[UID, Set[UID]]
+                ) =
+      SpecHandler.bottomUpSideefect[Set[UID]](
+        ex,
+        leafJudge,
+        leafFun(_, asgns, pathLabels),
+        parentFun(_,_,pathLabels),
+        default
+      )
+
+//    val assignments : Set[UID] = Set()
+//    val labels : collection.mutable.HashMap[UID, Set[UID]] = collection.mutable.HashMap()
+//    val vars : Set[NameEx] = Set()
+
+//    for( asgn <- assignments ){
+//      val labels : collection.mutable.HashMap[UID, Set[UID]] = collection.mutable.HashMap()
+//      markTree( NullEx, asgn, labels)
+//    }
+
+    val labels : collection.mutable.HashMap[UID, Set[UID]] = collection.mutable.HashMap()
+    markTree( p_phi, asgn, labels )
+    labels
+
   }
 
 }

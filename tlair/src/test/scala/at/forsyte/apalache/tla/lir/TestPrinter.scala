@@ -11,15 +11,15 @@ class TestPrinter extends FunSuite with TestingPredefs {
   val up = UTFPrinter
   val sp = SimplePrinter
 
+  val ALSO_PRINT = false
+
   object rmp extends Printer {
     def apply( p_ex : TlaEx ) : String = UTFPrinter.apply( p_ex, true )
   }
 
   implicit def str( p_ex : TlaEx ) : String = up( p_ex )
 
-  test( "Test UTF8" ) {
-
-    val ALSO_PRINT = false
+  test( "Test UTF8: TlaOper" ) {
 
     val eqEx1 : String = bd.eql( n_a, n_b )
     val eqEx2 : String = bd.eql( bd.plus( n_a, n_b ), bd.minus( n_c, n_d ) )
@@ -72,6 +72,10 @@ class TestPrinter extends FunSuite with TestingPredefs {
     assert( chooseEx2 == "CHOOSE x %s S : p".format( up.m_in ) )
     assert( chooseEx3 == "CHOOSE x : (p %s q)".format( up.m_and ) )
     assert( chooseEx4 == "CHOOSE x %s (S %s T) : (p %s q)".format( up.m_in, up.m_times, up.m_and ) )
+
+  }
+
+  test( "Test UTF8: TlaBoolOper" ) {
 
     val andEx1 : String = bd.and()
     val andEx2 : String = bd.and( n_a )
@@ -145,8 +149,52 @@ class TestPrinter extends FunSuite with TestingPredefs {
     assert( equivEx3 == "p %s q".format( up.m_equiv ) )
 
     val forallEx1 : String = bd.forall( n_a, n_b )
+    val forallEx2 : String = bd.forall( n_a, bd.or( seq( 2, 1 ) : _* ) )
+    val forallEx3 : String = bd.forall( n_a, n_b, n_c )
+    val forallEx4 : String = bd.forall( n_a, bd.times( seq( 2, 1 ) : _* ), bd.and( seq( 2, 3 ) : _* ) )
+
+    if ( ALSO_PRINT ) {
+      printsep()
+      printlns( forallEx1, forallEx2, forallEx3, forallEx4 )
+    }
+
+    assert( forallEx1 == "%sa . b".format( up.m_forall ) )
+    assert( forallEx2 == "%sa . (b %s c)".format( up.m_forall, up.m_or ) )
+    assert( forallEx3 == "%sa %s b . c".format( up.m_forall, up.m_in ) )
+    assert( forallEx4 == "%sa %s (b %s c) . (d %s e)".format( up.m_forall, up.m_in, up.m_times, up.m_and ) )
 
 
+    val existsEx1 : String = bd.exists( n_a, n_b )
+    val existsEx2 : String = bd.exists( n_a, bd.or( seq( 2, 1 ) : _* ) )
+    val existsEx3 : String = bd.exists( n_a, n_b, n_c )
+    val existsEx4 : String = bd.exists( n_a, bd.times( seq( 2, 1 ) : _* ), bd.and( seq( 2, 3 ) : _* ) )
+
+    if ( ALSO_PRINT ) {
+      printsep()
+      printlns( existsEx1, existsEx2, existsEx3, existsEx4 )
+    }
+
+    assert( existsEx1 == "%sa . b".format( up.m_exists ) )
+    assert( existsEx2 == "%sa . (b %s c)".format( up.m_exists, up.m_or ) )
+    assert( existsEx3 == "%sa %s b . c".format( up.m_exists, up.m_in ) )
+    assert( existsEx4 == "%sa %s (b %s c) . (d %s e)".format( up.m_exists, up.m_in, up.m_times, up.m_and ) )
+
+
+  }
+
+  test( "Test UTF8: TlaArithOper" ) {
+
+
+  }
+
+  test( "Test UTF8: TlaSetOper" ) {
+    val inEx1 : String = bd.in( n_a, n_b )
+    val inEx2 : String = bd.and( bd.in( n_a, n_b ), bd.in( n_c, n_d ) )
+
+    if ( ALSO_PRINT ) {
+      printsep()
+      printlns( inEx1, inEx2 )
+    }
   }
 
 }

@@ -125,7 +125,7 @@ package lir {
     // TODO: hey, use power of Scala! Move toNiceString out of here and introduce a PrettyPrinter class.
     // No need, toString suffices, you can just call print( ex ) which invokes it by default.
     def toNiceString( nTab: Int = 0) = ""
-    override def toString: String = toSimpleString // toNiceString()
+    override def toString: String =  UTFPrinter( this ) //toSimpleString // toNiceString()
 
     def toSimpleString: String = ""
 
