@@ -181,18 +181,28 @@ class TestAssignments extends FunSuite {
   }
 
   test("Test markTree"){
-    val fileName = "assignmentTestQuantifiers.tla"
+    UniqueDB.clear()
+
+    val fileName = "assignmentTestSymbNexts.tla"
     val extracted = sanitizer(testFolderPath + fileName).get._2.asInstanceOf[OperEx]
     val p_vars : Set[NameEx] = Set( bd.name( "a" ), bd.name( "b" ) )
+
+//    println( extracted.toNiceString() )
+
     val solution = assignmentSolver.getOrder( p_vars , extracted ).get
 
-    val asgns = solution.filter( pa => pa._2 ).map( pa => pa._1 ).toSet
+    val solutionTrim = Seq(solution.head, solution.tail.head)
 
-    val labels = assignmentSolver.getSymbNexts( extracted, asgns )
+    val asgns = solutionTrim.filter( pa => pa._2 ).map( pa => pa._1 ).toSet
 
-    labels.foreach( pa => println( "%s -> %s".format(
-      UniqueDB.apply( pa._1 ).get,
-      pa._2.map(UniqueDB.apply( _ ).get ) ) )
+    val manualAsgns = Set( UID( 20 ), UID( 70 ) )
+
+    val nexts = assignmentSolver.getSymbNexts( extracted, asgns )
+
+    nexts.foreach( pa => println( "%s -> %s".format(
+      pa._1.map( UniqueDB( _ ).get ),
+      pa._2 )
+    )
     )
 
 

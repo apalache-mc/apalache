@@ -33,20 +33,6 @@ object assignmentSolver{
   protected var m_fnSym = "R"
 
   /**
-    * Should be immutable, since the names are arbitrary anyway.
-    * Otherwise, there could be problems with names changing mid-execution.
-    */
-  //  def varSym : String = m_varSym
-  //  def varSym_=( p_sym : String ) : Unit = {
-  //    m_varSym = p_sym
-  //  }
-  //
-  //  def fnSym : String = m_fnSym
-  //  def fnSym_=( p_sym : String ) : Unit = {
-  //    m_fnSym = p_sym
-  //  }
-
-  /**
     * Intermediate class for internal use. Represents ϕ formulas as trees.
     */
   protected abstract class BoolFormula
@@ -552,7 +538,9 @@ object assignmentSolver{
     /* return */ getOrder( spec )
   }
 
-  def getSymbNexts( p_phi: TlaEx, asgn: Set[UID] ) : collection.mutable.HashMap[UID, Set[UID]] = {
+  type SymbNext = (Set[UID],TlaEx)
+
+  def getSymbNexts( p_phi: TlaEx, p_allAssignments : Set[UID] ) : Seq[SymbNext] = {
     /**
       * Every assignment node "bubbles" up, colors its path. Then, search from root for all
       */
@@ -602,9 +590,9 @@ object assignmentSolver{
     }
 
     def markTree( ex: TlaEx,
-                  asgns: Set[UID],
-                  pathLabels : collection.mutable.HashMap[UID, Set[UID]]
-                ) =
+                  asgns: Set[UID]
+                ) : collection.mutable.HashMap[UID, Set[UID]]= {
+      val pathLabels : collection.mutable.HashMap[UID, Set[UID]] = collection.mutable.HashMap()
       SpecHandler.bottomUpSideefect[Set[UID]](
         ex,
         leafJudge,
@@ -612,19 +600,41 @@ object assignmentSolver{
         parentFun(_,_,pathLabels),
         default
       )
+      pathLabels
+    }
 
-//    val assignments : Set[UID] = Set()
-//    val labels : collection.mutable.HashMap[UID, Set[UID]] = collection.mutable.HashMap()
-//    val vars : Set[NameEx] = Set()
+    val labels = markTree( p_phi, p_allAssignments )
 
-//    for( asgn <- assignments ){
-//      val labels : collection.mutable.HashMap[UID, Set[UID]] = collection.mutable.HashMap()
-//      markTree( NullEx, asgn, labels)
-//    }
+    def mkAsgns() : Seq[Set[UID]] = {
+      Seq( p_allAssignments )
+    }
 
-    val labels : collection.mutable.HashMap[UID, Set[UID]] = collection.mutable.HashMap()
-    markTree( p_phi, asgn, labels )
-    labels
+    def mkNext( asgns: Set[UID] ) : SymbNext = {
+
+      /**
+        * Check dummy or branches are handled correctly.
+        * */
+      def asgnFilter( ex: TlaEx ) : TlaEx = {
+        ex match{
+          case OperEx( TlaBoolOper.or, args@_* ) => {
+            val newArgs = args.filter(
+              x => labels.getOrElse( x.ID, Set() ).exists( y => asgns.contains( y ) )
+            )
+            if( newArgs.isEmpty )
+              ex
+            else
+              OperEx( TlaBoolOper.or, newArgs:_* )
+          }
+          case _ => ex
+        }
+      }
+
+      (asgns, SpecHandler.getNewEx( p_phi, asgnFilter ) )
+    }
+
+
+    mkAsgns().map( mkNext )
+
 
   }
 
