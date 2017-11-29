@@ -64,7 +64,7 @@ package object OperatorSubstitution {
     val bodyEID = EquivalenceDB( thisDecl.body )
 
     if( nameEID.nonEmpty && bodyEID.nonEmpty ) {
-      OperatorDB.put( nameEID.get, (params, bodyEID.get) )
+      OperatorDB.update( nameEID.get, (params, bodyEID.get) )
     }
   }
 
@@ -102,7 +102,7 @@ package object OperatorSubstitution {
             pair => body = replaceAll( body, NameEx( pair._1.name ), pair._2 )
           )
           Identifier.identify( body )
-          OriginDB.put(body.ID, tlaEx.ID)
+          OriginDB.update(body.ID, tlaEx.ID)
           return body
         }
       }
@@ -136,7 +136,7 @@ package object Substitutor extends Plugin {
         val bodyEID = EquivalenceDB( body )
 
         if( nameEID.nonEmpty && bodyEID.nonEmpty ) {
-          OperatorDB.put( nameEID.get, ( params, bodyEID.get ) )
+          OperatorDB.update( nameEID.get, ( params, bodyEID.get ) )
         }
         else{
           /** Something unexpectedly went wrong */
@@ -177,7 +177,7 @@ package object Substitutor extends Plugin {
             pair => body = replaceAll( body, NameEx( pair._1.name ), pair._2 )
           )
           Identifier.identify( body )
-          OriginDB.put(body.ID, tlaEx.ID)
+          OriginDB.update(body.ID, tlaEx.ID)
           return body
         }
       }

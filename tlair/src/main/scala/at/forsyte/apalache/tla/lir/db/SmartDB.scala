@@ -28,8 +28,11 @@ abstract class DB[ KeyType, ValType ] {
   */
 abstract class HashMapDB[ KeyType, ValType ] extends DB[ KeyType, ValType ] {
   protected val map : HashMap[ KeyType, ValType ] = HashMap()
-  def put( key: KeyType, value: ValType ) : Unit = {
+  def put( key: KeyType, value: ValType ) : Option[ValType] = {
     map.put( key, value )
+  }
+  def update( key: KeyType, value : ValType ) : Unit = {
+    map.update( key, value )
   }
   override def apply( key: KeyType ) : Option[ ValType ] = {
     return map.get( key )

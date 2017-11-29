@@ -7,8 +7,16 @@ import at.forsyte.apalache.tla.lir.plugins.{Identifier, UniqueDB}
 class BodyDB extends HashMapDB[String, (List[FormalParam], TlaEx)] {
   override val name = "bodyDB"
 
-  override def put( key : String, value : (List[FormalParam], TlaEx) ) : Unit = {
+  override def put( key : String,
+                    value : (List[FormalParam], TlaEx)
+                  ) : Option[(List[FormalParam], TlaEx)] = {
     map.put( key, (value._1, value._2.deepCopy( identified = false )) )
+  }
+
+  override def update( key : String,
+                       value : (List[FormalParam], TlaEx)
+                     ) : Unit = {
+    map.update( key, (value._1, value._2.deepCopy( identified = false )) )
   }
 
   def params( p_name : String ) : Option[List[FormalParam]] = apply( p_name ).map( _._1 )
@@ -23,17 +31,27 @@ class SourceDB extends HashMapDB[UID, UID] {
 
   override def put( key : UID,
                     value : UID
-                  ) : Unit =
+                  ) : Option[UID] =
+    (key, value) match {
+      case (UID( x ), UID( y )) if x < 0 || y < 0 => None
+      case _ => super.put( key, value )
+    }
+
+  override def update( key : UID,
+                       value : UID
+                     ) : Unit =
     (key, value) match {
       case (UID( x ), UID( y )) if x < 0 || y < 0 => /* return */
-      case _ => super.put( key, value )
+      case _ => super.update( key, value )
     }
 }
 
 object DummySrcDB extends SourceDB {
   override val name : String = "DummySource"
 
-  override def put( key : UID, value : UID ) : Unit = {}
+  override def put( key : UID, value : UID ) : Option[UID] = None
+
+  override def update( key : UID, value : UID ) : Unit = {}
 
   override def apply( key : UID ) : Option[UID] = None
 
@@ -56,7 +74,7 @@ object OperatorHandler {
                        ) : Unit = {
     Identifier.identify( p_new )
     if ( p_old.ID != p_new.ID ) {
-      p_srcDB.put( p_new.ID, p_old.ID )
+      p_srcDB.update( p_new.ID, p_old.ID )
     }
   }
 
@@ -66,7 +84,7 @@ object OperatorHandler {
     p_decl match {
       case decl : TlaOperDecl => {
         Identifier.identify( p_decl )
-        p_db.put( decl.name, (decl.formalParams, decl.body) )
+        p_db.update( decl.name, (decl.formalParams, decl.body) )
       }
     }
   }
@@ -84,7 +102,7 @@ object OperatorHandler {
       if ( arg == p_replacedEx ) {
         val ret = p_newEx.deepCopy( identified = false )
         Identifier.identify( ret )
-        p_srcDB.put( ret.ID, arg.ID )
+        p_srcDB.update( ret.ID, arg.ID )
         ret
       }
       else arg
@@ -125,7 +143,7 @@ object OperatorHandler {
           pair => body = replaceAll( body, NameEx( pair._1.name ), pair._2, p_srcDB)
         )
         Identifier.identify( body )
-        p_srcDB.put(body.ID, p_operEx.ID)
+        p_srcDB.update(body.ID, p_operEx.ID)
         /* return */ body
       }
 
@@ -137,7 +155,7 @@ object OperatorHandler {
     }
     val ret = SpecHandler.getNewEx( p_ex, subAndID )
     Identifier.identify( ret )
-    p_srcDB.put( ret.ID, p_ex.ID )
+    p_srcDB.update( ret.ID, p_ex.ID )
     ret
   }
 
@@ -152,7 +170,7 @@ object OperatorHandler {
       b = unfoldOnce( b, p_bdDB, p_srcDB )
     }
     Identifier.identify( b )
-    p_srcDB.put( b.ID, p_ex.ID )
+    p_srcDB.update( b.ID, p_ex.ID )
     b
   }
 

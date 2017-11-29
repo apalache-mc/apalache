@@ -64,7 +64,7 @@ object assignmentSolver{
       case Implies( lhs, rhs ) =>
         /* return */ "( => %s %s )".format( toSmt2( lhs ), toSmt2( rhs ) )
       case Variable( id: Int ) =>
-        /* return */ m_varSym + "_" + id //"( %s_%s )".format( varSym, id )
+        /* return */ "%s_%s".format( m_varSym, id )
       case LtFns( i: Int, j: Int ) =>
         /* return */ "( < ( %s %s ) ( %s %s ) )".format( m_fnSym, i, m_fnSym, j )
       case NeFns( i: Int, j: Int ) =>
@@ -115,32 +115,32 @@ object assignmentSolver{
     }
   }
 
-  /**
-    * Constructs the δ,,v,,(ϕ) formulas.
-    * @param v The variable deciding leaf terms.
-    * @param phi The formula being transformed.
-    * @return The transformed formula.
-    * @deprecated
-    */
-  protected def delta( v: NameEx )( phi: OperEx ) : BoolFormula = {
-    // assume well-formedndess, i.e. only and/or/in
-    phi.oper match {
-      case TlaBoolOper.and => Or( phi.args.map( arg => delta(v)( arg.asInstanceOf[OperEx] ) ):_* )
-      case TlaBoolOper.or => And( phi.args.map( arg => delta(v)( arg.asInstanceOf[OperEx] ) ):_* )
-      case TlaSetOper.in => {
-        phi.args.head match {
-          case OperEx( TlaActionOper.prime, NameEx( name ) ) => {
-            if( v == NameEx( name ) )
-              Variable( phi.ID.id )
-            else
-              False()
-          }
-          case _ => False()
-        }
-      }
-      case _ => False()
-    }
-  }
+//  /**
+//    * Constructs the δ,,v,,(ϕ) formulas.
+//    * @param v The variable deciding leaf terms.
+//    * @param phi The formula being transformed.
+//    * @return The transformed formula.
+//    * @deprecated
+//    */
+//  protected def delta( v: NameEx )( phi: OperEx ) : BoolFormula = {
+//    // assume well-formedndess, i.e. only and/or/in
+//    phi.oper match {
+//      case TlaBoolOper.and => Or( phi.args.map( arg => delta(v)( arg.asInstanceOf[OperEx] ) ):_* )
+//      case TlaBoolOper.or => And( phi.args.map( arg => delta(v)( arg.asInstanceOf[OperEx] ) ):_* )
+//      case TlaSetOper.in => {
+//        phi.args.head match {
+//          case OperEx( TlaActionOper.prime, NameEx( name ) ) => {
+//            if( v == NameEx( name ) )
+//              Variable( phi.ID.id )
+//            else
+//              False()
+//          }
+//          case _ => False()
+//        }
+//      }
+//      case _ => False()
+//    }
+//  }
 
   /**
     * Finds the LHS primed variable of a well-formed formula (given by the ID).
@@ -310,7 +310,7 @@ object assignmentSolver{
           case TlaSetOper.in =>
             /** First, we check for well-formed expr., i.e. a' \in B */
             args.head match {
-              case OperEx( TlaActionOper.prime, nameEx ) =>
+              case OperEx( TlaActionOper.prime, nameEx : NameEx ) =>
                 val n : Int = p_phi.ID.id
                 /** Use the definition of delta_v for base cases */
                 val newmap =
@@ -330,9 +330,8 @@ object assignmentSolver{
             }
 
           /** Added: 20.11.2017 - TODO: test well  */
-          case TlaBoolOper.exists => {
+          case TlaBoolOper.exists =>
             /* return */ innerMassProcess( args.tail.tail.head , p_vars)
-          }
 
           /** Other case */
           case _ =>
@@ -475,7 +474,7 @@ object assignmentSolver{
     *        ranking function, in ascending order.
     * @see [[[[getOrder(p_vars:scala\.collection\.immutable\.Set[at\.forsyte\.apalache\.tla\.lir\.NameEx],p_phi:at\.forsyte\.apalache\.tla\.lir\.OperEx,p_fileName:String):Option[Seq[(at\.forsyte\.apalache\.tla\.lir\.UID,Boolean)]]* getOrder]]]]
     */
-  def getOrder( p_spec : String ) : Option[Seq[(UID,Boolean)]] = {
+  def getOrder( p_spec : String ) : Option[Set[UID]] = {
     /** Initialize a context and solver */
     val ctx = new Context()
     val s = ctx.mkSolver()
@@ -501,19 +500,25 @@ object assignmentSolver{
     /** Extract all constants and their values */
     val varInterps = m.getConstDecls.map( x => ( m.getConstInterp( x ), x.getName.toString ) )
 
-    /** Sort by rank */
-    val sorted = varInterps.sortBy(  x => wrap( x._2 ) )
+    val trues = m.getConstDecls.filter( x => m.getConstInterp( x ).isTrue )
 
-    /** Convert z3 classes into UIDs and Bools */
-    // Note: if anyone can figure out how to do this in a less hack-ish manner, please let me know.
-    val ret = sorted.map(
-        x => (
-          UID( x._2.substring(2).toInt ), // Truncate A_... prefix
-          x._1.getBoolValue.toInt == 1 // no .toBool exists, cast to int then compare.
-        )
-      )
+    val uids = trues.map( x => UID( x.getName.toString.substring(2).toInt ) ).toSet
 
-    /* return */ Some( ret )
+    /* return */ Some( uids )
+
+//    /** Sort by rank */
+//    val sorted = varInterps.sortBy(  x => wrap( x._2 ) )
+//
+//    /** Convert z3 classes into UIDs and Bools */
+//    // Note: if anyone can figure out how to do this in a less hack-ish manner, please let me know.
+//    val ret = sorted.map(
+//        x => (
+//          UID( x._2.substring(2).toInt ), // Truncate A_... prefix
+//          x._1.getBoolValue.toInt == 1 // no .toBool exists, cast to int then compare.
+//        )
+//      )
+//
+//    /* return */ Some( ret )
   }
 
   /**
@@ -533,7 +538,7 @@ object assignmentSolver{
   def getOrder( p_vars: Set[NameEx],
                 p_phi : OperEx,
                 p_fileName : String = ""
-              ) : Option[Seq[(UID,Boolean)]] = {
+              ) : Option[Set[UID]] = {
     val spec = makeSpec(p_vars,p_phi,p_fileName)
     /* return */ getOrder( spec )
   }
@@ -545,19 +550,22 @@ object assignmentSolver{
       * Every assignment node "bubbles" up, colors its path. Then, search from root for all
       */
 
+    type mHashMap[K, V] = collection.mutable.HashMap[K,V]
+    type mSet[V] = collection.mutable.Set[V]
+    type setType = mHashMap[ UID, mSet[UID] ]
+
     def mark( ex : TlaEx,
               marker : UID,
-              pathLabels : collection.mutable.HashMap[UID, Set[UID]]
+              pathLabels : setType
             ) : Unit ={
-      pathLabels.getOrElseUpdate( ex.ID, Set() )
-      pathLabels( ex.ID ) += marker
+      pathLabels.getOrElseUpdate( ex.ID, collection.mutable.Set[UID]() ) += marker
     }
     def markAll( ex: TlaEx,
-                 markers: Set[UID],
-                 pathLabels : collection.mutable.HashMap[UID, Set[UID]]
+                 markers: mSet[UID],
+                 pathLabels : setType
                ) : Unit = {
-      pathLabels.getOrElseUpdate( ex.ID, Set() )
-      pathLabels( ex.ID ) ++= markers
+      pathLabels.getOrElseUpdate( ex.ID, collection.mutable.Set[UID]() ) ++= markers
+
     }
 
     def leafJudge( ex: TlaEx ) : Boolean =
@@ -566,34 +574,34 @@ object assignmentSolver{
         case _ => false
       }
 
-    val default : Set[UID] = Set()
+    val default : mSet[UID] = collection.mutable.Set()
 
     def leafFun( ex : TlaEx,
                  asgns : Set[UID],
-                 pathLabels : collection.mutable.HashMap[UID, Set[UID]]
-               ) : (Boolean, Set[UID]) = {
+                 pathLabels : setType
+               ) : (Boolean, mSet[UID]) = {
       if ( asgns.contains( ex.ID ) ) {
         mark( ex, ex.ID, pathLabels )
-        (true, Set(ex.ID))
+        (true, collection.mutable.Set(ex.ID))
       }
       else
-        (false, Set())
+        (false, collection.mutable.Set())
     }
 
     def parentFun( ex: TlaEx,
-                   children : Seq[(Boolean, Set[UID])],
-                   pathLabels: collection.mutable.HashMap[UID, Set[UID]]
-                 ) : (Boolean,Set[UID]) = {
+                   children : Seq[(Boolean, mSet[UID])],
+                   pathLabels: setType
+                 ) : (Boolean,mSet[UID]) = {
       children.filter( pa => pa._1 ).foreach( pa => markAll( ex, pa._2, pathLabels  ) )
-      val ret = pathLabels.getOrElse(ex.ID, Set())
+      val ret = pathLabels.getOrElse(ex.ID, collection.mutable.Set[UID]())
       (ret.nonEmpty, ret)
     }
 
     def markTree( ex: TlaEx,
                   asgns: Set[UID]
-                ) : collection.mutable.HashMap[UID, Set[UID]]= {
-      val pathLabels : collection.mutable.HashMap[UID, Set[UID]] = collection.mutable.HashMap()
-      SpecHandler.bottomUpSideefect[Set[UID]](
+                ) : mHashMap[UID, mSet[UID]]= {
+      val pathLabels : setType = collection.mutable.HashMap()
+      SpecHandler.bottomUpSideefect[mSet[UID]](
         ex,
         leafJudge,
         leafFun(_, asgns, pathLabels),
@@ -605,8 +613,40 @@ object assignmentSolver{
 
     val labels = markTree( p_phi, p_allAssignments )
 
-    def mkAsgns() : Seq[Set[UID]] = {
-      Seq( p_allAssignments )
+    def mkAsgns( strategy: Set[UID] ) : Seq[Set[UID]] = {
+      val byVar : mHashMap[String, mSet[UID]] = collection.mutable.HashMap()
+
+      def getName( ex: TlaEx ) : TlaEx = {
+        ex match {
+          case OperEx(
+            TlaSetOper.in,
+            OperEx(
+              TlaActionOper.prime,
+              nameEx
+            ),
+            _
+          ) => nameEx
+          case _ => NullEx
+        }
+      }
+
+      def matchAndFill( ex: TlaEx ) : Unit = {
+        getName(ex) match{
+          case NameEx( s ) => {
+            byVar.getOrElseUpdate( s, collection.mutable.Set() ) += ex.ID
+          }
+          case _ =>
+        }
+      }
+
+      strategy.foreach( uid => matchAndFill( UniqueDB( uid ).get ) )
+
+      def addAll( current : Seq[Set[UID]], s: String ) : Seq[Set[UID]] = {
+        val uidsForS = byVar( s ).toSeq
+        val possibilities = uidsForS.map( uid => current.map( S => S + uid ) )
+        possibilities.fold( Seq() )( _ ++ _ )
+      }
+      byVar.keySet.foldLeft( Seq[Set[UID]](Set()) )( addAll )
     }
 
     def mkNext( asgns: Set[UID] ) : SymbNext = {
@@ -633,7 +673,7 @@ object assignmentSolver{
     }
 
 
-    mkAsgns().map( mkNext )
+    mkAsgns( p_allAssignments ).map( mkNext )
 
 
   }

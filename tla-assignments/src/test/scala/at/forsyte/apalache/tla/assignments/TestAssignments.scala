@@ -173,10 +173,7 @@ class TestAssignments extends FunSuite {
 
     assert( solution.isDefined )
 
-    solution.get.foreach( pa => println( "%s -> %s".format(
-      UniqueDB.apply( pa._1 ).get,
-      pa._2 ) )
-    )
+    solution.get.foreach( x => println( UniqueDB.apply( x ).get ) )
 
   }
 
@@ -193,11 +190,9 @@ class TestAssignments extends FunSuite {
 
     val solutionTrim = Seq(solution.head, solution.tail.head)
 
-    val asgns = solutionTrim.filter( pa => pa._2 ).map( pa => pa._1 ).toSet
-
     val manualAsgns = Set( UID( 20 ), UID( 70 ) )
 
-    val nexts = assignmentSolver.getSymbNexts( extracted, asgns )
+    val nexts = assignmentSolver.getSymbNexts( extracted, solution )
 
     nexts.foreach( pa => println( "%s -> %s".format(
       pa._1.map( UniqueDB( _ ).get ),
