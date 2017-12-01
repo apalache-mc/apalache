@@ -15,6 +15,8 @@ object UniqueDB extends DB[ UID, TlaEx ] {
     if( key.id < 0 || key.id >= expressions.size() ) return None
     else return Some( expressions.elementAt( key.id ) )
   }
+
+  override def get( key : UID ) : TlaEx = expressions.elementAt( key.id )
   override def size() : Int = expressions.size()
 
   override def contains( key : UID ) : Boolean = 0 until expressions.size() contains key.id

@@ -1,22 +1,35 @@
 package at.forsyte.apalache.tla.lir
 
 
-import at.forsyte.apalache.tla.lir.oper.{FixedArity, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.FixedArity
 import at.forsyte.apalache.tla.lir.plugins.Identifier
-import at.forsyte.apalache.tla.lir.{Builder => bd}
+import at.forsyte.apalache.tla.lir.{Builder => bd, OperatorHandler => oh}
+
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
 
 @RunWith( classOf[JUnitRunner] )
-class TestOperatorHandler extends FunSuite {
+class TestOperatorHandler extends FunSuite with TestingPredefs {
   val testFolderPath = "src/test/resources/"
   val bodyDB         = new BodyDB()
   val sourceDB       = new SourceDB()
 
 
-  test( "Test bodyDB" ) {
+  test( "Test extract" ) {
+    bodyDB.clear()
+
+    val declEx1 = TlaVarDecl( "x" )
+    val declEx2 = TlaOperDecl( "A2", List(), 42 )
+    val declEx3 = TlaOperDecl( "B2", List( "x", ("y", 2) ), bd.exp( bd.appOp( "y", "x", "x" ), 2 ) )
+
+    oh.extract( declEx1, bodyDB )
+    assert( bodyDB.size() == 0 )
+
+    oh.extract( declEx2, bodyDB )
+    assert( bodyDB.size() == 1 && bodyDB.contains( "A2" ) )
+
   }
 
 
@@ -25,10 +38,10 @@ class TestOperatorHandler extends FunSuite {
     sourceDB.clear()
 
     val ex = bd.appOp( bd.name( "f" ), bd.cup( bd.name( "i" ), bd.name( "j" ) ) )
-    val newEx1 = OperatorHandler.replaceAll( ex, bd.name( "i" ), bd.int( 0 ) )
-    val newEx2 = OperatorHandler.replaceAll( ex, bd.name( "k" ), bd.int( 0 ) )
+    val newEx1 = OperatorHandler.replaceAll( ex, bd.name( "i" ), bd.bigInt( 0 ) )
+    val newEx2 = OperatorHandler.replaceAll( ex, bd.name( "k" ), bd.bigInt( 0 ) )
 
-    assert( newEx1 == bd.appOp( bd.name( "f" ), bd.cup( bd.int( 0 ), bd.name( "j" ) ) ) )
+    assert( newEx1 == bd.appOp( bd.name( "f" ), bd.cup( bd.bigInt( 0 ), bd.name( "j" ) ) ) )
     assert( newEx2 == ex )
   }
 
@@ -49,7 +62,7 @@ class TestOperatorHandler extends FunSuite {
     val op_B = TlaOperDecl( "B", List( SimpleFormalParam( "z" ) ), bd.name( "z" ) )
 
     val op_C = TlaOperDecl( "C", List(),
-      OperEx( op_A.operator, bd.int( 0 ), bd.int( 1 ), bd.name( "B" ) )
+      OperEx( op_A.operator, bd.bigInt( 0 ), bd.bigInt( 1 ), bd.name( "B" ) )
     )
 
     val spec = TlaSpec( "level2Operators", List( op_A, op_B, op_C ) )
@@ -60,8 +73,8 @@ class TestOperatorHandler extends FunSuite {
     val unfolded2 = OperatorHandler.unfoldOnce( unfolded1, bodyDB )
     val unfolded3 = OperatorHandler.unfoldOnce( unfolded2, bodyDB )
 
-    assert( unfolded1 == bd.appOp( bd.name( "B" ), bd.cup( bd.int( 0 ), bd.int( 1 ) ) ) )
-    assert( unfolded2 == bd.cup( bd.int( 0 ), bd.int( 1 ) ) )
+    assert( unfolded1 == bd.appOp( bd.name( "B" ), bd.cup( bd.bigInt( 0 ), bd.bigInt( 1 ) ) ) )
+    assert( unfolded2 == bd.cup( bd.bigInt( 0 ), bd.bigInt( 1 ) ) )
     assert( unfolded3 == unfolded2 )
 
     val maxUnfold = OperatorHandler.unfoldMax( op_C.body, bodyDB )
@@ -102,7 +115,7 @@ class TestOperatorHandler extends FunSuite {
           op_A.operator,
           OperEx(
             op_B.operator,
-            bd.int( 0 )
+            bd.bigInt( 0 )
           ),
           bd.name( "B" )
         ),
@@ -115,23 +128,23 @@ class TestOperatorHandler extends FunSuite {
 
     val unfolded = OperatorHandler.unfoldMax( op_C.body, bodyDB )
 
-    assert( unfolded == bd.int( 0 ) )
+    assert( unfolded == bd.bigInt( 0 ) )
   }
 
-  test( "Test SourceDB" ){
+  test( "Test SourceDB" ) {
     bodyDB.clear()
     sourceDB.clear()
 
     val ex = bd.appOp( bd.name( "f" ), bd.cup( bd.name( "i" ), bd.name( "j" ) ) )
 
-    Identifier.identify(ex)
+    Identifier.identify( ex )
 
-    val newEx1 = OperatorHandler.replaceAll( ex, bd.name( "i" ), bd.int( 0 ), sourceDB )
+    val newEx1 = OperatorHandler.replaceAll( ex, bd.name( "i" ), bd.bigInt( 0 ), sourceDB )
 
-    val original1 = OperatorHandler.undoReplace( newEx1 ,sourceDB )
+    val original1 = OperatorHandler.undoReplace( newEx1, sourceDB )
     val cup = ex.asInstanceOf[OperEx].args.tail.head
     val newCup = newEx1.asInstanceOf[OperEx].args.tail.head
-    val original2 = OperatorHandler.undoReplace( newCup ,sourceDB )
+    val original2 = OperatorHandler.undoReplace( newCup, sourceDB )
 
 
     assert( original1 identical ex )

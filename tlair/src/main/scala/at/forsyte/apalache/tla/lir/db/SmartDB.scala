@@ -13,6 +13,10 @@ abstract class DB[ KeyType, ValType ] {
 
   /** Retrieves the value associated with the key, if it exists in the database. */
   def apply( key: KeyType ) : Option[ ValType ]
+  /** Retrieves the value associated with the key, if it exists in the database, otherwise throws. */
+  def get( key: KeyType ) : ValType
+  /** Retrieves the value associated with the key, if it exists in the database, otherwise returns `elseVal`. */
+  def getOrElse( key: KeyType, elseVal : ValType ) : ValType = apply( key ).getOrElse( elseVal )
   /** Returns the database size. */
   def size() : Int
   /** Checks whether the key exists in the database. */
@@ -21,6 +25,10 @@ abstract class DB[ KeyType, ValType ] {
   def clear() : Unit
   /** Debugging method, prints contents to std. output. */
   def print(): Unit
+
+  def ==( p_map : Map[KeyType,ValType] ) : Boolean = {
+    p_map.size == size && p_map.forall( pa => apply( pa._1 ).contains( pa._2 ) )
+  }
 }
 
 /**
@@ -36,6 +44,9 @@ abstract class HashMapDB[ KeyType, ValType ] extends DB[ KeyType, ValType ] {
   }
   override def apply( key: KeyType ) : Option[ ValType ] = {
     return map.get( key )
+  }
+  override def get( key : KeyType ) : ValType = {
+    return map( key )
   }
   override def size() : Int = {
     return map.size
@@ -66,7 +77,7 @@ abstract class HashMapDB[ KeyType, ValType ] extends DB[ KeyType, ValType ] {
 abstract class SmartDB[ KeyType, ValType ] extends DB[ KeyType, ValType ] {
 
   /** Lookup that does not compute and store */
-  def get( key: KeyType ) : Option[ ValType ]
+  def fetch( key: KeyType ) : Option[ ValType ]
 
   /** Computes the value of key, but does not store it */
   def evaluate( key : KeyType ) : Option[ ValType ]
@@ -80,7 +91,7 @@ abstract class SmartDB[ KeyType, ValType ] extends DB[ KeyType, ValType ] {
 
   /** Lookup that computes and stores the value if it is not already stored */
   override def apply( key: KeyType ) : Option[ ValType ] =  {
-    val existing = get( key )
+    val existing = fetch( key )
     /** If the key's value has already been calculated, return it. */
     if ( existing.nonEmpty ) {
       return existing
@@ -95,7 +106,7 @@ abstract class SmartDB[ KeyType, ValType ] extends DB[ KeyType, ValType ] {
 abstract class SmartHashMapDB[ KeyType, ValType ] extends SmartDB[ KeyType, ValType ] {
   protected val map : HashMap[ KeyType, ValType ] = HashMap()
 
-  override def get( key: KeyType ) : Option[ ValType ] = {
+  override def fetch( key: KeyType ) : Option[ ValType ] = {
     return map.get( key )
   }
 
@@ -124,14 +135,5 @@ abstract class SmartHashMapDB[ KeyType, ValType ] extends SmartDB[ KeyType, ValT
     }
   }
 
-
-
 }
-
-
-/**
-  * Shorthand for common KeyTypes (UID, EID).
-  */
-abstract class UIDB[ ValType ] extends SmartDB[ UID, ValType ]
-abstract class EIDB[ ValType ] extends SmartDB[ EID, ValType ]
 

@@ -27,7 +27,7 @@ object EquivalenceDB extends SmartDB[ TlaEx, EID ]{
   }
 
   /** Retrieves EID from the allocator, WITHOUT allocating anew. Uses implicit conversion */
-  override def get( key: TlaEx ): Option[ EID ] = allocator.getID( key )
+  override def fetch( key: TlaEx ): Option[ EID ] = allocator.getID( key )
   /** Predicts what the EID would be, if allocate were called. Uses implicit conversion */
   override def evaluate( key : TlaEx ) : Option[ EID ] = allocator.predict( key )
 
@@ -48,6 +48,9 @@ object EquivalenceDB extends SmartDB[ TlaEx, EID ]{
     }
     return eid
   }
+
+  /** DUMMY */
+  override def get( key : TlaEx ) = EID(-1)
 
   /** Returns the number of distinct equivalence IDs assigned. */
   override def size() : Int = allocator.nextID()

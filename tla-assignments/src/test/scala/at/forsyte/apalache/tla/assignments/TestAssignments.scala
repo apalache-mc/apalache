@@ -5,6 +5,8 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.plugins.{Identifier, UniqueDB}
+import at.forsyte.apalache.tla.lir.{Builder => bd}
+
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -16,10 +18,8 @@ import scala.io.Source
   * Tests for the assignment solver
   */
 @RunWith(classOf[JUnitRunner])
-class TestAssignments extends FunSuite {
+class TestAssignments extends FunSuite with TestingPredefs {
   val testFolderPath = "src/test/resources/" // "../test/tla/"
-  val bd = Builder
-
 
   test("Check dependency set computation") {
 
@@ -107,102 +107,10 @@ class TestAssignments extends FunSuite {
 
   }
 
-  test("Check sanitization") {
-    val fileName = "assignmentTest2.tla"
-    val extracted = sanitizer(testFolderPath + fileName)
-    assert(extracted.isDefined)
-    val (before, after) = extracted.get
-//    println( "%s \n -> \n %s".format( before, after ) )
-
-    val expected =
-      bd.and(
-        bd.or(
-          bd.and(
-            bd.in( bd.prime( "a" ), bd.enumSet( bd.prime( "b" ) ) ),
-            bd.in( bd.prime( "b" ), bd.enumSet( bd.prime( "a" ) ) )
-//            bd.primeEq( "a", "b" ),
-//            bd.primeEq( "b", "a" )
-          ),
-          bd.in( bd.prime( "b" ), bd.enumSet( bd.int( 2 ) ) )
-//          bd.primeEq( "b", 2)
-        ),
-        bd.in( bd.prime( "a" ), bd.enumSet( bd.int( 1 ) ) )
-//        bd.primeEq( "a", 1 )
-      )
-
-    assert(after == expected)
-  }
-
-  test( "Check quantifiers" ){
-
-    val fileName = "assignmentTestQuantifiers.tla"
-    val extracted = sanitizer(testFolderPath + fileName)
-    assert(extracted.isDefined)
-    val (_, after) = extracted.get
-    //    println( "%s \n -> \n %s".format( before, after ) )
-
-    val bd = Builder
-
-    val expected =
-      bd.and(
-        bd.or(
-          bd.and(
-            bd.in( bd.prime( "a" ), bd.enumSet( bd.prime( "b" ) ) ),
-            bd.in( bd.prime( "b" ), bd.enumSet( bd.prime( "a" ) ) )
-          ),
-          bd.exists(
-            bd.name("p"),
-            bd.enumSet( bd.int( 1 ), bd.int( 2 ) ),
-            bd.in( bd.prime( "b" ), bd.enumSet( bd.name( "p" ) ) )
-          )
-        ),
-        bd.in( bd.prime( "a" ), bd.enumSet( bd.int( 1 ) ) ),
-        bd.forall(
-          bd.name( "q" ),
-          bd.enumSet( bd.int( 1 )  ),
-          bd.in( bd.prime( "a" ), bd.enumSet( bd.name( "q" ) ) )
-        )
-
-      )
-
-    assert(after == expected)
-
-    val p_vars : Set[NameEx] = Set( bd.name( "a" ), bd.name( "b" ) )
-
-    val solution = assignmentSolver.getOrder( p_vars , after.asInstanceOf[OperEx] )
-
-    assert( solution.isDefined )
-
-    solution.get.foreach( x => println( UniqueDB.apply( x ).get ) )
-
-  }
-
-  test("Test markTree"){
-    UniqueDB.clear()
-
-    val fileName = "assignmentTestSymbNexts.tla"
-    val extracted = sanitizer(testFolderPath + fileName).get._2.asInstanceOf[OperEx]
-    val p_vars : Set[NameEx] = Set( bd.name( "a" ), bd.name( "b" ) )
-
-//    println( extracted.toNiceString() )
-
-    val solution = assignmentSolver.getOrder( p_vars , extracted ).get
-
-    val solutionTrim = Seq(solution.head, solution.tail.head)
-
-    val manualAsgns = Set( UID( 20 ), UID( 70 ) )
-
-    val nexts = assignmentSolver.getSymbNexts( extracted, solution )
-
-    nexts.foreach( pa => println( "%s -> %s".format(
-      pa._1.map( UniqueDB( _ ).get ),
-      pa._2 )
-    )
-    )
 
 
-
-
+  test( "Test makeSpec" ){
+    val testDir =  testFolderPath + "sanitizer/"
   }
 
 }

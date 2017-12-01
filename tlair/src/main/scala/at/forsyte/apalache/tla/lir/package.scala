@@ -134,6 +134,8 @@ package lir {
     // TODO: goes to PrettyPrinter
     protected val tab : String = " " * indent
 
+    def isNull : Boolean = false
+
     def deepCopy( identified: Boolean = true ) : TlaEx
     def identical( other: TlaEx ) : Boolean
   }
@@ -150,6 +152,7 @@ package lir {
 
     override def toNiceString(nTab: Int): String = "NullEx"
     override def toSimpleString: String = toNiceString()
+    override def isNull : Boolean = true
   }
 
   /** just using a TLA+ value */
@@ -298,7 +301,7 @@ package lir {
     * @param body operator definition, that is a TLA+ expression that captures the operator definition
     */
   case class TlaOperDecl( name: String, formalParams: List[FormalParam], body: TlaEx ) extends TlaDecl {
-
+    require( !body.isNull )
     val operator: TlaUserOper = new TlaUserOper(name, FixedArity(formalParams.length), this)
 
     override def deepCopy( ): TlaOperDecl =  TlaOperDecl( name, formalParams, body.deepCopy() )
