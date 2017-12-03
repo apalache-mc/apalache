@@ -1,10 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfter, FunSuite}
@@ -1630,4 +1630,32 @@ class TestSymbStateRewriter extends FunSuite with BeforeAndAfter {
         fail("Unexpected rewriting result")
     }
   }
+
+  /* TODO: implement it in the future
+
+
+  test("""SE-FUN-UPD[1-4]: [[x \in {1, 2} |-> 2 * x] EXCEPT ![1] = 11] ~~> $C$fun""") {
+    val set = tla.enumSet(tla.int(1), tla.int(2))
+    val mapExpr = tla.mult(tla.int(2), tla.name("x"))
+    val fun = tla.funDef(mapExpr, tla.name("x"), set)
+
+    val except = tla.except(fun, tla.int(1), tla.int(11))
+    val state = new SymbState(except, CellTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case resFunEx @ NameEx(name) =>
+        assert(CellTheory().hasConst(name))
+        // check the function domain and co-domain
+        val resFun = nextState.arena.findCellByName(name)
+        val dom = nextState.arena.getDom(resFun)
+        val cdm = nextState.arena.getCdm(resFun)
+        assert(nextState.arena.getHas(dom).size == 2)
+        val cdmSize = nextState.arena.getHas(cdm).size
+        assert(cdmSize == 2 || cdmSize == 3) // the co-domain can be overapproximated
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+  */
 }
