@@ -17,6 +17,12 @@ class CheckerException(message: String) extends Exception(message)
 class RewriterException(message: String) extends CheckerException(message)
 
 /**
+  * This exception is thrown when QStateRewrite cannot find an applicable rule.
+  * @param message error message
+  */
+class NoRuleException(message: String) extends RewriterException(message)
+
+/**
   * This exception is thrown in case of problems with SMT encoding.
   *
   * @param message error message
