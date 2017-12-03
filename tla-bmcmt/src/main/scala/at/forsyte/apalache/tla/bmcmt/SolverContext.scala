@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.lir.TlaEx
-import com.microsoft.z3.FuncDecl
 
 /**
   * A context that stores the SMT constraints that are generated in the course of symbolic exploration.
@@ -60,7 +59,7 @@ trait SolverContext {
     * @param cell an arena cell
     * @return a function declaration (also stored in the context)
     */
-  def getOrIntroCellFun(cell: ArenaCell): FuncDecl
+  def getOrIntroCellFun(cell: ArenaCell): String
 
     /**
     * Assert that a Boolean TLA+ expression holds true.

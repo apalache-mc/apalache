@@ -94,19 +94,19 @@ class Z3SolverContext extends SolverContext {
     * Introduce an uninterpreted function associated with a cell.
     *
     * @param cell an arena cell
-    * @return a function declaration (also stored in the context)
+    * @return the name of the new function (declared in SMT)
     */
-  def getOrIntroCellFun(cell: ArenaCell): FuncDecl = {
+  def getOrIntroCellFun(cell: ArenaCell): String = {
     val cellName = cell.toString
     cellFuns.get(cellName) match {
       case Some(funDecl) =>
-        funDecl
+        funDecl.getName.toString
 
       case None =>
         val name = "fun%d".format(cell.id)
         val funDecl = z3context.mkFuncDecl(name, cellSort, cellSort)
         cellFuns.put(cellName, funDecl)
-        funDecl
+        name
     }
   }
 
