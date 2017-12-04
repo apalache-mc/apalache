@@ -72,6 +72,21 @@
                 <version>4.11</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest_2.12</artifactId>
+                <version>3.0.4</version>
+                <scope>test</scope>
+            </dependency>
+            <!--
+             check this page: http://www.scalatest.org/user_guide/testing_with_mock_objects#jMock
+            -->
+            <dependency>
+                <groupId>org.easymock</groupId>
+                <artifactId>easymock</artifactId>
+                <version>3.5.1</version>
+                <scope>test</scope>
+            </dependency>
 
             <!-- Dependencies that are not available from the Maven repository, see 3rdparty/README.md -->
             <dependency>
