@@ -358,7 +358,7 @@ object assignmentSolver {
     *         relevant declarations and assertions.
     */
   def makeSpec( p_vars : Set[NameEx],
-                p_phi : OperEx,
+                p_phi : TlaEx,
                 p_fileName : String = "",
                 p_completeSpec : Boolean = false
               ) : String = {
@@ -540,7 +540,7 @@ object assignmentSolver {
     * @see [[makeSpec]], [[[[getOrder(p_spec:String):Option[Seq[(at\.forsyte\.apalache\.tla\.lir\.UID,Boolean)]]* getOrder]]]]
     **/
   def getOrder( p_vars : Set[NameEx],
-                p_phi : OperEx,
+                p_phi : TlaEx,
                 p_fileName : String = ""
               ) : Option[Set[UID]] = {
     val spec = makeSpec( p_vars, p_phi, p_fileName )
@@ -616,7 +616,58 @@ object assignmentSolver {
       pathLabels
     }
 
+    def isConsistentMarking( ex : TlaEx, map : mHashMap[UID, mSet[UID]] ) : Boolean = {
+      ex match {
+        case OperEx( TlaBoolOper.and | TlaBoolOper.or, args@_* ) =>
+          map.contains( ex.ID ) && map( ex.ID ) == args.map( x => map.getOrElse( x.ID, Set() ) ).fold( Set() )( _ ++ _ )
+        case _ =>
+          if ( p_allAssignments.contains( ex.ID ) )
+            map.contains( ex.ID ) && map( ex.ID ) == Set( ex.ID )
+          else
+            !map.contains( ex.ID )
+      }
+    }
+
     val labels = markTree( p_phi, p_allAssignments )
+
+    assert( isConsistentMarking( p_phi, labels ) )
+
+    /**
+      * Note: Works incorrectly, not all possible combinations per variable are legitimate assignments,
+      * i.e. (a =1 /\ b=2) \/ ( a =2 /\ b =1  ), we have 2 branches not 4. Jure, 1.12.2017
+      *
+      * solution: given a combination, check all asgns lie on same branch ( the first common ancestor of
+      * any pair is an AND node). Jure, 1.12.2017
+      *
+      **/
+
+    /**
+      * Bug ( 4.12.2017 ): - Forgot to add quantifier introspection, expressions
+      * of the form \E i : Step1(i) \/ Step2(i) were mistakenly treated as leaves.
+      *
+      * */
+
+    def goodAsgn( asgn : Set[UID] ) : Boolean = {
+      def goodNode( p_ex : TlaEx, currentAsgn : Set[UID] ) : Boolean = {
+        def myLabels( ex : TlaEx ) : mSet[UID] =
+          labels.getOrElse( ex.ID, collection.mutable.Set[UID]() )
+        if( currentAsgn.isEmpty )
+          return true // early termination for partial asgns.
+        else if ( !currentAsgn.subsetOf( myLabels( p_ex ) ) )
+          return false // you need to be able to find all of the assignments somewhere
+        else
+          p_ex match {
+            case OperEx( TlaBoolOper.and, args@_* ) =>
+              args.forall( nd => goodNode( nd, currentAsgn.intersect( myLabels( nd ) ) ) )
+            case OperEx( TlaBoolOper.or, args@_* ) =>
+              args.exists( nd => goodNode( nd, currentAsgn ) )
+            case OperEx( TlaBoolOper.exists | TlaBoolOper.forall, _, _, body  ) =>
+              return goodNode( body, currentAsgn )
+            case _ => return true //currentAsgn.subsetOf( myLabels( ex ) )
+          }
+      }
+      goodNode( p_phi, asgn )
+    }
 
     def mkAsgns( strategy : Set[UID] ) : Seq[Set[UID]] = {
 
@@ -647,31 +698,6 @@ object assignmentSolver {
 
       strategy.foreach( uid => matchAndFill( UniqueDB( uid ).get ) )
 
-      /**
-        * Note: Works incorrectly, not all possible combinations per variable are legitimate assignments,
-        * i.e. (a =1 /\ b=2) \/ ( a =2 /\ b =1  ), we have 2 branches not 4. Jure, 1.12.2017
-        *
-        * solution: given a combination, check all asgns lie on same branch ( the first common ancestor of
-        * any pair is an AND node). Jure, 1.12.2017
-        *
-        **/
-
-      def goodAsgn( asgn : Set[UID] ) : Boolean = {
-        def goodNode( ex : TlaEx, currentAsgn : Set[UID] ) : Boolean = {
-          if( currentAsgn.isEmpty ) true // early termination for partial asgns.
-          def myLabels( ex : TlaEx ) : mSet[UID] =
-            labels.getOrElse( ex.ID, collection.mutable.Set[UID]() )
-          ex match {
-            case OperEx( TlaBoolOper.and, args@_* ) =>
-              args.forall( nd => goodNode( nd, currentAsgn.intersect( myLabels( nd ) ) ) )
-            case OperEx( TlaBoolOper.or, args@_* ) =>
-              args.exists( nd => goodNode( nd, currentAsgn.intersect( myLabels( nd ) ) ) )
-            case _ => myLabels( ex ).subsetOf( asgn )
-          }
-        }
-        goodNode( p_phi, asgn )
-      }
-
       def addAll( current : Seq[Set[UID]], s : String ) : Seq[Set[UID]] = {
         val uidsForS = byVar( s ).toSeq
         val possibilities = uidsForS.map( uid => current.map( S => S + uid ).filter( goodAsgn ) ) // added filter, 1.12.
@@ -688,13 +714,21 @@ object assignmentSolver {
       def asgnFilter( ex : TlaEx ) : TlaEx = {
         ex match {
           case OperEx( TlaBoolOper.or, args@_* ) => {
+            /**
+              * Or-branches have the property that they either contain
+              * all assignments or none of them. Therefore it suffices to check
+              * non-emptiness of the intersection.
+              */
             val newArgs = args.filter(
               x => labels.getOrElse( x.ID, Set() ).exists( y => asgns.contains( y ) )
             )
             if ( newArgs.isEmpty )
               ex
-            else
-              OperEx( TlaBoolOper.or, newArgs : _* )
+            else {
+              assert( newArgs.size == 1 )
+              newArgs.head // if nonempty, it has exactly 1 member
+              //OperEx( TlaBoolOper.or, newArgs : _* )
+            }
           }
           case _ => ex
         }
@@ -703,8 +737,9 @@ object assignmentSolver {
       (asgns, SpecHandler.getNewEx( p_phi, asgnFilter ))
     }
 
+    val asgnBranches = mkAsgns( p_allAssignments )
 
-    mkAsgns( p_allAssignments ).map( mkNext )
+    asgnBranches.map( mkNext )
 
 
   }

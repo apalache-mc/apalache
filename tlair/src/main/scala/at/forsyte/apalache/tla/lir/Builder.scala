@@ -118,6 +118,8 @@ object Builder {
 
   def unchanged( p_v : TlaEx ) : OperEx = OperEx( TlaActionOper.unchanged, p_v )
 
+  def unchangedTup( p_args: TlaEx* ) : OperEx = unchanged( tuple( p_args:_* ) )
+
   def comp( p_A : TlaEx
             , p_B : TlaEx
           ) : OperEx = OperEx( TlaActionOper.composition, p_A, p_B )

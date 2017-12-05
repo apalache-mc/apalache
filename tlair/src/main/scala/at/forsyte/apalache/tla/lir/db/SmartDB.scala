@@ -26,6 +26,8 @@ abstract class DB[ KeyType, ValType ] {
   /** Debugging method, prints contents to std. output. */
   def print(): Unit
 
+  def keySet() : Set[KeyType]
+
   def ==( p_map : Map[KeyType,ValType] ) : Boolean = {
     p_map.size == size && p_map.forall( pa => apply( pa._1 ).contains( pa._2 ) )
   }
@@ -35,34 +37,39 @@ abstract class DB[ KeyType, ValType ] {
   * Basic implementation of a DB wrapping a HashMap.
   */
 abstract class HashMapDB[ KeyType, ValType ] extends DB[ KeyType, ValType ] {
-  protected val map : HashMap[ KeyType, ValType ] = HashMap()
+  protected val m_map : HashMap[ KeyType, ValType ] = HashMap()
   def put( key: KeyType, value: ValType ) : Option[ValType] = {
-    map.put( key, value )
+    m_map.put( key, value )
   }
   def update( key: KeyType, value : ValType ) : Unit = {
-    map.update( key, value )
+    m_map.update( key, value )
   }
   override def apply( key: KeyType ) : Option[ ValType ] = {
-    return map.get( key )
+    return m_map.get( key )
   }
   override def get( key : KeyType ) : ValType = {
-    return map( key )
+    return m_map( key )
   }
   override def size() : Int = {
-    return map.size
+    return m_map.size
   }
   override def contains( key: KeyType ) : Boolean = {
-    return map.contains( key )
+    return m_map.contains( key )
   }
   def remove( key: KeyType ) : Unit = {
-    map.remove( key )
+    m_map.remove( key )
   }
   override def clear() : Unit = {
-    map.clear()
+    m_map.clear()
   }
+
+  override def keySet() : Set[KeyType] = {
+    m_map.keySet.toSet
+  }
+
   override def print(): Unit = {
     println( "\n" + name + ": \n" )
-    for ( ( k, v ) <- map ) {
+    for ( ( k, v ) <- m_map ) {
       println( k + " -> " + v )
     }
   }

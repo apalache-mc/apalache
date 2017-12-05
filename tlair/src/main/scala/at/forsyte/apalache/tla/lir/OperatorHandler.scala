@@ -10,13 +10,13 @@ class BodyDB extends HashMapDB[String, (List[FormalParam], TlaEx)] {
   override def put( key : String,
                     value : (List[FormalParam], TlaEx)
                   ) : Option[(List[FormalParam], TlaEx)] = {
-    map.put( key, (value._1, value._2.deepCopy( identified = false )) )
+    m_map.put( key, (value._1, value._2.deepCopy( identified = false )) )
   }
 
   override def update( key : String,
                        value : (List[FormalParam], TlaEx)
                      ) : Unit = {
-    map.update( key, (value._1, value._2.deepCopy( identified = false )) )
+    m_map.update( key, (value._1, value._2.deepCopy( identified = false )) )
   }
 
   def params( p_name : String ) : Option[List[FormalParam]] = apply( p_name ).map( _._1 )

@@ -4,8 +4,6 @@ import at.forsyte.apalache.tla.lir.db._
 import at.forsyte.apalache.tla.lir._
 import java.util.Vector
 
-// REWRITE AS DB[Int, TlaEx]
-
 object UniqueDB extends DB[ UID, TlaEx ] {
   override val name = "UniqueDB"
 
@@ -34,6 +32,8 @@ object UniqueDB extends DB[ UID, TlaEx ] {
       expressions.add( ex )
     }
   }
+
+  override def keySet( ) : Set[UID] = List.range(0,expressions.size()).map(UID).toSet
 
 }
 

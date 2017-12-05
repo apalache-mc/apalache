@@ -52,6 +52,9 @@ object EquivalenceDB extends SmartDB[ TlaEx, EID ]{
   /** DUMMY */
   override def get( key : TlaEx ) = EID(-1)
 
+  /** DUMMY */
+  override def keySet( ) : scala.collection.immutable.Set[TlaEx] = scala.collection.immutable.Set[TlaEx]()
+
   /** Returns the number of distinct equivalence IDs assigned. */
   override def size() : Int = allocator.nextID()
 

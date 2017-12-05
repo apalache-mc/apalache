@@ -11,6 +11,8 @@ import org.scalatest.junit.JUnitRunner
 
 import scala.io.Source
 
+/* TODO: All tests clean */
+
 @RunWith( classOf[JUnitRunner] )
 class TestConverter extends FunSuite with TestingPredefs {
   val testFolderPath = "src/test/resources/sanitizer/"
@@ -59,7 +61,7 @@ class TestConverter extends FunSuite with TestingPredefs {
 
   implicit val bDB : BodyDB = new BodyDB()
 
-  def clean() : Unit  = bDB.clear()
+  def clean( ) : Unit = bDB.clear()
 
   def cleanTest( f : => Unit ) = prePostTest( f, clean )
 
@@ -133,7 +135,20 @@ class TestConverter extends FunSuite with TestingPredefs {
     assert( sanitize( tla.enumSet( tla.eql( 0, 1 ) ) ) == tla.enumSet( tla.in( 0, tla.enumSet( 1 ) ) ) )
   }
 
-  test( "Test on files" ){
+  test( "Test unchangedExplicit" ){
+    cleanTest {
+      val ucEx1 = tla.unchanged( n_a )
+      val ucEx2 = tla.unchangedTup( n_a, n_b )
+      val ucEx3 = tla.unchanged( tla.plus( n_a, n_b ) )
+      val ucEx4 = tla.unchanged( n_a )
+
+//      assert( unchangedExplicit( ucEx1 ) == tla.and(  ) )
+
+
+    }
+  }
+
+  test( "Test on files" ) {
 
     cleanTest {
       val fname1 = "test1.tla"
@@ -141,11 +156,57 @@ class TestConverter extends FunSuite with TestingPredefs {
 
       extract( declarations1 : _* )
 
-//      bDB.print()
+      assert(
+        bDB.body( "Next" ).contains(
+          tla.and(
+            tla.primeEq( n_a, 1 ),
+            tla.primeEq( n_b, tla.eql( n_e, n_f ) ),
+            tla.in( tla.prime( n_c ), tla.enumSet( n_e, n_f, n_g ) ),
+            tla.primeEq( n_d, 4 ),
+            tla.unchanged( tla.tuple( n_x, n_y ) ),
+            tla.unchanged( n_z )
+          )
+        )
+      )
+
+      assert(
+        bDB.body( "Init" ).contains(
+          tla.eql( n_a, 0 )
+        )
+      )
+
+      assert(
+        bDB.body( "Spec" ).contains(
+          tla.box(
+            tla.stutt(
+              tla.appDecl( declarations1.find( _.name == "Next" ).get.asInstanceOf[TlaOperDecl] ),
+              tla.tuple( n_a, n_b )
+            )
+          )
+        )
+      )
+      //
+      //
+      //
+      //      assert(
+      //        bDB == Map(
+      //          "Next" -> (List(), tla.and(
+      //            tla.primeEq( n_a, 1 ),
+      //            tla.primeEq( n_b, tla.eql( n_e, n_f ) ),
+      //            tla.in( tla.prime( n_c ), tla.enumSet( n_e, n_f, n_g ) ),
+      //            tla.primeEq( n_d, 4 ),
+      //            tla.unchanged( tla.tuple( n_x, n_y ) ),
+      //            tla.unchanged( n_z )
+      //          )),
+      //          "Init" -> (List(), tla.eql( n_a, 0 )),
+      //          "Spec" -> (List(), tla.box( tla.stutt( "Next", tla.tuple( n_a, n_b ) ) ))
+      //        )
+      //      )
+
+      //      bDB.print()
 
 
     }
-
 
 
   }

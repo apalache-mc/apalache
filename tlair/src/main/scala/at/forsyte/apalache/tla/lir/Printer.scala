@@ -96,7 +96,7 @@ object UTFPrinter extends Printer {
 
     def opApp( p_ex : TlaEx ) : String = {
       p_ex match {
-        case OperEx( TlaSetOper.enumSet | TlaSetOper.in, _* ) => apply( p_ex )
+        case OperEx( TlaSetOper.enumSet | TlaSetOper.in | TlaFunOper.app, _* ) => apply( p_ex )
         case OperEx( _, args@_* ) if args.size > 1 => "(%s)".format( apply( p_ex ) )
         case _ => apply( p_ex )
       }

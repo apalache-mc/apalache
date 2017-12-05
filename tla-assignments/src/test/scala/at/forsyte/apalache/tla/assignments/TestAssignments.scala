@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.assignments
 
-import at.forsyte.apalache.tla.imp.SanyImporter
+import at.forsyte.apalache.tla.imp._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
@@ -111,6 +111,34 @@ class TestAssignments extends FunSuite with TestingPredefs {
 
   test( "Test makeSpec" ){
     val testDir =  testFolderPath + "sanitizer/"
+  }
+
+  test( "Test on real files" ) {
+    val file = "EWD840.tla"
+    UniqueDB.clear()
+    Converter.clear()
+
+    val decls = declarationsFromFile(testFolderPath + file)
+    Converter.extract( decls:_* )
+
+    val nextBody = findBodyOf( "Next", decls:_* )
+
+    val vars = Converter.getVars( decls:_*)
+    val cleaned = Converter.sanitize( nextBody )
+
+    val order = assignmentSolver.getOrder( vars.map( x => NameEx( x ) ), cleaned )
+
+    assert( order.isDefined )
+
+//    println( order.get.size )
+//      order.get.foreach( x => println( UniqueDB( x ).get ) )
+
+    val symbNexts = assignmentSolver.getSymbNexts( cleaned, order.get )
+
+    printsep()
+    println( symbNexts.size )
+    symbNexts.foreach( x =>  println( "%s : %s".format( x._1.map( p => (UniqueDB(p).get, p ) ) , x._2 ) ) )
+
   }
 
 }

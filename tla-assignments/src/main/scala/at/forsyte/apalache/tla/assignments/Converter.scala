@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.actions._
 import at.forsyte.apalache.tla.lir.oper._
 
 /**
@@ -12,6 +13,11 @@ object Converter {
   protected val INIT_STEP_DEFAULT_NAME = "Init"
   protected val m_bodyDB               = new BodyDB()
   protected val m_srcDB                = new SourceDB()
+
+  def clear() : Unit = {
+    m_bodyDB.clear()
+    m_srcDB.clear()
+  }
 
 
   def extract( p_decls : TlaDecl*
@@ -35,6 +41,31 @@ object Converter {
                ) : TlaEx = {
 
     OperatorHandler.unfoldMax( p_expr, bodyDB, srcDB )
+  }
+
+  def unchangedExplicit(
+                         p_ex : TlaEx
+                       )(
+                         implicit srcDB : SourceDB = m_srcDB
+                       ) : TlaEx = {
+
+    def exFun( ex : TlaEx ) : TlaEx = {
+      def lambda( x : TlaEx ) =
+        Builder.in( Builder.prime( x ), Builder.enumSet( x ) )
+
+      ex match {
+        case OperEx( TlaActionOper.unchanged, arg ) =>
+          arg match {
+            case OperEx( TlaFunOper.tuple, args@_* ) =>
+              Builder.and( args.map( lambda ) : _* )
+            case NameEx( _ ) => lambda( arg )
+            case _ => ex
+          }
+        case _ => ex
+      }
+    }
+
+    OperatorHandler.replaceWithRule( p_ex, exFun, srcDB )
   }
 
   def sanitizeByName(
@@ -64,7 +95,13 @@ object Converter {
       }
     }
 
-    OperatorHandler.replaceWithRule( inlineAll( p_expr )( bodyDB, srcDB ), rewriteEQ, m_srcDB )
+    val inlined = inlineAll( p_expr )( bodyDB, srcDB )
+
+    val eqReplaced = OperatorHandler.replaceWithRule( inlined, rewriteEQ, srcDB )
+
+    val unchangedChanged = unchangedExplicit( eqReplaced )( srcDB )
+
+    unchangedChanged
   }
 
   def apply( p_expr : TlaEx, p_decls : TlaDecl* ) : Option[TlaEx] = {
