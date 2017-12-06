@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.control.LetInOper
+import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaDecimal, TlaInt, TlaStr}
 import tla2sany.semantic._
 
@@ -33,6 +34,9 @@ class ExprOrOpArgNodeTranslator(context: Context, recStatus: RecursionStatus) {
 
     case letIn: LetInNode =>
       translateLetIn(letIn)
+
+    case at: AtNode =>
+      translateAt(at)
 
     case n =>
       throw new SanyImporterException("Unexpected subclass of tla2sany.ExprOrOpArgNode: " + n.getClass)
@@ -76,6 +80,15 @@ class ExprOrOpArgNodeTranslator(context: Context, recStatus: RecursionStatus) {
     val oper = new LetInOper(innerContext.declarations.map {d => d.asInstanceOf[TlaOperDecl]})
     val body = ExprOrOpArgNodeTranslator(context.disjointUnion(innerContext), recStatus).translate(letIn.getBody)
     OperEx(oper, body)
+  }
+
+  private def translateAt(node: AtNode): TlaEx = {
+    // e.g., in [f EXCEPT ![42] = @ + @], we have: base = f, modifier = 42
+    val base = translate(node.getAtBase)
+    // This translation introduces new expressions for different occurences of @.
+    // An alternative to this would be to introduce LET at = ... IN [f EXCEPT ![0] = at + at].
+    val modifier = translate(node.getAtModifier)
+    OperEx(TlaFunOper.app, base, modifier)
   }
 }
 

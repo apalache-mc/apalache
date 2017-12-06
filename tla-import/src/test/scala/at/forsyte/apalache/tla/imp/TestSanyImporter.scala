@@ -338,6 +338,7 @@ class TestSanyImporter extends FunSuite {
       |            \/ TRUE
       |            \/ FALSE
       |Except == [ x EXCEPT ![0] = 1 ]
+      |ExceptAt == [ x EXCEPT ![0] = @ /\ TRUE]
       |FcnApply == x[1]
       |FcnCtor == [ y \in x |-> y \cup y ]
       |IfThenElse == IF TRUE THEN FALSE ELSE TRUE
@@ -444,6 +445,14 @@ class TestSanyImporter extends FunSuite {
     assertTlaDecl("Except",
       OperEx(TlaFunOper.except,
         NameEx("x"), TlaFunOper.mkTuple(ValEx(TlaInt(0))), ValEx(TlaInt(1))
+      ))
+    assertTlaDecl("ExceptAt",
+      OperEx(TlaFunOper.except,
+        NameEx("x"),
+        TlaFunOper.mkTuple(ValEx(TlaInt(0))),
+        OperEx(TlaBoolOper.and,
+          OperEx(TlaFunOper.app, NameEx("x"), TlaFunOper.mkTuple(ValEx(TlaInt(0)))),
+          ValEx(TlaTrue))
       ))
     assertTlaDecl("FcnApply", OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(1))))
     val cup = OperEx(TlaSetOper.cup, NameEx("y"), NameEx("y"))
