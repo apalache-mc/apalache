@@ -52,11 +52,6 @@ object assignmentSolver {
     case class LtFns( i : Int, j : Int ) extends BoolFormula // ( R( i ) < R( j ) )
     case class NeFns( i : Int, j : Int ) extends BoolFormula // ( R( i ) != R( j ) )
 
-    type seenType = Set[Int]
-    type dependencySetsType = Set[(Int, Int)]
-    type deltaType = Map[NameEx, BoolFormula]
-    type recursionData = (seenType, dependencySetsType, dependencySetsType, deltaType)
-
     /**
       * Transforms BoolFormula expressions into SMTLIBv2 format recursively.
       *
@@ -139,17 +134,12 @@ object assignmentSolver {
       * @return A TLA expression with the name of the variable, unprimed.
       * @see [[rvars]]
       */
-    def lvar( i : Int ) : NameEx = {
+    def lvar( i : Int ) : Option[String] = {
       UniqueDB.get( UID( i ) ) match {
-        case OperEx( TlaSetOper.in, OperEx( TlaActionOper.prime, ne : NameEx ), _ ) => ne
-//        case _ => /* not well formed */
+        case OperEx( TlaSetOper.in, OperEx( TlaActionOper.prime, NameEx( name ) ), _ ) => Some( name )
+        case _ => None
       }
     }
-//
-//    def lvar( i : Int ) : NameEx = UniqueDB.apply( UID( i ) ).
-//      head.asInstanceOf[OperEx].args.
-//      head.asInstanceOf[OperEx].args.
-//      head.asInstanceOf[NameEx]
 
     /**
       * Extracts all primed subexpressions within a given expression, regardless of nesting depth.
@@ -158,14 +148,14 @@ object assignmentSolver {
       * @return A set of unprimed names. Each name appears uniquely, regardless of
       *         multiple occurrences with different UIDs.
       */
-    def findPrimes( ex : TlaEx ) : Set[NameEx] = {
+    def findPrimes( ex : TlaEx ) : Set[String] = {
       ex match {
-        case OperEx( TlaActionOper.prime, ne : NameEx ) =>
-          /* return */ Set( ne )
+        case OperEx( TlaActionOper.prime, NameEx( name ) ) =>
+          /* return */ Set( name )
         case OperEx( _, args@_* ) =>
-          /* return */ args.map( findPrimes ).fold( Set[NameEx]() ) { ( a, b ) => a ++ b }
+          /* return */ args.map( findPrimes ).fold( Set[String]() ) { ( a, b ) => a ++ b }
         case _ =>
-          /* return */ Set[NameEx]()
+          /* return */ Set[String]()
       }
     }
 
@@ -178,16 +168,11 @@ object assignmentSolver {
       * @return A set of expressions with the names of the variables, unprimed.
       * @see [[lvar]]
       */
-    def rvars( i : Int ) : Set[NameEx] =
+    def rvars( i : Int ) : Set[String] =
       UniqueDB.get( UID( i ) ) match {
         case OperEx( TlaSetOper.in, OperEx( TlaActionOper.prime, NameEx( _ ) ), set ) => findPrimes( set )
-        case _ => Set[NameEx]()
+        case _ => Set[String]()
       }
-//
-//      findPrimes(
-//        UniqueDB( UID( i ) ).head.asInstanceOf[OperEx].args.tail.head // 2nd arg is the RHS
-//      )
-
 
     /**
       * The ⊏ binary relation.
@@ -198,10 +183,16 @@ object assignmentSolver {
       * @param j The UID of the second term.
       * @return `true` iff the relation is satisfied.
       */
-    def sqsubset( i : Int, j : Int ) : Boolean = {
-
-      rvars( j ).contains( lvar( i ) )
+    def sqsubset( i : Int,
+                  j : Int
+                ) : Boolean = {
+      lvar( i ).exists( rvars( j ).contains  )
     }
+
+    type seenType = Set[Int]
+    type dependencySetType = Set[(Int, Int)]
+    type deltaType = Map[String, BoolFormula]
+    type recursionData = (seenType, dependencySetType, dependencySetType, deltaType)
 
     /**
       * Main method.
@@ -216,7 +207,9 @@ object assignmentSolver {
       *         leaf IDs, `D` is the set of dependent indices and `deltas` is a map storing
       *         δ,,v,,(ϕ) for every v.
       */
-    def massProcess( p_phi : TlaEx, p_vars : Set[NameEx] ) : ( seenType, dependencySetsType, deltaType ) = {
+    def massProcess( p_phi : TlaEx,
+                     p_vars : Set[String]
+                   ) : ( seenType, dependencySetType, deltaType ) = {
       val (seen, deps, _, deltas) = innerMassProcess( p_phi, p_vars )
       /* return */ (seen, deps, deltas.map( pa => (pa._1, simplify( pa._2 )) ))
     }
@@ -227,7 +220,9 @@ object assignmentSolver {
       * @return An additional extra set of independent indices, as bookkeeping,
       *         which is discarded in the return of [[massProcess]].
       */
-    def innerMassProcess( p_phi : TlaEx, p_vars : Set[NameEx] ) : recursionData = {
+    def innerMassProcess( p_phi : TlaEx,
+                          p_vars : Set[String]
+                        ) : recursionData = {
 
       /** We name the default arguments to return at irrelevant terms  */
       val defaultMap = ( for {v <- p_vars} yield (v, False()) ).toMap
@@ -261,14 +256,10 @@ object assignmentSolver {
             case TlaBoolOper.and | TlaBoolOper.or =>
 
               /** First, process all children */
-              val processedArgs : Seq[(Set[Int],
-                Set[(Int, Int)],
-                Set[(Int, Int)],
-                Map[NameEx, BoolFormula])]
-              = args.map( innerMassProcess( _, p_vars ) )
+              val processedArgs : Seq[recursionData] = args.map( innerMassProcess( _, p_vars ) )
 
               /** Next, compute a map from each v to a sequence of all child delta_v formulas  */
-              val newMapArgs : Map[NameEx, Seq[BoolFormula]] =
+              val newMapArgs : Map[String, Seq[BoolFormula]] =
                 ( for {v <- p_vars} yield
                   (v,
                     processedArgs.map(
@@ -294,7 +285,7 @@ object assignmentSolver {
               }
 
               /** Deltas flip boolean connectives */
-              val newMap : Map[NameEx, BoolFormula] =
+              val newMap : deltaType =
                 (
                   for {v <- p_vars}
                     yield (v,
@@ -306,7 +297,7 @@ object assignmentSolver {
                   ).toMap
 
               /** S is the set of all index pairs which we will be certain about after this step */
-              val S : Set[(Int, Int)] = for {x <- seen; y <- seen} yield (x, y)
+              val S : dependencySetType = for {x <- seen; y <- seen} yield (x, y)
 
               /** One set is unchanged, the other is the remeining elements from S */
               oper match {
@@ -319,13 +310,13 @@ object assignmentSolver {
 
               /** First, we check for well-formed expr., i.e. a' \in B */
               args.head match {
-                case OperEx( TlaActionOper.prime, nameEx : NameEx ) =>
+                case OperEx( TlaActionOper.prime, NameEx( name ) ) =>
                   val n : Int = p_phi.ID.id
                   /** Use the definition of delta_v for base cases */
                   val newmap =
                     ( for {v <- p_vars}
                       yield (v,
-                        if ( nameEx == v )
+                        if ( name == v )
                           Variable( n )
                         else
                           False()
@@ -374,10 +365,9 @@ object assignmentSolver {
     * @return An SMTLIBv2 string to be used alone or passed to the z3 API. Contains at least all
     *         relevant declarations and assertions.
     */
-  def makeSpec( p_vars : Set[NameEx],
+  def makeSpec( p_vars : Set[String],
                 p_phi : TlaEx,
-                p_fileName : Option[String] = None,
-                p_completeSpec : Boolean = false
+                p_fileName : Option[String] = None
               ) : String = {
 
     import auxFunctions._
@@ -424,18 +414,17 @@ object assignmentSolver {
     val fndecls = "\n( declare-fun %s ( Int ) Int )\n".format( m_fnSym )
 
     /** Assert all of the constraints, as defined in \phi_S^{good}^ */
-    val constraints = ( aargsSMT ++ rargsSMT ++ injargsSMT ++ exOneargsSMT ).toSeq.map(
+    val constraints = ( aargsSMT ++ rargsSMT ++ injargsSMT ++ exOneargsSMT ).map(
       str => "( assert %s )".format( str )
     ).mkString( "\n" )
 
     /** Partial return, sufficient for the z3 API */
     val ret = typedecls + fndecls + constraints
 
-    val logic = "( set-logic QF_UFLIA )\n"
-    val end = "\n( check-sat )\n( get-model )\n( exit )"
-
     /** Possibly produce standalone file */
     if ( p_fileName.nonEmpty ) {
+      val logic = "( set-logic QF_UFLIA )\n"
+      val end = "\n( check-sat )\n( get-model )\n( exit )"
 
       val pw = new PrintWriter( new File( p_fileName.get ) )
       pw.write( logic + ret + end )
@@ -443,14 +432,7 @@ object assignmentSolver {
 
     }
 
-    /** Return complete or partial spec */
-    if ( p_completeSpec ) {
-      /* return */ logic + ret + end
-    }
-    else {
-      /* return */ ret
-    }
-
+     /* return */ ret
   }
 
   /**
@@ -458,7 +440,7 @@ object assignmentSolver {
     *
     * @param p_fun The funciton interpretation produced by the z3 solver.
     */
-  protected class FunWrapper( p_fun : FuncInterp, p_varSym : String ) {
+  protected class FunWrapper( p_fun : FuncInterp ) {
     /** Return value for arguments outside the relevant subdomain. */
     protected val m_default : Int = p_fun.getElse.asInstanceOf[IntNum].getInt
 
@@ -469,7 +451,7 @@ object assignmentSolver {
     protected val m_map : Map[String, Int] =
       ( for {e : FuncInterp.Entry <- p_fun.getEntries}
         yield (
-          "%s_%s".format( p_varSym, e.getArgs.head ),
+          "%s_%s".format( auxFunctions.m_varSym, e.getArgs.head ),
           e.getValue.asInstanceOf[IntNum].getInt
         )
         ).toMap
@@ -517,7 +499,7 @@ object assignmentSolver {
       return None
 
     /** Wrap the function so it can be used to sort the sequence later. */
-    val wrap = new FunWrapper( m.getFuncInterp( fnDecl( 0 ) ), auxFunctions.m_varSym )
+    val wrap = new FunWrapper( m.getFuncInterp( fnDecl( 0 ) ) )
 
     /** Extract all constants and their values */
     val varInterps = m.getConstDecls.map( x => (m.getConstInterp( x ), x.getName.toString) )
@@ -558,7 +540,7 @@ object assignmentSolver {
     *         ranking function, in ascending order.
     * @see [[makeSpec]], [[[[getOrder(p_spec:String):Option[Seq[(at\.forsyte\.apalache\.tla\.lir\.UID,Boolean)]]* getOrder]]]]
     **/
-  def getOrder( p_vars : Set[NameEx],
+  def getOrder( p_vars : Set[String],
                 p_phi : TlaEx,
                 p_fileName : Option[String] = None
               ) : Option[Set[UID]] = {
