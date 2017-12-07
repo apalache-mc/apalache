@@ -27,6 +27,10 @@ import scala.collection.immutable.{Map, Set}
   */
 object assignmentSolver {
 
+  /**
+    * Contains various variables and functions that are used internally, but
+    * would clutter the solver interface.
+    */
   protected object preprocessHelperFunctions {
 
     /** Symbol to be used for variable names in SMT. */
@@ -127,7 +131,7 @@ object assignmentSolver {
       * Undefined behaviour if the formula is not well-formed or if the ID is invalid.
       *
       * @param i The UID of a formula, assumed to be valid.
-      * @return A TLA expression with the name of the variable, unprimed.
+      * @return The name of the variable, if the expression is well-formed, otherwise None.
       * @see [[rvars]]
       */
     def lvar( i : Int ) : Option[String] = {
@@ -141,7 +145,7 @@ object assignmentSolver {
       * Extracts all primed subexpressions within a given expression, regardless of nesting depth.
       *
       * @param ex An arbitrary TLA expression.
-      * @return A set of unprimed names. Each name appears uniquely, regardless of
+      * @return A set of names. Each name appears uniquely, regardless of
       *         multiple occurrences with different UIDs.
       */
     def findPrimes( ex : TlaEx ) : Set[String] = {
@@ -161,7 +165,7 @@ object assignmentSolver {
       * The RHS does not need to be well-formed. Undefined behaviour if the ID is invalid.
       *
       * @param i The UID of a formula, assumed to be valid.
-      * @return A set of expressions with the names of the variables, unprimed.
+      * @return A set of names of the variables, unprimed.
       * @see [[lvar]]
       */
     def rvars( i : Int ) : Set[String] =
@@ -191,7 +195,7 @@ object assignmentSolver {
     type recursionData = (seenType, dependencySetType, dependencySetType, deltaType)
 
     /**
-      * Main method.
+      * Main internal method.
       *
       * Extracts all relevant information in a single pass.
       * We assume the input is preprocessed, all terms that are not of the form a' ∈ B
@@ -327,7 +331,7 @@ object assignmentSolver {
                   /* return */ defaultArgs
               }
 
-            /** Added: 20.11.2017 - TODO: test well  */
+            /** Quantifier introspection, all existential quanitifications may have nested assignemnts */
             case TlaBoolOper.exists =>
               /* return */ innerMassProcess( args.tail.tail.head, p_vars )
 
@@ -381,9 +385,8 @@ object assignmentSolver {
     * @param p_phi          The Next formula.
     * @param p_fileName     Optional parameter, if `p_fileName` is nonempty, a file with the
     *                       complete specification is produced, including set-logic,
-    *                       check-sat and get-model commands. Set to empty by default.
-    * @return An SMTLIBv2 string to be used alone or passed to the z3 API. Contains at least all
-    *         relevant declarations and assertions.
+    *                       check-sat and get-model commands. Set to None by default.
+    * @return An SMTLIBv2 string to be passed to the z3 API.
     */
   def makeSpec( p_vars : Set[String],
                 p_phi : TlaEx,
@@ -463,15 +466,13 @@ object assignmentSolver {
     * the specification `p_spec`.
     *
     * @param p_spec A SMTLIBv2 specification string, as required by the parser method of
-    *               com.microsoft.z3.Context.
+    *               [[com.microsoft.z3.Context]].
     * @return `None`, if the assignment problem has no solution. Otherwise, returns a sequence
-    *         of pairs where the UID component refers to an assignment candidate and the boolean
-    *         component specifies whether the candidate is chosen as an assignment in the
-    *         good assignment strategy found by the internal methods. The pairs are sorted by the
+    *         of [[UID UIDs]], constituting a good assignmentStrategy, sorted by the
     *         ranking function, in ascending order.
-    * @see [[[[getOrder(p_vars:scala\.collection\.immutable\.Set[at\.forsyte\.apalache\.tla\.lir\.NameEx],p_phi:at\.forsyte\.apalache\.tla\.lir\.OperEx,p_fileName:String):Option[Seq[(at\.forsyte\.apalache\.tla\.lir\.UID,Boolean)]]* getOrder]]]]
+    * @see [[[[getStrategy(p_vars:scala\.collection\.immutable\.Set[at\.forsyte\.apalache\.tla\.lir\.NameEx],p_phi:at\.forsyte\.apalache\.tla\.lir\.OperEx,p_fileName:String):Option[Seq[(at\.forsyte\.apalache\.tla\.lir\.UID,Boolean)]]* getStrategy]]]]
     **/
-  def getOrder( p_spec : String ) : Option[StrategyType] = {
+  def getStrategy( p_spec : String ) : Option[StrategyType] = {
     import preprocessHelperFunctions._
 
     /** Initialize a context and solver */
@@ -515,25 +516,36 @@ object assignmentSolver {
     * @param p_fileName Optional parameter, if `p_fileName` is nonempty, a file with the complete
     *                   specification is also produced. Set to empty by default.
     * @return `None`, if the assignment problem has no solution. Otherwise, returns a sequence
-    *         of pairs where the UID component refers to an assignment candidate and the boolean
-    *         component specifies whether the candidate is chosen as an assignment in the
-    *         good assignment strategy found by the internal methods. The pairs are sorted by the
+    *         of [[UID UIDs]], constituting a good assignmentStrategy, sorted by the
     *         ranking function, in ascending order.
     * @see [[makeSpec]], [[[[getOrder(p_spec:String):Option[Seq[(at\.forsyte\.apalache\.tla\.lir\.UID,Boolean)]]* getOrder]]]]
     **/
-  def getOrder( p_vars : Set[String],
-                p_phi : TlaEx,
-                p_fileName : Option[String] = None
+  def getStrategy( p_vars : Set[String],
+                   p_phi : TlaEx,
+                   p_fileName : Option[String] = None
               ) : Option[StrategyType] = {
-    /* return */ getOrder( makeSpec( p_vars, p_phi, p_fileName ) )
+    /* return */ getStrategy( makeSpec( p_vars, p_phi, p_fileName ) )
   }
 
   type SymbNext = (AssignmentType, TlaEx)
 
+  /**
+    * Helper functions for [[getSymbNexts]].
+    */
   protected object symbolicNextHelperFunctions {
 
     type LabelMapType = Map[UID, Set[UID]]
 
+    /**
+      * Merges two maps.
+      * If a key is defined in both maps, the resulting map will associate it with
+      * the union of sets in the individual maps.
+      * @param p_map1 A map whose values are sets.
+      * @param p_map2 A map whose values are sets.
+      * @tparam K Map key type.
+      * @tparam V Map value set element type.
+      * @return
+      */
     def joinSetMaps[K, V]( p_map1 : Map[K, Set[V]],
                            p_map2 : Map[K, Set[V]]
                          ) : Map[K, Set[V]] = {
@@ -545,16 +557,33 @@ object assignmentSolver {
       )
     }
 
+    /**
+      * Shorthand for common .getOrElse uses
+      */
     def labelsAt( p_ex : TlaEx,
                   p_knownLabels : LabelMapType
                 ) : Set[UID] = p_knownLabels.getOrElse( p_ex.ID, Set() )
 
+    /**
+      * Decides whether a given [[TlaEx]] is considered a leaf in the formula tree.
+      * For our puposes, leaves are assignment candidates, i.e. expressions of the
+      * form x' \in S.
+      * @param p_ex Any TLA expression
+      * @return `true` iff the expression is a leaf in the formula tree.
+      */
     def leafJudge( p_ex : TlaEx ) : Boolean =
       p_ex match {
         case OperEx( TlaSetOper.in, OperEx( TlaActionOper.prime, NameEx( _ ) ), _ ) => true
         case _ => false
       }
 
+    /**
+      * Creates a partial label map at a leaf.
+      * @param p_ex Leaf expression.
+      * @param p_stratSet The assignment strategy.
+      * @return The empty map, if the leaf is not part of the srategy, otherwise the one-key
+      *         map, which assigns to the leaf ID a singleton which contains that ID.
+      */
     def leafFun( p_ex : TlaEx,
                  p_stratSet : Set[UID]
                ) : LabelMapType = {
@@ -565,15 +594,24 @@ object assignmentSolver {
         Map()
     }
 
+    /**
+      * Constructs a new label at the parent from child labels.
+      * @param p_ex Current node in the formula tree.
+      * @param p_childResults All the maps computed at child nodes.
+      * @return A new label map, which agrees with all child maps and additionally assigns to the current
+      *         node ID the union of all label sets found at its children.
+      */
     def parentFun( p_ex : TlaEx,
                    p_childResults : Seq[LabelMapType]
                  ) : LabelMapType = {
 
+      /** Unify all child maps */
       val superMap = p_childResults.fold( Map() )( joinSetMaps )
 
       p_ex match {
-        /* guaranteed */
+        /** Guaranteed, if invoked by the [[SpecHandler]] */
         case OperEx( _, args@_* ) => {
+          /** The set of all child labels */
           val mySet = args.map( labelsAt( _, superMap ) ).fold( Set() )( _ ++ _ )
           superMap + ( p_ex.ID -> mySet )
         }
@@ -582,7 +620,18 @@ object assignmentSolver {
 
     }
 
-    def markTree( p_ex : TlaEx,
+    /**
+      * Returns a consistent labeling of the formula tree rooted at `p_phi`.
+      *
+      * The labeling assigns to every node in the formula tree a label set (a subset of `p_stratSet`),
+      * where a parent label set is the union of all child label sets. The leaves are labled
+      * either with their own IDs or not at all, depending on whether or not they are part of `p_stratSet`.
+      * @param p_ex Root node.
+      * @param p_stratSet Assignment strategy (as set)
+      * @return A map representing a consistent labeling.
+      * @see [[isConsistentLabeling]]
+      */
+    def labelAll( p_ex : TlaEx,
                   p_stratSet : Set[UID]
                 ) : LabelMapType = {
       SpecHandler.bottomUpVal[LabelMapType](
@@ -594,74 +643,105 @@ object assignmentSolver {
       )
     }
 
-    def isConsistentMarking( p_ex : TlaEx,
-                             p_stratSet : Set[UID],
-                             p_knownLabels : LabelMapType
+    /**
+      * Checks whether a triplet of a formula, a strategy and a labeling is consistent.
+      */
+    def isConsistentLabeling( p_ex : TlaEx,
+                              p_stratSet : Set[UID],
+                              p_knownLabels : LabelMapType
                            ) : Boolean = {
       p_ex match {
+        /** If inner node, own labels must exist and be equal to the union of the child labels */
         case OperEx( TlaBoolOper.and | TlaBoolOper.or, args@_* ) =>
           p_knownLabels.contains( p_ex.ID ) && p_knownLabels( p_ex.ID ) == args.map(
             x => p_knownLabels.getOrElse( x.ID, Set() )
           ).fold( Set() )( _ ++ _ )
         case _ =>
+          /** If leaf and part of the strategy, the label set must be a singleton */
           if ( p_stratSet.contains( p_ex.ID ) )
             p_knownLabels.contains( p_ex.ID ) && p_knownLabels( p_ex.ID ) == Set( p_ex.ID )
+          /** Otherwise, must be unlabeled */
           else
             !p_knownLabels.contains( p_ex.ID )
       }
     }
 
     /**
-      * We say `p_asgn` is derived from `p_strat` iff one can obtain `p_asgn` from `p_strat` by
-      * removing elements.
+      * Checks whether the assignment candidate `p_currentAsgn` lies entirely on a single branch (
+      * as defined in the paper).
+      *
+      * This property is intuitively interpreted as follows:
+      * a) The empty assignment is always good, as it vacouously holds that all of its elements lie on
+      * the same branch.
+      * a) The candidate `p_currentAsgn` is never good at a node `p_ex`, if the subtree rooted at `p_ex` does
+      * not witness at least all labels from `p_currentAsgn`, i.e. the lables at `p_ex` must be a superset
+      * or `p_currentAsgn`
+      * a) In the case of an AND node, the individual assignments can be spread throughout the subtrees
+      * arbitrarily, since a branch witnesses all children of an AND node.
+      * a) In the case of an OR node, all the assignments must lie in the same subtree.
+      *
+      * @param p_ex Root of the formula subtree.
+      * @param p_knownLabels Known labeling.
+      * @param p_currentAsgn Assignment candidate.
+      * @return `true` iff `p_currentAsgn` satisfied the above property.
       */
-    def derivedFrom( p_asgn : AssignmentType,
-                     p_strat : StrategyType
-                   ) : Boolean = {
-      if ( p_asgn.isEmpty )
-        true
-      else if ( p_asgn.size > p_strat.size )
-        false
-      else if ( p_asgn.head == p_strat.head )
-        derivedFrom( p_asgn.tail, p_strat.tail )
-      else
-        derivedFrom( p_asgn, p_strat.tail )
-    }
-
-    def isGoodNode( p_ex : TlaEx,
-                    p_knownLabels : LabelMapType,
-                    p_currentAsgn : Set[UID]
+    def isGoodAtNode( p_ex : TlaEx,
+                      p_knownLabels : LabelMapType,
+                      p_currentAsgn : Set[UID]
                   ) : Boolean = {
+      /** Vacuous termination */
       if ( p_currentAsgn.isEmpty )
         true
+      /** Impossibility termination */
       else if ( !p_currentAsgn.subsetOf( labelsAt( p_ex, p_knownLabels ) ) )
         false
       else
         p_ex match {
           case OperEx( TlaBoolOper.and, args@_* ) =>
+            /**
+              * In the AND case, we check the intersections of `p_currentAsgn` with
+              * subtree labels. If the labeling is consistent, each subtree will have disjoint labels.
+              */
             args.forall(
-              nd => isGoodNode(
+              nd => isGoodAtNode(
                 nd,
                 p_knownLabels,
                 p_currentAsgn.intersect( labelsAt( nd, p_knownLabels ) )
               )
             )
           case OperEx( TlaBoolOper.or, args@_* ) =>
-            args.exists( nd => isGoodNode( nd, p_knownLabels, p_currentAsgn ) )
+            /** In the OR case, there must exist a child node, where `p_currentAsgn` is good. */
+            args.exists( nd => isGoodAtNode( nd, p_knownLabels, p_currentAsgn ) )
           case OperEx( TlaBoolOper.exists | TlaBoolOper.forall, _, _, body ) =>
-            isGoodNode( body, p_knownLabels, p_currentAsgn )
-          case _ => true //currentAsgn.subsetOf( myLabels( ex ) )
+            /** If we see an existential quantifier, we look inside. */
+            isGoodAtNode( body, p_knownLabels, p_currentAsgn )
+          case _ =>
+            /**
+              * If we are at a leaf and we did not terminate because of the subset inclusion exit,
+              * then it must hold that `p_currentAsgn` is a subset of the leaf labels. If the leaf labels
+              * were empty, we would have terminated at p_currentAsgn.isEmpty by necessity,
+              * so both the leaf labels and `p_currentAsgn` must be singletons, containing the same
+              * element. Therefore, we can conclude the property holds and return `true`.
+              */
+            true //p_currentAsgn.subsetOf( labelsAt( p_ex, p_knownLabels ) )
+
         }
     }
 
+    /** Calls [[isGoodAtNode]] on the entire formula. */
     def isGoodAssignment( p_phi : TlaEx,
                           p_knownLabels : LabelMapType,
                           p_asgnSet : Set[UID]
                         ) : Boolean = {
-      isGoodNode( p_phi, p_knownLabels, p_asgnSet )
+      isGoodAtNode( p_phi, p_knownLabels, p_asgnSet )
     }
 
-    def getName( p_ex : TlaEx ) : Option[String] = {
+    /**
+      * Extracts the name from a leaf node, if possible.
+      * @param p_ex Leaf candidate
+      * @return None, if the candidate is not a leaf, otherwise the name of the left hand side variable.
+      */
+    def getLHSName( p_ex : TlaEx ) : Option[String] = {
       p_ex match {
         case OperEx( TlaSetOper.in, OperEx( TlaActionOper.prime, NameEx( name ) ), _ ) => Some( name )
         case _ => None
@@ -671,7 +751,7 @@ object assignmentSolver {
     type VarMapType = Map[String, Set[UID]]
 
     def singleVarMap( p_ex : TlaEx ) : VarMapType = {
-      getName( p_ex ) match {
+      getLHSName( p_ex ) match {
         case Some( s ) => Map( s -> Set( p_ex.ID ) )
         case None => Map()
       }
@@ -760,9 +840,9 @@ object assignmentSolver {
     import symbolicNextHelperFunctions._
 
     val stratSet = p_asgnStrategy.toSet
-    val labels = markTree( p_phi, stratSet )
+    val labels = labelAll( p_phi, stratSet )
 
-    assert( isConsistentMarking( p_phi, stratSet, labels ) )
+    assert( isConsistentLabeling( p_phi, stratSet, labels ) )
 
     val asgnBranches = makeAssignments( p_phi, labels, stratSet )
 
@@ -774,7 +854,7 @@ object assignmentSolver {
   def getSymbolicTransitions( p_variables: Set[String],
                               p_phi : TlaEx
                             ) : Option[Seq[(AssignmentType, TlaEx)]] = {
-      getOrder( makeSpec( p_variables, p_phi ) ).map( getSymbNexts( p_phi, _ ) )
+      getStrategy( makeSpec( p_variables, p_phi ) ).map( getSymbNexts( p_phi, _ ) )
   }
 
 }

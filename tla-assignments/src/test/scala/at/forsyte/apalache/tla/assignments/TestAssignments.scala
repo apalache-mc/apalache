@@ -155,7 +155,7 @@ class TestAssignments extends FunSuite with TestingPredefs {
     val vars = Converter.getVars( decls:_*)
     val cleaned = Converter.sanitize( nextBody )
 
-    val order = assignmentSolver.getOrder( vars, cleaned )
+    val order = assignmentSolver.getStrategy( vars, cleaned )
 
     assert( order.isDefined )
 
