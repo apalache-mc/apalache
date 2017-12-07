@@ -27,11 +27,7 @@ import scala.collection.immutable.{Map, Set}
   */
 object assignmentSolver {
 
-  type StrategyType = Seq[UID]
-  type AssignmentType = StrategyType
-  type VarNameType = String
-
-  protected object auxFunctions {
+  protected object preprocessHelperFunctions {
 
     /** Symbol to be used for variable names in SMT. */
     var m_varSym = "A"
@@ -347,6 +343,34 @@ object assignmentSolver {
           /* return */ defaultArgs
       }
     }
+
+    /**
+      * Allows calls to a com.microsoft.z3.FuncInterp object as if it were a String -> Int function.
+      *
+      * @param p_fun The funciton interpretation produced by the z3 solver.
+      */
+    class FunWrapper( p_fun : FuncInterp ) {
+      /** Return value for arguments outside the relevant subdomain. */
+      protected val m_default : Int = p_fun.getElse.asInstanceOf[IntNum].getInt
+
+      /**
+        * Internal map, corresponds to the restriction of the function represented by `p_fun`
+        * to the relevant subdomain.
+        */
+      protected val m_map : Map[String, Int] =
+        ( for {e : FuncInterp.Entry <- p_fun.getEntries}
+          yield (
+            "%s_%s".format( preprocessHelperFunctions.m_varSym, e.getArgs.head ),
+            e.getValue.asInstanceOf[IntNum].getInt
+          )
+          ).toMap
+
+      /** The wrapper can be called like a function. */
+      def apply( arg : String ) : Int = m_map.getOrElse( arg, m_default )
+
+      override def toString : String = m_map.toString
+    }
+
   }
 
   /**
@@ -358,10 +382,6 @@ object assignmentSolver {
     * @param p_fileName     Optional parameter, if `p_fileName` is nonempty, a file with the
     *                       complete specification is produced, including set-logic,
     *                       check-sat and get-model commands. Set to empty by default.
-    * @param p_completeSpec Optional parameter, if `true`, produces a complete .smt2
-    *                       specification, with set-logic, check-sat and get-model commands.
-    *                       If false, will only produce the assertions and declarations.
-    *                       Set to false by default.
     * @return An SMTLIBv2 string to be used alone or passed to the z3 API. Contains at least all
     *         relevant declarations and assertions.
     */
@@ -370,7 +390,7 @@ object assignmentSolver {
                 p_fileName : Option[String] = None
               ) : String = {
 
-    import auxFunctions._
+    import preprocessHelperFunctions._
 
     /** Extract the list of leaf ids, the dependency set and the delta mapping */
     val (seen, deps, deltas) = massProcess( p_phi, p_vars )
@@ -435,34 +455,8 @@ object assignmentSolver {
      /* return */ ret
   }
 
-  /**
-    * Allows calls to a com.microsoft.z3.FuncInterp object as if it were a String -> Int function.
-    *
-    * @param p_fun The funciton interpretation produced by the z3 solver.
-    */
-  protected class FunWrapper( p_fun : FuncInterp ) {
-    /** Return value for arguments outside the relevant subdomain. */
-    protected val m_default : Int = p_fun.getElse.asInstanceOf[IntNum].getInt
-
-    /**
-      * Internal map, corresponds to the restriction of the function represented by `f`
-      * to the relevant subdomain.
-      */
-    protected val m_map : Map[String, Int] =
-      ( for {e : FuncInterp.Entry <- p_fun.getEntries}
-        yield (
-          "%s_%s".format( auxFunctions.m_varSym, e.getArgs.head ),
-          e.getValue.asInstanceOf[IntNum].getInt
-        )
-        ).toMap
-
-    /** The wrapper can be called like a function. */
-    def apply( arg : String ) : Int = m_map.getOrElse( arg, m_default )
-
-    override def toString : String = m_map.toString
-  }
-
-  /* TODO: FIX SO THE RESULTS APPEAR IN ORDER AGAIN */
+  type StrategyType = Seq[UID]
+  type AssignmentType = StrategyType
 
   /**
     * Point of access method, presents the solution to the assignment problem for
@@ -477,21 +471,23 @@ object assignmentSolver {
     *         ranking function, in ascending order.
     * @see [[[[getOrder(p_vars:scala\.collection\.immutable\.Set[at\.forsyte\.apalache\.tla\.lir\.NameEx],p_phi:at\.forsyte\.apalache\.tla\.lir\.OperEx,p_fileName:String):Option[Seq[(at\.forsyte\.apalache\.tla\.lir\.UID,Boolean)]]* getOrder]]]]
     **/
-  def getOrder( p_spec : String ) : Option[Set[UID]] = {
+  def getOrder( p_spec : String ) : Option[StrategyType] = {
+    import preprocessHelperFunctions._
+
     /** Initialize a context and solver */
     val ctx = new Context()
-    val s = ctx.mkSolver()
+    val solver = ctx.mkSolver()
 
     /** Parse the spec and add it to the solver */
-    s.add( ctx.parseSMTLIB2String( p_spec, null, null, null, null ) )
+    solver.add( ctx.parseSMTLIB2String( p_spec, null, null, null, null ) )
 
     /** Check sat, if not SAT terminate with None */
-    val status = s.check.toString
+    val status = solver.check.toString
     if ( status != "SATISFIABLE" )
       return None
 
     /** If SAT, get a model. */
-    val m = s.getModel
+    val m = solver.getModel
 
     /** Extract the rank function. Should be the only (non-const.) function */
     val fnDecl = m.getFuncDecls
@@ -501,28 +497,13 @@ object assignmentSolver {
     /** Wrap the function so it can be used to sort the sequence later. */
     val wrap = new FunWrapper( m.getFuncInterp( fnDecl( 0 ) ) )
 
-    /** Extract all constants and their values */
-    val varInterps = m.getConstDecls.map( x => (m.getConstInterp( x ), x.getName.toString) )
+    /** Extract all constants which are set to true */
+    val trues = m.getConstDecls.withFilter( x => m.getConstInterp( x ).isTrue ).map( _.getName.toString )
 
-    val trues = m.getConstDecls.filter( x => m.getConstInterp( x ).isTrue )
+    /** Sort by rank */
+    val sorted = trues.sortBy( x => wrap( x ) )
 
-    val uids = trues.map( x => UID( x.getName.toString.substring( 2 ).toInt ) ).toSet
-
-    /* return */ Some( uids )
-
-    //    /** Sort by rank */
-    //    val sorted = varInterps.sortBy(  x => wrap( x._2 ) )
-    //
-    //    /** Convert z3 classes into UIDs and Bools */
-    //    // Note: if anyone can figure out how to do this in a less hack-ish manner, please let me know.
-    //    val ret = sorted.map(
-    //        x => (
-    //          UID( x._2.substring(2).toInt ), // Truncate A_... prefix
-    //          x._1.getBoolValue.toInt == 1 // no .toBool exists, cast to int then compare.
-    //        )
-    //      )
-    //
-    //    /* return */ Some( ret )
+    /* return */ Some( sorted.map( x => UID( x.substring( 2 ).toInt ) ) )
   }
 
   /**
@@ -543,214 +524,257 @@ object assignmentSolver {
   def getOrder( p_vars : Set[String],
                 p_phi : TlaEx,
                 p_fileName : Option[String] = None
-              ) : Option[Set[UID]] = {
-    val spec = makeSpec( p_vars, p_phi, p_fileName )
-    /* return */ getOrder( spec )
+              ) : Option[StrategyType] = {
+    /* return */ getOrder( makeSpec( p_vars, p_phi, p_fileName ) )
   }
 
-  type SymbNext = (Set[UID], TlaEx)
+  type SymbNext = (AssignmentType, TlaEx)
 
-  def getSymbNexts( p_phi : TlaEx, p_allAssignments : Set[UID] ) : Seq[SymbNext] = {
-    /**
-      * Every assignment node "bubbles" up, colors its path. Then, search from root for all
-      */
+  protected object symbolicNextHelperFunctions {
 
-    type mHashMap[K, V] = collection.mutable.HashMap[K, V]
-    type mSet[V] = collection.mutable.Set[V]
-    type setType = mHashMap[UID, mSet[UID]]
+    type LabelMapType = Map[UID, Set[UID]]
 
-    def mark( ex : TlaEx,
-              marker : UID,
-              pathLabels : setType
-            ) : Unit = {
-      pathLabels.getOrElseUpdate( ex.ID, collection.mutable.Set[UID]() ) += marker
+    def joinSetMaps[K, V]( p_map1 : Map[K, Set[V]],
+                           p_map2 : Map[K, Set[V]]
+                         ) : Map[K, Set[V]] = {
+
+      Map[K, Set[V]](
+        ( p_map1.keySet ++ p_map2.keySet ).toSeq.map(
+          k => (k, p_map1.getOrElse( k, Set[V]() ) ++ p_map2.getOrElse( k, Set[V]() ))
+        ) : _*
+      )
     }
 
-    def markAll( ex : TlaEx,
-                 markers : mSet[UID],
-                 pathLabels : setType
-               ) : Unit = {
-      pathLabels.getOrElseUpdate( ex.ID, collection.mutable.Set[UID]() ) ++= markers
+    def labelsAt( p_ex : TlaEx,
+                  p_knownLabels : LabelMapType
+                ) : Set[UID] = p_knownLabels.getOrElse( p_ex.ID, Set() )
 
-    }
-
-    def leafJudge( ex : TlaEx ) : Boolean =
-      ex match {
+    def leafJudge( p_ex : TlaEx ) : Boolean =
+      p_ex match {
         case OperEx( TlaSetOper.in, OperEx( TlaActionOper.prime, NameEx( _ ) ), _ ) => true
         case _ => false
       }
 
-    val default : mSet[UID] = collection.mutable.Set()
-
-    def leafFun( ex : TlaEx,
-                 asgns : Set[UID],
-                 pathLabels : setType
-               ) : (Boolean, mSet[UID]) = {
-      if ( asgns.contains( ex.ID ) ) {
-        mark( ex, ex.ID, pathLabels )
-        (true, collection.mutable.Set( ex.ID ))
+    def leafFun( p_ex : TlaEx,
+                 p_stratSet : Set[UID]
+               ) : LabelMapType = {
+      if ( p_stratSet.contains( p_ex.ID ) ) {
+        Map( p_ex.ID -> Set( p_ex.ID ) )
       }
       else
-        (false, collection.mutable.Set())
+        Map()
     }
 
-    def parentFun( ex : TlaEx,
-                   children : Seq[(Boolean, mSet[UID])],
-                   pathLabels : setType
-                 ) : (Boolean, mSet[UID]) = {
-      children.filter( pa => pa._1 ).foreach( pa => markAll( ex, pa._2, pathLabels ) )
-      val ret = pathLabels.getOrElse( ex.ID, collection.mutable.Set[UID]() )
-      (ret.nonEmpty, ret)
+    def parentFun( p_ex : TlaEx,
+                   p_childResults : Seq[LabelMapType]
+                 ) : LabelMapType = {
+
+      val superMap = p_childResults.fold( Map() )( joinSetMaps )
+
+      p_ex match {
+        /* guaranteed */
+        case OperEx( _, args@_* ) => {
+          val mySet = args.map( labelsAt( _, superMap ) ).fold( Set() )( _ ++ _ )
+          superMap + ( p_ex.ID -> mySet )
+        }
+        case _ => Map()
+      }
+
     }
 
-    def markTree( ex : TlaEx,
-                  asgns : Set[UID]
-                ) : mHashMap[UID, mSet[UID]] = {
-      val pathLabels : setType = collection.mutable.HashMap()
-      SpecHandler.bottomUpSideefect[mSet[UID]](
-        ex,
+    def markTree( p_ex : TlaEx,
+                  p_stratSet : Set[UID]
+                ) : LabelMapType = {
+      SpecHandler.bottomUpVal[LabelMapType](
+        p_ex,
         leafJudge,
-        leafFun( _, asgns, pathLabels ),
-        parentFun( _, _, pathLabels ),
-        default
+        leafFun( _, p_stratSet ),
+        parentFun,
+        Map()
       )
-      pathLabels
     }
 
-    def isConsistentMarking( ex : TlaEx, map : mHashMap[UID, mSet[UID]] ) : Boolean = {
-      ex match {
+    def isConsistentMarking( p_ex : TlaEx,
+                             p_stratSet : Set[UID],
+                             p_knownLabels : LabelMapType
+                           ) : Boolean = {
+      p_ex match {
         case OperEx( TlaBoolOper.and | TlaBoolOper.or, args@_* ) =>
-          map.contains( ex.ID ) && map( ex.ID ) == args.map( x => map.getOrElse( x.ID, Set() ) ).fold( Set() )( _ ++ _ )
+          p_knownLabels.contains( p_ex.ID ) && p_knownLabels( p_ex.ID ) == args.map(
+            x => p_knownLabels.getOrElse( x.ID, Set() )
+          ).fold( Set() )( _ ++ _ )
         case _ =>
-          if ( p_allAssignments.contains( ex.ID ) )
-            map.contains( ex.ID ) && map( ex.ID ) == Set( ex.ID )
+          if ( p_stratSet.contains( p_ex.ID ) )
+            p_knownLabels.contains( p_ex.ID ) && p_knownLabels( p_ex.ID ) == Set( p_ex.ID )
           else
-            !map.contains( ex.ID )
+            !p_knownLabels.contains( p_ex.ID )
       }
     }
-
-    val labels = markTree( p_phi, p_allAssignments )
-
-    assert( isConsistentMarking( p_phi, labels ) )
 
     /**
-      * Note: Works incorrectly, not all possible combinations per variable are legitimate assignments,
-      * i.e. (a =1 /\ b=2) \/ ( a =2 /\ b =1  ), we have 2 branches not 4. Jure, 1.12.2017
-      *
-      * solution: given a combination, check all asgns lie on same branch ( the first common ancestor of
-      * any pair is an AND node). Jure, 1.12.2017
-      *
-      **/
-
-    /**
-      * Bug ( 4.12.2017 ): - Forgot to add quantifier introspection, expressions
-      * of the form \E i : Step1(i) \/ Step2(i) were mistakenly treated as leaves.
-      *
-      * */
-
-    def goodAsgn( asgn : Set[UID] ) : Boolean = {
-      def goodNode( p_ex : TlaEx, currentAsgn : Set[UID] ) : Boolean = {
-        def myLabels( ex : TlaEx ) : mSet[UID] =
-          labels.getOrElse( ex.ID, collection.mutable.Set[UID]() )
-        if( currentAsgn.isEmpty )
-          return true // early termination for partial asgns.
-        else if ( !currentAsgn.subsetOf( myLabels( p_ex ) ) )
-          return false // you need to be able to find all of the assignments somewhere
-        else
-          p_ex match {
-            case OperEx( TlaBoolOper.and, args@_* ) =>
-              args.forall( nd => goodNode( nd, currentAsgn.intersect( myLabels( nd ) ) ) )
-            case OperEx( TlaBoolOper.or, args@_* ) =>
-              args.exists( nd => goodNode( nd, currentAsgn ) )
-            case OperEx( TlaBoolOper.exists | TlaBoolOper.forall, _, _, body  ) =>
-              return goodNode( body, currentAsgn )
-            case _ => return true //currentAsgn.subsetOf( myLabels( ex ) )
-          }
-      }
-      goodNode( p_phi, asgn )
+      * We say `p_asgn` is derived from `p_strat` iff one can obtain `p_asgn` from `p_strat` by
+      * removing elements.
+      */
+    def derivedFrom( p_asgn : AssignmentType,
+                     p_strat : StrategyType
+                   ) : Boolean = {
+      if ( p_asgn.isEmpty )
+        true
+      else if ( p_asgn.size > p_strat.size )
+        false
+      else if ( p_asgn.head == p_strat.head )
+        derivedFrom( p_asgn.tail, p_strat.tail )
+      else
+        derivedFrom( p_asgn, p_strat.tail )
     }
 
-    def mkAsgns( strategy : Set[UID] ) : Seq[Set[UID]] = {
-
-      val byVar : mHashMap[String, mSet[UID]] = collection.mutable.HashMap()
-
-      def getName( ex : TlaEx ) : TlaEx = {
-        ex match {
-          case OperEx(
-          TlaSetOper.in,
-          OperEx(
-          TlaActionOper.prime,
-          nameEx
-          ),
-          _
-          ) => nameEx
-          case _ => NullEx
-        }
-      }
-
-      def matchAndFill( ex : TlaEx ) : Unit = {
-        getName( ex ) match {
-          case NameEx( s ) => {
-            byVar.getOrElseUpdate( s, collection.mutable.Set() ) += ex.ID
-          }
-          case _ =>
-        }
-      }
-
-      strategy.foreach( uid => matchAndFill( UniqueDB( uid ).get ) )
-
-      def addAll( current : Seq[Set[UID]], s : String ) : Seq[Set[UID]] = {
-        val uidsForS = byVar( s ).toSeq
-        val possibilities = uidsForS.map( uid => current.map( S => S + uid ).filter( goodAsgn ) ) // added filter, 1.12.
-        possibilities.fold( Seq() )( _ ++ _ )
-      }
-
-      byVar.keySet.foldLeft( Seq[Set[UID]]( Set() ) )( addAll )
-    }
-
-    def mkNext( asgns : Set[UID] ) : SymbNext = {
-      /**
-        * Check dummy or branches are handled correctly.
-        **/
-      def asgnFilter( ex : TlaEx ) : TlaEx = {
-        ex match {
-          case OperEx( TlaBoolOper.or, args@_* ) => {
-            /**
-              * Or-branches have the property that they either contain
-              * all assignments or none of them. Therefore it suffices to check
-              * non-emptiness of the intersection.
-              */
-            val newArgs = args.filter(
-              x => labels.getOrElse( x.ID, Set() ).exists( y => asgns.contains( y ) )
+    def isGoodNode( p_ex : TlaEx,
+                    p_knownLabels : LabelMapType,
+                    p_currentAsgn : Set[UID]
+                  ) : Boolean = {
+      if ( p_currentAsgn.isEmpty )
+        true
+      else if ( !p_currentAsgn.subsetOf( labelsAt( p_ex, p_knownLabels ) ) )
+        false
+      else
+        p_ex match {
+          case OperEx( TlaBoolOper.and, args@_* ) =>
+            args.forall(
+              nd => isGoodNode(
+                nd,
+                p_knownLabels,
+                p_currentAsgn.intersect( labelsAt( nd, p_knownLabels ) )
+              )
             )
-            if ( newArgs.isEmpty )
-              ex
-            else {
-              assert( newArgs.size == 1 )
-              newArgs.head // if nonempty, it has exactly 1 member
-              //OperEx( TlaBoolOper.or, newArgs : _* )
-            }
-          }
-          case _ => ex
+          case OperEx( TlaBoolOper.or, args@_* ) =>
+            args.exists( nd => isGoodNode( nd, p_knownLabels, p_currentAsgn ) )
+          case OperEx( TlaBoolOper.exists | TlaBoolOper.forall, _, _, body ) =>
+            isGoodNode( body, p_knownLabels, p_currentAsgn )
+          case _ => true //currentAsgn.subsetOf( myLabels( ex ) )
         }
-      }
-
-      (asgns, SpecHandler.getNewEx( p_phi, asgnFilter ))
     }
 
-    val asgnBranches = mkAsgns( p_allAssignments )
+    def isGoodAssignment( p_phi : TlaEx,
+                          p_knownLabels : LabelMapType,
+                          p_asgnSet : Set[UID]
+                        ) : Boolean = {
+      isGoodNode( p_phi, p_knownLabels, p_asgnSet )
+    }
 
-    asgnBranches.map( mkNext )
+    def getName( p_ex : TlaEx ) : Option[String] = {
+      p_ex match {
+        case OperEx( TlaSetOper.in, OperEx( TlaActionOper.prime, NameEx( name ) ), _ ) => Some( name )
+        case _ => None
+      }
+    }
 
+    type VarMapType = Map[String, Set[UID]]
+
+    def singleVarMap( p_ex : TlaEx ) : VarMapType = {
+      getName( p_ex ) match {
+        case Some( s ) => Map( s -> Set( p_ex.ID ) )
+        case None => Map()
+      }
+    }
+
+    def getVarMap( p_stratSet : Set[UID] ) : VarMapType = {
+      p_stratSet.map(
+        x => singleVarMap( UniqueDB.get( x ) )
+      ).fold( Map() )( joinSetMaps )
+    }
+
+    def createBranches( p_phi : TlaEx,
+                        p_current : Seq[Set[UID]],
+                        p_varMap : VarMapType,
+                        p_labels : LabelMapType,
+                        p_varName : String
+                      ) : Seq[Set[UID]] = {
+      val uidsForS = p_varMap( p_varName ).toSeq
+      val possibilities = uidsForS.map(
+        uid => p_current.map( S => S + uid ).filter( isGoodAssignment( p_phi, p_labels, _ ) )
+      )
+      possibilities.fold( Seq() )( _ ++ _ )
+    }
+
+    def makeAssignments( p_phi : TlaEx,
+                         p_labels : LabelMapType,
+                         p_strategy : Set[UID]
+                       ) : Seq[Set[UID]] = {
+
+      val byVar : VarMapType = getVarMap( p_strategy )
+
+      byVar.keySet.foldLeft( Seq[Set[UID]]( Set() ) )(
+        createBranches( p_phi, _, byVar, p_labels, _ )
+      )
+    }
+
+    def assignmentFilter( p_ex : TlaEx,
+                          p_asgnSet : Set[UID],
+                          p_labels : LabelMapType
+                        ) : TlaEx = {
+      p_ex match {
+        case OperEx( TlaBoolOper.or, args@_* ) => {
+          /**
+            * Or-branches have the property that they either contain
+            * all assignments or none of them. Therefore it suffices to check for
+            * non-emptiness of the intersection.
+            */
+          val newArgs = args.filter(
+            x => p_labels.getOrElse( x.ID, Set() ).exists( y => p_asgnSet.contains( y ) )
+          )
+          if ( newArgs.isEmpty )
+            p_ex
+          else {
+            assert( newArgs.size == 1 )
+            newArgs.head // if nonempty, it has exactly 1 member
+          }
+        }
+        case _ => p_ex
+      }
+    }
+
+    def mkOrdered( p_asgnSet : Set[UID],
+                   p_strat : StrategyType
+                 ) : AssignmentType = {
+      p_strat.filter( p_asgnSet.contains )
+    }
+
+    def mkNext( p_phi : TlaEx,
+                p_asgnSet : Set[UID],
+                p_strat : StrategyType,
+                p_labels : LabelMapType
+              ) : SymbNext = {
+      (
+        mkOrdered( p_asgnSet, p_strat ),
+        SpecHandler.getNewEx( p_phi, assignmentFilter( _, p_asgnSet, p_labels ) )
+      )
+    }
+
+  }
+
+  def getSymbNexts( p_phi : TlaEx, p_asgnStrategy : StrategyType ) : Seq[SymbNext] = {
+    /**
+      * Every assignment node "bubbles" up, colors its path. Then, search from root for all
+      */
+
+    import symbolicNextHelperFunctions._
+
+    val stratSet = p_asgnStrategy.toSet
+    val labels = markTree( p_phi, stratSet )
+
+    assert( isConsistentMarking( p_phi, stratSet, labels ) )
+
+    val asgnBranches = makeAssignments( p_phi, labels, stratSet )
+
+    asgnBranches.map( mkNext( p_phi, _, p_asgnStrategy, labels ) )
 
   }
 
 
-  def getSymbolicTransitions( p_variables: Set[VarNameType],
-                              p_formula : TlaEx
-                            ) : Seq[(AssignmentType, TlaEx)] = {
-//    val z3Spec = makeSpec( p_variables, p_formula )
-    Seq()
+  def getSymbolicTransitions( p_variables: Set[String],
+                              p_phi : TlaEx
+                            ) : Option[Seq[(AssignmentType, TlaEx)]] = {
+      getOrder( makeSpec( p_variables, p_phi ) ).map( getSymbNexts( p_phi, _ ) )
   }
 
 }

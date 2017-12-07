@@ -164,11 +164,11 @@ class TestAssignments extends FunSuite with TestingPredefs {
 
     val symbNexts = assignmentSolver.getSymbNexts( cleaned, order.get )
 
-    assert( symbNexts.forall( x =>  true ) )
+//    assert( symbNexts.forall( x =>  true ) )
 
-    printsep()
-    println( symbNexts.size )
-    symbNexts.foreach( x =>  println( "%s : %s".format( x._1.map( p => (UniqueDB(p).get, p ) ) , x._2 ) ) )
+//    printsep()
+//    println( symbNexts.size )
+//    symbNexts.foreach( x =>  println( "%s : %s".format( x._1.map( p => (UniqueDB(p).get, p ) ) , x._2 ) ) )
 
   }
 
