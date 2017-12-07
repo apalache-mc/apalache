@@ -5,6 +5,7 @@ import convenience._
 import Converter._
 import at.forsyte.apalache.tla.imp._
 import at.forsyte.apalache.tla.lir.db.DB
+import at.forsyte.apalache.tla.lir.plugins.UniqueDB
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -59,92 +60,134 @@ class TestConverter extends FunSuite with TestingPredefs {
     )
   )
 
-  implicit val bDB : BodyDB = new BodyDB()
+  val allDecls =
+    Seq(
+      declEx1,
+      declEx2,
+      declEx3,
+      declEx4,
+      declEx5,
+      declEx6,
+      declEx7,
+      declEx8,
+      declEx9
+    )
 
-  def clean( ) : Unit = bDB.clear()
+  implicit val bDB : BodyDB = new BodyDB()
+  implicit val sDB : SourceDB = DummySrcDB
+
+  def clean( ) : Unit = {
+    bDB.clear()
+    UniqueDB.clear()
+  }
+
+  def extractAll = extract( allDecls : _* )
 
   def cleanTest( f : => Unit ) = prePostTest( f, clean )
 
   test( "Test extract" ) {
 
+    cleanTest {
 
-    extract( declEx1, declEx2 )
 
-    assert( !( bDB == Map( declEx2.name -> (declEx2.formalParams, declEx2.body) ) ) )
-    assert(
-      bDB == Map(
-        declEx1.name -> (declEx1.formalParams, declEx1.body),
-        declEx2.name -> (declEx2.formalParams, declEx2.body)
+      extract( declEx1, declEx2 )
+
+      assert( !( bDB == Map( declEx2.name -> (declEx2.formalParams, declEx2.body) ) ) )
+      assert(
+        bDB == Map(
+          declEx1.name -> (declEx1.formalParams, declEx1.body),
+          declEx2.name -> (declEx2.formalParams, declEx2.body)
+        )
       )
-    )
 
-    extract( declEx5, declEx6, declEx7 )
+      extract( declEx5, declEx6, declEx7 )
 
-    assert( !( bDB == Map( declEx2.name -> (declEx2.formalParams, declEx2.body) ) ) )
-    assert(
-      bDB == Map(
-        declEx1.name -> (declEx1.formalParams, declEx1.body),
-        declEx2.name -> (declEx2.formalParams, declEx2.body)
+      assert( !( bDB == Map( declEx2.name -> (declEx2.formalParams, declEx2.body) ) ) )
+      assert(
+        bDB == Map(
+          declEx1.name -> (declEx1.formalParams, declEx1.body),
+          declEx2.name -> (declEx2.formalParams, declEx2.body)
+        )
       )
-    )
 
 
-    extract( declEx1, declEx2, declEx3, declEx4 )
+      extract( declEx1, declEx2, declEx3, declEx4 )
 
-    assert(
-      bDB == Map(
-        declEx1.name -> (declEx1.formalParams, declEx1.body),
-        declEx2.name -> (declEx2.formalParams, declEx2.body),
-        declEx3.name -> (declEx3.formalParams, declEx3.body),
-        declEx4.name -> (declEx4.formalParams, declEx4.body)
+      assert(
+        bDB == Map(
+          declEx1.name -> (declEx1.formalParams, declEx1.body),
+          declEx2.name -> (declEx2.formalParams, declEx2.body),
+          declEx3.name -> (declEx3.formalParams, declEx3.body),
+          declEx4.name -> (declEx4.formalParams, declEx4.body)
+        )
       )
-    )
+    }
   }
 
   test( "Test getVars" ) {
-    val vars = getVars( declEx1, declEx2, declEx3, declEx4, declEx5, declEx6, declEx7 )
-    assert( vars == Set( "x", "y", "z" ) )
+    cleanTest {
+      val vars = getVars( declEx1, declEx2, declEx3, declEx4, declEx5, declEx6, declEx7 )
+      assert( vars == Set( "x", "y", "z" ) )
 
-    val declEx8 = tla.declOp( "foo", n_q )
-    assert( getVars( declEx8 ).isEmpty )
-
+      val declEx8 = tla.declOp( "foo", n_q )
+      assert( getVars( declEx8 ).isEmpty )
+    }
   }
 
   test( "Test inlineAll" ) {
-    extract( declEx8, declEx9 )
+    cleanTest {
+      extractAll
 
-    assertThrows[IllegalArgumentException]( inlineAll( declEx4.body ) )
-    assert( inlineAll( declEx2.body ) == tla.int( 1 ) )
-    assert( inlineAll( declEx9.body ) == tla.plus( 2, 2 ) )
+      assertThrows[IllegalArgumentException]( inlineAll( declEx4.body ) )
+      assert( inlineAll( declEx2.body ) == tla.int( 1 ) )
+      assert( inlineAll( declEx9.body ) == tla.plus( 2, 2 ) )
 
-    assertThrows[IllegalArgumentException]( inlineAll( tla.appOp( "A" ) ) )
-    assert( inlineAll( tla.appOp( "A", 2 ) ) == tla.int( 2 ) )
+      assertThrows[IllegalArgumentException]( inlineAll( tla.appOp( "A" ) ) )
+      assert( inlineAll( tla.appOp( "A", 2 ) ) == tla.int( 2 ) )
+    }
   }
 
-  test( "Test sanitize" ) {
-    assert( sanitize( declEx1.body ) == declEx1.body )
-
-    assertThrows[IllegalArgumentException]( sanitize( declEx4.body ) )
-    assert( sanitize( declEx2.body ) == inlineAll( declEx2.body ) )
-    assert( sanitize( declEx9.body ) == inlineAll( declEx9.body ) )
-
-    assertThrows[IllegalArgumentException]( sanitize( tla.appOp( "A" ) ) )
-    assert( sanitize( tla.appOp( "A", 2 ) ) == inlineAll( tla.appOp( "A", 2 ) ) )
-
-    assert( sanitize( tla.eql( 0, 1 ) ) == tla.in( 0, tla.enumSet( 1 ) ) )
-    assert( sanitize( tla.enumSet( tla.eql( 0, 1 ) ) ) == tla.enumSet( tla.in( 0, tla.enumSet( 1 ) ) ) )
-  }
-
-  test( "Test unchangedExplicit" ){
+  test( "Test unchangedExplicit" ) {
     cleanTest {
       val ucEx1 = tla.unchanged( n_a )
       val ucEx2 = tla.unchangedTup( n_a, n_b )
       val ucEx3 = tla.unchanged( tla.plus( n_a, n_b ) )
-      val ucEx4 = tla.unchanged( n_a )
+      val ucEx4 =
+        tla.or(
+          tla.exists( n_x, n_S, tla.primeEq( n_x, 1 ) ),
+          tla.forall( n_x, n_S, tla.unchanged( n_x ) )
+        )
 
-//      assert( unchangedExplicit( ucEx1 ) == tla.and(  ) )
+      assert( unchangedExplicit( ucEx1 ) == tla.primeInSingleton( n_a, n_a ) )
+      assert( unchangedExplicit( ucEx2 ) ==
+        tla.and( tla.primeInSingleton( n_a, n_a ), tla.primeInSingleton( n_b, n_b ) )
+      )
+      assert( unchangedExplicit( ucEx3 ) == ucEx3 )
+      assert( unchangedExplicit( ucEx4 ) ==
+        tla.or(
+          tla.exists( n_x, n_S, tla.primeEq( n_x, 1 ) ),
+          tla.forall( n_x, n_S, unchangedExplicit( tla.unchanged( n_x ) ) )
+        )
+      )
 
+    }
+  }
 
+  test( "Test sanitize" ) {
+    cleanTest {
+      extractAll
+
+      assert( sanitize( declEx1.body ) == declEx1.body )
+
+      assertThrows[IllegalArgumentException]( sanitize( declEx4.body ) )
+      assert( sanitize( declEx2.body ) == inlineAll( declEx2.body ) )
+      assert( sanitize( declEx9.body ) == inlineAll( declEx9.body ) )
+
+      assertThrows[IllegalArgumentException]( sanitize( tla.appOp( "A" ) ) )
+      assert( sanitize( tla.appOp( "A", 2 ) ) == inlineAll( tla.appOp( "A", 2 ) ) )
+
+      assert( sanitize( tla.eql( 0, 1 ) ) == tla.in( 0, tla.enumSet( 1 ) ) )
+      assert( sanitize( tla.enumSet( tla.eql( 0, 1 ) ) ) == tla.enumSet( tla.in( 0, tla.enumSet( 1 ) ) ) )
     }
   }
 
@@ -185,128 +228,72 @@ class TestConverter extends FunSuite with TestingPredefs {
           )
         )
       )
-      //
-      //
-      //
-      //      assert(
-      //        bDB == Map(
-      //          "Next" -> (List(), tla.and(
-      //            tla.primeEq( n_a, 1 ),
-      //            tla.primeEq( n_b, tla.eql( n_e, n_f ) ),
-      //            tla.in( tla.prime( n_c ), tla.enumSet( n_e, n_f, n_g ) ),
-      //            tla.primeEq( n_d, 4 ),
-      //            tla.unchanged( tla.tuple( n_x, n_y ) ),
-      //            tla.unchanged( n_z )
-      //          )),
-      //          "Init" -> (List(), tla.eql( n_a, 0 )),
-      //          "Spec" -> (List(), tla.box( tla.stutt( "Next", tla.tuple( n_a, n_b ) ) ))
-      //        )
-      //      )
-
-      //      bDB.print()
-
 
     }
 
+    cleanTest {
+      val fileName = "test2.tla"
+      val declarations = declarationsFromFile( testFolderPath + fileName )
+
+      extract( declarations : _* )
+
+      val nextBody = findBodyOf( "Next", declarations:_*)
+
+      assert(!nextBody.isNull)
+
+      val after = sanitize( nextBody )
+
+      val expected =
+        tla.and(
+          tla.or(
+            tla.and(
+              tla.primeInSingleton( n_a, tla.prime( n_b ) ),
+              tla.primeInSingleton( n_b, tla.prime( n_a ) )
+            ),
+            tla.primeInSingleton( n_b, 2 )
+          ),
+          tla.primeInSingleton( n_a, 1 )
+        )
+
+      assert(after == expected)
+    }
+
+    cleanTest {
+      val fileName = "test3.tla"
+      val declarations = declarationsFromFile( testFolderPath + fileName )
+
+      extract( declarations : _* )
+
+      val nextBody = findBodyOf( "Next", declarations:_*)
+
+      assert(!nextBody.isNull)
+
+      val after = sanitize( nextBody )
+
+      val expected =
+        tla.and(
+          tla.or(
+            tla.and(
+              tla.primeInSingleton( n_a, tla.prime( n_b ) ),
+              tla.primeInSingleton( n_b, tla.prime( n_a ) )
+            ),
+            tla.exists(
+              n_p,
+              tla.enumSet( 1, 2 ),
+              tla.primeInSingleton( n_b, n_p )
+            )
+          ),
+          tla.primeInSingleton( n_a, 1 ),
+          tla.forall(
+            n_q,
+            tla.enumSet(1),
+            tla.primeInSingleton( n_a, n_q )
+          )
+        )
+
+      assert( after == expected )
+    }
 
   }
-
-  //  test("Check sanitization") {
-  //    val fileName = "assignmentTest2.tla"
-  //    val extracted = sanitizer(testFolderPath + fileName)
-  //    assert(extracted.isDefined)
-  //    val after = extracted.get
-  ////    println( "%s \n -> \n %s".format( before, after ) )
-  //
-  //    val ap = bd.prime( "a" )
-  //
-  //    val expected =
-  //      bd.and(
-  //        bd.or(
-  //          bd.and(
-  //            bd.in( bd.prime( "a" ), bd.enumSet( bd.prime( "b" ) ) ),
-  //            bd.in( bd.prime( "b" ), bd.enumSet( bd.prime( "a" ) ) )
-  ////            bd.primeEq( "a", "b" ),
-  ////            bd.primeEq( "b", "a" )
-  //          ),
-  //          bd.in( bd.prime( "b" ), bd.enumSet( bd.bigInt( 2 ) ) )
-  ////          bd.primeEq( "b", 2)
-  //        ),
-  //        bd.in( bd.prime( "a" ), bd.enumSet( bd.bigInt( 1 ) ) )
-  ////        bd.primeEq( "a", 1 )
-  //      )
-  //
-  //    assert(after == expected)
-  //  }
-  //
-  //  test( "Check quantifiers" ){
-  //
-  //    val fileName = "assignmentTestQuantifiers.tla"
-  //    val extracted = sanitizer(testFolderPath + fileName)
-  //    assert(extracted.isDefined)
-  //    val after = extracted.get
-  //    //    println( "%s \n -> \n %s".format( before, after ) )
-  //
-  //    val bd = Builder
-  //
-  //    val expected =
-  //      bd.and(
-  //        bd.or(
-  //          bd.and(
-  //            bd.in( bd.prime( "a" ), bd.enumSet( bd.prime( "b" ) ) ),
-  //            bd.in( bd.prime( "b" ), bd.enumSet( bd.prime( "a" ) ) )
-  //          ),
-  //          bd.exists(
-  //            bd.name("p"),
-  //            bd.enumSet( bd.bigInt( 1 ), bd.bigInt( 2 ) ),
-  //            bd.in( bd.prime( "b" ), bd.enumSet( bd.name( "p" ) ) )
-  //          )
-  //        ),
-  //        bd.in( bd.prime( "a" ), bd.enumSet( bd.bigInt( 1 ) ) ),
-  //        bd.forall(
-  //          bd.name( "q" ),
-  //          bd.enumSet( bd.bigInt( 1 )  ),
-  //          bd.in( bd.prime( "a" ), bd.enumSet( bd.name( "q" ) ) )
-  //        )
-  //
-  //      )
-  //
-  //    assert(after == expected)
-  //
-  //    val p_vars : Set[NameEx] = Set( bd.name( "a" ), bd.name( "b" ) )
-  //
-  //    val solution = assignmentSolver.getOrder( p_vars , after.asInstanceOf[OperEx] )
-  //
-  //    assert( solution.isDefined )
-  //
-  ////    solution.get.foreach( x => println( UniqueDB.apply( x ).get ) )
-  //
-  //  }
-  //
-  //  test("Test markTree"){
-  //    UniqueDB.clear()
-  //
-  //    val fileName = "assignmentTestSymbNexts.tla"
-  //    val extracted = sanitizer(testFolderPath + fileName).get.asInstanceOf[OperEx]
-  //    val p_vars : Set[NameEx] = Set( bd.name( "a" ), bd.name( "b" ) )
-  //
-  ////    println( extracted.toNiceString() )
-  //
-  //    val solution = assignmentSolver.getOrder( p_vars , extracted ).get
-  //
-  //    val solutionTrim = Seq(solution.head, solution.tail.head)
-  //
-  //    val manualAsgns = Set( UID( 20 ), UID( 70 ) )
-  //
-  //    val nexts = assignmentSolver.getSymbNexts( extracted, solution )
-  //
-  //    nexts.foreach( pa => println( "%s -> %s".format(
-  //      pa._1.map( UniqueDB( _ ).get ),
-  //      pa._2 )
-  //    )
-  //    )
-  //
-  //
-  //  }
 
 }

@@ -42,7 +42,7 @@ object Builder {
 
   def appDecl( p_decl : TlaOperDecl,
                p_args : TlaEx*
-             ) : OperEx = OperEx( p_decl.operator, p_args:_* )
+             ) : OperEx = OperEx( p_decl.operator, p_args : _* )
 
   /** TlaOper */
   def eql( p_lhs : TlaEx,
@@ -118,7 +118,8 @@ object Builder {
 
   def unchanged( p_v : TlaEx ) : OperEx = OperEx( TlaActionOper.unchanged, p_v )
 
-  def unchangedTup( p_args: TlaEx* ) : OperEx = unchanged( tuple( p_args:_* ) )
+  /** UNTESTED */
+  def unchangedTup( p_args : TlaEx* ) : OperEx = unchanged( tuple( p_args : _* ) )
 
   def comp( p_A : TlaEx
             , p_B : TlaEx
@@ -351,6 +352,11 @@ object Builder {
   def times( p_args : TlaEx* ) : OperEx = OperEx( TlaSetOper.times, p_args : _* )
 
   def powSet( p_S : TlaEx ) : OperEx = OperEx( TlaSetOper.powerset, p_S )
+
+  /** UNTESTED */
+  def primeInSingleton( p_x : TlaEx,
+                        p_y : TlaEx
+                      ) : OperEx = in( prime( p_x ), enumSet( p_y ) )
 
   val m_nameMap : Map[String, TlaOper] =
     scala.collection.immutable.Map(

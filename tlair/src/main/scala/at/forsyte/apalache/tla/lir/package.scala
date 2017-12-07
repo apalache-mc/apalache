@@ -342,7 +342,9 @@ package lir {
 
 
   abstract class IDType
-  case class UID( id: Int ) extends IDType
+  case class UID( id: Int ) extends IDType {
+    def valid : Boolean = id >= 0
+  }
   case class EID( id: Int ) extends IDType
 
 

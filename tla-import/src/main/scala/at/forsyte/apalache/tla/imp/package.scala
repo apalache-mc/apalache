@@ -13,7 +13,7 @@ package object imp {
   def findBodyOf( p_opName : String, decls: TlaDecl* ) : TlaEx = {
     decls.find {
       _.name == p_opName
-    }.withFilter( _.isInstanceOf[TlaOperDecl]).map( _.asInstanceOf[TlaOperDecl].body  ).getOrElse( NullEx)
+    }.withFilter( _.isInstanceOf[TlaOperDecl]).map( _.asInstanceOf[TlaOperDecl].body  ).getOrElse( NullEx )
   }
 
 }
