@@ -30,7 +30,8 @@ class SymbStateRewriter {
       new EqRule(this), new NeqRule(this),
       new OrRule(this), new AndRule(this), new NegRule(this),
       new IntCmpRule(this), new IntArithRule(this),
-      new SetCtorRule(this), new SetInRule(this), new SetNotInRule(this),
+      new SetCtorRule(this), new TupleCtorRule(this),
+      new SetInRule(this), new SetNotInRule(this),
       new SetCupRule(this), new SetCapAndMinusRule(this),
       new SetFilterRule(this), new SetMapAndFunCtorRule(this), new FunAppRule(this),
       new IntDotDotRule(this)
@@ -119,7 +120,7 @@ class SymbStateRewriter {
       }
     }
 
-    val pair = process(state, es.toList.reverse)
+    val pair = process(state, es.toList)
     (pair._1.setRex(state.ex), pair._2)
   }
 
