@@ -1,9 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.types.IntT
-import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, ValEx}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -394,6 +394,32 @@ class TestSymbStateRewriterInt extends RewriterBase {
         solverContext.pop()
         solverContext.push()
         solverContext.assertGroundExpr(OperEx(TlaOper.eq, result, ValEx(TlaInt(1))))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-INT-RNG: 2..5  = {2, 3, 4, 5}""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val expected = mkSet(Range(2, 6).map(i => ValEx(TlaInt(i))): _*)
+    val range = OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(5)))
+    val eqExpected = OperEx(TlaOper.eq, range, expected)
+
+    val state = new SymbState(eqExpected, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        assert(solverContext.sat())
+        // check equality
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, predEx))
         assert(!solverContext.sat())
 
       case _ =>
