@@ -137,6 +137,28 @@ class Arena private(val solverContext: SolverContext,
     newArena
   }
 
+  /**
+    * Append a sequence of cells to arena. This method returns a new arena and a sequence of the freshly
+    * created cells (the cells are ordered the same way as the sequence of types). This method provides us with a
+    * handy alternative to appendCell, when several cells should be created.
+    * @param types a sequence of cell types
+    * @return a pair: the new arena and a sequence of new cells
+    */
+  def appendCellSeq(types: CellT*): (Arena, Seq[ArenaCell]) = {
+    def create(arena: Arena, ts: Seq[CellT]): (Arena, Seq[ArenaCell]) =
+      ts match {
+        case Seq() =>
+          (arena, Seq())
+
+        case hd +: tl =>
+          val (tailArena: Arena, tailCells: Seq[ArenaCell]) = create(arena, tl)
+          val headArena = tailArena.appendCell(hd)
+          (headArena, headArena.topCell +: tailCells)
+      }
+
+    create(this, types)
+  }
+
   protected def appendCellWithoutDeclaration(cellType: CellT): Arena = {
     val newCell = new ArenaCell(cellCount, cellType)
     new Arena(solverContext, cellCount + 1, newCell,
@@ -221,6 +243,26 @@ class Arena private(val solverContext: SolverContext,
     */
   def getCdm(funCell: ArenaCell): ArenaCell = {
     cdmEdges.apply(funCell)
+  }
+
+  /**
+    * Check, whether a cell has an associated domain edge.
+    *
+    * @param cell a cell
+    * @return true, if cell has an edge labelled with 'dom'
+    */
+  def hasDom(cell: ArenaCell): Boolean = {
+    domEdges.contains(cell)
+  }
+
+  /**
+    * Check, whether a cell has an associated co-domain edge.
+    *
+    * @param cell a cell
+    * @return true, if cell has an edge labelled with 'cdm'
+    */
+  def hasCdm(cell: ArenaCell): Boolean = {
+    cdmEdges.contains(cell)
   }
 
   /**
