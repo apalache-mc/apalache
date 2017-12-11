@@ -95,6 +95,8 @@ package object types {
 
   /**
     * Sum type T1 + ... + Tn.
+    *
+    * Not used in our semantics.
     */
   case class SumT(components: Seq[CellT]) extends CellT
 
@@ -113,4 +115,15 @@ package object types {
     */
   case class FunT(domType: CellT, resultType: CellT) extends CellT
 
+  /**
+    * A tuple type
+    * @param args the types of the tuple elements
+    */
+  case class TupleT(args: Seq[CellT]) extends CellT
+
+  /**
+    * A record type
+    * @param fields a map of fields and their types
+    */
+  case class RecordT(fields: Map[String, CellT]) extends CellT
 }
