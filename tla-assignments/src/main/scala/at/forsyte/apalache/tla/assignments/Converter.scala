@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.assignments
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions._
 import at.forsyte.apalache.tla.lir.oper._
+import at.forsyte.apalache.tla.lir.plugins.Identifier
 
 /**
   * Object responsible for pre-processing input before it is passed to the
@@ -53,7 +54,7 @@ object Converter {
       def lambda( x : TlaEx ) =
         Builder.in( Builder.prime( x ), Builder.enumSet( x ) )
 
-      ex match {
+      val ret = ex match {
         case OperEx( TlaActionOper.unchanged, arg ) =>
           arg match {
             case OperEx( TlaFunOper.tuple, args@_* ) =>
@@ -63,6 +64,9 @@ object Converter {
           }
         case _ => ex
       }
+
+      Identifier.identify(ret)
+      ret
     }
 
     OperatorHandler.replaceWithRule( p_ex, exFun, srcDB )
@@ -99,9 +103,7 @@ object Converter {
 
     val eqReplaced = OperatorHandler.replaceWithRule( inlined, rewriteEQ, srcDB )
 
-    val unchangedChanged = unchangedExplicit( eqReplaced )( srcDB )
-
-    unchangedChanged
+    unchangedExplicit( eqReplaced )( srcDB )
   }
 
   def apply( p_expr : TlaEx, p_decls : TlaDecl* ) : Option[TlaEx] = {

@@ -10,7 +10,7 @@ import java.io._
 
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.plugins.UniqueDB
+import at.forsyte.apalache.tla.lir.plugins.{Identifier, UniqueDB}
 import at.forsyte.apalache.tla.lir.{UID, _}
 import com.microsoft.z3._
 
@@ -492,19 +492,29 @@ object assignmentSolver {
 
     /** Extract the rank function. Should be the only (non-const.) function */
     val fnDecl = m.getFuncDecls
-    if ( fnDecl.size != 1 )
-      return None
 
-    /** Wrap the function so it can be used to sort the sequence later. */
-    val wrap = new FunWrapper( m.getFuncInterp( fnDecl( 0 ) ) )
+    fnDecl.size match{
+      case 0 => { /** Only happens if Next is exactly 1 assignment */
+        val trues = m.getConstDecls.withFilter( x => m.getConstInterp( x ).isTrue ).map( _.getName.toString )
+        Some( trues.map( x => UID( x.substring( 2 ).toInt ) )  )
+      }
+      case 1 => {
+        if ( fnDecl.size != 1 )
+          return None
 
-    /** Extract all constants which are set to true */
-    val trues = m.getConstDecls.withFilter( x => m.getConstInterp( x ).isTrue ).map( _.getName.toString )
+        /** Wrap the function so it can be used to sort the sequence later. */
+        val wrap = new FunWrapper( m.getFuncInterp( fnDecl( 0 ) ) )
 
-    /** Sort by rank */
-    val sorted = trues.sortBy( x => wrap( x ) )
+        /** Extract all constants which are set to true */
+        val trues = m.getConstDecls.withFilter( x => m.getConstInterp( x ).isTrue ).map( _.getName.toString )
 
-    /* return */ Some( sorted.map( x => UID( x.substring( 2 ).toInt ) ) )
+        /** Sort by rank */
+        val sorted = trues.sortBy( x => wrap( x ) )
+
+        /* return */ Some( sorted.map( x => UID( x.substring( 2 ).toInt ) ) )
+      }
+      case _ => None
+    }
   }
 
   /**

@@ -142,7 +142,7 @@ class TestAssignments extends FunSuite with TestingPredefs {
 
   //    }
 
-  test( "Test on real files" ) {
+  ignore( "Test on real files" ) {
     val file = "EWD840.tla"
     UniqueDB.clear()
     Converter.clear()
@@ -169,6 +169,39 @@ class TestAssignments extends FunSuite with TestingPredefs {
 //    printsep()
 //    println( symbNexts.size )
 //    symbNexts.foreach( x =>  println( "%s : %s".format( x._1.map( p => (UniqueDB(p).get, p ) ) , x._2 ) ) )
+
+  }
+
+  test( "Test dangerous cases" ){
+
+    val file = "negation.tla"
+
+    UniqueDB.clear()
+    Converter.clear()
+
+    val decls = declarationsFromFile(testFolderPath + file)
+    decls.foreach( Identifier.identify )
+    Converter.extract( decls:_* )
+
+    val nextBody = findBodyOf( "Next", decls:_* )
+
+    assert( ! nextBody.isNull )
+    assert( nextBody.ID.valid )
+
+    val vars = Converter.getVars( decls:_*)
+    val cleaned = Converter.sanitize( nextBody )
+
+    assert( cleaned.ID.valid )
+
+    val strat = assignmentSolver.getStrategy( vars, cleaned )
+
+    assert( strat.isDefined )
+
+    //    println( order.get.size )
+    //      order.get.foreach( x => println( UniqueDB( x ).get ) )
+
+    val symbNexts = assignmentSolver.getSymbNexts( cleaned, strat.get )
+
 
   }
 
