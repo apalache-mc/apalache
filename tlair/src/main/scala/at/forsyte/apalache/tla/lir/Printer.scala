@@ -117,6 +117,7 @@ object UTFPrinter extends Printer {
           case TlaDecimal( d ) => d.toString
           case TlaStr( s ) => s
           case TlaBool( b ) => b.toString
+          case s: TlaPredefSet => s.name
           case _ => ""
         }
       case OperEx( oper : TlaUserOper, args@_* ) => "%s(%s)".format( oper.name, str( args ) )
@@ -216,7 +217,9 @@ object UTFPrinter extends Printer {
       case _ => ""
     }
 
-    if ( p_rmSpace ) return ret.replaceAll( " ", "" ) else ret
+    if ( p_rmSpace )
+      ret.replaceAll( " ", "" )
+    else ret
   }
 }
 
