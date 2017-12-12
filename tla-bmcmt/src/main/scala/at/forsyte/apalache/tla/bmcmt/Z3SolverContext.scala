@@ -1,9 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import java.io.{File, PrintWriter}
+
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 import com.microsoft.z3._
+import com.microsoft.z3.enumerations.Z3_lbool
 
 import scala.collection.mutable
 
@@ -19,21 +22,28 @@ class Z3SolverContext extends SolverContext {
   private val z3context: Context = new Context()
   private val z3solver = z3context.mkSolver()
   private val cellSort: UninterpretedSort = z3context.mkUninterpretedSort("Cell")
+
   /**
     * Uninterpreted predicate in(c, d) that expresses whether c is a member of d.
     */
   private val inFun: FuncDecl =
     z3context.mkFuncDecl("in", Array[Sort](cellSort, cellSort), z3context.getBoolSort)
+
   /**
     * Uninterpreted function to store integer values of integer cells.
     */
   private val valIntFun: FuncDecl =
     z3context.mkFuncDecl("valInt", cellSort, z3context.getIntSort)
+
+  /**
+    * A log writer, for debug purposes.
+    */
+  private val logWriter: PrintWriter = new PrintWriter(new File("log.smt"))
+
   /**
     * Uninterpreted functions C -> C associated with function cells.
     */
   private val cellFuns: mutable.Map[String, FuncDecl] = new mutable.HashMap[String, FuncDecl]()
-
 
   def falseConst: String = BoolTheory().namePrefix + "0" // $B$0
   def trueConst: String = BoolTheory().namePrefix + "1" // $B$1
@@ -47,6 +57,7 @@ class Z3SolverContext extends SolverContext {
     */
   override def dispose(): Unit = {
     z3context.close()
+    logWriter.close()
   }
 
   /**
@@ -55,6 +66,7 @@ class Z3SolverContext extends SolverContext {
     * @param cell a (previously undeclared) cell
     */
   override def declareCell(cell: ArenaCell): Unit = {
+    logWriter.println(";; declare cell " + cell.toString)
     z3context.mkConstDecl(cell.toString, cellSort)
   }
 
@@ -64,9 +76,47 @@ class Z3SolverContext extends SolverContext {
     * @param ex a simplified TLA+ expression over cells
     */
   def assertGroundExpr(ex: TlaEx): Unit = {
-    z3solver.add(toExpr(ex).asInstanceOf[BoolExpr])
+    logWriter.println(";; assert " + UTFPrinter.apply(ex))
+    val z3expr = toExpr(ex)
+    logWriter.println("(assert %s)".format(z3expr.toString))
+    z3solver.add(z3expr.asInstanceOf[BoolExpr])
   }
 
+  /**
+    * Evaluate a ground TLA+ expression in the current model, which is available after a call to sat().
+    * This method assumes that the outcome is either a Boolean or integer.
+    * If not, it throws SmtEncodingException.
+    *
+    * @param ex an expression to evaluate
+    * @return a TLA+ value
+    */
+  def evalGroundExpr(ex: TlaEx): TlaEx = {
+    val z3expr = z3solver.getModel.eval(toExpr(ex), true)
+    z3expr match {
+      case b: BoolExpr =>
+        val isTrue = b.getBoolValue.equals(Z3_lbool.Z3_L_TRUE)
+        ValEx(if (isTrue) TlaTrue else TlaFalse) // in undefined case, just return false
+
+      case i: IntNum =>
+        ValEx(TlaInt(i.getBigInteger))
+
+      case _ =>
+        if (z3expr.isConst && z3expr.getSort == cellSort) {
+          NameEx(z3expr.toString)
+        } else {
+          throw new SmtEncodingException("Expected an integer or Boolean, found: " + z3expr)
+        }
+    }
+  }
+
+  /**
+    * Log message to the logging file. This is helpful to debug the SMT encoding.
+    *
+    * @param message message text
+    */
+  def log(message: String): Unit = {
+    logWriter.println(message)
+  }
 
   /**
     * Introduce a new Boolean constant.
@@ -75,6 +125,7 @@ class Z3SolverContext extends SolverContext {
     */
   override def introBoolConst(): String = {
     val name = "%s%d".format(BoolTheory().namePrefix, nBoolConsts)
+    logWriter.println(";; declare bool " + name)
     nBoolConsts += 1
     name
   }
@@ -86,6 +137,7 @@ class Z3SolverContext extends SolverContext {
     */
   override def introIntConst(): String = {
     val name = "%s%d".format(IntTheory().namePrefix, nIntConsts)
+    logWriter.println(";; declare int " + name)
     nIntConsts += 1
     name
   }
@@ -104,6 +156,7 @@ class Z3SolverContext extends SolverContext {
 
       case None =>
         val name = "fun%d".format(cell.id)
+        logWriter.println(";; declare cell fun " + name)
         val funDecl = z3context.mkFuncDecl(name, cellSort, cellSort)
         cellFuns.put(cellName, funDecl)
         name
@@ -114,6 +167,8 @@ class Z3SolverContext extends SolverContext {
     * Push SMT context
     */
   override def push(): Unit = {
+    logWriter.println("(push)")
+    logWriter.flush() // good time to flush
     z3solver.push()
     level += 1
   }
@@ -123,6 +178,8 @@ class Z3SolverContext extends SolverContext {
     */
   override def pop(): Unit = {
     if (level > 0) {
+      logWriter.println("(pop)")
+      logWriter.flush() // good time to flush
       z3solver.pop()
       level -= 1
     }
@@ -130,13 +187,19 @@ class Z3SolverContext extends SolverContext {
 
   override def popTo(newLevel: Int): Unit = {
     if (level > newLevel) {
+      logWriter.println("(pop %d)".format(level - newLevel))
+      logWriter.flush() // good time to flush
       z3solver.pop(level - newLevel)
       level = newLevel
     }
   }
 
   override def sat(): Boolean = {
-    z3solver.check() == Status.SATISFIABLE
+    logWriter.println("(check)")
+    val status = z3solver.check()
+    logWriter.println(";; sat = " + (status == Status.SATISFIABLE))
+    logWriter.flush() // good time to flush
+    status == Status.SATISFIABLE
   }
 
   /**

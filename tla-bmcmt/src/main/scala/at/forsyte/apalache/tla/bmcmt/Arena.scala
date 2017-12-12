@@ -16,7 +16,6 @@ object Arena {
     var arena = new Arena(solverContext, 0,
       new ArenaCell(-1, UnknownT()),
       HashMap(),
-      new LazyEquality(solverContext),
       new HashMap(),
       new HashMap(),
       new HashMap()
@@ -54,7 +53,6 @@ object Arena {
 class Arena private(val solverContext: SolverContext,
                     val cellCount: Int, val topCell: ArenaCell,
                     val cellMap: Map[String, ArenaCell],
-                    val lazyEquality: LazyEquality,
                     private val hasEdges: Map[ArenaCell, List[ArenaCell]],
                     private val domEdges: Map[ArenaCell, ArenaCell],
                     private val cdmEdges: Map[ArenaCell, ArenaCell]
@@ -162,7 +160,7 @@ class Arena private(val solverContext: SolverContext,
   protected def appendCellWithoutDeclaration(cellType: CellT): Arena = {
     val newCell = new ArenaCell(cellCount, cellType)
     new Arena(solverContext, cellCount + 1, newCell,
-      cellMap + (newCell.toString -> newCell), lazyEquality, hasEdges, domEdges, cdmEdges)
+      cellMap + (newCell.toString -> newCell), hasEdges, domEdges, cdmEdges)
   }
 
   /**
@@ -179,7 +177,7 @@ class Arena private(val solverContext: SolverContext,
         case None => List(elemCell)
       }
 
-    new Arena(solverContext, cellCount, topCell, cellMap, lazyEquality, hasEdges + (setCell -> es), domEdges, cdmEdges)
+    new Arena(solverContext, cellCount, topCell, cellMap, hasEdges + (setCell -> es), domEdges, cdmEdges)
   }
 
   /**
@@ -207,7 +205,7 @@ class Arena private(val solverContext: SolverContext,
       throw new IllegalStateException("Trying to set function domain, whereas one is already set")
 
     new Arena(solverContext,
-      cellCount, topCell, cellMap, lazyEquality, hasEdges, domEdges + (funCell -> domCell), cdmEdges)
+      cellCount, topCell, cellMap, hasEdges, domEdges + (funCell -> domCell), cdmEdges)
   }
 
   /**
@@ -222,7 +220,7 @@ class Arena private(val solverContext: SolverContext,
       throw new IllegalStateException("Trying to set function co-domain, whereas one is already set")
 
     new Arena(solverContext,
-      cellCount, topCell, cellMap, lazyEquality, hasEdges, domEdges, cdmEdges + (funCell -> cdmCell))
+      cellCount, topCell, cellMap, hasEdges, domEdges, cdmEdges + (funCell -> cdmCell))
   }
 
   /**
