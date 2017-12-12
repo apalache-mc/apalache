@@ -27,7 +27,7 @@ object UniqueDB extends DB[ UID, TlaEx ] {
   }
 
   def add( ex: TlaEx ) : Unit = {
-    if( ex.ID == UID( -1 ) ){
+    if( !ex.ID.valid ){
       ex.setID( UID( expressions.size() ) )
       expressions.add( ex )
     }

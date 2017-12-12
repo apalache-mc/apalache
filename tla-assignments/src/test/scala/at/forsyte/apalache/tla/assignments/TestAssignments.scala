@@ -2,17 +2,11 @@ package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.imp._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.actions._
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.plugins.{Identifier, UniqueDB}
-import at.forsyte.apalache.tla.lir.{Builder => bd}
+import at.forsyte.apalache.tla.lir.plugins.UniqueDB
 
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-
-import scala.io.Source
-
 
 /**
   * Tests for the assignment solver
@@ -142,7 +136,7 @@ class TestAssignments extends FunSuite with TestingPredefs {
 
   //    }
 
-  ignore( "Test on real files" ) {
+  test( "Test on real files" ) {
     val file = "EWD840.tla"
     UniqueDB.clear()
     Converter.clear()
@@ -180,27 +174,25 @@ class TestAssignments extends FunSuite with TestingPredefs {
     Converter.clear()
 
     val decls = declarationsFromFile(testFolderPath + file)
-    decls.foreach( Identifier.identify )
-    Converter.extract( decls:_* )
-
+    val vars = Converter.getVars( decls:_*)
     val nextBody = findBodyOf( "Next", decls:_* )
 
     assert( ! nextBody.isNull )
+
+    val cleaned = Converter( nextBody, decls:_* )
     assert( nextBody.ID.valid )
 
-    val vars = Converter.getVars( decls:_*)
-    val cleaned = Converter.sanitize( nextBody )
+    assert( cleaned.isDefined )
+    assert( cleaned.get.ID.valid )
 
-    assert( cleaned.ID.valid )
-
-    val strat = assignmentSolver.getStrategy( vars, cleaned )
+    val strat = assignmentSolver.getStrategy( vars, cleaned.get )
 
     assert( strat.isDefined )
 
     //    println( order.get.size )
     //      order.get.foreach( x => println( UniqueDB( x ).get ) )
 
-    val symbNexts = assignmentSolver.getSymbNexts( cleaned, strat.get )
+    val symbNexts = assignmentSolver.getSymbNexts( cleaned.get, strat.get )
 
 
   }

@@ -4,10 +4,39 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.oper._
 
-object WarningDetector {
-  type Warnings = Set[UID]
+abstract class Warning{
+  def message : String
+  override def toString : String = message
 
-  def nestedAssignments( p_ex : TlaEx ) : Warnings = {
+  def isTrivial : Boolean = false
+}
+case class NoWarning() extends Warning{
+  override def message : String = "No warnings to report."
+  override def isTrivial : Boolean = true
+}
+case class NestedAssignmentWarning( p_warnings : Set[UID] ) extends Warning{
+  require( p_warnings.nonEmpty )
+  override def message : String = {
+    ("Warning: The following terms satisfy the structure of potential assignment candidates, " +
+      "but will not be considered due to their nesting: %s").format( p_warnings.mkString( ", " ) )
+  }
+}
+
+case class AggregateWarning( p_warnings : Warning* ) extends Warning{
+  override def message : String = {
+    if( isTrivial )
+      NoWarning().message
+    else
+      p_warnings.withFilter( _ != NoWarning() ).map( _.message).mkString( "\n" )
+  }
+
+  override def isTrivial : Boolean = p_warnings.forall( _.isTrivial )
+}
+
+object WarningDetector {
+  type NestedWarningSet = Set[UID]
+
+  def nestedAssignments( p_ex : TlaEx ) : Warning = {
 
     val default = Set[UID]()
 
@@ -25,7 +54,7 @@ object WarningDetector {
       }
     }
 
-    def leafFun( ex : TlaEx ) : Warnings = {
+    def leafFun( ex : TlaEx ) : NestedWarningSet = {
       ex match {
         case OperEx( TlaSetOper.in, OperEx( TlaActionOper.prime, NameEx( _ ) ), set ) =>
           leafFun( set ) + ex.ID
@@ -36,15 +65,18 @@ object WarningDetector {
       }
     }
 
-    def parentFun( ex : TlaEx, childVals : Seq[Warnings] ) : Warnings = {
+    def parentFun( ex : TlaEx, childVals : Seq[NestedWarningSet] ) : NestedWarningSet = {
       childVals.fold( Set[UID]() )( _ ++ _ )
     }
 
-    SpecHandler.bottomUpVal( p_ex, leafJudge, leafFun, parentFun, default )
+    val warningSet = SpecHandler.bottomUpVal( p_ex, leafJudge, leafFun, parentFun, default )
+    if( warningSet.isEmpty ) NoWarning() else NestedAssignmentWarning( warningSet )
   }
 
-  def apply( p_ex : TlaEx ) : Warnings = {
-    nestedAssignments( p_ex )
+  def apply( p_ex : TlaEx ) : Warning = {
+    val nestedWarnings = nestedAssignments( p_ex )
+
+    AggregateWarning( nestedWarnings )
   }
 
 }

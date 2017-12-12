@@ -1,0 +1,1 @@
+Fix quantifier introspection when solving assignments. If an assignment candidate is under a quantifier, its dependencies include any dependencies of the set defining the quantifier. 

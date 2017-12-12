@@ -114,6 +114,8 @@ package lir {
       canSet = true
     }
 
+    def valid : Boolean = m_ID.valid
+
   }
 
   object Identifiable extends Identifiable{

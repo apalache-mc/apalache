@@ -32,6 +32,7 @@ class TestWarningDetector extends FunSuite with TestingPredefs {
 
     val ret = WarningDetector( nextBody )
 
-    assert( ret.size == 1 )
+    assert( !ret.isTrivial )
+    println( ret.message )
   }
 }

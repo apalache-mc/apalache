@@ -107,13 +107,19 @@ object Converter {
   }
 
   def apply( p_expr : TlaEx, p_decls : TlaDecl* ) : Option[TlaEx] = {
+    Identifier.identify( p_expr )
+    p_decls.foreach( Identifier.identify )
     extract( p_decls : _* )
     val san = sanitize( p_expr )
     if ( san.isNull ) None
-    else Some( san )
+    else {
+      Identifier.identify( san )
+      Some( san )
+    }
   }
 
   def apply( p_opName : String, p_decls : TlaDecl* ) : Option[TlaEx] = {
+    p_decls.foreach( Identifier.identify )
     extract( p_decls : _* )
     val san = sanitizeByName( p_opName )
     if ( san.isNull ) None

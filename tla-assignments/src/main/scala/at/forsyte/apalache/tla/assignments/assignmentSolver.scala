@@ -819,6 +819,13 @@ object assignmentSolver {
             newArgs.head // if nonempty, it has exactly 1 member
           }
         }
+        case OperEx( TlaBoolOper.and, args@_* ) => {
+          /** Reorder by assignment order */
+          /* TODO!! */
+//          var sortArgs = args
+//          OperEx( TlaBoolOper.and, sortArgs )
+          p_ex
+        }
         case _ => p_ex
       }
     }
