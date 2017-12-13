@@ -1,7 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
+import at.forsyte.apalache.tla.bmcmt.implicitConversions._
+import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 
 /**
@@ -29,14 +31,6 @@ class EqRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val finalState = state.setTheory(BoolTheory()).setRex(NameEx(eqPred))
       rewriter.coerce(finalState, state.theory)
 
-    case OperEx(TlaOper.eq, le @ NameEx(left), re @ NameEx(right))
-        if IntTheory().hasConst(left) && IntTheory().hasConst(right) =>
-      // Boolean equality is easy
-      val eqPred = state.solverCtx.introBoolConst()
-      state.solverCtx.assertGroundExpr(OperEx(TlaOper.eq, NameEx(eqPred), state.ex))
-      val finalState = state.setTheory(BoolTheory()).setRex(NameEx(eqPred))
-      rewriter.coerce(finalState, state.theory)
-
     case OperEx(TlaOper.eq, lhs, rhs) =>
       // Rewrite the both arguments in Cell theory. Although by doing so,
       // we may introduce redundant cells, we don't have to think about types.
@@ -46,17 +40,14 @@ class EqRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val rightCell = rightState.arena.findCellByNameEx(rightState.ex)
       val eqPred = rightState.solverCtx.introBoolConst()
 
-      val arena = rightState.arena
-      val cons =
-        OperEx(TlaBoolOper.equiv,
-          NameEx(eqPred),
-          arena.lazyEquality.mkEquality(arena, leftCell, rightCell))
-
-      rightState.solverCtx.assertGroundExpr(cons)
-      val eqState = rightState.setRex(NameEx(eqPred))
+      // produce equality constraints, so that we can use SMT equality
+      val eqState = rewriter.lazyEquality.cacheOneEquality(rightState, leftCell, rightCell)
+      // and now we can use the SMT equality
+      rightState.solverCtx.assertGroundExpr(tla.equiv(tla.name(eqPred), tla.eql(leftCell, rightCell)))
+      val finalState = eqState.setRex(NameEx(eqPred))
           .setTheory(BoolTheory()) // we have introduced a Boolean constant
       // coerce to the previous theory, if needed
-      rewriter.coerce(eqState, state.theory)
+      rewriter.coerce(finalState, state.theory)
 
     case _ =>
       throw new RewriterException("EqRule is not applicable")

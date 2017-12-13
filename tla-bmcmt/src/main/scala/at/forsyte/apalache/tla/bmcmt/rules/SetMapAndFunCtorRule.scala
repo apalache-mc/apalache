@@ -1,8 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
 /**
@@ -78,24 +80,24 @@ class SetMapAndFunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val (newState: SymbState, resultCells: Seq[ArenaCell], elemType: CellT) =
       mapCells(setState, mapEx, varName, setEx, domainCells)
 
-    // introduce a domain cell
-    val arena = newState.arena.appendCell(FunT(domainCell.cellType, elemType))
+    // introduce a co-domain cell
+    var arena = newState.arena.appendCell(FunT(domainCell.cellType, elemType))
     val funCell = arena.topCell
     val arena2 = arena.appendCell(FinSetT(elemType)) // co-domain is a finite set of type elemType
     val codomainCell = arena2.topCell
-    val newArena = arena2.setDom(funCell, domainCell)
-      .setCdm(funCell, codomainCell)
+    arena = arena2.setDom(funCell, domainCell).setCdm(funCell, codomainCell)
+    arena = resultCells.foldLeft(arena) ((a, e) => a.appendHas(codomainCell, e))
     // associate a function constant with the function cell
-    val _ = newArena.solverContext.getOrIntroCellFun(funCell)
+    val _ = arena.solverContext.getOrIntroCellFun(funCell)
 
     // associate a value of the uninterpreted function with a cell
     def addCellCons(argCell: ArenaCell, resultCell: ArenaCell): Unit = {
-      val inDomain = OperEx(TlaSetOper.in, argCell.toNameEx, domainCell.toNameEx)
-      val funEqResult = OperEx(TlaOper.eq,
-        resultCell.toNameEx,
-        OperEx(TlaFunOper.app, funCell.toNameEx, argCell.toNameEx)) // this will be translated as function application
-      val inDomainImpliesResult = OperEx(TlaBoolOper.implies, inDomain, funEqResult)
+      val inDomain = tla.in(argCell, domainCell)
+      val funEqResult = tla.eql(resultCell, tla.appFun(funCell, argCell)) // this is translated as function application
+      val inDomainImpliesResult = tla.impl(inDomain, funEqResult)
       newState.solverCtx.assertGroundExpr(inDomainImpliesResult)
+      // the result unconditionally belongs to the co-domain
+      newState.solverCtx.assertGroundExpr(tla.in(resultCell, codomainCell))
     }
 
     // add SMT constraints
@@ -105,7 +107,7 @@ class SetMapAndFunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // that's it
     val finalState =
       newState.setTheory(CellTheory())
-        .setArena(newArena).setRex(funCell.toNameEx)
+        .setArena(arena).setRex(funCell.toNameEx)
     rewriter.coerce(finalState, state.theory)
   }
 

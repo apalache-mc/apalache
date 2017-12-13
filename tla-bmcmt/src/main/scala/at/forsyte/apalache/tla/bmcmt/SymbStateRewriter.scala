@@ -21,6 +21,7 @@ object SymbStateRewriter {
   * @author Igor Konnov
   */
 class SymbStateRewriter {
+  val lazyEquality = new LazyEquality(this)
   // don't try to rewrite the same rule more than RECURSION_LIMIT times
   private val RECURSION_LIMIT: Int = 1000000
   private val coercion = new Coercion(this)
@@ -29,6 +30,7 @@ class SymbStateRewriter {
     List(substRule, new BoolConstRule(this), new IntConstRule(this),
       new EqRule(this), new NeqRule(this),
       new OrRule(this), new AndRule(this), new NegRule(this),
+      new IfThenElseRule(this),
       new IntCmpRule(this), new IntArithRule(this),
       new SetCtorRule(this), new TupleCtorRule(this),
       new SetInRule(this), new SetNotInRule(this),
@@ -51,7 +53,8 @@ class SymbStateRewriter {
       case NameEx(name) =>
         if (substRule.isApplicable(state)) {
           // a variable that can be substituted with a cell
-          Done(coerce(substRule.apply(state), state.theory))
+          substRule.logOnEntry(state)
+          Done(substRule.logOnReturn(coerce(substRule.apply(state), state.theory)))
         } else {
           // oh-oh
           NoRule()
@@ -61,7 +64,8 @@ class SymbStateRewriter {
         // TODO: can we do any better than just a linear search?
         rules.find(r => r.isApplicable(state)) match {
           case Some(r) =>
-            Continue(r.apply(state))
+            r.logOnEntry(state)
+            Continue(r.logOnReturn(r.apply(state)))
 
           case None =>
             NoRule()

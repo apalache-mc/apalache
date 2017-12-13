@@ -16,7 +16,6 @@ object Arena {
     var arena = new Arena(solverContext, 0,
       new ArenaCell(-1, UnknownT()),
       HashMap(),
-      new LazyEquality(solverContext),
       new HashMap(),
       new HashMap(),
       new HashMap()
@@ -54,7 +53,6 @@ object Arena {
 class Arena private(val solverContext: SolverContext,
                     val cellCount: Int, val topCell: ArenaCell,
                     val cellMap: Map[String, ArenaCell],
-                    val lazyEquality: LazyEquality,
                     private val hasEdges: Map[ArenaCell, List[ArenaCell]],
                     private val domEdges: Map[ArenaCell, ArenaCell],
                     private val cdmEdges: Map[ArenaCell, ArenaCell]
@@ -137,10 +135,32 @@ class Arena private(val solverContext: SolverContext,
     newArena
   }
 
+  /**
+    * Append a sequence of cells to arena. This method returns a new arena and a sequence of the freshly
+    * created cells (the cells are ordered the same way as the sequence of types). This method provides us with a
+    * handy alternative to appendCell, when several cells should be created.
+    * @param types a sequence of cell types
+    * @return a pair: the new arena and a sequence of new cells
+    */
+  def appendCellSeq(types: CellT*): (Arena, Seq[ArenaCell]) = {
+    def create(arena: Arena, ts: Seq[CellT]): (Arena, Seq[ArenaCell]) =
+      ts match {
+        case Seq() =>
+          (arena, Seq())
+
+        case hd +: tl =>
+          val (tailArena: Arena, tailCells: Seq[ArenaCell]) = create(arena, tl)
+          val headArena = tailArena.appendCell(hd)
+          (headArena, headArena.topCell +: tailCells)
+      }
+
+    create(this, types)
+  }
+
   protected def appendCellWithoutDeclaration(cellType: CellT): Arena = {
     val newCell = new ArenaCell(cellCount, cellType)
     new Arena(solverContext, cellCount + 1, newCell,
-      cellMap + (newCell.toString -> newCell), lazyEquality, hasEdges, domEdges, cdmEdges)
+      cellMap + (newCell.toString -> newCell), hasEdges, domEdges, cdmEdges)
   }
 
   /**
@@ -157,7 +177,7 @@ class Arena private(val solverContext: SolverContext,
         case None => List(elemCell)
       }
 
-    new Arena(solverContext, cellCount, topCell, cellMap, lazyEquality, hasEdges + (setCell -> es), domEdges, cdmEdges)
+    new Arena(solverContext, cellCount, topCell, cellMap, hasEdges + (setCell -> es), domEdges, cdmEdges)
   }
 
   /**
@@ -185,7 +205,7 @@ class Arena private(val solverContext: SolverContext,
       throw new IllegalStateException("Trying to set function domain, whereas one is already set")
 
     new Arena(solverContext,
-      cellCount, topCell, cellMap, lazyEquality, hasEdges, domEdges + (funCell -> domCell), cdmEdges)
+      cellCount, topCell, cellMap, hasEdges, domEdges + (funCell -> domCell), cdmEdges)
   }
 
   /**
@@ -200,7 +220,7 @@ class Arena private(val solverContext: SolverContext,
       throw new IllegalStateException("Trying to set function co-domain, whereas one is already set")
 
     new Arena(solverContext,
-      cellCount, topCell, cellMap, lazyEquality, hasEdges, domEdges, cdmEdges + (funCell -> cdmCell))
+      cellCount, topCell, cellMap, hasEdges, domEdges, cdmEdges + (funCell -> cdmCell))
   }
 
   /**
@@ -221,6 +241,26 @@ class Arena private(val solverContext: SolverContext,
     */
   def getCdm(funCell: ArenaCell): ArenaCell = {
     cdmEdges.apply(funCell)
+  }
+
+  /**
+    * Check, whether a cell has an associated domain edge.
+    *
+    * @param cell a cell
+    * @return true, if cell has an edge labelled with 'dom'
+    */
+  def hasDom(cell: ArenaCell): Boolean = {
+    domEdges.contains(cell)
+  }
+
+  /**
+    * Check, whether a cell has an associated co-domain edge.
+    *
+    * @param cell a cell
+    * @return true, if cell has an edge labelled with 'cdm'
+    */
+  def hasCdm(cell: ArenaCell): Boolean = {
+    cdmEdges.contains(cell)
   }
 
   /**

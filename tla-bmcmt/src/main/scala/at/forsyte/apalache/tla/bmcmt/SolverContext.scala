@@ -69,6 +69,24 @@ trait SolverContext {
   def assertGroundExpr(ex: TlaEx): Unit
 
   /**
+    * Evaluate a ground TLA+ expression in the current model, which is available after a call to sat().
+    * This method assumes that the outcome is either a Boolean or integer.
+    * If not, it throws SmtEncodingException.
+    *
+    * @param ex an expression to evaluate
+    * @return a TLA+ value
+    */
+  def evalGroundExpr(ex: TlaEx): TlaEx
+
+  /**
+    * Write a message to the log file. This is helpful to debug the SMT encoding.
+    *
+    * @param message message text
+    */
+  def log(message: String): Unit
+
+
+  /**
     * Is the current context satisfiable?
     *
     * @return true if and only if the context is satisfiable

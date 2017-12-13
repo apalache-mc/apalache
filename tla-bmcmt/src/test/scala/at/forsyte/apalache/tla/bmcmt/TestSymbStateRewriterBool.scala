@@ -219,6 +219,25 @@ class TestSymbStateRewriterBool extends RewriterBase {
     }
   }
 
+  test("""SE-BOOL-NEG9: ~x ~~> c_TRUE""") {
+    val ex = OperEx(TlaBoolOper.not, NameEx("x"))
+    val binding = new Binding() + ("x" -> arena.cellFalse())
+    val state = new SymbState(ex, CellTheory(), arena, binding, solverContext)
+    new SymbStateRewriter().rewriteOnce(state) match {
+      case SymbStateRewriter.Continue(nextState) =>
+        nextState.ex match {
+          case NameEx(name) =>
+            assert(arena.cellTrue().toString == name)
+
+          case _ =>
+            fail("Unexpected rewriting result")
+        }
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
   test("""SE-AND1: FALSE /\ TRUE ~~> $B$0""") {
     val ex = OperEx(TlaBoolOper.and, ValEx(TlaFalse), ValEx(TlaTrue))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)

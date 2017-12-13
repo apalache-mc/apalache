@@ -1,6 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.implicitConversions._
+import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
@@ -38,7 +40,7 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def intersectOrDiff(op: OpEnum.Value, state: SymbState, leftSet: TlaEx, rightSet: TlaEx) = {
+  private def intersectOrDiff(op: OpEnum.Value, state: SymbState, leftSet: TlaEx, rightSet: TlaEx): SymbState = {
     val leftState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(leftSet))
     val rightState = rewriter.rewriteUntilDone(leftState.setTheory(CellTheory()).setRex(rightSet))
     val leftSetCell = leftState.arena.findCellByNameEx(leftState.ex)
@@ -64,24 +66,35 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
       }
 
     // add SMT constraints
-    if (leftElemCells.nonEmpty) {
-      def mkConsFun = if (op == OpEnum.CAP) overlap _ else noOverlap _
+    val newState:SymbState =
+      if (leftElemCells.nonEmpty) {
+        def mkConsFun = if (op == OpEnum.CAP) overlap _ else noOverlap _
 
-      // for every element in the left set, there must be an element in the right set (or no element in case of diff)
-      for (leftElem <- leftElemCells)
-        newArena.solverContext
-          .assertGroundExpr(mkConsFun(newArena, resultSetCell, leftSetCell, leftElem, rightSetCell, rightElemCells))
+        def overlapOrNot(st: SymbState, elem: ArenaCell): SymbState = {
+          if (op == OpEnum.CAP)
+            overlap(st, resultSetCell, leftSetCell, elem, rightSetCell, rightElemCells)
+          else
+            noOverlap(st, resultSetCell, leftSetCell, elem, rightSetCell, rightElemCells)
+        }
 
-      if (op == OpEnum.CAP && rightElemCells.nonEmpty) {
-        // for every element in the right set, there must be an element in the left set
-        for (rightElem <- rightElemCells)
-          newArena.solverContext
-            .assertGroundExpr(overlap(newArena, resultSetCell, rightSetCell, rightElem, leftSetCell, leftElemCells))
+        // for every element in the left set, there must be an element in the right set (or no element in case of diff)
+        val afterLeft = leftElemCells.foldLeft(rightState) (overlapOrNot)
+
+        if (op == OpEnum.CAP && rightElemCells.nonEmpty) {
+          def over(st: SymbState, elem: ArenaCell): SymbState = {
+            overlap(st, resultSetCell, rightSetCell, elem, leftSetCell, leftElemCells)
+          }
+          // for every element in the right set, there must be an element in the left set
+          rightElemCells.foldLeft(afterLeft) (over)
+        } else {
+          afterLeft
+        }
+      } else {
+        rightState
       }
-    }
 
     // that's it
-    rightState.setTheory(CellTheory())
+    newState.setTheory(CellTheory())
       .setArena(newArena).setRex(resultSetCell.toNameEx)
   }
 
@@ -95,28 +108,38 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private def not(e: TlaEx) = OperEx(TlaBoolOper.not, e)
 
   // see SE-SET-CAP1 for a description
-  private def overlap(arena: Arena, capSet: ArenaCell, set: ArenaCell, elem: ArenaCell,
-                      otherSet: ArenaCell, otherElems: List[ArenaCell]) = {
-    def eq(l: ArenaCell, r: ArenaCell) = arena.lazyEquality.mkEquality(arena, l, r)
+  private def overlap(state: SymbState, capSet: ArenaCell, set: ArenaCell, elem: ArenaCell,
+                      otherSet: ArenaCell, otherElems: List[ArenaCell]): SymbState = {
+    // produce equality constraints first
+    val eqState = rewriter.lazyEquality.cacheEqualities(state, otherElems.map(e => (e, elem)))
 
+    // now we can use SMT equality
     def existsOther(otherElem: ArenaCell) =
-      and(in(otherElem, otherSet), eq(otherElem, elem))
+      and(in(otherElem, otherSet), tla.eql(otherElem, elem))
 
-    OperEx(TlaBoolOper.equiv,
-      in(elem, capSet),
-      and(in(elem, set), or(otherElems.map(existsOther): _*)))
+    val cons =
+      tla.equiv(in(elem, capSet),
+        and(in(elem, set), or(otherElems.map(existsOther): _*)))
+
+    eqState.solverCtx.assertGroundExpr(cons)
+    eqState
   }
 
   // see SE-SET-DIFF for a description
-  private def noOverlap(arena: Arena, diffSet: ArenaCell, set: ArenaCell, elem: ArenaCell,
-                        otherSet: ArenaCell, otherElems: List[ArenaCell]) = {
-    def eq(l: ArenaCell, r: ArenaCell) = arena.lazyEquality.mkEquality(arena, l, r)
+  private def noOverlap(state: SymbState, diffSet: ArenaCell, set: ArenaCell, elem: ArenaCell,
+                        otherSet: ArenaCell, otherElems: List[ArenaCell]): SymbState = {
+    // produce equality constraints first
+    val eqState = rewriter.lazyEquality.cacheEqualities(state, otherElems.map(e => (e, elem)))
 
+    // now we can use SMT equality
     def noOther(otherElem: ArenaCell) =
-      or(not(in(otherElem, otherSet)), not(eq(otherElem, elem)))
+      or(not(in(otherElem, otherSet)), not(tla.eql(otherElem, elem)))
 
-    OperEx(TlaBoolOper.equiv,
-      in(elem, diffSet),
-      and(in(elem, set), and(otherElems.map(noOther): _*)))
+    val cons =
+      tla.equiv(in(elem, diffSet),
+        and(in(elem, set), and(otherElems.map(noOther): _*)))
+
+    eqState.solverCtx.assertGroundExpr(cons)
+    eqState
   }
 }
