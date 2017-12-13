@@ -12,6 +12,7 @@ import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.plugins.{Identifier, UniqueDB}
 import at.forsyte.apalache.tla.lir.{UID, _}
+
 import com.microsoft.z3._
 
 import scala.collection.immutable.{Map, Set}
@@ -144,16 +145,27 @@ object assignmentSolver {
     /**
       * Extracts all primed subexpressions within a given expression, regardless of nesting depth.
       *
-      * @param ex An arbitrary TLA expression.
+      * @param p_ex An arbitrary TLA expression.
       * @return A set of names. Each name appears uniquely, regardless of
       *         multiple occurrences with different UIDs.
       */
-    def findPrimes( ex : TlaEx ) : Set[String] = {
-      ex match {
+    def findPrimes( p_ex : TlaEx ) : Set[String] = {
+      p_ex match {
         case OperEx( TlaActionOper.prime, NameEx( name ) ) =>
           /* return */ Set( name )
         case OperEx( _, args@_* ) =>
           /* return */ args.map( findPrimes ).fold( Set[String]() ) { ( a, b ) => a ++ b }
+        case _ =>
+          /* return */ Set[String]()
+      }
+    }
+
+    def findAllNamed( p_ex: TlaEx, p_names : Set[String] ) : Set[String] = {
+      p_ex match {
+        case NameEx( name ) =>
+          /* return */ Set( name )
+        case OperEx( _, args@_* ) =>
+          /* return */ args.map( findAllNamed( _, p_names ) ).fold( Set[String]() ) { _ ++ _ }
         case _ =>
           /* return */ Set[String]()
       }
@@ -192,7 +204,10 @@ object assignmentSolver {
     type seenType = Set[Int]
     type dependencySetType = Set[(Int, Int)]
     type deltaType = Map[String, BoolFormula]
-    type recursionData = (seenType, dependencySetType, dependencySetType, deltaType)
+    type quantifiedVarDepsType = Map[String,Set[String]]
+    type quantAsgnDepsType = Map[Int, Set[String]]
+    type recursionData =
+      ( seenType, dependencySetType, dependencySetType, deltaType, quantAsgnDepsType )
 
     /**
       * Main internal method.
@@ -209,9 +224,10 @@ object assignmentSolver {
       */
     def massProcess( p_phi : TlaEx,
                      p_vars : Set[String]
-                   ) : ( seenType, dependencySetType, deltaType ) = {
-      val (seen, deps, _, deltas) = innerMassProcess( p_phi, p_vars )
-      /* return */ (seen, deps, deltas.map( pa => (pa._1, simplify( pa._2 )) ))
+                   ) : ( seenType, dependencySetType, deltaType, quantAsgnDepsType ) = {
+      val (seen, deps, _, deltas, quantDeps ) =
+        innerMassProcess( p_phi, p_vars, Map[String,Set[String]]() )
+      /* return */ (seen, deps, deltas.map( pa => (pa._1, simplify( pa._2 )) ), quantDeps)
     }
 
     /**
@@ -221,12 +237,14 @@ object assignmentSolver {
       *         which is discarded in the return of [[massProcess]].
       */
     def innerMassProcess( p_phi : TlaEx,
-                          p_vars : Set[String]
+                          p_vars : Set[String],
+                          p_quantifiedVarDeps : quantifiedVarDepsType
                         ) : recursionData = {
 
       /** We name the default arguments to return at irrelevant terms  */
       val defaultMap = ( for {v <- p_vars} yield (v, False()) ).toMap
-      val defaultArgs = (Set[Int](), Set[(Int, Int)](), Set[(Int, Int)](), defaultMap)
+      val defaultArgs =
+        (Set[Int](), Set[(Int, Int)](), Set[(Int, Int)](), defaultMap, Map[Int,Set[String]]())
 
       p_phi match {
         /**
@@ -256,7 +274,8 @@ object assignmentSolver {
             case TlaBoolOper.and | TlaBoolOper.or =>
 
               /** First, process all children */
-              val processedArgs : Seq[recursionData] = args.map( innerMassProcess( _, p_vars ) )
+              val processedArgs : Seq[recursionData] =
+                args.map( innerMassProcess( _, p_vars, p_quantifiedVarDeps ) )
 
               /** Next, compute a map from each v to a sequence of all child delta_v formulas  */
               val newMapArgs : Map[String, Seq[BoolFormula]] =
@@ -264,23 +283,23 @@ object assignmentSolver {
                   (v,
                     processedArgs.map(
                       /** Take the current delta_v. We know none of them are None by construction */
-                      _._4.get( v ).head
+                      _._4( v )
                     )
                   )
                   ).toMap
 
               /**
                 * The rest we obtain by folding and taking the unions of all components.
-                * The default arguments are empty sets as not to impact the result.
                 */
-              val (seen, depSet, indepSet, _) = processedArgs.fold(
-                defaultArgs
+              val ( seen, depSet, indepSet, jointQuantAsgnDepsMap ) = processedArgs.foldLeft(
+                ( defaultArgs._1, defaultArgs._2, defaultArgs._3, defaultArgs._5 )
               ) {
                 ( a, b ) =>
-                  (a._1 ++ b._1,
+                  (
+                    a._1 ++ b._1,
                     a._2 ++ b._2,
                     a._3 ++ b._3,
-                    defaultArgs._4 // irrelevant
+                    b._5 ++ a._4  // Key sets disjoint by construction
                   )
               }
 
@@ -301,8 +320,8 @@ object assignmentSolver {
 
               /** One set is unchanged, the other is the remeining elements from S */
               oper match {
-                case TlaBoolOper.and => (seen, S -- indepSet, indepSet, newMap)
-                case TlaBoolOper.or => (seen, depSet, S -- depSet, newMap)
+                case TlaBoolOper.and => (seen, S -- indepSet, indepSet, newMap, jointQuantAsgnDepsMap)
+                case TlaBoolOper.or => (seen, depSet, S -- depSet, newMap, jointQuantAsgnDepsMap)
               }
 
             /** Base case */
@@ -323,8 +342,22 @@ object assignmentSolver {
                       )
                       ).toMap
 
-                  /** If well formed, S = {n}, D = {(n,n)}, I = {}, deltas = newmap */
-                  /* return */ (Set[Int]( n ), Set[(Int, Int)]( (n, n) ), Set[(Int, Int)](), newmap)
+                  val rhsExistentialVars = findAllNamed( args.tail.head, p_quantifiedVarDeps.keySet )
+
+                  val exDepMap =
+                    if( rhsExistentialVars.isEmpty )
+                      Map[Int, Set[String]]()
+                    else{
+                      val unfoldedDeps =
+                        rhsExistentialVars.flatMap(
+                          p_quantifiedVarDeps.getOrElse( _, Set[String]() )
+                        )
+                      Map( n -> unfoldedDeps )
+                    }
+
+
+                  /** If well formed, S = {n}, D = {(n,n)}, I = {}, deltas = newmap,  */
+                  /* return */ (Set[Int]( n ), Set[(Int, Int)]( (n, n) ), Set[(Int, Int)](), newmap, exDepMap)
                 case _ =>
 
                   /** If not well-formed, ignore and return empty sets/trivial maps */
@@ -332,8 +365,16 @@ object assignmentSolver {
               }
 
             /** Quantifier introspection, all existential quanitifications may have nested assignemnts */
-            case TlaBoolOper.exists =>
-              /* return */ innerMassProcess( args.tail.tail.head, p_vars )
+            case TlaBoolOper.exists => {
+              val qVar = args.head match {
+                case NameEx( n ) => n
+                case _ => ""
+              }
+              assert( qVar.nonEmpty )
+              val rhsPrimes = findPrimes( args.tail.head )
+              val varDeps = if( rhsPrimes.nonEmpty ) Map( qVar -> rhsPrimes ) else Map[String, Set[String]]()
+              /* return */ innerMassProcess( args.tail.tail.head, p_vars, varDeps )
+            }
 
             /** Other case */
             case _ =>
@@ -395,15 +436,24 @@ object assignmentSolver {
 
     import preprocessHelperFunctions._
 
-    /** Extract the list of leaf ids, the dependency set and the delta mapping */
-    val (seen, deps, deltas) = massProcess( p_phi, p_vars )
+    /** Extract the list of leaf ids, the dependency set and the delta mapping + qDeps */
+    val (seen, deps, deltas, qDeps) = massProcess( p_phi, p_vars )
 
     /**
       * We need two subsets of deps, one where the \sqsubset relation holds
       * and one where lvars match for constructing \phi_R and \phi^\exists!^
       * respectively.
       */
-    val D_sqss = deps.filter( pa => sqsubset( pa._1, pa._2 ) )
+
+    def indirectDep( i : Int, j : Int ) : Boolean = {
+      lvar( j ).exists( qDeps.getOrElse( i, Set[String]() ).contains )
+    }
+
+    def filterFun( i : Int, j : Int ) : Boolean = {
+      sqsubset( i, j ) || indirectDep( i, j )
+    }
+
+    val D_sqss = deps.filter( pa => filterFun( pa._1, pa._2 ) )
     val D_exOne = deps.filter( pa => pa._1 < pa._2 && lvar( pa._1 ) == lvar( pa._2 ) )
 
     /** \phi_A */
