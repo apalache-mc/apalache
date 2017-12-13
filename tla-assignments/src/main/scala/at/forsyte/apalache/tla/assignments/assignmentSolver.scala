@@ -326,6 +326,8 @@ object assignmentSolver {
             /** Base case */
             case TlaSetOper.in =>
 
+              /** Check for RHS = Integers (or other infinite predef set)? */
+
               /** First, we check for well-formed expr., i.e. a' \in B */
               args.head match {
                 case OperEx( TlaActionOper.prime, NameEx( name ) ) =>
