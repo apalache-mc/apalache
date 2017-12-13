@@ -10,7 +10,7 @@ import java.io._
 
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.plugins.{Identifier, UniqueDB}
+import at.forsyte.apalache.tla.lir.plugins.UniqueDB
 import at.forsyte.apalache.tla.lir.{UID, _}
 
 import com.microsoft.z3._
@@ -20,10 +20,10 @@ import scala.collection.immutable.{Map, Set}
 /**
   * Object equipped with methods for solving the assignment problem.
   *
-  * =Instructions For Use=
+  * =Instructions For Use (OUTDATED!!!)=
   *   1. Extract a set of variables and the next formula from your TLA specification.
   *   1. Do one of the following:
-  *     a. To produce a good assignment strategy, call [[[[assignmentSolver#getOrder(p_vars:scala\.collection\.immutable\.Set[at\.forsyte\.apalache\.tla\.lir\.NameEx],p_phi:at\.forsyte\.apalache\.tla\.lir\.OperEx,p_fileName:String):Option[Seq[(at\.forsyte\.apalache\.tla\.lir\.UID,Boolean)]]* getOrder]]]].
+  *     a. To produce a good assignment strategy, call [[assignmentSolver#getStrategy(p_vars:scala\.collection\.immutable\.Set[String],p_phi:at\.forsyte\.apalache\.tla\.lir\.TlaEx,p_fileName:Option[String])* getStrategy]].
   *     a. To produce an SMT file or specification for later use, call [[assignmentSolver#makeSpec makeSpec]].
   */
 object assignmentSolver {
@@ -97,19 +97,18 @@ object assignmentSolver {
           * It is important to recurse first,
           * since otherwise false-simplification would not propagate upward.
           */
-        case And( args@_* ) => {
+        case And( args@_* ) =>
           val newargs = args.map( simplify )
           if ( newargs.contains( False() ) )
           /* return */ False()
           else
           /* return */ And( newargs : _* )
-        }
 
         /**
           * Recursively simplify, then drop all False() branches.
           * Afterwards, if the new tree has too few branches prune accordingly.
           */
-        case Or( args@_* ) => {
+        case Or( args@_* ) =>
           val newargs = args.map( simplify ).filterNot( _ == False() )
           newargs.size match {
             case 0 =>
@@ -119,7 +118,7 @@ object assignmentSolver {
             case _ =>
               /* return */ Or( newargs : _* )
           }
-        }
+
         case _ =>
           /* return */ phi
       }
@@ -365,7 +364,7 @@ object assignmentSolver {
               }
 
             /** Quantifier introspection, all existential quanitifications may have nested assignemnts */
-            case TlaBoolOper.exists => {
+            case TlaBoolOper.exists =>
               val qVar = args.head match {
                 case NameEx( n ) => n
                 case _ => ""
@@ -374,7 +373,6 @@ object assignmentSolver {
               val rhsPrimes = findPrimes( args.tail.head )
               val varDeps = if( rhsPrimes.nonEmpty ) Map( qVar -> rhsPrimes ) else Map[String, Set[String]]()
               /* return */ innerMassProcess( args.tail.tail.head, p_vars, varDeps )
-            }
 
             /** Other case */
             case _ =>
@@ -516,11 +514,11 @@ object assignmentSolver {
     * the specification `p_spec`.
     *
     * @param p_spec A SMTLIBv2 specification string, as required by the parser method of
-    *               [[com.microsoft.z3.Context]].
+    *               com.microsoft.z3.Context.
     * @return `None`, if the assignment problem has no solution. Otherwise, returns a sequence
-    *         of [[UID UIDs]], constituting a good assignmentStrategy, sorted by the
+    *         of [[at\.forsyte\.apalache\.tla\.lir\.UID UIDs]], constituting a good assignmentStrategy, sorted by the
     *         ranking function, in ascending order.
-    * @see [[[[getStrategy(p_vars:scala\.collection\.immutable\.Set[at\.forsyte\.apalache\.tla\.lir\.NameEx],p_phi:at\.forsyte\.apalache\.tla\.lir\.OperEx,p_fileName:String):Option[Seq[(at\.forsyte\.apalache\.tla\.lir\.UID,Boolean)]]* getStrategy]]]]
+    * @see [[getStrategy(p_vars:scala\.collection\.immutable\.Set[String],p_phi:at\.forsyte\.apalache\.tla\.lir\.TlaEx,p_fileName:Option[String])* getStrategy]]
     **/
   def getStrategy( p_spec : String ) : Option[StrategyType] = {
     import preprocessHelperFunctions._
@@ -544,11 +542,11 @@ object assignmentSolver {
     val fnDecl = m.getFuncDecls
 
     fnDecl.size match{
-      case 0 => { /** Only happens if Next is exactly 1 assignment */
+      case 0 => /** Only happens if Next is exactly 1 assignment */
         val trues = m.getConstDecls.withFilter( x => m.getConstInterp( x ).isTrue ).map( _.getName.toString )
         Some( trues.map( x => UID( x.substring( 2 ).toInt ) )  )
-      }
-      case 1 => {
+
+      case 1 =>
         if ( fnDecl.size != 1 )
           return None
 
@@ -562,7 +560,7 @@ object assignmentSolver {
         val sorted = trues.sortBy( x => wrap( x ) )
 
         /* return */ Some( sorted.map( x => UID( x.substring( 2 ).toInt ) ) )
-      }
+
       case _ => None
     }
   }
@@ -576,9 +574,9 @@ object assignmentSolver {
     * @param p_fileName Optional parameter, if `p_fileName` is nonempty, a file with the complete
     *                   specification is also produced. Set to empty by default.
     * @return `None`, if the assignment problem has no solution. Otherwise, returns a sequence
-    *         of [[UID UIDs]], constituting a good assignmentStrategy, sorted by the
+    *         of [[at\.forsyte\.apalache\.tla\.lir\.UID UIDs]], constituting a good assignmentStrategy, sorted by the
     *         ranking function, in ascending order.
-    * @see [[makeSpec]], [[[[getOrder(p_spec:String):Option[Seq[(at\.forsyte\.apalache\.tla\.lir\.UID,Boolean)]]* getOrder]]]]
+    * @see [[makeSpec]], [[getStrategy(p_spec:String)* getStrategy]]
     **/
   def getStrategy( p_vars : Set[String],
                    p_phi : TlaEx,
@@ -625,7 +623,7 @@ object assignmentSolver {
                 ) : Set[UID] = p_knownLabels.getOrElse( p_ex.ID, Set() )
 
     /**
-      * Decides whether a given [[TlaEx]] is considered a leaf in the formula tree.
+      * Decides whether a given [[at\.forsyte\.apalache\.tla\.lir\.TlaEx]] is considered a leaf in the formula tree.
       * For our puposes, leaves are assignment candidates, i.e. expressions of the
       * form x' \in S.
       * @param p_ex Any TLA expression
@@ -670,11 +668,11 @@ object assignmentSolver {
 
       p_ex match {
         /** Guaranteed, if invoked by the [[SpecHandler]] */
-        case OperEx( _, args@_* ) => {
+        case OperEx( _, args@_* ) =>
           /** The set of all child labels */
           val mySet = args.map( labelsAt( _, superMap ) ).fold( Set() )( _ ++ _ )
           superMap + ( p_ex.ID -> mySet )
-        }
+
         case _ => Map()
       }
 
@@ -853,7 +851,7 @@ object assignmentSolver {
                           p_labels : LabelMapType
                         ) : TlaEx = {
       p_ex match {
-        case OperEx( TlaBoolOper.or, args@_* ) => {
+        case OperEx( TlaBoolOper.or, args@_* ) =>
           /**
             * Or-branches have the property that they either contain
             * all assignments or none of them. Therefore it suffices to check for
@@ -868,14 +866,14 @@ object assignmentSolver {
             assert( newArgs.size == 1 )
             newArgs.head // if nonempty, it has exactly 1 member
           }
-        }
-        case OperEx( TlaBoolOper.and, args@_* ) => {
-          /** Reorder by assignment order */
-          /* TODO!! */
+
+        case OperEx( TlaBoolOper.and, args@_* ) =>
+          /** Reorder by assignment order? */
+          /* TODO? */
 //          var sortArgs = args
 //          OperEx( TlaBoolOper.and, sortArgs )
           p_ex
-        }
+
         case _ => p_ex
       }
     }
