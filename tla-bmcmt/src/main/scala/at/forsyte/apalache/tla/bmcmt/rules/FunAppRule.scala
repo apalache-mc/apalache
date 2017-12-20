@@ -40,21 +40,21 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val domCells = resState.arena.getHas(domainCell)
 
         // cache equalities
-        val eqState = rewriter.lazyEquality.cacheEqualities(resState, domCells.map(e => (e, argCell)))
+        val eqState = rewriter.lazyEq.cacheEqConstraints(resState, domCells.map(e => (e, argCell)))
 
         // Equation (2): there is a domain element that equals to the argument
         def mkInCase(domElem: ArenaCell): TlaEx = {
           val inDomain = tla.in(domElem, domainCell)
           val funEqResult =
             tla.eql(resultCell, tla.appFun(funCell, domElem)) // translated as function application in SMT
-          val eq = tla.eql(domElem, argCell) // just use SMT equality, thanks to the constraints generated with lazy equality
+          val eq = rewriter.lazyEq.safeEq(domElem, argCell) // just use SMT equality
           tla.and(inDomain, eq, funEqResult)
         }
 
         // Equation (3): there is no domain element that equals to the argument
         def mkNotInCase(domElem: ArenaCell): TlaEx = {
           val notInDomain = tla.not(tla.in(domElem, domainCell))
-          val eq = tla.eql(domElem, argCell) // just use SMT equality, thanks to the constraints generated with lazy equality
+          val eq = rewriter.lazyEq.safeEq(domElem, argCell) // just use SMT equality
           tla.or(notInDomain, tla.not(eq))
         }
 

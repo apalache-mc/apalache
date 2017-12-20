@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.types.BoolT
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
@@ -84,12 +85,10 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""SE-SET-IN1: {3} \in {1, {3}, {5}} ~~> $B$k""") {
-    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+  test("""SE-SET-IN1: {3} \in {{1}, {3}, {5}} ~~> $B$k""") {
+    val ex = tla.in(tla.enumSet(tla.int(3)),
+      tla.enumSet(tla.enumSet(tla.int(1)), tla.enumSet(tla.int(3)), tla.enumSet(tla.int(5))))
 
-    val ex = OperEx(TlaSetOper.in,
-      mkSet(ValEx(TlaInt(3))),
-      mkSet(ValEx(TlaInt(1)), mkSet(ValEx(TlaInt(3))), mkSet(ValEx(TlaInt(5)))))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
     val nextState = new SymbStateRewriter().rewriteUntilDone(state)
     nextState.ex match {
@@ -130,12 +129,10 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""SE-SET-IN1: 3 \in {1, {3}, {5}} ~~> $B$k""") {
-    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+  test("""SE-SET-IN1: 3 \in {{1}, {3}, {5}} ~~> $B$k""") {
+    val ex = tla.in(tla.int(3),
+      tla.enumSet(tla.enumSet(tla.int(1)), tla.enumSet(tla.int(3)), tla.enumSet(tla.int(5))))
 
-    val ex = OperEx(TlaSetOper.in,
-      ValEx(TlaInt(3)),
-      mkSet(ValEx(TlaInt(1)), mkSet(ValEx(TlaInt(3))), mkSet(ValEx(TlaInt(5)))))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
     val nextState = new SymbStateRewriter().rewriteUntilDone(state)
     nextState.ex match {

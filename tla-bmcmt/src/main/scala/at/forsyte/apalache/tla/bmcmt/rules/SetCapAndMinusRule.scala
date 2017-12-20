@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
@@ -111,11 +110,11 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private def overlap(state: SymbState, capSet: ArenaCell, set: ArenaCell, elem: ArenaCell,
                       otherSet: ArenaCell, otherElems: List[ArenaCell]): SymbState = {
     // produce equality constraints first
-    val eqState = rewriter.lazyEquality.cacheEqualities(state, otherElems.map(e => (e, elem)))
+    val eqState = rewriter.lazyEq.cacheEqConstraints(state, otherElems.map(e => (e, elem)))
 
     // now we can use SMT equality
     def existsOther(otherElem: ArenaCell) =
-      and(in(otherElem, otherSet), tla.eql(otherElem, elem))
+      and(in(otherElem, otherSet), rewriter.lazyEq.safeEq(otherElem, elem))
 
     val cons =
       tla.equiv(in(elem, capSet),
@@ -129,11 +128,11 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private def noOverlap(state: SymbState, diffSet: ArenaCell, set: ArenaCell, elem: ArenaCell,
                         otherSet: ArenaCell, otherElems: List[ArenaCell]): SymbState = {
     // produce equality constraints first
-    val eqState = rewriter.lazyEquality.cacheEqualities(state, otherElems.map(e => (e, elem)))
+    val eqState = rewriter.lazyEq.cacheEqConstraints(state, otherElems.map(e => (e, elem)))
 
     // now we can use SMT equality
     def noOther(otherElem: ArenaCell) =
-      or(not(in(otherElem, otherSet)), not(tla.eql(otherElem, elem)))
+      or(not(in(otherElem, otherSet)), not(rewriter.lazyEq.safeEq(otherElem, elem)))
 
     val cons =
       tla.equiv(in(elem, diffSet),

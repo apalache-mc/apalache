@@ -12,7 +12,7 @@ object ArenaCell {
   *
   * @author Igor Konnov
   */
-class ArenaCell(val id: Int, val cellType: CellT) {
+class ArenaCell(val id: Int, val cellType: CellT) extends Comparable[ArenaCell] {
   override def toString: String = {
     "%s%d".format(CellTheory().namePrefix, id)
   }
@@ -23,5 +23,9 @@ class ArenaCell(val id: Int, val cellType: CellT) {
 
   def mkTlaEq(rhs: ArenaCell): TlaEx = {
       OperEx(TlaOper.eq, this.toNameEx, rhs.toNameEx)
+  }
+
+  override def compareTo(t: ArenaCell): Int = {
+    id.compareTo(t.id)
   }
 }

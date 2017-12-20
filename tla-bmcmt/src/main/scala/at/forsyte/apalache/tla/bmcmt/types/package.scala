@@ -14,36 +14,71 @@ package object types {
       * @return true, if objects of the given types may be comparable
       */
     def comparableWith(other: CellT): Boolean = {
+      this.unify(other).nonEmpty
+    }
+
+    /**
+      * Compute a unifier of two types.
+      *
+      * @param other another type
+      * @return Some(unifier), if there is one, or None otherwise
+      */
+    def unify(other: CellT): Option[CellT] = {
       (this, other) match {
         case (UnknownT(), _) =>
-          true
+          Some(other)
 
         case (_, UnknownT()) =>
-          true
+          Some(this)
 
-        case (BoolT(), BoolT()) =>
-          true
-
-        case (ConstT(), ConstT()) =>
-          true
-
-        case (IntT(), IntT()) =>
-          true
+        case (BoolT(), BoolT()) | (ConstT(), ConstT()) | (IntT(), IntT()) =>
+          Some(this)
 
         case (FinSetT(left), FinSetT(right)) =>
-          left.comparableWith(right)
+          val unif = left.unify(right)
+          if (unif.nonEmpty) Some(FinSetT(unif.get)) else None
 
         case (FunT(leftDom, leftCodom), FunT(rightDom, rightCodom)) =>
-          leftDom.comparableWith(rightDom) && leftCodom.comparableWith(rightCodom)
+          val domUnif = leftDom.unify(rightDom)
+          val cdmUnif = leftCodom.unify(rightCodom)
+          if (domUnif.nonEmpty && cdmUnif.nonEmpty) {
+            Some(FunT(domUnif.get, cdmUnif.get))
+          } else {
+            None
+          }
 
-        case (SumT(leftTypes), right@_) =>
-          leftTypes.exists(_.comparableWith(right))
+        case (TupleT(leftArgs), TupleT(rightArgs)) =>
+          val maxlen = Math.max(leftArgs.length, rightArgs.length)
+          val paddedPairs: Seq[(CellT, CellT)] = leftArgs.padTo(maxlen, UnknownT()).zip(rightArgs.padTo(maxlen, UnknownT()))
+          val newArgs = paddedPairs map { case (l, r) => l.unify(r) }
+          if (newArgs.exists(_.isEmpty))
+            None
+          else
+            Some(TupleT(newArgs map (_.get)))
 
-        case (left@_, SumT(rightTypes)) =>
-          rightTypes.exists(left.comparableWith)
+        case (RecordT(leftMap), RecordT(rightMap)) =>
+          def unifyKey(key: String): Option[CellT] = {
+            (leftMap.get(key), rightMap.get(key)) match {
+              case (Some(l), Some(r)) =>
+                l.unify(r)
+
+              case (Some(l), None) =>
+                Some(l)
+
+              case (None, Some(r)) =>
+                Some(r)
+            }
+          }
+          val pairs = leftMap.keySet.union(rightMap.keySet).map(k => (k, unifyKey(k)))
+          if (pairs.exists (_._2.isEmpty)) {
+            None
+          } else {
+            val somes = pairs.map(p => (p._1, p._2.get))
+            Some(RecordT(Map(somes.toSeq: _*)))
+          }
 
         case _ =>
-          false
+          None
       }
     }
 
@@ -96,7 +131,7 @@ package object types {
   /**
     * Sum type T1 + ... + Tn.
     *
-    * Not used in our semantics.
+    * @deprecated Not used in our semantics anymore, but may reappear in the future.
     */
   case class SumT(components: Seq[CellT]) extends CellT
 
@@ -110,20 +145,41 @@ package object types {
   /**
     * A function type.
     *
-    * @param domType   the type of the domain (must be a finite set).
+    * @param domType    the type of the domain (must be a finite set).
     * @param resultType result type (not co-domain!)
     */
   case class FunT(domType: CellT, resultType: CellT) extends CellT
 
   /**
     * A tuple type
+    *
     * @param args the types of the tuple elements
     */
   case class TupleT(args: Seq[CellT]) extends CellT
 
   /**
     * A record type
+    *
     * @param fields a map of fields and their types
     */
   case class RecordT(fields: Map[String, CellT]) extends CellT
+
+
+  /**
+    * Unify two types decorated with Option.
+    *
+    * @param left a left type (may be None)
+    * @param right a right type (may be None)
+    * @return Some(unifier), if there is one, otherwise None
+    */
+  def unifyOption(left: Option[CellT], right: Option[CellT]): Option[CellT] = {
+    (left, right) match {
+      case (Some(l), Some(r)) =>
+        l.unify(r)
+
+      case _ =>
+        None
+    }
+  }
+
 }

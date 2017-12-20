@@ -21,7 +21,7 @@ object SymbStateRewriter {
   * @author Igor Konnov
   */
 class SymbStateRewriter {
-  val lazyEquality = new LazyEquality(this)
+  val lazyEq = new LazyEquality(this)
   // don't try to rewrite the same rule more than RECURSION_LIMIT times
   private val RECURSION_LIMIT: Int = 1000000
   private val coercion = new Coercion(this)
@@ -35,7 +35,8 @@ class SymbStateRewriter {
       new SetCtorRule(this), new TupleCtorRule(this),
       new SetInRule(this), new SetNotInRule(this),
       new SetCupRule(this), new SetCapAndMinusRule(this),
-      new SetFilterRule(this), new SetMapAndFunCtorRule(this), new FunAppRule(this),
+      new SetFilterRule(this), new SetMapAndFunCtorRule(this),
+      new FunAppRule(this), new FunExceptRule(this),
       new IntDotDotRule(this)
     ) /////////////
 

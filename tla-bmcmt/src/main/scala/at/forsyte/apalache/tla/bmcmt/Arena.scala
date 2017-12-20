@@ -132,6 +132,18 @@ class Arena private(val solverContext: SolverContext,
       case _ =>
         ()
     }
+    // After some thought, we have decided to require that cells of different types --- except unknown --- cannot be equal.
+    // So, we immediately add such a constraint to all the previously defined cells.
+    // Of course, this gives us n^2 / 2 clauses for n cells, but, hey, TLA+ is hard!
+    // TODO: use different sorts for different types in the future?
+    def otherType(c: ArenaCell): Boolean = {
+      !c.cellType.comparableWith(cellType)
+    }
+    val incomparable = cellMap.values.filter(otherType)
+    for (c <- incomparable) {
+      solverContext.assertGroundExpr(OperEx(TlaOper.ne, newCell.toNameEx, c.toNameEx))
+    }
+
     newArena
   }
 
@@ -159,6 +171,7 @@ class Arena private(val solverContext: SolverContext,
 
   protected def appendCellWithoutDeclaration(cellType: CellT): Arena = {
     val newCell = new ArenaCell(cellCount, cellType)
+    assert(!cellMap.contains(newCell.toString)) // this might happen, if we messed up arenas
     new Arena(solverContext, cellCount + 1, newCell,
       cellMap + (newCell.toString -> newCell), hasEdges, domEdges, cdmEdges)
   }

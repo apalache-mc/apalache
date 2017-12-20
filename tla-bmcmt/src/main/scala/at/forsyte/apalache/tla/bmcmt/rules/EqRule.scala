@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
@@ -41,9 +40,10 @@ class EqRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val eqPred = rightState.solverCtx.introBoolConst()
 
       // produce equality constraints, so that we can use SMT equality
-      val eqState = rewriter.lazyEquality.cacheOneEquality(rightState, leftCell, rightCell)
+      val eqState = rewriter.lazyEq.cacheOneEqConstraint(rightState, leftCell, rightCell)
       // and now we can use the SMT equality
-      rightState.solverCtx.assertGroundExpr(tla.equiv(tla.name(eqPred), tla.eql(leftCell, rightCell)))
+      val eqCons = tla.equiv(tla.name(eqPred), rewriter.lazyEq.safeEq(leftCell, rightCell))
+      rightState.solverCtx.assertGroundExpr(eqCons)
       val finalState = eqState.setRex(NameEx(eqPred))
           .setTheory(BoolTheory()) // we have introduced a Boolean constant
       // coerce to the previous theory, if needed

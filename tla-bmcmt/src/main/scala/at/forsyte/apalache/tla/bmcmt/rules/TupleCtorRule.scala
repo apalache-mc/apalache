@@ -36,6 +36,7 @@ class TupleCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
           .setRex(tla.enumSet(range: _*)))
         val dom = stateAfterDomain.arena.findCellByNameEx(stateAfterDomain.ex)
         // create the co-domain
+        // TODO: do not use unknown here, as the solver will use it against you
         var arena = stateAfterDomain.arena.appendCell(FinSetT(UnknownT()))
         val cdm = arena.topCell
         // add the cells to the co-domain

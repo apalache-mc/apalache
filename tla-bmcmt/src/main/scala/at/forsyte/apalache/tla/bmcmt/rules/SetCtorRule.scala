@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, SumT, UnknownT}
+import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, UnknownT}
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
@@ -28,10 +28,20 @@ class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // get the cell types
         val elemType =
           cells.map(_.cellType).toSet.toList match {
-            case List() => UnknownT()
-            case hd :: List() => hd
-            case list @ _ => SumT(list)
+            case List() =>
+              UnknownT()
+
+            case hd :: List() =>
+              hd
+
+            case list @ _ =>
+              val unif = list.map(Some(_)).reduce(types.unifyOption)
+              if (unif.nonEmpty)
+                unif.get
+              else
+                throw new RewriterException("No unifier for the elements in a set constructor: " + list.mkString(", "))
           }
+
         val arena = newState.arena.appendCell(FinSetT(elemType))
         val newCell = arena.topCell
         val newArena = cells.foldLeft(arena)((a, e) => a.appendHas(newCell, e))

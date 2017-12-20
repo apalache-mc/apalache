@@ -66,7 +66,7 @@ class Z3SolverContext extends SolverContext {
     * @param cell a (previously undeclared) cell
     */
   override def declareCell(cell: ArenaCell): Unit = {
-    logWriter.println(";; declare cell " + cell.toString)
+    logWriter.println(";; declare cell(%s): %s".format(cell.toString, cell.cellType))
     z3context.mkConstDecl(cell.toString, cellSort)
   }
 
@@ -84,7 +84,7 @@ class Z3SolverContext extends SolverContext {
 
   /**
     * Evaluate a ground TLA+ expression in the current model, which is available after a call to sat().
-    * This method assumes that the outcome is either a Boolean or integer.
+    * This method assumes that the outcome is one of the basic types: a Boolean, integer, or a cell constant.
     * If not, it throws SmtEncodingException.
     *
     * @param ex an expression to evaluate
@@ -285,9 +285,14 @@ class Z3SolverContext extends SolverContext {
 
       case OperEx(TlaFunOper.app, NameEx(funName), NameEx(argName)) =>
         // apply the function associated with a cell
-        val fun = cellFuns.apply(funName)
         val arg = z3context.mkConst(argName, cellSort)
-        z3context.mkApp(fun, arg)
+        if (funName != "$$intVal") {
+          val fun = cellFuns(funName)
+          z3context.mkApp(fun, arg)
+        } else {
+          // a hack to get back the integer values from a model
+          z3context.mkApp(valIntFun, arg)
+        }
 
       case _ =>
         throw new InvalidTlaExException("Unexpected TLA+ expression: " + ex, ex)

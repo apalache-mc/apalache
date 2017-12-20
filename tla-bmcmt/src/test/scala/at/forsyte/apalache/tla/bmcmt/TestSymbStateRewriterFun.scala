@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import java.io.{PrintWriter, StringWriter}
+
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, FunT, IntT}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaFunOper, TlaOper, TlaSetOper}
@@ -266,8 +268,28 @@ class TestSymbStateRewriterFun extends RewriterBase {
     }
   }
 
-  /* TODO: implement it in the future
+  test("""SE-FUN-APP[1-4]: [x \in {1, 2} |-> IF x = 1 THEN 11 ELSE 2 * x][1] ~~> $C$fun""") {
+    val set = tla.enumSet(tla.int(1), tla.int(2))
+    val pred = tla.eql(tla.name("x"), tla.int(1))
+    val ite = tla.ite(pred, tla.int(11), tla.mult(tla.int(2), tla.name("x")))
+    val iteFun = tla.funDef(ite, tla.name("x"), set)
+    val iteFunElem = tla.appFun(iteFun, tla.int(1))
+    val iteFunElemNe11 = tla.neql(iteFunElem, tla.int(11))
 
+    val state = new SymbState(iteFunElemNe11, BoolTheory(), arena, new Binding, solverContext)
+    val rewriter = new SymbStateRewriter()
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case resFunEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.assertGroundExpr(resFunEx)
+        val isSat = solverContext.sat()
+        assert(!isSat)
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
 
   test("""SE-FUN-UPD[1-4]: [[x \in {1, 2} |-> 2 * x] EXCEPT ![1] = 11] ~~> $C$fun""") {
     val set = tla.enumSet(tla.int(1), tla.int(2))
@@ -276,7 +298,8 @@ class TestSymbStateRewriterFun extends RewriterBase {
 
     val except = tla.except(fun, tla.int(1), tla.int(11))
     val state = new SymbState(except, CellTheory(), arena, new Binding, solverContext)
-    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    val rewriter = new SymbStateRewriter()
+    val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case resFunEx @ NameEx(name) =>
         assert(CellTheory().hasConst(name))
@@ -291,6 +314,31 @@ class TestSymbStateRewriterFun extends RewriterBase {
       case _ =>
         fail("Unexpected rewriting result")
     }
+
+    val exceptFun = nextState.arena.findCellByNameEx(nextState.ex)
+
+    val resFun1Ne11 = tla.neql(tla.appFun(nextState.ex, tla.int(1)), tla.int(11))
+    val cmpState = rewriter.rewriteUntilDone(nextState.setRex(resFun1Ne11).setTheory(BoolTheory()))
+
+    // compare
+    solverContext.push()
+
+    // make sure that not equals gives us sat
+    cmpState.ex match  {
+      case neqEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.assertGroundExpr(neqEx)
+        val isSat = solverContext.sat()
+        if (isSat) {
+          val writer = new StringWriter()
+          new SymbStateDecoder().explainState(cmpState, new PrintWriter(writer))
+          solverContext.log(writer.getBuffer.toString)
+          solverContext.pop()
+          fail("Expected UNSAT")
+        }
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
   }
-  */
 }
