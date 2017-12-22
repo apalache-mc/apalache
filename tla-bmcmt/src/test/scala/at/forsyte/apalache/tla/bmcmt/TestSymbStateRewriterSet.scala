@@ -616,4 +616,348 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
+  test("""SE-SUBSETEQ[1-3]: {1, 2} \subseteq {1, 2, 3} ~~> $B$... (true)""") {
+    val left = tla.enumSet(tla.int(1), tla.int(2))
+    val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
+    val ex = tla.subseteq(left, right)
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(tla.not(predEx))
+        assertUnsatOrExplain(nextState)
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SUBSETEQ[1-3]: {1, 2, 3} \subseteq {1, 2, 3} ~~> $B$... (true)""") {
+    val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
+    val ex = tla.subseteq(right, right)
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(tla.not(predEx))
+        assertUnsatOrExplain(nextState)
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SUBSETEQ[1-3]: {} \subseteq {1, 2, 3} ~~> $B$... (true)""") {
+    val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
+    val ex = tla.subseteq(tla.enumSet(), right)
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(tla.not(predEx))
+        assertUnsatOrExplain(nextState)
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SUBSETEQ[1-3]: {1, 4} \subseteq {1, 2, 3} ~~> $B$... (false)""") {
+    val left = tla.enumSet(tla.int(1), tla.int(4))
+    val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
+    val ex = tla.subseteq(left, right)
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assertUnsatOrExplain(nextState)
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(tla.not(predEx))
+        assert(solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SUPSETEQ[1-3]: {1, 2, 3} \supseteq {1, 2} ~~> $B$... (true)""") {
+    val left = tla.enumSet(tla.int(1), tla.int(2))
+    val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
+    val ex = tla.supseteq(right, left)
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(tla.not(predEx))
+        assertUnsatOrExplain(nextState)
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SUPSETEQ[1-3]: {1, 2, 3} \supseteq {1, 2, 3} ~~> $B$... (true)""") {
+    val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
+    val ex = tla.supseteq(right, right)
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(tla.not(predEx))
+        assertUnsatOrExplain(nextState)
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SUPSETEQ[1-3]: {1, 2, 3} \supseteq {} ~~> $B$... (true)""") {
+    val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
+    val ex = tla.supseteq(right, tla.enumSet())
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(tla.not(predEx))
+        assertUnsatOrExplain(nextState)
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SUPSETEQ[1-3]: {1, 2, 3} \supseteq {1, 4} ~~> $B$... (false)""") {
+    val left = tla.enumSet(tla.int(1), tla.int(4))
+    val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
+    val ex = tla.supseteq(right, left)
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assertUnsatOrExplain(nextState)
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(tla.not(predEx))
+        assert(solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SUBSET[1-3]: {1, 2} \subset {1, 2, 3} ~~> $B$... (true)""") {
+    val left = tla.enumSet(tla.int(1), tla.int(2))
+    val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
+    val ex = tla.subset(left, right)
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(tla.not(predEx))
+        assertUnsatOrExplain(nextState)
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SUBSET[1-3]: {1, 2, 3} \subset {1, 2, 3} ~~> $B$... (false)""") {
+    val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
+    val ex = tla.subset(right, right)
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assertUnsatOrExplain(nextState)
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(tla.not(predEx))
+        assert(solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SUBSET[1-3]: {} \subset {1, 2, 3} ~~> $B$... (true)""") {
+    val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
+    val ex = tla.subset(tla.enumSet(), right)
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(tla.not(predEx))
+        assertUnsatOrExplain(nextState)
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SUBSET[1-3]: {1, 4} \subset {1, 2, 3} ~~> $B$... (false)""") {
+    val left = tla.enumSet(tla.int(1), tla.int(4))
+    val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
+    val ex = tla.subset(left, right)
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assertUnsatOrExplain(nextState)
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(tla.not(predEx))
+        assert(solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SUPSET[1-3]:  {1, 2, 3} \supset {1, 2} ~~> $B$... (true)""") {
+    val left = tla.enumSet(tla.int(1), tla.int(2))
+    val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
+    val ex = tla.supset(right, left)
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(tla.not(predEx))
+        assertUnsatOrExplain(nextState)
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SUPSET[1-3]: {1, 2, 3} \supset {1, 2, 3} ~~> $B$... (false)""") {
+    val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
+    val ex = tla.supset(right, right)
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assertUnsatOrExplain(nextState)
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(tla.not(predEx))
+        assert(solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SUPSET[1-3]: {1, 2, 3} \subset {} ~~> $B$... (true)""") {
+    val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
+    val ex = tla.supset(right, tla.enumSet())
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(tla.not(predEx))
+        assertUnsatOrExplain(nextState)
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SUPSET[1-3]: {1, 2, 3} \subset {1, 4} ~~> $B$... (false)""") {
+    val left = tla.enumSet(tla.int(1), tla.int(4))
+    val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
+    val ex = tla.subset(right, left)
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(predEx)
+        assertUnsatOrExplain(nextState)
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(tla.not(predEx))
+        assert(solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
 }

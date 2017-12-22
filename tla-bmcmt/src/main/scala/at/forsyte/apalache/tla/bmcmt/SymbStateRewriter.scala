@@ -36,11 +36,13 @@ class SymbStateRewriter {
       new IntCmpRule(this), new IntArithRule(this),
       new SetCtorRule(this), new TupleCtorRule(this),
       new SetInRule(this), new SetNotInRule(this),
+      new SetInclusionRule(this),
       new SetCupRule(this), new SetCapAndMinusRule(this),
       new SetFilterRule(this), new SetMapAndFunCtorRule(this),
       new FunAppRule(this), new FunExceptRule(this),
       new IntDotDotRule(this),
-      new FunSetCtorRule(this)
+      new FunSetCtorRule(this),
+      new PowSetCtorRule(this)
     ) /////////////
 
   def rewriteOnce(state: SymbState): RewritingResult = {

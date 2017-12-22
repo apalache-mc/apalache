@@ -56,6 +56,13 @@ package object types {
             None
           }
 
+        case (PowSetT(left), PowSetT(right)) =>
+          val domUnif = left.unify(right)
+          if (domUnif.nonEmpty)
+            Some(PowSetT(domUnif.get))
+          else
+            None
+
         case (TupleT(leftArgs), TupleT(rightArgs)) =>
           val maxlen = Math.max(leftArgs.length, rightArgs.length)
           val paddedPairs: Seq[(CellT, CellT)] = leftArgs.padTo(maxlen, UnknownT()).zip(rightArgs.padTo(maxlen, UnknownT()))
@@ -153,6 +160,15 @@ package object types {
     * @param elemType the elements type
     */
   case class FinSetT(elemType: CellT) extends CellT
+
+  /**
+    * The type of a powerset of finite set, which is constructed as 'SUBSET S' in TLA+.
+    * @param domType the type of the argument finite set, i.e., typeof(S) in SUBSET S.
+    *                Currently, only FinSetT(_) is supported.
+    */
+  case class PowSetT(domType: CellT) extends CellT {
+    require(domType.isInstanceOf[FinSetT]) // currently, we support only PowSetT(FinSetT(_))
+  }
 
   /**
     * A function type.

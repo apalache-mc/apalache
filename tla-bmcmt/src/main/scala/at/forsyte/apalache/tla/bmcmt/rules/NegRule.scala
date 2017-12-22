@@ -1,11 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
 /**
-  * Implements the rules: SE-BOOL-NEG[1-9].
+  * Implements the rules: SE-BOOL-NEG[1-9]. The code is a bit complex, as we are trying to apply simplifications first.
   *
   * @author Igor Konnov
   */
@@ -19,6 +20,7 @@ class NegRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
+  // TODO: All the simplifications should be moved in the special preprocessing phase
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case OperEx(TlaBoolOper.not, subEx@NameEx(name)) =>
@@ -58,7 +60,18 @@ class NegRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
       case OperEx(TlaBoolOper.not, ex: TlaEx) =>
         // SE-BOOL-NEG[1-8]
-        state.setRex(rewriteNot(ex))
+        val rewritten = rewriteNot(ex)
+        if (rewritten.isDefined)
+          state.setRex(rewritten.get)
+        else {
+          // the general case, when no rewriting rule applies
+          val newState = rewriter.rewriteUntilDone(state.setRex(ex).setTheory(BoolTheory()))
+          val pred = state.solverCtx.introBoolConst()
+          newState.solverCtx.assertGroundExpr(tla.eql(tla.not(tla.name(pred)), newState.ex))
+          val finalState = newState.setRex(tla.name(pred))
+          // coerce back, if needed
+          rewriter.coerce(finalState, state.theory)
+        }
 
       case _ =>
         throw new RewriterException("NegRule is not applicable")
@@ -68,34 +81,28 @@ class NegRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private def rewriteNot(root: TlaEx) = {
     root match {
       case OperEx(TlaBoolOper.or, es@_*) => // SE-BOOL-NEG1
-        OperEx(TlaBoolOper.and, es.map(e => OperEx(TlaBoolOper.not, e)): _*)
+        Some(tla.and(es map tla.not :_*))
 
       case OperEx(TlaBoolOper.and, es@_*) => // SE-BOOL-NEG2
-        OperEx(TlaBoolOper.or, es.map(e => OperEx(TlaBoolOper.not, e)): _*)
+        Some(tla.or(es map tla.not :_*))
 
       case OperEx(TlaBoolOper.implies, lhs, rhs) => // SE-BOOL-NEG3
-        OperEx(TlaBoolOper.and,
-          lhs, OperEx(TlaBoolOper.not, rhs))
+        Some(tla.and(lhs, tla.not(rhs)))
 
       case OperEx(TlaBoolOper.equiv, lhs, rhs) => // SE-BOOL-NEG4
-        OperEx(TlaBoolOper.equiv,
-          OperEx(TlaBoolOper.not, lhs),
-          rhs)
+        Some(tla.equiv(tla.not(lhs), rhs))
 
-      case OperEx(TlaBoolOper.not, e) => e // SE-BOOL-NEG5
+      case OperEx(TlaBoolOper.not, e) =>  // SE-BOOL-NEG5
+        Some(e)
 
       case OperEx(TlaBoolOper.exists, x, set, pred) => // SE-BOOL-NEG6
-        OperEx(TlaBoolOper.forall,
-          x, set,
-          OperEx(TlaBoolOper.not, pred))
+        Some(tla.forall(x, set, tla.not(pred)))
 
       case OperEx(TlaBoolOper.forall, x, set, pred) => // SE-BOOL-NEG7
-        OperEx(TlaBoolOper.exists,
-          x, set,
-          OperEx(TlaBoolOper.not, pred))
+        Some(tla.exists(x, set, tla.not(pred)))
 
       case _ =>
-        throw new RewriterException("NegRule is not applicable")
+        None
     }
   }
 }

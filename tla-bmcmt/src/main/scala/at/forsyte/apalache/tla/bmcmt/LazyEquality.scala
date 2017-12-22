@@ -29,7 +29,7 @@ class LazyEquality(rewriter: SymbStateRewriter) {
     if (!left.cellType.comparableWith(right.cellType)) {
       // Trivially not equal due to incomparable types.
       // As this comparison usually indicates a coding problem, throw an exception here.
-      // If you still think that this is OK, to compare variables of different types, insert a check before safeEq.
+      // If you still think that this is okay to compare variables of different types, insert a check before safeEq.
       throw new RewriterException("Trivial inequality, as the types are different (check your code): type(%s) = %s, while type(%s) = %s"
         .format(left.name, left.cellType, right.name, right.cellType))
     } else if (eqCache.contains((left, right))) {
@@ -38,7 +38,8 @@ class LazyEquality(rewriter: SymbStateRewriter) {
       tla.eql(right, left) // it is safe to use SMT equality, as we have constructed the constraints
     } else {
       // let's add a bit of German here to indicate that it is really dangerous
-      throw new RewriterException("VORSICHT! SMT equality should be used only after calling cacheEqualities.")
+      val msg = "VORSICHT! SMT equality should be used only after calling cacheEqualities, unless you know what you are doing."
+      throw new RewriterException(msg)
     }
   }
 
@@ -115,12 +116,12 @@ class LazyEquality(rewriter: SymbStateRewriter) {
 
             case (FinSetT(_), FinSetT(_)) =>
               // in general, we need 2 * |X| * |Y| comparisons
-              val (ns1: SymbState, leftSubsetEqRight: TlaEx) = subsetEq(state, left, right)
-              val (ns2: SymbState, rightSubsetEqLeft: TlaEx) = subsetEq(ns1, right, left)
-              val eq = tla.equiv(tla.eql(left, right), tla.and(leftSubsetEqRight, rightSubsetEqLeft))
-              ns2.solverCtx.assertGroundExpr(eq)
+              val leftToRight: SymbState = subsetEq(state, left, right)
+              val rightToLeft: SymbState = subsetEq(leftToRight, right, left)
+              val eq = tla.equiv(tla.eql(left, right), tla.and(leftToRight.ex, rightToLeft.ex))
+              rightToLeft.solverCtx.assertGroundExpr(eq)
               // recover the original expression and theory
-              rewriter.coerce(ns2.setRex(state.ex), state.theory)
+              rewriter.coerce(rightToLeft.setRex(state.ex), state.theory)
 
             case (FunT(_, _), FunT(_, _)) =>
               mkFunEq(state, left, right)
@@ -134,6 +135,53 @@ class LazyEquality(rewriter: SymbStateRewriter) {
         // return the new state
         newState
       }
+    }
+  }
+
+  /**
+    * Check, whether one set is a subset of another set (not a proper one).
+    * This method changed the underlying theory to BoolTheory.
+    *
+    * Since this operation is tightly related to set equality, we moved it here.
+    *
+    * @param state a symbolic state
+    * @param left a left cell that holds a set
+    * @param right a right cell that holds a set
+    * @return a new symbolic state with a (Boolean) predicate equivalent to `left \subseteq right`.
+    */
+  def subsetEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {
+    val leftElems = state.arena.getHas(left)
+    val rightElems = state.arena.getHas(right)
+    if (leftElems.isEmpty) {
+      // SE-SUBSETEQ1
+      state.setRex(tla.bool(true)).setTheory(BoolTheory())
+    } else if (rightElems.isEmpty) {
+      // SE-SUBSETEQ2
+      def notIn(le: ArenaCell) = {
+        tla.not(tla.in(le, left))
+      }
+
+      val pred = tla.name(state.solverCtx.introBoolConst())
+      state.solverCtx.assertGroundExpr(tla.eql(pred, tla.and(leftElems.map(notIn): _*)))
+      state.setRex(pred).setTheory(BoolTheory())
+    } else {
+      // SE-SUBSETEQ3
+      val newState = cacheEqConstraints(state, leftElems cross rightElems) // cache all the equalities
+      def exists(lelem: ArenaCell) = {
+        def inAndEq(relem: ArenaCell) = {
+          tla.and(tla.in(relem, right), tla.eql(lelem, relem))
+        }
+
+        tla.or(rightElems.map(inAndEq): _*)
+      }
+
+      def notInOrExists(lelem: ArenaCell) = {
+        tla.or(tla.not(tla.in(lelem, left)), exists(lelem))
+      }
+
+      val pred = tla.name(newState.solverCtx.introBoolConst())
+      newState.solverCtx.assertGroundExpr(tla.eql(pred, tla.and(leftElems.map(notInOrExists): _*)))
+      newState.setTheory(BoolTheory()).setRex(pred)
     }
   }
 
@@ -171,35 +219,4 @@ class LazyEquality(rewriter: SymbStateRewriter) {
     rewriter.coerce(afterResEq.setRex(state.ex), state.theory)
   }
 
-  private def subsetEq(state: SymbState, left: ArenaCell, right: ArenaCell): (SymbState, TlaEx) = {
-    val leftElems = state.arena.getHas(left)
-    val rightElems = state.arena.getHas(right)
-    if (leftElems.isEmpty) {
-      // SE-SUBSETEQ1
-      (state, tla.bool(true))
-    } else if (rightElems.isEmpty) {
-      // SE-SUBSETEQ2
-      def notIn(le: ArenaCell) = {
-        tla.not(tla.in(le, left))
-      }
-
-      (state, tla.and(leftElems.map(notIn): _*))
-    } else {
-      // SE-SUBSETEQ3
-      val newState = cacheEqConstraints(state, leftElems cross rightElems) // cache all the equalities
-      def exists(lelem: ArenaCell) = {
-        def inAndEq(relem: ArenaCell) = {
-          tla.and(tla.in(relem, right), tla.eql(lelem, relem))
-        }
-
-        tla.or(rightElems.map(inAndEq): _*)
-      }
-
-      def notInOrExists(lelem: ArenaCell) = {
-        tla.or(tla.not(tla.in(lelem, left)), exists(lelem))
-      }
-
-      (newState, tla.and(leftElems.map(notInOrExists): _*))
-    }
-  }
 }
