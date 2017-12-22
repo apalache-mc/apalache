@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.types.BoolT
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
@@ -392,4 +393,70 @@ class TestSymbStateRewriterBool extends RewriterBase {
     }
   }
 
+  test("""SE-EX2: \E x \in {}: TRUE ~~> FALSE""") {
+    val ex = tla.exists(tla.name("x"), tla.enumSet(), tla.bool(true))
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    assert(NameEx(solverContext.falseConst) == nextState.ex)
+  }
+
+  test("""SE-EX3: \E x \in {1, 2, 3}: x = 2 ~~> $B$k""") {
+    val ex = tla.exists(tla.name("x"),
+      tla.enumSet(tla.int(1), tla.int(2), tla.int(3)),
+      tla.eql(tla.int(2), tla.name("x")))
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    assert(solverContext.sat())
+    solverContext.push()
+    solverContext.assertGroundExpr(nextState.ex)
+    assert(solverContext.sat())
+    solverContext.pop()
+    solverContext.assertGroundExpr(tla.not(nextState.ex))
+    assertUnsatOrExplain(nextState)
+  }
+
+  test("""SE-EX3: \E x \in {1, 2, 3}: x > 4 ~~> $B$k""") {
+    val ex = tla.exists(tla.name("x"),
+      tla.enumSet(tla.int(1), tla.int(2), tla.int(3)),
+      tla.gt(tla.name("x"), tla.int(4)))
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    assert(solverContext.sat())
+    solverContext.push()
+    solverContext.assertGroundExpr(nextState.ex)
+    assertUnsatOrExplain(nextState)
+    solverContext.pop()
+    solverContext.assertGroundExpr(tla.not(nextState.ex))
+    assert(solverContext.sat())
+  }
+
+  test("""SE-ALL3: \A x \in {1, 2, 3}: x < 10 ~~> $B$k""") {
+    val ex = tla.forall(tla.name("x"),
+      tla.enumSet(tla.int(1), tla.int(2), tla.int(3)),
+      tla.lt(tla.name("x"), tla.int(10)))
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    assert(solverContext.sat())
+    solverContext.push()
+    solverContext.assertGroundExpr(nextState.ex)
+    assert(solverContext.sat())
+    solverContext.pop()
+    solverContext.assertGroundExpr(tla.not(nextState.ex))
+    assertUnsatOrExplain(nextState)
+  }
+
+  test("""SE-ALL3: \A x \in {1, 2, 3}: x > 2 ~~> $B$k""") {
+    val ex = tla.forall(tla.name("x"),
+      tla.enumSet(tla.int(1), tla.int(2), tla.int(3)),
+      tla.gt(tla.name("x"), tla.int(2)))
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding, solverContext)
+    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    assert(solverContext.sat())
+    solverContext.push()
+    solverContext.assertGroundExpr(nextState.ex)
+    assertUnsatOrExplain(nextState)
+    solverContext.pop()
+    solverContext.assertGroundExpr(tla.not(nextState.ex))
+    assert(solverContext.sat())
+  }
 }

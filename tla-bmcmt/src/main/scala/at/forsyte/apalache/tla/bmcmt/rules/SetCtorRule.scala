@@ -26,22 +26,7 @@ class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
           rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), elems)
         val cells = newEs.map(newState.arena.findCellByNameEx)
         // get the cell types
-        val elemType =
-          cells.map(_.cellType).toSet.toList match {
-            case List() =>
-              UnknownT()
-
-            case hd :: List() =>
-              hd
-
-            case list @ _ =>
-              val unif = list.map(Some(_)).reduce(types.unifyOption)
-              if (unif.nonEmpty)
-                unif.get
-              else
-                throw new RewriterException("No unifier for the elements in a set constructor: " + list.mkString(", "))
-          }
-
+        val elemType = computeElementType(cells)
         val arena = newState.arena.appendCell(FinSetT(elemType))
         val newCell = arena.topCell
         val newArena = cells.foldLeft(arena)((a, e) => a.appendHas(newCell, e))
@@ -56,6 +41,23 @@ class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
       case _ =>
         throw new RewriterException("SetCtorRule is not applicable")
+    }
+  }
+
+  private def computeElementType(cells: Seq[ArenaCell]) = {
+    cells.map(_.cellType).toSet.toList match {
+      case List() =>
+        UnknownT()
+
+      case hd :: List() =>
+        hd
+
+      case list@_ =>
+        val unif = list.map(Some(_)).reduce(types.unifyOption)
+        if (unif.nonEmpty)
+          unif.get
+        else
+          throw new RewriterException("No unifier for the elements in a set constructor: " + list.mkString(", "))
     }
   }
 }

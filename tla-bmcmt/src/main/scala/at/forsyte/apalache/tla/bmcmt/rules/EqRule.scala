@@ -20,6 +20,11 @@ class EqRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   override def apply(state: SymbState): SymbState = state.ex match {
+    case OperEx(TlaOper.eq, NameEx(left), NameEx(right)) if left == right =>
+      // identical constants are obviously equal
+      val finalState = state.setTheory(BoolTheory()).setRex(NameEx(state.solverCtx.trueConst))
+      rewriter.coerce(finalState, state.theory)
+
     case OperEx(TlaOper.eq, le @ NameEx(left), re @ NameEx(right))
         if BoolTheory().hasConst(left) && BoolTheory().hasConst(right)
           || IntTheory().hasConst(left) && IntTheory().hasConst(right)

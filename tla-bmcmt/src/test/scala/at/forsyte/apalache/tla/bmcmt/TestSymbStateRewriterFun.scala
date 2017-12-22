@@ -1,7 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import java.io.{PrintWriter, StringWriter}
-
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, FunT, IntT}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaFunOper, TlaOper, TlaSetOper}
@@ -328,14 +326,7 @@ class TestSymbStateRewriterFun extends RewriterBase {
       case neqEx @ NameEx(name) =>
         assert(BoolTheory().hasConst(name))
         solverContext.assertGroundExpr(neqEx)
-        val isSat = solverContext.sat()
-        if (isSat) {
-          val writer = new StringWriter()
-          new SymbStateDecoder().explainState(cmpState, new PrintWriter(writer))
-          solverContext.log(writer.getBuffer.toString)
-          solverContext.pop()
-          fail("Expected UNSAT")
-        }
+        assertUnsatOrExplain(cmpState)
 
       case _ =>
         fail("Unexpected rewriting result")

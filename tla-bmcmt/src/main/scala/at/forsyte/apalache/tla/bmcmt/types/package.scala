@@ -67,6 +67,9 @@ package object types {
 
               case (None, Some(r)) =>
                 Some(r)
+
+              case _ =>
+                None
             }
           }
           val pairs = leftMap.keySet.union(rightMap.keySet).map(k => (k, unifyKey(k)))

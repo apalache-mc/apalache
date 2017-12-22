@@ -30,6 +30,7 @@ class SymbStateRewriter {
     List(substRule, new BoolConstRule(this), new IntConstRule(this),
       new EqRule(this), new NeqRule(this),
       new OrRule(this), new AndRule(this), new NegRule(this),
+      new LogicQuantRule(this),
       new IfThenElseRule(this),
       new IntCmpRule(this), new IntArithRule(this),
       new SetCtorRule(this), new TupleCtorRule(this),
@@ -121,6 +122,30 @@ class SymbStateRewriter {
         case r :: tail =>
           val (ts: SymbState, nt: List[TlaEx]) = process(st, tail)
           val ns = rewriteUntilDone(new SymbState(r, ts.theory, ts.arena, ts.binding, ts.solverCtx))
+          (ns, ns.ex :: nt)
+      }
+    }
+
+    val pair = process(state, es.toList)
+    (pair._1.setRex(state.ex), pair._2)
+  }
+
+  /**
+    * An extended version of rewriteSeqUntilDone, where expressions are accompanied with bindings.
+    *
+    * @param state a state to start with
+    * @param es    a sequence of expressions to rewrite accompanied with bindings
+    * @return a pair (the old state in a new context, the rewritten expressions)
+    */
+  def rewriteBoundSeqUntilDone(state: SymbState, es: Seq[(Binding, TlaEx)]): (SymbState, Seq[TlaEx]) = {
+    def process(st: SymbState, seq: Seq[(Binding, TlaEx)]): (SymbState, Seq[TlaEx]) = {
+      seq match {
+        case Seq() =>
+          (st, List())
+
+        case p :: tail =>
+          val (ts: SymbState, nt: List[TlaEx]) = process(st, tail)
+          val ns = rewriteUntilDone(new SymbState(p._2, ts.theory, ts.arena, p._1, ts.solverCtx))
           (ns, ns.ex :: nt)
       }
     }
