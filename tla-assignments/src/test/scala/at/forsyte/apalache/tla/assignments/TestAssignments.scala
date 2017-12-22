@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.assignments
 import at.forsyte.apalache.tla.imp._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.plugins.UniqueDB
-
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -165,6 +164,38 @@ class TestAssignments extends FunSuite with TestingPredefs {
 //    symbNexts.foreach( x =>  println( "%s : %s".format( x._1.map( p => (UniqueDB(p).get, p ) ) , x._2 ) ) )
 
   }
+
+  /*
+  TODO: fix IF-THEN-ELSE
+
+  test( "Test Prisoners" ){
+    val file = "PrisonersNoCard.tla"
+
+    UniqueDB.clear()
+    Converter.clear()
+
+    val decls = declarationsFromFile(testFolderPath + file)
+    val vars = Converter.getVars( decls:_*)
+    val nextBody = findBodyOf( "Next", decls:_* )
+
+    assert( ! nextBody.isNull )
+
+    val cleaned = Converter( nextBody, decls:_* )
+    assert( nextBody.ID.valid )
+
+    assert( cleaned.isDefined )
+    assert( cleaned.get.ID.valid )
+
+    val strat = assignmentSolver.getStrategy( vars, cleaned.get )
+
+    assert( strat.isDefined )
+
+    //    println( order.get.size )
+    //      order.get.foreach( x => println( UniqueDB( x ).get ) )
+
+    val symbNexts = assignmentSolver.getSymbNexts( cleaned.get, strat.get )
+  }
+  */
 
   test( "Test dangerous cases" ){
 
