@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.actions._
 import at.forsyte.apalache.tla.lir.control.{LetInOper, _}
 import at.forsyte.apalache.tla.lir.oper._
+import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
 import at.forsyte.apalache.tla.lir.temporal._
 import at.forsyte.apalache.tla.lir.values._
 
@@ -32,6 +33,13 @@ object Builder {
   implicit def bool( p_val : Boolean ) : ValEx = ValEx( TlaBool( p_val ) )
 
   def str( p_val : String ) : ValEx = ValEx( TlaStr( p_val ) )
+
+  /**
+    * The set BOOLEAN.
+    *
+    * @return the value expression that corresponds to BOOLEAN.
+    */
+  def booleanSet(): ValEx = ValEx(TlaBoolSet)
 
   /** Declarations */
 
