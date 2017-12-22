@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
   *
   * @author Igor Konnov
   */
-class LogicQuantRule(rewriter: SymbStateRewriter) extends RewritingRule {
+class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val pickRule = new PickFromAndFunMerge(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
