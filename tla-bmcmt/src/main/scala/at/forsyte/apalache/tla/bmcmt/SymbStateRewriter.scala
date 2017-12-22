@@ -2,7 +2,10 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter._
 import at.forsyte.apalache.tla.bmcmt.rules._
-import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
+import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaIntSet}
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 
 object SymbStateRewriter {
   sealed abstract class RewritingResult
@@ -22,28 +25,112 @@ object SymbStateRewriter {
   */
 class SymbStateRewriter {
   val lazyEq = new LazyEquality(this)
-  // don't try to rewrite the same rule more than RECURSION_LIMIT times
-  private val RECURSION_LIMIT: Int = 1000000
+  // bound the number of rewriting steps applied to the same rule
+  private val RECURSION_LIMIT: Int = 10000
   private val coercion = new Coercion(this)
   private val substRule = new SubstRule(this)
-  private val rules =
-    List(substRule, new BoolConstRule(this), new IntConstRule(this),
-      new EqRule(this), new NeqRule(this),
-      new OrRule(this), new AndRule(this), new NegRule(this),
-      new QuantRule(this),
-      new IfThenElseRule(this),
-      new AssignmentRule(this),
-      new IntCmpRule(this), new IntArithRule(this),
-      new SetCtorRule(this), new TupleCtorRule(this),
-      new SetInRule(this), new SetNotInRule(this),
-      new SetInclusionRule(this),
-      new SetCupRule(this), new SetCapAndMinusRule(this),
-      new SetFilterRule(this), new SetMapAndFunCtorRule(this),
-      new FunAppRule(this), new FunExceptRule(this),
-      new IntDotDotRule(this),
-      new FunSetCtorRule(this),
-      new PowSetCtorRule(this)
-    ) /////////////
+
+  // An nice way to guess the candidate rules by looking at the expression key.
+  // We use simple expressions to generate the keys.
+  // The idea is similar to a hash table, but in contrast to a hash table,
+  // we group similar expressions, since they have to be processed by the same rules.
+  private val ruleLookupTable: Map[String, List[RewritingRule]] = Map(
+    // the order is only important to improve readability
+
+    // substitution
+    key(NameEx("x"))
+      -> List(substRule),
+
+    // constants
+    key(ValEx(TlaBool(true)))
+      -> List(new BoolConstRule(this)),
+    key(ValEx(TlaInt(1)))
+      -> List(new IntConstRule(this)),
+
+    // logic
+    key(tla.eql(tla.name("x"), tla.name("y")))
+      -> List(new EqRule(this)),
+    key(tla.neql(tla.name("x"), tla.name("y")))
+      -> List(new NeqRule(this)),
+    key(tla.or(tla.name("x"), tla.name("y")))
+      -> List(new OrRule(this)),
+    key(tla.and(tla.name("x"), tla.name("y")))
+      -> List(new AndRule(this)),
+    key(tla.not(tla.name("x")))
+      -> List(new NegRule(this)),
+    key(tla.exists(tla.name("x"), tla.name("S"), tla.name("p")))
+      -> List(new QuantRule(this)),
+    key(tla.forall(tla.name("x"), tla.name("S"), tla.name("p")))
+      -> List(new QuantRule(this)),
+
+    // control flow
+    key(tla.ite(tla.name("cond"), tla.name("then"), tla.name("else")))
+      -> List(new IfThenElseRule(this)),
+
+    // sets
+    key(tla.in(tla.name("x"), tla.name("S")))
+      -> List(new AssignmentRule(this), new SetInRule(this)),
+    key(tla.notin(tla.name("x"), tla.name("S")))
+      -> List(new SetNotInRule(this)),
+    key(tla.enumSet(tla.name("x"))) ->
+      List(new SetCtorRule(this)),
+    key(tla.subseteq(tla.name("x"), tla.name("S")))
+      -> List(new SetInclusionRule(this)),
+    key(tla.subset(tla.name("x"), tla.name("S")))
+      -> List(new SetInclusionRule(this)),
+    key(tla.supseteq(tla.name("x"), tla.name("S")))
+      -> List(new SetInclusionRule(this)),
+    key(tla.supset(tla.name("x"), tla.name("S")))
+      -> List(new SetInclusionRule(this)),
+    key(tla.cup(tla.name("X"), tla.name("Y")))
+      -> List(new SetCupRule(this)),
+    key(tla.cap(tla.name("X"), tla.name("Y")))
+      -> List(new SetCapAndMinusRule(this)),
+    key(tla.setminus(tla.name("X"), tla.name("Y")))
+      -> List(new SetCapAndMinusRule(this)),
+    key(tla.filter(tla.name("x"), tla.name("S"), tla.name("p")))
+      -> List(new SetFilterRule(this)),
+    key(tla.map(tla.name("e"), tla.name("x"), tla.name("S")))
+      -> List(new SetMapAndFunCtorRule(this)),
+    key(tla.powSet(tla.name("X")))
+      -> List(new PowSetCtorRule(this)),
+    key(tla.dotdot(tla.int(1), tla.int(10)))
+      -> List(new IntDotDotRule(this)),
+
+    // integers
+    key(tla.lt(tla.int(1), tla.int(2)))
+      -> List(new IntCmpRule(this)),
+    key(tla.le(tla.int(1), tla.int(2)))
+      -> List(new IntCmpRule(this)),
+    key(tla.gt(tla.int(1), tla.int(2)))
+      -> List(new IntCmpRule(this)),
+    key(tla.ge(tla.int(1), tla.int(2)))
+      -> List(new IntCmpRule(this)),
+    key(tla.plus(tla.int(1), tla.int(2)))
+      -> List(new IntArithRule(this)),
+    key(tla.minus(tla.int(1), tla.int(2)))
+      -> List(new IntArithRule(this)),
+    key(tla.mult(tla.int(1), tla.int(2)))
+      -> List(new IntArithRule(this)),
+    key(tla.div(tla.int(1), tla.int(2)))
+      -> List(new IntArithRule(this)),
+    key(tla.mod(tla.int(1), tla.int(2)))
+      -> List(new IntArithRule(this)),
+
+    // functions
+    key(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S")))
+      -> List(new SetMapAndFunCtorRule(this)),
+    key(tla.appFun(tla.name("f"), tla.name("x")))
+      -> List(new FunAppRule(this)),
+    key(tla.except(tla.name("f"), tla.int(1), tla.int(42)))
+      -> List(new FunExceptRule(this)),
+    key(tla.funSet(tla.name("X"), tla.name("Y")))
+      -> List(new FunSetCtorRule(this)),
+
+    // tuples and records
+    key(tla.tuple(tla.name("x"), tla.int(2)))
+    -> List(new TupleCtorRule(this))
+  )///// ADD YOUR RULES ABOVE
 
   def rewriteOnce(state: SymbState): RewritingResult = {
     state.ex match {
@@ -67,11 +154,12 @@ class SymbStateRewriter {
         }
 
       case _ =>
-        // TODO: can we do any better than just a linear search?
-        rules.find(r => r.isApplicable(state)) match {
+        // lookup for a short list of potentially applicable rules
+        val potentialRules = ruleLookupTable.getOrElse(key(state.ex), List())
+
+        potentialRules.find(r => r.isApplicable(state)) match {
           case Some(r) =>
-            r.logOnEntry(state)
-            Continue(r.logOnReturn(r.apply(state)))
+            Continue(r.logOnReturn(r.apply(r.logOnEntry(state))))
 
           case None =>
             NoRule()
@@ -89,7 +177,8 @@ class SymbStateRewriter {
   def rewriteUntilDone(state: SymbState): SymbState = {
     def doRecursive(ncalls: Int, st: SymbState): SymbState = {
       if (ncalls >= RECURSION_LIMIT) {
-        throw new RewriterException("Recursion limit reached. A bug in the rewriting system?")
+        throw new RewriterException("Recursion limit of %d steps is reached. A cycle in the rewriting system?"
+          .format(RECURSION_LIMIT))
       } else {
         rewriteOnce(st) match {
           case Done(nextState) =>
@@ -98,7 +187,6 @@ class SymbStateRewriter {
 
           case Continue(nextState) =>
             // more translation steps are needed
-            // TODO: place a guard on the number of recursive calls
             doRecursive(ncalls + 1, nextState)
 
           case NoRule() =>
@@ -167,5 +255,29 @@ class SymbStateRewriter {
     */
   def coerce(state: SymbState, targetTheory: Theory): SymbState = {
     coercion.coerce(state, targetTheory)
+  }
+
+  /**
+    * Compute a key of a TLA+ expression to quickly decide on a short sequence of rules to try.
+    * @param ex a TLA+ expression
+    * @return a string that gives us an equivalence class for similar operations (see the code)
+    */
+  private def key(ex: TlaEx): String = {
+    ex match {
+      case OperEx(oper, _*) =>
+        "O@" + oper.toString
+
+      case ValEx(TlaInt(_)) | ValEx(TlaIntSet) =>
+        "I@"
+
+      case ValEx(TlaBool(_)) | ValEx(TlaBoolSet) =>
+        "B@"
+
+      case NameEx(_) =>
+        "N@"
+
+      case _ =>
+        "O@"
+    }
   }
 }

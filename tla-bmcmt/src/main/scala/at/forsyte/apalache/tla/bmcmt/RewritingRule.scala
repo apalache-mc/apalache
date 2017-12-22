@@ -8,8 +8,9 @@ trait RewritingRule {
 
   def apply(symbState: SymbState): SymbState
 
-  def logOnEntry(state: SymbState): Unit = {
+  def logOnEntry(state: SymbState): SymbState = {
     state.solverCtx.log("; %s(%s) {".format(getClass.getSimpleName, state.ex))
+    state
   }
 
   def logOnReturn(state: SymbState): SymbState = {
