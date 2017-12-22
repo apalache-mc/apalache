@@ -47,6 +47,15 @@ package object types {
             None
           }
 
+        case (FinFunSetT(leftDom, leftCdm), FinFunSetT(rightDom, rightCdm)) =>
+          val domUnif = leftDom.unify(rightDom)
+          val cdmUnif = leftCdm.unify(rightCdm)
+          if (domUnif.nonEmpty && cdmUnif.nonEmpty) {
+            Some(FinFunSetT(domUnif.get, cdmUnif.get))
+          } else {
+            None
+          }
+
         case (TupleT(leftArgs), TupleT(rightArgs)) =>
           val maxlen = Math.max(leftArgs.length, rightArgs.length)
           val paddedPairs: Seq[(CellT, CellT)] = leftArgs.padTo(maxlen, UnknownT()).zip(rightArgs.padTo(maxlen, UnknownT()))
@@ -152,6 +161,16 @@ package object types {
     * @param resultType result type (not co-domain!)
     */
   case class FunT(domType: CellT, resultType: CellT) extends CellT
+
+  /**
+    * A finite set of functions.
+    *
+    * @param domType the type of the domain (must be a finite set).
+    * @param cdmType the type of the co-domain (must be a finite set).
+    */
+  case class FinFunSetT(domType: CellT, cdmType: CellT) extends CellT {
+    require(domType.isInstanceOf[FinSetT] && cdmType.isInstanceOf[FinSetT])
+  }
 
   /**
     * A tuple type

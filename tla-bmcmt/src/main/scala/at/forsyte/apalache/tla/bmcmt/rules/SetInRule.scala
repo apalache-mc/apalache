@@ -14,10 +14,16 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
   * @author Igor Konnov
   */
 class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  override def isApplicable(symbState: SymbState): Boolean = {
-    symbState.ex match {
-      case OperEx(TlaSetOper.in, _, _) => true
-      case _ => false
+  override def isApplicable(state: SymbState): Boolean = {
+    state.ex match {
+      case OperEx(TlaSetOper.in, NameEx(name), _) =>
+        state.binding.contains(name)
+
+      case OperEx(TlaSetOper.in, _, _) =>
+        true
+
+      case _ =>
+        false
     }
   }
 

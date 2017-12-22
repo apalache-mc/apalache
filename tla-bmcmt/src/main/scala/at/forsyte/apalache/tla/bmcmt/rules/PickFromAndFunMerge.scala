@@ -11,6 +11,8 @@ import at.forsyte.apalache.tla.lir.convenience.tla
   * Importantly, the user picks the type tau somewhat arbitrary, and a new cell is assigned type tau.
   * So, it is up to the user to ensure that the cells in the set have types compatible with tau.
   *
+  * TODO: check for empty sets, statically and dynamically
+  *
   * @author Igor Konnov
   */
 class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
@@ -37,6 +39,9 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
 
       case FinSetT(t@FunT(FinSetT(argt), rest)) =>
         pickFun(t, set, state)
+
+      case FinFunSetT(domt @ FinSetT(_), cdm @ FinSetT(rest)) =>
+        pickFunFromFunSet(FunT(domt, rest), set, state)
 
       case _ =>
         throw new RewriterException("Cannot pick an element from a set of type: " + set.cellType)
@@ -119,7 +124,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
 
   /**
     * Implements SE-PICK-FUN, that is, assume that the picked element is a function.
-    * This is, by far, the most complex case, and the it easily blows up the set of constraints.
+    * This is, by far, the most complex case, and it easily blows up the set of constraints.
     *
     * @param cellType a cell type to assign to the picked cell.
     * @param funSet a set of cells that store functions
@@ -160,6 +165,45 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
     val funSetElems = arena.getHas(funSet)
     val existsFun = tla.or(funSetElems.map(resultEqFun): _*)
     val cons = decorateWithFailure(existsFun, funSet, funSetElems, funCell, arena.cellFailure())
+    state.solverCtx.assertGroundExpr(existsFun)
+    state.setArena(arena).setRex(funCell)
+  }
+
+  /**
+    * Implements SE-PICK-SET-FUN, that is, pick a function from a set [S -> T].
+    * Since we construct [S -> T] symbolically, it is easy to pick a function by imposing the constraints
+    * from S and T.
+    *
+    * @param cellType a cell type to assign to the picked cell.
+    * @param funSet a function set [S -> T]
+    * @param state a symbolic state
+    * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
+    */
+  def pickFunFromFunSet(cellType: CellT, funSet: ArenaCell, state: SymbState): SymbState = {
+    var arena = state.arena
+    val dom = arena.getDom(funSet)
+    val cdm = arena.getCdm(funSet)
+    arena = arena.appendCell(cellType)
+    val funCell = arena.topCell
+    arena = arena.setDom(funCell, dom).setCdm(funCell, cdm)
+    // associate a function constant with the function cell
+    val _ = arena.solverContext.getOrIntroCellFun(funCell)
+    // push the constraints to SMT
+    val cdmElems = arena.getHas(cdm)
+
+    def resultInCdm(domElem: ArenaCell): TlaEx = {
+      def funAppInCdm(cdmElem: ArenaCell): TlaEx = {
+        // cdmElem \in cdm /\ f_new[domElem] = cdmElem
+        tla.and(tla.in(cdmElem, cdm),
+          tla.eql(tla.appFun(funCell, domElem), cdmElem))
+      }
+
+      tla.or(tla.not(tla.in(domElem, dom)) +: cdmElems.map(funAppInCdm): _*)
+    }
+
+    val domElems = arena.getHas(dom)
+    val existsFun = tla.and(domElems.map(resultInCdm): _*)
+    val cons = decorateWithFailure(existsFun, funSet, domElems, funCell, arena.cellFailure())
     state.solverCtx.assertGroundExpr(existsFun)
     state.setArena(arena).setRex(funCell)
   }
