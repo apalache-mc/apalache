@@ -50,7 +50,7 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
 
       case _ =>
-        throw new RewriterException("IfThenElseRule is not applicable")
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
     }
   }
 }

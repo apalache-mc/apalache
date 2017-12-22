@@ -55,6 +55,6 @@ class EqRule(rewriter: SymbStateRewriter) extends RewritingRule {
       rewriter.coerce(finalState, state.theory)
 
     case _ =>
-      throw new RewriterException("EqRule is not applicable")
+      throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
   }
 }

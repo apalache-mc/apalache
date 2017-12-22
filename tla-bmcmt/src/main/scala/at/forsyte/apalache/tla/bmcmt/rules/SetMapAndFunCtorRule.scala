@@ -32,7 +32,7 @@ class SetMapAndFunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriteSetMap(state, mapEx, varName, setEx)
 
       case _ =>
-        throw new RewriterException("SetMapRule is not applicable")
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
     }
   }
 

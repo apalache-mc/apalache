@@ -74,7 +74,7 @@ class NegRule(rewriter: SymbStateRewriter) extends RewritingRule {
         }
 
       case _ =>
-        throw new RewriterException("NegRule is not applicable")
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
     }
   }
 

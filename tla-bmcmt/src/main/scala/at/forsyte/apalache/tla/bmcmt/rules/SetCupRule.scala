@@ -53,7 +53,7 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.coerce(finalState, state.theory) // coerce to the source theory
 
       case _ =>
-        throw new RewriterException("SetCupRule is not applicable")
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
     }
   }
 }

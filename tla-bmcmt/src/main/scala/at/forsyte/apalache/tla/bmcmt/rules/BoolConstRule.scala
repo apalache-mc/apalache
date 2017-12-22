@@ -40,7 +40,7 @@ class BoolConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
         state.setRex(NameEx(state.arena.cellBoolean().toString))
 
       case _ =>
-        throw new RewriterException("LogicConstRule is not applicable")
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
     }
   }
 }

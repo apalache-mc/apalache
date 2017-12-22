@@ -31,7 +31,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriteExistsOrForall(isExists = false, state, boundVar, boundingSetEx, predEx)
 
       case _ =>
-        throw new RewriterException("Rule is not applicable to: " + state.ex)
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
     }
   }
 

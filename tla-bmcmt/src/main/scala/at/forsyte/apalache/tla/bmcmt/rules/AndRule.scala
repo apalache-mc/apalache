@@ -44,7 +44,7 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.coerce(finalState, state.theory) // coerce if needed
 
       case _ =>
-        throw new RewriterException("AndRule is not applicable")
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
     }
   }
 

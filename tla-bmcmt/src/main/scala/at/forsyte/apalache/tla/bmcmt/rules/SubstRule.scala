@@ -25,7 +25,7 @@ class SubstRule(rewriter: SymbStateRewriter) extends RewritingRule {
         state.setRex(NameEx(cell.toString))
 
       case _ =>
-        throw new RewriterException("SubstRule is not applicable")
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
     }
   }
 }
