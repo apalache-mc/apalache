@@ -198,7 +198,7 @@ object UTFPrinter extends Printer {
           case TlaSetOper.cap => mkOpApp( "%%s %s %%s".format( m_cap ), args : _* )
           case TlaSetOper.cup => mkOpApp( "%%s %s %%s".format( m_cup ), args : _* )
           case TlaSetOper.filter => mkOpApp( "{%%s %s %%s: %%s}".format( m_in ), args : _* )
-          case TlaSetOper.funSet => mkOpApp( "%%s %s %%s".format( m_rarrow ), args : _* )
+          case TlaSetOper.funSet => mkOpApp( "[%%s %s %%s]".format( m_rarrow ), args : _* )
           case TlaSetOper.map => "{%s : %s}".format( apply( args.head ), opAppStrPairs( args.tail, pad( m_in ), ", " ) )
           case TlaSetOper.powerset => mkOpApp( "SUBSET %s", args : _* )
           case TlaSetOper.recSet => opAppStrPairs( args, " : ", ", " )
