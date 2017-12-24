@@ -15,6 +15,7 @@ object Converter {
   protected val m_bodyDB               = new BodyDB()
   protected val m_srcDB                = new SourceDB()
 
+  // TODO: Let's make a class instead of a singleton. Then we do not have to clean the contents (Igor)
   def clear() : Unit = {
     m_bodyDB.clear()
     m_srcDB.clear()

@@ -12,7 +12,6 @@ import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.plugins.UniqueDB
 import at.forsyte.apalache.tla.lir.{UID, _}
-
 import com.microsoft.z3._
 
 import scala.collection.immutable.{Map, Set}
@@ -27,6 +26,7 @@ import scala.collection.immutable.{Map, Set}
   *     a. To produce an SMT file or specification for later use, call [[assignmentSolver#makeSpec makeSpec]].
   */
 object assignmentSolver {
+  // TODO: should not be the object called AssignmentSolver by scala conventions? (Igor)
 
   /**
     * Contains various variables and functions that are used internally, but
