@@ -12,7 +12,7 @@ class TestSymbStateRewriterTuple extends RewriterBase {
   test("""SE-TUPLE-CTOR[1-2]: <<1, FALSE, {2}>> ~~> $C$k""") {
     val tuple = TlaFunOper.mkTuple(tla.int(1), tla.bool(false), tla.enumSet(tla.int(2)))
 
-    val state = new SymbState(tuple, CellTheory(), arena, new Binding, solverContext)
+    val state = new SymbState(tuple, CellTheory(), arena, new Binding)
     val nextState = new SymbStateRewriter(solverContext).rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx @ NameEx(name) =>

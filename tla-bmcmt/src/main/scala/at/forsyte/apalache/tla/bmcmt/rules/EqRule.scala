@@ -22,7 +22,7 @@ class EqRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = state.ex match {
     case OperEx(TlaOper.eq, NameEx(left), NameEx(right)) if left == right =>
       // identical constants are obviously equal
-      val finalState = state.setTheory(BoolTheory()).setRex(NameEx(state.solverCtx.trueConst))
+      val finalState = state.setTheory(BoolTheory()).setRex(NameEx(rewriter.solverContext.trueConst))
       rewriter.coerce(finalState, state.theory)
 
     case OperEx(TlaOper.eq, le @ NameEx(left), re @ NameEx(right))
@@ -30,8 +30,8 @@ class EqRule(rewriter: SymbStateRewriter) extends RewritingRule {
           || IntTheory().hasConst(left) && IntTheory().hasConst(right)
         =>
       // Boolean and integer equality are easy
-      val eqPred = state.solverCtx.introBoolConst()
-      state.solverCtx.assertGroundExpr(OperEx(TlaOper.eq, NameEx(eqPred), state.ex))
+      val eqPred = rewriter.solverContext.introBoolConst()
+      rewriter.solverContext.assertGroundExpr(OperEx(TlaOper.eq, NameEx(eqPred), state.ex))
       val finalState = state.setTheory(BoolTheory()).setRex(NameEx(eqPred))
       rewriter.coerce(finalState, state.theory)
 
@@ -42,13 +42,13 @@ class EqRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val leftCell = leftState.arena.findCellByNameEx(leftState.ex)
       val rightState = rewriter.rewriteUntilDone(leftState.setTheory(CellTheory()).setRex(rhs))
       val rightCell = rightState.arena.findCellByNameEx(rightState.ex)
-      val eqPred = rightState.solverCtx.introBoolConst()
+      val eqPred = rewriter.solverContext.introBoolConst()
 
       // produce equality constraints, so that we can use SMT equality
       val eqState = rewriter.lazyEq.cacheOneEqConstraint(rightState, leftCell, rightCell)
       // and now we can use the SMT equality
       val eqCons = tla.equiv(tla.name(eqPred), rewriter.lazyEq.safeEq(leftCell, rightCell))
-      rightState.solverCtx.assertGroundExpr(eqCons)
+      rewriter.solverContext.assertGroundExpr(eqCons)
       val finalState = eqState.setRex(NameEx(eqPred))
           .setTheory(BoolTheory()) // we have introduced a Boolean constant
       // coerce to the previous theory, if needed

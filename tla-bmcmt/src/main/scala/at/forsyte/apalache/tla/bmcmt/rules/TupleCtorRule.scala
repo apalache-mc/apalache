@@ -42,7 +42,7 @@ class TupleCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // add the cells to the co-domain
         arena = cells.foldLeft(arena)((a, e) => a.appendHas(cdm, e))
         def addIn(elemEx: TlaEx): Unit = {
-          stateAfterDomain.solverCtx.assertGroundExpr(tla.in(elemEx, cdm.toNameEx))
+          rewriter.solverContext.assertGroundExpr(tla.in(elemEx, cdm.toNameEx))
         }
         groundElems.foreach(addIn)
         // create the tuple cell
@@ -54,7 +54,7 @@ class TupleCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // connect the values to the indices
         def setVal(indexAndElem: (TlaEx, TlaEx)): Unit = {
           val funapp = tla.appFun(tuple.toNameEx, indexAndElem._1)
-          stateAfterDomain.solverCtx.assertGroundExpr(tla.eql(funapp, indexAndElem._2))
+          rewriter.solverContext.assertGroundExpr(tla.eql(funapp, indexAndElem._2))
         }
         range.zip(groundElems).foreach(setVal)
 

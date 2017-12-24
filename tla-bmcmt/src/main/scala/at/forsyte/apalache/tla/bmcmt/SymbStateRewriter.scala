@@ -177,8 +177,8 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
       case NameEx(name) =>
         if (substRule.isApplicable(state)) {
           // a variable that can be substituted with a cell
-          substRule.logOnEntry(state)
-          Done(substRule.logOnReturn(coerce(substRule.apply(state), state.theory)))
+          substRule.logOnEntry(solverContext, state)
+          Done(substRule.logOnReturn(solverContext, coerce(substRule.apply(state), state.theory)))
         } else {
           // oh-oh
           NoRule()
@@ -190,7 +190,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
 
         potentialRules.find(r => r.isApplicable(state)) match {
           case Some(r) =>
-            Continue(r.logOnReturn(r.apply(r.logOnEntry(state))))
+            Continue(r.logOnReturn(solverContext, r.apply(r.logOnEntry(solverContext, state))))
 
           case None =>
             NoRule()
@@ -244,7 +244,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
 
         case r :: tail =>
           val (ts: SymbState, nt: List[TlaEx]) = process(st, tail)
-          val ns = rewriteUntilDone(new SymbState(r, ts.theory, ts.arena, ts.binding, ts.solverCtx))
+          val ns = rewriteUntilDone(new SymbState(r, ts.theory, ts.arena, ts.binding))
           (ns, ns.ex :: nt)
       }
     }
@@ -268,7 +268,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
 
         case p :: tail =>
           val (ts: SymbState, nt: List[TlaEx]) = process(st, tail)
-          val ns = rewriteUntilDone(new SymbState(p._2, ts.theory, ts.arena, p._1, ts.solverCtx))
+          val ns = rewriteUntilDone(new SymbState(p._2, ts.theory, ts.arena, p._1))
           (ns, ns.ex :: nt)
       }
     }

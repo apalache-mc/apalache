@@ -37,7 +37,7 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
             // it's OK to use the SMT equality, as we are dealing with the basic types here
             val ifCond = tla.and(pred, tla.eql(newCell, thenCell))
             val elseCond = tla.and(tla.not(pred), tla.eql(newCell, elseCell))
-            elseState.solverCtx.assertGroundExpr(tla.or(ifCond, elseCond))
+            rewriter.solverContext.assertGroundExpr(tla.or(ifCond, elseCond))
             val finalState = elseState
                 .setArena(newArena)
                 .setRex(newCell.toNameEx)

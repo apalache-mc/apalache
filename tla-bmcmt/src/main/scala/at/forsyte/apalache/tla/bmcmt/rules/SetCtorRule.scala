@@ -32,7 +32,7 @@ class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val newArena = cells.foldLeft(arena)((a, e) => a.appendHas(newCell, e))
         def addIn(c: ArenaCell): Unit = {
           val inExpr = OperEx(TlaSetOper.in, c.toNameEx, newCell.toNameEx)
-          state.solverCtx.assertGroundExpr(inExpr)
+          rewriter.solverContext.assertGroundExpr(inExpr)
         }
         cells.foreach(addIn)
         val finalState =

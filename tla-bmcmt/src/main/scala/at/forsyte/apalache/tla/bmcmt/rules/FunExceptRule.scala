@@ -116,7 +116,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val eqFailure = tla.eql(funCell, eqState.arena.cellFailure())
 
         // finally, add the constraints in SMT
-        eqState.solverCtx.assertGroundExpr(tla.or(funUpdate))//, tla.and(outsideDom, eqFailure)))
+        rewriter.solverContext.assertGroundExpr(tla.or(funUpdate))//, tla.and(outsideDom, eqFailure)))
 
         val finalState = eqState
           .setArena(arena)

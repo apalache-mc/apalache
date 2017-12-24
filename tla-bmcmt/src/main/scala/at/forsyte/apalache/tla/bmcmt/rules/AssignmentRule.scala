@@ -44,7 +44,7 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val rhsCell = nextState.arena.findCellByNameEx(nextState.ex)
         val finalState = nextState
           .setTheory(BoolTheory())
-          .setRex(NameEx(nextState.solverCtx.trueConst))
+          .setRex(NameEx(rewriter.solverContext.trueConst))
           .setBinding(nextState.binding + (name + "'" -> rhsCell)) // bind the cell to the name
         rewriter.coerce(finalState, state.theory)
 
@@ -60,7 +60,7 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val pickedCell = pickState.arena.findCellByNameEx(pickState.ex)
         val finalState = pickState
           .setTheory(BoolTheory())
-          .setRex(NameEx(pickState.solverCtx.trueConst))
+          .setRex(NameEx(rewriter.solverContext.trueConst))
           .setBinding(pickState.binding + (name + "'" -> pickedCell)) // bind the picked cell to the name
 
         rewriter.coerce(finalState, state.theory)

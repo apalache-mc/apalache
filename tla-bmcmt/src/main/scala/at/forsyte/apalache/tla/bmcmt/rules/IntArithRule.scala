@@ -32,12 +32,12 @@ class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val leftState = rewriter.rewriteUntilDone(state.setTheory(IntTheory()).setRex(left))
       val rightState = rewriter.rewriteUntilDone(state.setTheory(IntTheory()).setRex(right))
       // introduce an integer constant to store the result
-      val intConst = rightState.solverCtx.introIntConst()
+      val intConst = rewriter.solverContext.introIntConst()
       val cons =
         OperEx(TlaOper.eq,
           NameEx(intConst),
           OperEx(oper, leftState.ex, rightState.ex))
-      rightState.solverCtx.assertGroundExpr(cons)
+      rewriter.solverContext.assertGroundExpr(cons)
       val finalState = rightState.setTheory(IntTheory()).setRex(NameEx(intConst))
       rewriter.coerce(finalState, state.theory)
 

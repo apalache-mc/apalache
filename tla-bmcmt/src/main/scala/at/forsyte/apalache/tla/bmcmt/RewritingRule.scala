@@ -8,13 +8,13 @@ trait RewritingRule {
 
   def apply(symbState: SymbState): SymbState
 
-  def logOnEntry(state: SymbState): SymbState = {
-    state.solverCtx.log("; %s(%s) {".format(getClass.getSimpleName, state.ex))
+  def logOnEntry(solverContext: SolverContext, state: SymbState): SymbState = {
+    solverContext.log("; %s(%s) {".format(getClass.getSimpleName, state.ex))
     state
   }
 
-  def logOnReturn(state: SymbState): SymbState = {
-    state.solverCtx.log("; } %s returns %s)".format(getClass.getSimpleName, state.ex))
+  def logOnReturn(solverContext: SolverContext, state: SymbState): SymbState = {
+    solverContext.log("; } %s returns %s)".format(getClass.getSimpleName, state.ex))
     state
   }
 }

@@ -21,7 +21,7 @@ class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   override def apply(state: SymbState): SymbState = {
-    val falseConst = state.solverCtx.falseConst
+    val falseConst = rewriter.solverContext.falseConst
     state.ex match {
       case OperEx(TlaBoolOper.or, args@_*) =>
         // We preprocess the arguments twice: before rewriting them and after rewriting them
@@ -31,11 +31,11 @@ class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
             rewriter.rewriteSeqUntilDone(state.setTheory(BoolTheory()), args)
 
           def mkOr: SymbState = {
-            val newPred = state.solverCtx.introBoolConst()
+            val newPred = rewriter.solverContext.introBoolConst()
             val cons = OperEx(TlaBoolOper.equiv,
               NameEx(newPred),
               OperEx(TlaBoolOper.or, preds: _*))
-            newState.solverCtx.assertGroundExpr(cons)
+            rewriter.solverContext.assertGroundExpr(cons)
             newState.setRex(NameEx(newPred))
           }
 
@@ -60,7 +60,7 @@ class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         case NameEx(name) =>
           (name == state.arena.cellTrue().toString
-            || name == state.solverCtx.trueConst)
+            || name == rewriter.solverContext.trueConst)
 
         case _ =>
           false
@@ -69,12 +69,12 @@ class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
     if (args.isEmpty) {
       // empty disjunction is always false
       state.setTheory(BoolTheory())
-        .setRex(NameEx(state.solverCtx.falseConst))
+        .setRex(NameEx(rewriter.solverContext.falseConst))
 
     } else if (args.exists(isTrue)) {
       // one true makes all true
       state.setTheory(BoolTheory())
-        .setRex(NameEx(state.solverCtx.trueConst))
+        .setRex(NameEx(rewriter.solverContext.trueConst))
     } else {
       // note that defaultFun is called only here and thus does not add constraints in the other branches
       defaultFun

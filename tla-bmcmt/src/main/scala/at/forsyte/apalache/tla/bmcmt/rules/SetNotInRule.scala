@@ -24,10 +24,10 @@ class SetNotInRule(rewriter: SymbStateRewriter) extends RewritingRule {
           state.setTheory(BoolTheory()).setRex(OperEx(TlaSetOper.in, cand, set))
         val nextState = rewriter.rewriteUntilDone(inState)
         val finalState =
-          if (NameEx(state.solverCtx.falseConst) == nextState.ex) {
-            nextState.setRex(NameEx(state.solverCtx.trueConst))
-          } else if (NameEx(state.solverCtx.trueConst) == nextState.ex) {
-            nextState.setRex(NameEx(state.solverCtx.falseConst))
+          if (NameEx(rewriter.solverContext.falseConst) == nextState.ex) {
+            nextState.setRex(NameEx(rewriter.solverContext.trueConst))
+          } else if (NameEx(rewriter.solverContext.trueConst) == nextState.ex) {
+            nextState.setRex(NameEx(rewriter.solverContext.falseConst))
           } else {
             nextState.setRex(OperEx(TlaBoolOper.not, nextState.ex))
           }

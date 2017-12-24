@@ -42,7 +42,7 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
             case (cell: ArenaCell) :: tail =>
               val (ts: SymbState, nt: List[TlaEx]) = process(st, tail)
               val newBinding = ts.binding + (varName -> cell)
-              val cellState = new SymbState(predEx, BoolTheory(), ts.arena, newBinding, ts.solverCtx)
+              val cellState = new SymbState(predEx, BoolTheory(), ts.arena, newBinding)
               // add [cell/x]
               val ns = rewriter.rewriteUntilDone(cellState)
               (ns.setBinding(ts.binding), ns.ex :: nt) // reset binding and add the new expression to the tail
@@ -62,7 +62,7 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
           val inOldSet = OperEx(TlaSetOper.in, cell.toNameEx, setCell.toNameEx)
           val inOldSetAndPred = OperEx(TlaBoolOper.and, pred, inOldSet)
           val ifAndOnlyIf = OperEx(TlaOper.eq, inNewSet, inOldSetAndPred)
-          newState.solverCtx.assertGroundExpr(ifAndOnlyIf)
+          rewriter.solverContext.assertGroundExpr(ifAndOnlyIf)
         }
 
         // add SMT constraints

@@ -56,7 +56,7 @@ class SetMapAndFunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val inNewSet = OperEx(TlaSetOper.in, newCell.toNameEx, newSetCell.toNameEx)
       val inOldSet = OperEx(TlaSetOper.in, oldCell.toNameEx, oldSetCell.toNameEx)
       val ifAndOnlyIf = OperEx(TlaOper.eq, inNewSet, inOldSet)
-      newState.solverCtx.assertGroundExpr(ifAndOnlyIf)
+      rewriter.solverContext.assertGroundExpr(ifAndOnlyIf)
     }
 
     // add SMT constraints
@@ -95,9 +95,9 @@ class SetMapAndFunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val inDomain = tla.in(argCell, domainCell)
       val funEqResult = tla.eql(resultCell, tla.appFun(funCell, argCell)) // this is translated as function application
       val inDomainImpliesResult = tla.impl(inDomain, funEqResult)
-      newState.solverCtx.assertGroundExpr(inDomainImpliesResult)
+      rewriter.solverContext.assertGroundExpr(inDomainImpliesResult)
       // the result unconditionally belongs to the co-domain
-      newState.solverCtx.assertGroundExpr(tla.in(resultCell, codomainCell))
+      rewriter.solverContext.assertGroundExpr(tla.in(resultCell, codomainCell))
     }
 
     // add SMT constraints
@@ -121,7 +121,7 @@ class SetMapAndFunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         case (cell: ArenaCell) :: tail =>
           val (ts: SymbState, nt: List[TlaEx]) = process(st, tail)
           val newBinding = ts.binding + (varName -> cell)
-          val cellState = new SymbState(mapEx, CellTheory(), ts.arena, newBinding, ts.solverCtx)
+          val cellState = new SymbState(mapEx, CellTheory(), ts.arena, newBinding)
           // add [cell/x]
           val ns = rewriter.rewriteUntilDone(cellState)
           (ns.setBinding(ts.binding), ns.ex :: nt) // reset binding and add the new expression in the head

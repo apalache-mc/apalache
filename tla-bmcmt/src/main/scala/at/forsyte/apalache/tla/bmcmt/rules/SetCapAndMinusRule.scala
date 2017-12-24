@@ -120,7 +120,7 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
       tla.equiv(in(elem, capSet),
         and(in(elem, set), or(otherElems.map(existsOther): _*)))
 
-    eqState.solverCtx.assertGroundExpr(cons)
+    rewriter.solverContext.assertGroundExpr(cons)
     eqState
   }
 
@@ -138,7 +138,7 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
       tla.equiv(in(elem, diffSet),
         and(in(elem, set), and(otherElems.map(noOther): _*)))
 
-    eqState.solverCtx.assertGroundExpr(cons)
+    rewriter.solverContext.assertGroundExpr(cons)
     eqState
   }
 }

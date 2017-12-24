@@ -91,17 +91,17 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     if (!elemCell.cellType.comparableWith(elemType)) {
       // SE-SET-IN0: incompatible types => return false
       state.setTheory(BoolTheory())
-        .setRex(NameEx(state.solverCtx.falseConst))
+        .setRex(NameEx(rewriter.solverContext.falseConst))
     } else if (potentialElems.isEmpty) {
       // SE-SET-IN1: the set cell points to no other cell => return false
       state.setTheory(BoolTheory())
-        .setRex(NameEx(state.solverCtx.falseConst))
+        .setRex(NameEx(rewriter.solverContext.falseConst))
     } else {
       val newArena = state.arena
-      val pred = state.solverCtx.introBoolConst()
+      val pred = rewriter.solverContext.introBoolConst()
       if (newArena.isLinkedViaHas(setCell, elemCell)) {
         // SE-SET-IN2: the element cell is already in the arena, just check dynamic membership
-        state.solverCtx.assertGroundExpr(tla.eql(tla.name(pred), tla.in(elemCell, state.ex)))
+        rewriter.solverContext.assertGroundExpr(tla.eql(tla.name(pred), tla.in(elemCell, state.ex)))
         state.setTheory(BoolTheory())
           .setArena(newArena).setRex(NameEx(pred))
       } else {
@@ -114,7 +114,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
         }
 
         val elemsInAndEq = potentialElems.map(inAndEq)
-        eqState.solverCtx.assertGroundExpr(tla.eql(tla.name(pred), tla.or(elemsInAndEq: _*)))
+        rewriter.solverContext.assertGroundExpr(tla.eql(tla.name(pred), tla.or(elemsInAndEq: _*)))
         eqState.setTheory(BoolTheory()).setArena(newArena).setRex(NameEx(pred))
       }
     }

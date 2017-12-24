@@ -12,7 +12,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     val set = tla.enumSet(tla.int(1), tla.int(2))
     val assign = tla.in(tla.prime(tla.name("x")), set)
 
-    val state = new SymbState(assign, CellTheory(), arena, new Binding, solverContext)
+    val state = new SymbState(assign, CellTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     val boundCell =
@@ -47,7 +47,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
                           tla.enumSet(tla.int(2), tla.int(3)))
     val assign = tla.in(tla.prime(tla.name("x")), set)
 
-    val state = new SymbState(assign, CellTheory(), arena, new Binding, solverContext)
+    val state = new SymbState(assign, CellTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     val boundCell =
@@ -94,7 +94,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     val set = tla.enumSet(fun0, fun1)
     val assign = tla.in(tla.prime(tla.name("x")), set)
 
-    val state = new SymbState(assign, CellTheory(), arena, new Binding, solverContext)
+    val state = new SymbState(assign, CellTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     val boundCell =
@@ -141,7 +141,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     val set = tla.funSet(tla.booleanSet(), tla.enumSet(tla.int(0), tla.int(1)))
     val assign = tla.in(tla.prime(tla.name("x")), set)
 
-    val state = new SymbState(assign, CellTheory(), arena, new Binding, solverContext)
+    val state = new SymbState(assign, CellTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     val boundCell =

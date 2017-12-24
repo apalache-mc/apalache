@@ -46,9 +46,9 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // 'exists' over an empty set always returns false, while 'forall' returns true
         val constResult =
           if (isExists)
-            setState.solverCtx.falseConst
+            rewriter.solverContext.falseConst
           else
-            setState.solverCtx.trueConst
+            rewriter.solverContext.trueConst
 
         setState.setTheory(BoolTheory()).setRex(NameEx(constResult))
       } else {
@@ -67,11 +67,12 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule {
         def elemWitnesses(elemAndPred: (ArenaCell, TlaEx)): TlaEx = {
           tla.and(tla.in(elemAndPred._1, set), elemAndPred._2)
         }
+
         def elemSatisfies(elemAndPred: (ArenaCell, TlaEx)): TlaEx = {
           tla.or(tla.not(tla.in(elemAndPred._1, set)), elemAndPred._2)
         }
 
-        val pred = NameEx(predState.solverCtx.introBoolConst())
+        val pred = NameEx(rewriter.solverContext.introBoolConst())
         val iff =
           if (isExists) {
             // \E x \in S: p holds iff nonEmpty /\ \/_i (p[c_i/x] /\ c_i \in set)
@@ -82,7 +83,8 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule {
             val allElem = tla.and(setCells.zip(predEs).map(elemSatisfies): _*)
             tla.equiv(pred, tla.or(empty, allElem))
           }
-        predState.solverCtx.assertGroundExpr(iff)
+
+        rewriter.solverContext.assertGroundExpr(iff)
 
         predState.setRex(pred)
           .setTheory(BoolTheory())
@@ -105,10 +107,10 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val predWitness = predState.ex
 
     // \E x \in S: p holds iff predWitness /\ S /= {}
-    val exPred = NameEx(predState.solverCtx.introBoolConst())
+    val exPred = NameEx(rewriter.solverContext.introBoolConst())
     val notEmpty = tla.or(setCells.map(e => tla.in(e, set)): _*)
     val iff = tla.equiv(exPred, tla.and(predWitness, notEmpty))
-    predState.solverCtx.assertGroundExpr(iff)
+    rewriter.solverContext.assertGroundExpr(iff)
 
     predState.setRex(exPred)
       .setTheory(BoolTheory())

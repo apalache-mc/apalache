@@ -71,14 +71,14 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
     * @return a new symbolic state that contains the constraints for every pair in the sequence
     */
   def cacheEqConstraints(state: SymbState, pairs: Traversable[(ArenaCell, ArenaCell)]): SymbState = {
-    state.solverCtx.log("; [START] Caching equality constraints for a sequence: " + pairs)
+    rewriter.solverContext.log("; [START] Caching equality constraints for a sequence: " + pairs)
 
     def makeOne(state: SymbState, pair: (ArenaCell, ArenaCell)): SymbState = {
       cacheOneEqConstraint(state, pair._1, pair._2)
     }
 
     val result = pairs.foldLeft(state)(makeOne)
-    state.solverCtx.log("; [DONE]  Caching equality constraints")
+    rewriter.solverContext.log("; [DONE]  Caching equality constraints")
     result
   }
 
@@ -96,7 +96,7 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
     if (!left.cellType.comparableWith(right.cellType)) {
       // cells of incomparable types cannot be equal
       if (!eqCache.contains((left, right)) && !eqCache.contains((right, left))) {
-        state.solverCtx.assertGroundExpr(tla.neql(left, right))
+        rewriter.solverContext.assertGroundExpr(tla.neql(left, right))
       }
       state
     } else {
@@ -117,8 +117,8 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
               // compare using two integer constants that will
               // be compared with valInt(left) and valInt(right)
               // TODO: find a more optimal solution?
-              val leftInt = state.solverCtx.introIntConst()
-              val rightInt = state.solverCtx.introIntConst()
+              val leftInt = rewriter.solverContext.introIntConst()
+              val rightInt = rewriter.solverContext.introIntConst()
               // left = right iff leftInt = rightInt
               val cellEqIffIntEq = OperEx(TlaBoolOper.equiv,
                 OperEx(TlaOper.eq, left.toNameEx, right.toNameEx),
@@ -126,9 +126,9 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
               // leftInt = valInt(left) and rightInt = valInt(right)
               val leftIntEqLeftCell = OperEx(TlaOper.eq, NameEx(leftInt), left.toNameEx)
               val rightIntEqRightCell = OperEx(TlaOper.eq, NameEx(rightInt), right.toNameEx)
-              state.solverCtx.assertGroundExpr(leftIntEqLeftCell)
-              state.solverCtx.assertGroundExpr(rightIntEqRightCell)
-              state.solverCtx.assertGroundExpr(cellEqIffIntEq)
+              rewriter.solverContext.assertGroundExpr(leftIntEqLeftCell)
+              rewriter.solverContext.assertGroundExpr(rightIntEqRightCell)
+              rewriter.solverContext.assertGroundExpr(cellEqIffIntEq)
               state
 
             case (FinSetT(_), FinSetT(_)) =>
@@ -136,7 +136,7 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
               val leftToRight: SymbState = subsetEq(state, left, right)
               val rightToLeft: SymbState = subsetEq(leftToRight, right, left)
               val eq = tla.equiv(tla.eql(left, right), tla.and(leftToRight.ex, rightToLeft.ex))
-              rightToLeft.solverCtx.assertGroundExpr(eq)
+              rewriter.solverContext.assertGroundExpr(eq)
               // recover the original expression and theory
               rewriter.coerce(rightToLeft.setRex(state.ex), state.theory)
 
@@ -178,8 +178,8 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
         tla.not(tla.in(le, left))
       }
 
-      val pred = tla.name(state.solverCtx.introBoolConst())
-      state.solverCtx.assertGroundExpr(tla.eql(pred, tla.and(leftElems.map(notIn): _*)))
+      val pred = tla.name(rewriter.solverContext.introBoolConst())
+      rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.and(leftElems.map(notIn): _*)))
       state.setRex(pred).setTheory(BoolTheory())
     } else {
       // SE-SUBSETEQ3
@@ -196,8 +196,8 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
         tla.or(tla.not(tla.in(lelem, left)), exists(lelem))
       }
 
-      val pred = tla.name(newState.solverCtx.introBoolConst())
-      newState.solverCtx.assertGroundExpr(tla.eql(pred, tla.and(leftElems.map(notInOrExists): _*)))
+      val pred = tla.name(rewriter.solverContext.introBoolConst())
+      rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.and(leftElems.map(notInOrExists): _*)))
       newState.setTheory(BoolTheory()).setRex(pred)
     }
   }
@@ -274,7 +274,7 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
     val domElems = state.arena.getHas(leftDom)
     val domainsEqual = tla.eql(leftDom, rightDom)
     val afterResEq = domElems.foldLeft(afterDomEq.setRex(tla.and(domainsEqual)))(eachDomElem)
-    afterResEq.solverCtx.assertGroundExpr(tla.equiv(tla.eql(leftFun, rightFun), afterResEq.ex))
+    rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(leftFun, rightFun), afterResEq.ex))
     // restore the original expression and theory
     rewriter.coerce(afterResEq.setRex(state.ex), state.theory)
   }

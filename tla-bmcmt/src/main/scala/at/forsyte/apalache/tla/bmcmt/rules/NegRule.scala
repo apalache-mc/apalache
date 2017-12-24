@@ -37,7 +37,7 @@ class NegRule(rewriter: SymbStateRewriter) extends RewritingRule {
             && name == state.arena.cellTrue().toString) {
             state.setRex(state.arena.cellFalse().toNameEx)
           } else {
-            val pred = state.solverCtx.introBoolConst()
+            val pred = rewriter.solverContext.introBoolConst()
             val iff =
               if (BoolTheory().hasConst(name)) {
                 // !pred <=> b
@@ -51,7 +51,7 @@ class NegRule(rewriter: SymbStateRewriter) extends RewritingRule {
                 throw new RewriterException("Unexpected theory in NegRule: " + state.theory)
               }
 
-            state.solverCtx.assertGroundExpr(iff)
+            rewriter.solverContext.assertGroundExpr(iff)
             val finalState = state.setRex(NameEx(pred)).setTheory(BoolTheory())
             // coerce back, if needed
             rewriter.coerce(finalState, state.theory)
@@ -66,8 +66,8 @@ class NegRule(rewriter: SymbStateRewriter) extends RewritingRule {
         else {
           // the general case, when no rewriting rule applies
           val newState = rewriter.rewriteUntilDone(state.setRex(ex).setTheory(BoolTheory()))
-          val pred = state.solverCtx.introBoolConst()
-          newState.solverCtx.assertGroundExpr(tla.eql(tla.not(tla.name(pred)), newState.ex))
+          val pred = rewriter.solverContext.introBoolConst()
+          rewriter.solverContext.assertGroundExpr(tla.eql(tla.not(tla.name(pred)), newState.ex))
           val finalState = newState.setRex(tla.name(pred))
           // coerce back, if needed
           rewriter.coerce(finalState, state.theory)

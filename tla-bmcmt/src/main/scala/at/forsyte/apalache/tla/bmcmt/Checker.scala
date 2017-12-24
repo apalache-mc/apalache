@@ -32,7 +32,7 @@ class Checker(checkerInput: CheckerInput, stepsBound: Int) {
   def run(): Outcome.Value = {
     // create initial symbolic states
     def mkInitState(transition: TlaEx) = {
-      new SymbState(transition, BoolTheory(), Arena.create(solverContext), new Binding, solverContext)
+      new SymbState(transition, BoolTheory(), Arena.create(solverContext), new Binding)
     }
 
     // create dummy branching points, just to have the initial states on the stack
@@ -99,7 +99,7 @@ class Checker(checkerInput: CheckerInput, stepsBound: Int) {
         // TODO: explain the counterexample before restoring the SMT context
         // currenly, writing the counterexample in the SMT log
         val writer = new StringWriter()
-        new SymbStateDecoder().explainState(invState, new PrintWriter(writer))
+        new SymbStateDecoder().explainState(solverContext, invState, new PrintWriter(writer))
         solverContext.log(writer.getBuffer.toString)
       }
       rewriter.pop()

@@ -13,7 +13,7 @@ class TestSymbStateRewriterControl extends RewriterBase {
     val e2 = tla.lt(tla.int(5), tla.int(1))
     val ite = tla.ite(pred, e1, e2)
 
-    val state = new SymbState(ite, BoolTheory(), arena, new Binding, solverContext)
+    val state = new SymbState(ite, BoolTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
@@ -37,7 +37,7 @@ class TestSymbStateRewriterControl extends RewriterBase {
     val e2 = tla.lt(tla.int(5), tla.int(1))
     val ite = tla.ite(pred, e1, e2)
 
-    val state = new SymbState(ite, BoolTheory(), arena, new Binding, solverContext)
+    val state = new SymbState(ite, BoolTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
@@ -61,7 +61,7 @@ class TestSymbStateRewriterControl extends RewriterBase {
     val e2 = tla.int(1)
     val ite = tla.ite(pred, e1, e2)
 
-    val state = new SymbState(ite, IntTheory(), arena, new Binding, solverContext)
+    val state = new SymbState(ite, IntTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
@@ -85,7 +85,7 @@ class TestSymbStateRewriterControl extends RewriterBase {
     val e2 = tla.int(1)
     val ite = tla.ite(pred, e1, e2)
 
-    val state = new SymbState(ite, IntTheory(), arena, new Binding, solverContext)
+    val state = new SymbState(ite, IntTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {

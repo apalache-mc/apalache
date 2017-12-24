@@ -15,7 +15,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     arena = arena.appendCell(IntT())
     val rightCell = arena.topCell
     val state = new SymbState(OperEx(TlaOper.eq, leftCell.toNameEx, rightCell.toNameEx),
-      BoolTheory(), arena, new Binding, solverContext)
+      BoolTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
@@ -53,7 +53,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val leftInt = solverContext.introIntConst()
     val rightInt = solverContext.introIntConst()
     val state = new SymbState(OperEx(TlaOper.eq, NameEx(leftInt), NameEx(rightInt)),
-      BoolTheory(), arena, new Binding, solverContext)
+      BoolTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
@@ -91,7 +91,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     arena = arena.appendCell(IntT())
     val rightCell = arena.topCell
     val state = new SymbState(OperEx(TlaArithOper.lt, leftCell.toNameEx, rightCell.toNameEx),
-      BoolTheory(), arena, new Binding, solverContext)
+      BoolTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
@@ -123,7 +123,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     arena = arena.appendCell(IntT())
     val rightCell = arena.topCell
     val state = new SymbState(OperEx(TlaArithOper.le, leftCell.toNameEx, rightCell.toNameEx),
-      BoolTheory(), arena, new Binding, solverContext)
+      BoolTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
@@ -155,7 +155,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     arena = arena.appendCell(IntT())
     val rightCell = arena.topCell
     val state = new SymbState(OperEx(TlaArithOper.gt, leftCell.toNameEx, rightCell.toNameEx),
-      BoolTheory(), arena, new Binding, solverContext)
+      BoolTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
@@ -185,7 +185,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val left = OperEx(TlaArithOper.plus, ValEx(TlaInt(1)), ValEx(TlaInt(5)))
     val right = OperEx(TlaArithOper.minus, ValEx(TlaInt(6)), ValEx(TlaInt(3)))
     val state = new SymbState(OperEx(TlaArithOper.gt, left, right),
-      BoolTheory(), arena, new Binding, solverContext)
+      BoolTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
@@ -211,7 +211,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     arena = arena.appendCell(IntT())
     val rightCell = arena.topCell
     val state = new SymbState(OperEx(TlaArithOper.ge, leftCell.toNameEx, rightCell.toNameEx),
-      BoolTheory(), arena, new Binding, solverContext)
+      BoolTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
@@ -241,7 +241,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val leftInt = solverContext.introIntConst()
     val rightInt = solverContext.introIntConst()
     val state = new SymbState(OperEx(TlaOper.ne, NameEx(leftInt), NameEx(rightInt)),
-      BoolTheory(), arena, new Binding, solverContext)
+      BoolTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
@@ -278,7 +278,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val leftInt = solverContext.introIntConst()
     val rightInt = solverContext.introIntConst()
     val expr = OperEx(TlaArithOper.plus, NameEx(leftInt), NameEx(rightInt))
-    val state = new SymbState(expr, IntTheory(), arena, new Binding, solverContext)
+    val state = new SymbState(expr, IntTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
@@ -306,7 +306,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val leftInt = solverContext.introIntConst()
     val rightInt = solverContext.introIntConst()
     val expr = OperEx(TlaArithOper.minus, NameEx(leftInt), NameEx(rightInt))
-    val state = new SymbState(expr, IntTheory(), arena, new Binding, solverContext)
+    val state = new SymbState(expr, IntTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
@@ -334,7 +334,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val leftInt = solverContext.introIntConst()
     val rightInt = solverContext.introIntConst()
     val expr = OperEx(TlaArithOper.mult, NameEx(leftInt), NameEx(rightInt))
-    val state = new SymbState(expr, IntTheory(), arena, new Binding, solverContext)
+    val state = new SymbState(expr, IntTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
@@ -362,7 +362,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val leftInt = solverContext.introIntConst()
     val rightInt = solverContext.introIntConst()
     val expr = OperEx(TlaArithOper.div, NameEx(leftInt), NameEx(rightInt))
-    val state = new SymbState(expr, IntTheory(), arena, new Binding, solverContext)
+    val state = new SymbState(expr, IntTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
@@ -390,7 +390,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val leftInt = solverContext.introIntConst()
     val rightInt = solverContext.introIntConst()
     val expr = OperEx(TlaArithOper.mod, NameEx(leftInt), NameEx(rightInt))
-    val state = new SymbState(expr, IntTheory(), arena, new Binding, solverContext)
+    val state = new SymbState(expr, IntTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
@@ -421,7 +421,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val range = OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(5)))
     val eqExpected = OperEx(TlaOper.eq, range, expected)
 
-    val state = new SymbState(eqExpected, BoolTheory(), arena, new Binding, solverContext)
+    val state = new SymbState(eqExpected, BoolTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {

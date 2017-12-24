@@ -17,26 +17,25 @@ import scala.collection.immutable.{HashSet, SortedSet}
   */
 class SymbStateDecoder() {
   // a simple decoder that dumps values into a text file, in the future we need better recovery code
-  def explainState(state: SymbState, writer: PrintWriter): Unit = {
-    val solver = state.solverCtx
+  def explainState(solverContext: SolverContext, state: SymbState, writer: PrintWriter): Unit = {
     def decode(cell: ArenaCell): TlaEx = {
       cell.cellType match {
         case BoolT() =>
-          solver.evalGroundExpr(cell.toNameEx)
+          solverContext.evalGroundExpr(cell.toNameEx)
 
         case IntT() =>
-          val intVal = solver.evalGroundExpr(tla.appFun(NameEx("$$intVal"), cell)) // a special hack to get an integer
-          tla.and(solver.evalGroundExpr(cell), tla.eql(cell, intVal))
+          val intVal = solverContext.evalGroundExpr(tla.appFun(NameEx("$$intVal"), cell)) // a special hack to get an integer
+          tla.and(solverContext.evalGroundExpr(cell), tla.eql(cell, intVal))
 
         case FinSetT(_) =>
-          def inSet(e: ArenaCell) = solver.evalGroundExpr(tla.in(e, cell)).identical(tla.bool(true))
+          def inSet(e: ArenaCell) = solverContext.evalGroundExpr(tla.in(e, cell)).identical(tla.bool(true))
           val elems = state.arena.getHas(cell).filter(inSet).map(_.toNameEx)
           tla.enumSet(elems :_*)
 
         case FunT(_, _) =>
           def eachElem(e: TlaEx): TlaEx = {
             val funApp = tla.appFun(cell, e)
-            val result = solver.evalGroundExpr(funApp)
+            val result = solverContext.evalGroundExpr(funApp)
             tla.eql(funApp, result)
           }
           val dom = state.arena.getDom(cell)
@@ -60,9 +59,9 @@ class SymbStateDecoder() {
       writer.println("%s = %s".format(c, decode(c)))
     }
     // compute the equivalence classes for the cells, totally suboptimally
-    // TODO: rewrite, I did not think too at all
+    // TODO: rewrite, I did not think too much at all
     def iseq(c: ArenaCell, d: ArenaCell): Boolean = {
-      solver.evalGroundExpr(tla.eql(c, d)).identical(tla.bool(true))
+      solverContext.evalGroundExpr(tla.eql(c, d)).identical(tla.bool(true))
     }
     def merge(cls: List[HashSet[ArenaCell]], c: ArenaCell, d: ArenaCell): List[HashSet[ArenaCell]] = {
       if (!iseq(c, d) || c == d) {

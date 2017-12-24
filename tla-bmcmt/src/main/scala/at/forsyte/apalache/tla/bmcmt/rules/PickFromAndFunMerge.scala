@@ -72,7 +72,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
 
     val found = tla.or(setCells.map(mkIn): _*)
     val cons = decorateWithFailure(found, set, setCells, resultCell, newArena.cellFailure())
-    eqState.solverCtx.assertGroundExpr(cons)
+    rewriter.solverContext.assertGroundExpr(cons)
     eqState.setArena(newArena).setRex(resultCell)
   }
 
@@ -112,13 +112,13 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
     def inResultIffInAux(elem: ArenaCell): Unit = {
       val inResult = tla.in(elem, resultCell)
       val inAux = tla.in(elem, auxCell)
-      state.solverCtx.assertGroundExpr(tla.equiv(inResult, inAux))
+      rewriter.solverContext.assertGroundExpr(tla.equiv(inResult, inAux))
     }
 
     union.foreach(inResultIffInAux)
     val found = tla.or(elems.map(mkIn): _*)
     val cons = decorateWithFailure(found, set, elems, resultCell, arena.cellFailure())
-    state.solverCtx.assertGroundExpr(cons)
+    rewriter.solverContext.assertGroundExpr(cons)
     state.setArena(arena).setRex(resultCell)
   }
 
@@ -165,7 +165,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
     val funSetElems = arena.getHas(funSet)
     val existsFun = tla.or(funSetElems.map(resultEqFun): _*)
     val cons = decorateWithFailure(existsFun, funSet, funSetElems, funCell, arena.cellFailure())
-    state.solverCtx.assertGroundExpr(existsFun)
+    rewriter.solverContext.assertGroundExpr(existsFun)
     state.setArena(arena).setRex(funCell)
   }
 
@@ -204,7 +204,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
     val domElems = arena.getHas(dom)
     val existsFun = tla.and(domElems.map(resultInCdm): _*)
     val cons = decorateWithFailure(existsFun, funSet, domElems, funCell, arena.cellFailure())
-    state.solverCtx.assertGroundExpr(existsFun)
+    rewriter.solverContext.assertGroundExpr(existsFun)
     state.setArena(arena).setRex(funCell)
   }
 

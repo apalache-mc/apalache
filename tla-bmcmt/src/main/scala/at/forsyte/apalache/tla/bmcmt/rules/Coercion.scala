@@ -50,11 +50,11 @@ class Coercion(val stateRewriter: SymbStateRewriter) {
   private def boolToCell(state: SymbState): SymbState = {
     state.ex match {
       case NameEx(name) if BoolTheory().hasConst(name) =>
-        if (name == state.solverCtx.falseConst) {
+        if (name == stateRewriter.solverContext.falseConst) {
           // $B$0 -> $C$0
           state.setRex(state.arena.cellFalse().toNameEx)
             .setTheory(CellTheory())
-        } else if (name == state.solverCtx.trueConst) {
+        } else if (name == stateRewriter.solverContext.trueConst) {
           // $B$1 -> $C$1
           state.setRex(state.arena.cellTrue().toNameEx)
             .setTheory(CellTheory())
@@ -65,7 +65,7 @@ class Coercion(val stateRewriter: SymbStateRewriter) {
           val equiv = OperEx(TlaBoolOper.equiv,
             NameEx(name),
             OperEx(TlaOper.eq, newCell.toNameEx, newArena.cellTrue().toNameEx))
-          state.solverCtx.assertGroundExpr(equiv)
+          stateRewriter.solverContext.assertGroundExpr(equiv)
           state.setArena(newArena)
             .setRex(newCell.toNameEx)
             .setTheory(CellTheory())
@@ -81,19 +81,19 @@ class Coercion(val stateRewriter: SymbStateRewriter) {
       case NameEx(name) if CellTheory().hasConst(name) =>
         if (name == state.arena.cellFalse().toString) {
           // $C$0 -> $B$0
-          state.setRex(NameEx(state.solverCtx.falseConst))
+          state.setRex(NameEx(stateRewriter.solverContext.falseConst))
             .setTheory(BoolTheory())
         } else if (name == state.arena.cellTrue().toString) {
           // $C$1 -> $B$1
-          state.setRex(NameEx(state.solverCtx.trueConst))
+          state.setRex(NameEx(stateRewriter.solverContext.trueConst))
             .setTheory(BoolTheory())
         } else {
           // general case
-          val pred = state.solverCtx.introBoolConst()
+          val pred = stateRewriter.solverContext.introBoolConst()
           val equiv = OperEx(TlaBoolOper.equiv,
             NameEx(pred),
             OperEx(TlaOper.eq, NameEx(name), state.arena.cellTrue().toNameEx))
-          state.solverCtx.assertGroundExpr(equiv)
+          stateRewriter.solverContext.assertGroundExpr(equiv)
           state.setRex(NameEx(pred))
             .setTheory(BoolTheory())
         }
@@ -109,7 +109,7 @@ class Coercion(val stateRewriter: SymbStateRewriter) {
         val newArena = state.arena.appendCell(IntT())
         val newCell = newArena.topCell
         val equiv = OperEx(TlaOper.eq, NameEx(name), newCell.toNameEx)
-        state.solverCtx.assertGroundExpr(equiv)
+        stateRewriter.solverContext.assertGroundExpr(equiv)
         state.setArena(newArena)
           .setRex(newCell.toNameEx)
           .setTheory(CellTheory())
@@ -122,9 +122,9 @@ class Coercion(val stateRewriter: SymbStateRewriter) {
   private def cellToInt(state: SymbState): SymbState = {
     state.ex match {
       case NameEx(name) if CellTheory().hasConst(name) =>
-        val intConst = state.solverCtx.introIntConst()
+        val intConst = stateRewriter.solverContext.introIntConst()
         val equiv = OperEx(TlaOper.eq, NameEx(name), NameEx(intConst))
-        state.solverCtx.assertGroundExpr(equiv)
+        stateRewriter.solverContext.assertGroundExpr(equiv)
         state.setRex(NameEx(intConst))
           .setTheory(IntTheory())
 

@@ -31,12 +31,12 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val leftState = rewriter.rewriteUntilDone(state.setTheory(IntTheory()).setRex(left))
       val rightState = rewriter.rewriteUntilDone(state.setTheory(IntTheory()).setRex(right))
       // compare integers directly in SMT
-      val eqPred = state.solverCtx.introBoolConst()
+      val eqPred = rewriter.solverContext.introBoolConst()
       val cons =
         OperEx(TlaOper.eq,
           NameEx(eqPred),
           OperEx(oper, leftState.ex, rightState.ex))
-      state.solverCtx.assertGroundExpr(cons)
+      rewriter.solverContext.assertGroundExpr(cons)
       val finalState = state.setTheory(BoolTheory()).setRex(NameEx(eqPred))
       rewriter.coerce(finalState, state.theory)
 

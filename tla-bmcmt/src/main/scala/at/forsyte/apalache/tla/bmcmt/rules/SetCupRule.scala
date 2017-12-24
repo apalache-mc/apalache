@@ -39,7 +39,7 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
           val inRightSet = OperEx(TlaSetOper.in, elemCell.toNameEx, rightSetCell.toNameEx)
           val inLeftOrRight = OperEx(TlaBoolOper.or, inLeftSet, inRightSet)
           val ifAndOnlyIf = OperEx(TlaOper.eq, inCupSet, inLeftOrRight)
-          rightState.solverCtx.assertGroundExpr(ifAndOnlyIf)
+          rewriter.solverContext.assertGroundExpr(ifAndOnlyIf)
         }
 
         // add SMT constraints
