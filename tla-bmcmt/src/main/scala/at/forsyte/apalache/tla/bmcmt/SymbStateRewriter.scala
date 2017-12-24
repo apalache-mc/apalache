@@ -299,6 +299,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
     level += 1
     intValueCache.push()
     lazyEq.push()
+    coercion.push()
     solverContext.push()
   }
 
@@ -311,6 +312,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
     intValueCache.pop()
     lazyEq.pop()
     solverContext.pop()
+    coercion.pop()
     level -= 1
   }
 
@@ -324,6 +326,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
     intValueCache.pop(n)
     lazyEq.pop(n)
     solverContext.pop(n)
+    coercion.pop(n)
     level -= n
   }
 
@@ -334,6 +337,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
     intValueCache.dispose()
     lazyEq.dispose()
     solverContext.dispose()
+    coercion.dispose()
   }
 
   /**
