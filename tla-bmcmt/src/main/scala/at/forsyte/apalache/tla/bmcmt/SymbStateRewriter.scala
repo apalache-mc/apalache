@@ -21,16 +21,33 @@ object SymbStateRewriter {
   * This class rewrites a symbolic state.
   * This is the place where all the action regarding the operational semantics is happening.
   *
+  * This class implements StackableContext by delegating the respective operations to all the internal caches
+  * and the SMT context. Thus, it is a central access point for context operations.
+  *
   * @author Igor Konnov
   */
-class SymbStateRewriter {
+class SymbStateRewriter(val solverContext: SolverContext) extends StackableContext {
+  /**
+    * The difference between the number of pushes and pops so far.
+    */
+  private var level: Int = 0
+
+  /**
+    * The cache for lazy equalities, to avoid generating the same equality constraints many times.
+    */
   val lazyEq = new LazyEquality(this)
+
+  /**
+    * A cache for integer literals.
+    */
+  val intValueCache = new IntValueCache(solverContext)
+
   // bound the number of rewriting steps applied to the same rule
   private val RECURSION_LIMIT: Int = 10000
   private val coercion = new Coercion(this)
   private val substRule = new SubstRule(this)
 
-  // An nice way to guess the candidate rules by looking at the expression key.
+  // A nice way to guess the candidate rules by looking at the expression key.
   // We use simple expressions to generate the keys.
   // The idea is similar to a hash table, but in contrast to a hash table,
   // we group similar expressions, since they have to be processed by the same rules.
@@ -40,6 +57,8 @@ class SymbStateRewriter {
     // substitution
     key(NameEx("x"))
       -> List(substRule),
+    key(tla.prime(NameEx("x")))
+      -> List(new PrimeRule(this)),
 
     // constants
     key(ValEx(TlaBool(true)))
@@ -132,6 +151,18 @@ class SymbStateRewriter {
     -> List(new TupleCtorRule(this))
   )///// ADD YOUR RULES ABOVE
 
+  /**
+    * Get the current context level, that is the difference between the number of pushes and pops made so far.
+    * @return the current level, always non-negative.
+    */
+  def contextLevel: Int = level
+
+
+  /**
+    * Rewrite a symbolic expression by applying at most one rewriting rule.
+    * @param state a symbolic state
+    * @return the new symbolic state obtained by rewriting state
+    */
   def rewriteOnce(state: SymbState): RewritingResult = {
     state.ex match {
       case NameEx(name) if CellTheory().hasConst(name) =>
@@ -255,6 +286,54 @@ class SymbStateRewriter {
     */
   def coerce(state: SymbState, targetTheory: Theory): SymbState = {
     coercion.coerce(state, targetTheory)
+  }
+
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+  /**
+    * Save the current context and push it on the stack for a later recovery with pop.
+    */
+  override def push(): Unit = {
+    level += 1
+    intValueCache.push()
+    lazyEq.push()
+    solverContext.push()
+  }
+
+  /**
+    * Pop the previously saved context. Importantly, pop may be called multiple times and thus it is not sufficient
+    * to save only the latest context.
+    */
+  override def pop(): Unit = {
+    assert(level > 0)
+    intValueCache.pop()
+    lazyEq.pop()
+    solverContext.pop()
+    level -= 1
+  }
+
+  /**
+    * Call pop several times.
+    *
+    * @param n the number of times to call pop
+    */
+  override def pop(n: Int): Unit = {
+    assert(level >= n)
+    intValueCache.pop(n)
+    lazyEq.pop(n)
+    solverContext.pop(n)
+    level -= n
+  }
+
+  /**
+    * Clean the context
+    */
+  override def dispose(): Unit = {
+    intValueCache.dispose()
+    lazyEq.dispose()
+    solverContext.dispose()
   }
 
   /**

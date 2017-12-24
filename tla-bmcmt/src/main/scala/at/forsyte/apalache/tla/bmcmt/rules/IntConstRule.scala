@@ -1,11 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, ValEx}
-
-import scala.collection.mutable
+import at.forsyte.apalache.tla.lir.{NameEx, ValEx}
 
 /**
   * Implements the rule SE-INT-CONST.
@@ -13,8 +10,6 @@ import scala.collection.mutable
   * @author Igor Konnov
   */
 class IntConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  // cache the integer constants that are introduced for integer literals
-  private val cache: mutable.Map[BigInt, String] = new mutable.HashMap()
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -26,16 +21,11 @@ class IntConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case ValEx(TlaInt(n)) =>
-        val intConst =
-          if (cache.contains(n)) {
-            cache(n)
-          } else {
-            // introduce a new constant
-            val intConst = state.solverCtx.introIntConst()
-            state.solverCtx.assertGroundExpr(OperEx(TlaOper.eq, NameEx(intConst), ValEx(TlaInt(n))))
-            cache.put(n, intConst)
-            intConst
-          }
+        if (!n.isValidInt) {
+          throw new RewriterException("BigInt %s does not fit into integer range. Do not know how to translate in SMT"
+            .format(n))
+        }
+        val intConst = rewriter.intValueCache.getOrCreate(n.toInt)
         val finalState =
           state.setTheory(IntTheory()).setRex(NameEx(intConst))
         rewriter.coerce(finalState, state.theory)

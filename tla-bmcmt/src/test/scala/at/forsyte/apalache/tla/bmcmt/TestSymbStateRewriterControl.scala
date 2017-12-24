@@ -14,14 +14,15 @@ class TestSymbStateRewriterControl extends RewriterBase {
     val ite = tla.ite(pred, e1, e2)
 
     val state = new SymbState(ite, BoolTheory(), arena, new Binding, solverContext)
-    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    val rewriter = new SymbStateRewriter(solverContext)
+    val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case res @ NameEx(name) =>
         assert(BoolTheory().hasConst(name))
-        solverContext.push()
+        rewriter.push()
         solverContext.assertGroundExpr(res)
         assert(solverContext.sat())
-        solverContext.pop()
+        rewriter.pop()
         solverContext.assertGroundExpr(tla.not(res))
         assert(!solverContext.sat())
 
@@ -37,14 +38,15 @@ class TestSymbStateRewriterControl extends RewriterBase {
     val ite = tla.ite(pred, e1, e2)
 
     val state = new SymbState(ite, BoolTheory(), arena, new Binding, solverContext)
-    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    val rewriter = new SymbStateRewriter(solverContext)
+    val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case res @ NameEx(name) =>
         assert(BoolTheory().hasConst(name))
-        solverContext.push()
+        rewriter.push()
         solverContext.assertGroundExpr(tla.not(res))
         assert(solverContext.sat())
-        solverContext.pop()
+        rewriter.pop()
         solverContext.assertGroundExpr(res)
         assert(!solverContext.sat())
 
@@ -60,14 +62,15 @@ class TestSymbStateRewriterControl extends RewriterBase {
     val ite = tla.ite(pred, e1, e2)
 
     val state = new SymbState(ite, IntTheory(), arena, new Binding, solverContext)
-    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    val rewriter = new SymbStateRewriter(solverContext)
+    val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case res @ NameEx(name) =>
         assert(IntTheory().hasConst(name))
-        solverContext.push()
+        rewriter.push()
         solverContext.assertGroundExpr(tla.eql(tla.int(4), res))
         assert(solverContext.sat())
-        solverContext.pop()
+        rewriter.pop()
         solverContext.assertGroundExpr(tla.eql(tla.int(1), res))
         assert(!solverContext.sat())
 
@@ -83,14 +86,15 @@ class TestSymbStateRewriterControl extends RewriterBase {
     val ite = tla.ite(pred, e1, e2)
 
     val state = new SymbState(ite, IntTheory(), arena, new Binding, solverContext)
-    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    val rewriter = new SymbStateRewriter(solverContext)
+    val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case res @ NameEx(name) =>
         assert(IntTheory().hasConst(name))
-        solverContext.push()
+        rewriter.push()
         solverContext.assertGroundExpr(tla.eql(tla.int(1), res))
         assert(solverContext.sat())
-        solverContext.pop()
+        rewriter.pop()
         solverContext.assertGroundExpr(tla.eql(tla.int(4), res))
         assert(!solverContext.sat())
 

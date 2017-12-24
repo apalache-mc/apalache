@@ -13,9 +13,24 @@ import scala.collection.mutable
   *
   * @author Igor Konnov
   */
-class LazyEquality(rewriter: SymbStateRewriter) {
-  // store in cache, whether a pair of cells has been compared before
-  private var eqCache: mutable.HashSet[(ArenaCell, ArenaCell)] = new mutable.HashSet[(ArenaCell, ArenaCell)]()
+class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
+  /**
+    * The current context level, see StackableContext.
+    */
+  private var level: Int = 0
+
+  /**
+    * A set of pairs, for which the equality constraints have been generated in SMT.
+    * This set can be partially cleaned up, when the pop method is called.
+    */
+  private var eqCache: mutable.Set[(ArenaCell, ArenaCell)] = new mutable.HashSet[(ArenaCell, ArenaCell)]()
+
+  /**
+    * For each level i, maintain the list of entries that were introduced level i, so we can easily remove
+    * the entries for the level i by iterating over the list in levelEntries[i].
+    * Here, we use a list, the head stores the entries that have been introduced at the current level.
+    */
+  private var entriesPerLevel: List[List[(ArenaCell, ArenaCell)]] = List(List())
 
   /**
     * This method ensure that a pair of its arguments can be safely compared by the SMT equality,
@@ -57,6 +72,7 @@ class LazyEquality(rewriter: SymbStateRewriter) {
     */
   def cacheEqConstraints(state: SymbState, pairs: Traversable[(ArenaCell, ArenaCell)]): SymbState = {
     state.solverCtx.log("; [START] Caching equality constraints for a sequence: " + pairs)
+
     def makeOne(state: SymbState, pair: (ArenaCell, ArenaCell)): SymbState = {
       cacheOneEqConstraint(state, pair._1, pair._2)
     }
@@ -87,7 +103,8 @@ class LazyEquality(rewriter: SymbStateRewriter) {
       if (eqCache.contains((left, right)) || eqCache.contains((right, left))) {
         // the constraints are already in the cache, we can just write down an SMT equality
         OperEx(TlaOper.eq, left.toNameEx, right.toNameEx)
-        eqCache.add((left, right))
+        eqCache.add((left, right)) // remember that we have generated the equality constraints
+        entriesPerLevel = ((left, right) +: entriesPerLevel.head) +: entriesPerLevel.tail // add entry on the head
         state
       } else {
         // generate constraints
@@ -130,8 +147,8 @@ class LazyEquality(rewriter: SymbStateRewriter) {
               throw new CheckerException("Unexpected equality test")
           }
 
-        // cache that we have built the constraints
-        eqCache.add((left, right))
+        eqCache.add((left, right)) // remember that we have generated the equality constraints
+        entriesPerLevel = ((left, right) +: entriesPerLevel.head) +: entriesPerLevel.tail // add entry on the head
         // return the new state
         newState
       }
@@ -145,7 +162,7 @@ class LazyEquality(rewriter: SymbStateRewriter) {
     * Since this operation is tightly related to set equality, we moved it here.
     *
     * @param state a symbolic state
-    * @param left a left cell that holds a set
+    * @param left  a left cell that holds a set
     * @param right a right cell that holds a set
     * @return a new symbolic state with a (Boolean) predicate equivalent to `left \subseteq right`.
     */
@@ -184,6 +201,49 @@ class LazyEquality(rewriter: SymbStateRewriter) {
       newState.setTheory(BoolTheory()).setRex(pred)
     }
   }
+
+
+  /**
+    * Save the current context and push it on the stack for a later recovery with pop.
+    */
+  override def push(): Unit = {
+    level += 1
+    entriesPerLevel = List() +: entriesPerLevel // one more level
+  }
+
+  /**
+    * Pop the previously saved context. Importantly, pop may be called multiple times and thus it is not sufficient
+    * to save only the latest context.
+    */
+  override def pop(): Unit = {
+    assert(level > 0)
+    for (entry <- entriesPerLevel.head) {
+      eqCache.remove(entry)
+    }
+    entriesPerLevel = entriesPerLevel.tail
+    level -= 1
+  }
+
+  /**
+    * Pop the context as many times as needed to reach a given level.
+    *
+    * @param n the number of times to call pop
+    */
+  override def pop(n: Int): Unit = {
+    for (_ <- 1.to(n)) {
+      pop()
+    }
+  }
+
+  /**
+    * Clean the context.
+    */
+  override def dispose(): Unit = {
+    eqCache.clear()
+    entriesPerLevel = List(List())
+    level = 0
+  }
+
 
   // function comparison: SE-FUN-EQ4
   private def mkFunEq(state: SymbState, leftFun: ArenaCell, rightFun: ArenaCell): SymbState = {

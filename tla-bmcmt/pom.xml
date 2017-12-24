@@ -25,6 +25,11 @@
             <artifactId>tla-import</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>at.forsyte.apalache</groupId>
+            <artifactId>tla-assignments</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- parent's dependencies -->
         <dependency>

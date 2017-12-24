@@ -13,7 +13,7 @@ class TestSymbStateRewriterTuple extends RewriterBase {
     val tuple = TlaFunOper.mkTuple(tla.int(1), tla.bool(false), tla.enumSet(tla.int(2)))
 
     val state = new SymbState(tuple, CellTheory(), arena, new Binding, solverContext)
-    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    val nextState = new SymbStateRewriter(solverContext).rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx @ NameEx(name) =>
         assert(CellTheory().hasConst(name))

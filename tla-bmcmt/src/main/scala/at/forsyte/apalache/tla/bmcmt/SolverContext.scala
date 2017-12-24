@@ -7,33 +7,7 @@ import at.forsyte.apalache.tla.lir.TlaEx
   *
   * @author Igor Konnov
   */
-trait SolverContext {
-  /**
-    * The number of SMT pushes made so far.
-    */
-  def level: Int
-
-  /**
-    * Dispose whatever has to be disposed in the end.
-    */
-  def dispose()
-
-  /**
-    * Push SMT context
-    */
-  def push(): Unit
-
-  /**
-    * Pop SMT context
-    */
-  def pop(): Unit
-
-  /**
-    * Pop back the SMT context until a given level is reached
-    * @param level a level to rollback to
-    */
-  def popTo(level: Int)
-
+trait SolverContext extends StackableContext {
   /**
     * Declare a constant for an arena cell.
     *
@@ -84,7 +58,6 @@ trait SolverContext {
     * @param message message text
     */
   def log(message: String): Unit
-
 
   /**
     * Is the current context satisfiable?

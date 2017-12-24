@@ -32,6 +32,18 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
+      // a common pattern x \in {y} that is equivalent to x = y, e.g., the assignment solver creates it
+      case OperEx(TlaSetOper.in, NameEx(name), OperEx(TlaSetOper.enumSet, rhs)) =>
+        val nextState = rewriter.rewriteUntilDone(state.setRex(rhs).setTheory(CellTheory()))
+        val rhsCell = nextState.arena.findCellByNameEx(nextState.ex)
+        val lhsCell = state.binding(name)
+        rewriter.lazyEq.cacheOneEqConstraint(nextState, lhsCell, rhsCell)
+        val finalState = nextState
+          .setTheory(BoolTheory())
+          .setRex(rewriter.lazyEq.safeEq(lhsCell, rhsCell))
+          .setBinding(nextState.binding + (name -> rhsCell)) // bind the cell to the name
+        rewriter.coerce(finalState, state.theory)
+
       case OperEx(TlaSetOper.in, elem, set) =>
         // TODO: here we could benefit from the type inference phase
         // switch to cell theory

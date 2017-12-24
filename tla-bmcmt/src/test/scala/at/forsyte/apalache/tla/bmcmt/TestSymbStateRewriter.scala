@@ -12,7 +12,7 @@ class TestSymbStateRewriter extends RewriterBase {
   test("SE-BOX-BOOL1: $B$_i ~~> $C$_j") {
     val pred = solverContext.introBoolConst()
     val state = new SymbState(NameEx(pred), BoolTheory(), arena, new Binding, solverContext)
-    val nextState = new SymbStateRewriter().coerce(state, CellTheory())
+    val nextState = new SymbStateRewriter(solverContext).coerce(state, CellTheory())
     nextState.ex match {
       case NameEx(name) =>
         assert(CellTheory().hasConst(name))
@@ -30,7 +30,7 @@ class TestSymbStateRewriter extends RewriterBase {
   test("SE-BOX-BOOL1: $B$_0 ~~> $C$_0") {
     val state = new SymbState(NameEx(solverContext.falseConst),
       BoolTheory(), arena, new Binding, solverContext)
-    val nextState = new SymbStateRewriter().coerce(state, CellTheory())
+    val nextState = new SymbStateRewriter(solverContext).coerce(state, CellTheory())
     nextState.ex match {
       case NameEx(name) =>
         assert(CellTheory().hasConst(name))
@@ -45,7 +45,7 @@ class TestSymbStateRewriter extends RewriterBase {
   test("SE-BOX-BOOL1: $B$_1 ~~> $C$_1") {
     val state = new SymbState(NameEx(solverContext.trueConst),
       BoolTheory(), arena, new Binding, solverContext)
-    val nextState = new SymbStateRewriter().coerce(state, CellTheory())
+    val nextState = new SymbStateRewriter(solverContext).coerce(state, CellTheory())
     nextState.ex match {
       case NameEx(name) =>
         assert(CellTheory().hasConst(name))
@@ -61,7 +61,7 @@ class TestSymbStateRewriter extends RewriterBase {
     arena = arena.appendCell(BoolT())
     val newCell = arena.topCell
     val state = new SymbState(newCell.toNameEx, CellTheory(), arena, new Binding, solverContext)
-    val nextState = new SymbStateRewriter().coerce(state, BoolTheory())
+    val nextState = new SymbStateRewriter(solverContext).coerce(state, BoolTheory())
     nextState.ex match {
       case NameEx(name) =>
         assert(BoolTheory().hasConst(name))
@@ -79,7 +79,7 @@ class TestSymbStateRewriter extends RewriterBase {
   test("SE-UNBOX-BOOL1: $C$_0 ~~> $B$_0") {
     val state = new SymbState(arena.cellFalse().toNameEx,
       CellTheory(), arena, new Binding, solverContext)
-    val nextState = new SymbStateRewriter().coerce(state, BoolTheory())
+    val nextState = new SymbStateRewriter(solverContext).coerce(state, BoolTheory())
     nextState.ex match {
       case NameEx(name) =>
         assert(BoolTheory().hasConst(name))
@@ -94,7 +94,7 @@ class TestSymbStateRewriter extends RewriterBase {
   test("SE-UNBOX-BOOL1: $C$_1 ~~> $B$_1") {
     val state = new SymbState(arena.cellTrue().toNameEx,
       CellTheory(), arena, new Binding, solverContext)
-    val nextState = new SymbStateRewriter().coerce(state, BoolTheory())
+    val nextState = new SymbStateRewriter(solverContext).coerce(state, BoolTheory())
     nextState.ex match {
       case NameEx(name) =>
         assert(BoolTheory().hasConst(name))
@@ -109,17 +109,18 @@ class TestSymbStateRewriter extends RewriterBase {
   test("SE-BOX-INT1: $Z$_i ~~> $C$_j") {
     val intConst = solverContext.introIntConst()
     val state = new SymbState(NameEx(intConst), IntTheory(), arena, new Binding, solverContext)
-    val nextState = new SymbStateRewriter().coerce(state, CellTheory())
+    val rewriter = new SymbStateRewriter(solverContext)
+    val nextState = rewriter.coerce(state, CellTheory())
     nextState.ex match {
       case NameEx(name) =>
         assert(CellTheory().hasConst(name))
         assert(CellTheory() == nextState.theory)
         assert(solverContext.sat())
         solverContext.assertGroundExpr(OperEx(TlaOper.eq, nextState.ex, ValEx(TlaInt(42))))
-        solverContext.push()
+        rewriter.push()
         solverContext.assertGroundExpr(OperEx(TlaOper.eq, NameEx(intConst), ValEx(TlaInt(42))))
         assert(solverContext.sat())
-        solverContext.pop()
+        rewriter.pop()
         solverContext.assertGroundExpr(OperEx(TlaOper.eq, NameEx(intConst), ValEx(TlaInt(41))))
         assert(!solverContext.sat())
 
@@ -132,17 +133,18 @@ class TestSymbStateRewriter extends RewriterBase {
     arena = arena.appendCell(IntT())
     val newCell = arena.topCell
     val state = new SymbState(newCell.toNameEx, CellTheory(), arena, new Binding, solverContext)
-    val nextState = new SymbStateRewriter().coerce(state, IntTheory())
+    val rewriter = new SymbStateRewriter(solverContext)
+    val nextState = rewriter.coerce(state, IntTheory())
     nextState.ex match {
       case NameEx(name) =>
         assert(IntTheory().hasConst(name))
         assert(IntTheory() == nextState.theory)
         assert(solverContext.sat())
         solverContext.assertGroundExpr(OperEx(TlaOper.eq, nextState.ex, ValEx(TlaInt(42))))
-        solverContext.push()
+        rewriter.push()
         solverContext.assertGroundExpr(OperEx(TlaOper.eq, newCell.toNameEx, ValEx(TlaInt(42))))
         assert(solverContext.sat())
-        solverContext.pop()
+        rewriter.pop()
         solverContext.assertGroundExpr(OperEx(TlaOper.eq, newCell.toNameEx, ValEx(TlaInt(41))))
         assert(!solverContext.sat())
 
@@ -156,7 +158,7 @@ class TestSymbStateRewriter extends RewriterBase {
     val cell = newArena.topCell
     val binding = new Binding() + ("x" -> cell)
     val state = new SymbState(NameEx("x"), CellTheory(), arena, binding, solverContext)
-    new SymbStateRewriter().rewriteOnce(state) match {
+    new SymbStateRewriter(solverContext).rewriteOnce(state) match {
       case SymbStateRewriter.Done(nextState) =>
         val expected = NameEx("$C$%d".format(cell.id))
         assert(expected == nextState.ex)

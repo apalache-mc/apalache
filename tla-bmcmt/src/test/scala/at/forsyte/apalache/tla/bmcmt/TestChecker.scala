@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.imp.SanyImporter
-import at.forsyte.apalache.tla.lir.{TlaModule, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule, TlaOperDecl}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -10,80 +11,112 @@ import scala.io.Source
 
 @RunWith(classOf[JUnitRunner])
 class TestChecker extends FunSuite {
-  test("Init is FALSE") {
-    // prepare the input
-    val text =
-      """---- MODULE boolconst ----
-        |Init == FALSE
-        |Next == TRUE
-        |================================
-      """.stripMargin
-
-    val (mod: TlaModule, init: TlaOperDecl, next: TlaOperDecl) = importTla("boolconst", text)
+  test("Init, OK") {
+    // x' \in {2}
+    val initTrans = List(mkAssign("x", 2))
+    val nextTrans = List(mkAssign("x", 2))
+    val checkerInput = new CheckerInput(initTrans, nextTrans, None)
     // initialize the model checker
-    val checker = new Checker(mod, init, next)
-    // check for 10 steps
-    val outcome = checker.check(1)
+    val checker = new Checker(checkerInput, 0)
+    val outcome = checker.run()
+    assert(Checker.Outcome.NoError == outcome)
+  }
+
+  test("Init, deadlock") {
+    // x' \in {2} /\ x' \in {1}
+    val initTrans = List(tla.and(mkAssign("x", 2), mkAssign("x", 1)))
+    val nextTrans = List(mkAssign("x", 2))
+    val checkerInput = new CheckerInput(initTrans, nextTrans, None)
+    // initialize the model checker
+    val checker = new Checker(checkerInput, 0)
+    val outcome = checker.run()
     assert(Checker.Outcome.Deadlock == outcome)
   }
 
-  test("Init is TRUE") {
-    // prepare the input
-    val text =
-      """---- MODULE boolconst ----
-        |Init == TRUE
-        |Next == TRUE
-        |================================
-      """.stripMargin
-
-    val (mod: TlaModule, init: TlaOperDecl, next: TlaOperDecl) = importTla("boolconst", text)
+  test("Init, 2 options, OK") {
+    // x' \in {2} /\ x' \in {1}
+    val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
+    val nextTrans = List(mkAssign("x", 2))
+    val checkerInput = new CheckerInput(initTrans, nextTrans, None)
     // initialize the model checker
-    val checker = new Checker(mod, init, next)
-    // check for 10 steps
-    val outcome = checker.check(1)
+    val checker = new Checker(checkerInput, 0)
+    val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
   }
 
-  test("Init is TRUE or FALSE") {
-    // prepare the input
-    val text =
-      """---- MODULE boolconst ----
-        |Init == TRUE \/ FALSE
-        |Next == TRUE
-        |================================
-      """.stripMargin
-
-    val (mod: TlaModule, init: TlaOperDecl, next: TlaOperDecl) = importTla("boolconst", text)
+  test("Init + Next, 1 step, OK") {
+    // x' \in {2} /\ x' \in {1}
+    val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
+    // x' \in {x + 1}
+    val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
+    val checkerInput = new CheckerInput(initTrans, nextTrans, None)
     // initialize the model checker
-    val checker = new Checker(mod, init, next)
-    // check for 10 steps
-    val outcome = checker.check(1)
+    val checker = new Checker(checkerInput, 1)
+    val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
   }
 
-  test("Init is TRUE and TRUE") {
-    // prepare the input
-    val text =
-      """---- MODULE boolconst ----
-        |Init == TRUE /\ TRUE
-        |Next == TRUE
-        |================================
-      """.stripMargin
-
-    val (mod: TlaModule, init: TlaOperDecl, next: TlaOperDecl) = importTla("boolconst", text)
+  test("Init + Next, 1 step, deadlock") {
+    // x' \in {2} /\ x' \in {1}
+    val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
+    // x > 3 /\ x' \in {x + 1}
+    val nextTrans = List(
+      tla.and(tla.gt(tla.name("x"), tla.int(3)),
+        mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))))
+    val checkerInput = new CheckerInput(initTrans, nextTrans, None)
     // initialize the model checker
-    val checker = new Checker(mod, init, next)
-    // check for 10 steps
-    val outcome = checker.check(1)
+    val checker = new Checker(checkerInput, 1)
+    val outcome = checker.run()
+    assert(Checker.Outcome.Deadlock == outcome)
+  }
+
+  test("Init + Next, 10 steps, OK") {
+    // x' \in {2} /\ x' \in {1}
+    val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
+    // x' \in {x + 1}
+    val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
+    val checkerInput = new CheckerInput(initTrans, nextTrans, None)
+    // initialize the model checker
+    val checker = new Checker(checkerInput, 10)
+    val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
   }
+
+  test("Init + Next, 10 steps, deadlock") {
+    // x' \in {2} /\ x' \in {1}
+    val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
+    // x < 10 /\ x' \in {x + 1}
+    val nextTrans = List(
+      tla.and(tla.lt(tla.name("x"), tla.int(10)),
+        mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))))
+    val checkerInput = new CheckerInput(initTrans, nextTrans, None)
+    // initialize the model checker
+    val checker = new Checker(checkerInput, 10)
+    val outcome = checker.run()
+    assert(Checker.Outcome.Deadlock == outcome)
+  }
+
+  test("Init + Next + Inv, 10 steps, OK") {
+    // x' \in {2} /\ x' \in {1}
+    val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
+    // x' \in {x + 1}
+    val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
+    // x < 100
+    val inv = tla.lt(tla.name("x"), tla.int(100))
+    val checkerInput = new CheckerInput(initTrans, nextTrans, Some(inv))
+    // initialize the model checker
+    val checker = new Checker(checkerInput, 10)
+    val outcome = checker.run()
+    assert(Checker.Outcome.NoError == outcome)
+  }
+
 
   ////////////////////////////////////////////////////////////////////
   private def importTla(name: String, text: String) = {
     val (rootName, modules) = new SanyImporter().loadFromSource(name, Source.fromString(text))
     val mod = expectSingleModule(name, rootName, modules)
-    val init = expectOperatorDeclaration("Init", 0, mod)
-    val next = expectOperatorDeclaration("Next", 1, mod)
+    val init = mod.declarations.find(_.name == "Init").get
+    val next = mod.declarations.find(_.name == "Next").get
     (mod, init, next)
   }
 
@@ -101,7 +134,7 @@ class TestChecker extends FunSuite {
   // copied from TestSanyImporter
   private def expectSingleModule(expectedRootName: String, rootName: String, modules: Map[String, TlaModule]): TlaModule = {
     assert(expectedRootName == rootName)
-    assert(1 == modules.size)
+    assert(1 <= modules.size)
     val root = modules.get(rootName)
     root match {
       case Some(mod) =>
@@ -112,4 +145,9 @@ class TestChecker extends FunSuite {
     }
   }
 
+  private def mkAssign(name: String, value: Int) =
+    tla.in(tla.prime(tla.name(name)), tla.enumSet(tla.int(value)))
+
+  private def mkAssign(name: String, rhs: TlaEx) =
+    tla.in(tla.prime(tla.name(name)), tla.enumSet(rhs))
 }

@@ -1,9 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import java.io.{PrintWriter, StringWriter}
+
 import at.forsyte.apalache.tla.bmcmt.Checker.Outcome
-import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter._
-import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaModule, TlaOperDecl}
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.convenience.tla
 
 object Checker {
 
@@ -18,79 +19,110 @@ object Checker {
   *
   * @author Igor Konnov
   */
-class Checker(mod: TlaModule, initOp: TlaOperDecl, nextOp: TlaOperDecl) {
+class Checker(checkerInput: CheckerInput, stepsBound: Int) {
   private var stack: List[Branchpoint] = List()
-  private val rewriter = new SymbStateRewriter()
+  private val solverContext: SolverContext = new Z3SolverContext
+  private val rewriter = new SymbStateRewriter(solverContext)
 
   /**
     * Check all executions of a TLA+ specification up to a bounded number of steps.
     *
-    * @param numSteps a bound on the number of steps to explore
     * @return a verification outcome
     */
-  def check(numSteps: Int): Outcome.Value = {
-    val solverContext = new Z3SolverContext
-    val initState = new SymbState(initOp.body, CellTheory(),
-      Arena.create(solverContext), new Binding, solverContext)
-    // create a dummy branching point, just to have the initial state on the stack
-    stack = List(new Branchpoint(initState, 1, initState.solverCtx.level))
-    // TODO: use Next, currently we use only Init
-    bigStep()
+  def run(): Outcome.Value = {
+    // create initial symbolic states
+    def mkInitState(transition: TlaEx) = {
+      new SymbState(transition, BoolTheory(), Arena.create(solverContext), new Binding, solverContext)
+    }
+
+    // create dummy branching points, just to have the initial states on the stack
+    def toBranchpoint(state: SymbState): Branchpoint = new Branchpoint(state, 0, rewriter.contextLevel)
+
+    stack = List(checkerInput.initTransitions.map(mkInitState).map(toBranchpoint): _*)
+
+    // run a depth-first search over symbolic transitions
+    dfs()
   }
 
-  private def bigStep(): Outcome.Value = {
+  private def dfs(): Outcome.Value = {
     val point = stack.head
-    if (point.exploredBranchesCnt == point.numBranches) {
-      // this branching point is all explored
-      stack = stack.tail
+    stack = stack.tail
+    if (point.depth > stepsBound) {
+      // we have reached the bound on the number of steps
       if (stack.isEmpty) {
-        // all done
-        Outcome.NoError
+        Outcome.NoError // all done
       } else {
-        // roll back to the previous point
-        val prevPoint = stack.head
-        prevPoint.state.solverCtx.popTo(prevPoint.solverContextLevel)
-        bigStep()
+        dfs() // explore the next state
       }
     } else {
-      // keep exploring the other branches
-      val branchNo = point.exploredBranchesCnt
-      point.exploredBranchesCnt += 1
-      val finalState = smallStep(point.state)
-      finalState.ex match {
-        case NameEx(name) if CellTheory().hasConst(name) =>
-          finalState.solverCtx.assertGroundExpr(OperEx(TlaOper.eq, finalState.ex, finalState.arena.cellTrue().toNameEx))
-
-        case _ =>
-          throw new CheckerException("Expected a cell, found a TLA expression")
+      rewriter.pop(rewriter.contextLevel - point.contextLevel) // roll back, if needed
+      rewriter.push()
+      val nextState = rewriter.rewriteUntilDone(point.state)
+      if (!solverContext.sat()) {
+        // this is a clear sign of a bug in one of the translation rules
+        throw new CheckerException("A contradiction introduced in rewriting. Report a bug.")
       }
-
-      if (!finalState.solverCtx.sat()) {
+      // assume the constraint constructed from Init or Next
+      solverContext.assertGroundExpr(nextState.ex)
+      if (!solverContext.sat()) {
         // the current symbolic state is not feasible
-        Outcome.Deadlock
+        Outcome.Deadlock // TODO: actually, it is a deadlock only if all other transitions fail
       } else {
-        // the symbolic state is reachable
-        // FIXME: check property
-        Outcome.NoError
+        // the symbolic state is reachable, check the invariant
+        if (invariantHolds(nextState)) {
+          // construct the next branching points
+          stack = constructNextPoints(point, nextState) ++ stack
+          // and continue
+          dfs()
+        } else {
+          Outcome.Error
+        }
       }
     }
   }
 
-  private def smallStep(state: SymbState): SymbState = {
-    rewriter.rewriteOnce(state) match {
-      case Done(nextState) =>
-        // converged to the normal form
-        nextState
-
-      case Continue(nextState) =>
-        // more translation steps are needed
-        // TODO: place a guard on the number of recursive calls
-        smallStep(nextState)
-
-      case NoRule() =>
-        // no rule applies, a problem in the tool?
-        throw new RewriterException("No rule applies")
+  private def invariantHolds(nextState: SymbState) = {
+    if (checkerInput.invariant.isEmpty) {
+      true
+    } else {
+      val inv = checkerInput.invariant.get
+      rewriter.push()
+      // assert ~Inv' (since we have computed a binding over primed variables)
+      val shiftedBinding = shiftBinding(nextState.binding)
+      val invState = rewriter.rewriteUntilDone(nextState
+        .setTheory(BoolTheory())
+        .setRex(inv)
+        .setBinding(shiftedBinding))
+      solverContext.assertGroundExpr(tla.not(invState.ex))
+      val sat = solverContext.sat()
+      if (sat) {
+        // TODO: explain the counterexample before restoring the SMT context
+        // currenly, writing the counterexample in the SMT log
+        val writer = new StringWriter()
+        new SymbStateDecoder().explainState(invState, new PrintWriter(writer))
+        solverContext.log(writer.getBuffer.toString)
+      }
+      rewriter.pop()
+      !sat
     }
   }
 
+  // construct next branching points
+  private def constructNextPoints(point: Branchpoint, nextState: SymbState): List[Branchpoint] = {
+    val shiftedBinding = shiftBinding(nextState.binding)
+
+    def eachTransition(transEx: TlaEx): Branchpoint = {
+      new Branchpoint(nextState.setRex(transEx).setBinding(shiftedBinding),
+        point.depth + 1, rewriter.contextLevel)
+    }
+
+    checkerInput.nextTransitions map eachTransition
+  }
+
+  // remove non-primed variables and rename primed variables to non-primed
+  private def shiftBinding(binding: Binding): Binding = {
+    binding
+      .filter(p => p._1.endsWith("'"))
+      .map(p => (p._1.stripSuffix("'"), p._2))
+  }
 }

@@ -185,12 +185,12 @@ class Z3SolverContext extends SolverContext {
     }
   }
 
-  override def popTo(newLevel: Int): Unit = {
-    if (level > newLevel) {
-      logWriter.println("(pop %d)".format(level - newLevel))
+  override def pop(n: Int): Unit = {
+    if (n > 0) {
+      logWriter.println("(pop %d)".format(n))
       logWriter.flush() // good time to flush
-      z3solver.pop(level - newLevel)
-      level = newLevel
+      z3solver.pop(n)
+      level -= n
     }
   }
 
