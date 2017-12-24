@@ -47,6 +47,8 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
       // If you still think that this is okay to compare variables of different types, insert a check before safeEq.
       throw new RewriterException("Trivial inequality, as the types are different (check your code): type(%s) = %s, while type(%s) = %s"
         .format(left.name, left.cellType, right.name, right.cellType))
+    } else if (left == right) {
+      NameEx(rewriter.solverContext.trueConst) // this is just true
     } else if (eqCache.contains((left, right))) {
       tla.eql(left, right) // it is safe to use SMT equality, as we have constructed the constraints
     } else if (eqCache.contains((right, left))) {
@@ -100,7 +102,10 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
       }
       state
     } else {
-      if (eqCache.contains((left, right)) || eqCache.contains((right, left))) {
+      if (left == right) {
+        // there is nothing to do
+        state
+      } else if (eqCache.contains((left, right)) || eqCache.contains((right, left))) {
         // the constraints are already in the cache, we can just write down an SMT equality
         OperEx(TlaOper.eq, left.toNameEx, right.toNameEx)
         eqCache.add((left, right)) // remember that we have generated the equality constraints

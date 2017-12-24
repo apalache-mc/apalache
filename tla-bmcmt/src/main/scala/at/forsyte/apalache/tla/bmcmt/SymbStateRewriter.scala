@@ -44,7 +44,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
 
   // bound the number of rewriting steps applied to the same rule
   private val RECURSION_LIMIT: Int = 10000
-  private val coercion = new Coercion(this)
+  private val coercion = new CoercionWithCache(this)
   private val substRule = new SubstRule(this)
 
   // A nice way to guess the candidate rules by looking at the expression key.

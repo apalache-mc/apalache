@@ -1,6 +1,5 @@
-package at.forsyte.apalache.tla.bmcmt.rules
+package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, IntT}
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
@@ -11,7 +10,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
   *
   * @author Igor Konnov
   */
-class Coercion(val stateRewriter: SymbStateRewriter) extends StackableContext {
+class CoercionWithCache(val stateRewriter: SymbStateRewriter) extends StackableContext {
   type SourceT = (String, Theory)
   type TargetT = String
 
