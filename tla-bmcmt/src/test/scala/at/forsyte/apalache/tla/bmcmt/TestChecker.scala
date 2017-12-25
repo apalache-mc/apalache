@@ -34,7 +34,7 @@ class TestChecker extends FunSuite {
   }
 
   test("Init, 2 options, OK") {
-    // x' \in {2} /\ x' \in {1}
+    // x' \in {2} \/ x' \in {1}
     val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
     val nextTrans = List(mkAssign("x", 2))
     val checkerInput = new CheckerInput(initTrans, nextTrans, None)
@@ -45,7 +45,7 @@ class TestChecker extends FunSuite {
   }
 
   test("Init + Next, 1 step, OK") {
-    // x' \in {2} /\ x' \in {1}
+    // x' \in {2} \/ x' \in {1}
     val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
     // x' \in {x + 1}
     val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
@@ -57,7 +57,7 @@ class TestChecker extends FunSuite {
   }
 
   test("Init + Next, 1 step, deadlock") {
-    // x' \in {2} /\ x' \in {1}
+    // x' \in {2} \/ x' \in {1}
     val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
     // x > 3 /\ x' \in {x + 1}
     val nextTrans = List(
@@ -71,7 +71,7 @@ class TestChecker extends FunSuite {
   }
 
   test("Init + Next, 10 steps, OK") {
-    // x' \in {2} /\ x' \in {1}
+    // x' \in {2} \/ x' \in {1}
     val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
     // x' \in {x + 1}
     val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
@@ -83,7 +83,7 @@ class TestChecker extends FunSuite {
   }
 
   test("Init + Next, 10 steps, deadlock") {
-    // x' \in {2} /\ x' \in {1}
+    // x' \in {2} \/ x' \in {1}
     val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
     // x < 10 /\ x' \in {x + 1}
     val nextTrans = List(
@@ -97,7 +97,7 @@ class TestChecker extends FunSuite {
   }
 
   test("Init + Next + Inv, 10 steps, OK") {
-    // x' \in {2} /\ x' \in {1}
+    // x' \in {2} \/ x' \in {1}
     val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
     // x' \in {x + 1}
     val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
@@ -108,6 +108,51 @@ class TestChecker extends FunSuite {
     val checker = new Checker(checkerInput, 10)
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
+  }
+
+  test("Init + Next + Inv, 10 steps, error") {
+    // x' \in {2} \/ x' \in {1}
+    val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
+    // x' \in {x + 1}
+    val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
+    // x < 5
+    val inv = tla.lt(tla.name("x"), tla.int(5))
+    val checkerInput = new CheckerInput(initTrans, nextTrans, Some(inv))
+    // initialize the model checker
+    val checker = new Checker(checkerInput, 10)
+    val outcome = checker.run()
+    assert(Checker.Outcome.Error == outcome)
+  }
+
+  test("Init + Next, 3 steps, non-determinism but no deadlock") {
+    // x' \in {1}
+    val initTrans = List(mkAssign("x", 1))
+    // x' \in {x + 1} \/ x > 100 /\ x' \in {x}
+    val trans1 = mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
+    val trans2 = tla.and(tla.gt(tla.name("x"), tla.int(100)),
+                         mkAssign("x", tla.name("x")))
+    val nextTrans = List(trans1, trans2)
+    val checkerInput = new CheckerInput(initTrans, nextTrans, None)
+    // initialize the model checker
+    val checker = new Checker(checkerInput, 2)
+    val outcome = checker.run()
+    assert(Checker.Outcome.NoError == outcome)
+  }
+
+  test("Init + Next, 10 steps, non-determinism in init and next") {
+    // x' \in {0} \/ x' \in {1}
+    val initTrans = List(mkAssign("x", 0), mkAssign("x", 1))
+    // x' \in {x + 1} \/ x > 1000 /\ x' \in {x}
+    val trans1 = mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
+    val trans2 = tla.and(tla.gt(tla.name("x"), tla.int(1000)),
+                         mkAssign("x", tla.name("x")))
+    val nextTrans = List(trans1, trans2)
+    val inv = tla.le(tla.name("x"), tla.int(1000)) // x <= 10
+    val checkerInput = new CheckerInput(initTrans, nextTrans, Some(inv))
+    // initialize the model checker
+    val checker = new Checker(checkerInput, 1000)
+    val outcome = checker.run()
+    assert(Checker.Outcome.Error == outcome)
   }
 
 

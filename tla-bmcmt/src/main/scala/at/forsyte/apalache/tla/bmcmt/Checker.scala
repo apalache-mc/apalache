@@ -20,7 +20,18 @@ object Checker {
   * @author Igor Konnov
   */
 class Checker(checkerInput: CheckerInput, stepsBound: Int) {
-  private var stack: List[Branchpoint] = List()
+  /**
+    * Unexplored branching points.
+    */
+  private var unexplored: List[Branchpoint] = List()
+  /**
+    * A stack of the symbolic states in the course of the depth-first search (the last state is on top).
+    */
+  private var stack: List[SymbState] = List()
+  /**
+    * The depth of the last state that was found to be satisfiable
+    */
+  private var lastSatDepth = -1
   private val solverContext: SolverContext = new Z3SolverContext
   private val rewriter = new SymbStateRewriter(solverContext)
 
@@ -36,46 +47,57 @@ class Checker(checkerInput: CheckerInput, stepsBound: Int) {
     }
 
     // create dummy branching points, just to have the initial states on the stack
-    def toBranchpoint(state: SymbState): Branchpoint = new Branchpoint(state, 0, rewriter.contextLevel)
+    val numbers = (checkerInput.initTransitions.length - 1).to(0) by -1 // n-1, ..., 1, 0
+    def toBranchpoint(stateAndNo: (SymbState, Int)): Branchpoint =
+      new Branchpoint(stateAndNo._1, depth = 0, transitionNo = stateAndNo._2, rewriter.contextLevel)
 
-    stack = List(checkerInput.initTransitions.map(mkInitState).map(toBranchpoint): _*)
+    unexplored = List(checkerInput.initTransitions.map(mkInitState).zip(numbers).map(toBranchpoint): _*)
 
     // run a depth-first search over symbolic transitions
     dfs()
   }
 
   private def dfs(): Outcome.Value = {
-    val point = stack.head
-    stack = stack.tail
-    if (point.depth > stepsBound) {
-      // we have reached the bound on the number of steps
-      if (stack.isEmpty) {
-        Outcome.NoError // all done
-      } else {
-        dfs() // explore the next state
-      }
+    if (unexplored.isEmpty) {
+      Outcome.NoError // all done
     } else {
-      rewriter.pop(rewriter.contextLevel - point.contextLevel) // roll back, if needed
-      rewriter.push()
-      val nextState = rewriter.rewriteUntilDone(point.state)
-      if (!solverContext.sat()) {
-        // this is a clear sign of a bug in one of the translation rules
-        throw new CheckerException("A contradiction introduced in rewriting. Report a bug.")
-      }
-      // assume the constraint constructed from Init or Next
-      solverContext.assertGroundExpr(nextState.ex)
-      if (!solverContext.sat()) {
-        // the current symbolic state is not feasible
-        Outcome.Deadlock // TODO: actually, it is a deadlock only if all other transitions fail
+      val point = unexplored.head
+      unexplored = unexplored.tail
+      if (point.depth > stepsBound) {
+        // we have reached the bound on the number of steps
+        lastSatDepth = point.depth // unconditionally satisfiable
+        dfs() // explore the next state
       } else {
-        // the symbolic state is reachable, check the invariant
-        if (invariantHolds(nextState)) {
-          // construct the next branching points
-          stack = constructNextPoints(point, nextState) ++ stack
-          // and continue
-          dfs()
+        rewriter.pop(rewriter.contextLevel - point.contextLevel) // roll back, if needed
+        stack.drop(stack.length - (1 + point.depth)) // remove the states explored beyond this point
+        rewriter.push()
+        val nextState = rewriter.rewriteUntilDone(point.state)
+        stack = nextState +: stack
+        if (!solverContext.sat()) {
+          // this is a clear sign of a bug in one of the translation rules
+          throw new CheckerException("A contradiction introduced in rewriting. Report a bug.")
+        }
+        // assume the constraint constructed from Init or Next
+        solverContext.assertGroundExpr(nextState.ex)
+        if (!solverContext.sat()) {
+          // the current symbolic state is not feasible
+          if (point.transitionNo == 0 && lastSatDepth <= point.depth) {
+            Outcome.Deadlock
+          } else {
+            // it is not the last transition to explore, continue
+            dfs()
+          }
         } else {
-          Outcome.Error
+          lastSatDepth = point.depth // this depth is reached now
+          // the symbolic state is reachable, check the invariant
+          if (invariantHolds(nextState)) {
+            // construct the next branching points
+            unexplored = constructNextPoints(point, nextState) ++ unexplored
+            // and continue
+            dfs()
+          } else {
+            Outcome.Error
+          }
         }
       }
     }
@@ -110,13 +132,14 @@ class Checker(checkerInput: CheckerInput, stepsBound: Int) {
   // construct next branching points
   private def constructNextPoints(point: Branchpoint, nextState: SymbState): List[Branchpoint] = {
     val shiftedBinding = shiftBinding(nextState.binding)
+    val numbers = (checkerInput.nextTransitions.length - 1).to(0) by -1 // n-1, ..., 1, 0
 
-    def eachTransition(transEx: TlaEx): Branchpoint = {
-      new Branchpoint(nextState.setRex(transEx).setBinding(shiftedBinding),
-        point.depth + 1, rewriter.contextLevel)
+    def eachTransition(exAndNo: (TlaEx, Int)): Branchpoint = {
+      new Branchpoint(nextState.setRex(exAndNo._1).setBinding(shiftedBinding),
+        depth = point.depth + 1, transitionNo = exAndNo._2, rewriter.contextLevel)
     }
 
-    checkerInput.nextTransitions map eachTransition
+    checkerInput.nextTransitions.zip(numbers) map eachTransition
   }
 
   // remove non-primed variables and rename primed variables to non-primed

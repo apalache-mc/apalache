@@ -9,13 +9,15 @@ package at.forsyte.apalache.tla.bmcmt
   * and the level in the SMT context stack. After restoring the SMT context to solverContextLevel, we can evaluate
   * the state.
   *
-  * @param state              the state in which the branching has occurred
-  * @param depth              the search depth reached so far (an initial state has depth 0)
+  * @param state        the state in which the branching has occurred
+  * @param depth        the search depth reached so far (an initial state has depth 0)
+  * @param transitionNo the sequential number of a transition (in the decreasing order, 0 comes last)
   * @param contextLevel the number of context pushes made by the SMT solver before exploring the branches,
-  *                           we use it to pop the SMT contexts that were introduced by the branches.
+  *                     we use it to pop the SMT contexts that were introduced by the branches.
   * @author Igor Konnov
   */
 class Branchpoint(val state: SymbState,
                   val depth: Int,
+                  val transitionNo: Int,
                   val contextLevel: Int) {
 }
