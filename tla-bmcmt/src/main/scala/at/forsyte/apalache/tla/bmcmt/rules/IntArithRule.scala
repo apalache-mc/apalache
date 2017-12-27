@@ -42,7 +42,9 @@ class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   private def rewriteGeneral(state: SymbState, ex: TlaEx) = ex match {
     case ValEx(TlaInt(value: BigInt)) =>
-      state.setRex(ex) // keep the simplified expression
+      // keep the simplified expression
+      val finalState = state.setRex(ex).setTheory(IntTheory())
+      rewriter.coerce(finalState, state.theory)
 
     case OperEx(oper: TlaArithOper, left, right) =>
       val leftState = rewriter.rewriteUntilDone(state.setTheory(IntTheory()).setRex(left))

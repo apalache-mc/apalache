@@ -39,7 +39,9 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   private def rewriteGeneral(state: SymbState, ex: TlaEx) = ex match {
     case ValEx(TlaBool(value)) =>
-      state.setRex(ex) // keep the simplified expression
+      // keep the simplified expression
+      val finalState = state.setRex(ex).setTheory(BoolTheory())
+      rewriter.coerce(finalState, state.theory)
 
     case OperEx(oper, left, right) =>
       val leftState = rewriter.rewriteUntilDone(state.setTheory(IntTheory()).setRex(left))

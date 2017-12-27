@@ -53,7 +53,7 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
                   OperEx(TlaActionOper.prime, NameEx(name)),
                   set) =>
         // switch to cell theory
-        val setState = rewriter.rewriteUntilDone(state.setRex(set))
+        val setState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(set))
         val setCell = setState.arena.findCellByNameEx(setState.ex)
         // pick an arbitrary witness
         val pickState = pickRule.pick(setCell, setState)
