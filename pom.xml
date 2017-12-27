@@ -19,10 +19,20 @@
     </properties>
 
     <modules>
+        <!-- intermediate representation (IR) -->
         <module>tlair</module>
+        <!-- parsing with SANY and build an IR -->
+        <module>mod-infra</module>
+        <!-- finding symbolic transitions -->
         <module>tla-import</module>
+        <!-- finding symbolic transitions -->
         <module>tla-assignments</module>
+        <!-- bounded model checker modulo theory -->
         <module>tla-bmcmt</module>
+        <!-- command line tools -->
+        <module>mod-tool</module>
+        <!-- distribution packaging -->
+        <module>mod-distribution</module> <!-- to bind them all -->
     </modules>
 
     <!-- the profile settings are copied from:
@@ -67,6 +77,24 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>com.google.inject</groupId>
+                <artifactId>guice</artifactId>
+                <version>4.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>1.2.3</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.typesafe.scala-logging</groupId>
+                <artifactId>scala-logging_2.12</artifactId>
+                <version>3.7.2</version>
+            </dependency>
+
+            <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <version>4.11</version>
@@ -87,6 +115,7 @@
                 <version>3.5.1</version>
                 <scope>test</scope>
             </dependency>
+
 
             <!-- Dependencies that are not available from the Maven repository, see 3rdparty/README.md -->
             <dependency>
@@ -118,6 +147,23 @@
                     <configuration>
                         <source>1.8</source>
                         <target>1.8</target>
+                    </configuration>
+                </plugin>
+                <!-- a plugin to build a distribution -->
+                <plugin>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>3.1.0</version>
+                </plugin>
+                <!-- write the version number in MANIFEST.MF -->
+                <plugin>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <configuration>
+                        <archive>
+                            <manifest>
+                                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                                <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                            </manifest>
+                        </archive>
                     </configuration>
                 </plugin>
             </plugins>
@@ -163,6 +209,32 @@
                         <phase>compile</phase>
                         <goals>
                             <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- assemble the project into a single jar -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.4</version>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <!-- this is the main entry point for all of our command tools -->
+                            <mainClass>at.forsyte.apalache.tla.Tool</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
                         </goals>
                     </execution>
                 </executions>

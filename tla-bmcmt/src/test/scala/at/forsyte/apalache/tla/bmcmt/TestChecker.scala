@@ -142,15 +142,15 @@ class TestChecker extends FunSuite {
   test("Init + Next, 10 steps, non-determinism in init and next") {
     // x' \in {0} \/ x' \in {1}
     val initTrans = List(mkAssign("x", 0), mkAssign("x", 1))
-    // x' \in {x + 1} \/ x > 1000 /\ x' \in {x}
+    // x' \in {x + 1} \/ x > 10 /\ x' \in {x}
     val trans1 = mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
-    val trans2 = tla.and(tla.gt(tla.name("x"), tla.int(1000)),
+    val trans2 = tla.and(tla.gt(tla.name("x"), tla.int(10)),
                          mkAssign("x", tla.name("x")))
     val nextTrans = List(trans1, trans2)
-    val inv = tla.le(tla.name("x"), tla.int(1000)) // x <= 10
+    val inv = tla.le(tla.name("x"), tla.int(10)) // x <= 10
     val checkerInput = new CheckerInput(initTrans, nextTrans, Some(inv))
     // initialize the model checker
-    val checker = new Checker(checkerInput, 1000)
+    val checker = new Checker(checkerInput, 10)
     val outcome = checker.run()
     assert(Checker.Outcome.Error == outcome)
   }
