@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.lir.plugins
 
 import at.forsyte.apalache.tla.lir.TlaSpec
-import collection.mutable.HashMap
+
+import scala.collection.mutable.HashMap
 
 class PluginTree
 
@@ -9,6 +10,8 @@ class PluginTree
   * There can only ever be one controller, a singleton object.
   * A controller creates a plugin tree from dependency information and consumes them in BFS order. (Independent chains
   * may be executed in parallel)
+  *
+  * @deprecated
   */
 object PluginController {
   //val allocator : IDAllocator[String] = new IDAllocator[String]();

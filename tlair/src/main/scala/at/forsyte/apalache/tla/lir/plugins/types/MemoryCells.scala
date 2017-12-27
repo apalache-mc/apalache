@@ -2,6 +2,8 @@ package at.forsyte.apalache.tla.lir.plugins.types
 
 /**
   * Created by jkukovec on 4/11/17.
+  *
+  * @deprecated
   */
 
 object TotalOrder {

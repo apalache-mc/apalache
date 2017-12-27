@@ -2,6 +2,9 @@ package at.forsyte.apalache.tla.log
 
 import java.util.Calendar
 
+/**
+  * @deprecated use slf4j and scala-logging instead
+  */
 object Log {
   abstract class errorLevel{
     val m_priority: Int
