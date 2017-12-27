@@ -339,4 +339,49 @@ class TestSymbStateRewriterFun extends RewriterBase {
         fail("Unexpected rewriting result")
     }
   }
+
+    // In general, the index is a tuple; tla-import gives us a singleton tuple.
+  test("""SE-FUN-UPD[1-4]: [[x \in {1, 2} |-> 2 * x] EXCEPT ![(1)] = 11] ~~> $C$fun""") {
+    val set = tla.enumSet(tla.int(1), tla.int(2))
+    val mapExpr = tla.mult(tla.int(2), tla.name("x"))
+    val fun = tla.funDef(mapExpr, tla.name("x"), set)
+
+    val except = tla.except(fun, tla.tuple(tla.int(1)), tla.int(11))
+    val state = new SymbState(except, CellTheory(), arena, new Binding)
+    val rewriter = new SymbStateRewriter(solverContext)
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case resFunEx @ NameEx(name) =>
+        assert(CellTheory().hasConst(name))
+        // check the function domain and co-domain
+        val resFun = nextState.arena.findCellByName(name)
+        val dom = nextState.arena.getDom(resFun)
+        val cdm = nextState.arena.getCdm(resFun)
+        assert(nextState.arena.getHas(dom).size == 2)
+        val cdmSize = nextState.arena.getHas(cdm).size
+        assert(cdmSize == 2 || cdmSize == 3) // the co-domain can be overapproximated
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+
+    val exceptFun = nextState.arena.findCellByNameEx(nextState.ex)
+
+    val resFun1Ne11 = tla.neql(tla.appFun(nextState.ex, tla.int(1)), tla.int(11))
+    val cmpState = rewriter.rewriteUntilDone(nextState.setRex(resFun1Ne11).setTheory(BoolTheory()))
+
+    // compare
+    rewriter.push()
+
+    // make sure that not equals gives us sat
+    cmpState.ex match  {
+      case neqEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.assertGroundExpr(neqEx)
+        assertUnsatOrExplain(cmpState)
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
 }

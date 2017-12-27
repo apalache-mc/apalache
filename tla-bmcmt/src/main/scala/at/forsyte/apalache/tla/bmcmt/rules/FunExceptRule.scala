@@ -26,15 +26,16 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       case OperEx(TlaFunOper.except, args@_*) =>
         // simplify all the arguments first
+        val noSingletons = rewriteSingletonTuples(args)
         val (groundState: SymbState, groundArgs: Seq[TlaEx]) =
-          rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), args)
+          rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), noSingletons)
 
         // the function always comes first
         val funCell = groundState.arena.findCellByNameEx(groundArgs.head)
         // then the indices and righthand-side expressions interleaved
         val argCells = groundArgs.tail.map(groundState.arena.findCellByNameEx)
         val indexCells = argCells.zipWithIndex.filter(_._2 % 2 == 0).map(_._1) // pick the even indices (starting with 0)
-      val valueCells = argCells.zipWithIndex.filter(_._2 % 2 == 1).map(_._1) // pick the odd indices (starting with 0)
+        val valueCells = argCells.zipWithIndex.filter(_._2 % 2 == 1).map(_._1) // pick the odd indices (starting with 0)
         assert(indexCells.length == valueCells.length)
         val updatePairs = indexCells.zip(valueCells) // ![j_i] = e_i
 
@@ -127,6 +128,15 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
     }
+  }
+
+  private def rewriteSingletonTuples(indices: Seq[TlaEx]): Seq[TlaEx] = {
+    def rewrite(e: TlaEx) = e match {
+      case OperEx(TlaFunOper.tuple, arg) => arg
+      case _ => e
+    }
+
+    indices map rewrite
   }
 
 }
