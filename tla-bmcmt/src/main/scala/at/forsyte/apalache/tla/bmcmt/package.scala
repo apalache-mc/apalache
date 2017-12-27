@@ -47,7 +47,8 @@ package object bmcmt {
         case NameEx(name) if hasConst(name) =>
           name
 
-        case _ => throw new CheckerException("Expected a cell, found: %s".format(tlaEx))
+        case _ =>
+          throw new CheckerException("Expected a cell, found: %s".format(tlaEx))
       }
     }
   }

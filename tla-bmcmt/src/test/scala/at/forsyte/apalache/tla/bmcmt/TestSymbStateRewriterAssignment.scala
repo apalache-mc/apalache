@@ -180,4 +180,26 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     solverContext.assertGroundExpr(eqStateFun2.ex)
     assertUnsatOrExplain(eqStateFun2) // should not be possible
   }
+
+  test("""SE-IN-ASSIGN1(funset): x \in [0..(5 - 1) ~~> {FALSE, TRUE}] ~~> TRUE and [x -> $C$k]""") {
+    val domain = tla.dotdot(tla.int(0), tla.minus(tla.int(5), tla.int(1)))
+    val set = tla.funSet(domain, tla.enumSet(tla.bool(false), tla.bool(true)))
+    val assign = tla.in(tla.prime(tla.name("x")), set)
+
+    val state = new SymbState(assign, CellTheory(), arena, new Binding)
+    val rewriter = new SymbStateRewriter(solverContext)
+    val nextState = rewriter.rewriteUntilDone(state)
+    val boundCell =
+      nextState.ex match {
+        case NameEx(name) =>
+          assert(CellTheory().hasConst(name))
+          assert(arena.cellTrue().toString == name)
+          assert(nextState.binding.size == 1)
+          assert(nextState.binding.contains("x'"))
+          nextState.binding("x'")
+
+        case _ =>
+          fail("Unexpected rewriting result")
+      }
+  }
 }
