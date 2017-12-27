@@ -1,10 +1,12 @@
 package at.forsyte.apalache.tla.lir.plugins
 
-import at.forsyte.apalache.tla.lir.db._
-import at.forsyte.apalache.tla.lir._
 import java.util.Vector
 
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.db._
+
 object UniqueDB extends DB[ UID, TlaEx ] {
+  // Igor: let's get rid of a singleton here. Make a class.
   override val name = "UniqueDB"
 
   private val expressions : Vector[ TlaEx ] = new Vector[ TlaEx ]
@@ -47,6 +49,9 @@ package object Identifier {
   def identify( ex : TlaEx ) : Unit = SpecHandler.sideeffectEx( ex, UniqueDB.add )
 }
 
+/**
+  * @deprecated use Pass
+  */
 package object FirstPass extends Plugin {
   override val name = "FirstPass"
   override val dependencies : List[String] = Nil

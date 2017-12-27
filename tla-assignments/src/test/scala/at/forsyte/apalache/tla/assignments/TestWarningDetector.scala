@@ -7,8 +7,6 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
-import scala.io.Source
-
 @RunWith(classOf[JUnitRunner])
 class TestWarningDetector extends FunSuite with TestingPredefs {
   val testFolderPath = "src/test/resources/WarningDetector/"
@@ -17,11 +15,11 @@ class TestWarningDetector extends FunSuite with TestingPredefs {
     val file = "test1.tla"
 
     UniqueDB.clear()
-    Converter.clear()
+    val converter = new Converter()
 
     val decls = declarationsFromFile(testFolderPath + file)
     decls.foreach( Identifier.identify )
-    Converter.extract( decls:_* )
+    converter.extract( decls:_* )
 
     val nextBody = findBodyOf( "Next", decls:_* )
 

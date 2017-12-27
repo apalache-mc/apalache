@@ -1,0 +1,70 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>at.forsyte.apalache</groupId>
+        <artifactId>apalache</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </parent>
+
+    <!--
+        All command line tooling and option parsing goes here... and nothing else!
+    -->
+    <artifactId>tool</artifactId>
+    <packaging>jar</packaging>
+
+    <name>tool</name>
+    <url>https://github.com/konnov/apalache</url>
+
+    <dependencies>
+        <dependency>
+            <groupId>at.forsyte.apalache</groupId>
+            <artifactId>tlair</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>at.forsyte.apalache</groupId>
+            <artifactId>tla-import</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>at.forsyte.apalache</groupId>
+            <artifactId>tla-assignments</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>at.forsyte.apalache</groupId>
+            <artifactId>tla-bmcmt</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.backuity.clist</groupId>
+            <artifactId>clist-core_2.12</artifactId>
+            <version>3.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.backuity.clist</groupId>
+            <artifactId>clist-macros_2.12</artifactId>
+            <version>3.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.scala-logging</groupId>
+            <artifactId>scala-logging_2.12</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_2.12</artifactId>
+            <!-- since artifactId contains a (scala) version, we have to provide a package version as well -->
+            <version>3.0.4</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>

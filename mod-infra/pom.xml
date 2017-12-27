@@ -1,16 +1,17 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>at.forsyte.apalache</groupId>
         <artifactId>apalache</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>tla-assignments</artifactId>
+    <artifactId>infra</artifactId>
     <packaging>jar</packaging>
 
-    <name>tla-assignments</name>
+    <name>infra</name>
     <url>https://github.com/konnov/apalache</url>
 
     <dependencies>
@@ -19,35 +20,38 @@
             <artifactId>tlair</artifactId>
             <version>${project.version}</version>
         </dependency>
+
         <dependency>
-            <groupId>at.forsyte.apalache</groupId>
-            <artifactId>infra</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>at.forsyte.apalache</groupId>
-            <artifactId>tla-import</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.5</version>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.scala-logging</groupId>
+            <artifactId>scala-logging_2.12</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.lamport.tla</groupId>
-            <artifactId>tla2tools</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.microsoft</groupId>
-            <artifactId>z3</artifactId>
-        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_2.12</artifactId>
+            <!-- since artifactId contains a (scala) version, we have to provide a package version as well -->
+            <version>3.0.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.easymock</groupId>
+            <artifactId>easymock</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+
 </project>

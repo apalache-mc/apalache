@@ -137,16 +137,16 @@ class TestAssignments extends FunSuite with TestingPredefs {
 
   test( "Test on real files" ) {
     val file = "EWD840.tla"
-    UniqueDB.clear()
-    Converter.clear()
+    UniqueDB.clear() // Igor: why do you need UniqueDB here?
 
     val decls = declarationsFromFile(testFolderPath + file)
-    Converter.extract( decls:_* )
+    val converter = new Converter()
+    converter.extract( decls:_* )
 
     val nextBody = findBodyOf( "Next", decls:_* )
 
-    val vars = Converter.getVars( decls:_*)
-    val cleaned = Converter.sanitize( nextBody )
+    val vars = converter.getVars( decls:_*)
+    val cleaned = converter.sanitize( nextBody )
 
     val order = assignmentSolver.getStrategy( vars, cleaned )
 
@@ -201,16 +201,17 @@ class TestAssignments extends FunSuite with TestingPredefs {
 
     val file = "negation.tla"
 
-    UniqueDB.clear()
-    Converter.clear()
+    UniqueDB.clear() // Igor: why do you need UniqueDB here?
+    val converter = new Converter()
+
 
     val decls = declarationsFromFile(testFolderPath + file)
-    val vars = Converter.getVars( decls:_*)
+    val vars = converter.getVars( decls:_*)
     val nextBody = findBodyOf( "Next", decls:_* )
 
     assert( ! nextBody.isNull )
 
-    val cleaned = Converter( nextBody, decls:_* )
+    val cleaned = converter( nextBody, decls:_* )
     assert( nextBody.ID.valid )
 
     assert( cleaned.isDefined )

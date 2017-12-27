@@ -15,7 +15,8 @@ class TestChecker extends FunSuite {
     // x' \in {2}
     val initTrans = List(mkAssign("x", 2))
     val nextTrans = List(mkAssign("x", 2))
-    val checkerInput = new CheckerInput(initTrans, nextTrans, None)
+    val dummyModule = new TlaModule("root", List(), List())
+    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
     val checker = new Checker(checkerInput, 0)
     val outcome = checker.run()
@@ -26,7 +27,8 @@ class TestChecker extends FunSuite {
     // x' \in {2} /\ x' \in {1}
     val initTrans = List(tla.and(mkAssign("x", 2), mkAssign("x", 1)))
     val nextTrans = List(mkAssign("x", 2))
-    val checkerInput = new CheckerInput(initTrans, nextTrans, None)
+    val dummyModule = new TlaModule("root", List(), List())
+    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
     val checker = new Checker(checkerInput, 0)
     val outcome = checker.run()
@@ -37,7 +39,8 @@ class TestChecker extends FunSuite {
     // x' \in {2} \/ x' \in {1}
     val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
     val nextTrans = List(mkAssign("x", 2))
-    val checkerInput = new CheckerInput(initTrans, nextTrans, None)
+    val dummyModule = new TlaModule("root", List(), List())
+    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
     val checker = new Checker(checkerInput, 0)
     val outcome = checker.run()
@@ -49,7 +52,8 @@ class TestChecker extends FunSuite {
     val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
     // x' \in {x + 1}
     val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
-    val checkerInput = new CheckerInput(initTrans, nextTrans, None)
+    val dummyModule = new TlaModule("root", List(), List())
+    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
     val checker = new Checker(checkerInput, 1)
     val outcome = checker.run()
@@ -63,7 +67,8 @@ class TestChecker extends FunSuite {
     val nextTrans = List(
       tla.and(tla.gt(tla.name("x"), tla.int(3)),
         mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))))
-    val checkerInput = new CheckerInput(initTrans, nextTrans, None)
+    val dummyModule = new TlaModule("root", List(), List())
+    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
     val checker = new Checker(checkerInput, 1)
     val outcome = checker.run()
@@ -75,7 +80,8 @@ class TestChecker extends FunSuite {
     val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
     // x' \in {x + 1}
     val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
-    val checkerInput = new CheckerInput(initTrans, nextTrans, None)
+    val dummyModule = new TlaModule("root", List(), List())
+    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
     val checker = new Checker(checkerInput, 10)
     val outcome = checker.run()
@@ -89,7 +95,8 @@ class TestChecker extends FunSuite {
     val nextTrans = List(
       tla.and(tla.lt(tla.name("x"), tla.int(10)),
         mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))))
-    val checkerInput = new CheckerInput(initTrans, nextTrans, None)
+    val dummyModule = new TlaModule("root", List(), List())
+    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
     val checker = new Checker(checkerInput, 10)
     val outcome = checker.run()
@@ -103,7 +110,8 @@ class TestChecker extends FunSuite {
     val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
     // x < 100
     val inv = tla.lt(tla.name("x"), tla.int(100))
-    val checkerInput = new CheckerInput(initTrans, nextTrans, Some(inv))
+    val dummyModule = new TlaModule("root", List(), List())
+    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, Some(inv))
     // initialize the model checker
     val checker = new Checker(checkerInput, 10)
     val outcome = checker.run()
@@ -117,7 +125,8 @@ class TestChecker extends FunSuite {
     val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
     // x < 5
     val inv = tla.lt(tla.name("x"), tla.int(5))
-    val checkerInput = new CheckerInput(initTrans, nextTrans, Some(inv))
+    val dummyModule = new TlaModule("root", List(), List())
+    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, Some(inv))
     // initialize the model checker
     val checker = new Checker(checkerInput, 10)
     val outcome = checker.run()
@@ -132,7 +141,8 @@ class TestChecker extends FunSuite {
     val trans2 = tla.and(tla.gt(tla.name("x"), tla.int(100)),
                          mkAssign("x", tla.name("x")))
     val nextTrans = List(trans1, trans2)
-    val checkerInput = new CheckerInput(initTrans, nextTrans, None)
+    val dummyModule = new TlaModule("root", List(), List())
+    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
     val checker = new Checker(checkerInput, 2)
     val outcome = checker.run()
@@ -148,7 +158,8 @@ class TestChecker extends FunSuite {
                          mkAssign("x", tla.name("x")))
     val nextTrans = List(trans1, trans2)
     val inv = tla.le(tla.name("x"), tla.int(10)) // x <= 10
-    val checkerInput = new CheckerInput(initTrans, nextTrans, Some(inv))
+    val dummyModule = new TlaModule("root", List(), List())
+    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, Some(inv))
     // initialize the model checker
     val checker = new Checker(checkerInput, 10)
     val outcome = checker.run()

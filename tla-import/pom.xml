@@ -21,9 +21,19 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>at.forsyte.apalache</groupId>
+            <artifactId>infra</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
         </dependency>
 
         <!-- parent's dependencies -->

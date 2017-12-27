@@ -4,24 +4,27 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.plugins.Identifier
+import com.google.inject.Singleton
 
 /**
   * Object responsible for pre-processing input before it is passed to the
   * [[at.forsyte.apalache.tla.assignments.assignmentSolver solver]].
   */
-object Converter {
+@Singleton
+class Converter {
+  // Igor: this class does a lot of things. Write comments on what the outcome is.
+  // Igor: Does this class have to be stateful?
+  //
+  // Igor: Let's find a better name for this class.
+  //
+  // Igor @ 27/12/2017: converted from a singleton to a class.
+  // Let Guice take care of instantiating the object rightly.
   protected val NEXT_STEP_DEFAULT_NAME = "Next"
   protected val INIT_STEP_DEFAULT_NAME = "Init"
   protected val m_bodyDB               = new BodyDB()
   protected val m_srcDB                = new SourceDB()
 
-  // TODO: Let's make a class instead of a singleton. Then we do not have to clean the contents (Igor)
-  def clear() : Unit = {
-    m_bodyDB.clear()
-    m_srcDB.clear()
-  }
-
-
+  // The methods that are not part of the interface should be declared private.
   def extract( p_decls : TlaDecl*
              )
              ( implicit db : BodyDB = m_bodyDB
@@ -34,6 +37,7 @@ object Converter {
     p_decls.withFilter( _.isInstanceOf[TlaVarDecl] ).map( _.name ).toSet
   }
 
+  // The methods that are not part of the interface should be declared private.
   def inlineAll(
                  p_expr : TlaEx
                )
@@ -45,6 +49,7 @@ object Converter {
     OperatorHandler.unfoldMax( p_expr, bodyDB, srcDB )
   }
 
+  // The methods that are not part of the interface should be declared private.
   def unchangedExplicit(
                          p_ex : TlaEx
                        )(
@@ -73,6 +78,7 @@ object Converter {
     OperatorHandler.replaceWithRule( p_ex, exFun, srcDB )
   }
 
+  // The methods that are not part of the interface should be declared private.
   def sanitizeByName(
                       p_operName : String
                     )
@@ -84,6 +90,7 @@ object Converter {
     bodyDB.body( p_operName ).map( sanitize( _ )( bodyDB, srcDB ) ).getOrElse( NullEx )
   }
 
+  // The methods that are not part of the interface should be declared private.
   def sanitize(
                 p_expr : TlaEx
               )
@@ -107,6 +114,8 @@ object Converter {
     unchangedExplicit( eqReplaced )( srcDB )
   }
 
+  // Igor: normally, the most important methods come first in a class declaration.
+  // Igor: why is this method declared with apply? What is special about it?
   def apply( p_expr : TlaEx, p_decls : TlaDecl* ) : Option[TlaEx] = {
     Identifier.identify( p_expr )
     p_decls.foreach( Identifier.identify )
@@ -119,6 +128,8 @@ object Converter {
     }
   }
 
+  // Igor: normally, the most important methods come first in a class declaration.
+  // Igor: why is this method declared with apply? What is special about it?
   def apply( p_opName : String, p_decls : TlaDecl* ) : Option[TlaEx] = {
     p_decls.foreach( Identifier.identify )
     extract( p_decls : _* )
