@@ -135,6 +135,8 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
       -> List(new IntArithRule(this)),
     key(tla.mod(tla.int(1), tla.int(2)))
       -> List(new IntArithRule(this)),
+    key(tla.exp(tla.int(2), tla.int(3)))
+      -> List(new IntArithRule(this)),
 
     // functions
     key(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S")))

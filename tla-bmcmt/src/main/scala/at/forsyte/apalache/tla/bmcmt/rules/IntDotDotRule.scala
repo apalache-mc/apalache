@@ -11,6 +11,8 @@ import at.forsyte.apalache.tla.lir.values.TlaInt
   * @author Igor Konnov
    */
 class IntDotDotRule(rewriter: SymbStateRewriter) extends RewritingRule {
+  private def simplifier = new ConstSimplifier()
+
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaArithOper.dotdot, _*) => true
@@ -34,7 +36,7 @@ class IntDotDotRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   private def getRange(elems: Seq[TlaEx]): (Int, Int) = {
-    elems match {
+    elems map (simplifier.simplify(_)) match {
       case Seq(ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
         if (!left.isValidInt || !right.isValidInt) {
           throw new RewriterException("Range bounds are too large to fit in scala.Int")

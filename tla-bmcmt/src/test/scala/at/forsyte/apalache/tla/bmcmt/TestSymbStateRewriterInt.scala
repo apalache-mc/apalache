@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.types.IntT
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
@@ -420,6 +421,33 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val expected = mkSet(Range(2, 6).map(i => ValEx(TlaInt(i))): _*)
     val range = OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(5)))
     val eqExpected = OperEx(TlaOper.eq, range, expected)
+
+    val state = new SymbState(eqExpected, BoolTheory(), arena, new Binding)
+    val rewriter = new SymbStateRewriter(solverContext)
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        assert(solverContext.sat())
+        // check equality
+        rewriter.push()
+        solverContext.assertGroundExpr(predEx)
+        assert(solverContext.sat())
+        rewriter.pop()
+        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, predEx))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-INT-RNG: 2..(6 - 1)  = {2, 3, 4, 5}""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val expected = mkSet(Range(2, 6).map(i => tla.int(i)): _*)
+    val range = tla.dotdot(tla.int(2), tla.minus(tla.int(6), tla.int(1)))
+    val eqExpected = tla.eql(range, expected)
 
     val state = new SymbState(eqExpected, BoolTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
