@@ -46,6 +46,14 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
   log("(declare-fun valInt (Cell) Int)") // log declaration
 
   /**
+    * The calls to z3context.mkConst consume 20% of the running time, according to VisualVM.
+    * Let's cache the constants, if Z3 cannot do it well.
+    * Again, the cache carries the context level, to support push and pop.
+    */
+  private val constCache: mutable.Map[String, (Expr, Int)] =
+    new mutable.HashMap[String, (Expr, Int)]
+
+  /**
     * Uninterpreted functions C -> C associated with function cells.
     * Since context operations may clear function declaration,
     * we carry the context level in the map and clean the function declarations on pop.
@@ -53,15 +61,11 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
   private val cellFuns: mutable.Map[String, (FuncDecl, Int)] =
     new mutable.HashMap[String, (FuncDecl, Int)]()
 
-  def falseConst: String = BoolTheory().namePrefix + "0" // $B$0
-  log(s"(declare-const $falseConst Bool)")
-
-  def trueConst: String = BoolTheory().namePrefix + "1" // $B$1
-  log(s"(declare-const $trueConst Bool)")
+  def falseConst: String = introBoolConst() // $B$0
+  def trueConst: String = introBoolConst() // $B$1
 
   // this constant should equal true, when a failure occured, TODO: figure out the failure semantics
-  def failConst: String = BoolTheory().namePrefix + "2" // $B$2
-  log(s"(declare-const $failConst Bool)")
+  def failConst: String = introBoolConst() // $B$2
   assertGroundExpr(NameEx(trueConst))
   assertGroundExpr(OperEx(TlaBoolOper.not, NameEx(falseConst)))
 
@@ -98,7 +102,10 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
     } else {
       maxCellIdPerContext = cell.id +: maxCellIdPerContext.tail
     }
-    z3context.mkConstDecl(cell.toString, cellSort)
+    val cellName = cell.toString
+    z3context.mkConstDecl(cellName, cellSort)
+    val const = z3context.mkConst(cellName, cellSort)
+    constCache += (cellName -> (const, level))
   }
 
   /**
@@ -170,6 +177,8 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
     log(s";; declare bool $name")
     log(s"(declare-const $name Bool)")
     nBoolConsts += 1
+    val const = z3context.mkConst(name, z3context.getBoolSort)
+    constCache += (name -> (const, level))
     name
   }
 
@@ -183,6 +192,8 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
     log(";; declare int $name")
     log("(declare-const $name Int)")
     nIntConsts += 1
+    val const = z3context.mkConst(name, z3context.getIntSort)
+    constCache += (name -> (const, level))
     name
   }
 
@@ -229,8 +240,9 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
       z3solver.pop()
       maxCellIdPerContext = maxCellIdPerContext.tail
       level -= 1
-      // clean function declarations
+      // clean the caches
       cellFuns.retain((_, value) => value._2 <= level)
+      constCache.retain((_, value) => value._2 <= level)
     }
   }
 
@@ -241,8 +253,9 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
       z3solver.pop(n)
       maxCellIdPerContext = maxCellIdPerContext.drop(n)
       level -= n
-      // clean function declarations
+      // clean the caches
       cellFuns.retain((_, value) => value._2 <= level)
+      constCache.retain((_, value) => value._2 <= level)
     }
   }
 
@@ -270,15 +283,7 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
   private def toExpr(ex: TlaEx): Expr = {
     ex match {
       case NameEx(name) =>
-        if (CellTheory().hasConst(name)) {
-          z3context.mkConst(name, cellSort)
-        } else if (BoolTheory().hasConst(name)) {
-          z3context.mkBoolConst(name)
-        } else if (IntTheory().hasConst(name)) {
-          z3context.mkIntConst(name)
-        } else {
-          throw new InvalidTlaExException("Expected a cell, found name: " + name, ex)
-        }
+        constCache(name)._1 // the cached expression
 
       case ValEx(TlaFalse) =>
         z3context.mkFalse()
@@ -300,7 +305,7 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
       case OperEx(TlaOper.eq, lhs@NameEx(lname), rhs@NameEx(rname)) =>
         if (CellTheory().hasConst(lname) && CellTheory().hasConst(rname)) {
           // just comparing cells
-          z3context.mkEq(z3context.mkConst(lname, cellSort), z3context.mkConst(rname, cellSort))
+          z3context.mkEq(constCache(lname)._1, constCache(rname)._1)
         } else {
           // comparing integers and Boolean to cells, Booleans to Booleans, and Integers to Integers
           toEqExpr(toExpr(lhs), toExpr(rhs))
@@ -335,13 +340,13 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
         z3context.mkNot(exZ3)
 
       case OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName)) =>
-        val elem = z3context.mkConst(elemName, cellSort)
-        val set = z3context.mkConst(setName, cellSort)
+        val elem = constCache(elemName)._1
+        val set = constCache(setName)._1
         z3context.mkApp(inFun, elem, set)
 
       case OperEx(TlaFunOper.app, NameEx(funName), NameEx(argName)) =>
         // apply the function associated with a cell
-        val arg = z3context.mkConst(argName, cellSort)
+        val arg = constCache(argName)._1
         if (funName != "$$intVal") {
           val (fun, _) = cellFuns(funName)
           z3context.mkApp(fun, arg)
