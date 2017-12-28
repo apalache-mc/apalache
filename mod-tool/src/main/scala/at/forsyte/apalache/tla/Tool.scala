@@ -60,14 +60,14 @@ object Tool extends App with LazyLogging {
     val injector = Guice.createInjector(new CheckerModule())
     val executor = injector.getInstance(classOf[PassChainExecutor])
     executor.options.setOption("parser.filename", check.file.getAbsolutePath)
-    executor.options.setOption("check.init", check.init)
-    executor.options.setOption("check.next", check.next)
-    executor.options.setOption("check.inv", check.inv)
-    executor.options.setOption("check.length", check.length)
+    executor.options.setOption("checker.init", check.init)
+    executor.options.setOption("checker.next", check.next)
+    executor.options.setOption("checker.inv", check.inv)
+    executor.options.setOption("checker.length", check.length)
 
     val result = executor.run()
     if (result.isDefined) {
-      val tlaModule = result.get.asInstanceOf[TlaModuleMixin].tlaModule.get
+      logger.error("Checker reports no error up to computation length %d", check.length)
     } else {
       logger.error("Checker has failed")
     }
