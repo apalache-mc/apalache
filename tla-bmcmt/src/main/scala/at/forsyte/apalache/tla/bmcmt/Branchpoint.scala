@@ -11,7 +11,8 @@ package at.forsyte.apalache.tla.bmcmt
   *
   * @param state        the state in which the branching has occurred
   * @param depth        the search depth reached so far (an initial state has depth 0)
-  * @param transitionNo the sequential number of a transition (in the decreasing order, 0 comes last)
+  * @param transitionNo the sequential number of a transition (in the same order as given to Checker)
+  * @param isLast       is this branching the last one, i.e., constructed for the last transition
   * @param contextLevel the number of context pushes made by the SMT solver before exploring the branches,
   *                     we use it to pop the SMT contexts that were introduced by the branches.
   * @author Igor Konnov
@@ -19,5 +20,6 @@ package at.forsyte.apalache.tla.bmcmt
 class Branchpoint(val state: SymbState,
                   val depth: Int,
                   val transitionNo: Int,
+                  val isLast: Boolean,
                   val contextLevel: Int) {
 }

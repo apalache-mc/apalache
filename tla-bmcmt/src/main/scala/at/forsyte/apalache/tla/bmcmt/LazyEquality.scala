@@ -102,14 +102,9 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
       }
       state
     } else {
-      if (left == right) {
-        // there is nothing to do
-        state
-      } else if (eqCache.contains((left, right)) || eqCache.contains((right, left))) {
-        // the constraints are already in the cache, we can just write down an SMT equality
-        OperEx(TlaOper.eq, left.toNameEx, right.toNameEx)
-        eqCache.add((left, right)) // remember that we have generated the equality constraints
-        entriesPerLevel = ((left, right) +: entriesPerLevel.head) +: entriesPerLevel.tail // add entry on the head
+      if (left == right
+        || eqCache.contains((left, right)) || eqCache.contains((right, left))) {
+        // there is nothing to do, the constraints are all there
         state
       } else {
         // generate constraints

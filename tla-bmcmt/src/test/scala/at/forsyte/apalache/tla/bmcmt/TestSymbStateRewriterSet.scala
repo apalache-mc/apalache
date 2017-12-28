@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.types.BoolT
+import at.forsyte.apalache.tla.bmcmt.types.{BoolT, IntT}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
@@ -246,6 +246,31 @@ class TestSymbStateRewriterSet extends RewriterBase {
           case _ =>
             fail("Unexpected rewriting result")
         }
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SET-IN1 (shortcut): 1 \in {1} ~~> $B$k""") {
+    // there is a special shortcut rule for singleton sets, which had a bug
+    val ex = tla.in(tla.int(1), tla.enumSet(tla.int(1)))
+
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding)
+    val rewriter = new SymbStateRewriter(solverContext)
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx @ NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        nextState.arena.appendCell(IntT()) // the buggy rule implementation triggered an error here
+        rewriter.push()
+        solverContext.assertGroundExpr(predEx)
+        assert(solverContext.sat())
+        rewriter.pop()
+        rewriter.push()
+        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, predEx))
+        assert(!solverContext.sat())
+        rewriter.pop()
 
       case _ =>
         fail("Unexpected rewriting result")

@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla
 
 import at.forsyte.apalache.infra.PassOptionException
 import at.forsyte.apalache.infra.passes.{PassChainExecutor, TlaModuleMixin}
+import at.forsyte.apalache.tla.bmcmt.InternalCheckerError
 import at.forsyte.apalache.tla.bmcmt.passes.CheckerModule
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.tooling.Version
@@ -79,8 +80,11 @@ object Tool extends App with LazyLogging {
       case e: PassOptionException =>
         logger.error(e.getMessage)
 
+      case e: InternalCheckerError =>
+        logger.error("The tool has detected an internal bug in itself. REPORT IT.", e)
+
       case e: Throwable =>
-        logger.error("This should not have happened. REPORT A BUG.", e)
+        logger.error("This should not have happened, but it did. REPORT A BUG.", e)
     }
   }
 }

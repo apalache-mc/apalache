@@ -14,7 +14,8 @@ trait RewritingRule {
   }
 
   def logOnReturn(solverContext: SolverContext, state: SymbState): SymbState = {
-    solverContext.log("; } %s returns %s)".format(getClass.getSimpleName, state.ex))
+    solverContext.log("; } %s returns %s [%d arena cells])"
+      .format(getClass.getSimpleName, state.ex, state.arena.cellCount))
     state
   }
 }

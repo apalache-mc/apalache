@@ -16,29 +16,34 @@ import scala.collection.mutable
   * @author Igor Konnov
   */
 class Z3SolverContext extends SolverContext {
+  /**
+    * A log writer, for debugging purposes.
+    */
+  private val logWriter: PrintWriter = new PrintWriter(new File("log.smt"))
+
   var level: Int = 0
   var nBoolConsts: Int = 3 // the first three cells are reserved for: false, true, fail
   var nIntConsts: Int = 0
   private val z3context: Context = new Context()
   private val z3solver = z3context.mkSolver()
+
   private val cellSort: UninterpretedSort = z3context.mkUninterpretedSort("Cell")
+  // log declaration, so we can directly replay the log with z3 -smt2
+  logWriter.println("(declare-sort Cell 0)")
 
   /**
     * Uninterpreted predicate in(c, d) that expresses whether c is a member of d.
     */
   private val inFun: FuncDecl =
     z3context.mkFuncDecl("in", Array[Sort](cellSort, cellSort), z3context.getBoolSort)
+  logWriter.println("(declare-fun in (Cell Cell) Bool)") // log declaration
 
   /**
     * Uninterpreted function to store integer values of integer cells.
     */
   private val valIntFun: FuncDecl =
     z3context.mkFuncDecl("valInt", cellSort, z3context.getIntSort)
-
-  /**
-    * A log writer, for debug purposes.
-    */
-  private val logWriter: PrintWriter = new PrintWriter(new File("log.smt"))
+  logWriter.println("(declare-fun valInt (Cell) Int)") // log declaration
 
   /**
     * Uninterpreted functions C -> C associated with function cells.
@@ -46,11 +51,22 @@ class Z3SolverContext extends SolverContext {
   private val cellFuns: mutable.Map[String, FuncDecl] = new mutable.HashMap[String, FuncDecl]()
 
   def falseConst: String = BoolTheory().namePrefix + "0" // $B$0
+  logWriter.println("(declare-const %s Bool)".format(falseConst))
   def trueConst: String = BoolTheory().namePrefix + "1" // $B$1
-  // this constant should equal true, when a failure occured
+  logWriter.println("(declare-const %s Bool)".format(trueConst))
+  // this constant should equal true, when a failure occured, TODO: figure out the failure semantics
   def failConst: String = BoolTheory().namePrefix + "2" // $B$2
+  logWriter.println("(declare-const %s Bool)".format(failConst))
   assertGroundExpr(NameEx(trueConst))
   assertGroundExpr(OperEx(TlaBoolOper.not, NameEx(falseConst)))
+
+  /**
+    * Sometimes, we lose a fresh arena in the rewriting rules. As this situation is very hard to debug,
+    * we are tracking here the largest cell id per SMT context. If the user is trying to add a cell
+    * with a smaller id, there is a good chance that a fresher arena was overwritten with an older one.
+    * To find bugs as soon as possible, we crash immediately.
+    */
+  private var maxCellIdPerContext = List(-1)
 
   /**
     * Dispose whatever has to be disposed in the end.
@@ -67,6 +83,16 @@ class Z3SolverContext extends SolverContext {
     */
   override def declareCell(cell: ArenaCell): Unit = {
     logWriter.println(";; declare cell(%s): %s".format(cell.toString, cell.cellType))
+    logWriter.println("(declare-const %s Cell)".format(cell))
+    if (maxCellIdPerContext.head >= cell.id) {
+      // Checking consistency. When the user accidentally replaces a fresh arena with an older one,
+      // we report it immediately. Otherwise, it is very hard to find the cause.
+      logWriter.flush() // flush the SMT log
+      throw new InternalCheckerError("Declaring cell %d, while cell %d has been already declared. Damaged arena?"
+        .format(cell.id, maxCellIdPerContext.head))
+    } else {
+      maxCellIdPerContext = cell.id +: maxCellIdPerContext.tail
+    }
     z3context.mkConstDecl(cell.toString, cellSort)
   }
 
@@ -126,6 +152,7 @@ class Z3SolverContext extends SolverContext {
   override def introBoolConst(): String = {
     val name = "%s%d".format(BoolTheory().namePrefix, nBoolConsts)
     logWriter.println(";; declare bool " + name)
+    logWriter.println("(declare-const %s Bool)".format(name))
     nBoolConsts += 1
     name
   }
@@ -138,6 +165,7 @@ class Z3SolverContext extends SolverContext {
   override def introIntConst(): String = {
     val name = "%s%d".format(IntTheory().namePrefix, nIntConsts)
     logWriter.println(";; declare int " + name)
+    logWriter.println("(declare-const %s Int)".format(name))
     nIntConsts += 1
     name
   }
@@ -157,6 +185,7 @@ class Z3SolverContext extends SolverContext {
       case None =>
         val name = "fun%d".format(cell.id)
         logWriter.println(";; declare cell fun " + name)
+        logWriter.println("(declare-fun %s (Cell) Cell)".format(name))
         val funDecl = z3context.mkFuncDecl(name, cellSort, cellSort)
         cellFuns.put(cellName, funDecl)
         name
@@ -170,6 +199,7 @@ class Z3SolverContext extends SolverContext {
     logWriter.println("(push)")
     logWriter.flush() // good time to flush
     z3solver.push()
+    maxCellIdPerContext = maxCellIdPerContext.head +: maxCellIdPerContext
     level += 1
   }
 
@@ -181,6 +211,7 @@ class Z3SolverContext extends SolverContext {
       logWriter.println("(pop)")
       logWriter.flush() // good time to flush
       z3solver.pop()
+      maxCellIdPerContext = maxCellIdPerContext.tail
       level -= 1
     }
   }
@@ -190,15 +221,20 @@ class Z3SolverContext extends SolverContext {
       logWriter.println("(pop %d)".format(n))
       logWriter.flush() // good time to flush
       z3solver.pop(n)
+      maxCellIdPerContext = maxCellIdPerContext.drop(n)
       level -= n
     }
   }
 
   override def sat(): Boolean = {
-    logWriter.println("(check)")
+    logWriter.println("(check-sat)")
     val status = z3solver.check()
     logWriter.println(";; sat = " + (status == Status.SATISFIABLE))
     logWriter.flush() // good time to flush
+    if (status == Status.UNKNOWN) {
+      // that seems to be the only reasonable behavior
+      throw new SmtEncodingException("SMT solver reports UNKNOWN. Perhaps, your specification is outside the supported logic.")
+    }
     status == Status.SATISFIABLE
   }
 

@@ -35,3 +35,11 @@ class SmtEncodingException(message: String) extends CheckerException(message)
   * @param ex the problematic expression
   */
 class InvalidTlaExException(message: String, ex: TlaEx) extends  CheckerException(message)
+
+/**
+  * An internal error that was triggered by the consistency checking code.
+  * The user should contact the developers.
+  *
+  * @param message error message
+  */
+class InternalCheckerError(message: String) extends CheckerException(message)

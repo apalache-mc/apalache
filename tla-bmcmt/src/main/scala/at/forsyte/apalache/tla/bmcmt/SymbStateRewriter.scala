@@ -49,8 +49,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
 
   // A nice way to guess the candidate rules by looking at the expression key.
   // We use simple expressions to generate the keys.
-  // The idea is similar to a hash table, but in contrast to a hash table,
-  // we group similar expressions, since they have to be processed by the same rules.
+  // For each key, there is a short list of rules that may be applicable.
   private val ruleLookupTable: Map[String, List[RewritingRule]] = Map(
     // the order is only important to improve readability
 

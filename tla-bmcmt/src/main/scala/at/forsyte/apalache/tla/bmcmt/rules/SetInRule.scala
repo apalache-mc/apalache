@@ -37,8 +37,8 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val nextState = rewriter.rewriteUntilDone(state.setRex(rhs).setTheory(CellTheory()))
         val rhsCell = nextState.arena.findCellByNameEx(nextState.ex)
         val lhsCell = state.binding(name)
-        rewriter.lazyEq.cacheOneEqConstraint(nextState, lhsCell, rhsCell)
-        val finalState = nextState
+        val afterEqState = rewriter.lazyEq.cacheOneEqConstraint(nextState, lhsCell, rhsCell)
+        val finalState = afterEqState
           .setTheory(BoolTheory())
           .setRex(rewriter.lazyEq.safeEq(lhsCell, rhsCell))
           .setBinding(nextState.binding + (name -> rhsCell)) // bind the cell to the name
@@ -58,10 +58,13 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
           case PowSetT(FinSetT(_)) =>
             powSetIn(setState, setCell, elemCell)
 
-          case _ => throw new RewriterException("Unexpected set type: %s in %s".format(setCell.cellType, state.ex))
+          case _ => throw new RewriterException("Unexpected set type: %s in %s"
+            .format(setCell.cellType, state.ex))
         }
 
-        rewriter.coerce(finalState, state.theory)
+        val coercedState = rewriter.coerce(finalState, state.theory)
+        assert(coercedState.arena.cellCount >= finalState.arena.cellCount) // catching a tricky bug
+        coercedState
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
@@ -97,13 +100,11 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       state.setTheory(BoolTheory())
         .setRex(NameEx(rewriter.solverContext.falseConst))
     } else {
-      val newArena = state.arena
       val pred = rewriter.solverContext.introBoolConst()
-      if (newArena.isLinkedViaHas(setCell, elemCell)) {
+      if (state.arena.isLinkedViaHas(setCell, elemCell)) {
         // SE-SET-IN2: the element cell is already in the arena, just check dynamic membership
         rewriter.solverContext.assertGroundExpr(tla.eql(tla.name(pred), tla.in(elemCell, state.ex)))
-        state.setTheory(BoolTheory())
-          .setArena(newArena).setRex(NameEx(pred))
+        state.setTheory(BoolTheory()).setRex(NameEx(pred))
       } else {
         // SE-SET-IN3: general case, generate equality constraints, if needed, and use them
         // cache equality constraints first
@@ -115,7 +116,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         val elemsInAndEq = potentialElems.map(inAndEq)
         rewriter.solverContext.assertGroundExpr(tla.eql(tla.name(pred), tla.or(elemsInAndEq: _*)))
-        eqState.setTheory(BoolTheory()).setArena(newArena).setRex(NameEx(pred))
+        eqState.setTheory(BoolTheory()).setRex(NameEx(pred))
       }
     }
   }

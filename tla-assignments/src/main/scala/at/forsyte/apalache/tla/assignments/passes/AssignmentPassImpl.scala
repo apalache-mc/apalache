@@ -75,8 +75,12 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
         // TODO: label the assignment expressions as assignments in a special database
         // for the moment just rely on that the assignment solver transforms the formulas in such a way
         // that all assignments come first
-        initAssignments.get.map(_._2)
+        initAssignments.get.map(_._2).toList
       }
+
+    for ((t, i) <- initTransitions.zipWithIndex) {
+      logger.debug("Initial transition #%d:\n   %s".format(i, t))
+    }
 
     val nextName = options.getOption("checker", "next", "Next").asInstanceOf[String]
     val nextBody = findBodyOf(nextName, tlaModule.get.declarations: _*)
@@ -89,8 +93,12 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
         // TODO: label the assignment expressions as assignments in a special database
         // for the moment just rely on that the assignment solver transforms the formulas in such a way
         // that all assignments come first
-        nextAssignments.get.map(_._2)
+        nextAssignments.get.map(_._2).toList
       }
+
+    for ((t, i) <- nextTransitions.zipWithIndex) {
+      logger.debug("Next transition #%d:\n   %s".format(i, t))
+    }
 
     //    val invariant = findBodyOf(invName, tlaModule.get.declarations: _*)
 
