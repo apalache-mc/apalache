@@ -47,13 +47,18 @@ class Z3SolverContext extends SolverContext {
 
   /**
     * Uninterpreted functions C -> C associated with function cells.
+    * Since context operations may clear function declaration,
+    * we carry the context level in the map and clean the function declarations on pop.
     */
-  private val cellFuns: mutable.Map[String, FuncDecl] = new mutable.HashMap[String, FuncDecl]()
+  private val cellFuns: mutable.Map[String, (FuncDecl, Int)] =
+    new mutable.HashMap[String, (FuncDecl, Int)]()
 
   def falseConst: String = BoolTheory().namePrefix + "0" // $B$0
   logWriter.println("(declare-const %s Bool)".format(falseConst))
+
   def trueConst: String = BoolTheory().namePrefix + "1" // $B$1
   logWriter.println("(declare-const %s Bool)".format(trueConst))
+
   // this constant should equal true, when a failure occured, TODO: figure out the failure semantics
   def failConst: String = BoolTheory().namePrefix + "2" // $B$2
   logWriter.println("(declare-const %s Bool)".format(failConst))
@@ -179,7 +184,7 @@ class Z3SolverContext extends SolverContext {
   def getOrIntroCellFun(cell: ArenaCell): String = {
     val cellName = cell.toString
     cellFuns.get(cellName) match {
-      case Some(funDecl) =>
+      case Some((funDecl, _)) =>
         funDecl.getName.toString
 
       case None =>
@@ -187,7 +192,7 @@ class Z3SolverContext extends SolverContext {
         logWriter.println(";; declare cell fun " + name)
         logWriter.println("(declare-fun %s (Cell) Cell)".format(name))
         val funDecl = z3context.mkFuncDecl(name, cellSort, cellSort)
-        cellFuns.put(cellName, funDecl)
+        cellFuns.put(cellName, (funDecl, level))
         name
     }
   }
@@ -213,6 +218,8 @@ class Z3SolverContext extends SolverContext {
       z3solver.pop()
       maxCellIdPerContext = maxCellIdPerContext.tail
       level -= 1
+      // clean function declarations
+      cellFuns.retain((_, value) => value._2 <= level)
     }
   }
 
@@ -223,6 +230,8 @@ class Z3SolverContext extends SolverContext {
       z3solver.pop(n)
       maxCellIdPerContext = maxCellIdPerContext.drop(n)
       level -= n
+      // clean function declarations
+      cellFuns.retain((_, value) => value._2 <= level)
     }
   }
 
@@ -323,7 +332,7 @@ class Z3SolverContext extends SolverContext {
         // apply the function associated with a cell
         val arg = z3context.mkConst(argName, cellSort)
         if (funName != "$$intVal") {
-          val fun = cellFuns(funName)
+          val (fun, _) = cellFuns(funName)
           z3context.mkApp(fun, arg)
         } else {
           // a hack to get back the integer values from a model
