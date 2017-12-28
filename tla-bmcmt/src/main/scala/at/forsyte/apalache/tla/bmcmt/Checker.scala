@@ -20,7 +20,7 @@ object Checker {
   *
   * @author Igor Konnov
   */
-class Checker(checkerInput: CheckerInput, stepsBound: Int) extends LazyLogging {
+class Checker(checkerInput: CheckerInput, stepsBound: Int, debug: Boolean = false) extends LazyLogging {
   /**
     * Unexplored branching points.
     */
@@ -33,7 +33,7 @@ class Checker(checkerInput: CheckerInput, stepsBound: Int) extends LazyLogging {
     * The depth of the last state that was found to be satisfiable
     */
   private var lastSatDepth = -1
-  private val solverContext: SolverContext = new Z3SolverContext
+  private val solverContext: SolverContext = new Z3SolverContext(debug)
   private val rewriter = new SymbStateRewriter(solverContext)
 
   /**

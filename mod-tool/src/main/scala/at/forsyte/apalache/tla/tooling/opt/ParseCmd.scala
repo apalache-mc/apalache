@@ -10,7 +10,7 @@ import org.backuity.clist.{Command, _}
   * @author Igor Konnov
   */
 class ParseCmd extends Command(name = "parse",
-                               description = "Parse a TLA+ specification and quit") {
+  description = "Parse a TLA+ specification and quit") with General {
 
   var file: File = arg[File](description = "a file containing a TLA+ specification")
 }

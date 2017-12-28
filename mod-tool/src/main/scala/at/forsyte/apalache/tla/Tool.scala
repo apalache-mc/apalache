@@ -25,7 +25,8 @@ object Tool extends App with LazyLogging {
     Console.println("")
     val parseCmd = new ParseCmd
     val checkCmd = new CheckCmd
-    Cli.parse(args).withProgramName("checker").withCommands(parseCmd, checkCmd) match {
+    Cli.parse(args).withProgramName("apalache").version(Version.version)
+        .withCommands(parseCmd, checkCmd) match {
       case Some(parse: ParseCmd) =>
         logger.debug("Parse " + parse.file)
         handleExceptions(runParse(parse, _))
@@ -59,6 +60,7 @@ object Tool extends App with LazyLogging {
   private def runCheck(check: CheckCmd, u: Unit): Unit = {
     val injector = Guice.createInjector(new CheckerModule())
     val executor = injector.getInstance(classOf[PassChainExecutor])
+    executor.options.setOption("general.debug", check.debug)
     executor.options.setOption("parser.filename", check.file.getAbsolutePath)
     executor.options.setOption("checker.init", check.init)
     executor.options.setOption("checker.next", check.next)
@@ -67,7 +69,7 @@ object Tool extends App with LazyLogging {
 
     val result = executor.run()
     if (result.isDefined) {
-      logger.error("Checker reports no error up to computation length %d", check.length)
+      logger.error("Checker reports no error up to computation length " + check.length)
     } else {
       logger.error("Checker has failed")
     }

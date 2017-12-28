@@ -9,7 +9,7 @@ class TerminalPass extends Pass {
     *
     * @return the name associated with the pass
     */
-  override def name: String = "terminal"
+  override def name: String = "Terminal"
 
   /**
     * Run the pass.

@@ -10,7 +10,7 @@ import org.backuity.clist.{Command, _}
   * @author Igor Konnov
   */
 class CheckCmd extends Command(name = "check",
-  description = "Check a TLA+ specification") {
+  description = "Check a TLA+ specification") with General {
 
   var file: File = arg[File](description = "a file containing a TLA+ specification")
   var init: String = opt[String](

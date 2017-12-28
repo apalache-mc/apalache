@@ -39,7 +39,8 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
     // TODO: add the invariant
     val input = new CheckerInput(spec.rootModule, spec.initTransitions, spec.nextTransitions, invariant = None)
     val stepsBound = options.getOption("checker", "length", 10).asInstanceOf[Int]
-    val outcome = new Checker(input, stepsBound).run()
+    val debug = options.getOption("general", "debug", false).asInstanceOf[Boolean]
+    val outcome = new Checker(input, stepsBound, debug).run()
     logger.info("The outcome is: " + outcome)
     outcome == Outcome.NoError
   }
