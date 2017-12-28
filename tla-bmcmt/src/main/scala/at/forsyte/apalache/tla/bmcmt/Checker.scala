@@ -84,8 +84,9 @@ class Checker(checkerInput: CheckerInput, stepsBound: Int, debug: Boolean = fals
         rewriter.pop(rewriter.contextLevel - point.contextLevel) // roll back, if needed
         stack.drop(stack.length - (1 + point.depth)) // remove the states explored beyond this point
         rewriter.push()
-        logger.debug("Stack push to level %d".format(rewriter.contextLevel))
+        logger.debug("Stack push to level %d, then rewriting".format(rewriter.contextLevel))
         val nextState = rewriter.rewriteUntilDone(point.state)
+        logger.debug("Finished rewriting")
         stack = nextState +: stack
         if (!solverContext.sat()) {
           // this is a clear sign of a bug in one of the translation rules

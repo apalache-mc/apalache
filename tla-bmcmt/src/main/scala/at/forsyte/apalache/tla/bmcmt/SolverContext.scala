@@ -55,9 +55,9 @@ trait SolverContext extends StackableContext {
   /**
     * Write a message to the log file. This is helpful to debug the SMT encoding.
     *
-    * @param message message text
+    * @param message message text, call-by-name
     */
-  def log(message: String): Unit
+  def log(message: => String): Unit
 
   /**
     * Is the current context satisfiable?

@@ -54,14 +54,14 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
     new mutable.HashMap[String, (FuncDecl, Int)]()
 
   def falseConst: String = BoolTheory().namePrefix + "0" // $B$0
-  log("(declare-const %s Bool)".format(falseConst))
+  log(s"(declare-const $falseConst Bool)")
 
   def trueConst: String = BoolTheory().namePrefix + "1" // $B$1
-  log("(declare-const %s Bool)".format(trueConst))
+  log(s"(declare-const $trueConst Bool)")
 
   // this constant should equal true, when a failure occured, TODO: figure out the failure semantics
   def failConst: String = BoolTheory().namePrefix + "2" // $B$2
-  log("(declare-const %s Bool)".format(failConst))
+  log(s"(declare-const $failConst Bool)")
   assertGroundExpr(NameEx(trueConst))
   assertGroundExpr(OperEx(TlaBoolOper.not, NameEx(falseConst)))
 
@@ -87,8 +87,8 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
     * @param cell a (previously undeclared) cell
     */
   override def declareCell(cell: ArenaCell): Unit = {
-    log(";; declare cell(%s): %s".format(cell.toString, cell.cellType))
-    log("(declare-const %s Cell)".format(cell))
+    log(s";; declare cell($cell): ${cell.cellType}")
+    log(s"(declare-const $cell Cell)")
     if (maxCellIdPerContext.head >= cell.id) {
       // Checking consistency. When the user accidentally replaces a fresh arena with an older one,
       // we report it immediately. Otherwise, it is very hard to find the cause.
@@ -107,9 +107,9 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
     * @param ex a simplified TLA+ expression over cells
     */
   def assertGroundExpr(ex: TlaEx): Unit = {
-    log(";; assert " + UTFPrinter.apply(ex))
+    log(s";; assert ${UTFPrinter.apply(ex)}")
     val z3expr = toExpr(ex)
-    log("(assert %s)".format(z3expr.toString))
+    log(s"(assert ${z3expr.toString})")
     z3solver.add(z3expr.asInstanceOf[BoolExpr])
   }
 
@@ -144,6 +144,7 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
     val writer = new PrintWriter(new File("log.smt"))
     if (!debug) {
       writer.println("Logging is disabled (Z3SolverContext.debug = false). Activate with --debug.")
+      writer.flush()
     }
     writer
   }
@@ -151,9 +152,9 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
   /**
     * Log message to the logging file. This is helpful to debug the SMT encoding.
     *
-    * @param message message text
+    * @param message message text, called by name, so evaluated only when needed
     */
-  def log(message: String): Unit = {
+  def log(message: => String): Unit = {
     if (debug) {
       logWriter.println(message)
     }
@@ -166,8 +167,8 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
     */
   override def introBoolConst(): String = {
     val name = "%s%d".format(BoolTheory().namePrefix, nBoolConsts)
-    log(";; declare bool " + name)
-    log("(declare-const %s Bool)".format(name))
+    log(s";; declare bool $name")
+    log(s"(declare-const $name Bool)")
     nBoolConsts += 1
     name
   }
@@ -179,8 +180,8 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
     */
   override def introIntConst(): String = {
     val name = "%s%d".format(IntTheory().namePrefix, nIntConsts)
-    log(";; declare int " + name)
-    log("(declare-const %s Int)".format(name))
+    log(";; declare int $name")
+    log("(declare-const $name Int)")
     nIntConsts += 1
     name
   }
@@ -199,8 +200,8 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
 
       case None =>
         val name = "fun%d".format(cell.id)
-        log(";; declare cell fun " + name)
-        log("(declare-fun %s (Cell) Cell)".format(name))
+        log(s";; declare cell fun $name")
+        log(s"(declare-fun $name (Cell) Cell)")
         val funDecl = z3context.mkFuncDecl(name, cellSort, cellSort)
         cellFuns.put(cellName, (funDecl, level))
         name
@@ -235,7 +236,7 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
 
   override def pop(n: Int): Unit = {
     if (n > 0) {
-      log("(pop %d)".format(n))
+      log("(pop $n)")
       logWriter.flush() // good time to flush
       z3solver.pop(n)
       maxCellIdPerContext = maxCellIdPerContext.drop(n)
@@ -248,7 +249,7 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
   override def sat(): Boolean = {
     log("(check-sat)")
     val status = z3solver.check()
-    log(";; sat = " + (status == Status.SATISFIABLE))
+    log(s";; sat = ${status == Status.SATISFIABLE}")
     logWriter.flush() // good time to flush
     if (status == Status.UNKNOWN) {
       // that seems to be the only reasonable behavior
