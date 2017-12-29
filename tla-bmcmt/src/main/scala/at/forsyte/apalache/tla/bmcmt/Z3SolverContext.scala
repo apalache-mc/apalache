@@ -22,7 +22,7 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
   private val logWriter: PrintWriter = initLog()
 
   var level: Int = 0
-  var nBoolConsts: Int = 3 // the first three cells are reserved for: false, true, fail
+  var nBoolConsts: Int = 0 // the first three cells are reserved for: false, true, fail
   var nIntConsts: Int = 0
   private val z3context: Context = new Context()
   private val z3solver = z3context.mkSolver()
@@ -61,11 +61,11 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
   private val cellFuns: mutable.Map[String, (FuncDecl, Int)] =
     new mutable.HashMap[String, (FuncDecl, Int)]()
 
-  def falseConst: String = introBoolConst() // $B$0
-  def trueConst: String = introBoolConst() // $B$1
+  val falseConst: String = introBoolConst() // $B$0
+  val trueConst: String = introBoolConst() // $B$1
 
   // this constant should equal true, when a failure occured, TODO: figure out the failure semantics
-  def failConst: String = introBoolConst() // $B$2
+  val failConst: String = introBoolConst() // $B$2
   assertGroundExpr(NameEx(trueConst))
   assertGroundExpr(OperEx(TlaBoolOper.not, NameEx(falseConst)))
 
