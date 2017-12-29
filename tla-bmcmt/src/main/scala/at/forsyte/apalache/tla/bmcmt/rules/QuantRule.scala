@@ -25,7 +25,15 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case OperEx(TlaBoolOper.exists, NameEx(boundVar), boundingSetEx, predEx) =>
-        rewriteExistsOrForall(isExists = true, state, boundVar, boundingSetEx, predEx)
+        if (rewriter.freeExistentialsStore.isFreeExists(state.ex.ID)) {
+          val setState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(boundingSetEx))
+          val set = setState.arena.findCellByNameEx(setState.ex)
+          val setCells = setState.arena.getHas(set)
+          val finalState = freeExists(setState, boundVar, predEx, set, setCells)
+          rewriter.coerce(finalState, state.theory)
+        } else {
+          rewriteExistsOrForall(isExists = true, state, boundVar, boundingSetEx, predEx)
+        }
 
       case OperEx(TlaBoolOper.forall, NameEx(boundVar), boundingSetEx, predEx) =>
         rewriteExistsOrForall(isExists = false, state, boundVar, boundingSetEx, predEx)
@@ -94,8 +102,10 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule {
     rewriter.coerce(finalState, state.theory)
   }
 
-  // this is a special form of exists, which we will use later
-  private def specialExists(setState: SymbState, boundVar: String, predEx: TlaEx, set: ArenaCell, setCells: List[ArenaCell]) = {
+  // introduce a Skolem constant for a free-standing existential quantifier
+  private def freeExists(setState: SymbState, boundVar: String, predEx: TlaEx,
+                            set: ArenaCell, setCells: List[ArenaCell]) = {
+    rewriter.solverContext.log("; free existential rule")
     // pick an arbitrary witness
     val pickState = pickRule.pick(set, setState)
     val pickedCell = pickState.arena.findCellByNameEx(pickState.ex)

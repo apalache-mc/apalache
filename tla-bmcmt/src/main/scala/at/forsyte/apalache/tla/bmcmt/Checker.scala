@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt
 import java.io.{PrintWriter, StringWriter}
 
 import at.forsyte.apalache.tla.bmcmt.Checker.Outcome
+import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import com.typesafe.scalalogging.LazyLogging
@@ -20,7 +21,8 @@ object Checker {
   *
   * @author Igor Konnov
   */
-class Checker(checkerInput: CheckerInput, stepsBound: Int, debug: Boolean = false) extends LazyLogging {
+class Checker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
+              stepsBound: Int, debug: Boolean = false) extends LazyLogging {
   /**
     * Unexplored branching points.
     */
@@ -35,6 +37,7 @@ class Checker(checkerInput: CheckerInput, stepsBound: Int, debug: Boolean = fals
   private var lastSatDepth = -1
   private val solverContext: SolverContext = new Z3SolverContext(debug)
   private val rewriter = new SymbStateRewriter(solverContext)
+  rewriter.freeExistentialsStore = frexStore
 
   /**
     * Check all executions of a TLA+ specification up to a bounded number of steps.

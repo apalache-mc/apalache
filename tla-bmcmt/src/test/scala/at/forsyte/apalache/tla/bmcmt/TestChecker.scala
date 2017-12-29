@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStoreImpl
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule, TlaOperDecl}
@@ -18,7 +19,7 @@ class TestChecker extends FunSuite {
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
-    val checker = new Checker(checkerInput, 0)
+    val checker = new Checker(new FreeExistentialsStoreImpl(), checkerInput, 0)
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
   }
@@ -30,7 +31,7 @@ class TestChecker extends FunSuite {
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
-    val checker = new Checker(checkerInput, 0)
+    val checker = new Checker(new FreeExistentialsStoreImpl(), checkerInput, 0)
     val outcome = checker.run()
     assert(Checker.Outcome.Deadlock == outcome)
   }
@@ -42,7 +43,7 @@ class TestChecker extends FunSuite {
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
-    val checker = new Checker(checkerInput, 0)
+    val checker = new Checker(new FreeExistentialsStoreImpl(), checkerInput, 0)
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
   }
@@ -55,7 +56,7 @@ class TestChecker extends FunSuite {
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
-    val checker = new Checker(checkerInput, 1)
+    val checker = new Checker(new FreeExistentialsStoreImpl(), checkerInput, 1)
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
   }
@@ -70,7 +71,7 @@ class TestChecker extends FunSuite {
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
-    val checker = new Checker(checkerInput, 1)
+    val checker = new Checker(new FreeExistentialsStoreImpl(), checkerInput, 1)
     val outcome = checker.run()
     assert(Checker.Outcome.Deadlock == outcome)
   }
@@ -83,7 +84,7 @@ class TestChecker extends FunSuite {
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
-    val checker = new Checker(checkerInput, 10)
+    val checker = new Checker(new FreeExistentialsStoreImpl(), checkerInput, 10)
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
   }
@@ -98,7 +99,7 @@ class TestChecker extends FunSuite {
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
-    val checker = new Checker(checkerInput, 10)
+    val checker = new Checker(new FreeExistentialsStoreImpl(), checkerInput, 10)
     val outcome = checker.run()
     assert(Checker.Outcome.Deadlock == outcome)
   }
@@ -113,7 +114,7 @@ class TestChecker extends FunSuite {
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, Some(inv))
     // initialize the model checker
-    val checker = new Checker(checkerInput, 10)
+    val checker = new Checker(new FreeExistentialsStoreImpl(), checkerInput, 10)
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
   }
@@ -128,7 +129,7 @@ class TestChecker extends FunSuite {
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, Some(inv))
     // initialize the model checker
-    val checker = new Checker(checkerInput, 10)
+    val checker = new Checker(new FreeExistentialsStoreImpl(), checkerInput, 10)
     val outcome = checker.run()
     assert(Checker.Outcome.Error == outcome)
   }
@@ -144,7 +145,7 @@ class TestChecker extends FunSuite {
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
-    val checker = new Checker(checkerInput, 2)
+    val checker = new Checker(new FreeExistentialsStoreImpl(), checkerInput, 2)
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
   }
@@ -161,7 +162,7 @@ class TestChecker extends FunSuite {
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, Some(inv))
     // initialize the model checker
-    val checker = new Checker(checkerInput, 10)
+    val checker = new Checker(new FreeExistentialsStoreImpl(), checkerInput, 10)
     val outcome = checker.run()
     assert(Checker.Outcome.Error == outcome)
   }
@@ -188,7 +189,8 @@ class TestChecker extends FunSuite {
   }
 
   // copied from TestSanyImporter
-  private def expectSingleModule(expectedRootName: String, rootName: String, modules: Map[String, TlaModule]): TlaModule = {
+  private def expectSingleModule(expectedRootName: String, rootName: String,
+                                 modules: Map[String, TlaModule]): TlaModule = {
     assert(expectedRootName == rootName)
     assert(1 <= modules.size)
     val root = modules.get(rootName)

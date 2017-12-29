@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.passes
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
 import at.forsyte.apalache.tla.assignments.SpecWithTransitions
 import at.forsyte.apalache.tla.bmcmt.Checker.Outcome
+import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStore
 import at.forsyte.apalache.tla.bmcmt.{Checker, CheckerException, CheckerInput}
 import com.google.inject.Inject
 import com.google.inject.name.Named
@@ -14,6 +15,7 @@ import com.typesafe.scalalogging.LazyLogging
   * @author Igor Konnov
   */
 class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
+                                        freeExistentialsStore: FreeExistentialsStore,
                                         @Named("AfterChecker") nextPass: Pass)
       extends BoundedCheckerPass with LazyLogging {
 
@@ -33,14 +35,14 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
     */
   override def execute(): Boolean = {
     if (specWithTransitions.isEmpty) {
-      throw new CheckerException("The input of BoundedChecker pass is not initialized")
+      throw new CheckerException(s"The input of $name pass is not initialized")
     }
     val spec = specWithTransitions.get
     // TODO: add the invariant
     val input = new CheckerInput(spec.rootModule, spec.initTransitions, spec.nextTransitions, invariant = None)
     val stepsBound = options.getOption("checker", "length", 10).asInstanceOf[Int]
     val debug = options.getOption("general", "debug", false).asInstanceOf[Boolean]
-    val outcome = new Checker(input, stepsBound, debug).run()
+    val outcome = new Checker(freeExistentialsStore, input, stepsBound, debug).run()
     logger.info("The outcome is: " + outcome)
     outcome == Outcome.NoError
   }

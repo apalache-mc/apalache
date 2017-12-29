@@ -1,11 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter._
+import at.forsyte.apalache.tla.bmcmt.analyses.{FreeExistentialsStore, FreeExistentialsStoreImpl}
 import at.forsyte.apalache.tla.bmcmt.rules._
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaIntSet}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 
 object SymbStateRewriter {
   sealed abstract class RewritingResult
@@ -46,6 +47,17 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
   private val RECURSION_LIMIT: Int = 10000
   private val coercion = new CoercionWithCache(this)
   private val substRule = new SubstRule(this)
+
+  /**
+    * The store that marks free existential quantifiers. By default, empty.
+    */
+  var freeExistentialsStore: FreeExistentialsStore = new FreeExistentialsStoreImpl()
+
+  /**
+    * Get the current context level, that is the difference between the number of pushes and pops made so far.
+    * @return the current level, always non-negative.
+    */
+  def contextLevel: Int = level
 
   // A nice way to guess the candidate rules by looking at the expression key.
   // We use simple expressions to generate the keys.
@@ -151,12 +163,6 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
     key(tla.tuple(tla.name("x"), tla.int(2)))
     -> List(new TupleCtorRule(this))
   )///// ADD YOUR RULES ABOVE
-
-  /**
-    * Get the current context level, that is the difference between the number of pushes and pops made so far.
-    * @return the current level, always non-negative.
-    */
-  def contextLevel: Int = level
 
 
   /**
