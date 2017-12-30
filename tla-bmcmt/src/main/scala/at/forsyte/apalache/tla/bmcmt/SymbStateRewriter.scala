@@ -241,7 +241,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
     *
     * @param state a state to start with
     * @param es    a sequence of expressions to rewrite
-    * @return a pair (the old state in a new context, the rewritten expressions)
+    * @return a pair (the new state with the original expression, the rewritten expressions)
     */
   def rewriteSeqUntilDone(state: SymbState, es: Seq[TlaEx]): (SymbState, Seq[TlaEx]) = {
     def process(st: SymbState, seq: Seq[TlaEx]): (SymbState, Seq[TlaEx]) = {
@@ -250,14 +250,15 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
           (st, List())
 
         case r :: tail =>
-          val (ts: SymbState, nt: List[TlaEx]) = process(st, tail)
-          val ns = rewriteUntilDone(new SymbState(r, ts.theory, ts.arena, ts.binding))
-          (ns, ns.ex :: nt)
+          val ns = rewriteUntilDone(st.setRex(r))
+          val (ts: SymbState, nt: List[TlaEx]) = process(ns, tail)
+          (ts, ns.ex :: nt)
       }
     }
 
+    val oldExpr = state.ex
     val pair = process(state, es.toList)
-    (pair._1.setRex(state.ex), pair._2)
+    (pair._1.setRex(oldExpr), pair._2)
   }
 
   /**

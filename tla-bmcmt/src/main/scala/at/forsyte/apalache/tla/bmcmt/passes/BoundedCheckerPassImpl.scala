@@ -2,9 +2,8 @@ package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
 import at.forsyte.apalache.tla.assignments.SpecWithTransitions
-import at.forsyte.apalache.tla.bmcmt.Checker.Outcome
+import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStore
-import at.forsyte.apalache.tla.bmcmt.{Checker, CheckerException, CheckerInput}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -42,9 +41,16 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
     val input = new CheckerInput(spec.rootModule, spec.initTransitions, spec.nextTransitions, invariant = None)
     val stepsBound = options.getOption("checker", "length", 10).asInstanceOf[Int]
     val debug = options.getOption("general", "debug", false).asInstanceOf[Boolean]
-    val outcome = new Checker(freeExistentialsStore, input, stepsBound, debug).run()
+    val search = options.getOption("checker", "search", "dfs").asInstanceOf[String]
+    val checker: Checker =
+      if (search == "dfs") {
+        new DfsChecker(freeExistentialsStore, input, stepsBound, debug)
+      } else {
+        new BfsChecker(freeExistentialsStore, input, stepsBound, debug)
+      }
+    val outcome = checker.run()
     logger.info("The outcome is: " + outcome)
-    outcome == Outcome.NoError
+    outcome == Checker.Outcome.NoError
   }
 
   /**

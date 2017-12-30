@@ -11,7 +11,7 @@ import org.scalatest.junit.JUnitRunner
 import scala.io.Source
 
 @RunWith(classOf[JUnitRunner])
-class TestChecker extends FunSuite {
+class TestDfsChecker extends FunSuite {
   test("Init, OK") {
     // x' \in {2}
     val initTrans = List(mkAssign("x", 2))
@@ -19,7 +19,7 @@ class TestChecker extends FunSuite {
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
-    val checker = new Checker(new FreeExistentialsStoreImpl(), checkerInput, 0)
+    val checker = new DfsChecker(new FreeExistentialsStoreImpl(), checkerInput, 0)
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
   }
@@ -31,7 +31,7 @@ class TestChecker extends FunSuite {
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
-    val checker = new Checker(new FreeExistentialsStoreImpl(), checkerInput, 0)
+    val checker = new DfsChecker(new FreeExistentialsStoreImpl(), checkerInput, 0)
     val outcome = checker.run()
     assert(Checker.Outcome.Deadlock == outcome)
   }
@@ -43,7 +43,7 @@ class TestChecker extends FunSuite {
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
-    val checker = new Checker(new FreeExistentialsStoreImpl(), checkerInput, 0)
+    val checker = new DfsChecker(new FreeExistentialsStoreImpl(), checkerInput, 0)
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
   }
@@ -56,7 +56,7 @@ class TestChecker extends FunSuite {
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
-    val checker = new Checker(new FreeExistentialsStoreImpl(), checkerInput, 1)
+    val checker = new DfsChecker(new FreeExistentialsStoreImpl(), checkerInput, 1)
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
   }
@@ -71,7 +71,7 @@ class TestChecker extends FunSuite {
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
-    val checker = new Checker(new FreeExistentialsStoreImpl(), checkerInput, 1)
+    val checker = new DfsChecker(new FreeExistentialsStoreImpl(), checkerInput, 1)
     val outcome = checker.run()
     assert(Checker.Outcome.Deadlock == outcome)
   }
@@ -84,7 +84,7 @@ class TestChecker extends FunSuite {
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
-    val checker = new Checker(new FreeExistentialsStoreImpl(), checkerInput, 10)
+    val checker = new DfsChecker(new FreeExistentialsStoreImpl(), checkerInput, 10)
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
   }
@@ -99,7 +99,7 @@ class TestChecker extends FunSuite {
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
-    val checker = new Checker(new FreeExistentialsStoreImpl(), checkerInput, 10)
+    val checker = new DfsChecker(new FreeExistentialsStoreImpl(), checkerInput, 10)
     val outcome = checker.run()
     assert(Checker.Outcome.Deadlock == outcome)
   }
@@ -114,7 +114,7 @@ class TestChecker extends FunSuite {
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, Some(inv))
     // initialize the model checker
-    val checker = new Checker(new FreeExistentialsStoreImpl(), checkerInput, 10)
+    val checker = new DfsChecker(new FreeExistentialsStoreImpl(), checkerInput, 10)
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
   }
@@ -129,7 +129,7 @@ class TestChecker extends FunSuite {
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, Some(inv))
     // initialize the model checker
-    val checker = new Checker(new FreeExistentialsStoreImpl(), checkerInput, 10)
+    val checker = new DfsChecker(new FreeExistentialsStoreImpl(), checkerInput, 10)
     val outcome = checker.run()
     assert(Checker.Outcome.Error == outcome)
   }
@@ -145,7 +145,7 @@ class TestChecker extends FunSuite {
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None)
     // initialize the model checker
-    val checker = new Checker(new FreeExistentialsStoreImpl(), checkerInput, 2)
+    val checker = new DfsChecker(new FreeExistentialsStoreImpl(), checkerInput, 2)
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
   }
@@ -162,7 +162,7 @@ class TestChecker extends FunSuite {
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, Some(inv))
     // initialize the model checker
-    val checker = new Checker(new FreeExistentialsStoreImpl(), checkerInput, 10)
+    val checker = new DfsChecker(new FreeExistentialsStoreImpl(), checkerInput, 10)
     val outcome = checker.run()
     assert(Checker.Outcome.Error == outcome)
   }

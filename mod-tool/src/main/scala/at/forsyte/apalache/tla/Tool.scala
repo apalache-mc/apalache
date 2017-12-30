@@ -66,10 +66,11 @@ object Tool extends App with LazyLogging {
     executor.options.setOption("checker.next", check.next)
     executor.options.setOption("checker.inv", check.inv)
     executor.options.setOption("checker.length", check.length)
+    executor.options.setOption("checker.search", check.search)
 
     val result = executor.run()
     if (result.isDefined) {
-      logger.error("Checker reports no error up to computation length " + check.length)
+      logger.info("Checker reports no error up to computation length " + check.length)
     } else {
       logger.error("Checker has failed")
     }
