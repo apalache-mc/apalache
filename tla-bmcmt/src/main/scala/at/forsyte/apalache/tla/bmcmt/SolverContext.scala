@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.lir.TlaEx
 
 /**
@@ -30,10 +31,11 @@ trait SolverContext extends StackableContext {
   /**
     * Introduce an uninterpreted function associated with a cell.
     *
-    * @param cell an arena cell
-    * @return a function declaration (also stored in the context)
+    * @param domainType a type of the domain
+    * @param resultType a type of the result
+    * @return the name of the new function (declared in SMT)
     */
-  def getOrIntroCellFun(cell: ArenaCell): String
+  def declareCellFun(cellName: String, domainType: CellT, resultType: CellT): Unit
 
     /**
     * Assert that a Boolean TLA+ expression holds true.
@@ -79,13 +81,5 @@ trait SolverContext extends StackableContext {
     * @return the name (typically, $B$1)
     */
   def trueConst: String
-
-  /**
-    * Get the name of the reserved Boolean constant that should be equal true,
-    * whenever a failure occured during an execution
-    *
-    * @return the name (typically, $B$2)
-    */
-  def failConst: String
 }
 

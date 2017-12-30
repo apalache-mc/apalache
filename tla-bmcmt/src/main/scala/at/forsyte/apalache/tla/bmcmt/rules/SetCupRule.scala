@@ -28,7 +28,11 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val leftElemCells = leftState.arena.getHas(leftSetCell)
         val rightElemCells = rightState.arena.getHas(rightSetCell)
         // introduce a new set
-        val arena = rightState.arena.appendCell(leftSetCell.cellType.join(rightSetCell.cellType))
+        val newType = types.unify(leftSetCell.cellType, rightSetCell.cellType)
+        if (newType.isEmpty) {
+          throw new TypeException(s"Failed to unify types ${leftSetCell.cellType} and ${rightSetCell.cellType} when rewriting ${state.ex}")
+        }
+        val arena = rightState.arena.appendCell(newType.get)
         val newSetCell = arena.topCell
         val newArena = (leftElemCells ++ rightElemCells).foldLeft(arena)((a, e) => a.appendHas(newSetCell, e))
 

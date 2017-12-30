@@ -3,10 +3,8 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
-
-import scala.collection.mutable
 
 /**
   * Generate equality constraints between cells and cache them to avoid redundant constraints.
@@ -14,23 +12,9 @@ import scala.collection.mutable
   * @author Igor Konnov
   */
 class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
-  /**
-    * The current context level, see StackableContext.
-    */
-  private var level: Int = 0
 
-  /**
-    * A set of pairs, for which the equality constraints have been generated in SMT.
-    * This set can be partially cleaned up, when the pop method is called.
-    */
-  private var eqCache: mutable.Set[(ArenaCell, ArenaCell)] = new mutable.HashSet[(ArenaCell, ArenaCell)]()
-
-  /**
-    * For each level i, maintain the list of entries that were introduced level i, so we can easily remove
-    * the entries for the level i by iterating over the list in levelEntries[i].
-    * Here, we use a list, the head stores the entries that have been introduced at the current level.
-    */
-  private var entriesPerLevel: List[List[(ArenaCell, ArenaCell)]] = List(List())
+  private val eqCache = new EqCache(NameEx(rewriter.solverContext.falseConst),
+    NameEx(rewriter.solverContext.trueConst))
 
   /**
     * This method ensure that a pair of its arguments can be safely compared by the SMT equality,
@@ -49,14 +33,44 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
         .format(left.name, left.cellType, right.name, right.cellType))
     } else if (left == right) {
       NameEx(rewriter.solverContext.trueConst) // this is just true
-    } else if (eqCache.contains((left, right))) {
-      tla.eql(left, right) // it is safe to use SMT equality, as we have constructed the constraints
-    } else if (eqCache.contains((right, left))) {
-      tla.eql(right, left) // it is safe to use SMT equality, as we have constructed the constraints
     } else {
-      // let's add a bit of German here to indicate that it is really dangerous
-      val msg = "VORSICHT! SMT equality should be used only after calling cacheEqualities, unless you know what you are doing."
-      throw new RewriterException(msg)
+      val entry = eqCache.get(left, right)
+      if (entry.isDefined) {
+        eqCache.toTla(left, right, entry.get)
+      } else {
+        // let's add a bit of German here to indicate that it is really dangerous
+        val msg = "VORSICHT! SMT equality should be used only after calling cacheEqualities, unless you know what you are doing."
+        throw new RewriterException(msg)
+      }
+    }
+  }
+
+  /**
+    * Check that the equality constraints were cached for left and right.
+    * Then, if left and right are of comparable types, use SMT equality,
+    * otherwise just return false. The difference between safeEq and cachedEq is that
+    * safeEq is stricter: it does not allow to compare cells of different types at all.
+    * Use cachedEq when you comparisons might involve cells of different types,
+    * and it is clear that these elements cannot be equal.
+    *
+    * @param left  a left cell
+    * @param right a right cell
+    * @return depending on the types of the both cells, return either (= left right), or false
+    */
+  def cachedEq(left: ArenaCell, right: ArenaCell): TlaEx = {
+    if (left == right) {
+      NameEx(rewriter.solverContext.trueConst) // this is just true
+    } else {
+      val entry = eqCache.get(left, right)
+      if (entry.isDefined) {
+        eqCache.toTla(left, right, entry.get)
+      } else if (!left.cellType.comparableWith(right.cellType)) {
+        NameEx(rewriter.solverContext.falseConst) // just false as the types are different
+      } else {
+        // let's add a bit of German here to indicate that it is really dangerous
+        val msg = "VORSICHT! SMT equality should be used only after calling cacheEqualities, unless you know what you are doing."
+        throw new RewriterException(msg)
+      }
     }
   }
 
@@ -95,63 +109,86 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
     * @return a new symbolic state
     */
   def cacheOneEqConstraint(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {
-    if (!left.cellType.comparableWith(right.cellType)) {
+    val cacheEntry = eqCache.get(left, right)
+    if (left == right) {
+      state
+    } else if (cacheEntry.isDefined) {
+      state // do nothing
+    } else if (!left.cellType.comparableWith(right.cellType)) {
       // cells of incomparable types cannot be equal
-      if (!eqCache.contains((left, right)) && !eqCache.contains((right, left))) {
-        rewriter.solverContext.assertGroundExpr(tla.neql(left, right))
-      }
+      eqCache.put(left, right, EqCache.FalseEntry())
       state
     } else {
-      if (left == right
-        || eqCache.contains((left, right)) || eqCache.contains((right, left))) {
-        // there is nothing to do, the constraints are all there
-        state
+      // generate constraints
+      val newState =
+        (left.cellType, right.cellType) match {
+          case (UnknownT(), UnknownT()) | (BoolT(), _) | (_, BoolT()) | (IntT(), IntT()) =>
+            eqCache.put(left, right, EqCache.EqEntry())
+            state // nothing to do, just use the built-in equality
+
+          case (FinSetT(_), FinSetT(_)) =>
+            mkSetEq(state, left, right)
+
+          case (FunT(_, _), FunT(_, _)) =>
+            mkFunEq(state, left, right)
+
+          case _ =>
+            throw new CheckerException("Unexpected equality test")
+        }
+
+      // return the new state
+      newState
+    }
+  }
+
+  private def mkSetEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {
+    if (left.cellType == FinSetT(UnknownT()) && state.arena.getHas(left).isEmpty) {
+      // The statically empty set is a very special case, as its element type is unknown.
+      // Hence, we cannot use SMT equality, as it does not work with different sorts.
+      mkEmptySetEq(state, left, right)
+    } else if (right.cellType == FinSetT(UnknownT()) && state.arena.getHas(right).isEmpty) {
+      mkEmptySetEq(state, right, left) // same here
+    } else {
+      // in general, we need 2 * |X| * |Y| comparisons
+      val leftToRight: SymbState = subsetEq(state, left, right)
+      val rightToLeft: SymbState = subsetEq(leftToRight, right, left)
+      if (left.cellType.signature == right.cellType.signature) {
+        // These two sets have the same signature and thus belong to the same sort.
+        // Hence, we can use SMT equality. This equality is needed by uninterpreted functions.
+        val eq = tla.equiv(tla.eql(left, right), tla.and(leftToRight.ex, rightToLeft.ex))
+        rewriter.solverContext.assertGroundExpr(eq)
+        eqCache.put(left, right, EqCache.EqEntry())
       } else {
-        // generate constraints
-        val newState =
-          (left.cellType, right.cellType) match {
-            case (UnknownT(), UnknownT()) | (BoolT(), _) | (_, BoolT()) =>
-              state // nothing to do, just use the built-in equality
-
-            case (IntT(), IntT()) =>
-              // compare using two integer constants that will
-              // be compared with valInt(left) and valInt(right)
-              // TODO: find a more optimal solution?
-              val leftInt = rewriter.solverContext.introIntConst()
-              val rightInt = rewriter.solverContext.introIntConst()
-              // left = right iff leftInt = rightInt
-              val cellEqIffIntEq = OperEx(TlaBoolOper.equiv,
-                OperEx(TlaOper.eq, left.toNameEx, right.toNameEx),
-                OperEx(TlaOper.eq, NameEx(leftInt), NameEx(rightInt)))
-              // leftInt = valInt(left) and rightInt = valInt(right)
-              val leftIntEqLeftCell = OperEx(TlaOper.eq, NameEx(leftInt), left.toNameEx)
-              val rightIntEqRightCell = OperEx(TlaOper.eq, NameEx(rightInt), right.toNameEx)
-              rewriter.solverContext.assertGroundExpr(leftIntEqLeftCell)
-              rewriter.solverContext.assertGroundExpr(rightIntEqRightCell)
-              rewriter.solverContext.assertGroundExpr(cellEqIffIntEq)
-              state
-
-            case (FinSetT(_), FinSetT(_)) =>
-              // in general, we need 2 * |X| * |Y| comparisons
-              val leftToRight: SymbState = subsetEq(state, left, right)
-              val rightToLeft: SymbState = subsetEq(leftToRight, right, left)
-              val eq = tla.equiv(tla.eql(left, right), tla.and(leftToRight.ex, rightToLeft.ex))
-              rewriter.solverContext.assertGroundExpr(eq)
-              // recover the original expression and theory
-              rewriter.coerce(rightToLeft.setRex(state.ex), state.theory)
-
-            case (FunT(_, _), FunT(_, _)) =>
-              mkFunEq(state, left, right)
-
-            case _ =>
-              throw new CheckerException("Unexpected equality test")
-          }
-
-        eqCache.add((left, right)) // remember that we have generated the equality constraints
-        entriesPerLevel = ((left, right) +: entriesPerLevel.head) +: entriesPerLevel.tail // add entry on the head
-        // return the new state
-        newState
+        // The signatures differ and thus SMT will flag a sort error.
+        // Introduce a predicate that carries equality constraints.
+        // This predicate is needed for equality and membership tests,
+        // e.g., {{}} \in {{{}}}, which are particularly hard to handle.
+        // TODO: if two sets S and T are found to be equal, congruence might be violated: f(S) != f(T)
+        val pred = tla.name(rewriter.solverContext.introBoolConst())
+        rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.and(leftToRight.ex, rightToLeft.ex)))
+        eqCache.put(left, right, EqCache.ExprEntry(pred))
       }
+
+      // recover the original expression and theory
+      rewriter.coerce(rightToLeft.setRex(state.ex), state.theory)
+    }
+  }
+
+  // statically empty sets should be handled with care
+  private def mkEmptySetEq(state: SymbState, emptySet: ArenaCell, otherSet: ArenaCell): SymbState = {
+    val otherElems = state.arena.getHas(otherSet)
+    if (otherElems.isEmpty) {
+      // That's simple. Two statically empty sets are equal.
+      eqCache.put(emptySet, otherSet, EqCache.TrueEntry())
+      state
+    } else {
+      // The other set might be empty in some models. Add a predicate.
+      val pred = tla.name(rewriter.solverContext.introBoolConst())
+      val emptyEx = tla.and(otherElems.map(e => tla.not(tla.in(e, otherSet))) :_*)
+      rewriter.solverContext.assertGroundExpr(tla.eql(pred, emptyEx))
+      // this predicate will be later used as an equality test
+      eqCache.put(emptySet, otherSet, EqCache.ExprEntry(pred))
+      state
     }
   }
 
@@ -186,7 +223,7 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
       val newState = cacheEqConstraints(state, leftElems cross rightElems) // cache all the equalities
       def exists(lelem: ArenaCell) = {
         def inAndEq(relem: ArenaCell) = {
-          tla.and(tla.in(relem, right), tla.eql(lelem, relem))
+          tla.and(tla.in(relem, right), cachedEq(lelem, relem))
         }
 
         tla.or(rightElems.map(inAndEq): _*)
@@ -207,8 +244,7 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
     * Save the current context and push it on the stack for a later recovery with pop.
     */
   override def push(): Unit = {
-    level += 1
-    entriesPerLevel = List() +: entriesPerLevel // one more level
+    eqCache.push()
   }
 
   /**
@@ -216,36 +252,27 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
     * to save only the latest context.
     */
   override def pop(): Unit = {
-    assert(level > 0)
-    for (entry <- entriesPerLevel.head) {
-      eqCache.remove(entry)
-    }
-    entriesPerLevel = entriesPerLevel.tail
-    level -= 1
+    eqCache.pop()
   }
 
   /**
     * Pop the context as many times as needed to reach a given level.
     *
-    * @param n the number of times to call pop
+    * @param n pop n times, if n > 0, otherwise, do nothing
     */
   override def pop(n: Int): Unit = {
-    for (_ <- 1.to(n)) {
-      pop()
-    }
+    eqCache.pop(n)
   }
 
   /**
-    * Clean the context.
+    * Clean the context
     */
   override def dispose(): Unit = {
-    eqCache.clear()
-    entriesPerLevel = List(List())
-    level = 0
+    eqCache.dispose()
   }
 
 
-  // function comparison: SE-FUN-EQ4
+// function comparison: SE-FUN-EQ4
   private def mkFunEq(state: SymbState, leftFun: ArenaCell, rightFun: ArenaCell): SymbState = {
     val leftDom = state.arena.getDom(leftFun)
     val rightDom = state.arena.getDom(rightFun)
@@ -275,8 +302,9 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
     val domainsEqual = tla.eql(leftDom, rightDom)
     val afterResEq = domElems.foldLeft(afterDomEq.setRex(tla.and(domainsEqual)))(eachDomElem)
     rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(leftFun, rightFun), afterResEq.ex))
+    eqCache.put(leftFun, rightFun, EqCache.EqEntry())
+
     // restore the original expression and theory
     rewriter.coerce(afterResEq.setRex(state.ex), state.theory)
   }
-
 }

@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, TupleT, UnknownT}
+import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, IntT, TupleT, UnknownT}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.TlaInt
@@ -49,11 +49,14 @@ class TupleCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         arena = arena.appendCell(TupleT(cells.map(_.cellType)))
         val tuple = arena.topCell
         arena = arena.setDom(tuple, dom).setCdm(tuple, cdm)
-        // associate a function constant with the tuple
-        val _ = arena.solverContext.getOrIntroCellFun(tuple)
+        // Associate a function constant with the tuple.
+        // As tuples can be extended, we do not specify types explicitly.
+        val _ = rewriter.solverContext.declareCellFun(tuple.toNameEx.name, IntT(), UnknownT())
         // connect the values to the indices
         def setVal(indexAndElem: (TlaEx, TlaEx)): Unit = {
           val funapp = tla.appFun(tuple.toNameEx, indexAndElem._1)
+          // TODO: here we hit an inherent problem with types and sorts.
+          // Since we need a single sort for a result type, we need a different presentation for tuples
           rewriter.solverContext.assertGroundExpr(tla.eql(funapp, indexAndElem._2))
         }
         range.zip(groundElems).foreach(setVal)

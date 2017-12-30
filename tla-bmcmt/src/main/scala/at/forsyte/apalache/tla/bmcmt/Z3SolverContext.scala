@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt
 
 import java.io.{File, PrintWriter}
 
+import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FailPredT, IntT}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
@@ -22,50 +23,35 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
   private val logWriter: PrintWriter = initLog()
 
   var level: Int = 0
-  var nBoolConsts: Int = 0 // the first three cells are reserved for: false, true, fail
+  var nBoolConsts: Int = 0 // the first three cells are reserved for: false and true
   var nIntConsts: Int = 0
   private val z3context: Context = new Context()
   private val z3solver = z3context.mkSolver()
 
-  private val cellSort: UninterpretedSort = z3context.mkUninterpretedSort("Cell")
-  // log declaration, so we can directly replay the log with z3 -smt2
-  log("(declare-sort Cell 0)")
-
   /**
-    * Uninterpreted predicate in(c, d) that expresses whether c is a member of d.
+    * Caching one uninterpreted sort for each cell signature. For integers, the integer sort.
     */
-  private val inFun: FuncDecl =
-    z3context.mkFuncDecl("in", Array[Sort](cellSort, cellSort), z3context.getBoolSort)
-  log("(declare-fun in (Cell Cell) Bool)") // log declaration
-
-  /**
-    * Uninterpreted function to store integer values of integer cells.
-    */
-  private val valIntFun: FuncDecl =
-    z3context.mkFuncDecl("valInt", cellSort, z3context.getIntSort)
-  log("(declare-fun valInt (Cell) Int)") // log declaration
-
-  /**
-    * The calls to z3context.mkConst consume 20% of the running time, according to VisualVM.
-    * Let's cache the constants, if Z3 cannot do it well.
-    * Again, the cache carries the context level, to support push and pop.
-    */
-  private val constCache: mutable.Map[String, (Expr, Int)] =
-    new mutable.HashMap[String, (Expr, Int)]
+  private val cellSorts: mutable.Map[String, (Sort, Int)] =
+    new mutable.HashMap[String, (Sort, Int)]
 
   /**
     * Uninterpreted functions C -> C associated with function cells.
     * Since context operations may clear function declaration,
     * we carry the context level in the map and clean the function declarations on pop.
     */
-  private val cellFuns: mutable.Map[String, (FuncDecl, Int)] =
+  private val funDecls: mutable.Map[String, (FuncDecl, Int)] =
     new mutable.HashMap[String, (FuncDecl, Int)]()
 
-  val falseConst: String = introBoolConst() // $B$0
-  val trueConst: String = introBoolConst() // $B$1
+  /**
+    * The calls to z3context.mkConst consume 20% of the running time, according to VisualVM.
+    * Let's cache the constants, if Z3 cannot do it well.
+    * Again, the cache carries the context level, to support push and pop.
+    */
+  private val constCache: mutable.Map[String, (Expr, CellT, Int)] =
+    new mutable.HashMap[String, (Expr, CellT, Int)]
 
-  // this constant should equal true, when a failure occured, TODO: figure out the failure semantics
-  val failConst: String = introBoolConst() // $B$2
+  val falseConst: String = introBoolConst() // $B$0, for simplicity
+  val trueConst: String = introBoolConst() // $B$1, for simplicity
   assertGroundExpr(NameEx(trueConst))
   assertGroundExpr(OperEx(TlaBoolOper.not, NameEx(falseConst)))
 
@@ -83,6 +69,9 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
   override def dispose(): Unit = {
     z3context.close()
     logWriter.close()
+    constCache.clear()
+    funDecls.clear()
+    cellSorts.clear()
   }
 
   /**
@@ -91,8 +80,6 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
     * @param cell a (previously undeclared) cell
     */
   override def declareCell(cell: ArenaCell): Unit = {
-    log(s";; declare cell($cell): ${cell.cellType}")
-    log(s"(declare-const $cell Cell)")
     if (maxCellIdPerContext.head >= cell.id) {
       // Checking consistency. When the user accidentally replaces a fresh arena with an older one,
       // we report it immediately. Otherwise, it is very hard to find the cause.
@@ -102,10 +89,22 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
     } else {
       maxCellIdPerContext = cell.id +: maxCellIdPerContext.tail
     }
+
+    log(s";; declare cell($cell): ${cell.cellType}")
+    val cellSort = getOrMkCellSort(cell.cellType)
+    log(s"(declare-const $cell $cellSort)")
     val cellName = cell.toString
     z3context.mkConstDecl(cellName, cellSort)
     val const = z3context.mkConst(cellName, cellSort)
-    constCache += (cellName -> (const, level))
+    constCache += (cellName -> (const, cell.cellType, level))
+
+    if (cell.id <= 1) {
+      // Either FALSE or TRUE. Enforce its value explicitely
+      val expr =
+        if (cell.id == 0) OperEx(TlaBoolOper.not, NameEx(cellName))
+        else NameEx(cellName)
+      assertGroundExpr(expr)
+    }
   }
 
   /**
@@ -139,7 +138,7 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
         ValEx(TlaInt(i.getBigInteger))
 
       case _ =>
-        if (z3expr.isConst && z3expr.getSort == cellSort) {
+        if (z3expr.isConst && z3expr.getSort.getName.toString.startsWith("Cell_")) {
           NameEx(z3expr.toString)
         } else {
           throw new SmtEncodingException("Expected an integer or Boolean, found: " + z3expr)
@@ -178,7 +177,7 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
     log(s"(declare-const $name Bool)")
     nBoolConsts += 1
     val const = z3context.mkConst(name, z3context.getBoolSort)
-    constCache += (name -> (const, level))
+    constCache += (name -> (const, BoolT(), level))
     name
   }
 
@@ -189,33 +188,44 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
     */
   override def introIntConst(): String = {
     val name = "%s%d".format(IntTheory().namePrefix, nIntConsts)
-    log(";; declare int $name")
-    log("(declare-const $name Int)")
+    log(s";; declare int $name")
+    log(s"(declare-const $name Int)")
     nIntConsts += 1
     val const = z3context.mkConst(name, z3context.getIntSort)
-    constCache += (name -> (const, level))
+    constCache += (name -> (const, IntT(), level))
     name
   }
 
   /**
     * Introduce an uninterpreted function associated with a cell.
     *
-    * @param cell an arena cell
+    * @param argType    an argument type
+    * @param resultType a result type
     * @return the name of the new function (declared in SMT)
     */
-  def getOrIntroCellFun(cell: ArenaCell): String = {
-    val cellName = cell.toString
-    cellFuns.get(cellName) match {
-      case Some((funDecl, _)) =>
-        funDecl.getName.toString
+  def declareCellFun(cellName: String, argType: CellT, resultType: CellT): Unit = {
+    val domSig = argType.signature
+    val resSig = resultType.signature
+    val funName = s"fun$cellName"
+    if (funDecls.contains(funName)) {
+      throw new SmtEncodingException(s"Declaring twice the function associated with cell $cellName")
+    } else {
+      val domSort = getOrMkCellSort(argType)
+      val cdmSort = getOrMkCellSort(resultType)
+      log(s";; declare cell fun $funName")
+      log(s"(declare-fun $funName ($domSort) $cdmSort)")
+      val funDecl = z3context.mkFuncDecl(funName, domSort, cdmSort)
+      funDecls += (funName -> (funDecl, level))
+    }
+  }
 
-      case None =>
-        val name = "fun%d".format(cell.id)
-        log(s";; declare cell fun $name")
-        log(s"(declare-fun $name (Cell) Cell)")
-        val funDecl = z3context.mkFuncDecl(name, cellSort, cellSort)
-        cellFuns.put(cellName, (funDecl, level))
-        name
+  private def getCellFun(cellName: String): FuncDecl = {
+    val funName = s"fun$cellName"
+    val funDecl = funDecls.get(funName)
+    if (funDecl.isDefined) {
+      funDecl.get._1
+    } else {
+      throw new SmtEncodingException(s"A function associated with cell $cellName is not declared")
     }
   }
 
@@ -241,8 +251,9 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
       maxCellIdPerContext = maxCellIdPerContext.tail
       level -= 1
       // clean the caches
-      cellFuns.retain((_, value) => value._2 <= level)
-      constCache.retain((_, value) => value._2 <= level)
+      cellSorts.retain((_, value) => value._2 <= level)
+      funDecls.retain((_, value) => value._2 <= level)
+      constCache.retain((_, value) => value._3 <= level)
     }
   }
 
@@ -254,8 +265,9 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
       maxCellIdPerContext = maxCellIdPerContext.drop(n)
       level -= n
       // clean the caches
-      cellFuns.retain((_, value) => value._2 <= level)
-      constCache.retain((_, value) => value._2 <= level)
+      cellSorts.retain((_, value) => value._2 <= level)
+      funDecls.retain((_, value) => value._2 <= level)
+      constCache.retain((_, value) => value._3 <= level)
     }
   }
 
@@ -278,6 +290,48 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
     */
   def toSmtlib2: String = {
     z3solver.toString
+  }
+
+  private def getOrMkCellSort(cellType: CellT): Sort = {
+    val sig = "Cell_" + cellType.signature
+    val sort = cellSorts.get(sig)
+    if (sort.isDefined) {
+      sort.get._1
+    } else {
+      val newSort =
+        cellType match {
+          case BoolT() =>
+            z3context.getBoolSort
+
+          case IntT() =>
+            z3context.getIntSort
+
+          case FailPredT() =>
+            z3context.getBoolSort
+
+          case _ =>
+            log(s"(declare-sort $sig 0)")
+            z3context.mkUninterpretedSort(sig)
+        }
+      cellSorts += (sig -> (newSort, level))
+      newSort
+    }
+  }
+
+  private def getOrMkInPred(setType: CellT, elemType: CellT): FuncDecl = {
+    val name = s"in_${elemType.signature}_${setType.signature}"
+    val funDecl = funDecls.get(name)
+    if (funDecl.isDefined) {
+      funDecl.get._1
+    } else {
+      val elemSort = getOrMkCellSort(elemType)
+      val setSort = getOrMkCellSort(setType)
+      val newDecl = z3context.mkFuncDecl(name,
+        Array[Sort](elemSort, setSort), z3context.getBoolSort)
+      funDecls += (name -> (newDecl, level))
+      log(s"(declare-fun $name ($elemSort $setSort) Bool)") // log declaration
+      newDecl
+    }
   }
 
   private def toExpr(ex: TlaEx): Expr = {
@@ -340,19 +394,21 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
         z3context.mkNot(exZ3)
 
       case OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName)) =>
-        val elem = constCache(elemName)._1
-        val set = constCache(setName)._1
-        z3context.mkApp(inFun, elem, set)
+        val elemEntry = constCache(elemName)
+        val setEntry = constCache(setName)
+        val inFun = getOrMkInPred(setEntry._2, elemEntry._2)
+        z3context.mkApp(inFun, elemEntry._1, setEntry._1)
 
       case OperEx(TlaFunOper.app, NameEx(funName), NameEx(argName)) =>
         // apply the function associated with a cell
         val arg = constCache(argName)._1
         if (funName != "$$intVal") {
-          val (fun, _) = cellFuns(funName)
-          z3context.mkApp(fun, arg)
+          z3context.mkApp(getCellFun(funName), arg)
         } else {
           // a hack to get back the integer values from a model
-          z3context.mkApp(valIntFun, arg)
+          // TODO: remove. There is no need in the uninterpreted function anymore,
+          // as integer cells are declared as integers
+          arg
         }
 
       case _ =>
@@ -367,12 +423,12 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
         z3context.mkEq(le, re)
 
       case (_: IntExpr, _: Expr) =>
-        // comparing an integer constant and a value
-        z3context.mkEq(le, z3context.mkApp(valIntFun, re))
+        // comparing an integer constant and a cell of integer type, which is declared as integer
+        z3context.mkEq(le, re)
 
       case (_: Expr, _: IntExpr) =>
-        // comparing an integer constant and a value
-        z3context.mkEq(z3context.mkApp(valIntFun, le), re)
+        // comparing an integer constant and a cell of integer type, which is declared as integer
+        z3context.mkEq(le, re)
 
       case (_: Expr, _: Expr) =>
         // comparing a cell constant against a function application

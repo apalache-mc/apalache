@@ -61,7 +61,7 @@ class SymbStateDecoder() {
     // compute the equivalence classes for the cells, totally suboptimally
     // TODO: rewrite, I did not think too much at all
     def iseq(c: ArenaCell, d: ArenaCell): Boolean = {
-      solverContext.evalGroundExpr(tla.eql(c, d)).identical(tla.bool(true))
+      c.cellType == d.cellType && solverContext.evalGroundExpr(tla.eql(c, d)).identical(tla.bool(true))
     }
     def merge(cls: List[HashSet[ArenaCell]], c: ArenaCell, d: ArenaCell): List[HashSet[ArenaCell]] = {
       if (!iseq(c, d) || c == d) {

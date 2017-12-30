@@ -4,6 +4,7 @@ import java.io.{PrintWriter, StringWriter}
 
 import at.forsyte.apalache.tla.bmcmt.Checker.Outcome
 import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStore
+import at.forsyte.apalache.tla.bmcmt.types.FailPredT
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import com.typesafe.scalalogging.LazyLogging
@@ -11,7 +12,7 @@ import com.typesafe.scalalogging.LazyLogging
 object Checker {
 
   object Outcome extends Enumeration {
-    val NoError, Error, Deadlock = Value
+    val NoError, Error, Deadlock, RuntimeError = Value
   }
 
 }
@@ -47,6 +48,7 @@ class Checker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
   def run(): Outcome.Value = {
     // create initial symbolic states
     val initialArena = Arena.create(solverContext)
+
     def mkInitState(transition: TlaEx) = {
       new SymbState(transition, BoolTheory(), initialArena, new Binding)
     }
@@ -98,36 +100,49 @@ class Checker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
         }
         // assume the constraint constructed from Init or Next
         solverContext.assertGroundExpr(nextState.ex)
-        if (!solverContext.sat()) {
-          // the current symbolic state is not feasible
-          if (point.isLast && lastSatDepth <= point.depth) {
-            logger.debug("Deadlock: lastSatDepth = %d, point.depth = %d"
-              .format(lastSatDepth, point.depth))
-            Outcome.Deadlock
-          } else {
-            // it is not the last transition to explore, continue
-            dfs()
-          }
+        // check that no failure predicate evaluates to true
+        rewriter.push()
+        val failPreds = nextState.arena.findCellsByType(FailPredT())
+        solverContext.assertGroundExpr(tla.or(failPreds.map(_.toNameEx): _*))
+        if (solverContext.sat()) {
+          // TODO: add diagnostic info
+          logger.error("The specification may produce a runtime error.")
+          Outcome.RuntimeError
         } else {
-          lastSatDepth = point.depth // this depth is reached now
-          // the symbolic state is reachable, check the invariant
-          if (invariantHolds(nextState)) {
-            // construct the next branching points
-            val nextPoints = constructNextPoints(point, nextState)
-            logger.debug("Constructed %d next points".format(nextPoints.length))
-            unexplored = nextPoints ++ unexplored
-            // and continue
-            dfs()
+          rewriter.pop()
+          if (!solverContext.sat()) {
+            // the current symbolic state is not feasible
+            if (point.isLast && lastSatDepth <= point.depth) {
+              logger.debug("Deadlock: lastSatDepth = %d, point.depth = %d"
+                .format(lastSatDepth, point.depth))
+              Outcome.Deadlock
+            } else {
+              // it is not the last transition to explore, continue
+              dfs()
+            }
           } else {
-            logger.debug("Error found")
-            Outcome.Error
+            lastSatDepth = point.depth // this depth is reached now
+            // the symbolic state is reachable, check the invariant
+            if (invariantHolds(nextState)) {
+              // construct the next branching points
+              val nextPoints = constructNextPoints(point, nextState)
+              logger.debug("Constructed %d next points".format(nextPoints.length))
+              unexplored = nextPoints ++ unexplored
+              // and continue
+              dfs()
+            } else {
+              logger.debug("Error found")
+              Outcome.Error
+            }
           }
         }
       }
     }
   }
 
-  private def invariantHolds(nextState: SymbState) = {
+  private def invariantHolds(nextState: SymbState)
+
+  = {
     if (checkerInput.invariant.isEmpty) {
       true
     } else {
@@ -155,7 +170,9 @@ class Checker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
   }
 
   // construct next branching points
-  private def constructNextPoints(point: Branchpoint, nextState: SymbState): List[Branchpoint] = {
+  private def constructNextPoints(point: Branchpoint, nextState: SymbState): List[Branchpoint]
+
+  = {
     val shiftedBinding = shiftBinding(nextState.binding)
     val lastTransitionNo = checkerInput.nextTransitions.length - 1
 
@@ -171,7 +188,7 @@ class Checker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
   }
 
   // remove non-primed variables and rename primed variables to non-primed
-  private def shiftBinding(binding: Binding): Binding = {
+  private def shiftBinding(binding: Binding): Binding  = {
     binding
       .filter(p => p._1.endsWith("'"))
       .map(p => (p._1.stripSuffix("'"), p._2))

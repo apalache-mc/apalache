@@ -80,15 +80,16 @@ class SetMapAndFunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val (newState: SymbState, resultCells: Seq[ArenaCell], elemType: CellT) =
       mapCells(setState, mapEx, varName, setEx, domainCells)
 
+    val funType = FunT(domainCell.cellType, elemType)
     // introduce a co-domain cell
-    var arena = newState.arena.appendCell(FunT(domainCell.cellType, elemType))
+    var arena = newState.arena.appendCell(funType)
     val funCell = arena.topCell
     val arena2 = arena.appendCell(FinSetT(elemType)) // co-domain is a finite set of type elemType
     val codomainCell = arena2.topCell
     arena = arena2.setDom(funCell, domainCell).setCdm(funCell, codomainCell)
     arena = resultCells.foldLeft(arena) ((a, e) => a.appendHas(codomainCell, e))
     // associate a function constant with the function cell
-    val _ = arena.solverContext.getOrIntroCellFun(funCell)
+    rewriter.solverContext.declareCellFun(funCell.name, funType.argType, funType.resultType)
 
     // associate a value of the uninterpreted function with a cell
     def addCellCons(argCell: ArenaCell, resultCell: ArenaCell): Unit = {
@@ -134,9 +135,16 @@ class SetMapAndFunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // get the cell types
     val elemType =
       newCells.map(_.cellType).toSet.toList match {
-        case List() => UnknownT()
-        case hd :: List() => hd
-        case list@_ => SumT(list)
+        case List() =>
+          UnknownT()
+
+        case list @_ =>
+          val unifier = unify(list :_*)
+          if (unifier.isDefined) {
+            unifier.get
+          } else {
+            throw new TypeException(s"No unifying type for ${list.mkString(", ")} (when rewriting $mapEx)")
+          }
       }
 
     (newState, newCells, elemType)

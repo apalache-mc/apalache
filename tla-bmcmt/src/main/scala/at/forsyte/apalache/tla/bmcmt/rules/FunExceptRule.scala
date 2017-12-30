@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
-import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, FunT}
+import at.forsyte.apalache.tla.bmcmt.types.{FailPredT, FinSetT, FunT}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
@@ -74,10 +74,15 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
         arena = arena.getHas(cdm).foldLeft(arena)(addToNewCdm)
         arena = valueCells.foldLeft(arena)(addToNewCdm)
         // create a new function cell and wire it with the old domain and the new co-domain
-        arena = arena.appendCell(FunT(dom.cellType, cdmElemType))
+        val funType = FunT(dom.cellType, cdmElemType)
+        arena = arena.appendCell(funType)
         val newFunCell = arena.topCell
         arena = arena.setDom(newFunCell, dom).setCdm(newFunCell, newCdm)
-        val _ = arena.solverContext.getOrIntroCellFun(newFunCell) // create an uninterpreted function in SMT
+        // introduce a new failure predicate
+        arena = arena.appendCell(FailPredT())
+        val failPred = arena.topCell
+        // associate an uninterpreted function in SMT
+        rewriter.solverContext.declareCellFun(newFunCell.name, funType.argType, funType.resultType)
 
         // add the update constraints
         def eachDomElem(domElem: ArenaCell) = {
@@ -114,10 +119,11 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
         }
 
         val outsideDom = tla.or(indexCells.map(existsIndexOutside): _*)
-        val eqFailure = tla.eql(funCell, eqState.arena.cellFailure())
 
         // finally, add the constraints in SMT
-        rewriter.solverContext.assertGroundExpr(tla.or(funUpdate))//, tla.and(outsideDom, eqFailure)))
+        val ok = tla.and(tla.not(failPred), tla.or(funUpdate))
+        val notOk = tla.and(failPred, outsideDom)
+        rewriter.solverContext.assertGroundExpr(tla.or(ok, notOk))
 
         val finalState = eqState
           .setArena(arena)

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, FunT, IntT}
+import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
@@ -9,13 +9,14 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
+
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterFun extends RewriterBase {
   test("""SE-FUN-CTOR[1-2]: [x \in {1,2,3,4} |-> x / 3: ] ~~> $C$k""") {
     def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
 
-    val set = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaInt(3)), ValEx(TlaInt(4)))
-    val mapping = OperEx(TlaArithOper.div, NameEx("x"), ValEx(TlaInt(3)))
+    val set = mkSet(tla.int(1), tla.int(2), tla.int(3), tla.int(4))
+    val mapping = OperEx(TlaArithOper.div, NameEx("x"), tla.int(3))
     val fun = OperEx(TlaFunOper.funDef, mapping, NameEx("x"), set)
 
     val state = new SymbState(fun, CellTheory(), arena, new Binding)
@@ -73,7 +74,7 @@ class TestSymbStateRewriterFun extends RewriterBase {
     }
   }
 
-  test("""SE-FUN-APP[1-3]: [x \in {1, 2} |-> x][4] ~~> $C$failure""") {
+  test("""SE-FUN-APP[1-3]: [x \in {1, 2} |-> x][4] ~~> failure!""") {
     def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
 
     val set = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(2)))
@@ -88,9 +89,10 @@ class TestSymbStateRewriterFun extends RewriterBase {
       case membershipEx @ NameEx(name) =>
         assert(CellTheory().hasConst(name))
         rewriter.push()
-        solverContext.assertGroundExpr(OperEx(TlaOper.eq, membershipEx, arena.cellFailure().toNameEx))
+        val failureOccurs = tla.or(nextState.arena.findCellsByType(FailPredT()).map(_.toNameEx) :_*)
+        solverContext.assertGroundExpr(failureOccurs)
         assert(solverContext.sat())
-        solverContext.assertGroundExpr(OperEx(TlaOper.ne, membershipEx, arena.cellFailure().toNameEx))
+        solverContext.assertGroundExpr(tla.not(failureOccurs))
         assert(!solverContext.sat())
 
       case _ =>

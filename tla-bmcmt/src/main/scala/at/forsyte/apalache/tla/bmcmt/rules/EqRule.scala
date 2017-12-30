@@ -47,7 +47,7 @@ class EqRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // produce equality constraints, so that we can use SMT equality
       val eqState = rewriter.lazyEq.cacheOneEqConstraint(rightState, leftCell, rightCell)
       // and now we can use the SMT equality
-      val eqCons = tla.equiv(tla.name(eqPred), rewriter.lazyEq.safeEq(leftCell, rightCell))
+      val eqCons = tla.equiv(tla.name(eqPred), rewriter.lazyEq.cachedEq(leftCell, rightCell))
       rewriter.solverContext.assertGroundExpr(eqCons)
       val finalState = eqState.setRex(NameEx(eqPred))
           .setTheory(BoolTheory()) // we have introduced a Boolean constant

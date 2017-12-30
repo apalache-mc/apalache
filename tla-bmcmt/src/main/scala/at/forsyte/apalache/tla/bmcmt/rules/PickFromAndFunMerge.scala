@@ -59,9 +59,13 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
     * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
     */
   def pickBasic(cellType: CellT, set: ArenaCell, state: SymbState): SymbState = {
-    val newArena = state.arena.appendCell(cellType)
-    val resultCell = newArena.topCell
-    val setCells = newArena.getHas(set)
+    var arena = state.arena.appendCell(cellType)
+    val resultCell = arena.topCell
+    // introduce a new failure predicate
+    arena = arena.appendCell(FailPredT())
+    val failPred = arena.topCell
+    // compare the set contents with the result
+    val setCells = arena.getHas(set)
     val eqState = rewriter.lazyEq.cacheEqConstraints(state, setCells.map(e => (e, resultCell)))
 
     // the new element equals to an existing element in the set
@@ -71,9 +75,9 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
     }
 
     val found = tla.or(setCells.map(mkIn): _*)
-    val cons = decorateWithFailure(found, set, setCells, resultCell, newArena.cellFailure())
-    rewriter.solverContext.assertGroundExpr(cons)
-    eqState.setArena(newArena).setRex(resultCell)
+    val existsBasicOrFailure = decorateWithFailure(found, set, setCells, resultCell, failPred)
+    rewriter.solverContext.assertGroundExpr(existsBasicOrFailure)
+    eqState.setArena(arena).setRex(resultCell)
   }
 
   /**
@@ -89,6 +93,10 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
     val resultCell = arena.topCell
     arena = arena.appendCell(cellType)
     val auxCell = arena.topCell
+    // introduce a new failure predicate
+    arena = arena.appendCell(FailPredT())
+    val failPred = arena.topCell
+
     val elems = arena.getHas(set)
     // get all the cells pointed by the elements of the set
     val union = elems.map(e => Set(arena.getHas(e): _*))
@@ -117,8 +125,8 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
 
     union.foreach(inResultIffInAux)
     val found = tla.or(elems.map(mkIn): _*)
-    val cons = decorateWithFailure(found, set, elems, resultCell, arena.cellFailure())
-    rewriter.solverContext.assertGroundExpr(cons)
+    val existsSetOrFailure = decorateWithFailure(found, set, elems, resultCell, failPred)
+    rewriter.solverContext.assertGroundExpr(existsSetOrFailure)
     state.setArena(arena).setRex(resultCell)
   }
 
@@ -135,11 +143,16 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
     var arena = funMerge(state.arena, funSet) // introduce DOM and CDM, see SE-PICK-FUN
     val dom = arena.getDom(funSet)
     val cdm = arena.getCdm(funSet)
+    val funType = cellType.asInstanceOf[FunT] // for now, it should be FunT, no tuple or record
     arena = arena.appendCell(cellType)
     val funCell = arena.topCell
     arena = arena.setDom(funCell, dom).setCdm(funCell, cdm)
+    // introduce a new failure predicate
+    arena = arena.appendCell(FailPredT())
+    val failPred = arena.topCell
     // associate a function constant with the function cell
-    val _ = arena.solverContext.getOrIntroCellFun(funCell)
+    rewriter.solverContext.declareCellFun(funCell.name, funType.argType, funType.resultType)
+
     // push the constraints to SMT
     val domElems = arena.getHas(dom)
 
@@ -164,8 +177,8 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
 
     val funSetElems = arena.getHas(funSet)
     val existsFun = tla.or(funSetElems.map(resultEqFun): _*)
-    val cons = decorateWithFailure(existsFun, funSet, funSetElems, funCell, arena.cellFailure())
-    rewriter.solverContext.assertGroundExpr(existsFun)
+    val existsFunOrFailure = decorateWithFailure(existsFun, funSet, funSetElems, funCell, failPred)
+    rewriter.solverContext.assertGroundExpr(existsFunOrFailure)
     state.setArena(arena).setRex(funCell)
   }
 
@@ -183,11 +196,19 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
     var arena = state.arena
     val dom = arena.getDom(funSet)
     val cdm = arena.getCdm(funSet)
+    val funType = cellType.asInstanceOf[FunT] // for now, only FinT is supported
     arena = arena.appendCell(cellType)
     val funCell = arena.topCell
     arena = arena.setDom(funCell, dom).setCdm(funCell, cdm)
+    // introduce a new failure predicate
+    arena = arena.appendCell(FailPredT())
+    val failPred = arena.topCell
     // associate a function constant with the function cell
-    val _ = arena.solverContext.getOrIntroCellFun(funCell)
+    val resultType = cellType match {
+      case FunT(_, rt) => rt
+      case _ => throw new RewriterException(s"Unexpected cell type $cellType in pickFun")
+    }
+    rewriter.solverContext.declareCellFun(funCell.name, funType.argType, funType.resultType)
     // push the constraints to SMT
     val cdmElems = arena.getHas(cdm)
 
@@ -203,8 +224,8 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
 
     val domElems = arena.getHas(dom)
     val existsFun = tla.and(domElems.map(resultInCdm): _*)
-    val cons = decorateWithFailure(existsFun, funSet, domElems, funCell, arena.cellFailure())
-    rewriter.solverContext.assertGroundExpr(existsFun)
+    val existsFunOrFailure = decorateWithFailure(existsFun, funSet, domElems, funCell, failPred)
+    rewriter.solverContext.assertGroundExpr(existsFunOrFailure)
     state.setArena(arena).setRex(funCell)
   }
 
@@ -251,11 +272,10 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
     }
 
     val setEmptyInRuntime = tla.and(setElems.map(mkNotIn): _*)
-    val eqFailure = tla.eql(result, failure)
     if (setElems.isEmpty) {
-      eqFailure // statically flag a failure
+      failure // statically flag a failure
     } else {
-      tla.or(found, tla.and(eqFailure, setEmptyInRuntime))
+      tla.and(tla.and(tla.not(failure), found), tla.eql(failure, setEmptyInRuntime))
     }
   }
 }

@@ -9,7 +9,7 @@ class RewriterBase extends FunSuite with BeforeAndAfter {
   protected var arena: Arena = Arena.create(solverContext)
 
   before {
-    solverContext = new Z3SolverContext()
+    solverContext = new Z3SolverContext(debug = true)
     arena = Arena.create(solverContext)
   }
 

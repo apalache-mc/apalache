@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
+import at.forsyte.apalache.tla.bmcmt.types.FailPredT
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
@@ -39,8 +40,12 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val resultCell = resState.ex
         val domCells = resState.arena.getHas(domainCell)
 
+        // introduce a new failure predicate
+        val newArena = resState.arena.appendCell(FailPredT())
+        val failPred = newArena.topCell
         // cache equalities
-        val eqState = rewriter.lazyEq.cacheEqConstraints(resState, domCells.map(e => (e, argCell)))
+        val eqState = rewriter.lazyEq.cacheEqConstraints(resState.setArena(newArena),
+          domCells.map(e => (e, argCell)))
 
         // Equation (2): there is a domain element that equals to the argument
         def mkInCase(domElem: ArenaCell): TlaEx = {
@@ -58,10 +63,9 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
           tla.or(notInDomain, tla.not(eq))
         }
 
-        val found = tla.or(domCells.map(mkInCase): _*)
-        val eqFailure = tla.eql(resultCell, eqState.arena.cellFailure())
-        val notFound = tla.and(eqFailure, tla.and(domCells.map(mkNotInCase): _*))
-        eqState.arena.solverContext.assertGroundExpr(tla.or(found, notFound))
+        val found = tla.and(tla.not(failPred), tla.or(domCells.map(mkInCase): _*))
+        val notFound = tla.and(failPred, tla.and(domCells.map(mkNotInCase): _*))
+        rewriter.solverContext.assertGroundExpr(tla.or(found, notFound))
 
         val finalState = eqState
           .setTheory(CellTheory())

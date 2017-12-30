@@ -10,7 +10,6 @@ object Arena {
   protected val falseName: String = CellTheory().namePrefix + "0"
   protected val trueName: String = CellTheory().namePrefix + "1"
   protected val booleanName: String = CellTheory().namePrefix + "2"
-  protected val failureName: String = CellTheory().namePrefix + "3"
 
   def create(solverContext: SolverContext): Arena = {
     var arena = new Arena(solverContext, 0,
@@ -20,7 +19,8 @@ object Arena {
       new HashMap(),
       new HashMap()
     ) /////
-    // by convention, the first cells have the following semantics: 0 stores FALSE, 1 stores TRUE, 2 stores BOOLEAN
+    // by convention, the first cells have the following semantics:
+    //  0 stores FALSE, 1 stores TRUE, 2 stores BOOLEAN
     arena = arena.appendCellWithoutDeclaration(BoolT())
       .appendCellWithoutDeclaration(BoolT())
       .appendCellWithoutDeclaration(FinSetT(BoolT()))
@@ -36,10 +36,8 @@ object Arena {
     solverContext.assertGroundExpr(OperEx(TlaSetOper.in, cellFalse.toNameEx, cellBoolean.toNameEx))
     solverContext.assertGroundExpr(OperEx(TlaSetOper.in, cellTrue.toNameEx, cellBoolean.toNameEx))
     // link c_BOOLEAN to c_FALSE and c_TRUE
-    arena = arena.appendHas(cellBoolean, cellFalse)
+    arena.appendHas(cellBoolean, cellFalse)
       .appendHas(cellBoolean, cellTrue)
-    // declare a FAILURE cell that is returned whenever an operation has failed
-    arena.appendCell(UnknownT()) // shall it be of a special failure type?
   }
 }
 
@@ -57,6 +55,7 @@ class Arena private(val solverContext: SolverContext,
                     private val domEdges: Map[ArenaCell, ArenaCell],
                     private val cdmEdges: Map[ArenaCell, ArenaCell]
                    ) {
+  // TODO: remove solverContext from Arena!
   /**
     * A fixed cell that equals to false in the Boolean theory.
     * @return the false cell
@@ -79,15 +78,6 @@ class Arena private(val solverContext: SolverContext,
     */
   def cellBoolean(): ArenaCell = {
     cellMap(Arena.booleanName)
-  }
-
-  /**
-    * A fixed cell that is returned to indicate an operation failure.
-    *
-    * @return the failure cell
-    */
-  def cellFailure(): ArenaCell = {
-    cellMap(Arena.failureName)
   }
 
   /**
@@ -131,17 +121,6 @@ class Arena private(val solverContext: SolverContext,
 
       case _ =>
         ()
-    }
-    // After some thought, we have decided to require that cells of different types --- except unknown --- cannot be equal.
-    // So, we immediately add such a constraint to all the previously defined cells.
-    // Of course, this gives us n^2 / 2 clauses for n cells, but, hey, TLA+ is hard!
-    // TODO: use different sorts for different types in the future?
-    def otherType(c: ArenaCell): Boolean = {
-      !c.cellType.comparableWith(cellType)
-    }
-    val incomparable = cellMap.values.filter(otherType)
-    for (c <- incomparable) {
-      solverContext.assertGroundExpr(OperEx(TlaOper.ne, newCell.toNameEx, c.toNameEx))
     }
 
     newArena
@@ -287,6 +266,15 @@ class Arena private(val solverContext: SolverContext,
     def default(c: ArenaCell): List[ArenaCell] = List()
 
     hasEdges.applyOrElse(src, default).contains(dst)
+  }
+
+  /**
+    * Find all the cells of a given type.
+    *
+    * @return all the cells that have exactly the same type as the argument (no unification involved)
+    */
+  def findCellsByType(cellType: CellT): List[ArenaCell] = {
+    cellMap.values.filter(_.cellType == cellType).toList
   }
 
   /**
