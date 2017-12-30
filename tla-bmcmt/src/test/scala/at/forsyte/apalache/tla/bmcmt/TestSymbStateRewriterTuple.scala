@@ -1,14 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.NameEx
-import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterTuple extends RewriterBase {
+  /*
   test("""SE-TUPLE-CTOR[1-2]: <<1, FALSE, {2}>> ~~> $C$k""") {
     val tuple = TlaFunOper.mkTuple(tla.int(1), tla.bool(false), tla.enumSet(tla.int(2)))
 
@@ -34,7 +31,6 @@ class TestSymbStateRewriterTuple extends RewriterBase {
     }
   }
 
-  /*
   test("""SE-TPL-ACC[1-2]: <<1, FALSE, {2}>>[2] ~~> $C$k equals FALSE""") {
     val tuple = tla.tuple(tla.int(1), tla.bool(false), tla.enumSet(tla.int(2)))
     val tupleAcc = tla.appFun(tuple, tla.int(2))
