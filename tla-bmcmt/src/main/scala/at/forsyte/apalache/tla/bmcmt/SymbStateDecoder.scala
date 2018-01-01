@@ -85,7 +85,7 @@ class SymbStateDecoder(solverContext: SolverContext) {
   }
 
   def decodeStateVariables(state: SymbState): Map[String, TlaEx] = {
-    state.binding.map(p => (p._1, decodeCellToTlaEx(state.arena, p._2)))
+    state.binding.map(p => (p._1, reverseMapVar(decodeCellToTlaEx(state.arena, p._2), p._1, p._2)))
   }
 
   def decodeCellToTlaEx(arena: Arena, cell: ArenaCell): TlaEx = cell.cellType match {
@@ -117,5 +117,20 @@ class SymbStateDecoder(solverContext: SolverContext) {
 
     case _ =>
       throw new RewriterException("Don't know how to decode the cell %s of type %s".format(cell, cell.cellType))
+  }
+
+  def reverseMapVar(expr: TlaEx, varName: String, cell: ArenaCell): TlaEx = {
+    def rec(ex: TlaEx): TlaEx = ex match {
+      case NameEx(name) =>
+        if (name != cell.name) ex else NameEx(varName)
+
+      case OperEx(oper, args @ _*) =>
+        OperEx(oper, args map rec :_*)
+
+      case _ =>
+        ex
+    }
+
+    rec(expr)
   }
 }
