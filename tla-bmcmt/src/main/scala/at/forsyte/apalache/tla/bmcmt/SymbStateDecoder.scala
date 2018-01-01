@@ -15,17 +15,13 @@ import scala.collection.immutable.{HashSet, SortedSet}
   *
   * @author Igor Konnov
   */
-class SymbStateDecoder() {
+class SymbStateDecoder(solverContext: SolverContext) {
   // a simple decoder that dumps values into a text file, in the future we need better recovery code
-  def explainState(solverContext: SolverContext, state: SymbState, writer: PrintWriter): Unit = {
+  def dumpArena(state: SymbState, writer: PrintWriter): Unit = {
     def decode(cell: ArenaCell): TlaEx = {
       cell.cellType match {
-        case BoolT() =>
+        case BoolT() | IntT() =>
           solverContext.evalGroundExpr(cell.toNameEx)
-
-        case IntT() =>
-          val intVal = solverContext.evalGroundExpr(tla.appFun(NameEx("$$intVal"), cell)) // a special hack to get an integer
-          tla.and(solverContext.evalGroundExpr(cell), tla.eql(cell, intVal))
 
         case FinSetT(_) =>
           def inSet(e: ArenaCell) = solverContext.evalGroundExpr(tla.in(e, cell)).identical(tla.bool(true))
@@ -86,5 +82,40 @@ class SymbStateDecoder() {
     for (cls <- classes) {
       writer.println("Equiv. class: {%s}".format(cls.mkString(", ")))
     }
+  }
+
+  def decodeStateVariables(state: SymbState): Map[String, TlaEx] = {
+    state.binding.map(p => (p._1, decodeCellToTlaEx(state.arena, p._2)))
+  }
+
+  def decodeCellToTlaEx(arena: Arena, cell: ArenaCell): TlaEx = cell.cellType match {
+    case BoolT() | IntT() =>
+      solverContext.evalGroundExpr(cell.toNameEx)
+
+    case FinSetT(_) =>
+      def inSet(e: ArenaCell) = solverContext.evalGroundExpr(tla.in(e, cell)).identical(tla.bool(true))
+      val elems = arena.getHas(cell).filter(inSet)
+      tla.enumSet(elems.map(c => decodeCellToTlaEx(arena, c)) :_*)
+
+    case FunT(_, _) =>
+      def eachElem(e: TlaEx): TlaEx = {
+        val funApp = tla.appFun(cell, e)
+        val result = solverContext.evalGroundExpr(funApp)
+        tla.eql(funApp, result)
+      }
+      val dom = arena.getDom(cell)
+      decodeCellToTlaEx(arena, dom) match {
+        case OperEx(TlaSetOper.enumSet, elems @ _*) =>
+          tla.and(elems.map(eachElem) :_*)
+
+        case _ =>
+          throw new RewriterException("Unexpected domain structure: " + dom)
+      }
+
+    case UnknownT() =>
+      tla.appFun(NameEx("Unknown"), cell)
+
+    case _ =>
+      throw new RewriterException("Don't know how to decode the cell %s of type %s".format(cell, cell.cellType))
   }
 }

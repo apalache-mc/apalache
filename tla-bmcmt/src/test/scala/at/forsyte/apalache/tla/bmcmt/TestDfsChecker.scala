@@ -110,9 +110,9 @@ class TestDfsChecker extends FunSuite {
     // x' \in {x + 1}
     val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
     // x < 100
-    val inv = tla.lt(tla.name("x"), tla.int(100))
+    val notInv = tla.not(tla.lt(tla.name("x"), tla.int(100)))
     val dummyModule = new TlaModule("root", List(), List())
-    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, Some(inv))
+    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, Some(notInv))
     // initialize the model checker
     val checker = new DfsChecker(new FreeExistentialsStoreImpl(), checkerInput, 10)
     val outcome = checker.run()
@@ -125,9 +125,9 @@ class TestDfsChecker extends FunSuite {
     // x' \in {x + 1}
     val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
     // x < 5
-    val inv = tla.lt(tla.name("x"), tla.int(5))
+    val notInv = tla.not(tla.lt(tla.name("x"), tla.int(5)))
     val dummyModule = new TlaModule("root", List(), List())
-    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, Some(inv))
+    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, Some(notInv))
     // initialize the model checker
     val checker = new DfsChecker(new FreeExistentialsStoreImpl(), checkerInput, 10)
     val outcome = checker.run()

@@ -136,28 +136,26 @@ class DfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
     }
   }
 
-  private def invariantHolds(nextState: SymbState)
-
-  = {
-    if (checkerInput.invariant.isEmpty) {
+  private def invariantHolds(nextState: SymbState) = {
+    if (checkerInput.notInvariant.isEmpty) {
       true
     } else {
       logger.debug("Checking the invariant")
-      val inv = checkerInput.invariant.get
+      val inv = checkerInput.notInvariant.get
       rewriter.push()
-      // assert ~Inv' (since we have computed a binding over primed variables)
+      // assert notInv' (since we have computed a binding over primed variables)
       val shiftedBinding = shiftBinding(nextState.binding)
       val invState = rewriter.rewriteUntilDone(nextState
         .setTheory(BoolTheory())
         .setRex(inv)
         .setBinding(shiftedBinding))
-      solverContext.assertGroundExpr(tla.not(invState.ex))
+      solverContext.assertGroundExpr(invState.ex)
       val sat = solverContext.sat()
       if (sat) {
         // TODO: explain the counterexample before restoring the SMT context
         // currenly, writing the counterexample in the SMT log
         val writer = new StringWriter()
-        new SymbStateDecoder().explainState(solverContext, invState, new PrintWriter(writer))
+        new SymbStateDecoder(solverContext).dumpArena(invState, new PrintWriter(writer))
         solverContext.log(writer.getBuffer.toString)
       }
       rewriter.pop()

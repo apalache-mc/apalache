@@ -24,7 +24,7 @@ class RewriterBase extends FunSuite with BeforeAndAfter {
   private def assertOrExplain(msg: String, state: SymbState, outcome: Boolean): Unit = {
     if (!outcome) {
       val writer = new StringWriter()
-      new SymbStateDecoder().explainState(solverContext, state, new PrintWriter(writer))
+      new SymbStateDecoder(solverContext).dumpArena(state, new PrintWriter(writer))
       solverContext.log(writer.getBuffer.toString)
       solverContext.push() // push and pop flush the log output
       solverContext.pop()

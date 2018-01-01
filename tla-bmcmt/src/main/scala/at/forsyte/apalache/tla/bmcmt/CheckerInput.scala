@@ -13,12 +13,11 @@ import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule}
   * @param nextTransitions a list of transitions that compute the next states.
   *                        A list [A_1, ..., A_n] is treated as A_1 \/ ... \/ A_n.
   *                        Each disjunct should assign a value to every primed variable at least once (see assignmentSolver).
-  * @param invariant       an optional invariant to check. If no invariant is provided, then the checker should only
-  *                        test the system for deadlocks.
+  * @param notInvariant    an optional invariant (negated).
   * @author Igor Konnov
   */
 class CheckerInput(val rootModule: TlaModule,
                    val initTransitions: List[TlaEx],
                    val nextTransitions: List[TlaEx],
-                   val invariant: Option[TlaEx]) { // TODO: remove invariant
+                   val notInvariant: Option[TlaEx]) {
 }

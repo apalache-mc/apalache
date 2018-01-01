@@ -100,13 +100,20 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
       logger.debug("Next transition #%d:\n   %s".format(i, t))
     }
 
-    //    val invariant = findBodyOf(invName, tlaModule.get.declarations: _*)
+    val invName = options.getOption("checker", "inv", None).asInstanceOf[Option[String]]
+    val invariant =
+      if (invName.isDefined) {
+        val invBody = findBodyOf(invName.get, tlaModule.get.declarations: _*)
+        Some(converter.sanitize(tla.not(invBody)))
+      } else {
+        None
+      }
 
     logger.info("Found %d initializing transitions and %d next transitions"
       .format(initTransitions.length, nextTransitions.length))
 
     specWithTransitions
-      = Some(new SpecWithTransitions(tlaModule.get, initTransitions.toList, nextTransitions.toList))
+      = Some(new SpecWithTransitions(tlaModule.get, initTransitions, nextTransitions, invariant))
     true
   }
 

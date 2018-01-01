@@ -26,6 +26,8 @@ class SimpleSkolemization @Inject()(val frexStore: FreeExistentialsStoreImpl) {
   def transformAndLabel(spec: SpecWithTransitions): SpecWithTransitions = {
     val initTransitions = spec.initTransitions map toNegatedForm
     val nextTransitions = spec.nextTransitions map toNegatedForm
+    val notInv =
+      if (spec.notInvariant.isDefined) Some(toNegatedForm(spec.notInvariant.get)) else None
 
     // TODO: UniqueDB should be wired using a constructor
     def addUid(ex: TlaEx): Unit =
@@ -35,7 +37,11 @@ class SimpleSkolemization @Inject()(val frexStore: FreeExistentialsStoreImpl) {
     initTransitions foreach markFreeExistentials
     nextTransitions foreach addUid
     nextTransitions foreach markFreeExistentials
-    new SpecWithTransitions(spec.rootModule, initTransitions, nextTransitions)
+    if (notInv.isDefined) {
+      addUid(notInv.get)
+      markFreeExistentials(notInv.get)
+    }
+    new SpecWithTransitions(spec.rootModule, initTransitions, nextTransitions, notInv)
   }
 
   private def markFreeExistentials(ex: TlaEx): Unit = ex match {

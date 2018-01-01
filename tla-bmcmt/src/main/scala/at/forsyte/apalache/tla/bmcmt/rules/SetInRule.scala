@@ -58,7 +58,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
           case PowSetT(FinSetT(_)) =>
             powSetIn(setState, setCell, elemCell)
 
-          case _ => throw new RewriterException("Unexpected set type: %s in %s"
+          case _ => throw new RewriterException("SetInRule is not implemented for type %s (found in %s)"
             .format(setCell.cellType, state.ex))
         }
 

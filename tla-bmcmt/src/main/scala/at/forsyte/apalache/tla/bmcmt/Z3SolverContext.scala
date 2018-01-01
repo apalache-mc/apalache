@@ -402,14 +402,11 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
       case OperEx(TlaFunOper.app, NameEx(funName), NameEx(argName)) =>
         // apply the function associated with a cell
         val arg = constCache(argName)._1
-        if (funName != "$$intVal") {
-          z3context.mkApp(getCellFun(funName), arg)
-        } else {
-          // a hack to get back the integer values from a model
-          // TODO: remove. There is no need in the uninterpreted function anymore,
-          // as integer cells are declared as integers
-          arg
-        }
+        z3context.mkApp(getCellFun(funName), arg)
+
+      case OperEx(TlaFunOper.app, NameEx(funName), arg @ ValEx(_)) =>
+        // apply the function associated with a cell
+        z3context.mkApp(getCellFun(funName), toExpr(arg))
 
       case _ =>
         throw new InvalidTlaExException("Unexpected TLA+ expression: " + ex, ex)

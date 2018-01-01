@@ -44,7 +44,7 @@ class IntDotDotRule(rewriter: SymbStateRewriter) extends RewritingRule {
         (left.toInt, right.toInt)
 
       case _ =>
-        throw new RewriterException("Expected an integer range in .., found %s"
+        throw new RewriterException("Expected a constant integer range in .., found %s"
           .format(elems.map(UTFPrinter.apply).mkString("..")))
     }
   }
