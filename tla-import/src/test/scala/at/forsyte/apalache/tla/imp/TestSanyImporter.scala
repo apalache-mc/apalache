@@ -546,6 +546,47 @@ class TestSanyImporter extends FunSuite {
         OperEx(TlaBoolOper.existsUnbounded, NameEx("y"), ValEx(TlaTrue))))(mod.declarations(6))
   }
 
+  test("expression labels") {
+    val text =
+      """---- MODULE labels ----
+        |A == {FALSE} \cup (l1 :: {TRUE})
+        |B == \E x \in BOOLEAN: l2(x) :: x /= FALSE
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter().loadFromSource("labels", Source.fromString(text))
+    val mod = expectSingleModule("labels", rootName, modules)
+
+    def assertTlaDecl(name: String, params: List[FormalParam], body: TlaEx): TlaDecl => Unit = {
+      case d: TlaOperDecl =>
+        assert(name == d.name)
+        assert(params == d.formalParams)
+        assert(body == d.body)
+
+      case _ =>
+        fail("Expected a TlaDecl")
+    }
+
+//    A == {FALSE} \cup (l1 :: {TRUE})
+    val expectedABody =
+      OperEx(TlaSetOper.cup,
+        OperEx(TlaSetOper.enumSet, ValEx(TlaBool(false))),
+        OperEx(TlaOper.label,
+                OperEx(TlaSetOper.enumSet, ValEx(TlaBool(true))),
+                NameEx("l1"))) ////
+    assertTlaDecl("A", List(), expectedABody) (mod.declarations.head)
+
+    //    B == \E x \in BOOLEAN: l2(x) :: x /= FALSE
+    // since we cannot access formal parameters, we ignore them
+    val expectedBBody =
+      OperEx(TlaBoolOper.exists,
+        NameEx("x"),
+        ValEx(TlaBoolSet),
+        OperEx(TlaOper.label,
+          OperEx(TlaOper.ne, NameEx("x"), ValEx(TlaBool(false))),
+          NameEx("l1"))) ////
+  }
+
   test("complex updates") {
     // One can write tricky combinations of EXCEPT arguments.
     val text =

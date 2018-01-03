@@ -210,6 +210,16 @@ object UTFPrinter extends Printer {
           case TlaSetOper.supsetProper => mkOpApp( "%%s %s %%s".format( m_supset ), args : _* )
           case TlaSetOper.times => opAppStr( args, pad( m_times ) )
           case TlaSetOper.union => mkOpApp( "UNION %s", args : _* )
+          case TlaOper.label =>
+            val body = this(args.head)
+            val label = this(args.tail.head)
+            val argsStr = args.tail.tail.map(apply).mkString(", ")
+            if (args.lengthCompare(2) > 0) {
+              s"$label($argsStr):: $body"
+            } else {
+              s"$label:: $body"
+            }
+
 
           case _ => "<[TBD]>"
         }
