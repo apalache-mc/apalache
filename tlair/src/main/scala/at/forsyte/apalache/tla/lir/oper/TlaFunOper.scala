@@ -72,6 +72,10 @@ object TlaFunOper {
   /**
     * A function update, e.g., [f EXCEPT ![i_1] = e_1, ![i_2] = e_2, ..., ![i_k] = e_k].
     * The order of the arguments is as follows: (f, i_1, e_1, ..., i_k, e_k).
+    *
+    * Note that all indices i_1, ..., i_k are tuples. For one-dimensional functions,
+    * they are singleton tuples, whereas for multidimensional functions the indices are
+    * tuples of arbitrary length.
     */
   val except = new TlaFunOper {
     override def arity: OperArity = new OperArity( k => k >= 3 && k % 2 == 1 )

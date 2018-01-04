@@ -90,8 +90,19 @@ class ExprOrOpArgNodeTranslator(context: Context, recStatus: RecursionStatus) {
     val base = translate(node.getAtBase)
     // This translation introduces new expressions for different occurrences of @.
     // An alternative to this would be to introduce LET at = ... IN [f EXCEPT ![0] = at + at].
-    val modifier = translate(node.getAtModifier)
-    OperEx(TlaFunOper.app, base, modifier)
+
+    // BUGFIX: the indices in EXCEPT are packed as tuples.
+    // Unpack them into multiple function applications when rewriting @, e.g., (((f[1])[2])[3]).
+    translate(node.getAtModifier) match {
+      case OperEx(TlaFunOper.tuple, indices @ _*) =>
+        def applyOne(base: TlaEx, index: TlaEx): TlaEx = {
+          OperEx(TlaFunOper.app, base, index)
+        }
+        indices.foldLeft(base) (applyOne)
+
+      case e @ _ =>
+        throw new SanyImporterException("Unexpected index expression in EXCEPT: " + e)
+    }
   }
 
   private def translateLabel(node: LabelNode): TlaEx = {

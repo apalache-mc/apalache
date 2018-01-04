@@ -461,7 +461,7 @@ class TestSanyImporter extends FunSuite {
         NameEx("x"),
         TlaFunOper.mkTuple(ValEx(TlaInt(0))),
         OperEx(TlaBoolOper.and,
-          OperEx(TlaFunOper.app, NameEx("x"), TlaFunOper.mkTuple(ValEx(TlaInt(0)))),
+          OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(0))),
           ValEx(TlaTrue))
       ))
     assertTlaDecl("FcnApply", OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(1))))
@@ -554,6 +554,57 @@ class TestSanyImporter extends FunSuite {
     assertTlaDecl("Q5",
       OperEx(TlaBoolOper.existsUnbounded, NameEx("x"),
         OperEx(TlaBoolOper.existsUnbounded, NameEx("y"), ValEx(TlaTrue))))(mod.declarations(6))
+  }
+
+  test("function updates") {
+    val text =
+      """---- MODULE except ----
+        |VARIABLE x
+        |Except == [ x EXCEPT ![0] = 1 ]
+        |ExceptAt == [ x EXCEPT ![0] = @ /\ TRUE]
+        |ExceptTuple == [ x EXCEPT ![<<0>>] = 1 ]
+        |ExceptManyAt == [ x EXCEPT ![1][2] = @ /\ TRUE]
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter().loadFromSource("except", Source.fromString(text))
+    val mod = expectSingleModule("except", rootName, modules)
+
+    expectTlaDecl("Except",
+      List(),
+      OperEx(TlaFunOper.except,
+        NameEx("x"), TlaFunOper.mkTuple(ValEx(TlaInt(0))), ValEx(TlaInt(1))
+      )) (mod.declarations(1))
+
+    expectTlaDecl("ExceptAt",
+      List(),
+      OperEx(TlaFunOper.except,
+        NameEx("x"),
+        TlaFunOper.mkTuple(ValEx(TlaInt(0))),
+        OperEx(TlaBoolOper.and,
+          OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(0))),
+          ValEx(TlaTrue))
+      )) (mod.declarations(2))
+
+    expectTlaDecl("ExceptTuple",
+      List(),
+      OperEx(TlaFunOper.except,
+        NameEx("x"), TlaFunOper.mkTuple(TlaFunOper.mkTuple(ValEx(TlaInt(0)))), ValEx(TlaInt(1))
+      )) (mod.declarations(3))
+
+    // the trick here is that the index tuple should be unfolded
+    expectTlaDecl("ExceptManyAt",
+      List(),
+      OperEx(TlaFunOper.except,
+        NameEx("x"),
+        TlaFunOper.mkTuple(ValEx(TlaInt(1)), ValEx(TlaInt(2))),
+        OperEx(TlaBoolOper.and,
+          OperEx(TlaFunOper.app,
+            OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(1))),
+            ValEx(TlaInt(2))
+          ), ///
+          ValEx(TlaTrue))
+      )) (mod.declarations(4))
   }
 
   test("expression labels") {
