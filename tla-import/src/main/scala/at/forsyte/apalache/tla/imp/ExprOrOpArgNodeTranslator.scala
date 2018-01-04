@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.control.LetInOper
-import at.forsyte.apalache.tla.lir.oper.TlaFunOper
+import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.{TlaDecimal, TlaInt, TlaStr}
 import tla2sany.semantic._
 
@@ -37,6 +37,9 @@ class ExprOrOpArgNodeTranslator(context: Context, recStatus: RecursionStatus) {
 
     case at: AtNode =>
       translateAt(at)
+
+    case label: LabelNode =>
+      translateLabel(label)
 
     case n =>
       throw new SanyImporterException("Unexpected subclass of tla2sany.ExprOrOpArgNode: " + n.getClass)
@@ -85,10 +88,27 @@ class ExprOrOpArgNodeTranslator(context: Context, recStatus: RecursionStatus) {
   private def translateAt(node: AtNode): TlaEx = {
     // e.g., in [f EXCEPT ![42] = @ + @], we have: base = f, modifier = 42
     val base = translate(node.getAtBase)
-    // This translation introduces new expressions for different occurences of @.
+    // This translation introduces new expressions for different occurrences of @.
     // An alternative to this would be to introduce LET at = ... IN [f EXCEPT ![0] = at + at].
-    val modifier = translate(node.getAtModifier)
-    OperEx(TlaFunOper.app, base, modifier)
+
+    // BUGFIX: the indices in EXCEPT are packed as tuples.
+    // Unpack them into multiple function applications when rewriting @, e.g., (((f[1])[2])[3]).
+    translate(node.getAtModifier) match {
+      case OperEx(TlaFunOper.tuple, indices @ _*) =>
+        def applyOne(base: TlaEx, index: TlaEx): TlaEx = {
+          OperEx(TlaFunOper.app, base, index)
+        }
+        indices.foldLeft(base) (applyOne)
+
+      case e @ _ =>
+        throw new SanyImporterException("Unexpected index expression in EXCEPT: " + e)
+    }
+  }
+
+  private def translateLabel(node: LabelNode): TlaEx = {
+    // There seems to be no way to access the formal parameters of LabelNode.
+    // For the moment, just translate the parameters as an empty list
+    OperEx(TlaOper.label, translate(node.getBody.asInstanceOf[ExprNode]), NameEx(node.getName.toString))
   }
 }
 

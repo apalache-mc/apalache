@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, TlaValue, ValEx}
 import tla2sany.semantic._
 
 /**
-  * This class acts as a proxy for OpAllTranslator. It hijacks the node that correspond to the standard library
+  * This class acts as a proxy for OpAllTranslator. It hijacks the node that corresponds to the standard library
   * operators and translates them differently from the user operators.
   *
   * @author konnov

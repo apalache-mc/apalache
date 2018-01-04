@@ -104,7 +104,9 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
     val invariant =
       if (invName.isDefined) {
         val invBody = findBodyOf(invName.get, tlaModule.get.declarations: _*)
-        Some(converter.sanitize(tla.not(invBody)))
+        val notInv = converter.sanitize(tla.not(invBody))
+        logger.debug("Negated invariant:\n   %s".format(notInv))
+        Some(notInv)
       } else {
         None
       }

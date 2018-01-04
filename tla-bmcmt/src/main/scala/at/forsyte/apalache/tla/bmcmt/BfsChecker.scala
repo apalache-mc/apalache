@@ -23,7 +23,7 @@ class BfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
   class CancelSearchException(val outcome: Outcome.Value) extends Exception
 
   /**
-    * A stack of the symbolic states in the course of the depth-first search (the last state is on top).
+    * A stack of the symbolic states that might constitute a counterexample (the last state is on top).
     */
   private var stack: List[SymbState] = List()
   private val solverContext: SolverContext = new Z3SolverContext(debug)
@@ -74,12 +74,15 @@ class BfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
     val nextStates = computeAllEnabled(startingState, transitions)
     if (nextStates.isEmpty) {
       // TODO: explain counterexample
-      logger.error(s"No next transition applicable on step $stepNo. Deadlock detected.")
+      logger.error(s"No next transition applicable on step $stepNo. Deadlock detected. Check counterexample.")
+      dumpCounterexample()
       throw new CancelSearchException(Outcome.RuntimeError)
     } else if (nextStates.lengthCompare(1) == 0) {
       // the only next state -- return it
       val onlyState = nextStates.head
-      onlyState.setBinding(shiftBinding(onlyState.binding))
+      val resultingState = onlyState.setBinding(shiftBinding(onlyState.binding))
+      stack = resultingState +: stack
+      resultingState
     } else {
       // pick an index j \in { 0..k } of the fired transition
       val transitionIndex = NameEx(rewriter.solverContext.introIntConst())
@@ -121,7 +124,9 @@ class BfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
         throw new InternalCheckerError(s"Error picking next variables (step $stepNo). Report a bug.")
       }
       // that is the result of this step
-      pickState.setBinding(shiftBinding(pickState.binding))
+      val resultingState = pickState.setBinding(shiftBinding(pickState.binding))
+      stack = resultingState +: stack
+      resultingState
     }
   }
 
@@ -130,7 +135,6 @@ class BfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
     logger.debug("Stack push to level %d, then rewriting".format(rewriter.contextLevel))
     val nextState = rewriter.rewriteUntilDone(state.setTheory(BoolTheory()).setRex(transition))
     logger.debug("Finished rewriting")
-    stack = nextState +: stack
     if (!solverContext.sat()) {
       // this is a clear sign of a bug in one of the translation rules
       logger.debug("UNSAT after pushing state constraints")
@@ -145,7 +149,8 @@ class BfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
     solverContext.assertGroundExpr(tla.or(failPreds.map(_.toNameEx): _*))
     if (solverContext.sat()) {
       // TODO: add diagnostic info
-      logger.error("The specification may produce a runtime error.")
+      logger.error("The specification may produce a runtime error. Check counterexample.")
+      dumpCounterexample()
       throw new CancelSearchException(Outcome.RuntimeError)
     } else {
       rewriter.pop()
@@ -155,6 +160,7 @@ class BfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
         rewriter.pop()
         None
       } else {
+        rewriter.pop()
         Some(nextState)
       }
     }
@@ -164,9 +170,9 @@ class BfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
     rewriter.push()
     solverContext.assertGroundExpr(tla.and(nextStates.map(e => tla.not(e.ex)): _*))
     if (solverContext.sat()) {
-      val filename = dumpCounterexample(state)
+      val filename = dumpCounterexample()
       logger.error(s"Deadlock detected at step $stepNo. Check $filename")
-      throw new CancelSearchException(Outcome.RuntimeError)
+      throw new CancelSearchException(Outcome.Deadlock)
     }
     rewriter.pop()
   }
@@ -183,7 +189,7 @@ class BfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
       solverContext.assertGroundExpr(notInvState.ex)
       val sat = solverContext.sat()
       if (sat) {
-        val filename = dumpCounterexample(notInvState)
+        val filename = dumpCounterexample()
         logger.error(s"Invariant is violated at depth $depth. Check the counterexample in $filename")
         throw new CancelSearchException(Outcome.Error)
       }
@@ -191,12 +197,17 @@ class BfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
     }
   }
 
-  private def dumpCounterexample(state: SymbState): String = {
+  private def dumpCounterexample(): String = {
     val filename = "counterexample.txt"
     val writer = new PrintWriter(new FileWriter(filename, false))
-    val binding = new SymbStateDecoder(solverContext).decodeStateVariables(state)
-    for ((name, ex) <- binding) {
-      writer.println("%-15s ->  %s".format(name, UTFPrinter.apply(ex)))
+    for ((state, i) <- stack.reverse.zipWithIndex) {
+      writer.println(s"State $i:")
+      writer.println("--------")
+      val binding = new SymbStateDecoder(solverContext).decodeStateVariables(state)
+      for ((name, ex) <- binding) {
+        writer.println("%-15s ->  %s".format(name, UTFPrinter.apply(ex)))
+      }
+      writer.println("========\n")
     }
     writer.close()
     filename

@@ -24,6 +24,16 @@ import scala.io.Source
 @RunWith(classOf[JUnitRunner])
 class TestSanyImporter extends FunSuite {
 
+  def expectTlaDecl(name: String, params: List[FormalParam], body: TlaEx): TlaDecl => Unit = {
+    case d: TlaOperDecl =>
+      assert(name == d.name)
+      assert(params == d.formalParams)
+      assert(body == d.body)
+
+    case d @ _ =>
+      fail("Expected a TlaOperDecl, found: " + d)
+  }
+
   test("empty module") {
     val text =
       """---- MODULE justASimpleTest ----
@@ -451,7 +461,7 @@ class TestSanyImporter extends FunSuite {
         NameEx("x"),
         TlaFunOper.mkTuple(ValEx(TlaInt(0))),
         OperEx(TlaBoolOper.and,
-          OperEx(TlaFunOper.app, NameEx("x"), TlaFunOper.mkTuple(ValEx(TlaInt(0)))),
+          OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(0))),
           ValEx(TlaTrue))
       ))
     assertTlaDecl("FcnApply", OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(1))))
@@ -544,6 +554,119 @@ class TestSanyImporter extends FunSuite {
     assertTlaDecl("Q5",
       OperEx(TlaBoolOper.existsUnbounded, NameEx("x"),
         OperEx(TlaBoolOper.existsUnbounded, NameEx("y"), ValEx(TlaTrue))))(mod.declarations(6))
+  }
+
+  test("function updates") {
+    val text =
+      """---- MODULE except ----
+        |VARIABLE x
+        |Except == [ x EXCEPT ![0] = 1 ]
+        |ExceptAt == [ x EXCEPT ![0] = @ /\ TRUE]
+        |ExceptTuple == [ x EXCEPT ![<<0>>] = 1 ]
+        |ExceptManyAt == [ x EXCEPT ![1][2] = @ /\ TRUE]
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter().loadFromSource("except", Source.fromString(text))
+    val mod = expectSingleModule("except", rootName, modules)
+
+    expectTlaDecl("Except",
+      List(),
+      OperEx(TlaFunOper.except,
+        NameEx("x"), TlaFunOper.mkTuple(ValEx(TlaInt(0))), ValEx(TlaInt(1))
+      )) (mod.declarations(1))
+
+    expectTlaDecl("ExceptAt",
+      List(),
+      OperEx(TlaFunOper.except,
+        NameEx("x"),
+        TlaFunOper.mkTuple(ValEx(TlaInt(0))),
+        OperEx(TlaBoolOper.and,
+          OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(0))),
+          ValEx(TlaTrue))
+      )) (mod.declarations(2))
+
+    expectTlaDecl("ExceptTuple",
+      List(),
+      OperEx(TlaFunOper.except,
+        NameEx("x"), TlaFunOper.mkTuple(TlaFunOper.mkTuple(ValEx(TlaInt(0)))), ValEx(TlaInt(1))
+      )) (mod.declarations(3))
+
+    // the trick here is that the index tuple should be unfolded
+    expectTlaDecl("ExceptManyAt",
+      List(),
+      OperEx(TlaFunOper.except,
+        NameEx("x"),
+        TlaFunOper.mkTuple(ValEx(TlaInt(1)), ValEx(TlaInt(2))),
+        OperEx(TlaBoolOper.and,
+          OperEx(TlaFunOper.app,
+            OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(1))),
+            ValEx(TlaInt(2))
+          ), ///
+          ValEx(TlaTrue))
+      )) (mod.declarations(4))
+  }
+
+  test("expression labels") {
+    val text =
+      """---- MODULE labels ----
+        |A == {FALSE} \cup (l1 :: {TRUE})
+        |B == \E x \in BOOLEAN: l2(x) :: x /= FALSE
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter().loadFromSource("labels", Source.fromString(text))
+    val mod = expectSingleModule("labels", rootName, modules)
+
+
+//    A == {FALSE} \cup (l1 :: {TRUE})
+    val expectedABody =
+      OperEx(TlaSetOper.cup,
+        OperEx(TlaSetOper.enumSet, ValEx(TlaBool(false))),
+        OperEx(TlaOper.label,
+                OperEx(TlaSetOper.enumSet, ValEx(TlaBool(true))),
+                NameEx("l1"))) ////
+    expectTlaDecl("A", List(), expectedABody) (mod.declarations.head)
+
+    //    B == \E x \in BOOLEAN: l2(x) :: x /= FALSE
+    // since we cannot access formal parameters, we ignore them
+    val expectedBBody =
+      OperEx(TlaBoolOper.exists,
+        NameEx("x"),
+        ValEx(TlaBoolSet),
+        OperEx(TlaOper.label,
+          OperEx(TlaOper.ne, NameEx("x"), ValEx(TlaBool(false))),
+          NameEx("l2"))) ////
+    expectTlaDecl("B", List(), expectedBBody) (mod.declarations.tail.head)
+  }
+
+  test("tuples as arguments") {
+    // test that single function arguments are translated consistently
+    val text =
+      """---- MODULE args ----
+        |VARIABLE f, g, e, h
+        |
+        |A == f[2]
+        |B == g["green"]
+        |C == e[FALSE]
+        |D == h[{}]
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter().loadFromSource("args", Source.fromString(text))
+    val mod = expectSingleModule("args", rootName, modules)
+
+    val expectedABody = OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaInt(2)))
+    expectTlaDecl("A", List(), expectedABody) (mod.declarations(4))
+
+    val expectedBBody = OperEx(TlaFunOper.app, NameEx("g"), ValEx(TlaStr("green")))
+    expectTlaDecl("B", List(), expectedBBody) (mod.declarations(5))
+
+    val expectedCBody = OperEx(TlaFunOper.app, NameEx("e"), ValEx(TlaBool(false)))
+    expectTlaDecl("C", List(), expectedCBody) (mod.declarations(6))
+
+    val expectedDBody = OperEx(TlaFunOper.app, NameEx("h"), OperEx(TlaSetOper.enumSet))
+    expectTlaDecl("D", List(), expectedDBody) (mod.declarations(7))
   }
 
   test("complex updates") {
@@ -697,22 +820,12 @@ class TestSanyImporter extends FunSuite {
     val (rootName, modules) = new SanyImporter().loadFromSource("level1Operators", Source.fromString(text))
     val mod = expectSingleModule("level1Operators", rootName, modules)
 
-    def assertTlaDecl(name: String, params: List[FormalParam], body: TlaEx): TlaDecl => Unit = {
-      case d: TlaOperDecl =>
-        assert(name == d.name)
-        assert(params == d.formalParams)
-        assert(body == d.body)
-
-      case _ =>
-        fail("Expected a TlaDecl")
-    }
-
-    assertTlaDecl("A", List(SimpleFormalParam("i"), SimpleFormalParam("j")),
+    expectTlaDecl("A", List(SimpleFormalParam("i"), SimpleFormalParam("j")),
       OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j")))(mod.declarations(2))
-    assertTlaDecl("**", List(SimpleFormalParam("i"), SimpleFormalParam("j")),
+    expectTlaDecl("**", List(SimpleFormalParam("i"), SimpleFormalParam("j")),
       OperEx(TlaSetOper.cap, NameEx("i"), NameEx("j")))(mod.declarations(3))
     val aDecl = mod.declarations(2).asInstanceOf[TlaOperDecl]
-    assertTlaDecl("C", List(),
+    expectTlaDecl("C", List(),
       OperEx(aDecl.operator, ValEx(TlaInt(1)), ValEx(TlaInt(2))))(mod.declarations(4))
   }
 
@@ -730,22 +843,13 @@ class TestSanyImporter extends FunSuite {
     val (rootName, modules) = new SanyImporter().loadFromSource("level2Operators", Source.fromString(text))
     val mod = expectSingleModule("level2Operators", rootName, modules)
 
-    def assertTlaDecl(name: String, params: List[FormalParam], body: TlaEx): TlaDecl => Unit = {
-      case d: TlaOperDecl =>
-        assert(name == d.name)
-        assert(params == d.formalParams)
-        assert(body == d.body)
 
-      case _ =>
-        fail("Expected a TlaDecl")
-    }
-
-    assertTlaDecl("A",
+    expectTlaDecl("A",
       List(SimpleFormalParam("i"), SimpleFormalParam("j"), OperFormalParam("f", FixedArity(1))),
       OperEx(TlaOper.apply, NameEx("f"),
         OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j"))))(mod.declarations(2))
     val aDecl = mod.declarations(2).asInstanceOf[TlaOperDecl]
-    assertTlaDecl("C", List(),
+    expectTlaDecl("C", List(),
       OperEx(aDecl.operator, ValEx(TlaInt(0)), ValEx(TlaInt(1)), NameEx("B")))(mod.declarations(4))
   }
 

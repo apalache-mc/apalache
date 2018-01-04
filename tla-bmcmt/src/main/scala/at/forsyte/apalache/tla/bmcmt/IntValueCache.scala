@@ -9,12 +9,12 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, ValEx}
   *
   * @author Igor Konnov
   */
-class IntValueCache(solverContext: SolverContext) extends AbstractCache[Int, String] {
+class IntValueCache(solverContext: SolverContext) extends AbstractCache[Unit, Int, String] {
 
-  def create(intValue: Int): String = {
+  def create(context: Unit, intValue: Int): (Unit, String) = {
     // introduce a new constant
     val intConst = solverContext.introIntConst()
     solverContext.assertGroundExpr(OperEx(TlaOper.eq, NameEx(intConst), ValEx(TlaInt(intValue))))
-    intConst
+    (context, intConst)
   }
 }

@@ -5,6 +5,8 @@ package at.forsyte.apalache.tla.lir
   */
 package oper {
 
+  import at.forsyte.apalache.tla.lir.control.TlaControlOper
+
   /**
     * The levels of the operators: State (reasons about current state), Action (reasons about a pair of states),
     * and Temporal (reasons about executions).
@@ -110,5 +112,23 @@ package oper {
 
       override def interpretation: Interpretation.Value = Interpretation.Predefined
     }
+
+    /**
+      * An operator that decorates an expression with a label, e.g., l3(a, b) :: ex.
+      * The order of the arguments is as follows: (1) the decorated expression, e.g., ex,
+      * (2) the label name, e.g., NameEx("l3"), and (3 to k) the label arguments, e.g.,
+      * NameEx("a") and NameEx("b").
+      *
+      * Technically, a label is not an operator in TLA+, but a special form of an expression.
+      * As the labels are rarely used, we have decided to introduce a new operator instead of
+      * extending TlaEx with a new case class (it would have been annoying to take care of LabelEx
+      * in the pattern-matching code).
+      */
+    val label = new TlaControlOper {
+      override val name: String = "LABEL"
+      override def arity: OperArity = new OperArity(_ >= 2)
+      override val interpretation: Interpretation.Value = Interpretation.Predefined
+    }
+
   }
 }

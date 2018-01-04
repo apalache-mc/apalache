@@ -313,6 +313,7 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
             log(s"(declare-sort $sig 0)")
             z3context.mkUninterpretedSort(sig)
         }
+
       cellSorts += (sig -> (newSort, level))
       newSort
     }
@@ -404,7 +405,7 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
         val arg = constCache(argName)._1
         z3context.mkApp(getCellFun(funName), arg)
 
-      case OperEx(TlaFunOper.app, NameEx(funName), arg @ ValEx(_)) =>
+      case OperEx(TlaFunOper.app, NameEx(funName), arg@ValEx(_)) =>
         // apply the function associated with a cell
         z3context.mkApp(getCellFun(funName), toExpr(arg))
 

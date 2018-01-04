@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.rules._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaIntSet}
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 
 object SymbStateRewriter {
   sealed abstract class RewritingResult
@@ -43,6 +43,11 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
     */
   val intValueCache = new IntValueCache(solverContext)
 
+  /**
+    * A cache for string literals.
+    */
+  val strValueCache = new StrValueCache(solverContext)
+
   // bound the number of rewriting steps applied to the same rule
   private val RECURSION_LIMIT: Int = 10000
   private val coercion = new CoercionWithCache(this)
@@ -76,6 +81,8 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
       -> List(new BoolConstRule(this)),
     key(ValEx(TlaInt(1)))
       -> List(new IntConstRule(this)),
+    key(ValEx(TlaStr("red")))
+      -> List(new StrConstRule(this)),
 
     // logic
     key(tla.eql(tla.name("x"), tla.name("y")))
@@ -306,6 +313,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
   override def push(): Unit = {
     level += 1
     intValueCache.push()
+    strValueCache.push()
     lazyEq.push()
     coercion.push()
     solverContext.push()
@@ -318,6 +326,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
   override def pop(): Unit = {
     assert(level > 0)
     intValueCache.pop()
+    strValueCache.pop()
     lazyEq.pop()
     solverContext.pop()
     coercion.pop()
@@ -332,6 +341,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
   override def pop(n: Int): Unit = {
     assert(level >= n)
     intValueCache.pop(n)
+    strValueCache.pop(n)
     lazyEq.pop(n)
     solverContext.pop(n)
     coercion.pop(n)
@@ -343,6 +353,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
     */
   override def dispose(): Unit = {
     intValueCache.dispose()
+    strValueCache.dispose()
     lazyEq.dispose()
     solverContext.dispose()
     coercion.dispose()

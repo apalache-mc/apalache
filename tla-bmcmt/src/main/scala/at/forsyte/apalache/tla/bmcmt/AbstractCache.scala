@@ -5,7 +5,7 @@ package at.forsyte.apalache.tla.bmcmt
   *
   * @author Igor Konnov
   */
-abstract class AbstractCache[SourceT, TargetT] extends StackableContext {
+abstract class AbstractCache[ContextT, SourceT, TargetT] extends StackableContext {
   /**
     * A context level, see StackableContext
     */
@@ -14,13 +14,18 @@ abstract class AbstractCache[SourceT, TargetT] extends StackableContext {
   // cache the integer constants that are introduced in SMT for integer literals
   private var cache: Map[SourceT, (TargetT, Int)] = Map[SourceT, (TargetT, Int)]()
 
+  def values(): Iterable[TargetT] = {
+    cache.values.map(_._1)
+  }
+
   /**
     * Create a target value based on the source value and cache it.
     *
+    * @param context the context before creating a new value
     * @param srcValue a source value
-    * @return a target value that is going to be cached
+    * @return a target value that is going to be cached and the new context
     */
-  def create(srcValue: SourceT): TargetT
+  def create(context: ContextT, srcValue: SourceT): (ContextT, TargetT)
 
   /**
     * Get a previously cache value for a given source value, or return the previously cached one.
@@ -29,14 +34,14 @@ abstract class AbstractCache[SourceT, TargetT] extends StackableContext {
     * @param srcValue a source value
     * @return a target value
     */
-  def getOrCreate(srcValue: SourceT): TargetT = {
+  def getOrCreate(context: ContextT, srcValue: SourceT): (ContextT, TargetT) = {
     if (cache.contains(srcValue)) {
-      cache(srcValue)._1
+      (context, cache(srcValue)._1)
     } else {
       // introduce a new constant
-      val targetValue: TargetT = create(srcValue)
+      val (newContext, targetValue) = create(context, srcValue)
       cache = cache + (srcValue -> (targetValue, level))
-      targetValue
+      (newContext, targetValue)
     }
   }
 
