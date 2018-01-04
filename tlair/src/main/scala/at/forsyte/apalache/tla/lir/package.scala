@@ -101,7 +101,7 @@ package lir {
     protected var m_ID : UID = UID( -1 )
     protected var canSet: Boolean = true
     def setID( newID: UID ) = {
-      if( canSet ) {
+      if( canSet && newID.valid ) {
         canSet = false
         m_ID = newID
       }
@@ -351,3 +351,5 @@ package lir {
 
 
 }
+
+
