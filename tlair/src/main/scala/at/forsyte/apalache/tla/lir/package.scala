@@ -39,6 +39,16 @@ package lir {
 
   }
 
+  /**
+    * An assumption defined by ASSUME(...)
+    * @param body the assumption body
+    */
+  case class TlaAssumeDecl(body: TlaEx) extends TlaDecl {
+    val name: String = "ASSUME"
+    override def deepCopy(): TlaAssumeDecl = TlaAssumeDecl(body.deepCopy(identified = false))
+    override def identical(other: TlaDecl): Boolean = this == other
+  }
+
   ///////////////// DISCUSSION
   /**
     * A module included by EXTENDS.

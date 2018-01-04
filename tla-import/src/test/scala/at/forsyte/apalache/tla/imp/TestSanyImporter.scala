@@ -30,7 +30,7 @@ class TestSanyImporter extends FunSuite {
       assert(params == d.formalParams)
       assert(body == d.body)
 
-    case d @ _ =>
+    case d@_ =>
       fail("Expected a TlaOperDecl, found: " + d)
   }
 
@@ -574,7 +574,7 @@ class TestSanyImporter extends FunSuite {
       List(),
       OperEx(TlaFunOper.except,
         NameEx("x"), TlaFunOper.mkTuple(ValEx(TlaInt(0))), ValEx(TlaInt(1))
-      )) (mod.declarations(1))
+      ))(mod.declarations(1))
 
     expectTlaDecl("ExceptAt",
       List(),
@@ -584,13 +584,13 @@ class TestSanyImporter extends FunSuite {
         OperEx(TlaBoolOper.and,
           OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(0))),
           ValEx(TlaTrue))
-      )) (mod.declarations(2))
+      ))(mod.declarations(2))
 
     expectTlaDecl("ExceptTuple",
       List(),
       OperEx(TlaFunOper.except,
         NameEx("x"), TlaFunOper.mkTuple(TlaFunOper.mkTuple(ValEx(TlaInt(0)))), ValEx(TlaInt(1))
-      )) (mod.declarations(3))
+      ))(mod.declarations(3))
 
     // the trick here is that the index tuple should be unfolded
     expectTlaDecl("ExceptManyAt",
@@ -604,7 +604,7 @@ class TestSanyImporter extends FunSuite {
             ValEx(TlaInt(2))
           ), ///
           ValEx(TlaTrue))
-      )) (mod.declarations(4))
+      ))(mod.declarations(4))
   }
 
   test("expression labels") {
@@ -619,25 +619,25 @@ class TestSanyImporter extends FunSuite {
     val mod = expectSingleModule("labels", rootName, modules)
 
 
-//    A == {FALSE} \cup (l1 :: {TRUE})
+    //    A == {FALSE} \cup (l1 :: {TRUE})
     val expectedABody =
       OperEx(TlaSetOper.cup,
         OperEx(TlaSetOper.enumSet, ValEx(TlaBool(false))),
         OperEx(TlaOper.label,
-                OperEx(TlaSetOper.enumSet, ValEx(TlaBool(true))),
-                NameEx("l1"))) ////
-    expectTlaDecl("A", List(), expectedABody) (mod.declarations.head)
+          OperEx(TlaSetOper.enumSet, ValEx(TlaBool(true))),
+          NameEx("l1"))) ////
+    expectTlaDecl("A", List(), expectedABody)(mod.declarations.head)
 
     //    B == \E x \in BOOLEAN: l2(x) :: x /= FALSE
     // since we cannot access formal parameters, we ignore them
     val expectedBBody =
-      OperEx(TlaBoolOper.exists,
-        NameEx("x"),
-        ValEx(TlaBoolSet),
-        OperEx(TlaOper.label,
-          OperEx(TlaOper.ne, NameEx("x"), ValEx(TlaBool(false))),
-          NameEx("l2"))) ////
-    expectTlaDecl("B", List(), expectedBBody) (mod.declarations.tail.head)
+    OperEx(TlaBoolOper.exists,
+      NameEx("x"),
+      ValEx(TlaBoolSet),
+      OperEx(TlaOper.label,
+        OperEx(TlaOper.ne, NameEx("x"), ValEx(TlaBool(false))),
+        NameEx("l2"))) ////
+    expectTlaDecl("B", List(), expectedBBody)(mod.declarations.tail.head)
   }
 
   test("tuples as arguments") {
@@ -657,16 +657,16 @@ class TestSanyImporter extends FunSuite {
     val mod = expectSingleModule("args", rootName, modules)
 
     val expectedABody = OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaInt(2)))
-    expectTlaDecl("A", List(), expectedABody) (mod.declarations(4))
+    expectTlaDecl("A", List(), expectedABody)(mod.declarations(4))
 
     val expectedBBody = OperEx(TlaFunOper.app, NameEx("g"), ValEx(TlaStr("green")))
-    expectTlaDecl("B", List(), expectedBBody) (mod.declarations(5))
+    expectTlaDecl("B", List(), expectedBBody)(mod.declarations(5))
 
     val expectedCBody = OperEx(TlaFunOper.app, NameEx("e"), ValEx(TlaBool(false)))
-    expectTlaDecl("C", List(), expectedCBody) (mod.declarations(6))
+    expectTlaDecl("C", List(), expectedCBody)(mod.declarations(6))
 
     val expectedDBody = OperEx(TlaFunOper.app, NameEx("h"), OperEx(TlaSetOper.enumSet))
-    expectTlaDecl("D", List(), expectedDBody) (mod.declarations(7))
+    expectTlaDecl("D", List(), expectedDBody)(mod.declarations(7))
   }
 
   test("complex updates") {
@@ -1312,6 +1312,61 @@ class TestSanyImporter extends FunSuite {
     //    assertTlaDecl("IsFinSet", OperEx(TlaFiniteSetOper.isFiniteSet, ValEx(TlaBoolSet)))
     //    assertTlaDecl("Card", OperEx(TlaFiniteSetOper.cardinality, ValEx(TlaBoolSet)))
   }
+
+  test("assumptions") {
+    // this proof is a garbage, just to check, whether the translator works
+    val text =
+      """
+        |---- MODULE assumptions ----
+        |CONSTANT N
+        |VARIABLE x
+        |ASSUME(N = 4)
+        |Init == x' = TRUE
+        |Next == x' = ~x
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter().loadFromSource("assumptions", Source.fromString(text))
+    assert(1 == modules.size)
+    // the root module and naturals
+    val root = modules(rootName)
+
+    modules(rootName).declarations(2) match {
+      case TlaAssumeDecl(e) =>
+        assert(OperEx(TlaOper.eq, NameEx("N"), ValEx(TlaInt(4))) == e)
+
+      case e @ _ =>
+        fail("expected an assumption, found: " + e)
+    }
+  }
+
+  test("ignore theorems") {
+    // this proof is a garbage, just to check, whether the translator works
+    val text =
+      """
+        |---- MODULE theorems ----
+        |VARIABLE x
+        |Init == x' = TRUE
+        |Next == x' = ~x
+        |Inv == x \in BOOLEAN
+        |PTL == TRUE
+        |THEOREM Next => Inv
+        |<1>1. Init => Inv
+        |  <2>1. Init => Inv
+        |    BY DEF Init, Inv
+        |  <2>. QED
+        |    BY <2>1, PTL DEF Next
+        |<1>2. QED
+        |
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter().loadFromSource("theorems", Source.fromString(text))
+    assert(1 == modules.size) // Naturals, Sequences, and our module
+    // the root module and naturals
+    val root = modules(rootName)
+  }
+
 
   /*
     // FiniteSets extend Sequences, which open the Pandora box... Temporarily disabled.

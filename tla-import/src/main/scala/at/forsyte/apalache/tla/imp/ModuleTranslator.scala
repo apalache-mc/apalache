@@ -16,7 +16,10 @@ class ModuleTranslator {
     val context2 = node.getVariableDecls.toList.foldLeft(context1) {
       (ctx, node) => ctx.push(TlaVarDecl(node.getName.toString))
     }
-    val context = node.getOpDefs.toList.foldLeft(context2) {
+    val context3 = node.getAssumptions.toList.foldLeft(context2) {
+      (ctx, node) => ctx.push(AssumeTranslator(ctx).translate(node))
+    }
+    val context = node.getOpDefs.toList.foldLeft(context3) {
       (ctx, node) => ctx.push(OpDefTranslator(ctx).translate(node))
     }
     val imported = node.getExtendedModuleSet.toArray(Array[ModuleNode]()).map {
