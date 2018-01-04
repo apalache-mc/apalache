@@ -145,7 +145,7 @@ package object types {
       *
       * @return a short signature that uniquely characterizes this type up to unification
       */
-    override val signature: String = "c"
+    override val signature: String = "str"
   }
 
   /**
@@ -277,7 +277,7 @@ package object types {
       *
       * @return a short signature that uniquely characterizes this type up to unification
       */
-    override val signature: String = "T"
+    override val signature: String = "T_" + args.map(_.signature).mkString("_")
   }
 
   /**

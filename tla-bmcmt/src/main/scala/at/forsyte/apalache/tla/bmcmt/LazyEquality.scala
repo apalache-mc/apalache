@@ -122,7 +122,8 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
       // generate constraints
       val newState =
         (left.cellType, right.cellType) match {
-          case (UnknownT(), UnknownT()) | (BoolT(), _) | (_, BoolT()) | (IntT(), IntT()) =>
+          case (UnknownT(), UnknownT()) | (BoolT(), _)
+               | (_, BoolT()) | (IntT(), IntT()) | (ConstT(), ConstT()) =>
             eqCache.put(left, right, EqCache.EqEntry())
             state // nothing to do, just use the built-in equality
 

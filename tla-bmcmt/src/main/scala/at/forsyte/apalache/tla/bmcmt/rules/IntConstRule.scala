@@ -22,16 +22,15 @@ class IntConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       case ValEx(TlaInt(n)) =>
         if (!n.isValidInt) {
-          throw new RewriterException("BigInt %s does not fit into integer range. Do not know how to translate in SMT"
-            .format(n))
+          throw new RewriterException(s"BigInt $n does not fit into integer range. Do not know how to translate in SMT.")
         }
-        val intConst = rewriter.intValueCache.getOrCreate(n.toInt)
+        val (_: Unit, intConst: String) = rewriter.intValueCache.getOrCreate((), n.toInt)
         val finalState =
           state.setTheory(IntTheory()).setRex(NameEx(intConst))
         rewriter.coerce(finalState, state.theory)
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+        throw new RewriterException(getClass.getSimpleName + " is not applicable")
     }
   }
 }

@@ -1,11 +1,14 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, IntT, TupleT}
+import at.forsyte.apalache.tla.lir.NameEx
+import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterTuple extends RewriterBase {
-  /*
   test("""SE-TUPLE-CTOR[1-2]: <<1, FALSE, {2}>> ~~> $C$k""") {
     val tuple = TlaFunOper.mkTuple(tla.int(1), tla.bool(false), tla.enumSet(tla.int(2)))
 
@@ -34,8 +37,8 @@ class TestSymbStateRewriterTuple extends RewriterBase {
   test("""SE-TPL-ACC[1-2]: <<1, FALSE, {2}>>[2] ~~> $C$k equals FALSE""") {
     val tuple = tla.tuple(tla.int(1), tla.bool(false), tla.enumSet(tla.int(2)))
     val tupleAcc = tla.appFun(tuple, tla.int(2))
-    val state = new SymbState(tuple, CellTheory(), arena, new Binding, solverContext)
-    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    val state = new SymbState(tupleAcc, CellTheory(), arena, new Binding)
+    val nextState = new SymbStateRewriter(solverContext).rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx @ NameEx(name) =>
         assert(CellTheory().hasConst(name))
@@ -62,6 +65,7 @@ class TestSymbStateRewriterTuple extends RewriterBase {
     }
   }
 
+  /*
   test("""SE-FUN-APP[1-3]: f[4] ~~> $C$k""") {
     def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
 
