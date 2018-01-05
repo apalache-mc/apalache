@@ -32,7 +32,9 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
-    val vars = tlaModule.get.declarations
+    val allDeclarations = OperatorHandler.uniqueVarRename(tlaModule.get.declarations)
+
+    val vars = allDeclarations
       .filter(_.isInstanceOf[TlaVarDecl])
       .map(d => NameEx(d.name))
     val varSet = Set(vars.map(_.name): _*)
@@ -59,7 +61,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
       case e@_ => e
     }
 
-    val declarations = tlaModule.get.declarations.map(replaceInit)
+    val declarations = allDeclarations.map(replaceInit)
 
     // let converter do its magic
     val converter = new Converter()
@@ -83,7 +85,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
     }
 
     val nextName = options.getOption("checker", "next", "Next").asInstanceOf[String]
-    val nextBody = findBodyOf(nextName, tlaModule.get.declarations: _*)
+    val nextBody = findBodyOf(nextName, allDeclarations: _*)
     val sanitizedNext = converter.sanitize(nextBody)
     val nextAssignments = assignmentSolver.getSymbolicTransitions(varSet, sanitizedNext)
     val nextTransitions =
@@ -103,7 +105,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
     val invName = options.getOption("checker", "inv", None).asInstanceOf[Option[String]]
     val invariant =
       if (invName.isDefined) {
-        val invBody = findBodyOf(invName.get, tlaModule.get.declarations: _*)
+        val invBody = findBodyOf(invName.get, allDeclarations: _*)
         val notInv = converter.sanitize(tla.not(invBody))
         logger.debug("Negated invariant:\n   %s".format(notInv))
         Some(notInv)
@@ -114,8 +116,9 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
     logger.info("Found %d initializing transitions and %d next transitions"
       .format(initTransitions.length, nextTransitions.length))
 
+    val newModule = new TlaModule(tlaModule.get.name, tlaModule.get.imports, allDeclarations)
     specWithTransitions
-      = Some(new SpecWithTransitions(tlaModule.get, initTransitions, nextTransitions, invariant))
+      = Some(new SpecWithTransitions(newModule, initTransitions, nextTransitions, invariant))
     true
   }
 
