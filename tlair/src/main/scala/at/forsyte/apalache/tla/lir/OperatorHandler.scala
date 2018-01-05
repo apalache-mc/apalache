@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.db.HashMapDB
-import at.forsyte.apalache.tla.lir.oper.TlaOper
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.plugins.{Identifier, UniqueDB}
 
 class BodyDB extends HashMapDB[String, (List[FormalParam], TlaEx)] {
@@ -76,6 +76,52 @@ object OperatorHandler {
     if ( p_old.ID != p_new.ID ) {
       p_srcDB.update( p_new.ID, p_old.ID )
     }
+  }
+
+  def uniqueVarRename( p_decls: Seq[TlaDecl] ) : Seq[TlaDecl] = {
+    def renameParam( p_prefix : String )( p_param : FormalParam ) : FormalParam = {
+      p_param match {
+        case SimpleFormalParam( name ) => SimpleFormalParam( "%s_%s".format( p_prefix, name ) )
+        case OperFormalParam( name, arity ) => OperFormalParam( "%s_%s".format( p_prefix, name ), arity )
+      }
+    }
+
+    def boundVarsRule(p_prefix : String, p_argNames : List[String])( p_ex : TlaEx ) : TlaEx = {
+      p_ex match{
+        case OperEx(
+          oper, // assuming bounded quantification!
+          NameEx( varname ),
+          set,
+          body
+        ) if oper == TlaBoolOper.exists || oper == TlaBoolOper.forall =>
+          OperEx(
+            oper,
+            NameEx( "%s_%s".format( p_prefix, varname ) ),
+            replaceWithRule( set, boundVarsRule( p_prefix, p_argNames ) ),
+            replaceWithRule( body, boundVarsRule( p_prefix, varname :: p_argNames ) )
+          )
+        case NameEx( name ) =>
+          NameEx( if (p_argNames.contains( name) ) "%s_%s".format( p_prefix, name ) else name )
+        case _ => p_ex
+      }
+    }
+
+    def renameBoundVars( p_prefix : String, p_argNames : List[String] )( p_body : TlaEx ) : TlaEx = {
+      replaceWithRule( p_body, boundVarsRule( p_prefix, p_argNames ) )
+    }
+
+    def addPrefix( p_decl : TlaDecl ) : TlaDecl = {
+      p_decl match{
+        case TlaOperDecl( name, formalParams, body ) =>
+          TlaOperDecl(
+            name,
+            formalParams.map( renameParam( name ) ),
+            renameBoundVars( name, formalParams.map( _.name ) )( body )
+          )
+        case _ => p_decl
+      }
+    }
+    p_decls.map( addPrefix )
   }
 
   def extract( p_decl : TlaDecl,
