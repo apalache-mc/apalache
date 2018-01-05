@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
@@ -22,6 +23,7 @@ class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
            | OperEx(TlaArithOper.div, _, _)
            | OperEx(TlaArithOper.mod, _, _)
            | OperEx(TlaArithOper.exp, _, _)
+           | OperEx(TlaArithOper.uminus, _)
       => true
 
       case _ => false
@@ -36,6 +38,9 @@ class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
     =>
       rewriteGeneral(state, simplifier.simplify(state.ex))
 
+    case OperEx(TlaArithOper.uminus, _) =>
+      rewriteGeneral(state, simplifier.simplify(state.ex))
+
     case _ =>
       throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
   }
@@ -46,6 +51,13 @@ class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val intConst = rewriter.solverContext.introIntConst()
       val finalState =
         rewriter.rewriteUntilDone(state.setRex(ex).setTheory(IntTheory()))
+      rewriter.coerce(finalState, state.theory)
+
+    case OperEx(TlaArithOper.uminus, subex) =>
+      val subState = rewriter.rewriteUntilDone(state.setTheory(IntTheory()).setRex(subex))
+      val intConst = rewriter.solverContext.introIntConst()
+      rewriter.solverContext.assertGroundExpr(tla.eql(NameEx(intConst), tla.uminus(subState.ex)))
+      val finalState = subState.setTheory(IntTheory()).setRex(NameEx(intConst))
       rewriter.coerce(finalState, state.theory)
 
     case OperEx(oper: TlaArithOper, left, right) =>

@@ -331,6 +331,31 @@ class TestSymbStateRewriterInt extends RewriterBase {
     }
   }
 
+  test("SE-INT-ARITH1[-.]: -$Z$j ~~> $Z$k") {
+    val leftInt = solverContext.introIntConst()
+    val expr = OperEx(TlaArithOper.uminus, NameEx(leftInt))
+    val state = new SymbState(expr, IntTheory(), arena, new Binding)
+    val rewriter = new SymbStateRewriter(solverContext)
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case result @ NameEx(name) =>
+        assert(IntTheory().hasConst(name))
+        assert(IntTheory() == state.theory)
+        assert(solverContext.sat())
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, NameEx(leftInt), ValEx(TlaInt(2017))))
+        rewriter.push()
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, result, ValEx(TlaInt(-2017))))
+        assert(solverContext.sat())
+        rewriter.pop()
+        rewriter.push()
+        solverContext.assertGroundExpr(OperEx(TlaOper.eq, result, ValEx(TlaInt(2017))))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
   test("SE-INT-ARITH1[*]: $Z$i * $Z$j ~~> $Z$k") {
     val leftInt = solverContext.introIntConst()
     val rightInt = solverContext.introIntConst()

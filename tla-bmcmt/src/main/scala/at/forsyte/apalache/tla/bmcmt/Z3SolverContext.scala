@@ -357,6 +357,10 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
         // convert to an arithmetic expression
         toArithExpr(ex)
 
+      case OperEx(oper: TlaArithOper, subex) =>
+        // convert to an arithmetic expression
+        toArithExpr(ex)
+
       case OperEx(TlaOper.eq, lhs@NameEx(lname), rhs@NameEx(rname)) =>
         if (CellTheory().hasConst(lname) && CellTheory().hasConst(rname)) {
           // just comparing cells
@@ -477,6 +481,9 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
       case OperEx(TlaArithOper.mod, left, right) =>
         z3context.mkMod(toArithExpr(left).asInstanceOf[IntExpr],
           toArithExpr(right).asInstanceOf[IntExpr])
+
+      case OperEx(TlaArithOper.uminus, subex) =>
+        z3context.mkUnaryMinus(toArithExpr(subex).asInstanceOf[IntExpr])
 
       case _ =>
         throw new InvalidTlaExException("Unexpected arithmetic expression: " + ex, ex)

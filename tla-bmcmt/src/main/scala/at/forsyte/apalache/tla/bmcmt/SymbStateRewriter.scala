@@ -155,6 +155,8 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
       -> List(new IntArithRule(this)),
     key(tla.exp(tla.int(2), tla.int(3)))
       -> List(new IntArithRule(this)),
+    key(tla.uminus(tla.int(1)))
+      -> List(new IntArithRule(this)),
 
     // functions
     key(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S")))
@@ -238,7 +240,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
 
           case NoRule() =>
             // no rule applies, a problem in the tool?
-            throw new RewriterException("No rule applies to expression: " + st.ex)
+            throw new RewriterException("No rewriting rule applies to expression: " + st.ex)
         }
       }
     }
