@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.types.FinSetT
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
@@ -38,8 +39,8 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       // a common pattern x' \in {y} that deterministically assigns the value of y to x'
       case OperEx(TlaSetOper.in,
-          OperEx(TlaActionOper.prime, NameEx(name)),
-          OperEx(TlaSetOper.enumSet, rhs)) =>
+      OperEx(TlaActionOper.prime, NameEx(name)),
+      OperEx(TlaSetOper.enumSet, rhs)) =>
         val nextState = rewriter.rewriteUntilDone(state.setRex(rhs).setTheory(CellTheory()))
         val rhsCell = nextState.arena.findCellByNameEx(nextState.ex)
         val finalState = nextState
@@ -49,19 +50,24 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.coerce(finalState, state.theory)
 
       // the general case
-      case OperEx(TlaSetOper.in,
-                  OperEx(TlaActionOper.prime, NameEx(name)),
-                  set) =>
+      case OperEx(TlaSetOper.in, OperEx(TlaActionOper.prime, NameEx(name)), set) =>
         // switch to cell theory
         val setState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(set))
         val setCell = setState.arena.findCellByNameEx(setState.ex)
-        // pick an arbitrary witness
-        val pickState = pickRule.pick(setCell, setState)
-        val pickedCell = pickState.arena.findCellByNameEx(pickState.ex)
-        val finalState = pickState
-          .setTheory(BoolTheory())
-          .setRex(NameEx(rewriter.solverContext.trueConst))
-          .setBinding(pickState.binding + (name + "'" -> pickedCell)) // bind the picked cell to the name
+        val finalState =
+          if (setCell.cellType.isInstanceOf[FinSetT]
+            && setState.arena.getHas(setCell).isEmpty) {
+            // nothing to pick from an empty set, return false
+            setState.setTheory(BoolTheory()).setRex(NameEx(rewriter.solverContext.falseConst))
+          } else {
+            // pick an arbitrary witness
+            val pickState = pickRule.pick(setCell, setState)
+            val pickedCell = pickState.arena.findCellByNameEx(pickState.ex)
+            pickState
+              .setTheory(BoolTheory())
+              .setRex(NameEx(rewriter.solverContext.trueConst))
+              .setBinding(pickState.binding + (name + "'" -> pickedCell)) // bind the picked cell to the name
+          }
 
         rewriter.coerce(finalState, state.theory)
 

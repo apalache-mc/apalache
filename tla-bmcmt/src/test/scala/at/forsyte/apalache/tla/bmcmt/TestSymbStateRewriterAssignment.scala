@@ -45,6 +45,23 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     assertUnsatOrExplain(nextState) // should not be possible
   }
 
+  test("""SE-IN-ASSIGN1(int): x' \in {} ~~> FALSE""") {
+    val assign = tla.in(tla.prime(tla.name("x")), tla.enumSet())
+
+    val state = new SymbState(assign, CellTheory(), arena, new Binding)
+    val rewriter = new SymbStateRewriter(solverContext)
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case NameEx(name) =>
+        assert(CellTheory().hasConst(name))
+        assert(arena.cellFalse().toString == name)
+        assert(nextState.binding.isEmpty)
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
   test("""SE-IN-ASSIGN1(int): x' \in {1} /\ x' = 1 ~~> TRUE and [x -> $C$k]""") {
     val set = tla.enumSet(tla.int(1))
     val assign = tla.in(tla.prime(tla.name("x")), set)

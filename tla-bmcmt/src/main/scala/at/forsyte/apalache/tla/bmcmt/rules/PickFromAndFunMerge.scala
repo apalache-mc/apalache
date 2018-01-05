@@ -24,35 +24,47 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
     * @return a new symbolic state whose expression stores a fresh cell that corresponds to the picked element.
     */
   def pick(set: ArenaCell, state: SymbState): SymbState = {
+    def checkEmptiness(): Unit =
+      if (state.arena.getHas(set).isEmpty)
+      // there is nothing to pick from a statically empty set
+        throw new RewriterException("Picking an element from a statically empty set")
+
     set.cellType match {
       case FinSetT(ConstT()) =>
+        checkEmptiness()
         pickBasic(ConstT(), set, state)
 
       case FinSetT(IntT()) =>
+        checkEmptiness()
         pickBasic(IntT(), set, state)
 
       case FinSetT(BoolT()) =>
+        checkEmptiness()
         pickBasic(BoolT(), set, state)
 
       case FinSetT(t@FinSetT(_)) =>
+        checkEmptiness()
         pickSet(t, set, state)
 
       case FinSetT(t@FunT(FinSetT(argt), rest)) =>
+        checkEmptiness()
         pickFun(t, set, state)
 
-      case FinSetT(t @ TupleT(_)) =>
+      case FinSetT(t@TupleT(_)) =>
+        checkEmptiness()
         pickTuple(t, set, state)
 
-      case FinSetT(t @ RecordT(_)) =>
+      case FinSetT(t@RecordT(_)) =>
+        checkEmptiness()
         pickRecord(t, set, state)
 
       case FinFunSetT(domt@FinSetT(_), cdm@FinSetT(rest)) =>
+        // no emptiness check, since we are dealing with a function set [S -> T]
         pickFunFromFunSet(FunT(domt, rest), set, state)
 
       case _ =>
         throw new RewriterException("Cannot pick an element from a set of type: " + set.cellType)
     }
-
   }
 
   /**
@@ -147,6 +159,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
   def pickTuple(cellType: CellT, tupleSet: ArenaCell, state: SymbState): SymbState = {
     val tupleType = cellType.asInstanceOf[TupleT]
     val tuples = state.arena.getHas(tupleSet)
+
     def pickAtPos(i: Int, sAndL: (SymbState, List[ArenaCell])): (SymbState, List[ArenaCell]) = {
       val slice = tuples.map(c => sAndL._1.arena.getHas(c)(i))
       val sliceSet = tla.enumSet(slice.map(_.toNameEx): _*)
@@ -165,7 +178,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
     arena = arena.appendCell(FailPredT())
     val failPred = arena.topCell
     val (newState: SymbState, newCells: List[ArenaCell]) =
-      tupleType.args.indices.foldRight((state.setArena(arena), List[ArenaCell]())) (pickAtPos)
+      tupleType.args.indices.foldRight((state.setArena(arena), List[ArenaCell]()))(pickAtPos)
 
     def forceEquality(otherTuple: ArenaCell): TlaEx = {
       def eq(p: (ArenaCell, ArenaCell)): TlaEx = {
@@ -173,14 +186,14 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
       }
 
       val equalities = newCells.zip(arena.getHas(otherTuple)) map eq
-      tla.and(tla.in(otherTuple, tupleSet) +: equalities :_*)
+      tla.and(tla.in(otherTuple, tupleSet) +: equalities: _*)
     }
 
-    val existsFun = tla.or(tuples map forceEquality :_*)
+    val existsFun = tla.or(tuples map forceEquality: _*)
     val existsFunOrFailure = decorateWithFailure(existsFun, tupleSet, tuples, newTuple, failPred)
     rewriter.solverContext.assertGroundExpr(existsFunOrFailure)
 
-    arena = newCells.foldLeft(newState.arena) ((a, c) => a.appendHas(newTuple, c))
+    arena = newCells.foldLeft(newState.arena)((a, c) => a.appendHas(newTuple, c))
     newState.setArena(arena)
       .setTheory(CellTheory())
       .setRex(newTuple.toNameEx)
@@ -192,9 +205,9 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
     * Note that some record fields may have bogus values, since not all the records in the set
     * are required to have all the keys assigned. That is an unavoidable loophole in the record types.
     *
-    * @param cellType a cell type to assign to the picked cell.
+    * @param cellType  a cell type to assign to the picked cell.
     * @param recordSet a set of cells that store records
-    * @param state    a symbolic state
+    * @param state     a symbolic state
     * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
     */
   def pickRecord(cellType: CellT, recordSet: ArenaCell, state: SymbState): SymbState = {
@@ -204,6 +217,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
     def pickAtPos(key: String, sAndL: (SymbState, List[ArenaCell])): (SymbState, List[ArenaCell]) = {
       def hasKey(rec: ArenaCell): Boolean =
         rec.cellType.asInstanceOf[RecordT].fields.contains(key)
+
       def keyIndex(rec: ArenaCell): Int =
         rec.cellType.asInstanceOf[RecordT].fields.keySet.toList.indexOf(key)
 
@@ -211,7 +225,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
       val tuples = filteredRecs.map(c => sAndL._1.arena.getHas(c).head) // the underlying tuples
       // get all the values that match the key
       val indices = filteredRecs map keyIndex
-      val values = tuples.zip(indices) map {case (t, i) => sAndL._1.arena.getHas(t) (i)}
+      val values = tuples.zip(indices) map { case (t, i) => sAndL._1.arena.getHas(t)(i) }
       if (values.isEmpty) {
         // this is just wrong: we could not have computed such a record type by unification
         throw new RewriterException(s"Internal error, no values for the record key $key in the set $recordSet")
@@ -240,9 +254,9 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
     val failPred = arena.topCell
     // pick the values for each key
     val (newState: SymbState, newCells: List[ArenaCell]) =
-      recordType.fields.keySet.foldRight((state.setArena(arena), List[ArenaCell]())) (pickAtPos)
+      recordType.fields.keySet.foldRight((state.setArena(arena), List[ArenaCell]()))(pickAtPos)
     // and connect them to the underlying tuple
-    arena = newCells.foldLeft(newState.arena) ((a, c) => a.appendHas(newTuple, c))
+    arena = newCells.foldLeft(newState.arena)((a, c) => a.appendHas(newTuple, c))
 
     def forceEquality(otherRecord: ArenaCell): TlaEx = {
       def valueEq(key: String): TlaEx = {
@@ -261,10 +275,10 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
       }
 
       val valueEqualities = recordType.fields.keySet.toList map valueEq
-      tla.and(tla.in(otherRecord, recordSet) +: valueEqualities :_*)
+      tla.and(tla.in(otherRecord, recordSet) +: valueEqualities: _*)
     }
 
-    val existsFun = tla.or(records map forceEquality :_*)
+    val existsFun = tla.or(records map forceEquality: _*)
     val existsFunOrFailure = decorateWithFailure(existsFun, recordSet, records, newRecord, failPred)
     rewriter.solverContext.assertGroundExpr(existsFunOrFailure)
 

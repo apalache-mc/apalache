@@ -29,7 +29,13 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule {
           val setState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(boundingSetEx))
           val set = setState.arena.findCellByNameEx(setState.ex)
           val setCells = setState.arena.getHas(set)
-          val finalState = freeExists(setState, boundVar, predEx, set, setCells)
+          val finalState =
+            if (setCells.isEmpty) {
+              // \E x \in {}... is FALSE
+              setState.setTheory(BoolTheory()).setRex(NameEx(rewriter.solverContext.falseConst))
+            } else {
+              freeExists(setState, boundVar, predEx, set, setCells)
+            }
           rewriter.coerce(finalState, state.theory)
         } else {
           rewriteExistsOrForall(isExists = true, state, boundVar, boundingSetEx, predEx)
@@ -104,7 +110,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   // introduce a Skolem constant for a free-standing existential quantifier
   private def freeExists(setState: SymbState, boundVar: String, predEx: TlaEx,
-                            set: ArenaCell, setCells: List[ArenaCell]) = {
+                         set: ArenaCell, setCells: List[ArenaCell]) = {
     rewriter.solverContext.log("; free existential rule")
     // pick an arbitrary witness
     val pickState = pickRule.pick(set, setState)
