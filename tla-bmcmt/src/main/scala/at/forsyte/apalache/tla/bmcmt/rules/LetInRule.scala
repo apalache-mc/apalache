@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
-import at.forsyte.apalache.tla.bmcmt.{RewriterException, RewritingRule, SymbState, SymbStateRewriter}
+import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.control.LetInOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaOperDecl}
 
@@ -28,6 +28,9 @@ class LetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val bodyState = rewriter.rewriteUntilDone(boundState.setTheory(state.theory).setRex(body))
       val finalState = bodyState.setBinding(state.binding) // recover the original binding
       rewriter.coerce(finalState, state.theory)
+
+    case _ =>
+      throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
   }
 
   private def bindOperator(state: SymbState, decl: TlaOperDecl): SymbState = {
@@ -35,7 +38,7 @@ class LetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       throw new RewriterException("Non-constant operators in LET-IN are not supported yet: " + decl)
     }
 
-    val newState = rewriter.rewriteUntilDone(state.setRex(decl.body))
+    val newState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(decl.body))
     val newCell = newState.arena.findCellByNameEx(newState.ex)
     val newBinding = newState.binding + (LetInRule.namePrefix + decl.name -> newCell)
     newState.setBinding(newBinding)

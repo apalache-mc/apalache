@@ -15,7 +15,7 @@ package lir {
     def identical( other: TlaDecl ) : Boolean
   }
 
-  // TODO: add TlaAssumeDecl and TlaTheoremDecl
+  // TODO: add TlaTheoremDecl?
 
   /**
     * A module as a basic unit that contains declarations.

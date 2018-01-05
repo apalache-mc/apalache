@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.{NameEx, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaOperDecl}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -104,15 +104,15 @@ class TestSymbStateRewriterControl extends RewriterBase {
   }
 
   test("""LET A == TRUE IN... ~~> [A -> TRUE]""") {
-    val letIn = tla.letIn(tla.appOp(NameEx("A")),
-                          TlaOperDecl("A", List(), tla.bool(true)))
-    val state = new SymbState(letIn, CellTheory(), arena, new Binding)
+    val decl = TlaOperDecl("A", List(), tla.bool(true))
+    val letIn = tla.letIn(OperEx(decl.operator), decl)
+    val state = new SymbState(letIn, BoolTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case res @ NameEx(name) =>
-        assert(CellTheory().hasConst(name))
-        assert(name == nextState.arena.cellTrue().toString)
+        assert(BoolTheory().hasConst(name))
+        assert(name == solverContext.trueConst)
 
       case _ =>
         fail("Unexpected rewriting result")

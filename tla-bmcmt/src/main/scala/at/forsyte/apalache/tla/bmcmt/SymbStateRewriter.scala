@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.analyses.{FreeExistentialsStore, FreeExiste
 import at.forsyte.apalache.tla.bmcmt.rules._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.oper.AnyArity
 import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaIntSet}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 
@@ -105,8 +106,8 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
       -> List(new IfThenElseRule(this)),
     key(tla.letIn(tla.int(1), TlaOperDecl("A", List(), tla.int(2))))
       -> List(new LetInRule(this)),
-    key(tla.appOp(tla.name("F")))
-      -> List(new OpAppRule(this)),
+    key(OperEx(new TlaUserOper("userOp", AnyArity(), TlaOperDecl("userOp", List(), tla.int(3)))))
+      -> List(new UserOperRule(this)),
 
     // sets
     key(tla.in(tla.name("x"), tla.name("S")))
@@ -374,6 +375,9 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
     */
   private def key(ex: TlaEx): String = {
     ex match {
+      case OperEx(_: TlaUserOper, _*) =>
+        "U@"
+
       case OperEx(oper, _*) =>
         "O@" + oper.name
 
