@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import scala.collection.immutable.SortedMap
+
 /** Change name, too ambiguous, especially with TLA Types in the other package -- Jure, 29.10.17 */
 package object types {
 
@@ -20,7 +22,7 @@ package object types {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., tuples, they have the same signature.
+      * e.g., records, they have the same signature.
       *
       * @return a short signature that uniquely characterizes this type up to unification
       */
@@ -73,15 +75,20 @@ package object types {
             None
 
         case (TupleT(leftArgs), TupleT(rightArgs)) =>
-          val maxlen = Math.max(leftArgs.length, rightArgs.length)
-          val paddedPairs: Seq[(CellT, CellT)] = leftArgs.padTo(maxlen, UnknownT()).zip(rightArgs.padTo(maxlen, UnknownT()))
-          val newArgs = paddedPairs map { case (l, r) => l.unify(r) }
-          if (newArgs.exists(_.isEmpty))
+          // in contrast to sequences, tuples of different lengths cannot be unified
+          if (leftArgs.lengthCompare(rightArgs.length) == 0) {
+            val unified = leftArgs.zip(rightArgs) map (p => p._1.unify(p._2))
+            if (unified.forall(_.isDefined)) {
+              Some(TupleT(unified.map(_.get)))
+            } else {
+              None
+            }
+          } else {
             None
-          else
-            Some(TupleT(newArgs map (_.get)))
+          }
 
         case (RecordT(leftMap), RecordT(rightMap)) =>
+          // records that have different keys can be unified
           def unifyKey(key: String): Option[CellT] = {
             (leftMap.get(key), rightMap.get(key)) match {
               case (Some(l), Some(r)) =>
@@ -103,7 +110,7 @@ package object types {
             None
           } else {
             val somes = pairs.map(p => (p._1, p._2.get))
-            Some(RecordT(Map(somes.toSeq: _*)))
+            Some(RecordT(SortedMap(somes.toSeq: _*)))
           }
 
         case _ =>
@@ -119,11 +126,13 @@ package object types {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., tuples, they have the same signature.
+      * e.g., records, they have the same signature.
       *
       * @return a short signature that uniquely characterizes this type up to unification
       */
     override val signature: String = "u"
+
+    override val toString: String = "Unknown"
   }
 
   /**
@@ -132,6 +141,8 @@ package object types {
     */
   case class FailPredT() extends CellT {
     override val signature: String = "E"
+
+    override val toString: String = "FailPred"
   }
 
   /**
@@ -141,11 +152,13 @@ package object types {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., tuples, they have the same signature.
+      * e.g., records, they have the same signature.
       *
       * @return a short signature that uniquely characterizes this type up to unification
       */
     override val signature: String = "str"
+
+    override val toString: String = "Const"
   }
 
   /**
@@ -155,11 +168,13 @@ package object types {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., tuples, they have the same signature.
+      * e.g., records, they have the same signature.
       *
       * @return a short signature that uniquely characterizes this type up to unification
       */
     override val signature: String = "b"
+
+    override val toString: String = "Bool"
   }
 
   /**
@@ -169,11 +184,13 @@ package object types {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., tuples, they have the same signature.
+      * e.g., records, they have the same signature.
       *
       * @return a short signature that uniquely characterizes this type up to unification
       */
     override val signature: String = "i"
+
+    override val toString: String = "Int"
   }
 
   /**
@@ -185,11 +202,13 @@ package object types {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., tuples, they have the same signature.
+      * e.g., records, they have the same signature.
       *
       * @return a short signature that uniquely characterizes this type up to unification
       */
     override val signature: String = "S" + elemType.signature
+
+    override val toString: String = s"FinSet[$elemType]"
   }
 
   /**
@@ -202,11 +221,13 @@ package object types {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., tuples, they have the same signature.
+      * e.g., records, they have the same signature.
       *
       * @return a short signature that uniquely characterizes this type up to unification
       */
     override val signature: String = "P" + domType.signature
+
+    override val toString: String = s"PowSet[$domType]"
   }
 
   /**
@@ -219,7 +240,7 @@ package object types {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., tuples, they have the same signature.
+      * e.g., records, they have the same signature.
       *
       * @return a short signature that uniquely characterizes this type up to unification
       */
@@ -230,6 +251,8 @@ package object types {
       case PowSetT(dt) => dt
       case _ => throw new TypeException(s"Unexpected domain type $domType")
     }
+
+    override val toString: String = s"Fun[$domType, $resultType]"
   }
 
   /**
@@ -243,7 +266,7 @@ package object types {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., tuples, they have the same signature.
+      * e.g., records, they have the same signature.
       *
       * @return a short signature that uniquely characterizes this type up to unification
       */
@@ -260,6 +283,8 @@ package object types {
       case PowSetT(dt) => dt
       case _ => throw new TypeException(s"Unexpected co-domain type $cdmType")
     }
+
+    override val toString: String = s"FinFunSet[$domType, $cdmType]"
   }
 
   /**
@@ -270,14 +295,13 @@ package object types {
   case class TupleT(args: Seq[CellT]) extends CellT {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
-      * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., tuples, they have the same signature.
-      *
-      * As tuples having different domains can be unified, we do not include the tuple arguments in the signature.
+      * similar to Java's signature mangling.
       *
       * @return a short signature that uniquely characterizes this type up to unification
       */
     override val signature: String = "T_" + args.map(_.signature).mkString("_")
+
+    override val toString: String = "Tuple[%s]".format(args.map(_.toString).mkString(", "))
   }
 
   /**
@@ -285,17 +309,20 @@ package object types {
     *
     * @param fields a map of fields and their types
     */
-  case class RecordT(fields: Map[String, CellT]) extends CellT {
+  case class RecordT(val fields: SortedMap[String, CellT]) extends CellT {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., tuples, they have the same signature.
+      * e.g., records, they have the same signature.
       *
       * As records having different domains can be unified, we do not include the records arguments in the signature.
       *
       * @return a short signature that uniquely characterizes this type up to unification
       */
     override val signature: String = "R"
+
+    override val toString: String =
+      "Record[%s]".format(fields.map(p => "\"" + p._1 + "\" -> " + p._2).mkString(", "))
   }
 
 

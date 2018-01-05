@@ -2,10 +2,10 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
-import at.forsyte.apalache.tla.bmcmt.types.{FailPredT, TupleT}
+import at.forsyte.apalache.tla.bmcmt.types.{FailPredT, RecordT, TupleT}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
-import at.forsyte.apalache.tla.lir.values.TlaInt
+import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 
 /**
@@ -36,6 +36,9 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
             case TupleT(_) =>
               applyTuple(funState, funCell, funEx, argEx)
 
+            case RecordT(_) =>
+              applyRecord(funState, funCell, funEx, argEx)
+
             case _ =>
               applyFun(funState, funCell, argEx)
           }
@@ -46,22 +49,39 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
+  private def applyRecord(state: SymbState, recordCell: ArenaCell, funEx: TlaEx, argEx: TlaEx): SymbState = {
+    val key = argEx match {
+      case ValEx(TlaStr(k)) => k
+      case _ => throw new RewriterException(s"Accessing a record $funEx with a non-constant key $argEx")
+    }
+    val fields = recordCell.cellType match {
+      case RecordT(f) => f
+      case t @ _ => throw new RewriterException(s"Corrupted record $funEx of a non-record type $t")
+    }
+    val index = fields.keySet.toList.indexOf(key)
+    val tupleCell = state.arena.getHas(recordCell).head
+    val elems = state.arena.getHas(tupleCell)
+    assert(index >= 0 && index < elems.length)
+    val tupleElem = elems(index)
+    state.setTheory(CellTheory()).setRex(tupleElem)
+  }
+
   private def applyTuple(state: SymbState, tupleCell: ArenaCell, funEx: TlaEx, argEx: TlaEx): SymbState = {
     val simpleArg = simplifier.simplify(argEx)
-    simpleArg match {
-      case ValEx(TlaInt(i)) =>
-        val elems = state.arena.getHas(tupleCell)
-        val index = i.toInt - 1
-        if (index < 0 || index >= elems.length) {
-          throw new RewriterException(s"Out of bounds index ${index + 1} in $funEx[$argEx]")
-        }
-
-        val tupleElem = elems(index)
-        state.setTheory(CellTheory()).setRex(tupleElem)
+    val index = simpleArg match {
+      case ValEx(TlaInt(i)) => i.toInt - 1
 
       case _ =>
         throw new RewriterException("Accessing a tuple with a non-constant index: " + argEx)
     }
+
+    val elems = state.arena.getHas(tupleCell)
+    if (index < 0 || index >= elems.length) {
+      throw new RewriterException(s"Out of bounds index ${index + 1} in $funEx[$argEx]")
+    }
+
+    val tupleElem = elems(index)
+    state.setTheory(CellTheory()).setRex(tupleElem)
   }
 
   private def applyFun(state: SymbState, funCell: ArenaCell, argEx: TlaEx): SymbState = {

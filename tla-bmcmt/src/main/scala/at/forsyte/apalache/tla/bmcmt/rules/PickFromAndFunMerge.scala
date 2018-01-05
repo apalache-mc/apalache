@@ -19,7 +19,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
   /**
     * Determine the general type of the set elements and pick an element of this type.
     *
-    * @param set a set cell
+    * @param set   a set cell
     * @param state a symbolic state
     * @return a new symbolic state whose expression stores a fresh cell that corresponds to the picked element.
     */
@@ -40,7 +40,13 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
       case FinSetT(t@FunT(FinSetT(argt), rest)) =>
         pickFun(t, set, state)
 
-      case FinFunSetT(domt @ FinSetT(_), cdm @ FinSetT(rest)) =>
+      case FinSetT(t @ TupleT(_)) =>
+        pickTuple(t, set, state)
+
+      case FinSetT(t @ RecordT(_)) =>
+        pickRecord(t, set, state)
+
+      case FinFunSetT(domt@FinSetT(_), cdm@FinSetT(rest)) =>
         pickFunFromFunSet(FunT(domt, rest), set, state)
 
       case _ =>
@@ -54,8 +60,8 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
     * integer, Boolean, or constant.
     *
     * @param cellType a cell type to assign to the picked cell.
-    * @param set a set of cells
-    * @param state a symbolic state
+    * @param set      a set of cells
+    * @param state    a symbolic state
     * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
     */
   def pickBasic(cellType: CellT, set: ArenaCell, state: SymbState): SymbState = {
@@ -84,8 +90,8 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
     * Implements SE-PICK-SET, that is, assume that the picked element is a set itself.
     *
     * @param cellType a cell type to assign to the picked cell.
-    * @param set a set of cells
-    * @param state a symbolic state
+    * @param set      a set of cells
+    * @param state    a symbolic state
     * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
     */
   def pickSet(cellType: CellT, set: ArenaCell, state: SymbState): SymbState = {
@@ -131,12 +137,149 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
   }
 
   /**
+    * Implements SE-PICK-TUPLE.
+    *
+    * @param cellType a cell type to assign to the picked cell.
+    * @param tupleSet a set of cells that store tuples
+    * @param state    a symbolic state
+    * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
+    */
+  def pickTuple(cellType: CellT, tupleSet: ArenaCell, state: SymbState): SymbState = {
+    val tupleType = cellType.asInstanceOf[TupleT]
+    val tuples = state.arena.getHas(tupleSet)
+    def pickAtPos(i: Int, sAndL: (SymbState, List[ArenaCell])): (SymbState, List[ArenaCell]) = {
+      val slice = tuples.map(c => sAndL._1.arena.getHas(c)(i))
+      val sliceSet = tla.enumSet(slice.map(_.toNameEx): _*)
+      val newState = rewriter.rewriteUntilDone(sAndL._1.setRex(sliceSet).setTheory(CellTheory()))
+      val sliceSetCell = newState.arena.findCellByNameEx(newState.ex)
+      val pickedState = pick(sliceSetCell, newState)
+      val pickedCell = pickedState.arena.findCellByNameEx(pickedState.ex)
+      val eqState = rewriter.lazyEq.cacheEqConstraints(pickedState, slice.map(c => (c, pickedCell)))
+      (eqState, pickedCell +: sAndL._2)
+    }
+
+    // introduce a new tuple
+    var arena = state.arena.appendCell(cellType)
+    val newTuple = arena.topCell
+    // introduce a new failure predicate
+    arena = arena.appendCell(FailPredT())
+    val failPred = arena.topCell
+    val (newState: SymbState, newCells: List[ArenaCell]) =
+      tupleType.args.indices.foldRight((state.setArena(arena), List[ArenaCell]())) (pickAtPos)
+
+    def forceEquality(otherTuple: ArenaCell): TlaEx = {
+      def eq(p: (ArenaCell, ArenaCell)): TlaEx = {
+        rewriter.lazyEq.safeEq(p._1, p._2)
+      }
+
+      val equalities = newCells.zip(arena.getHas(otherTuple)) map eq
+      tla.and(tla.in(otherTuple, tupleSet) +: equalities :_*)
+    }
+
+    val existsFun = tla.or(tuples map forceEquality :_*)
+    val existsFunOrFailure = decorateWithFailure(existsFun, tupleSet, tuples, newTuple, failPred)
+    rewriter.solverContext.assertGroundExpr(existsFunOrFailure)
+
+    arena = newCells.foldLeft(newState.arena) ((a, c) => a.appendHas(newTuple, c))
+    newState.setArena(arena)
+      .setTheory(CellTheory())
+      .setRex(newTuple.toNameEx)
+  }
+
+  /**
+    * Implements SE-PICK-RECORD.
+    *
+    * Note that some record fields may have bogus values, since not all the records in the set
+    * are required to have all the keys assigned. That is an unavoidable loophole in the record types.
+    *
+    * @param cellType a cell type to assign to the picked cell.
+    * @param recordSet a set of cells that store records
+    * @param state    a symbolic state
+    * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
+    */
+  def pickRecord(cellType: CellT, recordSet: ArenaCell, state: SymbState): SymbState = {
+    val recordType = cellType.asInstanceOf[RecordT]
+    val records = state.arena.getHas(recordSet)
+
+    def pickAtPos(key: String, sAndL: (SymbState, List[ArenaCell])): (SymbState, List[ArenaCell]) = {
+      def hasKey(rec: ArenaCell): Boolean =
+        rec.cellType.asInstanceOf[RecordT].fields.contains(key)
+      def keyIndex(rec: ArenaCell): Int =
+        rec.cellType.asInstanceOf[RecordT].fields.keySet.toList.indexOf(key)
+
+      val filteredRecs = records filter hasKey // not all the records have to have the key
+      val tuples = filteredRecs.map(c => sAndL._1.arena.getHas(c).head) // the underlying tuples
+      // get all the values that match the key
+      val indices = filteredRecs map keyIndex
+      val values = tuples.zip(indices) map {case (t, i) => sAndL._1.arena.getHas(t) (i)}
+      if (values.isEmpty) {
+        // this is just wrong: we could not have computed such a record type by unification
+        throw new RewriterException(s"Internal error, no values for the record key $key in the set $recordSet")
+      }
+
+      // Pick a value. The set may be dynamically empty. We add necessary constraints below.
+      val valueSet = tla.enumSet(values.map(_.toNameEx): _*)
+      val newState = rewriter.rewriteUntilDone(sAndL._1.setRex(valueSet).setTheory(CellTheory()))
+      val valueSetCell = newState.arena.findCellByNameEx(newState.ex)
+      val pickedState = pick(valueSetCell, newState)
+      val pickedCell = pickedState.arena.findCellByNameEx(pickedState.ex)
+      // don't forget to add equality constraints, as we have to compare the values below
+      val eqState = rewriter.lazyEq.cacheEqConstraints(pickedState, values.map(c => (c, pickedCell)))
+      (eqState, pickedCell +: sAndL._2)
+    }
+
+    // introduce a new record and the underlying tuple
+    var arena = state.arena.appendCell(cellType)
+    val newRecord = arena.topCell
+    val tupleType = TupleT(recordType.fields.values.toList) // NB: fields are sorted by keys
+    arena = arena.appendCell(tupleType)
+    val newTuple = arena.topCell
+    arena = arena.appendHas(newRecord, newTuple) // bind the record to the tuple
+    // introduce a new failure predicate
+    arena = arena.appendCell(FailPredT())
+    val failPred = arena.topCell
+    // pick the values for each key
+    val (newState: SymbState, newCells: List[ArenaCell]) =
+      recordType.fields.keySet.foldRight((state.setArena(arena), List[ArenaCell]())) (pickAtPos)
+    // and connect them to the underlying tuple
+    arena = newCells.foldLeft(newState.arena) ((a, c) => a.appendHas(newTuple, c))
+
+    def forceEquality(otherRecord: ArenaCell): TlaEx = {
+      def valueEq(key: String): TlaEx = {
+        val otherType = otherRecord.cellType.asInstanceOf[RecordT]
+        if (!otherType.fields.contains(key)) {
+          tla.bool(true) // no key, no constraint
+        } else {
+          // the values record[key] and otherRecord[key] must be equal
+          val index = recordType.fields.keySet.toList.indexOf(key)
+          val elem = newCells(index)
+          val otherIndex = otherType.fields.keySet.toList.indexOf(key)
+          val otherTuple = arena.getHas(otherRecord).head
+          val otherElem = arena.getHas(otherTuple)(otherIndex)
+          rewriter.lazyEq.safeEq(elem, otherElem)
+        }
+      }
+
+      val valueEqualities = recordType.fields.keySet.toList map valueEq
+      tla.and(tla.in(otherRecord, recordSet) +: valueEqualities :_*)
+    }
+
+    val existsFun = tla.or(records map forceEquality :_*)
+    val existsFunOrFailure = decorateWithFailure(existsFun, recordSet, records, newRecord, failPred)
+    rewriter.solverContext.assertGroundExpr(existsFunOrFailure)
+
+    newState.setArena(arena)
+      .setTheory(CellTheory())
+      .setRex(newRecord.toNameEx)
+  }
+
+  /**
     * Implements SE-PICK-FUN, that is, assume that the picked element is a function.
     * This is, by far, the most complex case, and it easily blows up the set of constraints.
     *
     * @param cellType a cell type to assign to the picked cell.
-    * @param funSet a set of cells that store functions
-    * @param state a symbolic state
+    * @param funSet   a set of cells that store functions
+    * @param state    a symbolic state
     * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
     */
   def pickFun(cellType: CellT, funSet: ArenaCell, state: SymbState): SymbState = {
@@ -188,8 +331,8 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
     * from S and T.
     *
     * @param cellType a cell type to assign to the picked cell.
-    * @param funSet a function set [S -> T]
-    * @param state a symbolic state
+    * @param funSet   a function set [S -> T]
+    * @param state    a symbolic state
     * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
     */
   def pickFunFromFunSet(cellType: CellT, funSet: ArenaCell, state: SymbState): SymbState = {
@@ -234,7 +377,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
     * and decorates the set cell with the edges 'dom' and 'cdm' that point to the unions of all domains and co-domains,
     * respectively.
     *
-    * @param arena an arena
+    * @param arena      an arena
     * @param funSetCell a set of cells that store functions
     * @return the new arena, in which funSetCell has two links:
     *         dom for the union of element domains and cdm for the union of element domains

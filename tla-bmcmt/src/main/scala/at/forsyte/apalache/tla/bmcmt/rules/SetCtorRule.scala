@@ -57,7 +57,7 @@ class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         if (unif.nonEmpty)
           unif.get
         else
-          throw new RewriterException("No unifier for the elements in a set constructor: " + list.mkString(", "))
+          throw new TypeException("No unifier for the elements in a set constructor: " + list.mkString(", "))
     }
   }
 }

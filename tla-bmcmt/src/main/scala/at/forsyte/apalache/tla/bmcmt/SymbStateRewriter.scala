@@ -168,7 +168,9 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
 
     // tuples and records
     key(tla.tuple(tla.name("x"), tla.int(2)))
-    -> List(new TupleCtorRule(this))
+    -> List(new TupleCtorRule(this)),
+    key(tla.enumFun(tla.str("a"), tla.int(2)))
+    -> List(new RecCtorRule(this))
   )///// ADD YOUR RULES ABOVE
 
 

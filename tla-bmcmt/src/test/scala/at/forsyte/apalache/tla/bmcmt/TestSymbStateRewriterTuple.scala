@@ -65,38 +65,57 @@ class TestSymbStateRewriterTuple extends RewriterBase {
     }
   }
 
-  /*
-  test("""SE-FUN-APP[1-3]: f[4] ~~> $C$k""") {
-    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+  test("""SE-TUPLE-CTOR[1-2] in a set: {<<1, FALSE>>, <<2, TRUE>>} ~~> $C$k""") {
+    val tuple1 = TlaFunOper.mkTuple(tla.int(1), tla.bool(false))
+    val tuple2 = TlaFunOper.mkTuple(tla.int(2), tla.bool(true))
 
-    val set = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaInt(3)), ValEx(TlaInt(4)))
-    val mapping = OperEx(TlaArithOper.mult, NameEx("x"), ValEx(TlaInt(3)))
-    val fun = OperEx(TlaFunOper.funDef, mapping, NameEx("x"), set)
-    val app = OperEx(TlaFunOper.app, fun, ValEx(TlaInt(4)))
-
-    val state = new SymbState(app, CellTheory(), arena, new Binding, solverContext)
-    val nextState = new SymbStateRewriter().rewriteUntilDone(state)
+    val state = new SymbState(tla.enumSet(tuple1, tuple2), CellTheory(), arena, new Binding)
+    val nextState = new SymbStateRewriter(solverContext).rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx @ NameEx(name) =>
         assert(CellTheory().hasConst(name))
         assert(solverContext.sat())
         val cell = nextState.arena.findCellByName(name)
         cell.cellType match {
-          case IntT() =>
-            solverContext.push()
-            solverContext.assertGroundExpr(OperEx(TlaOper.eq, cell.toNameEx, ValEx(TlaInt(12))))
-            assert(solverContext.sat())
-            solverContext.pop()
-            solverContext.assertGroundExpr(OperEx(TlaOper.ne, cell.toNameEx, ValEx(TlaInt(12))))
-            assert(!solverContext.sat())
+          case FinSetT(TupleT(List(IntT(), BoolT()))) =>
+            () // OK
+
+          // we check the actual contents in the later tests that access elements
 
           case _ =>
-            fail("Unexpected type")
+            fail("Unexpected type: " + cell.cellType)
         }
 
       case _ =>
         fail("Unexpected rewriting result")
     }
   }
-  */
+
+  test("""SE-TUPLE-CTOR[1-2] type error: {<<1, FALSE>>, <<2>>} ~~> $C$k""") {
+    val tuple1 = TlaFunOper.mkTuple(tla.int(1), tla.bool(false))
+    val tuple2 = TlaFunOper.mkTuple(tla.int(2))
+
+    val state = new SymbState(tla.enumSet(tuple1, tuple2), CellTheory(), arena, new Binding)
+    try {
+      new SymbStateRewriter(solverContext).rewriteUntilDone(state)
+      fail("Expected a type error")
+    } catch {
+      case _: TypeException =>
+        () // OK
+    }
+  }
+
+  test("""SE-TUPLE-CTOR[1-2] type error: {<<1, FALSE>>, <<TRUE, 2>>} ~~> $C$k""") {
+    val tuple1 = TlaFunOper.mkTuple(tla.int(1), tla.bool(false))
+    val tuple2 = TlaFunOper.mkTuple(tla.bool(true), tla.int(2))
+
+    val state = new SymbState(tla.enumSet(tuple1, tuple2), CellTheory(), arena, new Binding)
+    try {
+      new SymbStateRewriter(solverContext).rewriteUntilDone(state)
+      fail("Expected a type error")
+    } catch {
+      case _: TypeException =>
+        () // OK
+    }
+  }
 }

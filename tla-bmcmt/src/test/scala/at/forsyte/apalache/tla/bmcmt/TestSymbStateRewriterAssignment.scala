@@ -1,10 +1,13 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
+import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.NameEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
+
+import scala.collection.immutable.TreeMap
 
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterAssignment extends RewriterBase {
@@ -74,7 +77,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
 
   test("""SE-IN-ASSIGN1(set): x' \in {{1, 2}, {2, 3}} ~~> TRUE and [x -> $C$k]""") {
     val set = tla.enumSet(tla.enumSet(tla.int(1), tla.int(2)),
-                          tla.enumSet(tla.int(2), tla.int(3)))
+      tla.enumSet(tla.int(2), tla.int(3)))
     val assign = tla.in(tla.prime(tla.name("x")), set)
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
@@ -231,5 +234,106 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
         case _ =>
           fail("Unexpected rewriting result")
       }
+  }
+
+  test("""SE-IN-ASSIGN1(tuple): x' \in {<<1, FALSE, {1, 3}>>, <<2, TRUE, {4}>>} ~~> [x -> $C$k]""") {
+    val set1 = tla.enumSet(tla.int(1), tla.int(3))
+    val tuple1 = tla.tuple(tla.int(1), tla.bool(false), set1)
+    val set2 = tla.enumSet(tla.int(4))
+    val tuple2 = tla.tuple(tla.int(2), tla.bool(true), set2)
+    val set = tla.enumSet(tuple1, tuple2)
+    val assign = tla.in(tla.prime(tla.name("x")), set)
+
+    val state = new SymbState(assign, CellTheory(), arena, new Binding)
+    val rewriter = new SymbStateRewriter(solverContext)
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case NameEx(_) =>
+        val cell = nextState.binding("x'")
+        assert(TupleT(List(IntT(), BoolT(), FinSetT(IntT()))) == cell.cellType)
+
+        val membershipTest =
+          tla.and(tla.in(tla.appFun(tla.prime(tla.name("x")), tla.int(1)),
+            tla.enumSet(tla.int(1), tla.int(2))),
+            tla.in(tla.appFun(tla.prime(tla.name("x")), tla.int(2)),
+              tla.enumSet(tla.bool(false), tla.bool(true))),
+            tla.in(tla.appFun(tla.prime(tla.name("x")), tla.int(3)),
+              tla.enumSet(set1, set2))
+          ) ///
+
+        val inState = rewriter.rewriteUntilDone(nextState.setRex(membershipTest).setTheory(BoolTheory()))
+        rewriter.push()
+        solverContext.assertGroundExpr(inState.ex)
+        assert(solverContext.sat())
+        rewriter.pop()
+        solverContext.assertGroundExpr(tla.not(inState.ex))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-IN-ASSIGN1(record): x' \in {{"a" -> 1, "b" -> FALSE}, {"a" -> 2, "b" -> TRUE, "c" -> {3, 4}}} ~~> [x -> $C$k]""") {
+    // records in a set can have different -- although compatible -- sets of keys
+    val record1 = tla.enumFun(tla.str("a"), tla.int(1),
+      tla.str("b"), tla.bool(false))
+    val set2 = tla.enumSet(tla.int(3), tla.int(4))
+    val record2 = tla.enumFun(tla.str("a"), tla.int(2),
+      tla.str("b"), tla.bool(true), tla.str("c"), set2)
+    val set = tla.enumSet(record1, record2)
+    val assign = tla.in(tla.prime(tla.name("x")), set)
+
+    val state = new SymbState(assign, CellTheory(), arena, new Binding)
+    val rewriter = new SymbStateRewriter(solverContext)
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case NameEx(_) =>
+        val cell = nextState.binding("x'")
+        assert(cell.cellType.isInstanceOf[RecordT])
+        assert(cell.cellType.asInstanceOf[RecordT].fields
+          == TreeMap("a" -> IntT(), "b" -> BoolT(), "c" -> FinSetT(IntT())))
+
+        val membershipTest =
+          tla.and(tla.in(tla.appFun(tla.prime(tla.name("x")), tla.str("a")),
+            tla.enumSet(tla.int(1), tla.int(2))),
+            tla.in(tla.appFun(tla.prime(tla.name("x")), tla.str("b")),
+              tla.enumSet(tla.bool(false), tla.bool(true))),
+            tla.in(tla.appFun(tla.prime(tla.name("x")), tla.str("c")),
+              tla.enumSet(set2))
+          ) ///
+
+        rewriter.push()
+        val inState = rewriter.rewriteUntilDone(nextState.setRex(membershipTest).setTheory(BoolTheory()))
+        rewriter.push()
+        solverContext.assertGroundExpr(inState.ex)
+        assert(solverContext.sat())
+        rewriter.pop()
+        rewriter.push()
+        solverContext.assertGroundExpr(tla.not(inState.ex))
+        assert(!solverContext.sat())
+        rewriter.pop()
+        rewriter.pop()
+
+        // if we assume that result["a"] = 2, we should get result["b"] = TRUE, and result["c"] = { 3, 4 }
+        val assumption = tla.eql(tla.appFun(tla.prime(tla.name("x")), tla.str("a")), tla.int(2))
+        val bIsTrue = tla.eql(tla.appFun(tla.prime(tla.name("x")), tla.str("b")), tla.bool(true))
+        val cIsSet2 = tla.eql(tla.appFun(tla.prime(tla.name("x")), tla.str("c")), set2)
+        val assertion = tla.and(bIsTrue, cIsSet2)
+        val assumState = rewriter.rewriteUntilDone(nextState.setRex(assumption).setTheory(BoolTheory()))
+        solverContext.assertGroundExpr(assumState.ex)
+        assert(solverContext.sat())
+        rewriter.push()
+        val assertState = rewriter.rewriteUntilDone(assumState.setRex(assertion))
+        rewriter.push()
+        solverContext.assertGroundExpr(assertState.ex)
+        assert(solverContext.sat())
+        rewriter.pop()
+        solverContext.assertGroundExpr(tla.not(assertState.ex))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
   }
 }
