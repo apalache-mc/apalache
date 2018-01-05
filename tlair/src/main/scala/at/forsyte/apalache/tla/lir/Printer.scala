@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
-import at.forsyte.apalache.tla.lir.control.TlaControlOper
+import at.forsyte.apalache.tla.lir.control.{LetInOper, TlaControlOper}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
 import at.forsyte.apalache.tla.lir.values._
@@ -120,7 +120,12 @@ object UTFPrinter extends Printer {
           case s: TlaPredefSet => s.name
           case _ => ""
         }
+
       case OperEx( oper : TlaUserOper, args@_* ) => "%s(%s)".format( oper.name, str( args ) )
+
+      case OperEx( oper: LetInOper, body) =>
+        val defs = oper.defs.map(apply(_)).mkString("\n  ")
+        "LET %s IN\n  %s".format(defs, apply(body))
 
       case OperEx( oper, args@_* ) =>
         oper match {
@@ -220,7 +225,6 @@ object UTFPrinter extends Printer {
               s"$label:: $body"
             }
 
-
           case _ => "<[TBD]>"
         }
 
@@ -230,6 +234,43 @@ object UTFPrinter extends Printer {
     if ( p_rmSpace )
       ret.replaceAll( " ", "" )
     else ret
+  }
+
+  /**
+    * Print a declaration
+    *
+    * @param p_decl a declaration
+    * @return a string representation of TLA+ declaration
+    */
+  override def apply(p_decl: TlaDecl): String = {
+    def pr_param(p: FormalParam): String = {
+      val arity = p.arity.asInstanceOf[FixedArity].n
+      val params =
+        if (arity == 0) "" else "(%s)".format(1.to(arity).map("_").mkString(", "))
+      p.name + params
+    }
+
+    p_decl match {
+      case TlaConstDecl(name) =>
+        "CONSTANT " + name
+
+      case TlaVarDecl(name) =>
+        "VARIABLE " + name
+
+      case TlaAssumeDecl(body) =>
+        apply(body)
+
+      case TlaOperDecl(name, formalParams, body) =>
+        val ps =
+          if (formalParams.isEmpty)
+            ""
+          else "(%s)".format(formalParams.map(pr_param).mkString(", "))
+
+        name + ps + " == " + apply(body)
+
+      case _ =>
+        throw new RuntimeException("Unexpected declaration: " + p_decl) // it should not happen
+    }
   }
 }
 
