@@ -115,8 +115,8 @@ object UTFPrinter extends Printer {
         v match {
           case TlaInt( i ) => i.toString
           case TlaDecimal( d ) => d.toString
-          case TlaStr( s ) => s
-          case TlaBool( b ) => b.toString
+          case TlaStr( s ) => "\"" + s + "\""
+          case TlaBool( b ) => if (b) "TRUE" else "FALSE"
           case s: TlaPredefSet => s.name
           case _ => ""
         }
