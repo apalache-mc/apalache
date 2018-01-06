@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.TlaStr
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 
-import scala.collection.immutable.SortedMap
+import scala.collection.immutable.{SortedMap, SortedSet}
 
 /**
   * Implements the rules: SE-REC-CTOR[1-2].
@@ -45,6 +45,9 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         var arena = tupleState.arena.appendCell(recordType)
         val record = arena.topCell
         arena = arena.appendHas(record, tupleCell)
+        // create the domain cell
+        val (newArena, domain) = rewriter.recordDomainCache.getOrCreate(arena, SortedSet(keys:_*))
+        arena = newArena.setDom(record, domain)
 
         val finalState = tupleState.setArena(arena).setRex(record.toNameEx)
         rewriter.coerce(finalState, state.theory)

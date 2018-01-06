@@ -49,6 +49,11 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
     */
   val strValueCache = new StrValueCache(solverContext)
 
+  /**
+    * A cache of record domains.
+    */
+  val recordDomainCache = new RecordDomainCache(solverContext, strValueCache)
+
   // bound the number of rewriting steps applied to the same rule
   private val RECURSION_LIMIT: Int = 10000
   private val coercion = new CoercionWithCache(this)
@@ -172,6 +177,8 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
       -> List(new FunExceptRule(this)),
     key(tla.funSet(tla.name("X"), tla.name("Y")))
       -> List(new FunSetCtorRule(this)),
+    key(tla.dom(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S"))))
+      -> List(new DomainRule(this)), // also works for records
 
     // tuples and records
     key(tla.tuple(tla.name("x"), tla.int(2)))
@@ -323,6 +330,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
     level += 1
     intValueCache.push()
     strValueCache.push()
+    recordDomainCache.push()
     lazyEq.push()
     coercion.push()
     solverContext.push()
@@ -336,6 +344,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
     assert(level > 0)
     intValueCache.pop()
     strValueCache.pop()
+    recordDomainCache.pop()
     lazyEq.pop()
     solverContext.pop()
     coercion.pop()
@@ -351,6 +360,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
     assert(level >= n)
     intValueCache.pop(n)
     strValueCache.pop(n)
+    recordDomainCache.pop(n)
     lazyEq.pop(n)
     solverContext.pop(n)
     coercion.pop(n)
@@ -363,6 +373,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
   override def dispose(): Unit = {
     intValueCache.dispose()
     strValueCache.dispose()
+    recordDomainCache.dispose()
     lazyEq.dispose()
     solverContext.dispose()
     coercion.dispose()

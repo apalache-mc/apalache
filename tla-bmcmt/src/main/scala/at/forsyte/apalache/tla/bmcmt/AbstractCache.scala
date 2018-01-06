@@ -12,7 +12,9 @@ abstract class AbstractCache[ContextT, SourceT, TargetT] extends StackableContex
   private var level: Int = 0
 
   // cache the integer constants that are introduced in SMT for integer literals
-  private var cache: Map[SourceT, (TargetT, Int)] = Map[SourceT, (TargetT, Int)]()
+  private var cache: Map[SourceT, (TargetT, Int)] = Map()
+  // reverse mapping
+  private var reverseCache: Map[TargetT, (SourceT, Int)] = Map()
 
   def values(): Iterable[TargetT] = {
     cache.values.map(_._1)
@@ -25,7 +27,7 @@ abstract class AbstractCache[ContextT, SourceT, TargetT] extends StackableContex
     * @param srcValue a source value
     * @return a target value that is going to be cached and the new context
     */
-  def create(context: ContextT, srcValue: SourceT): (ContextT, TargetT)
+  protected def create(context: ContextT, srcValue: SourceT): (ContextT, TargetT)
 
   /**
     * Get a previously cache value for a given source value, or return the previously cached one.
@@ -41,7 +43,20 @@ abstract class AbstractCache[ContextT, SourceT, TargetT] extends StackableContex
       // introduce a new constant
       val (newContext, targetValue) = create(context, srcValue)
       cache = cache + (srcValue -> (targetValue, level))
+      reverseCache = reverseCache + (targetValue -> (srcValue, level))
       (newContext, targetValue)
+    }
+  }
+
+  /**
+    * Find the key that was used to create a given value.
+    * @param value a value, for which the key should be found
+    * @return the key, if exists
+    */
+  def findKey(value: TargetT): Option[SourceT] = {
+    reverseCache.get(value) match {
+      case Some((key, _)) => Some(key)
+      case None => None
     }
   }
 
@@ -57,13 +72,7 @@ abstract class AbstractCache[ContextT, SourceT, TargetT] extends StackableContex
     * to save only the latest context.
     */
   override def pop(): Unit = {
-    assert(level > 0)
-
-    def isEntryOlder(mapEntry: (SourceT, (TargetT, Int))): Boolean =
-      mapEntry._2._2 < level
-
-    cache = cache filter isEntryOlder
-    level -= 1
+    pop(1)
   }
 
   /**
@@ -72,9 +81,17 @@ abstract class AbstractCache[ContextT, SourceT, TargetT] extends StackableContex
     * @param n the number of times to call pop
     */
   override def pop(n: Int): Unit = {
-    for (_ <- 1.to(n)) {
-      pop()
-    }
+    assert(level >= n)
+    level -= n
+
+    def isEntryOld(mapEntry: (SourceT, (TargetT, Int))): Boolean =
+      mapEntry._2._2 <= level
+
+    def isRevEntryOld(mapEntry: (TargetT, (SourceT, Int))): Boolean =
+      mapEntry._2._2 <= level
+
+    cache = cache filter isEntryOld
+    reverseCache = reverseCache filter isRevEntryOld
   }
 
   /**
@@ -82,6 +99,7 @@ abstract class AbstractCache[ContextT, SourceT, TargetT] extends StackableContex
     */
   override def dispose(): Unit = {
     cache = Map()
+    reverseCache = Map()
     level = 0
   }
 }

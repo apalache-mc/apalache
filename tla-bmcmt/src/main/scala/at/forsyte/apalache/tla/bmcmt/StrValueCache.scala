@@ -16,10 +16,11 @@ class StrValueCache(solverContext: SolverContext) extends AbstractCache[Arena, S
     // introduce a new cell
     val newArena = arena.appendCell(ConstT())
     val newCell = newArena.topCell
-    // the freshly created cell should differ the others
+    // the freshly created cell should differ from the others
     for (other <- values()) {
       solverContext.assertGroundExpr(tla.neql(newCell.toNameEx, other.toNameEx))
     }
+    solverContext.log("; cached \"%s\" to %s".format(strValue, newCell))
     (newArena, newCell)
   }
 }

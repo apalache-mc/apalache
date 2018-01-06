@@ -211,6 +211,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
     * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
     */
   def pickRecord(cellType: CellT, recordSet: ArenaCell, state: SymbState): SymbState = {
+    // TODO: refactor, this happened to be a lot of code
     val recordType = cellType.asInstanceOf[RecordT]
     val records = state.arena.getHas(recordSet)
 
@@ -249,6 +250,20 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
     arena = arena.appendCell(tupleType)
     val newTuple = arena.topCell
     arena = arena.appendHas(newRecord, newTuple) // bind the record to the tuple
+    // compute the constants for each key, as we have to connect them with the domain
+    def mapKey(key: String): (String, ArenaCell) = {
+      val (newArena, cell) = rewriter.strValueCache.getOrCreate(arena, key)
+      arena = arena
+      (key, cell)
+    }
+
+    val keyMap = Map[String, ArenaCell](recordType.fields.keySet.toList.map(mapKey) :_*)
+    // introduce the record domain
+    arena = arena.appendCell(FinSetT(ConstT()))
+    val newDomain = arena.topCell
+    arena = arena.setDom(newRecord, newDomain)
+    arena = keyMap.values.foldLeft(arena) ((a, c) => a.appendHas(newDomain, c))
+
     // introduce a new failure predicate
     arena = arena.appendCell(FailPredT())
     val failPred = arena.topCell
@@ -259,10 +274,12 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
     arena = newCells.foldLeft(newState.arena)((a, c) => a.appendHas(newTuple, c))
 
     def forceEquality(otherRecord: ArenaCell): TlaEx = {
+      def otherDomain = arena.getDom(otherRecord)
+
       def valueEq(key: String): TlaEx = {
         val otherType = otherRecord.cellType.asInstanceOf[RecordT]
         if (!otherType.fields.contains(key)) {
-          tla.bool(true) // no key, no constraint
+          tla.notin(keyMap(key), newDomain)
         } else {
           // the values record[key] and otherRecord[key] must be equal
           val index = recordType.fields.keySet.toList.indexOf(key)
@@ -270,7 +287,12 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
           val otherIndex = otherType.fields.keySet.toList.indexOf(key)
           val otherTuple = arena.getHas(otherRecord).head
           val otherElem = arena.getHas(otherTuple)(otherIndex)
-          rewriter.lazyEq.safeEq(elem, otherElem)
+          // check the domain
+          val inOtherDom = tla.in(keyMap(key).toNameEx, otherDomain)
+          val inDom = tla.in(keyMap(key).toNameEx, newDomain)
+          val eq = rewriter.lazyEq.safeEq(elem, otherElem)
+          tla.or(tla.and(tla.not(inOtherDom), tla.not(inDom)),
+                 tla.and(eq, inDom, inOtherDom))
         }
       }
 

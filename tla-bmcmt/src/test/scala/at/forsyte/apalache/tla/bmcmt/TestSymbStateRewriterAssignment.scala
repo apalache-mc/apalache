@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
-import scala.collection.immutable.TreeMap
+import scala.collection.immutable.{SortedSet, TreeMap}
 
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterAssignment extends RewriterBase {
@@ -278,13 +278,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
               tla.enumSet(set1, set2))
           ) ///
 
-        val inState = rewriter.rewriteUntilDone(nextState.setRex(membershipTest).setTheory(BoolTheory()))
-        rewriter.push()
-        solverContext.assertGroundExpr(inState.ex)
-        assert(solverContext.sat())
-        rewriter.pop()
-        solverContext.assertGroundExpr(tla.not(inState.ex))
-        assert(!solverContext.sat())
+        assertTlaExAndRestore(rewriter, nextState.setRex(membershipTest))
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -320,34 +314,28 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
               tla.enumSet(set2))
           ) ///
 
-        rewriter.push()
-        val inState = rewriter.rewriteUntilDone(nextState.setRex(membershipTest).setTheory(BoolTheory()))
-        rewriter.push()
-        solverContext.assertGroundExpr(inState.ex)
-        assert(solverContext.sat())
-        rewriter.pop()
-        rewriter.push()
-        solverContext.assertGroundExpr(tla.not(inState.ex))
-        assert(!solverContext.sat())
-        rewriter.pop()
-        rewriter.pop()
+        assertTlaExAndRestore(rewriter, nextState.setRex(membershipTest))
 
         // if we assume that result["a"] = 2, we should get result["b"] = TRUE, and result["c"] = { 3, 4 }
+        rewriter.push()
         val assumption = tla.eql(tla.appFun(tla.prime(tla.name("x")), tla.str("a")), tla.int(2))
+        val assumState = assumeTlaEx(rewriter, nextState.setRex(assumption))
+
         val bIsTrue = tla.eql(tla.appFun(tla.prime(tla.name("x")), tla.str("b")), tla.bool(true))
         val cIsSet2 = tla.eql(tla.appFun(tla.prime(tla.name("x")), tla.str("c")), set2)
         val assertion = tla.and(bIsTrue, cIsSet2)
-        val assumState = rewriter.rewriteUntilDone(nextState.setRex(assumption).setTheory(BoolTheory()))
-        solverContext.assertGroundExpr(assumState.ex)
-        assert(solverContext.sat())
-        rewriter.push()
-        val assertState = rewriter.rewriteUntilDone(assumState.setRex(assertion))
-        rewriter.push()
-        solverContext.assertGroundExpr(assertState.ex)
-        assert(solverContext.sat())
+        assertTlaExAndRestore(rewriter, assumState.setRex(assertion))
         rewriter.pop()
-        solverContext.assertGroundExpr(tla.not(assertState.ex))
-        assert(!solverContext.sat())
+
+        // if we assume that result["a"] = 1, we should get DOMAIN result = {"a", "b"}
+        rewriter.push()
+        val assumption2 = tla.eql(tla.appFun(tla.prime(tla.name("x")), tla.str("a")), tla.int(2))
+        val assumeState2 = assumeTlaEx(rewriter, nextState.setRex(assumption2))
+        val (newArena, expectedDom) =
+          rewriter.recordDomainCache.getOrCreate(assumeState2.arena, SortedSet("a", "b", "c"))
+        val eq = tla.eql(expectedDom, tla.dom(tla.prime(tla.name("x"))))
+        assertTlaExAndRestore(rewriter, assumeState2.setArena(newArena).setRex(eq))
+        rewriter.pop()
 
       case _ =>
         fail("Unexpected rewriting result")

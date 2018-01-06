@@ -404,6 +404,9 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
         val inFun = getOrMkInPred(setEntry._2, elemEntry._2)
         z3context.mkApp(inFun, elemEntry._1, setEntry._1)
 
+      case OperEx(TlaSetOper.notin, elem, set) =>
+        z3context.mkNot(toExpr(OperEx(TlaSetOper.in, elem, set)).asInstanceOf[BoolExpr])
+
       case OperEx(TlaFunOper.app, NameEx(funName), NameEx(argName)) =>
         // apply the function associated with a cell
         val arg = constCache(argName)._1
