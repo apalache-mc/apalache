@@ -181,6 +181,18 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
     name
   }
 
+
+  /**
+    * Get the names of the active Boolean constants (not the cells of type BoolT).
+    * This method is used for debugging purposes and may be slow.
+    *
+    * @return a list of Boolean constant that are active in the current context
+    */
+  override def getBoolConsts(): Iterable[String] = {
+    val boolTheory = BoolTheory()
+    constCache.keys filter boolTheory.hasConst
+  }
+
   /**
     * Introduce a new integer constant.
     *

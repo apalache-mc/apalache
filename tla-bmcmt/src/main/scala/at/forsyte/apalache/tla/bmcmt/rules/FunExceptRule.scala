@@ -50,10 +50,10 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // induce the new type of the co-domain cells
         val cdmElemType = cdm.cellType match {
           case FinSetT(elemType) =>
-            val problemType = valueCells.find(!_.cellType.comparableWith(elemType))
-            if (problemType.isDefined) {
-              throw new RewriterException("Type error in %s: updating a function of type %s with a cell of type"
-                .format(funCell.cellType, problemType.get))
+            val problemCell = valueCells.find(!_.cellType.comparableWith(elemType))
+            if (problemCell.isDefined) {
+              throw new RewriterException("Type error in %s: updating a function of type %s with a cell of type %s"
+                .format(state.ex, funCell.cellType, problemCell.get.cellType))
             }
             elemType
 

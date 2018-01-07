@@ -84,9 +84,7 @@ class EqCache(val falseConst: TlaEx, val trueConst: TlaEx) extends StackableCont
     * to save only the latest context.
     */
   override def pop(): Unit = {
-    assert(level > 0)
-    eqCache.retain((_, value) => value._2 <= level)
-    level -= 1
+    pop(1)
   }
 
   /**

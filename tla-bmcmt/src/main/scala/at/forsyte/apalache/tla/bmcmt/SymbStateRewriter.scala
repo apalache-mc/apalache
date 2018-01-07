@@ -207,8 +207,13 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
       case NameEx(name) =>
         if (substRule.isApplicable(state)) {
           // a variable that can be substituted with a cell
-          substRule.logOnEntry(solverContext, state)
-          Done(substRule.logOnReturn(solverContext, coerce(substRule.apply(state), state.theory)))
+          val coercedState = coerce(substRule.apply(substRule.logOnEntry(solverContext, state)), state.theory)
+          val nextState = substRule.logOnReturn(solverContext, coercedState)
+          if (nextState.arena.cellCount < state.arena.cellCount) {
+            throw new RewriterException("Implementation error: the number of cells decreased from %d to %d"
+              .format(state.arena.cellCount, nextState.arena.cellCount))
+          }
+          Done(nextState)
         } else {
           // oh-oh
           NoRule()
@@ -220,12 +225,30 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
 
         potentialRules.find(r => r.isApplicable(state)) match {
           case Some(r) =>
-            Continue(r.logOnReturn(solverContext, r.apply(r.logOnEntry(solverContext, state))))
+//            try {
+              val nextState = r.logOnReturn(solverContext, r.apply(r.logOnEntry(solverContext, state)))
+              if (nextState.arena.cellCount < state.arena.cellCount) {
+                throw new RewriterException("Implementation error in rule %s: the number of cells decreased from %d to %d"
+                  .format(r.getClass.getSimpleName, state.arena.cellCount, nextState.arena.cellCount))
+              }
+              Continue(nextState)
+//            } catch {
+//              case ub: UndefinedBehaviorError if state.theory == BoolTheory() =>
+//                // replace with an unrestricted Boolean
+//              solverContext.log("; Rolled back undefined behavior, #cells in arena: " + state.arena.cellCount)
+//                // bugfix: use fresh arena
+//              Done(mkNondetBool(state.setArena(ub.arena)))
+//            }
 
           case None =>
             NoRule()
         }
     }
+  }
+
+  private def mkNondetBool(state: SymbState): SymbState = {
+    val bool = solverContext.introBoolConst()
+    state.setTheory(BoolTheory()).setRex(NameEx(bool))
   }
 
   /**
@@ -267,21 +290,17 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
     * @return a pair (the new state with the original expression, the rewritten expressions)
     */
   def rewriteSeqUntilDone(state: SymbState, es: Seq[TlaEx]): (SymbState, Seq[TlaEx]) = {
-    def process(st: SymbState, seq: Seq[TlaEx]): (SymbState, Seq[TlaEx]) = {
-      seq match {
-        case Seq() =>
-          (st, List())
-
-        case r :: tail =>
-          val ns = rewriteUntilDone(st.setRex(r))
-          val (ts: SymbState, nt: List[TlaEx]) = process(ns, tail)
-          (ts, ns.ex :: nt)
-      }
+    var newState = state // it is easier to write this code with a side effect on the state
+    // we should be very careful about propagating arenas here
+    def eachExpr(e: TlaEx): TlaEx = {
+      val ns = rewriteUntilDone(new SymbState(e, state.theory, newState.arena, newState.binding))
+      assert(ns.arena.cellCount >= newState.arena.cellCount)
+      newState = ns
+      ns.ex
     }
 
-    val oldExpr = state.ex
-    val pair = process(state, es.toList)
-    (pair._1.setRex(oldExpr), pair._2)
+    val rewrittenExprs = es map eachExpr
+    (newState.setRex(state.ex).setTheory(state.theory), rewrittenExprs)
   }
 
   /**
@@ -292,20 +311,17 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
     * @return a pair (the old state in a new context, the rewritten expressions)
     */
   def rewriteBoundSeqUntilDone(state: SymbState, es: Seq[(Binding, TlaEx)]): (SymbState, Seq[TlaEx]) = {
-    def process(st: SymbState, seq: Seq[(Binding, TlaEx)]): (SymbState, Seq[TlaEx]) = {
-      seq match {
-        case Seq() =>
-          (st, List())
-
-        case p :: tail =>
-          val (ts: SymbState, nt: List[TlaEx]) = process(st, tail)
-          val ns = rewriteUntilDone(new SymbState(p._2, ts.theory, ts.arena, p._1))
-          (ns, ns.ex :: nt)
-      }
+    var newState = state // it is easier to write this code with a side effect on the state
+    // we should be very careful about propagating arenas here
+    def eachExpr(be: (Binding, TlaEx)): TlaEx = {
+      val ns = rewriteUntilDone(new SymbState(be._2, state.theory, newState.arena, be._1))
+      assert(ns.arena.cellCount >= newState.arena.cellCount)
+      newState = ns
+      ns.ex
     }
 
-    val pair = process(state, es.toList)
-    (pair._1.setRex(state.ex), pair._2)
+    val rewrittenExprs = es map eachExpr
+    (newState.setRex(state.ex).setTheory(state.theory), rewrittenExprs)
   }
 
   /**

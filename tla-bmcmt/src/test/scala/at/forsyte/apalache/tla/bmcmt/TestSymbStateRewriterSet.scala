@@ -750,7 +750,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         rewriter.pop()
         rewriter.push()
         solverContext.assertGroundExpr(tla.not(predEx))
-        assertUnsatOrExplain(nextState)
+        assertUnsatOrExplain(rewriter, nextState)
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -772,7 +772,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         rewriter.pop()
         rewriter.push()
         solverContext.assertGroundExpr(tla.not(predEx))
-        assertUnsatOrExplain(nextState)
+        assertUnsatOrExplain(rewriter, nextState)
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -794,7 +794,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         rewriter.pop()
         rewriter.push()
         solverContext.assertGroundExpr(tla.not(predEx))
-        assertUnsatOrExplain(nextState)
+        assertUnsatOrExplain(rewriter, nextState)
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -813,7 +813,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         assert(BoolTheory().hasConst(name))
         rewriter.push()
         solverContext.assertGroundExpr(predEx)
-        assertUnsatOrExplain(nextState)
+        assertUnsatOrExplain(rewriter, nextState)
         rewriter.pop()
         rewriter.push()
         solverContext.assertGroundExpr(tla.not(predEx))
@@ -840,7 +840,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         rewriter.pop()
         rewriter.push()
         solverContext.assertGroundExpr(tla.not(predEx))
-        assertUnsatOrExplain(nextState)
+        assertUnsatOrExplain(rewriter, nextState)
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -862,7 +862,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         rewriter.pop()
         rewriter.push()
         solverContext.assertGroundExpr(tla.not(predEx))
-        assertUnsatOrExplain(nextState)
+        assertUnsatOrExplain(rewriter, nextState)
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -884,7 +884,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         rewriter.pop()
         rewriter.push()
         solverContext.assertGroundExpr(tla.not(predEx))
-        assertUnsatOrExplain(nextState)
+        assertUnsatOrExplain(rewriter, nextState)
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -903,7 +903,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         assert(BoolTheory().hasConst(name))
         rewriter.push()
         solverContext.assertGroundExpr(predEx)
-        assertUnsatOrExplain(nextState)
+        assertUnsatOrExplain(rewriter, nextState)
         rewriter.pop()
         rewriter.push()
         solverContext.assertGroundExpr(tla.not(predEx))
@@ -930,7 +930,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         rewriter.pop()
         rewriter.push()
         solverContext.assertGroundExpr(tla.not(predEx))
-        assertUnsatOrExplain(nextState)
+        assertUnsatOrExplain(rewriter, nextState)
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -948,7 +948,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         assert(BoolTheory().hasConst(name))
         rewriter.push()
         solverContext.assertGroundExpr(predEx)
-        assertUnsatOrExplain(nextState)
+        assertUnsatOrExplain(rewriter, nextState)
         rewriter.pop()
         rewriter.push()
         solverContext.assertGroundExpr(tla.not(predEx))
@@ -974,7 +974,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         rewriter.pop()
         rewriter.push()
         solverContext.assertGroundExpr(tla.not(predEx))
-        assertUnsatOrExplain(nextState)
+        assertUnsatOrExplain(rewriter, nextState)
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -993,7 +993,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         assert(BoolTheory().hasConst(name))
         rewriter.push()
         solverContext.assertGroundExpr(predEx)
-        assertUnsatOrExplain(nextState)
+        assertUnsatOrExplain(rewriter, nextState)
         rewriter.pop()
         rewriter.push()
         solverContext.assertGroundExpr(tla.not(predEx))
@@ -1016,7 +1016,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         assert(BoolTheory().hasConst(name))
         rewriter.push()
         solverContext.assertGroundExpr(predEx)
-        assertUnsatOrExplain(nextState)
+        assertUnsatOrExplain(rewriter, nextState)
         rewriter.pop()
         rewriter.push()
         solverContext.assertGroundExpr(tla.not(predEx))
@@ -1043,7 +1043,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         rewriter.pop()
         rewriter.push()
         solverContext.assertGroundExpr(tla.not(predEx))
-        assertUnsatOrExplain(nextState)
+        assertUnsatOrExplain(rewriter, nextState)
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -1061,7 +1061,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         assert(BoolTheory().hasConst(name))
         rewriter.push()
         solverContext.assertGroundExpr(predEx)
-        assertUnsatOrExplain(nextState)
+        assertUnsatOrExplain(rewriter, nextState)
         rewriter.pop()
         rewriter.push()
         solverContext.assertGroundExpr(tla.not(predEx))
@@ -1087,7 +1087,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         rewriter.pop()
         rewriter.push()
         solverContext.assertGroundExpr(tla.not(predEx))
-        assertUnsatOrExplain(nextState)
+        assertUnsatOrExplain(rewriter, nextState)
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -1106,7 +1106,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         assert(BoolTheory().hasConst(name))
         rewriter.push()
         solverContext.assertGroundExpr(predEx)
-        assertUnsatOrExplain(nextState)
+        assertUnsatOrExplain(rewriter, nextState)
         rewriter.pop()
         rewriter.push()
         solverContext.assertGroundExpr(tla.not(predEx))

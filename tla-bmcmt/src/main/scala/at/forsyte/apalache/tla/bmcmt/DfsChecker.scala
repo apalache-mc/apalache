@@ -155,7 +155,7 @@ class DfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
         // TODO: explain the counterexample before restoring the SMT context
         // currenly, writing the counterexample in the SMT log
         val writer = new StringWriter()
-        new SymbStateDecoder(solverContext).dumpArena(invState, new PrintWriter(writer))
+        new SymbStateDecoder(solverContext, rewriter).dumpArena(invState, new PrintWriter(writer))
         solverContext.log(writer.getBuffer.toString)
       }
       rewriter.pop()

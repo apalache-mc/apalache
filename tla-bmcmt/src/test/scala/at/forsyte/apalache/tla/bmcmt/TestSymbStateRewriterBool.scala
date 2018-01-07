@@ -417,7 +417,7 @@ class TestSymbStateRewriterBool extends RewriterBase {
     assert(solverContext.sat())
     rewriter.pop()
     solverContext.assertGroundExpr(tla.not(nextState.ex))
-    assertUnsatOrExplain(nextState)
+    assertUnsatOrExplain(rewriter, nextState)
   }
 
   test("""SE-EX3: \E x \in {1, 2, 3}: x > 4 ~~> $B$k""") {
@@ -430,7 +430,7 @@ class TestSymbStateRewriterBool extends RewriterBase {
     assert(solverContext.sat())
     rewriter.push()
     solverContext.assertGroundExpr(nextState.ex)
-    assertUnsatOrExplain(nextState)
+    assertUnsatOrExplain(rewriter, nextState)
     rewriter.pop()
     solverContext.assertGroundExpr(tla.not(nextState.ex))
     assert(solverContext.sat())
@@ -449,7 +449,7 @@ class TestSymbStateRewriterBool extends RewriterBase {
     assert(solverContext.sat())
     rewriter.pop()
     solverContext.assertGroundExpr(tla.not(nextState.ex))
-    assertUnsatOrExplain(nextState)
+    assertUnsatOrExplain(rewriter, nextState)
   }
 
   test("""SE-ALL3: \A x \in {1, 2, 3}: x > 2 ~~> $B$k""") {
@@ -462,7 +462,7 @@ class TestSymbStateRewriterBool extends RewriterBase {
     assert(solverContext.sat())
     rewriter.push()
     solverContext.assertGroundExpr(nextState.ex)
-    assertUnsatOrExplain(nextState)
+    assertUnsatOrExplain(rewriter, nextState)
     rewriter.pop()
     solverContext.assertGroundExpr(tla.not(nextState.ex))
     assert(solverContext.sat())

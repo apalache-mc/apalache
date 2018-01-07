@@ -23,6 +23,14 @@ trait SolverContext extends StackableContext {
   def introBoolConst(): String
 
   /**
+    * Get the names of the active Boolean constants (not the cells of type BoolT).
+    * This method is used for debugging purposes and may be slow.
+    *
+    * @return a list of Boolean constant that are active in the current context
+    */
+  def getBoolConsts: Iterable[String]
+
+  /**
     * Introduce a new integer constant.
     * @return the name of a new constant
     */

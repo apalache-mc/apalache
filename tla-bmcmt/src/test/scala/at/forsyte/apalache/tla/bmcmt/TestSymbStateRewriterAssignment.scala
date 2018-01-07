@@ -42,7 +42,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     rewriter.pop()
     rewriter.push()
     solverContext.assertGroundExpr(tla.eql(boundCell, tla.int(3)))
-    assertUnsatOrExplain(nextState) // should not be possible
+    assertUnsatOrExplain(rewriter, nextState) // should not be possible
   }
 
   test("""SE-IN-ASSIGN1(int): x' \in {} ~~> FALSE""") {
@@ -134,7 +134,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     val eq13 = tla.eql(boundCell, tla.enumSet(tla.int(1), tla.int(3)))
     val eqState13 = rewriter.rewriteUntilDone(nextState.setTheory(BoolTheory()).setRex(eq13))
     solverContext.assertGroundExpr(eqState13.ex)
-    assertUnsatOrExplain(eqState13) // should not be possible
+    assertUnsatOrExplain(rewriter, eqState13) // should not be possible
   }
 
   test("""SE-IN-ASSIGN1(fun): x' \in {[x \in BOOLEAN |-> 0], [x \in BOOLEAN |-> 1]} ~~> TRUE and [x -> $C$k]""") {
@@ -181,7 +181,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     val eqFun2 = tla.eql(boundCell, fun2)
     val eqStateFun2 = rewriter.rewriteUntilDone(nextState.setTheory(BoolTheory()).setRex(eqFun2))
     solverContext.assertGroundExpr(eqStateFun2.ex)
-    assertUnsatOrExplain(eqStateFun2) // should not be possible
+    assertUnsatOrExplain(rewriter, eqStateFun2) // should not be possible
   }
 
   test("""SE-IN-ASSIGN1(funset): x' \in [BOOLEAN -> {0, 1}] ~~> TRUE and [x -> $C$k]""") {
@@ -228,7 +228,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     val eqFun2 = tla.eql(boundCell, fun2)
     val eqStateFun2 = rewriter.rewriteUntilDone(nextState.setTheory(BoolTheory()).setRex(eqFun2))
     solverContext.assertGroundExpr(eqStateFun2.ex)
-    assertUnsatOrExplain(eqStateFun2) // should not be possible
+    assertUnsatOrExplain(rewriter, eqStateFun2) // should not be possible
   }
 
   test("""SE-IN-ASSIGN1(funset): x' \in [0..(5 - 1) ~~> {FALSE, TRUE}] ~~> TRUE and [x -> $C$k]""") {
@@ -292,8 +292,8 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     val set2 = tla.enumSet(tla.int(3), tla.int(4))
     val record2 = tla.enumFun(tla.str("a"), tla.int(2),
       tla.str("b"), tla.bool(true), tla.str("c"), set2)
-    val set = tla.enumSet(record1, record2)
-    val assign = tla.in(tla.prime(tla.name("x")), set)
+    val recordSet = tla.enumSet(record1, record2)
+    val assign = tla.in(tla.prime(tla.name("x")), recordSet)
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriter(solverContext)
@@ -329,12 +329,15 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
 
         // if we assume that result["a"] = 1, we should get DOMAIN result = {"a", "b"}
         rewriter.push()
-        val assumption2 = tla.eql(tla.appFun(tla.prime(tla.name("x")), tla.str("a")), tla.int(2))
+        val assumption2 = tla.eql(tla.appFun(tla.prime(tla.name("x")), tla.str("a")), tla.int(1))
         val assumeState2 = assumeTlaEx(rewriter, nextState.setRex(assumption2))
         val (newArena, expectedDom) =
-          rewriter.recordDomainCache.getOrCreate(assumeState2.arena, SortedSet("a", "b", "c"))
-        val eq = tla.eql(expectedDom, tla.dom(tla.prime(tla.name("x"))))
-        assertTlaExAndRestore(rewriter, assumeState2.setArena(newArena).setRex(eq))
+          rewriter.recordDomainCache.getOrCreate(assumeState2.arena, SortedSet("a", "b"))
+        val domEq = tla.eql(expectedDom, tla.dom(tla.prime(tla.name("x"))))
+        assertTlaExAndRestore(rewriter, assumeState2.setArena(newArena).setRex(domEq))
+        // and check that the record equals to the expected one
+        val eq = tla.eql(record1, tla.prime(tla.name("x")))
+        assertTlaExAndRestore(rewriter, assumeState2.setRex(eq))
         rewriter.pop()
 
       case _ =>

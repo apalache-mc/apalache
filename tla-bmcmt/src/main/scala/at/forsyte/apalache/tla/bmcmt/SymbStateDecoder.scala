@@ -5,8 +5,9 @@ import java.io.PrintWriter
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.TlaSetOper
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.values.TlaStr
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 
 import scala.collection.immutable.{HashSet, SortedSet}
 
@@ -15,50 +16,20 @@ import scala.collection.immutable.{HashSet, SortedSet}
   *
   * @author Igor Konnov
   */
-class SymbStateDecoder(solverContext: SolverContext) {
+class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter) {
   // a simple decoder that dumps values into a text file, in the future we need better recovery code
   def dumpArena(state: SymbState, writer: PrintWriter): Unit = {
-    def decode(cell: ArenaCell): TlaEx = {
-      cell.cellType match {
-        case BoolT() | IntT() =>
-          solverContext.evalGroundExpr(cell.toNameEx)
-
-        case FinSetT(_) =>
-          def inSet(e: ArenaCell) = solverContext.evalGroundExpr(tla.in(e, cell)).identical(tla.bool(true))
-          val elems = state.arena.getHas(cell).filter(inSet).map(_.toNameEx)
-          tla.enumSet(elems :_*)
-
-        case FunT(_, _) =>
-          def eachElem(e: TlaEx): TlaEx = {
-            val funApp = tla.appFun(cell, e)
-            val result = solverContext.evalGroundExpr(funApp)
-            tla.eql(funApp, result)
-          }
-          val dom = state.arena.getDom(cell)
-          decode(dom) match {
-            case OperEx(TlaSetOper.enumSet, elems @ _*) =>
-              tla.and(elems.map(eachElem) :_*)
-
-            case _ =>
-              throw new RewriterException("Unexpected domain structure: " + dom)
-          }
-
-        case UnknownT() =>
-          tla.appFun(NameEx("Unknown"), cell)
-
-        case _ =>
-          throw new RewriterException("Don't know how to decode the cell %s of type %s".format(cell, cell.cellType))
-      }
-    }
     val sortedCells = SortedSet[ArenaCell]() ++ state.arena.cellMap.values
     for (c <- sortedCells) {
-      writer.println("%s = %s".format(c, decode(c)))
+      writer.println("%s = %s".format(c, decodeCellToTlaEx(state.arena, c)))
     }
+
     // compute the equivalence classes for the cells, totally suboptimally
     // TODO: rewrite, I did not think too much at all
     def iseq(c: ArenaCell, d: ArenaCell): Boolean = {
       c.cellType == d.cellType && solverContext.evalGroundExpr(tla.eql(c, d)).identical(tla.bool(true))
     }
+
     def merge(cls: List[HashSet[ArenaCell]], c: ArenaCell, d: ArenaCell): List[HashSet[ArenaCell]] = {
       if (!iseq(c, d) || c == d) {
         cls
@@ -66,13 +37,17 @@ class SymbStateDecoder(solverContext: SolverContext) {
         def pred(s: HashSet[ArenaCell]): Boolean = {
           s.contains(c) || s.contains(d)
         }
+
         val (two: List[HashSet[ArenaCell]], rest: List[HashSet[ArenaCell]]) = cls.partition(pred)
+
         def union(x: HashSet[ArenaCell], y: HashSet[ArenaCell]): HashSet[ArenaCell] = {
           x.union(y)
         }
+
         rest ++ List(two.reduce(union))
       }
     }
+
     var classes = sortedCells.toList.map(HashSet(_))
     for (c <- sortedCells) {
       for (d <- sortedCells) {
@@ -82,6 +57,11 @@ class SymbStateDecoder(solverContext: SolverContext) {
     for (cls <- classes) {
       writer.println("Equiv. class: {%s}".format(cls.mkString(", ")))
     }
+
+    for (name <- solverContext.getBoolConsts) {
+      val value = solverContext.evalGroundExpr(NameEx(name))
+      writer.println(s"$name = $value")
+    }
   }
 
   def decodeStateVariables(state: SymbState): Map[String, TlaEx] = {
@@ -89,34 +69,73 @@ class SymbStateDecoder(solverContext: SolverContext) {
   }
 
   def decodeCellToTlaEx(arena: Arena, cell: ArenaCell): TlaEx = cell.cellType match {
-    case BoolT() | IntT() =>
+    case BoolT() | IntT() | FailPredT() =>
       solverContext.evalGroundExpr(cell.toNameEx)
 
-    case FinSetT(_) =>
-      def inSet(e: ArenaCell) = solverContext.evalGroundExpr(tla.in(e, cell)).identical(tla.bool(true))
-      val elems = arena.getHas(cell).filter(inSet)
-      tla.enumSet(elems.map(c => decodeCellToTlaEx(arena, c)) :_*)
-
-    case FunT(_, _) =>
-      def eachElem(e: TlaEx): TlaEx = {
-        val funApp = tla.appFun(cell, e)
-        val result = solverContext.evalGroundExpr(funApp)
-        tla.eql(funApp, result)
-      }
-      val dom = arena.getDom(cell)
-      decodeCellToTlaEx(arena, dom) match {
-        case OperEx(TlaSetOper.enumSet, elems @ _*) =>
-          tla.and(elems.map(eachElem) :_*)
-
-        case _ =>
-          throw new RewriterException("Unexpected domain structure: " + dom)
-      }
+    case ConstT() =>
+      ValEx(TlaStr(rewriter.strValueCache.findKey(cell).get))
 
     case UnknownT() =>
       tla.appFun(NameEx("Unknown"), cell)
 
+    case FinSetT(_) =>
+      def inSet(e: ArenaCell) = solverContext.evalGroundExpr(tla.in(e, cell)).identical(tla.bool(true))
+
+      val elems = arena.getHas(cell).filter(inSet)
+      tla.enumSet(elems.map(c => decodeCellToTlaEx(arena, c)): _*)
+
+    case FunT(_, _) =>
+      val dom = arena.getDom(cell)
+      def eachElem(es: List[TlaEx], argCell: ArenaCell): List[TlaEx] = {
+        val inSet = solverContext.evalGroundExpr(tla.in(argCell, dom)).identical(tla.bool(true))
+        if (inSet) {
+          val resultEx = solverContext.evalGroundExpr(tla.appFun(cell, argCell))
+          decodeCellToTlaEx(arena, argCell) +: resultEx +: es
+        } else {
+          es
+        }
+      }
+
+      val domElems = arena.getHas(dom)
+      // use the same notation as for the records
+      val keysAndValues = domElems.reverse.foldLeft(List[TlaEx]()) (eachElem)
+      OperEx(TlaFunOper.enum, keysAndValues :_*)
+
+    case r @ RecordT(_) =>
+      def exToStr(ex: TlaEx): TlaStr = ex match {
+        case ValEx(s @ TlaStr(_)) => s
+        case _ => throw new RewriterException("Expected a string, found: " + ex)
+      }
+      val dom = decodeSet(arena, arena.getDom(cell)) map exToStr
+      val tuple = arena.getHas(cell).head
+      val tupleElems = arena.getHas(tuple)
+      val keyList = r.fields.keySet.toList
+      def eachField(es: List[TlaEx], key: TlaStr): List[TlaEx] = {
+        val tupleIndex = keyList.indexOf(key.value)
+        val valueCell = tupleElems(tupleIndex)
+        ValEx(key) +: decodeCellToTlaEx(arena, valueCell) +: es
+      }
+
+      val keysAndValues = dom.reverse.toList.foldLeft(List[TlaEx]()) (eachField)
+      OperEx(TlaFunOper.enum, keysAndValues :_*)
+
+    case t @ TupleT(_) =>
+      val tupleElems = arena.getHas(cell)
+      val elemAsExprs  = tupleElems.map(c => decodeCellToTlaEx(arena, c))
+      tla.tuple(elemAsExprs :_*)
+
     case _ =>
       throw new RewriterException("Don't know how to decode the cell %s of type %s".format(cell, cell.cellType))
+  }
+
+  private def decodeSet(arena: Arena, set: ArenaCell): Seq[TlaEx] = {
+    decodeCellToTlaEx(arena, set) match {
+      case OperEx(TlaSetOper.enumSet, elems@_*) =>
+        elems
+
+      case _ =>
+        throw new RewriterException("Unexpected domain structure: " + set)
+    }
   }
 
   def reverseMapVar(expr: TlaEx, varName: String, cell: ArenaCell): TlaEx = {
@@ -124,8 +143,8 @@ class SymbStateDecoder(solverContext: SolverContext) {
       case NameEx(name) =>
         if (name != cell.name) ex else NameEx(varName)
 
-      case OperEx(oper, args @ _*) =>
-        OperEx(oper, args map rec :_*)
+      case OperEx(oper, args@_*) =>
+        OperEx(oper, args map rec: _*)
 
       case _ =>
         ex

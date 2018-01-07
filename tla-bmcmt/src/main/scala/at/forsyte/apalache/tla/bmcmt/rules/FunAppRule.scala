@@ -61,9 +61,18 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val index = fields.keySet.toList.indexOf(key)
     val tupleCell = state.arena.getHas(recordCell).head
     val elems = state.arena.getHas(tupleCell)
-    assert(index >= 0 && index < elems.length)
-    val tupleElem = elems(index)
-    state.setTheory(CellTheory()).setRex(tupleElem)
+    if (index >= 0 && index < elems.length) {
+      val keyCell = rewriter.strValueCache.get(key).get
+      // when key is outside the record domain, we do not flag a failure here,
+      // since records of different types are often used in TLA+ specifications, e.g., see Paxos.tla
+      val tupleElem = elems(index)
+      state.setTheory(CellTheory()).setRex(tupleElem)
+    } else {
+      // Now we are trouble, since we don't know the type of a value we should return.
+      // SymbStateRewriter will try to resolve it at upper levels
+      val msg = s"Accessing record $funEx of type ${recordCell.cellType} with the key $argEx. Filter the set first?"
+      throw new UndefinedBehaviorError(msg, state.arena)
+    }
   }
 
   private def applyTuple(state: SymbState, tupleCell: ArenaCell, funEx: TlaEx, argEx: TlaEx): SymbState = {

@@ -33,15 +33,19 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val valueEs = elems.zipWithIndex.filter(_._2 % 2 == 1).map(_._1) // pick the odd indices (starting with 0)
         assert(keyEs.lengthCompare(valueEs.length) == 0)
 
+        // sort the keys and values by the keys
+        val sortedKeyVals = keys.zip(valueEs).sortBy(_._1)
+
         // create a tuple that stores the values
         val tupleState =
-          rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(tla.tuple(valueEs :_*)))
+          rewriter.rewriteUntilDone(state.setTheory(CellTheory())
+            .setRex(tla.tuple(sortedKeyVals.map(_._2) :_*)))
 
         val tupleCell = tupleState.arena.findCellByNameEx(tupleState.ex)
         val elemTypes = tupleState.arena.getHas(tupleCell).map(_.cellType)
 
         // create the record cell and connect it to the fresh tuple
-        val recordType = RecordT(SortedMap(keys.zip(elemTypes) :_*))
+        val recordType = RecordT(SortedMap(sortedKeyVals.map(_._1).zip(elemTypes) :_*))
         var arena = tupleState.arena.appendCell(recordType)
         val record = arena.topCell
         arena = arena.appendHas(record, tupleCell)

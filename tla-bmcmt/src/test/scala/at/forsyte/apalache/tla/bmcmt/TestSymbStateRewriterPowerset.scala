@@ -43,7 +43,7 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     rewriter.pop()
     rewriter.push()
     solverContext.assertGroundExpr(tla.not(nextState.ex))
-    assertUnsatOrExplain(nextState)
+    assertUnsatOrExplain(rewriter, nextState)
   }
 
   test("""SE-SUBSET1: {} \in SUBSET {1, 2, 3}""") {
@@ -60,7 +60,7 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     rewriter.pop()
     rewriter.push()
     solverContext.assertGroundExpr(tla.not(nextState.ex))
-    assertUnsatOrExplain(nextState)
+    assertUnsatOrExplain(rewriter, nextState)
   }
 
   test("""SE-SUBSET1: {1, 2, 3} \in SUBSET {1, 2, 3}""") {
@@ -77,7 +77,7 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     rewriter.pop()
     rewriter.push()
     solverContext.assertGroundExpr(tla.not(nextState.ex))
-    assertUnsatOrExplain(nextState)
+    assertUnsatOrExplain(rewriter, nextState)
   }
 
   test("""SE-SUBSET1: {1, 2, 3, 4} \in SUBSET {1, 2, 3}""") {
@@ -91,7 +91,7 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     assert(solverContext.sat())
     rewriter.push()
     solverContext.assertGroundExpr(nextState.ex)
-    assertUnsatOrExplain(nextState)
+    assertUnsatOrExplain(rewriter, nextState)
     rewriter.pop()
     rewriter.push()
     solverContext.assertGroundExpr(tla.not(nextState.ex))

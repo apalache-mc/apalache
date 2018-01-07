@@ -25,6 +25,7 @@ class TypeException(message: String) extends CheckerException(message)
 
 /**
   * This exception is thrown when QStateRewrite cannot find an applicable rule.
+  *
   * @param message error message
   */
 class NoRuleException(message: String) extends RewriterException(message)
@@ -37,11 +38,22 @@ class NoRuleException(message: String) extends RewriterException(message)
 class SmtEncodingException(message: String) extends CheckerException(message)
 
 /**
-  * This exception is thrown when the structure of a TLA+ expression is unexpected.
+  * This exception is thrown when the behaviour of an expression is not defined,
+  * e.g., accessing an undefined record field. In some cases, it can be turned
+  * into a non-deterministic choice by an upper level.
+  *
   * @param message error message
-  * @param ex the problematic expression
+  * @param arena   arena created right before the exception
   */
-class InvalidTlaExException(message: String, ex: TlaEx) extends  CheckerException(message)
+class UndefinedBehaviorError(val message: String, val arena: Arena) extends RewriterException(message)
+
+/**
+  * This exception is thrown when the structure of a TLA+ expression is unexpected.
+  *
+  * @param message error message
+  * @param ex      the problematic expression
+  */
+class InvalidTlaExException(message: String, ex: TlaEx) extends CheckerException(message)
 
 /**
   * An internal error that was triggered by the consistency checking code.

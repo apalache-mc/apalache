@@ -45,7 +45,7 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     case OperEx(oper, left, right) =>
       val leftState = rewriter.rewriteUntilDone(state.setTheory(IntTheory()).setRex(left))
-      val rightState = rewriter.rewriteUntilDone(state.setTheory(IntTheory()).setRex(right))
+      val rightState = rewriter.rewriteUntilDone(leftState.setTheory(IntTheory()).setRex(right))
       // compare integers directly in SMT
       val eqPred = rewriter.solverContext.introBoolConst()
       val cons =
@@ -53,7 +53,7 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
           NameEx(eqPred),
           OperEx(oper, leftState.ex, rightState.ex))
       rewriter.solverContext.assertGroundExpr(cons)
-      val finalState = state.setTheory(BoolTheory()).setRex(NameEx(eqPred))
+      val finalState = rightState.setTheory(BoolTheory()).setRex(NameEx(eqPred))
       rewriter.coerce(finalState, state.theory)
 
     case _ =>

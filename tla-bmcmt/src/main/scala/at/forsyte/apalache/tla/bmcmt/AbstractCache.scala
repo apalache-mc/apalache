@@ -30,7 +30,7 @@ abstract class AbstractCache[ContextT, SourceT, TargetT] extends StackableContex
   protected def create(context: ContextT, srcValue: SourceT): (ContextT, TargetT)
 
   /**
-    * Get a previously cache value for a given source value, or return the previously cached one.
+    * Get a previously cached value for a given source value, or return the previously cached one.
     * Whenever a new value is created, it is cached. The cached value can be later removed by pop.
     *
     * @param srcValue a source value
@@ -45,6 +45,18 @@ abstract class AbstractCache[ContextT, SourceT, TargetT] extends StackableContex
       cache = cache + (srcValue -> (targetValue, level))
       reverseCache = reverseCache + (targetValue -> (srcValue, level))
       (newContext, targetValue)
+    }
+  }
+
+  /**
+    * Get a previously cached value for a given source value, if there is one. Otherwise, return none.
+    * @param srcValue a source value
+    * @return Some(result), or None
+    */
+  def get(srcValue: SourceT): Option[TargetT] = {
+    cache.get(srcValue) match {
+      case Some((target, _)) => Some(target)
+      case None => None
     }
   }
 

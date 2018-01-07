@@ -335,7 +335,7 @@ class TestSymbStateRewriterFun extends RewriterBase {
       case neqEx @ NameEx(name) =>
         assert(BoolTheory().hasConst(name))
         solverContext.assertGroundExpr(neqEx)
-        assertUnsatOrExplain(cmpState)
+        assertUnsatOrExplain(rewriter, cmpState)
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -380,7 +380,7 @@ class TestSymbStateRewriterFun extends RewriterBase {
       case neqEx @ NameEx(name) =>
         assert(BoolTheory().hasConst(name))
         solverContext.assertGroundExpr(neqEx)
-        assertUnsatOrExplain(cmpState)
+        assertUnsatOrExplain(rewriter, cmpState)
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -425,7 +425,7 @@ class TestSymbStateRewriterFun extends RewriterBase {
       case neqEx @ NameEx(name) =>
         assert(BoolTheory().hasConst(name))
         solverContext.assertGroundExpr(neqEx)
-        assertUnsatOrExplain(cmpState)
+        assertUnsatOrExplain(rewriter, cmpState)
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -470,7 +470,7 @@ class TestSymbStateRewriterFun extends RewriterBase {
       case neqEx @ NameEx(name) =>
         assert(BoolTheory().hasConst(name))
         solverContext.assertGroundExpr(neqEx)
-        assertUnsatOrExplain(cmpState)
+        assertUnsatOrExplain(rewriter, cmpState)
 
       case _ =>
         fail("Unexpected rewriting result")

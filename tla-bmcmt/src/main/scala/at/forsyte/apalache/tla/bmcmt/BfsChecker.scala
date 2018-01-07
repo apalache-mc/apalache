@@ -63,7 +63,7 @@ class BfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
 
         case tran :: tail =>
           val erased = state.setBinding(forgetPrimed(state.binding))
-          val nextState = applyTransition(erased, tran)
+          val nextState = applyTransition(stepNo, erased, tran)
           if (nextState.isDefined) {
             nextState.get +: computeAllEnabled(nextState.get, tail)
           } else {
@@ -130,9 +130,10 @@ class BfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
     }
   }
 
-  private def applyTransition(state: SymbState, transition: TlaEx): Option[SymbState] = {
+  private def applyTransition(stepNo: Int, state: SymbState, transition: TlaEx): Option[SymbState] = {
     rewriter.push()
-    logger.debug("Stack push to level %d, then rewriting".format(rewriter.contextLevel))
+    logger.debug("Step %d: pushing stack to level %d, then rewriting"
+      .format(stepNo, rewriter.contextLevel))
     val nextState = rewriter.rewriteUntilDone(state.setTheory(BoolTheory()).setRex(transition))
     logger.debug("Finished rewriting")
     if (!solverContext.sat()) {
@@ -156,6 +157,7 @@ class BfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
       rewriter.pop()
       if (!solverContext.sat()) {
         // the current symbolic state is not feasible
+        logger.debug("Transition is not feasible. Skipped.")
         rewriter.pop()
         rewriter.pop()
         None
@@ -203,7 +205,7 @@ class BfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
     for ((state, i) <- stack.reverse.zipWithIndex) {
       writer.println(s"State $i:")
       writer.println("--------")
-      val binding = new SymbStateDecoder(solverContext).decodeStateVariables(state)
+      val binding = new SymbStateDecoder(solverContext, rewriter).decodeStateVariables(state)
       for ((name, ex) <- binding) {
         writer.println("%-15s ->  %s".format(name, UTFPrinter.apply(ex)))
       }

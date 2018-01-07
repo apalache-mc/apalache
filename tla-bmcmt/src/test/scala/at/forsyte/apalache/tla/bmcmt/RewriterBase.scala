@@ -18,8 +18,8 @@ class RewriterBase extends FunSuite with BeforeAndAfter {
     solverContext.dispose()
   }
 
-  protected def assertUnsatOrExplain(state: SymbState): Unit = {
-    assertOrExplain("UNSAT", state, !solverContext.sat())
+  protected def assertUnsatOrExplain(rewriter: SymbStateRewriter, state: SymbState): Unit = {
+    assertOrExplain("UNSAT", rewriter, state, !solverContext.sat())
   }
 
   protected def assumeTlaEx(rewriter: SymbStateRewriter, state: SymbState): SymbState = {
@@ -39,15 +39,16 @@ class RewriterBase extends FunSuite with BeforeAndAfter {
     rewriter.pop()
     rewriter.push()
     solverContext.assertGroundExpr(tla.not(nextState.ex))
-    assert(!solverContext.sat())
+    assertUnsatOrExplain(rewriter, nextState)
     rewriter.pop()
     rewriter.pop()
   }
 
-  private def assertOrExplain(msg: String, state: SymbState, outcome: Boolean): Unit = {
+  private def assertOrExplain(msg: String, rewriter: SymbStateRewriter,
+                              state: SymbState, outcome: Boolean): Unit = {
     if (!outcome) {
       val writer = new StringWriter()
-      new SymbStateDecoder(solverContext).dumpArena(state, new PrintWriter(writer))
+      new SymbStateDecoder(solverContext, rewriter).dumpArena(state, new PrintWriter(writer))
       solverContext.log(writer.getBuffer.toString)
       solverContext.push() // push and pop flush the log output
       solverContext.pop()

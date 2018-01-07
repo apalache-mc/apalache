@@ -133,6 +133,12 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
           case (FunT(_, _), FunT(_, _)) =>
             mkFunEq(state, left, right)
 
+          case (RecordT(_), RecordT(_)) =>
+            mkRecordEq(state, left, right)
+
+          case (TupleT(_), TupleT(_)) =>
+            mkTupleEq(state, left, right)
+
           case _ =>
             throw new CheckerException("Unexpected equality test")
         }
@@ -307,5 +313,69 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
 
     // restore the original expression and theory
     rewriter.coerce(afterResEq.setRex(state.ex), state.theory)
+  }
+
+  private def mkRecordEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {
+    val leftType = left.cellType.asInstanceOf[RecordT]
+    val rightType = right.cellType.asInstanceOf[RecordT]
+    val leftDom = state.arena.getDom(left)
+    val rightDom = state.arena.getDom(right)
+    val leftTuple = state.arena.getHas(left).head
+    val rightTuple = state.arena.getHas(right).head
+    val leftElems = state.arena.getHas(leftTuple)
+    val rightElems = state.arena.getHas(rightTuple)
+    // the intersection of the keys, as we can assume that the domains are equal
+    val commonKeys = leftType.fields.keySet.intersect(rightType.fields.keySet)
+    var newState = state
+    def keyEq(key: String): TlaEx = {
+      val leftIndex = leftType.fields.keySet.toList.indexOf(key)
+      val rightIndex = rightType.fields.keySet.toList.indexOf(key)
+      val leftElem = leftElems(leftIndex)
+      val rightElem = rightElems(rightIndex)
+      newState = cacheOneEqConstraint(newState, leftElem, rightElem)
+      val (newArena, keyCell) = rewriter.strValueCache.getOrCreate(newState.arena, key)
+      newState = newState.setArena(newArena)
+      tla.or(tla.notin(keyCell, leftDom), safeEq(leftElem, rightElem))
+    }
+
+    newState = cacheOneEqConstraint(newState, leftDom, rightDom)
+
+    val eqs = commonKeys.toList map keyEq
+    val cons =
+      if (eqs.isEmpty)
+        safeEq(leftDom, rightDom)
+      else
+        tla.and(safeEq(leftDom, rightDom) +: eqs :_*)
+
+    rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(left, right), cons))
+    eqCache.put(left, right, EqCache.EqEntry())
+
+    // restore the original expression and theory
+    rewriter.coerce(newState.setRex(state.ex), state.theory)
+  }
+
+  private def mkTupleEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {
+    val leftType = left.cellType.asInstanceOf[TupleT]
+    val rightType = right.cellType.asInstanceOf[TupleT]
+    if (!leftType.comparableWith(rightType)) {
+      state
+    } else {
+      var newState = state
+
+      def elemEq(lelem: ArenaCell, relem: ArenaCell): TlaEx = {
+        newState = cacheOneEqConstraint(newState, lelem, relem)
+        safeEq(lelem, relem)
+      }
+
+      val leftElems = state.arena.getHas(left)
+      val rightElems = state.arena.getHas(right)
+
+      val tupleEq = tla.and(leftElems.zip(rightElems).map(p => elemEq(p._1, p._2)) :_*)
+      rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(left, right), tupleEq))
+      eqCache.put(left, right, EqCache.EqEntry())
+
+      // restore the original expression and theory
+      rewriter.coerce(newState.setRex(state.ex), state.theory)
+    }
   }
 }

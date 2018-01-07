@@ -19,15 +19,7 @@ class TestSymbStateRewriterTuple extends RewriterBase {
         assert(CellTheory().hasConst(name))
         assert(solverContext.sat())
         val cell = nextState.arena.findCellByName(name)
-        cell.cellType match {
-          case TupleT(List(IntT(), BoolT(), FinSetT(IntT()))) =>
-            () // OK
-
-            // we check the actual contents in the later tests that access elements
-
-          case _ =>
-            fail("Unexpected type")
-        }
+        assert(TupleT(List(IntT(), BoolT(), FinSetT(IntT()))) == cell.cellType)
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -76,15 +68,7 @@ class TestSymbStateRewriterTuple extends RewriterBase {
         assert(CellTheory().hasConst(name))
         assert(solverContext.sat())
         val cell = nextState.arena.findCellByName(name)
-        cell.cellType match {
-          case FinSetT(TupleT(List(IntT(), BoolT()))) =>
-            () // OK
-
-          // we check the actual contents in the later tests that access elements
-
-          case _ =>
-            fail("Unexpected type: " + cell.cellType)
-        }
+        assert(FinSetT(TupleT(List(IntT(), BoolT()))) == cell.cellType)
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -118,4 +102,25 @@ class TestSymbStateRewriterTuple extends RewriterBase {
         () // OK
     }
   }
+
+  test("""SE-TUPLE-EQ: <<2, FALSE>> /= <<2, TRUE>> ~~> $C$k""") {
+    val tuple1 = TlaFunOper.mkTuple(tla.int(2), tla.bool(false))
+    val tuple2 = TlaFunOper.mkTuple(tla.int(2), tla.bool(true))
+    val eq = tla.neql(tuple1, tuple2)
+
+    val rewriter = new SymbStateRewriter(solverContext)
+    val state = new SymbState(eq, BoolTheory(), arena, new Binding)
+    assertTlaExAndRestore(rewriter, state)
+  }
+
+  test("""SE-TUPLE-EQ: <<2, FALSE>> = <<2, FALSE>> ~~> $C$k""") {
+    val tuple1 = TlaFunOper.mkTuple(tla.int(2), tla.bool(false))
+    val tuple2 = TlaFunOper.mkTuple(tla.int(2), tla.bool(false))
+    val eq = tla.eql(tuple1, tuple2)
+
+    val rewriter = new SymbStateRewriter(solverContext)
+    val state = new SymbState(eq, BoolTheory(), arena, new Binding)
+    assertTlaExAndRestore(rewriter, state)
+  }
+
 }
