@@ -1,8 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStoreImpl
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaFunOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.plugins.Identifier
 import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
@@ -476,4 +478,28 @@ class TestSymbStateRewriterFun extends RewriterBase {
         fail("Unexpected rewriting result")
     }
   }
+
+  test("""fun in a set: \E x \in {[y \in BOOLEAN |-> ~y]}: x[FALSE]""") {
+    // this test was failing in the buggy implementation with PICK .. FROM and FUN-MERGE
+    val fun1 = tla.funDef(tla.not(tla.name("y")), tla.name("y"), ValEx(TlaBoolSet))
+    val exists = tla.exists(tla.name("x"),
+                            tla.enumSet(fun1),
+                            tla.appFun(NameEx("x"), tla.bool(false)))
+
+    val rewriter = new SymbStateRewriter(solverContext)
+    val fex = new FreeExistentialsStoreImpl()
+    Identifier.identify(exists)
+    fex.store.add(exists.ID)
+    rewriter.freeExistentialsStore = fex
+
+    val state = new SymbState(exists, BoolTheory(), arena, new Binding)
+    val nextState = rewriter.rewriteUntilDone(state)
+    assertTlaExAndRestore(rewriter, nextState)
+    // check failure predicates
+    solverContext.assertGroundExpr(nextState.ex)
+    val failure = tla.or(nextState.arena.findCellsByType(FailPredT()).map(_.toNameEx) :_*)
+    solverContext.assertGroundExpr(failure)
+    assert(!solverContext.sat())
+  }
+
 }
