@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.lir
 
+import at.forsyte.apalache.tla.lir.control.LetInOper
 import at.forsyte.apalache.tla.lir.db.HashMapDB
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.plugins.{Identifier, UniqueDB}
@@ -78,14 +79,67 @@ object OperatorHandler {
     }
   }
 
+  protected def pfx( p_prefix : String, p_s : String ) : String = "%s_%s".format( p_prefix, p_s )
+
+  protected def renameParam( p_prefix : String )( p_param : FormalParam ) : FormalParam = {
+    p_param match {
+      case SimpleFormalParam( name ) => SimpleFormalParam( pfx( p_prefix, name ) )
+      case OperFormalParam( name, arity ) => OperFormalParam( pfx( p_prefix, name ), arity )
+    }
+  }
+
   def uniqueVarRename( p_decls: Seq[TlaDecl] ) : Seq[TlaDecl] = {
-    def renameParam( p_prefix : String )( p_param : FormalParam ) : FormalParam = {
-      p_param match {
-        case SimpleFormalParam( name ) => SimpleFormalParam( "%s_%s".format( p_prefix, name ) )
-        case OperFormalParam( name, arity ) => OperFormalParam( "%s_%s".format( p_prefix, name ), arity )
+    def lambda( p_boundVars : Set[String], p_prefix : String )( p_ex : TlaEx ) : TlaEx = {
+      p_ex match {
+        case NameEx( name ) =>
+          if ( p_boundVars.contains( name ) ) NameEx( pfx( p_prefix, name ) )
+          else p_ex
+        case OperEx( op : LetInOper, body ) =>
+          val newdefs = op.defs.map(
+            decl => decl match {
+              case TlaOperDecl( name, params, declBody ) => TlaOperDecl(
+                name,
+                params.map( renameParam( p_prefix ) ),
+                lambda( p_boundVars ++ params.map( _.name ), p_prefix )( declBody )
+              )
+              case _ => decl
+            }
+          )
+          OperEx(
+            new LetInOper( newdefs ),
+            lambda( p_boundVars, p_prefix )( body )
+          )
+        // assuming bounded quantification!
+        case OperEx( oper, NameEx( varname ), set, body )
+          if oper == TlaBoolOper.exists || oper == TlaBoolOper.forall =>
+          OperEx(
+            oper,
+            NameEx( pfx( p_prefix, varname ) ),
+            lambda( p_boundVars, p_prefix )( set ),
+            lambda( p_boundVars + varname, p_prefix )( body )
+          )
+        case OperEx( oper, args@_* ) => OperEx( oper, args.map( lambda( p_boundVars, p_prefix ) ):_* )
+        case _ => p_ex
       }
     }
 
+    p_decls.map(
+      decl => decl match {
+        case TlaOperDecl( name, params, body ) =>
+          TlaOperDecl( name, params.map( renameParam( name ) ) , lambda( params.map( _.name).toSet, name )( body ) )
+        case _ => decl
+      }
+    )
+
+  }
+
+  def renameAll( p_decls: Seq[TlaDecl] ) : Seq[TlaDecl] = {
+
+
+    /**
+      * Note: 5.1.2018 : Nested quantifiers produce names such as
+      * prefx_prefix_..._prefix_name, think of a workaround
+      * */
     def boundVarsRule(p_prefix : String, p_argNames : List[String])( p_ex : TlaEx ) : TlaEx = {
       p_ex match{
         case OperEx(
@@ -100,6 +154,14 @@ object OperatorHandler {
             replaceWithRule( set, boundVarsRule( p_prefix, p_argNames ) ),
             replaceWithRule( body, boundVarsRule( p_prefix, varname :: p_argNames ) )
           )
+        case OperEx( oper: LetInOper, body ) => {
+          val newdecls = uniqueVarRename( oper.defs ).map(_.asInstanceOf[TlaOperDecl]).toList
+
+          OperEx(
+            new LetInOper( newdecls ),
+            replaceWithRule( body, boundVarsRule( p_prefix, p_argNames ) )
+          )
+        }
         case NameEx( name ) =>
           NameEx( if (p_argNames.contains( name) ) "%s_%s".format( p_prefix, name ) else name )
         case _ => p_ex
