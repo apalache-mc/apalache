@@ -13,9 +13,12 @@ import at.forsyte.apalache.tla.lir.convenience.tla
   *
   * TODO: check for empty sets, statically and dynamically
   *
+  * @param rewriter      a state rewriter
+  * @param failWhenEmpty issue a failure predicate that is set to true when a given set is empty
+  *
   * @author Igor Konnov
   */
-class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
+class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = false) {
   /**
     * Determine the general type of the set elements and pick an element of this type.
     *
@@ -449,8 +452,8 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
           throw new RewriterException("Unexpected type for a set of functions: " + funSetCell.cellType)
       }
 
-      val allDoms = Set(arena.getHas(funSetCell).map(c => arena.getDom(c)) :_*).toList
-      val allCdms = Set(arena.getHas(funSetCell).map(e => arena.getCdm(e)) :_*).toList
+      val allDoms = Set(arena.getHas(funSetCell).map(c => arena.getDom(c)): _*).toList
+      val allCdms = Set(arena.getHas(funSetCell).map(e => arena.getCdm(e)): _*).toList
       val unionOfAllDoms = tla.union(tla.enumSet(allDoms.map(_.toNameEx): _*))
       val domState = rewriter.rewriteUntilDone(state.setRex(unionOfAllDoms))
       val unionOfAllCdms = tla.union(tla.enumSet(allCdms.map(_.toNameEx): _*))
@@ -468,21 +471,28 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter) {
   // wrap an SMT constraint with a failure case
   private def decorateWithFailure(found: TlaEx, set: ArenaCell, setElems: Seq[ArenaCell],
                                   result: ArenaCell, failure: ArenaCell): TlaEx = {
-    rewriter.solverContext.log("; decorate with failure, set: %s, result: %s".format(set, result))
-
-    def mkNotIn(domElem: ArenaCell): TlaEx = {
-      tla.not(tla.in(domElem, set))
-    }
-
-    val setEmptyInRuntime = tla.and(setElems.map(mkNotIn): _*)
-    if (setElems.isEmpty) {
-      failure // statically flag a failure
+    if (!failWhenEmpty) {
+      // Do nothing, e.g., when \E x \in S is translated to S /= {} /\ x = PICK ... FROM S,
+      // the pick operator should not issue any errors, as the set emptiness is resolved earlier.
+      //
+      tla.and(found, tla.not(failure))
     } else {
-      // 1. The condition 'found' should hold true, when there is no failure.
-      // 2. If there is a failure, no guarantess are given.
-      // 3. A failure happens if and only if the set is empty at runtime.
-      tla.or(tla.and(tla.not(failure), found),
-        tla.and(failure, setEmptyInRuntime))
+      rewriter.solverContext.log("; decorate with failure, set: %s, result: %s".format(set, result))
+
+      def mkNotIn(domElem: ArenaCell): TlaEx = {
+        tla.not(tla.in(domElem, set))
+      }
+
+      val setEmptyInRuntime = tla.and(setElems.map(mkNotIn): _*)
+      if (setElems.isEmpty) {
+        failure // statically flag a failure
+      } else {
+        // 1. The condition 'found' should hold true, when there is no failure.
+        // 2. If there is a failure, no guarantess are given.
+        // 3. A failure happens if and only if the set is empty at runtime.
+        tla.or(tla.and(tla.not(failure), found),
+          tla.and(failure, setEmptyInRuntime))
+      }
     }
   }
 }
