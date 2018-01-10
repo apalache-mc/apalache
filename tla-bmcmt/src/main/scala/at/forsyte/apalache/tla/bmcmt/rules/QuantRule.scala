@@ -12,7 +12,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
   * @author Igor Konnov
   */
 class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val pickRule = new PickFromAndFunMerge(rewriter)
+  private val pickRule = new PickFromAndFunMerge(rewriter, failWhenEmpty = false)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
