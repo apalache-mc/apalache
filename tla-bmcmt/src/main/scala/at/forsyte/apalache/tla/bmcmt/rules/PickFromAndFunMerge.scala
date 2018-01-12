@@ -471,19 +471,19 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
   // wrap an SMT constraint with a failure case
   private def decorateWithFailure(found: TlaEx, set: ArenaCell, setElems: Seq[ArenaCell],
                                   result: ArenaCell, failure: ArenaCell): TlaEx = {
+    def mkNotIn(domElem: ArenaCell): TlaEx = {
+      tla.not(tla.in(domElem, set))
+    }
+    val setEmptyInRuntime =
+      if (setElems.isEmpty) tla.bool(true) else tla.and(setElems.map(mkNotIn): _*)
+
     if (!failWhenEmpty) {
       // Do nothing, e.g., when \E x \in S is translated to S /= {} /\ x = PICK ... FROM S,
-      // the pick operator should not issue any errors, as the set emptiness is resolved earlier.
-      //
-      tla.and(found, tla.not(failure))
+      // the pick operator should not issue any errors, as the set emptiness is resolved by other means.
+      tla.or(tla.and(tla.or(found, setEmptyInRuntime), tla.not(failure)))
     } else {
       rewriter.solverContext.log("; decorate with failure, set: %s, result: %s".format(set, result))
 
-      def mkNotIn(domElem: ArenaCell): TlaEx = {
-        tla.not(tla.in(domElem, set))
-      }
-
-      val setEmptyInRuntime = tla.and(setElems.map(mkNotIn): _*)
       if (setElems.isEmpty) {
         failure // statically flag a failure
       } else {
