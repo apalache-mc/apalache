@@ -149,6 +149,9 @@ class SimpleSkolemization @Inject()(val frexStore: FreeExistentialsStoreImpl) {
       case OperEx(TlaSetOper.supseteq, left, right) =>
         OperEx(if (neg) TlaSetOper.subsetProper else TlaSetOper.supseteq, left, right)
 
+      case OperEx(TlaOper.label, subex, args @ _*) =>
+        OperEx(TlaOper.label, nnf(neg, subex) +: args :_*)
+
       case _ =>
         OperEx(TlaBoolOper.not, ex)
     }
