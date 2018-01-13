@@ -8,15 +8,12 @@ package oper {
   import at.forsyte.apalache.tla.lir.control.TlaControlOper
 
   /**
-    * The levels of the operators: State (reasons about current state), Action (reasons about a pair of states),
-    * and Temporal (reasons about executions).
-    * *
-    *
-    * XXX: We are not using levels any more, since they seem to be type information, which needs static analysis.
-    * In the future, we will compute levels automatically.
+    * The levels of the operators as defined in the TLA+ book:
+    * Constant (contains only primitive operations and constants), State (reasons about current state),
+    * Action (reasons about a pair of states), and Temporal (reasons about executions).
     */
   object Level extends Enumeration {
-    val State, Action, Temporal = Value
+    val Constant, State, Action, Temporal = Value
   }
 
   /**
