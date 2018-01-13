@@ -11,7 +11,8 @@ import at.forsyte.apalache.tla.lir.convenience.tla
   * Importantly, the user picks the type tau somewhat arbitrary, and a new cell is assigned type tau.
   * So, it is up to the user to ensure that the cells in the set have types compatible with tau.
   *
-  * TODO: check for empty sets, statically and dynamically
+  * Currently, we allow a pick to fail and return an arbitrary value (of given sort).
+  * By default, failWhenEmpty = false, as the mode failWhenEmpty = true produces too many false positives...
   *
   * @param rewriter      a state rewriter
   * @param failWhenEmpty issue a failure predicate that is set to true when a given set is empty

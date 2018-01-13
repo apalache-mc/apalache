@@ -144,9 +144,28 @@ class BfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
     rewriter.push()
     // assume the constraint constructed by this transition
     solverContext.assertGroundExpr(nextState.ex)
-    // check that no failure predicate evaluates to true
+    // the following test does not work as expected
+//    checkForFailures(nextState)
+    if (!solverContext.sat()) {
+      // the current symbolic state is not feasible
+      logger.debug("Transition is not feasible. Skipped.")
+      rewriter.pop()
+      rewriter.pop()
+      None
+    } else {
+      rewriter.pop()
+      Some(nextState)
+    }
+  }
+
+  private def checkForFailures(state: SymbState): Unit = {
+    // FIXME: detecting failing operations is much harder than I thought
+    //        e.g., f[a] should be reported as a failure, when (a \notin DOMAIN f) holds,
+    //              but (a \notin DOMAIN f \/ f[a]) should not
+    //
+    // Thus, this test reports too many false positives...
     rewriter.push()
-    val failPreds = nextState.arena.findCellsByType(FailPredT())
+    val failPreds = state.arena.findCellsByType(FailPredT())
     solverContext.assertGroundExpr(tla.or(failPreds.map(_.toNameEx): _*))
     if (solverContext.sat()) {
       logger.error("The specification may produce a runtime error. Check counterexample.")
@@ -157,19 +176,8 @@ class BfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
 
       dumpCounterexample()
       throw new CancelSearchException(Outcome.RuntimeError)
-    } else {
-      rewriter.pop()
-      if (!solverContext.sat()) {
-        // the current symbolic state is not feasible
-        logger.debug("Transition is not feasible. Skipped.")
-        rewriter.pop()
-        rewriter.pop()
-        None
-      } else {
-        rewriter.pop()
-        Some(nextState)
-      }
     }
+    rewriter.pop()
   }
 
   private def checkForDeadlocks(stepNo: Int, state: SymbState, nextStates: List[SymbState]): Unit = {
