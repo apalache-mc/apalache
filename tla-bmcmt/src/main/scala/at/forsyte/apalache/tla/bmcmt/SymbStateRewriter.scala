@@ -5,11 +5,12 @@ import at.forsyte.apalache.tla.bmcmt.analyses.{FreeExistentialsStore, FreeExiste
 import at.forsyte.apalache.tla.bmcmt.rules._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.AnyArity
+import at.forsyte.apalache.tla.lir.oper.{AnyArity, TlaOper}
 import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaIntSet}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 
 object SymbStateRewriter {
+
   sealed abstract class RewritingResult
 
   case class Done(symbState: SymbState) extends RewritingResult
@@ -17,6 +18,7 @@ object SymbStateRewriter {
   case class Continue(symbState: SymbState) extends RewritingResult
 
   case class NoRule() extends RewritingResult
+
 }
 
 /**
@@ -66,6 +68,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
 
   /**
     * Get the current context level, that is the difference between the number of pushes and pops made so far.
+    *
     * @return the current level, always non-negative.
     */
   def contextLevel: Int = level
@@ -184,14 +187,19 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
 
     // tuples and records
     key(tla.tuple(tla.name("x"), tla.int(2)))
-    -> List(new TupleCtorRule(this)),
+      -> List(new TupleCtorRule(this)),
     key(tla.enumFun(tla.str("a"), tla.int(2)))
-    -> List(new RecCtorRule(this))
-  )///// ADD YOUR RULES ABOVE
+      -> List(new RecCtorRule(this)),
+
+    // misc
+    key(OperEx(TlaOper.label, tla.str("a"), tla.int(1)))
+      -> List(new LabelRule(this))
+  ) ///// ADD YOUR RULES ABOVE
 
 
   /**
     * Rewrite a symbolic expression by applying at most one rewriting rule.
+    *
     * @param state a symbolic state
     * @return the new symbolic state obtained by rewriting state
     */
@@ -227,20 +235,20 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
 
         potentialRules.find(r => r.isApplicable(state)) match {
           case Some(r) =>
-//            try {
-              val nextState = r.logOnReturn(solverContext, r.apply(r.logOnEntry(solverContext, state)))
-              if (nextState.arena.cellCount < state.arena.cellCount) {
-                throw new RewriterException("Implementation error in rule %s: the number of cells decreased from %d to %d"
-                  .format(r.getClass.getSimpleName, state.arena.cellCount, nextState.arena.cellCount))
-              }
-              Continue(nextState)
-//            } catch {
-//              case ub: UndefinedBehaviorError if state.theory == BoolTheory() =>
-//                // replace with an unrestricted Boolean
-//              solverContext.log("; Rolled back undefined behavior, #cells in arena: " + state.arena.cellCount)
-//                // bugfix: use fresh arena
-//              Done(mkNondetBool(state.setArena(ub.arena)))
-//            }
+            //            try {
+            val nextState = r.logOnReturn(solverContext, r.apply(r.logOnEntry(solverContext, state)))
+            if (nextState.arena.cellCount < state.arena.cellCount) {
+              throw new RewriterException("Implementation error in rule %s: the number of cells decreased from %d to %d"
+                .format(r.getClass.getSimpleName, state.arena.cellCount, nextState.arena.cellCount))
+            }
+            Continue(nextState)
+          //            } catch {
+          //              case ub: UndefinedBehaviorError if state.theory == BoolTheory() =>
+          //                // replace with an unrestricted Boolean
+          //              solverContext.log("; Rolled back undefined behavior, #cells in arena: " + state.arena.cellCount)
+          //                // bugfix: use fresh arena
+          //              Done(mkNondetBool(state.setArena(ub.arena)))
+          //            }
 
           case None =>
             NoRule()
@@ -281,6 +289,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
         }
       }
     }
+
     doRecursive(0, state)
   }
 
@@ -329,7 +338,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
   /**
     * Coerce the state expression from the current theory to another theory.
     *
-    * @param state a symbolic state
+    * @param state        a symbolic state
     * @param targetTheory a target theory
     * @return a new symbolic state, if possible
     */
@@ -399,6 +408,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
 
   /**
     * Compute a key of a TLA+ expression to quickly decide on a short sequence of rules to try.
+    *
     * @param ex a TLA+ expression
     * @return a string that gives us an equivalence class for similar operations (see the code)
     */
