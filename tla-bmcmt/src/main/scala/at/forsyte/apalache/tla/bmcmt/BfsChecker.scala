@@ -149,8 +149,12 @@ class BfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
     val failPreds = nextState.arena.findCellsByType(FailPredT())
     solverContext.assertGroundExpr(tla.or(failPreds.map(_.toNameEx): _*))
     if (solverContext.sat()) {
-      // TODO: add diagnostic info
       logger.error("The specification may produce a runtime error. Check counterexample.")
+      val activeFailures =
+        failPreds.filter(fp => solverContext.evalGroundExpr(fp.toNameEx) == tla.bool(true))
+
+      logger.error(s"The following failures are possible: %s.".format(activeFailures.mkString(", ")))
+
       dumpCounterexample()
       throw new CancelSearchException(Outcome.RuntimeError)
     } else {

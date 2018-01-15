@@ -28,4 +28,13 @@ class ArenaCell(val id: Int, val cellType: CellT) extends Comparable[ArenaCell] 
   override def compareTo(t: ArenaCell): Int = {
     id.compareTo(t.id)
   }
+
+  override def hashCode(): Int = id.hashCode()
+
+  override def equals(o: scala.Any): Boolean =
+    if (!o.isInstanceOf[ArenaCell]) {
+      false
+    } else {
+      id.equals(o.asInstanceOf[ArenaCell].id)
+    }
 }

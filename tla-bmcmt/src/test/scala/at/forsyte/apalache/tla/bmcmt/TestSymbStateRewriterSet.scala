@@ -1117,4 +1117,16 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
+  test("""SE-UNION: UNION {{1, 2}, {2,3}} = {1, 2, 3}""") {
+    val setOf12 = tla.enumSet(tla.int(1), tla.int(2))
+    val setOf23 = tla.enumSet(tla.int(3), tla.int(2))
+    val setOf123 = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
+    // This may seem weird, but since we don't know the type of {},
+    // it should be equal to the empty set of ints.
+    val eq = OperEx(TlaOper.eq, tla.union(tla.enumSet(setOf12, setOf23)), setOf123)
+    val rewriter = new SymbStateRewriter(solverContext)
+    val state = new SymbState(eq, BoolTheory(), arena, new Binding)
+    assertTlaExAndRestore(rewriter, state)
+  }
+
 }

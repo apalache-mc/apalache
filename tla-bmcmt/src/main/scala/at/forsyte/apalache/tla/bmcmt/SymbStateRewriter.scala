@@ -141,6 +141,8 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
       -> List(new SetMapAndFunCtorRule(this)),
     key(tla.powSet(tla.name("X")))
       -> List(new PowSetCtorRule(this)),
+    key(tla.union(tla.enumSet()))
+      -> List(new SetUnionRule(this)),
     key(tla.dotdot(tla.int(1), tla.int(10)))
       -> List(new IntDotDotRule(this)),
 

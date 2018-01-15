@@ -73,7 +73,12 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       solverContext.evalGroundExpr(cell.toNameEx)
 
     case ConstT() =>
-      ValEx(TlaStr(rewriter.strValueCache.findKey(cell).get))
+      val found = rewriter.strValueCache.findKey(cell)
+      if (found.isDefined) {
+        ValEx(TlaStr(found.get))
+      } else {
+        ValEx(TlaStr(cell.toString)) // a value that was assigned by the solver, and not created by us
+      }
 
     case UnknownT() =>
       tla.appFun(NameEx("Unknown"), cell)
