@@ -1,5 +1,6 @@
-package at.forsyte.apalache.tla.bmcmt
+package at.forsyte.apalache.tla.bmcmt.caches
 
+import at.forsyte.apalache.tla.bmcmt.SolverContext
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, ValEx}

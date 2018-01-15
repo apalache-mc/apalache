@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter._
-import at.forsyte.apalache.tla.bmcmt.analyses.{FreeExistentialsStore, FreeExistentialsStoreImpl}
+import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGrade, ExprGradeStoreImpl, FreeExistentialsStore, FreeExistentialsStoreImpl}
+import at.forsyte.apalache.tla.bmcmt.caches.{ExprCache, IntValueCache, RecordDomainCache, StrValueCache}
 import at.forsyte.apalache.tla.bmcmt.rules._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -55,6 +56,12 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
     * A cache of record domains.
     */
   val recordDomainCache = new RecordDomainCache(solverContext, strValueCache)
+
+  /**
+    * An expression cache that is initialized by grade storage, by default, empty.
+    * Set it to a new object, if you want to use a grade storage.
+    */
+  var exprCache = new ExprCache(new ExprGradeStoreImpl())
 
   // bound the number of rewriting steps applied to the same rule
   private val RECURSION_LIMIT: Int = 10000
@@ -290,7 +297,17 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
       }
     }
 
-    doRecursive(0, state)
+    // use cache or compute a new expression
+    exprCache.get(state.ex) match {
+      case Some(eg: (TlaEx, ExprGrade.Value)) =>
+        solverContext.log(s"; Using cached value ${eg._1} for expression ${state.ex}")
+        coerce(state.setRex(eg._1), state.theory)
+
+      case None =>
+        val nextState = doRecursive(0, state)
+        exprCache.put(state.ex, nextState.ex) // the grade is not important
+        nextState
+    }
   }
 
   /**
@@ -359,6 +376,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
     strValueCache.push()
     recordDomainCache.push()
     lazyEq.push()
+    exprCache.push()
     coercion.push()
     solverContext.push()
   }
@@ -373,6 +391,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
     strValueCache.pop()
     recordDomainCache.pop()
     lazyEq.pop()
+    exprCache.pop()
     solverContext.pop()
     coercion.pop()
     level -= 1
@@ -389,6 +408,7 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
     strValueCache.pop(n)
     recordDomainCache.pop(n)
     lazyEq.pop(n)
+    exprCache.pop(n)
     solverContext.pop(n)
     coercion.pop(n)
     level -= n

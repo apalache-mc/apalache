@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.passes
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
 import at.forsyte.apalache.tla.assignments.SpecWithTransitions
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStore
+import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FreeExistentialsStore}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -15,6 +15,7 @@ import com.typesafe.scalalogging.LazyLogging
   */
 class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
                                         freeExistentialsStore: FreeExistentialsStore,
+                                        exprGradeStore: ExprGradeStore,
                                         @Named("AfterChecker") nextPass: Pass)
       extends BoundedCheckerPass with LazyLogging {
 
@@ -45,7 +46,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
       if (search == "dfs") {
         new DfsChecker(freeExistentialsStore, input, stepsBound, debug)
       } else {
-        new BfsChecker(freeExistentialsStore, input, stepsBound, debug)
+        new BfsChecker(freeExistentialsStore, exprGradeStore, input, stepsBound, debug)
       }
     val outcome = checker.run()
     logger.info("The outcome is: " + outcome)

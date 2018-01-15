@@ -2,7 +2,8 @@ package at.forsyte.apalache.tla.bmcmt
 
 import java.io.{FileWriter, PrintWriter}
 
-import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStore
+import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FreeExistentialsStore}
+import at.forsyte.apalache.tla.bmcmt.caches.ExprCache
 import at.forsyte.apalache.tla.bmcmt.types.FailPredT
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -15,7 +16,9 @@ import com.typesafe.scalalogging.LazyLogging
   *
   * @author Igor Konnov
   */
-class BfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
+class BfsChecker(frexStore: FreeExistentialsStore,
+                 exprGradeStore: ExprGradeStore,
+                 checkerInput: CheckerInput,
                  stepsBound: Int, debug: Boolean = false) extends Checker with LazyLogging {
 
   import Checker._
@@ -29,6 +32,7 @@ class BfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
   private val solverContext: SolverContext = new Z3SolverContext(debug)
   private val rewriter = new SymbStateRewriter(solverContext)
   rewriter.freeExistentialsStore = frexStore
+  rewriter.exprCache = new ExprCache(exprGradeStore)
 
   /**
     * Check all executions of a TLA+ specification up to a bounded number of steps.
@@ -64,6 +68,7 @@ class BfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
         case tran :: tail =>
           val erased = state.setBinding(forgetPrimed(state.binding))
           val nextState = applyTransition(stepNo, erased, tran)
+          rewriter.exprCache.disposeActionLevel() // leave only constants
           if (nextState.isDefined) {
             nextState.get +: computeAllEnabled(nextState.get, tail)
           } else {
@@ -145,7 +150,7 @@ class BfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
     // assume the constraint constructed by this transition
     solverContext.assertGroundExpr(nextState.ex)
     // the following test does not work as expected
-//    checkForFailures(nextState)
+    //    checkForFailures(nextState)
     if (!solverContext.sat()) {
       // the current symbolic state is not feasible
       logger.debug("Transition is not feasible. Skipped.")
