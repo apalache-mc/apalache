@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes._
 import at.forsyte.apalache.tla.assignments.passes.{AssignmentPass, AssignmentPassImpl}
-import at.forsyte.apalache.tla.bmcmt.analyses.{FreeExistentialsStore, FreeExistentialsStoreImpl}
+import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, ExprGradeStoreImpl, FreeExistentialsStore, FreeExistentialsStoreImpl}
 import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
 import com.google.inject.AbstractModule
 import com.google.inject.name.Names
@@ -19,7 +19,9 @@ class CheckerModule extends AbstractModule {
       .to(classOf[WriteablePassOptions])
     // stores
     bind(classOf[FreeExistentialsStore])
-        .to(classOf[FreeExistentialsStoreImpl])
+      .to(classOf[FreeExistentialsStoreImpl])
+    bind(classOf[ExprGradeStore])
+      .to(classOf[ExprGradeStoreImpl])
     // SanyParserPassImpl is the default implementation of SanyParserPass
     bind(classOf[SanyParserPass])
       .to(classOf[SanyParserPassImpl])
@@ -35,15 +37,21 @@ class CheckerModule extends AbstractModule {
       .to(classOf[AssignmentPass])
     // the next pass after AssignmentPass is SimpleSkolemizationPass
     bind(classOf[SimpleSkolemizationPass])
-        .to(classOf[SimpleSkolemizationPassImpl])
+      .to(classOf[SimpleSkolemizationPassImpl])
     bind(classOf[Pass])
       .annotatedWith(Names.named("AfterAssignment"))
       .to(classOf[SimpleSkolemizationPass])
-    // the next pass after SimpleSkolemizationPass is BoundedCheckerPass
+    // the next pass after SimpleSkolemizationPass is GradePass
+    bind(classOf[GradePass])
+      .to(classOf[GradePassImpl])
+    bind(classOf[Pass])
+      .annotatedWith(Names.named("AfterSkolem"))
+      .to(classOf[GradePass])
+    // the next pass after GradePass is BoundedCheckerPass
     bind(classOf[BoundedCheckerPass])
       .to(classOf[BoundedCheckerPassImpl])
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterSkolem"))
+      .annotatedWith(Names.named("AfterGrade"))
       .to(classOf[BoundedCheckerPass])
     // the final pass is TerminalPass
     bind(classOf[Pass])

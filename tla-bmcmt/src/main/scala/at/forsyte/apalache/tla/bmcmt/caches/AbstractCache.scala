@@ -1,4 +1,6 @@
-package at.forsyte.apalache.tla.bmcmt
+package at.forsyte.apalache.tla.bmcmt.caches
+
+import at.forsyte.apalache.tla.bmcmt.StackableContext
 
 /**
   * An abstract cache that implements StackableContext.

@@ -1,6 +1,7 @@
-package at.forsyte.apalache.tla.bmcmt
+package at.forsyte.apalache.tla.bmcmt.caches
 
-import at.forsyte.apalache.tla.bmcmt.EqCache._
+import at.forsyte.apalache.tla.bmcmt.caches.EqCache._
+import at.forsyte.apalache.tla.bmcmt.{ArenaCell, StackableContext}
 import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 
