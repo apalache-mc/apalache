@@ -293,19 +293,20 @@ class TestAssignments extends FunSuite with TestingPredefs {
 
     assert( strat.isDefined )
 
+    Seq()
     //    println( order.get.size )
     //      order.get.foreach( x => println( UniqueDB( x ).get ) )
 
-    assignmentSolver.getSymbNexts( cleaned.get, strat.get )
+//    assignmentSolver.getSymbNexts( cleaned.get, strat.get )
   }
 
-  ignore( "Test Paxos (simplified)" ){
+  test( "Test Paxos (simplified)" ){
 
     val symbNexts = testFromFile( "Paxos.tla" )
 
   }
 
-  test( "Test Paxos" ) {
+  ignore( "Test Paxos" ) {
 
     val symbNexts = testFromFile( "miniPaxos.tla" )
   }
