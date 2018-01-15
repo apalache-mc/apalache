@@ -24,7 +24,23 @@ package lir {
     * @param imports the names of imported modules
     * @param declarations all kinds of declarations
     */
-  class TlaModule(val name: String, val imports: Seq[String], val declarations: Seq[TlaDecl])
+  class TlaModule(val name: String, val imports: Seq[String], val declarations: Seq[TlaDecl]) {
+    def constDeclarations: Seq[TlaConstDecl] = {
+      declarations.collect { case d: TlaConstDecl => d }
+    }
+
+    def varDeclarations: Seq[TlaVarDecl] = {
+      declarations.collect { case d: TlaVarDecl => d }
+    }
+
+    def operDeclarations: Seq[TlaOperDecl] = {
+      declarations.collect { case d: TlaOperDecl => d}
+    }
+
+    def assumeDeclarations: Seq[TlaAssumeDecl] = {
+      declarations.collect { case d: TlaAssumeDecl => d}
+    }
+  }
 
   /** a constant as defined by CONSTANT */
   case class TlaConstDecl(name: String) extends TlaDecl{
