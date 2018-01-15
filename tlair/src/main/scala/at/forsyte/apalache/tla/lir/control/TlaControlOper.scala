@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.lir.control
 
+import at.forsyte.apalache.tla.lir.TlaOperDecl
 import at.forsyte.apalache.tla.lir.oper._
 
 /**
@@ -40,6 +41,16 @@ object TlaControlOper {
     override val name: String = "IF-THEN-ELSE"
     override val arity: OperArity = FixedArity(3)
     override val interpretation: Interpretation.Value = Interpretation.Predefined
+  }
+
+  /**
+    * An instance of a LET-IN operator. Let-in is a very special operator since it contains new declarations.
+    *
+    * @param defs new definitions by the operator
+    * @return a new instance
+    */
+  def letIn(defs: TlaOperDecl*): LetInOper = {
+    new LetInOper(List(defs :_*))
   }
 }
 
