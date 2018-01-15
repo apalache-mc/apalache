@@ -2,9 +2,8 @@ package at.forsyte.apalache.tla.lir
 
 
 import at.forsyte.apalache.tla.lir.oper.FixedArity
-import at.forsyte.apalache.tla.lir.plugins.Identifier
+import at.forsyte.apalache.tla.lir.plugins.{Identifier, UniqueDB}
 import at.forsyte.apalache.tla.lir.{Builder => bd, OperatorHandler => oh}
-
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -150,6 +149,52 @@ class TestOperatorHandler extends FunSuite with TestingPredefs {
     assert( original1 identical ex )
     assert( original2 identical cup )
 
+
+  }
+
+  test( "Test SourceDB with uniqueVarRename" ){
+    UniqueDB.clear()
+
+    val sdb = new SourceDB()
+
+    val bodyA = bd.exists( n_x, n_S, bd.exists( n_y, n_T, bd.eql( bd.plus( n_x, n_y ), bd.plus( n_a, n_b ) ) ) )
+    val opA = bd.declOp( "A", bodyA, "a", "b")
+    Identifier.identify( opA )
+
+    val newA = OperatorHandler.uniqueVarRename( Seq(opA), sdb ).head.asInstanceOf[TlaOperDecl]
+    val newBodyA = newA.body
+
+    assert( newBodyA.valid )
+
+    val originalHopefully = UniqueDB apply sdb.traceBack( newBodyA.ID )
+
+
+    def leafJudge( p_ex : TlaEx) : Boolean = {
+      p_ex match {
+        case ex : OperEx => false
+        case _ => true
+      }
+    }
+
+    def leafFun( p_ex : TlaEx ) : Boolean = {
+      p_ex match {
+        case NameEx( name ) if name.startsWith( "A_" ) => {
+          val anc = sdb.traceBack( p_ex.ID )
+          UniqueDB.contains( anc ) && UniqueDB.get(anc) == NameEx( name.substring( 2 ) )
+        }
+        case _ => true
+      }
+    }
+
+    def parentFun( p_ex : TlaEx, p_childVals : Seq[Boolean] ) : Boolean = {
+      val allChildren = p_childVals.forall( x => x )
+      allChildren
+    }
+    def default = true
+
+    val allOK = SpecHandler.bottomUpVal[Boolean]( newBodyA, leafJudge, leafFun, parentFun, default )
+
+    assert( allOK )
 
   }
 }

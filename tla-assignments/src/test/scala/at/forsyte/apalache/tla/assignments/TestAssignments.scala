@@ -232,7 +232,7 @@ class TestAssignments extends FunSuite with TestingPredefs {
 
   }
 
-  test( "Test bound variable name clashes"){
+  ignore( "Test bound variable name clashes"){
     /**
       *
       * Bug: The operator subsitution can clash with e.g. quantified variables of the same name.
@@ -263,21 +263,25 @@ class TestAssignments extends FunSuite with TestingPredefs {
 
   }
 
-  test( "Test Paxos (simplified)" ){
-
-    val file = "Paxos.tla"
-
-    UniqueDB.clear() // Igor: why do you need UniqueDB here?
+  def testFromFile( p_file: String, p_next:String = "Next" ) : Seq[assignmentSolver.SymbNext] = {
+    UniqueDB.clear()
     val converter = new Converter()
 
 
-    val declsOld = declarationsFromFile(testFolderPath + file)
-    val decls = OperatorHandler.uniqueVarRename( declsOld )
+    val declsOld = declarationsFromFile(testFolderPath + p_file)
+    val declsRenamed = OperatorHandler.uniqueVarRename( declsOld )
+    val decls = declsRenamed.map(
+      decl => decl match {
+        case TlaOperDecl( name, params, body ) =>
+          TlaOperDecl( name, params, converter.explicitLetIn( body ) )
+        case _ => decl
+      }
+    )
+
     val vars = converter.getVars( decls:_*)
-    val nextBody = findBodyOf( "Next", decls:_* )
+    val nextBody = findBodyOf( p_next, decls:_* )
 
     assert( ! nextBody.isNull )
-
 
     val cleaned = converter( nextBody, decls:_* )
     assert( nextBody.ID.valid )
@@ -292,8 +296,24 @@ class TestAssignments extends FunSuite with TestingPredefs {
     //    println( order.get.size )
     //      order.get.foreach( x => println( UniqueDB( x ).get ) )
 
-    val symbNexts = assignmentSolver.getSymbNexts( cleaned.get, strat.get )
+    assignmentSolver.getSymbNexts( cleaned.get, strat.get )
+  }
 
+  ignore( "Test Paxos (simplified)" ){
+
+    val symbNexts = testFromFile( "Paxos.tla" )
+
+  }
+
+  test( "Test Paxos" ) {
+
+    val symbNexts = testFromFile( "miniPaxos.tla" )
+  }
+
+  ignore("Test ITE_CASE") {
+
+
+    val symbNexts = testFromFile( "ITE_CASE.tla" )
 
   }
 

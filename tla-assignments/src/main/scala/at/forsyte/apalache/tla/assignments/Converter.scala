@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions._
+import at.forsyte.apalache.tla.lir.control.{LetInOper, TlaControlOper}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.plugins.Identifier
 import com.google.inject.Singleton
@@ -78,6 +79,43 @@ class Converter {
     OperatorHandler.replaceWithRule( p_ex, exFun, srcDB )
   }
 
+  def iteToCase(
+                 p_ex : TlaEx
+               )(
+                 implicit srcDB : SourceDB = m_srcDB
+               ) : TlaEx = {
+    def exFun( ex: TlaEx ) : TlaEx = {
+      ex match {
+        case OperEx( TlaControlOper.ifThenElse, condEx, thenEx, elseEx ) =>
+          OperEx( TlaControlOper.caseWithOther, elseEx, condEx, thenEx )
+        case _ => ex
+      }
+    }
+
+    OperatorHandler.replaceWithRule( p_ex, exFun, srcDB )
+  }
+
+  def explicitLetIn(
+                     p_ex : TlaEx
+                   )(
+                     implicit srcDB : SourceDB = m_srcDB
+                   ) : TlaEx = {
+    def exFun( ex : TlaEx ) : TlaEx = {
+      ex match {
+        case OperEx( oper: LetInOper, body ) => {
+
+          val bodyDB = new BodyDB()
+          oper.defs.foreach( OperatorHandler.extract( _, bodyDB ) )
+
+          inlineAll( body )( bodyDB, srcDB )
+        }
+        case _ => ex
+      }
+    }
+
+    OperatorHandler.replaceWithRule( p_ex, exFun, srcDB )
+  }
+
   // The methods that are not part of the interface should be declared private.
   def sanitizeByName(
                       p_operName : String
@@ -111,7 +149,11 @@ class Converter {
 
     val eqReplaced = OperatorHandler.replaceWithRule( inlined, rewriteEQ, srcDB )
 
-    unchangedExplicit( eqReplaced )( srcDB )
+    val ucReplaced = unchangedExplicit( eqReplaced )( srcDB )
+
+    iteToCase( ucReplaced )( srcDB )
+
+
   }
 
   // Igor: normally, the most important methods come first in a class declaration.

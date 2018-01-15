@@ -45,6 +45,14 @@ class SourceDB extends HashMapDB[UID, UID] {
       case (UID( x ), UID( y )) if x < 0 || y < 0 => /* return */
       case _ => super.update( key, value )
     }
+
+  def traceBack( p_id : UID ) : UID = {
+    var ancestor : UID = p_id
+    while( m_map.contains( ancestor ) ){
+      ancestor = m_map( ancestor )
+    }
+    ancestor
+  }
 }
 
 object DummySrcDB extends SourceDB {
@@ -65,6 +73,8 @@ object DummySrcDB extends SourceDB {
   override def clear( ) : Unit = {}
 
   override def print( ) : Unit = {}
+
+  override def traceBack( p_id : UID ) : UID = p_id
 }
 
 object OperatorHandler {
@@ -88,37 +98,66 @@ object OperatorHandler {
     }
   }
 
-  def uniqueVarRename( p_decls: Seq[TlaDecl] ) : Seq[TlaDecl] = {
+  /**
+    *
+    * TODO: Test with proper srcDB
+    * @param p_decls
+    * @return
+    */
+  def uniqueVarRename( p_decls: Seq[TlaDecl], p_srcDB : SourceDB = DummySrcDB ) : Seq[TlaDecl] = {
     def lambda( p_boundVars : Set[String], p_prefix : String )( p_ex : TlaEx ) : TlaEx = {
       p_ex match {
         case NameEx( name ) =>
-          if ( p_boundVars.contains( name ) ) NameEx( pfx( p_prefix, name ) )
+          if ( p_boundVars.contains( name ) ) {
+            val ret = NameEx( pfx( p_prefix, name ) )
+            markSrc( p_ex, ret, p_srcDB )
+            ret
+          }
           else p_ex
         case OperEx( op : LetInOper, body ) =>
           val newdefs = op.defs.map(
             decl => decl match {
-              case TlaOperDecl( name, params, declBody ) => TlaOperDecl(
-                name,
-                params.map( renameParam( p_prefix ) ),
-                lambda( p_boundVars ++ params.map( _.name ), p_prefix )( declBody )
-              )
+              case TlaOperDecl( name, params, declBody ) => {
+                val newBody = lambda( p_boundVars ++ params.map( _.name ), p_prefix )( declBody )
+                markSrc( declBody, newBody, p_srcDB )
+                TlaOperDecl(
+                  name,
+                  params.map( renameParam( p_prefix ) ),
+                  newBody
+                )
+              }
               case _ => decl
             }
           )
-          OperEx(
-            new LetInOper( newdefs ),
-            lambda( p_boundVars, p_prefix )( body )
-          )
+          val newBody = lambda( p_boundVars, p_prefix )( body )
+          markSrc( body, newBody, p_srcDB )
+          val ret =
+            OperEx(
+              new LetInOper( newdefs ),
+              newBody
+            )
+          markSrc( p_ex, ret, p_srcDB )
+          ret
         // assuming bounded quantification!
         case OperEx( oper, NameEx( varname ), set, body )
-          if oper == TlaBoolOper.exists || oper == TlaBoolOper.forall =>
-          OperEx(
-            oper,
-            NameEx( pfx( p_prefix, varname ) ),
-            lambda( p_boundVars, p_prefix )( set ),
-            lambda( p_boundVars + varname, p_prefix )( body )
-          )
-        case OperEx( oper, args@_* ) => OperEx( oper, args.map( lambda( p_boundVars, p_prefix ) ):_* )
+          if oper == TlaBoolOper.exists || oper == TlaBoolOper.forall => {
+          val newName = NameEx( pfx( p_prefix, varname ) )
+          markSrc( p_ex.asInstanceOf[OperEx].args.head, newName, p_srcDB )
+          val newSet = lambda( p_boundVars, p_prefix )( set )
+          markSrc( set, newSet, p_srcDB )
+          val newBody = lambda( p_boundVars + varname, p_prefix )( body )
+          markSrc( body, newBody, p_srcDB )
+          val ret = OperEx( oper, newName, newSet, newBody )
+          markSrc( p_ex, ret, p_srcDB )
+          ret
+        }
+        case OperEx( oper, args@_* ) => {
+          val newArgs = args.map( lambda( p_boundVars, p_prefix ) )
+          args.zip( newArgs ).foreach( pa => markSrc( pa._1, pa._2, p_srcDB ) )
+          val ret = OperEx( oper, newArgs : _* )
+          markSrc( p_ex, ret, p_srcDB )
+          ret
+        }
         case _ => p_ex
       }
     }
@@ -131,59 +170,6 @@ object OperatorHandler {
       }
     )
 
-  }
-
-  def renameAll( p_decls: Seq[TlaDecl] ) : Seq[TlaDecl] = {
-
-
-    /**
-      * Note: 5.1.2018 : Nested quantifiers produce names such as
-      * prefx_prefix_..._prefix_name, think of a workaround
-      * */
-    def boundVarsRule(p_prefix : String, p_argNames : List[String])( p_ex : TlaEx ) : TlaEx = {
-      p_ex match{
-        case OperEx(
-          oper, // assuming bounded quantification!
-          NameEx( varname ),
-          set,
-          body
-        ) if oper == TlaBoolOper.exists || oper == TlaBoolOper.forall =>
-          OperEx(
-            oper,
-            NameEx( "%s_%s".format( p_prefix, varname ) ),
-            replaceWithRule( set, boundVarsRule( p_prefix, p_argNames ) ),
-            replaceWithRule( body, boundVarsRule( p_prefix, varname :: p_argNames ) )
-          )
-        case OperEx( oper: LetInOper, body ) => {
-          val newdecls = uniqueVarRename( oper.defs ).map(_.asInstanceOf[TlaOperDecl]).toList
-
-          OperEx(
-            new LetInOper( newdecls ),
-            replaceWithRule( body, boundVarsRule( p_prefix, p_argNames ) )
-          )
-        }
-        case NameEx( name ) =>
-          NameEx( if (p_argNames.contains( name) ) "%s_%s".format( p_prefix, name ) else name )
-        case _ => p_ex
-      }
-    }
-
-    def renameBoundVars( p_prefix : String, p_argNames : List[String] )( p_body : TlaEx ) : TlaEx = {
-      replaceWithRule( p_body, boundVarsRule( p_prefix, p_argNames ) )
-    }
-
-    def addPrefix( p_decl : TlaDecl ) : TlaDecl = {
-      p_decl match{
-        case TlaOperDecl( name, formalParams, body ) =>
-          TlaOperDecl(
-            name,
-            formalParams.map( renameParam( name ) ),
-            renameBoundVars( name, formalParams.map( _.name ) )( body )
-          )
-        case _ => p_decl
-      }
-    }
-    p_decls.map( addPrefix )
   }
 
   def extract( p_decl : TlaDecl,
@@ -245,12 +231,17 @@ object OperatorHandler {
                 ) : TlaEx = {
 
     /**
-      * Bug( Jure: 1.12.2017 ): inlining did not check if provided argument count matches arity,
+      * Old Bug( Jure: 1.12.2017 ): inlining did not check if provided argument count matches arity,
       * because the parser would reject such TLA code. However, manual examples produced
       * demonstrated lack of exceptions thrown when the number of args provided exceeded the arity.
       *
       * This has been rectified by a check in lambda.
       * */
+
+    /**
+      * Bug( Jure: 15.1.2018 ): Inlining did not look inside the operator declarations of a LET-IN
+      * operator.
+      */
 
     def subAndID( p_operEx : TlaEx ) : TlaEx = {
 
