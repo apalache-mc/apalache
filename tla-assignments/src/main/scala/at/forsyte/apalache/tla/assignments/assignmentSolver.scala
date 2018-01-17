@@ -758,7 +758,11 @@ object assignmentSolver {
                            ) : Boolean = {
       p_ex match {
         /** If inner node, own labels must exist and be equal to the union of the child labels */
-        case OperEx( TlaBoolOper.and | TlaBoolOper.or, args@_* ) =>
+        case OperEx( TlaBoolOper.and |
+                     TlaBoolOper.or |
+                     TlaBoolOper.exists |
+                     TlaControlOper.caseWithOther ,
+        args@_* ) =>
           p_knownLabels.contains( p_ex.ID ) && p_knownLabels( p_ex.ID ) == args.map(
             x => p_knownLabels.getOrElse( x.ID, Set() )
           ).fold( Set() )( _ ++ _ )
@@ -945,6 +949,13 @@ object assignmentSolver {
 
   }
 
+  /**
+    * Given a formula and a minimal assignment strategy, the method computes an overapproximation
+    * of the successor states.
+    * @param p_phi
+    * @param p_asgnStrategy
+    * @return
+    */
   def getSymbNexts( p_phi : TlaEx, p_asgnStrategy : StrategyType ) : Seq[SymbNext] = {
     /**
       * Every assignment node "bubbles" up, colors its path. Then, search from root for all
@@ -952,13 +963,24 @@ object assignmentSolver {
 
     import symbolicNextHelperFunctions._
 
+    /** For certain purposes, we do not care about the order of assignments.
+      * It is therefore helpful to have a set structure, with faster lookups. */
     val stratSet = p_asgnStrategy.toSet
+
+    /** We mark every node in the formula with a set of labels.
+      * A node n is marked with a set S iff all elements of S are assignment candidates, which
+      * appear in subformulas of n
+      *  */
     val labels = labelAll( p_phi, stratSet )
 
+    /** We make sure that the above requirement actually holds. */
     assert( isConsistentLabeling( p_phi, stratSet, labels ) )
 
+    /** We explicitly consider all branches */
     val asgnBranches = makeAssignments( p_phi, labels, stratSet )
 
+    /** Using this set of labels, we can prune the formula when considering
+      * different assignment options (choices for disjunction) */
     asgnBranches.map( mkNext( p_phi, _, p_asgnStrategy, labels ) )
 
   }

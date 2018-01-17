@@ -311,11 +311,16 @@ class TestAssignments extends FunSuite with TestingPredefs {
     val symbNexts = testFromFile( "miniPaxos.tla" )
   }
 
-  ignore("Test ITE_CASE") {
+  test("Test ITE_CASE") {
 
 
     val symbNexts = testFromFile( "ITE_CASE.tla" )
 
+  }
+
+  test( "AST" ){
+
+    testFromFile( "ast.tla" )
   }
 
 }
