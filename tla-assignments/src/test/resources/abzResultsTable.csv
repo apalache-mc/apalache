@@ -1,0 +1,7 @@
+Spec;Successful Termination;Number of Nodes;Size of Assignment Strategy;Number of Symbolic States;Runtime
+aba_asyn_byzagreement0.tla;true;86;48;8;269.0
+nbacg_asyn_guer01_nbac.tla;true;126;82;13;265.0
+EWD840.tla;true;47;16;4;30.0
+Paxos.tla;true;60;16;4;35.0
+nbac.tla;true;47;15;14;44.0
+bcastFolklore.tla;true;41;17;4;22.0

@@ -293,22 +293,18 @@ class TestAssignments extends FunSuite with TestingPredefs {
 
     assert( strat.isDefined )
 
-    Seq()
+//    Seq()
     //    println( order.get.size )
     //      order.get.foreach( x => println( UniqueDB( x ).get ) )
 
-//    assignmentSolver.getSymbNexts( cleaned.get, strat.get )
+    assignmentSolver.getSymbNexts( cleaned.get, strat.get )
   }
 
   test( "Test Paxos (simplified)" ){
 
     val symbNexts = testFromFile( "Paxos.tla" )
+    println( symbNexts.size )
 
-  }
-
-  ignore( "Test Paxos" ) {
-
-    val symbNexts = testFromFile( "miniPaxos.tla" )
   }
 
   test("Test ITE_CASE") {
@@ -318,9 +314,16 @@ class TestAssignments extends FunSuite with TestingPredefs {
 
   }
 
+  test("Test EWD840") {
+
+
+    val symbNexts = testFromFile( "EWD840.tla" )
+    println( symbNexts.size )
+  }
+
   test( "AST" ){
 
-    testFromFile( "ast.tla" )
+//    testFromFile( "ast.tla" )
   }
 
 }
