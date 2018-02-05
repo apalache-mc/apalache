@@ -1,7 +1,9 @@
-Spec;Successful Termination;Number of Nodes;Size of Assignment Strategy;Number of Symbolic States;Runtime
-aba_asyn_byzagreement0.tla;true;86;48;8;269.0
-nbacg_asyn_guer01_nbac.tla;true;126;82;13;265.0
-EWD840.tla;true;47;16;4;30.0
-Paxos.tla;true;60;16;4;35.0
-nbac.tla;true;47;15;14;44.0
-bcastFolklore.tla;true;41;17;4;22.0
+Specification,Successful Termination,Number of Nodes,Size of Assignment Strategy,umber of Symbolic Transitions,Runtime (ms)
+aba$\_$asyn$\_$byzagreement0.tla,true,86,48,8,224
+nbacg$\_$asyn$\_$guer01$\_$nbac.tla,true,126,82,13,186
+EWD840.tla,true,47,16,4,19
+ProdCons.tla,true,12,4,2,14
+Paxos.tla,true,60,16,4,24
+cycle.tla,true,8,3,2,14
+nbac.tla,true,47,15,14,21
+bcastFolklore.tla,true,41,17,4,20

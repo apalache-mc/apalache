@@ -102,7 +102,7 @@ class abzExperiments extends FunSuite with TestingPredefs {
   test( "Run All" ){
     val results = new File( testFolderPath ).listFiles().map( x => runTest( x.getName ) )
 
-    val resultsLocation = "/home/kukovec/Forsyte/iota/dissemination/abz2018/experiments/abzResultsTable.csv"
+    val resultsLocation = "src/test/resources/abzResultsTable.csv"
 
     val separator = ","
 
