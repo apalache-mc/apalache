@@ -9,8 +9,12 @@ import at.forsyte.apalache.tla.lir.values.TlaFalse
 
 object SymbTransGenerator extends TypeAliases {
 
+  var labelsGlob : Map[UID, Set[UID]] = Map()
+
   private object helperFunctions {
     type LabelMapType = Map[UID, Set[UID]]
+    type AssignmentSelection = Set[Set[UID]]
+    type SelMapType = Map[UID , AssignmentSelection]
 
     def joinSetMaps[K, V]( p_map1 : Map[K, Set[V]],
                            p_map2 : Map[K, Set[V]]
@@ -133,6 +137,15 @@ object SymbTransGenerator extends TypeAliases {
       }
     }
 
+    def labelsAt( p_ex : TlaEx, p_partialSel : SelMapType ) = {
+      true
+      // TODO
+    }
+
+    def labelsCheck( p_ex : TlaEx, p_partialSel : Set[Set[UID]] ) : Unit = {
+      assert( labelsGlob.getOrElse(p_ex.ID, Set()) == p_partialSel.fold( Set())( _ ++ _) )
+    }
+
     /**
       * Symbolic transitions are uniquely characterized by the intersections of branches with
       * an assignment strategy.
@@ -141,24 +154,42 @@ object SymbTransGenerator extends TypeAliases {
       *
       * Since we know how to recursively compute branch sets, we can easily compute branch intersection sets
       */
-    def makeAllSelections( p_phi : TlaEx, p_stratSet : Set[UID] ) : Set[Set[UID]] = {
+    def makeAllSelections( p_phi : TlaEx, p_stratSet : Set[UID] ) : SelMapType = {
       val leafJudge : TlaEx => Boolean = AlphaTLApTools.isCand
-      val default : Set[Set[UID]] = Set( Set() )
-      def leafFun( p_ex : TlaEx ) : Set[Set[UID]] =
-        if ( p_stratSet.contains( p_ex.ID ) ) Set( Set( p_ex.ID ) ) else default
-      def parentFun( p_ex: TlaEx, p_childVals: Seq[Set[Set[UID]]]) : Set[Set[UID]] = {
-        p_ex match {
-          case OperEx( oper, _* ) =>
+      val defaultVal : AssignmentSelection = Set( Set() )
+      val default : SelMapType = Map()
+      def leafFun( p_ex : TlaEx ) : SelMapType =
+        if ( p_stratSet.contains( p_ex.ID ) ) Map(p_ex.ID -> Set( Set( p_ex.ID ) ) ) else default
+      def parentFun( p_ex: TlaEx, p_childResults: Seq[SelMapType]) : SelMapType = {
+        val ret = p_ex match {
+          case OperEx( oper, args@_* ) =>
             oper match {
               case TlaBoolOper.and =>
-                  allCombinations( p_childVals )
-              case TlaBoolOper.or => p_childVals.fold( Set() )( _ ++ _ )
-              case TlaBoolOper.exists => p_childVals.tail.tail.head
-              case TlaControlOper.ifThenElse => p_childVals.tail.head ++ p_childVals.tail.tail.head
+                /** Unify all child maps */
+                val superMap = p_childResults.fold( Map() )( _ ++ _ )
+
+                /** The set of all child labels */
+                val mySet = allCombinations( args.map( x => superMap.getOrElse(x.ID, defaultVal ) ) )
+                superMap + ( p_ex.ID -> mySet )
+
+              case TlaBoolOper.or =>
+                val superMap = p_childResults.fold( Map() )( _ ++ _ )
+                val mySet = args.map( x => superMap.getOrElse(x.ID, defaultVal ) ).fold( Set() )( _ ++ _ )
+                superMap + ( p_ex.ID -> mySet )
+
+              case TlaBoolOper.exists =>
+                val childMap = p_childResults.tail.tail.head
+                childMap + ( p_ex.ID -> childMap.getOrElse(args.tail.tail.head.ID, defaultVal ) )
+              case TlaControlOper.ifThenElse =>
+                val superMap = p_childResults.tail.fold( Map() )( _ ++ _ )
+                val mySet = args.tail.map( x => superMap.getOrElse(x.ID, defaultVal ) ).fold( Set() )( _ ++ _ )
+                superMap + ( p_ex.ID -> mySet )
               case _ => default
             }
           case _ => default
         }
+        labelsCheck( p_ex, ret.getOrElse( p_ex.ID, defaultVal ) )
+        ret
       }
 
       SpecHandler.bottomUpVal( p_phi, leafJudge,leafFun, parentFun, default )
@@ -222,7 +253,7 @@ object SymbTransGenerator extends TypeAliases {
   def apply( p_phi : TlaEx, p_asgnStrategy : StrategyType ) : Seq[SymbTrans] = {
 
     // TODO
-    // SINGLE PASS LABELS + SELECTIONS
+    // Realize that LABELS (v) = Union[PartialSel(v)]
 
     import helperFunctions._
 
@@ -236,16 +267,17 @@ object SymbTransGenerator extends TypeAliases {
       *  */
     val labels = labelAll( p_phi, stratSet )
 
+    labelsGlob = labels
+
     /** We make sure that the above requirement actually holds. */
     assert( isConsistentLabeling( p_phi, stratSet, labels ) )
 
     /** We make sure that the above requirement actually holds. */
     val selections = makeAllSelections(p_phi, stratSet)
 
-    /** Sanity check, all selections should have the same size */
-    assert( selections.map( _.size ).size == 1 )
+    Seq()
 
-    restrictToSelections( p_phi, p_asgnStrategy, labels, selections )
+//    restrictToSelections( p_phi, p_asgnStrategy, labels, selections )
 
   }
 
