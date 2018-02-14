@@ -149,9 +149,9 @@ class Converter {
 
     val eqReplaced = OperatorHandler.replaceWithRule( inlined, rewriteEQ, srcDB )
 
-    val ucReplaced = unchangedExplicit( eqReplaced )( srcDB )
+    /* val ucReplaced = */ unchangedExplicit( eqReplaced )( srcDB )
 
-    iteToCase( ucReplaced )( srcDB )
+//    iteToCase( ucReplaced )( srcDB )
 
 
   }

@@ -10,6 +10,40 @@ import at.forsyte.apalache.tla.lir._
 
 import scala.collection.immutable.{Map, Set}
 
+object AlphaTLApTools {
+  private def isCandTemplate( p_ex : TlaEx, p_var : Option[String] ) : Boolean = {
+    p_ex match {
+      case OperEx(
+      TlaSetOper.in,
+      OperEx(
+      TlaActionOper.prime,
+      NameEx( name )
+      ),
+      _
+      ) => p_var.forall( _ == name )
+      case _ => false
+    }
+  }
+
+  def isCand( p_ex : TlaEx ) : Boolean = isCandTemplate( p_ex, None )
+
+  def isVarCand( p_var : String, p_ex : TlaEx ) : Boolean = isCandTemplate( p_ex, Some( p_var ) )
+
+  def findPrimes( p_ex : TlaEx ) : Set[String] = {
+    p_ex match {
+      case OperEx( TlaActionOper.prime, NameEx( name ) ) =>
+        /* return */ Set( name )
+      case OperEx( _, args@_* ) =>
+        /* return */ args.map( findPrimes ).fold( Set[String]() ) {
+        _ ++ _
+      }
+      case _ =>
+        /* return */ Set[String]()
+    }
+  }
+
+}
+
 /**
   * Generates SMT constraints for assignment strategies.
   *
@@ -94,40 +128,6 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
 
   }
 
-  private object alphaTLApTools {
-    private def isCandTemplate( p_ex : TlaEx, p_var : Option[String] ) : Boolean = {
-      p_ex match {
-        case OperEx(
-        TlaSetOper.in,
-        OperEx(
-        TlaActionOper.prime,
-        NameEx( name )
-        ),
-        _
-        ) => p_var.forall( _ == name )
-        case _ => false
-      }
-    }
-
-    def isCand( p_ex : TlaEx ) : Boolean = isCandTemplate( p_ex, None )
-
-    def isVarCand( p_var : String, p_ex : TlaEx ) : Boolean = isCandTemplate( p_ex, Some( p_var ) )
-
-    def findPrimes( p_ex : TlaEx ) : Set[String] = {
-      p_ex match {
-        case OperEx( TlaActionOper.prime, NameEx( name ) ) =>
-          /* return */ Set( name )
-        case OperEx( _, args@_* ) =>
-          /* return */ args.map( findPrimes ).fold( Set[String]() ) {
-          _ ++ _
-        }
-        case _ =>
-          /* return */ Set[String]()
-      }
-    }
-
-  }
-
   private object Aliases {
     type seenType = Set[Int]
     type collocSetType = Set[(Int, Int)]
@@ -148,7 +148,7 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
                                       ) : Aliases.recursionData = {
 
     import SMTtools._
-    import alphaTLApTools._
+    import AlphaTLApTools._
     import Aliases._
 
 
@@ -231,7 +231,8 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
             ).toMap
 
         /** At a terminal node, we know the exact values for the frozen sets */
-        val frozen : frozenType = Map( n -> p_frozenVarSet )
+        val starPrimes = findPrimes( star )
+        val frozen : frozenType = Map( n -> (p_frozenVarSet ++ starPrimes) )
         /** A terminal node, is always collocated exactly with itself */
         val colloc : collocSetType = Set( (n, n) )
         val noColloc : nonCollocSetType = Set()
@@ -244,7 +245,7 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
       }
 
       /** Recursive case, quantifier */
-      case OperEx( TlaBoolOper.exists, NameEx( boundVar ), star, subPhi ) => {
+      case OperEx( TlaBoolOper.exists, NameEx( _ ), star, subPhi ) => {
         /** All primes in the star expr. contribute to the frozen sets of subPhi */
         val starPrimes = findPrimes( star )
         val frozenVarSet = p_frozenVarSet ++ starPrimes
@@ -294,13 +295,13 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
     /* return */ (seen, colloc, delta.map( pa => (pa._1, simplify( pa._2 )) ), frozen)
   }
 
-  def makeSpec( p_vars : Set[String],
-                p_phi : TlaEx,
-                p_fileName : Option[String] = None
-              ) : String = {
+  def apply( p_vars : Set[String],
+             p_phi : TlaEx,
+             p_fileName : Option[String] = None
+           ) : String = {
 
     import SMTtools._
-    import alphaTLApTools._
+    import AlphaTLApTools._
 
     /** Extract the list of leaf ids, the collocated set, the delta mapping and the frozen mapping */
     val (seen, colloc, delta, frozen) = staticAnalysis( p_phi, p_vars )
@@ -325,7 +326,8 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
       val ex_i = UniqueDB( UID( i ) )
       val ex_j = UniqueDB( UID( j ) )
 
-      ex_j.contains( isCand( _ ) ) &&
+      // unnecessary, by construction, seen/colloc only contains cand. IDs
+      // ex_j.contains( isCand( _ ) ) &&
         p_vars.exists(
           v =>
             ex_i.exists( isVarCand( v, _ ) ) &&
@@ -336,11 +338,12 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
     val colloc_Vars = colloc.filter( pa => minimalCoveringClash( pa._1, pa._2 ) )
     val colloc_tl = colloc.filter( pa => triangleleft( pa._1, pa._2 ) )
 
-    val notAsgnCand = seen.filterNot( i => UniqueDB( UID( i ) ).exists( isCand ) )
-
-    /** \theta_H */
-    val thetaHArgs = notAsgnCand.map( i => Neg( Variable( i ) ) )
-    val thetaH = thetaHArgs.map( toSmt2 )
+    // \theta_H unnecessary by construction
+//    val notAsgnCand = seen.filterNot( i => UniqueDB( UID( i ) ).exists( isCand ) )
+//
+//    /** \theta_H */
+//    val thetaHArgs = notAsgnCand.map( i => Neg( Variable( i ) ) )
+//    val thetaH = thetaHArgs.map( toSmt2 )
 
     /** \theta_C^* */
     val thetaCStarArgs = delta.values
@@ -367,7 +370,7 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
     val fndecls = "\n( declare-fun %s ( Int ) Int )\n".format( m_fnSym )
 
     /** Assert all of the constraints, as defined in \theta */
-    val constraints = ( thetaH ++ thetaCStar ++ thetaE ++ thetaAStar ++ thetaInj ).map(
+    val constraints = ( /*thetaH ++ */ thetaCStar ++ thetaE ++ thetaAStar ++ thetaInj ).map(
       str => "( assert %s )".format( str )
     ).mkString( "\n" )
 
