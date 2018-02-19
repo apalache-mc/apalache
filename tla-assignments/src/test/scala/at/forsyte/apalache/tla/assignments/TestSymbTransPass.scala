@@ -1,9 +1,10 @@
 package at.forsyte.apalache.tla.assignments
 
+import java.io.{File, PrintWriter}
+
 import at.forsyte.apalache.tla.lir.TestingPredefs
 import at.forsyte.apalache.tla.lir.plugins.UniqueDB
 import at.forsyte.apalache.tla.imp.declarationsFromFile
-
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -17,8 +18,15 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
 
     val decls = declarationsFromFile( testFolderPath + p_file )
 
-    SymbolicTransitionPass( decls )
+    val ret = SymbolicTransitionPass( decls )
 
+//    val saveWriter = new PrintWriter( new File( testFolderPath + "SymbNexts" + p_file ) )
+
+//    ret.foreach( x => saveWriter.println( "%s : \n %s\n".format( x._1.map( UniqueDB.get ) , x._2 ) ) )
+
+//    saveWriter.close()
+
+    ret
   }
 
   test( "Test Selections" ){
@@ -33,6 +41,8 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
 
     val symbNexts = testFromFile( "Paxos.tla" )
     println( symbNexts.size )
+
+    printlns( symbNexts.map( _._2.toString ):_* )
 
   }
 

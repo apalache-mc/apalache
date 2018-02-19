@@ -9,121 +9,10 @@ import at.forsyte.apalache.tla.lir.values.TlaFalse
 
 object SymbTransGenerator extends TypeAliases {
 
-  var labelsGlob : Map[UID, Set[UID]] = Map()
-
   private object helperFunctions {
     type LabelMapType = Map[UID, Set[UID]]
-    type AssignmentSelection = Set[Set[UID]]
-    type SelMapType = Map[UID , AssignmentSelection]
-
-    def joinSetMaps[K, V]( p_map1 : Map[K, Set[V]],
-                           p_map2 : Map[K, Set[V]]
-                         ) : Map[K, Set[V]] = {
-      Map[K, Set[V]](
-        ( p_map1.keySet ++ p_map2.keySet ).toSeq.map(
-          k => (k, p_map1.getOrElse( k, Set[V]() ) ++ p_map2.getOrElse( k, Set[V]() ))
-        ) : _*
-      )
-    }
-
-    /**
-      * Shorthand for common .getOrElse uses
-      */
-    def labelsAt( p_ex : TlaEx,
-                  p_knownLabels : LabelMapType
-                ) : Set[UID] = p_knownLabels.getOrElse( p_ex.ID, Set() )
-
-    /**
-      * Decides whether a given [[at\.forsyte\.apalache\.tla\.lir\.TlaEx]] is considered a leaf in the formula tree.
-      * For our puposes, leaves are assignment candidates, i.e. expressions of the
-      * form x' \in S.
-      * @param p_ex Any TLA expression
-      * @return `true` iff the expression is a leaf in the formula tree.
-      */
-    def leafJudge( p_ex : TlaEx ) : Boolean = AlphaTLApTools.isCand( p_ex )
-
-    /**
-      * Creates a partial label map at a leaf.
-      * @param p_ex Leaf expression.
-      * @param p_stratSet The assignment strategy.
-      * @return The empty map, if the leaf is not part of the strategy, otherwise the one-key
-      *         map, which assigns to the leaf ID a singleton which contains that ID.
-      */
-    def leafFun( p_ex : TlaEx,
-                 p_stratSet : Set[UID]
-               ) : LabelMapType = {
-      if ( p_stratSet.contains( p_ex.ID ) ) {
-        Map( p_ex.ID -> Set( p_ex.ID ) )
-      }
-      else
-        Map()
-    }
-
-    /**
-      * Constructs a new label at the parent from child labels.
-      * @param p_ex Current node in the formula tree.
-      * @param p_childResults All the maps computed at child nodes.
-      * @return A new label map, which agrees with all child maps and additionally assigns to the current
-      *         node ID the union of all label sets found at its children.
-      */
-    def parentFun( p_ex : TlaEx,
-                   p_childResults : Seq[LabelMapType]
-                 ) : LabelMapType = {
-
-      p_ex match {
-        /** Guaranteed, if invoked by the [[SpecHandler]] */
-        case OperEx( _, args@_* ) =>
-
-          /** Unify all child maps */
-          val superMap = p_childResults.fold( Map() )( joinSetMaps )
-
-          /** The set of all child labels */
-          val mySet = args.map( labelsAt( _, superMap ) ).fold( Set() )( _ ++ _ )
-          superMap + ( p_ex.ID -> mySet )
-
-        case _ => Map()
-      }
-
-    }
-
-    def labelAll( p_ex : TlaEx,
-                  p_stratSet : Set[UID]
-                ) : LabelMapType = {
-      SpecHandler.bottomUpVal[LabelMapType](
-        p_ex,
-        leafJudge,
-        leafFun( _, p_stratSet ),
-        parentFun,
-        Map()
-      )
-    }
-
-    /**
-      * Checks whether a triplet of a formula, a strategy and a labeling is consistent.
-      */
-    def isConsistentLabeling( p_ex : TlaEx,
-                              p_stratSet : Set[UID],
-                              p_knownLabels : LabelMapType
-                            ) : Boolean = {
-      p_ex match {
-        /** If inner node, own labels must exist and be equal to the union of the child labels */
-        case OperEx( TlaBoolOper.and |
-                     TlaBoolOper.or |
-                     TlaBoolOper.exists |
-                     TlaControlOper.ifThenElse,
-        args@_* ) =>
-          p_knownLabels.contains( p_ex.ID ) && p_knownLabels( p_ex.ID ) == args.map(
-            x => p_knownLabels.getOrElse( x.ID, Set() )
-          ).fold( Set() )( _ ++ _ )
-        case _ =>
-          /** If leaf and part of the strategy, the label set must be a singleton */
-          if ( p_stratSet.contains( p_ex.ID ) )
-            p_knownLabels.contains( p_ex.ID ) && p_knownLabels( p_ex.ID ) == Set( p_ex.ID )
-          /** Otherwise, must be unlabeled */
-          else
-            p_knownLabels.getOrElse( p_ex.ID, Set() ).isEmpty
-      }
-    }
+    type AssignmentSelections = Set[Set[UID]]
+    type SelMapType = Map[UID , AssignmentSelections]
 
     def allCombinations[ValType]( p_sets: Seq[Set[Set[ValType]]]) : Set[Set[ValType]] = {
       if( p_sets.length == 1 )
@@ -137,13 +26,10 @@ object SymbTransGenerator extends TypeAliases {
       }
     }
 
-    def labelsAt( p_ex : TlaEx, p_partialSel : SelMapType ) = {
-      true
-      // TODO
-    }
+    def labelsAt( p_ex : TlaEx, p_partialSel : SelMapType ) : Set[UID] = labelsAt( p_ex.ID, p_partialSel )
 
-    def labelsCheck( p_ex : TlaEx, p_partialSel : Set[Set[UID]] ) : Unit = {
-      assert( labelsGlob.getOrElse(p_ex.ID, Set()) == p_partialSel.fold( Set())( _ ++ _) )
+    def labelsAt( p_id : UID, p_partialSel : SelMapType ) : Set[UID] = {
+      p_partialSel.getOrElse( p_id, Set() ).fold( Set())( _ ++ _)
     }
 
     /**
@@ -156,12 +42,12 @@ object SymbTransGenerator extends TypeAliases {
       */
     def makeAllSelections( p_phi : TlaEx, p_stratSet : Set[UID] ) : SelMapType = {
       val leafJudge : TlaEx => Boolean = AlphaTLApTools.isCand
-      val defaultVal : AssignmentSelection = Set( Set() )
+      val defaultVal : AssignmentSelections = Set( Set() )
       val default : SelMapType = Map()
       def leafFun( p_ex : TlaEx ) : SelMapType =
         if ( p_stratSet.contains( p_ex.ID ) ) Map(p_ex.ID -> Set( Set( p_ex.ID ) ) ) else default
       def parentFun( p_ex: TlaEx, p_childResults: Seq[SelMapType]) : SelMapType = {
-        val ret = p_ex match {
+        p_ex match {
           case OperEx( oper, args@_* ) =>
             oper match {
               case TlaBoolOper.and =>
@@ -188,8 +74,6 @@ object SymbTransGenerator extends TypeAliases {
             }
           case _ => default
         }
-        labelsCheck( p_ex, ret.getOrElse( p_ex.ID, defaultVal ) )
-        ret
       }
 
       SpecHandler.bottomUpVal( p_phi, leafJudge,leafFun, parentFun, default )
@@ -204,7 +88,7 @@ object SymbTransGenerator extends TypeAliases {
 
     def assignmentFilter( p_ex : TlaEx,
                           p_selection : Set[UID],
-                          p_labels : LabelMapType
+                          p_allSelections : SelMapType
                         ) : TlaEx = {
       p_ex match {
         case OperEx( TlaBoolOper.or, args@_* ) =>
@@ -213,8 +97,9 @@ object SymbTransGenerator extends TypeAliases {
             * all assignments or none of them. Therefore it suffices to check for
             * non-emptiness of the intersection.
             */
+
           val newArgs = args.filter(
-            x => p_labels.getOrElse( x.ID, Set() ).exists( y => p_selection.contains( y ) )
+            x => labelsAt(x, p_allSelections).exists( y => p_selection.contains( y ) )
           )
           if ( newArgs.isEmpty )
             p_ex
@@ -224,7 +109,7 @@ object SymbTransGenerator extends TypeAliases {
           }
         case OperEx( TlaControlOper.ifThenElse, cond, args@_* ) =>
           val newArgs = args.map(
-            x => if (p_labels.getOrElse( x.ID, Set() ).exists( y => p_selection.contains( y ) ))
+            x => if (labelsAt(x, p_allSelections).exists( y => p_selection.contains( y ) ))
               x else ValEx(TlaFalse)
           )
           OperEx( TlaControlOper.ifThenElse, cond +: newArgs:_* )
@@ -236,14 +121,13 @@ object SymbTransGenerator extends TypeAliases {
 
     def restrictToSelections( p_ex : TlaEx,
                               p_strat: StrategyType,
-                              p_labels : LabelMapType,
-                              p_selections : Set[Set[UID]]
+                              p_selections : SelMapType
                             ) : Seq[SymbTrans] = {
 
-      p_selections.map( s =>
+      p_selections( p_ex.ID ).map( s =>
         (
           mkOrdered( s, p_strat ),
-          SpecHandler.getNewEx( p_ex, assignmentFilter( _, s, p_labels ) )
+          SpecHandler.getNewEx( p_ex, assignmentFilter( _, s, p_selections ) )
         )
       ).toSeq
     }
@@ -252,32 +136,20 @@ object SymbTransGenerator extends TypeAliases {
 
   def apply( p_phi : TlaEx, p_asgnStrategy : StrategyType ) : Seq[SymbTrans] = {
 
-    // TODO
-    // Realize that LABELS (v) = Union[PartialSel(v)]
-
     import helperFunctions._
 
     /** For certain purposes, we do not care about the order of assignments.
       * It is therefore helpful to have a set structure, with faster lookups. */
     val stratSet = p_asgnStrategy.toSet
 
-    /** We mark every node in the formula with a set of labels.
-      * A node n is marked with a set S iff all elements of S are assignment candidates, which
-      * appear in subformulas of n
-      *  */
-    val labels = labelAll( p_phi, stratSet )
-
-    labelsGlob = labels
-
-    /** We make sure that the above requirement actually holds. */
-    assert( isConsistentLabeling( p_phi, stratSet, labels ) )
-
     /** We make sure that the above requirement actually holds. */
     val selections = makeAllSelections(p_phi, stratSet)
 
-    Seq()
+    /** Sanity check, all selections are the same size */
+    val allSizes = selections( p_phi.ID).map( _.size )
+    assert(allSizes.size == 1 )
 
-//    restrictToSelections( p_phi, p_asgnStrategy, labels, selections )
+    restrictToSelections( p_phi, p_asgnStrategy, selections )
 
   }
 
