@@ -1,7 +1,5 @@
 package at.forsyte.apalache.tla.assignments
 
-import java.io._
-
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
@@ -10,7 +8,10 @@ import at.forsyte.apalache.tla.lir._
 
 import scala.collection.immutable.{Map, Set}
 
-object AlphaTLApTools {
+/**
+  * Collection of alpha-TLA+ methods.
+  */
+private object AlphaTLApTools {
   private def isCandTemplate( p_ex : TlaEx, p_var : Option[String] ) : Boolean = {
     p_ex match {
       case OperEx(
@@ -25,10 +26,23 @@ object AlphaTLApTools {
     }
   }
 
+  /**
+    * Returns `true` if `p_ex` is an assignment candidate
+    * @param p_ex Input expression
+    */
   def isCand( p_ex : TlaEx ) : Boolean = isCandTemplate( p_ex, None )
 
+  /**
+    * Returns `true` if `p_ex` is an assignment candidate for the variable `p_var`
+    * @param p_var Variable name
+    * @param p_ex Input expression
+    */
   def isVarCand( p_var : String, p_ex : TlaEx ) : Boolean = isCandTemplate( p_ex, Some( p_var ) )
 
+  /**
+    * Returns the set of all primed variables appearing in subformulas of `p_ex`
+    * @param p_ex Input expression
+    */
   def findPrimes( p_ex : TlaEx ) : Set[String] = {
     p_ex match {
       case OperEx( TlaActionOper.prime, NameEx( name ) ) =>
@@ -47,12 +61,15 @@ object AlphaTLApTools {
 /**
   * Generates SMT constraints for assignment strategies.
   *
-  * Assumes input in alpha-TLA+
+  * Assumes input is alpha-TLA+
   */
 class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : String = "R" ) {
 
   private abstract class BoolFormula
 
+  /**
+    * Collects classes and methods for constructing SMT formulas
+    */
   private object SMTtools {
 
     case class False( ) extends BoolFormula
@@ -67,13 +84,20 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
 
     case class Variable( id : Int ) extends BoolFormula
 
-    case class LtFns( i : Int, j : Int ) extends BoolFormula // ( R( i ) < R( j ) )
-    case class NeFns( i : Int, j : Int ) extends BoolFormula // ( R( i ) != R( j ) )
+    // ( R( i ) < R( j ) )
+    case class LtFns( i : Int, j : Int ) extends BoolFormula
+    // ( R( i ) != R( j ) )
+    case class NeFns( i : Int, j : Int ) extends BoolFormula
 
+    /**
+      * Converts a BoolFormula to an smt2 string
+      * @param phi Input formula
+      * @return SMT encoding of the boolean formula
+      */
     def toSmt2( phi : BoolFormula ) : String = {
       phi match {
         case False() =>
-          /* return */ "false" //"( false )"
+          /* return */ "false"
         case And( args@_* ) =>
           /* return */ "( and %s )".format( args.map( toSmt2 ).mkString( " " ) )
         case Or( args@_* ) =>
@@ -91,6 +115,11 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
       }
     }
 
+    /**
+      * Removes redundant connectives.
+      * @param phi Input formula
+      * @return Logically equivalent subset formula.
+      */
     def simplify( phi : BoolFormula ) : BoolFormula = {
       phi match {
         /**
@@ -128,6 +157,9 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
 
   }
 
+  /**
+    * Collection of aliases used in internal methods.
+    */
   private object Aliases {
     type seenType = Set[Int]
     type collocSetType = Set[(Int, Int)]
@@ -142,6 +174,19 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
 
   }
 
+  /**
+    * Main internal method.
+    **
+    * @param p_phi Input formula
+    * @param p_vars Set of all variables, domain of delta.
+    * @param p_frozenVarSet Variables, which are known to be frozen (i.e., free variables defining
+    *                       a bound variable or IF-condition of an ancestor).
+    * @return The tuple (S, C, nC, d, f), where S is the set of visited leaves,
+    *         C is the (partial) collocation set,
+    *         nC is the (partial) no-collocation set,
+    *         d is the (partial) delta function
+    *         and f is the (partial) frozen function.
+    */
   private def recursiveMainComputation( p_phi : TlaEx,
                                         p_vars : Set[String],
                                         p_frozenVarSet : Aliases.frozenVarSetType
@@ -150,7 +195,6 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
     import SMTtools._
     import AlphaTLApTools._
     import Aliases._
-
 
     /** We name the default arguments to return at irrelevant terms  */
     val defaultMap = ( for {v <- p_vars} yield (v, False()) ).toMap
@@ -166,7 +210,6 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
           args.map( recursiveMainComputation( _, p_vars, p_frozenVarSet ) )
 
         /** Compute parent delta from children */
-
         def deltaConnective( args : Seq[BoolFormula] ) = {
           if ( oper == TlaBoolOper.and ) Or( args : _* ) else And( args : _* )
         }
@@ -241,7 +284,6 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
 
         /* return */ (seen, colloc, noColloc, delta, frozen)
 
-
       }
 
       /** Recursive case, quantifier */
@@ -280,24 +322,45 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
 
       }
 
+      /** In the other cases, return the default args */
       case _ => defaultArgs
 
     }
 
   }
 
+  /**
+    * Wrapper for [[recursiveMainComputation]].
+    * @param p_phi Input formula
+    * @param p_vars Set of all variables, domain of delta.
+    * @return The tuple (S, C, d, f), where S is the set of visited leaves,
+    *         C is the (partial) collocation set,
+    *         d is the (partial) delta function
+    *         and f is the (partial) frozen function.
+    */
   private def staticAnalysis( p_phi : TlaEx,
                               p_vars : Set[String]
                             ) : Aliases.staticAnalysisData = {
     import SMTtools._
+    /** Invoke the main method, then drop noColloc and simplify delta */
     val (seen, colloc, _, delta, frozen) =
       recursiveMainComputation( p_phi, p_vars, Set[String]() )
     /* return */ (seen, colloc, delta.map( pa => (pa._1, simplify( pa._2 )) ), frozen)
   }
 
+  /**
+    * Point of access mathod.
+    * @param p_vars Set of all variables relevant for phi.
+    * @param p_phi Input formula
+    * @param p_complete Optional parameter. If set to true, the produced specification
+    *                   is valid as a standalone specification. Otherwise it is
+    *                   designed to be passed to the
+    *                   [[at.forsyte.apalache.tla.assignments.SMTInterface SMT interface]].
+    * @return SMT specification string, encoding the assignment problem for `p_phi`.
+    */
   def apply( p_vars : Set[String],
              p_phi : TlaEx,
-             p_fileName : Option[String] = None
+             p_complete : Boolean = false
            ) : String = {
 
     import SMTtools._
@@ -311,6 +374,11 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
       * and Colloc_Vars for \tau_C
       */
 
+    /**
+      * Membership check for Colloc_Vars,
+      * a pair (i,j) belongs to Colloc_Vars, if both i and j label assignment candidates
+      * for the same variable.
+      * */
     def minimalCoveringClash( i : Int, j : Int ) : Boolean = {
       val ex_i = UniqueDB( UID( i ) )
       val ex_j = UniqueDB( UID( j ) )
@@ -322,46 +390,54 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
       )
     }
 
+    /**
+      * Membership check for Colloc_\tl,
+      * a pair (i,j) belongs to Colloc_\tl, if there is a variable v,
+      * such that i labels an assignment candidate for v and
+      * v is in the frozen set of j.
+      *
+      * Checking that j is a candidate is unnecessary, by construction,
+      * since seen/colloc only contain assignment candidate IDs.
+      * */
     def triangleleft( i : Int, j : Int ) : Boolean = {
       val ex_i = UniqueDB( UID( i ) )
       val ex_j = UniqueDB( UID( j ) )
 
-      // unnecessary, by construction, seen/colloc only contains cand. IDs
-      // ex_j.contains( isCand( _ ) ) &&
-        p_vars.exists(
-          v =>
-            ex_i.exists( isVarCand( v, _ ) ) &&
-              frozen( j ).contains( v )
-        )
+      p_vars.exists(
+        v =>
+          ex_i.exists( isVarCand( v, _ ) ) &&
+            frozen( j ).contains( v )
+      )
     }
 
+    /** Use the filterings to generate the desired sets */
     val colloc_Vars = colloc.filter( pa => minimalCoveringClash( pa._1, pa._2 ) )
     val colloc_tl = colloc.filter( pa => triangleleft( pa._1, pa._2 ) )
 
-    // \theta_H unnecessary by construction
+    /** \theta_H is unnecessary by construction, all our indices are from cand(phi) */
 //    val notAsgnCand = seen.filterNot( i => UniqueDB( UID( i ) ).exists( isCand ) )
 //
 //    /** \theta_H */
 //    val thetaHArgs = notAsgnCand.map( i => Neg( Variable( i ) ) )
 //    val thetaH = thetaHArgs.map( toSmt2 )
 
-    /** \theta_C^* */
+    /** \theta_C^*^ */
     val thetaCStarArgs = delta.values
     val thetaCStar = thetaCStarArgs.map( toSmt2 )
 
-    /** \theta^\E! */
+    /** \theta^\E!^ */
     val thetaEArgs =
       for {(i, j) <- colloc_Vars if i < j}
         yield Neg( And( Variable( i ), Variable( j ) ) )
     val thetaE = thetaEArgs.map( toSmt2 )
 
-    /** \theta_A^* */
+    /** \theta_A^*^ */
     val thetaAStarArgs =
       for {(i, j) <- colloc_tl}
         yield Implies( And( Variable( i ), Variable( j ) ), LtFns( i, j ) )
     val thetaAStar = thetaAStarArgs.map( toSmt2 )
 
-    /** \theta^inj */
+    /** \theta^inj^ */
     val thetaInjArgs = for {i <- seen; j <- seen if i < j} yield NeFns( i, j )
     val thetaInj = thetaInjArgs.map( toSmt2 )
 
@@ -377,14 +453,12 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
     /** Partial return, sufficient for the z3 API */
     val ret = typedecls + fndecls + constraints
 
-    /** Possibly produce standalone file */
-    if ( p_fileName.nonEmpty ) {
+    /** Possibly produce standalone spec */
+    if ( p_complete ) {
       val logic = "( set-logic QF_UFLIA )\n"
       val end = "\n( check-sat )\n( get-model )\n( exit )"
 
-      val pw = new PrintWriter( new File( p_fileName.get ) )
-      pw.write( logic + ret + end )
-      pw.close()
+      return logic + ret + end
 
     }
 

@@ -3,9 +3,22 @@ package at.forsyte.apalache.tla.assignments
 import at.forsyte.apalache.tla.lir._
 import com.microsoft.z3._
 
+/**
+  * General interface for an SMT solver.
+  *
+  * Current implementation uses Z3.
+  */
 object SMTInterface extends TypeAliases {
 
-  class FunWrapper( m_fun : FuncInterp, m_varSym : String ) {
+  /**
+    * Wraps a [[com.microsoft.z3.FuncInterp FuncInterp]].
+    *
+    * The [[apply]] method allows using a [[com.microsoft.z3.FuncInterp FuncInterp]]
+    * as a function.
+    * @param m_fun Wrapped function interpretation
+    * @param m_varSym Symbol used for variables
+    */
+  private class FunWrapper( m_fun : FuncInterp, m_varSym : String ) {
     /** Return value for arguments outside the relevant subdomain. */
     protected val m_default : Int = m_fun.getElse.asInstanceOf[IntNum].getInt
 
@@ -27,6 +40,13 @@ object SMTInterface extends TypeAliases {
     override def toString : String = m_map.toString
   }
 
+  /**
+    * Point of access method,
+    * @param p_spec SMT specification string for the assignment problem,
+    *               as required by the underlying solver.
+    * @param p_varSym Symbol used for variables.
+    * @return Some(A), if there exists an assignment strategy A, satisfying the spec, otherwise None.
+    */
   def apply( p_spec : String, p_varSym : String ) : Option[StrategyType] = {
 
     /** Initialize a context and solver */
@@ -36,6 +56,7 @@ object SMTInterface extends TypeAliases {
     /** Parse the spec and add it to the solver */
     solver.add( ctx.parseSMTLIB2String( p_spec, null, null, null, null ) )
 
+    /** If UNSAT, terminate */
     val status = solver.check.toString
     if ( status != "SATISFIABLE" )
       return None
@@ -67,6 +88,7 @@ object SMTInterface extends TypeAliases {
 
         /* return */ Some( sorted.map( x => UID( x.substring( 2 ).toInt ) ) )
 
+      /** Should not happen if spec comes from [[AssignmentStrategyEncoder]] */
       case _ => None
     }
   }
