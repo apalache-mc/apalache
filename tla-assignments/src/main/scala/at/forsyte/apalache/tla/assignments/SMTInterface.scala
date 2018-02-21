@@ -8,14 +8,15 @@ import com.microsoft.z3._
   *
   * Current implementation uses Z3.
   */
-object SMTInterface extends TypeAliases {
+class SMTInterface extends TypeAliases {
 
   /**
     * Wraps a [[com.microsoft.z3.FuncInterp FuncInterp]].
     *
     * The [[apply]] method allows using a [[com.microsoft.z3.FuncInterp FuncInterp]]
     * as a function.
-    * @param m_fun Wrapped function interpretation
+    *
+    * @param m_fun    Wrapped function interpretation
     * @param m_varSym Symbol used for variables
     */
   private class FunWrapper( m_fun : FuncInterp, m_varSym : String ) {
@@ -42,8 +43,9 @@ object SMTInterface extends TypeAliases {
 
   /**
     * Point of access method,
-    * @param p_spec SMT specification string for the assignment problem,
-    *               as required by the underlying solver.
+    *
+    * @param p_spec   SMT specification string for the assignment problem,
+    *                 as required by the underlying solver.
     * @param p_varSym Symbol used for variables.
     * @return Some(A), if there exists an assignment strategy A, satisfying the spec, otherwise None.
     */
@@ -67,11 +69,13 @@ object SMTInterface extends TypeAliases {
     /** Extract the rank function. Should be the only (non-const.) function */
     val fnDecl = m.getFuncDecls
 
-    fnDecl.size match{
-      case 0 => /** Only happens if Next is exactly 1 assignment */
+    fnDecl.size match {
+      case 0 =>
+
+        /** Only happens if Next is exactly 1 assignment */
         val trues =
           m.getConstDecls.withFilter( x => m.getConstInterp( x ).isTrue ).map( _.getName.toString )
-        Some( trues.map( x => UID( x.substring( 2 ).toInt ) )  )
+        Some( trues.map( x => UID( x.substring( 2 ).toInt ) ) )
 
       case 1 =>
         if ( fnDecl.size != 1 )

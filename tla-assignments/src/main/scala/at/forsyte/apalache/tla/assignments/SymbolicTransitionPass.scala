@@ -2,10 +2,6 @@ package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.OperatorHandler
-import at.forsyte.apalache.tla.assignments.Converter
-import at.forsyte.apalache.tla.lir.plugins.UniqueDB
-
-import scala.collection.immutable.Set
 
 object SymbolicTransitionPass extends TypeAliases {
 
@@ -34,9 +30,9 @@ object SymbolicTransitionPass extends TypeAliases {
     val vars = converter.getVars( decls:_*)
     val nextBody = findBodyOf( p_nextName, decls:_* )
 
-    assert( ! nextBody.isNull )
+    assert( !nextBody.isNull )
 
-    val cleaned = converter( nextBody, decls:_* )
+    val cleaned = converter( nextBody, decls : _* )
     assert( nextBody.ID.valid )
 
     assert( cleaned.isDefined )
@@ -48,11 +44,11 @@ object SymbolicTransitionPass extends TypeAliases {
 
     val spec = stratEncoder( vars, phi )
 
-    val strat = SMTInterface( spec, stratEncoder.m_varSym )
+    val strat = ( new SMTInterface() ) ( spec, stratEncoder.m_varSym )
 
     assert( strat.isDefined )
 
-    val transitions = SymbTransGenerator( phi, strat.get )
+    val transitions = ( new SymbTransGenerator() ) ( phi, strat.get )
 
     transitions
 
