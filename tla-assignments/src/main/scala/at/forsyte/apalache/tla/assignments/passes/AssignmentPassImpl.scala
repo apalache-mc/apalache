@@ -9,6 +9,9 @@ import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
+// TODO:
+// USE SymbolicTransitionPass
+
 /**
   * This pass finds symbolic transitions in a TLA+ specification.
   */
@@ -37,7 +40,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
     val vars = allDeclarations
       .filter(_.isInstanceOf[TlaVarDecl])
       .map(d => NameEx(d.name))
-    val varSet = Set(vars.map(_.name): _*)
+    val varSet = vars.map(_.name).toSet
 
     // replace every variable x with x', so we can use the assignment solver
     def primeVars(e: TlaEx): TlaEx = e match {
