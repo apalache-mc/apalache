@@ -136,7 +136,7 @@ object assignmentSolver {
       * @see [[rvars]]
       */
     def lvar( i : Int ) : Option[String] = {
-      UniqueDB.get( UID( i ) ) match {
+      UniqueDB.apply( UID( i ) ) match {
         case OperEx( TlaSetOper.in, OperEx( TlaActionOper.prime, NameEx( name ) ), _ ) => Some( name )
         case _ => None
       }
@@ -181,7 +181,7 @@ object assignmentSolver {
       * @see [[lvar]]
       */
     def rvars( i : Int ) : Set[String] =
-      UniqueDB.get( UID( i ) ) match {
+      UniqueDB.apply( UID( i ) ) match {
         case OperEx( TlaSetOper.in, OperEx( TlaActionOper.prime, NameEx( _ ) ), set ) => findPrimes( set )
         case _ => Set[String]()
       }
@@ -869,7 +869,7 @@ object assignmentSolver {
 
     def getVarMap( p_stratSet : Set[UID] ) : VarMapType = {
       p_stratSet.map(
-        x => singleVarMap( UniqueDB.get( x ) )
+        x => singleVarMap( UniqueDB.apply( x ) )
       ).fold( Map() )( joinSetMaps )
     }
 

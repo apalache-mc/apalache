@@ -319,7 +319,7 @@ class TestIDAllocation extends FunSuite{
                 &&
                 eqc.get.nonEmpty
                 &&
-                eqc.get.forall( UniqueDB( _ ).contains( tlaEx ) )
+                eqc.get.forall( UniqueDB.get( _ ).contains( tlaEx ) )
                 )
       }
 
@@ -393,7 +393,7 @@ class TestIDAllocation extends FunSuite{
 
       OperatorSubstitution.extract( spec )
 
-      val operinfo = OperatorDB( EquivalenceDB.getRaw( NameEx( "SndNewValue" ) ) )
+      val operinfo = OperatorDB.get( EquivalenceDB.getRaw( NameEx( "SndNewValue" ) ) )
 
       assert(
         operinfo.nonEmpty
@@ -487,7 +487,7 @@ class TestIDAllocation extends FunSuite{
       )
 
       // the origin of 0 + 1 is A(0)
-      val UID1 = OriginDB( retSpc.declarations
+      val UID1 = OriginDB.get( retSpc.declarations
         .reverse.head.asInstanceOf[TlaOperDecl]
         .body.asInstanceOf[OperEx]
         .args.tail.head.asInstanceOf[OperEx].args.head.ID

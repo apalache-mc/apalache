@@ -15,7 +15,7 @@ import scala.collection.mutable.Set
   * Equivalence IDs are introduced to reduce the cost of using TLA expressions as pkeys in other databases.
   */
 object EquivalenceDB extends SmartDB[ TlaEx, EID ]{
-  override val name = "EquivalenceDB"
+  override val m_name = "EquivalenceDB"
 
   private val eqClasses : Vector[ Set[ UID ] ] = new Vector[ Set[ UID ] ]
   private val allocator : IDAllocator[ TlaEx ] = new IDAllocator[ TlaEx ]
@@ -50,7 +50,7 @@ object EquivalenceDB extends SmartDB[ TlaEx, EID ]{
   }
 
   /** DUMMY */
-  override def get( key : TlaEx ) = EID(-1)
+  override def apply( key : TlaEx ) = EID(-1)
 
   /** DUMMY */
   override def keySet( ) : scala.collection.immutable.Set[TlaEx] = scala.collection.immutable.Set[TlaEx]()
@@ -63,7 +63,7 @@ object EquivalenceDB extends SmartDB[ TlaEx, EID ]{
 
   /** Prints both the individual EIDs and equivalence classes to std. output. */
   override def print(): Unit = {
-    println( "\n" + name + ": \n" )
+    println( "\n" + m_name + ": \n" )
     for ( i <- 0 until allocator.nextID()  ) {
       println( EID( i ) + " -> " + allocator.getVal( i ) )
     }
@@ -114,7 +114,7 @@ object EquivalenceDB extends SmartDB[ TlaEx, EID ]{
     * Overload for UID.
     */
   def getEqClass( key: UID ) : Option[ Set[ UID ] ] = {
-    return UniqueDB( key ).map( x => getEqClass( getRaw( x ) ) ).getOrElse(None)
+    return UniqueDB.get( key ).map( x => getEqClass( getRaw( x ) ) ).getOrElse(None)
   }
 
   /**
@@ -131,23 +131,6 @@ object EquivalenceDB extends SmartDB[ TlaEx, EID ]{
     //super.clear()
     allocator.reset()
     eqClasses.clear()
-  }
-
-}
-
-package object EquivalencePlugin extends Plugin {
-  override val name = "EquivalencePlugin"
-  override val dependencies : List[String] =  FirstPass.name :: Nil
-
-  /** Cannot produce errors (?)*/
-  override def translate(): Unit = {
-    output = input.deepCopy()
-    SpecHandler.sideeffectWithExFun( output, EquivalenceDB.apply )
-  }
-
-  override def reTranslate( err: PluginError ): Unit = {
-    /** Forwards errors */
-    throwError = err
   }
 
 }

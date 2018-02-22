@@ -166,7 +166,7 @@ class TestOperatorHandler extends FunSuite with TestingPredefs {
 
     assert( newBodyA.valid )
 
-    val originalHopefully = UniqueDB apply sdb.traceBack( newBodyA.ID )
+    val originalHopefully = UniqueDB.get( sdb.traceBack( newBodyA.ID ) )
 
 
     def leafJudge( p_ex : TlaEx) : Boolean = {
@@ -180,7 +180,7 @@ class TestOperatorHandler extends FunSuite with TestingPredefs {
       p_ex match {
         case NameEx( name ) if name.startsWith( "A_" ) => {
           val anc = sdb.traceBack( p_ex.ID )
-          UniqueDB.contains( anc ) && UniqueDB.get(anc) == NameEx( name.substring( 2 ) )
+          UniqueDB.contains( anc ) && UniqueDB.apply(anc) == NameEx( name.substring( 2 ) )
         }
         case _ => true
       }

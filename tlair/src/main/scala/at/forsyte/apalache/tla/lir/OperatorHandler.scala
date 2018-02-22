@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.plugins.{Identifier, UniqueDB}
 
 class BodyDB extends HashMapDB[String, (List[FormalParam], TlaEx)] {
-  override val name = "bodyDB"
+  override val m_name = "bodyDB"
 
   override def put( key : String,
                     value : (List[FormalParam], TlaEx)
@@ -20,15 +20,15 @@ class BodyDB extends HashMapDB[String, (List[FormalParam], TlaEx)] {
     m_map.update( key, (value._1, value._2.deepCopy( identified = false )) )
   }
 
-  def params( p_name : String ) : Option[List[FormalParam]] = apply( p_name ).map( _._1 )
+  def params( p_name : String ) : Option[List[FormalParam]] = get( p_name ).map( _._1 )
 
-  def body( p_name : String ) : Option[TlaEx] = apply( p_name ).map( _._2 )
+  def body( p_name : String ) : Option[TlaEx] = get( p_name ).map( _._2 )
 
   def arity( p_name : String ) : Option[Integer] = params( p_name ).map( _.size )
 }
 
 class SourceDB extends HashMapDB[UID, UID] {
-  override val name : String = "sourceDB"
+  override val m_name : String = "sourceDB"
 
   override def put( key : UID,
                     value : UID
@@ -56,13 +56,13 @@ class SourceDB extends HashMapDB[UID, UID] {
 }
 
 object DummySrcDB extends SourceDB {
-  override val name : String = "DummySource"
+  override val m_name : String = "DummySource"
 
   override def put( key : UID, value : UID ) : Option[UID] = None
 
   override def update( key : UID, value : UID ) : Unit = {}
 
-  override def apply( key : UID ) : Option[UID] = None
+  override def get( key : UID ) : Option[UID] = None
 
   override def size( ) : Int = 0
 
@@ -220,7 +220,7 @@ object OperatorHandler {
                    p_srcDB : SourceDB
                  ) : TlaEx = {
     if ( p_srcDB.contains( p_ex.ID ) ) {
-      UniqueDB( p_srcDB( p_ex.ID ).get ).get
+      UniqueDB( p_srcDB( p_ex.ID ) )
     }
     else p_ex
   }
@@ -246,7 +246,7 @@ object OperatorHandler {
     def subAndID( p_operEx : TlaEx ) : TlaEx = {
 
       def lambda( name : String, args : TlaEx* ) : TlaEx = {
-        val pbPair = p_bdDB( name )
+        val pbPair = p_bdDB.get( name )
         if ( pbPair.isEmpty ) return p_operEx
 
         var (params, body) = pbPair.get

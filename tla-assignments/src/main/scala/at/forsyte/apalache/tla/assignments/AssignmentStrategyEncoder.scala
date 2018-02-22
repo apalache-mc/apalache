@@ -380,8 +380,8 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
       * for the same variable.
       * */
     def minimalCoveringClash( i : Int, j : Int ) : Boolean = {
-      val ex_i = UniqueDB( UID( i ) )
-      val ex_j = UniqueDB( UID( j ) )
+      val ex_i = UniqueDB.get( UID( i ) )
+      val ex_j = UniqueDB.get( UID( j ) )
 
       p_vars.exists(
         v =>
@@ -400,8 +400,8 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
       * since seen/colloc only contain assignment candidate IDs.
       * */
     def triangleleft( i : Int, j : Int ) : Boolean = {
-      val ex_i = UniqueDB( UID( i ) )
-      val ex_j = UniqueDB( UID( j ) )
+      val ex_i = UniqueDB.get( UID( i ) )
+      val ex_j = UniqueDB.get( UID( j ) )
 
       p_vars.exists(
         v =>

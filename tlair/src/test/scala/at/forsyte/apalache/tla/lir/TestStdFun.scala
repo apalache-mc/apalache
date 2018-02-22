@@ -25,7 +25,7 @@ class TestStdFun extends FunSuite with TestingPredefs {
     }
     catch {
       case e : FilterInvalidationError => println( e )
-      case _ =>
+      case e : Throwable => throw e
     }
 
 

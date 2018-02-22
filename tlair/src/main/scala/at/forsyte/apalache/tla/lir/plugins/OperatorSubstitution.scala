@@ -9,14 +9,14 @@ import at.forsyte.apalache.tla.lir.oper._
 
 
 object OperatorDB extends HashMapDB[ EID, ( List[FormalParam], EID ) ]{
-  override val name = "OperatorDB"
+  override val m_name = "OperatorDB"
 
-  def params( eid: EID ) : Option[ List[ FormalParam ] ] =  apply( eid ).map( _._1 )
+  def params( eid: EID ) : Option[ List[ FormalParam ] ] =  get( eid ).map( _._1 )
 
   def arity( eid: EID ) : Option[ Integer ] = params( eid ).map( _.size )
 
   def body( eid: EID ) : Option[ TlaEx ] =
-    apply( eid ).map(
+    get( eid ).map(
       x => EquivalenceDB.getEx( x._2 ).map( _.deepCopy( identified = false ) )
     ).getOrElse( None )
 
@@ -43,7 +43,7 @@ object OperatorDB extends HashMapDB[ EID, ( List[FormalParam], EID ) ]{
 }
 
 object OriginDB extends HashMapDB[ UID, UID ] {
-  override val name = "OriginDB"
+  override val m_name = "OriginDB"
 }
 
 
@@ -57,11 +57,11 @@ package object OperatorSubstitution {
     val nameEx = NameEx( thisDecl.name )
     // Give separate UID so EID can be created if operator is never called in other code
     Identifier.identify( nameEx ) // NameEx is lost, do nor re-set multiple times
-    val nameEID = EquivalenceDB( nameEx )
+    val nameEID = EquivalenceDB.get( nameEx )
 
     // Body needs valid UID
 
-    val bodyEID = EquivalenceDB( thisDecl.body )
+    val bodyEID = EquivalenceDB.get( thisDecl.body )
 
     if( nameEID.nonEmpty && bodyEID.nonEmpty ) {
       OperatorDB.update( nameEID.get, (params, bodyEID.get) )
@@ -90,8 +90,8 @@ package object OperatorSubstitution {
         return getBodyOrSelf( tlaEx )
       }
       case OperEx( TlaOper.apply, oper, args@_* ) => {
-        val mapval = OperatorDB( EquivalenceDB.getRaw( oper ) )
-        if (mapval == None) return tlaEx
+        val mapval = OperatorDB.get( EquivalenceDB.getRaw( oper ) )
+        if (mapval.isEmpty) return tlaEx
         var body = EquivalenceDB.getEx( mapval.get._2 ).get
         val params = mapval.get._1
         if( params.size != args.size ){
@@ -121,19 +121,19 @@ package object OperatorSubstitution {
 
 package object Substitutor extends Plugin {
   override val name = "Substitutor"
-  override val dependencies : List[String] = FirstPass.name :: EquivalencePlugin.name :: Nil
+  override val dependencies : List[String] = FirstPass.name :: Nil
 
   def extractOper( tlaOperDecl: TlaDecl ) : Unit = {
     tlaOperDecl match {
-      case TlaOperDecl( name, params, body ) => {
+      case TlaOperDecl( exName, params, body ) => {
 
-        val nameEx = NameEx( name )
+        val nameEx = NameEx( exName )
         // Give separate UID so EID can be created if operator is never called in other code
         Identifier.identify( nameEx ) // NameEx is lost, do nor re-set multiple times
-        val nameEID = EquivalenceDB( nameEx )
+        val nameEID = EquivalenceDB.get( nameEx )
 
         // Body needs valid UID
-        val bodyEID = EquivalenceDB( body )
+        val bodyEID = EquivalenceDB.get( body )
 
         if( nameEID.nonEmpty && bodyEID.nonEmpty ) {
           OperatorDB.update( nameEID.get, ( params, bodyEID.get ) )
@@ -165,7 +165,7 @@ package object Substitutor extends Plugin {
     tlaEx match {
       case NameEx( _ ) =>  getBodyOrSelf( tlaEx )
       case OperEx( oper : TlaUserOper, args@_* ) => {
-        val mapval = OperatorDB( EquivalenceDB.getRaw( NameEx( oper.name) ) )
+        val mapval = OperatorDB.get( EquivalenceDB.getRaw( NameEx( oper.name) ) )
         if ( mapval.isEmpty ) return tlaEx
         var body = EquivalenceDB.getEx( mapval.get._2 ).get
         val params = mapval.get._1
