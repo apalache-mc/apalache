@@ -172,6 +172,8 @@ class SymbTransGenerator extends TypeAliases {
           /** otherwise, take the one intersecting branch*/
           else {
             assert( newArgs.size == 1 )
+//            if( newArgs.size != 1 )
+//              throw new AssignmentException( "Stategy intersects more than one branch, expected 1 or 0" )
             newArgs.head
           }
 
@@ -232,6 +234,8 @@ class SymbTransGenerator extends TypeAliases {
     /** Sanity check, all selections are the same size */
     val allSizes = selections( p_phi.ID ).map( _.size )
     assert( allSizes.size == 1 )
+//    if( allSizes.size != 1 )
+//      throw new AssignmentException("Assignment selections of unequal size constructed")
 
     /** We restrict the formula to each equivalence class (defined by an assignment selection) */
     restrictToSelections( p_phi, p_asgnStrategy, selections )

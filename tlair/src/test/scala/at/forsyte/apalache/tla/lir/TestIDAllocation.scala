@@ -251,44 +251,6 @@ class TestIDAllocation extends FunSuite{
 
   }
 
-  test("Check basic substitution") {
-
-    def bSub() {
-      val spec = specSum.deepCopy( )
-
-//      printSpec( spec )
-      val after = BasicSubstitutions.sub( spec )
-//      Identifier.identify( after )
-//      printSpec( after )
-
-      assert(
-        after.declarations.size == 1
-        &&
-        after.declarations.head == TlaOperDecl( "sum", Nil , ValEx( TlaTrue ) )
-      )
-
-      val spec2 = specBool.deepCopy()
-
-//      printSpec( spec2 )
-
-
-      val after2 = BasicSubstitutions.sub( spec2 )
-//      Identifier.identify( after2 )
-//      printSpec( after2 )
-
-      assert(
-        after2.declarations.size == 1
-        &&
-        after2.declarations.head == TlaOperDecl( "redundant bool", Nil , ValEx( TlaTrue ) )
-      )
-
-
-    }
-
-    sterileRun( bSub )
-
-  }
-
   test("Check equivalence") {
 
     def eqCheck() {

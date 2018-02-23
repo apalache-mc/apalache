@@ -38,7 +38,7 @@ class SMTInterface extends TypeAliases {
     /** The wrapper can be called like a function. */
     def apply( arg : String ) : Int = m_map.getOrElse( arg, m_default )
 
-    override def toString : String = m_map.toString
+//    override def toString : String = m_map.toString
   }
 
   /**
@@ -78,17 +78,17 @@ class SMTInterface extends TypeAliases {
         Some( trues.map( x => UID( x.substring( 2 ).toInt ) ) )
 
       case 1 =>
-        if ( fnDecl.size != 1 )
-          return None
 
         /** Wrap the function so it can be used to sort the sequence later. */
         val wrap = new FunWrapper( m.getFuncInterp( fnDecl( 0 ) ), p_varSym )
+
+        assert( wrap("") == m.getFuncInterp( fnDecl( 0 ) ).getElse.asInstanceOf[IntNum].getInt )
 
         /** Extract all constants which are set to true */
         val trues = m.getConstDecls.withFilter( x => m.getConstInterp( x ).isTrue ).map( _.getName.toString )
 
         /** Sort by rank */
-        val sorted = trues.sortBy( x => wrap( x ) )
+        val sorted = trues.sortBy( x => wrap.apply( x ) )
 
         /* return */ Some( sorted.map( x => UID( x.substring( 2 ).toInt ) ) )
 

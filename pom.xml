@@ -251,7 +251,7 @@
                 <executions>
                     <execution>
                         <goals>
-                            <goal>check</goal> <!-- or integration-check -->
+                            <goal>report</goal> <!-- or integration-check -->
                         </goals>
                         <phase>prepare-package</phase> <!-- or any other phase -->
                     </execution>
