@@ -147,6 +147,12 @@ class Converter {
 
     val inlined = inlineAll( p_expr )( bodyDB, srcDB )
 
+    /**
+      * Bug (Jure, 23.2.2018): Does not remember in sourceDB, because
+      * SpecHandler.getNewEx does not perform post-processing if the transformed parent has not transformed children.
+      *
+      * Fixed, by always calling postFun
+      * */
     val eqReplaced = OperatorHandler.replaceWithRule( inlined, rewriteEQ, srcDB )
 
     /* val ucReplaced = */ unchangedExplicit( eqReplaced )( srcDB )

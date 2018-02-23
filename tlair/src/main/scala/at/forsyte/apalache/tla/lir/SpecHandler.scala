@@ -78,18 +78,16 @@ object SpecHandler {
                 p_postFun : (TlaEx, TlaEx) => Unit = dummyPost
               ) : TlaEx = {
     val newEx = p_exFun( p_ex )
-    newEx match {
-      case OperEx( oper, args@_* ) => {
+    val ret = newEx match {
+      case OperEx( oper, args@_* ) =>
         val newargs = args.map( getNewEx( _, p_exFun, p_postFun ) )
         if ( args == newargs ) newEx
-        else {
-          val ret = OperEx( oper, newargs : _* )
-          p_postFun( p_ex, ret )
-          ret
-        }
-      }
+        else OperEx( oper, newargs : _* )
       case _ => newEx
     }
+    p_postFun( p_ex, ret )
+    ret
+
   }
 
   def sideeffectEx( p_ex : TlaEx,

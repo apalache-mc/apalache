@@ -76,7 +76,9 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
   }
 
   test( "Test no strat" ){
-    val next = bd.primeInSingleton( n_x, n_S )
+//    val next = bd.primeInSingleton( n_x, n_S )
+
+    val next = bd.eql( bd.prime( n_x ), n_y )
 
     val decls = Seq( TlaOperDecl( "Next", List(), next ), TlaVarDecl( "x" ), TlaVarDecl( "z" ) )
 

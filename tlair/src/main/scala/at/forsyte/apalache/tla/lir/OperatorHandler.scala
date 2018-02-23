@@ -200,8 +200,7 @@ object OperatorHandler {
     def swap( arg : TlaEx ) : TlaEx =
       if ( arg == p_replacedEx ) {
         val ret = p_newEx.deepCopy( identified = false )
-        Identifier.identify( ret )
-        p_srcDB.update( ret.ID, arg.ID )
+        markSrc( arg, ret, p_srcDB )
         ret
       }
       else arg
@@ -243,6 +242,12 @@ object OperatorHandler {
       * operator.
       */
 
+    /**
+      * Bug (Jure: 23.2.2018): Inlining adds X->X to the sourceDB
+      *
+      * Fixed by removing p_srcDB.update() calls with markSrc(), which performs sanity checks
+      */
+
     def subAndID( p_operEx : TlaEx ) : TlaEx = {
 
       def lambda( name : String, args : TlaEx* ) : TlaEx = {
@@ -258,8 +263,8 @@ object OperatorHandler {
         params.zip( args ).foreach(
           pair => body = replaceAll( body, NameEx( pair._1.name ), pair._2, p_srcDB )
         )
-        Identifier.identify( body )
-        p_srcDB.update( body.ID, p_operEx.ID )
+//        Identifier.identify( body )
+        markSrc( p_operEx, body, p_srcDB )
         /* return */ body
       }
 
@@ -271,8 +276,7 @@ object OperatorHandler {
     }
 
     val ret = SpecHandler.getNewEx( p_ex, subAndID )
-    Identifier.identify( ret )
-    p_srcDB.update( ret.ID, p_ex.ID )
+    markSrc( p_ex, ret, p_srcDB )
     ret
   }
 
@@ -286,8 +290,8 @@ object OperatorHandler {
       a = b
       b = unfoldOnce( b, p_bdDB, p_srcDB )
     }
-    Identifier.identify( b )
-    p_srcDB.update( b.ID, p_ex.ID )
+//    Identifier.identify( b )
+    markSrc( p_ex, b, p_srcDB )
     b
   }
 
