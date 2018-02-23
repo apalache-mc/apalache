@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.assignments.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
-import at.forsyte.apalache.tla.assignments.{AssignmentException, Converter, SpecWithTransitions, assignmentSolver}
+import at.forsyte.apalache.tla.assignments._
 import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -66,44 +66,56 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
 
     val declarations = allDeclarations.map(replaceInit)
 
-    // let converter do its magic
-    val converter = new Converter()
-    converter.extract(declarations: _*)
-    val initBody = findBodyOf(initName, declarations: _*)
-    val sanitizedInit = converter.sanitize(initBody)
+    val stp = new SymbolicTransitionPass()
 
-    val initAssignments = assignmentSolver.getSymbolicTransitions(varSet, sanitizedInit)
-    val initTransitions =
-      if (initAssignments.isEmpty) {
-        throw new AssignmentException("Failed to extract variable assignments from " + initName)
-      } else {
-        // TODO: label the assignment expressions as assignments in a special database
-        // for the moment just rely on that the assignment solver transforms the formulas in such a way
-        // that all assignments come first
-        initAssignments.get.map(_._2).toList
-      }
+    // drop selections because of lacking implementation further on
+    val initTransitions = stp( declarations, initName ).map( _._2 ).toList
+
+
+//    // let converter do its magic
+//    val converter = new Converter()
+//    converter.extract(declarations: _*)
+//    val initBody = findBodyOf(initName, declarations: _*)
+//    val sanitizedInit = converter.sanitize(initBody)
+//
+//    val initAssignments = assignmentSolver.getSymbolicTransitions(varSet, sanitizedInit)
+//    val initTransitions =
+//      if (initAssignments.isEmpty) {
+//        throw new AssignmentException("Failed to extract variable assignments from " + initName)
+//      } else {
+//        // TODO: label the assignment expressions as assignments in a special database
+//        // for the moment just rely on that the assignment solver transforms the formulas in such a way
+//        // that all assignments come first
+//        initAssignments.get.map(_._2).toList
+//      }
 
     for ((t, i) <- initTransitions.zipWithIndex) {
       logger.debug("Initial transition #%d:\n   %s".format(i, t))
     }
 
     val nextName = options.getOption("checker", "next", "Next").asInstanceOf[String]
-    val nextBody = findBodyOf(nextName, allDeclarations: _*)
-    val sanitizedNext = converter.sanitize(nextBody)
-    val nextAssignments = assignmentSolver.getSymbolicTransitions(varSet, sanitizedNext)
-    val nextTransitions =
-      if (nextAssignments.isEmpty) {
-        throw new AssignmentException("Failed to extract variable assignments from " + nextName)
-      } else {
-        // TODO: label the assignment expressions as assignments in a special database
-        // for the moment just rely on that the assignment solver transforms the formulas in such a way
-        // that all assignments come first
-        nextAssignments.get.map(_._2).toList
-      }
+
+    // drop selections because of lacking implementation further on
+    val nextTransitions = stp(declarations,nextName).map( _._2 ).toList
+
+//    val nextBody = findBodyOf(nextName, allDeclarations: _*)
+//    val sanitizedNext = converter.sanitize(nextBody)
+//    val nextAssignments = assignmentSolver.getSymbolicTransitions(varSet, sanitizedNext)
+//    val nextTransitions =
+//      if (nextAssignments.isEmpty) {
+//        throw new AssignmentException("Failed to extract variable assignments from " + nextName)
+//      } else {
+//        // TODO: label the assignment expressions as assignments in a special database
+//        // for the moment just rely on that the assignment solver transforms the formulas in such a way
+//        // that all assignments come first
+//        nextAssignments.get.map(_._2).toList
+//      }
 
     for ((t, i) <- nextTransitions.zipWithIndex) {
       logger.debug("Next transition #%d:\n   %s".format(i, t))
     }
+
+    val converter = new Converter()
 
     val invName = options.getOption("checker", "inv", None).asInstanceOf[Option[String]]
     val invariant =

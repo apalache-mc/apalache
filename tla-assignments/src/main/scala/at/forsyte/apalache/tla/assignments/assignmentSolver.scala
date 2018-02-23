@@ -6,6 +6,12 @@
 
 package at.forsyte.apalache.tla.assignments
 
+/**
+  * * DEPRECATED
+  * *  USE AssignmentStragetgyEncoder + SMTInterface + SymbTransGenerator
+  * * DEPRECATED
+  */
+
 import java.io._
 
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper

@@ -18,10 +18,10 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
     testFromDecls( Seq( TlaOperDecl( "Next", List(), p_next ) ) )
   }
 
-  def testFromDecls( p_decls : Seq[TlaDecl], p_next : String = "Next"   ) = {
+  def testFromDecls( p_decls : Seq[TlaDecl], p_next : String = "Next"   ) : Seq[SymbTrans]  = {
     UniqueDB.clear()
 
-    SymbolicTransitionPass( p_decls, p_next )
+    new SymbolicTransitionPass()( p_decls, p_next )
   }
 
   def testFromFile( p_file : String, p_next : String = "Next" ) : Seq[SymbTrans] = {
