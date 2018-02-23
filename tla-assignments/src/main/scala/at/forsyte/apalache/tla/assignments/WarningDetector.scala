@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
+import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.oper._
 
 abstract class Warning{
@@ -47,7 +48,8 @@ object WarningDetector {
             case TlaBoolOper.and |
                  TlaBoolOper.or |
                  TlaSetOper.in |
-                 TlaBoolOper.exists => false
+                 TlaBoolOper.exists |
+                 TlaControlOper.ifThenElse => false
             case _ => true
           }
         case _ => true
