@@ -66,7 +66,10 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
 
     val declarations = allDeclarations.map(replaceInit)
 
-    val stp = new SymbolicTransitionPass()
+    val bodyDB = new BodyDB
+    val srcDB = DummySrcDB// new SourceDB <-- not yet supported
+
+    val stp = new SymbolicTransitionPass( bodyDB, srcDB )
 
     // drop selections because of lacking implementation further on
     val initTransitions = stp( declarations, initName ).map( _._2 ).toList
@@ -115,13 +118,13 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
       logger.debug("Next transition #%d:\n   %s".format(i, t))
     }
 
-    val converter = new Converter()
+    val transformer = new Transformer()
 
     val invName = options.getOption("checker", "inv", None).asInstanceOf[Option[String]]
     val invariant =
       if (invName.isDefined) {
         val invBody = findBodyOf(invName.get, allDeclarations: _*)
-        val notInv = converter.sanitize(tla.not(invBody))
+        val notInv = transformer.sanitize(tla.not(invBody))( bodyDB, srcDB )
         logger.debug("Negated invariant:\n   %s".format(notInv))
         Some(notInv)
       } else {

@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.assignments
 
 import java.io.{File, PrintWriter}
 
-import at.forsyte.apalache.tla.lir.{TestingPredefs, TlaDecl, TlaEx, TlaOperDecl, TlaVarDecl, ValEx, Builder => bd}
+import at.forsyte.apalache.tla.lir.{BodyDB, SourceDB, TestingPredefs, TlaDecl, TlaEx, TlaOperDecl, TlaVarDecl, ValEx, Builder => bd}
 import at.forsyte.apalache.tla.lir.plugins.UniqueDB
 import at.forsyte.apalache.tla.imp.declarationsFromFile
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
@@ -20,8 +20,10 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
 
   def testFromDecls( p_decls : Seq[TlaDecl], p_next : String = "Next"   ) : Seq[SymbTrans]  = {
     UniqueDB.clear()
+    val bodyDB = new BodyDB
+    val srcDB = new SourceDB
 
-    new SymbolicTransitionPass()( p_decls, p_next )
+    new SymbolicTransitionPass(bodyDB,srcDB)( p_decls, p_next )
   }
 
   def testFromFile( p_file : String, p_next : String = "Next" ) : Seq[SymbTrans] = {

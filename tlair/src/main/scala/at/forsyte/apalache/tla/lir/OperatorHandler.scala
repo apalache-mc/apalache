@@ -48,19 +48,60 @@ class SourceDB extends HashMapDB[UID, UID] {
 
   def traceBack( p_id : UID ) : UID = {
     var ancestor : UID = p_id
-    while( m_map.contains( ancestor ) ){
+    while ( m_map.contains( ancestor ) ) {
       ancestor = m_map( ancestor )
     }
     ancestor
   }
 }
 
+object DummyBodyDB extends BodyDB {
+  override val m_name : String = "DummyBodyDB"
+
+  override def put( key : String,
+                    value : (List[FormalParam], TlaEx)
+                  ) : Option[(List[FormalParam], TlaEx)] = None
+
+  override def update( key : String,
+                       value : (List[FormalParam], TlaEx)
+                     ) : Unit = {}
+
+  override def params( p_name : String ) : Option[List[FormalParam]] = None
+
+  override def body( p_name : String ) : Option[TlaEx] = None
+
+  override def arity( p_name : String ) : Option[Integer] = None
+
+  override def get( key : String ) : Option[(List[FormalParam], TlaEx)] = None
+
+  override def apply( key : String ) : (List[FormalParam], TlaEx) = (List(), NullEx)
+
+  override def size( ) : Int = 0
+
+  override def contains( key : String ) : Boolean = false
+
+  override def remove( key : String ) : Unit = {}
+
+  override def clear( ) : Unit = {}
+
+  override def keySet( ) : Set[String] = Set()
+
+  /** Retrieves the value associated with the key, if it exists in the database, otherwise returns `elseVal`. */
+  override def getOrElse( key : String,
+                          elseVal : (List[FormalParam], TlaEx)
+                        ) : (List[FormalParam], TlaEx) = (List(), NullEx)
+}
+
 object DummySrcDB extends SourceDB {
-  override val m_name : String = "DummySource"
+  override val m_name : String = "DummySourceDB"
 
-  override def put( key : UID, value : UID ) : Option[UID] = None
+  override def put( key : UID,
+                    value : UID
+                  ) : Option[UID] = None
 
-  override def update( key : UID, value : UID ) : Unit = {}
+  override def update( key : UID,
+                       value : UID
+                     ) : Unit = {}
 
   override def get( key : UID ) : Option[UID] = None
 
@@ -75,6 +116,15 @@ object DummySrcDB extends SourceDB {
   override def print( ) : Unit = {}
 
   override def traceBack( p_id : UID ) : UID = p_id
+
+  override def apply( key : UID ) : UID = UID( -1 )
+
+  override def keySet( ) : Set[UID] = Set()
+
+  /** Retrieves the value associated with the key, if it exists in the database, otherwise returns `elseVal`. */
+  override def getOrElse( key : UID,
+                          elseVal : UID
+                        ) : UID = UID( -1 )
 }
 
 object OperatorHandler {
@@ -101,10 +151,11 @@ object OperatorHandler {
   /**
     *
     * TODO: Test with proper srcDB
+    *
     * @param p_decls
     * @return
     */
-  def uniqueVarRename( p_decls: Seq[TlaDecl], p_srcDB : SourceDB = DummySrcDB ) : Seq[TlaDecl] = {
+  def uniqueVarRename( p_decls : Seq[TlaDecl], p_srcDB : SourceDB = DummySrcDB ) : Seq[TlaDecl] = {
     def lambda( p_boundVars : Set[String], p_prefix : String )( p_ex : TlaEx ) : TlaEx = {
       p_ex match {
         case NameEx( name ) =>
@@ -165,7 +216,7 @@ object OperatorHandler {
     p_decls.map(
       decl => decl match {
         case TlaOperDecl( name, params, body ) =>
-          TlaOperDecl( name, params.map( renameParam( name ) ) , lambda( params.map( _.name).toSet, name )( body ) )
+          TlaOperDecl( name, params.map( renameParam( name ) ), lambda( params.map( _.name ).toSet, name )( body ) )
         case _ => decl
       }
     )
@@ -174,12 +225,12 @@ object OperatorHandler {
 
   def extract( p_decl : TlaDecl,
                p_db : BodyDB
-                 ) : Unit = {
+             ) : Unit = {
     p_decl match {
-        /**
-          * What to do when extracting the same operator > 1 times? Currently, we skip the 2nd+.
-          * Jure, 1.12.2017
-          * */
+      /**
+        * What to do when extracting the same operator > 1 times? Currently, we skip the 2nd+.
+        * Jure, 1.12.2017
+        **/
       case decl : TlaOperDecl if !p_db.contains( p_decl.name ) => {
         Identifier.identify( p_decl )
         p_db.update( decl.name, (decl.formalParams, decl.body) )
@@ -235,7 +286,7 @@ object OperatorHandler {
       * demonstrated lack of exceptions thrown when the number of args provided exceeded the arity.
       *
       * This has been rectified by a check in lambda.
-      * */
+      **/
 
     /**
       * Bug( Jure: 15.1.2018 ): Inlining did not look inside the operator declarations of a LET-IN
@@ -255,15 +306,15 @@ object OperatorHandler {
         if ( pbPair.isEmpty ) return p_operEx
 
         var (params, body) = pbPair.get
-        if( params.size != args.size )
+        if ( params.size != args.size )
           throw new IllegalArgumentException(
-            "Operator %s with arity %s called with %s argument%s".format( name, params.size, args.size, if(args.size != 1) "s" else "" )
+            "Operator %s with arity %s called with %s argument%s".format( name, params.size, args.size, if ( args.size != 1 ) "s" else "" )
           )
 
         params.zip( args ).foreach(
           pair => body = replaceAll( body, NameEx( pair._1.name ), pair._2, p_srcDB )
         )
-//        Identifier.identify( body )
+        //        Identifier.identify( body )
         markSrc( p_operEx, body, p_srcDB )
         /* return */ body
       }
@@ -290,7 +341,7 @@ object OperatorHandler {
       a = b
       b = unfoldOnce( b, p_bdDB, p_srcDB )
     }
-//    Identifier.identify( b )
+    //    Identifier.identify( b )
     markSrc( p_ex, b, p_srcDB )
     b
   }

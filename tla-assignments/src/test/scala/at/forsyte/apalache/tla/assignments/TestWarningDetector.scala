@@ -27,11 +27,11 @@ class TestWarningDetector extends FunSuite with TestingPredefs {
     val file = "test1.tla"
 
     UniqueDB.clear()
-    val converter = new Converter()
+    val converter = new Transformer()
 
     val decls = declarationsFromFile(testFolderPath + file)
     decls.foreach( Identifier.identify )
-    converter.extract( decls:_* )
+//    converter.extract( decls:_* )
 
     val nextBody = findBodyOf( "Next", decls:_* )
 

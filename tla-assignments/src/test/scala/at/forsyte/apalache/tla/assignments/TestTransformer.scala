@@ -13,7 +13,7 @@ import scala.io.Source
 /* TODO: All tests clean */
 
 @RunWith( classOf[JUnitRunner] )
-class TestConverter extends FunSuite with TestingPredefs {
+class TestTransformer extends FunSuite with TestingPredefs {
   val testFolderPath = "src/test/resources/sanitizer/"
 
   test( "badEx" ) {
@@ -79,7 +79,7 @@ class TestConverter extends FunSuite with TestingPredefs {
     UniqueDB.clear()
   }
 
-  val converter = new Converter()
+  val converter = new Transformer()
   def extractAll = converter.extract( allDecls : _* )
 
   def cleanTest( f : => Unit ) = prePostTest( f, clean )
@@ -124,7 +124,7 @@ class TestConverter extends FunSuite with TestingPredefs {
   }
 
   test( "Test getVars" ) {
-    val converter = new Converter()
+    val converter = new Transformer()
     cleanTest {
       val vars = converter.getVars( declEx1, declEx2, declEx3, declEx4, declEx5, declEx6, declEx7 )
       assert( vars == Set( "x", "y", "z" ) )
@@ -135,7 +135,7 @@ class TestConverter extends FunSuite with TestingPredefs {
   }
 
   test( "Test inlineAll" ) {
-    val converter = new Converter()
+    val converter = new Transformer()
     cleanTest {
       extractAll
 
@@ -149,7 +149,7 @@ class TestConverter extends FunSuite with TestingPredefs {
   }
 
   test( "Test unchangedExplicit" ) {
-    val converter = new Converter()
+    val converter = new Transformer()
     cleanTest {
       val ucEx1 = tla.unchanged( n_a )
       val ucEx2 = tla.unchangedTup( n_a, n_b )
@@ -175,8 +175,16 @@ class TestConverter extends FunSuite with TestingPredefs {
     }
   }
 
+  test( "Test NullEx" ) {
+    val converter = new Transformer()
+    cleanTest {
+
+      assert( converter(NullEx).isEmpty )
+    }
+  }
+
   test( "Test sanitize" ) {
-    val converter = new Converter()
+    val converter = new Transformer()
     cleanTest {
       extractAll
 
@@ -189,13 +197,13 @@ class TestConverter extends FunSuite with TestingPredefs {
       assertThrows[IllegalArgumentException]( converter.sanitize( tla.appOp( "A" ) ) )
       assert( converter.sanitize( tla.appOp( "A", 2 ) ) == converter.inlineAll( tla.appOp( "A", 2 ) ) )
 
-      assert( converter.sanitize( tla.eql( 0, 1 ) ) == tla.in( 0, tla.enumSet( 1 ) ) )
-      assert( converter.sanitize( tla.enumSet( tla.eql( 0, 1 ) ) ) == tla.enumSet( tla.in( 0, tla.enumSet( 1 ) ) ) )
+      assert( converter.sanitize( tla.primeEq( n_x, n_y ) ) == tla.primeInSingleton( n_x, n_y ) )
+      assert( converter.sanitize( tla.enumSet( tla.primeEq( n_x, n_y ) ) ) == tla.enumSet( tla.primeInSingleton( n_x, n_y ) ) )
     }
   }
 
   test( "Test on files" ) {
-    val converter = new Converter()
+    val converter = new Transformer()
     cleanTest {
       val fname1 = "test1.tla"
       val declarations1 = declarationsFromFile( testFolderPath + fname1 )

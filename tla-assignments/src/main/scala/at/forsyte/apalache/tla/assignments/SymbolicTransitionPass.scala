@@ -8,7 +8,8 @@ import at.forsyte.apalache.tla.lir.OperatorHandler
   *
   * @see [[AssignmentStrategyEncoder]], [[SMTInterface]], [[SymbTransGenerator]]
   */
-class SymbolicTransitionPass extends TypeAliases {
+class SymbolicTransitionPass( private val m_bodyDB : BodyDB,
+                              private val m_srcDB : SourceDB) extends TypeAliases {
 
   /**
     * Body lookup.
@@ -46,19 +47,19 @@ class SymbolicTransitionPass extends TypeAliases {
       **/
     val declsRenamed = OperatorHandler.uniqueVarRename( p_decls )
 
-    val converter = new Converter()
+    val transformer = new Transformer()
 
     /** Make all LET-IN calls explicit, to move towards alpha-TLA+ */
     val decls = declsRenamed.map(
       {
         case TlaOperDecl( name, params, body ) =>
-          TlaOperDecl( name, params, converter.explicitLetIn( body ) )
+          TlaOperDecl( name, params, transformer.explicitLetIn( body )( m_srcDB ) )
         case e@_ => e
       }
     )
 
     /** Extract variable declarations */
-    val vars = converter.getVars( decls : _* )
+    val vars = transformer.getVars( decls : _* )
 
     /** Extract transition relation */
     val nextBody = findBodyOf( p_nextName, decls : _* )
@@ -77,7 +78,7 @@ class SymbolicTransitionPass extends TypeAliases {
     //      )
 
     /** Preprocess body (inline operators, replace UNCHANGED, turn equality to set membership, etc.) */
-    val cleaned = converter( nextBody, decls : _* )
+    val cleaned = transformer( nextBody, decls : _* )( m_bodyDB, m_srcDB )
 
     /** Sanity check */
     assert( cleaned.isDefined && cleaned.get.ID.valid )
