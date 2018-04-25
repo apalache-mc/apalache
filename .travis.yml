@@ -1,5 +1,8 @@
 language: java
 
+# fixing the issue with oraclejdk8 on macos
+osx_image: xcode8
+
 jdk:
     - oraclejdk8
 
