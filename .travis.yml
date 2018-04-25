@@ -8,6 +8,7 @@ python:
 
 os:
     - linux
+    - osx
 
 # required to compile z3
 addons:
@@ -25,6 +26,8 @@ cache:
 before_install:
   - pushd 3rdparty
   - ./install-local.sh
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export JAVA_LIBRARY_PATH=$JAVA_LIBRARY_PATH:"$PWD/lib"; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$PWD/lib"; fi
   - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$PWD/lib"
   - popd
 
