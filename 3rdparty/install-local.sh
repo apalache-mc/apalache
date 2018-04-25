@@ -8,13 +8,21 @@ set -e
 
 D=`dirname $0` && D=`cd $D; pwd`
 
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    echo "Assuming that you are using MacOS..."
+    OST="macos"
+else
+    echo "Assuming that you are using Linux..."
+    OST="linux"
+fi
+
 if [ -f "$D/z3/configure" ]; then
     echo "Using a cached Z3 build..."
 else
     echo "Checking out z3..."
     git clone https://github.com/Z3Prover/z3 $D/z3
     pushd $D/z3
-    echo "Configuring z3..."
+    echo "Configuring z3 locally (Linux)..."
     python scripts/mk_make.py --java -p $D/
     echo "Compiling z3..."
     cd build
@@ -44,4 +52,8 @@ mvn -f tla2tools-pom.xml install install:install-file \
 
 echo ""
 echo "Add the following line in your ~/.bashrc or ~/.zshrc"
-echo 'export LD_LIBRARY_PATH="$LD_LIBRARY_PATH":'"$D/lib"
+if [ "$OST" == "linux" ]; then
+  echo 'export LD_LIBRARY_PATH="$LD_LIBRARY_PATH":'"$D/lib"
+else
+  echo 'export JAVA_LIBRARY_PATH="$JAVA_LIBRARY_PATH":'"$D/lib"
+fi
