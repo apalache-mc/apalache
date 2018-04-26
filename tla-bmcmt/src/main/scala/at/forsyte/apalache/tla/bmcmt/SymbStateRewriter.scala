@@ -119,6 +119,8 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
     // control flow
     key(tla.ite(tla.name("cond"), tla.name("then"), tla.name("else")))
       -> List(new IfThenElseRule(this)),
+    key(tla.caseOther(tla.name("otherAction"), tla.name("pred1"), tla.name("action1")))
+      -> List(new CaseRule(this)),
     key(tla.letIn(tla.int(1), TlaOperDecl("A", List(), tla.int(2))))
       -> List(new LetInRule(this)),
     key(OperEx(new TlaUserOper("userOp", AnyArity(), TlaOperDecl("userOp", List(), tla.int(3)))))
