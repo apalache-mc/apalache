@@ -26,7 +26,7 @@ cache:
 before_install:
   - pushd 3rdparty
   - ./install-local.sh
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export JAVA_LIBRARY_PATH=$JAVA_LIBRARY_PATH:"$PWD/lib"; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:"$PWD/lib"; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$PWD/lib"; fi
   - popd
 
