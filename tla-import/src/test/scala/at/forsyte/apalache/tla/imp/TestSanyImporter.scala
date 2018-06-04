@@ -1326,10 +1326,10 @@ class TestSanyImporter extends FunSuite {
     assertTlaDecl("ALen", tla.len(tla.tuple(tla.int(1), tla.int(2), tla.int(3))))
     assertTlaDecl("AConcat",
       tla.concat(tla.tuple(tla.int(1), tla.int(2)),
-                 tla.tuple(tla.int(3)) ))
+        tla.tuple(tla.int(3))))
     assertTlaDecl("AAppend",
       tla.append(tla.tuple(tla.int(1), tla.int(2)),
-                 tla.int(3)) )
+        tla.int(3)))
     assertTlaDecl("AHead", tla.head(tla.tuple(tla.int(1), tla.int(2), tla.int(3))))
     assertTlaDecl("ATail", tla.tail(tla.tuple(tla.int(1), tla.int(2), tla.int(3))))
     assertTlaDecl("ASubSeq",
@@ -1338,6 +1338,43 @@ class TestSanyImporter extends FunSuite {
     assertTlaDecl("ASelectSeq",
       tla.selectseq(tla.tuple(tla.int(1), tla.int(2), tla.int(3), tla.int(4)),
         tla.name("Test")))
+  }
+
+  // FiniteSets
+  test("module finitesets") {
+    // check that the FiniteSets module is imported properly
+    val text =
+      """---- MODULE finitesets ----
+        |EXTENDS FiniteSets
+        |IsFinSet == IsFiniteSet(BOOLEAN)
+        |Card == Cardinality(BOOLEAN)
+        |
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter().loadFromSource("finitesets", Source.fromString(text))
+    assert(4 == modules.size) // Naturals, Sequences, FiniteSets, and our module
+    val root = modules(rootName)
+
+    def assertTlaDecl(expectedName: String, body: TlaEx): Unit = {
+      root.declarations.find {
+        _.name == expectedName
+      } match {
+        case Some(d: TlaOperDecl) =>
+          assert(expectedName == d.name)
+          assert(0 == d.formalParams.length)
+          assert(body == d.body)
+
+        case _ =>
+          fail("Expected a TlaDecl")
+      }
+    }
+
+    // the root module contains its own declarations and the declarations by FiniteSets
+    assertTlaDecl("IsFinSet",
+      OperEx(TlaFiniteSetOper.isFiniteSet, ValEx(TlaBoolSet)))
+    assertTlaDecl("Card",
+      OperEx(TlaFiniteSetOper.cardinality, ValEx(TlaBoolSet)))
   }
 
   test("assumptions") {
@@ -1362,7 +1399,7 @@ class TestSanyImporter extends FunSuite {
       case TlaAssumeDecl(e) =>
         assert(OperEx(TlaOper.eq, NameEx("N"), ValEx(TlaInt(4))) == e)
 
-      case e @ _ =>
+      case e@_ =>
         fail("expected an assumption, found: " + e)
     }
   }
@@ -1393,42 +1430,6 @@ class TestSanyImporter extends FunSuite {
     // the root module and naturals
     val root = modules(rootName)
   }
-
-
-  /*
-    // FiniteSets extend Sequences, which open the Pandora box... Temporarily disabled.
-    test("module finitesets") {
-      // check that the FiniteSets module is imported properly
-      val text =
-        """---- MODULE finitesets ----
-          |EXTENDS FiniteSets
-          |IsFinSet == IsFiniteSet(BOOLEAN)
-          |Card == Cardinality(BOOLEAN)
-          |
-          |================================
-          |""".stripMargin
-
-      val (rootName, modules) = new SanyImporter().load("finitesets", Source.fromString(text))
-      assert(4 == modules.size) // Naturals, Sequences, FiniteSets, and our module
-      val root = modules(rootName)
-
-      def assertTlaDecl(expectedName: String, body: TlaEx): Unit = {
-        root.declarations.find { _.name == expectedName} match {
-          case Some(d: TlaOperDecl) =>
-            assert(expectedName == d.name)
-            assert(0 == d.formalParams.length)
-            assert(body == d.body)
-
-          case _ =>
-            fail("Expected a TlaDecl")
-        }
-      }
-
-      // the root module contains its own declarations and the declarations by FiniteSets
-      assertTlaDecl("IsFinSet", OperEx(TlaFiniteSetOper.isFiniteSet, ValEx(TlaBoolSet)))
-      assertTlaDecl("Card", OperEx(TlaFiniteSetOper.cardinality, ValEx(TlaBoolSet)))
-    }
-    */
 
   ////////////////////////////////////////////////////////////////////
   private def expectSingleModule(expectedRootName: String, rootName: String, modules: Map[String, TlaModule]): TlaModule = {
