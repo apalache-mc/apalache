@@ -296,6 +296,25 @@ object Builder {
 
   def len( p_s : TlaEx ) : OperEx = OperEx( TlaSeqOper.len, p_s )
 
+  /**
+    * Get a subsequence of S, that is, SubSeq(S, from, to)
+    * @param seq a sequence, e.g., constructed with tla.tuple
+    * @param from the first index of the subsequene, greater or equal to 1
+    * @param to the last index of the subsequence, not greater than Len(S)
+    * @return the expression that corresponds to SubSeq(S, from, to)
+    */
+  def subseq(seq: TlaEx, from: TlaEx, to: TlaEx): TlaEx =
+    OperEx(TlaSeqOper.subseq, seq, from, to)
+
+  /**
+    * Get the subsequence of S that consists of the elements matching a predicate.
+    * @param seq a sequence
+    * @param test a predicate, it should be an action name
+    * @return the expression that corresponds to SelectSeq(S, test)
+    */
+  def selectseq(seq: TlaEx, test: TlaEx): TlaEx =
+    OperEx(TlaSeqOper.selectseq, seq, test)
+
   /** TlaSetOper */
   def enumSet( p_args : TlaEx* ) : OperEx = OperEx( TlaSetOper.enumSet, p_args : _* )
 
