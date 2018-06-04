@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaOper, TlaSeqOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaNatSet, TlaRealSet}
 import at.forsyte.apalache.tla.lir.values.TlaRealInfinity
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, TlaValue, ValEx}
@@ -72,6 +72,14 @@ object OpApplProxy {
       (("Naturals", "\\div"), TlaArithOper.realDiv),
       (("Naturals", ".."), TlaArithOper.dotdot),
       (("Integers", "-."), TlaArithOper.uminus),
-      (("Reals", "/"), TlaArithOper.realDiv)
+      (("Reals", "/"), TlaArithOper.realDiv),
+      (("Sequences", "Seq"), TlaSetOper.seqSet),
+      (("Sequences", "Len"), TlaSeqOper.len),
+      (("Sequences", "\\o"), TlaSeqOper.concat),
+      (("Sequences", "Append"), TlaSeqOper.append),
+      (("Sequences", "Head"), TlaSeqOper.head),
+      (("Sequences", "Tail"), TlaSeqOper.tail),
+      (("Sequences", "SubSeq"), TlaSeqOper.subseq),
+      (("Sequences", "SelectSeq"), TlaSeqOper.selectseq)
     )
 }
