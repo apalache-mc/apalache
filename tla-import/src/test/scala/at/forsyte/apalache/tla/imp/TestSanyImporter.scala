@@ -5,6 +5,7 @@ import java.nio.file.Files
 
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.control.{LetInOper, TlaControlOper}
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.predef._
 import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
@@ -1281,11 +1282,22 @@ class TestSanyImporter extends FunSuite {
   }
 
   test("module seqs") {
-    // check that the FiniteSets module is imported properly
+    // check that the Sequences module is imported properly
     val text =
       """---- MODULE sequences ----
         |EXTENDS Sequences
         |
+        |Empty == <<>>
+        |Three == <<1, 2, 3>>
+        |ASeq == Seq({1 , 2})
+        |ALen == Len(<<1, 2, 3>>)
+        |AConcat == <<1, 2>> \o <<3>>
+        |AAppend == Append(<<1, 2>>, 3)
+        |AHead == Head(<<1, 2, 3>>)
+        |ATail == Tail(<<1, 2, 3>>)
+        |ASubSeq == SubSeq(<<1, 2, 3, 4>>, 2, 3)
+        |Test(i) == i = 2
+        |ASelectSeq == SelectSeq(<<1, 2, 3, 4>>, Test)
         |================================
         |""".stripMargin
 
@@ -1308,9 +1320,24 @@ class TestSanyImporter extends FunSuite {
       }
     }
 
-    // the root module contains its own declarations and the declarations by FiniteSets
-    //    assertTlaDecl("IsFinSet", OperEx(TlaFiniteSetOper.isFiniteSet, ValEx(TlaBoolSet)))
-    //    assertTlaDecl("Card", OperEx(TlaFiniteSetOper.cardinality, ValEx(TlaBoolSet)))
+    assertTlaDecl("Empty", tla.tuple())
+    assertTlaDecl("Three", tla.tuple(tla.int(1), tla.int(2), tla.int(3)))
+    assertTlaDecl("ASeq", tla.seqSet(tla.enumSet(tla.int(1), tla.int(2))))
+    assertTlaDecl("ALen", tla.len(tla.tuple(tla.int(1), tla.int(2), tla.int(3))))
+    assertTlaDecl("AConcat",
+      tla.concat(tla.tuple(tla.int(1), tla.int(2)),
+                 tla.tuple(tla.int(3)) ))
+    assertTlaDecl("AAppend",
+      tla.append(tla.tuple(tla.int(1), tla.int(2)),
+                 tla.int(3)) )
+    assertTlaDecl("AHead", tla.head(tla.tuple(tla.int(1), tla.int(2), tla.int(3))))
+    assertTlaDecl("ATail", tla.tail(tla.tuple(tla.int(1), tla.int(2), tla.int(3))))
+    assertTlaDecl("ASubSeq",
+      tla.subseq(tla.tuple(tla.int(1), tla.int(2), tla.int(3), tla.int(4)),
+        tla.int(2), tla.int(3)))
+    assertTlaDecl("ASelectSeq",
+      tla.selectseq(tla.tuple(tla.int(1), tla.int(2), tla.int(3), tla.int(4)),
+        tla.name("Test")))
   }
 
   test("assumptions") {
