@@ -38,4 +38,14 @@ object TlaSeqOper {
     override val arity = FixedArity(1)
     override val name = "Len(_)"
   }
+
+  val subseq = new TlaSeqOper {
+    override val arity = FixedArity(3)
+    override val name = "SubSeq(_, _, _)"
+  }
+
+  val selectseq = new TlaSeqOper {
+    override val arity = FixedArity(2)
+    override val name = "SelectSeq(_, _)"
+  }
 }
