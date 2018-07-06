@@ -175,7 +175,9 @@ class SymbTransGenerator extends TypeAliases {
             assert( newArgs.size == 1 )
 //            if( newArgs.size != 1 )
 //              throw new AssignmentException( "Stategy intersects more than one branch, expected 1 or 0" )
-            newArgs.head
+//            newArgs.head
+            /** recurse, since disjunctions aren't always expanded */
+            assignmentFilter( newArgs.head, p_selection, p_allSelections)
           }
 
         /** ITE behaves like disjunction, but instead of dropping subformulas we replace them

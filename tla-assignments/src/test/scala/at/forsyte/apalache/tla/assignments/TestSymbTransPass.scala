@@ -125,6 +125,9 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
 
 
     val symbNexts = testFromFile( "EWD840.tla" )
+    symbNexts foreach { s=>
+      println(s._2)
+    }
     println( symbNexts.size )
   }
 
