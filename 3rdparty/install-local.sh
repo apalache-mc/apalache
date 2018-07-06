@@ -31,7 +31,7 @@ popd
 echo "Done with z3"
 
 echo "Downloading TLA2Tools..."
-wget https://tla.msr-inria.inria.fr/tlatoolbox/dist/tla2tools.jar
+wget https://tla.msr-inria.inria.fr/tlatoolbox/ci/dist/tla2tools.jar
 echo "Done with TLA2Tools"
 
 echo "Installing Z3 and TLA2Tools in your local cache..."
