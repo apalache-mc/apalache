@@ -1,8 +1,9 @@
 package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.control.TlaControlOper
-import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values.TlaFalse
 
 /**
@@ -202,10 +203,15 @@ class SymbTransGenerator extends TypeAliases {
                               p_selections : SelMapType
                             ) : Seq[SymbTrans] = {
 
+      def asgnCheck( ex : TlaEx) : Boolean = ex match {
+        case OperEx( TlaSetOper.in, OperEx(TlaActionOper.prime, _), _*) => true
+        case _ => false
+      }
+
       p_selections( p_ex.ID ).map( s =>
         (
           mkOrdered( s, p_strat ),
-          SpecHandler.getNewEx( p_ex, assignmentFilter( _, s, p_selections ) )
+          SpecHandler.recursiveTransform( p_ex, asgnCheck ,assignmentFilter( _, s, p_selections ) )
         )
       ).toSeq
     }
