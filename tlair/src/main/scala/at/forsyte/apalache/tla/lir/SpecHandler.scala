@@ -72,6 +72,29 @@ object SpecHandler {
   def dummyExSideeffect( p_ex : TlaEx ) : Unit = {}
   def dummyPost(p_exOld : TlaEx, p_exNew: TlaEx) : Unit = {}
   def dummyDeclFun( p_decl : TlaDecl ) : TlaDecl = p_decl
+  def dummyTerminationFun( p_ex : TlaEx ) : Boolean = false
+
+
+  def recursiveTransform( p_ex: TlaEx,
+                          p_earlyTermination: TlaEx => Boolean = dummyTerminationFun,
+                          p_transform: TlaEx => TlaEx = dummyExFun,
+                          p_postFun: (TlaEx, TlaEx) => Unit = dummyPost
+                        ): TlaEx = {
+
+    val earlyTermination = p_earlyTermination(p_ex)
+    val transformed = p_transform(p_ex)
+    val ret =
+      if (earlyTermination) transformed
+      else transformed match {
+        case OperEx( oper, args@_* ) =>
+          val newargs = args.map( recursiveTransform( _, p_earlyTermination, p_transform, p_postFun ) )
+          if ( args == newargs ) transformed
+          else OperEx( oper, newargs : _* )
+        case _ => transformed
+      }
+    p_postFun( p_ex, ret )
+    ret
+  }
 
   def getNewEx( p_ex : TlaEx,
                 p_exFun : TlaEx => TlaEx = dummyExFun,
@@ -87,7 +110,6 @@ object SpecHandler {
     }
     p_postFun( p_ex, ret )
     ret
-
   }
 
   def sideeffectEx( p_ex : TlaEx,
