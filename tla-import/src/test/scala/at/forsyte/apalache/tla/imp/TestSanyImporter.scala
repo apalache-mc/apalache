@@ -1377,6 +1377,82 @@ class TestSanyImporter extends FunSuite {
       OperEx(TlaFiniteSetOper.cardinality, ValEx(TlaBoolSet)))
   }
 
+  test("module TLC") {
+    // check that the module TLC is imported properly
+    val text =
+      """---- MODULE tlc ----
+        |EXTENDS TLC
+        |
+        |VARIABLES i
+        |
+        |APrint == Print("TLC Print", TRUE)
+        |APrintT == PrintT("TLC PrintT")
+        |AAssert == Assert("TLC Assert", TRUE)
+        |AJavaTime == JavaTime
+        |ATLCGet == TLCGet(i)
+        |ATLCSet == TLCSet(i, 3)
+        |AColonGreater == {1, 2} :> 3
+        |AtAt == [j \in {1, 2} |-> j] @@ [k \in {3, 4} |-> k]
+        |APermutations == Permutations(<<1, 2>>)
+        |FakeSort(a, b) == TRUE
+        |ASortSeq == SortSeq(<<2, 1>>, FakeSort)
+        |ARandomElement == RandomElement({1, 2})
+        |AAny == Any
+        |AToString == ToString(42)
+        |ATLCEval == TLCEval(42)
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter().loadFromSource("tlc", Source.fromString(text))
+    assert(4 == modules.size) // our module + 3 LOCAL modules
+    // the root module and naturals
+    val root = modules(rootName)
+
+    def assertTlaDecl(expectedName: String, body: TlaEx): Unit = {
+      root.declarations.find {
+        _.name == expectedName
+      } match {
+        case Some(d: TlaOperDecl) =>
+          assert(expectedName == d.name)
+          assert(0 == d.formalParams.length)
+          assert(body == d.body)
+
+        case _ =>
+          fail("Expected a TlaDecl")
+      }
+    }
+
+    assertTlaDecl("APrint",
+      OperEx(TlcOper.print, tla.str("TLC Print"), tla.bool(true)))
+    assertTlaDecl("APrintT",
+      OperEx(TlcOper.printT, tla.str("TLC PrintT")))
+    assertTlaDecl("AAssert",
+      OperEx(TlcOper.assert, tla.str("TLC Assert"), tla.bool(true)))
+    assertTlaDecl("AJavaTime", OperEx(TlcOper.javaTime))
+    assertTlaDecl("ATLCGet",
+      OperEx(TlcOper.tlcGet, tla.name("i")))
+    assertTlaDecl("ATLCSet",
+      OperEx(TlcOper.tlcSet, tla.name("i"), tla.int(3)))
+    assertTlaDecl("AColonGreater",
+      OperEx(TlcOper.colonGreater, tla.enumSet(tla.int(1), tla.int(2)), tla.int(3)))
+    val fun12 = tla.funDef(tla.name("j"), tla.name("j"), tla.enumSet(tla.int(1), tla.int(2)))
+    val fun34 = tla.funDef(tla.name("k"), tla.name("k"), tla.enumSet(tla.int(3), tla.int(4)))
+    assertTlaDecl("AtAt",
+      OperEx(TlcOper.atat, fun12, fun34))
+    assertTlaDecl("APermutations",
+      OperEx(TlcOper.permutations, tla.tuple(tla.int(1), tla.int(2))))
+    assertTlaDecl("ASortSeq",
+      OperEx(TlcOper.sortSeq,
+        tla.tuple(tla.int(2), tla.int(1)),
+        tla.name("FakeSort")
+      ))
+    assertTlaDecl("ARandomElement",
+      OperEx(TlcOper.randomElement, tla.enumSet(tla.int(1), tla.int(2))))
+    assertTlaDecl("AAny", OperEx(TlcOper.any))
+    assertTlaDecl("ATLCEval", OperEx(TlcOper.tlcEval, tla.int(42)))
+    assertTlaDecl("AToString", OperEx(TlcOper.tlcToString, tla.int(42)))
+  }
+
   test("assumptions") {
     // this proof is a garbage, just to check, whether the translator works
     val text =
