@@ -82,6 +82,20 @@ object OpApplProxy {
       (("Sequences", "SubSeq"), TlaSeqOper.subseq),
       (("Sequences", "SelectSeq"), TlaSeqOper.selectseq),
       (("FiniteSets", "IsFiniteSet"), TlaFiniteSetOper.isFiniteSet),
-      (("FiniteSets", "Cardinality"), TlaFiniteSetOper.cardinality)
+      (("FiniteSets", "Cardinality"), TlaFiniteSetOper.cardinality),
+      (("TLC", "Any"), TlcOper.any),
+      (("TLC", "Assert"), TlcOper.assert),
+      (("TLC", "@@"), TlcOper.atat),
+      (("TLC", ":>"), TlcOper.colonGreater),
+      (("TLC", "JavaTime"), TlcOper.javaTime),
+      (("TLC", "Permutations"), TlcOper.permutations),
+      (("TLC", "RandomElement"), TlcOper.randomElement),
+      (("TLC", "SortSeq"), TlcOper.sortSeq),
+      (("TLC", "TLCEval"), TlcOper.tlcEval),
+      (("TLC", "TLCGet"), TlcOper.tlcGet),
+      (("TLC", "TLCSet"), TlcOper.tlcSet),
+      (("TLC", "ToString"), TlcOper.tlcToString),
+      (("TLC", "Print"), TlcOper.print),
+      (("TLC", "PrintT"), TlcOper.printT)
     )
 }
