@@ -7,7 +7,9 @@ package at.forsyte.apalache.tla.lir.oper
  */
 abstract class TlcOper extends TlaOper {
   override def interpretation: Interpretation.Value = Interpretation.StandardLib
+}
 
+object TlcOper {
   /**
     * Print(out, val) from TLC.
     */
