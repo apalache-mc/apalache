@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 /**
-  * Implements the rules: SE-ITE[1-5].
+  * Implements the rules: SE-ITE[1-6].
   *
   * @author Igor Konnov
   */
@@ -35,14 +35,17 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
         }
         val pred = predState.ex
         (thenCell.cellType, elseCell.cellType) match {
+          // ITE[1-4]
           case (BoolT(), BoolT()) | (IntT(), IntT()) | (ConstT(), ConstT()) =>
             val finalState = iteBasic(elseState, commonType.get, pred, thenCell, elseCell)
             rewriter.coerce(finalState, state.theory) // coerce to the source theory
 
+          // ITE5
           case (FinSetT(_), FinSetT(_)) =>
             val finalState = iteSet(elseState, commonType.get, pred, thenCell, elseCell)
             rewriter.coerce(finalState, state.theory) // coerce to the source theory
 
+          // TODO: the general case ITE6 is missing
           case _ =>
             throw new RewriterException("Attempting to apply IF-THEN-ELSE to %s and %s, not supported"
               .format(thenCell.cellType, elseCell.cellType))
@@ -71,12 +74,12 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val ifElems = state.arena.getHas(thenCell)
     val thenElems = state.arena.getHas(elseCell)
     val newArena2 = (ifElems ++ thenElems).foldLeft(newArena)((a, e) => a.appendHas(newSetCell, e))
-    // x \in NewSet <=> p /\ x \in S1 \/ ~p /\ x \in S2
+    // x \in NewSet <=> (~p \/ x \in S1) /\ (p \/ x \in S2)
     def addCellCons(elemCell: ArenaCell): Unit = {
       val inUnion = tla.in(elemCell, newSetCell)
       val inLeftSet = tla.in(elemCell, thenCell)
       val inRightSet = tla.in(elemCell, elseCell)
-      val inLeftOrRight = tla.or(tla.and(pred, inLeftSet), tla.and(tla.not(pred), inRightSet))
+      val inLeftOrRight = tla.and(tla.or(tla.not(pred), inLeftSet), tla.or(pred, inRightSet))
       rewriter.solverContext.assertGroundExpr(tla.eql(inUnion, inLeftOrRight))
     }
 
