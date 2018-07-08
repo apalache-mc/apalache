@@ -225,7 +225,11 @@ object UTFPrinter extends Printer {
               s"$label:: $body"
             }
 
-          case _ => "<[TBD]>"
+          case _ =>
+            if (args.isEmpty)
+            oper.name
+            else "%s(%s)".format(oper.name, str(args))
+        //, args: _*) // the default format
         }
 
       case _ => ""
