@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.analyses
 
 import at.forsyte.apalache.tla.assignments.SpecWithTransitions
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
 import com.google.inject.Inject
 
@@ -36,9 +37,13 @@ class ExprGradeAnalysis @Inject()(val store: ExprGradeStoreImpl) {
         if (consts.contains(name))
           add(e, ExprGrade.Constant)
         else if (vars.contains(name))
-          add(e, ExprGrade.ActionFree)
+          add(e, ExprGrade.StateFree)
         else
-          add(e, ExprGrade.ActionBound)
+          add(e, ExprGrade.StateBound)
+
+      case OperEx(TlaActionOper.prime, arg) =>
+        // e.g., x'
+        add(e, ExprGrade.join(ExprGrade.ActionFree, eachExpr(arg)))
 
       case OperEx(TlaTempOper.AA, _*) | OperEx(TlaTempOper.EE, _*)
            | OperEx(TlaTempOper.box, _*) | OperEx(TlaTempOper.diamond, _*)

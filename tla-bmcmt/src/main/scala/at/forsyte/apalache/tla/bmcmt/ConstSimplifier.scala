@@ -86,6 +86,9 @@ class ConstSimplifier {
     case OperEx(TlaBoolOper.not, ValEx(TlaBool(b))) =>
       ValEx(TlaBool(!b))
 
+    case OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.not, underDoubleNegation)) =>
+      underDoubleNegation
+
     case OperEx(TlaBoolOper.implies, ValEx(TlaBool(left)), ValEx(TlaBool(right))) =>
       ValEx(TlaBool(!left || right))
 

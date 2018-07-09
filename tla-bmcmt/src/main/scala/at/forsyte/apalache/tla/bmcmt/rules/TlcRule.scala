@@ -2,9 +2,10 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types.FailPredT
-import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlcOper
+import at.forsyte.apalache.tla.lir.values.TlaStr
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, ValEx}
 
 /**
   * Implements the rules for TLC operators.
@@ -25,16 +26,24 @@ class TlcRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       case OperEx(TlcOper.print, _, _)
            | OperEx(TlcOper.printT, _) =>
-        rewriter.coerce(state.setRex(tla.bool(true)).setTheory(BoolTheory()), state.theory)
+        val finalState = state
+          .setRex(NameEx(rewriter.solverContext.trueConst))
+          .setTheory(BoolTheory())
+        rewriter.coerce(finalState, state.theory)
 
-      case OperEx(TlcOper.assert, value, _) =>
+      case OperEx(TlcOper.assert, value, ValEx(TlaStr(message))) =>
         val valueState = rewriter.rewriteUntilDone(state.setRex(value).setTheory(BoolTheory()))
         // introduce a new failure predicate
-        val newArena = valueState.arena.appendCell(FailPredT())
+        var newArena = valueState.arena.appendCell(FailPredT())
         val failPred = newArena.topCell
-        rewriter.solverContext.assertGroundExpr(tla.equiv(failPred.toNameEx, tla.not(valueState.ex)))
-        // return true, the assertion is encoded with a failure predicate.
-        val finalState = valueState.setArena(newArena).setRex(tla.bool(true)).setTheory(BoolTheory())
+        rewriter.addMessage(failPred.id, "Assertion error: " + message)
+        val constraint = tla.impl(failPred.toNameEx, tla.not(valueState.ex))
+        rewriter.solverContext.assertGroundExpr(constraint)
+        // return isReachable. If there is a model M s.t. M |= isReachable, then M |= failPred allows us
+        // to check, whether the assertion is violated or not
+        val finalState = valueState.setArena(newArena)
+          .setRex(NameEx(rewriter.solverContext.trueConst))
+          .setTheory(BoolTheory())
         rewriter.coerce(finalState, state.theory)
 
       case _ =>

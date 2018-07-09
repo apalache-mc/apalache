@@ -10,8 +10,9 @@ import at.forsyte.apalache.tla.lir.oper.{AnyArity, TlaOper, TlcOper}
 import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaIntSet}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 
-object SymbStateRewriter {
+import scala.collection.mutable
 
+object SymbStateRewriter {
   sealed abstract class RewritingResult
 
   case class Done(symbState: SymbState) extends RewritingResult
@@ -19,7 +20,6 @@ object SymbStateRewriter {
   case class Continue(symbState: SymbState) extends RewritingResult
 
   case class NoRule() extends RewritingResult
-
 }
 
 /**
@@ -31,7 +31,7 @@ object SymbStateRewriter {
   *
   * @author Igor Konnov
   */
-class SymbStateRewriter(val solverContext: SolverContext) extends StackableContext {
+class SymbStateRewriter(val solverContext: SolverContext) extends StackableContext with MessageStorage {
   /**
     * The difference between the number of pushes and pops so far.
     */
@@ -72,6 +72,11 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
     * The store that marks free existential quantifiers. By default, empty.
     */
   var freeExistentialsStore: FreeExistentialsStore = new FreeExistentialsStoreImpl()
+
+  /**
+    * A storage for the messages associated with assertion failures, see MessageStorage.
+    */
+  private var messages: mutable.Map[Int, String] = new mutable.HashMap()
 
   /**
     * Get the current context level, that is the difference between the number of pushes and pops made so far.
@@ -436,7 +441,29 @@ class SymbStateRewriter(val solverContext: SolverContext) extends StackableConte
     coercion.dispose()
   }
 
+
   /**
+    * Add a text message to the storage.
+    *
+    * @param id      an id of the object, e.g., ArenaCell.id
+    * @param message a text message
+    */
+  override def addMessage(id: Int, message: String): Unit = {
+    messages += id -> message
+  }
+
+  /**
+    * Find a message associated with the given id
+    *
+    * @param id an id of the object, e.g., ArenaCell.id
+    * @return a text message, if exists
+    * @throws NoSuchElementException if there is no message associated with the given id
+    */
+  override def findMessage(id: Int): String = {
+    messages(id)
+  }
+
+/**
     * Compute a key of a TLA+ expression to quickly decide on a short sequence of rules to try.
     *
     * @param ex a TLA+ expression
