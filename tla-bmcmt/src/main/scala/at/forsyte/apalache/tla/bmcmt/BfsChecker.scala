@@ -33,6 +33,8 @@ class BfsChecker(frexStore: FreeExistentialsStore,
   private val rewriter = new SymbStateRewriter(solverContext)
   rewriter.freeExistentialsStore = frexStore
   rewriter.exprCache = new ExprCache(exprGradeStore)
+  // the checker receives a negation of the invariant at its input, but we need the positive version sometimes
+  private var invariant: Option[TlaEx] = None
 
   /**
     * Check all executions of a TLA+ specification up to a bounded number of steps.
@@ -44,6 +46,10 @@ class BfsChecker(frexStore: FreeExistentialsStore,
     val dummyState = new SymbState(initialArena.cellTrue().toNameEx,
       CellTheory(), initialArena, new Binding)
     try {
+      if (checkerInput.notInvariant.isDefined) {
+        // negate notInvariant and simplify it by rewriting
+        invariant = Some(new ConstSimplifier().simplify(tla.not(checkerInput.notInvariant.get)))
+      }
       var state = makeOneStep(0, dummyState, checkerInput.initTransitions)
       checkInvariant(0, state)
       for (i <- 1 to stepsBound) {
@@ -149,8 +155,8 @@ class BfsChecker(frexStore: FreeExistentialsStore,
     rewriter.push()
     // assume the constraint constructed by this transition
     solverContext.assertGroundExpr(nextState.ex)
-    // the following test does not work as expected
-    //    checkForFailures(nextState)
+    // check whether this transition violates some assertions
+    checkAssertionErrors(nextState)
     if (!solverContext.sat()) {
       // the current symbolic state is not feasible
       logger.debug("Transition is not feasible. Skipped.")
@@ -163,21 +169,21 @@ class BfsChecker(frexStore: FreeExistentialsStore,
     }
   }
 
-  private def checkForFailures(state: SymbState): Unit = {
-    // FIXME: detecting failing operations is much harder than I thought
-    //        e.g., f[a] should be reported as a failure, when (a \notin DOMAIN f) holds,
-    //              but (a \notin DOMAIN f \/ f[a]) should not
-    //
-    // Thus, this test reports too many false positives...
+  private def checkAssertionErrors(state: SymbState): Unit = {
+    // Detecting runtime errors such as: assertion violation,
+    // or function application outside its domain.
+    // The crucial assumption here is that IF-THEN-ELSE activates runtime errors only
+    // on the active branches, see IfThenElseRule.
     rewriter.push()
     val failPreds = state.arena.findCellsByType(FailPredT())
     solverContext.assertGroundExpr(tla.or(failPreds.map(_.toNameEx): _*))
     if (solverContext.sat()) {
-      logger.error("The specification may produce a runtime error. Check counterexample.")
+      logger.error("The specification may produce a runtime error. Check the counterexample.")
       val activeFailures =
         failPreds.filter(fp => solverContext.evalGroundExpr(fp.toNameEx) == tla.bool(true))
 
       logger.error(s"The following failures are possible: %s.".format(activeFailures.mkString(", ")))
+      activeFailures.foreach(fp => logger.error(rewriter.findMessage(fp.id)))
 
       dumpCounterexample()
       throw new CancelSearchException(Outcome.RuntimeError)
@@ -206,11 +212,26 @@ class BfsChecker(frexStore: FreeExistentialsStore,
         .setTheory(BoolTheory())
         .setRex(notInv))
       solverContext.assertGroundExpr(notInvState.ex)
-      val sat = solverContext.sat()
-      if (sat) {
+      val notInvSat = solverContext.sat()
+      if (notInvSat) {
         val filename = dumpCounterexample()
         logger.error(s"Invariant is violated at depth $depth. Check the counterexample in $filename")
         throw new CancelSearchException(Outcome.Error)
+      }
+      rewriter.pop()
+      rewriter.push()
+      val invState = rewriter.rewriteUntilDone(state
+        .setTheory(BoolTheory())
+        .setRex(invariant.get))
+      solverContext.assertGroundExpr(invState.ex)
+      val invSat = solverContext.sat()
+      if (!invSat) {
+        logger.error(s"Invariant is vacuously true at depth $depth.")
+        throw new CancelSearchException(Outcome.Error)
+      } else {
+        // check if the invariant is vacuously true, or if it violates some assertions
+        // check whether the invariant violates some assertions
+        checkAssertionErrors(invState)
       }
       rewriter.pop()
     }

@@ -4,7 +4,8 @@ import java.io.{File, PrintWriter}
 
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FailPredT, IntT}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper._
+import at.forsyte.apalache.tla.lir.control.TlaControlOper
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, _}
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
 import com.microsoft.z3._
 import com.microsoft.z3.enumerations.Z3_lbool
@@ -393,8 +394,11 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
         z3context.mkAnd(newEs: _*)
 
       case OperEx(TlaBoolOper.or, es@_*) =>
-        val newEs = es.map(e => toExpr(e).asInstanceOf[BoolExpr])
-        z3context.mkOr(newEs: _*)
+        val mapped_es = es map toExpr
+        // check the assertion before casting, to make debugging easier
+        assert(mapped_es.forall(e => e.isInstanceOf[BoolExpr]))
+        val cast_es = mapped_es.map(_.asInstanceOf[BoolExpr])
+        z3context.mkOr(cast_es: _*)
 
       case OperEx(TlaBoolOper.implies, lhs, rhs) =>
         val lhsZ3 = toExpr(lhs).asInstanceOf[BoolExpr]
@@ -405,6 +409,12 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
         val lhsZ3 = toExpr(lhs).asInstanceOf[BoolExpr]
         val rhsZ3 = toExpr(rhs).asInstanceOf[BoolExpr]
         z3context.mkEq(lhsZ3, rhsZ3)
+
+      case OperEx(TlaControlOper.ifThenElse, cond, thenExpr, elseExpr) =>
+        val boolCond = toExpr(cond).asInstanceOf[BoolExpr]
+        val thenZ3 = toExpr(thenExpr)
+        val elseZ3 = toExpr(elseExpr)
+        z3context.mkITE(boolCond, thenZ3, elseZ3)
 
       case OperEx(TlaBoolOper.not, e) =>
         val exZ3 = toExpr(e).asInstanceOf[BoolExpr]

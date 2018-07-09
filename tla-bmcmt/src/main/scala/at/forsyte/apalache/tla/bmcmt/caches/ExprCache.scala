@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGrade, ExprGradeStore}
 import at.forsyte.apalache.tla.lir.TlaEx
 
 /**
-  * Cache rewriting results for the expressions of the grade Constant and ActionFree.
+  * Cache rewriting results for the expressions of the grade Constant, State, and ActionFree.
   *
   * @author Igor Konnov
   */
@@ -24,7 +24,7 @@ class ExprCache(val store: ExprGradeStore) extends SimpleCache[TlaEx, (TlaEx, Ex
     */
   override def put(key: TlaEx, valueAndGrade: (TlaEx, ExprGrade.Value)): Unit = {
     valueAndGrade._2 match {
-      case ExprGrade.Constant | ExprGrade.ActionFree =>
+      case ExprGrade.Constant | ExprGrade.StateFree | ExprGrade.ActionFree =>
         super.put(key, valueAndGrade)
 
       case _ =>
