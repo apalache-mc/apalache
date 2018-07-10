@@ -16,7 +16,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     val assign = tla.in(tla.prime(tla.name("x")), set)
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     val boundCell =
       nextState.ex match {
@@ -49,7 +49,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     val assign = tla.in(tla.prime(tla.name("x")), tla.enumSet())
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case NameEx(name) =>
@@ -68,7 +68,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     val and = tla.and(assign, tla.eql(tla.prime(tla.name("x")), tla.int(1)))
 
     val state = new SymbState(and, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     val boundCell =
       nextState.ex match {
@@ -98,7 +98,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     val assign = tla.in(tla.prime(tla.name("x")), set)
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     val boundCell =
       nextState.ex match {
@@ -145,7 +145,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     val assign = tla.in(tla.prime(tla.name("x")), set)
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     val boundCell =
       nextState.ex match {
@@ -192,7 +192,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     val assign = tla.in(tla.prime(tla.name("x")), set)
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     val boundCell =
       nextState.ex match {
@@ -237,7 +237,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     val assign = tla.in(tla.prime(tla.name("x")), set)
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     val boundCell =
       nextState.ex match {
@@ -262,7 +262,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     val assign = tla.in(tla.prime(tla.name("x")), set)
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case NameEx(_) =>
@@ -296,7 +296,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     val assign = tla.in(tla.prime(tla.name("x")), recordSet)
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case NameEx(_) =>

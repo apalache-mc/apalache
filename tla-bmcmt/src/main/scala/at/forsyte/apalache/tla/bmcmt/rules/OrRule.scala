@@ -1,14 +1,14 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
-import at.forsyte.apalache.tla.lir.values.TlaTrue
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 
 /**
-  * Implements the rules: SE-OR[1-4].
-  *
-  * Note that this rule does not implement case split as prescribed by rule SE-SEARCH-SPLIT.
+  * For state-level expressions, we express A \/ B as IF A THEN TRUE ELSE B.
+  * For action-level expressions, i.e., involving primes, we do a direct translation to A \/ B.
+  * This mimics the behavior of TLC.
   *
   * @author Igor Konnov
   */
@@ -16,68 +16,56 @@ class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaBoolOper.or, _*) => true
+      case OperEx(TlaBoolOper.orParallel, _*) => true
       case _ => false
     }
   }
 
   override def apply(state: SymbState): SymbState = {
     val falseConst = rewriter.solverContext.falseConst
-    state.ex match {
-      case OperEx(TlaBoolOper.or, args@_*) =>
-        // We preprocess the arguments twice: before rewriting them and after rewriting them
-        // Hence, we call preprocessOrCall two times.
-        def mapPreprocessMkOr: SymbState = {
-          val (newState: SymbState, preds: Seq[TlaEx]) =
-            rewriter.rewriteSeqUntilDone(state.setTheory(BoolTheory()), args)
-
-          def mkOr: SymbState = {
-            val newPred = rewriter.solverContext.introBoolConst()
-            val cons = OperEx(TlaBoolOper.equiv,
-              NameEx(newPred),
-              OperEx(TlaBoolOper.or, preds: _*))
-            rewriter.solverContext.assertGroundExpr(cons)
-            newState.setRex(NameEx(newPred))
+    val trueConst = rewriter.solverContext.trueConst
+    val simplfier = new ConstSimplifier()
+    simplfier.simplifyShallow(state.ex) match {
+      case OperEx(TlaBoolOper.or, args @ _*) =>
+        val finalState =
+          if (args.isEmpty) {
+            // empty disjunction is always false
+            state.setRex(NameEx(falseConst)).setTheory(BoolTheory())
+          } else {
+            // use short-circuiting on state-level expressions (like in TLC)
+            def toIte(es: Seq[TlaEx]): TlaEx = {
+              es match {
+                case Seq(last) => last
+                case hd +: tail => tla.ite(hd, NameEx(trueConst), toIte(tail))
+              }
+            }
+            // create a chain of IF-THEN-ELSE expressions and rewrite them
+            val newState = state.setRex(toIte(args)).setTheory(BoolTheory())
+            rewriter.rewriteUntilDone(newState)
           }
 
-          preprocessOrCall(newState, preds, mkOr)
-        }
-
-        val finalState = preprocessOrCall(state, args, mapPreprocessMkOr)
         rewriter.coerce(finalState, state.theory) // coerce if needed
 
-      case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
-    }
-  }
+      case OperEx(TlaBoolOper.orParallel, args @ _*) =>
+        // normal disjunction on action-level expressions (like in TLC)
+        // rewrite all the arguments
+        val (newState: SymbState, preds: Seq[TlaEx]) =
+          rewriter.rewriteSeqUntilDone(state.setTheory(BoolTheory()), args)
+        val newPred = rewriter.solverContext.introBoolConst()
+        // and write down the constraints newPred <=> e_1 \/ ... \/ e_k
+        val cons = OperEx(TlaBoolOper.equiv,
+          NameEx(newPred),
+          OperEx(TlaBoolOper.or, preds: _*))
+        rewriter.solverContext.assertGroundExpr(cons)
+        val finalState = newState.setRex(NameEx(newPred)).setTheory(BoolTheory())
+        rewriter.coerce(finalState, state.theory) // coerce if needed
 
-  private def preprocessOrCall(state: SymbState, args: Seq[TlaEx],
-                               defaultFun: => SymbState) = {
-    // funny syntax for a function without arguments (similar to Unit-functions in OCaml)
-    def isTrue(ex: TlaEx): Boolean =
-      ex match {
-        case ValEx(TlaTrue) =>
-          true
+      case e @ ValEx(_) =>
+        // the simplifier has rewritten the disjunction to TRUE or FALSE
+        rewriter.rewriteUntilDone(state.setRex(e))
 
-        case NameEx(name) =>
-          (name == state.arena.cellTrue().toString
-            || name == rewriter.solverContext.trueConst)
-
-        case _ =>
-          false
-      }
-
-    if (args.isEmpty) {
-      // empty disjunction is always false
-      state.setTheory(BoolTheory())
-        .setRex(NameEx(rewriter.solverContext.falseConst))
-
-    } else if (args.exists(isTrue)) {
-      // one true makes all true
-      state.setTheory(BoolTheory())
-        .setRex(NameEx(rewriter.solverContext.trueConst))
-    } else {
-      // note that defaultFun is called only here and thus does not add constraints in the other branches
-      defaultFun
+      case e @ _ =>
+        throw new RewriterException("%s is not applicable to %s".format(getClass.getSimpleName, e))
     }
   }
 }

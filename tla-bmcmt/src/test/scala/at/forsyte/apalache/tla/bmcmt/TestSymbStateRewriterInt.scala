@@ -17,7 +17,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val rightCell = arena.topCell
     val state = new SymbState(OperEx(TlaOper.eq, leftCell.toNameEx, rightCell.toNameEx),
       BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -55,7 +55,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val rightInt = solverContext.introIntConst()
     val state = new SymbState(OperEx(TlaOper.eq, NameEx(leftInt), NameEx(rightInt)),
       BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -93,7 +93,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val rightCell = arena.topCell
     val state = new SymbState(OperEx(TlaArithOper.lt, leftCell.toNameEx, rightCell.toNameEx),
       BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case cmpEx@NameEx(name) =>
@@ -125,7 +125,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val rightCell = arena.topCell
     val state = new SymbState(OperEx(TlaArithOper.le, leftCell.toNameEx, rightCell.toNameEx),
       BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case cmpEx@NameEx(name) =>
@@ -157,7 +157,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val rightCell = arena.topCell
     val state = new SymbState(OperEx(TlaArithOper.gt, leftCell.toNameEx, rightCell.toNameEx),
       BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case cmpEx@NameEx(name) =>
@@ -187,7 +187,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val right = OperEx(TlaArithOper.minus, ValEx(TlaInt(6)), ValEx(TlaInt(3)))
     val state = new SymbState(OperEx(TlaArithOper.gt, left, right),
       BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case cmpEx @ NameEx(name) =>
@@ -213,7 +213,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val rightCell = arena.topCell
     val state = new SymbState(OperEx(TlaArithOper.ge, leftCell.toNameEx, rightCell.toNameEx),
       BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case cmpEx@NameEx(name) =>
@@ -243,7 +243,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val rightInt = solverContext.introIntConst()
     val state = new SymbState(OperEx(TlaOper.ne, NameEx(leftInt), NameEx(rightInt)),
       BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -280,7 +280,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val rightInt = solverContext.introIntConst()
     val expr = OperEx(TlaArithOper.plus, NameEx(leftInt), NameEx(rightInt))
     val state = new SymbState(expr, IntTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case result @ NameEx(name) =>
@@ -308,7 +308,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val rightInt = solverContext.introIntConst()
     val expr = OperEx(TlaArithOper.minus, NameEx(leftInt), NameEx(rightInt))
     val state = new SymbState(expr, IntTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case result @ NameEx(name) =>
@@ -335,7 +335,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val leftInt = solverContext.introIntConst()
     val expr = OperEx(TlaArithOper.uminus, NameEx(leftInt))
     val state = new SymbState(expr, IntTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case result @ NameEx(name) =>
@@ -361,7 +361,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val rightInt = solverContext.introIntConst()
     val expr = OperEx(TlaArithOper.mult, NameEx(leftInt), NameEx(rightInt))
     val state = new SymbState(expr, IntTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case result @ NameEx(name) =>
@@ -389,7 +389,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val rightInt = solverContext.introIntConst()
     val expr = OperEx(TlaArithOper.div, NameEx(leftInt), NameEx(rightInt))
     val state = new SymbState(expr, IntTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case result @ NameEx(name) =>
@@ -417,7 +417,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val rightInt = solverContext.introIntConst()
     val expr = OperEx(TlaArithOper.mod, NameEx(leftInt), NameEx(rightInt))
     val state = new SymbState(expr, IntTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case result @ NameEx(name) =>
@@ -448,7 +448,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val eqExpected = OperEx(TlaOper.eq, range, expected)
 
     val state = new SymbState(eqExpected, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(name) =>
@@ -475,7 +475,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val eqExpected = tla.eql(range, expected)
 
     val state = new SymbState(eqExpected, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(name) =>

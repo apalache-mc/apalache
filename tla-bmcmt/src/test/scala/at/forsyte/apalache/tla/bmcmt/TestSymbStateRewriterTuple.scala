@@ -13,7 +13,7 @@ class TestSymbStateRewriterTuple extends RewriterBase {
     val tuple = TlaFunOper.mkTuple(tla.int(1), tla.bool(false), tla.enumSet(tla.int(2)))
 
     val state = new SymbState(tuple, CellTheory(), arena, new Binding)
-    val nextState = new SymbStateRewriter(solverContext).rewriteUntilDone(state)
+    val nextState = create().rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx @ NameEx(name) =>
         assert(CellTheory().hasConst(name))
@@ -30,7 +30,7 @@ class TestSymbStateRewriterTuple extends RewriterBase {
     val tuple = tla.tuple(tla.int(1), tla.bool(false), tla.enumSet(tla.int(2)))
     val tupleAcc = tla.appFun(tuple, tla.int(2))
     val state = new SymbState(tupleAcc, CellTheory(), arena, new Binding)
-    val nextState = new SymbStateRewriter(solverContext).rewriteUntilDone(state)
+    val nextState = create().rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx @ NameEx(name) =>
         assert(CellTheory().hasConst(name))
@@ -62,7 +62,7 @@ class TestSymbStateRewriterTuple extends RewriterBase {
     val tuple2 = TlaFunOper.mkTuple(tla.int(2), tla.bool(true))
 
     val state = new SymbState(tla.enumSet(tuple1, tuple2), CellTheory(), arena, new Binding)
-    val nextState = new SymbStateRewriter(solverContext).rewriteUntilDone(state)
+    val nextState = create().rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx @ NameEx(name) =>
         assert(CellTheory().hasConst(name))
@@ -81,7 +81,7 @@ class TestSymbStateRewriterTuple extends RewriterBase {
 
     val state = new SymbState(tla.enumSet(tuple1, tuple2), CellTheory(), arena, new Binding)
     try {
-      new SymbStateRewriter(solverContext).rewriteUntilDone(state)
+      create().rewriteUntilDone(state)
       fail("Expected a type error")
     } catch {
       case _: TypeException =>
@@ -95,7 +95,7 @@ class TestSymbStateRewriterTuple extends RewriterBase {
 
     val state = new SymbState(tla.enumSet(tuple1, tuple2), CellTheory(), arena, new Binding)
     try {
-      new SymbStateRewriter(solverContext).rewriteUntilDone(state)
+      create().rewriteUntilDone(state)
       fail("Expected a type error")
     } catch {
       case _: TypeException =>
@@ -108,7 +108,7 @@ class TestSymbStateRewriterTuple extends RewriterBase {
     val tuple2 = TlaFunOper.mkTuple(tla.int(2), tla.bool(true))
     val eq = tla.neql(tuple1, tuple2)
 
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val state = new SymbState(eq, BoolTheory(), arena, new Binding)
     assertTlaExAndRestore(rewriter, state)
   }
@@ -118,7 +118,7 @@ class TestSymbStateRewriterTuple extends RewriterBase {
     val tuple2 = TlaFunOper.mkTuple(tla.int(2), tla.bool(false))
     val eq = tla.eql(tuple1, tuple2)
 
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val state = new SymbState(eq, BoolTheory(), arena, new Binding)
     assertTlaExAndRestore(rewriter, state)
   }

@@ -12,7 +12,7 @@ import scala.collection.immutable.{SortedMap, SortedSet, TreeMap}
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterRecord extends RewriterBase {
   test("""RecordDomainCache: dom {"a", "b"} /= dom {"a", "b", "c"} ~~> $C$k""") {
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val (newArena1, set1) = rewriter.recordDomainCache.create(arena, SortedSet("a", "b"))
     val (newArena2, set2) = rewriter.recordDomainCache.create(newArena1, SortedSet("a", "b", "c"))
     val neq = tla.not(tla.eql(set1, set2))
@@ -25,7 +25,7 @@ class TestSymbStateRewriterRecord extends RewriterBase {
       tla.str("b"), tla.bool(false), tla.str("c"), tla.str("d"))
 
     val state = new SymbState(record, CellTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx @ NameEx(name) =>
@@ -64,7 +64,7 @@ class TestSymbStateRewriterRecord extends RewriterBase {
 
     val recordAcc = tla.appFun(record, tla.str("b"))
     val state = new SymbState(recordAcc, CellTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx @ NameEx(name) =>
@@ -91,7 +91,7 @@ class TestSymbStateRewriterRecord extends RewriterBase {
 
     val recordAcc = tla.appFun(record, tla.str("c"))
     val state = new SymbState(recordAcc, CellTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     try {
       rewriter.rewriteUntilDone(state)
       fail("Expected an UndefinedBehaviorError")
@@ -105,7 +105,7 @@ class TestSymbStateRewriterRecord extends RewriterBase {
     val record2 = tla.enumFun(tla.str("a"), tla.int(2), tla.str("b"), tla.bool(true))
 
     val state = new SymbState(tla.enumSet(record1, record2), CellTheory(), arena, new Binding)
-    val nextState = new SymbStateRewriter(solverContext).rewriteUntilDone(state)
+    val nextState = create().rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx @ NameEx(name) =>
         assert(CellTheory().hasConst(name))
@@ -134,7 +134,7 @@ class TestSymbStateRewriterRecord extends RewriterBase {
       tla.str("b"), tla.bool(true), tla.str("c"), tla.int(3))
 
     val state = new SymbState(tla.enumSet(record1, record2), CellTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx @ NameEx(name) =>
@@ -161,7 +161,7 @@ class TestSymbStateRewriterRecord extends RewriterBase {
 
     val state = new SymbState(tla.enumSet(record1, record2), CellTheory(), arena, new Binding)
     try {
-      new SymbStateRewriter(solverContext).rewriteUntilDone(state)
+      create().rewriteUntilDone(state)
       fail("Expected a type error")
     } catch {
       case _: TypeException =>
@@ -181,7 +181,7 @@ class TestSymbStateRewriterRecord extends RewriterBase {
     val mapEx = tla.map(tla.appFun(tla.name("r"), tla.str("c")), tla.name("r"), filteredEx)
 
     val state = new SymbState(mapEx, CellTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     rewriter.push()
     val nextState = rewriter.rewriteUntilDone(state)
     assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(nextState.ex, tla.enumSet(tla.int(3)))))
@@ -199,7 +199,7 @@ class TestSymbStateRewriterRecord extends RewriterBase {
       tla.str("b"), tla.bool(false), tla.str("a"), tla.int(1))
     val eq = tla.eql(record1, record2)
     val state = new SymbState(eq, CellTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     assertTlaExAndRestore(rewriter, state)
   }
 
@@ -209,7 +209,7 @@ class TestSymbStateRewriterRecord extends RewriterBase {
     val record2 = tla.enumFun(tla.str("a"), tla.int(1))
     val eq = tla.neql(record1, record2)
     val state = new SymbState(eq, CellTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     assertTlaExAndRestore(rewriter, state)
   }
 

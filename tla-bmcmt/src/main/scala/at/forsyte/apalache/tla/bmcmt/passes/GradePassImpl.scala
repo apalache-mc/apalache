@@ -9,6 +9,15 @@ import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
+/**
+  * Label the specification subexpressions with grades, which are similar to TLA+ levels:
+  * constant, state-level, action-level, etc. See ExprGrade.
+  *
+  * After the labelling is done, this pass also replaces all action-level disjunctions
+  * with TlaBoolOper.orParallel.
+  *
+  * @author Igor Konnov
+  */
 class GradePassImpl @Inject()(val options: PassOptions,
                               exprGradeStoreImpl: ExprGradeStoreImpl,
                               @Named("AfterGrade") nextPass: Pass with SpecWithTransitionsMixin)
@@ -35,7 +44,7 @@ class GradePassImpl @Inject()(val options: PassOptions,
     val spec = specWithTransitions.get
     val analysis = new ExprGradeAnalysis(exprGradeStoreImpl)
     analysis.labelWithGrades(spec)
-    nextPass.setSpecWithTransitions(spec)
+    nextPass.setSpecWithTransitions(analysis.refineOr(spec))
     true
   }
 

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
-import at.forsyte.apalache.tla.bmcmt.{RewriterException, RewritingRule, SymbState, SymbStateRewriter}
+import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.{OperEx, TlaUserOper}
 
 /**
