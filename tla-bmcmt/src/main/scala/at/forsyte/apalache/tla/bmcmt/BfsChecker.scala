@@ -28,7 +28,10 @@ class BfsChecker(frexStore: FreeExistentialsStore,
     * A stack of the symbolic states that might constitute a counterexample (the last state is on top).
     */
   private var stack: List[SymbState] = List()
-  private val solverContext: SolverContext = new Z3SolverContext(debug)
+  private val solverContext: SolverContext =
+    new Z3SolverContext(debug)
+//    new PreproSolverContext(new Z3SolverContext(debug))
+
   private val rewriter = new SymbStateRewriterImpl(solverContext, exprGradeStore)
   rewriter.freeExistentialsStore = frexStore
   // the checker receives a negation of the invariant at its input, but we need the positive version sometimes

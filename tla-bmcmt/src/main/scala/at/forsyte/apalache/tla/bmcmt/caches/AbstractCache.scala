@@ -2,6 +2,8 @@ package at.forsyte.apalache.tla.bmcmt.caches
 
 import at.forsyte.apalache.tla.bmcmt.StackableContext
 
+import scala.collection.immutable.HashMap
+
 /**
   * An abstract cache that implements StackableContext.
   *
@@ -14,7 +16,7 @@ abstract class AbstractCache[ContextT, SourceT, TargetT] extends StackableContex
   private var level: Int = 0
 
   // cache the integer constants that are introduced in SMT for integer literals
-  private var cache: Map[SourceT, (TargetT, Int)] = Map()
+  private var cache: Map[SourceT, (TargetT, Int)] = HashMap()
   // reverse mapping
   private var reverseCache: Map[TargetT, (SourceT, Int)] = Map()
 

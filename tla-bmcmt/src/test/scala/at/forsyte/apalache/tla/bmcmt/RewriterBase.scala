@@ -6,11 +6,11 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import org.scalatest.{BeforeAndAfter, FunSuite}
 
 class RewriterBase extends FunSuite with BeforeAndAfter {
-  protected var solverContext: SolverContext = new Z3SolverContext()
+  protected var solverContext: SolverContext = new PreproSolverContext(new Z3SolverContext())
   protected var arena: Arena = Arena.create(solverContext)
 
   before {
-    solverContext = new Z3SolverContext(debug = true)
+    solverContext = new PreproSolverContext(new Z3SolverContext(debug = true))
     arena = Arena.create(solverContext)
   }
 

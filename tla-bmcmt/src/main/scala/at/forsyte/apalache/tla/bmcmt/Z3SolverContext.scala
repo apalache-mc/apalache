@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FailPredT, IntT}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, _}
-import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaFalse, TlaInt, TlaTrue}
 import com.microsoft.z3._
 import com.microsoft.z3.enumerations.Z3_lbool
 
@@ -28,6 +28,7 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
   var nIntConsts: Int = 0
   private val z3context: Context = new Context()
   private val z3solver = z3context.mkSolver()
+  private val simplifier = new ConstSimplifier()
 
   /**
     * Caching one uninterpreted sort for each cell signature. For integers, the integer sort.
@@ -115,7 +116,7 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
     */
   def assertGroundExpr(ex: TlaEx): Unit = {
     log(s";; assert ${UTFPrinter.apply(ex)}")
-    val z3expr = toExpr(ex)
+    val z3expr = toExpr(simplifier.simplify(ex))
     log(s"(assert ${z3expr.toString})")
     z3solver.add(z3expr.asInstanceOf[BoolExpr])
   }
@@ -129,7 +130,7 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
     * @return a TLA+ value
     */
   def evalGroundExpr(ex: TlaEx): TlaEx = {
-    val z3expr = z3solver.getModel.eval(toExpr(ex), true)
+    val z3expr = z3solver.getModel.eval(toExpr(simplifier.simplify(ex)), true)
     z3expr match {
       case b: BoolExpr =>
         val isTrue = b.getBoolValue.equals(Z3_lbool.Z3_L_TRUE)
@@ -426,6 +427,16 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
         val inFun = getOrMkInPred(setEntry._2, elemEntry._2)
         z3context.mkApp(inFun, elemEntry._1, setEntry._1)
 
+      case OperEx(TlaSetOper.in, arg @ ValEx(TlaInt(_)), NameEx(setName)) =>
+        val setEntry = constCache(setName)
+        val inFun = getOrMkInPred(setEntry._2, IntT())
+        z3context.mkApp(inFun, toExpr(arg), setEntry._1)
+
+      case OperEx(TlaSetOper.in, arg @ ValEx(TlaBool(_)), NameEx(setName)) =>
+        val setEntry = constCache(setName)
+        val inFun = getOrMkInPred(setEntry._2, BoolT())
+        z3context.mkApp(inFun, toExpr(arg), setEntry._1)
+
       case OperEx(TlaSetOper.notin, elem, set) =>
         z3context.mkNot(toExpr(OperEx(TlaSetOper.in, elem, set)).asInstanceOf[BoolExpr])
 
@@ -468,6 +479,13 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
 
   private def toArithExpr(ex: TlaEx): Expr = {
     ex match {
+      case ValEx(TlaInt(num)) =>
+        if (num.isValidLong) {
+          z3context.mkInt(num.toLong)
+        } else {
+          throw new SmtEncodingException("A number constant is too large to fit in Long: " + num)
+        }
+
       case NameEx(name) if IntTheory().hasConst(name) =>
         z3context.mkIntConst(name)
 
