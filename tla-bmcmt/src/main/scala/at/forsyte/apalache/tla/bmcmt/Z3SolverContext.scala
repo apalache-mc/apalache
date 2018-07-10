@@ -445,7 +445,7 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
         val arg = constCache(argName)._1
         z3context.mkApp(getCellFun(funName), arg)
 
-      case OperEx(TlaFunOper.app, NameEx(funName), arg@ValEx(_)) =>
+      case OperEx(TlaFunOper.app, NameEx(funName), arg) =>
         // apply the function associated with a cell
         z3context.mkApp(getCellFun(funName), toExpr(arg))
 
