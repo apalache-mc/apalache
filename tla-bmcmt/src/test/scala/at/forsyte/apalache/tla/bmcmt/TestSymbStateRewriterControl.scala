@@ -14,7 +14,7 @@ class TestSymbStateRewriterControl extends RewriterBase {
     val ite = tla.ite(pred, e1, e2)
 
     val state = new SymbState(ite, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case res @ NameEx(name) =>
@@ -38,7 +38,7 @@ class TestSymbStateRewriterControl extends RewriterBase {
     val ite = tla.ite(pred, e1, e2)
 
     val state = new SymbState(ite, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case res @ NameEx(name) =>
@@ -62,7 +62,7 @@ class TestSymbStateRewriterControl extends RewriterBase {
     val ite = tla.ite(pred, e1, e2)
 
     val state = new SymbState(ite, IntTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case res @ NameEx(name) =>
@@ -86,7 +86,7 @@ class TestSymbStateRewriterControl extends RewriterBase {
     val ite = tla.ite(pred, e1, e2)
 
     val state = new SymbState(ite, IntTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case res @ NameEx(name) =>
@@ -110,7 +110,7 @@ class TestSymbStateRewriterControl extends RewriterBase {
     val ite = tla.ite(pred, e1, e2)
 
     val state = new SymbState(ite, CellTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case res @ NameEx(name) =>
@@ -137,7 +137,7 @@ class TestSymbStateRewriterControl extends RewriterBase {
     val ite = tla.ite(pred, e1, e2)
 
     val state = new SymbState(ite, CellTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case res @ NameEx(name) =>
@@ -161,7 +161,7 @@ class TestSymbStateRewriterControl extends RewriterBase {
     val decl = TlaOperDecl("A", List(), tla.bool(true))
     val letIn = tla.letIn(OperEx(decl.operator), decl)
     val state = new SymbState(letIn, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case res @ NameEx(name) =>

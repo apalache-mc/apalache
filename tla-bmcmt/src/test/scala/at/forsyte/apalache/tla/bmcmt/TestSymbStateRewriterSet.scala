@@ -15,7 +15,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val binding = new Binding + ("x" -> arena.cellFalse()) +
       ("y" -> arena.cellTrue()) + ("z" -> arena.cellFalse())
     val state = new SymbState(ex, CellTheory(), arena, binding)
-    new SymbStateRewriter(solverContext).rewriteOnce(state) match {
+    create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
           case set@NameEx(name) =>
@@ -38,7 +38,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
   test("""SE-SET-CTOR[1-2]: {1, 3, 5} ~~> c_set""") {
     val ex = OperEx(TlaSetOper.enumSet, ValEx(TlaInt(1)), ValEx(TlaInt(3)), ValEx(TlaInt(5)))
     val state = new SymbState(ex, CellTheory(), arena, new Binding)
-    new SymbStateRewriter(solverContext).rewriteOnce(state) match {
+    create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
           case set@NameEx(name) =>
@@ -58,7 +58,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
 
     val ex = OperEx(TlaSetOper.in, mkSet(), mkSet())
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val nextState = new SymbStateRewriter(solverContext).rewriteUntilDone(state)
+    val nextState = create().rewriteUntilDone(state)
     assert(NameEx(solverContext.falseConst) == nextState.ex)
   }
 
@@ -69,7 +69,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
       ValEx(TlaInt(3)),
       mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(3)), ValEx(TlaInt(5))))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -91,7 +91,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
       tla.enumSet(tla.enumSet(tla.int(1)), tla.enumSet(tla.int(3)), tla.enumSet(tla.int(5))))
 
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -115,7 +115,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
       ValEx(TlaInt(2)),
       mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(3)), ValEx(TlaInt(5))))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -137,7 +137,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
       tla.enumSet(tla.enumSet(tla.int(1)), tla.enumSet(tla.int(3)), tla.enumSet(tla.int(5))))
 
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -159,7 +159,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
 
     val ex = OperEx(TlaSetOper.notin, mkSet(), mkSet())
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     assert(NameEx(solverContext.trueConst) == nextState.ex)
   }
@@ -170,7 +170,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         ValEx(TlaFalse),
         OperEx(TlaSetOper.enumSet, ValEx(TlaFalse), ValEx(TlaTrue)))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     rewriter.rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
@@ -198,7 +198,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         ValEx(TlaFalse),
         OperEx(TlaSetOper.enumSet, ValEx(TlaFalse), ValEx(TlaTrue)))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     rewriter.rewriteUntilDone(state).ex match {
       case predEx@NameEx(name) =>
         assert(BoolTheory().hasConst(name))
@@ -222,7 +222,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         cell.toNameEx,
         OperEx(TlaSetOper.enumSet, ValEx(TlaTrue), ValEx(TlaTrue)))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     rewriter.rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
@@ -257,7 +257,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val ex = tla.in(tla.int(1), tla.enumSet(tla.int(1)))
 
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -285,7 +285,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         cell.toNameEx,
         OperEx(TlaSetOper.enumSet, ValEx(TlaTrue), ValEx(TlaTrue)))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     rewriter.rewriteUntilDone(state).ex match {
       case predEx@NameEx(name) =>
         assert(BoolTheory().hasConst(name))
@@ -316,7 +316,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = mkSet(mkSet(), mkSet(mkSet(), mkSet(mkSet(), mkSet())))
     val ex = OperEx(TlaSetOper.in, left, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -343,7 +343,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = mkSet(mkSet(), mkSet(mkSet(), mkSet(mkSet())))
     val ex = OperEx(TlaSetOper.in, left, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -368,7 +368,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
 
     val ex = OperEx(TlaOper.eq, tla.enumSet(tla.enumSet()), tla.enumSet())
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -390,7 +390,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = mkSet(mkSet(), mkSet(mkSet(mkSet())))
     val ex = OperEx(TlaOper.eq, left, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -412,7 +412,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = mkSet(mkSet(), mkSet(mkSet()))
     val ex = OperEx(TlaOper.eq, left, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -433,7 +433,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     // it should be equal to the empty set of ints.
     val ex = OperEx(TlaOper.eq, tla.enumSet(), tla.setminus(setOf1, setOf1))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -460,7 +460,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
                     tla.setminus(setOfFalse, setOfFalse),
                     tla.setminus(setOfOne, setOfOne))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -485,7 +485,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = mkSet(mkSet(), mkSet(mkSet()))
     val ex = OperEx(TlaOper.ne, left, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -507,7 +507,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val filter = OperEx(TlaOper.eq, xMod2, ValEx(TlaInt(0)))
     val ex = OperEx(TlaSetOper.filter, NameEx("x"), set, filter)
     val state = new SymbState(ex, CellTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case newSet@NameEx(name) =>
@@ -521,17 +521,16 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""SE-SET-FILTER[1-2]: 2 \in {x \in {1,2,3,4} : x % 2 = 0} ~~> $B$k""") {
+  test("""SE-SET-FILTER[1-2]: 2 \in {x \in {1,2,3,4} : x < 3} ~~> $B$k""") {
     def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
 
     val set = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaInt(3)), ValEx(TlaInt(4)))
-    val xMod2 = OperEx(TlaArithOper.mod, NameEx("x"), ValEx(TlaInt(2)))
-    val filter = OperEx(TlaOper.eq, xMod2, ValEx(TlaInt(0)))
+    val filter = tla.lt(tla.name("x"), tla.int(3))
     val filteredSet = OperEx(TlaSetOper.filter, NameEx("x"), set, filter)
     val inFilteredSet = OperEx(TlaSetOper.in, ValEx(TlaInt(2)), filteredSet)
 
     val state = new SymbState(inFilteredSet, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx@NameEx(name) =>
@@ -558,7 +557,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val inFilteredSet = OperEx(TlaSetOper.in, ValEx(TlaInt(3)), filteredSet)
 
     val state = new SymbState(inFilteredSet, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx@NameEx(name) =>
@@ -583,7 +582,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val mappedSet = OperEx(TlaSetOper.map, mapping, NameEx("x"), set)
 
     val state = new SymbState(mappedSet, CellTheory(), arena, new Binding)
-    val nextState = new SymbStateRewriter(solverContext).rewriteUntilDone(state)
+    val nextState = create().rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx@NameEx(name) =>
         assert(CellTheory().hasConst(name))
@@ -604,7 +603,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val inMappedSet = OperEx(TlaSetOper.in, ValEx(TlaInt(0)), mappedSet)
 
     val state = new SymbState(inMappedSet, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx@NameEx(name) =>
@@ -630,7 +629,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val inMappedSet = OperEx(TlaSetOper.in, ValEx(TlaInt(2)), mappedSet)
 
     val state = new SymbState(inMappedSet, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx@NameEx(name) =>
@@ -657,7 +656,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val eqExpected = OperEx(TlaOper.eq, cupSet, expected)
 
     val state = new SymbState(eqExpected, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -686,7 +685,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val eqExpected = OperEx(TlaOper.eq, capSet, expected)
 
     val state = new SymbState(eqExpected, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -715,7 +714,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val eqExpected = OperEx(TlaOper.eq, minusSet, expected)
 
     val state = new SymbState(eqExpected, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -739,7 +738,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.subseteq(left, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -761,7 +760,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.subseteq(right, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -783,7 +782,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.subseteq(tla.enumSet(), right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -806,7 +805,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.subseteq(left, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -829,7 +828,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.supseteq(right, left)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -851,7 +850,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.supseteq(right, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -873,7 +872,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.supseteq(right, tla.enumSet())
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -896,7 +895,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.supseteq(right, left)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -919,7 +918,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.subset(left, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -941,7 +940,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.subset(right, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -963,7 +962,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.subset(tla.enumSet(), right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -986,7 +985,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.subset(left, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -1009,7 +1008,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = tla.enumSet(tla.enumSet(tla.int(1)), tla.enumSet(tla.int(2)), tla.enumSet(tla.int(3)))
     val ex = tla.subset(left, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -1032,7 +1031,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.supset(right, left)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -1054,7 +1053,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.supset(right, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -1076,7 +1075,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.supset(right, tla.enumSet())
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -1099,7 +1098,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.subset(right, left)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -1124,7 +1123,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     // This may seem weird, but since we don't know the type of {},
     // it should be equal to the empty set of ints.
     val eq = OperEx(TlaOper.eq, tla.union(tla.enumSet(setOf12, setOf23)), setOf123)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val state = new SymbState(eq, BoolTheory(), arena, new Binding)
     assertTlaExAndRestore(rewriter, state)
   }

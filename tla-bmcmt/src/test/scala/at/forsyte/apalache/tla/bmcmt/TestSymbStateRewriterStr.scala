@@ -11,7 +11,7 @@ class TestSymbStateRewriterStr extends RewriterBase {
   test("SE-STR-CTOR: \"red\" -> $C$k") {
     val state = new SymbState(ValEx(TlaStr("red")),
       CellTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextStateRed = rewriter.rewriteUntilDone(state)
     nextStateRed.ex match {
       case predEx@NameEx(name) =>

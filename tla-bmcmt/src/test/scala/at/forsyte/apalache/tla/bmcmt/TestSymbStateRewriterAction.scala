@@ -10,7 +10,7 @@ import org.scalatest.junit.JUnitRunner
 class TestSymbStateRewriterAction extends RewriterBase {
   test("""SE-PRIME: x' ~~> NameEx(x')""") {
     val state = new SymbState(tla.prime(NameEx("x")), CellTheory(), arena, new Binding)
-    new SymbStateRewriter(solverContext).rewriteOnce(state) match {
+    create().rewriteOnce(state) match {
       case Continue(next) =>
         assert(next.ex == NameEx("x'"))
 

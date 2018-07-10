@@ -18,6 +18,10 @@ class RewriterBase extends FunSuite with BeforeAndAfter {
     solverContext.dispose()
   }
 
+  protected def create(): SymbStateRewriterAuto = {
+    new SymbStateRewriterAuto(solverContext)
+  }
+
   protected def assertUnsatOrExplain(rewriter: SymbStateRewriter, state: SymbState): Unit = {
     assertOrExplain("UNSAT", rewriter, state, !solverContext.sat())
   }

@@ -9,8 +9,8 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 
 /**
   * Implements the rules: SE-ASSIGN{1,2,3}.
-  * Similar to TLC, this is a special form of x \in S operator that is treated
-  * as an assignment of a value from S to the variable x.
+  * Similar to TLC, this is a special form of x' \in S operator that is treated
+  * as an assignment of a value from S to the variable x'.
   *
   * TODO: add support for tuples!
   *

@@ -16,7 +16,7 @@ class ConstSimplifier {
         ex
 
       case OperEx(oper, args @ _*) =>
-        rewriteShallow(OperEx(oper, args map rewriteDeep :_*))
+        simplifyShallow(OperEx(oper, args map rewriteDeep :_*))
 
       case _ =>
         ex
@@ -25,7 +25,7 @@ class ConstSimplifier {
     rewriteDeep(rootExpr)
   }
 
-  private def rewriteShallow(ex: TlaEx): TlaEx = ex match {
+  def simplifyShallow(ex: TlaEx): TlaEx = ex match {
     case NameEx(_) | ValEx(_) => ex
 
     // integer operations

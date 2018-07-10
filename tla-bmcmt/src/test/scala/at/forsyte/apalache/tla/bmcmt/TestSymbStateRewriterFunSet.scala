@@ -13,7 +13,7 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
     val codomain = tla.enumSet(tla.bool(false), tla.bool(true))
     val state = new SymbState(tla.funSet(domain, codomain),
       CellTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case NameEx(name) =>
@@ -41,7 +41,7 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
     val codomain = tla.enumSet(tla.bool(false), tla.bool(true))
     val state = new SymbState(tla.funSet(domain, codomain),
       CellTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriter(solverContext)
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case NameEx(name) =>

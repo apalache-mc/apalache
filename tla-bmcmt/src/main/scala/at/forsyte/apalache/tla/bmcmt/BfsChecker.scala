@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.bmcmt
 import java.io.{FileWriter, PrintWriter}
 
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FreeExistentialsStore}
-import at.forsyte.apalache.tla.bmcmt.caches.ExprCache
 import at.forsyte.apalache.tla.bmcmt.types.FailPredT
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -30,9 +29,8 @@ class BfsChecker(frexStore: FreeExistentialsStore,
     */
   private var stack: List[SymbState] = List()
   private val solverContext: SolverContext = new Z3SolverContext(debug)
-  private val rewriter = new SymbStateRewriter(solverContext)
+  private val rewriter = new SymbStateRewriterImpl(solverContext, exprGradeStore)
   rewriter.freeExistentialsStore = frexStore
-  rewriter.exprCache = new ExprCache(exprGradeStore)
   // the checker receives a negation of the invariant at its input, but we need the positive version sometimes
   private var invariant: Option[TlaEx] = None
 

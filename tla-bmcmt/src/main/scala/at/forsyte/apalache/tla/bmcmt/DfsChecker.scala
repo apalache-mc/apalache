@@ -33,7 +33,7 @@ class DfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
     */
   private var lastSatDepth = -1
   private val solverContext: SolverContext = new Z3SolverContext(debug)
-  private val rewriter = new SymbStateRewriter(solverContext)
+  private val rewriter = new SymbStateRewriterImpl(solverContext)
   rewriter.freeExistentialsStore = frexStore
 
   /**

@@ -1,12 +1,12 @@
 package at.forsyte.apalache.tla.lir.plugins
 
-import scala.collection.immutable.Vector
-
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.db._
 
+import scala.collection.immutable.Vector
+
 object UniqueDB extends DB[ UID, TlaEx ] {
-  // Igor: let's get rid of a singleton here. Make a class.
+  // TODO: @Igor, let's get rid of a singleton here. Make a class.
   override val m_name = "UniqueDB"
 
   private var expressions : Vector[ TlaEx ] = Vector[ TlaEx ]()
