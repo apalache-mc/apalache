@@ -2,19 +2,21 @@ package at.forsyte.apalache.tla.bmcmt.caches
 
 import at.forsyte.apalache.tla.bmcmt.StackableContext
 
+import scala.collection.immutable.HashMap
+
 /**
   * A stackable cache that allows one to store values and retrieve them later.
   *
   * @author Igor Konnov
   */
-abstract class SimpleCache[KeyT, ValueT] extends StackableContext {
+class SimpleCache[KeyT, ValueT] extends StackableContext {
   /**
     * A context level, see StackableContext
     */
   protected var level: Int = 0
 
   // cache values
-  protected var cache: Map[KeyT, (ValueT, Int)] = Map()
+  protected var cache: Map[KeyT, (ValueT, Int)] = HashMap()
 
   def values(): Iterable[ValueT] = {
     cache.map(_._2._1)
