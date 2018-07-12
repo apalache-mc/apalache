@@ -1,8 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStoreImpl
 import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, IntT, PowSetT}
 import at.forsyte.apalache.tla.lir.NameEx
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.plugins.Identifier
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -22,7 +24,7 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
         assert(dom.cellType == FinSetT(IntT()))
         val domElems = nextState.arena.getHas(dom)
         assert(domElems.length == 3)
-        // the contents is tested in the rules below
+      // the contents is tested in the rules below
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -81,7 +83,8 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
   }
 
   test("""SE-SUBSET1: {1, 2, 3, 4} \in SUBSET {1, 2, 3}""") {
-    def setTo(k: Int) = tla.enumSet(1 to k map tla.int :_*)
+    def setTo(k: Int) = tla.enumSet(1 to k map tla.int: _*)
+
     val set1to4 = setTo(4)
     val powset = tla.powSet(setTo(3))
     val in = tla.in(set1to4, powset)
@@ -96,5 +99,79 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     rewriter.push()
     solverContext.assertGroundExpr(tla.not(nextState.ex))
     assert(solverContext.sat())
+  }
+
+  test("""SE-SUBSET: \E X \in SUBSET {1, 2}: TRUE (sat)""") {
+    // a regression test that failed in the previous versions
+    val set = tla.enumSet(tla.int(1), tla.int(2))
+    val ex = tla.exists(tla.name("X"), tla.powSet(set), tla.bool(true))
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding)
+    val rewriter = create()
+    try {
+      val nextState = rewriter.rewriteUntilDone(state)
+      fail("expected an error message about unfolding a powerset")
+    } catch {
+      case _: UnsupportedOperationException => () // OK
+    }
+    //    nextState.ex match {
+    //      case predEx@NameEx(name) =>
+    //        assert(BoolTheory().hasConst(name))
+    //        rewriter.push()
+    //        solverContext.assertGroundExpr(predEx)
+    //        assert(solverContext.sat())
+    //        rewriter.pop()
+    //        rewriter.push()
+    //        solverContext.assertGroundExpr(tla.not(predEx))
+    //        assertUnsatOrExplain(rewriter, nextState)
+    //
+    //      case _ =>
+    //        fail("Unexpected rewriting result")
+    //    }
+  }
+
+  test("""SE-SUBSET: skolem \E X \in SUBSET {1, 2}: TRUE (sat)""") {
+    // a regression test that failed in the previous versions
+    val set = tla.enumSet(tla.int(1), tla.int(2))
+    val ex = tla.exists(tla.name("X"), tla.powSet(set), tla.bool(true))
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding)
+    val fex = new FreeExistentialsStoreImpl
+    val rewriter = new SymbStateRewriterImpl(solverContext)
+    rewriter.freeExistentialsStore = fex
+    Identifier.identify(ex) // TODO: identifier should not be called directly
+    fex.store = fex.store + ex.ID
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        rewriter.push()
+        solverContext.assertGroundExpr(predEx)
+        assert(solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SUBSET: skolem \E X \in SUBSET {1, 2}: FALSE (unsat)""") {
+    // a regression test that failed in the previous versions
+    val set = tla.enumSet(tla.int(1), tla.int(2))
+    val ex = tla.exists(tla.name("X"), tla.powSet(set), tla.bool(false))
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding)
+    val fex = new FreeExistentialsStoreImpl
+    val rewriter = new SymbStateRewriterImpl(solverContext)
+    rewriter.freeExistentialsStore = fex
+    Identifier.identify(ex) // TODO: identifier should not be called directly
+    fex.store = fex.store + ex.ID
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        rewriter.push()
+        solverContext.assertGroundExpr(predEx)
+        assertUnsatOrExplain(rewriter, nextState)
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
   }
 }

@@ -2,16 +2,18 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
+import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, PowSetT}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
+import com.typesafe.scalalogging.LazyLogging
 
 /**
   * Implements the rules: SE-LOG-EX[1-3] and SE-LOG-ALL[1-3].
   *
   * @author Igor Konnov
   */
-class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule {
+class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogging {
   private val pickRule = new PickFromAndFunMerge(rewriter, failWhenEmpty = false)
 
   override def isApplicable(symbState: SymbState): Boolean = {
@@ -28,33 +30,47 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule {
         if (rewriter.freeExistentialsStore.isFreeExists(state.ex.ID)) {
           val setState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(boundingSetEx))
           val set = setState.arena.findCellByNameEx(setState.ex)
-          val setCells = setState.arena.getHas(set)
-          val finalState =
-            if (setCells.isEmpty) {
-              // \E x \in {}... is FALSE
-              setState.setTheory(BoolTheory()).setRex(NameEx(rewriter.solverContext.falseConst))
-            } else {
-              freeExists(setState, boundVar, predEx, set, setCells)
-            }
+          val finalState = set.cellType match {
+            case FinSetT(_) =>
+              freeExistsInSet(setState, boundVar, predEx, set)
+
+            case PowSetT(FinSetT(_)) => ()
+              // TODO: include in the report
+              freeExistsInPowerset(setState, boundVar, predEx, set)
+
+            case tp =>
+              throw new UnsupportedOperationException("Quantification over %s is not supported yet".format(tp))
+          }
           rewriter.coerce(finalState, state.theory)
         } else {
-          rewriteExistsOrForall(isExists = true, state, boundVar, boundingSetEx, predEx)
+          expandExistsOrForall(isExists = true, state, boundVar, boundingSetEx, predEx)
         }
 
       case OperEx(TlaBoolOper.forall, NameEx(boundVar), boundingSetEx, predEx) =>
-        rewriteExistsOrForall(isExists = false, state, boundVar, boundingSetEx, predEx)
+        expandExistsOrForall(isExists = false, state, boundVar, boundingSetEx, predEx)
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
     }
   }
 
-  private def rewriteExistsOrForall(isExists: Boolean,
+  private def expandExistsOrForall(isExists: Boolean,
                                     state: SymbState, boundVar: String, boundingSetEx: TlaEx, predEx: TlaEx) = {
+    rewriter.solverContext.log("; quanitification over a finite set => expanding")
     // first, evaluate boundingSet
     val setState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(boundingSetEx))
     val set = setState.arena.findCellByNameEx(setState.ex)
-    val setCells = setState.arena.getHas(set)
+    set.cellType match {
+      case PowSetT(_) =>
+        logger.warn("Unfolding a subset is inefficient. Consider using a free-standing quantifier \\E X \\in SUBSET {...}: P")
+        throw new UnsupportedOperationException("A quantified expression was about to unfold %s".format(setState.ex))
+
+      case FinSetT(_) => () // supported
+
+      case tp =>
+        throw new UnsupportedOperationException("Quantification over %s is not supported yet".format(tp))
+    }
+    val setCells = setState.arena.getHas(set)  // <------- THIS IS A BUG that does not work with SUBSET!
     val finalState =
       if (setCells.isEmpty) {
         // 'exists' over an empty set always returns false, while 'forall' returns true
@@ -108,10 +124,21 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule {
     rewriter.coerce(finalState, state.theory)
   }
 
-  // introduce a Skolem constant for a free-standing existential quantifier
-  private def freeExists(setState: SymbState, boundVar: String, predEx: TlaEx,
+  private def freeExistsInSet(setState: SymbState, boundVar: String, predEx: TlaEx, set: ArenaCell) = {
+    val setCells = setState.arena.getHas(set)
+    if (setCells.isEmpty) {
+      // \E x \in {}... is FALSE
+      setState.setTheory(BoolTheory()).setRex(NameEx(rewriter.solverContext.falseConst))
+    } else {
+      freeExistsInNonEmptySet(setState, boundVar, predEx, set, setCells)
+    }
+  }
+
+  // introduce a Skolem constant for a free-standing existential quantifier:
+  // that is, rewrite, \E x \in S: P(x) as S /= {} /\ P(c) for a constant c picked from S
+  private def freeExistsInNonEmptySet(setState: SymbState, boundVar: String, predEx: TlaEx,
                          set: ArenaCell, setCells: List[ArenaCell]) = {
-    rewriter.solverContext.log("; free existential rule")
+    rewriter.solverContext.log("; free existential rule over a finite set")
     // pick an arbitrary witness
     val pickState = pickRule.pick(set, setState)
     val pickedCell = pickState.arena.findCellByNameEx(pickState.ex)
@@ -129,6 +156,26 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule {
     rewriter.solverContext.assertGroundExpr(iff)
 
     predState.setRex(exPred)
+      .setTheory(BoolTheory())
+      .setBinding(predState.binding - boundVar) // forget the binding to x, but not the other bindings!
+  }
+
+  // Introduce a Skolem constant for a free-standing existential quantifier:
+  // In case of SUBSET(S), it is really easy: we have to enforce that a witness is a subset of S.
+  // A powerset is never empty, so we do not have to worry about this case.
+  private def freeExistsInPowerset(setState: SymbState, boundVar: String, predEx: TlaEx, set: ArenaCell) = {
+    rewriter.solverContext.log("; free existential rule over a powerset")
+    // pick an arbitrary witness
+    val pickState = pickRule.pick(set, setState)
+    val pickedCell = pickState.arena.findCellByNameEx(pickState.ex)
+    // enforce that the witness satisfies the predicate
+    val extendedBinding = pickState.binding + (boundVar -> pickedCell)
+    // predState.ex contains the predicate applied to the witness
+    val predState = rewriter.rewriteUntilDone(pickState
+      .setTheory(BoolTheory()).setRex(predEx).setBinding(extendedBinding))
+    val predWitness = predState.ex
+
+    predState.setRex(predWitness)
       .setTheory(BoolTheory())
       .setBinding(predState.binding - boundVar) // forget the binding to x, but not the other bindings!
   }
