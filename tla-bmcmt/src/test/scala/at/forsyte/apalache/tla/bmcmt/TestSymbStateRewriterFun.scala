@@ -42,6 +42,31 @@ class TestSymbStateRewriterFun extends RewriterBase {
     }
   }
 
+  test("""SE-FUN-CTOR[1-2]: [x \in {1,2,3} |-> IF x = 1 THEN 2 ELSE IF x = 2 THEN 3 ELSE 1 ] ~~> $C$k""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val set = mkSet(tla.int(1), tla.int(2), tla.int(3))
+    val mapping = tla.ite(
+      tla.eql(tla.name("x"), tla.enumSet(tla.int(1))),
+      tla.enumSet(tla.int(2)),
+      tla.ite(tla.eql(tla.name("x"), tla.int(2)),
+              tla.enumSet(tla.int(3)), tla.enumSet(tla.int(1)))
+    )
+    val fun = OperEx(TlaFunOper.funDef, mapping, NameEx("x"), set)
+
+    val state = new SymbState(fun, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case membershipEx @ NameEx(name) =>
+        assert(CellTheory().hasConst(name))
+        assert(solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
   test("""SE-FUN-APP[1-3]: f[4] ~~> $C$k""") {
     def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
 

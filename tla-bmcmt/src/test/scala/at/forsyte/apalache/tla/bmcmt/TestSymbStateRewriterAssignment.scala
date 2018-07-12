@@ -137,6 +137,64 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     assertUnsatOrExplain(rewriter, eqState13) // should not be possible
   }
 
+  test("""SE-IN-ASSIGN1(set): x' \in SUBSET {1, 2} ~~> TRUE and [x -> $C$k]""") {
+    val set = tla.powSet(tla.enumSet(tla.int(1), tla.int(2)))
+    val assign = tla.in(tla.prime(tla.name("x")), set)
+
+    val state = new SymbState(assign, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    val boundCell =
+      nextState.ex match {
+        case NameEx(name) =>
+          assert(CellTheory().hasConst(name))
+          assert(arena.cellTrue().toString == name)
+          assert(nextState.binding.size == 1)
+          assert(nextState.binding.contains("x'"))
+          nextState.binding("x'")
+
+        case _ =>
+          fail("Unexpected rewriting result")
+      }
+
+    // no contradiction introduced
+    assert(solverContext.sat())
+    // may equal to {1, 2}
+    rewriter.push()
+    val eq12 = tla.eql(boundCell, tla.enumSet(tla.int(1), tla.int(2)))
+    val eqState12 = rewriter.rewriteUntilDone(nextState.setTheory(BoolTheory()).setRex(eq12))
+    solverContext.assertGroundExpr(eqState12.ex)
+    assert(solverContext.sat()) // ok
+    rewriter.pop()
+    // may equal to {1}
+    rewriter.push()
+    val eq1 = tla.eql(boundCell, tla.enumSet(tla.int(1)))
+    val eqState1 = rewriter.rewriteUntilDone(nextState.setTheory(BoolTheory()).setRex(eq1))
+    solverContext.assertGroundExpr(eqState1.ex)
+    assert(solverContext.sat()) // ok
+    rewriter.pop()
+    // may equal to {2}
+    rewriter.push()
+    val eq2 = tla.eql(boundCell, tla.enumSet(tla.int(2)))
+    val eqState2 = rewriter.rewriteUntilDone(nextState.setTheory(BoolTheory()).setRex(eq2))
+    solverContext.assertGroundExpr(eqState2.ex)
+    assert(solverContext.sat()) // ok
+    rewriter.pop()
+    // may equal to {}
+    rewriter.push()
+    val eqEmpty = tla.eql(boundCell, tla.enumSet())
+    val eqStateEmpty = rewriter.rewriteUntilDone(nextState.setTheory(BoolTheory()).setRex(eqEmpty))
+    solverContext.assertGroundExpr(eqStateEmpty.ex)
+    assert(solverContext.sat()) // ok
+    rewriter.pop()
+    // not equal to {1, 2, 3}
+    rewriter.push()
+    val eq13 = tla.eql(boundCell, tla.enumSet(tla.int(1), tla.int(2), tla.int(3)))
+    val eqState13 = rewriter.rewriteUntilDone(nextState.setTheory(BoolTheory()).setRex(eq13))
+    solverContext.assertGroundExpr(eqState13.ex)
+    assertUnsatOrExplain(rewriter, eqState13) // should not be possible
+  }
+
   test("""SE-IN-ASSIGN1(fun): x' \in {[x \in BOOLEAN |-> 0], [x \in BOOLEAN |-> 1]} ~~> TRUE and [x -> $C$k]""") {
     val fun0 = tla.funDef(tla.int(0), tla.name("x"), tla.booleanSet())
     val fun1 = tla.funDef(tla.int(1), tla.name("x"), tla.booleanSet())

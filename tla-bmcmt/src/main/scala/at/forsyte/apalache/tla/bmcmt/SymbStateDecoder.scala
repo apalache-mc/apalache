@@ -129,6 +129,9 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       val elemAsExprs  = tupleElems.map(c => decodeCellToTlaEx(arena, c))
       tla.tuple(elemAsExprs :_*)
 
+    case PowSetT(t @ FinSetT(_)) =>
+      tla.powSet(decodeCellToTlaEx(arena, arena.getDom(cell)))
+
     case _ =>
       throw new RewriterException("Don't know how to decode the cell %s of type %s".format(cell, cell.cellType))
   }
