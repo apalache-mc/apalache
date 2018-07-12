@@ -35,23 +35,23 @@ class CheckerModule extends AbstractModule {
     bind(classOf[Pass])
       .annotatedWith(Names.named("AfterParser"))
       .to(classOf[AssignmentPass])
-    // the next pass after AssignmentPass is SimpleSkolemizationPass
-    bind(classOf[SimpleSkolemizationPass])
-      .to(classOf[SimpleSkolemizationPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterAssignment"))
-      .to(classOf[SimpleSkolemizationPass])
-    // the next pass after SimpleSkolemizationPass is GradePass
+    // the next pass after AssignmentPass is GradePass
     bind(classOf[GradePass])
       .to(classOf[GradePassImpl])
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterSkolem"))
+      .annotatedWith(Names.named("AfterAssignment"))
       .to(classOf[GradePass])
-    // the next pass after GradePass is BoundedCheckerPass
+    // the next pass after GradePass is SimpleSkolemizationPass
+    bind(classOf[SimpleSkolemizationPass])
+      .to(classOf[SimpleSkolemizationPassImpl])
+    bind(classOf[Pass])
+      .annotatedWith(Names.named("AfterGrade"))
+      .to(classOf[SimpleSkolemizationPass])
+    // the next pass after SimpleSkolemizationPass is BoundedCheckerPass
     bind(classOf[BoundedCheckerPass])
       .to(classOf[BoundedCheckerPassImpl])
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterGrade"))
+      .annotatedWith(Names.named("AfterSkolem"))
       .to(classOf[BoundedCheckerPass])
     // the final pass is TerminalPass
     bind(classOf[Pass])
