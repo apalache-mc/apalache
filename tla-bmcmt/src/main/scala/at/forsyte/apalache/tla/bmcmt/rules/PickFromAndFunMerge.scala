@@ -212,6 +212,36 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
   }
 
   /**
+    * Implements SE-PICK-SET, that is, assume that the picked element is a set itself.
+    *
+    * @param resultType a cell type to assign to the picked cell.
+    * @param set      a powerset
+    * @param state    a symbolic state
+    * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
+    */
+  def pickFromPowset(resultType: CellT, set: ArenaCell, state: SymbState): SymbState = {
+    // TODO: add this rule to the report!
+    rewriter.solverContext.log("; PICK %s FROM %s {".format(resultType, set))
+    var arena = state.arena.appendCell(resultType)
+    val resultSet = arena.topCell
+    val baseSet = arena.getDom(set)
+    val elems = arena.getHas(baseSet)
+    // resultSet may contain all the elements from the baseSet of the powerset SUBSET(S)
+    arena = elems.foldLeft(arena)((a, e) => a.appendHas(resultSet, e))
+
+    // if resultSet has an element, then it must be also in baseSet
+    def inResultIfInBase(elem: ArenaCell): Unit = {
+      val inResult = tla.in(elem, resultSet)
+      val inBase = tla.in(elem, baseSet)
+      rewriter.solverContext.assertGroundExpr(tla.impl(inResult, inBase))
+    }
+
+    elems foreach inResultIfInBase
+    rewriter.solverContext.log("; } PICK %s FROM %s".format(resultType, set))
+    state.setArena(arena).setRex(resultSet)
+  }
+
+  /**
     * Implements SE-PICK-TUPLE.
     *
     * @param cellType a cell type to assign to the picked cell.
