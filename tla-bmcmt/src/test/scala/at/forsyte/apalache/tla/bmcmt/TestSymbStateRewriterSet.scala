@@ -1,15 +1,17 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, IntT}
+import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStoreImpl
+import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FailPredT, IntT}
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.plugins.Identifier
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriterSet extends RewriterBase {
+class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
   test("""SE-SET-CTOR[1-2]: {x, y, z} ~~> c_set""") {
     val ex = OperEx(TlaSetOper.enumSet, NameEx("x"), NameEx("y"), NameEx("z"))
     val binding = new Binding + ("x" -> arena.cellFalse()) +
@@ -541,6 +543,91 @@ class TestSymbStateRewriterSet extends RewriterBase {
         rewriter.pop()
         solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, membershipEx))
         assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SET-FILTER[1-2]: LET X = {1, 2} \cap {2} IN {} = {x \in X : [y \in X |-> TRUE][x]} ~~> $B$k""") {
+    // regression
+    val filter = tla.appFun(tla.funDef(tla.bool(true), "y", "Oper:X"), "x")
+    val filteredSet = tla.filter("x", "Oper:X", filter)
+    val ex = tla.letIn(tla.eql(tla.enumSet(), filteredSet),
+      tla.declOp("X", tla.cap(tla.enumSet(1, 2), tla.enumSet(2))))
+
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding)
+    val rewriter = new SymbStateRewriterImpl(solverContext)
+    val fex = new FreeExistentialsStoreImpl()
+    Identifier.identify(ex) // XXX: should not be here
+    fex.store = fex.store + ex.ID
+    rewriter.freeExistentialsStore = fex
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case membershipEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        rewriter.push()
+        val failPreds = nextState.arena.findCellsByType(FailPredT())
+        val failureOccurs = tla.or(failPreds.map(_.toNameEx) :_*)
+        solverContext.assertGroundExpr(failureOccurs)
+        assert(!solverContext.sat()) // no failure should be possible
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SET-FILTER[1-2]: \E SUBSET X {1} IN {} = {x \in X : [y \in X |-> TRUE][x]} ~~> $B$k""") {
+    // regression
+    val baseSet = tla.enumSet(1)
+    val filter = tla.appFun(tla.funDef(tla.bool(true), "y", "X"), "x")
+    val filteredSet = tla.filter("x", "X", filter)
+    val ex = tla.exists("X", tla.powSet(baseSet), tla.eql(tla.enumSet(), filteredSet))
+
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding)
+    val rewriter = new SymbStateRewriterImpl(solverContext)
+    val fex = new FreeExistentialsStoreImpl()
+    Identifier.identify(ex) // XXX: should not be here
+    fex.store = fex.store + ex.ID
+    rewriter.freeExistentialsStore = fex
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case membershipEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        assert(solverContext.sat())
+        rewriter.push()
+        val failPreds = nextState.arena.findCellsByType(FailPredT())
+        val failureOccurs = tla.or(failPreds.map(_.toNameEx) :_*)
+        solverContext.assertGroundExpr(failureOccurs)
+        assert(!solverContext.sat()) // no failure should be possible
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SET-FILTER[1-2]: \E SUBSET X {1, 2} IN {} = {x \in X : [y \in {1} |-> TRUE][x]} ~~> $B$k""") {
+    // regression
+    val baseSet = tla.enumSet(1)
+    val filter = tla.appFun(tla.funDef(tla.bool(true), "y", tla.enumSet(1)), "x")
+    val filteredSet = tla.filter("x", "X", filter)
+    val ex = tla.exists("X", tla.powSet(tla.enumSet(1, 2)), tla.eql(tla.enumSet(), filteredSet))
+
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding)
+    val rewriter = new SymbStateRewriterImpl(solverContext)
+    val fex = new FreeExistentialsStoreImpl()
+    Identifier.identify(ex) // XXX: should not be here
+    fex.store = fex.store + ex.ID
+    rewriter.freeExistentialsStore = fex
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case membershipEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        rewriter.push()
+        val failPreds = nextState.arena.findCellsByType(FailPredT())
+        val failureOccurs = tla.or(failPreds.map(_.toNameEx) :_*)
+        solverContext.assertGroundExpr(failureOccurs)
+        assert(solverContext.sat()) // failure should be possible
 
       case _ =>
         fail("Unexpected rewriting result")

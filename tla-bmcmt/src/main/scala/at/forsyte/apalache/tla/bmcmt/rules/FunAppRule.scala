@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.types.{FailPredT, RecordT, TupleT}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 
 /**
   * Implements the rules: SE-FUN-APP[1-3].
@@ -107,10 +107,12 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val domCells = resState.arena.getHas(domainCell)
 
     // introduce a new failure predicate
-    val newArena = resState.arena.appendCell(FailPredT())
-    val failPred = newArena.topCell
+//    val newArena = resState.arena.appendCell(FailPredT())
+//    val failPred = newArena.topCell
+//    rewriter.addMessage(failPred.id,
+//      "Argument %s may be outside the function %s domain %s".format(argEx, funCell, state.arena.getDom(funCell)))
     // cache equalities
-    val eqState = rewriter.lazyEq.cacheEqConstraints(resState.setArena(newArena),
+    val eqState = rewriter.lazyEq.cacheEqConstraints(resState,
       domCells.map(e => (e, argCell)))
 
     // Equation (2): there is a domain element that equals to the argument
@@ -123,16 +125,24 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
 
     // Equation (3): there is no domain element that equals to the argument
-    def mkNotInCase(domElem: ArenaCell): TlaEx = {
-      val notInDomain = tla.not(tla.in(domElem, domainCell))
-      val eq = rewriter.lazyEq.safeEq(domElem, argCell) // just use SMT equality
-      tla.or(notInDomain, tla.not(eq))
-    }
+//    def mkNotInCase(domElem: ArenaCell): TlaEx = {
+//      val notInDomain = tla.not(tla.in(domElem, domainCell))
+//      val eq = rewriter.lazyEq.safeEq(domElem, argCell) // just use SMT equality
+//      tla.or(notInDomain, tla.not(eq))
+//    }
 
-    val found = tla.and(tla.not(failPred), tla.or(domCells.map(mkInCase): _*))
-    val notFound = tla.and(failPred, tla.and(domCells.map(mkNotInCase): _*))
-    rewriter.solverContext.assertGroundExpr(tla.or(found, notFound))
+    val foundFlag = rewriter.solverContext.introBoolConst() // XXX: remove
+    val found = tla.or(domCells.map(mkInCase): _*) //tla.and(tla.not(failPred), tla.or(domCells.map(mkInCase): _*))
+    rewriter.solverContext.assertGroundExpr(tla.equiv(tla.name(foundFlag), found))
 
-    eqState.setRex(resultCell).setTheory(CellTheory())
+    var newArena = eqState.arena.appendCell(FailPredT())
+    val failPred = newArena.topCell
+    rewriter.addMessage(failPred.id,
+      "Argument %s may be outside the function %s domain %s".format(argEx, funCell, state.arena.getDom(funCell)))
+    rewriter.solverContext.assertGroundExpr(tla.equiv(failPred.toNameEx, tla.not(NameEx(foundFlag))))
+
+    rewriter.rewriteUntilDone(eqState.setArena(newArena).setRex(resultCell).setTheory(CellTheory()))
   }
+
+
 }

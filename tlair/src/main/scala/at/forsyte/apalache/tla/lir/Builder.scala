@@ -380,6 +380,9 @@ object Builder {
 
   def powSet( p_S : TlaEx ) : OperEx = OperEx( TlaSetOper.powerset, p_S )
 
+  // tlc
+  def assert(e: TlaEx, msg: String): OperEx = OperEx(TlcOper.assert, e, ValEx(TlaStr(msg)))
+
   /** UNTESTED */
   def primeInSingleton( p_x : TlaEx,
                         p_y : TlaEx
