@@ -91,6 +91,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     // introduce a new failure predicate
     arena = arena.appendCell(FailPredT())
     val failPred = arena.topCell
+    rewriter.addMessage(failPred.id, "Picking from an empty set: " + set)
     // compare the set contents with the result
     val setCells = arena.getHas(set)
     val eqState = rewriter.lazyEq.cacheEqConstraints(state, setCells.map(e => (e, resultCell)))
@@ -125,6 +126,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     // introduce a new failure predicate
     arena = arena.appendCell(FailPredT())
     val failPred = arena.topCell
+    rewriter.addMessage(failPred.id, "Picking from an empty set: " + set)
 
     val elems = arena.getHas(set)
     // get all the cells pointed by the elements of the set
@@ -220,6 +222,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     // introduce a new failure predicate
     arena = arena.appendCell(FailPredT())
     val failPred = arena.topCell
+    rewriter.addMessage(failPred.id, "Picking from an empty set: " + tupleSet)
     val (newState: SymbState, newCells: List[ArenaCell]) =
       tupleType.args.indices.foldRight((state.setArena(arena), List[ArenaCell]()))(pickAtPos)
 
@@ -312,6 +315,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     // introduce a new failure predicate
     arena = arena.appendCell(FailPredT())
     val failPred = arena.topCell
+    rewriter.addMessage(failPred.id, "Picking from an empty set: " + recordSet)
     // pick the values for each key
     val (newState: SymbState, newCells: List[ArenaCell]) =
       recordType.fields.keySet.foldRight((state.setArena(arena), List[ArenaCell]()))(pickAtPos)
@@ -377,6 +381,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     // introduce a new failure predicate
     arena = arena.appendCell(FailPredT())
     val failPred = arena.topCell
+    rewriter.addMessage(failPred.id, "Picking from an empty set: " + funSet)
     // associate a function constant with the function cell
     rewriter.solverContext.declareCellFun(funCell.name, funType.argType, funType.resultType)
 
@@ -435,6 +440,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     // introduce a new failure predicate
     arena = arena.appendCell(FailPredT())
     val failPred = arena.topCell
+    rewriter.addMessage(failPred.id, "Picking from an empty set: " + funSet)
     // associate a function constant with the function cell
     val resultType = cellType match {
       case FunT(_, rt) => rt

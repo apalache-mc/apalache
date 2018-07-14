@@ -37,7 +37,8 @@ class TlcRule(rewriter: SymbStateRewriter) extends RewritingRule {
         var newArena = valueState.arena.appendCell(FailPredT())
         val failPred = newArena.topCell
         rewriter.addMessage(failPred.id, "Assertion error: " + message)
-        val constraint = tla.impl(failPred.toNameEx, tla.not(valueState.ex))
+        val assertion = valueState.ex
+        val constraint = tla.impl(failPred.toNameEx, tla.not(assertion))
         rewriter.solverContext.assertGroundExpr(constraint)
         // return isReachable. If there is a model M s.t. M |= isReachable, then M |= failPred allows us
         // to check, whether the assertion is violated or not

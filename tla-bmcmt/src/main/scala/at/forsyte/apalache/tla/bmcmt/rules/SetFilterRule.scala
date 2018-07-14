@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, UnknownT}
+import at.forsyte.apalache.tla.bmcmt.types.{FailPredT, FinSetT, UnknownT}
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, NullEx, OperEx, TlaEx}
 
@@ -42,6 +43,8 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
           val cellState = new SymbState(predEx, BoolTheory(), newState.arena, newBinding)
           try {
             val ns = rewriter.rewriteUntilDone(cellState)
+            // TODO: add to report
+            coverFailurePredicates(cellState, ns, tla.in(potentialCell.toNameEx, setCell.toNameEx))
             newState = ns.setBinding(ns.binding - varName) // reset binding
             ns.ex
           } catch {
@@ -87,6 +90,10 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         for ((cell, pred) <- filteredCellsAndPreds)
           addCellCons(cell, pred)
 
+        // predicate evaluation may fail only if the set is not empty
+//        val notEmpty = tla.or(potentialCells map (c => tla.in(c.toNameEx, setCell.toNameEx)) :_*)
+//        coverFailurePredicates(state, newState, notEmpty) // TODO: add in the report
+
         val finalState =
           newState.setTheory(CellTheory())
             .setArena(newArena).setRex(newSetCell.toNameEx)
@@ -95,5 +102,15 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
     }
+  }
+
+  // a failure inside a filter can happen only if the set is not empty
+  // TODO: add in the semantics report
+  private def coverFailurePredicates(state: SymbState, nextState: SymbState, condition: TlaEx): Unit = {
+    // XXX: future self, the operations on the maps and sets are probably expensive. Optimize.
+    val predsBefore = Set(state.arena.findCellsByType(FailPredT()) :_*)
+    val predsAfter = Set(nextState.arena.findCellsByType(FailPredT()) :_*) -- predsBefore
+    // for each failure fp on the then branch, fp => cond
+    predsAfter.foreach(fp => rewriter.solverContext.assertGroundExpr(tla.impl(fp.toNameEx, condition)))
   }
 }

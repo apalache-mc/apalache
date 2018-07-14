@@ -29,8 +29,8 @@ class BfsChecker(frexStore: FreeExistentialsStore,
     */
   private var stack: List[SymbState] = List()
   private val solverContext: SolverContext =
-    new Z3SolverContext(debug)
-//    new PreproSolverContext(new Z3SolverContext(debug))
+//    new Z3SolverContext(debug)
+    new PreproSolverContext(new Z3SolverContext(debug))
 
   private val rewriter = new SymbStateRewriterImpl(solverContext, exprGradeStore)
   rewriter.freeExistentialsStore = frexStore
@@ -190,6 +190,8 @@ class BfsChecker(frexStore: FreeExistentialsStore,
       throw new CancelSearchException(Outcome.RuntimeError)
     }
     rewriter.pop()
+    // assume no failure occurs
+    solverContext.assertGroundExpr(tla.and(failPreds.map(fp => tla.not(fp.toNameEx)): _*))
   }
 
   private def checkForDeadlocks(stepNo: Int, state: SymbState, nextStates: List[SymbState]): Unit = {

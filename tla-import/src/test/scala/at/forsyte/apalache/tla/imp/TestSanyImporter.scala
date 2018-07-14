@@ -1453,6 +1453,45 @@ class TestSanyImporter extends FunSuite {
     assertTlaDecl("AToString", OperEx(TlcOper.tlcToString, tla.int(42)))
   }
 
+  /*
+  TODO: we need a good way to propagate this module to the standard library
+
+  test("module BMC") {
+    // check that the module BMC is imported properly
+    val text =
+      """---- MODULE bmc ----
+        |EXTENDS BMC
+        |
+        |VARIABLES i
+        |
+        |AWithType == WithType(i, "IntT")
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter().loadFromSource("bmc", Source.fromString(text))
+    assert(2 == modules.size) // our module
+    // the root module and naturals
+    val root = modules(rootName)
+
+    def assertTlaDecl(expectedName: String, body: TlaEx): Unit = {
+      root.declarations.find {
+        _.name == expectedName
+      } match {
+        case Some(d: TlaOperDecl) =>
+          assert(expectedName == d.name)
+          assert(0 == d.formalParams.length)
+          assert(body == d.body)
+
+        case _ =>
+          fail("Expected a TlaDecl")
+      }
+    }
+
+    assertTlaDecl("AWithType",
+      OperEx(BmcOper.withType, tla.name("i"), tla.str("IntT")))
+  }
+  */
+
   test("assumptions") {
     // this proof is a garbage, just to check, whether the translator works
     val text =
