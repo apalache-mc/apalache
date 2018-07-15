@@ -2,18 +2,18 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStoreImpl
 import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.plugins.Identifier
 import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 
 @RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriterFun extends RewriterBase {
+class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
   test("""SE-FUN-CTOR[1-2]: [x \in {1,2,3,4} |-> x / 3: ] ~~> $C$k""") {
     def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
 
@@ -544,6 +544,31 @@ class TestSymbStateRewriterFun extends RewriterBase {
     val failure = tla.or(nextState.arena.findCellsByType(FailPredT()).map(_.toNameEx): _*)
     solverContext.assertGroundExpr(failure)
     assert(!solverContext.sat())
+  }
+
+  test("""SE-SET-APP[1-2]: LET X = {1, 2} \cap {2} IN [y \in X |-> TRUE][2] ~~> $B$k""") {
+    // regression
+    val fun = tla.funDef(tla.bool(true), "y", "Oper:X")
+    val app = tla.appFun(fun, 2)
+    val ex = tla.letIn(app,
+      tla.declOp("X", tla.cap(tla.enumSet(1, 2), tla.enumSet(2))))
+
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case membershipEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        assert(solverContext.sat()) // it should be sat
+        rewriter.push()
+        val failPreds = nextState.arena.findCellsByType(FailPredT())
+        val failureOccurs = tla.or(failPreds.map(_.toNameEx) :_*)
+        solverContext.assertGroundExpr(tla.not(failureOccurs))
+        assert(solverContext.sat()) // no deadlock
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
   }
 
 }
