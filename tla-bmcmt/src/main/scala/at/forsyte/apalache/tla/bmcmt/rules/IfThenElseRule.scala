@@ -103,25 +103,25 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   // TODO: introduce this rule in the semantics report
   private def iteSet(state: SymbState, commonType: CellT, pred: TlaEx, thenCell: ArenaCell, elseCell: ArenaCell) = {
-    val newArena = state.arena.appendCell(commonType)
+    var newArena = state.arena.appendCell(commonType)
     val newSetCell = newArena.topCell
     // make a union and introduce conditional membership
-    val ifElems = state.arena.getHas(thenCell)
-    val thenElems = state.arena.getHas(elseCell)
-    val newArena2 = (ifElems ++ thenElems).foldLeft(newArena)((a, e) => a.appendHas(newSetCell, e))
+    val thenElems = Set(state.arena.getHas(thenCell) :_*)
+    val elseElems = Set(state.arena.getHas(elseCell) :_*)
+    newArena = (thenElems ++ elseElems).foldLeft(newArena)((a, e) => a.appendHas(newSetCell, e))
     // x \in NewSet <=> (~p \/ x \in S1) /\ (p \/ x \in S2)
     def addCellCons(elemCell: ArenaCell): Unit = {
       val inUnion = tla.in(elemCell, newSetCell)
-      val inLeftSet = tla.in(elemCell, thenCell)
-      val inRightSet = tla.in(elemCell, elseCell)
-      val inLeftOrRight = tla.ite(pred, inLeftSet, inRightSet)
+      val inThenSet = if (thenElems.contains(elemCell)) tla.in(elemCell, thenCell) else tla.bool(false)
+      val inElseSet = if (elseElems.contains(elemCell)) tla.in(elemCell, elseCell) else tla.bool(false)
+      val inLeftOrRight = tla.ite(pred, inThenSet, inElseSet)
       rewriter.solverContext.assertGroundExpr(tla.eql(inUnion, inLeftOrRight))
     }
 
     // add SMT constraints
-    for (cell <- ifElems ++ thenElems)
+    for (cell <- thenElems ++ elseElems)
       addCellCons(cell)
 
-    state.setTheory(CellTheory()).setArena(newArena2).setRex(newSetCell.toNameEx)
+    state.setTheory(CellTheory()).setArena(newArena).setRex(newSetCell.toNameEx)
   }
 }

@@ -206,6 +206,7 @@ class BfsChecker(frexStore: FreeExistentialsStore,
   }
 
   private def checkInvariant(depth: Int, state: SymbState): Unit = {
+    checkAssertionErrors(state)
     if (checkerInput.notInvariant.isDefined) {
       logger.debug("Checking the invariant")
       val notInv = checkerInput.notInvariant.get
@@ -222,6 +223,9 @@ class BfsChecker(frexStore: FreeExistentialsStore,
         throw new CancelSearchException(Outcome.Error)
       }
       rewriter.pop()
+      /*
+      // TODO: how useful is the following code?
+
       rewriter.push()
       val invState = rewriter.rewriteUntilDone(state
         .setTheory(BoolTheory())
@@ -237,6 +241,7 @@ class BfsChecker(frexStore: FreeExistentialsStore,
         checkAssertionErrors(invState)
       }
       rewriter.pop()
+      */
     }
   }
 
