@@ -1,12 +1,13 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriterControl extends RewriterBase {
+class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
   test("""SE-ITE[1-4]: IF 3 > 2 THEN 2 < 4 ELSE 5 < 1 ~~> $C$k""") {
     val pred = tla.gt(tla.int(3), tla.int(2))
     val e1 = tla.lt(tla.int(2), tla.int(4))
@@ -129,6 +130,36 @@ class TestSymbStateRewriterControl extends RewriterBase {
         fail("Unexpected rewriting result")
     }
   }
+
+
+  test("""SE-ITE[5]: IF 1 = 1 THEN {2} ELSE {1} ] ~~> $C$k""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val ite = tla.ite(tla.eql(1, 1), tla.enumSet(2), tla.enumSet(1))
+    val eq = tla.eql(tla.enumSet(2), ite)
+
+    val state = new SymbState(eq, CellTheory(), arena, new Binding())
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case membershipEx@NameEx(name) =>
+        assert(CellTheory().hasConst(name))
+        assert(solverContext.sat())
+        solverContext.push()
+        solverContext.assertGroundExpr(tla.not(nextState.ex))
+        assertUnsatOrExplain(rewriter, nextState)
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(nextState.ex)
+        assert(solverContext.sat())
+        solverContext.pop()
+
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
 
   test("""SE-ITE[5]: IF 2 < 3 THEN {1, 2} ELSE {2, 3} ~~> {1, 2}""") {
     val pred = tla.lt(tla.int(2), tla.int(3))
