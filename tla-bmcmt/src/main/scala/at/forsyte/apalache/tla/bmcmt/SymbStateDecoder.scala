@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.values.TlaStr
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaStr}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 
 import scala.collection.immutable.{HashSet, SortedSet}
@@ -77,7 +77,15 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       if (found.isDefined) {
         ValEx(TlaStr(found.get))
       } else {
-        ValEx(TlaStr(cell.toString)) // a value that was assigned by the solver, and not created by us
+        findCellInSet(arena, rewriter.strValueCache.values().toSeq, cell.toNameEx) match {
+            // found among the cached keys
+          case Some(c) =>
+            decodeCellToTlaEx(arena, c)
+
+          case None =>
+            // not found, just use the name
+            ValEx(TlaStr(cell.toString)) // a value that was assigned by the solver, and not created by us
+        }
       }
 
     case UnknownT() =>
@@ -94,7 +102,10 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       def eachElem(es: List[TlaEx], argCell: ArenaCell): List[TlaEx] = {
         val inSet = solverContext.evalGroundExpr(tla.in(argCell, dom)).identical(tla.bool(true))
         if (inSet) {
-          val resultEx = solverContext.evalGroundExpr(tla.appFun(cell, argCell))
+          val resultEx = findCellInSet(arena, arena.getHas(arena.getCdm(cell)), tla.appFun(cell, argCell)) match {
+            case Some(c) => decodeCellToTlaEx(arena, c) // it may be a set
+            case None => solverContext.evalGroundExpr(tla.appFun(cell, argCell)) // fall back
+          }
           decodeCellToTlaEx(arena, argCell) +: resultEx +: es
         } else {
           es
@@ -144,6 +155,13 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       case _ =>
         throw new RewriterException("Unexpected domain structure: " + set)
     }
+  }
+
+  private def findCellInSet(arena: Arena, cells: Seq[ArenaCell], ex: TlaEx): Option[ArenaCell] = {
+    def isEq(c: ArenaCell): Boolean = {
+      ValEx(TlaBool(true)) == solverContext.evalGroundExpr(tla.and(tla.eql(c, ex)))
+    }
+    cells.find(isEq)
   }
 
   def reverseMapVar(expr: TlaEx, varName: String, cell: ArenaCell): TlaEx = {
