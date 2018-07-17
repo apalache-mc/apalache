@@ -29,8 +29,8 @@ class BfsChecker(frexStore: FreeExistentialsStore,
     */
   private var stack: List[SymbState] = List()
   private val solverContext: SolverContext =
-//    new Z3SolverContext(debug)
-    new PreproSolverContext(new Z3SolverContext(debug))
+    new Z3SolverContext(debug)
+//    new PreproSolverContext(new Z3SolverContext(debug))
 
   private val rewriter = new SymbStateRewriterImpl(solverContext, exprGradeStore)
   rewriter.freeExistentialsStore = frexStore
