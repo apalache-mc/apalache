@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+#
+# Run the APALACHE model checker
+#
+# Igor Konnov, 2018
+
+DIR=`dirname $0`
+DIR=`cd "$DIR/.."; pwd`
+echo "# Tool home: $DIR"
+JAR=`find "$DIR/mod-distribution/target/" -name "distribution-*-jar-with-dependencies.jar" | head -n 1`
+
+if [ ! -f "$JAR" ]; then
+    echo "ERROR: Distribution jar not found. Did you run mvn package?"
+    exit 1
+fi
+
+echo "# Package: $JAR"
+
+java -jar "$JAR" "$@"
+

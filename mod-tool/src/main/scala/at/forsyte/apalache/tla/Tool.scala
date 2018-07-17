@@ -25,7 +25,7 @@ object Tool extends App with LazyLogging {
     Console.println("")
     val parseCmd = new ParseCmd
     val checkCmd = new CheckCmd
-    Cli.parse(args).withProgramName("apalache").version(Version.version)
+    Cli.parse(args).withProgramName("apalache-mc").version(Version.version)
         .withCommands(parseCmd, checkCmd) match {
       case Some(parse: ParseCmd) =>
         logger.debug("Parse " + parse.file)
