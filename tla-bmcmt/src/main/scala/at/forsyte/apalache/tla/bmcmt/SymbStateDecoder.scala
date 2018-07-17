@@ -97,6 +97,9 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       val elems = arena.getHas(cell).filter(inSet)
       tla.enumSet(elems.map(c => decodeCellToTlaEx(arena, c)): _*)
 
+    case FinFunSetT(_, _) =>
+      tla.funSet(decodeCellToTlaEx(arena, arena.getDom(cell)), decodeCellToTlaEx(arena, arena.getCdm(cell)))
+
     case FunT(_, _) =>
       val dom = arena.getDom(cell)
       def eachElem(es: List[TlaEx], argCell: ArenaCell): List[TlaEx] = {

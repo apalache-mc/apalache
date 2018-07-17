@@ -486,8 +486,8 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
           throw new SmtEncodingException("A number constant is too large to fit in Long: " + num)
         }
 
-      case NameEx(name) if IntTheory().hasConst(name) =>
-        z3context.mkIntConst(name)
+      case NameEx(name) =>
+        z3context.mkIntConst(name) // TODO: incompatible sorts?
 
       case OperEx(TlaArithOper.lt, left, right) =>
         z3context.mkLt(toArithExpr(left).asInstanceOf[ArithExpr],

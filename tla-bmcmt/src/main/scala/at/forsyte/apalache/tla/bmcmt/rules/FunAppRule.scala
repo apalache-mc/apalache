@@ -116,12 +116,18 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       domCells.map(e => (e, argCell)))
 
     // Equation (2): there is a domain element that equals to the argument
-    def mkInCase(domElem: ArenaCell): TlaEx = {
+    def mkArgCase(domElem: ArenaCell): TlaEx = {
       val inDomain = tla.in(domElem, domainCell)
-      val funEqResult =
+      val argEq = rewriter.lazyEq.safeEq(domElem, argCell) // just use SMT equality
+      tla.and(inDomain, argEq)
+    }
+    // the result equals to the function result (bugfix: separate mkArgCase from mkResCase)
+    def mkResCase(domElem: ArenaCell): TlaEx = {
+      val inDomain = tla.in(domElem, domainCell)
+      val resEq =
         tla.eql(resultCell, tla.appFun(funCell, domElem)) // translated as function application in SMT
-      val eq = rewriter.lazyEq.safeEq(domElem, argCell) // just use SMT equality
-      tla.and(inDomain, eq, funEqResult)
+      val argEq = rewriter.lazyEq.safeEq(domElem, argCell) // just use SMT equality
+      tla.and(inDomain, argEq, resEq)
     }
 
     // Equation (3): there is no domain element that equals to the argument
@@ -132,8 +138,10 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
 //    }
 
     val foundFlag = rewriter.solverContext.introBoolConst() // XXX: remove
-    val found = tla.or(domCells.map(mkInCase): _*) //tla.and(tla.not(failPred), tla.or(domCells.map(mkInCase): _*))
+    val found = tla.or(domCells.map(mkArgCase): _*) //tla.and(tla.not(failPred), tla.or(domCells.map(mkInCase): _*))
     rewriter.solverContext.assertGroundExpr(tla.equiv(tla.name(foundFlag), found))
+    val resEq = tla.impl(found, tla.or(domCells.map(mkResCase): _*))
+    rewriter.solverContext.assertGroundExpr(resEq)
 
     var newArena = eqState.arena.appendCell(FailPredT())
     val failPred = newArena.topCell

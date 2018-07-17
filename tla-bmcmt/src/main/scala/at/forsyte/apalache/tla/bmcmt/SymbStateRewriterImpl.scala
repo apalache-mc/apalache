@@ -423,6 +423,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     * Clean the context
     */
   override def dispose(): Unit = {
+    exprCache.dispose()
     intValueCache.dispose()
     strValueCache.dispose()
     recordDomainCache.dispose()
