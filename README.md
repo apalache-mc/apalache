@@ -22,8 +22,7 @@ $ mvn package
 The model checker can be run as follows:
 
 ```bash
-$ java -jar mod-distribution/target/distribution-0.1-SNAPSHOT-jar-with-dependencies.jar \
-  check --init=Init --next=Next --inv=Inv --length=10 myspec.tla
+$ bin/apalache-mc check --init=Init --next=Next --inv=Inv --length=10 myspec.tla
 ```
 
 In contrast to TLC, the tool assumes that all specification parameters are
