@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.oper.FixedArity
-import at.forsyte.apalache.tla.lir.values.TlaInt
+import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
 
 trait TestingPredefs {
   implicit def name( p_s : String ) : NameEx = NameEx( p_s )
@@ -21,6 +21,8 @@ trait TestingPredefs {
   val n_p : NameEx = "p"
   val n_q : NameEx = "q"
   val n_r : NameEx = "r"
+  val n_s : NameEx = "s"
+  val n_t : NameEx = "t"
 
   val n_A : NameEx = "A"
   val n_B : NameEx = "B"
@@ -32,6 +34,9 @@ trait TestingPredefs {
   val n_x : NameEx = "x"
   val n_y : NameEx = "y"
   val n_z : NameEx = "z"
+
+  val trueEx  : ValEx = ValEx( TlaTrue )
+  val falseEx : ValEx = ValEx( TlaFalse )
 
   val arr   : Array[TlaEx] = Array( n_a, n_b, n_c, n_d, n_e, n_f, n_g )
   val arr_s : Seq[TlaEx]   = arr.toSeq
