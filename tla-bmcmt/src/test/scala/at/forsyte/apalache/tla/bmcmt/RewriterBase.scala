@@ -22,6 +22,10 @@ class RewriterBase extends FunSuite with BeforeAndAfter {
     new SymbStateRewriterAuto(solverContext)
   }
 
+  protected def createWithoutCache(): SymbStateRewriter = {
+    new SymbStateRewriterImpl(solverContext)
+  }
+
   protected def assertUnsatOrExplain(rewriter: SymbStateRewriter, state: SymbState): Unit = {
     assertOrExplain("UNSAT", rewriter, state, !solverContext.sat())
   }

@@ -67,7 +67,7 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-FUN-CTOR[1-2]: [x \in {1,2} |-> IF x = 1 THEN {2} ELSE {1} ] ~~> $C$k""") {
+  test("""SE-FUN-CTOR[1-2]: [x \in {1,2} |-> IF x = 1 THEN {2} ELSE {1} ][1] ~~> $C$k""") {
     def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
 
     val set = tla.enumSet(1, 2)

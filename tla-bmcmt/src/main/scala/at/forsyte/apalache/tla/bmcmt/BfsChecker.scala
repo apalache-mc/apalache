@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import java.io.{FileWriter, PrintWriter}
+import java.io.{FileWriter, PrintWriter, StringWriter}
 
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FreeExistentialsStore}
 import at.forsyte.apalache.tla.bmcmt.types.FailPredT
@@ -62,6 +62,7 @@ class BfsChecker(frexStore: FreeExistentialsStore,
       Outcome.NoError
     } catch {
       case ce: CancelSearchException =>
+        solverContext.dispose() // flushes the log
         ce.outcome
     }
   }
@@ -146,6 +147,7 @@ class BfsChecker(frexStore: FreeExistentialsStore,
     rewriter.push()
     logger.debug("Step %d: pushing stack to level %d, then rewriting"
       .format(stepNo, rewriter.contextLevel))
+    solverContext.log("; ------- STEP: %d, STACK LEVEL: %d {".format(stepNo, rewriter.contextLevel))
     val nextState = rewriter.rewriteUntilDone(state.setTheory(BoolTheory()).setRex(transition))
     logger.debug("Finished rewriting")
     if (!solverContext.sat()) {
@@ -163,9 +165,11 @@ class BfsChecker(frexStore: FreeExistentialsStore,
       logger.debug("Transition is not feasible. Skipped.")
       rewriter.pop()
       rewriter.pop()
+      solverContext.log("; } ------- STEP: %d, STACK LEVEL: %d".format(stepNo, rewriter.contextLevel))
       None
     } else {
       rewriter.pop()
+      solverContext.log("; } ------- STEP: %d, STACK LEVEL: %d".format(stepNo, rewriter.contextLevel))
       Some(nextState)
     }
   }
@@ -187,6 +191,11 @@ class BfsChecker(frexStore: FreeExistentialsStore,
       activeFailures.foreach(fp => logger.error(rewriter.findMessage(fp.id)))
 
       dumpCounterexample()
+      // dump everything in the log
+      val writer = new StringWriter()
+      new SymbStateDecoder(solverContext, rewriter).dumpArena(state, new PrintWriter(writer))
+      solverContext.log(writer.getBuffer.toString)
+
       throw new CancelSearchException(Outcome.RuntimeError)
     }
     rewriter.pop()
@@ -216,10 +225,15 @@ class BfsChecker(frexStore: FreeExistentialsStore,
         .setTheory(BoolTheory())
         .setRex(notInv))
       solverContext.assertGroundExpr(notInvState.ex)
+      checkAssertionErrors(notInvState) // the invariant violation may introduce runtime errors
       val notInvSat = solverContext.sat()
       if (notInvSat) {
         val filename = dumpCounterexample()
         logger.error(s"Invariant is violated at depth $depth. Check the counterexample in $filename")
+        // dump everything in the log
+        val writer = new StringWriter()
+        new SymbStateDecoder(solverContext, rewriter).dumpArena(notInvState, new PrintWriter(writer))
+        solverContext.log(writer.getBuffer.toString)
         throw new CancelSearchException(Outcome.Error)
       }
       rewriter.pop()

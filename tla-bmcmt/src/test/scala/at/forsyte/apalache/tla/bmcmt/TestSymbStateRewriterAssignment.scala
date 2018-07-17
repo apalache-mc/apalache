@@ -2,15 +2,15 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.NameEx
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.{NameEx, TestingPredefs}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 import scala.collection.immutable.{SortedSet, TreeMap}
 
 @RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriterAssignment extends RewriterBase {
+class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
   test("""SE-IN-ASSIGN1(int): x' \in {1, 2} ~~> TRUE and [x -> $C$k]""") {
     val set = tla.enumSet(tla.int(1), tla.int(2))
     val assign = tla.in(tla.prime(tla.name("x")), set)
@@ -135,6 +135,60 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     val eqState13 = rewriter.rewriteUntilDone(nextState.setTheory(BoolTheory()).setRex(eq13))
     solverContext.assertGroundExpr(eqState13.ex)
     assertUnsatOrExplain(rewriter, eqState13) // should not be possible
+  }
+
+  test("""SE-IN-ASSIGN1(set): x' \in {{1, 2}, {1+1, 2, 3}} \ {{2, 3}} ~~> TRUE and [x -> $C$k]""") {
+    // equal elements in different sets mess up picking from a set
+    val twoSets = tla.enumSet(tla.enumSet(1, 2), tla.enumSet(tla.plus(1, 1), 2, 3))
+    val minus = tla.setminus(twoSets, tla.enumSet(tla.enumSet(2, 3)))
+    val assign = tla.in(tla.prime("x"), minus)
+
+    val state = new SymbState(assign, CellTheory(), arena, new Binding)
+    val rewriter = createWithoutCache() // it is critical that 1+1 does not get simplified
+    val nextState = rewriter.rewriteUntilDone(state)
+    val boundCell =
+      nextState.ex match {
+        case NameEx(name) =>
+          assert(CellTheory().hasConst(name))
+          assert(arena.cellTrue().toString == name)
+          assert(nextState.binding.size == 1)
+          assert(nextState.binding.contains("x'"))
+          nextState.binding("x'")
+
+        case _ =>
+          fail("Unexpected rewriting result")
+      }
+
+    // no contradiction introduced
+    assert(solverContext.sat())
+    // may equal to {1, 2}
+    rewriter.push()
+    val eq12 = tla.eql(boundCell, tla.enumSet(1, 2))
+    val eqState12 = rewriter.rewriteUntilDone(nextState.setTheory(BoolTheory()).setRex(eq12))
+    solverContext.assertGroundExpr(eqState12.ex)
+    assert(solverContext.sat()) // ok
+    rewriter.pop()
+    // not equal to {1, 3}
+    rewriter.push()
+    val eq13 = tla.eql(boundCell, tla.enumSet(1, 3))
+    val eqState13 = rewriter.rewriteUntilDone(nextState.setTheory(BoolTheory()).setRex(eq13))
+    solverContext.assertGroundExpr(eqState13.ex)
+    assertUnsatOrExplain(rewriter, eqState13) // should not be possible
+    rewriter.pop()
+    // not equal to {2, 3}
+    rewriter.push()
+    val eq23 = tla.eql(boundCell, tla.enumSet(2, 3))
+    val eqState23 = rewriter.rewriteUntilDone(nextState.setTheory(BoolTheory()).setRex(eq23))
+    solverContext.assertGroundExpr(eqState23.ex)
+    assertUnsatOrExplain(rewriter, eqState23) // should not be possible
+    rewriter.pop()
+    // 2 is in the result
+    rewriter.push()
+    val in23 = tla.in(2, boundCell)
+    val inState23 = rewriter.rewriteUntilDone(nextState.setTheory(BoolTheory()).setRex(in23))
+    solverContext.assertGroundExpr(inState23.ex)
+    assert(solverContext.sat()) // should be possible
+    rewriter.pop()
   }
 
   test("""SE-IN-ASSIGN1(set): x' \in SUBSET {1, 2} ~~> TRUE and [x -> $C$k]""") {

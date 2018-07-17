@@ -121,45 +121,64 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     rewriter.solverContext.log("; PICK %s FROM %s {".format(cellType, set))
     var arena = state.arena.appendCell(cellType)
     val resultCell = arena.topCell
-    arena = arena.appendCell(cellType)
-    val auxCell = arena.topCell
+    arena = arena.appendCell(IntT())
+    val memberSets = arena.getHas(set)
+    val choice = arena.topCell // here we choose a set that belongs to the top-level set
+    rewriter.solverContext.assertGroundExpr(tla.ge(choice.toNameEx, tla.int(0)))
+    rewriter.solverContext.assertGroundExpr(tla.lt(choice.toNameEx, tla.int(memberSets.length)))
     // introduce a new failure predicate
     arena = arena.appendCell(FailPredT())
     val failPred = arena.topCell
-    rewriter.addMessage(failPred.id, "Picking from an empty set: " + set)
+    rewriter.addMessage(failPred.id, "Picking from a dynamically empty set: " + set)
 
-    val elems = arena.getHas(set)
     // get all the cells pointed by the elements of the set
-    val union = elems.map(e => Set(arena.getHas(e): _*))
+    val union = memberSets.map(e => Set(arena.getHas(e): _*))
       .fold(Set[ArenaCell]())(_ union _)
 
     // the resulting cell points to all the cells in the union
     arena = union.foldLeft(arena)((a, e) => a.appendHas(resultCell, e))
 
-    // the auxillary cell equals to an element in the original set
-    def mkIn(setElem: ArenaCell): TlaEx = {
-      val inSet = tla.in(setElem, set)
-      // here we don't use the deep equality, just the SMT equality
-      val eq = tla.eql(setElem, auxCell)
-      tla.and(inSet, eq)
+    // TODO: we need more tests here, tricky bugs are hiding
+//    def inResultIffChosen(memberSet: ArenaCell, setNo: Int): Unit = {
+////      val memberSetElems = Set(arena.getHas(memberSet) :_*)
+//      for (e <- union) {
+////        val isStaticallyIn = memberSetElems.contains(e) // the sets may intersect!
+//        val inMemberSet = tla.and(//tla.bool(isStaticallyIn),
+//                                  tla.in(e, memberSet),
+//                                  tla.in(memberSet, set)) // the set itself should belong to the top set
+//        val inResult = tla.in(e, resultCell)
+//        val myChoice = tla.eql(choice.toNameEx, tla.int(setNo))
+//        rewriter.solverContext.assertGroundExpr(
+//          tla.impl(tla.and(myChoice, inResult), inMemberSet))
+//        rewriter.solverContext.assertGroundExpr(
+//          tla.impl(tla.and(myChoice, inMemberSet), inResult))
+//      }
+//    }
+//
+//    // restrict the contents of the result to the chosen set
+//    for ((memberSet, no) <- memberSets.zipWithIndex)
+//      inResultIffChosen(memberSet, no)
+//
+    // we chose an existing element of the set
+    def mkIn(memberSet: ArenaCell, memberSetNo: Int): TlaEx = {
+      // TODO: cover with unit tests!
+      tla.and(tla.in(memberSet, set), tla.eql(choice.toNameEx, tla.int(memberSetNo)))
     }
 
-    def mkNotIn(setElem: ArenaCell): TlaEx = {
-      tla.not(tla.in(setElem, set))
+    val eqState = rewriter.lazyEq.cacheEqConstraints(state.setArena(arena), memberSets.map(s => (resultCell, s)))
+
+    // the most reliable way is to use set equality, which is rather expensive
+    // TODO: figure out, whether it is the only way
+    for ((ms, no) <- memberSets.zipWithIndex) {
+      val chosen = tla.eql(choice.toNameEx, tla.int(no))
+      rewriter.solverContext.assertGroundExpr(tla.impl(chosen, rewriter.lazyEq.cachedEq(resultCell, ms)))
     }
 
-    def inResultIffInAux(elem: ArenaCell): Unit = {
-      val inResult = tla.in(elem, resultCell)
-      val inAux = tla.in(elem, auxCell)
-      rewriter.solverContext.assertGroundExpr(tla.equiv(inResult, inAux))
-    }
-
-    union.foreach(inResultIffInAux)
-    val found = tla.or(elems.map(mkIn): _*)
-    val existsSetOrFailure = decorateWithFailure(found, set, elems, resultCell, failPred)
+    val found = tla.or(memberSets.zipWithIndex.map(p => mkIn(p._1, p._2)): _*)
+    val existsSetOrFailure = decorateWithFailure(found, set, memberSets, resultCell, failPred)
     rewriter.solverContext.assertGroundExpr(existsSetOrFailure)
     rewriter.solverContext.log("; } PICK %s FROM %s".format(cellType, set))
-    state.setArena(arena).setRex(resultCell)
+    eqState.setRex(resultCell)
   }
 
   /**
