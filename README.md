@@ -25,6 +25,8 @@ The model checker can be run as follows:
 $ bin/apalache-mc check --init=Init --next=Next --inv=Inv --length=10 myspec.tla
 ```
 
+The tool will report only the important messages. A detailed log can be found in `detailed.log`.
+
 In contrast to TLC, the tool assumes that all specification parameters are
 fixed right in the specification. We will add support for TLC models in
 the future.
