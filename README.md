@@ -9,6 +9,10 @@ checker that runs under the same assumptions as TLC.
 Related reports and publications can be found at the
 [apalache page](http://forsyte.at/research/apalache/).
 
+## Releases
+
+Check the [releases page](https://github.com/konnov/apalache/releases).
+
 ## Building and running
 
 To build the tool, you will need the following standard packages: Java 8 SDK,
