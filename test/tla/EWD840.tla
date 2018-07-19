@@ -7,12 +7,8 @@
 (***************************************************************************)
 EXTENDS Naturals
 
-N == 5
-
-(*
-CONSTANT N
-ASSUME NAssumption == N \in Nat \ {0}
- *)
+N == 4
+(*ASSUME NAssumption == N \in Nat \ {0}*)
 
 VARIABLES active, color, tpos, tcolor
 
@@ -147,6 +143,7 @@ FalseLiveness ==
 (* condition WF_vars(Next) is used instead of only WF_vars(System) that    *)
 (* requires fairness of the actions controlled by termination detection.   *)
 (***************************************************************************)
+
 SpecWFNext == Init /\ [][Next]_vars /\ WF_vars(Next)
 AllNodesTerminateIfNoMessages ==
   <>[][\A i \in Nodes : ~ SendMsg(i)]_vars => <>(\A i \in Nodes : ~ active[i])
@@ -156,8 +153,10 @@ AllNodesTerminateIfNoMessages ==
 (***************************************************************************)
 Inv == 
   \/ P0:: \A i \in Nodes : tpos < i => ~ active[i]
-  \/ P1:: \E j \in 0 .. tpos : color[j] = "black"
+  \/ P1:: \E j \in Nodes: (0 <= j /\ j <= tpos) => color[j] = "black"
   \/ P2:: tcolor = "black"
+
+  (*\/ P1:: \E j \in 0 .. tpos : color[j] = "black"*)
 
 (***************************************************************************)
 (* Use the following specification to let TLC check that the predicate     *)
@@ -168,5 +167,6 @@ Inv ==
 CheckInductiveSpec == TypeOK /\ Inv /\ [][Next]_vars
 =============================================================================
 \* Modification History
+\* Last modified Fri Jan 26 17:33:52 CET 2018 by igor
 \* Last modified Tue Jun 28 18:17:45 CEST 2016 by merz
 \* Created Mon Sep 09 11:33:10 CEST 2013 by merz
