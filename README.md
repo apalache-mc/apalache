@@ -2,13 +2,17 @@
 
 Abstraction-based parameterized TLA+ checker [![Build Status](https://travis-ci.org/konnov/apalache.svg?branch=master)](https://travis-ci.org/konnov/apalache)
 
+The current version of the tool is neither parameterized, nor it is using
+abstractions. As a first step, we are working on a symbolic bounded model
+checker that runs under the same assumptions as TLC.
+
 Related reports and publications can be found at the
 [apalache page](http://forsyte.at/research/apalache/).
 
 ## Building and running
 
 To build the tool, you will need the following standard packages: Java 8 SDK,
-Scala, and Maven.  You will also need [Z3 Prover](https://github.com/Z3Prover/z3)
+Scala, and Maven. You will also need [Z3 Prover](https://github.com/Z3Prover/z3)
 and [TLA tools](http://lamport.azurewebsites.net/tla/tools.html).
 Both can be automatically installed in your local Maven repository by running the
 script `./3rdparty/install-local.sh`.
