@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+#
+# Run integration tests
+#
+# Igor Konnov, 2018
+
+DIR=`dirname $0`
+DIR=`cd "$DIR/.."; pwd`
+echo "# Tool home: $DIR"
+TEST_DIR="$DIR/test/tla"
+nok=0
+nfail=0
+
+function check() {
+    TEST=$1
+    OUTF="$TEST.out"
+    ERRF="$TEST.err"
+    shift
+    "$DIR"/bin/apalache-mc check $@ >"$OUTF" 2>"$ERRF"
+
+    if grep -q "The outcome is: NoError" "$OUTF"; then
+        RES=1
+    elif grep -q "The outcome is: Error" "$OUTF"; then
+        RES=0
+    elif grep -q "REPORT A BUG" "$OUTF"; then
+        RES=500
+    else
+        RES=10 # unknown bug
+    fi
+}
+
+function expect_ok() {
+    if [ "$RES" = "1" ]; then
+        printf 'TEST %-60s [OK]\n' "$TEST"
+        nok=$((nok+1))
+    else
+        printf 'TEST %-60s [FAILED]\n' "$TEST"
+        nfail=$((nfail+1))
+    fi
+}
+
+function expect_err() {
+    if [ "$RES" = "0" ]; then
+        printf 'TEST %-60s [OK]\n' "$TEST"
+        nok=$((nok+1))
+    else
+        printf 'TEST %-60s [FAILED]\n' "$TEST"
+        nfail=$((nfail+1))
+    fi
+}
+
+
+cd "$DIR"
+echo "# Building the package with Maven"
+#mvn package
+
+echo "# Running the tests"
+cd "$DIR/test/tla"
+check "001-HourClock" --length=20 --init=HCini --next=HCnxt \
+    --inv=TypeOK HourClock.tla \
+    && expect_ok
+check "002-mis" --length=10 --inv=IsIndependent mis.tla \
+    && expect_ok
+check "003-mis_bug" --length=10 --inv=IsIndependent mis_bug.tla \
+    && expect_err
+# TODO: TypeOK of ast.tla does not work
+check "004-ast" --length=10 ast.tla \
+    && expect_ok
+check "005-pr" --length=3 pr.tla \
+    && expect_ok
+check "006-EWD840" --length=10 --inv=Inv EWD840.tla \
+    && expect_ok
+check "007-Paxos" --length=10 --inv=Inv Paxos.tla \
+    && expect_ok
+
+echo "OK: $nok FAILED: $nfail"
+
