@@ -68,6 +68,8 @@ class BfsChecker(frexStore: FreeExistentialsStore,
   }
 
   private def makeOneStep(stepNo: Int, startingState: SymbState, transitions: List[TlaEx]): SymbState = {
+    logger.info("Step %d, applying %d transitions".format(stepNo, transitions.length))
+
     def computeAllEnabled(state: SymbState, ts: List[TlaEx]): List[SymbState] =
       ts match {
         case List() =>
@@ -145,14 +147,14 @@ class BfsChecker(frexStore: FreeExistentialsStore,
 
   private def applyTransition(stepNo: Int, state: SymbState, transition: TlaEx): Option[SymbState] = {
     rewriter.push()
-    logger.debug("Step %d: pushing stack to level %d, then rewriting"
+    logger.debug("Step %d, SMT context level %d. Applying rewriting rules..."
       .format(stepNo, rewriter.contextLevel))
     solverContext.log("; ------- STEP: %d, STACK LEVEL: %d {".format(stepNo, rewriter.contextLevel))
     val nextState = rewriter.rewriteUntilDone(state.setTheory(BoolTheory()).setRex(transition))
-    logger.debug("Finished rewriting")
+    logger.debug("Finished rewriting. Checking satisfiability of the pushed constraints.")
     if (!solverContext.sat()) {
       // this is a clear sign of a bug in one of the translation rules
-      logger.debug("UNSAT after pushing state constraints")
+      logger.debug("UNSAT after pushing transition constraints")
       throw new CheckerException("A contradiction introduced in rewriting. Report a bug.")
     }
     rewriter.push()
@@ -160,6 +162,7 @@ class BfsChecker(frexStore: FreeExistentialsStore,
     solverContext.assertGroundExpr(nextState.ex)
     // check whether this transition violates some assertions
     checkAssertionErrors(nextState)
+    logger.debug("Checking satisfiability of the pushed constraints.")
     if (!solverContext.sat()) {
       // the current symbolic state is not feasible
       logger.debug("Transition is not feasible. Skipped.")
@@ -179,6 +182,7 @@ class BfsChecker(frexStore: FreeExistentialsStore,
     // or function application outside its domain.
     // The crucial assumption here is that IF-THEN-ELSE activates runtime errors only
     // on the active branches, see IfThenElseRule.
+    logger.debug("Checking whether the assertions can be violated.")
     rewriter.push()
     val failPreds = state.arena.findCellsByType(FailPredT())
     solverContext.assertGroundExpr(tla.or(failPreds.map(_.toNameEx): _*))
