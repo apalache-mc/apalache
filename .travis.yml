@@ -36,6 +36,10 @@ branches:
   - master
   - unstable
 
+script:
+    - mvn test
+    - ./test/run-integration
+
 notifications:
     email:
       recipients:
