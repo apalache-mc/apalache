@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Run integration tests
+# Run the integration tests
 #
 # Igor Konnov, 2018
 
@@ -10,13 +10,19 @@ echo "# Tool home: $DIR"
 TEST_DIR="$DIR/test/tla"
 nok=0
 nfail=0
+LOGFILE="$TEST_DIR/log.out"
+echo "" >"$LOGFILE"
+
+function tm() {
+    date '+%H:%M:%S'
+}
 
 function check() {
     TEST=$1
     OUTF="$TEST.out"
     ERRF="$TEST.err"
     shift
-    "$DIR"/bin/apalache-mc check $@ >"$OUTF" 2>"$ERRF"
+    "$DIR"/bin/apalache-mc check $@ 2>"$ERRF" | tee "$OUTF"
 
     if grep -q "The outcome is: NoError" "$OUTF"; then
         RES=1
@@ -31,20 +37,20 @@ function check() {
 
 function expect_ok() {
     if [ "$RES" = "1" ]; then
-        printf 'TEST %-60s [OK]\n' "$TEST"
+        printf '%s TEST %-58s [OK]\n' `tm` "$TEST" >>"$LOGFILE"
         nok=$((nok+1))
     else
-        printf 'TEST %-60s [FAILED]\n' "$TEST"
+        printf '%s TEST %-58s [FAIL]\n' `tm` "$TEST" >>"$LOGFILE"
         nfail=$((nfail+1))
     fi
 }
 
 function expect_err() {
     if [ "$RES" = "0" ]; then
-        printf 'TEST %-60s [OK]\n' "$TEST"
+        printf '%s TEST %-58s [OK]\n' `tm` "$TEST" >>"$LOGFILE"
         nok=$((nok+1))
     else
-        printf 'TEST %-60s [FAILED]\n' "$TEST"
+        printf '%s TEST %-58s [FAIL]\n' `tm` "$TEST" >>"$LOGFILE"
         nfail=$((nfail+1))
     fi
 }
@@ -73,5 +79,12 @@ check "006-EWD840" --length=10 --inv=Inv EWD840.tla \
 check "007-Paxos" --length=10 --inv=Inv Paxos.tla \
     && expect_ok
 
+cat "$LOGFILE"
+
 echo "OK: $nok FAILED: $nfail"
+
+if [ "$nfail" -gt 0 ]; then
+    echo "Some tests failed. Check ${TEST_DIR}/<test>.log."
+    exit 1
+fi
 
