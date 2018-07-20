@@ -5,12 +5,12 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, ValEx}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TestingPredefs, ValEx}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriterBool extends RewriterBase {
+class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
 
   test("SE-BOOL-FALSE [Cell]: FALSE ~~> $C$0") {
     val ex = ValEx(TlaFalse)
@@ -122,6 +122,57 @@ class TestSymbStateRewriterBool extends RewriterBase {
           OperEx(TlaBoolOper.not, NameEx("y")))
         assert(expected == nextState.ex)
         assert(state.arena == nextState.arena)
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("SE-BOOL-IMPL: x => y ~~> ~x \\/ y") {
+    val ex = tla.impl("x", "y")
+    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+    create().rewriteOnce(state) match {
+      case SymbStateRewriter.Continue(nextState) =>
+        val expected = tla.or(tla.not("x"), "y")
+        assert(expected == nextState.ex)
+        assert(state.arena == nextState.arena)
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("SE-BOOL-EQUIV: x <=> y") {
+    arena = arena.appendCell(BoolT())
+    val left = arena.topCell
+    arena = arena.appendCell(BoolT())
+    val right = arena.topCell
+    val ex = tla.equiv(left.toNameEx, right.toNameEx)
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding)
+    val rewriter = create()
+    rewriter.rewriteUntilDone(state).ex match {
+      case NameEx(result) =>
+        rewriter.solverContext.assertGroundExpr(NameEx(result))
+        solverContext.push()
+        solverContext.assertGroundExpr(left.toNameEx)
+        solverContext.assertGroundExpr(right.toNameEx)
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(tla.not(left.toNameEx))
+        solverContext.assertGroundExpr(tla.not(right.toNameEx))
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(left.toNameEx)
+        solverContext.assertGroundExpr(tla.not(right.toNameEx))
+        assert(!solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(tla.not(left.toNameEx))
+        solverContext.assertGroundExpr(right.toNameEx)
+        assert(!solverContext.sat())
+        solverContext.pop()
 
       case _ =>
         fail("Unexpected rewriting result")
