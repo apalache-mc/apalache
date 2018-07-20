@@ -25,9 +25,11 @@ Inv  ==
       THEN Assert(FALSE, "Failed Test 4")
       ELSE Print("Test 4 OK", TRUE)
 
+ (*
  /\ IF {1,2,3} # UNION (SUBSET {1, 2, 3})
       THEN Assert(FALSE, "Failed Test 5")
       ELSE Print("Test 5 OK", TRUE)    
+  *)
 
  /\ IF {1,2,3} # UNION {{1}, {2}, {3, 2, 1}}
       THEN Assert(FALSE, "Failed Test 6")
@@ -53,9 +55,11 @@ Inv  ==
       THEN Assert(FALSE, "Failed Test 11")
       ELSE Print("Test 11 OK", TRUE)
 
+ (*
  /\ IF {1,2,3} # DOMAIN <<"a", "b", "c">>
       THEN Assert(FALSE, "Failed Test 12")
       ELSE Print("Test 12 OK", TRUE)
+      *)
 
  /\ IF {1,2,3} # DOMAIN [i \in {3,2,2,1} |-> i+1]
       THEN Assert(FALSE, "Failed Test 13")

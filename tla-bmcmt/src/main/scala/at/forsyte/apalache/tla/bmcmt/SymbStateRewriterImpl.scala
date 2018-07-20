@@ -121,6 +121,8 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
       -> List(new IfThenElseRule(this)),
     key(tla.caseOther(tla.name("otherAction"), tla.name("pred1"), tla.name("action1")))
       -> List(new CaseRule(this)),
+    key(tla.caseAny(tla.name("pred1"), tla.name("action1")))
+      -> List(new CaseRule(this)),
     key(tla.letIn(tla.int(1), TlaOperDecl("A", List(), tla.int(2))))
       -> List(new LetInRule(this)),
     key(OperEx(new TlaUserOper("userOp", AnyArity(), TlaOperDecl("userOp", List(), tla.int(3)))))

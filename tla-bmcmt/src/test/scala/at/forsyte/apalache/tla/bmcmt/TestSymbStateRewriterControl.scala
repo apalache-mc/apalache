@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.types.{FailPredT, IntT}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
@@ -203,4 +204,97 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
         fail("Unexpected rewriting result")
     }
   }
+
+  // CASE i = 1 -> 2 [] i = 2 -> 3 [] i = 3 -> 1]
+  test("""SE-CASE1: CASE i = 1 -> 2 [] i = 2 -> 3 [] i = 3 -> 1]""") {
+    def guard(arg: Int) = tla.eql("i", arg)
+
+    val caseEx = tla.caseAny(guard(1), 2, guard(2), 3, guard(3), 1)
+
+    def caseExEqConst(i: Int) = tla.eql(i, caseEx)
+
+    for (i <- List(1, 2, 3)) {
+      // reinitialize the arena and the solver
+      solverContext = new PreproSolverContext(new Z3SolverContext(debug = true))
+      arena = Arena.create(solverContext)
+      arena = arena.appendCell(IntT())
+      val icell = arena.topCell
+      val binding = new Binding + ("i" -> icell)
+      val state = new SymbState(caseEx, IntTheory(), arena, binding)
+      val rewriter = create()
+      val nextState = rewriter.rewriteUntilDone(state)
+      nextState.ex match {
+        case res@NameEx(name) =>
+          assert(IntTheory().hasConst(name))
+          rewriter.push()
+          solverContext.assertGroundExpr(tla.eql(icell.toNameEx, i))
+          solverContext.assertGroundExpr(tla.eql(1 + (i % 3), res))
+          assert(solverContext.sat())
+          rewriter.pop()
+          rewriter.push()
+          val failureOccurs = tla.or(nextState.arena.findCellsByType(FailPredT()).map(_.toNameEx): _*)
+          solverContext.assertGroundExpr(failureOccurs)
+          assert(solverContext.sat()) // this possible since there is no OTHER case and the constraints do not restrict us
+          rewriter.pop()
+          rewriter.push()
+          solverContext.assertGroundExpr(tla.eql(icell.toNameEx, i))
+          solverContext.assertGroundExpr(tla.not(failureOccurs))
+          solverContext.assertGroundExpr(tla.eql(i, res))
+          assert(!solverContext.sat())
+          rewriter.pop()
+
+        case _ =>
+          fail("Unexpected rewriting result")
+      }
+
+      arena = nextState.arena // update the arena for the next iteration
+    }
+  }
+
+  // CASE i = 1 -> 2 [] i = 2 -> 3 [] i = 3 -> 1 [] OTHER -> 4]
+  test("""SE-CASE1: CASE i = 1 -> 2 [] i = 2 -> 3 [] i = 3 -> 1 [] OTHER -> 4]""") {
+    def guard(arg: Int) = tla.eql("i", arg)
+    val caseEx = tla.caseOther(4, guard(1), 2, guard(2), 3, guard(3), 1)
+    def caseExEqConst(i: Int) = tla.eql(i, caseEx)
+
+    for (i <- List(1, 2, 3, 99)) {
+      // reinitialize the arena and the solver
+      solverContext = new PreproSolverContext(new Z3SolverContext(debug = true))
+      arena = Arena.create(solverContext)
+      arena = arena.appendCell(IntT())
+      val icell = arena.topCell
+      val binding = new Binding + ("i" -> icell)
+      val state = new SymbState(caseEx, IntTheory(), arena, binding)
+      val rewriter = create()
+      val nextState = rewriter.rewriteUntilDone(state)
+      nextState.ex match {
+        case res @ NameEx(name) =>
+          assert(IntTheory().hasConst(name))
+          rewriter.push()
+          solverContext.assertGroundExpr(tla.eql(icell.toNameEx, i))
+          val expectedValue = if (i <= 3) 1 + (i % 3) else 4
+          solverContext.assertGroundExpr(tla.eql(expectedValue, res))
+          assert(solverContext.sat())
+          rewriter.pop()
+          rewriter.push()
+          val failureOccurs = tla.or(nextState.arena.findCellsByType(FailPredT()).map(_.toNameEx): _*)
+          solverContext.assertGroundExpr(failureOccurs)
+          assert(!solverContext.sat()) // no failure should occur, as there is the OTHER case
+          rewriter.pop()
+          rewriter.push()
+          solverContext.assertGroundExpr(tla.eql(icell.toNameEx, i))
+          solverContext.assertGroundExpr(tla.not(failureOccurs))
+          solverContext.assertGroundExpr(tla.eql(i, res))
+          assert(!solverContext.sat())
+          rewriter.pop()
+
+        case _ =>
+          fail("Unexpected rewriting result")
+      }
+
+      arena = nextState.arena // update the arena for the next iteration
+    }
+
+  }
+
 }
