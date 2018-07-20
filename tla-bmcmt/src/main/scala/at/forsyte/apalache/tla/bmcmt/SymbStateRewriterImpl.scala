@@ -111,6 +111,10 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
       -> List(new AndRule(this)),
     key(tla.not(tla.name("x")))
       -> List(new NegRule(this)),
+    key(tla.impl(tla.name("x"), tla.name("y")))
+      -> List(new ImplRule(this)),
+    key(tla.equiv(tla.name("x"), tla.name("y")))
+      -> List(new EquivRule(this)),
     key(tla.exists(tla.name("x"), tla.name("S"), tla.name("p")))
       -> List(new QuantRule(this)),
     key(tla.forall(tla.name("x"), tla.name("S"), tla.name("p")))
