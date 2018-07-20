@@ -48,14 +48,14 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
             .format(thenCell.cellType, elseCell.cellType))
         }
         val pred = predState.ex
-        (thenCell.cellType, elseCell.cellType) match {
+        commonType.get match {
           // ITE[1-4]
-          case (BoolT(), BoolT()) | (IntT(), IntT()) | (ConstT(), ConstT()) =>
+          case BoolT() | IntT() | ConstT() =>
             val finalState = iteBasic(elseState, commonType.get, pred, thenCell, elseCell)
             rewriter.coerce(finalState, state.theory) // coerce to the source theory
 
           // ITE5
-          case (FinSetT(_), FinSetT(_)) =>
+          case FinSetT(_) =>
             val finalState = iteSet(elseState, commonType.get, pred, thenCell, elseCell)
             rewriter.coerce(finalState, state.theory) // coerce to the source theory
 
