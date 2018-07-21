@@ -20,8 +20,9 @@ if [ -f "$D/z3/configure" ]; then
     echo "Using a cached Z3 build..."
 else
     echo "Checking out z3..."
-    git clone https://github.com/Z3Prover/z3 $D/z3
+    git clone https://github.com/Z3Prover/z3.git $D/z3
     pushd $D/z3
+    git checkout z3-4.7.1
     echo "Configuring z3 locally (Linux)..."
     python scripts/mk_make.py --java -p $D/
     echo "Compiling z3..."
