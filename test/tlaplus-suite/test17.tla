@@ -32,7 +32,6 @@ TNext ==
                    ELSE Assert(FALSE, "Failed Test 1")
      *)
 
-     (*
      \/ /\ Print("Starting Test 2", TRUE)
         /\ IF x' = 2 
              THEN y' = 1 
