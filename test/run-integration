@@ -57,8 +57,12 @@ function expect_err() {
 
 
 cd "$DIR"
-echo "# Building the package with Maven"
-#mvn package
+if [ "$NO_MVN" != "" ]; then
+    echo "# Skipped mvn package, as NO_MVN=$NO_MVN"
+else
+    echo "# Building the package with Maven"
+    mvn package
+fi
 
 echo "# Running the tests"
 cd "$DIR/test/tla"
