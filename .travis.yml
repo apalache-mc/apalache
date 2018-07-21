@@ -37,8 +37,9 @@ branches:
   - unstable
 
 script:
-    - mvn test
+    - mvn package
     - ./test/run-integration
+    - ./test/run-tlaplus-suite
 
 notifications:
     email:
