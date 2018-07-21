@@ -10,14 +10,17 @@ Init == /\ x = [i \in 1..3 |-> i]
         /\ y = 1
 Next == 
 
+  (*
   \/ /\ UNCHANGED <<x, y>>
      /\ \A i \in 1..3 : (x[i])' = x[i]
      /\ Print("Test 1 OK", TRUE)
+    *)     
 
   \/ /\ UNCHANGED <<x, y>>
      /\ \A i \in 1..3 : UNCHANGED x[i]
      /\ Print("Test 2 OK", TRUE)
 
+    (*
   \/ /\ UNCHANGED <<x, y>>
      /\ \A i \in 1..3 : UNCHANGED [a |-> x[i], b |-> x[i]+1]
      /\ Print("Test 3 OK", TRUE)
@@ -63,6 +66,7 @@ Next ==
      /\ IF UNCHANGED {1, 2, y}
           THEN Print("Test 11 OK", TRUE)
           ELSE Assert(FALSE, "Test 11 Failed")
+  *)
 
 Inv == TRUE
 ==========================================================================

@@ -2,12 +2,13 @@
 
 (* Test of LET *)
 
-EXTENDS TLC, Naturals, Sequences
+EXTENDS TLC, Naturals \*, Sequences
 
 VARIABLE x
 
 Init ==  x = 0
 
+(*
 FcnSubst(f, e(_)) ==
   (* A recursive definition of [i \in DOMAIN f |-> e(i)] *)
   LET Range == {f[i] : i \in DOMAIN f}
@@ -21,7 +22,7 @@ FcnSubst(f, e(_)) ==
                       THEN e(i)
                       ELSE FSub[[j \in (DOMAIN g) \ {el} |-> f[j]]][i]]
   IN FSub[f]
-
+*)
 
 Inv == 
 
@@ -38,10 +39,12 @@ Inv ==
            THEN Print("Test 2 OK", TRUE)
            ELSE Assert(FALSE, "Test 2 Failed")
 
+  (*
   /\ LET e(i) == i+1
      IN  IF FcnSubst(<<1,2,3>>, e) = <<2,3,4>>
            THEN Print("Test 3 OK", TRUE)
            ELSE Assert(FALSE, "Test 3 Failed")
+           *)
            
 Next ==  UNCHANGED x
 =========================================
