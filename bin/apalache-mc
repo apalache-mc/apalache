@@ -8,11 +8,11 @@ DIR=`dirname $0`
 DIR=`cd "$DIR/.."; pwd`
 echo "# Tool home: $DIR"
 # try to find a release file first
-JAR=`find "$DIR" -depth 1 -name "apalache-bmcmt-*-with-dependencies.jar" | head -n 1`
+JAR=`find "$DIR" -maxdepth 1 -name "apalache-bmcmt-*-with-dependencies.jar" | head -n 1`
 
 if [ ! -f "$JAR" ]; then
     # try to find a package file
-    JAR=`find "$DIR/mod-distribution/target/" -depth 1 -name "distribution-*-jar-with-dependencies.jar" | head -n 1`
+    JAR=`find "$DIR/mod-distribution/target/" -maxdepth 1 -name "distribution-*-jar-with-dependencies.jar" | head -n 1`
     if [ ! -f "$JAR" ]; then
         echo "ERROR: Distribution jar not found. Did you run mvn package?"
         exit 1
