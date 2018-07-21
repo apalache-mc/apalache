@@ -73,6 +73,17 @@ check "test14" --length=2 --inv=Inv test14.tla && expect_ok
 check "test15" --length=2 --inv=Inv test15.tla && expect_ok
 check "test16" --length=2 --inv=Inv test16.tla && expect_ok
 #check "test17" --length=2 --inv=Inv test17.tla && expect_ok
+#check "test18" --length=2 --inv=Inv test18.tla && expect_ok
+check "test19" --length=2 --inv=Inv test19.tla && expect_ok
+#check "test20" --length=2 --inv=Inv test20.tla && expect_ok
+check "test21" --length=2 --inv=Inv test21.tla && expect_ok
+#check "test22" --length=2 --inv=Inv test22.tla && expect_ok
+#check "test23" --length=2 --inv=Inv test23.tla && expect_ok
+#check "test24" --length=2 --inv=Inv test24.tla && expect_ok
+#check "test25" --length=2 --inv=Inv test25.tla && expect_ok
+check "test26" --length=2 --inv=Inv test26.tla && expect_ok
+#check "test27" --length=2 --inv=Inv test27.tla && expect_ok
+#check "test28" --length=2 --inv=Inv test28.tla && expect_ok
 
 cat "$LOGFILE"
 

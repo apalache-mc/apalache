@@ -2,7 +2,7 @@
 
 (* Test of priming and variable confusion *)
 
-EXTENDS Naturals, Sequences, TLC
+EXTENDS Naturals, TLC \*, Sequences
 
 Bar(z)    == z' = 2
 Foo(y)    == y = 2
@@ -27,6 +27,7 @@ Next ==
           THEN Print("Test 1 OK", TRUE)
           ELSE Assert(FALSE, "Test 1 Failed")
 
+(*
   \/ /\ x = 1
      /\ x'=x+1
      /\ y' = y
@@ -51,6 +52,7 @@ Next ==
 
      /\ IF FooBar(x') THEN Assert(FALSE, "Test 7 Failed")
                       ELSE Print("Test 7 OK", TRUE)
+          *)
 
   \/ IF (x = 1)
        THEN /\ x'=x+1
@@ -60,6 +62,7 @@ Next ==
             /\ y'=y
             /\ Print("Test 12 OK", FALSE)  
 
+  (*
   \/ /\ x = 1
      /\ x'=x+1
      /\ y'=y
@@ -75,6 +78,7 @@ Next ==
             IN  LetOp(1) = 3     )'
           THEN Print("Test 11 OK", TRUE)
           ELSE Assert(FALSE, "Test 11 Failed")
+    *)
 
   \/ UNCHANGED <<x,y>>
 

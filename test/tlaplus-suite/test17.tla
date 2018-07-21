@@ -25,12 +25,13 @@ TNext ==
   /\ x' = 2
   /\ \/ UNCHANGED y
 
+     (* THIS TEST HAS TYPE PROBLEMS!
      \/ /\ Print("Starting Test 1", TRUE)
         /\ y' = IF x' = 2 
                   THEN 1 
                    ELSE Assert(FALSE, "Failed Test 1")
+     *)
 
-     (*
      \/ /\ Print("Starting Test 2", TRUE)
         /\ IF x' = 2 
              THEN y' = 1 
@@ -40,6 +41,7 @@ TNext ==
         /\ x' # 2
         /\ Assert(FALSE, "Failed Test 3")
 
+     (*
      \/ /\ Print("Starting Test 4", TRUE)
         /\ ~(\E i \in {x'} : i = 2)
         /\ Assert(FALSE, "Failed Test 4")

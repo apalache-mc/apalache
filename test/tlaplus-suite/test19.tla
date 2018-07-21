@@ -2,7 +2,7 @@
 
 (* Test of large initial state space *)
 
-EXTENDS Naturals, Sequences
+EXTENDS Naturals \*, Sequences
 
 VARIABLE x, y, z 
 Init == /\ x \in 1..100
