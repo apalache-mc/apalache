@@ -15,14 +15,16 @@ Inv  ==
       THEN Assert(FALSE, "Test 1")
       ELSE Print("Test 1", TRUE)
 
+ (*
  /\ IF <<a, b, c>>[2] # b
       THEN Assert(FALSE, "Test 2")
       ELSE Print("Test 2", TRUE)
-
+ *)
  /\ IF [a |-> 1, b |-> 42, c |-> 99]["b"] # 42
       THEN Assert(FALSE, "Test 3" )
       ELSE Print("Test 3" , TRUE) 
 
+ (*
  /\ IF [i \in Nat |-> i+1][3] # 4
       THEN Assert(FALSE, "Test 4" )
       ELSE Print("Test 4" , TRUE) 
@@ -104,7 +106,6 @@ Inv  ==
       THEN Assert(FALSE, "Test 21" )
       ELSE Print("Test 21" , TRUE) 
 
-
  /\ IF [[i \in Nat, j \in Nat |-> <<i+1, j>>] 
          EXCEPT ![22, 3] = @[1]] [22, 3] # 23
       THEN Assert(FALSE, "Test 22" )
@@ -112,8 +113,8 @@ Inv  ==
 
  /\ Print("Tests completed", TRUE)
 
-
  /\ Print("Tests completed", TRUE)
+    *)
 
 Init == x = 1
 

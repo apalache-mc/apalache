@@ -51,6 +51,7 @@ Inv  ==
        THEN Assert(FALSE, "Test 6a Failed")
        ELSE Print("Test 6a OK", TRUE)
 
+(*
   /\ IF ~\E <<i, j>> \in {1,2} \X {3,4}, 
              k, l \in {4, 5}, m \in {6,7} : i + j + k + l + m = 23
        THEN Assert(FALSE, "Test 7 Failed")
@@ -88,6 +89,7 @@ Inv  ==
            -4 \in i
        THEN Print("Test 14 OK", TRUE)
        ELSE Assert(FALSE, "Test 14 Failed")
+    *)
 =========================================
 
 The following test is not expected to work because

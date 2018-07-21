@@ -21,11 +21,13 @@ Inv  ==
       THEN Assert(FALSE, "Failed Test 1") 
       ELSE Print("Test 1 OK", TRUE)
 
+ (*
  /\ IF [i \in {"a", "b", "c"} |-> 
          CASE i = "a" -> 1 [] i = "b" -> 2 [] i = "c" -> 3]
          # [c |-> 3, a |-> 1, b |-> 2]
       THEN Assert(FALSE, "Failed Test 2")
       ELSE Print("Test 2 OK", TRUE)
+
 
  /\ IF [c |-> 3, a |-> 1, b |-> 2] # 
         [[a |-> 1, b |-> 3, c |-> 4] EXCEPT !.b =2 , !.c=3]
@@ -35,15 +37,19 @@ Inv  ==
  /\ IF <<3, 4, 5>> # [<<3, 42, 75>> EXCEPT ![3]=5, ![2]=4]
       THEN Assert(FALSE, "Failed Test 4") 
       ELSE Print("Test 4 OK", TRUE)
+ *)
 
  /\ IF [i \in {3, 2, 1} |-> i+2] # [ j \in 1..3 |-> j+2]
       THEN Assert(FALSE, "Failed Test 5") 
       ELSE Print("Test 5 OK", TRUE)
 
+
  /\ IF [i \in {} |-> i] # <<>>
       THEN Assert(FALSE, "Failed Test 6") 
       ELSE Print("Test 6 OK", TRUE)
 
+
+ (*
  /\ IF {i \in [{1,2} -> {a, b, c}] : i[1] = a} # {<<a, a>>, <<a, b>>, <<a, c>>}
       THEN Assert(FALSE, "Failed Test 7") 
       ELSE Print("Test 7 OK", TRUE)
@@ -71,6 +77,7 @@ Inv  ==
  /\ IF f # [f EXCEPT ![1,3] = 4]
        THEN Assert(FALSE, "Test 13 Failed")
        ELSE Print("Test 13 OK", TRUE)
+ *)
 
 Init == x = 1
 

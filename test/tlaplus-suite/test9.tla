@@ -2,7 +2,7 @@
 
 (* Test of set constructors {x \in S : P(x)} and {e(x) : x \in S} *)
 
-EXTENDS Integers, TLC, FiniteSets
+EXTENDS Integers, TLC \*, FiniteSets
 
 VARIABLE x
 Type == x \in BOOLEAN
@@ -15,6 +15,7 @@ Inv  ==
        THEN Assert(FALSE, "Test 1 Failed")
        ELSE Print("Test 1 OK", TRUE)
 
+  (*
   /\ IF {<<i, j>> \in {1,2} \X {2,3} : j > i} # {<<1,2>>, <<1,3>>, <<2,3>>}
        THEN Assert(FALSE, "Test 2 Failed")
        ELSE Print("Test 2 OK", TRUE)
@@ -40,11 +41,13 @@ Inv  ==
   /\ IF {i+j : i \in {1,2,3}, j \in {}} # {}
        THEN Assert(FALSE, "Test 7 Failed")
        ELSE Print("Test 7 OK", TRUE)
+       *)
 
   /\ IF {i \in {} : i > 2} # {}
        THEN Assert(FALSE, "Test 8 Failed")
        ELSE Print("Test 8 OK", TRUE)
 
+    (*
   /\ IF {<<i, j>>  \in {1,3} \X {} : i > 2} # {}
        THEN Assert(FALSE, "Test 9 Failed")
        ELSE Print("Test 9 OK", TRUE)
@@ -69,5 +72,5 @@ Inv  ==
   /\ IF [ {5, 5, 5, 3, 5, 2} -> {1, 3, 3, 3} ] # [{2,3,5} -> {1,3}]
        THEN Assert(FALSE, "Test 14 Failed")
        ELSE Print("Test 14 OK", TRUE)
-
+       *)
 =========================================

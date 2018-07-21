@@ -2,7 +2,7 @@
 
 (* Test of IF and CASE and nested junctions *)
 
-EXTENDS Integers, TLC, FiniteSets, Sequences
+EXTENDS Integers, TLC \*, FiniteSets, Sequences
 
 
 VARIABLE x
@@ -50,5 +50,4 @@ Inv  ==
            \/ "c" = 1
        THEN Assert(FALSE, "Test 7 Failed")
        ELSE Print("Test 7 OK", TRUE)
-
 =========================================
