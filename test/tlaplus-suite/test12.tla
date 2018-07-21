@@ -2,7 +2,7 @@
 
 (* Test of Record constructs. *)
 
-EXTENDS Integers, TLC, FiniteSets
+EXTENDS Integers, TLC \*, FiniteSets
 
 
 VARIABLE x
@@ -116,5 +116,4 @@ IN
   /\ IF [r4 EXCEPT !["a"][1] = 2]["a"][1] # 2
        THEN Assert(FALSE, "Test 23 Failed")
        ELSE Print("Test 23 OK", TRUE)
-
 =========================================

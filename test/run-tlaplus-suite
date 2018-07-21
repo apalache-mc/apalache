@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+#
+# Run the tests from the TLA plus suite
+#
+# Igor Konnov, 2018
+
+DIR=`dirname $0`
+DIR=`cd "$DIR/.."; pwd`
+echo "# Tool home: $DIR"
+TEST_DIR="$DIR/test/tla"
+nok=0
+nfail=0
+LOGFILE="$TEST_DIR/log.out"
+echo "" >"$LOGFILE"
+
+function tm() {
+    date '+%H:%M:%S'
+}
+
+function check() {
+    TEST=$1
+    OUTF="$TEST.out"
+    ERRF="$TEST.err"
+    shift
+    "$DIR"/bin/apalache-mc check $@ 2>"$ERRF" | tee "$OUTF"
+
+    if grep -q "The outcome is: NoError" "$OUTF"; then
+        RES=1
+    elif grep -q "The outcome is: Error" "$OUTF"; then
+        RES=0
+    elif grep -q "REPORT A BUG" "$OUTF"; then
+        RES=500
+    else
+        RES=10 # unknown bug
+    fi
+}
+
+function expect_ok() {
+    if [ "$RES" = "1" ]; then
+        printf '%s TEST %-58s [OK]\n' `tm` "$TEST" >>"$LOGFILE"
+        nok=$((nok+1))
+    else
+        printf '%s TEST %-58s [FAIL]\n' `tm` "$TEST" >>"$LOGFILE"
+        nfail=$((nfail+1))
+    fi
+}
+
+
+cd "$DIR"
+if [ "$NO_MVN" != "" ]; then
+    echo "# Skipped mvn package, as NO_MVN=$NO_MVN"
+else
+    echo "# Building the package with Maven"
+    mvn package
+fi
+
+echo "# Running the tests"
+cd "$DIR/test/tlaplus-suite"
+check "test1" --length=2 --inv=Inv test1.tla && expect_ok
+check "test2" --length=2 --inv=Inv test2.tla && expect_ok
+check "test3" --length=2 --inv=Inv test3.tla && expect_ok
+#check "test4" --length=2 --inv=Inv test4.tla && expect_ok
+#check "test5" --length=2 --inv=Inv test5.tla && expect_ok
+check "test6" --length=2 --inv=Inv test6.tla && expect_ok
+check "test7" --length=2 --inv=Inv test7.tla && expect_ok
+check "test8" --length=2 --inv=Inv test8.tla && expect_ok
+check "test9" --length=2 --inv=Inv test9.tla && expect_ok
+#check "test10" --length=2 --inv=Inv test10.tla && expect_ok
+#check "test11" --length=2 --inv=Inv test11.tla && expect_ok
+#check "test12" --length=2 --inv=Inv test12.tla && expect_ok
+#check "test13" --length=2 --inv=Inv test13.tla && expect_ok
+check "test14" --length=2 --inv=Inv test14.tla && expect_ok
+check "test15" --length=2 --inv=Inv test15.tla && expect_ok
+check "test16" --length=2 --inv=Inv test16.tla && expect_ok
+#check "test17" --length=2 --inv=Inv test17.tla && expect_ok
+
+cat "$LOGFILE"
+
+echo "OK: $nok FAILED: $nfail"
+
+if [ "$nfail" -gt 0 ]; then
+    echo "Some tests failed. Check ${TEST_DIR}/<test>.log."
+    exit 1
+fi
+

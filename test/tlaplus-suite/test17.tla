@@ -2,7 +2,7 @@
 
 (* Test of handling of handling expressions with primes. *)
 
-EXTENDS TLC, Naturals, Sequences
+EXTENDS TLC, Naturals \*, Sequences
 
 VARIABLE x, y
 
@@ -10,8 +10,10 @@ Init == /\ Print("There should be two distinct states", TRUE)
         /\ x = 1
         /\ y = 1
 
+(*
 f[i \in Nat ] == x'+ x + 2*i
 g == [i \in {x'} |-> x+i]
+ *)
 
 
 Foo(a) == a' = x+1
@@ -28,6 +30,7 @@ TNext ==
                   THEN 1 
                    ELSE Assert(FALSE, "Failed Test 1")
 
+     (*
      \/ /\ Print("Starting Test 2", TRUE)
         /\ IF x' = 2 
              THEN y' = 1 
@@ -125,7 +128,7 @@ TNext ==
      \/ /\ Print("Starting Test 25", TRUE)
         /\ ~Foo(x)
         /\ Assert(FALSE, "Failed Test 25")
-
+    *)
 
 Next == TNext \/ UNCHANGED <<x, y>>
 =========================================

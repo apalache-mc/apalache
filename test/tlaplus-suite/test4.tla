@@ -32,7 +32,7 @@ Next ==
   \/ /\ x' = {3, 3, 2, 1}
      /\ UNCHANGED <<y, z, w>>
      /\ Print("Test 1", TRUE)
-
+  (*
   \/ /\ x' = 1..3
      /\ UNCHANGED <<y, z, w>>
      /\ Print("Test 2", TRUE)
@@ -67,6 +67,6 @@ Next ==
   \/ /\ w' = [{3,1, 3, 3, 3, 2} -> {2, 2, 1, 3, 2}]
      /\ UNCHANGED <<y, x, z>>
      /\ Print("Test 6", TRUE)
-
+    *)
 
 ============================================
