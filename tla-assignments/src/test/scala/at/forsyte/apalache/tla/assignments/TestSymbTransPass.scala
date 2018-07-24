@@ -1,11 +1,9 @@
 package at.forsyte.apalache.tla.assignments
 
-import java.io.{File, PrintWriter}
-
-import at.forsyte.apalache.tla.lir.{BodyDB, SourceDB, TestingPredefs, TlaDecl, TlaEx, TlaOperDecl, TlaVarDecl, ValEx, Builder => bd}
+import at.forsyte.apalache.tla.lir.{TestingPredefs, TlaDecl, TlaEx, TlaOperDecl, TlaVarDecl, ValEx, Builder => bd}
 import at.forsyte.apalache.tla.lir.plugins.UniqueDB
 import at.forsyte.apalache.tla.imp.declarationsFromFile
-import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
+import at.forsyte.apalache.tla.lir.db.{BodyDB, SourceDB}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -135,6 +133,11 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
 
     val symbNexts = testFromFile( "ast.tla" )
     println( symbNexts.size )
+
+  }
+
+  test( "test1" ) {
+    val symbNexts = testFromFile( "test1.tla" )
 
   }
 

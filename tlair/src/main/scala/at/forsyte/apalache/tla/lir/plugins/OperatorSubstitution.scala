@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 
 
-object OperatorDB extends HashMapDB[ EID, ( List[FormalParam], EID ) ]{
+object OperatorDB_old extends HashMapDB[ EID, ( List[FormalParam], EID ) ]{
   override val m_name = "OperatorDB"
 
   def params( eid: EID ) : Option[ List[ FormalParam ] ] =  get( eid ).map( _._1 )
@@ -17,12 +17,12 @@ object OperatorDB extends HashMapDB[ EID, ( List[FormalParam], EID ) ]{
 
   def body( eid: EID ) : Option[ TlaEx ] =
     get( eid ).map(
-      x => EquivalenceDB.getEx( x._2 ).map( _.deepCopy( identified = false ) )
+      x => EquivalenceDB_old.getEx( x._2 ).map( _.deepCopy( identified = false ) )
     ).getOrElse( None )
 
 
   def isRecursive( eid: EID ): Option[ Boolean ] = {
-    val opName = EquivalenceDB.getEx( eid ) match {
+    val opName = EquivalenceDB_old.getEx( eid ) match {
       case Some( NameEx( name ) )=> name
       case _ => return None
     }
@@ -57,14 +57,14 @@ package object OperatorSubstitution {
     val nameEx = NameEx( thisDecl.name )
     // Give separate UID so EID can be created if operator is never called in other code
     Identifier.identify( nameEx ) // NameEx is lost, do nor re-set multiple times
-    val nameEID = EquivalenceDB.get( nameEx )
+    val nameEID = EquivalenceDB_old.get( nameEx )
 
     // Body needs valid UID
 
-    val bodyEID = EquivalenceDB.get( thisDecl.body )
+    val bodyEID = EquivalenceDB_old.get( thisDecl.body )
 
     if( nameEID.nonEmpty && bodyEID.nonEmpty ) {
-      OperatorDB.update( nameEID.get, (params, bodyEID.get) )
+      OperatorDB_old.update( nameEID.get, (params, bodyEID.get) )
     }
   }
 
@@ -84,15 +84,15 @@ package object OperatorSubstitution {
 
   protected def applyReplace( tlaEx: TlaEx ) : TlaEx = {
     def getBodyOrSelf( ex: TlaEx ) =
-      OperatorDB.body( EquivalenceDB.getRaw( ex ) ).getOrElse( ex )
+      OperatorDB_old.body( EquivalenceDB_old.getRaw( ex ) ).getOrElse( ex )
     tlaEx match {
       case NameEx( _ ) => {
         return getBodyOrSelf( tlaEx )
       }
       case OperEx( TlaOper.apply, oper, args@_* ) => {
-        val mapval = OperatorDB.get( EquivalenceDB.getRaw( oper ) )
+        val mapval = OperatorDB_old.get( EquivalenceDB_old.getRaw( oper ) )
         if (mapval.isEmpty) return tlaEx
-        var body = EquivalenceDB.getEx( mapval.get._2 ).get
+        var body = EquivalenceDB_old.getEx( mapval.get._2 ).get
         val params = mapval.get._1
         if( params.size != args.size ){
           throw new ArityMismatch // arity mismatch

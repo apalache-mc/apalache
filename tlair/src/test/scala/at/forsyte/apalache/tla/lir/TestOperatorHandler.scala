@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.lir
 
 
+import at.forsyte.apalache.tla.lir.db.{BodyDB, SourceDB}
 import at.forsyte.apalache.tla.lir.oper.FixedArity
 import at.forsyte.apalache.tla.lir.plugins.{Identifier, UniqueDB}
 import at.forsyte.apalache.tla.lir.{Builder => bd, OperatorHandler => oh}
@@ -24,10 +25,10 @@ class TestOperatorHandler extends FunSuite with TestingPredefs {
     val declEx3 = TlaOperDecl( "B2", List( "x", ("y", 2) ), bd.exp( bd.appOp( "y", "x", "x" ), 2 ) )
 
     oh.extract( declEx1, bodyDB )
-    assert( bodyDB.size() == 0 )
+    assert( bodyDB.size == 0 )
 
     oh.extract( declEx2, bodyDB )
-    assert( bodyDB.size() == 1 && bodyDB.contains( "A2" ) )
+    assert( bodyDB.size == 1 && bodyDB.contains( "A2" ) )
 
   }
 

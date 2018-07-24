@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.assignments
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions._
 import at.forsyte.apalache.tla.lir.control.{LetInOper, TlaControlOper}
+import at.forsyte.apalache.tla.lir.db.{BodyDB, SourceDB}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.plugins.Identifier
 import com.google.inject.Singleton

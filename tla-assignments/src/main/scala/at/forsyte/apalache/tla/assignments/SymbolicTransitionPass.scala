@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.OperatorHandler
+import at.forsyte.apalache.tla.lir.db.{BodyDB, SourceDB}
 
 /**
   * Performs the complete procedure of finding symbolic transitions from the TLA+ implementation.
