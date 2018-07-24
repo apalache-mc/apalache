@@ -26,5 +26,12 @@
             <artifactId>scalatest_${scalaBinaryVersion}</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.scalaz/scalaz-core -->
+        <dependency>
+            <groupId>org.scalaz</groupId>
+            <artifactId>scalaz-core_2.12</artifactId>
+            <version>7.3.0-M24</version>
+        </dependency>
+
     </dependencies>
 </project>
