@@ -8,4 +8,8 @@ package object convenience {
     * This is just a short-hand to Builder, so one can type more naturally, e.g., tla.plus(tla.int(2), tla.int(3))
     */
   val tla: Builder.type = Builder
+
+  implicit def makeUID (id : Int) : UID = UID(id)
+  implicit def makeEID (id : Int) : EID = EID(id)
+
 }

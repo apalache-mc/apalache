@@ -35,6 +35,10 @@ public class IDAllocator<ValType> {
         }
     }
 
+    public Vector<ValType> keys(){
+        return m_ID_to_Val;
+    }
+
     public int getID( ValType p_val ){
         if( m_Val_to_ID.containsKey( p_val ) ) return m_Val_to_ID.get( p_val );
         return -1; // -1 if not allocated.

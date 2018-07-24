@@ -118,13 +118,28 @@ package lir {
       "Formal parameters should have fixed arity")
   }
 
-
-
-
-
+//  trait Identifiable{
+//    protected var m_ID : UniqueID = InvalidUID
+//    protected var canSet: Boolean = true
+//    def setID( newID: UniqueID ) = {
+//      if( canSet && newID.valid ) {
+//        canSet = false
+//        m_ID = newID
+//      }
+//      else throw new Identifiable_old.IDReallocationError
+//    }
+//    def ID : UniqueID = m_ID
+//
+//    def forget(): Unit = {
+//      m_ID = InvalidUID
+//      canSet = true
+//    }
+//
+//    def valid : Boolean = m_ID.valid
+//  }
 
   trait Identifiable{
-    protected var m_ID : UID = UID( -1 )
+    protected var m_ID : UID      = UID( -1 )
     protected var canSet: Boolean = true
     def setID( newID: UID ) = {
       if( canSet && newID.valid ) {
@@ -141,10 +156,9 @@ package lir {
     }
 
     def valid : Boolean = m_ID.valid
-
   }
 
-  object Identifiable extends Identifiable{
+  object Identifiable {
     class IDReallocationError extends Exception
   }
 
@@ -369,12 +383,15 @@ package lir {
   }
 
 
-  abstract class IDType
-  case class UID( id: Int ) extends IDType {
-    def valid : Boolean = id >= 0
+  abstract class IDType {
+    val id: Int
+    def valid: Boolean = id >= 0
   }
-  case class EID( id: Int ) extends IDType
 
+  // TODO: Rewrite UID with proper factory and invalid type
+
+  sealed case class UID( id: Int ) extends IDType
+  sealed case class EID( id: Int ) extends IDType
 
 }
 
