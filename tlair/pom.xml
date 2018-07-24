@@ -32,6 +32,5 @@
             <artifactId>scalaz-core_2.12</artifactId>
             <version>7.3.0-M24</version>
         </dependency>
-
     </dependencies>
 </project>
