@@ -196,8 +196,8 @@ class TestIDAllocation extends FunSuite{
 
 
   def clearAll(): Unit ={
-    OperatorDB.clear()
-    EquivalenceDB.clear()
+    OperatorDB_old.clear()
+    EquivalenceDB_old.clear()
     UniqueDB.clear()
     OriginDB.clear()
   }
@@ -209,8 +209,8 @@ class TestIDAllocation extends FunSuite{
 
   def printDBs(): Unit ={
     UniqueDB.print()
-    EquivalenceDB.print()
-    OperatorDB.print()
+    EquivalenceDB_old.print()
+    OperatorDB_old.print()
     OriginDB.print()
   }
 
@@ -261,7 +261,7 @@ class TestIDAllocation extends FunSuite{
 //      printSpec( spec )
 
 
-      EquivalenceDB.processAll( spec )
+      EquivalenceDB_old.processAll( spec )
 
 //      EquivalenceDB.print()
 
@@ -273,7 +273,7 @@ class TestIDAllocation extends FunSuite{
       var okAll = true
 
       def okEQC( tlaEx: TlaEx ) : Unit = {
-        val eqc = EquivalenceDB.getEqClass( tlaEx )
+        val eqc = EquivalenceDB_old.getEqClass( tlaEx )
         okAll = (
                 okAll
                 &&
@@ -325,9 +325,9 @@ class TestIDAllocation extends FunSuite{
       }
 
 
-      EquivalenceDB.processAll( spec )
+      EquivalenceDB_old.processAll( spec )
 
-      assert( EquivalenceDB.size() == 1 )
+      assert( EquivalenceDB_old.size() == 1 )
 //
 //      println( "\nEquivalence IDs/classes: \n" )
 //      for ( a <- 0 until EquivalenceDB.size( ) ) {
@@ -351,18 +351,18 @@ class TestIDAllocation extends FunSuite{
 
 //      Identifier.print()
 
-      EquivalenceDB.processAll( spec )
+      EquivalenceDB_old.processAll( spec )
 
       OperatorSubstitution.extract( spec )
 
-      val operinfo = OperatorDB.get( EquivalenceDB.getRaw( NameEx( "SndNewValue" ) ) )
+      val operinfo = OperatorDB_old.get( EquivalenceDB_old.getRaw( NameEx( "SndNewValue" ) ) )
 
       assert(
         operinfo.nonEmpty
         &&
         operinfo.get._1.size == 1
         &&
-        EquivalenceDB.getEx(operinfo.get._2).contains(
+        EquivalenceDB_old.getEx(operinfo.get._2).contains(
           specSnd.declarations.head.asInstanceOf[TlaOperDecl].body
         )
       )
@@ -384,16 +384,16 @@ class TestIDAllocation extends FunSuite{
       val spec2 = specSum.deepCopy()
 
       Identifier.identify( spec )
-      EquivalenceDB.processAll( spec )
+      EquivalenceDB_old.processAll( spec )
       OperatorSubstitution.extract( spec )
 
       Identifier.identify( spec2 )
-      EquivalenceDB.processAll( spec2 )
+      EquivalenceDB_old.processAll( spec2 )
       OperatorSubstitution.extract( spec2 )
 
-      assert( OperatorDB.isRecursive( EquivalenceDB.getRaw( NameEx( "Op" ) ) ).contains( true ) )
-      assert( OperatorDB.isRecursive( EquivalenceDB.getRaw( NameEx( "sum" ) ) ).contains( false ) )
-      assert( OperatorDB.isRecursive( EID( -1 ) ).isEmpty )
+      assert( OperatorDB_old.isRecursive( EquivalenceDB_old.getRaw( NameEx( "Op" ) ) ).contains( true ) )
+      assert( OperatorDB_old.isRecursive( EquivalenceDB_old.getRaw( NameEx( "sum" ) ) ).contains( false ) )
+      assert( OperatorDB_old.isRecursive( EID( -1 ) ).isEmpty )
 
 
     }
@@ -427,7 +427,7 @@ class TestIDAllocation extends FunSuite{
       val spec = specOper.deepCopy()
 
       Identifier.identify( spec )
-      EquivalenceDB.processAll( spec )
+      EquivalenceDB_old.processAll( spec )
       OperatorSubstitution.extract( spec )
 
       val retSpc = OperatorSubstitution.substituteOper( spec )

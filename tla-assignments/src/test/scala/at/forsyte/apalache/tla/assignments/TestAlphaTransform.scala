@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.assignments
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.imp._
+import at.forsyte.apalache.tla.lir.db.{DummyBodyDB, DummySrcDB}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
