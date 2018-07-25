@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.control.LetInOper
 import at.forsyte.apalache.tla.lir.db._
-import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 
 object EnvironmentHandlerGenerator {
   def makeDummyEH : EnvironmentHandler = new EnvironmentHandler( new UidDB, DummyBodyDB, DummySrcDB )
@@ -35,14 +35,7 @@ sealed class EnvironmentHandler(
   def identify : TlaEx => Unit =
     RecursiveProcessor.traverseEntireTlaEx( m_uidDB.add )
 
-  def fullyIdentified : TlaEx => Boolean = {
-    RecursiveProcessor.computeFromTlaEx[Boolean](
-      RecursiveProcessor.DefaultFunctions.naturalTermination,
-      _.ID.valid,
-      _.ID.valid,
-      (p, chd) => p.ID.valid && chd.forall( x => x )
-    )
-  }
+  def fullyIdentified: TlaEx => Boolean = RecursiveProcessor.globalTlaExProperty( _.ID.valid )
 
   import AuxFun._
 
@@ -123,69 +116,95 @@ sealed class EnvironmentHandler(
 
 
   /** Stores the operator declared by decl in the BodyDB */
-  def extract( p_decl : TlaDecl) : Unit = p_decl match {
-      case decl@TlaOperDecl(name,params,body) if !m_bodyDB.contains( p_decl.name ) => {
+  def extract( p_decls : TlaDecl*) : Unit = p_decls foreach {
+    _ match {
+      case TlaOperDecl( name, params, body ) if !m_bodyDB.contains( name ) =>
         identify( body )
-        m_bodyDB.update( name, (params, decl.body) )
-      }
+        m_bodyDB.update( name, (params, body) )
       case _ => ()
     }
+  }
 
-//  def unfoldOnce( p_ex : TlaEx,
-//                  p_bdDB : BodyDB,
-//                  p_srcDB : SourceDB = DummySrcDB
-//                ) : TlaEx = {
-//
-//    /**
-//      * Old Bug( Jure: 1.12.2017 ): inlining did not check if provided argument count matches arity,
-//      * because the parser would reject such TLA code. However, manual examples produced
-//      * demonstrated lack of exceptions thrown when the number of args provided exceeded the arity.
-//      *
-//      * This has been rectified by a check in lambda.
-//      **/
-//
-//    /**
-//      * Bug( Jure: 15.1.2018 ): Inlining did not look inside the operator declarations of a LET-IN
-//      * operator.
-//      */
-//
-//    /**
-//      * Bug (Jure: 23.2.2018): Inlining adds X->X to the sourceDB
-//      *
-//      * Fixed by removing p_srcDB.update() calls with markSrc(), which performs sanity checks
-//      */
-//
-//    def subAndID( p_operEx : TlaEx ) : TlaEx = {
-//
-//      def lambda( name : String, args : TlaEx* ) : TlaEx = {
-//        val pbPair = p_bdDB.get( name )
-//        if ( pbPair.isEmpty ) return p_operEx
-//
-//        var (params, body) = pbPair.get
-//        if ( params.size != args.size )
-//          throw new IllegalArgumentException(
-//            "Operator %s with arity %s called with %s argument%s".format( name, params.size, args.size, if ( args.size != 1 ) "s" else "" )
-//          )
-//
-//        params.zip( args ).foreach(
-//          pair => body = replaceAll( body, NameEx( pair._1.name ), pair._2, p_srcDB )
-//        )
-//        //        Identifier.identify( body )
-//        markSrc( p_operEx, body, p_srcDB )
-//        /* return */ body
-//      }
-//
-//      p_operEx match {
-//        case OperEx( op : TlaUserOper, args@_* ) => lambda( op.name, args : _* )
-//        case OperEx( TlaOper.apply, NameEx( name ), args@_* ) => lambda( name, args : _* )
-//        case _ => p_operEx
-//      }
-//    }
-//
-//    val ret = SpecHandler.getNewEx( p_ex, subAndID )
+  def unfoldOnce:  TlaEx => TlaEx = {
+    /**
+      * Bug( Jure: 15.1.2018 ): Inlining did not look inside the operator declarations of a LET-IN
+      * operator.
+      */
+
+    def subAndID( p_operEx : TlaEx ) : TlaEx = {
+      def lambda( name : String, args : TlaEx* ) : TlaEx =
+        m_bodyDB.get( name ) match {
+          case None => p_operEx
+          case Some((params, body)) =>
+            if ( params.size != args.size )
+              throw new IllegalArgumentException(
+                "Operator %s with arity %s called with %s argument%s".format( name, params.size, args.size, if ( args.size != 1 ) "s" else "" )
+              )
+            /** Instantiate all parameters with the corresponding args */
+            params.zip(args).foldLeft( body ){
+              case (oldBody, (param, arg)) =>
+                val mid = replaceAll( oldBody, NameEx(param.name), arg )
+                markSrc( oldBody, mid ) /** Should we keep all intermediate TlaEx? */
+                mid
+            }
+//            markSrc( p_operEx, newBody )
+        }
+
+      /** On UserOpers or applications, replace, otherwise ignore */
+      p_operEx match {
+        case OperEx( op : TlaUserOper, args@_* ) =>
+          val newEx = lambda( op.name, args : _* )
+          markSrc(p_operEx, newEx)
+          newEx
+        case OperEx( TlaOper.apply, NameEx( name ), args@_* ) =>
+          val newEx = lambda( name, args : _* )
+          markSrc(p_operEx, newEx)
+          newEx
+        /**
+          * 0-arity operators should never appear as only a NameEx, since recursion looks at children before
+          * the parent expression. This would trigger an arity exception since, at the subtree,
+          * the arguments are not visible.
+          * */
+//        case NameEx(name) =>
+//          val newEx = lambda( name )
+//          markSrc(p_operEx, newEx)
+//          newEx
+        case _ => p_operEx
+      }
+    }
+
+    def unification(p_ex: TlaEx,p_children: Traversable[TlaEx]): TlaEx = subAndID(
+      p_ex match {
+        case OperEx( oper, args@_* ) =>
+          if ( args == p_children ) // in case of no-op, do not reconstruct OperEx
+            p_ex
+          else {
+            val ret = OperEx( oper, p_children.toSeq : _* )
+            identify(ret)
+            ret
+          }
+        case _ => p_ex
+      }
+    )
+
+    RecursiveProcessor.computeFromTlaEx(
+      RecursiveProcessor.DefaultFunctions.naturalTermination,
+      subAndID,
+      subAndID,
+      unification
+    )
+
+//    RecursiveProcessor.transformTlaEx(
+//      RecursiveProcessor.DefaultFunctions.naturalTermination,
+//      subAndID,
+//      subAndID
+//    )
 //    markSrc( p_ex, ret, p_srcDB )
-//    ret
-//  }
+  }
+
+  def unfoldMax: TlaEx => TlaEx = RecursiveProcessor.computeFixpoint[TlaEx](
+    unfoldOnce, RecursiveProcessor.DefaultFunctions.equality[TlaEx]
+  )(_).getOrElse(NullEx)
 
   def replaceAll( p_tlaEx : TlaEx,
                   p_replacedEx : TlaEx,

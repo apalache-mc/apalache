@@ -106,6 +106,20 @@ object RecursiveProcessor {
     }
     else p_nonTerminalExFun( p_ex )
 
+  def globalProperty[T](
+                         p_propertyFun : T => Boolean,
+                         p_hasRelevantChildren : T => Boolean,
+                         p_getChildren : T => Traversable[T]
+                       ) : T => Boolean =
+    compute[T,Boolean](
+      DefaultFunctions.naturalTermination[T],
+      p_propertyFun,
+      p_propertyFun,
+      p_hasRelevantChildren,
+      p_getChildren,
+      (p, chd) => p_propertyFun(p) && chd.forall( identity )
+    )
+
   def computeFromTlaEx[T](
                            p_terminationCheck : TlaEx => Boolean,
                            p_terminalExFun : TlaEx => T,
@@ -121,6 +135,13 @@ object RecursiveProcessor {
       p_childUnification
     )
 
+  def globalTlaExProperty( p_propertyFun : TlaEx => Boolean ) : TlaEx => Boolean =
+    globalProperty[TlaEx](
+      p_propertyFun,
+      DefaultFunctions.tlaExHasChildren,
+      DefaultFunctions.tlaExGetChildren
+    )
+
   def transformTlaEx(
                       p_terminationCheck : TlaEx => Boolean,
                       p_terminalExFun : TlaEx => TlaEx,
@@ -130,7 +151,12 @@ object RecursiveProcessor {
       p_terminationCheck,
       p_terminalExFun,
       p_nonTerminalExFun,
-      DefaultFunctions.tlaExTransformChildren
+      (par,chds) => {
+        val newEx = DefaultFunctions.tlaExTransformChildren( par, chds )
+        if (p_terminationCheck(newEx))
+          p_terminalExFun(newEx)
+        else p_nonTerminalExFun(newEx)
+      }
     )
 
   def traverseTlaEx(
