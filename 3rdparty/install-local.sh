@@ -40,17 +40,17 @@ popd
 echo "Done with z3"
 
 echo "Downloading TLA2Tools..."
-wget https://github.com/tlaplus/tlaplus/releases/download/v1.5.6/tla2tools.jar
+wget https://github.com/tlaplus/tlaplus/releases/download/v1.5.6/tla2tools.jar -O $D/tla2tools.jar
 #wget https://tla.msr-inria.inria.fr/tlatoolbox/ci/dist/tla2tools.jar
 echo "Done with TLA2Tools"
 
 echo "Installing Z3 and TLA2Tools in your local cache..."
 
-mvn -f z3-pom.xml install install:install-file \
-    "-Dfile=lib/com.microsoft.z3.jar" "-DpomFile=z3-pom.xml"
+mvn -f $D/z3-pom.xml install install:install-file \
+    "-Dfile=$D/lib/com.microsoft.z3.jar" "-DpomFile=$D/z3-pom.xml"
 
-mvn -f tla2tools-pom.xml install install:install-file \
-    "-Dfile=tla2tools.jar" "-DpomFile=tla2tools-pom.xml"
+mvn -f $D/tla2tools-pom.xml install install:install-file \
+    "-Dfile=$D/tla2tools.jar" "-DpomFile=$D/tla2tools-pom.xml"
 
 echo ""
 echo "Add the following line in your ~/.bashrc or ~/.zshrc"
