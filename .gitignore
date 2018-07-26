@@ -27,3 +27,6 @@ test/tla/testSpec\.smt2
 tla-assignments/src/test/resources/assignmentTest1.smt2
 
 tla-bmcmt/log\.smt
+
+test/tla/*.err
+test/tla/*.out
