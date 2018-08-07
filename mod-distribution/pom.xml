@@ -12,10 +12,10 @@
         <version>0.2.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>distribution</artifactId>
+    <artifactId>apalache-pkg</artifactId>
     <packaging>pom</packaging>
 
-    <name>distribution</name>
+    <name>apalache-pkg</name>
     <url>https://github.com/konnov/apalache</url>
 
     <dependencies>
