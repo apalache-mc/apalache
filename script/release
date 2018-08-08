@@ -48,7 +48,7 @@ fi
 
 # overwrite the build number
 BUILD=`git describe`
-perl -pi -e 's/VERSION=""/VERSION="'$BUILD'"/' bin/apalache-mc
+perl -pi -e 's/BUILD=""/BUILD="'$BUILD'"/' bin/apalache-mc
 
 # release!
 echo "Releasing version ${ver} as ${tag}"
