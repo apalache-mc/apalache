@@ -53,7 +53,7 @@ perl -pi -e 's/VERSION=""/VERSION="'$BUILD'"/' bin/apalache-mc
 # release!
 echo "Releasing version ${ver} as ${tag}"
 git tag -f ${tag}
-git push --tags
+git push -f --tags
 releaseme create -r konnov/apalache -t "${tag}" -n ${notes} \
     -a "$release" -a bin/apalache-mc
 echo "Done"
