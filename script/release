@@ -50,12 +50,18 @@ fi
 BUILD=`git describe`
 perl -pi -e 's/BUILD=""/BUILD="'$BUILD'"/' bin/apalache-mc
 
+ZIPF="apalache-${BUILD}.zip"
+TGZF="apalache-${BUILD}.tgz"
+
+zip -r "$ZIPF" bin/apalache-mc "$release"
+tar zpcf "$TGZF" bin/apalache-mc "$release"
+
 # release!
 echo "Releasing version ${ver} as ${tag}"
 git tag -f ${tag}
 git push -f --tags
 releaseme create -r konnov/apalache -t "${tag}" -n ${notes} \
-    -a "$release" -a bin/apalache-mc
+    -a "$ZIPF" -a "$TGZF"
 echo "Done"
 
 # recover the script
