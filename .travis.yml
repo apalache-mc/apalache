@@ -27,8 +27,6 @@ cache:
 before_install:
     #- sudo pip install --upgrade pip
   - sudo pip install --user release-me
-  - export PATH=$HOME/.local/bin:$PATH
-  - export PYTHONPATH=$HOME/.local:$PYTHONPATH
   - pushd 3rdparty
   - ./install-local.sh
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:"$PWD/lib"; fi
@@ -36,7 +34,9 @@ before_install:
   - popd
 
 after_success:
-    ./script/release --overwrite latest-unstable ./script/latest-message.txt
+  - export PATH=$HOME/.local/bin:$PATH
+  - export PYTHONPATH=$HOME/.local:$PYTHONPATH
+  - ./script/release --overwrite latest-unstable ./script/latest-message.txt
 
 branches:
   only:
