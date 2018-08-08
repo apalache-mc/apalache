@@ -1,5 +1,4 @@
 language: java
-sudo: required # to use pip
 
 matrix:
   include:
@@ -26,8 +25,8 @@ cache:
 
 # locally compile z3 and make it available via LD_LIBRARY_PATH
 before_install:
-  - sudo pip install --upgrade pip
-  - sudo pip install release-me
+    #- sudo pip install --upgrade pip
+  - sudo pip install --user release-me
   - pushd 3rdparty
   - ./install-local.sh
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:"$PWD/lib"; fi
