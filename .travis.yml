@@ -27,6 +27,7 @@ cache:
 before_install:
     #- sudo pip install --upgrade pip
   - sudo pip install --user release-me
+  - export PATH=$PATH:~/.local/bin
   - pushd 3rdparty
   - ./install-local.sh
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:"$PWD/lib"; fi
