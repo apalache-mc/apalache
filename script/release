@@ -28,8 +28,8 @@ if [ "$RELEASEME_TOKEN" == "" ]; then
 fi
 
 # make sure that we do not release uncommited files
-(git diff --exit-code >/dev/null || git diff --cached --exit-code >/dev/null) \
-    && echo "Git directory is not clean. Commit the files first."
+(git diff --exit-code && git diff --cached --exit-code) \
+    || (printf '\nERROR: Git directory is not clean. Commit the changes first.\n'; exit 255)
 
 # the easiest way to extract the project version without maven
 ver=`grep '<version>' pom.xml | head -n 1 | sed 's/.*>\(.*\)<.*/\1/'`
