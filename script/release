@@ -2,7 +2,7 @@
 #
 # Release the latest build to github.
 # This requires the environment variable RELEASME_TOKEN
-# set to a proper github token
+# set to a proper github token.
 #
 # Igor Konnov, 2018
 
@@ -27,6 +27,10 @@ if [ "$RELEASEME_TOKEN" == "" ]; then
     exit 2
 fi
 
+# make sure that we do not release uncommited files
+(git diff --exit-code >/dev/null || git diff --cached --exit-code >/dev/null) \
+    && echo "Git directory is not clean. Commit the files first."
+
 # the easiest way to extract the project version without maven
 ver=`grep '<version>' pom.xml | head -n 1 | sed 's/.*>\(.*\)<.*/\1/'`
 release="mod-distribution/target/apalache-pkg-${ver}-full.jar"
@@ -42,10 +46,19 @@ if [ "$overwrite" != "" ]; then
         || echo "Failed to delete"
 fi
 
+# overwrite the build number
+BUILD=`git describe`
+perl -pi -e 's/VERSION=""/VERSION="'$BUILD'"/' bin/apalache-mc
+
+# release!
 echo "Releasing version ${ver} as ${tag}"
 git tag -f ${tag}
 git push --tags
 releaseme create -r konnov/apalache -t "${tag}" -n ${notes} \
     -a "$release" -a bin/apalache-mc
 echo "Done"
+
+# recover the script
+rm bin/apalache-mc
+git checkout bin/apalache-mc
 
