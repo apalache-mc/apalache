@@ -11,22 +11,32 @@ abstract class AlphaEx( ex : TlaEx ) {
 }
 
 sealed case class Star( ex : TlaEx ) extends AlphaEx( ex ) {
-  val deps : Set[Var] = {
-    SpecHandler.bottomUpVal[Set[Var]](
-      ex,
-      _ match {
-        case OperEx( TlaActionOper.prime, NameEx( _ ) ) => true
-        case _ => false
-      },
-      _ match {
-        case OperEx( TlaActionOper.prime, NameEx( n ) ) => Set( n )
-        case _ => Set.empty[Var]
-      },
-      ( _, s ) => s.fold( Set.empty[Var] ) {_ ++ _},
-      Set.empty[Var]
-    )
-    Set.empty[Var] // TODO
-  }
+//  val deps : Set[Var] = {
+//    SpecHandler.bottomUpVal[Set[Var]](
+//      ex,
+//      _ match {
+//        case OperEx( TlaActionOper.prime, NameEx( _ ) ) => true
+//        case _ => false
+//      },
+//      _ match {
+//        case OperEx( TlaActionOper.prime, NameEx( n ) ) => Set( n )
+//        case _ => Set.empty[Var]
+//      },
+//      ( _, s ) => s.fold( Set.empty[Var] ) {_ ++ _},
+//      Set.empty[Var]
+//    )
+//    Set.empty[Var] // TODO
+//  }
+  val deps : Set[Var] = RecursiveProcessor.computeFromTlaEx[Set[Var]](
+    _ match {
+      case OperEx( TlaActionOper.prime, NameEx( _ ) ) => true
+      case _ => false
+    },
+    x => Set( x.asInstanceOf[OperEx].args.head.asInstanceOf[NameEx].name ),
+    _ => Set.empty[Var],
+    { case (_, chds) => chds.fold( Set.empty[Var] ) { _ ++ _ } }
+  )( ex )
+
 }
 
 sealed case class FalseEx( ex : TlaEx ) extends AlphaEx( ex )
