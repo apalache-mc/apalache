@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.lir.values.TlaFalse
   */
 class SymbTransGenerator extends TypeAliases {
 
-  private object helperFunctions {
+  private[assignments] object helperFunctions {
     type LabelMapType = Map[UID, Set[UID]]
     type AssignmentSelections = Set[Set[UID]]
     type SelMapType = Map[UID, AssignmentSelections]
@@ -24,15 +24,20 @@ class SymbTransGenerator extends TypeAliases {
         val rest = allCombinations( p_sets.tail )
 
         ( for {s <- one}
-          yield rest.map( st => st ++ s ) ).fold( Set() )( _ ++ _ )
+          yield rest.map( st => st ++ s ) ).fold( Set.empty[Set[ValType]] )( _ ++ _ )
       }
     }
 
     def labelsAt( p_ex : TlaEx, p_partialSel : SelMapType ) : Set[UID] = labelsAt( p_ex.ID, p_partialSel )
 
-    def labelsAt( p_id : UID, p_partialSel : SelMapType ) : Set[UID] = {
-      p_partialSel.getOrElse( p_id, Set() ).fold( Set() )( _ ++ _ )
-    }
+    def labelsAt( p_id : UID, p_partialSel : SelMapType ) : Set[UID] = p_partialSel.getOrElse(
+      p_id,
+      Set.empty[Set[UID]]
+    ).fold(
+      Set.empty[UID]
+    )(
+      _ ++ _
+    )
 
     /**
       * Symbolic transitions are uniquely characterized by the intersections of branches with

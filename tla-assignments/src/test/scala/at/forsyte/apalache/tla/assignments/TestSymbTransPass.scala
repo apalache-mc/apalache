@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.assignments
 
-import at.forsyte.apalache.tla.lir.{TestingPredefs, TlaDecl, TlaEx, TlaOperDecl, TlaVarDecl, ValEx, Builder => bd}
+import at.forsyte.apalache.tla.lir.{NullEx, TestingPredefs, TlaDecl, TlaEx, TlaOperDecl, TlaVarDecl, UID, ValEx, Builder => bd}
 import at.forsyte.apalache.tla.lir.plugins.UniqueDB
 import at.forsyte.apalache.tla.imp.declarationsFromFile
 import at.forsyte.apalache.tla.lir.db.{BodyDB, SourceDB}
@@ -37,6 +37,12 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
 //    saveWriter.close()
 
     ret
+  }
+
+  test( "Test labelsAt" ){
+    val gen = new SymbTransGenerator
+
+    assert( gen.helperFunctions.labelsAt(NullEx, Map.empty[UID, Set[Set[UID]]]).isEmpty )
   }
 
   test( "Test Complete Spec return + unsat spec" ){
