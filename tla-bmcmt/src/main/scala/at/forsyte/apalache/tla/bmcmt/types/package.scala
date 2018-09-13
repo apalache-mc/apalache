@@ -46,34 +46,54 @@ package object types {
           Some(this)
 
         case (FinSetT(left), FinSetT(right)) =>
-          val unif = left.unify(right)
-          if (unif.nonEmpty) Some(FinSetT(unif.get)) else None
+            left.unify(right) map FinSetT
+//          val unif = left.unify(right)
+//          if (unif.nonEmpty) Some(FinSetT(unif.get)) else None
 
         case (FunT(leftDom, leftCodom), FunT(rightDom, rightCodom)) =>
-          val domUnif = leftDom.unify(rightDom)
-          val cdmUnif = leftCodom.unify(rightCodom)
-          if (domUnif.nonEmpty && cdmUnif.nonEmpty) {
-            Some(FunT(domUnif.get, cdmUnif.get))
-          } else {
-            None
-          }
+          for {
+            domUnif <- leftDom.unify(rightDom)
+            cdmUnif <- leftCodom.unify(rightCodom)
+          } yield FunT(domUnif, cdmUnif)
+
+//          val domUnif = leftDom.unify(rightDom)
+//          val cdmUnif = leftCodom.unify(rightCodom)
+//
+//
+//          if (domUnif.nonEmpty && cdmUnif.nonEmpty) {
+//            Some(FunT(domUnif.get, cdmUnif.get))
+//          } else {
+//            None
+//          }
 
         case (FinFunSetT(leftDom, leftCdm), FinFunSetT(rightDom, rightCdm)) =>
-          val domUnif = leftDom.unify(rightDom)
-          val cdmUnif = leftCdm.unify(rightCdm)
-          if (domUnif.nonEmpty && cdmUnif.nonEmpty) {
-            Some(FinFunSetT(domUnif.get, cdmUnif.get))
-          } else {
-            None
-          }
+          for {
+            domUnif <- leftDom.unify(rightDom)
+            cdmUnif <- leftCdm.unify(rightCdm)
+          } yield FinFunSetT(domUnif, cdmUnif)
+//
+//          val domUnif = leftDom.unify(rightDom)
+//          val cdmUnif = leftCdm.unify(rightCdm)
+//          if (domUnif.nonEmpty && cdmUnif.nonEmpty) {
+//            Some(FinFunSetT(domUnif.get, cdmUnif.get))
+//          } else {
+//            None
+//          }
 
         case (PowSetT(left), PowSetT(right)) =>
-          val domUnif = left.unify(right)
-          if (domUnif.nonEmpty)
-            Some(PowSetT(domUnif.get))
-          else
-            None
+          left.unify(right) map PowSetT
+//          val domUnif = left.unify(right)
+//          if (domUnif.nonEmpty)
+//            Some(PowSetT(domUnif.get))
+//          else
+//            None
 
+          /**
+            * Jure, 13.9.18: Suggestion: Change TupleT( _ : Seq[...]) to TupleT(_ : Array[...]) or
+            * TupleT( _ : IndextSeq[...]) so
+            * a) length checks are const time
+            * b) you can do index-based arg comparison
+            * */
         case (TupleT(leftArgs), TupleT(rightArgs)) =>
           // in contrast to sequences, tuples of different lengths cannot be unified
           if (leftArgs.lengthCompare(rightArgs.length) == 0) {
@@ -106,10 +126,11 @@ package object types {
           }
 
           val pairs = leftMap.keySet.union(rightMap.keySet).map(k => (k, unifyKey(k)))
+
           if (pairs.exists(_._2.isEmpty)) {
             None
           } else {
-            val somes = pairs.map(p => (p._1, p._2.get))
+            val somes = pairs.map { case (k, Some(v)) => (k,v) } // (p => (p._1, p._2.get))
             Some(RecordT(SortedMap(somes.toSeq: _*)))
           }
 
@@ -119,10 +140,15 @@ package object types {
     }
   }
 
+
+  /**
+    * Jure, 13.9.18: Suggestion: Replace all case class X( [no args] ) with object X ?
+    * */
+
   /**
     * A type variable.
     */
-  case class UnknownT() extends CellT {
+  sealed case class UnknownT() extends CellT {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
@@ -139,7 +165,7 @@ package object types {
     * A failure cell that represents a Boolean variable indicating whether
     * a certain operation failed.
     */
-  case class FailPredT() extends CellT {
+  sealed case class FailPredT() extends CellT {
     override val signature: String = "E"
 
     override val toString: String = "FailPred"
@@ -148,7 +174,7 @@ package object types {
   /**
     * A cell constant, that is, just a name that expresses string constants in TLA+.
     */
-  case class ConstT() extends CellT {
+  sealed case class ConstT() extends CellT {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
@@ -164,7 +190,7 @@ package object types {
   /**
     * A Boolean cell type.
     */
-  case class BoolT() extends CellT {
+  sealed case class BoolT() extends CellT {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
@@ -180,7 +206,7 @@ package object types {
   /**
     * An integer cell type.
     */
-  case class IntT() extends CellT {
+  sealed case class IntT() extends CellT {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
@@ -198,7 +224,7 @@ package object types {
     *
     * @param elemType the elements type
     */
-  case class FinSetT(elemType: CellT) extends CellT {
+  sealed case class FinSetT(elemType: CellT) extends CellT {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
@@ -206,7 +232,7 @@ package object types {
       *
       * @return a short signature that uniquely characterizes this type up to unification
       */
-    override val signature: String = "S" + elemType.signature
+    override val signature: String = s"S${elemType.signature}"
 
     override val toString: String = s"FinSet[$elemType]"
   }
@@ -216,7 +242,7 @@ package object types {
     * @param domType the type of the argument finite set, i.e., typeof(S) in SUBSET S.
     *                Currently, only FinSetT(_) is supported.
     */
-  case class PowSetT(domType: CellT) extends CellT {
+  sealed case class PowSetT(domType: CellT) extends CellT {
     require(domType.isInstanceOf[FinSetT]) // currently, we support only PowSetT(FinSetT(_))
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
@@ -225,7 +251,7 @@ package object types {
       *
       * @return a short signature that uniquely characterizes this type up to unification
       */
-    override val signature: String = "P" + domType.signature
+    override val signature: String = s"P${domType.signature}"
 
     override val toString: String = s"PowSet[$domType]"
   }
@@ -236,7 +262,7 @@ package object types {
     * @param domType    the type of the domain (must be a finite set).
     * @param resultType result type (not co-domain!)
     */
-  case class FunT(domType: CellT, resultType: CellT) extends CellT {
+  sealed case class FunT(domType: CellT, resultType: CellT) extends CellT {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
@@ -244,7 +270,8 @@ package object types {
       *
       * @return a short signature that uniquely characterizes this type up to unification
       */
-    override val signature: String = "f%s_%s".format(domType.signature, resultType.signature)
+    override val signature: String = s"f${domType.signature}_${resultType.signature}"
+//    override val signature: String = "f%s_%s".format(domType.signature, resultType.signature)
 
     val argType: CellT = domType match {
       case FinSetT(et) => et
@@ -261,7 +288,7 @@ package object types {
     * @param domType the type of the domain (must be a finite set).
     * @param cdmType the type of the co-domain (must be a finite set).
     */
-  case class FinFunSetT(domType: CellT, cdmType: CellT) extends CellT {
+  sealed case class FinFunSetT(domType: CellT, cdmType: CellT) extends CellT {
     require(domType.isInstanceOf[FinSetT] && cdmType.isInstanceOf[FinSetT])
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
@@ -270,7 +297,7 @@ package object types {
       *
       * @return a short signature that uniquely characterizes this type up to unification
       */
-    override val signature: String = "F%s_%s".format(domType.signature, cdmType.signature)
+    override val signature: String = s"F%${domType.signature}_%${cdmType.signature}"
 
     def argType(): CellT = domType match {
       case FinSetT(et) => et
@@ -278,7 +305,7 @@ package object types {
       case _ => throw new TypeException(s"Unexpected domain type $domType")
     }
 
-    def resultType(): CellT = domType match {
+    def resultType(): CellT = cdmType match {
       case FinSetT(et) => et
       case PowSetT(dt) => dt
       case _ => throw new TypeException(s"Unexpected co-domain type $cdmType")
@@ -292,16 +319,16 @@ package object types {
     *
     * @param args the types of the tuple elements
     */
-  case class TupleT(args: Seq[CellT]) extends CellT {
+  sealed case class TupleT(args: Seq[CellT]) extends CellT {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling.
       *
       * @return a short signature that uniquely characterizes this type up to unification
       */
-    override val signature: String = "T_" + args.map(_.signature).mkString("_")
+    override val signature: String = s"T_${args.map(_.signature).mkString("_")}"
 
-    override val toString: String = "Tuple[%s]".format(args.map(_.toString).mkString(", "))
+    override val toString: String = s"Tuple[${args.map(_.toString).mkString(", ")}]"
   }
 
   /**
@@ -309,7 +336,7 @@ package object types {
     *
     * @param fields a map of fields and their types
     */
-  case class RecordT(val fields: SortedMap[String, CellT]) extends CellT {
+  sealed case class RecordT(fields: SortedMap[String, CellT]) extends CellT {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
@@ -322,7 +349,7 @@ package object types {
     override val signature: String = "R"
 
     override val toString: String =
-      "Record[%s]".format(fields.map(p => "\"" + p._1 + "\" -> " + p._2).mkString(", "))
+      s"Record[${fields.map {case (k,v) => "\"" + k + "\" -> " + v } mkString ", " }]"
   }
 
 
@@ -333,23 +360,27 @@ package object types {
     * @param right a right type (may be None)
     * @return Some(unifier), if there is one, otherwise None
     */
-  def unifyOption(left: Option[CellT], right: Option[CellT]): Option[CellT] = {
-    (left, right) match {
-      case (Some(l), Some(r)) =>
-        l.unify(r)
-
-      case _ =>
-        None
-    }
-  }
+  def unifyOption(left: Option[CellT], right: Option[CellT]): Option[CellT] = for {
+      l <- left
+      r <- right
+      u <- l.unify(r)
+    } yield u
+//  {
+//    (left, right) match {
+//      case (Some(l), Some(r)) =>
+//        l.unify(r)
+//
+//      case _ =>
+//        None
+//    }
+//  }
 
   /**
     * Unify a sequence of types
     * @param ts a sequence of types
     * @return Some(unifier), if exists, or None
     */
-  def unify(ts: CellT*): Option[CellT] = {
+  def unify(ts: CellT*): Option[CellT] =
     ts.map(Some(_)).reduce[Option[CellT]]((x, y) => unifyOption(x, y))
-  }
 
 }
