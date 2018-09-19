@@ -32,10 +32,10 @@ before_install:
   - popd
   - pip install release-me
 
-after_success:
+    #after_success:
     #- sudo pip install --upgrade pip
-  - sudo pip install --user release-me
-  - ./script/release --overwrite latest-unstable ./script/latest-message.txt
+    #- sudo pip install --user release-me
+    #- ./script/release --overwrite latest-unstable ./script/latest-message.txt
 
 branches:
   only:
