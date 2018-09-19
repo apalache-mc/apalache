@@ -10,40 +10,40 @@ trait TestingPredefs {
   implicit def ofp( p_pair : (String, Int) ) : OperFormalParam =
     OperFormalParam( p_pair._1, FixedArity( p_pair._2 ) )
 
-  val n_a : NameEx = "a"
-  val n_b : NameEx = "b"
-  val n_c : NameEx = "c"
-  val n_d : NameEx = "d"
-  val n_e : NameEx = "e"
-  val n_f : NameEx = "f"
-  val n_g : NameEx = "g"
+  def n_a : NameEx = "a"
+  def n_b : NameEx = "b"
+  def n_c : NameEx = "c"
+  def n_d : NameEx = "d"
+  def n_e : NameEx = "e"
+  def n_f : NameEx = "f"
+  def n_g : NameEx = "g"
 
-  val n_p : NameEx = "p"
-  val n_q : NameEx = "q"
-  val n_r : NameEx = "r"
-  val n_s : NameEx = "s"
-  val n_t : NameEx = "t"
+  def n_p : NameEx = "p"
+  def n_q : NameEx = "q"
+  def n_r : NameEx = "r"
+  def n_s : NameEx = "s"
+  def n_t : NameEx = "t"
 
-  val n_A : NameEx = "A"
-  val n_B : NameEx = "B"
-  val n_S : NameEx = "S"
-  val n_T : NameEx = "T"
-  val n_P : NameEx = "P"
-  val n_Q : NameEx = "Q"
+  def n_B : NameEx = "B"
+  def n_A : NameEx = "A"
+  def n_S : NameEx = "S"
+  def n_T : NameEx = "T"
+  def n_P : NameEx = "P"
+  def n_Q : NameEx = "Q"
 
-  val n_x : NameEx = "x"
-  val n_y : NameEx = "y"
-  val n_z : NameEx = "z"
+  def n_x : NameEx = "x"
+  def n_y : NameEx = "y"
+  def n_z : NameEx = "z"
 
-  val trueEx  : ValEx = ValEx( TlaTrue )
-  val falseEx : ValEx = ValEx( TlaFalse )
+  def trueEx  : ValEx = ValEx( TlaTrue )
+  def falseEx : ValEx = ValEx( TlaFalse )
 
-  val arr   : Array[TlaEx] = Array( n_a, n_b, n_c, n_d, n_e, n_f, n_g )
-  val arr_s : Seq[TlaEx]   = arr.toSeq
+  def arr   : Array[TlaEx] = Array( n_a, n_b, n_c, n_d, n_e, n_f, n_g )
+  def arr_s : Seq[TlaEx]   = arr.toSeq
 
   def seq( n : Int, nSkip : Int = 0 ) : Seq[TlaEx] = arr.slice( nSkip, n + nSkip ).toSeq ++ Seq.fill( n - arr.length )( n_x )
 
-  val x_in_S : OperEx = Builder.in( "x", "S" )
+  def x_in_S : OperEx = Builder.in( "x", "S" )
 
   def printlns( p_ss : String* )
               ( implicit p_surround : Boolean = true ) : Unit =

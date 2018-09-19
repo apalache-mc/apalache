@@ -35,15 +35,15 @@ package oper {
     val m_cond: Int => Boolean = n => if (n < 0) false else cond(n)
   }
 
-  case class AnyArity() extends OperArity(_ => true)
+  sealed case class AnyArity() extends OperArity(_ => true)
 
-  case class FixedArity(n: Int) extends OperArity(_ == n)
+  sealed case class FixedArity(n: Int) extends OperArity(_ == n)
 
-  case class AnyOddArity() extends OperArity(_ % 2 == 1)
+  sealed case class AnyOddArity() extends OperArity(_ % 2 == 1)
 
-  case class AnyEvenArity() extends OperArity(_ % 2 == 0)
+  sealed case class AnyEvenArity() extends OperArity(_ % 2 == 0)
 
-  case class AnyPositiveArity() extends OperArity(_ > 0)
+  sealed case class AnyPositiveArity() extends OperArity(_ > 0)
 
   /** An abstract operator */
   trait TlaOper {
@@ -108,6 +108,15 @@ package oper {
       override def arity: OperArity = FixedArity(2)
 
       override def interpretation: Interpretation.Value = Interpretation.Predefined
+    }
+
+    /** The CHOOSE idiom: CHOOSE x : x \notin S */
+    val chooseIdiom: TlaOper = new TlaOper {
+      override val name : String = "CHOOSEI"
+
+      override def arity : OperArity = FixedArity(1)
+
+      override def interpretation : Interpretation.Value = Interpretation.Predefined
     }
 
     /**

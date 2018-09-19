@@ -10,6 +10,7 @@ docs/*
 3rdparty/include
 3rdparty/lib
 3rdparty/z3
+3rdparty/Box
 tla2tools.jar
 
 test/tla/testSpec\.smt2

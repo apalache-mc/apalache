@@ -1,5 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import java.lang.annotation.ElementType
+
+import at.forsyte.apalache.tla.lir.UID
+
 import scala.collection.immutable.SortedMap
 
 /** Change name, too ambiguous, especially with TLA Types in the other package -- Jure, 29.10.17 */
@@ -350,6 +354,29 @@ package object types {
 
     override val toString: String =
       s"Record[${fields.map {case (k,v) => "\"" + k + "\" -> " + v } mkString ", " }]"
+  }
+
+
+  sealed case class TypeParam(s: String) extends CellT {
+    /**
+      * Produce a short signature that uniquely describes the type (up to unification),
+      * similar to Java's signature mangling. If one type can be unified to another,
+      * e.g., records, they have the same signature.
+      *
+      * @return a short signature that uniquely characterizes this type up to unification
+      */
+    override val signature = s"P${s}"
+  }
+
+  sealed case class OptT( elementType: CellT ) extends CellT {
+    /**
+      * Produce a short signature that uniquely describes the type (up to unification),
+      * similar to Java's signature mangling. If one type can be unified to another,
+      * e.g., records, they have the same signature.
+      *
+      * @return a short signature that uniquely characterizes this type up to unification
+      */
+    override val signature : String = s"O${elementType.signature}"
   }
 
 
