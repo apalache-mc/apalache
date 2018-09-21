@@ -121,12 +121,36 @@ Except the standard form Init /\ ▢[Next]_e, no temporal operators are supporte
 
 ## Standard modules
 
-### Integers
+### Integers and Naturals
+
+For the moment, the model checker does not differentiate between integers and naturals. They are all translated as integers in SMT.
+
+**TODO: explicitly add the constraint x >= 0 for the naturals.**
 
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
-+, -, *, /, %, <=, >=, <, > | ✔ | - | These operators are translated into integer arithmetic of the SMT solver. Linear integer arithmetic is preferred.
++, -, *, <=, >=, <, > | ✔ | - | These operators are translated into integer arithmetic of the SMT solver. Linear integer arithmetic is preferred.
+/, % | ✔ | - | Integer division and modulo
+÷ | ✖ | - | Real division, not supported
 a..b, a^b | ✔ / ✖ | - | Provided a and b are constant expressions
-÷ | ✖ | - |
+Int, Nat | ✖ | - | Infinite sets are not supported
+
+### Reals
+
+Not supported, not a priority
+
+### Sequences
+
+Not supported yet, but will be as soon as we have a decent type inference engine.
+
+### FiniteSets
+
+Operator  | Supported? | Milestone | Comment
+------------------------|:------------------:|:---------------:|--------------
+IsFinite | ✔ | - | Always returns true, as all the supported sets are finite
+Cardinality | ✖ | - | A good encoding in SMT requires some research
+
+
+
 
 [cheat]: https://lamport.azurewebsites.net/tla/summary.pdf
