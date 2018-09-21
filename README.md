@@ -4,7 +4,7 @@ Abstraction-based parameterized TLA+ checker [![Build Status](https://travis-ci.
 
 The current version of the tool is neither parameterized, nor it is using
 abstractions. As a first step, we are working on a symbolic bounded model
-checker that runs under the same assumptions as TLC.
+checker that runs under the same assumptions as TLC. To see the list of supported TLA+ constructs, check the [supported features page](./features.md).
 
 Related reports and publications can be found at the
 [apalache page](http://forsyte.at/research/apalache/).
