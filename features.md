@@ -10,10 +10,10 @@ EXTENDS module | ✔ | - | As soon as SANY can import the module. Some standard 
 CONSTANTS C1, C2 | ✖ | -  | Declare your constants as operators, e.g., C1 == 111
 VARIABLES x, y, z | ✔ | - |
 ASSUME P | ✖ | - |
-F(x1, ..., x_n) == exp | ✔ / ✖ | - | Provisionally, any use of F is replaced with its body. Hence, recursive operators are not supported.
-f[x \in S] == exp | ? | - | A global function is replaced by an equivalent operator declaration. This feature has not been tested yet.
-INSTANCE M WITH ... | ✖ | - | 
-N(x1, ..., x_n) == INSTANCE M WITH... | ✖ | - |
+F(x1, ..., x_n) == exp | ✔ / ✖ | `0.7-dev-calls` | Provisionally, any use of F is replaced with its body. Hence, recursive operators are not supported yet.
+f[x \in S] == exp | ? | `0.7-dev-calls` | A global function is replaced by an equivalent operator declaration. This feature has not been tested yet.
+INSTANCE M WITH ... | ✖ | `0.5-dev-lang` | 
+N(x1, ..., x_n) == INSTANCE M WITH... | ✖ | `0.5-dev-lang` |
 THEOREM P | ✖ | - | 
 LOCAL def | ✔ | - | Handled by SANY 
 
@@ -26,9 +26,9 @@ Operator  | Supported? | Milestone | Comment
 ∧, ∨, ¬, ⇒, ⇔, ≡ | ✔ | - |
 TRUE, FALSE, BOOLEAN | ✔ | - |
 ∀x ∈ S: p, ∃x ∈ S : p |  ✔ | - | Multiple arguments might fail to work, as the tuples are not really supported yet. Just write ∀x ∈ S: ∀y ∈ T: p instead.
-CHOOSE x ∈ S : p |  ✖ | - | We know how to implement it
-∀x : p, ∃x : p |  ✖ | - | It is unlikely that we will support it, ever
-CHOOSE x : p |  ✖ | - | It is unlikely that we will support it, ever
+CHOOSE x ∈ S : p |  ✖ | `0.5-dev-lang` | We know how to implement it
+∀x : p, ∃x : p |  ✖ | **NEVER** | Use the versions above
+CHOOSE x : p |  ✖ | **NEVER** | Use the version above
 
 
 #### Sets
@@ -37,15 +37,15 @@ CHOOSE x : p |  ✖ | - | It is unlikely that we will support it, ever
 
 In the following, we sometimes denote sets as:
  
- * explicit, that is, constructed with {...} and the standard set operators such as union, intersection, comprehension, etc.
- * symbolic, that is, constructed with SUBSET S or [S -> T].
+ * *explicit*, that is, constructed with {...} and the standard set operators such as union, intersection, comprehension, etc.
+ * *symbolic*, that is, constructed with SUBSET S or [S -> T].
 
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 =, ≠, ∈, ∉, ⋂, ⋃, ⊆, \  | ✔ | - |
 {e_1, ..., e_n} | ✔ | - |
-{x ∈ S : p} | ✔ / ✖ | - | It may fail to work with tuples
-{e : x ∈ S} | ✔ / ✖ | - | It may fail to work with tuples
+{x ∈ S : p} | ✔ / ✖ | `0.5-dev-lang` | It may fail to work with tuples
+{e : x ∈ S} | ✔ / ✖ | `0.5-dev-lang` | It may fail to work with tuples
 SUBSET S | ✔ | - | Provided that S is *explicit*. Produces a *symbolic* set.
 UNION S |  ✔ | - | Provided that S is *explicit*
 
@@ -55,7 +55,7 @@ Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 f[e] | ✔ | - |
 DOMAIN f | ✔ | - |
-[ x ∈ S ↦ e] | ✔ / ✖ | - | It may fail to work with tuples
+[ x ∈ S ↦ e] | ✔ / ✖ | `0.5-dev-lang` | It may fail to work with tuples
 [ S → T ] | ✔ | - | Produces a *symbolic* set
 [ f EXCEPT ![e1] = e2 ] | ✔ | - | 
 
@@ -70,7 +70,7 @@ Operator  | Supported? | Milestone | Comment
 e.h | ✔ | - |
 r[e] | ✔/✖ | - | Provided that e is a constant expression.
 [ h1 ↦ e1, ..., h_n ↦ e_n] | ✔ | - |
-[ h1 : S1, ..., h_n : S_n] | ✖ | - |
+[ h1 : S1, ..., h_n : S_n] | ✖ | `0.5-dev-lang` |
 [ r EXCEPT !.h = e] | ✔ | - |
 
 #### Tuples
@@ -81,7 +81,7 @@ Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 e[i] | ✔ / ✖ | - | Provided that i is a constant expression
 << e1, ..., e_n >> | ✔ | - | Currently, this expression is always producing a tuple, not a sequence
-S1 x ... x S_n | ✖ | - | This is just unfortunate that we have not implemented it yet.
+S1 x ... x S_n | ✖ | `0.5-dev-lang` | This is just unfortunate that we have not implemented it yet.
 
 #### Strings and numbers
 
@@ -90,7 +90,7 @@ Construct  | Supported? | Milestone | Comment
 "c1...c_n" | ✔ | - | A string is always mapped to a unique uninterpreted constant
 STRING | ✖ | - | It is an infinite set. We cannot handle infinite sets.
 d1...d_n | ✔ | - | As long as the SMT solver (Z3) accepts that large number
-d1...d_n.d_n+1...d_m | ✖ | - | Technical matter. We could have implemented it.
+d1...d_n.d_n+1...d_m | ✖ | - | Technical issue. We could have implemented it.
 
 #### Miscellaneous Constructs
 
@@ -99,7 +99,7 @@ Construct  | Supported? | Milestone | Comment
 IF p THEN e1 ELSE e2 | ✔ | - | Provided that both e1 and e2 have the same type
 CASE p1→ e1 ▢ ... ▢ p_n → e_n | ✔ | - | Provided that all the expressions have the same type. Similar to TLC, the case expression is translated to series of IF-THEN-ELSE expressions.
 CASE p1→ e1 ▢ ... ▢ p_n → e_n ▢ OTHER → e | ✔ | - | See the comment above
-LET d1 == e1 ... d_n == e_n IN e | ✔ / ✖ | - | Provisionally, all usages of d1, ..., d_n are replaced with the expressions e1, ... e_n respectively.
+LET d1 == e1 ... d_n == e_n IN e | ✔ / ✖ | `0.7-dev-calls` | Provisionally, all usages of d1, ..., d_n are replaced with the expressions e1, ... e_n respectively.
 multi-line /\ and \/ | ✔ | - | 
 
 ### The Action Operators
@@ -141,7 +141,7 @@ Not supported, not a priority
 
 ### Sequences
 
-Not supported yet, but will be as soon as we have a decent type inference engine.
+Not supported yet, but will in milestone `0.5-dev-lang`.
 
 ### FiniteSets
 
