@@ -148,7 +148,7 @@ Not supported yet, but will in milestone `0.5-dev-lang`.
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 IsFinite | ✔ | - | Always returns true, as all the supported sets are finite
-Cardinality | ✖ | - | A good encoding in SMT requires some research
+Cardinality | ✖ | `0.5-dev-lang` | A good encoding in SMT requires some research
 
 
 
