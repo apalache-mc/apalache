@@ -4,6 +4,7 @@ import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
 import at.forsyte.apalache.tla.assignments.SpecWithTransitions
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FreeExistentialsStore}
+import at.forsyte.apalache.tla.lir.IdOrdering
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -38,7 +39,10 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
       throw new CheckerException(s"The input of $name pass is not initialized")
     }
     val spec = specWithTransitions.get
-    val input = new CheckerInput(spec.rootModule, spec.initTransitions, spec.nextTransitions, spec.notInvariant)
+    // hint by Markus Kuppe: sort init and next to get a stable ordering between the runs
+    val initSorted = spec.initTransitions.sorted(IdOrdering)
+    val nextSorted = spec.nextTransitions.sorted(IdOrdering)
+    val input = new CheckerInput(spec.rootModule, initSorted, nextSorted, spec.notInvariant)
     val stepsBound = options.getOption("checker", "length", 10).asInstanceOf[Int]
     val debug = options.getOption("general", "debug", false).asInstanceOf[Boolean]
     val search = options.getOption("checker", "search", "dfs").asInstanceOf[String]

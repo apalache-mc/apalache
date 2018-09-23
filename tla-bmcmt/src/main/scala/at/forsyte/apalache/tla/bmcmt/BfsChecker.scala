@@ -70,23 +70,23 @@ class BfsChecker(frexStore: FreeExistentialsStore,
   private def makeOneStep(stepNo: Int, startingState: SymbState, transitions: List[TlaEx]): SymbState = {
     logger.info("Step %d, applying %d transitions".format(stepNo, transitions.length))
 
-    def computeAllEnabled(state: SymbState, ts: List[TlaEx]): List[SymbState] =
+    def computeAllEnabled(state: SymbState, ts: List[TlaEx], transitionNo: Int): List[SymbState] =
       ts match {
         case List() =>
           List()
 
         case tran :: tail =>
           val erased = state.setBinding(forgetPrimed(state.binding))
-          val nextState = applyTransition(stepNo, erased, tran)
+          val nextState = applyTransition(stepNo, erased, tran, transitionNo)
           rewriter.exprCache.disposeActionLevel() // leave only constants
           if (nextState.isDefined) {
-            nextState.get +: computeAllEnabled(nextState.get, tail)
+            nextState.get +: computeAllEnabled(nextState.get, tail, transitionNo + 1)
           } else {
-            computeAllEnabled(state, tail)
+            computeAllEnabled(state, tail, transitionNo + 1)
           }
       }
 
-    val nextStates = computeAllEnabled(startingState, transitions)
+    val nextStates = computeAllEnabled(startingState, transitions, 0)
     if (nextStates.isEmpty) {
       // TODO: explain counterexample
       logger.error(s"No next transition applicable on step $stepNo. Deadlock detected. Check counterexample.")
@@ -145,10 +145,10 @@ class BfsChecker(frexStore: FreeExistentialsStore,
     }
   }
 
-  private def applyTransition(stepNo: Int, state: SymbState, transition: TlaEx): Option[SymbState] = {
+  private def applyTransition(stepNo: Int, state: SymbState, transition: TlaEx, transitionNo: Int): Option[SymbState] = {
     rewriter.push()
-    logger.debug("Step %d, SMT context level %d. Applying rewriting rules..."
-      .format(stepNo, rewriter.contextLevel))
+    logger.debug("Step #%d, transition #%d, SMT context level %d. Applying rewriting rules..."
+      .format(stepNo, transitionNo, rewriter.contextLevel))
     solverContext.log("; ------- STEP: %d, STACK LEVEL: %d {".format(stepNo, rewriter.contextLevel))
     val nextState = rewriter.rewriteUntilDone(state.setTheory(BoolTheory()).setRex(transition))
     logger.debug("Finished rewriting. Checking satisfiability of the pushed constraints.")
@@ -165,7 +165,7 @@ class BfsChecker(frexStore: FreeExistentialsStore,
     logger.debug("Checking satisfiability of the pushed constraints.")
     if (!solverContext.sat()) {
       // the current symbolic state is not feasible
-      logger.debug("Transition is not feasible. Skipped.")
+      logger.debug("Transition #%d is not feasible. Skipped.".format(transitionNo))
       rewriter.pop()
       rewriter.pop()
       solverContext.log("; } ------- STEP: %d, STACK LEVEL: %d".format(stepNo, rewriter.contextLevel))

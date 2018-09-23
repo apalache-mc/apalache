@@ -138,7 +138,7 @@ package lir {
 //    def valid : Boolean = m_ID.valid
 //  }
 
-  trait Identifiable{
+  trait Identifiable extends Ordered[Identifiable] {
     protected var m_ID : UID      = UID( -1 )
     protected var canSet: Boolean = true
     def setID( newID: UID ) = {
@@ -156,6 +156,24 @@ package lir {
     }
 
     def valid : Boolean = m_ID.valid
+
+    override def compare(that: Identifiable): Int = {
+      that match {
+        case other: Identifiable =>
+          if (valid && other.valid) {
+            ID.id - other.ID.id
+          } else {
+            throw new IllegalStateException("Comparing objects without IDs")
+          }
+
+        case _ =>
+          1
+      }
+    }
+  }
+
+  object IdOrdering extends Ordering[Identifiable] {
+    override def compare(x: Identifiable, y: Identifiable): Int = x compare y
   }
 
   object Identifiable {
