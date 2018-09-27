@@ -337,6 +337,7 @@ ISpec == IInit /\ [][Next]_vars
              
 =============================================================================
 \* Modification History
+\* Last modified Mon Sep 24 16:47:22 CEST 2018 by igor
 \* Last modified Thu Sep 20 18:13:47 PDT 2018 by markus
 \* Last modified Thu Sep 20 10:16:53 PDT 2018 by markus
 \* Last modified Thu Sep 20 05:45:00 PDT 2018 by lamport

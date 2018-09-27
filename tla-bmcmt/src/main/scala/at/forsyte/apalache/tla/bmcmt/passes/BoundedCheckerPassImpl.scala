@@ -45,12 +45,13 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
     val input = new CheckerInput(spec.rootModule, initSorted, nextSorted, spec.notInvariant)
     val stepsBound = options.getOption("checker", "length", 10).asInstanceOf[Int]
     val debug = options.getOption("general", "debug", false).asInstanceOf[Boolean]
+    val profile = options.getOption("smt", "prof", false).asInstanceOf[Boolean]
     val search = options.getOption("checker", "search", "dfs").asInstanceOf[String]
     val checker: Checker =
       if (search == "dfs") {
         new DfsChecker(freeExistentialsStore, input, stepsBound, debug)
       } else {
-        new BfsChecker(freeExistentialsStore, exprGradeStore, input, stepsBound, debug)
+        new BfsChecker(freeExistentialsStore, exprGradeStore, input, stepsBound, debug, profile)
       }
     val outcome = checker.run()
     logger.info("The outcome is: " + outcome)

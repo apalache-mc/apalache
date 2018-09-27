@@ -18,7 +18,7 @@ import com.typesafe.scalalogging.LazyLogging
 class BfsChecker(frexStore: FreeExistentialsStore,
                  exprGradeStore: ExprGradeStore,
                  checkerInput: CheckerInput,
-                 stepsBound: Int, debug: Boolean = false) extends Checker with LazyLogging {
+                 stepsBound: Int, debug: Boolean = false, profile: Boolean = false) extends Checker with LazyLogging {
 
   import Checker._
 
@@ -30,7 +30,7 @@ class BfsChecker(frexStore: FreeExistentialsStore,
   private var stack: List[SymbState] = List()
   private val solverContext: SolverContext =
 //    new Z3SolverContext(debug)
-    new PreproSolverContext(new Z3SolverContext(debug))
+    new PreproSolverContext(new Z3SolverContext(debug, profile))
 
   private val rewriter = new SymbStateRewriterImpl(solverContext, exprGradeStore)
   rewriter.freeExistentialsStore = frexStore

@@ -9,6 +9,7 @@ import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, _}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaFalse, TlaInt, TlaTrue}
 import com.microsoft.z3._
 import com.microsoft.z3.enumerations.Z3_lbool
+import scalaz.std.long
 
 import scala.collection.mutable
 
@@ -17,7 +18,7 @@ import scala.collection.mutable
   *
   * @author Igor Konnov
   */
-class Z3SolverContext(debug: Boolean = false) extends SolverContext {
+class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends SolverContext {
   /**
     * A log writer, for debugging purposes.
     */
@@ -119,6 +120,15 @@ class Z3SolverContext(debug: Boolean = false) extends SolverContext {
     val z3expr = toExpr(simplifier.simplify(ex))
     log(s"(assert ${z3expr.toString})")
     z3solver.add(z3expr.asInstanceOf[BoolExpr])
+
+    if (profile) {
+      val timeBefore = System.nanoTime()
+      sat()
+      val timeAfter = System.nanoTime()
+      val diffSec = (timeAfter - timeBefore) / 1000000000
+      val diffNano = (timeAfter - timeBefore) % 1000000000
+      log(";;;;;  @@ TIME TO SAT: %05d.%09d sec @@".format(diffSec, diffNano))
+    }
   }
 
   /**

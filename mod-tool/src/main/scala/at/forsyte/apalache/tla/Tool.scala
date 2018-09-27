@@ -61,6 +61,7 @@ object Tool extends App with LazyLogging {
     val injector = Guice.createInjector(new CheckerModule())
     val executor = injector.getInstance(classOf[PassChainExecutor])
     executor.options.setOption("general.debug", check.debug)
+    executor.options.setOption("smt.prof", check.smtprof)
     executor.options.setOption("parser.filename", check.file.getAbsolutePath)
     executor.options.setOption("checker.init", check.init)
     executor.options.setOption("checker.next", check.next)
