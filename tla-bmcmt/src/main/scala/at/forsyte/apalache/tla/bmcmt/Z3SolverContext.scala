@@ -9,7 +9,6 @@ import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, _}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaFalse, TlaInt, TlaTrue}
 import com.microsoft.z3._
 import com.microsoft.z3.enumerations.Z3_lbool
-import scalaz.std.long
 
 import scala.collection.mutable
 
@@ -537,6 +536,13 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
 
       case OperEx(TlaArithOper.uminus, subex) =>
         z3context.mkUnaryMinus(toArithExpr(subex).asInstanceOf[IntExpr])
+
+      case OperEx(TlaControlOper.ifThenElse, cond, thenExpr, elseExpr) =>
+        val boolCond = toExpr(cond).asInstanceOf[BoolExpr]
+        val thenZ3 = toArithExpr(thenExpr)
+        val elseZ3 = toArithExpr(elseExpr)
+        z3context.mkITE(boolCond, thenZ3, elseZ3)
+
 
       case _ =>
         throw new InvalidTlaExException("Unexpected arithmetic expression: " + ex, ex)

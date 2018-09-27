@@ -189,6 +189,30 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
     }
   }
 
+  test("""SE-ITE[1-4]: 1 + (IF 3 < 2 THEN 4 ELSE 1) ~~> $C$k""") {
+    val pred = tla.lt(tla.int(3), tla.int(2))
+    val e1 = tla.int(4)
+    val e2 = tla.int(1)
+    val ite = tla.plus(tla.int(1), tla.ite(pred, e1, e2))
+
+    val state = new SymbState(ite, IntTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case res @ NameEx(name) =>
+        assert(IntTheory().hasConst(name))
+        rewriter.push()
+        solverContext.assertGroundExpr(tla.eql(tla.int(2), res))
+        assert(solverContext.sat())
+        rewriter.pop()
+        solverContext.assertGroundExpr(tla.eql(tla.int(5), res))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
   test("""LET A == TRUE IN... ~~> [A -> TRUE]""") {
     val decl = TlaOperDecl("A", List(), tla.bool(true))
     val letIn = tla.letIn(OperEx(decl.operator), decl)
