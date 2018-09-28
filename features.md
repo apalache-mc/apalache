@@ -11,7 +11,7 @@ CONSTANTS C1, C2 | ✖ | -  | Declare your constants as operators, e.g., C1 == 1
 VARIABLES x, y, z | ✔ | - |
 ASSUME P | ✖ | - |
 F(x1, ..., x_n) == exp | ✔ / ✖ | `0.7-dev-calls` | Provisionally, any use of F is replaced with its body. Hence, recursive operators are not supported yet.
-f[x \in S] == exp | ? | `0.7-dev-calls` | A global function is replaced by an equivalent operator declaration. This feature has not been tested yet.
+f[x ∈ S] == exp | ? | `0.7-dev-calls` | A global function is replaced by an equivalent operator declaration. This feature has not been tested yet.
 INSTANCE M WITH ... | ✖ | `0.5-dev-lang` | 
 N(x1, ..., x_n) == INSTANCE M WITH... | ✖ | `0.5-dev-lang` |
 THEOREM P | ✖ | - | 
@@ -27,6 +27,7 @@ Operator  | Supported? | Milestone | Comment
 TRUE, FALSE, BOOLEAN | ✔ | - |
 ∀x ∈ S: p, ∃x ∈ S : p |  ✔ | - | Multiple arguments might fail to work, as the tuples are not really supported yet. Just write ∀x ∈ S: ∀y ∈ T: p instead.
 CHOOSE x ∈ S : p |  ✖ | `0.5-dev-lang` | We know how to implement it
+CHOOSE x : x ∉ S |  ✖ | `0.5-dev-lang` | That is a commonly used idiom
 ∀x : p, ∃x : p |  ✖ | **NEVER** | Use the versions above
 CHOOSE x : p |  ✖ | **NEVER** | Use the version above
 
@@ -135,10 +136,6 @@ Operator  | Supported? | Milestone | Comment
 a..b, a^b | ✔ / ✖ | - | Provided a and b are constant expressions
 Int, Nat | ✖ | - | Infinite sets are not supported
 
-### Reals
-
-Not supported, not a priority
-
 ### Sequences
 
 Not supported yet, but will in milestone `0.5-dev-lang`.
@@ -148,7 +145,11 @@ Not supported yet, but will in milestone `0.5-dev-lang`.
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 IsFinite | ✔ | - | Always returns true, as all the supported sets are finite
-Cardinality | ✖ | `0.5-dev-lang` | A good encoding in SMT requires some research
+Cardinality | ✖ | `0.5-dev-lang` | A good encoding in SMT requires some research, but we will support `Cardinality(S) >= const` and `Cardinality(S) <= const`
+
+### Reals
+
+Not supported, not a priority
 
 
 
