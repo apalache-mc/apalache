@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
-import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, PowSetT}
+import at.forsyte.apalache.tla.bmcmt.types.{FinFunSetT, FinSetT, FunT, PowSetT}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
@@ -58,6 +58,9 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
           case PowSetT(FinSetT(_)) =>
             powSetIn(setState, setCell, elemCell)
 
+          case FinFunSetT(_, _) =>
+            funSetIn(setState, setCell, elemCell)
+
           case _ => throw new RewriterException("SetInRule is not implemented for type %s (found in %s)"
             .format(setCell.cellType, state.ex))
         }
@@ -83,6 +86,19 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
           // delegate the work to \subseteq
           rewriter.lazyEq.subsetEq(state, elemCell, state.arena.getDom(powsetCell))
         }
+
+      case t @ _ =>
+        throw new RewriterException("Unexpected type: " + t)
+    }
+  }
+
+  private def funSetIn(state: SymbState, funsetCell: ArenaCell, funCell: ArenaCell): SymbState = {
+    funCell.cellType match {
+      case FunT(_, _) =>
+        val arena = state.arena
+        val domeq = tla.eql(arena.getDom(funCell), arena.getDom(funsetCell))
+        val cdmSubset = tla.subseteq(arena.getCdm(funCell), arena.getCdm(funsetCell))
+        rewriter.rewriteUntilDone(state.setRex(tla.and(domeq, cdmSubset)).setTheory(BoolTheory()))
 
       case t @ _ =>
         throw new RewriterException("Unexpected type: " + t)

@@ -35,6 +35,82 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
     }
   }
 
+  test("""SE-FUNSET2: [{1, 2} -> SUBSET {FALSE, TRUE}]""") {
+    val domain = tla.enumSet(tla.int(1), tla.int(2))
+    val codomain = tla.powSet(tla.enumSet(tla.bool(false), tla.bool(true)))
+    val state = new SymbState(tla.funSet(domain, codomain),
+      CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case NameEx(name) =>
+        assert(CellTheory().hasConst(name))
+        val cell = nextState.arena.findCellByNameEx(nextState.ex)
+        assert(cell.cellType == FinFunSetT(FinSetT(IntT()), PowSetT(FinSetT(BoolT()))))
+        val dom = nextState.arena.getDom(cell)
+        assert(dom.cellType == FinSetT(IntT()))
+        val domElems = nextState.arena.getHas(dom)
+        assert(domElems.length == 2)
+        val cdm = nextState.arena.getCdm(cell)
+        assert(cdm.cellType == PowSetT(FinSetT(BoolT())))
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-FUNSET2: [x \in {1, 2} -> {x = 1}] \in [{1, 2} -> SUBSET {FALSE, TRUE}]""") {
+    val domain = tla.enumSet(tla.int(1), tla.int(2))
+    val codomain = tla.powSet(tla.enumSet(tla.bool(false), tla.bool(true)))
+    val funset = tla.funSet(domain, codomain)
+    val fun = tla.funDef(tla.enumSet(tla.eql(tla.name("x"), tla.int(1))),
+                         tla.name("x"),
+                         domain)
+    val state = new SymbState(tla.in(fun, funset), BoolTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(nextState.ex)
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(tla.not(nextState.ex))
+        solverContext.pop()
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-FUNSET2: [x \in {1, 2} -> {TRUE}] \in [{1, 2} -> SUBSET {FALSE}]""") {
+    val domain = tla.enumSet(tla.int(1), tla.int(2))
+    val codomain = tla.powSet(tla.enumSet(tla.bool(false)))
+    val funset = tla.funSet(domain, codomain)
+    val fun = tla.funDef(tla.enumSet(tla.bool(true)),
+                         tla.name("x"),
+                         domain)
+    val state = new SymbState(tla.in(fun, funset), BoolTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        solverContext.push()
+        solverContext.assertGroundExpr(tla.not(nextState.ex))
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(nextState.ex)
+        solverContext.pop()
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
   // bugfix 27/12/2017
   test("""SE-FUNSET1: [0..(5 - 1) ~~> {FALSE, TRUE}]""") {
     val domain = tla.dotdot(tla.int(0), tla.minus(tla.int(5), tla.int(1)))

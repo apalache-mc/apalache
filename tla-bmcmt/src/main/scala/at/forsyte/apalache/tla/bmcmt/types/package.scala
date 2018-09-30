@@ -1,9 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import java.lang.annotation.ElementType
-
-import at.forsyte.apalache.tla.lir.UID
-
 import scala.collection.immutable.SortedMap
 
 /** Change name, too ambiguous, especially with TLA Types in the other package -- Jure, 29.10.17 */
@@ -289,11 +285,12 @@ package object types {
   /**
     * A finite set of functions.
     *
-    * @param domType the type of the domain (must be a finite set).
-    * @param cdmType the type of the co-domain (must be a finite set).
+    * @param domType the type of the domain (must be either a finite set or a powerset).
+    * @param cdmType the type of the co-domain (must be either a finite set or a powerset).
     */
   sealed case class FinFunSetT(domType: CellT, cdmType: CellT) extends CellT {
-    require(domType.isInstanceOf[FinSetT] && cdmType.isInstanceOf[FinSetT])
+    require((domType.isInstanceOf[FinSetT] || domType.isInstanceOf[PowSetT])
+            && (cdmType.isInstanceOf[FinSetT] || cdmType.isInstanceOf[PowSetT]))
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,

@@ -250,8 +250,7 @@ Before(i,j) == /\ num[i] > 0
 (***************************************************************************)
 (* Inv is the complete inductive invariant.                                *)
 (***************************************************************************)  
-Inv == (*/\ TypeOK *)
-       /\ \A i \in Procs : 
+Inv == /\ TypeOK        /\ \A i \in Procs : 
              /\ \* This conjunct not needed for mutual exclusion, but needed
                 \* to prove liveness
                 (pc[i] \in {"ncs", "e1", "e2"}) => (num[i] = 0)    
@@ -337,7 +336,7 @@ ISpec == IInit /\ [][Next]_vars
              
 =============================================================================
 \* Modification History
-\* Last modified Mon Sep 24 16:47:22 CEST 2018 by igor
+\* Last modified Sun Sep 30 17:46:21 CEST 2018 by igor
 \* Last modified Thu Sep 20 18:13:47 PDT 2018 by markus
 \* Last modified Thu Sep 20 10:16:53 PDT 2018 by markus
 \* Last modified Thu Sep 20 05:45:00 PDT 2018 by lamport
