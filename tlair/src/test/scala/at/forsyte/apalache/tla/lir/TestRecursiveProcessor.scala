@@ -90,7 +90,7 @@ class TestRecursiveProcessor extends FunSuite with TestingPredefs {
     assert( fn( setLst3, List.empty[Int] ) === fn( setLst3, lst3 ) )
   }
 
-  ignore( "Proper termination" ) {
+  test( "Proper termination" ) {
 
     def terminationTest( p_ex : TlaEx ) : Boolean = p_ex match {
       case NameEx( n ) => true
@@ -153,7 +153,10 @@ class TestRecursiveProcessor extends FunSuite with TestingPredefs {
     )( -1 )( recLimit )
 
     assert(fp.nonEmpty)
-
   }
 
+
+  test("Test Branching") {
+
+  }
 }

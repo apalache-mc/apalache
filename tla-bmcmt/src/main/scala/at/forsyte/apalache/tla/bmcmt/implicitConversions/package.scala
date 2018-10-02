@@ -6,6 +6,9 @@ import at.forsyte.apalache.tla.lir.NameEx
   * Implicit conversions between cells and TLA+ expressions. Use carefully.
   */
 package object implicitConversions {
+
+  import scala.language.implicitConversions
+
   implicit def cell2NameEx(c: ArenaCell): NameEx = {
     c.toNameEx
   }

@@ -31,9 +31,16 @@ package oper {
     val Signature: Interpretation.Value = Value
   }
 
-  class OperArity(cond: Int => Boolean) {
-    val m_cond: Int => Boolean = n => if (n < 0) false else cond(n)
+  class OperArity(private val m_cond: Int => Boolean) {
+    def cond(n : Int) : Boolean = if (n < 0) false else m_cond(n)
+
+    def &&( other: OperArity ) : OperArity = new OperArity( i => m_cond(i) && other.m_cond(i) )
+    def ||( other: OperArity ) : OperArity = new OperArity( i => m_cond(i) || other.m_cond(i) )
+
+    def unary_! : OperArity = new OperArity( !m_cond(_) )
   }
+
+  sealed case class MinimalArity(n: Int) extends OperArity( _ >= n )
 
   sealed case class AnyArity() extends OperArity(_ => true)
 
@@ -54,7 +61,7 @@ package oper {
     /* the number of arguments the operator has */
     def arity: OperArity
 
-    def isCorrectArity(a: Int): Boolean = arity.m_cond(a)
+    def isCorrectArity(a: Int): Boolean = arity.cond(a)
   }
 
   object TlaOper {
@@ -132,7 +139,7 @@ package oper {
       */
     val label = new TlaControlOper {
       override val name: String = "LABEL"
-      override def arity: OperArity = new OperArity(_ >= 2)
+      override def arity: OperArity = MinimalArity(2)
       override val interpretation: Interpretation.Value = Interpretation.Predefined
     }
 

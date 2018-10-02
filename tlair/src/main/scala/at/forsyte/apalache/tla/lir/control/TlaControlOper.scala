@@ -18,7 +18,7 @@ object TlaControlOper {
     */
   val caseNoOther = new TlaControlOper {
     override val name: String = "CASE"
-    override val arity: OperArity = new OperArity( k => k >= 2 && k % 2 == 0 )
+    override val arity: OperArity = MinimalArity(2) && AnyEvenArity()  //new OperArity( k => k >= 2 && k % 2 == 0 )
     override val interpretation: Interpretation.Value = Interpretation.Predefined
   }
 
@@ -30,7 +30,7 @@ object TlaControlOper {
     */
   val caseWithOther = new TlaControlOper {
     override val name: String = "CASE-OTHER"
-    override val arity: OperArity = new OperArity( k => k >= 3 && k % 2 == 1 )
+    override val arity: OperArity = MinimalArity(3) && AnyOddArity() //new OperArity( k => k >= 3 && k % 2 == 1 )
     override val interpretation: Interpretation.Value = Interpretation.Predefined
   }
 

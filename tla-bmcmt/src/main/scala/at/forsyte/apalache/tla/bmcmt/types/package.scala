@@ -1,5 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import java.lang.annotation.ElementType
+
+import at.forsyte.apalache.tla.lir.{UID, UTFPrinter}
+
 import scala.collection.immutable.SortedMap
 
 /** Change name, too ambiguous, especially with TLA Types in the other package -- Jure, 29.10.17 */
@@ -130,7 +134,7 @@ package object types {
           if (pairs.exists(_._2.isEmpty)) {
             None
           } else {
-            val somes = pairs.map { case (k, Some(v)) => (k,v) } // (p => (p._1, p._2.get))
+            val somes = pairs.map { case (k, v) => (k,v.get) } // (p => (p._1, p._2.get))
             Some(RecordT(SortedMap(somes.toSeq: _*)))
           }
 
@@ -276,6 +280,7 @@ package object types {
     val argType: CellT = domType match {
       case FinSetT(et) => et
       case PowSetT(dt) => dt
+      case CrossProdT(args) => TupleT( args map {_.elemType} )
       case _ => throw new TypeException(s"Unexpected domain type $domType")
     }
 
@@ -330,6 +335,17 @@ package object types {
     override val signature: String = s"T_${args.map(_.signature).mkString("_")}"
 
     override val toString: String = s"Tuple[${args.map(_.toString).mkString(", ")}]"
+  }
+
+  sealed case class CrossProdT( args: Seq[FinSetT] ) extends CellT {
+    /**
+      * Produce a short signature that uniquely describes the type (up to unification),
+      * similar to Java's signature mangling. If one type can be unified to another,
+      * e.g., records, they have the same signature.
+      *
+      * @return a short signature that uniquely characterizes this type up to unification
+      */
+    override val signature : String = args map {_.signature} mkString UTFPrinter.m_times
   }
 
   /**
