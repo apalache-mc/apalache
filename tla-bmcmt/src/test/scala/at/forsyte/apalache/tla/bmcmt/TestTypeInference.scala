@@ -46,7 +46,7 @@ class TestTypeInference extends FunSuite with TestingPredefs {
 
   }
 
-  test( "Application" ) {
+  ignore( "Application" ) {
 
     val ex = tla.eql( tla.plus(  tla.appFun( n_f, n_x ) , 2), 4 )
     val ex2 =
