@@ -65,7 +65,8 @@ object Tool extends App with LazyLogging {
     executor.options.setOption("parser.filename", check.file.getAbsolutePath)
     executor.options.setOption("checker.init", check.init)
     executor.options.setOption("checker.next", check.next)
-    executor.options.setOption("checker.inv", check.inv)
+    executor.options.setOption("checker.inv",
+      if (check.inv != "") Some(check.inv) else None)
     executor.options.setOption("checker.length", check.length)
     executor.options.setOption("checker.search", check.search)
 

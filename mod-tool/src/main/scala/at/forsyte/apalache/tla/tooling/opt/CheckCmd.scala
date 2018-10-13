@@ -22,8 +22,9 @@ class CheckCmd extends Command(name = "check",
   var next: String = opt[String](
     name = "next", default = "Next",
     description = "the name of a transition operator, default: Next")
-  var inv: Option[String] =
-    opt[Option[String]](name = "inv", description = "the name of an invariant operator, e.g., Inv")
+  var inv: String =
+    opt[String](name = "inv", default = "",
+      description = "the name of an invariant operator, e.g., Inv")
   var length: Int =
     opt[Int](name = "length", default = 10,
       description = "the bound on the computation length, default: 10")
