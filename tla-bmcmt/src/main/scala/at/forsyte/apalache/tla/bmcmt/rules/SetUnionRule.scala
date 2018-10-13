@@ -34,20 +34,24 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         var arena = newState.arena
         val sets = Set(arena.getHas(topSetCell) :_*).toList // remove duplicates too
-        // use sets to immediately find repetitive cells
-        val allElems = sets.foldLeft(Set[ArenaCell]()) ((all, s) => Set(arena.getHas(s) :_*).union(all))
+        // use sets to immediately merge repetitive cells
+        def expandSetCells(union: Set[ArenaCell], elemSet: ArenaCell): Set[ArenaCell] = {
+          Set(arena.getHas(elemSet): _*).union(union) // get all the cells in a set and them to the union
+        }
+
+        val unionOfSets = sets.foldLeft(Set[ArenaCell]())(expandSetCells)
         // introduce a set cell
         arena = arena.appendCell(FinSetT(elemType))
         val newSetCell = arena.topCell
 
-        if (allElems.isEmpty) {
+        if (unionOfSets.isEmpty) {
           // just return an empty set
           // TODO: cache empty sets!
           val finalState = newState.setRex(newSetCell).setArena(arena)
           rewriter.coerce(finalState, state.theory) // coerce to the source theory
         } else {
           // add all the elements to the arena
-          arena = allElems.foldLeft(arena) ((a, c) => a.appendHas(newSetCell, c))
+          arena = unionOfSets.foldLeft(arena) ((a, c) => a.appendHas(newSetCell, c))
 
           // require each cell to be in one of the sets
           def addCellCons(elemCell: ArenaCell): Unit = {
@@ -58,7 +62,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
           }
 
           // add SMT constraints
-          for (elem <- allElems)
+          for (elem <- unionOfSets)
             addCellCons(elem)
 
           // that's it
