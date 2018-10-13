@@ -119,6 +119,8 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
       -> List(new QuantRule(this)),
     key(tla.forall(tla.name("x"), tla.name("S"), tla.name("p")))
       -> List(new QuantRule(this)),
+    key(tla.choose(tla.name("x"), tla.name("S"), tla.name("p")))
+      -> List(new ChooseRule(this)),
 
     // control flow
     key(tla.ite(tla.name("cond"), tla.name("then"), tla.name("else")))

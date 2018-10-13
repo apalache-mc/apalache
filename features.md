@@ -26,7 +26,7 @@ Operator  | Supported? | Milestone | Comment
 ∧, ∨, ¬, ⇒, ⇔, ≡ | ✔ | - |
 TRUE, FALSE, BOOLEAN | ✔ | - |
 ∀x ∈ S: p, ∃x ∈ S : p |  ✔ | - | Multiple arguments might fail to work, as the tuples are not really supported yet. Just write ∀x ∈ S: ∀y ∈ T: p instead.
-CHOOSE x ∈ S : p |  ✖ | `0.5-dev-lang` | We know how to implement it
+CHOOSE x ∈ S : p |  ✔/✖ | `0.5-dev-lang` | Similar to TLC, we implement a non-deterministic choice. We will add a deterministic version in the future.
 CHOOSE x : x ∉ S |  ✖ | `0.5-dev-lang` | That is a commonly used idiom
 ∀x : p, ∃x : p |  ✖ | **NEVER** | Use the versions above
 CHOOSE x : p |  ✖ | **NEVER** | Use the version above
