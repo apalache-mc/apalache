@@ -75,24 +75,6 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
     // drop selections because of lacking implementation further on
     val initTransitions = stp( declarations, initName ).map( _._2 ).toList
 
-
-//    // let converter do its magic
-//    val converter = new Converter()
-//    converter.extract(declarations: _*)
-//    val initBody = findBodyOf(initName, declarations: _*)
-//    val sanitizedInit = converter.sanitize(initBody)
-//
-//    val initAssignments = assignmentSolver.getSymbolicTransitions(varSet, sanitizedInit)
-//    val initTransitions =
-//      if (initAssignments.isEmpty) {
-//        throw new AssignmentException("Failed to extract variable assignments from " + initName)
-//      } else {
-//        // TODO: label the assignment expressions as assignments in a special database
-//        // for the moment just rely on that the assignment solver transforms the formulas in such a way
-//        // that all assignments come first
-//        initAssignments.get.map(_._2).toList
-//      }
-
     for ((t, i) <- initTransitions.zipWithIndex) {
       logger.debug("Initial transition #%d:\n   %s".format(i, t))
     }
@@ -101,19 +83,6 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
 
     // drop selections because of lacking implementation further on
     val nextTransitions = stp(declarations,nextName).map( _._2 ).toList
-
-//    val nextBody = findBodyOf(nextName, allDeclarations: _*)
-//    val sanitizedNext = converter.sanitize(nextBody)
-//    val nextAssignments = assignmentSolver.getSymbolicTransitions(varSet, sanitizedNext)
-//    val nextTransitions =
-//      if (nextAssignments.isEmpty) {
-//        throw new AssignmentException("Failed to extract variable assignments from " + nextName)
-//      } else {
-//        // TODO: label the assignment expressions as assignments in a special database
-//        // for the moment just rely on that the assignment solver transforms the formulas in such a way
-//        // that all assignments come first
-//        nextAssignments.get.map(_._2).toList
-//      }
 
     for ((t, i) <- nextTransitions.zipWithIndex) {
       logger.debug("Next transition #%d:\n   %s".format(i, t))
@@ -125,6 +94,11 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
     val invariant =
       if (invName.isDefined) {
         val invBody = findBodyOf(invName.get, allDeclarations: _*)
+        if (invBody == NullEx) {
+          val msg = "Invariant definition %s not found".format(invName.get)
+          logger.error(msg)
+          throw new IllegalArgumentException(msg)
+        }
         val notInv = transformer.sanitize(tla.not(invBody))( bodyDB, srcDB )
         logger.debug("Negated invariant:\n   %s".format(notInv))
         Some(notInv)
