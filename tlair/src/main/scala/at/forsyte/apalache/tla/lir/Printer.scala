@@ -190,7 +190,7 @@ object UTFPrinter extends Printer {
           case TlaFunOper.enum => "[%s]".format( opAppStrPairs( args, pad( m_mapto ), ", " ) )
           case TlaFunOper.except => "[%s EXCEPT %s]".format( apply( args.head ), opAppPattern( args.tail, 2, "![%s] = %s", ", " ) )
           case TlaFunOper.funDef => "[%s %s %s]".format( opAppStrPairs( args.tail, pad( m_in ), ", " ), m_mapto, apply( args.head ) )
-          case TlaFunOper.tuple => "(%s)".format( str( args ) )
+          case TlaFunOper.tuple => "<<%s>>".format( str( args ) )
 
           case TlaSeqOper.append => "Append(%s)".format( str( args ) )
           case TlaSeqOper.concat => mkOpApp( "%%s %s %%s".format( m_ring ), args : _* )
