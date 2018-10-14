@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaOper
 
 
 /**
-  * Implements the rules: SE-CHOOSE1.
+  * Implements the rules: SE-LOG-CHO1.
   * Similar to TLC, we implement a non-determenistic choice.
   * It is not hard to add the requirement of determinism, but that will
   * probably affect efficiency.
