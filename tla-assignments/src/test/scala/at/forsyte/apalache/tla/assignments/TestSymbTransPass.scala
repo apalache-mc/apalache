@@ -147,4 +147,9 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
 
   }
 
+  test( "SimpTendermit1" ) {
+    val symbNexts = testFromFile( "SimpTendermit1.tla" )
+    val symbNexts2 = testFromFile( "SimpTendermit1.tla", "NextNoFaults" )
+  }
+
 }

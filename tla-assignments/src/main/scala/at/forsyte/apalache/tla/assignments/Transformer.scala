@@ -136,7 +136,7 @@ class Transformer {
           oper.defs.foreach( OperatorHandler.extract( _, bodyDB ) )
 
           /** inline as if operators were external */
-          inlineAll( body )( bodyDB, srcDB )
+          explicitLetIn( inlineAll( body )( bodyDB, srcDB ) )( srcDB )
         case _ => ex
       }
     }
