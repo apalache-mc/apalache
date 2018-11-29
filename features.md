@@ -26,7 +26,7 @@ Operator  | Supported? | Milestone | Comment
 ∧, ∨, ¬, ⇒, ⇔, ≡ | ✔ | - |
 TRUE, FALSE, BOOLEAN | ✔ | - |
 ∀x ∈ S: p, ∃x ∈ S : p |  ✔ | - | Multiple arguments might fail to work, as the tuples are not really supported yet. Just write ∀x ∈ S: ∀y ∈ T: p instead.
-CHOOSE x ∈ S : p |  ✔/✖ | `0.5-dev-lang` | Similar to TLC, we implement a non-deterministic choice. We will add a deterministic version in the future.
+CHOOSE x ∈ S : p |  ✔/✖ | - | Similar to TLC, we implement a non-deterministic choice. We will add a deterministic version in the future.
 CHOOSE x : x ∉ S |  ✖ | `0.5-dev-lang` | That is a commonly used idiom
 ∀x : p, ∃x : p |  ✖ | **NEVER** | Use the versions above
 CHOOSE x : p |  ✖ | **NEVER** | Use the version above
@@ -138,7 +138,11 @@ Int, Nat | ✖ | - | Infinite sets are not supported
 
 ### Sequences
 
-Not supported yet, but will in milestone `0.5-dev-lang`.
+Operator  | Supported? | Milestone | Comment
+------------------------|:------------------:|:---------------:|--------------
+<<...>>, Head, Tail, Len, Append, \o, SubSeq | ✖ | `0.5-dev-lang` | will be supported soon
+Seq(S) | ✖ | - | ?
+SelectSeq | ✖ | - | will not be supported in the near future
 
 ### FiniteSets
 
