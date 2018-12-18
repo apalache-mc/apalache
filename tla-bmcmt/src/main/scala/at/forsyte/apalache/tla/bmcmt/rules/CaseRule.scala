@@ -8,11 +8,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
 
 /**
-  * A rule for case. For the moment, we only have a workaround for CASE p -> A [] OTHER -> B, which is translated
-  * to IF p THEN A ELSE B. We introduced the rule to cope with the provisional version of the assignment solver
-  * that translates IF-THEN-ELSE to case.
-  *
-  * TODO: implement translation for the general case.
+  * A rule for case. Similar to TLC, CASE is translated into a chain of IF-THEN-ELSE expressions.
   *
   * @author Igor Konnov
   */
