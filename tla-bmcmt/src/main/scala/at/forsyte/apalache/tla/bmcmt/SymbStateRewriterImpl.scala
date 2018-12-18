@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.caches.{ExprCache, IntValueCache, RecordDom
 import at.forsyte.apalache.tla.bmcmt.rules._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{AnyArity, TlaOper, TlcOper}
+import at.forsyte.apalache.tla.lir.oper.{AnyArity, BmcOper, TlaOper, TlcOper}
 import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaIntSet}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 
@@ -211,6 +211,8 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     // misc
     key(OperEx(TlaOper.label, tla.str("a"), tla.int(1)))
       -> List(new LabelRule(this)),
+    key(OperEx(BmcOper.withType, tla.int(1), ValEx(TlaIntSet)))
+      -> List(new TypeAnnotationRule(this)),
 
     // TLC
     key(OperEx(TlcOper.print, tla.bool(true), tla.str("msg")))

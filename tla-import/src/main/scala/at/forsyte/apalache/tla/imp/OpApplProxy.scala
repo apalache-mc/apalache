@@ -7,8 +7,8 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, TlaValue, ValEx}
 import tla2sany.semantic._
 
 /**
-  * This class acts as a proxy for OpAllTranslator. It hijacks the node that corresponds to the standard library
-  * operators and translates them differently from the user operators.
+  * This class acts as a proxy for OpAllTranslator. It hijacks the nodes that correspond to the standard library
+  * operators and translates to the built-in operator objects.
   *
   * @author konnov
   */
@@ -21,16 +21,26 @@ class OpApplProxy(standardTranslator: OpApplTranslator) {
           val modAndName = (origin.getName.toString, opdef.getName.toString)
           OpApplProxy.libraryValues.get(modAndName) match {
             case Some(value: TlaValue) =>
+              // a built-in value
               ValEx(value)
 
             case _ =>
               OpApplProxy.libraryOperators.get(modAndName) match {
                 case Some(oper: TlaOper) =>
+                  // an operator in the standard library
                   val exTran = ExprOrOpArgNodeTranslator(standardTranslator.context, standardTranslator.recStatus)
                   OperEx(oper, node.getArgs.map { p => exTran.translate(p)} :_*)
 
                 case _ =>
-                  standardTranslator.translate(node)
+                  OpApplProxy.globalOperators.get(opdef.getName.toString) match {
+                    case Some(oper: TlaOper) =>
+                      // an operator that we overwrite unconditionally, e.g., <:
+                      val exTran = ExprOrOpArgNodeTranslator(standardTranslator.context, standardTranslator.recStatus)
+                      OperEx(oper, node.getArgs.map { p => exTran.translate(p)} :_*)
+
+                    case _ =>
+                      standardTranslator.translate(node)
+                  }
               }
           }
         } else {
@@ -97,5 +107,10 @@ object OpApplProxy {
       (("TLC", "ToString"), TlcOper.tlcToString),
       (("TLC", "Print"), TlcOper.print),
       (("TLC", "PrintT"), TlcOper.printT)
+    )
+
+  val globalOperators: Map[String, TlaOper] =
+    Map[String, TlaOper](
+      ("<:", BmcOper.withType)
     )
 }

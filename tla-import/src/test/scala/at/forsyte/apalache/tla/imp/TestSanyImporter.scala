@@ -25,7 +25,7 @@ import scala.io.Source
 @RunWith(classOf[JUnitRunner])
 class TestSanyImporter extends FunSuite {
 
-  def expectTlaDecl(name: String, params: List[FormalParam], body: TlaEx): TlaDecl => Unit = {
+  def expectTlaDecl(name: String, params: List[FormalParam], body: TlaEx): (TlaDecl => Unit) = {
     case d: TlaOperDecl =>
       assert(name == d.name)
       assert(params == d.formalParams)
@@ -33,6 +33,20 @@ class TestSanyImporter extends FunSuite {
 
     case d@_ =>
       fail("Expected a TlaOperDecl, found: " + d)
+  }
+
+  def assertTlaDecl(root: TlaModule, expectedName: String, body: TlaEx): Unit = {
+    root.declarations.find {
+      _.name == expectedName
+    } match {
+      case Some(d: TlaOperDecl) =>
+        assert(expectedName == d.name)
+        assert(0 == d.formalParams.length)
+        assert(body == d.body)
+
+      case _ =>
+        fail("Expected a TlaDecl")
+    }
   }
 
   test("empty module") {
@@ -1452,6 +1466,82 @@ class TestSanyImporter extends FunSuite {
     assertTlaDecl("ATLCEval", OperEx(TlcOper.tlcEval, tla.int(42)))
     assertTlaDecl("AToString", OperEx(TlcOper.tlcToString, tla.int(42)))
   }
+
+  test("type annotations (our custom extension)") {
+    // This is a temporary solution until Jure write a proper type inference engine.
+    // The operator <: should be defined somehow. We will rewrite it during the import phase.
+    // It may look strange that we use sets (Int, BOOLEAN, Int, [A -> B]) to denote types,
+    // but this solution is quite convenient and natural for TLA+.
+    val text =
+      """---- MODULE types ----
+        |EXTENDS Integers
+        |VARIABLE x, f
+        |a <: b == a
+        |SetOfInts == {} <: {Int}
+        |SetOfBools == {} <: {BOOLEAN}
+        |SetOfStrings == {} <: {STRING}
+        |SetOfSetsOfInts == {} <: {{Int}}
+        |Integer == 1 <: Int
+        |Bool == FALSE <: BOOLEAN
+        |Str == "a" <: STRING
+        |Fun == f <: [Int -> Int]
+        |SetOfFuns == f <: {[Int -> Int]}
+        |Rec == f <: [a |-> Int, b |-> BOOLEAN]
+        |SetOfRecs == {} <: {[a |-> Int, b |-> BOOLEAN]}
+        |Tup == f <: <<Int, BOOLEAN>>
+        |SetOfTuples == {} <: {<<Int, BOOLEAN>>}
+        |================================
+      """.stripMargin
+
+    val (rootName, modules) = new SanyImporter().loadFromSource("types", Source.fromString(text))
+    assert(3 == modules.size) // our module + Integers & Naturals
+    val rootMod = modules("types")
+    def assertDecl(name: String, body: TlaEx): Unit = assertTlaDecl(rootMod, name, body)
+
+    assertDecl("SetOfInts",
+      OperEx(BmcOper.withType, tla.enumSet(), tla.enumSet(ValEx(TlaIntSet))))
+
+    assertDecl("SetOfBools",
+      OperEx(BmcOper.withType, tla.enumSet(), tla.enumSet(ValEx(TlaBoolSet))))
+
+    assertDecl("SetOfStrings",
+      OperEx(BmcOper.withType, tla.enumSet(), tla.enumSet(ValEx(TlaStrSet))))
+
+    assertDecl("SetOfInts",
+      OperEx(BmcOper.withType, tla.enumSet(), tla.enumSet(ValEx(TlaIntSet))))
+
+    assertDecl("SetOfSetsOfInts",
+      OperEx(BmcOper.withType, tla.enumSet(), tla.enumSet(tla.enumSet(ValEx(TlaIntSet)))))
+
+    assertDecl("Integer",
+      OperEx(BmcOper.withType, tla.int(1), ValEx(TlaIntSet)))
+
+    assertDecl("Bool",
+      OperEx(BmcOper.withType, tla.bool(false), ValEx(TlaBoolSet)))
+
+    assertDecl("Str",
+      OperEx(BmcOper.withType, tla.str("a"), ValEx(TlaStrSet)))
+
+    assertDecl("Fun",
+      OperEx(BmcOper.withType, NameEx("f"), tla.funSet(ValEx(TlaIntSet), ValEx(TlaIntSet))))
+
+    assertDecl("Rec",
+      OperEx(BmcOper.withType, NameEx("f"),
+             tla.enumFun(tla.str("a"), ValEx(TlaIntSet), tla.str("b"), ValEx(TlaBoolSet))))
+
+    assertDecl("SetOfRecs",
+      OperEx(BmcOper.withType, tla.enumSet(),
+        tla.enumSet(tla.enumFun(tla.str("a"), ValEx(TlaIntSet), tla.str("b"), ValEx(TlaBoolSet)))))
+
+    assertDecl("Tup",
+      OperEx(BmcOper.withType, NameEx("f"),
+        tla.tuple(ValEx(TlaIntSet), ValEx(TlaBoolSet))))
+
+    assertDecl("SetOfTuples",
+      OperEx(BmcOper.withType, tla.enumSet(),
+        tla.enumSet(tla.tuple(ValEx(TlaIntSet), ValEx(TlaBoolSet)))))
+  }
+
 
   /*
   TODO: we need a good way to propagate this module to the standard library
