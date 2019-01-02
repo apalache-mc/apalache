@@ -29,6 +29,8 @@ object TlaSetOper {
   /**
     * Construct a set of records, e.g., [ f_1: S_1, ..., f_k: S_k ].
     * The order of the arguments is as follows: (f_1, S_1, ..., f_k, S_k).
+    * The field names f_1, ..., f_k are string constants,
+    * that is, ValEx(TlaStr("...")) and not NameEx("...")
     */
   val recSet = new TlaSetOper {
     override def arity: OperArity = AnyEvenArity()
@@ -101,11 +103,13 @@ object TlaSetOper {
     * A restricted set comprehension: { x \in S : p }.
     * The argument order is: (x, S, p). Note that x may be a tuple.
     */
-    /**
-      * Should we unify notation with TlaFunOper.funDef? Jure, 24.11.2017
-      * funDef has args (e, (x, S)+ )
-      */
   val filter = new TlaSetOper {
+    // Jure, 24.11.2017:
+    // Should we unify notation with TlaFunOper.funDef? funDef has args (e, (x, S)+ )
+    //
+    // Igor @ 19.12.2018: What's the point? The only use of multiple parameters,
+    // is to filter a Cartesian product. In this case, one can directly pass a Cartesian
+    // product as an argument. The tuple gives us some form of primitive pattern matching.
     override val arity = FixedArity(3)
     override val name = "filter"
   }
@@ -146,12 +150,10 @@ object TlaSetOper {
   /**
     Define a cartesian product of one or more sets.
     Note that we explicitly forbid to construct an empty set using this operator.
-    To construct an empty set, use emptySet.
+    To construct an empty set, use enumSet with no arguments.
     */
   val times = new TlaSetOper {
     override val arity = AnyArity()
     override val name = "\\times"
-
   }
-
 }
