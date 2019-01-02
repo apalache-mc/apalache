@@ -268,7 +268,12 @@ package lir {
     */
 
   case class OperEx(oper: TlaOper, args: TlaEx*) extends TlaEx {
-    require(oper.isCorrectArity(args.size), "unexpected arity %d".format(args.size))
+    require(oper.isCorrectArity(args.size),
+      "unexpected arity %d".format(args.size))
+
+    require(oper.permitsArgs(args),
+      "The arguments violate the invariant of %s".format(oper.name))
+
     override def toNiceString( nTab : Int = 0 ): String = {
       (tab *nTab) + "( OperEx: " +
         oper.name + ",\n" +
