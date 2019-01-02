@@ -398,7 +398,7 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     val mapExpr = tla.mult(tla.int(2), tla.name("x"))
     val fun = tla.funDef(mapExpr, tla.name("x"), set)
 
-    val except = tla.except(fun, tla.int(1), tla.int(11))
+    val except = tla.except(fun, tla.tuple(tla.int(1)), tla.int(11))
     val state = new SymbState(except, CellTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)

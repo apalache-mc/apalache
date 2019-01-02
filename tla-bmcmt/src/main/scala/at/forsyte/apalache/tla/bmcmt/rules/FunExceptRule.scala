@@ -25,10 +25,11 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case OperEx(TlaFunOper.except, args@_*) =>
-        // simplify all the arguments first
-        val noSingletons = rewriteSingletonTuples(args)
+        // first, unpack singleton tuples, see the comment to the method
+        val preprocessedArgs = unpackSingletonIndices(args)
+        // second, rewrite all the arguments
         val (groundState: SymbState, groundArgs: Seq[TlaEx]) =
-          rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), noSingletons)
+          rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), preprocessedArgs)
 
         // the function always comes first
         val funCell = groundState.arena.findCellByNameEx(groundArgs.head)
@@ -136,13 +137,25 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def rewriteSingletonTuples(indices: Seq[TlaEx]): Seq[TlaEx] = {
-    def rewrite(e: TlaEx) = e match {
-      case OperEx(TlaFunOper.tuple, arg) => arg
-      case _ => e
+  // This is an important step. As we receive expressions from SANY, every index argument to EXCEPT
+  // is always a tuple, even if we are using one-dimensional functions. For instance,
+  // the expression [f EXCEPT ![1] = 2] will be represented as OperEx(TlaFunOper.except, f, <<1>>, 2).
+  // Hence, we explicitly unpack singleton tuples. As for the non-singleton tuples, we keep them as is,
+  // as this is the only reasonable way to access a function element with a multi-dimensional index without
+  // introducing intermediate functions.
+  private def unpackSingletonIndices(args: Seq[TlaEx]): Seq[TlaEx] = {
+    def unpack(e: TlaEx) = e match {
+      case OperEx(TlaFunOper.tuple, arg) =>
+        arg // unpack
+      case OperEx(TlaFunOper.tuple, _*) =>
+        e    // keep
+      case _ =>
+        // complain
+        throw new RewriterException("Expected a tuple as a function index, found: " + e)
     }
 
-    indices map rewrite
+    // the arguments are like this: the function, index 1, value 1, ..., index k, value k
+    args.zipWithIndex.map(a => if (a._2 % 2 == 1) unpack(a._1) else a._1)
   }
 
 }
