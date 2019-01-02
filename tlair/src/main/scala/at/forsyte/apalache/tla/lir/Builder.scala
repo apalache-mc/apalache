@@ -74,6 +74,19 @@ object Builder {
               p_p : TlaEx
             ) : OperEx = OperEx( TlaOper.chooseBounded, p_x, p_S, p_p )
 
+  /**
+    * Decorate a TLA+ expression with a label (a TLA+2 feature), e.g.,
+    * lab(a, b) :: e decorates e with the label "lab" whose arguments are "a" and "b".
+    * @param ex a TLA+ expression to decorate
+    * @param name label identifier
+    * @param args label arguments (also identifiers)
+    * @return OperEx(TlaOper.label, ex, name as NameEx, args as NameEx)
+    */
+  def label(ex: TlaEx, name: String, args: String*): OperEx = {
+    OperEx(TlaOper.label, ex +: NameEx(name) +: args.map(NameEx) :_*)
+  }
+
+
   /** TlaBoolOper */
   def and( p_args : TlaEx* ) : OperEx = OperEx( TlaBoolOper.and, p_args : _* )
 
