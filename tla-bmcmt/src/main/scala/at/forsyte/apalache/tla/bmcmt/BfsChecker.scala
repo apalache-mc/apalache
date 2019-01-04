@@ -290,7 +290,7 @@ class BfsChecker(frexStore: FreeExistentialsStore,
     binding.filter(p => !p._1.endsWith("'"))
   }
 
-  // remove primed variables
+  // remove non-primed variables
   private def forgetNonPrimed(binding: Binding): Binding = {
     binding.filter(p => p._1.endsWith("'"))
   }

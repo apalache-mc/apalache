@@ -1,8 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import java.lang.annotation.ElementType
-
-import at.forsyte.apalache.tla.lir.{UID, UTFPrinter}
+import at.forsyte.apalache.tla.lir.UTFPrinter
 
 import scala.collection.immutable.SortedMap
 
@@ -51,8 +49,6 @@ package object types {
 
         case (FinSetT(left), FinSetT(right)) =>
             left.unify(right) map FinSetT
-//          val unif = left.unify(right)
-//          if (unif.nonEmpty) Some(FinSetT(unif.get)) else None
 
         case (FunT(leftDom, leftCodom), FunT(rightDom, rightCodom)) =>
           for {
@@ -60,37 +56,14 @@ package object types {
             cdmUnif <- leftCodom.unify(rightCodom)
           } yield FunT(domUnif, cdmUnif)
 
-//          val domUnif = leftDom.unify(rightDom)
-//          val cdmUnif = leftCodom.unify(rightCodom)
-//
-//
-//          if (domUnif.nonEmpty && cdmUnif.nonEmpty) {
-//            Some(FunT(domUnif.get, cdmUnif.get))
-//          } else {
-//            None
-//          }
-
         case (FinFunSetT(leftDom, leftCdm), FinFunSetT(rightDom, rightCdm)) =>
           for {
             domUnif <- leftDom.unify(rightDom)
             cdmUnif <- leftCdm.unify(rightCdm)
           } yield FinFunSetT(domUnif, cdmUnif)
-//
-//          val domUnif = leftDom.unify(rightDom)
-//          val cdmUnif = leftCdm.unify(rightCdm)
-//          if (domUnif.nonEmpty && cdmUnif.nonEmpty) {
-//            Some(FinFunSetT(domUnif.get, cdmUnif.get))
-//          } else {
-//            None
-//          }
 
         case (PowSetT(left), PowSetT(right)) =>
           left.unify(right) map PowSetT
-//          val domUnif = left.unify(right)
-//          if (domUnif.nonEmpty)
-//            Some(PowSetT(domUnif.get))
-//          else
-//            None
 
           /**
             * Jure, 13.9.18: Suggestion: Change TupleT( _ : Seq[...]) to TupleT(_ : Array[...]) or
@@ -145,9 +118,13 @@ package object types {
   }
 
 
-  /**
-    * Jure, 13.9.18: Suggestion: Replace all case class X( [no args] ) with object X ?
-    * */
+  // Jure @ 13.09.18: Suggestion: Replace all case class X( [no args] ) with object X ?
+  //
+  // Igor @ 20.12.18: This is called preliminary optimization. I would imagine that the scala
+  // compiler would do that for case classes, since they are thought-of as immutable.
+  // However, a simple test in the debugger shows that a new object is created, whenever
+  // an empty-parameter case class is constructed. Weird. However, let's do this optimization,
+  // only if it becomes a bottleneck. At this stage, clarity is more important.
 
   /**
     * A type variable.
@@ -245,6 +222,9 @@ package object types {
     * The type of a powerset of finite set, which is constructed as 'SUBSET S' in TLA+.
     * @param domType the type of the argument finite set, i.e., typeof(S) in SUBSET S.
     *                Currently, only FinSetT(_) is supported.
+    *
+    * FIXME: this type should be eliminated, as powersets have to be either treated specially
+    * by the respective rewriting functions, or explicitly unfolded.
     */
   sealed case class PowSetT(domType: CellT) extends CellT {
     require(domType.isInstanceOf[FinSetT]) // currently, we support only PowSetT(FinSetT(_))
@@ -263,8 +243,11 @@ package object types {
   /**
     * A function type.
     *
-    * @param domType    the type of the domain (must be a finite set).
-    * @param resultType result type (not co-domain!)
+    * FIXME: in the future, we will replace domType with argType, as we are moving towards
+    * a minimalistic type system
+    *
+    * @param domType    the type of the domain (a finite set, a powerset, or a cross product).
+    * @param resultType result type (not the co-domain!)
     */
   sealed case class FunT(domType: CellT, resultType: CellT) extends CellT {
     /**
@@ -275,7 +258,6 @@ package object types {
       * @return a short signature that uniquely characterizes this type up to unification
       */
     override val signature: String = s"f${domType.signature}_${resultType.signature}"
-//    override val signature: String = "f%s_%s".format(domType.signature, resultType.signature)
 
     val argType: CellT = domType match {
       case FinSetT(et) => et
@@ -289,6 +271,9 @@ package object types {
 
   /**
     * A finite set of functions.
+    *
+    * FIXME: this type should be eliminated, as these function sets have to be either treated specially
+    * by the respective rewriting functions, or explicitly unfolded.
     *
     * @param domType the type of the domain (must be either a finite set or a powerset).
     * @param cdmType the type of the co-domain (must be either a finite set or a powerset).
@@ -337,6 +322,33 @@ package object types {
     override val toString: String = s"Tuple[${args.map(_.toString).mkString(", ")}]"
   }
 
+  /**
+    * A sequence type. Note that in contrast to the standard TLA+ semantics,
+    * we distinguish tuples and sequences. The difference is that a tuple can have
+    * elements of different types, while a sequence has only elements of the same type.
+    *
+    * @param res the type of the elements in the co-domain
+    */
+  sealed case class SeqT(res: CellT) extends CellT {
+    /**
+      * Produce a short signature that uniquely describes the type (up to unification),
+      * similar to Java's signature mangling.
+      *
+      * @return a short signature that uniquely characterizes this type up to unification
+      */
+    override val signature: String = s"Q_$res"
+
+    override val toString: String = s"Seq[$res]"
+  }
+
+  /**
+    * The type for a cross product, e.g., FinSetT(A) |X FinSetT(B).
+    *
+    * FIXME: this type should disappear in the future,
+    * as CrossProdT(FinSetT(A), FinSetT(B)) = FinSetT(TupleT(A, B))
+    *
+    * @param args
+    */
   sealed case class CrossProdT( args: Seq[FinSetT] ) extends CellT {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
@@ -370,6 +382,7 @@ package object types {
   }
 
 
+  // FIXME: Igor @ 20.12.2018: Do we still need this type?
   sealed case class TypeParam(s: String) extends CellT {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
@@ -381,6 +394,7 @@ package object types {
     override val signature = s"P${s}"
   }
 
+  // FIXME: Igor @ 20.12.2018: Do we still need this type?
   sealed case class OptT( elementType: CellT ) extends CellT {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
@@ -405,15 +419,6 @@ package object types {
       r <- right
       u <- l.unify(r)
     } yield u
-//  {
-//    (left, right) match {
-//      case (Some(l), Some(r)) =>
-//        l.unify(r)
-//
-//      case _ =>
-//        None
-//    }
-//  }
 
   /**
     * Unify a sequence of types
