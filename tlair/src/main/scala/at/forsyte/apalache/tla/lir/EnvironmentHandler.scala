@@ -4,6 +4,8 @@ import at.forsyte.apalache.tla.lir.control.LetInOper
 import at.forsyte.apalache.tla.lir.db._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 
+
+// TODO: @Igor (04.01.2019): Jure, please use Google Guice already
 object EnvironmentHandlerGenerator {
   def makeDummyEH : EnvironmentHandler = new EnvironmentHandler( new UidDB, DummyBodyDB, DummySrcDB )
 

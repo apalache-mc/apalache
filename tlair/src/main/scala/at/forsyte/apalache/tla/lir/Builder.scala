@@ -287,18 +287,6 @@ object Builder {
               p_v1 : TlaEx,
               p_args : TlaEx* /* Expected even size */
             ) : OperEx = {
-    // Ensure that all indices are tuples. This is the invariant required by this operator.
-    // TODO: uncomment this test after fixing the broken tests!
-    /*
-    val otherKeys = p_args.zipWithIndex.collect { case (a, i) if i % 2 == 0 => a }
-    for (k <- p_k1 +: otherKeys) {
-      k match {
-        case OperEx(TlaFunOper.tuple, _*) => () // OK
-        case _ =>
-          throw new IllegalArgumentException("An argument of EXCEPT must always be a tuple, found: " + k)
-      }
-    }
-    */
     OperEx( TlaFunOper.except, p_f +: p_k1 +: p_v1 +: p_args : _* )
   }
 
@@ -415,6 +403,11 @@ object Builder {
   def primeInSingleton( p_x : TlaEx,
                         p_y : TlaEx
                       ) : OperEx = in( prime( p_x ), enumSet( p_y ) )
+
+  // bmc
+  def withType(expr: TlaEx, typeAnnot: TlaEx): OperEx =
+    OperEx(BmcOper.withType, expr, typeAnnot)
+
 
   val m_nameMap : Map[String, TlaOper] =
     scala.collection.immutable.Map(

@@ -118,26 +118,7 @@ package lir {
       "Formal parameters should have fixed arity")
   }
 
-//  trait Identifiable{
-//    protected var m_ID : UniqueID = InvalidUID
-//    protected var canSet: Boolean = true
-//    def setID( newID: UniqueID ) = {
-//      if( canSet && newID.valid ) {
-//        canSet = false
-//        m_ID = newID
-//      }
-//      else throw new Identifiable_old.IDReallocationError
-//    }
-//    def ID : UniqueID = m_ID
-//
-//    def forget(): Unit = {
-//      m_ID = InvalidUID
-//      canSet = true
-//    }
-//
-//    def valid : Boolean = m_ID.valid
-//  }
-
+  // TODO: let's clean up this trait (Igor)
   trait Identifiable extends Ordered[Identifiable] {
     protected var m_ID : UID      = UID( -1 )
     protected var canSet: Boolean = true
@@ -149,6 +130,19 @@ package lir {
       else throw new Identifiable.IDReallocationError
     }
     def ID : UID = m_ID
+
+    /**
+      * Get an ID, if one has been assigned, and throw IllegalStateException otherwise.
+      * @return a valid ID
+      * @throws IllegalStateException when an identifier has not been assigned yet.
+      */
+    def safeId: UID = {
+      if (m_ID.valid) {
+        m_ID
+      } else {
+        throw new IllegalStateException("An expression has not been assigned an ID yet")
+      }
+    }
 
     def forget(): Unit ={
       m_ID = UID( -1 )
