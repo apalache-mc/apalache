@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStoreImpl
 import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaFunOper, TlaOper, TlaSetOper}
@@ -42,17 +43,17 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-FUN-CTOR[1-2]: [x \in {1,2,3} |-> IF x = 1 THEN 2 ELSE IF x = 2 THEN 3 ELSE 1 ] ~~> $C$k""") {
-    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
-
-    val set = mkSet(tla.int(1), tla.int(2), tla.int(3))
+  test("""SE-FUN-CTOR[1-2]: [x \in {1,2,3} |-> IF x = 1 THEN {2} ELSE IF x = 2 THEN {3} ELSE {1} ] ~~> $C$k""") {
+    val set = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
+    def intSet(i: Int) = tla.enumSet(tla.int(i))
     val mapping = tla.ite(
-      tla.eql(tla.name("x"), tla.enumSet(tla.int(1))),
-      tla.enumSet(tla.int(2)),
+      tla.eql(tla.name("x"), tla.int(1)),
+      intSet(2),
       tla.ite(tla.eql(tla.name("x"), tla.int(2)),
-        tla.enumSet(tla.int(3)), tla.enumSet(tla.int(1)))
-    )
-    val fun = OperEx(TlaFunOper.funDef, mapping, NameEx("x"), set)
+        intSet(3),
+        intSet(1))
+    )////
+    val fun = tla.funDef(mapping, tla.name("x"), set)
 
     val state = new SymbState(fun, CellTheory(), arena, new Binding)
     val rewriter = create()
@@ -587,7 +588,7 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
       tla.enumSet(fun1),
       tla.appFun(NameEx("x"), tla.bool(false)))
 
-    val rewriter = new SymbStateRewriterImpl(solverContext)
+    val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
     val fex = new FreeExistentialsStoreImpl()
     Identifier.identify(exists)
     fex.store.add(exists.ID)
@@ -605,7 +606,8 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     assert(!solverContext.sat())
   }
 
-  test("""SE-SET-APP[1-2]: LET X = {1, 2} \cap {2} IN [y \in X |-> TRUE][2] ~~> $B$k""") {
+  // TrivialTypeFinder does not support let-in and operator declarations
+  ignore("""SE-SET-APP[1-2]: LET X = {1, 2} \cap {2} IN [y \in X |-> TRUE][2] ~~> $B$k""") {
     // regression
     val fun = tla.funDef(tla.bool(true), "y", "Oper:X")
     val app = tla.appFun(fun, 2)

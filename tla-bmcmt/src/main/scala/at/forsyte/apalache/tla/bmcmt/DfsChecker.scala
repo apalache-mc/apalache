@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt
 import java.io.{PrintWriter, StringWriter}
 
 import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStore
-import at.forsyte.apalache.tla.bmcmt.types.FailPredT
+import at.forsyte.apalache.tla.bmcmt.types.{CellT, FailPredT, TypeFinder}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import com.typesafe.scalalogging.LazyLogging
@@ -13,9 +13,13 @@ import com.typesafe.scalalogging.LazyLogging
   * It works well with data-reach specifications and large sets. However, due to enumeration of transitions,
   * it does not scale well to long computations.
   *
+  * WARNING: this implementation proved to be inefficient for bounded model checking.
+  * However, it might work just well for invariant checking. This implementation is not as advanced as BfsChecker.
+  *
   * @author Igor Konnov
   */
-class DfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
+class DfsChecker(typeFinder: TypeFinder[CellT],
+                 frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
                  stepsBound: Int, debug: Boolean = false) extends Checker with LazyLogging {
 
   import Checker._
@@ -35,7 +39,7 @@ class DfsChecker(frexStore: FreeExistentialsStore, checkerInput: CheckerInput,
   private val solverContext: SolverContext =
     new Z3SolverContext(debug)
 //    new PreproSolverContext(new Z3SolverContext(debug))
-  private val rewriter = new SymbStateRewriterImpl(solverContext)
+  private val rewriter = new SymbStateRewriterImpl(solverContext, typeFinder)
   rewriter.freeExistentialsStore = frexStore
 
   /**

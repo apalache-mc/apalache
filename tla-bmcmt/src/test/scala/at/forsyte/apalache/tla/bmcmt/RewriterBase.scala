@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt
 
 import java.io.{PrintWriter, StringWriter}
 
+import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir.convenience.tla
 import org.scalatest.{BeforeAndAfter, FunSuite}
 
@@ -23,7 +24,7 @@ class RewriterBase extends FunSuite with BeforeAndAfter {
   }
 
   protected def createWithoutCache(): SymbStateRewriter = {
-    new SymbStateRewriterImpl(solverContext)
+    new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
   }
 
   protected def assertUnsatOrExplain(rewriter: SymbStateRewriter, state: SymbState): Unit = {

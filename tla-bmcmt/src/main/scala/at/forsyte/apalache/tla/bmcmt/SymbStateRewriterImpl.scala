@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.{Continue, Done, NoRule, 
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.caches.{ExprCache, IntValueCache, RecordDomainCache, StrValueCache}
 import at.forsyte.apalache.tla.bmcmt.rules._
+import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{AnyArity, BmcOper, TlaOper, TlcOper}
@@ -19,13 +20,15 @@ import scala.collection.mutable
   * This class implements StackableContext by delegating the respective operations to all the internal caches
   * and the SMT context. Thus, it is a central access point for context operations.
   *
-  * @param solverContext a fresh solver context that will be populated with constraints
+  * @param solverContext  a fresh solver context that will be populated with constraints
+  * @param typeFinder     a type finder (assuming that typeFinder.inferAndSave has been called already)
   * @param exprGradeStore a labeling scheme that associated a grade with each expression;
   *                       it is required to distinguish between state-level and action-level expressions.
   *
   * @author Igor Konnov
   */
 class SymbStateRewriterImpl(val solverContext: SolverContext,
+                            val typeFinder: TypeFinder[CellT],
                             val exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl()) extends SymbStateRewriter {
   /**
     * The difference between the number of pushes and pops so far.

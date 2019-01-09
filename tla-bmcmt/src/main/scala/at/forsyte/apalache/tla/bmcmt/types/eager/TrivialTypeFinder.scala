@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.oper._
+import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 
 import scala.collection.immutable.SortedMap
@@ -15,7 +16,7 @@ import scala.collection.immutable.SortedMap
   * In contrast, to our first type inference approach, this engine is not trying to be
   * smart at all, and it is not doing any form of unification.
   *
-  * This class assumes that some pre-processing has been done:
+  * This class assumes that some pre-processing has been made:
   *
   * 1. The definitions of all user-defined operators have been expanded (no recursive operators),
   * 2. All variable names are unique, including the bound variables.
@@ -28,12 +29,24 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
   private var errors: Seq[TypeInferenceError] = Seq()
 
   /**
-    * Get the types that were assigned to variables by inferAndSave
+    * Get the types of the variables that are computed by inferAndSave. The method must return the types of
+    * the global variables (VARIABLE and CONSTANT) and it may return types of the bound variables.
     *
-    * @return a map from variable names to types
+    * @return a mapping of names to types
     */
-  def getVarTypes: Map[String, CellT] = varTypes
+  def getVarTypes: SortedMap[String, CellT] = varTypes
 
+
+  /**
+    * Forget all computed types and introduce types for the variables. You can call inferAndSave after that.
+    *
+    * @param newVarTypes types of the global variables (VARIABLE and CONSTANT)
+    */
+  override def reset(newVarTypes: Map[String, CellT]): Unit = {
+    varTypes = SortedMap(newVarTypes.toSeq: _*)
+    typeAnnotations = Map()
+    errors = Seq()
+  }
 
   /**
     * Given a TLA+ expression, reconstruct the types and store them in an internal storage.
@@ -48,28 +61,37 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
     // This class implements a very simple form of type inference from bottom to top.
     // As soon as we cannot infer types, we complain that the type annotations are not good enough.
     expr match {
-      case OperEx(TlaOper.eq, OperEx(TlaActionOper.prime, NameEx(varName)), rhs) =>
-        inferAndSave(rhs) match {
-          case Some(tp) =>
-            val primedVar = varName + "'"
-            assert(!varTypes.contains(primedVar))
-            varTypes = varTypes + (primedVar -> tp)
-            Some(BoolT())
-
-          case _ => None
+      // x' = e
+      // x' \in S
+      case OperEx(op, OperEx(TlaActionOper.prime, NameEx(varName)), rhs)
+        if op == TlaOper.eq || op == TlaSetOper.in =>
+        def assignTypeAndReturnBool(assignedType: CellT): Option[CellT] = {
+          val primedVar = varName + "'"
+          if (varTypes.contains(primedVar)) {
+            if (varTypes(primedVar) != assignedType) {
+              error(expr, "Assigning a type %s, while assigned type %s earlier"
+                .format(assignedType, varTypes(primedVar)))
+            }
+          } else {
+            varTypes = varTypes + (primedVar -> assignedType)
+          }
+          Some(BoolT())
         }
 
-      case OperEx(TlaSetOper.in, OperEx(TlaActionOper.prime, NameEx(varName)), rhs) =>
         inferAndSave(rhs) match {
-          case Some(FinSetT(elemT)) =>
-            val primedVar = varName + "'"
-            assert(!varTypes.contains(primedVar))
-            varTypes = varTypes + (primedVar -> elemT)
-            Some(BoolT())
-
-          case _ => None
+          case Some(tp) if op == TlaOper.eq =>
+            assignTypeAndReturnBool(tp)
+          case Some(FinSetT(elemT)) if op == TlaSetOper.in =>
+            assignTypeAndReturnBool(elemT)
+          case tp@_ if op == TlaOper.eq =>
+            errors +:= new TypeInferenceError(rhs, "Expected a type, found: " + tp)
+            None
+          case tp@_ if op == TlaSetOper.in =>
+            errors +:= new TypeInferenceError(rhs, "Expected a set, found: " + tp)
+            None
         }
 
+      // { x \in S: e }
       case OperEx(TlaSetOper.filter, NameEx(x), set, pred) =>
         inferAndSave(set) match {
           case Some(setT@FinSetT(elemT)) =>
@@ -88,6 +110,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
             None
         }
 
+      // { x \in S |-> e }
       case OperEx(TlaSetOper.map, mapEx, varsAndSets@_*) =>
         val names = varsAndSets.zipWithIndex.collect { case (NameEx(n), i) if i % 2 == 0 => n }
         val sets = varsAndSets.zipWithIndex.collect { case (e, i) if i % 2 == 1 => e }
@@ -106,6 +129,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
         names.zip(sets).foreach(bind)
         Some(FinSetT(inferAndSave(mapEx).getOrElse(UnknownT())))
 
+      // [x \in S |-> e]
       case OperEx(TlaFunOper.funDef, funEx, varsAndSets@_*) =>
         val names = varsAndSets.zipWithIndex.collect { case (NameEx(n), i) if i % 2 == 0 => n }
         val sets = varsAndSets.zipWithIndex.collect { case (e, i) if i % 2 == 1 => e }
@@ -133,6 +157,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
           }
         Some(FunT(domT, resT))
 
+      // exists, forall, or CHOOSE
       case OperEx(op, NameEx(x), set, pred)
         if op == TlaBoolOper.exists || op == TlaBoolOper.forall || op == TlaOper.chooseBounded =>
         inferAndSave(set) match {
@@ -156,9 +181,10 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
             None
         }
 
+      // a type annotation
       case OperEx(BmcOper.withType, ex, annot) =>
         val exT = inferAndSave(ex)
-        val annotT = AnnotationParser.parse(annot)
+        val annotT = AnnotationParser.fromTla(annot)
         val unifier = unifyOption(Some(annotT), exT)
         if (unifier.isDefined) {
           // save the type annotation and return the type
@@ -170,12 +196,20 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
           None
         }
 
+      // other operators
       case OperEx(_, args@_*) =>
         val argTypes = args.map(inferAndSave)
-        if (argTypes.forall(_.isDefined))
-          Some(compute(expr, argTypes.map(_.get): _*))
-        else
+        if (argTypes.forall(_.isDefined)) {
+          try {
+            Some(compute(expr, argTypes.map(_.get): _*))
+          } catch {
+            case e: TypeInferenceError =>
+              errors +:= e
+              None
+          }
+        } else {
           None
+        }
 
 
       case NameEx(name) =>
@@ -187,7 +221,13 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
         }
 
       case ValEx(_) =>
-        Some(compute(expr))
+        try {
+          Some(compute(expr))
+        } catch {
+          case e: TypeInferenceError =>
+            errors +:= e
+            None
+        }
 
       case _ =>
         None
@@ -338,6 +378,9 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
         error(ex, "Only explicit sets are supported in Cartesian products")
       }
       FinSetT(TupleT(elemTypes))
+
+    case ValEx(TlaBoolSet) => // BOOLEAN
+      FinSetT(BoolT())
   }
 
   private def computeSetOps(argTypes: Seq[CellT]): PartialFunction[TlaEx, CellT] = {
@@ -680,6 +723,17 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
       val exprType = argTypes.head
       val msgType = argTypes.tail.head
       expectType(BoolT(), expr, exprType)
+      expectType(ConstT(), msg, msgType)
+      BoolT()
+
+    case ex@OperEx(TlcOper.print, _, msg) =>
+      // an expression can be of any type
+      val msgType = argTypes.tail.head
+      expectType(ConstT(), msg, msgType)
+      BoolT()
+
+    case ex@OperEx(TlcOper.printT, msg) =>
+      val msgType = argTypes.head
       expectType(ConstT(), msg, msgType)
       BoolT()
 

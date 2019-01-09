@@ -4,8 +4,9 @@ import at.forsyte.apalache.tla.lir.UTFPrinter
 
 import scala.collection.immutable.SortedMap
 
-/** Change name, too ambiguous, especially with TLA Types in the other package -- Jure, 29.10.17 */
 package object types {
+  // @Jure 29.10.2017: Change name, too ambiguous, especially with TLA Types in the other package -- Jure, 29.10.17
+  // @Igor 05.01.2019: What is the problem? The full package name is at.forsyte.apalache.tla.bmcmt.types.
 
   /**
     * A simple type system for the symbolic memory cells.

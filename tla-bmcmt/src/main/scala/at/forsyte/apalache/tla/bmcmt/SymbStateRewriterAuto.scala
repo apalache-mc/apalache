@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeAnalysis, ExprGradeStore, ExprGradeStoreImpl, FreeExistentialsStore}
 import at.forsyte.apalache.tla.bmcmt.caches.{ExprCache, IntValueCache, RecordDomainCache, StrValueCache}
+import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.plugins.Identifier
 
@@ -23,9 +24,10 @@ class SymbStateRewriterAuto(val solverContext: SolverContext) extends SymbStateR
     */
   var vars: Set[String] = Set()
 
+  private val typeFinder = new TrivialTypeFinder()
   private val exprGradeStoreImpl = new ExprGradeStoreImpl()
   private val exprGradeAnalysis = new ExprGradeAnalysis(exprGradeStoreImpl)
-  private val impl = new SymbStateRewriterImpl(solverContext, exprGradeStore)
+  private val impl = new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
 
   override def contextLevel: Int = impl.contextLevel
 
@@ -46,6 +48,14 @@ class SymbStateRewriterAuto(val solverContext: SolverContext) extends SymbStateR
   private def preprocess(ex: TlaEx): Unit = {
     Identifier.identify(ex)
     exprGradeAnalysis.labelExpr(consts, vars, ex)
+    typeFinder.reset(Map())
+    typeFinder.inferAndSave(ex)
+    // FIXME
+    /*
+    if (typeFinder.getTypeErrors.nonEmpty) {
+      throw typeFinder.getTypeErrors.head // just throw the first error -- and get 54 tests failed
+    }
+    */
   }
 
   override def rewriteOnce(state: SymbState): SymbStateRewriter.RewritingResult = {

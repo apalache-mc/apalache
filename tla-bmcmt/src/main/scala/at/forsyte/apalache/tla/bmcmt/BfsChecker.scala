@@ -3,7 +3,8 @@ package at.forsyte.apalache.tla.bmcmt
 import java.io.{FileWriter, PrintWriter, StringWriter}
 
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FreeExistentialsStore}
-import at.forsyte.apalache.tla.bmcmt.types.FailPredT
+import at.forsyte.apalache.tla.bmcmt.types.{CellT, FailPredT, TypeFinder, TypeInferenceError}
+import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import com.typesafe.scalalogging.LazyLogging
@@ -11,12 +12,14 @@ import com.typesafe.scalalogging.LazyLogging
 /**
   * A bounded model checker using SMT. For each step, this checker applies all possible symbolic transitions
   * and then merges the result. Hence, it is similar to breadth-first search. The major limitation of this search is
-  * that for each step, all symbolic transitions should agree on the types of assigned varialbles.
+  * that for each step, all symbolic transitions should agree on the types of assigned variables.
   *
   * @author Igor Konnov
   */
-class BfsChecker(frexStore: FreeExistentialsStore,
+class BfsChecker(typeFinder: TypeFinder[CellT],
+                 frexStore: FreeExistentialsStore,
                  exprGradeStore: ExprGradeStore,
+                 sourceStore: SourceStore,
                  checkerInput: CheckerInput,
                  stepsBound: Int, debug: Boolean = false, profile: Boolean = false) extends Checker with LazyLogging {
 
@@ -29,10 +32,10 @@ class BfsChecker(frexStore: FreeExistentialsStore,
     */
   private var stack: List[SymbState] = List()
   private val solverContext: SolverContext =
-//    new Z3SolverContext(debug)
+  //    new Z3SolverContext(debug)
     new PreproSolverContext(new Z3SolverContext(debug, profile))
 
-  private val rewriter = new SymbStateRewriterImpl(solverContext, exprGradeStore)
+  private val rewriter = new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
   rewriter.freeExistentialsStore = frexStore
   // the checker receives a negation of the invariant at its input, but we need the positive version sometimes
   private var invariant: Option[TlaEx] = None
@@ -53,11 +56,13 @@ class BfsChecker(frexStore: FreeExistentialsStore,
       }
       var state = makeOneStep(0, dummyState, checkerInput.initTransitions)
       checkInvariant(0, state)
+      shiftTypes() // for each x', assign type(x) to be type(x'), forget x'
       for (i <- 1 to stepsBound) {
         // checking for deadlocks is not so easy in our encoding
         //        checkForDeadlocks(i, state, nextStates)
         state = makeOneStep(i, state, checkerInput.nextTransitions)
         checkInvariant(i, state)
+        shiftTypes() // for each x', assign type(x) to be type(x'), forget x'
       }
       Outcome.NoError
     } catch {
@@ -147,9 +152,12 @@ class BfsChecker(frexStore: FreeExistentialsStore,
 
   private def applyTransition(stepNo: Int, state: SymbState, transition: TlaEx, transitionNo: Int): Option[SymbState] = {
     rewriter.push()
-    logger.debug("Step #%d, transition #%d, SMT context level %d. Applying rewriting rules..."
+    logger.debug("Step #%d, transition #%d, SMT context level %d."
       .format(stepNo, transitionNo, rewriter.contextLevel))
+    logger.debug("Finding types of the variables...")
+    checkTypes(transition)
     solverContext.log("; ------- STEP: %d, STACK LEVEL: %d {".format(stepNo, rewriter.contextLevel))
+    logger.debug("Applying rewriting rules...")
     val nextState = rewriter.rewriteUntilDone(state.setTheory(BoolTheory()).setRex(transition))
     logger.debug("Finished rewriting. Checking satisfiability of the pushed constraints.")
     if (!solverContext.sat()) {
@@ -277,6 +285,37 @@ class BfsChecker(frexStore: FreeExistentialsStore,
     }
     writer.close()
     filename
+  }
+
+  private def checkTypes(transition: TlaEx): Unit = {
+    typeFinder.inferAndSave(transition)
+    if (typeFinder.getTypeErrors.nonEmpty) {
+      def print_error(e: TypeInferenceError): Unit = {
+        val locInfo =
+          sourceStore.find(e.origin.safeId) match {
+          case Some(loc) => loc.toString
+          case None => "<unknown origin>"
+        }
+        val exStr = e.origin match {
+          case OperEx(op, _*) => op.name + "(...)"
+          case ex @ _ => ex.toString()
+        }
+        logger.error("%s, %s, type error: %s".format(locInfo, exStr, e.explanation))
+      }
+
+      typeFinder.getTypeErrors foreach print_error
+      throw new CancelSearchException(Outcome.Error)
+    }
+  }
+
+  /**
+    * Remove the non-primed variables and rename the primed variables to their non-primed versions.
+    * After that, remove the type finder to contain the new types only.
+    */
+  private def shiftTypes(): Unit = {
+    val types = typeFinder.getVarTypes
+    val nextTypes = types.filter(_._1.endsWith("'")).map(p => (p._1.stripSuffix("'"), p._2))
+    typeFinder.reset(nextTypes)
   }
 
   // remove non-primed variables and rename primed variables to non-primed

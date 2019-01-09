@@ -86,17 +86,14 @@ class TestSymbStateRewriterRecord extends RewriterBase {
     }
   }
 
-  test("""SE-REC-ACC[1-2]: ["a" |-> 1, "b" |-> FALSE]["c"] ~~> undefined behavior""") {
+  test("""type inference error ["a" |-> 1, "b" |-> FALSE]["c"]""") {
     val record = tla.enumFun(tla.str("a"), tla.int(1), tla.str("b"), tla.bool(false))
 
     val recordAcc = tla.appFun(record, tla.str("c"))
     val state = new SymbState(recordAcc, CellTheory(), arena, new Binding)
     val rewriter = create()
-    try {
+    assertThrows[TypeInferenceError] {
       rewriter.rewriteUntilDone(state)
-      fail("Expected an UndefinedBehaviorError")
-    } catch {
-      case _: UndefinedBehaviorError => () // OK
     }
   }
 
@@ -127,13 +124,14 @@ class TestSymbStateRewriterRecord extends RewriterBase {
   }
 
   test("""SE-REC-CTOR[1-2] in a set: {["a" |-> 1, "b" |-> FALSE], ["a" |-> 2, "b" |-> TRUE, "c" |-> 3]} ~~> $C$k""") {
-    // records in a set can have different -- although compatible -- sets of keys
     val record1 = tla.enumFun(tla.str("a"), tla.int(1),
       tla.str("b"), tla.bool(false))
     val record2 = tla.enumFun(tla.str("a"), tla.int(2),
       tla.str("b"), tla.bool(true), tla.str("c"), tla.int(3))
+    // Records in a set can have different sets of keys. This requires a type annotation.
+    val annotation = AnnotationParser.toTla(RecordT(SortedMap("a" -> IntT(), "b" -> BoolT(), "c" -> IntT())))
 
-    val state = new SymbState(tla.enumSet(record1, record2), CellTheory(), arena, new Binding)
+    val state = new SymbState(tla.enumSet(tla.withType(record1, annotation), record2), CellTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
@@ -160,22 +158,22 @@ class TestSymbStateRewriterRecord extends RewriterBase {
     val record2 = tla.enumFun(tla.str("a"), tla.int(2), tla.str("b"), tla.bool(true))
 
     val state = new SymbState(tla.enumSet(record1, record2), CellTheory(), arena, new Binding)
-    try {
+    // this is a badly-typed expression
+    assertThrows[TypeInferenceError] {
       create().rewriteUntilDone(state)
-      fail("Expected a type error")
-    } catch {
-      case _: TypeException =>
-        () // OK
     }
   }
 
   test("""filter-map a record (idiom): {r.c : r \in {r2 \in {["a" |-> 1], ["a" |-> 2, "c" |-> 3]}: r2.c = 3}} ~~> $C$k""") {
-    // It is a common idiom in TLA+ to first filter records by a type field
-    // and then -- by knowing type of the filtered records -- map them somewhere.
+    // It is a common idiom in TLA+ to first filter records by the type field
+    // and then -- when knowing the type of the filtered records -- map them somewhere.
     // Although, it is not easy to do in a symbolic encoding, we support this idiom.
+    // We require though that all the records should have type-compatible fields.
     val record1 = tla.enumFun(tla.str("a"), tla.int(1))
     val record2 = tla.enumFun(tla.str("a"), tla.int(2), tla.str("c"), tla.int(3))
-    val setEx = tla.enumSet(record1, record2)
+    // Records in a set can have different sets of keys. This requires a type annotation.
+    val annotation = AnnotationParser.toTla(RecordT(SortedMap("a" -> IntT(), "c" -> IntT())))
+    val setEx = tla.enumSet(tla.withType(record1, annotation), record2)
     val predEx = tla.eql(tla.appFun(tla.name("r2"), tla.str("c")), tla.int(3))
     val filteredEx = tla.filter(tla.name("r2"), setEx, predEx)
     val mapEx = tla.map(tla.appFun(tla.name("r"), tla.str("c")), tla.name("r"), filteredEx)
@@ -204,10 +202,13 @@ class TestSymbStateRewriterRecord extends RewriterBase {
   }
 
   test("""SE-REC-EQ: ["a" |-> 1, "b" |-> FALSE, "c" |-> "d"] /= ["a" |-> 1] ~~> TRUE""") {
+    // Introduce two different records using a type annotation. The records should not be equal!
+    val annotation = AnnotationParser.toTla(RecordT(SortedMap("a" -> IntT(), "b" -> BoolT(), "c" -> ConstT())))
+
     val record1 = tla.enumFun(tla.str("a"), tla.int(1),
       tla.str("b"), tla.bool(false), tla.str("c"), tla.str("d"))
     val record2 = tla.enumFun(tla.str("a"), tla.int(1))
-    val eq = tla.neql(record1, record2)
+    val eq = tla.neql(record1, tla.withType(record2, annotation))
     val state = new SymbState(eq, CellTheory(), arena, new Binding)
     val rewriter = create()
     assertTlaExAndRestore(rewriter, state)

@@ -68,10 +68,14 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val tupleElem = elems(index)
       state.setTheory(CellTheory()).setRex(tupleElem)
     } else {
+      // FIXME: use the code below as soon as type inference is working correctly
       // Now we are trouble, since we don't know the type of a value we should return.
       // SymbStateRewriter will try to resolve it at upper levels
       val msg = s"Accessing record $funEx of type ${recordCell.cellType} with the key $argEx. Filter the set first?"
       throw new UndefinedBehaviorError(msg, state.arena)
+      // This case should have been caught by type inference. Throw an exception.
+//      val msg = s"Accessing record $funEx of type ${recordCell.cellType} with the field $argEx. Type inference should have caught this."
+//      throw new IllegalArgumentException(msg)
     }
   }
 

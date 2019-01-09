@@ -11,8 +11,7 @@ import org.scalatest.junit.JUnitRunner
 class TestSymbStateRewriterTlc extends RewriterBase {
   test("SE-TLC-PRINT: PRINT(...) -> TRUE") {
     val print = OperEx(TlcOper.print, tla.int(1), tla.str("hello"))
-    val state = new SymbState(print,
-      BoolTheory(), arena, new Binding)
+    val state = new SymbState(print, BoolTheory(), arena, new Binding)
     val rewriter = create()
     val nextStateRed = rewriter.rewriteUntilDone(state)
     nextStateRed.ex match {

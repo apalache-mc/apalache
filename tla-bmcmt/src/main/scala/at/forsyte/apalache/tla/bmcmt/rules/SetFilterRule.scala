@@ -41,9 +41,9 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
           // add [cell/x]
           val newBinding = newState.binding + (varName -> potentialCell)
           val cellState = new SymbState(predEx, BoolTheory(), newState.arena, newBinding)
+          // TODO: stop catching UndefinedBehaviorErrror, as soon as we have a stable type inference
           try {
             val ns = rewriter.rewriteUntilDone(cellState)
-            // TODO: add to report
             coverFailurePredicates(cellState, ns, tla.in(potentialCell.toNameEx, setCell.toNameEx))
             newState = ns.setBinding(ns.binding - varName) // reset binding
             ns.ex
@@ -61,11 +61,11 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // In case of records, it means that the type is unified to those records
         // that do not statically violate the predicate.
         val unifier =
-          if (filteredCellsAndPreds.isEmpty) {
-            Some(UnknownT())
-          } else {
-            types.unify(filteredCellsAndPreds.map(_._1.cellType): _*)
-          }
+        if (filteredCellsAndPreds.isEmpty) {
+          Some(UnknownT())
+        } else {
+          types.unify(filteredCellsAndPreds.map(_._1.cellType): _*)
+        }
 
         if (unifier.isEmpty) {
           throw new TypeException("No type unifier for the elements of: " + setEx)
@@ -75,7 +75,7 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val arena = newState.arena.appendCell(FinSetT(unifier.get))
         val newSetCell = arena.topCell
         val newArena = filteredCellsAndPreds.map(_._1)
-          .foldLeft(arena) ((a, e) => a.appendHas(newSetCell, e))
+          .foldLeft(arena)((a, e) => a.appendHas(newSetCell, e))
 
         // require each cell to satisfy the predicate
         def addCellCons(cell: ArenaCell, pred: TlaEx): Unit = {
@@ -91,8 +91,8 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
           addCellCons(cell, pred)
 
         // predicate evaluation may fail only if the set is not empty
-//        val notEmpty = tla.or(potentialCells map (c => tla.in(c.toNameEx, setCell.toNameEx)) :_*)
-//        coverFailurePredicates(state, newState, notEmpty) // TODO: add in the report
+        //        val notEmpty = tla.or(potentialCells map (c => tla.in(c.toNameEx, setCell.toNameEx)) :_*)
+        //        coverFailurePredicates(state, newState, notEmpty) // TODO: add in the report
 
         val finalState =
           newState.setTheory(CellTheory())
@@ -108,8 +108,8 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
   // TODO: add in the semantics report
   private def coverFailurePredicates(state: SymbState, nextState: SymbState, condition: TlaEx): Unit = {
     // XXX: future self, the operations on the maps and sets are probably expensive. Optimize.
-    val predsBefore = Set(state.arena.findCellsByType(FailPredT()) :_*)
-    val predsAfter = Set(nextState.arena.findCellsByType(FailPredT()) :_*) -- predsBefore
+    val predsBefore = Set(state.arena.findCellsByType(FailPredT()): _*)
+    val predsAfter = Set(nextState.arena.findCellsByType(FailPredT()): _*) -- predsBefore
     // for each failure fp on the then branch, fp => cond
     predsAfter.foreach(fp => rewriter.solverContext.assertGroundExpr(tla.impl(fp.toNameEx, condition)))
   }

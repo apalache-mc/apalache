@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, TestingPredefs}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
-import scala.collection.immutable.{SortedSet, TreeMap}
+import scala.collection.immutable.{SortedMap, SortedSet, TreeMap}
 
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
@@ -249,10 +249,10 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     assertUnsatOrExplain(rewriter, eqState13) // should not be possible
   }
 
-  test("""SE-IN-ASSIGN1(fun): x' \in {[x \in BOOLEAN |-> 0], [x \in BOOLEAN |-> 1]} ~~> TRUE and [x -> $C$k]""") {
-    val fun0 = tla.funDef(tla.int(0), tla.name("x"), tla.booleanSet())
-    val fun1 = tla.funDef(tla.int(1), tla.name("x"), tla.booleanSet())
-    val fun2 = tla.funDef(tla.int(2), tla.name("x"), tla.booleanSet())
+  test("""SE-IN-ASSIGN1(fun): x' \in {[x \in BOOLEAN |-> 0], [x2 \in BOOLEAN |-> 1]} ~~> TRUE and [x -> $C$k]""") {
+    val fun0 = tla.funDef(tla.int(0), tla.name("x2"), tla.booleanSet())
+    val fun1 = tla.funDef(tla.int(1), tla.name("x3"), tla.booleanSet())
+    val fun2 = tla.funDef(tla.int(2), tla.name("x4"), tla.booleanSet())
     val set = tla.enumSet(fun0, fun1)
     val assign = tla.in(tla.prime(tla.name("x")), set)
 
@@ -398,13 +398,14 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
   }
 
   test("""SE-IN-ASSIGN1(record): x' \in {{"a" -> 1, "b" -> FALSE}, {"a" -> 2, "b" -> TRUE, "c" -> {3, 4}}} ~~> [x -> $C$k]""") {
-    // records in a set can have different -- although compatible -- sets of keys
+    // records in a set can have different sets of keys, although the field types should be compatible for each field
     val record1 = tla.enumFun(tla.str("a"), tla.int(1),
       tla.str("b"), tla.bool(false))
     val set2 = tla.enumSet(tla.int(3), tla.int(4))
     val record2 = tla.enumFun(tla.str("a"), tla.int(2),
       tla.str("b"), tla.bool(true), tla.str("c"), set2)
-    val recordSet = tla.enumSet(record1, record2)
+    val annotation = AnnotationParser.toTla(RecordT(SortedMap("a" -> IntT(), "b" -> BoolT(),  "c" -> FinSetT(IntT()))))
+    val recordSet = tla.enumSet(tla.withType(record1, annotation), record2)
     val assign = tla.in(tla.prime(tla.name("x")), recordSet)
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)

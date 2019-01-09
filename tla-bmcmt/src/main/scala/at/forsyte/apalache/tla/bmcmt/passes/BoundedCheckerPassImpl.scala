@@ -4,7 +4,10 @@ import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
 import at.forsyte.apalache.tla.assignments.SpecWithTransitions
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FreeExistentialsStore}
+import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
+import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.IdOrdering
+import at.forsyte.apalache.tla.lir.process.Renaming
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -15,8 +18,11 @@ import com.typesafe.scalalogging.LazyLogging
   * @author Igor Konnov
   */
 class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
+                                        typeFinder: TypeFinder[CellT],
                                         freeExistentialsStore: FreeExistentialsStore,
                                         exprGradeStore: ExprGradeStore,
+                                        sourceStore: SourceStore,
+                                        renaming: Renaming,
                                         @Named("AfterChecker") nextPass: Pass)
       extends BoundedCheckerPass with LazyLogging {
 
@@ -39,19 +45,23 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
       throw new CheckerException(s"The input of $name pass is not initialized")
     }
     val spec = specWithTransitions.get
+    // rename bound variables, so each of them is unique. This is required by TrivialTypeFinder.
     // hint by Markus Kuppe: sort init and next to get a stable ordering between the runs
-    val initSorted = spec.initTransitions.sorted(IdOrdering)
-    val nextSorted = spec.nextTransitions.sorted(IdOrdering)
-    val input = new CheckerInput(spec.rootModule, initSorted, nextSorted, spec.notInvariant)
+    val initSorted = spec.initTransitions.map(renaming.renameBindingsUnique).sorted(IdOrdering)
+    val nextSorted = spec.nextTransitions.map(renaming.renameBindingsUnique).sorted(IdOrdering)
+    val notInvariantNew =
+      if (spec.notInvariant.isDefined) Some(renaming.renameBindingsUnique(spec.notInvariant.get)) else None
+    val input = new CheckerInput(spec.rootModule, initSorted, nextSorted, notInvariantNew)
     val stepsBound = options.getOption("checker", "length", 10).asInstanceOf[Int]
     val debug = options.getOption("general", "debug", false).asInstanceOf[Boolean]
     val profile = options.getOption("smt", "prof", false).asInstanceOf[Boolean]
     val search = options.getOption("checker", "search", "dfs").asInstanceOf[String]
     val checker: Checker =
       if (search == "dfs") {
-        new DfsChecker(freeExistentialsStore, input, stepsBound, debug)
+        new DfsChecker(typeFinder, freeExistentialsStore, input, stepsBound, debug)
       } else {
-        new BfsChecker(freeExistentialsStore, exprGradeStore, input, stepsBound, debug, profile)
+        new BfsChecker(typeFinder, freeExistentialsStore, exprGradeStore,
+          sourceStore, input, stepsBound, debug, profile)
       }
     val outcome = checker.run()
     logger.info("The outcome is: " + outcome)

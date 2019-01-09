@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, IntT, TupleT}
+import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.NameEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
@@ -75,31 +75,24 @@ class TestSymbStateRewriterTuple extends RewriterBase {
     }
   }
 
-  test("""SE-TUPLE-CTOR[1-2] type error: {<<1, FALSE>>, <<2>>} ~~> $C$k""") {
+  test("""type inference error: {<<1, FALSE>>, <<2>>}""") {
     val tuple1 = TlaFunOper.mkTuple(tla.int(1), tla.bool(false))
     val tuple2 = TlaFunOper.mkTuple(tla.int(2))
 
     val state = new SymbState(tla.enumSet(tuple1, tuple2), CellTheory(), arena, new Binding)
-    try {
+    assertThrows[TypeInferenceError] {
       create().rewriteUntilDone(state)
       fail("Expected a type error")
-    } catch {
-      case _: TypeException =>
-        () // OK
     }
   }
 
-  test("""SE-TUPLE-CTOR[1-2] type error: {<<1, FALSE>>, <<TRUE, 2>>} ~~> $C$k""") {
+  test("""type inference error: {<<1, FALSE>>, <<TRUE, 2>>} ~~> $C$k""") {
     val tuple1 = TlaFunOper.mkTuple(tla.int(1), tla.bool(false))
     val tuple2 = TlaFunOper.mkTuple(tla.bool(true), tla.int(2))
 
     val state = new SymbState(tla.enumSet(tuple1, tuple2), CellTheory(), arena, new Binding)
-    try {
+    assertThrows[TypeInferenceError] {
       create().rewriteUntilDone(state)
-      fail("Expected a type error")
-    } catch {
-      case _: TypeException =>
-        () // OK
     }
   }
 

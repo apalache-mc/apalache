@@ -3,6 +3,8 @@ package at.forsyte.apalache.tla.bmcmt.types
 import at.forsyte.apalache.tla.bmcmt.TypeException
 import at.forsyte.apalache.tla.lir.TlaEx
 
+import scala.collection.immutable.SortedMap
+
 /**
   * A diagnostic message that can be thrown as an exception or used in a list of errors.
   *
@@ -12,7 +14,7 @@ import at.forsyte.apalache.tla.lir.TlaEx
 class TypeInferenceError(val origin: TlaEx, val explanation: String) extends Exception(explanation)
 
 /**
-  * A general interface to a type inference engine. Check the description on docs/types-api.md.
+  * A general interface to a type inference engine. Check the description in docs/types-api.md.
   *
   * @tparam T the base class of the type system
   * @see CellT
@@ -43,4 +45,18 @@ trait TypeFinder[T] {
     * @throws TypeException, if the type cannot be computed.
     */
   def compute(e: TlaEx, argTypes: T*): T
+
+  /**
+    * Get the types of the variables that are computed by inferAndSave. The method must return the types of
+    * the global variables (VARIABLE and CONSTANT) and it may return types of the bound variables.
+    * @return a mapping of names to types
+    */
+  def getVarTypes: SortedMap[String, T]
+
+  /**
+    * Forget all computed types and introduce types for the variables. You can call inferAndSave after that.
+    *
+    * @param varTypes types of the global variables (VARIABLE and CONSTANT)
+    */
+  def reset(varTypes: Map[String, T]): Unit
 }

@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStoreImpl
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FailPredT, IntT}
+import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaOper, TlaSetOper}
@@ -12,6 +13,10 @@ import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
+  private def emptySetWithType(elemT: CellT): TlaEx =
+    tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(elemT)))
+
+
   test("""SE-SET-CTOR[1-2]: {x, y, z} ~~> c_set""") {
     val ex = OperEx(TlaSetOper.enumSet, NameEx("x"), NameEx("y"), NameEx("z"))
     val binding = new Binding + ("x" -> arena.cellFalse()) +
@@ -57,8 +62,9 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
 
   test("""SE-SET-IN1: {} \in {} ~~> $B$0""") {
     def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
-
-    val ex = OperEx(TlaSetOper.in, mkSet(), mkSet())
+    val ex = OperEx(TlaSetOper.in,
+      emptySetWithType(IntT()),
+      emptySetWithType(FinSetT(IntT())))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val nextState = create().rewriteUntilDone(state)
     assert(NameEx(solverContext.falseConst) == nextState.ex)
@@ -134,32 +140,22 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SET-IN1: 3 \in {{1}, {3}, {5}} ~~> $B$k""") {
+  test("""type inference 3 \in {{1}, {3}, {5}}""") {
+    // this test worked in the previous versions, but now it just reports a type inference error
     val ex = tla.in(tla.int(3),
       tla.enumSet(tla.enumSet(tla.int(1)), tla.enumSet(tla.int(3)), tla.enumSet(tla.int(5))))
 
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
-    val nextState = rewriter.rewriteUntilDone(state)
-    nextState.ex match {
-      case predEx@NameEx(name) =>
-        assert(BoolTheory().hasConst(name))
-        rewriter.push()
-        solverContext.assertGroundExpr(predEx)
-        assert(!solverContext.sat())
-        rewriter.pop()
-        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, predEx))
-        assert(solverContext.sat())
-
-      case _ =>
-        fail("Unexpected rewriting result")
+    assertThrows[TypeInferenceError] {
+      rewriter.rewriteUntilDone(state)
     }
   }
 
   test("""SE-SET-NOTIN1: {} \notin {} ~~> $B$1""") {
-    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
-
-    val ex = OperEx(TlaSetOper.notin, mkSet(), mkSet())
+    val ex = OperEx(TlaSetOper.notin,
+      emptySetWithType(FinSetT(IntT())),
+      emptySetWithType(FinSetT(FinSetT(IntT()))))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -313,9 +309,12 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
 
   test("""SE-SET-IN3: {{}, {{}, {}}} \in {{}, {{}, {{}, {}}}} ~~> b_new""") {
     def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+    def intSet() = emptySetWithType(IntT())
+    def int2Set() = emptySetWithType(FinSetT(IntT()))
+    def int3Set() = emptySetWithType(FinSetT(FinSetT(IntT())))
 
-    val left = mkSet(mkSet(), mkSet(mkSet(), mkSet()))
-    val right = mkSet(mkSet(), mkSet(mkSet(), mkSet(mkSet(), mkSet())))
+    val left = mkSet(int2Set(), mkSet(intSet(), intSet()))
+    val right = mkSet(int3Set(), mkSet(int2Set(), mkSet(intSet(), intSet())))
     val ex = OperEx(TlaSetOper.in, left, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
@@ -340,9 +339,13 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
 
   test("""SE-SET-IN3: {{}, {{{}}}} \in {{}, {{}, {{}}} ~~> b_new""") {
     def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+    def intSet() = emptySetWithType(IntT())
+    def int2Set() = emptySetWithType(FinSetT(IntT()))
+    def int3Set() = emptySetWithType(FinSetT(FinSetT(IntT())))
+    def int4Set() = emptySetWithType(FinSetT(FinSetT(FinSetT(IntT()))))
 
-    val left = mkSet(mkSet(), mkSet(mkSet(mkSet())))
-    val right = mkSet(mkSet(), mkSet(mkSet(), mkSet(mkSet())))
+    val left = mkSet(int3Set(), mkSet(mkSet(intSet())))
+    val right = mkSet(int4Set(), mkSet(int3Set(), mkSet(int2Set())))
     val ex = OperEx(TlaSetOper.in, left, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
@@ -351,12 +354,11 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
       case predEx@NameEx(name) =>
         assert(BoolTheory().hasConst(name))
         rewriter.push()
-        // and membership holds true
+        // set membership should not hold
         solverContext.assertGroundExpr(predEx)
         assert(!solverContext.sat())
         rewriter.pop()
-        // another query
-        // and membership does not hold
+        // its negation holds true
         solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, predEx))
         assert(solverContext.sat())
 
@@ -367,8 +369,10 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
 
   test("""SE-SET-EQ1: {{}} = {} ~~> $B$... (false)""") {
     def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+    def intSet() = emptySetWithType(IntT())           // empty sets need types
+    def int2Set() = emptySetWithType(FinSetT(IntT())) // empty sets need types
 
-    val ex = OperEx(TlaOper.eq, tla.enumSet(tla.enumSet()), tla.enumSet())
+    val ex = tla.eql(tla.enumSet(intSet()), int2Set())
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -386,10 +390,12 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
   }
 
   test("""SE-SET-EQ1: {{}, {{}}} = {{}, {{{}}} ~~> $B$... (false)""") {
-    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+    def intSet() = emptySetWithType(IntT())
+    def int2Set() = emptySetWithType(FinSetT(IntT()))
+    def int3Set() = emptySetWithType(FinSetT(FinSetT(IntT())))
 
-    val left = mkSet(mkSet(), mkSet(mkSet()))
-    val right = mkSet(mkSet(), mkSet(mkSet(mkSet())))
+    val left = tla.enumSet(int3Set(), tla.enumSet(int2Set()))
+    val right = tla.enumSet(int3Set(), tla.enumSet(tla.enumSet(intSet())))
     val ex = OperEx(TlaOper.eq, left, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
@@ -408,10 +414,11 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
   }
 
   test("""SE-SET-EQ1: {{}, {{}}} = {{}, {{}} ~~> $B$... (true)""") {
-    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+    def intSet() = emptySetWithType(IntT())
+    def int2Set() = emptySetWithType(FinSetT(IntT()))
 
-    val left = mkSet(mkSet(), mkSet(mkSet()))
-    val right = mkSet(mkSet(), mkSet(mkSet()))
+    val left = tla.enumSet(int2Set(), tla.enumSet(intSet()))
+    val right = tla.enumSet(int2Set(), tla.enumSet(intSet()))
     val ex = OperEx(TlaOper.eq, left, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
@@ -430,10 +437,9 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
   }
 
   test("""SE-SET-EQ1: {} = {1} \ {1} ~~> $B$... (true)""") {
+    def intSet() = emptySetWithType(IntT())
     val setOf1 = tla.enumSet(tla.int(1))
-    // This may seem weird, but since we don't know the type of {},
-    // it should be equal to the empty set of ints.
-    val ex = OperEx(TlaOper.eq, tla.enumSet(), tla.setminus(setOf1, setOf1))
+    val ex = OperEx(TlaOper.eq, intSet(), tla.setminus(setOf1, setOf1))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -453,38 +459,27 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SET-EQ1: {1} \ {1} = {FALSE} \ {FALSE} ~~> $B$... (false)""") {
-    // This may seem weird too, but since know the types of the both sets,
-    // and these types differ from each other, the result should be false
+  test("""type incorrect {1} \ {1} = {FALSE} \ {FALSE}""") {
+    // This test worked in the previous versions.
+    // Now we enforce type correctness, and reject this expression right after type checking.
     val setOfOne = tla.enumSet(tla.int(1))
     val setOfFalse = tla.enumSet(tla.bool(false))
     val ex = OperEx(TlaOper.eq,
-                    tla.setminus(setOfFalse, setOfFalse),
-                    tla.setminus(setOfOne, setOfOne))
+      tla.setminus(setOfFalse, setOfFalse),
+      tla.setminus(setOfOne, setOfOne))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
-    val nextState = rewriter.rewriteUntilDone(state)
-    nextState.ex match {
-      case predEx@NameEx(name) =>
-        assert(BoolTheory().hasConst(name))
-        rewriter.push()
-        // equal
-        solverContext.assertGroundExpr(tla.not(predEx))
-        assert(solverContext.sat())
-        rewriter.pop()
-        solverContext.assertGroundExpr(predEx)
-        assert(!solverContext.sat())
-
-      case _ =>
-        fail("Unexpected rewriting result")
+    assertThrows[TypeInferenceError] {
+      rewriter.rewriteUntilDone(state)
     }
   }
 
-  test("""SE-SET-NE1: {{}, {{}}} != {{}, {{}} ~~> $B$... (false)""") {
-    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+  test("""SE-SET-NE1: {{}, {{}}} != {{}, {{}}} ~~> $B$... (false)""") {
+    def intSet() = emptySetWithType(IntT())
+    def int2Set() = emptySetWithType(FinSetT(IntT()))
 
-    val left = mkSet(mkSet(), mkSet(mkSet()))
-    val right = mkSet(mkSet(), mkSet(mkSet()))
+    val left = tla.enumSet(int2Set(), tla.enumSet(intSet()))
+    val right = tla.enumSet(int2Set(), tla.enumSet(intSet()))
     val ex = OperEx(TlaOper.ne, left, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
@@ -557,7 +552,7 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
       tla.declOp("X", tla.cap(tla.enumSet(1, 2), tla.enumSet(2))))
 
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriterImpl(solverContext)
+    val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
     val fex = new FreeExistentialsStoreImpl()
     Identifier.identify(ex) // XXX: should not be here
     fex.store = fex.store + ex.ID
@@ -568,7 +563,7 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
         assert(BoolTheory().hasConst(name))
         rewriter.push()
         val failPreds = nextState.arena.findCellsByType(FailPredT())
-        val failureOccurs = tla.or(failPreds.map(_.toNameEx) :_*)
+        val failureOccurs = tla.or(failPreds.map(_.toNameEx): _*)
         solverContext.assertGroundExpr(failureOccurs)
         assert(!solverContext.sat()) // no failure should be possible
 
@@ -585,7 +580,7 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     val ex = tla.exists("X", tla.powSet(baseSet), tla.eql(tla.enumSet(), filteredSet))
 
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriterImpl(solverContext)
+    val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
     val fex = new FreeExistentialsStoreImpl()
     Identifier.identify(ex) // XXX: should not be here
     fex.store = fex.store + ex.ID
@@ -597,7 +592,7 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
         assert(solverContext.sat())
         rewriter.push()
         val failPreds = nextState.arena.findCellsByType(FailPredT())
-        val failureOccurs = tla.or(failPreds.map(_.toNameEx) :_*)
+        val failureOccurs = tla.or(failPreds.map(_.toNameEx): _*)
         solverContext.assertGroundExpr(failureOccurs)
         assert(!solverContext.sat()) // no failure should be possible
 
@@ -614,7 +609,7 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     val ex = tla.exists("X", tla.powSet(tla.enumSet(1, 2)), tla.eql(tla.enumSet(), filteredSet))
 
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriterImpl(solverContext)
+    val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
     val fex = new FreeExistentialsStoreImpl()
     Identifier.identify(ex) // XXX: should not be here
     fex.store = fex.store + ex.ID
@@ -625,7 +620,7 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
         assert(BoolTheory().hasConst(name))
         rewriter.push()
         val failPreds = nextState.arena.findCellsByType(FailPredT())
-        val failureOccurs = tla.or(failPreds.map(_.toNameEx) :_*)
+        val failureOccurs = tla.or(failPreds.map(_.toNameEx): _*)
         solverContext.assertGroundExpr(failureOccurs)
         assert(solverContext.sat()) // failure should be possible
 
@@ -867,7 +862,8 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
 
   test("""SE-SUBSETEQ[1-3]: {} \subseteq {1, 2, 3} ~~> $B$... (true)""") {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
-    val ex = tla.subseteq(tla.enumSet(), right)
+    // an empty set requires a type annotation
+    val ex = tla.subseteq(emptySetWithType(IntT()), right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -957,7 +953,8 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
 
   test("""SE-SUPSETEQ[1-3]: {1, 2, 3} \supseteq {} ~~> $B$... (true)""") {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
-    val ex = tla.supseteq(right, tla.enumSet())
+    // an empty set requires a type annotation
+    val ex = tla.supseteq(right, emptySetWithType(IntT()))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -1047,7 +1044,8 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
 
   test("""SE-SUBSET[1-3]: {} \subset {1, 2, 3} ~~> $B$... (true)""") {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
-    val ex = tla.subset(tla.enumSet(), right)
+    // an empty set requires a type annotation
+    val ex = tla.subset(emptySetWithType(IntT()), right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -1090,26 +1088,15 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SUBSET[1-3]: {1, 3} \subset {{1}, {2}, {3}} ~~> $B$... (false)""") {
+  test("""type inference error: {1, 3} \subset {{1}, {2}, {3}}""") {
+    // this test worked in the past but now it reports a type inference error
     val left = tla.enumSet(tla.int(1), tla.int(3))
     val right = tla.enumSet(tla.enumSet(tla.int(1)), tla.enumSet(tla.int(2)), tla.enumSet(tla.int(3)))
     val ex = tla.subset(left, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
-    val nextState = rewriter.rewriteUntilDone(state)
-    nextState.ex match {
-      case predEx@NameEx(name) =>
-        assert(BoolTheory().hasConst(name))
-        rewriter.push()
-        solverContext.assertGroundExpr(predEx)
-        assertUnsatOrExplain(rewriter, nextState)
-        rewriter.pop()
-        rewriter.push()
-        solverContext.assertGroundExpr(tla.not(predEx))
-        assert(solverContext.sat())
-
-      case _ =>
-        fail("Unexpected rewriting result")
+    assertThrows[TypeInferenceError] {
+      rewriter.rewriteUntilDone(state)
     }
   }
 
@@ -1160,7 +1147,8 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
 
   test("""SE-SUPSET[1-3]: {1, 2, 3} \supset {} ~~> $B$... (true)""") {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
-    val ex = tla.supset(right, tla.enumSet())
+    // an empty set requires a type annotation
+    val ex = tla.supset(right, emptySetWithType(IntT()))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)

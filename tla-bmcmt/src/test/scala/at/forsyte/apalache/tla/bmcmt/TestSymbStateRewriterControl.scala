@@ -213,7 +213,8 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""LET A == TRUE IN... ~~> [A -> TRUE]""") {
+  // type inference is not supported for let-in
+  ignore("""LET A == TRUE IN... ~~> [A -> TRUE]""") {
     val decl = TlaOperDecl("A", List(), tla.bool(true))
     val letIn = tla.letIn(OperEx(decl.operator), decl)
     val state = new SymbState(letIn, BoolTheory(), arena, new Binding)

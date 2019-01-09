@@ -671,6 +671,26 @@ class TestTrivialTypeFinder extends RewriterBase {
     assert(FinSetT(IntT()) == typeFinder.getVarTypes("y'"))
   }
 
+  test("inferAndSave double assignment") {
+    val typeFinder = new TrivialTypeFinder()
+    val x = tla.name("x")
+    val y = tla.name("y")
+    // double assignment is fine as soon as the types are preserved
+    val assignByIn =
+      tla.or(
+        tla.in(tla.prime(x), tla.enumSet(tla.int(1))),
+        tla.in(tla.prime(x), tla.enumSet(tla.int(3))))
+    assert(typeFinder.inferAndSave(assignByIn).contains(BoolT()))
+    assert(IntT() == typeFinder.getVarTypes("x'"))
+
+    val assignByEq =
+      tla.or(
+        tla.eql(tla.prime(y), tla.enumSet(tla.int(1))),
+        tla.eql(tla.prime(y), tla.enumSet(tla.int(4))))
+    assert(typeFinder.inferAndSave(assignByEq).contains(BoolT()))
+    assert(FinSetT(IntT()) == typeFinder.getVarTypes("y'"))
+  }
+
   test("inferAndSave set filter") {
     val typeFinder = new TrivialTypeFinder()
     val x = tla.name("x")
