@@ -1,9 +1,9 @@
 package at.forsyte.apalache.tla.assignments
 
+import at.forsyte.apalache.tla.imp._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.imp._
-import at.forsyte.apalache.tla.lir.db.{DummyBodyDB, DummySrcDB}
+import at.forsyte.apalache.tla.lir.db.{DummyBodyDB, SourceStoreImpl}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -13,9 +13,9 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
   val testFolderPath = "src/test/resources/assignmentSolver/"
 
   def specFromFile(p_file : String, p_next : String = "Next") : TlaEx = {
-    val declsRaw = declarationsFromFile( testFolderPath + p_file )
+    val declsRaw = declarationsFromFile(EnvironmentHandlerGenerator.makeDummyEH, testFolderPath + p_file )
 
-    val declsRenamed = OperatorHandler.uniqueVarRename( declsRaw )
+    val declsRenamed = OperatorHandler.uniqueVarRename( declsRaw, new SourceStoreImpl )
 
     val transformer = new Transformer()
 
@@ -23,7 +23,7 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
     val decls = declsRenamed.map(
       {
         case TlaOperDecl( name, params, body ) =>
-          TlaOperDecl( name, params, transformer.explicitLetIn( body )( DummySrcDB ) )
+          TlaOperDecl( name, params, transformer.explicitLetIn( body )( new SourceStoreImpl ) )
         case e@_ => e
       }
     )
@@ -45,7 +45,7 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
     //      )
 
     /** Preprocess body (inline operators, replace UNCHANGED, turn equality to set membership, etc.) */
-    val cleaned = transformer( nextBody, decls : _* )( DummyBodyDB, DummySrcDB )
+    val cleaned = transformer( nextBody, decls : _* )( DummyBodyDB, new SourceStoreImpl )
 
     /** Sanity check */
     assert( cleaned.isDefined && cleaned.get.ID.valid )

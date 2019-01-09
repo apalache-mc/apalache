@@ -1,11 +1,8 @@
 package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.imp._
-import at.forsyte.apalache.tla.lir.TestingPredefs
 import at.forsyte.apalache.tla.lir.plugins.{Identifier, UniqueDB}
-
-import at.forsyte.apalache.tla.lir.{Builder => bd}
-
+import at.forsyte.apalache.tla.lir.{EnvironmentHandlerGenerator, TestingPredefs}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -29,7 +26,7 @@ class TestWarningDetector extends FunSuite with TestingPredefs {
     UniqueDB.clear()
     val converter = new Transformer()
 
-    val decls = declarationsFromFile(testFolderPath + file)
+    val decls = declarationsFromFile(EnvironmentHandlerGenerator.makeDummyEH, testFolderPath + file)
     decls.foreach( Identifier.identify )
 //    converter.extract( decls:_* )
 

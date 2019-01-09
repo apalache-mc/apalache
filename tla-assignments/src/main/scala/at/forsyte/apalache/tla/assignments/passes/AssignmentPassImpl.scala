@@ -3,9 +3,10 @@ package at.forsyte.apalache.tla.assignments.passes
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
 import at.forsyte.apalache.tla.assignments._
 import at.forsyte.apalache.tla.imp.findBodyOf
+import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.db.{BodyDB, DummySrcDB}
+import at.forsyte.apalache.tla.lir.db.BodyDB
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -17,6 +18,8 @@ import com.typesafe.scalalogging.LazyLogging
   * This pass finds symbolic transitions in a TLA+ specification.
   */
 class AssignmentPassImpl @Inject()(options: PassOptions,
+                                   environmentHandler: EnvironmentHandler,
+                                   sourceStore: SourceStore,
                                    @Named("AfterAssignment") nextPass: Pass with SpecWithTransitionsMixin)
       extends AssignmentPass with LazyLogging {
 
@@ -36,7 +39,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
-    val allDeclarations = OperatorHandler.uniqueVarRename(tlaModule.get.declarations)
+    val allDeclarations = OperatorHandler.uniqueVarRename(tlaModule.get.declarations, sourceStore)
 
     val vars = allDeclarations
       .filter(_.isInstanceOf[TlaVarDecl])
@@ -45,8 +48,17 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
 
     // replace every variable x with x', so we can use the assignment solver
     def primeVars(e: TlaEx): TlaEx = e match {
-      case NameEx(name) if varSet.contains(name) => tla.prime(e)
-      case OperEx(op, args@_*) => OperEx(op, args.map(primeVars): _*)
+      case ne @ NameEx(name) if varSet.contains(name) =>
+        val newEx = environmentHandler.identify(tla.prime(e))
+        sourceStore.onTransformation(ne, newEx)
+        newEx
+
+      case oe @ OperEx(op, args@_*) =>
+        val newEx = environmentHandler.identify(OperEx(op, args.map(primeVars): _*))
+        sourceStore.onTransformation(oe, newEx)
+        newEx
+
+
       case _ => e
     }
 
@@ -68,9 +80,9 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
     val declarations = allDeclarations.map(replaceInit)
 
     val bodyDB = new BodyDB
-    val srcDB = DummySrcDB// new SourceDB <-- not yet supported
 
-    val stp = new SymbolicTransitionPass( bodyDB, srcDB )
+    // TODO: why do we call a pass inside a pass?
+    val stp = new SymbolicTransitionPass( bodyDB, sourceStore )
 
     // drop selections because of lacking implementation further on
     val initTransitions = stp( declarations, initName ).map( _._2 ).toList
@@ -99,7 +111,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
           logger.error(msg)
           throw new IllegalArgumentException(msg)
         }
-        val notInv = transformer.sanitize(tla.not(invBody))( bodyDB, srcDB )
+        val notInv = transformer.sanitize(tla.not(invBody))( bodyDB, sourceStore )
         logger.debug("Negated invariant:\n   %s".format(notInv))
         Some(notInv)
       } else {
