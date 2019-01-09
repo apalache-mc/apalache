@@ -1,9 +1,11 @@
 package at.forsyte.apalache.tla.lir
 
-import scala.reflect.Manifest
+import scalaz.Scalaz._
 import scalaz._
-import Scalaz._
 
+import scala.reflect.Manifest
+
+// TODO: @Igor: please move it to the package *.process
 object RecursiveProcessor {
 
   object DefaultFunctions {

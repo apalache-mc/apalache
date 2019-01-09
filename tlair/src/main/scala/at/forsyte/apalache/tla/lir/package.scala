@@ -400,6 +400,9 @@ package lir {
   }
 
 
+  // TODO: @Igor (09.01.2019): 1. We should use Long instead of Int, in order to have a large enough pool of identifiers.
+  // 2. We should assign identifiers automatically:
+  // Carrying around EnvironmentHandler and calling Identifier.identify is extremely annoying.
   abstract class IDType {
     val id: Int
     def valid: Boolean = id >= 0

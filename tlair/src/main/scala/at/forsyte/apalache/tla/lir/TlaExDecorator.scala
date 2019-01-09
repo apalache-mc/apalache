@@ -3,8 +3,10 @@ package at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 
 
+// TODO: REMOVE?
 trait TlaExDecorator
 
+// TODO: REMOVE?
 trait ToggleFlag extends TlaExDecorator {
   protected var toggled = false
 

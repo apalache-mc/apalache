@@ -7,6 +7,8 @@ import scala.collection.immutable.Vector
 
 object UniqueDB extends DB[ UID, TlaEx ] {
   // TODO: @Igor, let's get rid of a singleton here. Make a class.
+  // TODO: On a second thought, we do not need this class at all.
+  // We should just assign identifiers automatically and stop collecting all expressions.
   override val m_name = "UniqueDB"
 
   private var expressions : Vector[ TlaEx ] = Vector[ TlaEx ]()
@@ -43,8 +45,19 @@ object UniqueDB extends DB[ UID, TlaEx ] {
   * Created by jkukovec on 11/28/16.
   */
 package object Identifier {
-  def identify( spec : TlaSpec ) : Unit = SpecHandler.sideeffectWithExFun( spec, UniqueDB.add )
-  def identify( decl : TlaDecl ) : Unit = SpecHandler.sideeffectOperBody( decl , SpecHandler.sideeffectEx( _, UniqueDB.add ) )
-  def identify( ex : TlaEx ) : Unit = SpecHandler.sideeffectEx( ex, UniqueDB.add )
+  def identify( spec : TlaSpec ) : TlaSpec = {
+    SpecHandler.sideeffectWithExFun( spec, UniqueDB.add )
+    spec
+  }
+
+  def identify( decl : TlaDecl ) : TlaDecl = {
+    SpecHandler.sideeffectOperBody(decl, SpecHandler.sideeffectEx(_, UniqueDB.add))
+    decl
+  }
+
+  def identify( ex : TlaEx ) : TlaEx = {
+    SpecHandler.sideeffectEx( ex, UniqueDB.add )
+    ex
+  }
 }
 
