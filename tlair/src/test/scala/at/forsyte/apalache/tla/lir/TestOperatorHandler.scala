@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir
 
 
-import at.forsyte.apalache.tla.lir.db.{BodyDB, SourceDB}
+import at.forsyte.apalache.tla.lir.db.{BodyDB, SourceStoreImpl}
 import at.forsyte.apalache.tla.lir.oper.FixedArity
 import at.forsyte.apalache.tla.lir.plugins.{Identifier, UniqueDB}
 import at.forsyte.apalache.tla.lir.{Builder => bd, OperatorHandler => oh}
@@ -14,7 +14,7 @@ import org.scalatest.junit.JUnitRunner
 class TestOperatorHandler extends FunSuite with TestingPredefs {
   val testFolderPath = "src/test/resources/"
   val bodyDB         = new BodyDB()
-  val sourceDB       = new SourceDB()
+  val sourceDB       = new SourceStoreImpl()
 
 
   test( "Test extract" ) {
@@ -38,8 +38,8 @@ class TestOperatorHandler extends FunSuite with TestingPredefs {
     sourceDB.clear()
 
     val ex = bd.appOp( bd.name( "f" ), bd.cup( bd.name( "i" ), bd.name( "j" ) ) )
-    val newEx1 = OperatorHandler.replaceAll( ex, bd.name( "i" ), bd.bigInt( 0 ) )
-    val newEx2 = OperatorHandler.replaceAll( ex, bd.name( "k" ), bd.bigInt( 0 ) )
+    val newEx1 = OperatorHandler.replaceAll( ex, bd.name( "i" ), bd.bigInt( 0 ), new SourceStoreImpl )
+    val newEx2 = OperatorHandler.replaceAll( ex, bd.name( "k" ), bd.bigInt( 0 ), new SourceStoreImpl )
 
     assert( newEx1 == bd.appOp( bd.name( "f" ), bd.cup( bd.bigInt( 0 ), bd.name( "j" ) ) ) )
     assert( newEx2 == ex )
@@ -69,19 +69,19 @@ class TestOperatorHandler extends FunSuite with TestingPredefs {
 
     OperatorHandler.extract( spec, bodyDB )
 
-    val unfolded1 = OperatorHandler.unfoldOnce( op_C.body, bodyDB )
-    val unfolded2 = OperatorHandler.unfoldOnce( unfolded1, bodyDB )
-    val unfolded3 = OperatorHandler.unfoldOnce( unfolded2, bodyDB )
+    val unfolded1 = OperatorHandler.unfoldOnce( op_C.body, bodyDB, new SourceStoreImpl )
+    val unfolded2 = OperatorHandler.unfoldOnce( unfolded1, bodyDB, new SourceStoreImpl)
+    val unfolded3 = OperatorHandler.unfoldOnce( unfolded2, bodyDB, new SourceStoreImpl )
 
     assert( unfolded1 == bd.appOp( bd.name( "B" ), bd.cup( bd.bigInt( 0 ), bd.bigInt( 1 ) ) ) )
     assert( unfolded2 == bd.cup( bd.bigInt( 0 ), bd.bigInt( 1 ) ) )
     assert( unfolded3 == unfolded2 )
 
-    val maxUnfold = OperatorHandler.unfoldMax( op_C.body, bodyDB )
+    val maxUnfold = OperatorHandler.unfoldMax( op_C.body, bodyDB, sourceDB )
 
     assert( maxUnfold == unfolded2 )
 
-    val noUnfold = OperatorHandler.unfoldOnce( op_C.body, new BodyDB() )
+    val noUnfold = OperatorHandler.unfoldOnce( op_C.body, new BodyDB(), new SourceStoreImpl )
 
     assert( noUnfold == op_C.body )
 
@@ -126,11 +126,13 @@ class TestOperatorHandler extends FunSuite with TestingPredefs {
 
     OperatorHandler.extract( spec, bodyDB )
 
-    val unfolded = OperatorHandler.unfoldMax( op_C.body, bodyDB )
+    val unfolded = OperatorHandler.unfoldMax( op_C.body, bodyDB, sourceDB )
 
     assert( unfolded == bd.bigInt( 0 ) )
   }
 
+  /*
+  @Igor (08.01.2019): This does not look like a realistic application. The mapping between ids is too fragile.
   test( "Test SourceDB" ) {
     bodyDB.clear()
     sourceDB.clear()
@@ -149,14 +151,13 @@ class TestOperatorHandler extends FunSuite with TestingPredefs {
 
     assert( original1 identical ex )
     assert( original2 identical cup )
-
-
   }
+  */
 
   test( "Test SourceDB with uniqueVarRename" ){
     UniqueDB.clear()
 
-    val sdb = new SourceDB()
+    val sdb = new SourceStoreImpl()
 
     val bodyA = bd.exists( n_x, n_S, bd.exists( n_y, n_T, bd.eql( bd.plus( n_x, n_y ), bd.plus( n_a, n_b ) ) ) )
     val opA = bd.declOp( "A", bodyA, "a", "b")
