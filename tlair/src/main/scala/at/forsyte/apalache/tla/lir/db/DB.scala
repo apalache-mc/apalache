@@ -1,12 +1,13 @@
 package at.forsyte.apalache.tla.lir.db
 
-import collection.mutable.HashMap
-
 /**
   * Basic database, storing a ValType for each KeyType.
   *
   * Provides an interface for data retrieval, but each subclass must implement storage on its own.
+  *
   */
+// TODO: @Igor (05.01.2019) rename to KeyValueStore, which would better reflect the purpose and the implementation.
+// Why don't we just inherit from Map[KeyType, ValType]?
 trait DB[KeyType, ValType] {
   val m_name : String
 

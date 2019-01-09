@@ -1,9 +1,18 @@
 package at.forsyte.apalache.tla.lir.db
 
-import at.forsyte.apalache.tla.lir.UID
+import at.forsyte.apalache.tla.lir.{TlaEx, UID}
+import javax.inject.Singleton
 
-class SourceDB extends HashMapDB[UID, UID] {
+@Singleton
+class SourceStoreImpl extends HashMapDB[UID, UID] with TransformationListener {
+  // @Igor (08.01.2019): I don't think that we need this rich storage implementation.
+  // I would prefer rather having a minimal listener instead. Depending on the application,
+  // the user would implement their own efficient storages, e.g., see SourceStore.
   override val m_name : String = "sourceDB"
+
+  override def onTransformation(originEx: TlaEx, newEx: TlaEx): Unit = {
+    update(originEx.safeId, newEx.safeId)
+  }
 
   override def put( key : UID,
                     value : UID
@@ -22,7 +31,9 @@ class SourceDB extends HashMapDB[UID, UID] {
   }
 }
 
-object DummySrcDB extends SourceDB {
+// TODO: Igor (07.01.2019): This object is evil, as it allows one to swallow useful data instead of doing refactoring.
+// I have removed most of its usages, and we should just delete this object from the codebase
+object SourceStoreDummyImpl extends SourceStoreImpl {
   override val m_name : String = "DummySourceDB"
 
   override def put( key : UID,

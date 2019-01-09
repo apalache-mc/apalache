@@ -1,7 +1,9 @@
 package at.forsyte.apalache.tla.lir.db
 
 import at.forsyte.apalache.tla.lir.{FormalParam, NullEx, TlaEx}
+import com.google.inject.Singleton
 
+@Singleton
 class BodyDB extends HashMapDB[String, (List[FormalParam], TlaEx)] {
   override val m_name = "bodyDB"
 
