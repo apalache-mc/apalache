@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.lir
 
-import at.forsyte.apalache.tla.lir.control.LetInOper
+import at.forsyte.apalache.tla.lir.plugins.Identifier
 
 /**
   * Created by jkukovec on 12/6/16.
@@ -66,6 +66,9 @@ import at.forsyte.apalache.tla.lir.control.LetInOper
 //
 //}
 
+// TODO: @Igor: please move it to the package *.process
+// TODO: This code looks obfuscated: there are no comments and tonnes of default parameters.
+// I am simply not able to debug it.
 object SpecHandler {
 
   def dummyExFun( p_ex : TlaEx ) : TlaEx = p_ex
@@ -101,13 +104,18 @@ object SpecHandler {
                 p_postFun : (TlaEx, TlaEx) => Unit = dummyPost
               ) : TlaEx = {
     val newEx = p_exFun( p_ex )
+    // FIXME: Jure, I have added the call to identify, in order to mark the source
+    Identifier.identify(newEx)
+
     val ret = newEx match {
       case OperEx( oper, args@_* ) =>
         val newargs = args.map( getNewEx( _, p_exFun, p_postFun ) )
+        // FIXME: Jure, I have added the call to identify, in order to mark the source
         if ( args == newargs ) newEx
-        else OperEx( oper, newargs : _* )
+        else Identifier.identify(OperEx( oper, newargs : _* ))
       case _ => newEx
     }
+    // TODO: mark source
     p_postFun( p_ex, ret )
     ret
   }
