@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.tla.lir.{TlaConstDecl, TlaModule, TlaVarDecl}
+import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.{EnvironmentHandler, TlaConstDecl, TlaModule, TlaVarDecl}
 import tla2sany.semantic.ModuleNode
 
 /**
@@ -8,7 +9,7 @@ import tla2sany.semantic.ModuleNode
   *
   * @author konnov
   */
-class ModuleTranslator {
+class ModuleTranslator(environmentHandler: EnvironmentHandler, sourceStore: SourceStore) {
   def translate(node: ModuleNode): TlaModule = {
     val context1 = node.getConstantDecls.toList.foldLeft(Context()) {
       (ctx, node) => ctx.push(TlaConstDecl(node.getName.toString))
@@ -17,10 +18,10 @@ class ModuleTranslator {
       (ctx, node) => ctx.push(TlaVarDecl(node.getName.toString))
     }
     val context3 = node.getAssumptions.toList.foldLeft(context2) {
-      (ctx, node) => ctx.push(AssumeTranslator(ctx).translate(node))
+      (ctx, node) => ctx.push(AssumeTranslator(environmentHandler, sourceStore, ctx).translate(node))
     }
     val context = node.getOpDefs.toList.foldLeft(context3) {
-      (ctx, node) => ctx.push(OpDefTranslator(ctx).translate(node))
+      (ctx, node) => ctx.push(OpDefTranslator(environmentHandler, sourceStore, ctx).translate(node))
     }
     val imported = node.getExtendedModuleSet.toArray(Array[ModuleNode]()).map {
       mn => mn.getName.toString.intern()
@@ -31,7 +32,7 @@ class ModuleTranslator {
 }
 
 object ModuleTranslator {
-  def apply(): ModuleTranslator = {
-    new ModuleTranslator()
+  def apply(environmentHandler: EnvironmentHandler, sourceStore: SourceStore): ModuleTranslator = {
+    new ModuleTranslator(environmentHandler, sourceStore)
   }
 }

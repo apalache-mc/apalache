@@ -1,9 +1,10 @@
 package at.forsyte.apalache.tla.imp
 
+import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaNatSet, TlaRealSet}
 import at.forsyte.apalache.tla.lir.values.TlaRealInfinity
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, TlaValue, ValEx}
 import tla2sany.semantic._
 
 /**
@@ -12,7 +13,8 @@ import tla2sany.semantic._
   *
   * @author konnov
   */
-class OpApplProxy(standardTranslator: OpApplTranslator) {
+class OpApplProxy(environmentHandler: EnvironmentHandler, sourceStore: SourceStore,
+                  standardTranslator: OpApplTranslator) {
   def translate(node: OpApplNode): TlaEx = {
     node.getOperator match {
       case opdef: OpDefOrDeclNode if opdef.getKind == ASTConstants.UserDefinedOpKind =>
@@ -22,21 +24,27 @@ class OpApplProxy(standardTranslator: OpApplTranslator) {
           OpApplProxy.libraryValues.get(modAndName) match {
             case Some(value: TlaValue) =>
               // a built-in value
-              ValEx(value)
+              environmentHandler.identify(ValEx(value))
 
             case _ =>
               OpApplProxy.libraryOperators.get(modAndName) match {
                 case Some(oper: TlaOper) =>
                   // an operator in the standard library
-                  val exTran = ExprOrOpArgNodeTranslator(standardTranslator.context, standardTranslator.recStatus)
-                  OperEx(oper, node.getArgs.map { p => exTran.translate(p)} :_*)
+                  val exTran = ExprOrOpArgNodeTranslator(environmentHandler, sourceStore,
+                    standardTranslator.context, standardTranslator.recStatus)
+                  val resEx = OperEx(oper, node.getArgs.map { p => exTran.translate(p)} :_*)
+                  // the source should point to the operator application, not the definition
+                  // of the standard operator, which is pretty useless
+                  sourceStore.addRec(environmentHandler.identify(resEx), SourceLocation(node.getLocation))
 
                 case _ =>
                   OpApplProxy.globalOperators.get(opdef.getName.toString) match {
                     case Some(oper: TlaOper) =>
                       // an operator that we overwrite unconditionally, e.g., <:
-                      val exTran = ExprOrOpArgNodeTranslator(standardTranslator.context, standardTranslator.recStatus)
-                      OperEx(oper, node.getArgs.map { p => exTran.translate(p)} :_*)
+                      val exTran = ExprOrOpArgNodeTranslator(environmentHandler, sourceStore,
+                        standardTranslator.context, standardTranslator.recStatus)
+                      val resEx = OperEx(oper, node.getArgs.map { p => exTran.translate(p) }: _*)
+                      sourceStore.addRec(environmentHandler.identify(resEx), SourceLocation(node.getLocation))
 
                     case _ =>
                       standardTranslator.translate(node)
@@ -54,8 +62,10 @@ class OpApplProxy(standardTranslator: OpApplTranslator) {
 }
 
 object OpApplProxy {
-  def apply(standardTranslator: OpApplTranslator): OpApplProxy = {
-    new OpApplProxy(standardTranslator)
+  def apply(environmentHandler: EnvironmentHandler,
+            sourceStore: SourceStore,
+            standardTranslator: OpApplTranslator): OpApplProxy = {
+    new OpApplProxy(environmentHandler, sourceStore, standardTranslator)
   }
 
   val libraryValues: Map[Tuple2[String, String], TlaValue] =
