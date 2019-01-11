@@ -55,7 +55,7 @@ class TestOperatorHandler extends FunSuite with TestingPredefs {
         List(
           SimpleFormalParam( "i" ),
           SimpleFormalParam( "j" ),
-          OperFormalParam( "f", FixedArity( 2 ) )
+          OperFormalParam( "f", FixedArity( 1 ) )
         ),
         bd.appOp( bd.name( "f" ), bd.cup( bd.name( "i" ), bd.name( "j" ) ) )
       )
@@ -69,9 +69,11 @@ class TestOperatorHandler extends FunSuite with TestingPredefs {
 
     OperatorHandler.extract( spec, bodyDB )
 
-    val unfolded1 = OperatorHandler.unfoldOnce( op_C.body, bodyDB, new SourceStoreImpl )
-    val unfolded2 = OperatorHandler.unfoldOnce( unfolded1, bodyDB, new SourceStoreImpl)
-    val unfolded3 = OperatorHandler.unfoldOnce( unfolded2, bodyDB, new SourceStoreImpl )
+    val ssi = new SourceStoreImpl
+
+    val unfolded1 = OperatorHandler.unfoldOnce( op_C.body, bodyDB, ssi )
+    val unfolded2 = OperatorHandler.unfoldOnce( unfolded1, bodyDB, ssi )
+    val unfolded3 = OperatorHandler.unfoldOnce( unfolded2, bodyDB, ssi )
 
     assert( unfolded1 == bd.appOp( bd.name( "B" ), bd.cup( bd.bigInt( 0 ), bd.bigInt( 1 ) ) ) )
     assert( unfolded2 == bd.cup( bd.bigInt( 0 ), bd.bigInt( 1 ) ) )
@@ -154,7 +156,7 @@ class TestOperatorHandler extends FunSuite with TestingPredefs {
   }
   */
 
-  test( "Test SourceDB with uniqueVarRename" ){
+  ignore( "Test SourceDB with uniqueVarRename" ){
     UniqueDB.clear()
 
     val sdb = new SourceStoreImpl()

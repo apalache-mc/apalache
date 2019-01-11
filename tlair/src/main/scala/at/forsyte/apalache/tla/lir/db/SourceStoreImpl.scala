@@ -11,7 +11,7 @@ class SourceStoreImpl extends HashMapDB[UID, UID] with TransformationListener {
   override val m_name : String = "sourceDB"
 
   override def onTransformation(originEx: TlaEx, newEx: TlaEx): Unit = {
-    update(originEx.safeId, newEx.safeId)
+    update(newEx.safeId, originEx.safeId)
   }
 
   override def put( key : UID,

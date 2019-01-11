@@ -26,7 +26,7 @@ class TestRenaming extends FunSuite {
       tla.and(
         tla.exists(tla.name("x"), tla.name("S"), tla.gt(tla.name("x"), tla.int(1))),
         tla.forall(tla.name("x2"), tla.name("T"), tla.lt(tla.name("x2"), tla.int(42))))
-    handler.identify(original)
+//    handler.identify(original)
     val renamed = renaming.renameBindingsUnique(original)
     assert(expected == renamed)
     // the source code tracking should work properly

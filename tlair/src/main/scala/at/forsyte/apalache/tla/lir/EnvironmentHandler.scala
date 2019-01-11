@@ -35,6 +35,7 @@ class EnvironmentHandler @Inject()(val m_uidDB: UidDB,
     def markSrc(p_old: TlaEx,
                 p_new: TlaEx
                ): Unit = {
+      identify(p_old)
       identify(p_new)
       if (p_old.ID != p_new.ID) {
         m_listener.onTransformation(p_old, p_new)

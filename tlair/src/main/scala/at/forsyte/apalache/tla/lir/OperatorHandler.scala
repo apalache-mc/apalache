@@ -132,6 +132,7 @@ object OperatorHandler {
       if ( arg == p_replacedEx ) {
         // FIXME: Jure, I have added a call to identify, as otherwise markSrc is just wrong (Igor)
         val ret = Identifier.identify(p_newEx.deepCopy( identified = false ))
+        Identifier.identify(arg)
         markSrc( arg, ret, p_listener )
         ret
       }
@@ -170,7 +171,7 @@ object OperatorHandler {
       * because the parser would reject such TLA code. However, manual examples produced
       * demonstrated lack of exceptions thrown when the number of args provided exceeded the arity.
       *
-      * This has been rectified by a check in lambda.
+      * This has been rectified by a checkUID in lambda.
       **/
 
     /**
