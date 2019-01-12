@@ -231,6 +231,7 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
     if (checkerInput.notInvariant.isDefined) {
       logger.debug("Checking the invariant")
       val notInv = checkerInput.notInvariant.get
+      checkTypes(notInv)
       rewriter.push()
       // assert notInv
       val notInvState = rewriter.rewriteUntilDone(state
@@ -287,8 +288,8 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
     filename
   }
 
-  private def checkTypes(transition: TlaEx): Unit = {
-    typeFinder.inferAndSave(transition)
+  private def checkTypes(expr: TlaEx): Unit = {
+    typeFinder.inferAndSave(expr)
     if (typeFinder.getTypeErrors.nonEmpty) {
       def print_error(e: TypeInferenceError): Unit = {
         val locInfo =
