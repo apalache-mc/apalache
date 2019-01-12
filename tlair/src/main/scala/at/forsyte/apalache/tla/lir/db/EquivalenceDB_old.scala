@@ -1,8 +1,9 @@
 package at.forsyte.apalache.tla.lir.db
 
-import at.forsyte.apalache.tla.lir.plugins._
-import at.forsyte.apalache.tla.lir._
 import java.util.Vector
+
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.plugins._
 
 import scala.collection.mutable.Set
 
@@ -85,7 +86,10 @@ object EquivalenceDB_old extends SmartDB[ TlaEx, EID ]{
     * request the original expression from the EID. Note that this method always returns an
     * unidentified copy.
     */
-  def getEx( eid : EID ) : Option[TlaEx] = Option( allocator.getVal( eid.id ) ).map( _.deepCopy( identified = false ) )
+  def getEx( eid : EID ) : Option[TlaEx] = {
+    assert(eid.id.isValidInt) // backward compatibility with integer ids
+    Option( allocator.getVal( eid.id.toInt ) ).map( _.deepCopy( identified = false ) )
+  }
 
   /**
     * TODO: MOVE TO SEPARATE PLUGIN
@@ -106,8 +110,9 @@ object EquivalenceDB_old extends SmartDB[ TlaEx, EID ]{
     */
   def getEqClass( eid: EID ) : Option[ Set[ UID ] ] = {
     val id = eid.id
+    assert(id.isValidInt)
     if( id < 0 || id >= eqClasses.size() ) return None
-    else return Some( eqClasses.elementAt( id ) )
+    else return Some( eqClasses.elementAt( id.toInt ) )
   }
 
   /**

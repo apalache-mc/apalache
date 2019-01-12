@@ -1,10 +1,10 @@
 package at.forsyte.apalache.tla.assignments
 
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.plugins.UniqueDB
-import at.forsyte.apalache.tla.lir._
 
 import scala.collection.immutable.{Map, Set}
 
@@ -82,12 +82,12 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
 
     case class Implies( LHS : BoolFormula, RHS : BoolFormula ) extends BoolFormula
 
-    case class Variable( id : Int ) extends BoolFormula
+    case class Variable( id : Long ) extends BoolFormula
 
     // ( R( i ) < R( j ) )
-    case class LtFns( i : Int, j : Int ) extends BoolFormula
+    case class LtFns( i : Long, j : Long ) extends BoolFormula
     // ( R( i ) != R( j ) )
-    case class NeFns( i : Int, j : Int ) extends BoolFormula
+    case class NeFns( i : Long, j : Long ) extends BoolFormula
 
     /**
       * Converts a BoolFormula to an smt2 string
@@ -106,11 +106,11 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
           /* return */ "( not %s )".format( toSmt2( arg ) )
         case Implies( lhs, rhs ) =>
           /* return */ "( => %s %s )".format( toSmt2( lhs ), toSmt2( rhs ) )
-        case Variable( id : Int ) =>
+        case Variable( id : Long ) =>
           /* return */ "%s_%s".format( m_varSym, id )
-        case LtFns( i : Int, j : Int ) =>
+        case LtFns( i : Long, j : Long ) =>
           /* return */ "( < ( %s %s ) ( %s %s ) )".format( m_fnSym, i, m_fnSym, j )
-        case NeFns( i : Int, j : Int ) =>
+        case NeFns( i : Long, j : Long ) =>
           /* return */ "( not ( = ( %s %s ) ( %s %s ) ) )".format( m_fnSym, i, m_fnSym, j )
       }
     }
@@ -161,12 +161,12 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
     * Collection of aliases used in internal methods.
     */
   private object Aliases {
-    type seenType = Set[Int]
-    type collocSetType = Set[(Int, Int)]
+    type seenType = Set[Long]
+    type collocSetType = Set[(Long, Long)]
     type nonCollocSetType = collocSetType
     type deltaType = Map[String, BoolFormula]
     type frozenVarSetType = Set[String]
-    type frozenType = Map[Int, frozenVarSetType]
+    type frozenType = Map[Long, frozenVarSetType]
     type recursionData =
       (seenType, collocSetType, nonCollocSetType, deltaType, frozenType)
     type staticAnalysisData =
@@ -192,14 +192,14 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
                                         p_frozenVarSet : Aliases.frozenVarSetType
                                       ) : Aliases.recursionData = {
 
-    import SMTtools._
-    import AlphaTLApTools._
     import Aliases._
+    import AlphaTLApTools._
+    import SMTtools._
 
     /** We name the default arguments to return at irrelevant terms  */
     val defaultMap = ( for {v <- p_vars} yield (v, False()) ).toMap
     val defaultArgs =
-      (Set[Int](), Set[(Int, Int)](), Set[(Int, Int)](), defaultMap, Map[Int, Set[String]]())
+      (Set[Long](), Set[(Long, Long)](), Set[(Long, Long)](), defaultMap, Map[Long, Set[String]]())
 
     p_phi match {
       /** Recursive case, connectives */
@@ -260,7 +260,7 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
 
       /** Base case, assignment candidates */
       case OperEx( TlaSetOper.in, OperEx( TlaActionOper.prime, NameEx( name ) ), star ) => {
-        val n : Int = p_phi.ID.id
+        val n : Long = p_phi.ID.id
 
         /** delta_v creates a fresh variable from the unique ID if name == v */
         val delta : deltaType =
@@ -363,8 +363,8 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
              p_complete : Boolean = false
            ) : String = {
 
-    import SMTtools._
     import AlphaTLApTools._
+    import SMTtools._
 
     /** Extract the list of leaf ids, the collocated set, the delta mapping and the frozen mapping */
     val (seen, colloc, delta, frozen) = staticAnalysis( p_phi, p_vars )
@@ -379,7 +379,7 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
       * a pair (i,j) belongs to Colloc_Vars, if both i and j label assignment candidates
       * for the same variable.
       * */
-    def minimalCoveringClash( i : Int, j : Int ) : Boolean = {
+    def minimalCoveringClash( i : Long, j : Long ) : Boolean = {
       val ex_i = UniqueDB.get( UID( i ) )
       val ex_j = UniqueDB.get( UID( j ) )
 
@@ -399,7 +399,7 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
       * Checking that j is a candidate is unnecessary, by construction,
       * since seen/colloc only contain assignment candidate IDs.
       * */
-    def triangleleft( i : Int, j : Int ) : Boolean = {
+    def triangleleft( i : Long, j : Long ) : Boolean = {
       val ex_i = UniqueDB.get( UID( i ) )
       val ex_j = UniqueDB.get( UID( j ) )
 

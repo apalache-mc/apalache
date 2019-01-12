@@ -1,11 +1,9 @@
 package at.forsyte.apalache.tla.lir.db
 
-import collection.JavaConverters._
-
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.plugins.{IDAllocator, UniqueDB}
+import at.forsyte.apalache.tla.lir.plugins.IDAllocator
 
-import scala.collection.mutable.Set
+import scala.collection.JavaConverters._
 
 class EquivalenceDB extends SmartDB[TlaEx, EID] {
   type setT[T] = collection.mutable.Set[T]
@@ -100,8 +98,9 @@ class EquivalenceDB extends SmartDB[TlaEx, EID] {
     */
   def getEqClass( eid : EID ) : Option[setT[UID]] = {
     val id = eid.id
+    assert(id.isValidInt) // backward compatibility with integers ids
     if ( id < 0 || id >= eqClasses.size() ) None
-    else Some( eqClasses.elementAt( id ) )
+    else Some( eqClasses.elementAt( id.toInt ) )
   }
 
 //  /**

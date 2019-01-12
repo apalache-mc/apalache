@@ -13,10 +13,16 @@ class UidDB extends DB[ UID, TlaEx ] {
 
   private var m_contents : Vector[ TlaEx ] = Vector[ TlaEx ]()
 
-  override def apply( key : UID ) : TlaEx = m_contents( key.id )
-  override def get( key : UID ) : Option[TlaEx] =
-    if( !contains( key ) ) None
-    else Some( m_contents( key.id ) )
+  override def apply( key : UID ) : TlaEx = {
+    assert(key.id.isValidInt)
+    m_contents( key.id.toInt )
+  }
+
+  override def get( key : UID ) : Option[TlaEx] = {
+    assert(key.id.isValidInt)
+    if (!contains(key)) None
+    else Some(m_contents(key.id.toInt))
+  }
 
   def add( ex: TlaEx ) : Unit = {
     if( !ex.ID.valid ){

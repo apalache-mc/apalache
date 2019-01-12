@@ -155,7 +155,7 @@ package lir {
       that match {
         case other: Identifiable =>
           if (valid && other.valid) {
-            ID.id - other.ID.id
+            ID.id.compareTo(other.ID.id)
           } else {
             throw new IllegalStateException("Comparing objects without IDs")
           }
@@ -404,14 +404,14 @@ package lir {
   // 2. We should assign identifiers automatically:
   // Carrying around EnvironmentHandler and calling Identifier.identify is extremely annoying.
   abstract class IDType {
-    val id: Int
+    val id: Long
     def valid: Boolean = id >= 0
   }
 
   // TODO: Rewrite UID with proper factory and invalid type
 
-  sealed case class UID( id: Int ) extends IDType
-  sealed case class EID( id: Int ) extends IDType
+  sealed case class UID( id: Long ) extends IDType
+  sealed case class EID( id: Long ) extends IDType
 
 }
 
