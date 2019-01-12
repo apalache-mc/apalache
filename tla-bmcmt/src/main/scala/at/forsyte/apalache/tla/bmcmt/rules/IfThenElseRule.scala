@@ -35,28 +35,24 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
         elseState.setRex(NameEx(result)).setTheory(BoolTheory())
 
       case OperEx(TlaControlOper.ifThenElse, predEx, thenEx, elseEx) =>
-        // in the general case, the both branches returns cells
+        // in the general case, the both branches return cells
         val predState = rewriter.rewriteUntilDone(state.setTheory(BoolTheory()).setRex(predEx))
         val thenState = rewriter.rewriteUntilDone(predState.setTheory(CellTheory()).setRex(thenEx))
         val elseState = rewriter.rewriteUntilDone(thenState.setTheory(CellTheory()).setRex(elseEx))
         coverFailurePredicates(predState, thenState, elseState)
         val thenCell = elseState.arena.findCellByNameEx(thenState.ex)
         val elseCell = elseState.arena.findCellByNameEx(elseState.ex)
-        val commonType = thenCell.cellType.unify(elseCell.cellType)
-        if (commonType.isEmpty) {
-          throw new RewriterException("Failed to unify %s and %s in IF-THEN-ELSE"
-            .format(thenCell.cellType, elseCell.cellType))
-        }
         val pred = predState.ex
-        commonType.get match {
+        val resultType = rewriter.typeFinder.compute(state.ex, BoolT(), thenCell.cellType, elseCell.cellType)
+        resultType match {
           // ITE[1-4]
           case BoolT() | IntT() | ConstT() =>
-            val finalState = iteBasic(elseState, commonType.get, pred, thenCell, elseCell)
+            val finalState = iteBasic(elseState, resultType, pred, thenCell, elseCell)
             rewriter.coerce(finalState, state.theory) // coerce to the source theory
 
           // ITE5
           case FinSetT(_) =>
-            val finalState = iteSet(elseState, commonType.get, pred, thenCell, elseCell)
+            val finalState = iteSet(elseState, resultType, pred, thenCell, elseCell)
             rewriter.coerce(finalState, state.theory) // coerce to the source theory
 
           // TODO: the general case ITE6 is missing

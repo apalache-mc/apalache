@@ -33,6 +33,17 @@ class TestTrivialTypeFinder extends RewriterBase {
     assert(ConstT() == cellType)
   }
 
+  test("compute names") {
+    val typeFinder = new TrivialTypeFinder()
+    val x = tla.name("x")
+    typeFinder.reset(Map("x" -> BoolT()))
+    assert(BoolT() == typeFinder.compute(x))
+    typeFinder.reset(Map.empty)
+    assertThrows[TypeInferenceError] {
+      typeFinder.compute(x)
+    }
+  }
+
   test("compute basic operators") {
     val typeFinder = new TrivialTypeFinder()
     val x = tla.name("x")
@@ -321,16 +332,13 @@ class TestTrivialTypeFinder extends RewriterBase {
     val set12 = tla.enumSet(tla.int(1), tla.int(2))
     // good cases
     assert(FinSetT(IntT()) ==
-      typeFinder.compute(tla.filter(NameEx("x"), set12, tla.bool(true)),
-        UnknownT(), FinSetT(IntT()), BoolT()))
+      typeFinder.compute(tla.filter(NameEx("x"), set12, tla.bool(true)), IntT(), FinSetT(IntT()), BoolT()))
     // bad cases
     assertThrows[TypeInferenceError] {
-      typeFinder.compute(tla.filter(NameEx("x"), int1, tla.bool(true)),
-        UnknownT(), IntT(), BoolT())
+      typeFinder.compute(tla.filter(NameEx("x"), int1, tla.bool(true)), IntT(), IntT(), BoolT())
     }
     assertThrows[TypeInferenceError] {
-      typeFinder.compute(tla.filter(NameEx("x"), set12, int1),
-        UnknownT(), FinSetT(IntT()), IntT())
+      typeFinder.compute(tla.filter(NameEx("x"), set12, int1), IntT(), FinSetT(IntT()), IntT())
     }
   }
 
@@ -340,16 +348,15 @@ class TestTrivialTypeFinder extends RewriterBase {
     val set12 = tla.enumSet(tla.int(1), tla.int(2))
     // good cases
     assert(FinSetT(BoolT()) ==
-      typeFinder.compute(tla.map(tla.bool(true), NameEx("x"), set12),
-        FinSetT(BoolT()), UnknownT(), FinSetT(IntT())))
+      typeFinder.compute(tla.map(tla.bool(true), NameEx("x"), set12), BoolT(), IntT(), FinSetT(IntT())))
+    assert(FinSetT(IntT()) ==
+      typeFinder.compute(tla.map(tla.bool(true), NameEx("x"), set12), IntT(), BoolT(), FinSetT(BoolT())))
     // bad cases
     assertThrows[TypeInferenceError] {
-      typeFinder.compute(tla.map(tla.bool(true), NameEx("x"), int1),
-        FinSetT(BoolT()), UnknownT(), IntT())
+      typeFinder.compute(tla.map(tla.bool(true), NameEx("x"), int1), BoolT(), IntT(), IntT())
     }
     assertThrows[TypeInferenceError] {
-      typeFinder.compute(tla.map(tla.bool(true), NameEx("x"), set12, NameEx("y"), int1),
-        FinSetT(BoolT()), UnknownT(), FinSetT(IntT()), UnknownT(), IntT())
+      typeFinder.compute(tla.map(tla.bool(true), NameEx("x"), set12, NameEx("y"), int1), BoolT(), IntT(), FinSetT(IntT()), IntT(), IntT())
     }
   }
 
@@ -360,8 +367,7 @@ class TestTrivialTypeFinder extends RewriterBase {
     val set3 = tla.enumSet(tla.int(3))
     // good cases
     assert(FinSetT(IntT()) ==
-      typeFinder.compute(tla.union(tla.enumSet(set12, set3)),
-        FinSetT(FinSetT(IntT()))))
+      typeFinder.compute(tla.union(tla.enumSet(set12, set3)), FinSetT(FinSetT(IntT()))))
     // bad cases
     assertThrows[TypeInferenceError] {
       typeFinder.compute(tla.union(set12), FinSetT(IntT()))
@@ -424,20 +430,17 @@ class TestTrivialTypeFinder extends RewriterBase {
 
     // good cases
     assert(FinSetT(RecordT(SortedMap("a" -> IntT(), "b" -> BoolT()))) ==
-      typeFinder.compute(tla.recSet(tla.str("a"), set12, tla.str("b"), boolSet),
-        ConstT(), FinSetT(IntT()), ConstT(), FinSetT(BoolT())))
+      typeFinder.compute(tla.recSet(tla.str("a"), set12, tla.str("b"), boolSet), ConstT(), FinSetT(IntT()), ConstT(), FinSetT(BoolT())))
     // bad cases
     assertThrows[TypeInferenceError] {
-      typeFinder.compute(tla.recSet(tla.str("a"), int1, tla.str("b"), boolSet),
-        ConstT(), IntT(), ConstT(), FinSetT(BoolT()))
+      typeFinder.compute(tla.recSet(tla.str("a"), int1, tla.str("b"), boolSet), ConstT(), IntT(), ConstT(), FinSetT(BoolT()))
     }
   }
 
   test("compute [a |-> 1, b |-> FALSE]") {
     val typeFinder = new TrivialTypeFinder()
     val rec = tla.enumFun(tla.str("a"), tla.int(1), tla.str("b"), tla.bool(false))
-    val cellType = typeFinder.compute(rec,
-      ConstT(), IntT(), ConstT(), BoolT())
+    val cellType = typeFinder.compute(rec, ConstT(), IntT(), ConstT(), BoolT())
     assert(RecordT(SortedMap("a" -> IntT(), "b" -> BoolT())) == cellType)
     assertThrows[TypeInferenceError] {
       typeFinder.compute(rec, IntT(), IntT(), ConstT(), BoolT())
@@ -553,15 +556,12 @@ class TestTrivialTypeFinder extends RewriterBase {
     val e = tla.name("e")
     // good cases
     assert(FunT(FinSetT(IntT()), BoolT()) ==
-      typeFinder.compute(tla.funDef(e, x, S),
-        BoolT(), ConstT(), FinSetT(IntT())))
+      typeFinder.compute(tla.funDef(e, x, S), BoolT(), IntT(), FinSetT(IntT())))
     assert(FunT(FinSetT(TupleT(Seq(IntT(), ConstT()))), BoolT()) ==
-      typeFinder.compute(tla.funDef(e, x, S, y, T),
-        BoolT(), ConstT(), FinSetT(IntT()), ConstT(), FinSetT(ConstT())))
+      typeFinder.compute(tla.funDef(e, x, S, y, T), BoolT(), IntT(), FinSetT(IntT()), ConstT(), FinSetT(ConstT())))
     // bad cases
     assertThrows[TypeInferenceError] {
-      typeFinder.compute(tla.funDef(e, x, S),
-        BoolT(), ConstT(), IntT())
+      typeFinder.compute(tla.funDef(e, x, S), BoolT(), ConstT(), IntT())
     }
   }
 
@@ -574,15 +574,17 @@ class TestTrivialTypeFinder extends RewriterBase {
     val funT = FunT(FinSetT(IntT()), BoolT())
     // TlaFunOper.except expects a single index wrapped into a tuple
     assert(funT ==
-      typeFinder.compute(tla.except(f, e, g),
-        funT, TupleT(Seq(IntT())), BoolT()))
+      typeFinder.compute(tla.except(f, e, g), funT, TupleT(Seq(IntT())), BoolT()))
     val fun2T = FunT(FinSetT(TupleT(Seq(IntT(), ConstT()))), BoolT())
     assert(fun2T ==
-      typeFinder.compute(tla.except(f, e, g),
-        fun2T, TupleT(Seq(IntT(), ConstT())), BoolT()))
+      typeFinder.compute(tla.except(f, e, g), fun2T, TupleT(Seq(IntT(), ConstT())), BoolT()))
     // bad cases
     assertThrows[TypeInferenceError] {
       typeFinder.compute(tla.except(f, e, g), funT, IntT(), BoolT())
+    }
+    // the type of the new value must agree with the function result
+    assertThrows[TypeInferenceError] {
+        typeFinder.compute(tla.except(f, e, g), funT, TupleT(Seq(IntT())), IntT())
     }
   }
 

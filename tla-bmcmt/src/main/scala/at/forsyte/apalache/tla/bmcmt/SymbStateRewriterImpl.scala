@@ -110,6 +110,8 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
       -> List(new NeqRule(this)),
     key(tla.or(tla.name("x"), tla.name("y")))
       -> List(new OrRule(this)),
+    key(tla.orParallel(tla.name("x"), tla.name("y")))
+      -> List(new OrRule(this)),
     key(tla.and(tla.name("x"), tla.name("y")))
       -> List(new AndRule(this)),
     key(tla.not(tla.name("x")))

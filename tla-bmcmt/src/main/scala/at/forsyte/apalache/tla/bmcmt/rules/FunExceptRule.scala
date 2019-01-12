@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
-import at.forsyte.apalache.tla.bmcmt.types.{FailPredT, FinSetT, FunT}
+import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
@@ -25,45 +25,33 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case OperEx(TlaFunOper.except, args@_*) =>
-        // first, unpack singleton tuples, see the comment to the method
-        val preprocessedArgs = unpackSingletonIndices(args)
+        val funEx = args.head
+        val indexEs = args.tail.zipWithIndex.filter(_._2 % 2 == 0).map(_._1)
+        val areIndicesTuples = indexEs map isPackedInTuple
+        // first, unpack singleton tuples in indices, see the comment to the method
+        val unpackedIndices = unpackSingletonIndices(indexEs)
+        val valEs = args.tail.zipWithIndex.filter(_._2 % 2 == 1).map(_._1)
+        assert(indexEs.size == valEs.size)
+
         // second, rewrite all the arguments
         val (groundState: SymbState, groundArgs: Seq[TlaEx]) =
-          rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), preprocessedArgs)
-
-        // the function always comes first
+          rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), funEx +: (unpackedIndices ++ valEs))
         val funCell = groundState.arena.findCellByNameEx(groundArgs.head)
-        // then the indices and righthand-side expressions interleaved
-        val argCells = groundArgs.tail.map(groundState.arena.findCellByNameEx)
-        val indexCells = argCells.zipWithIndex.filter(_._2 % 2 == 0).map(_._1) // pick the even indices (starting with 0)
-        val valueCells = argCells.zipWithIndex.filter(_._2 % 2 == 1).map(_._1) // pick the odd indices (starting with 0)
-        assert(indexCells.length == valueCells.length)
+        val indexCells = groundArgs.slice(1, 1 + unpackedIndices.size)
+          .map(groundState.arena.findCellByNameEx)
+        val valueCells = groundArgs
+          .slice(1 + unpackedIndices.size, 1 + unpackedIndices.size + valEs.size)
+          .map(groundState.arena.findCellByNameEx)
         val updatePairs = indexCells.zip(valueCells) // ![j_i] = e_i
 
         // get domain and co-domain structure from the arena
         val dom = groundState.arena.getDom(funCell)
         val domCells = groundState.arena.getHas(dom)
         val cdm = groundState.arena.getCdm(funCell)
+        val cdmElemType: types.CellT = findFunResultType(state, funCell, indexCells, valueCells, areIndicesTuples)
 
         // generate equality constraints for the domain elements and all the indices
         val eqState = rewriter.lazyEq.cacheEqConstraints(groundState, domCells cross indexCells)
-
-        // induce the new type of the co-domain cells
-        val cdmElemType = cdm.cellType match {
-          case FinSetT(elemType) =>
-            val problemCell = valueCells.find(!_.cellType.comparableWith(elemType))
-            if (problemCell.isDefined) {
-              throw new RewriterException("Type error in %s: updating a function of type %s with a cell of type %s"
-                .format(state.ex, funCell.cellType, problemCell.get.cellType))
-            }
-            elemType
-
-          // TODO: we might want to extend the co-domain type a bit, when adding a tuple or a record
-
-          case _ =>
-            throw new RewriterException("Unexpected type of function co-domain in function update: %s"
-              .format(cdm.cellType))
-        }
 
         // create the new co-domain that includes the valueCells
         var arena = eqState.arena.appendCell(FinSetT(cdmElemType))
@@ -137,6 +125,32 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
+  private def findFunResultType(state: SymbState, funCell: ArenaCell,
+                                indexCells: Seq[ArenaCell], valueCells: Seq[ArenaCell],
+                                areIndicesTuples: Seq[Boolean]) = {
+    // make sure that the type finder is happy about the arguments
+    def mkArgType(i: Int) = {
+      val idx = i / 2
+      if (i % 2 == 0) {
+        if (areIndicesTuples(idx)) {
+          indexCells(idx).cellType // it's a tuple already
+        } else {
+          TupleT(Seq(indexCells(idx).cellType)) // repack into a singleton tuple
+        }
+      } else {
+        valueCells(idx).cellType
+      }
+    }
+
+    val indexValueTypes = 0.until(2 * indexCells.size) map mkArgType
+    val cdmElemType =
+      rewriter.typeFinder.compute(state.ex, funCell.cellType +: indexValueTypes: _*) match {
+        case FunT(FinSetT(_), resT) => resT
+        case t@_ => throw new RewriterException("Expected a function type, found: " + t)
+      }
+    cdmElemType
+  }
+
   // This is an important step. As we receive expressions from SANY, every index argument to EXCEPT
   // is always a tuple, even if we are using one-dimensional functions. For instance,
   // the expression [f EXCEPT ![1] = 2] will be represented as OperEx(TlaFunOper.except, f, <<1>>, 2).
@@ -148,14 +162,18 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case OperEx(TlaFunOper.tuple, arg) =>
         arg // unpack
       case OperEx(TlaFunOper.tuple, _*) =>
-        e    // keep
+        e // keep
       case _ =>
         // complain
         throw new RewriterException("Expected a tuple as a function index, found: " + e)
     }
 
-    // the arguments are like this: the function, index 1, value 1, ..., index k, value k
-    args.zipWithIndex.map(a => if (a._2 % 2 == 1) unpack(a._1) else a._1)
+    args map unpack
+  }
+
+  private def isPackedInTuple(e: TlaEx): Boolean = e match {
+    case OperEx(TlaFunOper.tuple, args @ _*) => args.length != 1
+    case _ => false
   }
 
 }

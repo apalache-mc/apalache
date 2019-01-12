@@ -544,7 +544,8 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SET-FILTER[1-2]: LET X = {1, 2} \cap {2} IN {} = {x \in X : [y \in X |-> TRUE][x]} ~~> $B$k""") {
+  // until the real type inference is implemented
+  ignore("""SE-SET-FILTER[1-2]: LET X = {1, 2} \cap {2} IN {} = {x \in X : [y \in X |-> TRUE][x]} ~~> $B$k""") {
     // regression
     val filter = tla.appFun(tla.funDef(tla.bool(true), "y", "Oper:X"), "x")
     val filteredSet = tla.filter("x", "Oper:X", filter)
@@ -657,11 +658,9 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
   }
 
   test("""SE-SET-MAP[1-2]: {x / 3: x \in {1,2,3,4}} ~~> $C$k""") {
-    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
-
-    val set = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaInt(3)), ValEx(TlaInt(4)))
-    val mapping = OperEx(TlaArithOper.div, NameEx("x"), ValEx(TlaInt(3)))
-    val mappedSet = OperEx(TlaSetOper.map, mapping, NameEx("x"), set)
+    val set = tla.enumSet(1 to 4 map tla.int :_*)
+    val mapping = tla.div(tla.name("x"), tla.int(3))
+    val mappedSet = tla.map(mapping, tla.name("x"), set)
 
     val state = new SymbState(mappedSet, CellTheory(), arena, new Binding)
     val nextState = create().rewriteUntilDone(state)
@@ -677,12 +676,10 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
   }
 
   test("""SE-SET-MAP[1-2]: 0 \in {x / 3: x \in {1,2,3,4}} ~~> $B$k""") {
-    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
-
-    val set = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaInt(3)), ValEx(TlaInt(4)))
-    val mapping = OperEx(TlaArithOper.div, NameEx("x"), ValEx(TlaInt(3)))
-    val mappedSet = OperEx(TlaSetOper.map, mapping, NameEx("x"), set)
-    val inMappedSet = OperEx(TlaSetOper.in, ValEx(TlaInt(0)), mappedSet)
+    val set = tla.enumSet(1 to 4 map tla.int :_*)
+    val mapping = tla.div(tla.name("x"), tla.int(3))
+    val mappedSet = tla.map(mapping, tla.name("x"), set)
+    val inMappedSet = tla.in(tla.int(0), mappedSet)
 
     val state = new SymbState(inMappedSet, BoolTheory(), arena, new Binding)
     val rewriter = create()
@@ -703,12 +700,10 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
   }
 
   test("""SE-SET-MAP[1-2]: 2 \in {x / 3: x \in {1,2,3,4}} ~~> $B$k""") {
-    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
-
-    val set = mkSet(ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaInt(3)), ValEx(TlaInt(4)))
-    val mapping = OperEx(TlaArithOper.div, NameEx("x"), ValEx(TlaInt(3)))
-    val mappedSet = OperEx(TlaSetOper.map, mapping, NameEx("x"), set)
-    val inMappedSet = OperEx(TlaSetOper.in, ValEx(TlaInt(2)), mappedSet)
+    val set = tla.enumSet(1 to 4 map tla.int :_*)
+    val mapping = tla.div(tla.name("x"), tla.int(3))
+    val mappedSet = tla.map(mapping, tla.name("x"), set)
+    val inMappedSet = tla.in(tla.int(2), mappedSet)
 
     val state = new SymbState(inMappedSet, BoolTheory(), arena, new Binding)
     val rewriter = create()

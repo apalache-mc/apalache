@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.{FunT, RecordT}
+import at.forsyte.apalache.tla.bmcmt.types.{FunT, RecordT, SeqT, TupleT}
 import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 
@@ -24,8 +24,9 @@ class DomainRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val funState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(funEx))
         val funCell = funState.arena.findCellByNameEx(funState.ex)
 
+        // no type information from the type finder is needed, as types are propagated in a straightforward manner
         funCell.cellType match {
-          case FunT(_, _) | RecordT(_) => () // OK
+          case FunT(_, _) | RecordT(_) | TupleT(_) | SeqT(_) => () // OK
           case _ =>
             throw new RewriterException("DOMAIN x where type(x) = %s is not implemented".format(funCell.cellType))
         }

@@ -316,15 +316,13 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
     rewriter.coerce(afterResEq.setRex(state.ex), state.theory)
   }
 
-  private def mkRecordEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {
-    val leftType = left.cellType.asInstanceOf[RecordT]
-    val rightType = right.cellType.asInstanceOf[RecordT]
-    val leftDom = state.arena.getDom(left)
-    val rightDom = state.arena.getDom(right)
-    val leftTuple = state.arena.getHas(left).head
-    val rightTuple = state.arena.getHas(right).head
-    val leftElems = state.arena.getHas(leftTuple)
-    val rightElems = state.arena.getHas(rightTuple)
+  private def mkRecordEq(state: SymbState, leftRec: ArenaCell, rightRec: ArenaCell): SymbState = {
+    val leftType = leftRec.cellType.asInstanceOf[RecordT]
+    val rightType = rightRec.cellType.asInstanceOf[RecordT]
+    val leftDom = state.arena.getDom(leftRec)
+    val rightDom = state.arena.getDom(rightRec)
+    val leftElems = state.arena.getHas(leftRec)
+    val rightElems = state.arena.getHas(rightRec)
     // the intersection of the keys, as we can assume that the domains are equal
     val commonKeys = leftType.fields.keySet.intersect(rightType.fields.keySet)
     var newState = state
@@ -348,8 +346,8 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
       else
         tla.and(safeEq(leftDom, rightDom) +: eqs :_*)
 
-    rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(left, right), cons))
-    eqCache.put(left, right, EqCache.EqEntry())
+    rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(leftRec, rightRec), cons))
+    eqCache.put(leftRec, rightRec, EqCache.EqEntry())
 
     // restore the original expression and theory
     rewriter.coerce(newState.setRex(state.ex), state.theory)

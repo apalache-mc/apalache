@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.types
 import at.forsyte.apalache.tla.bmcmt.TypeException
 import at.forsyte.apalache.tla.lir.TlaEx
 
-import scala.collection.immutable.SortedMap
+import scala.collection.immutable.{Map, SortedMap}
 
 /**
   * A diagnostic message that can be thrown as an exception or used in a list of errors.
@@ -39,6 +39,10 @@ trait TypeFinder[T] {
 
   /**
     * Given a TLA+ expression and the types of its arguments, compute the resulting type, if possible.
+    * This function uses the types that were pre-computed by inferAndSave. It should also work for arbitrary
+    * expressions, as soon as they can be unambiguously typed with the previously stored type information
+    * and the given arguments.
+    *
     * @param e a TLA+ expression
     * @param argTypes the types of the arguments.
     * @return the resulting type, if it can be computed
@@ -47,6 +51,16 @@ trait TypeFinder[T] {
   def compute(e: TlaEx, argTypes: T*): T
 
   /**
+    * Call compute recursively to compute the type of a given expression. This function is expensive,
+    * use it only when absolutely necessary. If the expression is referring to variables, inferAndSave should have
+    * been called before.
+    *
+    * @param ex a TLA+ expression
+    * @return the resulting type
+    */
+  def computeRec(ex: TlaEx): CellT
+
+    /**
     * Get the types of the variables that are computed by inferAndSave. The method must return the types of
     * the global variables (VARIABLE and CONSTANT) and it may return types of the bound variables.
     * @return a mapping of names to types

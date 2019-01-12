@@ -126,12 +126,11 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         case _ => throw new RewriterException("Expected a string, found: " + ex)
       }
       val dom = decodeSet(arena, arena.getDom(cell)) map exToStr
-      val tuple = arena.getHas(cell).head
-      val tupleElems = arena.getHas(tuple)
+      val fieldValues = arena.getHas(cell)
       val keyList = r.fields.keySet.toList
       def eachField(es: List[TlaEx], key: TlaStr): List[TlaEx] = {
         val tupleIndex = keyList.indexOf(key.value)
-        val valueCell = tupleElems(tupleIndex)
+        val valueCell = fieldValues(tupleIndex)
         ValEx(key) +: decodeCellToTlaEx(arena, valueCell) +: es
       }
 

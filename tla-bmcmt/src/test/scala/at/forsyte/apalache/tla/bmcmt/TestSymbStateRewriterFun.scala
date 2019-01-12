@@ -588,11 +588,14 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
       tla.enumSet(fun1),
       tla.appFun(NameEx("x"), tla.bool(false)))
 
-    val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
+    // here, we have to overred FreeExistentialsStore, and thus cannot use SymbStateRewriterAuto
+    val typeFinder = new TrivialTypeFinder()
+    val rewriter = new SymbStateRewriterImpl(solverContext, typeFinder)
     val fex = new FreeExistentialsStoreImpl()
     Identifier.identify(exists)
     fex.store.add(exists.ID)
     rewriter.freeExistentialsStore = fex
+    typeFinder.inferAndSave(exists)
 
     val state = new SymbState(exists, BoolTheory(), arena, new Binding)
     val nextState = rewriter.rewriteUntilDone(state)

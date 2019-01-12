@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.types.eager
 
 import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.bmcmt.{BoolTheory, IntTheory}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.control.TlaControlOper
@@ -8,7 +9,7 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 
-import scala.collection.immutable.SortedMap
+import scala.collection.immutable.{Map, SortedMap}
 
 /**
   * An eager type finder that propagates types from the leaves to the root.
@@ -196,6 +197,17 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
           None
         }
 
+      case OperEx(TlaActionOper.prime, NameEx(name)) =>
+        val primed = name + "'"
+        val result = varTypes.get(primed)
+        if (result.isEmpty) {
+          errors +:= new TypeInferenceError(expr, "Failed to find type of variable " + name)
+        }
+        result
+
+      case ex @ OperEx(TlaActionOper.prime, arg) =>
+        Some(error(ex, "Expected a name under ', found: " + arg))
+
       // other operators
       case OperEx(_, args@_*) =>
         val argTypes = args.map(inferAndSave)
@@ -211,14 +223,19 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
           None
         }
 
-
       case NameEx(name) =>
-        if (varTypes.contains(name)) {
-          Some(varTypes(name))
-        } else {
-          errors +:= new TypeInferenceError(expr, "Failed to find type of variable " + name)
-          None
+        var result = varTypes.get(name)
+        if (result.isEmpty) {
+          // TODO: this is a temporary solutions until the moment we have eliminated BoolTheory and IntTheory
+          if (IntTheory().hasConst(name)) {
+            result = Some(IntT())
+          } else if (BoolTheory().hasConst(name)) {
+            result = Some(BoolT())
+          } else {
+            errors +:= new TypeInferenceError(expr, "Failed to find type of variable " + name)
+          }
         }
+        result
 
       case ValEx(_) =>
         try {
@@ -240,6 +257,18 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
     * @return a list of type errors
     */
   override def getTypeErrors: Seq[TypeInferenceError] = errors
+
+  /**
+    * Call compute recursively to compute the type of a given expression. This function is expensive,
+    * use it only when absolutely necessary.
+    *
+    * @param ex a TLA+ expression
+    * @return the resulting type
+    */
+  override def computeRec(ex: TlaEx): CellT = ex match {
+    case OperEx(_, args@_*) => compute(ex, args map computeRec: _*)
+    case _ => compute(ex)
+  }
 
   /**
     * Given a TLA+ expression and the types of its arguments, compute the resulting type, if possible.
@@ -282,11 +311,16 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
   }
 
   private def computeBasicOps(argTypes: Seq[CellT]): PartialFunction[TlaEx, CellT] = {
-    case NameEx(name) if varTypes.contains(name) =>
-      varTypes(name)
+    case ne@NameEx(name) =>
+      varTypes.get(name)
+        .orElse(Some(error(ne, "No type assigned to " + name)))
+        .get
 
-    case OperEx(TlaActionOper.prime, NameEx(name)) if varTypes.contains(name) =>
-      varTypes(name + "'")
+    case ne@OperEx(TlaActionOper.prime, NameEx(name)) =>
+      val primed = name + "'"
+      varTypes.get(primed)
+        .orElse(Some(error(ne, "No type assigned to " + primed)))
+        .get
 
     case ex@OperEx(op, _, _)
       if op == TlaOper.eq || op == TlaOper.ne =>
@@ -404,17 +438,25 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
       }
 
     case ex@OperEx(op@TlaSetOper.map, _*) =>
-      for (pair <- argTypes.tail.zipWithIndex) {
-        if (pair._2 % 2 == 1) {
-          pair._1 match {
-            case FinSetT(_) => ()
+      var varType: CellT = UnknownT()
+      for ((tp, index) <- argTypes.tail.zipWithIndex) {
+        if (index % 2 == 0) {
+          varType = tp // save the type of the bound variable
+        }
+        if (index % 2 == 1) {
+          tp match {
+            case FinSetT(et) =>
+              if (et != varType) {
+                error(ex, "Expected Set(%s) at position %d, found: %s".format(varType, index / 2, tp))
+              }
+
             // what about {f \in [S -> T] |-> ... }?
             // what about {f \in [a: S, B: T] |-> ... }?
             case _ => errorUnexpected(ex, op.name, argTypes)
           }
         }
       }
-      argTypes.head
+      FinSetT(argTypes.head)
 
     case ex@OperEx(op, _, _) if op == TlaSetOper.in || op == TlaSetOper.notin =>
       argTypes match {
@@ -515,7 +557,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
     case ex@OperEx(op@TlaFunOper.funDef, e, bindings@_*) =>
       val resType = argTypes.head
       val setTypes = deinterleave(argTypes.tail, 1, 2)
-      val varTypes = deinterleave(argTypes.tail, 0, 2) collect { case ConstT() => true }
+      val varTypes = deinterleave(argTypes.tail, 0, 2)
       if (varTypes.length != setTypes.length) {
         errorUnexpected(ex, op.name, argTypes)
       } else {
@@ -539,15 +581,20 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
       // But we also check the argument types to be on a well-typed side.
       val indexTypes = deinterleave(argTypes.tail, 0, 2)
       val valueTypes = deinterleave(argTypes.tail, 1, 2)
-      val argT =
+      val (argT, resT) =
         funType match {
-          case FunT(FinSetT(tup@TupleT(_)), resT) => tup
-          case FunT(FinSetT(elemT), resT) => TupleT(Seq(elemT))
+          case FunT(FinSetT(tup@TupleT(_)), rt) => (tup, rt)
+          case FunT(FinSetT(elemT), rt) => (TupleT(Seq(elemT)), rt)
           case _ => error(ex, "Expected a function type, found: " + funType)
         }
       for (idx <- indexTypes) {
         if (idx != argT) {
           error(ex, "Expected an index of type %s, found: %s".format(argT, idx))
+        }
+      }
+      for (valT <- valueTypes) {
+        if (valT != resT) {
+          error(ex, "Expected an index of type %s, found: %s".format(resT, valT))
         }
       }
 

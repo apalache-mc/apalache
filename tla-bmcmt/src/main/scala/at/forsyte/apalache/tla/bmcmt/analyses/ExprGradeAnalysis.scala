@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.analyses
 import at.forsyte.apalache.tla.assignments.SpecWithTransitions
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
-import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
+import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaBoolOper}
 import at.forsyte.apalache.tla.lir.plugins.Identifier
 import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
 import com.google.inject.Inject
@@ -16,8 +16,8 @@ import com.google.inject.Inject
   * @author Igor Konnov
   */
 class ExprGradeAnalysis @Inject()(val store: ExprGradeStoreImpl) {
-  private def add(e: TlaEx, grade: ExprGrade.Value): ExprGrade.Value = {
-    store.store += (e.ID -> grade)
+  private def update(e: TlaEx, grade: ExprGrade.Value): ExprGrade.Value = {
+    store.store.update(e.ID, grade)
     grade
   }
 
@@ -31,19 +31,26 @@ class ExprGradeAnalysis @Inject()(val store: ExprGradeStoreImpl) {
   def labelExpr(consts: Set[String], vars: Set[String], expr: TlaEx): ExprGrade.Value = {
     def eachExpr(e: TlaEx): ExprGrade.Value = e match {
       case ValEx(_) =>
-        add(e, ExprGrade.Constant)
+        update(e, ExprGrade.Constant)
 
       case NameEx(name) =>
         if (consts.contains(name))
-          add(e, ExprGrade.Constant)
+          update(e, ExprGrade.Constant)
         else if (vars.contains(name))
-          add(e, ExprGrade.StateFree)
+          update(e, ExprGrade.StateFree)
         else
-          add(e, ExprGrade.StateBound)
+          update(e, ExprGrade.StateBound)
+
+      case OperEx(BmcOper.withType, annotated, _) =>
+        // We forbid to cache type-annotated expressions.
+        // Otherwise, {} <: {Int} would be cached as a set of integers, and then {} <: {{Int}} would be retrieved from
+        // the cache as a set of integers, which is, obviously, not our intention
+        update(e, ExprGrade.NonCacheable)
+        update(annotated, ExprGrade.NonCacheable)
 
       case OperEx(TlaActionOper.prime, arg) =>
         // e.g., x'
-        add(e, ExprGrade.join(ExprGrade.ActionFree, eachExpr(arg)))
+        update(e, ExprGrade.join(ExprGrade.ActionFree, eachExpr(arg)))
 
       case OperEx(TlaTempOper.AA, _*) | OperEx(TlaTempOper.EE, _*)
            | OperEx(TlaTempOper.box, _*) | OperEx(TlaTempOper.diamond, _*)
@@ -51,17 +58,17 @@ class ExprGradeAnalysis @Inject()(val store: ExprGradeStoreImpl) {
            | OperEx(TlaTempOper.strongFairness, _*)
            | OperEx(TlaTempOper.weakFairness, _*) =>
         e.asInstanceOf[OperEx].args.foreach(eachExpr)
-        add(e, ExprGrade.Higher)
+        update(e, ExprGrade.Higher)
 
       case OperEx(_) =>
-        add(e, ExprGrade.Constant)
+        update(e, ExprGrade.Constant)
 
       case OperEx(_, args@_*) =>
         val grades = args map eachExpr
-        add(e, grades reduce ExprGrade.join)
+        update(e, grades reduce ExprGrade.join)
 
       case _ =>
-        add(e, ExprGrade.Higher)
+        update(e, ExprGrade.Higher)
     }
 
     eachExpr(expr)
@@ -110,7 +117,7 @@ class ExprGradeAnalysis @Inject()(val store: ExprGradeStoreImpl) {
           case Some(grade) =>
             val newEx = OperEx(TlaBoolOper.orParallel, newArgs : _*)
             Identifier.identify(newEx) // TODO: it should not be called like that...
-            add(newEx, grade)
+            update(newEx, grade)
             newEx
 
           case None =>

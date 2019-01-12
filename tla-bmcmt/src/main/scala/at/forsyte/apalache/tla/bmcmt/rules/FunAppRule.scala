@@ -39,7 +39,9 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
             case RecordT(_) =>
               applyRecord(funState, funCell, funEx, argEx)
 
-            case _ =>
+            // TODO: a sequence
+
+            case _ => // the general case
               applyFun(funState, funCell, argEx)
           }
         rewriter.coerce(finalState, state.theory)
@@ -49,33 +51,24 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def applyRecord(state: SymbState, recordCell: ArenaCell, funEx: TlaEx, argEx: TlaEx): SymbState = {
+  private def applyRecord(state: SymbState, recordCell: ArenaCell, recEx: TlaEx, argEx: TlaEx): SymbState = {
     val key = argEx match {
       case ValEx(TlaStr(k)) => k
-      case _ => throw new RewriterException(s"Accessing a record $funEx with a non-constant key $argEx")
+      case _ => throw new RewriterException(s"Accessing a record $recEx with a non-constant key $argEx")
     }
     val fields = recordCell.cellType match {
       case RecordT(f) => f
-      case t @ _ => throw new RewriterException(s"Corrupted record $funEx of a non-record type $t")
+      case t @ _ => throw new RewriterException(s"Corrupted record $recEx of a non-record type $t")
     }
     val index = fields.keySet.toList.indexOf(key)
-    val tupleCell = state.arena.getHas(recordCell).head
-    val elems = state.arena.getHas(tupleCell)
+    val elems = state.arena.getHas(recordCell)
     if (index >= 0 && index < elems.length) {
       val keyCell = rewriter.strValueCache.get(key).get
-      // when key is outside the record domain, we do not flag a failure here,
-      // since records of different types are often used in TLA+ specifications, e.g., see Paxos.tla
-      val tupleElem = elems(index)
-      state.setTheory(CellTheory()).setRex(tupleElem)
+      state.setTheory(CellTheory()).setRex(elems(index))
     } else {
-      // FIXME: use the code below as soon as type inference is working correctly
-      // Now we are trouble, since we don't know the type of a value we should return.
-      // SymbStateRewriter will try to resolve it at upper levels
-      val msg = s"Accessing record $funEx of type ${recordCell.cellType} with the key $argEx. Filter the set first?"
-      throw new UndefinedBehaviorError(msg, state.arena)
-      // This case should have been caught by type inference. Throw an exception.
-//      val msg = s"Accessing record $funEx of type ${recordCell.cellType} with the field $argEx. Type inference should have caught this."
-//      throw new IllegalArgumentException(msg)
+      // This case should have been caught by type inference. Throw an exception immediately.
+      val msg = s"Accessing record $recEx of type ${recordCell.cellType} with the field $argEx. Type inference should have caught this."
+      throw new IllegalArgumentException(msg)
     }
   }
 

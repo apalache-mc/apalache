@@ -24,6 +24,7 @@ class SetMapAndFunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   override def apply(state: SymbState): SymbState = {
+    // TODO: add support for multiple arguments
     state.ex match {
       case OperEx(TlaFunOper.funDef, mapEx, NameEx(varName), setEx) =>
         rewriteFunCtor(state, mapEx, varName, setEx)
@@ -40,28 +41,35 @@ class SetMapAndFunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private def rewriteSetMap(state: SymbState, mapEx: TlaEx, varName: String, setEx: TlaEx) = {
     // rewrite the set expression into a memory cell
     val setState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(setEx))
-    val oldSetCell = setState.arena.findCellByNameEx(setState.ex)
+    val sourceSetCell = setState.arena.findCellByNameEx(setState.ex)
+    val elemT = sourceSetCell.cellType match {
+      case FinSetT(et) => et
+      case t @ _ => throw new RewriterException("Expected a finite set, found: " + t)
+    }
     // unfold the set and produce map every potential element to a cell
-    val oldCells = setState.arena.getHas(oldSetCell)
-
-    val (newState: SymbState, newCells: Seq[ArenaCell], elemType: CellT) =
-      mapCells(setState, mapEx, varName, setEx, oldCells)
+    val sourceCells = setState.arena.getHas(sourceSetCell)
+    // find the type of the target expression and of the target set
+    val targetMapT = rewriter.typeFinder.computeRec(mapEx)
+    val targetSetT = rewriter.typeFinder.compute(state.ex, targetMapT, elemT, sourceSetCell.cellType)
+    // map the source cells using the map expression
+    val (newState: SymbState, newCells: Seq[ArenaCell]) =
+      mapCells(setState, mapEx, varName, setEx, sourceCells)
 
     // introduce a new set
-    val arena = newState.arena.appendCell(FinSetT(elemType))
+    val arena = newState.arena.appendCell(targetSetT)
     val newSetCell = arena.topCell
     val newArena = newCells.foldLeft(arena)((a, e) => a.appendHas(newSetCell, e))
 
     // require each new cell to be in the new set iff the old cell was in the old set
     def addCellCons(oldCell: ArenaCell, newCell: ArenaCell): Unit = {
       val inNewSet = OperEx(TlaSetOper.in, newCell.toNameEx, newSetCell.toNameEx)
-      val inOldSet = OperEx(TlaSetOper.in, oldCell.toNameEx, oldSetCell.toNameEx)
+      val inOldSet = OperEx(TlaSetOper.in, oldCell.toNameEx, sourceSetCell.toNameEx)
       val ifAndOnlyIf = OperEx(TlaOper.eq, inNewSet, inOldSet)
       rewriter.solverContext.assertGroundExpr(ifAndOnlyIf)
     }
 
     // add SMT constraints
-    for ((cell, pred) <- oldCells zip newCells)
+    for ((cell, pred) <- sourceCells zip newCells)
       addCellCons(cell, pred)
 
     // that's it
@@ -75,22 +83,31 @@ class SetMapAndFunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // rewrite the set expression into a memory cell
     val setState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(setEx))
     val domainCell = setState.arena.findCellByNameEx(setState.ex)
-    // unfold the set and produce map every potential element to a cell
+    val elemT = domainCell.cellType match {
+      case FinSetT(et) => et
+      case t @ _ => throw new RewriterException("Expected a finite set, found: " + t)
+    }
+    // find the type of the target expression and of the target set
+    val resultT = rewriter.typeFinder.computeRec(mapEx)
+    val funT =
+      rewriter.typeFinder
+        .compute(state.ex, resultT, elemT, domainCell.cellType)
+        .asInstanceOf[FunT]
+    // unfold the set and map every potential element to a cell
     val domainCells = setState.arena.getHas(domainCell)
 
-    val (newState: SymbState, resultCells: Seq[ArenaCell], elemType: CellT) =
+    val (newState: SymbState, resultCells: Seq[ArenaCell]) =
       mapCells(setState, mapEx, varName, setEx, domainCells)
 
-    val funType = FunT(domainCell.cellType, elemType)
     // introduce a co-domain cell
-    var arena = newState.arena.appendCell(funType)
+    var arena = newState.arena.appendCell(funT)
     val funCell = arena.topCell
-    arena = arena.appendCell(FinSetT(elemType)) // co-domain is a finite set of type elemType
+    arena = arena.appendCell(FinSetT(resultT)) // co-domain is a finite set of type elemType
     val codomainCell = arena.topCell
     arena = arena.setDom(funCell, domainCell).setCdm(funCell, codomainCell)
     arena = resultCells.foldLeft(arena) ((a, e) => a.appendHas(codomainCell, e))
     // associate a function constant with the function cell
-    rewriter.solverContext.declareCellFun(funCell.name, funType.argType, funType.resultType)
+    rewriter.solverContext.declareCellFun(funCell.name, funT.argType, funT.resultType)
 
     // associate a value of the uninterpreted function with a cell
     def addCellCons(argCell: ArenaCell, resultCell: ArenaCell): Unit = {
@@ -120,7 +137,7 @@ class SetMapAndFunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         case Seq() =>
           (st, List())
 
-        case (cell: ArenaCell) :: tail =>
+        case cell :: tail =>
           val (ts: SymbState, nt: List[TlaEx]) = process(st, tail)
           val newBinding = ts.binding + (varName -> cell)
           val cellState = new SymbState(mapEx, CellTheory(), ts.arena, newBinding)
@@ -133,21 +150,8 @@ class SetMapAndFunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // compute mappings for all the cells (some of them may coincide, that's fine)
     val (newState: SymbState, newEs: Seq[TlaEx]) = process(state, oldCells)
     val newCells = newEs.map(newState.arena.findCellByNameEx)
-    // get the cell types
-    val elemType =
-      newCells.map(_.cellType).toSet.toList match {
-        case List() =>
-          UnknownT()
-
-        case list @_ =>
-          val unifier = unify(list :_*)
-          if (unifier.isDefined) {
-            unifier.get
-          } else {
-            throw new TypeException(s"No unifying type for ${list.mkString(", ")} (when rewriting $mapEx)")
-          }
-      }
-
-    (newState, newCells, elemType)
+    // Call distinct to remove duplicates, e.g., consider a silly mapping { x \in 1..100 |-> FALSE },
+    // which would produce 100 FALSE and they all be mapped to the same cell (by the constant cache)
+    (newState, newCells.distinct)
   }
 }

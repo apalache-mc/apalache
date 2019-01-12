@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.RewritingResult
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FreeExistentialsStore}
 import at.forsyte.apalache.tla.bmcmt.caches.{ExprCache, IntValueCache, RecordDomainCache, StrValueCache}
+import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.lir.TlaEx
 
 /**
@@ -28,6 +29,12 @@ trait SymbStateRewriter extends StackableContext with MessageStorage {
     * @return the current level, always non-negative.
     */
   def contextLevel: Int
+
+  /**
+    * A type finder.
+    * @return a type finder that can produce cell types
+    */
+  def typeFinder: TypeFinder[CellT]
 
   /**
     * The cache for lazy equalities, to avoid generating the same equality constraints many times.

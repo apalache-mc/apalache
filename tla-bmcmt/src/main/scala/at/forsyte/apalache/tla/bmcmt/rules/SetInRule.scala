@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
-import at.forsyte.apalache.tla.bmcmt.types.{FinFunSetT, FinSetT, FunT, PowSetT}
+import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
@@ -45,7 +45,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.coerce(finalState, state.theory)
 
       case OperEx(TlaSetOper.in, elem, set) =>
-        // TODO: here we could benefit from the type inference phase
+        // TODO: remove theories, see https://github.com/konnov/apalache/issues/22
         // switch to cell theory
         val elemState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(elem))
         val elemCell = elemState.arena.findCellByNameEx(elemState.ex)
@@ -75,43 +75,28 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   private def powSetIn(state: SymbState, powsetCell: ArenaCell, elemCell: ArenaCell): SymbState = {
-    (powsetCell.cellType, elemCell.cellType) match {
+    def checkType: PartialFunction[(CellT, CellT), Unit] = {
       case (PowSetT(FinSetT(expectedType)), FinSetT(actualType)) =>
-        def unif = expectedType.unify(actualType)
-        if (unif.isEmpty) {
-          // The types do not match, so we can safely return false.
-          // TODO: flag a static warning?
-          state.setRex(state.arena.cellFalse())
-        } else {
-          // delegate the work to \subseteq
-          rewriter.lazyEq.subsetEq(state, elemCell, state.arena.getDom(powsetCell))
-        }
-
-      case t @ _ =>
-        throw new RewriterException("Unexpected type: " + t)
+        assert(expectedType == actualType)
     }
+    // double check that the type finder did its job
+    checkType(powsetCell.cellType, elemCell.cellType)
+    // delegate the work to \subseteq
+    rewriter.lazyEq.subsetEq(state, elemCell, state.arena.getDom(powsetCell))
   }
 
   private def funSetIn(state: SymbState, funsetCell: ArenaCell, funCell: ArenaCell): SymbState = {
-    funCell.cellType match {
-      case FunT(_, _) =>
-        val arena = state.arena
-        val domeq = tla.eql(arena.getDom(funCell), arena.getDom(funsetCell))
-        val cdmSubset = tla.subseteq(arena.getCdm(funCell), arena.getCdm(funsetCell))
-        rewriter.rewriteUntilDone(state.setRex(tla.and(domeq, cdmSubset)).setTheory(BoolTheory()))
-
-      case t @ _ =>
-        throw new RewriterException("Unexpected type: " + t)
-    }
+    assert(PartialFunction.cond(funCell.cellType) { case FunT(_, _) => true })
+    val arena = state.arena
+    val domeq = tla.eql(arena.getDom(funCell), arena.getDom(funsetCell))
+    val cdmSubset = tla.subseteq(arena.getCdm(funCell), arena.getCdm(funsetCell))
+    rewriter.rewriteUntilDone(state.setRex(tla.and(domeq, cdmSubset)).setTheory(BoolTheory()))
   }
 
   private def basicIn(state: SymbState, setCell: ArenaCell, elemCell: ArenaCell, elemType: types.CellT) = {
     val potentialElems = state.arena.getHas(setCell)
-    if (!elemCell.cellType.comparableWith(elemType)) {
-      // SE-SET-IN0: incompatible types => return false
-      state.setTheory(BoolTheory())
-        .setRex(NameEx(rewriter.solverContext.falseConst))
-    } else if (potentialElems.isEmpty) {
+    assert(elemCell.cellType == elemType) // otherwise, type finder is incorrect
+    if (potentialElems.isEmpty) {
       // SE-SET-IN1: the set cell points to no other cell => return false
       state.setTheory(BoolTheory())
         .setRex(NameEx(rewriter.solverContext.falseConst))

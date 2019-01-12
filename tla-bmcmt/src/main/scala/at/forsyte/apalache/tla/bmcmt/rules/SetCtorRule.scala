@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, UnknownT}
+import at.forsyte.apalache.tla.bmcmt.types.FinSetT
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
@@ -25,8 +25,11 @@ class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val (newState: SymbState, newEs: Seq[TlaEx]) =
           rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), elems)
         val cells = newEs.map(newState.arena.findCellByNameEx)
-        // get the cell types
-        val elemType = computeElementType(cells)
+        // compute the set type using the type finder
+        val elemType = rewriter.typeFinder.compute(state.ex, cells.map(_.cellType) :_*) match {
+          case FinSetT(et) => et
+          case setT @ _ => throw new TypeException("Expected a finite set, found: " + setT)
+        }
         val arena = newState.arena.appendCell(FinSetT(elemType))
         val newCell = arena.topCell
         val newArena = cells.foldLeft(arena)((a, e) => a.appendHas(newCell, e))
@@ -41,23 +44,6 @@ class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
-    }
-  }
-
-  private def computeElementType(cells: Seq[ArenaCell]) = {
-    cells.map(_.cellType).toSet.toList match {
-      case List() =>
-        UnknownT()
-
-      case hd :: List() =>
-        hd
-
-      case list@_ =>
-        val unif = list.map(Some(_)).reduce(types.unifyOption)
-        if (unif.nonEmpty)
-          unif.get
-        else
-          throw new TypeException("No unifier for the elements in a set constructor: " + list.mkString(", "))
     }
   }
 }

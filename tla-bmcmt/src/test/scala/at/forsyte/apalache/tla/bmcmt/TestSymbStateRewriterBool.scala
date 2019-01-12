@@ -1,16 +1,34 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.types.BoolT
+import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, IntT}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TestingPredefs, ValEx}
 import org.junit.runner.RunWith
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
+class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with BeforeAndAfterEach {
+  // these are handy variables that will be overwritten by before
+  private var x: ArenaCell = new ArenaCell(100000, IntT())
+  private var y: ArenaCell = new ArenaCell(100001, IntT())
+  private var set: ArenaCell = new ArenaCell(100001, FinSetT(IntT()))
+  private var xyBinding = Binding()
+
+  override def beforeEach() {
+    super.beforeEach()
+
+    arena = arena.appendCell(BoolT()) // we have to give bindings to the type finder
+    x = arena.topCell
+    arena = arena.appendCell(BoolT()) // we have to give bindings to the type finder
+    y = arena.topCell
+    arena = arena.appendCell(FinSetT(IntT()))
+    set = arena.topCell
+    xyBinding = Binding("x" -> x, "y" -> y, "S" -> set)
+  }
 
   test("SE-BOOL-FALSE [Cell]: FALSE ~~> $C$0") {
     val ex = ValEx(TlaFalse)
@@ -81,13 +99,11 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
   }
 
   test("""SE-BOOL-NEG1: ~(x \/ y) ~~> ~x /\ ~y""") {
-    val ex = OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.or, NameEx("x"), NameEx("y")))
-    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+    val ex = tla.not(tla.or(tla.name("x"), tla.name("y")))
+    val state = new SymbState(ex, CellTheory(), arena, xyBinding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
-        val expected = OperEx(TlaBoolOper.and,
-          OperEx(TlaBoolOper.not, NameEx("x")),
-          OperEx(TlaBoolOper.not, NameEx("y")))
+        val expected = tla.and(tla.not(tla.name("x")), tla.not(tla.name("y")))
         assert(expected == nextState.ex)
         assert(state.arena == nextState.arena)
 
@@ -98,7 +114,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
 
   test("""SE-BOOL-NEG2: ~(x /\ y) ~~> ~x \/ ~y""") {
     val ex = OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.and, NameEx("x"), NameEx("y")))
-    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+    val state = new SymbState(ex, CellTheory(), arena, xyBinding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected = OperEx(TlaBoolOper.or,
@@ -114,7 +130,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
 
   test("SE-BOOL-NEG3: ~(x => y) ~~> x /\\ ~y") {
     val ex = OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.implies, NameEx("x"), NameEx("y")))
-    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+    val state = new SymbState(ex, CellTheory(), arena, xyBinding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected = OperEx(TlaBoolOper.and,
@@ -130,7 +146,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
 
   test("SE-BOOL-IMPL: x => y ~~> ~x \\/ y") {
     val ex = tla.impl("x", "y")
-    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+    val state = new SymbState(ex, CellTheory(), arena, xyBinding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected = tla.or(tla.not("x"), "y")
@@ -148,7 +164,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     arena = arena.appendCell(BoolT())
     val right = arena.topCell
     val ex = tla.equiv(left.toNameEx, right.toNameEx)
-    val state = new SymbState(ex, BoolTheory(), arena, new Binding)
+    val state = new SymbState(ex, BoolTheory(), arena, xyBinding)
     val rewriter = create()
     rewriter.rewriteUntilDone(state).ex match {
       case NameEx(result) =>
@@ -181,7 +197,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
 
   test("SE-BOOL-NEG4: ~(x <=> y) ~~> ~x <=> y") {
     val ex = OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.equiv, NameEx("x"), NameEx("y")))
-    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+    val state = new SymbState(ex, CellTheory(), arena, xyBinding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected =
@@ -197,7 +213,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
 
   test("SE-BOOL-NEG5: ~~x ~~> x") {
     val ex = OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.not, NameEx("x")))
-    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+    val state = new SymbState(ex, CellTheory(), arena, xyBinding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         assert(NameEx("x") == nextState.ex)
@@ -209,14 +225,14 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-BOOL-NEG6: ~\E x \in S: p ~~> \A x \in S: ~p""") {
+  test("""SE-BOOL-NEG6: ~\E x \in S: y ~~> \A x \in S: ~y""") {
     val ex = OperEx(TlaBoolOper.not,
-      OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("S"), NameEx("p")))
-    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+      OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("S"), NameEx("y")))
+    val state = new SymbState(ex, CellTheory(), arena, Binding("S" -> set, "y" -> y))
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected = OperEx(TlaBoolOper.forall, NameEx("x"), NameEx("S"),
-          OperEx(TlaBoolOper.not, NameEx("p")))
+          OperEx(TlaBoolOper.not, NameEx("y")))
         assert(expected == nextState.ex)
         assert(state.arena == nextState.arena)
         assert(state.binding == nextState.binding)
@@ -226,14 +242,14 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-BOOL-NEG7: ~\A x \in S: p ~~> \E x \in S: ~p""") {
+  test("""SE-BOOL-NEG7: ~\A x \in S: y ~~> \E x \in S: ~y""") {
     val ex = OperEx(TlaBoolOper.not,
-      OperEx(TlaBoolOper.forall, NameEx("x"), NameEx("S"), NameEx("p")))
-    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+      OperEx(TlaBoolOper.forall, NameEx("x"), NameEx("S"), NameEx("y")))
+    val state = new SymbState(ex, CellTheory(), arena, Binding("S" -> set, "y" -> y))
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected = OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("S"),
-          OperEx(TlaBoolOper.not, NameEx("p")))
+          OperEx(TlaBoolOper.not, NameEx("y")))
         assert(expected == nextState.ex)
         assert(state.arena == nextState.arena)
         assert(state.binding == nextState.binding)

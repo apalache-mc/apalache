@@ -190,7 +190,7 @@ class TestSymbStateRewriterRecord extends RewriterBase {
     assert(cell.cellType == FinSetT(RecordT(SortedMap("a" -> IntT(), "c" -> IntT()))))
   }
 
-  test("""SE-REC-EQ: ["a" |-> 1, "b" |-> FALSE, "c" |-> "d"] = ["c" |-> "d", "b" |-> FALSE, "a" |-> 1] ~~> TRUE""") {
+  test("""SE-REC-EQ: [a |-> 1, b |-> FALSE, c |-> "d"] = [c |-> "d", b |-> FALSE, a |-> 1] ~~> TRUE""") {
     val record1 = tla.enumFun(tla.str("a"), tla.int(1),
       tla.str("b"), tla.bool(false), tla.str("c"), tla.str("d"))
     val record2 = tla.enumFun(tla.str("c"), tla.str("d"),
@@ -201,7 +201,7 @@ class TestSymbStateRewriterRecord extends RewriterBase {
     assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""SE-REC-EQ: ["a" |-> 1, "b" |-> FALSE, "c" |-> "d"] /= ["a" |-> 1] ~~> TRUE""") {
+  test("""SE-REC-EQ: [a |-> 1, b |-> FALSE, c |-> "d"] /= [a |-> 1] ~~> TRUE""") {
     // Introduce two different records using a type annotation. The records should not be equal!
     val annotation = AnnotationParser.toTla(RecordT(SortedMap("a" -> IntT(), "b" -> BoolT(), "c" -> ConstT())))
 

@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir.oper.BmcOper
 
 /**
   * This rule just ignores a type annotation. The actual use of type annotations happens at an earlier
-  * type inference stage.
+  * type inference stage, see TrivialTypeFinder.
   *
   * @author Igor Konnov
   */

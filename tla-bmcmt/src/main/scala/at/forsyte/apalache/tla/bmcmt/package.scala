@@ -10,6 +10,13 @@ package object bmcmt {
     */
   type Binding = HashMap[String, ArenaCell]
 
+  // an a handy companion object
+  object Binding {
+    def apply(args: (String, ArenaCell)*): Binding ={
+      HashMap[String, ArenaCell](args :_*)
+    }
+  }
+
   /**
     * A theory used to evaluate a TLA+ expression: cells, Booleans, and integers.
     */

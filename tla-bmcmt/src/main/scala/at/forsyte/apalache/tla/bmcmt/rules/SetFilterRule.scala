@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.{FailPredT, FinSetT, UnknownT}
+import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, NullEx, OperEx, TlaEx}
@@ -25,13 +25,7 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // rewrite the set expression into a memory cell
         val setState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(setEx))
         val setCell = setState.arena.findCellByNameEx(setState.ex)
-        val elemType =
-          setCell.cellType match {
-            case FinSetT(et) => et
-            case _ =>
-              throw new RewriterException("Expression %s evaluates to a non-set cell %d"
-                .format(setEx.toString, setCell.id))
-          }
+        assert(PartialFunction.cond(setCell.cellType) { case FinSetT(_) => true })
         // unfold the set and produce boolean constants for every potential element
         val potentialCells = setState.arena.getHas(setCell)
         // similar to SymbStateRewriter.rewriteSeqUntilDone, but also handling exceptions
@@ -41,38 +35,22 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
           // add [cell/x]
           val newBinding = newState.binding + (varName -> potentialCell)
           val cellState = new SymbState(predEx, BoolTheory(), newState.arena, newBinding)
-          // TODO: stop catching UndefinedBehaviorErrror, as soon as we have a stable type inference
-          try {
-            val ns = rewriter.rewriteUntilDone(cellState)
-            coverFailurePredicates(cellState, ns, tla.in(potentialCell.toNameEx, setCell.toNameEx))
-            newState = ns.setBinding(ns.binding - varName) // reset binding
-            ns.ex
-          } catch {
-            case ub: UndefinedBehaviorError =>
-              newState = newState.setArena(ub.arena) // something was added to the arena
-              NullEx // accessing a non-existent record field => filter out, that is, return NullEx
-          }
+          val ns = rewriter.rewriteUntilDone(cellState)
+          coverFailurePredicates(cellState, ns, tla.in(potentialCell.toNameEx, setCell.toNameEx))
+          newState = ns.setBinding(ns.binding - varName) // reset binding
+          ns.ex
         }
 
         // compute predicates for all the cells, some may statically result in NullEx
         val computedPreds: Seq[TlaEx] = potentialCells map eachElem
         val filteredCellsAndPreds = (potentialCells zip computedPreds) filter (_._2 != NullEx)
-        // Importantly, we unified the types of cells that were not statically filtered out.
-        // In case of records, it means that the type is unified to those records
-        // that do not statically violate the predicate.
-        val unifier =
-        if (filteredCellsAndPreds.isEmpty) {
-          Some(UnknownT())
-        } else {
-          types.unify(filteredCellsAndPreds.map(_._1.cellType): _*)
-        }
 
-        if (unifier.isEmpty) {
-          throw new TypeException("No type unifier for the elements of: " + setEx)
-        }
+        // get the result type from the type finder
+        val resultType = rewriter.typeFinder.compute(state.ex, ConstT(), setCell.cellType, BoolT())
+        assert(PartialFunction.cond(resultType) { case FinSetT(_) => true })
 
         // introduce a new set
-        val arena = newState.arena.appendCell(FinSetT(unifier.get))
+        val arena = newState.arena.appendCell(resultType)
         val newSetCell = arena.topCell
         val newArena = filteredCellsAndPreds.map(_._1)
           .foldLeft(arena)((a, e) => a.appendHas(newSetCell, e))
