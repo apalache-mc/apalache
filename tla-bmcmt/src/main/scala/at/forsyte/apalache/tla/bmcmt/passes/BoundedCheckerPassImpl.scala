@@ -51,6 +51,16 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
     val nextSorted = spec.nextTransitions.map(renaming.renameBindingsUnique).sorted(IdOrdering)
     val notInvariantNew =
       if (spec.notInvariant.isDefined) Some(renaming.renameBindingsUnique(spec.notInvariant.get)) else None
+
+    logger.debug("Transitions after renamed")
+    for ((t, i) <- initSorted.zipWithIndex) {
+      logger.debug("Initial transition #%d:\n   %s".format(i, t))
+    }
+    for ((t, i) <- nextSorted.zipWithIndex) {
+      logger.debug("Next transition #%d:\n   %s".format(i, t))
+    }
+    logger.debug("Negated invariant:\n   %s".format(notInvariantNew))
+
     val input = new CheckerInput(spec.rootModule, initSorted, nextSorted, notInvariantNew)
     val stepsBound = options.getOption("checker", "length", 10).asInstanceOf[Int]
     val debug = options.getOption("general", "debug", false).asInstanceOf[Boolean]

@@ -85,10 +85,10 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
           case Some(FinSetT(elemT)) if op == TlaSetOper.in =>
             assignTypeAndReturnBool(elemT)
           case tp@_ if op == TlaOper.eq =>
-            errors +:= new TypeInferenceError(rhs, "Expected a type, found: " + tp)
+            addError(new TypeInferenceError(rhs, "Expected a type, found: " + tp))
             None
           case tp@_ if op == TlaSetOper.in =>
-            errors +:= new TypeInferenceError(rhs, "Expected a set, found: " + tp)
+            addError(new TypeInferenceError(rhs, "Expected a set, found: " + tp))
             None
         }
 
@@ -102,12 +102,12 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
             if (predT.contains(BoolT())) {
               Some(setT)
             } else {
-              errors +:= new TypeInferenceError(pred, "Expected a Boolean, found: " + predT)
+              addError(new TypeInferenceError(pred, "Expected a Boolean, found: " + predT))
               None
             }
 
           case tp@_ =>
-            errors +:= new TypeInferenceError(set, "Expected a set, found: " + tp)
+            addError(new TypeInferenceError(set, "Expected a set, found: " + tp))
             None
         }
 
@@ -123,7 +123,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
               varTypes = varTypes + (pair._1 -> elemT)
 
             case tp@_ =>
-              errors +:= new TypeInferenceError(pair._2, "Expected a set, found: " + tp)
+              addError(new TypeInferenceError(pair._2, "Expected a set, found: " + tp))
           }
         }
 
@@ -142,7 +142,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
               varTypes = varTypes + (pair._1 -> elemT)
 
             case tp@_ =>
-              errors +:= new TypeInferenceError(pair._2, "Expected a set, found: " + tp)
+              addError(new TypeInferenceError(pair._2, "Expected a set, found: " + tp))
           }
         }
 
@@ -173,12 +173,12 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
                 Some(BoolT()) // exists/forall
               }
             } else {
-              errors +:= new TypeInferenceError(pred, "Expected a Boolean, found: " + predT)
+              addError(new TypeInferenceError(pred, "Expected a Boolean, found: " + predT))
               None
             }
 
           case tp@_ =>
-            errors +:= new TypeInferenceError(set, "Expected a set, found: " + tp)
+            addError(new TypeInferenceError(set, "Expected a set, found: " + tp))
             None
         }
 
@@ -192,8 +192,8 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
           typeAnnotations += (ex.safeId -> unifier.get)
           unifier
         } else {
-          errors +:= new TypeInferenceError(annot,
-            "No unifier for type annotation %s and expression %s".format(annot, ex))
+          addError(new TypeInferenceError(annot,
+            "No unifier for type annotation %s and expression %s".format(annot, ex)))
           None
         }
 
@@ -201,7 +201,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
         val primed = name + "'"
         val result = varTypes.get(primed)
         if (result.isEmpty) {
-          errors +:= new TypeInferenceError(expr, "Failed to find type of variable " + name)
+          addError(new TypeInferenceError(expr, "Failed to find type of variable " + name))
         }
         result
 
@@ -216,7 +216,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
             Some(compute(expr, argTypes.map(_.get): _*))
           } catch {
             case e: TypeInferenceError =>
-              errors +:= e
+              addError(e)
               None
           }
         } else {
@@ -232,7 +232,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
           } else if (BoolTheory().hasConst(name)) {
             result = Some(BoolT())
           } else {
-            errors +:= new TypeInferenceError(expr, "Failed to find type of variable " + name)
+            addError(new TypeInferenceError(expr, "Failed to find type of variable " + name))
           }
         }
         result
@@ -242,7 +242,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
           Some(compute(expr))
         } catch {
           case e: TypeInferenceError =>
-            errors +:= e
+            addError(e)
             None
         }
 
@@ -799,7 +799,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
       val firstType = types.head
 
       if (types.tail.exists(_ != firstType)) {
-        error(ex, "Expected equal types: %s".format(types.mkString(", ")))
+        error(ex, "Expected equal types: %s".format(types.mkString(" and ")))
       }
     }
   }
@@ -814,6 +814,10 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
 
   private def notImplemented: PartialFunction[TlaEx, CellT] = {
     case ex => throw new NotImplementedError("Type construction for %s is not implemented. Report a bug!".format(ex))
+  }
+
+  private def addError(error: TypeInferenceError): Unit = {
+    errors :+= error
   }
 
   /**

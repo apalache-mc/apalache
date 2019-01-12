@@ -55,14 +55,14 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
         invariant = Some(new ConstSimplifier().simplify(tla.not(checkerInput.notInvariant.get)))
       }
       var state = makeOneStep(0, dummyState, checkerInput.initTransitions)
-      checkInvariant(0, state)
       shiftTypes() // for each x', assign type(x) to be type(x'), forget x'
+      checkInvariant(0, state)
       for (i <- 1 to stepsBound) {
         // checking for deadlocks is not so easy in our encoding
         //        checkForDeadlocks(i, state, nextStates)
         state = makeOneStep(i, state, checkerInput.nextTransitions)
-        checkInvariant(i, state)
         shiftTypes() // for each x', assign type(x) to be type(x'), forget x'
+        checkInvariant(i, state)
       }
       Outcome.NoError
     } catch {
