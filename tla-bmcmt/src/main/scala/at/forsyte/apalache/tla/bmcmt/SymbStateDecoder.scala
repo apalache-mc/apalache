@@ -27,7 +27,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     // compute the equivalence classes for the cells, totally suboptimally
     // TODO: rewrite, I did not think too much at all
     def iseq(c: ArenaCell, d: ArenaCell): Boolean = {
-      c.cellType == d.cellType && solverContext.evalGroundExpr(tla.eql(c, d)).identical(tla.bool(true))
+      c.cellType == d.cellType && solverContext.evalGroundExpr(tla.eql(c, d)) == tla.bool(true)
     }
 
     def merge(cls: List[HashSet[ArenaCell]], c: ArenaCell, d: ArenaCell): List[HashSet[ArenaCell]] = {
@@ -92,7 +92,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       tla.appFun(NameEx("Unknown"), cell)
 
     case FinSetT(_) =>
-      def inSet(e: ArenaCell) = solverContext.evalGroundExpr(tla.in(e, cell)).identical(tla.bool(true))
+      def inSet(e: ArenaCell) = solverContext.evalGroundExpr(tla.in(e, cell)) == tla.bool(true)
 
       val elems = arena.getHas(cell).filter(inSet)
       tla.enumSet(elems.map(c => decodeCellToTlaEx(arena, c)): _*)
@@ -103,7 +103,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     case FunT(_, _) =>
       val dom = arena.getDom(cell)
       def eachElem(es: List[TlaEx], argCell: ArenaCell): List[TlaEx] = {
-        val inSet = solverContext.evalGroundExpr(tla.in(argCell, dom)).identical(tla.bool(true))
+        val inSet = solverContext.evalGroundExpr(tla.in(argCell, dom)) == tla.bool(true)
         if (inSet) {
           val resultEx = findCellInSet(arena, arena.getHas(arena.getCdm(cell)), tla.appFun(cell, argCell)) match {
             case Some(c) => decodeCellToTlaEx(arena, c) // it may be a set

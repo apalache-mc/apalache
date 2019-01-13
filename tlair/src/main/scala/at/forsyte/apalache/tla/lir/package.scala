@@ -118,68 +118,15 @@ package lir {
       "Formal parameters should have fixed arity")
   }
 
-  // TODO: let's clean up this trait (Igor)
-  trait Identifiable extends Ordered[Identifiable] {
-    protected var m_ID : UID      = UID( -1 )
-    protected var canSet: Boolean = true
-    def setID( newID: UID ) = {
-      if( canSet && newID.valid ) {
-        canSet = false
-        m_ID = newID
-      }
-      else throw new Identifiable.IDReallocationError
-    }
-    def ID : UID = m_ID
-
-    /**
-      * Get an ID, if one has been assigned, and throw IllegalStateException otherwise.
-      * @return a valid ID
-      * @throws IllegalStateException when an identifier has not been assigned yet.
-      */
-    def safeId: UID = {
-      if (m_ID.valid) {
-        m_ID
-      } else {
-        throw new IllegalStateException("An expression has not been assigned an ID yet")
-      }
-    }
-
-    def forget(): Unit ={
-      m_ID = UID( -1 )
-      canSet = true
-    }
-
-    def valid : Boolean = m_ID.valid
-
-    override def compare(that: Identifiable): Int = {
-      that match {
-        case other: Identifiable =>
-          if (valid && other.valid) {
-            ID.id.compareTo(other.ID.id)
-          } else {
-            throw new IllegalStateException("Comparing objects without IDs")
-          }
-
-        case _ =>
-          1
-      }
-    }
-  }
-
-  object IdOrdering extends Ordering[Identifiable] {
-    override def compare(x: Identifiable, y: Identifiable): Int = x compare y
-  }
-
-  object Identifiable {
-    class IDReallocationError extends Exception
-  }
 
   /** An abstract TLA+ expression. Note that the class is sealed, so we allow only a limited set of values. */
   sealed abstract class TlaEx extends Identifiable {
     // TODO: hey, use power of Scala! Move toNiceString out of here and introduce a PrettyPrinter class.
     // No need, toString suffices, you can just call print( ex ) which invokes it by default.
     def toNiceString( nTab: Int = 0) = ""
-    override def toString: String =  UTFPrinter( this ) //toSimpleString // toNiceString()
+
+    // TODO: there must be a nice way of defining default printers in scala, so we do not have to make a choice here
+    override def toString: String =  UTFPrinter( this )
 
     def toSimpleString: String = ""
 
@@ -191,6 +138,8 @@ package lir {
     def isNull : Boolean = false
 
     def deepCopy( identified: Boolean = true ) : TlaEx
+
+    // this is a strange method, as it expects both structural equality and equality of the identifiers
     def identical( other: TlaEx ) : Boolean
   }
 
@@ -222,8 +171,7 @@ package lir {
       return ret
     }
 
-    // REVIEW: don't we want to maintain the invariant that two expressions with the same ID have the same structure?
-    // In this case, we don't need a deep comparison like this. -- Igor.
+    // TODO: move it an analysis class. This can be done by pattern matching and should not be in the class itself.
     override def identical( other: TlaEx ): Boolean = {
       other match{
         case ValEx( v ) => v == value && other.ID == ID
@@ -246,6 +194,7 @@ package lir {
       ex
     }
 
+    // TODO: move it an analysis class. This can be done by pattern matching and should not be in the class itself.
     override def identical( other: TlaEx ): Boolean = {
       other match{
         case NameEx( nm ) => nm == name && other.ID == ID
@@ -289,7 +238,7 @@ package lir {
       }
     }
 
-
+    // TODO: remove it, copying should work automatically for case classes
     override def deepCopy( identified: Boolean = true ): OperEx = {
       val ex = OperEx( oper, args.map( _.deepCopy( identified ) ) : _* ) // deep copy
       if (identified) {
@@ -299,6 +248,7 @@ package lir {
       ex
     }
 
+    // TODO: move it an analysis class. This can be done by pattern matching and should not be in the class itself.
     override def identical( other: TlaEx ): Boolean = {
       other match{
         case OperEx( op, arguments @ _*  ) => op == oper && other.ID == ID && arguments.size == args.size &&
@@ -398,21 +348,6 @@ package lir {
       case _ => false
     }
   }
-
-
-  // TODO: @Igor (09.01.2019): 1. We should use Long instead of Int, in order to have a large enough pool of identifiers.
-  // 2. We should assign identifiers automatically:
-  // Carrying around EnvironmentHandler and calling Identifier.identify is extremely annoying.
-  abstract class IDType {
-    val id: Long
-    def valid: Boolean = id >= 0
-  }
-
-  // TODO: Rewrite UID with proper factory and invalid type
-
-  sealed case class UID( id: Long ) extends IDType
-  sealed case class EID( id: Long ) extends IDType
-
 }
 
 

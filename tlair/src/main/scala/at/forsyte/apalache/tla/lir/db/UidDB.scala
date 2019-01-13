@@ -7,6 +7,7 @@ import scala.collection.immutable.Vector
 
 // TODO: Igor: what is the point of collecting all the expressions in a vector?
 // I do not see any useful application of that, except leaking memory.
+// Deprecated: do not use this class.
 @Singleton
 class UidDB extends DB[ UID, TlaEx ] {
   override val m_name = "UIDMap"
