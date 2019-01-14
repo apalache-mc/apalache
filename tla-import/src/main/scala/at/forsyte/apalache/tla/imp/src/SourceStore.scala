@@ -46,8 +46,11 @@ class SourceStore extends TransformationListener {
     find(originEx.safeId) match {
       case Some(loc) => addRec(newEx, loc)
       case None =>
-        () // XXX: throw an exception as soon as Jure fixes the source info and everything
-//        throw new IllegalArgumentException("The original expression does not have source data")
+        // FIXME: throw this exception as soon as we fix the source tracking
+        /*
+        throw new IllegalArgumentException("The original expression (UID = %s) does not have source data: %s"
+          .format(originEx.ID, originEx))
+         */
     }
   }
 
