@@ -430,6 +430,8 @@ class TestSanyImporter extends FunSuite {
       |ExceptAt == [ x EXCEPT ![0] = @ /\ TRUE]
       |FcnApply == x[1]
       |FcnCtor == [ y \in x |-> y \cup y ]
+      |FcnCtor2 == [ a \in x, b \in BOOLEAN |-> <<a, b>> ]
+      |FcnCtor3 == [ <<a, b>> \in x \X BOOLEAN |-> <<a, b>> ]
       |IfThenElse == IF TRUE THEN FALSE ELSE TRUE
       |RcdCtor == [ a |-> 1, b |-> 2 ]
       |RcdSelect == x.foo
@@ -445,6 +447,7 @@ class TestSanyImporter extends FunSuite {
       |UnboundedExists == \E y: TRUE
       |UnboundedForall == \A y: TRUE
       |SetOfAll == { 1: y \in x }
+      |SetOfTuples == { <<a, b>> : a \in x, b \in x }
       |SubsetOf == { y \in x: TRUE }
       |Boolean == BOOLEAN
       |String == STRING
@@ -536,6 +539,12 @@ class TestSanyImporter extends FunSuite {
     val cup = OperEx(TlaSetOper.cup, NameEx("y"), NameEx("y"))
     expectDecl("FcnCtor",
       OperEx(TlaFunOper.funDef, cup, NameEx("y"), NameEx("x")))
+    expectDecl("FcnCtor2",
+      OperEx(TlaFunOper.funDef, OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")),
+        NameEx("a"), NameEx("x"), NameEx("b"), NameEx("x")))
+    expectDecl("FcnCtor3",
+      OperEx(TlaFunOper.funDef, OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")),
+        OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")), NameEx("x")))
     expectDecl("IfThenElse",
       OperEx(TlaControlOper.ifThenElse, ValEx(TlaTrue), ValEx(TlaFalse), ValEx(TlaTrue)))
     expectDecl("RcdCtor",
@@ -568,6 +577,8 @@ class TestSanyImporter extends FunSuite {
       OperEx(TlaBoolOper.forallUnbounded, NameEx("y"), ValEx(TlaTrue)))
     expectDecl("SetOfAll",
       OperEx(TlaSetOper.map, ValEx(TlaInt(1)), NameEx("y"), NameEx("x")))
+    expectDecl("SetOfTuples",
+      OperEx(TlaSetOper.map, OperEx(TlaFunOper.tuple), NameEx("a"), NameEx("x"), NameEx("b"), NameEx("x")))
     expectDecl("SubsetOf",
       OperEx(TlaSetOper.filter, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))
     expectDecl("Boolean", ValEx(TlaBoolSet))

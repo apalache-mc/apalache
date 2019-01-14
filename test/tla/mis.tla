@@ -5,24 +5,30 @@ N == 3
 N4 == 81
 Nodes == 1..N
 
+a <: b == a \* type annotations
+
 VARIABLES Nb, round, val, awake, rem_nbrs, status, msgs
 
 Pred(n) == IF n > 1 THEN n - 1 ELSE N
 Succ(n) == IF n < N THEN n + 1 ELSE 1
 
-Init == /\ Nb = [ n \in Nodes |-> {Pred(n), Succ(n)} ]
+Init == \*/\ Nb = [ n \in Nodes |-> {Pred(n), Succ(n)} ]
+        /\ Nb \in SUBSET(Nodes \X Nodes)
         /\ round = 1
         /\ val \in [Nodes -> 1..N4]
         /\ awake = [n \in Nodes |-> TRUE]
         /\ rem_nbrs = Nb
         /\ status = [n \in Nodes |-> "unknown"]
-        /\ msgs = [n \in Nodes |-> {}]
+        /\ msgs = [n \in Nodes |->
+            ({} <: {[type |-> STRING, src |-> Int, val |-> Int ]})]
     
 Senders(u) == {v \in Nodes: awake[v] /\ u \in rem_nbrs[v] }
 
-SentValues(u) == { val'[w] : w \in Senders(u) }
+SentValues(u) == { [type |-> "val", src |-> w, val |-> val'[w]] : w \in Senders(u) }
     
-IsWinner(u) == \A v \in msgs'[u]: val'[u] > v \* replace with TRUE to introduce a bug
+IsWinner(u) ==
+    \A m \in msgs'[u]:
+        m.type = "val" => val'[u] > m.val \* replace with TRUE to introduce a bug
     
 Round1 ==
     /\ round = 1
@@ -34,10 +40,12 @@ Round1 ==
 
 SentWinners(u) ==
     IF \E w \in Senders(u): awake[w] /\ status[w] = "winner"
-    THEN {"winner"}
-    ELSE {}
+    THEN {[type |-> "winner", src |-> u]
+            <: [type |-> STRING, src |-> Int, val |-> Int]}
+    ELSE ({}
+            <: {[type |-> STRING, src |-> Int, val |-> Int]})
 
-IsLoser(u) == "winner" \in msgs'[u]
+IsLoser(u) == \E m \in msgs'[u]: m.type = "winner"
     
 Round2 ==
     /\ round = 2
@@ -47,14 +55,19 @@ Round2 ==
     /\ UNCHANGED <<rem_nbrs, awake, val>>
 
 SentLosers(u) ==
-    {w \in Senders(u): awake[w] /\ status[w] = "loser"}
+    {([type |-> "loser", src |-> s]
+        <: [type |-> STRING, src |-> Int, val |-> Int])
+        : s \in {w \in Senders(u): awake[w] /\ status[w] = "loser"}}
+
+ReceivedLosers(u) ==
+    {mm.src : mm \in {m \in msgs'[u]: m.type = "loser"}}
     
 Round3 ==
     /\ round = 3 
     /\ msgs' = [u \in Nodes |-> SentLosers(u)]
     /\ awake' = [n \in Nodes |->
         IF status[n] \notin {"winner", "loser"} THEN TRUE ELSE FALSE]
-    /\ rem_nbrs' = [u \in Nodes |-> rem_nbrs[u] \ msgs'[u]] 
+    /\ rem_nbrs' = [u \in Nodes |-> rem_nbrs[u] \ ReceivedLosers(u)] 
     /\ UNCHANGED <<status, val>>
 
 Next ==
