@@ -21,7 +21,9 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
                  exprGradeStore: ExprGradeStore,
                  sourceStore: SourceStore,
                  checkerInput: CheckerInput,
-                 stepsBound: Int, debug: Boolean = false, profile: Boolean = false) extends Checker with LazyLogging {
+                 stepsBound: Int,
+                 debug: Boolean = false,
+                 profile: Boolean = false) extends Checker with LazyLogging {
 
   import Checker._
 
@@ -32,8 +34,8 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
     */
   private var stack: List[SymbState] = List()
   private val solverContext: SolverContext =
-  //    new Z3SolverContext(debug)
-    new PreproSolverContext(new Z3SolverContext(debug, profile))
+      new Z3SolverContext(debug, profile)
+//    new PreproSolverContext(new Z3SolverContext(debug, profile))
 
   private val rewriter = new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
   rewriter.freeExistentialsStore = frexStore
@@ -83,7 +85,7 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
         case tran :: tail =>
           val erased = state.setBinding(forgetPrimed(state.binding))
           val nextState = applyTransition(stepNo, erased, tran, transitionNo)
-          rewriter.exprCache.disposeActionLevel() // leave only constants
+          rewriter.exprCache.disposeActionLevel() // leave only the constants
           if (nextState.isDefined) {
             nextState.get +: computeAllEnabled(nextState.get, tail, transitionNo + 1)
           } else {
@@ -96,7 +98,7 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
       // TODO: explain counterexample
       logger.error(s"No next transition applicable on step $stepNo. Deadlock detected. Check counterexample.")
       dumpCounterexample()
-      throw new CancelSearchException(Outcome.RuntimeError)
+      throw new CancelSearchException(Outcome.Deadlock)
     } else if (nextStates.lengthCompare(1) == 0) {
       // the only next state -- return it
       val onlyState = nextStates.head
@@ -130,11 +132,11 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
         val pickX = tla.in(tla.prime(NameEx(x.stripSuffix("'"))),
           tla.enumSet(nextStates.map(_.binding(x).toNameEx): _*))
 
-        def eq(sAndI: (SymbState, Int)): TlaEx =
-          tla.or(tla.neql(transitionIndex, tla.int(sAndI._2)),
-            tla.eql(NameEx(x), sAndI._1.binding(x).toNameEx))
+        def eq(state: SymbState, index: Int): TlaEx =
+          tla.or(tla.neql(transitionIndex, tla.int(index)),
+            tla.eql(NameEx(x), state.binding(x).toNameEx))
 
-        tla.and(pickX +: nextStates.zipWithIndex.map(eq): _*)
+        tla.and(pickX +: (nextStates.zipWithIndex map (eq _).tupled): _*)
       }
 
       val pickAll = tla.and(leftBound +: rightBound +: vars.toList.map(pickVar): _*)
