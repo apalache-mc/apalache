@@ -70,8 +70,10 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
           val primedVar = varName + "'"
           if (varTypes.contains(primedVar)) {
             if (varTypes(primedVar) != assignedType) {
-              error(expr, "Assigning a type %s, while assigned type %s earlier"
-                .format(assignedType, varTypes(primedVar)))
+              val e = new TypeInferenceError(expr,
+                "Assigning a type %s, while assigned type %s earlier"
+                  .format(assignedType, varTypes(primedVar)))
+              addError(e)
             }
           } else {
             varTypes = varTypes + (primedVar -> assignedType)
@@ -205,7 +207,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
         }
         result
 
-      case ex @ OperEx(TlaActionOper.prime, arg) =>
+      case ex@OperEx(TlaActionOper.prime, arg) =>
         Some(error(ex, "Expected a name under ', found: " + arg))
 
       // other operators
