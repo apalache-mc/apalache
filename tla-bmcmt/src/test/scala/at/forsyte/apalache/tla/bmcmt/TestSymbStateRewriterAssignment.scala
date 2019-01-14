@@ -13,6 +13,7 @@ import scala.collection.immutable.{SortedMap, SortedSet, TreeMap}
 class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
   private val set12: OperEx = tla.enumSet(tla.int(1), tla.int(2))
   private val x_prime: OperEx = tla.prime(tla.name("x"))
+  private val y_prime: OperEx = tla.prime(tla.name("y"))
 
   test("""SE-IN-ASSIGN1(int): x' \in {1, 2} ~~> TRUE and [x -> $C$k]""") {
     val set = set12
@@ -45,6 +46,34 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     rewriter.pop()
     rewriter.push()
     solverContext.assertGroundExpr(tla.eql(boundCell, tla.int(3)))
+    assertUnsatOrExplain(rewriter, nextState) // should not be possible
+  }
+
+  test("""SE-IN-ASSIGN1(int): assign in conjunction""") {
+    val and =
+      tla.and(
+        tla.in(x_prime, tla.enumSet(tla.int(1))),
+        tla.in(y_prime, tla.enumSet(tla.int(2)))
+      )
+
+    val state = new SymbState(and, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    val x_cell = nextState.binding("x'").toNameEx
+    val y_cell = nextState.binding("y'").toNameEx
+
+    assert(solverContext.sat()) // no contradiction introduced
+    rewriter.push()
+    solverContext.assertGroundExpr(tla.eql(x_cell, tla.int(1)))
+    solverContext.assertGroundExpr(tla.eql(y_cell, tla.int(2)))
+    assert(solverContext.sat()) // ok
+    rewriter.pop()
+    rewriter.push()
+    solverContext.assertGroundExpr(tla.neql(x_cell, tla.int(1)))
+    assertUnsatOrExplain(rewriter, nextState) // should not be possible
+    rewriter.pop()
+    rewriter.push()
+    solverContext.assertGroundExpr(tla.neql(y_cell, tla.int(2)))
     assertUnsatOrExplain(rewriter, nextState) // should not be possible
   }
 
@@ -408,7 +437,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     val set34 = tla.enumSet(tla.int(3), tla.int(4))
     val record2 = tla.enumFun(tla.str("a"), tla.int(2),
       tla.str("b"), tla.bool(true), tla.str("c"), set34)
-    val annotation = AnnotationParser.toTla(RecordT(SortedMap("a" -> IntT(), "b" -> BoolT(),  "c" -> FinSetT(IntT()))))
+    val annotation = AnnotationParser.toTla(RecordT(SortedMap("a" -> IntT(), "b" -> BoolT(), "c" -> FinSetT(IntT()))))
     val recordSet = tla.enumSet(tla.withType(record1, annotation), record2)
     val assign = tla.in(x_prime, recordSet)
 
@@ -432,7 +461,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
             tla.in(b_of_x_prime, boolset))
         // interestingly, we cannot expect that x'.c \in { 3, 4 },
         // as the value of the field c is unknown for the first record
-//            tla.in(c_of_x_prime, tla.enumSet(set34))
+        //            tla.in(c_of_x_prime, tla.enumSet(set34))
 
         assertTlaExAndRestore(rewriter, nextState.setRex(membershipTest))
 
