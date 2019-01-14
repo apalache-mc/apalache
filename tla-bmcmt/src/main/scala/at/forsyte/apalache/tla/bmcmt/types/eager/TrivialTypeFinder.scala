@@ -113,23 +113,23 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
             None
         }
 
-      // { x \in S |-> e }
+      // {e : x \in S}
       case OperEx(TlaSetOper.map, mapEx, varsAndSets@_*) =>
         val names = varsAndSets.zipWithIndex.collect { case (NameEx(n), i) if i % 2 == 0 => n }
         val sets = varsAndSets.zipWithIndex.collect { case (e, i) if i % 2 == 1 => e }
 
-        def bind(pair: Tuple2[String, TlaEx]): Unit = {
-          inferAndSave(pair._2) match {
+        def bind(name: String, set: TlaEx): Unit = {
+          inferAndSave(set) match {
             case Some(setT@FinSetT(elemT)) =>
-              assert(!varTypes.contains(pair._1))
-              varTypes = varTypes + (pair._1 -> elemT)
+              assert(!varTypes.contains(name))
+              varTypes = varTypes + (name -> elemT)
 
             case tp@_ =>
-              addError(new TypeInferenceError(pair._2, "Expected a set, found: " + tp))
+              addError(new TypeInferenceError(set, "Expected a set, found: " + tp))
           }
         }
 
-        names.zip(sets).foreach(bind)
+        names.zip(sets) foreach (bind _).tupled
         Some(FinSetT(inferAndSave(mapEx).getOrElse(UnknownT())))
 
       // [x \in S |-> e]
@@ -137,18 +137,18 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
         val names = varsAndSets.zipWithIndex.collect { case (NameEx(n), i) if i % 2 == 0 => n }
         val sets = varsAndSets.zipWithIndex.collect { case (e, i) if i % 2 == 1 => e }
 
-        def bind(pair: Tuple2[String, TlaEx]): Unit = {
-          inferAndSave(pair._2) match {
+        def bind(name: String, set: TlaEx): Unit = {
+          inferAndSave(set) match {
             case Some(setT@FinSetT(elemT)) =>
-              assert(!varTypes.contains(pair._1))
-              varTypes = varTypes + (pair._1 -> elemT)
+              assert(!varTypes.contains(name))
+              varTypes = varTypes + (name -> elemT)
 
             case tp@_ =>
-              addError(new TypeInferenceError(pair._2, "Expected a set, found: " + tp))
+              addError(new TypeInferenceError(set, "Expected a set, found: " + tp))
           }
         }
 
-        names.zip(sets).foreach(bind)
+        names.zip(sets) foreach (bind _).tupled
         val resT = inferAndSave(funEx).getOrElse(UnknownT())
         val domT =
           if (names.length == 1) {
@@ -268,8 +268,16 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
     * @return the resulting type
     */
   override def computeRec(ex: TlaEx): CellT = ex match {
-    case OperEx(_, args@_*) => compute(ex, args map computeRec: _*)
-    case _ => compute(ex)
+    case OperEx(BmcOper.withType, annotated, _) =>
+      // a pre-computed type annotation overrides the type info
+      assert(typeAnnotations.contains(annotated.ID)) // otherwise, the engine is broken
+      typeAnnotations(annotated.ID)
+
+    case OperEx(_, args@_*) =>
+      compute(ex, args map computeRec: _*)
+
+    case _ =>
+      compute(ex)
   }
 
   /**
@@ -281,7 +289,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
     * @throws TypeInferenceError if the type cannot be computed.
     */
   override def compute(ex: TlaEx, argTypes: CellT*): CellT = {
-    if (ex.ID.valid && typeAnnotations.contains(ex.ID)) {
+    if (typeAnnotations.contains(ex.ID)) {
       // this expression has been annotated with a type
       typeAnnotations(ex.ID)
     } else {
@@ -786,8 +794,8 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
       expectType(ConstT(), msg, msgType)
       BoolT()
 
-    case OperEx(BmcOper.withType, expr, _) =>
-      argTypes.head // just return the expression type, as the proper type has been assigned already
+    case ex @ OperEx(BmcOper.withType, _*) =>
+      throw new IllegalStateException("The type annotation must have been saved by inferAndSave: " + ex)
   }
 
   private def expectType(expectedType: CellT, ex: TlaEx, exType: CellT): Unit = {
