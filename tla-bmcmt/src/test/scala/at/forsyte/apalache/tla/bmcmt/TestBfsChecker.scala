@@ -79,6 +79,28 @@ class TestBfsChecker extends FunSuite with BeforeAndAfter {
     assert(Checker.Outcome.NoError == outcome)
   }
 
+  test("determinstic Init + 2 steps (regression)") {
+    // y' \in {1} /\ x' \in {1}
+    val initTrans = List(tla.and(mkAssign("y", 1), mkAssign("x", 1)))
+    // y' \in {y + 1} /\ x' \in {x + 1}
+    val nextTrans = List(tla.and(
+      mkAssign("y", tla.plus(tla.name("y"), tla.int(1))),
+      mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
+    ))///
+    val dummyModule = new TlaModule("root", List(), List())
+    val notInv = tla.not(tla.equiv(
+      tla.eql(tla.int(3), tla.name("x")),
+      tla.eql(tla.int(3), tla.name("y"))
+    ))////
+
+    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, Some(notInv))
+    // initialize the model checker
+    val checker = new BfsChecker(typeFinder, frexStore, exprGradeStore, sourceStore, checkerInput,
+      stepsBound = 2, debug = false, profile = false)
+    val outcome = checker.run()
+    assert(Checker.Outcome.NoError == outcome)
+  }
+
   test("Init + Next, 1 step, deadlock") {
     // x' \in {2} \/ x' \in {1}
     val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
@@ -176,22 +198,22 @@ class TestBfsChecker extends FunSuite with BeforeAndAfter {
 
   test("Init + Next + Inv, 2 steps, set assignments") {
     // sets require an explicit equality, and that is where picking the next state may fail
-    // Init == x' = {2} /\ y = {10}
+    // Init == x \in {2} /\ y \in {10}
     // Next == \/ x' = x \cup {2} /\ y' = y \setminus {11}
     //         \/ x' = x \setminus {2} /\ y' = y \cup {11}
     // Inv ==  11 \in y <=> 2 \notin x
 
-    // Init == x' = {1} /\ y = {10}
+    // Init == x' = {2} /\ y = {10}
     val init = tla.and(mkAssign("x", tla.enumSet(tla.int(2))),
       mkAssign("y", tla.enumSet(tla.int(10))))
 
-    // Next == \/ x' = x \cup {2} /\ y' = y
+    // Next == \/ x' = x \cup {2} /\ y' = y \setminus {11}
     //         \/ x' = x \setminus {2} /\ y' = y \cup {11}
     val next1 =
     tla.and(
       mkAssign("x", tla.cup(tla.name("x"), tla.enumSet(tla.int(2)))),
       mkAssign("y", tla.setminus(tla.name("y"), tla.enumSet(tla.int(11))))
-    )
+    )///
     ///
     val next2 =
       tla.and(

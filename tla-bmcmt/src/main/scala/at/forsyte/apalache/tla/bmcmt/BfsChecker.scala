@@ -104,22 +104,25 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
       val onlyState = nextStates.head
       val resultingState = onlyState.setBinding(shiftBinding(onlyState.binding))
       stack = resultingState +: stack
+      solverContext.assertGroundExpr(onlyState.ex)
       resultingState
     } else {
       // pick an index j \in { 0..k } of the fired transition
       val transitionIndex = NameEx(rewriter.solverContext.introIntConst())
 
-      def transitionFired(sAndI: (SymbState, Int)): TlaEx =
-        tla.or(tla.neql(transitionIndex, tla.int(sAndI._2)), sAndI._1.ex)
+      def transitionFired(state: SymbState, index: Int): TlaEx =
+        // it is tempting to use <=> instead of => here, but this might require from an inactive transition
+        // to be completely disabled, while we just say that it is not picked
+        tla.impl(tla.eql(transitionIndex, tla.int(index)), state.ex)
 
       // the bound on j will be rewritten in pickState
       val leftBound = tla.le(tla.int(0), transitionIndex)
       val rightBound = tla.lt(transitionIndex, tla.int(nextStates.length))
-      solverContext.assertGroundExpr(tla.and(nextStates.zipWithIndex.map(transitionFired): _*))
+      solverContext.assertGroundExpr(tla.and(nextStates.zipWithIndex.map((transitionFired _).tupled): _*))
 
       // glue the computed states S0, ..., Sk together:
       // for every variable x, pick c_x from { S1[x], ..., Sk[x] }
-      //   and require \A i \in { 1.. k}. j = i => c_x = Si[x]
+      //   and require \A i \in { 0.. k-1}. j = i => c_x = Si[x]
       // Then, the final state binds x -> c_x for every x \in Vars
       val lastState = nextStates.last // the last state has the largest arena
       val vars = forgetNonPrimed(lastState.binding).keySet
@@ -133,7 +136,7 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
           tla.enumSet(nextStates.map(_.binding(x).toNameEx): _*))
 
         def eq(state: SymbState, index: Int): TlaEx =
-          tla.or(tla.neql(transitionIndex, tla.int(index)),
+          tla.impl(tla.eql(transitionIndex, tla.int(index)),
             tla.eql(NameEx(x), state.binding(x).toNameEx))
 
         tla.and(pickX +: (nextStates.zipWithIndex map (eq _).tupled): _*)
@@ -181,7 +184,7 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
       solverContext.log("; } ------- STEP: %d, STACK LEVEL: %d".format(stepNo, rewriter.contextLevel))
       None
     } else {
-      rewriter.pop()
+      rewriter.pop() // forget about that the transition was taken
       solverContext.log("; } ------- STEP: %d, STACK LEVEL: %d".format(stepNo, rewriter.contextLevel))
       Some(nextState)
     }
@@ -192,7 +195,7 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
     // or function application outside its domain.
     // The crucial assumption here is that IF-THEN-ELSE activates runtime errors only
     // on the active branches, see IfThenElseRule.
-    logger.debug("Checking whether the assertions can be violated.")
+    logger.debug("Checking for runtime errors")
     rewriter.push()
     val failPreds = state.arena.findCellsByType(FailPredT())
     solverContext.assertGroundExpr(tla.or(failPreds.map(_.toNameEx): _*))
@@ -213,6 +216,7 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
       throw new CancelSearchException(Outcome.RuntimeError)
     }
     rewriter.pop()
+    logger.debug("No runtime errors")
     // assume no failure occurs
     solverContext.assertGroundExpr(tla.and(failPreds.map(fp => tla.not(fp.toNameEx)): _*))
   }
