@@ -10,10 +10,14 @@ package object bmcmt {
     */
   type Binding = HashMap[String, ArenaCell]
 
-  // an a handy companion object
+  // a handy companion object
   object Binding {
     def apply(args: (String, ArenaCell)*): Binding ={
       HashMap[String, ArenaCell](args :_*)
+    }
+
+    def apply(map: HashMap[String, ArenaCell]): Binding = {
+      map
     }
   }
 

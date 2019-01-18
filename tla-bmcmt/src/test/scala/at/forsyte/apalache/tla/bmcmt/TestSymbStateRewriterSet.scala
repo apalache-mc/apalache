@@ -723,6 +723,58 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
+  test("""SE-SET-MAP[1-2]: <<2, true>> \in {<<x, y>>: x \in {1,2,3}, y \in {FALSE, TRUE}} ~~> $B$k""") {
+    val set123 = tla.enumSet(1 to 3 map tla.int :_*)
+    val setBool = tla.enumSet(tla.bool(false), tla.bool(true))
+    val mapping = tla.tuple(tla.name("x"), tla.name("y"))
+    val mappedSet = tla.map(mapping, tla.name("x"), set123, tla.name("y"), setBool)
+    val inMappedSet = tla.in(tla.tuple(tla.int(2), tla.bool(true)), mappedSet)
+
+    val state = new SymbState(inMappedSet, BoolTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case membershipEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        rewriter.push()
+        solverContext.assertGroundExpr(membershipEx)
+        assert(solverContext.sat())
+        rewriter.pop()
+        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, membershipEx))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  test("""SE-SET-MAP[1-2]: <<TRUE>> \in {<<y>>: x \in {1,2} \ {2}, y \in {FALSE, TRUE}} ~~> $B$k""") {
+    // this expression may be problematic as it might conflict with cached expressions
+    val set12 = tla.enumSet(1 to 2 map tla.int :_*)
+    val set12minus2 = tla.setminus(set12, tla.enumSet(tla.int(2)))
+    val setBool = tla.enumSet(tla.bool(false), tla.bool(true))
+    val mapping = tla.tuple(tla.name("y"))
+    val mappedSet = tla.map(mapping, tla.name("x"), set12minus2, tla.name("y"), setBool)
+    val inMappedSet = tla.in(tla.tuple(tla.bool(true)), mappedSet)
+
+    val state = new SymbState(inMappedSet, BoolTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case membershipEx@NameEx(name) =>
+        assert(BoolTheory().hasConst(name))
+        rewriter.push()
+        solverContext.assertGroundExpr(membershipEx)
+        assert(solverContext.sat())
+        rewriter.pop()
+        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, membershipEx))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
   test("""SE-SET-CUP[1-2]: {1, 3} \cup {3, 4} = {1, 3, 4}""") {
     def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
 
