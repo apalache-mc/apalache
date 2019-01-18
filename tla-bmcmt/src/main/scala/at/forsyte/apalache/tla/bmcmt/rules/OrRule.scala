@@ -47,6 +47,7 @@ class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.coerce(finalState, state.theory) // coerce if needed
 
       case OperEx(TlaBoolOper.orParallel, args @ _*) =>
+        // TODO: update according to the semantics!
         // normal disjunction on action-level expressions (like in TLC)
         // rewrite all the arguments
         val (newState: SymbState, preds: Seq[TlaEx]) =
