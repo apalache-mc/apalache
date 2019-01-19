@@ -6,8 +6,6 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FreeExistentialsStore}
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.IdOrdering
-import at.forsyte.apalache.tla.lir.process.Renaming
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -22,7 +20,6 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
                                         freeExistentialsStore: FreeExistentialsStore,
                                         exprGradeStore: ExprGradeStore,
                                         sourceStore: SourceStore,
-                                        renaming: Renaming,
                                         @Named("AfterChecker") nextPass: Pass)
       extends BoundedCheckerPass with LazyLogging {
 
@@ -45,23 +42,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
       throw new CheckerException(s"The input of $name pass is not initialized")
     }
     val spec = specWithTransitions.get
-    // rename bound variables, so each of them is unique. This is required by TrivialTypeFinder.
-    // hint by Markus Kuppe: sort init and next to get a stable ordering between the runs
-    val initSorted = spec.initTransitions.map(renaming.renameBindingsUnique).sorted(IdOrdering)
-    val nextSorted = spec.nextTransitions.map(renaming.renameBindingsUnique).sorted(IdOrdering)
-    val notInvariantNew =
-      if (spec.notInvariant.isDefined) Some(renaming.renameBindingsUnique(spec.notInvariant.get)) else None
-
-    logger.debug("Transitions after renamed")
-    for ((t, i) <- initSorted.zipWithIndex) {
-      logger.debug("Initial transition #%d:\n   %s".format(i, t))
-    }
-    for ((t, i) <- nextSorted.zipWithIndex) {
-      logger.debug("Next transition #%d:\n   %s".format(i, t))
-    }
-    logger.debug("Negated invariant:\n   %s".format(notInvariantNew))
-
-    val input = new CheckerInput(spec.rootModule, initSorted, nextSorted, notInvariantNew)
+    val input = new CheckerInput(spec.rootModule, spec.initTransitions, spec.nextTransitions, spec.notInvariant)
     val stepsBound = options.getOption("checker", "length", 10).asInstanceOf[Int]
     val debug = options.getOption("general", "debug", false).asInstanceOf[Boolean]
     val profile = options.getOption("smt", "prof", false).asInstanceOf[Boolean]

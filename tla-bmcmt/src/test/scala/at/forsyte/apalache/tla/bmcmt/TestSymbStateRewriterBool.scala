@@ -487,6 +487,41 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     assertUnsatOrExplain(rewriter, nextState)
   }
 
+  test("""SE-EX: \E x \in {1, 2}: y' = x ~~> 2 assignments, regression""") {
+    // an assignment inside an existential quantifier is tricky, as we can multiple values to variables
+    val ex = tla.exists(
+      tla.name("x"),
+      tla.enumSet(tla.int(1), tla.int(2)),
+      tla.in(tla.prime(tla.name("y")),
+             tla.enumSet(tla.name("x")))
+    )////
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding)
+    val rewriter = create()
+    assertThrows[NotImplementedError] {
+      // TODO: implement multiple assignments in expanded quantifiers
+      val nextState = rewriter.rewriteUntilDone(state)
+      assert(solverContext.sat())
+      rewriter.push()
+      solverContext.assertGroundExpr(nextState.ex)
+      assert(solverContext.sat())
+      rewriter.pop()
+      rewriter.push()
+      solverContext.assertGroundExpr(tla.not(nextState.ex))
+      assertUnsatOrExplain(rewriter, nextState)
+      rewriter.pop()
+      rewriter.push()
+      solverContext.assertGroundExpr(nextState.ex)
+      solverContext.assertGroundExpr(tla.eql(tla.int(1), nextState.binding("y'").toNameEx))
+      assert(solverContext.sat())
+      rewriter.pop()
+      rewriter.push()
+      solverContext.assertGroundExpr(nextState.ex)
+      solverContext.assertGroundExpr(tla.eql(tla.int(2), nextState.binding("y'").toNameEx))
+      assert(solverContext.sat())
+      rewriter.pop()
+    }
+  }
+
   test("""SE-EX3: \E x \in {1, 2, 3}: x > 4 ~~> $B$k""") {
     val ex = tla.exists(tla.name("x"),
       tla.enumSet(tla.int(1), tla.int(2), tla.int(3)),

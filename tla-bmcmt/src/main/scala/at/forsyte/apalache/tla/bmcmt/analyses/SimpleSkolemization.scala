@@ -5,9 +5,9 @@ import at.forsyte.apalache.tla.bmcmt.RewriterException
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.plugins.UniqueDB
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import com.google.inject.Inject
+import com.typesafe.scalalogging.LazyLogging
 
 /**
   * A simple skolemization analysis that transforms a formula in negated normal form
@@ -16,7 +16,7 @@ import com.google.inject.Inject
   *
   * @author Igor Konnov
   */
-class SimpleSkolemization @Inject()(val frexStore: FreeExistentialsStoreImpl) {
+class SimpleSkolemization @Inject()(val frexStore: FreeExistentialsStoreImpl) extends LazyLogging {
   /**
     * Transform the transitions into normal form and label the free existential quantifiers.
     *
@@ -29,23 +29,17 @@ class SimpleSkolemization @Inject()(val frexStore: FreeExistentialsStoreImpl) {
     val notInv =
       if (spec.notInvariant.isDefined) Some(toNegatedForm(spec.notInvariant.get)) else None
 
-    // TODO: UniqueDB should be wired using a constructor
-    def addUid(ex: TlaEx): Unit =
-      SpecHandler.sideeffectEx(ex, UniqueDB.add)
-
-    initTransitions foreach addUid
     initTransitions foreach markFreeExistentials
-    nextTransitions foreach addUid
     nextTransitions foreach markFreeExistentials
     if (notInv.isDefined) {
-      addUid(notInv.get)
       markFreeExistentials(notInv.get)
     }
     new SpecWithTransitions(spec.rootModule, initTransitions, nextTransitions, notInv)
   }
 
   private def markFreeExistentials(ex: TlaEx): Unit = ex match {
-    case OperEx(TlaBoolOper.exists, _, _, pred) =>
+    case OperEx(TlaBoolOper.exists, name, _, pred) =>
+      logger.debug(s"added free existential $name (id=${ex.ID})")
       frexStore.store += ex.ID
       markFreeExistentials(pred)
 

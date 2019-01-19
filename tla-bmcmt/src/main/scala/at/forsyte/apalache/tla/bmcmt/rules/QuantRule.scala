@@ -3,8 +3,9 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, PowSetT}
+import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 import com.typesafe.scalalogging.LazyLogging
 
@@ -54,9 +55,28 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
     }
   }
 
+  private def isAssignmentInside(ex: TlaEx): Boolean = ex match {
+    case OperEx(TlaSetOper.in, OperEx(TlaActionOper.prime, NameEx(_)), _) => true
+    case OperEx(_, args@_*) => args.exists(isAssignmentInside)
+    case _ => false
+  }
+
+  // TODO: handle assignments inside exists properly
   private def expandExistsOrForall(isExists: Boolean,
-                                    state: SymbState, boundVar: String, boundingSetEx: TlaEx, predEx: TlaEx) = {
-    rewriter.solverContext.log("; quanitification over a finite set => expanding")
+                                   state: SymbState, boundVar: String, boundingSetEx: TlaEx, predEx: TlaEx) = {
+    rewriter.solverContext.log("; quantification over a finite set => expanding")
+
+    if (isAssignmentInside(predEx)) {
+      val msg =
+        if (isExists) {
+          "Assignments inside \\E are currently supported only for free existentials"
+        } else {
+          "Assignments inside \\A do not make any sense!"
+        }
+
+      throw new NotImplementedError(msg)
+    }
+
     // first, evaluate boundingSet
     val setState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(boundingSetEx))
     val set = setState.arena.findCellByNameEx(setState.ex)
@@ -70,7 +90,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
       case tp =>
         throw new UnsupportedOperationException("Quantification over %s is not supported yet".format(tp))
     }
-    val setCells = setState.arena.getHas(set)  // <------- THIS IS A BUG that does not work with SUBSET!
+    val setCells = setState.arena.getHas(set)
     val finalState =
       if (setCells.isEmpty) {
         // 'exists' over an empty set always returns false, while 'forall' returns true
@@ -137,7 +157,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
   // introduce a Skolem constant for a free-standing existential quantifier:
   // that is, rewrite, \E x \in S: P(x) as S /= {} /\ P(c) for a constant c picked from S
   private def freeExistsInNonEmptySet(setState: SymbState, boundVar: String, predEx: TlaEx,
-                         set: ArenaCell, setCells: List[ArenaCell]) = {
+                                      set: ArenaCell, setCells: List[ArenaCell]) = {
     rewriter.solverContext.log("; free existential rule over a finite set")
     // pick an arbitrary witness
     val pickState = pickRule.pick(set, setState)
