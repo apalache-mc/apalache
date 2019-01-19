@@ -10,6 +10,8 @@ import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSetOper}
 /**
   * Implements the rule: SE-UNION, that is, a union of all set elements.
   *
+  * FIXME: this rule contains the same bug that was fixed in SetCupRule. Fix it!
+  *
   * @author Igor Konnov
   */
 class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
