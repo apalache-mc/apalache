@@ -192,7 +192,6 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     name
   }
 
-
   /**
     * Get the names of the active Boolean constants (not the cells of type BoolT).
     * This method is used for debugging purposes and may be slow.
@@ -202,6 +201,17 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
   override def getBoolConsts(): Iterable[String] = {
     val boolTheory = BoolTheory()
     constCache.keys filter boolTheory.hasConst
+  }
+
+  /**
+    * Get the names of the active integers constants (not the cells of type BoolT).
+    * This method is used for debugging purposes and may be slow.
+    *
+    * @return a list of int constant that are active in the current context
+    */
+  override def getIntConsts(): Iterable[String] = {
+    val intTheory = IntTheory()
+    constCache.keys filter intTheory.hasConst
   }
 
   /**

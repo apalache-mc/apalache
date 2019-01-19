@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt
 import java.io.{FileWriter, PrintWriter, StringWriter}
 
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FreeExistentialsStore}
-import at.forsyte.apalache.tla.bmcmt.types.{CellT, FailPredT, TypeFinder, TypeInferenceError}
+import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -32,7 +32,7 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
   /**
     * A stack of the symbolic states that might constitute a counterexample (the last state is on top).
     */
-  private var stack: List[SymbState] = List()
+  private var stack: List[(SymbState, ArenaCell)] = List()
   private val solverContext: SolverContext =
       new Z3SolverContext(debug, profile)
 //    new PreproSolverContext(new Z3SolverContext(debug, profile))
@@ -101,32 +101,37 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
       throw new CancelSearchException(Outcome.Deadlock)
     } else if (nextStates.lengthCompare(1) == 0) {
       // the only next state -- return it
+      // introduce the transition just for the record
       val onlyState = nextStates.head
+      val newArena = onlyState.arena.appendCell(IntT())
+      val transitionIndex = newArena.topCell
+      solverContext.assertGroundExpr(tla.eql(transitionIndex.toNameEx, tla.int(0)))
       val resultingState = onlyState.setBinding(shiftBinding(onlyState.binding))
-      stack = resultingState +: stack
+      stack = (resultingState, transitionIndex) +: stack
       solverContext.assertGroundExpr(onlyState.ex)
-      resultingState
+      resultingState.setArena(newArena)
     } else {
       // pick an index j \in { 0..k } of the fired transition
-      val transitionIndex = NameEx(rewriter.solverContext.introIntConst())
+      val lastState = nextStates.last // the last state has the largest arena
+      val newArena = lastState.arena.appendCell(IntT())
+      val transitionIndex = newArena.topCell
 
       def transitionFired(state: SymbState, index: Int): TlaEx =
         // it is tempting to use <=> instead of => here, but this might require from an inactive transition
         // to be completely disabled, while we just say that it is not picked
-        tla.impl(tla.eql(transitionIndex, tla.int(index)), state.ex)
+        tla.impl(tla.eql(transitionIndex.toNameEx, tla.int(index)), state.ex)
 
       // the bound on j will be rewritten in pickState
-      val leftBound = tla.le(tla.int(0), transitionIndex)
-      val rightBound = tla.lt(transitionIndex, tla.int(nextStates.length))
+      val leftBound = tla.le(tla.int(0), transitionIndex.toNameEx)
+      val rightBound = tla.lt(transitionIndex.toNameEx, tla.int(nextStates.length))
       solverContext.assertGroundExpr(tla.and(nextStates.zipWithIndex.map((transitionFired _).tupled): _*))
 
       // glue the computed states S0, ..., Sk together:
       // for every variable x, pick c_x from { S1[x], ..., Sk[x] }
       //   and require \A i \in { 0.. k-1}. j = i => c_x = Si[x]
       // Then, the final state binds x -> c_x for every x \in Vars
-      val lastState = nextStates.last // the last state has the largest arena
       val vars = forgetNonPrimed(lastState.binding).keySet
-      val next = lastState.setBinding(forgetPrimed(lastState.binding))
+      val next = lastState.setBinding(forgetPrimed(lastState.binding)).setArena(newArena)
       if (nextStates.map(_.binding).exists(b => forgetNonPrimed(b).keySet != vars)) {
         throw new InternalCheckerError(s"Next states disagree on the set of assigned variables (step $stepNo)")
       }
@@ -136,7 +141,7 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
           tla.enumSet(nextStates.map(_.binding(x).toNameEx): _*))
 
         def eq(state: SymbState, index: Int): TlaEx =
-          tla.impl(tla.eql(transitionIndex, tla.int(index)),
+          tla.impl(tla.eql(transitionIndex.toNameEx, tla.int(index)),
             tla.eql(NameEx(x), state.binding(x).toNameEx))
 
         tla.and(pickX +: (nextStates.zipWithIndex map (eq _).tupled): _*)
@@ -150,7 +155,7 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
       }
       // that is the result of this step
       val resultingState = pickState.setBinding(shiftBinding(pickState.binding))
-      stack = resultingState +: stack
+      stack = (resultingState, transitionIndex) +: stack
       resultingState
     }
   }
@@ -281,10 +286,12 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
   private def dumpCounterexample(): String = {
     val filename = "counterexample.txt"
     val writer = new PrintWriter(new FileWriter(filename, false))
-    for ((state, i) <- stack.reverse.zipWithIndex) {
-      writer.println(s"State $i:")
+    for (((state, transitionCell), i) <- stack.reverse.zipWithIndex) {
+      val decoder = new SymbStateDecoder(solverContext, rewriter)
+      val transition = decoder.decodeCellToTlaEx(state.arena, transitionCell)
+      writer.println(s"State $i (from transition $transition):")
       writer.println("--------")
-      val binding = new SymbStateDecoder(solverContext, rewriter).decodeStateVariables(state)
+      val binding = decoder.decodeStateVariables(state)
       for ((name, ex) <- binding) {
         writer.println("%-15s ->  %s".format(name, UTFPrinter.apply(ex)))
       }
