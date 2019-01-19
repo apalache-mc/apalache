@@ -69,8 +69,8 @@ cd "$DIR/test/tla"
 check "001-HourClock" --length=20 --init=HCini --next=HCnxt \
     --inv=TypeOK HourClock.tla \
     && expect_ok
-check "002-Bug20190118" --length=1 --init=Init --next=Inv \
-    --inv=TypeOK Bug20190118.tla \
+check "002-Bug20190118" --length=1 --init=Init --next=Next \
+    --inv=Inv Bug20190118.tla \
     && expect_ok
 check "003-mis" --length=10 --inv=IsIndependent mis.tla \
     && expect_ok
