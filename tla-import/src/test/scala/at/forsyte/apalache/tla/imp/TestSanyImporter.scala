@@ -703,7 +703,7 @@ class TestSanyImporter extends FunSuite {
         OperEx(TlaSetOper.enumSet, ValEx(TlaBool(false))),
         OperEx(TlaOper.label,
           OperEx(TlaSetOper.enumSet, ValEx(TlaBool(true))),
-          NameEx("l1"))) ////
+          ValEx(TlaStr("l1")))) ////
     expectDecl("A", List(), expectedABody)(mod.declarations.head)
 
     //    B == \E x \in BOOLEAN: l2(x) :: x /= FALSE
@@ -714,7 +714,7 @@ class TestSanyImporter extends FunSuite {
       ValEx(TlaBoolSet),
       OperEx(TlaOper.label,
         OperEx(TlaOper.ne, NameEx("x"), ValEx(TlaBool(false))),
-        NameEx("l2"))) ////
+        ValEx(TlaStr("l2")))) ////
     expectDecl("B", List(), expectedBBody)(mod.declarations.tail.head)
   }
 
