@@ -120,7 +120,7 @@ class ExprOrOpArgNodeTranslator(environmentHandler: EnvironmentHandler, sourceSt
     // There seems to be no way to access the formal parameters of LabelNode.
     // For the moment, just translate the parameters as an empty list
     val labelBody = translate(node.getBody.asInstanceOf[ExprNode])
-    OperEx(TlaOper.label, labelBody, NameEx(node.getName.toString))
+    OperEx(TlaOper.label, labelBody, ValEx(TlaStr(node.getName.toString)))
   }
 }
 

@@ -19,7 +19,8 @@ N == 4
 dest == 1
 
 Nodes == 1..N
-EmptyIntSet == {0} \ {0}
+a <: b == a
+EmptyIntSet == {} <: {Int}
 
 VARIABLES out, in, to_rev
 
@@ -34,7 +35,8 @@ InitOut ==
     \* [ u \in Nodes |-> IF u = 1 THEN {2} ELSE EmptyIntSet ]
     [ u \in Nodes |->
         IF u = 2 THEN {3, 5} ELSE IF u \in { 3, 7} THEN {4}
-        ELSE IF u = 5 THEN {6} ELSE IF u = 6 THEN {3, 7} ELSE {} \* u \in {1, 4}
+        ELSE IF u = 5 THEN {6} ELSE IF u = 6 THEN {3, 7}
+        ELSE EmptyIntSet \* u \in {1, 4}
     ]
 
 Init ==

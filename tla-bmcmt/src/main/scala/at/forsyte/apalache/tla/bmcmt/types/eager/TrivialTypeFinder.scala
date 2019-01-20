@@ -780,6 +780,10 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
   }
 
   private def computeMiscOps(argTypes: Seq[CellT]): PartialFunction[TlaEx, CellT] = {
+    case ex@OperEx(TlaOper.label, args @ _*) =>
+      for ((a, t) <- args.tail.zip(argTypes.tail)) expectType(ConstT(), a, t)
+      argTypes.head
+
     case ex@OperEx(TlcOper.assert, expr, msg) =>
       val exprType = argTypes.head
       val msgType = argTypes.tail.head

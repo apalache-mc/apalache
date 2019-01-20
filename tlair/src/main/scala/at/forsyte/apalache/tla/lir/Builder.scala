@@ -83,7 +83,7 @@ object Builder {
     * @return OperEx(TlaOper.label, ex, name as NameEx, args as NameEx)
     */
   def label(ex: TlaEx, name: String, args: String*): OperEx = {
-    OperEx(TlaOper.label, ex +: NameEx(name) +: args.map(NameEx) :_*)
+    OperEx(TlaOper.label, ex +: ValEx(TlaStr(name)) +: args.map(s => ValEx(TlaStr(s))) :_*)
   }
 
 

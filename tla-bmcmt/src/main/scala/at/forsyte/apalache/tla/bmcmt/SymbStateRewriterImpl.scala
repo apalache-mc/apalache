@@ -218,7 +218,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
       -> List(new RecCtorRule(this)),
 
     // misc
-    key(OperEx(TlaOper.label, tla.name("lab"), tla.name("x")))
+    key(OperEx(TlaOper.label, tla.str("lab"), tla.str("x")))
       -> List(new LabelRule(this)),
     key(OperEx(BmcOper.withType, tla.int(1), ValEx(TlaIntSet)))
       -> List(new TypeAnnotationRule(this)),

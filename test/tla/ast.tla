@@ -7,6 +7,7 @@ Proc == 1..N
 NoPrnt == 10
 root == 1
 nbrs == { <<1, 2>>, <<2, 3>>, <<2, 4>>, <<3, 4>>, <<4, 5>>, <<5, 1>> }
+a <: b == b
 
 \*ASSUME NoPrnt \notin Proc /\ nbrs \subseteq Proc \times Proc
 VARIABLES prnt, rpt, msg
@@ -14,7 +15,7 @@ vars == <<prnt, rpt, msg>>
              
 Init == /\ prnt = [i \in Proc |-> NoPrnt]
         /\ rpt = [i \in Proc |-> FALSE]
-        /\ msg = {}
+        /\ msg = {} <: {<<Int, Int>>}
 
 CanSend(i, j) ==  (<<i, j>> \in nbrs) /\ (i = root \/ prnt[i] # NoPrnt)
 

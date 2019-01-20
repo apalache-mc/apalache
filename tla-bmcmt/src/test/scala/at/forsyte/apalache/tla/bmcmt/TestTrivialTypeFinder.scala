@@ -661,6 +661,18 @@ class TestTrivialTypeFinder extends RewriterBase {
     }
   }
 
+  test("compute labels") {
+    val typeFinder = new TrivialTypeFinder()
+    val e = tla.name("e")
+    val msg = "message"
+    // good cases:
+    // We only allow assert to return a Boolean result.
+    // When you use assert in a non-Boolean expression, provide the tool with a type annotation.
+    assert(IntT() == typeFinder.compute(tla.label(tla.int(1),"lab", "a"), IntT(), ConstT(), ConstT()))
+    assert(BoolT() == typeFinder.compute(tla.label(tla.bool(false),"lab", "a"), BoolT(), ConstT(), ConstT()))
+    // no bad cases, as it is impossible to construct an ill-typed label
+  }
+
   test("inferAndSave variable assignment") {
     val typeFinder = new TrivialTypeFinder()
     val x = tla.name("x")

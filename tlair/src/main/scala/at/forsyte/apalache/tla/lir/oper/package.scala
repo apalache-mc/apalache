@@ -6,6 +6,7 @@ package at.forsyte.apalache.tla.lir
 package oper {
 
   import at.forsyte.apalache.tla.lir.control.TlaControlOper
+  import at.forsyte.apalache.tla.lir.values.TlaStr
 
   /**
     * The levels of the operators as defined in the TLA+ book:
@@ -151,8 +152,8 @@ package oper {
     /**
       * <p>An operator that decorates an expression with a label, e.g., l3(a, b) :: ex.
       * The order of the arguments is as follows: (1) the decorated expression, e.g., ex,
-      * (2) the label name, e.g., NameEx("l3"), and (3 to k) the label arguments,
-      * which must be names, e.g., NameEx("a") and NameEx("b").</p>
+      * (2) the label, e.g., ValEx(TlaStr("l3")), and (3 to k) the label arguments,
+      * which must be strings, e.g., ValEx(TlaStr("a")) and ValEx(TlaStr("b")).</p>
       *
       * <p>To get more info about labels, see
       * <a href="http://research.microsoft.com/en-us/um/people/lamport/tla/tla2-guide.pdf">TLA+2 Preliminary Guide</a>.</p>
@@ -177,7 +178,7 @@ package oper {
         * @return true, if the invariant is satisfied
         */
       override def permitsArgs(args: Seq[TlaEx]): Boolean = {
-        val isNameEx: PartialFunction[TlaEx, Boolean] = { case NameEx(_) => true }
+        val isNameEx: PartialFunction[TlaEx, Boolean] = { case ValEx(v) => v.isInstanceOf[TlaStr] }
         args.tail.forall(isNameEx.isDefinedAt)
       }
     }
