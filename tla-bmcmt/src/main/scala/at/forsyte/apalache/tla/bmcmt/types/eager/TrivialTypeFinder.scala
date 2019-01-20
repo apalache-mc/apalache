@@ -203,7 +203,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
         val primed = name + "'"
         val result = varTypes.get(primed)
         if (result.isEmpty) {
-          addError(new TypeInferenceError(expr, "Failed to find type of variable " + name))
+          addError(new TypeInferenceError(expr, s"Failed to find type of variable $primed"))
         }
         result
 
@@ -228,7 +228,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
       case NameEx(name) =>
         var result = varTypes.get(name)
         if (result.isEmpty) {
-          // TODO: this is a temporary solutions until the moment we have eliminated BoolTheory and IntTheory
+          // TODO: this is a temporary solution until the moment we have eliminated BoolTheory and IntTheory
           if (IntTheory().hasConst(name)) {
             result = Some(IntT())
           } else if (BoolTheory().hasConst(name)) {
@@ -272,6 +272,10 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
       // a pre-computed type annotation overrides the type info
       assert(typeAnnotations.contains(annotated.ID)) // otherwise, the engine is broken
       typeAnnotations(annotated.ID)
+
+    case OperEx(TlaActionOper.prime, NameEx(_)) =>
+      // do not recurse in prime, as the type of a primed variable should be computed directly
+      compute(ex)
 
     case OperEx(_, args@_*) =>
       compute(ex, args map computeRec: _*)

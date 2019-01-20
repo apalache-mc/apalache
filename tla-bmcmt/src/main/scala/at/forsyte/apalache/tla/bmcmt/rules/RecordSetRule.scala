@@ -43,6 +43,9 @@ class RecordSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // the map operator { [ f_1 |-> x_1, ..., f_n |-> x_n ] : x_1 \in S_1, ..., x_n \in S_n }
         val map = OperEx(TlaSetOper.map, mapArgs :_*)
         rewriter.typeFinder.inferAndSave(map)
+        if (rewriter.typeFinder.getTypeErrors.nonEmpty) {
+          throw rewriter.typeFinder.getTypeErrors.head // throw a type inference error, if it happens
+        }
         mapbase.rewriteSetMapManyArgs(state.setRex(map), funEx, varNames, sets)
 
       case _ =>

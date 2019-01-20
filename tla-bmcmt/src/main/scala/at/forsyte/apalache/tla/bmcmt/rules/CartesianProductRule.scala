@@ -36,6 +36,9 @@ class CartesianProductRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val args: Seq[TlaEx] = funEx +: namesAndSets
         val map = OperEx(TlaSetOper.map, args :_*)
         rewriter.typeFinder.inferAndSave(map)
+        if (rewriter.typeFinder.getTypeErrors.nonEmpty) {
+          throw rewriter.typeFinder.getTypeErrors.head // throw a type inference error, if it happens
+        }
         mapbase.rewriteSetMapManyArgs(state.setRex(map), funEx, names, sets)
 
       case _ =>

@@ -14,10 +14,11 @@ Succ(n) == IF n < N THEN n + 1 ELSE 1
 
 Init == \*/\ Nb = [ n \in Nodes |-> {Pred(n), Succ(n)} ]
         /\ Nb \in SUBSET(Nodes \X Nodes)
+        /\ \A e \in Nb: <<e[2], e[1]>> \in Nb \* the graph is undirected
         /\ round = 1
         /\ val \in [Nodes -> 1..N4]
         /\ awake = [n \in Nodes |-> TRUE]
-        /\ rem_nbrs = Nb
+        /\ rem_nbrs = [ u \in Nodes |-> { v \in Nodes : <<u, v>> \in Nb}]
         /\ status = [n \in Nodes |-> "unknown"]
         /\ msgs = [n \in Nodes |->
             ({} <: {[type |-> STRING, src |-> Int, val |-> Int ]})]
@@ -74,8 +75,8 @@ Next ==
     round' = 1 + (round % 3) /\ (Round1 \/ Round2 \/ Round3) /\ UNCHANGED <<Nb>>
     
 IsIndependent ==
-    \A u \in Nodes: \A v \in Nb[u]:
-        (status[u] /= "winner" \/ status[v] /= "winner")
+    \A edge \in Nb:
+        (status[edge[1]] /= "winner" \/ status[edge[2]] /= "winner")
 
 Terminated == \A n \in Nodes: awake[n] = FALSE
 
