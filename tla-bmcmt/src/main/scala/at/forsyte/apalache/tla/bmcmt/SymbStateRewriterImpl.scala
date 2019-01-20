@@ -163,7 +163,11 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     key(tla.filter(tla.name("x"), tla.name("S"), tla.name("p")))
       -> List(new SetFilterRule(this)),
     key(tla.map(tla.name("e"), tla.name("x"), tla.name("S")))
-      -> List(new SetMapAndFunCtorRule(this)),
+      -> List(new SetMapRule(this)),
+    key(tla.times(tla.name("S1"), tla.name("S2")))
+      -> List(new CartesianProductRule(this)),
+    key(tla.recSet(tla.str("a"), tla.name("S1"), tla.str("b"), tla.name("S2")))
+      -> List(new RecordSetRule(this)),
     key(tla.powSet(tla.name("X")))
       -> List(new PowSetCtorRule(this)),
     key(tla.union(tla.enumSet()))
@@ -197,7 +201,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
 
     // functions
     key(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S")))
-      -> List(new SetMapAndFunCtorRule(this)),
+      -> List(new FunCtorRule(this)),
     key(tla.appFun(tla.name("f"), tla.name("x")))
       -> List(new FunAppRule(this)),
     key(tla.except(tla.name("f"), tla.int(1), tla.int(42)))

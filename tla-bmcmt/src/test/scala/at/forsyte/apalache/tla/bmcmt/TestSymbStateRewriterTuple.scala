@@ -116,4 +116,22 @@ class TestSymbStateRewriterTuple extends RewriterBase {
     assertTlaExAndRestore(rewriter, state)
   }
 
+  test("""SE-TUPLE-SET: {<<1, FALSE>>, <<2, FALSE>>, <<1, TRUE>>, <<2, TRUE>> = {1,2} \X  {FALSE, TRUE} ~~> $B$k""") {
+    val set12 = tla.enumSet(1 to 2 map tla.int :_*)
+    val setBool = tla.enumSet(tla.bool(false), tla.bool(true))
+    val prod = tla.times(set12, setBool)
+    def tup(i: Int, b: Boolean) = tla.tuple(tla.int(i), tla.bool(b))
+    val eq = tla.eql(prod, tla.enumSet(tup(1, false), tup(1, true), tup(2, false), tup(2, true)))
+
+    val state = new SymbState(eq, BoolTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    rewriter.push()
+    solverContext.assertGroundExpr(nextState.ex)
+    assert(solverContext.sat())
+    rewriter.pop()
+    solverContext.assertGroundExpr(tla.not(nextState.ex))
+    assert(!solverContext.sat())
+  }
+
 }

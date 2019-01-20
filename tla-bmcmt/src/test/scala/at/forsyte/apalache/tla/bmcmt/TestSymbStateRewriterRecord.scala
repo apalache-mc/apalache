@@ -214,4 +214,25 @@ class TestSymbStateRewriterRecord extends RewriterBase {
     assertTlaExAndRestore(rewriter, state)
   }
 
+
+  test(
+    """SE-REC-SET: {[n |-> 1, b |-> FALSE], [n |-> 2, b |-> FALSE], [n |-> 1, b |-> TRUE], [n |-> 2, b |-> TRUE] = {[n : {1, 2}, b : {FALSE, TRUE}}""".stripMargin) {
+    val set12 = tla.enumSet(1 to 2 map tla.int :_*)
+    val setBool = tla.enumSet(tla.bool(false), tla.bool(true))
+    val prod = tla.recSet(tla.str("n"), set12, tla.str("b"), setBool)
+    def rec(i: Int, b: Boolean) =
+      tla.enumFun(tla.str("n"), tla.int(i), tla.str("b"), tla.bool(b))
+    val eq = tla.eql(prod, tla.enumSet(rec(1, false), rec(1, true), rec(2, false), rec(2, true)))
+
+    val state = new SymbState(eq, BoolTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    rewriter.push()
+    solverContext.assertGroundExpr(nextState.ex)
+    assert(solverContext.sat())
+    rewriter.pop()
+    solverContext.assertGroundExpr(tla.not(nextState.ex))
+    assert(!solverContext.sat())
+  }
+
 }
