@@ -194,8 +194,9 @@ class Transformer {
               ) : TlaEx = {
     val inlined = inlineAll( p_expr )( bodyDB, listener )
 
+    val explicitLI = explicitLetIn( inlined )( listener )
 
-    val eqReplaced = rewriteEQ( inlined )(listener )
+    val eqReplaced = rewriteEQ( explicitLI )(listener )
 
     /* val ucReplaced = */ unchangedExplicit( eqReplaced )( listener )
 
