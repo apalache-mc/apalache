@@ -64,6 +64,15 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
 
     val initName = options.getOption("checker", "init", "Init").asInstanceOf[String]
 
+    val transformer = new Transformer()
+
+    val bodyDB = new BodyDB
+
+    transformer.extract( allDeclarations :_* )(bodyDB)
+
+    // TODO: why do we call a pass inside a pass?
+    val stp = new SymbolicTransitionPass( bodyDB, sourceStore )
+
     // since Converter and assignmentSolver do a lot of magic internally, substitute Init with primed variables first
     def replaceInit(decl: TlaDecl): TlaDecl = decl match {
       case TlaOperDecl(name, params, body) if name == initName =>
@@ -71,18 +80,13 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
           throw new AssignmentException("Initializing operator %s has %d arguments, expected 0"
             .format(initName, params.length))
         } else {
-          TlaOperDecl(name, params, primeVars(body))
+          TlaOperDecl( name, params, primeVars( transformer.inlineAll( body )( bodyDB, sourceStore ) ) )
         }
 
       case e@_ => e
     }
 
     val declarations = allDeclarations.map(replaceInit)
-
-    val bodyDB = new BodyDB
-
-    // TODO: why do we call a pass inside a pass?
-    val stp = new SymbolicTransitionPass( bodyDB, sourceStore )
 
     // drop selections because of lacking implementation further on
     val initTransitions = stp( declarations, initName ).map( _._2 ).toList
@@ -99,8 +103,6 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
     for ((t, i) <- nextTransitions.zipWithIndex) {
       logger.debug("Next transition #%d:\n   %s".format(i, t))
     }
-
-    val transformer = new Transformer()
 
     val invName = options.getOption("checker", "inv", None).asInstanceOf[Option[String]]
     val invariant =
