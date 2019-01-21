@@ -1,16 +1,16 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.TupleT
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 /**
-  * Implements the rules: SE-TPL-CTOR[1-2].
+  * Implements the rules: SE-TPL-CTOR[1-2]. A tuple may be interpreted as a sequence, if it was properly type-annotated,
+  * e.g., <<>> <: Seq(Int).
   *
   * @author Igor Konnov
   */
-class TupleCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
+class TupleOrSeqCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaFunOper.tuple, _*) => true
@@ -26,11 +26,14 @@ class TupleCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
           rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), elems)
         val cells = groundElems.map(stateAfterElems.arena.findCellByNameEx)
 
-        // create the tuple cell
-        var arena = stateAfterElems.arena.appendCell(TupleT(cells.map(_.cellType)))
+        // Get the resulting type from the type finder. It may happen to be a sequence!
+        val resultT = rewriter.typeFinder.compute(state.ex, cells.map(_.cellType) :_*)
+
+        // create the tuple or a sequence cell
+        var arena = stateAfterElems.arena.appendCell(resultT)
         val tuple = arena.topCell
 
-        // connect the cells to the tuple: the order of edges is important!
+        // connect the cells to the tuple (or a sequence): the order of edges is important!
         arena = cells.foldLeft(arena)((a, e) => a.appendHas(tuple, e))
 
         val finalState = stateAfterElems.setArena(arena).setRex(tuple.toNameEx)

@@ -453,9 +453,7 @@ class TestTrivialTypeFinder extends RewriterBase {
     val cellType = typeFinder.compute(tup, IntT(), BoolT())
     assert(TupleT(Seq(IntT(), BoolT())) == cellType)
     // an empty tuple is a sequence, but its type is unknown
-    assertThrows[TypeInferenceError] {
-      typeFinder.compute(tla.tuple())
-    }
+    assert(SeqT(UnknownT()) == typeFinder.compute(tla.tuple()))
   }
 
   test("compute <<1, FALSE>>[1]") {

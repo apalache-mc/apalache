@@ -66,6 +66,21 @@ package object types {
         case (PowSetT(left), PowSetT(right)) =>
           left.unify(right) map PowSetT
 
+        case (SeqT(left), SeqT(right)) =>
+          left.unify(right) map SeqT
+
+        case (SeqT(seqType), TupleT(tupleTypes)) =>
+          types.unify(seqType +: tupleTypes :_*) match {
+            case Some(et) => Some(SeqT(et))
+            case None => None
+          }
+
+        case (TupleT(tupleTypes), SeqT(seqType)) =>
+          types.unify(seqType +: tupleTypes :_*) match {
+            case Some(et) => Some(SeqT(et))
+            case None => None
+          }
+
           /**
             * Jure, 13.9.18: Suggestion: Change TupleT( _ : Seq[...]) to TupleT(_ : Array[...]) or
             * TupleT( _ : IndextSeq[...]) so

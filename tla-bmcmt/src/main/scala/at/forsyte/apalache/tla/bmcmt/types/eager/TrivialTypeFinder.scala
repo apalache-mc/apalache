@@ -510,7 +510,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
 
   private def computeFunCtors(argTypes: Seq[CellT]): PartialFunction[TlaEx, CellT] = {
     case ex@OperEx(TlaFunOper.tuple) =>
-      error(ex, "The type of an empty sequence is unknown, use annotation, e.g., <<>> <: <<Int>>")
+      SeqT(UnknownT())
 
     case ex@OperEx(op@TlaFunOper.tuple, _*) =>
       TupleT(argTypes)

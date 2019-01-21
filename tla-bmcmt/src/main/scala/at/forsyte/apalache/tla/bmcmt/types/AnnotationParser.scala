@@ -56,6 +56,10 @@ object AnnotationParser {
         val types = args map fromTla
         TupleT(types)
 
+      case OperEx(TlaSetOper.seqSet, elemEx) =>
+        val elemType = fromTla(elemEx)
+        SeqT(elemType)
+
       case e =>
         throw new RewriterException("Unexpected type annotation: %s".format(annot))
     }
