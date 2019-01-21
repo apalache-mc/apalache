@@ -68,7 +68,15 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
 
     val bodyDB = new BodyDB
 
-    transformer.extract( allDeclarations :_* )(bodyDB)
+    val decls = allDeclarations.map(
+      {
+        case TlaOperDecl( name, params, body ) =>
+          TlaOperDecl( name, params, transformer.explicitLetIn( body )( sourceStore ) )
+        case e@_ => e
+      }
+    )
+
+    transformer.extract( decls  :_* )(bodyDB)
 
     // TODO: why do we call a pass inside a pass?
     val stp = new SymbolicTransitionPass( bodyDB, sourceStore )
