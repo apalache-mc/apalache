@@ -141,7 +141,9 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
 
     // sets
     key(tla.in(tla.name("x"), tla.name("S")))
-      -> List(new AssignmentRule(this), new SetInRule(this)),
+      -> List(new AssignRecordRule(this),
+              new AssignmentRule(this),
+              new SetInRule(this)),
     key(tla.notin(tla.name("x"), tla.name("S")))
       -> List(new SetNotInRule(this)),
     key(tla.enumSet(tla.name("x"))) ->
