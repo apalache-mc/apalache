@@ -194,8 +194,9 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
           typeAnnotations += (ex.safeId -> unifier.get)
           unifier
         } else {
+          val exTStr = if (exT.isDefined) exT.get.toString else None.toString
           addError(new TypeInferenceError(annot,
-            "No unifier for type annotation %s and expression %s".format(annot, ex)))
+            s"No unifier for type $annotT and type $exTStr (from type annotation $annot and expression $ex)"))
           None
         }
 

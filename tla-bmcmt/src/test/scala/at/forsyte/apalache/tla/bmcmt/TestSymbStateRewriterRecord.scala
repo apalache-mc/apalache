@@ -235,4 +235,19 @@ class TestSymbStateRewriterRecord extends RewriterBase {
     assert(!solverContext.sat())
   }
 
+  test(
+    """SE-REC-SET: {[n : {1, 2}} <: {[n |-> Int, b |-> BOOLEAN ]}""".stripMargin) {
+    val set12 = tla.enumSet(1 to 2 map tla.int :_*)
+    val setBool = tla.enumSet(tla.bool(false), tla.bool(true))
+    val prod = tla.recSet(tla.str("n"), set12)
+    val expectedRecordT = FinSetT(RecordT(SortedMap("n" -> IntT(), "b" -> BoolT())))
+    val annotated = tla.withType(prod, AnnotationParser.toTla(expectedRecordT))
+
+    val state = new SymbState(annotated, BoolTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    val cell = nextState.arena.findCellByNameEx(nextState.ex)
+    assert(expectedRecordT == cell.cellType)
+  }
+
 }
