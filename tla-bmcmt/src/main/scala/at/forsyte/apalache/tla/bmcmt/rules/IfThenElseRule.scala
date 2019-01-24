@@ -31,7 +31,9 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val result = rewriter.solverContext.introBoolConst()
         val iffIte = tla.equiv(NameEx(result), tla.ite(predState.ex, thenState.ex, elseState.ex))
         rewriter.solverContext.assertGroundExpr(iffIte)
-        coverFailurePredicates(predState, thenState, elseState)
+        if (rewriter.introFailures) {
+          coverFailurePredicates(predState, thenState, elseState)
+        }
         elseState.setRex(NameEx(result)).setTheory(BoolTheory())
 
       case OperEx(TlaControlOper.ifThenElse, predEx, thenEx, elseEx) =>
@@ -39,7 +41,9 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val predState = rewriter.rewriteUntilDone(state.setTheory(BoolTheory()).setRex(predEx))
         val thenState = rewriter.rewriteUntilDone(predState.setTheory(CellTheory()).setRex(thenEx))
         val elseState = rewriter.rewriteUntilDone(thenState.setTheory(CellTheory()).setRex(elseEx))
-        coverFailurePredicates(predState, thenState, elseState)
+        if (rewriter.introFailures) {
+          coverFailurePredicates(predState, thenState, elseState)
+        }
         val thenCell = elseState.arena.findCellByNameEx(thenState.ex)
         val elseCell = elseState.arena.findCellByNameEx(elseState.ex)
         val pred = predState.ex
@@ -67,10 +71,12 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   /**
-    * This function adds the constraints that allow us to properly treat side effects such as Assert(..).
+    * <p>This function adds the constraints that allow us to properly treat side effects such as Assert(..).
     * It essentially says that the failure predicates generated for each branch can be only activated,
     * if the branch condition is satisfied. Without this condition the expressions such as
-    * "IF e \in DOMAIN f THEN f[e] ELSE default" would report a false runtime error.
+    * "IF e \in DOMAIN f THEN f[e] ELSE default" would report a false runtime error.</p>
+    *
+    * TODO: This method generates an enormous number of constraints on large benchmarks. Find a better solution.
     *
     * @param predState the state after rewriting the condition
     * @param thenState the state after rewriting the then branch

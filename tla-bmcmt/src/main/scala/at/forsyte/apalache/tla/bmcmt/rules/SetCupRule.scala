@@ -39,7 +39,7 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
         }
         var arena = rightState.arena.appendCell(newType.get)
         val newSetCell = arena.topCell
-        arena = (leftElems ++ rightElems).foldLeft(arena)((a, e) => a.appendHas(newSetCell, e))
+        arena = (leftElems ++ rightElems).distinct.foldLeft(arena)((a, e) => a.appendHas(newSetCell, e))
 
         // require each cell to be in one of the two sets
         def addCellCons(thisSet: ArenaCell, otherSet: ArenaCell, otherCells: Seq[ArenaCell], thisElem: ArenaCell): Unit = {

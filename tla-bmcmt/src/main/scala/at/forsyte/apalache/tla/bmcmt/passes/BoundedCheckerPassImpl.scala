@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.passes
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
 import at.forsyte.apalache.tla.assignments.SpecWithTransitions
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FreeExistentialsStore}
+import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FreeExistentialsStoreImpl}
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import com.google.inject.Inject
@@ -17,7 +17,7 @@ import com.typesafe.scalalogging.LazyLogging
   */
 class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
                                         typeFinder: TypeFinder[CellT],
-                                        freeExistentialsStore: FreeExistentialsStore,
+                                        freeExistentialsStore: FreeExistentialsStoreImpl,
                                         exprGradeStore: ExprGradeStore,
                                         sourceStore: SourceStore,
                                         @Named("AfterChecker") nextPass: Pass)
@@ -42,17 +42,19 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
       throw new CheckerException(s"The input of $name pass is not initialized")
     }
     val spec = specWithTransitions.get
-    val input = new CheckerInput(spec.rootModule, spec.initTransitions, spec.nextTransitions, spec.notInvariant)
+    val input = new CheckerInput(spec.rootModule, spec.initTransitions, spec.nextTransitions, spec.notInvariantPrime)
     val stepsBound = options.getOption("checker", "length", 10).asInstanceOf[Int]
     val debug = options.getOption("general", "debug", false).asInstanceOf[Boolean]
     val profile = options.getOption("smt", "prof", false).asInstanceOf[Boolean]
     val search = options.getOption("checker", "search", "dfs").asInstanceOf[String]
+    val checkRuntime =
+      options.getOption("checker", "checkRuntime", false).asInstanceOf[Boolean]
     val checker: Checker =
       if (search == "dfs") {
         new DfsChecker(typeFinder, freeExistentialsStore, input, stepsBound, debug)
       } else {
         new BfsChecker(typeFinder, freeExistentialsStore, exprGradeStore,
-          sourceStore, input, stepsBound, debug, profile)
+          sourceStore, input, stepsBound, debug, profile, checkRuntime)
       }
     val outcome = checker.run()
     logger.info("The outcome is: " + outcome)

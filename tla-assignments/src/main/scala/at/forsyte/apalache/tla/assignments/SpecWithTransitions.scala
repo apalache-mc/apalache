@@ -14,10 +14,12 @@ import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule}
   *                        A list [A_1, ..., A_n] is treated as A_1 \/ ... \/ A_n.
   *                        Each disjunct should assign a value to every primed variable at least once (see assignmentSolver).
   * @param notInvariant    negation of the invariant to check
+  * @param notInvariantPrime    notInvariant over primed variables
   *
   * @author Igor Konnov
   */
 class SpecWithTransitions(val rootModule: TlaModule,
                           val initTransitions: List[TlaEx],
                           val nextTransitions: List[TlaEx],
-                          val notInvariant: Option[TlaEx])
+                          val notInvariant: Option[TlaEx],
+                          val notInvariantPrime: Option[TlaEx])

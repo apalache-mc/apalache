@@ -16,7 +16,6 @@ import at.forsyte.apalache.tla.lir.convenience.tla
   *
   * @param rewriter      a state rewriter
   * @param failWhenEmpty issue a failure predicate that is set to true when a given set is empty
-  *
   * @author Igor Konnov
   */
 class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = false) {
@@ -66,7 +65,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
         // no emptiness check, since we are dealing with a function set [S -> T]
         pickFunFromFunSet(FunT(domt, rest), set, state)
 
-      case PowSetT(t @ FinSetT(_)) =>
+      case PowSetT(t@FinSetT(_)) =>
         // a powerset is never empty, pick an element
         pickFromPowset(t, set, state)
 
@@ -139,26 +138,26 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     arena = union.foldLeft(arena)((a, e) => a.appendHas(resultCell, e))
 
     // TODO: we need more tests here, tricky bugs are hiding
-//    def inResultIffChosen(memberSet: ArenaCell, setNo: Int): Unit = {
-////      val memberSetElems = Set(arena.getHas(memberSet) :_*)
-//      for (e <- union) {
-////        val isStaticallyIn = memberSetElems.contains(e) // the sets may intersect!
-//        val inMemberSet = tla.and(//tla.bool(isStaticallyIn),
-//                                  tla.in(e, memberSet),
-//                                  tla.in(memberSet, set)) // the set itself should belong to the top set
-//        val inResult = tla.in(e, resultCell)
-//        val myChoice = tla.eql(choice.toNameEx, tla.int(setNo))
-//        rewriter.solverContext.assertGroundExpr(
-//          tla.impl(tla.and(myChoice, inResult), inMemberSet))
-//        rewriter.solverContext.assertGroundExpr(
-//          tla.impl(tla.and(myChoice, inMemberSet), inResult))
-//      }
-//    }
-//
-//    // restrict the contents of the result to the chosen set
-//    for ((memberSet, no) <- memberSets.zipWithIndex)
-//      inResultIffChosen(memberSet, no)
-//
+    //    def inResultIffChosen(memberSet: ArenaCell, setNo: Int): Unit = {
+    ////      val memberSetElems = Set(arena.getHas(memberSet) :_*)
+    //      for (e <- union) {
+    ////        val isStaticallyIn = memberSetElems.contains(e) // the sets may intersect!
+    //        val inMemberSet = tla.and(//tla.bool(isStaticallyIn),
+    //                                  tla.in(e, memberSet),
+    //                                  tla.in(memberSet, set)) // the set itself should belong to the top set
+    //        val inResult = tla.in(e, resultCell)
+    //        val myChoice = tla.eql(choice.toNameEx, tla.int(setNo))
+    //        rewriter.solverContext.assertGroundExpr(
+    //          tla.impl(tla.and(myChoice, inResult), inMemberSet))
+    //        rewriter.solverContext.assertGroundExpr(
+    //          tla.impl(tla.and(myChoice, inMemberSet), inResult))
+    //      }
+    //    }
+    //
+    //    // restrict the contents of the result to the chosen set
+    //    for ((memberSet, no) <- memberSets.zipWithIndex)
+    //      inResultIffChosen(memberSet, no)
+    //
     // we chose an existing element of the set
     def mkIn(memberSet: ArenaCell, memberSetNo: Int): TlaEx = {
       // TODO: cover with unit tests!
@@ -185,8 +184,8 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     * Implements SE-PICK-SET, that is, assume that the picked element is a set itself.
     *
     * @param resultType a cell type to assign to the picked cell.
-    * @param set      a powerset
-    * @param state    a symbolic state
+    * @param set        a powerset
+    * @param state      a symbolic state
     * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
     */
   def pickFromPowset(resultType: CellT, set: ArenaCell, state: SymbState): SymbState = {
@@ -271,9 +270,9 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     * Note that some record fields may have bogus values, since not all the records in the set
     * are required to have all the keys assigned. That is an unavoidable loophole in the record types.
     *
-    * @param cellType  a cell type to assign to the picked cell.
+    * @param cellType     a cell type to assign to the picked cell.
     * @param setOfRecords a set of cells that store records
-    * @param state     a symbolic state
+    * @param state        a symbolic state
     * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
     */
   def pickRecord(cellType: CellT, setOfRecords: ArenaCell, state: SymbState): SymbState = {
@@ -313,6 +312,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     // introduce a new record
     var arena = state.arena.appendCell(cellType)
     val newRecord = arena.topCell
+
     // compute the constants for each key, as we have to connect them with the domain
     def mapKey(key: String): (String, ArenaCell) = {
       val (newArena, cell) = rewriter.strValueCache.getOrCreate(arena, key)
@@ -352,7 +352,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
         val eq = rewriter.lazyEq.safeEq(newRecordElem, recordInSetElem)
         // either the field is outside of the both domains, or it belongs to the both domains and the field values coincide
         tla.or(tla.and(tla.not(inOtherDom), tla.not(inNewDom)),
-               tla.and(inOtherDom, inNewDom, eq))
+          tla.and(inOtherDom, inNewDom, eq))
       }
 
       val valueEqualities = recordType.fields.keySet.toList map valueEq
@@ -525,10 +525,11 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     def mkNotIn(domElem: ArenaCell): TlaEx = {
       tla.not(tla.in(domElem, set))
     }
+
     val setEmptyInRuntime =
       if (setElems.isEmpty) tla.bool(true) else tla.and(setElems.map(mkNotIn): _*)
 
-    if (!failWhenEmpty) {
+    if (!failWhenEmpty && !rewriter.introFailures) {
       // Do nothing, e.g., when \E x \in S is translated to S /= {} /\ x = PICK ... FROM S,
       // the pick operator should not issue any errors, as the set emptiness is resolved by other means.
       tla.or(tla.and(tla.or(found, setEmptyInRuntime), tla.not(failure)))

@@ -69,6 +69,7 @@ object Tool extends App with LazyLogging {
       if (check.inv != "") Some(check.inv) else None)
     executor.options.setOption("checker.length", check.length)
     executor.options.setOption("checker.search", check.search)
+    executor.options.setOption("checker.checkRuntime", check.checkRuntime)
 
     val result = executor.run()
     if (result.isDefined) {

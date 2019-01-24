@@ -37,6 +37,12 @@ trait SymbStateRewriter extends StackableContext with MessageStorage {
   def typeFinder: TypeFinder[CellT]
 
   /**
+    * Introduce failure predicates?
+    * @return if so
+    */
+  var introFailures: Boolean
+
+  /**
     * The cache for lazy equalities, to avoid generating the same equality constraints many times.
     */
   def lazyEq: LazyEquality

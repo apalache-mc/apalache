@@ -77,11 +77,17 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
   private var messages: mutable.Map[Int, String] = new mutable.HashMap()
 
   /**
+    * Introduce failure predicate to do runtime checks
+    */
+  var introFailures: Boolean = true
+
+  /**
     * Get the current context level, that is the difference between the number of pushes and pops made so far.
     *
     * @return the current level, always non-negative.
     */
   def contextLevel: Int = level
+
 
   // A nice way to guess the candidate rules by looking at the expression key.
   // We use simple expressions to generate the keys.

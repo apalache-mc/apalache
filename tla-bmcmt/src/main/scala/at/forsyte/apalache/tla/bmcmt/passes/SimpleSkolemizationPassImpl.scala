@@ -5,8 +5,8 @@ import at.forsyte.apalache.tla.assignments.SpecWithTransitions
 import at.forsyte.apalache.tla.assignments.passes.SpecWithTransitionsMixin
 import at.forsyte.apalache.tla.bmcmt.CheckerException
 import at.forsyte.apalache.tla.bmcmt.analyses.{FreeExistentialsStoreImpl, SimpleSkolemization}
-import at.forsyte.apalache.tla.lir.IdOrdering
 import at.forsyte.apalache.tla.lir.process.Renaming
+import at.forsyte.apalache.tla.lir.{IdOrdering, TlaEx}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -47,11 +47,13 @@ class SimpleSkolemizationPassImpl @Inject()(val options: PassOptions,
     // hint by Markus Kuppe: sort init and next to get a stable ordering between the runs
     val initRenamed = spec.initTransitions.map(renaming.renameBindingsUnique).sorted(IdOrdering)
     val nextRenamed = spec.nextTransitions.map(renaming.renameBindingsUnique).sorted(IdOrdering)
-    val notInvRenamed = spec.notInvariant match {
+    def renameIfDefined(ex: Option[TlaEx]): Option[TlaEx] = ex match {
       case Some(ni) => Some(renaming.renameBindingsUnique(ni))
       case None => None
     }
-    var newSpec = new SpecWithTransitions(spec.rootModule, initRenamed, nextRenamed, notInvRenamed)
+    val notInvRenamed = renameIfDefined(spec.notInvariant)
+    val notInvPrimeRenamed = renameIfDefined(spec.notInvariantPrime)
+    var newSpec = new SpecWithTransitions(spec.rootModule, initRenamed, nextRenamed, notInvRenamed, notInvPrimeRenamed)
     val skolem = new SimpleSkolemization(freeExistentialsStoreImpl)
     newSpec = skolem.transformAndLabel(newSpec)
 

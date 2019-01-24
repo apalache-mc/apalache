@@ -98,7 +98,7 @@ class ExprGradeAnalysis @Inject()(val store: ExprGradeStoreImpl) {
   def refineOr(spec: SpecWithTransitions): SpecWithTransitions = {
     val newInit = spec.initTransitions map refineOrInExpr
     val newTrans = spec.nextTransitions map refineOrInExpr
-    new SpecWithTransitions(spec.rootModule, newInit, newTrans, spec.notInvariant)
+    new SpecWithTransitions(spec.rootModule, newInit, newTrans, spec.notInvariant, spec.notInvariantPrime)
   }
 
   /**

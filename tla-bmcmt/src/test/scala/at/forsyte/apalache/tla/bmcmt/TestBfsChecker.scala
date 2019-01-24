@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, ExprGradeStoreImpl, FreeExistentialsStore, FreeExistentialsStoreImpl}
+import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, ExprGradeStoreImpl, FreeExistentialsStoreImpl}
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
@@ -14,7 +14,7 @@ import scala.io.Source
 
 @RunWith(classOf[JUnitRunner])
 class TestBfsChecker extends FunSuite with BeforeAndAfter {
-  private var frexStore: FreeExistentialsStore = new FreeExistentialsStoreImpl()
+  private var frexStore: FreeExistentialsStoreImpl = new FreeExistentialsStoreImpl()
   private var typeFinder: TrivialTypeFinder = new TrivialTypeFinder()
   private var exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl()
   private var sourceStore: SourceStore = new SourceStore()
@@ -89,8 +89,8 @@ class TestBfsChecker extends FunSuite with BeforeAndAfter {
     ))///
     val dummyModule = new TlaModule("root", List(), List())
     val notInv = tla.not(tla.equiv(
-      tla.eql(tla.int(3), tla.name("x")),
-      tla.eql(tla.int(3), tla.name("y"))
+      tla.eql(tla.int(3), tla.prime(tla.name("x"))),
+      tla.eql(tla.int(3), tla.prime(tla.name("y")))
     ))////
 
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, Some(notInv))
@@ -153,7 +153,7 @@ class TestBfsChecker extends FunSuite with BeforeAndAfter {
     // x' \in {x + 1}
     val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
     // x < 100
-    val notInv = tla.not(tla.lt(tla.name("x"), tla.int(100)))
+    val notInv = tla.not(tla.lt(tla.prime(tla.name("x")), tla.int(100)))
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, Some(notInv))
     // initialize the model checker
@@ -169,7 +169,7 @@ class TestBfsChecker extends FunSuite with BeforeAndAfter {
     // x' \in {x + 1}
     val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
     // x < 5
-    val notInv = tla.not(tla.lt(tla.name("x"), tla.int(5)))
+    val notInv = tla.not(tla.lt(tla.prime(tla.name("x")), tla.int(5)))
     val dummyModule = new TlaModule("root", List(), List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, Some(notInv))
     // initialize the model checker
@@ -223,8 +223,8 @@ class TestBfsChecker extends FunSuite with BeforeAndAfter {
 
     // Inv ==  11 \in y <=> 2 \notin x
     val notInv = tla.not(tla.equiv(
-      tla.in(tla.int(11), tla.name("y")),
-      tla.notin(tla.int(2), tla.name("x"))
+      tla.in(tla.int(11), tla.prime(tla.name("y"))),
+      tla.notin(tla.int(2), tla.prime(tla.name("x")))
     ))////
 
     val dummyModule = new TlaModule("root", List(), List())

@@ -113,7 +113,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
     }
 
     val invName = options.getOption("checker", "inv", None).asInstanceOf[Option[String]]
-    val invariant =
+    val (notInvariant, notInvariantPrime) =
       if (invName.isDefined) {
         val invBody = findBodyOf(invName.get, allDeclarations: _*)
         if (invBody == NullEx) {
@@ -123,9 +123,11 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
         }
         val notInv = transformer.sanitize(tla.not(invBody))( bodyDB, sourceStore )
         logger.debug("Negated invariant:\n   %s".format(notInv))
-        Some(notInv)
+        val notInvPrime = primeVars(notInv)
+        logger.debug("Negated invariant with primes\n   %s".format(notInvPrime))
+        (Some(notInv), Some(notInvPrime))
       } else {
-        None
+        (None, None)
       }
 
     logger.info("Found %d initializing transitions and %d next transitions"
@@ -133,7 +135,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
 
     val newModule = new TlaModule(tlaModule.get.name, tlaModule.get.imports, allDeclarations)
     specWithTransitions
-      = Some(new SpecWithTransitions(newModule, initTransitions, nextTransitions, invariant))
+      = Some(new SpecWithTransitions(newModule, initTransitions, nextTransitions, notInvariant, notInvariantPrime))
     true
   }
 

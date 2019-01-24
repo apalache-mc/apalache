@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.analyses
 import at.forsyte.apalache.tla.assignments.SpecWithTransitions
 import at.forsyte.apalache.tla.bmcmt.RewriterException
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values.TlaBool
@@ -28,13 +29,15 @@ class SimpleSkolemization @Inject()(val frexStore: FreeExistentialsStoreImpl) ex
     val nextTransitions = spec.nextTransitions map toNegatedForm
     val notInv =
       if (spec.notInvariant.isDefined) Some(toNegatedForm(spec.notInvariant.get)) else None
+    val notInvPrime =
+      if (spec.notInvariantPrime.isDefined) Some(toNegatedForm(spec.notInvariantPrime.get)) else None
 
     initTransitions foreach markFreeExistentials
     nextTransitions foreach markFreeExistentials
     if (notInv.isDefined) {
       markFreeExistentials(notInv.get)
     }
-    new SpecWithTransitions(spec.rootModule, initTransitions, nextTransitions, notInv)
+    new SpecWithTransitions(spec.rootModule, initTransitions, nextTransitions, notInv, notInvPrime)
   }
 
   private def markFreeExistentials(ex: TlaEx): Unit = ex match {
@@ -66,6 +69,10 @@ class SimpleSkolemization @Inject()(val frexStore: FreeExistentialsStoreImpl) ex
 
       case OperEx(TlaBoolOper.not, arg) =>
         nnf(!neg, arg)
+
+      case ite@OperEx(TlaControlOper.ifThenElse, predEx, thenEx, elseEx) =>
+        // ~ITE(A, B, C) == ITE(A, ~B, ~C)
+        OperEx(TlaControlOper.ifThenElse, predEx, nnf(neg, thenEx), nnf(neg, elseEx))
 
       case OperEx(TlaBoolOper.and, args@_*) =>
         val oper = if (neg) TlaBoolOper.or else TlaBoolOper.and
@@ -143,8 +150,8 @@ class SimpleSkolemization @Inject()(val frexStore: FreeExistentialsStoreImpl) ex
       case OperEx(TlaSetOper.supseteq, left, right) =>
         OperEx(if (neg) TlaSetOper.subsetProper else TlaSetOper.supseteq, left, right)
 
-      case OperEx(TlaOper.label, subex, args @ _*) =>
-        OperEx(TlaOper.label, nnf(neg, subex) +: args :_*)
+      case OperEx(TlaOper.label, subex, args@_*) =>
+        OperEx(TlaOper.label, nnf(neg, subex) +: args: _*)
 
       case _ =>
         if (!neg)

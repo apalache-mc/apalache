@@ -48,6 +48,8 @@ class SymbStateRewriterAuto(val solverContext: SolverContext) extends SymbStateR
 
   override def exprGradeStore: ExprGradeStore = exprGradeStoreImpl
 
+  override var introFailures: Boolean = true
+
   private def reset(arena: Arena, binding: Binding): Unit = {
     def add(m: Map[String, CellT], c: ArenaCell) = m + (c.toString -> c.cellType)
     val cellTypes = arena.cellMap.values.foldLeft(Map[String, CellT]()) (add)
