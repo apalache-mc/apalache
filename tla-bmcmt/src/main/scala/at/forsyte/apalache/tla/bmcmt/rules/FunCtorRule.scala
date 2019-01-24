@@ -105,8 +105,7 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // compute mappings for all the cells (some of them may coincide, that's fine)
     val (newState: SymbState, newEs: Seq[TlaEx]) = process(state, oldCells)
     val newCells = newEs.map(newState.arena.findCellByNameEx)
-    // Call distinct to remove duplicates, e.g., consider a silly mapping { x \in 1..100 |-> FALSE },
-    // which would produce 100 FALSE and they all be mapped to the same cell (by the constant cache)
-    (newState, newCells.distinct)
+    // keep the sequence of results as it is, as it is be zipped by the function constructor
+    (newState, newCells)
   }
 }
