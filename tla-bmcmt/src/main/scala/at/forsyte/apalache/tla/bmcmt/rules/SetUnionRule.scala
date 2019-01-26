@@ -4,9 +4,9 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types.FinSetT
 import at.forsyte.apalache.tla.bmcmt.util.Prod2SeqIterator
+import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 /**
   * Implements the rule: SE-UNION, that is, a union of all set elements.
@@ -60,12 +60,13 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
           // require each cell to be in one of the sets
           def addCellCons(elemCell: ArenaCell): Unit = {
             val inUnionSet = tla.in(elemCell, newSetCell)
-            def inSet: PartialFunction[(ArenaCell, Set[ArenaCell]), TlaEx] = {
-              case (set: ArenaCell, elems: Set[ArenaCell]) if elems.contains(elemCell) =>
-                tla.and(tla.in(set, topSetCell), tla.in(elemCell, set))
+            def inSet(set: ArenaCell) = {
+              // this is sound, because we have generated element equalities
+              // and thus can use congruence of in(...) for free
+              tla.and(tla.in(set, topSetCell), tla.in(elemCell, set))
             }
 
-            val existsSet = tla.or(sets.zip(elemsOfSets) collect inSet :_*)
+            val existsSet = tla.or(sets map inSet :_*)
             val iff = OperEx(TlaOper.eq, inUnionSet, existsSet)
             rewriter.solverContext.assertGroundExpr(iff)
           }
