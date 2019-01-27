@@ -594,23 +594,49 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
       val funType = argTypes.head
       // In principle, we could just return the function itself.
       // But we also check the argument types to be on a well-typed side.
+      val indices = deinterleave(bindings, 0, 2) // the expressions
       val indexTypes = deinterleave(argTypes.tail, 0, 2)
       val valueTypes = deinterleave(argTypes.tail, 1, 2)
-      val (argT, resT) =
-        funType match {
-          case FunT(FinSetT(tup@TupleT(_)), rt) => (tup, rt)
-          case FunT(FinSetT(elemT), rt) => (TupleT(Seq(elemT)), rt)
-          case _ => error(ex, "Expected a function type, found: " + funType)
-        }
-      for (idx <- indexTypes) {
-        if (idx != argT) {
-          error(ex, "Expected an index of type %s, found: %s".format(argT, idx))
-        }
-      }
-      for (valT <- valueTypes) {
-        if (valT != resT) {
-          error(ex, "Expected an index of type %s, found: %s".format(resT, valT))
-        }
+      funType match {
+        case FunT(_, _) =>
+          val (argT, resT) =
+            funType match {
+              case FunT(FinSetT(tup@TupleT(_)), rt) => (tup, rt)
+              case FunT(FinSetT(elemT), rt) => (TupleT(Seq(elemT)), rt)
+              case _ => error(ex, "Expected a function type, found: " + funType)
+            }
+          for (idx <- indexTypes) {
+            if (idx != argT) {
+              error(ex, "Expected an index of type %s, found: %s".format(argT, idx))
+            }
+          }
+          for (valT <- valueTypes) {
+            if (valT != resT) {
+              error(ex, "Expected an index of type %s, found: %s".format(resT, valT))
+            }
+          }
+
+        case rec @ RecordT(_) =>
+          for (idx <- indexTypes) {
+            if (idx != TupleT(Seq(ConstT()))) {
+              error(ex, "Expected an index of type %s, found: %s".format(ConstT(), idx))
+            }
+          }
+          for ((index, valT) <- indices.zip(valueTypes)) {
+            index match {
+              case OperEx(TlaFunOper.tuple, ValEx(TlaStr(key))) =>
+                if (valT != rec.fields(key)) {
+                  error(ex, "Expected an index of type %s, found: %s".format(rec.fields(key), valT))
+                }
+
+              case _ =>
+                error(ex, s"Expected a record key, found: ${index}")
+            }
+
+          }
+
+        case _ =>
+          error(ex, "Expected a function or a record")
       }
 
       funType

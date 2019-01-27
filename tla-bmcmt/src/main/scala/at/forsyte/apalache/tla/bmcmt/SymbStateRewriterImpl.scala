@@ -392,6 +392,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     * @return a new symbolic state, if possible
     */
   def coerce(state: SymbState, targetTheory: Theory): SymbState = {
+    solverContext.checkConsistency(state.arena)
     coercion.coerce(state, targetTheory)
   }
 

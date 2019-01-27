@@ -88,6 +88,14 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
     */
   override def declareCell(cell: ArenaCell): Unit = context.declareCell(cell)
 
+
+  /**
+    * Check whether the current view of the SMT solver is consistent with arena.
+    *
+    * @param arena an arena
+    */
+  override def checkConsistency(arena: Arena): Unit = context.checkConsistency(arena)
+
   /**
     * Introduce a new Boolean constant.
     *

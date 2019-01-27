@@ -17,6 +17,12 @@ trait SolverContext extends StackableContext {
   def declareCell(cell: ArenaCell): Unit
 
   /**
+    * Check whether the current view of the SMT solver is consistent with arena.
+    * @param arena an arena
+    */
+  def checkConsistency(arena: Arena): Unit
+
+  /**
     * Introduce a new Boolean constant.
     * @return the name of a new constant
     */

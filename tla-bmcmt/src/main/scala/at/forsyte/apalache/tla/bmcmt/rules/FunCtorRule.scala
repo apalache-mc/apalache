@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
 /**
-  * Implements the rules: SE-SET-MAP[1-2] and SE-FUN-CTOR[1-2].
+  * Implements SE-FUN-CTOR[1-2].
   *
   * Since set map and function constructors have a lot in common, we implement them in the same class.
   *

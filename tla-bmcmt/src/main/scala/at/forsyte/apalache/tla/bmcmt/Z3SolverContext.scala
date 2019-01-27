@@ -109,6 +109,22 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     }
   }
 
+
+  /**
+    * Check whether the current view of the SMT solver is consistent with arena.
+    *
+    * @param arena an arena
+    */
+  override def checkConsistency(arena: Arena): Unit = {
+    val topId = arena.topCell.id
+    if (maxCellIdPerContext.head > topId) {
+      // Checking consistency. When the user accidentally replaces a fresh arena with an older one,
+      // we report it immediately. Otherwise, it is very hard to find the cause.
+      logWriter.flush() // flush the SMT log
+      throw new InternalCheckerError(s"Current arena has cell id = $topId, while SMT has ${maxCellIdPerContext.head}. Damaged arena?")
+    }
+  }
+
   /**
     * Assert that a Boolean TLA+ expression holds true.
     *
