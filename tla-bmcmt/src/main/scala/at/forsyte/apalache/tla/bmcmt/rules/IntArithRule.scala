@@ -62,7 +62,7 @@ class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     case OperEx(oper: TlaArithOper, left, right) =>
       val leftState = rewriter.rewriteUntilDone(state.setTheory(IntTheory()).setRex(left))
-      val rightState = rewriter.rewriteUntilDone(state.setTheory(IntTheory()).setRex(right))
+      val rightState = rewriter.rewriteUntilDone(leftState.setTheory(IntTheory()).setRex(right))
       // introduce an integer constant to store the result
       val intConst = rewriter.solverContext.introIntConst()
       val cons =
