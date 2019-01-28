@@ -81,7 +81,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
           unionOfSets foreach addCellCons
 
           // that's it
-          val finalState = newState.setArena(arena).setRex(newSetCell.toNameEx)
+          val finalState = eqState.setRex(newSetCell.toNameEx)
           rewriter.coerce(finalState, state.theory) // coerce to the source theory
         }
 
