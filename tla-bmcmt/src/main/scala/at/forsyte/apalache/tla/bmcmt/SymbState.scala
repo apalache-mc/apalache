@@ -27,4 +27,11 @@ class SymbState(val ex: TlaEx,
   def setBinding(newBinding: Binding): SymbState = {
     new SymbState(ex, theory, arena, newBinding)
   }
+
+  /**
+    * A convenience function to get the state expression as a cell, if it is actually a cell
+   */
+  def asCell: ArenaCell = {
+    arena.findCellByNameEx(ex)
+  }
 }

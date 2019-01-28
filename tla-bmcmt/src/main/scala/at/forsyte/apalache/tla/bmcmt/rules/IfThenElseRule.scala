@@ -13,6 +13,8 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
   * @author Igor Konnov
   */
 class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
+  private val pickFrom = new PickFromAndFunMerge(rewriter, false)
+
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaControlOper.ifThenElse, _, _, _) => true
@@ -59,10 +61,10 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
             val finalState = iteSet(elseState, resultType, pred, thenCell, elseCell)
             rewriter.coerce(finalState, state.theory) // coerce to the source theory
 
-          // TODO: the general case ITE6 is missing
+          // ITE6
           case _ =>
-            throw new RewriterException("Attempting to apply IF-THEN-ELSE to %s and %s, not supported"
-              .format(thenCell.cellType, elseCell.cellType))
+            val finalState = iteGeneral(elseState, resultType, pred, thenCell, elseCell)
+            rewriter.coerce(finalState, state.theory) // coerce to the source theory
         }
 
       case _ =>
@@ -103,7 +105,7 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.setArena(newArena).setRex(newCell.toNameEx)
   }
 
-  // TODO: introduce this rule in the semantics report
+  // TODO: why don't we use iteGeneral instead?
   private def iteSet(state: SymbState, commonType: CellT, pred: TlaEx, thenCell: ArenaCell, elseCell: ArenaCell) = {
     var newArena = state.arena.appendCell(commonType)
     val newSetCell = newArena.topCell
@@ -126,4 +128,20 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     state.setTheory(CellTheory()).setArena(newArena).setRex(newSetCell.toNameEx)
   }
+
+  // just use PICK FROM { thenValue, elseValue } to pick one of the two values
+  private def iteGeneral(state: SymbState, commonType: CellT, pred: TlaEx, thenCell: ArenaCell, elseCell: ArenaCell) = {
+    val setState = rewriter.rewriteUntilDone(state.setRex(tla.enumSet(thenCell.toNameEx, elseCell.toNameEx)))
+    val pickState = pickFrom.pick(setState.asCell, setState)
+    val pickedCell = pickState.asCell
+    // cache the equalities
+    val eqState = rewriter.lazyEq.cacheEqConstraints(pickState, (thenCell, pickedCell) +: (elseCell, pickedCell) +: Nil)
+    // assert that the picked value is equal to the branches only when the respective condition holds
+    val thenCond = tla.or(tla.not(pred), tla.eql(pickedCell.toNameEx, thenCell.toNameEx))
+    val elseCond = tla.or(pred, tla.eql(pickedCell.toNameEx, elseCell.toNameEx))
+    rewriter.solverContext.assertGroundExpr(tla.and(thenCond, elseCond))
+    eqState.setRex(pickedCell.toNameEx)
+  }
+
+
 }
