@@ -132,9 +132,22 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     */
   def assertGroundExpr(ex: TlaEx): Unit = {
     log(s";; assert ${UTFPrinter.apply(ex)}")
-    val z3expr = toExpr(simplifier.simplify(ex))
-    log(s"(assert ${z3expr.toString})")
-    z3solver.add(z3expr.asInstanceOf[BoolExpr])
+    if (false) {
+      // this optimization slows down model checkingx
+      simplifier.simplify(ex) match {
+        case OperEx(TlaBoolOper.and, args@_*) =>
+          args foreach assertGroundExpr // break down into clauses
+
+        case simple@_ =>
+          val z3expr = toExpr(simple)
+          log(s"(assert ${z3expr.toString})")
+          z3solver.add(z3expr.asInstanceOf[BoolExpr])
+      }
+    } else {
+      val z3expr = toExpr(ex)
+      log(s"(assert ${z3expr.toString})")
+      z3solver.add(z3expr.asInstanceOf[BoolExpr])
+    }
 
     if (profile) {
       val timeBefore = System.nanoTime()
@@ -426,15 +439,25 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
         z3context.mkNot(toExpr(OperEx(TlaOper.eq, lhs, rhs)).asInstanceOf[BoolExpr])
 
       case OperEx(TlaBoolOper.and, es@_*) =>
-        val newEs = es.map(e => toExpr(e).asInstanceOf[BoolExpr])
-        z3context.mkAnd(newEs: _*)
+        if (es.size < 50) {
+          val newEs = es.map(e => toExpr(e).asInstanceOf[BoolExpr])
+          z3context.mkAnd(newEs: _*)
+        } else {
+          // use Tseitin to produce many short clauses, as our clauses sometimes contain thousands of literals
+          tseitinAnd(es)
+        }
 
       case OperEx(TlaBoolOper.or, es@_*) =>
-        val mapped_es = es map toExpr
-        // check the assertion before casting, to make debugging easier
-        assert(mapped_es.forall(e => e.isInstanceOf[BoolExpr]))
-        val cast_es = mapped_es.map(_.asInstanceOf[BoolExpr])
-        z3context.mkOr(cast_es: _*)
+        if (es.size < 50) {
+          val mapped_es = es map toExpr
+          // check the assertion before casting, to make debugging easier
+          assert(mapped_es.forall(e => e.isInstanceOf[BoolExpr]))
+          val cast_es = mapped_es.map(_.asInstanceOf[BoolExpr])
+          z3context.mkOr(cast_es: _*)
+        } else {
+          // use Tseitin to produce many short clauses, as our clauses sometimes contain thousands of literals
+          tseitinOr(es)
+        }
 
       case OperEx(TlaBoolOper.implies, lhs, rhs) =>
         val lhsZ3 = toExpr(lhs).asInstanceOf[BoolExpr]
@@ -462,12 +485,12 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
         val inFun = getOrMkInPred(setEntry._2, elemEntry._2)
         z3context.mkApp(inFun, elemEntry._1, setEntry._1)
 
-      case OperEx(TlaSetOper.in, arg @ ValEx(TlaInt(_)), NameEx(setName)) =>
+      case OperEx(TlaSetOper.in, arg@ValEx(TlaInt(_)), NameEx(setName)) =>
         val setEntry = constCache(setName)
         val inFun = getOrMkInPred(setEntry._2, IntT())
         z3context.mkApp(inFun, toExpr(arg), setEntry._1)
 
-      case OperEx(TlaSetOper.in, arg @ ValEx(TlaBool(_)), NameEx(setName)) =>
+      case OperEx(TlaSetOper.in, arg@ValEx(TlaBool(_)), NameEx(setName)) =>
         val setEntry = constCache(setName)
         val inFun = getOrMkInPred(setEntry._2, BoolT())
         z3context.mkApp(inFun, toExpr(arg), setEntry._1)
@@ -573,5 +596,74 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
       case _ =>
         throw new InvalidTlaExException("Unexpected arithmetic expression: " + ex, ex)
     }
+
+  }
+
+  private def tseitinOr(es: Seq[TlaEx]): BoolExpr = {
+    def processOr(in: BoolExpr, form: BoolExpr, out: BoolExpr): BoolExpr = {
+      z3solver.add(z3context.mkOr(in, form, z3context.mkNot(out)))
+      z3solver.add(z3context.mkOr(z3context.mkNot(in), out))
+      z3solver.add(z3context.mkOr(z3context.mkNot(form), out))
+      out
+    }
+
+    def each(past: BoolExpr, oneEx: TlaEx): BoolExpr = {
+      oneEx match {
+        case ValEx(TlaBool(false)) =>
+          past
+
+        case ValEx(TlaBool(true)) =>
+          z3context.mkTrue()
+
+        case NameEx(_) =>
+          // just a Boolean constant
+          val out = constCache(introBoolConst())._1.asInstanceOf[BoolExpr]
+          processOr(past, toExpr(oneEx).asInstanceOf[BoolExpr], out)
+
+        case _ =>
+          // a complex expression, introduce a Boolean constant
+          val pred = constCache(introBoolConst())._1.asInstanceOf[BoolExpr]
+          z3solver.add(z3context.mkIff(pred, toExpr(oneEx).asInstanceOf[BoolExpr]))
+          val out = constCache(introBoolConst())._1.asInstanceOf[BoolExpr]
+          processOr(past, pred, out)
+      }
+    }
+
+    es.foldLeft(z3context.mkFalse())(each)
+  }
+
+  private def tseitinAnd(es: Seq[TlaEx]): BoolExpr = {
+    def not = z3context.mkNot _
+
+    def processAnd(in: BoolExpr, form: BoolExpr, out: BoolExpr): BoolExpr = {
+      z3solver.add(z3context.mkOr(not(in), not(form), out))
+      z3solver.add(z3context.mkOr(in, not(out)))
+      z3solver.add(z3context.mkOr(form, not(out)))
+      out
+    }
+
+    def each(past: BoolExpr, oneEx: TlaEx): BoolExpr = {
+      oneEx match {
+        case ValEx(TlaBool(true)) =>
+          past
+
+        case ValEx(TlaBool(false)) =>
+          z3context.mkFalse()
+
+        case NameEx(_) =>
+          // just a Boolean constant
+          val out = constCache(introBoolConst())._1.asInstanceOf[BoolExpr]
+          processAnd(past, toExpr(oneEx).asInstanceOf[BoolExpr], out)
+
+        case _ =>
+          // a complex expression, introduce a Boolean constant
+          val pred = constCache(introBoolConst())._1.asInstanceOf[BoolExpr]
+          z3solver.add(z3context.mkIff(pred, toExpr(oneEx).asInstanceOf[BoolExpr]))
+          val out = constCache(introBoolConst())._1.asInstanceOf[BoolExpr]
+          processAnd(past, pred, out)
+      }
+    }
+
+    es.foldLeft(z3context.mkTrue())(each)
   }
 }
