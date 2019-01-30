@@ -149,6 +149,18 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
     }
   }
 
+  /**
+    * Cache the equality as the SMT equality. When we know that we can use SMT equality by construction, e.g.,
+    * see PICK FROM {S_1, ..., S_n}, we can tell the cache just to use the SMT equality. Use this method with care,
+    * as it can easily produce unsound results!
+    *
+    * @param left a left cell
+    * @param right a right cell
+    */
+  def cacheAsSmtEqualityByMagic(left: ArenaCell, right: ArenaCell): Unit = {
+    eqCache.put(left, right, EqCache.EqEntry())
+  }
+
   private def mkSetEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {
     if (left.cellType == FinSetT(UnknownT()) && state.arena.getHas(left).isEmpty) {
       // The statically empty set is a very special case, as its element type is unknown.
