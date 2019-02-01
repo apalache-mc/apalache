@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.lir.ValEx
 import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.lir.{NameEx, ValEx}
 
 /**
   * Implements the rule SE-INT-CONST.
@@ -24,9 +24,11 @@ class IntConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
         if (!n.isValidInt) {
           throw new RewriterException(s"BigInt $n does not fit into integer range. Do not know how to translate in SMT.")
         }
-        val (_: Unit, intConst: String) = rewriter.intValueCache.getOrCreate((), n.toInt)
+        val (newArena: Arena, intCell: ArenaCell) = rewriter.intValueCache.getOrCreate(state.arena, n.toInt)
         val finalState =
-          state.setTheory(IntTheory()).setRex(NameEx(intConst))
+          state.setArena(newArena)
+            .setRex(intCell.toNameEx)
+            .setTheory(CellTheory())
         rewriter.coerce(finalState, state.theory)
 
       case _ =>

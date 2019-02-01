@@ -24,6 +24,9 @@ trait SolverContext extends StackableContext {
 
   /**
     * Introduce a new Boolean constant.
+    *
+    * WARNING: this method is obsolete and will be removed in the future. Just introduce a cell of type BoolT().
+    *
     * @return the name of a new constant
     */
   def introBoolConst(): String
@@ -46,6 +49,9 @@ trait SolverContext extends StackableContext {
 
   /**
     * Introduce a new integer constant.
+    *
+    * WARNING: this method is obsolete and will be removed in the future. Just introduce a cell of type IntT().
+    *
     * @return the name of a new constant
     */
   def introIntConst(): String
