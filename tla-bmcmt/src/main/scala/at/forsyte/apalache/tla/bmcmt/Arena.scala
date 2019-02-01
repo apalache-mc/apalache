@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 import scala.collection.immutable.HashMap
@@ -114,15 +114,6 @@ class Arena private(val solverContext: SolverContext,
     val newArena = appendCellWithoutDeclaration(cellType)
     val newCell = newArena.topCell
     solverContext.declareCell(newCell)
-    cellType match {
-      case BoolT() =>
-        val cons = OperEx(TlaBoolOper.or, newCell.mkTlaEq(cellFalse()), newCell.mkTlaEq(cellTrue()))
-        solverContext.assertGroundExpr(cons)
-
-      case _ =>
-        ()
-    }
-
     newArena
   }
 
