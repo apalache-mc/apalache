@@ -154,8 +154,8 @@ class TestSymbStateRewriter extends RewriterBase {
   }
 
   test("SE-SUBST1: x[cell/x] ~~> cell") {
-    val newArena = arena.appendCell(UnknownT())
-    val cell = newArena.topCell
+    arena = arena.appendCell(UnknownT())
+    val cell = arena.topCell
     val binding = new Binding() + ("x" -> cell)
     val state = new SymbState(NameEx("x"), CellTheory(), arena, binding)
     create().rewriteOnce(state) match {
