@@ -8,6 +8,9 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
   * Coercion from one theory to another. The coercion results are cached, and thus
   * this class supports StackableContext.
   *
+  * As we are assigning sorts to cells now, this class is here just for backward compatibility with the code.
+  * It will be removed in the future.
+  *
   * @author Igor Konnov
   */
 class CoercionWithCache(val stateRewriter: SymbStateRewriter) extends StackableContext {
@@ -134,9 +137,8 @@ class CoercionWithCache(val stateRewriter: SymbStateRewriter) extends StackableC
           // the general case
           val newArena = state.arena.appendCell(BoolT())
           val newCell = newArena.topCell
-          val equiv = OperEx(TlaBoolOper.equiv,
-            NameEx(name),
-            OperEx(TlaOper.eq, newCell.toNameEx, newArena.cellTrue().toNameEx))
+          // just compare the constants directly, as both of them have type Bool
+          val equiv = OperEx(TlaBoolOper.equiv, NameEx(name), newCell.toNameEx)
           stateRewriter.solverContext.assertGroundExpr(equiv)
           state.setArena(newArena)
             .setRex(newCell.toNameEx)
@@ -162,12 +164,10 @@ class CoercionWithCache(val stateRewriter: SymbStateRewriter) extends StackableC
         } else {
           // general case
           val pred = stateRewriter.solverContext.introBoolConst()
-          val equiv = OperEx(TlaBoolOper.equiv,
-            NameEx(pred),
-            OperEx(TlaOper.eq, NameEx(name), state.arena.cellTrue().toNameEx))
+          // just compare the constants directly, as both of them have type Bool
+          val equiv = OperEx(TlaBoolOper.equiv, NameEx(pred), NameEx(name))
           stateRewriter.solverContext.assertGroundExpr(equiv)
-          state.setRex(NameEx(pred))
-            .setTheory(BoolTheory())
+          state.setRex(NameEx(pred)).setTheory(BoolTheory())
         }
 
       case _ =>
