@@ -40,36 +40,38 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   private def intersectOrDiff(op: OpEnum.Value, state: SymbState, leftSet: TlaEx, rightSet: TlaEx): SymbState = {
-    val leftState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(leftSet))
-    val rightState = rewriter.rewriteUntilDone(leftState.setTheory(CellTheory()).setRex(rightSet))
-    val leftSetCell = leftState.arena.findCellByNameEx(leftState.ex)
-    val rightSetCell = rightState.arena.findCellByNameEx(rightState.ex)
-    val leftElemCells = leftState.arena.getHas(leftSetCell)
-    val rightElemCells = rightState.arena.getHas(rightSetCell)
+    var newState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(leftSet))
+    val leftSetCell = newState.asCell
+    newState = rewriter.rewriteUntilDone(newState.setTheory(CellTheory()).setRex(rightSet))
+    val rightSetCell = newState.asCell
+    val leftElemCells = newState.arena.getHas(leftSetCell)
+    val rightElemCells = newState.arena.getHas(rightSetCell)
     // introduce a new set
     val newType = types.unify(leftSetCell.cellType, rightSetCell.cellType)
     if (newType.isEmpty) {
       throw new TypeException(s"Failed to unify types ${leftSetCell.cellType} and ${rightSetCell.cellType} when rewriting ${state.ex}")
     }
-    val arena = rightState.arena.appendCell(newType.get)
-    val resultSetCell = arena.topCell
+    newState = newState.setArena(newState.arena.appendCell(newType.get))
+    val resultSetCell = newState.arena.topCell
 
     // add new arena edges
     val newArena =
       op match {
         case OpEnum.CAP =>
           if (leftElemCells.isEmpty && rightElemCells.isEmpty) {
-            arena // don't add anything, the intersection is empty
+            newState.arena // don't add anything, the intersection is empty
           } else {
-            (leftElemCells ++ rightElemCells).foldLeft(arena)((a, e) => a.appendHas(resultSetCell, e))
+            (leftElemCells ++ rightElemCells).foldLeft(newState.arena)((a, e) => a.appendHas(resultSetCell, e))
           }
 
         case OpEnum.MINUS =>
-          leftElemCells.foldLeft(arena)((a, e) => a.appendHas(resultSetCell, e))
+          leftElemCells.foldLeft(newState.arena)((a, e) => a.appendHas(resultSetCell, e))
       }
 
+    newState = newState.setArena(newArena)
+
     // add SMT constraints
-    val newState:SymbState =
+    newState =
       if (leftElemCells.nonEmpty) {
         def mkConsFun = if (op == OpEnum.CAP) overlap _ else noOverlap _
 
@@ -81,7 +83,7 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
         }
 
         // for every element in the left set, there must be an element in the right set (or no element in case of diff)
-        val afterLeft = leftElemCells.foldLeft(rightState) (overlapOrNot)
+        val afterLeft = leftElemCells.foldLeft(newState) (overlapOrNot)
 
         if (op == OpEnum.CAP && rightElemCells.nonEmpty) {
           def over(st: SymbState, elem: ArenaCell): SymbState = {
@@ -93,12 +95,11 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
           afterLeft
         }
       } else {
-        rightState
+        newState
       }
 
     // that's it
-    newState.setTheory(CellTheory())
-      .setArena(newArena).setRex(resultSetCell.toNameEx)
+    newState.setTheory(CellTheory()).setRex(resultSetCell.toNameEx)
   }
 
   private def in(e: ArenaCell, s: ArenaCell) = OperEx(TlaSetOper.in, e.toNameEx, s.toNameEx)
