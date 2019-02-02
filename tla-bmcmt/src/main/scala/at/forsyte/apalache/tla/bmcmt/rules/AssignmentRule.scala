@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
 import at.forsyte.apalache.tla.bmcmt.types.FinSetT
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
@@ -17,7 +18,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
   * @author Igor Konnov
   */
 class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val pickRule = new PickFromAndFunMerge(rewriter)
+  private val pickRule = new CherryPick(rewriter)
 
   override def isApplicable(state: SymbState): Boolean = {
     def isUnbound(name: String) =

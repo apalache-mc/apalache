@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
 import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, PowSetT}
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -15,7 +16,7 @@ import com.typesafe.scalalogging.LazyLogging
   * @author Igor Konnov
   */
 class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogging {
-  private val pickRule = new PickFromAndFunMerge(rewriter, failWhenEmpty = false)
+  private val pickRule = new CherryPick(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {

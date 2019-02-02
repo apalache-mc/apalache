@@ -133,7 +133,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
   def assertGroundExpr(ex: TlaEx): Unit = {
     log(s";; assert ${UTFPrinter.apply(ex)}")
     if (false) {
-      // this optimization slows down model checkingx
+      // this optimization slows down model checking
       simplifier.simplify(ex) match {
         case OperEx(TlaBoolOper.and, args@_*) =>
           args foreach assertGroundExpr // break down into clauses
@@ -601,6 +601,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
 
   private def tseitinOr(es: Seq[TlaEx]): BoolExpr = {
     def processOr(in: BoolExpr, form: BoolExpr, out: BoolExpr): BoolExpr = {
+      log(s";; Tseitin of OR for $form")
       z3solver.add(z3context.mkOr(in, form, z3context.mkNot(out)))
       z3solver.add(z3context.mkOr(z3context.mkNot(in), out))
       z3solver.add(z3context.mkOr(z3context.mkNot(form), out))
@@ -636,6 +637,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     def not = z3context.mkNot _
 
     def processAnd(in: BoolExpr, form: BoolExpr, out: BoolExpr): BoolExpr = {
+      log(s";; Tseitin of AND for $form")
       z3solver.add(z3context.mkOr(not(in), not(form), out))
       z3solver.add(z3context.mkOr(in, not(out)))
       z3solver.add(z3context.mkOr(form, not(out)))

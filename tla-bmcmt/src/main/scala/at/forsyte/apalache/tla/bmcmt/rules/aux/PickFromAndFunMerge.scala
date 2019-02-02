@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.bmcmt.rules
+package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
@@ -13,6 +13,9 @@ import at.forsyte.apalache.tla.lir.convenience.tla
   *
   * Currently, we allow a pick to fail and return an arbitrary value (of given sort).
   * By default, failWhenEmpty = false, as the mode failWhenEmpty = true produces too many false positives...
+  *
+  * WARNING: the methods implemented here need equalities and thus produce a quadratic number of equalities.
+  * See CherryPick that avoids this problem.
   *
   * @param rewriter      a state rewriter
   * @param failWhenEmpty issue a failure predicate that is set to true when a given set is empty

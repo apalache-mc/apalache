@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
@@ -13,7 +14,7 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
   * @author Igor Konnov
   */
 class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val picker = new PickFromAndFunMerge(rewriter)
+  private val picker = new CherryPick(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {

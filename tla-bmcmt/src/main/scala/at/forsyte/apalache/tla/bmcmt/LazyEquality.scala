@@ -252,14 +252,15 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
       def notInOrExists(lelem: ArenaCell) = {
         // BUG: this produced OOM on the inductive invariant of Paxos
         // BUGFIX: push this query to the solver, in order to avoid constructing enormous assertions
+        val notInOrExists = tla.or(tla.not(tla.in(lelem, left)), exists(lelem))
         val pred = tla.name(rewriter.solverContext.introBoolConst())
-        val iff = tla.equiv(pred, tla.or(tla.not(tla.in(lelem, left)), exists(lelem)))
-        rewriter.solverContext.assertGroundExpr(iff)
+        rewriter.solverContext.assertGroundExpr(tla.equiv(pred, notInOrExists))
         pred
       }
 
+      val forEachNotInOrExists = tla.and(leftElems.map(notInOrExists): _*)
       val pred = tla.name(rewriter.solverContext.introBoolConst())
-      rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.and(leftElems.map(notInOrExists): _*)))
+      rewriter.solverContext.assertGroundExpr(tla.eql(pred, forEachNotInOrExists))
       newState.setTheory(BoolTheory()).setRex(pred)
     }
   }

@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt
 import java.io.{FileWriter, PrintWriter, StringWriter}
 
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FreeExistentialsStoreImpl}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
@@ -138,7 +139,7 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
       // pick an index j \in { 0..k } of the fired transition
       val lastState = nextStates.last // the last state has the largest arena
       val newArena = lastState.arena.appendCell(IntT())
-      val transitionIndex = newArena.topCell
+      val transitionIndex = newArena.topCell // it also the oracle for picking cells
 
       def transitionFired(state: SymbState, index: Int): TlaEx =
       // it is tempting to use <=> instead of => here, but this might require from an inactive transition
@@ -155,32 +156,25 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
       //   and require \A i \in { 0.. k-1}. j = i => c_x = Si[x]
       // Then, the final state binds x -> c_x for every x \in Vars
       val vars = forgetNonPrimed(lastState.binding).keySet
-      val next = lastState.setBinding(forgetPrimed(lastState.binding)).setArena(newArena)
+      var finalState = lastState.setBinding(forgetPrimed(lastState.binding)).setArena(newArena).setRex(tla.bool(true))
       if (nextStates.map(_.binding).exists(b => forgetNonPrimed(b).keySet != vars)) {
         throw new InternalCheckerError(s"Next states disagree on the set of assigned variables (step $stepNo)")
       }
 
-      def pickVar(x: String): TlaEx = {
-        val pickX = tla.in(tla.prime(NameEx(x.stripSuffix("'"))),
-          tla.enumSet(nextStates.map(_.binding(x).toNameEx): _*))
-
-        def eq(state: SymbState, index: Int): TlaEx =
-          tla.impl(tla.eql(transitionIndex.toNameEx, tla.int(index)),
-            tla.eql(NameEx(x), state.binding(x).toNameEx))
-
-        tla.and(pickX +: (nextStates.zipWithIndex map (eq _).tupled): _*)
+      def pickVar(x: String): ArenaCell = {
+        val toPickFrom = nextStates map (_.binding(x))
+        finalState = new CherryPick(rewriter).pick(finalState, transitionIndex.toNameEx, toPickFrom)
+        finalState.asCell
       }
 
-      val pickAll = tla.and(leftBound +: rightBound +: vars.toList.map(pickVar): _*)
-      val pickState = rewriter.rewriteUntilDone(next.setTheory(BoolTheory()).setRex(pickAll))
-      rewriter.solverContext.assertGroundExpr(pickState.ex)
+      val finalBinding = Binding(vars.toSeq map (n => (n, pickVar(n))) :_*)
+      finalState = finalState.setBinding(shiftBinding(finalBinding))
       if (!solverContext.sat()) {
         throw new InternalCheckerError(s"Error picking next variables (step $stepNo). Report a bug.")
       }
       // that is the result of this step
-      val resultingState = pickState.setBinding(shiftBinding(pickState.binding))
-      stack = (resultingState, transitionIndex) +: stack
-      resultingState
+      stack = (finalState, transitionIndex) +: stack
+      finalState
     }
   }
 
