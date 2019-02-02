@@ -98,20 +98,23 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     val domainCell = argState.arena.getDom(funCell)
     val codomainCell = argState.arena.getCdm(funCell)
-    val resState = picker.pick(codomainCell, argState)
+    var nextState = picker.pick(codomainCell, argState)
 
     // SE-FUN-APP3
-    val resultCell = resState.ex
-    val domCells = resState.arena.getHas(domainCell)
+    val resultCell = nextState.asCell
+    val domCells = nextState.arena.getHas(domainCell)
+    val cdmCells = nextState.arena.getHas(codomainCell)
 
     // introduce a new failure predicate
 //    val newArena = resState.arena.appendCell(FailPredT())
 //    val failPred = newArena.topCell
 //    rewriter.addMessage(failPred.id,
 //      "Argument %s may be outside the function %s domain %s".format(argEx, funCell, state.arena.getDom(funCell)))
-    // cache equalities
-    val eqState = rewriter.lazyEq.cacheEqConstraints(resState,
-      domCells.map(e => (e, argCell)))
+
+    // cache equalities between the argument and the domain cells
+    nextState = rewriter.lazyEq.cacheEqConstraints(nextState, domCells.map((_, argCell)))
+    // cache equalities between the result and the co-domain cells (cherry-pick may create new cells!)
+    nextState = rewriter.lazyEq.cacheEqConstraints(nextState, cdmCells.map((_, resultCell)))
 
     // Equation (2): there is a domain element that equals to the argument
     def mkArgCase(domElem: ArenaCell): TlaEx = {
@@ -141,13 +144,13 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val resEq = tla.impl(found, tla.or(domCells.map(mkResCase): _*))
     rewriter.solverContext.assertGroundExpr(resEq)
 
-    var newArena = eqState.arena.appendCell(FailPredT())
-    val failPred = newArena.topCell
+    nextState = nextState.setArena(nextState.arena.appendCell(FailPredT()))
+    val failPred = nextState.arena.topCell
     rewriter.addMessage(failPred.id,
       "Argument %s may be outside the function %s domain %s".format(argEx, funCell, state.arena.getDom(funCell)))
     rewriter.solverContext.assertGroundExpr(tla.equiv(failPred.toNameEx, tla.not(NameEx(foundFlag))))
 
-    rewriter.rewriteUntilDone(eqState.setArena(newArena).setRex(resultCell).setTheory(CellTheory()))
+    rewriter.rewriteUntilDone(nextState.setRex(resultCell).setTheory(CellTheory()))
   }
 
 

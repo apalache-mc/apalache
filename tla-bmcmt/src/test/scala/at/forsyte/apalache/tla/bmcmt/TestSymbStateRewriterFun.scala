@@ -127,6 +127,38 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     }
   }
 
+  // regression: this test did not work with EWD840
+  test("""SE-FUN-CTOR[1-2]: [x \in {1,2} |-> ["a" |-> x] ][1] ~~> $C$k""") {
+    val set = tla.enumSet(1, 2)
+    val mapping = tla.enumFun(tla.str("a"), tla.name("x"))
+    val fun = tla.funDef(mapping, "x", set)
+    val eq = tla.eql(tla.enumFun(tla.str("a"), 1), tla.appFun(fun, 1))
+
+    val state = new SymbState(eq, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case membershipEx@NameEx(name) =>
+        assert(CellTheory().hasConst(name))
+        assert(solverContext.sat())
+        val failureOccurs = tla.or(nextState.arena.findCellsByType(FailPredT()).map(_.toNameEx): _*)
+        solverContext.assertGroundExpr(tla.not(failureOccurs))
+        assert(solverContext.sat())
+        solverContext.push()
+        solverContext.assertGroundExpr(nextState.ex)
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(tla.not(nextState.ex))
+        assert(!solverContext.sat())
+        solverContext.pop()
+
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
   test("""SE-FUN-APP[1-3]: f[4] ~~> $C$k""") {
     def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
 
