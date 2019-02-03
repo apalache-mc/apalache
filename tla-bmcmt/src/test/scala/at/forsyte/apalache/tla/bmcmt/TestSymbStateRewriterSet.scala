@@ -159,7 +159,14 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
-    assert(NameEx(solverContext.trueConst) == nextState.ex)
+    solverContext.push()
+    solverContext.assertGroundExpr(nextState.ex)
+    assert(solverContext.sat())
+    solverContext.pop()
+    solverContext.push()
+    solverContext.assertGroundExpr(tla.not(nextState.ex))
+    assert(!solverContext.sat())
+    solverContext.pop()
   }
 
   test("""SE-SET-IN2: \FALSE \in {\FALSE, \TRUE} ~~> b_new""") {
