@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
 /**
@@ -37,22 +37,17 @@ class NegRule(rewriter: SymbStateRewriter) extends RewritingRule {
             && name == state.arena.cellTrue().toString) {
             state.setRex(state.arena.cellFalse().toNameEx)
           } else {
-            val pred = rewriter.solverContext.introBoolConst()
+            val pred = NameEx(rewriter.solverContext.introBoolConst())
             val iff =
-              if (BoolTheory().hasConst(name)) {
-                // !pred <=> b
-                OperEx(TlaBoolOper.equiv, subEx, OperEx(TlaBoolOper.not, NameEx(pred)))
-              } else if (CellTheory().hasConst(name)) {
-                // pred <=> c_FALSE
-                OperEx(TlaBoolOper.equiv,
-                  NameEx(pred),
-                  OperEx(TlaOper.eq, subEx, state.arena.cellFalse().toNameEx))
+              if (BoolTheory().hasConst(name) || CellTheory().hasConst(name)) {
+                // pred <=> !b
+                OperEx(TlaBoolOper.equiv, pred, OperEx(TlaBoolOper.not, subEx))
               } else {
                 throw new RewriterException("Unexpected theory in NegRule: " + state.theory)
               }
 
             rewriter.solverContext.assertGroundExpr(iff)
-            val finalState = state.setRex(NameEx(pred)).setTheory(BoolTheory())
+            val finalState = state.setRex(pred).setTheory(BoolTheory())
             // coerce back, if needed
             rewriter.coerce(finalState, state.theory)
           }
