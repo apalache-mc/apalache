@@ -228,11 +228,16 @@ class CherryPick(rewriter: SymbStateRewriter) {
     * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
     */
   def pickSet(cellType: CellT, state: SymbState, oracle: NameEx, memberSets: Seq[ArenaCell]): SymbState = {
-    if (memberSets.length == 1) {
+    if (memberSets.isEmpty) {
+      throw new RuntimeException("Picking from a statically empty set")
+    } else if (memberSets.length == 1) {
       // one set, either empty, or not
       state.setRex(memberSets.head)
     } else if (memberSets.distinct.length == 1) {
       // all sets are actually the same, this is quite common for function domains
+      state.setRex(memberSets.head)
+    } else if (memberSets.forall(ms => state.arena.getHas(ms).isEmpty)) {
+      // multiple sets that are statically empty, just pick the first one
       state.setRex(memberSets.head)
     } else {
       pickSetNonEmpty(cellType, state, oracle, memberSets)
