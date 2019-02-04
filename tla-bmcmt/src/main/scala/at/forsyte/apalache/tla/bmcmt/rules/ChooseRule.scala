@@ -34,21 +34,41 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case OperEx(TlaOper.chooseBounded, varName, set, pred) =>
+        def solverAssert = rewriter.solverContext.assertGroundExpr _
         // compute set comprehension and then pick an element from it
         val filterEx = tla.filter(varName, set, pred)
-        val filterState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(filterEx))
+        var nextState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(filterEx))
         // pick an arbitrary witness
-        val setCell = filterState.arena.findCellByNameEx(filterState.ex)
-        if (filterState.arena.getHas(setCell).nonEmpty) {
-          rewriter.coerce(pickRule.pick(setCell, filterState), state.theory)
-        } else {
-          setCell.cellType match {
-            case FinSetT(et) =>
-              rewriter.coerce(makeUpValue(filterState, et), state.theory)
+        val setCell = nextState.arena.findCellByNameEx(nextState.ex)
+        if (nextState.arena.getHas(setCell).nonEmpty) {
+          val elems = nextState.arena.getHas(setCell)
+          val nelems = elems.size
+          // add an oracle \in 0..N, where the indices from 0 to N - 1 correspond to the set elements,
+          // whereas the index N corresponds to the default choice when the set is empty
+          nextState = nextState.setArena(nextState.arena.appendCell(IntT()))
+          val oracle = nextState.arena.topCell.toNameEx
+          solverAssert(tla.ge(oracle, tla.int(0)))
+          solverAssert(tla.le(oracle, tla.int(nelems)))
+          // introduce a default value
+          nextState = makeUpValue(nextState, findElemType(setCell))
+          val defaultValue = nextState.asCell
+          // when oracle = N, the set must be empty
+          val setIsEmpty = tla.and(elems.map(e => tla.notin(e.toNameEx, setCell.toNameEx)) :_*)
+          solverAssert(tla.impl(tla.eql(oracle, tla.int(nelems)), setIsEmpty))
+          // pick a cell
+          nextState = pickRule.pickBlindly(nextState, oracle, elems)
+          val pickedCell = nextState.asCell
+          // require that the picked cell is in the set
+          def chosenWhenIn(elem: ArenaCell, no: Int): Unit =
+            solverAssert(tla.impl(tla.eql(oracle, tla.int(no)), tla.in(elem.toNameEx, setCell.toNameEx)))
 
-            case tp @ _ =>
-              throw new RewriterException(s"Expected a set, found: $tp")
-          }
+          elems.zipWithIndex foreach (chosenWhenIn _).tupled
+          // and when it is empty, require the result to be equal to the default value
+          nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((pickedCell, defaultValue)))
+          solverAssert(tla.impl(tla.eql(oracle, tla.int(nelems)), tla.eql(pickedCell.toNameEx, defaultValue.toNameEx)))
+          rewriter.coerce(nextState, state.theory)
+        } else {
+          rewriter.coerce(makeUpValue(nextState, findElemType(setCell)), state.theory)
         }
 
       case _ =>
@@ -56,7 +76,18 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  // produce a 'default' value for a given type, when CHOOSE is called against a statically empty set
+  private def findElemType(setCell: ArenaCell): CellT = {
+    setCell.cellType match {
+      case FinSetT(et) =>
+        et
+
+      case tp @ _ =>
+        throw new RewriterException(s"Expected a set, found: $tp")
+    }
+  }
+
+  // Produce a 'default' value for a given type, when CHOOSE is called against a statically empty set
+  // TODO: introduce a cache for default values, otherwise there will be many identical copies
   private def makeUpValue(state: SymbState, cellType: CellT): SymbState = {
     cellType match {
       case recT @ RecordT(_) =>

@@ -163,7 +163,7 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
 
       def pickVar(x: String): ArenaCell = {
         val toPickFrom = nextStates map (_.binding(x))
-        finalState = new CherryPick(rewriter).pick(finalState, transitionIndex.toNameEx, toPickFrom)
+        finalState = new CherryPick(rewriter).pickBlindly(finalState, transitionIndex.toNameEx, toPickFrom)
         finalState.asCell
       }
 

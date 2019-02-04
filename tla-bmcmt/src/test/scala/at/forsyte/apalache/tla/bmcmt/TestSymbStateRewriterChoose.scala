@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.types.{AnnotationParser, FinSetT, IntT}
 import at.forsyte.apalache.tla.lir.TestingPredefs
 import at.forsyte.apalache.tla.lir.convenience.tla
 import org.junit.runner.RunWith
@@ -30,6 +31,48 @@ class TestSymbStateRewriterChoose extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
     rewriter.pop()
     rewriter.push()
+    val ns = assertEq(1)
+    assertUnsatOrExplain(rewriter, ns)
+  }
+
+  test("""SE-CHOOSE: CHOOSE x \in {1}: x > 1 ~~> $B$k""") {
+    val ex = tla.choose(tla.name("x"),
+      tla.enumSet(tla.int(1)),
+      tla.gt(tla.name("x"), tla.int(1)))
+    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    // the buggy implementation of choose fails on a dynamically empty set
+    assert(solverContext.sat())
+    def assertEq(i: Int): SymbState = {
+      val ns = rewriter.rewriteUntilDone(nextState.setRex(tla.eql(nextState.ex, tla.int(i))))
+      solverContext.assertGroundExpr(ns.ex)
+      ns
+    }
+
+    // Actually, semantics of choose does not restrict the outcome on the empty sets.
+    // But we know that our implementation would always return 0 in this case.
+    val ns = assertEq(1)
+    assertUnsatOrExplain(rewriter, ns)
+  }
+
+  test("""SE-CHOOSE: CHOOSE x \in {}: x > 1 ~~> $B$k""") {
+    val ex = tla.choose(tla.name("x"),
+      tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(IntT()))),
+      tla.gt(tla.name("x"), tla.int(1)))
+    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    // the buggy implementation of choose fails on a dynamically empty set
+    assert(solverContext.sat())
+    def assertEq(i: Int): SymbState = {
+      val ns = rewriter.rewriteUntilDone(nextState.setRex(tla.eql(nextState.ex, tla.int(i))))
+      solverContext.assertGroundExpr(ns.ex)
+      ns
+    }
+
+    // Actually, semantics of choose does not restrict the outcome on the empty sets.
+    // But we know that our implementation would always return 0 in this case.
     val ns = assertEq(1)
     assertUnsatOrExplain(rewriter, ns)
   }

@@ -55,19 +55,22 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
         elems.zipWithIndex foreach (chooseWhenIn _).tupled
 
-        pick(state.setArena(arena), oracle, elems)
+        pickBlindly(state.setArena(arena), oracle, elems)
     }
   }
 
   /**
     * Determine the type of the set elements and pick an element of this type.
     *
+    * Warning: this method does not check, whether the picked element actually belongs to the set.
+    * You have to do it yourself.
+    *
     * @param state a symbolic state
     * @param oracle a variable that stores which element (by index) should be picked, can be unrestricted
     * @param elems a non-empty set of cells
     * @return a new symbolic state whose expression stores a fresh cell that corresponds to the picked element.
     */
-  def pick(state: SymbState, oracle: NameEx, elems: Seq[ArenaCell]): SymbState = {
+  def pickBlindly(state: SymbState, oracle: NameEx, elems: Seq[ArenaCell]): SymbState = {
     assert(elems.nonEmpty) // this is an advanced class -- you should know what you are doing
     val targetType = elems.head.cellType
 
@@ -144,7 +147,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     def pickAtPos(i: Int): ArenaCell = {
       // as we know the field index, we just directly project tuples on this index
       val slice = tuples.map(c => newState.arena.getHas(c)(i))
-      newState = pick(newState, oracle, slice)
+      newState = pickBlindly(newState, oracle, slice)
       newState.asCell
     }
 
@@ -190,7 +193,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     def pickAtPos(key: String): ArenaCell = {
       val keyIndex = findKeyIndex(key)
       val slice = records.map(c => newState.arena.getHas(c)(keyIndex))
-      newState = pick(newState, oracle, slice)
+      newState = pickBlindly(newState, oracle, slice)
       newState.asCell
     }
 
@@ -289,7 +292,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
         case Nil => nonEmptyPadded(i) // just use the ith element of the non-empty sequence
         case s => s(i)
       } // no empty sets here
-      nextState = pick(nextState, oracle, toPick)
+      nextState = pickBlindly(nextState, oracle, toPick)
       val picked = nextState.asCell
 
       // this property is enforced by the oracle magic: chosen = 1 => z_i = c_i /\ chosen = 2 => z_i = d_i
