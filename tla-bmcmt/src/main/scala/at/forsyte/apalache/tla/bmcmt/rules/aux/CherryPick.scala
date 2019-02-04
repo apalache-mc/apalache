@@ -111,7 +111,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
     */
   def pickBasic(cellType: CellT, state: SymbState, oracle: NameEx, elems: Seq[ArenaCell]): SymbState = {
-    rewriter.solverContext.log("; CHERRY-PICK $cellType {")
+    rewriter.solverContext.log(s"; CHERRY-PICK $cellType {")
     var arena = state.arena.appendCell(cellType)
     val resultCell = arena.topCell
     // compare the set contents with the result
@@ -140,7 +140,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
     */
   def pickTuple(cellType: CellT, state: SymbState, oracle: NameEx, tuples: Seq[ArenaCell]): SymbState = {
-    rewriter.solverContext.log("; CHERRY-PICK $cellType {")
+    rewriter.solverContext.log(s"; CHERRY-PICK $cellType {")
     val tupleType = cellType.asInstanceOf[TupleT]
 
     var newState = state

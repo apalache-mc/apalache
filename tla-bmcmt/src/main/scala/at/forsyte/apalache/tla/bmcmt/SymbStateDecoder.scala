@@ -140,7 +140,11 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       }
 
       val keysAndValues = dom.reverse.toList.foldLeft(List[TlaEx]()) (eachField)
-      OperEx(TlaFunOper.enum, keysAndValues :_*)
+      if (keysAndValues.nonEmpty) {
+        OperEx(TlaFunOper.enum, keysAndValues: _*)
+      } else {
+        throw new RewriterException(s"Found an empty record $cell when decoding a counterexample. This is a bug.")
+      }
 
     case t @ TupleT(_) =>
       val tupleElems = arena.getHas(cell)
