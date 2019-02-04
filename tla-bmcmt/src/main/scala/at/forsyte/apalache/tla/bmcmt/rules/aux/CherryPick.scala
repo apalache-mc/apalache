@@ -285,7 +285,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     }
 
     val paddedOfMemberSets = elemsOfMemberSets map padSeq
-    val nonEmptyPadded = elemsOfMemberSets.find(_.nonEmpty).get // existence is guaranteed by minPosLen
+    val nonEmptyPadded = paddedOfMemberSets.find(_.nonEmpty).get // existence is guaranteed by minPosLen
     // for each index i, create {c_i, ..., d_i}. FIXME: this is not optimal. Implement pick from a static set.
     def pickOneElement(i: Int): Unit = {
       val toPick = paddedOfMemberSets map {
