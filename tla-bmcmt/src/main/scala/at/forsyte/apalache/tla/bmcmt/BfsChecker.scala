@@ -118,6 +118,11 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
 
     rewriter.typeFinder.reset(savedVarTypes) // restore the variable types to apply the enabled transitions once again
     val nextStates = applyAllEnabled(startingState, enabled, 0)
+    /*
+    // debugging info that really slows down model checking
+    val (nconst, ntotal) = rewriter.lazyEq.countConstantEqualities()
+    logger.info(s"Found $nconst of $ntotal constant equalities in the equality cache")
+    */
 
     if (nextStates.isEmpty) {
       // TODO: explain counterexample

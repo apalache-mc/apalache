@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.caches.EqCache
+import at.forsyte.apalache.tla.bmcmt.caches.EqCache.EqEntry
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -159,6 +160,50 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
     */
   def cacheAsSmtEqualityByMagic(left: ArenaCell, right: ArenaCell): Unit = {
     eqCache.put(left, right, EqCache.EqEntry())
+  }
+
+  /**
+    * Count the number of valid equalities. Use this method only for debugging purposes, as it is quite slow.
+    * @return a pair: the number of valid equalities, and the total number of non-constant equalities
+    */
+  def countConstantEqualities(): (Int, Int) = {
+    val solver = rewriter.solverContext
+    def isConstant(pred: TlaEx): Boolean = {
+      solver.push()
+      solver.assertGroundExpr(pred)
+      val exEq = solver.sat()
+      solver.pop()
+      solver.push()
+      solver.assertGroundExpr(tla.not(pred))
+      val exNeq = solver.sat()
+      solver.pop()
+      exEq && !exNeq || exNeq && !exEq
+    }
+
+    def onEntry(pair: (ArenaCell, ArenaCell), entryAndLevel: (EqCache.CacheEntry, Int)): Int = {
+      entryAndLevel._1 match {
+        case EqCache.EqEntry() =>
+          if (isConstant(tla.eql(pair._1, pair._2))) 1 else 0
+
+        case EqCache.ExprEntry(pred) =>
+          if (isConstant(pred)) 1 else 0
+
+        case _ => 0
+      }
+    }
+
+    def isNonStatic(pair: (ArenaCell, ArenaCell), entryAndLevel: (EqCache.CacheEntry, Int)): Int = {
+      entryAndLevel._1 match {
+        case EqCache.FalseEntry() => 0
+        case EqCache.TrueEntry() => 0
+        case _ => 1
+      }
+    }
+
+    val eqMap = eqCache.getMap
+    val nConst = (eqMap map (onEntry _).tupled).sum
+    val nNonStatic = (eqMap map (isNonStatic _).tupled).sum
+    (nConst, nNonStatic)
   }
 
   private def mkSetEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {

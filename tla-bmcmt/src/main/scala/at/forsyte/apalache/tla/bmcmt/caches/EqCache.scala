@@ -74,6 +74,12 @@ class EqCache(val falseConst: TlaEx, val trueConst: TlaEx) extends StackableCont
     }
 
   /**
+    * Get an immutable copy of the map
+    * @return the immutable copy of the cache entries
+    */
+  def getMap: Map[(ArenaCell, ArenaCell), (CacheEntry, Int)] = eqCache.toMap
+
+  /**
     * Save the current context and push it on the stack for a later recovery with pop.
     */
   override def push(): Unit = {
