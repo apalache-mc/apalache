@@ -279,20 +279,12 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
 
         potentialRules.find(r => r.isApplicable(state)) match {
           case Some(r) =>
-            //            try {
             val nextState = r.logOnReturn(solverContext, r.apply(r.logOnEntry(solverContext, state)))
             if (nextState.arena.cellCount < state.arena.cellCount) {
               throw new RewriterException("Implementation error in rule %s: the number of cells decreased from %d to %d"
                 .format(r.getClass.getSimpleName, state.arena.cellCount, nextState.arena.cellCount))
             }
             Continue(nextState)
-          //            } catch {
-          //              case ub: UndefinedBehaviorError if state.theory == BoolTheory() =>
-          //                // replace with an unrestricted Boolean
-          //              solverContext.log("; Rolled back undefined behavior, #cells in arena: " + state.arena.cellCount)
-          //                // bugfix: use fresh arena
-          //              Done(mkNondetBool(state.setArena(ub.arena)))
-          //            }
 
           case None =>
             NoRule()
