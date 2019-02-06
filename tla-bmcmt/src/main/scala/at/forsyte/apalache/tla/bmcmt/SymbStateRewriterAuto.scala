@@ -121,4 +121,11 @@ class SymbStateRewriterAuto(val solverContext: SolverContext) extends SymbStateR
   override def dispose(): Unit = {
     impl.dispose()
   }
+
+  /**
+    * Flush collected statistics.
+    */
+  override def flushStatistics(): Unit = {
+    impl.flushStatistics()
+  }
 }

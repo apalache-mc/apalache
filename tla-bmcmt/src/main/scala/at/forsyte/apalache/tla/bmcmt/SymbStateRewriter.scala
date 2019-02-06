@@ -32,12 +32,14 @@ trait SymbStateRewriter extends StackableContext with MessageStorage {
 
   /**
     * A type finder.
+    *
     * @return a type finder that can produce cell types
     */
   def typeFinder: TypeFinder[CellT]
 
   /**
     * Introduce failure predicates?
+    *
     * @return if so
     */
   var introFailures: Boolean
@@ -74,6 +76,7 @@ trait SymbStateRewriter extends StackableContext with MessageStorage {
 
   /**
     * The storage that associates with every expression id a grade, see ExprGrade.
+    *
     * @return
     */
   def exprGradeStore: ExprGradeStore
@@ -121,10 +124,16 @@ trait SymbStateRewriter extends StackableContext with MessageStorage {
     * @return a new symbolic state, if possible
     */
   def coerce(state: SymbState, targetTheory: Theory): SymbState
+
+  /**
+    * Flush collected statistics.
+    */
+  def flushStatistics(): Unit
 }
 
 
 object SymbStateRewriter {
+
   sealed abstract class RewritingResult
 
   case class Done(symbState: SymbState) extends RewritingResult
@@ -132,4 +141,5 @@ object SymbStateRewriter {
   case class Continue(symbState: SymbState) extends RewritingResult
 
   case class NoRule() extends RewritingResult
+
 }

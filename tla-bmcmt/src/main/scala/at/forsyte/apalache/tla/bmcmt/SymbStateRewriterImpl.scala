@@ -449,11 +449,15 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     level -= n
   }
 
+  override def flushStatistics(): Unit = {
+    statListener.locator.writeStats("profile-rules.txt")
+  }
+
   /**
     * Clean the context
     */
   override def dispose(): Unit = {
-    statListener.locator.writeStats("profile-rules.txt")
+    flushStatistics()
     exprCache.dispose()
     intValueCache.dispose()
     strValueCache.dispose()

@@ -199,6 +199,7 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
     solverContext.log("; ------- STEP: %d, STACK LEVEL: %d {".format(stepNo, rewriter.contextLevel))
     logger.debug("Applying rewriting rules...")
     val nextState = rewriter.rewriteUntilDone(state.setTheory(BoolTheory()).setRex(transition))
+    rewriter.flushStatistics()
     if (checkForErrors) {
       logger.debug("Finished rewriting. Checking satisfiability of the pushed constraints.")
       if (!solverContext.sat()) {
