@@ -56,28 +56,32 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
     val initialArena = Arena.create(solverContext)
     val dummyState = new SymbState(initialArena.cellTrue().toNameEx,
       CellTheory(), initialArena, new Binding)
-    try {
-      var state = makeOneStep(0, dummyState, checkerInput.initTransitions)
-      shiftTypes() // for each x', assign type(x) to be type(x'), forget x'
-//      state = checkInvariant(0, state)
-      for (i <- 1 to stepsBound) {
-        // checking for deadlocks is not so easy in our encoding
-        //        checkForDeadlocks(i, state, nextStates)
-        state = makeOneStep(i, state, checkerInput.nextTransitions)
+    val outcome =
+      try {
+        var state = makeOneStep(0, dummyState, checkerInput.initTransitions)
         shiftTypes() // for each x', assign type(x) to be type(x'), forget x'
-//        state = checkInvariant(i, state)
+        //      state = checkInvariant(0, state)
+        for (i <- 1 to stepsBound) {
+          // checking for deadlocks is not so easy in our encoding
+          //        checkForDeadlocks(i, state, nextStates)
+          state = makeOneStep(i, state, checkerInput.nextTransitions)
+          shiftTypes() // for each x', assign type(x) to be type(x'), forget x'
+          //        state = checkInvariant(i, state)
+        }
+        Outcome.NoError
+      } catch {
+        case ce: CancelSearchException =>
+          ce.outcome
       }
-      Outcome.NoError
-    } catch {
-      case ce: CancelSearchException =>
-        solverContext.dispose() // flushes the log
-        ce.outcome
-    }
+    // flush the logs
+    rewriter.dispose()
+    outcome
   }
 
   private def makeOneStep(stepNo: Int, startingState: SymbState, transitions: List[TlaEx]): SymbState = {
     // first, find all the feasible transition and check the invariant for each transition
     logger.info("Step %d, applying %d transition(s) and checking for errors".format(stepNo, transitions.length))
+
     def filterEnabledAndCheckErrors(state: SymbState, ts: List[TlaEx], transitionNo: Int): List[TlaEx] = {
       ts match {
         case List() => List()
@@ -95,11 +99,13 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
           }
       }
     }
+
     val savedVarTypes = rewriter.typeFinder.getVarTypes // save the variable types before applying the transitions
     val enabled = filterEnabledAndCheckErrors(startingState, transitions, 0)
 
     // second, apply the enabled transitions and collect their effects
     logger.info("Step %d, collecting %d enabled transition(s)".format(stepNo, enabled.length))
+
     def applyAllEnabled(state: SymbState, ts: List[TlaEx], transitionNo: Int): List[SymbState] =
       ts match {
         case List() =>
@@ -172,7 +178,7 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
         finalState.asCell
       }
 
-      val finalBinding = Binding(vars.toSeq map (n => (n, pickVar(n))) :_*)
+      val finalBinding = Binding(vars.toSeq map (n => (n, pickVar(n))): _*)
       finalState = finalState.setBinding(shiftBinding(finalBinding))
       if (!solverContext.sat()) {
         throw new InternalCheckerError(s"Error picking next variables (step $stepNo). Report a bug.")
@@ -280,10 +286,10 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
   private def checkInvariantPiecewise(depth: Int, state: SymbState, notInv: TlaEx): Boolean = {
     // check disjuncts separately, in order to simplify the problem for SMT
     notInv match {
-      case OperEx(TlaBoolOper.or, args @ _*) =>
+      case OperEx(TlaBoolOper.or, args@_*) =>
         args exists (a => checkInvariantPiecewise(depth, state, a))
 
-      case OperEx(TlaBoolOper.exists, name, set, OperEx(TlaBoolOper.or, args @ _*)) =>
+      case OperEx(TlaBoolOper.exists, name, set, OperEx(TlaBoolOper.or, args@_*)) =>
         def oneExists(a: TlaEx) = {
           // this existential can be skolemized
           val ex = tla.exists(name, set, a)
@@ -306,6 +312,7 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
           frexStore.store.add(ex.ID)
           ex
         }
+
         val pieces = Seq(oneExists(tla.and(predEx, thenEx)), oneExists(tla.and(tla.not(predEx), elseEx)))
         // use the equivalence \E x \in S: A \/ B <=> (\E x \in S: A) \/ (\E x \in S: B)
         pieces exists (a => checkInvariantPiecewise(depth, state, oneExists(a)))
@@ -318,7 +325,7 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
           .setRex(notInv))
         solverContext.assertGroundExpr(notInvState.ex)
         checkAssertionErrors(notInvState) // the invariant violation may introduce runtime errors
-        val notInvSat = solverContext.sat()
+      val notInvSat = solverContext.sat()
         if (notInvSat) {
           val newArena = notInvState.arena.appendCell(IntT()) // FIXME
           val transitionIndex = newArena.topCell

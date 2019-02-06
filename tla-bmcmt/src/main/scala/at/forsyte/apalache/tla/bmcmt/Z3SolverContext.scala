@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt
 
 import java.io.{File, PrintWriter}
 
+import at.forsyte.apalache.tla.bmcmt.profiler.{FruitlessSmtListener, SmtListener}
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FailPredT, IntT}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.control.TlaControlOper
@@ -29,6 +30,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
   private val z3context: Context = new Context()
   private val z3solver = z3context.mkSolver()
   private val simplifier = new ConstSimplifier()
+  private var smtListener: SmtListener = new FruitlessSmtListener()
 
   /**
     * Caching one uninterpreted sort for each cell signature. For integers, the integer sort.
@@ -82,6 +84,8 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     * @param cell a (previously undeclared) cell
     */
   override def declareCell(cell: ArenaCell): Unit = {
+    smtListener.onIntroCell(cell.id)
+
     if (maxCellIdPerContext.head >= cell.id) {
       // Checking consistency. When the user accidentally replaces a fresh arena with an older one,
       // we report it immediately. Otherwise, it is very hard to find the cause.
@@ -131,6 +135,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     * @param ex a simplified TLA+ expression over cells
     */
   def assertGroundExpr(ex: TlaEx): Unit = {
+    smtListener.onSmtAssert(ex)
     log(s";; assert ${UTFPrinter.apply(ex)}")
     if (false) {
       // this optimization slows down model checking
@@ -213,6 +218,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     */
   override def introBoolConst(): String = {
     val name = "%s%d".format(BoolTheory().namePrefix, nBoolConsts)
+    smtListener.onIntroSmtConst(name)
     log(s";; declare bool $name")
     log(s"(declare-const $name Bool)")
     nBoolConsts += 1
@@ -227,7 +233,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     *
     * @return a list of Boolean constant that are active in the current context
     */
-  override def getBoolConsts(): Iterable[String] = {
+  override def getBoolConsts: Iterable[String] = {
     val boolTheory = BoolTheory()
     constCache.keys filter boolTheory.hasConst
   }
@@ -238,7 +244,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     *
     * @return a list of int constant that are active in the current context
     */
-  override def getIntConsts(): Iterable[String] = {
+  override def getIntConsts: Iterable[String] = {
     val intTheory = IntTheory()
     constCache.keys filter intTheory.hasConst
   }
@@ -250,6 +256,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     */
   override def introIntConst(): String = {
     val name = "%s%d".format(IntTheory().namePrefix, nIntConsts)
+    smtListener.onIntroSmtConst(name)
     log(s";; declare int $name")
     log(s"(declare-const $name Int)")
     nIntConsts += 1
@@ -352,6 +359,10 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     */
   def toSmtlib2: String = {
     z3solver.toString
+  }
+
+  def setSmtListener(listener: SmtListener): Unit = {
+    smtListener = listener
   }
 
   private def getOrMkCellSort(cellType: CellT): Sort = {

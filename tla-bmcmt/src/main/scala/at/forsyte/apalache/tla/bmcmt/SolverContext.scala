@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.profiler.SmtListener
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.lir.TlaEx
 
@@ -95,6 +96,13 @@ trait SolverContext extends StackableContext {
     * @return true if and only if the context is satisfiable
     */
   def sat(): Boolean
+
+  /**
+    * Register an SMT listener
+    *
+    * @param listener register a listener, overrides the previous listener, if it was set before
+    */
+  def setSmtListener(listener: SmtListener): Unit
 
   /**
     * Get the name of the reserved Boolean constant that is always false

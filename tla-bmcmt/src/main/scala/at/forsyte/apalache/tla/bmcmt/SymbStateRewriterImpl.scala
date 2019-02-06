@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.{Continue, Done, NoRule, RewritingResult}
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.caches.{ExprCache, IntValueCache, RecordDomainCache, StrValueCache}
+import at.forsyte.apalache.tla.bmcmt.profiler.RuleStatListener
 import at.forsyte.apalache.tla.bmcmt.rules._
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.lir._
@@ -88,6 +89,11 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     */
   def contextLevel: Int = level
 
+  /**
+    * Statistics listener
+    */
+  val statListener: RuleStatListener = new RuleStatListener()
+  solverContext.setSmtListener(statListener) // subscribe to the SMT solver
 
   // A nice way to guess the candidate rules by looking at the expression key.
   // We use simple expressions to generate the keys.
@@ -260,6 +266,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
 
       case NameEx(name) =>
         if (substRule.isApplicable(state)) {
+          statListener.enterRule(substRule.getClass.getSimpleName)
           // a variable that can be substituted with a cell
           val coercedState = coerce(substRule.apply(substRule.logOnEntry(solverContext, state)), state.theory)
           val nextState = substRule.logOnReturn(solverContext, coercedState)
@@ -267,6 +274,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
             throw new RewriterException("Implementation error: the number of cells decreased from %d to %d"
               .format(state.arena.cellCount, nextState.arena.cellCount))
           }
+          statListener.exitRule()
           Done(nextState)
         } else {
           // oh-oh
@@ -279,11 +287,13 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
 
         potentialRules.find(r => r.isApplicable(state)) match {
           case Some(r) =>
+            statListener.enterRule(r.getClass.getSimpleName)
             val nextState = r.logOnReturn(solverContext, r.apply(r.logOnEntry(solverContext, state)))
             if (nextState.arena.cellCount < state.arena.cellCount) {
               throw new RewriterException("Implementation error in rule %s: the number of cells decreased from %d to %d"
                 .format(r.getClass.getSimpleName, state.arena.cellCount, nextState.arena.cellCount))
             }
+            statListener.exitRule()
             Continue(nextState)
 
           case None =>
@@ -443,6 +453,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     * Clean the context
     */
   override def dispose(): Unit = {
+    statListener.locator.writeStats("profile-rules.txt")
     exprCache.dispose()
     intValueCache.dispose()
     strValueCache.dispose()

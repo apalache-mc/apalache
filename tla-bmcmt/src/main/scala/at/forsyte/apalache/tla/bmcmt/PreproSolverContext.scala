@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.caches.SimpleCache
+import at.forsyte.apalache.tla.bmcmt.profiler.SmtListener
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
@@ -149,6 +150,14 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
     * @return true if and only if the context is satisfiable
     */
   override def sat(): Boolean = context.sat()
+
+
+  /**
+    * Register an SMT listener
+    *
+    * @param listener register a listener, overrides the previous listener, if it was set before
+    */
+  override def setSmtListener(listener: SmtListener): Unit = context.setSmtListener(listener)
 
   /**
     * Get the name of the reserved Boolean constant that is always false
