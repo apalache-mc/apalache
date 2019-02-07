@@ -1,5 +1,8 @@
 package at.forsyte.apalache.tla
 
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
+
 import at.forsyte.apalache.infra.PassOptionException
 import at.forsyte.apalache.infra.passes.{PassChainExecutor, TlaModuleMixin}
 import at.forsyte.apalache.tla.bmcmt.InternalCheckerError
@@ -23,21 +26,38 @@ object Tool extends App with LazyLogging {
     Console.println("# WARNING: This tool is in its early development stage.")
     Console.println("#          Please report bugs at: https://github.com/konnov/apalache/issues")
     Console.println("")
+    val startTime = LocalDateTime.now()
     val parseCmd = new ParseCmd
     val checkCmd = new CheckCmd
-    Cli.parse(args).withProgramName("apalache-mc").version(Version.version)
+    try {
+      Cli.parse(args).withProgramName("apalache-mc").version(Version.version)
         .withCommands(parseCmd, checkCmd) match {
-      case Some(parse: ParseCmd) =>
-        logger.debug("Parse " + parse.file)
-        handleExceptions(runParse(parse, _))
+        case Some(parse: ParseCmd) =>
+          logger.debug("Parse " + parse.file)
+          handleExceptions(runParse(parse, _))
 
-      case Some(check: CheckCmd) =>
-        logger.info("Checker options: filename=%s, init=%s, next=%s, inv=%s"
-          .format(check.file, check.init, check.next, check.inv))
-        handleExceptions(runCheck(check, _))
+        case Some(check: CheckCmd) =>
+          logger.info("Checker options: filename=%s, init=%s, next=%s, inv=%s"
+            .format(check.file, check.init, check.next, check.inv))
+          handleExceptions(runCheck(check, _))
 
-      case _ => () // nothing to do
+        case _ => () // nothing to do
+      }
+    } finally {
+      printTimeDiff(startTime)
     }
+  }
+
+  private def printTimeDiff(startTime: LocalDateTime): Unit = {
+    val endTime = LocalDateTime.now()
+    Console.println("It took me %d days %2d hours %2d min %2d sec"
+      .format(ChronoUnit.DAYS.between(startTime, endTime),
+        ChronoUnit.HOURS.between(startTime, endTime),
+        ChronoUnit.MINUTES.between(startTime, endTime),
+        ChronoUnit.SECONDS.between(startTime, endTime)))
+    Console.println("Total time: %d.%d sec"
+      .format(ChronoUnit.SECONDS.between(startTime, endTime),
+        ChronoUnit.MILLIS.between(startTime, endTime) % 1000))
   }
 
   private def runParse(parse: ParseCmd, u: Unit): Unit = {
