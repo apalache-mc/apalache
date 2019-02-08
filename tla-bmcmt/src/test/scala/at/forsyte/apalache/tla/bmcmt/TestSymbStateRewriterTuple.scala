@@ -134,4 +134,13 @@ class TestSymbStateRewriterTuple extends RewriterBase {
     assert(!solverContext.sat())
   }
 
+  test("""SE-TUPLE-DOM: DOMAIN <<2, FALSE>> = {1, 2}""") {
+    val tuple = TlaFunOper.mkTuple(tla.int(2), tla.bool(false), tla.str("c"))
+    val set123 = tla.enumSet(1.to(3) map tla.int :_*)
+    val eq = tla.eql(tla.dom(tuple), set123)
+    val state = new SymbState(eq, BoolTheory(), arena, new Binding)
+    val rewriter = create()
+    assertTlaExAndRestore(rewriter, state)
+  }
+
 }

@@ -1,8 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.caches.IntRangeCache
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.TlaArithOper
 import at.forsyte.apalache.tla.lir.values.TlaInt
 
 /**
@@ -10,7 +11,8 @@ import at.forsyte.apalache.tla.lir.values.TlaInt
   *
   * @author Igor Konnov
    */
-class IntDotDotRule(rewriter: SymbStateRewriter) extends RewritingRule {
+class IntDotDotRule(rewriter: SymbStateRewriter,
+                    intRangeCache: IntRangeCache) extends RewritingRule {
   private def simplifier = new ConstSimplifier()
 
   override def isApplicable(symbState: SymbState): Boolean = {
@@ -25,10 +27,9 @@ class IntDotDotRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case OperEx(TlaArithOper.dotdot, elems @ _*) =>
         if (elems.length != 2)
           throw new RewriterException("Expected two arguments to .., found " + elems.length)
-        val (left: Int, right: Int) = getRange(elems)
-        val range = Range(left, right + 1).map(i => ValEx(TlaInt(i)))
-        val setCtor = OperEx(TlaSetOper.enumSet, range: _*)
-        state.setRex(setCtor).setTheory(CellTheory())
+        val (start: Int, endInclusive: Int) = getRange(elems)
+        val (newArena, rangeCell) = intRangeCache.create(state.arena, (start, endInclusive))
+        state.setArena(newArena).setRex(rangeCell.toNameEx).setTheory(CellTheory())
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))

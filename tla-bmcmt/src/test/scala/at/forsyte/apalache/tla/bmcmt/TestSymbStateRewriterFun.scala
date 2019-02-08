@@ -657,6 +657,18 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     assert(!solverContext.sat())
   }
 
+  test("""SE-FUN-DOMAIN: DOMAIN [x \in {1,2,3} |-> x / 2: ]""") {
+    val set = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
+    val mapping = OperEx(TlaArithOper.div, NameEx("x"), tla.int(2))
+    val fun = tla.funDef(mapping, tla.name("x"), set)
+    val dom = tla.dom(fun)
+    val eq = tla.eql(dom, set)
+
+    val rewriter = create()
+    val state = new SymbState(eq, CellTheory(), arena, new Binding)
+    assertTlaExAndRestore(rewriter, state)
+  }
+
   // TrivialTypeFinder does not support let-in and operator declarations
   ignore("""SE-SET-APP[1-2]: LET X = {1, 2} \cap {2} IN [y \in X |-> TRUE][2] ~~> $B$k""") {
     // regression

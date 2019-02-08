@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.{Continue, Done, NoRule, RewritingResult}
 import at.forsyte.apalache.tla.bmcmt.analyses._
-import at.forsyte.apalache.tla.bmcmt.caches.{ExprCache, IntValueCache, RecordDomainCache, StrValueCache}
+import at.forsyte.apalache.tla.bmcmt.caches._
 import at.forsyte.apalache.tla.bmcmt.profiler.RuleStatListener
 import at.forsyte.apalache.tla.bmcmt.rules._
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
@@ -45,6 +45,11 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     * A cache for integer literals.
     */
   val intValueCache = new IntValueCache(solverContext)
+
+  /**
+    * A cache for integer ranges a..b.
+    */
+  val intRangeCache = new IntRangeCache(solverContext, intValueCache)
 
   /**
     * A cache for string literals.
@@ -187,7 +192,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     key(tla.union(tla.enumSet()))
       -> List(new SetUnionRule(this)),
     key(tla.dotdot(tla.int(1), tla.int(10)))
-      -> List(new IntDotDotRule(this)),
+      -> List(new IntDotDotRule(this, intRangeCache)),
 
     // integers
     key(tla.lt(tla.int(1), tla.int(2)))
@@ -223,7 +228,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     key(tla.funSet(tla.name("X"), tla.name("Y")))
       -> List(new FunSetCtorRule(this)),
     key(tla.dom(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S"))))
-      -> List(new DomainRule(this)), // also works for records
+      -> List(new DomainRule(this, intRangeCache)), // also works for records
 
     // tuples and records
     key(tla.tuple(tla.name("x"), tla.int(2)))
@@ -408,6 +413,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
   override def push(): Unit = {
     level += 1
     intValueCache.push()
+    intRangeCache.push()
     strValueCache.push()
     recordDomainCache.push()
     lazyEq.push()
@@ -423,6 +429,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
   override def pop(): Unit = {
     assert(level > 0)
     intValueCache.pop()
+    intRangeCache.pop()
     strValueCache.pop()
     recordDomainCache.pop()
     lazyEq.pop()
@@ -440,6 +447,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
   override def pop(n: Int): Unit = {
     assert(level >= n)
     intValueCache.pop(n)
+    intRangeCache.pop(n)
     strValueCache.pop(n)
     recordDomainCache.pop(n)
     lazyEq.pop(n)
@@ -460,6 +468,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     flushStatistics()
     exprCache.dispose()
     intValueCache.dispose()
+    intRangeCache.dispose()
     strValueCache.dispose()
     recordDomainCache.dispose()
     lazyEq.dispose()

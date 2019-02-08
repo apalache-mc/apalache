@@ -270,4 +270,26 @@ class TestSymbStateRewriterRecord extends RewriterBase {
     assertTlaExAndRestore(rewriter, nextState.setRex(inBool))
   }
 
+  test("""SE-REC-DOM: DOMAIN [a |-> 1, b |-> FALSE, c |-> "d"] = {"a", "b", "c"}""") {
+    val record = tla.enumFun(tla.str("a"), tla.int(1),
+      tla.str("b"), tla.bool(false), tla.str("c"), tla.str("d"))
+    val dom = tla.dom(record)
+    val eq = tla.eql(dom, tla.enumSet(tla.str("a"), tla.str("b"), tla.str("c")))
+    val state = new SymbState(eq, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    assertTlaExAndRestore(rewriter, state)
+  }
+
+  test("""SE-REC-DOM: DOMAIN ([a |-> 1] <: [a |-> 1, b |-> FALSE, c |-> "d"]) = {"a", "b", "c"}""") {
+    val record = tla.enumFun(tla.str("a"), tla.int(1),
+      tla.str("b"), tla.bool(false), tla.str("c"), tla.str("d"))
+    val richerType = AnnotationParser.toTla(RecordT(SortedMap("a" -> IntT(), "b" -> BoolT(), "c" -> ConstT())))
+    val annotated =
+      tla.withType(tla.enumFun(tla.str("a"), tla.int(1)), richerType)
+    val dom = tla.dom(annotated)
+    val eq = tla.eql(dom, tla.enumSet(tla.str("a")))
+    val state = new SymbState(eq, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    assertTlaExAndRestore(rewriter, state)
+  }
 }
