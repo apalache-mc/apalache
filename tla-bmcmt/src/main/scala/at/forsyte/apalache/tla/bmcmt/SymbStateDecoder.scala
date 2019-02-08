@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaStr}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
+import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.immutable.{HashSet, SortedSet}
 
@@ -16,7 +17,7 @@ import scala.collection.immutable.{HashSet, SortedSet}
   *
   * @author Igor Konnov
   */
-class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter) {
+class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter) extends LazyLogging {
   // a simple decoder that dumps values into a text file, in the future we need better recovery code
   def dumpArena(state: SymbState, writer: PrintWriter): Unit = {
     val sortedCells = SortedSet[ArenaCell]() ++ state.arena.cellMap.values
@@ -136,20 +137,30 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         case ValEx(s @ TlaStr(_)) => s
         case _ => throw new RewriterException("Expected a string, found: " + ex)
       }
-      val dom = decodeSet(arena, arena.getDom(cell)) map exToStr
+
+      // Note that the domain may have fewer fields than the record type is saying.
+      // This comes from the fact that we can extend a record with a richer type.
+      val domCell = arena.getDom(cell)
+      val dom = decodeSet(arena, domCell) map exToStr
       val fieldValues = arena.getHas(cell)
       val keyList = r.fields.keySet.toList
-      def eachField(es: List[TlaEx], key: TlaStr): List[TlaEx] = {
-        val tupleIndex = keyList.indexOf(key.value)
-        val valueCell = fieldValues(tupleIndex)
-        ValEx(key) +: decodeCellToTlaEx(arena, valueCell) +: es
+      def eachField(es: List[TlaEx], key: String): List[TlaEx] = {
+        if (!dom.contains(TlaStr(key))) {
+          es // skip
+        } else {
+          val index = keyList.indexOf(key)
+          val valueCell = fieldValues(index)
+          ValEx(TlaStr(key)) +: decodeCellToTlaEx(arena, valueCell) +: es
+        }
       }
 
-      val keysAndValues = dom.reverse.toList.foldLeft(List[TlaEx]()) (eachField)
+      val keysAndValues = keyList.reverse.foldLeft(List[TlaEx]()) (eachField)
       if (keysAndValues.nonEmpty) {
-        OperEx(TlaFunOper.enum, keysAndValues: _*)
+         OperEx(TlaFunOper.enum, keysAndValues: _*)
       } else {
-        throw new RewriterException(s"Found an empty record $cell when decoding a counterexample. This is a bug.")
+        logger.error(s"Decoder: Found an empty record $cell when decoding a counterexample, domain = $domCell. This is a bug.")
+        // for debugging purposes, just return a string
+        ValEx(TlaStr(s"Empty record domain $domCell"))
       }
 
     case t @ TupleT(_) =>
