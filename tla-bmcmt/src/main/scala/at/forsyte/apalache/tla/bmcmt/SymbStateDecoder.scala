@@ -106,6 +106,11 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       tla.funSet(decodeCellToTlaEx(arena, arena.getDom(cell)), decodeCellToTlaEx(arena, arena.getCdm(cell)))
 
     case FunT(_, _) =>
+      // in the new implementation, every function is represented with the relation {(x, f[x]) : x \in S}
+      val relation = arena.getCdm(cell)
+      decodeCellToTlaEx(arena, relation)
+      /*
+      // the old implementation
       val dom = arena.getDom(cell)
       def eachElem(es: List[TlaEx], argCell: ArenaCell): List[TlaEx] = {
         val inSet = solverContext.evalGroundExpr(tla.in(argCell, dom)) == tla.bool(true)
@@ -124,6 +129,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       // use the same notation as for the records
       val keysAndValues = domElems.reverse.foldLeft(List[TlaEx]()) (eachElem)
       OperEx(TlaFunOper.enum, keysAndValues :_*)
+      */
 
     case r @ RecordT(_) =>
       def exToStr(ex: TlaEx): TlaStr = ex match {

@@ -609,7 +609,7 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SET-FILTER[1-2]: \E SUBSET X {1, 2} IN {} = {x \in X : [y \in {1} |-> TRUE][x]} ~~> $B$k""") {
+  test("""SE-SET-FILTER[1-2]: \E X \in SUBSET {1, 2}: {} = {x \in X : [y \in {1} |-> TRUE][x]} ~~> $B$k""") {
     // regression
     val baseSet = tla.enumSet(1)
     val filter = tla.appFun(tla.funDef(tla.bool(true), "y", tla.enumSet(1)), "x")
@@ -626,11 +626,19 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     nextState.ex match {
       case membershipEx@NameEx(name) =>
         assert(BoolTheory().hasConst(name))
+        // the new implementation just returns a default value, as in the classical TLA+ interpretation
+        assert(solverContext.sat())
+        // the result should be true, although some values may be undefined
+        solverContext.assertGroundExpr(nextState.ex)
+        assert(solverContext.sat())
+        /*
+        // the old implementation with failure predicates
         rewriter.push()
         val failPreds = nextState.arena.findCellsByType(FailPredT())
         val failureOccurs = tla.or(failPreds.map(_.toNameEx): _*)
         solverContext.assertGroundExpr(failureOccurs)
         assert(solverContext.sat()) // failure should be possible
+        */
 
       case _ =>
         fail("Unexpected rewriting result")

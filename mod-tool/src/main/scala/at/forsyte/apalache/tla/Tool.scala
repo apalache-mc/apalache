@@ -52,9 +52,9 @@ object Tool extends App with LazyLogging {
     val endTime = LocalDateTime.now()
     Console.println("It took me %d days %2d hours %2d min %2d sec"
       .format(ChronoUnit.DAYS.between(startTime, endTime),
-        ChronoUnit.HOURS.between(startTime, endTime),
-        ChronoUnit.MINUTES.between(startTime, endTime),
-        ChronoUnit.SECONDS.between(startTime, endTime)))
+        ChronoUnit.HOURS.between(startTime, endTime) % 23,
+        ChronoUnit.MINUTES.between(startTime, endTime) % 60,
+        ChronoUnit.SECONDS.between(startTime, endTime) % 60))
     Console.println("Total time: %d.%d sec"
       .format(ChronoUnit.SECONDS.between(startTime, endTime),
         ChronoUnit.MILLIS.between(startTime, endTime) % 1000))

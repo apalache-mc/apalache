@@ -163,6 +163,16 @@ class Arena private(val solverContext: SolverContext,
     new Arena(solverContext, cellCount, topCell, cellMap, hasEdges + (setCell -> es), domEdges, cdmEdges)
   }
 
+  def appendHas(setCell: ArenaCell, cells: Seq[ArenaCell]): Arena = {
+    val es =
+      hasEdges.get(setCell) match {
+        case Some(list) => list ++ cells
+        case None => cells.toList
+      }
+
+    new Arena(solverContext, cellCount, topCell, cellMap, hasEdges + (setCell -> es), domEdges, cdmEdges)
+  }
+
   /**
     * Get all the edges that are labelled with 'has'.
     *

@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.lir.TlaEx
 
 /**
@@ -33,5 +34,12 @@ class SymbState(val ex: TlaEx,
    */
   def asCell: ArenaCell = {
     arena.findCellByNameEx(ex)
+  }
+
+  /**
+    * A convenience function to update arena and save the new arena in a new state.
+    */
+  def appendArenaCell(cellT: CellT): SymbState = {
+    setArena(arena.appendCell(cellT))
   }
 }

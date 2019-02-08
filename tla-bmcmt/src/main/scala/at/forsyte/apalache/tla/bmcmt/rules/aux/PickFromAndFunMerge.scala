@@ -87,6 +87,8 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
     */
   def pickBasic(cellType: CellT, set: ArenaCell, state: SymbState): SymbState = {
+    throw new NotImplementedError("This is a pre-warp method. Use CherryPick.pickBasic instead.")
+
     rewriter.solverContext.log("; PICK %s FROM %s {".format(cellType, set))
     var arena = state.arena.appendCell(cellType)
     val resultCell = arena.topCell
@@ -120,6 +122,8 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
     */
   def pickSet(cellType: CellT, set: ArenaCell, state: SymbState): SymbState = {
+    throw new NotImplementedError("This is a pre-warp method. Use CherryPick.pickSet instead.")
+
     rewriter.solverContext.log("; PICK %s FROM %s {".format(cellType, set))
     var arena = state.arena.appendCell(cellType)
     val resultCell = arena.topCell
@@ -222,6 +226,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
     */
   def pickTuple(cellType: CellT, tupleSet: ArenaCell, state: SymbState): SymbState = {
+    throw new NotImplementedError("This is a pre-warp method. Use CherryPick.pickTuple instead.")
     rewriter.solverContext.log("; PICK %s FROM %s {".format(cellType, tupleSet))
     val tupleType = cellType.asInstanceOf[TupleT]
     val tuples = state.arena.getHas(tupleSet)
@@ -279,6 +284,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
     */
   def pickRecord(cellType: CellT, setOfRecords: ArenaCell, state: SymbState): SymbState = {
+    throw new NotImplementedError("This is a pre-warp method. Use CherryPick.pickRecord instead.")
     // TODO: refactor, this happened to be a lot of code
     rewriter.solverContext.log("; PICK %s FROM %s {".format(cellType, setOfRecords))
     val recordType = cellType.asInstanceOf[RecordT]
@@ -382,6 +388,8 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
     */
   def pickFun(cellType: CellT, funSet: ArenaCell, state: SymbState): SymbState = {
+    throw new NotImplementedError("This is a pre-warp method. Use CherryPick.pickFun instead.")
+
     rewriter.solverContext.log("; PICK %s FROM %s {".format(cellType, funSet))
     val newState = funMerge(state, funSet) // introduce DOM and CDM, see SE-PICK-FUN
     var arena = newState.arena
@@ -439,6 +447,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
     */
   def pickFunFromFunSet(cellType: CellT, funSet: ArenaCell, state: SymbState): SymbState = {
+    throw new NotImplementedError("This is a pre-warp method that needs a new implementation")
     rewriter.solverContext.log("; PICK %s FROM %s {".format(cellType, funSet))
     var arena = state.arena
     val dom = arena.getDom(funSet)
@@ -484,7 +493,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
   /**
     * Implements the rule SE-FUN-MERGE: it extracts the domains and co-domains from all the cells stored in the set
     * and decorates the set cell with the edges 'dom' and 'cdm' that point to the unions of all domains and co-domains,
-    * respectively.
+    * respectively. This method is not needed anymore, as we are using CherryPick instead.
     *
     * @param state      a symbolic state
     * @param funSetCell a set of cells that store functions

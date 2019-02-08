@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.bmcmt.rules
+package at.forsyte.apalache.tla.bmcmt.rules.old
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
@@ -6,10 +6,11 @@ import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 /**
-  * Implements the rules: SE-FUN-UPD[1-4].
+  * Introduces a new function which is identical to the source function except the set of new values.
+  * This is the pre-warp implementation.
   *
   * @author Igor Konnov
   */
@@ -43,45 +44,80 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val valueCells = groundArgs
           .slice(1 + unpackedIndices.size, 1 + unpackedIndices.size + valEs.size)
           .map(groundState.arena.findCellByNameEx)
-        // rewrite tuples <<j_i, e_i>> to cells
         val updatePairs = indexCells.zip(valueCells) // ![j_i] = e_i
-        def mkPair(indexCell: ArenaCell, resCell: ArenaCell): TlaEx = tla.tuple(indexCell.toNameEx, resCell.toNameEx)
-        val (stateAfterTuples, updateTuples) =
-          rewriter.rewriteSeqUntilDone(groundState, updatePairs map (mkPair _).tupled)
 
-        // get the function relation from the arena
-        val relation = groundState.arena.getCdm(funCell)
+        // get domain and co-domain structure from the arena
+        val dom = groundState.arena.getDom(funCell)
+        val domCells = groundState.arena.getHas(dom)
+        val cdm = groundState.arena.getCdm(funCell)
+        val cdmElemType: types.CellT = findFunResultType(state, funCell, indexCells, valueCells, areIndicesTuples)
 
-        // filter the relation as follows:
-        // { t \in F : t[1] != j_1 /\ ... /\ t[1] != j_k \/ t = <<j_1, e_1>> \/ ... \/ t = <<j_k, e_k>> }
-        val boundVar = NameEx(s"_t${funEx.ID}")
-        val argNeIndices = tla.and(indexCells map (c => tla.neql(tla.appFun(boundVar, tla.int(1)), c.toNameEx)) :_*)
-        val pairEqNew = tla.or(updateTuples map (t => tla.eql(boundVar, t)) :_*)
-        val filterEx = tla.filter(boundVar, relation.toNameEx, tla.or(argNeIndices, pairEqNew))
+        // generate equality constraints for the domain elements and all the indices
+        val eqState = rewriter.lazyEq.cacheEqConstraints(groundState, domCells cross indexCells)
 
-        var nextState = rewriter.rewriteUntilDone(stateAfterTuples.setRex(filterEx).setTheory(CellTheory()))
-        val filteredRelation = nextState.asCell
-        // Finally, add <<j_1, e_1>>, ..., <<j_k, e_k>> to filteredCell.
-        // We are not using \cup here to avoid the equality constraints to be generated
-        val filteredCells = nextState.arena.getHas(filteredRelation)
-        nextState = nextState.appendArenaCell(filteredRelation.cellType)
-        val resultRelation = nextState.arena.topCell
-        val resultCells = filteredCells ++ updateTuples.map(nextState.arena.findCellByNameEx(_))
-        nextState = nextState.setArena(nextState.arena.appendHas(resultRelation, resultCells))
-        // require that the cells belong to the relation when the respective conditions hold true
-        def solverAssert = rewriter.solverContext.assertGroundExpr _
-        updateTuples foreach (t => solverAssert(tla.in(t, resultRelation)))
-        filteredCells foreach (c => solverAssert(tla.equiv(tla.in(c, resultRelation), tla.in(c, filteredRelation))))
+        // create the new co-domain that includes the valueCells
+        var arena = eqState.arena.appendCell(FinSetT(cdmElemType))
+        val newCdm = arena.topCell
 
-        // create new function
-        nextState = nextState.appendArenaCell(funCell.cellType)
-        val newFunCell = nextState.arena.topCell
-        // not storing the domain anymore
-//        val dom = nextState.arena.getDom(funCell)
-//        nextState = nextState.setArena(nextState.arena.setDom(newFunCell, dom)
-        nextState = nextState.setArena(nextState.arena.setCdm(newFunCell, resultRelation))
+        // add all the elements from the old co-domain as well as the new values
+        def addToNewCdm(a: Arena, c: ArenaCell) = a.appendHas(newCdm, c)
 
-        val finalState = nextState
+        arena = arena.getHas(cdm).foldLeft(arena)(addToNewCdm)
+        arena = valueCells.foldLeft(arena)(addToNewCdm)
+        // create a new function cell and wire it with the old domain and the new co-domain
+        val funType = FunT(dom.cellType, cdmElemType)
+        arena = arena.appendCell(funType)
+        val newFunCell = arena.topCell
+        arena = arena.setDom(newFunCell, dom).setCdm(newFunCell, newCdm)
+        // introduce a new failure predicate
+        arena = arena.appendCell(FailPredT())
+        val failPred = arena.topCell
+        // associate an uninterpreted function in SMT
+        rewriter.solverContext.declareCellFun(newFunCell.name, funType.argType, funType.resultType)
+
+        // add the update constraints
+        def eachDomElem(domElem: ArenaCell) = {
+          def onHit(index: ArenaCell, newValue: ArenaCell): TlaEx = {
+            val hit = rewriter.lazyEq.safeEq(index, domElem)
+
+            def update(c: ArenaCell): TlaEx = tla.eql(tla.appFun(newFunCell, c), newValue)
+
+            tla.and(hit, update(domElem), update(index))
+          }
+
+          val hitsUpdate = updatePairs.map(p => onHit(p._1, p._2))
+
+          def noHit(index: ArenaCell) = {
+            tla.not(rewriter.lazyEq.safeEq(index, domElem))
+          }
+
+          val noHitFound = tla.and(indexCells.map(noHit): _*)
+          val unchanged = tla.eql(tla.appFun(newFunCell, domElem), tla.appFun(funCell, domElem))
+          // there is an index that hits, or there is no such index, and no update is needed
+          val notIn = tla.not(tla.in(domElem, dom)) // if the cell is outside the domain, we don't care
+          tla.or(notIn +: tla.and(noHitFound, unchanged) +: hitsUpdate: _*)
+        }
+
+        val funUpdate = tla.and(domCells.map(eachDomElem): _*)
+
+        // flag a failure when there is an index outside the function domain
+        def existsIndexOutside(index: ArenaCell): TlaEx = {
+          def eachElem(domElem: ArenaCell) = {
+            tla.and(tla.not(tla.eql(index, domElem)), tla.not(tla.in(domElem, dom)))
+          }
+
+          tla.and(domCells.map(eachElem): _*)
+        }
+
+        val outsideDom = tla.or(indexCells.map(existsIndexOutside): _*)
+
+        // finally, add the constraints in SMT
+        val ok = tla.and(tla.not(failPred), tla.or(funUpdate))
+        val notOk = tla.and(failPred, outsideDom)
+        rewriter.solverContext.assertGroundExpr(tla.or(ok, notOk))
+
+        val finalState = eqState
+          .setArena(arena)
           .setTheory(CellTheory())
           .setRex(newFunCell)
         rewriter.coerce(finalState, state.theory)
@@ -91,7 +127,6 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  // TODO: remove
   private def findFunResultType(state: SymbState, funCell: ArenaCell,
                                 indexCells: Seq[ArenaCell], valueCells: Seq[ArenaCell],
                                 areIndicesTuples: Seq[Boolean]) = {

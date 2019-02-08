@@ -2,20 +2,21 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
-import at.forsyte.apalache.tla.bmcmt.types.{FailPredT, RecordT, TupleT}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory}
+import at.forsyte.apalache.tla.bmcmt.types.{CellT, FunT, RecordT, TupleT}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 
 /**
-  * Implements the rules: SE-FUN-APP[1-3].
+  * Implements f[x] for: functions, records, and tuples.
   *
   * @author Igor Konnov
   */
 class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val picker = new CherryPick(rewriter)
+  private val defaultValueFactory = new DefaultValueFactory(rewriter)
   private val simplifier = new ConstSimplifier()
 
   override def isApplicable(symbState: SymbState): Boolean = {
@@ -92,66 +93,48 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   private def applyFun(state: SymbState, funCell: ArenaCell, argEx: TlaEx): SymbState = {
+    val solverAssert = rewriter.solverContext.assertGroundExpr _
     // SE-FUN-APP2
-    val argState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(argEx))
-    val argCell = argState.arena.findCellByNameEx(argState.ex)
+    var nextState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(argEx))
+    val argCell = nextState.asCell
 
-    val domainCell = argState.arena.getDom(funCell)
-    val codomainCell = argState.arena.getCdm(funCell)
-    var nextState = picker.pick(codomainCell, argState)
+    val relationCell = nextState.arena.getCdm(funCell)
+    val relationElems = nextState.arena.getHas(relationCell)
+    val nelems = relationElems.size
+    nextState = picker.newOracleWithDefault(nextState, relationCell, relationElems)
+    val oracle = nextState.asCell
 
-    // SE-FUN-APP3
-    val resultCell = nextState.asCell
-    val domCells = nextState.arena.getHas(domainCell)
-    val cdmCells = nextState.arena.getHas(codomainCell)
-
-    // introduce a new failure predicate
-//    val newArena = resState.arena.appendCell(FailPredT())
-//    val failPred = newArena.topCell
-//    rewriter.addMessage(failPred.id,
-//      "Argument %s may be outside the function %s domain %s".format(argEx, funCell, state.arena.getDom(funCell)))
-
-    // cache equalities between the argument and the domain cells
-    nextState = rewriter.lazyEq.cacheEqConstraints(nextState, domCells.map((_, argCell)))
-    // cache equalities between the result and the co-domain cells (cherry-pick may create new cells!)
-    nextState = rewriter.lazyEq.cacheEqConstraints(nextState, cdmCells.map((_, resultCell)))
-
-    // Equation (2): there is a domain element that equals to the argument
-    def mkArgCase(domElem: ArenaCell): TlaEx = {
-      val inDomain = tla.in(domElem, domainCell)
-      val argEq = rewriter.lazyEq.safeEq(domElem, argCell) // just use SMT equality
-      tla.and(inDomain, argEq)
-    }
-    // the result equals to the function result (bugfix: separate mkArgCase from mkResCase)
-    def mkResCase(domElem: ArenaCell): TlaEx = {
-      val inDomain = tla.in(domElem, domainCell)
-      val resEq =
-        tla.eql(resultCell, tla.appFun(funCell, domElem)) // translated as function application in SMT
-      val argEq = rewriter.lazyEq.safeEq(domElem, argCell) // just use SMT equality
-      tla.and(inDomain, argEq, resEq)
+    nextState = picker.pickByOracle(nextState, oracle, relationElems)
+    val pickedPair = nextState.asCell
+    val pickedArg = nextState.arena.getHas(pickedPair).head
+    val pickedRes = nextState.arena.getHas(pickedPair).tail.head
+    // cache the equality between the picked argument and the supplied argument, O(1) constraints
+    nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((pickedArg, argCell)))
+    val argEqWhenNonEmpty =
+      tla.impl(tla.neql(oracle, tla.int(nelems)), tla.eql(pickedArg, argCell))
+    solverAssert(argEqWhenNonEmpty)
+    // importantly, we require oracle = N iff there is no element equal to argCell, O(N) constraints
+    for ((elem, no) <- relationElems.zipWithIndex) {
+      val elemArg = nextState.arena.getHas(elem).head
+      nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((argCell, elemArg)))
+      val inRel = tla.in(elem, relationCell)
+      val neqArg = tla.not(rewriter.lazyEq.safeEq(elemArg, argCell))
+      val found = tla.neql(oracle, tla.int(nelems))
+      // ~inRel \/ neqArg \/ found
+      solverAssert(tla.or(tla.not(inRel), neqArg, found))
+      // oracle = i => inRel
+      solverAssert(tla.impl(tla.eql(oracle, tla.int(no)), inRel))
     }
 
-    // Equation (3): there is no domain element that equals to the argument
-//    def mkNotInCase(domElem: ArenaCell): TlaEx = {
-//      val notInDomain = tla.not(tla.in(domElem, domainCell))
-//      val eq = rewriter.lazyEq.safeEq(domElem, argCell) // just use SMT equality
-//      tla.or(notInDomain, tla.not(eq))
-//    }
+    // the following step is not important, but we do it to easy debugging:
+    // if oracle = N, set the picked cell to the default value
+    val resultType: CellT = funCell.cellType.asInstanceOf[FunT].resultType
+    nextState = defaultValueFactory.makeUpValue(nextState, resultType)
+    val defaultValue = nextState.asCell
+    nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((pickedRes, defaultValue)))
+    solverAssert(tla.impl(tla.eql(oracle, tla.int(nelems)), tla.eql(pickedRes, defaultValue)))
 
-    val foundFlag = rewriter.solverContext.introBoolConst() // XXX: remove
-    val found = tla.or(domCells.map(mkArgCase): _*) //tla.and(tla.not(failPred), tla.or(domCells.map(mkInCase): _*))
-    rewriter.solverContext.assertGroundExpr(tla.equiv(tla.name(foundFlag), found))
-    val resEq = tla.impl(found, tla.or(domCells.map(mkResCase): _*))
-    rewriter.solverContext.assertGroundExpr(resEq)
 
-    nextState = nextState.setArena(nextState.arena.appendCell(FailPredT()))
-    val failPred = nextState.arena.topCell
-    rewriter.addMessage(failPred.id,
-      "Argument %s may be outside the function %s domain %s".format(argEx, funCell, state.arena.getDom(funCell)))
-    rewriter.solverContext.assertGroundExpr(tla.equiv(failPred.toNameEx, tla.not(NameEx(foundFlag))))
-
-    rewriter.rewriteUntilDone(nextState.setRex(resultCell).setTheory(CellTheory()))
+    nextState.setRex(pickedRes.toNameEx).setTheory(CellTheory())
   }
-
-
 }

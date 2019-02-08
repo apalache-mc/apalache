@@ -207,12 +207,21 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     nextState.ex match {
       case membershipEx@NameEx(name) =>
         assert(CellTheory().hasConst(name))
+        // In the previous version, we were using failure predicates to detect failures.
+        // However, they were an unnecessary burden and produced tonnes of constraints.
+        // In the new version, we just return some value,
+        // which is similar to Leslie's interpretation.
+        // The most important thing is that the SMT context is still satisfiable.
+        assert(solverContext.sat())
+        /*
+        // the code with failure predicates
         rewriter.push()
         val failureOccurs = tla.or(nextState.arena.findCellsByType(FailPredT()).map(_.toNameEx): _*)
         solverContext.assertGroundExpr(failureOccurs)
         assert(solverContext.sat())
         solverContext.assertGroundExpr(tla.not(failureOccurs))
         assert(!solverContext.sat())
+        */
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -439,10 +448,11 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
       case resFunEx@NameEx(name) =>
         assert(CellTheory().hasConst(name))
         // check the function domain and co-domain
-        val resFun = nextState.arena.findCellByName(name)
-        val dom = nextState.arena.getDom(resFun)
+        val resFun = nextState.asCell
+        // no domain anymore
+//        val dom = nextState.arena.getDom(resFun)
+//        assert(nextState.arena.getHas(dom).size == 2)
         val cdm = nextState.arena.getCdm(resFun)
-        assert(nextState.arena.getHas(dom).size == 2)
         val cdmSize = nextState.arena.getHas(cdm).size
         assert(cdmSize == 2 || cdmSize == 3) // the co-domain can be overapproximated
 
@@ -450,7 +460,7 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
         fail("Unexpected rewriting result")
     }
 
-    val exceptFun = nextState.arena.findCellByNameEx(nextState.ex)
+    val exceptFun = nextState.asCell
 
     val resFun1Ne11 = tla.neql(tla.appFun(nextState.ex, tla.int(1)), tla.int(11))
     val cmpState = rewriter.rewriteUntilDone(nextState.setRex(resFun1Ne11).setTheory(BoolTheory()))
@@ -463,8 +473,11 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
       case neqEx@NameEx(name) =>
         assert(BoolTheory().hasConst(name))
         solverContext.assertGroundExpr(neqEx)
+        /*
+        // not using failure predicates anymore
         val failureOccurs = tla.or(cmpState.arena.findCellsByType(FailPredT()).map(_.toNameEx): _*)
         solverContext.assertGroundExpr(tla.not(failureOccurs))
+        */
         assertUnsatOrExplain(rewriter, cmpState)
 
       case _ =>
@@ -487,9 +500,10 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
         assert(CellTheory().hasConst(name))
         // check the function domain and co-domain
         val resFun = nextState.arena.findCellByName(name)
-        val dom = nextState.arena.getDom(resFun)
+        // no domain anymore
+//        val dom = nextState.arena.getDom(resFun)
+//        assert(nextState.arena.getHas(dom).size == 2)
         val cdm = nextState.arena.getCdm(resFun)
-        assert(nextState.arena.getHas(dom).size == 2)
         val cdmSize = nextState.arena.getHas(cdm).size
         assert(cdmSize == 2 || cdmSize == 3) // the co-domain can be overapproximated
 
@@ -534,9 +548,10 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
         assert(CellTheory().hasConst(name))
         // check the function domain and co-domain
         val resFun = nextState.arena.findCellByName(name)
-        val dom = nextState.arena.getDom(resFun)
+        // no domain anymore
+//        val dom = nextState.arena.getDom(resFun)
+//        assert(nextState.arena.getHas(dom).size == 2)
         val cdm = nextState.arena.getCdm(resFun)
-        assert(nextState.arena.getHas(dom).size == 2)
         val cdmSize = nextState.arena.getHas(cdm).size
         assert(cdmSize == 2 || cdmSize == 3) // the co-domain can be overapproximated
 
@@ -581,9 +596,10 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
         assert(CellTheory().hasConst(name))
         // check the function domain and co-domain
         val resFun = nextState.arena.findCellByName(name)
-        val dom = nextState.arena.getDom(resFun)
+        // no domain anymore
+//        val dom = nextState.arena.getDom(resFun)
+//        assert(nextState.arena.getHas(dom).size == 2)
         val cdm = nextState.arena.getCdm(resFun)
-        assert(nextState.arena.getHas(dom).size == 2)
         val cdmSize = nextState.arena.getHas(cdm).size
         assert(cdmSize == 2 || cdmSize == 3) // the co-domain can be overapproximated
 

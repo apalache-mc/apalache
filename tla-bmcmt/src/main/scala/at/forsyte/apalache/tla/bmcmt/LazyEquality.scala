@@ -342,41 +342,22 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
     eqCache.dispose()
   }
 
-
-// function comparison: SE-FUN-EQ4
+  /**
+    * Compare two functions. In the new implementation, we just compare the associated relations as sets.
+    * @param state
+    * @param leftFun
+    * @param rightFun
+    * @return the new symbolic state
+    */
   private def mkFunEq(state: SymbState, leftFun: ArenaCell, rightFun: ArenaCell): SymbState = {
-    val leftDom = state.arena.getDom(leftFun)
-    val rightDom = state.arena.getDom(rightFun)
-    // produce constraints for the domain equality
-    val afterDomEq = cacheOneEqConstraint(state, leftDom, rightDom)
-
-    // produce constraints for each function result
-    def eachDomElem(st: SymbState, elem: ArenaCell): SymbState = {
-      // rewrite leftFun[elem] = rightFun[elem] into a cell
-      val leftResultEqualsRightResult =
-        tla.eql(tla.appFun(leftFun, elem),
-          tla.appFun(rightFun, elem))
-      val nst = rewriter.rewriteUntilDone(st.setTheory(BoolTheory()).setRex(leftResultEqualsRightResult))
-      val newEx =
-        st.ex match {
-          case OperEx(TlaBoolOper.and, es@_*) =>
-            val notInDom = tla.not(tla.in(elem, leftDom))
-            tla.and(tla.or(notInDom, nst.ex) +: es: _*)
-
-          case _ =>
-            throw new RuntimeException("should never happen")
-        }
-      nst.setRex(newEx)
-    }
-
-    val domElems = state.arena.getHas(leftDom)
-    val domainsEqual = tla.eql(leftDom, rightDom)
-    val afterResEq = domElems.foldLeft(afterDomEq.setRex(tla.and(domainsEqual)))(eachDomElem)
-    rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(leftFun, rightFun), afterResEq.ex))
+    val leftRel = state.arena.getCdm(leftFun)
+    val rightRel = state.arena.getCdm(rightFun)
+    val relEq = mkSetEq(state, leftRel, rightRel)
+    rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(leftFun, rightFun), tla.eql(leftRel, rightRel)))
     eqCache.put(leftFun, rightFun, EqCache.EqEntry())
 
     // restore the original expression and theory
-    rewriter.coerce(afterResEq.setRex(state.ex), state.theory)
+    rewriter.coerce(relEq.setRex(state.ex), state.theory)
   }
 
   private def mkRecordEq(state: SymbState, leftRec: ArenaCell, rightRec: ArenaCell): SymbState = {

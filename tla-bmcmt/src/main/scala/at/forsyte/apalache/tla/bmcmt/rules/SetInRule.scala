@@ -5,11 +5,11 @@ import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
 
 /**
-  * Implements the rules SE-SET-IN{1,2,3} and SE-IN-SUBSET1.
+  * Implements the rules SE-SET-IN{1,2,3}, SE-IN-FUNSET, and SE-IN-SUBSET1.
   *
   * @author Igor Konnov
   */
@@ -86,11 +86,30 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   private def funSetIn(state: SymbState, funsetCell: ArenaCell, funCell: ArenaCell): SymbState = {
+    // checking whether f \in [S -> T]
     assert(PartialFunction.cond(funCell.cellType) { case FunT(_, _) => true })
-    val arena = state.arena
-    val domeq = tla.eql(arena.getDom(funCell), arena.getDom(funsetCell))
-    val cdmSubset = tla.subseteq(arena.getCdm(funCell), arena.getCdm(funsetCell))
-    rewriter.rewriteUntilDone(state.setRex(tla.and(domeq, cdmSubset)).setTheory(BoolTheory()))
+    val funsetDom = state.arena.getDom(funsetCell)
+    val funsetCdm = state.arena.getCdm(funsetCell)
+    var nextState = state
+    nextState = nextState.appendArenaCell(BoolT())
+    val pred = nextState.arena.topCell
+    // In the new implementation, a function is a relation { <<x, f[x]>> : x \in U }.
+    // Check that \A t \in f: t[1] \in S /\ t[2] \in T.
+    def onPair(pair: ArenaCell): TlaEx = {
+      val tupleElems = nextState.arena.getHas(pair)
+      val (arg, res) = (tupleElems.head, tupleElems.tail.head)
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.in(arg, funsetDom)))
+      val inDom = nextState.asCell
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.in(res, funsetCdm)))
+      val inCdm = nextState.asCell
+      tla.and(inDom, inCdm)
+    }
+
+    val relation = nextState.arena.getCdm(funCell)
+    val relElems = nextState.arena.getHas(relation)
+    rewriter.solverContext.assertGroundExpr(tla.equiv(pred, tla.and(relElems map onPair :_*)))
+
+    rewriter.rewriteUntilDone(nextState.setRex(pred).setTheory(CellTheory()))
   }
 
   private def basicIn(state: SymbState, setCell: ArenaCell, elemCell: ArenaCell, elemType: types.CellT) = {

@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.bmcmt.rules
+package at.forsyte.apalache.tla.bmcmt.rules.old
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
@@ -8,8 +8,8 @@ import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
 /**
-  * The new implementation of a function constructor that encodes a function f = [x \in S |-> e] the classical way:
-  * f = {(a, b) : a \in S, b = e[a/x]. For efficiency, we are still carrying the domain set in a separate cell.
+  * Implements the function constructor by introduce the function domain, the co-domain, and an uninterpreted function
+  * to collect the actual mapping. This is the pre-warp implementation.
   *
   * @author Igor Konnov
   */
@@ -35,13 +35,12 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   private def rewriteFunCtor(state: SymbState, mapEx: TlaEx, varName: String, setEx: TlaEx) = {
     // rewrite the set expression into a memory cell
-    var nextState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(setEx))
-    val domainCell = nextState.asCell
+    val setState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(setEx))
+    val domainCell = setState.arena.findCellByNameEx(setState.ex)
     val elemT = domainCell.cellType match {
       case FinSetT(et) => et
       case t@_ => throw new RewriterException("Expected a finite set, found: " + t)
     }
-    val domainCells = nextState.arena.getHas(domainCell)
     // find the type of the target expression and of the target set
     val resultT = rewriter.typeFinder.computeRec(mapEx)
     val funT =
@@ -49,39 +48,39 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         .compute(state.ex, resultT, elemT, domainCell.cellType)
         .asInstanceOf[FunT]
     // unfold the set and map every potential element to a cell
-    // actually, instead of mapping every cell to e, we map it to <<x, e>>
-    val pairEx = tla.tuple(tla.name(varName), mapEx)
+    val domainCells = setState.arena.getHas(domainCell)
 
-    val (afterMapState: SymbState, relationCells: Seq[ArenaCell]) =
-      mapCells(nextState, pairEx, varName, setEx, domainCells)
+    val (newState: SymbState, resultCells: Seq[ArenaCell]) =
+      mapCells(setState, mapEx, varName, setEx, domainCells)
 
-    nextState = afterMapState
-    // Add the cell for the set that stores the relation <<x, f[x]>>.
-    nextState = nextState.appendArenaCell(funT)
-    val funCell = nextState.arena.topCell
-    nextState = nextState.appendArenaCell(FinSetT(TupleT(Seq(elemT, resultT))))
-    val relationCell = nextState.arena.topCell
-    val newArena = relationCells.foldLeft(nextState.arena) ((a, c) => a.appendHas(relationCell, c))
-    // we do not store the function domain anymore, as it is easy to get the domain and the relation out of sync
-//    nextState = nextState.setArena(newArena.setDom(funCell, domainCell))
-    // For historical reasons, we are using cdm to store the relation, though it is not the co-domain.
-    nextState = nextState.setArena(newArena.setCdm(funCell, relationCell))
-    // require the relation to contain only those pairs whose argument actually belongs to the set
+    // introduce a co-domain cell
+    var arena = newState.arena.appendCell(funT)
+    val funCell = arena.topCell
+    arena = arena.appendCell(FinSetT(resultT)) // co-domain is a finite set of type elemType
+    val codomainCell = arena.topCell
+    arena = arena.setDom(funCell, domainCell).setCdm(funCell, codomainCell)
+    arena = resultCells.foldLeft(arena)((a, e) => a.appendHas(codomainCell, e))
+    // associate a function constant with the function cell
+    rewriter.solverContext.declareCellFun(funCell.name, funT.argType, funT.resultType)
 
     // associate a value of the uninterpreted function with a cell
-    def addCellCons(domElem: ArenaCell, relElem: ArenaCell): Unit = {
-      val inDomain = tla.in(domElem, domainCell)
-      val inRelation = tla.in(relElem, relationCell)
-      val iff = tla.equiv(inDomain, inRelation)
-      rewriter.solverContext.assertGroundExpr(iff)
+    def addCellCons(argCell: ArenaCell, resultCell: ArenaCell): Unit = {
+      val inDomain = tla.in(argCell, domainCell)
+      val funEqResult = tla.eql(resultCell, tla.appFun(funCell, argCell)) // this is translated as function application
+      val inDomainImpliesResult = tla.impl(inDomain, funEqResult)
+      rewriter.solverContext.assertGroundExpr(inDomainImpliesResult)
+      // the result unconditionally belongs to the co-domain
+      rewriter.solverContext.assertGroundExpr(tla.in(resultCell, codomainCell))
     }
 
     // add SMT constraints
-    for ((domElem, relElem) <- domainCells zip relationCells)
-      addCellCons(domElem, relElem)
+    for ((cell, pred) <- domainCells zip resultCells)
+      addCellCons(cell, pred)
 
     // that's it
-    val finalState = nextState.setRex(funCell.toNameEx).setTheory(CellTheory())
+    val finalState =
+      newState.setTheory(CellTheory())
+        .setArena(arena).setRex(funCell.toNameEx)
     rewriter.coerce(finalState, state.theory)
   }
 
@@ -105,7 +104,7 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // compute mappings for all the cells (some of them may coincide, that's fine)
     val (newState: SymbState, newEs: Seq[TlaEx]) = process(state, oldCells)
     val newCells = newEs.map(newState.arena.findCellByNameEx)
-    // keep the sequence of results as it is, as it is will be zipped by the function constructor
+    // keep the sequence of results as it is, as it is be zipped by the function constructor
     (newState, newCells)
   }
 }
