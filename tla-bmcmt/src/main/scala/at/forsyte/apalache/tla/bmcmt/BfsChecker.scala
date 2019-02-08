@@ -160,6 +160,7 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
       // the bound on j will be rewritten in pickState
       val leftBound = tla.le(tla.int(0), transitionIndex.toNameEx)
       val rightBound = tla.lt(transitionIndex.toNameEx, tla.int(nextStates.length))
+      solverContext.assertGroundExpr(tla.and(leftBound, rightBound))
       solverContext.assertGroundExpr(tla.and(nextStates.zipWithIndex.map((transitionFired _).tupled): _*))
 
       // glue the computed states S0, ..., Sk together:
