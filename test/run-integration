@@ -83,7 +83,7 @@ check "006-pr" --length=3 pr.tla \
     && expect_ok
 check "007-EWD840" --length=10 --inv=Inv EWD840.tla \
     && expect_ok
-check "008-Paxos" --length=10 --inv=Inv Paxos.tla \
+check "008-Paxos" --length=5 --inv=Inv Paxos.tla \
     && expect_ok
 
 cat "$LOGFILE"
