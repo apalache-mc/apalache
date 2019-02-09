@@ -43,7 +43,7 @@ branches:
   - unstable
 
 script:
-    - mvn package && NO_MVN=1 ./test/run-integration && NO_MVN=1 ./test/run-tlaplus-suite
+    - mvn package && NO_MVN=1 ./test/run-integration #&& NO_MVN=1 ./test/run-tlaplus-suite
 
 notifications:
     email:
