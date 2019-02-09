@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 
@@ -10,10 +10,37 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
   * @author Igor Konnov
   */
 class ConstSimplifier {
+  def isFalseConst(ex: TlaEx): Boolean = {
+    ex match {
+      case ValEx(TlaBool(false)) => true
+      case NameEx(name) => name == SolverContext.falseConst || name == Arena.falseName
+      case _ => false
+    }
+  }
+
+  def isTrueConst(ex: TlaEx): Boolean = {
+    ex match {
+      case ValEx(TlaBool(true)) => true
+      case NameEx(name) => name == SolverContext.trueConst || name == Arena.trueName
+      case _ => false
+    }
+  }
+
+  def isBoolConst(ex: TlaEx): Boolean = isFalseConst(ex) || isTrueConst(ex)
+
   def simplify(rootExpr: TlaEx): TlaEx = {
     def rewriteDeep(ex: TlaEx): TlaEx = ex match {
       case NameEx(_) | ValEx(_) =>
-        ex
+        if (isFalseConst(ex)) {
+          ValEx(TlaBool(false))
+        } else if (isTrueConst(ex)) {
+          ValEx(TlaBool(true))
+        } else {
+          ex
+        }
+
+      // do not go in tla.in and tla.notin, as it breaks down our SMT encoding
+      case OperEx(TlaSetOper.in, _*) | OperEx(TlaSetOper.notin, _*) => ex
 
       case OperEx(oper, args @ _*) =>
         simplifyShallow(OperEx(oper, args map rewriteDeep :_*))
@@ -26,7 +53,17 @@ class ConstSimplifier {
   }
 
   def simplifyShallow(ex: TlaEx): TlaEx = ex match {
-    case NameEx(_) | ValEx(_) => ex
+    case NameEx(_) | ValEx(_) =>
+      if (isFalseConst(ex)) {
+        ValEx(TlaBool(false))
+      } else if (isTrueConst(ex)) {
+        ValEx(TlaBool(true))
+      } else {
+        ex
+      }
+
+    // do not go in tla.in and tla.notin, as it breaks down our SMT encoding
+    case OperEx(TlaSetOper.in, _*) | OperEx(TlaSetOper.notin, _*) => ex
 
     // integer operations
     case OperEx(TlaArithOper.plus, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>

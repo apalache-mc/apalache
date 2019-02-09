@@ -4,6 +4,8 @@ import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, S
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
 
+import scala.collection.immutable.SortedSet
+
 /**
   * Given a type, this class produces a default value for that type. This is needed by ChooseRule and FunAppRule.
   *
@@ -53,7 +55,9 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
           newState = newState.setArena(newState.arena.appendHas(recCell, fieldCell))
         }
         // create the domain and attach it to the record
-        val (newArena, domain) = rewriter.recordDomainCache.getOrCreate(newState.arena, recT.fields.keySet)
+        val pairOfSets = (recT.fields.keySet, SortedSet[String]())
+        val (newArena, domain) =
+          rewriter.recordDomainCache.getOrCreate(newState.arena, pairOfSets)
         newState = newState.setArena(newArena.setDom(recCell, domain))
         newState.setRex(recCell.toNameEx)
 

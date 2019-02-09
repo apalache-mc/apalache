@@ -312,7 +312,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
-        assert(NameEx(solverContext.falseConst) == nextState.ex)
+        assert(NameEx(SolverContext.falseConst) == nextState.ex)
         assert(state.arena == nextState.arena)
 
       case _ =>
@@ -359,7 +359,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
-        assert(NameEx(solverContext.falseConst) == nextState.ex)
+        assert(NameEx(SolverContext.falseConst) == nextState.ex)
         assert(state.arena == nextState.arena)
 
       case _ =>
@@ -372,7 +372,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
-        assert(NameEx(solverContext.trueConst) == nextState.ex)
+        assert(NameEx(SolverContext.trueConst) == nextState.ex)
         assert(state.arena == nextState.arena)
 
       case _ =>
@@ -385,7 +385,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
-        assert(NameEx(solverContext.trueConst) == nextState.ex)
+        assert(NameEx(SolverContext.trueConst) == nextState.ex)
         assert(state.arena == nextState.arena)
 
       case _ =>
@@ -468,7 +468,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     val ex = tla.exists(tla.name("x"), tla.enumSet(), tla.bool(true))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val nextState = create().rewriteUntilDone(state)
-    assert(NameEx(solverContext.falseConst) == nextState.ex)
+    assert(NameEx(SolverContext.falseConst) == nextState.ex)
   }
 
   test("""SE-EX3: \E x \in {1, 2, 3}: x = 2 ~~> $B$k""") {

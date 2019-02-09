@@ -7,9 +7,9 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 import scala.collection.immutable.HashMap
 
 object Arena {
-  protected val falseName: String = CellTheory().namePrefix + "0"
-  protected val trueName: String = CellTheory().namePrefix + "1"
-  protected val booleanName: String = CellTheory().namePrefix + "2"
+  val falseName: String = CellTheory().namePrefix + "0"
+  val trueName: String = CellTheory().namePrefix + "1"
+  val booleanName: String = CellTheory().namePrefix + "2"
 
   def create(solverContext: SolverContext): Arena = {
     var arena = new Arena(solverContext, 0,
@@ -33,11 +33,12 @@ object Arena {
     solverContext.declareCell(cellBoolean)
     solverContext.assertGroundExpr(OperEx(TlaOper.ne, cellFalse.toNameEx, cellTrue.toNameEx))
     // assert in(c_FALSE, c_BOOLEAN) and in(c_TRUE, c_BOOLEAN)
+    // link c_BOOLEAN to c_FALSE and c_TRUE
+    arena = arena.appendHas(cellBoolean, cellFalse)
+      .appendHas(cellBoolean, cellTrue)
     solverContext.assertGroundExpr(OperEx(TlaSetOper.in, cellFalse.toNameEx, cellBoolean.toNameEx))
     solverContext.assertGroundExpr(OperEx(TlaSetOper.in, cellTrue.toNameEx, cellBoolean.toNameEx))
-    // link c_BOOLEAN to c_FALSE and c_TRUE
-    arena.appendHas(cellBoolean, cellFalse)
-      .appendHas(cellBoolean, cellTrue)
+    arena
   }
 }
 
@@ -154,6 +155,7 @@ class Arena private(val solverContext: SolverContext,
     * @return a new arena
     */
   def appendHas(setCell: ArenaCell, elemCell: ArenaCell): Arena = {
+    solverContext.declareInPred(setCell, elemCell)
     val es =
       hasEdges.get(setCell) match {
         case Some(list) => list :+ elemCell
@@ -164,6 +166,7 @@ class Arena private(val solverContext: SolverContext,
   }
 
   def appendHas(setCell: ArenaCell, cells: Seq[ArenaCell]): Arena = {
+    cells foreach (solverContext.declareInPred(setCell, _))
     val es =
       hasEdges.get(setCell) match {
         case Some(list) => list ++ cells

@@ -12,10 +12,20 @@ import at.forsyte.apalache.tla.lir.TlaEx
 trait SolverContext extends StackableContext {
   /**
     * Declare a constant for an arena cell.
+    * This method is called automatically by the arena.
     *
     * @param cell a (previously undeclared) cell
     */
   def declareCell(cell: ArenaCell): Unit
+
+  /**
+    * Declare an arena edge of type 'has'. This method introduces a Boolean variable for the edge.
+    * This method is called automatically by the arena.
+    *
+    * @param set the containing set
+    * @param elem a set element
+    */
+  def declareInPred(set: ArenaCell, elem: ArenaCell): Unit
 
   /**
     * Check whether the current view of the SMT solver is consistent with arena.
@@ -103,19 +113,21 @@ trait SolverContext extends StackableContext {
     * @param listener register a listener, overrides the previous listener, if it was set before
     */
   def setSmtListener(listener: SmtListener): Unit
+}
 
+object SolverContext {
   /**
     * Get the name of the reserved Boolean constant that is always false
     * (useful to avoid messing with the keywords).
     * @return the name (typically, $B$0)
     */
-  def falseConst: String
+  val falseConst = "$B$0"
 
   /**
     * Get the name of the reserved Boolean constant that is always false
     * (useful to avoid messing with the keywords).
     * @return the name (typically, $B$1)
     */
-  def trueConst: String
+  val trueConst = "$B$1"
 }
 

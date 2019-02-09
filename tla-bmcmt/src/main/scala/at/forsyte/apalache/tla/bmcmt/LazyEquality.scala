@@ -14,9 +14,10 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
   * @author Igor Konnov
   */
 class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
+  private val simplifier = new ConstSimplifier
 
-  private val eqCache = new EqCache(NameEx(rewriter.solverContext.falseConst),
-    NameEx(rewriter.solverContext.trueConst))
+  private val eqCache = new EqCache(NameEx(SolverContext.falseConst),
+    NameEx(SolverContext.trueConst))
 
   /**
     * This method ensure that a pair of its arguments can be safely compared by the SMT equality,
@@ -34,7 +35,7 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
       throw new RewriterException("Trivial inequality, as the types are different (check your code): type(%s) = %s, while type(%s) = %s"
         .format(left.name, left.cellType, right.name, right.cellType))
     } else if (left == right) {
-      NameEx(rewriter.solverContext.trueConst) // this is just true
+      tla.bool(true) // this is just true
     } else {
       val entry = eqCache.get(left, right)
       if (entry.isDefined) {
@@ -61,13 +62,13 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
     */
   def cachedEq(left: ArenaCell, right: ArenaCell): TlaEx = {
     if (left == right) {
-      NameEx(rewriter.solverContext.trueConst) // this is just true
+      tla.bool(true) // this is just true
     } else {
       val entry = eqCache.get(left, right)
       if (entry.isDefined) {
         eqCache.toTla(left, right, entry.get)
       } else if (!left.cellType.comparableWith(right.cellType)) {
-        NameEx(rewriter.solverContext.falseConst) // just false as the types are different
+        tla.bool(false) // just false as the types are different
       } else {
         // let's add a bit of German here to indicate that it is really dangerous
         val msg = "VORSICHT! SMT equality should be used only after calling cacheEqualities, unless you know what you are doing."
@@ -220,7 +221,7 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
       if (left.cellType.signature == right.cellType.signature) {
         // These two sets have the same signature and thus belong to the same sort.
         // Hence, we can use SMT equality. This equality is needed by uninterpreted functions.
-        val eq = tla.equiv(tla.eql(left, right), tla.and(leftToRight.ex, rightToLeft.ex))
+        val eq = simplifier.simplify(tla.equiv(tla.eql(left, right), tla.and(leftToRight.ex, rightToLeft.ex)))
         rewriter.solverContext.assertGroundExpr(eq)
         eqCache.put(left, right, EqCache.EqEntry())
       } else {
@@ -291,19 +292,24 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
           tla.and(tla.in(relem, right), cachedEq(lelem, relem))
         }
 
-        tla.or(rightElems.map(inAndEq): _*)
+        // There are plenty of valid subformulas. Simplify!
+        simplifier.simplify(tla.or(rightElems.map(inAndEq): _*))
       }
 
       def notInOrExists(lelem: ArenaCell) = {
-        // BUG: this produced OOM on the inductive invariant of Paxos
-        // BUGFIX: push this query to the solver, in order to avoid constructing enormous assertions
-        val notInOrExists = tla.or(tla.not(tla.in(lelem, left)), exists(lelem))
-        val pred = tla.name(rewriter.solverContext.introBoolConst())
-        rewriter.solverContext.assertGroundExpr(tla.equiv(pred, notInOrExists))
-        pred
+        val notInOrExists = simplifier.simplify(tla.or(tla.not(tla.in(lelem, left)), exists(lelem)))
+        if (simplifier.isBoolConst(notInOrExists)) {
+          notInOrExists // just return the constant
+        } else {
+          // BUG: this produced OOM on the inductive invariant of Paxos
+          // BUGFIX: push this query to the solver, in order to avoid constructing enormous assertions
+          val pred = tla.name(rewriter.solverContext.introBoolConst())
+          rewriter.solverContext.assertGroundExpr(tla.equiv(pred, notInOrExists))
+          pred
+        }
       }
 
-      val forEachNotInOrExists = tla.and(leftElems.map(notInOrExists): _*)
+      val forEachNotInOrExists = simplifier.simplify(tla.and(leftElems.map(notInOrExists): _*))
       val pred = tla.name(rewriter.solverContext.introBoolConst())
       rewriter.solverContext.assertGroundExpr(tla.eql(pred, forEachNotInOrExists))
       newState.setTheory(BoolTheory()).setRex(pred)

@@ -118,7 +118,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     if (potentialElems.isEmpty) {
       // SE-SET-IN1: the set cell points to no other cell => return false
       state.setTheory(BoolTheory())
-        .setRex(NameEx(rewriter.solverContext.falseConst))
+        .setRex(NameEx(SolverContext.falseConst))
     } else {
       val pred = rewriter.solverContext.introBoolConst()
       if (state.arena.isLinkedViaHas(setCell, elemCell)) {

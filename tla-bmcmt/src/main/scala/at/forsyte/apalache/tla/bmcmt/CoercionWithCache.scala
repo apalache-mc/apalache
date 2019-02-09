@@ -125,11 +125,11 @@ class CoercionWithCache(val stateRewriter: SymbStateRewriter) extends StackableC
   private def boolToCell(state: SymbState): SymbState = {
     state.ex match {
       case NameEx(name) if BoolTheory().hasConst(name) =>
-        if (name == stateRewriter.solverContext.falseConst) {
+        if (name == SolverContext.falseConst) {
           // $B$0 -> $C$0
           state.setRex(state.arena.cellFalse().toNameEx)
             .setTheory(CellTheory())
-        } else if (name == stateRewriter.solverContext.trueConst) {
+        } else if (name == SolverContext.trueConst) {
           // $B$1 -> $C$1
           state.setRex(state.arena.cellTrue().toNameEx)
             .setTheory(CellTheory())
@@ -155,11 +155,11 @@ class CoercionWithCache(val stateRewriter: SymbStateRewriter) extends StackableC
       case NameEx(name) if CellTheory().hasConst(name) =>
         if (name == state.arena.cellFalse().toString) {
           // $C$0 -> $B$0
-          state.setRex(NameEx(stateRewriter.solverContext.falseConst))
+          state.setRex(NameEx(SolverContext.falseConst))
             .setTheory(BoolTheory())
         } else if (name == state.arena.cellTrue().toString) {
           // $C$1 -> $B$1
-          state.setRex(NameEx(stateRewriter.solverContext.trueConst))
+          state.setRex(NameEx(SolverContext.trueConst))
             .setTheory(BoolTheory())
         } else {
           // general case

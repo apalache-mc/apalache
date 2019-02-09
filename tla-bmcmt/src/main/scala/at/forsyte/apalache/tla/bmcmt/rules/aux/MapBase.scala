@@ -52,17 +52,15 @@ class MapBase(rewriter: SymbStateRewriter, val isBijective: Boolean) {
       elemsOfSets.zip(indices) map Function.tupled { (s, i) => s(i) }
 
     val tupleIter = new IntTupleIterator(setLimits).map(byIndex)
+
     // the SMT constraints are added right in the method
     val (newState, resultElemCells) =
       mapCellsManyArgs(setState.setArena(arena), resultSetCell, mapEx, varNames, setsAsCells, tupleIter)
 
-    // bind the element cells to the set
-    val newArena = resultElemCells.foldLeft(newState.arena) {(a, e) => a.appendHas(resultSetCell, e)}
-
     // that's it
     val finalState =
       newState.setTheory(CellTheory())
-        .setArena(newArena).setRex(resultSetCell.toNameEx)
+        .setRex(resultSetCell.toNameEx)
     rewriter.coerce(finalState, state.theory)
   }
 
@@ -94,16 +92,18 @@ class MapBase(rewriter: SymbStateRewriter, val isBijective: Boolean) {
     // bind the variables to the corresponding cells
     val newBinding: Binding = varNames.zip(valuesAsCells).foldLeft(state.binding)((m, p) => m + p)
     val mapState = state.setTheory(CellTheory()).setBinding(newBinding).setRex(mapEx)
-    val newState = rewriter.rewriteUntilDone(mapState)
-    val mapResultCell = newState.arena.findCellByNameEx(newState.ex)
+    var nextState = rewriter.rewriteUntilDone(mapState)
+    val mapResultCell = nextState.asCell
 
     // require each new cell to be in the new set iff the old cell was in the old set
     val inNewSet = OperEx(TlaSetOper.in, mapResultCell.toNameEx, targetSetCell.toNameEx)
     def inSourceSet(arg: ArenaCell, set: ArenaCell) = OperEx(TlaSetOper.in, arg.toNameEx, set.toNameEx)
     val argsInSourceSets = tla.and(valuesAsCells.zip(setsAsCells) map (inSourceSet _).tupled :_*)
     val ifAndOnlyIf = OperEx(TlaOper.eq, inNewSet, argsInSourceSets)
+    // add the edge before adding the constraint
+    nextState = nextState.setArena(nextState.arena.appendHas(targetSetCell, mapResultCell))
     rewriter.solverContext.assertGroundExpr(ifAndOnlyIf)
 
-    (newState.setBinding(state.binding), mapResultCell) // reset the binding and return the result
+    (nextState.setBinding(state.binding), mapResultCell) // reset the binding and return the result
   }
 }

@@ -223,7 +223,7 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
     nextState.ex match {
       case res @ NameEx(name) =>
         assert(BoolTheory().hasConst(name))
-        assert(name == solverContext.trueConst)
+        assert(name == SolverContext.trueConst)
 
       case _ =>
         fail("Unexpected rewriting result")

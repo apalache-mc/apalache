@@ -27,7 +27,7 @@ class TlcRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case OperEx(TlcOper.print, _, _)
            | OperEx(TlcOper.printT, _) =>
         val finalState = state
-          .setRex(NameEx(rewriter.solverContext.trueConst))
+          .setRex(NameEx(SolverContext.trueConst))
           .setTheory(BoolTheory())
         rewriter.coerce(finalState, state.theory)
 
@@ -43,7 +43,7 @@ class TlcRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // return isReachable. If there is a model M s.t. M |= isReachable, then M |= failPred allows us
         // to check, whether the assertion is violated or not
         val finalState = valueState.setArena(arena)
-          .setRex(NameEx(rewriter.solverContext.trueConst)) // if you need a value of a type different from bool, use TypedAssert
+          .setRex(NameEx(SolverContext.trueConst)) // if you need a value of a type different from bool, use TypedAssert
           .setTheory(BoolTheory())
         rewriter.coerce(finalState, state.theory)
 

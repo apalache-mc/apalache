@@ -28,7 +28,7 @@ class TestSymbStateRewriter extends RewriterBase {
   }
 
   test("SE-BOX-BOOL1: $B$_0 ~~> $C$_0") {
-    val state = new SymbState(NameEx(solverContext.falseConst),
+    val state = new SymbState(NameEx(SolverContext.falseConst),
       BoolTheory(), arena, new Binding)
     val nextState = create().coerce(state, CellTheory())
     nextState.ex match {
@@ -43,7 +43,7 @@ class TestSymbStateRewriter extends RewriterBase {
   }
 
   test("SE-BOX-BOOL1: $B$_1 ~~> $C$_1") {
-    val state = new SymbState(NameEx(solverContext.trueConst),
+    val state = new SymbState(NameEx(SolverContext.trueConst),
       BoolTheory(), arena, new Binding)
     val nextState = create().coerce(state, CellTheory())
     nextState.ex match {
@@ -84,7 +84,7 @@ class TestSymbStateRewriter extends RewriterBase {
       case NameEx(name) =>
         assert(BoolTheory().hasConst(name))
         assert(BoolTheory() == nextState.theory)
-        assert(solverContext.falseConst == name)
+        assert(SolverContext.falseConst == name)
 
       case _ =>
         fail("Unexpected coercion result")
@@ -99,7 +99,7 @@ class TestSymbStateRewriter extends RewriterBase {
       case NameEx(name) =>
         assert(BoolTheory().hasConst(name))
         assert(BoolTheory() == nextState.theory)
-        assert(solverContext.trueConst == name)
+        assert(SolverContext.trueConst == name)
 
       case _ =>
         fail("Unexpected coercion result")

@@ -430,7 +430,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-IN-ASSIGN1(record): x' \in {{"a" -> 1, "b" -> FALSE}, {"a" -> 2, "b" -> TRUE, "c" -> {3, 4}}} ~~> [x -> $C$k]""") {
+  test("""SE-IN-ASSIGN1(record): x' \in {{"a" -> 1, "b" -> FALSE}, {"a" -> 2, "b" -> TRUE, "c" -> {3, 4}}}""") {
     // records in a set can have different sets of keys, although the field types should be compatible for each field
     val record1 = tla.enumFun(tla.str("a"), tla.int(1),
       tla.str("b"), tla.bool(false))
@@ -481,7 +481,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
         val assumption2 = tla.eql(a_of_x_prime, tla.int(1))
         val assumeState2 = assumeTlaEx(rewriter, nextState.setRex(assumption2))
         val (newArena, expectedDom) =
-          rewriter.recordDomainCache.getOrCreate(assumeState2.arena, SortedSet("a", "b"))
+          rewriter.recordDomainCache.getOrCreate(assumeState2.arena, (SortedSet("a", "b"), SortedSet("c")))
         val domEq = tla.eql(expectedDom, tla.dom(x_prime))
         assertTlaExAndRestore(rewriter, assumeState2.setArena(newArena).setRex(domEq))
         // and check that the record equals to the expected one

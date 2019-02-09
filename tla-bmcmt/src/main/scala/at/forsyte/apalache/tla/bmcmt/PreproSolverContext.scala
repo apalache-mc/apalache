@@ -62,7 +62,7 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
           case None => ex
         }
 
-      case OperEx(TlaSetOper.in, _, _) =>
+      case OperEx(TlaSetOper.in, _*) | OperEx(TlaSetOper.notin, _*) =>
         // do not preprocess these expressions, as we have to find sorts from the names
         ex
 
@@ -89,6 +89,13 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
     */
   override def declareCell(cell: ArenaCell): Unit = context.declareCell(cell)
 
+  /**
+    * Declare an arena edge of type 'has'. This method introduces a Boolean variable for the edge.
+    *
+    * @param set the containing set
+    * @param elem a set element
+    */
+  def declareInPred(set: ArenaCell, elem: ArenaCell): Unit = context.declareInPred(set, elem)
 
   /**
     * Check whether the current view of the SMT solver is consistent with arena.
@@ -158,22 +165,6 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
     * @param listener register a listener, overrides the previous listener, if it was set before
     */
   override def setSmtListener(listener: SmtListener): Unit = context.setSmtListener(listener)
-
-  /**
-    * Get the name of the reserved Boolean constant that is always false
-    * (useful to avoid messing with the keywords).
-    *
-    * @return the name (typically, $B$0)
-    */
-  override def falseConst: String = context.falseConst
-
-  /**
-    * Get the name of the reserved Boolean constant that is always false
-    * (useful to avoid messing with the keywords).
-    *
-    * @return the name (typically, $B$1)
-    */
-  override def trueConst: String = context.trueConst
 
   /**
     * Save the current context and push it on the stack for a later recovery with pop.

@@ -19,8 +19,8 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   override def apply(state: SymbState): SymbState = {
-    val falseConst = rewriter.solverContext.falseConst
-    val trueConst = rewriter.solverContext.trueConst
+    val falseConst = SolverContext.falseConst
+    val trueConst = SolverContext.trueConst
     val simplfier = new ConstSimplifier()
     simplfier.simplifyShallow(state.ex) match {
       case OperEx(TlaBoolOper.and, args @ _*) =>

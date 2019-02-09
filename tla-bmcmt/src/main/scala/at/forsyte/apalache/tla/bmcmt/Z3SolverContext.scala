@@ -54,8 +54,8 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
   private val constCache: mutable.Map[String, (Expr, CellT, Int)] =
     new mutable.HashMap[String, (Expr, CellT, Int)]
 
-  val falseConst: String = introBoolConst() // $B$0, for simplicity
-  val trueConst: String = introBoolConst() // $B$1, for simplicity
+  val falseConst: String = introBoolConst() // introduce $B$0
+  val trueConst: String = introBoolConst()  // introduce $B$1
   assertGroundExpr(NameEx(trueConst))
   assertGroundExpr(OperEx(TlaBoolOper.not, NameEx(falseConst)))
 
@@ -113,6 +113,18 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     }
   }
 
+  override def declareInPred(set: ArenaCell, elem: ArenaCell): Unit = {
+    val elemT = elem.cellType
+    val setT = set.cellType
+    val name = s"in_${elemT.signature}${elem}_${setT.signature}$set"
+    smtListener.onIntroSmtConst(name)
+    log(s";; declare edge predicate $name: Bool")
+    log(s"(declare-const $name Bool)")
+    nBoolConsts += 1
+    val const = z3context.mkConst(name, z3context.getBoolSort)
+    constCache += (name -> (const, BoolT(), level))
+  }
+
 
   /**
     * Check whether the current view of the SMT solver is consistent with arena.
@@ -137,10 +149,10 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
   def assertGroundExpr(ex: TlaEx): Unit = {
     smtListener.onSmtAssert(ex)
     log(s";; assert ${UTFPrinter.apply(ex)}")
-    if (false) {
-      // this optimization slows down model checking
+    if (!debug) {
       simplifier.simplify(ex) match {
         case OperEx(TlaBoolOper.and, args@_*) =>
+          // this optimization slows down model checking
           args foreach assertGroundExpr // break down into clauses
 
         case simple@_ =>
@@ -149,6 +161,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
           z3solver.add(z3expr.asInstanceOf[BoolExpr])
       }
     } else {
+      // preprocessing makes bugs disappear, turn it off in the debugging
       val z3expr = toExpr(ex)
       log(s"(assert ${z3expr.toString})")
       z3solver.add(z3expr.asInstanceOf[BoolExpr])
@@ -392,6 +405,8 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     }
   }
 
+  /*
+  // this is the old implementation that used uninterpreted functions
   private def getOrMkInPred(setType: CellT, elemType: CellT): FuncDecl = {
     val name = s"in_${elemType.signature}_${setType.signature}"
     val funDecl = funDecls.get(name)
@@ -405,6 +420,19 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
       funDecls += (name -> (newDecl, level))
       log(s"(declare-fun $name ($elemSort $setSort) Bool)") // log declaration
       newDecl
+    }
+  }
+  */
+
+  private def getInPred(setName: String, setT: CellT, elemName: String, elemT: CellT): Expr = {
+    val name = s"in_${elemT.signature}${elemName}_${setT.signature}$setName"
+
+    constCache.get(name) match {
+      case None =>
+        throw new IllegalStateException(s"Trying to use in($elemName, $setName) while $elemName is not in $setName arena")
+
+      case Some((const, _, _)) =>
+        const
     }
   }
 
@@ -450,7 +478,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
         z3context.mkNot(toExpr(OperEx(TlaOper.eq, lhs, rhs)).asInstanceOf[BoolExpr])
 
       case OperEx(TlaBoolOper.and, es@_*) =>
-        if (es.size < 50) {
+        if (es.size < 1000) {
           val newEs = es.map(e => toExpr(e).asInstanceOf[BoolExpr])
           z3context.mkAnd(newEs: _*)
         } else {
@@ -459,7 +487,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
         }
 
       case OperEx(TlaBoolOper.or, es@_*) =>
-        if (es.size < 50) {
+        if (es.size < 1000) {
           val mapped_es = es map toExpr
           // check the assertion before casting, to make debugging easier
           assert(mapped_es.forall(e => e.isInstanceOf[BoolExpr]))
@@ -490,33 +518,18 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
         val exZ3 = toExpr(e).asInstanceOf[BoolExpr]
         z3context.mkNot(exZ3)
 
-      case OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName)) =>
-        val elemEntry = constCache(elemName)
-        val setEntry = constCache(setName)
-        val inFun = getOrMkInPred(setEntry._2, elemEntry._2)
-        z3context.mkApp(inFun, elemEntry._1, setEntry._1)
-
-      case OperEx(TlaSetOper.in, arg@ValEx(TlaInt(_)), NameEx(setName)) =>
-        val setEntry = constCache(setName)
-        val inFun = getOrMkInPred(setEntry._2, IntT())
-        z3context.mkApp(inFun, toExpr(arg), setEntry._1)
-
-      case OperEx(TlaSetOper.in, arg@ValEx(TlaBool(_)), NameEx(setName)) =>
-        val setEntry = constCache(setName)
-        val inFun = getOrMkInPred(setEntry._2, BoolT())
-        z3context.mkApp(inFun, toExpr(arg), setEntry._1)
-
       case OperEx(TlaSetOper.notin, elem, set) =>
         z3context.mkNot(toExpr(OperEx(TlaSetOper.in, elem, set)).asInstanceOf[BoolExpr])
 
-      case OperEx(TlaFunOper.app, NameEx(funName), NameEx(argName)) =>
-        // apply the function associated with a cell
-        val arg = constCache(argName)._1
-        z3context.mkApp(getCellFun(funName), arg)
+      case OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName)) =>
+        val setEntry = constCache(setName)
+        val elemEntry = constCache(elemName)
+        getInPred(setName, setEntry._2, elemName, elemEntry._2)
 
-      case OperEx(TlaFunOper.app, NameEx(funName), arg) =>
-        // apply the function associated with a cell
-        z3context.mkApp(getCellFun(funName), toExpr(arg))
+      // the old implementation allowed us to do that, but the new one is encoding edges directly
+    case OperEx(TlaSetOper.in, ValEx(TlaInt(_)), NameEx(_))
+        | OperEx(TlaSetOper.in, ValEx(TlaBool(_)), NameEx(_)) =>
+        throw new InvalidTlaExException("Preprocessing introduced a literal inside tla.in: " + ex, ex)
 
       case _ =>
         throw new InvalidTlaExException("Unexpected TLA+ expression: " + ex, ex)

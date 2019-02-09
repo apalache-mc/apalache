@@ -97,9 +97,9 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
         // 'exists' over an empty set always returns false, while 'forall' returns true
         val constResult =
           if (isExists)
-            rewriter.solverContext.falseConst
+            SolverContext.falseConst
           else
-            rewriter.solverContext.trueConst
+            SolverContext.trueConst
 
         setState.setTheory(BoolTheory()).setRex(NameEx(constResult))
       } else {
@@ -149,7 +149,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
     val setCells = setState.arena.getHas(set)
     if (setCells.isEmpty) {
       // \E x \in {}... is FALSE
-      setState.setTheory(BoolTheory()).setRex(NameEx(rewriter.solverContext.falseConst))
+      setState.setTheory(BoolTheory()).setRex(NameEx(SolverContext.falseConst))
     } else {
       freeExistsInNonEmptySet(setState, boundVar, predEx, set, setCells)
     }

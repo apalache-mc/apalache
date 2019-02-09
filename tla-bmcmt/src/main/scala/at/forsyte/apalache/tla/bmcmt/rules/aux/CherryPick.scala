@@ -349,10 +349,10 @@ class CherryPick(rewriter: SymbStateRewriter) {
       }
 
       val whenIn = tla.or(toPick.zip(memberSets).zipWithIndex map (inWhenChosen _).tupled: _*)
-      // in(z_i, R) <=> (chosen = 1 /\ in(c_i, S_1) \/ (chosen = 2 /\ in(d_i, S_2)
-      solverAssert(tla.equiv(tla.in(picked.toNameEx, resultCell.toNameEx), whenIn))
       // add the cell to the arena
       nextState = nextState.setArena(nextState.arena.appendHas(resultCell, picked))
+      // in(z_i, R) <=> (chosen = 1 /\ in(c_i, S_1) \/ (chosen = 2 /\ in(d_i, S_2)
+      solverAssert(tla.equiv(tla.in(picked.toNameEx, resultCell.toNameEx), whenIn))
     }
 
     0.until(maxLen) foreach pickOneElement

@@ -47,7 +47,7 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         var arena = newState.arena.appendCell(recordT)
         val recordCell = arena.topCell
         // importantly, the record keys that are outside of ctorKeys should not belong to the domain!
-        val extraFields = recordT.fields.keySet.filter(k => !ctorKeys.contains(k))
+        val extraKeys = recordT.fields.keySet.filter(k => !ctorKeys.contains(k))
         def addExtra(map: Map[String, ArenaCell], key: String) = {
           // make sure that the key is cached, as it does not appear in the actual expression
           val (newArena, keyCell) = rewriter.strValueCache.getOrCreate(arena, key)
@@ -55,7 +55,7 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
           map + (key -> keyCell)
         }
         // map these extra keys to the respective cells
-        val extraKeyMap = extraFields.foldLeft(Map.empty[String, ArenaCell])(addExtra)
+        val extraKeyMap = extraKeys.foldLeft(Map.empty[String, ArenaCell])(addExtra)
 
 
         // Connect the value cells to the record. The edges come in the order of allKeys. If the actual record passed
@@ -75,7 +75,8 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         recordT.fields foreach Function.tupled(addField)
 
         // Create the domain cell. Note that the actual domain may have fewer keys than recordT.fields.keys
-        val (newArena, domain) = rewriter.recordDomainCache.getOrCreate(arena, SortedSet(ctorKeys :_*))
+        val (newArena, domain) =
+          rewriter.recordDomainCache.getOrCreate(arena, (SortedSet(ctorKeys :_*), extraKeys))
         arena = newArena
         arena = arena.setDom(recordCell, domain)
         // importantly, the record keys that are outside of ctorKeys should not belong to the domain!

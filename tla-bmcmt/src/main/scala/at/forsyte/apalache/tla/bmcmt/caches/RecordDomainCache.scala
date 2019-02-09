@@ -13,30 +13,43 @@ import scala.collection.immutable.SortedSet
   * @author Igor Konnov
   */
 class RecordDomainCache(solverContext: SolverContext, strValueCache: StrValueCache)
-  extends AbstractCache[Arena, SortedSet[String], ArenaCell] {
+  extends AbstractCache[Arena, (SortedSet[String], SortedSet[String]), ArenaCell] {
 
   /**
     * Create a set for a sorted set of record keys.
     *
-    * @param context  the context before creating a new value
-    * @param keySet a source value
+    * @param context           the context before creating a new value
+    * @param usedAndUnusedKeys two sets: the keys in the domain and the keys outside of the domain
     * @return a target value that is going to be cached and the new context
     */
-  override def create(context: Arena, keySet: SortedSet[String]): (Arena, ArenaCell) = {
+  override def create(context: Arena, usedAndUnusedKeys: (SortedSet[String], SortedSet[String])): (Arena, ArenaCell) = {
+    val usedKeys = usedAndUnusedKeys._1
+    val unusedKeys = usedAndUnusedKeys._2
+    val allKeys: SortedSet[String] = usedKeys.union(unusedKeys)
     var arena = context
+
     def strToCell(str: String): ArenaCell = {
       val (newArena, cell) = strValueCache.getOrCreate(arena, str)
       arena = newArena
       cell
     }
 
-    val cells = keySet.toList map strToCell
+    val allCells = allKeys.toList map strToCell
     // create the domain cell
     arena = arena.appendCell(FinSetT(ConstT()))
     val set = arena.topCell
-    arena = cells.foldLeft(arena) ((a, c) => a.appendHas(set, c))
-    // force that every element is in the set
-    solverContext.assertGroundExpr(tla.and(cells.map(tla.in(_, set)) :_*))
+    arena = arena.appendHas(set, allCells)
+    // force that every key in the usedKeys is in the set, whereas every key in the unusedKeys is outside of the set
+    for ((cell, key) <- allCells.zip(allKeys)) {
+      val cond =
+        if (usedKeys.contains(key)) {
+          tla.in(cell, set)
+        } else {
+          tla.not(tla.in(cell, set))
+        }
+
+      solverContext.assertGroundExpr(cond)
+    }
     (arena, set)
   }
 }

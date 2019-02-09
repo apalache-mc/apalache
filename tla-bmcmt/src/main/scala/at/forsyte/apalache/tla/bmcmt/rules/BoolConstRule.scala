@@ -26,14 +26,14 @@ class BoolConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
         if (state.theory == CellTheory()) {
           state.setRex(NameEx(state.arena.cellFalse().toString))
         } else {
-          state.setRex(NameEx(rewriter.solverContext.falseConst))
+          state.setRex(NameEx(SolverContext.falseConst))
         }
 
       case ValEx(TlaTrue) =>
         if (state.theory == CellTheory()) {
           state.setRex(NameEx(state.arena.cellTrue().toString))
         } else {
-          state.setRex(NameEx(rewriter.solverContext.trueConst))
+          state.setRex(NameEx(SolverContext.trueConst))
         }
 
       case ValEx(TlaBoolSet) =>

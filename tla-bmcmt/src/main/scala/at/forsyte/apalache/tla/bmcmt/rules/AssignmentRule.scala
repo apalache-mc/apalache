@@ -46,7 +46,7 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val rhsCell = nextState.arena.findCellByNameEx(nextState.ex)
         val finalState = nextState
           .setTheory(BoolTheory())
-          .setRex(NameEx(rewriter.solverContext.trueConst))         // just return TRUE
+          .setRex(NameEx(SolverContext.trueConst))         // just return TRUE
           .setBinding(nextState.binding + (name + "'" -> rhsCell))  // bind the cell to the name
         rewriter.coerce(finalState, state.theory)
 
@@ -59,14 +59,14 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
           if (setCell.cellType.isInstanceOf[FinSetT]
             && setState.arena.getHas(setCell).isEmpty) {
             // nothing to pick from an empty set, return false
-            setState.setTheory(BoolTheory()).setRex(NameEx(rewriter.solverContext.falseConst))
+            setState.setTheory(BoolTheory()).setRex(NameEx(SolverContext.falseConst))
           } else {
             // pick an arbitrary witness
             val pickState = pickRule.pick(setCell, setState)
             val pickedCell = pickState.arena.findCellByNameEx(pickState.ex)
             pickState
               .setTheory(BoolTheory())
-              .setRex(NameEx(rewriter.solverContext.trueConst))           // just return TRUE
+              .setRex(NameEx(SolverContext.trueConst))           // just return TRUE
               .setBinding(pickState.binding + (name + "'" -> pickedCell)) // bind the picked cell to the name
           }
 

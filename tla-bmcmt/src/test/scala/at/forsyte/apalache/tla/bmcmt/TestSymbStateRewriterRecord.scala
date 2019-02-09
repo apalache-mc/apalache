@@ -13,8 +13,9 @@ import scala.collection.immutable.{SortedMap, SortedSet, TreeMap}
 class TestSymbStateRewriterRecord extends RewriterBase {
   test("""RecordDomainCache: dom {"a", "b"} /= dom {"a", "b", "c"} ~~> $C$k""") {
     val rewriter = create()
-    val (newArena1, set1) = rewriter.recordDomainCache.create(arena, SortedSet("a", "b"))
-    val (newArena2, set2) = rewriter.recordDomainCache.create(newArena1, SortedSet("a", "b", "c"))
+    val (newArena1, set1) = rewriter.recordDomainCache.create(arena, (SortedSet("a", "b"), SortedSet[String]()))
+    val (newArena2, set2) =
+      rewriter.recordDomainCache.create(newArena1, (SortedSet("a", "b", "c"), SortedSet[String]()))
     val neq = tla.not(tla.eql(set1, set2))
     val state = new SymbState(neq, CellTheory(), newArena2, new Binding)
     assertTlaExAndRestore(rewriter, state)
@@ -36,14 +37,15 @@ class TestSymbStateRewriterRecord extends RewriterBase {
           case r @ RecordT(_) =>
             assert(r.fields == SortedMap("a" -> IntT(), "b" -> BoolT(), "c" -> ConstT()))
             val keys = SortedSet("a", "b", "c")
-            val (_, expectedDomain) = rewriter.recordDomainCache.getOrCreate(nextState.arena, keys)
+            val (_, expectedDomain) =
+              rewriter.recordDomainCache.getOrCreate(nextState.arena, (keys, SortedSet[String]()))
             val domain = nextState.arena.getDom(cell)
-            assert(rewriter.recordDomainCache.findKey(domain).contains(keys))
+            assert(rewriter.recordDomainCache.findKey(domain).contains((keys, SortedSet[String]())))
             assert(expectedDomain == domain)
 
             // also make sure that the domain equality works
             val (newArena, expectedDom) =
-              rewriter.recordDomainCache.getOrCreate(nextState.arena, SortedSet("a", "b", "c"))
+              rewriter.recordDomainCache.getOrCreate(nextState.arena, (SortedSet("a", "b", "c"), SortedSet[String]()))
             val eq = tla.eql(expectedDom.toNameEx, tla.dom(cell.toNameEx))
             assertTlaExAndRestore(rewriter, nextState.setArena(newArena).setRex(eq))
 

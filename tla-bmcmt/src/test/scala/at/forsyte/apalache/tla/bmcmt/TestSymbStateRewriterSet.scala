@@ -67,7 +67,7 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
       emptySetWithType(FinSetT(IntT())))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val nextState = create().rewriteUntilDone(state)
-    assert(NameEx(solverContext.falseConst) == nextState.ex)
+    assert(NameEx(SolverContext.falseConst) == nextState.ex)
   }
 
   test("""SE-SET-IN1: 3 \in {1, 3, 5} ~~> $B$k""") {
