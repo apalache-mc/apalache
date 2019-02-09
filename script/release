@@ -47,7 +47,7 @@ if [ "$overwrite" != "" ]; then
 fi
 
 # overwrite the build number
-BUILD=`git describe`
+BUILD=`git describe --tags`
 perl -pi -e 's/BUILD=""/BUILD="'$BUILD'"/' bin/apalache-mc
 
 ZIPF="apalache-${BUILD}.zip"
