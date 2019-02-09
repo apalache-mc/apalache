@@ -99,14 +99,14 @@ The syntax of type annotations is as follows:
   type annotations. For instance, ``{Int, BOOLEAN}`` would be immediately rejected.
   Hence, sets should contain the elements of the same type (there is some flexibility
   for records, see Section 1)
-  1. ``[S -> T]`` specifies the type of a function whose domain is of type ``S``,
-  and the co-domain is of type ``T``. Hence, a function should return the values
+  1. ``[T_1 -> T_2]`` specifies the type of a function whose arguments have type ``T_1``,
+  and the results are of type ``T_2``. Hence, a function should return the values
   of the same type.
   1. ``<<T_1, ..., T_k>>`` specifies the type of a _k_-element tuple whose
   elements have types ``T_1, ..., T_k`` respectively. Note that different fields
   of a tuple are allowed to have different types. In these sense, we differentiate them
   from the general functions.
-  1. ``[f_1 |-> T_1, ..., f_k |-> T_k]`` specifies the type of _k_-field record,
+  1. ``[f_1 |-> T_1, ..., f_k |-> T_k]`` specifies the type of a _k_-field record,
   whose field ``f_i`` is of the type ``T_i``. The types ``T_1, ..., T_k`` may differ. Again,
   that makes them different from the general functions.
   1. ``Seq(T)`` specifies the type of finite sequences, whose elements are of type ``T``.
