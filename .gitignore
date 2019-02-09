@@ -3,8 +3,6 @@
 out
 target
 .directory
-docs/*
-!docs/*.tex
 
 3rdparty/bin
 3rdparty/include
