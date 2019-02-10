@@ -95,11 +95,14 @@ class CherryPick(rewriter: SymbStateRewriter) {
       case t@FinSetT(_) =>
         pickSet(t, state, oracle, elems)
 
+      case t@SeqT(_) =>
+        pickSequence(t, state, oracle, elems)
+
       case t@FunT(FinSetT(_), _) =>
         pickFun(t, state, oracle, elems)
 
       case _ =>
-        throw new RewriterException("Cannot pick an element from a set of type: " + targetType)
+        throw new RewriterException("Do not know how pick an element from a set of type: " + targetType)
     }
   }
 
@@ -304,24 +307,21 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
     val maxLen = elemsOfMemberSets map (_.size) reduce ((i, j) => if (i > j) i else j)
     assert(maxLen != 0)
+    val maxPadded = elemsOfMemberSets.find(_.size == maxLen).get // existence is guaranteed by maxLen
 
-    // compute the maximum length
-    def padSeq(s: Seq[ArenaCell]): Seq[ArenaCell] = s match {
+    // pad a non-empty sequence to the given length, keep the empty sequence intact
+    def padNonEmptySeq(s: Seq[ArenaCell], len: Int): Seq[ArenaCell] = s match {
       // copy last as many times as needed
-      case allButLast :+ last => allButLast ++ Seq.fill(maxLen - allButLast.length)(last)
+      case allButLast :+ last => allButLast ++ Seq.fill(len - allButLast.length)(last)
       // the empty sequence is a special case
-      case Nil => Nil
+      case Nil => maxPadded
     }
 
-    val paddedOfMemberSets = elemsOfMemberSets map padSeq
-    val nonEmptyPadded = paddedOfMemberSets.find(_.nonEmpty).get // existence is guaranteed by minPosLen
-    // for each index i, create {c_i, ..., d_i}. FIXME: this is not optimal. Implement pick from a static set.
+    val paddedOfMemberSets = elemsOfMemberSets.map(padNonEmptySeq(_, maxLen))
+    // for each index i, pick from {c_i, ..., d_i}.
     def pickOneElement(i: Int): Unit = {
-      val toPick = paddedOfMemberSets map {
-        case Nil => nonEmptyPadded(i) // just use the ith element of the non-empty sequence
-        case s => s(i)
-      } // no empty sets here
-      nextState = pickByOracle(nextState, oracle, toPick)
+      val toPickFrom = paddedOfMemberSets map { _(i) }
+      nextState = pickByOracle(nextState, oracle, toPickFrom)
       val picked = nextState.asCell
 
       // this property is enforced by the oracle magic: chosen = 1 => z_i = c_i /\ chosen = 2 => z_i = d_i
@@ -338,7 +338,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
         }
       }
 
-      val whenIn = tla.or(toPick.zip(memberSets).zipWithIndex map (inWhenChosen _).tupled: _*)
+      val whenIn = tla.or(toPickFrom.zip(memberSets).zipWithIndex map (inWhenChosen _).tupled: _*)
       // add the cell to the arena
       nextState = nextState.setArena(nextState.arena.appendHas(resultCell, picked))
       // in(z_i, R) <=> (chosen = 1 /\ in(c_i, S_1) \/ (chosen = 2 /\ in(d_i, S_2)
@@ -348,6 +348,87 @@ class CherryPick(rewriter: SymbStateRewriter) {
     0.until(maxLen) foreach pickOneElement
 
     rewriter.solverContext.log(s"; } CHERRY-PICK $resultCell:$cellType")
+    nextState.setRex(resultCell)
+  }
+
+  /**
+    * Picks a sequence from a list of sequences
+    *
+    * @param cellType   a cell type to assign to the picked cell.
+    * @param state      a symbolic state
+    * @param oracle     a variable that stores which element (by index) should be picked, can be unrestricted
+    * @param memberSeqs a sequence of sequences of cellType
+    * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
+    */
+  def pickSequence(cellType: CellT, state: SymbState, oracle: TlaEx, memberSeqs: Seq[ArenaCell]): SymbState = {
+    if (memberSeqs.isEmpty) {
+      throw new RuntimeException("Picking a sequence from a statically empty set")
+    } else if (memberSeqs.length == 1) {
+      // one sequence, either empty, or not
+      state.setRex(memberSeqs.head)
+    } else if (memberSeqs.distinct.length == 1) {
+      // all sequences are actually the same cell
+      state.setRex(memberSeqs.head)
+    } else if (memberSeqs.forall(ms => state.arena.getHas(ms).size == 2)) {
+      // multiple sequences that are statically empty (note that the first two elements are start and end)
+      state.setRex(memberSeqs.head)
+    } else {
+      pickSequenceNonEmpty(cellType, state, oracle, memberSeqs)
+    }
+  }
+
+  // Pick from a set of sequence. There is a larger overlap with pickSetNonEmpty
+  private def pickSequenceNonEmpty(seqType: CellT,
+                              state: SymbState,
+                              oracle: TlaEx,
+                              memberSeqs: Seq[ArenaCell]): SymbState = {
+    def solverAssert(e: TlaEx): Unit = rewriter.solverContext.assertGroundExpr(e)
+
+    rewriter.solverContext.log(s"; CHERRY-PICK $seqType {")
+    var nextState = state
+    // introduce a fresh cell for the set
+    nextState = nextState.setArena(state.arena.appendCell(seqType))
+    val resultCell = nextState.arena.topCell
+
+    // get all the cells pointed by the elements of every member set, without changing their order!
+    val elemsOfMemberSeqs: Seq[Seq[ArenaCell]] = memberSeqs map (s => nextState.arena.getHas(s).toSeq)
+
+    // Here we are using the awesome linear encoding that uses interleaving.
+    // We give an explanation for two statically non-empty sequences, the static case should be handled differently.
+    // Assume S_1 = << c_1, ..., c_n >> and S_2 = << d_1, ..., d_n >> (pad if they have different lengths)
+    //
+    // We construct a new sequence R = << z_1, ..., z_n >> where z_i = FROM { c_i, d_i }
+    //
+    // As we are not tracking membership for sequences, no additional SMT constraints are needed
+
+    val maxLen = elemsOfMemberSeqs map (_.size) reduce ((i, j) => if (i > j) i else j)
+    assert(maxLen != 0)
+    val maxPadded = elemsOfMemberSeqs.find(_.size == maxLen).get // there must be one like this
+
+    def padNonEmptySeq(s: Seq[ArenaCell], len: Int): Seq[ArenaCell] = s match {
+      // copy the last element as many times as needed
+      case allButLast :+ last if allButLast.size >= 2 => // the first two elements are start and end
+        allButLast ++ Seq.fill(len - allButLast.length)(last)
+      // the empty sequence is a special case
+      case start :: end :: Nil => start +: end +: maxPadded.tail.tail // keep the start and end (should be 0 anyhow)
+      case _ => throw new IllegalStateException("A corrupted encoding of a sequence")
+    }
+
+    val paddedSeqElems = elemsOfMemberSeqs.map(padNonEmptySeq(_, maxLen))
+    // no empty sequences beyond this point
+    // for each index i, pick from {c_i, ..., d_i}.
+    def pickOneElement(i: Int): Unit = {
+      val toPickFrom = paddedSeqElems map { _(i) }
+      nextState = pickByOracle(nextState, oracle, toPickFrom)
+      val picked = nextState.asCell
+      // this property is enforced by the oracle magic: chosen = 1 => z_i = c_i /\ chosen = 2 => z_i = d_i
+      // add the cell to the arena
+      nextState = nextState.setArena(nextState.arena.appendHas(resultCell, picked))
+    }
+
+    0.until(maxLen) foreach pickOneElement
+
+    rewriter.solverContext.log(s"; } CHERRY-PICK $resultCell:$seqType")
     nextState.setRex(resultCell)
   }
 
