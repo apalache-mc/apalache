@@ -105,8 +105,9 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
   /**
     * Intoduce an integer oracle variable over 0..N, where the indices from 0 to N - 1 correspond to the set elements,
-    * whereas the index N corresponds to the default choice when the set is empty. Add the constraint that
-    * oracle = N iff the set is empty
+    * whereas the index N corresponds to the default choice when the set is empty. This method does not add any
+    * constraints one the contents of the set. Nor it defines the default value. It is up to the specific operator
+    * how it is done
     *
     * @param state
     * @param set
@@ -122,17 +123,6 @@ class CherryPick(rewriter: SymbStateRewriter) {
     val oracle = nextState.arena.topCell.toNameEx
     solverAssert(tla.ge(oracle, tla.int(0)))
     solverAssert(tla.le(oracle, tla.int(nelems)))
-//    // introduce a default value
-//    nextState = defaultValueFactory.makeUpValue(nextState, set)
-//    val defaultValue = nextState.asCell
-//    // when oracle = N, the set must be empty
-//    val setIsEmpty =
-//      if (nelems == 0) {
-//        tla.bool(true)
-//      } else {
-//        tla.and(elems.map(e => tla.notin(e.toNameEx, set.toNameEx)): _*)
-//      }
-//    solverAssert(tla.equiv(tla.eql(oracle, tla.int(nelems)), setIsEmpty))
     nextState.setRex(oracle).setTheory(CellTheory())
   }
 

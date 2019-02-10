@@ -537,6 +537,9 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
         case FunT(FinSetT(funArgT), funResT) if funArgT == argType =>
           funResT
 
+        case SeqT(resT) if argType == IntT() =>
+          resT
+
         case TupleT(elemTypes) if argType == IntT() =>
           // try to extract an integer from the expression
           arg match {

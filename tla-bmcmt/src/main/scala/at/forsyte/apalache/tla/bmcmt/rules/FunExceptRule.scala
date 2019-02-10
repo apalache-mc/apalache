@@ -2,8 +2,6 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
-import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
@@ -14,7 +12,6 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
   * @author Igor Konnov
   */
 class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val picker = new CherryPick(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -28,7 +25,6 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case OperEx(TlaFunOper.except, args@_*) =>
         val funEx = args.head
         val indexEs = args.tail.zipWithIndex.filter(_._2 % 2 == 0).map(_._1)
-        val areIndicesTuples = indexEs map isPackedInTuple
         // first, unpack singleton tuples in indices, see the comment to the method
         val unpackedIndices = unpackSingletonIndices(indexEs)
         val valEs = args.tail.zipWithIndex.filter(_._2 % 2 == 1).map(_._1)
@@ -63,6 +59,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val filteredRelation = nextState.asCell
         // Finally, add <<j_1, e_1>>, ..., <<j_k, e_k>> to filteredCell.
         // We are not using \cup here to avoid the equality constraints to be generated
+        // TODO: this is not an issue anymore, use filter
         val filteredCells = nextState.arena.getHas(filteredRelation)
         nextState = nextState.appendArenaCell(filteredRelation.cellType)
         val resultRelation = nextState.arena.topCell
@@ -89,33 +86,6 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
     }
-  }
-
-  // TODO: remove
-  private def findFunResultType(state: SymbState, funCell: ArenaCell,
-                                indexCells: Seq[ArenaCell], valueCells: Seq[ArenaCell],
-                                areIndicesTuples: Seq[Boolean]) = {
-    // make sure that the type finder is happy about the arguments
-    def mkArgType(i: Int) = {
-      val idx = i / 2
-      if (i % 2 == 0) {
-        if (areIndicesTuples(idx)) {
-          indexCells(idx).cellType // it's a tuple already
-        } else {
-          TupleT(Seq(indexCells(idx).cellType)) // repack into a singleton tuple
-        }
-      } else {
-        valueCells(idx).cellType
-      }
-    }
-
-    val indexValueTypes = 0.until(2 * indexCells.size) map mkArgType
-    val cdmElemType =
-      rewriter.typeFinder.compute(state.ex, funCell.cellType +: indexValueTypes: _*) match {
-        case FunT(FinSetT(_), resT) => resT
-        case t@_ => throw new RewriterException("Expected a function type, found: " + t)
-      }
-    cdmElemType
   }
 
   // This is an important step. As we receive expressions from SANY, every index argument to EXCEPT

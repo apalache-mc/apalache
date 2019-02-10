@@ -49,7 +49,7 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         .compute(state.ex, resultT, elemT, domainCell.cellType)
         .asInstanceOf[FunT]
     // unfold the set and map every potential element to a cell
-    // actually, instead of mapping every cell to e, we map it to <<x, e>>
+    // actually, instead of mapping every cell to e, we map it to <<x, e>> to construct the relation
     val pairEx = tla.tuple(tla.name(varName), mapEx)
 
     val (afterMapState: SymbState, relationCells: Seq[ArenaCell]) =
@@ -60,18 +60,18 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     nextState = nextState.appendArenaCell(funT)
     val funCell = nextState.arena.topCell
     nextState = nextState.appendArenaCell(FinSetT(TupleT(Seq(elemT, resultT))))
-    val relationCell = nextState.arena.topCell
-    val newArena = relationCells.foldLeft(nextState.arena) ((a, c) => a.appendHas(relationCell, c))
+    val relation = nextState.arena.topCell
+    val newArena = nextState.arena.appendHas(relation, relationCells)
     // we do not store the function domain anymore, as it is easy to get the domain and the relation out of sync
 //    nextState = nextState.setArena(newArena.setDom(funCell, domainCell))
     // For historical reasons, we are using cdm to store the relation, though it is not the co-domain.
-    nextState = nextState.setArena(newArena.setCdm(funCell, relationCell))
+    nextState = nextState.setArena(newArena.setCdm(funCell, relation))
     // require the relation to contain only those pairs whose argument actually belongs to the set
 
     // associate a value of the uninterpreted function with a cell
     def addCellCons(domElem: ArenaCell, relElem: ArenaCell): Unit = {
       val inDomain = tla.in(domElem, domainCell)
-      val inRelation = tla.in(relElem, relationCell)
+      val inRelation = tla.in(relElem, relation)
       val iff = tla.equiv(inDomain, inRelation)
       rewriter.solverContext.assertGroundExpr(iff)
     }

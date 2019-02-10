@@ -1,12 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.caches.EqCache
-import at.forsyte.apalache.tla.bmcmt.caches.EqCache.EqEntry
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
 
 /**
   * Generate equality constraints between cells and cache them to avoid redundant constraints.
@@ -141,6 +140,9 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
 
           case (TupleT(_), TupleT(_)) =>
             mkTupleEq(state, left, right)
+
+          case (SeqT(_), SeqT(_)) =>
+            mkSeqEq(state, left, right)
 
           case _ =>
             throw new CheckerException("Unexpected equality test")
@@ -426,5 +428,33 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
       // restore the original expression and theory
       rewriter.coerce(newState.setRex(state.ex), state.theory)
     }
+  }
+
+  private def mkSeqEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {
+    // XXXXabcXX = XabcXX
+    val leftCells = state.arena.getHas(left)
+    val rightCells = state.arena.getHas(right)
+    val (leftStart, leftEnd) = (leftCells.head, leftCells.tail.head)
+    val (rightStart, rightEnd) = (rightCells.head, rightCells.tail.head)
+    val (leftElems, rightElems) = (leftCells.tail.tail, rightCells.tail.tail)
+    var nextState = state
+    def eqPairwise(no: Int): TlaEx = {
+      // Use function application here. This may look expensive, but is there any better way?
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.appFun(left, tla.int(no))))
+      val le = nextState.asCell
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.appFun(right, tla.int(no))))
+      val re = nextState.asCell
+      nextState = cacheEqConstraints(nextState, (le, re) :: Nil)
+      safeEq(le, re)
+    }
+
+    val minLen = Math.min(leftElems.size, rightElems.size)
+    val elemsEq = tla.and(1 to minLen map eqPairwise :_*)
+    val sizesEq = tla.eql(tla.minus(leftEnd, leftStart), tla.minus(rightEnd, rightStart))
+    rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(left, right), tla.and(sizesEq, elemsEq)))
+    eqCache.put(left, right, EqCache.EqEntry())
+
+    // restore the original expression and theory
+    rewriter.coerce(nextState.setRex(state.ex), state.theory)
   }
 }

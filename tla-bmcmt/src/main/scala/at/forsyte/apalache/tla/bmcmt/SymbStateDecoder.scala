@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaStr}
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 import com.typesafe.scalalogging.LazyLogging
 
@@ -131,6 +131,17 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       val keysAndValues = domElems.reverse.foldLeft(List[TlaEx]()) (eachElem)
       OperEx(TlaFunOper.enum, keysAndValues :_*)
       */
+
+    case SeqT(_) =>
+      val startEndFun = arena.getHas(cell) map (decodeCellToTlaEx(arena, _))
+      startEndFun match {
+        case ValEx(TlaInt(start)) :: ValEx(TlaInt(end)) +: cells =>
+          def isIn(elem : TlaEx, no: Int): Boolean = no + 1 >= start && no + 1 <= end
+          val filtered = cells.zipWithIndex filter (isIn _).tupled map (_._1)
+          tla.tuple(filtered :_*) // return a tuple as it is the canonical representation of a sequence
+
+        case _ => throw new RewriterException("Corrupted sequence object: " + startEndFun)
+      }
 
     case r @ RecordT(_) =>
       def exToStr(ex: TlaEx): TlaStr = ex match {

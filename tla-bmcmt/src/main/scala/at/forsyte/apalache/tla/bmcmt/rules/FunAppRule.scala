@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory}
-import at.forsyte.apalache.tla.bmcmt.types.{CellT, FunT, RecordT, TupleT}
+import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
@@ -41,9 +41,10 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
             case RecordT(_) =>
               applyRecord(funState, funCell, funEx, argEx)
 
-            // TODO: a sequence
+            case SeqT(_) =>
+              applySeq(funState, funCell, argEx)
 
-            case _ => // the general case
+            case _ => // general functions
               applyFun(funState, funCell, argEx)
           }
         rewriter.coerce(finalState, state.theory)
@@ -90,6 +91,37 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     val tupleElem = elems(index)
     state.setTheory(CellTheory()).setRex(tupleElem)
+  }
+
+  private def applySeq(state: SymbState, seqCell: ArenaCell, argEx: TlaEx): SymbState = {
+    val solverAssert = rewriter.solverContext.assertGroundExpr _
+    var nextState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(argEx))
+    val argCell = nextState.asCell
+    val seqChildren = state.arena.getHas(seqCell)
+    val start = seqChildren.head // starts with 0
+    val end = seqChildren.tail.head // starts with 0
+    // Get the sequence of N elements. The range values[start : end] forms the actual sequence
+    val values = seqChildren.tail.tail
+
+    // create the oracle
+    val nelems = values.size
+    nextState = nextState.appendArenaCell(IntT())
+    val oracle = nextState.arena.topCell.toNameEx
+    solverAssert(tla.ge(oracle, tla.int(0)))
+    solverAssert(tla.le(oracle, tla.int(nelems)))
+    // pick an element to be the result
+    nextState = picker.pickByOracle(nextState, oracle, values)
+    val pickedResult = nextState.asCell
+    // now it is getting interesting:
+    // If 1 <= arg <= end - start, just require oracle = arg - 1 + start,
+    // Otherwise, set oracle to N
+    val inRange = tla.and(tla.le(tla.int(1), argCell),
+                          tla.le(argCell, tla.minus(end, start)))
+    val oracleEqArg = tla.eql(oracle, tla.plus(tla.minus(argCell, tla.int(1)), start))
+    val oracleIsN = tla.eql(oracle, tla.int(nelems))
+    solverAssert(tla.or(tla.and(inRange, oracleEqArg), tla.and(tla.not(inRange), oracleIsN)))
+
+    nextState.setRex(pickedResult).setTheory(CellTheory())
   }
 
   private def applyFun(state: SymbState, funCell: ArenaCell, argEx: TlaEx): SymbState = {
