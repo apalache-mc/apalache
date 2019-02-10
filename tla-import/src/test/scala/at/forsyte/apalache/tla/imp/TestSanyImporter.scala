@@ -1177,8 +1177,8 @@ class TestSanyImporter extends FunSuite {
     assert(2 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
-    // the root module contains its own declarations (none in this test) and the declarations by Naturals
-    assert(root.declarations.nonEmpty)
+    // we strip away the operator declarations by Naturals
+    assert(root.declarations.isEmpty)
     assert(List("Naturals") == root.imports)
     // check that Naturals were imported properly
     val naturals = modules("Naturals")
@@ -1269,6 +1269,9 @@ class TestSanyImporter extends FunSuite {
     def expectDecl(name: String, body: TlaEx) =
       findAndExpectTlaDecl(locationStore, root, name, List(), body)
 
+    // the definitions of the standard operators are filtered out
+    assert(13 == root.declarations.size)
+
     // the root module contains its own declarations and the declarations by Integers
     expectDecl("IntSet", ValEx(TlaIntSet))
     expectDecl("Plus", OperEx(TlaArithOper.plus, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
@@ -1313,7 +1316,9 @@ class TestSanyImporter extends FunSuite {
       .loadFromSource("reals", Source.fromString(text))
     assert(4 == modules.size) // Reals include Integers that include Naturals
     val root = modules(rootName)
-    // the root module contains its own declarations and the declarations by Integers
+    // the definitions of the standard operators are filtered out
+    assert(15 == root.declarations.size)
+
     def expectDecl(name: String, body: TlaEx) =
       findAndExpectTlaDecl(locationStore, root, name, List(), body)
 
@@ -1363,6 +1368,9 @@ class TestSanyImporter extends FunSuite {
     def expectDecl(name: String, body: TlaEx) =
       findAndExpectTlaDecl(locationStore, root, name, List(), body)
 
+    // the definitions of the standard operators are filtered out
+    assert(11 == root.declarations.size)
+
     expectDecl("Empty", tla.tuple())
     expectDecl("Three", tla.tuple(tla.int(1), tla.int(2), tla.int(3)))
     expectDecl("ASeq", tla.seqSet(tla.enumSet(tla.int(1), tla.int(2))))
@@ -1402,6 +1410,9 @@ class TestSanyImporter extends FunSuite {
     val root = modules(rootName)
     def expectDecl(name: String, body: TlaEx) =
       findAndExpectTlaDecl(locationStore, root, name, List(), body)
+
+    // the definitions of the standard operators are filtered out
+    assert(2 == root.declarations.size)
 
     // the root module contains its own declarations and the declarations by FiniteSets
     expectDecl("IsFinSet",
@@ -1444,6 +1455,9 @@ class TestSanyImporter extends FunSuite {
     val root = modules(rootName)
     def expectDecl(name: String, body: TlaEx) =
       findAndExpectTlaDecl(locationStore, root, name, List(), body)
+
+    // the definitions of the standard operators are filtered out
+    assert(16 == root.declarations.size)
 
     expectDecl("APrint",
       OperEx(TlcOper.print, tla.str("TLC Print"), tla.bool(true)))
