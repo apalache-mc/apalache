@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 
@@ -40,7 +40,8 @@ class ConstSimplifier {
         }
 
       // do not go in tla.in and tla.notin, as it breaks down our SMT encoding
-      case OperEx(TlaSetOper.in, _*) | OperEx(TlaSetOper.notin, _*) => ex
+      // same for type annotations, if the simplifier introduces new expressions, type annotations may be broken
+      case OperEx(TlaSetOper.in, _*) | OperEx(TlaSetOper.notin, _*) | OperEx(BmcOper.withType, _*) => ex
 
       case OperEx(oper, args @ _*) =>
         simplifyShallow(OperEx(oper, args map rewriteDeep :_*))
@@ -63,7 +64,7 @@ class ConstSimplifier {
       }
 
     // do not go in tla.in and tla.notin, as it breaks down our SMT encoding
-    case OperEx(TlaSetOper.in, _*) | OperEx(TlaSetOper.notin, _*) => ex
+    case OperEx(TlaSetOper.in, _*) | OperEx(TlaSetOper.notin, _*) | OperEx(BmcOper.withType, _*) => ex
 
     // integer operations
     case OperEx(TlaArithOper.plus, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>

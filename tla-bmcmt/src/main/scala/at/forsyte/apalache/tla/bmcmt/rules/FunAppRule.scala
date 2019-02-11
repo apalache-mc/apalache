@@ -31,7 +31,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case OperEx(TlaFunOper.app, funEx, argEx) =>
         // SE-FUN-APP1
         val funState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(funEx))
-        val funCell = funState.arena.findCellByNameEx(funState.ex)
+        val funCell = funState.asCell
 
         val finalState =
           funCell.cellType match {
@@ -81,7 +81,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case ValEx(TlaInt(i)) => i.toInt - 1
 
       case _ =>
-        throw new RewriterException("Accessing a tuple with a non-constant index: " + argEx)
+        throw new RewriterException(s"Accessing a tuple $funEx with a non-constant index $argEx")
     }
 
     val elems = state.arena.getHas(tupleCell)
