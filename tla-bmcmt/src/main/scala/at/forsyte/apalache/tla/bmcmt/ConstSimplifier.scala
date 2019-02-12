@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
@@ -151,6 +152,20 @@ class ConstSimplifier {
         left
       } else {
         OperEx(TlaBoolOper.not, left)
+      }
+
+      // many ite expressions can be simplified like this
+    case OperEx(TlaControlOper.ifThenElse, pred, thenEx, _) if isTrueConst(pred) =>
+      thenEx
+
+    case OperEx(TlaControlOper.ifThenElse, pred, _, elseEx) if isFalseConst(pred) =>
+      elseEx
+
+    case ite @ OperEx(TlaControlOper.ifThenElse, _, thenEx, elseEx) =>
+      if (thenEx != elseEx) {
+        ite
+      } else {
+        thenEx
       }
 
     // default
