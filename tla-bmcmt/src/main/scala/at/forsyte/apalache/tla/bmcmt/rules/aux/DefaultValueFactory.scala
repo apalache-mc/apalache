@@ -81,6 +81,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         val start = arena.topCell
         arena = arena.appendCell(IntT()) // end
         val end = arena.topCell
+        arena = arena.appendHas(seq, start :: end :: Nil)
         for (cell <- Seq(start, end)) {
           rewriter.solverContext.assertGroundExpr(tla.eql(cell.toNameEx, tla.int(0)))
         }
