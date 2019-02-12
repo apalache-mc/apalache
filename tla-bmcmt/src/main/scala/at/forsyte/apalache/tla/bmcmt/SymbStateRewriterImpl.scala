@@ -264,6 +264,10 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     key(OperEx(TlcOper.printT, tla.str("msg")))
       -> List(new TlcRule(this)),
     key(OperEx(TlcOper.assert, tla.bool(true), tla.str("msg")))
+      -> List(new TlcRule(this)),
+    key(OperEx(TlcOper.colonGreater, tla.int(1), tla.int(2))) // :>
+      -> List(new TlcRule(this)),
+    key(OperEx(TlcOper.atat, NameEx("fun"), NameEx("pair")))  // @@
       -> List(new TlcRule(this))
   ) ///// ADD YOUR RULES ABOVE
 

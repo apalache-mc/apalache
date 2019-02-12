@@ -832,6 +832,27 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
       expectType(ConstT(), msg, msgType)
       BoolT()
 
+    case ex @ OperEx(TlcOper.colonGreater, _, _) =>
+      TupleT(argTypes) // a :> b is simply <<a, b>> in our type system
+
+    case ex @ OperEx(TlcOper.atat, _, _) =>
+      argTypes.head match {
+        case funT @ FunT(FinSetT(argT), resT) =>
+          argTypes.tail.head match {
+            case TupleT(Seq(at, rt)) =>
+              expectEqualTypes(ex, argT, at)
+              expectEqualTypes(ex, resT, rt)
+              funT
+
+            case tt @ _ =>
+              expectType(TupleT(Seq(argT, resT)), ex, tt)
+              funT
+          }
+
+        case _ =>
+          errorUnexpected(ex, TlcOper.atat.name, argTypes)
+      }
+
     case ex @ OperEx(BmcOper.withType, _*) =>
       throw new IllegalStateException("The type annotation must have been saved by inferAndSave: " + ex)
   }

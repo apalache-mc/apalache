@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaFunOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.plugins.Identifier
 import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values.TlaInt
@@ -226,6 +226,25 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
       case _ =>
         fail("Unexpected rewriting result")
     }
+  }
+
+  // Raft is directly using f @@ e :> r to construct a function g such as:
+  // DOMAIN g = {e} \cup DOMAIN f and g[e] = r and g[a] = f[a] for a \in DOMAIN f
+  // It is trivial to implement this extension with our encoding
+  test("""SE-FUN-AT-AT: [x \in {1, 2} |-> x] @@ 3 :> 4""") {
+    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
+    val set = tla.enumSet(tla.int(1), tla.int(2))
+    val mapping = NameEx("x")
+    val fun = tla.funDef(mapping, tla.name("x"), set)
+    val extFun = OperEx(TlcOper.atat, fun, OperEx(TlcOper.colonGreater, tla.int(3), tla.int(4)))
+
+    val state = new SymbState(extFun, CellTheory(), arena, new Binding)
+    val newFun = state.ex
+    val rewriter = create()
+    val extState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    assertTlaExAndRestore(rewriter, extState.setRex(tla.eql(tla.int(4), tla.appFun(newFun, tla.int(3)))))
   }
 
   test("""SE-FUN-APP[1-3]: [x \in {3} |-> {1, x}][3] ~~> $C$k""") {
