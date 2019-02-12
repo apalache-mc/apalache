@@ -6,6 +6,6 @@ filename;init;inv;length;next;search;options
 /home/kukovec/Forsyte/tladecision/oopsla-experiments/mis/mis.tla;;;;;;
 /home/kukovec/Forsyte/tladecision/oopsla-experiments/paxos/Paxos.tla;;;;;;
 /home/kukovec/Forsyte/tladecision/oopsla-experiments/pr/pr.tla;;;;;;
-/home/kukovec/Forsyte/tladecision/oopsla-experiments/queens/Queens.tla;PlaceQueen;;;;;
+/home/kukovec/Forsyte/tladecision/oopsla-experiments/queens/Queens.tla;;;;PlaceQueen;;
 /home/kukovec/Forsyte/tladecision/oopsla-experiments/raft/raft.tla;;;;;;
 /home/kukovec/Forsyte/tladecision/oopsla-experiments/two-phase/TwoPhase.tla;;;;;;

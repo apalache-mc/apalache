@@ -3,7 +3,7 @@
 set -e 
 
 TLC_HOME_FILE=tlchome.conf
-timer=/usr/bin/time
+timer="timeout 30s /usr/bin/time"
 timerFlags=--verbose
 APALACHE_DIR=$(dirname $(dirname "$(readlink -f "$0")"))    
 CMD="$APALACHE_DIR/bin/apalache-mc check" 
