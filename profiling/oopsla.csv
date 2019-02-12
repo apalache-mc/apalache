@@ -1,0 +1,11 @@
+filename;init;inv;length;next;search;options
+/home/kukovec/Forsyte/tladecision/oopsla-experiments/ast/ast.tla;;;;;;
+/home/kukovec/Forsyte/tladecision/oopsla-experiments/chang-roberts/ChangRoberts.tla;;;;;;
+/home/kukovec/Forsyte/tladecision/oopsla-experiments/disk-paxos/DiskSynod.tla;;;;;;
+/home/kukovec/Forsyte/tladecision/oopsla-experiments/ewd840/EWD840.tla;;;;;;
+/home/kukovec/Forsyte/tladecision/oopsla-experiments/mis/mis.tla;;;;;;
+/home/kukovec/Forsyte/tladecision/oopsla-experiments/paxos/Paxos.tla;;;;;;
+/home/kukovec/Forsyte/tladecision/oopsla-experiments/pr/pr.tla;;;;;;
+/home/kukovec/Forsyte/tladecision/oopsla-experiments/queens/Queens.tla;PlaceQueen;;;;;
+/home/kukovec/Forsyte/tladecision/oopsla-experiments/raft/raft.tla;;;;;;
+/home/kukovec/Forsyte/tladecision/oopsla-experiments/two-phase/TwoPhase.tla;;;;;;
