@@ -5,7 +5,7 @@ import java.time.temporal.ChronoUnit
 
 import at.forsyte.apalache.infra.PassOptionException
 import at.forsyte.apalache.infra.passes.{PassChainExecutor, TlaModuleMixin}
-import at.forsyte.apalache.tla.bmcmt.InternalCheckerError
+import at.forsyte.apalache.tla.bmcmt.{CheckerException, InternalCheckerError}
 import at.forsyte.apalache.tla.bmcmt.passes.CheckerModule
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.tooling.Version
@@ -20,11 +20,13 @@ import org.backuity.clist.Cli
   * @author Igor Konnov
   */
 object Tool extends App with LazyLogging {
+  private lazy val ISSUES_LINK: String = "[https://github.com/konnov/apalache/issues]"
+
   override def main(args: Array[String]): Unit = {
     Console.println("# APALACHE %s".format(Version.version))
     Console.println("#")
     Console.println("# WARNING: This tool is in its early development stage.")
-    Console.println("#          Please report bugs at: https://github.com/konnov/apalache/issues")
+    Console.println("#          Please report bugs at: " + ISSUES_LINK)
     Console.println("")
     val startTime = LocalDateTime.now()
     val parseCmd = new ParseCmd
@@ -99,7 +101,7 @@ object Tool extends App with LazyLogging {
     }
   }
 
-  private def handleExceptions(fun: (Unit) => Unit): Unit = {
+  private def handleExceptions(fun: Unit => Unit): Unit = {
     try {
       fun()
     } catch {
@@ -107,10 +109,13 @@ object Tool extends App with LazyLogging {
         logger.error(e.getMessage)
 
       case e: InternalCheckerError =>
-        logger.error("The tool has detected an internal bug in itself. REPORT IT.", e)
+        logger.error("There is a bug in the tool, which should be fixed. REPORT IT: " + ISSUES_LINK, e)
+
+      case e: CheckerException =>
+        logger.error("The tool has failed around unknown location. REPORT IT: " + ISSUES_LINK, e)
 
       case e: Throwable =>
-        logger.error("This should not have happened, but it did. REPORT A BUG.", e)
+        logger.error("This should not have happened, but it did. REPORT IT: " + ISSUES_LINK, e)
     }
   }
 }

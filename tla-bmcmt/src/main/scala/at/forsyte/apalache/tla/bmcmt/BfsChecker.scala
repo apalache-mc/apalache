@@ -60,22 +60,37 @@ class BfsChecker(typeFinder: TypeFinder[CellT],
       try {
         var state = makeOneStep(0, dummyState, checkerInput.initTransitions)
         shiftTypes() // for each x', assign type(x) to be type(x'), forget x'
-        //      state = checkInvariant(0, state)
         for (i <- 1 to stepsBound) {
           // checking for deadlocks is not so easy in our encoding
           //        checkForDeadlocks(i, state, nextStates)
           state = makeOneStep(i, state, checkerInput.nextTransitions)
           shiftTypes() // for each x', assign type(x) to be type(x'), forget x'
-          //        state = checkInvariant(i, state)
         }
         Outcome.NoError
       } catch {
+        case err: CheckerException =>
+          // try to get any info about the problematic source location
+          printRewriterSourceLoc()
+          throw err
+
         case ce: CancelSearchException =>
           ce.outcome
       }
     // flush the logs
     rewriter.dispose()
     outcome
+  }
+
+  private def printRewriterSourceLoc(): Unit = {
+    def getSourceLocation(ex: TlaEx) = sourceStore.find(ex.ID)
+    rewriter.getRewritingStack().find(getSourceLocation(_).isDefined) match {
+      case None =>
+        logger.error("Unable find the source of the problematic expression")
+
+      case Some(ex) =>
+        val loc = getSourceLocation(ex).get
+        logger.error(s"The problem occurs around the source location $loc")
+    }
   }
 
   private def makeOneStep(stepNo: Int, startingState: SymbState, transitions: List[TlaEx]): SymbState = {
