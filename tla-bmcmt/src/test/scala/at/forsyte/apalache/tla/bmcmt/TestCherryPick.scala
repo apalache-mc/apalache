@@ -117,12 +117,12 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
       state.asCell
     }
 
-    val tuples = Seq(mkSeq(1, 2), mkSeq(3, 4))
-    state = new CherryPick(rewriter).pickTuple(TupleT(Seq(IntT(), IntT())), state, oracle, tuples)
+    val seqs = Seq(mkSeq(1, 2), mkSeq(3, 4))
+    state = new CherryPick(rewriter).pickSequence(SeqT(IntT()), state, oracle, seqs)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, tuples(0).toNameEx)
-    assertEqWhenChosen(rewriter, state, oracle, 1, tuples(1).toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 0, seqs(0).toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 1, seqs(1).toNameEx)
   }
 
   test("""CHERRY-PICK {[a |-> 1, b |-> 2], [a |-> 3, b |-> 4]} ~~> $B$k""") {
