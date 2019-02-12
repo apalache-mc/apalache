@@ -28,6 +28,9 @@ class CheckCmd extends Command(name = "check",
   var length: Int =
     opt[Int](name = "length", default = 10,
       description = "the bound on the computation length, default: 10")
+  var filter: String =
+    opt[String](name = "filter", default = "",
+      description = "A sequence of regular expressions over transitions that filter transitions at every step, e.g., (0|1),(1|2),4,5")
   var checkRuntime: Boolean =
     opt[Boolean](name = "checkRuntime", default = false,
       description = "check for runtime errors, e.g., applying f[x] when x is outside of f's domain, default: false")
