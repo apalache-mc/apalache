@@ -183,7 +183,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
   }
 
 
-  test("""SE-SEQ-EQ: <<4, 5>> = SubSeq(<<3, 4, 5, 6>>, 2, 4)""") {
+  test("""SE-SEQ-EQ: <<4, 5>> = SubSeq(<<3, 4, 5, 6>>, 2, 3)""") {
     val tuple3456 = TlaFunOper.mkTuple(3.to(6) map tla.int :_*)
     val annot3456 = tla.withType(tuple3456, AnnotationParser.toTla(SeqT(IntT())))
     val subseqEx = tla.subseq(annot3456, tla.int(2), tla.int(3))
@@ -201,7 +201,22 @@ class TestSymbStateRewriterSequence extends RewriterBase {
       nextState.setRex(tla.eql(tla.bool(true), nextState.ex)))
   }
 
-  // TODO: pick
-  // TODO: append
+  test("""SE-SEQ-DOMAIN: DOMAIN SubSeq(<<3, 4, 5, 6>>, 2, 3) = {2, 3}""") {
+    val tuple3456 = TlaFunOper.mkTuple(3.to(6) map tla.int :_*)
+    val annot3456 = tla.withType(tuple3456, AnnotationParser.toTla(SeqT(IntT())))
+    val subseqEx = tla.subseq(annot3456, tla.int(2), tla.int(3))
+    val domEx = tla.dom(subseqEx)
+
+    val state = new SymbState(domEx, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    assertTlaExAndRestore(rewriter,
+      nextState.setRex(tla.eql(tla.enumSet(tla.int(2), tla.int(3)), nextState.ex)))
+  }
+
+  // for PICK see TestCherryPick
+
+  // TODO: except
   // TODO: concat \o
 }
