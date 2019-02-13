@@ -2,9 +2,9 @@
 
 set -e 
 
+TIMEOUT=2h
 TLC_HOME_FILE=tlchome.conf
-timer="timeout 30s /usr/bin/time"
-timerFlags=--verbose
+timer="timeout $TIMEOUT /usr/bin/time --verbose"
 APALACHE_DIR=$(dirname $(dirname "$(readlink -f "$0")"))    
 CMD="$APALACHE_DIR/bin/apalache-mc check" 
 
@@ -17,7 +17,7 @@ if [ -f $TLC_HOME_FILE ]; then
     if [ -f $FILE ] && [ -d $FOLDER ]; then
    
       echo "Testing $FILE"
-      $timer $timerFlags -o $FOLDER/profile_apalache_$(basename $FILE).txt $CMD ${@:3} $FILE > $FOLDER/log_apalache_$(basename $FILE).txt
+      $timer -o $FOLDER/profile_apalache_$(basename $FILE).txt $CMD ${@:3} $FILE > $FOLDER/log_apalache_$(basename $FILE).txt
     
     else
       echo "$FILE or $FOLDER does not exist"
