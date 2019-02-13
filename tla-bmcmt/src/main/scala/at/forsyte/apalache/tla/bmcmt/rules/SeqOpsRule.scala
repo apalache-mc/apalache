@@ -23,6 +23,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case OperEx(TlaSeqOper.subseq, _, _, _) => true
       case OperEx(TlaSeqOper.len, _) => true
       case OperEx(TlaSeqOper.append, _, _) => true
+      case OperEx(TlaSeqOper.concat, _, _) => true
       case _ => false
     }
   }
@@ -43,6 +44,9 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
       case OperEx(TlaSeqOper.append, seq, newElem) =>
         translateAppend(state, seq, newElem)
+
+      case OperEx(TlaSeqOper.concat, seq, otherSeq) =>
+        throw new NotImplementedError("Sequence concatenation is rarely used. If you need it, write a feature request.")
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))

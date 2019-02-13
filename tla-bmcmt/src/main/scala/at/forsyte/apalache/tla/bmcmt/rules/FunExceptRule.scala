@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
+import at.forsyte.apalache.tla.bmcmt.types.{CellT, FunT}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
@@ -34,6 +35,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val (groundState: SymbState, groundArgs: Seq[TlaEx]) =
           rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), funEx +: (unpackedIndices ++ valEs))
         val funCell = groundState.arena.findCellByNameEx(groundArgs.head)
+        checkType(funCell.cellType)
         val indexCells = groundArgs.slice(1, 1 + unpackedIndices.size)
           .map(groundState.arena.findCellByNameEx)
         val valueCells = groundArgs
@@ -111,4 +113,10 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     case _ => false
   }
 
+  private def checkType(cellType: CellT): Unit = {
+    cellType match {
+      case FunT(_, _) => () // o.k.
+      case _ => throw new NotImplementedError(s"EXCEPT is not implemented for $cellType. Write a feature request.")
+    }
+  }
 }
