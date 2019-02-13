@@ -200,7 +200,7 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case res @ NameEx(name) =>
-        assert(IntTheory().hasConst(name))
+        assert(CellTheory().hasConst(name))
         rewriter.push()
         solverContext.assertGroundExpr(tla.eql(tla.int(2), res))
         assert(solverContext.sat())
