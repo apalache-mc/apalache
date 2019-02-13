@@ -50,8 +50,8 @@ class SimpleSkolemizationPassImpl @Inject()(val options: PassOptions,
     // Rename bound variables, so each of them is unique. This is required by TrivialTypeFinder.
     // Hint by Markus Kuppe: sort init and next to get a stable ordering between the runs.
     // The most stable way is to sort them by their string representation.
-    val initRenamed = spec.initTransitions.map(renaming.renameBindingsUnique).sorted(StringOrdering)
-    val nextRenamed = spec.nextTransitions.map(renaming.renameBindingsUnique).sorted(StringOrdering)
+    val initRenamed = spec.initTransitions.sorted(StringOrdering).map(renaming.renameBindingsUnique)
+    val nextRenamed = spec.nextTransitions.sorted(StringOrdering).map(renaming.renameBindingsUnique)
     def renameIfDefined(ex: Option[TlaEx]): Option[TlaEx] = ex match {
       case Some(ni) => Some(renaming.renameBindingsUnique(ni))
       case None => None
