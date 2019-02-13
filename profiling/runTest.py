@@ -5,7 +5,7 @@ import csv
 
 dir = os.path.realpath( os.path.dirname(__file__) )
 
-print(dir)
+# print(dir)
 
 parser = argparse.ArgumentParser(description="Runs Apalache tests.")
 parser.add_argument("file", type=str, help="CSV file")
@@ -24,8 +24,8 @@ pairs = map( lambda x: (f"--{x}",x), ["init", "inv", "length", "next", "search"]
 
 with open( args.file, "r" ) as csvFile:
   reader = csv.DictReader(csvFile, delimiter=";")
-  for row in reader:
+  for (rownum,row) in enumerate(reader):
     fileArgs = map( lambda x: ifArg(x[0],row[x[1]]), pairs )
-    cmd = f"{dir}/runTest.sh {args.folder} {row['filename']} {' '.join(fileArgs)} {row['options']}"
-    print(cmd)
+    cmd = f"{dir}/runTest.sh {args.folder} {rownum} {row['filename']} {' '.join(fileArgs)} {row['options']}"
+    # print(cmd)
     os.system( cmd )    
