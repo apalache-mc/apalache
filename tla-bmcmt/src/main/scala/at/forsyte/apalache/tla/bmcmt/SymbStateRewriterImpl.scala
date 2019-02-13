@@ -251,6 +251,8 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
       -> List(new SeqOpsRule(this)),
     key(tla.append(tla.tuple(tla.name("x")), tla.int(10)))
       -> List(new SeqOpsRule(this)),
+    key(tla.append(tla.name("Seq1"), tla.name("Seq2")))
+      -> List(new SeqOpsRule(this)),
 
     // misc
     key(OperEx(TlaOper.label, tla.str("lab"), tla.str("x")))
