@@ -352,7 +352,7 @@ package object types {
       *
       * @return a short signature that uniquely characterizes this type up to unification
       */
-    override val signature: String = s"Q_$res"
+    override val signature: String = s"Q_${res.signature}"
 
     override val toString: String = s"Seq[$res]"
   }

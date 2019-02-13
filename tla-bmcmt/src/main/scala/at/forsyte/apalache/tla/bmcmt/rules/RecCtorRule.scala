@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.DefaultValueFactory
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, ConstT, RecordT}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
@@ -22,6 +23,8 @@ import scala.collection.immutable.SortedSet
   * @author Igor Konnov
   */
 class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
+  private val defaultValueFactory = new DefaultValueFactory(rewriter)
+
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaFunOper.enum, _*) => true
@@ -57,35 +60,37 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // map these extra keys to the respective cells
         val extraKeyMap = extraKeys.foldLeft(Map.empty[String, ArenaCell])(addExtra)
 
-
+        var nextState = newState.setArena(arena)
         // Connect the value cells to the record. The edges come in the order of allKeys. If the actual record passed
-        // in the constructor does not contain a key, we add a completely unrestricted cell of the required type.
+        // in the constructor does not contain a key, we add a default value of the required type.
+        // It is important to add default values to preserve the structure of the cells, e.g.,
+        // empty sequences require two cells: start and end.
         def addField(key: String, tp: CellT): Unit = {
           val valueCell =
             if (ctorKeys.contains(key)) {
               valueCells(ctorKeys.indexOf(key)) // get the cell associated with the value
             } else {
-              arena = arena.appendCell(tp) // introduce a new unrestricted cell, which works as a gap
-              arena.topCell
+              // produce a default value
+              nextState = defaultValueFactory.makeUpValue(nextState, tp)
+              nextState.asCell
             }
           // link this cell to the record
-          arena = arena.appendHas(recordCell, valueCell)
+          nextState = nextState.setArena(nextState.arena.appendHas(recordCell, valueCell))
         }
 
         recordT.fields foreach Function.tupled(addField)
 
         // Create the domain cell. Note that the actual domain may have fewer keys than recordT.fields.keys
         val (newArena, domain) =
-          rewriter.recordDomainCache.getOrCreate(arena, (SortedSet(ctorKeys :_*), extraKeys))
-        arena = newArena
-        arena = arena.setDom(recordCell, domain)
+          rewriter.recordDomainCache.getOrCreate(nextState.arena, (SortedSet(ctorKeys :_*), extraKeys))
+        nextState = nextState.setArena(newArena.setDom(recordCell, domain))
         // importantly, the record keys that are outside of ctorKeys should not belong to the domain!
         if (extraKeyMap.nonEmpty) {
           val extraOutsideOfDomain = extraKeyMap.values.map(f => tla.notin(f.toNameEx, domain.toNameEx))
           rewriter.solverContext.assertGroundExpr(tla.and(extraOutsideOfDomain.toSeq :_*))
         }
 
-        val finalState = newState.setArena(arena).setRex(recordCell.toNameEx)
+        val finalState = nextState.setRex(recordCell.toNameEx)
         rewriter.coerce(finalState, state.theory)
 
       case _ =>

@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.assignments.passes.SpecWithTransitionsMixin
 import at.forsyte.apalache.tla.bmcmt.CheckerException
 import at.forsyte.apalache.tla.bmcmt.analyses.{FreeExistentialsStoreImpl, SimpleSkolemization}
 import at.forsyte.apalache.tla.lir.process.Renaming
-import at.forsyte.apalache.tla.lir.{IdOrdering, TlaEx}
+import at.forsyte.apalache.tla.lir.{IdOrdering, Identifiable, TlaEx}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -33,6 +33,10 @@ class SimpleSkolemizationPassImpl @Inject()(val options: PassOptions,
     */
   override def name: String = "SimpleSkolemization"
 
+  object StringOrdering extends Ordering[Object] {
+    override def compare(x: Object, y: Object): Int = x.toString compare y.toString
+  }
+
   /**
     * Run the pass.
     *
@@ -43,10 +47,11 @@ class SimpleSkolemizationPassImpl @Inject()(val options: PassOptions,
       throw new CheckerException(s"The input of $name pass is not initialized")
     }
     val spec = specWithTransitions.get
-    // rename bound variables, so each of them is unique. This is required by TrivialTypeFinder.
-    // hint by Markus Kuppe: sort init and next to get a stable ordering between the runs
-    val initRenamed = spec.initTransitions.map(renaming.renameBindingsUnique).sorted(IdOrdering)
-    val nextRenamed = spec.nextTransitions.map(renaming.renameBindingsUnique).sorted(IdOrdering)
+    // Rename bound variables, so each of them is unique. This is required by TrivialTypeFinder.
+    // Hint by Markus Kuppe: sort init and next to get a stable ordering between the runs.
+    // The most stable way is to sort them by their string representation.
+    val initRenamed = spec.initTransitions.map(renaming.renameBindingsUnique).sorted(StringOrdering)
+    val nextRenamed = spec.nextTransitions.map(renaming.renameBindingsUnique).sorted(StringOrdering)
     def renameIfDefined(ex: Option[TlaEx]): Option[TlaEx] = ex match {
       case Some(ni) => Some(renaming.renameBindingsUnique(ni))
       case None => None
