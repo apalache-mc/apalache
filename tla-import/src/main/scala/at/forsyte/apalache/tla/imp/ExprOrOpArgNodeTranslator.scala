@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.imp
 
+import at.forsyte.apalache.tla.imp.simpl.Desugarer
 import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.control.LetInOper
@@ -16,6 +17,8 @@ import scala.collection.JavaConverters._
   */
 class ExprOrOpArgNodeTranslator(environmentHandler: EnvironmentHandler, sourceStore: SourceStore,
                                 context: Context, recStatus: RecursionStatus) {
+  private val desugarer = new Desugarer() // construct elsewhere?
+
   def translate(node: ExprOrOpArgNode): TlaEx = {
     val result =
       node match {
@@ -50,7 +53,9 @@ class ExprOrOpArgNodeTranslator(environmentHandler: EnvironmentHandler, sourceSt
           throw new SanyImporterException("Unexpected subclass of tla2sany.ExprOrOpArgNode: " + n.getClass)
       }
 
-    sourceStore.addRec(environmentHandler.identify(result), SourceLocation(node.getLocation))
+    val sugarFree = desugarer.transform(result)
+
+    sourceStore.addRec(environmentHandler.identify(sugarFree), SourceLocation(node.getLocation))
   }
 
   private def translateNumeral(node: NumeralNode) = {

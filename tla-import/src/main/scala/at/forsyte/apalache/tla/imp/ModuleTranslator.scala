@@ -14,6 +14,8 @@ import scala.collection.immutable.HashSet
   * @author konnov
   */
 class ModuleTranslator(environmentHandler: EnvironmentHandler, sourceStore: SourceStore) {
+  // TODO: get rid of environmentHandler, we do not need it anymore
+
   def translate(node: ModuleNode): TlaModule = {
     val context1 = node.getConstantDecls.toList.foldLeft(Context()) {
       (ctx, node) => ctx.push(TlaConstDecl(node.getName.toString))

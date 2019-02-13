@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.predef._
 import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
 import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.lir.{OperEx, _}
+import at.forsyte.apalache.tla.lir.{OperEx, ValEx, _}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -32,8 +32,8 @@ class TestSanyImporter extends FunSuite {
       assert(name == d.name)
       assert(params == d.formalParams)
       assert(body == d.body)
-      assert(d.body.ID.valid)                        // an identifier has been assigned
-      assert(sourceStore.contains(d.body.safeId))  // and source file information has been saved
+      assert(d.body.ID.valid) // an identifier has been assigned
+      assert(sourceStore.contains(d.body.safeId)) // and source file information has been saved
 
     case d@_ =>
       fail("Expected a TlaOperDecl, found: " + d)
@@ -44,15 +44,15 @@ class TestSanyImporter extends FunSuite {
                            name: String,
                            params: List[FormalParam],
                            body: TlaEx): Unit = {
-      mod.declarations.find {
-        _.name == name
-      } match {
-        case Some(d: TlaOperDecl) =>
-          expectTlaDecl(sourceStore, name, List(), body)
+    mod.declarations.find {
+      _.name == name
+    } match {
+      case Some(d: TlaOperDecl) =>
+        expectTlaDecl(sourceStore, name, List(), body)
 
-        case _ =>
-          fail("Expected a TlaDecl")
-      }
+      case _ =>
+        fail("Expected a TlaDecl")
+    }
   }
 
   test("empty module") {
@@ -146,9 +146,9 @@ class TestSanyImporter extends FunSuite {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(ValEx(TlaInt(1)) == actionDecl.body)
-        assert(actionDecl.body.ID.valid)                        // an identifier has been assigned
-        assert(locationStore.contains(actionDecl.body.safeId))  // and source file information has been saved
-        val loc = locationStore.find(actionDecl.body.safeId).get
+        assert(actionDecl.body.ID.valid) // an identifier has been assigned
+        assert(locationStore.contains(actionDecl.body.safeId)) // and source file information has been saved
+      val loc = locationStore.find(actionDecl.body.safeId).get
         assert(SourceRegion(SourcePosition(2, 9), SourcePosition(2, 9)) == loc.region)
     }
   }
@@ -171,9 +171,9 @@ class TestSanyImporter extends FunSuite {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(ValEx(TlaDecimal(BigDecimal("123.456"))) == actionDecl.body)
-        assert(actionDecl.body.ID.valid)                        // an identifier has been assigned
-        assert(locationStore.contains(actionDecl.body.safeId))  // and source file information has been saved
-        val loc = locationStore.find(actionDecl.body.safeId).get
+        assert(actionDecl.body.ID.valid) // an identifier has been assigned
+        assert(locationStore.contains(actionDecl.body.safeId)) // and source file information has been saved
+      val loc = locationStore.find(actionDecl.body.safeId).get
         assert(SourceRegion(SourcePosition(2, 9), SourcePosition(2, 15)) == loc.region)
     }
   }
@@ -196,9 +196,9 @@ class TestSanyImporter extends FunSuite {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(ValEx(TlaStr("Hello")) == actionDecl.body)
-        assert(actionDecl.body.ID.valid)                        // an identifier has been assigned
-        assert(locationStore.contains(actionDecl.body.safeId))  // and source file information has been saved
-        val loc = locationStore.find(actionDecl.body.safeId).get
+        assert(actionDecl.body.ID.valid) // an identifier has been assigned
+        assert(locationStore.contains(actionDecl.body.safeId)) // and source file information has been saved
+      val loc = locationStore.find(actionDecl.body.safeId).get
         assert(SourceRegion(SourcePosition(2, 9), SourcePosition(2, 15)) == loc.region)
     }
   }
@@ -221,9 +221,9 @@ class TestSanyImporter extends FunSuite {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(ValEx(TlaBool(false)) == actionDecl.body)
-        assert(actionDecl.body.ID.valid)                        // an identifier has been assigned
-        assert(locationStore.contains(actionDecl.body.safeId))  // and source file information has been saved
-        val loc = locationStore.find(actionDecl.body.safeId).get
+        assert(actionDecl.body.ID.valid) // an identifier has been assigned
+        assert(locationStore.contains(actionDecl.body.safeId)) // and source file information has been saved
+      val loc = locationStore.find(actionDecl.body.safeId).get
         assert("constop" == loc.filename)
         assert(SourceRegion(SourcePosition(2, 9), SourcePosition(2, 13)) == loc.region)
     }
@@ -247,8 +247,8 @@ class TestSanyImporter extends FunSuite {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(ValEx(TlaBool(true)) == actionDecl.body)
-        assert(actionDecl.body.ID.valid)                        // an identifier has been assigned
-        assert(locationStore.contains(actionDecl.body.safeId))  // and source file information has been saved
+        assert(actionDecl.body.ID.valid) // an identifier has been assigned
+        assert(locationStore.contains(actionDecl.body.safeId)) // and source file information has been saved
     }
   }
 
@@ -272,9 +272,9 @@ class TestSanyImporter extends FunSuite {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(NameEx("x") == actionDecl.body)
-        assert(actionDecl.body.ID.valid)                        // an identifier has been assigned
-        assert(locationStore.contains(actionDecl.body.safeId))  // and source file information has been saved
-        val loc = locationStore.find(actionDecl.body.safeId).get
+        assert(actionDecl.body.ID.valid) // an identifier has been assigned
+        assert(locationStore.contains(actionDecl.body.safeId)) // and source file information has been saved
+      val loc = locationStore.find(actionDecl.body.safeId).get
         assert(SourceRegion(SourcePosition(4, 9), SourcePosition(4, 9)) == loc.region)
     }
   }
@@ -299,8 +299,8 @@ class TestSanyImporter extends FunSuite {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(NameEx("n") == actionDecl.body)
-        assert(actionDecl.body.ID.valid)                        // an identifier has been assigned
-        assert(locationStore.contains(actionDecl.body.safeId))  // and source file information has been saved
+        assert(actionDecl.body.ID.valid) // an identifier has been assigned
+        assert(locationStore.contains(actionDecl.body.safeId)) // and source file information has been saved
     }
   }
 
@@ -322,9 +322,9 @@ class TestSanyImporter extends FunSuite {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(OperEx(TlaBoolOper.or, ValEx(TlaFalse), ValEx(TlaTrue)) == actionDecl.body)
-        assert(actionDecl.body.ID.valid)                        // an identifier has been assigned
-        assert(locationStore.contains(actionDecl.body.safeId))  // and source file information has been saved
-        val loc = locationStore.find(actionDecl.body.safeId).get
+        assert(actionDecl.body.ID.valid) // an identifier has been assigned
+        assert(locationStore.contains(actionDecl.body.safeId)) // and source file information has been saved
+      val loc = locationStore.find(actionDecl.body.safeId).get
         assert(SourceRegion(SourcePosition(2, 9), SourcePosition(2, 21)) == loc.region)
     }
   }
@@ -347,8 +347,8 @@ class TestSanyImporter extends FunSuite {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(OperEx(TlaSetOper.enumSet) == actionDecl.body)
-        assert(actionDecl.body.ID.valid)                        // an identifier has been assigned
-        assert(locationStore.contains(actionDecl.body.safeId))  // and source file information has been saved
+        assert(actionDecl.body.ID.valid) // an identifier has been assigned
+        assert(locationStore.contains(actionDecl.body.safeId)) // and source file information has been saved
     }
   }
 
@@ -372,8 +372,8 @@ class TestSanyImporter extends FunSuite {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(OperEx(TlaBoolOper.and, NameEx("x"), ValEx(TlaTrue)) == actionDecl.body)
-        assert(actionDecl.body.ID.valid)                        // an identifier has been assigned
-        assert(locationStore.contains(actionDecl.body.safeId))  // and source file information has been saved
+        assert(actionDecl.body.ID.valid) // an identifier has been assigned
+        assert(locationStore.contains(actionDecl.body.safeId)) // and source file information has been saved
     }
   }
 
@@ -468,6 +468,7 @@ class TestSanyImporter extends FunSuite {
       .loadFromSource("builtins", Source.fromString(text))
     val mod = expectSingleModule("builtins", rootName, modules)
     val root = modules(rootName)
+
     def expectDecl(name: String, body: TlaEx): Unit =
       findAndExpectTlaDecl(locationStore, root, name, List(), body)
 
@@ -604,6 +605,7 @@ class TestSanyImporter extends FunSuite {
     val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
       .loadFromSource("composite", Source.fromString(text))
     val mod = expectSingleModule("composite", rootName, modules)
+
     def expectDecl(name: String, body: TlaEx): (TlaDecl => Unit) =
       expectTlaDecl(locationStore, name, List(), body)
 
@@ -644,6 +646,7 @@ class TestSanyImporter extends FunSuite {
     val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
       .loadFromSource("except", Source.fromString(text))
     val mod = expectSingleModule("except", rootName, modules)
+
     def expectDecl(name: String, params: List[FormalParam], body: TlaEx) = expectTlaDecl(locationStore, name, params, body)
 
     expectDecl("Except",
@@ -668,19 +671,25 @@ class TestSanyImporter extends FunSuite {
         NameEx("x"), TlaFunOper.mkTuple(TlaFunOper.mkTuple(ValEx(TlaInt(0)))), ValEx(TlaInt(1))
       ))(mod.declarations(3))
 
-    // the trick here is that the index tuple should be unfolded
+    // the importer automatically substitutes @ with function application and unfolds ![1][2] to a chain of EXCEPTS
     expectDecl("ExceptManyAt",
       List(),
       OperEx(TlaFunOper.except,
         NameEx("x"),
-        TlaFunOper.mkTuple(ValEx(TlaInt(1)), ValEx(TlaInt(2))),
-        OperEx(TlaBoolOper.and,
+        TlaFunOper.mkTuple(ValEx(TlaInt(1))),
+        OperEx(TlaFunOper.except,
           OperEx(TlaFunOper.app,
-            OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(1))),
-            ValEx(TlaInt(2))
-          ), ///
-          ValEx(TlaTrue))
-      ))(mod.declarations(4))
+            NameEx("x"),
+            ValEx(TlaInt(1))),
+          TlaFunOper.mkTuple(ValEx(TlaInt(2))),
+          OperEx(TlaBoolOper.and,
+            OperEx(TlaFunOper.app,
+              OperEx(TlaFunOper.app,
+                NameEx("x"), ValEx(TlaInt(1))),
+              ValEx(TlaInt(2))
+            ), ///
+            ValEx(TlaTrue))
+        )))(mod.declarations(4))
   }
 
   test("expression labels") {
@@ -695,6 +704,7 @@ class TestSanyImporter extends FunSuite {
     val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
       .loadFromSource("labels", Source.fromString(text))
     val mod = expectSingleModule("labels", rootName, modules)
+
     def expectDecl(n: String, p: List[FormalParam], b: TlaEx) = expectTlaDecl(locationStore, n, p, b)
 
     //    A == {FALSE} \cup (l1 :: {TRUE})
@@ -735,6 +745,7 @@ class TestSanyImporter extends FunSuite {
     val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
       .loadFromSource("args", Source.fromString(text))
     val mod = expectSingleModule("args", rootName, modules)
+
     def expectDecl(n: String, p: List[FormalParam], b: TlaEx) = expectTlaDecl(locationStore, n, p, b)
 
     val expectedABody = OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaInt(2)))
@@ -765,6 +776,7 @@ class TestSanyImporter extends FunSuite {
     val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
       .loadFromSource("updates", Source.fromString(text))
     val mod = expectSingleModule("updates", rootName, modules)
+
     def expectDecl(name: String, body: TlaEx): (TlaDecl => Unit) =
       expectTlaDecl(locationStore, name, List(), body)
 
@@ -777,8 +789,15 @@ class TestSanyImporter extends FunSuite {
     expectDecl("E2",
       OperEx(TlaFunOper.except,
         NameEx("f"),
-        TlaFunOper.mkTuple(ValEx(TlaInt(0)), ValEx(TlaInt(1)), ValEx(TlaInt(2))),
-        ValEx(TlaInt(3))
+        TlaFunOper.mkTuple(ValEx(TlaInt(0))),
+        OperEx(TlaFunOper.except,
+          OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaInt(0))),
+          TlaFunOper.mkTuple(ValEx(TlaInt(1))),
+          OperEx(TlaFunOper.except,
+            OperEx(TlaFunOper.app, OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaInt(0))), ValEx(TlaInt(1))),
+            TlaFunOper.mkTuple(ValEx(TlaInt(2))),
+            ValEx(TlaInt(3)))
+        )//
       ))(mod.declarations(2))
     expectDecl("E3",
       OperEx(TlaFunOper.except,
@@ -802,6 +821,7 @@ class TestSanyImporter extends FunSuite {
     val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
       .loadFromSource("selects", Source.fromString(text))
     val mod = expectSingleModule("selects", rootName, modules)
+
     def expectDecl(name: String, body: TlaEx): (TlaDecl => Unit) =
       expectTlaDecl(locationStore, name, List(), body)
 
@@ -839,6 +859,7 @@ class TestSanyImporter extends FunSuite {
     val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
       .loadFromSource("funCtor", Source.fromString(text))
     val mod = expectSingleModule("funCtor", rootName, modules)
+
     def expectDecl(name: String, body: TlaEx) = expectTlaDecl(locationStore, name, List(), body)
 
     expectDecl("C1",
@@ -883,6 +904,7 @@ class TestSanyImporter extends FunSuite {
     val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
       .loadFromSource("level1Operators", Source.fromString(text))
     val mod = expectSingleModule("level1Operators", rootName, modules)
+
     def expectDecl(n: String, p: List[FormalParam], b: TlaEx) = expectTlaDecl(locationStore, n, p, b)
 
     expectDecl("A", List(SimpleFormalParam("i"), SimpleFormalParam("j")),
@@ -909,6 +931,7 @@ class TestSanyImporter extends FunSuite {
     val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
       .loadFromSource("level2Operators", Source.fromString(text))
     val mod = expectSingleModule("level2Operators", rootName, modules)
+
     def expectDecl(n: String, p: List[FormalParam], b: TlaEx) = expectTlaDecl(locationStore, n, p, b)
 
     expectDecl("A",
@@ -950,19 +973,19 @@ class TestSanyImporter extends FunSuite {
         assert(TlaOperDecl("Y",
           List(SimpleFormalParam("a")),
           NameEx("a")) == yDecl)
-        assert(locationStore.contains(yDecl.body.safeId))  // and source file information has been saved
+        assert(locationStore.contains(yDecl.body.safeId)) // and source file information has been saved
 
         val zDecl = o.defs(2)
         zDecl match {
           case TlaOperDecl("Z", List(OperFormalParam("f", FixedArity(1)), SimpleFormalParam("a")), _) =>
             assert(OperEx(TlaOper.apply, NameEx("f"), NameEx("a")) == zDecl.body)
         }
-        assert(locationStore.contains(zDecl.body.safeId))  // and source file information has been saved
+        assert(locationStore.contains(zDecl.body.safeId)) // and source file information has been saved
         assert(0 == xDecl.formalParams.length)
         assert(ValEx(TlaInt(1)) == xDecl.body)
         // although "X" might seem to be a variable, it is actually an operator without any arguments
         assert(OperEx(xDecl.operator) == body)
-        assert(locationStore.contains(xDecl.body.safeId))  // and source file information has been saved
+        assert(locationStore.contains(xDecl.body.safeId)) // and source file information has been saved
     }
   }
 
@@ -1003,13 +1026,13 @@ class TestSanyImporter extends FunSuite {
           )
 
         assert(expectedBody == fDecl.body)
-        assert(locationStore.contains(fDecl.body.safeId))  // and source file information has been saved
+        assert(locationStore.contains(fDecl.body.safeId)) // and source file information has been saved
 
         val xDecl = o.defs(1)
         assert("X" == xDecl.name)
         assert(OperEx(TlaOper.apply, NameEx("X")) == xDecl.body)
         assert(OperEx(xDecl.operator) == body)
-        assert(locationStore.contains(xDecl.body.safeId))  // and source file information has been saved
+        assert(locationStore.contains(xDecl.body.safeId)) // and source file information has been saved
     }
   }
 
@@ -1053,7 +1076,7 @@ class TestSanyImporter extends FunSuite {
           // but it is accessible via the field recParam.
           val recParam = OperFormalParam(name, FixedArity(nparams))
           assert(d.body == expectedBody)
-          assert(locationStore.contains(d.body.safeId))  // and source file information has been saved
+          assert(locationStore.contains(d.body.safeId)) // and source file information has been saved
 
         case _ =>
           fail("expected TlaRecOperDecl")
@@ -1083,7 +1106,7 @@ class TestSanyImporter extends FunSuite {
           _.name == "A"
         }.get.asInstanceOf[TlaOperDecl]
         assert(OperEx(A.operator, NameEx("n")) == d.body)
-        assert(locationStore.contains(d.body.safeId))  // and source file information has been saved
+        assert(locationStore.contains(d.body.safeId)) // and source file information has been saved
 
       case _ =>
         fail("Expected TlaOperDecl")
@@ -1105,7 +1128,7 @@ class TestSanyImporter extends FunSuite {
             OperEx(TlaOper.apply, NameEx("F"), OperEx(TlaArithOper.minus, NameEx("n"), ValEx(TlaInt(1)))))
         )
         assert(d.body == ite)
-        assert(locationStore.contains(d.body.safeId))  // and source file information has been saved
+        assert(locationStore.contains(d.body.safeId)) // and source file information has been saved
 
       case _ =>
         fail("expected TlaRecOperDecl")
@@ -1127,13 +1150,14 @@ class TestSanyImporter extends FunSuite {
     assert(1 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
+
     def expectDecl(name: String, body: TlaEx): Unit =
       findAndExpectTlaDecl(locationStore, root, name, List(), body)
 
     // a non-recursive function becomes a nullary operator that always returns an equivalent function
     expectDecl("nonRecFun",
       OperEx(TlaFunOper.funDef, NameEx("x"), NameEx("x"), NameEx("S"))
-    )///
+    ) ///
 
     // a recursive function becomes a recursive nullary operator
     // that returns a function defined w.r.t. the recursive operator
@@ -1146,7 +1170,7 @@ class TestSanyImporter extends FunSuite {
           assert(expectedName == d.name)
           assert(0 == d.formalParams.length)
           assert(body == d.body)
-          assert(locationStore.contains(d.body.safeId))  // and source file information has been saved
+          assert(locationStore.contains(d.body.safeId)) // and source file information has been saved
 
         case _ =>
           fail("Expected a TlaDecl")
@@ -1160,7 +1184,7 @@ class TestSanyImporter extends FunSuite {
           NameEx("x")),
         NameEx("x"),
         NameEx("S"))
-    )///
+    ) ///
   }
 
   test("module imports") {
@@ -1212,6 +1236,7 @@ class TestSanyImporter extends FunSuite {
     assert(2 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
+
     def expectDecl(name: String, body: TlaEx): Unit =
       findAndExpectTlaDecl(locationStore, root, name, List(), body)
 
@@ -1230,8 +1255,10 @@ class TestSanyImporter extends FunSuite {
     expectDecl("Range", OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(3))))
 
     // check the source info
-    val plus = root.declarations.find { _.name == "Plus" } match {
-      case Some(TlaOperDecl(_, _, oe @ OperEx(oper, _*))) =>
+    val plus = root.declarations.find {
+      _.name == "Plus"
+    } match {
+      case Some(TlaOperDecl(_, _, oe@OperEx(oper, _*))) =>
         val loc = locationStore.find(oe.safeId).get
         assert(SourceRegion(SourcePosition(4, 9), SourcePosition(4, 13)) == loc.region)
 
@@ -1266,6 +1293,7 @@ class TestSanyImporter extends FunSuite {
       .loadFromSource("ints", Source.fromString(text))
     assert(3 == modules.size) // Integers extends Naturals
     val root = modules(rootName)
+
     def expectDecl(name: String, body: TlaEx) =
       findAndExpectTlaDecl(locationStore, root, name, List(), body)
 
@@ -1365,6 +1393,7 @@ class TestSanyImporter extends FunSuite {
     assert(3 == modules.size) // Naturals, Sequences, and our module
     // the root module and naturals
     val root = modules(rootName)
+
     def expectDecl(name: String, body: TlaEx) =
       findAndExpectTlaDecl(locationStore, root, name, List(), body)
 
@@ -1408,6 +1437,7 @@ class TestSanyImporter extends FunSuite {
       .loadFromSource("finitesets", Source.fromString(text))
     assert(4 == modules.size) // Naturals, Sequences, FiniteSets, and our module
     val root = modules(rootName)
+
     def expectDecl(name: String, body: TlaEx) =
       findAndExpectTlaDecl(locationStore, root, name, List(), body)
 
@@ -1453,6 +1483,7 @@ class TestSanyImporter extends FunSuite {
     assert(4 == modules.size) // our module + 3 LOCAL modules
     // the root module and naturals
     val root = modules(rootName)
+
     def expectDecl(name: String, body: TlaEx) =
       findAndExpectTlaDecl(locationStore, root, name, List(), body)
 
@@ -1496,31 +1527,32 @@ class TestSanyImporter extends FunSuite {
     // It may look strange that we use sets (Int, BOOLEAN, Int, [A -> B]) to denote types,
     // but this solution is quite convenient and natural for TLA+.
     val text =
-      """---- MODULE types ----
-        |EXTENDS Integers
-        |VARIABLE x, f
-        |a <: b == a
-        |SetOfInts == {} <: {Int}
-        |SetOfBools == {} <: {BOOLEAN}
-        |SetOfStrings == {} <: {STRING}
-        |SetOfSetsOfInts == {} <: {{Int}}
-        |Integer == 1 <: Int
-        |Bool == FALSE <: BOOLEAN
-        |Str == "a" <: STRING
-        |Fun == f <: [Int -> Int]
-        |SetOfFuns == f <: {[Int -> Int]}
-        |Rec == f <: [a |-> Int, b |-> BOOLEAN]
-        |SetOfRecs == {} <: {[a |-> Int, b |-> BOOLEAN]}
-        |Tup == f <: <<Int, BOOLEAN>>
-        |SetOfTuples == {} <: {<<Int, BOOLEAN>>}
-        |================================
-      """.stripMargin
+    """---- MODULE types ----
+      |EXTENDS Integers
+      |VARIABLE x, f
+      |a <: b == a
+      |SetOfInts == {} <: {Int}
+      |SetOfBools == {} <: {BOOLEAN}
+      |SetOfStrings == {} <: {STRING}
+      |SetOfSetsOfInts == {} <: {{Int}}
+      |Integer == 1 <: Int
+      |Bool == FALSE <: BOOLEAN
+      |Str == "a" <: STRING
+      |Fun == f <: [Int -> Int]
+      |SetOfFuns == f <: {[Int -> Int]}
+      |Rec == f <: [a |-> Int, b |-> BOOLEAN]
+      |SetOfRecs == {} <: {[a |-> Int, b |-> BOOLEAN]}
+      |Tup == f <: <<Int, BOOLEAN>>
+      |SetOfTuples == {} <: {<<Int, BOOLEAN>>}
+      |================================
+    """.stripMargin
 
     val locationStore = new SourceStore
     val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
       .loadFromSource("types", Source.fromString(text))
     assert(3 == modules.size) // our module + Integers & Naturals
     val rootMod = modules("types")
+
     def expectDecl(name: String, body: TlaEx) =
       findAndExpectTlaDecl(locationStore, rootMod, name, List(), body)
 
@@ -1553,7 +1585,7 @@ class TestSanyImporter extends FunSuite {
 
     expectDecl("Rec",
       OperEx(BmcOper.withType, NameEx("f"),
-             tla.enumFun(tla.str("a"), ValEx(TlaIntSet), tla.str("b"), ValEx(TlaBoolSet))))
+        tla.enumFun(tla.str("a"), ValEx(TlaIntSet), tla.str("b"), ValEx(TlaBoolSet))))
 
     expectDecl("SetOfRecs",
       OperEx(BmcOper.withType, tla.enumSet(),
