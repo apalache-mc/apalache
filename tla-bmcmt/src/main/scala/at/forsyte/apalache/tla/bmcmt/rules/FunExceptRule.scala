@@ -89,17 +89,15 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   // This is an important step. As we receive expressions from SANY, every index argument to EXCEPT
-  // is always a tuple, even if we are using one-dimensional functions. For instance,
-  // the expression [f EXCEPT ![1] = 2] will be represented as OperEx(TlaFunOper.except, f, <<1>>, 2).
-  // Hence, we explicitly unpack singleton tuples. As for the non-singleton tuples, we keep them as is,
-  // as this is the only reasonable way to access a function element with a multi-dimensional index without
-  // introducing intermediate functions.
+  // is always a tuple]. For instance, the expression [f EXCEPT ![1] = 2] will be represented
+  // as OperEx(TlaFunOper.except, f, <<1>>, 2). Hence, we explicitly unpack singleton tuples.
+  // As for non-singleton tuples, they should be preprocessed.
   private def unpackSingletonIndices(args: Seq[TlaEx]): Seq[TlaEx] = {
     def unpack(e: TlaEx) = e match {
       case OperEx(TlaFunOper.tuple, arg) =>
         arg // unpack
       case OperEx(TlaFunOper.tuple, _*) =>
-        e // keep
+        throw new InternalCheckerError("TLA importer failed to preprocess a chained EXCEPT: " + e)
       case _ =>
         // complain
         throw new RewriterException("Expected a tuple as a function index, found: " + e)

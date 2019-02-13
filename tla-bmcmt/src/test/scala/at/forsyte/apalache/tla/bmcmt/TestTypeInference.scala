@@ -8,6 +8,7 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
+// TODO: remove?
 @RunWith( classOf[JUnitRunner] )
 class TestTypeInference extends FunSuite with TestingPredefs {
 
