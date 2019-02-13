@@ -300,6 +300,17 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     }
   }
 
+  test("""SE-FUN-APP[1-3]: [x \in {} |-> x][3]""") {
+    // regression: function application with an empty domain should not crash
+    val set = tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(IntT())))
+    val fun = tla.funDef(tla.name("x"), tla.name("x"), set)
+    val app = OperEx(TlaFunOper.app, fun, tla.int(3))
+    val state = new SymbState(app, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+  }
+
   test("""SE-FUN-EQ4: [y \in BOOLEAN |-> ~y] = [x \in BOOLEAN |-> ~x]""") {
     val fun1 = tla.funDef(tla.not(tla.name("y")), tla.name("y"), ValEx(TlaBoolSet))
     val fun2 = tla.funDef(tla.not(tla.name("x")), tla.name("x"), ValEx(TlaBoolSet))

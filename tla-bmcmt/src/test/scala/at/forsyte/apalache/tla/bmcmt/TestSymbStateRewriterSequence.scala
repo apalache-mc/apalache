@@ -64,6 +64,17 @@ class TestSymbStateRewriterSequence extends RewriterBase {
       nextState.setRex(tla.eql(tla.appFun(seq.toNameEx, tla.int(3)), tla.int(5))))
   }
 
+  test("""SE-SEQ-APP: (<<>> <: Seq(Int))[1]""") {
+    // regression: <<>>[1] should produce no contradiction, nor throw an exception
+    val tuple = TlaFunOper.mkTuple()
+    val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
+
+    val state = new SymbState(annotatedTuple, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+  }
+
   test("""SE-SEQ-HEAD: Head(<<3, 4, 5>> <: Seq(Int))""") {
     val tuple = TlaFunOper.mkTuple(3.to(5) map tla.int :_*)
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))

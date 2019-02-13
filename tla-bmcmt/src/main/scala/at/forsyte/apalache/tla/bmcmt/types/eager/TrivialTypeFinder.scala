@@ -110,6 +110,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
 
           case tp@_ =>
             addError(new TypeInferenceError(set, "Expected a set, found: " + tp))
+            varTypes = varTypes + (x -> UnknownT()) // otherwise, the type rewriter may throw an exception
             None
         }
 
@@ -126,6 +127,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
 
             case tp@_ =>
               addError(new TypeInferenceError(set, "Expected a set, found: " + tp))
+              varTypes = varTypes + (name -> UnknownT()) // otherwise, the type rewriter may throw an exception
           }
         }
 
@@ -145,6 +147,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
 
             case tp@_ =>
               addError(new TypeInferenceError(set, "Expected a set, found: " + tp))
+              varTypes = varTypes + (name -> UnknownT()) // otherwise, the type rewriter throws an exception 10 lines below
           }
         }
 
@@ -181,6 +184,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
 
           case tp@_ =>
             addError(new TypeInferenceError(set, "Expected a set, found: " + tp))
+            varTypes = varTypes + (x -> UnknownT()) // otherwise, the type rewriter may throw an exception
             None
         }
 
@@ -615,7 +619,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
           }
           for (valT <- valueTypes) {
             if (valT != resT) {
-              error(ex, "Expected an index of type %s, found: %s".format(resT, valT))
+              error(ex, "Expected a result of type %s, found: %s".format(resT, valT))
             }
           }
 
@@ -649,6 +653,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
         case FunT(domT, _) => domT
         case TupleT(_) => FinSetT(IntT())
         case RecordT(_) => FinSetT(ConstT())
+        case SeqT(_) => FinSetT(IntT())
         case _ => error(ex, "Unexpected type of DOMAIN argument: " + ex)
       }
   }
