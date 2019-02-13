@@ -375,7 +375,7 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
     val rightDom = state.arena.getDom(rightRec)
     val leftElems = state.arena.getHas(leftRec)
     val rightElems = state.arena.getHas(rightRec)
-    // the intersection of the keys, as we can assume that the domains are equal
+    // the intersection of the keys, as we can assume that the static domains are equal
     val commonKeys = leftType.fields.keySet.intersect(rightType.fields.keySet)
     var newState = state
     def keyEq(key: String): TlaEx = {
@@ -386,7 +386,10 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
       newState = cacheOneEqConstraint(newState, leftElem, rightElem)
       val (newArena, keyCell) = rewriter.strValueCache.getOrCreate(newState.arena, key)
       newState = newState.setArena(newArena)
-      tla.or(tla.notin(keyCell, leftDom), safeEq(leftElem, rightElem))
+      // we need a real set membership as keyCell may be outside of leftDom!
+      newState = rewriter.rewriteUntilDone(newState.setRex(tla.in(keyCell, leftDom)))
+      val membershipTest = newState.ex
+      tla.or(tla.not(membershipTest), safeEq(leftElem, rightElem))
     }
 
     newState = cacheOneEqConstraint(newState, leftDom, rightDom)
