@@ -104,10 +104,7 @@ class BfsChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsStore
       true // no filter applied
     } else {
       val stepRegex = new Regex(stepFilters(stepNo))
-      transitionNo.toString match {
-        case stepRegex() => true
-        case _ => false
-      }
+      stepRegex.findFirstIn(transitionNo.toString).isDefined
     }
   }
 

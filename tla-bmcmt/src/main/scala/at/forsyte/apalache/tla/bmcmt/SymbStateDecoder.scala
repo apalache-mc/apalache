@@ -84,7 +84,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         ValEx(TlaStr(found.get))
       } else {
         findCellInSet(arena, rewriter.strValueCache.values().toSeq, cell.toNameEx) match {
-            // found among the cached keys
+          // found among the cached keys
           case Some(c) =>
             decodeCellToTlaEx(arena, c)
 
@@ -109,43 +109,41 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     case FunT(_, _) =>
       // in the new implementation, every function is represented with the relation {(x, f[x]) : x \in S}
       val relation = arena.getCdm(cell)
-      decodeCellToTlaEx(arena, relation)
-      /*
-      // the old implementation
-      val dom = arena.getDom(cell)
-      def eachElem(es: List[TlaEx], argCell: ArenaCell): List[TlaEx] = {
-        val inSet = solverContext.evalGroundExpr(tla.in(argCell, dom)) == tla.bool(true)
-        if (inSet) {
-          val resultEx = findCellInSet(arena, arena.getHas(arena.getCdm(cell)), tla.appFun(cell, argCell)) match {
-            case Some(c) => decodeCellToTlaEx(arena, c) // it may be a set
-            case None => solverContext.evalGroundExpr(tla.appFun(cell, argCell)) // fall back
-          }
-          decodeCellToTlaEx(arena, argCell) +: resultEx +: es
-        } else {
-          es
-        }
-      }
+      val args =
+        decodeCellToTlaEx(arena, relation) match {
+          case OperEx(TlaSetOper.enumSet, elems@_*) =>
+            def untuple(e: TlaEx) = e match {
+              case OperEx(TlaFunOper.tuple, pair@_*) =>
+                pair
 
-      val domElems = arena.getHas(dom)
-      // use the same notation as for the records
-      val keysAndValues = domElems.reverse.foldLeft(List[TlaEx]()) (eachElem)
-      OperEx(TlaFunOper.enum, keysAndValues :_*)
-      */
+              case _ => throw new RewriterException("Corrupted function: " + relation)
+            }
+
+            elems flatMap untuple
+
+          case _ => throw new RewriterException("Corrupted function: " + relation)
+        }
+
+      if (arena.getHas(relation).nonEmpty)
+        OperEx(TlaFunOper.enum, args :_*)
+      else
+        OperEx(TlaFunOper.funDef, tla.enumSet(), tla.name("x"), tla.enumSet())
 
     case SeqT(_) =>
       val startEndFun = arena.getHas(cell) map (decodeCellToTlaEx(arena, _))
       startEndFun match {
         case ValEx(TlaInt(start)) :: ValEx(TlaInt(end)) +: cells =>
-          def isIn(elem : TlaEx, no: Int): Boolean = no + 1 >= start && no + 1 <= end
-          val filtered = cells.zipWithIndex filter (isIn _).tupled map (_._1)
-          tla.tuple(filtered :_*) // return a tuple as it is the canonical representation of a sequence
+          def isIn(elem: TlaEx, no: Int): Boolean = no + 1 >= start && no + 1 <= end
 
-        case _ => throw new RewriterException("Corrupted sequence object: " + startEndFun)
+          val filtered = cells.zipWithIndex filter (isIn _).tupled map (_._1)
+          tla.tuple(filtered: _*) // return a tuple as it is the canonical representation of a sequence
+
+        case _ => throw new RewriterException("Corrupted sequence: " + startEndFun)
       }
 
-    case r @ RecordT(_) =>
+    case r@RecordT(_) =>
       def exToStr(ex: TlaEx): TlaStr = ex match {
-        case ValEx(s @ TlaStr(_)) => s
+        case ValEx(s@TlaStr(_)) => s
         case _ => throw new RewriterException("Expected a string, found: " + ex)
       }
 
@@ -155,6 +153,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       val dom = decodeSet(arena, domCell) map exToStr
       val fieldValues = arena.getHas(cell)
       val keyList = r.fields.keySet.toList
+
       def eachField(es: List[TlaEx], key: String): List[TlaEx] = {
         if (!dom.contains(TlaStr(key))) {
           es // skip
@@ -165,21 +164,21 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         }
       }
 
-      val keysAndValues = keyList.reverse.foldLeft(List[TlaEx]()) (eachField)
+      val keysAndValues = keyList.reverse.foldLeft(List[TlaEx]())(eachField)
       if (keysAndValues.nonEmpty) {
-         OperEx(TlaFunOper.enum, keysAndValues: _*)
+        OperEx(TlaFunOper.enum, keysAndValues: _*)
       } else {
         logger.error(s"Decoder: Found an empty record $cell when decoding a counterexample, domain = $domCell. This is a bug.")
         // for debugging purposes, just return a string
         ValEx(TlaStr(s"Empty record domain $domCell"))
       }
 
-    case t @ TupleT(_) =>
+    case t@TupleT(_) =>
       val tupleElems = arena.getHas(cell)
-      val elemAsExprs  = tupleElems.map(c => decodeCellToTlaEx(arena, c))
-      tla.tuple(elemAsExprs :_*)
+      val elemAsExprs = tupleElems.map(c => decodeCellToTlaEx(arena, c))
+      tla.tuple(elemAsExprs: _*)
 
-    case PowSetT(t @ FinSetT(_)) =>
+    case PowSetT(t@FinSetT(_)) =>
       tla.powSet(decodeCellToTlaEx(arena, arena.getDom(cell)))
 
     case _ =>
@@ -200,6 +199,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     def isEq(c: ArenaCell): Boolean = {
       ValEx(TlaBool(true)) == solverContext.evalGroundExpr(tla.and(tla.eql(c, ex)))
     }
+
     cells.find(isEq)
   }
 
