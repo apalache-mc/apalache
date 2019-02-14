@@ -73,7 +73,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     * @return a new symbolic state whose expression stores a fresh cell that corresponds to the picked element.
     */
   def pickByOracle(state: SymbState, oracle: TlaEx, elems: Seq[ArenaCell]): SymbState = {
-    assert(elems.nonEmpty) // this is an advanced class -- you should know what you are doing
+    assert(elems.nonEmpty) // this is an advanced operator -- you should know what you are doing
     val targetType = elems.head.cellType
 
     targetType match {
@@ -230,8 +230,9 @@ class CherryPick(rewriter: SymbStateRewriter) {
     // introduce a new record
     newState = newState.setArena(newState.arena.appendCell(cellType))
     val newRecord = newState.arena.topCell
-    // pick the domain using the oracle. TODO: as records have just a few domains, we should be able to optimize it!
-    newState = pickSet(FinSetT(ConstT()), newState, oracle, records map (r => newState.arena.getDom(r)))
+    // pick the domain using the oracle.
+//    newState = pickSet(FinSetT(ConstT()), newState, oracle, records map (r => newState.arena.getDom(r)))
+    newState = pickRecordDomain(FinSetT(ConstT()), newState, oracle, records map (r => newState.arena.getDom(r)))
     val newDom = newState.asCell
     // pick the fields using the oracle
     val fieldCells = recordType.fields.keySet.toSeq map pickAtPos
@@ -246,6 +247,49 @@ class CherryPick(rewriter: SymbStateRewriter) {
     newState.setArena(newArena)
       .setTheory(CellTheory())
       .setRex(newRecord.toNameEx)
+  }
+
+  /**
+    * Pick a set among a sequence of record domains. We know that the types of all the domains are compatible.
+    * Moreover, from the record constructor, we know that the record domains have  exactly the same sequence
+    * of keys in the arena. Hence, we only have to define the SMT constraints that regulate which keys belong to the new set.
+    * This optimization prevents the model checker from blowing up in the number of record domains, e.g., in Raft.
+    *
+    * @param domType the goal type
+    * @param state a symbolic state
+    * @param oracle the oracle to use
+    * @param domains the domains to pick from
+    * @return a new cell that encodes a picked domain
+    */
+  private def pickRecordDomain(domType: CellT, state: SymbState, oracle: TlaEx, domains: Seq[ArenaCell]): SymbState = {
+    // It often happens that all the domains are actually the same cell. Return this cell.
+    val distinct = domains.distinct
+    if (distinct.size == 1) {
+      state.setRex(distinct.head)
+    } else {
+      // consistency check: make sure that all the domains consist of exactly the same sets of keys
+      val keyCells = state.arena.getHas(domains.head)
+      for (dom <- domains.tail) {
+        val otherKeyCells = state.arena.getHas(dom)
+        assert(otherKeyCells.size == keyCells.size,
+          "inconsistent record domains of size %d and %d".format(keyCells.size, otherKeyCells.size))
+        for ((k, o) <- keyCells.zip(otherKeyCells)) {
+          assert(k == o, s"inconsistent record domains: $k != $o")
+        }
+      }
+      // introduce a new cell for the picked domain
+      var nextState = state.appendArenaCell(domType)
+      val newDom = nextState.arena.topCell
+      nextState = nextState.setArena(nextState.arena.appendHas(newDom, keyCells))
+      // once we know that all the keys coincide, constrain membership with SMT
+      for ((dom, no) <- domains.zipWithIndex) {
+        def iffKey(keyCell: ArenaCell) = tla.equiv(tla.in(keyCell, newDom), tla.in(keyCell, dom))
+
+        val keysMatch = tla.and(keyCells map iffKey: _*)
+        rewriter.solverContext.assertGroundExpr(tla.impl(tla.eql(oracle, tla.int(no)), keysMatch))
+      }
+      nextState.setRex(newDom).setTheory(CellTheory())
+    }
   }
 
   /**

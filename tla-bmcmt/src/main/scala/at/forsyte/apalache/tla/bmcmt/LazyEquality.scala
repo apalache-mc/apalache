@@ -386,10 +386,12 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
       newState = cacheOneEqConstraint(newState, leftElem, rightElem)
       val (newArena, keyCell) = rewriter.strValueCache.getOrCreate(newState.arena, key)
       newState = newState.setArena(newArena)
-      // we need a real set membership as keyCell may be outside of leftDom!
-      // FIXME: this really slows down model checking! Fix it!
-      newState = rewriter.rewriteUntilDone(newState.setRex(tla.in(keyCell, leftDom)))
-      val membershipTest = newState.ex
+      // it is safe to use in directly since:
+      // (1) the record types coincide,
+      // (2) record constructors use RecordDomainCache,
+      // (3) and CherryPick uses pickRecordDomain
+      val membershipTest = tla.in(keyCell, leftDom)
+      //      newState = rewriter.rewriteUntilDone(newState.setRex(tla.in(keyCell, leftDom))) // the old way
       tla.or(tla.not(membershipTest), safeEq(leftElem, rightElem))
     }
 
