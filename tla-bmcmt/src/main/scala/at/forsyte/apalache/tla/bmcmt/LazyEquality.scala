@@ -387,6 +387,7 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
       val (newArena, keyCell) = rewriter.strValueCache.getOrCreate(newState.arena, key)
       newState = newState.setArena(newArena)
       // we need a real set membership as keyCell may be outside of leftDom!
+      // FIXME: this really slows down model checking! Fix it!
       newState = rewriter.rewriteUntilDone(newState.setRex(tla.in(keyCell, leftDom)))
       val membershipTest = newState.ex
       tla.or(tla.not(membershipTest), safeEq(leftElem, rightElem))

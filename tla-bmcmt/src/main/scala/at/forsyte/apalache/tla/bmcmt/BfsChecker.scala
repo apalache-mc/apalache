@@ -38,8 +38,8 @@ class BfsChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsStore
     */
   private var stack: List[(SymbState, ArenaCell)] = List()
   private val solverContext: SolverContext =
-    new Z3SolverContext(debug, profile)
-  //    new PreproSolverContext(new Z3SolverContext(debug, profile))
+//    new Z3SolverContext(debug, profile)
+      new PreproSolverContext(new Z3SolverContext(debug, profile))
 
   private val rewriter: SymbStateRewriterImpl = new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
   rewriter.freeExistentialsStore = frexStore

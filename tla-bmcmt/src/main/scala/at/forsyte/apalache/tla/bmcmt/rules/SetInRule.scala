@@ -39,7 +39,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val lhsCell = state.binding(name)
         val afterEqState = rewriter.lazyEq.cacheOneEqConstraint(nextState, lhsCell, rhsCell)
         val finalState = afterEqState
-          .setTheory(BoolTheory())
+//          .setTheory(BoolTheory())
           .setRex(rewriter.lazyEq.safeEq(lhsCell, rhsCell))
           .setBinding(nextState.binding + (name -> rhsCell)) // bind the cell to the name
         rewriter.coerce(finalState, state.theory)
@@ -117,26 +117,27 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     assert(elemCell.cellType == elemType) // otherwise, type finder is incorrect
     if (potentialElems.isEmpty) {
       // SE-SET-IN1: the set cell points to no other cell => return false
-      state.setTheory(BoolTheory())
-        .setRex(NameEx(SolverContext.falseConst))
+//      state.setTheory(BoolTheory()).setRex(NameEx(SolverContext.falseConst))
+      state.setTheory(CellTheory()).setRex(state.arena.cellFalse())
     } else {
-      val pred = rewriter.solverContext.introBoolConst()
+      var nextState = state.appendArenaCell(BoolT())
+      val pred = nextState.arena.topCell.toNameEx
       if (state.arena.isLinkedViaHas(setCell, elemCell)) {
         // SE-SET-IN2: the element cell is already in the arena, just check dynamic membership
-        rewriter.solverContext.assertGroundExpr(tla.eql(tla.name(pred), tla.in(elemCell, state.ex)))
-        state.setTheory(BoolTheory()).setRex(NameEx(pred))
+        rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.in(elemCell, state.ex)))
+        nextState.setTheory(CellTheory()).setRex(pred)
       } else {
         // SE-SET-IN3: general case, generate equality constraints, if needed, and use them
         // cache equality constraints first
-        val eqState = rewriter.lazyEq.cacheEqConstraints(state, potentialElems.map((_, elemCell)))
+        val eqState = rewriter.lazyEq.cacheEqConstraints(nextState, potentialElems.map((_, elemCell)))
 
         def inAndEq(elem: ArenaCell) = {
           tla.and(tla.in(elem, setCell), rewriter.lazyEq.safeEq(elem, elemCell)) // use lazy equality
         }
 
         val elemsInAndEq = potentialElems.map(inAndEq)
-        rewriter.solverContext.assertGroundExpr(tla.eql(tla.name(pred), tla.or(elemsInAndEq: _*)))
-        eqState.setTheory(BoolTheory()).setRex(NameEx(pred))
+        rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.or(elemsInAndEq: _*)))
+        eqState.setTheory(CellTheory()).setRex(pred)
       }
     }
   }

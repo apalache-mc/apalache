@@ -1,23 +1,45 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.PreproSolverContext.{CacheEntry, EqEntry, InEntry}
 import at.forsyte.apalache.tla.bmcmt.caches.SimpleCache
 import at.forsyte.apalache.tla.bmcmt.profiler.SmtListener
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
+import at.forsyte.apalache.tla.lir.convenience.tla
+
+object PreproSolverContext {
+  sealed abstract class CacheEntry {
+    def asTlaEx(negate: Boolean): TlaEx
+  }
+
+  case class EqEntry(isEq: Boolean) extends CacheEntry {
+    override def asTlaEx(negate: Boolean): TlaEx = tla.bool(if (negate) !isEq else isEq)
+  }
+  case class InEntry(isIn: Boolean) extends CacheEntry {
+    override def asTlaEx(negate: Boolean): TlaEx = tla.bool(if (negate) !isIn else isIn)
+  }
+}
+
 /**
-  * A preprocessor of the SolverContext that caches all equalities and propagates them
-  * before pushing the constraints to the actual solver. This is helpful as our rewriting rules
+  * <p>A preprocessor of the SolverContext that caches the following types of constraints and propagates them
+  * before pushing the constraints to the actual solver:</p>
+  *
+  * <ul>
+  *   <li>Equalities between two cells: tla.eql(c1, c2) and tla.neq(c1, c2)</li>
+  *   <li>Set membership assertions between two cells: tla.in(c1, c2) and tla.not(tla.in(c1, c2)).
+  * </ul>
+  *
+  * <p>This is helpful as our rewriting rules
   * introduce lots of redundant variables that can be easily eliminated by propagation.
-  *
-  * We use delegation instead of inheritance, as we will integrate with other solvers in the future.
-  *
-  * Surprisingly, this preprocessor slows down model checking. Figure out, what is going on...
+  * We use delegation instead of inheritance, as we will integrate with other solvers in the future.</p>
   *
   * @author Igor Konnov
   */
 class PreproSolverContext(context: SolverContext) extends SolverContext {
-  private val eqCache: SimpleCache[String, TlaEx] = new SimpleCache()
+  private val simplifier = new ConstSimplifier()
+  // FIXME: it would be much better to use cells here, but we do not have access to the arena
+  private val cache: SimpleCache[(String, String), CacheEntry] = new SimpleCache()
 
   /**
     * Assert that a Boolean TLA+ expression holds true.
@@ -25,20 +47,42 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
     * @param ex a simplified TLA+ expression over cells
     */
   override def assertGroundExpr(ex: TlaEx): Unit = {
-    // if a variable is equal to a value, we cache this equality
-    // and do not propagate it in the solver
-    val ppex = preprocess(ex)
-    preprocess(ex) match {
-      case OperEx(TlaOper.eq, NameEx(name), right) =>
-        eqCache.put(name, right)
-        context.log(";;    -> pp cache")
+    // there are plenty of top-level constraints like (= c1 c2) or tla.in(c1, c2)
+    val ppex = simplifier.simplify(preprocess(simplifier.simplify(ex)))
+    ppex match {
+      case OperEx(TlaOper.eq, NameEx(left), NameEx(right)) =>
+        // eq and not(ne), the latter is transformed by simplifier
+        if (CellTheory().hasConst(left) && CellTheory().hasConst(right)) {
+          val pair = if (left.compareTo(right) <= 0) (left, right) else (right, left)
+          cache.put(pair, EqEntry(true))
+          context.log(";;    -> pp eq cached as true ")
+        }
 
-      case OperEx(TlaOper.eq, left, NameEx(name)) =>
-        eqCache.put(name, left)
-        context.log(";;    -> pp cache")
+      case OperEx(TlaOper.ne, NameEx(left), NameEx(right)) =>
+        // ne and not(eq), the latter is transformed by simplifier
+        if (CellTheory().hasConst(left) && CellTheory().hasConst(right)) {
+          val pair = if (left.compareTo(right) <= 0) (left, right) else (right, left)
+          cache.put(pair, EqEntry(false))
+          context.log(";;    -> pp eq cached as false ")
+        }
+
+      case OperEx(TlaSetOper.in, NameEx(left), NameEx(right)) =>
+        // in and not(notin), the latter is transformed by simplifier
+        if (CellTheory().hasConst(left) && CellTheory().hasConst(right)) {
+          cache.put((left, right), InEntry(true))
+          context.log(";;    -> pp in cached as true ")
+        }
+
+      case OperEx(TlaSetOper.notin, NameEx(left), NameEx(right)) =>
+        // notin and not(in), the latter is transformed by simplifier
+        if (CellTheory().hasConst(left) && CellTheory().hasConst(right)) {
+          cache.put((left, right), InEntry(false))
+          context.log(";;    -> pp in cached as false ")
+        }
 
       case _ => // ignore
     }
+    // we have to user assert, as the cells might have been used by earlier constraints
     context.assertGroundExpr(ppex)
   }
 
@@ -56,9 +100,29 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
 
   private def preprocess(ex: TlaEx): TlaEx = {
     ex match {
-      case NameEx(name) =>
-        eqCache.get(name) match {
-          case Some(cached) => cached
+      case OperEx(TlaOper.eq, NameEx(left), NameEx(right)) =>
+        val pair = if (left.compareTo(right) <= 0) (left, right) else (right, left)
+        cache.get(pair) match {
+          case Some(cached) => cached.asTlaEx(negate = false)
+          case None => ex
+        }
+
+      case OperEx(TlaOper.ne, NameEx(left), NameEx(right)) =>
+        val pair = if (left.compareTo(right) <= 0) (left, right) else (right, left)
+        cache.get(pair) match {
+          case Some(cached) => cached.asTlaEx(negate = true)
+          case None => ex
+        }
+
+      case OperEx(TlaSetOper.in, NameEx(left), NameEx(right)) =>
+        cache.get((left, right)) match {
+          case Some(cached) => cached.asTlaEx(negate = false)
+          case None => ex
+        }
+
+      case OperEx(TlaSetOper.notin, NameEx(left), NameEx(right)) =>
+        cache.get((left, right)) match {
+          case Some(cached) => cached.asTlaEx(negate = true)
           case None => ex
         }
 
@@ -67,7 +131,8 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
         ex
 
       case OperEx(TlaFunOper.app, fun, elem) =>
-        // do not preprocess the function, as we have to find sorts from the names
+        // Do not preprocess the function, as we have to find sorts from the names.
+        // This is not relevant anymore, as we are not using uninterpreted functions.
         OperEx(TlaFunOper.app, fun, preprocess(elem))
 
       case OperEx(oper, args @ _*) =>
@@ -171,7 +236,7 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
     */
   override def push(): Unit = {
     context.push()
-    eqCache.push()
+    cache.push()
   }
 
   /**
@@ -179,7 +244,7 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
     * to save only the latest context.
     */
   override def pop(): Unit = {
-    eqCache.pop()
+    cache.pop()
     context.pop()
   }
 
@@ -189,7 +254,7 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
     * @param n pop n times, if n > 0, otherwise, do nothing
     */
   override def pop(n: Int): Unit = {
-    eqCache.pop(n)
+    cache.pop(n)
     context.pop(n)
   }
 
@@ -197,7 +262,7 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
     * Clean the context
     */
   override def dispose(): Unit = {
-    eqCache.dispose()
+    cache.dispose()
     context.dispose()
   }
 }
