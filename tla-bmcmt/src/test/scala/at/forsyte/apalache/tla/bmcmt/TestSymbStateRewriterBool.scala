@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStoreImpl
+import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, IntT}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
@@ -536,6 +538,21 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     rewriter.pop()
     solverContext.assertGroundExpr(tla.not(nextState.ex))
     assert(solverContext.sat())
+  }
+
+  test("""SE-EX: \E x \in {1} \ {1}: x > 4, regression""") {
+    val ex = tla.exists(tla.name("x"),
+      tla.setminus(tla.enumSet(tla.int(1)), tla.enumSet(tla.int(1))),
+      tla.gt(tla.name("x"), tla.int(4)))
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding)
+    val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
+    val fex = new FreeExistentialsStoreImpl()
+    fex.store = fex.store + ex.ID
+    rewriter.freeExistentialsStore = fex
+
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat()) // regression test, the buggy implementation failed here
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.not(nextState.ex))) // E x \in {} is false
   }
 
   test("""SE-ALL3: \A x \in {1, 2, 3}: x < 10 ~~> $B$k""") {

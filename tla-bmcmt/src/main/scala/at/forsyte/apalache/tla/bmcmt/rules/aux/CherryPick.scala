@@ -35,7 +35,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
         picker.pickFromPowset(t, set, state)
 
       case FinFunSetT(domt@FinSetT(_), cdm@FinSetT(rest)) =>
-        // no emptiness check, since we are dealing with a function set [S -> T]
+        // No emptiness check, since we are dealing with a function set [S -> T].
+        // If S is empty, we get a function of the empty set.
         pickFunFromFunSet(FunT(domt, rest), set, state)
 
       case _ =>
@@ -109,8 +110,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
   /**
     * Intoduce an integer oracle variable over 0..N, where the indices from 0 to N - 1 correspond to the set elements,
     * whereas the index N corresponds to the default choice when the set is empty. This method does not add any
-    * constraints one the contents of the set. Nor it defines the default value. It is up to the specific operator
-    * how it is done
+    * constraints on the contents of the set, you can do it by calling constrainOracleWithIn.
+    * Nor it defines the default value. It is up to the specific operator how it is done.
     *
     * @param state
     * @param set
@@ -127,6 +128,35 @@ class CherryPick(rewriter: SymbStateRewriter) {
     solverAssert(tla.ge(oracle, tla.int(0)))
     solverAssert(tla.le(oracle, tla.int(nelems)))
     nextState.setRex(oracle).setTheory(CellTheory())
+  }
+
+  /**
+    * <p>Add the following constraints:</p>
+    *
+    * <ul>
+    *   <li>oracle = i > in(e_i, S) for 0 <= i < N, and</li>
+    *   <li>oracle = N => \A i \in 0..(N-1) ~in(e_i, S).</li>
+    * </ul>
+    *
+    * <p>It is often natural to add these constraints. Sometimes, these constraints come in a different form.</p>
+    *
+    * @param oracle an oracle that is created with newOracleWithDefault
+    * @param set a set cell
+    * @param setElems the cells pointed by the set
+    */
+  def constrainOracleWithIn(oracle: ArenaCell, set: ArenaCell, setElems: Seq[ArenaCell]): Unit = {
+    def chooseWhenIn(el: ArenaCell, no: Int): Unit = {
+      val chosen = tla.eql(oracle.toNameEx, tla.int(no))
+      val in = tla.in(el, set)
+      rewriter.solverContext.assertGroundExpr(tla.impl(chosen, in))
+    }
+
+    // 1. oracle = i > in(e_i, S) for 0 <= i < N
+    setElems.zipWithIndex foreach (chooseWhenIn _).tupled
+    // 2. oracle = N => \A i \in 0..(N-1) ~in(e_i, S)
+    val allNotIn = tla.and(setElems map (e => tla.not(tla.in(e, set))) :_*)
+    val defaultChosen = tla.eql(oracle.toNameEx, tla.int(setElems.size))
+    rewriter.solverContext.assertGroundExpr(tla.impl(defaultChosen, allNotIn))
   }
 
   /**

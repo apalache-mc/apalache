@@ -151,34 +151,42 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
       // \E x \in {}... is FALSE
       setState.setTheory(BoolTheory()).setRex(NameEx(SolverContext.falseConst))
     } else {
-      freeExistsInNonEmptySet(setState, boundVar, predEx, set, setCells)
+      freeExistsInStaticallyNonEmptySet(setState, boundVar, predEx, set, setCells)
     }
   }
 
-  // introduce a Skolem constant for a free-standing existential quantifier:
-  // that is, rewrite, \E x \in S: P(x) as S /= {} /\ P(c) for a constant c picked from S
-  private def freeExistsInNonEmptySet(setState: SymbState, boundVar: String, predEx: TlaEx,
+  // Introduce a Skolem constant for a free-standing existential quantifier:
+  // that is, rewrite, \E x \in S: P(x) as S /= {} /\ P(c) for a constant c picked from S.
+  //
+  // We have to take care of the case, when the set S is actually empty, e.g., S = {1} \ {1}.
+  // In this case, exists should return FALSE.
+  private def freeExistsInStaticallyNonEmptySet(setState: SymbState, boundVar: String, predEx: TlaEx,
                                       set: ArenaCell, setCells: List[ArenaCell]) = {
+    // note that \E x \in SUBSET(S): ... is handled separately, so we can use pickByOracle
     rewriter.solverContext.log("; free existential rule over a finite set")
-    // pick an arbitrary witness
-    val pickState = pickRule.pick(set, setState)
-    val pickedCell = pickState.arena.findCellByNameEx(pickState.ex)
+    // choose an oracle with the default case oracle = N, when the set is empty
+    var nextState = pickRule.newOracleWithDefault(setState, set, setCells)
+    val oracle = nextState.asCell
+    pickRule.constrainOracleWithIn(oracle, set, setCells)
+    // pick an arbitrary witness according to the oracle
+    nextState = pickRule.pickByOracle(nextState, oracle.toNameEx, setCells)
+    val pickedCell = nextState.asCell
     // enforce that the witness satisfies the predicate
-    val extendedBinding = pickState.binding + (boundVar -> pickedCell)
+    val extendedBinding = nextState.binding + (boundVar -> pickedCell)
     // predState.ex contains the predicate applied to the witness
-    val predState = rewriter.rewriteUntilDone(pickState
+    nextState = rewriter.rewriteUntilDone(nextState
       .setTheory(BoolTheory()).setRex(predEx).setBinding(extendedBinding))
-    val predWitness = predState.ex
+    val predWitness = nextState.ex
 
     // \E x \in S: p holds iff predWitness /\ S /= {}
     val exPred = NameEx(rewriter.solverContext.introBoolConst())
-    val notEmpty = tla.or(setCells.map(e => tla.in(e, set)): _*)
-    val iff = tla.equiv(exPred, tla.and(predWitness, notEmpty))
+    val setNonEmpty = tla.neql(oracle.toNameEx, tla.int(setCells.size))
+    val iff = tla.equiv(exPred, tla.and(setNonEmpty, predWitness))
     rewriter.solverContext.assertGroundExpr(iff)
 
-    predState.setRex(exPred)
+    nextState.setRex(exPred)
       .setTheory(BoolTheory())
-      .setBinding(predState.binding - boundVar) // forget the binding to x, but not the other bindings!
+      .setBinding(nextState.binding - boundVar) // forget the binding to x, but not the other bindings!
   }
 
   // Introduce a Skolem constant for a free-standing existential quantifier:

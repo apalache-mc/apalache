@@ -2,11 +2,11 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
-import at.forsyte.apalache.tla.bmcmt.types.FinSetT
+import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinFunSetT, FinSetT, PowSetT}
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
-
+import at.forsyte.apalache.tla.lir.convenience.tla
 
 /**
   * Implements the rules: SE-ASSIGN{1,2,3}.
@@ -45,8 +45,8 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val nextState = rewriter.rewriteUntilDone(state.setRex(rhs).setTheory(CellTheory()))
         val rhsCell = nextState.arena.findCellByNameEx(nextState.ex)
         val finalState = nextState
-          .setTheory(BoolTheory())
-          .setRex(NameEx(SolverContext.trueConst))         // just return TRUE
+          .setTheory(CellTheory())
+          .setRex(state.arena.cellTrue().toNameEx)         // just return TRUE
           .setBinding(nextState.binding + (name + "'" -> rhsCell))  // bind the cell to the name
         rewriter.coerce(finalState, state.theory)
 
@@ -55,19 +55,40 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // switch to cell theory
         val setState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(set))
         val setCell = setState.arena.findCellByNameEx(setState.ex)
+        val elemCells = setState.arena.getHas(setCell)
         val finalState =
-          if (setCell.cellType.isInstanceOf[FinSetT]
-            && setState.arena.getHas(setCell).isEmpty) {
+          if (setCell.cellType.isInstanceOf[FinSetT] && elemCells.isEmpty) {
             // nothing to pick from an empty set, return false
-            setState.setTheory(BoolTheory()).setRex(NameEx(SolverContext.falseConst))
+            setState.setTheory(CellTheory()).setRex(setState.arena.cellFalse().toNameEx)
           } else {
-            // pick an arbitrary witness
-            val pickState = pickRule.pick(setCell, setState)
-            val pickedCell = pickState.arena.findCellByNameEx(pickState.ex)
-            pickState
-              .setTheory(BoolTheory())
-              .setRex(NameEx(SolverContext.trueConst))           // just return TRUE
-              .setBinding(pickState.binding + (name + "'" -> pickedCell)) // bind the picked cell to the name
+            setCell.cellType match {
+              case PowSetT(_) | FinFunSetT(_, _) =>
+                // these sets are never empty
+                var nextState = pickRule.pick(setCell, setState)
+                val pickedCell = nextState.asCell
+                nextState
+                  .setTheory(CellTheory())
+                  .setRex(nextState.arena.cellTrue().toNameEx) // always true
+                  .setBinding(nextState.binding + (name + "'" -> pickedCell)) // bind the picked cell to the name
+
+              case FinSetT(_) =>
+                // choose an oracle with the default case oracle = N, when the set is empty
+                var nextState = pickRule.newOracleWithDefault(setState, setCell, elemCells)
+                val oracle = nextState.asCell
+                pickRule.constrainOracleWithIn(oracle, setCell, elemCells)
+                // pick an arbitrary witness
+                nextState = pickRule.pickByOracle(nextState, oracle.toNameEx, elemCells)
+                val pickedCell = nextState.asCell
+                // introduce a Boolean result that equals true unless the set is empty
+                nextState = nextState.appendArenaCell(BoolT())
+                val result = nextState.arena.topCell.toNameEx
+                rewriter.solverContext.assertGroundExpr(tla.eql(result, tla.neql(oracle.toNameEx, tla.int(elemCells.size))))
+
+                nextState
+                  .setTheory(CellTheory())
+                  .setRex(result) // true as soon as S /= {}
+                  .setBinding(nextState.binding + (name + "'" -> pickedCell)) // bind the picked cell to the name
+            }
           }
 
         rewriter.coerce(finalState, state.theory)

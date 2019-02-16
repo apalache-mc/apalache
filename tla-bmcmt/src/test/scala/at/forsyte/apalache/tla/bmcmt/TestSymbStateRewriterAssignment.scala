@@ -22,20 +22,12 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
-    val boundCell =
-      nextState.ex match {
-        case NameEx(name) =>
-          assert(CellTheory().hasConst(name))
-          assert(arena.cellTrue().toString == name)
-          assert(nextState.binding.size == 1)
-          assert(nextState.binding.contains("x'"))
-          nextState.binding("x'")
-
-        case _ =>
-          fail("Unexpected rewriting result")
-      }
-
     assert(solverContext.sat()) // no contradiction introduced
+
+    assertTlaExAndRestore(rewriter, nextState)
+    assert(nextState.binding.size == 1)
+    assert(nextState.binding.contains("x'"))
+    val boundCell = nextState.binding("x'")
     rewriter.push()
     solverContext.assertGroundExpr(tla.eql(boundCell, tla.int(1)))
     assert(solverContext.sat()) // ok
@@ -94,6 +86,19 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     }
   }
 
+  test("""SE-IN-ASSIGN1(int): x' \in {1} \ {1} ~~> FALSE""") {
+    // a regression test
+    val assign = tla.in(x_prime, tla.setminus(tla.enumSet(1), tla.enumSet(1)))
+
+    val state = new SymbState(assign, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    // no contradiction should be introduced
+    assert(solverContext.sat())
+    // the assignment gives us false
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.not(nextState.ex)))
+  }
+
   test("""SE-IN-ASSIGN1(int): x' \in {1} /\ x' = 1 ~~> TRUE and [x -> $C$k]""") {
     val set = tla.enumSet(tla.int(1))
     val assign = tla.in(x_prime, set)
@@ -132,21 +137,15 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
-    val boundCell =
-      nextState.ex match {
-        case NameEx(name) =>
-          assert(CellTheory().hasConst(name))
-          assert(arena.cellTrue().toString == name)
-          assert(nextState.binding.size == 1)
-          assert(nextState.binding.contains("x'"))
-          nextState.binding("x'")
-
-        case _ =>
-          fail("Unexpected rewriting result")
-      }
-
     // no contradiction introduced
     assert(solverContext.sat())
+    // it returns true
+    assertTlaExAndRestore(rewriter, nextState)
+
+    assert(nextState.binding.size == 1)
+    assert(nextState.binding.contains("x'"))
+    val boundCell = nextState.binding("x'")
+
     // may equal to {1, 2}
     rewriter.push()
     val eq12 = tla.eql(boundCell, set12)
@@ -178,21 +177,14 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
     val rewriter = createWithoutCache() // it is critical that 1+1 does not get simplified
     val nextState = rewriter.rewriteUntilDone(state)
-    val boundCell =
-      nextState.ex match {
-        case NameEx(name) =>
-          assert(CellTheory().hasConst(name))
-          assert(arena.cellTrue().toString == name)
-          assert(nextState.binding.size == 1)
-          assert(nextState.binding.contains("x'"))
-          nextState.binding("x'")
-
-        case _ =>
-          fail("Unexpected rewriting result")
-      }
-
     // no contradiction introduced
     assert(solverContext.sat())
+    assertTlaExAndRestore(rewriter, nextState)
+
+    assert(nextState.binding.size == 1)
+    assert(nextState.binding.contains("x'"))
+    val boundCell = nextState.binding("x'")
+
     // may equal to {1, 2}
     rewriter.push()
     val eq12 = tla.eql(boundCell, tla.enumSet(1, 2))
@@ -291,21 +283,13 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
-    val boundCell =
-      nextState.ex match {
-        case NameEx(name) =>
-          assert(CellTheory().hasConst(name))
-          assert(arena.cellTrue().toString == name)
-          assert(nextState.binding.size == 1)
-          assert(nextState.binding.contains("x'"))
-          nextState.binding("x'")
-
-        case _ =>
-          fail("Unexpected rewriting result")
-      }
-
     // no contradiction introduced
     assert(solverContext.sat())
+    assertTlaExAndRestore(rewriter, nextState)
+    assert(nextState.binding.size == 1)
+    assert(nextState.binding.contains("x'"))
+    val boundCell = nextState.binding("x'")
+
     // may equal to fun0
     rewriter.push()
     val eqFun0 = tla.eql(boundCell, fun0)
@@ -373,6 +357,21 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     val eqStateFun2 = rewriter.rewriteUntilDone(nextState.setTheory(BoolTheory()).setRex(eqFun2))
     solverContext.assertGroundExpr(eqStateFun2.ex)
     assertUnsatOrExplain(rewriter, eqStateFun2) // should not be possible
+  }
+
+  test("""SE-IN-ASSIGN1(funset): x' \in [{} -> {0, 1}] ~~> FALSE""") {
+    // regression
+    val set = tla.funSet(tla.enumSet(), tla.enumSet(tla.int(0), tla.int(1)))
+    val assign = tla.in(x_prime, set)
+
+    val state = new SymbState(assign, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    // no contradiction introduced
+    assert(solverContext.sat())
+    // The assignment rule returns a function that is defined on the empty set.
+    // It's probably similar to an empty set. In fact, the associated relation is empty.
+    assertTlaExAndRestore(rewriter, nextState)
   }
 
   private val boolset: OperEx = tla.enumSet(tla.bool(false), tla.bool(true))
