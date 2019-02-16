@@ -11,9 +11,9 @@ import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 import com.google.common.math.IntMath
 import box.setlike.DisjointSets
 import box.setlike.DisjointSets.DJSState
-
 import scalaz._
 import Scalaz._
+import at.forsyte.apalache.tla.lir.io.UTFPrinter
 
 object CounterStates {
   type CounterType = Int

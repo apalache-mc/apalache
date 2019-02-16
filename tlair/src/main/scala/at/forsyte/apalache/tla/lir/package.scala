@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla
 
 package lir {
   
+  import at.forsyte.apalache.tla.lir.io.UTFPrinter
   import at.forsyte.apalache.tla.lir.oper._
 
   /** the base class for the universe of objects used in TLA+ */

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.lir.UTFPrinter
+import at.forsyte.apalache.tla.lir.io.UTFPrinter
 
 import scala.collection.immutable.SortedMap
 

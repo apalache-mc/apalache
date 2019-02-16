@@ -1,5 +1,6 @@
-package at.forsyte.apalache.tla.lir
+package at.forsyte.apalache.tla.lir.io
 
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.control.{LetInOper, TlaControlOper}
 import at.forsyte.apalache.tla.lir.oper._

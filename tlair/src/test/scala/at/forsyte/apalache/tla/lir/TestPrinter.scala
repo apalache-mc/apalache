@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.lir
 
+import at.forsyte.apalache.tla.lir.io.{Printer, SimplePrinter, UTFPrinter}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
