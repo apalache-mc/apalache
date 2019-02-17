@@ -101,9 +101,10 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80) {
         }
         val boxes: Seq[FormatElem] =
           keys.zip(values).map(p => HovBox(
-            Seq(formatIndex(p._1), TextElem(" %s ".format(UTFPrinter.m_in)), toFormatElem(p._2)),
+            Seq(formatIndex(p._1), TextElem(" = "), toFormatElem(p._2)),
               ""))
-        HovBox(TextElem("[") :: HBox(boxes, ", ")
+        HovBox(TextElem("[") :: toFormatElem(mapEx) :: TextElem(" EXCEPT ")
+          :: HBox(boxes, ", ")
           :: TextElem(" %s ".format(UTFPrinter.m_mapto)) :: toFormatElem(mapEx) :: TextElem("]") :: Nil, "")
 
       case OperEx(TlaFunOper.app, funEx, argEx) =>
