@@ -8,4 +8,4 @@ import at.forsyte.apalache.tla.assignments.passes.SpecWithTransitionsMixin
   *
   * @author Igor Konnov
   */
-trait SimpleSkolemizationPass extends Pass with SpecWithTransitionsMixin
+trait HintsAndSkolemizationPass extends Pass with SpecWithTransitionsMixin

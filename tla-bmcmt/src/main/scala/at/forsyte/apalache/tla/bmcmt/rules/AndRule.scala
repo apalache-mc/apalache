@@ -6,7 +6,10 @@ import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 
 /**
-  * Implements the rules: SE-AND[1-4].
+  * Implement the rule for conjunction. Similar to TLC, we short-circuit A /\ B as IF A THEN B ELSE FALSE.
+  * This allows us to introduce an optimization on-the-fly for the conjunctions that were marked with a hint.
+  * In this optimization, we push the context, assume A and check satisfiability of the SMT context.
+  * If the context is unsat, we immediately return FALSE. Otherwise, we pop the context and continue.
   *
   * @author Igor Konnov
   */
@@ -21,8 +24,8 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     val falseConst = SolverContext.falseConst
     val trueConst = SolverContext.trueConst
-    val simplfier = new ConstSimplifier()
-    simplfier.simplifyShallow(state.ex) match {
+    val simplifier = new ConstSimplifier()
+    simplifier.simplifyShallow(state.ex) match {
       case OperEx(TlaBoolOper.and, args @ _*) =>
         val finalState =
           if (args.isEmpty) {
@@ -37,7 +40,7 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
               }
             }
             // create a chain of IF-THEN-ELSE expressions and rewrite them
-            val newState = state.setRex(toIte(args)).setTheory(BoolTheory())
+            val newState = state.setRex(toIte(args)).setTheory(CellTheory())
             rewriter.rewriteUntilDone(newState)
           }
 

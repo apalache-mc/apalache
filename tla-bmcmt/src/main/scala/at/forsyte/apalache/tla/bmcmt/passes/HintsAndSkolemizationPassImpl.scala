@@ -6,26 +6,29 @@ import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
 import at.forsyte.apalache.tla.assignments.SpecWithTransitions
 import at.forsyte.apalache.tla.assignments.passes.SpecWithTransitionsMixin
 import at.forsyte.apalache.tla.bmcmt.CheckerException
-import at.forsyte.apalache.tla.bmcmt.analyses.{FreeExistentialsStoreImpl, SimpleSkolemization}
+import at.forsyte.apalache.tla.bmcmt.analyses.{FormulaHintsStoreImpl, FreeExistentialsStoreImpl, HintFinder, SimpleSkolemization}
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.process.Renaming
-import at.forsyte.apalache.tla.lir.{IdOrdering, Identifiable, TlaEx}
+import at.forsyte.apalache.tla.lir.TlaEx
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
 /**
   * Find free-standing existential quantifiers and rename all local bindings, so they have unique names.
+  *
   * @param options
-  * @param freeExistentialsStoreImpl
+  * @param frexStoreImpl
+  * @param hintsStoreImpl
   * @param renaming
   * @param nextPass
   */
-class SimpleSkolemizationPassImpl @Inject()(val options: PassOptions,
-                                            freeExistentialsStoreImpl: FreeExistentialsStoreImpl,
-                                            renaming: Renaming,
-                                            @Named("AfterSkolem") nextPass: Pass with SpecWithTransitionsMixin)
-  extends SimpleSkolemizationPass with LazyLogging {
+class HintsAndSkolemizationPassImpl @Inject()(val options: PassOptions,
+                                              frexStoreImpl: FreeExistentialsStoreImpl,
+                                              hintsStoreImpl: FormulaHintsStoreImpl,
+                                              renaming: Renaming,
+                                              @Named("AfterSkolem") nextPass: Pass with SpecWithTransitionsMixin)
+  extends HintsAndSkolemizationPass with LazyLogging {
 
   private var specWithTransitions: Option[SpecWithTransitions] = None
 
@@ -34,7 +37,7 @@ class SimpleSkolemizationPassImpl @Inject()(val options: PassOptions,
     *
     * @return the name associated with the pass
     */
-  override def name: String = "SimpleSkolemization"
+  override def name: String = "SkolemizationAndHints"
 
   object StringOrdering extends Ordering[Object] {
     override def compare(x: Object, y: Object): Int = x.toString compare y.toString
@@ -55,14 +58,16 @@ class SimpleSkolemizationPassImpl @Inject()(val options: PassOptions,
     // The most stable way is to sort them by their string representation.
     val initRenamed = spec.initTransitions.sorted(StringOrdering).map(renaming.renameBindingsUnique)
     val nextRenamed = spec.nextTransitions.sorted(StringOrdering).map(renaming.renameBindingsUnique)
+
     def renameIfDefined(ex: Option[TlaEx]): Option[TlaEx] = ex match {
       case Some(ni) => Some(renaming.renameBindingsUnique(ni))
       case None => None
     }
+
     val notInvRenamed = renameIfDefined(spec.notInvariant)
     val notInvPrimeRenamed = renameIfDefined(spec.notInvariantPrime)
     var newSpec = new SpecWithTransitions(spec.rootModule, initRenamed, nextRenamed, notInvRenamed, notInvPrimeRenamed)
-    val skolem = new SimpleSkolemization(freeExistentialsStoreImpl)
+    val skolem = new SimpleSkolemization(frexStoreImpl)
     newSpec = skolem.transformAndLabel(newSpec)
 
     logger.debug("Transitions after renaming and skolemization")
@@ -78,8 +83,11 @@ class SimpleSkolemizationPassImpl @Inject()(val options: PassOptions,
     }
     logger.debug("Negated invariant:\n   %s".format(newSpec.notInvariant))
 
+    val hintFinder = new HintFinder(hintsStoreImpl)
+    hintFinder.findHints(spec)
+
     nextPass.setSpecWithTransitions(newSpec)
-    val nfree = freeExistentialsStoreImpl.store.size
+    val nfree = frexStoreImpl.store.size
     logger.info(s"Found $nfree free existentials in the transitions")
     true
   }

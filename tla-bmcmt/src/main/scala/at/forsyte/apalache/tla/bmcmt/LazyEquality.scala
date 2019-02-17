@@ -276,7 +276,7 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
     val rightElems = state.arena.getHas(right)
     if (leftElems.isEmpty) {
       // SE-SUBSETEQ1
-      state.setRex(tla.bool(true)).setTheory(BoolTheory())
+      state.setRex(state.arena.cellTrue()).setTheory(CellTheory())
     } else if (rightElems.isEmpty) {
       // SE-SUBSETEQ2
       def notIn(le: ArenaCell) = {

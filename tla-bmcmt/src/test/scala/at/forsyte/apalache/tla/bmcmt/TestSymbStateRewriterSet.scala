@@ -1127,7 +1127,7 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SUBSET[1-3]: {} \subset {1, 2, 3} ~~> $B$... (true)""") {
+  test("""SE-SUBSET[1-3]: {} \subset {1, 2, 3} ~~> TRUE""") {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     // an empty set requires a type annotation
     val ex = tla.subset(emptySetWithType(IntT()), right)
@@ -1150,7 +1150,7 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SUBSET[1-3]: {1, 4} \subset {1, 2, 3} ~~> $B$... (false)""") {
+  test("""SE-SUBSET[1-3]: {1, 4} \subset {1, 2, 3} ~~> FALSE""") {
     val left = tla.enumSet(tla.int(1), tla.int(4))
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.subset(left, right)
@@ -1230,7 +1230,7 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SUPSET[1-3]: {1, 2, 3} \supset {} ~~> $B$... (true)""") {
+  test("""SE-SUPSET[1-3]: {1, 2, 3} \supset {} ~~> TRUE""") {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     // an empty set requires a type annotation
     val ex = tla.supset(right, emptySetWithType(IntT()))
@@ -1253,7 +1253,7 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SUBSET[1-3]: {1, 2, 3} \subset {1, 4} ~~> $B$... (false)""") {
+  test("""SE-SUBSET[1-3]: {1, 2, 3} \subset {1, 4} ~~> FALSE""") {
     val left = tla.enumSet(tla.int(1), tla.int(4))
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.subset(right, left)

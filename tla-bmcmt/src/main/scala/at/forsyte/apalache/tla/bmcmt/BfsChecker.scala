@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt
 
 import java.io.{FileWriter, PrintWriter, StringWriter}
 
-import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FreeExistentialsStoreImpl}
+import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore, FreeExistentialsStoreImpl}
 import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.imp.src.SourceStore
@@ -25,6 +25,7 @@ import scala.util.matching.Regex
   * @author Igor Konnov
   */
 class BfsChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsStoreImpl,
+                 formulaHintsStore: FormulaHintsStore,
                  exprGradeStore: ExprGradeStore, sourceStore: SourceStore, checkerInput: CheckerInput,
                  stepsBound: Int, filter: String,
                  debug: Boolean = false, profile: Boolean = false,
@@ -44,6 +45,7 @@ class BfsChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsStore
 
   private val rewriter: SymbStateRewriterImpl = new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
   rewriter.freeExistentialsStore = frexStore
+  rewriter.formulaHintsStore = formulaHintsStore
   rewriter.introFailures = checkRuntime
 
   private val stepFilters: Seq[String] = if (filter == "") Seq() else filter.split(",")
