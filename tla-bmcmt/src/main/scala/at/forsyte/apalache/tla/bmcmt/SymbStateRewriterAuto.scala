@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeAnalysis, ExprGradeStore, ExprGradeStoreImpl, FreeExistentialsStore}
+import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.caches.{ExprCache, IntValueCache, RecordDomainCache, StrValueCache}
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
@@ -45,6 +45,8 @@ class SymbStateRewriterAuto(val solverContext: SolverContext) extends SymbStateR
   override def exprCache: ExprCache = impl.exprCache
 
   override def freeExistentialsStore: FreeExistentialsStore = impl.freeExistentialsStore
+
+  override def formulaHintsStore: FormulaHintsStore = impl.formulaHintsStore
 
   override def exprGradeStore: ExprGradeStore = exprGradeStoreImpl
 
