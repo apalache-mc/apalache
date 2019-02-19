@@ -88,26 +88,13 @@ class BfsChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsStore
     outcome
   }
 
-  private def printRewriterSourceLoc(): Unit = {
-    def getSourceLocation(ex: TlaEx) = sourceStore.find(ex.ID)
-
-    rewriter.getRewritingStack().find(getSourceLocation(_).isDefined) match {
-      case None =>
-        logger.error("Unable find the source of the problematic expression")
-
-      case Some(ex) =>
-        val loc = getSourceLocation(ex).get
-        logger.error(s"The problem occurs around the source location $loc")
-    }
-  }
 
   // does the transition number satisfy the given filter at the given step?
   private def stepMatchesFilter(stepNo: Int, transitionNo: Int): Boolean = {
     if (stepFilters.size <= stepNo) {
       true // no filter applied
     } else {
-      val stepRegex = new Regex(stepFilters(stepNo))
-      stepRegex.findFirstIn(transitionNo.toString).isDefined
+      transitionNo.toString.matches("^%s$".format(stepFilters(stepNo)))
     }
   }
 
@@ -494,5 +481,18 @@ class BfsChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsStore
     }
     writer.println(hrule)
     writer.close()
+  }
+
+  private def printRewriterSourceLoc(): Unit = {
+    def getSourceLocation(ex: TlaEx) = sourceStore.find(ex.ID)
+
+    rewriter.getRewritingStack().find(getSourceLocation(_).isDefined) match {
+      case None =>
+        logger.error("Unable find the source of the problematic expression")
+
+      case Some(ex) =>
+        val loc = getSourceLocation(ex).get
+        logger.error(s"The problem occurs around the source location $loc")
+    }
   }
 }
