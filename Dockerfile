@@ -15,5 +15,8 @@ ENV _JAVA_OPTIONS="-Djdk.net.URLClassPath.disableClassPathURLCheck=true"
 RUN "3rdparty/install-local.sh"
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/apalache/3rdparty/lib/"
 
+# clean the leftovers from the previous non-docker builds
+RUN mvn clean
+# build the package
 RUN mvn package
 CMD ["bin/apalache-mc"]
