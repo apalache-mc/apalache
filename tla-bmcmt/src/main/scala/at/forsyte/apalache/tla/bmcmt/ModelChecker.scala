@@ -25,13 +25,13 @@ import scala.collection.immutable.SortedMap
   *
   * @author Igor Konnov
   */
-class BfsChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsStoreImpl,
-                 formulaHintsStore: FormulaHintsStore,
-                 exprGradeStore: ExprGradeStore, sourceStore: SourceStore, checkerInput: CheckerInput,
-                 stepsBound: Int, filter: String,
-                 searchStrategy: SearchStrategy,
-                 debug: Boolean = false, profile: Boolean = false,
-                 checkRuntime: Boolean = false) extends Checker with LazyLogging {
+class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsStoreImpl,
+                   formulaHintsStore: FormulaHintsStore,
+                   exprGradeStore: ExprGradeStore, sourceStore: SourceStore, checkerInput: CheckerInput,
+                   stepsBound: Int, filter: String,
+                   searchStrategy: SearchStrategy,
+                   debug: Boolean = false, profile: Boolean = false,
+                   checkRuntime: Boolean = false) extends Checker with LazyLogging {
 
   import Checker._
 
