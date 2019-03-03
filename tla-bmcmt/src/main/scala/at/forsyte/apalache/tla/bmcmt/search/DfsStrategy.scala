@@ -4,6 +4,8 @@ import at.forsyte.apalache.tla.bmcmt.CheckerInput
 import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy.{BacktrackOnce, Command, Finish}
 import com.typesafe.scalalogging.LazyLogging
 
+import scala.util.Random
+
 class DfsStrategy(input: CheckerInput, stepsBound: Int, randomize: Boolean) extends SearchStrategy with LazyLogging {
   var stepNo = 0
   var terminate = false
@@ -18,11 +20,12 @@ class DfsStrategy(input: CheckerInput, stepsBound: Int, randomize: Boolean) exte
       BacktrackOnce()
     } else if (stepNo == 0) {
       if (unexploredIndices.isEmpty) {
-        val allIndices = input.initTransitions.indices
+        val allIndices = shuffleIfNeeded(input.initTransitions.indices)
         unexploredIndices = Seq(allIndices.tail)
-        // explore the 0-th transition
-        logger.debug(s"DFS: step $stepNo, transition 0")
-        SearchStrategy.NextStep(stepNo, Seq(allIndices.head))
+        // start with the head
+        val hd = allIndices.head
+        logger.debug(s"DFS: step $stepNo, transition $hd")
+        SearchStrategy.NextStep(stepNo, Seq(hd))
       } else {
         assert(unexploredIndices.length == 1)
         if (unexploredIndices.head.isEmpty) {
@@ -39,11 +42,12 @@ class DfsStrategy(input: CheckerInput, stepsBound: Int, randomize: Boolean) exte
     } else { // step > 0
       if (unexploredIndices.length - 1 < stepNo) {
         // explore all transitions at this depth
-        val allIndices = input.nextTransitions.indices
+        val allIndices = shuffleIfNeeded(input.nextTransitions.indices)
         unexploredIndices = allIndices.tail +: unexploredIndices
-        // explore the 0-th transition
-        logger.debug(s"DFS: step $stepNo, transition 0")
-        SearchStrategy.NextStep(stepNo, Seq(allIndices.head))
+        // start with the head
+        val hd = allIndices.head
+        logger.debug(s"DFS: step $stepNo, transition $hd")
+        SearchStrategy.NextStep(stepNo, Seq(hd))
       } else {
         val unexplored = unexploredIndices.head
         if (unexplored.isEmpty) {
@@ -75,6 +79,14 @@ class DfsStrategy(input: CheckerInput, stepsBound: Int, randomize: Boolean) exte
       case SearchStrategy.NextStepDisabled() =>
         logger.debug(s"DFS response: disabled")
         () // nothing to do, just continue at this level
+    }
+  }
+
+  private def shuffleIfNeeded(transitions: Seq[Int]): Seq[Int] = {
+    if (randomize) {
+      Random.shuffle(transitions)
+    } else {
+      transitions
     }
   }
 }
