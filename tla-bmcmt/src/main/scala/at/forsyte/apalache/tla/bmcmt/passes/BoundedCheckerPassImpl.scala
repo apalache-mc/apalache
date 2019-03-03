@@ -62,7 +62,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
 
     val checker: Checker =
         new ModelChecker(typeFinder, freeExistentialsStore, hintsStore, exprGradeStore, sourceStore,
-          input, stepsBound, filter, strategy, debug, profile, checkRuntime)
+          input, strategy, filter, debug, profile, checkRuntime)
 
     val outcome = checker.run()
     logger.info("The outcome is: " + outcome)

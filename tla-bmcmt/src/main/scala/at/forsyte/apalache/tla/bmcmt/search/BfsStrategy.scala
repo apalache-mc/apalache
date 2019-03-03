@@ -5,11 +5,13 @@ import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy.Command
 
 class BfsStrategy(input: CheckerInput, stepsBound: Int) extends SearchStrategy {
   var stepNo = 0
-  var terminate = false
+  var deadlock = false
 
   override def getCommand: Command = {
-    if (terminate || stepNo > stepsBound) {
+    if (stepNo > stepsBound) {
       SearchStrategy.Finish()
+    } else if (deadlock) {
+      SearchStrategy.FinishOnDeadlock()
     } else if (stepNo == 0) {
       SearchStrategy.NextStep(stepNo, input.initTransitions.indices)
     } else {
@@ -20,7 +22,7 @@ class BfsStrategy(input: CheckerInput, stepsBound: Int) extends SearchStrategy {
   override def registerResponse(response: SearchStrategy.Response): Unit = {
     response match {
       case SearchStrategy.NextStepFired() => stepNo += 1
-      case SearchStrategy.NextStepDisabled() => terminate = true
+      case SearchStrategy.NextStepDisabled() => deadlock = true
       case SearchStrategy.Backtracked() => () // nothing to do
     }
   }

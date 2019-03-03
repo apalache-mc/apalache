@@ -5,7 +5,7 @@ import java.io.{FileWriter, PrintWriter, StringWriter}
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore, FreeExistentialsStoreImpl}
 import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
 import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy
-import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy.{BacktrackOnce, Backtracked, Finish, NextStep}
+import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
@@ -28,10 +28,10 @@ import scala.collection.immutable.SortedMap
 class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsStoreImpl,
                    formulaHintsStore: FormulaHintsStore,
                    exprGradeStore: ExprGradeStore, sourceStore: SourceStore, checkerInput: CheckerInput,
-                   stepsBound: Int, filter: String,
                    searchStrategy: SearchStrategy,
-                   debug: Boolean = false, profile: Boolean = false,
-                   checkRuntime: Boolean = false) extends Checker with LazyLogging {
+                   filter: String,
+                   debug: Boolean = false, profile: Boolean = false, checkRuntime: Boolean = false)
+  extends Checker with LazyLogging {
 
   import Checker._
 
@@ -71,24 +71,33 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
     val outcome =
       try {
         applySearchStrategy()
-        Outcome.NoError
       } catch {
+        case _ : CancelSearchException =>
+          Outcome.Error
+
         case err: CheckerException =>
           // try to get any info about the problematic source location
           printRewriterSourceLoc()
           throw err
-
-        case ce: CancelSearchException =>
-          ce.outcome
       }
     // flush the logs
     rewriter.dispose()
     outcome
   }
 
-  private def applySearchStrategy(): Unit = {
+  private def applySearchStrategy(): Outcome.Value = {
     searchStrategy.getCommand match {
-      case Finish() => () // done
+      case Finish() => Outcome.NoError // done
+
+      case FinishOnDeadlock() =>
+        logger.error(s"Deadlock detected.")
+        if (solverContext.sat()) {
+          logger.error("Check an execution leading to a deadlock state in counterexample.txt")
+          dumpCounterexample()
+        } else {
+          logger.error("No model found that would describe the deadlock")
+        }
+        Outcome.Deadlock
 
       case BacktrackOnce() =>
         rewriter.pop()

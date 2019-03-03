@@ -20,6 +20,7 @@ object SearchStrategy {
   case class NextStep(stepNo: Int, transitions: Seq[Int], popContext: Boolean = false) extends Command
   case class BacktrackOnce() extends Command
   case class Finish() extends Command
+  case class FinishOnDeadlock() extends Command
 
   abstract class Response
   case class NextStepFired() extends Response
