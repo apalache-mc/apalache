@@ -92,6 +92,7 @@ object Tool extends App with LazyLogging {
     executor.options.setOption("checker.length", check.length)
     executor.options.setOption("checker.search", check.search)
     executor.options.setOption("checker.filter", check.filter)
+    executor.options.setOption("checker.randomizeDfs", check.randomizeDfs)
     executor.options.setOption("checker.checkRuntime", check.checkRuntime)
 
     val result = executor.run()

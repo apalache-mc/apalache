@@ -4,6 +4,7 @@ import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
 import at.forsyte.apalache.tla.assignments.SpecWithTransitions
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore, FreeExistentialsStoreImpl}
+import at.forsyte.apalache.tla.bmcmt.search.{BfsStrategy, DfsStrategy}
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import com.google.inject.Inject
@@ -48,16 +49,21 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
     val debug = options.getOption("general", "debug", false).asInstanceOf[Boolean]
     val profile = options.getOption("smt", "prof", false).asInstanceOf[Boolean]
     val search = options.getOption("checker", "search", "dfs").asInstanceOf[String]
+    val randomize = options.getOption("checker", "randomizeDfs", true).asInstanceOf[Boolean]
     val filter = options.getOption("checker", "filter", "").asInstanceOf[String]
     val checkRuntime =
       options.getOption("checker", "checkRuntime", false).asInstanceOf[Boolean]
-    val checker: Checker =
-      if (search == "dfs") {
-        new DfsChecker(typeFinder, freeExistentialsStore, input, stepsBound, debug)
+    val strategy =
+      if (search == "bfs") {
+        new BfsStrategy(input, stepsBound)
       } else {
-        new BfsChecker(typeFinder, freeExistentialsStore, hintsStore, exprGradeStore, sourceStore,
-          input, stepsBound, filter, debug, profile, checkRuntime)
+        new DfsStrategy(input, stepsBound, randomize)
       }
+
+    val checker: Checker =
+        new BfsChecker(typeFinder, freeExistentialsStore, hintsStore, exprGradeStore, sourceStore,
+          input, stepsBound, filter, strategy, debug, profile, checkRuntime)
+
     val outcome = checker.run()
     logger.info("The outcome is: " + outcome)
     outcome == Checker.Outcome.NoError

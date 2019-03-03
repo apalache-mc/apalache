@@ -316,7 +316,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     * Push SMT context
     */
   override def push(): Unit = {
-    log("(push)")
+    log("(push) ;; becomes %d".format(level + 1))
     logWriter.flush() // good time to flush
     z3solver.push()
     maxCellIdPerContext = maxCellIdPerContext.head +: maxCellIdPerContext
@@ -328,7 +328,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     */
   override def pop(): Unit = {
     if (level > 0) {
-      log("(pop)")
+      log("(pop) ;; becomes %d".format(level - 1))
       logWriter.flush() // good time to flush
       z3solver.pop()
       maxCellIdPerContext = maxCellIdPerContext.tail
@@ -342,7 +342,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
 
   override def pop(n: Int): Unit = {
     if (n > 0) {
-      log("(pop $n)")
+      log("(pop %d) ;; becomes %d".format(n, level - n))
       logWriter.flush() // good time to flush
       z3solver.pop(n)
       maxCellIdPerContext = maxCellIdPerContext.drop(n)
