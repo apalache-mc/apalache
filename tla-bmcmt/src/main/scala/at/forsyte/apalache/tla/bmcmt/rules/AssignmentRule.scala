@@ -88,6 +88,9 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
                   .setTheory(CellTheory())
                   .setRex(result) // true as soon as S /= {}
                   .setBinding(nextState.binding + (name + "'" -> pickedCell)) // bind the picked cell to the name
+
+              case tp @ _ =>
+                throw new RewriterException("Unexpected type: " + tp)
             }
           }
 
