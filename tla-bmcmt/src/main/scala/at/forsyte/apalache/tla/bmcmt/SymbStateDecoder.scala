@@ -101,7 +101,10 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       def inSet(e: ArenaCell) = solverContext.evalGroundExpr(tla.in(e, cell)) == tla.bool(true)
 
       val elems = arena.getHas(cell).filter(inSet)
-      tla.enumSet(elems.map(c => decodeCellToTlaEx(arena, c)): _*)
+      val decodedElems = elems.map(decodeCellToTlaEx(arena, _))
+      // try to normalize the set for better user experience
+      val niceElems = decodedElems.distinct.sortWith(SymbStateDecoder.compareTlaExByStr)
+      tla.enumSet(niceElems: _*)
 
     case FinFunSetT(_, _) =>
       tla.funSet(decodeCellToTlaEx(arena, arena.getDom(cell)), decodeCellToTlaEx(arena, arena.getCdm(cell)))
@@ -124,7 +127,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
           case _ => throw new RewriterException("Corrupted function: " + relation)
         }
 
-      if (arena.getHas(relation).nonEmpty)
+      if (args.nonEmpty)
         OperEx(TlaFunOper.enum, args :_*)
       else
         OperEx(TlaFunOper.funDef, tla.enumSet(), tla.name("x"), tla.enumSet())
@@ -133,7 +136,8 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       val startEndFun = arena.getHas(cell) map (decodeCellToTlaEx(arena, _))
       startEndFun match {
         case ValEx(TlaInt(start)) :: ValEx(TlaInt(end)) +: cells =>
-          def isIn(elem: TlaEx, no: Int): Boolean = no + 1 >= start && no + 1 <= end
+          // note that start >= 0 and end = Len(S) - start
+          def isIn(elem: TlaEx, no: Int): Boolean = no >= start && no < end
 
           val filtered = cells.zipWithIndex filter (isIn _).tupled map (_._1)
           tla.tuple(filtered: _*) // return a tuple as it is the canonical representation of a sequence
@@ -216,5 +220,11 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     }
 
     rec(expr)
+  }
+}
+
+object SymbStateDecoder {
+  private def compareTlaExByStr(lhs: TlaEx, rhs: TlaEx): Boolean = {
+    lhs.toSimpleString.compareTo(rhs.toSimpleString) <= 0
   }
 }
