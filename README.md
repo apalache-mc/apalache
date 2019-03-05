@@ -25,6 +25,30 @@ As the tool is in the early development stage, there are a few releases.
 To try the latest features, you can download
 [the latest unstable build](https://github.com/konnov/apalache/releases/tag/latest-unstable).
 
+## Preparing the spec
+
+Similar to TLC, before running the tool, you have to specify the input parameters.
+Since we do not have integration with the TLA+ Toolbox yet, we require all constants to be replaced with operators.
+
+For instance, assume your spec contains a constant ``N`` for the number of processes
+and a constant ``Value`` for the set of possible values:
+
+```TLA
+CONSTANT N, Value
+``` 
+
+Replace them with the operators that define concrete values:
+
+```TLA
+\* CONSTANT N, Value
+N == 4
+Value == {0, 1}
+``` 
+
+Additionally, whenever you are using an empty set ``{}``, an empty sequence ``<<>>``,
+or a set of records with different sets of fields, you have to annotate these
+expressions with types, see [type inference and annotations](docs/types-and-annotations.md).
+
 ## Running the binaries
 
 First, make sure that you have installed [Oracle JRE 8](https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html)
