@@ -39,12 +39,12 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
-    val allDeclarations = OperatorHandler.uniqueVarRename(tlaModule.get.declarations, sourceStore)
+    val uniqueVarDecls = OperatorHandler.uniqueVarRename(tlaModule.get.declarations, sourceStore)
 
-    val varSet = allDeclarations
+    val varSet = uniqueVarDecls
       .filter(_.isInstanceOf[TlaVarDecl])
       .map(_.name).toSet
-    val constSet = allDeclarations
+    val constSet = uniqueVarDecls
       .filter(_.isInstanceOf[TlaConstDecl])
       .map(_.name).toSet
 
@@ -70,7 +70,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
 
     val bodyDB = new BodyDB
 
-    val decls = allDeclarations.map(
+    val letInExpandedDecls = uniqueVarDecls.map(
       {
         case TlaOperDecl( name, params, body ) =>
           TlaOperDecl( name, params, transformer.explicitLetIn( body )( sourceStore ) )
@@ -78,7 +78,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
       }
     )
 
-    transformer.extract( decls  :_* )(bodyDB)
+    transformer.extract( letInExpandedDecls  :_* )(bodyDB)
 
     // TODO: why do we call a pass inside a pass?
     val stp = new SymbolicTransitionPass( bodyDB, sourceStore )
@@ -96,10 +96,10 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
       case e@_ => e
     }
 
-    val declarations = allDeclarations.map(replaceInit)
+    val initReplacedDecls = letInExpandedDecls.map(replaceInit)
 
     // drop selections because of lacking implementation further on
-    val initTransitions = stp( declarations, initName ).map( _._2 ).toList
+    val initTransitions = stp( initReplacedDecls, initName ).map( _._2 ).toList
 
     for ((t, i) <- initTransitions.zipWithIndex) {
       logger.debug("Initial transition #%d:\n   %s".format(i, t))
@@ -108,7 +108,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
     val nextName = options.getOption("checker", "next", "Next").asInstanceOf[String]
 
     // drop selections because of lacking implementation further on
-    val nextTransitions = stp(declarations,nextName).map( _._2 ).toList
+    val nextTransitions = stp(initReplacedDecls,nextName).map( _._2 ).toList
 
     for ((t, i) <- nextTransitions.zipWithIndex) {
       logger.debug("Next transition #%d:\n   %s".format(i, t))
@@ -138,7 +138,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
       if (invName.isEmpty) {
         (None, None)
       } else {
-        val invBody = findBodyOf(invName.get, allDeclarations: _*)
+        val invBody = findBodyOf(invName.get, initReplacedDecls: _*)
         if (invBody == NullEx) {
           val msg = "Invariant definition %s not found".format(invName.get)
           logger.error(msg)
@@ -154,7 +154,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
     logger.info("Found %d initializing transitions and %d next transitions"
       .format(initTransitions.length, nextTransitions.length))
 
-    val newModule = new TlaModule(tlaModule.get.name, tlaModule.get.imports, allDeclarations)
+    val newModule = new TlaModule(tlaModule.get.name, tlaModule.get.imports, uniqueVarDecls)
     specWithTransitions
       = Some(new SpecWithTransitions(newModule, initTransitions, nextTransitions, cinitPrime, notInvariant, notInvariantPrime))
     true
