@@ -16,8 +16,8 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
   */
 class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val picker = new CherryPick(rewriter)
-  private val defaultValueFactory = new DefaultValueFactory(rewriter)
   private val simplifier = new ConstSimplifier()
+  private val defaultValueFactory = new DefaultValueFactory(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -142,7 +142,6 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // Just return a default value. Most likely, this expression will never propagate.
       defaultValueFactory.makeUpValue(nextState, funCell.cellType.asInstanceOf[FunT].resultType)
     } else {
-
       nextState = picker.newOracleWithDefault(nextState, relationCell, relationElems)
       val oracle = nextState.asCell
 
@@ -168,14 +167,8 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
         solverAssert(tla.impl(tla.eql(oracle, tla.int(no)), inRel))
       }
 
-      // the following step is not important, but we do it to easy debugging:
-      // if oracle = N, set the picked cell to the default value
-      val resultType: CellT = funCell.cellType.asInstanceOf[FunT].resultType
-      nextState = defaultValueFactory.makeUpValue(nextState, resultType)
-      val defaultValue = nextState.asCell
-      nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((pickedRes, defaultValue)))
-      solverAssert(tla.impl(tla.eql(oracle, tla.int(nelems)), tla.eql(pickedRes, defaultValue)))
-
+      // If oracle = N, the picked cell is not constrained. In the past, we used a default value here,
+      // but it sometimes produced conflicts (e.g., a picked record domain had to coincide with a default domain)
       nextState.setRex(pickedRes.toNameEx).setTheory(CellTheory())
     }
   }

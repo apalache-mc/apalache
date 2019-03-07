@@ -53,9 +53,6 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
           // pick a cell
           nextState = pickRule.pickByOracle(nextState, oracle, elems)
           val pickedCell = nextState.asCell
-          // introduce a default value
-          nextState = defaultValueFactory.makeUpValue(nextState, setCell)
-          val defaultValue = nextState.asCell
           // when oracle = N, the set must be empty
           val setIsEmpty =
             if (nelems == 0) {
@@ -72,11 +69,8 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
           elems.zipWithIndex foreach (chosenWhenIn _).tupled
 
-          // the following step is not essential, but we do it to easy debugging:
-          // if oracle = N, set the picked cell to the default value
-          nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((pickedCell, defaultValue)))
-          solverAssert(tla.impl(tla.eql(oracle, tla.int(nelems)), tla.eql(pickedCell.toNameEx, defaultValue.toNameEx)))
-
+          // If oracle = N, the picked cell is not constrained. In the past, we used a default value here,
+          // but it sometimes produced conflicts (e.g., a picked record domain had to coincide with a default domain)
           rewriter.coerce(nextState.setRex(pickedCell.toNameEx), state.theory)
         }
 

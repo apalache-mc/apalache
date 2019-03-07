@@ -50,10 +50,9 @@ class TestSymbStateRewriterChoose extends RewriterBase with TestingPredefs {
       ns
     }
 
-    // Actually, semantics of choose does not restrict the outcome on the empty sets.
-    // But we know that our implementation would always return 0 in this case.
-    val ns = assertEq(1)
-    assertUnsatOrExplain(rewriter, ns)
+    // The semantics of choose does not restrict the outcome on the empty sets,
+    // so we do not test for anything here. Our previous implementation of CHOOSE produced default values in this case,
+    // but this happened to be error-prone and sometimes conflicting with other rules. So, no default values.
   }
 
   test("""SE-CHOOSE: CHOOSE x \in {}: x > 1 ~~> $B$k""") {
