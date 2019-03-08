@@ -450,6 +450,9 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
         case Seq(_, FinSetT(elemT), BoolT()) =>
           FinSetT(elemT)
 
+        case Seq(_, PowSetT(elemT), BoolT()) =>
+          FinSetT(elemT) // powersets are expanded
+
         // what about {f \in [S -> T] : ... }?
         // what about {f \in [a: S, B: T] |-> ... }?
 

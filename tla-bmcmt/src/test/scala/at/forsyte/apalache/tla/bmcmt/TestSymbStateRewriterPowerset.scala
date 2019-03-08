@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStoreImpl
+import at.forsyte.apalache.tla.bmcmt.rules.aux.PowSetCtor
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.bmcmt.types.{AnnotationParser, FinSetT, IntT, PowSetT}
 import at.forsyte.apalache.tla.lir.NameEx
@@ -176,4 +177,24 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
         fail("Unexpected rewriting result")
     }
   }
+
+  test("""PowSetCtor {1, 2}""") {
+    val baseset = tla.enumSet(tla.int(1), tla.int(2))
+    val state = new SymbState(baseset, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    var nextState = rewriter.rewriteUntilDone(state)
+    val baseCell = nextState.asCell
+    nextState = new PowSetCtor(rewriter).confringo(nextState, baseCell)
+    val powCell = nextState.asCell
+    // give the cell type to type finder
+    rewriter.typeFinder.reset(rewriter.typeFinder.getVarTypes + (powCell.toString -> powCell.cellType))
+    // check equality
+    val eq = tla.eql(nextState.ex,
+      tla.enumSet(tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(IntT()))),
+        tla.enumSet(tla.int(1)),
+        tla.enumSet(tla.int(2)),
+          tla.enumSet(tla.int(1), tla.int(2))))
+    assertTlaExAndRestore(rewriter, nextState.setRex(eq))
+  }
+
 }

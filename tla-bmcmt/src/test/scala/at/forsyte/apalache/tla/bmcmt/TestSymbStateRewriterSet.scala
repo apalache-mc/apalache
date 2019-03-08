@@ -580,6 +580,21 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
+  test("""SE-SET-FILTER: {Q \in SUBSET {1,2,3} : 2 \notin Q}""") {
+    val set = tla.enumSet(1.to(3).map(tla.int) :_*)
+
+    val predEx = tla.notin(tla.int(2), tla.name("Q"))
+    val ex = tla.filter(tla.name("Q"), tla.powSet(set), predEx)
+    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    assertTlaExAndRestore(rewriter,
+      nextState.setRex(tla.in(tla.enumSet(tla.int(1), tla.int(3)), nextState.ex)))
+    assertTlaExAndRestore(rewriter,
+      nextState.setRex(tla.notin(tla.enumSet(tla.int(1), tla.int(2)), nextState.ex)))
+  }
+
   test("""SE-SET-FILTER[1-2]: \E SUBSET X {1} IN {} = {x \in X : [y \in X |-> TRUE][x]} ~~> $B$k""") {
     // regression
     val baseSet = tla.enumSet(1)
