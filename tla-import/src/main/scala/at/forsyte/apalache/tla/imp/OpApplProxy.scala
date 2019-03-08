@@ -89,7 +89,7 @@ object OpApplProxy {
       (("Naturals", ">="), TlaArithOper.ge),
       (("Naturals", "\\geq"), TlaArithOper.ge),
       (("Naturals", "%"), TlaArithOper.mod),
-      (("Naturals", "\\div"), TlaArithOper.realDiv),
+      (("Naturals", "\\div"), TlaArithOper.div),
       (("Naturals", ".."), TlaArithOper.dotdot),
       (("Integers", "-."), TlaArithOper.uminus),
       (("Reals", "/"), TlaArithOper.realDiv),
