@@ -35,18 +35,21 @@ class RecordSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val sets = for ((e, i) <- fieldsAndSets.zipWithIndex; if i % 2 == 1) yield e
         val varNames = 0 until arity map (i => s"x_${ex.ID}_$i") // are we avoiding name collisions like that?
         val vars: Seq[TlaEx] = varNames map (s => NameEx(s))
-        val varsAndSets: Seq[TlaEx] =
-          0 until (2 * arity) map (i => if (i % 2 == 0) vars(i / 2) else sets(i / 2))
         val fieldsAndVars: Seq[TlaEx] =
           0 until (2 * arity) map (i => if (i % 2 == 0) fields(i / 2) else vars(i / 2))
         // rewrite the sets
         val (setState, setsRewritten) = rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), sets)
+        val setsRewrittenAsCells = setsRewritten map setState.arena.findCellByNameEx
 
         // Get the types of the sets from the type finder. There are good chances that they are annotated with types.
-        val recordT = findRecordType(state.ex, setsRewritten map setState.arena.findCellByNameEx)
+        val recordT = findRecordType(state.ex, setsRewrittenAsCells)
         // the mapping [ f_1 |-> x_1, ..., f_n |-> x_n ]
         val funEx = tla.withType(OperEx(TlaFunOper.enum, fieldsAndVars: _*), AnnotationParser.toTla(recordT))
+        val varsAndSets: Seq[TlaEx] =
+          0 until (2 * arity) map (i => if (i % 2 == 0) vars(i / 2) else setsRewritten(i / 2))
         val mapArgs: Seq[TlaEx] = funEx +: varsAndSets
+        // we have to give the type finder the types of the freshly produced cells
+        setsRewrittenAsCells foreach rewriter.typeFinder.extendWithCellType
         // the map operator { [ f_1 |-> x_1, ..., f_n |-> x_n ] : x_1 \in S_1, ..., x_n \in S_n }
         val map = OperEx(TlaSetOper.map, mapArgs :_*)
         rewriter.typeFinder.inferAndSave(map)

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.types
 
-import at.forsyte.apalache.tla.bmcmt.TypeException
+import at.forsyte.apalache.tla.bmcmt.{ArenaCell, TypeException}
 import at.forsyte.apalache.tla.lir.TlaEx
 
 import scala.collection.immutable.{Map, SortedMap}
@@ -8,7 +8,7 @@ import scala.collection.immutable.{Map, SortedMap}
 /**
   * A diagnostic message that can be thrown as an exception or used in a list of errors.
   *
-  * @param origin the expression that caused the type error
+  * @param origin      the expression that caused the type error
   * @param explanation the explanation
   */
 class TypeInferenceError(val origin: TlaEx, val explanation: String) extends Exception(explanation)
@@ -33,6 +33,7 @@ trait TypeFinder[T] {
 
   /**
     * Retrieve the type errors from the latest call to inferAndSave.
+    *
     * @return a list of type errors
     */
   def getTypeErrors: Seq[TypeInferenceError]
@@ -43,10 +44,10 @@ trait TypeFinder[T] {
     * expressions, as soon as they can be unambiguously typed with the previously stored type information
     * and the given arguments.
     *
-    * @param e a TLA+ expression
+    * @param e        a TLA+ expression
     * @param argTypes the types of the arguments.
     * @return the resulting type, if it can be computed
-    * @throws TypeException, if the type cannot be computed.
+    * @throws TypeException , if the type cannot be computed.
     */
   def compute(e: TlaEx, argTypes: T*): T
 
@@ -60,12 +61,20 @@ trait TypeFinder[T] {
     */
   def computeRec(ex: TlaEx): CellT
 
-    /**
+  /**
     * Get the types of the variables that are computed by inferAndSave. The method must return the types of
     * the global variables (VARIABLE and CONSTANT) and it may return types of the bound variables.
+    *
     * @return a mapping of names to types
     */
   def getVarTypes: SortedMap[String, T]
+
+  /**
+    * Record the cell name and its type.
+    *
+    * @param cell an arena cell
+    */
+  def extendWithCellType(cell: ArenaCell): Unit
 
   /**
     * Forget all computed types and introduce types for the variables. You can call inferAndSave after that.

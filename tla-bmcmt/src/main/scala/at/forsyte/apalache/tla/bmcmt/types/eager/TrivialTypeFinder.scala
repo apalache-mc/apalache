@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.types.eager
 
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.bmcmt.{BoolTheory, IntTheory}
+import at.forsyte.apalache.tla.bmcmt.{ArenaCell, BoolTheory, IntTheory}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.control.TlaControlOper
@@ -47,6 +47,15 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
     varTypes = SortedMap(newVarTypes.toSeq: _*)
     typeAnnotations = Map()
     errors = Seq()
+  }
+
+  /**
+    * Record the cell name and its type.
+    *
+    * @param cell an arena cell
+    */
+  def extendWithCellType(cell: ArenaCell): Unit = {
+    varTypes += cell.toString -> cell.cellType
   }
 
   /**
