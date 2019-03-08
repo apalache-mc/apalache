@@ -151,14 +151,13 @@ Operator  | Supported? | Milestone | Comment
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 ``IsFinite`` | ✔ | - | Always returns true, as all the supported sets are finite
-``Cardinality`` | ✖ | `0.5-dev-lang` | A good encoding in SMT requires some research, but we will support `Cardinality(S) >= const` and `Cardinality(S) <= const`
+``Cardinality`` | ✔ | - | Try to avoid it, as Cardinality(S) produces ``O(n^2)`` constraints in SMT for cardinality `n`
 
 ### TLC
 
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 ``f @@ a :> b`` | ✔ | - | Supported in `0.5-dev-lang`. Extends the function relation with the pair ``<<a, b>>``
-SelectSeq | ✖ | - | will not be supported in the near future
 
 ### Reals
 
