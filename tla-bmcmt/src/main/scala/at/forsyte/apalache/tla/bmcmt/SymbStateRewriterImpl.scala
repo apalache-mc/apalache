@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.bmcmt.rules._
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{AnyArity, BmcOper, TlaOper, TlcOper}
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaIntSet}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 
@@ -258,6 +258,12 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
       -> List(new SeqOpsRule(this)),
     key(tla.append(tla.name("Seq1"), tla.name("Seq2")))
       -> List(new SeqOpsRule(this)),
+
+    // FiniteSets
+    key(OperEx(TlaFiniteSetOper.cardinality, tla.name("S")))
+      -> List(new CardinalityRule(this)),
+    key(OperEx(TlaFiniteSetOper.isFiniteSet, tla.name("S")))
+      -> List(new IsFiniteSetRule(this)),
 
     // misc
     key(OperEx(TlaOper.label, tla.str("lab"), tla.str("x")))
