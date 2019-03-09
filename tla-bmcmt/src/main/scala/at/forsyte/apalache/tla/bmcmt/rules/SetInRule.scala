@@ -93,6 +93,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     var nextState = state
     nextState = nextState.appendArenaCell(BoolT())
     val pred = nextState.arena.topCell
+    val relation = nextState.arena.getCdm(funCell)
     // In the new implementation, a function is a relation { <<x, f[x]>> : x \in U }.
     // Check that \A t \in f: t[1] \in S /\ t[2] \in T.
     def onPair(pair: ArenaCell): TlaEx = {
@@ -102,10 +103,10 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val inDom = nextState.asCell
       nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.in(res, funsetCdm)))
       val inCdm = nextState.asCell
-      tla.and(inDom, inCdm)
+      // BUGFIX: check only those pairs that actually belong to the relation
+      tla.or(tla.notin(pair, relation), tla.and(inDom, inCdm))
     }
 
-    val relation = nextState.arena.getCdm(funCell)
     val relElems = nextState.arena.getHas(relation)
     rewriter.solverContext.assertGroundExpr(tla.equiv(pred, tla.and(relElems map onPair :_*)))
 

@@ -8,7 +8,7 @@ import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterFunSet extends RewriterBase {
-  test("""SE-FUNSET1: [{1, 2, 3} ~~> {FALSE, TRUE}]""") {
+  test("""SE-FUNSET1: [{1, 2, 3} -> {FALSE, TRUE}]""") {
     val domain = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val codomain = tla.enumSet(tla.bool(false), tla.bool(true))
     val state = new SymbState(tla.funSet(domain, codomain),
@@ -83,6 +83,36 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
       case _ =>
         fail("Unexpected rewriting result")
     }
+  }
+
+  test("""SE-FUNSET2: [x \in {1, 2} -> 3] \in [{1, 2} -> {3, 4}]""") {
+    val domain = tla.enumSet(tla.int(1), tla.int(2))
+    val codomain = tla.enumSet(tla.int(3), tla.int(4))
+    val funset = tla.funSet(domain, codomain)
+    val fun = tla.funDef(tla.int(3),
+                         tla.name("x"),
+                         domain)
+    val state = new SymbState(tla.in(fun, funset), BoolTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    assertTlaExAndRestore(rewriter, nextState)
+  }
+
+  test("""SE-FUNSET2: [x \in {0, 1, 2} \ {0} -> 3] \in [{1, 2} -> {3, 4}]""") {
+    // although 0 is in the function domain at the arena level, it does not belong to the set difference
+    val domain1 = tla.setminus(tla.enumSet(0.to(2).map(tla.int) :_*), tla.enumSet(tla.int(0)))
+    val domain2 = tla.enumSet(1.to(2).map(tla.int) :_*)
+    val codomain = tla.enumSet(tla.int(3), tla.int(4))
+    val funset = tla.funSet(domain2, codomain)
+    val fun = tla.funDef(tla.int(3),
+                         tla.name("x"),
+                         domain1)
+    val state = new SymbState(tla.in(fun, funset), BoolTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    assertTlaExAndRestore(rewriter, nextState)
   }
 
   test("""SE-FUNSET2: [x \in {1, 2} -> {TRUE}] \in [{1, 2} -> SUBSET {FALSE}]""") {
