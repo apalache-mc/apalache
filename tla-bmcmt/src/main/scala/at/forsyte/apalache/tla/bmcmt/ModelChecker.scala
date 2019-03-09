@@ -58,6 +58,11 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
   private var enabledList: Seq[Seq[Int]] = Seq()
 
   /**
+    * A set of CONSTANTS, which are special (rigid) variables, as they do not change in the course of execution.
+    */
+  private val constants = Set(checkerInput.rootModule.constDeclarations.map(_.name) :_*)
+
+  /**
     * Check all executions of a TLA+ specification up to a bounded number of steps.
     *
     * @return a verification outcome
@@ -66,10 +71,11 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
     val initialArena = Arena.create(solverContext)
     val dummyState = new SymbState(initialArena.cellTrue().toNameEx,
       CellTheory(), initialArena, new Binding)
-    stack +:= (dummyState, initialArena.cellTrue())
-    typesStack +:= SortedMap[String, CellT]()
     val outcome =
       try {
+        val initConstState = initializeConstants(dummyState)
+        stack +:= (initConstState, initialArena.cellTrue())
+        typesStack +:= typeFinder.getVarTypes // the type of CONSTANTS have been computed already
         applySearchStrategy()
       } catch {
         case _ : CancelSearchException =>
@@ -83,6 +89,36 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
     // flush the logs
     rewriter.dispose()
     outcome
+  }
+
+  /**
+    * Use the provided expression to initialize the constants
+    * @param state an initial state
+    * @return a new state with the constants initialized
+    */
+  private def initializeConstants(state: SymbState): SymbState = {
+    val newState =
+      if (checkerInput.constInitPrimed.isEmpty) {
+        logger.info("No CONSTANT initializer given")
+        state
+      } else {
+        logger.info("Initializing CONSTANTS with the provided operator")
+        checkTypes(checkerInput.constInitPrimed.get)
+        val nextState = rewriter.rewriteUntilDone(state.setRex(checkerInput.constInitPrimed.get))
+        // importantly, assert the constraints that are imposed by the expression
+        rewriter.solverContext.assertGroundExpr(nextState.ex)
+        // as the initializer was defined over the primed versions of the constants, shift them back to non-primed
+        shiftTypes(Set())
+        nextState.setBinding(shiftBinding(nextState.binding, Set()))
+      }
+
+    val constants = checkerInput.rootModule.constDeclarations.map(_.name)
+    val uninitialized = constants.filter(n => !newState.binding.contains(n))
+    if (uninitialized.nonEmpty) {
+      logger.error("The following CONSTANTS are not initialized: " + uninitialized.mkString(", "))
+      throw new CancelSearchException(Checker.Outcome.RuntimeError)
+    }
+    newState
   }
 
   private def applySearchStrategy(): Outcome.Value = {
@@ -208,10 +244,10 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
       val newArena = onlyState.arena.appendCell(IntT())
       val transitionIndex = newArena.topCell
       solverContext.assertGroundExpr(tla.eql(transitionIndex.toNameEx, tla.int(0)))
-      val resultingState = onlyState.setArena(newArena).setBinding(shiftBinding(onlyState.binding))
+      val resultingState = onlyState.setArena(newArena).setBinding(shiftBinding(onlyState.binding, constants))
       solverContext.assertGroundExpr(onlyState.ex)
       stack +:= (resultingState, transitionIndex)
-      shiftTypes()
+      shiftTypes(constants)
       typesStack = typeFinder.getVarTypes +: typesStack
       Some(resultingState.setArena(newArena))
     } else {
@@ -235,9 +271,9 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
       // for every variable x, pick c_x from { S1[x], ..., Sk[x] }
       //   and require \A i \in { 0.. k-1}. j = i => c_x = Si[x]
       // Then, the final state binds x -> c_x for every x \in Vars
-      val vars = forgetNonPrimed(lastState.binding).keySet
+      val vars = forgetNonPrimed(lastState.binding, Set()).keySet // only VARIABLES, not CONSTANTS
       var finalState = lastState.setBinding(forgetPrimed(lastState.binding)).setArena(newArena).setRex(tla.bool(true))
-      if (nextStates.map(_.binding).exists(b => forgetNonPrimed(b).keySet != vars)) {
+      if (nextStates.map(_.binding).exists(b => forgetNonPrimed(b, Set()).keySet != vars)) {
         throw new InternalCheckerError(s"Next states disagree on the set of assigned variables (step $stepNo)")
       }
 
@@ -247,14 +283,16 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
         finalState.asCell
       }
 
-      val finalBinding = Binding(vars.toSeq map (n => (n, pickVar(n))): _*)
-      finalState = finalState.setBinding(shiftBinding(finalBinding))
+      val finalVarBinding = Binding(vars.toSeq map (n => (n, pickVar(n))): _*) // variables only
+      val constBinding = lastState.binding.filter(p => constants.contains(p._1))
+      val finalBinding = Binding(shiftBinding(finalVarBinding, Set()) ++ constBinding) // recover constants
+      finalState = finalState.setBinding(finalBinding)
       if (!solverContext.sat()) {
         throw new InternalCheckerError(s"Error picking next variables (step $stepNo). Report a bug.")
       }
       // that is the result of this step
       stack +:= (finalState, transitionIndex)
-      shiftTypes()
+      shiftTypes(constants)
       typesStack = typeFinder.getVarTypes +: typesStack
       Some(finalState)
     }
@@ -394,7 +432,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
           val newArena = notInvState.arena.appendCell(IntT()) // FIXME
           val transitionIndex = newArena.topCell
 
-          val finalState = notInvState.setArena(newArena).setBinding(shiftBinding(notInvState.binding))
+          val finalState = notInvState.setArena(newArena).setBinding(shiftBinding(notInvState.binding, constants))
           stack = (finalState, transitionIndex) +: stack
           val filename = dumpCounterexample()
           logger.error(s"Invariant is violated at depth $depth. Check the counterexample in $filename")
@@ -464,12 +502,15 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
   }
 
   /**
-    * Remove the non-primed variables and rename the primed variables to their non-primed versions.
+    * Remove the non-primed variables (except provided constants)
+    * and rename the primed variables to their non-primed versions.
     * After that, remove the type finder to contain the new types only.
     */
-  private def shiftTypes(): Unit = {
+  private def shiftTypes(constants: Set[String]): Unit = {
     val types = typeFinder.getVarTypes
-    val nextTypes = types.filter(_._1.endsWith("'")).map(p => (p._1.stripSuffix("'"), p._2))
+    val nextTypes =
+      types.filter(p => p._1.endsWith("'") || constants.contains(p._1))
+        .map(p => (p._1.stripSuffix("'"), p._2))
     typeFinder.reset(nextTypes)
   }
 
@@ -480,8 +521,8 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
   }
 
   // remove non-primed variables and rename primed variables to non-primed
-  private def shiftBinding(binding: Binding): Binding = {
-    forgetNonPrimed(binding)
+  private def shiftBinding(binding: Binding, constants: Set[String]): Binding = {
+    forgetNonPrimed(binding, constants)
       .map(p => (p._1.stripSuffix("'"), p._2))
   }
 
@@ -490,9 +531,9 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
     binding.filter(p => !p._1.endsWith("'"))
   }
 
-  // remove non-primed variables
-  private def forgetNonPrimed(binding: Binding): Binding = {
-    binding.filter(p => p._1.endsWith("'"))
+  // remove non-primed variables, except the provided constants
+  private def forgetNonPrimed(binding: Binding, constants: Set[String]): Binding = {
+    binding.filter(p => p._1.endsWith("'") || constants.contains(p._1))
   }
 
   // does the transition number satisfy the given filter at the given step?

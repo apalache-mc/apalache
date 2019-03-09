@@ -44,7 +44,8 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
       throw new CheckerException(s"The input of $name pass is not initialized")
     }
     val spec = specWithTransitions.get
-    val input = new CheckerInput(spec.rootModule, spec.initTransitions, spec.nextTransitions, spec.notInvariantPrime)
+    val input = new CheckerInput(spec.rootModule, spec.initTransitions,
+      spec.nextTransitions, spec.constInitPrime, spec.notInvariantPrime)
     val stepsBound = options.getOption("checker", "length", 10).asInstanceOf[Int]
     val debug = options.getOption("general", "debug", false).asInstanceOf[Boolean]
     val profile = options.getOption("smt", "prof", false).asInstanceOf[Boolean]

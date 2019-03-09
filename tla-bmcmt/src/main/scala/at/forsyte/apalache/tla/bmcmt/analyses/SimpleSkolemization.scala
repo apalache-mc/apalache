@@ -37,7 +37,7 @@ class SimpleSkolemization @Inject()(val frexStore: FreeExistentialsStoreImpl) ex
     if (notInv.isDefined) {
       markFreeExistentials(notInv.get)
     }
-    new SpecWithTransitions(spec.rootModule, initTransitions, nextTransitions, notInv, notInvPrime)
+    new SpecWithTransitions(spec.rootModule, initTransitions, nextTransitions, spec.constInitPrime, notInv, notInvPrime)
   }
 
   private def markFreeExistentials(ex: TlaEx): Unit = ex match {

@@ -25,7 +25,7 @@ object Tool extends App with LazyLogging {
   override def main(args: Array[String]): Unit = {
     Console.println("# APALACHE %s".format(Version.version))
     Console.println("#")
-    Console.println("# WARNING: This tool is in its early development stage.")
+    Console.println("# WARNING: This tool is in the experimental stage.")
     Console.println("#          Please report bugs at: " + ISSUES_LINK)
     Console.println("")
     val startTime = LocalDateTime.now()
@@ -89,6 +89,8 @@ object Tool extends App with LazyLogging {
     executor.options.setOption("checker.next", check.next)
     executor.options.setOption("checker.inv",
       if (check.inv != "") Some(check.inv) else None)
+    executor.options.setOption("checker.cinit",
+      if (check.cinit != "") Some(check.cinit) else None)
     executor.options.setOption("checker.length", check.length)
     executor.options.setOption("checker.search", check.search)
     executor.options.setOption("checker.filter", check.filter)

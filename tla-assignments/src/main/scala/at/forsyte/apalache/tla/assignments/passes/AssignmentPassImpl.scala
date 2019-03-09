@@ -41,20 +41,22 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
   override def execute(): Boolean = {
     val allDeclarations = OperatorHandler.uniqueVarRename(tlaModule.get.declarations, sourceStore)
 
-    val vars = allDeclarations
+    val varSet = allDeclarations
       .filter(_.isInstanceOf[TlaVarDecl])
-      .map(d => NameEx(d.name))
-    val varSet = vars.map(_.name).toSet
+      .map(_.name).toSet
+    val constSet = allDeclarations
+      .filter(_.isInstanceOf[TlaConstDecl])
+      .map(_.name).toSet
 
     // replace every variable x with x', so we can use the assignment solver
-    def primeVars(e: TlaEx): TlaEx = e match {
-      case ne @ NameEx(name) if varSet.contains(name) =>
+    def primeVars(nameSet: Set[String], e: TlaEx): TlaEx = e match {
+      case ne @ NameEx(name) if nameSet.contains(name) =>
         val newEx = environmentHandler.identify(tla.prime(e))
         sourceStore.onTransformation(ne, newEx)
         newEx
 
       case oe @ OperEx(op, args@_*) =>
-        val newEx = environmentHandler.identify(OperEx(op, args.map(primeVars): _*))
+        val newEx = environmentHandler.identify(OperEx(op, args.map(primeVars(nameSet, _)): _*))
         sourceStore.onTransformation(oe, newEx)
         newEx
 
@@ -88,7 +90,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
           throw new AssignmentException("Initializing operator %s has %d arguments, expected 0"
             .format(initName, params.length))
         } else {
-          TlaOperDecl( name, params, primeVars( transformer.inlineAll( body )( bodyDB, sourceStore ) ) )
+          TlaOperDecl( name, params, primeVars(varSet, transformer.inlineAll( body )( bodyDB, sourceStore ) ) )
         }
 
       case e@_ => e
@@ -112,9 +114,30 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
       logger.debug("Next transition #%d:\n   %s".format(i, t))
     }
 
+    // find constant initializers
+    val cinitName = options.getOption("checker", "cinit", None).asInstanceOf[Option[String]]
+    val cinitPrime =
+      if (cinitName.isEmpty) {
+        None
+      } else {
+        val cinitBody = findBodyOf(cinitName.get, allDeclarations: _*)
+        if (cinitBody == NullEx) {
+          val msg = s"Constant initializer ${cinitName.get} not found"
+          logger.error(msg)
+          throw new IllegalArgumentException(msg)
+        }
+        val cinit = transformer.sanitize(cinitBody) (bodyDB, sourceStore)
+        val cinitPrime = primeVars(constSet, cinit)
+        logger.debug("Constant initializer with primes\n    %s".format(cinitPrime))
+        Some(cinitPrime)
+      }
+
+    // find the invariant
     val invName = options.getOption("checker", "inv", None).asInstanceOf[Option[String]]
     val (notInvariant, notInvariantPrime) =
-      if (invName.isDefined) {
+      if (invName.isEmpty) {
+        (None, None)
+      } else {
         val invBody = findBodyOf(invName.get, allDeclarations: _*)
         if (invBody == NullEx) {
           val msg = "Invariant definition %s not found".format(invName.get)
@@ -123,11 +146,9 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
         }
         val notInv = transformer.sanitize(tla.not(invBody))( bodyDB, sourceStore )
         logger.debug("Negated invariant:\n   %s".format(notInv))
-        val notInvPrime = primeVars(notInv)
+        val notInvPrime = primeVars(varSet, notInv)
         logger.debug("Negated invariant with primes\n   %s".format(notInvPrime))
         (Some(notInv), Some(notInvPrime))
-      } else {
-        (None, None)
       }
 
     logger.info("Found %d initializing transitions and %d next transitions"
@@ -135,7 +156,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
 
     val newModule = new TlaModule(tlaModule.get.name, tlaModule.get.imports, allDeclarations)
     specWithTransitions
-      = Some(new SpecWithTransitions(newModule, initTransitions, nextTransitions, notInvariant, notInvariantPrime))
+      = Some(new SpecWithTransitions(newModule, initTransitions, nextTransitions, cinitPrime, notInvariant, notInvariantPrime))
     true
   }
 

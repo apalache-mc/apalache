@@ -16,8 +16,8 @@ package object bmcmt {
       HashMap[String, ArenaCell](args :_*)
     }
 
-    def apply(map: HashMap[String, ArenaCell]): Binding = {
-      map
+    def apply(map: Map[String, ArenaCell]): Binding = {
+      HashMap(map.toSeq :_*)
     }
   }
 

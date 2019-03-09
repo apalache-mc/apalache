@@ -16,9 +16,12 @@ class CheckCmd extends Command(name = "check",
   var search: String = opt[String](
     name = "search", default = "bfs",
     description = "search type (dfs or bfs), default: bfs")
+  var cinit: String = opt[String](
+    name = "cinit", default = "",
+    description = "the name of an operator that initializes CONSTANTS, default: None")
   var init: String = opt[String](
     name = "init", default = "Init",
-    description = "the name of an initializing operator, default: Init")
+    description = "the name of an operator that initializes VARIABLES, default: Init")
   var next: String = opt[String](
     name = "next", default = "Next",
     description = "the name of a transition operator, default: Next")
