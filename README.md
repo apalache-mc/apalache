@@ -28,22 +28,60 @@ To try the latest features, you can download
 ## Preparing the spec
 
 Similar to TLC, before running the tool, you have to specify the input parameters.
-Since we do not have integration with the TLA+ Toolbox yet, we require all constants to be replaced with operators.
+Since we do not have integration with the TLA+ Toolbox yet,
+we require all constants to initialized in a spec. There are two ways to do that.
 
+#### Option 1: Constants replaced with operators
 For instance, assume your spec contains a constant ``N`` for the number of processes
-and a constant ``Value`` for the set of possible values:
+and a constant ``Values`` for the set of possible values:
 
 ```TLA
-CONSTANT N, Value
+CONSTANT N, Values
 ``` 
 
 Replace them with the operators that define concrete values:
 
 ```TLA
-\* CONSTANT N, Value
+\* CONSTANT N, Values
 N == 4
-Value == {0, 1}
-``` 
+Values == {0, 1}
+```
+
+#### Option 2: Constants initialized with an operator
+
+This approach is similar to the ``Init`` operator, but applied to the constants.
+We define a special operator, e.g., called ``ConstInit``: 
+
+```TLA
+CONSTANT N, Values
+
+ConstInit ==
+  /\ N \in {4}
+  /\ Values \in {{0, 1}}
+```
+
+Note that in the current version, assignments to the constants should be
+written as ``C \in S``, where ``S`` is a set (you can use ``SUBSET S`` and ``[S -> T`` as well]).
+Moreover, ``ConstInit`` should be a conjunction of such assignments and possibly
+of additional constraints on the constants.
+
+As a bonus of this approach, you can have _parameterized though bounded_ constraints on the constants.
+For example:
+
+```TLA
+CONSTANT N, Values
+
+ConstInit ==
+  /\ N \in 3..10
+  /\ Values \in SUBSET 0..4
+  /\ Values /= {}
+```
+
+The model checker will try the instances for all the combinations of
+the parameters specified in ``ConstInit``, that is, in our example, it will
+consider ``N \in 3..10`` and all non-empty value sets that are subsets of ``0..4``.
+
+#### Type annotations
 
 Additionally, whenever you are using an empty set ``{}``, an empty sequence ``<<>>``,
 or a set of records with different sets of fields, you have to annotate these
@@ -57,8 +95,25 @@ First, make sure that you have installed [Oracle JRE 8](https://www.oracle.com/t
 The model checker can be run as follows:
 
 ```bash
-$ bin/apalache-mc check --init=Init --next=Next --inv=Inv --length=10 myspec.tla
+$ bin/apalache-mc check [--init=Init] [--cinit=ConstInit] [--next=Next] [--inv=Inv] --length=10 myspec.tla
 ```
+
+The arguments are as follows:
+
+  * ``--init`` specifies the initialization predicate, the default name is ``Init``
+  * ``--next`` specifies the transition predicate, the default name is ``Next``
+  * ``--cinit`` specifies the constant initialization predicate, optional
+  * ``--inv`` specifies the invariant to check, optional
+  * ``--length`` specifies the upper bound on the length of the finite executions to explore
+  
+If you like to check an inductive invariant ``Inv``, you can do as follows:   
+
+```bash
+$ bin/apalache-mc check --init=Inv --inv=Inv --length=1 myspec.tla
+```
+
+Make sure that ``Inv`` contains necessary constraints on the shape of the variables.
+Usually, ``TypeOK`` as the first line of an invariant is exactly what is needed.
 
 The tool will display only the important messages. A detailed log can be found in `detailed.log`.
 
