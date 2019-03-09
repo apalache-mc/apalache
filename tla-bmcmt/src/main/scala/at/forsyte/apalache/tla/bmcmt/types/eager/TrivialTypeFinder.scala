@@ -35,8 +35,16 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
     *
     * @return a mapping of names to types
     */
-  def getVarTypes: SortedMap[String, CellT] = varTypes
+  override def getVarTypes: SortedMap[String, CellT] = varTypes
 
+  /**
+    * Restore variable types from a map.
+    *
+    * @param newVarTypes a mapping of names to types
+    */
+  override def setVarTypes(newVarTypes: SortedMap[String, CellT]): Unit = {
+    varTypes = newVarTypes
+  }
 
   /**
     * Forget all computed types and introduce types for the variables. You can call inferAndSave after that.

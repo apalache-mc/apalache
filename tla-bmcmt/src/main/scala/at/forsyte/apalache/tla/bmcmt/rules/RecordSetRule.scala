@@ -40,6 +40,7 @@ class RecordSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // rewrite the sets
         val (setState, setsRewritten) = rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), sets)
         val setsRewrittenAsCells = setsRewritten map setState.arena.findCellByNameEx
+        val savedVarTypes = rewriter.typeFinder.getVarTypes // save the variable types, to restore them later
 
         // Get the types of the sets from the type finder. There are good chances that they are annotated with types.
         val recordT = findRecordType(state.ex, setsRewrittenAsCells)
@@ -56,6 +57,8 @@ class RecordSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
         if (rewriter.typeFinder.getTypeErrors.nonEmpty) {
           throw rewriter.typeFinder.getTypeErrors.head // throw a type inference error, if it happens
         }
+
+        rewriter.typeFinder.setVarTypes(savedVarTypes) // restore the variable types
         mapbase.rewriteSetMapManyArgs(setState.setRex(map), funEx, varNames, setsRewritten)
 
       case _ =>

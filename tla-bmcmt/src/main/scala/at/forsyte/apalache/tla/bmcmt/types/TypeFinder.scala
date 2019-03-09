@@ -70,6 +70,13 @@ trait TypeFinder[T] {
   def getVarTypes: SortedMap[String, T]
 
   /**
+    * Restore variable types from a map. This method does not update type annotations.
+    *
+    * @param newVarTypes a mapping of names to types
+    */
+  def setVarTypes(newVarTypes: SortedMap[String, CellT]): Unit
+
+    /**
     * Record the cell name and its type.
     *
     * @param cell an arena cell
