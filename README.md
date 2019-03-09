@@ -29,9 +29,9 @@ To try the latest features, you can download
 
 Similar to TLC, before running the tool, you have to specify the input parameters.
 Since we do not have integration with the TLA+ Toolbox yet,
-we require all constants to initialized in a spec. There are two ways to do that.
+we require all constants to be initialized in a spec. There are two ways to do that.
 
-#### Option 1: Constants replaced with operators
+#### Option 1: Replace constants with operators
 For instance, assume your spec contains a constant ``N`` for the number of processes
 and a constant ``Values`` for the set of possible values:
 
@@ -47,7 +47,7 @@ N == 4
 Values == {0, 1}
 ```
 
-#### Option 2: Constants initialized with an operator
+#### Option 2: Initialize constants with ConstInit
 
 This approach is similar to the ``Init`` operator, but applied to the constants.
 We define a special operator, e.g., called ``ConstInit``: 
@@ -60,8 +60,8 @@ ConstInit ==
   /\ Values \in {{0, 1}}
 ```
 
-Note that in the current version, assignments to the constants should be
-written as ``C \in S``, where ``S`` is a set (you can use ``SUBSET S`` and ``[S -> T`` as well]).
+Note that in the current version, an assignments to a constants ``c`` should be
+written as ``c \in S``, where ``S`` is a set (you can use ``SUBSET S`` and ``[S -> T`` as well]).
 Moreover, ``ConstInit`` should be a conjunction of such assignments and possibly
 of additional constraints on the constants.
 
@@ -106,7 +106,7 @@ The arguments are as follows:
   * ``--inv`` specifies the invariant to check, optional
   * ``--length`` specifies the upper bound on the length of the finite executions to explore
   
-If you like to check an inductive invariant ``Inv``, you can do as follows:   
+If you like to check an inductive invariant ``Inv``, you can do it as follows:   
 
 ```bash
 $ bin/apalache-mc check --init=Inv --inv=Inv --length=1 myspec.tla
@@ -116,10 +116,6 @@ Make sure that ``Inv`` contains necessary constraints on the shape of the variab
 Usually, ``TypeOK`` as the first line of an invariant is exactly what is needed.
 
 The tool will display only the important messages. A detailed log can be found in `detailed.log`.
-
-In contrast to TLC, the tool assumes that all specification parameters are
-fixed right in the specification. We will add support for TLC models in
-the future.
 
 ## Building from sources
 
