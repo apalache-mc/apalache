@@ -235,8 +235,8 @@ package object types {
   }
 
   /**
-    * The type of a powerset of finite set, which is constructed as 'SUBSET S' in TLA+.
-    * @param domType the type of the argument finite set, i.e., typeof(S) in SUBSET S.
+    * The type of a powerset of a finite set, which is constructed as 'SUBSET S' in TLA+.
+    * @param domType the type of the argument is a finite set, i.e., typeof(S) in SUBSET S.
     *                Currently, only FinSetT(_) is supported.
     *
     * FIXME: this type should be eliminated, as powersets have to be either treated specially

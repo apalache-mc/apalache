@@ -42,7 +42,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       case _ =>
         val elems = state.arena.getHas(set)
         if (elems.isEmpty) {
-          throw new RuntimeException("The set $set is statically empty. Pick should not be called on that.")
+          throw new RuntimeException(s"The set $set is statically empty. Pick should not be called on that.")
         }
 
         var arena = state.arena.appendCell(IntT())

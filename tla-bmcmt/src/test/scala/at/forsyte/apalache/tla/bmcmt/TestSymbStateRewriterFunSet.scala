@@ -46,13 +46,13 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
       case NameEx(name) =>
         assert(CellTheory().hasConst(name))
         val cell = nextState.arena.findCellByNameEx(nextState.ex)
-        assert(cell.cellType == FinFunSetT(FinSetT(IntT()), PowSetT(FinSetT(BoolT()))))
+        assert(cell.cellType == FinFunSetT(FinSetT(IntT()), FinSetT(FinSetT(BoolT()))))
         val dom = nextState.arena.getDom(cell)
         assert(dom.cellType == FinSetT(IntT()))
         val domElems = nextState.arena.getHas(dom)
         assert(domElems.length == 2)
         val cdm = nextState.arena.getCdm(cell)
-        assert(cdm.cellType == PowSetT(FinSetT(BoolT())))
+        assert(cdm.cellType == FinSetT(FinSetT(BoolT())))
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -125,20 +125,22 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
     val state = new SymbState(tla.in(fun, funset), BoolTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
-    nextState.ex match {
-      case NameEx(name) =>
-        assert(BoolTheory().hasConst(name))
-        solverContext.push()
-        solverContext.assertGroundExpr(tla.not(nextState.ex))
-        assert(solverContext.sat())
-        solverContext.pop()
-        solverContext.push()
-        solverContext.assertGroundExpr(nextState.ex)
-        solverContext.pop()
+    assert(solverContext.sat())
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.not(nextState.ex)))
+  }
 
-      case _ =>
-        fail("Unexpected rewriting result")
-    }
+  test("""SE-FUNSET with a SUBSET: [x \in {1, 2} -> {TRUE}] \in [{1, 2} -> SUBSET {FALSE, TRUE}]""") {
+    val domain = tla.enumSet(tla.int(1), tla.int(2))
+    val codomain = tla.powSet(tla.enumSet(tla.bool(false), tla.bool(true)))
+    val funset = tla.funSet(domain, codomain)
+    val fun = tla.funDef(tla.enumSet(tla.bool(true)),
+                         tla.name("x"),
+                         domain)
+    val state = new SymbState(tla.in(fun, funset), BoolTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    assertTlaExAndRestore(rewriter, nextState)
   }
 
   // bugfix 27/12/2017
