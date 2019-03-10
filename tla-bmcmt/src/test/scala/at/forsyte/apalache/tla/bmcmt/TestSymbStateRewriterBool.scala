@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStoreImpl
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, IntT}
+import at.forsyte.apalache.tla.bmcmt.types.{AnnotationParser, BoolT, FinSetT, IntT}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
@@ -242,6 +242,24 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
       case _ =>
         fail("Unexpected rewriting result")
     }
+  }
+
+  test("""IF-THEN-ELSE with \E: IF \E i \in {}: x' \in {i} THEN x' ELSE 0""") {
+    // this tricky test comes from Bakery, where an assignment is made in one branch of a conjunction
+    val exists = tla.exists(tla.name("i"),
+      tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(IntT()))),
+      tla.in(tla.prime(tla.name("x")), tla.enumSet(tla.name("i"))))
+    val ite = tla.ite(exists, tla.prime(tla.name("x")), tla.int(0))
+
+    val state = new SymbState(ite, CellTheory(), arena, Binding())
+    val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
+    val fex = new FreeExistentialsStoreImpl()
+    fex.store = fex.store + exists.ID
+    rewriter.freeExistentialsStore = fex
+
+    var nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(tla.int(0), nextState.ex)))
   }
 
   test("""SE-BOOL-NEG7: ~\A x \in S: y ~~> \E x \in S: ~y""") {

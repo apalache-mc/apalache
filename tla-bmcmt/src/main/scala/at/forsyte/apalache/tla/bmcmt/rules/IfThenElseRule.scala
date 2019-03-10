@@ -15,6 +15,7 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
   */
 class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val pickFrom = new CherryPick(rewriter)
+  private val simplifier = new ConstSimplifier()
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -28,24 +29,30 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case OperEx(TlaControlOper.ifThenElse, predEx, thenEx, elseEx) =>
         var nextState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(predEx))
         val predCell = nextState.asCell
-        nextState = rewriter.rewriteUntilDone(nextState.setRex(thenEx))
-        val thenCell = nextState.asCell
-        nextState = rewriter.rewriteUntilDone(nextState.setRex(elseEx))
-        val elseCell = nextState.asCell
-        // in the general case, the both branches return cells
-        //          if (rewriter.introFailures) {  // it was a bad idea
-        //            coverFailurePredicates(predState, thenState, elseState)
-        //          }
-        val resultType = rewriter.typeFinder.compute(state.ex, BoolT(), thenCell.cellType, elseCell.cellType)
-        val finalState =
-          resultType match {
-            // basic types, we can use SMT equality
-            case BoolT() | IntT() | ConstT() => iteBasic(nextState, resultType, predCell, thenCell, elseCell)
+        // Some rules immediately return TRUE or FALSE. In combination with assignments, this may lead to rewriting errors.
+        // See: TestSymbStateRewriterBool.test("""IF-THEN-ELSE with \E...""")
+        // In such cases, we should prune the branches
+        if (simplifier.isTrueConst(predCell)) {
+          rewriter.coerce(rewriter.rewriteUntilDone(nextState.setRex(thenEx)), state.theory)
+        } else if (simplifier.isFalseConst(predCell)) {
+          rewriter.coerce(rewriter.rewriteUntilDone(nextState.setRex(elseEx)), state.theory)
+        } else {
+          nextState = rewriter.rewriteUntilDone(nextState.setRex(thenEx))
+          val thenCell = nextState.asCell
+          nextState = rewriter.rewriteUntilDone(nextState.setRex(elseEx))
+          val elseCell = nextState.asCell
 
-            // sets, functions, records, tuples, sequence: use pick
-            case _ => iteGeneral(nextState, resultType, predCell, thenCell, elseCell)
-          }
-        rewriter.coerce(finalState, state.theory) // coerce to the source theory
+          val resultType = rewriter.typeFinder.compute(state.ex, BoolT(), thenCell.cellType, elseCell.cellType)
+          val finalState =
+            resultType match {
+              // basic types, we can use SMT equality
+              case BoolT() | IntT() | ConstT() => iteBasic(nextState, resultType, predCell, thenCell, elseCell)
+
+              // sets, functions, records, tuples, sequence: use pick
+              case _ => iteGeneral(nextState, resultType, predCell, thenCell, elseCell)
+            }
+          rewriter.coerce(finalState, state.theory) // coerce to the source theory
+        }
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
