@@ -471,8 +471,8 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
       writer.println(s"State $i (from transition $transition):")
       writer.println("--------")
       val binding = decoder.decodeStateVariables(state)
-      for ((name, ex) <- binding) {
-        writer.println("%-15s ->  %s".format(name, UTFPrinter.apply(ex)))
+      for (name <- binding.keys.toSeq.sorted) { // sort the keys
+        writer.println("%-15s ->  %s".format(name, UTFPrinter.apply(binding(name))))
       }
       writer.println("========\n")
     }
