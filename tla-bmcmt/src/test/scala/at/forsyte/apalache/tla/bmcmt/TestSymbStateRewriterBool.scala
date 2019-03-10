@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.bmcmt.types.{AnnotationParser, BoolT, FinSetT, IntT}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
-import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
+import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TestingPredefs, ValEx}
 import org.junit.runner.RunWith
@@ -571,6 +571,26 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat()) // regression test, the buggy implementation failed here
     assertTlaExAndRestore(rewriter, nextState.setRex(tla.not(nextState.ex))) // E x \in {} is false
+  }
+
+  test("""SE-EX skolem: \E i \in Nat: i = 10 /\ x' \in {i}""") {
+    // this works for skolem constants only
+    val ex = tla.exists(tla.name("i"),
+      ValEx(TlaNatSet),
+      tla.and(
+        tla.eql(tla.name("i"), tla.int(10)),
+        tla.in(tla.prime(tla.name("x")), tla.enumSet(tla.name("i")))))
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding)
+    val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
+    val fex = new FreeExistentialsStoreImpl()
+    fex.store = fex.store + ex.ID
+    rewriter.freeExistentialsStore = fex
+
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    solverContext.assertGroundExpr(nextState.ex)
+    val xp = nextState.binding("x'")
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(xp.toNameEx, tla.int(10))))
   }
 
   test("""SE-ALL3: \A x \in {1, 2, 3}: x < 10 ~~> $B$k""") {

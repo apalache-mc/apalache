@@ -6,8 +6,8 @@ Here is the list of the TLA+ language features that are currently supported by o
 
 Construct  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
-``EXTENDS module`` | ✔ | - | As soon as SANY can import the module. Some standard modules are not supported yet
-``CONSTANTS C1, C2`` | ✖ | -  | Declare your constants as operators, e.g., C1 == 111
+``EXTENDS module`` | ✔ | - | As soon as SANY imports the module. Some standard modules are not supported yet
+``CONSTANTS C1, C2`` | ✔ | -  | Either define a ``ConstInit`` operator to initialize the constants, or declare operators instead of constants, e.g., C1 == 111
 ``VARIABLES x, y, z`` | ✔ | - |
 ``ASSUME P`` | ✖ | - | Parsed, but not propagated to the solver
 ``F(x1, ..., x_n) == exp`` | ✔ / ✖ | `0.7-dev-calls` | Provisionally, any use of F is replaced with its body. Hence, recursive operators are not supported yet.
@@ -23,9 +23,9 @@ Construct  | Supported? | Milestone | Comment
 
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
-∧, ∨, ¬, ⇒, ⇔, ≡ | ✔ | - |
+∧, ∨, ¬, ⇒, ⇔, ≡ | ✔ | - | ∧, ∨ are translated to ``IF-THEN-ELSE``, using the short circuit semantics, similar to TLC
 ``TRUE``, ``FALSE``, ``BOOLEAN`` | ✔ | - |
-``∀x ∈ S: p``, ``∃x ∈ S : p`` |  ✔ | - | Multiple arguments might fail to work. Just write ∀x ∈ S: ∀y ∈ T: p instead.
+``∀x ∈ S: p``, ``∃x ∈ S : p`` |  ✔ | - |
 ``CHOOSE x ∈ S : p`` |  ✔/✖ | - | Similar to TLC, we implement a non-deterministic choice. We will add a deterministic version in the future.
 ``CHOOSE x : x ∉ S`` |  ✖ | `0.5-dev-lang` | That is a commonly used idiom
 ``∀x : p, ∃x : p`` |  ✖ | **NEVER** | Use the versions above
@@ -44,8 +44,8 @@ In the following, we sometimes denote sets as:
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 =, ≠, ∈, ∉, ⋂, ⋃, ⊆, \  | ✔ | - |
-``{e_1, ..., e_n}`` | ✔ | - |
-``{x ∈ S : p}`` | ✔ | - | Empty sets ``{}`` require [type annotations](types-and-annotations.md)
+``{e_1, ..., e_n}`` | ✔ | - | Empty sets ``{}`` require [type annotations](types-and-annotations.md)
+``{x ∈ S : p}`` | ✔ | - |
 ``{e : x ∈ S}`` | ✔ / ✖ | `0.5-dev-lang` | pattern matching like `{<<u, v>> \in S: p}` does not work
 ``SUBSET S`` | ✔ | - | Provided that S is *explicit*. Produces a *symbolic* set.
 ``UNION S`` |  ✔ | - | Provided that S is *explicit*
@@ -134,7 +134,7 @@ Operator  | Supported? | Milestone | Comment
 /, % | ✔ | - | Integer division and modulo
 ``a^b`` | ✔ / ✖ | - | Provided a and b are constant expressions. 
 ``a..b`` | ✔ / ✖ | - | Provided a and b are constant expressions. In general, use ``{x \in A..B : a <= x /\ x <= b}``, if you know constant bounds ``A`` and ``B`` on the variables ``a`` and ``b``. 
-``Int``, ``Nat`` | ✖ | - | Infinite sets are not supported. We may add their finite underapproximations in the future.
+``Int``, ``Nat`` | ✔ / ✖ | - | Only supported in ``\E x \in Nat: p`` and ``\E x \in Int: p``, if the expression is not located under ``\A`` and ``~``. 
 ÷ | ✖ | - | Real division, not supported
 
 ### Sequences

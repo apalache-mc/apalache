@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
+import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 
 import scala.collection.immutable.{Map, SortedMap}
@@ -344,6 +344,12 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
 
     case ValEx(TlaStr(_)) =>
       ConstT()
+
+    case ValEx(TlaNatSet) =>
+      FinSetT(IntT())
+
+    case ValEx(TlaIntSet) =>
+      FinSetT(IntT())
   }
 
   private def computeBasicOps(argTypes: Seq[CellT]): PartialFunction[TlaEx, CellT] = {
