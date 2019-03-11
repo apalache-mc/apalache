@@ -634,7 +634,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
         case FunT(_, _) =>
           val (argT, resT) =
             funType match {
-              case FunT(FinSetT(tup@TupleT(_)), rt) => (tup, rt)
+                // an argument to EXCEPT is always wrapped into a tuple
               case FunT(FinSetT(elemT), rt) => (TupleT(Seq(elemT)), rt)
               case _ => error(ex, "Expected a function type, found: " + funType)
             }

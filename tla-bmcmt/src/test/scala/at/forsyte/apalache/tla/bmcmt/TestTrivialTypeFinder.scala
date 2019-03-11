@@ -570,12 +570,12 @@ class TestTrivialTypeFinder extends RewriterBase {
     val g = tla.name("g")
     // good cases
     val funT = FunT(FinSetT(IntT()), BoolT())
-    // TlaFunOper.except expects a single index wrapped into a tuple
+    // TlaFunOper.except expects an index (single-dimensional as well as multi-dimensional) wrapped into a tuple
     assert(funT ==
       typeFinder.compute(tla.except(f, e, g), funT, TupleT(Seq(IntT())), BoolT()))
     val fun2T = FunT(FinSetT(TupleT(Seq(IntT(), ConstT()))), BoolT())
     assert(fun2T ==
-      typeFinder.compute(tla.except(f, e, g), fun2T, TupleT(Seq(IntT(), ConstT())), BoolT()))
+      typeFinder.compute(tla.except(f, e, g), fun2T, TupleT(Seq(TupleT(Seq(IntT(), ConstT())))), BoolT()))
     // bad cases
     assertThrows[TypeInferenceError] {
       typeFinder.compute(tla.except(f, e, g), funT, IntT(), BoolT())
