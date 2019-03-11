@@ -120,7 +120,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
       if (cinitName.isEmpty) {
         None
       } else {
-        val cinitBody = findBodyOf(cinitName.get, allDeclarations: _*)
+        val cinitBody = findBodyOf(cinitName.get, initReplacedDecls: _*)
         if (cinitBody == NullEx) {
           val msg = s"Constant initializer ${cinitName.get} not found"
           logger.error(msg)
