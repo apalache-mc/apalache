@@ -141,7 +141,16 @@ class Transformer {
       }
     }
 
-    OperatorHandler.replaceWithRule( p_ex, exFun, srcDB )
+    val ret = RecursiveProcessor.transformTlaEx(
+      RecursiveProcessor.DefaultFunctions.naturalTermination,
+      exFun,
+      exFun
+    )(p_ex)
+    srcDB.onTransformation( p_ex, ret)
+    ret
+//
+//    val oldret = OperatorHandler.replaceWithRule( p_ex, exFun, srcDB )
+//    oldret
   }
 
   /**
