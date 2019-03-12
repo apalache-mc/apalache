@@ -1,4 +1,7 @@
 <configuration>
+    <!-- This configuration file is no longer used, as we configure logback automatically -->
+
+
     <!-- always a good activate OnConsoleStatusListener -->
     <!--<statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener"/>-->
     <!-- suppress default messages by logback itself -->

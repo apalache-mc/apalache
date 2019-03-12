@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 import at.forsyte.apalache.infra.PassOptionException
+import at.forsyte.apalache.infra.log.LogbackConfigurator
 import at.forsyte.apalache.infra.passes.{PassChainExecutor, TlaModuleMixin}
 import at.forsyte.apalache.tla.bmcmt.{CheckerException, InternalCheckerError}
 import at.forsyte.apalache.tla.bmcmt.passes.CheckerModule
@@ -11,7 +12,6 @@ import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.tooling.Version
 import at.forsyte.apalache.tla.tooling.opt.{CheckCmd, ParseCmd}
 import com.google.inject.Guice
-import com.typesafe.scalalogging.LazyLogging
 import org.backuity.clist.Cli
 
 /**
@@ -19,7 +19,7 @@ import org.backuity.clist.Cli
   *
   * @author Igor Konnov
   */
-object Tool extends App with LazyLogging {
+object Tool extends App { // not using LazyLogging, as main is initializing the logger
   private lazy val ISSUES_LINK: String = "[https://github.com/konnov/apalache/issues]"
 
   override def main(args: Array[String]): Unit = {
@@ -28,6 +28,9 @@ object Tool extends App with LazyLogging {
     Console.println("# WARNING: This tool is in the experimental stage.")
     Console.println("#          Please report bugs at: " + ISSUES_LINK)
     Console.println("")
+    // force our programmatic logback configuration, as the autoconfiguration works unpredictably
+    new LogbackConfigurator().configureDefaultContext()
+    // start
     val startTime = LocalDateTime.now()
     val parseCmd = new ParseCmd
     val checkCmd = new CheckCmd
@@ -35,11 +38,11 @@ object Tool extends App with LazyLogging {
       Cli.parse(args).withProgramName("apalache-mc").version(Version.version)
         .withCommands(parseCmd, checkCmd) match {
         case Some(parse: ParseCmd) =>
-          logger.debug("Parse " + parse.file)
+          Console.print("Parse " + parse.file)
           handleExceptions(runParse(parse, _))
 
         case Some(check: CheckCmd) =>
-          logger.info("Checker options: filename=%s, init=%s, next=%s, inv=%s"
+          Console.print("Checker options: filename=%s, init=%s, next=%s, inv=%s"
             .format(check.file, check.init, check.next, check.inv))
           handleExceptions(runCheck(check, _))
 
@@ -70,12 +73,12 @@ object Tool extends App with LazyLogging {
 
     val result = executor.run()
     if (result.isDefined) {
-      logger.info("Parsed successfully")
+      Console.print("Parsed successfully")
       val tlaModule = result.get.asInstanceOf[TlaModuleMixin].tlaModule.get
-      logger.info("Root module: %s with %d declarations".format(tlaModule.name,
+      Console.print("Root module: %s with %d declarations".format(tlaModule.name,
         tlaModule.declarations.length))
     } else {
-      logger.error("Parser has failed")
+      Console.print("Parser has failed")
     }
   }
 
@@ -99,9 +102,9 @@ object Tool extends App with LazyLogging {
 
     val result = executor.run()
     if (result.isDefined) {
-      logger.info("Checker reports no error up to computation length " + check.length)
+      Console.print("Checker reports no error up to computation length " + check.length)
     } else {
-      logger.error("Checker has failed")
+      Console.print("Checker has failed")
     }
   }
 
@@ -110,16 +113,16 @@ object Tool extends App with LazyLogging {
       fun()
     } catch {
       case e: PassOptionException =>
-        logger.error(e.getMessage)
+        Console.print(e.getMessage)
 
       case e: InternalCheckerError =>
-        logger.error("There is a bug in the tool, which should be fixed. REPORT IT: " + ISSUES_LINK, e)
+        Console.print("There is a bug in the tool, which should be fixed. REPORT IT: " + ISSUES_LINK, e)
 
       case e: CheckerException =>
-        logger.error("The tool has failed around unknown location. REPORT IT: " + ISSUES_LINK, e)
+        Console.print("The tool has failed around unknown location. REPORT IT: " + ISSUES_LINK, e)
 
       case e: Throwable =>
-        logger.error("This should not have happened, but it did. REPORT IT: " + ISSUES_LINK, e)
+        Console.print("This should not have happened, but it did. REPORT IT: " + ISSUES_LINK, e)
     }
   }
 }
