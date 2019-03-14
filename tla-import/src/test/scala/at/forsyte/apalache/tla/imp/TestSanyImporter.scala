@@ -586,6 +586,46 @@ class TestSanyImporter extends FunSuite {
     expectDecl("String", ValEx(TlaStrSet))
   }
 
+  test("comprehensions with tuples") {
+    // TLA+ allows the user to use some form of pattern matching with tuples
+    val text =
+    """---- MODULE comprehensions ----
+      |VARIABLE XY, X, Y
+      |FilterTuples == { <<x, y>> \in XY :  x = 1}
+      |MapTuples == { x = 1 : <<x, y>> \in XY}
+      |MapTuples2 == { x = 1 : x, y \in XY}
+      |================================
+      |""".stripMargin
+
+    val locationStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+      .loadFromSource("comprehensions", Source.fromString(text))
+    val mod = expectSingleModule("comprehensions", rootName, modules)
+    val root = modules(rootName)
+
+    def expectDecl(name: String, body: TlaEx): Unit =
+      findAndExpectTlaDecl(locationStore, root, name, List(), body)
+
+    expectDecl("FilterTuples",
+      OperEx(TlaSetOper.filter,
+        OperEx(TlaFunOper.tuple, NameEx("x"), NameEx("y")),
+        NameEx("XY"),
+        OperEx(TlaOper.eq, NameEx("x"), ValEx(TlaInt(1)))
+      ))////
+    expectDecl("MapTuples",
+      OperEx(TlaSetOper.map,
+        OperEx(TlaOper.eq, NameEx("x"), ValEx(TlaInt(1))),
+        OperEx(TlaFunOper.tuple, NameEx("x"), NameEx("y")),
+        NameEx("XY")
+      ))////
+    expectDecl("MapTuples2",
+      OperEx(TlaSetOper.map,
+        OperEx(TlaOper.eq, NameEx("x"), ValEx(TlaInt(1))),
+        OperEx(TlaFunOper.tuple, NameEx("x"), NameEx("y")),
+        NameEx("XY")
+      ))////
+  }
+
   test("funCtor quantifiers") {
     // One can write tricky combinations of bound variables in TLA+.
     // We translate all of them uniformly:

@@ -46,7 +46,7 @@ Operator  | Supported? | Milestone | Comment
 =, ≠, ∈, ∉, ⋂, ⋃, ⊆, \  | ✔ | - |
 ``{e_1, ..., e_n}`` | ✔ | - | Empty sets ``{}`` require [type annotations](types-and-annotations.md)
 ``{x ∈ S : p}`` | ✔ | - |
-``{e : x ∈ S}`` | ✔ / ✖ | `0.5-dev-lang` | pattern matching like `{<<u, v>> \in S: p}` does not work
+``{e : x ∈ S}`` | ✔ | - |
 ``SUBSET S`` | ✔ | - | Provided that S is *explicit*. Produces a *symbolic* set.
 ``UNION S`` |  ✔ | - | Provided that S is *explicit*
 
