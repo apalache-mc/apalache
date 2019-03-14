@@ -12,6 +12,7 @@ import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.tooling.Version
 import at.forsyte.apalache.tla.tooling.opt.{CheckCmd, ParseCmd}
 import com.google.inject.Guice
+import com.typesafe.scalalogging.LazyLogging
 import org.backuity.clist.Cli
 
 /**
@@ -19,7 +20,7 @@ import org.backuity.clist.Cli
   *
   * @author Igor Konnov
   */
-object Tool extends App { // not using LazyLogging, as main is initializing the logger
+object Tool extends App with LazyLogging { // not using LazyLogging, as main is initializing the logger
   private lazy val ISSUES_LINK: String = "[https://github.com/konnov/apalache/issues]"
 
   override def main(args: Array[String]): Unit = {
@@ -55,12 +56,12 @@ object Tool extends App { // not using LazyLogging, as main is initializing the 
 
   private def printTimeDiff(startTime: LocalDateTime): Unit = {
     val endTime = LocalDateTime.now()
-    Console.println("It took me %d days %2d hours %2d min %2d sec"
+    logger.info("It took me %d days %2d hours %2d min %2d sec"
       .format(ChronoUnit.DAYS.between(startTime, endTime),
         ChronoUnit.HOURS.between(startTime, endTime) % 23,
         ChronoUnit.MINUTES.between(startTime, endTime) % 60,
         ChronoUnit.SECONDS.between(startTime, endTime) % 60))
-    Console.println("Total time: %d.%d sec"
+    logger.info("Total time: %d.%d sec"
       .format(ChronoUnit.SECONDS.between(startTime, endTime),
         ChronoUnit.MILLIS.between(startTime, endTime) % 1000))
   }
@@ -117,12 +118,15 @@ object Tool extends App { // not using LazyLogging, as main is initializing the 
 
       case e: InternalCheckerError =>
         Console.print("There is a bug in the tool, which should be fixed. REPORT IT: " + ISSUES_LINK, e)
+        logger.error("Internal error", e)
 
       case e: CheckerException =>
         Console.print("The tool has failed around unknown location. REPORT IT: " + ISSUES_LINK, e)
+        logger.error("Checker error", e)
 
       case e: Throwable =>
         Console.print("This should not have happened, but it did. REPORT IT: " + ISSUES_LINK, e)
+        logger.error("Unhandled exception", e)
     }
   }
 }
