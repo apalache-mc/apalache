@@ -1,9 +1,10 @@
 package at.forsyte.apalache.tla.imp.simpl
 
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
+import at.forsyte.apalache.tla.lir.control.LetInOper
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir._
 import javax.inject.Singleton
 
 /**
@@ -94,14 +95,7 @@ class Desugarer {
     val boundName = mkTupleName(boundEx) // rename a tuple into a name, if needed
     // variable substitutions for the variables inside the tuples
     val subs = collectSubstitutions(Map(), boundEx)
-    // rename the occurrences of the bound names met inside the tuple
-    def rename(e: TlaEx): TlaEx = e match {
-      case NameEx(name) => if (!subs.contains(name)) e else subs(name)
-      case OperEx(op, args @ _*) => OperEx(op, args map rename :_*)
-      case _ => e
-    }
-
-    val newPred = rename(predEx)
+    val newPred = substituteNames(subs, predEx)
     Seq(NameEx(boundName), setEx, newPred)
   }
 
@@ -117,14 +111,7 @@ class Desugarer {
     val boundNames = boundEs map mkTupleName // rename tuples into a names, if needed
     // variable substitutions for the variables inside the tuples
     val subs = boundEs.foldLeft(Map[String, TlaEx]())(collectSubstitutions)
-    // rename the occurrences of the bound names met inside the mapping expression
-    def rename(e: TlaEx): TlaEx = e match {
-      case NameEx(name) => if (!subs.contains(name)) e else subs(name)
-      case OperEx(op, args @ _*) => OperEx(op, args map rename :_*)
-      case _ => e
-    }
-
-    val newMapEx = rename(mapEx)
+    val newMapEx = substituteNames(subs, mapEx)
     // collect the arguments back
     val newArgs = 0.until(2 * boundEs.length) map
       { i => if (i % 2 == 0) NameEx(boundNames(i / 2)) else setEs(i / 2) }
@@ -177,5 +164,22 @@ class Desugarer {
       case _ =>
         throw new IllegalArgumentException("Unexpected %s among set filter parameters".format(ex))
     }
+  }
+
+  private def substituteNames(subs: Map[String, TlaEx], ex: TlaEx): TlaEx = {
+    def rename(e: TlaEx): TlaEx = e match {
+      case NameEx(name) => if (!subs.contains(name)) e else subs(name)
+
+      case OperEx(op: LetInOper, args @ _*) =>
+        val newDefs = op.defs.map(d => TlaOperDecl(d.name, d.formalParams, rename(d.body)))
+        OperEx(new LetInOper(newDefs), args map rename :_*)
+
+      case OperEx(op, args @ _*) =>
+        OperEx(op, args map rename :_*)
+
+      case _ => e
+    }
+
+    rename(ex)
   }
 }
