@@ -58,8 +58,9 @@ class RecordSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
           throw rewriter.typeFinder.getTypeErrors.head // throw a type inference error, if it happens
         }
 
+        val finalState = mapbase.rewriteSetMapManyArgs(setState.setRex(map), funEx, varNames, setsRewritten)
         rewriter.typeFinder.setVarTypes(savedVarTypes) // restore the variable types
-        mapbase.rewriteSetMapManyArgs(setState.setRex(map), funEx, varNames, setsRewritten)
+        finalState
 
       case _ =>
         throw new RewriterException("%s is not applicable to %s"
