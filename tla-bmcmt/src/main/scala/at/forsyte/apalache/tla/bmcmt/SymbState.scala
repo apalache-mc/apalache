@@ -42,4 +42,28 @@ class SymbState(val ex: TlaEx,
   def appendArenaCell(cellT: CellT): SymbState = {
     setArena(arena.appendCell(cellT))
   }
+
+  /**
+    * Find the names of the variables (their prime versions)
+    * that have changed between the primed and non-primed versions.
+    *
+    * @return the set of names of the variables that have changed, e.g., x', y', and z'
+    */
+  def changed: Set[String] = {
+    def eachName(set: Set[String], name: String): Set[String] = {
+      if (name.endsWith("'")) {
+        val nonPrimed = name.substring(0, name.length - 1)
+        if (!binding.contains(nonPrimed) || binding(nonPrimed) != binding(name)) {
+          set + name
+        } else {
+          set
+        }
+      } else {
+        set
+      }
+    }
+
+    binding.keySet.foldLeft(Set[String]())(eachName)
+  }
+
 }

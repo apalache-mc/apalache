@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
 import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy
 import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy._
 import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.bmcmt.util.TlaExUtil
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.control.TlaControlOper
@@ -385,11 +386,11 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
   }
 
   // TODO: This decomposition could be done at previous phases
-  private def checkInvariantPiecewise(depth: Int, state: SymbState, notInv: TlaEx): Boolean = {
+  private def checkInvariantPiecewise(depth: Int, nextState: SymbState, changed: Set[String], notInv: TlaEx): Boolean = {
     // check the disjuncts separately, in order to simplify the problem for SMT
     notInv match {
       case OperEx(TlaBoolOper.or, args@_*) =>
-        args exists (a => checkInvariantPiecewise(depth, state, a))
+        args exists (a => checkInvariantPiecewise(depth, nextState, changed, a))
 
       case OperEx(TlaBoolOper.exists, name, set, OperEx(TlaBoolOper.or, args@_*)) =>
         def oneExists(a: TlaEx) = {
@@ -399,12 +400,12 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
           ex
         }
         // use the equivalence \E x \in S: A \/ B <=> (\E x \in S: A) \/ (\E x \in S: B)
-        args exists (a => checkInvariantPiecewise(depth, state, oneExists(a)))
+        args exists (a => checkInvariantPiecewise(depth, nextState, changed, oneExists(a)))
 
       case ite@OperEx(TlaControlOper.ifThenElse, predEx, thenEx, elseEx) =>
         // ITE(A, B, C) == A /\ B \/ ~A /\ B
         val pieces = Seq(tla.and(predEx, thenEx), tla.and(tla.not(predEx), elseEx))
-        pieces exists (a => checkInvariantPiecewise(depth, state, a))
+        pieces exists (a => checkInvariantPiecewise(depth, nextState, changed, a))
 
       case OperEx(TlaBoolOper.exists, name, set, OperEx(TlaControlOper.ifThenElse, predEx, thenEx, elseEx)) =>
         // \E x \in S: ITE(A, B, C) == (\E x \in S: A /\ B) \/ (\E x \in S: ~A /\ B)
@@ -417,51 +418,58 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
 
         val pieces = Seq(oneExists(tla.and(predEx, thenEx)), oneExists(tla.and(tla.not(predEx), elseEx)))
         // use the equivalence \E x \in S: A \/ B <=> (\E x \in S: A) \/ (\E x \in S: B)
-        pieces exists (a => checkInvariantPiecewise(depth, state, oneExists(a)))
+        pieces exists (a => checkInvariantPiecewise(depth, nextState, changed, oneExists(a)))
 
       case _ =>
         logger.debug(s"Checking an invariant piece $notInv")
-        rewriter.push()
-        val notInvState = rewriter.rewriteUntilDone(state
-          .setTheory(BoolTheory())
-          .setRex(notInv))
-        solverContext.assertGroundExpr(notInvState.ex)
-        checkAssertionErrors(notInvState) // the invariant violation may introduce runtime errors
-      val notInvSat = solverContext.sat()
-        if (notInvSat) {
-          val newArena = notInvState.arena.appendCell(IntT()) // FIXME
-          val transitionIndex = newArena.topCell
+        val used = TlaExUtil.findUsedNames(notInv)
+        if (used.intersect(changed).isEmpty) {
+          logger.debug(s"The invariant is referring only to the UNCHANGED variables. Skipped.")
+          false
+        } else {
+          rewriter.push()
+          val notInvState = rewriter.rewriteUntilDone(nextState
+            .setTheory(BoolTheory())
+            .setRex(notInv))
+          solverContext.assertGroundExpr(notInvState.ex)
+          checkAssertionErrors(notInvState) // the invariant violation may introduce runtime errors
+          val notInvSat = solverContext.sat()
+          if (notInvSat) {
+            val newArena = notInvState.arena.appendCell(IntT()) // FIXME
+            val transitionIndex = newArena.topCell
 
-          val finalState = notInvState.setArena(newArena).setBinding(shiftBinding(notInvState.binding, constants))
-          stack = (finalState, transitionIndex) +: stack
-          val filename = dumpCounterexample()
-          logger.error(s"Invariant is violated at depth $depth. Check the counterexample in $filename")
-          if (debug) {
-            logger.warn(s"Dumping the arena into smt.log. This may take some time...")
-            // dump everything in the log
-            val writer = new StringWriter()
-            new SymbStateDecoder(solverContext, rewriter).dumpArena(notInvState, new PrintWriter(writer))
-            solverContext.log(writer.getBuffer.toString)
+            val finalState = notInvState.setArena(newArena).setBinding(shiftBinding(notInvState.binding, constants))
+            stack = (finalState, transitionIndex) +: stack
+            val filename = dumpCounterexample()
+            logger.error(s"Invariant is violated at depth $depth. Check the counterexample in $filename")
+            if (debug) {
+              logger.warn(s"Dumping the arena into smt.log. This may take some time...")
+              // dump everything in the log
+              val writer = new StringWriter()
+              new SymbStateDecoder(solverContext, rewriter).dumpArena(notInvState, new PrintWriter(writer))
+              solverContext.log(writer.getBuffer.toString)
+            }
+            throw new CancelSearchException(Outcome.Error)
           }
-          throw new CancelSearchException(Outcome.Error)
+          rewriter.pop()
+          notInvSat
         }
-        rewriter.pop()
-        notInvSat
     }
   }
 
-  private def checkInvariant(depth: Int, state: SymbState): SymbState = {
-    checkAssertionErrors(state)
+  private def checkInvariant(depth: Int, nextState: SymbState): SymbState = {
+    checkAssertionErrors(nextState)
     if (checkerInput.notInvariant.isEmpty) {
-      state
+      nextState
     } else {
       logger.debug("Checking the invariant")
       val notInv = checkerInput.notInvariant.get
       val savedTypes = rewriter.typeFinder.getVarTypes
       checkTypes(notInv)
-      val notInvSat = checkInvariantPiecewise(depth, state, notInv)
+      val changed = nextState.changed
+      val notInvSat = checkInvariantPiecewise(depth, nextState, changed, notInv)
       rewriter.typeFinder.reset(savedTypes) // forget about the types that were used to check the invariant
-      state
+      nextState
     }
   }
 
