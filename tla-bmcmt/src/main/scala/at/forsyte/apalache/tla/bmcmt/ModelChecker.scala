@@ -436,10 +436,13 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
           stack = (finalState, transitionIndex) +: stack
           val filename = dumpCounterexample()
           logger.error(s"Invariant is violated at depth $depth. Check the counterexample in $filename")
-          // dump everything in the log
-          val writer = new StringWriter()
-          new SymbStateDecoder(solverContext, rewriter).dumpArena(notInvState, new PrintWriter(writer))
-          solverContext.log(writer.getBuffer.toString)
+          if (debug) {
+            logger.warn(s"Dumping the arena into smt.log. This may take some time...")
+            // dump everything in the log
+            val writer = new StringWriter()
+            new SymbStateDecoder(solverContext, rewriter).dumpArena(notInvState, new PrintWriter(writer))
+            solverContext.log(writer.getBuffer.toString)
+          }
           throw new CancelSearchException(Outcome.Error)
         }
         rewriter.pop()
