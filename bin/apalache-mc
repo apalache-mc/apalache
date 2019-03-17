@@ -21,10 +21,5 @@ fi
 
 echo "# Package:   $JAR"
 
-# Do not change the following line.
-# It is automatically replaced with a version at the release stage.
-BUILD=""
-echo "# Build:     ${BUILD:-`git describe`}"
-
 java -jar "$JAR" "$@"
 

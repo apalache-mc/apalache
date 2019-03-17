@@ -20,11 +20,11 @@ import org.backuity.clist.Cli
   *
   * @author Igor Konnov
   */
-object Tool extends App with LazyLogging { // not using LazyLogging, as main is initializing the logger
+object Tool extends App with LazyLogging {
   private lazy val ISSUES_LINK: String = "[https://github.com/konnov/apalache/issues]"
 
   override def main(args: Array[String]): Unit = {
-    Console.println("# APALACHE %s".format(Version.version))
+    Console.println("# APALACHE version %s build %s".format(Version.version, Version.build))
     Console.println("#")
     Console.println("# WARNING: This tool is in the experimental stage.")
     Console.println("#          Please report bugs at: " + ISSUES_LINK)
