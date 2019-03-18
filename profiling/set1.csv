@@ -1,0 +1,19 @@
+filename;tool;timeout;init;inv;next;args
+traffic/traffic.tla;apalache;10m;;;;--length=4
+traffic/MC.tla;tlc;10m;;;;-config MC.cfg
+Prisoners/Prisoners.tla;apalache;30m;;SafetyInv;;--length=15 --cinit=ConstInit
+Prisoners/MC.tla;tlc;30m;;;;-config MC.cfg -deadlock
+ewd840/EWD840.tla;apalache;10m;;Inv;;--length=10 --cinit=ConstInit4
+ewd840/MC4.tla;tlc;10m;;;;-config MC.cfg -deadlock
+ewd840/EWD840.tla;apalache;10m;;Inv;;--length=30 --cinit=ConstInit10
+ewd840/MC10.tla;tlc;30m;;;;-config MC.cfg -deadlock
+allocator/SimpleAllocator.tla;apalache;30m;;ResourceMutex;;--length=7 --cinit=ConstInit22
+allocator/SAMC22.tla;tlc;30m;;ResourceMutex;;-config MC.cfg -deadlock
+allocator/SimpleAllocator.tla;apalache;30m;;ResourceMutex;;--length=7 --cinit=ConstInit53
+allocator/SAMC53.tla;tlc;30m;;ResourceMutex;;-config MC.cfg -deadlock
+bcastFolklore/bcastFolklore.tla;apalache;30m;InitNoBcast;Unforg;;--length=10 --cinit=ConstInit4
+bcastFolklore/MC4.tla;tlc;30m;InitNoBcast;Unforg;;-config MC.cfg -deadlock
+bcastFolklore/bcastFolklore.tla;apalache;30m;InitNoBcast;Unforg;;--length=10 --cinit=ConstInit20
+bcastFolklore/MC20.tla;tlc;1h;InitNoBcast;Unforg;;-config MC.cfg -deadlock
+two-phase/TwoPhase.tla;apalache;30m;;;;--length=10
+two-phase/TwoPhase.tla;tlc;30m;;;;

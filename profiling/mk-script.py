@@ -13,9 +13,23 @@ import stat
 import sys
 import csv
 
+
 dir = os.path.realpath( os.path.dirname(__file__) )
 
-# print(dir)
+def os_specific_commands():
+    if sys.platform.startswith("linux"):
+        cmds = { "time": "/usr/bin/time", "timeout": "/usr/bin/timeout" }
+    elif sys.platform == "darwin":
+        cmds = { "time": "gtime", "timeout": "gtimeout" }
+    else:
+        print("Platform %s is not supported" % sys.platform)
+        sys.exit(1)
+
+    return cmds
+
+
+os_cmds = os_specific_commands()
+
 
 def parse_options():
     parser = argparse.ArgumentParser(description="Generate a script to run Apalache tests.")
@@ -40,26 +54,19 @@ def tool_cmd(args, exp_dir, tla_filename, csv_row):
 
     tool = csv_row['tool']
     apalache_dir = args.apalacheDir
+    ctime = os_cmds['time']
+    ctimeout = "%s %s" % (os_cmds['timeout'], csv_row['timeout'])
     if tool == 'apalache':
-        return "%s/bin/apalache-mc check %s %s %s %s %s" \
-                % (args.apalacheDir, kv("init"),
+        return "%s %s %s/bin/apalache-mc check %s %s %s %s %s &" \
+                % (ctimeout, ctime,
+                        args.apalacheDir, kv("init"),
                         kv("next"), kv("inv"), csv_row["args"], tla_filename)
     elif tool == 'tlc':
-        # TLC needs a configuration file
-        cfg = os.path.join(exp_dir, "MC.cfg")
-        with open (cfg, "w+") as cf:
-            def write_if(key, tlc_name):
-                if csv_row[key].strip() != "":
-                    cf.write('%s\n%s\n' % (tlc_name, csv_row['init']))
-
-            write_if("init", "INIT")
-            write_if("next", "NEXT")
-            write_if("inv", "INVARIANT")
-
+        # TLC needs a configuration file, it should be created by the user
         # figure out how to run tlc
-        init, next, inv, args = kv("init"), kv("next"), kv("inv"), kv("args")
-        return f'java -cp {apalache_dir}/3rdparty/tla2tools.jar tlc2.TLC -config MC.cfg' \
-            + f' {args} {tla_filename}'
+        init, next, inv, args = kv("init"), kv("next"), kv("inv"), csv_row["args"]
+        return f'{ctimeout} {ctime} java -cp {apalache_dir}/3rdparty/tla2tools.jar ' \
+                + f' tlc2.TLC {args} {tla_filename} &'
     else:
         print("Unknown tool: %s" % tool)
         sys.exit(1)
@@ -85,9 +92,14 @@ def setup_experiment(args, row_num, csv_row):
     with open (script, "w+") as sf:
         lines = [
             '#!/bin/bash',
-            'set -e',
             'D=`dirname $0` && D=`cd "$D"; pwd` && cd "$D"',
-            tool_cmd(args, exp_dir, tla_basename, csv_row)
+            tool_cmd(args, exp_dir, tla_basename, csv_row),
+            'pid="$!"',
+            'trap \'kill $pid; exit 130\' INT # terminate the child process',
+            'wait "$pid"',
+            'exitcode="$?"',
+            'echo "EXITCODE=$exitcode"',
+            'exit "$exitcode"'
         ]
         for l in lines:
             sf.write(l)
