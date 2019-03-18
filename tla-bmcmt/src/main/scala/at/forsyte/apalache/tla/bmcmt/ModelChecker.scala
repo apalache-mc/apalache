@@ -30,7 +30,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
                    formulaHintsStore: FormulaHintsStore,
                    exprGradeStore: ExprGradeStore, sourceStore: SourceStore, checkerInput: CheckerInput,
                    searchStrategy: SearchStrategy,
-                   filter: String,
+                   tuningOptions: Map[String, String],
                    debug: Boolean = false, profile: Boolean = false, checkRuntime: Boolean = false)
   extends Checker with LazyLogging {
 
@@ -52,7 +52,13 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
   rewriter.formulaHintsStore = formulaHintsStore
   rewriter.introFailures = checkRuntime
 
-  private val stepFilters: Seq[String] = if (filter == "") Seq() else filter.split(",")
+  private val stepFilters: Seq[String] =
+    if (tuningOptions.contains("search.transitionFilter")) Seq() else tuningOptions("search.transitionFilter").split(",")
+
+  private val invFilter: String =
+    tuningOptions.getOrElse("search.invariantFilter", "")
+
+
   /**
     * A list of transitions that are enabled at every step
     */
@@ -459,7 +465,12 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
 
   private def checkInvariant(depth: Int, nextState: SymbState): SymbState = {
     checkAssertionErrors(nextState)
+    val matchesFilter = invFilter == "" || depth.toString.matches("^" + invFilter + "$")
+
     if (checkerInput.notInvariant.isEmpty) {
+      nextState
+    } else if (!matchesFilter) {
+      logger.debug(s"Step $depth does not match the invariant filter $invFilter. Skipped the invariant.")
       nextState
     } else {
       logger.debug("Checking the invariant")

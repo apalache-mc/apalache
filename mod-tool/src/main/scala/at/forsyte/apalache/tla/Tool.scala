@@ -1,7 +1,11 @@
 package at.forsyte.apalache.tla
 
+import java.io.{FileNotFoundException, FileReader, IOException}
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import java.util.Properties
+
+import scala.collection.JavaConverters._
 
 import at.forsyte.apalache.infra.PassOptionException
 import at.forsyte.apalache.infra.log.LogbackConfigurator
@@ -86,6 +90,14 @@ object Tool extends App with LazyLogging {
   private def runCheck(check: CheckCmd, u: Unit): Unit = {
     val injector = Guice.createInjector(new CheckerModule())
     val executor = injector.getInstance(classOf[PassChainExecutor])
+    val tuning =
+      if (check.tuning != "") {
+        loadProperties(check.tuning)
+      } else {
+        Map[String, String]()
+      }
+    executor.options.setOption("general.tuning", tuning)
+
     executor.options.setOption("general.debug", check.debug)
     executor.options.setOption("smt.prof", check.smtprof)
     executor.options.setOption("parser.filename", check.file.getAbsolutePath)
@@ -97,8 +109,6 @@ object Tool extends App with LazyLogging {
       if (check.cinit != "") Some(check.cinit) else None)
     executor.options.setOption("checker.length", check.length)
     executor.options.setOption("checker.search", check.search)
-    executor.options.setOption("checker.filter", check.filter)
-    executor.options.setOption("checker.randomizeDfs", check.randomizeDfs)
     executor.options.setOption("checker.checkRuntime", check.checkRuntime)
 
     val result = executor.run()
@@ -106,6 +116,26 @@ object Tool extends App with LazyLogging {
       Console.print("Checker reports no error up to computation length " + check.length)
     } else {
       Console.print("Checker has failed")
+    }
+  }
+
+  private def loadProperties(filename: String): Map[String, String] = {
+    val props = new Properties()
+    try {
+      val reader = new FileReader(filename)
+      props.load(reader)
+      reader.close()
+      var map = Map[String, String]()
+      for (name: String <- props.stringPropertyNames().asScala) {
+        map += (name -> props.getProperty(name)) // this seems to be the easiest way to convert Properties
+      }
+      map
+    } catch {
+      case _: FileNotFoundException =>
+        throw new PassOptionException(s"The properties file $filename not found")
+
+      case e: IOException =>
+        throw new PassOptionException(s"IO error while reading properties from $filename: ${e.getMessage}")
     }
   }
 

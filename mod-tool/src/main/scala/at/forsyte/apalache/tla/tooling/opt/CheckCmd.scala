@@ -31,6 +31,10 @@ class CheckCmd extends Command(name = "check",
   var length: Int =
     opt[Int](name = "length", default = 10,
       description = "the bound on the computation length, default: 10")
+  var tuning: String =
+    opt[String](name="tuning", default = "",
+      description = "filename of the config with file tuning options (see tuning.md)")
+
   var randomizeDfs: Boolean = opt[Boolean](
     name = "randomizeDfs", default = true,
     description = "randomize the choice of the next transition in DFS, default: true")

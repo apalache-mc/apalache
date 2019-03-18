@@ -50,20 +50,21 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
     val debug = options.getOption("general", "debug", false).asInstanceOf[Boolean]
     val profile = options.getOption("smt", "prof", false).asInstanceOf[Boolean]
     val search = options.getOption("checker", "search", "dfs").asInstanceOf[String]
-    val randomize = options.getOption("checker", "randomizeDfs", true).asInstanceOf[Boolean]
-    val filter = options.getOption("checker", "filter", "").asInstanceOf[String]
+    val tuning = options.getOption("general", "tuning", default = Map[String, String]())
+      .asInstanceOf[Map[String, String]]
     val checkRuntime =
       options.getOption("checker", "checkRuntime", false).asInstanceOf[Boolean]
     val strategy =
       if (search == "bfs") {
         new BfsStrategy(input, stepsBound)
       } else {
-        new DfsStrategy(input, stepsBound, randomize)
+        val random = tuning.getOrElse("search.randomDfs", "")
+        new DfsStrategy(input, stepsBound, random.toLowerCase.equals("true"))
       }
 
     val checker: Checker =
         new ModelChecker(typeFinder, freeExistentialsStore, hintsStore, exprGradeStore, sourceStore,
-          input, strategy, filter, debug, profile, checkRuntime)
+          input, strategy, tuning, debug, profile, checkRuntime)
 
     val outcome = checker.run()
     logger.info("The outcome is: " + outcome)

@@ -22,7 +22,7 @@ fi
 echo "# Package:   $JAR"
 
 # the maximum heap size, Z3 will use much more as a native library
-JVM_ARGS="-Xmx512m"
+JVM_ARGS="-Xmx4096m"
 # uncomment to track memory usage with: jcmd <pid> VM.native_memory summary
 #JVM_ARGS="${JVM_ARGS} -XX:NativeMemoryTracking=summary"
 

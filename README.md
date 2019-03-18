@@ -95,7 +95,7 @@ First, make sure that you have installed [Oracle JRE 8](https://www.oracle.com/t
 The model checker can be run as follows:
 
 ```bash
-$ bin/apalache-mc check [--init=Init] [--cinit=ConstInit] [--next=Next] [--inv=Inv] --length=10 myspec.tla
+$ bin/apalache-mc check [--init=Init] [--cinit=ConstInit] [--next=Next] [--inv=Inv] [--length=10] [--tuning=filename] myspec.tla
 ```
 
 The arguments are as follows:
@@ -105,6 +105,7 @@ The arguments are as follows:
   * ``--cinit`` specifies the constant initialization predicate, optional
   * ``--inv`` specifies the invariant to check, optional
   * ``--length`` specifies the upper bound on the length of the finite executions to explore
+  * ``--tuning`` specifies the properties file that stores the options for [fine tuning](tuning.md)
   
 If you like to check an inductive invariant ``Inv``, you can do it as follows:   
 
@@ -113,7 +114,7 @@ $ bin/apalache-mc check --init=Inv --inv=Inv --length=1 myspec.tla
 ```
 
 Make sure that ``Inv`` contains necessary constraints on the shape of the variables.
-Usually, ``TypeOK`` as the first line of an invariant is exactly what is needed.
+Usually, ``TypeOK`` as the first line of the invariant is exactly what is needed.
 
 The tool will display only the important messages. A detailed log can be found in `detailed.log`.
 
