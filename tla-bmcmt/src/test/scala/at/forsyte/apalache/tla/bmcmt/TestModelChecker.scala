@@ -218,6 +218,25 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     assert(Checker.Outcome.Error == outcome)
   }
 
+  test("Init + Next + Inv, 10 steps, and invarianFilter") {
+    // x' \in {2} \/ x' \in {1}
+    val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
+    // x' \in {x + 1}
+    val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
+    // x < 5
+    val notInv = tla.not(tla.lt(tla.prime(tla.name("x")), tla.int(5)))
+    val dummyModule = new TlaModule("root", List(), List())
+    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, Some(notInv))
+    // initialize the model checker
+    val strategy = new BfsStrategy(checkerInput, stepsBound = 10)
+    // We require the invariant to be checked only after the second step. So we will miss invariant violation.
+    val tuning = Map("search.invariantFilter" -> "2")
+    val checker = new ModelChecker(typeFinder, frexStore, hintsStore, exprGradeStore, sourceStore, checkerInput,
+      strategy, tuning, debug = false, profile = false)
+    val outcome = checker.run()
+    assert(Checker.Outcome.NoError == outcome)
+  }
+
   test("Init + Next, 3 steps, non-determinism but no deadlock") {
     // x' \in {1}
     val initTrans = List(mkAssign("x", 1))
