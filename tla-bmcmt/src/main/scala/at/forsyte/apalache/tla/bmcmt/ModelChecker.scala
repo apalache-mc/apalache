@@ -53,7 +53,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
   rewriter.introFailures = checkRuntime
 
   private val stepFilters: Seq[String] =
-    if (tuningOptions.contains("search.transitionFilter")) Seq() else tuningOptions("search.transitionFilter").split(",")
+    tuningOptions.getOrElse("search.transitionFilter", ".*").split(",")
 
   private val invFilter: String =
     tuningOptions.getOrElse("search.invariantFilter", "")
