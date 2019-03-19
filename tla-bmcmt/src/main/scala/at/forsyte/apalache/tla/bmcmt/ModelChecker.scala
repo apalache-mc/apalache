@@ -348,7 +348,8 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
       .format(stepNo, transitionNo, rewriter.contextLevel))
     logger.debug("Finding types of the variables...")
     checkTypes(transition)
-    solverContext.log("; ------- STEP: %d, STACK LEVEL: %d {".format(stepNo, rewriter.contextLevel))
+    solverContext.log("; ------- STEP: %d, STACK LEVEL: %d TRANSITION: %d {"
+      .format(stepNo, rewriter.contextLevel, transitionNo))
     logger.debug("Applying rewriting rules...")
     var nextState = rewriter.rewriteUntilDone(state.setTheory(BoolTheory()).setRex(transition))
     rewriter.flushStatistics()
@@ -379,7 +380,8 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
         // the current symbolic state is not feasible
         logger.debug("Transition #%d is not feasible.".format(transitionNo))
         rewriter.pop() // LEVEL + 0
-        solverContext.log("; } ------- STEP: %d, STACK LEVEL: %d".format(stepNo, rewriter.contextLevel))
+        solverContext.log("; } ------- STEP: %d, STACK LEVEL: %d TRANSITION: %d"
+          .format(stepNo, rewriter.contextLevel, transitionNo))
         (nextState, false)
         // LEVEL + 0
       } else {

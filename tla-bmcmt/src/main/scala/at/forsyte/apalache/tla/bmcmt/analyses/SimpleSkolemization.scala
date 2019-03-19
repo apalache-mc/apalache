@@ -36,12 +36,9 @@ class SimpleSkolemization @Inject()(val frexStore: FreeExistentialsStoreImpl) ex
 
     initTransitions foreach markFreeExistentials
     nextTransitions foreach markFreeExistentials
-    if (notInv.isDefined) {
-      markFreeExistentials(notInv.get)
-    }
-    if (constInitPrime.isDefined) {
-      markFreeExistentials(constInitPrime.get)
-    }
+    notInv foreach markFreeExistentials
+    notInvPrime foreach markFreeExistentials
+    constInitPrime foreach markFreeExistentials
     new SpecWithTransitions(spec.rootModule, initTransitions, nextTransitions, constInitPrime, notInv, notInvPrime)
   }
 
