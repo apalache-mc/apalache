@@ -226,11 +226,12 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
     logger.info("Step %d, level %d: collecting %d enabled transition(s)"
       .format(stepNo, rewriter.contextLevel, transWithEnabled.count(_._2)))
     assert(transWithEnabled.nonEmpty)
+    val simplifier = new ConstSimplifier()
 
     def applyTrans(state: SymbState, ts: List[((TlaEx, Int), Boolean)]): List[SymbState] =
       ts match {
         case List() =>
-          List()
+          List(state) // the final state may contain additional cells, add it
 
         case (tranWithNo, isEnabled) :: tail =>
           if (!isEnabled && !learnFromUnsat) {
@@ -239,8 +240,11 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
             val (transition, transitionNo) = tranWithNo
             val erased = state.setBinding(forgetPrimed(state.binding))
             // note that the constraints are added at the current level, without an additional push
-            val (nextState, _) = applyTransition(stepNo, erased, transition, transitionNo, checkForErrors = false)
+            var (nextState, _) = applyTransition(stepNo, erased, transition, transitionNo, checkForErrors = false)
             rewriter.exprCache.disposeActionLevel() // leave only the constants
+            if (isEnabled && learnFromUnsat && checkerInput.notInvariant.isDefined) {
+              nextState = assumeInvariant(stepNo, nextState)
+            }
             if (isEnabled) {
               // collect the variables of the enabled transition
               nextState +: applyTrans(nextState, tail)
@@ -248,32 +252,33 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
               assert(learnFromUnsat)
               // Do not collect the variables from the disabled transition, but remember that it was disabled.
               // Note that the constraints are propagated via nextState
-              solverContext.assertGroundExpr(tla.not(nextState.ex))
+              solverContext.assertGroundExpr(simplifier.simplify(tla.not(nextState.ex)))
               applyTrans(nextState, tail)
             }
           }
       }
 
-    val nextStates = applyTrans(startingState, transWithEnabled)
+    val nextAndLastStates = applyTrans(startingState, transWithEnabled)
+    val lastState = nextAndLastStates.last
+    val nextStates = nextAndLastStates.slice(0, nextAndLastStates.length - 1)
 
     if (nextStates.isEmpty) {
       throw new IllegalArgumentException("enabled must be non-empty")
     } else if (nextStates.lengthCompare(1) == 0) {
       // The only next state -- return it. Introduce the transition index just for the record.
-      val onlyState = nextStates.head
-      val newArena = onlyState.arena.appendCell(IntT())
+      val newArena = lastState.arena.appendCell(IntT())
       val transitionIndex = newArena.topCell
       val enabledNo = transWithEnabled.filter(_._2).head._1._2 // the number of the only enabled transition
       solverContext.assertGroundExpr(tla.eql(transitionIndex.toNameEx, tla.int(enabledNo)))
-      val resultingState = onlyState.setArena(newArena).setBinding(shiftBinding(onlyState.binding, constants))
-      solverContext.assertGroundExpr(onlyState.ex)
+      val resultingState = lastState.setArena(newArena).setBinding(shiftBinding(lastState.binding, constants))
+      solverContext.assertGroundExpr(lastState.ex)
       stack +:= (resultingState, transitionIndex)
       shiftTypes(constants)
       typesStack = typeFinder.getVarTypes +: typesStack
       Some(resultingState.setArena(newArena))
     } else {
       // pick an index j \in { 0..k } of the fired transition
-      var stateBeforeGluing = nextStates.last // the last state has the largest arena
+      var stateBeforeGluing = lastState // the last state has the largest arena
       stateBeforeGluing = stateBeforeGluing.appendArenaCell(IntT())
       val oracle = stateBeforeGluing.arena.topCell  // introduce an oracle to pick the next state
       stateBeforeGluing = mkTransitionIndex(stateBeforeGluing, oracle, transWithEnabled) // and a transition index
@@ -294,7 +299,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
       // for every variable x, pick c_x from { S1[x], ..., Sk[x] }
       //   and require \A i \in { 0.. k-1}. j = i => c_x = Si[x]
       // Then, the final state binds x -> c_x for every x \in Vars
-      val vars = forgetNonPrimed(stateBeforeGluing.binding, Set()).keySet // only VARIABLES, not CONSTANTS
+      val vars = forgetNonPrimed(nextStates.head.binding, Set()).keySet // only VARIABLES, not CONSTANTS
       var finalState = stateBeforeGluing.setBinding(forgetPrimed(stateBeforeGluing.binding)).setRex(tla.bool(true))
       if (nextStates.map(_.binding).exists(b => forgetNonPrimed(b, Set()).keySet != vars)) {
         throw new InternalCheckerError(s"Next states disagree on the set of assigned variables (step $stepNo)")
@@ -345,7 +350,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
     checkTypes(transition)
     solverContext.log("; ------- STEP: %d, STACK LEVEL: %d {".format(stepNo, rewriter.contextLevel))
     logger.debug("Applying rewriting rules...")
-    val nextState = rewriter.rewriteUntilDone(state.setTheory(BoolTheory()).setRex(transition))
+    var nextState = rewriter.rewriteUntilDone(state.setTheory(BoolTheory()).setRex(transition))
     rewriter.flushStatistics()
     if (checkForErrors) {
       logger.debug("Finished rewriting. Checking satisfiability of the pushed constraints.")
@@ -379,13 +384,31 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
         // LEVEL + 0
       } else {
         // check the invariant right here
-        checkInvariant(stepNo, nextState)
+        val matchesInvFilter = invFilter == "" || stepNo.toString.matches("^" + invFilter + "$")
+        if (matchesInvFilter) {
+          checkInvariant(stepNo, nextState)
+        }
         // and then forget all these constraints!
         rewriter.pop() // LEVEL + 0
         solverContext.log("; } ------- STEP: %d, STACK LEVEL: %d".format(stepNo, rewriter.contextLevel))
         (nextState, true)
         // LEVEL + 0
       }
+    }
+  }
+
+  private def assumeInvariant(stepNo: Int, state: SymbState): SymbState = {
+    val matchesInvFilter = invFilter == "" || stepNo.toString.matches("^" + invFilter + "$")
+    if (!matchesInvFilter || checkerInput.notInvariant.isEmpty) {
+      state
+    } else {
+      // as we have checked the invariant, we assume that it holds
+      logger.debug("Assuming that the invariant holds")
+      val prevEx = state.ex
+      val simplifier = new ConstSimplifier()
+      val nextState = rewriter.rewriteUntilDone(state.setRex(simplifier.simplify(tla.not(checkerInput.notInvariant.get))))
+      solverContext.assertGroundExpr(nextState.ex)
+      nextState.setRex(prevEx) // restore the expression
     }
   }
 
@@ -497,12 +520,8 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
 
   private def checkInvariant(depth: Int, nextState: SymbState): SymbState = {
     checkAssertionErrors(nextState)
-    val matchesFilter = invFilter == "" || depth.toString.matches("^" + invFilter + "$")
 
     if (checkerInput.notInvariant.isEmpty) {
-      nextState
-    } else if (!matchesFilter) {
-      logger.debug(s"Step $depth does not match the invariant filter $invFilter. Skipped the invariant.")
       nextState
     } else {
       logger.debug("Checking the invariant")
