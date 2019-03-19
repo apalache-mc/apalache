@@ -924,7 +924,7 @@ class TestSanyImporter extends FunSuite {
         ValEx(TlaTrue),
         NameEx("x"), NameEx("X"),
         NameEx("y"), NameEx("X"),
-        TlaFunOper.mkTuple(NameEx("a"), NameEx("b")), NameEx("Z"),
+        NameEx("a_b"), NameEx("Z"), // the tuple <<a, b>> is collapsed to a_b by Desugarer
         NameEx("z"), NameEx("Z")
       ))(mod.declarations(5))
   }
