@@ -43,6 +43,9 @@ class Desugarer {
       case fex @ OperEx(TlaSetOper.map, args @ _*) =>
         OperEx(TlaSetOper.map, collapseTuplesInMap(args.head, args.tail) :_*)
 
+      case fex @ OperEx(TlaFunOper.funDef, args @ _*) =>
+        OperEx(TlaFunOper.funDef, collapseTuplesInMap(args.head, args.tail) :_*)
+
       case OperEx(op, args @ _*) =>
         OperEx(op, args map transform :_*)
     }

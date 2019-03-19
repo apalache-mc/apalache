@@ -83,6 +83,8 @@ class Renaming @Inject()(val handler: EnvironmentHandler) {
         val names = varsAndSets.zipWithIndex.collect { case (e @ NameEx(_), i) if i % 2 == 0 => e }
         val sets = varsAndSets.zipWithIndex.collect { case (e, i) if i % 2 == 1 => e }
 
+        assert(names.length + sets.length == varsAndSets.length)
+
         def each(m: Map[String, String], n: String): Map[String, String] = {
           if (!seenNames.contains(n)) {
             seenNames += n

@@ -105,4 +105,24 @@ class TestDesugarer extends FunSuite {
     assert(expected == sugarFree)
   }
 
+  test("simplify tuples in functions") {
+    // TLA+ allows the user to write tuples in expanded form. We introduce tuples instead.
+    val map =
+      tla.funDef(
+        tla.plus(tla.name("x"), tla.name("y")),
+        tla.tuple(tla.name("x"), tla.tuple(tla.name("y"), tla.name("z"))),
+        tla.name("XYZ"))
+    val sugarFree = new Desugarer().transform(map)
+    val expected =
+      tla.funDef(
+        tla.plus(tla.appFun(tla.name("x_y_z"), tla.int(1)),
+          tla.appFun(tla.appFun(tla.name("x_y_z"),
+                     tla.int(2)),
+                     tla.int(1))),
+        tla.name("x_y_z"),
+        tla.name("XYZ")
+        )////
+    assert(expected == sugarFree)
+  }
+
 }
