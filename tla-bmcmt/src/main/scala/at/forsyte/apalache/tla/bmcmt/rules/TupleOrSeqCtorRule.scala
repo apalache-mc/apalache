@@ -57,7 +57,7 @@ class TupleOrSeqCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   private def createSeq(state: SymbState, seqT: SeqT, cells: Seq[ArenaCell]): SymbState = {
     // create a sequence cell
-    var nextState = state.appendArenaCell(seqT)
+    var nextState = state.updateArena(_.appendCell(seqT))
     val seq = nextState.arena.topCell
 
     // connect N + 2 elements to seqT: the start (>= 0), the end (< len), and the sequence of values

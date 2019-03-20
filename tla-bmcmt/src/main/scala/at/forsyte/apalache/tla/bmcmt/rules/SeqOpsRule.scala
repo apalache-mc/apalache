@@ -62,7 +62,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.plus(tla.int(1), start)))
     val newStart = nextState.asCell
     // introduce a new sequence that is different from seq in that the 0th element equals to newStart
-    nextState = nextState.appendArenaCell(seqCell.cellType)
+    nextState = nextState.updateArena(_.appendCell(seqCell.cellType))
     val newSeqCell = nextState.arena.topCell
     nextState = nextState.setArena(nextState.arena.appendHas(newSeqCell, newStart +: cells.tail))
     nextState.setRex(newSeqCell).setTheory(CellTheory())
@@ -80,7 +80,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.plus(start, newEndEx)))
     val newEnd = nextState.asCell
     // introduce a new sequence that whose start and end are updated as required
-    nextState = nextState.appendArenaCell(seqCell.cellType)
+    nextState = nextState.updateArena(_.appendCell(seqCell.cellType))
     val newSeqCell = nextState.arena.topCell
     nextState = nextState.setArena(nextState.arena.appendHas(newSeqCell, newStart :: newEnd +: cells.tail.tail))
     nextState.setRex(newSeqCell).setTheory(CellTheory())
@@ -102,7 +102,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // pick from the original value s[i] and the new element, and restrict the choice
     // based on the actual values of start and end
     def transform(oldElemCell: ArenaCell, no: Int): ArenaCell = {
-      nextState = nextState.appendArenaCell(IntT())
+      nextState = nextState.updateArena(_.appendCell(IntT()))
       val oracle = nextState.arena.topCell.toNameEx
       solverAssert(tla.ge(oracle, tla.int(0)))
       solverAssert(tla.le(oracle, tla.int(1)))
@@ -120,7 +120,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val newCells = (newElemCell :: transformedCells.reverse).reverse
 
     // introduce a new sequence that statically has one more element
-    nextState = nextState.appendArenaCell(seqCell.cellType)
+    nextState = nextState.updateArena(_.appendCell(seqCell.cellType))
     val newSeqCell = nextState.arena.topCell
     nextState = nextState.setArena(nextState.arena.appendHas(newSeqCell, start :: newEnd +: newCells))
     nextState.setRex(newSeqCell).setTheory(CellTheory())

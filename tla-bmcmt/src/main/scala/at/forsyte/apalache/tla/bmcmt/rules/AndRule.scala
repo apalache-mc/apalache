@@ -100,7 +100,7 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
           tailState
         } else {
           // propagate
-          var nextState = tailState.appendArenaCell(BoolT())
+          var nextState = tailState.updateArena(_.appendCell(BoolT()))
           val pred = nextState.asCell.toNameEx
           rewriter.solverContext.assertGroundExpr(tla.equiv(pred, tla.and(headCell.toNameEx, tailState.ex)))
           nextState.setRex(pred).setTheory(CellTheory())

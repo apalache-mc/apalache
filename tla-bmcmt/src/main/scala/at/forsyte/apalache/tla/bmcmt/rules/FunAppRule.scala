@@ -110,7 +110,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       defaultValueFactory.makeUpValue(nextState, seqCell.cellType.asInstanceOf[SeqT].res)
     } else {
       // create the oracle
-      nextState = nextState.appendArenaCell(IntT())
+      nextState = nextState.updateArena(_.appendCell(IntT()))
       val oracle = nextState.arena.topCell.toNameEx
       solverAssert(tla.ge(oracle, tla.int(0)))
       solverAssert(tla.le(oracle, tla.int(nelems)))

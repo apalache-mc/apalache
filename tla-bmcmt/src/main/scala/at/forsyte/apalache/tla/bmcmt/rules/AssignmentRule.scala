@@ -80,7 +80,7 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
                 nextState = pickRule.pickByOracle(nextState, oracle.toNameEx, elemCells)
                 val pickedCell = nextState.asCell
                 // introduce a Boolean result that equals true unless the set is empty
-                nextState = nextState.appendArenaCell(BoolT())
+                nextState = nextState.updateArena(_.appendCell(BoolT()))
                 val result = nextState.arena.topCell.toNameEx
                 rewriter.solverContext.assertGroundExpr(tla.eql(result, tla.neql(oracle.toNameEx, tla.int(elemCells.size))))
 

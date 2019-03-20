@@ -279,7 +279,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
     } else {
       // pick an index j \in { 0..k } of the fired transition
       var stateBeforeGluing = lastState // the last state has the largest arena
-      stateBeforeGluing = stateBeforeGluing.appendArenaCell(IntT())
+      stateBeforeGluing = stateBeforeGluing.updateArena(_.appendCell(IntT()))
       val oracle = stateBeforeGluing.arena.topCell  // introduce an oracle to pick the next state
       stateBeforeGluing = mkTransitionIndex(stateBeforeGluing, oracle, transWithEnabled) // and a transition index
       val transitionIndex = stateBeforeGluing.asCell

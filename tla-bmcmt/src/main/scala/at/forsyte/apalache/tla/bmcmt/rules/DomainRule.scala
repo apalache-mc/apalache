@@ -82,7 +82,7 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
   private def mkFunDomain(state: SymbState, funCell: ArenaCell): SymbState = {
     // the expression cache should help us here
     val relation = state.arena.getCdm(funCell)
-    var nextState = state.appendArenaCell(FinSetT(funCell.cellType.asInstanceOf[FunT].argType))
+    var nextState = state.updateArena(_.appendCell(FinSetT(funCell.cellType.asInstanceOf[FunT].argType)))
     val domCell = nextState.arena.topCell
     def getArg(c: ArenaCell): ArenaCell = nextState.arena.getHas(c).head
     val domCells = nextState.arena.getHas(relation) map getArg

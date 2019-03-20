@@ -308,7 +308,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
         }
       }
       // introduce a new cell for the picked domain
-      var nextState = state.appendArenaCell(domType)
+      var nextState = state.updateArena(_.appendCell(domType))
       val newDom = nextState.arena.topCell
       nextState = nextState.setArena(nextState.arena.appendHas(newDom, keyCells))
       // once we know that all the keys coincide, constrain membership with SMT

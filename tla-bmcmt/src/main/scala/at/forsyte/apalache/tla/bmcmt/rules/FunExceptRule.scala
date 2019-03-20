@@ -55,7 +55,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
         var nextState = stateAfterTuples
         val relation = groundState.arena.getCdm(funCell)
         val relationCells = nextState.arena.getHas(relation)
-        nextState = nextState.appendArenaCell(relation.cellType)
+        nextState = nextState.updateArena(_.appendCell(relation.cellType))
         val resultRelation = nextState.arena.topCell
 
         // introduce a new function relation that is organized as follows:

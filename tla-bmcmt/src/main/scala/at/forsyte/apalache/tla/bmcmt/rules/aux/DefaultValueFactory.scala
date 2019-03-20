@@ -47,7 +47,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         newState.setRex(tuple.toNameEx)
 
       case recT @ RecordT(_) =>
-        var newState = state.appendArenaCell(recT)
+        var newState = state.updateArena(_.appendCell(recT))
         val recCell = newState.arena.topCell
         for (v <- recT.fields.values) {
           newState = makeUpValue(newState, v)

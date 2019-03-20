@@ -37,14 +37,6 @@ class SymbState(val ex: TlaEx,
   }
 
   /**
-    * A convenience method to update arena and save the new arena in a new state.
-    * Use updateArena instead, which was introduced after appendArenaCell.
-    */
-  def appendArenaCell(cellT: CellT): SymbState = {
-    setArena(arena.appendCell(cellT))
-  }
-
-  /**
     * This is a convenience method that allows us to call an arena method and store the result in a new state.
     * By using this method, we avoid expressions like state.setArena(state.arena.foo(...))
     *

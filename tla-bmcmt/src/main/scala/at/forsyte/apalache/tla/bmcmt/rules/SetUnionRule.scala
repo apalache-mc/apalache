@@ -37,7 +37,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         val unionOfSets = elemsOfSets.foldLeft(Set[ArenaCell]()) (_.union(_))
         // introduce a set cell
-        nextState = nextState.appendArenaCell(FinSetT(elemType))
+        nextState = nextState.updateArena(_.appendCell(FinSetT(elemType)))
         val newSetCell = nextState.arena.topCell
 
         if (unionOfSets.isEmpty) {

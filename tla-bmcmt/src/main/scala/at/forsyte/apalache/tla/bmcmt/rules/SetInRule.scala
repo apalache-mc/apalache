@@ -91,7 +91,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val funsetDom = state.arena.getDom(funsetCell)
     val funsetCdm = state.arena.getCdm(funsetCell)
     var nextState = state
-    nextState = nextState.appendArenaCell(BoolT())
+    nextState = nextState.updateArena(_.appendCell(BoolT()))
     val pred = nextState.arena.topCell
     val relation = nextState.arena.getCdm(funCell)
     // In the new implementation, a function is a relation { <<x, f[x]>> : x \in U }.
@@ -121,7 +121,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
 //      state.setTheory(BoolTheory()).setRex(NameEx(SolverContext.falseConst))
       state.setTheory(CellTheory()).setRex(state.arena.cellFalse())
     } else {
-      var nextState = state.appendArenaCell(BoolT())
+      var nextState = state.updateArena(_.appendCell(BoolT()))
       val pred = nextState.arena.topCell.toNameEx
       if (state.arena.isLinkedViaHas(setCell, elemCell)) {
         // SE-SET-IN2: the element cell is already in the arena, just check dynamic membership
