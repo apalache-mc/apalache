@@ -22,6 +22,9 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   override def apply(state: SymbState): SymbState = {
+    def cacheEq(s: SymbState, l: ArenaCell, r: ArenaCell) = rewriter.lazyEq.cacheOneEqConstraint(s, l, r)
+    def solverAssert = rewriter.solverContext.assertGroundExpr _
+
     state.ex match {
       case OperEx(TlaFunOper.except, args@_*) =>
         val funEx = args.head
@@ -46,39 +49,47 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
         def mkPair(indexCell: ArenaCell, resCell: ArenaCell): TlaEx = tla.tuple(indexCell.toNameEx, resCell.toNameEx)
         val (stateAfterTuples, updateTuples) =
           rewriter.rewriteSeqUntilDone(groundState, updatePairs map (mkPair _).tupled)
+        val updateTuplesAsCells = updateTuples.map(stateAfterTuples.arena.findCellByNameEx(_))
 
         // get the function relation from the arena
+        var nextState = stateAfterTuples
         val relation = groundState.arena.getCdm(funCell)
-
-        // filter the relation as follows:
-        // { t \in F : t[1] != j_1 /\ ... /\ t[1] != j_k \/ t = <<j_1, e_1>> \/ ... \/ t = <<j_k, e_k>> }
-        val boundVar = NameEx(s"_t${funEx.ID}")
-        val argNeIndices = tla.and(indexCells map (c => tla.neql(tla.appFun(boundVar, tla.int(1)), c.toNameEx)) :_*)
-        val pairEqNew = tla.or(updateTuples map (t => tla.eql(boundVar, t)) :_*)
-        val filterEx = tla.filter(boundVar, relation.toNameEx, tla.or(argNeIndices, pairEqNew))
-
-        var nextState = rewriter.rewriteUntilDone(stateAfterTuples.setRex(filterEx).setTheory(CellTheory()))
-        val filteredRelation = nextState.asCell
-        // Finally, add <<j_1, e_1>>, ..., <<j_k, e_k>> to filteredCell.
-        // We are not using \cup here to avoid the equality constraints to be generated
-        // TODO: this is not an issue anymore, use filter
-        val filteredCells = nextState.arena.getHas(filteredRelation)
-        nextState = nextState.appendArenaCell(filteredRelation.cellType)
+        val relationCells = nextState.arena.getHas(relation)
+        nextState = nextState.appendArenaCell(relation.cellType)
         val resultRelation = nextState.arena.topCell
-        val resultCells = filteredCells ++ updateTuples.map(nextState.arena.findCellByNameEx(_))
-        nextState = nextState.setArena(nextState.arena.appendHas(resultRelation, resultCells))
-        // require that the cells belong to the relation when the respective conditions hold true
-        def solverAssert = rewriter.solverContext.assertGroundExpr _
-        updateTuples foreach (t => solverAssert(tla.in(t, resultRelation)))
-        filteredCells foreach (c => solverAssert(tla.equiv(tla.in(c, resultRelation), tla.in(c, filteredRelation))))
 
-        // create new function
-        nextState = nextState.appendArenaCell(funCell.cellType)
+        // introduce a new function relation that is organized as follows:
+        // [ p \in f_rel |-> IF p[1] = j_1 THEN <<j_1, e_1>> ELSE ... ELSE p ]
+        def eachRelationPair(p: ArenaCell): ArenaCell = {
+          val ite = toIte(nextState.arena, p, indexCells, updateTuplesAsCells)
+          nextState = rewriter.rewriteUntilDone(nextState.setRex(ite))
+          val updatedCell = nextState.asCell
+          // add the new cell to the arena immediately, as we are going to use the IN predicates
+          nextState = nextState.updateArena(_.appendHas(resultRelation, updatedCell))
+          // the new cell belongs to the new relation iff the old cell belongs to the old relation
+          solverAssert(tla.equiv(tla.in(p, relation), tla.in(updatedCell, resultRelation)))
+          updatedCell
+        }
+
+        // compute all updated cells in case we are dealing with a function over non-basic indices
+        val updatedCells = relationCells map eachRelationPair
+
+        // cache equality constraints between the indices and the indices in the function relation
+        def cacheEqForPair(p: ArenaCell): Unit = {
+          val pairIndex = nextState.arena.getHas(p).head
+          for (updateIndex <- indexCells) {
+            nextState = cacheEq(nextState, pairIndex, updateIndex)
+          }
+        }
+
+        // cache all equalities
+        relationCells foreach cacheEqForPair
+
+        // introduce new function
+        nextState = nextState.updateArena(_.appendCell(funCell.cellType))
         val newFunCell = nextState.arena.topCell
-        // not storing the domain anymore
-//        val dom = nextState.arena.getDom(funCell)
-//        nextState = nextState.setArena(nextState.arena.setDom(newFunCell, dom)
-        nextState = nextState.setArena(nextState.arena.setCdm(newFunCell, resultRelation))
+        // and attach the relation to it
+        nextState = nextState.updateArena(_.setCdm(newFunCell, resultRelation))
 
         val finalState = nextState
           .setTheory(CellTheory())
@@ -89,6 +100,21 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
     }
   }
+
+  def toIte(arena: Arena, pair: ArenaCell, indexCells: Seq[ArenaCell], updatePairs: Seq[ArenaCell]): TlaEx = {
+    val pairIndex = arena.getHas(pair).head // the first element of the pair is the index
+    updatePairs match {
+      case Seq() => pair // ... ELSE p
+      case newPair +: _ =>
+        val updateIndex = indexCells.head // IF p[1] = i_j
+        tla.ite(tla.eql(pairIndex, updateIndex), newPair, toIte(arena, pair, indexCells.tail, updatePairs.tail))
+    }
+  }
+
+  def addEqualities(state: SymbState, lhs: ArenaCell, rhs: ArenaCell): SymbState = {
+    rewriter.lazyEq.cacheOneEqConstraint(state, lhs, rhs)
+  }
+
 
   // This is an important step. As we receive expressions from SANY, every index argument to EXCEPT
   // is always a tuple]. For instance, the expression [f EXCEPT ![1] = 2] will be represented
@@ -106,11 +132,6 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
 
     args map unpack
-  }
-
-  private def isPackedInTuple(e: TlaEx): Boolean = e match {
-    case OperEx(TlaFunOper.tuple, args @ _*) => args.length != 1
-    case _ => false
   }
 
   private def checkType(cellType: CellT): Unit = {
