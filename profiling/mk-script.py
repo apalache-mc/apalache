@@ -41,6 +41,9 @@ def parse_options():
                         help="The directory that contains the benchmarks.")
     parser.add_argument("outDir", type=str,
        help="The directory to write the scripts and outcome of the experiments.")
+    parser.add_argument('--memlimit', dest='memlimit',
+                    default=0, type=int,
+                    help='Set memory limits in GB (default: 0)')
     args = parser.parse_args()
     args.apalacheDir = os.path.realpath(args.apalacheDir)
     args.specDir = os.path.realpath(args.specDir)
@@ -57,23 +60,24 @@ def tool_cmd(args, exp_dir, tla_filename, csv_row):
     ctime = os_cmds['time']
     ctimeout = "%s %s" % (os_cmds['timeout'], csv_row['timeout'])
     if tool == 'apalache':
-        return "%s %s %s/bin/apalache-mc check %s %s %s %s %s &" \
+        return "%s %s %s/bin/apalache-mc check %s %s %s %s %s | tee apalache.out &" \
                 % (ctimeout, ctime,
                         args.apalacheDir, kv("init"),
                         kv("next"), kv("inv"), csv_row["args"], tla_filename)
     elif tool == 'tlc':
         # TLC needs a configuration file, it should be created by the user
         # figure out how to run tlc
-        init, next, inv, args = kv("init"), kv("next"), kv("inv"), csv_row["args"]
+        init, next, inv, more_args = kv("init"), kv("next"), kv("inv"), csv_row["args"]
+        mem = "-fpmem %d" % (1024 * args.memlimit) if args.memlimit > 0 else ""
         return f'{ctimeout} {ctime} java -cp {apalache_dir}/3rdparty/tla2tools.jar ' \
-                + f' tlc2.TLC {args} {tla_filename} &'
+                + f' tlc2.TLC {mem} {more_args} {tla_filename} | tee tlc.out&'
     else:
         print("Unknown tool: %s" % tool)
         sys.exit(1)
 
 
 def setup_experiment(args, row_num, csv_row):
-    exp_dir = os.path.join(args.outDir, "%d" % row_num)
+    exp_dir = os.path.join(args.outDir, "in", "%d" % row_num)
     os.makedirs(exp_dir)
     print("Populating the directory for the experiment %d:" % row_num)
     # As SANY is only looking for file in the current directory,
@@ -83,7 +87,9 @@ def setup_experiment(args, row_num, csv_row):
     tla_dir, tla_basename = os.path.split(tla_full_filename)
     for f in os.listdir(tla_dir):
         full_path = os.path.join(tla_dir, f)
-        if os.path.isfile(full_path) and (f.endswith('.tla') or f.endswith('.cfg')):
+        if os.path.isfile(full_path) \
+                and (f.endswith('.tla') \
+                        or f.endswith('.cfg') or f.endswith('.properties')):
             print(f"  copied {f}")
             shutil.copy(full_path, exp_dir)
 
@@ -107,6 +113,35 @@ def setup_experiment(args, row_num, csv_row):
 
     os.chmod(script, stat.S_IWRITE | stat.S_IREAD | stat.S_IEXEC)
     print(f'  created the script {script}')
+    return script
+
+
+def create_master_script(args, all_scripts):
+    script = os.path.join(args.outDir, "run-all.sh")
+    with open (script, "w+") as sf:
+        # otherwise, 
+        #sf.write("#!/bin/bash\n")
+        for s in all_scripts:
+            sf.write(s)
+            sf.write("\n")
+
+    os.chmod(script, stat.S_IWRITE | stat.S_IREAD | stat.S_IEXEC)
+    print(f'Run the master script {script}')
+    return script
+
+
+def create_parallel_script(args, master_script):
+    script = os.path.join(args.outDir, "run-parallel.sh")
+    with open (script, "w+") as sf:
+        sf.write("#!/bin/bash\n")
+        #sf.write('trap "kill -s INT 0" EXIT TERM INT\n')
+        mem = "--memfree %d" % args.memlimit if args.memlimit > 0 else ""
+        sf.write("parallel -a %s --delay 3 --results out/{#}/ %s \n"\
+                % (master_script, mem))
+
+    os.chmod(script, stat.S_IWRITE | stat.S_IREAD | stat.S_IEXEC)
+    print(f'Run the parallel script {script}')
+    return script
 
 
 if __name__ == "__main__":
@@ -125,6 +160,12 @@ if __name__ == "__main__":
         dialect = sniffer.sniff(sample)
         csvfile.seek(0)
         reader = csv.DictReader(csvfile, dialect=dialect)
+        scripts = []
         for (row_num, row) in enumerate(reader):
-            setup_experiment(args, row_num, row)
+            single_script = setup_experiment(args, row_num + 1, row)
+            scripts.append(single_script)
+
+        print(f'\nAll experiment directories are populated\n')
+        ms_script = create_master_script(args, scripts)
+        create_parallel_script(args, ms_script)
 
