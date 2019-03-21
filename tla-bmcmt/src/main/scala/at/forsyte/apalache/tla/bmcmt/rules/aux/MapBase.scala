@@ -16,6 +16,7 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
   * @author Igor Konnov
   */
 class MapBase(rewriter: SymbStateRewriter, val isBijective: Boolean) {
+  private val typeConvertor = new TypeConverter(rewriter)
 
   /**
    <p>Implement a mapping { e: x_1 ∈ S_1, ..., x_n ∈ S_n }.</p>
@@ -27,16 +28,29 @@ class MapBase(rewriter: SymbStateRewriter, val isBijective: Boolean) {
                             mapEx: TlaEx,
                             varNames: Seq[String],
                             setEs: Seq[TlaEx]): SymbState = {
-    // TODO: this translation is not sound when several values are actually mapped to the same value.
     // first, rewrite the variable domains S_1, ..., S_n
-    val (setState, sets) = rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), setEs)
-    val setsAsCells = sets map setState.arena.findCellByNameEx
+    var (nextState, sets) = rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), setEs)
+    // convert the set cell, if required
+    def convertIfNeeded(setCell: ArenaCell): ArenaCell = {
+      setCell.cellType match {
+        case FinSetT(_) =>
+          setCell
+        case PowSetT(et) =>
+          nextState = typeConvertor.convert(nextState.setRex(setCell.toNameEx), FinSetT(et))
+          nextState.asCell
+        // TODO: convert functions sets too?
+        case tp @ _ => throw new NotImplementedError("A set filter over %s is not implemented".format(tp))
+      }
+    }
+
+    val setsAsCells = sets.map(nextState.arena.findCellByNameEx) map convertIfNeeded
+
     def getSetElemType(c: ArenaCell) = c.cellType match {
       case FinSetT(et) => et
-      case t@_ => throw new RewriterException("Expected a finite set, found: " + t)
+      case t@_ => throw new RewriterException("Expected a finite set, found %s in %s ".format(t, state.ex))
     }
     val setElemTypes = setsAsCells map getSetElemType
-    val elemsOfSets = setsAsCells.map(setState.arena.getHas)
+    val elemsOfSets = setsAsCells.map(nextState.arena.getHas)
     val setLimits = elemsOfSets.map(_.size - 1)
     // find the type of the target expression and of the target set
     val targetMapT = rewriter.typeFinder.computeRec(mapEx)
@@ -44,8 +58,8 @@ class MapBase(rewriter: SymbStateRewriter, val isBijective: Boolean) {
       { i => if (i % 2 == 0) setElemTypes(i / 2) else setsAsCells(i / 2).cellType }
     val targetSetT = rewriter.typeFinder.compute(state.ex, targetMapT +: argTypes :_*)
 
-    val arena = setState.arena.appendCell(targetSetT)
-    val resultSetCell = arena.topCell
+    nextState = nextState.updateArena(_.appendCell(targetSetT))
+    val resultSetCell = nextState.arena.topCell
 
     // enumerate all possible indices and map the corresponding tuples to cells
     def byIndex(indices: Seq[Int]): Seq[ArenaCell] =
@@ -55,7 +69,7 @@ class MapBase(rewriter: SymbStateRewriter, val isBijective: Boolean) {
 
     // the SMT constraints are added right in the method
     val (newState, resultElemCells) =
-      mapCellsManyArgs(setState.setArena(arena), resultSetCell, mapEx, varNames, setsAsCells, tupleIter)
+      mapCellsManyArgs(nextState, resultSetCell, mapEx, varNames, setsAsCells, tupleIter)
 
     // that's it
     val finalState =

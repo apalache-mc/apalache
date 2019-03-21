@@ -142,6 +142,10 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
               assert(!varTypes.contains(name))
               varTypes = varTypes + (name -> elemT)
 
+            case Some(PowSetT(setT @ FinSetT(_))) =>
+              assert(!varTypes.contains(name))
+              varTypes = varTypes + (name -> setT)
+
             case tp@_ =>
               addError(new TypeInferenceError(set, "Expected a set, found: " + tp))
               varTypes = varTypes + (name -> UnknownT()) // otherwise, the type rewriter may throw an exception
