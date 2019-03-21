@@ -43,11 +43,11 @@ object Tool extends App with LazyLogging {
       Cli.parse(args).withProgramName("apalache-mc").version(Version.version)
         .withCommands(parseCmd, checkCmd) match {
         case Some(parse: ParseCmd) =>
-          Console.print("Parse " + parse.file)
+          logger.info("Parse " + parse.file)
           handleExceptions(runParse(parse, _))
 
         case Some(check: CheckCmd) =>
-          Console.print("Checker options: filename=%s, init=%s, next=%s, inv=%s"
+          logger.info("Checker options: filename=%s, init=%s, next=%s, inv=%s"
             .format(check.file, check.init, check.next, check.inv))
           handleExceptions(runCheck(check, _))
 
@@ -78,12 +78,12 @@ object Tool extends App with LazyLogging {
 
     val result = executor.run()
     if (result.isDefined) {
-      Console.print("Parsed successfully")
+      logger.info("Parsed successfully")
       val tlaModule = result.get.asInstanceOf[TlaModuleMixin].tlaModule.get
-      Console.print("Root module: %s with %d declarations".format(tlaModule.name,
+      logger.info("Root module: %s with %d declarations".format(tlaModule.name,
         tlaModule.declarations.length))
     } else {
-      Console.print("Parser has failed")
+      logger.info("Parser has failed")
     }
   }
 
@@ -113,9 +113,9 @@ object Tool extends App with LazyLogging {
 
     val result = executor.run()
     if (result.isDefined) {
-      Console.print("Checker reports no error up to computation length " + check.length)
+      logger.info("Checker reports no error up to computation length " + check.length)
     } else {
-      Console.print("Checker has failed")
+      logger.info("Checker has failed")
     }
   }
 
@@ -144,18 +144,18 @@ object Tool extends App with LazyLogging {
       fun()
     } catch {
       case e: PassOptionException =>
-        Console.print(e.getMessage)
+        logger.error(e.getMessage)
 
       case e: InternalCheckerError =>
-        Console.print("There is a bug in the tool, which should be fixed. REPORT IT: " + ISSUES_LINK, e)
+        Console.err.println("There is a bug in the tool, which should be fixed. REPORT IT: " + ISSUES_LINK, e)
         logger.error("Internal error", e)
 
       case e: CheckerException =>
-        Console.print("The tool has failed around unknown location. REPORT IT: " + ISSUES_LINK, e)
+        Console.err.println("The tool has failed around unknown location. REPORT IT: " + ISSUES_LINK, e)
         logger.error("Checker error", e)
 
       case e: Throwable =>
-        Console.print("This should not have happened, but it did. REPORT IT: " + ISSUES_LINK, e)
+        Console.err.println("This should not have happened, but it did. REPORT IT: " + ISSUES_LINK, e)
         logger.error("Unhandled exception", e)
     }
   }
