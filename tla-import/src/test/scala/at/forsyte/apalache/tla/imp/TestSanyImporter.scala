@@ -1234,6 +1234,7 @@ class TestSanyImporter extends FunSuite {
         |EXTENDS Naturals
         |CONSTANT N
         |F(x) == x + N
+        |G == F(3)
         |================================
         |CONSTANT M
         |J == INSTANCE A WITH N <- M

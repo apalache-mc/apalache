@@ -17,19 +17,20 @@ class ModuleTranslator(environmentHandler: EnvironmentHandler, sourceStore: Sour
   // TODO: get rid of environmentHandler, we do not need it anymore
 
   def translate(node: ModuleNode): TlaModule = {
-    val context1 = node.getConstantDecls.toList.foldLeft(Context()) {
+    var context = node.getConstantDecls.toList.foldLeft(Context()) {
       (ctx, node) => ctx.push(TlaConstDecl(node.getName.toString))
     }
-    val context2 = node.getVariableDecls.toList.foldLeft(context1) {
+    context = node.getVariableDecls.toList.foldLeft(context) {
       (ctx, node) => ctx.push(TlaVarDecl(node.getName.toString))
-    }
-    val context3 = node.getAssumptions.toList.foldLeft(context2) {
-      (ctx, node) => ctx.push(AssumeTranslator(environmentHandler, sourceStore, ctx).translate(node))
     }
     val excludedDefs = findExcludedDefs(node)
     val userDefs = node.getOpDefs.toList filter (df => !excludedDefs.contains(df.getName.toString))
-    val context = userDefs.foldLeft(context3) {
+    context = userDefs.foldLeft(context) {
       (ctx, node) => ctx.push(OpDefTranslator(environmentHandler, sourceStore, ctx).translate(node))
+    }
+    // translate assumptions after the operator definitions, as the assumptions may use the operators
+    context = node.getAssumptions.toList.foldLeft(context) {
+      (ctx, node) => ctx.push(AssumeTranslator(environmentHandler, sourceStore, ctx).translate(node))
     }
     val imported = node.getExtendedModuleSet.toArray(Array[ModuleNode]()).map {
       mn => mn.getName.toString.intern()
