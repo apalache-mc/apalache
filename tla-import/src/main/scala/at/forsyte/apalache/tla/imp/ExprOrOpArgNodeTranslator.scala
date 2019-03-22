@@ -3,9 +3,12 @@ package at.forsyte.apalache.tla.imp
 import at.forsyte.apalache.tla.imp.simpl.Desugarer
 import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.control.LetInOper
+import at.forsyte.apalache.tla.lir.actions.TlaActionOper
+import at.forsyte.apalache.tla.lir.control.{LetInOper, TlaControlOper}
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper}
+import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
 import at.forsyte.apalache.tla.lir.values.{TlaDecimal, TlaInt, TlaStr}
+import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic._
 
 import scala.collection.JavaConverters._
@@ -16,7 +19,7 @@ import scala.collection.JavaConverters._
   * @author konnov
   */
 class ExprOrOpArgNodeTranslator(environmentHandler: EnvironmentHandler, sourceStore: SourceStore,
-                                context: Context, recStatus: RecursionStatus) {
+                                context: Context, recStatus: RecursionStatus) extends LazyLogging {
   private val desugarer = new Desugarer() // construct elsewhere?
 
   def translate(node: ExprOrOpArgNode): TlaEx = {
@@ -42,6 +45,9 @@ class ExprOrOpArgNodeTranslator(environmentHandler: EnvironmentHandler, sourceSt
 
         case letIn: LetInNode =>
           translateLetIn(letIn)
+
+        case substIn: SubstInNode =>
+          translateSubstIn(substIn)
 
         case at: AtNode =>
           translateAt(at)
@@ -98,6 +104,46 @@ class ExprOrOpArgNodeTranslator(environmentHandler: EnvironmentHandler, sourceSt
     val body = ExprOrOpArgNodeTranslator(environmentHandler, sourceStore, context.disjointUnion(innerContext), recStatus)
       .translate(letIn.getBody)
     OperEx(oper, body)
+  }
+
+  // substitute an expression with the declarations that come from INSTANCE M WITH ...
+  private def translateSubstIn(substIn: SubstInNode): TlaEx = {
+    def eachSubst(s: Subst): (String, TlaEx) = {
+      val replacement = translate(s.getExpr)
+      if (s.getOp.getKind != ASTConstants.ConstantDeclKind && s.getOp.getKind != ASTConstants.VariableDeclKind) {
+        throw new SanyImporterException("Expected a substitution for %s to be a CONSTANT or a VARIABLE, found %s"
+          .format(s.getOp.getName, replacement))
+      }
+      // As all declarations have unique names, it should be sufficient to map the name to the expression.
+      // SANY should have checked the syntactic and semantic rules for the substitution.
+      s.getOp.getName.toString -> replacement
+    }
+
+    val renaming = Map(substIn.getSubsts map eachSubst :_*)
+
+    def subExpr(ex: TlaEx): TlaEx = ex match {
+      case NameEx(name) =>
+        renaming.getOrElse(name, NameEx(name))
+
+      case OperEx(op: LetInOper, args @ _*) =>
+        def subDecl(d: TlaOperDecl) = {
+          TlaOperDecl(d.name, d.formalParams, subExpr(d.body))
+        }
+
+        OperEx(new LetInOper(op.defs map subDecl), args map subExpr :_*)
+
+      case OperEx(op, args @ _*) =>
+        if (renaming.nonEmpty
+            && Seq(TlaActionOper.enabled, TlaActionOper.composition, TlaTempOper.leadsTo).exists(_.name == op.name)) {
+          // TODO: find out how to deal with ENABLED and other tricky operators
+          logger.warn("Substitution of %s needs care. The current implementation may fail to work.".format(op.name))
+        }
+        OperEx(op, args map subExpr :_*)
+
+      case d => d
+    }
+
+    subExpr(translate(substIn.getBody))
   }
 
   private def translateAt(node: AtNode): TlaEx = {

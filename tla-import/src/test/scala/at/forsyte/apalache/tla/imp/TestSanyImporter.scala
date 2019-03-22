@@ -1227,6 +1227,55 @@ class TestSanyImporter extends FunSuite {
     ) ///
   }
 
+  test("instances") {
+    val text =
+      """---- MODULE inst ----
+        |---- MODULE A ----
+        |EXTENDS Naturals
+        |CONSTANT N
+        |F(x) == x + N
+        |================================
+        |CONSTANT M
+        |J == INSTANCE A WITH N <- M
+        |I(V, K) == INSTANCE A WITH N <- K
+        |================================
+        |""".stripMargin
+
+    val locationStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+      .loadFromSource("inst", Source.fromString(text))
+    assert(2 == modules.size) // inst + Naturals
+    // the root module and A
+    val root = modules(rootName)
+
+    def expectDecl(name: String, body: TlaEx): Unit =
+      findAndExpectTlaDecl(locationStore, root, name, List(), body)
+
+    // the root module contains its own declarations and the declarations by FiniteSets
+    root.declarations.find { _.name == "J!F" } match {
+      case Some(TlaOperDecl(_, params,
+          OperEx(TlaArithOper.plus, NameEx("x"), NameEx("M")))) =>
+        assert(params.length == 1)
+        assert(params.head.isInstanceOf[SimpleFormalParam])
+        assert("x" == params.head.asInstanceOf[SimpleFormalParam].name)
+
+      case _ =>
+        fail("expected the body for J!F")
+    }
+    // an instance with parameters
+    root.declarations.find { _.name == "I!F" } match {
+      case Some(TlaOperDecl(_, params,
+          OperEx(TlaArithOper.plus, NameEx("x"), NameEx("K")))) =>
+        assert(params.length == 3)
+        assert(params.head == SimpleFormalParam("V"))
+        assert(params(1) == SimpleFormalParam("K"))
+        assert(params(2) == SimpleFormalParam("x"))
+
+      case _ =>
+        fail("expected the body for I!F")
+    }
+  }
+
   test("module imports") {
     // operators with parameters that are themselves operators with parameters
     val text =
