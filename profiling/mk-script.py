@@ -14,8 +14,6 @@ import sys
 import csv
 
 
-dir = os.path.realpath( os.path.dirname(__file__) )
-
 def os_specific_commands():
     if sys.platform.startswith("linux"):
         cmds = { "time": "/usr/bin/time", "timeout": "/usr/bin/timeout" }
@@ -57,7 +55,7 @@ def tool_cmd(args, exp_dir, tla_filename, csv_row):
 
     tool = csv_row['tool']
     apalache_dir = args.apalacheDir
-    ctime = os_cmds['time']
+    ctime = "%s -o time.out" % os_cmds['time']
     ctimeout = "%s %s" % (os_cmds['timeout'], csv_row['timeout'])
     if tool == 'apalache':
         return "%s %s %s/bin/apalache-mc check %s %s %s %s %s | tee apalache.out &" \
@@ -68,8 +66,8 @@ def tool_cmd(args, exp_dir, tla_filename, csv_row):
         # TLC needs a configuration file, it should be created by the user
         # figure out how to run tlc
         init, next, inv, more_args = kv("init"), kv("next"), kv("inv"), csv_row["args"]
-        mem = "-fpmem %d" % (1024 * args.memlimit) if args.memlimit > 0 else ""
-        return f'{ctimeout} {ctime} java -cp {apalache_dir}/3rdparty/tla2tools.jar ' \
+        mem = "-Xmx%dG" % args.memlimit if args.memlimit > 0 else ""
+        return f'{ctimeout} {ctime} java {mem} -cp {apalache_dir}/3rdparty/tla2tools.jar ' \
                 + f' tlc2.TLC {mem} {more_args} {tla_filename} | tee tlc.out&'
     else:
         print("Unknown tool: %s" % tool)
@@ -77,7 +75,7 @@ def tool_cmd(args, exp_dir, tla_filename, csv_row):
 
 
 def setup_experiment(args, row_num, csv_row):
-    exp_dir = os.path.join(args.outDir, "in", "%d" % row_num)
+    exp_dir = os.path.join(args.outDir, "exp", "%03d" % row_num)
     os.makedirs(exp_dir)
     print("Populating the directory for the experiment %d:" % row_num)
     # As SANY is only looking for file in the current directory,
