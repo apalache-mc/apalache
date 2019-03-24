@@ -56,7 +56,7 @@ Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 ``f[e]`` | ✔ | - |
 ``DOMAIN f`` | ✔ | - |
-``[ x ∈ S ↦ e]`` | ✔ / ✖ | `0.5-dev-lang` |  pattern matching like `{<<u, v>> \in S: p}` does not work
+``[ x ∈ S ↦ e]`` | ✔ / ✖ | - |  
 ``[ S → T ]`` | ✔ | - | Produces a *symbolic* set
 ``[ f EXCEPT ![e1] = e2 ]`` | ✔ | - | 
 
@@ -80,12 +80,13 @@ Note that our type system distinguishes tuples from general functions.
 
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
-``e[i]`` | ✔ / ✖ | - | Provided that i is a constant expression
+``e[i]`` | ✔ / ✖ | - | Provided that ``i`` is a constant expression
 ``<< e1, ..., e_n >>`` | ✔ | - | By default, a tuple is constructed. Use a [type annotation](types-and-annotations.md) to construct a sequence of proper type.
 ``S1 x ... x S_n`` | ✔ | - |
+``[ t EXCEPT ![i] = e]`` | ✔/✖ | - | Provided that ``i`` is a constant expression 
 
 #### Strings and numbers
-
+ 
 Construct  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 ``"c1...c_n"`` | ✔ | - | A string is always mapped to a unique uninterpreted constant

@@ -142,7 +142,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
               assert(!varTypes.contains(name))
               varTypes = varTypes + (name -> elemT)
 
-            case Some(PowSetT(setT @ FinSetT(_))) =>
+            case Some(PowSetT(setT@FinSetT(_))) =>
               assert(!varTypes.contains(name))
               varTypes = varTypes + (name -> setT)
 
@@ -632,19 +632,19 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
       // In principle, we could just return the function itself.
       // But we also check the argument types to be on a well-typed side.
       val indices = deinterleave(bindings, 0, 2) // the expressions
-      val indexTypes = deinterleave(argTypes.tail, 0, 2)
+    val indexTypes = deinterleave(argTypes.tail, 0, 2)
       val valueTypes = deinterleave(argTypes.tail, 1, 2)
       funType match {
         case FunT(_, _) =>
           val (argT, resT) =
             funType match {
-                // an argument to EXCEPT is always wrapped into a tuple
+              // an argument to EXCEPT is always wrapped into a tuple
               case FunT(FinSetT(elemT), rt) => (TupleT(Seq(elemT)), rt)
               case _ => error(ex, "Expected a function type, found: " + funType)
             }
           for (idx <- indexTypes) {
             if (idx != argT) {
-              error(ex, "Expected an index of type %s, found: %s".format(argT, idx))
+              error(ex, "Expected an index of type TupleT(%s), found: %s".format(argT, idx))
             }
           }
           for (valT <- valueTypes) {
@@ -653,7 +653,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
             }
           }
 
-        case rec @ RecordT(_) =>
+        case rec@RecordT(_) =>
           for (idx <- indexTypes) {
             if (idx != TupleT(Seq(ConstT()))) {
               error(ex, "Expected an index of type %s, found: %s".format(ConstT(), idx))
@@ -663,17 +663,29 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
             index match {
               case OperEx(TlaFunOper.tuple, ValEx(TlaStr(key))) =>
                 if (valT != rec.fields(key)) {
-                  error(ex, "Expected an index of type %s, found: %s".format(rec.fields(key), valT))
+                  error(ex, "Expected an index of type TupleT(%s), found: %s".format(rec.fields(key), valT))
                 }
 
               case _ =>
-                error(ex, s"Expected a record key, found: ${index}")
+                error(ex, s"Expected a record key, found: $index")
             }
 
           }
 
+        case tup@TupleT(Seq(argTypes@_*)) =>
+          for (idx <- indexTypes) {
+            if (idx != TupleT(Seq(IntT()))) {
+              error(ex, "Expected an index of type TupleT(%s), found: %s".format(IntT(), idx))
+            }
+          }
+          for ((argT, valT) <- argTypes.zip(valueTypes)) {
+            if (argT != valT) {
+              error(ex, "Expected a value of type %s, found: %s".format(argT, valT))
+            }
+          }
+
         case _ =>
-          error(ex, "Expected a function or a record")
+          error(ex, "Expected a function, a record, or a tuple")
       }
 
       funType
@@ -845,7 +857,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
   }
 
   private def computeMiscOps(argTypes: Seq[CellT]): PartialFunction[TlaEx, CellT] = {
-    case ex@OperEx(TlaOper.label, args @ _*) =>
+    case ex@OperEx(TlaOper.label, args@_*) =>
       for ((a, t) <- args.tail.zip(argTypes.tail)) expectType(ConstT(), a, t)
       argTypes.head
 
@@ -867,19 +879,19 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
       expectType(ConstT(), msg, msgType)
       BoolT()
 
-    case ex @ OperEx(TlcOper.colonGreater, _, _) =>
+    case ex@OperEx(TlcOper.colonGreater, _, _) =>
       TupleT(argTypes) // a :> b is simply <<a, b>> in our type system
 
-    case ex @ OperEx(TlcOper.atat, _, _) =>
+    case ex@OperEx(TlcOper.atat, _, _) =>
       argTypes.head match {
-        case funT @ FunT(FinSetT(argT), resT) =>
+        case funT@FunT(FinSetT(argT), resT) =>
           argTypes.tail.head match {
             case TupleT(Seq(at, rt)) =>
               expectEqualTypes(ex, argT, at)
               expectEqualTypes(ex, resT, rt)
               funT
 
-            case tt @ _ =>
+            case tt@_ =>
               expectType(TupleT(Seq(argT, resT)), ex, tt)
               funT
           }
@@ -888,7 +900,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
           errorUnexpected(ex, TlcOper.atat.name, argTypes)
       }
 
-    case ex @ OperEx(BmcOper.withType, _*) =>
+    case ex@OperEx(BmcOper.withType, _*) =>
       throw new IllegalStateException("The type annotation must have been saved by inferAndSave: " + ex)
   }
 

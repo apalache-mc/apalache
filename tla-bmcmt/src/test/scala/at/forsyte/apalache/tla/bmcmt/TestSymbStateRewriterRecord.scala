@@ -294,4 +294,17 @@ class TestSymbStateRewriterRecord extends RewriterBase {
     val rewriter = create()
     assertTlaExAndRestore(rewriter, state)
   }
+
+
+  test("""SE-REC-EXCEPT:[ ["a" |-> 1, "b" |-> FALSE] EXCEPT !["a"] = 3 ]""") {
+    val record = tla.enumFun(tla.str("a"), tla.int(1), tla.str("b"), tla.bool(false))
+    val recExcept = tla.except(record, tla.tuple(tla.str("a")), tla.int(3))
+
+    val state = new SymbState(recExcept, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    val expectedRec = tla.enumFun(tla.str("a"), tla.int(3), tla.str("b"), tla.bool(false))
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(expectedRec, nextState.ex)))
+  }
+
 }

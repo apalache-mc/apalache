@@ -66,7 +66,6 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val index = fields.keySet.toList.indexOf(key)
     val elems = state.arena.getHas(recordCell)
     if (index >= 0 && index < elems.length) {
-      val keyCell = rewriter.strValueCache.get(key).get
       state.setTheory(CellTheory()).setRex(elems(index))
     } else {
       // This case should have been caught by type inference. Throw an exception immediately.

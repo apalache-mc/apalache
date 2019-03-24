@@ -143,4 +143,13 @@ class TestSymbStateRewriterTuple extends RewriterBase {
     assertTlaExAndRestore(rewriter, state)
   }
 
+  test("""SE-TUPLE-EXCEPT: [ <<1, FALSE>> EXCEPT ![1] = 3 ]""") {
+    val tuple = tla.tuple(tla.int(1), tla.bool(false))
+    val except = tla.except(tuple, tla.tuple(tla.int(1)), tla.int(3))
+    val state = new SymbState(except, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    val expectedTuple = tla.tuple(tla.int(3), tla.bool(false))
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(expectedTuple, nextState.ex)))
+  }
 }
