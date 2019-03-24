@@ -113,7 +113,8 @@ class ExprOrOpArgNodeTranslator(environmentHandler: EnvironmentHandler, sourceSt
 
   // substitute an expression with the declarations that come from INSTANCE M WITH ...
   private def translateSubstIn(substIn: SubstInNode): TlaEx = {
-    throw new SanyImporterException("Found an unexpected substitution. An INSTANCE inside an operator?")
+    SubstTranslator(environmentHandler, sourceStore, context)
+      .translate(substIn, translate(substIn.getBody))
   }
 
   private def translateAt(node: AtNode): TlaEx = {

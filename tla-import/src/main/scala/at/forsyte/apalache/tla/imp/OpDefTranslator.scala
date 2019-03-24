@@ -26,7 +26,9 @@ class OpDefTranslator(environmentHandler: EnvironmentHandler, sourceStore: Sourc
           // store the source location
           sourceStore.addRec(environmentHandler.identify(newBody), SourceLocation(node.getBody.getLocation))
           // return the operator whose body is a recursive function
-          new TlaRecOperDecl(nodeName, List(), newBody)
+          val operDecl = TlaOperDecl(nodeName, List(), newBody)
+          operDecl.isRecursive = true
+          operDecl
 
         case _ =>
           // non-recursive declarations are easy
@@ -38,7 +40,9 @@ class OpDefTranslator(environmentHandler: EnvironmentHandler, sourceStore: Sourc
       // in recursive declarations, the applications of recursive operators are replaced by calls to formal parameters
       val body = ExprOrOpArgNodeTranslator(environmentHandler, sourceStore, context, InsideRecursion())
         .translate(node.getBody)
-      new TlaRecOperDecl(nodeName, params, body)
+      val decl = TlaOperDecl(nodeName, params, body)
+      decl.isRecursive = true
+      decl
     }
   }
 

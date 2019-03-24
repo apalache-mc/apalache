@@ -43,17 +43,10 @@ class ModuleTranslator(environmentHandler: EnvironmentHandler, sourceStore: Sour
       val lookupPrefix = opDef.getName.toString.split("!").dropRight(1) // find the instance names
       // the expression translator should lookup using the lookupPrefix
       val adjustedContext = context.setLookupPrefix(lookupPrefix.toList)
-      val exprTranslator = ExprOrOpArgNodeTranslator(environmentHandler, sourceStore, adjustedContext, OutsideRecursion())
-      opDef.getBody match {
-        case substInNode: SubstInNode =>
-          // override the body and do the substitution
-          val body = exprTranslator.translate(substInNode.getBody)
-          decl.body = SubstTranslator(environmentHandler, sourceStore, adjustedContext).translate(substInNode, body)
-
-
-        case _ =>
-          decl.body = exprTranslator.translate(opDef.getBody)
-      }
+      val defTranslator = OpDefTranslator(environmentHandler, sourceStore, adjustedContext)
+      val updatedDecl = defTranslator.translate(opDef)
+      decl.isRecursive = updatedDecl.isRecursive
+      decl.body = updatedDecl.body
     }
 
     userDefs foreach eachOpDefSecondPass

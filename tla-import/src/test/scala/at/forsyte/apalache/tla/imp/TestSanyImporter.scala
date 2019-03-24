@@ -1110,10 +1110,11 @@ class TestSanyImporter extends FunSuite {
       root.declarations.find {
         _.name == name
       } match {
-        case Some(d: TlaRecOperDecl) =>
+        case Some(d: TlaOperDecl) =>
           // We expect that R in the declaration body is referred by a formal parameter with the same name R.
           // The caveat here is that the formal parameter R does not appear in the list of the R's formal parameters,
           // but it is accessible via the field recParam.
+          assert(d.isRecursive)
           val recParam = OperFormalParam(name, FixedArity(nparams))
           assert(d.body == expectedBody)
           assert(locationStore.contains(d.body.safeId)) // and source file information has been saved
@@ -1156,10 +1157,11 @@ class TestSanyImporter extends FunSuite {
     root.declarations.find {
       _.name == "F"
     } match {
-      case Some(d: TlaRecOperDecl) =>
+      case Some(d: TlaOperDecl) =>
         // We expect that F in the declaration body is referred by a formal parameter with the same name F.
         // The caveat here is that the formal parameter F does not appear in the list of the F's formal parameters,
         // but it is accessible via the field recParam.
+        assert(d.isRecursive)
         val recParam = OperFormalParam("F", FixedArity(1))
         val ite = OperEx(TlaControlOper.ifThenElse,
           OperEx(TlaOper.eq, NameEx("n"), ValEx(TlaInt(0))),
@@ -1206,14 +1208,15 @@ class TestSanyImporter extends FunSuite {
       root.declarations.find {
         _.name == expectedName
       } match {
-        case Some(d: TlaRecOperDecl) =>
+        case Some(d: TlaOperDecl) =>
+          assert(d.isRecursive)
           assert(expectedName == d.name)
           assert(0 == d.formalParams.length)
           assert(body == d.body)
           assert(locationStore.contains(d.body.safeId)) // and source file information has been saved
 
         case _ =>
-          fail("Expected a TlaDecl")
+          fail("Expected a TlaRecDecl")
       }
     }
 
