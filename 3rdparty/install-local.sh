@@ -57,7 +57,7 @@ popd
 echo "Done with Box"
 
 echo "Downloading TLA2Tools..."
-wget https://github.com/tlaplus/tlaplus/releases/download/v1.5.6/tla2tools.jar -O $D/tla2tools.jar
+wget https://github.com/tlaplus/tlaplus/releases/download/v1.5.7/tla2tools.jar -O $D/tla2tools.jar
 #wget https://tla.msr-inria.inria.fr/tlatoolbox/ci/dist/tla2tools.jar
 echo "Done with TLA2Tools"
 

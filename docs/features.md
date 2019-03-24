@@ -12,8 +12,8 @@ Construct  | Supported? | Milestone | Comment
 ``ASSUME P`` | ✖ | - | Parsed, but not propagated to the solver
 ``F(x1, ..., x_n) == exp`` | ✔ / ✖ | `0.7-dev-calls` | Provisionally, any use of F is replaced with its body. Hence, recursive operators are not supported yet.
 ``f[x ∈ S] == exp`` | ? | `0.7-dev-calls` | A global function is replaced by an equivalent operator declaration. This feature has not been tested yet.
-``INSTANCE M WITH ...`` | ✔ / ✖ | - | ``~>``, ``\cdot``, ``ENABLED`` are not treated special 
-``N(x1, ..., x_n) == INSTANCE M WITH...`` | ✔ / ✖ | - |
+``INSTANCE M WITH ...`` | ✔ / ✖ | - | ``~>``, ``\cdot``, ``ENABLED`` are not treated specially 
+``N(x1, ..., x_n) == INSTANCE M WITH...`` | ✔ / ✖ | `0.5-dev-calls` | Parameterized instances are not supported yet, LOCAL operator definitions inside instances may fail to work
 ``THEOREM P`` | ✖ | - | 
 ``LOCAL def`` | ✔ | - | Handled by SANY 
 

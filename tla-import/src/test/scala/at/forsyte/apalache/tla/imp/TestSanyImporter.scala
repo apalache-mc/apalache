@@ -1238,7 +1238,16 @@ class TestSanyImporter extends FunSuite {
         |================================
         |CONSTANT M
         |J == INSTANCE A WITH N <- M
-        |I(V, K) == INSTANCE A WITH N <- K
+        |\* I(V, K) == INSTANCE A WITH N <- K
+        |---- MODULE B ----
+        |---- MODULE C ----
+        |H(x) == x
+        |================================
+        |CONSTANT M
+        |C2 == INSTANCE C
+        |F(x) == C2!H(x)
+        |================================
+        |B2 == INSTANCE B
         |================================
         |""".stripMargin
 
@@ -1263,7 +1272,19 @@ class TestSanyImporter extends FunSuite {
       case _ =>
         fail("expected the body for J!F")
     }
-    // an instance with parameters
+    val fDecl = root.declarations.find { _.name == "J!F" }.get
+    root.declarations.find { _.name == "J!G" } match {
+      case Some(TlaOperDecl(_, params, body)) =>
+        assert(params.isEmpty)
+        assert(body == OperEx(new TlaUserOper("J!F", FixedArity(1), fDecl.asInstanceOf[TlaOperDecl]),
+          ValEx(TlaInt(3))
+        ))
+
+      case _ =>
+        fail("expected the body for J!G")
+    }
+    // an instance with parameters, not working yet
+    /*
     root.declarations.find { _.name == "I!F" } match {
       case Some(TlaOperDecl(_, params,
           OperEx(TlaArithOper.plus, NameEx("x"), NameEx("K")))) =>
@@ -1274,6 +1295,16 @@ class TestSanyImporter extends FunSuite {
 
       case _ =>
         fail("expected the body for I!F")
+    }
+    */
+    // two instances
+    root.declarations.find { _.name == "B2!C2!H" } match {
+      case Some(TlaOperDecl(_, params, NameEx("x"))) =>
+        assert(params.length == 1)
+        assert(params.head == SimpleFormalParam("x"))
+
+      case _ =>
+        fail("expected the body for B2!C2!H")
     }
   }
 
@@ -1570,7 +1601,7 @@ class TestSanyImporter extends FunSuite {
     val locationStore = new SourceStore
     val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
       .loadFromSource("tlc", Source.fromString(text))
-    assert(4 == modules.size) // our module + 3 LOCAL modules
+    assert(5 == modules.size) // our module + 4 LOCAL modules
     // the root module and naturals
     val root = modules(rootName)
 
@@ -1749,7 +1780,7 @@ class TestSanyImporter extends FunSuite {
     // the root module and naturals
     val root = modules(rootName)
 
-    modules(rootName).declarations(2) match {
+    modules(rootName).declarations(4) match {
       case TlaAssumeDecl(e) =>
         assert(OperEx(TlaOper.eq, NameEx("N"), ValEx(TlaInt(4))) == e)
 

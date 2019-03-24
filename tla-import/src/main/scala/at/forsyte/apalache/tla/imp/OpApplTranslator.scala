@@ -67,7 +67,7 @@ class OpApplTranslator(environmentHandler: EnvironmentHandler, sourceStore: Sour
     val exTran = ExprOrOpArgNodeTranslator(environmentHandler, sourceStore, context, recStatus)
 
     def translateNonRec() = {
-      context.declarationsMap.get(opcode) match {
+      context.lookup(opcode) match {
         case Some(decl: TlaOperDecl) =>
           val args = node.getArgs.toList.map { p => exTran.translate(p) }
           environmentHandler.identify(OperEx(decl.operator, args: _*))

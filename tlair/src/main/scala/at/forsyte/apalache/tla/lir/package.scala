@@ -304,14 +304,18 @@ package lir {
     * does not contain OperEx(this.operator, ...), but it does contain OperFormalOperParam(this.name),
     * see TlaRecOperDecl.</p>
     *
+    * <p>Note that the body is declared as a variable. We need it to deal with INSTANCE.</p>
+    *
     * @see TlaRecOperDecl
     *
     * @param name operator name
     * @param formalParams formal parameters
     * @param body operator definition, that is a TLA+ expression that captures the operator definition
     */
-  case class TlaOperDecl( name: String, formalParams: List[FormalParam], body: TlaEx ) extends TlaDecl {
-    require( !body.isNull )
+  case class TlaOperDecl( name: String, formalParams: List[FormalParam], var body: TlaEx ) extends TlaDecl {
+    // this is no longer required, as module instantiation uses null bodies
+    //    require( !body.isNull )
+
     val operator: TlaUserOper = new TlaUserOper(name, FixedArity(formalParams.length), this)
 
     override def deepCopy( ): TlaOperDecl =  TlaOperDecl( name, formalParams, body.deepCopy() )
