@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import java.io.{File, PrintWriter}
+import java.util.concurrent.{TimeUnit, TimeoutException}
 
 import at.forsyte.apalache.tla.bmcmt.profiler.{FruitlessSmtListener, SmtListener}
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FailPredT, IntT}
@@ -11,8 +12,11 @@ import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, _}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaFalse, TlaInt, TlaTrue}
 import com.microsoft.z3._
 import com.microsoft.z3.enumerations.Z3_lbool
+import com.microsoft.z3.Params
 
 import scala.collection.mutable
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 /**
   * An implementation of a SolverContext using Z3.
@@ -364,6 +368,45 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
       throw new SmtEncodingException("SMT solver reports UNKNOWN. Perhaps, your specification is outside the supported logic.")
     }
     status == Status.SATISFIABLE
+  }
+
+  override def satOrTimeout(timeoutSec: Long): Option[Boolean] = {
+    if (timeoutSec <= 0) {
+      Some(sat())
+    } else {
+      def setTimeout(tm: Long): Unit = {
+        val params = z3context.mkParams()
+        params.add("timeout", BigInt(tm * 1000).toInt)
+        z3solver.setParameters(params)
+      }
+      // temporarily, change the timeout
+      setTimeout(timeoutSec)
+      log("(check-sat)")
+      val status = z3solver.check()
+      setTimeout(0)
+      logWriter.flush() // good time to flush
+      status match {
+        case Status.SATISFIABLE => Some(true)
+        case Status.UNSATISFIABLE => Some(false)
+        case Status.UNKNOWN => None
+      }
+
+      /*
+      // XXX: this produces a segfault sometimes...
+      val satFuture: Future[Boolean] = Future {
+        sat()
+      }(ExecutionContext.global)
+
+      try {
+        Some(Await.result(satFuture, Duration(timeoutSec, TimeUnit.SECONDS)))
+      } catch {
+        case _: TimeoutException | _: InterruptedException =>
+          z3context.interrupt()
+          log(s";; timeout")
+          None
+      }
+      */
+    }
   }
 
   /**

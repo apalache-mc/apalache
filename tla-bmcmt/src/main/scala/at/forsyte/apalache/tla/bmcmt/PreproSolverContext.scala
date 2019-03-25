@@ -225,6 +225,14 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
 
 
   /**
+    * Check satisfiability of the context with a timeout
+    *
+    * @param timeoutSec the timeout in seconds. If timeout <= 0, it is not effective
+    * @return Some(result), if no timeout happened; otherwise, None
+    */
+  override def satOrTimeout(timeoutSec: Long): Option[Boolean] = context.satOrTimeout(timeoutSec)
+
+  /**
     * Register an SMT listener
     *
     * @param listener register a listener, overrides the previous listener, if it was set before

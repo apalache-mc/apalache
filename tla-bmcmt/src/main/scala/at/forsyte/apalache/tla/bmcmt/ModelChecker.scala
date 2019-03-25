@@ -61,6 +61,12 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
   private val learnFromUnsat: Boolean =
     tuningOptions.getOrElse("search.learnFromUnsat", "").toLowerCase == "true"
 
+  private val transitionTimeout: Long =
+    BigInt(tuningOptions.getOrElse("search.transition.timeout", "0")).toLong
+
+  private val invariantTimeout: Long =
+    BigInt(tuningOptions.getOrElse("search.invariant.timeout", "0")).toLong
+
 
   /**
     * A list of transitions that are enabled at every step
@@ -353,12 +359,21 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
     logger.debug("Applying rewriting rules...")
     var nextState = rewriter.rewriteUntilDone(state.setTheory(BoolTheory()).setRex(transition))
     rewriter.flushStatistics()
-    if (checkForErrors) {
+    if (checkForErrors && debug) {
+      // This is a debugging feature that allows us to find incorrect rewriting rules.
+      // Disable it in production.
       logger.debug("Finished rewriting. Checking satisfiability of the pushed constraints.")
-      if (!solverContext.sat()) {
-        // this is a clear sign of a bug in one of the translation rules
-        logger.debug("UNSAT after pushing transition constraints")
-        throw new CheckerException("A contradiction introduced in rewriting. Report a bug.")
+      solverContext.satOrTimeout(transitionTimeout) match {
+        case Some(false) =>
+          // this is a clear sign of a bug in one of the translation rules
+          logger.debug("UNSAT after pushing transition constraints")
+          throw new CheckerException("A contradiction introduced in rewriting. Report a bug.")
+
+        case Some(true) => () // SAT
+          logger.debug("The transition constraints are OK.")
+
+        case None => // interpret it as sat
+          logger.debug("Timeout. Assuming the transition constraints to be OK.")
       }
     }
     if (!checkForErrors) {
@@ -376,25 +391,31 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
       // check whether this transition violates some assertions
       checkAssertionErrors(nextState)
       logger.debug("Checking transition feasibility.")
-      if (!solverContext.sat()) {
-        // the current symbolic state is not feasible
-        logger.debug("Transition #%d is not feasible.".format(transitionNo))
-        rewriter.pop() // LEVEL + 0
-        solverContext.log("; } ------- STEP: %d, STACK LEVEL: %d TRANSITION: %d"
-          .format(stepNo, rewriter.contextLevel, transitionNo))
-        (nextState, false)
-        // LEVEL + 0
-      } else {
-        // check the invariant right here
-        val matchesInvFilter = invFilter == "" || stepNo.toString.matches("^" + invFilter + "$")
-        if (matchesInvFilter) {
-          checkInvariant(stepNo, transitionNo, nextState)
-        }
-        // and then forget all these constraints!
-        rewriter.pop() // LEVEL + 0
-        solverContext.log("; } ------- STEP: %d, STACK LEVEL: %d".format(stepNo, rewriter.contextLevel))
-        (nextState, true)
-        // LEVEL + 0
+      solverContext.satOrTimeout(transitionTimeout) match {
+        case Some(true) =>
+          // check the invariant right here
+          val matchesInvFilter = invFilter == "" || stepNo.toString.matches("^" + invFilter + "$")
+          if (matchesInvFilter) {
+            checkInvariant(stepNo, transitionNo, nextState)
+          }
+          // and then forget all these constraints!
+          rewriter.pop() // LEVEL + 0
+          solverContext.log("; } ------- STEP: %d, STACK LEVEL: %d".format(stepNo, rewriter.contextLevel))
+          (nextState, true)
+          // LEVEL + 0
+
+        case r: Option[Boolean] => // unsat or timeout
+          // the current symbolic state is not feasible
+          if (r.isDefined) {
+            logger.debug("Transition #%d is not feasible.".format(transitionNo))
+          } else {
+            logger.debug(s"Timed out when checking feasibility of transition #$transitionNo. Assuming it is infeasible.")
+          }
+          rewriter.pop() // LEVEL + 0
+          solverContext.log("; } ------- STEP: %d, STACK LEVEL: %d TRANSITION: %d"
+            .format(stepNo, rewriter.contextLevel, transitionNo))
+          (nextState, false)
+          // LEVEL + 0
       }
     }
   }
@@ -496,28 +517,35 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
             .setRex(notInv))
           solverContext.assertGroundExpr(notInvState.ex)
           checkAssertionErrors(notInvState) // the invariant violation may introduce runtime errors
-          val notInvSat = solverContext.sat()
-          if (notInvSat) {
-            // introduce an index of the last transition to show in the counterexample
-            val newArena = notInvState.arena.appendCell(IntT())
-            val transitionIndex = newArena.topCell
-            rewriter.solverContext.assertGroundExpr(tla.eql(tla.int(transitionNo), transitionIndex.toNameEx))
+          solverContext.satOrTimeout(invariantTimeout) match {
+            case Some(true) =>
+              // introduce an index of the last transition to show in the counterexample
+              val newArena = notInvState.arena.appendCell(IntT())
+              val transitionIndex = newArena.topCell
+              rewriter.solverContext.assertGroundExpr(tla.eql(tla.int(transitionNo), transitionIndex.toNameEx))
 
-            val finalState = notInvState.setArena(newArena).setBinding(shiftBinding(notInvState.binding, constants))
-            stack = (finalState, transitionIndex) +: stack
-            val filename = dumpCounterexample()
-            logger.error(s"Invariant is violated at depth $depth. Check the counterexample in $filename")
-            if (debug) {
-              logger.warn(s"Dumping the arena into smt.log. This may take some time...")
-              // dump everything in the log
-              val writer = new StringWriter()
-              new SymbStateDecoder(solverContext, rewriter).dumpArena(notInvState, new PrintWriter(writer))
-              solverContext.log(writer.getBuffer.toString)
-            }
-            throw new CancelSearchException(Outcome.Error)
+              val finalState = notInvState.setArena(newArena).setBinding(shiftBinding(notInvState.binding, constants))
+              stack = (finalState, transitionIndex) +: stack
+              val filename = dumpCounterexample()
+              logger.error(s"Invariant is violated at depth $depth. Check the counterexample in $filename")
+              if (debug) {
+                logger.warn(s"Dumping the arena into smt.log. This may take some time...")
+                // dump everything in the log
+                val writer = new StringWriter()
+                new SymbStateDecoder(solverContext, rewriter).dumpArena(notInvState, new PrintWriter(writer))
+                solverContext.log(writer.getBuffer.toString)
+              }
+              // cancel the search
+              throw new CancelSearchException(Outcome.Error)
+
+            case Some(false) =>
+              logger.debug("The invariant holds true.")
+
+            case None =>
+              logger.debug("Timeout. Assuming that the invariant holds true.")
           }
           rewriter.pop()
-          notInvSat
+          false
         }
     }
   }
