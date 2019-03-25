@@ -18,8 +18,14 @@ import re
 import sys
 
 time_re = re.compile(r'(\d+\.\d+)user\s+(\d+\.\d+)system.*?(\d+)maxresident')
-outcome_re = re.compile(r'^.*The outcome is:\s*(.*)$')
-ntrans_re = re.compile(r'^.*Found\s+(\d+)\s+initializing transitions and\s+(\d+)\s+next transitions')
+timeout_re = re.compile(r'Command exited with non-zero status 124')
+apalache_outcome_re = re.compile(r'The outcome is:\s*(.*)')
+apalache_ntrans_re = re.compile(r'Found\s+(\d+)\s+initializing transitions and\s+(\d+)\s+next transitions')
+apalache_depth_re = re.compile(r'Step\s+(\d+), level\s+\d+:')
+tlc_no_error_re = re.compile(r'Model checking completed. No error has been found')
+tlc_states_re = re.compile(r'\s(\d+)\s+distinct states found')
+tlc_depth_re = re.compile(r'The depth of the complete state graph search is\s+(\d+)')
+tlc_error_re = re.compile(r'Error:.* is violated')
 
 
 def parse_options():
@@ -55,26 +61,36 @@ def collect_dirs(args):
 
 
 def parse_time(ed):
+    entry = {'time_sec': None, 'mem_kb': None, 'status': 'Fail'}
     with open(os.path.join(ed['path'], 'time.out'), "r") as f:
-        m = time_re.match(f.readline())
-        if m:
-            return {'time_sec': int(math.ceil(float(m.group(1)) + float(m.group(2)))),
+        line = f.readline()
+        while line:
+            m = timeout_re.search(line)
+            if m:
+                entry = { **entry, 'status': 'Timeout' }
+            m = time_re.search(line)
+            if m:
+                entry = { **entry,
+                    'time_sec': int(math.ceil(float(m.group(1)) + float(m.group(2)))),
                     'mem_kb': m.group(3)}
-        else:
-            return {'time_sec': None, 'mem_kb': None}
 
-        
+            line = f.readline()
+
+    return entry
 
 
 def parse_apalache(ed):
-    entry = {}
+    entry = {'depth': 0, 'ninit_trans': 0, 'nnext_trans': 0}
     with open(os.path.join(ed['path'], 'detailed.log'), "r") as lf:
         line = lf.readline()
         while line:
-            m = outcome_re.match(line)
+            m = apalache_outcome_re.search(line)
             if m:
                 entry['status'] = m.group(1) 
-            m = ntrans_re.match(line)
+            m = apalache_depth_re.search(line)
+            if m:
+                entry['depth'] = int(m.group(1))
+            m = apalache_ntrans_re.search(line)
             if m:
                 entry['ninit_trans'] = m.group(1) 
                 entry['nnext_trans'] = m.group(2) 
@@ -101,7 +117,29 @@ def parse_apalache(ed):
 
 
 def parse_tlc(ed):
-    return {}
+    entry = {'nstates': 0, 'depth': 0}
+    with open(os.path.join(ed['path'], 'tlc.out'), "r") as lf:
+        line = lf.readline()
+        while line:
+            m = tlc_no_error_re.search(line)
+            if m:
+                entry['status'] = "NoError"
+
+            m = tlc_error_re.search(line)
+            if m:
+                entry['status'] = "Error"
+
+            m = tlc_states_re.search(line)
+            if m:
+                entry['nstates'] = int(m.group(1))
+
+            m = tlc_depth_re.search(line)
+            if m:
+                entry['depth'] = int(m.group(1))
+
+            line = lf.readline()
+
+    return entry
 
 
 if __name__ == "__main__":

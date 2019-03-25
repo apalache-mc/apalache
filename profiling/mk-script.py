@@ -59,16 +59,16 @@ def tool_cmd(args, exp_dir, tla_filename, csv_row):
     ctimeout = "%s %s" % (os_cmds['timeout'], csv_row['timeout'])
     if tool == 'apalache':
         return "%s %s %s/bin/apalache-mc check %s %s %s %s %s | tee apalache.out &" \
-                % (ctimeout, ctime,
+                % (ctime, ctimeout,
                         args.apalacheDir, kv("init"),
                         kv("next"), kv("inv"), csv_row["args"], tla_filename)
     elif tool == 'tlc':
         # TLC needs a configuration file, it should be created by the user
         # figure out how to run tlc
         init, next, inv, more_args = kv("init"), kv("next"), kv("inv"), csv_row["args"]
-        mem = "-Xmx%dG" % args.memlimit if args.memlimit > 0 else ""
-        return f'{ctimeout} {ctime} java {mem} -cp {apalache_dir}/3rdparty/tla2tools.jar ' \
-                + f' tlc2.TLC {mem} {more_args} {tla_filename} | tee tlc.out&'
+        mem = "-Xmx%dm" % (1024 * args.memlimit) if args.memlimit > 0 else ""
+        return f'{ctime} {ctimeout} java {mem} -cp {apalache_dir}/3rdparty/tla2tools.jar ' \
+                + f' tlc2.TLC {more_args} {tla_filename} | tee tlc.out&'
     else:
         print("Unknown tool: %s" % tool)
         sys.exit(1)
@@ -134,7 +134,7 @@ def create_parallel_script(args, master_script):
         sf.write("#!/bin/bash\n")
         #sf.write('trap "kill -s INT 0" EXIT TERM INT\n')
         mem = "--memfree %d" % args.memlimit if args.memlimit > 0 else ""
-        sf.write("parallel -a %s --delay 3 --results out/{#}/ %s \n"\
+        sf.write("parallel -a %s --delay 3 --results 'out/{#}/' %s \n"\
                 % (master_script, mem))
 
     os.chmod(script, stat.S_IWRITE | stat.S_IREAD | stat.S_IEXEC)
