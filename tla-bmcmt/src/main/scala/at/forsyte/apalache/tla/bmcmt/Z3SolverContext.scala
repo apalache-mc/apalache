@@ -376,14 +376,15 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     } else {
       def setTimeout(tm: Long): Unit = {
         val params = z3context.mkParams()
-        params.add("timeout", BigInt(tm * 1000).toInt)
+        params.add("timeout", BigInt(tm).toInt)
         z3solver.setParameters(params)
       }
       // temporarily, change the timeout
-      setTimeout(timeoutSec)
+      setTimeout(timeoutSec * 1000)
       log("(check-sat)")
       val status = z3solver.check()
-      setTimeout(0)
+      // set it to the maximum: Z3 is using 2^32 - 1, which is hard to pass in Java, so we can only set it to 2^31-1
+      setTimeout(Int.MaxValue)
       logWriter.flush() // good time to flush
       status match {
         case Status.SATISFIABLE => Some(true)
