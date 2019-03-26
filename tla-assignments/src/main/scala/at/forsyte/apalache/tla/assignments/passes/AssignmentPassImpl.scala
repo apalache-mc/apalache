@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.assignments._
 import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.db.BodyDB
 import com.google.inject.Inject
@@ -50,6 +51,10 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
 
     // replace every variable x with x', so we can use the assignment solver
     def primeVars(nameSet: Set[String], e: TlaEx): TlaEx = e match {
+      case ne @ OperEx(TlaActionOper.prime, NameEx(name)) =>
+        // Do not replace primes twice. This may happen when Init = Inv.
+        ne
+
       case ne @ NameEx(name) if nameSet.contains(name) =>
         val newEx = environmentHandler.identify(tla.prime(e))
         sourceStore.onTransformation(ne, newEx)
