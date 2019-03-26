@@ -1,0 +1,3 @@
+filename;tool;timeout;init;inv;next;args
+two-phase/TwoPhase.tla;apalache;10h;InitInv;Inv;;--length=1 --cinit=ConstInit7
+two-phase/MC7Inv.tla;tlc;20h;;;;-config MC.cfg -deadlock
