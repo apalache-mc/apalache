@@ -67,8 +67,9 @@ def tool_cmd(args, exp_dir, tla_filename, csv_row):
         # figure out how to run tlc
         init, next, inv, more_args = kv("init"), kv("next"), kv("inv"), csv_row["args"]
         mem = "-Xmx%dm" % (1024 * args.memlimit) if args.memlimit > 0 else ""
-        return f'{ctime} {ctimeout} java {mem} -cp {apalache_dir}/3rdparty/tla2tools.jar ' \
-                + f' tlc2.TLC {more_args} {tla_filename} | tee tlc.out&'
+        return ('%s %s java %s -cp %s/3rdparty/tla2tools.jar ' \
+                + ' tlc2.TLC %s %s | tee tlc.out&') \
+                % (ctime, ctimeout, mem, apalache_dir, more_args, tla_filename)
     else:
         print("Unknown tool: %s" % tool)
         sys.exit(1)
@@ -88,7 +89,7 @@ def setup_experiment(args, row_num, csv_row):
         if os.path.isfile(full_path) \
                 and (f.endswith('.tla') \
                         or f.endswith('.cfg') or f.endswith('.properties')):
-            print(f"  copied {f}")
+            print("  copied " + f)
             shutil.copy(full_path, exp_dir)
 
     # create the script to run an individual experiment
@@ -110,7 +111,7 @@ def setup_experiment(args, row_num, csv_row):
             sf.write("\n")
 
     os.chmod(script, stat.S_IWRITE | stat.S_IREAD | stat.S_IEXEC)
-    print(f'  created the script {script}')
+    print('  created the script ' + script)
     return script
 
 
@@ -124,7 +125,7 @@ def create_master_script(args, all_scripts):
             sf.write("\n")
 
     os.chmod(script, stat.S_IWRITE | stat.S_IREAD | stat.S_IEXEC)
-    print(f'Run the master script {script}')
+    print('Run the master script ' + script)
     return script
 
 
@@ -138,7 +139,7 @@ def create_parallel_script(args, master_script):
                 % (master_script, mem))
 
     os.chmod(script, stat.S_IWRITE | stat.S_IREAD | stat.S_IEXEC)
-    print(f'Run the parallel script {script}')
+    print('Run the parallel script ' + script)
     return script
 
 
@@ -163,7 +164,7 @@ if __name__ == "__main__":
             single_script = setup_experiment(args, row_num + 1, row)
             scripts.append(single_script)
 
-        print(f'\nAll experiment directories are populated\n')
+        print('\nAll experiment directories are populated\n')
         ms_script = create_master_script(args, scripts)
         create_parallel_script(args, ms_script)
 

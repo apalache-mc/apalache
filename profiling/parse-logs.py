@@ -172,7 +172,7 @@ if __name__ == "__main__":
                 print('Unknown tool: ' + ed['tool'])
                 entry['03:status'] = 'Failure'
         except FileNotFoundError as err:
-            print(f"Error in {ed['no']}: {err}")
+            print("Error in %s: %s" % (ed['no'], err))
             entry['03:status'] = 'failure'
 
         #print(entry)
@@ -194,5 +194,5 @@ if __name__ == "__main__":
         for e in entries:
             writer.writerow(e)
 
-    print(f"\n{len(entries)} entries are written to {args.output}")
+    print("\n%d entries are written to {args.output}" % (len(entries)))
 
