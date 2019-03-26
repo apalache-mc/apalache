@@ -55,7 +55,7 @@ def tool_cmd(args, exp_dir, tla_filename, csv_row):
 
     tool = csv_row['tool']
     apalache_dir = args.apalacheDir
-    ctime = "%s -o time.out" % os_cmds['time']
+    ctime = "%s -f 'elapsed_sec: %%e maxresident_kb: %%M' -o time.out" % os_cmds['time']
     ctimeout = "%s %s" % (os_cmds['timeout'], csv_row['timeout'])
     if tool == 'apalache':
         return "%s %s %s/bin/apalache-mc check %s %s %s %s %s | tee apalache.out &" \
