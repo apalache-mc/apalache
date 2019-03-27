@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.plugins.Identifier
+import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -138,6 +139,33 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
       case _ =>
         fail("Unexpected rewriting result")
     }
+  }
+
+  test("""SE-SET-IN-INT: 2 \in Int""") {
+    val ex = OperEx(TlaSetOper.in, tla.int(2), ValEx(TlaIntSet))
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    assertTlaExAndRestore(rewriter, nextState)
+  }
+
+  test("""SE-SET-IN-Nat: 2 \in Nat""") {
+    val ex = OperEx(TlaSetOper.in, tla.int(2), ValEx(TlaNatSet))
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    assertTlaExAndRestore(rewriter, nextState)
+  }
+
+  test("""SE-SET-IN-Nat: -1 \in Nat""") {
+    val ex = OperEx(TlaSetOper.in, tla.int(-1), ValEx(TlaNatSet))
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.not(nextState.ex)))
   }
 
   test("""type inference 3 \in {{1}, {3}, {5}}""") {

@@ -9,7 +9,9 @@ import scala.collection.immutable.HashMap
 object Arena {
   val falseName: String = CellTheory().namePrefix + "0"
   val trueName: String = CellTheory().namePrefix + "1"
-  val booleanName: String = CellTheory().namePrefix + "2"
+  val booleanSetName: String = CellTheory().namePrefix + "2"
+  val natSetName: String = CellTheory().namePrefix + "3"
+  val intSetName: String = CellTheory().namePrefix + "4"
 
   def create(solverContext: SolverContext): Arena = {
     var arena = new Arena(solverContext, 0,
@@ -20,17 +22,23 @@ object Arena {
       new HashMap()
     ) /////
     // by convention, the first cells have the following semantics:
-    //  0 stores FALSE, 1 stores TRUE, 2 stores BOOLEAN
+    //  0 stores FALSE, 1 stores TRUE, 2 stores BOOLEAN, 3 stores Nat, 4 stores Int
     arena = arena.appendCellWithoutDeclaration(BoolT())
       .appendCellWithoutDeclaration(BoolT())
       .appendCellWithoutDeclaration(FinSetT(BoolT()))
+      .appendCellWithoutDeclaration(FinSetT(IntT()))
+      .appendCellWithoutDeclaration(FinSetT(IntT()))
     // declare Boolean cells in SMT
     val cellFalse = arena.cellFalse()
     val cellTrue = arena.cellTrue()
-    val cellBoolean = arena.cellBoolean()
+    val cellBoolean = arena.cellBooleanSet()
+    val cellNat = arena.cellNatSet()
+    val cellInt = arena.cellIntSet()
     solverContext.declareCell(cellFalse)
     solverContext.declareCell(cellTrue)
     solverContext.declareCell(cellBoolean)
+    solverContext.declareCell(cellNat)
+    solverContext.declareCell(cellInt)
     solverContext.assertGroundExpr(OperEx(TlaOper.ne, cellFalse.toNameEx, cellTrue.toNameEx))
     // assert in(c_FALSE, c_BOOLEAN) and in(c_TRUE, c_BOOLEAN)
     // link c_BOOLEAN to c_FALSE and c_TRUE
@@ -77,8 +85,24 @@ class Arena private(val solverContext: SolverContext,
     * A fixed cell that stores the set {false, true}, that is, the set BOOLEAN in TLA+.
     * @return the cell for the BOOLEAN set
     */
-  def cellBoolean(): ArenaCell = {
-    cellMap(Arena.booleanName)
+  def cellBooleanSet(): ArenaCell = {
+    cellMap(Arena.booleanSetName)
+  }
+
+  /**
+    * A fixed cell that stores the set Nat. As this set is infinite, it is not pointing to any other cells.
+    * @return the cell for the Nat cell
+    */
+  def cellNatSet(): ArenaCell = {
+    cellMap(Arena.natSetName)
+  }
+
+  /**
+    * A fixed cell that stores the set Int. As this set is infinite, it is not pointing to any other cells.
+    * @return the cell for the Int cell
+    */
+  def cellIntSet(): ArenaCell = {
+    cellMap(Arena.intSetName)
   }
 
   /**

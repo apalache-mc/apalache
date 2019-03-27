@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaIntSet}
+import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 
 import scala.collection.mutable
@@ -125,7 +125,13 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
 
     // constants
     key(ValEx(TlaBool(true)))
-      -> List(new BoolConstRule(this)),
+      -> List(new BuiltinConstRule(this)),
+    key(ValEx(TlaBoolSet))
+      -> List(new BuiltinConstRule(this)),
+    key(ValEx(TlaIntSet))
+      -> List(new BuiltinConstRule(this)),
+    key(ValEx(TlaNatSet))
+      -> List(new BuiltinConstRule(this)),
     key(ValEx(TlaInt(1)))
       -> List(new IntConstRule(this)),
     key(ValEx(TlaStr("red")))
@@ -560,11 +566,20 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
       case OperEx(oper, _*) =>
         "O@" + oper.name
 
-      case ValEx(TlaInt(_)) | ValEx(TlaIntSet) =>
+      case ValEx(TlaInt(_)) =>
         "I@"
 
-      case ValEx(TlaBool(_)) | ValEx(TlaBoolSet) =>
+      case ValEx(TlaIntSet) =>
+        "SI@"
+
+      case ValEx(TlaNatSet) =>
+        "SN@"
+
+      case ValEx(TlaBool(_)) =>
         "B@"
+
+      case ValEx(TlaBoolSet) =>
+        "SB@"
 
       case NameEx(_) =>
         "N@"

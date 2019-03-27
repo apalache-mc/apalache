@@ -1,21 +1,19 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
+import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
 import at.forsyte.apalache.tla.lir.{NameEx, ValEx}
 
 /**
-  * Implements the rules: SE-BOOL-{FALSE,TRUE} and SE-SET-BOOLEAN.
+  * Rewriting BOOLEAN, Int, and Nat into predefined cells.
   *
   * @author Igor Konnov
    */
-class BoolConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
+class BuiltinConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
-      case ValEx(TlaFalse) => true
-      case ValEx(TlaTrue) => true
-      case ValEx(TlaBoolSet) => true
+      case ValEx(TlaFalse) | ValEx(TlaTrue) | ValEx(TlaBoolSet) | ValEx(TlaNatSet) | ValEx(TlaIntSet) => true
       case _ => false
     }
   }
@@ -37,7 +35,13 @@ class BoolConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
         }
 
       case ValEx(TlaBoolSet) =>
-        state.setRex(NameEx(state.arena.cellBoolean().toString))
+        state.setRex(NameEx(state.arena.cellBooleanSet().toString))
+
+      case ValEx(TlaNatSet) =>
+        state.setRex(NameEx(state.arena.cellNatSet().toString))
+
+      case ValEx(TlaIntSet) =>
+        state.setRex(NameEx(state.arena.cellIntSet().toString))
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))

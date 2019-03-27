@@ -12,11 +12,8 @@ import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, _}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaFalse, TlaInt, TlaTrue}
 import com.microsoft.z3._
 import com.microsoft.z3.enumerations.Z3_lbool
-import com.microsoft.z3.Params
 
 import scala.collection.mutable
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext, Future}
 
 /**
   * An implementation of a SolverContext using Z3.

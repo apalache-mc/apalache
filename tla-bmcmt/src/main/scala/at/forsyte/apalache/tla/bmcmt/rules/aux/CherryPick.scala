@@ -4,7 +4,8 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
+import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaNatSet}
+import at.forsyte.apalache.tla.lir.{NameEx, TlaEx, ValEx}
 
 /**
   * An advanced form of PickFromAndFunMerge that allows us:
@@ -38,6 +39,10 @@ class CherryPick(rewriter: SymbStateRewriter) {
         // No emptiness check, since we are dealing with a function set [S -> T].
         // If S is empty, we get a function of the empty set.
         pickFunFromFunSet(FunT(domt, rest), set, state)
+
+      case FinSetT(IntT()) if set == state.arena.cellIntSet() || set == state.arena.cellNatSet() =>
+        // not really an infinite set, but we can pick a value from it
+        pickFromIntOrNatSet(set, state)
 
       case _ =>
         val elems = state.arena.getHas(set)
@@ -579,6 +584,17 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
     rewriter.solverContext.log("; } PICK %s FROM %s".format(funT, funSet))
     nextState.setRex(funCell)
+  }
+
+  // just declare an integer, and in case of Nat make it non-negative
+  def pickFromIntOrNatSet(set: ArenaCell, state: SymbState): SymbState = {
+    assert(set == state.arena.cellNatSet() || set == state.arena.cellIntSet())
+    var nextState = state.updateArena(_.appendCell(IntT()))
+    val intCell = nextState.arena.topCell
+    if (set == state.arena.cellNatSet()) {
+      rewriter.solverContext.assertGroundExpr(tla.ge(intCell.toNameEx, tla.int(0)))
+    }
+    nextState.setRex(intCell).setTheory(CellTheory())
   }
 
   /**

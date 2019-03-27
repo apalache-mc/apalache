@@ -54,7 +54,7 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case OperEx(TlaSetOper.in, OperEx(TlaActionOper.prime, NameEx(name)), set) =>
         // switch to cell theory
         val setState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(set))
-        val setCell = setState.arena.findCellByNameEx(setState.ex)
+        val setCell = setState.asCell
         val elemCells = setState.arena.getHas(setCell)
         val finalState =
           if (setCell.cellType.isInstanceOf[FinSetT] && elemCells.isEmpty) {

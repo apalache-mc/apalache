@@ -135,7 +135,7 @@ Operator  | Supported? | Milestone | Comment
 /, % | ✔ | - | Integer division and modulo
 ``a^b`` | ✔ / ✖ | - | Provided a and b are constant expressions. 
 ``a..b`` | ✔ / ✖ | - | Provided a and b are constant expressions. In general, use ``{x \in A..B : a <= x /\ x <= b}``, if you know constant bounds ``A`` and ``B`` on the variables ``a`` and ``b``. 
-``Int``, ``Nat`` | ✔ / ✖ | - | Only supported in ``\E x \in Nat: p`` and ``\E x \in Int: p``, if the expression is not located under ``\A`` and ``~``. 
+``Int``, ``Nat`` | ✔ / ✖ | - | Supported in ``\E x \in Nat: p`` and ``\E x \in Int: p``, if the expression is not located under ``\A`` and ``~``. We also support assignments like ``f' \in [S -> Int]`` and tests ``f \in [S -> Nat]`` 
 ÷ | ✖ | - | Real division, not supported
 
 ### Sequences

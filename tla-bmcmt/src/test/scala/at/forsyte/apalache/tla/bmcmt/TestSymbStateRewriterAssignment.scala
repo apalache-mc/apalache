@@ -3,7 +3,8 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TestingPredefs}
+import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaNatSet}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TestingPredefs, ValEx}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -14,6 +15,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
   private val set12: OperEx = tla.enumSet(tla.int(1), tla.int(2))
   private val x_prime: OperEx = tla.prime(tla.name("x"))
   private val y_prime: OperEx = tla.prime(tla.name("y"))
+  private val boolset: OperEx = tla.enumSet(tla.bool(false), tla.bool(true))
 
   test("""SE-IN-ASSIGN1(int): x' \in {1, 2} ~~> TRUE and [x -> $C$k]""") {
     val set = set12
@@ -374,7 +376,6 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(rewriter, nextState)
   }
 
-  private val boolset: OperEx = tla.enumSet(tla.bool(false), tla.bool(true))
   test("""SE-IN-ASSIGN1(funset): x' \in [0..(5 - 1) ~~> {FALSE, TRUE}] ~~> TRUE and [x -> $C$k]""") {
     val domain = tla.dotdot(tla.int(0), tla.minus(tla.int(5), tla.int(1)))
     val set = tla.funSet(domain, boolset)
@@ -395,6 +396,31 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
         case _ =>
           fail("Unexpected rewriting result")
       }
+  }
+
+  test("""SE-IN-ASSIGN(funset with Nat): x' \in [0..4 -> Nat]""") {
+    val domain = tla.dotdot(tla.int(0), tla.int(4))
+    val set = tla.funSet(domain, ValEx(TlaNatSet))
+    val assign = tla.in(x_prime, set)
+
+    val state = new SymbState(assign, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(rewriter.solverContext.sat())
+    val x = nextState.binding("x'")
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.ge(tla.appFun(x, tla.int(1)), 0)))
+  }
+
+  test("""SE-IN-ASSIGN(funset with Int): x' \in [0..4 -> Int]""") {
+    val domain = tla.dotdot(tla.int(0), tla.int(4))
+    val set = tla.funSet(domain, ValEx(TlaIntSet))
+    val assign = tla.in(x_prime, set)
+
+    val state = new SymbState(assign, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(rewriter.solverContext.sat())
+    // there is not much to check here, since it is just a function that returns an integer
   }
 
   test("""SE-IN-ASSIGN1(tuple): x' \in {<<1, FALSE, {1, 3}>>, <<2, TRUE, {4}>>} ~~> [x -> $C$k]""") {
