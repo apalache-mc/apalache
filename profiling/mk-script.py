@@ -134,6 +134,7 @@ def create_parallel_script(args, master_script):
     with open (script, "w+") as sf:
         sf.write("#!/bin/bash\n")
         #sf.write('trap "kill -s INT 0" EXIT TERM INT\n')
+        sf.write('cd "%s"\n' args.outDir)
         mem = "--memfree %d" % args.memlimit if args.memlimit > 0 else ""
         sf.write("parallel -a %s --delay 3 --results 'out/{#}/' %s \n"\
                 % (master_script, mem))
