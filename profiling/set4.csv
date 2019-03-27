@@ -1,5 +1,5 @@
 filename;tool;timeout;init;inv;next;args
-tendermint-consensus/Tendermint4.tla;apalache;23h;;Agreement;;--length=15 --tuning=apalache.properties
-tendermint-consensus/Tendermint4n4f2.tla;apalache;23h;;Agreement;;--length=15
-tendermint-consensus/Tendermint4n4f0.tla;apalache;23h;;Agreement;;--length=15 --tuning=apalache.properties
-tendermint-consensus/Tendermint4n4f1.tla;apalache;23h;;Agreement;;--length=15 --tuning=apalache-n4f1.properties
+tendermint-consensus/Tendermint4.tla;apalache;23h;;Agreement;;--length=15 --tuning=apalache.properties --cinit=ConstInit
+tendermint-consensus/Tendermint4n4f2.tla;apalache;23h;;Agreement;;--length=15 --cinit=ConstInit
+tendermint-consensus/Tendermint4n4f0.tla;apalache;23h;;Agreement;;--length=15 --tuning=apalache.properties --cinit=ConstInit
+tendermint-consensus/Tendermint4n4f1.tla;apalache;23h;;Agreement;;--length=15 --tuning=apalache-n4f1.properties --cinit=ConstInit
