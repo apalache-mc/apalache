@@ -1,3 +1,8 @@
 filename;tool;timeout;init;inv;next;args
+Bakery-Boulangerie/Bakery.tla;apalache;1h;Inv;Inv;;--length=1
+ewd840/EWD840.tla;apalache;1h;InvAndTypeOK;InvAndTypeOK;;--length=1 --cinit=ConstInit10
+bcastByz/bcastByz.tla;apalache;1h;IndInv_Unforg_NoBcast;IndInv_Unforg_NoBcast;;--length=1 --cinit=ConstInit7
+c1cs/c1cs.tla;apalache;10h;IndStrengthens;IndStrengthens;;--length=1 --cinit=ConstInit4
 two-phase/TwoPhase.tla;apalache;10h;InitInv;Inv;;--length=1 --cinit=ConstInit7
 two-phase/MC7Inv.tla;tlc;20h;;;;-config MC.cfg -deadlock
+paxos/Paxos.tla;apalache;24h;Inv;Inv;;--length=1 --cinit=ConstInit3
