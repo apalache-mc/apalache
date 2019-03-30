@@ -1,12 +1,11 @@
 package at.forsyte.apalache.tla
 
-import java.io.{FileNotFoundException, FileReader, IOException}
+import java.io.{File, FileNotFoundException, FileReader, IOException}
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.Properties
 
 import scala.collection.JavaConverters._
-
 import at.forsyte.apalache.infra.PassOptionException
 import at.forsyte.apalache.infra.log.LogbackConfigurator
 import at.forsyte.apalache.infra.passes.{PassChainExecutor, TlaModuleMixin}
@@ -17,6 +16,9 @@ import at.forsyte.apalache.tla.tooling.Version
 import at.forsyte.apalache.tla.tooling.opt.{CheckCmd, ParseCmd}
 import com.google.inject.Guice
 import com.typesafe.scalalogging.LazyLogging
+import org.apache.commons.configuration2.Configuration
+import org.apache.commons.configuration2.builder.fluent.Configurations
+import org.apache.commons.configuration2.ex.ConfigurationException
 import org.backuity.clist.Cli
 
 /**
@@ -120,22 +122,21 @@ object Tool extends App with LazyLogging {
   }
 
   private def loadProperties(filename: String): Map[String, String] = {
-    val props = new Properties()
+    // use an apache-commons library, as it supports variable substitution
     try {
-      val reader = new FileReader(filename)
-      props.load(reader)
-      reader.close()
+      val config = new Configurations().properties(new File(filename))
+      // access configuration properties
       var map = Map[String, String]()
-      for (name: String <- props.stringPropertyNames().asScala) {
-        map += (name -> props.getProperty(name)) // this seems to be the easiest way to convert Properties
+      for (name: String <- config.getKeys.asScala) {
+        map += (name -> config.getString(name))
       }
       map
     } catch {
       case _: FileNotFoundException =>
         throw new PassOptionException(s"The properties file $filename not found")
 
-      case e: IOException =>
-        throw new PassOptionException(s"IO error while reading properties from $filename: ${e.getMessage}")
+      case e: ConfigurationException =>
+        throw new PassOptionException(s"Error in the properties file $filename: ${e.getMessage}")
     }
   }
 

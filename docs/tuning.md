@@ -2,8 +2,17 @@ Parameters for fine tuning
 ==========================
 
 The parameters for fine tuning can be passed to the checker in a properties file.
-Its name is given with the command-line option ``--tuning=my.properties.`` 
+Its name is given with the command-line option ``--tuning=my.properties.`` This file
+supports variable substitution, e.g., ``${x}`` is replaced with the value of ``x``, if it was
+previously declared.
+ 
 
+  1. __Timeouts__: ``search.transition.timeout=<seconds>`` and ``search.invariant.timeout=<seconds>`` set timeouts
+  in seconds for checking whether a transition is enabled and whether the invariant holds, respectively.
+  When a timeout occurs, while transition is checked, the transition is considered disabled
+  and the search continues. When a timeout occurs, while the invariant is checked, the invariant
+  is considered satisfied. Obviously, one can miss a bug by setting small timeouts.
+  
   1. __Guided search__: ``search.transitionFilter=<sequence>``. Restrict the choice of symbolic
   transitions at every step with a regular expression. For instance, ``search.filter=0,5,2|3``
   requres to start with the 0th transition, continue with the 5th transition,

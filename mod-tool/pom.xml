@@ -120,6 +120,18 @@
             <version>3.2.2</version>
         </dependency>
         <dependency>
+            <!-- configurations in property files -->
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-configuration2</artifactId>
+            <version>2.4</version>
+        </dependency>
+        <dependency>
+            <!-- commons-configuration2 uses commons-beanutiles (without declaring it in dependencies?) -->
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>1.9.3</version>
+        </dependency>
+        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
         </dependency>
