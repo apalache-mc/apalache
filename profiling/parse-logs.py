@@ -194,5 +194,5 @@ if __name__ == "__main__":
         for e in entries:
             writer.writerow(e)
 
-    print("\n%d entries are written to {args.output}" % (len(entries)))
+    print("\n%d entries are written to %s" % (len(entries), args.output))
 
