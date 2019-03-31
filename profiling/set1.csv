@@ -24,8 +24,8 @@ c1cs/MC4.tla;tlc;3h;;Agreement;;-config MC.cfg -deadlock
 two-phase/TwoPhase.tla;apalache;4h;;TCConsistent;;--length=11 --cinit=ConstInit3
 two-phase/MC3.tla;tlc;10m;;;;-config MC.cfg -deadlock
 two-phase/TwoPhase.tla;apalache;4h;;TCConsistent;;--length=23 --cinit=ConstInit7
-two-phase/MC7.tla;tlc;2h;;;;-config MC.cfg -deadlock
-paxos/Paxos.tla;apalache;1h;;VotingInv;;--length=30 --cinit=ConstInit3 --tuning=apalache3.properties
-paxos/MC3.tla;tlc;10h;;;;-config MC.cfg -deadlock
-paxos/Paxos.tla;apalache;3h;;VotingInv;;--length=30 --cinit=ConstInit5 --tuning=apalache5.properties
-paxos/MC5.tla;tlc;20h;;;;-config MC.cfg -deadlock
+two-phase/MC7.tla;tlc;23h;;;;-config MC.cfg -deadlock
+paxos/Paxos.tla;apalache;23h;;VotingInv;;--length=30 --cinit=ConstInit3 --tuning=apalache3.properties
+paxos/MC3.tla;tlc;23h;;;;-config MC.cfg -deadlock
+paxos/Paxos.tla;apalache;10h;;VotingInv;;--length=30 --cinit=ConstInit5 --tuning=apalache5.properties
+paxos/MC5.tla;tlc;23h;;;;-config MC.cfg -deadlock

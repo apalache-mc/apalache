@@ -17,7 +17,7 @@ import os
 import re
 import sys
 
-time_re = re.compile(r'elapsed_sec: (\d+) maxresident_kb: (\d+)')
+time_re = re.compile(r'elapsed_sec: (\d+)(|\.\d+) maxresident_kb: (\d+)')
 timeout_re = re.compile(r'Command exited with non-zero status 124')
 apalache_outcome_re = re.compile(r'The outcome is:\s*(.*)')
 apalache_ntrans_re = re.compile(r'Found\s+(\d+)\s+initializing transitions and\s+(\d+)\s+next transitions')
@@ -170,10 +170,10 @@ if __name__ == "__main__":
                 entry = { **entry, **parse_tlc(ed)}
             else:
                 print('Unknown tool: ' + ed['tool'])
-                entry['03:status'] = 'Failure'
+                entry['03:status'] = 'Fail'
         except FileNotFoundError as err:
             print("Error in %s: %s" % (ed['no'], err))
-            entry['03:status'] = 'failure'
+            entry['03:status'] = 'Fail'
 
         #print(entry)
         entries.append(entry)
