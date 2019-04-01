@@ -31,6 +31,6 @@ paxos/Paxos.tla;apalache;23h;;VotingInv;;--length=30 --cinit=ConstInit5 --tuning
 paxos/MC5.tla;tlc;23h;;;;-config MC.cfg -deadlock
 fpaxos/ApaFPaxos.tla;apalache;23h;;SafeValue;;--length=21 --tuning=apalache.properties
 fpaxos/MCFPaxos.tla;tlc;23h;;;;-config MCFPaxos.cfg -deadlock
-fpaxos/ApaFPaxos.tla;apalache;23h;;SafeValue;;--length=30 --tuning=apalache.properties
+fpaxos/ApaFPaxos.tla;apalache;23h;;SafeValue;;--length=30 --tuning=apalache5.properties
 fpaxos/MCFPaxos.tla;tlc;23h;;;;-config MCFPaxos5.cfg -deadlock
 

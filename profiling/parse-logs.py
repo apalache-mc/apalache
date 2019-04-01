@@ -37,6 +37,8 @@ def parse_options():
        help="The directory where the scripts and experiments logs can be found.")
     parser.add_argument("--output", "-o", default='results.csv',
                         help="The filename of the output CSV file")
+    parser.add_argument("--human", action="store_true",
+                        help="Make figures human-readable, e.g., convert 3610 seconds to 01H00M")
     args = parser.parse_args()
     args.expDir = os.path.realpath(args.expDir)
     return args
@@ -151,6 +153,64 @@ def parse_tlc(ed):
     return entry
 
 
+def humanize_sec(sec):
+    minutes = int(sec / 60) % 60
+    hours = int(sec / 3600)
+
+    if hours > 0:
+        return "%dH:%02dM" % (hours, minutes)
+    elif minutes > 0:
+        return "%2dM:%02dS" % (minutes, sec % 60)
+    else:
+        return "%2dS" % sec
+
+def humanize_kb(kb):
+    mb = int(kb / 1024)
+    gb = int(mb / 1024)
+
+    if gb > 0:
+        return "%d.%dG" % (gb, mb / 100)
+    elif mb > 0:
+        return "%dM" % mb
+    else:
+        return "%dK" % kb
+
+def humanize_num(num):
+    # shall we use round(..) instead of int(..)?
+    thousands = int(num / 1000)
+    millions = int(thousands / 1000)
+    billions = int(millions / 1000)
+
+    def print_smart(big, small, unit):
+        if big < 10:
+            return "%d.%d%s" % (big, small / 100, unit)
+        else:
+            return "%d%s" % (big, unit)
+
+    if billions > 0:
+        return print_smart(billions, millions, "B")
+    elif millions > 0:
+        return print_smart(millions, thousands, "M")
+    elif thousands > 0:
+        return print_smart(thousands, num % 1000, "K")
+    else:
+        return str(num)
+
+
+def humanize(entry):
+    def int_or_zero(name):
+        return int(entry[name]) if name in entry else 0
+
+    new_entry = { **entry,
+            '04:time_hum': humanize_sec(int_or_zero('04:time_sec')),
+            '05:mem_hum': humanize_kb(int_or_zero('05:mem_kb')),
+            '12:ncells_hum': humanize_num(int_or_zero('12:ncells')),
+            '13:nclauses_hum': humanize_num(int_or_zero('13:nclauses')),
+            '20:nstates_hum': humanize_num(int_or_zero('20:nstates'))
+    } 
+    return new_entry
+
+
 if __name__ == "__main__":
     args = parse_options()
     if not os.path.exists(args.expDir): 
@@ -177,6 +237,10 @@ if __name__ == "__main__":
 
         #print(entry)
         entries.append(entry)
+
+    # if the values must be human-readable, convert them
+    if args.human:
+        entries = [humanize(e) for e in entries]
 
     # collect the keys from the entries
     keys = set()
