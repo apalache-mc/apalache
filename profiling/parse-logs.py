@@ -158,11 +158,11 @@ def humanize_sec(sec):
     hours = int(sec / 3600)
 
     if hours > 0:
-        return "%dH:%02dM" % (hours, minutes)
+        return "%dh%02dm" % (hours, minutes)
     elif minutes > 0:
-        return "%2dM:%02dS" % (minutes, sec % 60)
+        return "%2dm%02ds" % (minutes, sec % 60)
     else:
-        return "%2dS" % sec
+        return "%2ds" % sec
 
 def humanize_kb(kb):
     mb = int(kb / 1024)
@@ -183,7 +183,7 @@ def humanize_num(num):
 
     def print_smart(big, small, unit):
         if big < 10:
-            return "%d.%d%s" % (big, small / 100, unit)
+            return "%d.%d%s" % (big, int(small / 100), unit)
         else:
             return "%d%s" % (big, unit)
 
