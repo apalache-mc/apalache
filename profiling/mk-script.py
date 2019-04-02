@@ -58,7 +58,7 @@ def tool_cmd(args, exp_dir, tla_filename, csv_row):
     ctime = "%s -f 'elapsed_sec: %%e maxresident_kb: %%M' -o time.out" % os_cmds['time']
     ctimeout = "%s %s" % (os_cmds['timeout'], csv_row['timeout'])
     if tool == 'apalache':
-        return "%s %s %s/bin/apalache-mc check %s %s %s %s %s | tee apalache.out &" \
+        return "%s %s %s/bin/apalache-mc check %s %s %s %s %s | tee apalache.out" \
                 % (ctime, ctimeout,
                         args.apalacheDir, kv("init"),
                         kv("next"), kv("inv"), csv_row["args"], tla_filename)
@@ -68,7 +68,7 @@ def tool_cmd(args, exp_dir, tla_filename, csv_row):
         init, next, inv, more_args = kv("init"), kv("next"), kv("inv"), csv_row["args"]
         mem = "-Xmx%dm" % (1024 * args.memlimit) if args.memlimit > 0 else ""
         return ('%s %s java %s -cp %s/3rdparty/tla2tools.jar ' \
-                + ' tlc2.TLC %s %s | tee tlc.out&') \
+                + ' tlc2.TLC %s %s | tee tlc.out') \
                 % (ctime, ctimeout, mem, apalache_dir, more_args, tla_filename)
     else:
         print("Unknown tool: %s" % tool)
@@ -99,9 +99,6 @@ def setup_experiment(args, row_num, csv_row):
             '#!/bin/bash',
             'D=`dirname $0` && D=`cd "$D"; pwd` && cd "$D"',
             tool_cmd(args, exp_dir, tla_basename, csv_row),
-            'pid="$!"',
-            'trap \'kill $pid; exit 130\' INT # terminate the child process',
-            'wait "$pid"',
             'exitcode="$?"',
             'echo "EXITCODE=$exitcode"',
             'exit "$exitcode"'
