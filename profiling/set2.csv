@@ -4,7 +4,7 @@ Bakery-Boulangerie/Bakery.tla;tlc;1h;Inv;Inv;;
 ewd840/EWD840.tla;apalache;3h;InvAndTypeOK;InvAndTypeOK;;--length=1 --cinit=ConstInit10
 ewd840/MC4Inv.tla;tlc;23h;;;;-config MC.cfg -deadlock
 bcastByz/bcastByz.tla;apalache;3h;IndInv_Unforg_NoBcast;IndInv_Unforg_NoBcast;;--length=1 --cinit=ConstInit4
-bcastByz/MC4Inv.tla;tlc;23h;;;;-config MC.cfg -deadlock
+bcastByz/MC4Inv.tla;tlc;23h;;;;-config MCInv.cfg -deadlock
 two-phase/TwoPhase.tla;apalache;23h;InitInv;Inv;;--length=1 --cinit=ConstInit7
 two-phase/MC7Inv.tla;tlc;23h;;;;-config MC.cfg -deadlock
 paxos/Apa3Paxos.tla;apalache;24h;Inv;Inv;;--length=1

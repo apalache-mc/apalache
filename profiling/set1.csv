@@ -3,22 +3,22 @@ traffic/traffic.tla;apalache;1h;;;;--length=4
 traffic/MC.tla;tlc;10m;;;;-config MC.cfg
 Prisoners/Prisoners.tla;apalache;30m;;SafetyInv;;--length=15 --cinit=ConstInit
 Prisoners/MC.tla;tlc;30m;;;;-config MC.cfg -deadlock
-ewd840/EWD840.tla;apalache;10m;;Inv;;--length=10 --cinit=ConstInit4
+ewd840/EWD840.tla;apalache;1h;;Inv;;--length=10 --cinit=ConstInit4
 ewd840/MC4.tla;tlc;10m;;;;-config MC.cfg -deadlock
-ewd840/EWD840.tla;apalache;30m;;Inv;;--length=30 --cinit=ConstInit10
+ewd840/EWD840.tla;apalache;1h;;Inv;;--length=30 --cinit=ConstInit10
 ewd840/MC10.tla;tlc;20h;;;;-config MC.cfg -deadlock
 allocator/SimpleAllocator.tla;apalache;10h;;ResourceMutex;;--length=7 --cinit=ConstInit22
 allocator/SAMC22.tla;tlc;30m;;ResourceMutex;;-config MC.cfg -deadlock
 allocator/SimpleAllocator.tla;apalache;23h;;ResourceMutex;;--length=10 --cinit=ConstInit53
 allocator/SAMC53.tla;tlc;30m;;ResourceMutex;;-config MC.cfg -deadlock
-bcastFolklore/bcastFolklore.tla;apalache;30m;InitNoBcast;Unforg;;--length=10 --cinit=ConstInit4
-bcastFolklore/MC4.tla;tlc;2h;InitNoBcast;Unforg;;-config MC.cfg -deadlock
-bcastFolklore/bcastFolklore.tla;apalache;30m;InitNoBcast;Unforg;;--length=10 --cinit=ConstInit20
-bcastFolklore/MC20.tla;tlc;20h;InitNoBcast;Unforg;;-config MC.cfg -deadlock
-bcastByz/bcastByz.tla;apalache;30m;InitNoBcast;Unforg;;--length=10 --cinit=ConstInit4
-bcastByz/MC4.tla;tlc;20h;InitNoBcast;Unforg;;-config MC.cfg -deadlock
-bcastByz/bcastByz.tla;apalache;30m;InitNoBcast;Unforg;;--length=30 --cinit=ConstInit7
-bcastByz/MC7.tla;tlc;23h;InitNoBcast;Unforg;;-config MC.cfg -deadlock
+bcastFolklore/bcastFolklore.tla;apalache;30m;Init;;;--length=10 --cinit=ConstInit4
+bcastFolklore/MC4.tla;tlc;2h;Init;;;-config MC.cfg
+bcastFolklore/bcastFolklore.tla;apalache;30m;Init;;;--length=10 --cinit=ConstInit20
+bcastFolklore/MC20.tla;tlc;20h;Init;;;-config MC.cfg
+bcastByz/bcastByz.tla;apalache;30m;Init;;;--length=10 --cinit=ConstInit4
+bcastByz/MC4.tla;tlc;20h;Init;;;-config MC.cfg
+bcastByz/bcastByz.tla;apalache;30m;Init;;;--length=30 --cinit=ConstInit7
+bcastByz/MC7.tla;tlc;23h;Init;;;-config MC.cfg
 c1cs/c1cs.tla;apalache;23h;;Agreement;;--length=20 --cinit=ConstInit4
 c1cs/MC4.tla;tlc;23h;;Agreement;;-config MC.cfg -deadlock
 two-phase/TwoPhase.tla;apalache;23h;;TCConsistent;;--length=11 --cinit=ConstInit3
