@@ -43,8 +43,9 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
     */
   private var stack: List[(SymbState, ArenaCell)] = List()
   private var typesStack: Seq[SortedMap[String, CellT]] = Seq()
-  private val solverContext: SolverContext = //new Z3SolverContext(debug, profile)
-    new PreproSolverContext(new Z3SolverContext(debug, profile))
+  private val solverContext: SolverContext = new Z3SolverContext(debug, profile)
+  // TODO: figure out why the preprocessor slows down invariant checking. Most likely, there is a bug.
+  //      new PreproSolverContext(new Z3SolverContext(debug, profile))
 
   private val rewriter: SymbStateRewriterImpl = new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
   rewriter.freeExistentialsStore = frexStore
