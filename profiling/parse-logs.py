@@ -199,7 +199,7 @@ def humanize_num(num):
 
 def humanize(entry):
     def int_or_zero(name):
-        return int(entry[name]) if name in entry else 0
+        return int(entry[name]) if name in entry and entry[name] else 0
 
     new_entry = { **entry,
             '04:time_hum': humanize_sec(int_or_zero('04:time_sec')),

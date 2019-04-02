@@ -25,12 +25,12 @@ two-phase/TwoPhase.tla;apalache;23h;;TCConsistent;;--length=11 --cinit=ConstInit
 two-phase/MC3.tla;tlc;10h;;;;-config MC.cfg -deadlock
 two-phase/TwoPhase.tla;apalache;23h;;TCConsistent;;--length=23 --cinit=ConstInit7
 two-phase/MC7.tla;tlc;23h;;;;-config MC.cfg -deadlock
-paxos/Paxos.tla;apalache;23h;;VotingInv;;--length=30 --cinit=ConstInit3 --tuning=apalache3.properties
+paxos/Apa3Paxos.tla;apalache;23h;;VotingInv;;--length=25 --tuning=apalache3.properties
 paxos/MC3.tla;tlc;23h;;;;-config MC.cfg -deadlock
-paxos/Paxos.tla;apalache;23h;;VotingInv;;--length=30 --cinit=ConstInit5 --tuning=apalache5.properties
+paxos/Apa5Paxos.tla;apalache;23h;;VotingInv;;--length=30 --tuning=apalache5.properties
 paxos/MC5.tla;tlc;23h;;;;-config MC.cfg -deadlock
 fpaxos/ApaFPaxos.tla;apalache;23h;;SafeValue;;--length=21 --tuning=apalache.properties
 fpaxos/MCFPaxos.tla;tlc;23h;;;;-config MCFPaxos.cfg -deadlock
-fpaxos/ApaFPaxos.tla;apalache;23h;;SafeValue;;--length=30 --tuning=apalache5.properties
+fpaxos/Apa5FPaxos.tla;apalache;23h;;SafeValue;;--length=30 --tuning=apalache5.properties
 fpaxos/MCFPaxos.tla;tlc;23h;;;;-config MCFPaxos5.cfg -deadlock
 
