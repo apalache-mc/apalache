@@ -109,10 +109,9 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       defaultValueFactory.makeUpValue(nextState, seqCell.cellType.asInstanceOf[SeqT].res)
     } else {
       // create the oracle
-      nextState = nextState.updateArena(_.appendCell(IntT()))
-      val oracle = nextState.arena.topCell.toNameEx
-      solverAssert(tla.ge(oracle, tla.int(0)))
-      solverAssert(tla.le(oracle, tla.int(nelems)))
+      nextState = picker.oracleHelper.newOracleWithDefault(nextState, nelems)
+      val oracle = nextState.ex
+      def oracleValue(n: Int) = picker.oracleHelper.getOracleValue(nextState, n).toNameEx
       // pick an element to be the result
       nextState = picker.pickByOracle(nextState, oracle, values)
       val pickedResult = nextState.asCell
@@ -121,8 +120,13 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // Otherwise, set oracle to N
       val inRange = tla.and(tla.le(tla.int(1), argCell),
         tla.le(argCell, tla.minus(end, start)))
-      val oracleEqArg = tla.eql(oracle, tla.plus(tla.minus(argCell, tla.int(1)), start))
-      val oracleIsN = tla.eql(oracle, tla.int(nelems))
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.plus(tla.minus(argCell, tla.int(1)), start)))
+      val indexCell = nextState.asCell
+      def eqArg(i: Int) =
+        tla.and(tla.eql(indexCell, tla.int(i)), tla.eql(oracle, picker.oracleHelper.getOracleValue(nextState, i)))
+      // since oracle values are now uninterpreted constants, we have to match them with integer indices
+      val oracleEqArg = tla.or(0.until(nelems) map eqArg :_*)
+      val oracleIsN = tla.eql(oracle, oracleValue(nelems))
       solverAssert(tla.or(tla.and(inRange, oracleEqArg), tla.and(tla.not(inRange), oracleIsN)))
       nextState.setRex(pickedResult).setTheory(CellTheory())
     }
@@ -141,8 +145,9 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // Just return a default value. Most likely, this expression will never propagate.
       defaultValueFactory.makeUpValue(nextState, funCell.cellType.asInstanceOf[FunT].resultType)
     } else {
-      nextState = picker.newOracleWithDefault(nextState, relationCell, relationElems)
+      nextState = picker.oracleHelper.newOracleWithDefault(nextState, relationElems.size)
       val oracle = nextState.asCell
+      def oracleValue(n: Int) = picker.oracleHelper.getOracleValue(nextState, n).toNameEx
 
       nextState = picker.pickByOracle(nextState, oracle, relationElems)
       val pickedPair = nextState.asCell
@@ -151,7 +156,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // cache the equality between the picked argument and the supplied argument, O(1) constraints
       nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((pickedArg, argCell)))
       val argEqWhenNonEmpty =
-        tla.impl(tla.neql(oracle, tla.int(nelems)), tla.eql(pickedArg, argCell))
+        tla.impl(tla.neql(oracle, oracleValue(nelems)), tla.eql(pickedArg, argCell))
       solverAssert(argEqWhenNonEmpty)
       // importantly, we require oracle = N iff there is no element equal to argCell, O(N) constraints
       for ((elem, no) <- relationElems.zipWithIndex) {
@@ -159,11 +164,11 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
         nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((argCell, elemArg)))
         val inRel = tla.in(elem, relationCell)
         val neqArg = tla.not(rewriter.lazyEq.safeEq(elemArg, argCell))
-        val found = tla.neql(oracle, tla.int(nelems))
+        val found = tla.neql(oracle, oracleValue(nelems))
         // ~inRel \/ neqArg \/ found
         solverAssert(tla.or(tla.not(inRel), neqArg, found))
         // oracle = i => inRel
-        solverAssert(tla.impl(tla.eql(oracle, tla.int(no)), inRel))
+        solverAssert(tla.impl(tla.eql(oracle, oracleValue(no)), inRel))
       }
 
       // If oracle = N, the picked cell is not constrained. In the past, we used a default value here,

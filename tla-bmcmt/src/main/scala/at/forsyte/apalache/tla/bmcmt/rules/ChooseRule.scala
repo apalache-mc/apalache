@@ -48,8 +48,10 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
           val nelems = elems.size
           // add an oracle \in 0..N, where the indices from 0 to N - 1 correspond to the set elements,
           // whereas the index N corresponds to the default choice when the set is empty
-          nextState = pickRule.newOracleWithDefault(nextState, setCell, elems)
+          nextState = pickRule.oracleHelper.newOracleWithDefault(nextState, elems.size)
           val oracle = nextState.ex
+          def oracleValue(n: Int) = pickRule.oracleHelper.getOracleValue(nextState, n).toNameEx
+
           // pick a cell
           nextState = pickRule.pickByOracle(nextState, oracle, elems)
           val pickedCell = nextState.asCell
@@ -61,11 +63,12 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
               tla.and(elems.map(e => tla.notin(e.toNameEx, setCell.toNameEx)): _*)
             }
 
-          solverAssert(tla.equiv(tla.eql(oracle, tla.int(nelems)), setIsEmpty))
+          solverAssert(tla.equiv(tla.eql(oracle, oracleValue(nelems)), setIsEmpty))
 
           // require that the picked cell is in the set
           def chosenWhenIn(elem: ArenaCell, no: Int): Unit =
-            solverAssert(tla.impl(tla.eql(oracle, tla.int(no)), tla.in(elem.toNameEx, setCell.toNameEx)))
+            solverAssert(tla.impl(tla.eql(oracle, oracleValue(no)),
+              tla.in(elem.toNameEx, setCell.toNameEx)))
 
           elems.zipWithIndex foreach (chosenWhenIn _).tupled
 

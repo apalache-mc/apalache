@@ -102,16 +102,15 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // pick from the original value s[i] and the new element, and restrict the choice
     // based on the actual values of start and end
     def transform(oldElemCell: ArenaCell, no: Int): ArenaCell = {
-      nextState = nextState.updateArena(_.appendCell(IntT()))
-      val oracle = nextState.arena.topCell.toNameEx
-      solverAssert(tla.ge(oracle, tla.int(0)))
-      solverAssert(tla.le(oracle, tla.int(1)))
+      nextState = picker.oracleHelper.newOracleNoDefault(nextState, 2)
+      val oracle = nextState.asCell.toNameEx
+      def oraValue(i: Int): TlaEx = picker.oracleHelper.getOracleValue(nextState, i)
       nextState = picker.pickByOracle(nextState, oracle, Seq(oldElemCell, newElemCell))
       // pick the element from the old sequence: start <= no /\ no < end => oracle = 0
       solverAssert(tla.impl(tla.and(tla.le(start, tla.int(no)), tla.lt(tla.int(no), end)),
-        tla.eql(oracle, tla.int(0))))
+        tla.eql(oracle, oraValue(0))))
       // pick the element from the new sequence: no = end => oracle = 1
-      solverAssert(tla.impl(tla.eql(tla.int(no), end), tla.eql(oracle, tla.int(1))))
+      solverAssert(tla.impl(tla.eql(tla.int(no), end), tla.eql(oracle, oraValue(1))))
       // the other elements are unrestricted, give some freedom to the solver
       nextState.asCell
     }

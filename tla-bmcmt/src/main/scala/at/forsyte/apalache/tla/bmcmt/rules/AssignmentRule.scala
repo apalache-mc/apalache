@@ -73,16 +73,17 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
               case FinSetT(_) =>
                 // choose an oracle with the default case oracle = N, when the set is empty
-                var nextState = pickRule.newOracleWithDefault(setState, setCell, elemCells)
+                var nextState = pickRule.oracleHelper.newOracleWithDefault(setState, elemCells.size)
                 val oracle = nextState.asCell
-                pickRule.constrainOracleWithIn(oracle, setCell, elemCells)
+                def oracleValue(n: Int) = pickRule.oracleHelper.getOracleValue(nextState, n).toNameEx
+                pickRule.oracleHelper.constrainOracleWithIn(nextState, oracle, setCell, elemCells)
                 // pick an arbitrary witness
                 nextState = pickRule.pickByOracle(nextState, oracle.toNameEx, elemCells)
                 val pickedCell = nextState.asCell
                 // introduce a Boolean result that equals true unless the set is empty
                 nextState = nextState.updateArena(_.appendCell(BoolT()))
                 val result = nextState.arena.topCell.toNameEx
-                rewriter.solverContext.assertGroundExpr(tla.eql(result, tla.neql(oracle.toNameEx, tla.int(elemCells.size))))
+                rewriter.solverContext.assertGroundExpr(tla.eql(result, tla.neql(oracle.toNameEx, oracleValue(elemCells.size))))
 
                 nextState
                   .setTheory(CellTheory())

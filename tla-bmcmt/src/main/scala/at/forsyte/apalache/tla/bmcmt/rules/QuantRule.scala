@@ -186,9 +186,10 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
     // note that \E x \in SUBSET(S): ... is handled separately, so we can use pickByOracle
     rewriter.solverContext.log("; free existential rule over a finite set")
     // choose an oracle with the default case oracle = N, when the set is empty
-    var nextState = pickRule.newOracleWithDefault(setState, set, setCells)
+    var nextState = pickRule.oracleHelper.newOracleWithDefault(setState, setCells.size)
+    def oracleValue(n: Int) = pickRule.oracleHelper.getOracleValue(nextState, n).toNameEx
     val oracle = nextState.asCell
-    pickRule.constrainOracleWithIn(oracle, set, setCells)
+    pickRule.oracleHelper.constrainOracleWithIn(nextState, oracle, set, setCells)
     // pick an arbitrary witness according to the oracle
     nextState = pickRule.pickByOracle(nextState, oracle.toNameEx, setCells)
     val pickedCell = nextState.asCell
@@ -201,7 +202,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
 
     // \E x \in S: p holds iff predWitness /\ S /= {}
     val exPred = NameEx(rewriter.solverContext.introBoolConst())
-    val setNonEmpty = tla.neql(oracle.toNameEx, tla.int(setCells.size))
+    val setNonEmpty = tla.neql(oracle.toNameEx, oracleValue(setCells.size))
     val iff = tla.equiv(exPred, tla.and(setNonEmpty, predWitness))
     rewriter.solverContext.assertGroundExpr(iff)
 
