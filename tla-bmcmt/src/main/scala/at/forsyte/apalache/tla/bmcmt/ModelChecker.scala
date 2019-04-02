@@ -58,8 +58,11 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
   private val invFilter: String =
     tuningOptions.getOrElse("search.invariantFilter", "")
 
-  private val learnFromUnsat: Boolean =
-    tuningOptions.getOrElse("search.learnFromUnsat", "").toLowerCase == "true"
+  private val learnTransFromUnsat: Boolean =
+    tuningOptions.getOrElse("search.transition.learnFromUnsat", "").toLowerCase == "true"
+
+  private val learnInvFromUnsat: Boolean =
+    tuningOptions.getOrElse("search.invariant.learnFromUnsat", "").toLowerCase == "true"
 
   private val transitionTimeout: Long =
     BigInt(tuningOptions.getOrElse("search.transition.timeout", "0")).toLong
@@ -240,7 +243,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
           List(state) // the final state may contain additional cells, add it
 
         case (tranWithNo, isEnabled) :: tail =>
-          if (!isEnabled && !learnFromUnsat) {
+          if (!isEnabled && !learnTransFromUnsat) {
             applyTrans(state, tail) // ignore the disabled transition, without any rewriting
           } else {
             val (transition, transitionNo) = tranWithNo
@@ -248,14 +251,14 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
             // note that the constraints are added at the current level, without an additional push
             var (nextState, _) = applyTransition(stepNo, erased, transition, transitionNo, checkForErrors = false)
             rewriter.exprCache.disposeActionLevel() // leave only the constants
-            if (isEnabled && learnFromUnsat && checkerInput.notInvariant.isDefined) {
+            if (isEnabled && learnInvFromUnsat && checkerInput.notInvariant.isDefined) {
               nextState = assumeInvariant(stepNo, nextState)
             }
             if (isEnabled) {
               // collect the variables of the enabled transition
               nextState +: applyTrans(nextState, tail)
             } else {
-              assert(learnFromUnsat)
+              assert(learnTransFromUnsat)
               // Do not collect the variables from the disabled transition, but remember that it was disabled.
               // Note that the constraints are propagated via nextState
               solverContext.assertGroundExpr(simplifier.simplify(tla.not(nextState.ex)))
@@ -429,7 +432,9 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
       logger.debug("Assuming that the invariant holds")
       val prevEx = state.ex
       val simplifier = new ConstSimplifier()
-      val nextState = rewriter.rewriteUntilDone(state.setRex(simplifier.simplify(tla.not(checkerInput.notInvariant.get))))
+      val simpleInv = simplifier.simplify(tla.not(checkerInput.notInvariant.get))
+      typeFinder.inferAndSave(simpleInv)
+      val nextState = rewriter.rewriteUntilDone(state.setRex(simpleInv))
       solverContext.assertGroundExpr(nextState.ex)
       nextState.setRex(prevEx) // restore the expression
     }
