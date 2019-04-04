@@ -105,7 +105,7 @@ The arguments are as follows:
   * ``--cinit`` specifies the constant initialization predicate, optional
   * ``--inv`` specifies the invariant to check, optional
   * ``--length`` specifies the upper bound on the length of the finite executions to explore
-  * ``--tuning`` specifies the properties file that stores the options for [fine tuning](tuning.md)
+  * ``--tuning`` specifies the properties file that stores the options for [fine tuning](docs/tuning.md)
   
 If you like to check an inductive invariant ``Inv``, you can do it as follows:   
 
