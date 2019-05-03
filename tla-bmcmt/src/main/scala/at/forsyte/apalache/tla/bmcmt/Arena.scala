@@ -179,25 +179,21 @@ class Arena private(val solverContext: SolverContext,
     * @return a new arena
     */
   def appendHas(setCell: ArenaCell, elemCell: ArenaCell): Arena = {
-    solverContext.declareInPred(setCell, elemCell)
+    solverContext.declareInPredIfNeeded(setCell, elemCell)
     val es =
       hasEdges.get(setCell) match {
-        case Some(list) => list :+ elemCell
-        case None => List(elemCell)
+        case Some(list) =>
+          list :+ elemCell
+
+        case None =>
+          List(elemCell)
       }
 
     new Arena(solverContext, cellCount, topCell, cellMap, hasEdges + (setCell -> es), domEdges, cdmEdges)
   }
 
   def appendHas(setCell: ArenaCell, cells: Seq[ArenaCell]): Arena = {
-    cells foreach (solverContext.declareInPred(setCell, _))
-    val es =
-      hasEdges.get(setCell) match {
-        case Some(list) => list ++ cells
-        case None => cells.toList
-      }
-
-    new Arena(solverContext, cellCount, topCell, cellMap, hasEdges + (setCell -> es), domEdges, cdmEdges)
+    cells.foldLeft(this) { (a, c) => a.appendHas(setCell, c) }
   }
 
   /**

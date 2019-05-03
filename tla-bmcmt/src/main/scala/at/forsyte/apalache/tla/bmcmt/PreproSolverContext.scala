@@ -160,7 +160,7 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
     * @param set the containing set
     * @param elem a set element
     */
-  def declareInPred(set: ArenaCell, elem: ArenaCell): Unit = context.declareInPred(set, elem)
+  def declareInPredIfNeeded(set: ArenaCell, elem: ArenaCell): Unit = context.declareInPredIfNeeded(set, elem)
 
   /**
     * Check whether the current view of the SMT solver is consistent with arena.

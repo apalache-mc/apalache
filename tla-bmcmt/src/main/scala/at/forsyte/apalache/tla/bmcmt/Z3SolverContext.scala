@@ -115,18 +115,19 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     }
   }
 
-  override def declareInPred(set: ArenaCell, elem: ArenaCell): Unit = {
+  override def declareInPredIfNeeded(set: ArenaCell, elem: ArenaCell): Unit = {
     val elemT = elem.cellType
     val setT = set.cellType
     val name = s"in_${elemT.signature}${elem}_${setT.signature}$set"
-    smtListener.onIntroSmtConst(name)
-    log(s";; declare edge predicate $name: Bool")
-    log(s"(declare-const $name Bool)")
-    nBoolConsts += 1
-    val const = z3context.mkConst(name, z3context.getBoolSort)
-    constCache += (name -> (const, BoolT(), level))
+    if (!constCache.contains(name)) {
+      smtListener.onIntroSmtConst(name)
+      log(s";; declare edge predicate $name: Bool")
+      log(s"(declare-const $name Bool)")
+      nBoolConsts += 1
+      val const = z3context.mkConst(name, z3context.getBoolSort)
+      constCache += (name -> (const, BoolT(), level))
+    }
   }
-
 
   /**
     * Check whether the current view of the SMT solver is consistent with arena.

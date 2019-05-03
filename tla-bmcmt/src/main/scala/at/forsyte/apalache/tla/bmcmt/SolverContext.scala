@@ -20,12 +20,13 @@ trait SolverContext extends StackableContext {
 
   /**
     * Declare an arena edge of type 'has'. This method introduces a Boolean variable for the edge.
-    * This method is called automatically by the arena.
+    * This method is called automatically by the arena. If the context already contains the constant
+    * with the same name, then this method does nothing.
     *
     * @param set the containing set
     * @param elem a set element
     */
-  def declareInPred(set: ArenaCell, elem: ArenaCell): Unit
+  def declareInPredIfNeeded(set: ArenaCell, elem: ArenaCell): Unit
 
   /**
     * Check whether the current view of the SMT solver is consistent with arena.
