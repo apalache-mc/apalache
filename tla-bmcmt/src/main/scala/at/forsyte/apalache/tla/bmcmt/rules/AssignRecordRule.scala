@@ -19,11 +19,17 @@ class AssignRecordRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val pick = new CherryPick(rewriter)
 
   override def isApplicable(state: SymbState): Boolean = {
+    def isUnbound(name: String) =
+      (!CellTheory().hasConst(name)
+        && !BoolTheory().hasConst(name)
+        && !IntTheory().hasConst(name)
+        && !state.binding.contains(name + "'"))
+
     state.ex match {
       case OperEx(TlaSetOper.in,
       OperEx(TlaActionOper.prime, NameEx(name)),
       OperEx(TlaSetOper.recSet, _*)) =>
-        true
+        isUnbound(name) // BUGFIX: perform an assignment if and only if name has not been assigned a value yet.
 
       case _ =>
         false
