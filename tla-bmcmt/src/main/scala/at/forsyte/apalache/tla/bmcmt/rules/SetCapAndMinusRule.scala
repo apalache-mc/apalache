@@ -61,11 +61,11 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
           if (leftElemCells.isEmpty && rightElemCells.isEmpty) {
             newState.arena // don't add anything, the intersection is empty
           } else {
-            (leftElemCells ++ rightElemCells).foldLeft(newState.arena)((a, e) => a.appendHas(resultSetCell, e))
+            newState.arena.appendHas(resultSetCell, leftElemCells ++ rightElemCells: _*)
           }
 
         case OpEnum.MINUS =>
-          leftElemCells.foldLeft(newState.arena)((a, e) => a.appendHas(resultSetCell, e))
+          newState.arena.appendHas(resultSetCell, leftElemCells: _*)
       }
 
     newState = newState.setArena(newArena)

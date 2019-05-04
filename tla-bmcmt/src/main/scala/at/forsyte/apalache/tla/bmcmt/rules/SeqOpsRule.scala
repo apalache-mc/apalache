@@ -64,7 +64,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // introduce a new sequence that is different from seq in that the 0th element equals to newStart
     nextState = nextState.updateArena(_.appendCell(seqCell.cellType))
     val newSeqCell = nextState.arena.topCell
-    nextState = nextState.setArena(nextState.arena.appendHas(newSeqCell, newStart +: cells.tail))
+    nextState = nextState.setArena(nextState.arena.appendHas(newSeqCell, newStart +: cells.tail: _*))
     nextState.setRex(newSeqCell).setTheory(CellTheory())
   }
 
@@ -82,7 +82,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // introduce a new sequence that whose start and end are updated as required
     nextState = nextState.updateArena(_.appendCell(seqCell.cellType))
     val newSeqCell = nextState.arena.topCell
-    nextState = nextState.setArena(nextState.arena.appendHas(newSeqCell, newStart :: newEnd +: cells.tail.tail))
+    nextState = nextState.setArena(nextState.arena.appendHas(newSeqCell, newStart :: newEnd +: cells.tail.tail: _*))
     nextState.setRex(newSeqCell).setTheory(CellTheory())
   }
 
@@ -121,7 +121,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // introduce a new sequence that statically has one more element
     nextState = nextState.updateArena(_.appendCell(seqCell.cellType))
     val newSeqCell = nextState.arena.topCell
-    nextState = nextState.setArena(nextState.arena.appendHas(newSeqCell, start :: newEnd +: newCells))
+    nextState = nextState.setArena(nextState.arena.appendHas(newSeqCell, start :: newEnd +: newCells: _*))
     nextState.setRex(newSeqCell).setTheory(CellTheory())
   }
 

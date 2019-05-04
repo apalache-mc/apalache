@@ -68,7 +68,7 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
     // we cannot use staticDom directly, as its in-relation is restricted, create a copy
     var arena = newArena.appendCell(staticDom.cellType)
     val dom = arena.topCell
-    arena = arena.appendHas(dom, arena.getHas(staticDom))
+    arena = arena.appendHas(dom, arena.getHas(staticDom): _*)
     for (domElem <- arena.getHas(staticDom)) {
       val inDom = tla.in(domElem, dom)
       // note that start >=0 and end equals the last element, so use start < domElem and domElem <= end
@@ -86,7 +86,7 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
     val domCell = nextState.arena.topCell
     def getArg(c: ArenaCell): ArenaCell = nextState.arena.getHas(c).head
     val domCells = nextState.arena.getHas(relation) map getArg
-    nextState = nextState.setArena(nextState.arena.appendHas(domCell, domCells))
+    nextState = nextState.setArena(nextState.arena.appendHas(domCell, domCells: _*))
     for (pair <- state.arena.getHas(relation)) {
       val arg = getArg(pair)
       val iff = tla.equiv(tla.in(arg, domCell),

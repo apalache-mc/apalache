@@ -38,7 +38,7 @@ class RecordDomainCache(solverContext: SolverContext, strValueCache: StrValueCac
     // create the domain cell
     arena = arena.appendCell(FinSetT(ConstT()))
     val set = arena.topCell
-    arena = arena.appendHas(set, allCells)
+    arena = arena.appendHas(set, allCells: _*)
     // force that every key in the usedKeys is in the set, whereas every key in the unusedKeys is outside of the set
     for ((cell, key) <- allCells.zip(allKeys)) {
       val cond =

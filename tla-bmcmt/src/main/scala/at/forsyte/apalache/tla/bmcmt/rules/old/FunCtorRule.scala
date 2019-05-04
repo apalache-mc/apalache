@@ -59,7 +59,7 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     arena = arena.appendCell(FinSetT(resultT)) // co-domain is a finite set of type elemType
     val codomainCell = arena.topCell
     arena = arena.setDom(funCell, domainCell).setCdm(funCell, codomainCell)
-    arena = resultCells.foldLeft(arena)((a, e) => a.appendHas(codomainCell, e))
+    arena = arena.appendHas(codomainCell, resultCells: _*)
     // associate a function constant with the function cell
     rewriter.solverContext.declareCellFun(funCell.name, funT.argType, funT.resultType)
 

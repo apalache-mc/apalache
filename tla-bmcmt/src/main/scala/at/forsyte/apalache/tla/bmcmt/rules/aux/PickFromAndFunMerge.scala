@@ -142,7 +142,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
       .fold(Set[ArenaCell]())(_ union _)
 
     // the resulting cell points to all the cells in the union
-    arena = union.foldLeft(arena)((a, e) => a.appendHas(resultCell, e))
+    arena = arena.appendHas(resultCell, union.toSeq: _*)
 
     // TODO: we need more tests here, tricky bugs are hiding
     //    def inResultIffChosen(memberSet: ArenaCell, setNo: Int): Unit = {
@@ -203,7 +203,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     val baseSet = arena.getDom(set)
     val elems = arena.getHas(baseSet)
     // resultSet may contain all the elements from the baseSet of the powerset SUBSET(S)
-    arena = elems.foldLeft(arena)((a, e) => a.appendHas(resultSet, e))
+    arena = arena.appendHas(resultSet, elems: _*)
 
     // if resultSet has an element, then it must be also in baseSet
     def inResultIfInBase(elem: ArenaCell): Unit = {
@@ -265,7 +265,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     val existsFunOrFailure = decorateWithFailure(existsFun, tupleSet, tuples, newTuple, failPred)
     rewriter.solverContext.assertGroundExpr(existsFunOrFailure)
 
-    arena = newCells.foldLeft(newState.arena)((a, c) => a.appendHas(newTuple, c))
+    arena = newState.arena.appendHas(newTuple, newCells: _*)
     rewriter.solverContext.log("; } PICK %s FROM %s".format(cellType, tupleSet))
     newState.setArena(arena)
       .setTheory(CellTheory())
@@ -334,7 +334,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     arena = arena.appendCell(FinSetT(ConstT()))
     val newDomain = arena.topCell
     arena = arena.setDom(newRecord, newDomain)
-    arena = keyMap.values.foldLeft(arena)((a, c) => a.appendHas(newDomain, c))
+    arena = arena.appendHas(newDomain, keyMap.values.toSeq: _*)
 
     // introduce a new failure predicate
     arena = arena.appendCell(FailPredT())
@@ -344,7 +344,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     val (newState: SymbState, newCells: List[ArenaCell]) =
       recordType.fields.keySet.foldRight((state.setArena(arena), List[ArenaCell]()))(pickAtPos)
     // and connect them to the record
-    arena = newCells.foldLeft(newState.arena)((a, c) => a.appendHas(newRecord, c))
+    arena = newState.arena.appendHas(newRecord, newCells: _*)
 
     def forceEquality(recordInSet: ArenaCell): TlaEx = {
       def domainOfRecordInSet = arena.getDom(recordInSet)

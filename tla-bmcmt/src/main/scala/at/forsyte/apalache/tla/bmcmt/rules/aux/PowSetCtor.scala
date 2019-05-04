@@ -25,7 +25,7 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
       val filtered = elems.zipWithIndex.filter(p => isIn(p._2)).map(_._1)
       arena = arena.appendCell(set.cellType)
       val subsetCell = arena.topCell
-      arena = arena.appendHas(subsetCell, filtered)
+      arena = arena.appendHas(subsetCell, filtered: _*)
       for (e <- filtered) {
         rewriter.solverContext.assertGroundExpr(tla.equiv(tla.in(e, subsetCell), tla.in(e, set)))
       }
@@ -45,7 +45,7 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
     // create a cell for the powerset, yeah, it is crazy, but hopefully these subsets are small
     arena = arena.appendCell(FinSetT(set.cellType))
     val powsetCell = arena.topCell
-    arena = arena.appendHas(powsetCell, subsets)
+    arena = arena.appendHas(powsetCell, subsets: _*)
     for (subset <- subsets) {
       rewriter.solverContext.assertGroundExpr(tla.in(subset, powsetCell))
     }

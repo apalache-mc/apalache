@@ -52,7 +52,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         for (v <- recT.fields.values) {
           newState = makeUpValue(newState, v)
           val fieldCell = newState.asCell
-          newState = newState.setArena(newState.arena.appendHas(recCell, fieldCell))
+          newState = newState.updateArena(_.appendHas(recCell, fieldCell))
         }
         // create the domain and attach it to the record
         val pairOfSets = (recT.fields.keySet, SortedSet[String]())
@@ -81,7 +81,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         val start = arena.topCell
         arena = arena.appendCell(IntT()) // end
         val end = arena.topCell
-        arena = arena.appendHas(seq, start :: end :: Nil)
+        arena = arena.appendHas(seq, start, end)
         for (cell <- Seq(start, end)) {
           rewriter.solverContext.assertGroundExpr(tla.eql(cell.toNameEx, tla.int(0)))
         }

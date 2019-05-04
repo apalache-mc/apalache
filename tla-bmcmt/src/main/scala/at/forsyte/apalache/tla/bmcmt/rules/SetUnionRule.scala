@@ -47,7 +47,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
           rewriter.coerce(finalState, state.theory) // coerce to the source theory
         } else {
           // add all the elements to the arena
-          nextState = nextState.setArena(nextState.arena.appendHas(newSetCell, unionOfSets.toSeq))
+          nextState = nextState.updateArena(_.appendHas(newSetCell, unionOfSets.toSeq: _*))
 
           // Require each cell to be in one of the sets, e.g., consider UNION { {1} \ {1}, {1} }
           // Importantly, when elemCell is pointed by several sets S_1, .., S_k, we require:

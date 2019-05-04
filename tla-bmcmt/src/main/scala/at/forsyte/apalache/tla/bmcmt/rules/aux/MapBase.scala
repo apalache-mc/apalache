@@ -115,7 +115,7 @@ class MapBase(rewriter: SymbStateRewriter, val isBijective: Boolean) {
     val argsInSourceSets = tla.and(valuesAsCells.zip(setsAsCells) map (inSourceSet _).tupled :_*)
     val ifAndOnlyIf = OperEx(TlaOper.eq, inNewSet, argsInSourceSets)
     // add the edge before adding the constraint
-    nextState = nextState.setArena(nextState.arena.appendHas(targetSetCell, mapResultCell))
+    nextState = nextState.updateArena(_.appendHas(targetSetCell, mapResultCell))
     rewriter.solverContext.assertGroundExpr(ifAndOnlyIf)
 
     (nextState.setBinding(state.binding), mapResultCell) // reset the binding and return the result

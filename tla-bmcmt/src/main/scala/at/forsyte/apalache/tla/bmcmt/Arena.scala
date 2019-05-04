@@ -171,6 +171,19 @@ class Arena private(val solverContext: SolverContext,
       cellMap + (newCell.toString -> newCell), hasEdges, domEdges, cdmEdges)
   }
 
+
+  /**
+    * Append 'has' edges that connect the first cell to the other cells, in the given order.
+    * The previously added edges come first.
+    *
+    * @param parentCell the cell that points to the children cells
+    * @param childrenCells the cells that are pointed by the parent cell
+    * @return the updated arena
+    */
+  def appendHas(parentCell: ArenaCell, childrenCells: ArenaCell*): Arena = {
+    childrenCells.foldLeft(this) { (a, c) => a.appendOneHasEdge(parentCell, c) }
+  }
+
   /**
     * Append a 'has' edge to connect a cell that corresponds to a set with a cell that corresponds to its element.
     *
@@ -178,7 +191,7 @@ class Arena private(val solverContext: SolverContext,
     * @param elemCell an element cell
     * @return a new arena
     */
-  def appendHas(setCell: ArenaCell, elemCell: ArenaCell): Arena = {
+  private def appendOneHasEdge(setCell: ArenaCell, elemCell: ArenaCell): Arena = {
     solverContext.declareInPredIfNeeded(setCell, elemCell)
     val es =
       hasEdges.get(setCell) match {
@@ -190,10 +203,6 @@ class Arena private(val solverContext: SolverContext,
       }
 
     new Arena(solverContext, cellCount, topCell, cellMap, hasEdges + (setCell -> es), domEdges, cdmEdges)
-  }
-
-  def appendHas(setCell: ArenaCell, cells: Seq[ArenaCell]): Arena = {
-    cells.foldLeft(this) { (a, c) => a.appendHas(setCell, c) }
   }
 
   /**

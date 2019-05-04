@@ -60,8 +60,7 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // introduce a new set
         val arena = newState.arena.appendCell(resultType)
         val newSetCell = arena.topCell
-        val newArena = filteredCellsAndPreds.map(_._1)
-          .foldLeft(arena)((a, e) => a.appendHas(newSetCell, e))
+        val newArena = arena.appendHas(newSetCell, filteredCellsAndPreds.map(_._1): _*)
 
         // require each cell to satisfy the predicate
         def addCellCons(cell: ArenaCell, pred: TlaEx): Unit = {

@@ -173,7 +173,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     // the rule for the respective element t[i], as it will use the same oracle!
 
     // add the new fields to arena
-    val newArena = newFields.foldLeft(newState.arena)((a, c) => a.appendHas(newTuple, c))
+    val newArena = newState.arena.appendHas(newTuple, newFields: _*)
     rewriter.solverContext.log(s"; } CHERRY-PICK $newTuple:$cellType")
     newState
       .setArena(newArena)
@@ -221,7 +221,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     val fieldCells = recordType.fields.keySet.toSeq map pickAtPos
     // and connect them to the record
     var newArena = newState.arena.setDom(newRecord, newDom)
-    newArena = fieldCells.foldLeft(newArena)((a, c) => a.appendHas(newRecord, c))
+    newArena = newArena.appendHas(newRecord, fieldCells: _*)
     // The awesome property: we do not have to enforce equality of the field values, as this will be enforced by
     // the rule for the respective element r.key, as it will use the same oracle!
 
@@ -263,7 +263,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       // introduce a new cell for the picked domain
       var nextState = state.updateArena(_.appendCell(domType))
       val newDom = nextState.arena.topCell
-      nextState = nextState.setArena(nextState.arena.appendHas(newDom, keyCells))
+      nextState = nextState.setArena(nextState.arena.appendHas(newDom, keyCells: _*))
       // once we know that all the keys coincide, constrain membership with SMT
       for ((dom, no) <- domains.zipWithIndex) {
         def iffKey(keyCell: ArenaCell) = tla.equiv(tla.in(keyCell, newDom), tla.in(keyCell, dom))
@@ -367,7 +367,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
       val whenIn = tla.or(toPickFrom.zip(memberSets).zipWithIndex map (inWhenChosen _).tupled: _*)
       // add the cell to the arena
-      nextState = nextState.setArena(nextState.arena.appendHas(resultCell, picked))
+      nextState = nextState.updateArena(_.appendHas(resultCell, picked))
       // in(z_i, R) <=> (chosen = 1 /\ in(c_i, S_1) \/ (chosen = 2 /\ in(d_i, S_2)
       solverAssert(tla.equiv(tla.in(picked.toNameEx, resultCell.toNameEx), whenIn))
     }
@@ -452,7 +452,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       val picked = nextState.asCell
       // this property is enforced by the oracle magic: chosen = 1 => z_i = c_i /\ chosen = 2 => z_i = d_i
       // add the cell to the arena
-      nextState = nextState.setArena(nextState.arena.appendHas(resultCell, picked))
+      nextState = nextState.updateArena(_.appendHas(resultCell, picked))
     }
 
     0.until(maxLen) foreach pickOneElement
@@ -522,7 +522,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
       arena = nextState.arena.appendCell(TupleT(Seq(funType.argType, funType.resultType)))
       val pair = arena.topCell
-      arena = arena.appendHas(pair, Seq(arg, pickedResult))
+      arena = arena.appendHas(pair, arg, pickedResult)
       arena = arena.appendHas(relationCell, pair)
       nextState = nextState.setArena(arena)
       val iff = tla.equiv(tla.in(arg, dom), tla.in(pair, relationCell))
@@ -565,7 +565,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     // we are not picking the co-domains, as it will make it harder to match
     val cdms = funs map (f => newState.arena.getCdm(f))
     val cdmCells = cdms.map(cdm => Set(newState.arena.getHas(cdm): _*)).reduce(_.union(_))
-    val newArena = cdmCells.foldLeft(newState.arena)((a, c) => a.appendHas(pickedCdm, c))
+    val newArena = newState.arena.appendHas(pickedCdm, cdmCells.toSeq: _*)
     newState = newState.setArena(newArena)
     // create a fresh cell to hold the function
     newState = newState.setArena(newState.arena.appendCell(funType))

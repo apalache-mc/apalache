@@ -61,7 +61,7 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val funCell = nextState.arena.topCell
     nextState = nextState.updateArena(_.appendCell(FinSetT(TupleT(Seq(elemT, resultT)))))
     val relation = nextState.arena.topCell
-    val newArena = nextState.arena.appendHas(relation, relationCells)
+    val newArena = nextState.arena.appendHas(relation, relationCells: _*)
     // we do not store the function domain anymore, as it is easy to get the domain and the relation out of sync
 //    nextState = nextState.setArena(newArena.setDom(funCell, domainCell))
     // For historical reasons, we are using cdm to store the relation, though it is not the co-domain.

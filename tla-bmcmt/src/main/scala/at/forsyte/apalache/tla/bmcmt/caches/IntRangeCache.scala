@@ -32,7 +32,7 @@ class IntRangeCache(solverContext: SolverContext, intValueCache: IntValueCache)
     // create the domain cell
     arena = arena.appendCell(FinSetT(IntT()))
     val set = arena.topCell
-    arena = arena.appendHas(set, cells)
+    arena = arena.appendHas(set, cells: _*)
     // force that every element is in the set
     solverContext.assertGroundExpr(tla.and(cells.map(tla.in(_, set)) :_*))
     (arena, set)

@@ -61,7 +61,7 @@ class TlcRule(rewriter: SymbStateRewriter) extends RewritingRule {
     nextState = nextState.updateArena(_.appendCell(relation.cellType))
     val newRelation = nextState.arena.topCell
     nextState = nextState.setArena(nextState.arena.setCdm(newFunCell, newRelation)
-      .appendHas(newRelation, newPair +: relationCells))
+      .appendHas(newRelation, newPair +: relationCells: _*))
     // the new pair unconditionally belongs to the new cell
     solverAssert(tla.in(newPair.toNameEx, newRelation.toNameEx))
     for (oldPair <- relationCells) {
