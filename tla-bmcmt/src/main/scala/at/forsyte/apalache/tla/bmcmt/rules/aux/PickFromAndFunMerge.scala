@@ -265,7 +265,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     val existsFunOrFailure = decorateWithFailure(existsFun, tupleSet, tuples, newTuple, failPred)
     rewriter.solverContext.assertGroundExpr(existsFunOrFailure)
 
-    arena = newState.arena.appendHas(newTuple, newCells: _*)
+    arena = newState.arena.appendHasNoSmt(newTuple, newCells: _*)
     rewriter.solverContext.log("; } PICK %s FROM %s".format(cellType, tupleSet))
     newState.setArena(arena)
       .setTheory(CellTheory())
@@ -344,7 +344,7 @@ class PickFromAndFunMerge(rewriter: SymbStateRewriter, failWhenEmpty: Boolean = 
     val (newState: SymbState, newCells: List[ArenaCell]) =
       recordType.fields.keySet.foldRight((state.setArena(arena), List[ArenaCell]()))(pickAtPos)
     // and connect them to the record
-    arena = newState.arena.appendHas(newRecord, newCells: _*)
+    arena = newState.arena.appendHasNoSmt(newRecord, newCells: _*)
 
     def forceEquality(recordInSet: ArenaCell): TlaEx = {
       def domainOfRecordInSet = arena.getDom(recordInSet)

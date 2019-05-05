@@ -75,7 +75,7 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
               nextState.asCell
             }
           // link this cell to the record
-          nextState = nextState.updateArena(_.appendHas(recordCell, valueCell))
+          nextState = nextState.updateArena(_.appendHasNoSmt(recordCell, valueCell))
         }
 
         recordT.fields foreach Function.tupled(addField)

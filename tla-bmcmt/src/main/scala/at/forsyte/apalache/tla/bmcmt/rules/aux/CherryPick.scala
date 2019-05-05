@@ -173,7 +173,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     // the rule for the respective element t[i], as it will use the same oracle!
 
     // add the new fields to arena
-    val newArena = newState.arena.appendHas(newTuple, newFields: _*)
+    val newArena = newState.arena.appendHasNoSmt(newTuple, newFields: _*)
     rewriter.solverContext.log(s"; } CHERRY-PICK $newTuple:$cellType")
     newState
       .setArena(newArena)
@@ -221,7 +221,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     val fieldCells = recordType.fields.keySet.toSeq map pickAtPos
     // and connect them to the record
     var newArena = newState.arena.setDom(newRecord, newDom)
-    newArena = newArena.appendHas(newRecord, fieldCells: _*)
+    newArena = newArena.appendHasNoSmt(newRecord, fieldCells: _*)
     // The awesome property: we do not have to enforce equality of the field values, as this will be enforced by
     // the rule for the respective element r.key, as it will use the same oracle!
 
@@ -263,7 +263,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       // introduce a new cell for the picked domain
       var nextState = state.updateArena(_.appendCell(domType))
       val newDom = nextState.arena.topCell
-      nextState = nextState.setArena(nextState.arena.appendHas(newDom, keyCells: _*))
+      nextState = nextState.updateArena(_.appendHas(newDom, keyCells: _*))
       // once we know that all the keys coincide, constrain membership with SMT
       for ((dom, no) <- domains.zipWithIndex) {
         def iffKey(keyCell: ArenaCell) = tla.equiv(tla.in(keyCell, newDom), tla.in(keyCell, dom))
@@ -452,7 +452,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       val picked = nextState.asCell
       // this property is enforced by the oracle magic: chosen = 1 => z_i = c_i /\ chosen = 2 => z_i = d_i
       // add the cell to the arena
-      nextState = nextState.updateArena(_.appendHas(resultCell, picked))
+      nextState = nextState.updateArena(_.appendHasNoSmt(resultCell, picked))
     }
 
     0.until(maxLen) foreach pickOneElement
@@ -522,7 +522,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
       arena = nextState.arena.appendCell(TupleT(Seq(funType.argType, funType.resultType)))
       val pair = arena.topCell
-      arena = arena.appendHas(pair, arg, pickedResult)
+      arena = arena.appendHasNoSmt(pair, arg, pickedResult)
       arena = arena.appendHas(relationCell, pair)
       nextState = nextState.setArena(arena)
       val iff = tla.equiv(tla.in(arg, dom), tla.in(pair, relationCell))

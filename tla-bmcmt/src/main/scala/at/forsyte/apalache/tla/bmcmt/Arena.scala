@@ -171,17 +171,29 @@ class Arena private(val solverContext: SolverContext,
       cellMap + (newCell.toString -> newCell), hasEdges, domEdges, cdmEdges)
   }
 
-
   /**
     * Append 'has' edges that connect the first cell to the other cells, in the given order.
-    * The previously added edges come first.
+    * The previously added edges come first. When this method is called as appendHas(X, Y1, ..., Ym),
+    * it adds a Boolean constant in_X_Yi for each i: 1 <= i <= m.
     *
     * @param parentCell the cell that points to the children cells
     * @param childrenCells the cells that are pointed by the parent cell
     * @return the updated arena
     */
   def appendHas(parentCell: ArenaCell, childrenCells: ArenaCell*): Arena = {
-    childrenCells.foldLeft(this) { (a, c) => a.appendOneHasEdge(parentCell, c) }
+    childrenCells.foldLeft(this) { (a, c) => a.appendOneHasEdge(addInPred = true, parentCell, c) }
+  }
+
+  /**
+    * Append 'has' edges that connect the first cell to the other cells, in the given order.
+    * The previously added edges come first. In contrast to appendHas, this method does not add any constants in SMT.
+    *
+    * @param parentCell the cell that points to the children cells
+    * @param childrenCells the cells that are pointed by the parent cell
+    * @return the updated arena
+    */
+  def appendHasNoSmt(parentCell: ArenaCell, childrenCells: ArenaCell*): Arena = {
+    childrenCells.foldLeft(this) { (a, c) => a.appendOneHasEdge(addInPred = false, parentCell, c) }
   }
 
   /**
@@ -189,10 +201,13 @@ class Arena private(val solverContext: SolverContext,
     *
     * @param setCell  a set cell
     * @param elemCell an element cell
+    * @param addInPred indicates whether the in_X_Y constant should be added in SMT.
     * @return a new arena
     */
-  private def appendOneHasEdge(setCell: ArenaCell, elemCell: ArenaCell): Arena = {
-    solverContext.declareInPredIfNeeded(setCell, elemCell)
+  private def appendOneHasEdge(addInPred: Boolean, setCell: ArenaCell, elemCell: ArenaCell): Arena = {
+    if (addInPred) {
+      solverContext.declareInPredIfNeeded(setCell, elemCell)
+    }
     val es =
       hasEdges.get(setCell) match {
         case Some(list) =>
