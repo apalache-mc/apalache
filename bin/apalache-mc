@@ -8,18 +8,26 @@ DIR=`dirname $0`
 DIR=`cd "$DIR/.."; pwd`
 echo "# Tool home: $DIR"
 # try to find a release file first
-JAR=`find "$DIR" -maxdepth 1 -name "apalache-bmcmt-*-with-dependencies.jar" | head -n 1`
+JAR=`find "$DIR" -maxdepth 1 -name "apalache-pkg-*-full.jar" | head -n 1`
 
 if [ ! -f "$JAR" ]; then
     # try to find a package file
-    JAR=`find "$DIR/mod-distribution/target/" -maxdepth 1 -name "distribution-*-jar-with-dependencies.jar" | head -n 1`
+    JAR=`find "$DIR/mod-distribution/target/" -maxdepth 1 -name "apalache-pkg-*-full.jar" | head -n 1`
     if [ ! -f "$JAR" ]; then
         echo "ERROR: Distribution jar not found. Did you run mvn package?"
         exit 1
     fi
 fi
 
-echo "# Package: $JAR"
+echo "# Package:   $JAR"
 
-java -jar "$JAR" "$@"
+# the maximum heap size, Z3 will use much more as a native library
+JVM_ARGS="-Xmx4096m"
+# uncomment to track memory usage with: jcmd <pid> VM.native_memory summary
+#JVM_ARGS="${JVM_ARGS} -XX:NativeMemoryTracking=summary"
+
+echo "# JVM args: $JVM_ARGS"
+echo "#"
+
+java $JVM_ARGS -jar "$JAR" "$@"
 

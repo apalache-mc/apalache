@@ -1,9 +1,10 @@
 package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.imp._
+import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.db.{BodyDB, DummySrcDB, SourceDB}
+import at.forsyte.apalache.tla.lir.db.{BodyDB, SourceStoreImpl, TransformationListener}
 import at.forsyte.apalache.tla.lir.plugins.UniqueDB
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -28,7 +29,8 @@ class TestTransformer extends FunSuite with TestingPredefs {
 
 
     assertThrows[SanySemanticException](
-      new SanyImporter().loadFromSource( "WrongArity", Source.fromString( text ) )
+      new SanyImporter(EnvironmentHandlerGenerator.makeEH, new SourceStore)
+        .loadFromSource( "WrongArity", Source.fromString( text ) )
     )
 
     val text2 =
@@ -39,7 +41,8 @@ class TestTransformer extends FunSuite with TestingPredefs {
       """.stripMargin
 
     assertThrows[SanySemanticException](
-      new SanyImporter().loadFromSource( "redef", Source.fromString( text2 ) )
+      new SanyImporter(EnvironmentHandlerGenerator.makeEH, new SourceStore)
+        .loadFromSource( "redef", Source.fromString( text2 ) )
     )
 
   }
@@ -73,7 +76,7 @@ class TestTransformer extends FunSuite with TestingPredefs {
     )
 
   implicit val bDB : BodyDB = new BodyDB()
-  implicit val sDB : SourceDB = DummySrcDB
+  implicit val sDB : TransformationListener = new SourceStoreImpl()
 
   def clean( ) : Unit = {
     bDB.clear()
@@ -207,7 +210,7 @@ class TestTransformer extends FunSuite with TestingPredefs {
     val converter = new Transformer()
     cleanTest {
       val fname1 = "test1.tla"
-      val declarations1 = declarationsFromFile( testFolderPath + fname1 )
+      val declarations1 = declarationsFromFile(EnvironmentHandlerGenerator.makeDummyEH, testFolderPath + fname1 )
 
       converter.extract( declarations1 : _* )
 
@@ -245,7 +248,7 @@ class TestTransformer extends FunSuite with TestingPredefs {
 
     cleanTest {
       val fileName = "test2.tla"
-      val declarations = declarationsFromFile( testFolderPath + fileName )
+      val declarations = declarationsFromFile(EnvironmentHandlerGenerator.makeDummyEH, testFolderPath + fileName )
 
       converter.extract( declarations : _* )
 
@@ -272,7 +275,7 @@ class TestTransformer extends FunSuite with TestingPredefs {
 
     cleanTest {
       val fileName = "test3.tla"
-      val declarations = declarationsFromFile( testFolderPath + fileName )
+      val declarations = declarationsFromFile(EnvironmentHandlerGenerator.makeDummyEH, testFolderPath + fileName )
 
       converter.extract( declarations : _* )
 

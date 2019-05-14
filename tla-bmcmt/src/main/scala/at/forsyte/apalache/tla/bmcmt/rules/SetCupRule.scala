@@ -1,11 +1,15 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.util.Prod2SeqIterator
 import at.forsyte.apalache.tla.lir.OperEx
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
 /**
   * Implements the rule: SE-SET-CUP1, that is, a union of two sets.
+  * In the first encoding, we used a linear number of `in` queries.
+  * However, this happens to be unsound, and we need a quadratic number of queries.
   *
   * @author Igor Konnov
   */
@@ -21,39 +25,56 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       case OperEx(TlaSetOper.cup, leftSet, rightSet) =>
         // rewrite the set expressions into memory cells
-        val leftState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(leftSet))
-        val rightState = rewriter.rewriteUntilDone(leftState.setTheory(CellTheory()).setRex(rightSet))
-        val leftSetCell = leftState.arena.findCellByNameEx(leftState.ex)
-        val rightSetCell = rightState.arena.findCellByNameEx(rightState.ex)
-        val leftElemCells = leftState.arena.getHas(leftSetCell)
-        val rightElemCells = rightState.arena.getHas(rightSetCell)
+        var nextState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(leftSet))
+        val leftSetCell = nextState.asCell
+        nextState = rewriter.rewriteUntilDone(nextState.setTheory(CellTheory()).setRex(rightSet))
+        val rightSetCell = nextState.asCell
+        val leftElems = nextState.arena.getHas(leftSetCell)
+        val rightElems = nextState.arena.getHas(rightSetCell)
+
+        val common = Set(leftElems :_*).intersect(Set(rightElems :_*))
+        val onlyLeft = Set(leftElems :_*).diff(common)
+        val onlyRight = Set(rightElems :_*).diff(common)
+
         // introduce a new set
         val newType = types.unify(leftSetCell.cellType, rightSetCell.cellType)
         if (newType.isEmpty) {
-          throw new TypeException(s"Failed to unify types ${leftSetCell.cellType} and ${rightSetCell.cellType} when rewriting ${state.ex}")
+          throw new TypeException(s"Failed to unify types ${leftSetCell.cellType}"
+            + " and ${rightSetCell.cellType} when rewriting ${state.ex}")
         }
-        val arena = rightState.arena.appendCell(newType.get)
-        val newSetCell = arena.topCell
-        val newArena = (leftElemCells ++ rightElemCells).foldLeft(arena)((a, e) => a.appendHas(newSetCell, e))
+        nextState = nextState.updateArena(_.appendCell(newType.get))
+        val newSetCell = nextState.arena.topCell
+        val allDistinct = common.toSeq ++ onlyLeft.toSeq ++ onlyRight.toSeq
+        nextState = nextState.updateArena(_.appendHas(newSetCell, allDistinct: _*))
 
-        // require each cell to be in one of the two sets
-        def addCellCons(elemCell: ArenaCell): Unit = {
-          val inCupSet = OperEx(TlaSetOper.in, elemCell.toNameEx, newSetCell.toNameEx)
-          val inLeftSet = OperEx(TlaSetOper.in, elemCell.toNameEx, leftSetCell.toNameEx)
-          val inRightSet = OperEx(TlaSetOper.in, elemCell.toNameEx, rightSetCell.toNameEx)
-          val inLeftOrRight = OperEx(TlaBoolOper.or, inLeftSet, inRightSet)
-          val ifAndOnlyIf = OperEx(TlaOper.eq, inCupSet, inLeftOrRight)
-          rewriter.solverContext.assertGroundExpr(ifAndOnlyIf)
+        // require each cell to be in in the union iff it is exactly in its origin set
+        def addOnlyCellCons(thisSet: ArenaCell, thisElem: ArenaCell): Unit = {
+          val inThis = tla.in(thisElem.toNameEx, thisSet.toNameEx)
+          val inCup = tla.in(thisElem.toNameEx, newSetCell.toNameEx)
+          rewriter.solverContext.assertGroundExpr(tla.equiv(inCup, inThis))
         }
 
+        def addEitherCellCons(thisElem: ArenaCell): Unit = {
+          val inThis = tla.in(thisElem.toNameEx, leftSetCell.toNameEx)
+          val inOther = tla.in(thisElem.toNameEx, rightSetCell.toNameEx)
+          val inCup = tla.in(thisElem.toNameEx, newSetCell.toNameEx)
+          rewriter.solverContext.assertGroundExpr(tla.equiv(inCup, tla.or(inThis, inOther)))
+        }
+
+        // new implementation: as we are not using uninterpreted functions anymore, we do not have to care about
+        // the problem described below.
+        // Add equality constraints, e.g., for ({1} \ {1}) \cup {1}. Otherwise, we might require equal cells to be
+        // inside and outside the resulting set
+//        val prodIter = new Prod2SeqIterator(leftElems, rightElems)
+//        val eqState = rewriter.lazyEq.cacheEqConstraints(rightState.setArena(arena), prodIter.toSeq)
+        // bugfix: we have to compare the elements in both sets and thus to introduce a quadratic number of constraints
         // add SMT constraints
-        for (cell <- leftElemCells ++ rightElemCells)
-          addCellCons(cell)
+        onlyLeft foreach (addOnlyCellCons(leftSetCell, _))
+        onlyRight foreach (addOnlyCellCons(rightSetCell, _))
+        common foreach addEitherCellCons
 
         // that's it
-        val finalState =
-          rightState.setTheory(CellTheory())
-            .setArena(newArena).setRex(newSetCell.toNameEx)
+        val finalState = nextState.setTheory(CellTheory()).setRex(newSetCell.toNameEx)
         rewriter.coerce(finalState, state.theory) // coerce to the source theory
 
       case _ =>

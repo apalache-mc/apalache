@@ -8,11 +8,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
 
 /**
-  * A rule for case. For the moment, we only have a workaround for CASE p -> A [] OTHER -> B, which is translated
-  * to IF p THEN A ELSE B. We introduced the rule to cope with the provisional version of the assignment solver
-  * that translates IF-THEN-ELSE to case.
-  *
-  * TODO: implement translation for the general case.
+  * A rule for case. Similar to TLC, CASE is translated into a chain of IF-THEN-ELSE expressions.
   *
   * @author Igor Konnov
   */
@@ -39,18 +35,18 @@ class CaseRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.coerce(finalState, state.theory)
 
       case OperEx(TlaControlOper.caseNoOther, args @ _*) =>
-        // similar to TLC, translate into the chain of IF-THEN-ELSE
-        val revGuardsAndActions = mkGuardsAndActions(args)
-        // First, rewrite the last action, to infer the type of the OTHER case, which we need in any case.
-        // This code is annoying, as we do not have a separate phase for type inference yet...
-        val lastState = rewriter.rewriteUntilDone(state.setRex(revGuardsAndActions.head._2).setTheory(CellTheory()))
-        val lastType = getCellType(lastState)
+        // first, rewrite all the arguments
+        val (newState: SymbState, newArgs: Seq[TlaEx]) =
+          rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), args)
+        val revGuardsAndActions = mkGuardsAndActions(newArgs)
+        val cells = newArgs.map(newState.arena.findCellByNameEx)
+        // get the expression type from the type finder (use the original expression as it could have been annotated!)
+        val resultType = rewriter.typeFinder.compute(state.ex, cells.map(_.cellType) :_*)
+        // place ASSERT(FALSE) instead of other
         val assertState = new TypedAssert(rewriter)
-          .typedAssert(lastState, lastType, tla.bool(false),
+          .typedAssert(newState, resultType, tla.bool(false),
             "It may happen that no guard in CASE is applicable")
-        val lastOrAssert = tla.ite(revGuardsAndActions.head._1, lastState.ex, assertState.ex)
-        // the rest is easy: just create a chain of IF-THEN-ELSE expressions
-        val iteWaterfall = revGuardsAndActions.tail.foldLeft(lastOrAssert)(decorateWithIf)
+        val iteWaterfall = revGuardsAndActions.foldLeft(assertState.ex)(decorateWithIf)
         val finalState = rewriter.rewriteUntilDone(assertState.setRex(iteWaterfall))
         rewriter.coerce(finalState, state.theory)
 

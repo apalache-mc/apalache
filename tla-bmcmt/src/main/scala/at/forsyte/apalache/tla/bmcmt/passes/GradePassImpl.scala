@@ -44,7 +44,9 @@ class GradePassImpl @Inject()(val options: PassOptions,
     val spec = specWithTransitions.get
     val analysis = new ExprGradeAnalysis(exprGradeStoreImpl)
     analysis.labelWithGrades(spec)
-    nextPass.setSpecWithTransitions(analysis.refineOr(spec))
+// the labelling with \+/ is not clear anymore. The assignment pass cares of finding independent symbolic transitons.
+//    nextPass.setSpecWithTransitions(analysis.refineOr(spec))
+    nextPass.setSpecWithTransitions(spec)
     true
   }
 

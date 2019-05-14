@@ -2,19 +2,20 @@ package at.forsyte.apalache.tla.bmcmt
 
 import java.io.{PrintWriter, StringWriter}
 
+import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir.convenience.tla
-import org.scalatest.{BeforeAndAfter, FunSuite}
+import org.scalatest.{BeforeAndAfterEach, FunSuite}
 
-class RewriterBase extends FunSuite with BeforeAndAfter {
+class RewriterBase extends FunSuite with BeforeAndAfterEach {
   protected var solverContext: SolverContext = new PreproSolverContext(new Z3SolverContext())
   protected var arena: Arena = Arena.create(solverContext)
 
-  before {
+  override def beforeEach() {
     solverContext = new PreproSolverContext(new Z3SolverContext(debug = true))
     arena = Arena.create(solverContext)
   }
 
-  after {
+  override def afterEach() {
     solverContext.dispose()
   }
 
@@ -23,7 +24,7 @@ class RewriterBase extends FunSuite with BeforeAndAfter {
   }
 
   protected def createWithoutCache(): SymbStateRewriter = {
-    new SymbStateRewriterImpl(solverContext)
+    new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
   }
 
   protected def assertUnsatOrExplain(rewriter: SymbStateRewriter, state: SymbState): Unit = {

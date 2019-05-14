@@ -1706,4 +1706,11 @@ class TestBuilder extends FunSuite with TestingPredefs {
 
   }
 
+  test( "Test direct methods: TlctOper" ) {
+    val assertMsg = "None"
+    val assertion = bd.assert( NullEx, assertMsg )
+
+    assert( assertion == OperEx( TlcOper.assert, NullEx, bd.str( assertMsg ) ) )
+  }
+
 }

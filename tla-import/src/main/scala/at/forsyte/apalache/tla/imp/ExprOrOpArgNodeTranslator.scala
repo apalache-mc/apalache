@@ -1,9 +1,12 @@
 package at.forsyte.apalache.tla.imp
 
+import at.forsyte.apalache.tla.imp.simpl.Desugarer
+import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.control.LetInOper
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.{TlaDecimal, TlaInt, TlaStr}
+import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic._
 
 import scala.collection.JavaConverters._
@@ -13,44 +16,59 @@ import scala.collection.JavaConverters._
   *
   * @author konnov
   */
-class ExprOrOpArgNodeTranslator(context: Context, recStatus: RecursionStatus) {
-  def translate: ExprOrOpArgNode => TlaEx = {
-    // as tlatools do not provide us with a visitor pattern, we have to enumerate classes here
-    case num: NumeralNode =>
-      translateNumeral(num)
+class ExprOrOpArgNodeTranslator(environmentHandler: EnvironmentHandler, sourceStore: SourceStore,
+                                context: Context, recStatus: RecursionStatus) extends LazyLogging {
+  private val desugarer = new Desugarer() // construct elsewhere?
 
-    case str: StringNode =>
-      translateString(str)
+  def translate(node: ExprOrOpArgNode): TlaEx = {
+    val result =
+      node match {
+        // as tlatools do not provide us with a visitor pattern, we have to enumerate classes here
+        case num: NumeralNode =>
+          translateNumeral(num)
 
-    case dec: DecimalNode =>
-      translateDecimal(dec)
+        case str: StringNode =>
+          translateString(str)
 
-    case opApp: OpApplNode =>
-      OpApplProxy(OpApplTranslator(context, recStatus)).translate(opApp)
+        case dec: DecimalNode =>
+          translateDecimal(dec)
 
-    case arg: OpArgNode =>
-      // we just pass the name of the argument without any extra information
-      NameEx(arg.getName.toString.intern())
+        case opApp: OpApplNode =>
+          OpApplProxy(environmentHandler, sourceStore,
+            OpApplTranslator(environmentHandler, sourceStore, context, recStatus)).translate(opApp)
 
-    case letIn: LetInNode =>
-      translateLetIn(letIn)
+        case arg: OpArgNode =>
+          // we just pass the name of the argument without any extra information
+          NameEx(arg.getName.toString.intern())
 
-    case at: AtNode =>
-      translateAt(at)
+        case letIn: LetInNode =>
+          translateLetIn(letIn)
 
-    case label: LabelNode =>
-      translateLabel(label)
+        case substIn: SubstInNode =>
+          translateSubstIn(substIn)
 
-    case n =>
-      throw new SanyImporterException("Unexpected subclass of tla2sany.ExprOrOpArgNode: " + n.getClass)
+        case at: AtNode =>
+          translateAt(at)
+
+        case label: LabelNode =>
+          translateLabel(label)
+
+        case n =>
+          throw new SanyImporterException("Unexpected subclass of tla2sany.ExprOrOpArgNode: " + n.getClass)
+      }
+
+    val sugarFree = desugarer.transform(result)
+
+    sourceStore.addRec(environmentHandler.identify(sugarFree), SourceLocation(node.getLocation))
   }
 
-  private def translateNumeral(node: NumeralNode) =
+  private def translateNumeral(node: NumeralNode) = {
     if (node.bigVal() != null) {
       ValEx(TlaInt(node.bigVal()))
     } else {
       ValEx(TlaInt(node.`val`()))
     }
+  }
 
   private def translateString(str: StringNode) =
   // internalize the string, so several occurences of the same string are kept as the same object
@@ -73,16 +91,30 @@ class ExprOrOpArgNodeTranslator(context: Context, recStatus: RecursionStatus) {
     // Hence, we reverse the list first.
     //
     // TODO: properly handle recursive declarations
-    val innerContext = letIn.context.getOpDefs.elements.asScala.toList.reverse.foldLeft(Context()) {
-      case (ctx, node: OpDefNode) =>
-        ctx.push(OpDefTranslator(context.disjointUnion(ctx)).translate(node))
+    var letInDeclarations = List[TlaOperDecl]()
+    var letInContext = context
+    for (node <- letIn.context.getOpDefs.elements.asScala.toList.reverse) {
+      node match {
+        case opdef: OpDefNode =>
+          val decl = OpDefTranslator(environmentHandler, sourceStore, letInContext).translate(opdef)
+          letInDeclarations = letInDeclarations :+ decl
+          letInContext = letInContext.push(decl)
 
-      case (_, other) =>
-        throw new SanyImporterException("Expected OpDefNode, found: " + other.getClass)
+        case _ =>
+          throw new SanyImporterException("Expected OpDefNode, found: " + node)
+      }
     }
-    val oper = new LetInOper(innerContext.declarations.map {d => d.asInstanceOf[TlaOperDecl]})
-    val body = ExprOrOpArgNodeTranslator(context.disjointUnion(innerContext), recStatus).translate(letIn.getBody)
+
+    val oper = new LetInOper(letInDeclarations)
+    val body = ExprOrOpArgNodeTranslator(environmentHandler, sourceStore, letInContext, recStatus)
+      .translate(letIn.getBody)
     OperEx(oper, body)
+  }
+
+  // substitute an expression with the declarations that come from INSTANCE M WITH ...
+  private def translateSubstIn(substIn: SubstInNode): TlaEx = {
+    SubstTranslator(environmentHandler, sourceStore, context)
+      .translate(substIn, translate(substIn.getBody))
   }
 
   private def translateAt(node: AtNode): TlaEx = {
@@ -94,13 +126,14 @@ class ExprOrOpArgNodeTranslator(context: Context, recStatus: RecursionStatus) {
     // BUGFIX: the indices in EXCEPT are packed as tuples.
     // Unpack them into multiple function applications when rewriting @, e.g., (((f[1])[2])[3]).
     translate(node.getAtModifier) match {
-      case OperEx(TlaFunOper.tuple, indices @ _*) =>
+      case OperEx(TlaFunOper.tuple, indices@_*) =>
         def applyOne(base: TlaEx, index: TlaEx): TlaEx = {
           OperEx(TlaFunOper.app, base, index)
         }
-        indices.foldLeft(base) (applyOne)
 
-      case e @ _ =>
+        indices.foldLeft(base)(applyOne)
+
+      case e@_ =>
         throw new SanyImporterException("Unexpected index expression in EXCEPT: " + e)
     }
   }
@@ -108,12 +141,14 @@ class ExprOrOpArgNodeTranslator(context: Context, recStatus: RecursionStatus) {
   private def translateLabel(node: LabelNode): TlaEx = {
     // There seems to be no way to access the formal parameters of LabelNode.
     // For the moment, just translate the parameters as an empty list
-    OperEx(TlaOper.label, translate(node.getBody.asInstanceOf[ExprNode]), NameEx(node.getName.toString))
+    val labelBody = translate(node.getBody.asInstanceOf[ExprNode])
+    OperEx(TlaOper.label, labelBody, ValEx(TlaStr(node.getName.toString)))
   }
 }
 
 object ExprOrOpArgNodeTranslator {
-  def apply(context: Context, recStatus: RecursionStatus): ExprOrOpArgNodeTranslator = {
-    new ExprOrOpArgNodeTranslator(context, recStatus)
+  def apply(environmentHandler: EnvironmentHandler, sourceStore: SourceStore,
+            context: Context, recStatus: RecursionStatus): ExprOrOpArgNodeTranslator = {
+    new ExprOrOpArgNodeTranslator(environmentHandler, sourceStore, context, recStatus)
   }
 }

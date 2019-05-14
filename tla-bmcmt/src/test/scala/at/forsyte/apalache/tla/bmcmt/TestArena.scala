@@ -31,7 +31,7 @@ class TestArena extends FunSuite {
   test("BOOLEAN has FALSE and TRUE") {
     val solverContext = new Z3SolverContext()
     val arena = Arena.create(solverContext)
-    val boolean = arena.cellBoolean()
-    assert(List(arena.cellFalse(), arena.cellTrue()) == arena.getHas(arena.cellBoolean()))
+    val boolean = arena.cellBooleanSet()
+    assert(List(arena.cellFalse(), arena.cellTrue()) == arena.getHas(arena.cellBooleanSet()))
   }
 }

@@ -280,8 +280,6 @@ class TestIDAllocation extends FunSuite{
                 eqc.nonEmpty
                 &&
                 eqc.get.nonEmpty
-                &&
-                eqc.get.forall( UniqueDB.get( _ ).contains( tlaEx ) )
                 )
       }
 
@@ -295,7 +293,8 @@ class TestIDAllocation extends FunSuite{
 
   }
 
-  test( "Check attributes" ){
+  /** Made redundant by deprecation of EquivalenceDB_old */
+  ignore( "Check attributes" ){
 
     def checkAtt() {
 
@@ -403,7 +402,8 @@ class TestIDAllocation extends FunSuite{
 
   }
 
-  test( "Test deep copy" ){
+  /** Made redundant by assign-on-create approach to UIDs */
+  ignore( "Test deep copy" ){
     def copytest(): Unit ={
       val spec1 = specSnd.deepCopy()
       val spec2 = spec1

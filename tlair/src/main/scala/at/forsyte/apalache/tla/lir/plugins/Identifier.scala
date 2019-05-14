@@ -5,18 +5,26 @@ import at.forsyte.apalache.tla.lir.db._
 
 import scala.collection.immutable.Vector
 
+// Deprecated: do not use this class. The identifiers are assigned automatically.
 object UniqueDB extends DB[ UID, TlaEx ] {
   // TODO: @Igor, let's get rid of a singleton here. Make a class.
+  // TODO: On a second thought, we do not need this class at all.
+  // We should just assign identifiers automatically and stop collecting all expressions.
   override val m_name = "UniqueDB"
 
   private var expressions : Vector[ TlaEx ] = Vector[ TlaEx ]()
 
   override def get( key: UID ): Option[ TlaEx ] = {
+    assert(key.id.isValidInt)
     if( key.id < 0 || key.id >= expressions.size ) return None
-    else return Some( expressions( key.id ) )
+    else return Some( expressions( key.id.toInt ) )
   }
 
-  override def apply( key : UID ) : TlaEx = expressions( key.id )
+  override def apply( key : UID ) : TlaEx = {
+    assert(key.id.isValidInt)
+    expressions( key.id.toInt )
+  }
+
   override def size() : Int = expressions.size
 
   override def contains( key : UID ) : Boolean = 0 <= key.id && key.id < expressions.size
@@ -35,16 +43,32 @@ object UniqueDB extends DB[ UID, TlaEx ] {
     }
   }
 
-  override def keyCollection( ) : Traversable[UID] = expressions.indices.map(UID).toSet
+  override def keyCollection( ) : Traversable[UID] = {
+    // backward compatibility with integer ids
+    expressions.indices.map(i => UID(i.toLong)).toSet
+  }
 
 }
 
 /**
   * Created by jkukovec on 11/28/16.
+  *
+  * Deprecated: do not use this class. The identifiers are now assigned automatically.
   */
 package object Identifier {
-  def identify( spec : TlaSpec ) : Unit = SpecHandler.sideeffectWithExFun( spec, UniqueDB.add )
-  def identify( decl : TlaDecl ) : Unit = SpecHandler.sideeffectOperBody( decl , SpecHandler.sideeffectEx( _, UniqueDB.add ) )
-  def identify( ex : TlaEx ) : Unit = SpecHandler.sideeffectEx( ex, UniqueDB.add )
+  def identify( spec : TlaSpec ) : TlaSpec = {
+    SpecHandler.sideeffectWithExFun( spec, UniqueDB.add )
+    spec
+  }
+
+  def identify( decl : TlaDecl ) : TlaDecl = {
+    SpecHandler.sideeffectOperBody(decl, SpecHandler.sideeffectEx(_, UniqueDB.add))
+    decl
+  }
+
+  def identify( ex : TlaEx ) : TlaEx = {
+    SpecHandler.sideeffectEx( ex, UniqueDB.add )
+    ex
+  }
 }
 

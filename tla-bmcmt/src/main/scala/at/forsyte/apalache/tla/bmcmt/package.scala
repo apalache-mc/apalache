@@ -10,8 +10,22 @@ package object bmcmt {
     */
   type Binding = HashMap[String, ArenaCell]
 
+  // a handy companion object
+  object Binding {
+    def apply(args: (String, ArenaCell)*): Binding ={
+      HashMap[String, ArenaCell](args :_*)
+    }
+
+    def apply(map: Map[String, ArenaCell]): Binding = {
+      HashMap(map.toSeq :_*)
+    }
+  }
+
   /**
     * A theory used to evaluate a TLA+ expression: cells, Booleans, and integers.
+    *
+    * This concept is obsolete and will be removed in the future.
+    * See the <a href="https://github.com/konnov/apalache/issues/22">issue</a>.
     */
   sealed abstract class Theory {
     /**
@@ -91,6 +105,10 @@ package object bmcmt {
     override def toString: String = "Bool"
   }
 
+  /**
+    * A theory of integers. This theory is obsolete and will be removed soon,
+    * as we are now using cells of type IntT().
+    */
   case class IntTheory() extends Theory {
     /**
       * The prefix of all integer constants.

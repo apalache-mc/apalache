@@ -1,8 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
+import at.forsyte.apalache.tla.lir.OperEx
+import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
 /**
   * Implements the rules: SE-SET-NOTIN1.
@@ -20,17 +21,9 @@ class SetNotInRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case OperEx(TlaSetOper.notin, cand, set) =>
-        val inState =
-          state.setTheory(BoolTheory()).setRex(OperEx(TlaSetOper.in, cand, set))
-        val nextState = rewriter.rewriteUntilDone(inState)
-        val finalState =
-          if (NameEx(rewriter.solverContext.falseConst) == nextState.ex) {
-            nextState.setRex(NameEx(rewriter.solverContext.trueConst))
-          } else if (NameEx(rewriter.solverContext.trueConst) == nextState.ex) {
-            nextState.setRex(NameEx(rewriter.solverContext.falseConst))
-          } else {
-            nextState.setRex(OperEx(TlaBoolOper.not, nextState.ex))
-          }
+        val notInState =
+          state.setTheory(CellTheory()).setRex(tla.not(tla.in(cand, set)))
+        val finalState = rewriter.rewriteUntilDone(notInState)
         rewriter.coerce(finalState, state.theory)
 
       case _ =>

@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
@@ -22,35 +23,27 @@ class EqRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = state.ex match {
     case OperEx(TlaOper.eq, NameEx(left), NameEx(right)) if left == right =>
       // identical constants are obviously equal
-      val finalState = state.setTheory(BoolTheory()).setRex(NameEx(rewriter.solverContext.trueConst))
-      rewriter.coerce(finalState, state.theory)
-
-    case OperEx(TlaOper.eq, le @ NameEx(left), re @ NameEx(right))
-        if BoolTheory().hasConst(left) && BoolTheory().hasConst(right)
-          || IntTheory().hasConst(left) && IntTheory().hasConst(right)
-        =>
-      // Boolean and integer equality are easy
-      val eqPred = rewriter.solverContext.introBoolConst()
-      rewriter.solverContext.assertGroundExpr(OperEx(TlaOper.eq, NameEx(eqPred), state.ex))
-      val finalState = state.setTheory(BoolTheory()).setRex(NameEx(eqPred))
+      val finalState = state.setTheory(CellTheory()).setRex(state.arena.cellTrue().toNameEx)
       rewriter.coerce(finalState, state.theory)
 
     case OperEx(TlaOper.eq, lhs, rhs) =>
       // Rewrite the both arguments in Cell theory. Although by doing so,
       // we may introduce redundant cells, we don't have to think about types.
-      val leftState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(lhs))
-      val leftCell = leftState.arena.findCellByNameEx(leftState.ex)
-      val rightState = rewriter.rewriteUntilDone(leftState.setTheory(CellTheory()).setRex(rhs))
-      val rightCell = rightState.arena.findCellByNameEx(rightState.ex)
-      val eqPred = rewriter.solverContext.introBoolConst()
+      var newState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(lhs))
+      val leftCell = newState.asCell
+      newState = rewriter.rewriteUntilDone(newState.setTheory(CellTheory()).setRex(rhs))
+      val rightCell = newState.asCell
+      newState = newState.setArena(newState.arena.appendCell(BoolT()))
+      val eqPred = newState.arena.topCell
 
       // produce equality constraints, so that we can use SMT equality
-      val eqState = rewriter.lazyEq.cacheOneEqConstraint(rightState, leftCell, rightCell)
+      newState = rewriter.lazyEq.cacheOneEqConstraint(newState, leftCell, rightCell)
       // and now we can use the SMT equality
-      val eqCons = tla.equiv(tla.name(eqPred), rewriter.lazyEq.cachedEq(leftCell, rightCell))
+      val eqCons = tla.equiv(eqPred.toNameEx, rewriter.lazyEq.cachedEq(leftCell, rightCell))
       rewriter.solverContext.assertGroundExpr(eqCons)
-      val finalState = eqState.setRex(NameEx(eqPred))
-          .setTheory(BoolTheory()) // we have introduced a Boolean constant
+      val finalState = newState
+        .setRex(eqPred.toNameEx)
+          .setTheory(CellTheory()) // we work at the cell level directly
       // coerce to the previous theory, if needed
       rewriter.coerce(finalState, state.theory)
 

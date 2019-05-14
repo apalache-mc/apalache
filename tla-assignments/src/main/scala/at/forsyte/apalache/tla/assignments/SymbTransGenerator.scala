@@ -187,12 +187,16 @@ class SymbTransGenerator extends TypeAliases {
 
         /** ITE behaves like disjunction, but instead of dropping subformulas we replace them
           * with False, since we cannot evaluate the IF-condition */
+          /** Jure, 13.2.2019: This only applies if at least one branch has an assignment, otherwise keep all */
         case OperEx( TlaControlOper.ifThenElse, cond, args@_* ) =>
           val newArgs = args.map(
             x => if ( labelsAt( x, p_allSelections ).exists( y => p_selection.contains( y ) ) )
               x else ValEx( TlaFalse )
           )
-          OperEx( TlaControlOper.ifThenElse, cond +: newArgs : _* )
+          if (newArgs.forall( _ == ValEx(TlaFalse) ) )
+            p_ex
+          else
+            OperEx( TlaControlOper.ifThenElse, cond +: newArgs : _* )
 
         case _ => p_ex
       }

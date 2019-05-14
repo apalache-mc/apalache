@@ -2,8 +2,8 @@ package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions._
-import at.forsyte.apalache.tla.lir.control.{LetInOper, TlaControlOper}
-import at.forsyte.apalache.tla.lir.db.{BodyDB, SourceDB}
+import at.forsyte.apalache.tla.lir.control.LetInOper
+import at.forsyte.apalache.tla.lir.db.{BodyDB, TransformationListener}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.plugins.Identifier
 import com.google.inject.Singleton
@@ -62,7 +62,7 @@ class Transformer {
                )
                (
                  implicit p_bodyDB : BodyDB,
-                 p_srcDB : SourceDB
+                 p_srcDB : TransformationListener
                ) : TlaEx = {
 
     OperatorHandler.unfoldMax( p_expr, p_bodyDB, p_srcDB )
@@ -79,7 +79,7 @@ class Transformer {
   def unchangedExplicit(
                          p_ex : TlaEx
                        )(
-                         implicit srcDB : SourceDB
+                         implicit srcDB : TransformationListener
                        ) : TlaEx = {
 
     def exFun( ex : TlaEx ) : TlaEx = {
@@ -126,7 +126,7 @@ class Transformer {
   def explicitLetIn(
                      p_ex : TlaEx
                    )(
-                     implicit srcDB : SourceDB
+                     implicit srcDB : TransformationListener
                    ) : TlaEx = {
     def exFun( ex : TlaEx ) : TlaEx = {
       ex match {
@@ -136,12 +136,21 @@ class Transformer {
           oper.defs.foreach( OperatorHandler.extract( _, bodyDB ) )
 
           /** inline as if operators were external */
-          inlineAll( body )( bodyDB, srcDB )
+          explicitLetIn( inlineAll( body )( bodyDB, srcDB ) )( srcDB )
         case _ => ex
       }
     }
 
-    OperatorHandler.replaceWithRule( p_ex, exFun, srcDB )
+    val ret = RecursiveProcessor.transformTlaEx(
+      RecursiveProcessor.DefaultFunctions.naturalTermination,
+      exFun,
+      exFun
+    )(p_ex)
+    srcDB.onTransformation( p_ex, ret)
+    ret
+//
+//    val oldret = OperatorHandler.replaceWithRule( p_ex, exFun, srcDB )
+//    oldret
   }
 
   /**
@@ -156,7 +165,7 @@ class Transformer {
                  p_ex : TlaEx
                )
                (
-                 implicit srcDB : SourceDB
+                 implicit srcDB : TransformationListener
                ) : TlaEx = {
     def lambda( tlaEx : TlaEx ) : TlaEx = {
       tlaEx match {
@@ -182,7 +191,7 @@ class Transformer {
     *   1. [[unchangedExplicit]]
     * @param p_expr Input expression.
     * @param bodyDB Operator body mapping, for unfolding.
-    * @param srcDB Mapping from replaced expressions to their originals.
+    * @param listener a listener to transformations.
     * @return Expression obtained after applying the sequence of transformations.
     */
   def sanitize(
@@ -190,14 +199,15 @@ class Transformer {
               )
               (
                 implicit bodyDB : BodyDB,
-                srcDB : SourceDB
+                listener : TransformationListener
               ) : TlaEx = {
-    val inlined = inlineAll( p_expr )( bodyDB, srcDB )
+    val inlined = inlineAll( p_expr )( bodyDB, listener )
 
+    val explicitLI = explicitLetIn( inlined )( listener )
 
-    val eqReplaced = rewriteEQ( inlined )(srcDB )
+    val eqReplaced = rewriteEQ( explicitLI )(listener )
 
-    /* val ucReplaced = */ unchangedExplicit( eqReplaced )( srcDB )
+    /* val ucReplaced = */ unchangedExplicit( eqReplaced )( listener )
 
   }
 
@@ -208,19 +218,19 @@ class Transformer {
     * @param p_expr Input expression.
     * @param p_decls Collection of declared operators.
     * @param p_bodyDB Mapping from operator names to their bodies. Should not contain recursive operators.
-    * @param p_srcDB  Mapping from replaced expressions to their originals.
+    * @param p_listener  a listener to transformations.
     * @return None, if [[sanitize]] fails, otherwise contains the sanitized expression.
     */
   def apply( p_expr : TlaEx,
              p_decls : TlaDecl*
            )(
              implicit p_bodyDB : BodyDB,
-             p_srcDB : SourceDB
+             p_listener : TransformationListener
            ) : Option[TlaEx] = {
     Identifier.identify( p_expr )
     p_decls.foreach( Identifier.identify )
     extract( p_decls : _* )( p_bodyDB )
-    val san = sanitize( p_expr )( p_bodyDB, p_srcDB )
+    val san = sanitize( p_expr )( p_bodyDB, p_listener )
     if ( san.isNull ) None
     else {
       Identifier.identify( san )

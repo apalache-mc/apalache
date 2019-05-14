@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.profiler.SmtListener
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.lir.TlaEx
 
@@ -11,13 +12,33 @@ import at.forsyte.apalache.tla.lir.TlaEx
 trait SolverContext extends StackableContext {
   /**
     * Declare a constant for an arena cell.
+    * This method is called automatically by the arena.
     *
     * @param cell a (previously undeclared) cell
     */
   def declareCell(cell: ArenaCell): Unit
 
   /**
+    * Declare an arena edge of type 'has'. This method introduces a Boolean variable for the edge.
+    * This method is called automatically by the arena. If the context already contains the constant
+    * with the same name, then this method does nothing.
+    *
+    * @param set the containing set
+    * @param elem a set element
+    */
+  def declareInPredIfNeeded(set: ArenaCell, elem: ArenaCell): Unit
+
+  /**
+    * Check whether the current view of the SMT solver is consistent with arena.
+    * @param arena an arena
+    */
+  def checkConsistency(arena: Arena): Unit
+
+  /**
     * Introduce a new Boolean constant.
+    *
+    * WARNING: this method is obsolete and will be removed in the future. Just introduce a cell of type BoolT().
+    *
     * @return the name of a new constant
     */
   def introBoolConst(): String
@@ -26,12 +47,23 @@ trait SolverContext extends StackableContext {
     * Get the names of the active Boolean constants (not the cells of type BoolT).
     * This method is used for debugging purposes and may be slow.
     *
-    * @return a list of Boolean constant that are active in the current context
+    * @return a list of Boolean constants that are active in the current context
     */
   def getBoolConsts: Iterable[String]
 
   /**
+    * Get the names of the active integer constants (not the cells of type IntT).
+    * This method is used for debugging purposes and may be slow.
+    *
+    * @return a list of integer constants that are active in the current context
+    */
+  def getIntConsts: Iterable[String]
+
+  /**
     * Introduce a new integer constant.
+    *
+    * WARNING: this method is obsolete and will be removed in the future. Just introduce a cell of type IntT().
+    *
     * @return the name of a new constant
     */
   def introIntConst(): String
@@ -77,17 +109,34 @@ trait SolverContext extends StackableContext {
   def sat(): Boolean
 
   /**
+    * Check satisfiability of the context with a timeout
+    *
+    * @param timeoutSec the timeout in seconds. If timeout <= 0, it is not effective
+    * @return Some(result), if no timeout happened; otherwise, None
+    */
+  def satOrTimeout(timeoutSec: Long): Option[Boolean]
+
+    /**
+    * Register an SMT listener
+    *
+    * @param listener register a listener, overrides the previous listener, if it was set before
+    */
+  def setSmtListener(listener: SmtListener): Unit
+}
+
+object SolverContext {
+  /**
     * Get the name of the reserved Boolean constant that is always false
     * (useful to avoid messing with the keywords).
     * @return the name (typically, $B$0)
     */
-  def falseConst: String
+  val falseConst = "$B$0"
 
   /**
     * Get the name of the reserved Boolean constant that is always false
     * (useful to avoid messing with the keywords).
     * @return the name (typically, $B$1)
     */
-  def trueConst: String
+  val trueConst = "$B$1"
 }
 

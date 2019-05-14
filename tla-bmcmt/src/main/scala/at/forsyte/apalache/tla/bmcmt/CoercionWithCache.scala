@@ -8,6 +8,9 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
   * Coercion from one theory to another. The coercion results are cached, and thus
   * this class supports StackableContext.
   *
+  * As we are assigning sorts to cells now, this class is here just for backward compatibility with the code.
+  * It will be removed in the future.
+  *
   * @author Igor Konnov
   */
 class CoercionWithCache(val stateRewriter: SymbStateRewriter) extends StackableContext {
@@ -122,11 +125,11 @@ class CoercionWithCache(val stateRewriter: SymbStateRewriter) extends StackableC
   private def boolToCell(state: SymbState): SymbState = {
     state.ex match {
       case NameEx(name) if BoolTheory().hasConst(name) =>
-        if (name == stateRewriter.solverContext.falseConst) {
+        if (name == SolverContext.falseConst) {
           // $B$0 -> $C$0
           state.setRex(state.arena.cellFalse().toNameEx)
             .setTheory(CellTheory())
-        } else if (name == stateRewriter.solverContext.trueConst) {
+        } else if (name == SolverContext.trueConst) {
           // $B$1 -> $C$1
           state.setRex(state.arena.cellTrue().toNameEx)
             .setTheory(CellTheory())
@@ -134,9 +137,8 @@ class CoercionWithCache(val stateRewriter: SymbStateRewriter) extends StackableC
           // the general case
           val newArena = state.arena.appendCell(BoolT())
           val newCell = newArena.topCell
-          val equiv = OperEx(TlaBoolOper.equiv,
-            NameEx(name),
-            OperEx(TlaOper.eq, newCell.toNameEx, newArena.cellTrue().toNameEx))
+          // just compare the constants directly, as both of them have type Bool
+          val equiv = OperEx(TlaBoolOper.equiv, NameEx(name), newCell.toNameEx)
           stateRewriter.solverContext.assertGroundExpr(equiv)
           state.setArena(newArena)
             .setRex(newCell.toNameEx)
@@ -153,21 +155,19 @@ class CoercionWithCache(val stateRewriter: SymbStateRewriter) extends StackableC
       case NameEx(name) if CellTheory().hasConst(name) =>
         if (name == state.arena.cellFalse().toString) {
           // $C$0 -> $B$0
-          state.setRex(NameEx(stateRewriter.solverContext.falseConst))
+          state.setRex(NameEx(SolverContext.falseConst))
             .setTheory(BoolTheory())
         } else if (name == state.arena.cellTrue().toString) {
           // $C$1 -> $B$1
-          state.setRex(NameEx(stateRewriter.solverContext.trueConst))
+          state.setRex(NameEx(SolverContext.trueConst))
             .setTheory(BoolTheory())
         } else {
           // general case
           val pred = stateRewriter.solverContext.introBoolConst()
-          val equiv = OperEx(TlaBoolOper.equiv,
-            NameEx(pred),
-            OperEx(TlaOper.eq, NameEx(name), state.arena.cellTrue().toNameEx))
+          // just compare the constants directly, as both of them have type Bool
+          val equiv = OperEx(TlaBoolOper.equiv, NameEx(pred), NameEx(name))
           stateRewriter.solverContext.assertGroundExpr(equiv)
-          state.setRex(NameEx(pred))
-            .setTheory(BoolTheory())
+          state.setRex(NameEx(pred)).setTheory(BoolTheory())
         }
 
       case _ =>

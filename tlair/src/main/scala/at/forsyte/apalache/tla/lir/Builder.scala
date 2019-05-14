@@ -74,10 +74,25 @@ object Builder {
               p_p : TlaEx
             ) : OperEx = OperEx( TlaOper.chooseBounded, p_x, p_S, p_p )
 
+  /**
+    * Decorate a TLA+ expression with a label (a TLA+2 feature), e.g.,
+    * lab(a, b) :: e decorates e with the label "lab" whose arguments are "a" and "b".
+    * @param ex a TLA+ expression to decorate
+    * @param name label identifier
+    * @param args label arguments (also identifiers)
+    * @return OperEx(TlaOper.label, ex, name as NameEx, args as NameEx)
+    */
+  def label(ex: TlaEx, name: String, args: String*): OperEx = {
+    OperEx(TlaOper.label, ex +: ValEx(TlaStr(name)) +: args.map(s => ValEx(TlaStr(s))) :_*)
+  }
+
+
   /** TlaBoolOper */
   def and( p_args : TlaEx* ) : OperEx = OperEx( TlaBoolOper.and, p_args : _* )
 
   def or( p_args : TlaEx* ) : OperEx = OperEx( TlaBoolOper.or, p_args : _* )
+
+  def orParallel( p_args : TlaEx* ) : OperEx = OperEx( TlaBoolOper.orParallel, p_args : _* )
 
   def not( p_P : TlaEx ) : OperEx = OperEx( TlaBoolOper.not, p_P )
 
@@ -271,7 +286,9 @@ object Builder {
               p_k1 : TlaEx,
               p_v1 : TlaEx,
               p_args : TlaEx* /* Expected even size */
-            ) : OperEx = OperEx( TlaFunOper.except, p_f +: p_k1 +: p_v1 +: p_args : _* )
+            ) : OperEx = {
+    OperEx( TlaFunOper.except, p_f +: p_k1 +: p_v1 +: p_args : _* )
+  }
 
   def funDef( p_e : TlaEx,
               p_x : TlaEx,
@@ -383,10 +400,14 @@ object Builder {
   // tlc
   def assert(e: TlaEx, msg: String): OperEx = OperEx(TlcOper.assert, e, ValEx(TlaStr(msg)))
 
-  /** UNTESTED */
   def primeInSingleton( p_x : TlaEx,
                         p_y : TlaEx
                       ) : OperEx = in( prime( p_x ), enumSet( p_y ) )
+
+  // bmc
+  def withType(expr: TlaEx, typeAnnot: TlaEx): OperEx =
+    OperEx(BmcOper.withType, expr, typeAnnot)
+
 
   val m_nameMap : Map[String, TlaOper] =
     scala.collection.immutable.Map(

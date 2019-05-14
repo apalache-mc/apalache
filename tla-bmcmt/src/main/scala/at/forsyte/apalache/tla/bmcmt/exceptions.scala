@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.lir.TlaEx
 
 /**
-  * A generic error that occured in the model checker.
+  * A generic error that occurred in the model checker.
   *
   * @param message error message
   */
@@ -36,16 +36,6 @@ class NoRuleException(message: String) extends RewriterException(message)
   * @param message error message
   */
 class SmtEncodingException(message: String) extends CheckerException(message)
-
-/**
-  * This exception is thrown when the behaviour of an expression is not defined,
-  * e.g., accessing an undefined record field. In some cases, it can be turned
-  * into a non-deterministic choice by an upper level.
-  *
-  * @param message error message
-  * @param arena   arena created right before the exception
-  */
-class UndefinedBehaviorError(val message: String, val arena: Arena) extends RewriterException(message)
 
 /**
   * This exception is thrown when the structure of a TLA+ expression is unexpected.

@@ -37,7 +37,7 @@ object TlaBoolOper {
     * This is another version of the OR operator. Syntactically, there is no such operator in TLA+.
     * However, TLC treats disjunctions at the action-level as a search split, which can be thought of
     * as parallel execution of all the branches, returning TRUE iff at least one of the branches returns TRUE.
-    * Analyses can benefit from knowing that a disjunction should be interpreted this way.
+    * Analyses can benefit from knowing that a disjunction should be interpreted in such a manner.
     */
   val orParallel = new TlaBoolOper {
     override def name: String = "\\||/"

@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla
 
 package lir {
   
+  import at.forsyte.apalache.tla.lir.io.UTFPrinter
   import at.forsyte.apalache.tla.lir.oper._
 
   /** the base class for the universe of objects used in TLA+ */
@@ -118,56 +119,14 @@ package lir {
       "Formal parameters should have fixed arity")
   }
 
-//  trait Identifiable{
-//    protected var m_ID : UniqueID = InvalidUID
-//    protected var canSet: Boolean = true
-//    def setID( newID: UniqueID ) = {
-//      if( canSet && newID.valid ) {
-//        canSet = false
-//        m_ID = newID
-//      }
-//      else throw new Identifiable_old.IDReallocationError
-//    }
-//    def ID : UniqueID = m_ID
-//
-//    def forget(): Unit = {
-//      m_ID = InvalidUID
-//      canSet = true
-//    }
-//
-//    def valid : Boolean = m_ID.valid
-//  }
-
-  trait Identifiable{
-    protected var m_ID : UID      = UID( -1 )
-    protected var canSet: Boolean = true
-    def setID( newID: UID ) = {
-      if( canSet && newID.valid ) {
-        canSet = false
-        m_ID = newID
-      }
-      else throw new Identifiable.IDReallocationError
-    }
-    def ID : UID = m_ID
-
-    def forget(): Unit ={
-      m_ID = UID( -1 )
-      canSet = true
-    }
-
-    def valid : Boolean = m_ID.valid
-  }
-
-  object Identifiable {
-    class IDReallocationError extends Exception
-  }
-
   /** An abstract TLA+ expression. Note that the class is sealed, so we allow only a limited set of values. */
   sealed abstract class TlaEx extends Identifiable {
     // TODO: hey, use power of Scala! Move toNiceString out of here and introduce a PrettyPrinter class.
     // No need, toString suffices, you can just call print( ex ) which invokes it by default.
     def toNiceString( nTab: Int = 0) = ""
-    override def toString: String =  UTFPrinter( this ) //toSimpleString // toNiceString()
+
+    // TODO: there must be a nice way of defining default printers in scala, so we do not have to make a choice here
+    override def toString: String =  UTFPrinter( this )
 
     def toSimpleString: String = ""
 
@@ -179,6 +138,8 @@ package lir {
     def isNull : Boolean = false
 
     def deepCopy( identified: Boolean = true ) : TlaEx
+
+    // this is a strange method, as it expects both structural equality and equality of the identifiers
     def identical( other: TlaEx ) : Boolean
   }
 
@@ -210,8 +171,7 @@ package lir {
       return ret
     }
 
-    // REVIEW: don't we want to maintain the invariant that two expressions with the same ID have the same structure?
-    // In this case, we don't need a deep comparison like this. -- Igor.
+    // TODO: move it an analysis class. This can be done by pattern matching and should not be in the class itself.
     override def identical( other: TlaEx ): Boolean = {
       other match{
         case ValEx( v ) => v == value && other.ID == ID
@@ -234,6 +194,7 @@ package lir {
       ex
     }
 
+    // TODO: move it an analysis class. This can be done by pattern matching and should not be in the class itself.
     override def identical( other: TlaEx ): Boolean = {
       other match{
         case NameEx( nm ) => nm == name && other.ID == ID
@@ -250,7 +211,12 @@ package lir {
     */
 
   case class OperEx(oper: TlaOper, args: TlaEx*) extends TlaEx {
-    require(oper.isCorrectArity(args.size), "unexpected arity %d".format(args.size))
+    require(oper.isCorrectArity(args.size),
+      "unexpected arity %d in %s applied to %s".format(args.size, oper.name, args.map(_.toString) mkString ", "))
+
+    require(oper.permitsArgs(args),
+      "The invariant of %s is violated by the arguments: %s".format(oper.name, args.map(_.toString) mkString ", "))
+
     override def toNiceString( nTab : Int = 0 ): String = {
       (tab *nTab) + "( OperEx: " +
         oper.name + ",\n" +
@@ -272,7 +238,7 @@ package lir {
       }
     }
 
-
+    // TODO: remove it, copying should work automatically for case classes
     override def deepCopy( identified: Boolean = true ): OperEx = {
       val ex = OperEx( oper, args.map( _.deepCopy( identified ) ) : _* ) // deep copy
       if (identified) {
@@ -282,6 +248,7 @@ package lir {
       ex
     }
 
+    // TODO: move it an analysis class. This can be done by pattern matching and should not be in the class itself.
     override def identical( other: TlaEx ): Boolean = {
       other match{
         case OperEx( op, arguments @ _*  ) => op == oper && other.ID == ID && arguments.size == args.size &&
@@ -336,62 +303,34 @@ package lir {
     * does not contain OperEx(this.operator, ...), but it does contain OperFormalOperParam(this.name),
     * see TlaRecOperDecl.</p>
     *
+    * <p>Note that the body is declared as a variable, which can be overwritten later. We need it to deal with INSTANCE.
+    * Similarly, isRecursive is false by default, but it can be set to true during instantiation.
+    * </p>
+    *
     * @see TlaRecOperDecl
     *
     * @param name operator name
     * @param formalParams formal parameters
     * @param body operator definition, that is a TLA+ expression that captures the operator definition
     */
-  case class TlaOperDecl( name: String, formalParams: List[FormalParam], body: TlaEx ) extends TlaDecl {
-    require( !body.isNull )
+  case class TlaOperDecl( name: String, formalParams: List[FormalParam], var body: TlaEx ) extends TlaDecl {
+    // this is no longer required, as module instantiation uses null bodies
+    //    require( !body.isNull )
+
     val operator: TlaUserOper = new TlaUserOper(name, FixedArity(formalParams.length), this)
+    /**
+      * Is the operator definition recursive? Similar to body, this is a variable that can be changed later.
+      */
+    var isRecursive: Boolean = false
 
     override def deepCopy( ): TlaOperDecl =  TlaOperDecl( name, formalParams, body.deepCopy() )
 
+    // TODO: remove
     override def identical( other: TlaDecl ): Boolean = other match {
       case TlaOperDecl( oname, oparams, obody ) => name == oname && formalParams == oparams && body.identical( obody )
       case _ => false
     }
   }
-
-  /**
-    * <p>A declaration of a recursive operator. This class extends TlaOperDecl, so in most of the cases one can treat
-    * this object just as an operator declaration. However, if one wants to get more details about
-    * the recursive definition, one can cast the object to TlaRecOperDecl and get these details.</p>
-    *
-    * <p>Note that we deliberately declare this class as a child of TlaOperDecl, not a case class. By doing so,
-    * we avoid one more case in case enumeration. However, one can always match TlaRecOperDecl in pattern matching.</p>
-    *
-    * <p>To keep the classes compact, we do not provide a method like isRecursive in TlaDecl.
-    * One can use foo.isInstance[TlaRecOperDecl].</p>
-    *
-    * @param name operator name
-    * @param formalParams formal parameters
-    * @param body operator definition, which can call the operator itself via OperEx(TlaOper.apply, NameEx(name), ...)
-    */
-  class TlaRecOperDecl(name: String, formalParams: List[FormalParam], body: TlaEx)
-      extends TlaOperDecl(name, formalParams, body) {
-
-    override def hashCode(): Int = super.hashCode()
-
-    override def equals(o: scala.Any): Boolean = o match {
-      case that: TlaRecOperDecl =>
-        super.equals(that)
-
-      case _ => false
-    }
-  }
-
-
-  abstract class IDType {
-    val id: Int
-    def valid: Boolean = id >= 0
-  }
-
-  // TODO: Rewrite UID with proper factory and invalid type
-
-  sealed case class UID( id: Int ) extends IDType
-  sealed case class EID( id: Int ) extends IDType
 
 }
 

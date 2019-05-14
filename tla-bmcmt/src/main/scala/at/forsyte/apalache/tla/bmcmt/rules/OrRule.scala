@@ -22,8 +22,8 @@ class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   override def apply(state: SymbState): SymbState = {
-    val falseConst = rewriter.solverContext.falseConst
-    val trueConst = rewriter.solverContext.trueConst
+    val falseConst = SolverContext.falseConst
+    val trueConst = SolverContext.trueConst
     val simplfier = new ConstSimplifier()
     simplfier.simplifyShallow(state.ex) match {
       case OperEx(TlaBoolOper.or, args @ _*) =>
@@ -47,6 +47,7 @@ class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.coerce(finalState, state.theory) // coerce if needed
 
       case OperEx(TlaBoolOper.orParallel, args @ _*) =>
+        // TODO: update according to the semantics!
         // normal disjunction on action-level expressions (like in TLC)
         // rewrite all the arguments
         val (newState: SymbState, preds: Seq[TlaEx]) =

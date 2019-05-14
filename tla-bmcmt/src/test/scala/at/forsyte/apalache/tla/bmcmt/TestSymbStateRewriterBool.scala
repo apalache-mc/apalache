@@ -1,16 +1,36 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.types.BoolT
+import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStoreImpl
+import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
+import at.forsyte.apalache.tla.bmcmt.types.{AnnotationParser, BoolT, FinSetT, IntT}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
-import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
+import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TestingPredefs, ValEx}
 import org.junit.runner.RunWith
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
+class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with BeforeAndAfterEach {
+  // these are handy variables that will be overwritten by before
+  private var x: ArenaCell = new ArenaCell(100000, IntT())
+  private var y: ArenaCell = new ArenaCell(100001, IntT())
+  private var set: ArenaCell = new ArenaCell(100001, FinSetT(IntT()))
+  private var xyBinding = Binding()
+
+  override def beforeEach() {
+    super.beforeEach()
+
+    arena = arena.appendCell(BoolT()) // we have to give bindings to the type finder
+    x = arena.topCell
+    arena = arena.appendCell(BoolT()) // we have to give bindings to the type finder
+    y = arena.topCell
+    arena = arena.appendCell(FinSetT(IntT()))
+    set = arena.topCell
+    xyBinding = Binding("x" -> x, "y" -> y, "S" -> set)
+  }
 
   test("SE-BOOL-FALSE [Cell]: FALSE ~~> $C$0") {
     val ex = ValEx(TlaFalse)
@@ -81,13 +101,11 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
   }
 
   test("""SE-BOOL-NEG1: ~(x \/ y) ~~> ~x /\ ~y""") {
-    val ex = OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.or, NameEx("x"), NameEx("y")))
-    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+    val ex = tla.not(tla.or(tla.name("x"), tla.name("y")))
+    val state = new SymbState(ex, CellTheory(), arena, xyBinding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
-        val expected = OperEx(TlaBoolOper.and,
-          OperEx(TlaBoolOper.not, NameEx("x")),
-          OperEx(TlaBoolOper.not, NameEx("y")))
+        val expected = tla.and(tla.not(tla.name("x")), tla.not(tla.name("y")))
         assert(expected == nextState.ex)
         assert(state.arena == nextState.arena)
 
@@ -98,7 +116,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
 
   test("""SE-BOOL-NEG2: ~(x /\ y) ~~> ~x \/ ~y""") {
     val ex = OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.and, NameEx("x"), NameEx("y")))
-    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+    val state = new SymbState(ex, CellTheory(), arena, xyBinding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected = OperEx(TlaBoolOper.or,
@@ -114,7 +132,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
 
   test("SE-BOOL-NEG3: ~(x => y) ~~> x /\\ ~y") {
     val ex = OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.implies, NameEx("x"), NameEx("y")))
-    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+    val state = new SymbState(ex, CellTheory(), arena, xyBinding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected = OperEx(TlaBoolOper.and,
@@ -130,7 +148,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
 
   test("SE-BOOL-IMPL: x => y ~~> ~x \\/ y") {
     val ex = tla.impl("x", "y")
-    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+    val state = new SymbState(ex, CellTheory(), arena, xyBinding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected = tla.or(tla.not("x"), "y")
@@ -148,7 +166,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     arena = arena.appendCell(BoolT())
     val right = arena.topCell
     val ex = tla.equiv(left.toNameEx, right.toNameEx)
-    val state = new SymbState(ex, BoolTheory(), arena, new Binding)
+    val state = new SymbState(ex, BoolTheory(), arena, xyBinding)
     val rewriter = create()
     rewriter.rewriteUntilDone(state).ex match {
       case NameEx(result) =>
@@ -181,7 +199,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
 
   test("SE-BOOL-NEG4: ~(x <=> y) ~~> ~x <=> y") {
     val ex = OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.equiv, NameEx("x"), NameEx("y")))
-    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+    val state = new SymbState(ex, CellTheory(), arena, xyBinding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected =
@@ -197,7 +215,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
 
   test("SE-BOOL-NEG5: ~~x ~~> x") {
     val ex = OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.not, NameEx("x")))
-    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+    val state = new SymbState(ex, CellTheory(), arena, xyBinding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         assert(NameEx("x") == nextState.ex)
@@ -209,14 +227,14 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-BOOL-NEG6: ~\E x \in S: p ~~> \A x \in S: ~p""") {
+  test("""SE-BOOL-NEG6: ~\E x \in S: y ~~> \A x \in S: ~y""") {
     val ex = OperEx(TlaBoolOper.not,
-      OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("S"), NameEx("p")))
-    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+      OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("S"), NameEx("y")))
+    val state = new SymbState(ex, CellTheory(), arena, Binding("S" -> set, "y" -> y))
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected = OperEx(TlaBoolOper.forall, NameEx("x"), NameEx("S"),
-          OperEx(TlaBoolOper.not, NameEx("p")))
+          OperEx(TlaBoolOper.not, NameEx("y")))
         assert(expected == nextState.ex)
         assert(state.arena == nextState.arena)
         assert(state.binding == nextState.binding)
@@ -226,14 +244,32 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-BOOL-NEG7: ~\A x \in S: p ~~> \E x \in S: ~p""") {
+  test("""IF-THEN-ELSE with \E: IF \E i \in {}: x' \in {i} THEN x' ELSE 0""") {
+    // this tricky test comes from Bakery, where an assignment is made in one branch of a conjunction
+    val exists = tla.exists(tla.name("i"),
+      tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(IntT()))),
+      tla.in(tla.prime(tla.name("x")), tla.enumSet(tla.name("i"))))
+    val ite = tla.ite(exists, tla.prime(tla.name("x")), tla.int(0))
+
+    val state = new SymbState(ite, CellTheory(), arena, Binding())
+    val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
+    val fex = new FreeExistentialsStoreImpl()
+    fex.store = fex.store + exists.ID
+    rewriter.freeExistentialsStore = fex
+
+    var nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(tla.int(0), nextState.ex)))
+  }
+
+  test("""SE-BOOL-NEG7: ~\A x \in S: y ~~> \E x \in S: ~y""") {
     val ex = OperEx(TlaBoolOper.not,
-      OperEx(TlaBoolOper.forall, NameEx("x"), NameEx("S"), NameEx("p")))
-    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+      OperEx(TlaBoolOper.forall, NameEx("x"), NameEx("S"), NameEx("y")))
+    val state = new SymbState(ex, CellTheory(), arena, Binding("S" -> set, "y" -> y))
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected = OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("S"),
-          OperEx(TlaBoolOper.not, NameEx("p")))
+          OperEx(TlaBoolOper.not, NameEx("y")))
         assert(expected == nextState.ex)
         assert(state.arena == nextState.arena)
         assert(state.binding == nextState.binding)
@@ -296,7 +332,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
-        assert(NameEx(solverContext.falseConst) == nextState.ex)
+        assert(NameEx(SolverContext.falseConst) == nextState.ex)
         assert(state.arena == nextState.arena)
 
       case _ =>
@@ -343,7 +379,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
-        assert(NameEx(solverContext.falseConst) == nextState.ex)
+        assert(NameEx(SolverContext.falseConst) == nextState.ex)
         assert(state.arena == nextState.arena)
 
       case _ =>
@@ -356,7 +392,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
-        assert(NameEx(solverContext.trueConst) == nextState.ex)
+        assert(NameEx(SolverContext.trueConst) == nextState.ex)
         assert(state.arena == nextState.arena)
 
       case _ =>
@@ -369,7 +405,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
-        assert(NameEx(solverContext.trueConst) == nextState.ex)
+        assert(NameEx(SolverContext.trueConst) == nextState.ex)
         assert(state.arena == nextState.arena)
 
       case _ =>
@@ -452,7 +488,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     val ex = tla.exists(tla.name("x"), tla.enumSet(), tla.bool(true))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val nextState = create().rewriteUntilDone(state)
-    assert(NameEx(solverContext.falseConst) == nextState.ex)
+    assert(NameEx(SolverContext.falseConst) == nextState.ex)
   }
 
   test("""SE-EX3: \E x \in {1, 2, 3}: x = 2 ~~> $B$k""") {
@@ -471,6 +507,41 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     assertUnsatOrExplain(rewriter, nextState)
   }
 
+  test("""SE-EX: \E x \in {1, 2}: y' = x ~~> 2 assignments, regression""") {
+    // an assignment inside an existential quantifier is tricky, as we can multiple values to variables
+    val ex = tla.exists(
+      tla.name("x"),
+      tla.enumSet(tla.int(1), tla.int(2)),
+      tla.in(tla.prime(tla.name("y")),
+             tla.enumSet(tla.name("x")))
+    )////
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding)
+    val rewriter = create()
+    assertThrows[NotImplementedError] {
+      // TODO: implement multiple assignments in expanded quantifiers
+      val nextState = rewriter.rewriteUntilDone(state)
+      assert(solverContext.sat())
+      rewriter.push()
+      solverContext.assertGroundExpr(nextState.ex)
+      assert(solverContext.sat())
+      rewriter.pop()
+      rewriter.push()
+      solverContext.assertGroundExpr(tla.not(nextState.ex))
+      assertUnsatOrExplain(rewriter, nextState)
+      rewriter.pop()
+      rewriter.push()
+      solverContext.assertGroundExpr(nextState.ex)
+      solverContext.assertGroundExpr(tla.eql(tla.int(1), nextState.binding("y'").toNameEx))
+      assert(solverContext.sat())
+      rewriter.pop()
+      rewriter.push()
+      solverContext.assertGroundExpr(nextState.ex)
+      solverContext.assertGroundExpr(tla.eql(tla.int(2), nextState.binding("y'").toNameEx))
+      assert(solverContext.sat())
+      rewriter.pop()
+    }
+  }
+
   test("""SE-EX3: \E x \in {1, 2, 3}: x > 4 ~~> $B$k""") {
     val ex = tla.exists(tla.name("x"),
       tla.enumSet(tla.int(1), tla.int(2), tla.int(3)),
@@ -485,6 +556,41 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     rewriter.pop()
     solverContext.assertGroundExpr(tla.not(nextState.ex))
     assert(solverContext.sat())
+  }
+
+  test("""SE-EX: \E x \in {1} \ {1}: x > 4, regression""") {
+    val ex = tla.exists(tla.name("x"),
+      tla.setminus(tla.enumSet(tla.int(1)), tla.enumSet(tla.int(1))),
+      tla.gt(tla.name("x"), tla.int(4)))
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding)
+    val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
+    val fex = new FreeExistentialsStoreImpl()
+    fex.store = fex.store + ex.ID
+    rewriter.freeExistentialsStore = fex
+
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat()) // regression test, the buggy implementation failed here
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.not(nextState.ex))) // E x \in {} is false
+  }
+
+  test("""SE-EX skolem: \E i \in Nat: i = 10 /\ x' \in {i}""") {
+    // this works for skolem constants only
+    val ex = tla.exists(tla.name("i"),
+      ValEx(TlaNatSet),
+      tla.and(
+        tla.eql(tla.name("i"), tla.int(10)),
+        tla.in(tla.prime(tla.name("x")), tla.enumSet(tla.name("i")))))
+    val state = new SymbState(ex, BoolTheory(), arena, new Binding)
+    val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
+    val fex = new FreeExistentialsStoreImpl()
+    fex.store = fex.store + ex.ID
+    rewriter.freeExistentialsStore = fex
+
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    solverContext.assertGroundExpr(nextState.ex)
+    val xp = nextState.binding("x'")
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(xp.toNameEx, tla.int(10))))
   }
 
   test("""SE-ALL3: \A x \in {1, 2, 3}: x < 10 ~~> $B$k""") {

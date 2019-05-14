@@ -1,7 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStoreImpl
-import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, IntT, PowSetT}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.PowSetCtor
+import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
+import at.forsyte.apalache.tla.bmcmt.types.{AnnotationParser, FinSetT, IntT, PowSetT}
 import at.forsyte.apalache.tla.lir.NameEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.plugins.Identifier
@@ -49,7 +51,8 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
   }
 
   test("""SE-SUBSET1: {} \in SUBSET {1, 2, 3}""") {
-    val set12 = tla.enumSet()
+    // an empty set requires a type annotation
+    val set12 = tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(IntT())))
     val powset = tla.powSet(tla.enumSet(tla.int(1), tla.int(2), tla.int(3)))
     val in = tla.in(set12, powset)
     val state = new SymbState(in, BoolTheory(), arena, new Binding)
@@ -135,7 +138,7 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     val ex = tla.exists(tla.name("X"), tla.powSet(set), tla.bool(true))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val fex = new FreeExistentialsStoreImpl
-    val rewriter = new SymbStateRewriterImpl(solverContext)
+    val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
     rewriter.freeExistentialsStore = fex
     Identifier.identify(ex) // TODO: identifier should not be called directly
     fex.store = fex.store + ex.ID
@@ -158,7 +161,7 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     val ex = tla.exists(tla.name("X"), tla.powSet(set), tla.bool(false))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val fex = new FreeExistentialsStoreImpl
-    val rewriter = new SymbStateRewriterImpl(solverContext)
+    val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
     rewriter.freeExistentialsStore = fex
     Identifier.identify(ex) // TODO: identifier should not be called directly
     fex.store = fex.store + ex.ID
@@ -174,4 +177,24 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
         fail("Unexpected rewriting result")
     }
   }
+
+  test("""PowSetCtor {1, 2}""") {
+    val baseset = tla.enumSet(tla.int(1), tla.int(2))
+    val state = new SymbState(baseset, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    var nextState = rewriter.rewriteUntilDone(state)
+    val baseCell = nextState.asCell
+    nextState = new PowSetCtor(rewriter).confringo(nextState, baseCell)
+    val powCell = nextState.asCell
+    // give the cell type to type finder
+    rewriter.typeFinder.reset(rewriter.typeFinder.getVarTypes + (powCell.toString -> powCell.cellType))
+    // check equality
+    val eq = tla.eql(nextState.ex,
+      tla.enumSet(tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(IntT()))),
+        tla.enumSet(tla.int(1)),
+        tla.enumSet(tla.int(2)),
+          tla.enumSet(tla.int(1), tla.int(2))))
+    assertTlaExAndRestore(rewriter, nextState.setRex(eq))
+  }
+
 }

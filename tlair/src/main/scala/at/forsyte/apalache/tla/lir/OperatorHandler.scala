@@ -1,19 +1,21 @@
 package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.control.LetInOper
-import at.forsyte.apalache.tla.lir.db.{BodyDB, DummySrcDB, HashMapDB, SourceDB}
+import at.forsyte.apalache.tla.lir.db.{BodyDB, TransformationListener}
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
-import at.forsyte.apalache.tla.lir.plugins.{Identifier, UniqueDB}
+import at.forsyte.apalache.tla.lir.plugins.Identifier
 
+// TODO: @Igor: please move it to the package *.process
+// TODO: This code looks obfuscated: there are way too many lambdas and no comments at all.
 object OperatorHandler {
 
-  protected def markSrc( p_old : TlaEx,
-                         p_new : TlaEx,
-                         p_srcDB : SourceDB
+  protected def markSrc(p_old : TlaEx,
+                        p_new : TlaEx,
+                        p_listener : TransformationListener
                        ) : Unit = {
     Identifier.identify( p_new )
     if ( p_old.ID != p_new.ID ) {
-      p_srcDB.update( p_new.ID, p_old.ID )
+      p_listener.onTransformation(p_old, p_new)
     }
   }
 
@@ -33,7 +35,7 @@ object OperatorHandler {
     * @param p_decls
     * @return
     */
-  def uniqueVarRename( p_decls : Seq[TlaDecl], p_srcDB : SourceDB = DummySrcDB ) : Seq[TlaDecl] = {
+  def uniqueVarRename( p_decls : Seq[TlaDecl], p_srcDB : TransformationListener) : Seq[TlaDecl] = {
     def lambda( p_boundVars : Set[String], p_prefix : String )( p_ex : TlaEx ) : TlaEx = {
       p_ex match {
         case NameEx( name ) =>
@@ -121,41 +123,47 @@ object OperatorHandler {
                p_db : BodyDB
              ) : Unit = SpecHandler.sideeffectDecl( p_spec, extract( _, p_db ) )
 
-  def replaceAll( p_tlaEx : TlaEx,
-                  p_replacedEx : TlaEx,
-                  p_newEx : TlaEx,
-                  p_srcDB : SourceDB = DummySrcDB
+  def replaceAll(p_tlaEx : TlaEx,
+                 p_replacedEx : TlaEx,
+                 p_newEx : TlaEx,
+                 p_listener : TransformationListener
                 ) : TlaEx = {
     def swap( arg : TlaEx ) : TlaEx =
       if ( arg == p_replacedEx ) {
-        val ret = p_newEx.deepCopy( identified = false )
-        markSrc( arg, ret, p_srcDB )
+        // FIXME: Jure, I have added a call to identify, as otherwise markSrc is just wrong (Igor)
+        val ret = Identifier.identify(p_newEx.deepCopy( identified = false ))
+        Identifier.identify(arg)
+        markSrc( arg, ret, p_listener )
         ret
       }
       else arg
 
-    SpecHandler.getNewEx( p_tlaEx, swap, markSrc( _, _, p_srcDB ) )
+    SpecHandler.getNewEx( p_tlaEx, swap, markSrc( _, _, p_listener ) )
   }
 
-  def replaceWithRule( p_ex : TlaEx,
-                       p_rule : TlaEx => TlaEx,
-                       p_srcDB : SourceDB = DummySrcDB
+  def replaceWithRule(p_ex : TlaEx,
+                      p_rule : TlaEx => TlaEx,
+                      p_listener : TransformationListener
                      ) : TlaEx = {
-    SpecHandler.getNewEx( p_ex, p_rule, markSrc( _, _, p_srcDB ) )
+    SpecHandler.getNewEx( p_ex, p_rule, markSrc( _, _, p_listener ) )
   }
+
+  /*
+  @Igor (08.01.2019). Commented out this method, as it requires precise tracking of changes, which is not always possible.
 
   def undoReplace( p_ex : TlaEx,
-                   p_srcDB : SourceDB
+                   p_srcDB : SourceStoreImpl
                  ) : TlaEx = {
     if ( p_srcDB.contains( p_ex.ID ) ) {
       UniqueDB( p_srcDB( p_ex.ID ) )
     }
     else p_ex
   }
+  */
 
-  def unfoldOnce( p_ex : TlaEx,
-                  p_bdDB : BodyDB,
-                  p_srcDB : SourceDB = DummySrcDB
+  def unfoldOnce(p_ex : TlaEx,
+                 p_bdDB : BodyDB,
+                 p_listener : TransformationListener
                 ) : TlaEx = {
 
     /**
@@ -163,7 +171,7 @@ object OperatorHandler {
       * because the parser would reject such TLA code. However, manual examples produced
       * demonstrated lack of exceptions thrown when the number of args provided exceeded the arity.
       *
-      * This has been rectified by a check in lambda.
+      * This has been rectified by a checkUID in lambda.
       **/
 
     /**
@@ -189,12 +197,24 @@ object OperatorHandler {
             "Operator %s with arity %s called with %s argument%s".format( name, params.size, args.size, if ( args.size != 1 ) "s" else "" )
           )
 
+        // Igor: Jure, please write imperative code, if you like it so. The commented code below is impossible to debug.
+        for ((par, arg) <- params.zip(args)) {
+          val paramName = Identifier.identify(NameEx(par.name))
+          // FIXME: Jure, I have added the call to markSrc, in order to track changes (Igor)
+          markSrc(arg, paramName, p_listener )
+          body = replaceAll(body, paramName, arg, p_listener)
+        }
+
+        markSrc(p_operEx, body, p_listener )
+
+        /*
         params.zip( args ).foreach(
-          pair => body = replaceAll( body, NameEx( pair._1.name ), pair._2, p_srcDB )
+          pair => body = replaceAll( body, NameEx( pair._1.name ), pair._2, p_listener )
         )
         //        Identifier.identify( body )
-        markSrc( p_operEx, body, p_srcDB )
-        /* return */ body
+        markSrc( p_operEx, body, p_listener )
+        */
+        body
       }
 
       p_operEx match {
@@ -205,22 +225,22 @@ object OperatorHandler {
     }
 
     val ret = SpecHandler.getNewEx( p_ex, subAndID )
-    markSrc( p_ex, ret, p_srcDB )
+    markSrc( p_ex, ret, p_listener )
     ret
   }
 
-  def unfoldMax( p_ex : TlaEx,
-                 p_bdDB : BodyDB,
-                 p_srcDB : SourceDB = DummySrcDB
+  def unfoldMax(p_ex : TlaEx,
+                p_bdDB : BodyDB,
+                p_listener : TransformationListener
                ) : TlaEx = {
     var a = p_ex
-    var b = unfoldOnce( p_ex, p_bdDB, p_srcDB )
+    var b = unfoldOnce( p_ex, p_bdDB, p_listener )
     while ( a != b ) {
       a = b
-      b = unfoldOnce( b, p_bdDB, p_srcDB )
+      b = unfoldOnce( b, p_bdDB, p_listener )
     }
     //    Identifier.identify( b )
-    markSrc( p_ex, b, p_srcDB )
+    markSrc( p_ex, b, p_listener )
     b
   }
 

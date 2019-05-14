@@ -1,15 +1,17 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 import scala.collection.immutable.HashMap
 
 object Arena {
-  protected val falseName: String = CellTheory().namePrefix + "0"
-  protected val trueName: String = CellTheory().namePrefix + "1"
-  protected val booleanName: String = CellTheory().namePrefix + "2"
+  val falseName: String = CellTheory().namePrefix + "0"
+  val trueName: String = CellTheory().namePrefix + "1"
+  val booleanSetName: String = CellTheory().namePrefix + "2"
+  val natSetName: String = CellTheory().namePrefix + "3"
+  val intSetName: String = CellTheory().namePrefix + "4"
 
   def create(solverContext: SolverContext): Arena = {
     var arena = new Arena(solverContext, 0,
@@ -20,24 +22,31 @@ object Arena {
       new HashMap()
     ) /////
     // by convention, the first cells have the following semantics:
-    //  0 stores FALSE, 1 stores TRUE, 2 stores BOOLEAN
+    //  0 stores FALSE, 1 stores TRUE, 2 stores BOOLEAN, 3 stores Nat, 4 stores Int
     arena = arena.appendCellWithoutDeclaration(BoolT())
       .appendCellWithoutDeclaration(BoolT())
       .appendCellWithoutDeclaration(FinSetT(BoolT()))
+      .appendCellWithoutDeclaration(FinSetT(IntT()))
+      .appendCellWithoutDeclaration(FinSetT(IntT()))
     // declare Boolean cells in SMT
     val cellFalse = arena.cellFalse()
     val cellTrue = arena.cellTrue()
-    val cellBoolean = arena.cellBoolean()
+    val cellBoolean = arena.cellBooleanSet()
+    val cellNat = arena.cellNatSet()
+    val cellInt = arena.cellIntSet()
     solverContext.declareCell(cellFalse)
     solverContext.declareCell(cellTrue)
     solverContext.declareCell(cellBoolean)
+    solverContext.declareCell(cellNat)
+    solverContext.declareCell(cellInt)
     solverContext.assertGroundExpr(OperEx(TlaOper.ne, cellFalse.toNameEx, cellTrue.toNameEx))
     // assert in(c_FALSE, c_BOOLEAN) and in(c_TRUE, c_BOOLEAN)
+    // link c_BOOLEAN to c_FALSE and c_TRUE
+    arena = arena.appendHas(cellBoolean, cellFalse)
+      .appendHas(cellBoolean, cellTrue)
     solverContext.assertGroundExpr(OperEx(TlaSetOper.in, cellFalse.toNameEx, cellBoolean.toNameEx))
     solverContext.assertGroundExpr(OperEx(TlaSetOper.in, cellTrue.toNameEx, cellBoolean.toNameEx))
-    // link c_BOOLEAN to c_FALSE and c_TRUE
-    arena.appendHas(cellBoolean, cellFalse)
-      .appendHas(cellBoolean, cellTrue)
+    arena
   }
 }
 
@@ -76,8 +85,24 @@ class Arena private(val solverContext: SolverContext,
     * A fixed cell that stores the set {false, true}, that is, the set BOOLEAN in TLA+.
     * @return the cell for the BOOLEAN set
     */
-  def cellBoolean(): ArenaCell = {
-    cellMap(Arena.booleanName)
+  def cellBooleanSet(): ArenaCell = {
+    cellMap(Arena.booleanSetName)
+  }
+
+  /**
+    * A fixed cell that stores the set Nat. As this set is infinite, it is not pointing to any other cells.
+    * @return the cell for the Nat cell
+    */
+  def cellNatSet(): ArenaCell = {
+    cellMap(Arena.natSetName)
+  }
+
+  /**
+    * A fixed cell that stores the set Int. As this set is infinite, it is not pointing to any other cells.
+    * @return the cell for the Int cell
+    */
+  def cellIntSet(): ArenaCell = {
+    cellMap(Arena.intSetName)
   }
 
   /**
@@ -114,15 +139,6 @@ class Arena private(val solverContext: SolverContext,
     val newArena = appendCellWithoutDeclaration(cellType)
     val newCell = newArena.topCell
     solverContext.declareCell(newCell)
-    cellType match {
-      case BoolT() =>
-        val cons = OperEx(TlaBoolOper.or, newCell.mkTlaEq(cellFalse()), newCell.mkTlaEq(cellTrue()))
-        solverContext.assertGroundExpr(cons)
-
-      case _ =>
-        ()
-    }
-
     newArena
   }
 
@@ -156,17 +172,49 @@ class Arena private(val solverContext: SolverContext,
   }
 
   /**
+    * Append 'has' edges that connect the first cell to the other cells, in the given order.
+    * The previously added edges come first. When this method is called as appendHas(X, Y1, ..., Ym),
+    * it adds a Boolean constant in_X_Yi for each i: 1 <= i <= m.
+    *
+    * @param parentCell the cell that points to the children cells
+    * @param childrenCells the cells that are pointed by the parent cell
+    * @return the updated arena
+    */
+  def appendHas(parentCell: ArenaCell, childrenCells: ArenaCell*): Arena = {
+    childrenCells.foldLeft(this) { (a, c) => a.appendOneHasEdge(addInPred = true, parentCell, c) }
+  }
+
+  /**
+    * Append 'has' edges that connect the first cell to the other cells, in the given order.
+    * The previously added edges come first. In contrast to appendHas, this method does not add any constants in SMT.
+    *
+    * @param parentCell the cell that points to the children cells
+    * @param childrenCells the cells that are pointed by the parent cell
+    * @return the updated arena
+    */
+  def appendHasNoSmt(parentCell: ArenaCell, childrenCells: ArenaCell*): Arena = {
+    childrenCells.foldLeft(this) { (a, c) => a.appendOneHasEdge(addInPred = false, parentCell, c) }
+  }
+
+  /**
     * Append a 'has' edge to connect a cell that corresponds to a set with a cell that corresponds to its element.
     *
     * @param setCell  a set cell
     * @param elemCell an element cell
+    * @param addInPred indicates whether the in_X_Y constant should be added in SMT.
     * @return a new arena
     */
-  def appendHas(setCell: ArenaCell, elemCell: ArenaCell): Arena = {
+  private def appendOneHasEdge(addInPred: Boolean, setCell: ArenaCell, elemCell: ArenaCell): Arena = {
+    if (addInPred) {
+      solverContext.declareInPredIfNeeded(setCell, elemCell)
+    }
     val es =
       hasEdges.get(setCell) match {
-        case Some(list) => list :+ elemCell
-        case None => List(elemCell)
+        case Some(list) =>
+          list :+ elemCell
+
+        case None =>
+          List(elemCell)
       }
 
     new Arena(solverContext, cellCount, topCell, cellMap, hasEdges + (setCell -> es), domEdges, cdmEdges)

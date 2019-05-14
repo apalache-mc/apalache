@@ -1,8 +1,7 @@
 package at.forsyte.apalache.tla.assignments
 
-import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.OperatorHandler
-import at.forsyte.apalache.tla.lir.db.{BodyDB, SourceDB}
+import at.forsyte.apalache.tla.lir.db.{BodyDB, TransformationListener}
+import at.forsyte.apalache.tla.lir.{OperatorHandler, _}
 
 /**
   * Performs the complete procedure of finding symbolic transitions from the TLA+ implementation.
@@ -10,7 +9,7 @@ import at.forsyte.apalache.tla.lir.db.{BodyDB, SourceDB}
   * @see [[AssignmentStrategyEncoder]], [[SMTInterface]], [[SymbTransGenerator]]
   */
 class SymbolicTransitionPass( private val m_bodyDB : BodyDB,
-                              private val m_srcDB : SourceDB) extends TypeAliases {
+                              private val m_srcDB : TransformationListener) extends TypeAliases {
 
   /**
     * Body lookup.
@@ -46,7 +45,7 @@ class SymbolicTransitionPass( private val m_bodyDB : BodyDB,
       * First, rename all bound variables to unique ones (per operator), to avoid contamination
       * when unfolding operator calls
       **/
-    val declsRenamed = OperatorHandler.uniqueVarRename( p_decls )
+    val declsRenamed = OperatorHandler.uniqueVarRename( p_decls, m_srcDB )
 
     val transformer = new Transformer()
 

@@ -75,7 +75,8 @@ object TlaFunOper {
     *
     * Note that all indices i_1, ..., i_k are tuples. For one-dimensional functions,
     * they are singleton tuples, whereas for multidimensional functions the indices are
-    * tuples of arbitrary length.
+    * tuples of arbitrary length. This is the design choice that comes from SANY.
+    * When you write f[<<1>>] in TLA+, expect to deal with (except (tuple (tuple 1))) here.
     */
   val except = new TlaFunOper {
     override def arity: OperArity = new OperArity( k => k >= 3 && k % 2 == 1 )

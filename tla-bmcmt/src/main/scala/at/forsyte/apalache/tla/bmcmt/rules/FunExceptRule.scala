@@ -2,18 +2,21 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
-import at.forsyte.apalache.tla.bmcmt.types.{FailPredT, FinSetT, FunT}
+import at.forsyte.apalache.tla.bmcmt.types.{CellT, FunT, RecordT, TupleT}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 
 /**
-  * Implements the rules: SE-FUN-UPD[1-4].
+  * Implements the rules: FUN-EXCEPT and REC-EXCEPT.
   *
   * @author Igor Konnov
   */
 class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val picker = new PickFromAndFunMerge(rewriter)
+  private def cacheEq(s: SymbState, l: ArenaCell, r: ArenaCell) = rewriter.lazyEq.cacheOneEqConstraint(s, l, r)
+
+  private def solverAssert = rewriter.solverContext.assertGroundExpr _
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -25,110 +28,33 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case OperEx(TlaFunOper.except, args@_*) =>
-        // simplify all the arguments first
-        val noSingletons = rewriteSingletonTuples(args)
+        val funEx = args.head
+        val indexEs = args.tail.zipWithIndex.filter(_._2 % 2 == 0).map(_._1)
+        // first, unpack singleton tuples in indices, see the comment to the method
+        val unpackedIndices = unpackSingletonIndices(indexEs)
+        val valEs = args.tail.zipWithIndex.filter(_._2 % 2 == 1).map(_._1)
+        assert(indexEs.size == valEs.size)
+
+        // second, rewrite all the arguments
         val (groundState: SymbState, groundArgs: Seq[TlaEx]) =
-          rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), noSingletons)
-
-        // the function always comes first
+          rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), funEx +: (unpackedIndices ++ valEs))
         val funCell = groundState.arena.findCellByNameEx(groundArgs.head)
-        // then the indices and righthand-side expressions interleaved
-        val argCells = groundArgs.tail.map(groundState.arena.findCellByNameEx)
-        val indexCells = argCells.zipWithIndex.filter(_._2 % 2 == 0).map(_._1) // pick the even indices (starting with 0)
-        val valueCells = argCells.zipWithIndex.filter(_._2 % 2 == 1).map(_._1) // pick the odd indices (starting with 0)
-        assert(indexCells.length == valueCells.length)
-        val updatePairs = indexCells.zip(valueCells) // ![j_i] = e_i
-
-        // get domain and co-domain structure from the arena
-        val dom = groundState.arena.getDom(funCell)
-        val domCells = groundState.arena.getHas(dom)
-        val cdm = groundState.arena.getCdm(funCell)
-
-        // generate equality constraints for the domain elements and all the indices
-        val eqState = rewriter.lazyEq.cacheEqConstraints(groundState, domCells cross indexCells)
-
-        // induce the new type of the co-domain cells
-        val cdmElemType = cdm.cellType match {
-          case FinSetT(elemType) =>
-            val problemCell = valueCells.find(!_.cellType.comparableWith(elemType))
-            if (problemCell.isDefined) {
-              throw new RewriterException("Type error in %s: updating a function of type %s with a cell of type %s"
-                .format(state.ex, funCell.cellType, problemCell.get.cellType))
-            }
-            elemType
-
-          // TODO: we might want to extend the co-domain type a bit, when adding a tuple or a record
-
-          case _ =>
-            throw new RewriterException("Unexpected type of function co-domain in function update: %s"
-              .format(cdm.cellType))
-        }
-
-        // create the new co-domain that includes the valueCells
-        var arena = eqState.arena.appendCell(FinSetT(cdmElemType))
-        val newCdm = arena.topCell
-
-        // add all the elements from the old co-domain as well as the new values
-        def addToNewCdm(a: Arena, c: ArenaCell) = a.appendHas(newCdm, c)
-
-        arena = arena.getHas(cdm).foldLeft(arena)(addToNewCdm)
-        arena = valueCells.foldLeft(arena)(addToNewCdm)
-        // create a new function cell and wire it with the old domain and the new co-domain
-        val funType = FunT(dom.cellType, cdmElemType)
-        arena = arena.appendCell(funType)
-        val newFunCell = arena.topCell
-        arena = arena.setDom(newFunCell, dom).setCdm(newFunCell, newCdm)
-        // introduce a new failure predicate
-        arena = arena.appendCell(FailPredT())
-        val failPred = arena.topCell
-        // associate an uninterpreted function in SMT
-        rewriter.solverContext.declareCellFun(newFunCell.name, funType.argType, funType.resultType)
-
-        // add the update constraints
-        def eachDomElem(domElem: ArenaCell) = {
-          def onHit(index: ArenaCell, newValue: ArenaCell): TlaEx = {
-            val hit = rewriter.lazyEq.safeEq(index, domElem)
-
-            def update(c: ArenaCell): TlaEx = tla.eql(tla.appFun(newFunCell, c), newValue)
-
-            tla.and(hit, update(domElem), update(index))
+        val indexCells = groundArgs.slice(1, 1 + unpackedIndices.size)
+          .map(groundState.arena.findCellByNameEx)
+        val valueCells = groundArgs
+          .slice(1 + unpackedIndices.size, 1 + unpackedIndices.size + valEs.size)
+          .map(groundState.arena.findCellByNameEx)
+        var nextState =
+          funCell.cellType match {
+            case FunT(_, _) => rewriteFun(groundState, funCell, indexCells, valueCells)
+            case rt @ RecordT(_) => rewriteRec(groundState, funCell, rt, unpackedIndices, valueCells)
+            case tt @ TupleT(_) => rewriteTuple(groundState, funCell, tt, unpackedIndices, valueCells)
+            case _ => throw new NotImplementedError(
+              s"EXCEPT is not implemented for ${funCell.cellType}. Write a feature request.")
           }
 
-          val hitsUpdate = updatePairs.map(p => onHit(p._1, p._2))
-
-          def noHit(index: ArenaCell) = {
-            tla.not(rewriter.lazyEq.safeEq(index, domElem))
-          }
-
-          val noHitFound = tla.and(indexCells.map(noHit): _*)
-          val unchanged = tla.eql(tla.appFun(newFunCell, domElem), tla.appFun(funCell, domElem))
-          // there is an index that hits, or there is no such index, and no update is needed
-          val notIn = tla.not(tla.in(domElem, dom)) // if the cell is outside the domain, we don't care
-          tla.or(notIn +: tla.and(noHitFound, unchanged) +: hitsUpdate: _*)
-        }
-
-        val funUpdate = tla.and(domCells.map(eachDomElem): _*)
-
-        // flag a failure when there is an index outside the function domain
-        def existsIndexOutside(index: ArenaCell): TlaEx = {
-          def eachElem(domElem: ArenaCell) = {
-            tla.and(tla.not(tla.eql(index, domElem)), tla.not(tla.in(domElem, dom)))
-          }
-
-          tla.and(domCells.map(eachElem): _*)
-        }
-
-        val outsideDom = tla.or(indexCells.map(existsIndexOutside): _*)
-
-        // finally, add the constraints in SMT
-        val ok = tla.and(tla.not(failPred), tla.or(funUpdate))
-        val notOk = tla.and(failPred, outsideDom)
-        rewriter.solverContext.assertGroundExpr(tla.or(ok, notOk))
-
-        val finalState = eqState
-          .setArena(arena)
+        val finalState = nextState
           .setTheory(CellTheory())
-          .setRex(newFunCell)
         rewriter.coerce(finalState, state.theory)
 
       case _ =>
@@ -136,13 +62,150 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def rewriteSingletonTuples(indices: Seq[TlaEx]): Seq[TlaEx] = {
-    def rewrite(e: TlaEx) = e match {
-      case OperEx(TlaFunOper.tuple, arg) => arg
-      case _ => e
+  def rewriteFun(state: SymbState,
+                 funCell: ArenaCell,
+                 indexCells: Seq[ArenaCell],
+                 valueCells: Seq[ArenaCell]): SymbState = {
+    // rewrite tuples <<j_i, e_i>> to cells
+    val updatePairs = indexCells.zip(valueCells) // ![j_i] = e_i
+    def mkPair(indexCell: ArenaCell, resCell: ArenaCell): TlaEx = tla.tuple(indexCell.toNameEx, resCell.toNameEx)
+
+    val (stateAfterTuples, updateTuples) =
+      rewriter.rewriteSeqUntilDone(state, updatePairs map (mkPair _).tupled)
+    val updateTuplesAsCells = updateTuples.map(stateAfterTuples.arena.findCellByNameEx(_))
+
+    // get the function relation from the arena
+    var nextState = stateAfterTuples
+    val relation = state.arena.getCdm(funCell)
+    val relationCells = nextState.arena.getHas(relation)
+    nextState = nextState.updateArena(_.appendCell(relation.cellType))
+    val resultRelation = nextState.arena.topCell
+
+    // introduce a new function relation that is organized as follows:
+    // [ p \in f_rel |-> IF p[1] = j_1 THEN <<j_1, e_1>> ELSE ... ELSE p ]
+    def eachRelationPair(p: ArenaCell): ArenaCell = {
+      val ite = toIte(nextState.arena, p, indexCells, updateTuplesAsCells)
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(ite))
+      val updatedCell = nextState.asCell
+      // add the new cell to the arena immediately, as we are going to use the IN predicates
+      nextState = nextState.updateArena(_.appendHas(resultRelation, updatedCell))
+      // the new cell belongs to the new relation iff the old cell belongs to the old relation
+      solverAssert(tla.equiv(tla.in(p, relation), tla.in(updatedCell, resultRelation)))
+      updatedCell
     }
 
-    indices map rewrite
+    // compute all updated cells in case we are dealing with a function over non-basic indices
+    val updatedCells = relationCells map eachRelationPair
+
+    // cache equality constraints between the indices and the indices in the function relation
+    def cacheEqForPair(p: ArenaCell): Unit = {
+      val pairIndex = nextState.arena.getHas(p).head
+      for (updateIndex <- indexCells) {
+        nextState = cacheEq(nextState, pairIndex, updateIndex)
+      }
+    }
+
+    // cache all equalities
+    relationCells foreach cacheEqForPair
+
+    // introduce new function
+    nextState = nextState.updateArena(_.appendCell(funCell.cellType))
+    val newFunCell = nextState.arena.topCell
+    // and attach the relation to it
+    nextState
+      .updateArena(_.setCdm(newFunCell, resultRelation))
+      .setRex(newFunCell)
   }
 
+  def rewriteRec(state: SymbState,
+                 recCell: ArenaCell,
+                 recType: RecordT,
+                 indexEs: Seq[TlaEx],
+                 valueCells: Seq[ArenaCell]): SymbState = {
+    def indexToStr: TlaEx => String = {
+      case ValEx(TlaStr(key)) => key
+      case ex => throw new RewriterException("Expected a string when updating a record, found: " + ex)
+    }
+
+    val updatedKeys = indexEs map indexToStr
+    val unchangedKeys = recType.fields.keySet.diff(Set(updatedKeys :_*))
+    // create a new record
+    def mkUnchanged(key: String): (TlaEx, TlaEx) = {
+      (tla.str(key), tla.appFun(recCell.toNameEx, tla.str(key)))
+    }
+    def flattenPairs(list: Seq[TlaEx], pair: (TlaEx, TlaEx)): Seq[TlaEx] = {
+      pair._1 +: pair._2 +: list
+    }
+    // [ [k1, v1], [k2, v2], ... ]
+    val updatedPairs: Seq[(TlaEx, TlaEx)] = indexEs.zip(valueCells.map(_.toNameEx))
+    val unchangedPairs: Seq[(TlaEx, TlaEx)] = unchangedKeys.toList.map(mkUnchanged)
+    val newRecEx = OperEx(TlaFunOper.enum,
+      (updatedPairs ++ unchangedPairs).reverse.foldLeft(Seq[TlaEx]())(flattenPairs) :_*)
+    rewriter.rewriteUntilDone(state.setRex(newRecEx)) // let the rewriter handle this
+  }
+
+  def rewriteTuple(state: SymbState,
+                   tupleCell: ArenaCell,
+                   tupleT: TupleT,
+                   indexEs: Seq[TlaEx],
+                   valueCells: Seq[ArenaCell]): SymbState = {
+    def indexToInt: TlaEx => Int = {
+      case ValEx(TlaInt(index)) => index.toInt
+      case ex => throw new RewriterException("Expected a number when updating a tuple, found: " + ex)
+    }
+
+    val updatedIndices = indexEs map indexToInt
+    val updateMap = Map(updatedIndices.zip(valueCells) :_*)
+    def updateOrKeep(i: Int): TlaEx = {
+      if (updateMap.contains(i)) {
+        updateMap(i)
+      } else {
+        tla.appFun(tupleCell, tla.int(i))
+      }
+    }
+
+    val tupleSize = tupleT.args.size
+    val newTuple = tla.tuple(1.to(tupleSize) map updateOrKeep :_*)
+    rewriter.rewriteUntilDone(state.setRex(newTuple)) // let the rewriter handle this
+  }
+
+  def toIte(arena: Arena, pair: ArenaCell, indexCells: Seq[ArenaCell], updatePairs: Seq[ArenaCell]): TlaEx = {
+    val pairIndex = arena.getHas(pair).head // the first element of the pair is the index
+    updatePairs match {
+      case Seq() => pair // ... ELSE p
+      case newPair +: _ =>
+        val updateIndex = indexCells.head // IF p[1] = i_j
+        tla.ite(tla.eql(pairIndex, updateIndex), newPair, toIte(arena, pair, indexCells.tail, updatePairs.tail))
+    }
+  }
+
+  def addEqualities(state: SymbState, lhs: ArenaCell, rhs: ArenaCell): SymbState = {
+    rewriter.lazyEq.cacheOneEqConstraint(state, lhs, rhs)
+  }
+
+
+  // This is an important step. As we receive expressions from SANY, every index argument to EXCEPT
+  // is always a tuple]. For instance, the expression [f EXCEPT ![1] = 2] will be represented
+  // as OperEx(TlaFunOper.except, f, <<1>>, 2). Hence, we explicitly unpack singleton tuples.
+  // As for non-singleton tuples, they should be preprocessed.
+  private def unpackSingletonIndices(args: Seq[TlaEx]): Seq[TlaEx] = {
+    def unpack(e: TlaEx) = e match {
+      case OperEx(TlaFunOper.tuple, arg) =>
+        arg // unpack
+      case OperEx(TlaFunOper.tuple, _*) =>
+        throw new InternalCheckerError("TLA importer failed to preprocess a chained EXCEPT: " + e)
+      case _ =>
+        // complain
+        throw new RewriterException("Expected a tuple as a function index, found: " + e)
+    }
+
+    args map unpack
+  }
+
+  private def checkType(cellType: CellT): Unit = {
+    cellType match {
+      case FunT(_, _) => () // o.k.
+      case _ => throw new NotImplementedError(s"EXCEPT is not implemented for $cellType. Write a feature request.")
+    }
+  }
 }

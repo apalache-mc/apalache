@@ -12,17 +12,19 @@ package at.forsyte.apalache.tla.bmcmt.analyses
   *      but not parameters or bound variables, e.g., x + 1 if x is a VARIABLE, but not y + 1,
   *      if y is a variable bound with \E y \in ... There must be at least one primed expression inside
   *      an action-level expression, otherwise; it would be a state-level expression.</li>
-  * <li> an action-level expression that refers to bound variables and parameters, and</li>
-  * <li> another expression of higher grade, e.g., a temporal level expression <>A.
+  * <li> an action-level expression that refers to bound variables and parameters, </li>
+  * <li> another expression of higher grade, e.g., a temporal level expression <>A, and</li>
+  * <li> an expression that should never be cached, e.g., a type-annotated expression.</li>
   * </ol>
   *
   * @author Igor Konnov
   */
 object ExprGrade extends Enumeration {
-  val Constant, StateFree, StateBound, ActionFree, ActionBound, Higher = Value
+  val Constant, StateFree, StateBound, ActionFree, ActionBound, Higher, NonCacheable = Value
 
   def join(left: Value, right: Value): Value = {
     (left, right) match {
+      case (NonCacheable, _) | (_, NonCacheable) => NonCacheable
       case (Higher, _) | (_, Higher) => Higher
       case (ActionBound, _) | (_, ActionBound) => ActionBound
       case (ActionFree, StateBound) | (StateBound, ActionFree) => ActionBound

@@ -1,6 +1,10 @@
 package at.forsyte.apalache.tla.lir.oper
 
 /**
+  * Sequence operators
+  *
+  * @author Jure Kukovec
+  *
   * Created by jkukovec on 11/17/16.
   */
 

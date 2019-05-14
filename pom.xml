@@ -7,7 +7,7 @@
     <groupId>at.forsyte.apalache</groupId>
     <artifactId>apalache</artifactId>
     <packaging>pom</packaging>
-    <version>0.2.1-SNAPSHOT</version>
+    <version>0.5.0-RELEASE</version>
 
     <name>APALACHE project</name>
     <url>https://github.com/konnov/apalache</url>
@@ -44,7 +44,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <scalaVersion>2.12.0</scalaVersion>
+                <scalaVersion>2.12.0</scalaVersion> <!-- required by scala-xml 1.0.6 -->
                 <scalaBinaryVersion>2.12</scalaBinaryVersion>
             </properties>
             <dependencies>
@@ -56,18 +56,12 @@
                 <dependency>
                     <groupId>org.scala-lang.modules</groupId>
                     <artifactId>scala-xml_${scalaBinaryVersion}</artifactId>
-                    <version>1.0.6</version>
+                    <version>1.0.5</version> <!-- required by scalatest 3.0.5 -->
                 </dependency>
                 <dependency>
                     <groupId>org.scala-lang.modules</groupId>
                     <artifactId>scala-parser-combinators_${scalaBinaryVersion}</artifactId>
                     <version>1.0.4</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.scalatest</groupId>
-                    <artifactId>scalatest_${scalaBinaryVersion}</artifactId>
-                    <version>3.0.0</version>
-                    <scope>test</scope>
                 </dependency>
             </dependencies>
         </profile>
@@ -79,19 +73,19 @@
             <dependency>
                 <groupId>com.google.inject</groupId>
                 <artifactId>guice</artifactId>
-                <version>4.0</version>
+                <version>4.2.2</version>
             </dependency>
 
             <dependency>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
-                <version>1.2.3</version>
+                <version>1.1.8</version>
             </dependency>
 
             <dependency>
                 <groupId>com.typesafe.scala-logging</groupId>
-                <artifactId>scala-logging_2.12</artifactId>
-                <version>3.7.2</version>
+                <artifactId>scala-logging_${scalaBinaryVersion}</artifactId>
+                <version>3.5.0</version>
             </dependency>
 
             <dependency>
@@ -102,8 +96,8 @@
             </dependency>
             <dependency>
                 <groupId>org.scalatest</groupId>
-                <artifactId>scalatest_2.12</artifactId>
-                <version>3.0.4</version>
+                <artifactId>scalatest_${scalaBinaryVersion}</artifactId>
+                <version>3.0.1</version>
                 <scope>test</scope>
             </dependency>
             <!--
@@ -121,7 +115,7 @@
             <dependency>
                 <groupId>org.lamport.tla</groupId>
                 <artifactId>tla2tools</artifactId>
-                <version>2.0.0-2017-10-06</version>
+                <version>1.5.7</version>
             </dependency>
 
             <dependency>
@@ -133,12 +127,37 @@
     </dependencyManagement>
 
     <build>
+        <!-- plugin settings for the modules -->
         <pluginManagement>
             <plugins>
                 <plugin>
                     <groupId>net.alchim31.maven</groupId>
                     <artifactId>scala-maven-plugin</artifactId>
                     <version>3.2.1</version>
+
+                    <executions>
+                        <execution>
+                            <id>scala-compile-first</id>
+                            <phase>process-resources</phase>
+                            <goals>
+                                <goal>add-source</goal>
+                                <goal>compile</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>scala-test-compile</id>
+                            <phase>process-test-resources</phase>
+                            <goals>
+                                <goal>testCompile</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <args>
+                            <!-- work-around for https://issues.scala-lang.org/browse/SI-8358 -->
+                            <arg>-nobootcp</arg>
+                        </args>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -148,11 +167,43 @@
                         <source>1.8</source>
                         <target>1.8</target>
                     </configuration>
+
+                    <executions>
+                        <execution>
+                            <phase>compile</phase>
+                            <goals>
+                                <goal>compile</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+
                 </plugin>
-                <!-- a plugin to build a distribution -->
+                <!--
+                 A plugin to build a distribution package, check:
+         https://maven.apache.org/plugins/maven-assembly-plugin/examples/multimodule/module-binary-inclusion-simple.html
+                -->
                 <plugin>
                     <artifactId>maven-assembly-plugin</artifactId>
                     <version>3.1.0</version>
+                    <configuration>
+                        <descriptors>
+                            <descriptor>src/assembly/bin.xml</descriptor>
+                        </descriptors>
+                        <archive>
+                            <manifest>
+                                <!-- this is the main entry point for all of our command tools -->
+                                <mainClass>at.forsyte.apalache.tla.Tool</mainClass>
+                            </manifest>
+                        </archive>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>single</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
                 <!-- write the version number in MANIFEST.MF -->
                 <plugin>
@@ -166,15 +217,33 @@
                         </archive>
                     </configuration>
                 </plugin>
+
+                <plugin>
+                    <groupId>org.scoverage</groupId>
+                    <artifactId>scoverage-maven-plugin</artifactId>
+                    <version>${scoverage.plugin.version}</version>
+                    <configuration>
+                        <scalaVersion>${scalaBinaryVersion}</scalaVersion>
+                        <!-- other parameters -->
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>report</goal> <!-- or integration-check -->
+                            </goals>
+                            <phase>prepare-package</phase> <!-- or any other phase -->
+                        </execution>
+                    </executions>
+                </plugin>
             </plugins>
         </pluginManagement>
 
+        <!-- plugin settings for the parent module itself -->
         <plugins>
             <!-- compile scala and java code -->
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
-                <version>3.1.6</version>
 
                 <executions>
                     <execution>
@@ -214,30 +283,18 @@
                 </executions>
             </plugin>
 
-            <!-- assemble the project into a single jar -->
+            <!--
+                Find conflicting versions of the libraries by running mvn enforcer:enforce
+
+                https://www.ricston.com/blog/solving-dependency-conflicts-maven/
+             -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.4</version>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>1.4.1</version>
                 <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <archive>
-                        <manifest>
-                            <!-- this is the main entry point for all of our command tools -->
-                            <mainClass>at.forsyte.apalache.tla.Tool</mainClass>
-                        </manifest>
-                    </archive>
+                    <rules><dependencyConvergence/></rules>
                 </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
 
             <plugin>

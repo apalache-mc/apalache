@@ -1,0 +1,36 @@
+filename;tool;timeout;init;inv;next;args
+traffic/traffic.tla;apalache;1h;;;;--length=4
+traffic/MC.tla;tlc;10m;;;;-config MC.cfg
+Prisoners/Prisoners.tla;apalache;30m;;SafetyInv;;--length=15 --cinit=ConstInit
+Prisoners/MC.tla;tlc;30m;;;;-config MC.cfg -deadlock
+ewd840/EWD840.tla;apalache;1h;;Inv;;--length=10 --cinit=ConstInit4
+ewd840/MC4.tla;tlc;10m;;;;-config MC.cfg -deadlock
+ewd840/EWD840.tla;apalache;1h;;Inv;;--length=30 --cinit=ConstInit10
+ewd840/MC10.tla;tlc;20h;;;;-config MC.cfg -deadlock
+allocator/SimpleAllocator.tla;apalache;10h;;ResourceMutex;;--length=7 --cinit=ConstInit22
+allocator/SAMC22.tla;tlc;30m;;ResourceMutex;;-config MC.cfg -deadlock
+allocator/SimpleAllocator.tla;apalache;23h;;ResourceMutex;;--length=10 --cinit=ConstInit53
+allocator/SAMC53.tla;tlc;30m;;ResourceMutex;;-config MC.cfg -deadlock
+bcastFolklore/bcastFolklore.tla;apalache;30m;Init;;;--length=10 --cinit=ConstInit4
+bcastFolklore/MC4.tla;tlc;2h;Init;;;-config MC.cfg
+bcastFolklore/bcastFolklore.tla;apalache;30m;Init;;;--length=10 --cinit=ConstInit20
+bcastFolklore/MC20.tla;tlc;20h;Init;;;-config MC.cfg
+bcastByz/bcastByz.tla;apalache;30m;Init;;;--length=10 --cinit=ConstInit4
+bcastByz/MC4.tla;tlc;20h;Init;;;-config MC.cfg
+bcastByz/bcastByz.tla;apalache;30m;Init;;;--length=30 --cinit=ConstInit7
+bcastByz/MC7.tla;tlc;23h;Init;;;-config MC.cfg
+c1cs/c1cs.tla;apalache;23h;;Agreement;;--length=20 --cinit=ConstInit4
+c1cs/MC4.tla;tlc;23h;;Agreement;;-config MC.cfg -deadlock
+two-phase/TwoPhase.tla;apalache;23h;;TCConsistent;;--length=11 --cinit=ConstInit3
+two-phase/MC3.tla;tlc;10h;;;;-config MC.cfg -deadlock
+two-phase/TwoPhase.tla;apalache;23h;;TCConsistent;;--length=23 --cinit=ConstInit7
+two-phase/MC7.tla;tlc;23h;;;;-config MC.cfg -deadlock
+paxos/Apa3Paxos.tla;apalache;23h;;VotingInv;;--length=25 --tuning=apalache3.properties
+paxos/MC3.tla;tlc;23h;;;;-config MC.cfg -deadlock
+paxos/Apa5Paxos.tla;apalache;23h;;VotingInv;;--length=30 --tuning=apalache5.properties
+paxos/MC5.tla;tlc;23h;;;;-config MC.cfg -deadlock
+fpaxos/ApaFPaxos.tla;apalache;23h;;SafeValue;;--length=21 --tuning=apalache.properties
+fpaxos/MCFPaxos.tla;tlc;23h;;;;-config MCFPaxos.cfg -deadlock
+fpaxos/Apa5FPaxos.tla;apalache;23h;;SafeValue;;--length=30 --tuning=apalache5.properties
+fpaxos/MCFPaxos.tla;tlc;23h;;;;-config MCFPaxos5.cfg -deadlock
+

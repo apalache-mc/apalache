@@ -1,9 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaBool
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 
 /**
   * Integer comparisons: <, <=, >, >=. For equality and inequality, check EqRule and NeqRule.
@@ -44,16 +45,17 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
       rewriter.coerce(finalState, state.theory)
 
     case OperEx(oper, left, right) =>
-      val leftState = rewriter.rewriteUntilDone(state.setTheory(IntTheory()).setRex(left))
-      val rightState = rewriter.rewriteUntilDone(leftState.setTheory(IntTheory()).setRex(right))
+      val leftState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(left))
+      val rightState = rewriter.rewriteUntilDone(leftState.setTheory(CellTheory()).setRex(right))
       // compare integers directly in SMT
-      val eqPred = rewriter.solverContext.introBoolConst()
+      var arena = rightState.arena.appendCell(BoolT())
+      val eqPred = arena.topCell
       val cons =
         OperEx(TlaOper.eq,
-          NameEx(eqPred),
+          eqPred.toNameEx,
           OperEx(oper, leftState.ex, rightState.ex))
       rewriter.solverContext.assertGroundExpr(cons)
-      val finalState = rightState.setTheory(BoolTheory()).setRex(NameEx(eqPred))
+      val finalState = rightState.setArena(arena).setTheory(CellTheory()).setRex(eqPred.toNameEx)
       rewriter.coerce(finalState, state.theory)
 
     case _ =>

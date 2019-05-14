@@ -5,7 +5,7 @@
     <parent>
         <groupId>at.forsyte.apalache</groupId>
         <artifactId>apalache</artifactId>
-        <version>0.2.1-SNAPSHOT</version>
+        <version>0.5.0-RELEASE</version>
     </parent>
 
     <!--
@@ -16,6 +16,76 @@
 
     <name>tool</name>
     <url>https://github.com/konnov/apalache</url>
+
+    <build>
+        <plugins>
+            <!-- generate git properties for versioning -->
+            <plugin>
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
+                <version>2.2.5</version>
+                <executions>
+                    <execution>
+                        <id>get-the-git-infos</id>
+                        <goals>
+                            <goal>revision</goal>
+                        </goals>
+                        <!-- *NOTE*: The default phase of revision is initialize, but in case you want to change it, you can do so by adding the phase here -->
+                        <phase>initialize</phase>
+                    </execution>
+                </executions>
+
+                <configuration>
+                    <verbose>false</verbose>
+
+                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
+
+                    <generateGitPropertiesFilename>${project.build.outputDirectory}/at/forsyte/apalache/tla/tooling/git.properties</generateGitPropertiesFilename>
+
+                    <skipPoms>true</skipPoms>
+
+                    <failOnNoGitDirectory>true</failOnNoGitDirectory>
+
+                    <failOnUnableToExtractRepoInfo>true</failOnUnableToExtractRepoInfo>
+
+                    <includeOnlyProperties>
+                        <includeOnlyProperty>git.commit.id.describe</includeOnlyProperty>
+                    </includeOnlyProperties>
+
+                    <!-- @since 2.1.0 -->
+                    <!--
+                        The following `gitDescribe` configuration below is optional and can be leveraged as a really powerful versioning helper.
+                        If you are not familar with [git-describe](https://github.com/git-commit-id/maven-git-commit-id-plugin#git-describe-short-intro-to-an-awesome-command) it is highly recommended to go through this part of the documentation. More advanced users can most likely skip the explanations in this section, as it just explains the same options that git provides.
+                        As a side note this plugin tries to be 1-to-1 compatible with git's plain output, even though the describe functionality has been reimplemented manually using JGit (you don't have to have a git executable to use the plugin).
+                        See also https://git-scm.com/docs/git-describe
+                    -->
+                    <gitDescribe>
+                        <skip>false</skip>
+                        <always>true</always>
+                        <dirty>-dirty</dirty>
+
+                        <!--
+                            When you run git-describe it only looks only for *annotated tags* by default.
+                            If you wish to consider *lightweight tags* in your describe as well you would need to switch this to `true`
+
+                            The difference between *annotated tags* and *lightweight tags* is outlined in more depth here:
+                            https://github.com/git-commit-id/maven-git-commit-id-plugin/#git-describe-and-a-small-gotcha-with-tags
+                        -->
+                        <tags>true</tags>
+
+                        <!--
+                            Explanation:
+                            git-describe, by default, returns just the tag name, if the current commit is tagged.
+                            Set this option to `true` to force it to format the output using the typical describe format ("${tag-name}-${commits_from_tag}-g${commit_id-maybe_dirty}"), even if "on" a tag.
+
+                            An example would be: `tagname-0-gc0ffebabe` - notice that the distance from the tag is 0 here, if you don't use **forceLongFormat** mode, the describe for such commit would look like this: `tagname`.
+                        -->
+                        <forceLongFormat>true</forceLongFormat>
+                    </gitDescribe>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
     <dependencies>
         <dependency>
@@ -42,12 +112,24 @@
         <dependency>
             <groupId>org.backuity.clist</groupId>
             <artifactId>clist-core_2.12</artifactId>
-            <version>3.3.0</version>
+            <version>3.2.2</version>
         </dependency>
         <dependency>
             <groupId>org.backuity.clist</groupId>
             <artifactId>clist-macros_2.12</artifactId>
-            <version>3.3.0</version>
+            <version>3.2.2</version>
+        </dependency>
+        <dependency>
+            <!-- configurations in property files -->
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-configuration2</artifactId>
+            <version>2.4</version>
+        </dependency>
+        <dependency>
+            <!-- commons-configuration2 uses commons-beanutiles (without declaring it in dependencies?) -->
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>1.9.3</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -61,8 +143,6 @@
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_2.12</artifactId>
-            <!-- since artifactId contains a (scala) version, we have to provide a package version as well -->
-            <version>3.0.4</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

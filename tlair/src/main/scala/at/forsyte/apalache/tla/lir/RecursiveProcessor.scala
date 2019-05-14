@@ -1,7 +1,11 @@
 package at.forsyte.apalache.tla.lir
 
+import scalaz.Scalaz._
+import scalaz._
+
 import scala.reflect.Manifest
 
+// TODO: @Igor: please move it to the package *.process
 object RecursiveProcessor {
 
   object DefaultFunctions {
@@ -80,6 +84,37 @@ object RecursiveProcessor {
     }
   }
 
+  def computeS[S, T1, T2](
+                           p_terminationCheck : T1 => Boolean,
+                           p_terminalExFun : T1 => State[S, T2],
+                           p_nonTerminalExFun : T1 => State[S, T2],
+                           p_hasRelevantChildren : T1 => Boolean,
+                           p_getChildren : T1 => Traversable[T1],
+                           p_childUnification : (T1, Traversable[T2]) => State[S, T2]
+                         )(
+                           p_ex : T1
+                         ) : State[S, T2] =
+    if ( p_terminationCheck( p_ex ) ) {
+      p_terminalExFun( p_ex )
+    }
+
+    else if ( p_hasRelevantChildren( p_ex ) ) {
+      val recFun = computeS(
+        p_terminationCheck,
+        p_terminalExFun,
+        p_nonTerminalExFun,
+        p_hasRelevantChildren,
+        p_getChildren,
+        p_childUnification
+      ) _
+
+      val x = p_getChildren(p_ex).toList traverseS recFun
+      x flatMap { p_childUnification( p_ex, _ ) }
+    }
+    else {
+      p_nonTerminalExFun( p_ex )
+    }
+
   def compute[T1, T2](
                        p_terminationCheck : T1 => Boolean,
                        p_terminalExFun : T1 => T2,
@@ -111,13 +146,13 @@ object RecursiveProcessor {
                          p_hasRelevantChildren : T => Boolean,
                          p_getChildren : T => Traversable[T]
                        ) : T => Boolean =
-    compute[T,Boolean](
+    compute[T, Boolean](
       DefaultFunctions.naturalTermination[T],
       p_propertyFun,
       p_propertyFun,
       p_hasRelevantChildren,
       p_getChildren,
-      (p, chd) => p_propertyFun(p) && chd.forall( identity )
+      ( p, chd ) => p_propertyFun( p ) && chd.forall( identity )
     )
 
   def computeFromTlaEx[T](
@@ -151,11 +186,11 @@ object RecursiveProcessor {
       p_terminationCheck,
       p_terminalExFun,
       p_nonTerminalExFun,
-      (par,chds) => {
+      ( par, chds ) => {
         val newEx = DefaultFunctions.tlaExTransformChildren( par, chds )
-        if (p_terminationCheck(newEx))
-          p_terminalExFun(newEx)
-        else p_nonTerminalExFun(newEx)
+        if ( p_terminationCheck( newEx ) )
+          p_terminalExFun( newEx )
+        else p_nonTerminalExFun( newEx )
       }
     )
 

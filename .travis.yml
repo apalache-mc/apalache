@@ -30,6 +30,12 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:"$PWD/lib"; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$PWD/lib"; fi
   - popd
+    #- pip install release-me
+
+    #after_success:
+    #- sudo pip install --upgrade pip
+    #- sudo pip install --user release-me
+    #- ./script/release --overwrite latest-unstable ./script/latest-message.txt
 
 branches:
   only:
@@ -37,7 +43,7 @@ branches:
   - unstable
 
 script:
-    - mvn package && NO_MVN=1 ./test/run-integration && NO_MVN=1 ./test/run-tlaplus-suite
+    - mvn package && NO_MVN=1 ./test/run-integration #&& NO_MVN=1 ./test/run-tlaplus-suite
 
 notifications:
     email:

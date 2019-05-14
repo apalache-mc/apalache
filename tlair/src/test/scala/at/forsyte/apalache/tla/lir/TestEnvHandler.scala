@@ -74,7 +74,8 @@ class TestEnvHandler extends FunSuite with TestingPredefs {
 
   }
 
-  test( "ReplaceAll" ) {
+  /** Made redundant by assign-on-create approach to UIDs */
+  ignore( "ReplaceAll" ) {
     val eh = newEh
 
     val ex = tla.eql( tla.plus( 1, 1 ), 2 )

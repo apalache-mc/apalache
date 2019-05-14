@@ -6,8 +6,9 @@ import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaStr}
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
+import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.immutable.{HashSet, SortedSet}
 
@@ -16,7 +17,7 @@ import scala.collection.immutable.{HashSet, SortedSet}
   *
   * @author Igor Konnov
   */
-class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter) {
+class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter) extends LazyLogging {
   // a simple decoder that dumps values into a text file, in the future we need better recovery code
   def dumpArena(state: SymbState, writer: PrintWriter): Unit = {
     val sortedCells = SortedSet[ArenaCell]() ++ state.arena.cellMap.values
@@ -27,7 +28,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     // compute the equivalence classes for the cells, totally suboptimally
     // TODO: rewrite, I did not think too much at all
     def iseq(c: ArenaCell, d: ArenaCell): Boolean = {
-      c.cellType == d.cellType && solverContext.evalGroundExpr(tla.eql(c, d)).identical(tla.bool(true))
+      c.cellType == d.cellType && solverContext.evalGroundExpr(tla.eql(c, d)) == tla.bool(true)
     }
 
     def merge(cls: List[HashSet[ArenaCell]], c: ArenaCell, d: ArenaCell): List[HashSet[ArenaCell]] = {
@@ -62,6 +63,11 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       val value = solverContext.evalGroundExpr(NameEx(name))
       writer.println(s"$name = $value")
     }
+
+    for (name <- solverContext.getIntConsts) {
+      val value = solverContext.evalGroundExpr(NameEx(name))
+      writer.println(s"$name = $value")
+    }
   }
 
   def decodeStateVariables(state: SymbState): Map[String, TlaEx] = {
@@ -78,7 +84,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         ValEx(TlaStr(found.get))
       } else {
         findCellInSet(arena, rewriter.strValueCache.values().toSeq, cell.toNameEx) match {
-            // found among the cached keys
+          // found among the cached keys
           case Some(c) =>
             decodeCellToTlaEx(arena, c)
 
@@ -92,58 +98,91 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       tla.appFun(NameEx("Unknown"), cell)
 
     case FinSetT(_) =>
-      def inSet(e: ArenaCell) = solverContext.evalGroundExpr(tla.in(e, cell)).identical(tla.bool(true))
+      def inSet(e: ArenaCell) = solverContext.evalGroundExpr(tla.in(e, cell)) == tla.bool(true)
 
       val elems = arena.getHas(cell).filter(inSet)
-      tla.enumSet(elems.map(c => decodeCellToTlaEx(arena, c)): _*)
+      val decodedElems = elems.map(decodeCellToTlaEx(arena, _))
+      // try to normalize the set for better user experience
+      val niceElems = decodedElems.distinct.sortWith(SymbStateDecoder.compareTlaExByStr)
+      tla.enumSet(niceElems: _*)
 
     case FinFunSetT(_, _) =>
       tla.funSet(decodeCellToTlaEx(arena, arena.getDom(cell)), decodeCellToTlaEx(arena, arena.getCdm(cell)))
 
     case FunT(_, _) =>
-      val dom = arena.getDom(cell)
-      def eachElem(es: List[TlaEx], argCell: ArenaCell): List[TlaEx] = {
-        val inSet = solverContext.evalGroundExpr(tla.in(argCell, dom)).identical(tla.bool(true))
-        if (inSet) {
-          val resultEx = findCellInSet(arena, arena.getHas(arena.getCdm(cell)), tla.appFun(cell, argCell)) match {
-            case Some(c) => decodeCellToTlaEx(arena, c) // it may be a set
-            case None => solverContext.evalGroundExpr(tla.appFun(cell, argCell)) // fall back
-          }
-          decodeCellToTlaEx(arena, argCell) +: resultEx +: es
+      // in the new implementation, every function is represented with the relation {(x, f[x]) : x \in S}
+      val relation = arena.getCdm(cell)
+      val args =
+        decodeCellToTlaEx(arena, relation) match {
+          case OperEx(TlaSetOper.enumSet, elems@_*) =>
+            def untuple(e: TlaEx) = e match {
+              case OperEx(TlaFunOper.tuple, pair@_*) =>
+                pair
+
+              case _ => throw new RewriterException("Corrupted function: " + relation)
+            }
+
+            elems flatMap untuple
+
+          case _ => throw new RewriterException("Corrupted function: " + relation)
+        }
+
+      if (args.nonEmpty)
+        OperEx(TlaFunOper.enum, args :_*)
+      else
+        OperEx(TlaFunOper.funDef, tla.enumSet(), tla.name("x"), tla.enumSet())
+
+    case SeqT(_) =>
+      val startEndFun = arena.getHas(cell) map (decodeCellToTlaEx(arena, _))
+      startEndFun match {
+        case ValEx(TlaInt(start)) :: ValEx(TlaInt(end)) +: cells =>
+          // note that start >= 0 and end = Len(S) - start
+          def isIn(elem: TlaEx, no: Int): Boolean = no >= start && no < end
+
+          val filtered = cells.zipWithIndex filter (isIn _).tupled map (_._1)
+          tla.tuple(filtered: _*) // return a tuple as it is the canonical representation of a sequence
+
+        case _ => throw new RewriterException("Corrupted sequence: " + startEndFun)
+      }
+
+    case r@RecordT(_) =>
+      def exToStr(ex: TlaEx): TlaStr = ex match {
+        case ValEx(s@TlaStr(_)) => s
+        case _ => throw new RewriterException("Expected a string, found: " + ex)
+      }
+
+      // Note that the domain may have fewer fields than the record type is saying.
+      // This comes from the fact that we can extend a record with a richer type.
+      val domCell = arena.getDom(cell)
+      val dom = decodeSet(arena, domCell) map exToStr
+      val fieldValues = arena.getHas(cell)
+      val keyList = r.fields.keySet.toList
+
+      def eachField(es: List[TlaEx], key: String): List[TlaEx] = {
+        if (!dom.contains(TlaStr(key))) {
+          es // skip
         } else {
-          es
+          val index = keyList.indexOf(key)
+          val valueCell = fieldValues(index)
+          ValEx(TlaStr(key)) +: decodeCellToTlaEx(arena, valueCell) +: es
         }
       }
 
-      val domElems = arena.getHas(dom)
-      // use the same notation as for the records
-      val keysAndValues = domElems.reverse.foldLeft(List[TlaEx]()) (eachElem)
-      OperEx(TlaFunOper.enum, keysAndValues :_*)
-
-    case r @ RecordT(_) =>
-      def exToStr(ex: TlaEx): TlaStr = ex match {
-        case ValEx(s @ TlaStr(_)) => s
-        case _ => throw new RewriterException("Expected a string, found: " + ex)
-      }
-      val dom = decodeSet(arena, arena.getDom(cell)) map exToStr
-      val tuple = arena.getHas(cell).head
-      val tupleElems = arena.getHas(tuple)
-      val keyList = r.fields.keySet.toList
-      def eachField(es: List[TlaEx], key: TlaStr): List[TlaEx] = {
-        val tupleIndex = keyList.indexOf(key.value)
-        val valueCell = tupleElems(tupleIndex)
-        ValEx(key) +: decodeCellToTlaEx(arena, valueCell) +: es
+      val keysAndValues = keyList.reverse.foldLeft(List[TlaEx]())(eachField)
+      if (keysAndValues.nonEmpty) {
+        OperEx(TlaFunOper.enum, keysAndValues: _*)
+      } else {
+        logger.error(s"Decoder: Found an empty record $cell when decoding a counterexample, domain = $domCell. This is a bug.")
+        // for debugging purposes, just return a string
+        ValEx(TlaStr(s"Empty record domain $domCell"))
       }
 
-      val keysAndValues = dom.reverse.toList.foldLeft(List[TlaEx]()) (eachField)
-      OperEx(TlaFunOper.enum, keysAndValues :_*)
-
-    case t @ TupleT(_) =>
+    case t@TupleT(_) =>
       val tupleElems = arena.getHas(cell)
-      val elemAsExprs  = tupleElems.map(c => decodeCellToTlaEx(arena, c))
-      tla.tuple(elemAsExprs :_*)
+      val elemAsExprs = tupleElems.map(c => decodeCellToTlaEx(arena, c))
+      tla.tuple(elemAsExprs: _*)
 
-    case PowSetT(t @ FinSetT(_)) =>
+    case PowSetT(t@FinSetT(_)) =>
       tla.powSet(decodeCellToTlaEx(arena, arena.getDom(cell)))
 
     case _ =>
@@ -164,6 +203,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     def isEq(c: ArenaCell): Boolean = {
       ValEx(TlaBool(true)) == solverContext.evalGroundExpr(tla.and(tla.eql(c, ex)))
     }
+
     cells.find(isEq)
   }
 
@@ -180,5 +220,11 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     }
 
     rec(expr)
+  }
+}
+
+object SymbStateDecoder {
+  private def compareTlaExByStr(lhs: TlaEx, rhs: TlaEx): Boolean = {
+    lhs.toSimpleString.compareTo(rhs.toSimpleString) <= 0
   }
 }

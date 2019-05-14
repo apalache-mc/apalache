@@ -24,10 +24,10 @@ class NeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
           state.setRex(OperEx(TlaOper.eq, left, right))
         val nextState = rewriter.rewriteUntilDone(eqState)
         val finalState =
-          if (NameEx(rewriter.solverContext.falseConst) == nextState.ex) {
-            nextState.setRex(NameEx(rewriter.solverContext.trueConst))
-          } else if (NameEx(rewriter.solverContext.trueConst) == nextState.ex) {
-            nextState.setRex(NameEx(rewriter.solverContext.falseConst))
+          if (NameEx(SolverContext.falseConst) == nextState.ex) {
+            nextState.setRex(NameEx(SolverContext.trueConst))
+          } else if (NameEx(SolverContext.trueConst) == nextState.ex) {
+            nextState.setRex(NameEx(SolverContext.falseConst))
           } else {
             val neState =  nextState.setRex(OperEx(TlaBoolOper.not, nextState.ex))
             rewriter.rewriteUntilDone(neState)

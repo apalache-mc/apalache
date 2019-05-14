@@ -3,11 +3,12 @@ package at.forsyte.apalache.tla.bmcmt.analyses
 import at.forsyte.apalache.tla.assignments.SpecWithTransitions
 import at.forsyte.apalache.tla.bmcmt.RewriterException
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.plugins.UniqueDB
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import com.google.inject.Inject
+import com.typesafe.scalalogging.LazyLogging
 
 /**
   * A simple skolemization analysis that transforms a formula in negated normal form
@@ -16,7 +17,7 @@ import com.google.inject.Inject
   *
   * @author Igor Konnov
   */
-class SimpleSkolemization @Inject()(val frexStore: FreeExistentialsStoreImpl) {
+class SimpleSkolemization @Inject()(val frexStore: FreeExistentialsStoreImpl) extends LazyLogging {
   /**
     * Transform the transitions into normal form and label the free existential quantifiers.
     *
@@ -28,24 +29,22 @@ class SimpleSkolemization @Inject()(val frexStore: FreeExistentialsStoreImpl) {
     val nextTransitions = spec.nextTransitions map toNegatedForm
     val notInv =
       if (spec.notInvariant.isDefined) Some(toNegatedForm(spec.notInvariant.get)) else None
+    val notInvPrime =
+      if (spec.notInvariantPrime.isDefined) Some(toNegatedForm(spec.notInvariantPrime.get)) else None
+    val constInitPrime =
+      if (spec.constInitPrime.isDefined) Some(toNegatedForm(spec.constInitPrime.get)) else None
 
-    // TODO: UniqueDB should be wired using a constructor
-    def addUid(ex: TlaEx): Unit =
-      SpecHandler.sideeffectEx(ex, UniqueDB.add)
-
-    initTransitions foreach addUid
     initTransitions foreach markFreeExistentials
-    nextTransitions foreach addUid
     nextTransitions foreach markFreeExistentials
-    if (notInv.isDefined) {
-      addUid(notInv.get)
-      markFreeExistentials(notInv.get)
-    }
-    new SpecWithTransitions(spec.rootModule, initTransitions, nextTransitions, notInv)
+    notInv foreach markFreeExistentials
+    notInvPrime foreach markFreeExistentials
+    constInitPrime foreach markFreeExistentials
+    new SpecWithTransitions(spec.rootModule, initTransitions, nextTransitions, constInitPrime, notInv, notInvPrime)
   }
 
   private def markFreeExistentials(ex: TlaEx): Unit = ex match {
-    case OperEx(TlaBoolOper.exists, _, _, pred) =>
+    case OperEx(TlaBoolOper.exists, name, _, pred) =>
+      logger.debug(s"added free existential $name (id=${ex.ID})")
       frexStore.store += ex.ID
       markFreeExistentials(pred)
 
@@ -53,6 +52,11 @@ class SimpleSkolemization @Inject()(val frexStore: FreeExistentialsStoreImpl) {
       args foreach markFreeExistentials
 
     case OperEx(TlaBoolOper.or, args@_*) =>
+      args foreach markFreeExistentials
+
+    case OperEx(TlaControlOper.ifThenElse, args@_*) =>
+      // we do not have to check that the predicate does not have \forall,
+      // as we are only concerned with \exists in the scope of \forall
       args foreach markFreeExistentials
 
     case _ =>
@@ -72,6 +76,10 @@ class SimpleSkolemization @Inject()(val frexStore: FreeExistentialsStoreImpl) {
 
       case OperEx(TlaBoolOper.not, arg) =>
         nnf(!neg, arg)
+
+      case ite@OperEx(TlaControlOper.ifThenElse, predEx, thenEx, elseEx) =>
+        // ~ITE(A, B, C) == ITE(A, ~B, ~C)
+        OperEx(TlaControlOper.ifThenElse, predEx, nnf(neg, thenEx), nnf(neg, elseEx))
 
       case OperEx(TlaBoolOper.and, args@_*) =>
         val oper = if (neg) TlaBoolOper.or else TlaBoolOper.and
@@ -149,8 +157,8 @@ class SimpleSkolemization @Inject()(val frexStore: FreeExistentialsStoreImpl) {
       case OperEx(TlaSetOper.supseteq, left, right) =>
         OperEx(if (neg) TlaSetOper.subsetProper else TlaSetOper.supseteq, left, right)
 
-      case OperEx(TlaOper.label, subex, args @ _*) =>
-        OperEx(TlaOper.label, nnf(neg, subex) +: args :_*)
+      case OperEx(TlaOper.label, subex, args@_*) =>
+        OperEx(TlaOper.label, nnf(neg, subex) +: args: _*)
 
       case _ =>
         if (!neg)

@@ -2,20 +2,22 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
-import at.forsyte.apalache.tla.bmcmt.types.{FailPredT, RecordT, TupleT}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory}
+import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 
 /**
-  * Implements the rules: SE-FUN-APP[1-3].
+  * Implements f[x] for: functions, records, and tuples.
   *
   * @author Igor Konnov
   */
 class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val picker = new PickFromAndFunMerge(rewriter)
+  private val picker = new CherryPick(rewriter)
   private val simplifier = new ConstSimplifier()
+  private val defaultValueFactory = new DefaultValueFactory(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -29,7 +31,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case OperEx(TlaFunOper.app, funEx, argEx) =>
         // SE-FUN-APP1
         val funState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(funEx))
-        val funCell = funState.arena.findCellByNameEx(funState.ex)
+        val funCell = funState.asCell
 
         val finalState =
           funCell.cellType match {
@@ -39,7 +41,10 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
             case RecordT(_) =>
               applyRecord(funState, funCell, funEx, argEx)
 
-            case _ =>
+            case SeqT(_) =>
+              applySeq(funState, funCell, argEx)
+
+            case _ => // general functions
               applyFun(funState, funCell, argEx)
           }
         rewriter.coerce(finalState, state.theory)
@@ -49,29 +54,23 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def applyRecord(state: SymbState, recordCell: ArenaCell, funEx: TlaEx, argEx: TlaEx): SymbState = {
+  private def applyRecord(state: SymbState, recordCell: ArenaCell, recEx: TlaEx, argEx: TlaEx): SymbState = {
     val key = argEx match {
       case ValEx(TlaStr(k)) => k
-      case _ => throw new RewriterException(s"Accessing a record $funEx with a non-constant key $argEx")
+      case _ => throw new RewriterException(s"Accessing a record $recEx with a non-constant key $argEx")
     }
     val fields = recordCell.cellType match {
       case RecordT(f) => f
-      case t @ _ => throw new RewriterException(s"Corrupted record $funEx of a non-record type $t")
+      case t @ _ => throw new RewriterException(s"Corrupted record $recEx of a non-record type $t")
     }
     val index = fields.keySet.toList.indexOf(key)
-    val tupleCell = state.arena.getHas(recordCell).head
-    val elems = state.arena.getHas(tupleCell)
+    val elems = state.arena.getHas(recordCell)
     if (index >= 0 && index < elems.length) {
-      val keyCell = rewriter.strValueCache.get(key).get
-      // when key is outside the record domain, we do not flag a failure here,
-      // since records of different types are often used in TLA+ specifications, e.g., see Paxos.tla
-      val tupleElem = elems(index)
-      state.setTheory(CellTheory()).setRex(tupleElem)
+      state.setTheory(CellTheory()).setRex(elems(index))
     } else {
-      // Now we are trouble, since we don't know the type of a value we should return.
-      // SymbStateRewriter will try to resolve it at upper levels
-      val msg = s"Accessing record $funEx of type ${recordCell.cellType} with the key $argEx. Filter the set first?"
-      throw new UndefinedBehaviorError(msg, state.arena)
+      // This case should have been caught by type inference. Throw an exception immediately.
+      val msg = s"Accessing record $recEx of type ${recordCell.cellType} with the field $argEx. Type inference should have caught this."
+      throw new IllegalArgumentException(msg)
     }
   }
 
@@ -81,7 +80,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case ValEx(TlaInt(i)) => i.toInt - 1
 
       case _ =>
-        throw new RewriterException("Accessing a tuple with a non-constant index: " + argEx)
+        throw new RewriterException(s"Accessing a tuple $funEx with a non-constant index $argEx")
     }
 
     val elems = state.arena.getHas(tupleCell)
@@ -93,64 +92,88 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.setTheory(CellTheory()).setRex(tupleElem)
   }
 
-  private def applyFun(state: SymbState, funCell: ArenaCell, argEx: TlaEx): SymbState = {
-    // SE-FUN-APP2
-    val argState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(argEx))
-    val argCell = argState.arena.findCellByNameEx(argState.ex)
+  private def applySeq(state: SymbState, seqCell: ArenaCell, argEx: TlaEx): SymbState = {
+    val solverAssert = rewriter.solverContext.assertGroundExpr _
+    var nextState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(argEx))
+    val argCell = nextState.asCell
+    val seqChildren = state.arena.getHas(seqCell)
+    val start = seqChildren.head // starts with 0
+    val end = seqChildren.tail.head // starts with 0
+    // Get the sequence of N elements. The range values[start : end] forms the actual sequence
+    val values = seqChildren.tail.tail
 
-    val domainCell = argState.arena.getDom(funCell)
-    val codomainCell = argState.arena.getCdm(funCell)
-    val resState = picker.pick(codomainCell, argState)
-
-    // SE-FUN-APP3
-    val resultCell = resState.ex
-    val domCells = resState.arena.getHas(domainCell)
-
-    // introduce a new failure predicate
-//    val newArena = resState.arena.appendCell(FailPredT())
-//    val failPred = newArena.topCell
-//    rewriter.addMessage(failPred.id,
-//      "Argument %s may be outside the function %s domain %s".format(argEx, funCell, state.arena.getDom(funCell)))
-    // cache equalities
-    val eqState = rewriter.lazyEq.cacheEqConstraints(resState,
-      domCells.map(e => (e, argCell)))
-
-    // Equation (2): there is a domain element that equals to the argument
-    def mkArgCase(domElem: ArenaCell): TlaEx = {
-      val inDomain = tla.in(domElem, domainCell)
-      val argEq = rewriter.lazyEq.safeEq(domElem, argCell) // just use SMT equality
-      tla.and(inDomain, argEq)
+    val nelems = values.size
+    if (nelems == 0) {
+      // The sequence is statically empty. Return the default value.
+      // Most likely, this expression will be never used as a result.
+      defaultValueFactory.makeUpValue(nextState, seqCell.cellType.asInstanceOf[SeqT].res)
+    } else {
+      // create the oracle
+      nextState = picker.oracleHelper.newOracleWithDefault(nextState, nelems)
+      val oracle = nextState.ex
+      def oracleValue(n: Int) = picker.oracleHelper.getOracleValue(nextState, n).toNameEx
+      // pick an element to be the result
+      nextState = picker.pickByOracle(nextState, oracle, values)
+      val pickedResult = nextState.asCell
+      // now it is getting interesting:
+      // If 1 <= arg <= end - start, just require oracle = arg - 1 + start,
+      // Otherwise, set oracle to N
+      val inRange = tla.and(tla.le(tla.int(1), argCell),
+        tla.le(argCell, tla.minus(end, start)))
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.plus(tla.minus(argCell, tla.int(1)), start)))
+      val indexCell = nextState.asCell
+      def eqArg(i: Int) =
+        tla.and(tla.eql(indexCell, tla.int(i)), tla.eql(oracle, picker.oracleHelper.getOracleValue(nextState, i)))
+      // since oracle values are now uninterpreted constants, we have to match them with integer indices
+      val oracleEqArg = tla.or(0.until(nelems) map eqArg :_*)
+      val oracleIsN = tla.eql(oracle, oracleValue(nelems))
+      solverAssert(tla.or(tla.and(inRange, oracleEqArg), tla.and(tla.not(inRange), oracleIsN)))
+      nextState.setRex(pickedResult).setTheory(CellTheory())
     }
-    // the result equals to the function result (bugfix: separate mkArgCase from mkResCase)
-    def mkResCase(domElem: ArenaCell): TlaEx = {
-      val inDomain = tla.in(domElem, domainCell)
-      val resEq =
-        tla.eql(resultCell, tla.appFun(funCell, domElem)) // translated as function application in SMT
-      val argEq = rewriter.lazyEq.safeEq(domElem, argCell) // just use SMT equality
-      tla.and(inDomain, argEq, resEq)
-    }
-
-    // Equation (3): there is no domain element that equals to the argument
-//    def mkNotInCase(domElem: ArenaCell): TlaEx = {
-//      val notInDomain = tla.not(tla.in(domElem, domainCell))
-//      val eq = rewriter.lazyEq.safeEq(domElem, argCell) // just use SMT equality
-//      tla.or(notInDomain, tla.not(eq))
-//    }
-
-    val foundFlag = rewriter.solverContext.introBoolConst() // XXX: remove
-    val found = tla.or(domCells.map(mkArgCase): _*) //tla.and(tla.not(failPred), tla.or(domCells.map(mkInCase): _*))
-    rewriter.solverContext.assertGroundExpr(tla.equiv(tla.name(foundFlag), found))
-    val resEq = tla.impl(found, tla.or(domCells.map(mkResCase): _*))
-    rewriter.solverContext.assertGroundExpr(resEq)
-
-    var newArena = eqState.arena.appendCell(FailPredT())
-    val failPred = newArena.topCell
-    rewriter.addMessage(failPred.id,
-      "Argument %s may be outside the function %s domain %s".format(argEx, funCell, state.arena.getDom(funCell)))
-    rewriter.solverContext.assertGroundExpr(tla.equiv(failPred.toNameEx, tla.not(NameEx(foundFlag))))
-
-    rewriter.rewriteUntilDone(eqState.setArena(newArena).setRex(resultCell).setTheory(CellTheory()))
   }
 
+  private def applyFun(state: SymbState, funCell: ArenaCell, argEx: TlaEx): SymbState = {
+    val solverAssert = rewriter.solverContext.assertGroundExpr _
+    // SE-FUN-APP2
+    var nextState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(argEx))
+    val argCell = nextState.asCell
 
+    val relationCell = nextState.arena.getCdm(funCell)
+    val relationElems = nextState.arena.getHas(relationCell)
+    val nelems = relationElems.size
+    if (nelems == 0) {
+      // Just return a default value. Most likely, this expression will never propagate.
+      defaultValueFactory.makeUpValue(nextState, funCell.cellType.asInstanceOf[FunT].resultType)
+    } else {
+      nextState = picker.oracleHelper.newOracleWithDefault(nextState, relationElems.size)
+      val oracle = nextState.asCell
+      def oracleValue(n: Int) = picker.oracleHelper.getOracleValue(nextState, n).toNameEx
+
+      nextState = picker.pickByOracle(nextState, oracle, relationElems)
+      val pickedPair = nextState.asCell
+      val pickedArg = nextState.arena.getHas(pickedPair).head
+      val pickedRes = nextState.arena.getHas(pickedPair).tail.head
+      // cache the equality between the picked argument and the supplied argument, O(1) constraints
+      nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((pickedArg, argCell)))
+      val argEqWhenNonEmpty =
+        tla.impl(tla.neql(oracle, oracleValue(nelems)), tla.eql(pickedArg, argCell))
+      solverAssert(argEqWhenNonEmpty)
+      // importantly, we require oracle = N iff there is no element equal to argCell, O(N) constraints
+      for ((elem, no) <- relationElems.zipWithIndex) {
+        val elemArg = nextState.arena.getHas(elem).head
+        nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((argCell, elemArg)))
+        val inRel = tla.in(elem, relationCell)
+        val neqArg = tla.not(rewriter.lazyEq.safeEq(elemArg, argCell))
+        val found = tla.neql(oracle, oracleValue(nelems))
+        // ~inRel \/ neqArg \/ found
+        solverAssert(tla.or(tla.not(inRel), neqArg, found))
+        // oracle = i => inRel
+        solverAssert(tla.impl(tla.eql(oracle, oracleValue(no)), inRel))
+      }
+
+      // If oracle = N, the picked cell is not constrained. In the past, we used a default value here,
+      // but it sometimes produced conflicts (e.g., a picked record domain had to coincide with a default domain)
+      nextState.setRex(pickedRes.toNameEx).setTheory(CellTheory())
+    }
+  }
 }

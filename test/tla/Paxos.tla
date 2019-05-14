@@ -24,6 +24,12 @@ Value == {0, 1}
 
 Acceptor == {"a1", "a2"}
 Quorum == {{"a1", "a2"}}
+
+a <: b == a
+MT == [type |-> STRING, bal |-> Int,
+       mbal |-> Int, acc |-> STRING,
+       val |-> Int, mval |-> Int]
+
 (*
 Acceptor == {"a1", "a2", "a3"}
 Quorum == {{"a1", "a2"}, {"a2", "a3"}, {"a1", "a3"}}
@@ -129,13 +135,13 @@ votes == [a \in Acceptor |->
 Init == /\ maxBal = [a \in Acceptor |-> -1]
         /\ maxVBal = [a \in Acceptor |-> -1]
         /\ maxVal = [a \in Acceptor |-> None]
-        /\ msgs = {}
+        /\ msgs = {} <: {MT}
 
 (***************************************************************************)
 (* The actions.  We begin with the subaction (an action that will be used  *)
 (* to define the actions that make up the next-state action.               *)
 (***************************************************************************)
-Send(m) == /\ msgs' = msgs \cup {m}
+Send(m) == /\ msgs' = msgs \cup {m <: MT}
 
 
 (***************************************************************************)
@@ -184,38 +190,15 @@ Phase1b(a) == /\ \E m \in msgs :
 Phase2a(b, v) ==
   /\ ~ \E m \in msgs : m.type = "2a" /\ m.bal = b
   /\ \E Q \in Quorum :
-        (*
         LET Q1b == {m \in msgs : /\ m.type = "1b"
                                  /\ m.acc \in Q
                                  /\ m.bal = b}
             Q1bv == {m \in Q1b : m.mbal \geq 0}
         IN  /\ \A a \in Q : \E m \in Q1b : m.acc = a 
-            /\ \/ Q1bv = {}
+            /\ \/ Q1bv = ({} <: {MT})
                \/ \E m \in Q1bv : 
                     /\ m.mval = v
                     /\ \A mm \in Q1bv : m.mbal \geq mm.mbal 
-                    *)
-        /\ \A a \in Q :
-            \E m \in {m2 \in msgs : /\ m2.type = "1b"
-                                    /\ m2.acc \in Q
-                                    /\ m2.bal = b} :
-                    m.acc = a 
-        /\ \/ {} = {m \in {m3 \in msgs : /\ m3.type = "1b"
-                                         /\ m3.acc \in Q
-                                         /\ m3.bal = b} :
-                    m.mbal \geq 0}
-           \/ \E m \in {m4 \in {m5 \in msgs :
-                                /\ m5.type = "1b"
-                                /\ m5.acc \in Q
-                                /\ m5.bal = b} :
-                    m4.mbal \geq 0} : 
-             /\ m.mval = v
-             /\ \A mm \in {m5 \in {m6 \in msgs :
-                                /\ m6.type = "1b"
-                                /\ m6.acc \in Q
-                                /\ m6.bal = b} :
-                        m5.mbal \geq 0} :
-                    m.mbal \geq mm.mbal 
   /\ Send([type |-> "2a", bal |-> b, val |-> v])
   /\ UNCHANGED <<maxBal, maxVBal, maxVal>>
 
@@ -228,11 +211,8 @@ Phase2a(b, v) ==
 (* phase 2b message announcing its vote.  It also sets maxBal[a] to the    *)
 (* message's.  ballot number                                               *)
 (***************************************************************************)
-Phase2b(a) == \E m \in
-        {m2 \in msgs:
-                (* BMCMT check, let's add smth like HASFIELD(m2, "val") *)
-            m2.type = "2a" /\ m2.val = m2.val}: (* filter records *)
-  (*/\ m.type = "2a"*)
+Phase2b(a) == \E m \in msgs:
+  /\ m.type = "2a"
   /\ m.bal \geq maxBal[a]
   /\ maxBal' = [maxBal EXCEPT ![a] = m.bal]
   /\ maxVBal' = [maxVBal EXCEPT ![a] = m.bal]
@@ -297,7 +277,6 @@ Inv == (*/\ TypeOK*)
        /\ \A a \in Acceptor : IF maxVBal[a] = -1
                                 THEN maxVal[a] = None
                                 ELSE <<maxVBal[a], maxVal[a]>> \in votes[a]
-       (*
        /\ \A m \in msgs : 
              /\ (m.type = "1b") => /\ maxBal[m.acc] \geq m.bal
                                    /\ (m.mbal \geq 0) =>
@@ -307,6 +286,5 @@ Inv == (*/\ TypeOK*)
                                    /\ \A mm \in msgs : /\ mm.type = "2a"
                                                        /\ mm.bal = m.bal
                                                        => mm.val = m.val
-        *)                                                       
        (*/\ V!Inv*)
 ============================================================================

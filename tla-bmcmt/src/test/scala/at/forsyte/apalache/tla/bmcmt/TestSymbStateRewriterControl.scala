@@ -189,7 +189,32 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""LET A == TRUE IN... ~~> [A -> TRUE]""") {
+  test("""SE-ITE[1-4]: 1 + (IF 3 < 2 THEN 4 ELSE 1) ~~> $C$k""") {
+    val pred = tla.lt(tla.int(3), tla.int(2))
+    val e1 = tla.int(4)
+    val e2 = tla.int(1)
+    val ite = tla.plus(tla.int(1), tla.ite(pred, e1, e2))
+
+    val state = new SymbState(ite, IntTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case res @ NameEx(name) =>
+        assert(CellTheory().hasConst(name))
+        rewriter.push()
+        solverContext.assertGroundExpr(tla.eql(tla.int(2), res))
+        assert(solverContext.sat())
+        rewriter.pop()
+        solverContext.assertGroundExpr(tla.eql(tla.int(5), res))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
+  // type inference is not supported for let-in
+  ignore("""LET A == TRUE IN... ~~> [A -> TRUE]""") {
     val decl = TlaOperDecl("A", List(), tla.bool(true))
     val letIn = tla.letIn(OperEx(decl.operator), decl)
     val state = new SymbState(letIn, BoolTheory(), arena, new Binding)
@@ -198,7 +223,7 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
     nextState.ex match {
       case res @ NameEx(name) =>
         assert(BoolTheory().hasConst(name))
-        assert(name == solverContext.trueConst)
+        assert(name == SolverContext.trueConst)
 
       case _ =>
         fail("Unexpected rewriting result")

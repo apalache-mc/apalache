@@ -2,10 +2,14 @@ package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes._
 import at.forsyte.apalache.tla.assignments.passes.{AssignmentPass, AssignmentPassImpl}
-import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, ExprGradeStoreImpl, FreeExistentialsStore, FreeExistentialsStoreImpl}
+import at.forsyte.apalache.tla.bmcmt.analyses._
+import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
+import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
-import com.google.inject.AbstractModule
+import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.db.TransformationListener
 import com.google.inject.name.Names
+import com.google.inject.{AbstractModule, TypeLiteral}
 
 /**
   * A configuration that binds all the passes from the parser to the checker.
@@ -20,8 +24,14 @@ class CheckerModule extends AbstractModule {
     // stores
     bind(classOf[FreeExistentialsStore])
       .to(classOf[FreeExistentialsStoreImpl])
+    bind(classOf[FormulaHintsStore])
+      .to(classOf[FormulaHintsStoreImpl])
     bind(classOf[ExprGradeStore])
       .to(classOf[ExprGradeStoreImpl])
+    bind(new TypeLiteral[TypeFinder[CellT]] {})
+      .to(classOf[TrivialTypeFinder])   // using a trivial type finder
+    bind(classOf[TransformationListener])
+      .to(classOf[SourceStore])
     // SanyParserPassImpl is the default implementation of SanyParserPass
     bind(classOf[SanyParserPass])
       .to(classOf[SanyParserPassImpl])
@@ -42,11 +52,11 @@ class CheckerModule extends AbstractModule {
       .annotatedWith(Names.named("AfterAssignment"))
       .to(classOf[GradePass])
     // the next pass after GradePass is SimpleSkolemizationPass
-    bind(classOf[SimpleSkolemizationPass])
-      .to(classOf[SimpleSkolemizationPassImpl])
+    bind(classOf[HintsAndSkolemizationPass])
+      .to(classOf[HintsAndSkolemizationPassImpl])
     bind(classOf[Pass])
       .annotatedWith(Names.named("AfterGrade"))
-      .to(classOf[SimpleSkolemizationPass])
+      .to(classOf[HintsAndSkolemizationPass])
     // the next pass after SimpleSkolemizationPass is BoundedCheckerPass
     bind(classOf[BoundedCheckerPass])
       .to(classOf[BoundedCheckerPassImpl])

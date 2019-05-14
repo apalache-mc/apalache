@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSetOper}
 
 /**
-  * Implements the rule: SE-UNION, that is, a union of all set elements.
+  * Implements the rule for a union of all set elements.
   *
   * @author Igor Konnov
   */
@@ -24,45 +24,58 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       case OperEx(TlaSetOper.union, topSet) =>
         // rewrite the arguments into memory cells
-        val newState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(topSet))
-        val topSetCell = newState.arena.findCellByNameEx(newState.ex)
+        var nextState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(topSet))
+        val topSetCell = nextState.asCell
         val elemType =
           topSetCell.cellType match {
             case FinSetT(FinSetT(et)) => et
             case _ => throw new TypeException(s"Applying UNION to $topSet of type ${topSetCell.cellType}" )
           }
 
-        var arena = newState.arena
-        val sets = Set(arena.getHas(topSetCell) :_*).toList // remove duplicates too
-        // use sets to immediately find repetitive cells
-        val allElems = sets.foldLeft(Set[ArenaCell]()) ((all, s) => Set(arena.getHas(s) :_*).union(all))
-        // introduce a set cell
-        arena = arena.appendCell(FinSetT(elemType))
-        val newSetCell = arena.topCell
+        val sets = Set(nextState.arena.getHas(topSetCell) :_*).toList // remove duplicates too
+        val elemsOfSets = sets map (s => Set(nextState.arena.getHas(s) :_*))
 
-        if (allElems.isEmpty) {
+        val unionOfSets = elemsOfSets.foldLeft(Set[ArenaCell]()) (_.union(_))
+        // introduce a set cell
+        nextState = nextState.updateArena(_.appendCell(FinSetT(elemType)))
+        val newSetCell = nextState.arena.topCell
+
+        if (unionOfSets.isEmpty) {
           // just return an empty set
           // TODO: cache empty sets!
-          val finalState = newState.setRex(newSetCell).setArena(arena)
+          val finalState = nextState.setRex(newSetCell)
           rewriter.coerce(finalState, state.theory) // coerce to the source theory
         } else {
           // add all the elements to the arena
-          arena = allElems.foldLeft(arena) ((a, c) => a.appendHas(newSetCell, c))
+          nextState = nextState.updateArena(_.appendHas(newSetCell, unionOfSets.toSeq: _*))
 
-          // require each cell to be in one of the sets
-          def addCellCons(elemCell: ArenaCell): Unit = {
+          // Require each cell to be in one of the sets, e.g., consider UNION { {1} \ {1}, {1} }
+          // Importantly, when elemCell is pointed by several sets S_1, .., S_k, we require:
+          //    in(elemCell, newSetCell)
+          //      <=> in(elemCell, S_1) /\ in(S_1, topSetCell) \/ ... \/ in(elemCell, S_k) /\ in(S_k, topSetCell)
+          //
+          // This approach is more expensive at the rewriting phase, but it produces O(n) constraints in SMT,
+          // in contrast to the old approach with equalities and uninterpreted functions, which required O(n^2) constraints.
+          def addOneElemCons(elemCell: ArenaCell): Unit = {
+            def isPointedBySet(set: ArenaCell, setElems: Set[ArenaCell]): Boolean = setElems.contains(elemCell)
+            val pointingSets = (sets.zip(elemsOfSets) filter (isPointedBySet _).tupled) map (_._1)
+            def inPointingSet(set: ArenaCell) = {
+              // this is sound, because we have generated element equalities
+              // and thus can use congruence of in(...) for free
+              tla.and(tla.in(set, topSetCell), tla.in(elemCell, set))
+            }
+
+            val existsIncludingSet = tla.or(pointingSets map inPointingSet :_*)
             val inUnionSet = tla.in(elemCell, newSetCell)
-            val existsSet = tla.or(sets.map(s => tla.and(tla.in(s, topSetCell), tla.in(elemCell, s))) :_*)
-            val iff = OperEx(TlaOper.eq, inUnionSet, existsSet)
+            val iff = OperEx(TlaOper.eq, inUnionSet, existsIncludingSet)
             rewriter.solverContext.assertGroundExpr(iff)
           }
 
           // add SMT constraints
-          for (elem <- allElems)
-            addCellCons(elem)
+          unionOfSets foreach addOneElemCons
 
           // that's it
-          val finalState = newState.setArena(arena).setRex(newSetCell.toNameEx)
+          val finalState = nextState.setRex(newSetCell.toNameEx)
           rewriter.coerce(finalState, state.theory) // coerce to the source theory
         }
 

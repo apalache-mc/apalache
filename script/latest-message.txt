@@ -1,0 +1,3 @@
+This is the latest successful build of the unstable branch, which contains cool
+new features but is not guaranteed to work. If you want to experiment, this
+build is for you.

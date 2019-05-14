@@ -1,0 +1,16 @@
+filename;tool;timeout;init;inv;next;args
+raft/raft.tla;apalache;23h;;NoCommits;;--length=30 --tuning=apalache.properties
+raft/raft.tla;apalache;23h;;Lemma2;;--length=30 --tuning=apalache.properties
+raft/raft.tla;apalache;23h;;Lemma4;;--length=30 --tuning=apalache.properties
+epaxos/EgalitarianPaxos.tla;apalache;23h;;NoCommits;;--length=30 --cinit=ConstInit --tuning=apalache.properties
+epaxos/EgalitarianPaxos.tla;apalache;23h;;ConsistencyAsInv;;--length=30 --cinit=ConstInit --tuning=apalache.properties
+kafka/Kip320.tla;apalache;23h;;WeakIsr;;--length=20 --tuning=apalache.properties
+kafka/Kip320.tla;apalache;23h;;StrongIsr;;--length=20 --tuning=apalache.properties
+kafka/Kip320FirstTry.tla;apalache;23h;;WeakIsr;;--length=20 --tuning=apalache.properties
+kafka/Kip320FirstTry.tla;apalache;23h;;StrongIsr;;--length=20 --tuning=apalache.properties
+kafka/Kip279.tla;apalache;23h;;WeakIsr;Next_Kip279;--length=20 --tuning=apalache.properties
+kafka/Kip279.tla;apalache;23h;;StrongIsr;Next_Kip279;--length=20 --tuning=apalache.properties
+kafka/Kip101.tla;apalache;23h;;WeakIsr;Next_Kip101;--length=20 --tuning=apalache.properties
+kafka/Kip101.tla;apalache;23h;;StrongIsr;Next_Kip101;--length=20 --tuning=apalache.properties
+kafka/KafkaTruncateToHighWatermark.tla;apalache;23h;;WeakIsr;;--length=20 --tuning=apalache.properties
+kafka/KafkaTruncateToHighWatermark.tla;apalache;23h;;StrongIsr;;--length=20 --tuning=apalache.properties

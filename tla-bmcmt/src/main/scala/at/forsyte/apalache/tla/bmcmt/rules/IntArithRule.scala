@@ -1,10 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.types.IntT
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.TlaArithOper
 import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 
 /**
   * Integer arithmetic operations: +, -, *, div, mod.
@@ -13,6 +14,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
   * @author Igor Konnov
   */
 class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
+  private val intConstRule: IntConstRule = new IntConstRule(rewriter)
   private val simplifier = new ConstSimplifier()
 
   override def isApplicable(symbState: SymbState): Boolean = {
@@ -46,31 +48,29 @@ class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   private def rewriteGeneral(state: SymbState, ex: TlaEx) = ex match {
-    case ValEx(TlaInt(value: BigInt)) =>
-      // keep the simplified expression
-      val intConst = rewriter.solverContext.introIntConst()
-      val finalState =
-        rewriter.rewriteUntilDone(state.setRex(ex).setTheory(IntTheory()))
-      rewriter.coerce(finalState, state.theory)
+    case ValEx(TlaInt(_)) =>
+      // just use the constant rule, which will compare with the integer cache
+      intConstRule.apply(state.setTheory(CellTheory()).setRex(ex))
 
     case OperEx(TlaArithOper.uminus, subex) =>
-      val subState = rewriter.rewriteUntilDone(state.setTheory(IntTheory()).setRex(subex))
-      val intConst = rewriter.solverContext.introIntConst()
-      rewriter.solverContext.assertGroundExpr(tla.eql(NameEx(intConst), tla.uminus(subState.ex)))
-      val finalState = subState.setTheory(IntTheory()).setRex(NameEx(intConst))
+      val subState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(subex))
+      // TODO: think how to stop introducing cells for intermediate expressions
+      val newArena = subState.arena.appendCell(IntT())
+      val newCell = newArena.topCell
+      rewriter.solverContext.assertGroundExpr(tla.eql(newCell.toNameEx, tla.uminus(subState.ex)))
+      val finalState = subState.setRex(newCell.toNameEx).setArena(newArena).setTheory(CellTheory())
       rewriter.coerce(finalState, state.theory)
 
     case OperEx(oper: TlaArithOper, left, right) =>
-      val leftState = rewriter.rewriteUntilDone(state.setTheory(IntTheory()).setRex(left))
-      val rightState = rewriter.rewriteUntilDone(state.setTheory(IntTheory()).setRex(right))
+      val leftState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(left))
+      val rightState = rewriter.rewriteUntilDone(leftState.setTheory(CellTheory()).setRex(right))
+      // TODO: think how to stop introducing cells for intermediate expressions
+      val newArena = rightState.arena.appendCell(IntT())
+      val newCell = newArena.topCell
       // introduce an integer constant to store the result
-      val intConst = rewriter.solverContext.introIntConst()
-      val cons =
-        OperEx(TlaOper.eq,
-          NameEx(intConst),
-          OperEx(oper, leftState.ex, rightState.ex))
+      val cons = tla.eql(newCell.toNameEx, OperEx(oper, leftState.ex, rightState.ex))
       rewriter.solverContext.assertGroundExpr(cons)
-      val finalState = rightState.setTheory(IntTheory()).setRex(NameEx(intConst))
+      val finalState = rightState.setTheory(CellTheory()).setArena(newArena).setRex(newCell.toNameEx)
       rewriter.coerce(finalState, state.theory)
 
     case _ =>
