@@ -47,7 +47,7 @@ if [ "$overwrite" != "" ]; then
 fi
 
 # overwrite the build number
-BUILD=`git describe --all`
+BUILD=`git describe --tags`
 
 ZIPF="apalache-${BUILD}.zip"
 TGZF="apalache-${BUILD}.tgz"
