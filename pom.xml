@@ -7,7 +7,7 @@
     <groupId>at.forsyte.apalache</groupId>
     <artifactId>apalache</artifactId>
     <packaging>pom</packaging>
-    <version>0.5.0-RELEASE</version>
+    <version>0.5.1-SNAPSHOT</version>
 
     <name>APALACHE project</name>
     <url>https://github.com/konnov/apalache</url>
