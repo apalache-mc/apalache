@@ -26,7 +26,7 @@ class IntTupleIterator(limits: Seq[Int]) extends Iterator[Seq[Int]] {
     if (!hasNext) {
       throw new NoSuchElementException("All elements have been enumerated")
     }
-    if (toEnumerate > 1000000) {
+    if (toEnumerate > MAX_PRODUCT_SIZE) {
       throw new RewriterException("Too many elements to enumerate: " + toEnumerate)
     }
 
