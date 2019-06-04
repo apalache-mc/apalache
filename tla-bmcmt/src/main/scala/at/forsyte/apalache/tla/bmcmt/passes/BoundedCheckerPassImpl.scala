@@ -4,7 +4,7 @@ import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
 import at.forsyte.apalache.tla.assignments.SpecWithTransitions
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore, FreeExistentialsStoreImpl}
-import at.forsyte.apalache.tla.bmcmt.search.{BfsStrategy, DfsStrategy}
+import at.forsyte.apalache.tla.bmcmt.search.{BfsStrategy, BfsStrategyStopWatchDecorator, DfsStrategy}
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import com.google.inject.Inject
@@ -56,7 +56,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
       options.getOption("checker", "checkRuntime", false).asInstanceOf[Boolean]
     val strategy =
       if (search == "bfs") {
-        new BfsStrategy(input, stepsBound)
+        new BfsStrategyStopWatchDecorator(new BfsStrategy(input, stepsBound), filename="bfs.csv")
       } else {
         val random = tuning.getOrElse("search.randomDfs", "")
         new DfsStrategy(input, stepsBound, random.toLowerCase.equals("true"))
