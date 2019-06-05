@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, OracleHelper}
 import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, IntT, PowSetT}
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -186,12 +186,11 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
     // note that \E x \in SUBSET(S): ... is handled separately, so we can use pickByOracle
     rewriter.solverContext.log("; free existential rule over a finite set")
     // choose an oracle with the default case oracle = N, when the set is empty
-    var nextState = pickRule.oracleHelper.newOracleWithDefault(setState, setCells.size)
-    def oracleValue(n: Int) = pickRule.oracleHelper.getOracleValue(nextState, n).toNameEx
-    val oracle = nextState.asCell
-    pickRule.oracleHelper.constrainOracleWithIn(nextState, oracle, set, setCells)
+    val (oracleState, oracle) = pickRule.oracleFactory.newConstOracle(setState, setCells.size + 1)
+    var nextState = oracleState
+    OracleHelper.constrainOracleWithIn(rewriter, nextState, oracle, set, setCells)
     // pick an arbitrary witness according to the oracle
-    nextState = pickRule.pickByOracle(nextState, oracle.toNameEx, setCells)
+    nextState = pickRule.pickByOracle(nextState, oracle, setCells)
     val pickedCell = nextState.asCell
     // enforce that the witness satisfies the predicate
     val extendedBinding = nextState.binding + (boundVar -> pickedCell)
@@ -202,7 +201,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
 
     // \E x \in S: p holds iff predWitness /\ S /= {}
     val exPred = NameEx(rewriter.solverContext.introBoolConst())
-    val setNonEmpty = tla.neql(oracle.toNameEx, oracleValue(setCells.size))
+    val setNonEmpty = tla.not(oracle.oracleEqTo(nextState, setCells.size))
     val iff = tla.equiv(exPred, tla.and(setNonEmpty, predWitness))
     rewriter.solverContext.assertGroundExpr(iff)
 

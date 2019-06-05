@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, OracleHelper}
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinFunSetT, FinSetT, PowSetT}
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
@@ -73,17 +73,16 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
               case FinSetT(_) =>
                 // choose an oracle with the default case oracle = N, when the set is empty
-                var nextState = pickRule.oracleHelper.newOracleWithDefault(setState, elemCells.size)
-                val oracle = nextState.asCell
-                def oracleValue(n: Int) = pickRule.oracleHelper.getOracleValue(nextState, n).toNameEx
-                pickRule.oracleHelper.constrainOracleWithIn(nextState, oracle, setCell, elemCells)
+                var (nextState, oracle) = pickRule.oracleFactory.newConstOracle(setState, elemCells.size + 1)
+                OracleHelper.constrainOracleWithIn(rewriter, nextState, oracle, setCell, elemCells)
                 // pick an arbitrary witness
-                nextState = pickRule.pickByOracle(nextState, oracle.toNameEx, elemCells)
+                nextState = pickRule.pickByOracle(nextState, oracle, elemCells)
                 val pickedCell = nextState.asCell
                 // introduce a Boolean result that equals true unless the set is empty
                 nextState = nextState.updateArena(_.appendCell(BoolT()))
                 val result = nextState.arena.topCell.toNameEx
-                rewriter.solverContext.assertGroundExpr(tla.eql(result, tla.neql(oracle.toNameEx, oracleValue(elemCells.size))))
+                rewriter.solverContext.assertGroundExpr(tla.eql(result,
+                  tla.not(oracle.oracleEqTo(nextState, elemCells.size))))
 
                 nextState
                   .setTheory(CellTheory())

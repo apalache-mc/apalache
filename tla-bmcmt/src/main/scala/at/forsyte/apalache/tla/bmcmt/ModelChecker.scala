@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt
 import java.io.{FileWriter, PrintWriter, StringWriter}
 
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore, FreeExistentialsStoreImpl}
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, OracleHelper}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, Oracle, OracleHelper}
 import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy
 import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy._
 import at.forsyte.apalache.tla.bmcmt.types._
@@ -288,16 +288,17 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
     } else {
       val picker = new CherryPick(rewriter)
       // pick an index j \in { 0..k } of the fired transition
-      var stateBeforeGluing = lastState // the last state has the largest arena
-      stateBeforeGluing = picker.oracleHelper.newOracleNoDefault(stateBeforeGluing, nextStates.length)
-      val oracle = stateBeforeGluing.asCell
+      val (nextState, oracle) = picker.oracleFactory.newConstOracle(lastState, nextStates.length)
+      var stateBeforeGluing = nextState // the last state has the largest arena
+
+//        picker.oracleHelper.newOracleNoDefault(stateBeforeGluing, nextStates.length)
       stateBeforeGluing = mkTransitionIndex(stateBeforeGluing, oracle, transWithEnabled) // and a transition index
       val transitionIndex = stateBeforeGluing.asCell
 
       def transitionFired(state: SymbState, index: Int): TlaEx =
       // it is tempting to use <=> instead of => here, but this might require from an inactive transition
       // to be completely disabled, while we just say that it is not picked
-        tla.impl(picker.oracleHelper.oracleEqTo(state, oracle.toNameEx, index), state.ex)
+        tla.impl(oracle.oracleEqTo(state, index), state.ex)
 
       // the bound on j will be rewritten in pickState
       solverContext.assertGroundExpr(tla.and(nextStates.zipWithIndex.map((transitionFired _).tupled): _*))
@@ -314,7 +315,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
 
       def pickVar(x: String): ArenaCell = {
         val toPickFrom = nextStates map (_.binding(x))
-        finalState = picker.pickByOracle(finalState, oracle.toNameEx, toPickFrom)
+        finalState = picker.pickByOracle(finalState, oracle, toPickFrom)
         finalState.asCell
       }
 
@@ -336,14 +337,13 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
 
   // Introduce a transition index for an oracle. The problem is that the oracle ranges over the indices of
   // the enabled transitions, while the users want to see the indices from the range of all transitions.
-  private def mkTransitionIndex(state: SymbState, oracle: ArenaCell,
+  private def mkTransitionIndex(state: SymbState, oracle: Oracle,
                                 transWithEnabled: List[((TlaEx, Int), Boolean)]): SymbState = {
-    val oracleHelper = new OracleHelper(rewriter)
     val newArena = state.arena.appendCell(IntT())
     val transitionIndex = newArena.topCell // it is also the oracle for picking cells
     val enabled = transWithEnabled.filter(_._2).map(_._1._2) // keep the enabled numbers only
     for ((no, i) <- enabled.zipWithIndex) {
-      solverContext.assertGroundExpr(tla.impl(oracleHelper.oracleEqTo(state, oracle.toNameEx, i),
+      solverContext.assertGroundExpr(tla.impl(oracle.oracleEqTo(state, i),
                                               tla.eql(transitionIndex.toNameEx, tla.int(no))))
     }
     state.setArena(newArena).setRex(transitionIndex.toNameEx)
