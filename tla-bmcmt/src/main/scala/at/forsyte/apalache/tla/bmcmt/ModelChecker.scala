@@ -288,7 +288,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
     } else {
       val picker = new CherryPick(rewriter)
       // pick an index j \in { 0..k } of the fired transition
-      val (nextState, oracle) = picker.oracleFactory.newConstOracle(lastState, nextStates.length)
+      val (nextState, oracle) = picker.oracleFactory.newPropositionalOracle(lastState, nextStates.length)
       var stateBeforeGluing = nextState // the last state has the largest arena
 
 //        picker.oracleHelper.newOracleNoDefault(stateBeforeGluing, nextStates.length)

@@ -1,7 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
-import at.forsyte.apalache.tla.bmcmt.types.ConstT
-import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
-import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.bmcmt.{SymbState, SymbStateRewriter}
 
 class OracleFactory(rewriter: SymbStateRewriter) {
   /**
@@ -13,19 +11,19 @@ class OracleFactory(rewriter: SymbStateRewriter) {
     * @return a new symbolic state and the oracle, the state.rex equals to state.rex
     */
   def newConstOracle(state: SymbState, nvalues: Int): (SymbState, Oracle) = {
-    val solverAssert = rewriter.solverContext.assertGroundExpr _
-    var nextState = state.setArena(state.arena.appendCell(ConstT()))
-    val oracleCell = nextState.arena.topCell
-    val oracle = new UninterpretedConstOracle(rewriter.strValueCache, oracleCell)
+    UninterpretedConstOracle.create(rewriter, state, nvalues)
+  }
 
-    def introConst(i: Int): Unit = {
-      val (newArena, _) = rewriter.strValueCache.getOrCreate(nextState.arena, i.toString)
-      nextState = nextState.setArena(newArena)
-    }
-
-    val nums = 0 until nvalues
-    nums foreach introConst // introduce a constant for every integer
-    solverAssert(tla.or(nums.map(i => oracle.oracleEqTo(nextState, i)) :_*))
-    (nextState, oracle)
+  /**
+    * Create a new oracle that can have a value in the range [0, nvalues).
+    * This oracle is using a propositional encoding of oracle values,
+    * e.g., 4 values are encoded as b0 /\ b1, ~b0 /\ b1, b0 /\ ~b1, ~b0 /\ ~b1.
+    *
+    * @param state   a symbolic state
+    * @param nvalues the number of values to hold
+    * @return a new symbolic state and the oracle, the state.rex equals to state.rex
+    */
+  def newPropositionalOracle(state: SymbState, nvalues: Int): (SymbState, Oracle) = {
+    PropositionalConstOracle.create(rewriter, state, nvalues)
   }
 }
