@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 import at.forsyte.apalache.tla.bmcmt.caches.StrValueCache
-import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState}
+import at.forsyte.apalache.tla.bmcmt.types.ConstT
+import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 
@@ -16,5 +17,24 @@ class UninterpretedConstOracle(strValueCache: StrValueCache, oracleCell: ArenaCe
     val strVal = strValueCache.get(position.toString)
     assert(strVal.isDefined)
     tla.eql(oracleCell.toNameEx, strVal.get.toNameEx)
+  }
+}
+
+object UninterpretedConstOracle {
+  def create(rewriter: SymbStateRewriter, state: SymbState, nvalues: Int): (SymbState, Oracle) = {
+    val solverAssert = rewriter.solverContext.assertGroundExpr _
+    var nextState = state.setArena(state.arena.appendCell(ConstT()))
+    val oracleCell = nextState.arena.topCell
+    val oracle = new UninterpretedConstOracle(rewriter.strValueCache, oracleCell)
+
+    def introConst(i: Int): Unit = {
+      val (newArena, _) = rewriter.strValueCache.getOrCreate(nextState.arena, i.toString)
+      nextState = nextState.setArena(newArena)
+    }
+
+    val nums = 0 until nvalues
+    nums foreach introConst // introduce a constant for every integer
+    solverAssert(tla.or(nums.map(i => oracle.oracleEqTo(nextState, i)) :_*))
+    (nextState, oracle)
   }
 }

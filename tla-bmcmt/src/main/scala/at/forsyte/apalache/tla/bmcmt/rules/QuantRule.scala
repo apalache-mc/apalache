@@ -186,7 +186,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
     // note that \E x \in SUBSET(S): ... is handled separately, so we can use pickByOracle
     rewriter.solverContext.log("; free existential rule over a finite set")
     // choose an oracle with the default case oracle = N, when the set is empty
-    val (oracleState, oracle) = pickRule.oracleFactory.newConstOracle(setState, setCells.size + 1)
+    val (oracleState, oracle) = pickRule.oracleFactory.newPropositionalOracle(setState, setCells.size + 1)
     var nextState = oracleState
     OracleHelper.constrainOracleWithIn(rewriter, nextState, oracle, set, setCells)
     // pick an arbitrary witness according to the oracle

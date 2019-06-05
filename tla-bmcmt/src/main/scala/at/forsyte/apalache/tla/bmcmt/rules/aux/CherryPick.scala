@@ -51,7 +51,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
           throw new RuntimeException(s"The set $set is statically empty. Pick should not be called on that.")
         }
 
-        var (nextState, oracle) = oracleFactory.newConstOracle(state, elems.size)
+        var (nextState, oracle) = oracleFactory.newPropositionalOracle(state, elems.size)
 
         def chooseWhenIn(el: ArenaCell, no: Int): Unit = {
           val chosen = oracle.oracleEqTo(nextState, no)
