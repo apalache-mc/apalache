@@ -64,7 +64,7 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
             setCell.cellType match {
               case PowSetT(_) | FinFunSetT(_, _) =>
                 // these sets are never empty
-                var nextState = pickRule.pick(setCell, setState)
+                var nextState = pickRule.pick(setCell, setState, setState.arena.cellFalse().toNameEx)
                 val pickedCell = nextState.asCell
                 nextState
                   .setTheory(CellTheory())
@@ -74,15 +74,15 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
               case FinSetT(_) =>
                 // choose an oracle with the default case oracle = N, when the set is empty
                 var (nextState, oracle) = pickRule.oracleFactory.newPropositionalOracle(setState, elemCells.size + 1)
-                OracleHelper.constrainOracleWithIn(rewriter, nextState, oracle, setCell, elemCells)
+                OracleHelper.assertOraclePicksSetMembers(rewriter, nextState, oracle, setCell, elemCells)
                 // pick an arbitrary witness
-                nextState = pickRule.pickByOracle(nextState, oracle, elemCells)
+                nextState = pickRule.pickByOracle(nextState, oracle, elemCells, nextState.arena.cellTrue().toNameEx)
                 val pickedCell = nextState.asCell
                 // introduce a Boolean result that equals true unless the set is empty
                 nextState = nextState.updateArena(_.appendCell(BoolT()))
                 val result = nextState.arena.topCell.toNameEx
                 rewriter.solverContext.assertGroundExpr(tla.eql(result,
-                  tla.not(oracle.oracleEqTo(nextState, elemCells.size))))
+                  tla.not(oracle.whenEqualTo(nextState, elemCells.size))))
 
                 nextState
                   .setTheory(CellTheory())

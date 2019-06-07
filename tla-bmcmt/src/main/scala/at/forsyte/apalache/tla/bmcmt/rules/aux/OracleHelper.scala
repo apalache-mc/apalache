@@ -1,8 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.types.ConstT
-import at.forsyte.apalache.tla.bmcmt.{ArenaCell, CellTheory, SymbState, SymbStateRewriter}
-import at.forsyte.apalache.tla.lir.TlaEx
+import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.convenience.tla
 
 /**
@@ -28,20 +26,11 @@ object OracleHelper {
     * @param set a set cell
     * @param setElems the cells pointed by the set
     */
-  def constrainOracleWithIn(rewriter: SymbStateRewriter, state: SymbState,
-                            oracle: Oracle, set: ArenaCell, setElems: Seq[ArenaCell]): Unit = {
-    def chooseWhenIn(el: ArenaCell, no: Int): Unit = {
-      val chosen = oracle.oracleEqTo(state, no)
-      val in = tla.in(el.toNameEx, set.toNameEx)
-      rewriter.solverContext.assertGroundExpr(tla.impl(chosen, in))
-    }
-
-    // 1. oracle = i > in(e_i, S) for 0 <= i < N
-    setElems.zipWithIndex foreach (chooseWhenIn _).tupled
-    // 2. oracle = N => \A i \in 0..(N-1) ~in(e_i, S)
+  def assertOraclePicksSetMembers(rewriter: SymbStateRewriter, state: SymbState,
+                                  oracle: Oracle, set: ArenaCell, setElems: Seq[ArenaCell]): Unit = {
+    val elemsIn = setElems map { e => tla.in(e.toNameEx, set.toNameEx) }
     val allNotIn = tla.and(setElems map (e => tla.not(tla.in(e.toNameEx, set.toNameEx))) :_*)
-    val defaultChosen = oracle.oracleEqTo(state, setElems.size)
-    rewriter.solverContext.assertGroundExpr(tla.impl(defaultChosen, allNotIn))
+    rewriter.solverContext.assertGroundExpr(oracle.caseAssertions(state, elemsIn :+ allNotIn))
   }
 
 }

@@ -58,7 +58,7 @@ class AssignRecordRule(rewriter: SymbStateRewriter) extends RewritingRule {
         var nextState = setState
         def pickValue(set: TlaEx): TlaEx = {
           val cell = nextState.arena.findCellByNameEx(set)
-          nextState = pick.pick(cell, nextState)
+          nextState = pick.pick(cell, nextState, nextState.arena.cellFalse().toNameEx) // TODO: no empty sets?
           nextState.ex
         }
         val pickedValues = setsRewritten map pickValue

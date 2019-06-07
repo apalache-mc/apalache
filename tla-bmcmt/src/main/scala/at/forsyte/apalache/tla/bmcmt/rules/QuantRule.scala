@@ -188,9 +188,9 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
     // choose an oracle with the default case oracle = N, when the set is empty
     val (oracleState, oracle) = pickRule.oracleFactory.newPropositionalOracle(setState, setCells.size + 1)
     var nextState = oracleState
-    OracleHelper.constrainOracleWithIn(rewriter, nextState, oracle, set, setCells)
+    OracleHelper.assertOraclePicksSetMembers(rewriter, nextState, oracle, set, setCells)
     // pick an arbitrary witness according to the oracle
-    nextState = pickRule.pickByOracle(nextState, oracle, setCells)
+    nextState = pickRule.pickByOracle(nextState, oracle, setCells, nextState.arena.cellTrue)
     val pickedCell = nextState.asCell
     // enforce that the witness satisfies the predicate
     val extendedBinding = nextState.binding + (boundVar -> pickedCell)
@@ -201,7 +201,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
 
     // \E x \in S: p holds iff predWitness /\ S /= {}
     val exPred = NameEx(rewriter.solverContext.introBoolConst())
-    val setNonEmpty = tla.not(oracle.oracleEqTo(nextState, setCells.size))
+    val setNonEmpty = tla.not(oracle.whenEqualTo(nextState, setCells.size))
     val iff = tla.equiv(exPred, tla.and(setNonEmpty, predWitness))
     rewriter.solverContext.assertGroundExpr(iff)
 
@@ -216,7 +216,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
   private def freeExistsInPowerset(setState: SymbState, boundVar: String, predEx: TlaEx, set: ArenaCell) = {
     rewriter.solverContext.log("; free existential rule over a powerset")
     // pick an arbitrary witness
-    val pickState = pickRule.pick(set, setState)
+    val pickState = pickRule.pick(set, setState, setState.arena.cellFalse())
     val pickedCell = pickState.arena.findCellByNameEx(pickState.ex)
     // enforce that the witness satisfies the predicate
     val extendedBinding = pickState.binding + (boundVar -> pickedCell)
