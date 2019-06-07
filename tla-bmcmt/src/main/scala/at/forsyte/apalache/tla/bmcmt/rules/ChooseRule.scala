@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory, OracleHelper}
 import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaOper
@@ -51,24 +51,10 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
           nextState = oracleState
 
           // pick a cell
-          nextState = pickRule.pickByOracle(nextState, oracle, elems)
+          nextState = pickRule.pickByOracle(nextState, oracle, elems, nextState.arena.cellTrue().toNameEx)
           val pickedCell = nextState.asCell
-          // when oracle = N, the set must be empty
-          val setIsEmpty =
-            if (nelems == 0) {
-              tla.bool(true)
-            } else {
-              tla.and(elems.map(e => tla.notin(e.toNameEx, setCell.toNameEx)): _*)
-            }
-
-          solverAssert(tla.equiv(oracle.oracleEqTo(nextState, nelems), setIsEmpty))
-
-          // require that the picked cell is in the set
-          def chosenWhenIn(elem: ArenaCell, no: Int): Unit =
-            solverAssert(tla.impl(oracle.oracleEqTo(nextState, no),
-              tla.in(elem.toNameEx, setCell.toNameEx)))
-
-          elems.zipWithIndex foreach (chosenWhenIn _).tupled
+          // require the oracle to produce only the values for the set elements (or no elements, when it is empty)
+          OracleHelper.assertOraclePicksSetMembers(rewriter, nextState, oracle, setCell, elems)
 
           // If oracle = N, the picked cell is not constrained. In the past, we used a default value here,
           // but it sometimes produced conflicts (e.g., a picked record domain had to coincide with a default domain)

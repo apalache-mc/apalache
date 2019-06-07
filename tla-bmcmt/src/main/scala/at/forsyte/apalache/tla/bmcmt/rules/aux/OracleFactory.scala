@@ -24,6 +24,6 @@ class OracleFactory(rewriter: SymbStateRewriter) {
     * @return a new symbolic state and the oracle, the state.rex equals to state.rex
     */
   def newPropositionalOracle(state: SymbState, nvalues: Int): (SymbState, Oracle) = {
-    PropositionalConstOracle.create(rewriter, state, nvalues)
+    PropositionalOracle.create(rewriter, state, nvalues)
   }
 }

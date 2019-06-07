@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt
 import java.io.{FileWriter, PrintWriter, StringWriter}
 
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore, FreeExistentialsStoreImpl}
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, Oracle, OracleHelper}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, MockOracle, Oracle}
 import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy
 import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy._
 import at.forsyte.apalache.tla.bmcmt.types._
@@ -41,7 +41,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
   /**
     * A stack of the symbolic states that might constitute a counterexample (the last state is on top).
     */
-  private var stack: List[(SymbState, ArenaCell)] = List()
+  private var stack: List[(SymbState, Oracle)] = List()
   private var typesStack: Seq[SortedMap[String, CellT]] = Seq()
   private val solverContext: SolverContext = new Z3SolverContext(debug, profile)
   // TODO: figure out why the preprocessor slows down invariant checking. Most likely, there is a bug.
@@ -93,7 +93,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
     val outcome =
       try {
         val initConstState = initializeConstants(dummyState)
-        stack +:= (initConstState, initialArena.cellTrue())
+        stack +:= (initConstState, new MockOracle(0))
         typesStack +:= typeFinder.getVarTypes // the type of CONSTANTS have been computed already
         applySearchStrategy()
       } catch {
@@ -271,82 +271,54 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
     val lastState = nextAndLastStates.last
     val nextStates = nextAndLastStates.slice(0, nextAndLastStates.length - 1)
 
+    val picker = new CherryPick(rewriter)
+    // pick an index j \in { 0..k } of the fired transition
+    val (oracleState, oracle) = picker.oracleFactory.newPropositionalOracle(lastState, nextStates.length)
+
     if (nextStates.isEmpty) {
       throw new IllegalArgumentException("enabled must be non-empty")
     } else if (nextStates.lengthCompare(1) == 0) {
-      // The only next state -- return it. Introduce the transition index just for the record.
-      val newArena = lastState.arena.appendCell(IntT())
-      val transitionIndex = newArena.topCell
-      val enabledNo = transWithEnabled.filter(_._2).head._1._2 // the number of the only enabled transition
-      solverContext.assertGroundExpr(tla.eql(transitionIndex.toNameEx, tla.int(enabledNo)))
-      val resultingState = lastState.setArena(newArena).setBinding(shiftBinding(lastState.binding, constants))
+      val resultingState = oracleState.setBinding(shiftBinding(lastState.binding, constants))
       solverContext.assertGroundExpr(lastState.ex)
-      stack +:= (resultingState, transitionIndex)
+      stack +:= (resultingState, oracle) // in this case, oracle is always zero
       shiftTypes(constants)
       typesStack = typeFinder.getVarTypes +: typesStack
-      Some(resultingState.setArena(newArena))
+      Some(resultingState)
     } else {
-      val picker = new CherryPick(rewriter)
-      // pick an index j \in { 0..k } of the fired transition
-      val (nextState, oracle) = picker.oracleFactory.newPropositionalOracle(lastState, nextStates.length)
-      var stateBeforeGluing = nextState // the last state has the largest arena
-
-//        picker.oracleHelper.newOracleNoDefault(stateBeforeGluing, nextStates.length)
-      stateBeforeGluing = mkTransitionIndex(stateBeforeGluing, oracle, transWithEnabled) // and a transition index
-      val transitionIndex = stateBeforeGluing.asCell
-
-      def transitionFired(state: SymbState, index: Int): TlaEx =
-      // it is tempting to use <=> instead of => here, but this might require from an inactive transition
-      // to be completely disabled, while we just say that it is not picked
-        tla.impl(oracle.oracleEqTo(state, index), state.ex)
-
-      // the bound on j will be rewritten in pickState
-      solverContext.assertGroundExpr(tla.and(nextStates.zipWithIndex.map((transitionFired _).tupled): _*))
+      // if oracle = i, then the ith transition is enabled
+      solverContext.assertGroundExpr(oracle.caseAssertions(oracleState, nextStates.map(_.ex)))
 
       // glue the computed states S0, ..., Sk together:
       // for every variable x, pick c_x from { S1[x], ..., Sk[x] }
       //   and require \A i \in { 0.. k-1}. j = i => c_x = Si[x]
       // Then, the final state binds x -> c_x for every x \in Vars
       val vars = forgetNonPrimed(nextStates.head.binding, Set()).keySet // only VARIABLES, not CONSTANTS
-      var finalState = stateBeforeGluing.setBinding(forgetPrimed(stateBeforeGluing.binding)).setRex(tla.bool(true))
+      var finalState = oracleState.setBinding(forgetPrimed(oracleState.binding)).setRex(tla.bool(true))
       if (nextStates.map(_.binding).exists(b => forgetNonPrimed(b, Set()).keySet != vars)) {
         throw new InternalCheckerError(s"Next states disagree on the set of assigned variables (step $stepNo)")
       }
 
       def pickVar(x: String): ArenaCell = {
         val toPickFrom = nextStates map (_.binding(x))
-        finalState = picker.pickByOracle(finalState, oracle, toPickFrom)
+        finalState = picker.pickByOracle(finalState,
+          oracle, toPickFrom, finalState.arena.cellFalse().toNameEx) // no else case
         finalState.asCell
       }
 
       val finalVarBinding = Binding(vars.toSeq map (n => (n, pickVar(n))): _*) // variables only
-      val constBinding = stateBeforeGluing.binding.filter(p => constants.contains(p._1))
+      val constBinding = oracleState.binding.filter(p => constants.contains(p._1))
       val finalBinding = Binding(shiftBinding(finalVarBinding, Set()) ++ constBinding) // recover constants
       finalState = finalState.setBinding(finalBinding)
       if (!solverContext.sat()) {
         throw new InternalCheckerError(s"Error picking next variables (step $stepNo). Report a bug.")
       }
       // that is the result of this step
-      stack +:= (finalState, transitionIndex)
+      stack +:= (finalState, oracle)
         // here we save the transition index, not the oracle, which will be shown to the user
       shiftTypes(constants)
       typesStack = typeFinder.getVarTypes +: typesStack
       Some(finalState)
     }
-  }
-
-  // Introduce a transition index for an oracle. The problem is that the oracle ranges over the indices of
-  // the enabled transitions, while the users want to see the indices from the range of all transitions.
-  private def mkTransitionIndex(state: SymbState, oracle: Oracle,
-                                transWithEnabled: List[((TlaEx, Int), Boolean)]): SymbState = {
-    val newArena = state.arena.appendCell(IntT())
-    val transitionIndex = newArena.topCell // it is also the oracle for picking cells
-    val enabled = transWithEnabled.filter(_._2).map(_._1._2) // keep the enabled numbers only
-    for ((no, i) <- enabled.zipWithIndex) {
-      solverContext.assertGroundExpr(tla.impl(oracle.oracleEqTo(state, i),
-                                              tla.eql(transitionIndex.toNameEx, tla.int(no))))
-    }
-    state.setArena(newArena).setRex(transitionIndex.toNameEx)
   }
 
   // This method adds constraints right in the current context, without doing push
@@ -523,13 +495,10 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
           checkAssertionErrors(notInvState) // the invariant violation may introduce runtime errors
           solverContext.satOrTimeout(invariantTimeout) match {
             case Some(true) =>
-              // introduce an index of the last transition to show in the counterexample
-              val newArena = notInvState.arena.appendCell(IntT())
-              val transitionIndex = newArena.topCell
-              rewriter.solverContext.assertGroundExpr(tla.eql(tla.int(transitionNo), transitionIndex.toNameEx))
-
-              val finalState = notInvState.setArena(newArena).setBinding(shiftBinding(notInvState.binding, constants))
-              stack = (finalState, transitionIndex) +: stack
+              // introduce a dummy oracle to hold the transition index, we need it for the counterexample
+              val oracle = new MockOracle(transitionNo)
+              val finalState = notInvState.setBinding(shiftBinding(notInvState.binding, constants))
+              stack = (finalState, oracle) +: stack
               val filename = dumpCounterexample()
               logger.error(s"Invariant is violated at depth $depth. Check the counterexample in $filename")
               if (debug) {
@@ -574,9 +543,9 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
   private def dumpCounterexample(): String = {
     val filename = "counterexample.txt"
     val writer = new PrintWriter(new FileWriter(filename, false))
-    for (((state, transitionCell), i) <- stack.reverse.zipWithIndex) {
+    for (((state, oracle), i) <- stack.reverse.zipWithIndex) {
       val decoder = new SymbStateDecoder(solverContext, rewriter)
-      val transition = decoder.decodeCellToTlaEx(state.arena, transitionCell)
+      val transition = oracle.evalPosition(solverContext, state)
       writer.println(s"State $i (from transition $transition):")
       writer.println("--------")
       val binding = decoder.decodeStateVariables(state)

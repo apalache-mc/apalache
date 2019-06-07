@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, Oracle, OracleFactor
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -15,7 +16,7 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
   private def assertEqWhenChosen(rewriter: SymbStateRewriter, state: SymbState,
                                  oracle: Oracle, position: Int, expected: TlaEx): SymbState = {
     rewriter.push()
-    solverContext.assertGroundExpr(oracle.oracleEqTo(state, position))
+    solverContext.assertGroundExpr(oracle.whenEqualTo(state, position))
     val ns = rewriter.rewriteUntilDone(state.setRex(tla.eql(state.ex, expected)))
     rewriter.push()
     solverContext.assertGroundExpr(ns.ex)
@@ -40,13 +41,14 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
       // introduce integer cells directly
       arena = state.arena.appendCell(IntT())
       val cell = arena.topCell
-      solverContext.assertGroundExpr(tla.eql(cell.toNameEx, tla.int(i)))
+      solverContext.assertGroundExpr(tla.eql(cell, tla.int(i)))
       state = state.setArena(arena)
       cell
     }
 
     val intCells = Seq(1, 2, 2) map mkIntCell
-    val pickedState = new CherryPick(rewriter).pickBasic(IntT(), state, oracle, intCells)
+    val pickedState = new CherryPick(rewriter)
+      .pickBasic(IntT(), state, oracle, intCells, state.arena.cellFalse())
     assert(solverContext.sat())
 
     assertEqWhenChosen(rewriter, pickedState, oracle, 0, tla.int(1))
@@ -67,11 +69,12 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
     }
 
     val tuples = Seq(mkTuple(1, 2), mkTuple(3, 4))
-    state = new CherryPick(rewriter).pickTuple(TupleT(Seq(IntT(), IntT())), state, oracle, tuples)
+    state = new CherryPick(rewriter)
+      .pickTuple(TupleT(Seq(IntT(), IntT())), state, oracle, tuples, state.arena.cellFalse())
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, tuples(0).toNameEx)
-    assertEqWhenChosen(rewriter, state, oracle, 1, tuples(1).toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 0, tuples(0))
+    assertEqWhenChosen(rewriter, state, oracle, 1, tuples(1))
   }
 
   test("""CHERRY-PICK {<<1, <<2, 3>> >>, <<3, <<4, 5>> >>} ~~> $B$k""") {
@@ -88,7 +91,7 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
 
     val tuples = Seq(mkTuple(1, 2, 3), mkTuple(3, 4, 5))
     val tupleT = TupleT(Seq(IntT(), TupleT(Seq(IntT(), IntT()))))
-    state = new CherryPick(rewriter).pickTuple(tupleT, state, oracle, tuples)
+    state = new CherryPick(rewriter).pickTuple(tupleT, state, oracle, tuples, state.arena.cellFalse())
     assert(solverContext.sat())
 
     assertEqWhenChosen(rewriter, state, oracle, 0, tuples(0).toNameEx)
@@ -110,7 +113,7 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
     }
 
     val seqs = Seq(mkSeq(1, 2), mkSeq(3, 4))
-    state = new CherryPick(rewriter).pickSequence(SeqT(IntT()), state, oracle, seqs)
+    state = new CherryPick(rewriter).pickSequence(SeqT(IntT()), state, oracle, seqs, state.arena.cellFalse())
     assert(solverContext.sat())
 
     assertEqWhenChosen(rewriter, state, oracle, 0, seqs(0).toNameEx)
@@ -130,7 +133,7 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
     }
 
     val records = Seq(mkRecord(1, 2), mkRecord(3, 4))
-    state = new CherryPick(rewriter).pickRecord(records.head.cellType, state, oracle, records)
+    state = new CherryPick(rewriter).pickRecord(records.head.cellType, state, oracle, records, state.arena.cellFalse())
     assert(solverContext.sat())
 
     assertEqWhenChosen(rewriter, state, oracle, 0, records(0).toNameEx)
@@ -150,7 +153,7 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
     }
 
     val sets = Seq(mkSet(1, 2), mkSet(3, 4))
-    state = new CherryPick(rewriter).pickSet(FinSetT(IntT()), state, oracle, sets)
+    state = new CherryPick(rewriter).pickSet(FinSetT(IntT()), state, oracle, sets, state.arena.cellFalse())
     assert(solverContext.sat())
 
     assertEqWhenChosen(rewriter, state, oracle, 0, sets(0).toNameEx)
@@ -170,7 +173,7 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
     }
 
     val sets = Seq(mkSet(tla.enumSet(1, 2)), mkSet(tla.enumSet()))
-    state = new CherryPick(rewriter).pickSet(FinSetT(IntT()), state, oracle, sets)
+    state = new CherryPick(rewriter).pickSet(FinSetT(IntT()), state, oracle, sets, state.arena.cellFalse())
     assert(solverContext.sat())
 
     assertEqWhenChosen(rewriter, state, oracle, 0, sets(0).toNameEx)
@@ -190,7 +193,7 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
     }
 
     val sets = Seq(mkSet(tla.enumSet()))
-    state = new CherryPick(rewriter).pickSet(FinSetT(IntT()), state, oracle, sets)
+    state = new CherryPick(rewriter).pickSet(FinSetT(IntT()), state, oracle, sets, state.arena.cellFalse())
     assert(solverContext.sat())
 
     assertEqWhenChosen(rewriter, state, oracle, 0, sets(0).toNameEx)
@@ -211,7 +214,7 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
     val sets = Seq(rewriteEx(tla.enumSet(tla.enumSet(1, 2),
       tla.enumSet(3, 4))),
       rewriteEx(tla.enumSet(tla.enumSet(5, 6))))
-    state = new CherryPick(rewriter).pickSet(FinSetT(FinSetT(IntT())), state, oracle, sets)
+    state = new CherryPick(rewriter).pickSet(FinSetT(FinSetT(IntT())), state, oracle, sets, state.arena.cellFalse())
     assert(solverContext.sat())
 
     assertEqWhenChosen(rewriter, state, oracle, 0, sets(0).toNameEx)
@@ -234,7 +237,7 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
     val fun2 = mkFun(tla.enumSet(2, 3), tla.mult(2, tla.name("x")))
     val funs = Seq(fun1, fun2)
     val funT = FunT(FinSetT(IntT()), IntT())
-    state = new CherryPick(rewriter).pickFun(funT, state, oracle, funs)
+    state = new CherryPick(rewriter).pickFun(funT, state, oracle, funs, state.arena.cellFalse())
     assert(solverContext.sat())
 
     assertEqWhenChosen(rewriter, state, oracle, 0, funs(0).toNameEx)
