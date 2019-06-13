@@ -3,7 +3,7 @@ language: java
 matrix:
   include:
     - os: linux
-      jdk: oraclejdk9
+      jdk: openjdk8
 # the build for osx still does not work, DYLD_LIBRARY_PATH does not solve the problem
 #    - os: osx
 #      osx_image: xcode8 # fixing the issue with oraclejdk8 on macos
