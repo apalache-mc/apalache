@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.lir.plugins.IDAllocator
 
 import scala.collection.JavaConverters._
 
+// TODO: @Igor (26.06.2019) remove?
 class EquivalenceDB extends SmartDB[TlaEx, EID] {
   type setT[T] = collection.mutable.Set[T]
   type vecT[E] = java.util.Vector[E]

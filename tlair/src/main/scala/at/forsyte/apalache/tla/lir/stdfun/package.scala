@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.lir
 
+// TODO: these are probably handy functions, but they should not be in **.lir
 package object stdfun {
 
   class FilterInvalidationError( p_ex : OperEx ) extends Exception {

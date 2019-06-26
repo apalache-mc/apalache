@@ -69,6 +69,7 @@ import at.forsyte.apalache.tla.lir.plugins.Identifier
 // TODO: @Igor: please move it to the package *.process
 // TODO: This code looks obfuscated: there are no comments and tonnes of default parameters.
 // I am simply not able to debug it.
+// TODO: this class should be replaced by something readable.
 object SpecHandler {
 
   def dummyExFun( p_ex : TlaEx ) : TlaEx = p_ex

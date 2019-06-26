@@ -6,6 +6,8 @@ import java.util.Vector;
 
 /**
  * Created by jkukovec on 11/28/16.
+ *
+ * TODO: do we still need it?
  */
 public class IDAllocator<ValType> {
     protected Vector<ValType> m_ID_to_Val;

@@ -22,10 +22,13 @@ trait ToggleFlag extends TlaExDecorator {
 
 }
 
+// TODO: REMOVE?
 class FlaggedOperEx( oper : TlaOper, args : TlaEx* ) extends OperEx( oper, args : _* ) with ToggleFlag
 
+// TODO: REMOVE?
 class FlaggedNameEx( name : String ) extends NameEx( name ) with ToggleFlag
 
+// TODO: REMOVE?
 class FlaggedValEx( value : TlaValue ) extends ValEx( value ) with ToggleFlag
 
 
@@ -39,12 +42,15 @@ object lir {
 //  implicit def dropFlagVal( p_flagged : FlaggedValEx ) : ValEx =
 //    ValEx( p_flagged.value )
 
+  // TODO: REMOVE?
   implicit def addFlagOper( p_opEx : OperEx ) : FlaggedOperEx =
     new FlaggedOperEx( p_opEx.oper, p_opEx.args:_* )
 
+  // TODO: REMOVE?
   implicit def addFlagName( p_nmEx : NameEx ) : FlaggedNameEx =
     new FlaggedNameEx( p_nmEx.name )
 
+  // TODO: REMOVE?
   implicit def addFlagVal( p_nmEx : ValEx ) : FlaggedValEx =
     new FlaggedValEx( p_nmEx.value )
 

@@ -33,6 +33,7 @@ class SourceStoreImpl extends HashMapDB[UID, UID] with TransformationListener {
 
 // TODO: Igor (07.01.2019): This object is evil, as it allows one to swallow useful data instead of doing refactoring.
 // I have removed most of its usages, and we should just delete this object from the codebase
+// TODO: remove
 object SourceStoreDummyImpl extends SourceStoreImpl {
   override val m_name : String = "DummySourceDB"
 

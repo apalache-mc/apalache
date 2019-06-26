@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.lir.db
 
 import at.forsyte.apalache.tla.lir._
 
+// TODO: Igor (26.06.2019) remove
 class OperatorDB extends HashMapDB[EID, (List[FormalParam], EID)] {
   override val m_name = "OperatorDB"
 

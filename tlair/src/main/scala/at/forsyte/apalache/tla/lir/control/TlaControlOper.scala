@@ -5,6 +5,8 @@ import at.forsyte.apalache.tla.lir.oper._
 
 /**
   * Control-flow operators
+  *
+  * TODO: move to **.lir.oper?
   */
 abstract class TlaControlOper extends TlaOper {
   override def interpretation: Interpretation.Value = Interpretation.Predefined

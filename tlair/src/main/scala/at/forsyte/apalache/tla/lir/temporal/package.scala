@@ -3,7 +3,9 @@ package at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.oper._
 
 /**
- * Temporal operators.
+  * Temporal operators.
+  *
+  * TODO: move to **.lir.oper?
  */
 package object temporal {
   abstract class TlaTempOper extends TlaOper {

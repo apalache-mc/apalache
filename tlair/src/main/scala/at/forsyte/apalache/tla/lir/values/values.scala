@@ -10,6 +10,7 @@ case class TlaInt(value: BigInt) extends TlaValue {
 }
 
 // TODO: do we want to have a less ad hoc solution, e.g., an object with all handy constructors?
+// TODO: remove, use Builder.int instead
 object IntEx {
   def apply(n: BigInt): ValEx = ValEx(TlaInt(n))
 }
@@ -54,6 +55,8 @@ abstract class TlaPredefSet() extends TlaSet {
   *
   * FIXME: Apparently, we do not need this class, as the only way to define a set is to use
   * an operator... This is already type information, which should be inferred by a type analysis.
+  *
+  * TODO: remove
   */
 case class TlaUserSet() extends TlaSet
 
@@ -61,5 +64,7 @@ case class TlaUserSet() extends TlaSet
   * A function.
   *
   * FIXME: It is not clear, why we need this object at all, as all functions are created with operators.
+  *
+  * TODO: remove
   */
 case class TlaFun(domain: TlaSet) extends TlaValue

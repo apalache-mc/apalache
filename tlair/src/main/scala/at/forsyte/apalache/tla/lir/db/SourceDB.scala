@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.lir.db
 
 import at.forsyte.apalache.tla.lir.UID
 
+// TODO: @Igor (26.06.2019) use SourceStore instead
 class SourceDB extends HashMapDB[UID, UID] {
   override val m_name : String = "sourceDB"
 

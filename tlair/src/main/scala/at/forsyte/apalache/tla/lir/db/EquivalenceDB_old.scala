@@ -14,6 +14,8 @@ import scala.collection.mutable.Set
   * if they have the exact same form (not value, which is never checked), regardless of unique IDs.
   *
   * Equivalence IDs are introduced to reduce the cost of using TLA expressions as pkeys in other databases.
+  *
+  * TODO: Igor (26.06.2019) remove
   */
 object EquivalenceDB_old extends SmartDB[ TlaEx, EID ]{
   override val m_name = "EquivalenceDB"

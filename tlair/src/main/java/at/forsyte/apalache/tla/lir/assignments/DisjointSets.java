@@ -4,9 +4,9 @@ import java.util.*;
 
 /**
  * Created by jkukovec on 08/23/17.
+ * TODO: move it to tla-assignments (Igor)
  */
 public class DisjointSets<ValType> {
-    // TODO: move it to tla-assignments (Igor)
     private Map<ValType,ValType> m_parent;
     private Map<ValType,Integer> m_rank;
 

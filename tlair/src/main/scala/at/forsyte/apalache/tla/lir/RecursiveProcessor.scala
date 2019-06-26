@@ -6,6 +6,7 @@ import scalaz._
 import scala.reflect.Manifest
 
 // TODO: @Igor: please move it to the package *.process
+// @Igor: this looks like a mini-functional language inside Scala. It is an unnecessary abstraction. Do not use it.
 object RecursiveProcessor {
 
   object DefaultFunctions {

@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.db._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 
-
+// TODO: move to lir.process? Or delete, if it is not used anymore.
 object OperatorDB_old extends HashMapDB[ EID, ( List[FormalParam], EID ) ]{
   override val m_name = "OperatorDB"
 

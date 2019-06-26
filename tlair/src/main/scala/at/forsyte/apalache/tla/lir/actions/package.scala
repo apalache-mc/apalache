@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.lir.oper._
   */
 package object actions {
 
+  // TODO: move to **.lir.oper?
   abstract class TlaActionOper extends TlaOper {
     override def interpretation: Interpretation.Value = Interpretation.Predefined
   }

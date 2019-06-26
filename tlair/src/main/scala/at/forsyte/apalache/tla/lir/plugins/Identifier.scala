@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.lir.db._
 import scala.collection.immutable.Vector
 
 // Deprecated: do not use this class. The identifiers are assigned automatically.
+// TODO: remove
 object UniqueDB extends DB[ UID, TlaEx ] {
   // TODO: @Igor, let's get rid of a singleton here. Make a class.
   // TODO: On a second thought, we do not need this class at all.
@@ -54,6 +55,8 @@ object UniqueDB extends DB[ UID, TlaEx ] {
   * Created by jkukovec on 11/28/16.
   *
   * Deprecated: do not use this class. The identifiers are now assigned automatically.
+  *
+  * TODO: remove
   */
 package object Identifier {
   def identify( spec : TlaSpec ) : TlaSpec = {

@@ -4,6 +4,8 @@ import at.forsyte.apalache.tla.lir.values.TlaPredefSet
 
 /**
   * The standard set of booleans. Of course, one can explicitly construct the set { FALSE, TRUE }.
+  *
+  * TODO: move to **.lir.values?
   */
 object TlaBoolSet extends TlaPredefSet {
   override val name: String = "BOOLEAN"
