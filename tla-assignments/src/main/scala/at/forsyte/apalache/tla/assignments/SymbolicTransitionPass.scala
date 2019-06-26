@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.assignments
 
-import at.forsyte.apalache.tla.lir.db.{BodyDB, TransformationListener}
+import at.forsyte.apalache.tla.lir.db.BodyDB
+import at.forsyte.apalache.tla.lir.process.TransformationListener
 import at.forsyte.apalache.tla.lir.{OperatorHandler, _}
 
 /**

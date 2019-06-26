@@ -1,9 +1,10 @@
 package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.control.LetInOper
-import at.forsyte.apalache.tla.lir.db.{BodyDB, TransformationListener}
+import at.forsyte.apalache.tla.lir.db.BodyDB
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.plugins.Identifier
+import at.forsyte.apalache.tla.lir.process.TransformationListener
 
 // TODO: @Igor: please move it to the package *.process
 // TODO: This code looks obfuscated: there are way too many lambdas and no comments at all.

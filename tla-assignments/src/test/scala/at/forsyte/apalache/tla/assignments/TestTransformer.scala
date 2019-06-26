@@ -4,8 +4,9 @@ import at.forsyte.apalache.tla.imp._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.db.{BodyDB, SourceStoreImpl, TransformationListener}
+import at.forsyte.apalache.tla.lir.db.{BodyDB, SourceStoreImpl}
 import at.forsyte.apalache.tla.lir.plugins.UniqueDB
+import at.forsyte.apalache.tla.lir.process.TransformationListener
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.imp.src
 
-import at.forsyte.apalache.tla.lir.db.TransformationListener
+import at.forsyte.apalache.tla.lir.process.TransformationListener
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, UID}
 import com.google.inject.Singleton
 

@@ -3,9 +3,10 @@ package at.forsyte.apalache.tla.assignments
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions._
 import at.forsyte.apalache.tla.lir.control.LetInOper
-import at.forsyte.apalache.tla.lir.db.{BodyDB, TransformationListener}
+import at.forsyte.apalache.tla.lir.db.BodyDB
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.plugins.Identifier
+import at.forsyte.apalache.tla.lir.process.TransformationListener
 import com.google.inject.Singleton
 
 /**

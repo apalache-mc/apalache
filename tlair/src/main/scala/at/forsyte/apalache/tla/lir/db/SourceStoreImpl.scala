@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.lir.db
 
+import at.forsyte.apalache.tla.lir.process.TransformationListener
 import at.forsyte.apalache.tla.lir.{TlaEx, UID}
 import javax.inject.Singleton
 
