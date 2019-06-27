@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.control.LetInOper
 import at.forsyte.apalache.tla.lir.db.BodyDB
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
-import at.forsyte.apalache.tla.lir.transformations.TransformationListener
+import at.forsyte.apalache.tla.lir.transformations.{RecursiveTransformation, ReplaceFixed, SimpleTransformation, TransformationListener}
 
 // TODO: @Igor: please move it to the package *.process
 // TODO: This code looks obfuscated: there are way too many lambdas and no comments at all.
@@ -118,29 +118,27 @@ object OperatorHandler {
 
   def extract( p_spec : TlaSpec,
                p_db : BodyDB
-             ) : Unit = SpecHandler.sideeffectDecl( p_spec, extract( _, p_db ) )
+             ) : Unit = p_spec.declarations.foreach( extract( _, p_db ) )
 
   def replaceAll(p_tlaEx : TlaEx,
                  p_replacedEx : TlaEx,
                  p_newEx : TlaEx,
                  p_listener : TransformationListener
-                ) : TlaEx = {
-    def swap( arg : TlaEx ) : TlaEx =
-      if ( arg == p_replacedEx ) {
-        val ret = p_newEx.deepCopy()
-        markSrc( arg, ret, p_listener )
-        ret
-      }
-      else arg
-
-    SpecHandler.getNewEx( p_tlaEx, swap, markSrc( _, _, p_listener ) )
-  }
+                ) : TlaEx =
+    // Temporary, until this class gets deleted
+    new RecursiveTransformation( ReplaceFixed( p_replacedEx, p_newEx, p_listener ) )( p_tlaEx )
 
   def replaceWithRule(p_ex : TlaEx,
                       p_rule : TlaEx => TlaEx,
                       p_listener : TransformationListener
                      ) : TlaEx = {
-    SpecHandler.getNewEx( p_ex, p_rule, markSrc( _, _, p_listener ) )
+    // Temporary, until this class gets deleted
+    val lambda : TlaEx => TlaEx = { ex =>
+      val ret = p_rule(ex)
+      markSrc( ex, ret, p_listener)
+      ret
+    }
+    new RecursiveTransformation( new SimpleTransformation( lambda, p_listener ) )(p_ex)
   }
 
   /*
@@ -217,8 +215,8 @@ object OperatorHandler {
         case _ => p_operEx
       }
     }
-
-    val ret = SpecHandler.getNewEx( p_ex, subAndID )
+    // Temporary, until this class is replaced
+    val ret = new RecursiveTransformation( new SimpleTransformation( subAndID ) )( p_ex )
     markSrc( p_ex, ret, p_listener )
     ret
   }

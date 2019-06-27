@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.io.UTFPrinter
 
 /**
-  * A TransformationInvariant causes a at.forsyte.apalache.tla.lir.transformations.Transformation to throw an InvariantViolation when
+  * A TransformationInvariant causes a Transformation to throw an InvariantViolation when
   * the results of `transform` do not satisfy the predicate defined by `holdsFor`
   */
 trait TransformationInvariant extends TransformationListener {

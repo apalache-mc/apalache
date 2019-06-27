@@ -67,11 +67,20 @@ object WarningDetector {
       }
     }
 
-    def parentFun( ex : TlaEx, childVals : Seq[NestedWarningSet] ) : NestedWarningSet = {
+    def parentFun( ex : TlaEx, childVals : Traversable[NestedWarningSet] ) : NestedWarningSet = {
       childVals.fold( Set[UID]() )( _ ++ _ )
     }
 
-    val warningSet = SpecHandler.bottomUpVal( p_ex, leafJudge, leafFun, parentFun, default )
+    /**
+      * NOTE: RETHINK HOW RP IS CALLED, SINCE THIS IS A REWRITE TO MATCH THE FORMAT OF
+      * SpecHandler.bottomUpVal
+      **/
+    val warningSet = RecursiveProcessor.computeFromTlaEx[NestedWarningSet](
+      leafJudge,
+      leafFun,
+      _ => default,
+      parentFun
+    )( p_ex )
     if( warningSet.isEmpty ) NoWarning() else NestedAssignmentWarning( warningSet )
   }
 

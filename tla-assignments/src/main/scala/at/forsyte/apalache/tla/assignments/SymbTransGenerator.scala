@@ -60,7 +60,7 @@ class SymbTransGenerator extends TypeAliases {
         * Otherwise, we look at the branching Lemmas to determine how to compute branch sets for
         * parents from the branch sets of children
         **/
-      def parentFun( p_ex : TlaEx, p_childResults : Seq[SelMapType] ) : SelMapType = {
+      def parentFun( p_ex : TlaEx, p_childResults : Traversable[SelMapType] ) : SelMapType = {
         p_ex match {
           case OperEx( oper, args@_* ) =>
             oper match {
@@ -105,12 +105,15 @@ class SymbTransGenerator extends TypeAliases {
       }
 
       /**
-        * Call bottomUpVal to propagate partial maps up the formula tree.
-        * At the root, we obtain the set of all valid assignment selections, which is
-        * in a one-to-one correspondence with the quotient set Branches(\phi) / ~_A
+        * NOTE: RETHINK HOW RP IS CALLED, SINCE THIS IS A REWRITE TO MATCH THE FORMAT OF
+        * SpecHandler.bottomUpVal
         **/
-      SpecHandler.bottomUpVal( p_phi, leafJudge, leafFun, parentFun, default )
-
+      RecursiveProcessor.computeFromTlaEx[SelMapType](
+        leafJudge,
+        leafFun,
+        _ => default,
+        parentFun
+      )( p_phi )
     }
 
     /**
@@ -222,7 +225,11 @@ class SymbTransGenerator extends TypeAliases {
       p_selections( p_ex.ID ).map( s =>
         (
           mkOrdered( s, p_strat ),
-          SpecHandler.recursiveTransform( p_ex, asgnCheck ,assignmentFilter( _, s, p_selections ) )
+          RecursiveProcessor.transformTlaEx(
+            asgnCheck,
+            assignmentFilter( _, s, p_selections ),
+            assignmentFilter( _, s, p_selections )
+          )( p_ex )
         )
       ).toSeq
     }

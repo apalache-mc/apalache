@@ -10,5 +10,5 @@ sealed case class ReplaceFixed( replacedEx : TlaEx,
                                 listeners : TransformationListener*
                               ) extends Transformation {
   override def transformInternal( ex : TlaEx ) : TlaEx =
-    if ( ex == replacedEx ) newEx else ex
+    if ( ex == replacedEx ) newEx.deepCopy() else ex
 }

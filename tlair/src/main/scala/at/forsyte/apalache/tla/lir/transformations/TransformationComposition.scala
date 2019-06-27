@@ -6,6 +6,6 @@ class TransformationComposition( transformations : Transformation* ) extends Tra
   // Each transformation defines its own listeners
   override val listeners : Seq[TransformationListener] = Seq.empty
 
-  override def transformInternal( ex : TlaEx ) =
+  override def transformInternal( ex : TlaEx ) : TlaEx =
     transformations.foldLeft( ex ) { case (e, tr) => tr( e ) }
 }
