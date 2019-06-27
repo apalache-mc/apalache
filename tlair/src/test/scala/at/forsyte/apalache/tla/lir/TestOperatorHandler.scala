@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.db.{BodyDB, SourceStoreImpl}
 import at.forsyte.apalache.tla.lir.oper.FixedArity
-import at.forsyte.apalache.tla.lir.plugins.{Identifier, UniqueDB}
 import at.forsyte.apalache.tla.lir.{Builder => bd, OperatorHandler => oh}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -131,74 +130,5 @@ class TestOperatorHandler extends FunSuite with TestingPredefs {
     val unfolded = OperatorHandler.unfoldMax( op_C.body, bodyDB, sourceDB )
 
     assert( unfolded == bd.bigInt( 0 ) )
-  }
-
-  /*
-  @Igor (08.01.2019): This does not look like a realistic application. The mapping between ids is too fragile.
-  test( "Test SourceDB" ) {
-    bodyDB.clear()
-    sourceDB.clear()
-
-    val ex = bd.appOp( bd.name( "f" ), bd.cup( bd.name( "i" ), bd.name( "j" ) ) )
-
-    Identifier.identify( ex )
-
-    val newEx1 = OperatorHandler.replaceAll( ex, bd.name( "i" ), bd.bigInt( 0 ), sourceDB )
-
-    val original1 = OperatorHandler.undoReplace( newEx1, sourceDB )
-    val cup = ex.asInstanceOf[OperEx].args.tail.head
-    val newCup = newEx1.asInstanceOf[OperEx].args.tail.head
-    val original2 = OperatorHandler.undoReplace( newCup, sourceDB )
-
-
-    assert( original1 identical ex )
-    assert( original2 identical cup )
-  }
-  */
-
-  ignore( "Test SourceDB with uniqueVarRename" ){
-    UniqueDB.clear()
-
-    val sdb = new SourceStoreImpl()
-
-    val bodyA = bd.exists( n_x, n_S, bd.exists( n_y, n_T, bd.eql( bd.plus( n_x, n_y ), bd.plus( n_a, n_b ) ) ) )
-    val opA = bd.declOp( "A", bodyA, "a", "b")
-    Identifier.identify( opA )
-
-    val newA = OperatorHandler.uniqueVarRename( Seq(opA), sdb ).head.asInstanceOf[TlaOperDecl]
-    val newBodyA = newA.body
-
-    assert( newBodyA.valid )
-
-    val originalHopefully = UniqueDB.get( sdb.traceBack( newBodyA.ID ) )
-
-
-    def leafJudge( p_ex : TlaEx) : Boolean = {
-      p_ex match {
-        case ex : OperEx => false
-        case _ => true
-      }
-    }
-
-    def leafFun( p_ex : TlaEx ) : Boolean = {
-      p_ex match {
-        case NameEx( name ) if name.startsWith( "A_" ) => {
-          val anc = sdb.traceBack( p_ex.ID )
-          UniqueDB.contains( anc ) && UniqueDB.apply(anc) == NameEx( name.substring( 2 ) )
-        }
-        case _ => true
-      }
-    }
-
-    def parentFun( p_ex : TlaEx, p_childVals : Seq[Boolean] ) : Boolean = {
-      val allChildren = p_childVals.forall( x => x )
-      allChildren
-    }
-    def default = true
-
-    val allOK = SpecHandler.bottomUpVal[Boolean]( newBodyA, leafJudge, leafFun, parentFun, default )
-
-    assert( allOK )
-
   }
 }

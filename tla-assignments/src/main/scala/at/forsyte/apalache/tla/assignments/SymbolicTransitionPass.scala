@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir.db.BodyDB
-import at.forsyte.apalache.tla.lir.process.TransformationListener
+import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 import at.forsyte.apalache.tla.lir.{OperatorHandler, _}
 
 /**
@@ -72,20 +72,11 @@ class SymbolicTransitionPass( private val m_bodyDB : BodyDB,
         "%s not found or not an operator".format( p_nextName )
       )
 
-    /** Sanity check */
-    assert( nextBody.ID.valid )
-    //      throw new AssignmentException(
-    //        "%s has an invalid ID".format( p_nextName )
-    //      )
-
     /** Preprocess body (inline operators, replace UNCHANGED, turn equality to set membership, etc.) */
     val cleaned = transformer( nextBody, decls : _* )( m_bodyDB, m_srcDB )
 
     /** Sanity check */
-    assert( cleaned.isDefined && cleaned.get.ID.valid )
-    //      throw new AssignmentException(
-    //        "%s could not be sanitized".format( p_nextName )
-    //      )
+    assert( cleaned.isDefined )
 
     val phi = cleaned.get
 

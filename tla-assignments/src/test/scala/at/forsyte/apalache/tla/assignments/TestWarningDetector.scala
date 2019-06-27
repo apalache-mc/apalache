@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.imp._
-import at.forsyte.apalache.tla.lir.plugins.{Identifier, UniqueDB}
 import at.forsyte.apalache.tla.lir.{EnvironmentHandlerGenerator, TestingPredefs}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -23,11 +22,9 @@ class TestWarningDetector extends FunSuite with TestingPredefs {
   test( "test" ){
     val file = "test1.tla"
 
-    UniqueDB.clear()
     val converter = new Transformer()
 
     val decls = declarationsFromFile(EnvironmentHandlerGenerator.makeDummyEH, testFolderPath + file)
-    decls.foreach( Identifier.identify )
 //    converter.extract( decls:_* )
 
     val nextBody = findBodyOf( "Next", decls:_* )
@@ -35,7 +32,6 @@ class TestWarningDetector extends FunSuite with TestingPredefs {
     println( nextBody )
 
     assert( ! nextBody.isNull )
-    assert( nextBody.ID.valid )
 
     val ret = WarningDetector( nextBody )
 

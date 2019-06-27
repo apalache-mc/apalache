@@ -15,7 +15,7 @@ class TestSourceStore extends FunSuite {
     val ex = environmentHandler.identify(tla.int(1))
     val loc = SourceLocation("root", SourceRegion(1, 2, 3, 4))
     store.addRec(ex, loc)
-    val foundLoc = store.find(ex.safeId)
+    val foundLoc = store.find(ex.ID)
     assert(loc == foundLoc.get)
   }
 
@@ -26,9 +26,9 @@ class TestSourceStore extends FunSuite {
     val set = environmentHandler.identify(tla.enumSet(int1))
     val loc = SourceLocation("root", SourceRegion(1, 2, 3, 4))
     store.addRec(set, loc)
-    val foundLoc = store.find(set.safeId)
+    val foundLoc = store.find(set.ID)
     assert(loc == foundLoc.get)
-    val foundLoc2 = store.find(int1.safeId)
+    val foundLoc2 = store.find(int1.ID)
     assert(loc == foundLoc2.get)
   }
 
@@ -42,8 +42,8 @@ class TestSourceStore extends FunSuite {
     store.addRec(int1, loc1)
     val loc2 = SourceLocation("root", SourceRegion(1, 2, 3, 4))
     store.addRec(set2, loc2)
-    assert(loc2 == store.find(set2.safeId).get)
-    assert(loc2 == store.find(set.safeId).get)
-    assert(loc1 == store.find(int1.safeId).get)
+    assert(loc2 == store.find(set2.ID).get)
+    assert(loc2 == store.find(set.ID).get)
+    assert(loc1 == store.find(int1.ID).get)
   }
 }

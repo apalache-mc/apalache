@@ -5,8 +5,7 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.db.{BodyDB, SourceStoreImpl}
-import at.forsyte.apalache.tla.lir.plugins.UniqueDB
-import at.forsyte.apalache.tla.lir.process.TransformationListener
+import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -81,7 +80,6 @@ class TestTransformer extends FunSuite with TestingPredefs {
 
   def clean( ) : Unit = {
     bDB.clear()
-    UniqueDB.clear()
   }
 
   val converter = new Transformer()

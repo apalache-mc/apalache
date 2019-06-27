@@ -42,10 +42,4 @@ class TestLirValues extends FunSuite {
     val c = new TlaVarDecl("x")
     assert("x" == c.name)
   }
-
-  test("define a function") {
-    val dom = TlaIntSet
-    val f = TlaFun(dom)
-    assert(f.domain == dom)
-  }
 }

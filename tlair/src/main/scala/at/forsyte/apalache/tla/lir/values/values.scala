@@ -49,22 +49,3 @@ abstract class TlaSet() extends TlaValue
 abstract class TlaPredefSet() extends TlaSet {
   val name: String
 }
-
-/**
-  * A set defined by the user.
-  *
-  * FIXME: Apparently, we do not need this class, as the only way to define a set is to use
-  * an operator... This is already type information, which should be inferred by a type analysis.
-  *
-  * TODO: remove
-  */
-case class TlaUserSet() extends TlaSet
-
-/**
-  * A function.
-  *
-  * FIXME: It is not clear, why we need this object at all, as all functions are created with operators.
-  *
-  * TODO: remove
-  */
-case class TlaFun(domain: TlaSet) extends TlaValue

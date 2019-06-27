@@ -216,7 +216,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
         val unifier = unifyOption(Some(annotT), exT)
         if (unifier.isDefined) {
           // save the type annotation and return the type
-          typeAnnotations += (ex.safeId -> unifier.get)
+          typeAnnotations += (ex.ID -> unifier.get)
           unifier
         } else {
           val exTStr = if (exT.isDefined) exT.get.toString else None.toString

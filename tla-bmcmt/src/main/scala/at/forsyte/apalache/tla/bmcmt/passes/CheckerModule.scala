@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.process.TransformationListener
+import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, TypeLiteral}
 

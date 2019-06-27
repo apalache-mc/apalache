@@ -563,7 +563,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
     if (typeFinder.getTypeErrors.nonEmpty) {
       def print_error(e: TypeInferenceError): Unit = {
         val locInfo =
-          sourceStore.find(e.origin.safeId) match {
+          sourceStore.find(e.origin.ID) match {
             case Some(loc) => loc.toString
             case None => "<unknown origin>"
           }

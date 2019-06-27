@@ -3,9 +3,10 @@ package at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.control.LetInOper
 import at.forsyte.apalache.tla.lir.db._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
-import at.forsyte.apalache.tla.lir.process.TransformationListener
 import com.google.inject.Inject
 import javax.inject.Singleton
+
+import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 
 // TODO: @Igor move these classes to *.process
 // TODO: @Igor (04.01.2019):
@@ -63,8 +64,6 @@ class EnvironmentHandler @Inject()(val m_uidDB: UidDB,
     RecursiveProcessor.traverseEntireTlaEx(m_uidDB.add)(expr)
     expr
   }
-
-  def fullyIdentified: TlaEx => Boolean = RecursiveProcessor.globalTlaExProperty(_.ID.valid)
 
   import AuxFun._
 
@@ -249,7 +248,7 @@ class EnvironmentHandler @Inject()(val m_uidDB: UidDB,
                  p_newEx: TlaEx
                 ): TlaEx = {
     def swap(arg: TlaEx): TlaEx = {
-      val ret = p_newEx.deepCopy(identified = false)
+      val ret = p_newEx.deepCopy()
       identify(ret)
       markSrc(arg, ret)
       ret

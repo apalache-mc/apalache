@@ -38,20 +38,11 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
         "%s not found or not an operator".format( p_next )
       )
 
-    /** Sanity check */
-    assert( nextBody.ID.valid )
-    //      throw new AssignmentException(
-    //        "%s has an invalid ID".format( p_nextName )
-    //      )
-
     /** Preprocess body (inline operators, replace UNCHANGED, turn equality to set membership, etc.) */
     val cleaned = transformer( nextBody, decls : _* )( DummyBodyDB, new SourceStoreImpl )
 
     /** Sanity check */
-    assert( cleaned.isDefined && cleaned.get.ID.valid )
-    //      throw new AssignmentException(
-    //        "%s could not be sanitized".format( p_nextName )
-    //      )
+    assert( cleaned.isDefined )
 
     cleaned.get
   }

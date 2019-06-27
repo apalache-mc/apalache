@@ -14,17 +14,6 @@ class TestEnvHandler extends FunSuite with TestingPredefs {
 
   def newEh : EnvironmentHandler = EnvironmentHandlerGenerator.makeEH
 
-  test( "Identification" ) {
-    val eh = EnvironmentHandlerGenerator.makeEH
-
-    val ex = tla.eql( 1, 0 )
-
-    eh.identify( ex )
-    eh.identify( ex )
-
-    assert( eh.fullyIdentified( ex ) )
-  }
-
   test( "VarRename" ) {
     val eh = EnvironmentHandlerGenerator.makeEH
 
@@ -71,22 +60,6 @@ class TestEnvHandler extends FunSuite with TestingPredefs {
 
     assert( ehReal.m_bodyDB.size === 1 )
     assert( ehDummy.m_bodyDB.size === 0 )
-
-  }
-
-  /** Made redundant by assign-on-create approach to UIDs */
-  ignore( "ReplaceAll" ) {
-    val eh = newEh
-
-    val ex = tla.eql( tla.plus( 1, 1 ), 2 )
-    val toReplace : TlaEx = 1
-    val replaceWith : TlaEx = tla.appOp( "Cos", 0 )
-
-    eh identify ex
-
-    val replEx = eh.replaceAll( ex, toReplace, replaceWith )
-
-    assert( eh.fullyIdentified( ex ) && !eh.fullyIdentified( replEx ) )
 
   }
 

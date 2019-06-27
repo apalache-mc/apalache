@@ -31,7 +31,7 @@ class TestRenaming extends FunSuite {
     assert(expected == renamed)
     // the source code tracking should work properly
     // @Igor (08.01.2019): this is where the uglyness of EnvironmentHandler is showing...
-    assert(original.safeId == handler.m_listener.asInstanceOf[SourceStoreImpl](renamed.safeId))
+    assert(original.ID == handler.m_listener.asInstanceOf[SourceStoreImpl](renamed.ID))
   }
 
   test("test renaming filter") {
@@ -50,6 +50,6 @@ class TestRenaming extends FunSuite {
     assert(expected == renamed)
     // the source code tracking should work properly
     // @Igor (08.01.2019): this is where the uglyness of EnvironmentHandler is showing...
-    assert(original.safeId == handler.m_listener.asInstanceOf[SourceStoreImpl](renamed.safeId))
+    assert(original.ID == handler.m_listener.asInstanceOf[SourceStoreImpl](renamed.ID))
   }
 }

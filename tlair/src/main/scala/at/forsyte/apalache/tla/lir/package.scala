@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla
 
 package lir {
-  
+
   import at.forsyte.apalache.tla.lir.io.UTFPrinter
   import at.forsyte.apalache.tla.lir.oper._
 
@@ -12,8 +12,6 @@ package lir {
   abstract class TlaDecl {
     def name: String
     def deepCopy(): TlaDecl
-    // why do we need it here?
-    def identical( other: TlaDecl ) : Boolean
   }
 
   // TODO: add TlaTheoremDecl?
@@ -46,14 +44,11 @@ package lir {
   /** a constant as defined by CONSTANT */
   case class TlaConstDecl(name: String) extends TlaDecl{
     override def deepCopy( ): TlaConstDecl =  TlaConstDecl( name )
-    override def identical( other: TlaDecl ): Boolean = this == other
   }
 
   /** a variable as defined by VARIABLE */
   case class TlaVarDecl(name: String) extends TlaDecl{
     override def deepCopy( ): TlaVarDecl =  TlaVarDecl( name )
-    override def identical( other: TlaDecl ): Boolean = this == other
-
   }
 
   /**
@@ -62,20 +57,10 @@ package lir {
     */
   case class TlaAssumeDecl(body: TlaEx) extends TlaDecl {
     val name: String = "ASSUME"
-    override def deepCopy(): TlaAssumeDecl = TlaAssumeDecl(body.deepCopy(identified = false))
-    override def identical(other: TlaDecl): Boolean = this == other
+    override def deepCopy(): TlaAssumeDecl = TlaAssumeDecl(body.deepCopy())
   }
 
   ///////////////// DISCUSSION
-  /**
-    * A module included by EXTENDS.
-    *
-    * FIXME: shall we remove this one, as there is no obvious for it? Just use TlaModule.
-    */
-  case class TlaModuleDecl(name: String) extends TlaDecl{
-    override def deepCopy( ): TlaModuleDecl =  TlaModuleDecl( name )
-    override def identical( other: TlaDecl ): Boolean = this == other
-  }
 
   /**
     * A spec, given by a list of declarations and a list of expressions.
@@ -83,14 +68,10 @@ package lir {
     * FIXME: a candidate for removal. Just use TlaModule?
     */
   case class TlaSpec( name: String, declarations: List[TlaDecl] ){
-    def deepCopy() : TlaSpec = {
-      return TlaSpec( name, declarations.map( _.deepCopy() ) )
-    }
-    def identical( other: TlaSpec ): Boolean =
-      ( name == other.name
-        && declarations.zip( other.declarations ).forall( pa => pa._1.identical( pa._2 ) )
-        )
+    def deepCopy() : TlaSpec = TlaSpec( name, declarations.map( _.deepCopy() ) )
+
   }
+
   ///////////////// END of DISCUSSION
 
 
@@ -121,26 +102,15 @@ package lir {
 
   /** An abstract TLA+ expression. Note that the class is sealed, so we allow only a limited set of values. */
   sealed abstract class TlaEx extends Identifiable {
-    // TODO: hey, use power of Scala! Move toNiceString out of here and introduce a PrettyPrinter class.
-    // No need, toString suffices, you can just call print( ex ) which invokes it by default.
-    def toNiceString( nTab: Int = 0) = ""
 
     // TODO: there must be a nice way of defining default printers in scala, so we do not have to make a choice here
     override def toString: String =  UTFPrinter( this )
 
     def toSimpleString: String = ""
 
-    // TODO: goes to PrettyPrinter
-    protected val indent : Int = 4
-    // TODO: goes to PrettyPrinter
-    protected val tab : String = " " * indent
-
     def isNull : Boolean = false
 
-    def deepCopy( identified: Boolean = true ) : TlaEx
-
-    // this is a strange method, as it expects both structural equality and equality of the identifiers
-    def identical( other: TlaEx ) : Boolean
+    def deepCopy() : TlaEx
   }
 
   /**
@@ -150,57 +120,21 @@ package lir {
     * We could use Option[TlaEx], but that would introduce unnecessary many pattern matches, as NoneEx will be rare.
     */
   object NullEx extends TlaEx {
-    override def deepCopy(identified: Boolean): TlaEx = NullEx
-    override def identical(other: TlaEx): Boolean = this eq other
-
-    override def toNiceString(nTab: Int): String = "NullEx"
-    override def toSimpleString: String = toNiceString()
+    override def deepCopy() : TlaEx = NullEx
+    override def toSimpleString: String = toString
     override def isNull : Boolean = true
   }
 
   /** just using a TLA+ value */
   case class ValEx(value: TlaValue) extends TlaEx{
-    override def toNiceString( nTab : Int = 0): String = (tab *nTab) + "( ValEx: " + value.toString + " , id:" + ID + " )"
     override def toSimpleString: String = value.toString
-    override def deepCopy( identified: Boolean = true ): ValEx = {
-      val ret = ValEx( value )
-      if (identified) {
-        ret.m_ID = m_ID
-        ret.canSet = canSet
-      }
-      return ret
-    }
-
-    // TODO: move it an analysis class. This can be done by pattern matching and should not be in the class itself.
-    override def identical( other: TlaEx ): Boolean = {
-      other match{
-        case ValEx( v ) => v == value && other.ID == ID
-        case _ => false
-      }
-    }
-
+    override def deepCopy() : ValEx = ValEx( value )
   }
 
   /** referring to a variable, constant, operator, etc. by a name. */
   case class NameEx(name: String) extends TlaEx{
-    override def toNiceString( nTab: Int = 0 ): String = (tab *nTab) + "( NameEx: " + name + " , id: " + ID + " )"
     override def toSimpleString: String = name
-    override def deepCopy(identified: Boolean = true): NameEx = {
-      val ex = NameEx(name)
-      if (identified) {
-        ex.m_ID = m_ID
-        ex.canSet = canSet
-      }
-      ex
-    }
-
-    // TODO: move it an analysis class. This can be done by pattern matching and should not be in the class itself.
-    override def identical( other: TlaEx ): Boolean = {
-      other match{
-        case NameEx( nm ) => nm == name && other.ID == ID
-        case _ => false
-      }
-    }
+    override def deepCopy() : NameEx = NameEx(name)
   }
 
   // applying an operator, including the one defined by OperFormalParam
@@ -217,13 +151,6 @@ package lir {
     require(oper.permitsArgs(args),
       "The invariant of %s is violated by the arguments: %s".format(oper.name, args.map(_.toString) mkString ", "))
 
-    override def toNiceString( nTab : Int = 0 ): String = {
-      (tab *nTab) + "( OperEx: " +
-        oper.name + ",\n" +
-        args.map( (x : TlaEx) => x.toNiceString( nTab + 1 )).mkString(",\n") +
-        ",\n" + (tab *nTab) + "  id: " + ID + "\n"+ (tab *nTab) + ")"
-    }
-
     override def toSimpleString: String = {
       oper.arity match{
         case FixedArity(n) => {
@@ -238,31 +165,7 @@ package lir {
       }
     }
 
-    // TODO: remove it, copying should work automatically for case classes
-    override def deepCopy( identified: Boolean = true ): OperEx = {
-      val ex = OperEx( oper, args.map( _.deepCopy( identified ) ) : _* ) // deep copy
-      if (identified) {
-        ex.m_ID = m_ID
-        ex.canSet = canSet
-      }
-      ex
-    }
-
-    // TODO: move it an analysis class. This can be done by pattern matching and should not be in the class itself.
-    override def identical( other: TlaEx ): Boolean = {
-      other match{
-        case OperEx( op, arguments @ _*  ) => op == oper && other.ID == ID && arguments.size == args.size &&
-          args.zip(arguments).forall( pa => pa._1.identical( pa._2 ) )
-        case _ => false
-      }
-    }
-
-    // TODO: what is that and why do we need it?
-    def deepForget( ): Unit = {
-      forget()
-      args.foreach( _.forget() )
-    }
-
+    override def deepCopy() : OperEx =  OperEx( oper, args.map( _.deepCopy() ) : _* )
   }
 
   /**
@@ -324,12 +227,6 @@ package lir {
     var isRecursive: Boolean = false
 
     override def deepCopy( ): TlaOperDecl =  TlaOperDecl( name, formalParams, body.deepCopy() )
-
-    // TODO: remove
-    override def identical( other: TlaDecl ): Boolean = other match {
-      case TlaOperDecl( oname, oparams, obody ) => name == oname && formalParams == oparams && body.identical( obody )
-      case _ => false
-    }
   }
 
 }

@@ -5,8 +5,7 @@ import at.forsyte.apalache.tla.lir.actions._
 import at.forsyte.apalache.tla.lir.control.LetInOper
 import at.forsyte.apalache.tla.lir.db.BodyDB
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.plugins.Identifier
-import at.forsyte.apalache.tla.lir.process.TransformationListener
+import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 import com.google.inject.Singleton
 
 /**
@@ -88,8 +87,7 @@ class Transformer {
       def lambda( x : TlaEx ) =
         Builder.in( Builder.prime( x ), Builder.enumSet( x ) )
 
-
-      val ret = ex match {
+      ex match {
         case OperEx( TlaActionOper.unchanged, arg ) =>
 
           /** Consider UNCHANGED x
@@ -103,10 +101,6 @@ class Transformer {
           }
         case _ => ex
       }
-
-      /** Identify at the end */
-      Identifier.identify( ret )
-      ret
     }
 
     OperatorHandler.replaceWithRule( p_ex, exFun, srcDB )
@@ -228,15 +222,10 @@ class Transformer {
              implicit p_bodyDB : BodyDB,
              p_listener : TransformationListener
            ) : Option[TlaEx] = {
-    Identifier.identify( p_expr )
-    p_decls.foreach( Identifier.identify )
     extract( p_decls : _* )( p_bodyDB )
     val san = sanitize( p_expr )( p_bodyDB, p_listener )
     if ( san.isNull ) None
-    else {
-      Identifier.identify( san )
-      Some( san )
-    }
+    else Some( san )
   }
 
 }

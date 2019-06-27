@@ -6,7 +6,6 @@ import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.bmcmt.types.{AnnotationParser, FinSetT, IntT, PowSetT}
 import at.forsyte.apalache.tla.lir.NameEx
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.plugins.Identifier
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -140,7 +139,6 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     val fex = new FreeExistentialsStoreImpl
     val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
     rewriter.freeExistentialsStore = fex
-    Identifier.identify(ex) // TODO: identifier should not be called directly
     fex.store = fex.store + ex.ID
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
@@ -163,7 +161,6 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     val fex = new FreeExistentialsStoreImpl
     val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
     rewriter.freeExistentialsStore = fex
-    Identifier.identify(ex) // TODO: identifier should not be called directly
     fex.store = fex.store + ex.ID
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {

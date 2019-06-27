@@ -6,7 +6,6 @@ import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
 import scala.collection.mutable.{Set => MSet}
-import at.forsyte.apalache.tla.lir.plugins.Identifier
 
 @RunWith( classOf[JUnitRunner] )
 class TestRecursiveProcessor extends FunSuite with TestingPredefs {
@@ -123,8 +122,6 @@ class TestRecursiveProcessor extends FunSuite with TestingPredefs {
     val ex1 = tla.primeInSingleton( n_x, n_S )
     val ex2 = tla.ite( tla.eql( 0, 1 ), n_p, n_q )
     val ex3 = tla.exists( n_x, n_T, tla.and( ex1, ex2 ) )
-
-    Identifier.identify( ex3 )
 
     val fun = RecursiveProcessor.traverseEntireTlaEx( collect )
 

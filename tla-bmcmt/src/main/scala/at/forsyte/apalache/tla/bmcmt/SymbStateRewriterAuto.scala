@@ -5,7 +5,6 @@ import at.forsyte.apalache.tla.bmcmt.caches.{ExprCache, IntValueCache, RecordDom
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir.TlaEx
-import at.forsyte.apalache.tla.lir.plugins.Identifier
 
 /**
   * A decorator of SymbStateRewriter that automatically preprocesses every given expression.
@@ -62,7 +61,6 @@ class SymbStateRewriterAuto(val solverContext: SolverContext) extends SymbStateR
   }
 
   private def preprocess(ex: TlaEx): Unit = {
-    Identifier.identify(ex)
     exprGradeAnalysis.labelExpr(consts, vars, ex)
     typeFinder.inferAndSave(ex)
     if (typeFinder.getTypeErrors.nonEmpty) {

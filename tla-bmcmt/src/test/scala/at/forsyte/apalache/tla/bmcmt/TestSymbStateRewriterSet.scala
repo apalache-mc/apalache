@@ -6,7 +6,6 @@ import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.plugins.Identifier
 import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
 import org.junit.runner.RunWith
@@ -590,7 +589,6 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
     val fex = new FreeExistentialsStoreImpl()
-    Identifier.identify(ex) // XXX: should not be here
     fex.store = fex.store + ex.ID
     rewriter.freeExistentialsStore = fex
     val nextState = rewriter.rewriteUntilDone(state)
@@ -633,7 +631,6 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
     val fex = new FreeExistentialsStoreImpl()
-    Identifier.identify(ex) // XXX: should not be here
     fex.store = fex.store + ex.ID
     rewriter.freeExistentialsStore = fex
     val nextState = rewriter.rewriteUntilDone(state)
@@ -662,7 +659,6 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
     val fex = new FreeExistentialsStoreImpl()
-    Identifier.identify(ex) // XXX: should not be here
     fex.store = fex.store + ex.ID
     rewriter.freeExistentialsStore = fex
     val nextState = rewriter.rewriteUntilDone(state)

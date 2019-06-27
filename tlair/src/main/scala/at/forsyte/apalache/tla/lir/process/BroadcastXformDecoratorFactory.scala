@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.lir.process
 
 import at.forsyte.apalache.tla.lir.TlaEx
+import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 
 import scala.collection.mutable
 

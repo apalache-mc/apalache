@@ -1,8 +1,9 @@
 package at.forsyte.apalache.tla.lir.db
 
-import at.forsyte.apalache.tla.lir.process.TransformationListener
 import at.forsyte.apalache.tla.lir.{TlaEx, UID}
 import javax.inject.Singleton
+
+import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 
 @Singleton
 class SourceStoreImpl extends HashMapDB[UID, UID] with TransformationListener {
@@ -12,19 +13,8 @@ class SourceStoreImpl extends HashMapDB[UID, UID] with TransformationListener {
   override val m_name : String = "sourceDB"
 
   override def onTransformation(originEx: TlaEx, newEx: TlaEx): Unit = {
-    update(newEx.safeId, originEx.safeId)
+    update(newEx.ID, originEx.ID)
   }
-
-  override def put( key : UID,
-                    value : UID
-                  ) : Option[UID] =
-    if( key.valid && value.valid ) super.put( key, value )
-    else None
-
-  override def update( key : UID,
-                       value : UID
-                     ) : Unit =
-    if (key.valid && value.valid) super.update( key, value )
 
   def traceBack( p_id : UID ) : UID = get( p_id ) match {
     case Some( id ) => traceBack( id )

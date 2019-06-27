@@ -11,12 +11,7 @@ package object convenience {
     */
   val tla : Builder.type = Builder
 
-  // TODO: remove? Just call UID(id)?
   implicit def makeUID( id : Int ) : UID = UID( id )
 
-  // TODO: remove? Just call EID(id)
-  implicit def makeEID( id : Int ) : EID = EID( id )
-
-  // TODO: remove? Just call FixedArity(n)
   implicit def opArity( n : Int ) : OperArity = FixedArity( n )
 }

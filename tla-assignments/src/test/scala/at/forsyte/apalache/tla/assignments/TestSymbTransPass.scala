@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.imp.declarationsFromFile
 import at.forsyte.apalache.tla.lir.db.{BodyDB, SourceStoreImpl}
-import at.forsyte.apalache.tla.lir.plugins.UniqueDB
 import at.forsyte.apalache.tla.lir.{EnvironmentHandlerGenerator, NullEx, TestingPredefs, TlaDecl, TlaEx, TlaOperDecl, TlaVarDecl, UID, Builder => bd}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -17,7 +16,6 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
   }
 
   def testFromDecls( p_decls : Seq[TlaDecl], p_next : String = "Next"   ) : Seq[SymbTrans]  = {
-    UniqueDB.clear()
     val bodyDB = new BodyDB
     val srcDB = new SourceStoreImpl
 
@@ -46,7 +44,6 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
   }
 
   test( "Test Complete Spec return + unsat spec" ){
-    UniqueDB.clear()
     val phi = bd.bool( false )
     val encoder = new AssignmentStrategyEncoder()
     val fullSpec = encoder( Set("x"), phi, p_complete = true )

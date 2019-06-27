@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.lir.process
+package at.forsyte.apalache.tla.lir.transformations
 
 import at.forsyte.apalache.tla.lir.TlaEx
 

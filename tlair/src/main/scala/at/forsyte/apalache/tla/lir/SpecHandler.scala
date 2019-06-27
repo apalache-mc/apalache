@@ -1,7 +1,5 @@
 package at.forsyte.apalache.tla.lir
 
-import at.forsyte.apalache.tla.lir.plugins.Identifier
-
 /**
   * Created by jkukovec on 12/6/16.
   */
@@ -11,60 +9,6 @@ import at.forsyte.apalache.tla.lir.plugins.Identifier
   * they just ignore the delcarations in LET.
   */
 
-//object ExTreeManipulator{
-//  val dummyExFun : TlaEx => TlaEx = { x : TlaEx => x }
-//  val dummyExSideeffect : TlaEx => Unit = { _ => }
-//  val dummyPost : (TlaEx, TlaEx) => Unit = { _ => }
-//  val dummyDeclFun: TlaDecl => TlaDecl = { x : TlaDecl => x}
-//
-//  def generalBaseRecursive(
-//                            p_ex : TlaEx,
-//                            p_baseCaseCheck : TlaEx => Boolean,
-//                            p_baseCaseFun : TlaEx => TlaEx,
-//                            p_recursiveCaseFun : TlaEx => TlaEx,
-//                            p_post : (TlaEx, TlaEx) => Unit
-//                          ) : TlaEx = {
-//    val ret = if ( p_baseCaseCheck( p_ex ) ) {
-//      p_baseCaseFun( p_ex )
-//    }
-//    else {
-//      p_recursiveCaseFun( p_ex )
-//    }
-//    p_post( p_ex, ret )
-//    ret
-//  }
-//
-//  def operExRecursive(
-//                       p_ex : TlaEx,
-//                       p_exFun : TlaEx => TlaEx = dummyExFun,
-//                       p_postFun : (TlaEx, TlaEx) => Unit = dummyPost
-//                     ) : TlaEx = {
-//    val newEx = p_exFun( p_ex )
-//    newEx match {
-//      case OperEx( oper, args@_* ) =>
-//        val newOper =
-//          oper match {
-//            case op : LetInOper =>
-//              new LetInOper(
-//                op.defs.map( {
-//                  case TlaOperDecl( opName, params, opBody ) =>
-//                    TlaOperDecl( opName, params, operExRecursive( opBody, p_exFun, p_postFun ) )
-//                } )
-//              )
-//            case _ => oper
-//          }
-//        val newargs = args.map( operExRecursive( _, p_exFun, p_postFun ) )
-//        if ( oper == newOper && args == newargs ) newEx
-//        else {
-//          val ret = OperEx( oper, newargs : _* )
-//          p_postFun( p_ex, ret )
-//          ret
-//        }
-//      case _ => newEx
-//    }
-//  }
-//
-//}
 
 // TODO: @Igor: please move it to the package *.process
 // TODO: This code looks obfuscated: there are no comments and tonnes of default parameters.
@@ -105,15 +49,13 @@ object SpecHandler {
                 p_postFun : (TlaEx, TlaEx) => Unit = dummyPost
               ) : TlaEx = {
     val newEx = p_exFun( p_ex )
-    // FIXME: Jure, I have added the call to identify, in order to mark the source
-    Identifier.identify(newEx)
 
     val ret = newEx match {
       case OperEx( oper, args@_* ) =>
         val newargs = args.map( getNewEx( _, p_exFun, p_postFun ) )
         // FIXME: Jure, I have added the call to identify, in order to mark the source
         if ( args == newargs ) newEx
-        else Identifier.identify(OperEx( oper, newargs : _* ))
+        else OperEx( oper, newargs : _* )
       case _ => newEx
     }
     // TODO: mark source

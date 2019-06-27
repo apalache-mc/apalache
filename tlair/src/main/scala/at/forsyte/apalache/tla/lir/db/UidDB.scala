@@ -26,10 +26,6 @@ class UidDB extends DB[ UID, TlaEx ] {
   }
 
   def add( ex: TlaEx ) : Unit = {
-    if( !ex.ID.valid ){
-      ex.setID( UID( m_contents.size ) )
-      m_contents :+=  ex
-    }
   }
 
   override def clear() : Unit = m_contents = Vector[ TlaEx ]()

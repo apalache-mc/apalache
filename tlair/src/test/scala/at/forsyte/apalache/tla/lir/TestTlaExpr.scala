@@ -2,8 +2,7 @@ package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.predef.TlaIntSet
-import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr, TlaUserSet}
+import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -108,17 +107,6 @@ class TestTlaExpr extends FunSuite {
       OperEx(TlaSetOper.enumSet),
       OperEx(TlaSetOper.enumSet, ValEx(TlaInt(1)))
     )
-  }
-
-  test("set constructors") {
-    // declare sets whose contents we don't know
-    val set1 = TlaUserSet()
-    val set2 = TlaUserSet()
-    // there is only one set of integers
-    val intSet = TlaIntSet
-
-    val rhs = OperEx(TlaSetOper.cup, ValEx(set2), ValEx(intSet))
-    OperEx(TlaOper.eq, ValEx(set1), rhs)
   }
 
   test("strange set operations") {

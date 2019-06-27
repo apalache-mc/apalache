@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.lir.process
 
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 import org.junit.runner.RunWith

@@ -38,9 +38,7 @@ object UniqueDB extends DB[ UID, TlaEx ] {
   }
 
   def add( ex: TlaEx ) : Unit = {
-    if( !ex.ID.valid ){
-      ex.setID( UID( expressions.size ) )
-      expressions :+=  ex
+    if( false ){
     }
   }
 
@@ -51,27 +49,4 @@ object UniqueDB extends DB[ UID, TlaEx ] {
 
 }
 
-/**
-  * Created by jkukovec on 11/28/16.
-  *
-  * Deprecated: do not use this class. The identifiers are now assigned automatically.
-  *
-  * TODO: remove
-  */
-package object Identifier {
-  def identify( spec : TlaSpec ) : TlaSpec = {
-    SpecHandler.sideeffectWithExFun( spec, UniqueDB.add )
-    spec
-  }
-
-  def identify( decl : TlaDecl ) : TlaDecl = {
-    SpecHandler.sideeffectOperBody(decl, SpecHandler.sideeffectEx(_, UniqueDB.add))
-    decl
-  }
-
-  def identify( ex : TlaEx ) : TlaEx = {
-    SpecHandler.sideeffectEx( ex, UniqueDB.add )
-    ex
-  }
-}
 

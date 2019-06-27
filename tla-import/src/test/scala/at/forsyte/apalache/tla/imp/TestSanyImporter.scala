@@ -32,8 +32,7 @@ class TestSanyImporter extends FunSuite {
       assert(name == d.name)
       assert(params == d.formalParams)
       assert(body == d.body)
-      assert(d.body.ID.valid) // an identifier has been assigned
-      assert(sourceStore.contains(d.body.safeId)) // and source file information has been saved
+      assert(sourceStore.contains(d.body.ID)) // and source file information has been saved
 
     case d@_ =>
       fail("Expected a TlaOperDecl, found: " + d)
@@ -146,9 +145,8 @@ class TestSanyImporter extends FunSuite {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(ValEx(TlaInt(1)) == actionDecl.body)
-        assert(actionDecl.body.ID.valid) // an identifier has been assigned
-        assert(locationStore.contains(actionDecl.body.safeId)) // and source file information has been saved
-      val loc = locationStore.find(actionDecl.body.safeId).get
+        assert(locationStore.contains(actionDecl.body.ID)) // and source file information has been saved
+      val loc = locationStore.find(actionDecl.body.ID).get
         assert(SourceRegion(SourcePosition(2, 9), SourcePosition(2, 9)) == loc.region)
     }
   }
@@ -171,9 +169,8 @@ class TestSanyImporter extends FunSuite {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(ValEx(TlaDecimal(BigDecimal("123.456"))) == actionDecl.body)
-        assert(actionDecl.body.ID.valid) // an identifier has been assigned
-        assert(locationStore.contains(actionDecl.body.safeId)) // and source file information has been saved
-      val loc = locationStore.find(actionDecl.body.safeId).get
+        assert(locationStore.contains(actionDecl.body.ID)) // and source file information has been saved
+      val loc = locationStore.find(actionDecl.body.ID).get
         assert(SourceRegion(SourcePosition(2, 9), SourcePosition(2, 15)) == loc.region)
     }
   }
@@ -196,9 +193,8 @@ class TestSanyImporter extends FunSuite {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(ValEx(TlaStr("Hello")) == actionDecl.body)
-        assert(actionDecl.body.ID.valid) // an identifier has been assigned
-        assert(locationStore.contains(actionDecl.body.safeId)) // and source file information has been saved
-      val loc = locationStore.find(actionDecl.body.safeId).get
+        assert(locationStore.contains(actionDecl.body.ID)) // and source file information has been saved
+      val loc = locationStore.find(actionDecl.body.ID).get
         assert(SourceRegion(SourcePosition(2, 9), SourcePosition(2, 15)) == loc.region)
     }
   }
@@ -221,9 +217,8 @@ class TestSanyImporter extends FunSuite {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(ValEx(TlaBool(false)) == actionDecl.body)
-        assert(actionDecl.body.ID.valid) // an identifier has been assigned
-        assert(locationStore.contains(actionDecl.body.safeId)) // and source file information has been saved
-      val loc = locationStore.find(actionDecl.body.safeId).get
+        assert(locationStore.contains(actionDecl.body.ID)) // and source file information has been saved
+      val loc = locationStore.find(actionDecl.body.ID).get
         assert("constop" == loc.filename)
         assert(SourceRegion(SourcePosition(2, 9), SourcePosition(2, 13)) == loc.region)
     }
@@ -247,8 +242,7 @@ class TestSanyImporter extends FunSuite {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(ValEx(TlaBool(true)) == actionDecl.body)
-        assert(actionDecl.body.ID.valid) // an identifier has been assigned
-        assert(locationStore.contains(actionDecl.body.safeId)) // and source file information has been saved
+        assert(locationStore.contains(actionDecl.body.ID)) // and source file information has been saved
     }
   }
 
@@ -272,9 +266,8 @@ class TestSanyImporter extends FunSuite {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(NameEx("x") == actionDecl.body)
-        assert(actionDecl.body.ID.valid) // an identifier has been assigned
-        assert(locationStore.contains(actionDecl.body.safeId)) // and source file information has been saved
-      val loc = locationStore.find(actionDecl.body.safeId).get
+        assert(locationStore.contains(actionDecl.body.ID)) // and source file information has been saved
+      val loc = locationStore.find(actionDecl.body.ID).get
         assert(SourceRegion(SourcePosition(4, 9), SourcePosition(4, 9)) == loc.region)
     }
   }
@@ -299,8 +292,7 @@ class TestSanyImporter extends FunSuite {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(NameEx("n") == actionDecl.body)
-        assert(actionDecl.body.ID.valid) // an identifier has been assigned
-        assert(locationStore.contains(actionDecl.body.safeId)) // and source file information has been saved
+        assert(locationStore.contains(actionDecl.body.ID)) // and source file information has been saved
     }
   }
 
@@ -322,9 +314,8 @@ class TestSanyImporter extends FunSuite {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(OperEx(TlaBoolOper.or, ValEx(TlaFalse), ValEx(TlaTrue)) == actionDecl.body)
-        assert(actionDecl.body.ID.valid) // an identifier has been assigned
-        assert(locationStore.contains(actionDecl.body.safeId)) // and source file information has been saved
-      val loc = locationStore.find(actionDecl.body.safeId).get
+        assert(locationStore.contains(actionDecl.body.ID)) // and source file information has been saved
+      val loc = locationStore.find(actionDecl.body.ID).get
         assert(SourceRegion(SourcePosition(2, 9), SourcePosition(2, 21)) == loc.region)
     }
   }
@@ -347,8 +338,7 @@ class TestSanyImporter extends FunSuite {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(OperEx(TlaSetOper.enumSet) == actionDecl.body)
-        assert(actionDecl.body.ID.valid) // an identifier has been assigned
-        assert(locationStore.contains(actionDecl.body.safeId)) // and source file information has been saved
+        assert(locationStore.contains(actionDecl.body.ID)) // and source file information has been saved
     }
   }
 
@@ -372,8 +362,7 @@ class TestSanyImporter extends FunSuite {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(OperEx(TlaBoolOper.and, NameEx("x"), ValEx(TlaTrue)) == actionDecl.body)
-        assert(actionDecl.body.ID.valid) // an identifier has been assigned
-        assert(locationStore.contains(actionDecl.body.safeId)) // and source file information has been saved
+        assert(locationStore.contains(actionDecl.body.ID)) // and source file information has been saved
     }
   }
 
@@ -1013,19 +1002,19 @@ class TestSanyImporter extends FunSuite {
         assert(TlaOperDecl("Y",
           List(SimpleFormalParam("a")),
           NameEx("a")) == yDecl)
-        assert(locationStore.contains(yDecl.body.safeId)) // and source file information has been saved
+        assert(locationStore.contains(yDecl.body.ID)) // and source file information has been saved
 
         val zDecl = o.defs(2)
         zDecl match {
           case TlaOperDecl("Z", List(OperFormalParam("f", FixedArity(1)), SimpleFormalParam("a")), _) =>
             assert(OperEx(TlaOper.apply, NameEx("f"), NameEx("a")) == zDecl.body)
         }
-        assert(locationStore.contains(zDecl.body.safeId)) // and source file information has been saved
+        assert(locationStore.contains(zDecl.body.ID)) // and source file information has been saved
         assert(0 == xDecl.formalParams.length)
         assert(ValEx(TlaInt(1)) == xDecl.body)
         // although "X" might seem to be a variable, it is actually an operator without any arguments
         assert(OperEx(xDecl.operator) == body)
-        assert(locationStore.contains(xDecl.body.safeId)) // and source file information has been saved
+        assert(locationStore.contains(xDecl.body.ID)) // and source file information has been saved
     }
   }
 
@@ -1066,13 +1055,13 @@ class TestSanyImporter extends FunSuite {
           )
 
         assert(expectedBody == fDecl.body)
-        assert(locationStore.contains(fDecl.body.safeId)) // and source file information has been saved
+        assert(locationStore.contains(fDecl.body.ID)) // and source file information has been saved
 
         val xDecl = o.defs(1)
         assert("X" == xDecl.name)
         assert(OperEx(TlaOper.apply, NameEx("X")) == xDecl.body)
         assert(OperEx(xDecl.operator) == body)
-        assert(locationStore.contains(xDecl.body.safeId)) // and source file information has been saved
+        assert(locationStore.contains(xDecl.body.ID)) // and source file information has been saved
     }
   }
 
@@ -1117,7 +1106,7 @@ class TestSanyImporter extends FunSuite {
           assert(d.isRecursive)
           val recParam = OperFormalParam(name, FixedArity(nparams))
           assert(d.body == expectedBody)
-          assert(locationStore.contains(d.body.safeId)) // and source file information has been saved
+          assert(locationStore.contains(d.body.ID)) // and source file information has been saved
 
         case _ =>
           fail("expected TlaRecOperDecl")
@@ -1147,7 +1136,7 @@ class TestSanyImporter extends FunSuite {
           _.name == "A"
         }.get.asInstanceOf[TlaOperDecl]
         assert(OperEx(A.operator, NameEx("n")) == d.body)
-        assert(locationStore.contains(d.body.safeId)) // and source file information has been saved
+        assert(locationStore.contains(d.body.ID)) // and source file information has been saved
 
       case _ =>
         fail("Expected TlaOperDecl")
@@ -1170,7 +1159,7 @@ class TestSanyImporter extends FunSuite {
             OperEx(TlaOper.apply, NameEx("F"), OperEx(TlaArithOper.minus, NameEx("n"), ValEx(TlaInt(1)))))
         )
         assert(d.body == ite)
-        assert(locationStore.contains(d.body.safeId)) // and source file information has been saved
+        assert(locationStore.contains(d.body.ID)) // and source file information has been saved
 
       case _ =>
         fail("expected TlaRecOperDecl")
@@ -1213,7 +1202,7 @@ class TestSanyImporter extends FunSuite {
           assert(expectedName == d.name)
           assert(0 == d.formalParams.length)
           assert(body == d.body)
-          assert(locationStore.contains(d.body.safeId)) // and source file information has been saved
+          assert(locationStore.contains(d.body.ID)) // and source file information has been saved
 
         case _ =>
           fail("Expected a TlaRecDecl")
@@ -1383,7 +1372,7 @@ class TestSanyImporter extends FunSuite {
       _.name == "Plus"
     } match {
       case Some(TlaOperDecl(_, _, oe@OperEx(oper, _*))) =>
-        val loc = locationStore.find(oe.safeId).get
+        val loc = locationStore.find(oe.ID).get
         assert(SourceRegion(SourcePosition(4, 9), SourcePosition(4, 13)) == loc.region)
 
       case _ => fail()

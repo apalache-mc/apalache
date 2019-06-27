@@ -4,7 +4,6 @@ import at.forsyte.apalache.tla.assignments.SpecWithTransitions
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaBoolOper}
-import at.forsyte.apalache.tla.lir.plugins.Identifier
 import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
 import com.google.inject.Inject
 
@@ -116,7 +115,6 @@ class ExprGradeAnalysis @Inject()(val store: ExprGradeStoreImpl) {
 
           case Some(grade) =>
             val newEx = OperEx(TlaBoolOper.orParallel, newArgs : _*)
-            Identifier.identify(newEx) // TODO: it should not be called like that...
             update(newEx, grade)
             newEx
 

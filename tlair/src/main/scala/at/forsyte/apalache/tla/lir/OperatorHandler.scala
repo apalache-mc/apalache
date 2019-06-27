@@ -3,8 +3,7 @@ package at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.control.LetInOper
 import at.forsyte.apalache.tla.lir.db.BodyDB
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
-import at.forsyte.apalache.tla.lir.plugins.Identifier
-import at.forsyte.apalache.tla.lir.process.TransformationListener
+import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 
 // TODO: @Igor: please move it to the package *.process
 // TODO: This code looks obfuscated: there are way too many lambdas and no comments at all.
@@ -14,7 +13,6 @@ object OperatorHandler {
                         p_new : TlaEx,
                         p_listener : TransformationListener
                        ) : Unit = {
-    Identifier.identify( p_new )
     if ( p_old.ID != p_new.ID ) {
       p_listener.onTransformation(p_old, p_new)
     }
@@ -112,10 +110,8 @@ object OperatorHandler {
         * What to do when extracting the same operator > 1 times? Currently, we skip the 2nd+.
         * Jure, 1.12.2017
         **/
-      case decl : TlaOperDecl if !p_db.contains( p_decl.name ) => {
-        Identifier.identify( p_decl )
+      case decl : TlaOperDecl if !p_db.contains( p_decl.name ) =>
         p_db.update( decl.name, (decl.formalParams, decl.body) )
-      }
       case _ =>
     }
   }
@@ -131,9 +127,7 @@ object OperatorHandler {
                 ) : TlaEx = {
     def swap( arg : TlaEx ) : TlaEx =
       if ( arg == p_replacedEx ) {
-        // FIXME: Jure, I have added a call to identify, as otherwise markSrc is just wrong (Igor)
-        val ret = Identifier.identify(p_newEx.deepCopy( identified = false ))
-        Identifier.identify(arg)
+        val ret = p_newEx.deepCopy()
         markSrc( arg, ret, p_listener )
         ret
       }
@@ -200,8 +194,7 @@ object OperatorHandler {
 
         // Igor: Jure, please write imperative code, if you like it so. The commented code below is impossible to debug.
         for ((par, arg) <- params.zip(args)) {
-          val paramName = Identifier.identify(NameEx(par.name))
-          // FIXME: Jure, I have added the call to markSrc, in order to track changes (Igor)
+          val paramName = NameEx(par.name)
           markSrc(arg, paramName, p_listener )
           body = replaceAll(body, paramName, arg, p_listener)
         }

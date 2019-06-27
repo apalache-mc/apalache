@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.imp.src
 
-import at.forsyte.apalache.tla.lir.process.TransformationListener
+import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, UID}
 import com.google.inject.Singleton
 
@@ -43,7 +43,7 @@ class SourceStore extends TransformationListener {
     * @param newEx its replacement
     */
   override def onTransformation(originEx: TlaEx, newEx: TlaEx): Unit = {
-    find(originEx.safeId) match {
+    find(originEx.ID) match {
       case Some(loc) => addRec(newEx, loc)
       case None =>
         // FIXME: throw this exception as soon as we fix the source tracking
@@ -77,7 +77,7 @@ class SourceStore extends TransformationListener {
     val (filenameIndex, regionIndex) = addRegion(location)
     val map = idToRegion(filenameIndex)
     def add(ex: TlaEx): Unit = {
-      val exId = ex.safeId
+      val exId = ex.ID
       if (!map.contains(exId)) {
         map += exId -> regionIndex
         ex match {

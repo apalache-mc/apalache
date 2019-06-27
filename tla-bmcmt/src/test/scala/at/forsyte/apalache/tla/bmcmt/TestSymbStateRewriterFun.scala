@@ -6,7 +6,6 @@ import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.plugins.Identifier
 import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import org.junit.runner.RunWith
@@ -670,7 +669,6 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     val typeFinder = new TrivialTypeFinder()
     val rewriter = new SymbStateRewriterImpl(solverContext, typeFinder)
     val fex = new FreeExistentialsStoreImpl()
-    Identifier.identify(exists)
     fex.store.add(exists.ID)
     rewriter.freeExistentialsStore = fex
     typeFinder.inferAndSave(exists)
