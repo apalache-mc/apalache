@@ -770,9 +770,6 @@ class TestTrivialTypeFinder extends RewriterBase {
   test("inferAndSave type annotation") {
     val typeFinder = new TrivialTypeFinder()
     val ex = tla.enumSet()
-    // assign an id to ex
-    val handler = EnvironmentHandlerGenerator.makeEH
-    handler.identify(ex)
 
     val annotatedEx = tla.withType(ex, tla.enumSet(ValEx(TlaIntSet)))
     assert(typeFinder.inferAndSave(annotatedEx).contains(FinSetT(IntT())))

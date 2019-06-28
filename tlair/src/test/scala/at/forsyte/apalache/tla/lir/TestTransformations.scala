@@ -17,24 +17,24 @@ class TestTransformations extends FunSuite with TestingPredefs {
 
   object Invariants {
 
-    val NoAsAfter = new SimpleTransformationInvariant(
+    val NoAsAfter = new TransformationInvariant(
       "NoAsAfter",
       ( _, newEx ) => RecursiveProcessor.globalTlaExProperty {
         _ != n_a
       }( newEx )
     )
 
-    val IsAlwaysIdentity = new SimpleTransformationInvariant(
+    val IsAlwaysIdentity = new TransformationInvariant(
       "IsAlwaysIdentity",
       ( originalEx, newEx ) => originalEx == newEx
     )
 
-    val MonotonicallyBigger = new SimpleTransformationInvariant(
+    val MonotonicallyBigger = new TransformationInvariant(
       "MonotonicallyBigger",
       ( originalEx, newEx ) => depthOf( originalEx ) <= depthOf( newEx )
     )
 
-    val Impossible = new SimpleTransformationInvariant(
+    val Impossible = new TransformationInvariant(
       "Impossible",
       ( _, _ ) => false
     )
@@ -54,12 +54,12 @@ class TestTransformations extends FunSuite with TestingPredefs {
 }
 
   test( "Test identity" ) {
-    val goodIdentity = new SimpleTransformation(
+    val goodIdentity = new Transformation(
       identity,
       Invariants.IsAlwaysIdentity
     )
 
-    val badIdentity = new SimpleTransformation(
+    val badIdentity = new Transformation(
       identity,
       Invariants.Impossible
     )
@@ -92,7 +92,7 @@ class TestTransformations extends FunSuite with TestingPredefs {
   }
 
   test( "Test RecursiveTransformation" ) {
-    val reduceDepth = new SimpleTransformation(
+    val reduceDepth = new Transformation(
       {
         case OperEx( _, arg, _* ) => arg
         case ex@_ => ex
@@ -108,22 +108,5 @@ class TestTransformations extends FunSuite with TestingPredefs {
     val fully = reduceDepthToOne( ex )
     assert( fully == NullEx )
 
-  }
-
-  test( "Test ConditionalTransformation" ) {
-    val nullify = new SimpleTransformation(
-      _ => NullEx
-    )
-    val nullifyOperators = new ConditionalTransformation(
-      _.isInstanceOf[OperEx],
-      nullify
-    )
-    val ex1 = n_a
-    val ex2 = and( n_a, n_b )
-
-    assert( nullify(ex1) == NullEx)
-    assert( nullify(ex2) == NullEx)
-    assert( nullifyOperators(ex1) != NullEx)
-    assert( nullifyOperators(ex2) == NullEx)
   }
 }

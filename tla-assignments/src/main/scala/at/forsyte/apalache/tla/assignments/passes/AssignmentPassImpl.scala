@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.db.BodyDB
+import at.forsyte.apalache.tla.lir.process.DeclarationModifiers
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -40,7 +41,10 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
-    val uniqueVarDecls = OperatorHandler.uniqueVarRename(tlaModule.get.declarations, sourceStore)
+    val uniqueVarDecls =
+      tlaModule.get.declarations map {
+        DeclarationModifiers.uniqueVarRename( _, sourceStore )
+      }
 
     val varSet = uniqueVarDecls
       .filter(_.isInstanceOf[TlaVarDecl])
@@ -56,12 +60,12 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
         ne
 
       case ne @ NameEx(name) if nameSet.contains(name) =>
-        val newEx = environmentHandler.identify(tla.prime(e))
+        val newEx = tla.prime(e)
         sourceStore.onTransformation(ne, newEx)
         newEx
 
       case oe @ OperEx(op, args@_*) =>
-        val newEx = environmentHandler.identify(OperEx(op, args.map(primeVars(nameSet, _)): _*))
+        val newEx = OperEx(op, args.map(primeVars(nameSet, _)): _*)
         sourceStore.onTransformation(oe, newEx)
         newEx
 

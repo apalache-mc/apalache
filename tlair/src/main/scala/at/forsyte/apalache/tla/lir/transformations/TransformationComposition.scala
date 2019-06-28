@@ -1,11 +1,6 @@
 package at.forsyte.apalache.tla.lir.transformations
 
-import at.forsyte.apalache.tla.lir.TlaEx
-
-class TransformationComposition( transformations : Transformation* ) extends Transformation {
-  // Each transformation defines its own listeners
-  override val listeners : Seq[TransformationListener] = Seq.empty
-
-  override def transformInternal( ex : TlaEx ) : TlaEx =
-    transformations.foldLeft( ex ) { case (e, tr) => tr( e ) }
-}
+class TransformationComposition( transformations : Transformation* )
+  extends Transformation(
+    transformations.foldLeft( _ ) { case (e, tr) => tr( e ) }
+  )

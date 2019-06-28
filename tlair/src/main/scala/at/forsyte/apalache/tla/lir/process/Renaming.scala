@@ -47,7 +47,7 @@ class Renaming @Inject()(val handler: EnvironmentHandler) {
     def rename(map: Map[String, String], ex: TlaEx): TlaEx = ex match {
       case NameEx(name) =>
         if (map.contains(name)) {
-          val newEx = handler.identify(NameEx(map(name)))
+          val newEx = NameEx(map(name))
           handler.m_listener.onTransformation(ex, newEx)
           newEx
         } else {
@@ -65,15 +65,15 @@ class Renaming @Inject()(val handler: EnvironmentHandler) {
           if (!seenNames.contains(name)) {
             seenNames += name
             val newArgs = otherArgs.map(rename(map, _))
-            handler.identify(OperEx(op, ne +: newArgs: _*))
+            OperEx(op, ne +: newArgs: _*)
           } else {
             val newName = findUniqueName(name)
             seenNames += newName
             val newMap = map + (name -> newName)
             val newArgs = otherArgs.map(rename(newMap, _))
-            val newNameEx = handler.identify(NameEx(newName))
+            val newNameEx = NameEx(newName)
             handler.m_listener.onTransformation(ne, newNameEx)
-            handler.identify(OperEx(op, newNameEx +: newArgs: _*))
+            OperEx(op, newNameEx +: newArgs: _*)
           }
         handler.m_listener.onTransformation(ex, newEx)
         newEx
@@ -102,7 +102,7 @@ class Renaming @Inject()(val handler: EnvironmentHandler) {
             ne // keep the old expression, as it does not change the link to the source code
           } else {
             val nne = NameEx(newMap(ne.name))
-            handler.m_listener.onTransformation(ne, handler.identify(nne))
+            handler.m_listener.onTransformation(ne,nne)
             nne
           }
         }
@@ -113,12 +113,12 @@ class Renaming @Inject()(val handler: EnvironmentHandler) {
         def fold(s: Seq[TlaEx], p: Tuple2[TlaEx, TlaEx]) = p._1 +: p._2 +: s
 
         val newArgs = newNames.zip(newSets).foldLeft(Seq[TlaEx]())(fold)
-        val newEx = handler.identify(OperEx(op, newResult +: newArgs: _*))
+        val newEx = OperEx(op, newResult +: newArgs: _*)
         handler.m_listener.onTransformation(ex, newEx)
         newEx
 
       case OperEx(op, args@_*) =>
-        val newEx = handler.identify(OperEx(op, args.map(e => rename(map, e)): _*))
+        val newEx = OperEx(op, args.map(e => rename(map, e)): _*)
         handler.m_listener.onTransformation(ex, newEx)
         newEx
     }

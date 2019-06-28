@@ -24,7 +24,7 @@ class OpApplProxy(environmentHandler: EnvironmentHandler, sourceStore: SourceSto
           OpApplProxy.libraryValues.get(modAndName) match {
             case Some(value: TlaValue) =>
               // a built-in value
-              environmentHandler.identify(ValEx(value))
+              ValEx(value)
 
             case _ =>
               OpApplProxy.libraryOperators.get(modAndName) match {
@@ -35,7 +35,7 @@ class OpApplProxy(environmentHandler: EnvironmentHandler, sourceStore: SourceSto
                   val resEx = OperEx(oper, node.getArgs.map { p => exTran.translate(p)} :_*)
                   // the source should point to the operator application, not the definition
                   // of the standard operator, which is pretty useless
-                  sourceStore.addRec(environmentHandler.identify(resEx), SourceLocation(node.getLocation))
+                  sourceStore.addRec(resEx, SourceLocation(node.getLocation))
 
                 case _ =>
                   OpApplProxy.globalOperators.get(opdef.getName.toString) match {
@@ -44,7 +44,7 @@ class OpApplProxy(environmentHandler: EnvironmentHandler, sourceStore: SourceSto
                       val exTran = ExprOrOpArgNodeTranslator(environmentHandler, sourceStore,
                         standardTranslator.context, standardTranslator.recStatus)
                       val resEx = OperEx(oper, node.getArgs.map { p => exTran.translate(p) }: _*)
-                      sourceStore.addRec(environmentHandler.identify(resEx), SourceLocation(node.getLocation))
+                      sourceStore.addRec(resEx, SourceLocation(node.getLocation))
 
                     case _ =>
                       standardTranslator.translate(node)

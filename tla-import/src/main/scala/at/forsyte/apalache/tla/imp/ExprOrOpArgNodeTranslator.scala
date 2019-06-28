@@ -59,7 +59,7 @@ class ExprOrOpArgNodeTranslator(environmentHandler: EnvironmentHandler, sourceSt
 
     val sugarFree = desugarer.transform(result)
 
-    sourceStore.addRec(environmentHandler.identify(sugarFree), SourceLocation(node.getLocation))
+    sourceStore.addRec(sugarFree, SourceLocation(node.getLocation))
   }
 
   private def translateNumeral(node: NumeralNode) = {

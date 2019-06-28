@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.imp._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.db.{DummyBodyDB, SourceStoreImpl}
+import at.forsyte.apalache.tla.lir.process.DeclarationModifiers
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -15,7 +16,9 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
   def specFromFile(p_file : String, p_next : String = "Next") : TlaEx = {
     val declsRaw = declarationsFromFile(EnvironmentHandlerGenerator.makeDummyEH, testFolderPath + p_file )
 
-    val declsRenamed = OperatorHandler.uniqueVarRename( declsRaw, new SourceStoreImpl )
+    val declsRenamed = declsRaw map {
+        DeclarationModifiers.uniqueVarRename( _ )
+      }
 
     val transformer = new Transformer()
 

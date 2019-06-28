@@ -1,11 +1,12 @@
 package at.forsyte.apalache.tla.assignments
 
+import at.forsyte.apalache.tla.assignments.transformations.InlineFactory
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions._
 import at.forsyte.apalache.tla.lir.control.LetInOper
-import at.forsyte.apalache.tla.lir.db.BodyDB
+import at.forsyte.apalache.tla.lir.db.{BodyDB, BodyDBFactory}
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.transformations.TransformationListener
+import at.forsyte.apalache.tla.lir.transformations.{RecursiveTransformation, Transformation, TransformationListener}
 import com.google.inject.Singleton
 
 /**
@@ -32,8 +33,7 @@ class Transformer {
              )
              ( implicit p_bodyDB : BodyDB
              ) : Unit = {
-
-    p_decls.foreach( OperatorHandler.extract( _, p_bodyDB ) )
+    BodyDBFactory.makeDBFromDecls( p_decls, p_bodyDB )
   }
 
   /**
@@ -64,8 +64,8 @@ class Transformer {
                  implicit p_bodyDB : BodyDB,
                  p_srcDB : TransformationListener
                ) : TlaEx = {
-
-    OperatorHandler.unfoldMax( p_expr, p_bodyDB, p_srcDB )
+    InlineFactory(p_bodyDB, p_srcDB).InlineAll(p_expr)
+//    OperatorHandler.unfoldMax( p_expr, p_bodyDB, p_srcDB )
   }
 
   /**
@@ -103,7 +103,8 @@ class Transformer {
       }
     }
 
-    OperatorHandler.replaceWithRule( p_ex, exFun, srcDB )
+    // Temporary, until this class gets deleted
+    new RecursiveTransformation( new Transformation( exFun, srcDB ) )(p_ex)
   }
 
   /**
@@ -127,8 +128,7 @@ class Transformer {
       ex match {
         case OperEx( oper : LetInOper, body ) =>
           /** Make a fresh temporary DB, store all decls inside */
-          val bodyDB = new BodyDB()
-          oper.defs.foreach( OperatorHandler.extract( _, bodyDB ) )
+          val bodyDB = BodyDBFactory.makeDBFromDecls( oper.defs )
 
           /** inline as if operators were external */
           explicitLetIn( inlineAll( body )( bodyDB, srcDB ) )( srcDB )
@@ -170,7 +170,8 @@ class Transformer {
       }
     }
 
-    OperatorHandler.replaceWithRule( p_ex, lambda, srcDB )
+    // Temporary, until this class gets deleted
+    new RecursiveTransformation( new Transformation( lambda, srcDB ) )(p_ex)
   }
 
   //

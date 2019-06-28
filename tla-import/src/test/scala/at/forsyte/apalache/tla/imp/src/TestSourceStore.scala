@@ -11,8 +11,7 @@ import org.scalatest.junit.JUnitRunner
 class TestSourceStore extends FunSuite {
   test("basic add and find") {
     val store = new SourceStore()
-    val environmentHandler = EnvironmentHandlerGenerator.makeEH
-    val ex = environmentHandler.identify(tla.int(1))
+    val ex = tla.int(1)
     val loc = SourceLocation("root", SourceRegion(1, 2, 3, 4))
     store.addRec(ex, loc)
     val foundLoc = store.find(ex.ID)
@@ -21,9 +20,8 @@ class TestSourceStore extends FunSuite {
 
   test("recursive add and find") {
     val store = new SourceStore()
-    val environmentHandler = EnvironmentHandlerGenerator.makeEH
     val int1 = tla.int(1)
-    val set = environmentHandler.identify(tla.enumSet(int1))
+    val set = tla.enumSet(int1)
     val loc = SourceLocation("root", SourceRegion(1, 2, 3, 4))
     store.addRec(set, loc)
     val foundLoc = store.find(set.ID)
@@ -34,10 +32,9 @@ class TestSourceStore extends FunSuite {
 
   test("locations are not overwritten") {
     val store = new SourceStore()
-    val environmentHandler = EnvironmentHandlerGenerator.makeEH
     val int1 = tla.int(1)
-    val set = environmentHandler.identify(tla.enumSet(int1))
-    val set2 = environmentHandler.identify(tla.enumSet(set))
+    val set = tla.enumSet(int1)
+    val set2 = tla.enumSet(set)
     val loc1 = SourceLocation("tada", SourceRegion(100, 200, 300, 400))
     store.addRec(int1, loc1)
     val loc2 = SourceLocation("root", SourceRegion(1, 2, 3, 4))

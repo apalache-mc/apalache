@@ -16,17 +16,14 @@ class TestRenaming extends FunSuite {
     val handler = EnvironmentHandlerGenerator.makeEH
     val renaming = new Renaming(handler)
     val original =
-      handler.identify(
         tla.and(
           tla.exists(tla.name("x"), tla.name("S"), tla.gt(tla.name("x"), tla.int(1))),
           tla.forall(tla.name("x"), tla.name("T"), tla.lt(tla.name("x"), tla.int(42))))
-      )
     ///
     val expected =
       tla.and(
         tla.exists(tla.name("x"), tla.name("S"), tla.gt(tla.name("x"), tla.int(1))),
         tla.forall(tla.name("x2"), tla.name("T"), tla.lt(tla.name("x2"), tla.int(42))))
-//    handler.identify(original)
     val renamed = renaming.renameBindingsUnique(original)
     assert(expected == renamed)
     // the source code tracking should work properly
@@ -38,10 +35,10 @@ class TestRenaming extends FunSuite {
     val handler = EnvironmentHandlerGenerator.makeEH
     val renaming = new Renaming(handler)
     val original =
-      handler.identify(
         tla.cup(
           tla.filter(tla.name("x"), tla.name("S"), tla.eql(tla.name("x"), tla.int(1))),
-          tla.filter(tla.name("x"), tla.name("S"), tla.eql(tla.name("x"), tla.int(2)))))
+          tla.filter(tla.name("x"), tla.name("S"), tla.eql(tla.name("x"), tla.int(2)))
+        )
     val expected =
       tla.cup(
         tla.filter(tla.name("x"), tla.name("S"), tla.eql(tla.name("x"), tla.int(1))),

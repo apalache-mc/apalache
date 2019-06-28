@@ -142,7 +142,9 @@ class TestTransformer extends FunSuite with TestingPredefs {
     cleanTest {
       extractAll
 
-      assertThrows[IllegalArgumentException]( converter.inlineAll( declEx4.body ) )
+      assertThrows[IllegalArgumentException](
+        converter.inlineAll( declEx4.body )
+      )
       assert( converter.inlineAll( declEx2.body ) == tla.int( 1 ) )
       assert( converter.inlineAll( declEx9.body ) == tla.plus( 2, 2 ) )
 

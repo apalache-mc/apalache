@@ -29,8 +29,6 @@ class TestEnvHandler extends FunSuite with TestingPredefs {
       tla.exists( n_x, n_S, tla.eql( tla.plus( n_x, paramName ), tla.appOp( letInOperName, paramName ) ) ),
       aOper )
 
-    eh.identify( ex )
-
     val decl = tla.declOp( operName, ex, paramName )
 
     val newDecls = eh.uniqueVarRename( Seq( decl ) )
@@ -130,9 +128,6 @@ class TestEnvHandler extends FunSuite with TestingPredefs {
 
     eh.extract( decl1, decl2 )
     val ex = tla.appOp( opName2, 0 )
-
-    eh identify ex
-
 
     val unfolded1 = eh.unfoldOnce( ex )
     val unfolded2 = eh.unfoldOnce( unfolded1 )

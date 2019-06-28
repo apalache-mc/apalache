@@ -24,7 +24,7 @@ class OpDefTranslator(environmentHandler: EnvironmentHandler, sourceStore: Sourc
           // declare a nullary recursive operator instead of a recursive function
           val newBody = replaceFunWithOper(nodeName, body)
           // store the source location
-          sourceStore.addRec(environmentHandler.identify(newBody), SourceLocation(node.getBody.getLocation))
+          sourceStore.addRec(newBody, SourceLocation(node.getBody.getLocation))
           // return the operator whose body is a recursive function
           val operDecl = TlaOperDecl(nodeName, List(), newBody)
           operDecl.isRecursive = true
@@ -49,10 +49,10 @@ class OpDefTranslator(environmentHandler: EnvironmentHandler, sourceStore: Sourc
   private def replaceFunWithOper(name: String, body: TlaEx): TlaEx = {
     def replace(e: TlaEx): TlaEx = e match {
       case NameEx(n) if n == name =>
-        environmentHandler.identify(OperEx(TlaOper.apply, NameEx(n)))
+        OperEx(TlaOper.apply, NameEx(n))
 
       case OperEx(o, args@_*) =>
-        environmentHandler.identify(OperEx(o, args map replace: _*))
+        OperEx(o, args map replace: _*)
 
       case _ => e
     }

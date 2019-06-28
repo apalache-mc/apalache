@@ -37,8 +37,6 @@ class EnvironmentHandler @Inject()(val m_uidDB: UidDB,
     def markSrc(p_old: TlaEx,
                 p_new: TlaEx
                ): Unit = {
-      identify(p_old)
-      identify(p_new)
       if (p_old.ID != p_new.ID) {
         m_listener.onTransformation(p_old, p_new)
       }
@@ -50,19 +48,6 @@ class EnvironmentHandler @Inject()(val m_uidDB: UidDB,
       case SimpleFormalParam(name) => SimpleFormalParam(pfx(p_prefix, name))
       case OperFormalParam(name, arity) => OperFormalParam(pfx(p_prefix, name), arity)
     }
-  }
-
-  /**
-    * Assign unique identifiers to all subexpressions and store them in m_uidDb.
-    *
-    * Igor: identify now returns the argument expression, so one can wrap an expression with identify at construction time.
-    *
-    * @param expr a root expression
-    * @return the same expression
-    */
-  def identify(expr: TlaEx): TlaEx = {
-    RecursiveProcessor.traverseEntireTlaEx(m_uidDB.add)(expr)
-    expr
   }
 
   import AuxFun._
@@ -148,7 +133,6 @@ class EnvironmentHandler @Inject()(val m_uidDB: UidDB,
   def extract(p_decls: TlaDecl*): Unit = p_decls foreach {
     _ match {
       case TlaOperDecl(name, params, body) if !m_bodyDB.contains(name) =>
-        identify(body)
         m_bodyDB.update(name, (params, body))
       case _ => ()
     }
@@ -215,7 +199,6 @@ class EnvironmentHandler @Inject()(val m_uidDB: UidDB,
             p_ex
           else {
             val ret = OperEx(oper, p_children.toSeq: _*)
-            identify(ret)
             ret
           }
         case _ => p_ex
@@ -249,7 +232,6 @@ class EnvironmentHandler @Inject()(val m_uidDB: UidDB,
                 ): TlaEx = {
     def swap(arg: TlaEx): TlaEx = {
       val ret = p_newEx.deepCopy()
-      identify(ret)
       markSrc(arg, ret)
       ret
     }
