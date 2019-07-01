@@ -20,7 +20,6 @@ import com.typesafe.scalalogging.LazyLogging
   * This pass finds symbolic transitions in a TLA+ specification.
   */
 class AssignmentPassImpl @Inject()(options: PassOptions,
-                                   environmentHandler: EnvironmentHandler,
                                    sourceStore: SourceStore,
                                    @Named("AfterAssignment") nextPass: Pass with SpecWithTransitionsMixin)
       extends AssignmentPass with LazyLogging {

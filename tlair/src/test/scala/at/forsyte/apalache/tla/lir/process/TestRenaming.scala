@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.lir.process
 
-import at.forsyte.apalache.tla.lir.EnvironmentHandlerGenerator
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.db.SourceStoreImpl
 import org.junit.runner.RunWith
@@ -13,8 +12,7 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TestRenaming extends FunSuite {
   test("test renaming exists/forall") {
-    val handler = EnvironmentHandlerGenerator.makeEH
-    val renaming = new Renaming(handler)
+    val renaming = new Renaming()
     val original =
         tla.and(
           tla.exists(tla.name("x"), tla.name("S"), tla.gt(tla.name("x"), tla.int(1))),
@@ -26,14 +24,10 @@ class TestRenaming extends FunSuite {
         tla.forall(tla.name("x2"), tla.name("T"), tla.lt(tla.name("x2"), tla.int(42))))
     val renamed = renaming.renameBindingsUnique(original)
     assert(expected == renamed)
-    // the source code tracking should work properly
-    // @Igor (08.01.2019): this is where the uglyness of EnvironmentHandler is showing...
-    assert(original.ID == handler.m_listener.asInstanceOf[SourceStoreImpl](renamed.ID))
   }
 
   test("test renaming filter") {
-    val handler = EnvironmentHandlerGenerator.makeEH
-    val renaming = new Renaming(handler)
+    val renaming = new Renaming()
     val original =
         tla.cup(
           tla.filter(tla.name("x"), tla.name("S"), tla.eql(tla.name("x"), tla.int(1))),
@@ -45,8 +39,5 @@ class TestRenaming extends FunSuite {
         tla.filter(tla.name("x2"), tla.name("S"), tla.eql(tla.name("x2"), tla.int(2))))
     val renamed = renaming.renameBindingsUnique(original)
     assert(expected == renamed)
-    // the source code tracking should work properly
-    // @Igor (08.01.2019): this is where the uglyness of EnvironmentHandler is showing...
-    assert(original.ID == handler.m_listener.asInstanceOf[SourceStoreImpl](renamed.ID))
   }
 }

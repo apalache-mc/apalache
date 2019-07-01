@@ -14,10 +14,7 @@ import tla2sany.semantic._
   *
   * @author konnov
   */
-class SubstTranslator(environmentHandler: EnvironmentHandler,
-                      sourceStore: SourceStore,
-                      context: Context) extends LazyLogging {
-  // TODO: get rid of environmentHandler, we do not need it anymore
+class SubstTranslator(sourceStore: SourceStore, context: Context) extends LazyLogging {
 
   def translate(substInNode: SubstInNode, body: TlaEx): TlaEx = {
     subExpr(mkRenaming(substInNode), body)
@@ -50,7 +47,7 @@ class SubstTranslator(environmentHandler: EnvironmentHandler,
   }
 
   private def mkRenaming(substInNode: SubstInNode): Map[String, TlaEx] = {
-    val exprTranslator = ExprOrOpArgNodeTranslator(environmentHandler, sourceStore, context, OutsideRecursion())
+    val exprTranslator = ExprOrOpArgNodeTranslator(sourceStore, context, OutsideRecursion())
 
     def eachSubst(s: Subst): (String, TlaEx) = {
       val replacement = exprTranslator.translate(s.getExpr)
@@ -69,7 +66,7 @@ class SubstTranslator(environmentHandler: EnvironmentHandler,
 }
 
 object SubstTranslator {
-  def apply(environmentHandler: EnvironmentHandler, sourceStore: SourceStore, context: Context): SubstTranslator = {
-    new SubstTranslator(environmentHandler, sourceStore, context)
+  def apply(sourceStore: SourceStore, context: Context) : SubstTranslator = {
+    new SubstTranslator(sourceStore, context)
   }
 }

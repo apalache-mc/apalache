@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.imp.src
 
-import at.forsyte.apalache.tla.lir.EnvironmentHandlerGenerator
 import at.forsyte.apalache.tla.lir.convenience.tla
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite

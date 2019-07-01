@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.imp.declarationsFromFile
 import at.forsyte.apalache.tla.lir.db.{BodyDB, SourceStoreImpl}
-import at.forsyte.apalache.tla.lir.{EnvironmentHandlerGenerator, NullEx, TestingPredefs, TlaDecl, TlaEx, TlaOperDecl, TlaVarDecl, UID, Builder => bd}
+import at.forsyte.apalache.tla.lir.{NullEx, TestingPredefs, TlaDecl, TlaEx, TlaOperDecl, TlaVarDecl, UID, Builder => bd}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -24,7 +24,7 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
 
   def testFromFile( p_file : String, p_next : String = "Next" ) : Seq[SymbTrans] = {
 
-    val decls = declarationsFromFile(EnvironmentHandlerGenerator.makeDummyEH, testFolderPath + p_file )
+    val decls = declarationsFromFile(testFolderPath + p_file)
 
     val ret = testFromDecls( decls, p_next )
 

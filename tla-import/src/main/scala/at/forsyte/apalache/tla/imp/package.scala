@@ -8,8 +8,8 @@ import at.forsyte.apalache.tla.lir._
 package object imp {
 
 
-  def declarationsFromFile(environmentHandler: EnvironmentHandler, p_path : String ) : Seq[TlaDecl] = {
-    val (rootName, modules) = new SanyImporter(environmentHandler, new SourceStore).loadFromFile( new File( p_path ) )
+  def declarationsFromFile(p_path: String) : Seq[TlaDecl] = {
+    val (rootName, modules) = new SanyImporter(new SourceStore).loadFromFile( new File( p_path ) )
     modules( rootName ).declarations
   }
 

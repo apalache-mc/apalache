@@ -13,7 +13,7 @@ import scala.collection.immutable.{HashMap, HashSet}
   * @author Igor Konnov
   */
 @Singleton
-class Renaming @Inject()(val handler: EnvironmentHandler) {
+class Renaming @Inject()() {
   /**
     * The names of bindings that have been seen already.
     */
@@ -48,7 +48,6 @@ class Renaming @Inject()(val handler: EnvironmentHandler) {
       case NameEx(name) =>
         if (map.contains(name)) {
           val newEx = NameEx(map(name))
-          handler.m_listener.onTransformation(ex, newEx)
           newEx
         } else {
           ex // nothing changes, so no new id is assigned
@@ -72,10 +71,8 @@ class Renaming @Inject()(val handler: EnvironmentHandler) {
             val newMap = map + (name -> newName)
             val newArgs = otherArgs.map(rename(newMap, _))
             val newNameEx = NameEx(newName)
-            handler.m_listener.onTransformation(ne, newNameEx)
             OperEx(op, newNameEx +: newArgs: _*)
           }
-        handler.m_listener.onTransformation(ex, newEx)
         newEx
 
       case OperEx(op, result, varsAndSets@_*)
@@ -102,7 +99,6 @@ class Renaming @Inject()(val handler: EnvironmentHandler) {
             ne // keep the old expression, as it does not change the link to the source code
           } else {
             val nne = NameEx(newMap(ne.name))
-            handler.m_listener.onTransformation(ne,nne)
             nne
           }
         }
@@ -114,12 +110,10 @@ class Renaming @Inject()(val handler: EnvironmentHandler) {
 
         val newArgs = newNames.zip(newSets).foldLeft(Seq[TlaEx]())(fold)
         val newEx = OperEx(op, newResult +: newArgs: _*)
-        handler.m_listener.onTransformation(ex, newEx)
         newEx
 
       case OperEx(op, args@_*) =>
         val newEx = OperEx(op, args.map(e => rename(map, e)): _*)
-        handler.m_listener.onTransformation(ex, newEx)
         newEx
     }
 

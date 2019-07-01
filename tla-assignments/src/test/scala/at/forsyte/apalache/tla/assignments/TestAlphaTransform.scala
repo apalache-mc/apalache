@@ -14,7 +14,7 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
   val testFolderPath = "src/test/resources/assignmentSolver/"
 
   def specFromFile(p_file : String, p_next : String = "Next") : TlaEx = {
-    val declsRaw = declarationsFromFile(EnvironmentHandlerGenerator.makeDummyEH, testFolderPath + p_file )
+    val declsRaw = declarationsFromFile(testFolderPath + p_file)
 
     val declsRenamed = declsRaw map {
         DeclarationModifiers.uniqueVarRename( _ )

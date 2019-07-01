@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.predef.TlaIntSet
-import at.forsyte.apalache.tla.lir.{EnvironmentHandlerGenerator, NameEx, OperEx, ValEx}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, ValEx}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 

@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.imp._
-import at.forsyte.apalache.tla.lir.{EnvironmentHandlerGenerator, TestingPredefs}
+import at.forsyte.apalache.tla.lir.TestingPredefs
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -24,7 +24,7 @@ class TestWarningDetector extends FunSuite with TestingPredefs {
 
     val converter = new Transformer()
 
-    val decls = declarationsFromFile(EnvironmentHandlerGenerator.makeDummyEH, testFolderPath + file)
+    val decls = declarationsFromFile(testFolderPath + file)
 //    converter.extract( decls:_* )
 
     val nextBody = findBodyOf( "Next", decls:_* )

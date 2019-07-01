@@ -16,8 +16,7 @@ import scala.collection.JavaConverters._
   *
   * @author konnov
   */
-class ExprOrOpArgNodeTranslator(environmentHandler: EnvironmentHandler, sourceStore: SourceStore,
-                                context: Context, recStatus: RecursionStatus) extends LazyLogging {
+class ExprOrOpArgNodeTranslator(sourceStore: SourceStore, context: Context, recStatus: RecursionStatus) extends LazyLogging {
   private val desugarer = new Desugarer() // construct elsewhere?
 
   def translate(node: ExprOrOpArgNode): TlaEx = {
@@ -34,8 +33,7 @@ class ExprOrOpArgNodeTranslator(environmentHandler: EnvironmentHandler, sourceSt
           translateDecimal(dec)
 
         case opApp: OpApplNode =>
-          OpApplProxy(environmentHandler, sourceStore,
-            OpApplTranslator(environmentHandler, sourceStore, context, recStatus)).translate(opApp)
+          OpApplProxy(sourceStore, OpApplTranslator(sourceStore, context, recStatus)).translate(opApp)
 
         case arg: OpArgNode =>
           // we just pass the name of the argument without any extra information
@@ -96,7 +94,7 @@ class ExprOrOpArgNodeTranslator(environmentHandler: EnvironmentHandler, sourceSt
     for (node <- letIn.context.getOpDefs.elements.asScala.toList.reverse) {
       node match {
         case opdef: OpDefNode =>
-          val decl = OpDefTranslator(environmentHandler, sourceStore, letInContext).translate(opdef)
+          val decl = OpDefTranslator(sourceStore, letInContext).translate(opdef)
           letInDeclarations = letInDeclarations :+ decl
           letInContext = letInContext.push(decl)
 
@@ -106,14 +104,14 @@ class ExprOrOpArgNodeTranslator(environmentHandler: EnvironmentHandler, sourceSt
     }
 
     val oper = new LetInOper(letInDeclarations)
-    val body = ExprOrOpArgNodeTranslator(environmentHandler, sourceStore, letInContext, recStatus)
+    val body = ExprOrOpArgNodeTranslator(sourceStore, letInContext, recStatus)
       .translate(letIn.getBody)
     OperEx(oper, body)
   }
 
   // substitute an expression with the declarations that come from INSTANCE M WITH ...
   private def translateSubstIn(substIn: SubstInNode): TlaEx = {
-    SubstTranslator(environmentHandler, sourceStore, context)
+    SubstTranslator(sourceStore, context)
       .translate(substIn, translate(substIn.getBody))
   }
 
@@ -147,8 +145,7 @@ class ExprOrOpArgNodeTranslator(environmentHandler: EnvironmentHandler, sourceSt
 }
 
 object ExprOrOpArgNodeTranslator {
-  def apply(environmentHandler: EnvironmentHandler, sourceStore: SourceStore,
-            context: Context, recStatus: RecursionStatus): ExprOrOpArgNodeTranslator = {
-    new ExprOrOpArgNodeTranslator(environmentHandler, sourceStore, context, recStatus)
+  def apply(sourceStore: SourceStore, context: Context, recStatus: RecursionStatus) : ExprOrOpArgNodeTranslator = {
+    new ExprOrOpArgNodeTranslator(sourceStore, context, recStatus)
   }
 }

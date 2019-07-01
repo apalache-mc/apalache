@@ -10,7 +10,7 @@ import tla2sany.semantic.{OpApplNode, OpDefNode}
   *
   * @author konnov
   */
-class OpDefTranslator(environmentHandler: EnvironmentHandler, sourceStore: SourceStore, context: Context) {
+class OpDefTranslator(sourceStore: SourceStore, context: Context) {
   def translate(node: OpDefNode): TlaOperDecl = {
     val params = node.getParams.toList map FormalParamTranslator().translate
     val nodeName = node.getName.toString.intern()
@@ -19,7 +19,7 @@ class OpDefTranslator(environmentHandler: EnvironmentHandler, sourceStore: Sourc
       node.getBody match {
         case app: OpApplNode if "$RecursiveFcnSpec" == app.getOperator.getName.toString =>
           // this is a definition of a recursive function
-          val body = ExprOrOpArgNodeTranslator(environmentHandler, sourceStore, context, OutsideRecursion())
+          val body = ExprOrOpArgNodeTranslator(sourceStore, context, OutsideRecursion())
             .translate(node.getBody)
           // declare a nullary recursive operator instead of a recursive function
           val newBody = replaceFunWithOper(nodeName, body)
@@ -33,12 +33,12 @@ class OpDefTranslator(environmentHandler: EnvironmentHandler, sourceStore: Sourc
         case _ =>
           // non-recursive declarations are easy
           TlaOperDecl(nodeName, params,
-            ExprOrOpArgNodeTranslator(environmentHandler, sourceStore, context, OutsideRecursion())
+            ExprOrOpArgNodeTranslator(sourceStore, context, OutsideRecursion())
               .translate(node.getBody))
       }
     } else {
       // in recursive declarations, the applications of recursive operators are replaced by calls to formal parameters
-      val body = ExprOrOpArgNodeTranslator(environmentHandler, sourceStore, context, InsideRecursion())
+      val body = ExprOrOpArgNodeTranslator(sourceStore, context, InsideRecursion())
         .translate(node.getBody)
       val decl = TlaOperDecl(nodeName, params, body)
       decl.isRecursive = true
@@ -62,7 +62,7 @@ class OpDefTranslator(environmentHandler: EnvironmentHandler, sourceStore: Sourc
 }
 
 object OpDefTranslator {
-  def apply(environmentHandler: EnvironmentHandler, sourceStore: SourceStore, context: Context): OpDefTranslator = {
-    new OpDefTranslator(environmentHandler, sourceStore, context)
+  def apply( sourceStore: SourceStore, context: Context) : OpDefTranslator = {
+    new OpDefTranslator(sourceStore, context)
   }
 }

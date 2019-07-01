@@ -358,7 +358,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
 
   ////////////////////////////////////////////////////////////////////
   private def importTla(name: String, text: String) = {
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, new SourceStore)
+    val (rootName, modules) = new SanyImporter(new SourceStore)
       .loadFromSource(name, Source.fromString(text))
     val mod = expectSingleModule(name, rootName, modules)
     val init = mod.declarations.find(_.name == "Init").get

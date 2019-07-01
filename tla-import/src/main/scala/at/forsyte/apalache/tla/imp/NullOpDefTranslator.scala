@@ -10,7 +10,7 @@ import tla2sany.semantic.{OpApplNode, OpDefNode}
   *
   * @author konnov
   */
-class NullOpDefTranslator(environmentHandler: EnvironmentHandler, sourceStore: SourceStore, context: Context) {
+class NullOpDefTranslator(sourceStore: SourceStore, context: Context) {
   def translate(node: OpDefNode): TlaOperDecl = {
     val params = node.getParams.toList map FormalParamTranslator().translate
     val nodeName = node.getName.toString.intern()
@@ -19,8 +19,8 @@ class NullOpDefTranslator(environmentHandler: EnvironmentHandler, sourceStore: S
 }
 
 object NullOpDefTranslator {
-  def apply(environmentHandler: EnvironmentHandler, sourceStore: SourceStore, context: Context): NullOpDefTranslator = {
-    new NullOpDefTranslator(environmentHandler, sourceStore, context)
+  def apply(sourceStore: SourceStore, context: Context): NullOpDefTranslator = {
+    new NullOpDefTranslator(sourceStore, context)
   }
 }
 

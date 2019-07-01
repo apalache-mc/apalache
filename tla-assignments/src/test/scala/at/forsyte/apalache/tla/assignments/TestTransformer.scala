@@ -29,7 +29,7 @@ class TestTransformer extends FunSuite with TestingPredefs {
 
 
     assertThrows[SanySemanticException](
-      new SanyImporter(EnvironmentHandlerGenerator.makeEH, new SourceStore)
+      new SanyImporter(new SourceStore)
         .loadFromSource( "WrongArity", Source.fromString( text ) )
     )
 
@@ -41,7 +41,7 @@ class TestTransformer extends FunSuite with TestingPredefs {
       """.stripMargin
 
     assertThrows[SanySemanticException](
-      new SanyImporter(EnvironmentHandlerGenerator.makeEH, new SourceStore)
+      new SanyImporter(new SourceStore)
         .loadFromSource( "redef", Source.fromString( text2 ) )
     )
 
@@ -211,7 +211,7 @@ class TestTransformer extends FunSuite with TestingPredefs {
     val converter = new Transformer()
     cleanTest {
       val fname1 = "test1.tla"
-      val declarations1 = declarationsFromFile(EnvironmentHandlerGenerator.makeDummyEH, testFolderPath + fname1 )
+      val declarations1 = declarationsFromFile(testFolderPath + fname1)
 
       converter.extract( declarations1 : _* )
 
@@ -249,7 +249,7 @@ class TestTransformer extends FunSuite with TestingPredefs {
 
     cleanTest {
       val fileName = "test2.tla"
-      val declarations = declarationsFromFile(EnvironmentHandlerGenerator.makeDummyEH, testFolderPath + fileName )
+      val declarations = declarationsFromFile(testFolderPath + fileName)
 
       converter.extract( declarations : _* )
 
@@ -276,7 +276,7 @@ class TestTransformer extends FunSuite with TestingPredefs {
 
     cleanTest {
       val fileName = "test3.tla"
-      val declarations = declarationsFromFile(EnvironmentHandlerGenerator.makeDummyEH, testFolderPath + fileName )
+      val declarations = declarationsFromFile(testFolderPath + fileName)
 
       converter.extract( declarations : _* )
 

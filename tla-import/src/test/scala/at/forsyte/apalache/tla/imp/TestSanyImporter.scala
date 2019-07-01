@@ -60,7 +60,7 @@ class TestSanyImporter extends FunSuite {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, new SourceStore)
+    val (rootName, modules) = new SanyImporter(new SourceStore)
       .loadFromSource("justASimpleTest", Source.fromString(text))
     assert("justASimpleTest" == rootName)
   }
@@ -82,7 +82,7 @@ class TestSanyImporter extends FunSuite {
       pw.close()
     }
 
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, new SourceStore)
+    val (rootName, modules) = new SanyImporter(new SourceStore)
       .loadFromFile(temp)
     assert("justASimpleTest" == rootName)
   }
@@ -95,7 +95,7 @@ class TestSanyImporter extends FunSuite {
       """.stripMargin
 
     val (rootName, modules) =
-      new SanyImporter(EnvironmentHandlerGenerator.makeEH, new SourceStore)
+      new SanyImporter(new SourceStore)
         .loadFromSource("onevar", Source.fromString(text))
     val mod = expectSingleModule("onevar", rootName, modules)
     assert(1 == mod.declarations.size)
@@ -116,7 +116,7 @@ class TestSanyImporter extends FunSuite {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, new SourceStore)
+    val (rootName, modules) = new SanyImporter(new SourceStore)
       .loadFromSource("oneconst", Source.fromString(text))
     val mod = expectSingleModule("oneconst", rootName, modules)
     assert(1 == mod.declarations.size)
@@ -135,7 +135,7 @@ class TestSanyImporter extends FunSuite {
       """.stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("constop", Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(1 == mod.declarations.size)
@@ -159,7 +159,7 @@ class TestSanyImporter extends FunSuite {
       """.stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("constop", Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(1 == mod.declarations.size)
@@ -183,7 +183,7 @@ class TestSanyImporter extends FunSuite {
       """.stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("constop", Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(1 == mod.declarations.size)
@@ -207,7 +207,7 @@ class TestSanyImporter extends FunSuite {
       """.stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("constop", Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(1 == mod.declarations.size)
@@ -232,7 +232,7 @@ class TestSanyImporter extends FunSuite {
       """.stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("constop", Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(1 == mod.declarations.size)
@@ -256,7 +256,7 @@ class TestSanyImporter extends FunSuite {
       """.stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("constop", Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(2 == mod.declarations.size)
@@ -282,7 +282,7 @@ class TestSanyImporter extends FunSuite {
       """.stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("constop", Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(2 == mod.declarations.size)
@@ -304,7 +304,7 @@ class TestSanyImporter extends FunSuite {
       """.stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("builtinop", Source.fromString(text))
     val mod = expectSingleModule("builtinop", rootName, modules)
     assert(1 == mod.declarations.size)
@@ -328,7 +328,7 @@ class TestSanyImporter extends FunSuite {
       """.stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("emptyset", Source.fromString(text))
     val mod = expectSingleModule("emptyset", rootName, modules)
     assert(1 == mod.declarations.size)
@@ -352,7 +352,7 @@ class TestSanyImporter extends FunSuite {
       """.stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("builtinop", Source.fromString(text))
     val mod = expectSingleModule("builtinop", rootName, modules)
     assert(2 == mod.declarations.size)
@@ -453,7 +453,7 @@ class TestSanyImporter extends FunSuite {
     //        |TemporalWhile == ????
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("builtins", Source.fromString(text))
     val mod = expectSingleModule("builtins", rootName, modules)
     val root = modules(rootName)
@@ -587,7 +587,7 @@ class TestSanyImporter extends FunSuite {
       |""".stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("comprehensions", Source.fromString(text))
     val mod = expectSingleModule("comprehensions", rootName, modules)
     val root = modules(rootName)
@@ -631,7 +631,7 @@ class TestSanyImporter extends FunSuite {
       |""".stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("composite", Source.fromString(text))
     val mod = expectSingleModule("composite", rootName, modules)
 
@@ -672,7 +672,7 @@ class TestSanyImporter extends FunSuite {
         |""".stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("except", Source.fromString(text))
     val mod = expectSingleModule("except", rootName, modules)
 
@@ -730,7 +730,7 @@ class TestSanyImporter extends FunSuite {
         |""".stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("labels", Source.fromString(text))
     val mod = expectSingleModule("labels", rootName, modules)
 
@@ -771,7 +771,7 @@ class TestSanyImporter extends FunSuite {
         |""".stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("args", Source.fromString(text))
     val mod = expectSingleModule("args", rootName, modules)
 
@@ -802,7 +802,7 @@ class TestSanyImporter extends FunSuite {
         |""".stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("updates", Source.fromString(text))
     val mod = expectSingleModule("updates", rootName, modules)
 
@@ -847,7 +847,7 @@ class TestSanyImporter extends FunSuite {
         |""".stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("selects", Source.fromString(text))
     val mod = expectSingleModule("selects", rootName, modules)
 
@@ -885,7 +885,7 @@ class TestSanyImporter extends FunSuite {
         |""".stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("funCtor", Source.fromString(text))
     val mod = expectSingleModule("funCtor", rootName, modules)
 
@@ -930,7 +930,7 @@ class TestSanyImporter extends FunSuite {
         |""".stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("level1Operators", Source.fromString(text))
     val mod = expectSingleModule("level1Operators", rootName, modules)
 
@@ -957,7 +957,7 @@ class TestSanyImporter extends FunSuite {
         |""".stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("level2Operators", Source.fromString(text))
     val mod = expectSingleModule("level2Operators", rootName, modules)
 
@@ -984,7 +984,7 @@ class TestSanyImporter extends FunSuite {
         |""".stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("let", Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
@@ -1031,7 +1031,7 @@ class TestSanyImporter extends FunSuite {
         |""".stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("let", Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
@@ -1089,7 +1089,7 @@ class TestSanyImporter extends FunSuite {
         |""".stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("recOpers", Source.fromString(text))
     assert(2 == modules.size)
     // the root module and naturals
@@ -1176,7 +1176,7 @@ class TestSanyImporter extends FunSuite {
         |""".stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("globalFuns", Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
@@ -1244,7 +1244,7 @@ class TestSanyImporter extends FunSuite {
         |""".stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("inst", Source.fromString(text))
     assert(2 == modules.size) // inst + Naturals
     // the root module and A
@@ -1309,7 +1309,7 @@ class TestSanyImporter extends FunSuite {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, new SourceStore)
+    val (rootName, modules) = new SanyImporter(new SourceStore)
       .loadFromSource("imports", Source.fromString(text))
     assert(2 == modules.size)
     // the root module and naturals
@@ -1344,7 +1344,7 @@ class TestSanyImporter extends FunSuite {
         |""".stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("nats", Source.fromString(text))
     assert(2 == modules.size)
     // the root module and naturals
@@ -1402,7 +1402,7 @@ class TestSanyImporter extends FunSuite {
         |""".stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("ints", Source.fromString(text))
     assert(3 == modules.size) // Integers extends Naturals
     val root = modules(rootName)
@@ -1453,7 +1453,7 @@ class TestSanyImporter extends FunSuite {
         |""".stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("reals", Source.fromString(text))
     assert(4 == modules.size) // Reals include Integers that include Naturals
     val root = modules(rootName)
@@ -1501,7 +1501,7 @@ class TestSanyImporter extends FunSuite {
         |""".stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("sequences", Source.fromString(text))
     assert(3 == modules.size) // Naturals, Sequences, and our module
     // the root module and naturals
@@ -1546,7 +1546,7 @@ class TestSanyImporter extends FunSuite {
         |""".stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("finitesets", Source.fromString(text))
     assert(4 == modules.size) // Naturals, Sequences, FiniteSets, and our module
     val root = modules(rootName)
@@ -1591,7 +1591,7 @@ class TestSanyImporter extends FunSuite {
         |""".stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("tlc", Source.fromString(text))
     assert(5 == modules.size) // our module + 4 LOCAL modules
     // the root module and naturals
@@ -1661,7 +1661,7 @@ class TestSanyImporter extends FunSuite {
     """.stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, locationStore)
+    val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("types", Source.fromString(text))
     assert(3 == modules.size) // our module + Integers & Naturals
     val rootMod = modules("types")
@@ -1766,7 +1766,7 @@ class TestSanyImporter extends FunSuite {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, new SourceStore)
+    val (rootName, modules) = new SanyImporter(new SourceStore)
       .loadFromSource("assumptions", Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
@@ -1802,7 +1802,7 @@ class TestSanyImporter extends FunSuite {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(EnvironmentHandlerGenerator.makeEH, new SourceStore)
+    val (rootName, modules) = new SanyImporter(new SourceStore)
       .loadFromSource("theorems", Source.fromString(text))
     assert(1 == modules.size) // Naturals, Sequences, and our module
     // the root module and naturals

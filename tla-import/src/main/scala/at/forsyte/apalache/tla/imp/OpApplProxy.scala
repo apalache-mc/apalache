@@ -13,8 +13,7 @@ import tla2sany.semantic._
   *
   * @author konnov
   */
-class OpApplProxy(environmentHandler: EnvironmentHandler, sourceStore: SourceStore,
-                  standardTranslator: OpApplTranslator) {
+class OpApplProxy(sourceStore: SourceStore, standardTranslator: OpApplTranslator) {
   def translate(node: OpApplNode): TlaEx = {
     node.getOperator match {
       case opdef: OpDefOrDeclNode if opdef.getKind == ASTConstants.UserDefinedOpKind =>
@@ -30,8 +29,7 @@ class OpApplProxy(environmentHandler: EnvironmentHandler, sourceStore: SourceSto
               OpApplProxy.libraryOperators.get(modAndName) match {
                 case Some(oper: TlaOper) =>
                   // an operator in the standard library
-                  val exTran = ExprOrOpArgNodeTranslator(environmentHandler, sourceStore,
-                    standardTranslator.context, standardTranslator.recStatus)
+                  val exTran = ExprOrOpArgNodeTranslator(sourceStore, standardTranslator.context, standardTranslator.recStatus)
                   val resEx = OperEx(oper, node.getArgs.map { p => exTran.translate(p)} :_*)
                   // the source should point to the operator application, not the definition
                   // of the standard operator, which is pretty useless
@@ -41,8 +39,7 @@ class OpApplProxy(environmentHandler: EnvironmentHandler, sourceStore: SourceSto
                   OpApplProxy.globalOperators.get(opdef.getName.toString) match {
                     case Some(oper: TlaOper) =>
                       // an operator that we overwrite unconditionally, e.g., <:
-                      val exTran = ExprOrOpArgNodeTranslator(environmentHandler, sourceStore,
-                        standardTranslator.context, standardTranslator.recStatus)
+                      val exTran = ExprOrOpArgNodeTranslator(sourceStore, standardTranslator.context, standardTranslator.recStatus)
                       val resEx = OperEx(oper, node.getArgs.map { p => exTran.translate(p) }: _*)
                       sourceStore.addRec(resEx, SourceLocation(node.getLocation))
 
@@ -62,10 +59,8 @@ class OpApplProxy(environmentHandler: EnvironmentHandler, sourceStore: SourceSto
 }
 
 object OpApplProxy {
-  def apply(environmentHandler: EnvironmentHandler,
-            sourceStore: SourceStore,
-            standardTranslator: OpApplTranslator): OpApplProxy = {
-    new OpApplProxy(environmentHandler, sourceStore, standardTranslator)
+  def apply(sourceStore: SourceStore, standardTranslator: OpApplTranslator) : OpApplProxy = {
+    new OpApplProxy(sourceStore, standardTranslator)
   }
 
   val libraryValues: Map[Tuple2[String, String], TlaValue] =

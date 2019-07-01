@@ -5,7 +5,7 @@ import java.io.File
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.{EnvironmentHandler, TlaModule}
+import at.forsyte.apalache.tla.lir.TlaModule
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -17,9 +17,8 @@ import com.typesafe.scalalogging.LazyLogging
   */
 
 class SanyParserPassImpl @Inject()(val options: PassOptions,
-                                   val environmentHandler: EnvironmentHandler,
                                    val sourceStore: SourceStore,
-                                   @Named("AfterParser") val nextPass: (Pass with TlaModuleMixin))
+                                   @Named("AfterParser") val nextPass: Pass with TlaModuleMixin)
   extends SanyParserPass with LazyLogging {
 
   private var rootModule: Option[TlaModule] = None
@@ -38,7 +37,7 @@ class SanyParserPassImpl @Inject()(val options: PassOptions,
     */
   override def execute(): Boolean = {
     val filename = options.getOptionOrError("parser", "filename").asInstanceOf[String]
-    val (rootName, modules) = new SanyImporter(environmentHandler, sourceStore).loadFromFile(new File(filename))
+    val (rootName, modules) = new SanyImporter(sourceStore).loadFromFile(new File(filename))
     rootModule = modules.get(rootName)
     if (rootModule.isEmpty) {
       logger.error("Error parsing file " + filename)

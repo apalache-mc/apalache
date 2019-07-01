@@ -4,7 +4,7 @@ import java.io._
 import java.nio.file.Files
 
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.{EnvironmentHandler, TlaModule}
+import at.forsyte.apalache.tla.lir.TlaModule
 import org.apache.commons.io.output.WriterOutputStream
 import tla2sany.drivers.SANY
 import tla2sany.modanalyzer.SpecObj
@@ -17,7 +17,7 @@ import scala.io.Source
   *
   * @author konnov
   */
-class SanyImporter(environmentHandler: EnvironmentHandler, sourceStore: SourceStore) {
+class SanyImporter( sourceStore: SourceStore) {
   /**
     * Load a TLA+ specification from a file by calling SANY.
     *
@@ -36,7 +36,7 @@ class SanyImporter(environmentHandler: EnvironmentHandler, sourceStore: SourceSt
     // do the translation
     val modmap = specObj.getExternalModuleTable.getModuleNodes.foldLeft(Map[String, TlaModule]()) {
       (map, node) => map + (node.getName.toString ->
-        ModuleTranslator(environmentHandler, sourceStore).translate(node))
+        ModuleTranslator(sourceStore).translate(node))
     }
 
     Tuple2(specObj.getName, modmap)
