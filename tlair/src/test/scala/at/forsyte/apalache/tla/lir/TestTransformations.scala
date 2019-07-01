@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.transformations._
+import at.forsyte.apalache.tla.lir.transformations.impl._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -54,12 +55,12 @@ class TestTransformations extends FunSuite with TestingPredefs {
 }
 
   test( "Test identity" ) {
-    val goodIdentity = new Transformation(
+    val goodIdentity = new TransformationImpl(
       identity,
       Invariants.IsAlwaysIdentity
     )
 
-    val badIdentity = new Transformation(
+    val badIdentity = new TransformationImpl(
       identity,
       Invariants.Impossible
     )
@@ -92,14 +93,14 @@ class TestTransformations extends FunSuite with TestingPredefs {
   }
 
   test( "Test RecursiveTransformation" ) {
-    val reduceDepth = new Transformation(
+    val reduceDepth = new TransformationImpl(
       {
         case OperEx( _, arg, _* ) => arg
         case ex@_ => ex
       }
     )
 
-    val reduceDepthToOne = new RecursiveTransformation( reduceDepth )
+    val reduceDepthToOne = new RecursiveTransformationImpl( reduceDepth )
 
     val ex = and( and( and( and( and( NullEx ) ) ) ) )
 
@@ -109,4 +110,9 @@ class TestTransformations extends FunSuite with TestingPredefs {
     assert( fully == NullEx )
 
   }
+
+  test("test recursive negation") {
+
+  }
+
 }

@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.assignments.transformations
 
 import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
-import at.forsyte.apalache.tla.lir.transformations.TransformationInvariant
+import at.forsyte.apalache.tla.lir.transformations.impl.TransformationInvariant
 import at.forsyte.apalache.tla.lir.{RecursiveProcessor, TlaEx}
 
 /**

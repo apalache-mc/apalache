@@ -3,16 +3,17 @@ package at.forsyte.apalache.tla.assignments.transformations
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
-import at.forsyte.apalache.tla.lir.transformations.{RecursiveTransformation, Transformation, TransformationFactory, TransformationListener}
+import at.forsyte.apalache.tla.lir.transformations.impl.{RecursiveTransformationImpl, TransformationTrackerImpl, TransformationImpl}
+import at.forsyte.apalache.tla.lir.transformations.{ExprTransformer, TransformationListener}
 
-sealed case class UnchengedExplicitFactory( listeners: TransformationListener* )
-  extends TransformationFactory( listeners :_* ) {
+sealed case class UnchengedExplicitTracker(listeners: TransformationListener* )
+  extends TransformationTrackerImpl( listeners :_* ) {
 
   def inSingleton( x : TlaEx ) : TlaEx =
     Builder.in( Builder.prime( x.deepCopy() ), Builder.enumSet( x.deepCopy() ) )
 
-  val OneUnchangedExplicit: Transformation =
-    listenTo {
+  val OneUnchangedExplicit: ExprTransformer =
+    track {
       case OperEx( TlaActionOper.unchanged, arg ) =>
 
         /** UNCHANGED can be applied either to names or to tuples:
@@ -34,6 +35,6 @@ sealed case class UnchengedExplicitFactory( listeners: TransformationListener* )
     * UNCHANGED (x,...,y) --> x' \in {x} /\ ... /\ y' \in {y}
     *
     */
-  val AllUnchangedExplicit: Transformation =
-    new RecursiveTransformation( OneUnchangedExplicit )
+  val AllUnchangedExplicit: TransformationImpl =
+    new RecursiveTransformationImpl( OneUnchangedExplicit )
 }

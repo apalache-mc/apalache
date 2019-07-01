@@ -3,11 +3,12 @@ package at.forsyte.apalache.tla.assignments.transformations
 import at.forsyte.apalache.tla.lir.control.LetInOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.db.BodyDBFactory
-import at.forsyte.apalache.tla.lir.transformations.{RecursiveTransformation, Transformation, TransformationFactory, TransformationListener}
+import at.forsyte.apalache.tla.lir.transformations.impl.{RecursiveTransformationImpl, TransformationTrackerImpl, TransformationImpl}
+import at.forsyte.apalache.tla.lir.transformations.{ExprTransformer, TransformationListener}
 
-sealed case class LetInExplicitFactory( listeners : TransformationListener* )
-  extends TransformationFactory( listeners : _* ) {
-  val LetInExplicitOnce : Transformation = listenTo {
+sealed case class LetInExplicit(listeners : TransformationListener* )
+  extends TransformationTrackerImpl( listeners : _* ) {
+  val LetInExplicitOnce : ExprTransformer = track {
     case OperEx( oper : LetInOper, body ) =>
 
       /** Make a fresh temporary DB, store all decls inside */
@@ -16,7 +17,7 @@ sealed case class LetInExplicitFactory( listeners : TransformationListener* )
       /**
         * Inline as if operators were external.
         */
-      InlineFactory( bodyDB, listeners : _* ).InlineAll( body )
+      Inline( bodyDB, listeners : _* ).InlineAll( body )
     case ex => ex
   }
 
@@ -28,7 +29,7 @@ sealed case class LetInExplicitFactory( listeners : TransformationListener* )
   /**
     * Recursive call to LetInExplicitOnce is needed because LET-IN may be nested
     */
-  val LetInExplicitAllToplevel : Transformation = listenTo {
+  val LetInExplicitAllToplevel : ExprTransformer = track {
     lambda
   }
 
@@ -43,6 +44,6 @@ sealed case class LetInExplicitFactory( listeners : TransformationListener* )
     *
     * AllLetInExplicit(A) = x + 2 + 1
     */
-  val AllLetInExplicit : Transformation =
-    new RecursiveTransformation( LetInExplicitAllToplevel )
+  val AllLetInExplicit : TransformationImpl =
+    new RecursiveTransformationImpl( LetInExplicitAllToplevel )
 }

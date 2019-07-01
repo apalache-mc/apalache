@@ -3,8 +3,9 @@ package at.forsyte.apalache.tla.lir.transformations
 import at.forsyte.apalache.tla.lir.control.LetInOper
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
+import at.forsyte.apalache.tla.lir.transformations.impl.{TransformationTrackerImpl, TransformationImpl}
 
-object VariableRenamingFactory {
+object VariableRenamingTracker {
   def pfx( prefix : String, s : String ) : String = s"${prefix}_$s"
 
   def renameParam( prefix : String )( param : FormalParam ) : FormalParam = {
@@ -15,22 +16,22 @@ object VariableRenamingFactory {
   }
 }
 
-sealed case class VariableRenamingFactory( listeners : TransformationListener* )
-  extends TransformationFactory( listeners : _* ) {
+sealed case class VariableRenamingTracker(listeners : TransformationListener* )
+  extends TransformationTrackerImpl( listeners : _* ) {
 
   /**
     * Prepends `prefix` to every variable in `boundVars`
     */
   private def prefixPrepend( boundVars : Set[String], prefix : String )( ex : TlaEx ) : TlaEx = ex match {
     case NameEx( name ) if boundVars.contains( name ) =>
-      NameEx( VariableRenamingFactory.pfx( prefix, name ) )
+      NameEx( VariableRenamingTracker.pfx( prefix, name ) )
     case OperEx( op : LetInOper, body ) =>
       val newdefs = op.defs.map(
         {
           case TlaOperDecl( name, params, declBody ) =>
             TlaOperDecl(
               name,
-              params.map( VariableRenamingFactory.renameParam( prefix ) ),
+              params.map( VariableRenamingTracker.renameParam( prefix ) ),
               VariableRenaming( boundVars ++ params.map( _.name ), prefix )( declBody )
             )
           case decl => decl
@@ -51,13 +52,13 @@ sealed case class VariableRenamingFactory( listeners : TransformationListener* )
       )
     case OperEx( oper, args@_* ) =>
       OperEx( oper, args map {
-        VariableRenaming( boundVars, prefix ).transform
+        VariableRenaming( boundVars, prefix )
       } : _* )
     case _ => ex
   }
 
-  def VariableRenaming( boundVars : Set[String], prefix : String ) : Transformation =
-    listenTo {
+  def VariableRenaming( boundVars : Set[String], prefix : String ) : ExprTransformer =
+    track {
       prefixPrepend( boundVars, prefix )
     }
 }

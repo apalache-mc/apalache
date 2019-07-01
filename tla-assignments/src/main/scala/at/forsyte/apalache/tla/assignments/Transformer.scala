@@ -1,12 +1,13 @@
 package at.forsyte.apalache.tla.assignments
 
-import at.forsyte.apalache.tla.assignments.transformations.InlineFactory
+import at.forsyte.apalache.tla.assignments.transformations.Inline
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions._
 import at.forsyte.apalache.tla.lir.control.LetInOper
 import at.forsyte.apalache.tla.lir.db.{BodyDB, BodyDBFactory}
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.transformations.{RecursiveTransformation, Transformation, TransformationListener}
+import at.forsyte.apalache.tla.lir.transformations.impl.{RecursiveTransformationImpl, TransformationImpl}
+import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 import com.google.inject.Singleton
 
 /**
@@ -64,7 +65,7 @@ class Transformer {
                  implicit p_bodyDB : BodyDB,
                  p_srcDB : TransformationListener
                ) : TlaEx = {
-    InlineFactory(p_bodyDB, p_srcDB).InlineAll(p_expr)
+    Inline(p_bodyDB, p_srcDB).InlineAll(p_expr)
 //    OperatorHandler.unfoldMax( p_expr, p_bodyDB, p_srcDB )
   }
 
@@ -104,7 +105,7 @@ class Transformer {
     }
 
     // Temporary, until this class gets deleted
-    new RecursiveTransformation( new Transformation( exFun, srcDB ) )(p_ex)
+    new RecursiveTransformationImpl( new TransformationImpl( exFun, srcDB ) )(p_ex)
   }
 
   /**
@@ -171,7 +172,7 @@ class Transformer {
     }
 
     // Temporary, until this class gets deleted
-    new RecursiveTransformation( new Transformation( lambda, srcDB ) )(p_ex)
+    new RecursiveTransformationImpl( new TransformationImpl( lambda, srcDB ) )(p_ex)
   }
 
   //

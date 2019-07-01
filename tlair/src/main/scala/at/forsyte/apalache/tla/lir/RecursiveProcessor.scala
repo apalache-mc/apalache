@@ -18,6 +18,7 @@ object RecursiveProcessor {
 
     def equality[T] : (T, T) => Boolean = _ == _
 
+    // TODO: Igor @ 01.07.2019: why all of a sudden we are doing fixpoint computations on doubles?
     def epsEquality[T]( eps : Double, d : (T, T) => Double )( x : T, y : T ) : Boolean = d( x, y ) <= eps
 
     def childCollect[T1, T2](

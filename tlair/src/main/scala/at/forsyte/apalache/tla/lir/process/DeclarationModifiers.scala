@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir.process
 
 import at.forsyte.apalache.tla.lir.{TlaDecl, TlaOperDecl}
-import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, VariableRenamingFactory}
+import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, VariableRenamingTracker}
 
 object DeclarationModifiers {
   /**
@@ -12,8 +12,8 @@ object DeclarationModifiers {
       case TlaOperDecl( name, params, body ) =>
         TlaOperDecl(
           name,
-          params.map( VariableRenamingFactory.renameParam( prefix = name ) ),
-          VariableRenamingFactory( listeners : _* ).VariableRenaming(
+          params.map( VariableRenamingTracker.renameParam( prefix = name ) ),
+          VariableRenamingTracker( listeners : _* ).VariableRenaming(
             params.map( _.name ).toSet,
             name
           )( body )

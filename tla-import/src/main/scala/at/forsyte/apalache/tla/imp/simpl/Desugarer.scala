@@ -14,6 +14,8 @@ import javax.inject.Singleton
   *
   * TODO: track the source information
   *
+  * TODO: move to *.lir.transformations.standard?
+  *
   * @author Igor Konnov
   */
 @Singleton

@@ -4,9 +4,10 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.db.BodyDB
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.transformations._
+import at.forsyte.apalache.tla.lir.transformations.impl.{RecursiveTransformationImpl, ReplaceFixed, TransformationTrackerImpl, TransformationImpl}
 
-sealed case class InlineFactory( bodyMap : BodyDB, listeners : TransformationListener* )
-  extends TransformationFactory( listeners : _* ) {
+sealed case class Inline(bodyMap : BodyDB, listeners : TransformationListener* )
+  extends TransformationTrackerImpl( listeners : _* ) {
 
   /**
     * Attempts to instantiate the body of the operator named `name` with the provided arguments.
@@ -19,8 +20,8 @@ sealed case class InlineFactory( bodyMap : BodyDB, listeners : TransformationLis
     bodyMap.get( name ) match {
       case Some( (params, body) ) if params.size == args.size =>
         val newBody = params.zip( args ).foldLeft( body ) { case (b, (fParam, arg)) =>
-          val replacement : Transformation = ReplaceFixed( NameEx( fParam.name ), arg, listeners : _* )
-          new RecursiveTransformation( replacement ).transform( b )
+          val replacement : TransformationImpl = ReplaceFixed( NameEx( fParam.name ), arg, listeners : _* )
+          new RecursiveTransformationImpl( replacement ).transform( b )
         }
         Option( newBody )
       case Some( (params, _) ) if params.size != args.size =>
@@ -35,7 +36,7 @@ sealed case class InlineFactory( bodyMap : BodyDB, listeners : TransformationLis
     * either with TlaOper.apply and the operator name, or as a
     * TlaUserOper directly.
     */
-  val InlineOne : Transformation = listenTo {
+  val InlineOne : ExprTransformer = track {
     case ex@OperEx( op : TlaUserOper, args@_* ) =>
       instantiateBody( op.name, args : _* ).getOrElse( ex )
     case ex@OperEx( TlaOper.apply, NameEx( name ), args@_* ) =>
@@ -43,8 +44,8 @@ sealed case class InlineFactory( bodyMap : BodyDB, listeners : TransformationLis
     case ex => ex
   }
 
-  val InlineAllToplevel : Transformation =
-    new RecursiveTransformation( InlineOne )
+  val InlineAllToplevel : ExprTransformer =
+    new RecursiveTransformationImpl( InlineOne )
 
   private def lambda( ex : TlaEx ) : TlaEx = {
     val post = InlineAllToplevel( ex )
@@ -62,7 +63,7 @@ sealed case class InlineFactory( bodyMap : BodyDB, listeners : TransformationLis
     *
     * InlineAll(B) = IF y + 2 > 7 THEN 1 ELSE 0
     */
-  val InlineAll: Transformation = listenTo {
+  val InlineAll: ExprTransformer = track {
     lambda
   }
 }
