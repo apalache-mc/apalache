@@ -8,7 +8,8 @@ import at.forsyte.apalache.tla.lir.oper.{FixedArity, Interpretation, OperArity}
   * new operator definitions. At the moment, we store only the body as an argument, whereas the actual
   * definitions are accessible via the field defs. In the future, this might change.
   *
-  * TODO: move to **.lir.oper?
+  * TODO: Igor @ 02.07.2019: remove this operator and introduce LetInEx(_: TlaOperDecl) extends TlaEx.
+  * See: https://github.com/konnov/apalache/issues/14
   */
 class LetInOper(val defs: List[TlaOperDecl]) extends TlaControlOper {
   override val name: String = "LET-IN"
