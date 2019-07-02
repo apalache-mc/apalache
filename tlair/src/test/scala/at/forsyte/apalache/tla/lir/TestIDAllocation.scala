@@ -4,12 +4,9 @@ import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.lir.plugins._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-
-import scala.collection.mutable.Set
 
 /**
   * Created by jkukovec on 11/30/16.

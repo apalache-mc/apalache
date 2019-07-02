@@ -4,7 +4,6 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.plugins.UniqueDB
 
 import scala.collection.immutable.{Map, Set}
 
@@ -167,10 +166,11 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
     type deltaType = Map[String, BoolFormula]
     type frozenVarSetType = Set[String]
     type frozenType = Map[Long, frozenVarSetType]
+    type UIDtoExMapType = Map[Long, TlaEx]
     type recursionData =
-      (seenType, collocSetType, nonCollocSetType, deltaType, frozenType)
+      (seenType, collocSetType, nonCollocSetType, deltaType, frozenType, UIDtoExMapType)
     type staticAnalysisData =
-      (seenType, collocSetType, deltaType, frozenType)
+      (seenType, collocSetType, deltaType, frozenType, UIDtoExMapType)
 
   }
 
@@ -199,7 +199,7 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
     /** We name the default arguments to return at irrelevant terms  */
     val defaultMap = ( for {v <- p_vars} yield (v, False()) ).toMap
     val defaultArgs =
-      (Set[Long](), Set[(Long, Long)](), Set[(Long, Long)](), defaultMap, Map[Long, Set[String]]())
+      (Set[Long](), Set[(Long, Long)](), Set[(Long, Long)](), defaultMap, Map[Long, Set[String]](), Map[Long, TlaEx]())
 
     p_phi match {
       /** Recursive case, connectives */
@@ -230,7 +230,7 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
           * The seen/colloc/noColloc sets are merely unions of their respective child sets.
           * In the case of the frozen mapping, the domains are disjoint so ++ suffices
           */
-        val (seen, childCollocSet, childNoCollocSet, _, jointFrozen) =
+        val (seen, childCollocSet, childNoCollocSet, _, jointFrozen, uidMap) =
           processedChildArgs.foldLeft(
             defaultArgs
           ) {
@@ -240,7 +240,8 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
                 a._2 ++ b._2,
                 a._3 ++ b._3,
                 defaultArgs._4,
-                a._5 ++ b._5 // Key sets disjoint by construction
+                a._5 ++ b._5, // Key sets disjoint by construction
+                a._6 ++ b._6
               )
           }
 
@@ -251,9 +252,11 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
           * At an AND node, all pairs not yet processed, that are not known to
           * be non-collocated, are collocated. At an OR branch, the opposite is true.
           */
-        /* return */ oper match {
-          case TlaBoolOper.and => (seen, S -- childNoCollocSet, childNoCollocSet, delta, jointFrozen)
-          case TlaBoolOper.or => (seen, childCollocSet, S -- childCollocSet, delta, jointFrozen)
+        oper match {
+          case TlaBoolOper.and =>
+            (seen, S -- childNoCollocSet, childNoCollocSet, delta, jointFrozen, uidMap)
+          case TlaBoolOper.or =>
+            (seen, childCollocSet, S -- childCollocSet, delta, jointFrozen, uidMap)
         }
 
       }
@@ -281,8 +284,10 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
         val noColloc : nonCollocSetType = Set()
         /** Mark the node as seen */
         val seen : seenType = Set( n )
+        /** Add the mapping from n to its expr. */
+        val map : Map[Long,TlaEx] = Seq(n -> p_phi).toMap
 
-        /* return */ (seen, colloc, noColloc, delta, frozen)
+        /* return */ (seen, colloc, noColloc, delta, frozen, map)
 
       }
 
@@ -317,7 +322,9 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
 
         val S : collocSetType = for {x <- seen; y <- seen} yield (x, y)
 
-        /* return */ (seen, childCollocSet, S -- childCollocSet, delta, jointFrozen)
+        val jointMap = thenResults._6 ++ elseResults._6
+
+        /* return */ (seen, childCollocSet, S -- childCollocSet, delta, jointFrozen, jointMap)
 
 
       }
@@ -343,9 +350,9 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
                             ) : Aliases.staticAnalysisData = {
     import SMTtools._
     /** Invoke the main method, then drop noColloc and simplify delta */
-    val (seen, colloc, _, delta, frozen) =
+    val (seen, colloc, _, delta, frozen, uidMap) =
       recursiveMainComputation( p_phi, p_vars, Set[String]() )
-    /* return */ (seen, colloc, delta.map( pa => (pa._1, simplify( pa._2 )) ), frozen)
+    /* return */ (seen, colloc, delta.map( pa => (pa._1, simplify( pa._2 )) ), frozen, uidMap)
   }
 
   /**
@@ -367,7 +374,7 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
     import SMTtools._
 
     /** Extract the list of leaf ids, the collocated set, the delta mapping and the frozen mapping */
-    val (seen, colloc, delta, frozen) = staticAnalysis( p_phi, p_vars )
+    val (seen, colloc, delta, frozen, uidMap) = staticAnalysis( p_phi, p_vars )
 
     /**
       * We need two subsets of colloc, Colloc_\triangleleft for \tau_A
@@ -380,8 +387,8 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
       * for the same variable.
       * */
     def minimalCoveringClash( i : Long, j : Long ) : Boolean = {
-      val ex_i = UniqueDB.get( UID( i ) )
-      val ex_j = UniqueDB.get( UID( j ) )
+      val ex_i = uidMap.get( i )
+      val ex_j = uidMap.get( j )
 
       p_vars.exists(
         v =>
@@ -400,8 +407,8 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
       * since seen/colloc only contain assignment candidate IDs.
       * */
     def triangleleft( i : Long, j : Long ) : Boolean = {
-      val ex_i = UniqueDB.get( UID( i ) )
-      val ex_j = UniqueDB.get( UID( j ) )
+      val ex_i = uidMap.get( i )
+      val ex_j = uidMap.get( j )
 
       p_vars.exists(
         v =>
