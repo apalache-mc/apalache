@@ -30,7 +30,7 @@ class TransformationImpl(fn : TlaEx => TlaEx, listeners : TransformationListener
     * invariant listeners only perform validation, not data manipulation
     *
     * TODO: Igor @ 01.07.2019: this method should not be in Transformation.
-    * All operations with listeners should be done in TransformationFactory.
+    * All operations with listeners should be done in TransformationTrackerImpl.
     */
   def suppressInvariantChecks : TransformationImpl =
     new TransformationImpl( fn, listeners.filterNot( _.isInstanceOf[TransformationInvariant] ) :_* )

@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.transformations.impl.{RecursiveTransformation
 import at.forsyte.apalache.tla.lir.transformations.{ExprTransformer, TransformationListener}
 
 sealed case class EqualityAsContainment(listeners : TransformationListener* )
-  extends TransformationTrackerImpl( listeners : _* ) {
+  extends TransformationTrackerImpl( listeners : _* ) { // SIN 1
   val OneEqualityAsContainment: ExprTransformer = track {
     case OperEx( TlaOper.eq, lhs@OperEx( TlaActionOper.prime, _ ), rhs ) =>
       OperEx( TlaSetOper.in, lhs, OperEx( TlaSetOper.enumSet, rhs ) )

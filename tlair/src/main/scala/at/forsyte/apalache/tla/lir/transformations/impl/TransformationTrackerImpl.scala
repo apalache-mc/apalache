@@ -5,4 +5,6 @@ import at.forsyte.apalache.tla.lir.transformations.{ExprTransformer, Transformat
 class TransformationTrackerImpl(listeners : TransformationListener* ) extends TransformationTracker {
   def track( fn : ExprTransformer ) : ExprTransformer =
     new TransformationImpl( fn, listeners : _* )
+
+  // suppressInvariantChecks
 }
