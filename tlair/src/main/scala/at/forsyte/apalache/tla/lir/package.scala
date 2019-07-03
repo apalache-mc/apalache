@@ -108,8 +108,6 @@ package lir {
 
     def toSimpleString: String = ""
 
-    def isNull : Boolean = false
-
     def deepCopy() : TlaEx
   }
 
@@ -122,7 +120,6 @@ package lir {
   object NullEx extends TlaEx {
     override def deepCopy() : TlaEx = NullEx
     override def toSimpleString: String = toString
-    override def isNull : Boolean = true
   }
 
   /** just using a TLA+ value */

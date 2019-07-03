@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.lir.stdfun._
 class TestStdFun extends FunSuite with TestingPredefs {
   test( "filter Null" ) {
 
-    def filterFun( p_ex : TlaEx ) : Boolean = !p_ex.isNull
+    def filterFun( p_ex : TlaEx ) : Boolean = p_ex != NullEx
 
     val ex1 = bd.plus( 2, bd.enumSet( NullEx, NullEx ) )
     val ex2 = bd.plus( 2, bd.plus( NullEx, NullEx ) )

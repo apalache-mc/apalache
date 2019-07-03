@@ -226,7 +226,7 @@ class Transformer {
            ) : Option[TlaEx] = {
     extract( p_decls : _* )( p_bodyDB )
     val san = sanitize( p_expr )( p_bodyDB, p_listener )
-    if ( san.isNull ) None
+    if ( san == NullEx ) None
     else Some( san )
   }
 

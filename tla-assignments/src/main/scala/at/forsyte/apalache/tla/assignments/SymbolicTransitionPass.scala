@@ -70,7 +70,7 @@ class SymbolicTransitionPass( private val m_bodyDB : BodyDB,
 
     /** If extraction failed, throw */
     //    assert( !nextBody.isNull )
-    if ( nextBody.isNull )
+    if ( nextBody == NullEx )
       throw new AssignmentException(
         "%s not found or not an operator".format( p_nextName )
       )

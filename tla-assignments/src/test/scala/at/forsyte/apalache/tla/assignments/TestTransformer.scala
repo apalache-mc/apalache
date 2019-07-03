@@ -255,7 +255,7 @@ class TestTransformer extends FunSuite with TestingPredefs {
 
       val nextBody = findBodyOf( "Next", declarations:_*)
 
-      assert(!nextBody.isNull)
+      assert( nextBody != NullEx )
 
       val after = converter.sanitize( nextBody )
 
@@ -282,7 +282,7 @@ class TestTransformer extends FunSuite with TestingPredefs {
 
       val nextBody = findBodyOf( "Next", declarations:_*)
 
-      assert(!nextBody.isNull)
+      assert( nextBody != NullEx )
 
       val after = converter.sanitize( nextBody )
 

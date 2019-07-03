@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.imp._
-import at.forsyte.apalache.tla.lir.TestingPredefs
+import at.forsyte.apalache.tla.lir.{NullEx, TestingPredefs}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -31,7 +31,7 @@ class TestWarningDetector extends FunSuite with TestingPredefs {
 
     println( nextBody )
 
-    assert( ! nextBody.isNull )
+    assert( nextBody != NullEx )
 
     val ret = WarningDetector( nextBody )
 
