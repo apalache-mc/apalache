@@ -65,8 +65,8 @@ class Transformer {
                  implicit p_bodyDB : BodyDB,
                  p_srcDB : TransformationListener
                ) : TlaEx = {
-    Inline(p_bodyDB, p_srcDB).InlineAll(p_expr)
-//    OperatorHandler.unfoldMax( p_expr, p_bodyDB, p_srcDB )
+    Inline( p_bodyDB, p_srcDB ).InlineAll( p_expr )
+    //    OperatorHandler.unfoldMax( p_expr, p_bodyDB, p_srcDB )
   }
 
   /**
@@ -105,7 +105,7 @@ class Transformer {
     }
 
     // Temporary, until this class gets deleted
-    new RecursiveTransformationImpl( new TransformationImpl( exFun, srcDB ) )(p_ex)
+    new RecursiveTransformationImpl( new TransformationImpl( exFun, srcDB ) )( p_ex )
   }
 
   /**
@@ -114,7 +114,7 @@ class Transformer {
     * Undefined behaviour on recursive operators.
     *
     * @see inlineAll
-    * @param p_ex Input expression
+    * @param p_ex  Input expression
     * @param srcDB Mapping from replaced expressions to their originals.
     * @return A new [[TlaEx]], where all occurrences of operator applications,
     *         for operators declared in a LET expression,
@@ -125,28 +125,24 @@ class Transformer {
                    )(
                      implicit srcDB : TransformationListener
                    ) : TlaEx = {
-    def exFun( ex : TlaEx ) : TlaEx = {
-      ex match {
-        case OperEx( oper : LetInOper, body ) =>
-          /** Make a fresh temporary DB, store all decls inside */
-          val bodyDB = BodyDBFactory.makeDBFromDecls( oper.defs )
+    val ret = p_ex match {
 
-          /** inline as if operators were external */
-          explicitLetIn( inlineAll( body )( bodyDB, srcDB ) )( srcDB )
-        case _ => ex
-      }
+      case OperEx( oper : LetInOper, body ) =>
+
+        /** Make a fresh temporary DB, store all decls inside */
+        val bodyDB = BodyDBFactory.makeDBFromDecls( oper.defs )
+
+        /** inline as if operators were external */
+        explicitLetIn( inlineAll( body )( bodyDB, srcDB ) )( srcDB )
+      case OperEx(op, args@_*) =>
+        OperEx( op, args map {
+          explicitLetIn( _ )( srcDB )
+        } : _* )
+      case _ => p_ex
     }
-
-    val ret = RecursiveProcessor.transformTlaEx(
-      RecursiveProcessor.DefaultFunctions.naturalTermination,
-      exFun,
-      exFun
-    )(p_ex)
-    srcDB.onTransformation( p_ex, ret)
+    srcDB.onTransformation( p_ex, ret )
     ret
-//
-//    val oldret = OperatorHandler.replaceWithRule( p_ex, exFun, srcDB )
-//    oldret
+
   }
 
   /**
@@ -172,7 +168,7 @@ class Transformer {
     }
 
     // Temporary, until this class gets deleted
-    new RecursiveTransformationImpl( new TransformationImpl( lambda, srcDB ) )(p_ex)
+    new RecursiveTransformationImpl( new TransformationImpl( lambda, srcDB ) )( p_ex )
   }
 
   //
@@ -186,8 +182,9 @@ class Transformer {
     *   1. [[inlineAll]]
     *   1. [[rewriteEQ]]
     *   1. [[unchangedExplicit]]
-    * @param p_expr Input expression.
-    * @param bodyDB Operator body mapping, for unfolding.
+    *
+    * @param p_expr   Input expression.
+    * @param bodyDB   Operator body mapping, for unfolding.
     * @param listener a listener to transformations.
     * @return Expression obtained after applying the sequence of transformations.
     */
@@ -202,7 +199,7 @@ class Transformer {
 
     val explicitLI = explicitLetIn( inlined )( listener )
 
-    val eqReplaced = rewriteEQ( explicitLI )(listener )
+    val eqReplaced = rewriteEQ( explicitLI )( listener )
 
     /* val ucReplaced = */ unchangedExplicit( eqReplaced )( listener )
 
@@ -212,10 +209,11 @@ class Transformer {
   // Igor: why is this method declared with apply? What is special about it?
   /**
     * Performs [[extract]], followed by [[sanitize]] and identification.
-    * @param p_expr Input expression.
-    * @param p_decls Collection of declared operators.
-    * @param p_bodyDB Mapping from operator names to their bodies. Should not contain recursive operators.
-    * @param p_listener  a listener to transformations.
+    *
+    * @param p_expr     Input expression.
+    * @param p_decls    Collection of declared operators.
+    * @param p_bodyDB   Mapping from operator names to their bodies. Should not contain recursive operators.
+    * @param p_listener a listener to transformations.
     * @return None, if [[sanitize]] fails, otherwise contains the sanitized expression.
     */
   def apply( p_expr : TlaEx,

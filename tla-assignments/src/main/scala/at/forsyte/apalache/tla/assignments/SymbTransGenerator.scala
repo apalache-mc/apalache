@@ -105,15 +105,17 @@ class SymbTransGenerator extends TypeAliases {
       }
 
       /**
-        * NOTE: RETHINK HOW RP IS CALLED, SINCE THIS IS A REWRITE TO MATCH THE FORMAT OF
-        * SpecHandler.bottomUpVal
-        **/
-      RecursiveProcessor.computeFromTlaEx[SelMapType](
-        leafJudge,
-        leafFun,
-        _ => default,
-        parentFun
-      )( p_phi )
+        * NOTE: Rethink this, since it's a direct port from using RecursiveProcessor
+        */
+      def getSelMap(ex: TlaEx) : SelMapType = ex match {
+        case e if leafJudge(e) => leafFun(e)
+        case e@OperEx(_, args@_*) =>
+          val chdRes = args map getSelMap
+          parentFun(e, chdRes)
+        case _ => default
+      }
+
+      getSelMap(p_phi)
     }
 
     /**
@@ -222,18 +224,28 @@ class SymbTransGenerator extends TypeAliases {
         case _ => false
       }
 
+      def newBodyFrom(s: Set[UID]): TlaEx = p_ex match {
+        case OperEx( TlaSetOper.in, OperEx(TlaActionOper.prime, _), _*) =>
+          assignmentFilter( p_ex, s, p_selections )
+        case OperEx(op, args@_*) =>
+          assignmentFilter(
+            OperEx(op,
+              args map {assignmentFilter( _, s, p_selections ) } :_*
+            ),
+            s,
+            p_selections
+          )
+        case _ => p_ex
+      }
+
+
       p_selections( p_ex.ID ).map( s =>
         (
           mkOrdered( s, p_strat ),
-          RecursiveProcessor.transformTlaEx(
-            asgnCheck,
-            assignmentFilter( _, s, p_selections ),
-            assignmentFilter( _, s, p_selections )
-          )( p_ex )
+          newBodyFrom( s )
         )
       ).toSeq
     }
-
   }
 
   /**

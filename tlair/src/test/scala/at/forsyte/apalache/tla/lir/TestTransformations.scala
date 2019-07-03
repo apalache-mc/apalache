@@ -17,12 +17,16 @@ class TestTransformations extends FunSuite with TestingPredefs {
   }
 
   object Invariants {
+    private def noAs( ex : TlaEx ) : Boolean = ex match {
+      case OperEx( _, args@_* ) =>
+        args forall noAs
+      case NameEx( n ) => n != "a"
+      case _ => true
+    }
 
     val NoAsAfter = new TransformationInvariant(
       "NoAsAfter",
-      ( _, newEx ) => RecursiveProcessor.globalTlaExProperty {
-        _ != n_a
-      }( newEx )
+      ( _, newEx ) => noAs(newEx)
     )
 
     val IsAlwaysIdentity = new TransformationInvariant(
@@ -52,7 +56,7 @@ class TestTransformations extends FunSuite with TestingPredefs {
       Invariants.MonotonicallyBigger.onTransformation( x_in_S, n_x )
     }
     assert( Invariants.MonotonicallyBigger.holdsFor( n_x, x_in_S ) )
-}
+  }
 
   test( "Test identity" ) {
     val goodIdentity = new TransformationImpl(
@@ -102,7 +106,7 @@ class TestTransformations extends FunSuite with TestingPredefs {
 
     val reduceDepthToOne = new RecursiveTransformationImpl( reduceDepth )
 
-    val ex = and( and( and( and( and( NullEx ) ) ) ) )
+    val ex = and( and( and( and( and( NullEx, n_a ), n_b ), n_c ), n_d ), n_e )
 
     val once = reduceDepth( ex )
     assert( once != NullEx )
@@ -111,7 +115,7 @@ class TestTransformations extends FunSuite with TestingPredefs {
 
   }
 
-  test("test recursive negation") {
+  test( "test recursive negation" ) {
 
   }
 

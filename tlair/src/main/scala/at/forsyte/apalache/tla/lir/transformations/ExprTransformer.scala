@@ -8,4 +8,4 @@ import at.forsyte.apalache.tla.lir.TlaEx
   *
   * @author Igor Konnov
  */
-trait ExprTransformer extends Function1[TlaEx, TlaEx]
+trait ExprTransformer extends Function[TlaEx, TlaEx]

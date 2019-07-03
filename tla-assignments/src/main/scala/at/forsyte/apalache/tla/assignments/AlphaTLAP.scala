@@ -27,16 +27,14 @@ sealed case class Star( ex : TlaEx ) extends AlphaEx( ex ) {
 //    )
 //    Set.empty[Var] // TODO
 //  }
-  val deps : Set[Var] = RecursiveProcessor.computeFromTlaEx[Set[Var]](
-    _ match {
-      case OperEx( TlaActionOper.prime, NameEx( _ ) ) => true
-      case _ => false
-    },
-    x => Set( x.asInstanceOf[OperEx].args.head.asInstanceOf[NameEx].name ),
-    _ => Set.empty[Var],
-    { case (_, chds) => chds.fold( Set.empty[Var] ) { _ ++ _ } }
-  )( ex )
 
+  def getVars(ex: TlaEx): Set[Var] = ex match {
+    case OperEx( TlaActionOper.prime, NameEx( n ) ) => Set(n)
+    case OperEx(_, args@_*) => {args map getVars}.foldLeft(Set.empty[Var]) { _ ++ _ }
+    case _ => Set.empty[Var]
+  }
+
+  val deps : Set[Var] = getVars( ex )
 }
 
 sealed case class FalseEx( ex : TlaEx ) extends AlphaEx( ex )
