@@ -15,6 +15,7 @@ object VariableRenamingTracker {
   }
 }
 
+// TODO: Igor @ 04.07.2019: merge with *.standard.Renaming
 sealed case class VariableRenamingTracker(listeners : TransformationListener* )
   extends TransformationTrackerImpl( listeners : _* ) {
 
