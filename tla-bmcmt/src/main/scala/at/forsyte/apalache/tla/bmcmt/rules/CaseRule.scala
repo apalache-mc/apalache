@@ -2,8 +2,8 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types.CellT
-import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.lir.oper.TlaControlOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
 

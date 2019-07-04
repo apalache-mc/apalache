@@ -4,9 +4,8 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, OracleHelper}
 import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, IntT, PowSetT}
-import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 import com.typesafe.scalalogging.LazyLogging

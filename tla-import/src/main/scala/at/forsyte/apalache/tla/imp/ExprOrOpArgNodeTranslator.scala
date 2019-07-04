@@ -3,8 +3,7 @@ package at.forsyte.apalache.tla.imp
 import at.forsyte.apalache.tla.imp.simpl.Desugarer
 import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.control.LetInOper
-import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{LetInOper, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.{TlaDecimal, TlaInt, TlaStr}
 import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic._

@@ -3,8 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, OracleHelper}
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinFunSetT, FinSetT, PowSetT}
-import at.forsyte.apalache.tla.lir.actions.TlaActionOper
-import at.forsyte.apalache.tla.lir.oper.TlaSetOper
+import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
 

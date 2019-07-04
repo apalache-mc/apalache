@@ -1,7 +1,5 @@
 package at.forsyte.apalache.tla.lir
 
-import at.forsyte.apalache.tla.lir.actions._
-import at.forsyte.apalache.tla.lir.control.{LetInOper, _}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values._

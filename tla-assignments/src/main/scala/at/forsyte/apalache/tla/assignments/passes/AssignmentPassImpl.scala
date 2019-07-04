@@ -5,9 +5,9 @@ import at.forsyte.apalache.tla.assignments._
 import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.db.BodyDB
+import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.process.DeclarationModifiers
 import com.google.inject.Inject
 import com.google.inject.name.Named

@@ -5,7 +5,6 @@ package at.forsyte.apalache.tla.lir
   */
 package oper {
 
-  import at.forsyte.apalache.tla.lir.control.TlaControlOper
   import at.forsyte.apalache.tla.lir.values.TlaStr
 
   /**

@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.lir.control.LetInOper
+import at.forsyte.apalache.tla.lir.oper.LetInOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaOperDecl}
 
 object LetInRule {

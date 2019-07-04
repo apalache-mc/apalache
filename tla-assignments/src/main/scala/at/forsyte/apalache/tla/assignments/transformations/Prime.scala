@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.assignments.transformations
 
-import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.transformations.impl.TransformationTrackerImpl
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.transformations.{ExprTransformer, TransformationListener}

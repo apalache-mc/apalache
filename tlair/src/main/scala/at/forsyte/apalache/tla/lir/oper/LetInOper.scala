@@ -1,7 +1,6 @@
-package at.forsyte.apalache.tla.lir.control
+package at.forsyte.apalache.tla.lir.oper
 
 import at.forsyte.apalache.tla.lir.TlaOperDecl
-import at.forsyte.apalache.tla.lir.oper.{FixedArity, Interpretation, OperArity}
 
 /**
   * The LET A_1 == e_1, ..., A_k = e_k in B. Let-In is a very special operator, as it introduces

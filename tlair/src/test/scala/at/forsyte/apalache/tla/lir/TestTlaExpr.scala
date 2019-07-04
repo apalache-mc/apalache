@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.lir
 
-import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import org.junit.runner.RunWith

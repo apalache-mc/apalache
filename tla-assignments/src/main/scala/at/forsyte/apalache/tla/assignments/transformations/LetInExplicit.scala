@@ -1,9 +1,9 @@
 package at.forsyte.apalache.tla.assignments.transformations
 
-import at.forsyte.apalache.tla.lir.control.LetInOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.db.BodyDBFactory
-import at.forsyte.apalache.tla.lir.transformations.impl.{RecursiveTransformationImpl, TransformationTrackerImpl, TransformationImpl}
+import at.forsyte.apalache.tla.lir.oper.LetInOper
+import at.forsyte.apalache.tla.lir.transformations.impl.{RecursiveTransformationImpl, TransformationImpl, TransformationTrackerImpl}
 import at.forsyte.apalache.tla.lir.transformations.{ExprTransformer, TransformationListener}
 
 sealed case class LetInExplicit(listeners : TransformationListener* )

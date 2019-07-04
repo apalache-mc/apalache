@@ -2,8 +2,6 @@ package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.actions.TlaActionOper
-import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaStrSet}
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}

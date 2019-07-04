@@ -2,11 +2,9 @@ package at.forsyte.apalache.tla.lir.io
 
 import java.io.PrintWriter
 
-import at.forsyte.apalache.tla.lir.actions.TlaActionOper
-import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.io.PrettyWriter._
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFiniteSetOper, _}
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.predef._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 

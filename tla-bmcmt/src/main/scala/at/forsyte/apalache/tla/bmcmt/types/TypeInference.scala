@@ -3,9 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.types
 import java.math.RoundingMode
 
 import at.forsyte.apalache.tla.bmcmt.{InternalCheckerError, InvalidTlaExException, TypeException}
-import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 import com.google.common.math.IntMath

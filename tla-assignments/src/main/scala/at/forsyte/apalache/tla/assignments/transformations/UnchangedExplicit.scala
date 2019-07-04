@@ -1,9 +1,8 @@
 package at.forsyte.apalache.tla.assignments.transformations
 
-import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.TlaFunOper
-import at.forsyte.apalache.tla.lir.transformations.impl.{RecursiveTransformationImpl, TransformationTrackerImpl, TransformationImpl}
+import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaFunOper}
+import at.forsyte.apalache.tla.lir.transformations.impl.{RecursiveTransformationImpl, TransformationImpl, TransformationTrackerImpl}
 import at.forsyte.apalache.tla.lir.transformations.{ExprTransformer, TransformationListener}
 
 sealed case class UnchengedExplicitTracker(listeners: TransformationListener* )

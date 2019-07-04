@@ -1,16 +1,12 @@
-package at.forsyte.apalache.tla.lir.control
+package at.forsyte.apalache.tla.lir.oper
 
 import at.forsyte.apalache.tla.lir.TlaOperDecl
-import at.forsyte.apalache.tla.lir.oper._
 
 /**
-  * Control-flow operators
-  *
-  * TODO: move to **.lir.oper?
+  * A control-flow operator.
   */
 abstract class TlaControlOper extends TlaOper {
   override def interpretation: Interpretation.Value = Interpretation.Predefined
-
 }
 
 object TlaControlOper {
@@ -55,5 +51,3 @@ object TlaControlOper {
     new LetInOper(List(defs :_*))
   }
 }
-
-

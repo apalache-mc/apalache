@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}

@@ -4,8 +4,8 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.lir.oper.TlaControlOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 /**

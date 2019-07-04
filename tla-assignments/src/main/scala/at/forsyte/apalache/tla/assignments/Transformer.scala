@@ -2,10 +2,8 @@ package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.assignments.transformations.Inline
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.actions._
-import at.forsyte.apalache.tla.lir.control.LetInOper
 import at.forsyte.apalache.tla.lir.db.{BodyDB, BodyDBFactory}
-import at.forsyte.apalache.tla.lir.oper._
+import at.forsyte.apalache.tla.lir.oper.{LetInOper, _}
 import at.forsyte.apalache.tla.lir.transformations.impl.{RecursiveTransformationImpl, TransformationImpl}
 import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 import com.google.inject.Singleton

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
-import at.forsyte.apalache.tla.lir.actions.TlaActionOper
+import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.transformations.{ExprTransformer, TransformationTracker}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 

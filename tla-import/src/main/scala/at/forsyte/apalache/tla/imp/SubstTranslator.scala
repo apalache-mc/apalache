@@ -2,9 +2,7 @@ package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.actions.TlaActionOper
-import at.forsyte.apalache.tla.lir.control.LetInOper
-import at.forsyte.apalache.tla.lir.oper.TlaTempOper
+import at.forsyte.apalache.tla.lir.oper.{LetInOper, TlaActionOper, TlaTempOper}
 import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic._
 

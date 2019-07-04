@@ -4,8 +4,6 @@ package at.forsyte.apalache.tla.lir
   * Created by jkukovec on 11/16/16.
   */
 
-import at.forsyte.apalache.tla.lir.actions.TlaActionOper
-import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import org.junit.runner.RunWith

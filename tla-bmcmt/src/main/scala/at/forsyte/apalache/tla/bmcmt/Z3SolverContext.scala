@@ -1,14 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import java.io.{File, PrintWriter}
-import java.util.concurrent.{TimeUnit, TimeoutException}
 
 import at.forsyte.apalache.tla.bmcmt.profiler.{FruitlessSmtListener, SmtListener}
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FailPredT, IntT}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.io.UTFPrinter
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, _}
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaFalse, TlaInt, TlaTrue}
 import com.microsoft.z3._
 import com.microsoft.z3.enumerations.Z3_lbool

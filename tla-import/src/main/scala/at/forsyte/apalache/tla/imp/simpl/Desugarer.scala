@@ -1,9 +1,7 @@
 package at.forsyte.apalache.tla.imp.simpl
 
-import at.forsyte.apalache.tla.lir.actions.TlaActionOper
-import at.forsyte.apalache.tla.lir.control.LetInOper
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{LetInOper, TlaActionOper, TlaFunOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir._
 import javax.inject.Singleton
 

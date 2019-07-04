@@ -1,9 +1,8 @@
 package at.forsyte.apalache.tla.lir.transformations
 
-import at.forsyte.apalache.tla.lir.control.LetInOper
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
-import at.forsyte.apalache.tla.lir.transformations.impl.{TransformationTrackerImpl, TransformationImpl}
+import at.forsyte.apalache.tla.lir.oper.{LetInOper, TlaBoolOper}
+import at.forsyte.apalache.tla.lir.transformations.impl.{TransformationImpl, TransformationTrackerImpl}
 
 object VariableRenamingTracker {
   def pfx( prefix : String, s : String ) : String = s"${prefix}_$s"

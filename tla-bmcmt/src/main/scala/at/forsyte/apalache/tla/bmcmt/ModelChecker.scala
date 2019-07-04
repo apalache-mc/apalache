@@ -10,10 +10,9 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.bmcmt.util.TlaExUtil
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.io.UTFPrinter
-import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaControlOper}
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.immutable.SortedMap

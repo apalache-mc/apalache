@@ -1,9 +1,8 @@
 package at.forsyte.apalache.tla.assignments.transformations
 
-import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
-import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.transformations.impl.{RecursiveTransformationImpl, TransformationTrackerImpl, TransformationImpl}
+import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.transformations.impl.{RecursiveTransformationImpl, TransformationImpl, TransformationTrackerImpl}
 import at.forsyte.apalache.tla.lir.transformations.{ExprTransformer, TransformationListener}
 
 sealed case class EqualityAsContainment(listeners : TransformationListener* )

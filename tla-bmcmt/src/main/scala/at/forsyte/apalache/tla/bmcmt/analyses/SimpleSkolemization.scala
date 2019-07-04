@@ -3,9 +3,8 @@ package at.forsyte.apalache.tla.bmcmt.analyses
 import at.forsyte.apalache.tla.assignments.SpecWithTransitions
 import at.forsyte.apalache.tla.bmcmt.RewriterException
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.control.TlaControlOper
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaOper, TlaSetOper, TlaControlOper}
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging

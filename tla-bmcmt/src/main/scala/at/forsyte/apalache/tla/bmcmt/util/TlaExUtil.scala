@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.util
 
-import at.forsyte.apalache.tla.lir.actions.TlaActionOper
+import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
 // TODO: this should probably go to tlair
