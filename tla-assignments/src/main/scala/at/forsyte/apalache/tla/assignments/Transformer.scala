@@ -123,24 +123,26 @@ class Transformer {
                    )(
                      implicit srcDB : TransformationListener
                    ) : TlaEx = {
-    val ret = p_ex match {
-
+    def makeExplicit(ex: TlaEx)(bodyDB: BodyDB) : TlaEx = ex match {
       case OperEx( oper : LetInOper, body ) =>
 
         /** Make a fresh temporary DB, store all decls inside */
-        val bodyDB = BodyDBFactory.makeDBFromDecls( oper.defs )
+        val extendedBodyDB = BodyDBFactory.makeDBFromDecls( oper.defs, bodyDB )
 
         /** inline as if operators were external */
-        explicitLetIn( inlineAll( body )( bodyDB, srcDB ) )( srcDB )
+        val inlined = inlineAll( body )( extendedBodyDB, srcDB )
+
+        /** call makeExplicit again to catch nested let-ins */
+        makeExplicit( inlined )( extendedBodyDB )
       case OperEx(op, args@_*) =>
         OperEx( op, args map {
-          explicitLetIn( _ )( srcDB )
+          makeExplicit(_)(bodyDB)
         } : _* )
-      case _ => p_ex
+      case _ => ex
     }
+    val ret = makeExplicit(p_ex)(new BodyDB())
     srcDB.onTransformation( p_ex, ret )
     ret
-
   }
 
   /**

@@ -53,7 +53,7 @@ class TestSymbStateDecoder extends RewriterBase {
   }
 
   test("decode set") {
-    val originalEx = tla.enumSet(tla.int(1), tla.int(2), tla.int(2))
+    val originalEx = tla.enumSet(tla.int(2), tla.int(1), tla.int(2))
     val simpleOriginalEx = tla.enumSet(tla.int(1), tla.int(2))
     val state = new SymbState(originalEx,
       CellTheory(), arena, new Binding)

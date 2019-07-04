@@ -225,5 +225,5 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
 
 object SymbStateDecoder {
   private def compareTlaExByStr(lhs: TlaEx, rhs: TlaEx): Boolean =
-    lhs.toString == rhs.toString
+    lhs.toSimpleString.compareTo(rhs.toSimpleString) <= 0
 }

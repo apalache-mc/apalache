@@ -105,15 +105,15 @@ class SymbTransGenerator extends TypeAliases {
       /**
         * NOTE: Rethink this, since it's a direct port from using RecursiveProcessor
         */
-      def getSelMap(ex: TlaEx) : SelMapType = ex match {
-        case e if leafJudge(e) => leafFun(e)
-        case e@OperEx(_, args@_*) =>
+      def getSelMap( ex : TlaEx ) : SelMapType = ex match {
+        case e if leafJudge( e ) => leafFun( e )
+        case e@OperEx( _, args@_* ) =>
           val chdRes = args map getSelMap
-          parentFun(e, chdRes)
+          parentFun( e, chdRes )
         case _ => default
       }
 
-      getSelMap(p_phi)
+      getSelMap( p_phi )
     }
 
     /**
@@ -178,25 +178,25 @@ class SymbTransGenerator extends TypeAliases {
           if ( newArgs.isEmpty )
             p_ex
 
-          /** otherwise, take the one intersecting branch*/
+          /** otherwise, take the one intersecting branch */
           else {
             assert( newArgs.size == 1 )
-//            if( newArgs.size != 1 )
-//              throw new AssignmentException( "Stategy intersects more than one branch, expected 1 or 0" )
-//            newArgs.head
+            //            if( newArgs.size != 1 )
+            //              throw new AssignmentException( "Stategy intersects more than one branch, expected 1 or 0" )
+            //            newArgs.head
             /** recurse, since disjunctions aren't always expanded */
-            assignmentFilter( newArgs.head, p_selection, p_allSelections)
+            assignmentFilter( newArgs.head, p_selection, p_allSelections )
           }
 
         /** ITE behaves like disjunction, but instead of dropping subformulas we replace them
           * with False, since we cannot evaluate the IF-condition */
-          /** Jure, 13.2.2019: This only applies if at least one branch has an assignment, otherwise keep all */
+        /** Jure, 13.2.2019: This only applies if at least one branch has an assignment, otherwise keep all */
         case OperEx( TlaControlOper.ifThenElse, cond, args@_* ) =>
           val newArgs = args.map(
             x => if ( labelsAt( x, p_allSelections ).exists( y => p_selection.contains( y ) ) )
               x else ValEx( TlaFalse )
           )
-          if (newArgs.forall( _ == ValEx(TlaFalse) ) )
+          if ( newArgs.forall( _ == ValEx( TlaFalse ) ) )
             p_ex
           else
             OperEx( TlaControlOper.ifThenElse, cond +: newArgs : _* )
@@ -207,8 +207,9 @@ class SymbTransGenerator extends TypeAliases {
 
     /**
       * Gathers the ordered selections and their corresponding restricted formulas.
-      * @param p_ex Input formula.
-      * @param p_strat Assignment strategy
+      *
+      * @param p_ex         Input formula.
+      * @param p_strat      Assignment strategy
       * @param p_selections Map of partial assignment selections.
       * @return A sequence of pairs of ordered assignment selections and their symbolic transitions.
       */
@@ -216,31 +217,24 @@ class SymbTransGenerator extends TypeAliases {
                               p_strat : StrategyType,
                               p_selections : SelMapType
                             ) : Seq[SymbTrans] = {
-
-      def asgnCheck( ex : TlaEx) : Boolean = ex match {
-        case OperEx( TlaSetOper.in, OperEx(TlaActionOper.prime, _), _*) => true
-        case _ => false
+      def newBodyFrom( s : Set[UID], ex : TlaEx ) : TlaEx = ex match {
+        case OperEx( TlaSetOper.in, OperEx( TlaActionOper.prime, _ ), _* ) =>
+          assignmentFilter( ex, s, p_selections )
+        case OperEx( op, args@_* ) =>
+          val childVals = args map {
+            newBodyFrom( s, _ )
+          }
+          // Make sure to avoid creating new UIDs if not absolutely needed, as filtering
+          // is done on the basis of UIDs not syntax
+          val newEx = if ( childVals == args ) ex else OperEx( op, childVals : _* )
+          assignmentFilter( newEx, s, p_selections )
+        case _ => assignmentFilter( ex, s, p_selections )
       }
-
-      def newBodyFrom(s: Set[UID]): TlaEx = p_ex match {
-        case OperEx( TlaSetOper.in, OperEx(TlaActionOper.prime, _), _*) =>
-          assignmentFilter( p_ex, s, p_selections )
-        case OperEx(op, args@_*) =>
-          assignmentFilter(
-            OperEx(op,
-              args map {assignmentFilter( _, s, p_selections ) } :_*
-            ),
-            s,
-            p_selections
-          )
-        case _ => p_ex
-      }
-
 
       p_selections( p_ex.ID ).map( s =>
         (
           mkOrdered( s, p_strat ),
-          newBodyFrom( s )
+          newBodyFrom( s, p_ex )
         )
       ).toSeq
     }
@@ -268,8 +262,8 @@ class SymbTransGenerator extends TypeAliases {
     /** Sanity check, all selections are the same size */
     val allSizes = selections( p_phi.ID ).map( _.size )
     assert( allSizes.size == 1 )
-//    if( allSizes.size != 1 )
-//      throw new AssignmentException("Assignment selections of unequal size constructed")
+    //    if( allSizes.size != 1 )
+    //      throw new AssignmentException("Assignment selections of unequal size constructed")
 
     /** We restrict the formula to each equivalence class (defined by an assignment selection) */
     restrictToSelections( p_phi, p_asgnStrategy, selections )
