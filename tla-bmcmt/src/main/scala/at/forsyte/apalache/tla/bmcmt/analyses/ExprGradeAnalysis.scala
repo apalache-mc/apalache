@@ -3,8 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.analyses
 import at.forsyte.apalache.tla.assignments.SpecWithTransitions
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
-import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaBoolOper}
-import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
+import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaBoolOper, TlaTempOper}
 import com.google.inject.Inject
 
 /**

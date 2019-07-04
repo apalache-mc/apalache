@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.control.LetInOper
-import at.forsyte.apalache.tla.lir.temporal.TlaTempOper
+import at.forsyte.apalache.tla.lir.oper.TlaTempOper
 import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic._
 
