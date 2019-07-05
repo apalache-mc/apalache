@@ -107,10 +107,16 @@ The arguments are as follows:
   * ``--length`` specifies the upper bound on the length of the finite executions to explore
   * ``--tuning`` specifies the properties file that stores the options for [fine tuning](docs/tuning.md)
   
-If you like to check an inductive invariant ``Inv``, you can do it as follows:   
+If you like to check an inductive invariant ``Inv``, you can run two commands:   
 
 ```bash
 $ bin/apalache-mc check --init=Inv --inv=Inv --length=1 myspec.tla
+```
+
+and 
+
+```bash
+$ bin/apalache-mc check --init=Init --inv=Inv --length=0 myspec.tla
 ```
 
 Make sure that ``Inv`` contains necessary constraints on the shape of the variables.
