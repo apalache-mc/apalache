@@ -154,6 +154,11 @@ if __name__ == "__main__":
             print("The input CSV file does not have a header")
             sys.exit(1)
 
+        if os.path.exists(args.outDir):
+            print("WARNING: Directory %s is already existing. We will rewrite it now." % args.outDir)
+            shutil.rmtree(args.outDir)
+                    
+
         dialect = sniffer.sniff(sample)
         csvfile.seek(0)
         reader = csv.DictReader(csvfile, dialect=dialect)
