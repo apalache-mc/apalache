@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir.transformations.impl
 
 import at.forsyte.apalache.tla.lir.TlaEx
-import at.forsyte.apalache.tla.lir.transformations.{ExprTransformer, TransformationListener}
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationListener}
 
 /**
   * A Transformation is a wrapper around a TlaEx => TlaEx function, that
@@ -13,7 +13,7 @@ import at.forsyte.apalache.tla.lir.transformations.{ExprTransformer, Transformat
   * is an implementation detail.
   */
 class TransformationImpl(fn : TlaEx => TlaEx, listeners : TransformationListener*)
-    extends ExprTransformer {
+    extends TlaExTransformation {
   // TODO: Igor @ 01.07.2019? Why do we need this method? I would even declare Transformation sealed, to disable inheritance.
   def transform( ex : TlaEx ) : TlaEx = {
     val res = fn( ex )

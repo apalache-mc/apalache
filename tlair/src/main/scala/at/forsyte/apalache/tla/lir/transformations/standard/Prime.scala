@@ -1,15 +1,15 @@
-package at.forsyte.apalache.tla.assignments.transformations
+package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.transformations.impl.TransformationTrackerImpl
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
-import at.forsyte.apalache.tla.lir.transformations.{ExprTransformer, TransformationListener}
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationListener}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 
 sealed case class Prime(vars : Set[String], listeners : TransformationListener* )
   extends TransformationTrackerImpl( listeners : _* ) {
   // Igor @ 01.07.2019: what use is this object?
-  val PrimeOne : ExprTransformer = track {
+  val PrimeOne : TlaExTransformation = track {
     case ex@OperEx( TlaActionOper.prime, NameEx( name ) ) =>
       // Do not replace primes twice. This may happen when Init = Inv.
       ex
@@ -20,7 +20,7 @@ sealed case class Prime(vars : Set[String], listeners : TransformationListener* 
     case ex => ex
   }
 
-  val PrimeAll : ExprTransformer = track {
+  val PrimeAll : TlaExTransformation = track {
     // Igor @ 01.07.2019: I just fail to understand the code with RecursiveProcessor.
     // Replacing recursion in Scala with special classes is like replacing for-loops in C with special functions.
     // One can do that, but there is no reason for that.

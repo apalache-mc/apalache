@@ -57,7 +57,7 @@ sealed case class VariableRenamingTracker(listeners : TransformationListener* )
     case _ => ex
   }
 
-  def VariableRenaming( boundVars : Set[String], prefix : String ) : ExprTransformer =
+  def VariableRenaming( boundVars : Set[String], prefix : String ) : TlaExTransformation =
     track {
       prefixPrepend( boundVars, prefix )
     }

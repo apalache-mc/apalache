@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
-import at.forsyte.apalache.tla.lir.transformations.{ExprTransformer, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
 /**
@@ -10,7 +10,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
   *
   * @param tracker a transformation tracker
   */
-class PrimePropagation(tracker: TransformationTracker) extends ExprTransformer {
+class PrimePropagation(tracker: TransformationTracker) extends TlaExTransformation {
   override def apply(e: TlaEx): TlaEx = transform(primed = false)(e)
 
   private def transform(primed: Boolean): TlaEx => TlaEx = tracker.track {

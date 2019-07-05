@@ -1,9 +1,9 @@
-package at.forsyte.apalache.tla.assignments.transformations
+package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaFunOper}
 import at.forsyte.apalache.tla.lir.transformations.impl.{RecursiveTransformationImpl, TransformationImpl, TransformationTrackerImpl}
-import at.forsyte.apalache.tla.lir.transformations.{ExprTransformer, TransformationListener}
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationListener}
 
 sealed case class UnchengedExplicitTracker(listeners: TransformationListener* )
   extends TransformationTrackerImpl( listeners :_* ) {
@@ -11,7 +11,7 @@ sealed case class UnchengedExplicitTracker(listeners: TransformationListener* )
   def inSingleton( x : TlaEx ) : TlaEx =
     Builder.in( Builder.prime( x.deepCopy() ), Builder.enumSet( x.deepCopy() ) )
 
-  val OneUnchangedExplicit: ExprTransformer =
+  val OneUnchangedExplicit: TlaExTransformation =
     track {
       case OperEx( TlaActionOper.unchanged, arg ) =>
 

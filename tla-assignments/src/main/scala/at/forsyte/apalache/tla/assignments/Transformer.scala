@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.assignments
 
-import at.forsyte.apalache.tla.assignments.transformations.Inline
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.db.{BodyDB, BodyDBFactory}
 import at.forsyte.apalache.tla.lir.oper.{LetInOper, _}
-import at.forsyte.apalache.tla.lir.transformations.impl.{RecursiveTransformationImpl, TransformationImpl}
+import at.forsyte.apalache.tla.lir.transformations.impl.{RecursiveTransformationImpl, TrackerWithListeners, TransformationImpl}
 import at.forsyte.apalache.tla.lir.transformations.TransformationListener
+import at.forsyte.apalache.tla.lir.transformations.standard.Inline
 import com.google.inject.Singleton
 
 /**
@@ -63,8 +63,7 @@ class Transformer {
                  implicit p_bodyDB : BodyDB,
                  p_srcDB : TransformationListener
                ) : TlaEx = {
-    Inline( p_bodyDB, p_srcDB ).InlineAll( p_expr )
-    //    OperatorHandler.unfoldMax( p_expr, p_bodyDB, p_srcDB )
+    Inline( p_bodyDB, TrackerWithListeners( p_srcDB ) )( p_expr )
   }
 
   /**

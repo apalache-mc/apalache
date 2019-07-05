@@ -7,5 +7,5 @@ package at.forsyte.apalache.tla.lir.transformations
   * @author Igor Konnov
   */
 trait TransformationTracker {
-  def track(t: ExprTransformer): ExprTransformer
+  def track(t: TlaExTransformation): TlaExTransformation
 }
