@@ -155,7 +155,7 @@ if __name__ == "__main__":
             sys.exit(1)
 
         if os.path.exists(args.outDir):
-            print("WARNING: Directory %s is already existing. We will rewrite it now." % args.outDir)
+            print("WARNING: Directory %s already exists. Deleting it and re-populating..." % args.outDir)
             shutil.rmtree(args.outDir)
                     
 
