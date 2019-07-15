@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.db.BodyDB
 import at.forsyte.apalache.tla.lir.oper.{LetInOper, TlaOper}
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, _}
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
 object Inline {
   /**
@@ -26,7 +26,7 @@ object Inline {
             ReplaceFixed( NameEx( fParam.name ), arg, tracker )( b )
         }
         // newBody may contain other operator calls
-        val inlinedNewBody = Inline(bodyMap, tracker)(newBody)
+        val inlinedNewBody = Inline( bodyMap, tracker )( newBody )
         Option( inlinedNewBody )
       case Some( (params, _) ) if params.size != args.size =>
         throw new IllegalArgumentException(
@@ -50,14 +50,24 @@ object Inline {
 
   def apply( bodyMap : BodyDB, tracker : TransformationTracker ) : TlaExTransformation = { ex =>
     val tr = inlineLeaf( bodyMap, tracker )
+    lazy val self = apply( bodyMap, tracker )
     // No need to call tracker.track again, tr is always called on the top-level expression
     ex match {
       case OperEx( op : LetInOper, body ) =>
-        // do something with op.decls
-        // ...
-        tr( apply(bodyMap, tracker)(body) )
+        // Inline bodies of all op.defs
+        val inlinedOperDecls = op.defs.map { x =>
+          x.copy(
+            body = self( x.body )
+          )
+        }
+
+        val newOp = new LetInOper( inlinedOperDecls )
+        val newBody = self( body )
+        val retEx = if ( op == newOp && body == newBody ) ex else OperEx( newOp, newBody )
+
+        tr( retEx )
       case ex@OperEx( op, args@_* ) =>
-        val newArgs = args map apply(bodyMap, tracker)
+        val newArgs = args map self
         val retEx = if ( args == newArgs ) ex else OperEx( op, newArgs : _* )
         tr( retEx )
       case _ => tr( ex )

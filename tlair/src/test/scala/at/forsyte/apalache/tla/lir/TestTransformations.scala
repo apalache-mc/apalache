@@ -1,9 +1,9 @@
 package at.forsyte.apalache.tla.lir
 
-import at.forsyte.apalache.tla.lir.db.{BodyDB, BodyDBFactory}
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationListener, TransformationTracker}
+import at.forsyte.apalache.tla.lir.db.BodyDBFactory
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.transformations.impl._
-import at.forsyte.apalache.tla.lir.transformations.standard.{EqualityAsContainment, ExplicitLetIn, Inline, ReplaceFixed}
+import at.forsyte.apalache.tla.lir.transformations.standard._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -152,6 +152,10 @@ class TestTransformations extends FunSuite with TestingPredefs {
     val ex3 = n_A
     val ex4 = appOp( n_A )
     val ex5 = or( eql( int( 1 ), int( 0 ) ), ge( appDecl( cDecl, appOp( n_A ) ), int( 0 ) ) )
+    val ex6 = letIn(
+      appOp( NameEx( "X" ) ),
+      declOp( "X", appOp( NameEx( "C" ), n_p ) )
+    )
 
     val expected1 = n_B // Operators need to be called with apply
     val expected2 = n_c
@@ -161,10 +165,13 @@ class TestTransformations extends FunSuite with TestingPredefs {
       eql( int( 1 ), int( 0 ) ),
       ge( plus( n_c, int( 1 ) ), int( 0 ) )
     )
+    val expected6 = letIn(
+      appOp( NameEx( "X" ) ),
+      declOp( "X", plus( n_p, int( 1 ) ) )
+    )
 
-
-    val exs = Seq( ex1, ex2, ex3, ex4, ex5 )
-    val expected = Seq( expected1, expected2, expected3, expected4, expected5 )
+    val exs = Seq( ex1, ex2, ex3, ex4, ex5, ex6 )
+    val expected = Seq( expected1, expected2, expected3, expected4, expected5, expected6 )
     val actual = exs map transformation
 
     assert( expected == actual )
@@ -199,12 +206,61 @@ class TestTransformations extends FunSuite with TestingPredefs {
         ge( plus( n_p, int( 3 ) ), int( 0 ) )
       )
 
-    val exs = Seq( /*ex1, ex2, ex3,*/ ex4 )
-    val expected = Seq( /*expected1, expected2, expected3,*/ expected4 )
+    val exs = Seq( ex1, ex2, ex3, ex4 )
+    val expected = Seq( expected1, expected2, expected3, expected4 )
     val actual = exs map transformation
 
     assert( expected == actual )
 
+  }
+
+  test( "Test Prime" ) {
+    val vars : Set[String] = Set(
+      "x", "a"
+    )
+    val transformation = Prime( vars, Trackers.NoTracker )
+
+    val pa1 = n_x -> prime( n_x )
+    val pa2 = n_y -> n_y
+    val pa3 = prime( n_x ) -> prime( n_x )
+    val pa4 = and( n_x, n_y, prime( n_a ) ) -> and( prime( n_x ), n_y, prime( n_a ) )
+
+    val expected = Seq(
+      pa1, pa2, pa3, pa4
+    )
+    val cmp = expected map { case (k, v) =>
+      (v, transformation( k ))
+    }
+    cmp foreach { case (ex, act) =>
+      assert( ex == act )
+    }
+  }
+
+  test( "Test ExplicitUnchanged" ) {
+    val transformation = ExplicitUnchanged( Trackers.NoTracker )
+    val inSing : TlaEx => TlaEx = ExplicitUnchanged.inSingleton
+
+    val pa1 = n_x -> n_x
+    val pa2 = unchanged( n_x ) -> inSing( n_x )
+    val pa3 = and( n_x, unchanged( n_y ) ) -> and( n_x, inSing( n_y ) )
+    val pa4 = letIn(
+      appOp( NameEx( "X" ) ),
+      declOp( "X", unchanged( n_x ) )
+    ) -> letIn(
+      appOp( NameEx( "X" ) ),
+      declOp( "X", inSing( n_x ) )
+    )
+    val pa5 = unchangedTup( n_x, n_y ) -> and( inSing( n_x ), inSing( n_y ) )
+
+    val expected = Seq(
+      pa1, pa2, pa3, pa4, pa5
+    )
+    val cmp = expected map { case (k, v) =>
+      (v, transformation( k ))
+    }
+    cmp foreach { case (ex, act) =>
+      assert( ex == act )
+    }
   }
 
 }

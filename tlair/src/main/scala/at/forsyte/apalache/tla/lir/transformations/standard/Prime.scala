@@ -1,53 +1,52 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.TlaActionOper
-import at.forsyte.apalache.tla.lir.transformations.impl.TransformationTrackerImpl
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationListener}
+import at.forsyte.apalache.tla.lir.oper.{LetInOper, TlaActionOper}
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 
-sealed case class Prime(vars : Set[String], listeners : TransformationListener* )
-  extends TransformationTrackerImpl( listeners : _* ) {
-  // Igor @ 01.07.2019: what use is this object?
-  val PrimeOne : TlaExTransformation = track {
-    case ex@OperEx( TlaActionOper.prime, NameEx( name ) ) =>
-      // Do not replace primes twice. This may happen when Init = Inv.
-      ex
+object Prime {
+  private def primeLeaf( vars : Set[String], tracker : TransformationTracker ) : TlaExTransformation =
+    tracker.track {
+      case ex@NameEx( name ) if vars.contains( name ) =>
+        tla.prime( ex.deepCopy() )
 
-    case ex@NameEx( name ) if vars.contains( name ) =>
-      tla.prime( ex.deepCopy() )
+      case ex => ex
+    }
 
-    case ex => ex
-  }
+  /**
+    * Returns a transformation which primes all unprimed variables from `vars` appearing in a given expression
+    *
+    * Example:
+    *
+    * a' + b > 0 --> a' + b' > 0
+    */
+  def apply( vars : Set[String], tracker : TransformationTracker ) : TlaExTransformation = { ex =>
+    val tr = primeLeaf( vars, tracker )
+    lazy val self = apply(vars, tracker)
+    // No need to call tracker.track again, tr is always called on the top-level expression
+    ex match {
+      case OperEx( op : LetInOper, body ) =>
+        // Transform bodies of all op.defs
+        val replacedOperDecls = op.defs.map { x =>
+          x.copy(
+            body = self( x.body )
+          )
+        }
 
-  val PrimeAll : TlaExTransformation = track {
-    // Igor @ 01.07.2019: I just fail to understand the code with RecursiveProcessor.
-    // Replacing recursion in Scala with special classes is like replacing for-loops in C with special functions.
-    // One can do that, but there is no reason for that.
-    // If you want to avoid duplication between PrimeOne and PrimeAll, use partial functions.
+        val newOp = new LetInOper( replacedOperDecls )
+        val newBody = self( body )
+        val retEx = if ( op == newOp && body == newBody ) ex else OperEx( newOp, newBody )
 
-    case ex@OperEx( TlaActionOper.prime, NameEx( name ) ) =>
-      // Do not replace primes twice. This may happen when Init = Inv.
-      ex
-
-    case ex@NameEx( name ) if vars.contains( name ) =>
-      tla.prime( ex.deepCopy() )
-
-    // the following two lines are the difference between PrimeOne and PrimeAll.
-    // They can be understood by any Scala programmer, in contrast to the lines that call RecursiveProcessor.
-    case OperEx(oper, args @ _*) =>
-      OperEx(oper, args map PrimeAll :_*)
-
-    case e => e
-
-    // Avoid double-priming
-//    RecursiveProcessor.transformTlaEx(
-//      {
-//        case OperEx( TlaActionOper.prime, _ ) => true
-//        case _ => false
-//      },
-//      RecursiveProcessor.DefaultFunctions.identity,
-//      PrimeOne
-//    )
+        tr( retEx )
+      case ex@OperEx( TlaActionOper.prime, NameEx( _ ) ) =>
+        // Do not prime expressions which are already primed. This may happen when Init = Inv.
+        tr(ex)
+      case ex@OperEx( op, args@_* ) =>
+        val newArgs = args map self
+        val retEx = if ( args == newArgs ) ex else OperEx( op, newArgs : _* )
+        tr( retEx )
+      case _ => tr( ex )
+    }
   }
 }
