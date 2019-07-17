@@ -37,7 +37,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.lamport.tla</groupId>
+            <groupId>org.lamport</groupId>
             <artifactId>tla2tools</artifactId>
         </dependency>
         <dependency>

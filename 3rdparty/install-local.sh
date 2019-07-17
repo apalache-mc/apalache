@@ -56,18 +56,22 @@ cp target/box-1.0-SNAPSHOT.jar $D/lib/box.jar
 popd
 echo "Done with Box"
 
-echo "Downloading TLA2Tools..."
-wget https://github.com/tlaplus/tlaplus/releases/download/v1.5.7/tla2tools.jar -O $D/tla2tools.jar
+# tla2tools is available from oss.sonatype.org now
+#
+#echo "Downloading TLA2Tools..."
+#wget https://github.com/tlaplus/tlaplus/releases/download/v1.5.7/tla2tools.jar -O $D/tla2tools.jar
 #wget https://tla.msr-inria.inria.fr/tlatoolbox/ci/dist/tla2tools.jar
-echo "Done with TLA2Tools"
+#echo "Done with TLA2Tools"
 
-echo "Installing Z3 and TLA2Tools in your local cache..."
+#echo "Installing Z3 and TLA2Tools in your local cache..."
+
+echo "Installing Z3 in your local maven cache..."
 
 mvn -f $D/z3-pom.xml install install:install-file \
     "-Dfile=$D/lib/com.microsoft.z3.jar" "-DpomFile=$D/z3-pom.xml"
 
-mvn -f $D/tla2tools-pom.xml install install:install-file \
-    "-Dfile=$D/tla2tools.jar" "-DpomFile=$D/tla2tools-pom.xml"
+#mvn -f $D/tla2tools-pom.xml install install:install-file \
+#    "-Dfile=$D/tla2tools.jar" "-DpomFile=$D/tla2tools-pom.xml"
 
 mvn -f $D/box-pom.xml install install:install-file \
     "-Dfile=$D/lib/box.jar" "-DpomFile=$D/box-pom.xml"
