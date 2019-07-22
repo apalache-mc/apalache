@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir.TlaEx
-import at.forsyte.apalache.tla.lir.db.BodyDB
+import at.forsyte.apalache.tla.lir.storage.BodyMap
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.transformations.standard._
 
@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.lir.transformations.standard._
   */
 object StandardTransformer {
   def apply(
-             bodyMap : BodyDB,
+             bodyMap : BodyMap,
              tracker : TransformationTracker
            ) : TlaExTransformation = {
     val transformationSequence : Vector[TlaExTransformation] =

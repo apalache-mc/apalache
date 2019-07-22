@@ -4,12 +4,13 @@ import at.forsyte.apalache.tla.imp._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.db.{BodyDB, SourceStoreImpl}
+import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory, SourceStoreImpl}
 import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
+import scala.collection.immutable.HashMap
 import scala.io.Source
 
 /* TODO: All tests clean */
@@ -75,56 +76,15 @@ class TestTransformer extends FunSuite with TestingPredefs {
       declEx9
     )
 
-  implicit val bDB : BodyDB = new BodyDB()
-  implicit val sDB : TransformationListener = new SourceStoreImpl()
+  implicit val ssi : TransformationListener = new SourceStoreImpl()
 
   def clean( ) : Unit = {
-    bDB.clear()
   }
 
-  val converter = new Transformer()
-  def extractAll = converter.extract( allDecls : _* )
+  val converter    = new Transformer()
+  val allExtracted = BodyMapFactory.makeFromDecls( allDecls )
 
   def cleanTest( f : => Unit ) = prePostTest( f, clean )
-
-  test( "Test extract" ) {
-
-    cleanTest {
-
-
-      converter.extract( declEx1, declEx2 )
-
-      assert( !( bDB == Map( declEx2.name -> (declEx2.formalParams, declEx2.body) ) ) )
-      assert(
-        bDB == Map(
-          declEx1.name -> (declEx1.formalParams, declEx1.body),
-          declEx2.name -> (declEx2.formalParams, declEx2.body)
-        )
-      )
-
-      converter.extract( declEx5, declEx6, declEx7 )
-
-      assert( !( bDB == Map( declEx2.name -> (declEx2.formalParams, declEx2.body) ) ) )
-      assert(
-        bDB == Map(
-          declEx1.name -> (declEx1.formalParams, declEx1.body),
-          declEx2.name -> (declEx2.formalParams, declEx2.body)
-        )
-      )
-
-
-      converter.extract( declEx1, declEx2, declEx3, declEx4 )
-
-      assert(
-        bDB == Map(
-          declEx1.name -> (declEx1.formalParams, declEx1.body),
-          declEx2.name -> (declEx2.formalParams, declEx2.body),
-          declEx3.name -> (declEx3.formalParams, declEx3.body),
-          declEx4.name -> (declEx4.formalParams, declEx4.body)
-        )
-      )
-    }
-  }
 
   test( "Test getVars" ) {
     val converter = new Transformer()
@@ -140,16 +100,15 @@ class TestTransformer extends FunSuite with TestingPredefs {
   test( "Test inlineAll" ) {
     val converter = new Transformer()
     cleanTest {
-      extractAll
 
       assertThrows[IllegalArgumentException](
-        converter.inlineAll( declEx4.body )
+        converter.inlineAll( declEx4.body )(allExtracted, ssi)
       )
-      assert( converter.inlineAll( declEx2.body ) == tla.int( 1 ) )
-      assert( converter.inlineAll( declEx9.body ) == tla.plus( 2, 2 ) )
+      assert( converter.inlineAll( declEx2.body )(allExtracted, ssi) == tla.int( 1 ) )
+      assert( converter.inlineAll( declEx9.body )(allExtracted, ssi) == tla.plus( 2, 2 ) )
 
-      assertThrows[IllegalArgumentException]( converter.inlineAll( tla.appOp( "A" ) ) )
-      assert( converter.inlineAll( tla.appOp( "A", 2 ) ) == tla.int( 2 ) )
+      assertThrows[IllegalArgumentException]( converter.inlineAll( tla.appOp( "A" ) )(allExtracted, ssi) )
+      assert( converter.inlineAll( tla.appOp( "A", 2 ) )(allExtracted, ssi) == tla.int( 2 ) )
     }
   }
 
@@ -184,26 +143,35 @@ class TestTransformer extends FunSuite with TestingPredefs {
     val converter = new Transformer()
     cleanTest {
 
-      assert( converter(NullEx).isEmpty )
+      assert( converter(NullEx)(BodyMapFactory.newMap, ssi).isEmpty )
     }
   }
 
   test( "Test sanitize" ) {
     val converter = new Transformer()
     cleanTest {
-      extractAll
 
-      assert( converter.sanitize( declEx1.body ) == declEx1.body )
+      assert( converter.sanitize( declEx1.body )(allExtracted, ssi) == declEx1.body )
 
-      assertThrows[IllegalArgumentException]( converter.sanitize( declEx4.body ) )
-      assert( converter.sanitize( declEx2.body ) == converter.inlineAll( declEx2.body ) )
-      assert( converter.sanitize( declEx9.body ) == converter.inlineAll( declEx9.body ) )
+      assertThrows[IllegalArgumentException]( converter.sanitize( declEx4.body )(allExtracted, ssi) )
+      assert(
+        converter.sanitize( declEx2.body )(allExtracted, ssi) ==
+          converter.inlineAll( declEx2.body )(allExtracted, ssi) )
+      assert(
+        converter.sanitize( declEx9.body )(allExtracted, ssi) ==
+          converter.inlineAll( declEx9.body )(allExtracted, ssi) )
 
-      assertThrows[IllegalArgumentException]( converter.sanitize( tla.appOp( "A" ) ) )
-      assert( converter.sanitize( tla.appOp( "A", 2 ) ) == converter.inlineAll( tla.appOp( "A", 2 ) ) )
+      assertThrows[IllegalArgumentException]( converter.sanitize( tla.appOp( "A" ) )(allExtracted, ssi) )
+      assert(
+        converter.sanitize( tla.appOp( "A", 2 ) )(allExtracted, ssi)
+        == converter.inlineAll( tla.appOp( "A", 2 ) )(allExtracted, ssi) )
 
-      assert( converter.sanitize( tla.primeEq( n_x, n_y ) ) == tla.primeInSingleton( n_x, n_y ) )
-      assert( converter.sanitize( tla.enumSet( tla.primeEq( n_x, n_y ) ) ) == tla.enumSet( tla.primeInSingleton( n_x, n_y ) ) )
+      assert(
+        converter.sanitize( tla.primeEq( n_x, n_y ) )(allExtracted, ssi)
+          == tla.primeInSingleton( n_x, n_y ) )
+      assert(
+        converter.sanitize( tla.enumSet( tla.primeEq( n_x, n_y ) ) )(allExtracted, ssi)
+          == tla.enumSet( tla.primeInSingleton( n_x, n_y ) ) )
     }
   }
 
@@ -213,10 +181,10 @@ class TestTransformer extends FunSuite with TestingPredefs {
       val fname1 = "test1.tla"
       val declarations1 = declarationsFromFile(testFolderPath + fname1)
 
-      converter.extract( declarations1 : _* )
+      val bm = BodyMapFactory.makeFromDecls( declarations1 )
 
       assert(
-        bDB.body( "Next" ).contains(
+        bm.get( "Next" ).map( _._2 ).contains(
           tla.and(
             tla.primeEq( n_a, 1 ),
             tla.primeEq( n_b, tla.eql( n_e, n_f ) ),
@@ -229,13 +197,13 @@ class TestTransformer extends FunSuite with TestingPredefs {
       )
 
       assert(
-        bDB.body( "Init" ).contains(
+        bm.get( "Init" ).map( _._2 ).contains(
           tla.eql( n_a, 0 )
         )
       )
 
       assert(
-        bDB.body( "Spec" ).contains(
+        bm.get( "Spec" ).map( _._2 ).contains(
           tla.box(
             tla.stutt(
               tla.appDecl( declarations1.find( _.name == "Next" ).get.asInstanceOf[TlaOperDecl] ),
@@ -251,13 +219,13 @@ class TestTransformer extends FunSuite with TestingPredefs {
       val fileName = "test2.tla"
       val declarations = declarationsFromFile(testFolderPath + fileName)
 
-      converter.extract( declarations : _* )
+      val bm = BodyMapFactory.makeFromDecls( declarations )
 
       val nextBody = findBodyOf( "Next", declarations:_*)
 
       assert( nextBody != NullEx )
 
-      val after = converter.sanitize( nextBody )
+      val after = converter.sanitize( nextBody )(bm, ssi)
 
       val expected =
         tla.and(
@@ -278,13 +246,13 @@ class TestTransformer extends FunSuite with TestingPredefs {
       val fileName = "test3.tla"
       val declarations = declarationsFromFile(testFolderPath + fileName)
 
-      converter.extract( declarations : _* )
+      val bm = BodyMapFactory.makeFromDecls( declarations )
 
       val nextBody = findBodyOf( "Next", declarations:_*)
 
       assert( nextBody != NullEx )
 
-      val after = converter.sanitize( nextBody )
+      val after = converter.sanitize( nextBody )(bm, ssi)
 
       val expected =
         tla.and(

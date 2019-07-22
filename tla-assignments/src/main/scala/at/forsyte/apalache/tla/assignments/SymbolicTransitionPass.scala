@@ -1,16 +1,16 @@
 package at.forsyte.apalache.tla.assignments
 
-import at.forsyte.apalache.tla.lir.db.BodyDB
 import at.forsyte.apalache.tla.lir.process.DeclarationModifiers
 import at.forsyte.apalache.tla.lir.transformations.TransformationListener
-import at.forsyte.apalache.tla.lir.{_}
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.storage.BodyMap
 
 /**
   * Performs the complete procedure of finding symbolic transitions from the TLA+ implementation.
   *
   * @see [[AssignmentStrategyEncoder]], [[SMTInterface]], [[SymbTransGenerator]]
   */
-class SymbolicTransitionPass( private val m_bodyDB : BodyDB,
+class SymbolicTransitionPass( private val m_bodyMap : BodyMap,
                               private val m_srcDB : TransformationListener) extends TypeAliases {
 
   /**
@@ -76,7 +76,7 @@ class SymbolicTransitionPass( private val m_bodyDB : BodyDB,
       )
 
     /** Preprocess body (inline operators, replace UNCHANGED, turn equality to set membership, etc.) */
-    val cleaned = transformer( nextBody, decls : _* )( m_bodyDB, m_srcDB )
+    val cleaned = transformer( nextBody, decls : _* )( m_bodyMap, m_srcDB )
 
     /** Sanity check */
     assert( cleaned.isDefined )

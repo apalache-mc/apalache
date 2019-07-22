@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.imp.declarationsFromFile
-import at.forsyte.apalache.tla.lir.db.{BodyDB, SourceStoreImpl}
+import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory, SourceStoreImpl}
 import at.forsyte.apalache.tla.lir.{NullEx, TestingPredefs, TlaDecl, TlaEx, TlaOperDecl, TlaVarDecl, UID, Builder => bd}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -16,10 +16,10 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
   }
 
   def testFromDecls( p_decls : Seq[TlaDecl], p_next : String = "Next"   ) : Seq[SymbTrans]  = {
-    val bodyDB = new BodyDB
+    val bodyMap = BodyMapFactory.makeFromDecls( p_decls )
     val srcDB = new SourceStoreImpl
 
-    new SymbolicTransitionPass(bodyDB,srcDB)( p_decls, p_next )
+    new SymbolicTransitionPass(bodyMap,srcDB)( p_decls, p_next )
   }
 
   def testFromFile( p_file : String, p_next : String = "Next" ) : Seq[SymbTrans] = {

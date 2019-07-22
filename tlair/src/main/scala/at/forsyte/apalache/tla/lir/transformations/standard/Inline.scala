@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.db.BodyDB
 import at.forsyte.apalache.tla.lir.oper.{LetInOper, TlaOper}
+import at.forsyte.apalache.tla.lir.storage.BodyMap
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
 object Inline {
@@ -14,7 +14,7 @@ object Inline {
     * Throws IllegalArgumentException if the size of `args` does not match the operator arity.
     */
   private def instantiateBody(
-                               bodyMap : BodyDB,
+                               bodyMap : BodyMap,
                                tracker : TransformationTracker,
                                name : String,
                                args : TlaEx*
@@ -36,7 +36,7 @@ object Inline {
     }
 
   private def inlineLeaf(
-                          bodyMap : BodyDB,
+                          bodyMap : BodyMap,
                           tracker : TransformationTracker
                         ) : TlaExTransformation = tracker.track {
     // Jure, 5.7.19: Can 0-arity operators ever appear as standalone NameEx, without
@@ -48,7 +48,7 @@ object Inline {
     case ex => ex
   }
 
-  def apply( bodyMap : BodyDB, tracker : TransformationTracker ) : TlaExTransformation = { ex =>
+  def apply( bodyMap : BodyMap, tracker : TransformationTracker ) : TlaExTransformation = { ex =>
     val tr = inlineLeaf( bodyMap, tracker )
     lazy val self = apply( bodyMap, tracker )
     // No need to call tracker.track again, tr is always called on the top-level expression

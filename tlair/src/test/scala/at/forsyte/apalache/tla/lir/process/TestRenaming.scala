@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir.process
 
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.db.SourceStoreImpl
+import at.forsyte.apalache.tla.lir.storage.SourceStoreImpl
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner

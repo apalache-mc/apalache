@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.db.{BodyDB, BodyDBFactory}
 import at.forsyte.apalache.tla.lir.oper.{LetInOper, _}
+import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
 import at.forsyte.apalache.tla.lir.transformations.impl.{RecursiveTransformationImpl, TrackerWithListeners, TransformationImpl}
-import at.forsyte.apalache.tla.lir.transformations.TransformationListener
-import at.forsyte.apalache.tla.lir.transformations.standard.Inline
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationListener, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.standard.{Flatten, Inline}
 import com.google.inject.Singleton
 
 /**
@@ -26,13 +26,13 @@ class Transformer {
     * Extracts information about operators' bodies and stores it for later substitution.
     *
     * @param p_decls  Collection of declarations. All instances that are not [[TlaOperDecl]] are ignored.
-    * @param p_bodyDB Mapping from operator names to their bodies.
+    * @param p_bodyMap Mapping from operator names to their bodies.
     */
   def extract( p_decls : TlaDecl*
              )
-             ( implicit p_bodyDB : BodyDB
+             ( implicit p_bodyMap : BodyMap
              ) : Unit = {
-    BodyDBFactory.makeDBFromDecls( p_decls, p_bodyDB )
+    BodyMapFactory.makeFromDecls( p_decls, p_bodyMap )
   }
 
   /**
@@ -51,7 +51,7 @@ class Transformer {
     * Occurrences of [[TlaRecOperDecl]] are not expanded.
     *
     * @param p_expr   Input expression.
-    * @param p_bodyDB Mapping from operator names to their bodies. Should not contain recursive operators.
+    * @param p_bodyMap Mapping from operator names to their bodies. Should not contain recursive operators.
     * @param p_srcDB  Mapping from replaced expressions to their originals.
     * @return A new [[TlaEx]], where all operator applications, for operators from `p_bodyDB`, have been
     *         replaced by their bodies (with parameters substituted by the arguments).
@@ -60,10 +60,10 @@ class Transformer {
                  p_expr : TlaEx
                )
                (
-                 implicit p_bodyDB : BodyDB,
+                 implicit p_bodyMap : BodyMap,
                  p_srcDB : TransformationListener
                ) : TlaEx = {
-    Inline( p_bodyDB, TrackerWithListeners( p_srcDB ) )( p_expr )
+    Inline( p_bodyMap, TrackerWithListeners( p_srcDB ) )( p_expr )
   }
 
   /**
@@ -122,11 +122,11 @@ class Transformer {
                    )(
                      implicit srcDB : TransformationListener
                    ) : TlaEx = {
-    def makeExplicit(ex: TlaEx)(bodyDB: BodyDB) : TlaEx = ex match {
+    def makeExplicit(ex: TlaEx)(bodyMap: BodyMap) : TlaEx = ex match {
       case OperEx( oper : LetInOper, body ) =>
 
         /** Make a fresh temporary DB, store all decls inside */
-        val extendedBodyDB = BodyDBFactory.makeDBFromDecls( oper.defs, bodyDB )
+        val extendedBodyDB = BodyMapFactory.makeFromDecls( oper.defs, bodyMap )
 
         /** inline as if operators were external */
         val inlined = inlineAll( body )( extendedBodyDB, srcDB )
@@ -135,11 +135,11 @@ class Transformer {
         makeExplicit( inlined )( extendedBodyDB )
       case OperEx(op, args@_*) =>
         OperEx( op, args map {
-          makeExplicit(_)(bodyDB)
+          makeExplicit(_)(bodyMap)
         } : _* )
       case _ => ex
     }
-    val ret = makeExplicit(p_ex)(new BodyDB())
+    val ret = makeExplicit(p_ex)(BodyMapFactory.newMap)
     srcDB.onTransformation( p_ex, ret )
     ret
   }
@@ -174,6 +174,16 @@ class Transformer {
   // TODO : develop flags for sanitize, to know which transformations to perform
   //
 
+  def flattenAndOr(
+                    ex : TlaEx
+                  ) : TlaEx = {
+    // temporary fix
+    Flatten( new TransformationTracker {
+      override def track( t : TlaExTransformation ) : TlaExTransformation = t
+    } )(ex)
+  }
+
+
   /**
     * Performs several transformations in sequence.
     *
@@ -183,7 +193,7 @@ class Transformer {
     *   1. [[unchangedExplicit]]
     *
     * @param p_expr   Input expression.
-    * @param bodyDB   Operator body mapping, for unfolding.
+    * @param bodyMap   Operator body mapping, for unfolding.
     * @param listener a listener to transformations.
     * @return Expression obtained after applying the sequence of transformations.
     */
@@ -191,16 +201,19 @@ class Transformer {
                 p_expr : TlaEx
               )
               (
-                implicit bodyDB : BodyDB,
+                implicit bodyMap : BodyMap,
                 listener : TransformationListener
               ) : TlaEx = {
-    val inlined = inlineAll( p_expr )( bodyDB, listener )
+    val inlined = inlineAll( p_expr )( bodyMap, listener )
 
     val explicitLI = explicitLetIn( inlined )( listener )
 
     val eqReplaced = rewriteEQ( explicitLI )( listener )
 
-    /* val ucReplaced = */ unchangedExplicit( eqReplaced )( listener )
+    val ucReplaced = unchangedExplicit( eqReplaced )( listener )
+
+    ucReplaced
+//    flattenAndOr( ucReplaced )
 
   }
 
@@ -211,18 +224,18 @@ class Transformer {
     *
     * @param p_expr     Input expression.
     * @param p_decls    Collection of declared operators.
-    * @param p_bodyDB   Mapping from operator names to their bodies. Should not contain recursive operators.
+    * @param p_bodyMap   Mapping from operator names to their bodies. Should not contain recursive operators.
     * @param p_listener a listener to transformations.
     * @return None, if [[sanitize]] fails, otherwise contains the sanitized expression.
     */
   def apply( p_expr : TlaEx,
              p_decls : TlaDecl*
            )(
-             implicit p_bodyDB : BodyDB,
+             implicit p_bodyMap : BodyMap,
              p_listener : TransformationListener
            ) : Option[TlaEx] = {
-    extract( p_decls : _* )( p_bodyDB )
-    val san = sanitize( p_expr )( p_bodyDB, p_listener )
+    val bm = BodyMapFactory.makeFromDecls( p_decls, p_bodyMap )
+    val san = sanitize( p_expr )( bm, p_listener )
     if ( san == NullEx ) None
     else Some( san )
   }

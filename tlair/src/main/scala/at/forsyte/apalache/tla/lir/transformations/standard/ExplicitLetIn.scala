@@ -1,20 +1,20 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
-import at.forsyte.apalache.tla.lir.db.BodyDBFactory
 import at.forsyte.apalache.tla.lir.oper.LetInOper
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.OperEx
+import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 
 object ExplicitLetIn {
 
-  def letInExplicitLeaf( tracker : TransformationTracker ) : TlaExTransformation = tracker.track {
+  private def letInExplicitLeaf( tracker : TransformationTracker ) : TlaExTransformation = tracker.track {
     case OperEx( oper : LetInOper, body ) =>
 
       /** Let-in may be nested */
       val fullyExplicit = apply( tracker )( body )
 
       /** Make a fresh temporary DB, store all decls inside */
-      val bodyDB = BodyDBFactory.makeDBFromDecls( oper.defs )
+      val bodyDB = BodyMapFactory.makeFromDecls( oper.defs )
 
       /** Inline as if operators were external. */
       Inline( bodyDB, tracker )( fullyExplicit )

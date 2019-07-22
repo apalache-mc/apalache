@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.lir
 
-import at.forsyte.apalache.tla.lir.db.BodyDBFactory
+import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.transformations.impl._
 import at.forsyte.apalache.tla.lir.transformations.standard._
@@ -143,7 +143,7 @@ class TestTransformations extends FunSuite with TestingPredefs {
       cDecl
     )
 
-    val bodies = BodyDBFactory.makeDBFromDecls( operDecls )
+    val bodies = BodyMapFactory.makeFromDecls( operDecls )
 
     val transformation = Inline( bodies, Trackers.NoTracker )
 

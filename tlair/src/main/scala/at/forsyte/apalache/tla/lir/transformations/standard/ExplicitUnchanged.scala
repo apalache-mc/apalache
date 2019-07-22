@@ -9,7 +9,7 @@ object ExplicitUnchanged {
   protected[lir] def inSingleton( x : TlaEx ) : TlaEx =
     Builder.in( Builder.prime( x.deepCopy() ), Builder.enumSet( x.deepCopy() ) )
 
-  def unchangedExplicitLeaf( tracker : TransformationTracker ) : TlaExTransformation = tracker.track {
+  private def unchangedExplicitLeaf( tracker : TransformationTracker ) : TlaExTransformation = tracker.track {
     case OperEx( TlaActionOper.unchanged, arg ) =>
 
       /** UNCHANGED can be applied either to names or to tuples:

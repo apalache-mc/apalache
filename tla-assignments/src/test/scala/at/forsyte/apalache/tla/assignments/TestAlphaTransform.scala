@@ -3,8 +3,8 @@ package at.forsyte.apalache.tla.assignments
 import at.forsyte.apalache.tla.imp._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.db.{DummyBodyDB, SourceStoreImpl}
 import at.forsyte.apalache.tla.lir.process.DeclarationModifiers
+import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory, SourceStoreImpl}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -42,7 +42,7 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
       )
 
     /** Preprocess body (inline operators, replace UNCHANGED, turn equality to set membership, etc.) */
-    val cleaned = transformer( nextBody, decls : _* )( DummyBodyDB, new SourceStoreImpl )
+    val cleaned = transformer( nextBody, decls : _* )( BodyMapFactory.newMap, new SourceStoreImpl )
 
     /** Sanity check */
     assert( cleaned.isDefined )

@@ -65,6 +65,15 @@ object AnnotationParser {
         val resType = fromTla(resAnnot)
         FunT(FinSetT(argType), resType)
 
+      case OperEx(TlaSetOper.recSet, args@_* ) =>
+        // We know |args| = 0 (mod 2)
+        val argPairs = args.grouped( 2 ).toSeq map {
+          case Seq( ValEx( TlaStr( s ) ), value ) =>
+            (s, fromTla( value ))
+          case e => throw new RewriterException("Expected a Seq(string, _) found: %s".format(e))
+        }
+        RecordT( SortedMap( argPairs : _* ) )
+
       case e =>
         throw new RewriterException("Unexpected type annotation: %s".format(annot))
     }
