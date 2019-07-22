@@ -5,6 +5,8 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.process.DeclarationModifiers
 import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory, SourceStoreImpl}
+import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
+import at.forsyte.apalache.tla.lir.transformations.standard.ExplicitLetIn
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -20,13 +22,13 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
         DeclarationModifiers.uniqueVarRename( _ )
       }
 
-    val transformer = new Transformer()
+    val tracker = TrackerWithListeners( new SourceStoreImpl )
 
     /** Make all LET-IN calls explicit, to move towards alpha-TLA+ */
     val decls = declsRenamed.map(
       {
         case TlaOperDecl( name, params, body ) =>
-          TlaOperDecl( name, params, transformer.explicitLetIn( body )( new SourceStoreImpl ) )
+          TlaOperDecl( name, params, ExplicitLetIn( tracker )( body ) )
         case e@_ => e
       }
     )
@@ -41,8 +43,13 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
         "%s not found or not an operator".format( p_next )
       )
 
+    val transformer = StandardTransformer( BodyMapFactory.newMap, tracker )
+
     /** Preprocess body (inline operators, replace UNCHANGED, turn equality to set membership, etc.) */
-    val cleaned = transformer( nextBody, decls : _* )( BodyMapFactory.newMap, new SourceStoreImpl )
+    val cleaned = transformer( nextBody ) match {
+      case NullEx => None
+      case e => Some( e )
+    }
 
     /** Sanity check */
     assert( cleaned.isDefined )

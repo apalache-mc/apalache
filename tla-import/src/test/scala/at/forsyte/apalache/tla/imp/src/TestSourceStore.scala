@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.imp.src
 
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.src.SourceRegion
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner

@@ -9,6 +9,8 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.process.DeclarationModifiers
 import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
+import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
+import at.forsyte.apalache.tla.lir.transformations.standard.{ExplicitLetIn, Inline}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -74,12 +76,12 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
 
     val initName = options.getOption("checker", "init", "Init").asInstanceOf[String]
 
-    val transformer = new Transformer()
+    val tracker = TrackerWithListeners( sourceStore )
 
     val letInExpandedDecls = uniqueVarDecls.map(
       {
         case TlaOperDecl( name, params, body ) =>
-          TlaOperDecl( name, params, transformer.explicitLetIn( body )( sourceStore ) )
+          TlaOperDecl( name, params, ExplicitLetIn( tracker )( body ) )
         case e@_ => e
       }
     )
@@ -96,7 +98,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
           throw new AssignmentException("Initializing operator %s has %d arguments, expected 0"
             .format(initName, params.length))
         } else {
-          TlaOperDecl( name, params, primeVars(varSet, transformer.inlineAll( body )( bodyMap, sourceStore ) ) )
+          TlaOperDecl( name, params, primeVars(varSet, Inline( bodyMap, tracker)( body ) ) )
         }
 
       case e@_ => e
@@ -120,6 +122,8 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
       logger.debug("Next transition #%d:\n   %s".format(i, t))
     }
 
+    val transformer = StandardTransformer( bodyMap, tracker )
+
     // find constant initializers
     val cinitName = options.getOption("checker", "cinit", None).asInstanceOf[Option[String]]
     val cinitPrime =
@@ -132,7 +136,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
           logger.error(msg)
           throw new IllegalArgumentException(msg)
         }
-        val cinit = transformer.sanitize(cinitBody) (bodyMap, sourceStore)
+        val cinit = transformer(cinitBody)
         val cinitPrime = primeVars(constSet, cinit)
         logger.debug("Constant initializer with primes\n    %s".format(cinitPrime))
         Some(cinitPrime)
@@ -150,7 +154,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
           logger.error(msg)
           throw new IllegalArgumentException(msg)
         }
-        val notInv = transformer.sanitize(tla.not(invBody))( bodyMap, sourceStore )
+        val notInv = transformer(tla.not(invBody))
         logger.debug("Negated invariant:\n   %s".format(notInv))
         val notInvPrime = primeVars(varSet, notInv)
         logger.debug("Negated invariant with primes\n   %s".format(notInvPrime))

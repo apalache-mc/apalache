@@ -3,7 +3,9 @@ package at.forsyte.apalache.tla.assignments
 import at.forsyte.apalache.tla.lir.process.DeclarationModifiers
 import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.storage.BodyMap
+import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
+import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
+import at.forsyte.apalache.tla.lir.transformations.standard.ExplicitLetIn
 
 /**
   * Performs the complete procedure of finding symbolic transitions from the TLA+ implementation.
@@ -51,19 +53,19 @@ class SymbolicTransitionPass( private val m_bodyMap : BodyMap,
         DeclarationModifiers.uniqueVarRename( _, m_srcDB )
       }
 
-    val transformer = new Transformer()
+    val tracker = TrackerWithListeners( m_srcDB )
 
     /** Make all LET-IN calls explicit, to move towards alpha-TLA+ */
     val decls = declsRenamed.map(
       {
         case TlaOperDecl( name, params, body ) =>
-          TlaOperDecl( name, params, transformer.explicitLetIn( body )( m_srcDB ) )
+          TlaOperDecl( name, params, ExplicitLetIn( tracker )( body ) )
         case e@_ => e
       }
     )
 
     /** Extract variable declarations */
-    val vars = transformer.getVars( decls : _* )
+    val vars = decls.withFilter( _.isInstanceOf[TlaVarDecl] ).map( _.name ).toSet
 
     /** Extract transition relation */
     val nextBody = findBodyOf( p_nextName, decls : _* )
@@ -75,8 +77,15 @@ class SymbolicTransitionPass( private val m_bodyMap : BodyMap,
         "%s not found or not an operator".format( p_nextName )
       )
 
+    val bm = BodyMapFactory.makeFromDecls( decls, m_bodyMap )
+
+    val transformer = StandardTransformer( bm, tracker )
+
     /** Preprocess body (inline operators, replace UNCHANGED, turn equality to set membership, etc.) */
-    val cleaned = transformer( nextBody, decls : _* )( m_bodyMap, m_srcDB )
+    val cleaned = transformer( nextBody ) match {
+      case NullEx => None
+      case e => Some( e )
+    }
 
     /** Sanity check */
     assert( cleaned.isDefined )

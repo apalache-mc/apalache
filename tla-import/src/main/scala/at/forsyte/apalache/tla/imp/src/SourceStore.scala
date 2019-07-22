@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.imp.src
 
+import at.forsyte.apalache.tla.lir.src.{RegionTree, SourceLocation}
 import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, UID}
 import com.google.inject.Singleton

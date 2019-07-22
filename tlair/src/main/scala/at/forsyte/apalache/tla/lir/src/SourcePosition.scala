@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.imp.src
+package at.forsyte.apalache.tla.lir.src
 
 /**
   * An object of this class represents a position in a text file.

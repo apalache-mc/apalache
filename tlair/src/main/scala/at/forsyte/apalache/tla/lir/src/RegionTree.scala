@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.imp.src
+package at.forsyte.apalache.tla.lir.src
 
 /**
   * A tree that stores source regions in the order of their nesting. We assume that a region can be included into

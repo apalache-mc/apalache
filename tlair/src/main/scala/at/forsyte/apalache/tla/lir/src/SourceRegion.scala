@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.imp.src
+package at.forsyte.apalache.tla.lir.src
 
 /**
   * This class captures a region in a text file. Instead of the standard representation of a position
@@ -7,7 +7,6 @@ package at.forsyte.apalache.tla.imp.src
   *
   * @param start the starting position
   * @param end the ending position, inclusive
-  *
   * @author Igor Konnov
   */
 class SourceRegion(val start: SourcePosition, val end: SourcePosition) {

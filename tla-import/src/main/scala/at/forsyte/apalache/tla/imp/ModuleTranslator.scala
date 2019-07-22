@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.imp
 
-
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import tla2sany.semantic.{ModuleNode, OpDefNode, SubstInNode}

@@ -3,10 +3,11 @@ package at.forsyte.apalache.tla.imp
 import java.io.{File, PrintWriter}
 import java.nio.file.Files
 
-import at.forsyte.apalache.tla.imp.src.{SourcePosition, SourceRegion, SourceStore}
+import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.predef._
+import at.forsyte.apalache.tla.lir.src.{SourcePosition, SourceRegion}
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir.{OperEx, ValEx, _}
 import org.junit.runner.RunWith
