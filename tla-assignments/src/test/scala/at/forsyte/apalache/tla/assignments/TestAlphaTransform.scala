@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.imp._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.process.DeclarationModifiers
-import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory, SourceStoreImpl}
+import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory, ChangeListener}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard.ExplicitLetIn
 import org.junit.runner.RunWith
@@ -22,7 +22,7 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
         DeclarationModifiers.uniqueVarRename( _ )
       }
 
-    val tracker = TrackerWithListeners( new SourceStoreImpl )
+    val tracker = TrackerWithListeners( new ChangeListener )
 
     /** Make all LET-IN calls explicit, to move towards alpha-TLA+ */
     val decls = declsRenamed.map(

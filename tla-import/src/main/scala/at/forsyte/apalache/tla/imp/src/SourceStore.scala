@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.imp.src
 
 import at.forsyte.apalache.tla.lir.src.{RegionTree, SourceLocation}
+import at.forsyte.apalache.tla.lir.storage.SourceMap
 import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, UID}
 import com.google.inject.Singleton
@@ -127,5 +128,13 @@ class SourceStore extends TransformationListener {
         idToRegion :+= mutable.HashMap()
         newIndex
     }
+  }
+
+  def makeSourceMap: SourceMap = {
+    val keys = idToRegion.map( _.keySet).foldLeft( Set.empty[UID] ){ _ ++ _ }
+    val pairs = keys map { k =>
+      k -> find(k).get
+    }
+    pairs.toMap
   }
 }

@@ -6,11 +6,10 @@ import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.process.DeclarationModifiers
-import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
+import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
-import at.forsyte.apalache.tla.lir.transformations.standard.{ExplicitLetIn, Inline}
+import at.forsyte.apalache.tla.lir.transformations.standard.{ExplicitLetIn, Inline, Prime}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -21,9 +20,10 @@ import com.typesafe.scalalogging.LazyLogging
 /**
   * This pass finds symbolic transitions in a TLA+ specification.
   */
-class AssignmentPassImpl @Inject()(options: PassOptions,
-                                   sourceStore: SourceStore,
-                                   @Named("AfterAssignment") nextPass: Pass with SpecWithTransitionsMixin)
+class AssignmentPassImpl @Inject()( options: PassOptions,
+                                    sourceStore: SourceStore,
+                                    changeListener: ChangeListener,
+                                    @Named("AfterAssignment") nextPass: Pass with SpecWithTransitionsMixin)
       extends AssignmentPass with LazyLogging {
 
   var tlaModule: Option[TlaModule] = None
@@ -44,7 +44,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
   override def execute(): Boolean = {
     val uniqueVarDecls =
       tlaModule.get.declarations map {
-        DeclarationModifiers.uniqueVarRename( _, sourceStore )
+        DeclarationModifiers.uniqueVarRename( _, changeListener )
       }
 
     val varSet = uniqueVarDecls
@@ -54,29 +54,9 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
       .filter(_.isInstanceOf[TlaConstDecl])
       .map(_.name).toSet
 
-    // replace every variable x with x', so we can use the assignment solver
-    def primeVars(nameSet: Set[String], e: TlaEx): TlaEx = e match {
-      case ne @ OperEx(TlaActionOper.prime, NameEx(name)) =>
-        // Do not replace primes twice. This may happen when Init = Inv.
-        ne
-
-      case ne @ NameEx(name) if nameSet.contains(name) =>
-        val newEx = tla.prime(e)
-        sourceStore.onTransformation(ne, newEx)
-        newEx
-
-      case oe @ OperEx(op, args@_*) =>
-        val newEx = OperEx(op, args.map(primeVars(nameSet, _)): _*)
-        sourceStore.onTransformation(oe, newEx)
-        newEx
-
-
-      case _ => e
-    }
-
     val initName = options.getOption("checker", "init", "Init").asInstanceOf[String]
 
-    val tracker = TrackerWithListeners( sourceStore )
+    val tracker = TrackerWithListeners( changeListener )
 
     val letInExpandedDecls = uniqueVarDecls.map(
       {
@@ -89,7 +69,9 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
     val bodyMap = BodyMapFactory.makeFromDecls( letInExpandedDecls )
 
     // TODO: why do we call a pass inside a pass?
-    val stp = new SymbolicTransitionPass( bodyMap, sourceStore )
+    val stp = new SymbolicTransitionPass( bodyMap, changeListener )
+
+    val primeTr = Prime( varSet, tracker )
 
     // since Converter and assignmentSolver do a lot of magic internally, substitute Init with primed variables first
     def replaceInit(decl: TlaDecl): TlaDecl = decl match {
@@ -98,7 +80,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
           throw new AssignmentException("Initializing operator %s has %d arguments, expected 0"
             .format(initName, params.length))
         } else {
-          TlaOperDecl( name, params, primeVars(varSet, Inline( bodyMap, tracker)( body ) ) )
+          TlaOperDecl( name, params, primeTr( Inline( bodyMap, tracker)( body ) ) )
         }
 
       case e@_ => e
@@ -137,7 +119,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
           throw new IllegalArgumentException(msg)
         }
         val cinit = transformer(cinitBody)
-        val cinitPrime = primeVars(constSet, cinit)
+        val cinitPrime = Prime( constSet, tracker)(cinit)
         logger.debug("Constant initializer with primes\n    %s".format(cinitPrime))
         Some(cinitPrime)
       }
@@ -156,7 +138,7 @@ class AssignmentPassImpl @Inject()(options: PassOptions,
         }
         val notInv = transformer(tla.not(invBody))
         logger.debug("Negated invariant:\n   %s".format(notInv))
-        val notInvPrime = primeVars(varSet, notInv)
+        val notInvPrime = primeTr(notInv)
         logger.debug("Negated invariant with primes\n   %s".format(notInvPrime))
         (Some(notInv), Some(notInvPrime))
       }

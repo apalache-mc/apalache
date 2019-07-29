@@ -18,10 +18,9 @@ object EqualityAsContainment {
     * Example:
     * x' = y --> x' \in {y}
     */
-  def apply( tracker : TransformationTracker ) : TlaExTransformation = { ex =>
+  def apply( tracker : TransformationTracker ) : TlaExTransformation = tracker.track { ex =>
     val tr = oneEqualityAsContainment( tracker )
     lazy val self = apply(tracker)
-    // No need to call tracker.track again, tr is always called on the top-level expression
     ex match {
       case OperEx( op: LetInOper, body ) =>
         // Transform bodies of all op.defs

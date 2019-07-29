@@ -21,10 +21,9 @@ object ReplaceFixed {
              replacedEx : TlaEx,
              newEx : TlaEx,
              tracker : TransformationTracker
-           ) : TlaExTransformation = { ex =>
+           ) : TlaExTransformation = tracker.track { ex =>
     val tr = replaceOne( replacedEx, newEx, tracker )
     lazy val self = apply( replacedEx, newEx, tracker )
-    // No need to call tracker.track again, tr is always called on the top-level expression
     ex match {
       case OperEx( op : LetInOper, body ) =>
         // Transform bodies of all op.defs

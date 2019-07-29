@@ -9,7 +9,7 @@ object Prime {
   private def primeLeaf( vars : Set[String], tracker : TransformationTracker ) : TlaExTransformation =
     tracker.track {
       case ex@NameEx( name ) if vars.contains( name ) =>
-        tla.prime( ex.deepCopy() )
+        tla.prime( ex )
 
       case ex => ex
     }
@@ -21,7 +21,7 @@ object Prime {
     *
     * a' + b > 0 --> a' + b' > 0
     */
-  def apply( vars : Set[String], tracker : TransformationTracker ) : TlaExTransformation = { ex =>
+  def apply( vars : Set[String], tracker : TransformationTracker ) : TlaExTransformation = tracker.track { ex =>
     val tr = primeLeaf( vars, tracker )
     lazy val self = apply(vars, tracker)
     // No need to call tracker.track again, tr is always called on the top-level expression

@@ -21,6 +21,11 @@ object Inline {
                              ) : Option[TlaEx] =
     bodyMap.get( name ) match {
       case Some( (params, body) ) if params.size == args.size =>
+        // Jure, 24.7.19.: This does not establish ChangeTracking between body and inlinedNewBody.
+        // Do we want to track these changes?
+
+        // Jure, 29.7.19.: Operator instantiation potentially violates UID uniqueness, e.g. currently, when
+        // we instantiate A(p), where A(x) == x + x, both copies of x have the same UID (as p).
         val newBody = params.zip( args ).foldLeft( body ) {
           case (b, (fParam, arg)) =>
             ReplaceFixed( NameEx( fParam.name ), arg, tracker )( b )
@@ -48,10 +53,9 @@ object Inline {
     case ex => ex
   }
 
-  def apply( bodyMap : BodyMap, tracker : TransformationTracker ) : TlaExTransformation = { ex =>
+  def apply( bodyMap : BodyMap, tracker : TransformationTracker ) : TlaExTransformation = tracker.track { ex =>
     val tr = inlineLeaf( bodyMap, tracker )
     lazy val self = apply( bodyMap, tracker )
-    // No need to call tracker.track again, tr is always called on the top-level expression
     ex match {
       case OperEx( op : LetInOper, body ) =>
         // Inline bodies of all op.defs
