@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore
 import at.forsyte.apalache.tla.bmcmt.search.{BfsStrategy, BfsStrategyStopWatchDecorator, DfsStrategy}
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -22,6 +23,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
                                         hintsStore: FormulaHintsStore,
                                         exprGradeStore: ExprGradeStore,
                                         sourceStore: SourceStore,
+                                        changeListener: ChangeListener,
                                         @Named("AfterChecker") nextPass: Pass)
       extends BoundedCheckerPass with LazyLogging {
 
@@ -63,7 +65,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
       }
 
     val checker: Checker =
-        new ModelChecker(typeFinder, freeExistentialsStore, hintsStore, exprGradeStore, sourceStore,
+        new ModelChecker(typeFinder, freeExistentialsStore, hintsStore, changeListener, exprGradeStore, sourceStore,
           input, strategy, tuning, debug, profile, checkRuntime)
 
     val outcome = checker.run()

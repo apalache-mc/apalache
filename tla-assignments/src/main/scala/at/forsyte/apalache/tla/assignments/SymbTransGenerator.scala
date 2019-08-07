@@ -43,7 +43,8 @@ class SymbTransGenerator extends TypeAliases {
       * By computing all possibilities for such intersections, we effectively consider
       * all equivalence classes of ~_A.
       *
-      * Since we know how to recursively compute branch sets, we can easily compute branch intersection sets
+      * makeAllSelections(phi, A)(psi) returns the set { S \cap A | S \in Branches(psi) }, i.e.
+      * the representatives of Branches(psi) / ~_A, for psi \in Sub(phi)
       */
     def makeAllSelections( p_phi : TlaEx, p_stratSet : Set[UID] ) : SelMapType = {
       val leafJudge : TlaEx => Boolean = AlphaTLApTools.isCand
@@ -64,26 +65,40 @@ class SymbTransGenerator extends TypeAliases {
             oper match {
               /**
                 * Branches( /\ \phi_i ) = { Br_1 U ... U Br_s | \forall i . Br_i \in Branches(\phi_i) }
+                * { S \cap A | S \in Branches( /\ phi_i ) } =
+                * { (Br_1 U ... U Br_s) \cap A | \forall i . Br_i \in Branches(\phi_i) } =
+                * { (Br_1 \cap A) U ... U (Br_s \cap A) | \forall i . Br_i \in Branches(\phi_i) } =
+                * { B_1 U ... U B_n | \forall i . B_i \in { T \cap A | T \in Branches(\phi_i)} }
                 */
               case TlaBoolOper.and =>
 
-                /** Unify all child maps */
-                val superMap = p_childResults.fold( Map() )( _ ++ _ )
+                /** Unify all child maps, keysets are disjoint by construction */
+                val unifiedMaps = p_childResults.fold( Map() )( _ ++ _ )
 
-                /** The set of all child labels */
-                val mySet = allCombinations( args.map( x => superMap.getOrElse( x.ID, defaultVal ) ) )
-                superMap + ( p_ex.ID -> mySet )
+                val childBranchSets = args.map( x => unifiedMaps.getOrElse( x.ID, defaultVal ) )
+
+                /** The set as computed from the lemma */
+                val mySet = allCombinations( childBranchSets )
+                unifiedMaps + ( p_ex.ID -> mySet )
 
               /**
                 * Branches( \/ \phi_i ) = U Branches(\phi_i)
+                *  { S \cap A | S \in Branches( \/ \phi_i )} =
+                *  { S \cap A | S \in U Branches(\phi_i)} =
+                *  U { S \cap A | S \in Branches(\phi_i)}
                 */
               case TlaBoolOper.or =>
-                val superMap = p_childResults.fold( Map() )( _ ++ _ )
-                val mySet = args.map( x => superMap.getOrElse( x.ID, defaultVal ) ).fold( Set() )( _ ++ _ )
-                superMap + ( p_ex.ID -> mySet )
+                val unifiedMaps = p_childResults.fold( Map() )( _ ++ _ )
+
+                val childBranchSets = args.map( x => unifiedMaps.getOrElse( x.ID, defaultVal ) )
+
+                val mySet = childBranchSets.fold( Set() )( _ ++ _ )
+                unifiedMaps + ( p_ex.ID -> mySet )
 
               /**
                 * Branches( \E x \in S . \phi ) = Branches( \phi )
+                * { S \cap A | S \in Branches( \E x \in S . \phi )} =
+                * { S \cap A | S \in Branches( \phi )} =
                 */
               case TlaBoolOper.exists =>
                 val childMap = p_childResults.tail.tail.head
@@ -91,11 +106,17 @@ class SymbTransGenerator extends TypeAliases {
 
               /**
                 * Branches( ITE(\phi_c, \phi_t, \phi_e) ) = Branches( \phi_t ) U Branches( \phi_e )
+                * { S \cap A | S \in Branches( ITE(\phi_c, \phi_t, \phi_e) )} =
+                * { S \cap A | S \in Branches( \phi_t ) U Branches( \phi_e ) } =
+                * { S \cap A | S \in Branches( \phi_t ) } U { S \cap A | S \in Branches( \phi_e ) }
                 */
               case TlaControlOper.ifThenElse =>
-                val superMap = p_childResults.tail.fold( Map() )( _ ++ _ )
-                val mySet = args.tail.map( x => superMap.getOrElse( x.ID, defaultVal ) ).fold( Set() )( _ ++ _ )
-                superMap + ( p_ex.ID -> mySet )
+                val unifiedMaps = p_childResults.tail.fold( Map() )( _ ++ _ )
+
+                val childBranchSets = args.tail.map( x => unifiedMaps.getOrElse( x.ID, defaultVal ) )
+
+                val mySet = childBranchSets.fold( Set() )( _ ++ _ )
+                unifiedMaps + ( p_ex.ID -> mySet )
               case _ => default
             }
           case _ => default
@@ -127,7 +148,7 @@ class SymbTransGenerator extends TypeAliases {
     def mkOrdered( p_asgnSet : Set[UID],
                    p_strat : StrategyType
                  ) : AssignmentType = {
-      p_strat.filter( p_asgnSet.contains )
+      p_strat.filter( p_asgnSet.contains ) // p_strat is already ordered
     }
 
     /**
@@ -220,14 +241,30 @@ class SymbTransGenerator extends TypeAliases {
       def newBodyFrom( s : Set[UID], ex : TlaEx ) : TlaEx = ex match {
         case OperEx( TlaSetOper.in, OperEx( TlaActionOper.prime, _ ), _* ) =>
           assignmentFilter( ex, s, p_selections )
+
         case OperEx( op, args@_* ) =>
           val childVals = args map {
             newBodyFrom( s, _ )
           }
           // Make sure to avoid creating new UIDs if not absolutely needed, as filtering
           // is done on the basis of UIDs not syntax
-          val newEx = if ( childVals == args ) ex else OperEx( op, childVals : _* )
-          assignmentFilter( newEx, s, p_selections )
+          val same = childVals == args
+
+          val newEx = if ( same ) ex else OperEx( op, childVals : _* )
+
+          /**
+            * Since our selections depend on UIDs, we need to update accordingly.
+            * Each element childVars[i] is a transformation (pruning) of args[i], so
+            * the p_selections entry copies over, because the branch intersections are preserved
+            */
+          val updatedSelections = if ( same ) p_selections else {
+            val newChildMap : SelMapType = args.zip(childVals).map {
+              case (x,y) => y.ID -> p_selections.getOrElse( x.ID, Set.empty )
+            }.toMap
+            (p_selections ++ newChildMap) + (newEx.ID -> p_selections.getOrElse(ex.ID, Set.empty))
+          }
+          assignmentFilter( newEx, s, updatedSelections )
+
         case _ => assignmentFilter( ex, s, p_selections )
       }
 

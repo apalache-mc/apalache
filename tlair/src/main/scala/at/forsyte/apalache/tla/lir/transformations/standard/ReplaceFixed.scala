@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
 object ReplaceFixed {
   def replaceOne(
                   replacedEx : TlaEx,
-                  newEx : TlaEx,
+                  newEx : => TlaEx, // takes a [=> TlaEx] to allow for the creation of new instances (with distinct UIDs)
                   tracker : TransformationTracker
                 ) : TlaExTransformation = tracker.track {
     ex => if ( ex == replacedEx ) newEx else ex
@@ -19,7 +19,7 @@ object ReplaceFixed {
     */
   def apply(
              replacedEx : TlaEx,
-             newEx : TlaEx,
+             newEx : => TlaEx, // takes a [=> TlaEx] to allow for the creation of new instances (with distinct UIDs)
              tracker : TransformationTracker
            ) : TlaExTransformation = tracker.track { ex =>
     val tr = replaceOne( replacedEx, newEx, tracker )

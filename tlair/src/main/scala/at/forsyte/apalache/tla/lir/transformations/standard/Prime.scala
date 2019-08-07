@@ -24,7 +24,6 @@ object Prime {
   def apply( vars : Set[String], tracker : TransformationTracker ) : TlaExTransformation = tracker.track { ex =>
     val tr = primeLeaf( vars, tracker )
     lazy val self = apply(vars, tracker)
-    // No need to call tracker.track again, tr is always called on the top-level expression
     ex match {
       case OperEx( op : LetInOper, body ) =>
         // Transform bodies of all op.defs

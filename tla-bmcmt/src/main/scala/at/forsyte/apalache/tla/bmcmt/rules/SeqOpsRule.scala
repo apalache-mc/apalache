@@ -23,6 +23,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case OperEx(TlaSeqOper.len, _) => true
       case OperEx(TlaSeqOper.append, _, _) => true
       case OperEx(TlaSeqOper.concat, _, _) => true
+        // TlaSeqOper.selectseq => ???
       case _ => false
     }
   }

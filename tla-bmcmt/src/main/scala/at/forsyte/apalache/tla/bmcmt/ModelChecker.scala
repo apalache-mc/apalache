@@ -13,6 +13,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.io.UTFPrinter
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaControlOper}
+import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.immutable.SortedMap
@@ -25,12 +26,13 @@ import scala.collection.immutable.SortedMap
   *
   * @author Igor Konnov
   */
-class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsStoreImpl,
-                   formulaHintsStore: FormulaHintsStore,
-                   exprGradeStore: ExprGradeStore, sourceStore: SourceStore, checkerInput: CheckerInput,
-                   searchStrategy: SearchStrategy,
-                   tuningOptions: Map[String, String],
-                   debug: Boolean = false, profile: Boolean = false, checkRuntime: Boolean = false)
+class ModelChecker( typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsStoreImpl,
+                    formulaHintsStore: FormulaHintsStore,
+                    changeListener: ChangeListener,
+                    exprGradeStore: ExprGradeStore, sourceStore: SourceStore, checkerInput: CheckerInput,
+                    searchStrategy: SearchStrategy,
+                    tuningOptions: Map[String, String],
+                    debug: Boolean = false, profile: Boolean = false, checkRuntime: Boolean = false)
   extends Checker with LazyLogging {
 
   import Checker._
@@ -561,8 +563,14 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
     typeFinder.inferAndSave(expr)
     if (typeFinder.getTypeErrors.nonEmpty) {
       def print_error(e: TypeInferenceError): Unit = {
+        val sourceLocator: SourceLocator = SourceLocator(
+          sourceStore.makeSourceMap,
+          changeListener
+        )
+
         val locInfo =
-          sourceStore.find(e.origin.ID) match {
+//          sourceStore.find(e.origin.ID) match {
+          sourceLocator.sourceOf( e.origin ) match {
             case Some(loc) => loc.toString
             case None => "<unknown origin>"
           }
@@ -643,7 +651,14 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
   }
 
   private def printRewriterSourceLoc(): Unit = {
-    def getSourceLocation(ex: TlaEx) = sourceStore.find(ex.ID)
+//    def getSourceLocation(ex: TlaEx) = sourceStore.find(ex.ID)
+    def getSourceLocation(ex: TlaEx) = {
+      val sourceLocator: SourceLocator = SourceLocator(
+        sourceStore.makeSourceMap,
+        changeListener
+      )
+      sourceLocator.sourceOf( ex )
+    }
 
     rewriter.getRewritingStack().find(getSourceLocation(_).isDefined) match {
       case None =>

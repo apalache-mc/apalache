@@ -85,6 +85,8 @@ check "007-EWD840" --length=5 --inv=Inv EWD840.tla \
     && expect_ok
 check "008-Paxos" --length=5 --inv=Inv Paxos.tla \
     && expect_ok
+check "009-Bug20190807" --length=1 Bug20190118.tla \
+    && expect_ok
 
 cat "$LOGFILE"
 
