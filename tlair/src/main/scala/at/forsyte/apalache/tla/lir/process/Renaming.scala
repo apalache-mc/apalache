@@ -19,12 +19,12 @@ class Renaming @Inject()() {
   /**
     * The names of bindings that have been seen already.
     */
-  private var seenNames = HashSet[String]()
+  private var seenNames: Map[String, Int] = HashMap[String, Int]()
 
   /**
     * <p>Rename all bindings so that the bound variable names become unique
     * across all the code. For instance, \E x \in S: x > 1 /\ \E x \in T: x < 2
-    * becomes \E x$1 \in S: x$1 > 1 /\ \E x$2 \in T: x$2 < 2. This method
+    * becomes \E x1 \in S: x1 > 1 /\ \E x2 \in T: x2 < 2. This method
     * does not expand operator definitions.</p>
     *
     * <p>WARNING: this method saves the unique names. That is, multiple calls to this method
@@ -34,16 +34,10 @@ class Renaming @Inject()() {
     * @return an equivalent expression whose bound variables are uniquely renamed
     */
   def renameBindingsUnique(expr: TlaEx): TlaEx = {
-    def findUniqueName(name: String): String = {
-      def find(i: Int): Int = {
-        if (!seenNames.contains(name + i)) {
-          i
-        } else {
-          find(i + 1)
-        }
-      }
-
-      name + find(2)
+    def assignUniqueName(name: String): String = {
+      val newVersion = 1 + seenNames.getOrElse(name, 0)
+      seenNames += name -> newVersion
+      name + newVersion // assign a unique name, e.g., x1, x2, x3, etc.
     }
 
     def rename(map: Map[String, String], ex: TlaEx): TlaEx = ex match {
@@ -62,20 +56,11 @@ class Renaming @Inject()() {
           || op == TlaBoolOper.exists || op == TlaBoolOper.forall
           || op == TlaOper.chooseBounded || op == TlaOper.chooseUnbounded
           || op == TlaOper.chooseIdiom =>
-        val newEx =
-          if (!seenNames.contains(name)) {
-            seenNames += name
-            val newArgs = otherArgs.map(rename(map, _))
-            OperEx(op, ne +: newArgs: _*)
-          } else {
-            val newName = findUniqueName(name)
-            seenNames += newName
-            val newMap = map + (name -> newName)
-            val newArgs = otherArgs.map(rename(newMap, _))
-            val newNameEx = NameEx(newName)
-            OperEx(op, newNameEx +: newArgs: _*)
-          }
-        newEx
+
+        val newName = assignUniqueName(name)
+        val newMap = map + (name -> newName)
+        val newArgs = otherArgs.map(rename(newMap, _))
+        OperEx(op, NameEx(newName) +: newArgs: _*)
 
       case OperEx(op, result, varsAndSets@_*)
         if op == TlaSetOper.map || op == TlaFunOper.funDef =>
@@ -85,14 +70,7 @@ class Renaming @Inject()() {
         assert(names.length + sets.length == varsAndSets.length)
 
         def each(m: Map[String, String], n: String): Map[String, String] = {
-          if (!seenNames.contains(n)) {
-            seenNames += n
-            m
-          } else {
-            val newName = findUniqueName(n)
-            seenNames += newName
-            m + (n -> newName)
-          }
+          m + (n -> assignUniqueName(n))
         }
 
         val newMap = names.map(_.name).foldLeft(map)(each)

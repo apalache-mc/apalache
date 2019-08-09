@@ -20,7 +20,7 @@ class TestRenaming extends FunSuite {
     ///
     val expected =
       tla.and(
-        tla.exists(tla.name("x"), tla.name("S"), tla.gt(tla.name("x"), tla.int(1))),
+        tla.exists(tla.name("x1"), tla.name("S"), tla.gt(tla.name("x1"), tla.int(1))),
         tla.forall(tla.name("x2"), tla.name("T"), tla.lt(tla.name("x2"), tla.int(42))))
     val renamed = renaming.renameBindingsUnique(original)
     assert(expected == renamed)
@@ -35,7 +35,7 @@ class TestRenaming extends FunSuite {
         )
     val expected =
       tla.cup(
-        tla.filter(tla.name("x"), tla.name("S"), tla.eql(tla.name("x"), tla.int(1))),
+        tla.filter(tla.name("x1"), tla.name("S"), tla.eql(tla.name("x1"), tla.int(1))),
         tla.filter(tla.name("x2"), tla.name("S"), tla.eql(tla.name("x2"), tla.int(2))))
     val renamed = renaming.renameBindingsUnique(original)
     assert(expected == renamed)
