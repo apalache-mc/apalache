@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.lir.transformations.impl
 
-import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.transformations._
 
 /**

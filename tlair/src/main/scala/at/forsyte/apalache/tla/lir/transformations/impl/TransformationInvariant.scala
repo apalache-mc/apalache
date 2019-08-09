@@ -5,6 +5,8 @@ import at.forsyte.apalache.tla.lir.io.UTFPrinter
 import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 
 /**
+  * TODO: REMOVE?
+  *
   * A TransformationInvariant causes a Transformation to throw an InvariantViolation when
   * the results of `transform` do not satisfy the predicate defined by `holdsFor`.
   *

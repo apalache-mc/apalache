@@ -15,6 +15,7 @@ object aux {
   }
 }
 
+// TODO: REMOVE?
 // TODO: Igor @ 01.07.2019: we do not need this class.
 // The user can simply decorate any recursive function with TransformationFactory.listenTo.
 class RecursiveTransformationImpl( transformation : TlaExTransformation )

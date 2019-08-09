@@ -4,6 +4,8 @@ import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationListener}
 
 /**
+  * TODO: REMOVE?
+  *
   * A Transformation is a wrapper around a TlaEx => TlaEx function, that
   * is equipped with any number of TransformationListener instances (e.g. TransformationInvariant%s)
   *
