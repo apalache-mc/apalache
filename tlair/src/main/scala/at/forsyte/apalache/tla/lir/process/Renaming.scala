@@ -2,10 +2,11 @@ package at.forsyte.apalache.tla.lir.process
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import com.google.inject.Inject
 import javax.inject.Singleton
 
-import scala.collection.immutable.{HashMap, HashSet}
+import scala.collection.immutable.HashMap
 
 /**
   * This class contains methods that are related to renaming.
@@ -15,11 +16,15 @@ import scala.collection.immutable.{HashMap, HashSet}
   * TODO: shall we move this class to *.lir.transformations.standard?
   */
 @Singleton
-class Renaming @Inject()() {
+class Renaming @Inject()(tracker: TransformationTracker) extends TlaExTransformation {
   /**
     * The names of bindings that have been seen already.
     */
   private var seenNames: Map[String, Int] = HashMap[String, Int]()
+
+  override def apply(e: TlaEx): TlaEx = {
+    renameBindingsUnique(e)
+  }
 
   /**
     * <p>Rename all bindings so that the bound variable names become unique
@@ -40,8 +45,8 @@ class Renaming @Inject()() {
       name + newVersion // assign a unique name, e.g., x1, x2, x3, etc.
     }
 
-    def rename(map: Map[String, String], ex: TlaEx): TlaEx = ex match {
-      case NameEx(name) =>
+    def rename(map: Map[String, String]): TlaExTransformation = tracker.track {
+      case ex @ NameEx(name) =>
         if (map.contains(name)) {
           val newEx = NameEx(map(name))
           newEx
@@ -49,7 +54,7 @@ class Renaming @Inject()() {
           ex // nothing changes, so no new id is assigned
         }
 
-      case ValEx(_) => ex
+      case ex @ ValEx(_) => ex
 
       case OperEx(op, ne @ NameEx(name), otherArgs@_*)
         if op == TlaSetOper.filter
@@ -59,7 +64,7 @@ class Renaming @Inject()() {
 
         val newName = assignUniqueName(name)
         val newMap = map + (name -> newName)
-        val newArgs = otherArgs.map(rename(newMap, _))
+        val newArgs = otherArgs.map(e => rename(newMap)(e))
         OperEx(op, NameEx(newName) +: newArgs: _*)
 
       case OperEx(op, result, varsAndSets@_*)
@@ -78,13 +83,12 @@ class Renaming @Inject()() {
           if (!newMap.contains(ne.name)) {
             ne // keep the old expression, as it does not change the link to the source code
           } else {
-            val nne = NameEx(newMap(ne.name))
-            nne
+            NameEx(newMap(ne.name))
           }
         }
         val newNames = names map introName
-        val newSets = sets.map(rename(newMap, _))
-        val newResult = rename(newMap, result)
+        val newSets = sets.map(e => rename(newMap)(e))
+        val newResult = rename(newMap)(result)
 
         def fold(s: Seq[TlaEx], p: Tuple2[TlaEx, TlaEx]) = p._1 +: p._2 +: s
 
@@ -93,11 +97,11 @@ class Renaming @Inject()() {
         newEx
 
       case OperEx(op, args@_*) =>
-        val newEx = OperEx(op, args.map(e => rename(map, e)): _*)
+        val newEx = OperEx(op, args.map(e => rename(map)(e)): _*)
         newEx
     }
 
     // rename the bound variables
-    rename(HashMap(), expr)
+    rename(HashMap())(expr)
   }
 }

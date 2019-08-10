@@ -9,8 +9,8 @@ import scala.collection.JavaConverters._
 import at.forsyte.apalache.infra.PassOptionException
 import at.forsyte.apalache.infra.log.LogbackConfigurator
 import at.forsyte.apalache.infra.passes.{PassChainExecutor, TlaModuleMixin}
+import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.bmcmt.{CheckerException, InternalCheckerError}
-import at.forsyte.apalache.tla.bmcmt.passes.CheckerModule
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.tooling.Version
 import at.forsyte.apalache.tla.tooling.opt.{CheckCmd, ParseCmd}

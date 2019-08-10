@@ -1,18 +1,20 @@
-package at.forsyte.apalache.tla.bmcmt.passes
+package at.forsyte.apalache.tla.bmcmt.config
 
 import at.forsyte.apalache.infra.passes._
 import at.forsyte.apalache.tla.assignments.passes.{AssignmentPass, AssignmentPassImpl}
 import at.forsyte.apalache.tla.bmcmt.analyses._
+import at.forsyte.apalache.tla.bmcmt.passes._
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.transformations.TransformationListener
+import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
 import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, TypeLiteral}
 
 /**
   * A configuration that binds all the passes from the parser to the checker.
+  * If you are not sure how the binding works, check the tutorial on Google Guice.
   *
   * @author Igor Konnov
   */
@@ -30,8 +32,13 @@ class CheckerModule extends AbstractModule {
       .to(classOf[ExprGradeStoreImpl])
     bind(new TypeLiteral[TypeFinder[CellT]] {})
       .to(classOf[TrivialTypeFinder])   // using a trivial type finder
+    // transformation tracking
+    // TODO: the binding of TransformationListener should disappear in the future
     bind(classOf[TransformationListener])
       .to(classOf[SourceStore])
+    // check TransformationTrackerProvider to find out which listeners the tracker is using
+    bind(classOf[TransformationTracker])
+        .toProvider(classOf[TransformationTrackerProvider])
     // SanyParserPassImpl is the default implementation of SanyParserPass
     bind(classOf[SanyParserPass])
       .to(classOf[SanyParserPassImpl])

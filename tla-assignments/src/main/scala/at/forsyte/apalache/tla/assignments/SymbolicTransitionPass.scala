@@ -11,6 +11,8 @@ import at.forsyte.apalache.tla.lir.transformations.standard.ExplicitLetIn
   * Performs the complete procedure of finding symbolic transitions from the TLA+ implementation.
   *
   * @see [[AssignmentStrategyEncoder]], [[SMTInterface]], [[SymbTransGenerator]]
+  *
+  * TODO: Igor @ 10.08.2019: this class should get TransformationTracker as a parameter instead of TransformationListener.
   */
 class SymbolicTransitionPass( private val m_bodyMap : BodyMap,
                               private val m_srcDB : TransformationListener) extends TypeAliases {
