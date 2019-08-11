@@ -3,11 +3,14 @@ package at.forsyte.apalache.tla.pp.passes
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.lir.transformations.standard.ModuleByExTransformer
+import at.forsyte.apalache.tla.pp.Desugarer
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
 class PreproPassImpl @Inject()(val options: PassOptions,
+                               tracker: TransformationTracker,
                                @Named("AfterPrepro") nextPass: Pass with TlaModuleMixin)
     extends PreproPass with LazyLogging {
 
@@ -27,7 +30,9 @@ class PreproPassImpl @Inject()(val options: PassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
-    outputTlaModule = tlaModule
+    logger.info("de-sugaring the spec")
+    val afterDesugarer = ModuleByExTransformer(Desugarer(tracker)) (tlaModule.get)
+    outputTlaModule = Some(afterDesugarer)
     true
   }
 

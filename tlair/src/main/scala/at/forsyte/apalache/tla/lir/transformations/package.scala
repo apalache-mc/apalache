@@ -8,4 +8,9 @@ package object transformations {
     * @author Igor Konnov
     */
   type TlaExTransformation = TlaEx => TlaEx
+
+  /**
+    * A transformation that makes a module out of a module.
+    */
+  type TlaModuleTransformation = TlaModule => TlaModule
 }

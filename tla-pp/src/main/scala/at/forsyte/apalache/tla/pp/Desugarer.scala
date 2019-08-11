@@ -1,8 +1,8 @@
-package at.forsyte.apalache.tla.imp.simpl
+package at.forsyte.apalache.tla.pp
 
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.{LetInOper, TlaActionOper, TlaFunOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import javax.inject.Singleton
 
@@ -13,12 +13,13 @@ import javax.inject.Singleton
   *
   * TODO: can we make transformation tracking more precise?
   *
-  * TODO: move to *.lir.transformations.standard?
-  *
   * @author Igor Konnov
   */
 @Singleton
-class Desugarer(tracker: TransformationTracker) {
+class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
+
+  override def apply(ex: TlaEx) = transform(ex)
+
   def transform: TlaExTransformation = tracker.track {
       case ex @ NameEx(_) => ex
       case ex @ ValEx(_) => ex
@@ -185,4 +186,8 @@ class Desugarer(tracker: TransformationTracker) {
 
     rename(ex)
   }
+}
+
+object Desugarer {
+  def apply(tracker: TransformationTracker): Desugarer = new Desugarer(tracker)
 }
