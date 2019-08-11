@@ -12,10 +12,16 @@ import scala.collection.mutable
   * ChangeListener tracks predecessors of expressions;
   *
   * If a transformation takes ex1 with UID x as input and returns ex2 with UID y and x != y, then
-  * ChangeListener will contain y -> x.
+  * ChangeListener will record y -> x. Moreover, if ex2 contains a subexpression g2 that is not tracked
+  * by ChangeListener (and none of its ascendants but ex2 is tracked), then ChangeListener will record g2 -> ex1.
   *
-  * TODO: The name 'ChangeListener' sounds similar to 'TransformationListener'. Shall we give a better name?
-  * For instance, PredIdSavingListener?
+  * TODO: Igor @ 11.08.2019, the name 'ChangeListener' sounds similar to 'TransformationListener'.
+  * Shall we give a better name, for instance, PredIdSavingListener?
+  *
+  * TODO: Igor @ 11.08.2019, we are using Map[UID, UID] to record the changes between the subtrees.
+  * There must be a less wasteful data structure for that.
+  *
+  * @author Jure Kukovec
   */
 @Singleton
 class ChangeListener extends TransformationListener {
