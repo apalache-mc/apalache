@@ -32,18 +32,20 @@
     <modules>
         <!-- intermediate representation (IR) -->
         <module>tlair</module>
-        <!-- parsing with SANY and build an IR -->
+        <!-- defines the basic infrastructure: logging, passes, etc. -->
         <module>mod-infra</module>
-        <!-- finding symbolic transitions -->
+        <!-- parsing with SANY and build an IR -->
         <module>tla-import</module>
+        <!-- all kinds of preprocessing -->
+        <module>tla-pp</module>
         <!-- finding symbolic transitions -->
         <module>tla-assignments</module>
         <!-- bounded model checker modulo theory -->
         <module>tla-bmcmt</module>
         <!-- command line tools -->
         <module>mod-tool</module>
-        <!-- distribution packaging -->
-        <module>mod-distribution</module> <!-- to bind them all -->
+        <!-- distribution packaging to bind them all -->
+        <module>mod-distribution</module>
     </modules>
 
     <!-- the profile settings are copied from:

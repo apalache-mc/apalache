@@ -9,6 +9,7 @@ import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
+import at.forsyte.apalache.tla.pp.passes.{PreproPass, PreproPassImpl}
 import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, TypeLiteral}
 
@@ -49,11 +50,17 @@ class CheckerModule extends AbstractModule {
     bind(classOf[Pass])
       .annotatedWith(Names.named("InitialPass"))
       .to(classOf[SanyParserPass])
-    // the next pass after SanyParserPass is AssignmentPass
+    // the next pass after SanyParserPass is PreproPass
+    bind(classOf[PreproPass])
+      .to(classOf[PreproPassImpl])
+    bind(classOf[Pass])
+      .annotatedWith(Names.named("AfterParser"))
+      .to(classOf[PreproPass])
+    // the next pass after PreproPass is AssignmentPass
     bind(classOf[AssignmentPass])
       .to(classOf[AssignmentPassImpl])
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterParser"))
+      .annotatedWith(Names.named("AfterPrepro"))
       .to(classOf[AssignmentPass])
     // the next pass after AssignmentPass is GradePass
     bind(classOf[GradePass])
