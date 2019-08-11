@@ -1,17 +1,24 @@
 package at.forsyte.apalache.tla.imp.simpl
 
 import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
+import org.scalactic.TripleEqualsSupport
+import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestDesugarer extends FunSuite {
+class TestDesugarer extends FunSuite with BeforeAndAfterEach {
+  private var desugarer = new Desugarer(TrackerWithListeners())
+
+  override def beforeEach(): Unit = {
+    desugarer = new Desugarer(TrackerWithListeners())
+  }
+
   test("chain 2 excepts") {
     // [f EXCEPT ![i][j] = e]
     val highCalories =
       tla.except(tla.name("f"), tla.tuple(tla.name("i"), tla.name("j")), tla.name("e"))
-    val desugarer = new Desugarer
     val sugarFree = desugarer.transform(highCalories)
     // becomes [ f EXCEPT ![i] = [f[i] EXCEPT ![j] = e] ]
     val expected =
@@ -33,7 +40,6 @@ class TestDesugarer extends FunSuite {
         tla.name("f"),
         tla.tuple(tla.name("i"), tla.name("j"), tla.name("k")),
         tla.name("e"))
-    val desugarer = new Desugarer
     val sugarFree = desugarer.transform(highCalories)
     // becomes [ f EXCEPT ![i] = [f[i] EXCEPT ![j] = [f[i][j] EXCEPT ![k] = e] ] ]
     val expected = tla.except(
@@ -58,7 +64,7 @@ class TestDesugarer extends FunSuite {
     // There is no added value in this construct, so it is just sugar.
     // So, we do the transformation right here.
     val unchanged = tla.unchangedTup(tla.name("x"), tla.tuple(tla.name("y"), tla.name("z")))
-    val sugarFree = new Desugarer().transform(unchanged)
+    val sugarFree = desugarer.transform(unchanged)
     val expected = tla.unchangedTup(tla.name("x"), tla.name("y"), tla.name("z"))
     assert(expected == sugarFree)
   }
@@ -71,7 +77,7 @@ class TestDesugarer extends FunSuite {
         tla.name("XYZ"),
         tla.and(tla.eql(tla.name("x"), tla.int(3)),
                 tla.eql(tla.name("y"), tla.int(4))))
-    val sugarFree = new Desugarer().transform(filter)
+    val sugarFree = desugarer.transform(filter)
     val expected =
       tla.filter(
         tla.name("x_y_z"),
@@ -92,7 +98,7 @@ class TestDesugarer extends FunSuite {
         tla.plus(tla.name("x"), tla.name("y")),
         tla.tuple(tla.name("x"), tla.tuple(tla.name("y"), tla.name("z"))),
         tla.name("XYZ"))
-    val sugarFree = new Desugarer().transform(map)
+    val sugarFree = desugarer.transform(map)
     val expected =
       tla.map(
         tla.plus(tla.appFun(tla.name("x_y_z"), tla.int(1)),
@@ -112,7 +118,7 @@ class TestDesugarer extends FunSuite {
         tla.plus(tla.name("x"), tla.name("y")),
         tla.tuple(tla.name("x"), tla.tuple(tla.name("y"), tla.name("z"))),
         tla.name("XYZ"))
-    val sugarFree = new Desugarer().transform(map)
+    val sugarFree = desugarer.transform(map)
     val expected =
       tla.funDef(
         tla.plus(tla.appFun(tla.name("x_y_z"), tla.int(1)),
@@ -124,5 +130,4 @@ class TestDesugarer extends FunSuite {
         )////
     assert(expected == sugarFree)
   }
-
 }

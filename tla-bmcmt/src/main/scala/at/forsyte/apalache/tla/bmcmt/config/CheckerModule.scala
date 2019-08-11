@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.bmcmt.passes._
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
 import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, TypeLiteral}
@@ -23,6 +23,7 @@ class CheckerModule extends AbstractModule {
     // the options singleton
     bind(classOf[PassOptions])
       .to(classOf[WriteablePassOptions])
+
     // stores
     bind(classOf[FreeExistentialsStore])
       .to(classOf[FreeExistentialsStoreImpl])
@@ -32,13 +33,15 @@ class CheckerModule extends AbstractModule {
       .to(classOf[ExprGradeStoreImpl])
     bind(new TypeLiteral[TypeFinder[CellT]] {})
       .to(classOf[TrivialTypeFinder])   // using a trivial type finder
+
     // transformation tracking
     // TODO: the binding of TransformationListener should disappear in the future
     bind(classOf[TransformationListener])
-      .to(classOf[SourceStore])
+      .to(classOf[ChangeListener])
     // check TransformationTrackerProvider to find out which listeners the tracker is using
     bind(classOf[TransformationTracker])
         .toProvider(classOf[TransformationTrackerProvider])
+
     // SanyParserPassImpl is the default implementation of SanyParserPass
     bind(classOf[SanyParserPass])
       .to(classOf[SanyParserPassImpl])

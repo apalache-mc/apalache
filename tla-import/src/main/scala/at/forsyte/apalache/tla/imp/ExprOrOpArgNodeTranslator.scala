@@ -15,9 +15,8 @@ import scala.collection.JavaConverters._
   *
   * @author konnov
   */
-class ExprOrOpArgNodeTranslator(sourceStore: SourceStore, context: Context, recStatus: RecursionStatus) extends LazyLogging {
-  private val desugarer = new Desugarer() // construct elsewhere?
-
+class ExprOrOpArgNodeTranslator(sourceStore: SourceStore,
+                                context: Context, recStatus: RecursionStatus) extends LazyLogging {
   def translate(node: ExprOrOpArgNode): TlaEx = {
     val result =
       node match {
@@ -54,9 +53,7 @@ class ExprOrOpArgNodeTranslator(sourceStore: SourceStore, context: Context, recS
           throw new SanyImporterException("Unexpected subclass of tla2sany.ExprOrOpArgNode: " + n.getClass)
       }
 
-    val sugarFree = desugarer.transform(result)
-
-    sourceStore.addRec(sugarFree, SourceLocation(node.getLocation))
+    sourceStore.addRec(result, SourceLocation(node.getLocation))
   }
 
   private def translateNumeral(node: NumeralNode) = {

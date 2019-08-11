@@ -698,7 +698,23 @@ class TestSanyImporter extends FunSuite {
         NameEx("x"), TlaFunOper.mkTuple(TlaFunOper.mkTuple(ValEx(TlaInt(0)))), ValEx(TlaInt(1))
       ))(mod.declarations(3))
 
-    // the importer automatically substitutes @ with function application and unfolds ![1][2] to a chain of EXCEPTS
+
+    // 1. The importer automatically substitutes @ with the corresponding function application
+    // 2. The importer no longer unfolds ![1][2] to a chain of EXCEPTS. This is done by Desugarer in a separate pass.
+
+    expectDecl("ExceptManyAt",
+      List(),
+      OperEx(TlaFunOper.except,
+        tla.name("x"),
+        tla.tuple(tla.int(1), tla.int(2)),
+        tla.and(
+          tla.appFun(
+            tla.appFun(tla.name("x"), tla.int(1)),
+            tla.int(2)),
+          tla.bool(true)
+        ))) (mod.declarations(4))
+
+/*  // the old test when Desugarer was part of SanyImporter
     expectDecl("ExceptManyAt",
       List(),
       OperEx(TlaFunOper.except,
@@ -717,6 +733,7 @@ class TestSanyImporter extends FunSuite {
             ), ///
             ValEx(TlaTrue))
         )))(mod.declarations(4))
+*/
   }
 
   test("expression labels") {
@@ -813,6 +830,19 @@ class TestSanyImporter extends FunSuite {
         TlaFunOper.mkTuple(ValEx(TlaInt(0))), ValEx(TlaInt(1)),
         TlaFunOper.mkTuple(ValEx(TlaInt(2))), ValEx(TlaInt(3))
       ))(mod.declarations(1))
+
+
+    // SanyImporter no longer unfolds a multi-argument EXCEPT into a chain.
+    // This is done by Desugarer in a separate phase.
+    expectDecl("E2",
+      tla.except(
+        tla.name("f"),
+        tla.tuple(tla.int(0), tla.int(1), tla.int(2)),
+        tla.int(3)
+      )
+    ) (mod.declarations(2))
+
+    /* // the old test when Desugarer was part of SanyImporter
     expectDecl("E2",
       OperEx(TlaFunOper.except,
         NameEx("f"),
@@ -826,6 +856,8 @@ class TestSanyImporter extends FunSuite {
             ValEx(TlaInt(3)))
         )//
       ))(mod.declarations(2))
+      */
+
     expectDecl("E3",
       OperEx(TlaFunOper.except,
         NameEx("f"),
@@ -906,6 +938,26 @@ class TestSanyImporter extends FunSuite {
         NameEx("y"), NameEx("X"),
         NameEx("z"), NameEx("Z")
       ))(mod.declarations(4))
+
+    // the tuple <<a, b>> is no longer collapsed to a_b by SanyImporter.
+    // This is done by Desugarer in a separate phase.
+    expectDecl(
+      "C4",
+      tla.funDef(
+        tla.bool(true),
+        tla.name("x"),
+        tla.name("X"),
+        tla.name("y"),
+        tla.name("X"),
+        tla.tuple(tla.name("a"), tla.name("b")),
+        tla.name("Z"),
+        tla.name("z"),
+        tla.name("Z")
+      )
+    ) (mod.declarations(5))
+
+    // the old test when Desugarer was part of SanyImporter
+    /*
     expectDecl("C4",
       OperEx(TlaFunOper.funDef,
         ValEx(TlaTrue),
@@ -914,6 +966,7 @@ class TestSanyImporter extends FunSuite {
         NameEx("a_b"), NameEx("Z"), // the tuple <<a, b>> is collapsed to a_b by Desugarer
         NameEx("z"), NameEx("Z")
       ))(mod.declarations(5))
+      */
   }
 
   test("level-1 operators") {

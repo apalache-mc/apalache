@@ -3,32 +3,33 @@ package at.forsyte.apalache.tla.imp.simpl
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.{LetInOper, TlaActionOper, TlaFunOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import javax.inject.Singleton
 
 /**
-  * Remove annoying syntactic sugar. For the moment, we only deal with [f EXCEPT ![i][j]...[k] = ..],
-  * but in the future we should move most of the pre-processing code to this class, unless it really changes
-  * the expressive power.
+  * Remove all annoying syntactic sugar.
+  * In the future we should move most of the pre-processing code to this class,
+  * unless it really changes the expressive power.
   *
-  * TODO: track the source information
+  * TODO: can we make transformation tracking more precise?
   *
   * TODO: move to *.lir.transformations.standard?
   *
   * @author Igor Konnov
   */
 @Singleton
-class Desugarer {
-  def transform(expr: TlaEx): TlaEx = {
-    expr match {
-      case NameEx(_) | ValEx(_) => expr
+class Desugarer(tracker: TransformationTracker) {
+  def transform: TlaExTransformation = tracker.track {
+      case ex @ NameEx(_) => ex
+      case ex @ ValEx(_) => ex
 
-      case OperEx(TlaFunOper.except, fun, args @ _*) =>
+      case ex @ OperEx(TlaFunOper.except, fun, args @ _*) =>
         val accessors = args.zipWithIndex filter (_._2 % 2 == 0) map (_._1)
         val newValues = args.zipWithIndex filter (_._2 % 2 == 1) map (_._1)
         val nonSingletons = accessors.collect { case OperEx(TlaFunOper.tuple, lst @ _*) => lst.size > 1 }
         if (nonSingletons.isEmpty) {
           // only singleton tuples, do nothing
-          expr
+          ex
         } else {
           // multiple accesses, e.g., ![i][j] = ...
           expandExcept(fun, accessors, newValues)
@@ -48,7 +49,6 @@ class Desugarer {
 
       case OperEx(op, args @ _*) =>
         OperEx(op, args map transform :_*)
-    }
   }
 
   private def flattenTuples(ex: TlaEx): Seq[TlaEx] = ex match {
