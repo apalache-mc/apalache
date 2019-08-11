@@ -13,6 +13,9 @@ import scala.collection.mutable
   *
   * If a transformation takes ex1 with UID x as input and returns ex2 with UID y and x != y, then
   * ChangeListener will contain y -> x.
+  *
+  * TODO: The name 'ChangeListener' sounds similar to 'TransformationListener'. Shall we give a better name?
+  * For instance, PredIdSavingListener?
   */
 @Singleton
 class ChangeListener extends TransformationListener {

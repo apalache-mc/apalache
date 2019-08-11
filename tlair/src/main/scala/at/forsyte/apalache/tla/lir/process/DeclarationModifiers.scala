@@ -6,6 +6,8 @@ import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, Vari
 object DeclarationModifiers {
   /**
     * Temporarily moved here from OperatorHandler while we figure out how to structure Renaming
+    *
+    * TODO: shall we move this class to *.lir.transformations.standard
     */
   def uniqueVarRename( decl : TlaDecl, listeners : TransformationListener* ) : TlaDecl =
     decl match {
