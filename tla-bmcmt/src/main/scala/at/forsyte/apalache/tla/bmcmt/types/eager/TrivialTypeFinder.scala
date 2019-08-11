@@ -5,24 +5,32 @@ import at.forsyte.apalache.tla.bmcmt.{ArenaCell, BoolTheory, IntTheory}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaIntSet, TlaNatSet}
+import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
+import com.google.inject.Singleton
 
 import scala.collection.immutable.{Map, SortedMap}
 
 /**
-  * An eager type finder that propagates types from the leaves to the root.
+  * <p>An eager type finder that propagates types from the leaves to the root.
   * As it can easily fail to find a type, the user has to write type annotations.
   * In contrast, to our first type inference approach, this engine is not trying to be
-  * smart at all, and it is not doing any form of unification.
+  * smart at all, and it is not doing any form of unification.</p>
   *
-  * This class assumes that some pre-processing has been made:
+  * <p>This class assumes that some pre-processing has been made:</p>
   *
-  * 1. The definitions of all user-defined operators have been expanded (no recursive operators),
-  * 2. All variable names are unique, including the bound variables.
+  * <ol>
+  *  <li>The definitions of all user-defined operators have been expanded (no recursive operators),</li>
+  *  <li>All variable names are unique, including the bound variables.</li>
+  * </ol>
+  *
+  * <p>TrivialTypeFinder implements TransformationListener, so it propagates type annotations on the expressions
+  * after modifications.</p>
   *
   * @author Igor Konnov
   */
-class TrivialTypeFinder extends TypeFinder[CellT] {
+@Singleton
+class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
   private var varTypes: SortedMap[String, CellT] = SortedMap()
   private var typeAnnotations: Map[UID, CellT] = Map()
   private var errors: Seq[TypeInferenceError] = Seq()
@@ -62,6 +70,14 @@ class TrivialTypeFinder extends TypeFinder[CellT] {
     */
   def extendWithCellType(cell: ArenaCell): Unit = {
     varTypes += cell.toString -> cell.cellType
+  }
+
+  override def onTransformation(originalEx: TlaEx, newEx: TlaEx): Unit = {
+    typeAnnotations.get(originalEx.ID) match {
+        // propagate type annotations
+      case Some(tp) => typeAnnotations += newEx.ID -> tp
+      case _ => ()
+    }
   }
 
   /**

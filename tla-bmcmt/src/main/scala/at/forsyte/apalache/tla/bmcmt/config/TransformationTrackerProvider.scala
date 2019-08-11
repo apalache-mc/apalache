@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.config
 
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
@@ -15,10 +15,10 @@ import com.google.inject.{Inject, Provider, Singleton}
   * @author Igor Konnov
   */
 @Singleton
-class TransformationTrackerProvider @Inject()(changeListener: ChangeListener)
+class TransformationTrackerProvider @Inject()(changeListener: ChangeListener, trivialTypeFinder: TrivialTypeFinder)
     extends Provider[TransformationTracker] {
 
-  private val tracker = TrackerWithListeners(changeListener)
+  private val tracker = TrackerWithListeners(changeListener, trivialTypeFinder)
 
   override def get(): TransformationTracker = {
     tracker
