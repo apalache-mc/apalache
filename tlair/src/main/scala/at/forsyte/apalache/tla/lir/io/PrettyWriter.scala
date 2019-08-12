@@ -37,8 +37,8 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80) {
       case ValEx(TlaStrSet) => TextElem("STRING")
 
       case OperEx(op, args@_*) if op == TlaBoolOper.and || op == TlaBoolOper.or =>
-        val sign = if (op == TlaBoolOper.and) " /\\ " else " \\/ "
-        VBox(args map toFormatElem, sign, "")
+        val sign = if (op == TlaBoolOper.and) "/\\ " else "\\/ "
+        OrLikeBox(args map toFormatElem, prefix = sign, sep = " " + sign)
 
       case OperEx(op, x, set, pred)
         if op == TlaBoolOper.exists || op == TlaBoolOper.forall || op == TlaOper.chooseBounded =>
@@ -56,7 +56,7 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80) {
         HvBox(elems, "")
 
       case OperEx(TlaSetOper.enumSet, args@_*) =>
-        HovBox(TextElem("{") :: IndentBox(HovBox(args map toFormatElem, ", ")) :: TextElem("}") :: Nil, "")
+        IndentBox(HovBox(TextElem("{ ") :: HovBox(args map toFormatElem, ", ") :: TextElem(" }") :: Nil, ""))
 
       case OperEx(TlaFunOper.enum, keysAndValues@_*) =>
         val keys = keysAndValues.zipWithIndex filter (_._2 % 2 == 0) map (_._1)
@@ -131,9 +131,9 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80) {
     var cursorPos = 0
     var indent = 0
 
-    def pushIndent(): Unit = indent += 4
+    def pushIndent(): Unit = indent += 2
 
-    def popIndent(): Unit = indent -= 4
+    def popIndent(): Unit = indent -= 2
 
     def fitsOneLine(len: Int): Boolean = cursorPos + len <= width
 
@@ -155,7 +155,7 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80) {
   abstract class FormatElem() {
     def write(ww: WindowWriter): Unit
 
-    def len: Int
+    def length: Int
   }
 
   case class TextElem(text: String) extends FormatElem {
@@ -163,7 +163,7 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80) {
       ww.print(text)
     }
 
-    override def len: Int = text.length
+    override def length: Int = text.length
   }
 
   case class HBox(elems: Seq[FormatElem], sep: String) extends FormatElem {
@@ -176,29 +176,29 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80) {
       }
     }
 
-    override def len: Int = if (elems.isEmpty) 0 else (elems.size - 1) * sep.length + elems.map(_.len).sum
+    override def length: Int = if (elems.isEmpty) 0 else (elems.size - 1) * sep.length + elems.map(_.length).sum
   }
 
   case class VBox(elems: Seq[FormatElem], prefix: String, sep: String) extends FormatElem {
     override def write(ww: WindowWriter): Unit = {
-      ww.pushIndent()
       for ((el, no) <- elems.zipWithIndex) {
         if (no != 0) {
           ww.print(sep)
-          ww.println()
         }
+        ww.println()
         ww.print(prefix)
+        ww.pushIndent()
         el.write(ww)
+        ww.popIndent()
       }
-      ww.popIndent()
     }
 
-    override def len: Int = textWidth // the vertical box moves to the new line after printing the elements
+    override def length: Int = textWidth // the vertical box moves to the new line after printing the elements
   }
 
   case class HvBox(elems: Seq[FormatElem], sep: String) extends FormatElem {
     override def write(ww: WindowWriter): Unit = {
-      val wholeLen = len
+      val wholeLen = length
       if (ww.fitsOneLine(wholeLen)) {
         HBox(elems, sep).write(ww)
       } else {
@@ -206,16 +206,38 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80) {
       }
     }
 
-    override def len: Int = if (elems.isEmpty) 0 else (elems.size - 1) * sep.length + elems.map(_.len).sum
+    override def length: Int = if (elems.isEmpty) 0 else (elems.size - 1) * sep.length + elems.map(_.length).sum
+  }
+
+  /**
+    * This box behaves like HvBox, but uses the separator as the prefix in the VBox mode.
+    * It is useful for multiline disjunctions and conjunctions.
+    *
+    * @param elems the elements
+    * @param prefix the prefix in the VBox mode
+    * @param sep the separator in the HBox mode
+    */
+  case class OrLikeBox(elems: Seq[FormatElem], prefix: String, sep: String) extends FormatElem {
+    override def write(ww: WindowWriter): Unit = {
+      // one-liner needs parentheses around
+      val hbox = HBox(List(TextElem("("), HBox(elems, sep), TextElem(")")), "")
+      if (ww.fitsOneLine(hbox.length)) {
+        hbox.write(ww)
+      } else {
+        VBox(elems, prefix, sep = "").write(ww)
+      }
+    }
+
+    override def length: Int = if (elems.isEmpty) 0 else (elems.size - 1) * sep.length + elems.map(_.length).sum
   }
 
   case class HovBox(elems: Seq[FormatElem], sep: String) extends FormatElem {
     override def write(ww: WindowWriter): Unit = {
       for ((el, no) <- elems.zipWithIndex) {
-        val elLen = el.len
         if (no != 0) {
           ww.print(sep)
         }
+        val elLen = el.length + sep.length
         if (!ww.fitsOneLine(elLen)) {
           ww.println()
         }
@@ -223,7 +245,7 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80) {
       }
     }
 
-    override def len: Int = if (elems.isEmpty) 0 else (elems.size - 1) * sep.length + elems.map(_.len).sum
+    override def length: Int = if (elems.isEmpty) 0 else (elems.size - 1) * sep.length + elems.map(_.length).sum
   }
 
   case class IndentBox(elem: FormatElem) extends FormatElem {
@@ -233,7 +255,7 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80) {
       ww.popIndent()
     }
 
-    override def len: Int = elem.len
+    override def length: Int = elem.length
   }
 
   private def makeTab(indent: Int): String = 1 to indent map (_ => " ") mkString ""

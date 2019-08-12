@@ -166,7 +166,7 @@ package lir {
   }
 
   /**
-    * A user-defined operator that is created from an operator declaration.
+    * A user-defined operator.
     * Normally, user-defined operators are created from the operator declarations.
     *
     * @see TlaOperDecl
@@ -177,6 +177,8 @@ package lir {
     */
   class TlaUserOper(val name: String, val arity: OperArity, val decl: TlaOperDecl) extends TlaOper {
     override def interpretation = Interpretation.User
+
+    override val precedence: (Int, Int) = (16, 16) // similar to function application
 
     // as this is not a case class, we have to carefully define equality and hashCode
     override def equals(that: scala.Any): Boolean = {
