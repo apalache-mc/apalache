@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.assignments
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.actions.TlaActionOper
 import at.forsyte.apalache.tla.lir.control.TlaControlOper
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values.TlaFalse
 
 /**
@@ -204,8 +204,9 @@ class SymbTransGenerator extends TypeAliases {
 
     /**
       * Gathers the ordered selections and their corresponding restricted formulas.
-      * @param p_ex Input formula.
-      * @param p_strat Assignment strategy
+      *
+      * @param p_ex         Input formula.
+      * @param p_strat      Assignment strategy
       * @param p_selections Map of partial assignment selections.
       * @return A sequence of pairs of ordered assignment selections and their symbolic transitions.
       */
@@ -213,20 +214,43 @@ class SymbTransGenerator extends TypeAliases {
                               p_strat : StrategyType,
                               p_selections : SelMapType
                             ) : Seq[SymbTrans] = {
+      def newBodyFrom( s : Set[UID], ex : TlaEx ) : TlaEx = ex match {
+        case OperEx( TlaSetOper.in, OperEx( TlaActionOper.prime, _ ), _* ) =>
+          assignmentFilter( ex, s, p_selections )
 
-      def asgnCheck( ex : TlaEx) : Boolean = ex match {
-        case OperEx( TlaSetOper.in, OperEx(TlaActionOper.prime, _), _*) => true
-        case _ => false
+        case OperEx( op, args@_* ) =>
+          val childVals = args map {
+            newBodyFrom( s, _ )
+          }
+          // Make sure to avoid creating new UIDs if not absolutely needed, as filtering
+          // is done on the basis of UIDs not syntax
+          val same = childVals == args
+
+          val newEx = if ( same ) ex else OperEx( op, childVals : _* )
+
+          /**
+            * Since our selections depend on UIDs, we need to update accordingly.
+            * Each element childVars[i] is a transformation (pruning) of args[i], so
+            * the p_selections entry copies over, because the branch intersections are preserved
+            */
+          val updatedSelections = if ( same ) p_selections else {
+            val newChildMap : SelMapType = args.zip(childVals).map {
+              case (x,y) => y.ID -> p_selections.getOrElse( x.ID, Set.empty )
+            }.toMap
+            (p_selections ++ newChildMap) + (newEx.ID -> p_selections.getOrElse(ex.ID, Set.empty))
+          }
+          assignmentFilter( newEx, s, updatedSelections )
+
+        case _ => assignmentFilter( ex, s, p_selections )
       }
 
       p_selections( p_ex.ID ).map( s =>
         (
           mkOrdered( s, p_strat ),
-          SpecHandler.recursiveTransform( p_ex, asgnCheck ,assignmentFilter( _, s, p_selections ) )
+          newBodyFrom( s, p_ex )
         )
       ).toSeq
     }
-
   }
 
   /**
