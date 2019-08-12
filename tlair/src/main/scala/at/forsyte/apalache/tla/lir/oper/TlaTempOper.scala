@@ -12,24 +12,28 @@ object TlaTempOper {
   val box = new TlaTempOper {
     override val name: String = "[]"
     override def arity: OperArity = FixedArity(1)
+    override val precedence: (Int, Int) = (4, 15)
   }
 
   /** The LTL diamond operator */
   val diamond = new TlaTempOper {
     override val name: String = "<>"
     override def arity: OperArity = FixedArity(1)
+    override val precedence: (Int, Int) = (4, 15)
   }
 
   /** The leads-to operator */
   val leadsTo = new TlaTempOper {
     override val name: String = "~>"
     override def arity: OperArity = FixedArity(2)
+    override val precedence: (Int, Int) = (2, 2)
   }
 
   /** The 'guarantees' operator */
   val guarantees = new TlaTempOper {
     override val name: String = "-+->"
     override def arity: OperArity = FixedArity(2)
+    override val precedence: (Int, Int) = (2, 2)
   }
 
   /**
@@ -38,6 +42,7 @@ object TlaTempOper {
   val weakFairness = new TlaTempOper {
     override val name: String = "WF"
     override def arity: OperArity = FixedArity(2)
+    override val precedence: (Int, Int) = (4, 15)
   }
 
   /**
@@ -46,17 +51,20 @@ object TlaTempOper {
   val strongFairness = new TlaTempOper {
     override val name: String = "SF"
     override def arity: OperArity = FixedArity(2)
+    override val precedence: (Int, Int) = (4, 15)
   }
 
   /** The temporal existential quantification (hiding) operator */
   val EE = new TlaTempOper {
     override val name: String = "\\EE"
     override def arity: OperArity = FixedArity(2)
+    override val precedence: (Int, Int) = (4, 15)
   }
 
   /** The temporal universal quantification operator */
   val AA = new TlaTempOper {
     override val name: String = "\\AA"
     override def arity: OperArity = FixedArity(2)
+    override val precedence: (Int, Int) = (4, 15)
   }
 }

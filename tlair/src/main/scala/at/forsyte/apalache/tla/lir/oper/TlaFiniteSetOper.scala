@@ -16,6 +16,7 @@ object TlaFiniteSetOper {
   val isFiniteSet = new TlaFiniteSetOper {
     override val arity = FixedArity(1)
     override val name = "IsFiniteSet"
+    override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   /**
@@ -24,6 +25,7 @@ object TlaFiniteSetOper {
   val cardinality = new TlaFiniteSetOper {
     override val arity = FixedArity(1)
     override val name = "Cardinality"
+    override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
 }

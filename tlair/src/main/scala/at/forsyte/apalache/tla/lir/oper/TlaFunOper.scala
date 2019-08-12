@@ -18,6 +18,7 @@ object TlaFunOper {
   val enum = new TlaFunOper {
     override def arity: OperArity = new OperArity( k => k >= 2 && k % 2 == 0 )
     override val name: String = "fun-enum"
+    override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   /**
@@ -27,10 +28,13 @@ object TlaFunOper {
   val tuple = new TlaFunOper {
     override val arity = AnyArity()
     override val name = "<<...>>"
+    override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   /**
     * A short-hand constructor for tuples.
+    *
+    * TODO: remove, as we have the TLA builder
     *
     * @param elems tuple elements
     * @return a new OperEx(tuple, elems: _*)
@@ -45,12 +49,14 @@ object TlaFunOper {
   val app = new TlaFunOper {
     override val arity: OperArity = FixedArity(2)
     override val name: String = "fun-app"
+    override val precedence: (Int, Int) = (16, 16)
   }
 
   /** DOMAIN f */
   val domain = new TlaFunOper {
     override val arity: OperArity = FixedArity(1)
     override val name: String = "DOMAIN"
+    override val precedence: (Int, Int) = (9, 9)
   }
 
   /**
@@ -65,8 +71,8 @@ object TlaFunOper {
     */
   val funDef = new TlaFunOper {
     override def arity: OperArity = new OperArity( k => k >= 3 && k % 2 == 1 )
-
     override val name: String = "fun-def"
+    override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   /**
@@ -80,7 +86,7 @@ object TlaFunOper {
     */
   val except = new TlaFunOper {
     override def arity: OperArity = new OperArity( k => k >= 3 && k % 2 == 1 )
-
     override val name: String = "EXCEPT"
+    override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 }

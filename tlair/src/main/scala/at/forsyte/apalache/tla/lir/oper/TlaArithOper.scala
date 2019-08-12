@@ -32,6 +32,7 @@ object TlaArithOper {
     override val arity = AnyArity()
     // Empty sum = 0
     override val name = "SUM"
+    override val precedence: (Int, Int) = (10, 10)
   }
 
   /**
@@ -40,6 +41,7 @@ object TlaArithOper {
   val plus = new TlaArithOper {
     override val arity = FixedArity(2)
     override val name = "(+)"
+    override val precedence: (Int, Int) = (10, 10)
   }
 
   /**
@@ -48,6 +50,7 @@ object TlaArithOper {
   val uminus = new TlaArithOper {
     override val arity = FixedArity(1)
     override val name = "-."
+    override val precedence: (Int, Int) = (12, 12)
   }
 
   /**
@@ -56,6 +59,7 @@ object TlaArithOper {
   val minus = new TlaArithOper {
     override val arity = FixedArity(2)
     override val name = "(-)"
+    override val precedence: (Int, Int) = (11, 11)
   }
 
   /**
@@ -63,9 +67,9 @@ object TlaArithOper {
     */
   val prod = new TlaArithOper {
     override def arity = AnyArity()
-
     // empty prod = 1
     override val name = "PROD"
+    override val precedence: (Int, Int) = (13, 13)
   }
 
   /**
@@ -73,8 +77,8 @@ object TlaArithOper {
     */
   val mult = new TlaArithOper {
     override def arity: OperArity = FixedArity(2)
-
     override val name: String = "(*)"
+    override val precedence: (Int, Int) = (13, 13)
   }
 
   /**
@@ -82,8 +86,8 @@ object TlaArithOper {
     */
   val div = new TlaArithOper {
     override def arity: OperArity = FixedArity(2)
-
     override val name: String = "(\\div)"
+    override val precedence: (Int, Int) = (13, 13)
   }
 
   /**
@@ -91,8 +95,8 @@ object TlaArithOper {
     */
   val mod = new TlaArithOper {
     override def arity: OperArity = FixedArity(2)
-
     override val name: String = "(%)"
+    override val precedence: (Int, Int) = (10, 11)
   }
 
   /**
@@ -100,8 +104,8 @@ object TlaArithOper {
     */
   val realDiv = new TlaArithOper {
     override def arity: OperArity = FixedArity(2)
-
     override val name: String = "(/)"
+    override val precedence: (Int, Int) = (13, 13)
   }
 
   /**
@@ -109,8 +113,8 @@ object TlaArithOper {
     **/
   val exp = new TlaArithOper {
     override def arity: OperArity = FixedArity(2)
-
     override val name: String = "(^)"
+    override val precedence: (Int, Int) = (14, 14)
   }
 
   /**
@@ -119,6 +123,7 @@ object TlaArithOper {
   val dotdot = new TlaArithOper {
     override val arity = FixedArity(2)
     override val name = "_.._"
+    override val precedence: (Int, Int) = (9, 9)
   }
 
   /**
@@ -127,8 +132,8 @@ object TlaArithOper {
   val lt = new TlaArithOper {
     /* the number of arguments the operator has */
     override def arity: OperArity = FixedArity(2)
-
     override val name: String = "(<)"
+    override val precedence: (Int, Int) = (5, 5)
   }
 
   /**
@@ -137,8 +142,8 @@ object TlaArithOper {
   val gt = new TlaArithOper {
     /* the number of arguments the operator has */
     override def arity: OperArity = FixedArity(2)
-
     override val name: String = "(>)"
+    override val precedence: (Int, Int) = (5, 5)
   }
 
   /**
@@ -147,8 +152,8 @@ object TlaArithOper {
   val le = new TlaArithOper {
     /* the number of arguments the operator has */
     override def arity: OperArity = FixedArity(2)
-
     override val name: String = "(<=)"
+    override val precedence: (Int, Int) = (5, 5)
   }
 
   /**
@@ -157,8 +162,8 @@ object TlaArithOper {
   val ge = new TlaArithOper {
     /* the number of arguments the operator has */
     override def arity: OperArity = FixedArity(2)
-
     override val name: String = "(>=)"
+    override val precedence: (Int, Int) = (5, 5)
   }
 
 }

@@ -18,6 +18,7 @@ object BmcOper {
   val withType: BmcOper = new BmcOper {
     override def name: String = "BMC!<:"
     override def arity: OperArity = FixedArity(2)
+    override val precedence: (Int, Int) = (100, 100)
   }
 }
 

@@ -16,6 +16,7 @@ object TlcOper {
   val print: TlcOper = new TlcOper {
     override def name: String = "TLC!Print"
     override def arity: OperArity = FixedArity(2)
+    override val precedence: (Int, Int) = (16, 16)
   }
 
   /**
@@ -24,6 +25,7 @@ object TlcOper {
   val printT: TlcOper = new TlcOper {
     override def name: String = "TLC!PrintT"
     override def arity: OperArity = FixedArity(1)
+    override val precedence: (Int, Int) = (16, 16)
   }
 
   /**
@@ -32,6 +34,7 @@ object TlcOper {
   val assert: TlcOper = new TlcOper {
     override def name: String = "TLC!Assert"
     override def arity: OperArity = FixedArity(2)
+    override val precedence: (Int, Int) = (16, 16)
   }
 
   /**
@@ -40,6 +43,7 @@ object TlcOper {
   val javaTime: TlcOper = new TlcOper {
     override def name: String = "TLC!javaTime"
     override def arity: OperArity = FixedArity(0)
+    override val precedence: (Int, Int) = (16, 16)
   }
 
   /**
@@ -48,6 +52,7 @@ object TlcOper {
   val tlcGet: TlcOper = new TlcOper {
     override def name: String = "TLC!TLCGet"
     override def arity: OperArity = FixedArity(1)
+    override val precedence: (Int, Int) = (16, 16)
   }
 
   /**
@@ -56,6 +61,7 @@ object TlcOper {
   val tlcSet: TlcOper = new TlcOper {
     override def name: String = "TLC!TLCSet"
     override def arity: OperArity = FixedArity(2)
+    override val precedence: (Int, Int) = (16, 16)
   }
 
   /**
@@ -64,6 +70,7 @@ object TlcOper {
   val colonGreater: TlcOper = new TlcOper {
     override def name: String = "TLC!:>"
     override def arity: OperArity = FixedArity(2)
+    override val precedence: (Int, Int) = (7, 7)
   }
 
   /**
@@ -72,6 +79,7 @@ object TlcOper {
   val atat: TlcOper = new TlcOper {
     override def name: String = "TLC!@@"
     override def arity: OperArity = FixedArity(2)
+    override val precedence: (Int, Int) = (6, 6)
   }
 
   /**
@@ -80,6 +88,7 @@ object TlcOper {
   val permutations: TlcOper = new TlcOper {
     override def name: String = "TLC!Permutations"
     override def arity: OperArity = FixedArity(1)
+    override val precedence: (Int, Int) = (16, 16)
   }
 
   /**
@@ -88,6 +97,7 @@ object TlcOper {
   val sortSeq: TlcOper = new TlcOper {
     override def name: String = "TLC!SortSeq"
     override def arity: OperArity = FixedArity(2)
+    override val precedence: (Int, Int) = (16, 16)
   }
 
   /**
@@ -96,6 +106,7 @@ object TlcOper {
   val randomElement: TlcOper = new TlcOper {
     override def name: String = "TLC!RandomElement"
     override def arity: OperArity = FixedArity(1)
+    override val precedence: (Int, Int) = (16, 16)
   }
 
   /**
@@ -104,6 +115,7 @@ object TlcOper {
   val any: TlcOper = new TlcOper {
     override def name: String = "TLC!Any"
     override def arity: OperArity = FixedArity(0)
+    override val precedence: (Int, Int) = (16, 16)
   }
 
   /**
@@ -112,6 +124,7 @@ object TlcOper {
   val tlcToString: TlcOper = new TlcOper {
     override def name: String = "TLC!ToString"
     override def arity: OperArity = FixedArity(1)
+    override val precedence: (Int, Int) = (16, 16)
   }
 
   /**
@@ -120,6 +133,7 @@ object TlcOper {
   val tlcEval: TlcOper = new TlcOper {
     override def name: String = "TLC!TLCEval"
     override def arity: OperArity = FixedArity(1)
+    override val precedence: (Int, Int) = (16, 16)
   }
 }
 

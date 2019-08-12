@@ -15,6 +15,8 @@ object TlaActionOper {
     override val name: String = "'"
 
     override def arity: OperArity = FixedArity(1)
+
+    override def precedence: (Int, Int) = (15, 15)
   }
 
   /**
@@ -24,6 +26,8 @@ object TlaActionOper {
     override val name: String = "[A]_e"
 
     override def arity: OperArity = FixedArity(2)
+
+    override def precedence: (Int, Int) = (4, 15)
   }
 
   /**
@@ -33,6 +37,8 @@ object TlaActionOper {
     override val name: String = "<A>_e"
 
     override def arity: OperArity = FixedArity(2)
+
+    override def precedence: (Int, Int) = (4, 15)
   }
 
   /**
@@ -42,6 +48,8 @@ object TlaActionOper {
     override val name: String = "ENABLED"
 
     override def arity: OperArity = FixedArity(1)
+
+    override def precedence: (Int, Int) = (4, 15)
   }
 
   /**
@@ -51,6 +59,8 @@ object TlaActionOper {
     override val name: String = "UNCHANGED"
 
     override def arity: OperArity = FixedArity(1)
+
+    override def precedence: (Int, Int) = (4, 15)
   }
 
   /**
@@ -62,5 +72,6 @@ object TlaActionOper {
   val composition = new TlaActionOper {
     override val name: String = "\\cdot"
     override def arity: OperArity = FixedArity(2)
+    override def precedence: (Int, Int) = (13, 13)
   }
 }

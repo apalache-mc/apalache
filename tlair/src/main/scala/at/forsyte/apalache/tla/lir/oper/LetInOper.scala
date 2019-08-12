@@ -14,6 +14,7 @@ class LetInOper(val defs: List[TlaOperDecl]) extends TlaControlOper {
   override val name: String = "LET-IN"
   override val arity: OperArity = FixedArity(1)
   override val interpretation: Interpretation.Value = Interpretation.Predefined
+  override val precedence: (Int, Int) = (0, 0)
 
   override def equals( obj : scala.Any ) : Boolean = obj match {
     case letIn: LetInOper => defs == letIn.defs

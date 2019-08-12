@@ -63,6 +63,12 @@ package oper {
     def arity: OperArity
 
     /**
+      * Operator precedence. See: Lamport. Specifying Systems, 2004, p. 271, Table 6.
+      * @return the range that defines operator precedence [a, b].
+      */
+    def precedence: (Int, Int)
+
+    /**
       * Is the operator allowed to have that many arguments?
       * @param a the number of arguments
       * @return true, if this number of arguments is allowed.
@@ -85,6 +91,7 @@ package oper {
       val name = "="
       val interpretation: Interpretation.Value = Interpretation.Predefined
       val arity = FixedArity(2)
+      override val precedence: (Int, Int) = (5, 5)
     }
 
     /** Inequality of two TLA+ objects */
@@ -92,6 +99,7 @@ package oper {
       val name = "/="
       val interpretation: Interpretation.Value = Interpretation.Predefined
       val arity = FixedArity(2)
+      override val precedence: (Int, Int) = (5, 5)
     }
 
     /**
@@ -108,8 +116,8 @@ package oper {
       override def arity: OperArity = AnyPositiveArity()
 
       override def interpretation: Interpretation.Value = Interpretation.Predefined
-
       override val name: String = "_()"
+      override val precedence: (Int, Int) = (16, 16)
     }
 
     /**
@@ -123,6 +131,8 @@ package oper {
       override def arity: OperArity = FixedArity(3)
 
       override def interpretation: Interpretation.Value = Interpretation.Predefined
+
+      override val precedence: (Int, Int) = (0, 0) // see Section 15.2.1 in Lamport's book
     }
 
     /**
@@ -136,6 +146,8 @@ package oper {
       override def arity: OperArity = FixedArity(2)
 
       override def interpretation: Interpretation.Value = Interpretation.Predefined
+
+      override val precedence: (Int, Int) = (0, 0) // see Section 15.2.1 in Lamport's book
     }
 
     /** The CHOOSE idiom: CHOOSE x : x \notin S */
@@ -146,6 +158,8 @@ package oper {
       override def arity: OperArity = FixedArity(1)
 
       override def interpretation: Interpretation.Value = Interpretation.Predefined
+
+      override val precedence: (Int, Int) = (0, 0) // Section 15.2.1
     }
 
     /**
@@ -168,6 +182,8 @@ package oper {
       override def arity: OperArity = MinimalArity(2)
 
       override val interpretation: Interpretation.Value = Interpretation.Predefined
+
+      override val precedence: (Int, Int) = (16, 16) // similar to function application
 
       /**
         * Do the operator arguments satisfy the operator invariant?

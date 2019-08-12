@@ -17,8 +17,8 @@ object TlaBoolOper {
     */
   val and = new TlaBoolOper {
     override def arity = AnyArity()
-
     override val name = "/\\"
+    override val precedence: (Int, Int) = (3, 3)
   }
 
   /**
@@ -29,8 +29,8 @@ object TlaBoolOper {
     */
   val or = new TlaBoolOper {
     override def arity: OperArity = AnyArity()
-
     override val name: String = "\\/"
+    override val precedence: (Int, Int) = (3, 3)
   }
 
   /**
@@ -41,8 +41,8 @@ object TlaBoolOper {
     */
   val orParallel = new TlaBoolOper {
     override def name: String = "\\||/"
-
     override def arity: OperArity = AnyArity()
+    override val precedence: (Int, Int) = (3, 3)
   }
 
   /**
@@ -50,8 +50,8 @@ object TlaBoolOper {
     */
   val not = new TlaBoolOper {
     override def arity: OperArity = FixedArity(1)
-
     override val name: String = "~"
+    override val precedence: (Int, Int) = (4, 4)
   }
 
   /**
@@ -59,8 +59,8 @@ object TlaBoolOper {
     */
   val implies = new TlaBoolOper {
     override def arity: OperArity = FixedArity(2)
-
     override val name: String = "=>"
+    override val precedence: (Int, Int) = (1, 1)
   }
 
   /**
@@ -68,35 +68,35 @@ object TlaBoolOper {
     */
   val equiv = new TlaBoolOper {
     override def arity: OperArity = FixedArity(2)
-
     override val name: String = "<=>"
+    override val precedence: (Int, Int) = (2, 2)
   }
 
   /** \A x \in S : p */
   val forall = new TlaBoolOper {
     override def arity: OperArity = FixedArity(3)
-
     override val name: String = "\\A3"
+    override val precedence: (Int, Int) = (0, 0) // Section 15.2.1
   }
 
   /** \A x : p */
   val forallUnbounded = new TlaBoolOper {
     override def arity: OperArity = FixedArity(2)
-
     override val name: String = "\\A2"
+    override val precedence: (Int, Int) = (0, 0) // Section 15.2.1
   }
 
   /** \E x \in S : p */
   val exists = new TlaBoolOper {
     override def arity: OperArity = FixedArity(3)
-
     override val name: String = "\\E3"
+    override val precedence: (Int, Int) = (0, 0) // Section 15.2.1
   }
 
   /** \E x : p */
   val existsUnbounded = new TlaBoolOper {
     override def arity: OperArity = FixedArity(2)
-
     override val name: String = "\\E2"
+    override val precedence: (Int, Int) = (0, 0) // Section 15.2.1
   }
 }

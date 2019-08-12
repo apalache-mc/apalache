@@ -18,6 +18,7 @@ object TlaControlOper {
     override val name: String = "CASE"
     override val arity: OperArity = MinimalArity(2) && AnyEvenArity()  //new OperArity( k => k >= 2 && k % 2 == 0 )
     override val interpretation: Interpretation.Value = Interpretation.Predefined
+    override val precedence: (Int, Int) = (0, 0)
   }
 
   /**
@@ -30,6 +31,7 @@ object TlaControlOper {
     override val name: String = "CASE-OTHER"
     override val arity: OperArity = MinimalArity(3) && AnyOddArity() //new OperArity( k => k >= 3 && k % 2 == 1 )
     override val interpretation: Interpretation.Value = Interpretation.Predefined
+    override val precedence: (Int, Int) = (0, 0)
   }
 
   /**
@@ -39,10 +41,13 @@ object TlaControlOper {
     override val name: String = "IF-THEN-ELSE"
     override val arity: OperArity = FixedArity(3)
     override val interpretation: Interpretation.Value = Interpretation.Predefined
+    override val precedence: (Int, Int) = (0, 0)
   }
 
   /**
     * An instance of a LET-IN operator. Let-in is a very special operator since it contains new declarations.
+    *
+    * TODO: remove? One can construct LET-IN with TLA builder.
     *
     * @param defs new definitions by the operator
     * @return a new instance
