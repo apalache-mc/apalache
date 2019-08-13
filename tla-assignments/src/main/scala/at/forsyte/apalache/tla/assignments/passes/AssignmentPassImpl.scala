@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.process.DeclarationModifiers
 import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
-import at.forsyte.apalache.tla.lir.transformations.standard.{ExplicitLetIn, Inline, Prime}
+import at.forsyte.apalache.tla.lir.transformations.standard._
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging

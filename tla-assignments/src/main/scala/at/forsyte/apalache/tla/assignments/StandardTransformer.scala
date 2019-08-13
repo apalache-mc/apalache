@@ -16,14 +16,18 @@ object StandardTransformer {
            ) : TlaExTransformation = {
     val transformationSequence : Vector[TlaExTransformation] =
       Vector(
+//        InlineAndExplicitLetIn( bodyMap, tracker ),
         Inline( bodyMap, tracker ),
         ExplicitLetIn( tracker ),
         EqualityAsContainment( tracker ),
-        ExplicitUnchanged( tracker )
+        ExplicitUnchanged( tracker ),
+        SimplifyRecordAccess( tracker )
       )
 
     {
-      ex: TlaEx => transformationSequence.foldLeft( ex ) { (e, t) => t(e) }
+      ex: TlaEx => transformationSequence.foldLeft( ex ) {
+        (e, t) => t(e)
+      }
     }
   }
 }
