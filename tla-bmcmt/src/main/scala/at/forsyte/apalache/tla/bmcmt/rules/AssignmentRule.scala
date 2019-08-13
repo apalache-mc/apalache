@@ -72,7 +72,7 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
               case FinSetT(_) =>
                 // choose an oracle with the default case oracle = N, when the set is empty
-                var (nextState, oracle) = pickRule.oracleFactory.newPropositionalOracle(setState, elemCells.size + 1)
+                var (nextState, oracle) = pickRule.oracleFactory.newDefaultOracle(setState, elemCells.size + 1)
                 OracleHelper.assertOraclePicksSetMembers(rewriter, nextState, oracle, setCell, elemCells)
                 // pick an arbitrary witness
                 nextState = pickRule.pickByOracle(nextState, oracle, elemCells, nextState.arena.cellTrue().toNameEx)

@@ -47,7 +47,7 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
           val nelems = elems.size
           // add an oracle \in 0..N, where the indices from 0 to N - 1 correspond to the set elements,
           // whereas the index N corresponds to the default choice when the set is empty
-          val (oracleState, oracle) = pickRule.oracleFactory.newPropositionalOracle(nextState, elems.size + 1)
+          val (oracleState, oracle) = pickRule.oracleFactory.newDefaultOracle(nextState, elems.size + 1)
           nextState = oracleState
 
           // pick a cell

@@ -101,7 +101,7 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
     def solverAssert = rewriter.solverContext.assertGroundExpr _
 
     // introduce an oracle \in 0..1. We use integers as the pick rules do so.
-    val (nextState, oracle) = pickFrom.oracleFactory.newPropositionalOracle(state, 2)
+    val (nextState, oracle) = pickFrom.oracleFactory.newDefaultOracle(state, 2)
     // require the oracle value to match the predicate: oracle = 1 iff pred = true
     solverAssert(tla.equiv(pred, oracle.whenEqualTo(nextState, 1)))
     // Pick a cell. Mind the order, oracle = 1 is the then branch, whereas oracle = 0 is the else branch.

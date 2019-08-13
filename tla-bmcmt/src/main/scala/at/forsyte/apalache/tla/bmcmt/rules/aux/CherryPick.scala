@@ -52,7 +52,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
           throw new RuntimeException(s"The set $set is statically empty. Pick should not be called on that.")
         }
 
-        var (nextState, oracle) = oracleFactory.newPropositionalOracle(state, elems.size + 1)
+        var (nextState, oracle) = oracleFactory.newDefaultOracle(state, elems.size + 1)
 
         // pick only the elements that belong to the set
         val elemsIn = elems map { tla.in(_, set) }

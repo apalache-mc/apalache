@@ -109,7 +109,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       defaultValueFactory.makeUpValue(nextState, seqCell.cellType.asInstanceOf[SeqT].res)
     } else {
       // create the oracle
-      val (oracleState, oracle) = picker.oracleFactory.newPropositionalOracle(nextState, nelems + 1)
+      val (oracleState, oracle) = picker.oracleFactory.newDefaultOracle(nextState, nelems + 1)
       nextState = oracleState
       // pick an element to be the result
       nextState = picker.pickByOracle(nextState, oracle, values, nextState.arena.cellTrue().toNameEx)
@@ -144,7 +144,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // Just return a default value. Most likely, this expression will never propagate.
       defaultValueFactory.makeUpValue(nextState, funCell.cellType.asInstanceOf[FunT].resultType)
     } else {
-      val (oracleState, oracle) = picker.oracleFactory.newPropositionalOracle(nextState, relationElems.size + 1)
+      val (oracleState, oracle) = picker.oracleFactory.newDefaultOracle(nextState, relationElems.size + 1)
       nextState = oracleState
       nextState = picker.pickByOracle(nextState, oracle, relationElems, nextState.arena.cellTrue().toNameEx)
       val pickedPair = nextState.asCell

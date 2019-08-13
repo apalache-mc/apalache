@@ -274,7 +274,7 @@ class ModelChecker( typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSt
 
     val picker = new CherryPick(rewriter)
     // pick an index j \in { 0..k } of the fired transition
-    val (oracleState, oracle) = picker.oracleFactory.newPropositionalOracle(lastState, nextStates.length)
+    val (oracleState, oracle) = picker.oracleFactory.newDefaultOracle(lastState, nextStates.length)
 
     if (nextStates.isEmpty) {
       throw new IllegalArgumentException("enabled must be non-empty")

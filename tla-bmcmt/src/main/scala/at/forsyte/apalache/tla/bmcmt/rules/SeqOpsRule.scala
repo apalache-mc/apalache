@@ -102,7 +102,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // pick from the original value s[i] and the new element, and restrict the choice
     // based on the actual values of start and end
     def transform(oldElemCell: ArenaCell, no: Int): ArenaCell = {
-      val (oracleState, oracle) = picker.oracleFactory.newPropositionalOracle(nextState, 2)
+      val (oracleState, oracle) = picker.oracleFactory.newDefaultOracle(nextState, 2)
       nextState = oracleState
       nextState = picker.pickByOracle(nextState, oracle, Seq(oldElemCell, newElemCell), nextState.arena.cellTrue())
       // pick the element from the old sequence: start <= no /\ no < end => oracle = 0
