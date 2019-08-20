@@ -53,7 +53,3 @@ trait Identifiable extends Ordered[Identifiable] {
 
   override def compare(that: Identifiable): Int = ID.id.compareTo(that.ID.id)
 }
-
-object IdOrdering extends Ordering[Identifiable] {
-  override def compare(x: Identifiable, y: Identifiable): Int = x compare y
-}

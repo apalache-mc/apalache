@@ -6,32 +6,33 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
 
 object Flatten {
   private def sameOp( op : TlaOper )( ex : TlaEx ) : Boolean = ex match {
-    case OperEx( o, _ ) => o == op
+    case OperEx( o, _* ) => o == op
     case _ => false
   }
 
   private def flattenOne( tracker : TransformationTracker ) : TlaExTransformation =
     tracker.track {
       case ex@OperEx( TlaBoolOper.and | TlaBoolOper.or, args@_* ) =>
-        val filterFun = sameOp( ex.oper )(_)
+        val hasSameOper = sameOp( ex.oper )(_)
         // We're looking for cases of OperEx( op1, ..., OperEx( op2, ...),... ) where op1 == op2
-        val similar = args.filter {
-          filterFun
+        val similar = args.exists {
+          hasSameOper
         }
         // If there are no direct children with the same operator, do nothing
-        if ( similar.isEmpty )
+        if ( !similar )
           ex
         else {
-          // Thhese arguments stay unchanged
-          val different = args.filterNot {
-            filterFun
+          // We want to preserve arg. order
+          val newArgs = args flatMap { x =>
+            if( hasSameOper(x) ){
+              // We steal all children from OperEx subexpressions using the same operator
+              x.asInstanceOf[OperEx].args
+            }
+            else
+              // These arguments stay unchanged
+              Seq(x)
           }
-          // Then we steal all children from similar (= same and/or oper) OperEx subexpressions
-          val flattened = similar.foldLeft( Seq.empty[TlaEx] ) {
-            case (a, b) => b.asInstanceOf[OperEx].args ++ a
-          }
-          // we add the flattened to the existing
-          val newArgs = different ++ flattened
+          // We know newArgs != args, because similar = true
           OperEx( ex.oper, newArgs : _* )
         }
       case e => e

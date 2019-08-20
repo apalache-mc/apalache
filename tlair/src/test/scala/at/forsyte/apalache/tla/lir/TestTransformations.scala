@@ -92,26 +92,39 @@ class TestTransformations extends FunSuite with TestingPredefs {
   }
 
   test( "Test ReplaceFixed" ) {
+    val transformation = ReplaceFixed( n_x, NameEx( "y" ), Trackers.NoTracker )
 
-  }
-
-  test( "Test RecursiveTransformation" ) {
-    val reduceDepth = new TransformationImpl(
-      {
-        case OperEx( _, arg, _* ) => arg
-        case ex@_ => ex
-      }
+    val pa1 = n_x -> n_y
+    val pa2 = n_z -> n_z
+    val pa3 = prime( n_x ) -> prime( n_y )
+    val pa4 = ite( n_p, n_x, n_y ) -> ite( n_p, n_y, n_y )
+    val pa5 = letIn(
+      plus( n_z, appOp( n_A ) ),
+      declOp( "A", n_q )
+    ) -> letIn(
+      plus( n_z, appOp( n_A ) ),
+      declOp( "A", n_q )
+    )
+    val pa6 = letIn(
+      enumSet( plus( n_x, appOp( n_A ) ), appOp( n_B, n_x ) ),
+      declOp( "A", n_x ),
+      declOp( "B", n_p, "p" )
+    ) -> letIn(
+      enumSet( plus( n_y, appOp( n_A ) ), appOp( n_B, n_y ) ),
+      declOp( "A", n_y ),
+      declOp( "B", n_p, "p" )
     )
 
-    val reduceDepthToOne = new RecursiveTransformationImpl( reduceDepth )
 
-    val ex = and( and( and( and( and( NullEx, n_a ), n_b ), n_c ), n_d ), n_e )
-
-    val once = reduceDepth( ex )
-    assert( once != NullEx )
-    val fully = reduceDepthToOne( ex )
-    assert( fully == NullEx )
-
+    val expected = Seq(
+      pa1, pa2, pa3, pa4, pa5, pa6
+    )
+    val cmp = expected map { case (k, v) =>
+      (v, transformation( k ))
+    }
+    cmp foreach { case (ex, act) =>
+      assert( ex == act )
+    }
   }
 
   test( "Test EqualityAsContainment" ) {
@@ -120,6 +133,10 @@ class TestTransformations extends FunSuite with TestingPredefs {
     val ex1 = primeEq( n_x, n_y )
     val ex2 = or( primeEq( n_x, n_y ), ge( prime( n_x ), int( 0 ) ) )
     val ex3 = ite( primeEq( n_x, n_y ), primeEq( n_z, int( 0 ) ), primeEq( n_z, int( 1 ) ) )
+    val ex4 = letIn(
+      appOp( n_A ),
+      declOp( "A", primeEq( n_x, n_y ) )
+    )
 
     val expected1 = in( prime( n_x ), enumSet( n_y ) )
     val expected2 = or( in( prime( n_x ), enumSet( n_y ) ), ge( prime( n_x ), int( 0 ) ) )
@@ -128,9 +145,13 @@ class TestTransformations extends FunSuite with TestingPredefs {
       in( prime( n_z ), enumSet( int( 0 ) ) ),
       in( prime( n_z ), enumSet( int( 1 ) ) )
     )
+    val expected4 = letIn(
+      appOp( n_A ),
+      declOp( "A", in( prime( n_x ), enumSet( n_y ) ) )
+    )
 
-    val exs = Seq( ex1, ex2, ex3 )
-    val expected = Seq( expected1, expected2, expected3 )
+    val exs = Seq( ex1, ex2, ex3, ex4 )
+    val expected = Seq( expected1, expected2, expected3, expected4 )
     val actual = exs map transformation
     assert( expected == actual )
   }
@@ -175,6 +196,15 @@ class TestTransformations extends FunSuite with TestingPredefs {
     val actual = exs map transformation
 
     assert( expected == actual )
+
+    assertThrows[IllegalArgumentException] {
+      transformation( appOp( NameEx( "C" ) ) )
+    }
+    assertThrows[IllegalArgumentException] {
+      transformation( appOp( NameEx( "C" ), n_a, n_b ) )
+    }
+
+
   }
 
   test( "Test ExplicitLetIn" ) {
@@ -254,6 +284,60 @@ class TestTransformations extends FunSuite with TestingPredefs {
 
     val expected = Seq(
       pa1, pa2, pa3, pa4, pa5
+    )
+    val cmp = expected map { case (k, v) =>
+      (v, transformation( k ))
+    }
+    cmp foreach { case (ex, act) =>
+      assert( ex == act )
+    }
+  }
+
+  test( "Test Flatten" ) {
+    val transformation = Flatten( Trackers.NoTracker )
+    val inSing : TlaEx => TlaEx = ExplicitUnchanged.inSingleton
+
+    val pa1 = n_x -> n_x
+    val pa2 = and( n_x, and( n_y, n_z ) ) -> and( n_x, n_y, n_z )
+    val pa3 = or( n_x, or( n_y, n_z ) ) -> or( n_x, n_y, n_z )
+    val pa4 = or( n_x, and( n_y, n_z ) ) -> or( n_x, and( n_y, n_z ) )
+    val pa5 = and(
+      and(
+        or(
+          or( n_a, n_b ),
+          or( n_c, n_d )
+        )
+      ),
+      and(
+        or(
+          or( n_e, n_f ),
+          or( n_g, NameEx( "h" ) )
+        )
+      )
+    ) -> and(
+      or( n_a, n_b, n_c, n_d ),
+      or( n_e, n_f, n_g, NameEx( "h" ) )
+    )
+    val pa6 = enumSet( or( n_x, and( n_y, n_z ) ) ) -> enumSet( or( n_x, and( n_y, n_z ) ) )
+    val pa7 = letIn(
+      appOp( n_A ),
+      declOp( "A", int(1) )
+    ) -> letIn(
+      appOp( n_A ),
+      declOp( "A", int(1) )
+    )
+
+    val pa8 = letIn(
+      appOp( n_A ),
+      declOp( "A", or( n_x, or( n_y, n_z ) ) )
+    ) -> letIn(
+      appOp( n_A ),
+      declOp( "A", or( n_x, n_y, n_z ) )
+    )
+
+
+    val expected = Seq(
+      pa1, pa2, pa3, pa4, pa5, pa6, pa7, pa8
     )
     val cmp = expected map { case (k, v) =>
       (v, transformation( k ))

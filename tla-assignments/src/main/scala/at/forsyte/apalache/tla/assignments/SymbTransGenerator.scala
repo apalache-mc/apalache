@@ -15,7 +15,9 @@ class SymbTransGenerator extends TypeAliases {
     type SelMapType = Map[UID, AssignmentSelections]
 
     def allCombinations[ValType]( p_sets : Seq[Set[Set[ValType]]] ) : Set[Set[ValType]] = {
-      if ( p_sets.length == 1 )
+      if ( p_sets.isEmpty )
+        Set.empty[Set[ValType]]
+      else if ( p_sets.length == 1 )
         p_sets.head
       else {
         val one = p_sets.head
@@ -48,12 +50,12 @@ class SymbTransGenerator extends TypeAliases {
       */
     def makeAllSelections( p_phi : TlaEx, p_stratSet : Set[UID] ) : SelMapType = {
       val leafJudge : TlaEx => Boolean = AlphaTLApTools.isCand
-      val defaultVal : AssignmentSelections = Set( Set() )
-      val default : SelMapType = Map()
+      val defaultVal : AssignmentSelections = Set( Set.empty )
+      val emptyMap : SelMapType = Map.empty
 
       /** Nodes with labels in A have one branch and therefore one (nonempty) intersection wtih A */
       def leafFun( p_ex : TlaEx ) : SelMapType =
-        if ( p_stratSet.contains( p_ex.ID ) ) Map( p_ex.ID -> Set( Set( p_ex.ID ) ) ) else default
+        if ( p_stratSet.contains( p_ex.ID ) ) Map( p_ex.ID -> Set( Set( p_ex.ID ) ) ) else emptyMap
 
       /**
         * Otherwise, we look at the branching Lemmas to determine how to compute branch sets for
@@ -73,13 +75,13 @@ class SymbTransGenerator extends TypeAliases {
               case TlaBoolOper.and =>
 
                 /** Unify all child maps, keysets are disjoint by construction */
-                val unifiedMaps = p_childResults.fold( Map() )( _ ++ _ )
+                val unifiedMap = p_childResults.fold( Map() )( _ ++ _ )
 
-                val childBranchSets = args.map( x => unifiedMaps.getOrElse( x.ID, defaultVal ) )
+                val childBranchSets = args.flatMap( x => unifiedMap.get( x.ID ) )
 
                 /** The set as computed from the lemma */
                 val mySet = allCombinations( childBranchSets )
-                unifiedMaps + ( p_ex.ID -> mySet )
+                if (mySet.isEmpty) unifiedMap else unifiedMap + ( p_ex.ID -> mySet )
 
               /**
                 * Branches( \/ \phi_i ) = U Branches(\phi_i)
@@ -88,12 +90,12 @@ class SymbTransGenerator extends TypeAliases {
                 *  U { S \cap A | S \in Branches(\phi_i)}
                 */
               case TlaBoolOper.or =>
-                val unifiedMaps = p_childResults.fold( Map() )( _ ++ _ )
+                val unifiedMap = p_childResults.fold( Map() )( _ ++ _ )
 
-                val childBranchSets = args.map( x => unifiedMaps.getOrElse( x.ID, defaultVal ) )
+                val childBranchSets = args.flatMap( x => unifiedMap.get( x.ID ) )
 
                 val mySet = childBranchSets.fold( Set() )( _ ++ _ )
-                unifiedMaps + ( p_ex.ID -> mySet )
+                if (mySet.isEmpty) unifiedMap else unifiedMap + ( p_ex.ID -> mySet )
 
               /**
                 * Branches( \E x \in S . \phi ) = Branches( \phi )
@@ -102,7 +104,8 @@ class SymbTransGenerator extends TypeAliases {
                 */
               case TlaBoolOper.exists =>
                 val childMap = p_childResults.tail.tail.head
-                childMap + ( p_ex.ID -> childMap.getOrElse( args.tail.tail.head.ID, defaultVal ) )
+                val mySet = childMap.getOrElse( args.tail.tail.head.ID, defaultVal )
+                if (mySet.isEmpty) childMap else childMap + ( p_ex.ID -> mySet )
 
               /**
                 * Branches( ITE(\phi_c, \phi_t, \phi_e) ) = Branches( \phi_t ) U Branches( \phi_e )
@@ -111,15 +114,16 @@ class SymbTransGenerator extends TypeAliases {
                 * { S \cap A | S \in Branches( \phi_t ) } U { S \cap A | S \in Branches( \phi_e ) }
                 */
               case TlaControlOper.ifThenElse =>
-                val unifiedMaps = p_childResults.tail.fold( Map() )( _ ++ _ )
+                val unifiedMap = p_childResults.tail.fold( Map() )( _ ++ _ )
 
-                val childBranchSets = args.tail.map( x => unifiedMaps.getOrElse( x.ID, defaultVal ) )
+                val childBranchSets = args.tail.flatMap( x => unifiedMap.get( x.ID ) )
 
                 val mySet = childBranchSets.fold( Set() )( _ ++ _ )
-                unifiedMaps + ( p_ex.ID -> mySet )
-              case _ => default
+                if (mySet.isEmpty) unifiedMap else unifiedMap + ( p_ex.ID -> mySet )
+
+              case _ => emptyMap
             }
-          case _ => default
+          case _ => emptyMap
         }
       }
 
@@ -131,7 +135,7 @@ class SymbTransGenerator extends TypeAliases {
         case e@OperEx( _, args@_* ) =>
           val chdRes = args map getSelMap
           parentFun( e, chdRes )
-        case _ => default
+        case _ => emptyMap
       }
 
       getSelMap( p_phi )
