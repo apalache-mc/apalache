@@ -69,10 +69,10 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     val expected =
       """TRUE
         |  => verylongname
-        |  /\ verylongname
-        |  /\ verylongname
-        |  /\ verylongname
-        |  /\ verylongname""".stripMargin
+        |    /\ verylongname
+        |    /\ verylongname
+        |    /\ verylongname
+        |    /\ verylongname""".stripMargin
     assert(expected == result)
   }
 
@@ -84,8 +84,9 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     printWriter.flush()
     val result = stringWriter.toString
     val expected =
-      """(verylongname \/ verylongname \/ verylongname) /\ (verylongname \/ verylongname \/ verylongname)
-        |  /\ (verylongname \/ verylongname \/ verylongname)""".stripMargin
+      """(verylongname \/ verylongname \/ verylongname)
+        |    /\ (verylongname \/ verylongname \/ verylongname)
+        |    /\ (verylongname \/ verylongname \/ verylongname)""".stripMargin
     assert(expected == result)
   }
 
@@ -96,8 +97,9 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     printWriter.flush()
     val result = stringWriter.toString
     val expected =
-      """¬(verylongname /\ verylongname
-        |    /\ verylongname)""".stripMargin
+      """¬(verylongname
+        |      /\ verylongname
+        |      /\ verylongname)""".stripMargin
     assert(expected == result)
   }
 
@@ -207,7 +209,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     printWriter.flush()
     val result = stringWriter.toString
     val expected =
-      """[x ∈ S, y ∈ T ↦ x + y]""".stripMargin
+      """[ x ∈ S, y ∈ T ↦ x + y ]""".stripMargin
     assert(expected == result)
   }
 
@@ -220,9 +222,11 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     printWriter.flush()
     val result = stringWriter.toString
     val expected =
-      """[verylong1 ∈ verylong3,
+      """[
+        |  verylong1 ∈ verylong3,
         |  verylong2 ∈ verylong4 ↦
-        |    verylong1 + verylong2]""".stripMargin
+        |    verylong1 + verylong2
+        |]""".stripMargin
     assert(expected == result)
   }
 

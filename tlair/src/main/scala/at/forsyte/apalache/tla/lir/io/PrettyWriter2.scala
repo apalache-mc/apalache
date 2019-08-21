@@ -55,10 +55,10 @@ class PrettyWriter2(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) e
           val argDocs = args.map(toDoc(op.precedence, _)).toList
           val grouped =
             if (argDocs.length <= 3) {
-              val doc = folddoc(argDocs, _ <> softline <> sign <> space <> _)
+              val doc = nest(folddoc(argDocs, _ <> line <> sign <> space <> _))
               group(hang(doc)) // prefer a horizontal layout
             } else {
-              val doc = folddoc(argDocs, _ <> linebreak <> sign <> space <> _)
+              val doc = nest(folddoc(argDocs, _ <> linebreak <> sign <> space <> _))
               doc              // prefer a vertical layout, here we could use the indented form
             }
           wrapWithParen(parentPrecedence, op.precedence, grouped)
@@ -90,7 +90,7 @@ class PrettyWriter2(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) e
       case OperEx(TlaFunOper.funDef, body, keysAndValues@_*) =>
         val (ks, vs) = keysAndValues.zipWithIndex partition(_._2 % 2 == 0)
         val (keys, values) = (ks.map(_._1), vs.map(_._1))
-        // format each key-value pair (k, v) into k |-> v
+        // format each key-value pair (k, v) into k \in v
         val boxes =
           keys.zip(values).map(p =>
             group(toDoc((0, 0), p._1) <> space <> UTFPrinter.m_in <> nest(line <> toDoc((0, 0), p._2)))
@@ -98,7 +98,11 @@ class PrettyWriter2(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) e
 
         val binders = ssep(boxes.toList, comma <> line)
         val bodyDoc = toDoc((0, 0), body)
-        group(brackets(nest(binders <> space <> UTFPrinter.m_mapto <> nest(line <> bodyDoc))))
+        group(
+          text("[") <>
+          nest(line <> binders <> space <> UTFPrinter.m_mapto <> nest(line <> bodyDoc)) <> line <>
+          text("]")
+        ) ////
 
       case OperEx(TlaSetOper.map, body, keysAndValues@_*) =>
         val (ks, vs) = keysAndValues.zipWithIndex partition(_._2 % 2 == 0)
