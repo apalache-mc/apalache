@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir.oper.LetInOper
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{LetIn0Ex, OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
 object ReplaceFixed {
@@ -42,6 +42,13 @@ object ReplaceFixed {
         val newArgs = args map self
         val retEx = if ( args == newArgs ) ex else OperEx( op, newArgs : _* )
         tr( retEx )
+      case LetIn0Ex( name, operBody, exprBody ) =>
+        val newOperBody = self(operBody)
+        val newExprBody = self(exprBody)
+        val newEx =
+          if ( newOperBody == operBody && newExprBody == exprBody ) ex
+          else LetIn0Ex(name, newOperBody, newExprBody)
+        tr( newEx )
       case _ => tr( ex )
     }
   }

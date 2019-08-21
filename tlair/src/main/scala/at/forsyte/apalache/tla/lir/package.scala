@@ -134,13 +134,18 @@ package lir {
     override def deepCopy() : NameEx = NameEx(name)
   }
 
-  // applying an operator, including the one defined by OperFormalParam
-
-  /**
-    * NOTE: Scala does not auto-generate copy for OperEx, because args are variable
-    * IK: Let's discuss it. To my understanding, case classes copy their parameters without any problem.
+  /** LetIn0Ex represents a special 0 arity LET-IN expression, that can be used to optimize computation,
+    * Can only be introduced in preprocessing and never appears in specifications.
+    *
+    * Example:
+    * LET X == 1 IN X ~~> LetIn0Ex("X", ValEx( 1 ), OperEx(apply, NameEx("X")) )
     */
+  case class LetIn0Ex( name : String, operBody : TlaEx, exprBody : TlaEx ) extends TlaEx {
+    override def deepCopy( ) = LetIn0Ex( name, operBody.deepCopy(), exprBody.deepCopy() )
+    override def toSimpleString: String = s"LET $name == $operBody IN $exprBody"
+  }
 
+  // applying an operator, including the one defined by OperFormalParam
   case class OperEx(oper: TlaOper, args: TlaEx*) extends TlaEx {
     require(oper.isCorrectArity(args.size),
       "unexpected arity %d in %s applied to %s".format(args.size, oper.name, args.map(_.toString) mkString ", "))

@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir.oper.LetInOper
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.OperEx
+import at.forsyte.apalache.tla.lir.{FormalParam, LetIn0Ex, OperEx}
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 
 object ExplicitLetIn {
@@ -17,6 +17,10 @@ object ExplicitLetIn {
       val bodyDB = BodyMapFactory.makeFromDecls( oper.defs )
 
       /** Inline as if operators were external. */
+      Inline( bodyDB, tracker )( fullyExplicit )
+    case LetIn0Ex( name, operBody, exprBody) =>
+      val fullyExplicit = apply( tracker )( exprBody )
+      val bodyDB = Map( name -> (List.empty[FormalParam], operBody) )
       Inline( bodyDB, tracker )( fullyExplicit )
     case ex => ex
   }
@@ -34,6 +38,8 @@ object ExplicitLetIn {
     ex match {
       case OperEx( op : LetInOper, _ ) =>
         tr( ex )
+      case e : LetIn0Ex =>
+        tr( e )
       case ex@OperEx( op, args@_* ) =>
         val newArgs = args map self
         val retEx = if ( args == newArgs ) ex else OperEx( op, newArgs : _* )

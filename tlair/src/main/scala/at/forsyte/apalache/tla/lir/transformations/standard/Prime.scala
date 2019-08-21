@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{LetInOper, TlaActionOper}
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
+import at.forsyte.apalache.tla.lir.{LetIn0Ex, NameEx, OperEx}
 
 object Prime {
   private def primeLeaf( vars : Set[String], tracker : TransformationTracker ) : TlaExTransformation =
@@ -45,6 +45,13 @@ object Prime {
         val newArgs = args map self
         val retEx = if ( args == newArgs ) ex else OperEx( op, newArgs : _* )
         tr( retEx )
+      case LetIn0Ex( name, operBody, exprBody ) =>
+        val newOperBody = self(operBody)
+        val newExprBody = self(exprBody)
+        val newEx =
+          if ( newOperBody == operBody && newExprBody == exprBody ) ex
+          else LetIn0Ex(name, newOperBody, newExprBody)
+        tr( newEx )
       case _ => tr( ex )
     }
   }

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
-import at.forsyte.apalache.tla.lir.OperEx
+import at.forsyte.apalache.tla.lir.{LetIn0Ex, OperEx}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations._
 
@@ -37,6 +37,13 @@ object PruneApalacheAnnotations {
       case OperEx( op, args@_* ) =>
         val newArgs = args map self
         val newEx = if ( args == newArgs ) ex else OperEx( op, newArgs : _* )
+        tr( newEx )
+      case LetIn0Ex( name, operBody, exprBody ) =>
+        val newOperBody = self(operBody)
+        val newExprBody = self(exprBody)
+        val newEx =
+          if ( newOperBody == operBody && newExprBody == exprBody ) ex
+          else LetIn0Ex(name, newOperBody, newExprBody)
         tr( newEx )
       case _ => tr( ex )
     }
