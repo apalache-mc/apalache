@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir.process
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import com.google.inject.Inject
 import javax.inject.Singleton
@@ -54,9 +54,32 @@ class Renaming @Inject()(tracker: TransformationTracker) extends TlaExTransforma
           ex // nothing changes, so no new id is assigned
         }
 
-      case ex @ ValEx(_) => ex
+      case OperEx( letInOp : LetInOper, body ) =>
+        val opersAndFParamsNameMap = ( letInOp.defs flatMap {
+          case TlaOperDecl( n, params, _ ) => ( n -> assignUniqueName( n ) ) +: (
+            params map { p =>
+              val pName = p.name
+              pName -> assignUniqueName( pName )
+            } )
+        } ).toMap
 
-      case OperEx(op, ne @ NameEx(name), otherArgs@_*)
+        val newMap = map ++ opersAndFParamsNameMap
+
+        val newDecls = letInOp.defs map {
+          case TlaOperDecl( n, ps, b ) =>
+            TlaOperDecl(
+              opersAndFParamsNameMap( n ),
+              ps map {
+                case SimpleFormalParam( p ) => SimpleFormalParam( opersAndFParamsNameMap( p ) )
+                case OperFormalParam( p, a ) => OperFormalParam( opersAndFParamsNameMap( p ), a )
+              },
+              rename( newMap )( b )
+            )
+        }
+        val newBody = rename(newMap)(body)
+        OperEx( new LetInOper(newDecls), newBody )
+
+      case OperEx(op, NameEx(name), otherArgs@_*)
         if op == TlaSetOper.filter
           || op == TlaBoolOper.exists || op == TlaBoolOper.forall
           || op == TlaOper.chooseBounded || op == TlaOper.chooseUnbounded
@@ -99,6 +122,8 @@ class Renaming @Inject()(tracker: TransformationTracker) extends TlaExTransforma
       case OperEx(op, args@_*) =>
         val newEx = OperEx(op, args.map(e => rename(map)(e)): _*)
         newEx
+
+      case ex => ex
     }
 
     // rename the bound variables

@@ -24,8 +24,8 @@ trait TestingPredefs {
   def n_s : NameEx = "s"
   def n_t : NameEx = "t"
 
-  def n_B : NameEx = "B"
   def n_A : NameEx = "A"
+  def n_B : NameEx = "B"
   def n_S : NameEx = "S"
   def n_T : NameEx = "T"
   def n_P : NameEx = "P"

@@ -406,7 +406,7 @@ object Builder {
     OperEx(BmcOper.withType, expr, typeAnnot)
 
 
-  val m_nameMap : Map[String, TlaOper] =
+  private val m_nameMap : Map[String, TlaOper] =
     scala.collection.immutable.Map(
       TlaOper.eq.name -> TlaOper.eq,
       TlaOper.ne.name -> TlaOper.ne,

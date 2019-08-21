@@ -33,4 +33,6 @@ tla-bmcmt/profile-rules.txt
 test/tla/*.err
 test/tla/*.out
 
+*.log
+
 
