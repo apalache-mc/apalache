@@ -17,7 +17,7 @@ import scala.collection.immutable.HashMap
   *
   * @author Igor Konnov
   */
-class PrettyWriter2(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) extends PrettyPrinter {
+class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) extends PrettyPrinter {
   override val defaultIndent: Int = indent
 
   def write(expr: TlaEx): Unit = {
@@ -66,10 +66,10 @@ class PrettyWriter2(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) e
 
       case OperEx(op, x, set, pred)
         if op == TlaBoolOper.exists || op == TlaBoolOper.forall || op == TlaOper.chooseBounded =>
-        val sign = PrettyWriter2.bindingOps(op)
+        val sign = PrettyWriter.bindingOps(op)
         group(
           group(text(sign) <> text(x.toString) <> space <>
-            text(PrettyWriter2.binaryOps(TlaSetOper.in)) <> softline <>
+            text(PrettyWriter.binaryOps(TlaSetOper.in)) <> softline <>
             toDoc(op.precedence, set) <> text(":")
           ) <>
             nest(line <> toDoc(op.precedence, pred))
@@ -150,19 +150,19 @@ class PrettyWriter2(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) e
 
       group(doc)
 
-      case OperEx(op, lhs, rhs) if PrettyWriter2.binaryOps.contains(op) =>
+      case OperEx(op, lhs, rhs) if PrettyWriter.binaryOps.contains(op) =>
         val doc =
           toDoc(op.precedence, lhs) <> line <>
-            text(PrettyWriter2.binaryOps(op)) <> space <>
+            text(PrettyWriter.binaryOps(op)) <> space <>
             toDoc(op.precedence, rhs)
         wrapWithParen(parentPrecedence, op.precedence, group(hang(doc)))
 
-      case OperEx(op, arg) if PrettyWriter2.unaryOps.contains(op) =>
-        val doc = text(PrettyWriter2.unaryOps(op)) <> toDoc(op.precedence, arg)
+      case OperEx(op, arg) if PrettyWriter.unaryOps.contains(op) =>
+        val doc = text(PrettyWriter.unaryOps(op)) <> toDoc(op.precedence, arg)
         wrapWithParen(parentPrecedence, op.precedence, doc)
 
-      case OperEx(op, args@_*) if PrettyWriter2.funOps.contains(op) =>
-        val doc = text(PrettyWriter2.funOps(op)) <>
+      case OperEx(op, args@_*) if PrettyWriter.funOps.contains(op) =>
+        val doc = text(PrettyWriter.funOps(op)) <>
           parens(ssep(args.map(toDoc(op.precedence, _)).toList, comma))
         wrapWithParen(parentPrecedence, op.precedence, doc)
 
@@ -181,7 +181,7 @@ class PrettyWriter2(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) e
   }
 }
 
-object PrettyWriter2 {
+object PrettyWriter {
   protected val unaryOps = HashMap(
     TlaBoolOper.not -> UTFPrinter.m_not,
     TlaArithOper.uminus -> "-",
