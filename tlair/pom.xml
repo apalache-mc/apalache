@@ -37,5 +37,12 @@
             <artifactId>scalaz-core_2.12</artifactId>
             <version>7.3.0-M24</version>
         </dependency>
+
+        <!-- pretty printing with kiama -->
+        <dependency>
+            <groupId>org.bitbucket.inkytonik.kiama</groupId>
+            <artifactId>kiama_2.12</artifactId>
+            <version>2.2.1</version>
+        </dependency>
     </dependencies>
 </project>

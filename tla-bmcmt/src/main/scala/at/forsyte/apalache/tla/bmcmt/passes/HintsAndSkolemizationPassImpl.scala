@@ -7,9 +7,9 @@ import at.forsyte.apalache.tla.assignments.SpecWithTransitions
 import at.forsyte.apalache.tla.assignments.passes.SpecWithTransitionsMixin
 import at.forsyte.apalache.tla.bmcmt.CheckerException
 import at.forsyte.apalache.tla.bmcmt.analyses.{FormulaHintsStoreImpl, FreeExistentialsStoreImpl, HintFinder, SimpleSkolemization}
-import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.process.Renaming
 import at.forsyte.apalache.tla.lir.TlaEx
+import at.forsyte.apalache.tla.lir.io.PrettyWriter2
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -75,12 +75,12 @@ class HintsAndSkolemizationPassImpl @Inject()(val options: PassOptions,
     logger.debug("Transitions after renaming and skolemization")
     for ((t, i) <- newSpec.initTransitions.zipWithIndex) {
       val stringWriter = new StringWriter()
-      new PrettyWriter(new PrintWriter(stringWriter)).write(t)
+      new PrettyWriter2(new PrintWriter(stringWriter)).write(t)
       logger.debug("Initial transition #%d:\n%s".format(i, stringWriter.toString))
     }
     for ((t, i) <- newSpec.nextTransitions.zipWithIndex) {
       val stringWriter = new StringWriter()
-      new PrettyWriter(new PrintWriter(stringWriter)).write(t)
+      new PrettyWriter2(new PrintWriter(stringWriter)).write(t)
       logger.debug("Next transition #%d:\n   %s".format(i, stringWriter.toString))
     }
     logger.debug("Negated invariant:\n   %s".format(newSpec.notInvariant))
