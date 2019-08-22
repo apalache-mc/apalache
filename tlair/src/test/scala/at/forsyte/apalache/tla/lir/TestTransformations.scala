@@ -347,4 +347,56 @@ class TestTransformations extends FunSuite with TestingPredefs {
     }
   }
 
+  test( "Test SplitLetIn0" ){
+    val transformation = SplitLetIn0( Trackers.NoTracker )
+
+    val pa1 =
+      and( n_x, and( n_y, n_z ) ) ->
+        and( n_x, and( n_y, n_z ) )
+    val pa2 =
+      LetIn0Ex( "X", n_x, appOp( NameEx( "X" ) ) ) ->
+        LetIn0Ex( "X", n_x, appOp( NameEx( "X" ) ) )
+    val pa3 =
+      letIn( appOp( NameEx( "X" ) ), declOp( "X", n_x ) ) ->
+        LetIn0Ex( "X", n_x, appOp( NameEx( "X" ) ) )
+
+    val pa4 =
+      letIn( appOp( NameEx( "X" ), int( 1 ) ), declOp( "X", n_t, "t" ) ) ->
+        letIn( appOp( NameEx( "X" ), int( 1 ) ), declOp( "X", n_t, "t" ) )
+
+    val pa5 =
+      letIn(
+        plus( appOp( NameEx( "X" ) ), appOp( NameEx( "Y" ), int( 1 ) ) ),
+        declOp( "X", n_x ),
+        declOp( "Y", n_t, "t" )
+      ) ->
+        letIn(
+          LetIn0Ex( "X", n_x, plus( appOp( NameEx( "X" ) ), appOp( NameEx( "Y" ), int( 1 ) ) ) ),
+          declOp( "Y", n_t, "t" )
+        )
+
+    val pa6 =
+      letIn(
+        plus( appOp( NameEx( "X" ) ), appOp( NameEx( "Y" ) ) ),
+        declOp( "X", n_x ),
+        declOp( "Y", n_y )
+      ) ->
+        LetIn0Ex(
+          "X",
+          n_x,
+          LetIn0Ex( "Y", n_y, plus( appOp( NameEx( "X" ) ), appOp( NameEx( "Y" ) ) ) )
+        )
+
+    val expected = Seq(
+      pa1, pa2, pa3, pa4, pa5, pa6
+    )
+    val cmp = expected map { case (k, v) =>
+      (v, transformation( k ))
+    }
+    cmp foreach { case (ex, act) =>
+      assert( ex == act )
+    }
+
+  }
+
 }
