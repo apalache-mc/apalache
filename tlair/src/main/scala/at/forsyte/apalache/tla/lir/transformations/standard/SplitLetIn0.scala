@@ -1,14 +1,30 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
-import at.forsyte.apalache.tla.lir.{LetIn0Ex, OperEx}
+import at.forsyte.apalache.tla.lir.{LetIn0Ex, OperEx, TlaOperDecl}
 import at.forsyte.apalache.tla.lir.oper.LetInOper
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
 object SplitLetIn0 {
+
+  /** We need to split an ordered collection of OperDecls (from a LET-IN operator),
+    * into segments of 0 arity and >0 ariry operators, to replace 0-arity operators with the
+    * LetIn0Ex syntax
+    */
+  private[lir] def collectSegments( decls : Traversable[TlaOperDecl] ) : List[List[TlaOperDecl]] = decls match {
+    case d if d.isEmpty => List.empty
+    case head :: tail =>
+      val rec = collectSegments( tail )
+      val headOrEmpty = rec.headOption.getOrElse( List.empty )
+      // head has arity >0 && all decls in the first segment have arity >0.
+      // if headOption returns None, the 2nd condition vacuously holds for the empty seq
+      if ( head.formalParams.nonEmpty && headOrEmpty.forall( _.formalParams.nonEmpty ) )
+        ( head +: headOrEmpty ) +: rec.drop( 1 ) // Nil.tail throws, but Nil.drop(1) doesn't
+      else
+        List( head ) +: rec
+  }
+
   private def splitLetIn( tracker : TransformationTracker ) : TlaExTransformation = tracker.track {
     case OperEx( oper : LetInOper, body ) =>
-
-      val (arity0, arityGt0) = oper.defs.partition( _.formalParams.isEmpty )
 
       /** Let-in may be nested */
       val splitInBody = apply( tracker )( body )
@@ -24,16 +40,25 @@ object SplitLetIn0 {
         *
         * LET A1 == ...
         * IN (LET A2 == ... IN (... LET An == ... IN X))
+        *
+        * Because LET-IN defined operators may reference each other, it's insufficient to
+        * simply filter out all 0 arity operators, as this may break the contexts.
+        * Instead, we split the oper. declarations into segments.
         */
-      val zeroForm = arity0.foldRight( splitInBody ){
-        case (decl, b) => LetIn0Ex( decl.name, decl.body, b )
-      }
+      val segments = collectSegments( oper.defs )
 
-      if ( arityGt0.isEmpty )
-        zeroForm
-      else {
-        val newOper = new LetInOper( arityGt0 )
-        OperEx( newOper, zeroForm )
+      // sanity check
+      assert( segments.forall { _.nonEmpty } )
+
+      segments.foldRight( splitInBody ) {
+        case (decls, b) =>
+          // we know decls is nonempty
+          val h = decls.head
+          if ( h.formalParams.isEmpty )
+            LetIn0Ex( h.name, h.body, b )
+          else
+            OperEx( new LetInOper( decls ), b )
+
       }
     case ex => ex
   }
