@@ -50,6 +50,9 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
 
       case OperEx(op, args @ _*) =>
         OperEx(op, args map transform :_*)
+
+      case LetInEx( body, defs@_* ) =>
+        LetInEx( transform( body ), defs map { d => d.copy( body = transform( d.body ) ) } : _* )
   }
 
   private def flattenTuples(ex: TlaEx): Seq[TlaEx] = ex match {
