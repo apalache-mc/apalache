@@ -22,7 +22,7 @@ class TestAux extends FunSuite with TestingPredefs {
         List( List( ar0Decl1 ) )
     val pa2 =
       List( ar0Decl1, ar0Decl2 ) ->
-        List( List( ar0Decl1 ), List( ar0Decl2 ) )
+        List( List( ar0Decl1, ar0Decl2 ) )
     val pa3 =
       List( arGe0Decl1, ar0Decl1 ) ->
         List( List( arGe0Decl1 ), List( ar0Decl1 ) )
@@ -31,7 +31,7 @@ class TestAux extends FunSuite with TestingPredefs {
         List( List( arGe0Decl1, arGe0Decl2 ) )
     val pa5 =
       List( arGe0Decl1, arGe0Decl2, ar0Decl1, ar0Decl2, arGe0Decl3 ) ->
-        List( List( arGe0Decl1, arGe0Decl2 ), List( ar0Decl1 ), List( ar0Decl2 ), List( arGe0Decl3 ) )
+        List( List( arGe0Decl1, arGe0Decl2 ), List( ar0Decl1, ar0Decl2 ), List( arGe0Decl3 ) )
 
     val expected = Seq(
       pa1, pa2, pa3, pa4, pa5

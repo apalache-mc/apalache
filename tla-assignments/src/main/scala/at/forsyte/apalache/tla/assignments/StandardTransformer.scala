@@ -18,7 +18,7 @@ object StandardTransformer {
       Vector(
 //        InlineAndExplicitLetIn( bodyMap, tracker ),
         Inline( bodyMap, tracker ),
-        ExplicitLetIn( tracker ),
+        ExplicitLetIn( tracker, skip0Arity = false ),
         EqualityAsContainment( tracker ),
         ExplicitUnchanged( tracker ),
         SimplifyRecordAccess( tracker )

@@ -207,8 +207,8 @@ class TestTransformations extends FunSuite with TestingPredefs {
 
   }
 
-  test( "Test ExplicitLetIn" ) {
-    val transformation = ExplicitLetIn( Trackers.NoTracker )
+  test( "Test ExplicitLetIn, skip0Arity = false" ) {
+    val transformation = ExplicitLetIn( Trackers.NoTracker, skip0Arity = false )
 
     val ex1 = n_x
     val ex2 = letIn( appOp( n_A ), declOp( "A", n_x ) )
@@ -233,6 +233,46 @@ class TestTransformations extends FunSuite with TestingPredefs {
       ite(
         ge( n_c, int( 0 ) ),
         ge( plus( n_c, n_c ), int( 0 ) ),
+        ge( plus( n_p, int( 3 ) ), int( 0 ) )
+      )
+
+    val exs = Seq( ex1, ex2, ex3, ex4 )
+    val expected = Seq( expected1, expected2, expected3, expected4 )
+    val actual = exs map transformation
+
+    assert( expected == actual )
+
+  }
+
+  test( "Test ExplicitLetIn, skip0Arity = true" ) {
+    val transformation = ExplicitLetIn( Trackers.NoTracker, skip0Arity = true )
+
+    val ex1 = n_x
+    val ex2 = letIn( appOp( n_A ), declOp( "A", n_x ) )
+    val ex3 = letIn( appOp( n_A, n_x ), declOp( "A", n_y, SimpleFormalParam( "y" ) ) )
+    val ex4 =
+      letIn(
+        ite(
+          ge( n_c, int( 0 ) ),
+          letIn(
+            appOp( NameEx( "Y" ) ),
+            declOp( "Y", appOp( NameEx( "X" ), n_c, n_c ) )
+          ),
+          appOp( NameEx( "X" ), n_p, int( 3 ) )
+        ),
+        declOp( "X", ge( plus( n_a, n_b ), int( 0 ) ), "a", "b" )
+      )
+
+    val expected1 = n_x
+    val expected2 = letIn( appOp( n_A ), declOp( "A", n_x ) )
+    val expected3 = n_x
+    val expected4 =
+      ite(
+        ge( n_c, int( 0 ) ),
+        letIn(
+          appOp( NameEx( "Y" ) ),
+          declOp( "Y", ge( plus( n_c, n_c ), int( 0 ) ) )
+        ),
         ge( plus( n_p, int( 3 ) ), int( 0 ) )
       )
 

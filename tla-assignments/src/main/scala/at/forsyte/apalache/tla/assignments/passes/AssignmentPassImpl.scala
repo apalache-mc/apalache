@@ -61,7 +61,7 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
     val letInExpandedDecls = uniqueVarDecls.map(
       {
         case TlaOperDecl( name, params, body ) =>
-          TlaOperDecl( name, params, ExplicitLetIn( tracker )( body ) )
+          TlaOperDecl( name, params, ExplicitLetIn( tracker, skip0Arity = false )( body ) )
         case e@_ => e
       }
     )

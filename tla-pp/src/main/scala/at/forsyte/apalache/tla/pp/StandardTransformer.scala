@@ -17,7 +17,7 @@ object StandardTransformer {
     val transformationSequence : Vector[TlaExTransformation] =
       Vector(
         Inline( bodyMap, tracker ),
-        ExplicitLetIn( tracker ),
+        ExplicitLetIn( tracker, skip0Arity = false ),
         EqualityAsContainment( tracker ),
         ExplicitUnchanged( tracker ),
         SimplifyRecordAccess( tracker )

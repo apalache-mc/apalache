@@ -28,7 +28,7 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
     val decls = declsRenamed.map(
       {
         case TlaOperDecl( name, params, body ) =>
-          TlaOperDecl( name, params, ExplicitLetIn( tracker )( body ) )
+          TlaOperDecl( name, params, ExplicitLetIn( tracker, skip0Arity = false )( body ) )
         case e@_ => e
       }
     )

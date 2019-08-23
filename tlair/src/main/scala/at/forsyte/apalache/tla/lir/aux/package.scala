@@ -62,18 +62,21 @@ package object aux {
     case _ => Map.empty[String, Int]
   }
 
-  /** We need to split an ordered collection of OperDecls (from a LET-IN operator),
-    * into segments of 0 arity and >0 ariry operators, to expand all but the 0-arity
+  def hasPositiveArity( decl: TlaOperDecl ) : Boolean = decl.formalParams.nonEmpty
+
+  /** We may need to split an ordered collection of OperDecls (from a LET-IN operator),
+    * into segments of 0 arity and >0 ariry operators
     */
   def collectSegments( decls : Traversable[TlaOperDecl] ) : List[List[TlaOperDecl]] = decls match {
     case d if d.isEmpty => List.empty
     case head :: tail =>
+      val headPosArity = hasPositiveArity( head )
       val rec = collectSegments( tail )
-      val headOrEmpty = rec.headOption.getOrElse( List.empty )
-      // head has arity >0 && all decls in the first segment have arity >0.
-      // if headOption returns None, the 2nd condition vacuously holds for the empty seq
-      if ( head.formalParams.nonEmpty && headOrEmpty.forall( _.formalParams.nonEmpty ) )
-        ( head +: headOrEmpty ) +: rec.drop( 1 ) // Nil.tail throws, but Nil.drop(1) doesn't
+      val recHeadOrEmpty = rec.headOption.getOrElse( List.empty )
+      // We merge to previous, if they have the same arity category (0 or >0)
+      // if headOption returns None, the condition vacuously holds for the empty seq
+      if ( recHeadOrEmpty.forall( d => hasPositiveArity( d ) == headPosArity ) )
+        ( head +: recHeadOrEmpty ) +: rec.drop( 1 ) // Nil.tail throws, but Nil.drop(1) doesn't
       else
         List( head ) +: rec
   }
