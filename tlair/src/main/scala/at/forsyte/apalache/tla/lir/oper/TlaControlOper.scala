@@ -43,16 +43,4 @@ object TlaControlOper {
     override val interpretation: Interpretation.Value = Interpretation.Predefined
     override val precedence: (Int, Int) = (0, 0)
   }
-
-  /**
-    * An instance of a LET-IN operator. Let-in is a very special operator since it contains new declarations.
-    *
-    * TODO: remove? One can construct LET-IN with TLA builder.
-    *
-    * @param defs new definitions by the operator
-    * @return a new instance
-    */
-  def letIn(defs: TlaOperDecl*): LetInOper = {
-    new LetInOper(List(defs :_*))
-  }
 }

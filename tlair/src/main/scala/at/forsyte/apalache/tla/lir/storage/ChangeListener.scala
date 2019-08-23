@@ -1,9 +1,8 @@
 package at.forsyte.apalache.tla.lir.storage
 
 
-import at.forsyte.apalache.tla.lir.oper.LetInOper
 import at.forsyte.apalache.tla.lir.transformations.TransformationListener
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, UID}
+import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaEx, UID}
 import com.google.inject.Singleton
 
 import scala.collection.mutable
@@ -37,13 +36,14 @@ class ChangeListener extends TransformationListener {
   // as if it were produced by an anonymous transformation from the original
   private def inheritUID(ex: TlaEx, uid: UID) : Unit = {
     ex match {
-      case OperEx( letIn : LetInOper, body ) =>
-        letIn.defs map {
+      case LetInEx( body, defs@_* ) =>
+        defs map {
           _.body
         } foreach {
           inheritUID( _, uid )
         }
         inheritUID( body, uid )
+
       case OperEx( _, args@_* ) =>
         args foreach {
           inheritUID( _, uid )

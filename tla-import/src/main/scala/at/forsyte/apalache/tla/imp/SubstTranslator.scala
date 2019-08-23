@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{LetInOper, TlaActionOper, TlaTempOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaTempOper}
 import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic._
 
@@ -23,12 +23,9 @@ class SubstTranslator(sourceStore: SourceStore, context: Context) extends LazyLo
       case NameEx(name) =>
         renaming.getOrElse(name, NameEx(name))
 
-      case OperEx(op: LetInOper, args@_*) =>
-        def subDecl(d: TlaOperDecl) = {
-          TlaOperDecl(d.name, d.formalParams, subRec(d.body))
-        }
-
-        OperEx(new LetInOper(op.defs map subDecl), args map subRec: _*)
+      case LetInEx( body, defs@_* ) =>
+        def subDecl( d : TlaOperDecl ) = d.copy( body = subRec( d.body ) )
+        LetInEx( subRec(body), defs map subDecl :_*)
 
       case OperEx(op, args@_*) =>
         if (renaming.nonEmpty

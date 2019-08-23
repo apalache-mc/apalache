@@ -1045,17 +1045,17 @@ class TestSanyImporter extends FunSuite {
     root.declarations.find {
       _.name == "A"
     } match {
-      case Some(TlaOperDecl(_, _, OperEx(o: LetInOper, body))) =>
-        assert(3 == o.defs.length)
-        val xDecl = o.defs.head
+      case Some(TlaOperDecl(_, _, LetInEx(body, defs@_*))) =>
+        assert(3 == defs.length)
+        val xDecl = defs.head
         assert("X" == xDecl.name)
-        val yDecl = o.defs(1)
+        val yDecl = defs(1)
         assert(TlaOperDecl("Y",
           List(SimpleFormalParam("a")),
           NameEx("a")) == yDecl)
         assert(locationStore.contains(yDecl.body.ID)) // and source file information has been saved
 
-        val zDecl = o.defs(2)
+        val zDecl = defs(2)
         zDecl match {
           case TlaOperDecl("Z", List(OperFormalParam("f", FixedArity(1)), SimpleFormalParam("a")), _) =>
             assert(OperEx(TlaOper.apply, NameEx("f"), NameEx("a")) == zDecl.body)
@@ -1092,9 +1092,9 @@ class TestSanyImporter extends FunSuite {
     root.declarations.find {
       _.name == "A"
     } match {
-      case Some(TlaOperDecl(_, _, OperEx(o: LetInOper, body))) =>
-        assert(2 == o.defs.length)
-        val fDecl = o.defs.head
+      case Some(TlaOperDecl(_, _, LetInEx(body, defs@_*))) =>
+        assert(2 == defs.length)
+        val fDecl = defs.head
         assert("f" == fDecl.name)
         val expectedBody =
           OperEx(TlaFunOper.funDef,
@@ -1108,7 +1108,7 @@ class TestSanyImporter extends FunSuite {
         assert(expectedBody == fDecl.body)
         assert(locationStore.contains(fDecl.body.ID)) // and source file information has been saved
 
-        val xDecl = o.defs(1)
+        val xDecl = defs(1)
         assert("X" == xDecl.name)
         assert(OperEx(TlaOper.apply, NameEx("X")) == xDecl.body)
         assert(OperEx(xDecl.operator) == body)

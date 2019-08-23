@@ -1,9 +1,9 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{LetInOper, TlaActionOper}
+import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.{LetIn0Ex, NameEx, OperEx}
+import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx}
 
 object Prime {
   private def primeLeaf( vars : Set[String], tracker : TransformationTracker ) : TlaExTransformation =
@@ -25,19 +25,17 @@ object Prime {
     val tr = primeLeaf( vars, tracker )
     lazy val self = apply(vars, tracker)
     ex match {
-      case OperEx( op : LetInOper, body ) =>
+      case LetInEx( body, defs@_* ) =>
         // Transform bodies of all op.defs
-        val replacedOperDecls = op.defs.map { x =>
+        val newDefs = defs.map { x =>
           x.copy(
             body = self( x.body )
           )
         }
-
-        val newOp = new LetInOper( replacedOperDecls )
         val newBody = self( body )
-        val retEx = if ( op == newOp && body == newBody ) ex else OperEx( newOp, newBody )
-
+        val retEx = if ( defs == newDefs && body == newBody ) ex else LetInEx( newBody, newDefs : _* )
         tr( retEx )
+
       case ex@OperEx( TlaActionOper.prime, NameEx( _ ) ) =>
         // Do not prime expressions which are already primed. This may happen when Init = Inv.
         tr(ex)
@@ -45,13 +43,7 @@ object Prime {
         val newArgs = args map self
         val retEx = if ( args == newArgs ) ex else OperEx( op, newArgs : _* )
         tr( retEx )
-      case LetIn0Ex( name, operBody, exprBody ) =>
-        val newOperBody = self(operBody)
-        val newExprBody = self(exprBody)
-        val newEx =
-          if ( newOperBody == operBody && newExprBody == exprBody ) ex
-          else LetIn0Ex(name, newOperBody, newExprBody)
-        tr( newEx )
+
       case _ => tr( ex )
     }
   }

@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.lir.transformations
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{LetInOper, TlaBoolOper}
-import at.forsyte.apalache.tla.lir.transformations.impl.{TransformationImpl, TransformationTrackerImpl}
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper}
+import at.forsyte.apalache.tla.lir.transformations.impl.TransformationTrackerImpl
 
 object VariableRenamingTracker {
   def pfx( prefix : String, s : String ) : String = s"${prefix}_$s"
@@ -25,8 +25,8 @@ sealed case class VariableRenamingTracker(listeners : TransformationListener* )
   private def prefixPrepend( boundVars : Set[String], prefix : String )( ex : TlaEx ) : TlaEx = ex match {
     case NameEx( name ) if boundVars.contains( name ) =>
       NameEx( VariableRenamingTracker.pfx( prefix, name ) )
-    case OperEx( op : LetInOper, body ) =>
-      val newdefs = op.defs.map(
+    case LetInEx( body, defs@_* ) =>
+      val newdefs = defs.map(
         {
           case TlaOperDecl( name, params, declBody ) =>
             TlaOperDecl(
@@ -37,10 +37,8 @@ sealed case class VariableRenamingTracker(listeners : TransformationListener* )
           case decl => decl
         }
       )
-      OperEx(
-        new LetInOper( newdefs ),
-        VariableRenaming( boundVars, prefix )( body )
-      )
+      LetInEx( VariableRenaming( boundVars, prefix )( body ), newdefs : _* )
+
     // assuming bounded quantification!
     case OperEx( oper, v@NameEx( varname ), set, body )
       if oper == TlaBoolOper.exists || oper == TlaBoolOper.forall =>

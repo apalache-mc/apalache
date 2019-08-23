@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{LetInOper, TlaFunOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.{TlaDecimal, TlaInt, TlaStr}
 import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic._
@@ -98,10 +98,9 @@ class ExprOrOpArgNodeTranslator(sourceStore: SourceStore,
       }
     }
 
-    val oper = new LetInOper(letInDeclarations)
     val body = ExprOrOpArgNodeTranslator(sourceStore, letInContext, recStatus)
       .translate(letIn.getBody)
-    OperEx(oper, body)
+    LetInEx( body, letInDeclarations : _* )
   }
 
   // substitute an expression with the declarations that come from INSTANCE M WITH ...

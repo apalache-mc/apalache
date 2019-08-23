@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.oper.{LetInOper, TlaActionOper, TlaFunOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaFunOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import javax.inject.Singleton
 
@@ -174,9 +174,9 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
     def rename(e: TlaEx): TlaEx = e match {
       case NameEx(name) => if (!subs.contains(name)) e else subs(name)
 
-      case OperEx(op: LetInOper, args @ _*) =>
-        val newDefs = op.defs.map(d => TlaOperDecl(d.name, d.formalParams, rename(d.body)))
-        OperEx(new LetInOper(newDefs), args map rename :_*)
+      case LetInEx( body, defs@_* ) =>
+        val newDefs = defs.map( d => d.copy( body = rename( d.body ) ) )
+        LetInEx( rename( body ), newDefs : _* )
 
       case OperEx(op, args @ _*) =>
         OperEx(op, args map rename :_*)

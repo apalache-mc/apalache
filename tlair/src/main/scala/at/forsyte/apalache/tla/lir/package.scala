@@ -134,15 +134,10 @@ package lir {
     override def deepCopy() : NameEx = NameEx(name)
   }
 
-  /** LetIn0Ex represents a special 0 arity LET-IN expression, that can be used to optimize computation,
-    * Can only be introduced in preprocessing and never appears in specifications.
-    *
-    * Example:
-    * LET X == 1 IN X ~~> LetIn0Ex("X", ValEx( 1 ), OperEx(apply, NameEx("X")) )
-    */
-  case class LetIn0Ex( name : String, operBody : TlaEx, exprBody : TlaEx ) extends TlaEx {
-    override def deepCopy( ) = LetIn0Ex( name, operBody.deepCopy(), exprBody.deepCopy() )
-    override def toSimpleString: String = s"LET $name == $operBody IN $exprBody"
+  // Introducing a LET-IN expression
+  case class LetInEx( body: TlaEx, decls: TlaOperDecl* ) extends TlaEx {
+    override def deepCopy( ) = LetInEx( body.deepCopy(), decls map { _.deepCopy() } :_*)
+    override def toSimpleString: String = s"LET ${decls.mkString(" ")} IN $body"
   }
 
   // applying an operator, including the one defined by OperFormalParam

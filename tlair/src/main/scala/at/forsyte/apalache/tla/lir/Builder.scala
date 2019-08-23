@@ -172,9 +172,10 @@ object Builder {
            p_else : TlaEx
          ) : OperEx = OperEx( TlaControlOper.ifThenElse, p_cond, p_then, p_else )
 
+  // [[LetIn]]
   def letIn( p_ex : TlaEx,
-             p_operArgs : TlaOperDecl*
-           ) : OperEx = OperEx( new LetInOper( p_operArgs.toList ), p_ex )
+             p_defs : TlaOperDecl*
+           ) : LetInEx = LetInEx( p_ex, p_defs : _* )
 
   /** TlaTempOper */
   def AA( p_x : TlaEx,

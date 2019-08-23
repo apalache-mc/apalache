@@ -45,6 +45,7 @@ object UTFPrinter extends Printer {
   val m_supseteq  = "\u2287"
   val m_setminus  = "\u2216"
   val m_times     = "\u00D7"
+  val m_defeq     = "\u225C"
 
   def pad( s : String ) : String = " %s ".format( s )
 
@@ -121,9 +122,9 @@ object UTFPrinter extends Printer {
 
       case OperEx( oper : TlaUserOper, args@_* ) => "%s(%s)".format( oper.name, str( args ) )
 
-      case OperEx( oper: LetInOper, body) =>
-        val defs = oper.defs.map(apply(_)).mkString("\n  ")
-        "LET %s IN\n  %s".format(defs, apply(body))
+      case LetInEx( body, defs@_* ) =>
+        val defStrings = defs.map( apply( _ ) ).mkString( " " )
+        s"LET $defStrings IN ${apply( body )}"
 
       case OperEx( oper, args@_* ) =>
         oper match {
@@ -269,7 +270,7 @@ object UTFPrinter extends Printer {
             ""
           else "(%s)".format(formalParams.map(pr_param).mkString(", "))
 
-        name + ps + " == " + apply(body)
+        name + ps + s" ${m_defeq} " + apply(body)
 
       case _ =>
         throw new RuntimeException("Unexpected declaration: " + p_decl) // it should not happen

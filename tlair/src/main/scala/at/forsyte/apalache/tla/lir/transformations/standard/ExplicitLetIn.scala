@@ -1,27 +1,23 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
-import at.forsyte.apalache.tla.lir.oper.LetInOper
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.{FormalParam, LetIn0Ex, OperEx}
+import at.forsyte.apalache.tla.lir.{FormalParam, LetInEx, OperEx}
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 
 object ExplicitLetIn {
 
   private def letInExplicitLeaf( tracker : TransformationTracker ) : TlaExTransformation = tracker.track {
-    case OperEx( oper : LetInOper, body ) =>
+    case LetInEx( body, defs@_* ) =>
 
       /** Let-in may be nested */
       val fullyExplicit = apply( tracker )( body )
 
       /** Make a fresh temporary DB, store all decls inside */
-      val bodyDB = BodyMapFactory.makeFromDecls( oper.defs )
+      val bodyDB = BodyMapFactory.makeFromDecls( defs )
 
       /** Inline as if operators were external. */
       Inline( bodyDB, tracker )( fullyExplicit )
-    case LetIn0Ex( name, operBody, exprBody) =>
-      val fullyExplicit = apply( tracker )( exprBody )
-      val bodyDB = Map( name -> (List.empty[FormalParam], operBody) )
-      Inline( bodyDB, tracker )( fullyExplicit )
+
     case ex => ex
   }
 
@@ -36,10 +32,8 @@ object ExplicitLetIn {
     val tr = letInExplicitLeaf( tracker )
     lazy val self = apply( tracker )
     ex match {
-      case OperEx( op : LetInOper, _ ) =>
+      case _ : LetInEx =>
         tr( ex )
-      case e : LetIn0Ex =>
-        tr( e )
       case ex@OperEx( op, args@_* ) =>
         val newArgs = args map self
         val retEx = if ( args == newArgs ) ex else OperEx( op, newArgs : _* )

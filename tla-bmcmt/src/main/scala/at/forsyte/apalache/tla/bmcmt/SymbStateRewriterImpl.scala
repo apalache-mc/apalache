@@ -566,6 +566,9 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
       case OperEx(oper, _*) =>
         "O@" + oper.name
 
+      case LetInEx(_, _*) =>
+        "L@"
+
       case ValEx(TlaInt(_)) =>
         "I@"
 

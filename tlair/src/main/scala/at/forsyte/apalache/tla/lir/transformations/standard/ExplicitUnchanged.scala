@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{LetInOper, TlaActionOper, TlaFunOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaFunOper}
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
 object ExplicitUnchanged {
@@ -38,30 +38,22 @@ object ExplicitUnchanged {
     val tr = unchangedExplicitLeaf( tracker )
     lazy val self = apply( tracker )
     ex match {
-      case OperEx( op : LetInOper, body ) =>
+      case LetInEx( body, defs@_* ) =>
         // Transform bodies of all op.defs
-        val replacedOperDecls = op.defs.map { x =>
+        val newDefs = defs.map { x =>
           x.copy(
             body = self( x.body )
           )
         }
-
-        val newOp = new LetInOper( replacedOperDecls )
         val newBody = self( body )
-        val retEx = if ( op == newOp && body == newBody ) ex else OperEx( newOp, newBody )
-
+        val retEx = if ( defs == newDefs && body == newBody ) ex else LetInEx( newBody, newDefs : _* )
         tr( retEx )
+
       case ex@OperEx( op, args@_* ) =>
         val newArgs = args map self
         val retEx = if ( args == newArgs ) ex else OperEx( op, newArgs : _* )
         tr( retEx )
-      case LetIn0Ex( name, operBody, exprBody ) =>
-        val newOperBody = self(operBody)
-        val newExprBody = self(exprBody)
-        val newEx =
-          if ( newOperBody == operBody && newExprBody == exprBody ) ex
-          else LetIn0Ex(name, newOperBody, newExprBody)
-        tr( newEx )
+
       case _ => tr( ex )
     }
   }

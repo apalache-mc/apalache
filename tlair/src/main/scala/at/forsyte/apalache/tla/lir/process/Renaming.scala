@@ -54,8 +54,8 @@ class Renaming @Inject()(tracker: TransformationTracker) extends TlaExTransforma
           ex // nothing changes, so no new id is assigned
         }
 
-      case OperEx( letInOp : LetInOper, body ) =>
-        val opersAndFParamsNameMap = ( letInOp.defs flatMap {
+      case LetInEx( body, defs@_* ) =>
+        val opersAndFParamsNameMap = ( defs flatMap {
           case TlaOperDecl( n, params, _ ) => ( n -> assignUniqueName( n ) ) +: (
             params map { p =>
               val pName = p.name
@@ -65,7 +65,7 @@ class Renaming @Inject()(tracker: TransformationTracker) extends TlaExTransforma
 
         val newMap = map ++ opersAndFParamsNameMap
 
-        val newDecls = letInOp.defs map {
+        val newDefs = defs map {
           case TlaOperDecl( n, ps, b ) =>
             TlaOperDecl(
               opersAndFParamsNameMap( n ),
@@ -76,8 +76,8 @@ class Renaming @Inject()(tracker: TransformationTracker) extends TlaExTransforma
               rename( newMap )( b )
             )
         }
-        val newBody = rename(newMap)(body)
-        OperEx( new LetInOper(newDecls), newBody )
+        val newBody = rename( newMap )( body )
+        LetInEx( newBody, newDefs : _* )
 
       case OperEx(op, NameEx(name), otherArgs@_*)
         if op == TlaSetOper.filter

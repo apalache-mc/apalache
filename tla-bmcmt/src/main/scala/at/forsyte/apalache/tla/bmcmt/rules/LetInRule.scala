@@ -1,8 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.lir.oper.LetInOper
-import at.forsyte.apalache.tla.lir.{OperEx, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.{LetInEx, TlaOperDecl}
 
 object LetInRule {
   val namePrefix = "Oper:"
@@ -16,19 +15,17 @@ object LetInRule {
 class LetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
-      case OperEx(_: LetInOper, _*) => true
-
+      case _ : LetInEx => true
       case _ => false
     }
   }
 
   override def apply(state: SymbState): SymbState = state.ex match {
-    case OperEx(oper: LetInOper, body) =>
-      val boundState = oper.defs.foldLeft(state) (bindOperator)
+    case LetInEx( body, defs@_* ) =>
+      val boundState = defs.foldLeft(state) (bindOperator)
       val bodyState = rewriter.rewriteUntilDone(boundState.setTheory(state.theory).setRex(body))
       val finalState = bodyState.setBinding(state.binding) // recover the original binding
       rewriter.coerce(finalState, state.theory)
-
     case _ =>
       throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
   }

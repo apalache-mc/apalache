@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{LetInOper, TlaFunOper}
+import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.TlaStr
 
@@ -27,30 +27,22 @@ object SimplifyRecordAccess {
     val tr = simplifyLeaf( tracker )
     lazy val self = apply( tracker )
     ex match {
-      case OperEx( op : LetInOper, body ) =>
-        // Inline bodies of all op.defs
-        val inlinedOperDecls = op.defs.map { x =>
+      case LetInEx( body, defs@_* ) =>
+        // Transform bodies of all op.defs
+        val newDefs = defs.map { x =>
           x.copy(
             body = self( x.body )
           )
         }
-
-        val newOp = new LetInOper( inlinedOperDecls )
         val newBody = self( body )
-        val retEx = if ( op == newOp && body == newBody ) ex else OperEx( newOp, newBody )
-
+        val retEx = if ( defs == newDefs && body == newBody ) ex else LetInEx( newBody, newDefs : _* )
         tr( retEx )
+
       case ex@OperEx( op, args@_* ) =>
         val newArgs = args map self
         val retEx = if ( args == newArgs ) ex else OperEx( op, newArgs : _* )
         tr( retEx )
-      case LetIn0Ex( name, operBody, exprBody ) =>
-        val newOperBody = self(operBody)
-        val newExprBody = self(exprBody)
-        val newEx =
-          if ( newOperBody == operBody && newExprBody == exprBody ) ex
-          else LetIn0Ex(name, newOperBody, newExprBody)
-        tr( newEx )
+
       case _ => tr( ex )
     }
   }
