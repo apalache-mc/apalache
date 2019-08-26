@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.pp.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.lir.TlaModule
-import at.forsyte.apalache.tla.lir.process.DeclarationModifiers
+import at.forsyte.apalache.tla.lir.process.Renaming
 import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
@@ -37,12 +37,13 @@ class PreproPassImpl @Inject()( val options: PassOptions,
     logger.info("de-sugaring the spec")
     val afterDesugarer = ModuleByExTransformer(Desugarer(tracker)) (tlaModule.get)
     logger.info("Renaming variables uniquely")
+    val renaming = new Renaming( tracker )
     val uniqueVarDecls =
       new TlaModule(
         afterDesugarer.name,
         afterDesugarer.imports,
         afterDesugarer.declarations map {
-          DeclarationModifiers.uniqueVarRename( _, changeListener )
+          renaming.apply
         }
       )
 

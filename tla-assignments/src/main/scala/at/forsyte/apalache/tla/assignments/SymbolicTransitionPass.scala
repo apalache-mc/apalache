@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.assignments
 
-import at.forsyte.apalache.tla.lir.process.DeclarationModifiers
+import at.forsyte.apalache.tla.lir.process.Renaming
 import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
@@ -48,15 +48,15 @@ class SymbolicTransitionPass( private val m_bodyMap : BodyMap,
              p_nextName : String = "Next"
            ) : Seq[SymbTrans] = {
 
+    val tracker = TrackerWithListeners( m_srcDB )
+    val renaming = new Renaming( tracker )
     /**
       * First, rename all bound variables to unique ones (per operator), to avoid contamination
       * when unfolding operator calls
       **/
     val declsRenamed = p_decls map {
-        DeclarationModifiers.uniqueVarRename( _, m_srcDB )
+        renaming.apply
       }
-
-    val tracker = TrackerWithListeners( m_srcDB )
 
     /** Make all LET-IN calls explicit, to move towards alpha-TLA+ */
     val decls = declsRenamed.map(

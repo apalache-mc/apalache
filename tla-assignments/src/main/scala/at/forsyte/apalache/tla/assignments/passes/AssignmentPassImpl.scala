@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.process.DeclarationModifiers
+import at.forsyte.apalache.tla.lir.process.Renaming
 import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard._
@@ -42,9 +42,12 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
+    val tracker = TrackerWithListeners( changeListener )
+    val renaming = new Renaming( tracker )
+
     val uniqueVarDecls =
       tlaModule.get.declarations map {
-        DeclarationModifiers.uniqueVarRename( _, changeListener )
+        renaming.apply
       }
 
     val varSet = uniqueVarDecls
@@ -55,8 +58,6 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
       .map(_.name).toSet
 
     val initName = options.getOption("checker", "init", "Init").asInstanceOf[String]
-
-    val tracker = TrackerWithListeners( changeListener )
 
     val letInExpandedDecls = uniqueVarDecls.map(
       {
