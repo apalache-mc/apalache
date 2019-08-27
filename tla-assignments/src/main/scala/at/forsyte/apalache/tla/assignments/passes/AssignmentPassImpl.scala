@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.process.Renaming
 import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener}
+import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import com.google.inject.Inject
@@ -36,6 +37,24 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
     */
   override def name: String = "AssignmentFinder"
 
+  private def findOrThrow(
+                           name: String,
+                           msgPrefix: String,
+                           decls: Seq[TlaDecl]
+                         ) : Option[TlaEx] = {
+    val nameOpt = options.getOption("checker", name, None).asInstanceOf[Option[String]]
+    nameOpt map { n =>
+      findBodyOf(n, decls: _*) match {
+        case NullEx =>
+          val msg = s"$msgPrefix $n not found"
+          logger.error(msg)
+          throw new IllegalArgumentException(msg)
+        case body =>
+          body
+      }
+    }
+  }
+
   /**
     * Run the pass
     *
@@ -43,36 +62,27 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
     */
   override def execute(): Boolean = {
     val tracker = TrackerWithListeners( changeListener )
-    val renaming = new Renaming( tracker )
 
-    val uniqueVarDecls =
-      tlaModule.get.declarations map {
-        renaming.apply
-      }
+    val decls = tlaModule.get.declarations
 
-    val varSet = uniqueVarDecls
+    val varSet = decls
       .filter(_.isInstanceOf[TlaVarDecl])
       .map(_.name).toSet
-    val constSet = uniqueVarDecls
+    val constSet = decls
       .filter(_.isInstanceOf[TlaConstDecl])
       .map(_.name).toSet
 
     val initName = options.getOption("checker", "init", "Init").asInstanceOf[String]
 
-    val letInExpandedDecls = uniqueVarDecls.map(
-      {
-        case TlaOperDecl( name, params, body ) =>
-          TlaOperDecl( name, params, ExplicitLetIn( tracker, skip0Arity = false )( body ) )
-        case e@_ => e
-      }
-    )
-
-    val bodyMap = BodyMapFactory.makeFromDecls( letInExpandedDecls )
+    val bodyMap = BodyMapFactory.makeFromDecls( decls )
 
     // TODO: why do we call a pass inside a pass?
     val stp = new SymbolicTransitionPass( bodyMap, changeListener )
 
     val primeTr = Prime( varSet, tracker )
+    // We need an extra EqualityAsContainment, because priming
+    // may change equality into asgn. candidates
+    val eacTr = EqualityAsContainment( tracker )
 
     // since Converter and assignmentSolver do a lot of magic internally, substitute Init with primed variables first
     def replaceInit(decl: TlaDecl): TlaDecl = decl match {
@@ -81,13 +91,13 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
           throw new AssignmentException("Initializing operator %s has %d arguments, expected 0"
             .format(initName, params.length))
         } else {
-          TlaOperDecl( name, params, primeTr( Inline( bodyMap, tracker)( body ) ) )
+          TlaOperDecl( name, params, eacTr( primeTr( body ) ) )
         }
 
       case e@_ => e
     }
 
-    val initReplacedDecls = letInExpandedDecls.map(replaceInit)
+    val initReplacedDecls = decls.map(replaceInit)
 
     // drop selections because of lacking implementation further on
     val initTransitions = stp( initReplacedDecls, initName ).map( _._2 ).toList
@@ -105,49 +115,31 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
       logger.debug("Next transition #%d:\n   %s".format(i, t))
     }
 
-    val transformer = StandardTransformer( bodyMap, tracker )
+    val cinit = findOrThrow( "cinit", "Constant initializer", decls )
+    val cinitPrime = cinit map {
+      body =>
+        val ret = eacTr( Prime( constSet, tracker )( body ) )
+        logger.debug(s"Constant initializer with primes\n    $ret")
+        ret
+    }
 
-    // find constant initializers
-    val cinitName = options.getOption("checker", "cinit", None).asInstanceOf[Option[String]]
-    val cinitPrime =
-      if (cinitName.isEmpty) {
-        None
-      } else {
-        val cinitBody = findBodyOf(cinitName.get, initReplacedDecls: _*)
-        if (cinitBody == NullEx) {
-          val msg = s"Constant initializer ${cinitName.get} not found"
-          logger.error(msg)
-          throw new IllegalArgumentException(msg)
-        }
-        val cinit = transformer(cinitBody)
-        val cinitPrime = Prime( constSet, tracker)(cinit)
-        logger.debug("Constant initializer with primes\n    %s".format(cinitPrime))
-        Some(cinitPrime)
-      }
+    val inv = findOrThrow( "inv", "Invariant", decls )
+    val notInvariant = inv map { i =>
+      val ret = tla.not(i)
+      logger.debug(s"Negated invariant:\n   $ret")
+      ret
+    }
 
-    // find the invariant
-    val invName = options.getOption("checker", "inv", None).asInstanceOf[Option[String]]
-    val (notInvariant, notInvariantPrime) =
-      if (invName.isEmpty) {
-        (None, None)
-      } else {
-        val invBody = findBodyOf(invName.get, initReplacedDecls: _*)
-        if (invBody == NullEx) {
-          val msg = "Invariant definition %s not found".format(invName.get)
-          logger.error(msg)
-          throw new IllegalArgumentException(msg)
-        }
-        val notInv = transformer(tla.not(invBody))
-        logger.debug("Negated invariant:\n   %s".format(notInv))
-        val notInvPrime = primeTr(notInv)
-        logger.debug("Negated invariant with primes\n   %s".format(notInvPrime))
-        (Some(notInv), Some(notInvPrime))
-      }
+    val notInvariantPrime = notInvariant map { i =>
+      val ret = eacTr( primeTr ( i ) )
+      logger.debug(s"Negated invariant with primes\n   $ret")
+      ret
+    }
 
     logger.info("Found %d initializing transitions and %d next transitions"
       .format(initTransitions.length, nextTransitions.length))
 
-    val newModule = new TlaModule(tlaModule.get.name, tlaModule.get.imports, uniqueVarDecls)
+    val newModule = new TlaModule(tlaModule.get.name, tlaModule.get.imports, decls)
     specWithTransitions
       = Some(new SpecWithTransitions(newModule, initTransitions, nextTransitions, cinitPrime, notInvariant, notInvariantPrime))
     true

@@ -14,14 +14,20 @@ object ExplicitLetIn {
                                ) : TlaExTransformation = tracker.track {
     case LetInEx( body, defs@_* ) =>
 
-      /** Let-in may be nested */
-      val explicitBody = apply( tracker, skip0Arity )( body )
+      val self = apply( tracker, skip0Arity )
+      /** LET-IN may be nested in the body ...*/
+      val explicitBody = self( body )
+
+      /** .. or another operator */
+      val explicitDefs = defs map { d =>
+        d.copy( body = self( d.body ) )
+      }
 
       val filterFun : TlaOperDecl => Boolean =
         if (skip0Arity) hasPositiveArity
         else { _ => true} //expand all
 
-      val (defsToExpand, defsToKeep) = defs.partition( filterFun )
+      val (defsToExpand, defsToKeep) = explicitDefs.partition( filterFun )
 
       /** Make a fresh temporary DB, store all selected defs inside */
       val bodyDB = BodyMapFactory.makeFromDecls( defsToExpand )

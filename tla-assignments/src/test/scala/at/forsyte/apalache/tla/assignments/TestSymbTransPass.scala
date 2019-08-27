@@ -1,8 +1,13 @@
 package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.imp.declarationsFromFile
-import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory, ChangeListener}
-import at.forsyte.apalache.tla.lir.{NullEx, TestingPredefs, TlaDecl, TlaEx, TlaOperDecl, TlaVarDecl, UID, Builder => bd}
+import at.forsyte.apalache.tla.lir.process.Renaming
+import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener}
+import at.forsyte.apalache.tla.lir.transformations.TlaExTransformation
+import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
+import at.forsyte.apalache.tla.lir.transformations.standard._
+import at.forsyte.apalache.tla.lir.{NullEx, TestingPredefs, TlaDecl, TlaEx, TlaModule, TlaOperDecl, TlaVarDecl, UID, Builder => bd}
+import at.forsyte.apalache.tla.pp.Desugarer
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -16,10 +21,29 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
   }
 
   def testFromDecls( p_decls : Seq[TlaDecl], p_next : String = "Next"   ) : Seq[SymbTrans]  = {
-    val bodyMap = BodyMapFactory.makeFromDecls( p_decls )
+    val fakeModule = new TlaModule("test", Seq.empty, p_decls)
     val srcDB = new ChangeListener
 
-    new SymbolicTransitionPass(bodyMap,srcDB)( p_decls, p_next )
+    val tracker = TrackerWithListeners( srcDB )
+    val afterDesugarer = ModuleByExTransformer(Desugarer(tracker)) (fakeModule)
+    val renaming = new Renaming( tracker )
+    val uniqueVarDecls =
+      new TlaModule(
+        afterDesugarer.name,
+        afterDesugarer.imports,
+        afterDesugarer.declarations map {
+          renaming.apply
+        }
+      )
+
+    val bodyMap = BodyMapFactory.makeFromDecls( uniqueVarDecls.operDeclarations )
+    val inlined = ModuleByExTransformer( Inline( bodyMap, tracker ) )( uniqueVarDecls )
+    val explLetIn = ModuleByExTransformer( ExplicitLetIn( tracker, skip0Arity = false ) )( inlined )
+    val eac = ModuleByExTransformer( EqualityAsContainment( tracker ) )( explLetIn )
+    val explUC = ModuleByExTransformer( ExplicitUnchanged( tracker ) )( eac )
+    val preprocessed = ModuleByExTransformer(  SimplifyRecordAccess( tracker ) )( explUC )
+
+    new SymbolicTransitionPass(bodyMap,srcDB)( preprocessed.declarations, p_next )
   }
 
   def testFromFile( p_file : String, p_next : String = "Next" ) : Seq[SymbTrans] = {
@@ -61,10 +85,6 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
     val decls = Seq( TlaOperDecl( "Next", List(), next ), TlaVarDecl( "x" ) )
 
     val symbNexts = testFromDecls( decls )
-    println( symbNexts.size )
-
-
-
   }
 
   test( "Test non-compliant SMT spec" ){
@@ -99,49 +119,27 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
   }
 
   test( "Test Selections" ){
-
     val symbNexts = testFromFile( "Selections.tla" )
-    println( symbNexts.size )
-
-
   }
 
   test( "Test Paxos (simplified)" ){
-
     val symbNexts = testFromFile( "Paxos.tla" )
-    println( symbNexts.size )
-
-    printlns( symbNexts.map( _._2.toString ):_* )
-
   }
 
   test("Test ITE_CASE") {
-
-
     val symbNexts = testFromFile( "ITE_CASE.tla" )
-
   }
 
   test("Test EWD840") {
-
-
     val symbNexts = testFromFile( "EWD840.tla" )
-    symbNexts foreach { s=>
-      println(s._2)
-    }
-    println( symbNexts.size )
   }
 
   test( "AST" ){
-
     val symbNexts = testFromFile( "ast.tla" )
-    println( symbNexts.size )
-
   }
 
   test( "test1" ) {
     val symbNexts = testFromFile( "test1.tla" )
-
   }
 
   test( "SimpTendermit1" ) {

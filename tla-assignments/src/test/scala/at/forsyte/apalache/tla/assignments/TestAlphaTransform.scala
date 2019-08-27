@@ -6,7 +6,8 @@ import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.process.Renaming
 import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory, ChangeListener}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
-import at.forsyte.apalache.tla.lir.transformations.standard.ExplicitLetIn
+import at.forsyte.apalache.tla.lir.transformations.standard._
+import at.forsyte.apalache.tla.pp.Desugarer
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -18,44 +19,29 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
   def specFromFile(p_file : String, p_next : String = "Next") : TlaEx = {
     val declsRaw = declarationsFromFile(testFolderPath + p_file)
 
+    val fakeModule = new TlaModule("test", Seq.empty, declsRaw)
+
     val tracker = TrackerWithListeners( new ChangeListener )
-    val tr = new Renaming( tracker )
 
-    val declsRenamed = declsRaw map {
-        tr.apply
-      }
-
-    /** Make all LET-IN calls explicit, to move towards alpha-TLA+ */
-    val decls = declsRenamed.map(
-      {
-        case TlaOperDecl( name, params, body ) =>
-          TlaOperDecl( name, params, ExplicitLetIn( tracker, skip0Arity = false )( body ) )
-        case e@_ => e
-      }
-    )
-
-    /** Extract transition relation */
-    val nextBody = findBodyOf( p_next, decls : _* )
-
-    /** If extraction failed, throw */
-    //    assert( !nextBody.isNull )
-    if ( nextBody == NullEx )
-      throw new AssignmentException(
-        "%s not found or not an operator".format( p_next )
+    val afterDesugarer = ModuleByExTransformer(Desugarer(tracker)) (fakeModule)
+    val renaming = new Renaming( tracker )
+    val uniqueVarDecls =
+      new TlaModule(
+        afterDesugarer.name,
+        afterDesugarer.imports,
+        afterDesugarer.declarations map {
+          renaming.apply
+        }
       )
 
-    val transformer = StandardTransformer( BodyMapFactory.newMap, tracker )
+    val bodyMap = BodyMapFactory.makeFromDecls( uniqueVarDecls.operDeclarations )
+    val inlined = ModuleByExTransformer( Inline( bodyMap, tracker ) )( uniqueVarDecls )
+    val explLetIn = ModuleByExTransformer( ExplicitLetIn( tracker, skip0Arity = false ) )( inlined )
+    val eac = ModuleByExTransformer( EqualityAsContainment( tracker ) )( explLetIn )
+    val explUC = ModuleByExTransformer( ExplicitUnchanged( tracker ) )( eac )
+    val preprocessed = ModuleByExTransformer(  SimplifyRecordAccess( tracker ) )( explUC )
 
-    /** Preprocess body (inline operators, replace UNCHANGED, turn equality to set membership, etc.) */
-    val cleaned = transformer( nextBody ) match {
-      case NullEx => None
-      case e => Some( e )
-    }
-
-    /** Sanity check */
-    assert( cleaned.isDefined )
-
-    cleaned.get
+    findBodyOf( p_next, preprocessed.declarations : _* )
   }
 
   test( "Star abstraction" ) {

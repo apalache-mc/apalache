@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.lir
 
-import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper._
 
 // Contains methods and classes used in testing/debugging/experimenting
 package object aux {
@@ -81,4 +81,44 @@ package object aux {
         List( head ) +: rec
   }
 
+  def diff( ex1 : TlaEx, ex2: TlaEx ) : TlaEx = (ex1, ex2) match {
+    case (OperEx( op1, args1@_* ), OperEx(op2, args2@_*)) if op1 == op2 =>
+        val argDiff = args1.zipAll( args2, NullEx, NullEx ) map { case (x, y) => diff( x, y ) }
+        OperEx( op1, argDiff: _* )
+    case (ValEx(v1), ValEx(v2)) if v1 == v2 => ex1
+    case (NameEx(n1), NameEx(n2)) if n1 == n2 => ex1
+    case (LetInEx(b1, decls1@_*), LetInEx(b2, decls2@_*) ) =>
+      val defaultDecl = TlaOperDecl("Null", List.empty, NullEx)
+      val defaultParam = SimpleFormalParam("diffParam")
+      val declDiff = decls1.zipAll( decls2, defaultDecl, defaultDecl ) map { case (d1, d2) =>
+        if ( d1.name == d2.name && d1.formalParams == d2.formalParams )
+          d1.copy( body = diff( d1.body, d2.body ) )
+        else {
+          val name = s"DiffDecl_${d1.name}_${d2.name}"
+          val params = d1.formalParams.zipAll( d2.formalParams, defaultParam, defaultParam ) map {
+            case (par1@SimpleFormalParam( p1 ), SimpleFormalParam( p2 )) if p1 == p2 =>
+              par1
+            case (par1@OperFormalParam( p1, FixedArity( n1 ) ), OperFormalParam( p2, FixedArity( n2 ) )) if p1 == p2 && n1 == n2 =>
+              par1
+            case (par1, par2) =>
+              SimpleFormalParam( s"DiffParam_${par1.name}_${par2.name}" )
+          }
+          TlaOperDecl( name, params, diff( d1.body, d2.body ) )
+        }
+      }
+      LetInEx( diff( b1, b2 ), declDiff : _* )
+    case _ =>
+      OperEx( TlaOper.apply, NameEx("Diff"), ex1, ex2 )
+  }
+
+  def allDiffs( ex : TlaEx ) : Seq[TlaEx] = ex match {
+      case OperEx( TlaOper.apply, NameEx( "Diff" ), ex1, ex2 ) =>
+        Seq(ex)
+      case OperEx( _, args@_* ) =>
+        args flatMap { allDiffs }
+      case LetInEx( body, defs@_*) =>
+        ( body +: (defs map {_.body}) ) flatMap allDiffs
+      case _ =>
+        Seq.empty
+    }
 }

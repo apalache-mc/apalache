@@ -5,9 +5,9 @@ import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.process.Renaming
 import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
-import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
-import at.forsyte.apalache.tla.lir.transformations.standard.ModuleByExTransformer
-import at.forsyte.apalache.tla.pp.{Desugarer, StandardTransformer}
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.standard._
+import at.forsyte.apalache.tla.pp.Desugarer
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -48,8 +48,20 @@ class PreproPassImpl @Inject()( val options: PassOptions,
       )
 
     val bodyMap = BodyMapFactory.makeFromDecls( uniqueVarDecls.operDeclarations )
+
+    val transformationSequence : Vector[TlaExTransformation] =
+      Vector(
+        Inline( bodyMap, tracker ),
+        ExplicitLetIn( tracker, skip0Arity = false ),
+        EqualityAsContainment( tracker ),
+        ExplicitUnchanged( tracker ),
+        SimplifyRecordAccess( tracker )
+      )
+
     logger.info("Applying standard transformations")
-    val preprocessed = ModuleByExTransformer( StandardTransformer(bodyMap, tracker) )(uniqueVarDecls)
+    val preprocessed = transformationSequence.foldLeft( uniqueVarDecls ){ case (m,tr) =>
+      ModuleByExTransformer( tr )( m )
+    }
     outputTlaModule = Some(preprocessed)
     true
   }

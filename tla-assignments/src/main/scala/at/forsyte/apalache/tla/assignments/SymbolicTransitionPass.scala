@@ -1,11 +1,10 @@
 package at.forsyte.apalache.tla.assignments
 
-import at.forsyte.apalache.tla.lir.process.Renaming
-import at.forsyte.apalache.tla.lir.transformations.TransformationListener
+import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
+import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory, ChangeListener}
+import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
-import at.forsyte.apalache.tla.lir.transformations.standard.ExplicitLetIn
 
 /**
   * Performs the complete procedure of finding symbolic transitions from the TLA+ implementation.
@@ -15,8 +14,8 @@ import at.forsyte.apalache.tla.lir.transformations.standard.ExplicitLetIn
   * TODO: Igor @ 10.08.2019: this class should get TransformationTracker as a parameter instead of TransformationListener.
   * TODO: Igor @ 10.08.2019: this class should be an actual Pass, similar to AssignmentPass.
   */
-class SymbolicTransitionPass( private val m_bodyMap : BodyMap,
-                              private val m_srcDB : TransformationListener) extends TypeAliases {
+class SymbolicTransitionPass( private val bodyMap : BodyMap,
+                              private val listener : TransformationListener) extends TypeAliases {
 
   /**
     * Body lookup.
@@ -38,62 +37,20 @@ class SymbolicTransitionPass( private val m_bodyMap : BodyMap,
     *   a. The operator `p_nextName` is not a member of `p_decls`
     *   a. No assignment strategy exists for `p_nextName`
     *
-    * @param p_decls    Declarations to be considered. Must include variable declarations and all of the
+    * @param decls    Declarations to be considered. Must include variable declarations and all of the
     *                   non-recursive operators appearing in the spec.
-    * @param p_nextName The name of the operator defining the transition relation.
+    * @param nextName The name of the operator defining the transition relation.
     * @return A collection of symbolic transitions, if they can be extracted.
     *
     */
-  def apply( p_decls : Seq[TlaDecl],
-             p_nextName : String = "Next"
+  def apply( decls : Seq[TlaDecl],
+             nextName : String = "Next"
            ) : Seq[SymbTrans] = {
-
-    val tracker = TrackerWithListeners( m_srcDB )
-    val renaming = new Renaming( tracker )
-    /**
-      * First, rename all bound variables to unique ones (per operator), to avoid contamination
-      * when unfolding operator calls
-      **/
-    val declsRenamed = p_decls map {
-        renaming.apply
-      }
-
-    /** Make all LET-IN calls explicit, to move towards alpha-TLA+ */
-    val decls = declsRenamed.map(
-      {
-        case TlaOperDecl( name, params, body ) =>
-          TlaOperDecl( name, params, ExplicitLetIn( tracker, skip0Arity = false )( body ) )
-        case e@_ => e
-      }
-    )
-
     /** Extract variable declarations */
     val vars = decls.withFilter( _.isInstanceOf[TlaVarDecl] ).map( _.name ).toSet
 
     /** Extract transition relation */
-    val nextBody = findBodyOf( p_nextName, decls : _* )
-
-    /** If extraction failed, throw */
-    //    assert( !nextBody.isNull )
-    if ( nextBody == NullEx )
-      throw new AssignmentException(
-        "%s not found or not an operator".format( p_nextName )
-      )
-
-    val bm = BodyMapFactory.makeFromDecls( decls, m_bodyMap )
-
-    val transformer = StandardTransformer( bm, tracker )
-
-    /** Preprocess body (inline operators, replace UNCHANGED, turn equality to set membership, etc.) */
-    val cleaned = transformer( nextBody ) match {
-      case NullEx => None
-      case e => Some( e )
-    }
-
-    /** Sanity check */
-    assert( cleaned.isDefined )
-
-    val phi = cleaned.get
+    val phi = findBodyOf( nextName, decls : _* )
 
     val stratEncoder = new AssignmentStrategyEncoder()
 
@@ -106,14 +63,13 @@ class SymbolicTransitionPass( private val m_bodyMap : BodyMap,
     /** Throw if no strat. */
     if ( strat.isEmpty )
       throw new AssignmentException(
-        "No assignment strategy found for %s".format( p_nextName )
+        "No assignment strategy found for %s".format( nextName )
       )
 
     /** From a strategy, compute symb. trans. */
     val transitions = ( new SymbTransGenerator() ) ( phi, strat.get )
 
     transitions
-
   }
 
 }
