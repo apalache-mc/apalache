@@ -1,21 +1,15 @@
 package at.forsyte.apalache.tla.assignments
 
-import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory, ChangeListener}
-import at.forsyte.apalache.tla.lir.transformations.TransformationListener
-import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 
 /**
   * Performs the complete procedure of finding symbolic transitions from the TLA+ implementation.
   *
   * @see [[AssignmentStrategyEncoder]], [[SMTInterface]], [[SymbTransGenerator]]
   *
-  * TODO: Igor @ 10.08.2019: this class should get TransformationTracker as a parameter instead of TransformationListener.
-  * TODO: Igor @ 10.08.2019: this class should be an actual Pass, similar to AssignmentPass.
+  * Jure, 28.8.19: Should symbolic transitions track their origin?
   */
-class SymbolicTransitionPass( private val bodyMap : BodyMap,
-                              private val listener : TransformationListener) extends TypeAliases {
+object SymbolicTransitionExtractor extends TypeAliases {
 
   /**
     * Body lookup.
@@ -24,7 +18,7 @@ class SymbolicTransitionPass( private val bodyMap : BodyMap,
     * @param decls    Collection of declarations to be searched.
     * @return The body of the operator declaration, if it is an element of the collection, otherwise NullEx.
     */
-  protected def findBodyOf( p_opName : String, decls : TlaDecl* ) : TlaEx = {
+  protected def findBodyOf( p_opName : String, decls : Seq[TlaDecl] ) : TlaEx = {
     decls.find {
       _.name == p_opName
     }.withFilter( _.isInstanceOf[TlaOperDecl] ).map( _.asInstanceOf[TlaOperDecl].body ).getOrElse( NullEx )
@@ -50,7 +44,7 @@ class SymbolicTransitionPass( private val bodyMap : BodyMap,
     val vars = decls.withFilter( _.isInstanceOf[TlaVarDecl] ).map( _.name ).toSet
 
     /** Extract transition relation */
-    val phi = findBodyOf( nextName, decls : _* )
+    val phi = findBodyOf( nextName, decls )
 
     val stratEncoder = new AssignmentStrategyEncoder()
 

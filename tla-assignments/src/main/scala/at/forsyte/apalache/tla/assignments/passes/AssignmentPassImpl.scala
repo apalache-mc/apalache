@@ -76,9 +76,6 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
 
     val bodyMap = BodyMapFactory.makeFromDecls( decls )
 
-    // TODO: why do we call a pass inside a pass?
-    val stp = new SymbolicTransitionPass( bodyMap, changeListener )
-
     val primeTr = Prime( varSet, tracker )
     // We need an extra EqualityAsContainment, because priming
     // may change equality into asgn. candidates
@@ -100,7 +97,7 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
     val initReplacedDecls = decls.map(replaceInit)
 
     // drop selections because of lacking implementation further on
-    val initTransitions = stp( initReplacedDecls, initName ).map( _._2 ).toList
+    val initTransitions = SymbolicTransitionExtractor( initReplacedDecls, initName ).map( _._2 ).toList
 
     for ((t, i) <- initTransitions.zipWithIndex) {
       logger.debug("Initial transition #%d:\n   %s".format(i, t))
@@ -109,7 +106,7 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
     val nextName = options.getOption("checker", "next", "Next").asInstanceOf[String]
 
     // drop selections because of lacking implementation further on
-    val nextTransitions = stp(initReplacedDecls,nextName).map( _._2 ).toList
+    val nextTransitions = SymbolicTransitionExtractor(initReplacedDecls,nextName).map( _._2 ).toList
 
     for ((t, i) <- nextTransitions.zipWithIndex) {
       logger.debug("Next transition #%d:\n   %s".format(i, t))

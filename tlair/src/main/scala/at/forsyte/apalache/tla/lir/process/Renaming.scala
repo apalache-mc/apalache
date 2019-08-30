@@ -22,6 +22,11 @@ class Renaming @Inject()(tracker: TransformationTracker) extends TlaExTransforma
     */
   private var seenNames: Map[String, Int] = HashMap[String, Int]()
 
+  private def renameUserOper(op: TlaOper, map: Map[String, String]) : TlaOper = op match {
+    case o : TlaUserOper => new TlaUserOper( map.getOrElse( o.name, o.name ), o.arity, o.decl )
+    case _ => op
+  }
+
   override def apply(e: TlaEx): TlaEx = {
     renameBindingsUnique(e)
   }
@@ -33,7 +38,7 @@ class Renaming @Inject()(tracker: TransformationTracker) extends TlaExTransforma
         pName -> assignUniqueName( pName )
       }).toMap
 
-      TlaOperDecl(
+      val retDecl = TlaOperDecl(
         name,
         params map {
           case SimpleFormalParam( p ) => SimpleFormalParam( paramMap( p ) )
@@ -42,14 +47,16 @@ class Renaming @Inject()(tracker: TransformationTracker) extends TlaExTransforma
         rename( paramMap )( body )
       )
 
-      decl
+      retDecl
     case _ => decl
   }
 
   private def assignUniqueName(name: String): String = {
     val newVersion = 1 + seenNames.getOrElse(name, 0)
     seenNames += name -> newVersion
-    name + newVersion // assign a unique name, e.g., x1, x2, x3, etc.
+    // Jure: 30.8.19: changed name + version to name + _ + version, because calling renaming twice
+    // can create indistinguishable expressions e.g. p + 11 + 1 and p + 1 + 11
+    s"${name}_$newVersion" // assign a unique name, e.g., x1, x2, x3, etc.
   }
 
   private def rename(map: Map[String, String]): TlaExTransformation = tracker.track {
@@ -127,7 +134,7 @@ class Renaming @Inject()(tracker: TransformationTracker) extends TlaExTransforma
       newEx
 
     case OperEx(op, args@_*) =>
-      val newEx = OperEx(op, args.map(e => rename(map)(e)): _*)
+      val newEx = OperEx(renameUserOper(op, map), args.map(e => rename(map)(e)): _*)
       newEx
 
     case ex => ex
