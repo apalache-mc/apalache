@@ -20,43 +20,43 @@ object TlaSeqOper {
 
   val head = new TlaSeqOper {
     override val arity = FixedArity(1)
-    override val name = "Head(_)"
+    override val name = "Head"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   val tail = new TlaSeqOper {
     override val arity = FixedArity(1)
-    override val name = "Tail(_)"
+    override val name = "Tail"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   val append = new TlaSeqOper {
     override val arity = FixedArity(2)
-    override val name = "Append(_,_)"
+    override val name = "Append"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   val concat = new TlaSeqOper {
     override val arity = FixedArity(2)
-    override val name = "_o_"
+    override val name = "\\o"
     override val precedence: (Int, Int) = (13, 13)
   }
 
   val len = new TlaSeqOper {
     override val arity = FixedArity(1)
-    override val name = "Len(_)"
+    override val name = "Len"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   val subseq = new TlaSeqOper {
     override val arity = FixedArity(3)
-    override val name = "SubSeq(_, _, _)"
+    override val name = "SubSeq"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   val selectseq = new TlaSeqOper {
     override val arity = FixedArity(2)
-    override val name = "SelectSeq(_, _)"
+    override val name = "SelectSeq"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 }
