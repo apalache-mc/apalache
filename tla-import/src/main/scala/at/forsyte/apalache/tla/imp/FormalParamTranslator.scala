@@ -14,7 +14,7 @@ class FormalParamTranslator {
     if (param.getArity == 0) {
       SimpleFormalParam(param.getName.toString.intern())
     } else {
-      OperFormalParam(param.getName.toString.intern(), FixedArity(param.getArity))
+      OperFormalParam(param.getName.toString.intern(), param.getArity)
     }
   }
 }

@@ -43,14 +43,14 @@ class TestBuilder extends FunSuite with TestingPredefs {
     assert( opEx3 ==
       TlaOperDecl(
         "A",
-        List( OperFormalParam( "B", FixedArity( 0 ) ) ),
+        List( OperFormalParam( "B", 0) ),
         OperEx( TlaOper.apply, n_B )
       )
     )
     assert( opEx4 ==
       TlaOperDecl(
         "A",
-        List( SimpleFormalParam( "x" ), OperFormalParam( "B", FixedArity( 1 ) ) ),
+        List( SimpleFormalParam( "x" ), OperFormalParam( "B", 1) ),
         OperEx( TlaOper.apply, n_B, n_x )
       )
     )

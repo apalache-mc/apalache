@@ -81,23 +81,17 @@ package lir {
   sealed abstract class FormalParam {
     def name: String
 
-    def arity: OperArity   /** Simplify arity to Int, Jure 16.11.2017 */
+    def arity: Int
 
   }
 
   /** An ordinary formal parameter, e.g., x used in A(x) == ... */
   case class SimpleFormalParam(name: String) extends FormalParam {
-    override def arity: OperArity = FixedArity(0)
+    override def arity: Int = 0
   }
 
   /** A function signature, e.g., f(_, _) used in A(f(_, _), x, y) */
-  case class OperFormalParam(name: String, arity: OperArity) extends FormalParam {
-    require(
-      arity match {
-        case FixedArity(_) => true;
-        case _ => false
-      },
-      "Formal parameters should have fixed arity")
+  case class OperFormalParam(name: String, arity: Int) extends FormalParam {
   }
 
   /** An abstract TLA+ expression. Note that the class is sealed, so we allow only a limited set of values. */

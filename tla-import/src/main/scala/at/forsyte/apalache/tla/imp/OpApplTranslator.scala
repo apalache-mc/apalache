@@ -78,7 +78,7 @@ class OpApplTranslator(sourceStore: SourceStore, val context: Context, val recSt
         case oper: OpDefNode if oper.getInRecursive =>
           // this is a placeholder for a recursive call, replace it with a usage of a formal parameter
           val args = node.getArgs.toList.map { p => exTran.translate(p) }
-          val recParam = OperFormalParam(opcode, FixedArity(args.length))
+          val recParam = OperFormalParam(opcode, args.length)
           OperEx(TlaOper.apply, NameEx(opcode) +: args: _*)
 
         case _ =>

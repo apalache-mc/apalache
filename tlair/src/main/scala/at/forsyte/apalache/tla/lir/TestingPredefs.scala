@@ -8,7 +8,7 @@ trait TestingPredefs {
   implicit def value( p_n : Int  ) : ValEx = ValEx( TlaInt( p_n ) )
   implicit def sfp( p_s : String ) : SimpleFormalParam = SimpleFormalParam( p_s )
   implicit def ofp( p_pair : (String, Int) ) : OperFormalParam =
-    OperFormalParam( p_pair._1, FixedArity( p_pair._2 ) )
+    OperFormalParam( p_pair._1, p_pair._2 )
 
   def n_a : NameEx = "a"
   def n_b : NameEx = "b"

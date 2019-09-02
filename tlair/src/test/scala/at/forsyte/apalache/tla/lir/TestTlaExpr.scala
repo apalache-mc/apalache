@@ -161,7 +161,7 @@ class TestTlaExpr extends FunSuite {
 
   test("declaring an order 2 operator") {
     // f(_, _)
-    val fOper = new OperFormalParam("f", FixedArity(2))
+    val fOper = new OperFormalParam("f", 2)
 
     // A(f(_, _), x, y) == f(x, y)
     val odef = new TlaOperDecl("A",

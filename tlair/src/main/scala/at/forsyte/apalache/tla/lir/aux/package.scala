@@ -98,7 +98,7 @@ package object aux {
           val params = d1.formalParams.zipAll( d2.formalParams, defaultParam, defaultParam ) map {
             case (par1@SimpleFormalParam( p1 ), SimpleFormalParam( p2 )) if p1 == p2 =>
               par1
-            case (par1@OperFormalParam( p1, FixedArity( n1 ) ), OperFormalParam( p2, FixedArity( n2 ) )) if p1 == p2 && n1 == n2 =>
+            case (par1@OperFormalParam( p1, n1), OperFormalParam( p2, n2)) if p1 == p2 && n1 == n2 =>
               par1
             case (par1, par2) =>
               SimpleFormalParam( s"DiffParam_${par1.name}_${par2.name}" )

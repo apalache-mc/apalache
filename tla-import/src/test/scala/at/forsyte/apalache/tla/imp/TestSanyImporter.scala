@@ -1015,7 +1015,7 @@ class TestSanyImporter extends FunSuite {
     def expectDecl(n: String, p: List[FormalParam], b: TlaEx) = expectTlaDecl(locationStore, n, p, b)
 
     expectDecl("A",
-      List(SimpleFormalParam("i"), SimpleFormalParam("j"), OperFormalParam("f", FixedArity(1))),
+      List(SimpleFormalParam("i"), SimpleFormalParam("j"), OperFormalParam("f", 1)),
       OperEx(TlaOper.apply, NameEx("f"),
         OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j"))))(mod.declarations(2))
     val aDecl = mod.declarations(2).asInstanceOf[TlaOperDecl]
@@ -1057,7 +1057,7 @@ class TestSanyImporter extends FunSuite {
 
         val zDecl = defs(2)
         zDecl match {
-          case TlaOperDecl("Z", List(OperFormalParam("f", FixedArity(1)), SimpleFormalParam("a")), _) =>
+          case TlaOperDecl("Z", List(OperFormalParam("f", 1), SimpleFormalParam("a")), _) =>
             assert(OperEx(TlaOper.apply, NameEx("f"), NameEx("a")) == zDecl.body)
         }
         assert(locationStore.contains(zDecl.body.ID)) // and source file information has been saved
@@ -1155,7 +1155,7 @@ class TestSanyImporter extends FunSuite {
           // The caveat here is that the formal parameter R does not appear in the list of the R's formal parameters,
           // but it is accessible via the field recParam.
           assert(d.isRecursive)
-          val recParam = OperFormalParam(name, FixedArity(nparams))
+          val recParam = OperFormalParam(name, nparams)
           assert(d.body == expectedBody)
           assert(locationStore.contains(d.body.ID)) // and source file information has been saved
 
@@ -1202,7 +1202,7 @@ class TestSanyImporter extends FunSuite {
         // The caveat here is that the formal parameter F does not appear in the list of the F's formal parameters,
         // but it is accessible via the field recParam.
         assert(d.isRecursive)
-        val recParam = OperFormalParam("F", FixedArity(1))
+        val recParam = OperFormalParam("F", 1)
         val ite = OperEx(TlaControlOper.ifThenElse,
           OperEx(TlaOper.eq, NameEx("n"), ValEx(TlaInt(0))),
           ValEx(TlaInt(1)),
