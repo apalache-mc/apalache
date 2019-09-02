@@ -281,7 +281,37 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
         val doc = group(op.name <> parens(commaSeparated))
         wrapWithParen(parentPrecedence, op.precedence, doc)
 
-      // TODO: LET-IN!
+      case LetInEx(body, decls @ _*) =>
+        def eachDecl(d: TlaOperDecl) = {
+          group("LET" <> space <> toDoc(d) <> line <> "IN")
+        }
+
+        group(ssep(decls.map(eachDecl).toList, line) <>
+          line <> toDoc((0, 0), body))
+    }
+  }
+
+  private def toDoc(decl: TlaDecl): Doc = {
+    decl match {
+      case TlaOperDecl(name, params, body) =>
+        val paramsDoc =
+          if (params.isEmpty)
+            text("")
+          else parens(ssep(params map toDoc, "," <> softline))
+
+        group(name <> paramsDoc <> space <> "==" <> nest(line <> toDoc((0, 0), body)))
+
+        // TODO: implement other declarations!
+    }
+  }
+
+  private def toDoc(param: FormalParam): Doc = {
+    param match {
+      case SimpleFormalParam(name) =>
+        name
+
+      case OperFormalParam(name, arity) =>
+        group(name <> parens(ssep(List.fill(arity)("_"), "," <> softline)))
     }
   }
 

@@ -2,12 +2,13 @@ package at.forsyte.apalache.tla.lir.io
 
 import java.io.{PrintWriter, StringWriter}
 
+import at.forsyte.apalache.tla.lir.{OperEx, SimpleFormalParam, TlaOperDecl}
 import org.junit.runner.RunWith
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.convenience.tla._
 
-@RunWith( classOf[JUnitRunner] )
+@RunWith(classOf[JUnitRunner])
 class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   private var stringWriter = new StringWriter()
   private var printWriter = new PrintWriter(stringWriter)
@@ -125,7 +126,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("multi-line set") {
     val writer = new PrettyWriter(printWriter, 20)
-    writer.write(enumSet(1.to(10).map(int) :_*))
+    writer.write(enumSet(1.to(10).map(int): _*))
     printWriter.flush()
     val expected =
       """{
@@ -144,7 +145,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("multi-line tuple") {
     val writer = new PrettyWriter(printWriter, 20)
-    writer.write(tuple(1.to(10).map(int) :_*))
+    writer.write(tuple(1.to(10).map(int): _*))
     printWriter.flush()
     val expected =
       """<<
@@ -174,7 +175,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("one-line conjunction") {
     val writer = new PrettyWriter(printWriter, 80)
-    val expr = and(1.to(3) map(_ => name("verylongname")) :_*)
+    val expr = and(1.to(3) map (_ => name("verylongname")): _*)
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -184,7 +185,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("multi-line conjunction") {
     val writer = new PrettyWriter(printWriter, 40)
-    val expr = impl(true, and(1.to(5) map(_ => name("verylongname")) :_*))
+    val expr = impl(true, and(1.to(5) map (_ => name("verylongname")): _*))
     writer.write(expr)
     printWriter.flush()
     // a multi-line vertical box always breaks from the previous line, as otherwise it is incredibly hard to indent
@@ -200,8 +201,8 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("nested multiline conjunction/disjunction") {
     val writer = new PrettyWriter(printWriter, 80)
-    val orEx = or(1.to(3) map(_ => name("verylongname")) :_*)
-    val andEx = and(1.to(3) map (_ => orEx) :_*)
+    val orEx = or(1.to(3) map (_ => name("verylongname")): _*)
+    val andEx = and(1.to(3) map (_ => orEx): _*)
     writer.write(andEx)
     printWriter.flush()
     val expected =
@@ -213,7 +214,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("nested multiline conjunction under negation") {
     val writer = new PrettyWriter(printWriter, 20)
-    val andEx = and(1.to(3) map(_ => name("verylongname")) :_*)
+    val andEx = and(1.to(3) map (_ => name("verylongname")): _*)
     writer.write(not(andEx))
     printWriter.flush()
     val expected =
@@ -229,7 +230,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     writer.write(expr)
     printWriter.flush()
     // a multi-line vertical box always breaks from the previous line, as otherwise it is incredibly hard to indent
-    val expected ="\\E x \\in y: z"
+    val expected = "\\E x \\in y: z"
     assert(expected == stringWriter.toString)
   }
 
@@ -600,6 +601,61 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
       """CASE guard1 -> action1
         |  [] guard2 -> action2
         |  [] OTHER -> otherAction""".stripMargin
+    assert(expected == stringWriter.toString)
+  }
+
+  test("a one-line LET-IN") {
+    val writer = new PrettyWriter(printWriter, 40)
+    val expr = letIn("A", TlaOperDecl("A", List(), 1))
+    writer.write(expr)
+    printWriter.flush()
+    val expected =
+      """LET A == 1 IN A""".stripMargin
+    assert(expected == stringWriter.toString)
+  }
+
+  test("a multi-line LET-IN") {
+    val writer = new PrettyWriter(printWriter, 40)
+    val decl =
+      TlaOperDecl("AVeryLongName",
+        List(SimpleFormalParam("param1"), SimpleFormalParam("param2")),
+        plus("param1", "param2"))
+    val expr = letIn(OperEx(decl.operator, 1, 2), decl)
+    writer.write(expr)
+    printWriter.flush()
+    val expected =
+      """LET AVeryLongName(param1, param2) ==
+        |  param1 + param2
+        |IN
+        |AVeryLongName(1, 2)""".stripMargin
+    assert(expected == stringWriter.toString)
+  }
+
+  test("multiple definitions in LET-IN") {
+    val writer = new PrettyWriter(printWriter, 40)
+    val decl1 =
+      TlaOperDecl("AVeryLongName",
+        List(SimpleFormalParam("param1"), SimpleFormalParam("param2")),
+        plus("param1", "param2"))
+    val decl2 =
+      TlaOperDecl("BVeryLongName",
+        List(SimpleFormalParam("param1"), SimpleFormalParam("param2")),
+        plus("param1", "param2"))
+    val expr = letIn(
+      mult(OperEx(decl1.operator, 1, 2),
+      OperEx(decl2.operator, 3, 4)),
+      decl1, decl2)
+    writer.write(expr)
+    printWriter.flush()
+    val expected =
+      """LET AVeryLongName(param1, param2) ==
+        |  param1 + param2
+        |IN
+        |LET BVeryLongName(param1, param2) ==
+        |  param1 + param2
+        |IN
+        |AVeryLongName(1, 2)
+        |  * BVeryLongName(3, 4)""".stripMargin
     assert(expected == stringWriter.toString)
   }
 }
