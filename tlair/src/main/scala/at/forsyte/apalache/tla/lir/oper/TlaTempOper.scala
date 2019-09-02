@@ -58,13 +58,13 @@ object TlaTempOper {
   val EE = new TlaTempOper {
     override val name: String = "\\EE"
     override def arity: OperArity = FixedArity(2)
-    override val precedence: (Int, Int) = (4, 15)
+    override val precedence: (Int, Int) = (0, 0) // Sec 15.2.1, Undelimited Constructs
   }
 
   /** The temporal universal quantification operator */
   val AA = new TlaTempOper {
     override val name: String = "\\AA"
     override def arity: OperArity = FixedArity(2)
-    override val precedence: (Int, Int) = (4, 15)
+    override val precedence: (Int, Int) = (0, 0) // Sec 15.2.1, Undelimited Constructs
   }
 }

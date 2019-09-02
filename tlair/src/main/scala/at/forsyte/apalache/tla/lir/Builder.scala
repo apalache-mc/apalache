@@ -160,12 +160,12 @@ object Builder {
                  p_args : TlaEx* /* Expected even size */
                ) : OperEx = OperEx( TlaControlOper.caseNoOther, p_p1 +: p_e1 +: p_args : _* )
 
-  def caseOther( p_e : TlaEx,
-                 p_p1 : TlaEx,
-                 p_e1 : TlaEx,
-                 p_args : TlaEx* /* Expected even size */
+  def caseOther(p_other : TlaEx,
+                p_p1 : TlaEx,
+                p_e1 : TlaEx,
+                p_args : TlaEx* /* Expected even size */
                ) : OperEx =
-    OperEx( TlaControlOper.caseWithOther, p_e +: p_p1 +: p_e1 +: p_args : _* )
+    OperEx( TlaControlOper.caseWithOther, p_other +: p_p1 +: p_e1 +: p_args : _* )
 
   def ite( p_cond : TlaEx,
            p_then : TlaEx,

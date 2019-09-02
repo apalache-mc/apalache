@@ -178,8 +178,8 @@ object UTFPrinter extends Printer {
           case TlaTempOper.EE => mkOpApp( "[%s]%%s . %%s".format( m_exists ), args : _* )
           case TlaTempOper.guarantees => mkOpApp( "%%s %s %%s".format( m_guarantee ), args : _* )
           case TlaTempOper.leadsTo => mkOpApp( "%%s %s %%s".format( m_leadsto ), args : _* )
-          case TlaTempOper.strongFairness => mkApp( "SF[%s](%s)", args : _* )
-          case TlaTempOper.weakFairness => mkApp( "WF[%s](%s)", args : _* )
+          case TlaTempOper.strongFairness => mkApp( "SF_%s(%s)", args : _* )
+          case TlaTempOper.weakFairness => mkApp( "WF_%s(%s)", args : _* )
 
           case TlaFiniteSetOper.cardinality => mkApp( "Cardinality(%s)", args : _* )
           case TlaFiniteSetOper.isFiniteSet => mkApp( "IsFiniteSet(%s)", args : _* )
