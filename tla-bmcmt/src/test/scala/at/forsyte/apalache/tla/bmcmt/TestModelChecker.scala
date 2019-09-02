@@ -137,6 +137,27 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     assert(Checker.Outcome.NoError == outcome)
   }
 
+  test("Init + 2 steps with LET-IN") {
+    // x' \in {1}
+    val initTrans = List(mkAssign("x", 1))
+    // LET A == 1 + x IN x' \in { A + 1 }
+    val aDecl = TlaOperDecl("A", List(), tla.plus(tla.int(1), tla.name("x")))
+
+    val letIn = tla.letIn(tla.plus(OperEx(aDecl.operator), tla.int(1)), aDecl)
+
+    val nextTrans = List(mkAssign("x", letIn))///
+    val dummyModule = new TlaModule("root", List(), List())
+    val notInv = tla.not(tla.neql(tla.int(4), tla.prime(tla.name("x"))))
+
+    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, Some(notInv))
+    // initialize the model checker
+    val strategy = new BfsStrategy(checkerInput, stepsBound = 2)
+    val checker = new ModelChecker(typeFinder, frexStore, hintsStore, changeListener, exprGradeStore, sourceStore, checkerInput,
+      strategy, Map(), debug = false, profile = false)
+    val outcome = checker.run()
+    assert(Checker.Outcome.NoError == outcome)
+  }
+
   test("Init + Next, 1 step, deadlock") {
     // x' \in {2} \/ x' \in {1}
     val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))

@@ -213,21 +213,14 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
     }
   }
 
-  // type inference is not supported for let-in
-  ignore("""LET A == TRUE IN... ~~> [A -> TRUE]""") {
-    val decl = TlaOperDecl("A", List(), tla.bool(true))
-    val letIn = tla.letIn(OperEx(decl.operator), decl)
-    val state = new SymbState(letIn, BoolTheory(), arena, new Binding)
+  // LET-IN is often used to cache computation results
+  test("""LET A == 1 + 2 IN 1 + A ~~> 4""") {
+    val decl = TlaOperDecl("A", List(), tla.plus(1, 2))
+    val letIn = tla.letIn(tla.plus(1, OperEx(decl.operator)), decl)
+    val state = new SymbState(letIn, IntTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
-    nextState.ex match {
-      case res @ NameEx(name) =>
-        assert(BoolTheory().hasConst(name))
-        assert(name == SolverContext.trueConst)
-
-      case _ =>
-        fail("Unexpected rewriting result")
-    }
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(nextState.ex, tla.int(4))))
   }
 
   // CASE i = 1 -> 2 [] i = 2 -> 3 [] i = 3 -> 1]

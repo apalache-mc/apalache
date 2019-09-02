@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.predef.TlaIntSet
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, ValEx}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaOperDecl, ValEx}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -230,6 +230,10 @@ class TestTrivialTypeFinder extends RewriterBase {
     val caseOtherEx = tla.caseOther(z, p, x, q, y)
     assert(FinSetT(IntT()) ==
       typeFinder.compute(caseOtherEx, FinSetT(IntT()), BoolT(), FinSetT(IntT()), BoolT(), FinSetT(IntT())))
+
+    val decl = TlaOperDecl("A", List(), tla.plus(tla.int(1), tla.int(2)))
+    val letIn = tla.letIn(tla.plus(tla.int(1), OperEx(decl.operator)), decl)
+    assert(IntT() == typeFinder.compute(letIn, IntT()))
     // bad cases
     assertThrows[TypeInferenceError] {
       assert(FinSetT(IntT()) ==
@@ -765,6 +769,14 @@ class TestTrivialTypeFinder extends RewriterBase {
     assert(typeFinder.inferAndSave(map).contains(FunT(FinSetT(TupleT(Seq(IntT(), BoolT()))), FinSetT(IntT()))))
     assert(IntT() == typeFinder.getVarTypes("x"))
     assert(BoolT() == typeFinder.getVarTypes("y"))
+  }
+
+  test("inferAndSave LET A == 1 + 2 IN 1 + A") {
+    val typeFinder = new TrivialTypeFinder()
+    val decl = TlaOperDecl("A", List(), tla.plus(tla.int(1), tla.int(2)))
+    val letIn = tla.letIn(tla.plus(tla.int(1), OperEx(decl.operator)), decl)
+    assert(typeFinder.inferAndSave(letIn).contains(IntT()))
+    assert(IntT() == typeFinder.getVarTypes("A"))
   }
 
   test("inferAndSave type annotation") {

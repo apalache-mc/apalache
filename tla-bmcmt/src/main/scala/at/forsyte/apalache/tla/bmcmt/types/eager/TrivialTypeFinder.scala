@@ -84,7 +84,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
     * Given a TLA+ expression, reconstruct the types and store them in an internal storage.
     * If the expression is not well-typed, diagnostic messages can be accessed with getTypeErrors.
     * The main goal of this method is to assign types to the free and bound variables
-    * (as we do not consider operators).
+    * as we do not consider operators. (We allow nullary LET-IN operators though).
     *
     * @param expr a TLA+ expression.
     * @return Some(type), if successful, and None otherwise
@@ -93,6 +93,26 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
     // This class implements a very simple form of type inference from bottom to top.
     // As soon as we cannot infer types, we complain that the type annotations are not good enough.
     expr match {
+      // LET A == ... IN
+      // LET B == ... IN
+      // ...
+      // IN Z
+      case letIn @ LetInEx(body, defs @ _*) =>
+        def inferDefResultType(d: TlaOperDecl): Unit = {
+          if (d.formalParams.nonEmpty) {
+            // This is a critical error in our code, which is not a type inference error
+            throw new IllegalStateException(s"Found a non-constant LET-IN definition ${d.name}, which should have been expanded")
+          } else {
+            val resT = inferAndSave(d.body)
+            // Bind the let name to the computed type of the result.
+            // XXX: It is not a type of a variable, which may confuse the model checker.
+            varTypes += d.name -> resT.getOrElse(UnknownT())
+          }
+        }
+
+        defs foreach inferDefResultType
+        inferAndSave(body) // body may use the types of the let definitions
+
       // x' = e
       // x' \in S
       case OperEx(op, OperEx(TlaActionOper.prime, NameEx(varName)), rhs)
@@ -339,11 +359,15 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
     } else {
       // chain partial functions to handle different types of operators with different functions
       val handlers =
-        (computeValues :: computeBasicOps(argTypes)
-          :: computeBoolOps(argTypes) :: computeIntOps(argTypes)
+        (computeValues
+          :: computeBasicOps(argTypes)
+          :: computeBoolOps(argTypes)
+          :: computeIntOps(argTypes)
           :: computeControlOps(argTypes)
-          :: computeSetCtors(argTypes) :: computeFunCtors(argTypes)
-          :: computeSetOps(argTypes) :: computeFunOps(argTypes)
+          :: computeSetCtors(argTypes)
+          :: computeFunCtors(argTypes)
+          :: computeSetOps(argTypes)
+          :: computeFunOps(argTypes)
           :: computeFunApp(argTypes)
           :: computeFiniteSetOps(argTypes)
           :: computeSeqOps(argTypes)
@@ -375,6 +399,23 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
       varTypes.get(name)
         .orElse(Some(error(ne, "No type assigned to " + name)))
         .get
+
+    case app @ OperEx(TlaOper.apply, NameEx(opName)) =>
+      varTypes.get(opName.toString)
+        .orElse(Some(error(app, "No type assigned to " + opName)))
+        .get
+
+    case OperEx(TlaOper.apply, opName, _*) =>
+        throw new IllegalStateException(s"Unexpected operator call to $opName. Report a bug!")
+
+    // TODO: Jure, I guess, you would like to remove the two instances below
+    case app @ OperEx(op: TlaUserOper) =>
+      varTypes.get(op.name)
+        .orElse(Some(error(app, "No type assigned to " + op.name)))
+        .get
+
+    case OperEx(op: TlaUserOper, _*) =>
+      throw new IllegalStateException(s"Unexpected operator call to ${op.name}. Report a bug!")
 
     case ne@OperEx(TlaActionOper.prime, NameEx(name)) =>
       val primed = name + "'"
@@ -797,6 +838,10 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
       guards.foreach(expectType(BoolT(), ex, _))
       expectEqualTypes(ex, actions: _*)
       actions.head
+
+    case ex @ LetInEx(_, _*) =>
+      // Can we really type-check anything here? We would need to analyze the let bindings.
+      argTypes.head
   }
 
   private def computeFiniteSetOps(argTypes: Seq[CellT]): PartialFunction[TlaEx, CellT] = {
