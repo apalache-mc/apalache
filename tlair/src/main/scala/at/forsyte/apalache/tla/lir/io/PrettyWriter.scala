@@ -51,17 +51,17 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
         // an empty set
         text("{}")
 
-      case OperEx(op @ TlaSetOper.enumSet, arg) =>
+      case OperEx(op@TlaSetOper.enumSet, arg) =>
         // a singleton set
         group("{" <> toDoc(op.precedence, arg) <> "}")
 
-      case OperEx(op @ TlaSetOper.enumSet, args@_*) =>
+      case OperEx(op@TlaSetOper.enumSet, args@_*) =>
         // a set enumeration, e.g., { 1, 2, 3 }
         val argDocs = args.map(toDoc(op.precedence, _))
         val commaSeparated = ssep(argDocs.toList, text(",") <> softline)
         group(text("{") <> nest(line <> commaSeparated, indent) <> line <> "}")
 
-      case OperEx(op @ TlaFunOper.tuple, args@_*) =>
+      case OperEx(op@TlaFunOper.tuple, args@_*) =>
         // a tuple, e.g., <<1, 2, 3>>
         val argDocs = args.map(toDoc(op.precedence, _))
         val commaSeparated = ssep(argDocs.toList, text(",") <> softline)
@@ -219,7 +219,7 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
 
       case OperEx(TlaControlOper.caseNoOther, guardsAndUpdates@_*) =>
         // delegate this case to CASE with OTHER by passing NullEx
-        toDoc(parentPrecedence, OperEx(TlaControlOper.caseWithOther, NullEx +: guardsAndUpdates :_*))
+        toDoc(parentPrecedence, OperEx(TlaControlOper.caseWithOther, NullEx +: guardsAndUpdates: _*))
 
       case OperEx(TlaFunOper.except, funEx, keysAndValues@_*) =>
         val (ks, vs) = keysAndValues.zipWithIndex partition (_._2 % 2 == 0)
@@ -275,13 +275,31 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
         val doc = nest(folddoc(argDocs, _ <> line <> sign <> space <> _))
         wrapWithParen(parentPrecedence, op.precedence, group(doc))
 
+      case OperEx(op@TlaOper.apply, NameEx(name), args@_*) =>
+        val argDocs = args.map(toDoc(op.precedence, _)).toList
+        val commaSeparated = ssep(argDocs, "," <> softline)
+        val doc =
+          if (args.isEmpty) {
+            text(name)
+          } else {
+            group(name <> parens(commaSeparated))
+          }
+
+        wrapWithParen(parentPrecedence, op.precedence, doc)
+
       case OperEx(op, args@_*) =>
         val argDocs = args.map(toDoc(op.precedence, _)).toList
         val commaSeparated = ssep(argDocs, "," <> softline)
-        val doc = group(op.name <> parens(commaSeparated))
+        val doc =
+          if (args.isEmpty) {
+            text(op.name)
+          } else {
+            group(op.name <> parens(commaSeparated))
+          }
+
         wrapWithParen(parentPrecedence, op.precedence, doc)
 
-      case LetInEx(body, decls @ _*) =>
+      case LetInEx(body, decls@_*) =>
         def eachDecl(d: TlaOperDecl) = {
           group("LET" <> space <> toDoc(d) <> line <> "IN")
         }
@@ -301,7 +319,7 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
 
         group(name <> paramsDoc <> space <> "==" <> nest(line <> toDoc((0, 0), body)))
 
-        // TODO: implement other declarations!
+      // TODO: implement other declarations!
     }
   }
 

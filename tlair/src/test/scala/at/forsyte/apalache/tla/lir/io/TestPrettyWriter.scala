@@ -7,6 +7,7 @@ import org.junit.runner.RunWith
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.convenience.tla._
+import at.forsyte.apalache.tla.lir.oper.TlaOper
 
 @RunWith(classOf[JUnitRunner])
 class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
@@ -24,6 +25,27 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     writer.write(name("awesome"))
     printWriter.flush()
     assert("awesome" == stringWriter.toString)
+  }
+
+  test("apply A") {
+    val writer = new PrettyWriter(printWriter, 80)
+    writer.write(OperEx(TlaOper.apply, "A"))
+    printWriter.flush()
+    assert("A" == stringWriter.toString)
+  }
+
+  test("apply A to 1") {
+    val writer = new PrettyWriter(printWriter, 80)
+    writer.write(OperEx(TlaOper.apply, "A", 1))
+    printWriter.flush()
+    assert("A(1)" == stringWriter.toString)
+  }
+
+  test("apply A to 1 and 2") {
+    val writer = new PrettyWriter(printWriter, 80)
+    writer.write(OperEx(TlaOper.apply, "A", 1, 2))
+    printWriter.flush()
+    assert("A(1, 2)" == stringWriter.toString)
   }
 
   test("ENABLED and prime") {
@@ -606,7 +628,8 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a one-line LET-IN") {
     val writer = new PrettyWriter(printWriter, 40)
-    val expr = letIn("A", TlaOperDecl("A", List(), 1))
+    val aDecl = TlaOperDecl("A", List(), 1)
+    val expr = letIn(OperEx(aDecl.operator), aDecl)
     writer.write(expr)
     printWriter.flush()
     val expected =
