@@ -52,10 +52,10 @@ object ExplicitLetIn {
     */
   def apply(
              tracker : TransformationTracker,
-             skip0Arity : Boolean
+             keepNullary : Boolean
            ) : TlaExTransformation = tracker.track { ex =>
-    val tr = letInExplicitLeaf( tracker, skip0Arity )
-    lazy val self = apply( tracker, skip0Arity )
+    val tr = letInExplicitLeaf( tracker, keepNullary )
+    lazy val self = apply( tracker, keepNullary )
     ex match {
       case _ : LetInEx =>
         tr( ex )

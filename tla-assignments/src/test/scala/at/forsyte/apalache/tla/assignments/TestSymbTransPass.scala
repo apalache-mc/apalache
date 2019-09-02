@@ -38,7 +38,7 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
 
     val bodyMap = BodyMapFactory.makeFromDecls( uniqueVarDecls.operDeclarations )
     val inlined = ModuleByExTransformer( Inline( bodyMap, tracker ) )( uniqueVarDecls )
-    val explLetIn = ModuleByExTransformer( ExplicitLetIn( tracker, skip0Arity = false ) )( inlined )
+    val explLetIn = ModuleByExTransformer( ExplicitLetIn( tracker, keepNullary = false ) )( inlined )
     val eac = ModuleByExTransformer( EqualityAsContainment( tracker ) )( explLetIn )
     val explUC = ModuleByExTransformer( ExplicitUnchanged( tracker ) )( eac )
     val preprocessed = ModuleByExTransformer(  SimplifyRecordAccess( tracker ) )( explUC )
