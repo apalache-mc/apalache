@@ -248,7 +248,7 @@ object UTFPrinter extends Printer {
     */
   override def apply(p_decl: TlaDecl): String = {
     def pr_param(p: FormalParam): String = {
-      val arity = p.arity.asInstanceOf[FixedArity].n
+      val arity = p.arity
       val params =
         if (arity == 0) "" else "(%s)".format(1.to(arity).map("_").mkString(", "))
       p.name + params

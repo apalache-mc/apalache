@@ -27,8 +27,8 @@ class TestRenaming extends FunSuite with BeforeAndAfterEach with TestingPredefs 
     ///
     val expected =
       and(
-        exists(name("x1"), n_S, gt(name("x1"), int(1))),
-        forall(name("x2"), n_T, lt(name("x2"), int(42))))
+        exists(name("x_1"), n_S, gt(name("x_1"), int(1))),
+        forall(name("x_2"), n_T, lt(name("x_2"), int(42))))
     val renamed = renaming.renameBindingsUnique(original)
     assert(expected == renamed)
   }
@@ -41,8 +41,8 @@ class TestRenaming extends FunSuite with BeforeAndAfterEach with TestingPredefs 
         )
     val expected =
       cup(
-        filter(name("x1"), name("S"), eql(name("x1"), int(1))),
-        filter(name("x2"), name("S"), eql(name("x2"), int(2))))
+        filter(name("x_1"), name("S"), eql(name("x_1"), int(1))),
+        filter(name("x_2"), name("S"), eql(name("x_2"), int(2))))
     val renamed = renaming.renameBindingsUnique(original)
     assert(expected == renamed)
   }
@@ -57,8 +57,8 @@ class TestRenaming extends FunSuite with BeforeAndAfterEach with TestingPredefs 
 
     val expected =
       letIn(
-        exists( name( "x2" ), n_S, appOp( name( "p1" ), name( "x2" ) ) ),
-        declOp( "p1", forall( name( "x1" ), n_S, appOp( name( "R" ), name( "t1" ), name( "x1" ) ) ), "t1" )
+        exists( name( "x_2" ), n_S, appOp( name( "p_1" ), name( "x_2" ) ) ),
+        declOp( "p_1", forall( name( "x_1" ), n_S, appOp( name( "R" ), name( "t_1" ), name( "x_1" ) ) ), "t_1" )
       )
 
     val actual = renaming( original )
@@ -83,12 +83,12 @@ class TestRenaming extends FunSuite with BeforeAndAfterEach with TestingPredefs 
     val expected =
       and(
       letIn(
-        appOp( name( "X1" ) ),
-        declOp( "X1", trueEx )
+        appOp( name( "X_1" ) ),
+        declOp( "X_1", trueEx )
       ),
       letIn(
-        appOp( name( "X2" ) ),
-        declOp( "X2", falseEx )
+        appOp( name( "X_2" ) ),
+        declOp( "X_2", falseEx )
       )
     )
 
