@@ -1373,6 +1373,34 @@ class TestSanyImporter extends FunSuite {
     assert(naturals.declarations.nonEmpty)
   }
 
+  // uncomment this test when we decide on how to fix operator overriding
+  ignore("EXTENDS with operator overriding") {
+    // operators with parameters that are themselves operators with parameters
+    val text =
+      """---- MODULE imports ----
+        |---- MODULE M ----
+        |a == {}
+        |================================
+        |EXTENDS M
+        |a(self) == {self}
+        |b == a("a")
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter(new SourceStore)
+      .loadFromSource("imports", Source.fromString(text))
+    assert(2 == modules.size)
+    // the root module and naturals
+    val root = modules(rootName)
+    // we strip away the operator declarations by Naturals
+    assert(root.declarations.isEmpty)
+    assert(List("M") == root.imports)
+    // check that Naturals were imported properly
+    val aOfM = root.declarations.head
+    // check that the root module has indeed the definition a(self) == {self}, not a == {}
+    assert(aOfM.isInstanceOf[TlaOperDecl] && aOfM.asInstanceOf[TlaOperDecl].formalParams.size == 1)
+  }
+
   test("module nats") {
     // check that the Naturals module is imported properly
     val text =

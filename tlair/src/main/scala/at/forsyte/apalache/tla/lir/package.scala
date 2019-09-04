@@ -8,7 +8,14 @@ package lir {
   /** the base class for the universe of objects used in TLA+ */
   abstract class TlaValue
 
-  /** a declaration, e.g., of a variable, constant, or an operator */
+  /**
+    * A declaration, e.g., of a variable, constant, or an operator.
+    * Technically, this class should be called TlaDef, as we are dealing with
+    * TLA+ definitions, see Specifying Systems, Ch. 17.3. Unfortunately, there are
+    * variable declarations and operator definitions...
+    *
+    * TODO: rename to TlaDef.
+    */
   abstract class TlaDecl {
     def name: String
     def deepCopy(): TlaDecl
