@@ -70,9 +70,9 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
   test( "Test Complete Spec return + unsat spec" ){
     val phi = bd.bool( false )
     val encoder = new AssignmentStrategyEncoder()
-    val fullSpec = encoder( Set("x"), phi, p_complete = true )
+    val fullSpec = encoder( Set("x"), phi, complete = true )
 
-    val spec = encoder( Set("x"), phi, p_complete = false)
+    val spec = encoder( Set("x"), phi, complete = false)
     assert( fullSpec.nonEmpty )
 
     assert( (new SMTInterface())(spec, encoder.m_varSym).isEmpty )
