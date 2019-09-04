@@ -24,7 +24,10 @@ class LetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     case LetInEx( body, defs@_* ) =>
       val boundState = defs.foldLeft(state) (bindOperator)
       val bodyState = rewriter.rewriteUntilDone(boundState.setTheory(state.theory).setRex(body))
-      val finalState = bodyState.setBinding(state.binding) // recover the original binding
+      val finalState = bodyState.setBinding(
+        // We remove only the bindings introduced by let-in, which were not already defined in the original
+        bodyState.binding -- ( boundState.binding.keySet -- state.binding.keySet )
+      )
       rewriter.coerce(finalState, state.theory)
     case _ =>
       throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
