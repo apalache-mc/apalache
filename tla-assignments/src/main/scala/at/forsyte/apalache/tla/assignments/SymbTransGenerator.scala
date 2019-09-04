@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.TlaFalse
 
 /**
@@ -14,6 +14,7 @@ class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases 
     type LabelMapType = Map[UID, Set[UID]]
     type AssignmentSelections = Set[Set[UID]]
     type SelMapType = Map[UID, AssignmentSelections]
+    type letInMapType = Map[String, SelMapType]
 
     def allCombinations[ValType]( p_sets : Seq[Set[Set[ValType]]] ) : Set[Set[ValType]] = {
       if ( p_sets.isEmpty )
@@ -40,276 +41,217 @@ class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases 
       _ ++ _
     )
 
-    /**
-      * Symbolic transitions are uniquely characterized by the intersections of branches with
-      * an assignment strategy.
-      * By computing all possibilities for such intersections, we effectively consider
-      * all equivalence classes of ~_A.
-      *
-      * makeAllSelections(phi, A)(psi) returns the set { S \cap A | S \in Branches(psi) }, i.e.
-      * the representatives of Branches(psi) / ~_A, for psi \in Sub(phi)
-      */
-    def makeAllSelections( p_phi : TlaEx, p_stratSet : Set[UID] ) : SelMapType = {
-      val leafJudge : TlaEx => Boolean = AlphaTLApTools.isCand
-      val defaultVal : AssignmentSelections = Set( Set.empty )
-      val emptyMap : SelMapType = Map.empty
-
-      /** Nodes with labels in A have one branch and therefore one (nonempty) intersection wtih A */
-      def leafFun( p_ex : TlaEx ) : SelMapType =
-        if ( p_stratSet.contains( p_ex.ID ) ) Map( p_ex.ID -> Set( Set( p_ex.ID ) ) ) else emptyMap
-
+    def allSelections( ex : TlaEx, stratSet: Set[UID], letInMap: letInMapType = Map.empty ) : SelMapType = ex match {
+      case e if AlphaTLApTools.isCand(e) =>
+        if ( stratSet.contains( e.ID ) ) Map( e.ID -> Set( Set( e.ID ) ) ) else Map.empty[UID, AssignmentSelections]
       /**
-        * Otherwise, we look at the branching Lemmas to determine how to compute branch sets for
-        * parents from the branch sets of children
-        **/
-      def parentFun( p_ex : TlaEx, p_childResults : Traversable[SelMapType] ) : SelMapType = {
-        p_ex match {
-          case OperEx( oper, args@_* ) =>
-            oper match {
-              /**
-                * Branches( /\ \phi_i ) = { Br_1 U ... U Br_s | \forall i . Br_i \in Branches(\phi_i) }
-                * { S \cap A | S \in Branches( /\ phi_i ) } =
-                * { (Br_1 U ... U Br_s) \cap A | \forall i . Br_i \in Branches(\phi_i) } =
-                * { (Br_1 \cap A) U ... U (Br_s \cap A) | \forall i . Br_i \in Branches(\phi_i) } =
-                * { B_1 U ... U B_n | \forall i . B_i \in { T \cap A | T \in Branches(\phi_i)} }
-                */
-              case TlaBoolOper.and =>
-
-                /** Unify all child maps, keysets are disjoint by construction */
-                val unifiedMap = p_childResults.fold( Map() )( _ ++ _ )
-
-                val childBranchSets = args.flatMap( x => unifiedMap.get( x.ID ) )
-
-                /** The set as computed from the lemma */
-                val mySet = allCombinations( childBranchSets )
-                if ( mySet.isEmpty ) unifiedMap else unifiedMap + ( p_ex.ID -> mySet )
-
-              /**
-                * Branches( \/ \phi_i ) = U Branches(\phi_i)
-                * { S \cap A | S \in Branches( \/ \phi_i )} =
-                * { S \cap A | S \in U Branches(\phi_i)} =
-                * U { S \cap A | S \in Branches(\phi_i)}
-                */
-              case TlaBoolOper.or =>
-                val unifiedMap = p_childResults.fold( Map() )( _ ++ _ )
-
-                val childBranchSets = args.flatMap( x => unifiedMap.get( x.ID ) )
-
-                val mySet = childBranchSets.fold( Set() )( _ ++ _ )
-                if ( mySet.isEmpty ) unifiedMap else unifiedMap + ( p_ex.ID -> mySet )
-
-              /**
-                * Branches( \E x \in S . \phi ) = Branches( \phi )
-                * { S \cap A | S \in Branches( \E x \in S . \phi )} =
-                * { S \cap A | S \in Branches( \phi )} =
-                */
-              case TlaBoolOper.exists =>
-                val childMap = p_childResults.tail.tail.head
-                val mySet = childMap.getOrElse( args.tail.tail.head.ID, defaultVal )
-                if ( mySet.isEmpty ) childMap else childMap + ( p_ex.ID -> mySet )
-
-              /**
-                * Branches( ITE(\phi_c, \phi_t, \phi_e) ) = Branches( \phi_t ) U Branches( \phi_e )
-                * { S \cap A | S \in Branches( ITE(\phi_c, \phi_t, \phi_e) )} =
-                * { S \cap A | S \in Branches( \phi_t ) U Branches( \phi_e ) } =
-                * { S \cap A | S \in Branches( \phi_t ) } U { S \cap A | S \in Branches( \phi_e ) }
-                */
-              case TlaControlOper.ifThenElse =>
-                val unifiedMap = p_childResults.tail.fold( Map() )( _ ++ _ )
-
-                val childBranchSets = args.tail.flatMap( x => unifiedMap.get( x.ID ) )
-
-                val mySet = childBranchSets.fold( Set() )( _ ++ _ )
-                if ( mySet.isEmpty ) unifiedMap else unifiedMap + ( p_ex.ID -> mySet )
-
-              case _ => emptyMap
-            }
-          case _ => emptyMap
-        }
-      }
-
-      /**
-        * NOTE: Rethink this, since it's a direct port from using RecursiveProcessor
+        * Branches( /\ \phi_i ) = { Br_1 U ... U Br_s | \forall i . Br_i \in Branches(\phi_i) }
+        * { S \cap A | S \in Branches( /\ phi_i ) } =
+        * { (Br_1 U ... U Br_s) \cap A | \forall i . Br_i \in Branches(\phi_i) } =
+        * { (Br_1 \cap A) U ... U (Br_s \cap A) | \forall i . Br_i \in Branches(\phi_i) } =
+        * { B_1 U ... U B_n | \forall i . B_i \in { T \cap A | T \in Branches(\phi_i)} }
         */
-      def getSelMap( ex : TlaEx ) : SelMapType = ex match {
-        case e if leafJudge( e ) => leafFun( e )
-        case e@OperEx( _, args@_* ) =>
-          val chdRes = args map getSelMap
-          parentFun( e, chdRes )
-        case _ => emptyMap
-      }
+      case OperEx(TlaBoolOper.and, args@_*) =>
+        /** Unify all child maps, keysets are disjoint by construction */
+        val unifiedMap = (args map { allSelections( _, stratSet, letInMap ) }).fold( Map.empty[UID, AssignmentSelections] ) { _ ++ _ }
 
-      getSelMap( p_phi )
+        val childBranchSets = args.flatMap( x => unifiedMap.get( x.ID ) )
+
+        /** The set as computed from the lemma */
+        val mySet = allCombinations( childBranchSets )
+        if ( mySet.isEmpty ) unifiedMap else unifiedMap + ( ex.ID -> mySet )
+
+      /**
+        * Branches( \/ \phi_i ) = U Branches(\phi_i)
+        * { S \cap A | S \in Branches( \/ \phi_i )} =
+        * { S \cap A | S \in U Branches(\phi_i)} =
+        * U { S \cap A | S \in Branches(\phi_i)}
+        */
+      case OperEx(TlaBoolOper.or, args@_*)  =>
+        val unifiedMap = (args map { allSelections( _, stratSet, letInMap ) }).fold( Map.empty[UID, AssignmentSelections]) { _ ++ _ }
+
+        val childBranchSets = args.flatMap( x => unifiedMap.get( x.ID ) )
+
+        val mySet = childBranchSets.fold( Set.empty[Set[UID]] )( _ ++ _ )
+        if ( mySet.isEmpty ) unifiedMap else unifiedMap + ( ex.ID -> mySet )
+
+      /**
+        * Branches( \E x \in S . \phi ) = Branches( \phi )
+        * { S \cap A | S \in Branches( \E x \in S . \phi )} =
+        * { S \cap A | S \in Branches( \phi )} =
+        */
+      case OperEx(TlaBoolOper.exists, _, _, phi) =>
+        val childMap = allSelections( phi, stratSet, letInMap )
+        val mySet = childMap.getOrElse( phi.ID, Set( Set.empty[UID] ) )
+        if ( mySet.isEmpty ) childMap else childMap + ( ex.ID -> mySet )
+
+      /**
+        * Branches( ITE(\phi_c, \phi_t, \phi_e) ) = Branches( \phi_t ) U Branches( \phi_e )
+        * { S \cap A | S \in Branches( ITE(\phi_c, \phi_t, \phi_e) )} =
+        * { S \cap A | S \in Branches( \phi_t ) U Branches( \phi_e ) } =
+        * { S \cap A | S \in Branches( \phi_t ) } U { S \cap A | S \in Branches( \phi_e ) }
+        */
+      case OperEx(TlaControlOper.ifThenElse, _, thenAndElse@_*) =>
+        val unifiedMap = (thenAndElse map { allSelections( _, stratSet, letInMap ) }).fold( Map.empty[UID, AssignmentSelections] ) { _ ++ _ }
+
+        val childBranchSets = thenAndElse.flatMap( x => unifiedMap.get( x.ID ) )
+
+        val mySet = childBranchSets.fold( Set.empty[Set[UID]] )( _ ++ _ )
+        if ( mySet.isEmpty ) unifiedMap else unifiedMap + ( ex.ID -> mySet )
+
+      case LetInEx( body, defs@_* ) =>
+        val defMap = (defs map { d =>
+          d.name -> allSelections(d.body, stratSet, letInMap)
+        }).toMap
+        val childMap = allSelections( body, stratSet, letInMap ++ defMap )
+        val mySet = childMap.getOrElse( body.ID, Set( Set.empty[UID] ) )
+        if ( mySet.isEmpty ) childMap else childMap + ( ex.ID -> mySet )
+
+      // Nullary apply, v1
+      case OperEx(TlaOper.apply, NameEx(operName)) =>
+        // Apply may appear in higher order operators, so it might not be possible to pre-analyze
+        letInMap.getOrElse( operName, Map.empty[UID, AssignmentSelections] )
+      // Nullary apply, v2
+      case OperEx(o: TlaUserOper) =>
+        // We force the expansion of all non-letIn defined TlaUserOper in preprocessing.
+        // Therefore, if the letInBodyMap is undefined for o.name, this is an error (and should throw)
+        letInMap( o.name )
+
+      case _ => Map.empty[UID, AssignmentSelections]
+    }
+
+
+    def sliceWith( selection : Set[UID], allSelections: SelMapType ) : TlaExTransformation = tracker.track {
+      // Assignments are a base case, don't recurse on args
+      case ex@OperEx( TlaSetOper.in, OperEx( TlaActionOper.prime, _ ), _* ) =>
+        ex
+
+      case ex@OperEx( TlaBoolOper.or, args@_* ) =>
+        /**
+          * Or-branches have the property that they either contain
+          * all assignments or none of them. Therefore it suffices to check for
+          * non-emptiness of the intersection.
+          */
+
+        val newArgs = args.filter { x =>
+          /**
+            * \E S \in allSelections( x ) . S \cap selection \ne \emptyset
+            * <=>
+            * \E S \in allSelections( x ) . \E y \in S . y \in selection
+            * <=>
+            * \E S \in allSelections( x ) . \E y \in selection . y \in S
+            * <=>
+            * \E y \in selection . y \in \bigcup allSelections( x )
+            */
+          labelsAt( x, allSelections ) exists { selection.contains }
+        }
+
+        /**
+          * If no assignments lie below, take the largest subformula.
+          * It is guaranteed to belong to the union of branches.
+          * Otherwise, take the one intersecting branch (recurse, since disjunctions aren't always expanded)
+          */
+        assert( newArgs.size < 2 )
+
+        newArgs.headOption.map( sliceWith( selection, allSelections) ).getOrElse( ex )
+
+      /** ITE behaves like disjunction, but instead of dropping subformulas we replace them
+        * with False, since we cannot evaluate the IF-condition */
+      /** This only applies if at least one branch has an assignment, otherwise keep all */
+      case ex@OperEx( TlaControlOper.ifThenElse, cond, args@_* ) =>
+        val newArgs = args.map(
+          x => if ( labelsAt( x, allSelections ) exists { selection.contains } )
+            x else ValEx( TlaFalse )
+        )
+        if ( newArgs.forall( _ == ValEx( TlaFalse ) ) ) ex
+        else OperEx( TlaControlOper.ifThenElse, cond +: newArgs : _* )
+
+      case ex@OperEx( op, args@_* ) =>
+        val childVals = args map {
+          sliceWith( selection, allSelections )
+        }
+        // Make sure to avoid creating new UIDs if not absolutely needed, as filtering
+        // is done on the basis of UIDs not syntax
+        if ( childVals == args ) ex else OperEx( op, childVals : _* )
+
+      case ex@LetInEx( body, defs@_* ) =>
+        val slice = sliceWith( selection, allSelections )
+        val newDefs = defs map { d =>
+          d.copy( body = slice( d.body ) )
+        } // filterNot { _.body == ValEx( TlaFalse ) } ?
+
+        val newBody = slice( body )
+
+        val same = newDefs == defs && newBody == body
+
+        if ( same ) ex
+        else if ( newBody == ValEx( TlaFalse ) ) newBody
+        else LetInEx( newBody, newDefs : _* )
+
+      case ex => ex
     }
 
     /**
       * Orders a selection by \prec_A
       *
-      * @param p_asgnSet A selection S \subseteq A
-      * @param p_strat   An assignment strategy A.
+      * @param selection A selection S \subseteq A
+      * @param strategy  An assignment strategy A.
       * @return A sequence of elements s_1, ..., s_|S| from S, such that
       *         s_1 \prec_A ... \prec_A s_|S|
       */
-    def mkOrdered( p_asgnSet : Set[UID],
-                   p_strat : StrategyType
+    def mkOrdered(
+                   selection : Set[UID],
+                   strategy : StrategyType
                  ) : AssignmentType = {
-      p_strat.filter( p_asgnSet.contains ) // p_strat is already ordered
-    }
-
-    /**
-      * Produces a formula restriction, but simplified by TLA+ semantics.
-      *
-      * @param p_ex            Input formula
-      * @param p_selection     An assignment selection.
-      * @param p_allSelections The partial selction map.
-      * @return
-      */
-    def assignmentFilter( p_ex : TlaEx,
-                          p_selection : Set[UID],
-                          p_allSelections : SelMapType
-                        ) : TlaEx = {
-      p_ex match {
-        case OperEx( TlaBoolOper.or, args@_* ) =>
-
-          /**
-            * Or-branches have the property that they either contain
-            * all assignments or none of them. Therefore it suffices to check for
-            * non-emptiness of the intersection.
-            */
-
-          val newArgs = args.filter(
-            x =>
-
-              /**
-                * \E S \in p_allSelections( x ) . S \cap p_selection \ne \emptyset
-                * <=>
-                * \E S \in p_allSelections( x ) . \E y \in S . y \in p_selection
-                * <=>
-                * \E S \in p_allSelections( x ) . \E y \in p_selection . y \in S
-                */
-              p_allSelections.getOrElse(
-                x.ID, Set()
-              ).exists(
-                sel => p_selection.exists(
-                  y => sel.contains( y )
-                )
-              )
-            //            x => labelsAt( x, p_allSelections ).exists( y => p_selection.contains( y ) )
-          )
-
-          /**
-            * If no assignments lie below, take the largest subformula.
-            * It is guaranteed to belong to the union of branches.
-            */
-          if ( newArgs.isEmpty )
-            p_ex
-
-          /** otherwise, take the one intersecting branch */
-          else {
-            assert( newArgs.size == 1 )
-            //            if( newArgs.size != 1 )
-            //              throw new AssignmentException( "Stategy intersects more than one branch, expected 1 or 0" )
-            //            newArgs.head
-            /** recurse, since disjunctions aren't always expanded */
-            assignmentFilter( newArgs.head, p_selection, p_allSelections )
-          }
-
-        /** ITE behaves like disjunction, but instead of dropping subformulas we replace them
-          * with False, since we cannot evaluate the IF-condition */
-        /** Jure, 13.2.2019: This only applies if at least one branch has an assignment, otherwise keep all */
-        case OperEx( TlaControlOper.ifThenElse, cond, args@_* ) =>
-          val newArgs = args.map(
-            x => if ( labelsAt( x, p_allSelections ).exists( y => p_selection.contains( y ) ) )
-              x else ValEx( TlaFalse )
-          )
-          if ( newArgs.forall( _ == ValEx( TlaFalse ) ) )
-            p_ex
-          else
-            OperEx( TlaControlOper.ifThenElse, cond +: newArgs : _* )
-
-        case _ => p_ex
-      }
+      strategy.filter( selection.contains ) // strategy is already ordered
     }
 
     /**
       * Gathers the ordered selections and their corresponding restricted formulas.
       *
-      * @param p_ex         Input formula.
-      * @param p_strat      Assignment strategy
-      * @param p_selections Map of partial assignment selections.
+      * @param ex         Input formula.
+      * @param strategy      Assignment strategy
+      * @param selections Map of partial assignment selections.
       * @return A sequence of pairs of ordered assignment selections and their symbolic transitions.
       */
-    def restrictToSelections( p_ex : TlaEx,
-                              p_strat : StrategyType,
-                              p_selections : SelMapType
-                            ) : Seq[SymbTrans] = {
-      def newBodyFrom( s : Set[UID] ) : TlaEx => TlaEx = tracker.track {
-        case ex@OperEx( TlaSetOper.in, OperEx( TlaActionOper.prime, _ ), _* ) =>
-          assignmentFilter( ex, s, p_selections )
-
-        case ex@OperEx( op, args@_* ) =>
-          val childVals = args map {
-            newBodyFrom( s )
-          }
-          // Make sure to avoid creating new UIDs if not absolutely needed, as filtering
-          // is done on the basis of UIDs not syntax
-          val same = childVals == args
-
-          val newEx = if ( same ) ex else OperEx( op, childVals : _* )
-
-          /**
-            * Since our selections depend on UIDs, we need to update accordingly.
-            * Each element childVars[i] is a transformation (pruning) of args[i], so
-            * the p_selections entry copies over, because the branch intersections are preserved
-            */
-          val updatedSelections = if ( same ) p_selections else {
-            val newChildMap : SelMapType = args.zip( childVals ).map {
-              case (x, y) => y.ID -> p_selections.getOrElse( x.ID, Set.empty )
-            }.toMap
-            ( p_selections ++ newChildMap ) + ( newEx.ID -> p_selections.getOrElse( ex.ID, Set.empty ) )
-          }
-          assignmentFilter( newEx, s, updatedSelections )
-
-        case ex => assignmentFilter( ex, s, p_selections )
-      }
-
-      p_selections( p_ex.ID ).map( s =>
+    def getTransitions(
+                        ex : TlaEx,
+                        strategy : StrategyType,
+                        selections : SelMapType
+                      ) : Seq[SymbTrans] =
+      selections( ex.ID ).map( s =>
         (
-          mkOrdered( s, p_strat ),
-          newBodyFrom( s )( p_ex )
+          mkOrdered( s, strategy ),
+          sliceWith( s, selections )( ex )
         )
       ).toSeq
     }
-  }
 
   /**
     * Point of access method
     *
-    * @param p_phi          TLA+ formula
-    * @param p_asgnStrategy Assignment strategy A for `p_phi`.
+    * @param phi          TLA+ formula
+    * @param asgnStrategy Assignment strategy A for `p_phi`.
     * @see [[AssignmentStrategyEncoder]]
     * @return A collection of symbolic transitions, as defined by the equivalence classes of ~,,A,,
     */
-  def apply( p_phi : TlaEx, p_asgnStrategy : StrategyType ) : Seq[SymbTrans] = {
+  def apply( phi : TlaEx, asgnStrategy : StrategyType ) : Seq[SymbTrans] = {
 
     import helperFunctions._
 
     /** For certain purposes, we do not care about the order of assignments.
       * It is therefore helpful to have a set structure, with faster lookups. */
-    val stratSet = p_asgnStrategy.toSet
+    val stratSet = asgnStrategy.toSet
 
-    /** We compute the set of all branch intersections with `p_asgnStrategy` */
-    val selections = makeAllSelections( p_phi, stratSet )
+    /** We compute the set of all branch intersections with `asgnStrategy` */
+    val selections = allSelections( phi, stratSet, Map.empty )
 
     /** Sanity check, all selections are the same size */
-    val allSizes = selections( p_phi.ID ).map( _.size )
+    val allSizes = selections( phi.ID ).map( _.size )
     assert( allSizes.size == 1 )
-    //    if( allSizes.size != 1 )
-    //      throw new AssignmentException("Assignment selections of unequal size constructed")
 
     /** We restrict the formula to each equivalence class (defined by an assignment selection) */
-    restrictToSelections( p_phi, p_asgnStrategy, selections )
-
+    getTransitions( phi, asgnStrategy, selections )
   }
 
 }

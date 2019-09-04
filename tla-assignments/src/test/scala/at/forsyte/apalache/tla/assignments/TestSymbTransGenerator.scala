@@ -108,15 +108,15 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
     )
 
     val selections1 = possibleAssgnsX map { asgn =>
-      makeAllSelections( ex1, asgn )
+      allSelections( ex1, asgn )
     }
 
     val selections2 = possibleAssgnsY map { asgn =>
-      makeAllSelections( ex2, asgn )
+      allSelections( ex2, asgn )
     }
 
     val selections3 = possibleAssgnsXY map { asgn =>
-      makeAllSelections( ex3, asgn )
+      allSelections( ex3, asgn )
     }
 
     selections1 zip possibleAssgnsX foreach { case (s,e) =>
