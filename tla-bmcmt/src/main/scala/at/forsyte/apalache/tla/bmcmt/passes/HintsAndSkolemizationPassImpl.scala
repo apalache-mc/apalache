@@ -10,6 +10,7 @@ import at.forsyte.apalache.tla.bmcmt.analyses.{FormulaHintsStoreImpl, FreeExiste
 import at.forsyte.apalache.tla.lir.process.Renaming
 import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
+import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -17,16 +18,11 @@ import com.typesafe.scalalogging.LazyLogging
 /**
   * Find free-standing existential quantifiers and rename all local bindings, so they have unique names.
   *
-  * @param options
-  * @param frexStoreImpl
-  * @param hintsStoreImpl
-  * @param renaming
-  * @param nextPass
   */
 class HintsAndSkolemizationPassImpl @Inject()(val options: PassOptions,
                                               frexStoreImpl: FreeExistentialsStoreImpl,
                                               hintsStoreImpl: FormulaHintsStoreImpl,
-                                              renaming: Renaming,
+                                              tracker: TransformationTracker,
                                               @Named("AfterSkolem") nextPass: Pass with SpecWithTransitionsMixin)
   extends HintsAndSkolemizationPass with LazyLogging {
 
@@ -56,20 +52,18 @@ class HintsAndSkolemizationPassImpl @Inject()(val options: PassOptions,
     // Rename bound variables, so each of them is unique. This is required by TrivialTypeFinder.
     // Hint by Markus Kuppe: sort init and next to get a stable ordering between the runs.
     // The most stable way is to sort them by their string representation.
+    val renaming = new Renaming(tracker)
     val initRenamed = spec.initTransitions.sorted(StringOrdering).map(renaming.renameBindingsUnique)
     val nextRenamed = spec.nextTransitions.sorted(StringOrdering).map(renaming.renameBindingsUnique)
 
-    def renameIfDefined(ex: Option[TlaEx]): Option[TlaEx] = ex match {
-      case Some(ni) => Some(renaming.renameBindingsUnique(ni))
-      case None => None
-    }
+    def renameIfDefined(ex: Option[TlaEx]): Option[TlaEx] = ex map renaming.renameBindingsUnique
 
     val constInitPrimeRenamed = renameIfDefined(spec.constInitPrime)
     val notInvRenamed = renameIfDefined(spec.notInvariant)
     val notInvPrimeRenamed = renameIfDefined(spec.notInvariantPrime)
     var newSpec = new SpecWithTransitions(spec.rootModule, initRenamed, nextRenamed,
       constInitPrimeRenamed, notInvRenamed, notInvPrimeRenamed)
-    val skolem = new SimpleSkolemization(frexStoreImpl)
+    val skolem = new SimpleSkolemization(frexStoreImpl, tracker)
     newSpec = skolem.transformAndLabel(newSpec)
 
     logger.debug("Transitions after renaming and skolemization")

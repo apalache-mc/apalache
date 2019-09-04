@@ -4,7 +4,8 @@ import at.forsyte.apalache.tla.assignments.SpecWithTransitions
 import at.forsyte.apalache.tla.bmcmt.RewriterException
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaOper, TlaSetOper, TlaControlOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaControlOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
@@ -16,7 +17,10 @@ import com.typesafe.scalalogging.LazyLogging
   *
   * @author Igor Konnov
   */
-class SimpleSkolemization @Inject()(val frexStore: FreeExistentialsStoreImpl) extends LazyLogging {
+class SimpleSkolemization @Inject()(
+                                     val frexStore: FreeExistentialsStoreImpl,
+                                     tracker: TransformationTracker
+                                   ) extends LazyLogging {
   /**
     * Transform the transitions into normal form and label the free existential quantifiers.
     *
@@ -26,12 +30,9 @@ class SimpleSkolemization @Inject()(val frexStore: FreeExistentialsStoreImpl) ex
   def transformAndLabel(spec: SpecWithTransitions): SpecWithTransitions = {
     val initTransitions = spec.initTransitions map toNegatedForm
     val nextTransitions = spec.nextTransitions map toNegatedForm
-    val notInv =
-      if (spec.notInvariant.isDefined) Some(toNegatedForm(spec.notInvariant.get)) else None
-    val notInvPrime =
-      if (spec.notInvariantPrime.isDefined) Some(toNegatedForm(spec.notInvariantPrime.get)) else None
-    val constInitPrime =
-      if (spec.constInitPrime.isDefined) Some(toNegatedForm(spec.constInitPrime.get)) else None
+    val notInv = spec.notInvariant map toNegatedForm
+    val notInvPrime = spec.notInvariantPrime map toNegatedForm
+    val constInitPrime = spec.constInitPrime map toNegatedForm
 
     initTransitions foreach markFreeExistentials
     nextTransitions foreach markFreeExistentials
@@ -62,62 +63,65 @@ class SimpleSkolemization @Inject()(val frexStore: FreeExistentialsStoreImpl) ex
       () // stop here
   }
 
-  private def toNegatedForm(rootExpr: TlaEx): TlaEx = {
-    def nnf(neg: Boolean, ex: TlaEx): TlaEx = ex match {
+  private def toNegatedForm : TlaExTransformation = tracker.track { rootExpr =>
+    def nnf(neg: Boolean) : TlaExTransformation = tracker.track {
       case ValEx(TlaBool(b)) =>
         tla.bool(b ^ neg)
 
-      case ValEx(_) =>
+      case ex@ValEx(_) =>
         throw new RewriterException("Negation should not propagate to a non-boolean constant: " + ex)
 
-      case NameEx(name) =>
+      case ex@NameEx(_) =>
         if (neg) tla.not(ex) else ex
 
       case OperEx(TlaBoolOper.not, arg) =>
-        nnf(!neg, arg)
+        nnf(!neg)(arg)
 
       case ite@OperEx(TlaControlOper.ifThenElse, predEx, thenEx, elseEx) =>
         // ~ITE(A, B, C) == ITE(A, ~B, ~C)
-        OperEx(TlaControlOper.ifThenElse, predEx, nnf(neg, thenEx), nnf(neg, elseEx))
+        val recNnf = nnf(neg)
+        OperEx(TlaControlOper.ifThenElse, predEx, recNnf(thenEx), recNnf(elseEx))
 
       case OperEx(TlaBoolOper.and, args@_*) =>
         val oper = if (neg) TlaBoolOper.or else TlaBoolOper.and
-        OperEx(oper, args map (nnf(neg, _)): _*)
+        OperEx(oper, args map nnf(neg): _*)
 
       case OperEx(TlaBoolOper.or, args@_*) =>
         val oper = if (neg) TlaBoolOper.and else TlaBoolOper.or
-        OperEx(oper, args map (nnf(neg, _)): _*)
+        OperEx(oper, args map nnf(neg): _*)
 
       case OperEx(TlaBoolOper.implies, left, right) =>
+        val (fNnf, tNnf) = (nnf(neg = false), nnf(neg = true))
         if (neg) {
-          tla.and(nnf(neg = false, left), nnf(neg = true, right))
+          tla.and(fNnf(left), tNnf(right))
         } else {
-          tla.or(nnf(neg = true, left), nnf(neg = false, right))
+          tla.or(tNnf(left), fNnf(right))
         }
 
       case OperEx(TlaBoolOper.equiv, left, right) =>
+        val (fNnf, tNnf) = (nnf(neg = false), nnf(neg = true))
         if (neg) {
           // ~(A <=> B) to (~A /\ B) \/ (A /\ ~B)
-          tla.or(tla.and(nnf(neg = false, left), nnf(neg = true, right)),
-            tla.and(nnf(neg = true, left), nnf(neg = false, right)))
+          tla.or(tla.and(fNnf(left), tNnf(right)),
+            tla.and(tNnf(left), fNnf(right)))
         } else {
           // (A <=> B) to (~A /\ ~B) \/ (A /\ B)
-          tla.or(tla.and(nnf(neg = false, left), nnf(neg = false, right)),
-            tla.and(nnf(neg = true, left), nnf(neg = true, right)))
+          tla.or(tla.and(fNnf(left), fNnf(right)),
+            tla.and(tNnf(left), tNnf(right)))
         }
 
       case OperEx(TlaBoolOper.exists, x, set, pred) =>
         if (neg) {
-          OperEx(TlaBoolOper.forall, x, set, nnf(neg = true, pred))
+          OperEx(TlaBoolOper.forall, x, set, nnf(neg = true)(pred))
         } else {
-          OperEx(TlaBoolOper.exists, x, set, nnf(neg = false, pred))
+          OperEx(TlaBoolOper.exists, x, set, nnf(neg = false)(pred))
         }
 
       case OperEx(TlaBoolOper.forall, x, set, pred) =>
         if (neg) {
-          OperEx(TlaBoolOper.exists, x, set, nnf(neg = true, pred))
+          OperEx(TlaBoolOper.exists, x, set, nnf(neg = true)(pred))
         } else {
-          OperEx(TlaBoolOper.forall, x, set, nnf(neg = false, pred))
+          OperEx(TlaBoolOper.forall, x, set, nnf(neg = false)(pred))
         }
 
       case OperEx(TlaArithOper.lt, left, right) =>
@@ -157,14 +161,13 @@ class SimpleSkolemization @Inject()(val frexStore: FreeExistentialsStoreImpl) ex
         OperEx(if (neg) TlaSetOper.subsetProper else TlaSetOper.supseteq, left, right)
 
       case OperEx(TlaOper.label, subex, args@_*) =>
-        OperEx(TlaOper.label, nnf(neg, subex) +: args: _*)
+        OperEx(TlaOper.label, nnf(neg)(subex) +: args: _*)
 
-      case _ =>
+      case ex =>
         if (!neg)
           ex
         else OperEx(TlaBoolOper.not, ex)
     }
-
-    nnf(neg = false, rootExpr)
+    nnf(neg = false)(rootExpr)
   }
 }

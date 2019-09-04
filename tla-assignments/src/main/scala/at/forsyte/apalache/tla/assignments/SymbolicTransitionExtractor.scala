@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 
 /**
   * Performs the complete procedure of finding symbolic transitions from the TLA+ implementation.
@@ -9,7 +10,7 @@ import at.forsyte.apalache.tla.lir._
   *
   * Jure, 28.8.19: Should symbolic transitions track their origin?
   */
-object SymbolicTransitionExtractor extends TypeAliases {
+class SymbolicTransitionExtractor( tracker: TransformationTracker ) extends TypeAliases {
 
   /**
     * Body lookup.
@@ -61,7 +62,7 @@ object SymbolicTransitionExtractor extends TypeAliases {
       )
 
     /** From a strategy, compute symb. trans. */
-    val transitions = ( new SymbTransGenerator() ) ( phi, strat.get )
+    val transitions = ( new SymbTransGenerator(tracker) ) ( phi, strat.get )
 
     transitions
   }

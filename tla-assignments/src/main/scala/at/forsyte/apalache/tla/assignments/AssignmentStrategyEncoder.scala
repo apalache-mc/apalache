@@ -6,153 +6,13 @@ import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaControlO
 import scala.collection.immutable.{Map, Set}
 
 /**
-  * Collection of alpha-TLA+ methods.
-  */
-private object AlphaTLApTools {
-  private def isCandTemplate( p_ex : TlaEx, p_var : Option[String] ) : Boolean = {
-    p_ex match {
-      case OperEx(
-      TlaSetOper.in,
-      OperEx(
-      TlaActionOper.prime,
-      NameEx( name )
-      ),
-      _
-      ) => p_var.forall( _ == name )
-      case _ => false
-    }
-  }
-
-  /**
-    * Returns `true` if `p_ex` is an assignment candidate
-    * @param p_ex Input expression
-    */
-  def isCand( p_ex : TlaEx ) : Boolean = isCandTemplate( p_ex, None )
-
-  /**
-    * Returns `true` if `p_ex` is an assignment candidate for the variable `p_var`
-    * @param p_var Variable name
-    * @param p_ex Input expression
-    */
-  def isVarCand( p_var : String, p_ex : TlaEx ) : Boolean = isCandTemplate( p_ex, Some( p_var ) )
-
-  /**
-    * Returns the set of all primed variables appearing in subformulas of `p_ex`
-    * @param p_ex Input expression
-    */
-  def findPrimes( p_ex : TlaEx ) : Set[String] = {
-    p_ex match {
-      case OperEx( TlaActionOper.prime, NameEx( name ) ) =>
-        /* return */ Set( name )
-      case OperEx( _, args@_* ) =>
-        /* return */ args.map( findPrimes ).fold( Set[String]() ) {
-        _ ++ _
-      }
-      case _ =>
-        /* return */ Set[String]()
-    }
-  }
-
-}
-
-/**
   * Generates SMT constraints for assignment strategies.
   *
   * Assumes input is alpha-TLA+
   */
 class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : String = "R" ) {
 
-  private abstract class BoolFormula
-
-  /**
-    * Collects classes and methods for constructing SMT formulas
-    */
-  private object SMTtools {
-
-    case class False( ) extends BoolFormula
-
-    case class And( args : BoolFormula* ) extends BoolFormula
-
-    case class Or( args : BoolFormula* ) extends BoolFormula
-
-    case class Neg( arg : BoolFormula ) extends BoolFormula
-
-    case class Implies( LHS : BoolFormula, RHS : BoolFormula ) extends BoolFormula
-
-    case class Variable( id : Long ) extends BoolFormula
-
-    // ( R( i ) < R( j ) )
-    case class LtFns( i : Long, j : Long ) extends BoolFormula
-    // ( R( i ) != R( j ) )
-    case class NeFns( i : Long, j : Long ) extends BoolFormula
-
-    /**
-      * Converts a BoolFormula to an smt2 string
-      * @param phi Input formula
-      * @return SMT encoding of the boolean formula
-      */
-    def toSmt2( phi : BoolFormula ) : String = {
-      phi match {
-        case False() =>
-          /* return */ "false"
-        case And( args@_* ) =>
-          /* return */ "( and %s )".format( args.map( toSmt2 ).mkString( " " ) )
-        case Or( args@_* ) =>
-          /* return */ "( or %s )".format( args.map( toSmt2 ).mkString( " " ) )
-        case Neg( arg : BoolFormula ) =>
-          /* return */ "( not %s )".format( toSmt2( arg ) )
-        case Implies( lhs, rhs ) =>
-          /* return */ "( => %s %s )".format( toSmt2( lhs ), toSmt2( rhs ) )
-        case Variable( id : Long ) =>
-          /* return */ "%s_%s".format( m_varSym, id )
-        case LtFns( i : Long, j : Long ) =>
-          /* return */ "( < ( %s %s ) ( %s %s ) )".format( m_fnSym, i, m_fnSym, j )
-        case NeFns( i : Long, j : Long ) =>
-          /* return */ "( not ( = ( %s %s ) ( %s %s ) ) )".format( m_fnSym, i, m_fnSym, j )
-      }
-    }
-
-    /**
-      * Removes redundant connectives.
-      * @param phi Input formula
-      * @return Logically equivalent subset formula.
-      */
-    def simplify( phi : BoolFormula ) : BoolFormula = {
-      phi match {
-        /**
-          * Recursively simplify branches first.
-          * If any branch is false, the whole formula is false.
-          * It is important to recurse first,
-          * since otherwise false-simplification would not propagate upward.
-          */
-        case And( args@_* ) =>
-          val newargs = args.map( simplify )
-          if ( newargs.contains( False() ) )
-          /* return */ False()
-          else
-          /* return */ And( newargs : _* )
-
-        /**
-          * Recursively simplify, then drop all False() branches.
-          * Afterwards, if the new tree has too few branches prune accordingly.
-          */
-        case Or( args@_* ) =>
-          val newargs = args.map( simplify ).filterNot( _ == False() )
-          newargs.size match {
-            case 0 =>
-              /* return */ False()
-            case 1 =>
-              /* return */ newargs.head
-            case _ =>
-              /* return */ Or( newargs : _* )
-          }
-
-        case _ =>
-          /* return */ phi
-      }
-    }
-
-  }
+  import SmtTools._
 
   /**
     * Collection of aliases used in internal methods.
@@ -192,7 +52,6 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
 
     import Aliases._
     import AlphaTLApTools._
-    import SMTtools._
 
     /** We name the default arguments to return at irrelevant terms  */
     val defaultMap = ( for {v <- p_vars} yield (v, False()) ).toMap
@@ -285,7 +144,7 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
         /** Add the mapping from n to its expr. */
         val map : Map[Long,TlaEx] = Seq(n -> p_phi).toMap
 
-        /* return */ (seen, colloc, noColloc, delta, frozen, map)
+         (seen, colloc, noColloc, delta, frozen, map)
 
       }
 
@@ -296,7 +155,7 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
         val frozenVarSet = p_frozenVarSet ++ starPrimes
 
         /** Recurse on the child with a bigger frozen set */
-        /* return */ recursiveMainComputation( subPhi, p_vars, frozenVarSet )
+         recursiveMainComputation( subPhi, p_vars, frozenVarSet )
 
       }
 
@@ -322,10 +181,12 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
 
         val jointMap = thenResults._6 ++ elseResults._6
 
-        /* return */ (seen, childCollocSet, S -- childCollocSet, delta, jointFrozen, jointMap)
-
-
+         (seen, childCollocSet, S -- childCollocSet, delta, jointFrozen, jointMap)
       }
+
+      /** Recursive case, nullary LetIn */
+      case LetInEx( body, defs@_* ) =>
+        defaultArgs
 
       /** In the other cases, return the default args */
       case _ => defaultArgs
@@ -346,11 +207,10 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
   private def staticAnalysis( p_phi : TlaEx,
                               p_vars : Set[String]
                             ) : Aliases.staticAnalysisData = {
-    import SMTtools._
     /** Invoke the main method, then drop noColloc and simplify delta */
     val (seen, colloc, _, delta, frozen, uidMap) =
       recursiveMainComputation( p_phi, p_vars, Set[String]() )
-    /* return */ (seen, colloc, delta.map( pa => (pa._1, simplify( pa._2 )) ), frozen, uidMap)
+     (seen, colloc, delta.map( pa => (pa._1, simplify( pa._2 )) ), frozen, uidMap)
   }
 
   /**
@@ -369,7 +229,6 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
            ) : String = {
 
     import AlphaTLApTools._
-    import SMTtools._
 
     /** Extract the list of leaf ids, the collocated set, the delta mapping and the frozen mapping */
     val (seen, colloc, delta, frozen, uidMap) = staticAnalysis( p_phi, p_vars )
@@ -426,25 +285,27 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
 //    val thetaHArgs = notAsgnCand.map( i => Neg( Variable( i ) ) )
 //    val thetaH = thetaHArgs.map( toSmt2 )
 
+    val toSmt : BoolFormula => String = toSmt2( _ )
+
     /** \theta_C^*^ */
     val thetaCStarArgs = delta.values
-    val thetaCStar = thetaCStarArgs.map( toSmt2 )
+    val thetaCStar = thetaCStarArgs.map( toSmt )
 
     /** \theta^\E!^ */
     val thetaEArgs =
       for {(i, j) <- colloc_Vars if i < j}
         yield Neg( And( Variable( i ), Variable( j ) ) )
-    val thetaE = thetaEArgs.map( toSmt2 )
+    val thetaE = thetaEArgs.map( toSmt )
 
     /** \theta_A^*^ */
     val thetaAStarArgs =
       for {(i, j) <- colloc_tl}
         yield Implies( And( Variable( i ), Variable( j ) ), LtFns( i, j ) )
-    val thetaAStar = thetaAStarArgs.map( toSmt2 )
+    val thetaAStar = thetaAStarArgs.map( toSmt )
 
     /** \theta^inj^ */
     val thetaInjArgs = for {i <- seen; j <- seen if i < j} yield NeFns( i, j )
-    val thetaInj = thetaInjArgs.map( toSmt2 )
+    val thetaInj = thetaInjArgs.map( toSmt )
 
     /** The constant/funciton declaration commands */
     val typedecls = seen.map( "( declare-fun %s_%s () Bool )".format( m_varSym, _ ) ).mkString( "\n" )
@@ -467,7 +328,7 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
 
     }
 
-    /* return */ ret
+     ret
   }
 
 }

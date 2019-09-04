@@ -308,10 +308,6 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
             None
         }
 
-      case LetInEx( body, defs@_*) =>
-        // TODO, once we implement the 0-arity operator exceptions
-        None
-
       case _ =>
         None
     }

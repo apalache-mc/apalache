@@ -43,7 +43,7 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
     val explUC = ModuleByExTransformer( ExplicitUnchanged( tracker ) )( eac )
     val preprocessed = ModuleByExTransformer(  SimplifyRecordAccess( tracker ) )( explUC )
 
-    SymbolicTransitionExtractor(preprocessed.declarations, p_next)
+    new SymbolicTransitionExtractor(tracker)(preprocessed.declarations, p_next)
   }
 
   def testFromFile( p_file : String, p_next : String = "Next" ) : Seq[SymbTrans] = {
@@ -62,7 +62,7 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
   }
 
   test( "Test labelsAt" ){
-    val gen = new SymbTransGenerator
+    val gen = new SymbTransGenerator( TrackerWithListeners() )
 
     assert( gen.helperFunctions.labelsAt(NullEx, Map.empty[UID, Set[Set[UID]]]).isEmpty )
   }

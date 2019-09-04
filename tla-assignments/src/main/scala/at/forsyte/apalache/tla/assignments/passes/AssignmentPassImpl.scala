@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.process.Renaming
 import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener}
-import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import com.google.inject.Inject
@@ -96,8 +96,10 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
 
     val initReplacedDecls = decls.map(replaceInit)
 
+    val ste = new SymbolicTransitionExtractor( tracker )
+
     // drop selections because of lacking implementation further on
-    val initTransitions = SymbolicTransitionExtractor( initReplacedDecls, initName ).map( _._2 ).toList
+    val initTransitions = ste( initReplacedDecls, initName ).map( _._2 ).toList
 
     for ((t, i) <- initTransitions.zipWithIndex) {
       logger.debug("Initial transition #%d:\n   %s".format(i, t))
@@ -106,7 +108,7 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
     val nextName = options.getOption("checker", "next", "Next").asInstanceOf[String]
 
     // drop selections because of lacking implementation further on
-    val nextTransitions = SymbolicTransitionExtractor(initReplacedDecls,nextName).map( _._2 ).toList
+    val nextTransitions = ste(initReplacedDecls,nextName).map( _._2 ).toList
 
     for ((t, i) <- nextTransitions.zipWithIndex) {
       logger.debug("Next transition #%d:\n   %s".format(i, t))
@@ -122,7 +124,9 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
 
     val inv = findOrThrow( "inv", "Invariant", decls )
     val notInvariant = inv map { i =>
-      val ret = tla.not(i)
+      val ret = tracker.track {
+        x => tla.not(x)
+      }(i)
       logger.debug(s"Negated invariant:\n   $ret")
       ret
     }

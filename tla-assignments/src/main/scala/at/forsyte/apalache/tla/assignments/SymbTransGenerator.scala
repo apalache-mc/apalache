@@ -2,12 +2,13 @@ package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
+import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.values.TlaFalse
 
 /**
   * Constructs symbolic transitions from an assignment strategy.
   */
-class SymbTransGenerator extends TypeAliases {
+class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases {
 
   private[assignments] object helperFunctions {
     type LabelMapType = Map[UID, Set[UID]]
@@ -81,13 +82,13 @@ class SymbTransGenerator extends TypeAliases {
 
                 /** The set as computed from the lemma */
                 val mySet = allCombinations( childBranchSets )
-                if (mySet.isEmpty) unifiedMap else unifiedMap + ( p_ex.ID -> mySet )
+                if ( mySet.isEmpty ) unifiedMap else unifiedMap + ( p_ex.ID -> mySet )
 
               /**
                 * Branches( \/ \phi_i ) = U Branches(\phi_i)
-                *  { S \cap A | S \in Branches( \/ \phi_i )} =
-                *  { S \cap A | S \in U Branches(\phi_i)} =
-                *  U { S \cap A | S \in Branches(\phi_i)}
+                * { S \cap A | S \in Branches( \/ \phi_i )} =
+                * { S \cap A | S \in U Branches(\phi_i)} =
+                * U { S \cap A | S \in Branches(\phi_i)}
                 */
               case TlaBoolOper.or =>
                 val unifiedMap = p_childResults.fold( Map() )( _ ++ _ )
@@ -95,7 +96,7 @@ class SymbTransGenerator extends TypeAliases {
                 val childBranchSets = args.flatMap( x => unifiedMap.get( x.ID ) )
 
                 val mySet = childBranchSets.fold( Set() )( _ ++ _ )
-                if (mySet.isEmpty) unifiedMap else unifiedMap + ( p_ex.ID -> mySet )
+                if ( mySet.isEmpty ) unifiedMap else unifiedMap + ( p_ex.ID -> mySet )
 
               /**
                 * Branches( \E x \in S . \phi ) = Branches( \phi )
@@ -105,7 +106,7 @@ class SymbTransGenerator extends TypeAliases {
               case TlaBoolOper.exists =>
                 val childMap = p_childResults.tail.tail.head
                 val mySet = childMap.getOrElse( args.tail.tail.head.ID, defaultVal )
-                if (mySet.isEmpty) childMap else childMap + ( p_ex.ID -> mySet )
+                if ( mySet.isEmpty ) childMap else childMap + ( p_ex.ID -> mySet )
 
               /**
                 * Branches( ITE(\phi_c, \phi_t, \phi_e) ) = Branches( \phi_t ) U Branches( \phi_e )
@@ -119,7 +120,7 @@ class SymbTransGenerator extends TypeAliases {
                 val childBranchSets = args.tail.flatMap( x => unifiedMap.get( x.ID ) )
 
                 val mySet = childBranchSets.fold( Set() )( _ ++ _ )
-                if (mySet.isEmpty) unifiedMap else unifiedMap + ( p_ex.ID -> mySet )
+                if ( mySet.isEmpty ) unifiedMap else unifiedMap + ( p_ex.ID -> mySet )
 
               case _ => emptyMap
             }
@@ -242,13 +243,13 @@ class SymbTransGenerator extends TypeAliases {
                               p_strat : StrategyType,
                               p_selections : SelMapType
                             ) : Seq[SymbTrans] = {
-      def newBodyFrom( s : Set[UID], ex : TlaEx ) : TlaEx = ex match {
-        case OperEx( TlaSetOper.in, OperEx( TlaActionOper.prime, _ ), _* ) =>
+      def newBodyFrom( s : Set[UID] ) : TlaEx => TlaEx = tracker.track {
+        case ex@OperEx( TlaSetOper.in, OperEx( TlaActionOper.prime, _ ), _* ) =>
           assignmentFilter( ex, s, p_selections )
 
-        case OperEx( op, args@_* ) =>
+        case ex@OperEx( op, args@_* ) =>
           val childVals = args map {
-            newBodyFrom( s, _ )
+            newBodyFrom( s )
           }
           // Make sure to avoid creating new UIDs if not absolutely needed, as filtering
           // is done on the basis of UIDs not syntax
@@ -262,20 +263,20 @@ class SymbTransGenerator extends TypeAliases {
             * the p_selections entry copies over, because the branch intersections are preserved
             */
           val updatedSelections = if ( same ) p_selections else {
-            val newChildMap : SelMapType = args.zip(childVals).map {
-              case (x,y) => y.ID -> p_selections.getOrElse( x.ID, Set.empty )
+            val newChildMap : SelMapType = args.zip( childVals ).map {
+              case (x, y) => y.ID -> p_selections.getOrElse( x.ID, Set.empty )
             }.toMap
-            (p_selections ++ newChildMap) + (newEx.ID -> p_selections.getOrElse(ex.ID, Set.empty))
+            ( p_selections ++ newChildMap ) + ( newEx.ID -> p_selections.getOrElse( ex.ID, Set.empty ) )
           }
           assignmentFilter( newEx, s, updatedSelections )
 
-        case _ => assignmentFilter( ex, s, p_selections )
+        case ex => assignmentFilter( ex, s, p_selections )
       }
 
       p_selections( p_ex.ID ).map( s =>
         (
           mkOrdered( s, p_strat ),
-          newBodyFrom( s, p_ex )
+          newBodyFrom( s )( p_ex )
         )
       ).toSeq
     }

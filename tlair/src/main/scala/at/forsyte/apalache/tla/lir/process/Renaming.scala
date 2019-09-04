@@ -15,8 +15,7 @@ import scala.collection.immutable.HashMap
   *
   * TODO: shall we move this class to *.lir.transformations.standard?
   */
-@Singleton
-class Renaming @Inject()(tracker: TransformationTracker) extends TlaExTransformation {
+class Renaming (tracker: TransformationTracker) extends TlaExTransformation {
   /**
     * The names of bindings that have been seen already.
     */

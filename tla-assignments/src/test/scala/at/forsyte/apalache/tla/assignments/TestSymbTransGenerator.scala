@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.assignments
 
+import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.{TestingPredefs, UID, aux}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -8,7 +9,7 @@ import org.scalatest.junit.JUnitRunner
 @RunWith( classOf[JUnitRunner] )
 class TestSymbTransGenerator extends FunSuite with TestingPredefs {
 
-  val stg = new SymbTransGenerator()
+  val stg = new SymbTransGenerator( TrackerWithListeners() )
 
   import stg.helperFunctions._
   import at.forsyte.apalache.tla.lir.Builder._
