@@ -99,7 +99,8 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
     val ste = new SymbolicTransitionExtractor( tracker )
 
     // drop selections because of lacking implementation further on
-    val initTransitions = ste( initReplacedDecls, initName ).map( _._2 ).toList
+    val initTransitionsRaw = ste( initReplacedDecls, initName )
+    val initTransitions = initTransitionsRaw.map( _._2 ).toList
 
     for ((t, i) <- initTransitions.zipWithIndex) {
       logger.debug("Initial transition #%d:\n   %s".format(i, t))
@@ -108,7 +109,8 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
     val nextName = options.getOption("checker", "next", "Next").asInstanceOf[String]
 
     // drop selections because of lacking implementation further on
-    val nextTransitions = ste(initReplacedDecls,nextName).map( _._2 ).toList
+    val nextTransitionsRaw = ste(initReplacedDecls,nextName)
+    val nextTransitions = nextTransitionsRaw.map( _._2 ).toList
 
     for ((t, i) <- nextTransitions.zipWithIndex) {
       logger.debug("Next transition #%d:\n   %s".format(i, t))
@@ -140,7 +142,9 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
     logger.info("Found %d initializing transitions and %d next transitions"
       .format(initTransitions.length, nextTransitions.length))
 
-    val newModule = new TlaModule(tlaModule.get.name, tlaModule.get.imports, decls)
+    // We do not add intReplacedDecls
+    val withInit = SymbolicTransitionInserter( tlaModule.get, initName, initTransitionsRaw )
+    val newModule = SymbolicTransitionInserter( withInit, nextName, nextTransitionsRaw )
     specWithTransitions
       = Some(new SpecWithTransitions(newModule, initTransitions, nextTransitions, cinitPrime, notInvariant, notInvariantPrime))
     true
