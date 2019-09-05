@@ -66,7 +66,7 @@ class OpApplTranslator(sourceStore: SourceStore, val context: Context, val recSt
       context.lookup(opcode) match {
         case Some(decl: TlaOperDecl) =>
           val args = node.getArgs.toList.map { p => exTran.translate(p) }
-          OperEx(decl.operator, args: _*)
+          OperEx(TlaOper.apply, NameEx(decl.name) +: args: _*)
 
         case _ =>
           throw new SanyImporterException("User operator %s is not found in the translation context: %s".format(opcode, node))

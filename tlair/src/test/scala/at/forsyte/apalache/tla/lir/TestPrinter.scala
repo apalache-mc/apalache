@@ -52,10 +52,10 @@ class TestPrinter extends FunSuite with TestingPredefs {
       printlns( appEx1, appEx2, appEx3, appEx4, appEx5 )( true )
     }
 
-    assert( appEx1 == "x" )
+    assert( appEx1 == "x()" )
     assert( appEx2 == "x(a)" )
     assert( appEx3 == "x(a, b, c)" )
-    assert( appEx4 == "a(b)" )
+    assert( appEx4 == "a(b())" )
     assert( appEx5 == "a(b(c), d(e))" )
 
     val chooseEx1 : String = bd.choose( n_x, n_p )
@@ -93,7 +93,7 @@ class TestPrinter extends FunSuite with TestingPredefs {
     assert( andEx2 == "a" )
     assert( andEx3 == "a %s b".format( up.m_and ) )
     assert( andEx4 == "a %s (b %s c)".format( up.m_and, up.m_and ) )
-    assert( andEx5 == "a %s b".format( up.m_and ) )
+    assert( andEx5 == "a %s b()".format( up.m_and ) )
 
     val orEx1 : String = bd.or()
     val orEx2 : String = bd.or( n_a )
@@ -110,7 +110,7 @@ class TestPrinter extends FunSuite with TestingPredefs {
     assert( orEx2 == "a" )
     assert( orEx3 == "a %s b".format( up.m_or ) )
     assert( orEx4 == "a %s (b %s c)".format( up.m_or, up.m_or ) )
-    assert( orEx5 == "a %s b".format( up.m_or ) )
+    assert( orEx5 == "a %s b()".format( up.m_or ) )
 
     val notEx1 : String = bd.not( n_a )
     val notEx2 : String = bd.not( bd.and( n_a, n_b ) )

@@ -216,7 +216,7 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
   // LET-IN is often used to cache computation results
   test("""LET A == 1 + 2 IN 1 + A ~~> 4""") {
     val decl = TlaOperDecl("A", List(), tla.plus(1, 2))
-    val letIn = tla.letIn(tla.plus(1, OperEx(decl.operator)), decl)
+    val letIn = tla.letIn(tla.plus(1, tla.appDecl(decl)), decl)
     val state = new SymbState(letIn, IntTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)

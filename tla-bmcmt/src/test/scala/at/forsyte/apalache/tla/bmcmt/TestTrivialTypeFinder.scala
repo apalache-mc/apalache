@@ -232,7 +232,7 @@ class TestTrivialTypeFinder extends RewriterBase {
       typeFinder.compute(caseOtherEx, FinSetT(IntT()), BoolT(), FinSetT(IntT()), BoolT(), FinSetT(IntT())))
 
     val decl = TlaOperDecl("A", List(), tla.plus(tla.int(1), tla.int(2)))
-    val letIn = tla.letIn(tla.plus(tla.int(1), OperEx(decl.operator)), decl)
+    val letIn = tla.letIn(tla.plus(tla.int(1), tla.appDecl(decl)), decl)
     assert(IntT() == typeFinder.compute(letIn, IntT()))
     // bad cases
     assertThrows[TypeInferenceError] {
@@ -653,13 +653,13 @@ class TestTrivialTypeFinder extends RewriterBase {
     // good cases:
     // We only allow assert to return a Boolean result.
     // When you use assert in a non-Boolean expression, provide the tool with a type annotation.
-    assert(BoolT() == typeFinder.compute(tla.assert(e, msg), BoolT(), ConstT()))
+    assert(BoolT() == typeFinder.compute(tla.tlcAssert(e, msg), BoolT(), ConstT()))
     // bad cases
     assertThrows[TypeInferenceError] {
-      assert(BoolT() == typeFinder.compute(tla.assert(e, msg), IntT(), ConstT()))
+      assert(BoolT() == typeFinder.compute(tla.tlcAssert(e, msg), IntT(), ConstT()))
     }
     assertThrows[TypeInferenceError] {
-      assert(BoolT() == typeFinder.compute(tla.assert(e, msg), BoolT(), IntT()))
+      assert(BoolT() == typeFinder.compute(tla.tlcAssert(e, msg), BoolT(), IntT()))
     }
   }
 
@@ -774,7 +774,7 @@ class TestTrivialTypeFinder extends RewriterBase {
   test("inferAndSave LET A == 1 + 2 IN 1 + A") {
     val typeFinder = new TrivialTypeFinder()
     val decl = TlaOperDecl("A", List(), tla.plus(tla.int(1), tla.int(2)))
-    val letIn = tla.letIn(tla.plus(tla.int(1), OperEx(decl.operator)), decl)
+    val letIn = tla.letIn(tla.plus(tla.int(1), tla.appDecl(decl)), decl)
     assert(typeFinder.inferAndSave(letIn).contains(IntT()))
     assert(IntT() == typeFinder.getVarTypes("A"))
   }

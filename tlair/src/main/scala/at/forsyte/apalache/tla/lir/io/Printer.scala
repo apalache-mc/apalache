@@ -120,8 +120,6 @@ object UTFPrinter extends Printer {
           case _ => ""
         }
 
-      case OperEx( oper : TlaUserOper, args@_* ) => "%s(%s)".format( oper.name, str( args ) )
-
       case LetInEx( body, defs@_* ) =>
         val defStrings = defs.map( apply( _ ) ).mkString( " " )
         s"LET $defStrings IN ${apply( body )}"
@@ -130,7 +128,7 @@ object UTFPrinter extends Printer {
         oper match {
           case TlaOper.eq => mkOpApp( "%s = %s", args : _* )
           case TlaOper.ne => mkOpApp( "%%s %s %%s".format( m_neq ), args : _* )
-          case TlaOper.apply => ( if ( args.size > 1 ) "%s(%s)" else "%s" ).format( opApp( args.head ), str( args.tail ) )
+          case TlaOper.apply => "%s(%s)".format( opApp( args.head ), str( args.tail ) )
           case TlaOper.chooseUnbounded => mkOpApp( "CHOOSE %s : %s", args : _* )
           case TlaOper.chooseBounded => mkOpApp( "CHOOSE %%s %s %%s : %%s".format( m_in ), args : _* )
 

@@ -55,27 +55,22 @@ class TestBuilder extends FunSuite with TestingPredefs {
       )
     )
 
-    val oper1 = opEx1.operator
-    val oper2 = opEx2.operator
-    val oper3 = opEx3.operator
-    val oper4 = opEx4.operator
-
     val appEx1 = bd.appDecl( opEx1 )
     val appEx2 = bd.appDecl( opEx2, n_a )
     val appEx3 = bd.appDecl( opEx3, n_a )
     val appEx4 = bd.appDecl( opEx4, n_a, n_b )
 
-    assert( appEx1 == OperEx( oper1 ) )
+    assert( appEx1 == OperEx( TlaOper.apply, name(opEx1.name) ) )
     assertThrows[IllegalArgumentException]( bd.appDecl( opEx1, n_a ) )
     assertThrows[IllegalArgumentException]( bd.appDecl( opEx2) )
-    assert( appEx2 == OperEx( oper2, n_a ) )
+    assert( appEx2 == OperEx( TlaOper.apply, name(opEx2.name), n_a ) )
     assertThrows[IllegalArgumentException]( bd.appDecl( opEx2, n_a, n_b ) )
     assertThrows[IllegalArgumentException]( bd.appDecl( opEx3 ) )
-    assert( appEx3 == OperEx( oper3, n_a ) )
+    assert( appEx3 == OperEx( TlaOper.apply, name(opEx3.name), n_a ) )
     assertThrows[IllegalArgumentException]( bd.appDecl( opEx3, n_a, n_b ) )
     assertThrows[IllegalArgumentException]( bd.appDecl( opEx4 ) )
     assertThrows[IllegalArgumentException]( bd.appDecl( opEx4, n_a ) )
-    assert( appEx4 == OperEx( oper4, n_a, n_b ) )
+    assert( appEx4 == OperEx( TlaOper.apply, name(opEx4.name), n_a, n_b ) )
     assertThrows[IllegalArgumentException]( bd.appDecl( opEx4, n_a, n_b, n_c ) )
   }
 
@@ -1705,7 +1700,7 @@ class TestBuilder extends FunSuite with TestingPredefs {
 
   test( "Test direct methods: TlctOper" ) {
     val assertMsg = "None"
-    val assertion = bd.assert( NullEx, assertMsg )
+    val assertion = bd.tlcAssert( NullEx, assertMsg )
 
     assert( assertion == OperEx( TlcOper.assert, NullEx, bd.str( assertMsg ) ) )
   }

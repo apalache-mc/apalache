@@ -107,15 +107,10 @@ class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases 
         val mySet = childMap.getOrElse( body.ID, Set( Set.empty[UID] ) )
         if ( mySet.isEmpty ) childMap else childMap + ( ex.ID -> mySet )
 
-      // Nullary apply, v1
+      // Nullary apply
       case OperEx(TlaOper.apply, NameEx(operName)) =>
         // Apply may appear in higher order operators, so it might not be possible to pre-analyze
         letInMap.getOrElse( operName, Map.empty[UID, AssignmentSelections] )
-      // Nullary apply, v2
-      case OperEx(o: TlaUserOper) =>
-        // We force the expansion of all non-letIn defined TlaUserOper in preprocessing.
-        // Therefore, if the letInBodyMap is undefined for o.name, this is an error (and should throw)
-        letInMap( o.name )
 
       case _ => Map.empty[UID, AssignmentSelections]
     }

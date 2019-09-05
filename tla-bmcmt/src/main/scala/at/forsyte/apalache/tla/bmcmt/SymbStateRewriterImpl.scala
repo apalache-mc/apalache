@@ -170,8 +170,9 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
       -> List(new CaseRule(this)),
     key(tla.letIn(tla.int(1), TlaOperDecl("A", List(), tla.int(2))))
       -> List(new LetInRule(this)),
-    key(OperEx(new TlaUserOper("userOp", AnyArity(), TlaOperDecl("userOp", List(), tla.int(3)))))
-      -> List(new UserOperRule(this)),
+      // TODO, rethink TlaOper.apply rule
+    key(tla.appDecl( TlaOperDecl("userOp", List(), tla.int(3)) ) ) ->
+      List(new UserOperRule(this)),
 
     // sets
     key(tla.in(tla.name("x"), tla.name("S")))
@@ -560,7 +561,8 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     */
   private def key(ex: TlaEx): String = {
     ex match {
-      case OperEx(_: TlaUserOper, _*) =>
+      // TODO: Is this correct?
+      case OperEx(TlaOper.apply, NameEx(_), _*) =>
         "U@"
 
       case OperEx(oper, _*) =>

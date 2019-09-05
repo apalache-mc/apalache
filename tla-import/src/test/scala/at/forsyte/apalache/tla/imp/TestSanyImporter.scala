@@ -461,8 +461,8 @@ class TestSanyImporter extends FunSuite {
 
     val trueOperDecl = mod.declarations(1)
     expectDecl("True", ValEx(TlaTrue))
-    val trueOper = TlaOperDecl("True", List(), ValEx(TlaTrue)).operator
-    assert(OperEx(trueOper) == OperEx(trueOper))
+
+    val trueOperEx = OperEx( TlaOper.apply, NameEx("True") )
 
     expectDecl("Eq", OperEx(TlaOper.eq, ValEx(TlaFalse), ValEx(TlaTrue)))
     expectDecl("Ne", OperEx(TlaOper.ne, ValEx(TlaFalse), ValEx(TlaTrue)))
@@ -487,11 +487,11 @@ class TestSanyImporter extends FunSuite {
     expectDecl("Diamond", OperEx(TlaTempOper.diamond, ValEx(TlaTrue)))
     expectDecl("Enabled", OperEx(TlaActionOper.enabled, NameEx("x")))
     expectDecl("Unchanged", OperEx(TlaActionOper.unchanged, NameEx("x")))
-    expectDecl("Cdot", OperEx(TlaActionOper.composition, OperEx(trueOper), OperEx(trueOper)))
+    expectDecl("Cdot", OperEx(TlaActionOper.composition, trueOperEx, trueOperEx))
     expectDecl("Guarantees",
-      OperEx(TlaTempOper.guarantees, OperEx(trueOper), OperEx(trueOper)))
+      OperEx(TlaTempOper.guarantees, trueOperEx, trueOperEx))
     expectDecl("Angleact",
-      OperEx(TlaActionOper.nostutter, OperEx(trueOper), NameEx("x")))
+      OperEx(TlaActionOper.nostutter, trueOperEx, NameEx("x")))
     expectDecl("BoundedChoose",
       OperEx(TlaOper.chooseBounded, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))
     expectDecl("BoundedExists",
@@ -548,15 +548,15 @@ class TestSanyImporter extends FunSuite {
       OperEx(TlaSetOper.recSet,
         ValEx(TlaStr("a")), NameEx("x"), ValEx(TlaStr("b")), NameEx("x")))
     expectDecl("StrongFairness",
-      OperEx(TlaTempOper.strongFairness, NameEx("x"), OperEx(trueOper)))
+      OperEx(TlaTempOper.strongFairness, NameEx("x"), trueOperEx))
     expectDecl("WeakFairness",
-      OperEx(TlaTempOper.weakFairness, NameEx("x"), OperEx(trueOper)))
+      OperEx(TlaTempOper.weakFairness, NameEx("x"), trueOperEx))
     expectDecl("SquareAct",
-      OperEx(TlaActionOper.stutter, OperEx(trueOper), NameEx("x")))
+      OperEx(TlaActionOper.stutter, trueOperEx, NameEx("x")))
     expectDecl("TemporalExists",
-      OperEx(TlaTempOper.EE, NameEx("y"), OperEx(trueOper)))
+      OperEx(TlaTempOper.EE, NameEx("y"), trueOperEx))
     expectDecl("TemporalForall",
-      OperEx(TlaTempOper.AA, NameEx("y"), OperEx(trueOper)))
+      OperEx(TlaTempOper.AA, NameEx("y"), trueOperEx))
     expectDecl("UnboundedChoose",
       OperEx(TlaOper.chooseUnbounded, NameEx("y"), ValEx(TlaTrue)))
     expectDecl("UnboundedExists",
@@ -993,7 +993,7 @@ class TestSanyImporter extends FunSuite {
       OperEx(TlaSetOper.cap, NameEx("i"), NameEx("j")))(mod.declarations(3))
     val aDecl = mod.declarations(2).asInstanceOf[TlaOperDecl]
     expectDecl("C", List(),
-      OperEx(aDecl.operator, ValEx(TlaInt(1)), ValEx(TlaInt(2))))(mod.declarations(4))
+      OperEx(TlaOper.apply, NameEx( aDecl.name ), ValEx(TlaInt(1)), ValEx(TlaInt(2))))(mod.declarations(4))
   }
 
   test("level-2 operators") {
@@ -1020,7 +1020,7 @@ class TestSanyImporter extends FunSuite {
         OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j"))))(mod.declarations(2))
     val aDecl = mod.declarations(2).asInstanceOf[TlaOperDecl]
     expectDecl("C", List(),
-      OperEx(aDecl.operator, ValEx(TlaInt(0)), ValEx(TlaInt(1)), NameEx("B")))(mod.declarations(4))
+      tla.appDecl( aDecl, tla.int(0), tla.int(1), tla.name("B") ))(mod.declarations(4))
   }
 
   test("let-in") {
@@ -1062,9 +1062,9 @@ class TestSanyImporter extends FunSuite {
         }
         assert(locationStore.contains(zDecl.body.ID)) // and source file information has been saved
         assert(0 == xDecl.formalParams.length)
-        assert(ValEx(TlaInt(1)) == xDecl.body)
+        assert(tla.int(1) == xDecl.body)
         // although "X" might seem to be a variable, it is actually an operator without any arguments
-        assert(OperEx(xDecl.operator) == body)
+        assert(tla.appDecl(xDecl) == body)
         assert(locationStore.contains(xDecl.body.ID)) // and source file information has been saved
     }
   }
@@ -1110,8 +1110,8 @@ class TestSanyImporter extends FunSuite {
 
         val xDecl = defs(1)
         assert("X" == xDecl.name)
-        assert(OperEx(TlaOper.apply, NameEx("X")) == xDecl.body)
-        assert(OperEx(xDecl.operator) == body)
+        assert(tla.appOp( tla.name("X") ) == xDecl.body)
+        assert(tla.appDecl(xDecl) == body)
         assert(locationStore.contains(xDecl.body.ID)) // and source file information has been saved
     }
   }
@@ -1186,7 +1186,7 @@ class TestSanyImporter extends FunSuite {
         val A = root.declarations.find {
           _.name == "A"
         }.get.asInstanceOf[TlaOperDecl]
-        assert(OperEx(A.operator, NameEx("n")) == d.body)
+        assert(tla.appDecl( A, tla.name("n") ) == d.body)
         assert(locationStore.contains(d.body.ID)) // and source file information has been saved
 
       case _ =>
@@ -1319,9 +1319,8 @@ class TestSanyImporter extends FunSuite {
     root.declarations.find { _.name == "J!G" } match {
       case Some(TlaOperDecl(_, params, body)) =>
         assert(params.isEmpty)
-        assert(body == OperEx(new TlaUserOper("J!F", FixedArity(1), fDecl.asInstanceOf[TlaOperDecl]),
-          ValEx(TlaInt(3))
-        ))
+        val expected = tla.appDecl( fDecl.asInstanceOf[TlaOperDecl], tla.int(3) )
+        assert(body == expected)
 
       case _ =>
         fail("expected the body for J!G")

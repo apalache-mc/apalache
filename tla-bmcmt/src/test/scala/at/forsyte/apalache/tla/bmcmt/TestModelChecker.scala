@@ -143,7 +143,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     // LET A == 1 + x IN x' \in { A + 1 }
     val aDecl = TlaOperDecl("A", List(), tla.plus(tla.int(1), tla.name("x")))
 
-    val letIn = tla.letIn(tla.plus(OperEx(aDecl.operator), tla.int(1)), aDecl)
+    val letIn = tla.letIn(tla.plus(tla.appDecl( aDecl ), tla.int(1)), aDecl)
 
     val nextTrans = List(mkAssign("x", letIn))///
     val dummyModule = new TlaModule("root", List(), List())

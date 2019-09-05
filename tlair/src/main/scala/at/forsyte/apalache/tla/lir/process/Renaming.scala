@@ -21,11 +21,6 @@ class Renaming (tracker: TransformationTracker) extends TlaExTransformation {
     */
   private var seenNames: Map[String, Int] = HashMap[String, Int]()
 
-  private def renameUserOper(op: TlaOper, map: Map[String, String]) : TlaOper = op match {
-    case o : TlaUserOper => new TlaUserOper( map.getOrElse( o.name, o.name ), o.arity, o.decl )
-    case _ => op
-  }
-
   override def apply(e: TlaEx): TlaEx = {
     renameBindingsUnique(e)
   }
@@ -133,7 +128,7 @@ class Renaming (tracker: TransformationTracker) extends TlaExTransformation {
       newEx
 
     case OperEx(op, args@_*) =>
-      val newEx = OperEx(renameUserOper(op, map), args.map(e => rename(map)(e)): _*)
+      val newEx = OperEx(op, args.map(e => rename(map)(e)): _*)
       newEx
 
     case ex => ex

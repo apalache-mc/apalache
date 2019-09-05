@@ -47,7 +47,12 @@ object Builder {
 
   def appDecl( p_decl : TlaOperDecl,
                p_args : TlaEx*
-             ) : OperEx = OperEx( p_decl.operator, p_args : _* )
+             ) : OperEx = {
+    if ( p_args.length == p_decl.formalParams.length )
+      OperEx( TlaOper.apply, name( p_decl.name ) +: p_args : _* )
+    else
+      throw new IllegalArgumentException
+  }
 
   /** TlaOper */
   def eql( p_lhs : TlaEx,
@@ -396,7 +401,7 @@ object Builder {
   def powSet( p_S : TlaEx ) : OperEx = OperEx( TlaSetOper.powerset, p_S )
 
   // tlc
-  def assert(e: TlaEx, msg: String): OperEx = OperEx(TlcOper.assert, e, ValEx(TlaStr(msg)))
+  def tlcAssert( e: TlaEx, msg: String ): OperEx = OperEx(TlcOper.assert, e, ValEx(TlaStr(msg)))
 
   def primeInSingleton( p_x : TlaEx,
                         p_y : TlaEx

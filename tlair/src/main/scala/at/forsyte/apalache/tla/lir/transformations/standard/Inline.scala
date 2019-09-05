@@ -46,8 +46,6 @@ object Inline {
                         ) : TlaExTransformation = tracker.track {
     // Jure, 5.7.19: Can 0-arity operators ever appear as standalone NameEx, without
     // a OperEx( TlaOper.apply, NameEx( name ), args@_* ) wrapper? Currently, we consider that invalid
-    case ex@OperEx( op : TlaUserOper, args@_* ) =>
-      instantiateBody( bodyMap, tracker, op.name, args : _* ).getOrElse( ex )
     case ex@OperEx( TlaOper.apply, NameEx( name ), args@_* ) =>
       instantiateBody( bodyMap, tracker, name, args : _* ).getOrElse( ex )
     case ex => ex

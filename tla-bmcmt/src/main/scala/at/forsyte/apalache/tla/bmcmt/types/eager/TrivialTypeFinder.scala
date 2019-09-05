@@ -401,21 +401,12 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
         .get
 
     case app @ OperEx(TlaOper.apply, NameEx(opName)) =>
-      varTypes.get(opName.toString)
+      varTypes.get(opName.toString) // String.toString ??
         .orElse(Some(error(app, "No type assigned to " + opName)))
         .get
 
     case OperEx(TlaOper.apply, opName, _*) =>
         throw new IllegalStateException(s"Unexpected operator call to $opName. Report a bug!")
-
-    // TODO: Jure, I guess, you would like to remove the two instances below
-    case app @ OperEx(op: TlaUserOper) =>
-      varTypes.get(op.name)
-        .orElse(Some(error(app, "No type assigned to " + op.name)))
-        .get
-
-    case OperEx(op: TlaUserOper, _*) =>
-      throw new IllegalStateException(s"Unexpected operator call to ${op.name}. Report a bug!")
 
     case ne@OperEx(TlaActionOper.prime, NameEx(name)) =>
       val primed = name + "'"

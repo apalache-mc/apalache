@@ -186,16 +186,10 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
         /** Then, analyze the body, with the bodyResults map */
         staticAnalysis( body, vars, initialFrozenVarSet, initialLetInOperBodyMap ++ bodyResults )
 
-      /** Nullary apply, v1 */
+      /** Nullary apply */
       case OperEx( TlaOper.apply, NameEx(operName) ) =>
         // Apply may appear in higher order operators, so it might not be possible to pre-analyze
         initialLetInOperBodyMap.getOrElse( operName, defaultArgs)
-
-      /** Nullary apply, v2 */
-      case OperEx( o: TlaUserOper ) =>
-        // We force the expansion of all non-letIn defined TlaUserOper in preprocessing.
-        // Therefore, if the letInBodyMap is undefined for o.name, this is an error (and should throw)
-        initialLetInOperBodyMap( o.name )
 
       /** In the other cases, return the default args */
       case _ => defaultArgs

@@ -629,7 +629,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   test("a one-line LET-IN") {
     val writer = new PrettyWriter(printWriter, 40)
     val aDecl = TlaOperDecl("A", List(), 1)
-    val expr = letIn(OperEx(aDecl.operator), aDecl)
+    val expr = letIn(appDecl(aDecl), aDecl)
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -643,7 +643,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
       TlaOperDecl("AVeryLongName",
         List(SimpleFormalParam("param1"), SimpleFormalParam("param2")),
         plus("param1", "param2"))
-    val expr = letIn(OperEx(decl.operator, 1, 2), decl)
+    val expr = letIn(appDecl(decl, int(1), int(2)), decl)
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -665,8 +665,8 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
         List(SimpleFormalParam("param1"), SimpleFormalParam("param2")),
         plus("param1", "param2"))
     val expr = letIn(
-      mult(OperEx(decl1.operator, 1, 2),
-      OperEx(decl2.operator, 3, 4)),
+      mult(appDecl(decl1, int(1), int(2)),
+        appDecl(decl2, int(3), int(4))),
       decl1, decl2)
     writer.write(expr)
     printWriter.flush()

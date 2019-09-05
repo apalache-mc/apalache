@@ -167,38 +167,6 @@ package lir {
   }
 
   /**
-    * A user-defined operator.
-    * Normally, user-defined operators are created from the operator declarations.
-    *
-    * @see TlaOperDecl
-    *
-    * @param name operator name
-    * @param arity operator arity
-    * @param decl the declaration, from which the operator was instantiated
-    */
-  class TlaUserOper(val name: String, val arity: OperArity, val decl: TlaOperDecl) extends TlaOper {
-    override def interpretation = Interpretation.User
-
-    override val precedence: (Int, Int) = (16, 16) // similar to function application
-
-    // as this is not a case class, we have to carefully define equality and hashCode
-    override def equals(that: scala.Any): Boolean = {
-      that match {
-        case that: TlaUserOper =>
-          that.name == name && that.arity == arity && that.decl == decl
-
-        case _ =>
-          false
-      }
-    }
-
-    override def hashCode(): Int = {
-      31 * (31 * name.hashCode + arity.hashCode()) + decl.hashCode()
-    }
-  }
-
-
-  /**
     * <p>An operator definition, e.g. A == 1 + 2, or B(x, y) == x + y, or (C(f(_, _), x, y) == f(x, y).</p>
     *
     * <p>As in the case with the built-in operators, every operator declaration carries a single operator instance,
@@ -220,7 +188,6 @@ package lir {
     // this is no longer required, as module instantiation uses null bodies
     //    require( !body.isNull )
 
-    val operator: TlaUserOper = new TlaUserOper(name, FixedArity(formalParams.length), this)
     /**
       * Is the operator definition recursive? Similar to body, this is a variable that can be changed later.
       */
