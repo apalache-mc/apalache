@@ -1373,27 +1373,27 @@ class TestSanyImporter extends FunSuite {
   }
 
   // uncomment this test when we decide on how to fix operator overriding
-  ignore("EXTENDS with operator overriding") {
-    // operators with parameters that are themselves operators with parameters
+  test("lookup order in INSTANCE") {
+    // regression: SanyImporter was resolving the names in the wrong order
     val text =
       """---- MODULE imports ----
         |---- MODULE M ----
         |a == {}
+        |b == a
         |================================
-        |EXTENDS M
         |a(self) == {self}
-        |b == a("a")
+        |I == INSTANCE M
+        |c == a(1)
         |================================
         |""".stripMargin
 
     val (rootName, modules) = new SanyImporter(new SourceStore)
       .loadFromSource("imports", Source.fromString(text))
-    assert(2 == modules.size)
+    assert(1 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
     // we strip away the operator declarations by Naturals
-    assert(root.declarations.isEmpty)
-    assert(List("M") == root.imports)
+    assert(4 == root.declarations.size)
     // check that Naturals were imported properly
     val aOfM = root.declarations.head
     // check that the root module has indeed the definition a(self) == {self}, not a == {}

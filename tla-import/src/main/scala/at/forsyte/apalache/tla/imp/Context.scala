@@ -19,7 +19,7 @@ trait Context {
 
   /**
     * Find a declaration that is associated with the name. If the context is given a lookup prefix "A!B!C", then
-    * lookup("x") will try "x", "C!x", "B!C!x", and "A!B!C!x" in that order.
+    * lookup("x") will try "A!B!C!x", "B!C!x", "C!x", "x", in that order.
     *
     * @param name a name that may be prefixed with instance names, e.g., A!B!x
     * @return the declaration, if found
@@ -75,26 +75,28 @@ object Context {
 
     /**
       * Find a declaration that is associated with the name. If the context is given a lookup prefix "A!B!C", then
-      * lookup("x") will try "x", "C!x", "B!C!x", and "A!B!C!x" in that order.
+      * lookup("x") will try "A!B!C!x", "B!C!x", "C!x", "x", in that order.
       *
       * @param name a name that may be prefixed with instance names, e.g., A!B!x
       * @return the declaration, if found
       */
     override def lookup(name: String): Option[TlaDecl] = {
       val map: Map[String, TlaDecl] = declarationMap
-      def find(qname: String, revPrefix: Seq[String]): Option[TlaDecl] = {
+      def find(qname: String): Option[TlaDecl] = {
         if (map.contains(qname)) {
           Some(map(qname))
         } else {
-          revPrefix match {
-            case Nil => None
-            case heads :+ instName =>
-              find(instName + "!" + qname, heads)
+          val index = qname.indexOf("!")
+          if (index < 0 ) {
+            None
+          } else {
+            find(qname.substring(index + 1))
           }
         }
       }
 
-      find(name, lookupPrefix)
+      val fullname = (lookupPrefix :+ name).mkString("!")
+      find(fullname)
     }
 
     /**
