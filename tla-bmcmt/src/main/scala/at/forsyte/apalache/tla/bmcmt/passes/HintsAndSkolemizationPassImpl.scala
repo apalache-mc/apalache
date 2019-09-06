@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.passes
 
 import java.io.{PrintWriter, StringWriter}
 
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
+import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.assignments.SpecWithTransitions
 import at.forsyte.apalache.tla.assignments.passes.SpecWithTransitionsMixin
 import at.forsyte.apalache.tla.bmcmt.CheckerException
@@ -23,11 +23,8 @@ class HintsAndSkolemizationPassImpl @Inject()(val options: PassOptions,
                                               frexStoreImpl: FreeExistentialsStoreImpl,
                                               hintsStoreImpl: FormulaHintsStoreImpl,
                                               tracker: TransformationTracker,
-                                              @Named("AfterSkolem") nextPass: Pass with SpecWithTransitionsMixin)
+                                              @Named("AfterSkolem") nextPass: Pass with SpecWithTransitionsMixin with TlaModuleMixin)
   extends HintsAndSkolemizationPass with LazyLogging {
-
-  private var specWithTransitions: Option[SpecWithTransitions] = None
-
   /**
     * The pass name.
     *
@@ -95,10 +92,8 @@ class HintsAndSkolemizationPassImpl @Inject()(val options: PassOptions,
     * @return the next pass, if exists, or None otherwise
     */
   override def next(): Option[Pass] = {
+    tlaModule foreach { nextPass.setModule }
+    specWithTransitions foreach { nextPass.setSpecWithTransitions }
     Some(nextPass)
-  }
-
-  override def setSpecWithTransitions(spec: SpecWithTransitions): Unit = {
-    specWithTransitions = Some(spec)
   }
 }

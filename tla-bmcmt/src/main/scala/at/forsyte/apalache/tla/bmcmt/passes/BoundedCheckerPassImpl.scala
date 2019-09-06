@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
-import at.forsyte.apalache.tla.assignments.SpecWithTransitions
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore, FreeExistentialsStoreImpl}
 import at.forsyte.apalache.tla.bmcmt.search.{BfsStrategy, BfsStrategyStopWatchDecorator, DfsStrategy}
@@ -26,8 +25,6 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
                                         changeListener: ChangeListener,
                                         @Named("AfterChecker") nextPass: Pass)
       extends BoundedCheckerPass with LazyLogging {
-
-  private var specWithTransitions: Option[SpecWithTransitions] = None
 
   /**
     * The pass name.
@@ -79,15 +76,8 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
     *
     * @return the next pass, if exists, or None otherwise
     */
-  override def next(): Option[Pass] = {
-    if (specWithTransitions.isDefined) {
-      Some(nextPass)
-    } else {
-      None
-    }
-  }
-
-  override def setSpecWithTransitions(spec: SpecWithTransitions): Unit = {
-    specWithTransitions = Some(spec)
-  }
+  override def next(): Option[Pass] = for {
+      _ <- tlaModule
+      _ <- specWithTransitions
+    } yield nextPass // just checks if both exist
 }

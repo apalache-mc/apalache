@@ -1,14 +1,12 @@
 package at.forsyte.apalache.tla.assignments.passes
 
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
+import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.assignments._
 import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.process.Renaming
 import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener}
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import com.google.inject.Inject
@@ -24,12 +22,8 @@ import com.typesafe.scalalogging.LazyLogging
 class AssignmentPassImpl @Inject()( options: PassOptions,
                                     sourceStore: SourceStore,
                                     changeListener: ChangeListener,
-                                    @Named("AfterAssignment") nextPass: Pass with SpecWithTransitionsMixin)
+                                    @Named("AfterAssignment") nextPass: Pass with SpecWithTransitionsMixin with TlaModuleMixin )
       extends AssignmentPass with LazyLogging {
-
-  var tlaModule: Option[TlaModule] = None
-  private var specWithTransitions: Option[SpecWithTransitions] = None
-
   /**
     * The name of the pass
     *
@@ -145,8 +139,9 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
     // We do not add intReplacedDecls
     val withInit = SymbolicTransitionInserter( tlaModule.get, initName, initTransitionsRaw )
     val newModule = SymbolicTransitionInserter( withInit, nextName, nextTransitionsRaw )
-    specWithTransitions
-      = Some(new SpecWithTransitions(newModule, initTransitions, nextTransitions, cinitPrime, notInvariant, notInvariantPrime))
+
+    setSpecWithTransitions(new SpecWithTransitions(newModule, initTransitions, nextTransitions, cinitPrime, notInvariant, notInvariantPrime))
+    setModule(newModule)
     true
   }
 
@@ -157,11 +152,10 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
     * @return the next pass, if exists, or None otherwise
     */
   override def next(): Option[Pass] = {
-    if (specWithTransitions.isDefined) {
-      nextPass.setSpecWithTransitions(specWithTransitions.get)
-      Some(nextPass)
-    } else {
-      None
+    tlaModule foreach { nextPass.setModule }
+    specWithTransitions.map { swt =>
+      nextPass.setSpecWithTransitions(swt)
+      nextPass
     }
   }
 }
