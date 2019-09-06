@@ -4,7 +4,7 @@ import java.io.{File, PrintWriter}
 import java.nio.file.Files
 
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.predef._
 import at.forsyte.apalache.tla.lir.src.{SourcePosition, SourceRegion}
@@ -705,13 +705,13 @@ class TestSanyImporter extends FunSuite {
     expectDecl("ExceptManyAt",
       List(),
       OperEx(TlaFunOper.except,
-        tla.name("x"),
-        tla.tuple(tla.int(1), tla.int(2)),
-        tla.and(
-          tla.appFun(
-            tla.appFun(tla.name("x"), tla.int(1)),
-            tla.int(2)),
-          tla.bool(true)
+        name("x"),
+        tuple(int(1), int(2)),
+        and(
+          appFun(
+            appFun(name("x"), int(1)),
+            int(2)),
+          bool(true)
         ))) (mod.declarations(4))
 
 /*  // the old test when Desugarer was part of SanyImporter
@@ -835,10 +835,10 @@ class TestSanyImporter extends FunSuite {
     // SanyImporter no longer unfolds a multi-argument EXCEPT into a chain.
     // This is done by Desugarer in a separate phase.
     expectDecl("E2",
-      tla.except(
-        tla.name("f"),
-        tla.tuple(tla.int(0), tla.int(1), tla.int(2)),
-        tla.int(3)
+      except(
+        name("f"),
+        tuple(int(0), int(1), int(2)),
+        int(3)
       )
     ) (mod.declarations(2))
 
@@ -943,16 +943,16 @@ class TestSanyImporter extends FunSuite {
     // This is done by Desugarer in a separate phase.
     expectDecl(
       "C4",
-      tla.funDef(
-        tla.bool(true),
-        tla.name("x"),
-        tla.name("X"),
-        tla.name("y"),
-        tla.name("X"),
-        tla.tuple(tla.name("a"), tla.name("b")),
-        tla.name("Z"),
-        tla.name("z"),
-        tla.name("Z")
+      funDef(
+        bool(true),
+        name("x"),
+        name("X"),
+        name("y"),
+        name("X"),
+        tuple(name("a"), name("b")),
+        name("Z"),
+        name("z"),
+        name("Z")
       )
     ) (mod.declarations(5))
 
@@ -1591,24 +1591,24 @@ class TestSanyImporter extends FunSuite {
     // the definitions of the standard operators are filtered out
     assert(11 == root.declarations.size)
 
-    expectDecl("Empty", tla.tuple())
-    expectDecl("Three", tla.tuple(tla.int(1), tla.int(2), tla.int(3)))
-    expectDecl("ASeq", tla.seqSet(tla.enumSet(tla.int(1), tla.int(2))))
-    expectDecl("ALen", tla.len(tla.tuple(tla.int(1), tla.int(2), tla.int(3))))
+    expectDecl("Empty", tuple())
+    expectDecl("Three", tuple(int(1), int(2), int(3)))
+    expectDecl("ASeq", seqSet(enumSet(int(1), int(2))))
+    expectDecl("ALen", len(tuple(int(1), int(2), int(3))))
     expectDecl("AConcat",
-      tla.concat(tla.tuple(tla.int(1), tla.int(2)),
-        tla.tuple(tla.int(3))))
+      concat(tuple(int(1), int(2)),
+        tuple(int(3))))
     expectDecl("AAppend",
-      tla.append(tla.tuple(tla.int(1), tla.int(2)),
-        tla.int(3)))
-    expectDecl("AHead", tla.head(tla.tuple(tla.int(1), tla.int(2), tla.int(3))))
-    expectDecl("ATail", tla.tail(tla.tuple(tla.int(1), tla.int(2), tla.int(3))))
+      append(tuple(int(1), int(2)),
+        int(3)))
+    expectDecl("AHead", head(tuple(int(1), int(2), int(3))))
+    expectDecl("ATail", tail(tuple(int(1), int(2), int(3))))
     expectDecl("ASubSeq",
-      tla.subseq(tla.tuple(tla.int(1), tla.int(2), tla.int(3), tla.int(4)),
-        tla.int(2), tla.int(3)))
+      subseq(tuple(int(1), int(2), int(3), int(4)),
+        int(2), int(3)))
     expectDecl("ASelectSeq",
-      tla.selectseq(tla.tuple(tla.int(1), tla.int(2), tla.int(3), tla.int(4)),
-        tla.name("Test")))
+      selectseq(tuple(int(1), int(2), int(3), int(4)),
+        name("Test")))
   }
 
   // FiniteSets
@@ -1682,34 +1682,34 @@ class TestSanyImporter extends FunSuite {
     assert(16 == root.declarations.size)
 
     expectDecl("APrint",
-      OperEx(TlcOper.print, tla.str("TLC Print"), tla.bool(true)))
+      OperEx(TlcOper.print, str("TLC Print"), bool(true)))
     expectDecl("APrintT",
-      OperEx(TlcOper.printT, tla.str("TLC PrintT")))
+      OperEx(TlcOper.printT, str("TLC PrintT")))
     expectDecl("AAssert",
-      OperEx(TlcOper.assert, tla.str("TLC Assert"), tla.bool(true)))
+      OperEx(TlcOper.assert, str("TLC Assert"), bool(true)))
     expectDecl("AJavaTime", OperEx(TlcOper.javaTime))
     expectDecl("ATLCGet",
-      OperEx(TlcOper.tlcGet, tla.name("i")))
+      OperEx(TlcOper.tlcGet, name("i")))
     expectDecl("ATLCSet",
-      OperEx(TlcOper.tlcSet, tla.name("i"), tla.int(3)))
+      OperEx(TlcOper.tlcSet, name("i"), int(3)))
     expectDecl("AColonGreater",
-      OperEx(TlcOper.colonGreater, tla.enumSet(tla.int(1), tla.int(2)), tla.int(3)))
-    val fun12 = tla.funDef(tla.name("j"), tla.name("j"), tla.enumSet(tla.int(1), tla.int(2)))
-    val fun34 = tla.funDef(tla.name("k"), tla.name("k"), tla.enumSet(tla.int(3), tla.int(4)))
+      OperEx(TlcOper.colonGreater, enumSet(int(1), int(2)), int(3)))
+    val fun12 = funDef(name("j"), name("j"), enumSet(int(1), int(2)))
+    val fun34 = funDef(name("k"), name("k"), enumSet(int(3), int(4)))
     expectDecl("AtAt",
       OperEx(TlcOper.atat, fun12, fun34))
     expectDecl("APermutations",
-      OperEx(TlcOper.permutations, tla.tuple(tla.int(1), tla.int(2))))
+      OperEx(TlcOper.permutations, tuple(int(1), int(2))))
     expectDecl("ASortSeq",
       OperEx(TlcOper.sortSeq,
-        tla.tuple(tla.int(2), tla.int(1)),
-        tla.name("FakeSort")
+        tuple(int(2), int(1)),
+        name("FakeSort")
       ))
     expectDecl("ARandomElement",
-      OperEx(TlcOper.randomElement, tla.enumSet(tla.int(1), tla.int(2))))
+      OperEx(TlcOper.randomElement, enumSet(int(1), int(2))))
     expectDecl("AAny", OperEx(TlcOper.any))
-    expectDecl("ATLCEval", OperEx(TlcOper.tlcEval, tla.int(42)))
-    expectDecl("AToString", OperEx(TlcOper.tlcToString, tla.int(42)))
+    expectDecl("ATLCEval", OperEx(TlcOper.tlcEval, int(42)))
+    expectDecl("AToString", OperEx(TlcOper.tlcToString, int(42)))
   }
 
   test("type annotations (our custom extension)") {
@@ -1748,47 +1748,47 @@ class TestSanyImporter extends FunSuite {
       findAndExpectTlaDecl(locationStore, rootMod, name, List(), body)
 
     expectDecl("SetOfInts",
-      OperEx(BmcOper.withType, tla.enumSet(), tla.enumSet(ValEx(TlaIntSet))))
+      OperEx(BmcOper.withType, enumSet(), enumSet(ValEx(TlaIntSet))))
 
     expectDecl("SetOfBools",
-      OperEx(BmcOper.withType, tla.enumSet(), tla.enumSet(ValEx(TlaBoolSet))))
+      OperEx(BmcOper.withType, enumSet(), enumSet(ValEx(TlaBoolSet))))
 
     expectDecl("SetOfStrings",
-      OperEx(BmcOper.withType, tla.enumSet(), tla.enumSet(ValEx(TlaStrSet))))
+      OperEx(BmcOper.withType, enumSet(), enumSet(ValEx(TlaStrSet))))
 
     expectDecl("SetOfInts",
-      OperEx(BmcOper.withType, tla.enumSet(), tla.enumSet(ValEx(TlaIntSet))))
+      OperEx(BmcOper.withType, enumSet(), enumSet(ValEx(TlaIntSet))))
 
     expectDecl("SetOfSetsOfInts",
-      OperEx(BmcOper.withType, tla.enumSet(), tla.enumSet(tla.enumSet(ValEx(TlaIntSet)))))
+      OperEx(BmcOper.withType, enumSet(), enumSet(enumSet(ValEx(TlaIntSet)))))
 
     expectDecl("Integer",
-      OperEx(BmcOper.withType, tla.int(1), ValEx(TlaIntSet)))
+      OperEx(BmcOper.withType, int(1), ValEx(TlaIntSet)))
 
     expectDecl("Bool",
-      OperEx(BmcOper.withType, tla.bool(false), ValEx(TlaBoolSet)))
+      OperEx(BmcOper.withType, bool(false), ValEx(TlaBoolSet)))
 
     expectDecl("Str",
-      OperEx(BmcOper.withType, tla.str("a"), ValEx(TlaStrSet)))
+      OperEx(BmcOper.withType, str("a"), ValEx(TlaStrSet)))
 
     expectDecl("Fun",
-      OperEx(BmcOper.withType, NameEx("f"), tla.funSet(ValEx(TlaIntSet), ValEx(TlaIntSet))))
+      OperEx(BmcOper.withType, NameEx("f"), funSet(ValEx(TlaIntSet), ValEx(TlaIntSet))))
 
     expectDecl("Rec",
       OperEx(BmcOper.withType, NameEx("f"),
-        tla.enumFun(tla.str("a"), ValEx(TlaIntSet), tla.str("b"), ValEx(TlaBoolSet))))
+        enumFun(str("a"), ValEx(TlaIntSet), str("b"), ValEx(TlaBoolSet))))
 
     expectDecl("SetOfRecs",
-      OperEx(BmcOper.withType, tla.enumSet(),
-        tla.enumSet(tla.enumFun(tla.str("a"), ValEx(TlaIntSet), tla.str("b"), ValEx(TlaBoolSet)))))
+      OperEx(BmcOper.withType, enumSet(),
+        enumSet(enumFun(str("a"), ValEx(TlaIntSet), str("b"), ValEx(TlaBoolSet)))))
 
     expectDecl("Tup",
       OperEx(BmcOper.withType, NameEx("f"),
-        tla.tuple(ValEx(TlaIntSet), ValEx(TlaBoolSet))))
+        tuple(ValEx(TlaIntSet), ValEx(TlaBoolSet))))
 
     expectDecl("SetOfTuples",
-      OperEx(BmcOper.withType, tla.enumSet(),
-        tla.enumSet(tla.tuple(ValEx(TlaIntSet), ValEx(TlaBoolSet)))))
+      OperEx(BmcOper.withType, enumSet(),
+        enumSet(tuple(ValEx(TlaIntSet), ValEx(TlaBoolSet)))))
   }
 
 
@@ -1827,18 +1827,19 @@ class TestSanyImporter extends FunSuite {
     }
 
     assertTlaDecl("AWithType",
-      OperEx(BmcOper.withType, tla.name("i"), tla.str("IntT")))
+      OperEx(BmcOper.withType, name("i"), str("IntT")))
   }
   */
 
   test("assumptions") {
-    // this proof is a garbage, just to check, whether the translator works
+    // checking that the assumptions are imported properly
     val text =
       """
         |---- MODULE assumptions ----
         |CONSTANT N
         |VARIABLE x
         |ASSUME(N = 4)
+        |ASSUME(N < 10)
         |Init == x' = TRUE
         |Next == x' = ~x
         |================================
@@ -1853,6 +1854,14 @@ class TestSanyImporter extends FunSuite {
     modules(rootName).declarations(4) match {
       case TlaAssumeDecl(e) =>
         assert(OperEx(TlaOper.eq, NameEx("N"), ValEx(TlaInt(4))) == e)
+
+      case e@_ =>
+        fail("expected an assumption, found: " + e)
+    }
+
+    modules(rootName).declarations(5) match {
+      case TlaAssumeDecl(e) =>
+        assert(lt("x", 10) == e)
 
       case e@_ =>
         fail("expected an assumption, found: " + e)
