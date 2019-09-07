@@ -1021,7 +1021,7 @@ class TestSanyImporter extends FunSuite {
         OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j"))))(mod.declarations(2))
     val aDecl = mod.declarations(2).asInstanceOf[TlaOperDecl]
     expectDecl("C", List(),
-      tla.appDecl( aDecl, tla.int(0), tla.int(1), tla.name("B") ))(mod.declarations(4))
+      appDecl( aDecl, int(0), int(1), name("B") ))(mod.declarations(4))
   }
 
   test("let-in") {
@@ -1063,9 +1063,9 @@ class TestSanyImporter extends FunSuite {
         }
         assert(locationStore.contains(zDecl.body.ID)) // and source file information has been saved
         assert(0 == xDecl.formalParams.length)
-        assert(tla.int(1) == xDecl.body)
+        assert(int(1) == xDecl.body)
         // although "X" might seem to be a variable, it is actually an operator without any arguments
-        assert(tla.appDecl(xDecl) == body)
+        assert(appDecl(xDecl) == body)
         assert(locationStore.contains(xDecl.body.ID)) // and source file information has been saved
     }
   }
@@ -1111,8 +1111,8 @@ class TestSanyImporter extends FunSuite {
 
         val xDecl = defs(1)
         assert("X" == xDecl.name)
-        assert(tla.appOp( tla.name("X") ) == xDecl.body)
-        assert(tla.appDecl(xDecl) == body)
+        assert(appOp( name("X") ) == xDecl.body)
+        assert(appDecl(xDecl) == body)
         assert(locationStore.contains(xDecl.body.ID)) // and source file information has been saved
     }
   }
@@ -1187,7 +1187,7 @@ class TestSanyImporter extends FunSuite {
         val A = root.declarations.find {
           _.name == "A"
         }.get.asInstanceOf[TlaOperDecl]
-        assert(tla.appDecl( A, tla.name("n") ) == d.body)
+        assert(appDecl( A, name("n") ) == d.body)
         assert(locationStore.contains(d.body.ID)) // and source file information has been saved
 
       case _ =>
@@ -1320,7 +1320,7 @@ class TestSanyImporter extends FunSuite {
     root.declarations.find { _.name == "J!G" } match {
       case Some(TlaOperDecl(_, params, body)) =>
         assert(params.isEmpty)
-        val expected = tla.appDecl( fDecl.asInstanceOf[TlaOperDecl], tla.int(3) )
+        val expected = appDecl( fDecl.asInstanceOf[TlaOperDecl], int(3) )
         assert(body == expected)
 
       case _ =>
