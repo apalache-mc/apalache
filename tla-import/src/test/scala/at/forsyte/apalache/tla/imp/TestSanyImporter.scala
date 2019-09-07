@@ -14,6 +14,7 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
+import scala.collection.immutable.HashSet
 import scala.io.Source
 
 /**
@@ -1837,11 +1838,8 @@ class TestSanyImporter extends FunSuite {
       """
         |---- MODULE assumptions ----
         |CONSTANT N
-        |VARIABLE x
-        |ASSUME(N = 4)
-        |ASSUME(N < 10)
-        |Init == x' = TRUE
-        |Next == x' = ~x
+        |ASSUME N = 4
+        |ASSUME N /= 10
         |================================
         |""".stripMargin
 
@@ -1851,21 +1849,21 @@ class TestSanyImporter extends FunSuite {
     // the root module and naturals
     val root = modules(rootName)
 
-    modules(rootName).declarations(4) match {
-      case TlaAssumeDecl(e) =>
-        assert(OperEx(TlaOper.eq, NameEx("N"), ValEx(TlaInt(4))) == e)
+    modules(rootName).declarations(1) match {
+      case TlaAssumeDecl(e) => assert(eql("N", 4) == e)
 
-      case e@_ =>
-        fail("expected an assumption, found: " + e)
+      case e@_ => fail("expected an assumption, found: " + e)
     }
 
-    modules(rootName).declarations(5) match {
-      case TlaAssumeDecl(e) =>
-        assert(lt("x", 10) == e)
+    modules(rootName).declarations(2) match {
+      case TlaAssumeDecl(e) => assert(neql("N", 10) == e)
 
-      case e@_ =>
-        fail("expected an assumption, found: " + e)
+      case e@_ => fail("expected an assumption, found: " + e)
     }
+
+    // regression test for issue #25
+    val names = HashSet(modules(rootName).assumeDeclarations.map(_.name) :_*)
+    assert(2 == names.size) // all assumptions must have unique names
   }
 
   test("ignore theorems") {

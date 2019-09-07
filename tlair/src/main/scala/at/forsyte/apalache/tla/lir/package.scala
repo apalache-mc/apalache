@@ -63,7 +63,7 @@ package lir {
     * @param body the assumption body
     */
   case class TlaAssumeDecl(body: TlaEx) extends TlaDecl {
-    val name: String = "ASSUME"
+    val name: String = "ASSUME" + body.ID
     override def deepCopy(): TlaAssumeDecl = TlaAssumeDecl(body.deepCopy())
   }
 
