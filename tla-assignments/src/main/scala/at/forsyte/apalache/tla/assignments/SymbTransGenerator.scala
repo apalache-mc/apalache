@@ -156,7 +156,7 @@ class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases 
       case ex@OperEx( TlaControlOper.ifThenElse, cond, args@_* ) =>
         val newArgs = args.map(
           x => if ( labelsAt( x, allSelections ) exists { selection.contains } )
-            x else ValEx( TlaFalse )
+            sliceWith( selection, allSelections )( x ) else ValEx( TlaFalse )
         )
         if ( newArgs.forall( _ == ValEx( TlaFalse ) ) ) ex
         else OperEx( TlaControlOper.ifThenElse, cond +: newArgs : _* )

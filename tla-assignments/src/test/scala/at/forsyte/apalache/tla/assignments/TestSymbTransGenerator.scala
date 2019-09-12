@@ -1,7 +1,9 @@
 package at.forsyte.apalache.tla.assignments
 
+import at.forsyte.apalache.tla.lir.Builder.primeInSingleton
+import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
-import at.forsyte.apalache.tla.lir.{TestingPredefs, UID, aux}
+import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -130,6 +132,41 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
     selections3 zip possibleAssgnsXY foreach { case (s,e) =>
       assert( s(ex3.ID) == Set(e) )
     }
+  }
+
+
+  test( "Test ITE with multibranching" ){
+
+    val asgn1 = primeInSingleton( n_x, int(1) )
+    val asgn2 = primeInSingleton( n_x, int(2) )
+    val asgn3 = primeInSingleton( n_x, int(3) )
+
+    val next = ite(
+      trueEx,
+      asgn1,
+      ite(
+        trueEx,
+        asgn2,
+        asgn3
+      )
+    )
+
+    val sel = Seq( asgn1.ID, asgn2.ID, asgn3.ID )
+
+    val transitions = stg( next, sel )
+
+    // Only expected to work on the above
+    def countXprime(ex: TlaEx): Int = ex match {
+      case OperEx( TlaActionOper.prime, NameEx( "x" ) ) => 1
+      case OperEx( _, args@_* ) =>
+        (args map countXprime).sum
+      case _ => 0
+    }
+
+    transitions foreach { t =>
+      assert(countXprime( t._2 ) == 1)
+    }
+
   }
 
 
