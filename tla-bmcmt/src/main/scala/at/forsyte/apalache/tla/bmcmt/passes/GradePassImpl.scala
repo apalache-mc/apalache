@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
-import at.forsyte.apalache.tla.assignments.passes.SpecWithTransitionsMixin
 import at.forsyte.apalache.tla.bmcmt.CheckerException
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeAnalysis, ExprGradeStoreImpl}
 import com.google.inject.Inject
@@ -19,7 +18,7 @@ import com.typesafe.scalalogging.LazyLogging
   */
 class GradePassImpl @Inject()(val options: PassOptions,
                               exprGradeStoreImpl: ExprGradeStoreImpl,
-                              @Named("AfterGrade") nextPass: Pass with SpecWithTransitionsMixin with TlaModuleMixin)
+                              @Named("AfterGrade") nextPass: Pass with TlaModuleMixin)
   extends GradePass with LazyLogging {
 
   /**
@@ -35,15 +34,15 @@ class GradePassImpl @Inject()(val options: PassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
-    if (specWithTransitions.isEmpty) {
+    if (tlaModule.isEmpty) {
       throw new CheckerException(s"The input of $name pass is not initialized")
     }
-    val spec = specWithTransitions.get
+
+    val module = tlaModule.get
     val analysis = new ExprGradeAnalysis(exprGradeStoreImpl)
-    analysis.labelWithGrades(spec)
-// the labelling with \+/ is not clear anymore. The assignment pass cares of finding independent symbolic transitons.
-//    nextPass.setSpecWithTransitions(analysis.refineOr(spec))
-    nextPass.setSpecWithTransitions(spec)
+    analysis.labelWithGrades(module)
+
+    nextPass.setModule(module)
     true
   }
 
@@ -54,8 +53,6 @@ class GradePassImpl @Inject()(val options: PassOptions,
     * @return the next pass, if exists, or None otherwise
     */
   override def next(): Option[Pass] = {
-    tlaModule foreach { nextPass.setModule }
-    specWithTransitions foreach { nextPass.setSpecWithTransitions }
     Some(nextPass)
   }
 }

@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
+import at.forsyte.apalache.tla.assignments.ModuleManipulator
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore, FreeExistentialsStoreImpl}
 import at.forsyte.apalache.tla.bmcmt.search.{BfsStrategy, BfsStrategyStopWatchDecorator, DfsStrategy}
@@ -39,12 +40,19 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
-    if (specWithTransitions.isEmpty) {
+    if (tlaModule.isEmpty) {
       throw new CheckerException(s"The input of $name pass is not initialized")
     }
-    val spec = specWithTransitions.get
-    val input = new CheckerInput(spec.rootModule, spec.initTransitions,
-      spec.nextTransitions, spec.constInitPrime, spec.notInvariantPrime)
+    val module = tlaModule.get
+
+    import at.forsyte.apalache.tla.assignments.ModuleManipulator.defaultNames._
+
+    val initTrans = ModuleManipulator.getTransitionsFromSpec( module, s"$renamingPrefix$initDefaultName" )
+    val nextTrans = ModuleManipulator.getTransitionsFromSpec( module, s"$renamingPrefix$nextDefaultName" )
+    val cinitP = ModuleManipulator.getOperatorOption( module, s"$renamingPrefix$cinitDefaultName" )
+    val notInvP = ModuleManipulator.getOperatorOption( module, s"$renamingPrefix$notInvPrimeDefaultName" )
+
+    val input = new CheckerInput(module, initTrans.toList, nextTrans.toList, cinitP, notInvP)
     val stepsBound = options.getOption("checker", "length", 10).asInstanceOf[Int]
     val debug = options.getOption("general", "debug", false).asInstanceOf[Boolean]
     val profile = options.getOption("smt", "prof", false).asInstanceOf[Boolean]
@@ -76,8 +84,6 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
     *
     * @return the next pass, if exists, or None otherwise
     */
-  override def next(): Option[Pass] = for {
-      _ <- tlaModule
-      _ <- specWithTransitions
-    } yield nextPass // just checks if both exist
+  override def next(): Option[Pass] =
+    tlaModule map {_ => nextPass}
 }

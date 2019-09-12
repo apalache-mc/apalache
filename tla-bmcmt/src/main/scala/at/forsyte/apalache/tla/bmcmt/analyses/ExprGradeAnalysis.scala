@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.analyses
 
-import at.forsyte.apalache.tla.assignments.SpecWithTransitions
+import at.forsyte.apalache.tla.assignments.ModuleManipulator
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaActionOper, TlaBoolOper, TlaTempOper}
 import com.google.inject.Inject
@@ -74,28 +74,19 @@ class ExprGradeAnalysis @Inject()(val store: ExprGradeStoreImpl) {
   /**
     * Label all subexpressions of an expression with their grades.
     *
-    * @param rootModule a module that contains all declarations
-    * @param expr       an expression to label
+    * @param module a module that contains all declarations
     */
-  def labelWithGrades(rootModule: TlaModule, expr: TlaEx): Unit = {
-    val consts = Set(rootModule.constDeclarations.map(_.name): _*)
-    val vars = Set(rootModule.varDeclarations.map(_.name): _*)
-    labelExpr(consts, vars, expr)
-  }
+  def labelWithGrades(module: TlaModule): Unit = {
+    import at.forsyte.apalache.tla.assignments.ModuleManipulator.defaultNames._
 
-  def labelWithGrades(spec: SpecWithTransitions): Unit = {
-    spec.initTransitions.foreach(e => labelWithGrades(spec.rootModule, e))
-    spec.nextTransitions.foreach(e => labelWithGrades(spec.rootModule, e))
-    spec.notInvariant.foreach(e => labelWithGrades(spec.rootModule, e))
-  }
+    val initTransitions = ModuleManipulator.getTransitionsFromSpec( module, initDefaultName )
+    val nextTransitions = ModuleManipulator.getTransitionsFromSpec( module, nextDefaultName )
+    val notInvOpt = ModuleManipulator.getOperatorOption( module, notInvDefaultName )
 
-  /**
-  * Replace disjunctions with orParallel when the expression is action-level or higher.
-  */
-  def refineOr(spec: SpecWithTransitions): SpecWithTransitions = {
-    val newInit = spec.initTransitions map refineOrInExpr
-    val newTrans = spec.nextTransitions map refineOrInExpr
-    new SpecWithTransitions(spec.rootModule, newInit, newTrans, spec.constInitPrime, spec.notInvariant, spec.notInvariantPrime)
+    val consts = Set(module.constDeclarations.map(_.name): _*)
+    val vars = Set(module.varDeclarations.map(_.name): _*)
+
+    (notInvOpt ++ initTransitions ++ nextTransitions).foreach { labelExpr(consts, vars, _) }
   }
 
   /**

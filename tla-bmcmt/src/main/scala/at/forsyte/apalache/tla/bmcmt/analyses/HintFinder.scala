@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt.analyses
 
-import at.forsyte.apalache.tla.assignments.SpecWithTransitions
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import com.google.inject.Inject
@@ -17,14 +16,14 @@ class HintFinder @Inject()(val hintsStore: FormulaHintsStoreImpl) extends LazyLo
   /**
     * Transform the transitions into normal form and label the free existential quantifiers.
     *
-    * @param spec a specification with identified transitions
+    * @param transitions identified transitions
     * @return the modified input
     */
-  def findHints(spec: SpecWithTransitions): Unit = {
-    spec.initTransitions foreach makeHints
-    spec.nextTransitions foreach makeHints
+  def findHints(transitions: Seq[TlaEx]): Unit = {
+    transitions foreach makeHints
     logger.debug("introduced %d formula hints".format(hintsStore.store.size))
   }
+
 
   private def makeHints(ex: TlaEx): Unit = ex match {
     case OperEx(TlaBoolOper.exists, _, _, quantifiedEx) =>

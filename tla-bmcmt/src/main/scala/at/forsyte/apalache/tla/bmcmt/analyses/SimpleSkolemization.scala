@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt.analyses
 
-import at.forsyte.apalache.tla.assignments.SpecWithTransitions
 import at.forsyte.apalache.tla.bmcmt.RewriterException
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -27,19 +26,10 @@ class SimpleSkolemization @Inject()(
     * @param spec a specification with identified transitions
     * @return the modified input
     */
-  def transformAndLabel(spec: SpecWithTransitions): SpecWithTransitions = {
-    val initTransitions = spec.initTransitions map toNegatedForm
-    val nextTransitions = spec.nextTransitions map toNegatedForm
-    val notInv = spec.notInvariant map toNegatedForm
-    val notInvPrime = spec.notInvariantPrime map toNegatedForm
-    val constInitPrime = spec.constInitPrime map toNegatedForm
-
-    initTransitions foreach markFreeExistentials
-    nextTransitions foreach markFreeExistentials
-    notInv foreach markFreeExistentials
-    notInvPrime foreach markFreeExistentials
-    constInitPrime foreach markFreeExistentials
-    new SpecWithTransitions(spec.rootModule, initTransitions, nextTransitions, constInitPrime, notInv, notInvPrime)
+  def transformAndLabel( decls: Traversable[TlaOperDecl] ) : Traversable[TlaOperDecl] = decls map { d =>
+    val newBody = toNegatedForm( d.body )
+    markFreeExistentials( newBody )
+    d.copy( body = newBody )
   }
 
   private def markFreeExistentials(ex: TlaEx): Unit = ex match {

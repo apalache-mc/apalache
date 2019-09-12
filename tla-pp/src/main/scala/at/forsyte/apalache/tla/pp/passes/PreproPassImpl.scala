@@ -17,7 +17,6 @@ class PreproPassImpl @Inject()( val options: PassOptions,
                                 @Named("AfterPrepro") nextPass: Pass with TlaModuleMixin)
     extends PreproPass with LazyLogging {
 
-  override var tlaModule: Option[TlaModule] = None
   private var outputTlaModule: Option[TlaModule] = None
 
   /**
@@ -73,12 +72,9 @@ class PreproPassImpl @Inject()( val options: PassOptions,
     * @return the next pass, if exists, or None otherwise
     */
   override def next(): Option[Pass] = {
-    if (outputTlaModule.isDefined) {
-      nextPass.tlaModule = outputTlaModule
-      Some(nextPass)
-    } else {
-      None
+    outputTlaModule map { m =>
+      nextPass.setModule( m )
+      nextPass
     }
   }
-
 }

@@ -22,7 +22,7 @@ import com.typesafe.scalalogging.LazyLogging
 class AssignmentPassImpl @Inject()( options: PassOptions,
                                     sourceStore: SourceStore,
                                     changeListener: ChangeListener,
-                                    @Named("AfterAssignment") nextPass: Pass with SpecWithTransitionsMixin with TlaModuleMixin )
+                                    @Named("AfterAssignment") nextPass: Pass with TlaModuleMixin )
       extends AssignmentPass with LazyLogging {
   /**
     * The name of the pass
@@ -137,10 +137,24 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
       .format(initTransitions.length, nextTransitions.length))
 
     // We do not add intReplacedDecls
-    val withInit = SymbolicTransitionInserter( tlaModule.get, initName, initTransitionsRaw )
-    val newModule = SymbolicTransitionInserter( withInit, nextName, nextTransitionsRaw )
 
-    setSpecWithTransitions(new SpecWithTransitions(newModule, initTransitions, nextTransitions, cinitPrime, notInvariant, notInvariantPrime))
+    import ModuleManipulator.defaultNames._
+
+    // We insert all the special values as operators
+    val initDecls = ModuleManipulator.declsFromTransitions( initDefaultName, initTransitionsRaw )
+    val nextDecls = ModuleManipulator.declsFromTransitions( nextDefaultName, nextTransitionsRaw )
+    val cinitDeclOpt = ModuleManipulator.optionalOperDecl( cinitDefaultName, cinitPrime )
+    val notInvDeclOpt = ModuleManipulator.optionalOperDecl( notInvDefaultName, notInvariant )
+    val notInvPDeclOpt = ModuleManipulator.optionalOperDecl( notInvPrimeDefaultName, notInvariantPrime )
+
+    // Option[x] ++ Seq[x] = Iterable[x]
+    // None ++ l = l
+    // Some(a) ++ l = a +: l
+    val newDecls = cinitDeclOpt ++ notInvDeclOpt ++ notInvPDeclOpt ++ initDecls ++ nextDecls
+
+    val module = tlaModule.get
+    val newModule = new TlaModule( module.name, module.imports, newDecls.toSeq ++ module.declarations )
+
     setModule(newModule)
     true
   }
@@ -152,9 +166,8 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
     * @return the next pass, if exists, or None otherwise
     */
   override def next(): Option[Pass] = {
-    tlaModule foreach { nextPass.setModule }
-    specWithTransitions.map { swt =>
-      nextPass.setSpecWithTransitions(swt)
+    tlaModule map { m =>
+      nextPass.setModule(m)
       nextPass
     }
   }

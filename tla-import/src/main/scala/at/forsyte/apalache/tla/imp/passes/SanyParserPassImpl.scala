@@ -51,12 +51,9 @@ class SanyParserPassImpl @Inject()(val options: PassOptions,
     *
     * @return the next pass, if exists, or None otherwise
     */
-  override def next(): Option[Pass] = {
-    if (rootModule.isDefined) {
-      nextPass.tlaModule = Some(rootModule.get)
-      Some(nextPass)
-    } else {
-      None
+  override def next(): Option[Pass] =
+    rootModule map { m =>
+      nextPass.setModule(m)
+      nextPass
     }
-  }
 }
