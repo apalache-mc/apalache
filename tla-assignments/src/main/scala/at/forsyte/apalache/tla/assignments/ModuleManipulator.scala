@@ -36,12 +36,12 @@ object ModuleManipulator {
     }
 
   def insertTransitions( module : TlaModule, transitionOperName : String, transitions : Seq[SymbTrans] ) : TlaModule = {
-    new TlaModule( module.name, module.imports, declsFromTransitions( transitionOperName, transitions ) ++ module.declarations )
+    new TlaModule( module.name, declsFromTransitions( transitionOperName, transitions ) ++ module.declarations )
   }
 
   def optionalInsertOperator( module: TlaModule, newOperName: String, optionalBody: Option[TlaEx] ) : TlaModule =
     optionalOperDecl( newOperName, optionalBody ) map { d =>
-      new TlaModule( module.name, module.imports, d +: module.declarations )
+      new TlaModule( module.name, d +: module.declarations )
     } getOrElse module
 
   /**

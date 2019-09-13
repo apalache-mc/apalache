@@ -157,7 +157,7 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
     val newDecls = cinitDeclOpt ++ notInvDeclOpt ++ notInvPDeclOpt ++ initDecls ++ nextDecls
 
     val module = tlaModule.get
-    val newModule = new TlaModule( module.name, module.imports, newDecls.toSeq ++ module.declarations )
+    val newModule = new TlaModule( module.name, newDecls.toSeq ++ module.declarations )
 
     setModule(newModule)
     true

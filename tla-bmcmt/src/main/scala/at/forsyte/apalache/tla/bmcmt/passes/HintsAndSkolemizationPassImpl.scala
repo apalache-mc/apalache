@@ -99,7 +99,7 @@ class HintsAndSkolemizationPassImpl @Inject()(val options: PassOptions,
     val hintFinder = new HintFinder(hintsStoreImpl)
     hintFinder.findHints((newInitDecls ++ newNextDecls).asInstanceOf[Seq[TlaOperDecl]].map(_.body))
 
-    nextPass.setModule( new TlaModule( module.name, module.imports, newDecls.toSeq ))
+    nextPass.setModule( new TlaModule( module.name, newDecls.toSeq ))
     val nfree = frexStoreImpl.store.size
     logger.info(s"Found $nfree free existentials in the transitions")
     true
