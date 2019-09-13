@@ -27,9 +27,20 @@ import scala.collection.immutable.HashMap
 class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) extends PrettyPrinter {
   override val defaultIndent: Int = indent
 
+  def write(mod: TlaModule): Unit = {
+    writer.write(pretty(toDoc(mod), textWidth).layout)
+  }
+
   def write(expr: TlaEx): Unit = {
     writer.write(pretty(toDoc((0, 0), expr), textWidth).layout)
   }
+
+  def toDoc(mod: TlaModule): Doc = {
+    s"----- MODULE ${mod.name} -----" <> line <>
+      lsep(mod.declarations.toList map toDoc, line) <> line <>
+      "===============" <> line
+  }
+
 
   def toDoc(parentPrecedence: (Int, Int), expr: TlaEx): Doc = {
     expr match {
@@ -309,8 +320,17 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
     }
   }
 
-  private def toDoc(decl: TlaDecl): Doc = {
+  def toDoc(decl: TlaDecl): Doc = {
     decl match {
+      case TlaConstDecl(name) =>
+        group("CONSTANT" <> space <> name)
+
+      case TlaVarDecl(name) =>
+        group("VARIABLE" <> space <> name)
+
+      case TlaAssumeDecl(body) =>
+        group("ASSUME" <> parens(toDoc((0, 0), body)))
+
       case TlaOperDecl(name, params, body) =>
         val paramsDoc =
           if (params.isEmpty)
@@ -318,8 +338,6 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
           else parens(ssep(params map toDoc, "," <> softline))
 
         group(name <> paramsDoc <> space <> "==" <> nest(line <> toDoc((0, 0), body)))
-
-      // TODO: implement other declarations!
     }
   }
 

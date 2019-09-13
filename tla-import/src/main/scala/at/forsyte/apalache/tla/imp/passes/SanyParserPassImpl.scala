@@ -1,11 +1,12 @@
 package at.forsyte.apalache.tla.imp.passes
 
-import java.io.File
+import java.io.{File, FileWriter, PrintWriter}
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.TlaModule
+import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -41,6 +42,15 @@ class SanyParserPassImpl @Inject()(val options: PassOptions,
     rootModule = modules.get(rootName)
     if (rootModule.isEmpty) {
       logger.error("Error parsing file " + filename)
+    } else {
+      // dump the parsed module
+      // TODO: introduce a general solution that dumps the module after every pass
+      val fileWriter = new PrintWriter(new FileWriter("out-parser.tla"))
+      try {
+        new PrettyWriter(fileWriter).write(rootModule.get)
+      } finally {
+        fileWriter.close()
+      }
     }
     rootModule.isDefined
   }
