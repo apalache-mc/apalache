@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener}
+import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import com.google.inject.Inject
@@ -92,9 +92,12 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
 
     val ste = new SymbolicTransitionExtractor( tracker )
 
-    // drop selections because of lacking implementation further on
     val initTransitionsRaw = ste( initReplacedDecls, initName )
-    val initTransitions = initTransitionsRaw.map( _._2 ).toList
+    /** Finally, we sort them for convenience */
+    val trSort = new TransitionOrder( SourceLocator( sourceStore.makeSourceMap, changeListener ) )
+    val initTransitionsSorted = trSort.sourceSort( initTransitionsRaw )
+    // drop selections because of lacking implementation further on
+    val initTransitions = initTransitionsSorted.map( _._2 ).toList
 
     for ((t, i) <- initTransitions.zipWithIndex) {
       logger.debug("Initial transition #%d:\n   %s".format(i, t))
@@ -102,9 +105,10 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
 
     val nextName = options.getOption("checker", "next", "Next").asInstanceOf[String]
 
-    // drop selections because of lacking implementation further on
     val nextTransitionsRaw = ste(initReplacedDecls,nextName)
-    val nextTransitions = nextTransitionsRaw.map( _._2 ).toList
+    val nextTransitionsSorted = trSort.sourceSort( nextTransitionsRaw )
+    // drop selections because of lacking implementation further on
+    val nextTransitions = nextTransitionsSorted.map( _._2 ).toList
 
     for ((t, i) <- nextTransitions.zipWithIndex) {
       logger.debug("Next transition #%d:\n   %s".format(i, t))
