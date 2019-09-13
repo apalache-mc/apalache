@@ -39,7 +39,7 @@ class SanyImporter( sourceStore: SourceStore) {
         ModuleTranslator(sourceStore).translate(node))
     }
 
-    Tuple2(specObj.getName, modmap)
+    (specObj.getName, modmap)
   }
 
   /**

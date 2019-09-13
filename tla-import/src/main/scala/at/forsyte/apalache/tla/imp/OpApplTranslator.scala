@@ -62,11 +62,21 @@ class OpApplTranslator(sourceStore: SourceStore, val context: Context, val recSt
     val opcode = node.getOperator.getName.toString
     val exTran = ExprOrOpArgNodeTranslator(sourceStore, context, recStatus)
 
-    def translateNonRec() = {
+    def translateNonRec(): TlaEx = {
       context.lookup(opcode) match {
-        case Some(decl: TlaOperDecl) =>
+        case DeclUnit(decl: TlaOperDecl) =>
+          // call the user-defined operator
           val args = node.getArgs.toList.map { p => exTran.translate(p) }
           OperEx(TlaOper.apply, NameEx(decl.name) +: args: _*)
+
+        case OperAliasUnit(_, oper) =>
+          // call the library operator that is bound to the alias, e.g., instead of I!+ call +.
+          val args = node.getArgs.toList.map { p => exTran.translate(p) }
+          OperEx(oper, args :_*)
+
+        case ValueAliasUnit(_, value) =>
+          // just use the TLA+ value
+          ValEx(value)
 
         case _ =>
           throw new SanyImporterException("User operator %s is not found in the translation context: %s".format(opcode, node))

@@ -30,7 +30,7 @@ class ExprOrOpArgNodeTranslator(sourceStore: SourceStore,
           translateDecimal(dec)
 
         case opApp: OpApplNode =>
-          OpApplProxy(sourceStore, OpApplTranslator(sourceStore, context, recStatus)).translate(opApp)
+          OpApplTranslator(sourceStore, context, recStatus).translate(opApp)
 
         case arg: OpArgNode =>
           // we just pass the name of the argument without any extra information
@@ -91,7 +91,7 @@ class ExprOrOpArgNodeTranslator(sourceStore: SourceStore,
         case opdef: OpDefNode =>
           val decl = OpDefTranslator(sourceStore, letInContext).translate(opdef)
           letInDeclarations = letInDeclarations :+ decl
-          letInContext = letInContext.push(decl)
+          letInContext = letInContext.push(DeclUnit(decl))
 
         case _ =>
           throw new SanyImporterException("Expected OpDefNode, found: " + node)

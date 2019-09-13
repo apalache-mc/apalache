@@ -10,6 +10,8 @@ import tla2sany.semantic._
   * Translate a module instance. This class needs extensive testing,
   * as the module instantiation rules are quite sophisticated (Ch. 17).
   *
+  * TODO: is this class actually used? If not, remove.
+  *
   * @author konnov
   */
 class SubstTranslator(sourceStore: SourceStore, context: Context) extends LazyLogging {

@@ -1045,8 +1045,8 @@ class TestSanyImporter extends FunSuite {
     // the root module contains its own declarations and the declarations by FiniteSets
     root.declarations.find {
       _.name == "A"
-    } match {
-      case Some(TlaOperDecl(_, _, LetInEx(body, defs@_*))) =>
+    }.collect {
+      case TlaOperDecl(_, _, LetInEx(body, defs@_*)) =>
         assert(3 == defs.length)
         val xDecl = defs.head
         assert("X" == xDecl.name)
@@ -1092,8 +1092,8 @@ class TestSanyImporter extends FunSuite {
     // the root module contains its own declarations and the declarations by FiniteSets
     root.declarations.find {
       _.name == "A"
-    } match {
-      case Some(TlaOperDecl(_, _, LetInEx(body, defs@_*))) =>
+    } collect {
+      case TlaOperDecl(_, _, LetInEx(body, defs@_*)) =>
         assert(2 == defs.length)
         val fDecl = defs.head
         assert("f" == fDecl.name)
@@ -1313,8 +1313,8 @@ class TestSanyImporter extends FunSuite {
         assert(params.head.isInstanceOf[SimpleFormalParam])
         assert("x" == params.head.asInstanceOf[SimpleFormalParam].name)
 
-      case _ =>
-        fail("expected the body for J!F")
+      case e =>
+        fail("expected the body for J!F, found: " + e)
     }
     val fDecl = root.declarations.find { _.name == "J!F" }.get
     root.declarations.find { _.name == "J!G" } match {
@@ -1351,12 +1351,11 @@ class TestSanyImporter extends FunSuite {
     }
   }
 
-  test("module imports") {
+  test("EXTENDS of the standard modules") {
     // operators with parameters that are themselves operators with parameters
     val text =
       """---- MODULE imports ----
         |EXTENDS Naturals
-        |
         |================================
         |""".stripMargin
 
@@ -1368,9 +1367,9 @@ class TestSanyImporter extends FunSuite {
     // we strip away the operator declarations by Naturals
     assert(root.declarations.isEmpty)
     assert(List("Naturals") == root.imports)
-    // check that Naturals were imported properly
+    // as Naturals containts definitions of the built-in operators, it is empty
     val naturals = modules("Naturals")
-    assert(naturals.declarations.nonEmpty)
+    assert(naturals.declarations.isEmpty)
   }
 
   // uncomment this test when we decide on how to fix operator overriding
@@ -1864,6 +1863,30 @@ class TestSanyImporter extends FunSuite {
     // regression test for issue #25
     val names = HashSet(modules(rootName).assumeDeclarations.map(_.name) :_*)
     assert(2 == names.size) // all assumptions must have unique names
+  }
+
+  test("instances of standard modules") {
+    // Issue #52: the built-in operators are not eliminated when using INSTANCE
+    val text =
+      """---- MODULE issue52 ----
+        |I == INSTANCE Sequences
+        |A == I!Append(<<>>, {})
+        |================================
+        |""".stripMargin
+
+    val locationStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(locationStore)
+      .loadFromSource("issue52", Source.fromString(text))
+    // the root module and naturals
+    val root = modules(rootName)
+    // the definitions of the standard operators are filtered out
+    assert(1 == root.declarations.size)
+    root.declarations(0) match {
+      case TlaOperDecl("A", _, body) =>
+        assert(append(tuple(), enumSet()) == body)
+
+      case d => fail("unexpected declaration: " + d)
+    }
   }
 
   test("ignore theorems") {
