@@ -39,7 +39,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     // x' \in {2}
     val initTrans = List(mkAssign("x", 2))
     val nextTrans = List(mkAssign("x", 2))
-    val dummyModule = new TlaModule("root", List(), List())
+    val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, None)
     val strategy = new BfsStrategy(checkerInput, stepsBound = 0)
     val checker = new ModelChecker(typeFinder, frexStore, hintsStore, changeListener, exprGradeStore, sourceStore, checkerInput,
@@ -52,7 +52,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     // x' \in {2} /\ x' \in {1}
     val initTrans = List(tla.and(mkAssign("x", 2), mkAssign("x", 1)))
     val nextTrans = List(mkAssign("x", 2))
-    val dummyModule = new TlaModule("root", List(), List())
+    val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, None)
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 0)
@@ -66,7 +66,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     // x' \in {2} \/ x' \in {1}
     val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
     val nextTrans = List(mkAssign("x", 2))
-    val dummyModule = new TlaModule("root", List(), List())
+    val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, None)
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 0)
@@ -81,7 +81,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
     // x' \in {x + 1}
     val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
-    val dummyModule = new TlaModule("root", List(), List())
+    val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, None)
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 1)
@@ -100,7 +100,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
         tla.lt(tla.name("x"), tla.int(10)),
         mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
       )///
-    val dummyModule = new TlaModule("root", List(), List())
+    val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, None)
 
     // Add the hint. We cannot check in the test, whether the hints was actually used.
@@ -122,7 +122,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
       mkAssign("y", tla.plus(tla.name("y"), tla.int(1))),
       mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
     ))///
-    val dummyModule = new TlaModule("root", List(), List())
+    val dummyModule = new TlaModule("root", List())
     val notInv = tla.not(tla.equiv(
       tla.eql(tla.int(3), tla.prime(tla.name("x"))),
       tla.eql(tla.int(3), tla.prime(tla.name("y")))
@@ -146,7 +146,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val letIn = tla.letIn(tla.plus(tla.appDecl( aDecl ), tla.int(1)), aDecl)
 
     val nextTrans = List(mkAssign("x", letIn))///
-    val dummyModule = new TlaModule("root", List(), List())
+    val dummyModule = new TlaModule("root", List())
     val notInv = tla.not(tla.neql(tla.int(4), tla.prime(tla.name("x"))))
 
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, Some(notInv))
@@ -165,7 +165,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val nextTrans = List(
       tla.and(tla.gt(tla.name("x"), tla.int(3)),
         mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))))
-    val dummyModule = new TlaModule("root", List(), List())
+    val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, None)
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 1)
@@ -180,7 +180,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
     // x' \in {x + 1}
     val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
-    val dummyModule = new TlaModule("root", List(), List())
+    val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, None)
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 10)
@@ -197,7 +197,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val nextTrans = List(
       tla.and(tla.lt(tla.name("x"), tla.int(10)),
         mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))))
-    val dummyModule = new TlaModule("root", List(), List())
+    val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, None)
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 10)
@@ -214,7 +214,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
     // x < 100
     val notInv = tla.not(tla.lt(tla.prime(tla.name("x")), tla.int(100)))
-    val dummyModule = new TlaModule("root", List(), List())
+    val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, Some(notInv))
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 10)
@@ -231,7 +231,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
     // x < 5
     val notInv = tla.not(tla.lt(tla.prime(tla.name("x")), tla.int(5)))
-    val dummyModule = new TlaModule("root", List(), List())
+    val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, Some(notInv))
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 10)
@@ -248,7 +248,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
     // x < 5
     val notInv = tla.not(tla.lt(tla.prime(tla.name("x")), tla.int(5)))
-    val dummyModule = new TlaModule("root", List(), List())
+    val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, Some(notInv))
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 10)
@@ -268,7 +268,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val trans2 = tla.and(tla.gt(tla.name("x"), tla.int(100)),
       mkAssign("x", tla.name("x")))
     val nextTrans = List(trans1, trans2)
-    val dummyModule = new TlaModule("root", List(), List())
+    val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, None)
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 3)
@@ -309,7 +309,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
       tla.notin(tla.int(2), tla.prime(tla.name("x")))
     ))////
 
-    val dummyModule = new TlaModule("root", List(), List())
+    val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(dummyModule, List(init), List(next1, next2), None, Some(notInv))
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 2)
@@ -328,7 +328,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
       mkAssign("x", tla.name("x")))
     val nextTrans = List(trans1, trans2)
     val notInv = tla.gt(tla.prime(tla.name("x")), tla.int(10)) // ~(x <= 10)
-    val dummyModule = new TlaModule("root", List(), List())
+    val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, Some(notInv))
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 10)
@@ -349,7 +349,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     // a constant initializer: N' \in { 20, 10 }
     val cInit = tla.in(tla.prime(tla.name("N")), tla.enumSet(tla.int(20), tla.int(10)))
     val notInv = tla.gt(tla.prime(tla.name("x")), tla.name("N")) // ~(x <= N)
-    val dummyModule = new TlaModule("root", List(), List(TlaConstDecl("N"), TlaVarDecl("x")))
+    val dummyModule = new TlaModule("root", List(TlaConstDecl("N"), TlaVarDecl("x")))
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, Some(cInit), Some(notInv))
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 10)
@@ -367,7 +367,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val trans2 = mkAssign("x", tla.plus(tla.name("x"), tla.int(2)))
     val nextTrans = List(trans1, trans2)
     val notInv = tla.gt(tla.prime(tla.name("x")), tla.int(11)) // ~(x <= 11)
-    val dummyModule = new TlaModule("root", List(), List())
+    val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, Some(notInv))
     // initialize the model checker
     val filter = "0,0,0,0,0,0,0,0,0,0,0" // execute initTrans once and onlytrans1 10 times

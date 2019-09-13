@@ -40,7 +40,6 @@ class PreproPassImpl @Inject()( val options: PassOptions,
     val uniqueVarDecls =
       new TlaModule(
         afterDesugarer.name,
-        afterDesugarer.imports,
         afterDesugarer.declarations map {
           renaming.apply
         }

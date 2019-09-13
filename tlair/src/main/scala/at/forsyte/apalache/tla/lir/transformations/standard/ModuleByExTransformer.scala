@@ -20,7 +20,7 @@ class ModuleByExTransformer(exTrans: TlaExTransformation) extends TlaModuleTrans
       case d => d
     }
 
-    new TlaModule(mod.name, mod.imports, mod.declarations map mapOneDeclaration)
+    new TlaModule(mod.name, mod.declarations map mapOneDeclaration)
   }
 }
 

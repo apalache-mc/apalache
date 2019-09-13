@@ -21,7 +21,7 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
   }
 
   def testFromDecls( p_decls : Seq[TlaDecl], p_next : String = "Next"   ) : Seq[SymbTrans]  = {
-    val fakeModule = new TlaModule("test", Seq.empty, p_decls)
+    val fakeModule = new TlaModule("test", p_decls)
     val srcDB = new ChangeListener
 
     val tracker = TrackerWithListeners( srcDB )
@@ -30,7 +30,6 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
     val uniqueVarDecls =
       new TlaModule(
         afterDesugarer.name,
-        afterDesugarer.imports,
         afterDesugarer.declarations map {
           renaming.apply
         }

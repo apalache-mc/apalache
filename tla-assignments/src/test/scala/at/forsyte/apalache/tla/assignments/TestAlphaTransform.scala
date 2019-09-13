@@ -19,7 +19,7 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
   def specFromFile(p_file : String, p_next : String = "Next") : TlaEx = {
     val declsRaw = declarationsFromFile(testFolderPath + p_file)
 
-    val fakeModule = new TlaModule("test", Seq.empty, declsRaw)
+    val fakeModule = new TlaModule("test", declsRaw)
 
     val tracker = TrackerWithListeners( new ChangeListener )
 
@@ -28,7 +28,6 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
     val uniqueVarDecls =
       new TlaModule(
         afterDesugarer.name,
-        afterDesugarer.imports,
         afterDesugarer.declarations map {
           renaming.apply
         }

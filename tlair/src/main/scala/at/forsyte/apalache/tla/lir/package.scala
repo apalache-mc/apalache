@@ -27,10 +27,9 @@ package lir {
     * A module as a basic unit that contains declarations.
     *
     * @param name the module name
-    * @param imports the names of imported modules
     * @param declarations all kinds of declarations
     */
-  class TlaModule(val name: String, val imports: Seq[String], val declarations: Seq[TlaDecl]) {
+  class TlaModule(val name: String, val declarations: Seq[TlaDecl]) {
     def constDeclarations: Seq[TlaConstDecl] = {
       declarations.collect { case d: TlaConstDecl => d }
     }

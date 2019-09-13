@@ -1366,7 +1366,6 @@ class TestSanyImporter extends FunSuite {
     val root = modules(rootName)
     // we strip away the operator declarations by Naturals
     assert(root.declarations.isEmpty)
-    assert(List("Naturals") == root.imports)
     // as Naturals containts definitions of the built-in operators, it is empty
     val naturals = modules("Naturals")
     assert(naturals.declarations.isEmpty)

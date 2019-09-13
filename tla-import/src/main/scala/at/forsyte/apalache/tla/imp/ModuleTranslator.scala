@@ -66,13 +66,10 @@ class ModuleTranslator(sourceStore: SourceStore) {
     context = node.getAssumptions.toList.foldLeft(context) {
       (ctx, node) => ctx.push(DeclUnit(AssumeTranslator(sourceStore, ctx).translate(node)))
     }
-    val imported = node.getExtendedModuleSet.toArray(Array[ModuleNode]()).map {
-      mn => mn.getName.toString.intern()
-    }
 
     // filter out the aliases, keep only the user definitions and declarations
     val actualDefs = context.declarations.collect({ case DeclUnit(d) => d })
-    new TlaModule(node.getName.toString, imported, actualDefs)
+    new TlaModule(node.getName.toString, actualDefs)
   }
 
   private def addAliasesOfBuiltins(ctx: Context, instancePrefix: String, node: ModuleNode): Context = {
