@@ -31,7 +31,8 @@ class ModuleTranslator(sourceStore: SourceStore) {
 
     def eachOpDefFirstPass(ctx: Context, opDef: OpDefNode): Context = {
       context.lookup(opDef.getName.toString) match {
-        case d: DeclUnit => throw new SanyImporterException("Duplicate definition: " + d.name)
+        case d: DeclUnit =>
+          throw new SanyImporterException("Duplicate definition: " + d.name)
 
         case NoneUnit() =>
           // translate only the user-defined operators, skip the aliases
@@ -97,12 +98,7 @@ class ModuleTranslator(sourceStore: SourceStore) {
 
     // add aliases for the definitions inside the module
     val modName = node.getName.toString
-    var newCtx =
-      if (StandardLibrary.standardModules.contains(modName)) {
-        node.getOpDefs.foldLeft(ctx) { (c, d) => subDef(c, modName, alias(d), d) }
-      } else {
-        ctx
-      }
+    var newCtx = node.getOpDefs.foldLeft(ctx) { (c, d) => subDef(c, modName, alias(d), d) }
 
     // add aliases for the definitions in the modules that this one EXTENDS
     val extendedModules = node.getExtendedModuleSet.asScala.toList map (_.asInstanceOf[ModuleNode])
