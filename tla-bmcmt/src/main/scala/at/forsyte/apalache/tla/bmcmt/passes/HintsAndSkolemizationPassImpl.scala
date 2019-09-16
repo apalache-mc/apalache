@@ -7,10 +7,10 @@ import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.assignments.ModuleManipulator
 import at.forsyte.apalache.tla.bmcmt.CheckerException
 import at.forsyte.apalache.tla.bmcmt.analyses.{FormulaHintsStoreImpl, FreeExistentialsStoreImpl, HintFinder, SimpleSkolemization}
-import at.forsyte.apalache.tla.lir.process.Renaming
 import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule, TlaOperDecl}
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.lir.transformations.standard.Renaming
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging

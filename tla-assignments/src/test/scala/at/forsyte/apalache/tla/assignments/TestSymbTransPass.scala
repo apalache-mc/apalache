@@ -1,12 +1,10 @@
 package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.imp.declarationsFromFile
-import at.forsyte.apalache.tla.lir.process.Renaming
 import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener}
-import at.forsyte.apalache.tla.lir.transformations.TlaExTransformation
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard._
-import at.forsyte.apalache.tla.lir.{NullEx, TestingPredefs, TlaDecl, TlaEx, TlaModule, TlaOperDecl, TlaVarDecl, UID, Builder => bd}
+import at.forsyte.apalache.tla.lir.{Builder => bd,_}
 import at.forsyte.apalache.tla.pp.Desugarer
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite

@@ -1,10 +1,8 @@
-package at.forsyte.apalache.tla.lir.process
+package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
-import com.google.inject.Inject
-import javax.inject.Singleton
 
 import scala.collection.immutable.HashMap
 

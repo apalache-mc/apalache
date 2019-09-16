@@ -1,10 +1,10 @@
-package at.forsyte.apalache.tla.lir.process
+package at.forsyte.apalache.tla.lir
 
-import at.forsyte.apalache.tla.lir.TestingPredefs
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
+import at.forsyte.apalache.tla.lir.transformations.standard.Renaming
 import org.junit.runner.RunWith
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.junit.JUnitRunner
+import org.scalatest.{BeforeAndAfterEach, FunSuite}
 
 /**
   * Test variable renaming.

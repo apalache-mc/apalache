@@ -3,8 +3,7 @@ package at.forsyte.apalache.tla.assignments
 import at.forsyte.apalache.tla.imp._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.process.Renaming
-import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory, ChangeListener}
+import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.pp.Desugarer
