@@ -81,23 +81,22 @@ class SimpleSkolemization @Inject()(
         OperEx(oper, args map nnf(neg): _*)
 
       case OperEx(TlaBoolOper.implies, left, right) =>
-        val (fNnf, tNnf) = (nnf(neg = false), nnf(neg = true))
+        val (nnfNonNegated, nnfNegated) = (nnf(neg = false), nnf(neg = true))
         if (neg) {
-          tla.and(fNnf(left), tNnf(right))
+          tla.and(nnfNonNegated(left), nnfNegated(right))
         } else {
-          tla.or(tNnf(left), fNnf(right))
+          tla.or(nnfNegated(left), nnfNonNegated(right))
         }
 
-      case OperEx(TlaBoolOper.equiv, left, right) =>
-        val (fNnf, tNnf) = (nnf(neg = false), nnf(neg = true))
-        if (neg) {
-          // ~(A <=> B) to (~A /\ B) \/ (A /\ ~B)
-          tla.or(tla.and(fNnf(left), tNnf(right)),
-            tla.and(tNnf(left), fNnf(right)))
+      case equiv @ OperEx(TlaBoolOper.equiv, left, right) =>
+        val (nnfNonNegated, nnfNegated) = (nnf(neg = false), nnf(neg = true))
+        if (!neg) {
+          // we do not negate the expression but recurse to deal with the negations below the tree
+          tla.equiv(nnfNonNegated(left), nnfNonNegated(right))
         } else {
-          // (A <=> B) to (~A /\ ~B) \/ (A /\ B)
-          tla.or(tla.and(fNnf(left), fNnf(right)),
-            tla.and(tNnf(left), tNnf(right)))
+          // ~(A <=> B) to (~A /\ B) \/ (A /\ ~B)
+          tla.or(tla.and(nnfNonNegated(left), nnfNegated(right)),
+            tla.and(nnfNegated(left), nnfNonNegated(right)))
         }
 
       case OperEx(TlaBoolOper.exists, x, set, pred) =>
