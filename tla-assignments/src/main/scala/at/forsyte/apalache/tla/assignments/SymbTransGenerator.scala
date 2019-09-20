@@ -14,7 +14,7 @@ class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases 
     type LabelMapType = Map[UID, Set[UID]]
     type AssignmentSelections = Set[Set[UID]]
     type SelMapType = Map[UID, AssignmentSelections]
-    type letInMapType = Map[String, SelMapType]
+    type letInMapType = Map[String, (UID,SelMapType)]
 
     def allCombinations[ValType]( p_sets : Seq[Set[Set[ValType]]] ) : Set[Set[ValType]] = {
       if ( p_sets.isEmpty )
@@ -41,6 +41,16 @@ class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases 
       _ ++ _
     )
 
+    /** Given an assignment strategy A and a TLA+ expression \phi, computes
+      * { B \cap A | B \in Branches( \psi ) }
+      * for all expresisons \psi \in Sub(\phi)
+      *
+      * @param ex Top-level expression
+      * @param stratSet Assignment strategy
+      * @param letInMap Auxiliary map, storing the already-computed branch-information for nullary LET-IN
+      *                 defined operators.
+      * @return A mapping of the form [e.ID |-> { B \cap A | B \in Branches( e ) } | e \in Sub(ex)]
+      */
     def allSelections( ex : TlaEx, stratSet: Set[UID], letInMap: letInMapType = Map.empty ) : SelMapType = ex match {
       case e if AlphaTLApTools.isCand(e) =>
         if ( stratSet.contains( e.ID ) ) Map( e.ID -> Set( Set( e.ID ) ) ) else Map.empty[UID, AssignmentSelections]
@@ -59,7 +69,7 @@ class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases 
 
         /** The set as computed from the lemma */
         val mySet = allCombinations( childBranchSets )
-        if ( mySet.isEmpty ) unifiedMap else unifiedMap + ( ex.ID -> mySet )
+        if ( mySet.isEmpty || mySet.exists( _.isEmpty) ) unifiedMap else unifiedMap + ( ex.ID -> mySet )
 
       /**
         * Branches( \/ \phi_i ) = U Branches(\phi_i)
@@ -73,7 +83,7 @@ class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases 
         val childBranchSets = args.flatMap( x => unifiedMap.get( x.ID ) )
 
         val mySet = childBranchSets.fold( Set.empty[Set[UID]] )( _ ++ _ )
-        if ( mySet.isEmpty ) unifiedMap else unifiedMap + ( ex.ID -> mySet )
+        if ( mySet.isEmpty || mySet.exists( _.isEmpty) ) unifiedMap else unifiedMap + ( ex.ID -> mySet )
 
       /**
         * Branches( \E x \in S . \phi ) = Branches( \phi )
@@ -83,7 +93,7 @@ class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases 
       case OperEx(TlaBoolOper.exists, _, _, phi) =>
         val childMap = allSelections( phi, stratSet, letInMap )
         val mySet = childMap.getOrElse( phi.ID, Set( Set.empty[UID] ) )
-        if ( mySet.isEmpty ) childMap else childMap + ( ex.ID -> mySet )
+        if ( mySet.exists( _.isEmpty) ) childMap else childMap + ( ex.ID -> mySet )
 
       /**
         * Branches( ITE(\phi_c, \phi_t, \phi_e) ) = Branches( \phi_t ) U Branches( \phi_e )
@@ -97,20 +107,25 @@ class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases 
         val childBranchSets = thenAndElse.flatMap( x => unifiedMap.get( x.ID ) )
 
         val mySet = childBranchSets.fold( Set.empty[Set[UID]] )( _ ++ _ )
-        if ( mySet.isEmpty ) unifiedMap else unifiedMap + ( ex.ID -> mySet )
+        if ( mySet.isEmpty || mySet.exists( _.isEmpty) ) unifiedMap else unifiedMap + ( ex.ID -> mySet )
 
       case LetInEx( body, defs@_* ) =>
         val defMap = (defs map { d =>
-          d.name -> allSelections(d.body, stratSet, letInMap)
+          d.name -> (d.body.ID, allSelections(d.body, stratSet, letInMap))
         }).toMap
         val childMap = allSelections( body, stratSet, letInMap ++ defMap )
         val mySet = childMap.getOrElse( body.ID, Set( Set.empty[UID] ) )
-        if ( mySet.isEmpty ) childMap else childMap + ( ex.ID -> mySet )
+        if ( mySet.exists( _.isEmpty) ) childMap else childMap + ( ex.ID -> mySet )
 
       // Nullary apply
       case OperEx(TlaOper.apply, NameEx(operName)) =>
         // Apply may appear in higher order operators, so it might not be possible to pre-analyze
-        letInMap.getOrElse( operName, Map.empty[UID, AssignmentSelections] )
+        letInMap.get( operName ) match {
+          case Some( (uid, lim) ) =>
+            val mySet = lim.getOrElse( uid, Set( Set.empty[UID] ) )
+            if ( mySet.exists( _.isEmpty) ) lim else lim + ( ex.ID -> mySet )
+          case None => Map.empty[UID, AssignmentSelections]
+        }
 
       case _ => Map.empty[UID, AssignmentSelections]
     }
@@ -127,28 +142,40 @@ class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases 
           * all assignments or none of them. Therefore it suffices to check for
           * non-emptiness of the intersection.
           */
+        /**
+          * Jure, 16.9.19: This is no longer true, with the inclusion of LET-IN, as assignments that
+          * happen within a LET-IN operator body can appear to belong to multiple branches.
+          * */
 
-        val newArgs = args.filter { x =>
-          /**
-            * \E S \in allSelections( x ) . S \cap selection \ne \emptyset
-            * <=>
-            * \E S \in allSelections( x ) . \E y \in S . y \in selection
-            * <=>
-            * \E S \in allSelections( x ) . \E y \in selection . y \in S
-            * <=>
-            * \E y \in selection . y \in \bigcup allSelections( x )
-            */
-          labelsAt( x, allSelections ) exists { selection.contains }
+//        val newArgs = args.filter { x =>
+//          /**
+//            * \E S \in allSelections( x ) . S \cap selection \ne \emptyset
+//            * <=>
+//            * \E S \in allSelections( x ) . \E y \in S . y \in selection
+//            * <=>
+//            * \E S \in allSelections( x ) . \E y \in selection . y \in S
+//            * <=>
+//            * \E y \in selection . y \in \bigcup allSelections( x )
+//            */
+//          labelsAt( x, allSelections ) exists { selection.contains }
+//        }
+        val newArgs = args filter { x =>
+          labelsAt( x, allSelections ).subsetOf( selection )
         }
 
-        /**
-          * If no assignments lie below, take the largest subformula.
-          * It is guaranteed to belong to the union of branches.
-          * Otherwise, take the one intersecting branch (recurse, since disjunctions aren't always expanded)
-          */
-        assert( newArgs.size < 2 )
+//        /**
+//          * If no assignments lie below, take the largest subformula.
+//          * It is guaranteed to belong to the union of branches.
+//          * Otherwise, take the one intersecting branch (recurse, since disjunctions aren't always expanded)
+//          */
+//        assert( newArgs.size < 2 )
 
-        newArgs.headOption.map( sliceWith( selection, allSelections) ).getOrElse( ex )
+//        newArgs.headOption.map( sliceWith( selection, allSelections) ).getOrElse( ex )
+        newArgs match {
+          case Nil => ex
+          case head +: Nil => sliceWith( selection, allSelections)(head)
+          case _ => OperEx( TlaBoolOper.or, newArgs map sliceWith( selection, allSelections) : _* )
+        }
 
       /** ITE behaves like disjunction, but instead of dropping subformulas we replace them
         * with False, since we cannot evaluate the IF-condition */

@@ -72,7 +72,7 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
     assert( expected1 == actual1 )
   }
 
-  test( "Test makeAllSelections" ) {
+  test( "Test allSelections" ) {
     val xasgn11 = in( prime( n_x ), n_S )
     val xasgn12 = in( prime( n_x ), enumSet( int( 1 ) ) )
     val yasgn11 = in( prime( n_y ), enumSet( n_T ) )
@@ -110,15 +110,15 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
     )
 
     val selections1 = possibleAssgnsX map { asgn =>
-      allSelections( ex1, asgn )
+      allSelections( ex1, asgn, Map.empty )
     }
 
     val selections2 = possibleAssgnsY map { asgn =>
-      allSelections( ex2, asgn )
+      allSelections( ex2, asgn, Map.empty )
     }
 
     val selections3 = possibleAssgnsXY map { asgn =>
-      allSelections( ex3, asgn )
+      allSelections( ex3, asgn, Map.empty )
     }
 
     selections1 zip possibleAssgnsX foreach { case (s,e) =>
@@ -132,6 +132,52 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
     selections3 zip possibleAssgnsXY foreach { case (s,e) =>
       assert( s(ex3.ID) == Set(e) )
     }
+
+    val xasgn21 = in( prime( n_x ), n_S )
+    val yasgn21 = in( prime( n_y ), enumSet( n_T ) )
+    val yasgn22 = in( prime( n_y ), dotdot( int( 2 ), n_a ) )
+
+    val ex4 = and( eql( int(0), int(1) ), xasgn21 )
+    val xDecl = declOp( "X", ex4 )
+    val ex5 = and( yasgn21, appDecl( xDecl ) )
+    val ex6 = and( yasgn22, appDecl( xDecl ) )
+    val ex7 = or( ex5, ex6 )
+    val ex8 = letIn( ex7, xDecl )
+
+    val possibleAssgnsX2 = Seq( Set( xasgn21.ID ) )
+
+    val possibleAssgnsXY2 = Seq(
+      Set( xasgn21.ID, yasgn21.ID ),
+      Set( xasgn21.ID, yasgn22.ID )
+    )
+
+    val selections4 = possibleAssgnsX2 map { asgn =>
+      allSelections( ex4, asgn, Map.empty )
+    }
+
+    selections4 zip possibleAssgnsX2 foreach { case (s,e) =>
+      assert( s(ex4.ID) == Set(e) )
+    }
+
+    val letInMap = Map( xDecl.name -> (xDecl.body.ID, selections4.head) )
+
+    val selections5 = possibleAssgnsXY2 map { asgn =>
+      allSelections( ex7, asgn, letInMap )
+    }
+
+    val selections6 = possibleAssgnsXY2 map { asgn =>
+      allSelections( ex8, asgn, Map.empty )
+    }
+
+    assert( selections5 == selections6.map  {_ - ex8.ID} )
+
+    selections6 zip possibleAssgnsXY2 foreach { case (s,e) =>
+      // We need to weaken the condition, because LET-IN assignments
+      // can appear on any number of branches.
+      assert( s( ex8.ID ).contains( e ) )
+    }
+
+
   }
 
 
@@ -169,5 +215,22 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
 
   }
 
+  test( "Test LET-IN" ){
+    val asgn = primeInSingleton( n_x, int(1) )
+    val xDecl = declOp( "X", asgn )
+    val disj = or(
+      and(n_A, appDecl( xDecl ) ),
+      and(n_B, appDecl( xDecl ) )
+    )
 
+    val next = letIn(
+      disj,
+      xDecl
+    )
+
+    val strat = Seq( asgn.ID )
+
+    val ret = stg( next, strat ) map { _._2 }
+    assert( ret == Seq(next) )
+  }
 }

@@ -1,19 +1,11 @@
 package at.forsyte.apalache.tla.assignments
 
-import at.forsyte.apalache.tla.assignments.SmtTools.simplify
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 
 import scala.collection.immutable.{Map, Set}
 
-/**
-  * Generates SMT constraints for assignment strategies.
-  *
-  * Assumes input is alpha-TLA+
-  */
-class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : String = "R" ) {
-
-  import SmtTools._
+object AssignmentStrategyEncoder {
 
   /**
     * Collection of aliases used in internal methods.
@@ -21,7 +13,7 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
   type seenType = Set[Long]
   type collocSetType = Set[(Long, Long)]
   type nonCollocSetType = collocSetType
-  type deltaType = Map[String, BoolFormula]
+  type deltaType = Map[String, SmtTools.BoolFormula]
   type frozenVarSetType = Set[String]
   type frozenType = Map[Long, frozenVarSetType]
   type uidToExMapType = Map[Long, TlaEx]
@@ -40,7 +32,17 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
   }
 
   type letInOperBodyMapType = Map[String, StaticAnalysisData]
+}
 
+/**
+  * Generates SMT constraints for assignment strategies.
+  *
+  * Assumes input is alpha-TLA+
+  */
+class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : String = "R" ) {
+
+  import SmtTools._
+  import AssignmentStrategyEncoder._
 
   /**
     * Main internal method.
@@ -55,12 +57,12 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
     *         d is the (partial) delta function
     *         and f is the (partial) frozen function.
     */
-  private def staticAnalysis(
-                              phi : TlaEx,
-                              vars : Set[String],
-                              initialFrozenVarSet : frozenVarSetType,
-                              initialLetInOperBodyMap : letInOperBodyMapType
-                            ) : StaticAnalysisData = {
+  private[assignments] def staticAnalysis(
+                                           phi : TlaEx,
+                                           vars : Set[String],
+                                           initialFrozenVarSet : frozenVarSetType,
+                                           initialLetInOperBodyMap : letInOperBodyMapType
+                                         ) : StaticAnalysisData = {
     import AlphaTLApTools._
 
     /** We name the default arguments to return at irrelevant terms  */
