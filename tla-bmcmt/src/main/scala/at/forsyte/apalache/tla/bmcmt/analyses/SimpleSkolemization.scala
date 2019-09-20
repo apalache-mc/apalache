@@ -90,14 +90,12 @@ class SimpleSkolemization @Inject()(
         }
 
       case equiv @ OperEx(TlaBoolOper.equiv, left, right) =>
-        val (nnfNonNegated, nnfNegated) = (nnf(neg = false), nnf(neg = true))
+        val nnfNonNegated = nnf(neg = false)
+        // we do not negate the arguments but recurse to deal with the negations below the tree
         if (!neg) {
-          // we do not negate the expression but recurse to deal with the negations below the tree
-          tla.equiv(nnfNonNegated(left), nnfNonNegated(right))
+          tla.eql(nnfNonNegated(left), nnfNonNegated(right))
         } else {
-          // ~(A <=> B) to (~A /\ B) \/ (A /\ ~B)
-          tla.or(tla.and(nnfNonNegated(left), nnfNegated(right)),
-            tla.and(nnfNegated(left), nnfNonNegated(right)))
+          tla.neql(nnfNonNegated(left), nnfNonNegated(right))
         }
 
       case OperEx(TlaBoolOper.exists, x, set, pred) =>
