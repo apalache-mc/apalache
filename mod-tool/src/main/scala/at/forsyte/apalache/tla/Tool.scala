@@ -1,9 +1,10 @@
 package at.forsyte.apalache.tla
 
-import java.io.{File, FileNotFoundException, FileReader, IOException}
+import java.io.{File, FileNotFoundException}
+import java.nio.file.{Files, Path, Paths}
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import java.util.Properties
 
 import scala.collection.JavaConverters._
 import at.forsyte.apalache.infra.PassOptionException
@@ -16,7 +17,6 @@ import at.forsyte.apalache.tla.tooling.Version
 import at.forsyte.apalache.tla.tooling.opt.{CheckCmd, ParseCmd}
 import com.google.inject.Guice
 import com.typesafe.scalalogging.LazyLogging
-import org.apache.commons.configuration2.Configuration
 import org.apache.commons.configuration2.builder.fluent.Configurations
 import org.apache.commons.configuration2.ex.ConfigurationException
 import org.backuity.clist.Cli
@@ -76,6 +76,7 @@ object Tool extends App with LazyLogging {
     // here, we implement a terminal pass to get the parse results
     val injector = Guice.createInjector(new ParserModule())
     val executor = injector.getInstance(classOf[PassChainExecutor])
+    executor.options.setOption("io.outdir", createOutputDir())
     executor.options.setOption("parser.filename", parse.file.getAbsolutePath)
 
     val result = executor.run()
@@ -92,6 +93,7 @@ object Tool extends App with LazyLogging {
   private def runCheck(check: CheckCmd, u: Unit): Unit = {
     val injector = Guice.createInjector(new CheckerModule())
     val executor = injector.getInstance(classOf[PassChainExecutor])
+    executor.options.setOption("io.outdir", createOutputDir())
     val tuning =
       if (check.tuning != "") {
         loadProperties(check.tuning)
@@ -138,6 +140,16 @@ object Tool extends App with LazyLogging {
       case e: ConfigurationException =>
         throw new PassOptionException(s"Error in the properties file $filename: ${e.getMessage}")
     }
+  }
+
+  private def createOutputDir(): Path = {
+    // here we use the order 'hours-minutes and then the date', as it is much easier to use with completion
+    val nicetime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH.mm-dd.MM.uuuu-"))
+    val xdir = new File(System.getProperty("user.dir"), "x")
+    if (!xdir.exists()) {
+      xdir.mkdir()
+    }
+    Files.createTempDirectory(Paths.get(xdir.getAbsolutePath), nicetime)
   }
 
   private def handleExceptions(fun: Unit => Unit): Unit = {

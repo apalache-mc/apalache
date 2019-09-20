@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.lir.io
 
-import java.io.PrintWriter
+import java.io.{File, FileWriter, PrintWriter}
 
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, _}
@@ -365,6 +365,21 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
 }
 
 object PrettyWriter {
+  /**
+    * Write a module to a file (without appending).
+    *
+    * @param module a TLA module
+    * @param outputFile an output file that will be created or overwritten
+    */
+  def write(module: TlaModule, outputFile: File): Unit = {
+    val writer = new PrintWriter(new FileWriter(outputFile, false))
+    try {
+      new PrettyWriter(writer).write(module)
+    } finally {
+      writer.close()
+    }
+  }
+
   protected val unaryOps = HashMap(
     TlaBoolOper.not -> "~",
     TlaArithOper.uminus -> "-",

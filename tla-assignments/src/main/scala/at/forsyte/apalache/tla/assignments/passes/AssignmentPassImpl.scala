@@ -1,11 +1,15 @@
 package at.forsyte.apalache.tla.assignments.passes
 
+import java.io.File
+import java.nio.file.Path
+
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.assignments._
 import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard._
@@ -158,6 +162,9 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
 
     val module = tlaModule.get
     val newModule = new TlaModule( module.name, newDecls.toSeq ++ module.declarations )
+
+    val outdir = options.getOptionOrError("io", "outdir").asInstanceOf[Path]
+    PrettyWriter.write(newModule, new File(outdir.toFile, "out-assign.tla"))
 
     setModule(newModule)
     true

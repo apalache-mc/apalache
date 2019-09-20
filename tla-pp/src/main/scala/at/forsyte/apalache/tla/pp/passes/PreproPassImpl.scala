@@ -1,7 +1,11 @@
 package at.forsyte.apalache.tla.pp.passes
 
+import java.io.File
+import java.nio.file.Path
+
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.lir.TlaModule
+import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.process.Renaming
 import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
@@ -60,6 +64,10 @@ class PreproPassImpl @Inject()( val options: PassOptions,
     val preprocessed = transformationSequence.foldLeft( uniqueVarDecls ){ case (m,tr) =>
       ModuleByExTransformer( tr )( m )
     }
+
+    val outdir = options.getOptionOrError("io", "outdir").asInstanceOf[Path]
+    PrettyWriter.write(preprocessed, new File(outdir.toFile, "out-prepro.tla"))
+
     outputTlaModule = Some(preprocessed)
     true
   }

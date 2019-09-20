@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
-import java.io.{PrintWriter, StringWriter}
+import java.io.{File, PrintWriter, StringWriter}
+import java.nio.file.Path
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.assignments.ModuleManipulator
@@ -98,8 +99,12 @@ class HintsAndSkolemizationPassImpl @Inject()(val options: PassOptions,
 
     val hintFinder = new HintFinder(hintsStoreImpl)
     hintFinder.findHints((newInitDecls ++ newNextDecls).asInstanceOf[Seq[TlaOperDecl]].map(_.body))
+    val newModule = new TlaModule(module.name, newDecls.toSeq)
+    nextPass.setModule(newModule)
 
-    nextPass.setModule( new TlaModule( module.name, newDecls.toSeq ))
+    val outdir = options.getOptionOrError("io", "outdir").asInstanceOf[Path]
+    PrettyWriter.write(newModule, new File(outdir.toFile, "out-skolem.tla"))
+
     val nfree = frexStoreImpl.store.size
     logger.info(s"Found $nfree free existentials in the transitions")
     true
