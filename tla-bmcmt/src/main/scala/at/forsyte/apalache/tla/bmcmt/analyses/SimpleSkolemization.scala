@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.RewriterException
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaControlOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import com.google.inject.Inject
@@ -153,8 +154,55 @@ class SimpleSkolemization @Inject()(
         OperEx(TlaOper.label, nnf(neg)(subex) +: args: _*)
 
       case LetInEx(body, defs @ _*) =>
-        // TODO: Jure, please deal with the case LET X = ... IN ~X
-        LetInEx(nnf(neg)(body), defs :_ *)
+
+        /**
+          * To handle the case of LET X == ... IN ... ~X ...
+          * we introduce a new let-in operator NegX$, the body of which is the
+          * nnf transformation of the body of X. Then, we replace all calls to ~X in the
+          * LET-IN body with calls to NegX$.
+          */
+
+        def negName( n: String ): String = s"Neg$n$$"
+
+        val newBody = nnf( neg )( body )
+
+        // We can't just implement ~X for all operators ( e.g. what if X == 1..10 ), just for
+        // those that actually appear under negation in the body (and thus must be of type Bool)
+        def negAppearingOpers( tlaEx : TlaEx ) : Set[String] = tlaEx match {
+          case OperEx( TlaBoolOper.not, OperEx( TlaOper.apply, NameEx( name ) ) ) =>
+            Set(name)
+          case OperEx( op, args@_* ) =>
+            args.map( negAppearingOpers ).foldLeft( Set.empty[String] ) {
+              _ ++ _
+            }
+          case LetInEx( b, ds@_* ) =>
+            ds.map( d => negAppearingOpers( d.body ) ).foldLeft( negAppearingOpers( b ) ) {
+              _ ++ _
+            }
+          case _ => Set.empty[String]
+        }
+
+        val negOpers = negAppearingOpers( newBody )
+
+        val replacements = negOpers map { opName =>
+          ReplaceFixed(
+            OperEx( TlaBoolOper.not, OperEx( TlaOper.apply, NameEx( opName ) ) ),
+            OperEx( TlaOper.apply, NameEx( negName( opName ) ) ),
+            tracker
+          )
+        }
+
+        val negReplacedBody = replacements.foldLeft( newBody ) { case (b, tr) =>
+          tr( b )
+        }
+
+        val negDefs = defs withFilter { d => negOpers.contains( d.name ) } map { d =>
+          d.copy( name = negName( d.name ), body = nnf( neg = true )( d.body ) )
+        }
+
+        val newDefs = defs ++ negDefs
+
+        LetInEx( negReplacedBody, newDefs : _ * )
 
       case ex =>
         if (!neg)
