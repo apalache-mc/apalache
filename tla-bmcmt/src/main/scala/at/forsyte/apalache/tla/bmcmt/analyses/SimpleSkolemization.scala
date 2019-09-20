@@ -154,7 +154,7 @@ class SimpleSkolemization @Inject()(
 
       case LetInEx(body, defs @ _*) =>
         // TODO: Jure, please deal with the case LET X = ... IN ~X
-        LetInEx(nnf(neg)(body), defs)
+        LetInEx(nnf(neg)(body), defs :_ *)
 
       case ex =>
         if (!neg)

@@ -6,7 +6,6 @@ import java.nio.file.Path
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
-import at.forsyte.apalache.tla.lir.process.Renaming
 import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
