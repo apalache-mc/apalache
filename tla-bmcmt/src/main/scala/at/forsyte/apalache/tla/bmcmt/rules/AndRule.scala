@@ -42,12 +42,13 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
                 case hd +: tail => tla.ite(hd, toIte(tail), NameEx(falseConst))
               }
             }
-            // create a chain of IF-THEN-ELSE expressions and rewrite them
-            //            val newState = state.setRex(toIte(args)).setTheory(CellTheory())
-            //            rewriter.rewriteUntilDone(newState)
 
-            if (rewriter.formulaHintsStore.getHint(state.ex.ID).contains(FormulaHintsStore.HighAnd())) {
-
+            if (!rewriter.formulaHintsStore.getHint(state.ex.ID).contains(FormulaHintsStore.HighAnd())) {
+              // simply translate if-then-else to a chain of if-then-else expressions
+              val newState = state.setRex(toIte(args)).setTheory(CellTheory())
+              rewriter.rewriteUntilDone(newState)
+            } else {
+              // evaluate the conditions and prune them in runtime
               val level = rewriter.contextLevel
               rewriter.push()
               val result = shortCircuit(state, args)
@@ -61,9 +62,6 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
                 val newState = state.setRex(toIte(args)).setTheory(CellTheory())
                 rewriter.rewriteUntilDone(newState)
               }
-            } else {
-              val newState = state.setRex(toIte(args)).setTheory(CellTheory())
-              rewriter.rewriteUntilDone(newState)
             }
           }
 

@@ -12,7 +12,8 @@ class SubstRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(state: SymbState): Boolean = {
     state.ex match {
       case NameEx(x) =>
-        state.binding.contains(x)
+        // make sure that x is not an SMT constant, but a variable name
+        !CellTheory().hasConst(x) && !BoolTheory().hasConst(x)
 
       case _ => false
     }
@@ -21,8 +22,12 @@ class SubstRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case NameEx(x) =>
-        val cell = state.binding.apply(x)
-        state.setRex(NameEx(cell.toString))
+        if (state.binding.contains(x)) {
+          val cell = state.binding.apply(x)
+          state.setRex(NameEx(cell.toString))
+        } else {
+          throw new RewriterException(s"${getClass.getSimpleName}: Variable $x is not assigned a value")
+        }
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))

@@ -39,14 +39,14 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       // a common pattern x' \in {y} that deterministically assigns the value of y to x'
       case OperEx(TlaSetOper.in,
-      OperEx(TlaActionOper.prime, NameEx(name)),
-      OperEx(TlaSetOper.enumSet, rhs)) =>
+          OperEx(TlaActionOper.prime, NameEx(name)),
+          OperEx(TlaSetOper.enumSet, rhs)) =>
         val nextState = rewriter.rewriteUntilDone(state.setRex(rhs).setTheory(CellTheory()))
         val rhsCell = nextState.arena.findCellByNameEx(nextState.ex)
         val finalState = nextState
           .setTheory(CellTheory())
-          .setRex(state.arena.cellTrue().toNameEx)         // just return TRUE
-          .setBinding(nextState.binding + (name + "'" -> rhsCell))  // bind the cell to the name
+          .setRex(state.arena.cellTrue().toNameEx) // just return TRUE
+          .setBinding(nextState.binding + (name + "'" -> rhsCell)) // bind the cell to the name
         rewriter.coerce(finalState, state.theory)
 
       // the general case
@@ -88,7 +88,7 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
                   .setRex(result) // true as soon as S /= {}
                   .setBinding(nextState.binding + (name + "'" -> pickedCell)) // bind the picked cell to the name
 
-              case tp @ _ =>
+              case tp@_ =>
                 throw new RewriterException("Unexpected type: " + tp)
             }
           }
