@@ -152,6 +152,10 @@ class SimpleSkolemization @Inject()(
       case OperEx(TlaOper.label, subex, args@_*) =>
         OperEx(TlaOper.label, nnf(neg)(subex) +: args: _*)
 
+      case LetInEx(body, defs @ _*) =>
+        // TODO: Jure, please deal with the case LET X = ... IN ~X
+        LetInEx(nnf(neg)(body), defs)
+
       case ex =>
         if (!neg)
           ex
