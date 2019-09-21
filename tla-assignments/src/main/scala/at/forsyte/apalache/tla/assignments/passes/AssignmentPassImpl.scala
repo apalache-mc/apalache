@@ -161,7 +161,8 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
     val newDecls = cinitDeclOpt ++ notInvDeclOpt ++ notInvPDeclOpt ++ initDecls ++ nextDecls
 
     val module = tlaModule.get
-    val newModule = new TlaModule( module.name, newDecls.toSeq ++ module.declarations )
+    val newModule = new TlaModule( module.name,
+      module.constDeclarations ++ module.varDeclarations ++ newDecls.toSeq ++ module.assumeDeclarations)
 
     val outdir = options.getOptionOrError("io", "outdir").asInstanceOf[Path]
     PrettyWriter.write(newModule, new File(outdir.toFile, "out-assign.tla"))

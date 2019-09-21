@@ -110,7 +110,8 @@ class HintsAndSkolemizationPassImpl @Inject()(val options: PassOptions,
 
     val hintFinder = new HintFinder(hintsStoreImpl)
     hintFinder.findHints((newInitDecls ++ newNextDecls).asInstanceOf[Seq[TlaOperDecl]].map(_.body))
-    val newModule = new TlaModule(module.name, newDecls.toSeq)
+    val newModule = new TlaModule(module.name,
+      module.constDeclarations ++ module.varDeclarations ++ newDecls.toSeq ++ module.assumeDeclarations)
     nextPass.setModule(newModule)
 
     val outdir = options.getOptionOrError("io", "outdir").asInstanceOf[Path]

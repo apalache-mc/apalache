@@ -87,6 +87,8 @@ check "008-Paxos" --length=5 --inv=Inv Paxos.tla \
     && expect_ok
 check "009-Bug20190807" --length=1 Bug20190118.tla \
     && expect_ok
+check "010-Bug20190921" --length=5 --cinit=CInit Bug20190921.tla \
+    && expect_ok
 
 cat "$LOGFILE"
 
