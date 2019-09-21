@@ -304,9 +304,9 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   test("a one-line record") {
     val writer = new PrettyWriter(printWriter, 40)
     val expr = enumFun(
-      "x1", "x2",
-      "x3", "x4",
-      "x5", "x6"
+      str("x1"), "x2",
+      str("x3"), "x4",
+      str("x5"), "x6"
     ) ////
     writer.write(expr)
     printWriter.flush()
@@ -318,9 +318,9 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   test("a multi-line record") {
     val writer = new PrettyWriter(printWriter, 40)
     val expr = enumFun(
-      "verylong1", "verylong2",
-      "verylong3", "verylong4",
-      "verylong5", "verylong6"
+      str("verylong1"), "verylong2",
+      str("verylong3"), "verylong4",
+      str("verylong5"), "verylong6"
     ) ////
     writer.write(expr)
     printWriter.flush()
@@ -334,9 +334,9 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   test("a narrow multi-line record") {
     val writer = new PrettyWriter(printWriter, 20)
     val expr = enumFun(
-      "verylong1", "verylong2",
-      "verylong3", "verylong4",
-      "verylong5", "verylong6"
+      str("verylong1"), "verylong2",
+      str("verylong3"), "verylong4",
+      str("verylong5"), "verylong6"
     ) ////
     writer.write(expr)
     printWriter.flush()
@@ -353,9 +353,9 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   test("a one-line set of records") {
     val writer = new PrettyWriter(printWriter, 40)
     val expr = recSet(
-      "x1", "x2",
-      "x3", "x4",
-      "x5", "x6"
+      str("x1"), "x2",
+      str("x3"), "x4",
+      str("x5"), "x6"
     ) ////
     writer.write(expr)
     printWriter.flush()
@@ -367,9 +367,9 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   test("a multi-line set of records") {
     val writer = new PrettyWriter(printWriter, 40)
     val expr = recSet(
-      "verylong1", "verylong2",
-      "verylong3", "verylong4",
-      "verylong5", "verylong6"
+      str("verylong1"), "verylong2",
+      str("verylong3"), "verylong4",
+      str("verylong5"), "verylong6"
     ) ////
     writer.write(expr)
     printWriter.flush()

@@ -130,7 +130,7 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
         // format each key-value pair (k, v) into k |-> v
         val boxes =
           keys.zip(values).map(p =>
-            group(toDoc((0, 0), p._1) <> space <> "|->" <> nest(line <> toDoc((0, 0), p._2)))
+            group(strNoQuotes(p._1) <> space <> "|->" <> nest(line <> toDoc((0, 0), p._2)))
           ) ///
 
         group(brackets(nest(ssep(boxes.toList, comma <> line))))
@@ -142,7 +142,7 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
         // format each key-value pair (k, v) into k: v
         val boxes =
           keys.zip(values).map(p =>
-            group(toDoc((0, 0), p._1) <> ":" <> nest(line <> toDoc((0, 0), p._2)))
+            group(strNoQuotes(p._1) <> ":" <> nest(line <> toDoc((0, 0), p._2)))
           ) ///
 
         group(brackets(nest(ssep(boxes.toList, comma <> line))))
@@ -360,6 +360,13 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
       parens(doc)
     } else {
       doc // expression's precedence is higher, no need for parentheses
+    }
+  }
+
+  private def strNoQuotes(ex: TlaEx): String = {
+    ex match {
+      case ValEx(TlaStr(s)) => s
+      case _ => throw new IllegalStateException("Expected a string as a record key, found: " + ex)
     }
   }
 }
