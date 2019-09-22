@@ -10,11 +10,11 @@ object ExplicitLetIn {
 
   private def letInExplicitLeaf(
                                  tracker : TransformationTracker,
-                                 skip0Arity : Boolean
+                                 keepNullary : Boolean
                                ) : TlaExTransformation = tracker.track {
     case LetInEx( body, defs@_* ) =>
 
-      val self = apply( tracker, skip0Arity )
+      val self = apply( tracker, keepNullary )
       /** LET-IN may be nested in the body ...*/
       val explicitBody = self( body )
 
@@ -24,7 +24,7 @@ object ExplicitLetIn {
       }
 
       val filterFun : TlaOperDecl => Boolean =
-        if (skip0Arity) hasPositiveArity
+        if (keepNullary) hasPositiveArity
         else { _ => true} //expand all
 
       val (defsToExpand, defsToKeep) = explicitDefs.partition( filterFun )
@@ -45,7 +45,7 @@ object ExplicitLetIn {
   /**
     * Returns a transformation which replaces all occurrences of LET-IN expressions with
     * copies of their bodies, in which LET-IN defined operators have been expanded.
-    * If the `skip0Arity` flag is set to true, only operators with strictly positive arity get expanded.
+    * If the `keepNullary` flag is set to true, only operators with strictly positive arity get expanded.
     *
     * Example:
     * LET X(a) == a + b IN X(0) > 1 --> 1 + b > 1
