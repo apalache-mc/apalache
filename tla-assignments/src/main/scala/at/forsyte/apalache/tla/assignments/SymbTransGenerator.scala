@@ -147,20 +147,17 @@ class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases 
           * happen within a LET-IN operator body can appear to belong to multiple branches.
           * */
 
-//        val newArgs = args.filter { x =>
-//          /**
-//            * \E S \in allSelections( x ) . S \cap selection \ne \emptyset
-//            * <=>
-//            * \E S \in allSelections( x ) . \E y \in S . y \in selection
-//            * <=>
-//            * \E S \in allSelections( x ) . \E y \in selection . y \in S
-//            * <=>
-//            * \E y \in selection . y \in \bigcup allSelections( x )
-//            */
-//          labelsAt( x, allSelections ) exists { selection.contains }
-//        }
-        val newArgs = args filter { x =>
-          labelsAt( x, allSelections ).subsetOf( selection )
+        val newArgs = args.filter { x =>
+          /**
+            * \E S \in allSelections( x ) . S \cap selection \ne \emptyset
+            * <=>
+            * \E S \in allSelections( x ) . \E y \in S . y \in selection
+            * <=>
+            * \E S \in allSelections( x ) . \E y \in selection . y \in S
+            * <=>
+            * \E y \in selection . y \in \bigcup allSelections( x )
+            */
+          labelsAt( x, allSelections ) exists { selection.contains }
         }
 
 //        /**
@@ -177,16 +174,28 @@ class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases 
           case _ => OperEx( TlaBoolOper.or, newArgs map sliceWith( selection, allSelections) : _* )
         }
 
-      /** ITE behaves like disjunction, but instead of dropping subformulas we replace them
-        * with False, since we cannot evaluate the IF-condition */
-      /** This only applies if at least one branch has an assignment, otherwise keep all */
-      case ex@OperEx( TlaControlOper.ifThenElse, cond, args@_* ) =>
-        val newArgs = args.map(
-          x => if ( labelsAt( x, allSelections ) exists { selection.contains } )
+      /** We replace ITE(a,b,c) with either a /\ b or ~a /\ c, depending
+        * on which branch has the assignment.
+        * This only applies if exactly branch has an assignment, otherwise keep all */
+      case ex@OperEx( TlaControlOper.ifThenElse, ifEx, args@_* ) =>
+        val newTail = args.map(
+          x => if ( labelsAt( x, allSelections ) exists {
+            selection.contains
+          } )
             sliceWith( selection, allSelections )( x ) else ValEx( TlaFalse )
         )
-        if ( newArgs.forall( _ == ValEx( TlaFalse ) ) ) ex
-        else OperEx( TlaControlOper.ifThenElse, cond +: newArgs : _* )
+
+        newTail match {
+          case ValEx( TlaFalse ) +: ValEx( TlaFalse ) +: Nil =>
+            ex
+          case newThen +: ValEx( TlaFalse ) +: Nil =>
+            OperEx( TlaBoolOper.and, ifEx, newThen )
+          case ValEx( TlaFalse ) +: newElse +: Nil =>
+            OperEx( TlaBoolOper.and, OperEx( TlaBoolOper.not, ifEx ), newElse )
+          case _ =>
+            // Possible, because of LET-IN
+            OperEx( TlaControlOper.ifThenElse, ifEx +: newTail : _* )
+        }
 
       case ex@OperEx( op, args@_* ) =>
         val childVals = args map {

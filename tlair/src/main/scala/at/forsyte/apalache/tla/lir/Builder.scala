@@ -338,6 +338,8 @@ object Builder {
   /** TlaSetOper */
   def enumSet( p_args : TlaEx* ) : OperEx = OperEx( TlaSetOper.enumSet, p_args : _* )
 
+  def emptySet() : OperEx = enumSet()
+
   def in( p_x : TlaEx,
           p_S : TlaEx
         ) : OperEx = OperEx( TlaSetOper.in, p_x, p_S )
