@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.RewriterException
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaControlOper, TlaOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
+import at.forsyte.apalache.tla.lir.transformations.standard.{Renaming, ReplaceFixed}
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import com.google.inject.Inject
@@ -23,14 +23,13 @@ class SimpleSkolemization @Inject()(
                                    ) extends LazyLogging {
   /**
     * Transform the transitions into normal form and label the free existential quantifiers.
-    *
-    * @param spec a specification with identified transitions
-    * @return the modified input
     */
   def transformAndLabel( decls: Traversable[TlaOperDecl] ) : Traversable[TlaOperDecl] = decls map { d =>
     val newBody = toNegatedForm( d.body )
-    markFreeExistentials( newBody )
-    d.copy( body = newBody )
+    val renaming = new Renaming(tracker)
+    val renamed = renaming.renameBindingsUnique( newBody )
+    markFreeExistentials( renamed )
+    d.copy( body = renamed )
   }
 
   private def markFreeExistentials(ex: TlaEx): Unit = ex match {

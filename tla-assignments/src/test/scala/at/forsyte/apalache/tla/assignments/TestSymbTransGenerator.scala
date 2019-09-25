@@ -233,4 +233,27 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
     val ret = stg( next, strat ) map { _._2 }
     assert( ret == Seq(next) )
   }
+
+  test( "Test sliceWith" ){
+    val asgn = primeInSingleton( n_x, int(1) )
+    val xDecl = declOp( "X", asgn )
+    val disj = or(
+      and(n_A, appDecl( xDecl ) ),
+      and(n_B, appDecl( xDecl ) )
+    )
+
+    val next = letIn(
+      disj,
+      xDecl
+    )
+
+    val selection = Set(asgn.ID)
+    val allSelections = stg.helperFunctions.allSelections( next, selection, Map.empty )
+
+    val sliced = stg.helperFunctions.sliceWith(selection, allSelections)(next)
+
+    assert( sliced == next )
+
+  }
+
 }

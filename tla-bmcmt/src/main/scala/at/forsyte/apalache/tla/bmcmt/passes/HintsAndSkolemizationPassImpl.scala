@@ -70,21 +70,11 @@ class HintsAndSkolemizationPassImpl @Inject()(val options: PassOptions,
 
     // re-insert renamed with renamed prefix + extra renaming because NNF might introduce duplicates
     // Jure, 20.9.19: Calling an extra renaming is a patchwork fix, until we determine a more elegant way
-    val initDecls = ModuleManipulator.declsFromTransitionBodies( s"$renamingPrefix$initDefaultName", initRenamed ) map {
-      d => d.copy( body = renaming.renameBindingsUnique( d.body ) )
-    }
-    val nextDecls = ModuleManipulator.declsFromTransitionBodies( s"$renamingPrefix$nextDefaultName", nextRenamed ) map {
-      d => d.copy( body = renaming.renameBindingsUnique( d.body ) )
-    }
-    val cinitDeclOpt = ModuleManipulator.optionalOperDecl( s"$renamingPrefix$cinitDefaultName", constInitPrimeRenamed ) map {
-      d => d.copy( body = renaming.renameBindingsUnique( d.body ) )
-    }
-    val notInvDeclOpt = ModuleManipulator.optionalOperDecl( s"$renamingPrefix$notInvDefaultName", notInvRenamed ) map {
-      d => d.copy( body = renaming.renameBindingsUnique( d.body ) )
-    }
-    val notInvPDeclOpt = ModuleManipulator.optionalOperDecl( s"$renamingPrefix$notInvPrimeDefaultName", notInvPrimeRenamed ) map {
-      d => d.copy( body = renaming.renameBindingsUnique( d.body ) )
-    }
+    val initDecls = ModuleManipulator.declsFromTransitionBodies( s"$renamingPrefix$initDefaultName", initRenamed )
+    val nextDecls = ModuleManipulator.declsFromTransitionBodies( s"$renamingPrefix$nextDefaultName", nextRenamed )
+    val cinitDeclOpt = ModuleManipulator.optionalOperDecl( s"$renamingPrefix$cinitDefaultName", constInitPrimeRenamed )
+    val notInvDeclOpt = ModuleManipulator.optionalOperDecl( s"$renamingPrefix$notInvDefaultName", notInvRenamed )
+    val notInvPDeclOpt = ModuleManipulator.optionalOperDecl( s"$renamingPrefix$notInvPrimeDefaultName", notInvPrimeRenamed )
 
     val skolem = new SimpleSkolemization(frexStoreImpl, tracker)
     val newInitDecls = skolem.transformAndLabel(initDecls)
