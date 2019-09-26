@@ -319,6 +319,28 @@ class TestSanyImporter extends FunSuite {
     }
   }
 
+  test("LOCAL operator") {
+    val text =
+      """---- MODULE localop ----
+        |LOCAL LocalOp == TRUE
+        |================================
+      """.stripMargin
+
+    val locationStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(locationStore)
+      .loadFromSource("localop", Source.fromString(text))
+    val mod = expectSingleModule("localop", rootName, modules)
+    assert(1 == mod.declarations.size)
+
+    mod.declarations.head match {
+      case actionDecl: TlaOperDecl =>
+        assert("LocalOp" == actionDecl.name)
+        assert(0 == actionDecl.formalParams.length)
+        assert(ValEx(TlaBool(true)) == actionDecl.body)
+        assert(locationStore.contains(actionDecl.body.ID)) // and source file information has been saved
+    }
+  }
+
   test("empty set") {
     val text =
       """---- MODULE emptyset ----
