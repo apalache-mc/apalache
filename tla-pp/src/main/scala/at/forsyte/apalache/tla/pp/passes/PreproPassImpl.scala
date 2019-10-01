@@ -39,13 +39,11 @@ class PreproPassImpl @Inject()( val options: PassOptions,
     logger.info("de-sugaring the spec")
     val afterDesugarer = ModuleByExTransformer(Desugarer(tracker)) (tlaModule.get)
     logger.info("Renaming variables uniquely")
-    val renaming = new Renaming( tracker )
+    val renaming = new IncrementalRenaming( tracker )
     val uniqueVarDecls =
       new TlaModule(
         afterDesugarer.name,
-        afterDesugarer.declarations map {
-          renaming.apply
-        }
+        renaming.syncAndNormalizeDs( afterDesugarer.declarations ).toSeq
       )
 
     val bodyMap = BodyMapFactory.makeFromDecls( uniqueVarDecls.operDeclarations )

@@ -68,10 +68,10 @@ class TestIncrementalRenaming extends FunSuite with TestingPredefs with BeforeAn
     } == Map( "x" -> 1, "y" -> 2 ) )
   }
 
-  test( "Test constructNameCounterMap [TlaEx]" ) {
+  test( "Test nameCounterMapFromEx [TlaEx]" ) {
     val ex = and( n_x, n_y, n_z, eql( plus( n_t, n_z ), int( 2 ) ) )
 
-    assert( nameCounterMapFromEx(ex).isEmpty )
+    assert( nameCounterMapFromEx( takeMax = true )(ex).isEmpty )
 
     val ex2 = and(
       name( makeName( "x", 2 ) ),
@@ -88,7 +88,7 @@ class TestIncrementalRenaming extends FunSuite with TestingPredefs with BeforeAn
       name( makeName( "x", 2 ) )
     )
 
-    val ex2Map = nameCounterMapFromEx( ex2 )
+    val ex2Map = nameCounterMapFromEx( takeMax = true )( ex2 )
     assert( ex2Map ==
       Map(
         "x" -> 2,
@@ -98,7 +98,7 @@ class TestIncrementalRenaming extends FunSuite with TestingPredefs with BeforeAn
     )
   }
 
-  test( "Test constructNameCounterMap [TlaDecl]" ){
+  test( "Test nameCounterMapFromEx [LET-IN TlaDecl]" ){
     val p1Name = makeName( "p", 1 )
     val p3Name = makeName( "p", 3 )
     val p8Name = makeName( "p", 8 )
@@ -174,7 +174,7 @@ class TestIncrementalRenaming extends FunSuite with TestingPredefs with BeforeAn
         zDecl
       )
 
-    val letInExMap = nameCounterMapFromEx( letInEx )
+    val letInExMap = nameCounterMapFromEx( takeMax = true )( letInEx )
     assert( letInExMap ==
       Map(
         "p" -> 8,
@@ -307,6 +307,116 @@ class TestIncrementalRenaming extends FunSuite with TestingPredefs with BeforeAn
     val renamedTwice = renaming( renamed )
 
     assert( renamedTwice == expected( 2 ) )
+  }
+
+  test( "Test offsetName" ){
+    val offsets = Map(
+      "x" -> 1
+    )
+
+    val fn : String => String = offsetName( offsets )
+
+    val name1 = "x"
+    val expected1 = "x"
+    val actual1 = fn(name1)
+    assert( expected1 == actual1 )
+
+    val name2 = makeName( "x", 1 )
+    assertThrows[AssertionError] {
+      fn( name2 )
+    }
+
+    val name3 = makeName( "x", 2 )
+    val expected3 = makeName( "x", 1 )
+    val actual3 = fn( name3 )
+    assert( expected3 == actual3 )
+
+
+    val name4 = makeName( "y", 2 )
+    val expected4 = makeName( "y", 2 )
+    val actual4 = fn( name4 )
+    assert( expected4 == actual4 )
+
+  }
+
+  test( "Test shiftCounters" ){
+    val offsets = Map(
+      "x" -> 4,
+      "y" -> 2,
+      "z" -> 3
+    )
+
+    val ex = gt(
+      plus(
+        name( makeName( "x", 5 ) ),
+        name( makeName( "y", 3 ) )
+      ),
+      name( makeName("z", 4 ) )
+    )
+
+    val expected = gt(
+      plus(
+        name( makeName( "x", 1 ) ),
+        name( makeName( "y", 1 ) )
+      ),
+      name( makeName("z", 1 ) )
+    )
+
+    val actual = renaming.shiftCounters( offsets )( ex )
+    assert( expected == actual )
+  }
+
+  test( "Test normalize" ){
+    val ex = gt(
+      plus(
+        name( makeName( "x", 5 ) ),
+        name( makeName( "y", 3 ) )
+      ),
+      name( makeName("z", 4 ) )
+    )
+
+    val expected = gt(
+      plus(
+        name( makeName( "x", 1 ) ),
+        name( makeName( "y", 1 ) )
+      ),
+      name( makeName("z", 1 ) )
+    )
+
+    val actual = renaming.normalize( ex )
+    assert( expected == actual )
+  }
+
+  test( "Test syncFrom" ){
+    val ex = exists( name( makeName( "x", 5 ) ), n_S, n_p )
+
+    val expected = exists( name( makeName( "x", 6 ) ), n_S, n_p )
+
+    renaming.syncFrom( ex )
+    val actual = renaming( ex )
+    assert( expected == actual )
+  }
+
+  test( "Test syncAndNormalizeDs" ) {
+    val syncEx = exists( name( makeName( "x", 99 ) ), n_S, n_p )
+    renaming.syncFrom( syncEx ) // Set x -> 99 in the map
+
+    val ex1 = exists( name( makeName( "x", 3 ) ), n_S, n_p )
+    val ex2 = exists( name( makeName( "x", 105 ) ), n_S, n_p )
+
+    val xDecl = declOp( "X", ex1 )
+    val yDecl = declOp( "Y", ex2 )
+
+    val decls = Seq(xDecl, yDecl)
+    val expected = Seq(
+      declOp( "X", exists( name( makeName( "x", 1 ) ), n_S, n_p ) ),
+      declOp( "Y", exists( name( makeName( "x", 2 ) ), n_S, n_p ) )
+    )
+
+    val actual = renaming.syncAndNormalizeDs( decls )
+
+    assert( expected == actual )
+
   }
 
 }

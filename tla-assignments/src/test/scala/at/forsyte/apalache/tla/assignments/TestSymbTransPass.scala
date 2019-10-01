@@ -24,13 +24,11 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
 
     val tracker = TrackerWithListeners( srcDB )
     val afterDesugarer = ModuleByExTransformer(Desugarer(tracker)) (fakeModule)
-    val renaming = new Renaming( tracker )
+    val renaming = new IncrementalRenaming( tracker )
     val uniqueVarDecls =
       new TlaModule(
         afterDesugarer.name,
-        afterDesugarer.declarations map {
-          renaming.apply
-        }
+        renaming.syncAndNormalizeDs( afterDesugarer.declarations ).toSeq
       )
 
     val bodyMap = BodyMapFactory.makeFromDecls( uniqueVarDecls.operDeclarations )

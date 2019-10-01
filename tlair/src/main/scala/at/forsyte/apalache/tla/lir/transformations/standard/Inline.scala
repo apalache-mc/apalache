@@ -21,12 +21,10 @@ object Inline {
                              ) : Option[TlaEx] =
     bodyMap.get( name ) match {
       case Some( (params, body) ) if params.size == args.size =>
-        // Jure, 24.7.19.: This does not establish ChangeTracking between body and inlinedNewBody.
-        // Do we want to track these changes?
+        // We deep copy the body, to ensure UID uniqueness
+        val bodyCopy = DeepCopy( tracker )( body )
 
-        // Jure, 29.7.19.: Operator instantiation potentially violates UID uniqueness, e.g. currently, when
-        // we instantiate A(p), where A(x) == x + x, both copies of x have the same UID (as p).
-        val newBody = params.zip( args ).foldLeft( body ) {
+        val newBody = params.zip( args ).foldLeft( bodyCopy ) {
           case (b, (fParam, arg)) =>
             ReplaceFixed( NameEx( fParam.name ), arg, tracker )( b )
         }

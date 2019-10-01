@@ -4,8 +4,9 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.predef.TlaIntSet
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaOperDecl, ValEx}
+import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaStrSet}
+import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
+import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -787,5 +788,115 @@ class TestTrivialTypeFinder extends RewriterBase {
     assert(typeFinder.inferAndSave(annotatedEx).contains(FinSetT(IntT())))
     // check that the type of the underlying expression has been changed as well
     assert(FinSetT(IntT()) == typeFinder.compute(ex))
+  }
+
+  test( "inferAndSave from the wild" ){
+    import IncrementalRenaming.makeName
+    val init = tla.declOp( makeName( "RenamedInit", 0),
+      tla.and(
+        tla.primeInSingleton(
+          tla.name( "recOne" ),
+          tla.withType(
+            tla.enumFun(
+              tla.str( "x" ),
+              tla.str( "y" )
+            ),
+            tla.enumFun(
+              tla.str( "x" ), ValEx( TlaStrSet ),
+              tla.str( "y" ), ValEx( TlaIntSet )
+            )
+          )
+        ),
+        tla.primeInSingleton(
+          tla.name( "recTwo" ),
+          tla.withType(
+            tla.enumFun(
+              tla.str( "x" ),
+              tla.str( "x" )
+            ),
+            tla.enumFun(
+              tla.str( "x" ), ValEx( TlaStrSet ),
+              tla.str( "z" ), tla.enumSet( ValEx( TlaIntSet ) )
+            )
+          )
+        )
+      )
+    )
+
+    val next1 = tla.declOp( makeName( "RenamedNext", 0),
+      tla.and(
+        tla.primeInSingleton(
+          tla.name( "recOne" ),
+          tla.withType(
+            tla.enumFun(
+              tla.str( "x" ),
+              tla.str( "x" )
+            ),
+            tla.enumFun(
+              tla.str( "x" ), ValEx( TlaStrSet ),
+              tla.str( "y" ), ValEx( TlaIntSet )
+            )
+          )
+        ),
+        tla.primeInSingleton(
+          tla.name( "recTwo" ),
+          tla.withType(
+            tla.enumFun(
+              tla.str( "x" ),
+              tla.str( "x" )
+            ),
+            tla.enumFun(
+              tla.str( "x" ), ValEx( TlaStrSet ),
+              tla.str( "z" ), tla.enumSet( ValEx( TlaIntSet ) )
+            )
+          )
+        )
+      )
+    )
+
+    val next2 = tla.declOp( makeName( "RenamedNext", 1),
+      tla.and(
+        tla.primeInSingleton(
+          tla.name( "recOne" ),
+          tla.withType(
+            tla.enumFun(
+              tla.str( "x" ),
+              tla.str( "x" )
+            ),
+            tla.enumFun(
+              tla.str( "x" ), ValEx( TlaStrSet ),
+              tla.str( "y" ), ValEx( TlaIntSet )
+            )
+          )
+        ),
+        tla.primeInSingleton(
+          tla.name( "recTwo" ),
+          tla.withType(
+            tla.enumFun(
+              tla.str( "x" ),
+              tla.str( "z" )
+            ),
+            tla.enumFun(
+              tla.str( "x" ), ValEx( TlaStrSet ),
+              tla.str( "z" ), tla.enumSet( ValEx( TlaIntSet ) )
+            )
+          )
+        )
+      )
+    )
+
+    val decls = Seq(
+      init,
+      next1,
+      next2
+    )
+
+    val ttf = new TrivialTypeFinder
+
+    decls foreach {
+      d => ttf.inferAndSave( d.body )
+    }
+
+    assert( ttf.getTypeErrors.isEmpty )
   }
 }
