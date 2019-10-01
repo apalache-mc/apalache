@@ -10,7 +10,7 @@ import at.forsyte.apalache.tla.bmcmt.analyses.{FormulaHintsStoreImpl, FreeExiste
 import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule, TlaOperDecl}
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
-import at.forsyte.apalache.tla.lir.transformations.standard.Renaming
+import at.forsyte.apalache.tla.lir.transformations.standard.{IncrementalRenaming}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -58,18 +58,21 @@ class HintsAndSkolemizationPassImpl @Inject()(val options: PassOptions,
     val notInv = ModuleManipulator.getOperatorOption( module, notInvDefaultName )
     val notInvP = ModuleManipulator.getOperatorOption( module, notInvPrimeDefaultName )
 
-    val renaming = new Renaming(tracker)
-    val initRenamed = initTrans.sorted(StringOrdering).map(renaming.renameBindingsUnique)
-    val nextRenamed = nextTrans.sorted(StringOrdering).map(renaming.renameBindingsUnique)
+    val oldExs = notInv ++: notInvP ++: cinitP ++: (initTrans ++ nextTrans)
 
-    def renameIfDefined(ex: Option[TlaEx]): Option[TlaEx] = ex map renaming.renameBindingsUnique
+    val renaming = new IncrementalRenaming(tracker)
+    oldExs foreach { renaming.syncFrom }
+
+    val initRenamed = initTrans.sorted(StringOrdering) map renaming
+    val nextRenamed = nextTrans.sorted(StringOrdering) map renaming
+
+    def renameIfDefined(ex: Option[TlaEx]): Option[TlaEx] = ex map renaming
 
     val constInitPrimeRenamed = renameIfDefined(cinitP)
     val notInvRenamed = renameIfDefined(notInv)
     val notInvPrimeRenamed = renameIfDefined(notInvP)
 
     // re-insert renamed with renamed prefix + extra renaming because NNF might introduce duplicates
-    // Jure, 20.9.19: Calling an extra renaming is a patchwork fix, until we determine a more elegant way
     val initDecls = ModuleManipulator.declsFromTransitionBodies( s"$renamingPrefix$initDefaultName", initRenamed )
     val nextDecls = ModuleManipulator.declsFromTransitionBodies( s"$renamingPrefix$nextDefaultName", nextRenamed )
     val cinitDeclOpt = ModuleManipulator.optionalOperDecl( s"$renamingPrefix$cinitDefaultName", constInitPrimeRenamed )
@@ -77,13 +80,16 @@ class HintsAndSkolemizationPassImpl @Inject()(val options: PassOptions,
     val notInvPDeclOpt = ModuleManipulator.optionalOperDecl( s"$renamingPrefix$notInvPrimeDefaultName", notInvPrimeRenamed )
 
     val skolem = new SimpleSkolemization(frexStoreImpl, tracker)
-    val newInitDecls = skolem.transformAndLabel(initDecls)
-    val newNextDecls = skolem.transformAndLabel(nextDecls)
-    val newCInitDeclOpt = skolem.transformAndLabel(cinitDeclOpt)
-    val newNotInvDeclOpt = skolem.transformAndLabel(notInvDeclOpt)
-    val newNotInvPDeclOpt = skolem.transformAndLabel(notInvPDeclOpt)
+    val tr = skolem.transform( renaming ) _
+    val newInitDecls = tr(initDecls)
+    val newNextDecls = tr(nextDecls)
+    val newCInitDeclOpt = tr(cinitDeclOpt)
+    val newNotInvDeclOpt = tr(notInvDeclOpt)
+    val newNotInvPDeclOpt = tr(notInvPDeclOpt)
 
     val newDecls = newCInitDeclOpt ++ newNotInvDeclOpt ++ newNotInvPDeclOpt ++ newInitDecls ++ newNextDecls
+    val normalizedDecls = renaming.normalizeDs( newDecls )
+    skolem.label( normalizedDecls )
 
     logger.debug("Transitions after renaming and skolemization")
     for ((t, i) <- newInitDecls.asInstanceOf[Seq[TlaOperDecl]].zipWithIndex) {
@@ -101,7 +107,7 @@ class HintsAndSkolemizationPassImpl @Inject()(val options: PassOptions,
     val hintFinder = new HintFinder(hintsStoreImpl)
     hintFinder.findHints((newInitDecls ++ newNextDecls).asInstanceOf[Seq[TlaOperDecl]].map(_.body))
     val newModule = new TlaModule(module.name,
-      module.constDeclarations ++ module.varDeclarations ++ newDecls.toSeq ++ module.assumeDeclarations)
+      module.constDeclarations ++ module.varDeclarations ++ normalizedDecls.toSeq ++ module.assumeDeclarations)
     nextPass.setModule(newModule)
 
     val outdir = options.getOptionOrError("io", "outdir").asInstanceOf[Path]

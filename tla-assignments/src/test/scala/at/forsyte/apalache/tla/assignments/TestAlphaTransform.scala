@@ -23,13 +23,11 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
     val tracker = TrackerWithListeners( new ChangeListener )
 
     val afterDesugarer = ModuleByExTransformer(Desugarer(tracker)) (fakeModule)
-    val renaming = new Renaming( tracker )
+    val renaming = new IncrementalRenaming( tracker )
     val uniqueVarDecls =
       new TlaModule(
         afterDesugarer.name,
-        afterDesugarer.declarations map {
-          renaming.apply
-        }
+        renaming.syncAndNormalizeDs( afterDesugarer.declarations ).toSeq
       )
 
     val bodyMap = BodyMapFactory.makeFromDecls( uniqueVarDecls.operDeclarations )
