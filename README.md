@@ -6,6 +6,9 @@ __master__: [![Build Status](https://travis-ci.org/konnov/apalache.svg?branch=ma
 &nbsp;&nbsp;&nbsp;
 __unstable__: [![Build Status](https://travis-ci.org/konnov/apalache.svg?branch=unstable)](https://travis-ci.org/konnov/apalache)
 
+To get an intuition about how APALACHE is working,
+check our [paper at OOPSLA19](https://forsyte.at/wp-content/uploads/kkt-oopsla19.pdf).
+
 The current version of the tool is neither parameterized, nor it is using
 abstractions. As a first step, we are working on a symbolic bounded model
 checker that runs under the same assumptions as TLC. To see the list of supported TLA+ constructs, check the [supported features page](docs/features.md).
