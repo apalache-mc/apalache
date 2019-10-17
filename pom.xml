@@ -38,6 +38,8 @@
         <module>tla-import</module>
         <!-- all kinds of preprocessing -->
         <module>tla-pp</module>
+        <!-- finding types -->
+        <module>tla-types</module>
         <!-- finding symbolic transitions -->
         <module>tla-assignments</module>
         <!-- bounded model checker modulo theory -->

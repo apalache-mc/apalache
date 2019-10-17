@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.assignments
+package at.forsyte.apalache.tla.lir.smt
 
 object SmtTools {
 
