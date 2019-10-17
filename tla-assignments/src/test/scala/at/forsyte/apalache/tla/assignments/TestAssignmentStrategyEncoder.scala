@@ -12,7 +12,7 @@ import scala.collection.immutable.Set
 class TestAssignmentStrategyEncoder extends FunSuite with TestingPredefs {
 
   import AssignmentStrategyEncoder._
-  import at.forsyte.apalache.tla.assignments.SmtTools._
+  import at.forsyte.apalache.tla.lir.smt.SmtTools._
 
   val encoder = new AssignmentStrategyEncoder()
 
