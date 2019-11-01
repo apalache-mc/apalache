@@ -66,6 +66,6 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker) exte
 
     case OperEx(TlaSetOper.setminus, setX, setY) =>
       val tempName = NameEx(gen.newName())
-      tla.filter(tempName, setX, tla.notin(tempName, setY))
+      tla.filter(tempName, setX, tla.not(tla.in(tempName, setY)))
   }
 }

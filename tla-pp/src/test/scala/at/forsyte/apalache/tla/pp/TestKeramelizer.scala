@@ -42,7 +42,7 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
     val output = keramelizer.apply(input)
     val expected = tla.filter(tla.name("t_1"),
       tla.name("X"),
-      tla.notin(tla.name("t_1"), tla.name("Y")))
+      tla.not(tla.in(tla.name("t_1"), tla.name("Y"))))
     assert(expected == output)
   }
 }

@@ -10,6 +10,7 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
   *
   * @author Igor Konnov
   */
+@deprecated("No longer used thanks to KerAmelizer", "0.5.2")
 class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   private object OpEnum extends Enumeration {
