@@ -61,7 +61,7 @@ class TestTransformations extends FunSuite with TestingPredefs {
   }
 
   test( "Test EqualityAsContainment" ) {
-    val transformation = EqualityAsContainment( Trackers.NoTracker )
+    val transformation = PrimedEqualityToMembership( Trackers.NoTracker )
 
     val ex1 = primeEq( n_x, n_y )
     val ex2 = or( primeEq( n_x, n_y ), ge( prime( n_x ), int( 0 ) ) )

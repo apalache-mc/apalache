@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.transformations._
   * Replace every equality x' = e with x' \in {e}. This transformation is needed by the assignment solver,
   * so we extracted it into an optional transformation.
   */
-class EqualityAsContainment(tracker: TransformationTracker) extends TlaExTransformation {
+class PrimedEqualityToMembership(tracker: TransformationTracker) extends TlaExTransformation {
   override def apply(ex: TlaEx): TlaEx = {
     transform(ex)
   }
@@ -35,8 +35,8 @@ class EqualityAsContainment(tracker: TransformationTracker) extends TlaExTransfo
   }
 }
 
-object EqualityAsContainment {
-  def apply(tracker: TransformationTracker): EqualityAsContainment = {
-    new EqualityAsContainment(tracker)
+object PrimedEqualityToMembership {
+  def apply(tracker: TransformationTracker): PrimedEqualityToMembership = {
+    new PrimedEqualityToMembership(tracker)
   }
 }
