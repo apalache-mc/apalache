@@ -44,11 +44,11 @@ class PreproPassImpl @Inject()( val options: PassOptions,
         renaming.syncAndNormalizeDs(tlaModule.get.declarations).toSeq
       ) ///
 
-    val bodyMap = BodyMapFactory.makeFromDecls( uniqueVarDecls.operDeclarations )
+    val defBodyMap = BodyMapFactory.makeFromDecls( uniqueVarDecls.operDeclarations )
 
     val transformationSequence : Vector[TlaExTransformation] =
       Vector(
-        Inline( bodyMap, tracker ),
+        Inline(defBodyMap, tracker),
         LetInExpander(tracker, keepNullary = true),
         Desugarer(tracker),
         PrimedEqualityToMembership(tracker),
