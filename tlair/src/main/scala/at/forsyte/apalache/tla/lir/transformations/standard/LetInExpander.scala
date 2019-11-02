@@ -13,7 +13,7 @@ import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
   *
   * @author Jure Kukovec
   */
-class ExplicitLetIn(tracker: TransformationTracker, keepNullary: Boolean) extends TlaExTransformation {
+class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean) extends TlaExTransformation {
   override def apply(ex: TlaEx) = transform(ex)
 
   def transform: TlaExTransformation = tracker.track {
@@ -53,8 +53,8 @@ class ExplicitLetIn(tracker: TransformationTracker, keepNullary: Boolean) extend
   }
 }
 
-object ExplicitLetIn {
-  def apply(tracker: TransformationTracker, keepNullary: Boolean): ExplicitLetIn = {
-    new ExplicitLetIn(tracker, keepNullary)
+object LetInExpander {
+  def apply(tracker: TransformationTracker, keepNullary: Boolean): LetInExpander = {
+    new LetInExpander(tracker, keepNullary)
   }
 }

@@ -49,7 +49,7 @@ class PreproPassImpl @Inject()( val options: PassOptions,
     val transformationSequence : Vector[TlaExTransformation] =
       Vector(
         Inline( bodyMap, tracker ),
-        ExplicitLetIn(tracker, keepNullary = true),
+        LetInExpander(tracker, keepNullary = true),
         Desugarer(tracker),
         PrimedEqualityToMembership(tracker),
         SimplifyRecordAccess(tracker)

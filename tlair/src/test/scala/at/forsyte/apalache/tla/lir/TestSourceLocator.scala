@@ -128,7 +128,7 @@ class TestSourceLocator extends FunSuite with TestingPredefs {
   }
 
   test( "Test ExplicitLetIn" ) {
-    val transformation = ExplicitLetIn( tracker, keepNullary = false )
+    val transformation = LetInExpander( tracker, keepNullary = false )
 
     testTransformation( transformation )
   }
