@@ -58,13 +58,29 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     assert(expected == sugarFree)
   }
 
+  test("""rewrite UNCHANGED <<x, y>> >> to x' = x /\ y' = y""") {
+    val unchanged = tla.unchangedTup(tla.name("x"), tla.tuple(tla.name("y")))
+    val sugarFree = desugarer.transform(unchanged)
+    val expected =
+      tla.and(
+        tla.eql(tla.prime(tla.name("x")), tla.name("x")),
+        tla.eql(tla.prime(tla.name("y")), tla.name("y"))
+      ) ///
+    assert(expected == sugarFree)
+  }
+
   test("unfold UNCHANGED <<x, <<y, z>> >> to UNCHANGED <<x, y, z>>") {
     // This is an idiom that was probably introduced by Diego Ongaro in Raft.
     // There is no added value in this construct, so it is just sugar.
     // So, we do the transformation right here.
     val unchanged = tla.unchangedTup(tla.name("x"), tla.tuple(tla.name("y"), tla.name("z")))
     val sugarFree = desugarer.transform(unchanged)
-    val expected = tla.unchangedTup(tla.name("x"), tla.name("y"), tla.name("z"))
+    val expected =
+      tla.and(
+        tla.eql(tla.prime(tla.name("x")), tla.name("x")),
+        tla.eql(tla.prime(tla.name("y")), tla.name("y")),
+        tla.eql(tla.prime(tla.name("z")), tla.name("z"))
+      ) ///
     assert(expected == sugarFree)
   }
 

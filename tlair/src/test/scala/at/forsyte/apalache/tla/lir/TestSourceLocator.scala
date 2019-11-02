@@ -133,12 +133,6 @@ class TestSourceLocator extends FunSuite with TestingPredefs {
     testTransformation( transformation )
   }
 
-  test( "Test ExplicitUnchanged" ) {
-    val transformation = ExplicitUnchanged( tracker )
-
-    testTransformation( transformation )
-  }
-
   test( "Test Flatten" ) {
     val transformation = Flatten( tracker )
 
