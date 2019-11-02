@@ -33,7 +33,7 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
     val inlined = ModuleByExTransformer( Inline( bodyMap, tracker ) )( uniqueVarDecls )
     val explLetIn = ModuleByExTransformer( ExplicitLetIn( tracker, keepNullary = false ) )( inlined )
     val afterDesugarer = ModuleByExTransformer(Desugarer(tracker)) (explLetIn)
-    val eac = ModuleByExTransformer( EqualityAsContainment( tracker ) )( afterDesugarer )
+    val eac = ModuleByExTransformer( PrimedEqualityToMembership( tracker ) )( afterDesugarer )
     val preprocessed = ModuleByExTransformer(  SimplifyRecordAccess( tracker ) ) (eac)
 
     findBodyOf( p_next, preprocessed.declarations : _* )

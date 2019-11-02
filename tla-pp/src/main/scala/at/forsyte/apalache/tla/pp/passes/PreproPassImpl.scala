@@ -51,7 +51,7 @@ class PreproPassImpl @Inject()( val options: PassOptions,
         Inline( bodyMap, tracker ),
         ExplicitLetIn( tracker, keepNullary = true ),
         Desugarer(tracker),
-        EqualityAsContainment(tracker),
+        PrimedEqualityToMembership(tracker),
         SimplifyRecordAccess(tracker)
       )
 
