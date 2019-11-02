@@ -53,6 +53,7 @@ class SimpleSkolemization @Inject()(
       () // stop here
   }
 
+  // TODO: move this transformation right before Keramelizer
   private def toNegatedForm : TlaExTransformation = tracker.track { rootExpr =>
     def nnf(neg: Boolean) : TlaExTransformation = tracker.track {
       case ValEx(TlaBool(b)) =>

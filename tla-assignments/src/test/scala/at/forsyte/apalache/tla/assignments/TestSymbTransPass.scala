@@ -23,12 +23,11 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
     val srcDB = new ChangeListener
 
     val tracker = TrackerWithListeners( srcDB )
-    val afterDesugarer = ModuleByExTransformer(Desugarer(tracker)) (fakeModule)
     val renaming = new IncrementalRenaming( tracker )
     val uniqueVarDecls =
       new TlaModule(
-        afterDesugarer.name,
-        renaming.syncAndNormalizeDs( afterDesugarer.declarations ).toSeq
+        fakeModule.name,
+        renaming.syncAndNormalizeDs( fakeModule.declarations ).toSeq
       )
 
     val bodyMap = BodyMapFactory.makeFromDecls( uniqueVarDecls.operDeclarations )
@@ -36,7 +35,8 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
     val explLetIn = ModuleByExTransformer( ExplicitLetIn( tracker, keepNullary = false ) )( inlined )
     val eac = ModuleByExTransformer( EqualityAsContainment( tracker ) )( explLetIn )
     val explUC = ModuleByExTransformer( ExplicitUnchanged( tracker ) )( eac )
-    val preprocessed = ModuleByExTransformer(  SimplifyRecordAccess( tracker ) )( explUC )
+    val simplified = ModuleByExTransformer(  SimplifyRecordAccess( tracker ) )( explUC )
+    val preprocessed = ModuleByExTransformer(Desugarer(tracker)) (simplified)
 
     new SymbolicTransitionExtractor(tracker)(preprocessed.declarations, p_next)
   }

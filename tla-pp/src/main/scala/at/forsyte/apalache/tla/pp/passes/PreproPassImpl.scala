@@ -35,32 +35,33 @@ class PreproPassImpl @Inject()( val options: PassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
-    logger.info("Running Desugarer")
-    val afterDesugarer = ModuleByExTransformer(Desugarer(tracker)) (tlaModule.get)
-    logger.info("Running KerAmelizer")
-    val keraSpec = ModuleByExTransformer(new Keramelizer(gen, tracker)) (afterDesugarer)
     logger.info("Renaming variables uniquely")
-    val renaming = new IncrementalRenaming( tracker )
+    val inModule = tlaModule.get
+    val renaming = new IncrementalRenaming(tracker)
     val uniqueVarDecls =
       new TlaModule(
-        keraSpec.name,
-        renaming.syncAndNormalizeDs(keraSpec.declarations).toSeq
+        inModule.name,
+        renaming.syncAndNormalizeDs(inModule.declarations).toSeq
       ) ///
 
     val bodyMap = BodyMapFactory.makeFromDecls( uniqueVarDecls.operDeclarations )
 
     val transformationSequence : List[TlaExTransformation] =
       List(
-        Inline( bodyMap, tracker ),
-        ExplicitLetIn( tracker, keepNullary = true ),
-        EqualityAsContainment( tracker ),
-        ExplicitUnchanged( tracker ),
-        SimplifyRecordAccess( tracker )
+        Inline(bodyMap, tracker),
+        ExplicitLetIn(tracker, keepNullary = true),
+        EqualityAsContainment(tracker),
+        ExplicitUnchanged(tracker), // TODO: move to Desugarer or Keramelizer?
+        Desugarer(tracker),
+        Keramelizer(gen, tracker),
+        SimplifyRecordAccess(tracker) // TODO: move to Desugarer o Keramelizer?
       )
 
-    logger.info("Applying standard transformations")
-    val preprocessed = transformationSequence.foldLeft( uniqueVarDecls ){
-      case (m,tr) => ModuleByExTransformer( tr )( m )
+    logger.info("Applying standard transformations...")
+    val preprocessed = transformationSequence.foldLeft(uniqueVarDecls){
+      case (m, tr) =>
+        logger.info("  > Applying %s".format(tr.getClass.getSimpleName))
+        ModuleByExTransformer(tr) (m)
     }
 
     val outdir = options.getOptionOrError("io", "outdir").asInstanceOf[Path]

@@ -2,18 +2,23 @@ package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.lir.transformations.standard.FlatLanguagePred
 
 /**
-  * A simplifier from TLA+ to KerA+.
+  * <p>A simplifier from TLA+ to KerA+. This transformation assumes that all operator definitions and internal
+  * let-definitions have been inlined.</p>
   *
-  * To get the idea about KerA+, check the paper at OOPSLA'19: TLA+ Model Checking Made Symbolic.
+  * <p>To get the idea about KerA+, check the paper at OOPSLA'19: TLA+ Model Checking Made Symbolic.<p>
   *
   * @author Igor Konnov
   */
 class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker) extends TlaExTransformation {
-  override def apply(ex: TlaEx) = transform(ex)
+  override def apply(expr: TlaEx): TlaEx = {
+    LanguageWatchdog(FlatLanguagePred()).check(expr)
+    transform(expr)
+  }
 
   /**
     * Transform an expression recursively, by rewriting some TLA+ expressions in KerA+.
@@ -67,5 +72,11 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker) exte
     case OperEx(TlaSetOper.setminus, setX, setY) =>
       val tempName = NameEx(gen.newName())
       tla.filter(tempName, setX, tla.not(tla.in(tempName, setY)))
+  }
+}
+
+object Keramelizer {
+  def apply(gen: UniqueNameGenerator, tracker: TransformationTracker): Keramelizer = {
+    new Keramelizer(gen, tracker)
   }
 }
