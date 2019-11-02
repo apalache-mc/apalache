@@ -1,44 +1,42 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
-import at.forsyte.apalache.tla.lir.{LetInEx, OperEx}
+import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.transformations._
 
+/**
+  * Replace every equality x' = e with x' \in {e}. This transformation is needed by the assignment solver,
+  * so we extracted it into an optional transformation.
+  */
+class EqualityAsContainment(tracker: TransformationTracker) extends TlaExTransformation {
+  override def apply(ex: TlaEx): TlaEx = {
+    transform(ex)
+  }
+
+  def transform: TlaExTransformation = tracker.track {
+    // interesting case
+    case OperEx(TlaOper.eq, lhs@OperEx(TlaActionOper.prime, NameEx(name)), rhs) =>
+      OperEx(TlaSetOper.in, lhs, OperEx(TlaSetOper.enumSet, rhs))
+
+    // standard recursive processing of composite operators and let-in definitions
+    case ex@LetInEx(body, defs@_*) =>
+      // Transform bodies of all op.defs
+      val newDefs = defs.map { x =>
+        x.copy(body = transform(x.body))
+      }
+      val newBody = transform(body)
+      if (defs == newDefs && body == newBody) ex else LetInEx(newBody, newDefs: _*)
+
+    case ex@OperEx(op, args@_*) =>
+      val newArgs = args map transform
+      if (args == newArgs) ex else OperEx(op, newArgs: _*)
+
+    case ex => ex
+  }
+}
+
 object EqualityAsContainment {
-  private def oneEqualityAsContainment( tracker : TransformationTracker ) : TlaExTransformation =
-    tracker.track {
-      case OperEx( TlaOper.eq, lhs@OperEx( TlaActionOper.prime, _ ), rhs ) =>
-        OperEx( TlaSetOper.in, lhs, OperEx( TlaSetOper.enumSet, rhs ) )
-      case e => e
-    }
-
-  /**
-    * Returns a transformation that replaces prime assignments with set membership.
-    *
-    * Example:
-    * x' = y --> x' \in {y}
-    */
-  def apply( tracker : TransformationTracker ) : TlaExTransformation = tracker.track { ex =>
-    val tr = oneEqualityAsContainment( tracker )
-    lazy val self = apply(tracker)
-    ex match {
-      case LetInEx( body, defs@_* ) =>
-        // Transform bodies of all op.defs
-        val newDefs = defs.map { x =>
-          x.copy(
-            body = self( x.body )
-          )
-        }
-        val newBody = self( body )
-        val retEx = if ( defs == newDefs && body == newBody ) ex else LetInEx( newBody, newDefs : _* )
-        tr( retEx )
-
-      case OperEx( op, args@_* ) =>
-        val newArgs = args map self
-        val newEx = if ( args == newArgs ) ex else OperEx( op, newArgs : _* )
-        tr( newEx )
-
-      case _ => tr( ex )
-    }
+  def apply(tracker: TransformationTracker): EqualityAsContainment = {
+    new EqualityAsContainment(tracker)
   }
 }

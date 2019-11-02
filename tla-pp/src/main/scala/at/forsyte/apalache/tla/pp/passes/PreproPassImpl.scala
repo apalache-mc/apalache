@@ -51,8 +51,8 @@ class PreproPassImpl @Inject()( val options: PassOptions,
         Inline( bodyMap, tracker ),
         ExplicitLetIn( tracker, keepNullary = true ),
         Desugarer(tracker),
-        EqualityAsContainment( tracker ),
-        SimplifyRecordAccess( tracker )
+        EqualityAsContainment(tracker),
+        SimplifyRecordAccess(tracker)
       )
 
     logger.info("Applying standard transformations")
