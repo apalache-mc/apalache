@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.transformations.impl._
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -241,7 +240,6 @@ class TestTransformations extends FunSuite with TestingPredefs {
 
   test( "Test Flatten" ) {
     val transformation = Flatten( Trackers.NoTracker )
-    val inSing : TlaEx => TlaEx = ExplicitUnchanged.inSingleton
 
     val pa1 = n_x -> n_x
     val pa2 = and( n_x, and( n_y, n_z ) ) -> and( n_x, n_y, n_z )
