@@ -42,7 +42,7 @@ class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean) extend
         }
 
       /** Inline the operators using the map of definitions */
-      Inline(bodyMap, tracker)(expandedLetIn)
+      InlinerOfUserOper(bodyMap, tracker)(expandedLetIn)
 
       // recursive processing of composite operators
     case ex@OperEx(op, args@_*) =>

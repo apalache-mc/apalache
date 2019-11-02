@@ -14,7 +14,7 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
   *
   * @author Jure Kukovec
   */
-class Inline(defBodyMap: BodyMap, tracker: TransformationTracker)
+class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker)
     extends TlaExTransformation {
 
   override def apply(expr: TlaEx): TlaEx = {
@@ -71,8 +71,8 @@ class Inline(defBodyMap: BodyMap, tracker: TransformationTracker)
   }
 }
 
-object Inline {
-  def apply(defBodyMap: BodyMap, tracker: TransformationTracker): Inline = {
-    new Inline(defBodyMap, tracker)
+object InlinerOfUserOper {
+  def apply(defBodyMap: BodyMap, tracker: TransformationTracker): InlinerOfUserOper = {
+    new InlinerOfUserOper(defBodyMap, tracker)
   }
 }
