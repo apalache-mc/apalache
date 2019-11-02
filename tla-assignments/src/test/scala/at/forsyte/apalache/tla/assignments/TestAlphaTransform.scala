@@ -22,20 +22,19 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
 
     val tracker = TrackerWithListeners( new ChangeListener )
 
-    val afterDesugarer = ModuleByExTransformer(Desugarer(tracker)) (fakeModule)
     val renaming = new IncrementalRenaming( tracker )
     val uniqueVarDecls =
       new TlaModule(
-        afterDesugarer.name,
-        renaming.syncAndNormalizeDs( afterDesugarer.declarations ).toSeq
+        fakeModule.name,
+        renaming.syncAndNormalizeDs( fakeModule.declarations ).toSeq
       )
 
     val bodyMap = BodyMapFactory.makeFromDecls( uniqueVarDecls.operDeclarations )
     val inlined = ModuleByExTransformer( Inline( bodyMap, tracker ) )( uniqueVarDecls )
     val explLetIn = ModuleByExTransformer( ExplicitLetIn( tracker, keepNullary = false ) )( inlined )
-    val eac = ModuleByExTransformer( EqualityAsContainment( tracker ) )( explLetIn )
-    val explUC = ModuleByExTransformer( ExplicitUnchanged( tracker ) )( eac )
-    val preprocessed = ModuleByExTransformer(  SimplifyRecordAccess( tracker ) )( explUC )
+    val afterDesugarer = ModuleByExTransformer(Desugarer(tracker)) (explLetIn)
+    val eac = ModuleByExTransformer( EqualityAsContainment( tracker ) )( afterDesugarer )
+    val preprocessed = ModuleByExTransformer(  SimplifyRecordAccess( tracker ) ) (eac)
 
     findBodyOf( p_next, preprocessed.declarations : _* )
   }

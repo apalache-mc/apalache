@@ -36,15 +36,13 @@ class PreproPassImpl @Inject()( val options: PassOptions,
     */
   override def execute(): Boolean = {
     val tracker : TransformationTracker = TrackerWithListeners( changeListener )
-    logger.info("de-sugaring the spec")
-    val afterDesugarer = ModuleByExTransformer(Desugarer(tracker)) (tlaModule.get)
     logger.info("Renaming variables uniquely")
     val renaming = new IncrementalRenaming( tracker )
     val uniqueVarDecls =
       new TlaModule(
-        afterDesugarer.name,
-        renaming.syncAndNormalizeDs( afterDesugarer.declarations ).toSeq
-      )
+        tlaModule.get.name,
+        renaming.syncAndNormalizeDs(tlaModule.get.declarations).toSeq
+      ) ///
 
     val bodyMap = BodyMapFactory.makeFromDecls( uniqueVarDecls.operDeclarations )
 
@@ -52,8 +50,8 @@ class PreproPassImpl @Inject()( val options: PassOptions,
       Vector(
         Inline( bodyMap, tracker ),
         ExplicitLetIn( tracker, keepNullary = true ),
+        Desugarer(tracker),
         EqualityAsContainment( tracker ),
-        ExplicitUnchanged( tracker ),
         SimplifyRecordAccess( tracker )
       )
 

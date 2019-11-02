@@ -36,8 +36,12 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
           expandExcept(fun, accessors, newValues)
         }
 
-      case OperEx(TlaActionOper.unchanged, tex @ OperEx(TlaFunOper.tuple, args @ _*)) =>
-        OperEx(TlaActionOper.unchanged, OperEx(TlaFunOper.tuple, flattenTuples(tex) :_*))
+      case OperEx(TlaActionOper.unchanged, args @ _*) =>
+        // flatten all tuples, e.g., convert <<x, <<y, z>> >> to [x, y, z]
+        val flatArgs = flattenTuples(tla.tuple(args :_*))
+        // and map every x to x' = x
+        val eqs = flatArgs map { x => tla.eql(tla.prime(x), x) }
+        tla.and(eqs :_*)
 
       case fex @ OperEx(TlaSetOper.filter, boundEx, setEx, predEx) =>
         OperEx(TlaSetOper.filter, collapseTuplesInFilter(boundEx, setEx, predEx) :_*)
@@ -59,7 +63,11 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
     case OperEx(TlaFunOper.tuple, args @ _*) =>
       args.map(flattenTuples).reduce(_ ++ _)
 
-    case _ => Seq(ex)
+    case NameEx(_) =>
+      Seq(ex)
+
+    case _ =>
+      throw new IllegalArgumentException("Expected a variable or a tuple of variables, found: " + ex)
   }
 
   private def expandExcept(topFun: TlaEx, accessors: Seq[TlaEx], newValues: Seq[TlaEx]): TlaEx = {
