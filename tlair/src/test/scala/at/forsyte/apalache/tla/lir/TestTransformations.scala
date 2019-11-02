@@ -141,7 +141,7 @@ class TestTransformations extends FunSuite with TestingPredefs {
   }
 
   test( "Test ExplicitLetIn, skip0Arity = false" ) {
-    val transformation = ExplicitLetIn( Trackers.NoTracker, keepNullary = false )
+    val transformation = LetInExpander( Trackers.NoTracker, keepNullary = false )
 
     val ex1 = n_x
     val ex2 = letIn( appOp( n_A ), declOp( "A", n_x ) )
@@ -178,7 +178,7 @@ class TestTransformations extends FunSuite with TestingPredefs {
   }
 
   test( "Test ExplicitLetIn, skip0Arity = true" ) {
-    val transformation = ExplicitLetIn( Trackers.NoTracker, keepNullary = true )
+    val transformation = LetInExpander( Trackers.NoTracker, keepNullary = true )
 
     val ex1 = n_x
     val ex2 = letIn( appOp( n_A ), declOp( "A", n_x ) )
