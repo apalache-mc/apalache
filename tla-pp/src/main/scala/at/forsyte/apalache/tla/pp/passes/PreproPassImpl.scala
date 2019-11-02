@@ -37,7 +37,7 @@ class PreproPassImpl @Inject()( val options: PassOptions,
   override def execute(): Boolean = {
     val tracker : TransformationTracker = TrackerWithListeners( changeListener )
     logger.info("Renaming variables uniquely")
-    val renaming = new IncrementalRenaming( tracker )
+    val renaming = new IncrementalRenaming(tracker)
     val uniqueVarDecls =
       new TlaModule(
         tlaModule.get.name,
@@ -49,7 +49,7 @@ class PreproPassImpl @Inject()( val options: PassOptions,
     val transformationSequence : Vector[TlaExTransformation] =
       Vector(
         Inline( bodyMap, tracker ),
-        ExplicitLetIn( tracker, keepNullary = true ),
+        ExplicitLetIn(tracker, keepNullary = true),
         Desugarer(tracker),
         PrimedEqualityToMembership(tracker),
         SimplifyRecordAccess(tracker)

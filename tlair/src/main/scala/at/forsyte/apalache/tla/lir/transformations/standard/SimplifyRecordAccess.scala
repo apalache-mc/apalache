@@ -13,7 +13,7 @@ import at.forsyte.apalache.tla.lir.values.TlaStr
   *
   * @param tracker a transformation tracker
   *
-  * @author Jure Kukovec, Igor Konnov
+  * @author Jure Kukovec
   */
 class SimplifyRecordAccess(tracker: TransformationTracker) extends TlaExTransformation {
   override def apply(ex: TlaEx) = transform(ex)

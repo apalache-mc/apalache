@@ -1,69 +1,60 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaOperDecl, aux}
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 
-object ExplicitLetIn {
+/**
+  * <p>A transformation which replaces all occurrences of LET-IN expressions with
+  * copies of their bodies, in which LET-IN defined operators have been expanded.
+  * If the `keepNullary` flag is set to true, only operators with strictly positive arity get expanded.</p>
+  *
+  * <p>Example: `LET X(a) == a + b IN X(0) > 1` becomes `1 + b > 1`. </p>
+  *
+  * @author Jure Kukovec
+  */
+class ExplicitLetIn(tracker: TransformationTracker, keepNullary: Boolean) extends TlaExTransformation {
+  override def apply(ex: TlaEx) = transform(ex)
 
-  import aux.hasPositiveArity
-
-  private def letInExplicitLeaf(
-                                 tracker : TransformationTracker,
-                                 keepNullary : Boolean
-                               ) : TlaExTransformation = tracker.track {
-    case LetInEx( body, defs@_* ) =>
-
-      val self = apply( tracker, keepNullary )
-      /** LET-IN may be nested in the body ...*/
-      val explicitBody = self( body )
+  def transform: TlaExTransformation = tracker.track {
+    // interesting case
+    case LetInEx(body, defs @ _*) =>
+      /** LET-IN may be nested in the body ... */
+      val expandedBody = transform(body)
 
       /** .. or another operator */
-      val explicitDefs = defs map { d =>
-        d.copy( body = self( d.body ) )
+      val expandedDefs = defs map { d =>
+        d.copy(body = transform(d.body))
       }
 
-      val filterFun : TlaOperDecl => Boolean =
-        if (keepNullary) hasPositiveArity
-        else { _ => true} //expand all
+      def needsExpansion(d: TlaOperDecl): Boolean = !keepNullary || d.formalParams.nonEmpty
 
-      val (defsToExpand, defsToKeep) = explicitDefs.partition( filterFun )
+      val (defsToExpand, defsToKeep) = expandedDefs.partition(needsExpansion)
 
-      /** Make a fresh temporary DB, store all selected defs inside */
-      val bodyDB = BodyMapFactory.makeFromDecls( defsToExpand )
+      /** create a map of definitions from the ones that have to be expanded */
+      val bodyMap = BodyMapFactory.makeFromDecls(defsToExpand)
 
-      val inlineThis =
-        if (defsToKeep.nonEmpty) LetInEx( explicitBody, defsToKeep : _* )
-        else explicitBody
+      val expandedLetIn =
+        if (defsToKeep.nonEmpty) {
+          LetInEx(expandedBody, defsToKeep: _*) // nullary definitions are still there
+        } else {
+          expandedBody                          // all definitions were expanded
+        }
 
-      /** Inline as if operators were external. */
-      Inline( bodyDB, tracker )( inlineThis )
+      /** Inline the operators using the map of definitions */
+      Inline(bodyMap, tracker)(expandedLetIn)
+
+      // recursive processing of composite operators
+    case ex@OperEx(op, args@_*) =>
+      val newArgs = args map transform
+      if (args == newArgs) ex else OperEx(op, newArgs: _*)
 
     case ex => ex
   }
+}
 
-  /**
-    * Returns a transformation which replaces all occurrences of LET-IN expressions with
-    * copies of their bodies, in which LET-IN defined operators have been expanded.
-    * If the `keepNullary` flag is set to true, only operators with strictly positive arity get expanded.
-    *
-    * Example:
-    * LET X(a) == a + b IN X(0) > 1 --> 1 + b > 1
-    */
-  def apply(
-             tracker : TransformationTracker,
-             keepNullary : Boolean
-           ) : TlaExTransformation = tracker.track { ex =>
-    val tr = letInExplicitLeaf( tracker, keepNullary )
-    lazy val self = apply( tracker, keepNullary )
-    ex match {
-      case _ : LetInEx =>
-        tr( ex )
-      case ex@OperEx( op, args@_* ) =>
-        val newArgs = args map self
-        val retEx = if ( args == newArgs ) ex else OperEx( op, newArgs : _* )
-        tr( retEx )
-      case _ => tr( ex )
-    }
+object ExplicitLetIn {
+  def apply(tracker: TransformationTracker, keepNullary: Boolean): ExplicitLetIn = {
+    new ExplicitLetIn(tracker, keepNullary)
   }
 }
