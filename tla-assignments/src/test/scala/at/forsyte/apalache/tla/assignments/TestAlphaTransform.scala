@@ -30,7 +30,7 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
       )
 
     val bodyMap = BodyMapFactory.makeFromDecls( uniqueVarDecls.operDeclarations )
-    val inlined = ModuleByExTransformer( Inline( bodyMap, tracker ) )( uniqueVarDecls )
+    val inlined = ModuleByExTransformer( InlinerOfUserOper( bodyMap, tracker ) )( uniqueVarDecls )
     val explLetIn = ModuleByExTransformer( LetInExpander( tracker, keepNullary = false ) )( inlined )
     val afterDesugarer = ModuleByExTransformer(Desugarer(tracker)) (explLetIn)
     val eac = ModuleByExTransformer( PrimedEqualityToMembership( tracker ) )( afterDesugarer )

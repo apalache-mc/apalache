@@ -48,7 +48,7 @@ class PreproPassImpl @Inject()( val options: PassOptions,
 
     val transformationSequence : Vector[TlaExTransformation] =
       Vector(
-        Inline(defBodyMap, tracker),
+        InlinerOfUserOper(defBodyMap, tracker),
         LetInExpander(tracker, keepNullary = true),
         Desugarer(tracker),
         PrimedEqualityToMembership(tracker),

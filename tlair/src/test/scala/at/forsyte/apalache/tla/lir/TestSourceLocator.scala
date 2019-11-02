@@ -146,7 +146,7 @@ class TestSourceLocator extends FunSuite with TestingPredefs {
   }
 
   test( "Test Inline" ) {
-    val transformation = Inline( bodyMap, tracker )
+    val transformation = InlinerOfUserOper( bodyMap, tracker )
 
     testTransformation( transformation )
   }

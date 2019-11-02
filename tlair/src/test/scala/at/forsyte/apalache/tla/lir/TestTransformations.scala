@@ -98,7 +98,7 @@ class TestTransformations extends FunSuite with TestingPredefs {
 
     val bodies = BodyMapFactory.makeFromDecls( operDecls )
 
-    val transformation = Inline( bodies, Trackers.NoTracker )
+    val transformation = InlinerOfUserOper( bodies, Trackers.NoTracker )
 
     val ex1 = n_B
     val ex2 = appOp( n_B )
