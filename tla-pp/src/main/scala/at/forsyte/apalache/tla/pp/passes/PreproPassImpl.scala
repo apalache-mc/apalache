@@ -35,7 +35,6 @@ class PreproPassImpl @Inject()( val options: PassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
-    val tracker : TransformationTracker = TrackerWithListeners( changeListener )
     logger.info("Renaming variables uniquely")
     val renaming = new IncrementalRenaming(tracker)
     val uniqueVarDecls =
@@ -53,7 +52,7 @@ class PreproPassImpl @Inject()( val options: PassOptions,
         Desugarer(tracker),
         Keramelizer(gen, tracker),
         PrimedEqualityToMembership(tracker),
-        SimplifyRecordAccess(tracker)
+        SimplifyRecordAccess(tracker) // TODO: this is an optimization, introduce an optimization pass after assignment solver
       )
 
     logger.info("Applying standard transformations...")
