@@ -40,8 +40,12 @@ class FlatLanguagePred extends LanguagePred {
           }
         }
 
-        val newLetDefs = defs.map(_.name).toSet
-        isOkInContext(newLetDefs, body)
+        if (!eachDefRec(letDefs, defs)) {
+          false
+        } else {
+          val newLetDefs = defs.map(_.name).toSet
+          isOkInContext(letDefs ++ newLetDefs, body)
+        }
 
       case OperEx(TlaOper.apply, NameEx(opName), args@_*) =>
         // the only allowed case is calling a nullary operator that was declared with let-in

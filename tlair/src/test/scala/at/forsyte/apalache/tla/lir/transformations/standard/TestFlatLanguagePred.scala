@@ -36,6 +36,18 @@ class TestFlatLanguagePred extends FunSuite {
     assert(pred.isExprOk(letIn))
   }
 
+  test("nested nullary let-in ") {
+    val app = tla.plus(tla.appOp(tla.name("A")), tla.appOp(tla.name("B")))
+    val letIn = tla.letIn(app,
+      tla.declOp("A",
+        tla.plus(tla.int(1), tla.int(2))))
+    val outerLetIn =
+      tla.letIn(letIn,
+        tla.declOp("B",
+          tla.int(3)))
+    assert(pred.isExprOk(outerLetIn))
+  }
+
   test("a call to a user operator in a module") {
     val appB = tla.appOp(tla.name("B"), tla.int(1))
     val defA = tla.declOp("A", appB)
