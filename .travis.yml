@@ -41,6 +41,7 @@ branches:
   only:
   - master
   - unstable
+  - feature/keramel
 
 script:
     - mvn package && NO_MVN=1 ./test/run-integration #&& NO_MVN=1 ./test/run-tlaplus-suite
