@@ -122,19 +122,13 @@ class TestSourceLocator extends FunSuite with TestingPredefs {
   }
 
   test( "Test EqualityAsContainment" ) {
-    val transformation = EqualityAsContainment( tracker )
+    val transformation = PrimedEqualityToMembership( tracker )
 
     testTransformation( transformation )
   }
 
   test( "Test ExplicitLetIn" ) {
-    val transformation = ExplicitLetIn( tracker, keepNullary = false )
-
-    testTransformation( transformation )
-  }
-
-  test( "Test ExplicitUnchanged" ) {
-    val transformation = ExplicitUnchanged( tracker )
+    val transformation = LetInExpander( tracker, keepNullary = false )
 
     testTransformation( transformation )
   }
@@ -152,7 +146,7 @@ class TestSourceLocator extends FunSuite with TestingPredefs {
   }
 
   test( "Test Inline" ) {
-    val transformation = Inline( bodyMap, tracker )
+    val transformation = InlinerOfUserOper( bodyMap, tracker )
 
     testTransformation( transformation )
   }

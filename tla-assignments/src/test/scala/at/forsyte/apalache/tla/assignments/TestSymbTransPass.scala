@@ -31,12 +31,11 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
       )
 
     val bodyMap = BodyMapFactory.makeFromDecls( uniqueVarDecls.operDeclarations )
-    val inlined = ModuleByExTransformer( Inline( bodyMap, tracker ) )( uniqueVarDecls )
-    val explLetIn = ModuleByExTransformer( ExplicitLetIn( tracker, keepNullary = false ) )( inlined )
-    val eac = ModuleByExTransformer( EqualityAsContainment( tracker ) )( explLetIn )
-    val explUC = ModuleByExTransformer( ExplicitUnchanged( tracker ) )( eac )
-    val simplified = ModuleByExTransformer(  SimplifyRecordAccess( tracker ) )( explUC )
-    val preprocessed = ModuleByExTransformer(Desugarer(tracker)) (simplified)
+    val inlined = ModuleByExTransformer( InlinerOfUserOper( bodyMap, tracker ) )( uniqueVarDecls )
+    val explLetIn = ModuleByExTransformer( LetInExpander( tracker, keepNullary = false ) )( inlined )
+    val afterDesugarer = ModuleByExTransformer(Desugarer(tracker)) (explLetIn)
+    val eac = ModuleByExTransformer( PrimedEqualityToMembership( tracker ) )(afterDesugarer)
+    val preprocessed = ModuleByExTransformer(  SimplifyRecordAccess( tracker ) )( eac )
 
     new SymbolicTransitionExtractor(tracker)(preprocessed.declarations, p_next)
   }

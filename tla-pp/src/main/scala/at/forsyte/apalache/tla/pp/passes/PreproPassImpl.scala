@@ -35,26 +35,25 @@ class PreproPassImpl @Inject()( val options: PassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
+    val tracker : TransformationTracker = TrackerWithListeners( changeListener )
     logger.info("Renaming variables uniquely")
-    val inModule = tlaModule.get
     val renaming = new IncrementalRenaming(tracker)
     val uniqueVarDecls =
       new TlaModule(
-        inModule.name,
-        renaming.syncAndNormalizeDs(inModule.declarations).toSeq
+        tlaModule.get.name,
+        renaming.syncAndNormalizeDs(tlaModule.get.declarations).toSeq
       ) ///
 
-    val bodyMap = BodyMapFactory.makeFromDecls( uniqueVarDecls.operDeclarations )
+    val defBodyMap = BodyMapFactory.makeFromDecls( uniqueVarDecls.operDeclarations )
 
-    val transformationSequence : List[TlaExTransformation] =
-      List(
-        Inline(bodyMap, tracker),
-        ExplicitLetIn(tracker, keepNullary = true),
-        EqualityAsContainment(tracker),
-        ExplicitUnchanged(tracker), // TODO: move to Desugarer or Keramelizer?
+    val transformationSequence : Vector[TlaExTransformation] =
+      Vector(
+        InlinerOfUserOper(defBodyMap, tracker),
+        LetInExpander(tracker, keepNullary = true),
         Desugarer(tracker),
         Keramelizer(gen, tracker),
-        SimplifyRecordAccess(tracker) // TODO: move to Desugarer o Keramelizer?
+        PrimedEqualityToMembership(tracker),
+        SimplifyRecordAccess(tracker)
       )
 
     logger.info("Applying standard transformations...")

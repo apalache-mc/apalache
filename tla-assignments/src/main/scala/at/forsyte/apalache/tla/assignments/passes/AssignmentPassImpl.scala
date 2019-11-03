@@ -77,7 +77,7 @@ class AssignmentPassImpl @Inject()( options: PassOptions,
     val primeTr = Prime( varSet, tracker )
     // We need an extra EqualityAsContainment, because priming
     // may change equality into asgn. candidates
-    val eacTr = EqualityAsContainment( tracker )
+    val eacTr = PrimedEqualityToMembership( tracker )
 
     // since Converter and assignmentSolver do a lot of magic internally, substitute Init with primed variables first
     def replaceInit(decl: TlaDecl): TlaDecl = decl match {

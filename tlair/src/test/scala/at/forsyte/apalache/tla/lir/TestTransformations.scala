@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.transformations.impl._
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -61,7 +60,7 @@ class TestTransformations extends FunSuite with TestingPredefs {
   }
 
   test( "Test EqualityAsContainment" ) {
-    val transformation = EqualityAsContainment( Trackers.NoTracker )
+    val transformation = PrimedEqualityToMembership( Trackers.NoTracker )
 
     val ex1 = primeEq( n_x, n_y )
     val ex2 = or( primeEq( n_x, n_y ), ge( prime( n_x ), int( 0 ) ) )
@@ -99,7 +98,7 @@ class TestTransformations extends FunSuite with TestingPredefs {
 
     val bodies = BodyMapFactory.makeFromDecls( operDecls )
 
-    val transformation = Inline( bodies, Trackers.NoTracker )
+    val transformation = InlinerOfUserOper( bodies, Trackers.NoTracker )
 
     val ex1 = n_B
     val ex2 = appOp( n_B )
@@ -141,7 +140,7 @@ class TestTransformations extends FunSuite with TestingPredefs {
   }
 
   test( "Test ExplicitLetIn, skip0Arity = false" ) {
-    val transformation = ExplicitLetIn( Trackers.NoTracker, keepNullary = false )
+    val transformation = LetInExpander( Trackers.NoTracker, keepNullary = false )
 
     val ex1 = n_x
     val ex2 = letIn( appOp( n_A ), declOp( "A", n_x ) )
@@ -178,7 +177,7 @@ class TestTransformations extends FunSuite with TestingPredefs {
   }
 
   test( "Test ExplicitLetIn, skip0Arity = true" ) {
-    val transformation = ExplicitLetIn( Trackers.NoTracker, keepNullary = true )
+    val transformation = LetInExpander( Trackers.NoTracker, keepNullary = true )
 
     val ex1 = n_x
     val ex2 = letIn( appOp( n_A ), declOp( "A", n_x ) )
@@ -239,36 +238,8 @@ class TestTransformations extends FunSuite with TestingPredefs {
     }
   }
 
-  test( "Test ExplicitUnchanged" ) {
-    val transformation = ExplicitUnchanged( Trackers.NoTracker )
-    val inSing : TlaEx => TlaEx = ExplicitUnchanged.inSingleton
-
-    val pa1 = n_x -> n_x
-    val pa2 = unchanged( n_x ) -> inSing( n_x )
-    val pa3 = and( n_x, unchanged( n_y ) ) -> and( n_x, inSing( n_y ) )
-    val pa4 = letIn(
-      appOp( NameEx( "X" ) ),
-      declOp( "X", unchanged( n_x ) )
-    ) -> letIn(
-      appOp( NameEx( "X" ) ),
-      declOp( "X", inSing( n_x ) )
-    )
-    val pa5 = unchangedTup( n_x, n_y ) -> and( inSing( n_x ), inSing( n_y ) )
-
-    val expected = Seq(
-      pa1, pa2, pa3, pa4, pa5
-    )
-    val cmp = expected map { case (k, v) =>
-      (v, transformation( k ))
-    }
-    cmp foreach { case (ex, act) =>
-      assert( ex == act )
-    }
-  }
-
   test( "Test Flatten" ) {
     val transformation = Flatten( Trackers.NoTracker )
-    val inSing : TlaEx => TlaEx = ExplicitUnchanged.inSingleton
 
     val pa1 = n_x -> n_x
     val pa2 = and( n_x, and( n_y, n_z ) ) -> and( n_x, n_y, n_z )
