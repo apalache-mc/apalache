@@ -7,9 +7,9 @@ import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
-import at.forsyte.apalache.tla.pp.{Desugarer, Keramelizer, UniqueNameGenerator}
+import at.forsyte.apalache.tla.pp.{Desugarer, Keramelizer, Normalizer, UniqueNameGenerator}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -35,37 +35,38 @@ class PreproPassImpl @Inject()( val options: PassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
-    logger.info("Renaming variables uniquely")
+    logger.info("Before preprocessing: unique renaming")
     val renaming = new IncrementalRenaming(tracker)
-    val uniqueVarDecls =
-      new TlaModule(
-        tlaModule.get.name,
-        renaming.syncAndNormalizeDs(tlaModule.get.declarations).toSeq
-      ) ///
+    val beforeModule = renaming.renameInModule(tlaModule.get)
+    val defBodyMap = BodyMapFactory.makeFromDecls(beforeModule.operDeclarations )
 
-    val defBodyMap = BodyMapFactory.makeFromDecls( uniqueVarDecls.operDeclarations )
-
-    val transformationSequence : Vector[TlaExTransformation] =
-      Vector(
+    val transformationSequence =
+      List(
         InlinerOfUserOper(defBodyMap, tracker),
         LetInExpander(tracker, keepNullary = true),
         Desugarer(tracker),
+        Normalizer(tracker),
         Keramelizer(gen, tracker),
         PrimedEqualityToMembership(tracker),
         SimplifyRecordAccess(tracker) // TODO: this is an optimization, introduce an optimization pass after assignment solver
       )
 
     logger.info("Applying standard transformations...")
-    val preprocessed = transformationSequence.foldLeft(uniqueVarDecls){
+    val preprocessed = transformationSequence.foldLeft(beforeModule){
       case (m, tr) =>
         logger.info("  > Applying %s".format(tr.getClass.getSimpleName))
         ModuleByExTransformer(tr) (m)
     }
 
-    val outdir = options.getOptionOrError("io", "outdir").asInstanceOf[Path]
-    PrettyWriter.write(preprocessed, new File(outdir.toFile, "out-prepro.tla"))
+    // unique renaming after all transformations
+    logger.info("After preprocessing: unique renaming")
+    val afterModule = renaming.renameInModule(preprocessed)
 
-    outputTlaModule = Some(preprocessed)
+    // dump the result of preprocessing
+    val outdir = options.getOptionOrError("io", "outdir").asInstanceOf[Path]
+    PrettyWriter.write(afterModule, new File(outdir.toFile, "out-prepro.tla"))
+
+    outputTlaModule = Some(afterModule)
     true
   }
 

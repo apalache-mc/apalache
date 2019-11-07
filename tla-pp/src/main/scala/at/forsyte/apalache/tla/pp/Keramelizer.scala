@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.standard.FlatLanguagePred
+import javax.inject.Singleton
 
 /**
   * <p>A simplifier from TLA+ to KerA+. This transformation assumes that all operator definitions and internal
@@ -14,6 +15,7 @@ import at.forsyte.apalache.tla.lir.transformations.standard.FlatLanguagePred
   *
   * @author Igor Konnov
   */
+@Singleton
 class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker) extends TlaExTransformation {
   override def apply(expr: TlaEx): TlaEx = {
     LanguageWatchdog(FlatLanguagePred()).check(expr)

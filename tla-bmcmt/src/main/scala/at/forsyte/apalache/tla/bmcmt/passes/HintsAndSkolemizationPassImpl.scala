@@ -18,6 +18,7 @@ import com.typesafe.scalalogging.LazyLogging
 /**
   * Find free-standing existential quantifiers and rename all local bindings, so they have unique names.
   *
+  * TODO: clean up this mess.
   */
 class HintsAndSkolemizationPassImpl @Inject()(val options: PassOptions,
                                               frexStoreImpl: FreeExistentialsStoreImpl,
@@ -79,33 +80,28 @@ class HintsAndSkolemizationPassImpl @Inject()(val options: PassOptions,
     val notInvDeclOpt = ModuleManipulator.optionalOperDecl( s"$renamingPrefix$notInvDefaultName", notInvRenamed )
     val notInvPDeclOpt = ModuleManipulator.optionalOperDecl( s"$renamingPrefix$notInvPrimeDefaultName", notInvPrimeRenamed )
 
+    // TODO: skolemization should be free of side effects. It simply finds expressions that could be skolemized.
     val skolem = new SimpleSkolemization(frexStoreImpl, tracker)
-    val tr = skolem.transform( renaming ) _
-    val newInitDecls = tr(initDecls)
-    val newNextDecls = tr(nextDecls)
-    val newCInitDeclOpt = tr(cinitDeclOpt)
-    val newNotInvDeclOpt = tr(notInvDeclOpt)
-    val newNotInvPDeclOpt = tr(notInvPDeclOpt)
 
-    val newDecls = newCInitDeclOpt ++ newNotInvDeclOpt ++ newNotInvPDeclOpt ++ newInitDecls ++ newNextDecls
+    val newDecls = cinitDeclOpt ++ notInvDeclOpt ++ notInvPDeclOpt ++ initDecls ++ nextDecls
     val normalizedDecls = renaming.normalizeDs( newDecls )
     skolem.label( normalizedDecls )
 
     logger.debug("Transitions after renaming and skolemization")
-    for ((t, i) <- newInitDecls.asInstanceOf[Seq[TlaOperDecl]].zipWithIndex) {
+    for ((t, i) <- initDecls.asInstanceOf[Seq[TlaOperDecl]].zipWithIndex) {
       val stringWriter = new StringWriter()
       new PrettyWriter(new PrintWriter(stringWriter)).write(t.body)
       logger.debug("Initial transition #%d:\n%s".format(i, stringWriter.toString))
     }
-    for ((t, i) <- newNextDecls.asInstanceOf[Seq[TlaOperDecl]].zipWithIndex) {
+    for ((t, i) <- nextDecls.asInstanceOf[Seq[TlaOperDecl]].zipWithIndex) {
       val stringWriter = new StringWriter()
       new PrettyWriter(new PrintWriter(stringWriter)).write(t.body)
       logger.debug("Next transition #%d:\n   %s".format(i, stringWriter.toString))
     }
-    logger.debug("Negated invariant:\n   %s".format(newNotInvDeclOpt))
+    logger.debug("Negated invariant:\n   %s".format(notInvDeclOpt))
 
     val hintFinder = new HintFinder(hintsStoreImpl)
-    hintFinder.findHints((newInitDecls ++ newNextDecls).asInstanceOf[Seq[TlaOperDecl]].map(_.body))
+    hintFinder.findHints((initDecls ++ nextDecls).asInstanceOf[Seq[TlaOperDecl]].map(_.body))
     val newModule = new TlaModule(module.name,
       module.constDeclarations ++ module.varDeclarations ++ normalizedDecls.toSeq ++ module.assumeDeclarations)
     nextPass.setModule(newModule)

@@ -3,9 +3,14 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.transformations.impl.Lift
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation, TransformationTracker}
 
 import scala.collection.immutable.HashMap
+
+// Igor @ 07.11.2019: refactoring needed
+// TODO: move object after class
+// TODO: move private methods after the public methods
+// TODO: add comments
 
 object IncrementalRenaming {
   private val separator : String = "$"
@@ -119,6 +124,13 @@ class IncrementalRenaming( tracker : TransformationTracker ) extends TlaExTransf
   import IncrementalRenaming._
 
   private var nameCounters : Map[String, Int] = HashMap.empty[String, Int]
+
+  /**
+    * Incrementally rename all declarations in a module, so every variable is declared only once.
+    */
+  def renameInModule: TlaModuleTransformation = {
+    mod => new TlaModule(mod.name, syncAndNormalizeDs(mod.declarations).toSeq)
+  }
 
   /**
     * Generates the next unique name with the given base.
@@ -362,7 +374,5 @@ class IncrementalRenaming( tracker : TransformationTracker ) extends TlaExTransf
     syncFromDs( ds )
     normalizeDs( applyToDecls( ds ) )
   }
-
-
 
 }
