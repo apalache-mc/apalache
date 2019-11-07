@@ -134,16 +134,32 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
       }
 
     case ex @ OperEx(TlaTempOper.leadsTo, _*) =>
-      throw new UnexpectedLanguageError("Negation of ~> is not implemented: " + ex)
+      if (!neg) {
+        ex
+      } else {
+        throw new UnexpectedLanguageError("Negation of ~> is not implemented: " + ex)
+      }
 
     case ex @ OperEx(TlaTempOper.guarantees, _*) =>
-      throw new UnexpectedLanguageError("Negation of -+-> is not implemented: " + ex)
+      if (!neg) {
+        ex
+      } else {
+        throw new UnexpectedLanguageError("Negation of -+-> is not implemented: " + ex)
+      }
 
     case ex @ OperEx(TlaTempOper.weakFairness, _*) =>
-      throw new UnexpectedLanguageError("Negation of WF is not implemented: " + ex)
+      if (!neg) {
+        ex
+      } else {
+        throw new UnexpectedLanguageError("Negation of WF is not implemented: " + ex)
+      }
 
     case ex @ OperEx(TlaTempOper.strongFairness, _*) =>
-      throw new UnexpectedLanguageError("Negation of SF is not implemented: " + ex)
+      if (!neg) {
+        ex
+      } else {
+        throw new UnexpectedLanguageError("Negation of SF is not implemented: " + ex)
+      }
 
     case LetInEx(body, defs@_*) =>
       if (neg) {
