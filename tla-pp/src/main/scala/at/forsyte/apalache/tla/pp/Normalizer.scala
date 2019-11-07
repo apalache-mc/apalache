@@ -119,6 +119,32 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
     case OperEx(TlaOper.label, subex, args@_*) =>
       OperEx(TlaOper.label, nnf(neg)(subex) +: args: _*)
 
+    case ex @ OperEx(TlaTempOper.diamond, args @ _*) =>
+      if (!neg) {
+        ex
+      } else {
+        OperEx(TlaTempOper.box, args map nnf(true) :_*)
+      }
+
+    case ex @ OperEx(TlaTempOper.box, args @ _*) =>
+      if (!neg) {
+        ex
+      } else {
+        OperEx(TlaTempOper.box, args map nnf(true) :_*)
+      }
+
+    case ex @ OperEx(TlaTempOper.leadsTo, _*) =>
+      throw new UnexpectedLanguageError("Negation of ~> is not implemented: " + ex)
+
+    case ex @ OperEx(TlaTempOper.guarantees, _*) =>
+      throw new UnexpectedLanguageError("Negation of -+-> is not implemented: " + ex)
+
+    case ex @ OperEx(TlaTempOper.weakFairness, _*) =>
+      throw new UnexpectedLanguageError("Negation of WF is not implemented: " + ex)
+
+    case ex @ OperEx(TlaTempOper.strongFairness, _*) =>
+      throw new UnexpectedLanguageError("Negation of SF is not implemented: " + ex)
+
     case LetInEx(body, defs@_*) =>
       if (neg) {
         // a negation of the let body
@@ -130,6 +156,10 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
         }
         LetInEx(transform(body), defs map transformDef :_*)
       }
+
+    case OperEx(oper, args @ _*) =>
+      // a non-Boolean operator, simply transform its arguments, which may be Boolean
+      OperEx(oper, args map transform :_*)
 
     case expr =>
       if (!neg) {
