@@ -47,7 +47,7 @@ class PreproPassImpl @Inject()( val options: PassOptions,
         Desugarer(tracker),
         Normalizer(tracker),
         Keramelizer(gen, tracker),
-        PrimedEqualityToMembership(tracker),
+        PrimedEqualityToMembership(tracker), // transform x' = e to x' \in {e}, needed by the assignment solver
         SimplifyRecordAccess(tracker) // TODO: this is an optimization, introduce an optimization pass after assignment solver
       )
 

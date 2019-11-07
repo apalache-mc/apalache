@@ -27,8 +27,8 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
     case ValEx(TlaBool(b)) =>
       tla.bool(b ^ neg)
 
-    case ex@ValEx(_) =>
-      throw new UnexpectedLanguageError("Negation should not propagate to a non-boolean constant: " + ex)
+    case vex @ ValEx(_) =>
+      vex // this may be called when processing a non-Boolean expression
 
     case ex@NameEx(_) =>
       if (neg) tla.not(ex) else ex
@@ -120,7 +120,16 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
       OperEx(TlaOper.label, nnf(neg)(subex) +: args: _*)
 
     case LetInEx(body, defs@_*) =>
-      nnfLetIn(neg, body, defs)
+      if (neg) {
+        // a negation of the let body
+        nnfLetIn(neg, body, defs)
+      } else {
+        // no negation, simply normalize the body and the bodies of the definitions
+        def transformDef(decl: TlaOperDecl): TlaOperDecl = {
+          TlaOperDecl(decl.name, decl.formalParams, transform(decl.body))
+        }
+        LetInEx(transform(body), defs map transformDef :_*)
+      }
 
     case expr =>
       if (!neg) {
