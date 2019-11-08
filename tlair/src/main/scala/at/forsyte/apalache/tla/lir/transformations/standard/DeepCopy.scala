@@ -1,28 +1,35 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
-import at.forsyte.apalache.tla.lir.{LetInEx, OperEx}
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 
-object DeepCopy {
+class DeepCopy(tracker: TransformationTracker) extends TlaExTransformation {
+  override def apply(expr: TlaEx): TlaEx = {
+    transform(expr)
+  }
+
   /**
     * Calls deep copy in a way that sets up tracking between every replacement (not just top-level)
     */
-  def apply( tracker : TransformationTracker ) : TlaExTransformation = tracker.track { ex =>
-    lazy val self = apply( tracker )
-    ex match {
-      case LetInEx( body, defs@_* ) =>
-        // Transform bodies of all op.defs
-        val newDefs = defs.map { x =>
-          x.copy(
-            body = self( x.body )
-          )
-        }
-        LetInEx( self( body ), newDefs : _* )
+  def transform: TlaExTransformation = tracker.track {
+    case LetInEx(body, defs@_*) =>
+      // Transform bodies of all op.defs
+      val newDefs = defs.map { x =>
+        x.copy(
+          body = transform(x.body)
+        )
+      }
+      LetInEx(transform(body), newDefs: _*)
 
-      case OperEx( op, args@_* ) =>
-        OperEx( op, args map self : _* )
+    case OperEx(op, args@_*) =>
+      OperEx(op, args map transform: _*)
 
-      case _ => ex.deepCopy()
-    }
+    case ex => ex.deepCopy()
+  }
+}
+
+object DeepCopy {
+  def apply(tracker: TransformationTracker): DeepCopy = {
+    new DeepCopy(tracker)
   }
 }
