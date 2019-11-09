@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
-import at.forsyte.apalache.tla.pp.{ExprOptimizer, UniqueNameGenerator}
+import at.forsyte.apalache.tla.pp.{ConstSimplifier, ExprOptimizer, UniqueNameGenerator}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -46,7 +46,8 @@ class OptPassImpl @Inject()(val options: PassOptions,
 
     val transformationSequence =
       List(
-        ExprOptimizer(tracker)
+        ExprOptimizer(tracker),
+        ConstSimplifier(tracker)
       ) ///
 
     logger.info(" > Applying optimizations:")

@@ -29,7 +29,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
   var nIntConsts: Int = 0
   private val z3context: Context = new Context()
   private val z3solver = z3context.mkSolver()
-  private val simplifier = new ConstSimplifier()
+  private val simplifier = new ConstSimplifierForSmt()
   private var smtListener: SmtListener = new FruitlessSmtListener()
 
   /**

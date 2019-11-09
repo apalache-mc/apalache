@@ -15,7 +15,7 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
   */
 class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val pickFrom = new CherryPick(rewriter)
-  private val simplifier = new ConstSimplifier()
+  private val simplifier = new ConstSimplifierForSmt()
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {

@@ -16,7 +16,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
   * @author Igor Konnov
   */
 class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val simplifier = new ConstSimplifier()
+  private val simplifier = new ConstSimplifierForSmt()
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {

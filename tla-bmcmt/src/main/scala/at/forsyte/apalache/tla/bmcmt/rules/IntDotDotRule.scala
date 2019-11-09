@@ -14,7 +14,7 @@ import at.forsyte.apalache.tla.lir.values.TlaInt
    */
 class IntDotDotRule(rewriter: SymbStateRewriter,
                     intRangeCache: IntRangeCache) extends RewritingRule {
-  private def simplifier = new ConstSimplifier()
+  private def simplifier = new ConstSimplifierForSmt()
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {

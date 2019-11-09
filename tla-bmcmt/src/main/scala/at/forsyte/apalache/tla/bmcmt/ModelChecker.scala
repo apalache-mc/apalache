@@ -235,7 +235,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
     logger.info("Step %d, level %d: collecting %d enabled transition(s)"
       .format(stepNo, rewriter.contextLevel, transWithEnabled.count(_._2)))
     assert(transWithEnabled.nonEmpty)
-    val simplifier = new ConstSimplifier()
+    val simplifier = new ConstSimplifierForSmt()
 
     def applyTrans(state: SymbState, ts: List[((TlaEx, Int), Boolean)]): List[SymbState] =
       ts match {

@@ -37,7 +37,7 @@ object PreproSolverContext {
   * @author Igor Konnov
   */
 class PreproSolverContext(context: SolverContext) extends SolverContext {
-  private val simplifier = new ConstSimplifier()
+  private val simplifier = new ConstSimplifierForSmt()
   // FIXME: it would be much better to use cells here, but we do not have access to the arena
   private val cache: SimpleCache[(String, String), CacheEntry] = new SimpleCache()
 

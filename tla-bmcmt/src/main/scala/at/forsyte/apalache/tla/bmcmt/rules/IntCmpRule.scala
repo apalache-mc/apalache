@@ -13,7 +13,7 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
   * @author Igor Konnov
   */
 class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val simplifier = new ConstSimplifier()
+  private val simplifier = new ConstSimplifierForSmt()
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {

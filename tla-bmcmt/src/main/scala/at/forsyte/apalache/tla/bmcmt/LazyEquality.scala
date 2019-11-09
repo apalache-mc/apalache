@@ -13,7 +13,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
   * @author Igor Konnov
   */
 class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
-  private val simplifier = new ConstSimplifier
+  private val simplifier = new ConstSimplifierForSmt
 
   private val eqCache = new EqCache(NameEx(SolverContext.falseConst),
     NameEx(SolverContext.trueConst))

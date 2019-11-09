@@ -1,72 +1,47 @@
-package at.forsyte.apalache.tla.bmcmt
+package at.forsyte.apalache.tla.pp
 
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
+import at.forsyte.apalache.tla.lir.transformations.standard.FlatLanguagePred
+import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 
 /**
   * A simplifier of constant TLA+ expressions, e.g., rewriting 1 + 2 to 3.
   *
   * @author Igor Konnov
   */
-class ConstSimplifier {
-  def isFalseConst(ex: TlaEx): Boolean = {
-    ex match {
-      case ValEx(TlaBool(false)) => true
-      case NameEx(name) => name == SolverContext.falseConst || name == Arena.falseName
-      case _ => false
-    }
+class ConstSimplifier(tracker: TransformationTracker) extends TlaExTransformation {
+  override def apply(expr: TlaEx): TlaEx = {
+    LanguageWatchdog(FlatLanguagePred()).check(expr)
+    simplify(expr)
   }
-
-  def isTrueConst(ex: TlaEx): Boolean = {
-    ex match {
-      case ValEx(TlaBool(true)) => true
-      case NameEx(name) => name == SolverContext.trueConst || name == Arena.trueName
-      case _ => false
-    }
-  }
-
-  def isBoolConst(ex: TlaEx): Boolean = isFalseConst(ex) || isTrueConst(ex)
 
   def simplify(rootExpr: TlaEx): TlaEx = {
-    def rewriteDeep(ex: TlaEx): TlaEx = ex match {
-      case NameEx(_) | ValEx(_) =>
-        if (isFalseConst(ex)) {
-          ValEx(TlaBool(false))
-        } else if (isTrueConst(ex)) {
-          ValEx(TlaBool(true))
-        } else {
-          ex
-        }
-
-      // do not go in tla.in and tla.notin, as it breaks down our SMT encoding
-      // same for type annotations, if the simplifier introduces new expressions, type annotations may be broken
-      case OperEx(TlaSetOper.in, _*) | OperEx(TlaSetOper.notin, _*) | OperEx(BmcOper.withType, _*) => ex
-
-      case OperEx(oper, args @ _*) =>
-        simplifyShallow(OperEx(oper, args map rewriteDeep :_*))
-
-      // TODO: process LetInEx
-
-      case _ =>
-        ex
-    }
-
     rewriteDeep(rootExpr)
   }
 
-  def simplifyShallow(ex: TlaEx): TlaEx = ex match {
-    case NameEx(_) | ValEx(_) =>
-      if (isFalseConst(ex)) {
-        ValEx(TlaBool(false))
-      } else if (isTrueConst(ex)) {
-        ValEx(TlaBool(true))
-      } else {
-        ex
-      }
+  private def rewriteDeep: TlaExTransformation = tracker.track {
+    case ex @ ValEx(_) => ex
 
-    // do not go in tla.in and tla.notin, as it breaks down our SMT encoding
-    case OperEx(TlaSetOper.in, _*) | OperEx(TlaSetOper.notin, _*) | OperEx(BmcOper.withType, _*) => ex
+    case ex @ NameEx(_) => ex
+
+    case OperEx(oper, args @ _*) =>
+      simplifyShallow(OperEx(oper, args map rewriteDeep :_*))
+
+    case LetInEx(body, defs @ _*) =>
+      val newDefs = defs.map {
+        d => TlaOperDecl(d.name, d.formalParams, simplify(d.body))
+      }
+      LetInEx(simplify(body), newDefs :_*)
+
+    case ex => ex
+  }
+
+  private def simplifyShallow(ex: TlaEx): TlaEx = ex match {
+    case ValEx(_) => ex
+
+    case NameEx(_) => ex
 
     // integer operations
     case OperEx(TlaArithOper.plus, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
@@ -189,10 +164,10 @@ class ConstSimplifier {
       }
 
       // many ite expressions can be simplified like this
-    case OperEx(TlaControlOper.ifThenElse, pred, thenEx, _) if isTrueConst(pred) =>
+    case OperEx(TlaControlOper.ifThenElse, ValEx(TlaBool(true)), thenEx, _) =>
       thenEx
 
-    case OperEx(TlaControlOper.ifThenElse, pred, _, elseEx) if isFalseConst(pred) =>
+    case OperEx(TlaControlOper.ifThenElse, pred, ValEx(TlaBool(false)), elseEx) =>
       elseEx
 
     case ite @ OperEx(TlaControlOper.ifThenElse, _, thenEx, elseEx) =>
@@ -212,5 +187,8 @@ class ConstSimplifier {
     case _ =>
       ex
   }
+}
 
+object ConstSimplifier {
+  def apply(tracker: TransformationTracker): ConstSimplifier = new ConstSimplifier(tracker)
 }

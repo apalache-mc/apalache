@@ -24,7 +24,7 @@ class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     val falseConst = SolverContext.falseConst
     val trueConst = SolverContext.trueConst
-    val simplfier = new ConstSimplifier()
+    val simplfier = new ConstSimplifierForSmt()
     simplfier.simplifyShallow(state.ex) match {
       case OperEx(TlaBoolOper.or, args @ _*) =>
         val finalState =

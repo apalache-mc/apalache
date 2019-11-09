@@ -12,7 +12,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
   */
 class ImplRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val substRule = new SubstRule(rewriter)
-  private val simplifier = new ConstSimplifier()
+  private val simplifier = new ConstSimplifierForSmt()
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
