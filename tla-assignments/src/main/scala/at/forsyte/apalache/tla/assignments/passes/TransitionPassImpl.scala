@@ -46,22 +46,22 @@ class TransitionPassImpl @Inject()(options: PassOptions,
     val initOperName = options.getOrElse("checker", "init", "Init")
     val initOperNamePrimed = initOperName + "Primed"
     val initDeclarations = extractTransitions(inModule, initOperNamePrimed, NormalizedNames.INIT_PREFIX)
-    logger.info(s"Found ${initDeclarations.size} initializing transitions")
+    logger.info(s"  > Found ${initDeclarations.size} initializing transitions")
 
     // extract transitions from Next
     val nextOperName = options.getOrElse("checker", "next", "Next")
     val nextDeclarations = extractTransitions(inModule, nextOperName, NormalizedNames.NEXT_PREFIX)
-    logger.info(s"Found ${nextDeclarations.size} transitions")
+    logger.info(s"  > Found ${nextDeclarations.size} transitions")
 
     // convert an optional CInit operator
     val cinitDeclarations =
       options.get[String]("checker", "cinit") match {
         case None =>
-          logger.info(s"No constant initializer")
+          logger.info(s"  > No constant initializer")
           Seq()
 
         case Some(cinitName) =>
-          logger.info(s"Found constant initializer $cinitName")
+          logger.info(s"  > Found constant initializer $cinitName")
           val cinitEx = findBodyOf(cinitName + "Primed", inModule.operDeclarations :_*)
           Seq(ModuleAdapter.exprToOperDef(NormalizedNames.CONST_INIT, cinitEx))
       }
@@ -71,7 +71,7 @@ class TransitionPassImpl @Inject()(options: PassOptions,
     val newDecls = inModule.constDeclarations ++ inModule.varDeclarations ++ inModule.assumeDeclarations ++
       cinitDeclarations ++ initDeclarations ++ nextDeclarations ++ vcDeclarations
 
-    logger.info(s"Applying unique renaming")
+    logger.info(s"  > Applying unique renaming")
     val outModule = incrementalRenaming.renameInModule(new TlaModule(inModule.name, newDecls))
 
     // print the resulting module
