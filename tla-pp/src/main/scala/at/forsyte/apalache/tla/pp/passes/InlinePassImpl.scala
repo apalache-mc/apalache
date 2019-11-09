@@ -15,18 +15,19 @@ import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
 /**
-  * A preprocessing pass that simplifies TLA+ expression by running multiple transformation.
+  * A pass that expands operators and let-in definitions.
+  *
   * @param options pass options
   * @param gen name generator
   * @param tracker transformation tracker
   * @param nextPass next pass to call
   */
-class PreproPassImpl @Inject()( val options: PassOptions,
-                                gen: UniqueNameGenerator,
-                                renaming: IncrementalRenaming,
-                                tracker: TransformationTracker,
-                                @Named("AfterPrepro") nextPass: Pass with TlaModuleMixin)
-    extends PreproPass with LazyLogging {
+class InlinePassImpl @Inject()(val options: PassOptions,
+                               gen: UniqueNameGenerator,
+                               renaming: IncrementalRenaming,
+                               tracker: TransformationTracker,
+                               @Named("AfterInline") nextPass: Pass with TlaModuleMixin)
+    extends InlinePass with LazyLogging {
 
   private var outputTlaModule: Option[TlaModule] = None
 
@@ -35,7 +36,7 @@ class PreproPassImpl @Inject()( val options: PassOptions,
     *
     * @return the name associated with the pass
     */
-  override def name: String = "PreprocessingPass"
+  override def name: String = "InlinePass"
 
   /**
     * Run the pass.
@@ -43,34 +44,26 @@ class PreproPassImpl @Inject()( val options: PassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
-    logger.info("  > Before preprocessing: unique renaming")
-    val beforeModule = renaming.renameInModule(tlaModule.get)
-    val defBodyMap = BodyMapFactory.makeFromDecls(beforeModule.operDeclarations )
+    val module = tlaModule.get
+    val defBodyMap = BodyMapFactory.makeFromDecls(module.operDeclarations)
 
     val transformationSequence =
       List(
-        Desugarer(tracker),
-        Normalizer(tracker),
-        Keramelizer(gen, tracker),
-        PrimedEqualityToMembership(tracker) // transform x' = e to x' \in {e}, needed by the assignment solver
+        InlinerOfUserOper(defBodyMap, tracker),
+        LetInExpander(tracker, keepNullary = true)
       )
 
-    logger.info(" > Applying standard transformations:")
-    val preprocessed = transformationSequence.foldLeft(beforeModule){
+    val inlined = transformationSequence.foldLeft(module){
       case (m, tr) =>
         logger.info("  > %s".format(tr.getClass.getSimpleName))
         ModuleByExTransformer(tr) (m)
     }
 
-    // unique renaming after all transformations
-    logger.info("  > After preprocessing: unique renaming")
-    val afterModule = renaming.renameInModule(preprocessed)
-
     // dump the result of preprocessing
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    PrettyWriter.write(afterModule, new File(outdir.toFile, "out-prepro.tla"))
+    PrettyWriter.write(inlined, new File(outdir.toFile, "out-inline.tla"))
 
-    outputTlaModule = Some(afterModule)
+    outputTlaModule = Some(inlined)
     true
   }
 

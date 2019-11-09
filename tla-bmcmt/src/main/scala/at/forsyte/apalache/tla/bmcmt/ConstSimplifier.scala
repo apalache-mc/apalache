@@ -46,6 +46,8 @@ class ConstSimplifier {
       case OperEx(oper, args @ _*) =>
         simplifyShallow(OperEx(oper, args map rewriteDeep :_*))
 
+      // TODO: process LetInEx
+
       case _ =>
         ex
     }
