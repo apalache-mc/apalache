@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.config
 
 import at.forsyte.apalache.infra.passes._
-import at.forsyte.apalache.tla.assignments.passes.{AssignmentPass, AssignmentPassImpl}
+import at.forsyte.apalache.tla.assignments.passes.{TransitionPass, TransitionPassImpl, PrimingPass, PrimingPassImpl}
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.passes._
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
@@ -50,35 +50,41 @@ class CheckerModule extends AbstractModule {
     bind(classOf[Pass])
       .annotatedWith(Names.named("InitialPass"))
       .to(classOf[SanyParserPass])
+    // the next pass is PrimingPass
+    bind(classOf[PrimingPass])
+      .to(classOf[PrimingPassImpl])
+    bind(classOf[Pass])
+      .annotatedWith(Names.named("AfterParser"))
+      .to(classOf[PrimingPass])
+    // the next pass is VCGenPass
+    bind(classOf[VCGenPass])
+      .to(classOf[VCGenPassImpl])
+    bind(classOf[Pass])
+      .annotatedWith(Names.named("AfterPriming"))
+      .to(classOf[VCGenPass])
     // the next pass after SanyParserPass is PreproPass
     bind(classOf[PreproPass])
       .to(classOf[PreproPassImpl])
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterParser"))
+      .annotatedWith(Names.named("AfterVCGen"))
       .to(classOf[PreproPass])
     // the next pass after PreproPass is AssignmentPass
-    bind(classOf[AssignmentPass])
-      .to(classOf[AssignmentPassImpl])
+    bind(classOf[TransitionPass])
+      .to(classOf[TransitionPassImpl])
     bind(classOf[Pass])
       .annotatedWith(Names.named("AfterPrepro"))
-      .to(classOf[AssignmentPass])
-    // the next pass after AssignmentPass is GradePass
-    bind(classOf[GradePass])
-      .to(classOf[GradePassImpl])
+      .to(classOf[TransitionPass])
+    // the next pass after AssignmentPass is AnalysisPass
+    bind(classOf[AnalysisPass])
+      .to(classOf[AnalysisPassImpl])
     bind(classOf[Pass])
       .annotatedWith(Names.named("AfterAssignment"))
-      .to(classOf[GradePass])
-    // the next pass after GradePass is SimpleSkolemizationPass
-    bind(classOf[HintsAndSkolemizationPass])
-      .to(classOf[HintsAndSkolemizationPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterGrade"))
-      .to(classOf[HintsAndSkolemizationPass])
+      .to(classOf[AnalysisPass])
     // the next pass after SimpleSkolemizationPass is BoundedCheckerPass
     bind(classOf[BoundedCheckerPass])
       .to(classOf[BoundedCheckerPassImpl])
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterSkolem"))
+      .annotatedWith(Names.named("AfterAnalysis"))
       .to(classOf[BoundedCheckerPass])
     // the final pass is TerminalPass
     bind(classOf[Pass])

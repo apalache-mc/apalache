@@ -14,8 +14,16 @@ import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
+/**
+  * A preprocessing pass that simplifies TLA+ expression by running multiple transformation.
+  * @param options pass options
+  * @param gen name generator
+  * @param tracker transformation tracker
+  * @param nextPass next pass to call
+  */
 class PreproPassImpl @Inject()( val options: PassOptions,
                                 gen: UniqueNameGenerator,
+                                renaming: IncrementalRenaming,
                                 tracker: TransformationTracker,
                                 @Named("AfterPrepro") nextPass: Pass with TlaModuleMixin)
     extends PreproPass with LazyLogging {
@@ -35,8 +43,7 @@ class PreproPassImpl @Inject()( val options: PassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
-    logger.info("Before preprocessing: unique renaming")
-    val renaming = new IncrementalRenaming(tracker)
+    logger.info("  > Before preprocessing: unique renaming")
     val beforeModule = renaming.renameInModule(tlaModule.get)
     val defBodyMap = BodyMapFactory.makeFromDecls(beforeModule.operDeclarations )
 
@@ -51,7 +58,7 @@ class PreproPassImpl @Inject()( val options: PassOptions,
         SimplifyRecordAccess(tracker) // TODO: this is an optimization, introduce an optimization pass after assignment solver
       )
 
-    logger.info("Applying standard transformations...")
+    logger.info("  > Applying standard transformations...")
     val preprocessed = transformationSequence.foldLeft(beforeModule){
       case (m, tr) =>
         logger.info("  > Applying %s".format(tr.getClass.getSimpleName))
@@ -59,11 +66,11 @@ class PreproPassImpl @Inject()( val options: PassOptions,
     }
 
     // unique renaming after all transformations
-    logger.info("After preprocessing: unique renaming")
+    logger.info("  > After preprocessing: unique renaming")
     val afterModule = renaming.renameInModule(preprocessed)
 
     // dump the result of preprocessing
-    val outdir = options.getOptionOrError("io", "outdir").asInstanceOf[Path]
+    val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
     PrettyWriter.write(afterModule, new File(outdir.toFile, "out-prepro.tla"))
 
     outputTlaModule = Some(afterModule)

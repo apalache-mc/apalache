@@ -1,11 +1,9 @@
---------------------------- MODULE SimpTendermit1 ---------------------------
+--------------------------- MODULE SimpT1 ---------------------------
 (*
- A TLA+ specification of Simplified Tendermint in the synchronous model with symmetric
+ A TLA+ specification of from the synchronous model with symmetric
  Byzantine faults (Algorithm 1).
  
  Based on the pseudo-code from the arxiv publication 1809.09858v1 [cs.DC] 26 Sep 2018.
- 
- Encoded in TLA+ by Igor Konnov
  *)
  
 EXTENDS Integers 

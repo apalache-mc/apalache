@@ -76,8 +76,8 @@ object Tool extends App with LazyLogging {
     // here, we implement a terminal pass to get the parse results
     val injector = Guice.createInjector(new ParserModule())
     val executor = injector.getInstance(classOf[PassChainExecutor])
-    executor.options.setOption("io.outdir", createOutputDir())
-    executor.options.setOption("parser.filename", parse.file.getAbsolutePath)
+    executor.options.set("io.outdir", createOutputDir())
+    executor.options.set("parser.filename", parse.file.getAbsolutePath)
 
     val result = executor.run()
     if (result.isDefined) {
@@ -93,27 +93,27 @@ object Tool extends App with LazyLogging {
   private def runCheck(check: CheckCmd, u: Unit): Unit = {
     val injector = Guice.createInjector(new CheckerModule())
     val executor = injector.getInstance(classOf[PassChainExecutor])
-    executor.options.setOption("io.outdir", createOutputDir())
+    executor.options.set("io.outdir", createOutputDir())
     val tuning =
       if (check.tuning != "") {
         loadProperties(check.tuning)
       } else {
         Map[String, String]()
       }
-    executor.options.setOption("general.tuning", tuning)
+    executor.options.set("general.tuning", tuning)
 
-    executor.options.setOption("general.debug", check.debug)
-    executor.options.setOption("smt.prof", check.smtprof)
-    executor.options.setOption("parser.filename", check.file.getAbsolutePath)
-    executor.options.setOption("checker.init", check.init)
-    executor.options.setOption("checker.next", check.next)
-    executor.options.setOption("checker.inv",
-      if (check.inv != "") Some(check.inv) else None)
-    executor.options.setOption("checker.cinit",
-      if (check.cinit != "") Some(check.cinit) else None)
-    executor.options.setOption("checker.length", check.length)
-    executor.options.setOption("checker.search", check.search)
-    executor.options.setOption("checker.checkRuntime", check.checkRuntime)
+    executor.options.set("general.debug", check.debug)
+    executor.options.set("smt.prof", check.smtprof)
+    executor.options.set("parser.filename", check.file.getAbsolutePath)
+    executor.options.set("checker.init", check.init)
+    executor.options.set("checker.next", check.next)
+    if (check.inv != "")
+      executor.options.set("checker.inv", check.inv)
+    if (check.cinit != "")
+      executor.options.set("checker.cinit", check.cinit)
+    executor.options.set("checker.length", check.length)
+    executor.options.set("checker.search", check.search)
+    executor.options.set("checker.checkRuntime", check.checkRuntime)
 
     val result = executor.run()
     if (result.isDefined) {

@@ -9,62 +9,39 @@ import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
   * @see [[AssignmentStrategyEncoder]], [[SMTInterface]], [[SymbTransGenerator]]
   *
   * Jure, 28.8.19: Should symbolic transitions track their origin?
+  * Igor, 09.11.19: yes, that is needed for all kinds of error reporting.
   */
-class SymbolicTransitionExtractor( tracker: TransformationTracker ) extends TypeAliases {
+class SymbolicTransitionExtractor(tracker: TransformationTracker) extends TypeAliases {
 
   /**
-    * Body lookup.
+    * Find assignments in an action expression and produce symbolic transitions, if possible.
     *
-    * @param p_opName Name of the TLA+ operator declaration.
-    * @param decls    Collection of declarations to be searched.
-    * @return The body of the operator declaration, if it is an element of the collection, otherwise NullEx.
-    */
-  protected def findBodyOf( p_opName : String, decls : Seq[TlaDecl] ) : TlaEx = {
-    decls.find {
-      _.name == p_opName
-    }.withFilter( _.isInstanceOf[TlaOperDecl] ).map( _.asInstanceOf[TlaOperDecl].body ).getOrElse( NullEx )
-  }
-
-  /**
-    * Point of access method.
-    *
-    * Throws [[AssignmentException]] if:
-    *   a. The operator `p_nextName` is not a member of `p_decls`
-    *   a. No assignment strategy exists for `p_nextName`
-    *
-    * @param decls    Declarations to be considered. Must include variable declarations and all of the
-    *                   non-recursive operators appearing in the spec.
-    * @param nextName The name of the operator defining the transition relation.
-    * @return A collection of symbolic transitions, if they can be extracted.
+    * @param vars names of the variables on which actionExpr is operating, e.g, the variables defined with VARIABLES
+    * @param actionExpr an expression over primed and unprimed variables, e.g., Next or Init
+    * @return A collection of symbolic transitions, if they can be extracted; otherwise, return an empty sequence
     *
     */
-  def apply( decls : Seq[TlaDecl],
-             nextName : String = "Next"
-           ) : Seq[SymbTrans] = {
-    /** Extract variable declarations */
-    val vars = decls.withFilter( _.isInstanceOf[TlaVarDecl] ).map( _.name ).toSet
-
-    /** Extract transition relation */
-    val phi = findBodyOf( nextName, decls )
-
-    val stratEncoder = new AssignmentStrategyEncoder()
+  def apply(vars: Seq[String], actionExpr: TlaEx) : Seq[SymbTrans] = {
+    val strategyEncoder = new AssignmentStrategyEncoder()
 
     /** Generate an smt encoding of the assignment problem to pass to the SMT solver */
-    val spec = stratEncoder( vars, phi )
+    val smtFormula = strategyEncoder.apply(vars.toSet, actionExpr)
 
     /** Get strategy from the solver */
-    val strat = ( new SMTInterface() ) ( spec, stratEncoder.m_varSym )
+    val assignmentStrategy = new SMTInterface().apply(smtFormula, strategyEncoder.m_varSym)
 
-    /** Throw if no strat. */
-    if ( strat.isEmpty )
-      throw new AssignmentException(
-        "No assignment strategy found for %s".format( nextName )
-      )
-
-    /** From a strategy, compute symb. trans. */
-    val transitions = ( new SymbTransGenerator(tracker) ) ( phi, strat.get )
-
-    transitions
+    if (assignmentStrategy.isEmpty) {
+      Seq()
+    } else {
+      /** produce symbolic transitions */
+      new SymbTransGenerator(tracker).apply(actionExpr, assignmentStrategy.get)
+    }
   }
 
+}
+
+object SymbolicTransitionExtractor {
+  def apply(tracker: TransformationTracker): SymbolicTransitionExtractor = {
+    new SymbolicTransitionExtractor(tracker)
+  }
 }

@@ -27,7 +27,7 @@ class WriteablePassOptions extends PassOptions {
     * @param name an option name, where the pass name is separated from the option name with a dot (.)
     * @param value an option value
     */
-  def setOption(name: String, value: Any): Unit = {
+  def set(name: String, value: Any): Unit = {
     if (!name.exists(_ == '.')) {
       throw new PassOptionException("Expected an option of format <pass>.<option, found: " + name)
     }
@@ -40,8 +40,11 @@ class WriteablePassOptions extends PassOptions {
     * @param optionName an option name
     * @return the option value, normally, an Integer or String
     */
-  def getOption(passName: String, optionName: String): Option[Any] = {
-    store.get(passName + "." + optionName)
+  def get[T](passName: String, optionName: String): Option[T] = {
+    store.get(passName + "." + optionName) match {
+      case Some(value) => Some(value.asInstanceOf[T])
+      case None => None
+    }
   }
 
   /**
@@ -52,10 +55,10 @@ class WriteablePassOptions extends PassOptions {
     * @param default    a default value
     * @return the option value, normally, an Integer or String
     */
-  def getOption(passName: String, optionName: String, default: Any): Any = {
-    val value = getOption(passName, optionName)
+  def getOrElse[T](passName: String, optionName: String, default: T): T = {
+    val value = get(passName, optionName)
     if (value.isDefined) {
-      value.get
+      value.get.asInstanceOf[T]
     } else {
       default
     }
@@ -68,10 +71,10 @@ class WriteablePassOptions extends PassOptions {
     * @param optionName an option name
     * @return the option value, normally, an Integer or String
     */
-  def getOptionOrError(passName: String, optionName: String): Any = {
-    val value = getOption(passName, optionName)
+  def getOrError[T](passName: String, optionName: String): T = {
+    val value = get(passName, optionName)
     if (value.isDefined) {
-      value.get
+      value.get.asInstanceOf[T]
     } else {
       throw new PassOptionException("The mandatory option %s.%s not found"
         .format(passName, optionName))

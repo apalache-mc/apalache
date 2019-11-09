@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.transformations.impl.Lift
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation, TransformationTracker}
+import javax.inject.{Inject, Singleton}
 
 import scala.collection.immutable.HashMap
 
@@ -119,7 +120,8 @@ object IncrementalRenaming {
 /**
   * Unlike Renaming, IncrementalRenaming is intended to maintain concise names under arbitrary re-application
   */
-class IncrementalRenaming( tracker : TransformationTracker ) extends TlaExTransformation {
+@Singleton
+class IncrementalRenaming @Inject()(tracker : TransformationTracker) extends TlaExTransformation {
 
   import IncrementalRenaming._
 

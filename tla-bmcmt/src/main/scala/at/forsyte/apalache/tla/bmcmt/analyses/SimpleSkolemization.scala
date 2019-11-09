@@ -1,12 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.analyses
 
-import at.forsyte.apalache.tla.bmcmt.RewriterException
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaControlOper, TlaOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.transformations.standard.{IncrementalRenaming, ReplaceFixed}
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.values.TlaBool
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaControlOper}
+import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
@@ -18,13 +14,7 @@ import com.typesafe.scalalogging.LazyLogging
   */
 class SimpleSkolemization @Inject()
         (val frexStore: FreeExistentialsStoreImpl, tracker: TransformationTracker) extends LazyLogging {
-
-  def label( decls : Traversable[TlaDecl] ) : Unit = decls foreach {
-    case d : TlaOperDecl => markFreeExistentials( d.body )
-    case _ => ()
-  }
-
-  private def markFreeExistentials(ex: TlaEx): Unit = ex match {
+  def markFreeExistentials(ex: TlaEx): Unit = ex match {
     case OperEx(TlaBoolOper.exists, name, _, pred) =>
       logger.debug(s"added free existential $name (id=${ex.ID})")
       frexStore.store += ex.ID

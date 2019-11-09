@@ -12,7 +12,6 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.io.UTFPrinter
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaControlOper}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import com.typesafe.scalalogging.LazyLogging
 
@@ -26,13 +25,13 @@ import scala.collection.immutable.SortedMap
   *
   * @author Igor Konnov
   */
-class ModelChecker( typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsStoreImpl,
-                    formulaHintsStore: FormulaHintsStore,
-                    changeListener: ChangeListener,
-                    exprGradeStore: ExprGradeStore, sourceStore: SourceStore, checkerInput: CheckerInput,
-                    searchStrategy: SearchStrategy,
-                    tuningOptions: Map[String, String],
-                    debug: Boolean = false, profile: Boolean = false, checkRuntime: Boolean = false)
+class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsStoreImpl,
+                   formulaHintsStore: FormulaHintsStore,
+                   changeListener: ChangeListener,
+                   exprGradeStore: ExprGradeStore, sourceStore: SourceStore, checkerInput: CheckerInput,
+                   searchStrategy: SearchStrategy,
+                   tuningOptions: Map[String, String],
+                   debug: Boolean = false, profile: Boolean = false, checkRuntime: Boolean = false)
   extends Checker with LazyLogging {
 
   import Checker._
@@ -252,7 +251,7 @@ class ModelChecker( typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSt
             // note that the constraints are added at the current level, without an additional push
             var (nextState, _) = applyTransition(stepNo, erased, transition, transitionNo, checkForErrors = false)
             rewriter.exprCache.disposeActionLevel() // leave only the constants
-            if (isEnabled && learnInvFromUnsat && checkerInput.notInvariant.isDefined) {
+            if (isEnabled && learnInvFromUnsat) {
               nextState = assumeInvariant(stepNo, nextState)
             }
             if (isEnabled) {
@@ -315,7 +314,7 @@ class ModelChecker( typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSt
       }
       // that is the result of this step
       stack +:= (finalState, oracle)
-        // here we save the transition index, not the oracle, which will be shown to the user
+      // here we save the transition index, not the oracle, which will be shown to the user
       shiftTypes(constants)
       typesStack = typeFinder.getVarTypes +: typesStack
       Some(finalState)
@@ -364,20 +363,19 @@ class ModelChecker( typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSt
       // assume the constraint constructed by this transition
       solverContext.assertGroundExpr(nextState.ex)
       // check whether this transition violates some assertions
-      checkAssertionErrors(nextState)
       logger.debug("Checking transition feasibility.")
       solverContext.satOrTimeout(transitionTimeout) match {
         case Some(true) =>
           // check the invariant right here
           val matchesInvFilter = invFilter == "" || stepNo.toString.matches("^" + invFilter + "$")
           if (matchesInvFilter) {
-            checkInvariant(stepNo, transitionNo, nextState)
+            checkAllInvariants(stepNo, transitionNo, nextState)
           }
           // and then forget all these constraints!
           rewriter.pop() // LEVEL + 0
           solverContext.log("; } ------- STEP: %d, STACK LEVEL: %d".format(stepNo, rewriter.contextLevel))
           (nextState, true)
-          // LEVEL + 0
+        // LEVEL + 0
 
         case r: Option[Boolean] => // unsat or timeout
           // the current symbolic state is not feasible
@@ -390,154 +388,78 @@ class ModelChecker( typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSt
           solverContext.log("; } ------- STEP: %d, STACK LEVEL: %d TRANSITION: %d"
             .format(stepNo, rewriter.contextLevel, transitionNo))
           (nextState, false)
-          // LEVEL + 0
+        // LEVEL + 0
       }
     }
   }
 
   private def assumeInvariant(stepNo: Int, state: SymbState): SymbState = {
     val matchesInvFilter = invFilter == "" || stepNo.toString.matches("^" + invFilter + "$")
-    if (!matchesInvFilter || checkerInput.notInvariant.isEmpty) {
+    if (!matchesInvFilter || checkerInput.invariantsAndNegations.isEmpty) {
       state
     } else {
       // as we have checked the invariant, we assume that it holds
       logger.debug("Assuming that the invariant holds")
       val prevEx = state.ex
-      val simplifier = new ConstSimplifier()
-      val simpleInv = simplifier.simplify(tla.not(checkerInput.notInvariant.get))
-      typeFinder.inferAndSave(simpleInv)
-      val nextState = rewriter.rewriteUntilDone(state.setRex(simpleInv))
-      solverContext.assertGroundExpr(nextState.ex)
+      var nextState = state
+      for ((inv, _) <- checkerInput.invariantsAndNegations) {
+        typeFinder.inferAndSave(inv)
+        nextState = rewriter.rewriteUntilDone(state.setRex(inv))
+        solverContext.assertGroundExpr(nextState.ex)
+      }
       nextState.setRex(prevEx) // restore the expression
     }
   }
 
-  private def checkAssertionErrors(state: SymbState): Unit = {
-    // FIXME: this mechanism is broken in unstable, as the rules are not producing failure predicates anymore
-    // Detecting runtime errors such as: assertion violation,
-    // or function application outside its domain.
-    // The crucial assumption here is that IF-THEN-ELSE activates runtime errors only
-    // on the active branches, see IfThenElseRule.
-    val failPreds = state.arena.findCellsByType(FailPredT())
-    if (checkRuntime) {
-      logger.debug("Checking for runtime errors")
+  private def checkAllInvariants(depth: Int, transitionNo: Int, nextState: SymbState): Unit = {
+    for ((notInv, invNo) <- checkerInput.invariantsAndNegations.map(_._2).zipWithIndex) {
+      logger.debug(s"Checking the invariant $invNo")
+      val savedTypes = rewriter.typeFinder.getVarTypes
+      // rename x' to x, so we are reasoning about the non-primed variables
+      shiftTypes(constants)
+      val shiftedState = nextState.setBinding(shiftBinding(nextState.binding, constants))
+      // check the types and the invariant
+      checkTypes(notInv)
+      val changedVars = nextState.changed
+      checkOneInvariant(depth, transitionNo, shiftedState, changedVars, notInv)
+      rewriter.typeFinder.reset(savedTypes) // forget about the types that were used to check the invariant
+    }
+  }
+
+  private def checkOneInvariant(depth: Int, transitionNo: Int, nextState: SymbState, changed: Set[String], notInv: TlaEx): Unit = {
+    val used = TlaExUtil.findUsedNames(notInv).map(_ + "'")
+    if (used.intersect(changed).isEmpty) {
+      logger.debug(s"The invariant is referring only to the UNCHANGED variables. Skipped.")
+    } else {
       rewriter.push()
-      solverContext.assertGroundExpr(tla.or(failPreds.map(_.toNameEx): _*))
-      if (solverContext.sat()) {
-        logger.error("The specification may produce a runtime error. Check the counterexample.")
-        val activeFailures =
-          failPreds.filter(fp => solverContext.evalGroundExpr(fp.toNameEx) == tla.bool(true))
+      val notInvState = rewriter.rewriteUntilDone(nextState
+        .setTheory(BoolTheory())
+        .setRex(notInv))
+      solverContext.assertGroundExpr(notInvState.ex)
+      solverContext.satOrTimeout(invariantTimeout) match {
+        case Some(true) =>
+          // introduce a dummy oracle to hold the transition index, we need it for the counterexample
+          val oracle = new MockOracle(transitionNo)
+          stack = (notInvState, oracle) +: stack
+          val filename = dumpCounterexample()
+          logger.error(s"Invariant is violated at depth $depth. Check the counterexample in $filename")
+          if (debug) {
+            logger.warn(s"Dumping the arena into smt.log. This may take some time...")
+            // dump everything in the log
+            val writer = new StringWriter()
+            new SymbStateDecoder(solverContext, rewriter).dumpArena(notInvState, new PrintWriter(writer))
+            solverContext.log(writer.getBuffer.toString)
+          }
+          // cancel the search
+          throw new CancelSearchException(Outcome.Error)
 
-        logger.error(s"The following failures are possible: %s.".format(activeFailures.mkString(", ")))
-        activeFailures.foreach(fp => logger.error(rewriter.findMessage(fp.id)))
+        case Some(false) =>
+          logger.debug("The invariant holds true.")
 
-        dumpCounterexample()
-        // dump everything in the log
-        val writer = new StringWriter()
-        new SymbStateDecoder(solverContext, rewriter).dumpArena(state, new PrintWriter(writer))
-        solverContext.log(writer.getBuffer.toString)
-
-        throw new CancelSearchException(Outcome.RuntimeError)
+        case None =>
+          logger.debug("Timeout. Assuming that the invariant holds true.")
       }
       rewriter.pop()
-      logger.debug("No runtime errors")
-    }
-    // assume no failure occurs
-    failPreds.map(fp => tla.not(fp.toNameEx)) foreach solverContext.assertGroundExpr
-  }
-
-  // TODO: This decomposition could be done at previous phases
-  private def checkInvariantPiecewise(depth: Int, transitionNo: Int, nextState: SymbState, changed: Set[String], notInv: TlaEx): Boolean = {
-    // check the disjuncts separately, in order to simplify the problem for SMT
-    notInv match {
-      case OperEx(TlaBoolOper.or, args@_*) =>
-        args exists (a => checkInvariantPiecewise(depth, transitionNo, nextState, changed, a))
-
-      case OperEx(TlaBoolOper.exists, name, set, OperEx(TlaBoolOper.or, args@_*)) =>
-        def oneExists(a: TlaEx) = {
-          // this existential can be skolemized
-          val ex = tla.exists(name, set, a)
-          frexStore.store.add(ex.ID)
-          ex
-        }
-        // use the equivalence \E x \in S: A \/ B <=> (\E x \in S: A) \/ (\E x \in S: B)
-        args exists (a => checkInvariantPiecewise(depth, transitionNo, nextState, changed, oneExists(a)))
-
-      case ite@OperEx(TlaControlOper.ifThenElse, predEx, thenEx, elseEx) =>
-        // ITE(A, B, C) == A /\ B \/ ~A /\ B
-        val pieces = Seq(tla.and(predEx, thenEx), tla.and(tla.not(predEx), elseEx))
-        pieces exists (a => checkInvariantPiecewise(depth, transitionNo, nextState, changed, a))
-
-      case OperEx(TlaBoolOper.exists, name, set, OperEx(TlaControlOper.ifThenElse, predEx, thenEx, elseEx)) =>
-        // \E x \in S: ITE(A, B, C) == (\E x \in S: A /\ B) \/ (\E x \in S: ~A /\ B)
-        def oneExists(a: TlaEx) = {
-          // this existential can be skolemized
-          val ex = tla.exists(name, set, a)
-          frexStore.store.add(ex.ID)
-          ex
-        }
-
-        val pieces = Seq(oneExists(tla.and(predEx, thenEx)), oneExists(tla.and(tla.not(predEx), elseEx)))
-        // use the equivalence \E x \in S: A \/ B <=> (\E x \in S: A) \/ (\E x \in S: B)
-        pieces exists (a => checkInvariantPiecewise(depth, transitionNo, nextState, changed, oneExists(a)))
-
-      case _ =>
-        logger.debug(s"Checking an invariant piece $notInv")
-        val used = TlaExUtil.findUsedNames(notInv)
-        if (used.intersect(changed).isEmpty) {
-          logger.debug(s"The invariant is referring only to the UNCHANGED variables. Skipped.")
-          false
-        } else {
-          rewriter.push()
-          val notInvState = rewriter.rewriteUntilDone(nextState
-            .setTheory(BoolTheory())
-            .setRex(notInv))
-          solverContext.assertGroundExpr(notInvState.ex)
-          checkAssertionErrors(notInvState) // the invariant violation may introduce runtime errors
-          solverContext.satOrTimeout(invariantTimeout) match {
-            case Some(true) =>
-              // introduce a dummy oracle to hold the transition index, we need it for the counterexample
-              val oracle = new MockOracle(transitionNo)
-              val finalState = notInvState.setBinding(shiftBinding(notInvState.binding, constants))
-              stack = (finalState, oracle) +: stack
-              val filename = dumpCounterexample()
-              logger.error(s"Invariant is violated at depth $depth. Check the counterexample in $filename")
-              if (debug) {
-                logger.warn(s"Dumping the arena into smt.log. This may take some time...")
-                // dump everything in the log
-                val writer = new StringWriter()
-                new SymbStateDecoder(solverContext, rewriter).dumpArena(notInvState, new PrintWriter(writer))
-                solverContext.log(writer.getBuffer.toString)
-              }
-              // cancel the search
-              throw new CancelSearchException(Outcome.Error)
-
-            case Some(false) =>
-              logger.debug("The invariant holds true.")
-
-            case None =>
-              logger.debug("Timeout. Assuming that the invariant holds true.")
-          }
-          rewriter.pop()
-          false
-        }
-    }
-  }
-
-  private def checkInvariant(depth: Int, transitionNo: Int, nextState: SymbState): SymbState = {
-    checkAssertionErrors(nextState)
-
-    if (checkerInput.notInvariant.isEmpty) {
-      nextState
-    } else {
-      logger.debug("Checking the invariant")
-      val notInv = checkerInput.notInvariant.get
-      val savedTypes = rewriter.typeFinder.getVarTypes
-      checkTypes(notInv)
-      val changed = nextState.changed
-      val notInvSat = checkInvariantPiecewise(depth, transitionNo, nextState, changed, notInv)
-      rewriter.typeFinder.reset(savedTypes) // forget about the types that were used to check the invariant
-      nextState
     }
   }
 
@@ -569,8 +491,7 @@ class ModelChecker( typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSt
         )
 
         val locInfo =
-//          sourceStore.find(e.origin.ID) match {
-          sourceLocator.sourceOf( e.origin ) match {
+          sourceLocator.sourceOf(e.origin) match {
             case Some(loc) => loc.toString
             case None => "<unknown origin>"
           }
@@ -651,13 +572,13 @@ class ModelChecker( typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSt
   }
 
   private def printRewriterSourceLoc(): Unit = {
-//    def getSourceLocation(ex: TlaEx) = sourceStore.find(ex.ID)
+    //    def getSourceLocation(ex: TlaEx) = sourceStore.find(ex.ID)
     def getSourceLocation(ex: TlaEx) = {
       val sourceLocator: SourceLocator = SourceLocator(
         sourceStore.makeSourceMap,
         changeListener
       )
-      sourceLocator.sourceOf( ex )
+      sourceLocator.sourceOf(ex)
     }
 
     rewriter.getRewritingStack().find(getSourceLocation(_).isDefined) match {

@@ -7,4 +7,4 @@ import at.forsyte.apalache.infra.passes.{Pass, TlaModuleMixin}
   *
   * @author Igor Konnov
   */
-trait HintsAndSkolemizationPass extends Pass with TlaModuleMixin
+trait AnalysisPass extends Pass with TlaModuleMixin

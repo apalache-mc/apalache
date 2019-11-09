@@ -4,6 +4,12 @@ import at.forsyte.apalache.tla.lir.src.SourceLocation
 import at.forsyte.apalache.tla.lir.storage.SourceLocator
 
 class TransitionOrder( sourceLocator : SourceLocator ) {
+  /**
+    * Sorts the transitions lexicographically on the source code information of assignments
+    */
+  def sortBySource(transitions : Seq[SymbTrans] ) : Seq[SymbTrans] = {
+    transitions sortWith transLT
+  }
 
   private type orderTup = (String, Int, Int)
 
@@ -49,9 +55,4 @@ class TransitionOrder( sourceLocator : SourceLocator ) {
     s._1 map { x => sourceLocator.sourceOf( x ).get } sortWith locLT
 
   private def transLT( a: SymbTrans, b: SymbTrans ): Boolean = seqLocLT( getSortedLocs( a ), getSortedLocs( b ) )
-  /**
-    * Sorts the transitions lexicographically on the source code information of assignments
-    */
-  def sourceSort( transitions : Seq[SymbTrans] ) : Seq[SymbTrans] =
-    transitions sortWith transLT
 }
