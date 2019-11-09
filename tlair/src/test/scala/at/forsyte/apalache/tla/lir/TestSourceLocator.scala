@@ -171,11 +171,4 @@ class TestSourceLocator extends FunSuite with TestingPredefs {
 
     testTransformation( transformation )
   }
-
-  test( "Test SimplifyRecordAccess" ) {
-    val transformation = SimplifyRecordAccess( tracker )
-
-    testTransformation( transformation )
-  }
-
 }

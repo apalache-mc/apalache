@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.config
 
 import at.forsyte.apalache.infra.passes._
-import at.forsyte.apalache.tla.assignments.passes.{TransitionPass, TransitionPassImpl, PrimingPass, PrimingPassImpl}
+import at.forsyte.apalache.tla.assignments.passes.{PrimingPass, PrimingPassImpl, TransitionPass, TransitionPassImpl}
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.passes._
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
-import at.forsyte.apalache.tla.pp.passes.{PreproPass, PreproPassImpl}
+import at.forsyte.apalache.tla.pp.passes.{OptPass, OptPassImpl, PreproPass, PreproPassImpl}
 import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, TypeLiteral}
 
@@ -75,10 +75,16 @@ class CheckerModule extends AbstractModule {
       .annotatedWith(Names.named("AfterPrepro"))
       .to(classOf[TransitionPass])
     // the next pass after AssignmentPass is AnalysisPass
+    bind(classOf[OptPass])
+      .to(classOf[OptPassImpl])
+    bind(classOf[Pass])
+      .annotatedWith(Names.named("AfterTransitionFinder"))
+      .to(classOf[OptPass])
+    // the next pass after AssignmentPass is AnalysisPass
     bind(classOf[AnalysisPass])
       .to(classOf[AnalysisPassImpl])
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterAssignment"))
+      .annotatedWith(Names.named("AfterOpt"))
       .to(classOf[AnalysisPass])
     // the next pass after SimpleSkolemizationPass is BoundedCheckerPass
     bind(classOf[BoundedCheckerPass])

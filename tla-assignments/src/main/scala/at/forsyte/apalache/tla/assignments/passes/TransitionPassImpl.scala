@@ -25,7 +25,7 @@ class TransitionPassImpl @Inject()(options: PassOptions,
                                    tracker: TransformationTracker,
                                    changeListener: ChangeListener,
                                    incrementalRenaming: IncrementalRenaming,
-                                   @Named("AfterAssignment") nextPass: Pass with TlaModuleMixin)
+                                   @Named("AfterTransitionFinder") nextPass: Pass with TlaModuleMixin)
   extends TransitionPass with LazyLogging {
   /**
     * The name of the pass

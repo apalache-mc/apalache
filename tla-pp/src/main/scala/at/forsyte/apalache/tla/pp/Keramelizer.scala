@@ -16,49 +16,15 @@ import javax.inject.Singleton
   * @author Igor Konnov
   */
 @Singleton
-class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker) extends TlaExTransformation {
+class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
+    extends AbstractTransformer(tracker) with TlaExTransformation {
+
+  override val partialTransformers = List(transformSets)
+
+
   override def apply(expr: TlaEx): TlaEx = {
     LanguageWatchdog(FlatLanguagePred()).check(expr)
     transform(expr)
-  }
-
-  /**
-    * Transform an expression recursively, by rewriting some TLA+ expressions in KerA+.
-    *
-    * @return a new expression
-    */
-  def transform: TlaExTransformation = tracker.track {
-    case OperEx(op, args @ _*) =>
-      transformOneLevel(OperEx(op, args map transform :_*))
-
-    case LetInEx(body, defs @ _*) =>
-      def mapDecl(d: TlaOperDecl): TlaOperDecl = {
-        TlaOperDecl(d.name, d.formalParams, transform(d.body))
-      }
-
-      LetInEx(transform(body), defs.map(mapDecl) :_*)
-
-    case ex =>
-      transformOneLevel(ex)
-  }
-
-  /**
-    * Transform an expression without looking into the arguments.
-    * @return a new expression
-    */
-  private def transformOneLevel: TlaExTransformation = {
-    val identity: PartialFunction[TlaEx, TlaEx] = {
-      case e => e
-    }
-    // chain partial functions to handle different types of operators with different functions
-    val handlers =
-      List(
-        transformSets,
-        identity
-      ) ///
-
-    // and track the changes
-    tracker.track(handlers reduceLeft (_ orElse _))
   }
 
   /**

@@ -68,9 +68,9 @@ class AnalysisPassImpl @Inject()(val options: PassOptions,
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
     PrettyWriter.write(module, new File(outdir.toFile, "out-analysis.tla"))
 
-    logger.info(s"Introduced expression grades")
-    logger.info(s"Found %d free existentials".format(frexStoreImpl.store.size))
-    logger.info("Introduced %d formula hints".format(hintsStoreImpl.store.size))
+    logger.info("  > Introduced expression grades")
+    logger.info("  > Found %d free existentials".format(frexStoreImpl.store.size))
+    logger.info("  > Introduced %d formula hints".format(hintsStoreImpl.store.size))
 
     true
   }
