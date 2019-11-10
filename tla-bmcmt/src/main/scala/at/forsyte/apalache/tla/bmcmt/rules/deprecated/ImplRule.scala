@@ -1,6 +1,7 @@
-package at.forsyte.apalache.tla.bmcmt.rules
+package at.forsyte.apalache.tla.bmcmt.rules.deprecated
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rules.SubstRule
 import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
@@ -10,6 +11,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
   *
   * @author Igor Konnov
   */
+@deprecated("rewritten by Normalizer")
 class ImplRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val substRule = new SubstRule(rewriter)
   private val simplifier = new ConstSimplifierForSmt()

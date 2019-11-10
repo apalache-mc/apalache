@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.bmcmt.rules
+package at.forsyte.apalache.tla.bmcmt.rules.deprecated
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.MapBase
@@ -15,6 +15,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
   *
   * @author Igor Konnov
   */
+@deprecated("Keramelizer takes care of that")
 class RecordSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val mapbase = new MapBase(rewriter, isBijective = true)
 

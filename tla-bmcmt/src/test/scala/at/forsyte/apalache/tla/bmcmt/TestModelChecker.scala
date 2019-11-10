@@ -123,7 +123,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
       mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
     ))///
     val dummyModule = new TlaModule("root", List())
-    val inv = tla.equiv(
+    val inv = tla.eql(
       tla.eql(tla.int(3), tla.name("x")),
       tla.eql(tla.int(3), tla.name("y"))
     )////
@@ -147,7 +147,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
 
     val nextTrans = List(mkAssign("x", letIn))///
     val dummyModule = new TlaModule("root", List())
-    val inv = tla.neql(tla.int(4), tla.name("x"))
+    val inv = tla.not(tla.eql(tla.int(4), tla.name("x")))
 
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, List((inv, tla.not(inv))))
     // initialize the model checker
@@ -304,9 +304,9 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
       ) ///
 
     // Inv ==  11 \in y <=> 2 \notin x
-    val inv = tla.equiv(
+    val inv = tla.eql(
       tla.in(tla.int(11), tla.name("y")),
-      tla.notin(tla.int(2), tla.name("x"))
+      tla.not(tla.in(tla.int(2), tla.name("x")))
     )////
 
     val dummyModule = new TlaModule("root", List())

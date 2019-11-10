@@ -204,7 +204,7 @@ object UTFPrinter extends Printer {
           case TlaSetOper.funSet => mkOpApp( "[%%s %s %%s]".format( m_rarrow ), args : _* )
           case TlaSetOper.map => "{%s : %s}".format( apply( args.head ), opAppStrPairs( args.tail, pad( m_in ), ", " ) )
           case TlaSetOper.powerset => mkOpApp( "SUBSET %s", args : _* )
-          case TlaSetOper.recSet => opAppStrPairs( args, " : ", ", " )
+          case TlaSetOper.recSet => "[" + opAppStrPairs( args, ": ", ", " ) + "]"
           case TlaSetOper.seqSet => mkApp( "Seq(%s)", args : _* )
           case TlaSetOper.setminus => mkOpApp( "%%s %s %%s".format( m_setminus ), args : _* )
           case TlaSetOper.subseteq => mkOpApp( "%%s %s %%s".format( m_subseteq ), args : _* )

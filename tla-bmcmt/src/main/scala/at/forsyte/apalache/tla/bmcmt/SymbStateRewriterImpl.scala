@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.caches._
 import at.forsyte.apalache.tla.bmcmt.profiler.RuleStatListener
 import at.forsyte.apalache.tla.bmcmt.rules._
+import at.forsyte.apalache.tla.bmcmt.rules.deprecated.{CartesianProductRule, RecordSetRule, SetCapAndMinusRule}
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -140,8 +141,8 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     // logic
     key(tla.eql(tla.name("x"), tla.name("y")))
       -> List(new EqRule(this)),
-    key(tla.neql(tla.name("x"), tla.name("y")))
-      -> List(new NeqRule(this)),
+//    key(tla.neql(tla.name("x"), tla.name("y")))
+//      -> List(new NeqRule(this)),
     key(tla.or(tla.name("x"), tla.name("y")))
       -> List(new OrRule(this)),
     key(tla.orParallel(tla.name("x"), tla.name("y")))
@@ -150,10 +151,10 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
       -> List(new AndRule(this)),
     key(tla.not(tla.name("x")))
       -> List(new NegRule(this)),
-    key(tla.impl(tla.name("x"), tla.name("y")))
-      -> List(new ImplRule(this)),
-    key(tla.equiv(tla.name("x"), tla.name("y")))
-      -> List(new EquivRule(this)),
+//    key(tla.impl(tla.name("x"), tla.name("y")))
+//      -> List(new ImplRule(this)),
+//    key(tla.equiv(tla.name("x"), tla.name("y")))
+//      -> List(new EquivRule(this)),
     key(tla.exists(tla.name("x"), tla.name("S"), tla.name("p")))
       -> List(new QuantRule(this)),
     key(tla.forall(tla.name("x"), tla.name("S"), tla.name("p")))
@@ -179,8 +180,8 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
       -> List(new AssignRecordRule(this),
               new AssignmentRule(this),
               new SetInRule(this)),
-    key(tla.notin(tla.name("x"), tla.name("S")))
-      -> List(new SetNotInRule(this)),
+//    key(tla.notin(tla.name("x"), tla.name("S")))
+//      -> List(new SetNotInRule(this)),
     key(tla.enumSet(tla.name("x"))) ->
       List(new SetCtorRule(this)),
     key(tla.subseteq(tla.name("x"), tla.name("S")))
@@ -201,10 +202,10 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
       -> List(new SetFilterRule(this)),
     key(tla.map(tla.name("e"), tla.name("x"), tla.name("S")))
       -> List(new SetMapRule(this)),
-    key(tla.times(tla.name("S1"), tla.name("S2")))
-      -> List(new CartesianProductRule(this)),
-    key(tla.recSet(tla.str("a"), tla.name("S1"), tla.str("b"), tla.name("S2")))
-      -> List(new RecordSetRule(this)),
+//    key(tla.times(tla.name("S1"), tla.name("S2")))
+//      -> List(new CartesianProductRule(this)),
+//    key(tla.recSet(tla.str("a"), tla.name("S1"), tla.str("b"), tla.name("S2")))
+//      -> List(new RecordSetRule(this)),
     key(tla.powSet(tla.name("X")))
       -> List(new PowSetCtorRule(this)),
     key(tla.union(tla.enumSet()))

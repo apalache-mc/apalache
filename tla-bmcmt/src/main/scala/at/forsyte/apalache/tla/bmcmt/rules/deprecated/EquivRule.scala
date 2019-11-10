@@ -1,15 +1,17 @@
-package at.forsyte.apalache.tla.bmcmt.rules
+package at.forsyte.apalache.tla.bmcmt.rules.deprecated
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rules.SubstRule
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 
 /**
-  * Implements an implication A => B by rewriting it to ~A \/ B.
+  * Implements an equivalence A <=> B by rewriting it to A = B.
   *
   * @author Igor Konnov
   */
+@deprecated("Normalizer takes care of it")
 class EquivRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val substRule = new SubstRule(rewriter)
   private val simplifier = new ConstSimplifierForSmt()

@@ -179,10 +179,9 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SET-NOTIN1: {} \notin {} ~~> $B$1""") {
-    val ex = OperEx(TlaSetOper.notin,
-      emptySetWithType(FinSetT(IntT())),
-      emptySetWithType(FinSetT(FinSetT(IntT()))))
+  test("""SE-SET-NOTIN1: ~({} \in {}) ~~> $B$1""") {
+    val ex = tla.not(tla.in(emptySetWithType(FinSetT(IntT())),
+      emptySetWithType(FinSetT(FinSetT(IntT())))))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -224,11 +223,10 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SET-NOTIN1: \FALSE \notin {\FALSE, \TRUE} ~~> b_new""") {
+  test("""SE-SET-NOTIN1: ~(\FALSE \in {\FALSE, \TRUE}) ~~> b_new""") {
     val ex =
-      OperEx(TlaSetOper.notin,
-        ValEx(TlaFalse),
-        OperEx(TlaSetOper.enumSet, ValEx(TlaFalse), ValEx(TlaTrue)))
+      tla.not(tla.in(tla.bool(false),
+        tla.enumSet(tla.bool(false), tla.bool(true))))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
     rewriter.rewriteUntilDone(state).ex match {
@@ -309,13 +307,13 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SET-NOTIN1: c_i: Bool \notin {\TRUE, \TRUE} ~~> c_pred""") {
+  test("""SE-SET-NOTIN1: c_i: ~(Bool \in {\TRUE, \TRUE}) ~~> c_pred""") {
     arena = arena.appendCell(BoolT())
     val cell = arena.topCell
     val ex =
-      OperEx(TlaSetOper.notin,
+      tla.not(tla.in(
         cell.toNameEx,
-        OperEx(TlaSetOper.enumSet, ValEx(TlaTrue), ValEx(TlaTrue)))
+        tla.enumSet(tla.bool(true), tla.bool(true))))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
     rewriter.rewriteUntilDone(state).ex match {
@@ -508,13 +506,13 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SET-NE1: {{}, {{}}} != {{}, {{}}} ~~> $B$... (false)""") {
+  test("""SE-SET-NE1: ~({{}, {{}}} = {{}, {{}}}) ~~> $B$... (false)""") {
     def intSet() = emptySetWithType(IntT())
     def int2Set() = emptySetWithType(FinSetT(IntT()))
 
     val left = tla.enumSet(int2Set(), tla.enumSet(intSet()))
     val right = tla.enumSet(int2Set(), tla.enumSet(intSet()))
-    val ex = OperEx(TlaOper.ne, left, right)
+    val ex = tla.not(tla.eql(left, right))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -606,10 +604,10 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SET-FILTER: {Q \in SUBSET {1,2,3} : 2 \notin Q}""") {
+  test("""SE-SET-FILTER: {Q \in SUBSET {1,2,3} : ~(2 \in Q)}""") {
     val set = tla.enumSet(1.to(3).map(tla.int) :_*)
 
-    val predEx = tla.notin(tla.int(2), tla.name("Q"))
+    val predEx = tla.not(tla.in(tla.int(2), tla.name("Q")))
     val ex = tla.filter(tla.name("Q"), tla.powSet(set), predEx)
     val state = new SymbState(ex, CellTheory(), arena, new Binding)
     val rewriter = create()
@@ -618,7 +616,7 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(rewriter,
       nextState.setRex(tla.in(tla.enumSet(tla.int(1), tla.int(3)), nextState.ex)))
     assertTlaExAndRestore(rewriter,
-      nextState.setRex(tla.notin(tla.enumSet(tla.int(1), tla.int(2)), nextState.ex)))
+      nextState.setRex(tla.not(tla.in(tla.enumSet(tla.int(1), tla.int(2)), nextState.ex))))
   }
 
   test("""SE-SET-FILTER[1-2]: \E SUBSET X {1} IN {} = {x \in X : [y \in X |-> TRUE][x]} ~~> $B$k""") {

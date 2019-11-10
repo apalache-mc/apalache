@@ -238,10 +238,10 @@ class TestSymbStateRewriterInt extends RewriterBase {
     }
   }
 
-  test("SE-INT-CMP1: $Z$i != $Z$j ~~> $B$k") {
+  test("SE-INT-CMP1: ~($Z$i = $Z$j) ~~> $B$k") {
     val leftInt = solverContext.introIntConst()
     val rightInt = solverContext.introIntConst()
-    val state = new SymbState(OperEx(TlaOper.ne, NameEx(leftInt), NameEx(rightInt)),
+    val state = new SymbState(tla.not(tla.eql(tla.name(leftInt), tla.name(rightInt))),
       BoolTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)

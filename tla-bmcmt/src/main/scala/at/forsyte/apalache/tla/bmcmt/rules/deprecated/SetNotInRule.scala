@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.bmcmt.rules
+package at.forsyte.apalache.tla.bmcmt.rules.deprecated
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.OperEx
@@ -10,6 +10,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaSetOper
   *
   * @author Igor Konnov
   */
+@deprecated("Rewritten by Keramelizer")
 class SetNotInRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
