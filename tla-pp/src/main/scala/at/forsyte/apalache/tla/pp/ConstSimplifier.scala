@@ -122,11 +122,13 @@ class ConstSimplifier(tracker: TransformationTracker) extends TlaExTransformatio
     case OperEx(TlaBoolOper.not, OperEx(TlaOper.ne, lhs, rhs)) =>
       OperEx(TlaOper.eq, lhs, rhs)
 
-    case OperEx(TlaBoolOper.not, OperEx(TlaOper.eq, lhs, rhs)) =>
-      OperEx(TlaOper.ne, lhs, rhs)
+//      Keep unmodified, as KerA+ does not allow for /=
+//    case OperEx(TlaBoolOper.not, OperEx(TlaOper.eq, lhs, rhs)) =>
+//      OperEx(TlaOper.ne, lhs, rhs)
 
-    case OperEx(TlaBoolOper.not, OperEx(TlaSetOper.in, lhs, rhs)) =>
-      OperEx(TlaSetOper.notin, lhs, rhs)
+    //      Keep unmodified, as KerA+ does not allow for \notin
+//    case OperEx(TlaBoolOper.not, OperEx(TlaSetOper.in, lhs, rhs)) =>
+//      OperEx(TlaSetOper.notin, lhs, rhs)
 
     case OperEx(TlaBoolOper.not, OperEx(TlaSetOper.notin, lhs, rhs)) =>
       OperEx(TlaSetOper.in, lhs, rhs)
