@@ -268,9 +268,23 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
             parens(toDoc(op.precedence, action))
         wrapWithParen(parentPrecedence, op.precedence, group(doc))
 
-      case OperEx(op, arg) if PrettyWriter.unaryOps.contains(op) =>
+      case OperEx(op, arg @ NameEx(_)) if PrettyWriter.unaryOps.contains(op) =>
         val doc = text(PrettyWriter.unaryOps(op)) <> toDoc(op.precedence, arg)
         wrapWithParen(parentPrecedence, op.precedence, doc)
+
+      case OperEx(op, arg @ ValEx(_)) if PrettyWriter.unaryOps.contains(op) =>
+        val doc = text(PrettyWriter.unaryOps(op)) <> toDoc(op.precedence, arg)
+        wrapWithParen(parentPrecedence, op.precedence, doc)
+
+      case OperEx(op, arg @ OperEx(_, _)) if PrettyWriter.unaryOps.contains(op) =>
+        // a unary operator over unary operator, no parentheses needed
+        val doc = text(PrettyWriter.unaryOps(op)) <> toDoc(op.precedence, arg)
+        wrapWithParen(parentPrecedence, op.precedence, doc)
+
+      case OperEx(op, arg) if PrettyWriter.unaryOps.contains(op) =>
+        // in all other cases, introduce parentheses.
+        // Yse the minimal precedence, as we are introducing the parentheses in any case.
+        text(PrettyWriter.unaryOps(op)) <> parens(toDoc((0, 0), arg))
 
       case OperEx(op, lhs, rhs) if PrettyWriter.binaryOps.contains(op) =>
         val doc =
