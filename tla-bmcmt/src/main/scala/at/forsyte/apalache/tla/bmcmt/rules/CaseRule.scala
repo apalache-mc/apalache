@@ -12,6 +12,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
   *
   * @author Igor Konnov
   */
+@deprecated("This should be handled by Keramelizer")
 class CaseRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
