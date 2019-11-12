@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.types
 
-import at.forsyte.apalache.tla.lir.TestingPredefs
+import at.forsyte.apalache.tla.lir.oper.{FixedArity, Interpretation, OperArity, TlaOper}
+import at.forsyte.apalache.tla.lir.{OperEx, TestingPredefs}
 import at.forsyte.apalache.tla.lir.smt.SmtTools.{And, Or}
 import at.forsyte.apalache.tla.types.smt.SmtVarGenerator
 import org.junit.runner.RunWith
@@ -26,6 +27,29 @@ class TestBuiltinTemplates extends FunSuite with TestingPredefs with BeforeAndAf
     val template = templateGen.makeTemplate( ex )
     assertThrows[AssertionError] {
      template( templateArgs )
+    }
+    assertThrows[IllegalArgumentException] {
+      template( List.empty )
+    }
+  }
+
+  test( "No signature" ){
+    val bogusOper = new TlaOper {
+
+      override def precedence : (Int, Int) = (0, 0)
+
+      override def arity : OperArity = FixedArity( 0 )
+
+      override def interpretation : Interpretation.Value = Interpretation.User
+
+      override def name : String = "bogus"
+    }
+    val ex = OperEx( bogusOper )
+    val templateArgs = smtVarGen.getNFresh( 1 )
+    val template = templateGen.makeTemplate( ex )
+
+    assertThrows[IllegalArgumentException]{
+      template( templateArgs )
     }
   }
 

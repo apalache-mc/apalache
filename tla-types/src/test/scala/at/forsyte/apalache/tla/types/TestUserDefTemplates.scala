@@ -55,6 +55,25 @@ class TestUserDefTemplates extends FunSuite with TestingPredefs with BeforeAndAf
     case z => Seq( z )
   }
 
+  test( "Wrong arity" ) {
+    val ex = tla.plus( n_x, n_y )
+
+    val templateArgs = smtVarGen.getNFresh( 2 )
+    val template = udtg.makeTemplate( List.empty, ex )
+    assertThrows[AssertionError] {
+      template( templateArgs )
+    }
+    assertThrows[IllegalArgumentException] {
+      template( List.empty )
+    }
+  }
+
+  test( "Unsupported expr." ){
+    assertThrows[IllegalArgumentException] {
+      udtg.nabla( int, NullEx, Map.empty )
+    }
+  }
+
   test( "Literals" ) {
     val ex1 = tla.int( 1 )
     val ex2 = tla.str( "a" )
@@ -247,6 +266,24 @@ class TestUserDefTemplates extends FunSuite with TestingPredefs with BeforeAndAf
           transitiveEql( condLst )( t, e ) && transitiveEql( condLst )( p, int )
         case _ => false
       }
+      case _ => false
+    }
+
+    assert( assertCond )
+  }
+
+  test("Test LET-IN") {
+    // LET A == 1 IN A
+    val body = tla.letIn( n_A, tla.declOp( "A", tla.int(1) ) )
+    val e = smtVarGen.getFresh
+
+    val templ = udtg.makeTemplate( List.empty, body )
+    val templApp = templ( e +: Nil ).asInstanceOf[And]
+
+    val condLst = flattenCond( templApp.args )
+
+    val assertCond = condLst exists {
+      case Eql( t, int ) => transitiveEql(condLst)( t, e )
       case _ => false
     }
 

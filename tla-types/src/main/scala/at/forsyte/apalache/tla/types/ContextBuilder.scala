@@ -2,26 +2,6 @@ package at.forsyte.apalache.tla.types
 
 import at.forsyte.apalache.tla.lir.UID
 
-
-object ContextBuilder {
-  // Debugging method
-  def visualize( backMap : UID => String, typeRecovery : SmtDatatype => String )( ctx : OperatorContext ) : Traversable[String] =
-    ctx flatMap {
-      case (appStack, asgns) =>
-        val prefix = appStack.foldLeft( "" ) {
-          case (str, id) =>
-            val opEx = backMap( id )
-            s"$str$opEx[$id] -> "
-        }
-        asgns map {
-          case (id, dt) =>
-            val ex = backMap( id )
-            val t = typeRecovery( dt )
-            s"$prefix$ex[$id] : $t"
-        }
-    }
-}
-
 /**
   * ContextBuilder keeps track of which SmtDatatype (mostly SmtTypeVar) gets assigned
   * to which UID, within a given operator application stack.

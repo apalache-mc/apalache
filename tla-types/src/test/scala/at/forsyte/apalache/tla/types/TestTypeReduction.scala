@@ -7,7 +7,7 @@ import org.scalatest.{BeforeAndAfter, FunSuite}
 import org.scalatest.junit.JUnitRunner
 
 @RunWith( classOf[JUnitRunner] )
-class TestTypeReduction extends FunSuite with TestingPredefs with BeforeAndAfter {
+class TestTypeReduction extends FunSuite with BeforeAndAfter {
 
   var gen = new SmtVarGenerator
   var tr  = new TypeReduction( gen )
@@ -32,5 +32,28 @@ class TestTypeReduction extends FunSuite with TestingPredefs with BeforeAndAfter
     assert( rr.t == set( fun( tup( idx ), set( int ) ) ) )
     assert( rr.phi.contains( hasIndex( idx, 0, int ) ) )
     assert( rr.phi.contains( hasIndex( idx, 1, str ) ) )
+  }
+
+  test( "Test seq" ){
+    val tau = RecT( Map( "a" -> SeqT( IntT ) ) )
+    val m = Map.empty[TypeVar, SmtTypeVariable]
+    val rr = tr.reduce(tau, m)
+    val idx = SmtIntVariable( 0 )
+    assert( rr.t == rec( idx ) )
+    assert( rr.phi.contains( hasField( idx, "a", seq( int ) ) ) )
+  }
+
+  test( "Test poly/sparseTup" ){
+    val tau = PolyOperT( List.empty, OperT( TupT( IntT ), SparseTupT( Map( 3 -> IntT ) ) ) )
+    val m = Map.empty[TypeVar, SmtTypeVariable]
+    val rr = tr.reduce(tau, m)
+
+    val assertCond = rr.t match {
+      case oper( _, tup( j ) ) =>
+        rr.phi.contains( hasIndex( j, 3, int ) )
+      case _ => false
+    }
+
+    assert( assertCond )
   }
 }
