@@ -1,5 +1,10 @@
 package at.forsyte.apalache.tla.types
 
+/**
+  * TypeVarGenerator generates unique TypeVar values on demand.
+  *
+  * See SignatureGenerator.
+  */
 class TypeVarGenerator {
   private var idx : Int = 0
 
@@ -9,8 +14,5 @@ class TypeVarGenerator {
     ret
   }
 
-  def getNUnique( n : Int ) : List[TypeVar] = List.fill( n ) {
-    getUnique
-  }
-
+  def getNUnique( n : Int ) : List[TypeVar] = List.fill( n ) { getUnique }
 }

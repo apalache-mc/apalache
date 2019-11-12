@@ -2,8 +2,16 @@ package at.forsyte.apalache.tla.types
 
 import at.forsyte.apalache.tla.lir.{OperEx, ValEx}
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.values.TlaStr
+import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 
+/**
+  * Generates the signature (or all possible signatures) for a given built-in operator
+  *
+  * We assume the built-in operators have a known list of possible signatures.
+  * The arguments are taken as OperEx, because this allows us to handle what
+  * the paper describes as infinite families of fixed-arity operators (e.g. {...}),
+  * where we can infer the arity (or in the case of records, the fields) from the OperEx arguments
+  */
 class SignatureGenerator {
   private val typeVarGenerator : TypeVarGenerator = new TypeVarGenerator
 
@@ -83,16 +91,27 @@ class SignatureGenerator {
       List( PolyOperT( t +: ts, OperT( TupT( t +: allPairs : _* ), FunT( TupT( ts : _* ), t ) ) ) )
 
     /** Records */
-    case TlaSetOper.recSet =>
-      val kvPairs = operEx.args.zipWithIndex.collect {
+    case TlaFunOper.enum =>
+      val kvMap = operEx.args.zipWithIndex.collect {
         case (ValEx( TlaStr( s ) ), i) if i % 2 == 0 =>
-          KvPair( s, typeVarGenerator.getUnique )
-      }
-      val ts = kvPairs map {
-        _.v.asInstanceOf[TypeVar]
-      }
-      val tupArgs = kvPairs flatMap { pa => List( StrT, SetT( pa.v ) ) }
-      List( PolyOperT( ts.toList, OperT( TupT( tupArgs : _* ), SetT( RecT( kvPairs : _* ) ) ) ) )
+          s -> typeVarGenerator.getUnique
+      }.toMap
+
+      val ts = kvMap.values.toList
+
+      val tupArgs = ts flatMap { v => List( StrT, v ) }
+      List( PolyOperT( ts, OperT( TupT( tupArgs : _* ), RecT( kvMap ) ) ) )
+
+    case TlaSetOper.recSet =>
+      val kvMap = operEx.args.zipWithIndex.collect {
+        case (ValEx( TlaStr( s ) ), i) if i % 2 == 0 =>
+          s -> typeVarGenerator.getUnique
+      }.toMap
+
+      val ts = kvMap.values.toList
+
+      val tupArgs = ts flatMap { v => List( StrT, SetT( v ) ) }
+      List( PolyOperT( ts, OperT( TupT( tupArgs : _* ), SetT( RecT( kvMap ) ) ) ) )
 
     /** Tuples */
     case TlaFunOper.tuple =>
@@ -141,31 +160,111 @@ class SignatureGenerator {
     // TODO
     /** Overloaded */
     case TlaFunOper.app =>
-      // TODO: Application has multiple signatures
-      val ts = typeVarGenerator.getNUnique( 2 )
-      val List( t1, t2 ) = ts
-      List( PolyOperT( ts, OperT( TupT( FunT( t1, t2 ), t1 ), t1 ) ) )
+      // A function is always possible
+      val funSig = {
+        val ts = typeVarGenerator.getNUnique( 2 )
+        val List( t1, t2 ) = ts
+        PolyOperT( ts, OperT( TupT( FunT( t1, t2 ), t1 ), t1 ) )
+      }
+
+      // def not val, because there's no need to evaluate it in the case of records
+      def seqSig : PolyOperT = {
+        val t = typeVarGenerator.getUnique
+        PolyOperT( List( t ), OperT( TupT( SeqT( t ), IntT ), t ) )
+      }
+
+      // For tuples/records we need integer, resp. string, constants
+      val Seq( _, arg ) = operEx.args
+      arg match {
+        case ValEx( TlaInt( i ) ) =>
+          val sparseTupSig = {
+            val t = typeVarGenerator.getUnique
+            PolyOperT( List( t ), OperT( TupT( SparseTupT( Map( i.toInt -> t ) ), IntT ), t ) )
+          }
+          List( funSig, seqSig, sparseTupSig )
+        case ValEx( TlaStr( s ) ) =>
+          val recSig = {
+            val t = typeVarGenerator.getUnique
+            PolyOperT( List( t ), OperT( TupT( RecT( Map( s -> t ) ), IntT ), t ) )
+          }
+          List( funSig, recSig )
+        case _ => List( funSig, seqSig )
+      }
 
     case TlaFunOper.except =>
-      // Todo, EXCEPT has multiple signatures
-
       val n = ( operEx.args.length - 1 ) / 2
-      val tupSizes = operEx.args.zipWithIndex.collect {
-        case (OperEx( TlaFunOper.tuple, tupargs@_* ), i) if i % 2 == 1 =>
-          tupargs.length
-      }.toSet
+      val allTupArgs = operEx.args.zipWithIndex collect {
+        case (OperEx( TlaFunOper.tuple, tupArgs@_* ), i) if i % 2 == 1 =>
+          tupArgs
+      }
+      val tupSizes = ( allTupArgs map {
+        _.length
+      } ).toSet
       assert( tupSizes.size == 1 )
       // All of the arguments are k-tuples
       val k = tupSizes.head
-      val t = typeVarGenerator.getUnique
-      val ts = typeVarGenerator.getNUnique( k )
-      val fnChain = ts.foldRight[TlaType]( t ) { case (from, to) => FunT( from, to ) }
-      val allPairs = for {
-        _ <- 1 to n
-        v <- List( TupT( ts : _* ), t )
-      } yield v
-      List( PolyOperT( t +: ts, OperT( TupT( fnChain +: allPairs : _* ), fnChain ) ) )
 
+      val funSig = {
+        val t = typeVarGenerator.getUnique
+        val ts = typeVarGenerator.getNUnique( k )
+        val fnChain = ts.foldRight[TlaType]( t ) { case (from, to) => FunT( from, to ) }
+        val allPairs = for {
+          _ <- 1 to n
+          v <- List( TupT( ts : _* ), t )
+        } yield v
+        PolyOperT( t +: ts, OperT( TupT( fnChain +: allPairs : _* ), fnChain ) )
+      }
+
+      val recCandidate = allTupArgs forall { s =>
+        s forall {
+          case ValEx( _ : TlaStr ) => true
+          case _ => false
+        }
+      }
+
+      val recSigOpt =
+        if ( !recCandidate ) None
+        else {
+          val ts = typeVarGenerator.getNUnique( n )
+          val tups = operEx.args.zipWithIndex collect {
+            case (OperEx( TlaFunOper.tuple, tupargs@_* ), i)
+              if i % 2 == 1 && ( tupargs forall {
+                case ValEx( _ : TlaStr ) => true
+                case _ => false
+              } ) =>
+              tupargs map {
+                _.asInstanceOf[ValEx].value.asInstanceOf[TlaStr].value
+              }
+          }
+
+          def expandIteratedMap( leafVal : TlaType, strSeq : Seq[String], baseMap : TypeMap[String] ) : TypeMap[String] = strSeq match {
+            case h +: Nil =>
+              baseMap + ( h -> leafVal )
+            case h +: t =>
+              baseMap.getOrElse( h, RecT( Map.empty ) ) match {
+                case RecT( recMap ) =>
+                  baseMap + ( h -> RecT( expandIteratedMap( leafVal, t, recMap ) ) )
+                case _ =>
+                  throw new IllegalArgumentException( "Malformed nested record map" )
+              }
+          }
+
+          val recT = ts.zip( tups ).foldLeft( RecT( Map.empty ) ) {
+            case (RecT( recMap ), (t, strTup)) =>
+              RecT( expandIteratedMap( t, strTup, recMap ) )
+          }
+
+          val allPairs = for {
+            t <- ts
+            v <- List( TupT( Seq.fill( k )( StrT ) :_* ), t )
+          } yield v
+
+          Some(
+            PolyOperT( ts, OperT( TupT( recT +: allPairs : _* ), recT ) )
+          )
+        }
+
+      List( funSig ) ++ recSigOpt
 
     case o => throw new IllegalArgumentException(
       s"Signature of operator ${o.toString} is not known"
