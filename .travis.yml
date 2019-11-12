@@ -41,6 +41,7 @@ branches:
   only:
   - master
   - unstable
+  - types
   - feature/keramel
 
 script:
