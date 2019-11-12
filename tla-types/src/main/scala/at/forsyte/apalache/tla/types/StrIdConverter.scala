@@ -8,30 +8,34 @@ package at.forsyte.apalache.tla.types
   */
 class StrIdConverter {
 
-  private var idMap: Map[String, Int] = Map.empty
-  private var stringVector: Vector[String] = Vector.empty
+  private var idMap        : Map[String, Int] = Map.empty
+  private var stringVector : Vector[String]   = Vector.empty
 
   /**
     * Add a new string to the enumeration
     */
   def add( s : String ) : Unit = {
-    val newId = stringVector.length
-    stringVector = stringVector :+ s
-    idMap += s -> newId
+    if( !idMap.contains( s ) ) {
+      val newId = stringVector.length
+      stringVector = stringVector :+ s
+      idMap += s -> newId
+    }
   }
 
   /**
     * Accessors
     */
-  def idToString( i: Int ) : Option[String] =
-    if( 0 <= i && i < stringVector.length )
-      Some(stringVector(i))
+  def idToString( i : Int ) : Option[String] =
+    if ( 0 <= i && i < stringVector.length )
+      Some( stringVector( i ) )
     else None
-  def stringToId( s: String ) : Option[Int] = idMap.get(s)
+
+  def stringToId( s : String ) : Option[Int] = idMap.get( s )
 
   /**
     * Content collections
     */
   def allStringIds : Traversable[Int] = stringVector.indices
+
   def allStrings : Traversable[String] = stringVector
 }
