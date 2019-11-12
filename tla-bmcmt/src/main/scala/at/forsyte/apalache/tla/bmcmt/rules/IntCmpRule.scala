@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaBool

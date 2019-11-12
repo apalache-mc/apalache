@@ -1,8 +1,9 @@
-package at.forsyte.apalache.tla.bmcmt
+package at.forsyte.apalache.tla.bmcmt.rewriter
 
+import at.forsyte.apalache.tla.bmcmt.{Arena, SolverContext}
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
-import at.forsyte.apalache.tla.lir._
 
 /**
   * A simplifier of constant TLA+ expressions, e.g., rewriting 1 + 2 to 3.

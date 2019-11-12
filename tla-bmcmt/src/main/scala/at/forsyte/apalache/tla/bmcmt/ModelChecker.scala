@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt
 import java.io.{FileWriter, PrintWriter, StringWriter}
 
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore, FreeExistentialsStoreImpl}
+import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, MockOracle, Oracle}
 import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy
 import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy._

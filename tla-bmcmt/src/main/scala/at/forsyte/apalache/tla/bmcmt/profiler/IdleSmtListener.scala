@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.profiler
 import at.forsyte.apalache.tla.lir.TlaEx
 
-class FruitlessSmtListener extends SmtListener {
+class IdleSmtListener extends SmtListener {
   override def onIntroSmtConst(name: String): Unit = {}
 
   override def onIntroCell(id: Long): Unit = {}

@@ -3,9 +3,9 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.PreproSolverContext.{CacheEntry, EqEntry, InEntry}
 import at.forsyte.apalache.tla.bmcmt.caches.SimpleCache
 import at.forsyte.apalache.tla.bmcmt.profiler.SmtListener
+import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
-
 import at.forsyte.apalache.tla.lir.convenience.tla
 
 object PreproSolverContext {

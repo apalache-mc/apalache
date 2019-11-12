@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.deprecated
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.rules.SubstRule
 import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.convenience.tla
