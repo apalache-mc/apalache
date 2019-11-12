@@ -209,12 +209,11 @@ class TestUserDefTemplates extends FunSuite with TestingPredefs with BeforeAndAf
     assert( assertCond )
   }
 
-  test( "EXCEPT" ){
+  test( "Test EXCEPT return type contains all fields" ){
 
     /**
       * [ [a |-> 1, b |-> 2] EXCEPT !.a = 3 ]
       */
-
     val body = tla.except(
       tla.enumFun(
         tla.str( "a" ), tla.int( 1 ),
@@ -229,19 +228,28 @@ class TestUserDefTemplates extends FunSuite with TestingPredefs with BeforeAndAf
     val templ = udtg.makeTemplate( List.empty, body )
     val templApp = templ( e +: Nil ).asInstanceOf[And]
 
-    val condLst = flattenCond( templApp.args )
-
-    condLst foreach {
-      case Or( _, And( args@_* ) ) =>
-        args foreach println
-      case hf: hasField =>
-        println( hf )
-      case e@Eql(_, r: rec) =>
-        println( e )
-      case _ =>
+    // We anticipate the Rec-side of Or
+    def oracleDecideOr( bf: BoolFormula ): BoolFormula = bf match {
+      case Or( _, b ) => b
+      case x => x
     }
 
+    val condLst = flattenCond( templApp.args map oracleDecideOr )
+
+    /**
+      * \E i .
+      *   /\ e = rec(i)
+      *   /\ hasField( i, "b", int )
+      */
+    val assertCond = condLst exists {
+      case Eql( t, rec( i ) ) => condLst exists {
+        case hasField( `i`, "b", p ) =>
+          transitiveEql( condLst )( t, e ) && transitiveEql( condLst )( p, int )
+        case _ => false
+      }
+      case _ => false
+    }
+
+    assert( assertCond )
   }
-
-
 }
