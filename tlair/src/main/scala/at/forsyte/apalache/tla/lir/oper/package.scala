@@ -193,7 +193,7 @@ package oper {
         * @return true, if the invariant is satisfied
         */
       override def permitsArgs(args: Seq[TlaEx]): Boolean = {
-        val isNameEx: PartialFunction[TlaEx, Boolean] = { case ValEx(v) => v.isInstanceOf[TlaStr] }
+        val isNameEx: PartialFunction[TlaEx, Boolean] = { case ValEx(TlaStr(_)) => true }
         args.tail.forall(isNameEx.isDefinedAt)
       }
     }

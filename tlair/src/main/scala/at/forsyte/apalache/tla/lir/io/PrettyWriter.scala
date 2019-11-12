@@ -251,6 +251,33 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
 
         group(doc)
 
+        // a set of functions [S -> T]
+      case OperEx(TlaSetOper.funSet, domain, coDomain) =>
+        val doc =
+          toDoc(TlaSetOper.funSet.precedence, domain) <>
+            nest(line <>
+              text("->") <> space <>
+              toDoc(TlaSetOper.funSet.precedence, coDomain))
+        group(brackets(doc))
+
+        // a labelled expression L3(a, b) :: 42
+      case expr @ OperEx(oper @ TlaOper.label, decoratedExpr, ValEx(TlaStr(name)), args @ _*) =>
+        val argDocs = args map {
+          case ValEx(TlaStr(str)) => text(str)
+          case e => throw new MalformedTlaError("Malformed expression: " + expr)
+        }
+        val optionalArgs =
+          if (args.isEmpty)
+            emptyDoc
+          else
+            parens(ssep(argDocs.toList, text(",") <> softline))
+
+        val doc =
+          text(name) <> optionalArgs <> space <> "::" <>
+            nest(line <>toDoc(oper.precedence, decoratedExpr))
+        group(wrapWithParen(parentPrecedence, oper.precedence, doc))
+
+      // [A]_vars or <A>_vars
       case OperEx(op, action, vars)
         if op == TlaActionOper.stutter || op == TlaActionOper.nostutter =>
         def wrapper = if (op == TlaActionOper.stutter) brackets _ else angles _
@@ -312,6 +339,7 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
 
         wrapWithParen(parentPrecedence, op.precedence, doc)
 
+        // TODO: fix funSet
       case OperEx(op, args@_*) =>
         val argDocs = args.map(toDoc(op.precedence, _)).toList
         val commaSeparated = ssep(argDocs, "," <> softline)

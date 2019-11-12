@@ -82,7 +82,7 @@ object Builder {
     * @param ex a TLA+ expression to decorate
     * @param name label identifier
     * @param args label arguments (also identifiers)
-    * @return OperEx(TlaOper.label, ex, name as NameEx, args as NameEx)
+    * @return OperEx(TlaOper.label, ex, name as ValEx(TlaStr(_)), args as ValEx(TlaStr(_)))
     */
   def label(ex: TlaEx, name: String, args: String*): OperEx = {
     OperEx(TlaOper.label, ex +: ValEx(TlaStr(name)) +: args.map(s => ValEx(TlaStr(s))) :_*)

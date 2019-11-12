@@ -134,7 +134,6 @@ object UTFPrinter extends Printer {
 
           case TlaBoolOper.and => opAppStr( args, " %s ".format( m_and ) )
           case TlaBoolOper.or => opAppStr( args, " %s ".format( m_or ) )
-          case TlaBoolOper.orParallel => opAppStr( args, " %s ".format( TlaBoolOper.orParallel.name ) )
           case TlaBoolOper.not => mkOpApp( "%s%%s".format( m_not ), args : _* )
           case TlaBoolOper.implies => mkOpApp( "%%s %s %%s".format( m_impl ), args : _* )
           case TlaBoolOper.equiv => mkOpApp( "%%s %s %%s".format( m_equiv ), args : _* )
