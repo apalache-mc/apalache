@@ -140,10 +140,8 @@ class TestBuiltinTemplates extends FunSuite with TestingPredefs with BeforeAndAf
       *   /\ \E t .
       *     /\ hasField( i, "a", t )
       *     /\ t13 = t
-      *
       */
-
-    assert(
+    val assertCond1 =
       templateApp1 match {
         case Or( _, And( args@_* ) ) => args exists {
           case Eql( `e1`, rec( i ) ) => args exists {
@@ -157,7 +155,8 @@ class TestBuiltinTemplates extends FunSuite with TestingPredefs with BeforeAndAf
         }
         case _ => false
       }
-    )
+
+    assert( assertCond1 )
 
     val ex2 = tla.except(
       n_x,
@@ -170,11 +169,36 @@ class TestBuiltinTemplates extends FunSuite with TestingPredefs with BeforeAndAf
     val template2 = templateGen.makeTemplate( ex2 )
     val templateApp2 = template2( templateArgs2 )
 
-    templateApp2 match {
-      case Or( _, And( args@_* ) ) =>
-        args foreach println
-      case _ => ()
-    }
+    /**
+      * Let ts2 = List(t21,t22,t23,t24,t25,t26,t27)
+      *
+      * \E i .
+      *   /\ e2 = rec(i)
+      *   /\ \E j .
+      *     /\ hasField( i, "a", rec(j) )
+      *     /\ \E x .
+      *       /\ hasField(j, "c", x)
+      *       /\ x = t25
+      */
+    val assertCond2 =
+      templateApp2 match {
+        case Or( _, And( args@_* ) ) => args exists {
+          case Eql( `e2`, rec( i ) ) => args.exists {
+            case hasField( `i`, "a", rec( j ) ) => args exists {
+              case hasField( `j`, "c", x ) => args exists {
+                case Eql( y, `x` ) => ts2.take( 5 ).reverse.headOption contains y
+                case _ => false
+              }
+              case _ => false
+            }
+            case _ => false
+          }
+          case _ => false
+        }
+        case _ => false
+      }
+
+    assert( assertCond2 )
     
   }
 
