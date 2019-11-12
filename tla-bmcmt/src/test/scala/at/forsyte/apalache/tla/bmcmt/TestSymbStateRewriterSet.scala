@@ -471,7 +471,12 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
   test("""SE-SET-EQ1: {} = {1} \ {1} ~~> $B$... (true)""") {
     def intSet() = emptySetWithType(IntT())
     val setOf1 = tla.enumSet(tla.int(1))
-    val ex = OperEx(TlaOper.eq, intSet(), tla.setminus(setOf1, setOf1))
+
+    def dynEmpty(left: TlaEx): TlaEx = {
+      tla.filter(tla.name("t"), left, tla.bool(false))
+    }
+
+    val ex = OperEx(TlaOper.eq, intSet(), dynEmpty(setOf1))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)

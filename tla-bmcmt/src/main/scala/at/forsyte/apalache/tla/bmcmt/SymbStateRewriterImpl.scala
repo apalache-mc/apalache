@@ -4,8 +4,8 @@ import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.{Continue, Done, NoRule, 
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.caches._
 import at.forsyte.apalache.tla.bmcmt.profiler.RuleStatListener
+import at.forsyte.apalache.tla.bmcmt.rewriter.RewriterConfig
 import at.forsyte.apalache.tla.bmcmt.rules._
-import at.forsyte.apalache.tla.bmcmt.rules.deprecated.{CartesianProductRule, RecordSetRule, SetCapAndMinusRule}
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -42,6 +42,13 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     * The difference between the number of pushes and pops so far.
     */
   private var level: Int = 0
+
+  /**
+    * Configuration options
+    *
+    * @return the rewriter options
+    */
+  var config: RewriterConfig = new RewriterConfig
 
   /**
     * The cache for lazy equalities, to avoid generating the same equality constraints many times.
@@ -184,22 +191,22 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
       List(new SetCtorRule(this)),
     key(tla.subseteq(tla.name("x"), tla.name("S")))
       -> List(new SetInclusionRule(this)),
+    key(tla.cup(tla.name("X"), tla.name("Y")))
+      -> List(new SetCupRule(this)),
+    key(tla.filter(tla.name("x"), tla.name("S"), tla.name("p")))
+      -> List(new SetFilterRule(this)),
+    key(tla.map(tla.name("e"), tla.name("x"), tla.name("S")))
+      -> List(new SetMapRule(this)),
 //    key(tla.subset(tla.name("x"), tla.name("S")))
 //      -> List(new SetInclusionRule(this)),
 //    key(tla.supseteq(tla.name("x"), tla.name("S")))
 //      -> List(new SetInclusionRule(this)),
 //    key(tla.supset(tla.name("x"), tla.name("S")))
 //      -> List(new SetInclusionRule(this)),
-    key(tla.cup(tla.name("X"), tla.name("Y")))
-      -> List(new SetCupRule(this)),
-    key(tla.cap(tla.name("X"), tla.name("Y")))
-      -> List(new SetCapAndMinusRule(this)),
-    key(tla.setminus(tla.name("X"), tla.name("Y")))
-      -> List(new SetCapAndMinusRule(this)),
-    key(tla.filter(tla.name("x"), tla.name("S"), tla.name("p")))
-      -> List(new SetFilterRule(this)),
-    key(tla.map(tla.name("e"), tla.name("x"), tla.name("S")))
-      -> List(new SetMapRule(this)),
+//    key(tla.cap(tla.name("X"), tla.name("Y")))
+//      -> List(new SetCapAndMinusRule(this)),
+//    key(tla.setminus(tla.name("X"), tla.name("Y")))
+//      -> List(new SetCapAndMinusRule(this)),
 //    key(tla.times(tla.name("S1"), tla.name("S2")))
 //      -> List(new CartesianProductRule(this)),
 //    key(tla.recSet(tla.str("a"), tla.name("S1"), tla.str("b"), tla.name("S2")))

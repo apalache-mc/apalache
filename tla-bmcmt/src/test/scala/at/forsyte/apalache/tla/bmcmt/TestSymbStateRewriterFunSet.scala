@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.NameEx
+import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -101,7 +101,13 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
 
   test("""SE-FUNSET2: [x \in {0, 1, 2} \ {0} -> 3] \in [{1, 2} -> {3, 4}]""") {
     // although 0 is in the function domain at the arena level, it does not belong to the set difference
-    val domain1 = tla.setminus(tla.enumSet(0.to(2).map(tla.int) :_*), tla.enumSet(tla.int(0)))
+    def setminus(set: TlaEx, intVal: Int): TlaEx = {
+      tla.filter(tla.name("t"),
+        set,
+        tla.not(tla.eql(tla.name("t"), tla.int(intVal))))
+    }
+
+    val domain1 = setminus(tla.enumSet(0.to(2).map(tla.int) :_*), 0)
     val domain2 = tla.enumSet(1.to(2).map(tla.int) :_*)
     val codomain = tla.enumSet(tla.int(3), tla.int(4))
     val funset = tla.funSet(domain2, codomain)

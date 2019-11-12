@@ -289,17 +289,24 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val init = tla.and(mkAssign("x", tla.enumSet(tla.int(2))),
       mkAssign("y", tla.enumSet(tla.int(10))))
 
+    // as KerA+ does not have setminus, we use a filter here
+    def setminus(setName: String, boundName: String, intVal: Int): TlaEx = {
+      tla.filter(tla.name(boundName),
+        tla.name(setName),
+        tla.not(tla.eql(tla.name(boundName), tla.int(intVal))))
+    }
+
     // Next == \/ x' = x \cup {2} /\ y' = y \setminus {11}
     //         \/ x' = x \setminus {2} /\ y' = y \cup {11}
     val next1 =
     tla.and(
       mkAssign("x", tla.cup(tla.name("x"), tla.enumSet(tla.int(2)))),
-      mkAssign("y", tla.setminus(tla.name("y"), tla.enumSet(tla.int(11))))
+      mkAssign("y", setminus("y", "t1", 11))
     )///
     ///
     val next2 =
       tla.and(
-        mkAssign("x", tla.setminus(tla.name("x"), tla.enumSet(tla.int(2)))),
+        mkAssign("x", setminus("x", "t2", 2)),
         mkAssign("y", tla.cup(tla.name("y"), tla.enumSet(tla.int(11))))
       ) ///
 

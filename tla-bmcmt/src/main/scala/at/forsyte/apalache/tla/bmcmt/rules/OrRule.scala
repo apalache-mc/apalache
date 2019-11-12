@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
+import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
@@ -26,7 +27,7 @@ class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val trueConst = SolverContext.trueConst
     val simplfier = new ConstSimplifierForSmt()
     simplfier.simplifyShallow(state.ex) match {
-      case OperEx(TlaBoolOper.or, args @ _*) =>
+      case OperEx(TlaBoolOper.or, args@_*) =>
         val finalState =
           if (args.isEmpty) {
             // empty disjunction is always false
@@ -39,18 +40,35 @@ class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
                 case hd +: tail => tla.ite(hd, NameEx(trueConst), toIte(tail))
               }
             }
-            // create a chain of IF-THEN-ELSE expressions and rewrite them
-            val newState = state.setRex(toIte(args)).setTheory(BoolTheory())
+
+            val newState =
+              if (rewriter.config.shortCircuit) {
+                // create a chain of IF-THEN-ELSE expressions and rewrite them
+                state.setRex(toIte(args)).setTheory(BoolTheory())
+              } else {
+                // simply translate to a disjunction
+                var nextState = state.updateArena(_.appendCell(BoolT()))
+                val pred = nextState.arena.topCell.toNameEx
+                def mapArg(argEx: TlaEx): TlaEx = {
+                  nextState = rewriter.rewriteUntilDone(nextState.setRex(argEx).setTheory(CellTheory()))
+                  nextState.ex
+                }
+
+                val rewrittenArgs = args map mapArg
+                rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.or(rewrittenArgs :_*)))
+                nextState.setRex(pred).setTheory(CellTheory())
+              }
+
             rewriter.rewriteUntilDone(newState)
           }
 
         rewriter.coerce(finalState, state.theory) // coerce if needed
 
-      case e @ ValEx(_) =>
+      case e@ValEx(_) =>
         // the simplifier has rewritten the disjunction to TRUE or FALSE
         rewriter.rewriteUntilDone(state.setRex(e))
 
-      case e @ _ =>
+      case e@_ =>
         throw new RewriterException("%s is not applicable to %s".format(getClass.getSimpleName, e))
     }
   }

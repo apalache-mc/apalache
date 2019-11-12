@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.{NameEx, TlaEx, ValEx}
 
 /**
-  * An advanced form of PickFromAndFunMerge that allows us:
+  * An element picket that allows us:
   *
   * <ul>
   * <li>to pick from a list of cells instead of a set, and</li>
@@ -19,7 +19,6 @@ import at.forsyte.apalache.tla.lir.{NameEx, TlaEx, ValEx}
   * @author Igor Konnov
   */
 class CherryPick(rewriter: SymbStateRewriter) {
-  private val picker = new PickFromAndFunMerge(rewriter, failWhenEmpty = false)
   private val defaultValueFactory = new DefaultValueFactory(rewriter)
   val oracleFactory = new OracleFactory(rewriter)
 
@@ -35,7 +34,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     set.cellType match {
       case PowSetT(t@FinSetT(_)) =>
         // a powerset is never empty, pick an element
-        picker.pickFromPowset(t, set, state)
+        pickFromPowset(t, set, state)
 
       case FinFunSetT(domt@FinSetT(_), cdm@FinSetT(rest)) =>
         // No emptiness check, since we are dealing with a function set [S -> T].
@@ -482,6 +481,35 @@ class CherryPick(rewriter: SymbStateRewriter) {
     rewriter.solverContext.log(s"; } CHERRY-PICK $funCell:$funType")
     // That's it! Compare to pickFunPreWarp.
     nextState.setArena(newArena).setRex(funCell).setTheory(CellTheory())
+  }
+
+  /**
+    * Implements SE-PICK-SET, that is, assume that the picked element is a set itself.
+    *
+    * @param resultType a cell type to assign to the picked cell.
+    * @param set        a powerset
+    * @param state      a symbolic state
+    * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
+    */
+  def pickFromPowset(resultType: CellT, set: ArenaCell, state: SymbState): SymbState = {
+    rewriter.solverContext.log("; PICK %s FROM %s {".format(resultType, set))
+    var arena = state.arena.appendCell(resultType)
+    val resultSet = arena.topCell
+    val baseSet = arena.getDom(set)
+    val elems = arena.getHas(baseSet)
+    // resultSet may contain all the elements from the baseSet of the powerset SUBSET(S)
+    arena = arena.appendHas(resultSet, elems: _*)
+
+    // if resultSet has an element, then it must be also in baseSet
+    def inResultIfInBase(elem: ArenaCell): Unit = {
+      val inResult = tla.in(elem, resultSet)
+      val inBase = tla.in(elem, baseSet)
+      rewriter.solverContext.assertGroundExpr(tla.impl(inResult, inBase))
+    }
+
+    elems foreach inResultIfInBase
+    rewriter.solverContext.log("; } PICK %s FROM %s".format(resultType, set))
+    state.setArena(arena).setRex(resultSet)
   }
 
   /**
