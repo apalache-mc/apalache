@@ -157,7 +157,31 @@ class SignatureGenerator {
       }
 
     /** Sequences */
-    // TODO
+    case TlaSeqOper.concat =>
+      val t = typeVarGenerator.getUnique
+      List( PolyOperT( List( t ), OperT( TupT( SeqT( t ), SeqT( t ) ), SeqT( t ) ) ) )
+    case TlaSeqOper.head =>
+      val t = typeVarGenerator.getUnique
+      List( PolyOperT( List( t ), OperT( TupT( SeqT( t ) ), t ) ) )
+    case TlaSeqOper.tail =>
+      val t = typeVarGenerator.getUnique
+      List( PolyOperT( List( t ), OperT( TupT( SeqT( t ) ), SeqT( t ) ) ) )
+    case TlaSeqOper.len =>
+      val t = typeVarGenerator.getUnique
+      List( PolyOperT( List( t ), OperT( TupT( SeqT( t ) ), IntT ) ) )
+    case TlaSetOper.seqSet =>
+      val t = typeVarGenerator.getUnique
+      List( PolyOperT( List( t ), OperT( TupT( SetT( t ) ), SetT( SeqT( t ) ) ) ) )
+    case TlaSeqOper.append =>
+      val t = typeVarGenerator.getUnique
+      List( PolyOperT( List( t ), OperT( TupT( SeqT( t ), t ), SeqT( t ) ) ) )
+    case TlaSeqOper.subseq =>
+      val t = typeVarGenerator.getUnique
+      List( PolyOperT( List( t ), OperT( TupT( SeqT( t ), IntT, IntT ), SeqT( t ) ) ) )
+    case TlaSeqOper.selectseq =>
+      val t = typeVarGenerator.getUnique
+      List( PolyOperT( List( t ), OperT( TupT( SeqT( t ), OperT( TupT( t ), BoolT ) ), SeqT( t ) ) ) )
+
     /** Overloaded */
     case TlaFunOper.app =>
       // A function is always possible
@@ -256,7 +280,7 @@ class SignatureGenerator {
 
           val allPairs = for {
             t <- ts
-            v <- List( TupT( Seq.fill( k )( StrT ) :_* ), t )
+            v <- List( TupT( Seq.fill( k )( StrT ) : _* ), t )
           } yield v
 
           Some(

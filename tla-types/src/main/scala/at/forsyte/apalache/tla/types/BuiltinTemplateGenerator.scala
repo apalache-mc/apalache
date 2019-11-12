@@ -25,9 +25,6 @@ class BuiltinTemplateGenerator( private val smtVarGen : SmtVarGenerator ) {
   def makeTemplate( ex : OperEx ) : Template = {
     case e +: ts =>
       val sigs = sigGen.getPossibleSignatures( ex )
-      // Sanity check
-      if( sigs.isEmpty )
-        throw new NotImplementedError(s"Signature for $ex has not been implemented")
       // In general, overloaded operators can have >1 potential signature
       val subTemplates = sigs map { case PolyOperT( tVars, OperT( TupT( xs@_* ), y ) ) =>
         // We create fresh SMT variables, which hold the concrete types of the type parameters
@@ -62,6 +59,8 @@ class BuiltinTemplateGenerator( private val smtVarGen : SmtVarGenerator ) {
         case h +: Nil => h
         case _ => Or( subTemplates : _* )
       }
+    case Nil =>
+      throw new IllegalArgumentException("Templates must accept at least 1 argument.")
   }
 
 }
