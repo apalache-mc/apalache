@@ -38,4 +38,4 @@ previously declared.
   
   1. __Short circuiting__: `rewriter.shortCircuit=(false|true)`. By default, `A \/ B` and `A /\ B` are translated to SMT as if-then-else expressions, e.g., `(ite A true B)`. When `rewriter.shortCircuit=false`, disjunctions and conjunctions are directly translated to `(or ...)` and `(and ...)` respectively. By default, `rewriter.shortCircuit=true`.
 
-  1. __Lazy short circuiting__: `rewriter.lazyCircuit=(false|true)`. Given `A /\ B`, first check with the solver, whether `A` is satisfiable. If not, return reduce to `false` immediately; otherwise, rewrite `B`. By default, `rewriter.lazyCircuit=true`.
+  1. __Lazy short circuiting__: `rewriter.lazyCircuit=(false|true)`. Given `A /\ B`, first check with the solver, whether `A` is satisfiable. If not, return reduce to `false` immediately; otherwise, rewrite `B`. By default, `rewriter.lazyCircuit=false`.
