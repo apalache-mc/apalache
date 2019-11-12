@@ -1,4 +1,6 @@
-package at.forsyte.apalache.tla.types
+package at.forsyte.apalache.tla.types.smt
+
+import at.forsyte.apalache.tla.types.{SmtIntVariable, SmtTypeVariable, SmtVariable}
 
 /**
   * Generator for fresh SMT variables, of the TlaType datatype or integer variety.
