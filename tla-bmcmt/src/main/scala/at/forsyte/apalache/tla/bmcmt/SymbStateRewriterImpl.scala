@@ -145,8 +145,6 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
 //      -> List(new NeqRule(this)),
     key(tla.or(tla.name("x"), tla.name("y")))
       -> List(new OrRule(this)),
-    key(tla.orParallel(tla.name("x"), tla.name("y")))
-      -> List(new OrRule(this)),
     key(tla.and(tla.name("x"), tla.name("y")))
       -> List(new AndRule(this)),
     key(tla.not(tla.name("x")))
@@ -186,12 +184,12 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
       List(new SetCtorRule(this)),
     key(tla.subseteq(tla.name("x"), tla.name("S")))
       -> List(new SetInclusionRule(this)),
-    key(tla.subset(tla.name("x"), tla.name("S")))
-      -> List(new SetInclusionRule(this)),
-    key(tla.supseteq(tla.name("x"), tla.name("S")))
-      -> List(new SetInclusionRule(this)),
-    key(tla.supset(tla.name("x"), tla.name("S")))
-      -> List(new SetInclusionRule(this)),
+//    key(tla.subset(tla.name("x"), tla.name("S")))
+//      -> List(new SetInclusionRule(this)),
+//    key(tla.supseteq(tla.name("x"), tla.name("S")))
+//      -> List(new SetInclusionRule(this)),
+//    key(tla.supset(tla.name("x"), tla.name("S")))
+//      -> List(new SetInclusionRule(this)),
     key(tla.cup(tla.name("X"), tla.name("Y")))
       -> List(new SetCupRule(this)),
     key(tla.cap(tla.name("X"), tla.name("Y")))

@@ -12,6 +12,8 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
   * An optimization for a record assignment: x' \in [f_1 : S_1, ..., f_n : S_n].
   * In principle, we could expand the record set first, but that is far from optimal.
   *
+  * TODO: this is a case where purely symbolic constraints would help.
+  *
   * @author Igor Konnov
   */
 class AssignRecordRule(rewriter: SymbStateRewriter) extends RewritingRule {

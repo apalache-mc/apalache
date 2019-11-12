@@ -94,8 +94,6 @@ object Builder {
 
   def or( p_args : TlaEx* ) : OperEx = OperEx( TlaBoolOper.or, p_args : _* )
 
-  def orParallel( p_args : TlaEx* ) : OperEx = OperEx( TlaBoolOper.orParallel, p_args : _* )
-
   def not( p_P : TlaEx ) : OperEx = OperEx( TlaBoolOper.not, p_P )
 
   def impl( p_P : TlaEx,

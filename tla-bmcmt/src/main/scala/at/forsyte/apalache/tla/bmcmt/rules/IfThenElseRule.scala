@@ -59,33 +59,6 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  /*
-  /**
-    * <p>This function adds the constraints that allow us to properly treat side effects such as Assert(..).
-    * It essentially says that the failure predicates generated for each branch can be only activated,
-    * if the branch condition is satisfied. Without this condition the expressions such as
-    * "IF e \in DOMAIN f THEN f[e] ELSE default" would report a false runtime error.</p>
-    *
-    * TODO: This method generates an enormous number of constraints on large benchmarks. Find a better solution.
-    *
-    * @param predState the state after rewriting the condition
-    * @param thenState the state after rewriting the then branch
-    * @param elseState the state after rewriting the else branch
-    */
-  private def coverFailurePredicates(predState: SymbState, thenState: SymbState, elseState: SymbState): Unit = {
-    // XXX: future self, the operations on the maps and sets are probably expensive. Optimize.
-    // a response from the future self: the whole thing was a bad idea.
-    val predsBefore = Set(predState.arena.findCellsByType(FailPredT()): _*)
-    val thenPreds = Set(thenState.arena.findCellsByType(FailPredT()): _*) -- predsBefore
-    val elsePreds = Set(elseState.arena.findCellsByType(FailPredT()): _*) -- thenPreds
-    val cond = predState.ex
-    // for each failure fp on the then branch, fp => cond
-    thenPreds.foreach(fp => rewriter.solverContext.assertGroundExpr(tla.or(tla.not(fp), cond)))
-    // for each failure fp on the else branch, fp => ~cond
-    elsePreds.foreach(fp => rewriter.solverContext.assertGroundExpr(tla.or(tla.not(fp), tla.not(cond))))
-  }
-  */
-
   private def iteBasic(state: SymbState, commonType: CellT, pred: TlaEx, thenCell: ArenaCell, elseCell: ArenaCell) = {
     val newArena = state.arena.appendCell(commonType)
     val newCell = newArena.topCell

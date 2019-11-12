@@ -23,10 +23,6 @@ class SetMapRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-// a special single-argument case
-//      case OperEx(TlaSetOper.map, mapEx, NameEx(varName), setEx) =>
-//        rewriteSetMap(state, mapEx, varName, setEx)
-
       case OperEx(TlaSetOper.map, mapEx, varsAndSets @ _*) =>
         val varNames = varsAndSets.zipWithIndex.filter(_._2 % 2 == 0).collect { case (NameEx(n), _) => n }
         val sets = varsAndSets.zipWithIndex.filter(_._2 % 2 == 1).map(_._1)

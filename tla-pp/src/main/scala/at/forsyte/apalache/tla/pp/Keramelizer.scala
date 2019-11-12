@@ -44,6 +44,21 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
 
     case OperEx(TlaSetOper.notin, x, setX) =>
       tla.not(tla.in(x, setX))
+
+    case OperEx(TlaSetOper.supseteq, setX, setY) =>
+      tla.subseteq(setY, setX)
+
+    case OperEx(TlaSetOper.subsetProper, setX, setY) =>
+      tla.and(
+        tla.not(tla.eql(setX, setY)),
+        tla.subseteq(setX, setY)
+      ) ///
+
+    case OperEx(TlaSetOper.supsetProper, setX, setY) =>
+      tla.and(
+        tla.not(tla.eql(setX, setY)),
+        tla.subseteq(setY, setX)
+      ) ///
   }
 
   /**

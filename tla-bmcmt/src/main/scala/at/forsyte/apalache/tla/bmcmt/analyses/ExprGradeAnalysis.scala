@@ -84,12 +84,7 @@ class ExprGradeAnalysis @Inject()(val store: ExprGradeStoreImpl) {
           case Some(ExprGrade.Constant) | Some(ExprGrade.StateFree) | Some(ExprGrade.StateBound) =>
             expr // keep it
 
-          case Some(grade) =>
-            val newEx = OperEx(TlaBoolOper.orParallel, newArgs : _*)
-            update(newEx, grade)
-            newEx
-
-          case None =>
+          case _ =>
             throw new RuntimeException("ExprGradeAnalysis is broken")
         }
 

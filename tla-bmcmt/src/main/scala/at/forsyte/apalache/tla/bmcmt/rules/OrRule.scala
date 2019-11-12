@@ -16,7 +16,6 @@ class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaBoolOper.or, _*) => true
-      case OperEx(TlaBoolOper.orParallel, _*) => true
       case _ => false
     }
   }
@@ -44,21 +43,6 @@ class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
             rewriter.rewriteUntilDone(newState)
           }
 
-        rewriter.coerce(finalState, state.theory) // coerce if needed
-
-      case OperEx(TlaBoolOper.orParallel, args @ _*) =>
-        // TODO: update according to the semantics!
-        // normal disjunction on action-level expressions (like in TLC)
-        // rewrite all the arguments
-        val (newState: SymbState, preds: Seq[TlaEx]) =
-          rewriter.rewriteSeqUntilDone(state.setTheory(BoolTheory()), args)
-        val newPred = rewriter.solverContext.introBoolConst()
-        // and write down the constraints newPred <=> e_1 \/ ... \/ e_k
-        val cons = OperEx(TlaBoolOper.equiv,
-          NameEx(newPred),
-          OperEx(TlaBoolOper.or, preds: _*))
-        rewriter.solverContext.assertGroundExpr(cons)
-        val finalState = newState.setRex(NameEx(newPred)).setTheory(BoolTheory())
         rewriter.coerce(finalState, state.theory) // coerce if needed
 
       case e @ ValEx(_) =>

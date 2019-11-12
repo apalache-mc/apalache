@@ -183,7 +183,6 @@ class TestTrivialTypeFinder extends RewriterBase {
     assert(BoolT() == typeFinder.compute(tla.not(p), BoolT()))
     assert(BoolT() == typeFinder.compute(tla.and(p, q), BoolT(), BoolT()))
     assert(BoolT() == typeFinder.compute(tla.or(p, q), BoolT(), BoolT()))
-    assert(BoolT() == typeFinder.compute(tla.orParallel(p, q), BoolT(), BoolT()))
     assert(BoolT() == typeFinder.compute(tla.impl(p, q), BoolT(), BoolT()))
     assert(BoolT() == typeFinder.compute(tla.equiv(p, q), BoolT(), BoolT()))
     assert(BoolT() == typeFinder.compute(tla.forall(x, S, p), IntT(), FinSetT(IntT()), BoolT()))
@@ -197,9 +196,6 @@ class TestTrivialTypeFinder extends RewriterBase {
     }
     assertThrows[TypeInferenceError] {
       assert(BoolT() == typeFinder.compute(tla.or(p, q), IntT(), BoolT()))
-    }
-    assertThrows[TypeInferenceError] {
-      assert(BoolT() == typeFinder.compute(tla.orParallel(p, q), IntT(), BoolT()))
     }
     assertThrows[TypeInferenceError] {
       assert(BoolT() == typeFinder.compute(tla.impl(p, q), IntT(), BoolT()))

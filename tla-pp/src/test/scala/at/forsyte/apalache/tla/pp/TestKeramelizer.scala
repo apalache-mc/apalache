@@ -90,4 +90,32 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
     assert(expected == output)
   }
 
+  test("""X \supseteq Y ~~> Y \subseteq X""") {
+    val input = tla.supseteq(tla.name("X"), tla.name("Y"))
+    val output = keramelizer.apply(input)
+    val expected = tla.subseteq(tla.name("Y"), tla.name("X"))
+    assert(expected == output)
+  }
+
+  test("""X \subset Y ~~> ~(X = Y) /\ X \subseteq Y""") {
+    val input = tla.subset(tla.name("X"), tla.name("Y"))
+    val output = keramelizer.apply(input)
+    val expected =
+      tla.and(
+        tla.not(tla.eql(tla.name("X"), tla.name("Y"))),
+        tla.subseteq(tla.name("X"), tla.name("Y"))
+      ) ///
+    assert(expected == output)
+  }
+
+  test("""X \supset Y ~~> ~(X = Y) /\ Y \subseteq X""") {
+    val input = tla.supset(tla.name("X"), tla.name("Y"))
+    val output = keramelizer.apply(input)
+    val expected =
+      tla.and(
+        tla.not(tla.eql(tla.name("X"), tla.name("Y"))),
+        tla.subseteq(tla.name("Y"), tla.name("X"))
+      ) ///
+    assert(expected == output)
+  }
 }

@@ -789,7 +789,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
       BoolT()
 
     case ex@OperEx(op, _*)
-      if op == TlaBoolOper.and || op == TlaBoolOper.or || op == TlaBoolOper.orParallel =>
+      if op == TlaBoolOper.and || op == TlaBoolOper.or =>
       argTypes.foreach(expectType(BoolT(), ex, _))
       BoolT()
 

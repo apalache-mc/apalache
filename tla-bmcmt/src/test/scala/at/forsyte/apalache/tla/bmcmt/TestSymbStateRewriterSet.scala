@@ -948,7 +948,8 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SUPSETEQ[1-3]: {1, 2, 3} \supseteq {1, 2} ~~> $B$... (true)""") {
+  // rewritten by Keramelizer
+  ignore("""SE-SUPSETEQ[1-3]: {1, 2, 3} \supseteq {1, 2} ~~> $B$... (true)""") {
     val left = tla.enumSet(tla.int(1), tla.int(2))
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.supseteq(right, left)
@@ -971,7 +972,8 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SUPSETEQ[1-3]: {1, 2, 3} \supseteq {1, 2, 3} ~~> $B$... (true)""") {
+  // rewritten by Keramelizer
+  ignore("""SE-SUPSETEQ[1-3]: {1, 2, 3} \supseteq {1, 2, 3} ~~> $B$... (true)""") {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.supseteq(right, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
@@ -993,7 +995,8 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SUPSETEQ[1-3]: {1, 2, 3} \supseteq {} ~~> $B$... (true)""") {
+  // rewritten by Keramelizer
+  ignore("""SE-SUPSETEQ[1-3]: {1, 2, 3} \supseteq {} ~~> $B$... (true)""") {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     // an empty set requires a type annotation
     val ex = tla.supseteq(right, emptySetWithType(IntT()))
@@ -1016,7 +1019,8 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SUPSETEQ[1-3]: {1, 2, 3} \supseteq {1, 4} ~~> $B$... (false)""") {
+  // rewritten by Keramelizer
+  ignore("""SE-SUPSETEQ[1-3]: {1, 2, 3} \supseteq {1, 4} ~~> $B$... (false)""") {
     val left = tla.enumSet(tla.int(1), tla.int(4))
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.supseteq(right, left)
@@ -1039,7 +1043,8 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SUBSET[1-3]: {1, 2} \subset {1, 2, 3} ~~> $B$... (true)""") {
+  // rewritten by Keramelizer
+  ignore("""SE-SUBSET[1-3]: {1, 2} \subset {1, 2, 3} ~~> $B$... (true)""") {
     val left = tla.enumSet(tla.int(1), tla.int(2))
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.subset(left, right)
@@ -1062,7 +1067,8 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SUBSET[1-3]: {1, 2, 3} \subset {1, 2, 3} ~~> $B$... (false)""") {
+  // rewritten by Keramelizer
+  ignore("""SE-SUBSET[1-3]: {1, 2, 3} \subset {1, 2, 3} ~~> $B$... (false)""") {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.subset(right, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
@@ -1084,7 +1090,8 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SUBSET[1-3]: {} \subset {1, 2, 3} ~~> TRUE""") {
+  // rewritten by Keramelizer
+  ignore("""SE-SUBSET[1-3]: {} \subset {1, 2, 3} ~~> TRUE""") {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     // an empty set requires a type annotation
     val ex = tla.subset(emptySetWithType(IntT()), right)
@@ -1107,7 +1114,8 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SUBSET[1-3]: {1, 4} \subset {1, 2, 3} ~~> FALSE""") {
+  // rewritten by Keramelizer
+  ignore("""SE-SUBSET[1-3]: {1, 4} \subset {1, 2, 3} ~~> FALSE""") {
     val left = tla.enumSet(tla.int(1), tla.int(4))
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.subset(left, right)
@@ -1130,7 +1138,8 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""type inference error: {1, 3} \subset {{1}, {2}, {3}}""") {
+  // rewritten by Keramelizer
+  ignore("""type inference error: {1, 3} \subset {{1}, {2}, {3}}""") {
     // this test worked in the past but now it reports a type inference error
     val left = tla.enumSet(tla.int(1), tla.int(3))
     val right = tla.enumSet(tla.enumSet(tla.int(1)), tla.enumSet(tla.int(2)), tla.enumSet(tla.int(3)))
@@ -1142,7 +1151,8 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SUPSET[1-3]:  {1, 2, 3} \supset {1, 2} ~~> $B$... (true)""") {
+  // rewritten by Keramelizer
+  ignore("""SE-SUPSET[1-3]:  {1, 2, 3} \supset {1, 2} ~~> $B$... (true)""") {
     val left = tla.enumSet(tla.int(1), tla.int(2))
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.supset(right, left)
@@ -1165,7 +1175,8 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SUPSET[1-3]: {1, 2, 3} \supset {1, 2, 3} ~~> $B$... (false)""") {
+  // rewritten by Keramelizer
+  ignore("""SE-SUPSET[1-3]: {1, 2, 3} \supset {1, 2, 3} ~~> $B$... (false)""") {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.supset(right, right)
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
@@ -1187,7 +1198,8 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SUPSET[1-3]: {1, 2, 3} \supset {} ~~> TRUE""") {
+  // rewritten by Keramelizer
+  ignore("""SE-SUPSET[1-3]: {1, 2, 3} \supset {} ~~> TRUE""") {
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     // an empty set requires a type annotation
     val ex = tla.supset(right, emptySetWithType(IntT()))
@@ -1210,7 +1222,8 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SUBSET[1-3]: {1, 2, 3} \subset {1, 4} ~~> FALSE""") {
+  // rewritten by Keramelizer
+  ignore("""SE-SUBSET[1-3]: {1, 2, 3} \subset {1, 4} ~~> FALSE""") {
     val left = tla.enumSet(tla.int(1), tla.int(4))
     val right = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val ex = tla.subset(right, left)

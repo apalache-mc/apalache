@@ -23,6 +23,8 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
            | OperEx(TlaArithOper.ge, _, _)
       => true
 
+        // Note that there is no equality, as it is handled by EqRule. Inequality is rewritten by Keramelizer.
+
       case _ => false
     }
   }
