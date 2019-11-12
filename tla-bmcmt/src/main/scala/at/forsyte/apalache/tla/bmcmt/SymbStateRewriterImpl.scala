@@ -247,6 +247,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
       -> List(new FunCtorRule(this)),
     key(tla.appFun(tla.name("f"), tla.name("x")))
       -> List(new FunAppRule(this)),
+    // Jure, 11.11.19: 2nd argument should be a tuple?
     key(tla.except(tla.name("f"), tla.int(1), tla.int(42)))
       -> List(new FunExceptRule(this)),
     key(tla.funSet(tla.name("X"), tla.name("Y")))
