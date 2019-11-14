@@ -52,11 +52,15 @@ expressions, which requires type inference. Moreover, the user expects a warning
 neither of the conditions `p_1, ..., p_n` holds true.
 Hence, Leslie Lamport defines semantics of case in [Specifying Systems, p. 298](#spec2004) as:
 
-```CHOOSE v: (p_1 /\ (v = e_1) \/ ... \/ (p_n /\ (v = e_n)))```.
+```tla
+  CHOOSE v: (p_1 /\ (v = e_1) \/ ... \/ (p_n /\ (v = e_n)))
+```
 
 Similarly, `CASE-OTHER` is defined  as:
  
- ```CHOOSE v: (p_1 /\ (v = e_1) \/ ... \/ (p_n /\ (v = e_n)) \/ (~p_1 /\ ... ~p_n /\ (v = e_ def)))```.
+ ```tla
+  CHOOSE v: (p_1 /\ (v = e_1) \/ ... \/ (p_n /\ (v = e_n)) \/ (~p_1 /\ ... ~p_n /\ (v = e_ def)))
+ ```
  
 As a result, if there are several conditions among `p_1, ..., p_n` that hold true,
 then `CHOOSE` always selects the same condition ```p_i``` for equivalent formulas.
