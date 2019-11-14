@@ -18,4 +18,4 @@ class UnexpectedLanguageError(message: String) extends LirError(message)
   * An exception that should be thrown when a TLA+ code is malformed.
   * @param message the error message
   */
-class MalformedTlaError(message: String, cause: TlaEx) extends LirError(message)
+class MalformedTlaError(message: String, val causeExpr: TlaEx) extends LirError(message)

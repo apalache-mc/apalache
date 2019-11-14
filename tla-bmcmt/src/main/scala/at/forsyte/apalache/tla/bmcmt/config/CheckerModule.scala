@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.config
 
+import at.forsyte.apalache.infra.{DefaultExceptionAdapter, ExceptionAdapter}
 import at.forsyte.apalache.infra.passes._
 import at.forsyte.apalache.tla.assignments.passes.{PrimingPass, PrimingPassImpl, TransitionPass, TransitionPassImpl}
 import at.forsyte.apalache.tla.bmcmt.analyses._
@@ -24,6 +25,9 @@ class CheckerModule extends AbstractModule {
     // the options singleton
     bind(classOf[PassOptions])
       .to(classOf[WriteablePassOptions])
+    // exception handler
+    bind(classOf[ExceptionAdapter])
+      .to(classOf[CheckerExceptionAdapter])
 
     // stores
     bind(classOf[FreeExistentialsStore])

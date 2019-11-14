@@ -119,7 +119,7 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
 
     case expr @ OperEx(TlaControlOper.caseNoOther, _*) =>
       throw new NotInKeraError("CASE without other, see: " +
-        "https://github.com/konnov/apalache/blob/feature/keramel/docs/preprocessing.md", expr)
+        "[docs/preprocessing.md]", expr)
   }
 
   private def mkGuardsAndActions(args: Seq[TlaEx]): Seq[(TlaEx, TlaEx)] = {

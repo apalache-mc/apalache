@@ -486,10 +486,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
     typeFinder.inferAndSave(expr)
     if (typeFinder.getTypeErrors.nonEmpty) {
       def print_error(e: TypeInferenceError): Unit = {
-        val sourceLocator: SourceLocator = SourceLocator(
-          sourceStore.makeSourceMap,
-          changeListener
-        )
+        val sourceLocator: SourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
 
         val locInfo =
           sourceLocator.sourceOf(e.origin) match {
