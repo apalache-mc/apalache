@@ -264,7 +264,7 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
       case expr @ OperEx(oper @ TlaOper.label, decoratedExpr, ValEx(TlaStr(name)), args @ _*) =>
         val argDocs = args map {
           case ValEx(TlaStr(str)) => text(str)
-          case e => throw new MalformedTlaError("Malformed expression: " + expr)
+          case _ => throw new MalformedTlaError("Malformed expression", expr)
         }
         val optionalArgs =
           if (args.isEmpty)

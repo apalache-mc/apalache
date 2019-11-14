@@ -29,9 +29,16 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
       case Some(inv: TlaOperDecl) if inv.formalParams.isEmpty =>
         new TlaModule(module.name, module.declarations ++ introConditions(inv.body))
 
-      case Some(decl) => throw new MalformedTlaError(s"Expected a nullary operator $invName, found: " + decl)
+      case Some(decl: TlaOperDecl) =>
+        val message = s"Expected a nullary operator $invName, found ${decl.formalParams.length} arguments"
+        throw new MalformedTlaError(message, decl.body)
 
-      case None => throw new MalformedTlaError(s"Invariant candidate $invName not found")
+      case Some(decl) =>
+        val message = s"Expected a nullary operator $invName, found ${decl.getClass.getSimpleName}"
+        throw new MalformedTlaError(message, NullEx)
+
+      case None =>
+        throw new MalformedTlaError(s"Invariant candidate $invName not found", NullEx)
     }
   }
 

@@ -170,15 +170,15 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     // control flow
     key(tla.ite(tla.name("cond"), tla.name("then"), tla.name("else")))
       -> List(new IfThenElseRule(this)),
-    key(tla.caseOther(tla.name("otherAction"), tla.name("pred1"), tla.name("action1")))
-      -> List(new CaseRule(this)),
-    key(tla.caseAny(tla.name("pred1"), tla.name("action1")))
-      -> List(new CaseRule(this)),
     key(tla.letIn(tla.int(1), TlaOperDecl("A", List(), tla.int(2))))
       -> List(new LetInRule(this)),
       // TODO, rethink TlaOper.apply rule
     key(tla.appDecl( TlaOperDecl("userOp", List(), tla.int(3)) ) ) ->
       List(new UserOperRule(this)),
+    //    key(tla.caseOther(tla.name("otherAction"), tla.name("pred1"), tla.name("action1")))
+    //      -> List(new CaseRule(this)),
+    //    key(tla.caseAny(tla.name("pred1"), tla.name("action1")))
+    //      -> List(new CaseRule(this)),
 
     // sets
     key(tla.in(tla.name("x"), tla.name("S")))

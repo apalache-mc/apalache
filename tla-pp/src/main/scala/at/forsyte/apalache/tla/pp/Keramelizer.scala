@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.convenience._
@@ -20,7 +20,7 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
     extends AbstractTransformer(tracker) with TlaExTransformation {
 
   override val partialTransformers =
-    List(transformLogic, transformSets, transformTuples, transformRecords)
+    List(transformLogic, transformSets, transformTuples, transformRecords, transformControl)
 
 
   override def apply(expr: TlaEx): TlaEx = {
@@ -102,6 +102,33 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
     case OperEx(TlaOper.ne, left, right) =>
       tla.not(tla.eql(left, right))
   }
+
+  /**
+    * Control flow transformations.
+    *
+    * @return a transformed expression
+    */
+  private def transformControl: PartialFunction[TlaEx, TlaEx] = {
+    case expr @ OperEx(TlaControlOper.caseWithOther, otherEx, args @ _*) =>
+      def decorateWithIf(elseEx: TlaEx, guardAction: (TlaEx, TlaEx)): OperEx = {
+        tla.ite(guardAction._1, guardAction._2, elseEx)
+      }
+      // produce a chain of if-then-else expressions
+      val revGuardsAndActions = mkGuardsAndActions(args)
+      revGuardsAndActions.foldLeft(otherEx)(decorateWithIf)
+
+    case expr @ OperEx(TlaControlOper.caseNoOther, _*) =>
+      throw new NotInKeraError("CASE without other, see: " +
+        "https://github.com/konnov/apalache/blob/feature/keramel/docs/preprocessing.md", expr)
+  }
+
+  private def mkGuardsAndActions(args: Seq[TlaEx]): Seq[(TlaEx, TlaEx)] = {
+    assert(args.length % 2 == 0) // even
+    val guards = args.zipWithIndex.filter(p => p._2 % 2 == 0).map(_._1)
+    val actions = args.zipWithIndex.filter(p => p._2 % 2 != 0).map(_._1)
+    guards.zip(actions).reverse
+  }
+
 }
 
 object Keramelizer {

@@ -118,4 +118,26 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
       ) ///
     assert(expected == output)
   }
+
+  test("""CASE-OTHER""") {
+    val input = tla.caseOther(tla.name("e_def"),
+      tla.name("p_1"), tla.name("e_1"),
+      tla.name("p_2"), tla.name("e_2"))
+    val output = keramelizer.apply(input)
+    val expected =
+      tla.ite(tla.name("p_1"), tla.name("e_1"),
+        tla.ite(tla.name("p_2"), tla.name("e_2"),
+          tla.name("e_def")
+        ) ///
+    ) ///
+    assert(expected == output)
+  }
+
+  test("""CASE without OTHER""") {
+    val input = tla.caseSplit(
+      tla.name("p_1"), tla.name("e_1"),
+      tla.name("p_2"), tla.name("e_2")
+    ) ///
+    assertThrows[NotInKeraError](keramelizer.apply(input))
+  }
 }
