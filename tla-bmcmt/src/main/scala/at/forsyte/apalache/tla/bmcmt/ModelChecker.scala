@@ -315,7 +315,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
       val finalVarBinding = Binding(primedVars.toSeq map (n => (n, pickVar(n))): _*) // variables only
       val constBinding = oracleState.binding.filter(p => constants.contains(p._1))
       finalState = finalState.setBinding(Binding(finalVarBinding ++ constBinding))
-      if (!solverContext.sat()) {
+      if (debug && !solverContext.sat()) {
         throw new InternalCheckerError(s"Error picking next variables (step $stepNo). Report a bug.")
       }
       // check the invariant, if search invariant.split=false
@@ -411,7 +411,6 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
       state
     } else {
       // as we have checked the invariant, we assume that it holds
-      logger.debug("Assuming that the invariant holds")
       val savedEx = state.ex
       val savedTypes = rewriter.typeFinder.getVarTypes
       val savedBinding = state.binding
@@ -419,8 +418,9 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
       shiftTypes(constants)
       var nextState = state.setBinding(shiftBinding(state.binding, constants))
 
-      for ((inv, _) <- checkerInput.invariantsAndNegations) {
+      for (((inv, _), index) <- checkerInput.invariantsAndNegations.zipWithIndex) {
         typeFinder.inferAndSave(inv)
+        logger.debug(s"Assuming that the invariant $index holds true")
         nextState = rewriter.rewriteUntilDone(nextState.setRex(inv))
         // assume that the invariant holds true
         solverContext.assertGroundExpr(nextState.ex)
