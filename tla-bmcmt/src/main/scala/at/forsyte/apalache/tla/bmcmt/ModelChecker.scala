@@ -412,14 +412,23 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
     } else {
       // as we have checked the invariant, we assume that it holds
       logger.debug("Assuming that the invariant holds")
-      val prevEx = state.ex
-      var nextState = state
+      val savedEx = state.ex
+      val savedTypes = rewriter.typeFinder.getVarTypes
+      val savedBinding = state.binding
+      // rename x' to x, so we are reasoning about the non-primed variables
+      shiftTypes(constants)
+      var nextState = state.setBinding(shiftBinding(state.binding, constants))
+
       for ((inv, _) <- checkerInput.invariantsAndNegations) {
         typeFinder.inferAndSave(inv)
-        nextState = rewriter.rewriteUntilDone(state.setRex(inv))
+        nextState = rewriter.rewriteUntilDone(nextState.setRex(inv))
+        // assume that the invariant holds true
         solverContext.assertGroundExpr(nextState.ex)
       }
-      nextState.setRex(prevEx) // restore the expression
+
+      // restore the expression, the types, and the bindings
+      rewriter.typeFinder.reset(savedTypes) // forget about the types that were used to check the invariant
+      nextState.setRex(savedEx).setBinding(savedBinding)
     }
   }
 

@@ -224,6 +224,42 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     assert(Checker.Outcome.NoError == outcome)
   }
 
+  test("Init + Next + Inv, 10 steps, learnFromUnsat, OK") {
+    // x' \in {2} \/ x' \in {1}
+    val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
+    // x' \in {x + 1}
+    val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
+    // x < 100
+    val inv = tla.lt(tla.name("x"), tla.int(100))
+    val dummyModule = new TlaModule("root", List())
+    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, List((inv, tla.not(inv))))
+    // initialize the model checker
+    val strategy = new BfsStrategy(checkerInput, stepsBound = 10)
+    val tuning = Map("search.invariant.learnFromUnsat" -> "true")
+    val checker = new ModelChecker(typeFinder, frexStore, hintsStore, changeListener, exprGradeStore, sourceStore, checkerInput,
+      strategy, tuning, debug = false, profile = false)
+    val outcome = checker.run()
+    assert(Checker.Outcome.NoError == outcome)
+  }
+
+  test("Init + Next + Inv, 10 steps, !search.invariant.split, OK") {
+    // x' \in {2} \/ x' \in {1}
+    val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
+    // x' \in {x + 1}
+    val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
+    // x < 100
+    val inv = tla.lt(tla.name("x"), tla.int(100))
+    val dummyModule = new TlaModule("root", List())
+    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, List((inv, tla.not(inv))))
+    // initialize the model checker
+    val strategy = new BfsStrategy(checkerInput, stepsBound = 10)
+    val tuning = Map("search.invariant.split" -> "false")
+    val checker = new ModelChecker(typeFinder, frexStore, hintsStore, changeListener, exprGradeStore, sourceStore, checkerInput,
+      strategy, tuning, debug = false, profile = false)
+    val outcome = checker.run()
+    assert(Checker.Outcome.NoError == outcome)
+  }
+
   test("Init + Next + Inv, 10 steps, error") {
     // x' \in {2} \/ x' \in {1}
     val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
@@ -241,7 +277,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     assert(Checker.Outcome.Error == outcome)
   }
 
-  test("Init + Next + Inv, 10 steps, and invarianFilter") {
+  test("Init + Next + Inv, 10 steps, and invariantFilter") {
     // x' \in {2} \/ x' \in {1}
     val initTrans = List(tla.or(mkAssign("x", 2), mkAssign("x", 1)))
     // x' \in {x + 1}
