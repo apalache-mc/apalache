@@ -29,7 +29,16 @@ previously declared.
   This option is useful for checking consensus algorithms, where the decision
   cannot be revoked. So instead of checking the invariant after each step, we can
   do that after the algorithm has made a good number of steps. 
-    
+  
+1. __Invariant checking by splitting__: `search.invariant.split=(false|true)`. If the option
+is set to true, the invariant is checked individually for every enabled transition. Otherwise,
+the invariant is checked once after all enabled transitions have been added into the SMT context.
+By default, `search.invariant.split=true`
+  
+1. __Learning from invariants__: ``search.invariant.learnFromUnsat=(false|true)``. If the option
+is set to true, once the checked found that `~Inv` does not hold for some depth, it adds the
+assumption `Inv` in the SMT context. 
+   
 1. __Randomized search__: ``search.randomDfs=(false|true)``. When the symbolic transitions
   are enumerated in the depth-first order, that is, ``search=dfs``, choose the next transition
   randomly.

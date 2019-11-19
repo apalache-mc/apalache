@@ -59,6 +59,9 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
   private val invFilter: String =
     tuningOptions.getOrElse("search.invariantFilter", "")
 
+  private val invariantSplitByTransition: Boolean =
+    tuningOptions.getOrElse("search.invariant.split", "true").toLowerCase == "true"
+
   private val learnTransFromUnsat: Boolean =
     tuningOptions.getOrElse("search.transition.learnFromUnsat", "").toLowerCase == "true"
 
@@ -252,7 +255,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
             // note that the constraints are added at the current level, without an additional push
             var (nextState, _) = applyTransition(stepNo, erased, transition, transitionNo, checkForErrors = false)
             rewriter.exprCache.disposeActionLevel() // leave only the constants
-            if (isEnabled && learnInvFromUnsat) {
+            if (isEnabled && learnInvFromUnsat && invariantSplitByTransition) {
               nextState = assumeInvariant(stepNo, nextState)
             }
             if (isEnabled) {
@@ -281,6 +284,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
     } else if (nextStates.lengthCompare(1) == 0) {
       val resultingState = oracleState.setBinding(shiftBinding(lastState.binding, constants))
       solverContext.assertGroundExpr(lastState.ex)
+      if (!invariantSplitByTransition) { checkAllInvariants(stepNo, 0, resultingState) }
       stack +:= (resultingState, oracle) // in this case, oracle is always zero
       shiftTypes(constants)
       typesStack = typeFinder.getVarTypes +: typesStack
@@ -289,13 +293,15 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
       // if oracle = i, then the ith transition is enabled
       solverContext.assertGroundExpr(oracle.caseAssertions(oracleState, nextStates.map(_.ex)))
 
-      // glue the computed states S0, ..., Sk together:
-      // for every variable x, pick c_x from { S1[x], ..., Sk[x] }
-      //   and require \A i \in { 0.. k-1}. j = i => c_x = Si[x]
-      // Then, the final state binds x -> c_x for every x \in Vars
-      val vars = forgetNonPrimed(nextStates.head.binding, Set()).keySet // only VARIABLES, not CONSTANTS
-      var finalState = oracleState.setBinding(forgetPrimed(oracleState.binding)).setRex(tla.bool(true))
-      if (nextStates.map(_.binding).exists(b => forgetNonPrimed(b, Set()).keySet != vars)) {
+      // glue the computed states S_0, ..., S_k together:
+      // for every variable x', pick c_x from { S_1[x'], ..., S_k[x'] }
+      //   and require \A i \in { 0.. k-1}. j = i => c_x = S_i[x']
+      // Then, the final state binds x' -> c_x for every x' \in Vars'
+      def getAssignedVars(st: SymbState) = forgetNonPrimed(st.binding, Set()).keySet
+
+      val primedVars = getAssignedVars(nextStates.head) // only VARIABLES, not CONSTANTS
+      var finalState = oracleState
+      if (nextStates.exists(getAssignedVars(_) != primedVars)) {
         throw new InternalCheckerError(s"Next states disagree on the set of assigned variables (step $stepNo)")
       }
 
@@ -306,13 +312,19 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
         finalState.asCell
       }
 
-      val finalVarBinding = Binding(vars.toSeq map (n => (n, pickVar(n))): _*) // variables only
+      val finalVarBinding = Binding(primedVars.toSeq map (n => (n, pickVar(n))): _*) // variables only
       val constBinding = oracleState.binding.filter(p => constants.contains(p._1))
-      val finalBinding = Binding(shiftBinding(finalVarBinding, Set()) ++ constBinding) // recover constants
-      finalState = finalState.setBinding(finalBinding)
+      finalState = finalState.setBinding(Binding(finalVarBinding ++ constBinding))
       if (!solverContext.sat()) {
         throw new InternalCheckerError(s"Error picking next variables (step $stepNo). Report a bug.")
       }
+      // check the invariant, if search invariant.split=false
+      if (!invariantSplitByTransition) { checkAllInvariants(stepNo, 0, finalState) }
+      if (learnInvFromUnsat && !invariantSplitByTransition) {
+        finalState = assumeInvariant(stepNo, finalState)
+      }
+      // finally, shift the primed variables to non-primed
+      finalState = finalState.setBinding(shiftBinding(finalState.binding, constants))
       // that is the result of this step
       stack +:= (finalState, oracle)
       // here we save the transition index, not the oracle, which will be shown to the user
@@ -367,9 +379,8 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
       logger.debug("Checking transition feasibility.")
       solverContext.satOrTimeout(transitionTimeout) match {
         case Some(true) =>
-          // check the invariant right here
-          val matchesInvFilter = invFilter == "" || stepNo.toString.matches("^" + invFilter + "$")
-          if (matchesInvFilter) {
+          if (invariantSplitByTransition) {
+            // check the invariant as soon as one transition has been applied
             checkAllInvariants(stepNo, transitionNo, nextState)
           }
           // and then forget all these constraints!
@@ -412,7 +423,12 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
     }
   }
 
-  private def checkAllInvariants(depth: Int, transitionNo: Int, nextState: SymbState): Unit = {
+  private def checkAllInvariants(stepNo: Int, transitionNo: Int, nextState: SymbState): Unit = {
+    val matchesInvFilter = invFilter == "" || stepNo.toString.matches("^" + invFilter + "$")
+    if (!matchesInvFilter) {
+      return // skip the check
+    }
+
     for ((notInv, invNo) <- checkerInput.invariantsAndNegations.map(_._2).zipWithIndex) {
       logger.debug(s"Checking the invariant $invNo")
       val savedTypes = rewriter.typeFinder.getVarTypes
@@ -422,12 +438,12 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
       // check the types and the invariant
       checkTypes(notInv)
       val changedVars = nextState.changed
-      checkOneInvariant(depth, transitionNo, shiftedState, changedVars, notInv)
+      checkOneInvariant(stepNo, transitionNo, shiftedState, changedVars, notInv)
       rewriter.typeFinder.reset(savedTypes) // forget about the types that were used to check the invariant
     }
   }
 
-  private def checkOneInvariant(depth: Int, transitionNo: Int, nextState: SymbState, changed: Set[String], notInv: TlaEx): Unit = {
+  private def checkOneInvariant(stepNo: Int, transitionNo: Int, nextState: SymbState, changed: Set[String], notInv: TlaEx): Unit = {
     val used = TlaExUtil.findUsedNames(notInv).map(_ + "'")
     if (used.intersect(changed).isEmpty) {
       logger.debug(s"The invariant is referring only to the UNCHANGED variables. Skipped.")
@@ -443,7 +459,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
           val oracle = new MockOracle(transitionNo)
           stack = (notInvState, oracle) +: stack
           val filename = dumpCounterexample()
-          logger.error(s"Invariant is violated at depth $depth. Check the counterexample in $filename")
+          logger.error(s"Invariant is violated at depth $stepNo. Check the counterexample in $filename")
           if (debug) {
             logger.warn(s"Dumping the arena into smt.log. This may take some time...")
             // dump everything in the log
