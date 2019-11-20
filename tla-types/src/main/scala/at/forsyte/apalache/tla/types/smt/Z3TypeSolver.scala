@@ -6,17 +6,21 @@ import at.forsyte.apalache.tla.types._
 import at.forsyte.apalache.tla.types.smt.FunWrappers.{HasAtFunWrapper, SizeFunWrapper}
 import com.microsoft.z3._
 
+object Z3TypeSolver {
+  type Solution = Map[Int, TlaType]
+}
+
 /**
   * Z3TypeSolver
   */
 class Z3TypeSolver( useSoftConstraints : Boolean ) {
+  import Z3TypeSolver._
 
-  type Solution = Map[Int, TlaType]
-
-  private val ctx    : Context  = new Context
-  private val solver : Z3Solver =
+  private val ctx           : Context          = new Context
+  private val solver        : Z3Solver         =
     if ( useSoftConstraints ) new MaxSMTSolver( ctx )
     else new ClassicSolver( ctx )
+  private val strEnumerator : StringEnumerator = new StringEnumerator
 
   /************
    *INIT BEGIN*
@@ -111,7 +115,8 @@ class Z3TypeSolver( useSoftConstraints : Boolean ) {
       case Eql( lhs, rhs ) => ctx.mkEq( dtToSmt( lhs ), dtToSmt( rhs ) )
       case hasField( v, s, t ) =>
         val vConst = varToConst( v )
-        val sInt = ctx.mkInt( s )
+        val sId = strEnumerator.add( s )
+        val sInt = ctx.mkInt( sId )
         val exists = ctx.mkApp( hasFieldDecl, vConst, sInt ).asInstanceOf[BoolExpr]
         val value = ctx.mkEq( ctx.mkApp( atFieldDecl, vConst, sInt ), dtToSmt( t ) )
         ctx.mkAnd( exists, value )
@@ -150,8 +155,7 @@ class Z3TypeSolver( useSoftConstraints : Boolean ) {
     */
   def solve(
              vars : Seq[SmtVariable],
-             constraints : BoolFormula,
-             converter : StrIdConverter
+             constraints : BoolFormula
            ) : Option[Solution] = {
     solver.push()
     val varDecls = addVars( vars )
@@ -165,7 +169,7 @@ class Z3TypeSolver( useSoftConstraints : Boolean ) {
         val idxWrap = HasAtFunWrapper( ctx, model, hasIdxDecl, atIdxDecl )
         val fieldWrap = HasAtFunWrapper( ctx, model, hasFieldDecl, atFieldDecl )
 
-        val typeReconstructor = new TypeReconstructor( idxWrap.apply, fieldWrap.apply, sizeWrap.apply, converter )
+        val typeReconstructor = new TypeReconstructor( idxWrap.apply, fieldWrap.apply, sizeWrap.apply, strEnumerator )
 
         val tMap = ( varDecls map { v =>
           recoverVarId( v.getName.toString ) -> typeReconstructor( model.getConstInterp( v ) )

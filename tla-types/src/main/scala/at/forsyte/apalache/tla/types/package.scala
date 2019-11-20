@@ -9,6 +9,7 @@ import at.forsyte.apalache.tla.lir.smt.SmtTools.BoolFormula
 package object types {
   type TypeContext = Map[TypeVar, SmtTypeVariable]
   type NameContext = Map[String, SmtDatatype]
+  type GlobalNameContext = Map[String, SmtTypeVariable]
   type Template = Seq[SmtDatatype] => BoolFormula
   type TypeMap[kType] = Map[kType, TlaType]
   type TypeVarAssignment = Map[UID, SmtDatatype]

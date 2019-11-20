@@ -10,7 +10,7 @@ class TypeReconstructor(
                          idxFun : (Int, Int) => Option[Expr],
                          fieldFun : (Int, Int) => Option[Expr],
                          sizeFun : Int => Int,
-                         strIdConverter : StrIdConverter
+                         strEnumerator : StringEnumerator
                        ) {
   import Names._
 
@@ -59,8 +59,8 @@ class TypeReconstructor(
           // fields to check. Instead we check all record fields that appear in the specification
           // and keep those for which fieldFun is defined.
           val recMap = for {
-            jStr <- strIdConverter.allStrings
-            jId <- strIdConverter.stringToId( jStr )
+            jStr <- strEnumerator.allStrings
+            jId <- strEnumerator.stringToId( jStr )
             v <- fieldFun( i, jId )
           } yield jStr -> apply( v )
           RecT( recMap.toMap )

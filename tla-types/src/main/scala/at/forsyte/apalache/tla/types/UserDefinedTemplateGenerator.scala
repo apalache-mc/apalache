@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.types
 
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.smt.SmtTools.{And, BoolFormula}
 import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
@@ -24,7 +25,7 @@ class UserDefinedTemplateGenerator(
                                   ) {
   private val templGen   = new BuiltinTemplateGenerator( smtVarGen )
   private val formSigEnc = new FormalSignatureEncoder( smtVarGen )
-  private val ctxBuilder = new ContextBuilder
+  private val ctxBuilder = new OperatorContextBuilder
 
   /**
     * The nabla function, as defined in the paper.
@@ -65,25 +66,39 @@ class UserDefinedTemplateGenerator(
     // Every time nablaInternal( a, b, _ )( _, c ) is invoked,we record the assignment of the
     // smt value a to the UID of b, in the stack c
     ctxBuilder.record( operStack, phi.ID, x )
+
+    def processName( n: String, id: UID ) : Seq[BoolFormula] = {
+      // If m contains n (n is not a user-defined operator name) then we can just read
+      // the appropriate value from m and generate a single Eql constraint
+      m.get( n ) map { v => Seq( Eql( x, v ) ) } getOrElse {
+        // Otherwise, n must be a  user-defined operator and we have to perform a virtual call
+        assert( bodyMap.contains( n ) )
+        val (fParams, body) = bodyMap( n )
+        // First, we need to compute a fresh formal signature
+        val SigTriple( opType, paramTypes, sigConstraints ) = formSigEnc.sig( fParams )
+        // Next, we compute n's template, adding the ID of ex (the virtual call-site) to the operator stack
+        val opTemplate = makeTemplateInternal( fParams, body )( bodyMap, id +: operStack )
+        // We know that x must have the formal opType, in addition to the constraints obtained by the template
+        // and side-constraints form the signature computation
+        Eql( x, opType ) +: opTemplate( paramTypes ) +: sigConstraints
+      }
+    }
+
     phi match {
       case ValEx( _ : TlaInt ) => Seq( Eql( x, int ) )
       case ValEx( _ : TlaStr ) => Seq( Eql( x, str ) )
       case ValEx( _ : TlaBool ) => Seq( Eql( x, bool ) )
       case ex@NameEx( n ) =>
-        // If m contains n (n is not a user-defined operator name) then we can just read
-        // the appropriate value from m and generate a single Eql constraint
-        m.get( n ) map { v => Seq( Eql( x, v ) ) } getOrElse {
-          // Otherwise, n must be a  user-defined operator and we have to perform a virtual call
-          assert( bodyMap.contains( n ) )
-          val (fParams, body) = bodyMap( n )
-          // First, we need to compute a fresh formal signature
-          val SigTriple( opType, paramTypes, sigConstraints ) = formSigEnc.sig( fParams )
-          // Next, we compute n's template, adding the ID of ex (the virtual call-site) to the operator stack
-          val opTemplate = makeTemplateInternal( fParams, body )( bodyMap, ex.ID +: operStack )
-          // We know that x must have the formal opType, in addition to the constraints obtained by the template
-          // and side-constraints form the signature computation
-          Eql( x, opType ) +: opTemplate( paramTypes ) +: sigConstraints
-        }
+        processName( n, ex.ID )
+      case ex@OperEx( TlaActionOper.prime, NameEx( n ) ) =>
+        processName( s"$n'", ex.ID )
+      /** UNCHANGED expressions are a special case, because we need to introduce the prime variable */
+      case ex@OperEx( TlaActionOper.unchanged, nameEx: NameEx ) =>
+        val equivalentEx = Builder.primeEq( nameEx.deepCopy(), nameEx )
+        nablaInternal( x, equivalentEx, m )( bodyMap, operStack )
+      case ex@OperEx( TlaActionOper.unchanged, OperEx( TlaFunOper.tuple, tupArgs@_* ) ) =>
+        val equivalentEx = Builder.and( tupArgs map Builder.unchanged : _* )
+        nablaInternal( x, equivalentEx, m )( bodyMap, operStack )
       case ex@OperEx( _, args@_* ) =>
         // If we're dealing with a built-in operator, we simply compute its template and apply it
         val opTemplate = templGen.makeTemplate( ex )
@@ -124,6 +139,6 @@ class UserDefinedTemplateGenerator(
       // The template is then given by a single nabla(Internal) call.
       And( nablaInternal( e, body, mGlobal ++ mParams )( bodyMap, operStack ) : _* )
     case Nil =>
-      throw new IllegalArgumentException("Templates must accept at least 1 argument.")
+      throw new IllegalArgumentException( "Templates must accept at least 1 argument." )
   }
 }

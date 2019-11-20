@@ -6,11 +6,11 @@ import org.scalatest.{BeforeAndAfter, FunSuite}
 import org.scalatest.junit.JUnitRunner
 
 @RunWith( classOf[JUnitRunner] )
-class TestStrIdConverter extends FunSuite with TestingPredefs with BeforeAndAfter {
-  var sic = new StrIdConverter
+class TestStringEnumerator extends FunSuite with TestingPredefs with BeforeAndAfter {
+  var sic = new StringEnumerator
 
   before {
-    sic = new StrIdConverter
+    sic = new StringEnumerator
   }
 
   test( "Add" ) {

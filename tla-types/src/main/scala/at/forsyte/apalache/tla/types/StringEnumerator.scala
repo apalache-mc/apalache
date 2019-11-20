@@ -4,23 +4,25 @@ package at.forsyte.apalache.tla.types
   * Instead of encoding record field names as strings in SMT, we instead opt to enumerate the
   * finite, and usually small, collection of record fields appearing in a specification and
   * use the fields' ids (integers) instead.
-  * StrIdConverter keeps track of this enumeration.
+  * StringEnumerator keeps track of this enumeration.
   */
-class StrIdConverter {
+class StringEnumerator {
 
   private var idMap        : Map[String, Int] = Map.empty
   private var stringVector : Vector[String]   = Vector.empty
 
   /**
-    * Add a new string to the enumeration
+    * Attempts to add a new string to the enumeration.
+    * If the string was already enumerated, returns the known ID, otheriwse
+    * adds the string to the collection and returns its new ID.
     */
-  def add( s : String ) : Unit = {
-    if( !idMap.contains( s ) ) {
+  def add( s : String ) : Int =
+    stringToId( s ) getOrElse {
       val newId = stringVector.length
       stringVector = stringVector :+ s
       idMap += s -> newId
+      newId
     }
-  }
 
   /**
     * Accessors
