@@ -18,7 +18,7 @@ class UniqueNameGenerator {
 
   /**
     * Produce a new unique name for a variable
-    * @return a name starting with "_T" followed by letters and digits
+    * @return a name starting with "t_" followed by letters and digits
     */
   def newName(): String = {
     val id = nextId.getAndIncrement()

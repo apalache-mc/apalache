@@ -101,7 +101,11 @@ class ConstSimplifier(tracker: TransformationTracker) extends TlaExTransformatio
       ValEx(TlaBool(result))
 
     case OperEx(TlaBoolOper.and, args @ _*)  =>
-      OperEx(TlaBoolOper.and, args.filter(_ != ValEx(TlaBool(true))) :_*)
+      val simpEx = OperEx(TlaBoolOper.and, args.filterNot { _ == ValEx(TlaBool(true)) } :_*)
+      simpEx match {
+        case OperEx(TlaBoolOper.and) => ValEx(TlaBool(true)) // an empty disjunction is true
+        case e => e
+      }
 
     case OperEx(TlaBoolOper.or, args @ _*) if args.contains(ValEx(TlaBool(true))) =>
       ValEx(TlaBool(true))
@@ -111,7 +115,11 @@ class ConstSimplifier(tracker: TransformationTracker) extends TlaExTransformatio
       ValEx(TlaBool(result))
 
     case OperEx(TlaBoolOper.or, args @ _*)  =>
-      OperEx(TlaBoolOper.or, args.filter(_ != ValEx(TlaBool(false))) :_*)
+      val simpEx = OperEx(TlaBoolOper.or, args.filterNot { _ == ValEx(TlaBool(false)) } :_*)
+      simpEx match {
+        case OperEx(TlaBoolOper.or) => ValEx(TlaBool(false)) // an empty disjunction is false
+        case e => e
+      }
 
     case OperEx(TlaBoolOper.not, ValEx(TlaBool(b))) =>
       ValEx(TlaBool(!b))
@@ -172,18 +180,18 @@ class ConstSimplifier(tracker: TransformationTracker) extends TlaExTransformatio
     case OperEx(TlaControlOper.ifThenElse, pred, ValEx(TlaBool(false)), elseEx) =>
       elseEx
 
+    case OperEx(TlaControlOper.ifThenElse, pred, ValEx(TlaBool(true)), ValEx(TlaBool(false))) =>
+      simplifyShallow(pred)
+
+    case OperEx(TlaControlOper.ifThenElse, pred, ValEx(TlaBool(false)), ValEx(TlaBool(true))) =>
+      simplifyShallow(OperEx(TlaBoolOper.not, pred))
+
     case ite @ OperEx(TlaControlOper.ifThenElse, _, thenEx, elseEx) =>
       if (thenEx != elseEx) {
         ite
       } else {
         thenEx
       }
-
-    case OperEx(TlaControlOper.ifThenElse, pred, ValEx(TlaBool(true)), ValEx(TlaBool(false))) =>
-      pred
-
-    case OperEx(TlaControlOper.ifThenElse, pred, ValEx(TlaBool(false)), ValEx(TlaBool(true))) =>
-      OperEx(TlaBoolOper.not, pred)
 
     // default
     case _ =>

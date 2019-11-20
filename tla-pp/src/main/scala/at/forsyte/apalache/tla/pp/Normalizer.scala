@@ -92,18 +92,18 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
     case OperEx(TlaArithOper.ge, left, right) =>
       OperEx(if (neg) TlaArithOper.lt else TlaArithOper.ge, left, right)
 
-    case OperEx(TlaOper.eq, left, right) =>
+    case eq @ OperEx(TlaOper.eq, left, right) =>
       if (neg) {
         tla.not(tla.eql(left, right))
       } else {
-        tla.eql(left, right)
+        eq
       }
 
-    case OperEx(TlaOper.ne, left, right) =>
+    case neq @ OperEx(TlaOper.ne, left, right) =>
       if (neg) {
         tla.eql(left, right)
       } else {
-        tla.not(tla.eql(left, right))
+        neq
       }
 
     case OperEx(TlaSetOper.in, left, right) =>
