@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.TlaModule
 
 class TestFlatLanguagePred extends FunSuite {
-  private var pred = new FlatLanguagePred
+  private val pred = new FlatLanguagePred
 
   test("a flat expression") {
     val expr = tla.enumSet(tla.int(1), tla.str("abc"), tla.bool(false))

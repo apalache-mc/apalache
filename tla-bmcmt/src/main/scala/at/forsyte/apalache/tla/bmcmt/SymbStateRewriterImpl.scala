@@ -254,7 +254,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     key(tla.dom(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S"))))
       -> List(new DomainRule(this, intRangeCache)), // also works for records
 
-    // tuples, records, and records
+    // tuples, records, and sequences
     key(tla.tuple(tla.name("x"), tla.int(2)))
       -> List(new TupleOrSeqCtorRule(this)),
     key(tla.enumFun(tla.str("a"), tla.int(2)))

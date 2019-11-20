@@ -8,6 +8,8 @@ import at.forsyte.apalache.tla.bmcmt.search.{BfsStrategy, BfsStrategyStopWatchDe
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
+import at.forsyte.apalache.tla.lir.transformations.LanguageWatchdog
+import at.forsyte.apalache.tla.lir.transformations.standard.{FlatLanguagePred, KeraLanguagePred}
 import at.forsyte.apalache.tla.pp.NormalizedNames
 import com.google.inject.Inject
 import com.google.inject.name.Named
@@ -45,6 +47,10 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
       throw new CheckerException(s"The input of $name pass is not initialized")
     }
     val module = tlaModule.get
+
+    for (decl <- module.operDeclarations) {
+      LanguageWatchdog(KeraLanguagePred()).check(decl.body)
+    }
 
     val initTrans = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.INIT_PREFIX)
     val nextTrans = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.NEXT_PREFIX)
