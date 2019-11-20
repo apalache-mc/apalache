@@ -10,11 +10,11 @@ import org.scalatest.junit.JUnitRunner
 
 @RunWith( classOf[JUnitRunner] )
 class TestReconstruction extends FunSuite with TestingPredefs with BeforeAndAfter {
-  var converter = new StrIdConverter
+  var converter = new StringEnumerator
   var ctx       = new Context
 
   before {
-    converter = new StrIdConverter
+    converter = new StringEnumerator
     ctx = new Context
   }
 

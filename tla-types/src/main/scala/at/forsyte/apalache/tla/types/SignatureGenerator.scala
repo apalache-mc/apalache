@@ -17,21 +17,30 @@ class SignatureGenerator {
 
   def getPossibleSignatures( operEx : OperEx ) : List[PolyOperT] = operEx.oper match {
     /** Logic */
+    // \A T . <T> => T
     case TlaOper.eq | TlaOper.ne =>
       val t = typeVarGenerator.getUnique
       List( PolyOperT( List( t ), OperT( TupT( t, t ), BoolT ) ) )
+    // \A n . <Bool^n> => Bool
     case TlaBoolOper.and | TlaBoolOper.or | TlaBoolOper.implies | TlaBoolOper.equiv =>
       List( PolyOperT( List.empty, OperT( TupT( List.fill( operEx.args.length )( BoolT ) : _* ), BoolT ) ) )
+    // <Bool> => Bool
     case TlaBoolOper.not =>
       List( PolyOperT( List.empty, OperT( TupT( BoolT ), BoolT ) ) )
+    // \A T . <T,Set(T),Bool> => Bool
     case TlaBoolOper.forall | TlaBoolOper.exists =>
       val t = typeVarGenerator.getUnique
       List( PolyOperT( List( t ), OperT( TupT( t, SetT( t ), BoolT ), BoolT ) ) )
 
     /** Choose */
+    // \A T . <T,Set(T),Bool> => T
     case TlaOper.chooseBounded =>
       val t = typeVarGenerator.getUnique
       List( PolyOperT( List( t ), OperT( TupT( t, SetT( t ), BoolT ), t ) ) )
+
+    /** Action */
+//    case TlaActionOper.unchanged =>
+//  SHOULD NEVER BE EVALUATED
 
     /** Arithmetic */
     case TlaArithOper.plus | TlaArithOper.minus | TlaArithOper.mult |
@@ -78,7 +87,7 @@ class SignatureGenerator {
     case TlaFunOper.domain =>
       val ts = typeVarGenerator.getNUnique( 2 )
       val List( t1, t2 ) = ts
-      List( PolyOperT( ts, OperT( TupT( FunT( t1, t2 ) ), SetT( t2 ) ) ) )
+      List( PolyOperT( ts, OperT( TupT( FunT( t1, t2 ) ), SetT( t1 ) ) ) )
     case TlaSetOper.funSet =>
       val ts = typeVarGenerator.getNUnique( 2 )
       val List( t1, t2 ) = ts
@@ -125,15 +134,15 @@ class SignatureGenerator {
     case TlaControlOper.ifThenElse =>
       val t = typeVarGenerator.getUnique
       List( PolyOperT( List( t ), OperT( TupT( BoolT, t, t ), t ) ) )
-    case TlaControlOper.caseNoOther =>
-      val n = operEx.args.length / 2
-      val t = typeVarGenerator.getUnique
-      val tupArgs = for {
-        _ <- 1 to n
-        v <- List( BoolT, t )
-      } yield v
-
-      List( PolyOperT( List( t ), OperT( TupT( tupArgs : _* ), t ) ) )
+      // We forbid CASE without OTHER
+//    case TlaControlOper.caseNoOther =>
+//      val n = operEx.args.length / 2
+//      val t = typeVarGenerator.getUnique
+//      val tupArgs = for {
+//        _ <- 1 to n
+//        v <- List( BoolT, t )
+//      } yield v
+//      List( PolyOperT( List( t ), OperT( TupT( tupArgs : _* ), t ) ) )
     case TlaControlOper.caseWithOther =>
       val n = ( operEx.args.length - 1 ) / 2
       val t = typeVarGenerator.getUnique
@@ -188,7 +197,7 @@ class SignatureGenerator {
       val funSig = {
         val ts = typeVarGenerator.getNUnique( 2 )
         val List( t1, t2 ) = ts
-        PolyOperT( ts, OperT( TupT( FunT( t1, t2 ), t1 ), t1 ) )
+        PolyOperT( ts, OperT( TupT( FunT( t1, t2 ), t1 ), t2 ) )
       }
 
       // def not val, because there's no need to evaluate it in the case of records
@@ -291,7 +300,7 @@ class SignatureGenerator {
       List( funSig ) ++ recSigOpt
 
     case o => throw new IllegalArgumentException(
-      s"Signature of operator ${o.toString} is not known"
+      s"Signature of operator ${o.name} is not known"
     )
   }
 }

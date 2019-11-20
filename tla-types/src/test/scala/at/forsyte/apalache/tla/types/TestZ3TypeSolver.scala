@@ -59,7 +59,7 @@ class TestZ3TypeSolver extends FunSuite with TestingPredefs with BeforeAndAfter 
     val templ = udtg.makeTemplate( operX.formalParams, operX.body )
     val templApp = templ( e +: ts ).asInstanceOf[And]
 
-    val ret = solver.solve( smtVarGen.allVars, templApp, new StrIdConverter )
+    val ret = solver.solve( smtVarGen.allVars, templApp )
     assert( ret.nonEmpty )
     val map = ret.get
 
@@ -90,7 +90,7 @@ class TestZ3TypeSolver extends FunSuite with TestingPredefs with BeforeAndAfter 
     val templ = udtg.makeTemplate( List.empty, declC.body )
     val templApp = templ( e +: Nil ).asInstanceOf[And]
 
-    val ret = solver.solve( smtVarGen.allVars, templApp, new StrIdConverter )
+    val ret = solver.solve( smtVarGen.allVars, templApp )
 
     assert( ret.nonEmpty )
   }
@@ -106,7 +106,7 @@ class TestZ3TypeSolver extends FunSuite with TestingPredefs with BeforeAndAfter 
     val templ = udtg.makeTemplate( List.empty, ex )
     val templApp = templ( e +: Nil ).asInstanceOf[And]
 
-    val ret = solver.solve( smtVarGen.allVars, templApp, new StrIdConverter )
+    val ret = solver.solve( smtVarGen.allVars, templApp )
 
     assert( ret.nonEmpty )
   }
