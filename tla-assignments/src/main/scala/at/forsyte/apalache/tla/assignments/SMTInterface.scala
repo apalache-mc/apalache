@@ -56,7 +56,7 @@ class SMTInterface extends TypeAliases {
     val solver = ctx.mkSolver()
 
     /** Parse the spec and add it to the solver */
-    solver.add( ctx.parseSMTLIB2String( p_spec, null, null, null, null ) )
+    solver.add( ctx.parseSMTLIB2String( p_spec, null, null, null, null ) :_* )
 
     /** If UNSAT, terminate */
     val status = solver.check.toString
