@@ -35,6 +35,10 @@ class KeraLanguagePred extends LanguagePred {
       case OperEx(oper, arg) if KeraLanguagePred.unaryOps.contains(oper) =>
         isOkInContext(letDefs, arg)
 
+      case OperEx(BmcOper.withType, lhs, _) =>
+        // do not recurse in the type annotation, as it is using special syntax
+        isOkInContext(letDefs, lhs)
+
       case OperEx(oper, lhs, rhs) if KeraLanguagePred.binaryOps.contains(oper) =>
         isOkInContext(letDefs, lhs) && isOkInContext(letDefs, rhs)
 
@@ -53,8 +57,8 @@ class KeraLanguagePred extends LanguagePred {
 
       case OperEx(oper, args@_*)
         if oper == TlaSetOper.map || oper == TlaFunOper.funDef =>
-        val oddArgs = args.zipWithIndex.filter { p => p._2 % 2 == 0 } map { _._1 }
-        oddArgs forall {
+        val evenArgs = args.zipWithIndex.filter { p => p._2 % 2 == 0 } map { _._1 }
+        evenArgs forall {
           isOkInContext(letDefs, _)
         }
 
@@ -106,7 +110,7 @@ object KeraLanguagePred {
       TlaSeqOper.head,
       TlaSeqOper.tail,
       TlaSeqOper.len,
-      TlcOper.printT
+      TlcOper.printT // TODO: preprocess into NullEx in Keramelizer
       // for the future
       //    TlaActionOper.enabled,
       //    TlaActionOper.unchanged,
@@ -137,7 +141,7 @@ object KeraLanguagePred {
       TlaSeqOper.concat,
       TlcOper.atat,
       TlcOper.colonGreater,
-      TlcOper.print,
+      TlcOper.print, // TODO: preprocess into NullEx in Keramelizer
       TlcOper.assert,
       TlcOper.colonGreater,
       TlcOper.atat,
