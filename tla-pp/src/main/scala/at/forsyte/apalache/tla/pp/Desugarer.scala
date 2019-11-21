@@ -3,22 +3,28 @@ package at.forsyte.apalache.tla.pp
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaFunOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.standard.FlatLanguagePred
+import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 import javax.inject.Singleton
 
 /**
-  * Remove all annoying syntactic sugar.
-  * In the future we should move most of the pre-processing code to this class,
-  * unless it really changes the expressive power.
+  * <p>Remove all annoying syntactic sugar. In the future we should move most of the pre-processing code to this class,
+  * unless it really changes the expressive power.</p>
   *
-  * TODO: can we make transformation tracking more precise?
+  * <p>This transformation assumes that all operator definitions and internal
+  * let-definitions have been inlined.</p>
+  *
+  * <p>TODO: can we make transformation tracking more precise?</p>
   *
   * @author Igor Konnov
   */
 @Singleton
 class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
 
-  override def apply(ex: TlaEx) = transform(ex)
+  override def apply(expr: TlaEx): TlaEx = {
+    LanguageWatchdog(FlatLanguagePred()).check(expr)
+    transform(expr)
+  }
 
   def transform: TlaExTransformation = tracker.track {
       case ex @ NameEx(_) => ex

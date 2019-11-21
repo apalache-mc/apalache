@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.types.{AnnotationParser, FinSetT, IntT, SeqT}
+import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -136,7 +137,11 @@ class TestSymbStateDecoder extends RewriterBase {
 
   test("decode dynamically empty fun") {
     // this domain is not empty at the arena level, but it is in every SMT model
-    val domEx = tla.setminus(tla.enumSet(tla.int(1)), tla.enumSet(tla.int(1)))
+    def dynEmpty(left: TlaEx): TlaEx = {
+      tla.filter(tla.name("t"), left, tla.bool(false))
+    }
+
+    val domEx = dynEmpty(tla.enumSet(tla.int(1)))
     val funEx = tla.funDef(tla.plus(tla.name("x"), tla.int(1)), tla.name("x"), domEx)
     val state = new SymbState(funEx,
       CellTheory(), arena, new Binding)

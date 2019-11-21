@@ -251,6 +251,33 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
 
         group(doc)
 
+        // a set of functions [S -> T]
+      case OperEx(TlaSetOper.funSet, domain, coDomain) =>
+        val doc =
+          toDoc(TlaSetOper.funSet.precedence, domain) <>
+            nest(line <>
+              text("->") <> space <>
+              toDoc(TlaSetOper.funSet.precedence, coDomain))
+        group(brackets(doc))
+
+        // a labelled expression L3(a, b) :: 42
+      case expr @ OperEx(oper @ TlaOper.label, decoratedExpr, ValEx(TlaStr(name)), args @ _*) =>
+        val argDocs = args map {
+          case ValEx(TlaStr(str)) => text(str)
+          case _ => throw new MalformedTlaError("Malformed expression", expr)
+        }
+        val optionalArgs =
+          if (args.isEmpty)
+            emptyDoc
+          else
+            parens(ssep(argDocs.toList, text(",") <> softline))
+
+        val doc =
+          text(name) <> optionalArgs <> space <> "::" <>
+            nest(line <>toDoc(oper.precedence, decoratedExpr))
+        group(wrapWithParen(parentPrecedence, oper.precedence, doc))
+
+      // [A]_vars or <A>_vars
       case OperEx(op, action, vars)
         if op == TlaActionOper.stutter || op == TlaActionOper.nostutter =>
         def wrapper = if (op == TlaActionOper.stutter) brackets _ else angles _
@@ -268,9 +295,23 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
             parens(toDoc(op.precedence, action))
         wrapWithParen(parentPrecedence, op.precedence, group(doc))
 
-      case OperEx(op, arg) if PrettyWriter.unaryOps.contains(op) =>
+      case OperEx(op, arg @ NameEx(_)) if PrettyWriter.unaryOps.contains(op) =>
         val doc = text(PrettyWriter.unaryOps(op)) <> toDoc(op.precedence, arg)
         wrapWithParen(parentPrecedence, op.precedence, doc)
+
+      case OperEx(op, arg @ ValEx(_)) if PrettyWriter.unaryOps.contains(op) =>
+        val doc = text(PrettyWriter.unaryOps(op)) <> toDoc(op.precedence, arg)
+        wrapWithParen(parentPrecedence, op.precedence, doc)
+
+      case OperEx(op, arg @ OperEx(_, _)) if PrettyWriter.unaryOps.contains(op) =>
+        // a unary operator over unary operator, no parentheses needed
+        val doc = text(PrettyWriter.unaryOps(op)) <> toDoc(op.precedence, arg)
+        wrapWithParen(parentPrecedence, op.precedence, doc)
+
+      case OperEx(op, arg) if PrettyWriter.unaryOps.contains(op) =>
+        // in all other cases, introduce parentheses.
+        // Yse the minimal precedence, as we are introducing the parentheses in any case.
+        text(PrettyWriter.unaryOps(op)) <> parens(toDoc((0, 0), arg))
 
       case OperEx(op, lhs, rhs) if PrettyWriter.binaryOps.contains(op) =>
         val doc =
@@ -298,6 +339,7 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
 
         wrapWithParen(parentPrecedence, op.precedence, doc)
 
+        // TODO: fix funSet
       case OperEx(op, args@_*) =>
         val argDocs = args.map(toDoc(op.precedence, _)).toList
         val commaSeparated = ssep(argDocs, "," <> softline)

@@ -38,13 +38,13 @@ class SanyParserPassImpl @Inject()(val options: PassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
-    val filename = options.getOptionOrError("parser", "filename").asInstanceOf[String]
+    val filename = options.getOrError("parser", "filename").asInstanceOf[String]
     val (rootName, modules) = new SanyImporter(sourceStore).loadFromFile(new File(filename))
     rootModule = modules.get(rootName)
     if (rootModule.isEmpty) {
       logger.error("Error parsing file " + filename)
     } else {
-      val outdir = options.getOptionOrError("io", "outdir").asInstanceOf[Path]
+      val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
       PrettyWriter.write(rootModule.get, new File(outdir.toFile, "out-parser.tla"))
     }
     rootModule.isDefined

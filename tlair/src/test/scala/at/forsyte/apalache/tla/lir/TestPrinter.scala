@@ -159,10 +159,10 @@ class TestPrinter extends FunSuite with TestingPredefs {
       printlns( forallEx1, forallEx2, forallEx3, forallEx4 )
     }
 
-    assert( forallEx1 == "%sa . b".format( up.m_forall ) )
-    assert( forallEx2 == "%sa . (b %s c)".format( up.m_forall, up.m_or ) )
-    assert( forallEx3 == "%sa %s b . c".format( up.m_forall, up.m_in ) )
-    assert( forallEx4 == "%sa %s (b %s c) . (d %s e)".format( up.m_forall, up.m_in, up.m_times, up.m_and ) )
+    assert( forallEx1 == "%sa: b".format( up.m_forall ) )
+    assert( forallEx2 == "%sa: (b %s c)".format( up.m_forall, up.m_or ) )
+    assert( forallEx3 == "%sa %s b: c".format( up.m_forall, up.m_in ) )
+    assert( forallEx4 == "%sa %s (b %s c): (d %s e)".format( up.m_forall, up.m_in, up.m_times, up.m_and ) )
 
 
     val existsEx1 : String = bd.exists( n_a, n_b )
@@ -175,10 +175,10 @@ class TestPrinter extends FunSuite with TestingPredefs {
       printlns( existsEx1, existsEx2, existsEx3, existsEx4 )
     }
 
-    assert( existsEx1 == "%sa . b".format( up.m_exists ) )
-    assert( existsEx2 == "%sa . (b %s c)".format( up.m_exists, up.m_or ) )
-    assert( existsEx3 == "%sa %s b . c".format( up.m_exists, up.m_in ) )
-    assert( existsEx4 == "%sa %s (b %s c) . (d %s e)".format( up.m_exists, up.m_in, up.m_times, up.m_and ) )
+    assert( existsEx1 == "%sa: b".format( up.m_exists ) )
+    assert( existsEx2 == "%sa: (b %s c)".format( up.m_exists, up.m_or ) )
+    assert( existsEx3 == "%sa %s b: c".format( up.m_exists, up.m_in ) )
+    assert( existsEx4 == "%sa %s (b %s c): (d %s e)".format( up.m_exists, up.m_in, up.m_times, up.m_and ) )
 
 
   }

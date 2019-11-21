@@ -8,7 +8,7 @@ object LetInRule {
 }
 
 /**
-  * A simple translation of LET ... IN that supports only nullary operators.
+  * A simple translation of LET ... IN that supports only the operators without arguments.
   *
   * @author Igor Konnov
   */

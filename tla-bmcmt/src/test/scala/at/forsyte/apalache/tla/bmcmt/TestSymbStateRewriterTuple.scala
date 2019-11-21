@@ -96,10 +96,10 @@ class TestSymbStateRewriterTuple extends RewriterBase {
     }
   }
 
-  test("""SE-TUPLE-EQ: <<2, FALSE>> /= <<2, TRUE>> ~~> $C$k""") {
+  test("""SE-TUPLE-EQ: ~(<<2, FALSE>> = <<2, TRUE>>) ~~> $C$k""") {
     val tuple1 = TlaFunOper.mkTuple(tla.int(2), tla.bool(false))
     val tuple2 = TlaFunOper.mkTuple(tla.int(2), tla.bool(true))
-    val eq = tla.neql(tuple1, tuple2)
+    val eq = tla.not(tla.eql(tuple1, tuple2))
 
     val rewriter = create()
     val state = new SymbState(eq, BoolTheory(), arena, new Binding)
@@ -116,7 +116,8 @@ class TestSymbStateRewriterTuple extends RewriterBase {
     assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""SE-TUPLE-SET: {<<1, FALSE>>, <<2, FALSE>>, <<1, TRUE>>, <<2, TRUE>> = {1,2} \X  {FALSE, TRUE} ~~> $B$k""") {
+  // Keramelizer rewrites \X
+  ignore("""SE-TUPLE-SET: {<<1, FALSE>>, <<2, FALSE>>, <<1, TRUE>>, <<2, TRUE>> = {1,2} \X  {FALSE, TRUE} ~~> $B$k""") {
     val set12 = tla.enumSet(1 to 2 map tla.int :_*)
     val setBool = tla.enumSet(tla.bool(false), tla.bool(true))
     val prod = tla.times(set12, setBool)

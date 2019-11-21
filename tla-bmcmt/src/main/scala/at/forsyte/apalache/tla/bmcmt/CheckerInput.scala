@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule}
 
 /**
-  * Input to checker. We assume that this input is prepared by AssignmentPass.
+  * Input to ModelChecker. We assume that this input is prepared by TransitionPass.
   *
   * @param rootModule       a TLA+ module
   * @param initTransitions a list of transitions that compute the initial states.
@@ -14,12 +14,12 @@ import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule}
   *                        A list [A_1, ..., A_n] is treated as A_1 \/ ... \/ A_n.
   *                        Each disjunct should assign a value to every primed variable at least once (see assignmentSolver).
   * @param constInitPrimed An optional initializer of CONSTANTS (over their primed versions).
-  * @param notInvariant    An optional invariant (negated).
+  * @param invariantsAndNegations pairs of invariants and their negations (we decouple them for optimization).
   * @author Igor Konnov
   */
 class CheckerInput(val rootModule: TlaModule,
                    val initTransitions: List[TlaEx],
                    val nextTransitions: List[TlaEx],
                    val constInitPrimed: Option[TlaEx],
-                   val notInvariant: Option[TlaEx]) {
+                   val invariantsAndNegations: List[(TlaEx, TlaEx)]) {
 }

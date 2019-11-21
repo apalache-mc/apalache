@@ -2,7 +2,8 @@ package at.forsyte.apalache.tla.bmcmt
 
 import java.io.{File, PrintWriter}
 
-import at.forsyte.apalache.tla.bmcmt.profiler.{FruitlessSmtListener, SmtListener}
+import at.forsyte.apalache.tla.bmcmt.profiler.{IdleSmtListener, SmtListener}
+import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FailPredT, IntT}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.io.UTFPrinter
@@ -29,8 +30,8 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
   var nIntConsts: Int = 0
   private val z3context: Context = new Context()
   private val z3solver = z3context.mkSolver()
-  private val simplifier = new ConstSimplifier()
-  private var smtListener: SmtListener = new FruitlessSmtListener()
+  private val simplifier = new ConstSimplifierForSmt()
+  private var smtListener: SmtListener = new IdleSmtListener()
 
   /**
     * Caching one uninterpreted sort for each cell signature. For integers, the integer sort.

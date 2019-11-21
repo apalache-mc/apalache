@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.{Continue, Done, NoRule, 
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.caches._
 import at.forsyte.apalache.tla.bmcmt.profiler.RuleStatListener
+import at.forsyte.apalache.tla.bmcmt.rewriter.RewriterConfig
 import at.forsyte.apalache.tla.bmcmt.rules._
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.lir._
@@ -41,6 +42,13 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     * The difference between the number of pushes and pops so far.
     */
   private var level: Int = 0
+
+  /**
+    * Configuration options
+    *
+    * @return the rewriter options
+    */
+  var config: RewriterConfig = new RewriterConfig
 
   /**
     * The cache for lazy equalities, to avoid generating the same equality constraints many times.
@@ -140,20 +148,18 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     // logic
     key(tla.eql(tla.name("x"), tla.name("y")))
       -> List(new EqRule(this)),
-    key(tla.neql(tla.name("x"), tla.name("y")))
-      -> List(new NeqRule(this)),
+//    key(tla.neql(tla.name("x"), tla.name("y")))
+//      -> List(new NeqRule(this)),
     key(tla.or(tla.name("x"), tla.name("y")))
-      -> List(new OrRule(this)),
-    key(tla.orParallel(tla.name("x"), tla.name("y")))
       -> List(new OrRule(this)),
     key(tla.and(tla.name("x"), tla.name("y")))
       -> List(new AndRule(this)),
     key(tla.not(tla.name("x")))
       -> List(new NegRule(this)),
-    key(tla.impl(tla.name("x"), tla.name("y")))
-      -> List(new ImplRule(this)),
-    key(tla.equiv(tla.name("x"), tla.name("y")))
-      -> List(new EquivRule(this)),
+//    key(tla.impl(tla.name("x"), tla.name("y")))
+//      -> List(new ImplRule(this)),
+//    key(tla.equiv(tla.name("x"), tla.name("y")))
+//      -> List(new EquivRule(this)),
     key(tla.exists(tla.name("x"), tla.name("S"), tla.name("p")))
       -> List(new QuantRule(this)),
     key(tla.forall(tla.name("x"), tla.name("S"), tla.name("p")))
@@ -164,47 +170,47 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     // control flow
     key(tla.ite(tla.name("cond"), tla.name("then"), tla.name("else")))
       -> List(new IfThenElseRule(this)),
-    key(tla.caseOther(tla.name("otherAction"), tla.name("pred1"), tla.name("action1")))
-      -> List(new CaseRule(this)),
-    key(tla.caseAny(tla.name("pred1"), tla.name("action1")))
-      -> List(new CaseRule(this)),
     key(tla.letIn(tla.int(1), TlaOperDecl("A", List(), tla.int(2))))
       -> List(new LetInRule(this)),
       // TODO, rethink TlaOper.apply rule
     key(tla.appDecl( TlaOperDecl("userOp", List(), tla.int(3)) ) ) ->
       List(new UserOperRule(this)),
+    //    key(tla.caseOther(tla.name("otherAction"), tla.name("pred1"), tla.name("action1")))
+    //      -> List(new CaseRule(this)),
+    //    key(tla.caseAny(tla.name("pred1"), tla.name("action1")))
+    //      -> List(new CaseRule(this)),
 
     // sets
     key(tla.in(tla.name("x"), tla.name("S")))
       -> List(new AssignRecordRule(this),
               new AssignmentRule(this),
               new SetInRule(this)),
-    key(tla.notin(tla.name("x"), tla.name("S")))
-      -> List(new SetNotInRule(this)),
+//    key(tla.notin(tla.name("x"), tla.name("S")))
+//      -> List(new SetNotInRule(this)),
     key(tla.enumSet(tla.name("x"))) ->
       List(new SetCtorRule(this)),
     key(tla.subseteq(tla.name("x"), tla.name("S")))
       -> List(new SetInclusionRule(this)),
-    key(tla.subset(tla.name("x"), tla.name("S")))
-      -> List(new SetInclusionRule(this)),
-    key(tla.supseteq(tla.name("x"), tla.name("S")))
-      -> List(new SetInclusionRule(this)),
-    key(tla.supset(tla.name("x"), tla.name("S")))
-      -> List(new SetInclusionRule(this)),
     key(tla.cup(tla.name("X"), tla.name("Y")))
       -> List(new SetCupRule(this)),
-    key(tla.cap(tla.name("X"), tla.name("Y")))
-      -> List(new SetCapAndMinusRule(this)),
-    key(tla.setminus(tla.name("X"), tla.name("Y")))
-      -> List(new SetCapAndMinusRule(this)),
     key(tla.filter(tla.name("x"), tla.name("S"), tla.name("p")))
       -> List(new SetFilterRule(this)),
     key(tla.map(tla.name("e"), tla.name("x"), tla.name("S")))
       -> List(new SetMapRule(this)),
-    key(tla.times(tla.name("S1"), tla.name("S2")))
-      -> List(new CartesianProductRule(this)),
-    key(tla.recSet(tla.str("a"), tla.name("S1"), tla.str("b"), tla.name("S2")))
-      -> List(new RecordSetRule(this)),
+//    key(tla.subset(tla.name("x"), tla.name("S")))
+//      -> List(new SetInclusionRule(this)),
+//    key(tla.supseteq(tla.name("x"), tla.name("S")))
+//      -> List(new SetInclusionRule(this)),
+//    key(tla.supset(tla.name("x"), tla.name("S")))
+//      -> List(new SetInclusionRule(this)),
+//    key(tla.cap(tla.name("X"), tla.name("Y")))
+//      -> List(new SetCapAndMinusRule(this)),
+//    key(tla.setminus(tla.name("X"), tla.name("Y")))
+//      -> List(new SetCapAndMinusRule(this)),
+//    key(tla.times(tla.name("S1"), tla.name("S2")))
+//      -> List(new CartesianProductRule(this)),
+//    key(tla.recSet(tla.str("a"), tla.name("S1"), tla.str("b"), tla.name("S2")))
+//      -> List(new RecordSetRule(this)),
     key(tla.powSet(tla.name("X")))
       -> List(new PowSetCtorRule(this)),
     key(tla.union(tla.enumSet()))
@@ -248,7 +254,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     key(tla.dom(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S"))))
       -> List(new DomainRule(this, intRangeCache)), // also works for records
 
-    // tuples, records, and records
+    // tuples, records, and sequences
     key(tla.tuple(tla.name("x"), tla.int(2)))
       -> List(new TupleOrSeqCtorRule(this)),
     key(tla.enumFun(tla.str("a"), tla.int(2)))

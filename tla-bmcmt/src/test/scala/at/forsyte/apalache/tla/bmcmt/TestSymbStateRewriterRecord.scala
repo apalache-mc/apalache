@@ -11,7 +11,7 @@ import scala.collection.immutable.{SortedMap, SortedSet, TreeMap}
 
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterRecord extends RewriterBase {
-  test("""RecordDomainCache: dom {"a", "b"} /= dom {"a", "b", "c"} ~~> $C$k""") {
+  test("""RecordDomainCache: ~(dom {"a", "b"} = dom {"a", "b", "c"}) ~~> $C$k""") {
     val rewriter = create()
     val (newArena1, set1) = rewriter.recordDomainCache.create(arena, (SortedSet("a", "b"), SortedSet[String]()))
     val (newArena2, set2) =
@@ -203,21 +203,21 @@ class TestSymbStateRewriterRecord extends RewriterBase {
     assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""SE-REC-EQ: [a |-> 1, b |-> FALSE, c |-> "d"] /= [a |-> 1] ~~> TRUE""") {
+  test("""SE-REC-EQ: ~([a |-> 1, b |-> FALSE, c |-> "d"] = [a |-> 1]) ~~> TRUE""") {
     // Introduce two different records using a type annotation. The records should not be equal!
     val annotation = AnnotationParser.toTla(RecordT(SortedMap("a" -> IntT(), "b" -> BoolT(), "c" -> ConstT())))
 
     val record1 = tla.enumFun(tla.str("a"), tla.int(1),
       tla.str("b"), tla.bool(false), tla.str("c"), tla.str("d"))
     val record2 = tla.enumFun(tla.str("a"), tla.int(1))
-    val eq = tla.neql(record1, tla.withType(record2, annotation))
+    val eq = tla.not(tla.eql(record1, tla.withType(record2, annotation)))
     val state = new SymbState(eq, CellTheory(), arena, new Binding)
     val rewriter = create()
     assertTlaExAndRestore(rewriter, state)
   }
 
-
-  test(
+  // Keramelizer does this expansion
+  ignore(
     """SE-REC-SET: {[n |-> 1, b |-> FALSE], [n |-> 2, b |-> FALSE], [n |-> 1, b |-> TRUE], [n |-> 2, b |-> TRUE] = {[n : {1, 2}, b : {FALSE, TRUE}}""".stripMargin) {
     val set12 = tla.enumSet(1 to 2 map tla.int :_*)
     val setBool = tla.enumSet(tla.bool(false), tla.bool(true))
@@ -237,7 +237,8 @@ class TestSymbStateRewriterRecord extends RewriterBase {
     assert(!solverContext.sat())
   }
 
-  test(
+  // Keramelizer does this expansion
+  ignore(
     """SE-REC-SET: {[n : {1, 2}} <: {[n |-> Int, b |-> BOOLEAN ]}""".stripMargin) {
     val set12 = tla.enumSet(1 to 2 map tla.int :_*)
     val setBool = tla.enumSet(tla.bool(false), tla.bool(true))

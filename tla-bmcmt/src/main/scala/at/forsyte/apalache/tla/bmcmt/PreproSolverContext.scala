@@ -3,9 +3,9 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.PreproSolverContext.{CacheEntry, EqEntry, InEntry}
 import at.forsyte.apalache.tla.bmcmt.caches.SimpleCache
 import at.forsyte.apalache.tla.bmcmt.profiler.SmtListener
+import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
-
 import at.forsyte.apalache.tla.lir.convenience.tla
 
 object PreproSolverContext {
@@ -37,7 +37,7 @@ object PreproSolverContext {
   * @author Igor Konnov
   */
 class PreproSolverContext(context: SolverContext) extends SolverContext {
-  private val simplifier = new ConstSimplifier()
+  private val simplifier = new ConstSimplifierForSmt()
   // FIXME: it would be much better to use cells here, but we do not have access to the arena
   private val cache: SimpleCache[(String, String), CacheEntry] = new SimpleCache()
 

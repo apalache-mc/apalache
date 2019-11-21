@@ -6,17 +6,25 @@ import java.nio.file.Path
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
-import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener}
-import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
+import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
-import at.forsyte.apalache.tla.pp.Desugarer
+import at.forsyte.apalache.tla.pp.{Desugarer, Keramelizer, Normalizer, UniqueNameGenerator}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
+/**
+  * A preprocessing pass that simplifies TLA+ expression by running multiple transformation.
+  * @param options pass options
+  * @param gen name generator
+  * @param tracker transformation tracker
+  * @param nextPass next pass to call
+  */
 class PreproPassImpl @Inject()( val options: PassOptions,
-                                changeListener: ChangeListener,
+                                gen: UniqueNameGenerator,
+                                renaming: IncrementalRenaming,
+                                tracker: TransformationTracker,
                                 @Named("AfterPrepro") nextPass: Pass with TlaModuleMixin)
     extends PreproPass with LazyLogging {
 
@@ -35,35 +43,34 @@ class PreproPassImpl @Inject()( val options: PassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
-    val tracker : TransformationTracker = TrackerWithListeners( changeListener )
-    logger.info("Renaming variables uniquely")
-    val renaming = new IncrementalRenaming(tracker)
-    val uniqueVarDecls =
-      new TlaModule(
-        tlaModule.get.name,
-        renaming.syncAndNormalizeDs(tlaModule.get.declarations).toSeq
-      ) ///
+    logger.info("  > Before preprocessing: unique renaming")
+    val beforeModule = renaming.renameInModule(tlaModule.get)
+    val defBodyMap = BodyMapFactory.makeFromDecls(beforeModule.operDeclarations )
 
-    val defBodyMap = BodyMapFactory.makeFromDecls( uniqueVarDecls.operDeclarations )
-
-    val transformationSequence : Vector[TlaExTransformation] =
-      Vector(
-        InlinerOfUserOper(defBodyMap, tracker),
-        LetInExpander(tracker, keepNullary = true),
+    val transformationSequence =
+      List(
         Desugarer(tracker),
-        PrimedEqualityToMembership(tracker),
-        SimplifyRecordAccess(tracker)
+        Normalizer(tracker),
+        Keramelizer(gen, tracker),
+        PrimedEqualityToMembership(tracker) // transform x' = e to x' \in {e}, needed by the assignment solver
       )
 
-    logger.info("Applying standard transformations")
-    val preprocessed = transformationSequence.foldLeft( uniqueVarDecls ){ case (m,tr) =>
-      ModuleByExTransformer( tr )( m )
+    logger.info(" > Applying standard transformations:")
+    val preprocessed = transformationSequence.foldLeft(beforeModule){
+      case (m, tr) =>
+        logger.info("  > %s".format(tr.getClass.getSimpleName))
+        ModuleByExTransformer(tr) (m)
     }
 
-    val outdir = options.getOptionOrError("io", "outdir").asInstanceOf[Path]
-    PrettyWriter.write(preprocessed, new File(outdir.toFile, "out-prepro.tla"))
+    // unique renaming after all transformations
+    logger.info("  > After preprocessing: unique renaming")
+    val afterModule = renaming.renameInModule(preprocessed)
 
-    outputTlaModule = Some(preprocessed)
+    // dump the result of preprocessing
+    val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
+    PrettyWriter.write(afterModule, new File(outdir.toFile, "out-prepro.tla"))
+
+    outputTlaModule = Some(afterModule)
     true
   }
 

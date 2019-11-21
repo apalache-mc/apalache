@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaNatSet}
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TestingPredefs, ValEx}
+import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -90,7 +90,13 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
 
   test("""SE-IN-ASSIGN1(int): x' \in {1} \ {1} ~~> FALSE""") {
     // a regression test
-    val assign = tla.in(x_prime, tla.setminus(tla.enumSet(1), tla.enumSet(1)))
+    def empty(set: TlaEx): TlaEx = {
+      tla.filter(tla.name("t"),
+        set,
+        tla.bool(false))
+    }
+
+    val assign = tla.in(x_prime, empty(tla.enumSet(tla.int(1))))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
     val rewriter = create()
@@ -172,8 +178,14 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
 
   test("""SE-IN-ASSIGN1(set): x' \in {{1, 2}, {1+1, 2, 3}} \ {{2, 3}} ~~> TRUE and [x -> $C$k]""") {
     // equal elements in different sets mess up picking from a set
+    def setminus(left: TlaEx, right: TlaEx): TlaEx = {
+      tla.filter(tla.name("t"),
+        left,
+        tla.not(tla.eql(tla.name("t"), right)))
+    }
+
     val twoSets = tla.enumSet(tla.enumSet(1, 2), tla.enumSet(tla.plus(1, 1), 2, 3))
-    val minus = tla.setminus(twoSets, tla.enumSet(tla.enumSet(2, 3)))
+    val minus = setminus(twoSets, tla.enumSet(2, 3))
     val assign = tla.in(tla.prime("x"), minus)
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)

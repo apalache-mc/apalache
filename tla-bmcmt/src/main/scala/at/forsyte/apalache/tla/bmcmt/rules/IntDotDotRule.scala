@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.caches.IntRangeCache
+import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.io.UTFPrinter
 import at.forsyte.apalache.tla.lir.oper.TlaArithOper
@@ -14,7 +15,7 @@ import at.forsyte.apalache.tla.lir.values.TlaInt
    */
 class IntDotDotRule(rewriter: SymbStateRewriter,
                     intRangeCache: IntRangeCache) extends RewritingRule {
-  private def simplifier = new ConstSimplifier()
+  private def simplifier = new ConstSimplifierForSmt()
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {

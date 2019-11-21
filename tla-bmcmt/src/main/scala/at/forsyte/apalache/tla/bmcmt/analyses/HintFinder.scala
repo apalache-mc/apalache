@@ -13,28 +13,16 @@ import com.typesafe.scalalogging.LazyLogging
   * @author Igor Konnov
   */
 class HintFinder @Inject()(val hintsStore: FormulaHintsStoreImpl) extends LazyLogging {
-  /**
-    * Transform the transitions into normal form and label the free existential quantifiers.
-    *
-    * @param transitions identified transitions
-    * @return the modified input
-    */
-  def findHints(transitions: Seq[TlaEx]): Unit = {
-    transitions foreach makeHints
-    logger.debug("introduced %d formula hints".format(hintsStore.store.size))
-  }
-
-
-  private def makeHints(ex: TlaEx): Unit = ex match {
+  def introHints(ex: TlaEx): Unit = ex match {
     case OperEx(TlaBoolOper.exists, _, _, quantifiedEx) =>
-      makeHints(quantifiedEx)
+      introHints(quantifiedEx)
 
     case OperEx(TlaBoolOper.forall, _, _, quantifiedEx) =>
-      makeHints(quantifiedEx)
+      introHints(quantifiedEx)
 
     case OperEx(TlaBoolOper.and, args@_*) =>
       hintsStore.store.put(ex.ID, FormulaHintsStore.HighAnd())
-      args foreach makeHints
+      args foreach introHints
 
     case _ =>
       () // do not explore any further

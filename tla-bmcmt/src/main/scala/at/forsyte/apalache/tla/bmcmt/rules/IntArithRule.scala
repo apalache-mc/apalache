@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.types.IntT
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaArithOper
@@ -15,7 +16,7 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
   */
 class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val intConstRule: IntConstRule = new IntConstRule(rewriter)
-  private val simplifier = new ConstSimplifier()
+  private val simplifier = new ConstSimplifierForSmt()
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {

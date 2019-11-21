@@ -38,13 +38,13 @@ we require all constants to be initialized in a spec. There are two ways to do t
 For instance, assume your spec contains a constant ``N`` for the number of processes
 and a constant ``Values`` for the set of possible values:
 
-```TLA
+```tla
 CONSTANT N, Values
 ``` 
 
 Replace them with the operators that define concrete values:
 
-```TLA
+```tla
 \* CONSTANT N, Values
 N == 4
 Values == {0, 1}
@@ -55,12 +55,12 @@ Values == {0, 1}
 This approach is similar to the ``Init`` operator, but applied to the constants.
 We define a special operator, e.g., called ``ConstInit``: 
 
-```TLA
+```tla
 CONSTANT N, Values
 
 ConstInit ==
-  /\ N \in {4}
-  /\ Values \in {{0, 1}}
+  /\ N = 4
+  /\ Values = {0, 1}
 ```
 
 Note that in the current version, an assignments to a constants ``c`` should be
@@ -71,7 +71,7 @@ of additional constraints on the constants.
 As a bonus of this approach, you can have _parameterized though bounded_ constraints on the constants.
 For example:
 
-```TLA
+```tla
 CONSTANT N, Values
 
 ConstInit ==

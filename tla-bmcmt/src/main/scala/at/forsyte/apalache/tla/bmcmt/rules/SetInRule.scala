@@ -39,9 +39,8 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val lhsCell = state.binding(name)
         val afterEqState = rewriter.lazyEq.cacheOneEqConstraint(nextState, lhsCell, rhsCell)
         val finalState = afterEqState
-//          .setTheory(BoolTheory())
+          .setTheory(BoolTheory())
           .setRex(rewriter.lazyEq.safeEq(lhsCell, rhsCell))
-          .setBinding(nextState.binding + (name -> rhsCell)) // bind the cell to the name
         rewriter.coerce(finalState, state.theory)
 
       case OperEx(TlaSetOper.in, elem, set) =>

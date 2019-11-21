@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.caches.EqCache
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
+import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -13,7 +14,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
   * @author Igor Konnov
   */
 class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
-  private val simplifier = new ConstSimplifier
+  private val simplifier = new ConstSimplifierForSmt
 
   private val eqCache = new EqCache(NameEx(SolverContext.falseConst),
     NameEx(SolverContext.trueConst))

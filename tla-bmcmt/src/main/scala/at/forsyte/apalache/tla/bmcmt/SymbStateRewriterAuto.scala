@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.caches.{ExprCache, IntValueCache, RecordDomainCache, StrValueCache}
+import at.forsyte.apalache.tla.bmcmt.rewriter.RewriterConfig
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir.TlaEx
@@ -24,6 +25,8 @@ class SymbStateRewriterAuto(val solverContext: SolverContext) extends SymbStateR
     * The names that are treated as (free) variables.
     */
   var vars: Set[String] = Set()
+
+  var config: RewriterConfig = new RewriterConfig
 
   val typeFinder = new TrivialTypeFinder()
 

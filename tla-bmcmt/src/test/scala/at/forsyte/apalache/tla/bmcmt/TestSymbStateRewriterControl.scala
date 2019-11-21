@@ -223,8 +223,9 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(nextState.ex, tla.int(4))))
   }
 
+  // handled by Keramelizer
   // CASE i = 1 -> 2 [] i = 2 -> 3 [] i = 3 -> 1]
-  test("""SE-CASE1: CASE i = 1 -> 2 [] i = 2 -> 3 [] i = 3 -> 1]""") {
+  ignore("""SE-CASE1: CASE i = 1 -> 2 [] i = 2 -> 3 [] i = 3 -> 1]""") {
     def guard(arg: Int) = tla.eql("i", arg)
 
     val caseEx = tla.caseAny(guard(1), 2, guard(2), 3, guard(3), 1)
@@ -269,8 +270,9 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
     }
   }
 
+  // handled by Keramelizer
   // CASE i = 1 -> 2 [] i = 2 -> 3 [] i = 3 -> 1 [] OTHER -> 4]
-  test("""SE-CASE1: CASE i = 1 -> 2 [] i = 2 -> 3 [] i = 3 -> 1 [] OTHER -> 4]""") {
+  ignore("""SE-CASE1: CASE i = 1 -> 2 [] i = 2 -> 3 [] i = 3 -> 1 [] OTHER -> 4]""") {
     def guard(arg: Int) = tla.eql("i", arg)
     val caseEx = tla.caseOther(4, guard(1), 2, guard(2), 3, guard(3), 1)
     def caseExEqConst(i: Int) = tla.eql(i, caseEx)

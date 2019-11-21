@@ -6,20 +6,21 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-import scala.collection.JavaConverters._
-import at.forsyte.apalache.infra.PassOptionException
 import at.forsyte.apalache.infra.log.LogbackConfigurator
 import at.forsyte.apalache.infra.passes.{PassChainExecutor, TlaModuleMixin}
+import at.forsyte.apalache.infra.{ExceptionAdapter, PassOptionException}
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.bmcmt.{CheckerException, InternalCheckerError}
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.tooling.Version
 import at.forsyte.apalache.tla.tooling.opt.{CheckCmd, ParseCmd}
-import com.google.inject.Guice
+import com.google.inject.{Guice, Injector}
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.configuration2.builder.fluent.Configurations
 import org.apache.commons.configuration2.ex.ConfigurationException
-import org.backuity.clist.Cli
+import org.backuity.clist.{Cli, Command}
+
+import scala.collection.JavaConverters._
 
 /**
   * Command line access to the APALACHE tools.
@@ -46,12 +47,14 @@ object Tool extends App with LazyLogging {
         .withCommands(parseCmd, checkCmd) match {
         case Some(parse: ParseCmd) =>
           logger.info("Parse " + parse.file)
-          handleExceptions(runParse(parse, _))
+          val injector = injectorFactory(parseCmd)
+          handleExceptions(injector, runParse(injector, parse, _))
 
         case Some(check: CheckCmd) =>
           logger.info("Checker options: filename=%s, init=%s, next=%s, inv=%s"
             .format(check.file, check.init, check.next, check.inv))
-          handleExceptions(runCheck(check, _))
+          val injector = injectorFactory(check)
+          handleExceptions(injector, runCheck(injector, check, _))
 
         case _ => () // nothing to do
       }
@@ -72,12 +75,11 @@ object Tool extends App with LazyLogging {
         ChronoUnit.MILLIS.between(startTime, endTime) % 1000))
   }
 
-  private def runParse(parse: ParseCmd, u: Unit): Unit = {
+  private def runParse(injector: Injector, parse: ParseCmd, u: Unit): Unit = {
     // here, we implement a terminal pass to get the parse results
-    val injector = Guice.createInjector(new ParserModule())
     val executor = injector.getInstance(classOf[PassChainExecutor])
-    executor.options.setOption("io.outdir", createOutputDir())
-    executor.options.setOption("parser.filename", parse.file.getAbsolutePath)
+    executor.options.set("io.outdir", createOutputDir())
+    executor.options.set("parser.filename", parse.file.getAbsolutePath)
 
     val result = executor.run()
     if (result.isDefined) {
@@ -90,30 +92,29 @@ object Tool extends App with LazyLogging {
     }
   }
 
-  private def runCheck(check: CheckCmd, u: Unit): Unit = {
-    val injector = Guice.createInjector(new CheckerModule())
+  private def runCheck(injector: Injector, check: CheckCmd, u: Unit): Unit = {
     val executor = injector.getInstance(classOf[PassChainExecutor])
-    executor.options.setOption("io.outdir", createOutputDir())
+    executor.options.set("io.outdir", createOutputDir())
     val tuning =
       if (check.tuning != "") {
         loadProperties(check.tuning)
       } else {
         Map[String, String]()
       }
-    executor.options.setOption("general.tuning", tuning)
+    executor.options.set("general.tuning", tuning)
 
-    executor.options.setOption("general.debug", check.debug)
-    executor.options.setOption("smt.prof", check.smtprof)
-    executor.options.setOption("parser.filename", check.file.getAbsolutePath)
-    executor.options.setOption("checker.init", check.init)
-    executor.options.setOption("checker.next", check.next)
-    executor.options.setOption("checker.inv",
-      if (check.inv != "") Some(check.inv) else None)
-    executor.options.setOption("checker.cinit",
-      if (check.cinit != "") Some(check.cinit) else None)
-    executor.options.setOption("checker.length", check.length)
-    executor.options.setOption("checker.search", check.search)
-    executor.options.setOption("checker.checkRuntime", check.checkRuntime)
+    executor.options.set("general.debug", check.debug)
+    executor.options.set("smt.prof", check.smtprof)
+    executor.options.set("parser.filename", check.file.getAbsolutePath)
+    executor.options.set("checker.init", check.init)
+    executor.options.set("checker.next", check.next)
+    if (check.inv != "")
+      executor.options.set("checker.inv", check.inv)
+    if (check.cinit != "")
+      executor.options.set("checker.cinit", check.cinit)
+    executor.options.set("checker.length", check.length)
+    executor.options.set("checker.search", check.search)
+    executor.options.set("checker.checkRuntime", check.checkRuntime)
 
     val result = executor.run()
     if (result.isDefined) {
@@ -152,10 +153,23 @@ object Tool extends App with LazyLogging {
     Files.createTempDirectory(Paths.get(xdir.getAbsolutePath), nicetime)
   }
 
-  private def handleExceptions(fun: Unit => Unit): Unit = {
+  private def injectorFactory(cmd: Command): Injector = {
+    cmd match {
+      case _: ParseCmd => Guice.createInjector(new ParserModule)
+      case _: CheckCmd => Guice.createInjector(new CheckerModule)
+      case _ => throw new RuntimeException("Unexpected command: " + cmd)
+    }
+  }
+
+  private def handleExceptions(injector: Injector, fun: Unit => Unit): Unit = {
+    val adapter = injector.getInstance(classOf[ExceptionAdapter])
+
     try {
       fun()
     } catch {
+      case e: Exception if adapter.toMessage.isDefinedAt(e) =>
+        logger.error(adapter.toMessage(e))
+
       case e: PassOptionException =>
         logger.error(e.getMessage)
 

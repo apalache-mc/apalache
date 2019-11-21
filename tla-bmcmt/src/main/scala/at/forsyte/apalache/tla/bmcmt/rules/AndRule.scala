@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.FormulaHintsStore
+import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
@@ -16,7 +17,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
   * @author Igor Konnov
   */
 class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val simplifier = new ConstSimplifier()
+  private val simplifier = new ConstSimplifierForSmt()
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -43,9 +44,26 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
               }
             }
 
-            if (!rewriter.formulaHintsStore.getHint(state.ex.ID).contains(FormulaHintsStore.HighAnd())) {
+            if (!rewriter.config.lazyCircuit &&
+                !rewriter.formulaHintsStore.getHint(state.ex.ID).contains(FormulaHintsStore.HighAnd())) {
               // simply translate if-then-else to a chain of if-then-else expressions
-              val newState = state.setRex(toIte(args)).setTheory(CellTheory())
+              val newState =
+                if (rewriter.config.shortCircuit) {
+                  // create a chain of IF-THEN-ELSE expressions and rewrite them
+                  state.setRex(toIte(args)).setTheory(CellTheory())
+                } else {
+                  // simply translate to a conjunction
+                  var nextState = state.updateArena(_.appendCell(BoolT()))
+                  val pred = nextState.arena.topCell.toNameEx
+                  def mapArg(argEx: TlaEx): TlaEx = {
+                    nextState = rewriter.rewriteUntilDone(nextState.setRex(argEx).setTheory(CellTheory()))
+                    nextState.ex
+                  }
+
+                  val rewrittenArgs = args map mapArg
+                  rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.and(rewrittenArgs :_*)))
+                  nextState.setRex(pred).setTheory(CellTheory())
+                }
               rewriter.rewriteUntilDone(newState)
             } else {
               // evaluate the conditions and prune them in runtime

@@ -8,8 +8,6 @@ import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 /**
   * Implements the rule: SE-SUBSET1, that is, constructs the powerset SUBSET S for a set S.
   *
-  * TODO: add typeFinder?
-  *
   * @author Igor Konnov
    */
 class PowSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {

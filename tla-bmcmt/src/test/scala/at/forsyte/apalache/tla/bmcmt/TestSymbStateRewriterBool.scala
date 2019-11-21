@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.NoRule
 import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStoreImpl
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.bmcmt.types.{AnnotationParser, BoolT, FinSetT, IntT}
@@ -7,7 +8,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TestingPredefs, ValEx}
+import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.junit.JUnitRunner
@@ -100,148 +101,22 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     }
   }
 
-  test("""SE-BOOL-NEG1: ~(x \/ y) ~~> ~x /\ ~y""") {
-    val ex = tla.not(tla.or(tla.name("x"), tla.name("y")))
-    val state = new SymbState(ex, CellTheory(), arena, xyBinding)
-    create().rewriteOnce(state) match {
-      case SymbStateRewriter.Continue(nextState) =>
-        val expected = tla.and(tla.not(tla.name("x")), tla.not(tla.name("y")))
-        assert(expected == nextState.ex)
-        assert(state.arena == nextState.arena)
-
-      case _ =>
-        fail("Unexpected rewriting result")
-    }
-  }
-
-  test("""SE-BOOL-NEG2: ~(x /\ y) ~~> ~x \/ ~y""") {
-    val ex = OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.and, NameEx("x"), NameEx("y")))
-    val state = new SymbState(ex, CellTheory(), arena, xyBinding)
-    create().rewriteOnce(state) match {
-      case SymbStateRewriter.Continue(nextState) =>
-        val expected = OperEx(TlaBoolOper.or,
-          OperEx(TlaBoolOper.not, NameEx("x")),
-          OperEx(TlaBoolOper.not, NameEx("y")))
-        assert(expected == nextState.ex)
-        assert(state.arena == nextState.arena)
-
-      case _ =>
-        fail("Unexpected rewriting result")
-    }
-  }
-
-  test("SE-BOOL-NEG3: ~(x => y) ~~> x /\\ ~y") {
-    val ex = OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.implies, NameEx("x"), NameEx("y")))
-    val state = new SymbState(ex, CellTheory(), arena, xyBinding)
-    create().rewriteOnce(state) match {
-      case SymbStateRewriter.Continue(nextState) =>
-        val expected = OperEx(TlaBoolOper.and,
-          NameEx("x"),
-          OperEx(TlaBoolOper.not, NameEx("y")))
-        assert(expected == nextState.ex)
-        assert(state.arena == nextState.arena)
-
-      case _ =>
-        fail("Unexpected rewriting result")
-    }
-  }
-
   test("SE-BOOL-IMPL: x => y ~~> ~x \\/ y") {
+    // outside of KerA+, should be handled by Keramelizer and Normalizer
     val ex = tla.impl("x", "y")
     val state = new SymbState(ex, CellTheory(), arena, xyBinding)
-    create().rewriteOnce(state) match {
-      case SymbStateRewriter.Continue(nextState) =>
-        val expected = tla.or(tla.not("x"), "y")
-        assert(expected == nextState.ex)
-        assert(state.arena == nextState.arena)
-
-      case _ =>
-        fail("Unexpected rewriting result")
-    }
+    assert(NoRule() == create().rewriteOnce(state))
   }
 
   test("SE-BOOL-EQUIV: x <=> y") {
+    // outside of KerA+, should be handled by Keramelizer and Normalizer
     arena = arena.appendCell(BoolT())
     val left = arena.topCell
     arena = arena.appendCell(BoolT())
     val right = arena.topCell
     val ex = tla.equiv(left.toNameEx, right.toNameEx)
     val state = new SymbState(ex, BoolTheory(), arena, xyBinding)
-    val rewriter = create()
-    rewriter.rewriteUntilDone(state).ex match {
-      case NameEx(result) =>
-        rewriter.solverContext.assertGroundExpr(NameEx(result))
-        solverContext.push()
-        solverContext.assertGroundExpr(left.toNameEx)
-        solverContext.assertGroundExpr(right.toNameEx)
-        assert(solverContext.sat())
-        solverContext.pop()
-        solverContext.push()
-        solverContext.assertGroundExpr(tla.not(left.toNameEx))
-        solverContext.assertGroundExpr(tla.not(right.toNameEx))
-        assert(solverContext.sat())
-        solverContext.pop()
-        solverContext.push()
-        solverContext.assertGroundExpr(left.toNameEx)
-        solverContext.assertGroundExpr(tla.not(right.toNameEx))
-        assert(!solverContext.sat())
-        solverContext.pop()
-        solverContext.push()
-        solverContext.assertGroundExpr(tla.not(left.toNameEx))
-        solverContext.assertGroundExpr(right.toNameEx)
-        assert(!solverContext.sat())
-        solverContext.pop()
-
-      case _ =>
-        fail("Unexpected rewriting result")
-    }
-  }
-
-  test("SE-BOOL-NEG4: ~(x <=> y) ~~> ~x <=> y") {
-    val ex = OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.equiv, NameEx("x"), NameEx("y")))
-    val state = new SymbState(ex, CellTheory(), arena, xyBinding)
-    create().rewriteOnce(state) match {
-      case SymbStateRewriter.Continue(nextState) =>
-        val expected =
-          OperEx(TlaBoolOper.equiv,
-            OperEx(TlaBoolOper.not, NameEx("x")), NameEx("y"))
-        assert(expected == nextState.ex)
-        assert(state.arena == nextState.arena)
-
-      case _ =>
-        fail("Unexpected rewriting result")
-    }
-  }
-
-  test("SE-BOOL-NEG5: ~~x ~~> x") {
-    val ex = OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.not, NameEx("x")))
-    val state = new SymbState(ex, CellTheory(), arena, xyBinding)
-    create().rewriteOnce(state) match {
-      case SymbStateRewriter.Continue(nextState) =>
-        assert(NameEx("x") == nextState.ex)
-        assert(state.arena == nextState.arena)
-        assert(state.binding == nextState.binding)
-
-      case _ =>
-        fail("Unexpected rewriting result")
-    }
-  }
-
-  test("""SE-BOOL-NEG6: ~\E x \in S: y ~~> \A x \in S: ~y""") {
-    val ex = OperEx(TlaBoolOper.not,
-      OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("S"), NameEx("y")))
-    val state = new SymbState(ex, CellTheory(), arena, Binding("S" -> set, "y" -> y))
-    create().rewriteOnce(state) match {
-      case SymbStateRewriter.Continue(nextState) =>
-        val expected = OperEx(TlaBoolOper.forall, NameEx("x"), NameEx("S"),
-          OperEx(TlaBoolOper.not, NameEx("y")))
-        assert(expected == nextState.ex)
-        assert(state.arena == nextState.arena)
-        assert(state.binding == nextState.binding)
-
-      case _ =>
-        fail("Unexpected rewriting result")
-    }
+    assert(NoRule() == create().rewriteOnce(state))
   }
 
   test("""IF-THEN-ELSE with \E: IF \E i \in {}: x' \in {i} THEN x' ELSE 0""") {
@@ -260,23 +135,6 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     var nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(tla.int(0), nextState.ex)))
-  }
-
-  test("""SE-BOOL-NEG7: ~\A x \in S: y ~~> \E x \in S: ~y""") {
-    val ex = OperEx(TlaBoolOper.not,
-      OperEx(TlaBoolOper.forall, NameEx("x"), NameEx("S"), NameEx("y")))
-    val state = new SymbState(ex, CellTheory(), arena, Binding("S" -> set, "y" -> y))
-    create().rewriteOnce(state) match {
-      case SymbStateRewriter.Continue(nextState) =>
-        val expected = OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("S"),
-          OperEx(TlaBoolOper.not, NameEx("y")))
-        assert(expected == nextState.ex)
-        assert(state.arena == nextState.arena)
-        assert(state.binding == nextState.binding)
-
-      case _ =>
-        fail("Unexpected rewriting result")
-    }
   }
 
   test("""SE-BOOL-NEG9: ~c_i ~~> b_new""") {
@@ -308,23 +166,13 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     }
   }
 
-  test("""SE-BOOL-NEG9: ~x ~~> c_TRUE""") {
+  test("""SE-BOOL-NEG9: ~x ~~> TRUE""") {
     val ex = OperEx(TlaBoolOper.not, NameEx("x"))
     val binding = new Binding() + ("x" -> arena.cellFalse())
     val state = new SymbState(ex, CellTheory(), arena, binding)
-    create().rewriteOnce(state) match {
-      case SymbStateRewriter.Continue(nextState) =>
-        nextState.ex match {
-          case NameEx(name) =>
-            assert(arena.cellTrue().toString == name)
-
-          case _ =>
-            fail("Unexpected rewriting result")
-        }
-
-      case _ =>
-        fail("Unexpected rewriting result")
-    }
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(nextState.ex, tla.bool(true))))
   }
 
   test("""SE-AND1: FALSE /\ TRUE ~~> $B$0""") {
@@ -443,13 +291,13 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     }
   }
 
-  test("""SE-BOOL-NE1: $B$1 != $B$2 ~~> $B$3""") {
+  test("""SE-BOOL-NE1: ~($B$1 = $B$2) ~~> $B$3""") {
     arena = arena.appendCell(BoolT())
     val left = arena.topCell
     arena = arena.appendCell(BoolT())
     val right = arena.topCell
 
-    val ex = OperEx(TlaOper.ne, left.toNameEx, right.toNameEx)
+    val ex = tla.not(tla.eql(left.toNameEx, right.toNameEx))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -559,8 +407,12 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
   }
 
   test("""SE-EX: \E x \in {1} \ {1}: x > 4, regression""") {
+    def dynEmpty(left: TlaEx): TlaEx = {
+      tla.filter(tla.name("t"), left, tla.bool(false))
+    }
+
     val ex = tla.exists(tla.name("x"),
-      tla.setminus(tla.enumSet(tla.int(1)), tla.enumSet(tla.int(1))),
+      dynEmpty(tla.enumSet(tla.int(1))),
       tla.gt(tla.name("x"), tla.int(4)))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())

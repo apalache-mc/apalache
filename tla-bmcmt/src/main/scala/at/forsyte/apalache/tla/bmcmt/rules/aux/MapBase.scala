@@ -53,6 +53,7 @@ class MapBase(rewriter: SymbStateRewriter, val isBijective: Boolean) {
     val elemsOfSets = setsAsCells.map(nextState.arena.getHas)
     val setLimits = elemsOfSets.map(_.size - 1)
     // find the type of the target expression and of the target set
+    // TODO: types should have been computed already, this was only needed by CartesianProductRule and RecordSetRule
     val targetMapT = rewriter.typeFinder.computeRec(mapEx)
     val argTypes = 0.until(2 * setsAsCells.size) map
       { i => if (i % 2 == 0) setElemTypes(i / 2) else setsAsCells(i / 2).cellType }

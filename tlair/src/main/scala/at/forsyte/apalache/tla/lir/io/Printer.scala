@@ -134,14 +134,13 @@ object UTFPrinter extends Printer {
 
           case TlaBoolOper.and => opAppStr( args, " %s ".format( m_and ) )
           case TlaBoolOper.or => opAppStr( args, " %s ".format( m_or ) )
-          case TlaBoolOper.orParallel => opAppStr( args, " %s ".format( TlaBoolOper.orParallel.name ) )
           case TlaBoolOper.not => mkOpApp( "%s%%s".format( m_not ), args : _* )
           case TlaBoolOper.implies => mkOpApp( "%%s %s %%s".format( m_impl ), args : _* )
           case TlaBoolOper.equiv => mkOpApp( "%%s %s %%s".format( m_equiv ), args : _* )
-          case TlaBoolOper.forall => mkOpApp( "%s%%s %s %%s . %%s".format( m_forall, m_in ), args : _* )
-          case TlaBoolOper.exists => mkOpApp( "%s%%s %s %%s . %%s".format( m_exists, m_in ), args : _* )
-          case TlaBoolOper.forallUnbounded => mkOpApp( "%s%%s . %%s".format( m_forall ), args : _* )
-          case TlaBoolOper.existsUnbounded => mkOpApp( "%s%%s . %%s".format( m_exists ), args : _* )
+          case TlaBoolOper.forall => mkOpApp( "%s%%s %s %%s: %%s".format( m_forall, m_in ), args : _* )
+          case TlaBoolOper.exists => mkOpApp( "%s%%s %s %%s: %%s".format( m_exists, m_in ), args : _* )
+          case TlaBoolOper.forallUnbounded => mkOpApp( "%s%%s: %%s".format( m_forall ), args : _* )
+          case TlaBoolOper.existsUnbounded => mkOpApp( "%s%%s: %%s".format( m_exists ), args : _* )
 
           case TlaArithOper.sum => opAppStr( args, " + " )
           case TlaArithOper.plus => mkOpApp( "%s + %s", args : _* )
@@ -204,7 +203,7 @@ object UTFPrinter extends Printer {
           case TlaSetOper.funSet => mkOpApp( "[%%s %s %%s]".format( m_rarrow ), args : _* )
           case TlaSetOper.map => "{%s : %s}".format( apply( args.head ), opAppStrPairs( args.tail, pad( m_in ), ", " ) )
           case TlaSetOper.powerset => mkOpApp( "SUBSET %s", args : _* )
-          case TlaSetOper.recSet => opAppStrPairs( args, " : ", ", " )
+          case TlaSetOper.recSet => "[" + opAppStrPairs( args, ": ", ", " ) + "]"
           case TlaSetOper.seqSet => mkApp( "Seq(%s)", args : _* )
           case TlaSetOper.setminus => mkOpApp( "%%s %s %%s".format( m_setminus ), args : _* )
           case TlaSetOper.subseteq => mkOpApp( "%%s %s %%s".format( m_subseteq ), args : _* )

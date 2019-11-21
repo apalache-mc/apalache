@@ -24,7 +24,7 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case OperEx(TlaFunOper.funDef, mapEx, NameEx(varName), setEx) =>
-        // TODO: add support for multiple arguments
+        // note that we only have a single-argument case here, as Desugarer collapses multiple arguments into a tuple
         rewriteFunCtor(state, mapEx, varName, setEx)
 
       case _ =>

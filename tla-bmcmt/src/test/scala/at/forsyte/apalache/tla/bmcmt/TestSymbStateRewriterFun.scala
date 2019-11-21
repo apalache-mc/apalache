@@ -286,7 +286,7 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
         fail("Unexpected rewriting result")
     }
     rewriter.pop()
-    val appNeq = tla.neql(nextState.ex, tla.enumSet(tla.int(1), tla.int(3)))
+    val appNeq = tla.not(tla.eql(nextState.ex, tla.enumSet(tla.int(1), tla.int(3))))
     val neqState = nextState.setRex(appNeq).setTheory(BoolTheory())
     rewriter.rewriteUntilDone(neqState).ex match {
       case eqEx@NameEx(name) =>
@@ -333,10 +333,10 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-FUN-NE: [y \in BOOLEAN |-> ~y] /= [x \in BOOLEAN |-> ~x]""") {
+  test("""SE-FUN-NE: ~([y \in BOOLEAN |-> ~y] = [x \in BOOLEAN |-> ~x])""") {
     val fun1 = tla.funDef(tla.not(tla.name("y")), tla.name("y"), ValEx(TlaBoolSet))
     val fun2 = tla.funDef(tla.not(tla.name("x")), tla.name("x"), ValEx(TlaBoolSet))
-    val state = new SymbState(tla.neql(fun1, fun2), BoolTheory(), arena, new Binding)
+    val state = new SymbState(tla.not(tla.eql(fun1, fun2)), BoolTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
@@ -356,10 +356,10 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-FUN-NE: [y \in BOOLEAN |-> ~y] /= [x \in BOOLEAN |-> x]""") {
+  test("""SE-FUN-NE: ~([y \in BOOLEAN |-> ~y] = [x \in BOOLEAN |-> x])""") {
     val fun1 = tla.funDef(tla.not(tla.name("y")), tla.name("y"), ValEx(TlaBoolSet))
     val fun2 = tla.funDef(tla.name("x"), tla.name("x"), ValEx(TlaBoolSet))
-    val state = new SymbState(tla.neql(fun1, fun2), BoolTheory(), arena, new Binding)
+    val state = new SymbState(tla.not(tla.eql(fun1, fun2)), BoolTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
@@ -423,7 +423,7 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     }
     rewriter.pop()
     rewriter.push()
-    val appNeq = tla.neql(nextState.ex, boolNegFun)
+    val appNeq = tla.not(tla.eql(nextState.ex, boolNegFun))
     val neqState = rewriter.rewriteUntilDone(nextState.setRex(appNeq).setTheory(BoolTheory()))
     neqState.ex match {
       case neqEx@NameEx(name) =>
@@ -445,7 +445,7 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     val ite = tla.ite(pred, tla.int(11), tla.mult(tla.int(2), tla.name("x")))
     val iteFun = tla.funDef(ite, tla.name("x"), set)
     val iteFunElem = tla.appFun(iteFun, tla.int(1))
-    val iteFunElemNe11 = tla.neql(iteFunElem, tla.int(11))
+    val iteFunElemNe11 = tla.not(tla.eql(iteFunElem, tla.int(11)))
 
     val state = new SymbState(iteFunElemNe11, BoolTheory(), arena, new Binding)
     val rewriter = create()
@@ -491,7 +491,7 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
 
     val exceptFun = nextState.asCell
 
-    val resFun1Ne11 = tla.neql(tla.appFun(nextState.ex, tla.int(1)), tla.int(11))
+    val resFun1Ne11 = tla.not(tla.eql(tla.appFun(nextState.ex, tla.int(1)), tla.int(11)))
     val cmpState = rewriter.rewriteUntilDone(nextState.setRex(resFun1Ne11).setTheory(BoolTheory()))
 
     // compare
@@ -542,7 +542,7 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
 
     val exceptFun = nextState.arena.findCellByNameEx(nextState.ex)
 
-    val resFun1Ne11 = tla.neql(tla.appFun(nextState.ex, tla.int(1)), tla.int(11))
+    val resFun1Ne11 = tla.not(tla.eql(tla.appFun(nextState.ex, tla.int(1)), tla.int(11)))
     val cmpState = rewriter.rewriteUntilDone(nextState.setRex(resFun1Ne11).setTheory(BoolTheory()))
 
     // compare
@@ -590,7 +590,7 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
 
     val exceptFun = nextState.arena.findCellByNameEx(nextState.ex)
 
-    val resFun1Ne11 = tla.neql(tla.appFun(nextState.ex, tla.int(1)), tla.int(11))
+    val resFun1Ne11 = tla.not(tla.eql(tla.appFun(nextState.ex, tla.int(1)), tla.int(11)))
     val cmpState = rewriter.rewriteUntilDone(nextState.setRex(resFun1Ne11).setTheory(BoolTheory()))
 
     // compare
@@ -638,7 +638,7 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
 
     val exceptFun = nextState.arena.findCellByNameEx(nextState.ex)
 
-    val resFun1Ne11 = tla.neql(tla.appFun(nextState.ex, tla.str("a")), tla.int(11))
+    val resFun1Ne11 = tla.not(tla.eql(tla.appFun(nextState.ex, tla.str("a")), tla.int(11)))
     val cmpState = rewriter.rewriteUntilDone(nextState.setRex(resFun1Ne11).setTheory(BoolTheory()))
 
     // compare

@@ -3,6 +3,8 @@ package at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.oper.FixedArity
 import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
 
+// Igor@02.11.2019: why are TestingPredefs located in src/main?
+// TODO: move TestingPredefs into src/test
 trait TestingPredefs {
   implicit def name( p_s : String ) : NameEx = NameEx( p_s )
   implicit def value( p_n : Int  ) : ValEx = ValEx( TlaInt( p_n ) )

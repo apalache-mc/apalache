@@ -246,6 +246,41 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     assert(expected == stringWriter.toString)
   }
 
+  test("~x") {
+    val writer = new PrettyWriter(printWriter, 80)
+    writer.write(not(name("x")))
+    printWriter.flush()
+    assert("~x" == stringWriter.toString)
+  }
+
+  test("~(1 = 2)") {
+    val writer = new PrettyWriter(printWriter, 80)
+    writer.write(not(eql(int(1), int(2))))
+    printWriter.flush()
+    assert("~(1 = 2)" == stringWriter.toString)
+  }
+
+  test("[S -> T]") {
+    val writer = new PrettyWriter(printWriter, 80)
+    writer.write(funSet(name("S"), name("T")))
+    printWriter.flush()
+    assert("[S -> T]" == stringWriter.toString)
+  }
+
+  test("L2 :: 1") {
+    val writer = new PrettyWriter(printWriter, 80)
+    writer.write(label(int(1), "L2"))
+    printWriter.flush()
+    assert("L2 :: 1" == stringWriter.toString)
+  }
+
+  test("L2(a, b) :: 1") {
+    val writer = new PrettyWriter(printWriter, 80)
+    writer.write(label(int(1), "L2", "a", "b"))
+    printWriter.flush()
+    assert("L2(a, b) :: 1" == stringWriter.toString)
+  }
+
   test("one-line exists") {
     val writer = new PrettyWriter(printWriter, 40)
     val expr = exists("x", "y", "z")

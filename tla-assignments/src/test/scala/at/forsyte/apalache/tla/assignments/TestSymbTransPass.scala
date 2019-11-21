@@ -34,10 +34,11 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
     val inlined = ModuleByExTransformer( InlinerOfUserOper( bodyMap, tracker ) )( uniqueVarDecls )
     val explLetIn = ModuleByExTransformer( LetInExpander( tracker, keepNullary = false ) )( inlined )
     val afterDesugarer = ModuleByExTransformer(Desugarer(tracker)) (explLetIn)
-    val eac = ModuleByExTransformer( PrimedEqualityToMembership( tracker ) )(afterDesugarer)
-    val preprocessed = ModuleByExTransformer(  SimplifyRecordAccess( tracker ) )( eac )
+    val preprocessed = ModuleByExTransformer( PrimedEqualityToMembership( tracker ) )( afterDesugarer )
 
-    new SymbolicTransitionExtractor(tracker)(preprocessed.declarations, p_next)
+    val vars = preprocessed.varDeclarations.map(_.name)
+
+    SymbolicTransitionExtractor(tracker)(vars, preprocessed.operDeclarations.find(_.name == p_next).get.body)
   }
 
   def testFromFile( p_file : String, p_next : String = "Next" ) : Seq[SymbTrans] = {
@@ -93,23 +94,18 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
   }
 
   test( "Test no strat" ){
-//    val next = bd.primeInSingleton( n_x, n_S )
-
     val next = bd.eql( bd.prime( n_x ), n_y )
-
     val decls = Seq( TlaOperDecl( "Next", List(), next ), TlaVarDecl( "x" ), TlaVarDecl( "z" ) )
-
-    assertThrows[AssignmentException]( testFromDecls( decls ) )
-
+    val trans = testFromDecls(decls)
+    assert(trans.isEmpty)
   }
 
-  test( "Test no Next" ){
+  ignore( "Test no Next"){
+    // the new version of SymbolicTransitionExtractor accepts an expression, so nothing to test here
+    // TODO: remove this test
     val next = bd.primeInSingleton( n_x, n_S )
-
     val decls = Seq( TlaOperDecl( "Next", List(), next ), TlaVarDecl( "x" ) )
-
-    assertThrows[AssignmentException]( testFromDecls( decls, "NotNext" ) )
-
+    assertThrows[AssignmentException](testFromDecls(decls, "NotNext"))
   }
 
   test( "Test Selections" ){
@@ -136,8 +132,8 @@ class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
     val symbNexts = testFromFile( "test1.tla" )
   }
 
-  test( "SimpTendermit1" ) {
-    val symbNexts = testFromFile( "SimpTendermit1.tla" )
-    val symbNexts2 = testFromFile( "SimpTendermit1.tla", "NextNoFaults" )
+  test( "SimpT1" ) {
+    val symbNexts = testFromFile( "SimpT1.tla" )
+    val symbNexts2 = testFromFile( "SimpT1.tla", "NextNoFaults" )
   }
 }
