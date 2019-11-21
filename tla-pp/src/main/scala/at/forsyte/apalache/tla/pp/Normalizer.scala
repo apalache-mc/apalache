@@ -103,7 +103,7 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
       if (neg) {
         tla.eql(left, right)
       } else {
-        neq
+        tla.not(tla.eql(left, right))
       }
 
     case OperEx(TlaSetOper.in, left, right) =>
