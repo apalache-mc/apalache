@@ -86,7 +86,7 @@ class TestKeraLanguagePred extends FunSuite {
     assert(pred.isExprOk(uminus(int(2))))
   }
 
-  test("a KerA logic expression") {
+  test("a KerA control expression") {
     assert(pred.isExprOk(ite(name("p"), int(1), int(2))))
   }
 
@@ -105,6 +105,11 @@ class TestKeraLanguagePred extends FunSuite {
 
   test("not a KerA tuple expression") {
     assert(!pred.isExprOk(times(name("X"), name("Y"))))
+  }
+
+  test("a KerA logic expression") {
+    assert(pred.isExprOk(or(bool(false), name("b"))))
+    assert(pred.isExprOk(and(bool(false), name("b"))))
   }
 
   test("not a KerA logic expression") {

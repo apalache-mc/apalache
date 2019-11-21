@@ -151,6 +151,8 @@ object KeraLanguagePred {
 
   protected val naryOps: HashSet[TlaOper] =
     HashSet(
+      TlaBoolOper.and,
+      TlaBoolOper.or,
       TlaSetOper.enumSet,
       TlaFunOper.except,
       TlaFunOper.tuple,
