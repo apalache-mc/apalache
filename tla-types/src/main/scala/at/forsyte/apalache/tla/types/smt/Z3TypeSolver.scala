@@ -74,19 +74,19 @@ class Z3TypeSolver( useSoftConstraints : Boolean ) {
   /**
     * Axioms
     */
-  private val axiomSizeOf : BoolExpr = {
-    val i = ctx.mkConst( ctx.mkSymbol( "i" ), intS )
-    val j = ctx.mkConst( ctx.mkSymbol( "j" ), intS )
-    ctx.mkForall(
-      Array[Expr]( i, j ),
-      ctx.mkImplies(
-        ctx.mkApp( hasIdxDecl, i, j ).asInstanceOf[BoolExpr],
-        ctx.mkGe( ctx.mkApp( sizeOfDecl, i ).asInstanceOf[ArithExpr], j.asInstanceOf[ArithExpr] )
-      ),
-      0, null, null, null, null
-    )
-  }
-  solver.assert( axiomSizeOf )
+//  private val axiomSizeOf : BoolExpr = {
+//    val i = ctx.mkConst( ctx.mkSymbol( "i" ), intS )
+//    val j = ctx.mkConst( ctx.mkSymbol( "j" ), intS )
+//    ctx.mkForall(
+//      Array[Expr]( i, j ),
+//      ctx.mkImplies(
+//        ctx.mkApp( hasIdxDecl, i, j ).asInstanceOf[BoolExpr],
+//        ctx.mkGe( ctx.mkApp( sizeOfDecl, i ).asInstanceOf[ArithExpr], j.asInstanceOf[ArithExpr] )
+//      ),
+//      0, null, null, null, null
+//    )
+//  }
+//  solver.assert( axiomSizeOf )
 
   /**********
    *INIT END*
@@ -125,7 +125,9 @@ class Z3TypeSolver( useSoftConstraints : Boolean ) {
         val iInt = ctx.mkInt( i )
         val exists = ctx.mkApp( hasIdxDecl, vConst, iInt ).asInstanceOf[BoolExpr]
         val value = ctx.mkEq( ctx.mkApp( atIdxDecl, vConst, iInt ), dtToSmt( t ) )
-        ctx.mkAnd( exists, value )
+        // Explicit instantiation
+        val sizeAxiom = ctx.mkGe( ctx.mkApp( sizeOfDecl, vConst ).asInstanceOf[ArithExpr], iInt )
+        ctx.mkAnd( exists, value, sizeAxiom )
       case sizeOfEql( i, j ) =>
         ctx.mkEq( ctx.mkApp( sizeOfDecl, varToConst( i ) ), ctx.mkInt( j ) )
       case _ =>
