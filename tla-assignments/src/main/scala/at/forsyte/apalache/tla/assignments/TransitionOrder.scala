@@ -1,9 +1,12 @@
 package at.forsyte.apalache.tla.assignments
 
-import at.forsyte.apalache.tla.lir.src.SourceLocation
+import at.forsyte.apalache.tla.imp.src.SourceLocation
+import at.forsyte.apalache.tla.lir.UID
+import at.forsyte.apalache.tla.lir.src.{SourceLocation, SourcePosition, SourceRegion}
 import at.forsyte.apalache.tla.lir.storage.SourceLocator
+import com.typesafe.scalalogging.LazyLogging
 
-class TransitionOrder( sourceLocator : SourceLocator ) {
+class TransitionOrder( sourceLocator : SourceLocator ) extends LazyLogging {
   /**
     * Sorts the transitions lexicographically on the source code information of assignments
     */
@@ -51,8 +54,19 @@ class TransitionOrder( sourceLocator : SourceLocator ) {
   private def seqLocLT( a : Seq[SourceLocation], b : Seq[SourceLocation] ) : Boolean =
     lexCmpSeqs( locCmp )( a, b ) < 0
 
-  private def getSortedLocs( s : SymbTrans ) : Seq[SourceLocation] =
-    s._1 map { x => sourceLocator.sourceOf( x ).get } sortWith locLT
+  private def getSortedLocs( s : SymbTrans ) : Seq[SourceLocation] = {
+    def findLoc(uid: UID): SourceLocation = {
+      sourceLocator.sourceOf(uid) match {
+        case Some(loc) => loc
+        case None =>
+          // degrading without throwing an exception
+          logger.warn(s"Missing source location for UID = $UID")
+          SourceLocation("unknown", new SourceRegion(SourcePosition(1), SourcePosition(2)))
+      }
+    }
+
+    s._1 map findLoc sortWith locLT
+  }
 
   private def transLT( a: SymbTrans, b: SymbTrans ): Boolean = seqLocLT( getSortedLocs( a ), getSortedLocs( b ) )
 }
