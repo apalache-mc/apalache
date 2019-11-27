@@ -61,21 +61,21 @@ class TestZ3TypeSolver extends FunSuite with TestingPredefs with BeforeAndAfter 
 
     val ret = solver.solve( smtVarGen.allVars, templApp )
     assert( ret.nonEmpty )
-    val map = ret.get
+    val solution = ret.get
 
     val ctx = udtg.getCtx
     val varOfPlusEx = ctx( List.empty )( plusEx.ID )
 
     assert( varOfPlusEx match {
-      case SmtTypeVariable( i ) =>
-        map(i) == IntT
+      case i : SmtTypeVariable =>
+        solution( i ) == IntT
       case _ => false
-    })
+    } )
   }
 
-  test( "H.O. operators" ){
+  test( "H.O. operators" ) {
     // A(p) == p
-    val declA = tla.declOp( "A", n_p, "p")
+    val declA = tla.declOp( "A", n_p, "p" )
     // B(O(_)) == O(1)
     val declB = tla.declOp( "B", tla.appOp( tla.name( "O" ), tla.int( 1 ) ), ("O", 1) )
     // C == B(A)
@@ -95,10 +95,10 @@ class TestZ3TypeSolver extends FunSuite with TestingPredefs with BeforeAndAfter 
     assert( ret.nonEmpty )
   }
 
-  test("Misc. Tuples"){
+  test( "Misc. Tuples" ) {
     val ex = tla.and(
-      tla.eql( n_x, tla.tuple( tla.int(1), tla.str( "a" ) ) ),
-      tla.eql( n_y, tla.tuple( tla.str("b"), tla.int( 2 ), tla.str( "c" ) ) )
+      tla.eql( n_x, tla.tuple( tla.int( 1 ), tla.str( "a" ) ) ),
+      tla.eql( n_y, tla.tuple( tla.str( "b" ), tla.int( 2 ), tla.str( "c" ) ) )
     )
 
     val e = smtVarGen.getFresh

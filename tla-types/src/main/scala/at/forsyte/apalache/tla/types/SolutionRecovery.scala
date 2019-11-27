@@ -4,34 +4,20 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.storage.BodyMap
 import at.forsyte.apalache.tla.types.smt.Z3TypeSolver.Solution
 
-object SolutionRecovery {
-
-  class IncompleteSolutionException( m : String ) extends Exception( m )
-
-}
-
 class SolutionRecovery( tvg : TypeVarGenerator ) {
-
-  import SolutionRecovery._
 
   /**
     * Returns the types of all variables and generalized types of all operators
     */
   def recover(
-               knownOperaotrs : Map[String, TlaType],
+               knownOperators : Map[String, TlaType],
                bodyMap : BodyMap,
                operCtx : OperatorContext,
                globalNameCtx : GlobalNameContext,
                solution : Solution
              ) : Map[String, TlaType] = {
     val varTypes = globalNameCtx map {
-      case (varName, SmtTypeVariable( f )) =>
-        solution.get( f ) map {
-          varName -> _
-        } match {
-          case None => throw new IncompleteSolutionException( s"No type found for $varName" )
-          case Some( r ) => r
-        }
+      case (varName, tv) => varName -> solution( tv )
     }
 
     val (backMap, operNames) = bodyMap.foldLeft( (Map.empty[UID, TlaEx], Seq.empty[String]) ) {
@@ -40,8 +26,9 @@ class SolutionRecovery( tvg : TypeVarGenerator ) {
     }
 
     val operTypes = operNames map { opName =>
-      opName -> knownOperaotrs.getOrElse( opName,
-        generalizeType( opName, backMap, operCtx, solution ) )
+      opName -> knownOperators.getOrElse( opName,
+        generalizeType( opName, backMap, operCtx, solution )
+      )
     }
 
     varTypes ++ operTypes.toMap
@@ -168,22 +155,21 @@ class SolutionRecovery( tvg : TypeVarGenerator ) {
                     ) : TlaType = {
     val allTypes = operCtx flatMap {
       case (_, asgn) => asgn flatMap {
-        case (uid, SmtTypeVariable( i )) =>
+        case (uid, tv) =>
           // It can happen that a key is not found in idToExMap. An example of this is
           // when, internally for type-constraints,
           // UNCHANGED a is transformed into a' = a. This intermediate
           // expression is ephemeral and as such is not recorded in idToExMap
           idToExMap.get( uid ) match {
             case Some( NameEx( n ) ) if n == operName =>
-              Some( solution( i ) )
+              Some( solution( tv ) )
             case _ => None
           }
-        case _ => None
       }
     }
     allTypes.headOption match {
       case None =>
-        throw new Exception( "Every operator should have at least one type candidate" )
+        throw new Exception( s"Operator $operName should have at least one type candidate, but has 0." )
       case Some( h ) =>
         allTypes.foldLeft( h ) { case (t1, t2) => findPoly( t1, t2 ) }
     }

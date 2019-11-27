@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.types.smt.FunWrappers.{HasAtFunWrapper, SizeFunWr
 import com.microsoft.z3._
 
 object Z3TypeSolver {
-  type Solution = Map[Int, TlaType]
+  type Solution = SmtDatatype => TlaType
 }
 
 /**
@@ -160,7 +160,7 @@ class Z3TypeSolver( useSoftConstraints : Boolean ) {
              constraints : BoolFormula
            ) : Option[Solution] = {
     solver.push()
-    val varDecls = addVars( vars )
+    addVars( vars )
     addConstraints( constraints )
     val status = solver.check()
     val model = solver.getModel
@@ -173,10 +173,16 @@ class Z3TypeSolver( useSoftConstraints : Boolean ) {
 
         val typeReconstructor = new TypeReconstructor( idxWrap.apply, fieldWrap.apply, sizeWrap.apply, strEnumerator )
 
-        val tMap = ( varDecls map { v =>
-          recoverVarId( v.getName.toString ) -> typeReconstructor( model.getConstInterp( v ) )
-        } ).toMap
-        Some( tMap )
+        def solution( dt: SmtDatatype ) : TlaType = {
+          val expr = Z3Converter.dtToSmt( dt )
+          typeReconstructor( model.eval(
+            expr,
+            false // completion:  When this flag is enabled, a model value will be assigned to any constant or function that does not have an interpretation in the model.
+            /* TODO: Investigate potential benefits of completion = true */
+          ) )
+        }
+
+        Some( solution )
       case _ => None
     }
   }
@@ -222,18 +228,5 @@ class Z3TypeSolver( useSoftConstraints : Boolean ) {
   private def flatten( s : BoolFormula ) : Seq[BoolFormula] = s match {
     case And( conds@_* ) => conds flatMap flatten
     case z => Seq( z )
-  }
-
-  /**
-    * Reads variable IDs from their canonical name (e.g. f7 -> 7)
-    *
-    * returns -1 if the input is malformed
-    */
-  private def recoverVarId( s : String ) : Int = {
-    val varNameRegex = s"${Names.tVarSymb}(0|[1-9][0-9]*)".r
-    s match {
-      case varNameRegex( x ) => x.toInt
-      case _ => -1
-    }
   }
 }
