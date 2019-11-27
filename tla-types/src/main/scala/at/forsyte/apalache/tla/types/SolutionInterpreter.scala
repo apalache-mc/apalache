@@ -4,27 +4,33 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.storage.BodyMap
 import at.forsyte.apalache.tla.types.smt.Z3TypeSolver.Solution
 
-class SolutionRecovery( tvg : TypeVarGenerator ) {
+class SolutionInterpreter( tvg : TypeVarGenerator ) {
 
   /**
     * Returns the types of all variables and generalized types of all operators
     */
-  def recover(
-               knownOperators : Map[String, TlaType],
-               bodyMap : BodyMap,
-               operCtx : OperatorContext,
-               globalNameCtx : GlobalNameContext,
-               solution : Solution
-             ) : Map[String, TlaType] = {
+  def interpret(
+                 knownOperators : Map[String, TlaType],
+                 bodyMap : BodyMap,
+                 operCtx : OperatorContext,
+                 globalNameCtx : GlobalNameContext,
+                 solution : Solution
+               ) : Map[String, TlaType] = {
+    // For TLA variables, we just evaluate their matching SMT variables directly
     val varTypes = globalNameCtx map {
       case (varName, tv) => varName -> solution( tv )
     }
 
+    // We construct an inverse UID->TlaEx mapping, so we know which UIDs belong to operator
+    // application sites, in order to determine the types of operators. Simultaneously,
+    // we also collect all the operator names from the BodyMap
     val (backMap, operNames) = bodyMap.foldLeft( (Map.empty[UID, TlaEx], Seq.empty[String]) ) {
       case ((partialMap, partialOpNames), (name, (_, body))) =>
         (partialMap ++ aux.uidToExMap( body ), name +: partialOpNames)
     }
 
+    // For each unknown operator, we will look at its type
+    // generalization, computed from the operator context
     val operTypes = operNames map { opName =>
       opName -> knownOperators.getOrElse( opName,
         generalizeType( opName, backMap, operCtx, solution )
@@ -146,6 +152,17 @@ class SolutionRecovery( tvg : TypeVarGenerator ) {
     * Given an operator name `operName`, computes the type generalization of all
     * application instances of `operName` across all possible contexts.
     * This gives us the polymorphic type of the operator `operName` (in this specification).
+    *
+    * If an operator appears in two different parts of the specification, with
+    * types < X1, ... , Xn > => X0 and < Y1, ... , Yn > => Y0 where at least for one i
+    * Xi != Yi, it must be the case that the type of the operator can be said to be
+    * < Z1, ... , Zn > => Z0 where, for each i, Xi and Yi are particular instances of Zi
+    *
+    * Example:
+    * The operator A has, at different locations, types < Int, Int > => Bool and
+    * < Str, Str > => Bool. Generalization determines the type of A to be
+    * < T0, T0 > => Bool. If we additionally know that an instance of A has type
+    * < Int, Str > => Bool, the generalization becomes < T0, T1 > => Bool
     */
   def generalizeType(
                       operName : String,
@@ -153,6 +170,9 @@ class SolutionRecovery( tvg : TypeVarGenerator ) {
                       operCtx : OperatorContext,
                       solution : Solution
                     ) : TlaType = {
+    // We gather every instance of operator application, from every possible
+    // application stack. For each of them, `solution` gives us the type of that particular
+    // instance.
     val allTypes = operCtx flatMap {
       case (_, asgn) => asgn flatMap {
         case (uid, tv) =>
@@ -171,7 +191,8 @@ class SolutionRecovery( tvg : TypeVarGenerator ) {
       case None =>
         throw new Exception( s"Operator $operName should have at least one type candidate, but has 0." )
       case Some( h ) =>
-        allTypes.foldLeft( h ) { case (t1, t2) => findPoly( t1, t2 ) }
+        // We iteratively compute the polymorphic generalized type
+        allTypes.tail.foldLeft( h ) { case (t1, t2) => findPoly( t1, t2 ) }
     }
   }
 }
