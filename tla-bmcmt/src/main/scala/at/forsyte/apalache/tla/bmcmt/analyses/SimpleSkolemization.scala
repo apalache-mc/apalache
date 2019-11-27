@@ -31,6 +31,11 @@ class SimpleSkolemization @Inject()
       // as we are only concerned with \exists in the scope of \forall
       args foreach markFreeExistentials
 
+    case LetInEx(body, defs @ _*) =>
+      // at this point, we only have nullary let-in definitions
+      defs.foreach { df => markFreeExistentials(df.body) }
+      markFreeExistentials(body)
+
     case _ =>
       () // stop here
   }

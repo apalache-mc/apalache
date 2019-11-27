@@ -35,7 +35,8 @@ class LetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   private def bindOperator(state: SymbState, decl: TlaOperDecl): SymbState = {
     if (decl.formalParams.nonEmpty) {
-      throw new RewriterException("Non-constant operators in LET-IN are not supported yet: " + decl)
+      throw new RewriterException("Found unexpanded %d-ary LET-IN %s. This is a preprocessing bug."
+        .format(decl.formalParams.size, decl.name))
     }
 
     val newState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(decl.body))
