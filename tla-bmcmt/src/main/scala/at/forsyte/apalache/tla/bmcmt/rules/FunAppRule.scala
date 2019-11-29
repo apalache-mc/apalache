@@ -110,7 +110,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       defaultValueFactory.makeUpValue(nextState, seqCell.cellType.asInstanceOf[SeqT].res)
     } else {
       // create the oracle
-      val (oracleState, oracle) = picker.oracleFactory.newDefaultOracle(nextState, nelems + 1)
+      val (oracleState, oracle) = picker.oracleFactory.newIntOracle(nextState, nelems + 1)
       nextState = oracleState
       // pick an element to be the result
       nextState = picker.pickByOracle(nextState, oracle, values, nextState.arena.cellTrue().toNameEx)
@@ -122,10 +122,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
         tla.le(argCell, tla.minus(end, start)))
       nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.plus(tla.minus(argCell, tla.int(1)), start)))
       val indexCell = nextState.asCell
-      def eqArg(i: Int) =
-        tla.and(tla.eql(indexCell, tla.int(i)), oracle.whenEqualTo(nextState, i))
-      // since oracle values are now uninterpreted constants, we have to match them with integer indices
-      val oracleEqArg = tla.or(0.until(nelems) map eqArg :_*)
+      val oracleEqArg = tla.eql(indexCell, oracle.intCell)
       val oracleIsN = oracle.whenEqualTo(nextState, nelems)
       solverAssert(tla.or(tla.and(inRange, oracleEqArg), tla.and(tla.not(inRange), oracleIsN)))
       nextState.setRex(pickedResult).setTheory(CellTheory())
