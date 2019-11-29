@@ -215,8 +215,27 @@ class TestSymbStateRewriterSequence extends RewriterBase {
       nextState.setRex(tla.eql(tla.enumSet(tla.int(2), tla.int(3)), nextState.ex)))
   }
 
+  test("""SEQ-CONCAT: <<9, 10>> \o SubSeq(S, 2, 3)""") {
+    val tuple3_6 = TlaFunOper.mkTuple(3.to(6) map tla.int :_*)
+    val seqT = AnnotationParser.toTla(SeqT(IntT()))
+    val annotatedTuple = tla.withType(tuple3_6, seqT)
+    val subseq = tla.subseq(annotatedTuple, tla.int(2), tla.int(3)) // <<4, 5>>
+    val tuple9_10 = tla.withType(TlaFunOper.mkTuple(tla.int(9), tla.int(10)), seqT)
+    val concat = tla.concat(tuple9_10, subseq)
+
+    val state = new SymbState(concat, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    val result = nextState.asCell
+    assert(SeqT(IntT()) == result.cellType)
+
+    val expected = tla.withType(TlaFunOper.mkTuple(tla.int(9), tla.int(10), tla.int(4), tla.int(5)), seqT)
+
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(expected, nextState.ex)))
+  }
+
   // for PICK see TestCherryPick
 
   // TODO: except
-  // TODO: concat \o
 }

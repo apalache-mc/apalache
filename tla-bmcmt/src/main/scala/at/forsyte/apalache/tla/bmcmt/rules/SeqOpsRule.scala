@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
+import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.lir.oper.TlaSeqOper
 
 /**
@@ -46,7 +47,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
         translateAppend(state, seq, newElem)
 
       case OperEx(TlaSeqOper.concat, seq, otherSeq) =>
-        throw new NotImplementedError("Sequence concatenation is rarely used. If you need it, write a feature request.")
+        translateConcat(state, seq, otherSeq)
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
@@ -132,4 +133,86 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // just return end - start
     rewriter.rewriteUntilDone(nextState.setRex(tla.minus(end, start)))
   }
+
+  // Implement concatenation on sequences. This is the most expensive operation on sequences.
+  private def translateConcat(state: SymbState, seq1: TlaEx, seq2: TlaEx): SymbState = {
+    def solverAssert = rewriter.solverContext.assertGroundExpr _
+
+    var nextState = state
+
+    def rewriteSeq(seqEx: TlaEx): (ArenaCell, ArenaCell, ArenaCell, Seq[ArenaCell], CellT) = {
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(seqEx).setTheory(CellTheory()))
+      val cell = nextState.asCell
+      val connectedCells = nextState.arena.getHas(cell)
+      val start = connectedCells.head
+      val end = connectedCells.tail.head
+      val elems = connectedCells.tail.tail
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.minus(end, start)))
+      val len = nextState.asCell
+      (start, end, len, elems, cell.cellType)
+    }
+
+    // rewrite the expressions
+    val (start1, end1, len1, elems1, cellType) = rewriteSeq(seq1)
+    val (start2, end2, len2, elems2, _) = rewriteSeq(seq2)
+
+    // introduce a new sequence
+    nextState = nextState.updateArena(_.appendCell(cellType))
+    val seq3 = nextState.arena.topCell
+    nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.int(0)))
+    val start3 = nextState.asCell
+    nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.plus(len1, len2)))
+    val end3 = nextState.asCell
+
+    val elems1then2 = elems1 ++ elems2
+    val ntotal = elems1then2.length
+
+    // pre-compute integer constants that are used when computing every element
+    // offset2 = N1 + start2 - len1
+    nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.minus(tla.plus(tla.int(elems1.size), start2), len1)))
+    val offset2 = nextState.asCell
+    nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.plus(len1, len2)))
+    val len1plus2 = nextState.asCell
+
+    // introduce constraints for the i-th element of the resulting sequence
+    def pickElem(i: Int): ArenaCell = {
+      // create the oracle
+      val (oracleState, oracle) = picker.oracleFactory.newIntOracle(nextState, ntotal + 1)
+      nextState = oracleState
+      // pick an element to be the result
+      nextState = picker.pickByOracle(nextState, oracle, elems1then2, nextState.arena.cellTrue().toNameEx)
+      val pickedResult = nextState.asCell
+      // If 0 <= i < len1, then require oracle = i + start1,
+      // If len1 <= i < len1 + len2, then require oracle = i + offset2 = i - len1 + N1 + start2,
+      // Otherwise, set oracle to N
+      val inRange1 = tla.lt(tla.int(i), len1)
+      val inRange2 =
+        tla.and(
+          tla.le(len1, tla.int(i)),
+          tla.lt(tla.int(i), len1plus2))
+
+      val whenInRange1 =
+        tla.or(tla.not(inRange1), tla.eql(oracle.intCell, tla.plus(tla.int(i), start1)))
+      val whenInRange2 =
+        tla.or(tla.not(inRange2),
+               tla.eql(oracle.intCell, tla.plus(tla.int(i), offset2)))
+      val whenOutOfRange =
+        tla.or(tla.lt(tla.int(i), len1plus2),
+          tla.eql(oracle.intCell, tla.int(ntotal)))
+
+      solverAssert(whenInRange1)
+      solverAssert(whenInRange2)
+      solverAssert(whenOutOfRange)
+
+      pickedResult
+    }
+
+    val newCells: Seq[ArenaCell] = 0.until(ntotal) map pickElem
+
+    // finally, add start, end, and the elements to the sequence
+    nextState = nextState.updateArena(_.appendHasNoSmt(seq3, start3 +: end3 +: newCells :_*))
+
+    nextState.setRex(seq3)
+  }
+
 }

@@ -22,7 +22,7 @@ class OracleFactory(rewriter: SymbStateRewriter) {
     * @param nvalues the number of values to hold
     * @return a new symbolic state and the oracle, the state.rex equals to state.rex
     */
-  def newConstOracle(state: SymbState, nvalues: Int): (SymbState, Oracle) = {
+  def newConstOracle(state: SymbState, nvalues: Int): (SymbState, UninterpretedConstOracle) = {
     UninterpretedConstOracle.create(rewriter, state, nvalues)
   }
 
@@ -35,7 +35,19 @@ class OracleFactory(rewriter: SymbStateRewriter) {
     * @param nvalues the number of values to hold
     * @return a new symbolic state and the oracle, the state.rex equals to state.rex
     */
-  def newPropositionalOracle(state: SymbState, nvalues: Int): (SymbState, Oracle) = {
+  def newPropositionalOracle(state: SymbState, nvalues: Int): (SymbState, PropositionalOracle) = {
     PropositionalOracle.create(rewriter, state, nvalues)
+  }
+
+  /**
+    * Create a new oracle that can have a value in the range [0, nvalues).
+    * This oracle is using an integer encoding of oracle values.
+    *
+    * @param state   a symbolic state
+    * @param nvalues the number of values to hold
+    * @return a new symbolic state and the oracle, the state.rex equals to state.rex
+    */
+  def newIntOracle(state: SymbState, nvalues: Int): (SymbState, IntOracle) = {
+    IntOracle.create(rewriter, state, nvalues)
   }
 }

@@ -142,8 +142,8 @@ Operator  | Supported? | Milestone | Comment
 
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
-``<<...>>``, ``Head``, ``Tail``, ``Len``, ``SubSeq`` | ✔ | - | Supported in `0.5-dev-lang`. The sequence constructor ``<<...>>`` needs a [type annotation](types-and-annotations.md).
-``EXCEPT`` and ``\o`` | ✖ | `0.5-dev-lang` | these operators do not seem to be often used
+``<<...>>``, ``Head``, ``Tail``, ``Len``, ``SubSeq``, `Append`, `\o` | ✔ | - | Supported in `0.5-dev-lang`. The sequence constructor ``<<...>>`` needs a [type annotation](types-and-annotations.md).
+``EXCEPT`` | ✖ | `0.5-dev-lang` | this operator do not seem to be often used
 ``Seq(S)`` | ✖ | - | We need an upper bound on the length of the sequences.
 ``SelectSeq`` | ✖ | - | will not be supported in the near future
 
