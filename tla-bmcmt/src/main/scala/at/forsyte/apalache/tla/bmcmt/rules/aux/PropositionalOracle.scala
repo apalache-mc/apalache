@@ -83,7 +83,7 @@ class PropositionalOracle(bitCells: Seq[ArenaCell], nvalues: Int) extends Oracle
 }
 
 object PropositionalOracle {
-  def create(rewriter: SymbStateRewriter, state: SymbState, nvalues: Int): (SymbState, Oracle) = {
+  def create(rewriter: SymbStateRewriter, state: SymbState, nvalues: Int): (SymbState, PropositionalOracle) = {
     val solverAssert = rewriter.solverContext.assertGroundExpr _
 
     // how many bits do we need to fit n values

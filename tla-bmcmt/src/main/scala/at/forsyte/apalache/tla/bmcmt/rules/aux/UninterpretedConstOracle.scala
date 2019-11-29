@@ -56,7 +56,7 @@ class UninterpretedConstOracle(valueCells: Seq[ArenaCell], oracleCell: ArenaCell
 }
 
 object UninterpretedConstOracle {
-  def create(rewriter: SymbStateRewriter, state: SymbState, nvalues: Int): (SymbState, Oracle) = {
+  def create(rewriter: SymbStateRewriter, state: SymbState, nvalues: Int): (SymbState, UninterpretedConstOracle) = {
     val solverAssert = rewriter.solverContext.assertGroundExpr _
     var nextState = state
 
