@@ -51,7 +51,7 @@ class SymbState(val ex: TlaEx,
     * Find the names of the variables (their prime versions)
     * that have changed between the primed and non-primed versions.
     *
-    * @return the set of names of the variables that have changed, e.g., x', y', and z'
+    * @return the set of names of the primed variables that have changed, e.g., x', y', and z'
     */
   def changed: Set[String] = {
     def eachName(set: Set[String], name: String): Set[String] = {

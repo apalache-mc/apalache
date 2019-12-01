@@ -302,7 +302,13 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
       val primedVars = getAssignedVars(nextStates.head) // only VARIABLES, not CONSTANTS
       var finalState = oracleState
       if (nextStates.exists(getAssignedVars(_) != primedVars)) {
-        throw new InternalCheckerError(s"Next states disagree on the set of assigned variables (step $stepNo)")
+        val index = nextStates.indexWhere(getAssignedVars(_) != primedVars)
+        val otherSet = getAssignedVars(nextStates(index))
+        val diff = otherSet.union(primedVars).diff(otherSet.intersect(primedVars))
+        val msg =
+          "[Step %d] Next states 0 and %d disagree on the set of assigned variables: %s"
+            .format(stepNo, index, diff.mkString(", "))
+        throw new InternalCheckerError(msg)
       }
 
       def pickVar(x: String): ArenaCell = {
@@ -435,26 +441,36 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
   private def checkAllInvariants(stepNo: Int, transitionNo: Int, nextState: SymbState): Unit = {
     val matchesInvFilter = invFilter == "" || stepNo.toString.matches("^" + invFilter + "$")
     if (!matchesInvFilter) {
-      return // skip the check
+      return // skip the check if this transition should not be checked
     }
 
-    for ((notInv, invNo) <- checkerInput.invariantsAndNegations.map(_._2).zipWithIndex) {
+    // if the previous step was filtered, we cannot use the unchanged optimization
+    val prevMatchesInvFilter = invFilter == "" || (stepNo - 1).toString.matches("^" + invFilter + "$")
+
+    val invNegs = checkerInput.invariantsAndNegations.map(_._2)
+    for ((notInv, invNo) <- invNegs.zipWithIndex) {
       logger.debug(s"Checking the invariant $invNo")
+      val changedPrimed =
+        if (prevMatchesInvFilter) {
+          nextState.changed // only check the invariant if it touches the changed variables
+        } else {
+          nextState.binding.keySet // check the invariant in any case, as it could be violated at the previous step
+        }
       val savedTypes = rewriter.typeFinder.getVarTypes
       // rename x' to x, so we are reasoning about the non-primed variables
       shiftTypes(constants)
       val shiftedState = nextState.setBinding(shiftBinding(nextState.binding, constants))
+      rewriter.exprCache.disposeActionLevel() // renaming x' to x makes the cache inconsistent, so clean it
       // check the types and the invariant
       checkTypes(notInv)
-      val changedVars = nextState.changed
-      checkOneInvariant(stepNo, transitionNo, shiftedState, changedVars, notInv)
+      checkOneInvariant(stepNo, transitionNo, shiftedState, changedPrimed, notInv)
       rewriter.typeFinder.reset(savedTypes) // forget about the types that were used to check the invariant
     }
   }
 
-  private def checkOneInvariant(stepNo: Int, transitionNo: Int, nextState: SymbState, changed: Set[String], notInv: TlaEx): Unit = {
-    val used = TlaExUtil.findUsedNames(notInv).map(_ + "'")
-    if (used.intersect(changed).isEmpty) {
+  private def checkOneInvariant(stepNo: Int, transitionNo: Int, nextState: SymbState, changedPrimed: Set[String], notInv: TlaEx): Unit = {
+    val used = TlaExUtil.findUsedNames(notInv).map(_ + "'") // add primes as the invariant is referring to non-primed variables
+    if (used.intersect(changedPrimed).isEmpty) {
       logger.debug(s"The invariant is referring only to the UNCHANGED variables. Skipped.")
     } else {
       rewriter.push()
