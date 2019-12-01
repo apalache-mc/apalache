@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.{LetInEx, TlaOperDecl}
 
 object LetInRule {
-  val namePrefix = "Oper:"
+  val namePrefix = "LetDef:"
 }
 
 /**
@@ -24,10 +24,10 @@ class LetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     case LetInEx( body, defs@_* ) =>
       val boundState = defs.foldLeft(state) (bindOperator)
       val bodyState = rewriter.rewriteUntilDone(boundState.setTheory(state.theory).setRex(body))
-      val finalState = bodyState.setBinding(
-        // We remove only the bindings introduced by let-in, which were not already defined in the original
-        bodyState.binding -- ( boundState.binding.keySet -- state.binding.keySet )
-      )
+      // forget the bindings that were introduced by let-definitions of this expression
+      val newDefs = (bodyState.binding.keySet -- state.binding.keySet).filter(_.startsWith(LetInRule.namePrefix))
+      val finalBinding = bodyState.binding -- newDefs
+      val finalState = bodyState.setBinding(finalBinding)
       rewriter.coerce(finalState, state.theory)
     case _ =>
       throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
