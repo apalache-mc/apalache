@@ -44,9 +44,24 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
               }
             }
 
-            if (!rewriter.config.lazyCircuit &&
-                !rewriter.formulaHintsStore.getHint(state.ex.ID).contains(FormulaHintsStore.HighAnd())) {
-              // simply translate if-then-else to a chain of if-then-else expressions
+            if (rewriter.config.lazyCircuit &&
+                rewriter.formulaHintsStore.getHint(state.ex.ID).contains(FormulaHintsStore.HighAnd())) {
+              // lazy short-circuiting: evaluate the conditions and prune them in runtime
+              val level = rewriter.contextLevel
+              rewriter.push()
+              val result = lazyCircuit(state, args)
+              if (simplifier.isFalseConst(result.ex)) {
+                rewriter.pop(rewriter.contextLevel - level) // roll back, nothing to keep
+                result.setRex(state.arena.cellFalse().toNameEx).setTheory(CellTheory())
+              } else {
+                // We have to pop the context. Otherwise, we break the stack contract.
+                rewriter.pop()
+                // is there a workaround?
+                val newState = state.setRex(toIte(args)).setTheory(CellTheory())
+                rewriter.rewriteUntilDone(newState)
+              }
+            } else {
+              // no lazy short-circuiting: simply translate if-then-else to a chain of if-then-else expressions
               val newState =
                 if (rewriter.config.shortCircuit) {
                   // create a chain of IF-THEN-ELSE expressions and rewrite them
@@ -65,21 +80,6 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
                   nextState.setRex(pred).setTheory(CellTheory())
                 }
               rewriter.rewriteUntilDone(newState)
-            } else {
-              // evaluate the conditions and prune them in runtime
-              val level = rewriter.contextLevel
-              rewriter.push()
-              val result = shortCircuit(state, args)
-              if (simplifier.isFalseConst(result.ex)) {
-                rewriter.pop(rewriter.contextLevel - level) // roll back, nothing to keep
-                result.setRex(state.arena.cellFalse().toNameEx).setTheory(CellTheory())
-              } else {
-                // We have to pop the context. Otherwise, we break the stack contract.
-                rewriter.pop()
-                // is there a workaround?
-                val newState = state.setRex(toIte(args)).setTheory(CellTheory())
-                rewriter.rewriteUntilDone(newState)
-              }
             }
           }
 
@@ -94,7 +94,7 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def shortCircuit(state: SymbState, es: Seq[TlaEx]): SymbState = {
+  private def lazyCircuit(state: SymbState, es: Seq[TlaEx]): SymbState = {
     val cellFalse = state.arena.cellFalse()
     if (es.isEmpty) {
       state.setRex(state.arena.cellTrue().toNameEx).setTheory(CellTheory())
@@ -110,7 +110,7 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // always unsat, prune immediately
         headState.setRex(cellFalse.toNameEx).setTheory(CellTheory())
       } else {
-        val tailState = shortCircuit(headState, tail)
+        val tailState = lazyCircuit(headState, tail)
         if (simplifier.isFalseConst(tailState.ex)) {
           // prune by propagating false
           tailState
