@@ -120,6 +120,20 @@ class TestSymbStateRewriterSequence extends RewriterBase {
       nextState.setRex(tla.eql(tla.appFun(result.toNameEx, tla.int(2)), tla.int(5))))
   }
 
+  test("""regression: Tail(<<>> <: Seq(Int)) does not unsat and its length is zero""") {
+    val emptyTuple = TlaFunOper.mkTuple()
+    val annotatedTuple = tla.withType(emptyTuple, AnnotationParser.toTla(SeqT(IntT())))
+    val seqTail = tla.tail(annotatedTuple)
+
+    val state = new SymbState(seqTail, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    // in this case, Tail may return an arbitrary value, but it should not get stuck!
+    assert(solverContext.sat())
+    // the length of the new sequence is 0, not -1
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(tla.int(0), tla.len(nextState.ex))))
+  }
+
   test("""SE-SEQ-SUBSEQ: SubSeq(S, 2, 4)""") {
     val tuple = TlaFunOper.mkTuple(3.to(6) map tla.int :_*)
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
@@ -137,6 +151,20 @@ class TestSymbStateRewriterSequence extends RewriterBase {
       nextState.setRex(tla.eql(tla.appFun(result.toNameEx, tla.int(2)), tla.int(5))))
     assertTlaExAndRestore(rewriter,
       nextState.setRex(tla.eql(tla.len(result.toNameEx), tla.int(2))))
+  }
+
+  test("""regression: SE-SEQ-SUBSEQ: SubSeq(S, 3, 1) does not unsat and has length 0""") {
+    val tuple = TlaFunOper.mkTuple(3.to(6) map tla.int :_*)
+    val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
+    val subseqEx = tla.subseq(annotatedTuple, tla.int(3), tla.int(1))
+
+    val state = new SymbState(subseqEx, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    // in this case, the solver should not be stuck by unsat, the value is simply arbitrary
+    assert(solverContext.sat())
+    // the length of the new sequence is 0, not -1
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(tla.int(0), tla.len(nextState.ex))))
   }
 
   test("""SE-SEQ-APPEND: Append(S, 10)""") {
@@ -233,6 +261,20 @@ class TestSymbStateRewriterSequence extends RewriterBase {
     val expected = tla.withType(TlaFunOper.mkTuple(tla.int(9), tla.int(10), tla.int(4), tla.int(5)), seqT)
 
     assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(expected, nextState.ex)))
+  }
+
+  test("""regression: SEQ-CONCAT: <<9, 10>> \o Tail(<<>>) does not unsat""") {
+    val seqT = AnnotationParser.toTla(SeqT(IntT()))
+    val empty = tla.withType(TlaFunOper.mkTuple(), seqT)
+    val tuple9_10 = tla.withType(TlaFunOper.mkTuple(tla.int(9), tla.int(10)), seqT)
+    // Tail(<<>>) produces some undefined value. In this case, \o should also produce an undefined value.
+    val concat = tla.concat(tuple9_10, tla.tail(empty))
+
+    val state = new SymbState(concat, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    // the result is undefined, but it should be sat
+    assert(solverContext.sat())
   }
 
   // for PICK see TestCherryPick
