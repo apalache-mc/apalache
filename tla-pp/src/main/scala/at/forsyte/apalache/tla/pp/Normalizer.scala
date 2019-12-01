@@ -94,35 +94,35 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
 
     case eq @ OperEx(TlaOper.eq, left, right) =>
       if (neg) {
-        tla.not(tla.eql(left, right))
+        tla.not(tla.eql(transform(left), transform(right)))
       } else {
-        eq
+        tla.eql(transform(left), transform(right))
       }
 
     case neq @ OperEx(TlaOper.ne, left, right) =>
       if (neg) {
-        tla.eql(left, right)
+        tla.eql(transform(left), transform(right))
       } else {
-        tla.not(tla.eql(left, right))
+        tla.not(tla.eql(transform(left), transform(right)))
       }
 
     case OperEx(TlaSetOper.in, left, right) =>
-      OperEx(if (neg) TlaSetOper.notin else TlaSetOper.in, left, right)
+      OperEx(if (neg) TlaSetOper.notin else TlaSetOper.in, transform(left), transform(right))
 
     case OperEx(TlaSetOper.notin, left, right) =>
-      OperEx(if (neg) TlaSetOper.in else TlaSetOper.notin, left, right)
+      OperEx(if (neg) TlaSetOper.in else TlaSetOper.notin, transform(left), transform(right))
 
     case OperEx(TlaSetOper.subseteq, left, right) =>
-      OperEx(if (neg) TlaSetOper.supsetProper else TlaSetOper.subseteq, left, right)
+      OperEx(if (neg) TlaSetOper.supsetProper else TlaSetOper.subseteq, transform(left), transform(right))
 
     case OperEx(TlaSetOper.subsetProper, left, right) =>
-      OperEx(if (neg) TlaSetOper.supseteq else TlaSetOper.subsetProper, left, right)
+      OperEx(if (neg) TlaSetOper.supseteq else TlaSetOper.subsetProper, transform(left), transform(right))
 
     case OperEx(TlaSetOper.supsetProper, left, right) =>
-      OperEx(if (neg) TlaSetOper.subseteq else TlaSetOper.supsetProper, left, right)
+      OperEx(if (neg) TlaSetOper.subseteq else TlaSetOper.supsetProper, transform(left), transform(right))
 
     case OperEx(TlaSetOper.supseteq, left, right) =>
-      OperEx(if (neg) TlaSetOper.subsetProper else TlaSetOper.supseteq, left, right)
+      OperEx(if (neg) TlaSetOper.subsetProper else TlaSetOper.supseteq, transform(left), transform(right))
 
     case OperEx(TlaOper.label, subex, args@_*) =>
       OperEx(TlaOper.label, nnf(neg)(subex) +: args: _*)
