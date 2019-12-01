@@ -59,8 +59,11 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val seqCell = nextState.asCell
     val cells = nextState.arena.getHas(seqCell)
     val start = cells.head
+    val end = cells.tail.head
+    // increment start, unless it goes over the bound
+    val updatedStart = tla.ite(tla.lt(start, end), tla.plus(tla.int(1), start), start)
     // increment start
-    nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.plus(tla.int(1), start)))
+    nextState = rewriter.rewriteUntilDone(nextState.setRex(updatedStart))
     val newStart = nextState.asCell
     // introduce a new sequence that is different from seq in that the 0th element equals to newStart
     nextState = nextState.updateArena(_.appendCell(seqCell.cellType))
@@ -70,16 +73,31 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   private def translateSubSeq(state: SymbState, seq: TlaEx, newStartEx: TlaEx, newEndEx: TlaEx) = {
-    var nextState = rewriter.rewriteUntilDone(state.setRex(seq).setTheory(CellTheory()))
-    val seqCell = nextState.asCell
+    var nextState = state
+    def rewriteToCell(ex: TlaEx): ArenaCell = {
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(ex).setTheory(CellTheory()))
+      nextState.asCell
+    }
+
+    val seqCell = rewriteToCell(seq)
     val cells = nextState.arena.getHas(seqCell)
     val start = cells.head
+    val end = cells.tail.head
 
-    // TODO: check that the new range is allowed?
-    nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.plus(start, tla.minus(newStartEx, tla.int(1)))))
-    val newStart = nextState.asCell
-    nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.plus(start, newEndEx)))
-    val newEnd = nextState.asCell
+    // compute the new interval [expectedStart, expectedEnd)
+    val expectedStart = rewriteToCell(tla.plus(start, tla.minus(newStartEx, tla.int(1))))
+    val expectedEnd = rewriteToCell(tla.plus(start, newEndEx))
+    // use the computed values, as soon as they do not violate the invariant:
+    //   start <= end, start >= oldStart, end <= oldEnd
+    val seqInvariant = rewriteToCell(tla.and(
+        tla.le(expectedStart, expectedEnd),
+        tla.le(start, expectedStart),
+        tla.le(expectedEnd, end)
+      ))
+
+    val newStart = rewriteToCell(tla.ite(seqInvariant, expectedStart, tla.int(0)))
+    val newEnd = rewriteToCell(tla.ite(seqInvariant, expectedEnd, tla.int(0)))
+
     // introduce a new sequence that whose start and end are updated as required
     nextState = nextState.updateArena(_.appendCell(seqCell.cellType))
     val newSeqCell = nextState.arena.topCell
