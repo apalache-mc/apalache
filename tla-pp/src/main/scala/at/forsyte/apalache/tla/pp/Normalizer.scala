@@ -182,8 +182,12 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
       }
 
     case OperEx(oper, args @ _*) =>
-      // a non-Boolean operator, simply transform its arguments, which may be Boolean
-      OperEx(oper, args map transform :_*)
+      // a non-Boolean operator: transform its arguments, which may be Boolean
+      if (neg) {
+        tla.not(OperEx(oper, args map transform :_*))
+      } else {
+        OperEx(oper, args map transform :_*)
+      }
 
     case expr =>
       if (!neg) {
