@@ -266,7 +266,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     // x' \in {x + 1}
     val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
     // x < 5
-    val inv = tla.lt(tla.prime(tla.name("x")), tla.int(5))
+    val inv = tla.lt(tla.name("x"), tla.int(5))
     val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, List((inv, tla.not(inv))))
     // initialize the model checker
@@ -275,6 +275,44 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
       strategy, Map(), debug = false, profile = false)
     val outcome = checker.run()
     assert(Checker.Outcome.Error == outcome)
+  }
+
+  test("Init + Next + Inv, 3 steps, error, edge case") {
+    // the invariant is violated in the last state of a bounded execution
+
+    // x' \in {0}
+    val initTrans = List(mkAssign("x", 0))
+    // x' \in {x + 1}
+    val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
+    // x /= 3
+    val inv = tla.not(tla.eql(tla.name("x"), tla.int(3)))
+    val dummyModule = new TlaModule("root", List())
+    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, List((inv, tla.not(inv))))
+    // initialize the model checker
+    val strategy = new BfsStrategy(checkerInput, stepsBound = 3)
+    val checker = new ModelChecker(typeFinder, frexStore, hintsStore, changeListener, exprGradeStore, sourceStore, checkerInput,
+      strategy, Map(), debug = false, profile = false)
+    val outcome = checker.run()
+    assert(Checker.Outcome.Error == outcome)
+  }
+
+  test("Init + Next + Inv, 2 steps, no error, edge case") {
+    // the invariant is violated in the last state of a bounded execution
+
+    // x' \in {0}
+    val initTrans = List(mkAssign("x", 0))
+    // x' \in {x + 1}
+    val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
+    // x /= 3
+    val inv = tla.not(tla.eql(tla.name("x"), tla.int(3)))
+    val dummyModule = new TlaModule("root", List())
+    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, None, List((inv, tla.not(inv))))
+    // initialize the model checker
+    val strategy = new BfsStrategy(checkerInput, stepsBound = 2)
+    val checker = new ModelChecker(typeFinder, frexStore, hintsStore, changeListener, exprGradeStore, sourceStore, checkerInput,
+      strategy, Map(), debug = false, profile = false)
+    val outcome = checker.run()
+    assert(Checker.Outcome.NoError == outcome)
   }
 
   test("Init + Next + Inv, 10 steps, and invariantFilter") {
