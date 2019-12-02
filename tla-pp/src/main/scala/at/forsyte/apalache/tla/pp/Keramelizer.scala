@@ -73,6 +73,14 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
       val boundVars: Seq[TlaEx] = vars.map(_ => NameEx(gen.newName()))
       val mapEx = OperEx(TlaFunOper.enum, vars.zip(boundVars).flatMap(x => List(x._1, x._2)): _*)
       OperEx(TlaSetOper.map, mapEx +: boundVars.zip(sets).flatMap(x => List(x._1, x._2)): _*)
+
+    case OperEx(BmcOper.withType,
+                OperEx(TlaSetOper.map, mapEx, varsAndSets @ _*),
+                OperEx(TlaSetOper.enumSet, recordAnnotation)) =>
+      // It is quite common to add a type annotation, e.g., [a: A, b: B] <: {[a |-> Int, b |-> STRING]}.
+      // Propagate the annotation in the map expression
+      val annotMapEx = tla.withType(mapEx, recordAnnotation)
+      OperEx(TlaSetOper.map, annotMapEx +: varsAndSets: _*)
   }
 
   /**
