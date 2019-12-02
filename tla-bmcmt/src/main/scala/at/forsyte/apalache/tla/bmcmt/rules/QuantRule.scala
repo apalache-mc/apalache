@@ -33,16 +33,16 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
           expandExistsOrForall(isExists = true, state, boundVar, boundingSetEx, predEx)
         } else {
           if (boundingSetEx == ValEx(TlaNatSet) || boundingSetEx == ValEx(TlaIntSet)) {
-            freeExistsInNatOrInt(state, boundVar, predEx, boundingSetEx)
+            skolemExistsInNatOrInt(state, boundVar, predEx, boundingSetEx)
           } else {
             val setState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(boundingSetEx))
             val set = setState.asCell
             val finalState = set.cellType match {
               case FinSetT(_) =>
-                freeExistsInSet(setState, boundVar, predEx, set)
+                skolemExistsInSet(setState, boundVar, predEx, set)
 
               case PowSetT(FinSetT(_)) => ()
-                freeExistsInPowerset(setState, boundVar, predEx, set)
+                skolemExistsInPowerset(setState, boundVar, predEx, set)
 
               case tp =>
                 throw new UnsupportedOperationException("Quantification over %s is not supported yet".format(tp))
@@ -149,7 +149,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
     rewriter.coerce(finalState, state.theory)
   }
 
-  private def freeExistsInNatOrInt(state: SymbState, boundVar: String, predEx: TlaEx, boundingSetEx: TlaEx): SymbState = {
+  private def skolemExistsInNatOrInt(state: SymbState, boundVar: String, predEx: TlaEx, boundingSetEx: TlaEx): SymbState = {
     rewriter.solverContext.log("; free existential rule over an infinite set " + boundingSetEx)
     var nextState = state.setArena(state.arena.appendCell(IntT()))
     val witness = nextState.arena.topCell
@@ -165,7 +165,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
       .setBinding(nextState.binding - boundVar) // forget the binding to x, but not the other bindings!
   }
 
-  private def freeExistsInSet(setState: SymbState, boundVar: String, predEx: TlaEx, set: ArenaCell) = {
+  private def skolemExistsInSet(setState: SymbState, boundVar: String, predEx: TlaEx, set: ArenaCell) = {
     val setCells = setState.arena.getHas(set)
     if (setCells.isEmpty) {
       // \E x \in {}... is FALSE
@@ -212,7 +212,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
   // Introduce a Skolem constant for a free-standing existential quantifier:
   // In case of SUBSET(S), it is really easy: we have to enforce that a witness is a subset of S.
   // A powerset is never empty, so we do not have to worry about this case.
-  private def freeExistsInPowerset(setState: SymbState, boundVar: String, predEx: TlaEx, set: ArenaCell) = {
+  private def skolemExistsInPowerset(setState: SymbState, boundVar: String, predEx: TlaEx, set: ArenaCell) = {
     rewriter.solverContext.log("; free existential rule over a powerset")
     // pick an arbitrary witness
     val pickState = pickRule.pick(set, setState, setState.arena.cellFalse())

@@ -49,6 +49,8 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
           .setBinding(nextState.binding + (name + "'" -> rhsCell)) // bind the cell to the name
         rewriter.coerce(finalState, state.theory)
 
+      // TODO: the assignment logic should be moved to QuantRule, while assignments become \E t \in S: x' = t
+
       // the general case
       case OperEx(TlaSetOper.in, OperEx(TlaActionOper.prime, NameEx(name)), set) =>
         // switch to cell theory
