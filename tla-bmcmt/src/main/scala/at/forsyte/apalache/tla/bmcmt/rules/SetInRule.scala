@@ -30,6 +30,8 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
+  // TODO: the membership logic should be moved to QuantRule, while membership checks become \E t \in S: x = t
+
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       // a common pattern x \in {y} that is equivalent to x = y, e.g., the assignment solver creates it

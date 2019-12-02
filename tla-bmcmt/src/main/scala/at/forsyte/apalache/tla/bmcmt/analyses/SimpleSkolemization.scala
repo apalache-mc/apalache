@@ -7,8 +7,7 @@ import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
 /**
-  * A simple skolemization analysis that finds the existential quantifiers that stand freely in a formula, that is,
-  * not located under any universal quantifier.
+  * The skolemization analysis finds the existential quantifiers that are safe to skolemize.
   *
   * @author Igor Konnov
   */
@@ -20,24 +19,38 @@ class SimpleSkolemization @Inject()
       frexStore.store += ex.ID
       markFreeExistentials(pred)
 
+    case OperEx(TlaBoolOper.forall, _, _, pred) =>
+      // it is fine to skolemize existentials under \A, as \A is translated into a conjunction
+      markFreeExistentials(pred)
+
+    case OperEx(TlaBoolOper.not, _) =>
+      () // stop here. This should be a leaf (and rare) expression, as we are dealing with the NNF.
+
     case OperEx(TlaBoolOper.and, args@_*) =>
       args foreach markFreeExistentials
 
     case OperEx(TlaBoolOper.or, args@_*) =>
       args foreach markFreeExistentials
 
-    case OperEx(TlaControlOper.ifThenElse, args@_*) =>
-      // we do not have to check that the predicate does not have \forall,
-      // as we are only concerned with \exists in the scope of \forall
-      args foreach markFreeExistentials
+    case OperEx(TlaControlOper.ifThenElse, _, left, right) =>
+      // try to identify existentials in the both arms
+      markFreeExistentials(left)
+      markFreeExistentials(right)
+      // We omit skolemization of the existentials in the predicate,
+      // as the predicate is used in both the negated and non-negated forms.
+      // Effectively, IF-THEN-ELSE requires both \E and \A forms
 
     case LetInEx(body, defs @ _*) =>
       // at this point, we only have nullary let-in definitions
       defs.foreach { df => markFreeExistentials(df.body) }
       markFreeExistentials(body)
 
+    case OperEx(_, args @ _*) =>
+      // try to descend in the children, which may contain Boolean operations, e.g., { \E x \in S: P }
+      args foreach markFreeExistentials
+
     case _ =>
-      () // stop here
+      () // terminal expression, stop here
   }
 
 }
