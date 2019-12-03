@@ -23,6 +23,7 @@ class SetInclusionRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
+  // TODO: rewrite \subseteq with Keramelizer
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case OperEx(TlaSetOper.subseteq, left, right) =>
