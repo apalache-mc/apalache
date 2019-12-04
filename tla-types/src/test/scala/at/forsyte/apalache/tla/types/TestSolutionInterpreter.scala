@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.types
 
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.types.smt.Z3TypeSolver.Solution
 import at.forsyte.apalache.tla.types.smt.{SmtVarGenerator, Z3TypeSolver}
 import org.junit.runner.RunWith
 import org.scalatest.{BeforeAndAfter, FunSuite}
@@ -15,14 +16,16 @@ class TestSolutionInterpreter extends FunSuite with TestingPredefs with BeforeAn
   val useSoftConstraints = false
   val primeConsistency   = false
 
-  var solutionInterpreter : SolutionInterpreter = new SolutionInterpreter( new TypeVarGenerator )
-  var smtVarGen                                 = new SmtVarGenerator
-  var solver                                    = new Z3TypeSolver( useSoftConstraints = useSoftConstraints )
+  var smtVarGen           = new SmtVarGenerator
+  var typeVarGen          = new TypeVarGenerator
+  var solver              = new Z3TypeSolver( useSoftConstraints = useSoftConstraints, typeVarGen )
+  var solutionInterpreter = new SolutionInterpreter( typeVarGen )
 
   before {
-    solutionInterpreter = new SolutionInterpreter( new TypeVarGenerator )
     smtVarGen = new SmtVarGenerator
-    solver = new Z3TypeSolver( useSoftConstraints = useSoftConstraints )
+    typeVarGen = new TypeVarGenerator
+    solver = new Z3TypeSolver( useSoftConstraints = useSoftConstraints, typeVarGen )
+    solutionInterpreter = new SolutionInterpreter( typeVarGen )
   }
 
   test( "Example from the documentation" ) {
@@ -47,13 +50,16 @@ class TestSolutionInterpreter extends FunSuite with TestingPredefs with BeforeAn
       val templApp = templ( e +: Nil )
 
       val ret = solver.solve( smtVarGen.allVars, templApp )
-      assert( ret.nonEmpty )
-      val solution = ret.get
-      val ctx = udtg.getCtx
+      ret match {
+        case Solution( solution ) =>
+          val ctx = udtg.getCtx
 
-      val backMap = aux.uidToExMap( declA.body ) ++ aux.uidToExMap( declNext.body )
+          val backMap = aux.uidToExMap( declA.body ) ++ aux.uidToExMap( declNext.body )
 
-      solutionInterpreter.generalizeType( declA.name, backMap, ctx, solution )
+          solutionInterpreter.generalizeType( declA.name, backMap, ctx, solution, Map.empty )
+        case _ =>
+          throw new Exception( "No solution" )
+      }
     }
 
     val declNext1 = tla.declOp( "Next",
@@ -117,21 +123,24 @@ class TestSolutionInterpreter extends FunSuite with TestingPredefs with BeforeAn
     val templApp = templ( e +: Nil )
 
     val ret = solver.solve( smtVarGen.allVars, templApp )
-    assert( ret.nonEmpty )
-    val solution = ret.get
-    val ctx = udtg.getCtx
 
-    val backMap = aux.uidToExMap( nextBody ) ++ aux.uidToExMap( tautDecl.body )
+    ret match {
+      case Solution( solution ) =>
+        val ctx = udtg.getCtx
 
-    val genT = solutionInterpreter.generalizeType( tautDecl.name, backMap, ctx, solution )
+        val backMap = aux.uidToExMap( nextBody ) ++ aux.uidToExMap( tautDecl.body )
 
-    // Expected: genT = < T > => BoolT
-    val assertCond = genT match {
-      case OperT( TupT( _ : TypeVar ), BoolT ) => true
-      case _ => false
+        val genT = solutionInterpreter.generalizeType( tautDecl.name, backMap, ctx, solution, Map.empty )
+
+        // Expected: genT = < T > => BoolT
+        val assertCond = genT match {
+          case OperT( TupT( _ : TypeVar ), BoolT ) => true
+          case _ => false
+        }
+
+        assert( assertCond )
+      case _ => assert( false )
     }
-
-    assert( assertCond )
   }
 
   test( "Generalization: Harder polymorphic operator" ) {
@@ -169,21 +178,23 @@ class TestSolutionInterpreter extends FunSuite with TestingPredefs with BeforeAn
     val templApp = templ( e +: Nil )
 
     val ret = solver.solve( smtVarGen.allVars, templApp )
-    assert( ret.nonEmpty )
-    val solution = ret.get
-    val ctx = udtg.getCtx
+    ret match {
+      case Solution( solution ) =>
+        val ctx = udtg.getCtx
 
-    val backMap = aux.uidToExMap( nextBody ) ++ aux.uidToExMap( polyOperDecl.body )
+        val backMap = aux.uidToExMap( nextBody ) ++ aux.uidToExMap( polyOperDecl.body )
 
-    val genT = solutionInterpreter.generalizeType( polyOperDecl.name, backMap, ctx, solution )
+        val genT = solutionInterpreter.generalizeType( polyOperDecl.name, backMap, ctx, solution, Map.empty )
 
-    // Expected: genT = < T, IntT, T > => IntT
-    val assertCond = genT match {
-      case OperT( TupT( t : TypeVar, IntT, t2 : TypeVar ), IntT ) => t == t2
-      case _ => false
+        // Expected: genT = < T, IntT, T > => IntT
+        val assertCond = genT match {
+          case OperT( TupT( t : TypeVar, IntT, t2 : TypeVar ), IntT ) => t == t2
+          case _ => false
+        }
+
+        assert( assertCond )
+      case _ => assert( false )
     }
-
-    assert( assertCond )
   }
 
   test( "Recovery: No generalization" ) {
@@ -223,28 +234,31 @@ class TestSolutionInterpreter extends FunSuite with TestingPredefs with BeforeAn
     val templApp = templ( e +: Nil )
 
     val ret = solver.solve( smtVarGen.allVars, templApp )
-    assert( ret.nonEmpty )
-    val solution = ret.get
-    val ctx = udtg.getCtx
 
-    val recovered = solutionInterpreter.interpret(
-      Map( nextDecl.name -> BoolT ),
-      globBM,
-      ctx,
-      globNC,
-      solution
-    )
+    ret match {
+      case Solution( solution ) =>
+        val ctx = udtg.getCtx
 
-    val assertCond = recovered forall {
-      case ("x", t) => t == IntT
-      case ("y", t) => t == recovered( "y'" )
-      case (s, t) if s == plusDecl.name => t match {
-        case OperT( TupT( IntT, _ ), IntT ) => true
-        case _ => false
-      }
-      case _ => true
+        val recovered = solutionInterpreter.interpret(
+          Map( nextDecl.name -> BoolT ),
+          globBM,
+          ctx,
+          globNC,
+          solution
+        )
+
+        val assertCond = recovered forall {
+          case ("x", t) => t == IntT
+          case ("y", t) => t == recovered( "y'" )
+          case (s, t) if s == plusDecl.name => t match {
+            case OperT( TupT( IntT, _ ), IntT ) => true
+            case _ => false
+          }
+          case _ => true
+        }
+        assert( assertCond )
+      case _ => assert( false )
     }
-    assert( assertCond )
   }
 
   test( "Recovery: Using generalization" ) {
@@ -256,8 +270,8 @@ class TestSolutionInterpreter extends FunSuite with TestingPredefs with BeforeAn
 
     /**
       * O(a,b,c) == IF a = c
-      * THEN b
-      * ELSE b + 1
+      *             THEN b
+      *             ELSE b + 1
       * Next == O("a", 1, c) >= O( 1, 1, 1 ) + O( [a -> 1, b-> 2], 1, [a -> 1, c -> 3] )
       */
     val nextBody = tla.ge(
@@ -284,27 +298,28 @@ class TestSolutionInterpreter extends FunSuite with TestingPredefs with BeforeAn
     val templApp = templ( e +: Nil )
 
     val ret = solver.solve( smtVarGen.allVars, templApp )
-    assert( ret.nonEmpty )
-    val solution = ret.get
-    val ctx = udtg.getCtx
+    ret match {
+      case Solution( solution ) =>
+        val ctx = udtg.getCtx
 
-    val recovered = solutionInterpreter.interpret(
-      Map( nextDecl.name -> BoolT ),
-      globBM,
-      ctx,
-      globNC,
-      solution
-    )
+        val recovered = solutionInterpreter.interpret(
+          Map( nextDecl.name -> BoolT ),
+          globBM,
+          ctx,
+          globNC,
+          solution
+        )
 
-    val assertCond = recovered forall {
-      case (s, t) if s == polyOperDecl.name => t match {
-        case OperT( TupT( t1, IntT, t2 ), IntT ) => t1 == t2
-        case _ => false
-      }
-      case _ => true
+        val assertCond = recovered forall {
+          case (s, t) if s == polyOperDecl.name => t match {
+            case OperT( TupT( t1, IntT, t2 ), IntT ) => t1 == t2
+            case _ => false
+          }
+          case _ => true
+        }
+        assert( assertCond )
+      case _ => assert( false )
     }
-    assert( assertCond )
-
   }
 
 }

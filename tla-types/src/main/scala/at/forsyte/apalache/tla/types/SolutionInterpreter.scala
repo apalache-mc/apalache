@@ -2,20 +2,48 @@ package at.forsyte.apalache.tla.types
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.storage.BodyMap
-import at.forsyte.apalache.tla.types.smt.Z3TypeSolver.Solution
+import at.forsyte.apalache.tla.types.smt.Z3TypeSolver.SolutionFunction
+
+object SolutionInterpreter {
+  type InterpretedSolution = Map[String, TlaType]
+
+  /**
+    * Intermediate type to be introduced by mkDelta, represents a type-mismatch between
+    * two different instances of an operator application. Indicates that the operator
+    * is polymorphic and its signature should use a type variable
+    * instead of either the l-type or the r-type.
+    */
+  private sealed case class DeltaT( l : TlaType, r : TlaType ) extends TlaType
+
+  /**
+    * Resolving deltas, we can obtain `newType`, by replacing each instance of a delta
+    * with the value specified by the substitution `deltaSub`.
+    *
+    * If mkDelta(a,b) returns DRR(t, sigma) and Delta(a_i,b_i) maps to T_i
+    * in sigma, for all i, then a can be obtained by applying sigma' to t, where
+    * sigma'(T_i) = a_i (analogous for b)
+    */
+  private sealed case class DeltaResolutionResult(
+                                                   newType : TlaType,
+                                                   deltaSub : Map[DeltaT, TlaType]
+                                                 )
+
+}
 
 class SolutionInterpreter( tvg : TypeVarGenerator ) {
+
+  import SolutionInterpreter._
 
   /**
     * Returns the types of all variables and generalized types of all operators
     */
   def interpret(
-                 knownOperators : Map[String, TlaType],
+                 virtualCallResults : Map[String, TlaType],
                  bodyMap : BodyMap,
                  operCtx : OperatorContext,
                  globalNameCtx : GlobalNameContext,
-                 solution : Solution
-               ) : Map[String, TlaType] = {
+                 solution : SolutionFunction
+               ) : InterpretedSolution = {
     // For TLA variables, we just evaluate their matching SMT variables directly
     val varTypes = globalNameCtx map {
       case (varName, tv) => varName -> solution( tv )
@@ -29,33 +57,67 @@ class SolutionInterpreter( tvg : TypeVarGenerator ) {
         (partialMap ++ aux.uidToExMap( body ), name +: partialOpNames)
     }
 
-    // For each unknown operator, we will look at its type
+    // For each operator, we will look at its type
     // generalization, computed from the operator context
+    // Some operator types are partially precomputed in virtualCallResults
     val operTypes = operNames map { opName =>
-      opName -> knownOperators.getOrElse( opName,
-        generalizeType( opName, backMap, operCtx, solution )
-      )
+      opName -> generalizeType( opName, backMap, operCtx, solution, virtualCallResults )
     }
 
     varTypes ++ operTypes.toMap
   }
 
   /**
-    * Intermediate type to be introduced by mkDelta, represents a type-mismatch between
-    * two different instances of an operator application. Indicates that the operator
-    * is polymorphic and its signature should use a type variable
-    * instead of either the l-type or the r-type.
+    * Given an operator name `operName`, computes the type generalization of all
+    * application instances of `operName` across all possible contexts.
+    * This gives us the polymorphic type of the operator `operName` (in this specification).
+    *
+    * If an operator appears in two different parts of the specification, with
+    * types < X1, ... , Xn > => X0 and < Y1, ... , Yn > => Y0 where at least for one i
+    * Xi != Yi, it must be the case that the type of the operator can be said to be
+    * < Z1, ... , Zn > => Z0 where, for each i, Xi and Yi are particular instances of Zi
+    *
+    * Example:
+    * The operator A has, at different locations, types < Int, Int > => Bool and
+    * < Str, Str > => Bool. Generalization determines the type of A to be
+    * < T0, T0 > => Bool. If we additionally know that an instance of A has type
+    * < Int, Str > => Bool, the generalization becomes < T0, T1 > => Bool
     */
-  sealed case class DeltaT( l : TlaType, r : TlaType ) extends TlaType
+  def generalizeType(
+                      operName : String,
+                      idToExMap : Map[UID, TlaEx],
+                      operCtx : OperatorContext,
+                      solution : SolutionFunction,
+                      virtualCallResults : Map[String, TlaType]
+                    ) : TlaType = {
+    // We gather every instance of operator application, from every possible
+    // application stack. For each of them, `solution` gives us the type of that particular
+    // instance.
+    val allInstanceTypes = operCtx flatMap {
+      case (_, asgn) => asgn flatMap {
+        case (uid, tv) =>
+          // It can happen that a key is not found in idToExMap. An example of this is
+          // when, internally for type-constraints,
+          // UNCHANGED a is transformed into a' = a. This intermediate
+          // expression is ephemeral and as such is not recorded in idToExMap
+          idToExMap.get( uid ) match {
+            case Some( NameEx( n ) ) if n == operName =>
+              Some( solution( tv ) )
+            case _ => None
+          }
+      }
+    }
+    // Some operator types are partially known from virtual calls
+    val allTypes = virtualCallResults.get( operName ) ++: allInstanceTypes.toList
 
-  /**
-    * Resolving deltas, we can obtain `newType`, by replacing each instance of a delta
-    * with the value specified by the substitution `deltaSub`.
-    */
-  sealed case class DeltaResolutionResult(
-                                           newType : TlaType,
-                                           deltaSub : Map[DeltaT, TlaType]
-                                         )
+    allTypes match {
+      case Nil =>
+        throw new Exception( s"Operator $operName should have at least one type candidate, but has 0." )
+      case head +: tail =>
+        // We iteratively compute the polymorphic generalized type
+        tail.foldLeft( head ) { case (t1, t2) => findPoly( t1, t2 ) }
+    }
+  }
 
   /**
     * Computes the type-delta (minimal incompatibility indicator) of two types
@@ -90,7 +152,7 @@ class SolutionInterpreter( tvg : TypeVarGenerator ) {
     * such that both `t1` and `t2` are instances of t and t preserves as much of the
     * syntactic form of t1/t2 as possible.
     */
-  def findPoly( t1 : TlaType, t2 : TlaType ) : TlaType =
+  private def findPoly( t1 : TlaType, t2 : TlaType ) : TlaType =
     resolveDelta( mkDelta( t1, t2 ), Map.empty ).newType
 
   /**
@@ -146,53 +208,5 @@ class SolutionInterpreter( tvg : TypeVarGenerator ) {
       DeltaResolutionResult( OperT( newDom.asInstanceOf[TupT], newCdm ), newSub2 )
     // case PolyOperT should not happen
     case x => DeltaResolutionResult( x, deltaSub )
-  }
-
-  /**
-    * Given an operator name `operName`, computes the type generalization of all
-    * application instances of `operName` across all possible contexts.
-    * This gives us the polymorphic type of the operator `operName` (in this specification).
-    *
-    * If an operator appears in two different parts of the specification, with
-    * types < X1, ... , Xn > => X0 and < Y1, ... , Yn > => Y0 where at least for one i
-    * Xi != Yi, it must be the case that the type of the operator can be said to be
-    * < Z1, ... , Zn > => Z0 where, for each i, Xi and Yi are particular instances of Zi
-    *
-    * Example:
-    * The operator A has, at different locations, types < Int, Int > => Bool and
-    * < Str, Str > => Bool. Generalization determines the type of A to be
-    * < T0, T0 > => Bool. If we additionally know that an instance of A has type
-    * < Int, Str > => Bool, the generalization becomes < T0, T1 > => Bool
-    */
-  def generalizeType(
-                      operName : String,
-                      idToExMap : Map[UID, TlaEx],
-                      operCtx : OperatorContext,
-                      solution : Solution
-                    ) : TlaType = {
-    // We gather every instance of operator application, from every possible
-    // application stack. For each of them, `solution` gives us the type of that particular
-    // instance.
-    val allTypes = operCtx flatMap {
-      case (_, asgn) => asgn flatMap {
-        case (uid, tv) =>
-          // It can happen that a key is not found in idToExMap. An example of this is
-          // when, internally for type-constraints,
-          // UNCHANGED a is transformed into a' = a. This intermediate
-          // expression is ephemeral and as such is not recorded in idToExMap
-          idToExMap.get( uid ) match {
-            case Some( NameEx( n ) ) if n == operName =>
-              Some( solution( tv ) )
-            case _ => None
-          }
-      }
-    }
-    allTypes.headOption match {
-      case None =>
-        throw new Exception( s"Operator $operName should have at least one type candidate, but has 0." )
-      case Some( h ) =>
-        // We iteratively compute the polymorphic generalized type
-        allTypes.tail.foldLeft( h ) { case (t1, t2) => findPoly( t1, t2 ) }
-    }
   }
 }
