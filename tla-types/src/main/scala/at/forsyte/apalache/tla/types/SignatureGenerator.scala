@@ -39,8 +39,8 @@ class SignatureGenerator {
       List( PolyOperT( List( t ), OperT( TupT( t, SetT( t ), BoolT ), t ) ) )
 
     /** Action */
-//    case TlaActionOper.unchanged =>
-//  SHOULD NEVER BE EVALUATED
+    //    case TlaActionOper.unchanged =>
+    //  SHOULD NEVER BE EVALUATED
 
     /** Arithmetic */
     case TlaArithOper.plus | TlaArithOper.minus | TlaArithOper.mult |
@@ -85,42 +85,48 @@ class SignatureGenerator {
 
     /** Functions */
     case TlaFunOper.domain =>
-      val ts = typeVarGenerator.getNUnique( 2 )
-      val List( t1, t2 ) = ts
+      val ts@List( t1, t2 ) = typeVarGenerator.getNUnique( 2 )
       List( PolyOperT( ts, OperT( TupT( FunT( t1, t2 ) ), SetT( t1 ) ) ) )
     case TlaSetOper.funSet =>
-      val ts = typeVarGenerator.getNUnique( 2 )
-      val List( t1, t2 ) = ts
+      val ts@List( t1, t2 ) = typeVarGenerator.getNUnique( 2 )
       List( PolyOperT( ts, OperT( TupT( SetT( t1 ), SetT( t2 ) ), SetT( FunT( t1, t2 ) ) ) ) )
     case TlaFunOper.funDef =>
       val n = ( operEx.args.length - 1 ) / 2
       val t = typeVarGenerator.getUnique
       val ts = typeVarGenerator.getNUnique( n )
       val allPairs = ts flatMap { x => List( x, SetT( x ) ) }
-      List( PolyOperT( t +: ts, OperT( TupT( t +: allPairs : _* ), FunT( TupT( ts : _* ), t ) ) ) )
+      val domT = ts match {
+        case single +: Nil => single
+        case _ => TupT( ts : _* )
+      }
+      List( PolyOperT( t +: ts, OperT( TupT( t +: allPairs : _* ), FunT( domT, t ) ) ) )
 
     /** Records */
     case TlaFunOper.enum =>
-      val kvMap = operEx.args.zipWithIndex.collect {
+      val kvMapRaw = operEx.args.zipWithIndex.collect {
         case (ValEx( TlaStr( s ) ), i) if i % 2 == 0 =>
           s -> typeVarGenerator.getUnique
-      }.toMap
+      }
 
-      val ts = kvMap.values.toList
+      val ts = kvMapRaw map {
+        _._2
+      }
 
       val tupArgs = ts flatMap { v => List( StrT, v ) }
-      List( PolyOperT( ts, OperT( TupT( tupArgs : _* ), RecT( kvMap ) ) ) )
+      List( PolyOperT( ts.toList, OperT( TupT( tupArgs : _* ), RecT( kvMapRaw.toMap ) ) ) )
 
     case TlaSetOper.recSet =>
-      val kvMap = operEx.args.zipWithIndex.collect {
+      val kvMapRaw = operEx.args.zipWithIndex.collect {
         case (ValEx( TlaStr( s ) ), i) if i % 2 == 0 =>
           s -> typeVarGenerator.getUnique
-      }.toMap
+      }
 
-      val ts = kvMap.values.toList
+      val ts = kvMapRaw map {
+        _._2
+      }
 
       val tupArgs = ts flatMap { v => List( StrT, SetT( v ) ) }
-      List( PolyOperT( ts, OperT( TupT( tupArgs : _* ), SetT( RecT( kvMap ) ) ) ) )
+      List( PolyOperT( ts.toList, OperT( TupT( tupArgs : _* ), SetT( RecT( kvMapRaw.toMap ) ) ) ) )
 
     /** Tuples */
     case TlaFunOper.tuple =>
@@ -134,15 +140,15 @@ class SignatureGenerator {
     case TlaControlOper.ifThenElse =>
       val t = typeVarGenerator.getUnique
       List( PolyOperT( List( t ), OperT( TupT( BoolT, t, t ), t ) ) )
-      // We forbid CASE without OTHER
-//    case TlaControlOper.caseNoOther =>
-//      val n = operEx.args.length / 2
-//      val t = typeVarGenerator.getUnique
-//      val tupArgs = for {
-//        _ <- 1 to n
-//        v <- List( BoolT, t )
-//      } yield v
-//      List( PolyOperT( List( t ), OperT( TupT( tupArgs : _* ), t ) ) )
+    // We forbid CASE without OTHER
+    //    case TlaControlOper.caseNoOther =>
+    //      val n = operEx.args.length / 2
+    //      val t = typeVarGenerator.getUnique
+    //      val tupArgs = for {
+    //        _ <- 1 to n
+    //        v <- List( BoolT, t )
+    //      } yield v
+    //      List( PolyOperT( List( t ), OperT( TupT( tupArgs : _* ), t ) ) )
     case TlaControlOper.caseWithOther =>
       val n = ( operEx.args.length - 1 ) / 2
       val t = typeVarGenerator.getUnique
@@ -195,8 +201,7 @@ class SignatureGenerator {
     case TlaFunOper.app =>
       // A function is always possible
       val funSig = {
-        val ts = typeVarGenerator.getNUnique( 2 )
-        val List( t1, t2 ) = ts
+        val ts@List( t1, t2 ) = typeVarGenerator.getNUnique( 2 )
         PolyOperT( ts, OperT( TupT( FunT( t1, t2 ), t1 ), t2 ) )
       }
 
@@ -218,7 +223,7 @@ class SignatureGenerator {
         case ValEx( TlaStr( s ) ) =>
           val recSig = {
             val t = typeVarGenerator.getUnique
-            PolyOperT( List( t ), OperT( TupT( RecT( Map( s -> t ) ), IntT ), t ) )
+            PolyOperT( List( t ), OperT( TupT( RecT( Map( s -> t ) ), StrT ), t ) )
           }
           List( funSig, recSig )
         case _ => List( funSig, seqSig )
@@ -298,6 +303,11 @@ class SignatureGenerator {
         }
 
       List( funSig ) ++ recSigOpt
+
+    /** APALACHE */
+    case BmcOper.withType =>
+      val ts@List( t1, t2 ) = typeVarGenerator.getNUnique( 2 )
+      List( PolyOperT( ts, OperT( TupT( t1, t2 ), t1 ) ) )
 
     case o => throw new IllegalArgumentException(
       s"Signature of operator ${o.name} is not known"
