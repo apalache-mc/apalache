@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.types
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.smt.SmtTools.And
 import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
+import at.forsyte.apalache.tla.types.smt.Z3TypeSolver.Solution
 import at.forsyte.apalache.tla.types.smt.{SmtVarGenerator, Z3TypeSolver}
 import org.junit.runner.RunWith
 import org.scalatest.{BeforeAndAfter, FunSuite}
@@ -15,7 +16,7 @@ class TestZ3TypeSolver extends FunSuite with TestingPredefs with BeforeAndAfter 
 
   var smtVarGen = new SmtVarGenerator
 
-  var globNC : NameContext = Map(
+  var globNC : GlobalNameContext = Map(
     "x" -> smtVarGen.getFresh,
     "y" -> smtVarGen.getFresh
   )
@@ -23,7 +24,7 @@ class TestZ3TypeSolver extends FunSuite with TestingPredefs with BeforeAndAfter 
   val globBM : BodyMap = Map.empty
 
   var udtg   = new UserDefinedTemplateGenerator( smtVarGen, globNC, globBM )
-  var solver = new Z3TypeSolver( useSoftConstraints = true )
+  var solver = new Z3TypeSolver( useSoftConstraints = true, new TypeVarGenerator )
 
   before {
     smtVarGen = new SmtVarGenerator
@@ -32,7 +33,7 @@ class TestZ3TypeSolver extends FunSuite with TestingPredefs with BeforeAndAfter 
       "y" -> smtVarGen.getFresh
     )
     udtg = new UserDefinedTemplateGenerator( smtVarGen, globNC, globBM )
-    solver = new Z3TypeSolver( useSoftConstraints = true )
+    solver = new Z3TypeSolver( useSoftConstraints = true, new TypeVarGenerator )
   }
 
 
@@ -60,17 +61,18 @@ class TestZ3TypeSolver extends FunSuite with TestingPredefs with BeforeAndAfter 
     val templApp = templ( e +: ts ).asInstanceOf[And]
 
     val ret = solver.solve( smtVarGen.allVars, templApp )
-    assert( ret.nonEmpty )
-    val solution = ret.get
+    ret match {
+      case Solution( solution ) =>
+        val ctx = udtg.getCtx
+        val varOfPlusEx = ctx( List.empty )( plusEx.ID )
 
-    val ctx = udtg.getCtx
-    val varOfPlusEx = ctx( List.empty )( plusEx.ID )
-
-    assert( varOfPlusEx match {
-      case i : SmtTypeVariable =>
-        solution( i ) == IntT
-      case _ => false
-    } )
+        assert( varOfPlusEx match {
+          case i : SmtTypeVariable =>
+            solution( i ) == IntT
+          case _ => false
+        } )
+      case _ => assert( false )
+    }
   }
 
   test( "H.O. operators" ) {

@@ -7,13 +7,21 @@ import at.forsyte.apalache.tla.types.smt.FunWrappers.{HasAtFunWrapper, SizeFunWr
 import com.microsoft.z3._
 
 object Z3TypeSolver {
-  type Solution = SmtDatatype => TlaType
+  type SolutionFunction = SmtDatatype => TlaType
+  abstract class SolutionOrUnsatCore {
+    def nonEmpty : Boolean = this match {
+      case _ : Solution => true
+      case _ => false
+    }
+  }
+  sealed case class UnsatCore( core: Array[BoolExpr] ) extends SolutionOrUnsatCore
+  sealed case class Solution( f: SolutionFunction ) extends SolutionOrUnsatCore
 }
 
 /**
   * Z3TypeSolver
   */
-class Z3TypeSolver( useSoftConstraints : Boolean ) {
+class Z3TypeSolver( useSoftConstraints : Boolean, tvg: TypeVarGenerator ) {
   import Z3TypeSolver._
 
   private val ctx           : Context          = new Context
@@ -45,7 +53,7 @@ class Z3TypeSolver( useSoftConstraints : Boolean ) {
   private val funTCtor  : Constructor =
     ctx.mkConstructor( funTName, s"is$funTName", Array( "dom", "cdm" ), Array[Sort]( null, null ), Array( 0, 0 ) )
   private val operTCtor : Constructor =
-    ctx.mkConstructor( operTName, s"is$operTName", Array( "odom", "ocdm" ), Array[Sort]( null, null ), Array( 0, 0 ) )
+    ctx.mkConstructor( operTName, s"is$operTName", Array( "odom", "ocdm" ), Array[Sort]( intS, null ), Array( 0, 0 ) )
   private val tupTCtor  : Constructor =
     ctx.mkConstructor( tupTName, s"is$tupTName", Array( "i" ), Array[Sort]( intS ), null )
   private val recTCtor  : Constructor =
@@ -70,6 +78,8 @@ class Z3TypeSolver( useSoftConstraints : Boolean ) {
   private val atIdxDecl    : FuncDecl = ctx.mkFuncDecl( atIndexName, Array[Sort]( intS, intS ), tlaTypeDTS )
   private val hasFieldDecl : FuncDecl = ctx.mkFuncDecl( hasFieldName, Array[Sort]( intS, intS ), boolS )
   private val atFieldDecl  : FuncDecl = ctx.mkFuncDecl( atFieldName, Array[Sort]( intS, intS ), tlaTypeDTS )
+
+  private val rankDecl     : FuncDecl = ctx.mkFuncDecl( rankName, tlaTypeDTS, intS )
 
   /**
     * Axioms
@@ -103,7 +113,7 @@ class Z3TypeSolver( useSoftConstraints : Boolean ) {
       case set( x ) => ctx.mkApp( setTCtor.ConstructorDecl, dtToSmt( x ) )
       case seq( x ) => ctx.mkApp( seqTCtor.ConstructorDecl, dtToSmt( x ) )
       case fun( x, y ) => ctx.mkApp( funTCtor.ConstructorDecl, dtToSmt( x ), dtToSmt( y ) )
-      case oper( x, y ) => ctx.mkApp( operTCtor.ConstructorDecl, dtToSmt( x ), dtToSmt( y ) )
+      case oper( i, y ) => ctx.mkApp( operTCtor.ConstructorDecl, varToConst( i ), dtToSmt( y ) )
       case tup( i ) => ctx.mkApp( tupTCtor.ConstructorDecl, varToConst( i ) )
       case rec( i ) => ctx.mkApp( recTCtor.ConstructorDecl, varToConst( i ) )
       case f : SmtTypeVariable => varToConst( f )
@@ -118,13 +128,29 @@ class Z3TypeSolver( useSoftConstraints : Boolean ) {
         val sId = strEnumerator.add( s )
         val sInt = ctx.mkInt( sId )
         val exists = ctx.mkApp( hasFieldDecl, vConst, sInt ).asInstanceOf[BoolExpr]
-        val value = ctx.mkEq( ctx.mkApp( atFieldDecl, vConst, sInt ), dtToSmt( t ) )
-        ctx.mkAnd( exists, value )
+        val tExpr = dtToSmt( t )
+        val value = ctx.mkEq( ctx.mkApp( atFieldDecl, vConst, sInt ), tExpr )
+        val rank = ctx.mkEq(
+          ctx.mkApp( rankDecl, tExpr ),
+          ctx.mkAdd(
+            ctx.mkApp( rankDecl, dtToSmt( rec( v ) ) ).asInstanceOf[ArithExpr],
+            ctx.mkInt( 1 )
+          )
+        )
+        ctx.mkAnd( exists, value, rank )
       case hasIndex( v, i, t ) =>
         val vConst = varToConst( v )
         val iInt = ctx.mkInt( i )
         val exists = ctx.mkApp( hasIdxDecl, vConst, iInt ).asInstanceOf[BoolExpr]
-        val value = ctx.mkEq( ctx.mkApp( atIdxDecl, vConst, iInt ), dtToSmt( t ) )
+        val tExpr = dtToSmt( t )
+        val value = ctx.mkEq( ctx.mkApp( atIdxDecl, vConst, iInt ), tExpr )
+        val rank = ctx.mkEq(
+          ctx.mkApp( rankDecl, tExpr ),
+          ctx.mkAdd(
+            ctx.mkApp( rankDecl, dtToSmt( tup( v ) ) ).asInstanceOf[ArithExpr],
+            ctx.mkInt( 1 )
+          )
+        )
         // Explicit instantiation
         val sizeAxiom = ctx.mkGe( ctx.mkApp( sizeOfDecl, vConst ).asInstanceOf[ArithExpr], iInt )
         ctx.mkAnd( exists, value, sizeAxiom )
@@ -158,32 +184,34 @@ class Z3TypeSolver( useSoftConstraints : Boolean ) {
   def solve(
              vars : Seq[SmtVariable],
              constraints : BoolFormula
-           ) : Option[Solution] = {
+           ) : SolutionOrUnsatCore = {
     solver.push()
     addVars( vars )
     addConstraints( constraints )
     val status = solver.check()
-    val model = solver.getModel
     solver.pop()
     status match {
       case Status.SATISFIABLE =>
+        val model = solver.getModel
         val sizeWrap = SizeFunWrapper( ctx, model, sizeOfDecl )
         val idxWrap = HasAtFunWrapper( ctx, model, hasIdxDecl, atIdxDecl )
         val fieldWrap = HasAtFunWrapper( ctx, model, hasFieldDecl, atFieldDecl )
 
-        val typeReconstructor = new TypeReconstructor( idxWrap.apply, fieldWrap.apply, sizeWrap.apply, strEnumerator )
+        val typeReconstructor = new TypeReconstructor( tvg, idxWrap.apply, fieldWrap.apply, sizeWrap.apply, strEnumerator )
 
-        def solution( dt: SmtDatatype ) : TlaType = {
+        def solutionFn( dt: SmtDatatype ) : TlaType = {
           val expr = Z3Converter.dtToSmt( dt )
-          typeReconstructor( model.eval(
+          val evalEx = model.eval(
             expr,
-            false // completion:  When this flag is enabled, a model value will be assigned to any constant or function that does not have an interpretation in the model.
-            /* TODO: Investigate potential benefits of completion = true */
-          ) )
+            true // completion:  When this flag is enabled, a model value will be assigned to any constant or function that does not have an interpretation in the model.
+            /* TODO: Investigate if true is useful for partial specifications, where some values are still undefined */
+          )
+          typeReconstructor( evalEx )
         }
 
-        Some( solution )
-      case _ => None
+        Solution( solutionFn )
+      case _ =>
+        UnsatCore( solver.getUnsatCore )
     }
   }
 

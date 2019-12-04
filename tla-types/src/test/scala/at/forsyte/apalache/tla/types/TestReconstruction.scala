@@ -12,10 +12,12 @@ import org.scalatest.junit.JUnitRunner
 class TestReconstruction extends FunSuite with TestingPredefs with BeforeAndAfter {
   var converter = new StringEnumerator
   var ctx       = new Context
+  var tvg       = new TypeVarGenerator
 
   before {
     converter = new StringEnumerator
     ctx = new Context
+    tvg = new TypeVarGenerator
   }
 
   test( "Test tupT" ) {
@@ -34,7 +36,7 @@ class TestReconstruction extends FunSuite with TestingPredefs with BeforeAndAfte
 
     def sizeFun( i : Int ) : Int = 2
 
-    val reconstructor = new TypeReconstructor( idxFun, fieldFun, sizeFun, converter )
+    val reconstructor = new TypeReconstructor( tvg, idxFun, fieldFun, sizeFun, converter )
 
     val ex1 = ctx.mkApp( tupC.ConstructorDecl, ctx.mkInt( 1 ) )
     val type1 = reconstructor( ex1 )

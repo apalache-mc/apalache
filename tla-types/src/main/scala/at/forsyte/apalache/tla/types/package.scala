@@ -22,12 +22,14 @@ package object types {
   object Names {
     val intVarSymb : String = "i"
     val tVarSymb   : String = "f"
+    val labelSymb   : String = "l"
 
     val atIndexName: String = "atIndex"
     val atFieldName: String = "atField"
     val hasIndexName : String = "hasIndex"
     val hasFieldName : String = "hasField"
     val sizeOfName   : String = "sizeOf"
+    val rankName   : String = "rank"
 
     val dtName    : String = "tlaT"
     val intTName  : String = "intT"
