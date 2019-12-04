@@ -33,7 +33,7 @@ class FormalSignatureEncoder( private val smtVarGen: SmtVarGenerator ) {
         case (ReductionResult( ti, phii ), j) =>
           hasIndex( i, j, ti ) +: phii
       } )
-      SigTriple( oper( tup( i ), f ), paramDTs, constraints )
+      SigTriple( oper( i, f ), paramDTs, constraints )
   }
 
   /**
@@ -50,7 +50,7 @@ class FormalSignatureEncoder( private val smtVarGen: SmtVarGenerator ) {
       val i = smtVarGen.getFreshInt
       val f +: fs = smtVarGen.getNFresh( arity + 1 )
       ReductionResult(
-        oper( tup( i ), f ),
+        oper( i, f ),
         sizeOfEql( i, arity ) +: ( fs.zipWithIndex map { case (fj, j) =>
           hasIndex( i, j, fj )
         } )

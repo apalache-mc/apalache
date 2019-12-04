@@ -6,7 +6,9 @@ import at.forsyte.apalache.tla.lir.smt.SmtTools
   * SmtDatatype represents an intermediate layer of abstraction between the TlaType
   * and the eventual solver-dependent SMT datatype implementation
   */
-abstract class SmtDatatype
+abstract class SmtDatatype {
+  override def toString : String = TypePrinter( this )
+}
 
 /**
   * SmtVariable is either an integer of represents a TlaType
@@ -31,7 +33,7 @@ sealed case class seq( sq: SmtDatatype ) extends SmtDatatype
 sealed case class tup( j: SmtIntVariable ) extends SmtDatatype
 sealed case class rec( r: SmtIntVariable ) extends SmtDatatype
 sealed case class fun( arg: SmtDatatype, res: SmtDatatype ) extends SmtDatatype
-sealed case class oper( oarg: SmtDatatype, ores: SmtDatatype ) extends SmtDatatype
+sealed case class oper( i: SmtIntVariable, ores: SmtDatatype ) extends SmtDatatype
 
 /**
   * We include abstractions of the functions used in the constraints

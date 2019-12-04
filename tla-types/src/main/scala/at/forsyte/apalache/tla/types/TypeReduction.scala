@@ -32,7 +32,10 @@ class TypeReduction( private val smtVarGen : SmtVarGenerator ) {
     case OperT( domT, cdmT ) =>
       val ReductionResult( v1, phi1 ) = reduce( domT, m )
       val ReductionResult( v2, phi2 ) = reduce( cdmT, m )
-      ReductionResult( oper( v1, v2 ), phi1 ++ phi2 )
+      v1 match {
+        case tup( i ) => ReductionResult( oper( i, v2 ), phi1 ++ phi2 )
+        case _ => throw new IllegalArgumentException(s"Expected tuple, got $v1")
+      }
     case TupT( ts@_* ) =>
       val l = ts.length
       val results = ts map {

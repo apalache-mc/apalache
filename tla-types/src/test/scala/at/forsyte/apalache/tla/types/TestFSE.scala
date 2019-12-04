@@ -42,7 +42,7 @@ class TestFSE extends FunSuite with TestingPredefs with BeforeAndAfter {
       */
 
     assert( List( (pt1, o1.arity), (pt2, o2.arity) ) forall {
-      case (ReductionResult( oper( tup( i : SmtIntVariable ), _ ), phi ), arity) =>
+      case (ReductionResult( oper( i, _ ), phi ), arity) =>
         phi.contains( sizeOfEql( i, arity ) ) &&
           Range( 0, o1.arity ).forall { j =>
             phi.exists {
@@ -68,7 +68,7 @@ class TestFSE extends FunSuite with TestingPredefs with BeforeAndAfter {
     val op2 = tla.declOp( "X", n_x, ("p",1), "r", ("s",2)  )
 
     def assertCond( opDecl: TlaOperDecl ) = fse.sig( opDecl.formalParams ) match {
-      case SigTriple( oper( tup( i ), f ), parTs, phi ) if parTs.headOption.contains( f ) =>
+      case SigTriple( oper( i, f ), parTs, phi ) if parTs.headOption.contains( f ) =>
         phi.contains( sizeOfEql( i, opDecl.formalParams.length ) ) &&
         parTs.tail.zipWithIndex.forall {
           case (t, j) =>

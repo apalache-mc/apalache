@@ -10,30 +10,30 @@ import org.scalatest.junit.JUnitRunner
 
 @RunWith( classOf[JUnitRunner] )
 class TestBuiltinTemplates extends FunSuite with TestingPredefs with BeforeAndAfter {
-  var smtVarGen = new SmtVarGenerator
-  var templateGen = new BuiltinTemplateGenerator(smtVarGen)
+  var smtVarGen   = new SmtVarGenerator
+  var templateGen = new BuiltinTemplateGenerator( smtVarGen )
 
   before {
     smtVarGen = new SmtVarGenerator
-    templateGen = new BuiltinTemplateGenerator(smtVarGen)
+    templateGen = new BuiltinTemplateGenerator( smtVarGen )
   }
 
   import at.forsyte.apalache.tla.lir.{Builder => tla}
 
-  test( "Wrong arity" ){
+  test( "Wrong arity" ) {
     val ex = tla.plus( n_x, n_y )
 
     val templateArgs = smtVarGen.getNFresh( 2 )
     val template = templateGen.makeTemplate( ex )
     assertThrows[AssertionError] {
-     template( templateArgs )
+      template( templateArgs )
     }
     assertThrows[IllegalArgumentException] {
       template( List.empty )
     }
   }
 
-  test( "No signature" ){
+  test( "No signature" ) {
     val bogusOper = new TlaOper {
 
       override def precedence : (Int, Int) = (0, 0)
@@ -48,15 +48,15 @@ class TestBuiltinTemplates extends FunSuite with TestingPredefs with BeforeAndAf
     val templateArgs = smtVarGen.getNFresh( 1 )
     val template = templateGen.makeTemplate( ex )
 
-    assertThrows[IllegalArgumentException]{
+    assertThrows[IllegalArgumentException] {
       template( templateArgs )
     }
   }
 
-  test( "Simple operator: +" ){
+  test( "Simple operator: +" ) {
     val ex = tla.plus( n_x, n_y )
 
-    val templateArgs@List(e,t1,t2) = smtVarGen.getNFresh( 3 )
+    val templateArgs@List( e, t1, t2 ) = smtVarGen.getNFresh( 3 )
     val template = templateGen.makeTemplate( ex )
     val templateApp = template( templateArgs )
 
@@ -68,10 +68,10 @@ class TestBuiltinTemplates extends FunSuite with TestingPredefs with BeforeAndAf
 
   }
 
-  test( "Poly operator: =" ){
+  test( "Poly operator: =" ) {
     val ex = tla.eql( n_x, n_y )
 
-    val templateArgs@List(e,t1,t2) = smtVarGen.getNFresh( 3 )
+    val templateArgs@List( e, t1, t2 ) = smtVarGen.getNFresh( 3 )
     val template = templateGen.makeTemplate( ex )
     val templateApp = template( templateArgs )
 
@@ -89,7 +89,7 @@ class TestBuiltinTemplates extends FunSuite with TestingPredefs with BeforeAndAf
     )
   }
 
-  test( "Poly operator: \\cup" ){
+  test( "Poly operator: \\cup" ) {
     val ex = tla.cup( n_x, n_y )
 
     val templateArgs = smtVarGen.getNFresh( 3 )
@@ -101,7 +101,7 @@ class TestBuiltinTemplates extends FunSuite with TestingPredefs with BeforeAndAf
     assert(
       andCast.args.exists {
         case Eql( _, t ) => andCast.args.forall {
-          case Eql( _, x @ set( SmtTypeVariable( _ ) )  ) => t == x
+          case Eql( _, x@set( SmtTypeVariable( _ ) ) ) => t == x
           case _ => true
         }
         case _ => false
@@ -109,10 +109,10 @@ class TestBuiltinTemplates extends FunSuite with TestingPredefs with BeforeAndAf
     )
   }
 
-  test( "Poly operator: \\times" ){
+  test( "Poly operator: \\times" ) {
     val ex = tla.times( n_a, n_b, n_c, n_d )
 
-    val templateArgs @ e +: ts = smtVarGen.getNFresh( 1 + ex.args.length )
+    val templateArgs@e +: ts = smtVarGen.getNFresh( 1 + ex.args.length )
     val tmap = ts.zipWithIndex.map( pa => pa._2 -> pa._1 ).toMap
     val template = templateGen.makeTemplate( ex )
     val templateApp = template( templateArgs )
@@ -148,10 +148,10 @@ class TestBuiltinTemplates extends FunSuite with TestingPredefs with BeforeAndAf
     )
   }
 
-  test("Overloaded operator: EXCEPT"){
+  test( "Overloaded operator: EXCEPT" ) {
 
     val ex1 = tla.except( n_x, tla.tuple( tla.str( "a" ) ), tla.str( "b" ) )
-    val templateArgs1 @ e1 +: ts1 = smtVarGen.getNFresh( 1 + ex1.args.length )
+    val templateArgs1@( e1 +: ts1 ) = smtVarGen.getNFresh( 1 + ex1.args.length )
     val tmap1 = ts1.zipWithIndex.map( pa => pa._2 -> pa._1 ).toMap
     val template1 = templateGen.makeTemplate( ex1 )
     val templateApp1 = template1( templateArgs1 )
@@ -186,9 +186,9 @@ class TestBuiltinTemplates extends FunSuite with TestingPredefs with BeforeAndAf
       n_x,
       tla.tuple( tla.str( "a" ), tla.str( "b" ) ), 0,
       tla.tuple( tla.str( "a" ), tla.str( "c" ) ), tla.emptySet(),
-      tla.tuple( tla.str( "e" ), tla.str( "f" ) ), tla.tuple( tla.int(1), tla.int(2) )
+      tla.tuple( tla.str( "e" ), tla.str( "f" ) ), tla.tuple( tla.int( 1 ), tla.int( 2 ) )
     )
-    val templateArgs2 @ e2 +: ts2 = smtVarGen.getNFresh( 1 + ex2.args.length )
+    val templateArgs2@( e2 +: ts2 ) = smtVarGen.getNFresh( 1 + ex2.args.length )
     val tmap2 = ts2.zipWithIndex.map( pa => pa._2 -> pa._1 ).toMap
     val template2 = templateGen.makeTemplate( ex2 )
     val templateApp2 = template2( templateArgs2 )
@@ -223,7 +223,5 @@ class TestBuiltinTemplates extends FunSuite with TestingPredefs with BeforeAndAf
       }
 
     assert( assertCond2 )
-    
   }
-
 }

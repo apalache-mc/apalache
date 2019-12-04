@@ -16,16 +16,16 @@ class TestUserDefTemplates extends FunSuite with TestingPredefs with BeforeAndAf
 
   var smtVarGen = new SmtVarGenerator
 
-  val globNC : NameContext = Map(
+  val globNC : GlobalNameContext = Map(
     "x" -> smtVarGen.getFresh,
     "y" -> smtVarGen.getFresh
   )
 
   val emptyNC : NameContext = Map.empty
 
-  val globBM : BodyMap     = Map.empty
+  val globBM : BodyMap = Map.empty
 
-  var udtg      = new UserDefinedTemplateGenerator( smtVarGen, globNC, globBM )
+  var udtg = new UserDefinedTemplateGenerator( smtVarGen, globNC, globBM )
 
   before {
     smtVarGen = new SmtVarGenerator
@@ -39,13 +39,21 @@ class TestUserDefTemplates extends FunSuite with TestingPredefs with BeforeAndAf
       val self = transitiveEql( s )( _, _ )
       s.exists {
         case e@Eql( `a`, f ) =>
-          transitiveEql( s.filterNot{ _ == e })( f, b )
+          transitiveEql( s.filterNot {
+            _ == e
+          } )( f, b )
         case e@Eql( `b`, f ) =>
-          transitiveEql( s.filterNot{ _ == e })( f, a )
+          transitiveEql( s.filterNot {
+            _ == e
+          } )( f, a )
         case e@Eql( f, `a` ) =>
-          transitiveEql( s.filterNot{ _ == e })( f, b )
+          transitiveEql( s.filterNot {
+            _ == e
+          } )( f, b )
         case e@Eql( f, `b` ) =>
-          transitiveEql( s.filterNot{ _ == e })( a, f )
+          transitiveEql( s.filterNot {
+            _ == e
+          } )( a, f )
         case _ => false
       }
     }
@@ -68,7 +76,7 @@ class TestUserDefTemplates extends FunSuite with TestingPredefs with BeforeAndAf
     }
   }
 
-  test( "Unsupported expr." ){
+  test( "Unsupported expr." ) {
     assertThrows[IllegalArgumentException] {
       udtg.nabla( int, NullEx, Map.empty )
     }
@@ -109,7 +117,7 @@ class TestUserDefTemplates extends FunSuite with TestingPredefs with BeforeAndAf
 
     val x = smtVarGen.getFresh
 
-    val nbla = udtg.nabla( x, ex, m)
+    val nbla = udtg.nabla( x, ex, m )
 
     val flatNbla = flattenCond( nbla )
 
@@ -133,33 +141,33 @@ class TestUserDefTemplates extends FunSuite with TestingPredefs with BeforeAndAf
 
     val assertCond =
       transEq( xVar, int ) &&
-      transEq( yVar, int ) &&
-      flatNbla.exists {
-        case Eql( `x`, tx ) =>
-          flatNbla.exists {
-            case Eql( tO, oper( tup( i ), `tx` ) ) =>
-              transEq( tO, ptVar2 ) &&
-                flatNbla.contains( sizeOfEql( i, par2.arity ) ) &&
-                flatNbla.exists {
-                  case hasIndex( `i`, 0, fj ) =>
-                    transEq( fj, int )
-                  case _ => false
-                } &&
-                flatNbla.exists {
-                  case hasIndex( `i`, 1, fj ) =>
-                    transEq( fj, ptVar1 )
-                  case _ => false
-                }
-            case _ => false
-          }
-        case _ => false
+        transEq( yVar, int ) &&
+        flatNbla.exists {
+          case Eql( `x`, tx ) =>
+            flatNbla.exists {
+              case Eql( tO, oper( i, `tx` ) ) =>
+                transEq( tO, ptVar2 ) &&
+                  flatNbla.contains( sizeOfEql( i, par2.arity ) ) &&
+                  flatNbla.exists {
+                    case hasIndex( `i`, 0, fj ) =>
+                      transEq( fj, int )
+                    case _ => false
+                  } &&
+                  flatNbla.exists {
+                    case hasIndex( `i`, 1, fj ) =>
+                      transEq( fj, ptVar1 )
+                    case _ => false
+                  }
+              case _ => false
+            }
+          case _ => false
 
-      }
+        }
 
     assert( assertCond )
   }
 
-  test( "Test makeTemplate" ){
+  test( "Test makeTemplate" ) {
     val par1 = SimpleFormalParam( "p" )
     val par2 = OperFormalParam( "O", 2 )
 
@@ -174,7 +182,7 @@ class TestUserDefTemplates extends FunSuite with TestingPredefs with BeforeAndAf
     val operX = TlaOperDecl( "X", List( par1, par2 ), body )
 
     val e = smtVarGen.getFresh
-    val ts@ List( t1, t2 ) = smtVarGen.getNFresh( operX.formalParams.length )
+    val ts@List( t1, t2 ) = smtVarGen.getNFresh( operX.formalParams.length )
 
     val templ = udtg.makeTemplate( operX.formalParams, operX.body )
     val templApp = templ( e +: ts ).asInstanceOf[And]
@@ -202,23 +210,23 @@ class TestUserDefTemplates extends FunSuite with TestingPredefs with BeforeAndAf
 
     val assertCond =
       transEq( globNC( "x" ), int ) &&
-      transEq( globNC( "y" ), int ) &&
+        transEq( globNC( "y" ), int ) &&
         condLst.exists {
           case Eql( `e`, tx ) =>
             condLst.exists {
-              case Eql( tO, oper( tup( i ), `tx` ) ) =>
+              case Eql( tO, oper( i, `tx` ) ) =>
                 transEq( tO, t2 ) &&
-                condLst.contains( sizeOfEql( i, par2.arity ) ) &&
-                condLst.exists {
-                  case hasIndex( `i`, 0, fj ) =>
-                    transEq( fj, int )
-                  case _ => false
-                } &&
-                condLst.exists {
-                  case hasIndex( `i`, 1, fj ) =>
-                    transEq( fj, t1 )
-                  case _ => false
-                }
+                  condLst.contains( sizeOfEql( i, par2.arity ) ) &&
+                  condLst.exists {
+                    case hasIndex( `i`, 0, fj ) =>
+                      transEq( fj, int )
+                    case _ => false
+                  } &&
+                  condLst.exists {
+                    case hasIndex( `i`, 1, fj ) =>
+                      transEq( fj, t1 )
+                    case _ => false
+                  }
               case _ => false
             }
           case _ => false
@@ -228,7 +236,7 @@ class TestUserDefTemplates extends FunSuite with TestingPredefs with BeforeAndAf
     assert( assertCond )
   }
 
-  test( "Test EXCEPT return type contains all fields" ){
+  test( "Test EXCEPT return type contains all fields" ) {
 
     /**
       * [ [a |-> 1, b |-> 2] EXCEPT !.a = 3 ]
@@ -248,7 +256,7 @@ class TestUserDefTemplates extends FunSuite with TestingPredefs with BeforeAndAf
     val templApp = templ( e +: Nil ).asInstanceOf[And]
 
     // We anticipate the Rec-side of Or
-    def oracleDecideOr( bf: BoolFormula ): BoolFormula = bf match {
+    def oracleDecideOr( bf : BoolFormula ) : BoolFormula = bf match {
       case Or( _, b ) => b
       case x => x
     }
@@ -272,9 +280,9 @@ class TestUserDefTemplates extends FunSuite with TestingPredefs with BeforeAndAf
     assert( assertCond )
   }
 
-  test("Test LET-IN") {
+  test( "Test LET-IN" ) {
     // LET A == 1 IN A
-    val body = tla.letIn( n_A, tla.declOp( "A", tla.int(1) ) )
+    val body = tla.letIn( n_A, tla.declOp( "A", tla.int( 1 ) ) )
     val e = smtVarGen.getFresh
 
     val templ = udtg.makeTemplate( List.empty, body )
@@ -283,7 +291,7 @@ class TestUserDefTemplates extends FunSuite with TestingPredefs with BeforeAndAf
     val condLst = flattenCond( templApp.args )
 
     val assertCond = condLst exists {
-      case Eql( t, int ) => transitiveEql(condLst)( t, e )
+      case Eql( t, int ) => transitiveEql( condLst )( t, e )
       case _ => false
     }
 
