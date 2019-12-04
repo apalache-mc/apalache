@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.types
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaFunOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.smt.SmtTools.{And, BoolFormula}
 import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
@@ -20,7 +20,7 @@ import at.forsyte.apalache.tla.types.smt.SmtVarGenerator
   */
 class UserDefinedTemplateGenerator(
                                     private val smtVarGen : SmtVarGenerator,
-                                    private val mGlobal : NameContext,
+                                    private val mGlobal : GlobalNameContext,
                                     private val globalBodyMap : BodyMap
                                   ) {
   private val templGen   = new BuiltinTemplateGenerator( smtVarGen )
@@ -39,13 +39,42 @@ class UserDefinedTemplateGenerator(
     * Generates the template for a user-defined operator, given its parameters and body.
     */
   def makeTemplate( fParams : List[FormalParam], body : TlaEx ) : Template =
-    makeTemplateInternal( fParams, body )( globalBodyMap, List.empty )
+    makeTemplateInternal( fParams, body )( mGlobal, globalBodyMap, List.empty )
 
   /**
     * Returns the context build during nabla computations
     */
   def getCtx : OperatorContext = ctxBuilder.get
 
+  /**
+    * Given a name or tuple of names, generates a NameContext, assigning a fresh SMT variable
+    * to each TLA variable (name) provided.
+    */
+  private def fromBound( ex : TlaEx ) : NameContext = ex match {
+    case NameEx( v ) => Map( v -> smtVarGen.getFresh )
+    case OperEx( TlaFunOper.tuple, names@_* ) =>
+      ( names map {
+        case NameEx( v ) => v -> smtVarGen.getFresh
+        case _ => throw new IllegalArgumentException( "Set filter tuple arguments should only contain names" )
+      } ).toMap
+    case _ => throw new IllegalArgumentException( "fromBound may only be called on names or tuples of names." )
+  }
+
+  /**
+    * Given an operator expression, which potentially introduces bound variables,
+    * generates a NameContext, which assigns a fresh SMT constant to each bound variable
+    */
+  private def mkBoundVarMapExtension( ex : OperEx ) : NameContext = ex match {
+    case OperEx( TlaSetOper.filter | TlaOper.chooseBounded |
+                 TlaBoolOper.exists | TlaBoolOper.forall,
+                 bound, _@_* ) => fromBound( bound )
+    case OperEx( TlaSetOper.map | TlaFunOper.funDef, _, boundPairs@_* ) =>
+      val processedBound = boundPairs.zipWithIndex collect {
+        case (bound, i) if i % 2 == 0 => fromBound( bound )
+      }
+      processedBound.foldLeft( Map.empty[String, SmtDatatype] ) { _ ++ _ }
+    case _ => Map.empty
+  }
 
   /**
     * Internal method of nabla.
@@ -67,17 +96,18 @@ class UserDefinedTemplateGenerator(
     // smt value a to the UID of b, in the stack c
     ctxBuilder.record( operStack, phi.ID, x )
 
-    def processName( n: String, id: UID ) : Seq[BoolFormula] = {
+    def processName( n : String, id : UID ) : Seq[BoolFormula] = {
       // If m contains n (n is not a user-defined operator name) then we can just read
       // the appropriate value from m and generate a single Eql constraint
       m.get( n ) map { v => Seq( Eql( x, v ) ) } getOrElse {
         // Otherwise, n must be a  user-defined operator and we have to perform a virtual call
-        assert( bodyMap.contains( n ) )
+        if ( !bodyMap.contains( n ) )
+          throw new IllegalArgumentException( s"The body of operator $n is unknown" )
         val (fParams, body) = bodyMap( n )
         // First, we need to compute a fresh formal signature
         val SigTriple( opType, paramTypes, sigConstraints ) = formSigEnc.sig( fParams )
         // Next, we compute n's template, adding the ID of ex (the virtual call-site) to the operator stack
-        val opTemplate = makeTemplateInternal( fParams, body )( bodyMap, id +: operStack )
+        val opTemplate = makeTemplateInternal( fParams, body )( m, bodyMap, id +: operStack )
         // We know that x must have the formal opType, in addition to the constraints obtained by the template
         // and side-constraints form the signature computation
         Eql( x, opType ) +: opTemplate( paramTypes ) +: sigConstraints
@@ -92,21 +122,33 @@ class UserDefinedTemplateGenerator(
         processName( n, ex.ID )
       case ex@OperEx( TlaActionOper.prime, NameEx( n ) ) =>
         processName( s"$n'", ex.ID )
+
       /** UNCHANGED expressions are a special case, because we need to introduce the prime variable */
-      case ex@OperEx( TlaActionOper.unchanged, nameEx: NameEx ) =>
+      case ex@OperEx( TlaActionOper.unchanged, nameEx : NameEx ) =>
         val equivalentEx = Builder.primeEq( nameEx.deepCopy(), nameEx )
         nablaInternal( x, equivalentEx, m )( bodyMap, operStack )
       case ex@OperEx( TlaActionOper.unchanged, OperEx( TlaFunOper.tuple, tupArgs@_* ) ) =>
         val equivalentEx = Builder.and( tupArgs map Builder.unchanged : _* )
         nablaInternal( x, equivalentEx, m )( bodyMap, operStack )
-      case ex@OperEx( _, args@_* ) =>
+      case ex@OperEx( oper, args@_* ) =>
         // If we're dealing with a built-in operator, we simply compute its template and apply it
         val opTemplate = templGen.makeTemplate( ex )
+
+        // Quantifier introduce variables, so we have to extend m when computing sub-nablas
+        val boundVarMapExtension = mkBoundVarMapExtension( ex )
+        // Sanity check, we should not be overwriting anything, except in the case
+        // where variables have not been renamed. In that scenario, the extension must overwrite
+        // the old values
+//        assert( boundVarMapExtension.keySet.intersect(m.keySet).isEmpty )
+
         val fs = smtVarGen.getNFresh( args.length )
-        opTemplate( x +: fs ) +: ( fs.zip( args ) flatMap {
+        val templApp = opTemplate( x +: fs )
+        val subConstraints = fs.zip( args ) flatMap {
           // For the args, we have to recursively compute nabla as well
-          case (fi, phii) => nablaInternal( fi, phii, m )( bodyMap, operStack )
-        } )
+          case (fi, phii) =>
+            nablaInternal( fi, phii, m ++ boundVarMapExtension )( bodyMap, operStack )
+        }
+        templApp +: subConstraints
       case LetInEx( body, defs@_* ) =>
         // In the LET-IN case, we add the bound operators to the BodyMap and recurse on the body
         val newBodyMap = BodyMapFactory.makeFromDecls( defs, bodyMap )
@@ -124,6 +166,7 @@ class UserDefinedTemplateGenerator(
                                     fParams : List[FormalParam],
                                     body : TlaEx
                                   )(
+                                    initialNC : NameContext,
                                     bodyMap : BodyMap,
                                     operStack : OperatorApplicationStack
                                   ) : Template = {
@@ -137,7 +180,7 @@ class UserDefinedTemplateGenerator(
       } ).toMap
       // By assumption, the domains of mParams and mGlobal are disjoint
       // The template is then given by a single nabla(Internal) call.
-      And( nablaInternal( e, body, mGlobal ++ mParams )( bodyMap, operStack ) : _* )
+      And( nablaInternal( e, body, initialNC ++ mParams )( bodyMap, operStack ) : _* )
     case Nil =>
       throw new IllegalArgumentException( "Templates must accept at least 1 argument." )
   }
