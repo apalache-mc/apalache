@@ -1,21 +1,33 @@
 package at.forsyte.apalache.tla.types.smt
 
-import at.forsyte.apalache.tla.types._
+import at.forsyte.apalache.tla.types.{TlaType, _}
 import com.microsoft.z3.{DatatypeExpr, Expr, IntNum}
 
 /**
   * TypeReconstructor allows us to recover TlaTypes from z3 Expr values, containing our custom datatype expressions
   */
 class TypeReconstructor(
+                         private val tvg : TypeVarGenerator,
                          idxFun : (Int, Int) => Option[Expr],
                          fieldFun : (Int, Int) => Option[Expr],
                          sizeFun : Int => Int,
                          strEnumerator : StringEnumerator
                        ) {
+
   import Names._
 
-  private val tvg       : TypeVarGenerator  = new TypeVarGenerator
   private var typeAlloc : Map[Int, TypeVar] = Map.empty
+
+  def processTup( i : Int ) : TlaType = {
+    val size = sizeFun( i )
+    // For tuples or sparse tuples, we know how many indices we must check from the size function
+    val tupArgs = for {
+      j <- 0 until size
+      // In the case of sparse tuples, any index that isn't known from the
+      // idxFun gets assigned a unique type variable
+    } yield idxFun( i, j ).map( apply ).getOrElse( tvg.getUnique )
+    TupT( tupArgs : _* )
+  }
 
   def apply( e : Expr ) : TlaType = e match {
     case d : DatatypeExpr =>
@@ -29,8 +41,9 @@ class TypeReconstructor(
           val cdmT = apply( cdm )
           FunT( domT, cdmT )
         case `operTName` =>
-          val Array( dom, cdm ) = d.getArgs
-          val domT = apply( dom )
+          val Array( tupIdxExp, cdm ) = d.getArgs
+          val tupIdx = tupIdxExp.asInstanceOf[IntNum].getInt
+          val domT = processTup( tupIdx )
           val cdmT = apply( cdm )
           // Operators always have tuples as domains
           assert( domT.isInstanceOf[TupT] )
@@ -44,14 +57,7 @@ class TypeReconstructor(
         case `tupTName` =>
           val Array( iExp ) = d.getArgs
           val i = iExp.asInstanceOf[IntNum].getInt
-          val size = sizeFun( i )
-          // For tuples or sparse tuples, we know how many indices we must check from the size function
-          val tupArgs = for {
-            j <- 0 until size
-            // In the case of sparse tuples, any index that isn't known from the
-            // idxFun gets assigned a unique type variable
-          } yield idxFun( i, j ).map( apply ).getOrElse( tvg.getUnique )
-          TupT( tupArgs : _* )
+          processTup( i )
         case `recTName` =>
           val Array( iExp ) = d.getArgs
           val i = iExp.asInstanceOf[IntNum].getInt
@@ -64,7 +70,6 @@ class TypeReconstructor(
             v <- fieldFun( i, jId )
           } yield jStr -> apply( v )
           RecT( recMap.toMap )
-
         case `varTName` =>
           val Array( iExp ) = d.getArgs
           val i = iExp.asInstanceOf[IntNum].getInt
@@ -74,9 +79,9 @@ class TypeReconstructor(
           val tv = typeAlloc.getOrElse( i, tvg.getUnique )
           typeAlloc += i -> tv
           tv
-
-        case _ => throw new IllegalArgumentException( "..." )
+        case x =>
+          throw new IllegalArgumentException( s"$x cannot be evaluated in the model." )
       }
-    case _ => throw new IllegalArgumentException( "..." )
+    case x => throw new IllegalArgumentException( s"$x is not a TlaType." )
   }
 }
