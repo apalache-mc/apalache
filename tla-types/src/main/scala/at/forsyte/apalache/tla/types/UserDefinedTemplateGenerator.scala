@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.types
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
+import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaIntSet, TlaNatSet, TlaStrSet}
 import at.forsyte.apalache.tla.lir.smt.SmtTools.{And, BoolFormula}
 import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
@@ -66,7 +67,8 @@ class UserDefinedTemplateGenerator(
     */
   private def mkBoundVarMapExtension( ex : OperEx ) : NameContext = ex match {
     case OperEx( TlaSetOper.filter | TlaOper.chooseBounded |
-                 TlaBoolOper.exists | TlaBoolOper.forall,
+                 TlaBoolOper.exists | TlaBoolOper.forall |
+                 TlaTempOper.EE | TlaTempOper.AA,
                  bound, _@_* ) => fromBound( bound )
     case OperEx( TlaSetOper.map | TlaFunOper.funDef, _, boundPairs@_* ) =>
       val processedBound = boundPairs.zipWithIndex collect {
@@ -118,6 +120,10 @@ class UserDefinedTemplateGenerator(
       case ValEx( _ : TlaInt ) => Seq( Eql( x, int ) )
       case ValEx( _ : TlaStr ) => Seq( Eql( x, str ) )
       case ValEx( _ : TlaBool ) => Seq( Eql( x, bool ) )
+      case ValEx( TlaBoolSet ) => Seq( Eql( x, set( bool ) ) )
+      case ValEx( TlaIntSet ) => Seq( Eql( x, set( int ) ) )
+      case ValEx( TlaNatSet ) => Seq( Eql( x, set( int ) ) )
+      case ValEx( TlaStrSet ) => Seq( Eql( x, set( str ) ) )
       case ex@NameEx( n ) =>
         processName( n, ex.ID )
       case ex@OperEx( TlaActionOper.prime, NameEx( n ) ) =>
@@ -130,6 +136,20 @@ class UserDefinedTemplateGenerator(
       case ex@OperEx( TlaActionOper.unchanged, OperEx( TlaFunOper.tuple, tupArgs@_* ) ) =>
         val equivalentEx = Builder.and( tupArgs map Builder.unchanged : _* )
         nablaInternal( x, equivalentEx, m )( bodyMap, operStack )
+      case ex@OperEx( TlaActionOper.unchanged, OperEx( TlaOper.apply, NameEx( n ) ) ) =>
+        bodyMap.get( n ) match {
+          case Some( (_, nameEx : NameEx) ) =>
+            val equivalentEx = Builder.primeEq( nameEx.deepCopy(), nameEx )
+            nablaInternal( x, equivalentEx, m )( bodyMap, operStack )
+          case Some( (_, OperEx( TlaFunOper.tuple, tupArgs@_* )) ) =>
+            val equivalentEx = Builder.and( tupArgs map Builder.unchanged : _* )
+            nablaInternal( x, equivalentEx, m )( bodyMap, operStack )
+          case _ =>
+            throw new IllegalArgumentException( "UNCHANGED supports only single-name or name-tuple arguments." )
+        }
+      /** Annotations use constructors (e.g. Seq(_) in unintended ways so they should be ignored completely*/
+      case OperEx( BmcOper.withType, ex, annot ) =>
+        nablaInternal( x, ex, m )( bodyMap, operStack )
       case ex@OperEx( oper, args@_* ) =>
         // If we're dealing with a built-in operator, we simply compute its template and apply it
         val opTemplate = templGen.makeTemplate( ex )
