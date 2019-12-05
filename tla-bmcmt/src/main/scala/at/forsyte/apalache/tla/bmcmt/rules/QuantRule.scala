@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, OracleHelper}
 import at.forsyte.apalache.tla.bmcmt.types.{FinFunSetT, FinSetT, IntT, PowSetT}
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaArithOper, TlaBoolOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 import com.typesafe.scalalogging.LazyLogging
@@ -32,25 +32,33 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
         if (!rewriter.freeExistentialsStore.isFreeExists(state.ex.ID)) {
           expandExistsOrForall(isExists = true, state, boundVar, boundingSetEx, predEx)
         } else {
-          if (boundingSetEx == ValEx(TlaNatSet) || boundingSetEx == ValEx(TlaIntSet)) {
-            skolemExistsInNatOrInt(state, boundVar, predEx, boundingSetEx)
-          } else {
-            val setState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(boundingSetEx))
-            val set = setState.asCell
-            val finalState = set.cellType match {
-              case FinSetT(_) =>
-                skolemExistsInSet(setState, boundVar, predEx, set)
+          boundingSetEx match {
+            case ValEx(TlaNatSet) | ValEx(TlaIntSet) =>
+              // skolemizable existential over integers or naturals
+              skolemExistsInNatOrInt(state, boundVar, predEx, boundingSetEx)
 
-              case PowSetT(FinSetT(_)) => ()
-                skolemExistsByPick(setState, boundVar, predEx, set)
+            case OperEx(TlaArithOper.dotdot, left, right) =>
+              // rewrite \E x \in a..b: p as c >= a /\ c <= b /\ p[c/x] for an integer constant c
+              skolemExistsInRange(state, boundVar, predEx, left, right)
 
-              case FinFunSetT(_, _) => ()
-                skolemExistsByPick(setState, boundVar, predEx, set)
+            // the general case
+            case _ =>
+              val setState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(boundingSetEx))
+              val set = setState.asCell
+              val finalState = set.cellType match {
+                case FinSetT(_) =>
+                  skolemExistsInSet(setState, boundVar, predEx, set)
 
-              case tp =>
-                throw new UnsupportedOperationException("Quantification over %s is not supported yet".format(tp))
-            }
-            rewriter.coerce(finalState, state.theory)
+                case PowSetT(FinSetT(_)) => ()
+                  skolemExistsByPick(setState, boundVar, predEx, set)
+
+                case FinFunSetT(_, _) => ()
+                  skolemExistsByPick(setState, boundVar, predEx, set)
+
+                case tp =>
+                  throw new UnsupportedOperationException("Quantification over %s is not supported yet".format(tp))
+              }
+              rewriter.coerce(finalState, state.theory)
           }
         }
 
@@ -167,6 +175,25 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
       .setBinding(nextState.binding - boundVar) // forget the binding to x, but not the other bindings!
   }
 
+  private def skolemExistsInRange(state: SymbState, boundVar: String,
+                                  predEx: TlaEx, leftBound: TlaEx, rightBound: TlaEx): SymbState = {
+    rewriter.solverContext.log(s"; skolemizable existential $boundVar over $leftBound..$rightBound ")
+    var nextState = state.setArena(state.arena.appendCell(IntT()))
+    val witness = nextState.arena.topCell
+    // assert that the witness is in the range leftBound..rightBound
+    nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.ge(witness, leftBound)).setTheory(CellTheory()))
+    rewriter.solverContext.assertGroundExpr(nextState.ex)
+    nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.le(witness, rightBound)).setTheory(CellTheory()))
+    rewriter.solverContext.assertGroundExpr(nextState.ex)
+    // enforce that the witness satisfies the predicate
+    val extendedBinding = nextState.binding + (boundVar -> witness)
+    // predState.ex contains the predicate applied to the witness
+    nextState = rewriter.rewriteUntilDone(nextState
+      .setTheory(CellTheory()).setRex(predEx).setBinding(extendedBinding))
+    nextState
+      .setBinding(nextState.binding - boundVar) // forget the binding to x, but not the other bindings!
+  }
+
   private def skolemExistsInSet(setState: SymbState, boundVar: String, predEx: TlaEx, set: ArenaCell) = {
     val setCells = setState.arena.getHas(set)
     if (setCells.isEmpty) {
@@ -183,7 +210,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
   // We have to take care of the case, when the set S is actually empty, e.g., S = {1} \ {1}.
   // In this case, exists should return FALSE.
   private def freeExistsInStaticallyNonEmptySet(setState: SymbState, boundVar: String, predEx: TlaEx,
-                                      set: ArenaCell, setCells: List[ArenaCell]) = {
+                                                set: ArenaCell, setCells: List[ArenaCell]) = {
     // note that \E x \in SUBSET(S): ... is handled separately, so we can use pickByOracle
     rewriter.solverContext.log("; free existential rule over a finite set")
     // choose an oracle with the default case oracle = N, when the set is empty
