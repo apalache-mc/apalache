@@ -130,12 +130,16 @@ class Z3TypeSolver( useSoftConstraints : Boolean, tvg: TypeVarGenerator ) {
         val exists = ctx.mkApp( hasFieldDecl, vConst, sInt ).asInstanceOf[BoolExpr]
         val tExpr = dtToSmt( t )
         val value = ctx.mkEq( ctx.mkApp( atFieldDecl, vConst, sInt ), tExpr )
-        val rank = ctx.mkEq(
-          ctx.mkApp( rankDecl, tExpr ),
-          ctx.mkAdd(
-            ctx.mkApp( rankDecl, dtToSmt( rec( v ) ) ).asInstanceOf[ArithExpr],
-            ctx.mkInt( 1 )
-          )
+//        val rank = ctx.mkEq(
+//          ctx.mkApp( rankDecl, tExpr ),
+//          ctx.mkAdd(
+//            ctx.mkApp( rankDecl, dtToSmt( rec( v ) ) ).asInstanceOf[ArithExpr],
+//            ctx.mkInt( 1 )
+//          )
+//        )
+        val rank = ctx.mkGt(
+          ctx.mkApp( rankDecl, tExpr ).asInstanceOf[ArithExpr],
+          ctx.mkApp( rankDecl, dtToSmt( rec( v ) ) ).asInstanceOf[ArithExpr]
         )
         ctx.mkAnd( exists, value, rank )
       case hasIndex( v, i, t ) =>
@@ -144,12 +148,16 @@ class Z3TypeSolver( useSoftConstraints : Boolean, tvg: TypeVarGenerator ) {
         val exists = ctx.mkApp( hasIdxDecl, vConst, iInt ).asInstanceOf[BoolExpr]
         val tExpr = dtToSmt( t )
         val value = ctx.mkEq( ctx.mkApp( atIdxDecl, vConst, iInt ), tExpr )
-        val rank = ctx.mkEq(
-          ctx.mkApp( rankDecl, tExpr ),
-          ctx.mkAdd(
-            ctx.mkApp( rankDecl, dtToSmt( tup( v ) ) ).asInstanceOf[ArithExpr],
-            ctx.mkInt( 1 )
-          )
+//        val rank = ctx.mkEq(
+//          ctx.mkApp( rankDecl, tExpr ),
+//          ctx.mkAdd(
+//            ctx.mkApp( rankDecl, dtToSmt( tup( v ) ) ).asInstanceOf[ArithExpr],
+//            ctx.mkInt( 1 )
+//          )
+//        )
+        val rank = ctx.mkGt(
+          ctx.mkApp( rankDecl, tExpr ).asInstanceOf[ArithExpr],
+          ctx.mkApp( rankDecl, dtToSmt( tup( v ) ) ).asInstanceOf[ArithExpr]
         )
         // Explicit instantiation
         val sizeAxiom = ctx.mkGe( ctx.mkApp( sizeOfDecl, vConst ).asInstanceOf[ArithExpr], iInt )
