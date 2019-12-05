@@ -13,6 +13,8 @@ import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.junit.JUnitRunner
 
+import scala.collection.immutable.HashMap
+
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with BeforeAndAfterEach {
   // these are handy variables that will be overwritten by before
@@ -437,6 +439,34 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     solverContext.assertGroundExpr(nextState.ex)
     val xp = nextState.binding("x'")
     assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(xp.toNameEx, tla.int(10))))
+  }
+
+  test("""SE-EX skolemization over range: \E i \in a..b: i % 3 = 1 /\ x' \in {i}""") {
+    // this works for skolem constants only
+    val ex = tla.exists(
+      tla.name("i"),
+      tla.dotdot(tla.name("a"), tla.name("b")),
+      tla.and(
+        tla.eql(tla.mod(tla.name("i"), tla.int(3)), tla.int(1)),
+        tla.in(tla.prime(tla.name("x")), tla.enumSet(tla.name("i")))
+      )
+    ) ///
+
+    val rewriter = createWithFreeExists(ex.ID)
+
+    // rewrite 5 and 9 first, to produce a and b
+    var state = new SymbState(tla.int(5), CellTheory(), arena, new Binding)
+    state = rewriter.rewriteUntilDone(state)
+    val aCell = state.asCell
+    state = rewriter.rewriteUntilDone(state.setRex(tla.int(9)))
+    val bCell = state.asCell
+    val binding: Binding = HashMap("a" -> aCell, "b" -> bCell)
+
+    val nextState = rewriter.rewriteUntilDone(state.setBinding(binding).setRex(ex))
+    assert(solverContext.sat())
+    solverContext.assertGroundExpr(nextState.ex)
+    val xp = nextState.binding("x'")
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(xp.toNameEx, tla.int(7))))
   }
 
   test("""SE-ALL3: \A x \in {1, 2, 3}: x < 10 ~~> $B$k""") {
