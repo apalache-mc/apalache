@@ -6,8 +6,7 @@ import java.nio.file.Path
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
-import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
-import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.pp.{Desugarer, Keramelizer, Normalizer, UniqueNameGenerator}
 import com.google.inject.Inject
@@ -44,26 +43,27 @@ class PreproPassImpl @Inject()( val options: PassOptions,
     */
   override def execute(): Boolean = {
     logger.info("  > Before preprocessing: unique renaming")
-    val beforeModule = renaming.renameInModule(tlaModule.get)
-    val defBodyMap = BodyMapFactory.makeFromDecls(beforeModule.operDeclarations )
+    val input = tlaModule.get
 
-    val transformationSequence =
+    val transformationSequence: List[(String, TlaModuleTransformation)] =
       List(
-        Desugarer(tracker),
-        Normalizer(tracker),
-        Keramelizer(gen, tracker),
-        PrimedEqualityToMembership(tracker) // transform x' = e to x' \in {e}, needed by the assignment solver
+        ("Desugarer", ModuleByExTransformer(Desugarer(tracker))),
+        ("UniqueRenamer", renaming.renameInModule),
+        ("Normalizer", ModuleByExTransformer(Normalizer(tracker))),
+        ("Keramelizer", ModuleByExTransformer(Keramelizer(gen, tracker))),
+          // transform x' = e to x' \in {e}, needed by the assignment solver
+        ("PrimedEqualityToMembership", ModuleByExTransformer(PrimedEqualityToMembership(tracker)))
       )
 
     logger.info(" > Applying standard transformations:")
-    val preprocessed = transformationSequence.foldLeft(beforeModule){
-      case (m, tr) =>
-        logger.info("  > %s".format(tr.getClass.getSimpleName))
-        ModuleByExTransformer(tr) (m)
+    val preprocessed = transformationSequence.foldLeft(input) {
+      case (m, (name, xformer)) =>
+        logger.info(s"  > $name")
+        xformer(m)
     }
 
     // unique renaming after all transformations
-    logger.info("  > After preprocessing: unique renaming")
+    logger.info("  > After preprocessing: UniqueRenamer")
     val afterModule = renaming.renameInModule(preprocessed)
 
     // dump the result of preprocessing
