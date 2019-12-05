@@ -34,6 +34,9 @@ class TestTypeAnnotationPass extends FunSuite with TestingPredefs with BeforeAnd
 
     val options = new WriteablePassOptions
     val outDir = new File( s"${testFolderPath}out/" )
+    if (!outDir.exists()) {
+      outDir.mkdir()
+    }
     options.set( "io.outdir", Paths.get( outDir.getAbsolutePath ) )
 
     val pass = new TypeAnnotationPassImpl(
@@ -67,8 +70,20 @@ class TestTypeAnnotationPass extends FunSuite with TestingPredefs with BeforeAnd
     }
   }
 
-  test( "Test: Paxos.tla" ) {
-    testFromFile( "Paxos.tla" )
+  test( "Test: test6.tla" ) {
+    testFromFile( "test6.tla" )
   }
+
+  test( "Test: Paxos" ) {
+    testFromFile( "realSpecs/Paxos.tla" )
+  }
+
+  test( "Test: Blockchain" ) {
+    testFromFile( "realSpecs/BlockchainP1.tla" )
+  }
+
+//  test( "Test: Lightclient" ) {
+//    testFromFile( "realSpecs/LightclientV1P1.tla" )
+//  }
 
 }
