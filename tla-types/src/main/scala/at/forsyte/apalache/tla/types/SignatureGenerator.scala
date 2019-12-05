@@ -41,6 +41,25 @@ class SignatureGenerator {
     /** Action */
     //    case TlaActionOper.unchanged =>
     //  SHOULD NEVER BE EVALUATED
+    case TlaActionOper.enabled =>
+      List( PolyOperT( List.empty, OperT( TupT( BoolT ), BoolT ) ) )
+    case TlaActionOper.nostutter | TlaActionOper.stutter =>
+      val t = typeVarGenerator.getUnique
+      List( PolyOperT( List( t ), OperT( TupT( BoolT, t ), BoolT ) ) )
+    case TlaActionOper.composition =>
+      List( PolyOperT( List.empty, OperT( TupT( BoolT, BoolT ), BoolT ) ) )
+
+    /** Temporal */
+    case TlaTempOper.box | TlaTempOper.diamond =>
+      List( PolyOperT( List.empty, OperT( TupT( BoolT ), BoolT ) ) )
+    case TlaTempOper.weakFairness | TlaTempOper.strongFairness =>
+      val t = typeVarGenerator.getUnique
+      List( PolyOperT( List( t ), OperT( TupT( t, BoolT ), BoolT ) ) )
+    case TlaTempOper.leadsTo | TlaTempOper.guarantees =>
+      List( PolyOperT( List.empty, OperT( TupT( BoolT, BoolT ), BoolT ) ) )
+    case TlaTempOper.AA | TlaTempOper.EE =>
+      val t = typeVarGenerator.getUnique
+      List( PolyOperT( List( t ), OperT( TupT( t, BoolT ), BoolT ) ) )
 
     /** Arithmetic */
     case TlaArithOper.plus | TlaArithOper.minus | TlaArithOper.mult |
@@ -82,6 +101,14 @@ class SignatureGenerator {
     case TlaSetOper.union =>
       val t = typeVarGenerator.getUnique
       List( PolyOperT( List( t ), OperT( TupT( SetT( SetT( t ) ) ), SetT( t ) ) ) )
+
+    /** Finite sets */
+    case TlaFiniteSetOper.isFiniteSet =>
+      val t = typeVarGenerator.getUnique
+      List( PolyOperT( List( t ), OperT( TupT( SetT( t ) ), BoolT ) ) )
+    case TlaFiniteSetOper.cardinality =>
+      val t = typeVarGenerator.getUnique
+      List( PolyOperT( List( t ), OperT( TupT( SetT( t ) ), IntT ) ) )
 
     /** Functions */
     case TlaFunOper.domain =>
@@ -129,9 +156,6 @@ class SignatureGenerator {
       List( PolyOperT( ts.toList, OperT( TupT( tupArgs : _* ), SetT( RecT( kvMapRaw.toMap ) ) ) ) )
 
     /** Tuples */
-    case TlaFunOper.tuple =>
-      val ts = typeVarGenerator.getNUnique( operEx.args.length )
-      List( PolyOperT( ts, OperT( TupT( ts : _* ), TupT( ts : _* ) ) ) )
     case TlaSetOper.times =>
       val ts = typeVarGenerator.getNUnique( operEx.args.length )
       List( PolyOperT( ts, OperT( TupT( ts map SetT : _* ), SetT( TupT( ts : _* ) ) ) ) )
@@ -304,10 +328,22 @@ class SignatureGenerator {
 
       List( funSig ) ++ recSigOpt
 
+    case TlaFunOper.tuple =>
+      val tupSig = {
+        val ts = typeVarGenerator.getNUnique( operEx.args.length )
+        PolyOperT( ts, OperT( TupT( ts : _* ), TupT( ts : _* ) ) )
+      }
+      val seqSig = {
+        val t = typeVarGenerator.getUnique
+        PolyOperT( List( t ), OperT( TupT( Seq.fill( operEx.args.length )( t ) : _* ), SeqT( t ) ) )
+      }
+      List( tupSig, seqSig )
+
     /** APALACHE */
-    case BmcOper.withType =>
-      val ts@List( t1, t2 ) = typeVarGenerator.getNUnique( 2 )
-      List( PolyOperT( ts, OperT( TupT( t1, t2 ), t1 ) ) )
+    // Should never be seen
+//    case BmcOper.withType =>
+//      val ts@List( t1, t2 ) = typeVarGenerator.getNUnique( 2 )
+//      List( PolyOperT( ts, OperT( TupT( t1, t2 ), t1 ) ) )
 
     case o => throw new IllegalArgumentException(
       s"Signature of operator ${o.name} is not known"
