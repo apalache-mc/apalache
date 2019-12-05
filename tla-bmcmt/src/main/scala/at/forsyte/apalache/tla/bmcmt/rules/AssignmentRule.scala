@@ -37,7 +37,7 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      // a common pattern x' \in {y} that deterministically assigns the value of y to x'
+      // a common pattern x' \in {e} that deterministically assigns the value of e to x'
       case OperEx(TlaSetOper.in,
           OperEx(TlaActionOper.prime, NameEx(name)),
           OperEx(TlaSetOper.enumSet, rhs)) =>
@@ -49,53 +49,9 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
           .setBinding(nextState.binding + (name + "'" -> rhsCell)) // bind the cell to the name
         rewriter.coerce(finalState, state.theory)
 
-      // TODO: the assignment logic should be moved to QuantRule, while assignments become \E t \in S: x' = t
-
       // the general case
-      case OperEx(TlaSetOper.in, OperEx(TlaActionOper.prime, NameEx(name)), set) =>
-        // switch to cell theory
-        val setState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(set))
-        val setCell = setState.asCell
-        val elemCells = setState.arena.getHas(setCell)
-        val finalState =
-          if (setCell.cellType.isInstanceOf[FinSetT] && elemCells.isEmpty) {
-            // nothing to pick from an empty set, return false
-            setState.setTheory(CellTheory()).setRex(setState.arena.cellFalse().toNameEx)
-          } else {
-            setCell.cellType match {
-              case PowSetT(_) | FinFunSetT(_, _) =>
-                // these sets are never empty
-                var nextState = pickRule.pick(setCell, setState, setState.arena.cellFalse().toNameEx)
-                val pickedCell = nextState.asCell
-                nextState
-                  .setTheory(CellTheory())
-                  .setRex(nextState.arena.cellTrue().toNameEx) // always true
-                  .setBinding(nextState.binding + (name + "'" -> pickedCell)) // bind the picked cell to the name
-
-              case FinSetT(_) =>
-                // choose an oracle with the default case oracle = N, when the set is empty
-                var (nextState, oracle) = pickRule.oracleFactory.newDefaultOracle(setState, elemCells.size + 1)
-                OracleHelper.assertOraclePicksSetMembers(rewriter, nextState, oracle, setCell, elemCells)
-                // pick an arbitrary witness
-                nextState = pickRule.pickByOracle(nextState, oracle, elemCells, nextState.arena.cellTrue().toNameEx)
-                val pickedCell = nextState.asCell
-                // introduce a Boolean result that equals true unless the set is empty
-                nextState = nextState.updateArena(_.appendCell(BoolT()))
-                val result = nextState.arena.topCell.toNameEx
-                rewriter.solverContext.assertGroundExpr(tla.eql(result,
-                  tla.not(oracle.whenEqualTo(nextState, elemCells.size))))
-
-                nextState
-                  .setTheory(CellTheory())
-                  .setRex(result) // true as soon as S /= {}
-                  .setBinding(nextState.binding + (name + "'" -> pickedCell)) // bind the picked cell to the name
-
-              case tp@_ =>
-                throw new RewriterException("Unexpected type: " + tp)
-            }
-          }
-
-        rewriter.coerce(finalState, state.theory)
+      case e @ OperEx(TlaSetOper.in, OperEx(TlaActionOper.prime, NameEx(name)), set) =>
+        throw new RewriterException("Assignments from sets are preprocessed by Keramelizer. Problematic expression: " + e)
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))

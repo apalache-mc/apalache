@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, OracleHelper}
-import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, IntT, PowSetT}
+import at.forsyte.apalache.tla.bmcmt.types.{FinFunSetT, FinSetT, IntT, PowSetT}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaNatSet}
@@ -42,7 +42,10 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
                 skolemExistsInSet(setState, boundVar, predEx, set)
 
               case PowSetT(FinSetT(_)) => ()
-                skolemExistsInPowerset(setState, boundVar, predEx, set)
+                skolemExistsByPick(setState, boundVar, predEx, set)
+
+              case FinFunSetT(_, _) => ()
+                skolemExistsByPick(setState, boundVar, predEx, set)
 
               case tp =>
                 throw new UnsupportedOperationException("Quantification over %s is not supported yet".format(tp))
@@ -86,14 +89,13 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
     val setState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(boundingSetEx))
     val set = setState.arena.findCellByNameEx(setState.ex)
     set.cellType match {
-      case PowSetT(_) =>
-        logger.warn("Unfolding a subset is inefficient. Consider using a free-standing quantifier \\E X \\in SUBSET {...}: P")
-        throw new UnsupportedOperationException("A quantified expression was about to unfold %s".format(setState.ex))
-
       case FinSetT(_) => () // supported
 
       case tp =>
-        throw new UnsupportedOperationException("Quantification over %s is not supported yet".format(tp))
+        val msg = "Trying to expand a complex set in \\E %s \\in ... ".format(boundVar) +
+          "Try to move \\E out of a negated expression. Expression: "
+        logger.warn(msg)
+        throw new UnsupportedOperationException("Expansion of %s is not supported yet".format(tp))
     }
     val setCells = setState.arena.getHas(set)
     val finalState =
@@ -212,8 +214,8 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
   // Introduce a Skolem constant for a free-standing existential quantifier:
   // In case of SUBSET(S), it is really easy: we have to enforce that a witness is a subset of S.
   // A powerset is never empty, so we do not have to worry about this case.
-  private def skolemExistsInPowerset(setState: SymbState, boundVar: String, predEx: TlaEx, set: ArenaCell) = {
-    rewriter.solverContext.log("; free existential rule over a powerset")
+  private def skolemExistsByPick(setState: SymbState, boundVar: String, predEx: TlaEx, set: ArenaCell) = {
+    rewriter.solverContext.log("; free existential rule over " + set.cellType)
     // pick an arbitrary witness
     val pickState = pickRule.pick(set, setState, setState.arena.cellFalse())
     val pickedCell = pickState.arena.findCellByNameEx(pickState.ex)

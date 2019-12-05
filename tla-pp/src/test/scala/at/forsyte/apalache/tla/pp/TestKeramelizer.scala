@@ -140,4 +140,43 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
     ) ///
     assertThrows[NotInKeraError](keramelizer.apply(input))
   }
+
+  // we simplify assignments into existential quantification
+  test("""x' \in S ~~> \E t_1 \in S: x' = t_1""") {
+    val input = tla.in(tla.prime(tla.name("x")), tla.name("S"))
+    val output = keramelizer.apply(input)
+    val expected =
+      tla.exists(
+        tla.name("t_1"),
+        tla.name("S"),
+        tla.eql(tla.prime(tla.name("x")), tla.name("t_1"))
+      ) ////
+    assert(expected == output)
+  }
+
+  test("""x' \in SUBSET S ~~> \E t_1 \in SUBSET S: x' = t_1""") {
+    val input = tla.in(tla.prime(tla.name("x")), tla.powSet(tla.name("S")))
+    val output = keramelizer.apply(input)
+    val expected =
+      tla.exists(
+        tla.name("t_1"),
+        tla.powSet(tla.name("S")),
+        tla.eql(tla.prime(tla.name("x")), tla.name("t_1"))
+      ) ////
+    assert(expected == output)
+  }
+
+  test("""x' \in [S -> T] ~~> \E t_1 \in [S -> T]: x' = t_1""") {
+    val funSet = tla.funSet(tla.name("S"), tla.name("T"))
+    val input = tla.in(tla.prime(tla.name("x")), funSet)
+    val output = keramelizer.apply(input)
+    val expected =
+      tla.exists(
+        tla.name("t_1"),
+        funSet,
+        tla.eql(tla.prime(tla.name("x")), tla.name("t_1"))
+      ) ////
+    assert(expected == output)
+  }
+
 }

@@ -20,7 +20,7 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
     extends AbstractTransformer(tracker) with TlaExTransformation {
 
   override val partialTransformers =
-    List(transformLogic, transformSets, transformTuples, transformRecords, transformControl)
+    List(transformLogic, transformSets, transformTuples, transformRecords, transformControl, transformAssignments)
 
 
   override def apply(expr: TlaEx): TlaEx = {
@@ -109,6 +109,17 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
 
     case OperEx(TlaOper.ne, left, right) =>
       tla.not(tla.eql(left, right))
+  }
+
+  /**
+    * Assignment'-like expressions.
+    *
+    * @return a transformed expression
+    */
+  private def transformAssignments: PartialFunction[TlaEx, TlaEx] = {
+    case OperEx(TlaSetOper.in, prime @ OperEx(TlaActionOper.prime, NameEx(x)), set) =>
+      val temp = gen.newName()
+      tla.exists(tla.name(temp), set, tla.eql(prime, tla.name(temp)))
   }
 
   /**
