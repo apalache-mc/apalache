@@ -10,19 +10,25 @@ import org.scalatest.junit.JUnitRunner
 
 import scala.collection.immutable.{SortedMap, SortedSet, TreeMap}
 
+/**
+  * Tests for assignments. The assignments were at the core of Apalache 0.5.x. In Apalache 0.6.x, they are preprocessed
+  * into Skolemizable existential quantifiers. We keep the tests for regression.
+  */
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
   private val set12: OperEx = tla.enumSet(tla.int(1), tla.int(2))
   private val x_prime: OperEx = tla.prime(tla.name("x"))
   private val y_prime: OperEx = tla.prime(tla.name("y"))
+  private val boundName: TlaEx = tla.name("t")
   private val boolset: OperEx = tla.enumSet(tla.bool(false), tla.bool(true))
 
-  test("""SE-IN-ASSIGN1(int): x' \in {1, 2} ~~> TRUE and [x -> $C$k]""") {
+  test("""SE-IN-ASSIGN1(int): \E t \in {1, 2}: x' \in {t} ~~> TRUE and [x -> $C$k]""") {
     val set = set12
-    val assign = tla.in(x_prime, set)
+    val assign = tla.exists(boundName, set, tla.in(x_prime, tla.enumSet(boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
-    val rewriter = create()
+    val rewriter = createWithFreeExists(assign.ID) // mark the existential as skolemizable
+
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat()) // no contradiction introduced
 
@@ -72,10 +78,10 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
   }
 
   test("""SE-IN-ASSIGN1(int): x' \in {} ~~> FALSE""") {
-    val assign = tla.in(x_prime, tla.enumSet())
+    val assign = tla.exists(boundName, tla.enumSet(), tla.in(x_prime, tla.enumSet(boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
-    val rewriter = create()
+    val rewriter = createWithFreeExists(assign.ID)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case NameEx(name) =>
@@ -88,18 +94,18 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-IN-ASSIGN1(int): x' \in {1} \ {1} ~~> FALSE""") {
+  test("""SE-IN-ASSIGN1(int): \E t \in \in {t_2 \in {1}: FALSE}: x' \in {t} ~~> FALSE""") {
     // a regression test
     def empty(set: TlaEx): TlaEx = {
-      tla.filter(tla.name("t"),
+      tla.filter(tla.name("t_2"),
         set,
         tla.bool(false))
     }
 
-    val assign = tla.in(x_prime, empty(tla.enumSet(tla.int(1))))
+    val assign = tla.exists(boundName, empty(tla.enumSet(tla.int(1))), tla.in(x_prime, tla.enumSet(boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
-    val rewriter = create()
+    val rewriter = createWithFreeExists(assign.ID)
     val nextState = rewriter.rewriteUntilDone(state)
     // no contradiction should be introduced
     assert(solverContext.sat())
@@ -137,13 +143,13 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     assert(!solverContext.sat())
   }
 
-  test("""SE-IN-ASSIGN1(set): x' \in {{1, 2}, {2, 3}} ~~> TRUE and [x -> $C$k]""") {
+  test("""SE-IN-ASSIGN1(set): \E t \in {{1, 2}, {2, 3}}: x' \in {t} ~~> TRUE and [x -> $C$k]""") {
     val set = tla.enumSet(set12,
       tla.enumSet(tla.int(2), tla.int(3)))
-    val assign = tla.in(x_prime, set)
+    val assign = tla.exists(boundName, set, tla.in(tla.prime("x"), tla.enumSet(boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
-    val rewriter = create()
+    val rewriter = createWithFreeExists(assign.ID)
     val nextState = rewriter.rewriteUntilDone(state)
     // no contradiction introduced
     assert(solverContext.sat())
@@ -176,20 +182,21 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     assertUnsatOrExplain(rewriter, eqState13) // should not be possible
   }
 
-  test("""SE-IN-ASSIGN1(set): x' \in {{1, 2}, {1+1, 2, 3}} \ {{2, 3}} ~~> TRUE and [x -> $C$k]""") {
+  test("""SE-IN-ASSIGN1(set): \E t \in {{1, 2}, {1+1, 2, 3}} \ {{2, 3}}: x' \in {t} ~~> TRUE and [x -> $C$k]""") {
     // equal elements in different sets mess up picking from a set
     def setminus(left: TlaEx, right: TlaEx): TlaEx = {
-      tla.filter(tla.name("t"),
+      // this is how Keramelizer translates setminus
+      tla.filter(tla.name("t_2"),
         left,
-        tla.not(tla.eql(tla.name("t"), right)))
+        tla.not(tla.eql(tla.name("t_2"), right)))
     }
 
     val twoSets = tla.enumSet(tla.enumSet(1, 2), tla.enumSet(tla.plus(1, 1), 2, 3))
     val minus = setminus(twoSets, tla.enumSet(2, 3))
-    val assign = tla.in(tla.prime("x"), minus)
+    val assign = tla.exists(boundName, minus, tla.in(tla.prime("x"), tla.enumSet(boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
-    val rewriter = createWithoutCache() // it is critical that 1+1 does not get simplified
+    val rewriter = createWithFreeExists(assign.ID) // it is critical that 1+1 does not get simplified
     val nextState = rewriter.rewriteUntilDone(state)
     // no contradiction introduced
     assert(solverContext.sat())
@@ -229,12 +236,12 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     rewriter.pop()
   }
 
-  test("""SE-IN-ASSIGN1(set): x' \in SUBSET {1, 2} ~~> TRUE and [x -> $C$k]""") {
+  test("""SE-IN-ASSIGN1(set): \E t \in SUBSET {1, 2}: x' \in {t} ~~> TRUE and [x -> $C$k]""") {
     val set = tla.powSet(set12)
-    val assign = tla.in(x_prime, set)
+    val assign = tla.exists(boundName, set, tla.in(tla.prime("x"), tla.enumSet(boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
-    val rewriter = create()
+    val rewriter = createWithFreeExists(assign.ID)
     val nextState = rewriter.rewriteUntilDone(state)
     val boundCell =
       nextState.ex match {
@@ -287,15 +294,15 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     assertUnsatOrExplain(rewriter, eqState13) // should not be possible
   }
 
-  test("""SE-IN-ASSIGN1(fun): x' \in {[x \in BOOLEAN |-> 0], [x2 \in BOOLEAN |-> 1]} ~~> TRUE and [x -> $C$k]""") {
+  test("""SE-IN-ASSIGN1(fun): \E t \in {[x \in BOOLEAN |-> 0], [x2 \in BOOLEAN |-> 1]}: x' \in {t} ~~> TRUE""") {
     val fun0 = tla.funDef(tla.int(0), tla.name("x2"), tla.booleanSet())
     val fun1 = tla.funDef(tla.int(1), tla.name("x3"), tla.booleanSet())
     val fun2 = tla.funDef(tla.int(2), tla.name("x4"), tla.booleanSet())
     val set = tla.enumSet(fun0, fun1)
-    val assign = tla.in(x_prime, set)
+    val assign = tla.exists(boundName, set, tla.in(tla.prime("x"), tla.enumSet(boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
-    val rewriter = create()
+    val rewriter = createWithFreeExists(assign.ID)
     val nextState = rewriter.rewriteUntilDone(state)
     // no contradiction introduced
     assert(solverContext.sat())
@@ -326,15 +333,15 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     assertUnsatOrExplain(rewriter, eqStateFun2) // should not be possible
   }
 
-  test("""SE-IN-ASSIGN1(funset): x' \in [BOOLEAN -> {0, 1}] ~~> TRUE and [x -> $C$k]""") {
+  test("""SE-IN-ASSIGN1(funset): \E t \in [BOOLEAN -> {0, 1}]: x' \in {t} ~~> TRUE""") {
     val fun0 = tla.funDef(tla.int(0), tla.name("x"), tla.booleanSet())
     val fun1 = tla.funDef(tla.int(1), tla.name("x"), tla.booleanSet())
     val fun2 = tla.funDef(tla.int(2), tla.name("x"), tla.booleanSet())
     val set = tla.funSet(tla.booleanSet(), tla.enumSet(tla.int(0), tla.int(1)))
-    val assign = tla.in(x_prime, set)
+    val assign = tla.exists(boundName, set, tla.in(tla.prime("x"), tla.enumSet(boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
-    val rewriter = create()
+    val rewriter = createWithFreeExists(assign.ID)
     val nextState = rewriter.rewriteUntilDone(state)
     val boundCell =
       nextState.ex match {
@@ -373,13 +380,13 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     assertUnsatOrExplain(rewriter, eqStateFun2) // should not be possible
   }
 
-  test("""SE-IN-ASSIGN1(funset): x' \in [{} -> {0, 1}] ~~> FALSE""") {
+  test("""SE-IN-ASSIGN1(funset): \E t \in [{} -> {0, 1}]: x' \in {t} ~~> FALSE""") {
     // regression
     val set = tla.funSet(tla.enumSet(), tla.enumSet(tla.int(0), tla.int(1)))
-    val assign = tla.in(x_prime, set)
+    val assign = tla.exists(boundName, set, tla.in(tla.prime("x"), tla.enumSet(boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
-    val rewriter = create()
+    val rewriter = createWithFreeExists(assign.ID)
     val nextState = rewriter.rewriteUntilDone(state)
     // no contradiction introduced
     assert(solverContext.sat())
@@ -388,13 +395,13 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(rewriter, nextState)
   }
 
-  test("""SE-IN-ASSIGN1(funset): x' \in [0..(5 - 1) ~~> {FALSE, TRUE}] ~~> TRUE and [x -> $C$k]""") {
+  test("""SE-IN-ASSIGN1(funset): \E t \in [0..(5 - 1) -> BOOLEAN]: x' \in {t} ~~> TRUE""") {
     val domain = tla.dotdot(tla.int(0), tla.minus(tla.int(5), tla.int(1)))
     val set = tla.funSet(domain, boolset)
-    val assign = tla.in(x_prime, set)
+    val assign = tla.exists(boundName, set, tla.in(tla.prime("x"), tla.enumSet(boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
-    val rewriter = create()
+    val rewriter = createWithFreeExists(assign.ID)
     val nextState = rewriter.rewriteUntilDone(state)
     val boundCell =
       nextState.ex match {
@@ -410,41 +417,42 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
       }
   }
 
-  test("""SE-IN-ASSIGN(funset with Nat): x' \in [0..4 -> Nat]""") {
+  test("""SE-IN-ASSIGN(funset with Nat): \E t \in [0..4 -> Nat]: x' \in {t}""") {
     val domain = tla.dotdot(tla.int(0), tla.int(4))
     val set = tla.funSet(domain, ValEx(TlaNatSet))
-    val assign = tla.in(x_prime, set)
+    val assign = tla.exists(boundName, set, tla.in(tla.prime("x"), tla.enumSet(boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
-    val rewriter = create()
+    val rewriter = createWithFreeExists(assign.ID)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(rewriter.solverContext.sat())
     val x = nextState.binding("x'")
     assertTlaExAndRestore(rewriter, nextState.setRex(tla.ge(tla.appFun(x, tla.int(1)), 0)))
   }
 
-  test("""SE-IN-ASSIGN(funset with Int): x' \in [0..4 -> Int]""") {
+  test("""SE-IN-ASSIGN(funset with Int): \E t \in [0..4 -> Int]: x' \in {t}""") {
     val domain = tla.dotdot(tla.int(0), tla.int(4))
     val set = tla.funSet(domain, ValEx(TlaIntSet))
-    val assign = tla.in(x_prime, set)
+    val assign = tla.exists(boundName, set, tla.in(tla.prime("x"), tla.enumSet(boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
-    val rewriter = create()
+    val rewriter = createWithFreeExists(assign.ID)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(rewriter.solverContext.sat())
     // there is not much to check here, since it is just a function that returns an integer
   }
 
-  test("""SE-IN-ASSIGN1(tuple): x' \in {<<1, FALSE, {1, 3}>>, <<2, TRUE, {4}>>} ~~> [x -> $C$k]""") {
+  // the model checker will never meet such an expression, as it will be optimized into several existentials by ExprOptimizer
+  test("""SE-IN-ASSIGN1(tuple): \E t \in {<<1, FALSE, {1, 3}>>, <<2, TRUE, {4}>>}: x' \in {t}""") {
     val set1 = tla.enumSet(tla.int(1), tla.int(3))
     val tuple1 = tla.tuple(tla.int(1), tla.bool(false), set1)
     val set2 = tla.enumSet(tla.int(4))
     val tuple2 = tla.tuple(tla.int(2), tla.bool(true), set2)
     val set = tla.enumSet(tuple1, tuple2)
-    val assign = tla.in(x_prime, set)
+    val assign = tla.exists(boundName, set, tla.in(tla.prime("x"), tla.enumSet(boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
-    val rewriter = create()
+    val rewriter = createWithFreeExists(assign.ID)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case NameEx(_) =>
@@ -467,19 +475,21 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-IN-ASSIGN1(record): x' \in {{"a" -> 1, "b" -> FALSE}, {"a" -> 2, "b" -> TRUE, "c" -> {3, 4}}}""") {
+  // the model checker will never meet such an expression, as it will be optimized into several existentials by ExprOptimizer
+  test("""SE-IN-ASSIGN1(record): \E t \in {{"a" -> 1, "b" -> FALSE}, {"a" -> 2, "b" -> TRUE, "c" -> {3, 4}}}: x' \in {t}""") {
+    val annotation = AnnotationParser.toTla(RecordT(SortedMap("a" -> IntT(), "b" -> BoolT(), "c" -> FinSetT(IntT()))))
     // records in a set can have different sets of keys, although the field types should be compatible for each field
     val record1 = tla.enumFun(tla.str("a"), tla.int(1),
       tla.str("b"), tla.bool(false))
     val set34 = tla.enumSet(tla.int(3), tla.int(4))
     val record2 = tla.enumFun(tla.str("a"), tla.int(2),
       tla.str("b"), tla.bool(true), tla.str("c"), set34)
-    val annotation = AnnotationParser.toTla(RecordT(SortedMap("a" -> IntT(), "b" -> BoolT(), "c" -> FinSetT(IntT()))))
     val recordSet = tla.enumSet(tla.withType(record1, annotation), record2)
-    val assign = tla.in(x_prime, recordSet)
+    val assign = tla.exists(boundName, recordSet, tla.in(tla.prime("x"), tla.enumSet(boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
-    val rewriter = create()
+    val rewriter = createWithFreeExists(assign.ID)
+    rewriter.typeFinder.inferAndSave(assign) // trigger type inference manually
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case NameEx(_) =>

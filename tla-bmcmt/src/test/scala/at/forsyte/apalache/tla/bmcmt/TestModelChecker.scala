@@ -427,8 +427,14 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val trans2 = tla.and(tla.gt(tla.name("x"), tla.int(10)),
       mkAssign("x", tla.name("x")))
     val nextTrans = List(trans1, trans2)
-    // a constant initializer: N' \in { 20, 10 }
-    val cInit = tla.in(tla.prime(tla.name("N")), tla.enumSet(tla.int(20), tla.int(10)))
+    // a constant initializer: \E t \in { 20, 10 }: N' \in {t}
+    val cInit =
+      tla.exists(
+        tla.name("t"),
+        tla.enumSet(tla.int(20), tla.int(10)),
+        tla.in(tla.prime(tla.name("N")), tla.enumSet(tla.name("t")))
+      ) ////
+    frexStore.store += cInit.ID // mark as Skolemizable
     val notInv = tla.gt(tla.prime(tla.name("x")), tla.name("N")) // ~(x <= N)
     val dummyModule = new TlaModule("root", List(TlaConstDecl("N"), TlaVarDecl("x")))
     val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, Some(cInit), List((tla.not(notInv), notInv)))
