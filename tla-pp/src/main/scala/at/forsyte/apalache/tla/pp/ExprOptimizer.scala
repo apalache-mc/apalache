@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaFunOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.transformations.standard.{FlatLanguagePred, ReplaceFixed}
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
@@ -17,7 +17,7 @@ import javax.inject.Singleton
 class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker)
   extends AbstractTransformer(tracker) with TlaExTransformation {
 
-  override val partialTransformers = List(transformFuns, transformExistsOverSets)
+  override val partialTransformers = List(transformFuns, transformSets, transformExistsOverSets)
 
   override def apply(expr: TlaEx): TlaEx = {
     LanguageWatchdog(FlatLanguagePred()).check(expr)
@@ -30,6 +30,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
     * @return a transformed fun expression
     */
   private def transformFuns: PartialFunction[TlaEx, TlaEx] = {
+    // TODO: add unit tests
     case OperEx(TlaFunOper.app, OperEx(TlaFunOper.enum, ctorArgs@_*), ValEx(TlaStr(accessedKey))) =>
       val rewrittenArgs = ctorArgs map transform
       val found = rewrittenArgs.grouped(2).find {
@@ -41,7 +42,17 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
       }
   }
 
-  // TODO: add unit tests
+  /**
+    * Set transformations.
+    *
+    * @return a transformed expression
+    */
+  private def transformSets: PartialFunction[TlaEx, TlaEx] = {
+    case OperEx(TlaSetOper.in, mem, OperEx(TlaArithOper.dotdot, left, right)) =>
+      // Transform e \in a..b into a <= e /\ e <= b.
+      // (The assignments are not affected by this transformation, as they are transformed to \E t \in S: x' = t.)
+      tla.and(tla.le(left, mem), tla.le(mem, right))
+  }
 
   /**
     * Transformations for existential quantification over sets: \exists x \in SetExpr: P.
@@ -49,6 +60,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
     * @return a transformed \exists expression
     */
   private def transformExistsOverSets: PartialFunction[TlaEx, TlaEx] = {
+    // TODO: add unit tests
     case OperEx(TlaBoolOper.exists, NameEx(x), OperEx(TlaSetOper.filter, NameEx(y), s, e), g) =>
       // \E x \in {y \in S: e}: g becomes \E y \in S: e /\ g [x replaced with y]
       val newPred = ReplaceFixed(NameEx(x), NameEx(y), tracker).apply(tla.and(e, g))
@@ -74,7 +86,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
 
       pairs.foldLeft(letIn) { case (exprBelow, (name, set)) => mkExistsRec(name, set, exprBelow) }
 
-      // TODO: add other kinds of sets
+      // TODO: add other kinds of sets?
   }
 }
 
