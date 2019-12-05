@@ -47,7 +47,7 @@ class AnalysisPassImpl @Inject()(val options: PassOptions,
     val consts = module.constDeclarations.map(_.name).toSet
     val vars = module.varDeclarations.map(_.name).toSet
 
-    val skolem = new SimpleSkolemization(frexStoreImpl, tracker)
+    val skolem = new SkolemizationAnalysis(frexStoreImpl, tracker)
     val hintFinder = new HintFinder(hintsStoreImpl)
     val gradeAnalysis = new ExprGradeAnalysis(exprGradeStoreImpl)
 
@@ -69,7 +69,7 @@ class AnalysisPassImpl @Inject()(val options: PassOptions,
     PrettyWriter.write(module, new File(outdir.toFile, "out-analysis.tla"))
 
     logger.info("  > Introduced expression grades")
-    logger.info("  > Found %d free existentials".format(frexStoreImpl.store.size))
+    logger.info("  > Found %d skolemizable existentials".format(frexStoreImpl.store.size))
     logger.info("  > Introduced %d formula hints".format(hintsStoreImpl.store.size))
 
     true

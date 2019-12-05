@@ -415,10 +415,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
       dynEmpty(tla.enumSet(tla.int(1))),
       tla.gt(tla.name("x"), tla.int(4)))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
-    val fex = new FreeExistentialsStoreImpl()
-    fex.store = fex.store + ex.ID
-    rewriter.freeExistentialsStore = fex
+    val rewriter = createWithFreeExists(ex.ID)
 
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat()) // regression test, the buggy implementation failed here
@@ -433,10 +430,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
         tla.eql(tla.name("i"), tla.int(10)),
         tla.in(tla.prime(tla.name("x")), tla.enumSet(tla.name("i")))))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
-    val fex = new FreeExistentialsStoreImpl()
-    fex.store = fex.store + ex.ID
-    rewriter.freeExistentialsStore = fex
+    val rewriter = createWithFreeExists(ex.ID)
 
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
