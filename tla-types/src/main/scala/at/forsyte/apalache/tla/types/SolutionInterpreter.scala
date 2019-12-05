@@ -107,12 +107,12 @@ class SolutionInterpreter( tvg : TypeVarGenerator ) {
           }
       }
     }
-    // Some operator types are partially known from virtual calls
-    val allTypes = virtualCallResults.get( operName ) ++: allInstanceTypes.toList
-
-    allTypes match {
+    allInstanceTypes.toList match {
       case Nil =>
-        throw new Exception( s"Operator $operName should have at least one type candidate, but has 0." )
+        // Only use virtual calls if there's no instance-use informaiton
+        virtualCallResults.getOrElse( operName ,
+          throw new Exception( s"Operator $operName should have at least one type candidate, but has 0." )
+        )
       case head +: tail =>
         // We iteratively compute the polymorphic generalized type
         tail.foldLeft( head ) { case (t1, t2) => findPoly( t1, t2 ) }
