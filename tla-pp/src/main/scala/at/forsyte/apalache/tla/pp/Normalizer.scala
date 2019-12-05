@@ -107,10 +107,19 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
       }
 
     case OperEx(TlaSetOper.in, left, right) =>
-      OperEx(if (neg) TlaSetOper.notin else TlaSetOper.in, transform(left), transform(right))
+      // use only \in, as \notin is not in KerA+
+      if (neg) {
+        tla.not(OperEx(TlaSetOper.in, transform(left), transform(right)))
+      } else {
+        OperEx(TlaSetOper.in, transform(left), transform(right))
+      }
 
     case OperEx(TlaSetOper.notin, left, right) =>
-      OperEx(if (neg) TlaSetOper.in else TlaSetOper.notin, transform(left), transform(right))
+      if (neg) {
+        OperEx(TlaSetOper.in, transform(left), transform(right))
+      } else {
+        tla.not(OperEx(TlaSetOper.in, transform(left), transform(right)))
+      }
 
     case OperEx(TlaSetOper.subseteq, left, right) =>
       OperEx(if (neg) TlaSetOper.supsetProper else TlaSetOper.subseteq, transform(left), transform(right))

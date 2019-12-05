@@ -8,11 +8,12 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
 
 /**
-  * Implements the rules: SE-ASSIGN{1,2,3}.
+  * Implements the assignment rule.
   * Similar to TLC, this is a special form of x' \in S operator that is treated
   * as an assignment of a value from S to the variable x'.
   *
-  * TODO: add support for tuples!
+  * Since version 0.6.x, most of the work is delegated to existential quantification, that is,
+  * assignments are treated as \E t \in S: x' = t
   *
   * @author Igor Konnov
   */
@@ -51,7 +52,7 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
       // the general case
       case e @ OperEx(TlaSetOper.in, OperEx(TlaActionOper.prime, NameEx(name)), set) =>
-        throw new RewriterException("Assignments from sets are preprocessed by Keramelizer. Problematic expression: " + e)
+        throw new RewriterException("Assignments from sets must be preprocessed by Keramelizer. Problematic expression: " + e)
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
