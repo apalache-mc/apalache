@@ -11,11 +11,11 @@ import com.typesafe.scalalogging.LazyLogging
   *
   * @author Igor Konnov
   */
-class SimpleSkolemization @Inject()
+class SkolemizationAnalysis @Inject()
         (val frexStore: FreeExistentialsStoreImpl, tracker: TransformationTracker) extends LazyLogging {
   def markFreeExistentials(ex: TlaEx): Unit = ex match {
     case OperEx(TlaBoolOper.exists, name, _, pred) =>
-      logger.debug(s"added free existential $name (id=${ex.ID})")
+      logger.debug(s"existential $name (id=${ex.ID}) is skolemizable")
       frexStore.store += ex.ID
       markFreeExistentials(pred)
 
