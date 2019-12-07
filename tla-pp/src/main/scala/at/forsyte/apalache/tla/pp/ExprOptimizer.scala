@@ -1,12 +1,14 @@
 package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaFunOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.transformations.standard.{FlatLanguagePred, ReplaceFixed}
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.values.TlaStr
+import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import javax.inject.Singleton
+
+import scala.math.BigInt
 
 /**
   * <p>An optimizer of KerA+ expressions.</p>
@@ -17,7 +19,7 @@ import javax.inject.Singleton
 class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker)
   extends AbstractTransformer(tracker) with TlaExTransformation {
 
-  override val partialTransformers = List(transformFuns, transformSets, transformExistsOverSets)
+  override val partialTransformers = List(transformFuns, transformSets, transformCard, transformExistsOverSets)
 
   override def apply(expr: TlaEx): TlaEx = {
     LanguageWatchdog(FlatLanguagePred()).check(expr)
@@ -52,6 +54,56 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
       // Transform e \in a..b into a <= e /\ e <= b.
       // (The assignments are not affected by this transformation, as they are transformed to \E t \in S: x' = t.)
       tla.and(tla.le(left, mem), tla.le(mem, right))
+  }
+
+  /**
+    * Cardinality transformations.
+    *
+    * @return a transformed expression
+    */
+  private def transformCard: PartialFunction[TlaEx, TlaEx] = {
+    case OperEx(TlaOper.eq, OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal)))
+      if intVal == BigInt(0) =>
+      // Cardinality(Set) = 0, that is, Set = {}.
+      // Rewrite it into \A t1 \in Set: FALSE.
+      // If Set = {}, then the conjunction over the empty set is true.
+      // If Set /= {}, then at least one element of Set reports FALSE, and the conjunction is false.
+      tla.forall(tla.name(nameGen.newName()), set, tla.bool(false))
+
+    case OperEx(TlaArithOper.gt, OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal)))
+          if intVal == BigInt(0) =>
+      // We can find this pattern in real TLA+ benchmarks more often than one would think.
+      // Rewrite into \E t1 \in set: TRUE
+      tla.exists(tla.name(nameGen.newName()), set, tla.bool(true))
+
+    case OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal)))
+          if intVal == BigInt(1) =>
+      // same as above
+      tla.exists(tla.name(nameGen.newName()), set, tla.bool(true))
+
+    case OperEx(TlaOper.ne, OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal)))
+          if intVal == BigInt(0) =>
+      // same as above
+      tla.exists(tla.name(nameGen.newName()), set, tla.bool(true))
+
+    case OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal)))
+          if intVal == BigInt(2) =>
+      // We can find this pattern in real TLA+ benchmarks more often than one would think.
+      // Rewrite into LET T3 = set IN \E t1 \in T3: \E t2 \in T3: t1 /= t2
+      val tmp1 = nameGen.newName()
+      val tmp2 = nameGen.newName()
+      val setName = nameGen.newName()
+      tla.letIn(
+        tla.exists(tla.name(tmp1), tla.name(setName),
+          tla.exists(tla.name(tmp2), tla.name(setName),
+            tla.not(tla.eql(tla.name(tmp1), tla.name(tmp2))))),
+        TlaOperDecl(setName, List(), set)
+      ) ///
+
+    case OperEx(TlaArithOper.gt, card @ OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal)))
+          if intVal == BigInt(1) =>
+      // reduce to the case above
+      transformCard(tla.ge(card, tla.int(2)))
   }
 
   /**
