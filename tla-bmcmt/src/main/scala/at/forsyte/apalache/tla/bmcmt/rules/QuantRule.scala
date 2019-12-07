@@ -77,7 +77,6 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
   }
 
 
-  // TODO: handle assignments inside exists properly
   private def expandExistsOrForall(isExists: Boolean,
                                    state: SymbState, boundVar: String, boundingSetEx: TlaEx, predEx: TlaEx) = {
     rewriter.solverContext.log("; quantification over a finite set => expanding")
@@ -85,7 +84,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
     if (isAssignmentInside(predEx)) {
       val msg =
         if (isExists) {
-          "Assignments inside \\E are currently supported only for free existentials"
+          "Assignments inside \\E are currently supported only for skolemizable existentials"
         } else {
           "Assignments inside \\A do not make any sense!"
         }
@@ -144,7 +143,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
             val existsElem = tla.or(setCells.zip(predEs).map(elemWitnesses): _*)
             tla.equiv(pred, tla.and(nonEmpty, existsElem))
           } else {
-            // \A x \in S: p holds iff empty \/ /\_i (~p[c_i/x] \/ ~c_i \in set)
+            // \A x \in S: p holds iff empty \/ /\_i (p[c_i/x] \/ ~c_i \in set)
             val allElem = tla.and(setCells.zip(predEs).map(elemSatisfies): _*)
             tla.equiv(pred, tla.or(empty, allElem))
           }
