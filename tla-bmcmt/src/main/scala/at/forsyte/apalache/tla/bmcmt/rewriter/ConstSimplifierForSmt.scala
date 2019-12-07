@@ -71,6 +71,12 @@ class ConstSimplifierForSmt {
         ex
       }
 
+    case OperEx(TlaSetOper.notin, lhs, rhs) =>
+      OperEx(TlaBoolOper.not, OperEx(TlaSetOper.in, lhs, rhs))
+
+    case OperEx(TlaBoolOper.not, OperEx(TlaSetOper.notin, lhs, rhs)) =>
+      OperEx(TlaSetOper.in, lhs, rhs)
+
     // do not go in tla.in and tla.notin, as it breaks down our SMT encoding
     case OperEx(TlaSetOper.in, _*) | OperEx(TlaSetOper.notin, _*) | OperEx(BmcOper.withType, _*) => ex
 
@@ -155,12 +161,6 @@ class ConstSimplifierForSmt {
 
     case OperEx(TlaBoolOper.not, OperEx(TlaOper.eq, lhs, rhs)) =>
       OperEx(TlaOper.ne, lhs, rhs)
-
-    case OperEx(TlaBoolOper.not, OperEx(TlaSetOper.in, lhs, rhs)) =>
-      OperEx(TlaSetOper.notin, lhs, rhs)
-
-    case OperEx(TlaBoolOper.not, OperEx(TlaSetOper.notin, lhs, rhs)) =>
-      OperEx(TlaSetOper.in, lhs, rhs)
 
     case OperEx(TlaBoolOper.implies, ValEx(TlaBool(left)), ValEx(TlaBool(right))) =>
       ValEx(TlaBool(!left || right))
