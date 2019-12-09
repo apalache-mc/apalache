@@ -8,7 +8,7 @@ import com.microsoft.z3._
   *
   * Current implementation uses Z3.
   */
-class SMTInterface extends TypeAliases {
+class SMTInterface {
 
   /**
     * Wraps a [[com.microsoft.z3.FuncInterp FuncInterp]].

@@ -20,6 +20,11 @@ object BmcOper {
     override def arity: OperArity = FixedArity(2)
     override val precedence: (Int, Int) = (100, 100)
   }
+  val assign: BmcOper = new BmcOper {
+    override def name: String = "BMC!<-"
+    override def arity: OperArity = FixedArity(2)
+    override val precedence: (Int, Int) = (100, 100)
+  }
 }
 
 

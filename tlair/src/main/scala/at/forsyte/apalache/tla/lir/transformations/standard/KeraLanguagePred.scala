@@ -145,7 +145,8 @@ object KeraLanguagePred {
       TlcOper.assert,
       TlcOper.colonGreater,
       TlcOper.atat,
-      BmcOper.withType
+      BmcOper.withType,
+      BmcOper.assign
       // for the future
       //      TlaActionOper.composition,
       //      TlaTempOper.leadsTo,

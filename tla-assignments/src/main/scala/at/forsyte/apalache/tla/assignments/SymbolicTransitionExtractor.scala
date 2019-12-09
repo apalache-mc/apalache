@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
   * Jure, 28.8.19: Should symbolic transitions track their origin?
   * Igor, 09.11.19: yes, that is needed for all kinds of error reporting.
   */
-class SymbolicTransitionExtractor(tracker: TransformationTracker) extends TypeAliases {
+class SymbolicTransitionExtractor(tracker: TransformationTracker) {
 
   /**
     * Find assignments in an action expression and produce symbolic transitions, if possible.
@@ -28,14 +28,12 @@ class SymbolicTransitionExtractor(tracker: TransformationTracker) extends TypeAl
     val smtFormula = strategyEncoder.apply(vars.toSet, actionExpr)
 
     /** Get strategy from the solver */
-    val assignmentStrategy = new SMTInterface().apply(smtFormula, strategyEncoder.m_varSym)
+    val assignmentStrategyOpt = new SMTInterface().apply(smtFormula, strategyEncoder.m_varSym)
 
-    if (assignmentStrategy.isEmpty) {
-      Seq()
-    } else {
+    assignmentStrategyOpt map { assignmentStrategy =>
       /** produce symbolic transitions */
-      new SymbTransGenerator(tracker).apply(actionExpr, assignmentStrategy.get)
-    }
+      new SymbTransGenerator(tracker).apply(actionExpr, assignmentStrategy)
+    } getOrElse Seq.empty
   }
 
 }

@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.values.TlaFalse
 /**
   * Constructs symbolic transitions from an assignment strategy.
   */
-class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases {
+class SymbTransGenerator( tracker : TransformationTracker ) {
 
   private[assignments] object helperFunctions {
     type LabelMapType = Map[UID, Set[UID]]
@@ -46,14 +46,13 @@ class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases 
       * for all expresisons \psi \in Sub(\phi)
       *
       * @param ex Top-level expression
-      * @param stratSet Assignment strategy
       * @param letInMap Auxiliary map, storing the already-computed branch-information for nullary LET-IN
       *                 defined operators.
       * @return A mapping of the form [e.ID |-> { B \cap A | B \in Branches( e ) } | e \in Sub(ex)]
       */
-    def allSelections( ex : TlaEx, stratSet: Set[UID], letInMap: letInMapType = Map.empty ) : SelMapType = ex match {
-      case e if AlphaTLApTools.isCand(e) =>
-        if ( stratSet.contains( e.ID ) ) Map( e.ID -> Set( Set( e.ID ) ) ) else Map.empty[UID, AssignmentSelections]
+    def allSelections( ex : TlaEx, letInMap: letInMapType = Map.empty ) : SelMapType = ex match {
+      /** Base case, assignments */
+      case e@OperEx( BmcOper.assign, _, _ ) => Map( e.ID -> Set( Set( e.ID ) ) )
       /**
         * Branches( /\ \phi_i ) = { Br_1 U ... U Br_s | \forall i . Br_i \in Branches(\phi_i) }
         * { S \cap A | S \in Branches( /\ phi_i ) } =
@@ -63,7 +62,7 @@ class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases 
         */
       case OperEx(TlaBoolOper.and, args@_*) =>
         /** Unify all child maps, keysets are disjoint by construction */
-        val unifiedMap = (args map { allSelections( _, stratSet, letInMap ) }).fold( Map.empty[UID, AssignmentSelections] ) { _ ++ _ }
+        val unifiedMap = (args map { allSelections( _, letInMap ) }).fold( Map.empty[UID, AssignmentSelections] ) { _ ++ _ }
 
         val childBranchSets = args.flatMap( x => unifiedMap.get( x.ID ) )
 
@@ -78,7 +77,7 @@ class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases 
         * U { S \cap A | S \in Branches(\phi_i)}
         */
       case OperEx(TlaBoolOper.or, args@_*)  =>
-        val unifiedMap = (args map { allSelections( _, stratSet, letInMap ) }).fold( Map.empty[UID, AssignmentSelections]) { _ ++ _ }
+        val unifiedMap = (args map { allSelections( _, letInMap ) }).fold( Map.empty[UID, AssignmentSelections]) { _ ++ _ }
 
         val childBranchSets = args.flatMap( x => unifiedMap.get( x.ID ) )
 
@@ -91,7 +90,7 @@ class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases 
         * { S \cap A | S \in Branches( \phi )} =
         */
       case OperEx(TlaBoolOper.exists, _, _, phi) =>
-        val childMap = allSelections( phi, stratSet, letInMap )
+        val childMap = allSelections( phi, letInMap )
         val mySet = childMap.getOrElse( phi.ID, Set( Set.empty[UID] ) )
         if ( mySet.exists( _.isEmpty) ) childMap else childMap + ( ex.ID -> mySet )
 
@@ -102,7 +101,7 @@ class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases 
         * { S \cap A | S \in Branches( \phi_t ) } U { S \cap A | S \in Branches( \phi_e ) }
         */
       case OperEx(TlaControlOper.ifThenElse, _, thenAndElse@_*) =>
-        val unifiedMap = (thenAndElse map { allSelections( _, stratSet, letInMap ) }).fold( Map.empty[UID, AssignmentSelections] ) { _ ++ _ }
+        val unifiedMap = (thenAndElse map { allSelections( _, letInMap ) }).fold( Map.empty[UID, AssignmentSelections] ) { _ ++ _ }
 
         val childBranchSets = thenAndElse.flatMap( x => unifiedMap.get( x.ID ) )
 
@@ -111,9 +110,9 @@ class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases 
 
       case LetInEx( body, defs@_* ) =>
         val defMap = (defs map { d =>
-          d.name -> (d.body.ID, allSelections(d.body, stratSet, letInMap))
+          d.name -> (d.body.ID, allSelections(d.body, letInMap))
         }).toMap
-        val childMap = allSelections( body, stratSet, letInMap ++ defMap )
+        val childMap = allSelections( body, letInMap ++ defMap )
         val mySet = childMap.getOrElse( body.ID, Set( Set.empty[UID] ) )
         if ( mySet.exists( _.isEmpty) ) childMap else childMap + ( ex.ID -> mySet )
 
@@ -133,9 +132,7 @@ class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases 
 
     def sliceWith( selection : Set[UID], allSelections: SelMapType ) : TlaExTransformation = tracker.track {
       // Assignments are a base case, don't recurse on args
-      case ex@OperEx( TlaOper.eq, OperEx( TlaActionOper.prime, _ : NameEx ), _* ) =>
-        ex
-
+      case ex@OperEx( BmcOper.assign, _* ) => ex
       case ex@OperEx( TlaBoolOper.or, args@_* ) =>
         /**
           * Or-branches have the property that they either contain
@@ -274,15 +271,25 @@ class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases 
       * It is therefore helpful to have a set structure, with faster lookups. */
     val stratSet = asgnStrategy.toSet
 
+    /** Replace all assignments */
+    val asgnTransform = AssignmentOperatorIntroduction( stratSet, tracker )
+    val transformed = asgnTransform( phi )
+
+    /**
+      * Since the new assignments have different UIDs, the new strategy is obtained
+      * by replacing the UIDs in the old strategy (preserving order)
+      */
+    val newStrat = asgnStrategy map asgnTransform.getReplacements
+
     /** We compute the set of all branch intersections with `asgnStrategy` */
-    val selections = allSelections( phi, stratSet, Map.empty )
+    val selections = allSelections( transformed, Map.empty )
 
     /** Sanity check, all selections are the same size */
-    val allSizes = selections( phi.ID ).map( _.size )
+    val allSizes = selections( transformed.ID ).map( _.size )
     assert( allSizes.size == 1 )
 
     /** We restrict the formula to each equivalence class (defined by an assignment selection) */
-    getTransitions( phi, asgnStrategy, selections )
+    getTransitions( transformed, newStrat, selections )
   }
 
 }

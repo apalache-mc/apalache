@@ -411,6 +411,9 @@ object Builder {
   def withType(expr: TlaEx, typeAnnot: TlaEx): OperEx =
     OperEx(BmcOper.withType, expr, typeAnnot)
 
+  def assignPrime( n: NameEx, rhs: TlaEx ): OperEx =
+    OperEx( BmcOper.assign, prime( n ), rhs )
+
 
   private val m_nameMap : Map[String, TlaOper] =
     scala.collection.immutable.Map(
