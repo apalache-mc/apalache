@@ -253,7 +253,8 @@ class TestSymbStateRewriterRecord extends RewriterBase {
     assert(expectedRecordT == cell.cellType)
   }
 
-  test("""SE-REC-SET: x' \in {[n |-> Int, b |-> BOOLEAN ]}""".stripMargin) {
+  // Keramelizer and ExprOptimizer rewrite assignments over records sets into existentials over records
+  ignore("""SE-REC-SET: x' \in {[n |-> Int, b |-> BOOLEAN ]}""".stripMargin) {
     val set12 = tla.enumSet(1 to 2 map tla.int :_*)
     val setBool = tla.enumSet(tla.bool(false), tla.bool(true))
     val prod = tla.recSet(tla.str("n"), set12, tla.str("b"), setBool)
