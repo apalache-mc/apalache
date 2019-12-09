@@ -115,8 +115,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
 
       // x' = e
       // x' \in S
-      case OperEx(op, OperEx(TlaActionOper.prime, NameEx(varName)), rhs)
-        if op == TlaOper.eq || op == TlaSetOper.in =>
+      case OperEx(BmcOper.assign, OperEx(TlaActionOper.prime, NameEx(varName)), rhs) =>
         def assignTypeAndReturnBool(assignedType: CellT): Option[CellT] = {
           val primedVar = varName + "'"
           if (varTypes.contains(primedVar)) {
@@ -133,15 +132,10 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
         }
 
         inferAndSave(rhs) match {
-          case Some(tp) if op == TlaOper.eq =>
+          case Some(tp) =>
             assignTypeAndReturnBool(tp)
-          case Some(FinSetT(elemT)) if op == TlaSetOper.in =>
-            assignTypeAndReturnBool(elemT)
-          case tp@_ if op == TlaOper.eq =>
+          case tp@None =>
             addError(new TypeInferenceError(rhs, "Expected a type, found: " + tp))
-            None
-          case tp@_ if op == TlaSetOper.in =>
-            addError(new TypeInferenceError(rhs, "Expected a set, found: " + tp))
             None
         }
 

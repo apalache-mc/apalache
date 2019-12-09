@@ -131,6 +131,10 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     key(tla.prime(NameEx("x")))
       -> List(new PrimeRule(this)),
 
+    // assignment
+    key( OperEx( BmcOper.assign, tla.name("x"), tla.name("y") ) )
+      -> List( new AssignmentRule(this) ),
+
     // constants
     key(ValEx(TlaBool(true)))
       -> List(new BuiltinConstRule(this)),
@@ -182,9 +186,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
 
     // sets
     key(tla.in(tla.name("x"), tla.name("S")))
-      -> List(new AssignRecordRule(this),
-              new AssignmentRule(this),
-              new SetInRule(this)),
+      -> List( new SetInRule(this) ),
 //    key(tla.notin(tla.name("x"), tla.name("S")))
 //      -> List(new SetNotInRule(this)),
     key(tla.enumSet(tla.name("x"))) ->

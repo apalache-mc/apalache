@@ -63,7 +63,11 @@ class TransitionPassImpl @Inject()(options: PassOptions,
         case Some(cinitName) =>
           logger.info(s"  > Found constant initializer $cinitName")
           val cinitEx = findBodyOf(cinitName + "Primed", inModule.operDeclarations :_*)
-          Seq(ModuleAdapter.exprToOperDef(NormalizedNames.CONST_INIT, cinitEx))
+          // We don't perform the standard assignment-search on cinit,
+          // we just replace EVERY x' = e with x' <- e
+          val tr = AssignmentOperatorIntroduction( { _ => true }, tracker )
+          val newEx = tr(cinitEx)
+          Seq(ModuleAdapter.exprToOperDef(NormalizedNames.CONST_INIT, newEx))
       }
 
     // Add the constants, variables, and assumptions; then add CInit, Init*, Next*; then add verification conditions.
@@ -87,7 +91,7 @@ class TransitionPassImpl @Inject()(options: PassOptions,
     val vars = module.varDeclarations.map(_.name)
 
     val transitionPairs = SymbolicTransitionExtractor(tracker)(vars, primedName)
-    // sort the transitions by their occurence in the source code
+    // sort the transitions by their occurrence in the source code
     val sorter = new TransitionOrder(SourceLocator(sourceStore.makeSourceMap, changeListener))
     val sortedPairs = sorter.sortBySource(transitionPairs)
     if (sortedPairs.isEmpty) {

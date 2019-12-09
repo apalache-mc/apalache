@@ -253,7 +253,8 @@ class TestSymbStateRewriterRecord extends RewriterBase {
     assert(expectedRecordT == cell.cellType)
   }
 
-  test("""SE-REC-SET: x' \in {[n |-> Int, b |-> BOOLEAN ]}""".stripMargin) {
+  // Assignment from record set is no longer direct
+  ignore("""SE-REC-SET: x' \in {[n |-> Int, b |-> BOOLEAN ]}""".stripMargin) {
     val set12 = tla.enumSet(1 to 2 map tla.int :_*)
     val setBool = tla.enumSet(tla.bool(false), tla.bool(true))
     val prod = tla.recSet(tla.str("n"), set12, tla.str("b"), setBool)
