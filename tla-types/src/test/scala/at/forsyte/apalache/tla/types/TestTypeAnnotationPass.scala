@@ -82,8 +82,8 @@ class TestTypeAnnotationPass extends FunSuite with TestingPredefs with BeforeAnd
     testFromFile( "realSpecs/BlockchainP1.tla" )
   }
 
-//  test( "Test: Lightclient" ) {
-//    testFromFile( "realSpecs/LightclientV1P1.tla" )
-//  }
+  test( "Test: test7.tla (Lightclient)" ) {
+    testFromFile( "test7.tla" )
+  }
 
 }
