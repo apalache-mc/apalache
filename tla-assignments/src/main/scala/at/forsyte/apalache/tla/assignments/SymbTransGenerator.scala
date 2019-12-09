@@ -133,7 +133,7 @@ class SymbTransGenerator( tracker : TransformationTracker ) extends TypeAliases 
 
     def sliceWith( selection : Set[UID], allSelections: SelMapType ) : TlaExTransformation = tracker.track {
       // Assignments are a base case, don't recurse on args
-      case ex@OperEx( TlaSetOper.in, OperEx( TlaActionOper.prime, _ ), _* ) =>
+      case ex@OperEx( TlaOper.eq, OperEx( TlaActionOper.prime, _ : NameEx ), _* ) =>
         ex
 
       case ex@OperEx( TlaBoolOper.or, args@_* ) =>

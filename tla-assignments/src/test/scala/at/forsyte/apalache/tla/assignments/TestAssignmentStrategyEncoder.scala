@@ -49,7 +49,7 @@ class TestAssignmentStrategyEncoder extends FunSuite with TestingPredefs {
   }
 
   test( "Test staticAnalysis: assignment" ) {
-    val asgn = primeInSingleton( n_x, int( 1 ) )
+    val asgn = primeEq( n_x, int( 1 ) )
     val asgnSAD = analyze( asgn, vars )
 
     assertEqualSAD( asgnSAD,
@@ -66,8 +66,8 @@ class TestAssignmentStrategyEncoder extends FunSuite with TestingPredefs {
   }
   test( "Test staticAnalysis: or" ) {
 
-    val asgnX1 = primeInSingleton( n_x, int( 1 ) )
-    val asgnX2 = primeInSingleton( n_x, int( 2 ) )
+    val asgnX1 = primeEq( n_x, int( 1 ) )
+    val asgnX2 = primeEq( n_x, int( 2 ) )
     val cmpX1 = eql( n_x, int( 1 ) )
     val cmpX2 = eql( n_x, int( 2 ) )
 
@@ -118,8 +118,8 @@ class TestAssignmentStrategyEncoder extends FunSuite with TestingPredefs {
 
   test( "Test staticAnalysis: and" ) {
 
-    val asgnX = primeInSingleton( n_x, int( 1 ) )
-    val asgnY = primeInSingleton( n_y, int( 1 ) )
+    val asgnX = primeEq( n_x, int( 1 ) )
+    val asgnY = primeEq( n_y, int( 1 ) )
     val cmpX = eql( n_x, int( 1 ) )
     val cmpY = eql( n_y, int( 1 ) )
 
@@ -172,7 +172,7 @@ class TestAssignmentStrategyEncoder extends FunSuite with TestingPredefs {
   }
 
   test( "Test staticAnalysis: exists" ){
-    val asgn = primeInSingleton( n_x, n_z )
+    val asgn = primeEq( n_x, n_z )
     val cmp = eql( n_x, n_z )
     val existsAsgn = exists( n_z, enumSet( prime( n_y ) ), asgn )
     val existsDoubleAsgn = exists( n_z, enumSet( prime( n_y ) ), exists (n_t, emptySet(), asgn ) )
@@ -208,8 +208,8 @@ class TestAssignmentStrategyEncoder extends FunSuite with TestingPredefs {
   }
 
   test( "Test staticAnalysis: ITE" ){
-    val asgnX1 = primeInSingleton( n_x, int( 1 ) )
-    val asgnX2 = primeInSingleton( n_x, int( 2 ) )
+    val asgnX1 = primeEq( n_x, int( 1 ) )
+    val asgnX2 = primeEq( n_x, int( 2 ) )
     val cmpX1 = eql( n_x, int( 1 ) )
     val cmpX2 = eql( n_x, int( 2 ) )
 
@@ -260,9 +260,9 @@ class TestAssignmentStrategyEncoder extends FunSuite with TestingPredefs {
   }
 
   test( "Test staticAnalysis: LET-IN" ){
-    val asgnX = primeInSingleton( n_x, int( 1 ) )
-    val asgnY1 = primeInSingleton( n_y, int( 1 ) )
-    val asgnY2 = primeInSingleton( n_y, int( 2 ) )
+    val asgnX = primeEq( n_x, int( 1 ) )
+    val asgnY1 = primeEq( n_y, int( 1 ) )
+    val asgnY2 = primeEq( n_y, int( 2 ) )
     val xDecl = declOp( "X", asgnX )
     val bodySingle = appDecl( xDecl )
     val bodyOr =

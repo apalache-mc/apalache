@@ -73,10 +73,10 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
   }
 
   test( "Test allSelections" ) {
-    val xasgn11 = in( prime( n_x ), n_S )
-    val xasgn12 = in( prime( n_x ), enumSet( int( 1 ) ) )
-    val yasgn11 = in( prime( n_y ), enumSet( n_T ) )
-    val yasgn12 = in( prime( n_y ), dotdot( int( 2 ), n_a ) )
+    val xasgn11 = primeEq( n_x, n_s )
+    val xasgn12 = primeEq( n_x, int( 1 ) )
+    val yasgn11 = primeEq( n_x, n_T )
+    val yasgn12 = primeEq( n_x, n_t )
 
     val ex1 =
       ite(
@@ -133,9 +133,9 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
       assert( s(ex3.ID) == Set(e) )
     }
 
-    val xasgn21 = in( prime( n_x ), n_S )
-    val yasgn21 = in( prime( n_y ), enumSet( n_T ) )
-    val yasgn22 = in( prime( n_y ), dotdot( int( 2 ), n_a ) )
+    val xasgn21 = primeEq( n_x, n_s )
+    val yasgn21 = primeEq( n_x, n_T )
+    val yasgn22 = primeEq( n_y, n_t )
 
     val ex4 = and( eql( int(0), int(1) ), xasgn21 )
     val xDecl = declOp( "X", ex4 )
@@ -182,10 +182,9 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
 
 
   test( "Test ITE with multibranching" ){
-
-    val asgn1 = primeInSingleton( n_x, int(1) )
-    val asgn2 = primeInSingleton( n_x, int(2) )
-    val asgn3 = primeInSingleton( n_x, int(3) )
+    val asgn1 = primeEq( n_x, int(1) )
+    val asgn2 = primeEq( n_x, int(2) )
+    val asgn3 = primeEq( n_x, int(3) )
 
     val next = ite(
       trueEx,
@@ -216,7 +215,7 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
   }
 
   test( "Test LET-IN" ){
-    val asgn = primeInSingleton( n_x, int(1) )
+    val asgn = primeEq( n_x, int(1) )
     val xDecl = declOp( "X", asgn )
     val disj = or(
       and(n_A, appDecl( xDecl ) ),
@@ -235,7 +234,7 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
   }
 
   test( "Test sliceWith" ){
-    val asgn = primeInSingleton( n_x, int(1) )
+    val asgn = primeEq( n_x, int(1) )
     val xDecl = declOp( "X", asgn )
     val disj = or(
       and(n_A, appDecl( xDecl ) ),
