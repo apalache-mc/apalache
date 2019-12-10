@@ -25,6 +25,11 @@
             <artifactId>infra</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>at.forsyte.apalache</groupId>
+            <artifactId>tla-import</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>com.google.inject</groupId>

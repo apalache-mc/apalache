@@ -11,3 +11,10 @@ import at.forsyte.apalache.tla.lir.{MalformedTlaError, TlaEx}
   */
 class NotInKeraError(message: String, cause: TlaEx) extends MalformedTlaError(message, cause)
 
+/**
+  * This exception is thrown when operator overriding fails.
+  * @param message the error message
+  * @param cause the problematic expression
+  */
+class OverridingError(message: String, cause: TlaEx) extends MalformedTlaError(message, cause)
+
