@@ -473,6 +473,7 @@ object PrettyWriter {
       TlaSeqOper.concat -> "\\o",
       TlcOper.atat -> "@@",
       TlcOper.colonGreater -> ":>",
+      BmcOper.assign -> "<-",
       BmcOper.withType -> "<:"
     ) ////
 
