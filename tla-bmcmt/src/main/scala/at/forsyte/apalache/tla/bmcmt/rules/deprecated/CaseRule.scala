@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules.deprecated
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.TypedAssert
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaControlOper

@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.bmcmt.rules
+package at.forsyte.apalache.tla.bmcmt.rules.deprecated
 
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, FailPredT}
 import at.forsyte.apalache.tla.bmcmt.{BoolTheory, SymbState, SymbStateRewriter}
@@ -14,6 +14,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
   *
   * @param rewriter a symbolic rewriter
   */
+@deprecated("We do not have clean semantics for assert")
 class TypedAssert(rewriter: SymbStateRewriter) {
   def typedAssert(state: SymbState, targetType: CellT, arg: TlaEx, message: String): SymbState = {
     val valueState = rewriter.rewriteUntilDone(state.setRex(arg).setTheory(BoolTheory()))

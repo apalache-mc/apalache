@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.bmcmt.rules
+package at.forsyte.apalache.tla.bmcmt.rules.deprecated
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
@@ -16,6 +16,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
   *
   * @author Igor Konnov
   */
+@deprecated("Keramelizer and ExprOptimizer should rewrite this assignment")
 class AssignRecordRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val pick = new CherryPick(rewriter)
 
