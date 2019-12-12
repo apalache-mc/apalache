@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, OracleHelper}
 import at.forsyte.apalache.tla.bmcmt.types.{FinFunSetT, FinSetT, IntT, PowSetT}
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaArithOper, TlaBoolOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 import com.typesafe.scalalogging.LazyLogging
@@ -71,7 +71,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
   }
 
   private def isAssignmentInside(ex: TlaEx): Boolean = ex match {
-    case OperEx(TlaSetOper.in, OperEx(TlaActionOper.prime, NameEx(_)), _) => true
+    case OperEx(BmcOper.assign, OperEx(TlaActionOper.prime, NameEx(_)), _) => true
     case OperEx(_, args@_*) => args.exists(isAssignmentInside)
     case _ => false
   }

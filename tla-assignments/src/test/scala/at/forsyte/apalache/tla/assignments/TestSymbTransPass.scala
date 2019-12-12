@@ -11,7 +11,7 @@ import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestSymbTransPass extends FunSuite with TestingPredefs with TypeAliases {
+class TestSymbTransPass extends FunSuite with TestingPredefs {
   val testFolderPath = "src/test/resources/assignmentSolver/"
 
   def testFromNext( p_next : TlaEx ) : Seq[SymbTrans] = {

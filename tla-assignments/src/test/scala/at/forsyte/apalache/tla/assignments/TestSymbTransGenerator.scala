@@ -1,8 +1,7 @@
 package at.forsyte.apalache.tla.assignments
 
-import at.forsyte.apalache.tla.lir.Builder.primeInSingleton
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
-import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
+import at.forsyte.apalache.tla.lir.transformations.impl.{IdleTracker, TrackerWithListeners}
 import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -72,11 +71,17 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
     assert( expected1 == actual1 )
   }
 
+  def fromPossiblity( ex: TlaEx, asgn: Set[UID] ): (TlaEx, SelMapType, Set[UID]) = {
+    val tr = AssignmentOperatorIntroduction( asgn, new IdleTracker )
+    val trEx = tr(ex)
+    (trEx, allSelections( trEx, Map.empty ), asgn map tr.getReplacements )
+  }
+
   test( "Test allSelections" ) {
-    val xasgn11 = in( prime( n_x ), n_S )
-    val xasgn12 = in( prime( n_x ), enumSet( int( 1 ) ) )
-    val yasgn11 = in( prime( n_y ), enumSet( n_T ) )
-    val yasgn12 = in( prime( n_y ), dotdot( int( 2 ), n_a ) )
+    val xasgn11 = primeEq( n_x, n_s )
+    val xasgn12 = primeEq( n_x, int( 1 ) )
+    val yasgn11 = primeEq( n_x, n_T )
+    val yasgn12 = primeEq( n_x, n_t )
 
     val ex1 =
       ite(
@@ -109,33 +114,27 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
       Set( xasgn12.ID, yasgn12.ID )
     )
 
-    val selections1 = possibleAssgnsX map { asgn =>
-      allSelections( ex1, asgn, Map.empty )
+    val selections1 = possibleAssgnsX map { fromPossiblity(ex1, _ ) }
+
+    val selections2 = possibleAssgnsY map { fromPossiblity(ex2, _ ) }
+
+    val selections3 = possibleAssgnsXY map { fromPossiblity(ex3, _ ) }
+
+    selections1 foreach { case (newEx, s, e) =>
+        assert( s(newEx.ID) == Set(e)  )
     }
 
-    val selections2 = possibleAssgnsY map { asgn =>
-      allSelections( ex2, asgn, Map.empty )
+    selections2 foreach { case (newEx, s, e) =>
+      assert( s(newEx.ID) == Set(e) )
     }
 
-    val selections3 = possibleAssgnsXY map { asgn =>
-      allSelections( ex3, asgn, Map.empty )
+    selections3 foreach { case (newEx, s, e) =>
+      assert( s(newEx.ID) == Set(e) )
     }
 
-    selections1 zip possibleAssgnsX foreach { case (s,e) =>
-        assert( s(ex1.ID) == Set(e) )
-    }
-
-    selections2 zip possibleAssgnsY foreach { case (s,e) =>
-      assert( s(ex2.ID) == Set(e) )
-    }
-
-    selections3 zip possibleAssgnsXY foreach { case (s,e) =>
-      assert( s(ex3.ID) == Set(e) )
-    }
-
-    val xasgn21 = in( prime( n_x ), n_S )
-    val yasgn21 = in( prime( n_y ), enumSet( n_T ) )
-    val yasgn22 = in( prime( n_y ), dotdot( int( 2 ), n_a ) )
+    val xasgn21 = primeEq( n_x, n_s )
+    val yasgn21 = primeEq( n_x, n_T )
+    val yasgn22 = primeEq( n_y, n_t )
 
     val ex4 = and( eql( int(0), int(1) ), xasgn21 )
     val xDecl = declOp( "X", ex4 )
@@ -151,30 +150,18 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
       Set( xasgn21.ID, yasgn22.ID )
     )
 
-    val selections4 = possibleAssgnsX2 map { asgn =>
-      allSelections( ex4, asgn, Map.empty )
+    val selections4 = possibleAssgnsX2 map { fromPossiblity( ex4, _ ) }
+
+    selections4 foreach { case (newEx, s, e) =>
+      assert( s(newEx.ID) == Set(e) )
     }
 
-    selections4 zip possibleAssgnsX2 foreach { case (s,e) =>
-      assert( s(ex4.ID) == Set(e) )
-    }
+    val selections5 = possibleAssgnsXY2 map { fromPossiblity(ex8, _) }
 
-    val letInMap = Map( xDecl.name -> (xDecl.body.ID, selections4.head) )
-
-    val selections5 = possibleAssgnsXY2 map { asgn =>
-      allSelections( ex7, asgn, letInMap )
-    }
-
-    val selections6 = possibleAssgnsXY2 map { asgn =>
-      allSelections( ex8, asgn, Map.empty )
-    }
-
-    assert( selections5 == selections6.map  {_ - ex8.ID} )
-
-    selections6 zip possibleAssgnsXY2 foreach { case (s,e) =>
+    selections5 foreach { case (newEx, s, e) =>
       // We need to weaken the condition, because LET-IN assignments
       // can appear on any number of branches.
-      assert( s( ex8.ID ).contains( e ) )
+      assert( s( newEx.ID ).contains( e ) )
     }
 
 
@@ -182,10 +169,9 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
 
 
   test( "Test ITE with multibranching" ){
-
-    val asgn1 = primeInSingleton( n_x, int(1) )
-    val asgn2 = primeInSingleton( n_x, int(2) )
-    val asgn3 = primeInSingleton( n_x, int(3) )
+    val asgn1 = primeEq( n_x, int(1) )
+    val asgn2 = primeEq( n_x, int(2) )
+    val asgn3 = primeEq( n_x, int(3) )
 
     val next = ite(
       trueEx,
@@ -216,7 +202,7 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
   }
 
   test( "Test LET-IN" ){
-    val asgn = primeInSingleton( n_x, int(1) )
+    val asgn = primeEq( n_x, int(1) )
     val xDecl = declOp( "X", asgn )
     val disj = or(
       and(n_A, appDecl( xDecl ) ),
@@ -231,11 +217,13 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
     val strat = Seq( asgn.ID )
 
     val ret = stg( next, strat ) map { _._2 }
-    assert( ret == Seq(next) )
+    assert( ret == Seq(
+      letIn( disj, declOp( "X", assignPrime( n_x, int( 1 ) ) ) )
+    ) )
   }
 
   test( "Test sliceWith" ){
-    val asgn = primeInSingleton( n_x, int(1) )
+    val asgn = primeEq( n_x, int(1) )
     val xDecl = declOp( "X", asgn )
     val disj = or(
       and(n_A, appDecl( xDecl ) ),
@@ -248,9 +236,10 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
     )
 
     val selection = Set(asgn.ID)
-    val allSelections = stg.helperFunctions.allSelections( next, selection, Map.empty )
+    val tr = AssignmentOperatorIntroduction( selection, new IdleTracker )
+    val allSelectionsMade = allSelections( tr(next), Map.empty )
 
-    val sliced = stg.helperFunctions.sliceWith(selection, allSelections)(next)
+    val sliced = sliceWith(selection map tr.getReplacements, allSelectionsMade)(next)
 
     assert( sliced == next )
 

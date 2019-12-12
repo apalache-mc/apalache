@@ -48,6 +48,13 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     assert("A(1, 2)" == stringWriter.toString)
   }
 
+  test("assignment: x' <- 2") {
+    val writer = new PrettyWriter(printWriter, 80)
+    writer.write(assignPrime(name("x"), int(2)))
+    printWriter.flush()
+    assert("x' <- 2" == stringWriter.toString)
+  }
+
   test("ENABLED and prime") {
     val writer = new PrettyWriter(printWriter, 80)
     writer.write(enabled(prime("x")))

@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, OracleHelper}
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinFunSetT, FinSetT, PowSetT}
-import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaActionOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
 
@@ -28,7 +28,7 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
         && !state.binding.contains(name + "'"))
 
     state.ex match {
-      case OperEx(TlaSetOper.in, OperEx(TlaActionOper.prime, NameEx(name)), _) =>
+      case OperEx(BmcOper.assign, OperEx(TlaActionOper.prime, NameEx(name)), _) =>
         isUnbound(name)
 
       case _ =>
@@ -38,10 +38,8 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      // a common pattern x' \in {e} that deterministically assigns the value of e to x'
-      case OperEx(TlaSetOper.in,
-          OperEx(TlaActionOper.prime, NameEx(name)),
-          OperEx(TlaSetOper.enumSet, rhs)) =>
+      // general case
+      case OperEx(BmcOper.assign, OperEx(TlaActionOper.prime, NameEx(name)), rhs) =>
         val nextState = rewriter.rewriteUntilDone(state.setRex(rhs).setTheory(CellTheory()))
         val rhsCell = nextState.arena.findCellByNameEx(nextState.ex)
         val finalState = nextState
@@ -49,11 +47,6 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
           .setRex(state.arena.cellTrue().toNameEx) // just return TRUE
           .setBinding(nextState.binding + (name + "'" -> rhsCell)) // bind the cell to the name
         rewriter.coerce(finalState, state.theory)
-
-      // the general case
-      case e @ OperEx(TlaSetOper.in, OperEx(TlaActionOper.prime, NameEx(name)), set) =>
-        throw new RewriterException("Assignments from sets must be preprocessed by Keramelizer. Problematic expression: " + e)
-
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
     }

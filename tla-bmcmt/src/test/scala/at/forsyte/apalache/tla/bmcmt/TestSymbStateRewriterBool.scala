@@ -357,13 +357,13 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     assertUnsatOrExplain(rewriter, nextState)
   }
 
+  /** Jure, 9.12.19: Why should this throw? */
   test("""SE-EX: \E x \in {1, 2}: y' = x ~~> 2 assignments, regression""") {
     // an assignment inside an existential quantifier is tricky, as we can multiple values to variables
     val ex = tla.exists(
       tla.name("x"),
       tla.enumSet(tla.int(1), tla.int(2)),
-      tla.in(tla.prime(tla.name("y")),
-             tla.enumSet(tla.name("x")))
+      tla.assignPrime( tla.name("y"), tla.name("x"))
     )////
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
@@ -430,7 +430,9 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
       ValEx(TlaNatSet),
       tla.and(
         tla.eql(tla.name("i"), tla.int(10)),
-        tla.in(tla.prime(tla.name("x")), tla.enumSet(tla.name("i")))))
+        tla.assignPrime( tla.name("x"), tla.name("i"))
+      )
+    )
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = createWithFreeExists(ex.ID)
 
@@ -448,7 +450,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
       tla.dotdot(tla.name("a"), tla.name("b")),
       tla.and(
         tla.eql(tla.mod(tla.name("i"), tla.int(3)), tla.int(1)),
-        tla.in(tla.prime(tla.name("x")), tla.enumSet(tla.name("i")))
+        tla.assignPrime( tla.name("x"), tla.name("i"))
       )
     ) ///
 
