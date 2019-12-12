@@ -51,8 +51,6 @@ class PreproPassImpl @Inject()( val options: PassOptions,
         ("UniqueRenamer", renaming.renameInModule),
         ("Normalizer", ModuleByExTransformer(Normalizer(tracker))),
         ("Keramelizer", ModuleByExTransformer(Keramelizer(gen, tracker)))
-          // transform x' = e to x' \in {e}, needed by the assignment solver
-//        ("PrimedEqualityToMembership", ModuleByExTransformer(PrimedEqualityToMembership(tracker)))
       )
 
     logger.info(" > Applying standard transformations:")

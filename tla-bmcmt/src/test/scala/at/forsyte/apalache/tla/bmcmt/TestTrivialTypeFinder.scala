@@ -778,11 +778,11 @@ class TestTrivialTypeFinder extends RewriterBase {
 
   // Since the introduction of BmcOper.assign, the old assignments need to be transformed
   // into the form \E t \in S: x' = t
-  ignore( "inferAndSave from the wild" ){
+  test( "inferAndSave from the wild" ){
     import IncrementalRenaming.makeName
     val init = tla.declOp( makeName( "RenamedInit", 0),
       tla.and(
-        tla.primeInSingleton(
+        tla.assignPrime(
           tla.name( "recOne" ),
           tla.withType(
             tla.enumFun(
@@ -795,7 +795,7 @@ class TestTrivialTypeFinder extends RewriterBase {
             )
           )
         ),
-        tla.primeInSingleton(
+        tla.assignPrime(
           tla.name( "recTwo" ),
           tla.withType(
             tla.enumFun(
@@ -813,7 +813,7 @@ class TestTrivialTypeFinder extends RewriterBase {
 
     val next1 = tla.declOp( makeName( "RenamedNext", 0),
       tla.and(
-        tla.primeInSingleton(
+        tla.assignPrime(
           tla.name( "recOne" ),
           tla.withType(
             tla.enumFun(
@@ -826,7 +826,7 @@ class TestTrivialTypeFinder extends RewriterBase {
             )
           )
         ),
-        tla.primeInSingleton(
+        tla.assignPrime(
           tla.name( "recTwo" ),
           tla.withType(
             tla.enumFun(
@@ -844,7 +844,7 @@ class TestTrivialTypeFinder extends RewriterBase {
 
     val next2 = tla.declOp( makeName( "RenamedNext", 1),
       tla.and(
-        tla.primeInSingleton(
+        tla.assignPrime(
           tla.name( "recOne" ),
           tla.withType(
             tla.enumFun(
@@ -857,7 +857,7 @@ class TestTrivialTypeFinder extends RewriterBase {
             )
           )
         ),
-        tla.primeInSingleton(
+        tla.assignPrime(
           tla.name( "recTwo" ),
           tla.withType(
             tla.enumFun(

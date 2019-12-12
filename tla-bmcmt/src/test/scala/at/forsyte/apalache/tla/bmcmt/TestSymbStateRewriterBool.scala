@@ -358,7 +358,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
   }
 
   /** Jure, 9.12.19: Why should this throw? */
-  ignore("""SE-EX: \E x \in {1, 2}: y' = x ~~> 2 assignments, regression""") {
+  test("""SE-EX: \E x \in {1, 2}: y' = x ~~> 2 assignments, regression""") {
     // an assignment inside an existential quantifier is tricky, as we can multiple values to variables
     val ex = tla.exists(
       tla.name("x"),

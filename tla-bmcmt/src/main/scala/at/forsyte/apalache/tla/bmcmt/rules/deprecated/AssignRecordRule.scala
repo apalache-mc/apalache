@@ -14,6 +14,9 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
   *
   * TODO: this is a case where purely symbolic constraints would help.
   *
+  * Jure, 12.12.19: After changing the assignment syntax to x' <- v this rule is no longer relevant
+  * TODO: Consider deleting or migrating to the new \E t \in [...] : x' = t syntax
+  *
   * @author Igor Konnov
   */
 @deprecated("Keramelizer and ExprOptimizer should rewrite this assignment")
