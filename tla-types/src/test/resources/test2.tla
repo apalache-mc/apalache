@@ -1,6 +1,7 @@
 --------------- MODULE test2 -------------
 EXTENDS Integers
-VARIABLE x
+CONSTANT x
 
-A == x.c = "a" /\ x.d = 2
+Init == x.c = "a" /\ x.d = 2
+Next == TRUE
 ============================================

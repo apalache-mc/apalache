@@ -2,6 +2,8 @@
 EXTENDS Integers
 VARIABLE msgs, maxBal,maxVBal,maxVal
 
+CONSTANT C1,C2
+
 Quorum == {{1, 2}, {2, 3}, {1, 3}}
 
 Send(m) == msgs' = msgs \cup {m}
@@ -20,4 +22,8 @@ Phase2a(b, v) ==
                 /\ \A mm \in Q1bv : m.mbal \geq mm.mbal 
   /\ Send([type |-> "2a", bal |-> b, val |-> v])
   /\ UNCHANGED <<maxBal, maxVBal, maxVal>>
+
+Init == TRUE
+Next == Phase2a( C1, C2 )
+
 ============================================

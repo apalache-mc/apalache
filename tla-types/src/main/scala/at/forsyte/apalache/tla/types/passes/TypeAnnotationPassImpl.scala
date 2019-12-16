@@ -4,7 +4,6 @@ import java.io.{File, FileWriter, PrintWriter}
 import java.nio.file.Path
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
-import at.forsyte.apalache.tla.lir.smt.SmtTools.And
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.types._
@@ -41,27 +40,30 @@ class TypeAnnotationPassImpl @Inject()(
     */
   override def execute( ) : Boolean = {
     val module = tlaModule.get
-//    val initOperName = options.getOrElse( "checker", "init", "Init" )
-//    val nextOperName = options.getOrElse( "checker", "next", "Next" )
-//    val cinitOperNameOpt = options.get[String]( "checker", "cinit" )
+    val initOperName = options.getOrElse( "checker", "init", "Init" )
+    val nextOperName = options.getOrElse( "checker", "next", "Next" )
+    val cinitOperNameOpt = options.get[String]( "checker", "cinit" )
+    val invOperNameOpt = options.get[String]( "checker", "inv" )
 
     val operDecls = module.operDeclarations
     val nonOperDecls = module.constDeclarations ++ module.varDeclarations
 
-    //    val rootOpers = Seq( initOperName, nextOperName ) ++ cinitOperNameOpt
+    val rootOpers = Seq( initOperName, nextOperName ) ++ cinitOperNameOpt ++ invOperNameOpt
 
-    // We imagine, for type-checking purposes, a virtual top-level operator, with the body
-    // Init /\ Next (resp. Init /\ Next /\ CInit)
-    // Then, we only need to run the template once, for the body of this fictional operator
-    //    val virtualBody = Builder.and( rootOpers map { opName =>
-    //      Builder.appOp( Builder.name( opName ) )
-    //    } : _* )
+//     We imagine, for type-checking purposes, a virtual top-level operator, with the body
+//     Init /\ Next (/\ Inv /\ CInit)
+//     Then, we only need to run the template once, for the body of this fictional operator
 
-    //    val rootName = "__root"
-    //    val rootDecl = TlaOperDecl( rootName, List.empty, virtualBody )
+    val virtualBody = Builder.and( rootOpers map { opName =>
+      Builder.appOp( Builder.name( opName ) )
+    } : _* )
 
-    //    val bodyMap = BodyMapFactory.makeFromDecls( rootDecl +: operDecls )
-    val bodyMap = BodyMapFactory.makeFromDecls( operDecls )
+    val rootName = "__root"
+    val rootDecl = TlaOperDecl( rootName, List.empty, virtualBody )
+
+    val bodyMap = BodyMapFactory.makeFromDecls( rootDecl +: operDecls )
+//    val bodyMap = BodyMapFactory.makeFromDecls( operDecls )
+
     val globalNameContext = new NameContextBuilder( smtVarGen ).build(
       nonOperDecls, primeConsistency
     )
@@ -69,22 +71,22 @@ class TypeAnnotationPassImpl @Inject()(
     val templateGenerator =
       new UserDefinedTemplateGenerator( smtVarGen, globalNameContext, bodyMap )
 
-    val virtualCalls = operDecls map {
-      case TlaOperDecl( name, fParams, body ) =>
-        val e = smtVarGen.getFresh
-        val ts = smtVarGen.getNFresh( fParams.length )
-        val template = templateGenerator.makeTemplate( fParams, body )
-        val constraint = template( e +: ts )
-        name -> (e, ts, constraint)
-    }
+//    val virtualCalls = operDecls map {
+//      case TlaOperDecl( name, fParams, body ) =>
+//        val e = smtVarGen.getFresh
+//        val ts = smtVarGen.getNFresh( fParams.length )
+//        val template = templateGenerator.makeTemplate( fParams, body )
+//        val constraint = template( e +: ts )
+//        name -> (e, ts, constraint)
+//    }
 
-    val constraints = And( virtualCalls.map {
-      case (_, (_, _, c)) => c
-    } : _* )
+//    val constraints = And( virtualCalls.map {
+//      case (_, (_, _, c)) => c
+//    } : _* )
 
-    //    val e = smtVarGen.getFresh
-    //    val template = templateGenerator.makeTemplate( List.empty, virtualBody )
-    //    val constraints = template( e +: Nil )
+    val e = smtVarGen.getFresh
+    val template = templateGenerator.makeTemplate( List.empty, virtualBody )
+    val constraints = template( e +: Nil )
 
     val solver = new Z3TypeSolver( useSoftConstraints = useSoftConstraints, typeVarGen )
 
@@ -94,24 +96,31 @@ class TypeAnnotationPassImpl @Inject()(
       case Solution( solution ) =>
         val operatorContext = templateGenerator.getCtx
 
-        val extendedSolution = ( virtualCalls map {
-          case (name, (e, ts, _)) =>
-            name -> ( ts match {
-              case Nil => solution( e )
-              case _ => OperT( TupT( ts map solution : _* ), solution( e ) )
+//        val extendedSolution = ( virtualCalls map {
+//          case (name, (e, ts, _)) =>
+//            name -> ( ts match {
+//              case Nil => solution( e )
+//              case _ => OperT( TupT( ts map solution : _* ), solution( e ) )
+//            } )
+//        } ).toMap
+
+        val extendedSolution = bodyMap map {
+          case (opName, (fParams, _)) =>
+            opName -> ( fParams.length match {
+              case 0 => typeVarGen.getUnique
+              case n => OperT( TupT( typeVarGen.getNUnique( n ) : _* ), typeVarGen.getUnique )
             } )
-        } ).toMap
+        }
 
         // TODO: propagate the solution to other passes
 
         val interpretedSolution = new SolutionInterpreter( typeVarGen ).interpret(
           extendedSolution,
-          //          Map(rootName -> BoolT),
           bodyMap,
           operatorContext,
           globalNameContext,
           solution
-        )
+        ) - rootName
 
         // dump the result to a file
         val outStr = interpretedSolution.toList.sortBy( _._1 ) map {
