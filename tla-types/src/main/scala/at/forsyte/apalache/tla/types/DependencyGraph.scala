@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.types
 
-import at.forsyte.apalache.tla.lir.oper.TlaOper
+import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaActionOper, TlaOper}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.storage.BodyMap
 
@@ -134,6 +134,14 @@ object DependencyGraph {
       ( args map subCalls ).foldLeft( Set( otherName ) ) {
         _ ++ _
       }
+    // We explicitly disregard dependencies on
+    // operators used as type annotations, because they are
+    // ignored in template generation. This method forces them to become roots
+    case OperEx( BmcOper.withType, expr, annot ) =>
+      subCalls(expr)
+    // Similar for UNCHANGED
+    case OperEx( TlaActionOper.unchanged, _ ) =>
+      Set.empty[String]
     case OperEx( _, args@_* ) =>
       ( args map subCalls ).foldLeft( Set.empty[String] ) {
         _ ++ _
