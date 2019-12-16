@@ -11,7 +11,8 @@ class TypeReconstructor(
                          idxFun : (Int, Int) => Option[Expr],
                          fieldFun : (Int, Int) => Option[Expr],
                          sizeFun : Int => Int,
-                         strEnumerator : StringEnumerator
+                         strEnumerator : StringEnumerator,
+                         typeNarrowerOpt: Option[TypeNarrower]
                        ) {
 
   import Names._
@@ -69,7 +70,10 @@ class TypeReconstructor(
             jId <- strEnumerator.stringToId( jStr )
             v <- fieldFun( i, jId )
           } yield jStr -> apply( v )
-          RecT( recMap.toMap )
+          val broad = RecT( recMap.toMap )
+          typeNarrowerOpt.map {
+            _.narrow( broad, i )
+          } getOrElse broad
         case `varTName` =>
           val Array( iExp ) = d.getArgs
           val i = iExp.asInstanceOf[IntNum].getInt

@@ -205,7 +205,26 @@ class Z3TypeSolver( useSoftConstraints : Boolean, tvg: TypeVarGenerator ) {
         val idxWrap = HasAtFunWrapper( ctx, model, hasIdxDecl, atIdxDecl )
         val fieldWrap = HasAtFunWrapper( ctx, model, hasFieldDecl, atFieldDecl )
 
-        val typeReconstructor = new TypeReconstructor( tvg, idxWrap.apply, fieldWrap.apply, sizeWrap.apply, strEnumerator )
+        val idxEval = new IndexEvaluator {
+          override def getValue( i : Int ) : Int = model.eval(
+            ctx.mkConst( s"${Names.intVarSymb}$i", intS ),
+            false
+          ).asInstanceOf[IntNum].getInt
+        }
+
+        def fieldConstraints( c : BoolFormula ) : Seq[hasField] = c match {
+          case And( cs@_* ) => cs flatMap fieldConstraints
+          case Or( cs@_*) => cs flatMap fieldConstraints
+          case hf: hasField => Seq(hf)
+          case _ => Seq.empty
+        }
+
+        val narrower = new TypeNarrower( fieldConstraints( constraints ), idxEval )
+
+        val typeReconstructor = new TypeReconstructor(
+          tvg, idxWrap.apply, fieldWrap.apply,
+          sizeWrap.apply, strEnumerator, Some( narrower )
+        )
 
         def solutionFn( dt: SmtDatatype ) : TlaType = {
           val expr = Z3Converter.dtToSmt( dt )
