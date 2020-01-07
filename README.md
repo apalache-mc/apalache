@@ -6,16 +6,17 @@ __master__: [![Build Status](https://travis-ci.org/konnov/apalache.svg?branch=ma
 &nbsp;&nbsp;&nbsp;
 __unstable__: [![Build Status](https://travis-ci.org/konnov/apalache.svg?branch=unstable)](https://travis-ci.org/konnov/apalache)
 
-To get an intuition about how APALACHE is working,
+To read an academic paper about the theory behind APALACHE,
 check our [paper at OOPSLA19](https://forsyte.at/wp-content/uploads/kkt-oopsla19.pdf).
 
 The current version of the tool is neither parameterized, nor it is using
 abstractions. As a first step, we are working on a symbolic bounded model
-checker that runs under the same assumptions as TLC. To see the list of supported TLA+ constructs, check the [supported features page](docs/features.md).
+checker that runs under the same assumptions as TLC. To see the list of supported
+TLA+ constructs, check the [supported features page](docs/features.md).
 Our tool runs simple type inference, in order to encode TLA+ expressions in
  [Microsoft Z3](https://github.com/Z3Prover/z3). Check the note on
 [type inference and annotations](docs/types-and-annotations.md) to get an idea of
-the supported TLA+ expressions and hints provided by the user. 
+the supported TLA+ expressions and hints provided by the user.
 
 Related reports and publications can be found at the
 [apalache page](http://forsyte.at/research/apalache/).
@@ -23,10 +24,12 @@ Related reports and publications can be found at the
 ## Releases
 
 Check the [releases page](https://github.com/konnov/apalache/releases).
-As the tool is in the early development stage, there are a few releases. 
+So far, we have not been releasing often. You can always try the latest cool
+features in the [unstable branch](https://github.com/konnov/apalache/tree/unstable).
 
-To try the latest features, you can download
-[the latest unstable build](https://github.com/konnov/apalache/releases/tag/latest-unstable).
+## Getting Started
+
+Read the [manual](doc/manual.md).
 
 ## Preparing the spec
 
@@ -40,7 +43,7 @@ and a constant ``Values`` for the set of possible values:
 
 ```tla
 CONSTANT N, Values
-``` 
+```
 
 Replace them with the operators that define concrete values:
 
@@ -53,7 +56,7 @@ Values == {0, 1}
 #### Option 2: Initialize constants with ConstInit
 
 This approach is similar to the ``Init`` operator, but applied to the constants.
-We define a special operator, e.g., called ``ConstInit``: 
+We define a special operator, e.g., called ``ConstInit``:
 
 ```tla
 CONSTANT N, Values
@@ -109,14 +112,14 @@ The arguments are as follows:
   * ``--inv`` specifies the invariant to check, optional
   * ``--length`` specifies the upper bound on the length of the finite executions to explore
   * ``--tuning`` specifies the properties file that stores the options for [fine tuning](docs/tuning.md)
-  
+
 If you like to check an inductive invariant ``Inv``, you can run two commands:   
 
 ```bash
 $ bin/apalache-mc check --init=Inv --inv=Inv --length=1 myspec.tla
 ```
 
-and 
+and
 
 ```bash
 $ bin/apalache-mc check --init=Init --inv=Inv --length=0 myspec.tla
@@ -131,15 +134,13 @@ The tool will display only the important messages. A detailed log can be found i
 
 To build the tool, you will need the following standard packages: Java 8 SDK,
 Scala, and Maven. You will also need [Z3 Prover
-4.7.1](https://github.com/Z3Prover/z3) and [TLA tools](http://lamport.azurewebsites.net/tla/tools.html).
+4.8.x](https://github.com/Z3Prover/z3) and [TLA tools](http://lamport.azurewebsites.net/tla/tools.html).
 Both Z3 and TLA+ tools can
 be automatically installed in your local Maven repository by running the script
-`./3rdparty/install-local.sh`. __WARNING: Z3 API has been changed in version
-4.8.0, so make sure that you install version 4.7.1.__
+`./3rdparty/install-local.sh`.
 
 To build the complete package, including the dependencies, type:
 
 ```bash
 $ mvn package
 ```
-
