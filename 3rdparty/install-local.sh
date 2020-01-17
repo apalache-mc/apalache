@@ -16,6 +16,11 @@ else
     OST="linux"
 fi
 
+if [ "$1" == "--nocache" ]; then
+    echo "Cleaning the previous builds"
+    rm -rf "$D/z3"
+fi
+
 if [ -f "$D/z3/configure" ]; then
     echo "Using a cached Z3 build..."
 else
