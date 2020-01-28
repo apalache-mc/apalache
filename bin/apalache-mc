@@ -8,7 +8,7 @@ DIR=`dirname $0`
 DIR=`cd "$DIR/.."; pwd`
 echo "# Tool home: $DIR"
 # try to find either a release jar, or a local build
-DISTS=`mktemp ${TMPDIR}/apalache-dists.XXXX`
+DISTS=`mktemp apalache-dists.XXXX`
 find >$DISTS "$DIR" "$DIR/mod-distribution/target/" \
     -maxdepth 1 -name "apalache-pkg-*-full.jar"
 
