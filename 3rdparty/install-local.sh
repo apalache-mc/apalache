@@ -7,6 +7,7 @@
 set -e
 
 D=`dirname $0` && D=`cd $D; pwd`
+Z3_DIR="$D/z3-4.8.7"
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
     echo "Assuming that you are using MacOS..."
@@ -25,8 +26,8 @@ if [ -f "$D/z3/configure" ]; then
     echo "Using a cached Z3 build..."
 else
     echo "Checking out z3..."
-    git clone https://github.com/Z3Prover/z3.git $D/z3
-    pushd $D/z3
+    git clone https://github.com/Z3Prover/z3.git ${Z3_DIR}
+    pushd ${Z3_DIR}
     git checkout z3-4.8.7
     echo "Configuring z3 locally (Linux)..."
     python scripts/mk_make.py --java -p $D/
