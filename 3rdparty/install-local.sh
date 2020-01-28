@@ -19,10 +19,10 @@ fi
 
 if [ "$1" == "--nocache" ]; then
     echo "Cleaning the previous builds"
-    rm -rf "$D/z3"
+    rm -rf "${Z3_DIR}"
 fi
 
-if [ -f "$D/z3/configure" ]; then
+if [ -f "${Z3_DIR}/configure" ]; then
     echo "Using a cached Z3 build..."
 else
     echo "Checking out z3..."
@@ -49,7 +49,7 @@ popd
 
 # install Z3 libraries
 echo "Compiling and installing z3..."
-pushd $D/z3
+pushd ${Z3_DIR}
 cd build
 make install # install *.so and *.jar in 3rdparty
 popd
