@@ -14,7 +14,7 @@ import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
 /**
-  * Find free-standing existential quantifiers and rename all local bindings, so they have unique names.
+  * Find free-standing existential quantifiers, grade expressions, and produce hints about some formulas.
   */
 class AnalysisPassImpl @Inject()(val options: PassOptions,
                                  frexStoreImpl: FreeExistentialsStoreImpl,
