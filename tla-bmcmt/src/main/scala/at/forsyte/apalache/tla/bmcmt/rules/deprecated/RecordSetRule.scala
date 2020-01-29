@@ -65,7 +65,7 @@ class RecordSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
       case _ =>
         throw new RewriterException("%s is not applicable to %s"
-          .format(getClass.getSimpleName, state.ex))
+          .format(getClass.getSimpleName, state.ex), state.ex)
     }
   }
 
@@ -74,7 +74,7 @@ class RecordSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
       0 until (2 * sets.size) map (i => if (i % 2 == 0) ConstT() else sets(i / 2).cellType)
     rewriter.typeFinder.compute(ctorEx, fieldsAndSets :_*) match {
       case FinSetT(recT @ RecordT(_)) => recT
-      case t @ _ => throw new RewriterException("Unexpected record type: " + t)
+      case t @ _ => throw new RewriterException("Unexpected record type: " + t, ctorEx)
     }
   }
 }

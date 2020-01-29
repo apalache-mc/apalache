@@ -44,7 +44,7 @@ class BuiltinConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
         state.setRex(NameEx(state.arena.cellIntSet().toString))
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 }

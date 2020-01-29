@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.lir.{NullEx, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
 
 import scala.collection.immutable.SortedSet
@@ -88,7 +89,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         relState.setArena(arena).setRex(seq.toNameEx)
 
       case tp @ _ =>
-        throw new RewriterException(s"I do not know how to generate a default value for the type $tp")
+        throw new RewriterException(s"I do not know how to generate a default value for the type $tp", state.ex)
     }
   }
 
@@ -98,7 +99,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         et
 
       case tp @ _ =>
-        throw new RewriterException(s"Expected a set, found: $tp")
+        throw new RewriterException(s"Expected a set, found: $tp", NullEx)
     }
   }
 }

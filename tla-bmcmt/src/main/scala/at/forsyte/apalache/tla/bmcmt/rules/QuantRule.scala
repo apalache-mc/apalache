@@ -66,7 +66,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
         expandExistsOrForall(isExists = false, state, boundVar, boundingSetEx, predEx)
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 

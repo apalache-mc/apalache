@@ -36,7 +36,7 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.coerce(finalState, state.theory) // coerce to the source theory
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 
@@ -50,7 +50,7 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // introduce a new set
     val newType = types.unify(leftSetCell.cellType, rightSetCell.cellType)
     if (newType.isEmpty) {
-      throw new TypeException(s"Failed to unify types ${leftSetCell.cellType} and ${rightSetCell.cellType} when rewriting ${state.ex}")
+      throw new TypeException(s"Failed to unify types ${leftSetCell.cellType} and ${rightSetCell.cellType} when rewriting ${state.ex}", state.ex)
     }
     newState = newState.setArena(newState.arena.appendCell(newType.get))
     val resultSetCell = newState.arena.topCell

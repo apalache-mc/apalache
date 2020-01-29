@@ -38,7 +38,7 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
       rewriteGeneral(state, simplifier.simplify(state.ex))
 
     case _ =>
-      throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+      throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
   }
 
   private def rewriteGeneral(state: SymbState, ex: TlaEx) = ex match {
@@ -62,6 +62,6 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
       rewriter.coerce(finalState, state.theory)
 
     case _ =>
-      throw new RewriterException("It should not happen. Report a bug")
+      throw new RewriterException("It should not happen. Report a bug", ex)
   }
 }

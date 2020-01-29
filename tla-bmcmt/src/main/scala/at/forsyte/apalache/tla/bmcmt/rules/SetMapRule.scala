@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{MapBase, TypeConverter}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.MapBase
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
@@ -29,8 +29,7 @@ class SetMapRule(rewriter: SymbStateRewriter) extends RewritingRule {
         mapbase.rewriteSetMapManyArgs(state, mapEx, varNames, sets)
 
       case _ =>
-        throw new RewriterException("%s is not applicable to %s"
-          .format(getClass.getSimpleName, state.ex))
+        throw new RewriterException("%s is not applicable to %s".format(getClass.getSimpleName, state.ex), state.ex)
     }
   }
 
@@ -41,7 +40,7 @@ class SetMapRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val sourceSetCell = setState.arena.findCellByNameEx(setState.ex)
     val elemT = sourceSetCell.cellType match {
       case FinSetT(et) => et
-      case t@_ => throw new RewriterException("Expected a finite set, found: " + t)
+      case t@_ => throw new RewriterException("Expected a finite set, found: " + t, state.ex)
     }
     // unfold the set and map every potential element to a cell
     val sourceCells = setState.arena.getHas(sourceSetCell)

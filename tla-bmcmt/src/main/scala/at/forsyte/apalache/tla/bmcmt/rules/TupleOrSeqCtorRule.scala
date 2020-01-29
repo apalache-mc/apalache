@@ -34,14 +34,14 @@ class TupleOrSeqCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
           resultT match {
             case tt@TupleT(_) => createTuple(stateAfterElems, tt, cells)
             case st@SeqT(_) => createSeq(stateAfterElems, st, cells)
-            case _ => throw new RewriterException("Unexpected type: " + resultT)
+            case _ => throw new RewriterException("Unexpected type: " + resultT, state.ex)
           }
 
 
         rewriter.coerce(finalState, state.theory)
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 

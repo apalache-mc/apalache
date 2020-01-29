@@ -67,7 +67,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
             funSetIn(setState, setCell, elemCell)
 
           case _ => throw new RewriterException("SetInRule is not implemented for type %s (found in %s)"
-            .format(setCell.cellType, state.ex))
+            .format(setCell.cellType, state.ex), state.ex)
         }
 
         val coercedState = rewriter.coerce(finalState, state.theory)
@@ -75,7 +75,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
         coercedState
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 

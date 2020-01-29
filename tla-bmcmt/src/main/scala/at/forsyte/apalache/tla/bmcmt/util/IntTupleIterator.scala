@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.util
 
-import at.forsyte.apalache.tla.bmcmt.RewriterException
+import at.forsyte.apalache.tla.bmcmt.{Limits, RewriterException}
+import at.forsyte.apalache.tla.lir.NullEx
 
 /**
   * Iterate over all k-tuples from (0,...,0) up to (n_1, ..., n_k), including the tuple (n_1, ..., n_k).
@@ -9,11 +10,6 @@ import at.forsyte.apalache.tla.bmcmt.RewriterException
   * @author Igor Konnov
   */
 class IntTupleIterator(limits: Seq[Int]) extends Iterator[Seq[Int]] {
-  /**
-    * The upper bound on the size of the Cartesian product
-    */
-  val MAX_PRODUCT_SIZE = 1000000
-
   private var vec: Array[Int] = (-1) +: Array.fill(limits.size - 1)(0)
   // we have to enumerate that many elements
   private var toEnumerate: BigInt = limits.map(BigInt(_) + 1).product // bugfix: use BigInt to avoid overflow
@@ -26,8 +22,8 @@ class IntTupleIterator(limits: Seq[Int]) extends Iterator[Seq[Int]] {
     if (!hasNext) {
       throw new NoSuchElementException("All elements have been enumerated")
     }
-    if (toEnumerate > MAX_PRODUCT_SIZE) {
-      throw new RewriterException("Too many elements to enumerate: " + toEnumerate)
+    if (toEnumerate > Limits.MAX_PRODUCT_SIZE) {
+      throw new RewriterException("Too many elements to enumerate: " + toEnumerate, NullEx)
     }
 
     toEnumerate -= 1

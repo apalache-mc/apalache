@@ -28,7 +28,7 @@ class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // compute the set type using the type finder
         val elemType = rewriter.typeFinder.compute(state.ex, cells.map(_.cellType) :_*) match {
           case FinSetT(et) => et
-          case setT @ _ => throw new TypeException("Expected a finite set, found: " + setT)
+          case setT @ _ => throw new TypeException("Expected a finite set, found: " + setT, state.ex)
         }
         val arena = newState.arena.appendCell(FinSetT(elemType))
         val newCell = arena.topCell
@@ -43,7 +43,7 @@ class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.coerce(finalState, state.theory)
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 }

@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{NameEx, NullEx, TlaEx}
 
 /**
   * Generate equality constraints between cells and cache them to avoid redundant constraints.
@@ -33,7 +33,7 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
       // As this comparison usually indicates a coding problem, throw an exception here.
       // If you still think that this is okay to compare variables of different types, insert a check before safeEq.
       throw new RewriterException("Trivial inequality, as the types are different (check your code): type(%s) = %s, while type(%s) = %s"
-        .format(left.name, left.cellType, right.name, right.cellType))
+        .format(left.name, left.cellType, right.name, right.cellType), NullEx)
     } else if (left == right) {
       tla.bool(true) // this is just true
     } else {
@@ -43,7 +43,7 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
       } else {
         // let's add a bit of German here to indicate that it is really dangerous
         val msg = "VORSICHT! SMT equality should be used only after calling cacheEqualities, unless you know what you are doing."
-        throw new RewriterException(msg)
+        throw new RewriterException(msg, NullEx)
       }
     }
   }
@@ -72,7 +72,7 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
       } else {
         // let's add a bit of German here to indicate that it is really dangerous
         val msg = "VORSICHT! SMT equality should be used only after calling cacheEqualities, unless you know what you are doing."
-        throw new RewriterException(msg)
+        throw new RewriterException(msg, NullEx)
       }
     }
   }
@@ -146,7 +146,7 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
             mkSeqEq(state, left, right)
 
           case _ =>
-            throw new CheckerException("Unexpected equality test")
+            throw new CheckerException("Unexpected equality test", state.ex)
         }
 
       // return the new state

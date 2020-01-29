@@ -6,7 +6,7 @@ import java.nio.file.Path
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.bmcmt.CheckerException
 import at.forsyte.apalache.tla.bmcmt.analyses._
-import at.forsyte.apalache.tla.lir.{TlaAssumeDecl, TlaEx, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.{NullEx, TlaAssumeDecl, TlaEx, TlaOperDecl}
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import com.google.inject.Inject
@@ -41,7 +41,7 @@ class AnalysisPassImpl @Inject()(val options: PassOptions,
     */
   override def execute(): Boolean = {
     if (tlaModule.isEmpty) {
-      throw new CheckerException(s"The input of $name pass is not initialized")
+      throw new CheckerException(s"The input of $name pass is not initialized", NullEx)
     }
     val module = tlaModule.get
     val consts = module.constDeclarations.map(_.name).toSet

@@ -168,7 +168,7 @@ object Tool extends App with LazyLogging {
       fun()
     } catch {
       case e: Exception if adapter.toMessage.isDefinedAt(e) =>
-        logger.error(adapter.toMessage(e))
+        logger.error(adapter.toMessage(e), e)
 
       case e: PassOptionException =>
         logger.error(e.getMessage)

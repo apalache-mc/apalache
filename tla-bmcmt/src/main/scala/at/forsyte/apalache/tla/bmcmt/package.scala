@@ -62,7 +62,7 @@ package object bmcmt {
           name
 
         case _ =>
-          throw new CheckerException("Expected a cell, found: %s".format(tlaEx))
+          throw new CheckerException("Expected a cell, found: %s".format(tlaEx), tlaEx)
       }
     }
   }

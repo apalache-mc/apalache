@@ -52,7 +52,7 @@ class CaseRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.coerce(finalState, state.theory)
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 
@@ -67,7 +67,7 @@ class CaseRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       case NameEx(name) => state.arena.findCellByName(name).cellType
       case _ =>
-        throw new RewriterException("The rewriting result is not a cell but %s" + state.ex)
+        throw new RewriterException("The rewriting result is not a cell but %s" + state.ex, state.ex)
     }
   }
 

@@ -26,11 +26,11 @@ class SubstRule(rewriter: SymbStateRewriter) extends RewritingRule {
           val cell = state.binding.apply(x)
           state.setRex(NameEx(cell.toString))
         } else {
-          throw new RewriterException(s"${getClass.getSimpleName}: Variable $x is not assigned a value")
+          throw new RewriterException(s"${getClass.getSimpleName}: Variable $x is not assigned a value", state.ex)
         }
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 }

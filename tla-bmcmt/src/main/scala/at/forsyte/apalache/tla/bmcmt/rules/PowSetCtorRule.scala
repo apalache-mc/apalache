@@ -33,7 +33,7 @@ class PowSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.coerce(finalState, state.theory)
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 }

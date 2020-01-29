@@ -102,7 +102,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
         pickFun(t, state, oracle, elems, elseAssert)
 
       case _ =>
-        throw new RewriterException("Do not know how pick an element from a set of type: " + targetType)
+        throw new RewriterException("Do not know how pick an element from a set of type: " + targetType, state.ex)
     }
   }
 

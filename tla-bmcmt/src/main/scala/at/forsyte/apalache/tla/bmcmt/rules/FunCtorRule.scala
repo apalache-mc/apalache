@@ -29,7 +29,7 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
       case _ =>
         throw new RewriterException("%s is not applicable to %s"
-          .format(getClass.getSimpleName, state.ex))
+          .format(getClass.getSimpleName, state.ex), state.ex)
     }
   }
 
@@ -39,7 +39,7 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val domainCell = nextState.asCell
     val elemT = domainCell.cellType match {
       case FinSetT(et) => et
-      case t@_ => throw new RewriterException("Expected a finite set, found: " + t)
+      case t@_ => throw new RewriterException("Expected a finite set, found: " + t, state.ex)
     }
     val domainCells = nextState.arena.getHas(domainCell)
     // find the type of the target expression and of the target set

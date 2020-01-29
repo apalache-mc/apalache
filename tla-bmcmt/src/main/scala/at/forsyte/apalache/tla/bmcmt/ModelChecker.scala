@@ -308,7 +308,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
         val msg =
           "[Step %d] Next states 0 and %d disagree on the set of assigned variables: %s"
             .format(stepNo, index, diff.mkString(", "))
-        throw new InternalCheckerError(msg)
+        throw new InternalCheckerError(msg, finalState.ex)
       }
 
       def pickVar(x: String): ArenaCell = {
@@ -322,7 +322,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
       val constBinding = oracleState.binding.filter(p => constants.contains(p._1))
       finalState = finalState.setBinding(Binding(finalVarBinding ++ constBinding))
       if (debug && !solverContext.sat()) {
-        throw new InternalCheckerError(s"Error picking next variables (step $stepNo). Report a bug.")
+        throw new InternalCheckerError(s"Error picking next variables (step $stepNo). Report a bug.", finalState.ex)
       }
       // check the invariant, if search invariant.split=false
       if (!invariantSplitByTransition) { checkAllInvariants(stepNo, 0, finalState) }
@@ -360,7 +360,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
         case Some(false) =>
           // this is a clear sign of a bug in one of the translation rules
           logger.debug("UNSAT after pushing transition constraints")
-          throw new CheckerException("A contradiction introduced in rewriting. Report a bug.")
+          throw new CheckerException("A contradiction introduced in rewriting. Report a bug.", state.ex)
 
         case Some(true) => () // SAT
           logger.debug("The transition constraints are OK.")

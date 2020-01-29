@@ -58,7 +58,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.coerce(finalState, state.theory)
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 
@@ -124,7 +124,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
                  valueCells: Seq[ArenaCell]): SymbState = {
     def indexToStr: TlaEx => String = {
       case ValEx(TlaStr(key)) => key
-      case ex => throw new RewriterException("Expected a string when updating a record, found: " + ex)
+      case ex => throw new RewriterException("Expected a string when updating a record, found: " + ex, ex)
     }
 
     val updatedKeys = indexEs map indexToStr
@@ -151,7 +151,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
                    valueCells: Seq[ArenaCell]): SymbState = {
     def indexToInt: TlaEx => Int = {
       case ValEx(TlaInt(index)) => index.toInt
-      case ex => throw new RewriterException("Expected a number when updating a tuple, found: " + ex)
+      case ex => throw new RewriterException("Expected a number when updating a tuple, found: " + ex, ex)
     }
 
     val updatedIndices = indexEs map indexToInt
@@ -193,10 +193,10 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case OperEx(TlaFunOper.tuple, arg) =>
         arg // unpack
       case OperEx(TlaFunOper.tuple, _*) =>
-        throw new InternalCheckerError("TLA importer failed to preprocess a chained EXCEPT: " + e)
+        throw new InternalCheckerError("TLA importer failed to preprocess a chained EXCEPT: " + e, e)
       case _ =>
         // complain
-        throw new RewriterException("Expected a tuple as a function index, found: " + e)
+        throw new RewriterException("Expected a tuple as a function index, found: " + e, e)
     }
 
     args map unpack

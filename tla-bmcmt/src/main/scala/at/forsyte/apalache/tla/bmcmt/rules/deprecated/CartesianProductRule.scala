@@ -47,7 +47,7 @@ class CartesianProductRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
       case _ =>
         throw new RewriterException("%s is not applicable to %s"
-          .format(getClass.getSimpleName, state.ex))
+          .format(getClass.getSimpleName, state.ex), state.ex)
     }
   }
 }
