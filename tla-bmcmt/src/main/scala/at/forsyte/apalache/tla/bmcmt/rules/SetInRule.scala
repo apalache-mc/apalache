@@ -90,6 +90,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     rewriter.lazyEq.subsetEq(state, elemCell, state.arena.getDom(powsetCell))
   }
 
+  // TODO: pick a function from funsetCell and check for function equality
   private def funSetIn(state: SymbState, funsetCell: ArenaCell, funCell: ArenaCell): SymbState = {
     // checking whether f \in [S -> T]
     assert(PartialFunction.cond(funCell.cellType) { case FunT(_, _) => true })
