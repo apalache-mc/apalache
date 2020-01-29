@@ -5,6 +5,7 @@ import java.nio.file.Path
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.bmcmt.{CheckerException, VCGenerator}
+import at.forsyte.apalache.tla.lir.NullEx
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import com.google.inject.Inject
@@ -35,7 +36,7 @@ class VCGenPassImpl @Inject()(options: PassOptions,
     */
   override def execute(): Boolean = {
     if (tlaModule.isEmpty) {
-      throw new CheckerException(s"The input of $name pass is not initialized")
+      throw new CheckerException(s"The input of $name pass is not initialized", NullEx)
     }
 
     val newModule =

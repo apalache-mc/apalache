@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore
 import at.forsyte.apalache.tla.bmcmt.search.{BfsStrategy, BfsStrategyStopWatchDecorator, DfsStrategy}
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.NullEx
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.LanguageWatchdog
 import at.forsyte.apalache.tla.lir.transformations.standard.{FlatLanguagePred, KeraLanguagePred}
@@ -44,7 +45,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
     */
   override def execute(): Boolean = {
     if (tlaModule.isEmpty) {
-      throw new CheckerException(s"The input of $name pass is not initialized")
+      throw new CheckerException(s"The input of $name pass is not initialized", NullEx)
     }
     val module = tlaModule.get
 

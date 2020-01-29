@@ -28,27 +28,27 @@ class IntDotDotRule(rewriter: SymbStateRewriter,
     state.ex match {
       case OperEx(TlaArithOper.dotdot, elems @ _*) =>
         if (elems.length != 2)
-          throw new RewriterException("Expected two arguments to .., found " + elems.length)
-        val (start: Int, endInclusive: Int) = getRange(elems)
+          throw new RewriterException("Expected two arguments to .., found " + elems.length, state.ex)
+        val (start: Int, endInclusive: Int) = getRange(state.ex, elems)
         val (newArena, rangeCell) = intRangeCache.create(state.arena, (start, endInclusive))
         state.setArena(newArena).setRex(rangeCell.toNameEx).setTheory(CellTheory())
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 
-  private def getRange(elems: Seq[TlaEx]): (Int, Int) = {
+  private def getRange(ex: TlaEx, elems: Seq[TlaEx]): (Int, Int) = {
     elems map (simplifier.simplify(_)) match {
       case Seq(ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
         if (!left.isValidInt || !right.isValidInt) {
-          throw new RewriterException("Range bounds are too large to fit in scala.Int")
+          throw new RewriterException("Range bounds are too large to fit in scala.Int", ex)
         }
         (left.toInt, right.toInt)
 
       case _ =>
         throw new RewriterException("Expected a constant integer range in .., found %s"
-          .format(elems.map(UTFPrinter.apply).mkString("..")))
+          .format(elems.map(UTFPrinter.apply).mkString("..")), ex)
     }
   }
 }

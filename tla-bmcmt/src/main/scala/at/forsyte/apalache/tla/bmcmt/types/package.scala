@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.lir.NullEx
 import at.forsyte.apalache.tla.lir.io.UTFPrinter
 
 import scala.collection.immutable.SortedMap
@@ -279,7 +280,7 @@ package object types {
       case FinSetT(et) => et
       case PowSetT(dt) => dt
       case CrossProdT(args) => TupleT( args map {_.elemType} )
-      case _ => throw new TypeException(s"Unexpected domain type $domType")
+      case _ => throw new TypeException(s"Unexpected domain type $domType", NullEx)
     }
 
     override val toString: String = s"Fun[$domType, $resultType]"
@@ -309,13 +310,13 @@ package object types {
     def argType(): CellT = domType match {
       case FinSetT(et) => et
       case PowSetT(dt) => dt
-      case _ => throw new TypeException(s"Unexpected domain type $domType")
+      case _ => throw new TypeException(s"Unexpected domain type $domType", NullEx)
     }
 
     def resultType(): CellT = cdmType match {
       case FinSetT(et) => et
       case PowSetT(dt) => dt
-      case _ => throw new TypeException(s"Unexpected co-domain type $cdmType")
+      case _ => throw new TypeException(s"Unexpected co-domain type $cdmType", NullEx)
     }
 
     override val toString: String = s"FinFunSet[$domType, $cdmType]"

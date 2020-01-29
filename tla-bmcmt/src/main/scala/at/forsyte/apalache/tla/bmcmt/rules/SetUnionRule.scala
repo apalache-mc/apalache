@@ -29,7 +29,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val elemType =
           topSetCell.cellType match {
             case FinSetT(FinSetT(et)) => et
-            case _ => throw new TypeException(s"Applying UNION to $topSet of type ${topSetCell.cellType}" )
+            case _ => throw new TypeException(s"Applying UNION to $topSet of type ${topSetCell.cellType}", state.ex)
           }
 
         val sets = Set(nextState.arena.getHas(topSetCell) :_*).toList // remove duplicates too
@@ -80,7 +80,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
         }
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 }

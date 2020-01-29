@@ -45,7 +45,7 @@ class CoercionWithCache(val stateRewriter: SymbStateRewriter) extends StackableC
     } else {
       val name = state.ex match {
         case NameEx(n) => n
-        case _ => throw new RewriterException("Expected NameEx, found: " + state.ex)
+        case _ => throw new RewriterException("Expected NameEx, found: " + state.ex, state.ex)
       }
 
       val cachedValue = cache.get((name, targetTheory))
@@ -68,12 +68,12 @@ class CoercionWithCache(val stateRewriter: SymbStateRewriter) extends StackableC
               intToCell(state)
 
             case _ =>
-              throw new RewriterException("Coercion from %s to %s is not allowed".format(state.theory, targetTheory))
+              throw new RewriterException("Coercion from %s to %s is not allowed".format(state.theory, targetTheory), state.ex)
           }
 
         val targetName = targetState.ex match {
           case NameEx(n) => n
-          case _ => throw new RewriterException("Expected NameEx, found: " + targetState.ex)
+          case _ => throw new RewriterException("Expected NameEx, found: " + targetState.ex, targetState.ex)
         }
 
         cache = cache + ((name, targetTheory) -> (targetName, level))

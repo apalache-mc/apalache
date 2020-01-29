@@ -62,7 +62,7 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
         }
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 

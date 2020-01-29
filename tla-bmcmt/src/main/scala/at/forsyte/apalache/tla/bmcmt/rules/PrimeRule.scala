@@ -23,7 +23,7 @@ class PrimeRule(rewriter: SymbStateRewriter) extends RewritingRule {
         state.setRex(NameEx(name + "'"))
 
       case _ =>
-        throw new RewriterException("Prime operator is only implemented for variables")
+        throw new RewriterException("Prime operator is only implemented for variables", state.ex)
     }
   }
 }

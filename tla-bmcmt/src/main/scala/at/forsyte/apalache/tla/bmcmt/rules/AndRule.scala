@@ -90,7 +90,7 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.rewriteUntilDone(state.setRex(e))
 
       case e@_ =>
-        throw new RewriterException("%s is not applicable to %s".format(getClass.getSimpleName, e))
+        throw new RewriterException("%s is not applicable to %s".format(getClass.getSimpleName, e), e)
     }
   }
 

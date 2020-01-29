@@ -29,7 +29,7 @@ class StrConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.coerce(finalState, state.theory)
 
       case _ =>
-        throw new RewriterException(getClass.getSimpleName + " is not applicable")
+        throw new RewriterException(getClass.getSimpleName + " is not applicable", state.ex)
     }
   }
 }

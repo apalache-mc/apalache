@@ -47,7 +47,7 @@ class MapBase(rewriter: SymbStateRewriter, val isBijective: Boolean) {
 
     def getSetElemType(c: ArenaCell) = c.cellType match {
       case FinSetT(et) => et
-      case t@_ => throw new RewriterException("Expected a finite set, found %s in %s ".format(t, state.ex))
+      case t@_ => throw new RewriterException("Expected a finite set, found %s in %s ".format(t, state.ex), state.ex)
     }
     val setElemTypes = setsAsCells map getSetElemType
     val elemsOfSets = setsAsCells.map(nextState.arena.getHas)

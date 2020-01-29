@@ -81,8 +81,6 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     */
   val exprCache = new ExprCache(exprGradeStore)
 
-  // bound the number of rewriting steps applied to the same rule
-  private val RECURSION_LIMIT: Int = 10000
   private val coercion = new CoercionWithCache(this)
   private val substRule = new SubstRule(this)
 
@@ -325,7 +323,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
           val nextState = substRule.logOnReturn(solverContext, coercedState)
           if (nextState.arena.cellCount < state.arena.cellCount) {
             throw new RewriterException("Implementation error: the number of cells decreased from %d to %d"
-              .format(state.arena.cellCount, nextState.arena.cellCount))
+              .format(state.arena.cellCount, nextState.arena.cellCount), state.ex)
           }
           statListener.exitRule()
           Done(nextState)
@@ -344,7 +342,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
             val nextState = r.logOnReturn(solverContext, r.apply(r.logOnEntry(solverContext, state)))
             if (nextState.arena.cellCount < state.arena.cellCount) {
               throw new RewriterException("Implementation error in rule %s: the number of cells decreased from %d to %d"
-                .format(r.getClass.getSimpleName, state.arena.cellCount, nextState.arena.cellCount))
+                .format(r.getClass.getSimpleName, state.arena.cellCount, nextState.arena.cellCount), state.ex)
             }
             statListener.exitRule()
             Continue(nextState)
@@ -365,9 +363,9 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
   def rewriteUntilDone(state: SymbState): SymbState = {
     // the main reason for using a recursive function here instead of a loop is that it is easier to debug
     def doRecursive(ncalls: Int, st: SymbState): SymbState = {
-      if (ncalls >= RECURSION_LIMIT) {
+      if (ncalls >= Limits.RECURSION_LIMIT) {
         throw new RewriterException("Recursion limit of %d steps is reached. A cycle in the rewriting system?"
-          .format(RECURSION_LIMIT))
+          .format(Limits.RECURSION_LIMIT), state.ex)
       } else {
         rewritingStack +:= state.ex // push the expression on the stack
         rewriteOnce(st) match {
@@ -384,7 +382,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
 
           case NoRule() =>
             // no rule applies, a problem in the tool?
-            throw new RewriterException("No rewriting rule applies to expression: " + st.ex)
+            throw new RewriterException("No rewriting rule applies to expression: " + st.ex, st.ex)
         }
       }
     }

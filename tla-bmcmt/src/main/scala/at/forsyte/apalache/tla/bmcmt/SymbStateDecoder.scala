@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir._
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.immutable.{HashSet, SortedSet}
@@ -119,12 +119,12 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
               case OperEx(TlaFunOper.tuple, pair@_*) =>
                 pair
 
-              case _ => throw new RewriterException("Corrupted function: " + relation)
+              case _ => throw new RewriterException("Corrupted function: " + relation, NullEx)
             }
 
             elems flatMap untuple
 
-          case _ => throw new RewriterException("Corrupted function: " + relation)
+          case _ => throw new RewriterException("Corrupted function: " + relation, NullEx)
         }
 
       if (args.nonEmpty)
@@ -142,13 +142,13 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
           val filtered = cells.zipWithIndex filter (isIn _).tupled map (_._1)
           tla.tuple(filtered: _*) // return a tuple as it is the canonical representation of a sequence
 
-        case _ => throw new RewriterException("Corrupted sequence: " + startEndFun)
+        case _ => throw new RewriterException("Corrupted sequence: " + startEndFun, NullEx)
       }
 
     case r@RecordT(_) =>
       def exToStr(ex: TlaEx): TlaStr = ex match {
         case ValEx(s@TlaStr(_)) => s
-        case _ => throw new RewriterException("Expected a string, found: " + ex)
+        case _ => throw new RewriterException("Expected a string, found: " + ex, ex)
       }
 
       // Note that the domain may have fewer fields than the record type is saying.
@@ -186,7 +186,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       tla.powSet(decodeCellToTlaEx(arena, arena.getDom(cell)))
 
     case _ =>
-      throw new RewriterException("Don't know how to decode the cell %s of type %s".format(cell, cell.cellType))
+      throw new RewriterException("Don't know how to decode the cell %s of type %s".format(cell, cell.cellType), NullEx)
   }
 
   private def decodeSet(arena: Arena, set: ArenaCell): Seq[TlaEx] = {
@@ -195,7 +195,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         elems
 
       case _ =>
-        throw new RewriterException("Unexpected domain structure: " + set)
+        throw new RewriterException("Unexpected domain structure: " + set, NullEx)
     }
   }
 

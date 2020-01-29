@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.{ArenaCell, CellTheory, SymbState, SymbStateRewriter}
+import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types.FinSetT
@@ -33,9 +33,13 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
     }
 
     rewriter.solverContext.log("; %s(%s) {".format(getClass.getSimpleName, state.ex))
+    val powSetSize = BigInt(1) << elems.size
+    if (powSetSize >= Limits.POWSET_MAX_SIZE) {
+      throw new RewriterException(s"Attempted to expand a powerset of size 2^${elems.size}", state.ex)
+    }
     val subsets =
       if (elems.nonEmpty) {
-        BigInt(0).to((BigInt(1) << elems.size) - 1) map mkSetByNum
+        BigInt(0).to(powSetSize - 1) map mkSetByNum
       } else {
         // the set is statically empty: just introduce an empty set
         arena = arena.appendCell(set.cellType)
