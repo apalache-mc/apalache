@@ -6,9 +6,11 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
 /**
   * <p>An abstract transformer that calls partial functions.<p>
   *
+  * <p>TODO: move to *.apalache.tla.lir.transformations?</p>
+  *
   * @author Igor Konnov
   */
-abstract class AbstractTransformer(tracker: TransformationTracker) {
+abstract class AbstractTransformer(tracker: TransformationTracker) extends TlaExTransformation {
   /**
     * The sequence of partial transformers
     */

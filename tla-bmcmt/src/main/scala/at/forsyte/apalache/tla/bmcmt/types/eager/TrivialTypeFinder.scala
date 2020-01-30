@@ -901,6 +901,12 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
   }
 
   private def computeMiscOps(argTypes: Seq[CellT]): PartialFunction[TlaEx, CellT] = {
+    case ex@OperEx(BmcOper.skolemExists, _) =>
+      BoolT()
+
+    case ex@OperEx(BmcOper.expand, _) =>
+      argTypes.head
+
     case ex@OperEx(TlaOper.label, args@_*) =>
       for ((a, t) <- args.tail.zip(argTypes.tail)) expectType(ConstT(), a, t)
       argTypes.head

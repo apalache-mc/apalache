@@ -3,14 +3,14 @@ package at.forsyte.apalache.tla.bmcmt.passes
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore, FreeExistentialsStoreImpl}
+import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore}
 import at.forsyte.apalache.tla.bmcmt.search.{BfsStrategy, BfsStrategyStopWatchDecorator, DfsStrategy}
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.NullEx
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.LanguageWatchdog
-import at.forsyte.apalache.tla.lir.transformations.standard.{FlatLanguagePred, KeraLanguagePred}
+import at.forsyte.apalache.tla.lir.transformations.standard.KeraLanguagePred
 import at.forsyte.apalache.tla.pp.NormalizedNames
 import com.google.inject.Inject
 import com.google.inject.name.Named
@@ -23,7 +23,6 @@ import com.typesafe.scalalogging.LazyLogging
   */
 class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
                                         typeFinder: TypeFinder[CellT],
-                                        freeExistentialsStore: FreeExistentialsStoreImpl,
                                         hintsStore: FormulaHintsStore,
                                         exprGradeStore: ExprGradeStore,
                                         sourceStore: SourceStore,
@@ -77,7 +76,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
       }
 
     val checker: Checker =
-        new ModelChecker(typeFinder, freeExistentialsStore, hintsStore, changeListener, exprGradeStore, sourceStore,
+        new ModelChecker(typeFinder, hintsStore, changeListener, exprGradeStore, sourceStore,
           input, strategy, tuning, debug, profile, checkRuntime)
 
     val outcome = checker.run()

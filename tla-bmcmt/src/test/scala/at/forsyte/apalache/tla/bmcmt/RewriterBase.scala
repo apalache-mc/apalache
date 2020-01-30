@@ -2,9 +2,7 @@ package at.forsyte.apalache.tla.bmcmt
 
 import java.io.{PrintWriter, StringWriter}
 
-import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStoreImpl
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
-import at.forsyte.apalache.tla.lir.UID
 import at.forsyte.apalache.tla.lir.convenience.tla
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 
@@ -23,14 +21,6 @@ class RewriterBase extends FunSuite with BeforeAndAfterEach {
 
   protected def create(): SymbStateRewriterAuto = {
     new SymbStateRewriterAuto(solverContext)
-  }
-
-  protected def createWithFreeExists(existsIds: UID*): SymbStateRewriterImpl = {
-    val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
-    val fex = new FreeExistentialsStoreImpl()
-    fex.store = fex.store ++ existsIds
-    rewriter.freeExistentialsStore = fex
-    rewriter
   }
 
   protected def createWithoutCache(): SymbStateRewriter = {
