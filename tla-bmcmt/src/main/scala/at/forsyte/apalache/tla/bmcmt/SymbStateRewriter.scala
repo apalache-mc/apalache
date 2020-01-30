@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.RewritingResult
-import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore, FreeExistentialsStore}
+import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore}
 import at.forsyte.apalache.tla.bmcmt.caches.{ExprCache, IntValueCache, RecordDomainCache, StrValueCache}
 import at.forsyte.apalache.tla.bmcmt.rewriter.RewriterConfig
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
@@ -75,11 +75,6 @@ trait SymbStateRewriter extends StackableContext with MessageStorage {
     * An expression cache.
     */
   def exprCache: ExprCache
-
-  /**
-    * The store that marks free existential quantifiers. By default, empty.
-    */
-  def freeExistentialsStore: FreeExistentialsStore
 
   /**
     * The storage that associates with every expression id a grade, see ExprGrade.

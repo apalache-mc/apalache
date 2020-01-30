@@ -30,8 +30,6 @@ class CheckerModule extends AbstractModule {
       .to(classOf[CheckerExceptionAdapter])
 
     // stores
-    bind(classOf[FreeExistentialsStore])
-      .to(classOf[FreeExistentialsStoreImpl])
     bind(classOf[FormulaHintsStore])
       .to(classOf[FormulaHintsStoreImpl])
     bind(classOf[ExprGradeStore])

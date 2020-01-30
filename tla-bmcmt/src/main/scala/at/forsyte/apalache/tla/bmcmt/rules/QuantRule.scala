@@ -21,6 +21,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaBoolOper.exists, _, _, _) => true
+      case OperEx(BmcOper.skolemExists, OperEx(TlaBoolOper.exists, _, _, _)) => true
       case OperEx(TlaBoolOper.forall, _, _, _) => true
       case _ => false
     }
@@ -28,41 +29,43 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case OperEx(TlaBoolOper.exists, NameEx(boundVar), boundingSetEx, predEx) =>
-        if (!rewriter.freeExistentialsStore.isFreeExists(state.ex.ID)) {
-          expandExistsOrForall(isExists = true, state, boundVar, boundingSetEx, predEx)
-        } else {
-          boundingSetEx match {
-            case ValEx(TlaNatSet) | ValEx(TlaIntSet) =>
-              // skolemizable existential over integers or naturals
-              skolemExistsInNatOrInt(state, boundVar, predEx, boundingSetEx)
+      case OperEx(BmcOper.skolemExists, OperEx(TlaBoolOper.exists, NameEx(boundVar), boundingSetEx, predEx)) =>
+        // This is where our encoding shines. An existential is simply replaced by a constant.
+        boundingSetEx match {
+          case ValEx(TlaNatSet) | ValEx(TlaIntSet) =>
+            // skolemizable existential over integers or naturals
+            skolemExistsInNatOrInt(state, boundVar, predEx, boundingSetEx)
 
-            case OperEx(TlaArithOper.dotdot, left, right) =>
-              // rewrite \E x \in a..b: p as c >= a /\ c <= b /\ p[c/x] for an integer constant c
-              skolemExistsInRange(state, boundVar, predEx, left, right)
+          case OperEx(TlaArithOper.dotdot, left, right) =>
+            // rewrite \E x \in a..b: p as c >= a /\ c <= b /\ p[c/x] for an integer constant c
+            skolemExistsInRange(state, boundVar, predEx, left, right)
 
-            // the general case
-            case _ =>
-              val setState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(boundingSetEx))
-              val set = setState.asCell
-              val finalState = set.cellType match {
-                case FinSetT(_) =>
-                  skolemExistsInSet(setState, boundVar, predEx, set)
+          // the general case
+          case _ =>
+            val setState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(boundingSetEx))
+            val set = setState.asCell
+            val finalState = set.cellType match {
+              case FinSetT(_) =>
+                skolemExistsInSet(setState, boundVar, predEx, set)
 
-                case PowSetT(FinSetT(_)) => ()
-                  skolemExistsByPick(setState, boundVar, predEx, set)
+              case PowSetT(FinSetT(_)) => ()
+                skolemExistsByPick(setState, boundVar, predEx, set)
 
-                case FinFunSetT(_, _) => ()
-                  skolemExistsByPick(setState, boundVar, predEx, set)
+              case FinFunSetT(_, _) => ()
+                skolemExistsByPick(setState, boundVar, predEx, set)
 
-                case tp =>
-                  throw new UnsupportedOperationException("Quantification over %s is not supported yet".format(tp))
-              }
-              rewriter.coerce(finalState, state.theory)
-          }
+              case tp =>
+                throw new UnsupportedOperationException("Quantification over %s is not supported yet".format(tp))
+            }
+            rewriter.coerce(finalState, state.theory)
         }
 
+      case OperEx(TlaBoolOper.exists, NameEx(boundVar), boundingSetEx, predEx) =>
+        // expand the existential to a disjunction
+        expandExistsOrForall(isExists = true, state, boundVar, boundingSetEx, predEx)
+
       case OperEx(TlaBoolOper.forall, NameEx(boundVar), boundingSetEx, predEx) =>
+        // expand the existential to a conjunction
         expandExistsOrForall(isExists = false, state, boundVar, boundingSetEx, predEx)
 
       case _ =>
@@ -199,7 +202,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
       // \E x \in {}... is FALSE
       setState.setTheory(CellTheory()).setRex(NameEx(SolverContext.falseConst))
     } else {
-      freeExistsInStaticallyNonEmptySet(setState, boundVar, predEx, set, setCells)
+      skolemExistsInStaticallyNonEmptySet(setState, boundVar, predEx, set, setCells)
     }
   }
 
@@ -208,7 +211,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
   //
   // We have to take care of the case, when the set S is actually empty, e.g., S = {1} \ {1}.
   // In this case, exists should return FALSE.
-  private def freeExistsInStaticallyNonEmptySet(setState: SymbState, boundVar: String, predEx: TlaEx,
+  private def skolemExistsInStaticallyNonEmptySet(setState: SymbState, boundVar: String, predEx: TlaEx,
                                                 set: ArenaCell, setCells: List[ArenaCell]) = {
     // note that \E x \in SUBSET(S): ... is handled separately, so we can use pickByOracle
     rewriter.solverContext.log("; free existential rule over a finite set")

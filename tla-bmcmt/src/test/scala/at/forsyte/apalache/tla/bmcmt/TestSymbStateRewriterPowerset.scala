@@ -1,11 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStoreImpl
 import at.forsyte.apalache.tla.bmcmt.rules.aux.PowSetCtor
-import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.bmcmt.types.{AnnotationParser, FinSetT, IntT, PowSetT}
-import at.forsyte.apalache.tla.lir.NameEx
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.oper.BmcOper
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -134,12 +133,11 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
   test("""SE-SUBSET: skolem \E X \in SUBSET {1, 2}: TRUE (sat)""") {
     // a regression test that failed in the previous versions
     val set = tla.enumSet(tla.int(1), tla.int(2))
-    val ex = tla.exists(tla.name("X"), tla.powSet(set), tla.bool(true))
+    val ex =
+      OperEx(BmcOper.skolemExists,
+        tla.exists(tla.name("X"), tla.powSet(set), tla.bool(true)))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val fex = new FreeExistentialsStoreImpl
-    val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
-    rewriter.freeExistentialsStore = fex
-    fex.store = fex.store + ex.ID
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>
@@ -156,12 +154,12 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
   test("""SE-SUBSET: skolem \E X \in SUBSET {1, 2}: FALSE (unsat)""") {
     // a regression test that failed in the previous versions
     val set = tla.enumSet(tla.int(1), tla.int(2))
-    val ex = tla.exists(tla.name("X"), tla.powSet(set), tla.bool(false))
+    val ex =
+      OperEx(BmcOper.skolemExists,
+        tla.exists(tla.name("X"), tla.powSet(set), tla.bool(false)))
+
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val fex = new FreeExistentialsStoreImpl
-    val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
-    rewriter.freeExistentialsStore = fex
-    fex.store = fex.store + ex.ID
+    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx@NameEx(name) =>

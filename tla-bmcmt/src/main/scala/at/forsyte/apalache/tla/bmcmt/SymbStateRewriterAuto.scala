@@ -46,8 +46,6 @@ class SymbStateRewriterAuto(val solverContext: SolverContext) extends SymbStateR
 
   override def exprCache: ExprCache = impl.exprCache
 
-  override def freeExistentialsStore: FreeExistentialsStore = impl.freeExistentialsStore
-
   override def formulaHintsStore: FormulaHintsStore = impl.formulaHintsStore
 
   override def exprGradeStore: ExprGradeStore = exprGradeStoreImpl

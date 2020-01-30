@@ -85,11 +85,6 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
   private val substRule = new SubstRule(this)
 
   /**
-    * The store that marks free existential quantifiers. By default, empty.
-    */
-  var freeExistentialsStore: FreeExistentialsStore = new FreeExistentialsStoreImpl()
-
-  /**
     * The store that contains formula hints. By default, empty.
     */
   var formulaHintsStore: FormulaHintsStore = new FormulaHintsStoreImpl()
@@ -162,6 +157,9 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
 //      -> List(new ImplRule(this)),
 //    key(tla.equiv(tla.name("x"), tla.name("y")))
 //      -> List(new EquivRule(this)),
+    key(OperEx(BmcOper.skolemExists, tla.exists(tla.name("x"),
+               tla.name("S"), tla.name("p"))))
+      -> List(new QuantRule(this)),
     key(tla.exists(tla.name("x"), tla.name("S"), tla.name("p")))
       -> List(new QuantRule(this)),
     key(tla.forall(tla.name("x"), tla.name("S"), tla.name("p")))

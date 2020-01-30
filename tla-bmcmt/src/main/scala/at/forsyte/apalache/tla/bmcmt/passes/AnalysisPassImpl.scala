@@ -1,14 +1,15 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
-import java.io.{File, PrintWriter, StringWriter}
+import java.io.File
 import java.nio.file.Path
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.bmcmt.CheckerException
 import at.forsyte.apalache.tla.bmcmt.analyses._
-import at.forsyte.apalache.tla.lir.{NullEx, TlaAssumeDecl, TlaEx, TlaOperDecl}
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.lir.transformations.standard.ModuleByExTransformer
+import at.forsyte.apalache.tla.lir.{NullEx, TlaAssumeDecl, TlaEx, TlaOperDecl}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -17,7 +18,6 @@ import com.typesafe.scalalogging.LazyLogging
   * Find free-standing existential quantifiers, grade expressions, and produce hints about some formulas.
   */
 class AnalysisPassImpl @Inject()(val options: PassOptions,
-                                 frexStoreImpl: FreeExistentialsStoreImpl,
                                  hintsStoreImpl: FormulaHintsStoreImpl,
                                  exprGradeStoreImpl: ExprGradeStoreImpl,
                                  tracker: TransformationTracker,
@@ -43,33 +43,34 @@ class AnalysisPassImpl @Inject()(val options: PassOptions,
     if (tlaModule.isEmpty) {
       throw new CheckerException(s"The input of $name pass is not initialized", NullEx)
     }
-    val module = tlaModule.get
-    val consts = module.constDeclarations.map(_.name).toSet
-    val vars = module.varDeclarations.map(_.name).toSet
 
-    val skolem = new SkolemizationAnalysis(frexStoreImpl, tracker)
+    val skolem = new SkolemizationTransformer(tracker)
+    val skolemModule = ModuleByExTransformer(skolem).apply(tlaModule.get)
+    logger.info("  > Replaced some existentials with Skolem constants")
+
+    val consts = skolemModule.constDeclarations.map(_.name).toSet
+    val vars = skolemModule.varDeclarations.map(_.name).toSet
+
     val hintFinder = new HintFinder(hintsStoreImpl)
     val gradeAnalysis = new ExprGradeAnalysis(exprGradeStoreImpl)
 
     def analyzeExpr(expr: TlaEx): Unit = {
       gradeAnalysis.labelExpr(consts, vars, expr)
-      skolem.markFreeExistentials(expr)
       hintFinder.introHints(expr)
     }
 
-    module.declarations.foreach {
+    skolemModule.declarations.foreach {
       case d: TlaOperDecl => analyzeExpr(d.body)
       case a: TlaAssumeDecl => analyzeExpr(a.body)
       case _ => ()
     }
 
-    nextPass.setModule(module)
+    nextPass.setModule(skolemModule)
 
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    PrettyWriter.write(module, new File(outdir.toFile, "out-analysis.tla"))
+    PrettyWriter.write(skolemModule, new File(outdir.toFile, "out-analysis.tla"))
 
     logger.info("  > Introduced expression grades")
-    logger.info("  > Found %d skolemizable existentials".format(frexStoreImpl.store.size))
     logger.info("  > Introduced %d formula hints".format(hintsStoreImpl.store.size))
 
     true
