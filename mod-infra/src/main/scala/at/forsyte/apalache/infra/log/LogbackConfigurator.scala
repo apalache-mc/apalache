@@ -1,11 +1,11 @@
 package at.forsyte.apalache.infra.log
 
-import ch.qos.logback.classic.filter.{LevelFilter, ThresholdFilter}
-import ch.qos.logback.classic.{Level, LoggerContext, PatternLayout}
+import ch.qos.logback.classic.filter.ThresholdFilter
 import ch.qos.logback.classic.spi.{Configurator, ILoggingEvent}
-import ch.qos.logback.core.{ConsoleAppender, FileAppender}
+import ch.qos.logback.classic.{Level, LoggerContext, PatternLayout}
 import ch.qos.logback.core.encoder.LayoutWrappingEncoder
 import ch.qos.logback.core.spi.ContextAwareBase
+import ch.qos.logback.core.{ConsoleAppender, FileAppender}
 import org.slf4j.LoggerFactory
 
 /**
@@ -45,7 +45,7 @@ class LogbackConfigurator extends ContextAwareBase with Configurator {
     filter.start()
     app.addFilter(filter)
     val layout = new PatternLayout()
-    layout.setPattern("%-67msg %.-1level@%d{HHmmss.SSS}%n")
+    layout.setPattern("%-65msg %.-1level@%d{HH:mm:ss.SSS}%n")
     layout.setContext(loggerContext)
     layout.start()
     val encoder = new LayoutWrappingEncoder[ILoggingEvent]()
