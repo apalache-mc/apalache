@@ -16,11 +16,13 @@ import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 import scala.collection.mutable
 
 /**
-  * This class rewrites a symbolic state.
-  * This is the place where all the action regarding the operational semantics is happening.
+  * <p>This class rewrites a symbolic state.
+  * This is the place where all the action regarding the operational semantics is happening.</p>
   *
-  * This class implements StackableContext by delegating the respective operations to all the internal caches
-  * and the SMT context. Thus, it is a central access point for context operations.
+  * <p>This class implements StackableContext by delegating the respective operations to all the internal caches
+  * and the SMT context. Thus, it is a central access point for context operations.</p>
+  *
+  * <p>TODO: rename this class to RewriterImpl?</p>
   *
   * @param solverContext  a fresh solver context that will be populated with constraints
   * @param typeFinder     a type finder (assuming that typeFinder.inferAndSave has been called already)

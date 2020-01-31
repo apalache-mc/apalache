@@ -6,9 +6,12 @@ import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
 /**
-  * This analysis finds formulas of specific structure and labels them with hints.
+  * <p>This analysis finds formulas of specific structure and labels them with hints.
   * For instance, the top-level conjunctions (that are situated only under other conjunctions and quantifiers)
-  * are labelled with a hint.
+  * are labelled with a hint.</p>
+  *
+  * <p>This class will be probably removed in the future, as lazy circuiting with an incremental solver gives us
+  * a speed-up only on relatively small instances.</p>
   *
   * @author Igor Konnov
   */
