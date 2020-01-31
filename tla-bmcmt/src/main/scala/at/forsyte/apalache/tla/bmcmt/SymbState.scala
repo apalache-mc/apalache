@@ -1,10 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.lir.TlaEx
 
 /**
-  * A state of symbolic execution.
+  * <p>A state of the rewriter.</p>
+  *
+  * <p>TODO: rename this class to ReState?</p>
   *
   * @author Igor Konnov
   */

@@ -1,7 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt
 
 /**
-  * The collection of all magic constants that are used in the rewriting process.
+  * <p>The collection of all magic constants that are used in the rewriting process.</p>
+  *
+  * <p>TODO: move to RewriterConfig?</p>
   */
 object Limits {
   /**

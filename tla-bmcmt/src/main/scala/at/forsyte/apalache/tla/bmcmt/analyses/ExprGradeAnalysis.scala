@@ -1,12 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt.analyses
 
-import at.forsyte.apalache.tla.assignments.ModuleAdapter
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaActionOper, TlaBoolOper, TlaTempOper}
 import com.google.inject.Inject
 
 /**
-  * An analysis that computes expression grades and also replaces \/ with orParallel, when possible.
+  * An analysis that computes expression grades, which are used by the rewriter's caches.
   *
   * TODO: add tests
   *

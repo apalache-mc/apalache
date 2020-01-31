@@ -44,7 +44,7 @@ class AnalysisPassImpl @Inject()(val options: PassOptions,
       throw new CheckerException(s"The input of $name pass is not initialized", NullEx)
     }
 
-    val skolem = new SkolemizationTransformer(tracker)
+    val skolem = new SkolemizationMarker(tracker)
     val skolemModule = ModuleByExTransformer(skolem).apply(tlaModule.get)
     logger.info("  > Replaced some existentials with Skolem constants")
 
