@@ -76,6 +76,13 @@ class CherryPick(rewriter: SymbStateRewriter) {
     assert(elems.nonEmpty) // this is an advanced operator -- you should know what you are doing
     val targetType = elems.head.cellType
 
+    // An optimization: if the (multi-) set consists of identical cells, return the cell
+    // (e.g., this happens when all enabled transitions do not change a variable.)
+    if (elems.distinct.size == 1) {
+      return state.setRex(elems.head)
+    }
+
+    // the general case
     targetType match {
       case ConstT() =>
         pickBasic(ConstT(), state, oracle, elems, elseAssert)
