@@ -16,8 +16,6 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
   * @author Igor Konnov
   */
 class MapBase(rewriter: SymbStateRewriter, val isBijective: Boolean) {
-  private val typeConvertor = new TypeConverter(rewriter)
-
   /**
    <p>Implement a mapping { e: x_1 ∈ S_1, ..., x_n ∈ S_n }.</p>
 
@@ -31,19 +29,16 @@ class MapBase(rewriter: SymbStateRewriter, val isBijective: Boolean) {
     // first, rewrite the variable domains S_1, ..., S_n
     var (nextState, sets) = rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), setEs)
     // convert the set cell, if required
-    def convertIfNeeded(setCell: ArenaCell): ArenaCell = {
+    def checkType(setCell: ArenaCell): ArenaCell = {
       setCell.cellType match {
         case FinSetT(_) =>
           setCell
-        case PowSetT(et) =>
-          nextState = typeConvertor.convert(nextState.setRex(setCell.toNameEx), FinSetT(et))
-          nextState.asCell
-        // TODO: convert functions sets too?
+
         case tp @ _ => throw new NotImplementedError("A set filter over %s is not implemented".format(tp))
       }
     }
 
-    val setsAsCells = sets.map(nextState.arena.findCellByNameEx) map convertIfNeeded
+    val setsAsCells = sets.map(nextState.arena.findCellByNameEx) map checkType
 
     def getSetElemType(c: ArenaCell) = c.cellType match {
       case FinSetT(et) => et

@@ -432,7 +432,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val nextTrans = List(trans1, trans2)
     // a constant initializer: \E t \in { 20, 10 }: N' \in {t}
     val cInit =
-      OperEx(BmcOper.skolemExists,
+      OperEx(BmcOper.skolem,
         tla.exists(
           tla.name("t"),
           tla.enumSet(tla.int(20), tla.int(10)),

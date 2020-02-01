@@ -586,7 +586,7 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     val filter = tla.appFun(tla.funDef(tla.bool(true), "y", "Oper:X"), "x")
     val filteredSet = tla.filter("x", "Oper:X", filter)
     val ex =
-      OperEx(BmcOper.skolemExists,
+      OperEx(BmcOper.skolem,
         tla.letIn(tla.eql(tla.enumSet(), filteredSet),
           tla.declOp("X", tla.cap(tla.enumSet(1, 2), tla.enumSet(2)))))
 
@@ -608,11 +608,12 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SET-FILTER: {Q \in SUBSET {1,2,3} : ~(2 \in Q)}""") {
+  test("""SE-SET-FILTER: {Q \in Expand(SUBSET {1,2,3}) : ~(2 \in Q)}""") {
     val set = tla.enumSet(1.to(3).map(tla.int) :_*)
 
     val predEx = tla.not(tla.in(tla.int(2), tla.name("Q")))
-    val ex = tla.filter(tla.name("Q"), tla.powSet(set), predEx)
+    val expandedPowSet = OperEx(BmcOper.expand, tla.powSet(set))
+    val ex = tla.filter(tla.name("Q"), expandedPowSet, predEx)
     val state = new SymbState(ex, CellTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -629,7 +630,7 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     val filter = tla.appFun(tla.funDef(tla.bool(true), "y", "X"), "x")
     val filteredSet = tla.filter("x", "X", filter)
     val ex =
-      OperEx(BmcOper.skolemExists,
+      OperEx(BmcOper.skolem,
         tla.exists("X", tla.powSet(baseSet), tla.eql(tla.enumSet(), filteredSet)))
 
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
@@ -656,7 +657,7 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     val filter = tla.appFun(tla.funDef(tla.bool(true), "y", tla.enumSet(1)), "x")
     val filteredSet = tla.filter("x", "X", filter)
     val ex =
-      OperEx(BmcOper.skolemExists,
+      OperEx(BmcOper.skolem,
         tla.exists("X", tla.powSet(tla.enumSet(1, 2)), tla.eql(tla.enumSet(), filteredSet)))
 
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)

@@ -25,7 +25,7 @@ class SkolemizationMarker @Inject()(tracker: TransformationTracker)
 
   def transform: TlaExTransformation = tracker.track {
     case OperEx(TlaBoolOper.exists, name, set, pred) =>
-      OperEx(BmcOper.skolemExists, tla.exists(name, set, transform(pred)))
+      OperEx(BmcOper.skolem, tla.exists(name, set, transform(pred)))
 
     case OperEx(TlaBoolOper.forall, name, set, pred) =>
       // it is fine to skolemize existentials under \A, as \A is translated into a conjunction

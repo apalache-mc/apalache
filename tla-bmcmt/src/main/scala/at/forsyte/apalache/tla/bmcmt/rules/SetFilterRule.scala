@@ -1,9 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.TypeConverter
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, NullEx, OperEx, TlaEx}
 
@@ -13,8 +11,6 @@ import at.forsyte.apalache.tla.lir.{NameEx, NullEx, OperEx, TlaEx}
   * @author Igor Konnov
   */
 class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val typeConvertor = new TypeConverter(rewriter)
-
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaSetOper.filter, _*) => true
@@ -29,8 +25,6 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         var newState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(setEx))
         newState = newState.asCell.cellType match {
           case FinSetT(_) => newState
-          case PowSetT(et) => typeConvertor.convert(newState, FinSetT(et))
-            // TODO: convert functions sets too?
           case tp @ _ => throw new NotImplementedError("A set filter over %s is not implemented".format(tp))
         }
         val setCell = newState.asCell
@@ -44,7 +38,6 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
           val newBinding = newState.binding + (varName -> potentialCell)
           val cellState = new SymbState(predEx, BoolTheory(), newState.arena, newBinding)
           val ns = rewriter.rewriteUntilDone(cellState)
-          coverFailurePredicates(cellState, ns, tla.in(potentialCell.toNameEx, setCell.toNameEx))
           newState = ns.setBinding(ns.binding - varName) // reset binding
           ns.ex
         }
@@ -75,10 +68,6 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         for ((cell, pred) <- filteredCellsAndPreds)
           addCellCons(cell, pred)
 
-        // predicate evaluation may fail only if the set is not empty
-        //        val notEmpty = tla.or(potentialCells map (c => tla.in(c.toNameEx, setCell.toNameEx)) :_*)
-        //        coverFailurePredicates(state, newState, notEmpty) // TODO: add in the report
-
         val finalState =
           newState.setTheory(CellTheory())
             .setArena(newArena).setRex(newSetCell.toNameEx)
@@ -87,15 +76,5 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
-  }
-
-  // a failure inside a filter can happen only if the set is not empty
-  // TODO: remove, as the failure predicates are not used anymore
-  private def coverFailurePredicates(state: SymbState, nextState: SymbState, condition: TlaEx): Unit = {
-    // XXX: future self, the operations on the maps and sets are probably expensive. Optimize.
-    val predsBefore = Set(state.arena.findCellsByType(FailPredT()): _*)
-    val predsAfter = Set(nextState.arena.findCellsByType(FailPredT()): _*) -- predsBefore
-    // for each failure fp on the then branch, fp => cond
-    predsAfter.foreach(fp => rewriter.solverContext.assertGroundExpr(tla.impl(fp.toNameEx, condition)))
   }
 }

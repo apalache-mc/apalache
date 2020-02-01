@@ -34,7 +34,7 @@ object BmcOper {
     * Skolemization hint. In an expression Skolem(\E x \in S: e), the existential may be skolemized, that is, translated
     * into a constant.
     */
-  val skolemExists: BmcOper = new BmcOper {
+  val skolem: BmcOper = new BmcOper {
     override def name: String = "BMC!Skolem"
     override def arity: OperArity = FixedArity(1)
     override def precedence: (Int, Int) = (100, 100)

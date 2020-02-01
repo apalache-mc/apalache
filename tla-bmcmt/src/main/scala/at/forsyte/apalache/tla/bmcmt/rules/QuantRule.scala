@@ -21,7 +21,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaBoolOper.exists, _, _, _) => true
-      case OperEx(BmcOper.skolemExists, OperEx(TlaBoolOper.exists, _, _, _)) => true
+      case OperEx(BmcOper.`skolem`, OperEx(TlaBoolOper.exists, _, _, _)) => true
       case OperEx(TlaBoolOper.forall, _, _, _) => true
       case _ => false
     }
@@ -29,7 +29,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case OperEx(BmcOper.skolemExists, OperEx(TlaBoolOper.exists, NameEx(boundVar), boundingSetEx, predEx)) =>
+      case OperEx(BmcOper.`skolem`, OperEx(TlaBoolOper.exists, NameEx(boundVar), boundingSetEx, predEx)) =>
         // This is where our encoding shines. An existential is simply replaced by a constant.
         boundingSetEx match {
           case ValEx(TlaNatSet) | ValEx(TlaIntSet) =>

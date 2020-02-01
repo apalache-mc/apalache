@@ -664,7 +664,7 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     // this test was failing in the buggy implementation with PICK .. FROM and FUN-MERGE
     val fun1 = tla.funDef(tla.not(tla.name("y")), tla.name("y"), ValEx(TlaBoolSet))
     val exists =
-      OperEx(BmcOper.skolemExists,
+      OperEx(BmcOper.skolem,
         tla.exists(tla.name("x"),
           tla.enumSet(fun1),
           tla.appFun(NameEx("x"), tla.bool(false))))

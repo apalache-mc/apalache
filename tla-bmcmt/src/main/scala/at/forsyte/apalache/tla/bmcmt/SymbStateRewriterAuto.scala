@@ -55,7 +55,7 @@ class SymbStateRewriterAuto(val solverContext: SolverContext) extends SymbStateR
   private def reset(arena: Arena, binding: Binding): Unit = {
     def add(m: Map[String, CellT], c: ArenaCell) = m + (c.toString -> c.cellType)
     val cellTypes = arena.cellMap.values.foldLeft(Map[String, CellT]()) (add)
-    def addName(m: Map[String, CellT], p: Tuple2[String, ArenaCell]) = m + (p._1 -> p._2.cellType)
+    def addName(m: Map[String, CellT], p: (String, ArenaCell)) = m + (p._1 -> p._2.cellType)
     val cellAndBindingTypes = binding.foldLeft(cellTypes) (addName)
     // propagate cell types and bindings to the type inference engine
     typeFinder.reset(cellAndBindingTypes)
@@ -75,12 +75,14 @@ class SymbStateRewriterAuto(val solverContext: SolverContext) extends SymbStateR
     impl.rewriteOnce(state)
   }
 
+  // TODO: rename to rewrite
   override def rewriteUntilDone(state: SymbState): SymbState = {
     reset(state.arena, state.binding)
     preprocess(state.ex)
     impl.rewriteUntilDone(state)
   }
 
+  // TODO: rename to rewriteSeq
   override def rewriteSeqUntilDone(state: SymbState, es: Seq[TlaEx]): (SymbState, Seq[TlaEx]) = {
     reset(state.arena, state.binding)
     preprocess(state.ex)
@@ -88,6 +90,7 @@ class SymbStateRewriterAuto(val solverContext: SolverContext) extends SymbStateR
     impl.rewriteSeqUntilDone(state, es)
   }
 
+  // TODO: rename to rewriteSeqWithBindings
   override def rewriteBoundSeqUntilDone(state: SymbState, es: Seq[(Binding, TlaEx)]): (SymbState, Seq[TlaEx]) = {
     reset(state.arena, state.binding)
     preprocess(state.ex)

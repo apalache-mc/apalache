@@ -159,7 +159,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
 //      -> List(new ImplRule(this)),
 //    key(tla.equiv(tla.name("x"), tla.name("y")))
 //      -> List(new EquivRule(this)),
-    key(OperEx(BmcOper.skolemExists, tla.exists(tla.name("x"),
+    key(OperEx(BmcOper.skolem, tla.exists(tla.name("x"),
                tla.name("S"), tla.name("p"))))
       -> List(new QuantRule(this)),
     key(tla.exists(tla.name("x"), tla.name("S"), tla.name("p")))
@@ -211,6 +211,8 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
 //      -> List(new CartesianProductRule(this)),
 //    key(tla.recSet(tla.str("a"), tla.name("S1"), tla.str("b"), tla.name("S2")))
 //      -> List(new RecordSetRule(this)),
+    key(OperEx(BmcOper.expand, tla.name("X")))
+      -> List(new SetExpandRule(this)),
     key(tla.powSet(tla.name("X")))
       -> List(new PowSetCtorRule(this)),
     key(tla.union(tla.enumSet()))

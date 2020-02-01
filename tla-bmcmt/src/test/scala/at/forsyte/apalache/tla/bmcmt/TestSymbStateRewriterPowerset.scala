@@ -130,11 +130,11 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     //    }
   }
 
-  test("""SE-SUBSET: skolem \E X \in SUBSET {1, 2}: TRUE (sat)""") {
+  test("""SE-SUBSET: Skolem(\E X \in SUBSET {1, 2}: TRUE) (sat)""") {
     // a regression test that failed in the previous versions
     val set = tla.enumSet(tla.int(1), tla.int(2))
     val ex =
-      OperEx(BmcOper.skolemExists,
+      OperEx(BmcOper.skolem,
         tla.exists(tla.name("X"), tla.powSet(set), tla.bool(true)))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
@@ -151,11 +151,11 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     }
   }
 
-  test("""SE-SUBSET: skolem \E X \in SUBSET {1, 2}: FALSE (unsat)""") {
+  test("""SE-SUBSET: Skolem(\E X \in SUBSET {1, 2}: FALSE (unsat))""") {
     // a regression test that failed in the previous versions
     val set = tla.enumSet(tla.int(1), tla.int(2))
     val ex =
-      OperEx(BmcOper.skolemExists,
+      OperEx(BmcOper.skolem,
         tla.exists(tla.name("X"), tla.powSet(set), tla.bool(false)))
 
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
