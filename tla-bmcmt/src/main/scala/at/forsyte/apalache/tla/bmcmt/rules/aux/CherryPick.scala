@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaNatSet}
-import at.forsyte.apalache.tla.lir.{NameEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{NameEx, NullEx, TlaEx, ValEx}
 
 /**
   * An element picket that allows us:
@@ -32,6 +32,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     */
   def pick(set: ArenaCell, state: SymbState, elseAssert: TlaEx): SymbState = {
     set.cellType match {
+      // all kinds of sets that should be kept unexpanded
       case PowSetT(t@FinSetT(_)) =>
         // a powerset is never empty, pick an element
         pickFromPowset(t, set, state)
@@ -40,6 +41,20 @@ class CherryPick(rewriter: SymbStateRewriter) {
         // No emptiness check, since we are dealing with a function set [S -> T].
         // If S is empty, we get a function of the empty set.
         pickFunFromFunSet(FunT(domt, rest), set, state)
+
+      case FinFunSetT(domt@FinSetT(_), cdm@PowSetT(resultT @ FinSetT(_))) =>
+        // No emptiness check, since we are dealing with a function set [S -> T].
+        // If S is empty, we get a function of the empty set.
+        pickFunFromFunSet(FunT(domt, resultT), set, state)
+
+      case FinFunSetT(dom1T@FinSetT(_), FinFunSetT(dom2T @ FinSetT(_), FinSetT(result2T))) =>
+        pickFunFromFunSet(FunT(dom1T, FunT(dom2T, result2T)), set, state)
+
+      case FinFunSetT(dom1T@FinSetT(_), cdm @ FinFunSetT(dom2T @ FinSetT(_), PowSetT(result2T @ FinSetT(_)))) =>
+        pickFunFromFunSet(FunT(dom1T, FunT(dom2T, result2T)), set, state)
+
+      case FinFunSetT(FinSetT(_), PowSetT(_)) | FinFunSetT(FinSetT(_), FinFunSetT(_, _)) =>
+        throw new RewriterException(s"Rewriting for the type ${set.cellType} is not implemented. Raise an issue.", state.ex)
 
       case FinSetT(IntT()) if set == state.arena.cellIntSet() || set == state.arena.cellNatSet() =>
         // not really a finite set, but we can pick a value from it
@@ -521,8 +536,9 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
   /**
     * Picks a function from a set [S -> T].
-    * Since we construct [S -> T] symbolically, it is easy to pick a function by imposing the constraints
-    * from S and T, so we are not using an oracle here.
+    * Since [S -> T] is in its unexpanded form, it is easy to pick a function by imposing the constraints
+    * from S and T, so we are not using an oracle here. However, we have to take care of T, as it can be
+    * an unexpanded set itself, e.g., SUBSET X, or [X -> Y].
     *
     * @param funT   a cell type to assign to the picked cell.
     * @param funSet a function set [S -> T]
@@ -532,9 +548,9 @@ class CherryPick(rewriter: SymbStateRewriter) {
   def pickFunFromFunSet(funT: CellT, funSet: ArenaCell, state: SymbState): SymbState = {
     rewriter.solverContext.log("; PICK %s FROM %s {".format(funT, funSet))
     var arena = state.arena
-    val dom = arena.getDom(funSet) // this is a set of potential arguments
-    val cdm = arena.getCdm(funSet) // this is a set of potential results
-    // TODO: take care of [{} -> T] and [S -> {}]
+    val dom = arena.getDom(funSet) // this is a set of potential arguments, always expanded!
+    val cdm = arena.getCdm(funSet) // this is a set of potential results, may be expanded, may be not.
+    // TODO: take care of [S -> {}], what is the semantics of it?
     val funType = funT.asInstanceOf[FunT] // for now, only FunT is supported
     // create the function cell
     arena = arena.appendCell(funT)
@@ -543,11 +559,14 @@ class CherryPick(rewriter: SymbStateRewriter) {
     arena = arena.appendCell(FinSetT(TupleT(Seq(funType.argType, funType.resultType))))
     val relationCell = arena.topCell
     // not keeping the domain explicitly
+    // TODO: why don't we keep the domain? It is always expanded and thus already pre-computed!
 //    arena = arena.setDom(funCell, dom)
     arena = arena.setCdm(funCell, relationCell)
     var nextState = state.setArena(arena)
 
-    // for every domain cell, pick a result from the co-domain
+    // For every domain cell, pick a result from the co-domain.
+    // The beauty of CherryPick: When the co-domain is not expanded, CherryPick will pick one value out of the co-domain,
+    // instead of constructing the co-domain first.
     for (arg <- arena.getHas(dom)) {
       nextState = pick(cdm, nextState, nextState.arena.cellFalse()) // the co-domain should be non-empty
       val pickedResult = nextState.asCell
@@ -560,7 +579,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
       val iff = tla.equiv(tla.in(arg, dom), tla.in(pair, relationCell))
       rewriter.solverContext.assertGroundExpr(iff)
     }
-    // TODO: pick default values when one set is empty
+
+    // If S is empty, the relation is empty too.
 
     rewriter.solverContext.log("; } PICK %s FROM %s".format(funT, funSet))
     nextState.setRex(funCell)

@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.config
 
 import at.forsyte.apalache.infra.ExceptionAdapter
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.types.TypeInferenceError
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{MalformedTlaError, TlaEx}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
@@ -29,6 +30,9 @@ class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
 
     case err: TypeException =>
       "%s: type error: %s".format(findLoc(err.causeExpr), err.getMessage)
+
+    case err: TypeInferenceError =>
+      "%s: type error: %s".format(findLoc(err.origin), err.getMessage)
 
     case err: InvalidTlaExException =>
       "%s: unexpected TLA+ expression: %s".format(findLoc(err.causeExpr), err.getMessage)

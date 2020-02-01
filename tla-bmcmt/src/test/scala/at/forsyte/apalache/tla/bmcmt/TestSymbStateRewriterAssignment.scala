@@ -25,7 +25,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
 
   test("""SE-IN-ASSIGN1(int): \E t \in {1, 2}: x' \in {t} ~~> TRUE and [x -> $C$k]""") {
     val set = set12
-    val assign = OperEx(BmcOper.skolemExists, tla.exists(boundName, set, tla.assign(x_prime, boundName)))
+    val assign = OperEx(BmcOper.skolem, tla.exists(boundName, set, tla.assign(x_prime, boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
 
@@ -79,7 +79,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
   }
 
   test("""SE-IN-ASSIGN1(int): x' \in {} ~~> FALSE""") {
-    val assign = OperEx(BmcOper.skolemExists, tla.exists(boundName, tla.enumSet(), tla.assign(x_prime, boundName)))
+    val assign = OperEx(BmcOper.skolem, tla.exists(boundName, tla.enumSet(), tla.assign(x_prime, boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
     val rewriter = create()
@@ -103,7 +103,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
         tla.bool(false))
     }
 
-    val assign = OperEx(BmcOper.skolemExists,
+    val assign = OperEx(BmcOper.skolem,
       tla.exists(boundName, empty(tla.enumSet(tla.int(1))), tla.assign(x_prime, boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
@@ -147,7 +147,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
   test("""SE-IN-ASSIGN1(set): \E t \in {{1, 2}, {2, 3}}: x' \in {t} ~~> TRUE and [x -> $C$k]""") {
     val set = tla.enumSet(set12,
       tla.enumSet(tla.int(2), tla.int(3)))
-    val assign = OperEx(BmcOper.skolemExists,
+    val assign = OperEx(BmcOper.skolem,
       tla.exists(boundName, set, tla.assign(x_prime, boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
@@ -196,7 +196,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     val twoSets = tla.enumSet(tla.enumSet(1, 2), tla.enumSet(tla.plus(1, 1), 2, 3))
     val minus = setminus(twoSets, tla.enumSet(2, 3))
     val assign =
-      OperEx(BmcOper.skolemExists,
+      OperEx(BmcOper.skolem,
         tla.exists(boundName, minus, tla.assign(x_prime, boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
@@ -243,7 +243,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
   test("""SE-IN-ASSIGN1(set): \E t \in SUBSET {1, 2}: x' \in {t} ~~> TRUE and [x -> $C$k]""") {
     val set = tla.powSet(set12)
     val assign =
-      OperEx(BmcOper.skolemExists,
+      OperEx(BmcOper.skolem,
         tla.exists(boundName, set, tla.assign(x_prime, boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
@@ -306,7 +306,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     val fun2 = tla.funDef(tla.int(2), tla.name("x4"), tla.booleanSet())
     val set = tla.enumSet(fun0, fun1)
     val assign =
-      OperEx(BmcOper.skolemExists,
+      OperEx(BmcOper.skolem,
         tla.exists(boundName, set, tla.assign(x_prime, boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
@@ -347,7 +347,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     val fun2 = tla.funDef(tla.int(2), tla.name("x"), tla.booleanSet())
     val set = tla.funSet(tla.booleanSet(), tla.enumSet(tla.int(0), tla.int(1)))
     val assign =
-      OperEx(BmcOper.skolemExists,
+      OperEx(BmcOper.skolem,
         tla.exists(boundName, set, tla.assign(x_prime, boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
@@ -394,7 +394,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     // regression
     val set = tla.funSet(tla.enumSet(), tla.enumSet(tla.int(0), tla.int(1)))
     val assign =
-      OperEx(BmcOper.skolemExists,
+      OperEx(BmcOper.skolem,
         tla.exists(boundName, set, tla.assign(x_prime, boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
@@ -411,7 +411,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     val domain = tla.dotdot(tla.int(0), tla.minus(tla.int(5), tla.int(1)))
     val set = tla.funSet(domain, boolset)
     val assign =
-      OperEx(BmcOper.skolemExists,
+      OperEx(BmcOper.skolem,
         tla.exists(boundName, set, tla.assign(x_prime, boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
@@ -435,7 +435,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     val domain = tla.dotdot(tla.int(0), tla.int(4))
     val set = tla.funSet(domain, ValEx(TlaNatSet))
     val assign =
-      OperEx(BmcOper.skolemExists,
+      OperEx(BmcOper.skolem,
         tla.exists(boundName, set, tla.assign(x_prime, boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
@@ -450,7 +450,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     val domain = tla.dotdot(tla.int(0), tla.int(4))
     val set = tla.funSet(domain, ValEx(TlaIntSet))
     val assign =
-      OperEx(BmcOper.skolemExists,
+      OperEx(BmcOper.skolem,
         tla.exists(boundName, set, tla.assign(x_prime, boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
@@ -468,7 +468,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     val tuple2 = tla.tuple(tla.int(2), tla.bool(true), set2)
     val set = tla.enumSet(tuple1, tuple2)
     val assign =
-      OperEx(BmcOper.skolemExists,
+      OperEx(BmcOper.skolem,
         tla.exists(boundName, set, tla.assign(x_prime, boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)
@@ -506,7 +506,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
       tla.str("b"), tla.bool(true), tla.str("c"), set34)
     val recordSet = tla.enumSet(tla.withType(record1, annotation), record2)
     val assign =
-      OperEx(BmcOper.skolemExists,
+      OperEx(BmcOper.skolem,
         tla.exists(boundName, recordSet, tla.assign(x_prime, boundName)))
 
     val state = new SymbState(assign, CellTheory(), arena, new Binding)

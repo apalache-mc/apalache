@@ -111,7 +111,7 @@ object KeraLanguagePred {
       TlaSeqOper.tail,
       TlaSeqOper.len,
       TlcOper.printT, // TODO: preprocess into NullEx in Keramelizer
-      BmcOper.skolemExists,
+      BmcOper.skolem,
       BmcOper.expand
       // for the future
       //    TlaActionOper.enabled,

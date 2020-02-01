@@ -123,7 +123,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
   test("""IF-THEN-ELSE with \E: IF \E i \in {}: x' \in {i} THEN x' ELSE 0""") {
     // this tricky test comes from Bakery, where an assignment is made in one branch of a conjunction
     val exists =
-      OperEx(BmcOper.skolemExists,
+      OperEx(BmcOper.skolem,
         tla.exists(tla.name("i"),
           tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(IntT()))),
           tla.in(tla.prime(tla.name("x")), tla.enumSet(tla.name("i")))))
@@ -412,7 +412,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     }
 
     val ex =
-      OperEx(BmcOper.skolemExists,
+      OperEx(BmcOper.skolem,
         tla.exists(tla.name("x"),
           dynEmpty(tla.enumSet(tla.int(1))),
           tla.gt(tla.name("x"), tla.int(4))))
@@ -427,7 +427,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
   test("""SE-EX skolem: \E i \in Nat: i = 10 /\ x' \in {i}""") {
     // this works for skolem constants only
     val ex =
-      OperEx(BmcOper.skolemExists,
+      OperEx(BmcOper.skolem,
         tla.exists(tla.name("i"),
           ValEx(TlaNatSet),
           tla.and(
@@ -447,7 +447,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
   test("""SE-EX skolemization over range: \E i \in a..b: i % 3 = 1 /\ x' \in {i}""") {
     // this works for skolem constants only
     val ex =
-      OperEx(BmcOper.skolemExists,
+      OperEx(BmcOper.skolem,
         tla.exists(
           tla.name("i"),
           tla.dotdot(tla.name("a"), tla.name("b")),

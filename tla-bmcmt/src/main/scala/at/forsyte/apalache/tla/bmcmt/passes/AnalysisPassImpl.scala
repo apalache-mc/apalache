@@ -44,12 +44,23 @@ class AnalysisPassImpl @Inject()(val options: PassOptions,
       throw new CheckerException(s"The input of $name pass is not initialized", NullEx)
     }
 
-    val skolem = new SkolemizationMarker(tracker)
-    val skolemModule = ModuleByExTransformer(skolem).apply(tlaModule.get)
-    logger.info("  > Replaced some existentials with Skolem constants")
+    val transformationSequence =
+      List(
+        new SkolemizationMarker(tracker),
+        new ExpansionMarker(tracker)
+      ) ///
 
-    val consts = skolemModule.constDeclarations.map(_.name).toSet
-    val vars = skolemModule.varDeclarations.map(_.name).toSet
+    logger.info(" > Marking skolemizable existentials and sets to be expanded...")
+    val marked = transformationSequence.foldLeft(tlaModule.get) {
+      case (m, tr) =>
+        logger.info("  > %s".format(tr.getClass.getSimpleName))
+        ModuleByExTransformer(tr).apply(m)
+    }
+
+    logger.info(" > Running analyzers...")
+
+    val consts = marked.constDeclarations.map(_.name).toSet
+    val vars = marked.varDeclarations.map(_.name).toSet
 
     val hintFinder = new HintFinder(hintsStoreImpl)
     val gradeAnalysis = new ExprGradeAnalysis(exprGradeStoreImpl)
@@ -59,16 +70,16 @@ class AnalysisPassImpl @Inject()(val options: PassOptions,
       hintFinder.introHints(expr)
     }
 
-    skolemModule.declarations.foreach {
+    marked.declarations.foreach {
       case d: TlaOperDecl => analyzeExpr(d.body)
       case a: TlaAssumeDecl => analyzeExpr(a.body)
       case _ => ()
     }
 
-    nextPass.setModule(skolemModule)
+    nextPass.setModule(marked)
 
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    PrettyWriter.write(skolemModule, new File(outdir.toFile, "out-analysis.tla"))
+    PrettyWriter.write(marked, new File(outdir.toFile, "out-analysis.tla"))
 
     logger.info("  > Introduced expression grades")
     logger.info("  > Introduced %d formula hints".format(hintsStoreImpl.store.size))
