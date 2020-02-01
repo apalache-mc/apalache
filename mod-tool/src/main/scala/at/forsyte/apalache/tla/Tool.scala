@@ -120,7 +120,7 @@ object Tool extends App with LazyLogging {
     if (result.isDefined) {
       logger.info("Checker reports no error up to computation length " + check.length)
     } else {
-      logger.info("Checker has failed")
+      logger.info("Checker has found an error")
     }
   }
 
