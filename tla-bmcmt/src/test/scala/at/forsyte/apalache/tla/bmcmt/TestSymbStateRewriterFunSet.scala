@@ -116,7 +116,7 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
   }
 
   // this should be fixed by implementing #91
-  test("""SE-FUNSET2: [x \in {1, 2} -> {x = 1}] \in [{1, 2} -> SUBSET {FALSE, TRUE}]""") {
+  test("""SE-FUNSET2: [x \in {1, 2} |-> {x = 1}] \in [{1, 2} -> SUBSET {FALSE, TRUE}]""") {
     val domain = tla.enumSet(tla.int(1), tla.int(2))
     val codomain = tla.powSet(tla.enumSet(tla.bool(false), tla.bool(true)))
     val funset = tla.funSet(domain, codomain)
@@ -142,7 +142,7 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
     }
   }
 
-  test("""SE-FUNSET2: [x \in {1, 2} -> 3] \in [{1, 2} -> {3, 4}]""") {
+  test("""SE-FUNSET2: [x \in {1, 2} |-> 3] \in [{1, 2} -> {3, 4}]""") {
     val domain = tla.enumSet(tla.int(1), tla.int(2))
     val codomain = tla.enumSet(tla.int(3), tla.int(4))
     val funset = tla.funSet(domain, codomain)
@@ -157,7 +157,7 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
   }
 
   // this should be redundant in the presence of #91
-  test("""SE-FUNSET2: [x \in {0, 1, 2} \ {0} -> 3] \in [{1, 2} -> {3, 4}]""") {
+  test("""SE-FUNSET2: [x \in {0, 1, 2} \ {0} |-> 3] \in [{1, 2} -> {3, 4}]""") {
     // although 0 is in the function domain at the arena level, it does not belong to the set difference
     def setminus(set: TlaEx, intVal: Int): TlaEx = {
       tla.filter(tla.name("t"),
@@ -180,7 +180,7 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
   }
 
   // this should be fixed by implementing #91
-  test("""SE-FUNSET2: [x \in {1, 2} -> {TRUE}] \in [{1, 2} -> SUBSET {FALSE}]""") {
+  test("""SE-FUNSET2: [x \in {1, 2} |-> {TRUE}] \in [{1, 2} -> SUBSET {FALSE}]""") {
     val domain = tla.enumSet(tla.int(1), tla.int(2))
     val codomain = tla.powSet(tla.enumSet(tla.bool(false)))
     val funset = tla.funSet(domain, codomain)
@@ -195,7 +195,7 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
   }
 
   // this should be fixed by implementing #91
-  test("""SE-FUNSET with a SUBSET: [x \in {1, 2} -> {TRUE}] \in [{1, 2} -> SUBSET {FALSE, TRUE}]""") {
+  test("""SE-FUNSET with a SUBSET: [x \in {1, 2} |-> {TRUE}] \in [{1, 2} -> SUBSET {FALSE, TRUE}]""") {
     val domain = tla.enumSet(tla.int(1), tla.int(2))
     val codomain = tla.powSet(tla.enumSet(tla.bool(false), tla.bool(true)))
     val funset = tla.funSet(domain, codomain)
