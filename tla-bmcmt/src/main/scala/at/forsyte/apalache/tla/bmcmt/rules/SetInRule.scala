@@ -31,6 +31,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   // TODO: x \in S should be equivalent to SkolemExists(\E t \in S: x = t)
+  // This is only true for the positive occurences of x \in S!
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       // a common pattern x \in {y} that is equivalent to x = y, e.g., the assignment solver creates it
@@ -92,7 +93,21 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
   // TODO: pick a function from funsetCell and check for function equality
   private def funSetIn(state: SymbState, funsetCell: ArenaCell, funCell: ArenaCell): SymbState = {
     // checking whether f \in [S -> T]
-    assert(PartialFunction.cond(funCell.cellType) { case FunT(_, _) => true })
+    def flagTypeError(): Nothing = {
+      val msg = s"Not implemented (open an issue): f \\in S for f: %s and S: %s."
+        .format(funCell.cellType, funsetCell.cellType)
+      throw new RewriterException(msg, state.ex)
+    }
+    funCell.cellType match {
+      case FunT(FinSetT(_), _) => () // OK
+      case _ => flagTypeError()
+    }
+    funsetCell.cellType match {
+      case FinFunSetT(_, PowSetT(_)) | FinFunSetT(PowSetT(_), _) |
+           FinFunSetT(_, FinFunSetT(_, _)) | FinFunSetT(FinFunSetT(_, _), _) =>
+        flagTypeError()
+      case _ => () // OK
+    }
     val funsetDom = state.arena.getDom(funsetCell)
     val funsetCdm = state.arena.getCdm(funsetCell)
     var nextState = state
