@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
+import at.forsyte.apalache.tla.lir.values.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values._
 
 

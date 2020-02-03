@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.types
 import at.forsyte.apalache.tla.bmcmt.RewriterException
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaIntSet, TlaStrSet}
+import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaStrSet}
 import at.forsyte.apalache.tla.lir.values.TlaStr
 import at.forsyte.apalache.tla.lir.{NullEx, OperEx, TlaEx, ValEx}
 

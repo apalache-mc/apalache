@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaIntSet, TlaNatSet}
-import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
+import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaNatSet}
+import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.lir.{NameEx, ValEx}
 
 /**
@@ -13,21 +13,22 @@ import at.forsyte.apalache.tla.lir.{NameEx, ValEx}
 class BuiltinConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
-      case ValEx(TlaFalse) | ValEx(TlaTrue) | ValEx(TlaBoolSet) | ValEx(TlaNatSet) | ValEx(TlaIntSet) => true
+      case ValEx(TlaBool(false)) | ValEx(TlaBool(true))
+           | ValEx(TlaBoolSet) | ValEx(TlaNatSet) | ValEx(TlaIntSet) => true
       case _ => false
     }
   }
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case ValEx(TlaFalse) =>
+      case ValEx(TlaBool(false)) =>
         if (state.theory == CellTheory()) {
           state.setRex(NameEx(state.arena.cellFalse().toString))
         } else {
           state.setRex(NameEx(SolverContext.falseConst))
         }
 
-      case ValEx(TlaTrue) =>
+      case ValEx(TlaBool(true)) =>
         if (state.theory == CellTheory()) {
           state.setRex(NameEx(state.arena.cellTrue().toString))
         } else {

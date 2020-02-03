@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlcOper
-import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaNatSet}
+import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
 import org.scalatest.FunSuite
 
 class TestKeraLanguagePred extends FunSuite {

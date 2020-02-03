@@ -3,8 +3,8 @@ package at.forsyte.apalache.tla.imp
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaStrSet}
-import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
+import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaStrSet}
+import at.forsyte.apalache.tla.lir.values.TlaBool
 import tla2sany.semantic._
 
 /**
@@ -114,10 +114,10 @@ class OpApplTranslator(sourceStore: SourceStore, val context: Context, val recSt
   private def translateBuiltinConst(node: OpApplNode) = {
     // comparing the name seems to be the only reasonable way of learning about the actual operator
     node.getOperator.getName.toString match {
-      case "FALSE" => ValEx(TlaFalse)             // we disagree with tlatools and treat FALSE as a built-in value
-      case "TRUE" => ValEx(TlaTrue)               // ditto
-      case "BOOLEAN" => ValEx(TlaBoolSet)         // ditto
-      case "STRING" => ValEx(TlaStrSet)           // ditto
+      case "FALSE" => ValEx(TlaBool(false))
+      case "TRUE" => ValEx(TlaBool(true))
+      case "BOOLEAN" => ValEx(TlaBoolSet)
+      case "STRING" => ValEx(TlaStrSet)
       case "$SetEnumerate" => OperEx(TlaSetOper.enumSet)
         // NOTE: previously, we have a special object for the only empty set is a value,
         // but that seems to create problems

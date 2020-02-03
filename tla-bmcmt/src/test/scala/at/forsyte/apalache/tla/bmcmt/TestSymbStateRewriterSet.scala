@@ -5,8 +5,8 @@ import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaNatSet}
-import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
+import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -197,8 +197,8 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
   test("""SE-SET-IN2: \FALSE \in {\FALSE, \TRUE} ~~> b_new""") {
     val ex =
       OperEx(TlaSetOper.in,
-        ValEx(TlaFalse),
-        OperEx(TlaSetOper.enumSet, ValEx(TlaFalse), ValEx(TlaTrue)))
+        ValEx(TlaBool(false)),
+        OperEx(TlaSetOper.enumSet, ValEx(TlaBool(false)), ValEx(TlaBool(true))))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
     rewriter.rewriteOnce(state) match {
@@ -249,7 +249,7 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     val ex =
       OperEx(TlaSetOper.in,
         cell.toNameEx,
-        OperEx(TlaSetOper.enumSet, ValEx(TlaTrue), ValEx(TlaTrue)))
+        OperEx(TlaSetOper.enumSet, ValEx(TlaBool(true)), ValEx(TlaBool(true))))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
     rewriter.rewriteOnce(state) match {
