@@ -9,7 +9,6 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 
 /**
   * Integer comparisons: <, <=, >, >=. For equality and inequality, check EqRule and NeqRule.
-  * Implements SE-INT-CMP1.
   *
   * @author Igor Konnov
   */

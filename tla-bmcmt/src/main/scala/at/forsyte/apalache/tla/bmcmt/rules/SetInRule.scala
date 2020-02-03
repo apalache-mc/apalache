@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
 
 /**
-  * Implements the rules SE-SET-IN{1,2,3}, SE-IN-FUNSET, and SE-IN-SUBSET1.
+  * Rewrites set membership tests: x \in S, x \in SUBSET S, and x \in [S -> T].
   *
   * @author Igor Konnov
   */

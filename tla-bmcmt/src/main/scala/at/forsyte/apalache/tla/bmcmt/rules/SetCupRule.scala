@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
 /**
-  * Implements the rule: SE-SET-CUP1, that is, a union of two sets.
+  * Rewrites X \cup Y, that is, a union of two sets (not UNION).
   * In the first encoding, we used a linear number of `in` queries.
   * However, this happens to be unsound, and we need a quadratic number of queries.
   *

@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaArithOper
 import at.forsyte.apalache.tla.lir.values.TlaInt
 
 /**
-  * Implements the rules: SE-INT-RANGE[1-2].
+  * Rewrites an integer range a..b.
   *
   * @author Igor Konnov
    */

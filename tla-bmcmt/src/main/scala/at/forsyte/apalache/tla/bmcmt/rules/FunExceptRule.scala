@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 
 /**
-  * Implements the rules: FUN-EXCEPT and REC-EXCEPT.
+  * Rewriting EXCEPT for functions, tuples, and records.
   *
   * @author Igor Konnov
   */

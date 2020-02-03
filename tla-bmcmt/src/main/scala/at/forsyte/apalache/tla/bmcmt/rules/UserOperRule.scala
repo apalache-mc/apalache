@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 
 /**
-  * An operator application (for constant operators).
+  * This rule rewrites an operator application (for constant operators).
   *
   * @author Igor Konnov
   */

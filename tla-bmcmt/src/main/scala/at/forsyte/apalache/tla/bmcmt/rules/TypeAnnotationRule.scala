@@ -5,7 +5,8 @@ import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.oper.BmcOper
 
 /**
-  * This rule just ignores a type annotation. The actual use of type annotations happens at an earlier
+  * This rule just ignores a type annotation a <: b.
+  * The actual use of type annotations happens at an earlier
   * type inference stage, see TrivialTypeFinder.
   *
   * @author Igor Konnov

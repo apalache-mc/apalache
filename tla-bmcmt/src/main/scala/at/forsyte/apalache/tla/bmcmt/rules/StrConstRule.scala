@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir.ValEx
 import at.forsyte.apalache.tla.lir.values.TlaStr
 
 /**
-  * Implements the rule SE-STR-CONST.
+  * Rewrites a string literal, e.g., "hello".
   *
   * @author Igor Konnov
   */
