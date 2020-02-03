@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, NullEx, OperEx, TlaEx}
 
 /**
-  * Implements the rules: SE-SET-FILTER[1-2].
+  * Rewrites a set comprehension { x \in S: P }.
   *
   * @author Igor Konnov
   */

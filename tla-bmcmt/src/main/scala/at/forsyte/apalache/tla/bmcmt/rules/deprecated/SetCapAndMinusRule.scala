@@ -105,7 +105,6 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   private def in(e: ArenaCell, s: ArenaCell) = OperEx(TlaSetOper.in, e.toNameEx, s.toNameEx)
 
-  // TODO: these are common functions, move them to TlaExBuilder
   private def and(es: TlaEx*) = OperEx(TlaBoolOper.and, es: _*)
 
   private def or(es: TlaEx*) = OperEx(TlaBoolOper.or, es: _*)

@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 import scala.collection.immutable.SortedSet
 
 /**
-  * Implements the rules: SE-REC-CTOR[1-2].
+  * Rewrites a record constructor [f_1 |-> e_1, ..., f_k |-> e_k].
   *
   * Internally, a record is stored as a tuple,
   * where an index i corresponds to the ith key in the sorted set of record keys.

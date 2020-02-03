@@ -10,7 +10,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaControlOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 /**
-  * Implements the rules: SE-ITE[1-6].
+  * Rewriting rule for IF A THEN B ELSE C.
   *
   * @author Igor Konnov
   */

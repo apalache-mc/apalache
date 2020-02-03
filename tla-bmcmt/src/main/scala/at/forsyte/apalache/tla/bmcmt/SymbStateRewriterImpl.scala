@@ -147,18 +147,12 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     // logic
     key(tla.eql(tla.name("x"), tla.name("y")))
       -> List(new EqRule(this)),
-//    key(tla.neql(tla.name("x"), tla.name("y")))
-//      -> List(new NeqRule(this)),
     key(tla.or(tla.name("x"), tla.name("y")))
       -> List(new OrRule(this)),
     key(tla.and(tla.name("x"), tla.name("y")))
       -> List(new AndRule(this)),
     key(tla.not(tla.name("x")))
       -> List(new NegRule(this)),
-//    key(tla.impl(tla.name("x"), tla.name("y")))
-//      -> List(new ImplRule(this)),
-//    key(tla.equiv(tla.name("x"), tla.name("y")))
-//      -> List(new EquivRule(this)),
     key(OperEx(BmcOper.skolem, tla.exists(tla.name("x"),
                tla.name("S"), tla.name("p"))))
       -> List(new QuantRule(this)),
@@ -177,16 +171,10 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
       // TODO, rethink TlaOper.apply rule
     key(tla.appDecl( TlaOperDecl("userOp", List(), tla.int(3)) ) ) ->
       List(new UserOperRule(this)),
-    //    key(tla.caseOther(tla.name("otherAction"), tla.name("pred1"), tla.name("action1")))
-    //      -> List(new CaseRule(this)),
-    //    key(tla.caseAny(tla.name("pred1"), tla.name("action1")))
-    //      -> List(new CaseRule(this)),
 
     // sets
     key(tla.in(tla.name("x"), tla.name("S")))
       -> List( new SetInRule(this) ),
-//    key(tla.notin(tla.name("x"), tla.name("S")))
-//      -> List(new SetNotInRule(this)),
     key(tla.enumSet(tla.name("x"))) ->
       List(new SetCtorRule(this)),
     key(tla.subseteq(tla.name("x"), tla.name("S")))
@@ -197,20 +185,6 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
       -> List(new SetFilterRule(this)),
     key(tla.map(tla.name("e"), tla.name("x"), tla.name("S")))
       -> List(new SetMapRule(this)),
-//    key(tla.subset(tla.name("x"), tla.name("S")))
-//      -> List(new SetInclusionRule(this)),
-//    key(tla.supseteq(tla.name("x"), tla.name("S")))
-//      -> List(new SetInclusionRule(this)),
-//    key(tla.supset(tla.name("x"), tla.name("S")))
-//      -> List(new SetInclusionRule(this)),
-//    key(tla.cap(tla.name("X"), tla.name("Y")))
-//      -> List(new SetCapAndMinusRule(this)),
-//    key(tla.setminus(tla.name("X"), tla.name("Y")))
-//      -> List(new SetCapAndMinusRule(this)),
-//    key(tla.times(tla.name("S1"), tla.name("S2")))
-//      -> List(new CartesianProductRule(this)),
-//    key(tla.recSet(tla.str("a"), tla.name("S1"), tla.str("b"), tla.name("S2")))
-//      -> List(new RecordSetRule(this)),
     key(OperEx(BmcOper.expand, tla.name("X")))
       -> List(new SetExpandRule(this)),
     key(tla.powSet(tla.name("X")))

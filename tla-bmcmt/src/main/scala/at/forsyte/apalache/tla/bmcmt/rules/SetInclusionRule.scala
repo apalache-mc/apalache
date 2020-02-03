@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
 
 /**
-  * Implements subset inclusion.
+  * Rewrites subset inclusion X \subseteq Y.
   *
   * @author Igor Konnov
   */

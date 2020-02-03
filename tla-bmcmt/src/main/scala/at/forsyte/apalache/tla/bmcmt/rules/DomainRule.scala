@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 
 /**
-  * Implements the rules: SE-DOM.
+  * Rewriting DOMAIN f, that is, translating the domain of a function, record, tuple, or sequence.
   *
   * @author Igor Konnov
   */

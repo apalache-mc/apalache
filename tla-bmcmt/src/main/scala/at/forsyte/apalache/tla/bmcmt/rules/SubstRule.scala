@@ -4,7 +4,8 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.NameEx
 
 /**
-  * Implements the rule SE-SUBST1.
+  * Substitutes a bound name with a cell. For instance, it substitutes a name that is declared with VARIABLE or CONSTANT,
+  * as well as bound variables declared with \A, \E, set operations, etc.
   *
   * @author Igor Konnov
    */

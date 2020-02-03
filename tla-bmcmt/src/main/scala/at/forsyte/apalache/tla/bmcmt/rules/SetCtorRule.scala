@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 /**
-  * Implements the rules: SE-SET-CTOR[1-2].
+  * Rewrites the set constructor {e_1, ..., e_k}.
   *
   * @author Igor Konnov
    */

@@ -10,7 +10,6 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 
 /**
   * Integer arithmetic operations: +, -, *, div, mod.
-  * Implements rule SE-INT-ARITH1.
   *
   * @author Igor Konnov
   */

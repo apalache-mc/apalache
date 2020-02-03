@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
 /**
-  * Implements the rule: SE-SUBSET1, that is, constructs the powerset SUBSET S for a set S.
+  * Rewrites the powerset SUBSET S for a set S.
   *
   * @author Igor Konnov
    */

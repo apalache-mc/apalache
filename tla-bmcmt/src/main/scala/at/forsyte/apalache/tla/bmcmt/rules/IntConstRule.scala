@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir.ValEx
 import at.forsyte.apalache.tla.lir.values.TlaInt
 
 /**
-  * Implements the rule SE-INT-CONST.
+  * Rewrites integer constants.
   *
   * @author Igor Konnov
   */

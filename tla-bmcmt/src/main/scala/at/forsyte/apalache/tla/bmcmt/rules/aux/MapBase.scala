@@ -8,14 +8,13 @@ import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 /**
-  * The base rules for set mappings: {e : x ∈ S}, S_1 × ... × S_n, [a_1 ↦ S_1, ..., a_n ↦ S_n]
+  * The base rules for a set map {e : x ∈ S}. This class was extracted from SetMapRule, as it was used in other rules
+  * that are now obsolete. Due to the general nature of this mapping, we keep it in a separate class.
   *
   * @param rewriter the symbolic rewriter
-  * @param isBijective a hint that the mapping is bijective,
-  *    e.g., as in { &lt;&lt;x, y&gt;&gt; : x ∈ S_1, y ∈ S_ 2}, so the additional constraints are not required.
   * @author Igor Konnov
   */
-class MapBase(rewriter: SymbStateRewriter, val isBijective: Boolean) {
+class MapBase(rewriter: SymbStateRewriter) {
   /**
    <p>Implement a mapping { e: x_1 ∈ S_1, ..., x_n ∈ S_n }.</p>
 
@@ -28,31 +27,21 @@ class MapBase(rewriter: SymbStateRewriter, val isBijective: Boolean) {
                             setEs: Seq[TlaEx]): SymbState = {
     // first, rewrite the variable domains S_1, ..., S_n
     var (nextState, sets) = rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), setEs)
-    // convert the set cell, if required
-    def checkType(setCell: ArenaCell): ArenaCell = {
+    def findSetCellAndElemType(setCell: ArenaCell): (ArenaCell, CellT) = {
       setCell.cellType match {
-        case FinSetT(_) =>
-          setCell
+        case FinSetT(elemType) =>
+          (setCell, elemType)
 
         case tp @ _ => throw new NotImplementedError("A set filter over %s is not implemented".format(tp))
       }
     }
 
-    val setsAsCells = sets.map(nextState.arena.findCellByNameEx) map checkType
-
-    def getSetElemType(c: ArenaCell) = c.cellType match {
-      case FinSetT(et) => et
-      case t@_ => throw new RewriterException("Expected a finite set, found %s in %s ".format(t, state.ex), state.ex)
-    }
-    val setElemTypes = setsAsCells map getSetElemType
+    val (setsAsCells, elemTypes) = (sets.map(nextState.arena.findCellByNameEx) map findSetCellAndElemType).unzip
     val elemsOfSets = setsAsCells.map(nextState.arena.getHas)
     val setLimits = elemsOfSets.map(_.size - 1)
-    // find the type of the target expression and of the target set
-    // TODO: types should have been computed already, this was only needed by CartesianProductRule and RecordSetRule
+    // find the types of the target expression and of the target set
     val targetMapT = rewriter.typeFinder.computeRec(mapEx)
-    val argTypes = 0.until(2 * setsAsCells.size) map
-      { i => if (i % 2 == 0) setElemTypes(i / 2) else setsAsCells(i / 2).cellType }
-    val targetSetT = rewriter.typeFinder.compute(state.ex, targetMapT +: argTypes :_*)
+    val targetSetT = FinSetT(targetMapT)
 
     nextState = nextState.updateArena(_.appendCell(targetSetT))
     val resultSetCell = nextState.arena.topCell

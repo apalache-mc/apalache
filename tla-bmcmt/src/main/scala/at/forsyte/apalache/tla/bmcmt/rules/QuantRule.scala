@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 import com.typesafe.scalalogging.LazyLogging
 
 /**
-  * Implements the rules: SE-LOG-EX[1-3] and SE-LOG-ALL[1-3].
+  * Rewrites \A x \in S: P and \E x \in S: P. The existential quantifier is often replaced with a constant (skolemized).
   *
   * @author Igor Konnov
   */
