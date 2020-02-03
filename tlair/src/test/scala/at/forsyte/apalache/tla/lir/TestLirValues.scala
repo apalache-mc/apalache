@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.lir
 
-import at.forsyte.apalache.tla.lir.predef.TlaIntSet
 import at.forsyte.apalache.tla.lir.values._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -14,8 +13,6 @@ class TestLirValues extends FunSuite {
   test("create booleans") {
     val b = TlaBool(false)
     assert(!b.value)
-    assert(!TlaFalse.value)
-    assert(TlaTrue.value)
   }
 
   test("create int") {

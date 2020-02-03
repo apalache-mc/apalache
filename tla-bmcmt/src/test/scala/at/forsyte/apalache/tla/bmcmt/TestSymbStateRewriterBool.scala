@@ -6,8 +6,8 @@ import at.forsyte.apalache.tla.bmcmt.types.{AnnotationParser, BoolT, FinSetT, In
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaBoolOper, TlaOper}
-import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaNatSet}
-import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaTrue}
+import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaNatSet}
+import at.forsyte.apalache.tla.lir.values.TlaBool
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.junit.JUnitRunner
@@ -35,7 +35,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
   }
 
   test("SE-BOOL-FALSE [Cell]: FALSE ~~> $C$0") {
-    val ex = ValEx(TlaFalse)
+    val ex = ValEx(TlaBool(false))
     val state = new SymbState(ex, CellTheory(), arena, new Binding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
@@ -49,7 +49,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
   }
 
   test("SE-BOOL-FALSE [Bool]: FALSE ~~> $B$0") {
-    val ex = ValEx(TlaFalse)
+    val ex = ValEx(TlaBool(false))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
@@ -75,7 +75,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
   }
 
   test("SE-BOOL-TRUE [Cell]: TRUE ~~> $C$1") {
-    val ex = ValEx(TlaTrue)
+    val ex = ValEx(TlaBool(true))
     val state = new SymbState(ex, CellTheory(), arena, new Binding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
@@ -89,7 +89,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
   }
 
   test("SE-BOOL-TRUE [Bool]: TRUE ~~> $B$1") {
-    val ex = ValEx(TlaTrue)
+    val ex = ValEx(TlaBool(true))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
@@ -175,7 +175,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
   }
 
   test("""SE-AND1: FALSE /\ TRUE ~~> $B$0""") {
-    val ex = OperEx(TlaBoolOper.and, ValEx(TlaFalse), ValEx(TlaTrue))
+    val ex = OperEx(TlaBoolOper.and, ValEx(TlaBool(false)), ValEx(TlaBool(true)))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
@@ -248,7 +248,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
   }
 
   test("""SE-OR1: FALSE \/ TRUE ~~> $B$1""") {
-    val ex = OperEx(TlaBoolOper.or, ValEx(TlaFalse), ValEx(TlaTrue))
+    val ex = OperEx(TlaBoolOper.or, ValEx(TlaBool(false)), ValEx(TlaBool(true)))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>

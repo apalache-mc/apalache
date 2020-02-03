@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.values.TlaFalse
+import at.forsyte.apalache.tla.lir.values.TlaBool
 
 abstract class AlphaEx( ex : TlaEx ) {
   val id : UID = ex.ID
@@ -59,7 +59,7 @@ object AlphaTransform {
       Exists( e, Star(x), Star( set ), AlphaTransform( body ) )
     case e@OperEx( TlaSetOper.in, OperEx( TlaActionOper.prime, NameEx( v ) ), rhs ) =>
       AsgnEx( e, v, Star( rhs ) )
-    case ValEx( TlaFalse ) => FalseEx( ex )
+    case ValEx(TlaBool(false)) => FalseEx( ex )
     case _ => Star( ex )
   }
 }

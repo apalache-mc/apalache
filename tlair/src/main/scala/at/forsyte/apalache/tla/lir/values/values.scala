@@ -1,27 +1,26 @@
 package at.forsyte.apalache.tla.lir.values
 
-import at.forsyte.apalache.tla.lir.{TlaValue, ValEx}
+import at.forsyte.apalache.tla.lir.TlaValue
 
-/** an integer value (unbounded as in TLA+) */
+/**
+  * An integer constant (unbounded as in TLA+).
+  */
 case class TlaInt(value: BigInt) extends TlaValue {
   def isNatural: Boolean = {
     value >= 0
   }
 }
 
-// TODO: do we want to have a less ad hoc solution, e.g., an object with all handy constructors?
-// TODO: remove, use Builder.int instead
-object IntEx {
-  def apply(n: BigInt): ValEx = ValEx(TlaInt(n))
-}
-
-/** A decimal value d_1...d_k.d_k+1...d_m.
+/**
+  * A decimal constant d_1...d_k.d_k+1...d_m.
   * Since we represent the decimal value with BigDecimal, one should take care of rounding results.
   */
 case class TlaDecimal(value: BigDecimal) extends TlaValue
 
-/** A really real number, not a float.
-  * For the moment, we don't know what to do about it. */
+/**
+  * A truly real number, not a float.
+  * This class is kept for compatibility with TLA+. We do not have an efficient representation for it.
+  */
 case class TlaReal() extends TlaValue
 
 /**
@@ -32,20 +31,55 @@ case class TlaReal() extends TlaValue
   */
 object TlaRealInfinity extends TlaReal
 
-/** a boolean */
+/**
+  * A Boolean constant. Efficiently, there are two values: TlaBool(false) and TlaBool(true).
+  * We keep the case class and do not introduce objects such as TlaFalse and TlaTrue for consistency with other values.
+  */
 case class TlaBool(value: Boolean) extends TlaValue
 
-object TlaFalse extends TlaBool(false)
-
-object TlaTrue extends TlaBool(true)
-
-/** a string */
+/**
+  * A string constant.
+  */
 case class TlaStr(value: String) extends TlaValue
 
-/** an abstract set */
-abstract class TlaSet() extends TlaValue
-
-/** a predefined set, e.g., the set of all integers */
-abstract class TlaPredefSet() extends TlaSet {
+/**
+  * A predefined constant set, e.g., the set of all integers.
+  */
+abstract class TlaPredefSet() extends TlaValue {
   val name: String
+}
+
+/**
+  * The standard set of booleans. It should be equal to { FALSE, TRUE }.
+  */
+object TlaBoolSet extends TlaPredefSet {
+  override val name: String = "BOOLEAN"
+}
+
+/**
+  * The standard set of all strings.
+  */
+object TlaStrSet extends TlaPredefSet {
+  override val name: String = "STRING"
+}
+
+/**
+  * The standard set of all integers.
+  */
+object TlaIntSet extends TlaPredefSet {
+  override val name: String = "Int"
+}
+
+/**
+  * The standard set of all naturals, including zero.
+  */
+object TlaNatSet extends TlaPredefSet {
+  override val name: String = "Nat"
+}
+
+/**
+  * The standard set of all reals.
+  */
+object TlaRealSet extends TlaPredefSet {
+  override val name: String = "Real"
 }

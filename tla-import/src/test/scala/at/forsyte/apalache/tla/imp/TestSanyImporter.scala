@@ -6,7 +6,6 @@ import java.nio.file.Files
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.predef._
 import at.forsyte.apalache.tla.lir.src.{SourcePosition, SourceRegion}
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir.{OperEx, ValEx, _}
@@ -312,7 +311,7 @@ class TestSanyImporter extends FunSuite {
       case actionDecl: TlaOperDecl =>
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
-        assert(OperEx(TlaBoolOper.or, ValEx(TlaFalse), ValEx(TlaTrue)) == actionDecl.body)
+        assert(OperEx(TlaBoolOper.or, ValEx(TlaBool(false)), ValEx(TlaBool(true))) == actionDecl.body)
         assert(locationStore.contains(actionDecl.body.ID)) // and source file information has been saved
       val loc = locationStore.find(actionDecl.body.ID).get
         assert(SourceRegion(SourcePosition(2, 9), SourcePosition(2, 21)) == loc.region)
@@ -382,7 +381,7 @@ class TestSanyImporter extends FunSuite {
       case actionDecl: TlaOperDecl =>
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
-        assert(OperEx(TlaBoolOper.and, NameEx("x"), ValEx(TlaTrue)) == actionDecl.body)
+        assert(OperEx(TlaBoolOper.and, NameEx("x"), ValEx(TlaBool(true))) == actionDecl.body)
         assert(locationStore.contains(actionDecl.body.ID)) // and source file information has been saved
     }
   }
@@ -483,18 +482,18 @@ class TestSanyImporter extends FunSuite {
       findAndExpectTlaDecl(locationStore, root, name, List(), body)
 
     val trueOperDecl = mod.declarations(1)
-    expectDecl("True", ValEx(TlaTrue))
+    expectDecl("True", ValEx(TlaBool(true)))
 
     val trueOperEx = OperEx( TlaOper.apply, NameEx("True") )
 
-    expectDecl("Eq", OperEx(TlaOper.eq, ValEx(TlaFalse), ValEx(TlaTrue)))
-    expectDecl("Ne", OperEx(TlaOper.ne, ValEx(TlaFalse), ValEx(TlaTrue)))
+    expectDecl("Eq", OperEx(TlaOper.eq, ValEx(TlaBool(false)), ValEx(TlaBool(true))))
+    expectDecl("Ne", OperEx(TlaOper.ne, ValEx(TlaBool(false)), ValEx(TlaBool(true))))
     expectDecl("Prime", OperEx(TlaActionOper.prime, NameEx("x")))
     expectDecl("Not", OperEx(TlaBoolOper.not, NameEx("x")))
-    expectDecl("Or", OperEx(TlaBoolOper.or, ValEx(TlaFalse), ValEx(TlaTrue)))
-    expectDecl("And", OperEx(TlaBoolOper.and, ValEx(TlaFalse), ValEx(TlaTrue)))
-    expectDecl("Equiv", OperEx(TlaBoolOper.equiv, ValEx(TlaFalse), ValEx(TlaTrue)))
-    expectDecl("Implies", OperEx(TlaBoolOper.implies, ValEx(TlaFalse), ValEx(TlaTrue)))
+    expectDecl("Or", OperEx(TlaBoolOper.or, ValEx(TlaBool(false)), ValEx(TlaBool(true))))
+    expectDecl("And", OperEx(TlaBoolOper.and, ValEx(TlaBool(false)), ValEx(TlaBool(true))))
+    expectDecl("Equiv", OperEx(TlaBoolOper.equiv, ValEx(TlaBool(false)), ValEx(TlaBool(true))))
+    expectDecl("Implies", OperEx(TlaBoolOper.implies, ValEx(TlaBool(false)), ValEx(TlaBool(true))))
     expectDecl("Subset", OperEx(TlaSetOper.SUBSET, NameEx("x")))
     expectDecl("Union", OperEx(TlaSetOper.union, NameEx("x")))
     expectDecl("Domain", OperEx(TlaFunOper.domain, NameEx("x")))
@@ -505,9 +504,9 @@ class TestSanyImporter extends FunSuite {
     expectDecl("Cap", OperEx(TlaSetOper.cap, NameEx("x"), NameEx("x")))
     expectDecl("Cup", OperEx(TlaSetOper.cup, NameEx("x"), NameEx("x")))
     expectDecl("Times", OperEx(TlaSetOper.times, NameEx("x"), NameEx("x")))
-    expectDecl("LeadsTo", OperEx(TlaTempOper.leadsTo, ValEx(TlaTrue), ValEx(TlaTrue)))
-    expectDecl("Box", OperEx(TlaTempOper.box, ValEx(TlaTrue)))
-    expectDecl("Diamond", OperEx(TlaTempOper.diamond, ValEx(TlaTrue)))
+    expectDecl("LeadsTo", OperEx(TlaTempOper.leadsTo, ValEx(TlaBool(true)), ValEx(TlaBool(true))))
+    expectDecl("Box", OperEx(TlaTempOper.box, ValEx(TlaBool(true))))
+    expectDecl("Diamond", OperEx(TlaTempOper.diamond, ValEx(TlaBool(true))))
     expectDecl("Enabled", OperEx(TlaActionOper.enabled, NameEx("x")))
     expectDecl("Unchanged", OperEx(TlaActionOper.unchanged, NameEx("x")))
     expectDecl("Cdot", OperEx(TlaActionOper.composition, trueOperEx, trueOperEx))
@@ -516,11 +515,11 @@ class TestSanyImporter extends FunSuite {
     expectDecl("Angleact",
       OperEx(TlaActionOper.nostutter, trueOperEx, NameEx("x")))
     expectDecl("BoundedChoose",
-      OperEx(TlaOper.chooseBounded, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))
+      OperEx(TlaOper.chooseBounded, NameEx("y"), NameEx("x"), ValEx(TlaBool(true))))
     expectDecl("BoundedExists",
-      OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))
+      OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("x"), ValEx(TlaBool(true))))
     expectDecl("BoundedForall",
-      OperEx(TlaBoolOper.forall, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))
+      OperEx(TlaBoolOper.forall, NameEx("y"), NameEx("x"), ValEx(TlaBool(true))))
     expectDecl("CartesianProd",
       OperEx(TlaSetOper.times, NameEx("x"), NameEx("x"), NameEx("x")))
     expectDecl("Pair", OperEx(TlaFunOper.tuple, ValEx(TlaInt(1)), ValEx(TlaInt(2))))
@@ -531,9 +530,9 @@ class TestSanyImporter extends FunSuite {
     expectDecl("CaseOther",
       OperEx(TlaControlOper.caseWithOther, (7 +: 1.to(6)).map(i => ValEx(TlaInt(i))): _*))
     expectDecl("ConjList",
-      OperEx(TlaBoolOper.and, List(TlaFalse, TlaTrue, TlaFalse).map(b => ValEx(b)): _*))
+      OperEx(TlaBoolOper.and, List(TlaBool(false), TlaBool(true), TlaBool(false)).map(b => ValEx(b)): _*))
     expectDecl("DisjList",
-      OperEx(TlaBoolOper.or, List(TlaFalse, TlaTrue, TlaFalse).map(b => ValEx(b)): _*))
+      OperEx(TlaBoolOper.or, List(TlaBool(false), TlaBool(true), TlaBool(false)).map(b => ValEx(b)): _*))
     expectDecl("Except",
       OperEx(TlaFunOper.except,
         NameEx("x"), TlaFunOper.mkTuple(ValEx(TlaInt(0))), ValEx(TlaInt(1))
@@ -544,7 +543,7 @@ class TestSanyImporter extends FunSuite {
         TlaFunOper.mkTuple(ValEx(TlaInt(0))),
         OperEx(TlaBoolOper.and,
           OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(0))),
-          ValEx(TlaTrue))
+          ValEx(TlaBool(true)))
       ))
     expectDecl("FcnApply", OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(1))))
     val cup = OperEx(TlaSetOper.cup, NameEx("y"), NameEx("y"))
@@ -557,7 +556,7 @@ class TestSanyImporter extends FunSuite {
       OperEx(TlaFunOper.funDef, OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")),
         OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")), NameEx("x")))
     expectDecl("IfThenElse",
-      OperEx(TlaControlOper.ifThenElse, ValEx(TlaTrue), ValEx(TlaFalse), ValEx(TlaTrue)))
+      OperEx(TlaControlOper.ifThenElse, ValEx(TlaBool(true)), ValEx(TlaBool(false)), ValEx(TlaBool(true))))
     expectDecl("RcdCtor",
       OperEx(TlaFunOper.enum,
         ValEx(TlaStr("a")), ValEx(TlaInt(1)), ValEx(TlaStr("b")), ValEx(TlaInt(2))))
@@ -581,17 +580,17 @@ class TestSanyImporter extends FunSuite {
     expectDecl("TemporalForall",
       OperEx(TlaTempOper.AA, NameEx("y"), trueOperEx))
     expectDecl("UnboundedChoose",
-      OperEx(TlaOper.chooseUnbounded, NameEx("y"), ValEx(TlaTrue)))
+      OperEx(TlaOper.chooseUnbounded, NameEx("y"), ValEx(TlaBool(true))))
     expectDecl("UnboundedExists",
-      OperEx(TlaBoolOper.existsUnbounded, NameEx("y"), ValEx(TlaTrue)))
+      OperEx(TlaBoolOper.existsUnbounded, NameEx("y"), ValEx(TlaBool(true))))
     expectDecl("UnboundedForall",
-      OperEx(TlaBoolOper.forallUnbounded, NameEx("y"), ValEx(TlaTrue)))
+      OperEx(TlaBoolOper.forallUnbounded, NameEx("y"), ValEx(TlaBool(true))))
     expectDecl("SetOfAll",
       OperEx(TlaSetOper.map, ValEx(TlaInt(1)), NameEx("y"), NameEx("x")))
     expectDecl("SetOfTuples",
       OperEx(TlaSetOper.map, OperEx(TlaFunOper.tuple), NameEx("a"), NameEx("x"), NameEx("b"), NameEx("x")))
     expectDecl("SubsetOf",
-      OperEx(TlaSetOper.filter, NameEx("y"), NameEx("x"), ValEx(TlaTrue)))
+      OperEx(TlaSetOper.filter, NameEx("y"), NameEx("x"), ValEx(TlaBool(true))))
     expectDecl("Boolean", ValEx(TlaBoolSet))
     expectDecl("String", ValEx(TlaStrSet))
   }
@@ -661,24 +660,24 @@ class TestSanyImporter extends FunSuite {
 
     expectDecl("Q1",
       OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("X"),
-        OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("X"), ValEx(TlaTrue))))(mod.declarations(2))
+        OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("X"), ValEx(TlaBool(true)))))(mod.declarations(2))
     expectDecl("Q2",
       OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("X"),
-        OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("X"), ValEx(TlaTrue))))(mod.declarations(3))
+        OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("X"), ValEx(TlaBool(true)))))(mod.declarations(3))
     expectDecl("Q3",
       OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("X"),
         OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("X"),
           OperEx(TlaBoolOper.exists, NameEx("z"), NameEx("Z"),
-            ValEx(TlaTrue)))))(mod.declarations(4))
+            ValEx(TlaBool(true))))))(mod.declarations(4))
     expectDecl("Q4",
       OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("X"),
         OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("X"),
           OperEx(TlaBoolOper.exists, OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")), NameEx("Z"),
             OperEx(TlaBoolOper.exists, NameEx("z"), NameEx("Z"),
-              ValEx(TlaTrue))))))(mod.declarations(5))
+              ValEx(TlaBool(true)))))))(mod.declarations(5))
     expectDecl("Q5",
       OperEx(TlaBoolOper.existsUnbounded, NameEx("x"),
-        OperEx(TlaBoolOper.existsUnbounded, NameEx("y"), ValEx(TlaTrue))))(mod.declarations(6))
+        OperEx(TlaBoolOper.existsUnbounded, NameEx("y"), ValEx(TlaBool(true)))))(mod.declarations(6))
   }
 
   test("function updates") {
@@ -712,7 +711,7 @@ class TestSanyImporter extends FunSuite {
         TlaFunOper.mkTuple(ValEx(TlaInt(0))),
         OperEx(TlaBoolOper.and,
           OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(0))),
-          ValEx(TlaTrue))
+          ValEx(TlaBool(true)))
       ))(mod.declarations(2))
 
     expectDecl("ExceptTuple",
@@ -754,7 +753,7 @@ class TestSanyImporter extends FunSuite {
                 NameEx("x"), ValEx(TlaInt(1))),
               ValEx(TlaInt(2))
             ), ///
-            ValEx(TlaTrue))
+            ValEx(TlaBool(true)))
         )))(mod.declarations(4))
 */
   }
@@ -946,17 +945,17 @@ class TestSanyImporter extends FunSuite {
 
     expectDecl("C1",
       OperEx(TlaFunOper.funDef,
-        ValEx(TlaTrue),
+        ValEx(TlaBool(true)),
         NameEx("x"), NameEx("X"),
         NameEx("y"), NameEx("X")))(mod.declarations(2))
     expectDecl("C2",
       OperEx(TlaFunOper.funDef,
-        ValEx(TlaTrue),
+        ValEx(TlaBool(true)),
         NameEx("x"), NameEx("X"),
         NameEx("y"), NameEx("X")))(mod.declarations(3))
     expectDecl("C3",
       OperEx(TlaFunOper.funDef,
-        ValEx(TlaTrue),
+        ValEx(TlaBool(true)),
         NameEx("x"), NameEx("X"),
         NameEx("y"), NameEx("X"),
         NameEx("z"), NameEx("Z")
@@ -983,7 +982,7 @@ class TestSanyImporter extends FunSuite {
     /*
     expectDecl("C4",
       OperEx(TlaFunOper.funDef,
-        ValEx(TlaTrue),
+        ValEx(TlaBool(true)),
         NameEx("x"), NameEx("X"),
         NameEx("y"), NameEx("X"),
         NameEx("a_b"), NameEx("Z"), // the tuple <<a, b>> is collapsed to a_b by Desugarer

@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.assignments
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.values.TlaFalse
+import at.forsyte.apalache.tla.lir.values.TlaBool
 
 /**
   * Constructs symbolic transitions from an assignment strategy.
@@ -179,15 +179,15 @@ class SymbTransGenerator( tracker : TransformationTracker ) {
           x => if ( labelsAt( x, allSelections ) exists {
             selection.contains
           } )
-            sliceWith( selection, allSelections )( x ) else ValEx( TlaFalse )
+            sliceWith( selection, allSelections )( x ) else ValEx(TlaBool(false))
         )
 
         newTail match {
-          case ValEx( TlaFalse ) +: ValEx( TlaFalse ) +: Nil =>
+          case ValEx(TlaBool(false)) +: ValEx(TlaBool(false)) +: Nil =>
             ex
-          case newThen +: ValEx( TlaFalse ) +: Nil =>
+          case newThen +: ValEx(TlaBool(false)) +: Nil =>
             OperEx( TlaBoolOper.and, ifEx, newThen )
-          case ValEx( TlaFalse ) +: newElse +: Nil =>
+          case ValEx(TlaBool(false)) +: newElse +: Nil =>
             OperEx( TlaBoolOper.and, OperEx( TlaBoolOper.not, ifEx ), newElse )
           case _ =>
             // Possible, because of LET-IN
@@ -213,7 +213,7 @@ class SymbTransGenerator( tracker : TransformationTracker ) {
         val same = newDefs == defs && newBody == body
 
         if ( same ) ex
-        else if ( newBody == ValEx( TlaFalse ) ) newBody
+        else if ( newBody == ValEx(TlaBool(false)) ) newBody
         else LetInEx( newBody, newDefs : _* )
 
       case ex => ex

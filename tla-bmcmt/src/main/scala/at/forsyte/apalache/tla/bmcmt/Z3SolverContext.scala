@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FailPredT, IntT}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.io.UTFPrinter
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaFalse, TlaInt, TlaTrue}
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
 import com.microsoft.z3._
 import com.microsoft.z3.enumerations.Z3_lbool
 
@@ -192,7 +192,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     z3expr match {
       case b: BoolExpr =>
         val isTrue = b.getBoolValue.equals(Z3_lbool.Z3_L_TRUE)
-        ValEx(if (isTrue) TlaTrue else TlaFalse) // in undefined case, just return false
+        ValEx(if (isTrue) TlaBool(true) else TlaBool(false)) // in undefined case, just return false
 
       case i: IntNum =>
         ValEx(TlaInt(i.getBigInteger))
@@ -483,10 +483,10 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
       case NameEx(name) =>
         constCache(name)._1 // the cached expression
 
-      case ValEx(TlaFalse) =>
+      case ValEx(TlaBool(false)) =>
         z3context.mkFalse()
 
-      case ValEx(TlaTrue) =>
+      case ValEx(TlaBool(true)) =>
         z3context.mkTrue()
 
       case ValEx(TlaInt(num)) =>
