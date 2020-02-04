@@ -41,11 +41,11 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
 
       case OperEx(TlaSetOper.enumSet) =>
         // an empty set
-        obj("set")
+        obj("set", Arr())
 
       case OperEx(op@TlaSetOper.enumSet, arg) =>
         // a singleton set
-        obj("set", toJson(op.precedence, arg))
+        obj("set", Arr(toJson(op.precedence, arg)))
 
       case OperEx(op@TlaSetOper.enumSet, args@_*) =>
         // a set enumeration, e.g., { 1, 2, 3 }

@@ -20,7 +20,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     val writer = new JsonWriter(printWriter, indent)
     writer.write(ex)
     printWriter.flush()
-    assert(expected == stringWriter.toString)
+    assert(stringWriter.toString == expected)
   }
 
   // compare expression and expected result (multi-line formatting)
@@ -65,24 +65,29 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   test("empty set") {
     compare(
       enumSet(),
-      """{"tla":"set","val":null}"""
-    )
-  }
-
-  test("empty set multi-line") {
-    compareMultiLine(
-      enumSet(),
-      """{
-        |  "tla": "set",
-        |  "val": null
-        |}""".stripMargin
+      """{"tla":"set","val":[]}"""
     )
   }
 
   test("singleton set") {
     compare(
       enumSet(42),
-      """{"tla":"set","val":{"tla":"int","val":"42"}}"""
+      """{"tla":"set","val":[{"tla":"int","val":"42"}]}"""
+    )
+  }
+
+  test("singleton set multi-line") {
+    compareMultiLine(
+      enumSet(42),
+      """{
+        |  "tla": "set",
+        |  "val": [
+        |    {
+        |      "tla": "int",
+        |      "val": "42"
+        |    }
+        |  ]
+        |}""".stripMargin
     )
   }
 
