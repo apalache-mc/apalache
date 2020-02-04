@@ -54,11 +54,10 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val setCell = setState.asCell
         val finalState: SymbState = setCell.cellType match {
           case FinSetT(elemType) =>
-            if (setCell != setState.arena.cellNatSet() && setCell != setState.arena.cellIntSet()) {
-              basicIn(setState, setCell, elemCell, elemType)
-            } else {
-              intOrNatSetIn(setState, setCell, elemCell, elemType)
-            }
+            basicIn(setState, setCell, elemCell, elemType)
+
+          case InfSetT(IntT()) if setCell == setState.arena.cellNatSet() || setCell == setState.arena.cellIntSet() =>
+            intOrNatSetIn(setState, setCell, elemCell, IntT())
 
           case PowSetT(FinSetT(_)) =>
             powSetIn(setState, setCell, elemCell)
@@ -98,6 +97,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
         .format(funCell.cellType, funsetCell.cellType)
       throw new RewriterException(msg, state.ex)
     }
+
     funCell.cellType match {
       case FunT(FinSetT(_), _) => () // OK
       case _ => flagTypeError()
@@ -113,6 +113,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     nextState = nextState.updateArena(_.appendCell(BoolT()))
     val pred = nextState.arena.topCell
     val relation = nextState.arena.getCdm(funCell)
+
     // In the new implementation, a function is a relation { <<x, f[x]>> : x \in U }.
     // Check that \A t \in f: t[1] \in S /\ t[2] \in T.
     def onPair(pair: ArenaCell): TlaEx = {
@@ -127,7 +128,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
 
     val relElems = nextState.arena.getHas(relation)
-    rewriter.solverContext.assertGroundExpr(tla.equiv(pred, tla.and(relElems map onPair :_*)))
+    rewriter.solverContext.assertGroundExpr(tla.equiv(pred, tla.and(relElems map onPair: _*)))
 
     rewriter.rewriteUntilDone(nextState.setRex(pred).setTheory(CellTheory()))
   }
@@ -152,7 +153,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     assert(elemCell.cellType == elemType) // otherwise, type finder is incorrect
     if (potentialElems.isEmpty) {
       // SE-SET-IN1: the set cell points to no other cell => return false
-//      state.setTheory(BoolTheory()).setRex(NameEx(SolverContext.falseConst))
+      //      state.setTheory(BoolTheory()).setRex(NameEx(SolverContext.falseConst))
       state.setTheory(CellTheory()).setRex(state.arena.cellFalse())
     } else {
       var nextState = state.updateArena(_.appendCell(BoolT()))
