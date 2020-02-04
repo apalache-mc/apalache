@@ -778,6 +778,17 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
+  // type inference would reject this
+  test("""error: {x: x \in Int}""") {
+    val set = ValEx(TlaIntSet)
+    val mapExpr = tla.name("x")
+    val mapSet = tla.map(mapExpr, tla.name("x"), set)
+
+    val state = new SymbState(mapSet, BoolTheory(), arena, new Binding)
+    val rewriter = create()
+    assertThrows[TypeInferenceError](rewriter.rewriteUntilDone(state))
+  }
+
   test("""SE-SET-MAP[1-2]: <<2, true>> \in {<<x, y>>: x \in {1,2,3}, y \in {FALSE, TRUE}} ~~> $B$k""") {
     val set123 = tla.enumSet(1 to 3 map tla.int :_*)
     val setBool = tla.enumSet(tla.bool(false), tla.bool(true))
