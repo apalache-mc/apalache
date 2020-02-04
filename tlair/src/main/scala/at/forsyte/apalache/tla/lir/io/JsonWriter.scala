@@ -16,11 +16,11 @@ import ujson._
 class JsonWriter(writer: PrintWriter, indent: Int = 2) {
 
   def write(expr: TlaEx): Unit = {
-    writer.write(ujson.write(toJson((0, 0), expr)))
+    writer.write(ujson.write(toJson((0, 0), expr), indent))
   }
 
-  def obj(kind: String, value: ujson.Value = ujson.Null): ujson.Value = {
-    Obj("kind" -> kind, "value" -> value)
+  def obj(tla: String, value: ujson.Value = ujson.Null): ujson.Value = {
+    Obj("tla" -> tla, "val" -> value)
   }
 
   def toJson(parentPrecedence: (Int, Int), expr: TlaEx): ujson.Value = {
@@ -38,6 +38,24 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
 
       case OperEx(op@TlaActionOper.prime, e) =>
         obj("prime", toJson(op.precedence, e))
+
+      case OperEx(TlaSetOper.enumSet) =>
+        // an empty set
+        obj("set")
+
+      case OperEx(op@TlaSetOper.enumSet, arg) =>
+        // a singleton set
+        obj("set", toJson(op.precedence, arg))
+
+      case OperEx(op@TlaSetOper.enumSet, args@_*) =>
+        // a set enumeration, e.g., { 1, 2, 3 }
+        val argJsons = args.map(toJson(op.precedence, _))
+        obj("set", argJsons)
+
+      case OperEx(op@TlaFunOper.tuple, args@_*) =>
+        // a tuple, e.g., <<1, 2, 3>>
+        val argJsons = args.map(toJson(op.precedence, _))
+        obj("tuple", argJsons)
 
       case _ => True
     }
