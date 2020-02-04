@@ -32,7 +32,7 @@ class MapBase(rewriter: SymbStateRewriter) {
         case FinSetT(elemType) =>
           (setCell, elemType)
 
-        case tp @ _ => throw new NotImplementedError("A set filter over %s is not implemented".format(tp))
+        case tp @ _ => throw new NotImplementedError("A set map over %s is not implemented".format(tp))
       }
     }
 

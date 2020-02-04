@@ -52,6 +52,9 @@ package object types {
         case (FinSetT(left), FinSetT(right)) =>
             left.unify(right) map FinSetT
 
+        case (InfSetT(left), InfSetT(right)) =>
+            left.unify(right) map InfSetT
+
         case (FunT(leftDom, leftCodom), FunT(rightDom, rightCodom)) =>
           for {
             domUnif <- leftDom.unify(rightDom)
@@ -163,6 +166,7 @@ package object types {
     * A failure cell that represents a Boolean variable indicating whether
     * a certain operation failed.
     */
+  @deprecated("failure predicates were abandoned")
   sealed case class FailPredT() extends CellT {
     override val signature: String = "E"
 
@@ -236,12 +240,28 @@ package object types {
   }
 
   /**
+    * An infinite set such as Nat or Int. Although the rewriting system expands only finite sets,
+    * in some cases, we can pick a value from an infinite set, e.g., \E x \in Int: P.
+    *
+    * @param elemType the elements type
+    */
+  sealed case class InfSetT(elemType: CellT) extends CellT {
+    /**
+      * Produce a short signature that uniquely describes the type (up to unification),
+      * similar to Java's signature mangling. If one type can be unified to another,
+      * e.g., records, they have the same signature.
+      *
+      * @return a short signature that uniquely characterizes this type up to unification
+      */
+    override val signature: String = s"Z${elemType.signature}"
+
+    override val toString: String = s"InfSet[$elemType]"
+  }
+
+  /**
     * The type of a powerset of a finite set, which is constructed as 'SUBSET S' in TLA+.
     * @param domType the type of the argument is a finite set, i.e., typeof(S) in SUBSET S.
     *                Currently, only FinSetT(_) is supported.
-    *
-    * FIXME: this type should be eliminated, as powersets have to be either treated specially
-    * by the respective rewriting functions, or explicitly unfolded.
     */
   sealed case class PowSetT(domType: CellT) extends CellT {
     require(domType.isInstanceOf[FinSetT]) // currently, we support only PowSetT(FinSetT(_))
@@ -260,7 +280,7 @@ package object types {
   /**
     * A function type.
     *
-    * FIXME: in the future, we will replace domType with argType, as we are moving towards
+    * TODO: in the future, we will replace domType with argType, as we are moving towards
     * a minimalistic type system
     *
     * @param domType    the type of the domain (a finite set, a powerset, or a cross product).
@@ -288,9 +308,6 @@ package object types {
 
   /**
     * A finite set of functions.
-    *
-    * FIXME: this type should be eliminated, as these function sets have to be either treated specially
-    * by the respective rewriting functions, or explicitly unfolded.
     *
     * @param domType the type of the domain (must be either a finite set or a powerset).
     * @param cdmType the type of the co-domain (must be either a finite set or a powerset).
@@ -366,6 +383,7 @@ package object types {
     *
     * @param args
     */
+  @deprecated("Never been used")
   sealed case class CrossProdT( args: Seq[FinSetT] ) extends CellT {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
