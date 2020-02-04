@@ -4,7 +4,6 @@ import java.io.{File, FileWriter, PrintWriter}
 
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, _}
-import at.forsyte.apalache.tla.lir.predef._
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir._
 import org.bitbucket.inkytonik.kiama.output.PrettyPrinter
@@ -54,6 +53,8 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
       case ValEx(TlaNatSet) => text("Nat")
       case ValEx(TlaRealSet) => text("Real")
       case ValEx(TlaStrSet) => text("STRING")
+
+      case NullEx => text("\"NOP\"")
 
       case OperEx(op@TlaActionOper.prime, e) =>
         toDoc(op.precedence, e) <> "'"

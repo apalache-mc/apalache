@@ -196,6 +196,10 @@ class OpApplTranslator(sourceStore: SourceStore, val context: Context, val recSt
           case "$SetOfRcds" =>
             mkPairsCtorBuiltin(TlaSetOper.recSet, node)
 
+          case "$Nop" =>
+            // typically, an expression related to TLAPS is marked with $Nop
+            NullEx  // we cannot do much here, but hope that the expression will never reach the model checker
+
           case _ =>
             throw new SanyImporterException("Unsupported operator: " + opcode)
         }
