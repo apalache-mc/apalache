@@ -46,34 +46,20 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
       case ValEx(TlaRealSet) => unary("set", "Real")
       case ValEx(TlaStrSet) => unary("set", "STRING")
 
-//      case OperEx(op@TlaSetOper.enumSet, args@_*) =>
-//        // a set enumeration, e.g., { 1, 2, 3 }
-//        val argJsons = args.map(toJson(op.precedence, _))
-//        obj("set", argJsons)
-//
-//      case OperEx(op@TlaFunOper.tuple, args@_*) =>
-//        // a tuple, e.g., <<1, 2, 3>>
-//        val argJsons = args.map(toJson(op.precedence, _))
-//        obj("tuple", argJsons)
-//
-//      case OperEx(op@TlaFunOper.tuple, args@_*) =>
-//        // a tuple, e.g., <<1, 2, 3>>
-//        val argJsons = args.map(toJson(op.precedence, _))
-//        obj("tuple", argJsons)
-
       case OperEx(op@_, arg) if JsonWriter.unaryOps.contains(op) =>
         unary(JsonWriter.unaryOps(op), toJson(op.precedence, arg))
 
       case OperEx(op@_, arg1, arg2) if JsonWriter.binaryOps.contains(op) =>
         Obj(
-          "tla" -> JsonWriter.unaryOps(op),
+          "tla" -> JsonWriter.binaryOps(op),
           "arg1" -> toJson(op.precedence, arg1),
           "arg2" -> toJson(op.precedence, arg2)
         )
 
       case OperEx(op@_, args@_*) if JsonWriter.naryOps.contains(op)  =>
         val argJsons = args.map(toJson(op.precedence, _))
-        nary(JsonWriter.naryOps(op), argJsons)
+//        nary(JsonWriter.naryOps(op), argJsons)
+        Obj("tla" -> JsonWriter.naryOps(op), "args" -> argJsons)
 
       case _ => True
     }

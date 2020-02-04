@@ -73,70 +73,70 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     )
   }
 
-//  test("empty set") {
-//    compare(
-//      enumSet(),
-//      """{"tla":"enum","args":[]}"""
-//    )
-//  }
+  test("empty set") {
+    compare(
+      enumSet(),
+      """{"tla":"enum","args":[]}"""
+    )
+  }
 //
-//  test("singleton set") {
-//    compare(
-//      enumSet(42),
-//      """{"tla":"set","val":[{"tla":"int","val":"42"}]}"""
-//    )
-//  }
-//
-//  test("singleton set multi-line") {
-//    compareMultiLine(
-//      enumSet(42),
-//      """{
-//        |  "tla": "set",
-//        |  "val": [
-//        |    {
-//        |      "tla": "int",
-//        |      "val": "42"
-//        |    }
-//        |  ]
-//        |}""".stripMargin
-//    )
-//  }
-//
-//  test("enum set") {
-//    compare(
-//      enumSet(int(1), int(2), int(3)),
-//      """{"tla":"set","val":[{"tla":"int","val":"1"},{"tla":"int","val":"2"},{"tla":"int","val":"3"}]}"""
-//    )
-//  }
-//
-//  test("enum set multi-line") {
-//    compareMultiLine(
-//      enumSet(int(1), int(2), int(3)),
-//      """{
-//        |  "tla": "set",
-//        |  "val": [
-//        |    {
-//        |      "tla": "int",
-//        |      "val": "1"
-//        |    },
-//        |    {
-//        |      "tla": "int",
-//        |      "val": "2"
-//        |    },
-//        |    {
-//        |      "tla": "int",
-//        |      "val": "3"
-//        |    }
-//        |  ]
-//        |}""".stripMargin
-//    )
-//  }
-//
-//  test("minus") {
-//    compare(
-//      minus(int(1), int(2)),
-//      """{"tla":"--","val":[{"tla":"int","val":"1"},{"tla":"int","val":"2"}]}"""
-//    )
-//  }
+  test("singleton set") {
+    compare(
+      enumSet(42),
+      """{"tla":"enum","args":[{"tla":"int","arg":"42"}]}"""
+    )
+  }
+
+  test("singleton set multi-line") {
+    compareMultiLine(
+      enumSet(42),
+      """{
+        |  "tla": "enum",
+        |  "args": [
+        |    {
+        |      "tla": "int",
+        |      "arg": "42"
+        |    }
+        |  ]
+        |}""".stripMargin
+    )
+  }
+
+  test("enum set") {
+    compare(
+      enumSet(int(1), int(2), int(3)),
+      """{"tla":"enum","args":[{"tla":"int","arg":"1"},{"tla":"int","arg":"2"},{"tla":"int","arg":"3"}]}"""
+    )
+  }
+
+  test("enum set multi-line") {
+    compareMultiLine(
+      enumSet(int(1), int(2), int(3)),
+      """{
+        |  "tla": "enum",
+        |  "args": [
+        |    {
+        |      "tla": "int",
+        |      "arg": "1"
+        |    },
+        |    {
+        |      "tla": "int",
+        |      "arg": "2"
+        |    },
+        |    {
+        |      "tla": "int",
+        |      "arg": "3"
+        |    }
+        |  ]
+        |}""".stripMargin
+    )
+  }
+
+  test("minus") {
+    compare(
+      minus(int(1), int(2)),
+      """{"tla":"-","arg1":{"tla":"int","arg":"1"},"arg2":{"tla":"int","arg":"2"}}"""
+    )
+  }
 }
 
