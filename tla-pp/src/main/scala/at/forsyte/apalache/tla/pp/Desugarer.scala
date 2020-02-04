@@ -29,6 +29,7 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
   def transform: TlaExTransformation = tracker.track {
       case ex @ NameEx(_) => ex
       case ex @ ValEx(_) => ex
+      case ex @ NullEx => ex
 
       case ex @ OperEx(TlaFunOper.except, fun, args @ _*) =>
         val accessors = args.zipWithIndex filter (_._2 % 2 == 0) map (_._1)
