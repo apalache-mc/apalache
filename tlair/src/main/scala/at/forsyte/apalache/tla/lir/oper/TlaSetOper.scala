@@ -45,7 +45,7 @@ object TlaSetOper {
     */
   val seqSet = new TlaSetOper {
     override def arity: OperArity = FixedArity(1)
-    override val name: String = "Seq(_)"
+    override val name: String = "Seq"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
