@@ -101,6 +101,8 @@ check "015-y2k" --length=20 --inv=Safety y2k_override.tla \
     && expect_ok
 check "016-y2k" --length=30 --inv=Safety y2k_override.tla \
     && expect_err
+check "017-NatCounter" --length=10 --inv=Inv NatCounter.tla \
+    && expect_err
 
 cat "$LOGFILE"
 
