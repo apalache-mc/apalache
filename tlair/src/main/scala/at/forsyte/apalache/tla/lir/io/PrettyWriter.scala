@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.lir.io
 import java.io.{File, FileWriter, PrintWriter}
 
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, _}
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlcOper, _}
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir._
 import org.bitbucket.inkytonik.kiama.output.PrettyPrinter
@@ -472,7 +472,6 @@ object PrettyWriter {
       TlaTempOper.leadsTo -> "~>",
       TlaTempOper.guarantees -> "-+->",
       TlaSeqOper.concat -> "\\o",
-      TlcOper.atat -> "@@",
       TlcOper.colonGreater -> ":>",
       BmcOper.assign -> "<-",
       BmcOper.withType -> "<:"
@@ -481,7 +480,8 @@ object PrettyWriter {
   protected val naryOps: Map[TlaOper, String] = HashMap(
     TlaSetOper.times -> "\\X",
     TlaArithOper.sum -> "+",
-    TlaArithOper.prod -> "*"
+    TlaArithOper.prod -> "*",
+    TlcOper.atat -> "@@"
   ) ////
 
   protected val bindingOps = HashMap(

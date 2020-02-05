@@ -212,6 +212,8 @@ object UTFPrinter extends Printer {
           case TlaSetOper.supsetProper => mkOpApp( "%%s %s %%s".format( m_supset ), args : _* )
           case TlaSetOper.times => opAppStr( args, pad( m_times ) )
           case TlaSetOper.union => mkOpApp( "UNION %s", args : _* )
+          case TlcOper.atat => str(args, " @@ ")
+          case TlcOper.colonGreater => "%s :> %s".format(args.head, args(1))
           case TlaOper.label =>
             val body = this(args.head)
             val label = this(args.tail.head)

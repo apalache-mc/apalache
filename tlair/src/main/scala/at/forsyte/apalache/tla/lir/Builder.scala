@@ -407,6 +407,17 @@ object Builder {
                         p_y : TlaEx
                       ) : OperEx = in( prime( p_x ), enumSet( p_y ) )
 
+  // d_1 :> e_1 @@ ... @@ d_k :> e_k
+  def atat(args: TlaEx*): OperEx = {
+    if (args.isEmpty) {
+      OperEx(TlcOper.atat)
+    } else {
+      val kvs = args.sliding(2, 2).toList
+      val pairs = kvs.map(p => OperEx(TlcOper.colonGreater, p.head, p(1)))
+      OperEx(TlcOper.atat, pairs :_*)
+    }
+  }
+
   // bmc
   def withType(expr: TlaEx, typeAnnot: TlaEx): OperEx =
     OperEx(BmcOper.withType, expr, typeAnnot)

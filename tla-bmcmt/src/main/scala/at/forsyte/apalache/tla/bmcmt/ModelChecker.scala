@@ -12,8 +12,10 @@ import at.forsyte.apalache.tla.bmcmt.util.TlaExUtil
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.io.UTFPrinter
+import at.forsyte.apalache.tla.lir.io.{PrettyWriter, UTFPrinter}
+import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
+import at.forsyte.apalache.tla.lir.values.TlaStr
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.immutable.SortedMap
@@ -513,10 +515,12 @@ class ModelChecker(typeFinder: TypeFinder[CellT],
       writer.println(s"State $i (from transition $transition):")
       writer.println("--------")
       val binding = decoder.decodeStateVariables(state)
-      for (name <- binding.keys.toSeq.sorted) { // sort the keys
-        writer.println("%-15s ->  %s".format(name, UTFPrinter.apply(binding(name))))
+      val args = binding.toList.sortBy(_._1).flatMap(p => List(ValEx(TlaStr(p._1)), p._2))
+      if (args.nonEmpty) {
+        val record = OperEx(TlaFunOper.enum, args :_*)
+        new PrettyWriter(writer).write(record)
       }
-      writer.println("========\n")
+      writer.println("\n========\n")
     }
     writer.close()
     filename
