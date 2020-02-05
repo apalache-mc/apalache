@@ -57,7 +57,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
         throw new RewriterException(s"Rewriting for the type ${set.cellType} is not implemented. Raise an issue.", state.ex)
 
       case InfSetT(IntT()) if set == state.arena.cellIntSet() || set == state.arena.cellNatSet() =>
-        // not really a finite set, but we can pick a value from it
+        // pick an integer or natural
         pickFromIntOrNatSet(set, state)
 
       case _ =>
