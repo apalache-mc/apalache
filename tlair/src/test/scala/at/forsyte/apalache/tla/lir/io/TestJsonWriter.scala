@@ -41,7 +41,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   test("name") {
     compare(
       name("awesome"),
-      """{"tla":"name","arg":"awesome"}"""
+      """{"name":"awesome"}"""
     )
   }
 
@@ -55,35 +55,35 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   test("int") {
     compare(
       int(42),
-      """{"tla":"int","arg":"42"}"""
+      """{"int":"42"}"""
     )
   }
 
   test("RealSet") {
     compare(
       ValEx(TlaRealSet), // TODO: builders for sets? (Andrey)
-      """{"tla":"set","arg":"Real"}"""
+      """{"set":"Real"}"""
     )
   }
 
   test("prime name") {
     compare(
       prime("awesome"),
-      """{"tla":"prime","arg":{"tla":"name","arg":"awesome"}}"""
+      """{"prime":{"name":"awesome"}}"""
     )
   }
 
   test("empty set") {
     compare(
       enumSet(),
-      """{"tla":"enum","args":[]}"""
+      """{"enum":[]}"""
     )
   }
 //
   test("singleton set") {
     compare(
       enumSet(42),
-      """{"tla":"enum","args":[{"tla":"int","arg":"42"}]}"""
+      """{"enum":[{"int":"42"}]}"""
     )
   }
 
@@ -91,11 +91,9 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     compareMultiLine(
       enumSet(42),
       """{
-        |  "tla": "enum",
-        |  "args": [
+        |  "enum": [
         |    {
-        |      "tla": "int",
-        |      "arg": "42"
+        |      "int": "42"
         |    }
         |  ]
         |}""".stripMargin
@@ -105,7 +103,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   test("enum set") {
     compare(
       enumSet(int(1), int(2), int(3)),
-      """{"tla":"enum","args":[{"tla":"int","arg":"1"},{"tla":"int","arg":"2"},{"tla":"int","arg":"3"}]}"""
+      """{"enum":[{"int":"1"},{"int":"2"},{"int":"3"}]}"""
     )
   }
 
@@ -113,19 +111,15 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     compareMultiLine(
       enumSet(int(1), int(2), int(3)),
       """{
-        |  "tla": "enum",
-        |  "args": [
+        |  "enum": [
         |    {
-        |      "tla": "int",
-        |      "arg": "1"
+        |      "int": "1"
         |    },
         |    {
-        |      "tla": "int",
-        |      "arg": "2"
+        |      "int": "2"
         |    },
         |    {
-        |      "tla": "int",
-        |      "arg": "3"
+        |      "int": "3"
         |    }
         |  ]
         |}""".stripMargin
@@ -135,7 +129,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   test("minus") {
     compare(
       minus(int(1), int(2)),
-      """{"tla":"-","arg1":{"tla":"int","arg":"1"},"arg2":{"tla":"int","arg":"2"}}"""
+      """{"-":[{"int":"1"},{"int":"2"}]}"""
     )
   }
 }
