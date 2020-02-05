@@ -42,6 +42,11 @@ class CherryPick(rewriter: SymbStateRewriter) {
         // If S is empty, we get a function of the empty set.
         pickFunFromFunSet(FunT(domt, rest), set, state)
 
+      case FinFunSetT(domt@FinSetT(_), cdm@InfSetT(rest)) =>
+        // No emptiness check, since we are dealing with a function set [S -> T].
+        // If S is empty, we get a function of the empty set.
+        pickFunFromFunSet(FunT(domt, rest), set, state)
+
       case FinFunSetT(domt@FinSetT(_), cdm@PowSetT(resultT @ FinSetT(_))) =>
         // No emptiness check, since we are dealing with a function set [S -> T].
         // If S is empty, we get a function of the empty set.
