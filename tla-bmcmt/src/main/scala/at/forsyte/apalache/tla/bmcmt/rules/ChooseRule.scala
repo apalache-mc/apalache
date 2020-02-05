@@ -2,9 +2,10 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory, OracleHelper}
-import at.forsyte.apalache.tla.lir.OperEx
+import at.forsyte.apalache.tla.bmcmt.types.FinSetT
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaOper
+import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 
 /**
@@ -32,6 +33,8 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case OperEx(TlaOper.chooseBounded, varName, set, pred) =>
+        // This is a general encoding, handling both happy and unhappy scenarios,
+        // that is, when CHOOSE is defined on its arguments and not, respectively.
         def solverAssert = rewriter.solverContext.assertGroundExpr _
         // compute set comprehension and then pick an element from it
         val filterEx = tla.filter(varName, set, pred)
@@ -59,9 +62,63 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
           rewriter.coerce(nextState.setRex(pickedCell.toNameEx), state.theory)
         }
 
+      // once the issue #95 has been resolved, use happyChoose
+
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
+  }
+
+  // This translation is sound only in the happy scenario, that is, when CHOOSE is defined on its argument.
+  // It should be used only after resolving the issue #95: https://github.com/konnov/apalache/issues/95
+  private def happyChoose(state: SymbState, varName: String, set: TlaEx, pred: TlaEx): SymbState = {
+    // rewrite the bounding set
+    val nextState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(set))
+    val setCell = nextState.asCell
+    val isFinSet = PartialFunction.cond(setCell.cellType) { case FinSetT(_) => true }
+    if (isFinSet) {
+      happyChooseFromFinite(nextState, setCell, varName, pred)
+    } else {
+      happyChooseFromOther(nextState, setCell, varName, pred)
+    }
+  }
+
+  private def happyChooseFromFinite(state: SymbState, setCell: ArenaCell, varName: String, pred: TlaEx): SymbState = {
+    def solverAssert = rewriter.solverContext.assertGroundExpr _
+
+    if (state.arena.getHas(setCell).isEmpty) {
+      defaultValueFactory.makeUpValue(state, setCell)
+    } else {
+      val elems = state.arena.getHas(setCell)
+      var (nextState, oracle) = pickRule.oracleFactory.newDefaultOracle(state, elems.size)
+      val trueEx = nextState.arena.cellTrue().toNameEx
+
+      // pick only the elements that belong to the set
+      val elemsIn = elems map { e => tla.in(e.toNameEx, setCell.toNameEx) }
+      solverAssert(oracle.caseAssertions(nextState, elemsIn))
+      nextState = pickRule.pickByOracle(nextState, oracle, elems, trueEx)
+      val witness = nextState.asCell
+      // assert that the predicate holds -- we are in the happy case
+      val tempBinding = nextState.binding + (varName -> witness)
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(pred).setBinding(tempBinding))
+      solverAssert(nextState.ex)
+      // return the witness
+      nextState.setRex(witness.toNameEx).setBinding(nextState.binding - varName)
+    }
+  }
+
+  private def happyChooseFromOther(state: SymbState, setCell: ArenaCell, varName: String, pred: TlaEx): SymbState = {
+    def solverAssert = rewriter.solverContext.assertGroundExpr _
+
+    // the set is never empty, e.g., a powerset or a function set
+    var nextState = pickRule.pick(setCell, state, state.arena.cellFalse().toNameEx)
+    val witness = nextState.asCell
+    // assert that the witness satisfies the predicate -- we are in the happy case
+    val tempBinding = nextState.binding + (varName -> witness)
+    nextState = rewriter.rewriteUntilDone(nextState.setRex(pred).setBinding(tempBinding))
+    solverAssert(nextState.ex)
+    // return the witness
+    nextState.setRex(witness.toNameEx).setBinding(nextState.binding - varName)
   }
 
 }
