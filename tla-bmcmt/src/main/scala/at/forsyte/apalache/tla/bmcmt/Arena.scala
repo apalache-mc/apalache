@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 import scala.collection.immutable.HashMap
@@ -39,10 +39,11 @@ object Arena {
     solverContext.declareCell(cellBoolean)
     solverContext.declareCell(cellNat)
     solverContext.declareCell(cellInt)
-    // assert in(c_FALSE, c_BOOLEAN) and in(c_TRUE, c_BOOLEAN)
+    solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, cellFalse.toNameEx))
+    solverContext.assertGroundExpr(cellTrue.toNameEx)
     // link c_BOOLEAN to c_FALSE and c_TRUE
-    arena = arena.appendHas(cellBoolean, cellFalse)
-      .appendHas(cellBoolean, cellTrue)
+    arena = arena.appendHas(cellBoolean, cellFalse).appendHas(cellBoolean, cellTrue)
+    // assert in(c_FALSE, c_BOOLEAN) and in(c_TRUE, c_BOOLEAN)
     solverContext.assertGroundExpr(OperEx(TlaSetOper.in, cellFalse.toNameEx, cellBoolean.toNameEx))
     solverContext.assertGroundExpr(OperEx(TlaSetOper.in, cellTrue.toNameEx, cellBoolean.toNameEx))
     arena

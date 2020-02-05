@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
+import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir._
 import com.typesafe.scalalogging.LazyLogging
 
@@ -184,6 +184,12 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
 
     case PowSetT(t@FinSetT(_)) =>
       tla.powSet(decodeCellToTlaEx(arena, arena.getDom(cell)))
+
+    case InfSetT(elemT) if cell == arena.cellIntSet() =>
+      ValEx(TlaIntSet)
+
+    case InfSetT(elemT) if cell == arena.cellNatSet() =>
+      ValEx(TlaNatSet)
 
     case _ =>
       throw new RewriterException("Don't know how to decode the cell %s of type %s".format(cell, cell.cellType), NullEx)
