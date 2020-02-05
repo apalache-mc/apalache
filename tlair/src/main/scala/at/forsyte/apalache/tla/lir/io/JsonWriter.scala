@@ -18,47 +18,57 @@ import scala.collection.immutable.HashMap
 class JsonWriter(writer: PrintWriter, indent: Int = 2) {
 
   def write(expr: TlaEx): Unit = {
-    writer.write(ujson.write(toJson((0, 0), expr), indent))
+    writer.write(ujson.write(toJson(expr), indent))
   }
 
-  private def unary(tla: String, arg: ujson.Value): ujson.Value = {
-    Obj(tla -> arg)
+  // various forms of JSON encodings of TLA expressions
+  private def unary(tla: String, arg: TlaEx): ujson.Value = {
+    Obj(tla -> toJson(arg))
   }
 
-  private def binary(tla: String, arg1: ujson.Value, arg2: ujson.Value): ujson.Value = {
-    Obj(tla -> Arr(arg1, arg2))
+  private def binary(tla: String, arg1: TlaEx, arg2: TlaEx): ujson.Value = {
+    Obj(tla -> Arr(toJson(arg1), toJson(arg2)))
   }
 
-  private def nary(tla: String, args: Seq[ujson.Value]): ujson.Value = {
-    Obj(tla -> args)
+  private def nary(tla: String, args: Seq[TlaEx]): ujson.Value = {
+    Obj(tla -> args.map(toJson))
   }
 
-  def toJson(parentPrecedence: (Int, Int), expr: TlaEx): ujson.Value = {
+  private def defWithArg(tla: String, defn: TlaEx, arg: TlaEx): ujson.Value = {
+    Obj(tla -> toJson(defn), "arg" -> toJson(arg))
+  }
+
+  private def defWithArgs(tla: String, defn: TlaEx, args: Seq[TlaEx]): ujson.Value = {
+    Obj(tla -> toJson(defn), "args" -> args.map(toJson))
+  }
+
+  def toJson(expr: TlaEx): ujson.Value = {
     expr match {
-      case NameEx(x) => unary("name", Str(x))
+      case NameEx(x) => unary("name", tla.str(x))
 
       case ValEx(TlaStr(str)) => Str(str)
-      case ValEx(TlaInt(value)) => unary("int", Str(value.toString))
+      case ValEx(TlaInt(value)) => unary("int", tla.str(value.toString))
       case ValEx(TlaBool(b)) => if (b) True else False
-      case ValEx(TlaBoolSet) => unary("set", "BOOLEAN")
-      case ValEx(TlaIntSet) => unary("set", "Int")
-      case ValEx(TlaNatSet) => unary("set", "Nat")
-      case ValEx(TlaRealSet) => unary("set", "Real")
-      case ValEx(TlaStrSet) => unary("set", "STRING")
+      case ValEx(TlaBoolSet) => unary("set", tla.str("BOOLEAN"))
+      case ValEx(TlaIntSet) => unary("set", tla.str("Int"))
+      case ValEx(TlaNatSet) => unary("set", tla.str("Nat"))
+      case ValEx(TlaRealSet) => unary("set", tla.str("Real"))
+      case ValEx(TlaStrSet) => unary("set", tla.str("STRING"))
+
+      case OperEx(op@_, fun, keysAndValues@_*) if JsonWriter.funOps.contains(op) =>
+        defWithArgs(JsonWriter.funOps(op), fun, keysAndValues)
+
+      case OperEx(TlaFunOper.app, funEx, argEx) =>
+        defWithArg("fun-app", funEx, argEx)
 
       case OperEx(op@_, arg) if JsonWriter.unaryOps.contains(op) =>
-        unary(JsonWriter.unaryOps(op), toJson(op.precedence, arg))
+        unary(JsonWriter.unaryOps(op), arg)
 
       case OperEx(op@_, arg1, arg2) if JsonWriter.binaryOps.contains(op) =>
-        binary(
-          JsonWriter.binaryOps(op),
-          toJson(op.precedence, arg1),
-          toJson(op.precedence, arg2)
-        )
+        binary(JsonWriter.binaryOps(op), arg1, arg2)
 
       case OperEx(op@_, args@_*) if JsonWriter.naryOps.contains(op)  =>
-        val argJsons = args.map(toJson(op.precedence, _))
-        nary(JsonWriter.naryOps(op), argJsons)
+        nary(JsonWriter.naryOps(op), args)
 
       case _ => True
     }
@@ -69,7 +79,7 @@ object JsonWriter {
   protected val unaryOps = HashMap(
     TlaActionOper.prime -> "prime", // TODO: should we use `'` or `prime` or something else?
     TlaBoolOper.not -> "~",
-    TlaArithOper.uminus -> "uminus",
+    TlaArithOper.uminus -> "uminus", // TODO: a word instead of `-` for disambiguation from binary operator
     TlaSetOper.union -> "UNION",
     TlaSetOper.powerset -> "SUBSET",
     TlaActionOper.enabled -> "ENABLED",
@@ -119,9 +129,14 @@ object JsonWriter {
     TlaSetOper.enumSet -> "enum",
     TlaFunOper.tuple -> "tuple",
     TlaSetOper.times -> "\\X",
-    TlaArithOper.sum -> "sum", // TODO: for disambiguation from binary `+` used a word
-    TlaArithOper.prod -> "prod", // TODO: for disambiguation from binary `*` used a word
+    TlaArithOper.sum -> "sum", // TODO: a word instead of `+` for disambiguation from binary operator
+    TlaArithOper.prod -> "prod", // TODO: a word instead of `*` for disambiguation from binary operator
     TlaBoolOper.and -> "/\\",
     TlaBoolOper.or -> "\\/"
+  )
+
+  protected val funOps: Map[TlaOper, String] = HashMap(
+    TlaFunOper.funDef -> "fun-def",
+    TlaFunOper.except -> "fun-except"
   )
 }
