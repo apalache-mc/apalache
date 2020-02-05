@@ -21,16 +21,16 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
     writer.write(ujson.write(toJson((0, 0), expr), indent))
   }
 
-  def unary(tla: String, arg: ujson.Value): ujson.Value = {
-    Obj("tla" -> tla, "arg" -> arg)
+  private def unary(tla: String, arg: ujson.Value): ujson.Value = {
+    Obj(tla -> arg)
   }
 
-  def binary(tla: String, arg1: ujson.Value, arg2: ujson.Value): ujson.Value = {
-    Obj("tla" -> tla, "arg1" -> arg1, "arg2" -> arg2)
+  private def binary(tla: String, arg1: ujson.Value, arg2: ujson.Value): ujson.Value = {
+    Obj(tla -> Arr(arg1, arg2))
   }
 
-  def nary(tla: String, args: ujson.Value*): ujson.Value = {
-    Obj("tla" -> tla, "args" -> args)
+  private def nary(tla: String, args: Seq[ujson.Value]): ujson.Value = {
+    Obj(tla -> args)
   }
 
   def toJson(parentPrecedence: (Int, Int), expr: TlaEx): ujson.Value = {
@@ -50,16 +50,15 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
         unary(JsonWriter.unaryOps(op), toJson(op.precedence, arg))
 
       case OperEx(op@_, arg1, arg2) if JsonWriter.binaryOps.contains(op) =>
-        Obj(
-          "tla" -> JsonWriter.binaryOps(op),
-          "arg1" -> toJson(op.precedence, arg1),
-          "arg2" -> toJson(op.precedence, arg2)
+        binary(
+          JsonWriter.binaryOps(op),
+          toJson(op.precedence, arg1),
+          toJson(op.precedence, arg2)
         )
 
       case OperEx(op@_, args@_*) if JsonWriter.naryOps.contains(op)  =>
         val argJsons = args.map(toJson(op.precedence, _))
-//        nary(JsonWriter.naryOps(op), argJsons)
-        Obj("tla" -> JsonWriter.naryOps(op), "args" -> argJsons)
+        nary(JsonWriter.naryOps(op), argJsons)
 
       case _ => True
     }
@@ -70,7 +69,7 @@ object JsonWriter {
   protected val unaryOps = HashMap(
     TlaActionOper.prime -> "prime", // TODO: should we use `'` or `prime` or something else?
     TlaBoolOper.not -> "~",
-    TlaArithOper.uminus -> "-",
+    TlaArithOper.uminus -> "uminus",
     TlaSetOper.union -> "UNION",
     TlaSetOper.powerset -> "SUBSET",
     TlaActionOper.enabled -> "ENABLED",
@@ -120,7 +119,9 @@ object JsonWriter {
     TlaSetOper.enumSet -> "enum",
     TlaFunOper.tuple -> "tuple",
     TlaSetOper.times -> "\\X",
-    TlaArithOper.sum -> "+",
-    TlaArithOper.prod -> "*"
+    TlaArithOper.sum -> "sum", // TODO: for disambiguation from binary `+` used a word
+    TlaArithOper.prod -> "prod", // TODO: for disambiguation from binary `*` used a word
+    TlaBoolOper.and -> "/\\",
+    TlaBoolOper.or -> "\\/"
   )
 }
