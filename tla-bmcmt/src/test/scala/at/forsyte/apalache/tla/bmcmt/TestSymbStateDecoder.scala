@@ -1,8 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.types.{AnnotationParser, FinSetT, IntT, SeqT}
-import at.forsyte.apalache.tla.lir.TlaEx
+import at.forsyte.apalache.tla.lir.{TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -51,6 +52,30 @@ class TestSymbStateDecoder extends RewriterBase {
     assert(originalEx == decodedEx)
     // hard core comparison
     assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(decodedEx, originalEx)))
+  }
+
+  test("decode Int set") {
+    val originalEx = ValEx(TlaIntSet)
+    val state = new SymbState(originalEx, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    val cell = nextState.asCell
+    val decoder = new SymbStateDecoder(solverContext, rewriter)
+    val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
+    assert(originalEx == decodedEx)
+  }
+
+  test("decode Nat set") {
+    val originalEx = ValEx(TlaNatSet)
+    val state = new SymbState(originalEx, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    val cell = nextState.asCell
+    val decoder = new SymbStateDecoder(solverContext, rewriter)
+    val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
+    assert(originalEx == decodedEx)
   }
 
   test("decode set") {
