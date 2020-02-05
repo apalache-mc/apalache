@@ -23,8 +23,8 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
         println(op.getClass)
       case _ => println("_")
     }
-   // val theType = getTypeTag(ex).
-   // println(ex.oper.toString)
+    // val theType = getTypeTag(ex).
+    // println(ex.oper.toString)
 
     val stringWriter = new StringWriter()
     val printWriter = new PrintWriter(stringWriter)
@@ -79,7 +79,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
       """{"enum":[]}"""
     )
   }
-//
+  //
   test("singleton set") {
     compare(
       enumSet(42),
@@ -100,14 +100,14 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     )
   }
 
-  test("enum set") {
+  test("enum") {
     compare(
       enumSet(int(1), int(2), int(3)),
       """{"enum":[{"int":"1"},{"int":"2"},{"int":"3"}]}"""
     )
   }
 
-  test("enum set multi-line") {
+  test("enum multi-line") {
     compareMultiLine(
       enumSet(int(1), int(2), int(3)),
       """{
@@ -126,11 +126,71 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     )
   }
 
+  test("tuple") {
+    compare(
+      tuple(int(1), str("two"), ValEx(TlaRealSet)),
+      """{"tuple":[{"int":"1"},"two",{"set":"Real"}]}"""
+    )
+  }
+
+  test("conjunction") {
+    compare(
+      and(name("a"), name("b"), name("c")),
+      """{"/\\":[{"name":"a"},{"name":"b"},{"name":"c"}]}"""
+    )
+  }
+
   test("minus") {
     compare(
       minus(int(1), int(2)),
       """{"-":[{"int":"1"},{"int":"2"}]}"""
     )
   }
-}
 
+  test("function definition") {
+    compareMultiLine(
+      funDef(plus("x", "y"), "x", "S", "y", "T"),
+      """{
+        |  "fun-def": {
+        |    "+": [
+        |      {
+        |        "name": "x"
+        |      },
+        |      {
+        |        "name": "y"
+        |      }
+        |    ]
+        |  },
+        |  "args": [
+        |    {
+        |      "name": "x"
+        |    },
+        |    {
+        |      "name": "S"
+        |    },
+        |    {
+        |      "name": "y"
+        |    },
+        |    {
+        |      "name": "T"
+        |    }
+        |  ]
+        |}""".stripMargin
+    )
+  }
+
+  test("function application") {
+    compare(
+      appFun("f", "e"),
+      """{"fun-app":{"name":"f"},"arg":{"name":"e"}}"""
+    )
+  }
+
+  test("function except") {
+    compare(
+      except("f", "k", "v"),
+      """{"fun-except":{"name":"f"},"args":[{"name":"k"},{"name":"v"}]}"""
+    )
+  }
+
+}
