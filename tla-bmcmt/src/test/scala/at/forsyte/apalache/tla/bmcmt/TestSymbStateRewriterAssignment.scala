@@ -431,7 +431,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
       }
   }
 
-  test("""SE-IN-ASSIGN(funset with Nat): \E t \in [0..4 -> Nat]: x' \in {t}""") {
+  test("""ASSIGN[funset with Nat]: \E t \in [0..4 -> Nat]: x' <- t""") {
     val domain = tla.dotdot(tla.int(0), tla.int(4))
     val set = tla.funSet(domain, ValEx(TlaNatSet))
     val assign =
@@ -446,7 +446,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(rewriter, nextState.setRex(tla.ge(tla.appFun(x, tla.int(1)), 0)))
   }
 
-  test("""SE-IN-ASSIGN(funset with Int): \E t \in [0..4 -> Int]: x' \in {t}""") {
+  test("""ASSIGN[funset with Int]: \E t \in [0..4 -> Int]: x' <- t""") {
     val domain = tla.dotdot(tla.int(0), tla.int(4))
     val set = tla.funSet(domain, ValEx(TlaIntSet))
     val assign =

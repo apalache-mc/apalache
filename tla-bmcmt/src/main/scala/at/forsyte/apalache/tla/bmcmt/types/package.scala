@@ -314,7 +314,8 @@ package object types {
     */
   sealed case class FinFunSetT(domType: CellT, cdmType: CellT) extends CellT {
     require((domType.isInstanceOf[FinSetT] || domType.isInstanceOf[PowSetT])
-            && (cdmType.isInstanceOf[FinSetT] || cdmType.isInstanceOf[PowSetT] || cdmType.isInstanceOf[FinFunSetT]))
+            && (cdmType.isInstanceOf[FinSetT] || cdmType.isInstanceOf[PowSetT]
+                  || cdmType.isInstanceOf[FinFunSetT] || cdmType.isInstanceOf[InfSetT]))
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
