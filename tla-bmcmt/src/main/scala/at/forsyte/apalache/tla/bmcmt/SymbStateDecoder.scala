@@ -127,10 +127,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
           case _ => throw new RewriterException("Corrupted function: " + relation, NullEx)
         }
 
-      if (args.nonEmpty)
-        OperEx(TlaFunOper.enum, args :_*)
-      else
-        OperEx(TlaFunOper.funDef, tla.enumSet(), tla.name("x"), tla.enumSet())
+      tla.atat(args: _*)
 
     case SeqT(_) =>
       val startEndFun = arena.getHas(cell) map (decodeCellToTlaEx(arena, _))

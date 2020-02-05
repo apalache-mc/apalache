@@ -392,6 +392,15 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     assert(expected == stringWriter.toString)
   }
 
+  test("TLC @@") {
+    val writer = new PrettyWriter(printWriter, 40)
+    val expr = atat(str("a"), 1, str("b"), 2, str("c"), 3)
+    writer.write(expr)
+    printWriter.flush()
+    val expected = """"a" :> 1 @@ "b" :> 2 @@ "c" :> 3""".stripMargin
+    assert(expected == stringWriter.toString)
+  }
+
   test("a one-line set of records") {
     val writer = new PrettyWriter(printWriter, 40)
     val expr = recSet(
