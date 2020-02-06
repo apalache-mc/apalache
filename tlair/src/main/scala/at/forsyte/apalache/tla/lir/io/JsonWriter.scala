@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.lir.io
 import java.io.{File, FileWriter, PrintWriter}
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, _}
 import at.forsyte.apalache.tla.lir.predef._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
@@ -22,6 +21,11 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
   }
 
   // various forms of JSON encodings of TLA expressions
+
+  private def primitive(tla: String, value: String): ujson.Value = {
+    Obj(tla -> value)
+  }
+
   private def unary(tla: String, arg: TlaEx): ujson.Value = {
     Obj(tla -> toJson(arg))
   }
@@ -34,32 +38,63 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
     Obj(tla -> args.map(toJson))
   }
 
-  private def defWithArg(tla: String, defn: TlaEx, arg: TlaEx): ujson.Value = {
-    Obj(tla -> toJson(defn), "arg" -> toJson(arg))
+  private def applyTo(fun: TlaEx, to: TlaEx): ujson.Value = {
+    Obj("apply" -> toJson(fun), "to" -> toJson(to))
   }
 
-  private def defWithArgs(tla: String, defn: TlaEx, args: Seq[TlaEx]): ujson.Value = {
-    Obj(tla -> toJson(defn), "args" -> args.map(toJson))
+  private def funWhere(fun: TlaEx, args: Seq[TlaEx]): ujson.Value = {
+    Obj("function" -> toJson(fun), "where" -> args.map(toJson))
+  }
+
+  private def exceptWith(fun: TlaEx, args: Seq[TlaEx]): ujson.Value = {
+    Obj("except" -> toJson(fun), "with" -> args.map(toJson))
   }
 
   def toJson(expr: TlaEx): ujson.Value = {
     expr match {
-      case NameEx(x) => unary("id", tla.str(x))
-
-      case ValEx(TlaStr(str)) => Str(str)
-      case ValEx(TlaInt(value)) => unary("int", tla.str(value.toString))
+      /**
+       * as name references happen in TLA+ much more frequently than string literals,
+       * we optimize for that case, and encode TLA+ name references as JSON strings,
+       * while TLA+ strings as { "str" = "..." } JSON objects.
+       */
+      case NameEx(x) => x
+      case ValEx(TlaStr(str)) => primitive("str", str)
+      case ValEx(TlaInt(value)) => primitive("int", value.toString)
       case ValEx(TlaBool(b)) => if (b) True else False
-      case ValEx(TlaBoolSet) => unary("set", tla.str("BOOLEAN"))
-      case ValEx(TlaIntSet) => unary("set", tla.str("Int"))
-      case ValEx(TlaNatSet) => unary("set", tla.str("Nat"))
-      case ValEx(TlaRealSet) => unary("set", tla.str("Real"))
-      case ValEx(TlaStrSet) => unary("set", tla.str("STRING"))
+      case ValEx(TlaBoolSet) => primitive("set", "BOOLEAN")
+      case ValEx(TlaIntSet) => primitive("set", "Int")
+      case ValEx(TlaNatSet) => primitive("set", "Nat")
+      case ValEx(TlaRealSet) => primitive("set", "Real")
+      case ValEx(TlaStrSet) => primitive("set", "STRING")
 
-      case OperEx(op@_, fun, keysAndValues@_*) if JsonWriter.funOps.contains(op) =>
-        defWithArgs(JsonWriter.funOps(op), fun, keysAndValues)
+      /**
+       * Introducing special forms for function definitions and applications seems reasonable:
+       * again, they occur so frequently, that they deserve a special treatment to improve readability.
+       * These forms are:
+       *    [ x \in S, y \in T |-> e ] =>
+       *    { "function": "e", "where": [ "x", "S", "y", "T"] }
+       *
+       *    [f EXCEPT ![i_1] = e_1, ![i_2] = e_2] =>
+       *    { "except": "f", "with": [ "i_1", "e_1", "i_2", "e_2"] }
+       *
+       *    f[e] =>
+       *    { "apply": "f", "to": "e" }
+       */
+      case OperEx(TlaFunOper.funDef, fun, keysAndValues@_*) =>
+        funWhere(fun, keysAndValues)
+
+      case OperEx(TlaFunOper.except, fun, keysAndValues@_*) =>
+        exceptWith(fun, keysAndValues)
 
       case OperEx(TlaFunOper.app, funEx, argEx) =>
-        defWithArg("fun-app", funEx, argEx)
+        applyTo(funEx, argEx)
+
+      /**
+       * General handling of unary, binary, and nary operators
+       *
+       * Unary: op e => { "op": "e" }
+       * Others:
+       */
 
       case OperEx(op@_, arg) if JsonWriter.unaryOps.contains(op) =>
         unary(JsonWriter.unaryOps(op), arg)
@@ -77,9 +112,9 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
 
 object JsonWriter {
   protected val unaryOps = HashMap(
-    TlaActionOper.prime -> "prime", // TODO: should we use `'` or `prime` or something else?
-    TlaBoolOper.not -> "~",
-    TlaArithOper.uminus -> "uminus", // TODO: a word instead of `-` for disambiguation from binary operator
+    TlaActionOper.prime -> "prime", // TODO: instead of `'`
+    TlaBoolOper.not -> "not",
+    TlaArithOper.uminus -> "minus", // TODO: instead of `-` for disambiguation from binary operator
     TlaSetOper.union -> "UNION",
     TlaSetOper.powerset -> "SUBSET",
     TlaActionOper.enabled -> "ENABLED",
@@ -94,9 +129,9 @@ object JsonWriter {
     TlaOper.ne -> "/=",
     TlaBoolOper.implies -> "=>",
     TlaBoolOper.equiv -> "<=>",
-    TlaArithOper.plus -> "+",
+    TlaArithOper.plus -> "+", // TODO: we treat `+` as nary operator: in JSON we do not distinguish plus and sum
     TlaArithOper.minus -> "-",
-    TlaArithOper.mult -> "*",
+    TlaArithOper.mult -> "*", // TODO: we treat `*` as nary operator: in JSON we do not distinguish mult and prod
     TlaArithOper.div -> "/",
     TlaArithOper.mod -> "%",
     TlaArithOper.realDiv -> "/.",
@@ -106,19 +141,19 @@ object JsonWriter {
     TlaArithOper.gt -> ">",
     TlaArithOper.le -> "<=",
     TlaArithOper.ge -> ">=",
-    TlaSetOper.in -> "\\in",
-    TlaSetOper.notin -> "\\notin",
-    TlaSetOper.cap -> "\\cap",
-    TlaSetOper.cup -> "\\cup",
-    TlaSetOper.setminus -> "\\",
-    TlaSetOper.subseteq -> "\\subseteq",
-    TlaSetOper.subsetProper -> "\\subset",
-    TlaSetOper.supseteq -> "\\supseteq",
-    TlaSetOper.supsetProper -> "\\supset",
-    TlaActionOper.composition -> "\\cdot",
+    TlaSetOper.in -> "in",  // TODO: instead of `\in`
+    TlaSetOper.notin -> "notin", // TODO: instead of `\notin`
+    TlaSetOper.cap -> "intersect", // TODO: instead of `\cap`
+    TlaSetOper.cup -> "union",  // TODO: instead of `\cup`
+    TlaSetOper.setminus -> "setminus",  // TODO: instead of `\setminus`
+    TlaSetOper.subseteq -> "subseteq",  // TODO: instead of `\subseteq`
+    TlaSetOper.subsetProper -> "subset",  // TODO: instead of `\subset`
+    TlaSetOper.supseteq -> "supseteq",  // TODO: instead of `\supseteq`
+    TlaSetOper.supsetProper -> "supset",  // TODO: instead of `\supset`
+    TlaActionOper.composition -> "compose", // TODO: instead of `\cdot`
     TlaTempOper.leadsTo -> "~>",
     TlaTempOper.guarantees -> "-+->",
-    TlaSeqOper.concat -> "\\o",
+    TlaSeqOper.concat -> "concat",  // TODO: instead of `\o`
     TlcOper.atat -> "@@",
     TlcOper.colonGreater -> ":>",
     BmcOper.assign -> "<-",
@@ -126,17 +161,12 @@ object JsonWriter {
   )
 
   protected val naryOps: Map[TlaOper, String] = HashMap(
-    TlaSetOper.enumSet -> "enum",
-    TlaFunOper.tuple -> "tuple",
-    TlaSetOper.times -> "\\X",
-    TlaArithOper.sum -> "sum", // TODO: a word instead of `+` for disambiguation from binary operator
-    TlaArithOper.prod -> "prod", // TODO: a word instead of `*` for disambiguation from binary operator
-    TlaBoolOper.and -> "/\\",
-    TlaBoolOper.or -> "\\/"
-  )
-
-  protected val funOps: Map[TlaOper, String] = HashMap(
-    TlaFunOper.funDef -> "fun-def",
-    TlaFunOper.except -> "fun-except"
+    TlaSetOper.enumSet -> "enum", // TODO: instead of `{}`
+    TlaFunOper.tuple -> "tuple",  // TODO: instead of `<<>>`
+    TlaSetOper.times -> "times",
+    TlaArithOper.sum -> "+",  // TODO: we treat `+` as nary operator: in JSON we do not distinguish plus and sum
+    TlaArithOper.prod -> "*", // TODO: we treat `*` as nary operator: in JSON we do not distinguish mult and prod
+    TlaBoolOper.and -> "and", // TODO: instead of `/\`
+    TlaBoolOper.or -> "or"  // TODO: instead of `\/`
   )
 }
