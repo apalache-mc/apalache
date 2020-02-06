@@ -62,6 +62,19 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
     Obj(tla -> toJson(name), "with" -> toJson(pred))
   }
 
+  private def ifThenElse(pred: TlaEx, thenEx: TlaEx, elseEx: TlaEx): ujson.Value = {
+    Obj("IF" -> toJson(pred), "THEN" -> toJson(thenEx), "ELSE" -> toJson(elseEx))
+  }
+
+  private def caseSplit(guardsAndUpdates: Seq[TlaEx]): ujson.Value = {
+    Obj("CASE" -> guardsAndUpdates.map(toJson))
+  }
+
+  private def caseOther(guardsAndUpdates: Seq[TlaEx], other: TlaEx): ujson.Value = {
+    Obj("CASE" -> guardsAndUpdates.map(toJson), "OTHER" -> toJson(other))
+  }
+
+
   def toJson(expr: TlaEx): ujson.Value = {
     expr match {
       /**
@@ -79,11 +92,6 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
       case ValEx(TlaRealSet) => primitive("set", "Real")
       case ValEx(TlaStrSet) => primitive("set", "STRING")
 
-      /**
-       * Introducing special forms for function definitions and applications seems reasonable:
-       * again, they occur so frequently, that they deserve a special treatment to improve readability.
-       */
-
       // [ x \in S, y \in T |-> e ]  =>  { "function": "e", "where": [ "x", "S", "y", "T"] }
       case OperEx(TlaFunOper.funDef, fun, keysAndValues@_*) =>
         funWhere(fun, keysAndValues)
@@ -99,6 +107,9 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
       // {e: x \in S, y \in T} => {"map":"e","where":["x","S","y","T"]}
       case OperEx(TlaSetOper.map, body, keysAndValues@_*) =>
         mapWhere(body, keysAndValues)
+
+      case OperEx(TlaControlOper.ifThenElse, pred, thenEx, elseEx) =>
+        ifThenElse(pred, thenEx, elseEx)
 
       /**
        * General handling of unary, binary, and nary operators
@@ -129,6 +140,11 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
       case OperEx(op@_, name, pred) if JsonWriter.unboundedPredOps.contains(op)  =>
         unboundedWithPred(JsonWriter.unboundedPredOps(op), name, pred)
 
+      case OperEx(TlaControlOper.caseNoOther, guardsAndUpdates@_*) =>
+        caseSplit(guardsAndUpdates)
+
+      case OperEx(TlaControlOper.caseWithOther, otherEx, guardsAndUpdates@_*) =>
+        caseOther(guardsAndUpdates, otherEx)
 
       case _ => True
     }

@@ -272,7 +272,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   }
 
   test("exists unbounded") {
-    // \E x \in S : P
+    // \E x : P
     compare(
       exists("x", "P"),
       """{"exists":"x","with":"P"}"""
@@ -280,7 +280,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   }
 
   test("choose bounded") {
-    // \E x \in S : P
+    // CHOOSE x \in S : x > 3
     compare(
       choose("x", "S", gt("x",3)),
       """{"CHOOSE":["x","S"],"with":{">":["x",{"int":"3"}]}}"""
@@ -288,13 +288,18 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   }
 
   test("choose unbounded") {
-    // \E x \in S : P
+    // CHOOSE <<x, y>> : x + y <= 5
     compareMultiLine(
-      choose("x", gt(plus("x","y"),5)),
+      choose(tuple("x", "y"), le(plus("x","y"),5)),
       """{
-        |  "CHOOSE": "x",
+        |  "CHOOSE": {
+        |    "tuple": [
+        |      "x",
+        |      "y"
+        |    ]
+        |  },
         |  "with": {
-        |    ">": [
+        |    "<=": [
         |      {
         |        "+": [
         |          "x",
@@ -307,6 +312,33 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
         |    ]
         |  }
         |}""".stripMargin
+    )
+  }
+
+  test("if then else") {
+    // \E x \in S : P
+    compare(
+      ite("p", "x", "y"),
+      """{"IF":"p","THEN":"x","ELSE":"y"}"""
+    )
+  }
+
+  test("case split") {
+    // CASE guard1 -> action1
+    //   [] guard2 -> action2
+    compare(
+      caseSplit("guard1", "action1", "guard2", "action2"),
+      """{"CASE":["guard1","action1","guard2","action2"]}"""
+    )
+  }
+
+  test("case with other") {
+    // CASE guard1 -> action1
+    //   [] guard2 -> action2
+    //   [] OTHER -> otherAction
+    compare(
+      caseOther("otherAction", "guard1", "action1", "guard2", "action2"),
+      """{"CASE":["guard1","action1","guard2","action2"],"OTHER":"otherAction"}"""
     )
   }
 }
