@@ -28,6 +28,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     compare(ex, expected, 2)
 
   test("id") {
+    // awesome
     compare(
       name("awesome"),
       """"awesome""""
@@ -35,6 +36,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   }
 
   test("str") {
+    // "Hello, World!"
     compare(
       str("Hello, World!"),
       """{"str":"Hello, World!"}"""
@@ -42,6 +44,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   }
 
   test("int") {
+    // int
     compare(
       int(42),
       """{"int":"42"}"""
@@ -49,6 +52,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   }
 
   test("RealSet") {
+    // Real
     compare(
       ValEx(TlaRealSet), // TODO: builders for sets? (Andrey)
       """{"set":"Real"}"""
@@ -56,6 +60,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   }
 
   test("prime name") {
+    // awesome'
     compare(
       prime("awesome"),
       """{"prime":"awesome"}"""
@@ -63,6 +68,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   }
 
   test("empty set") {
+    // { }
     compare(
       enumSet(),
       """{"enum":[]}"""
@@ -70,6 +76,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   }
   //
   test("singleton set") {
+    // { 42 }
     compare(
       enumSet(42),
       """{"enum":[{"int":"42"}]}"""
@@ -77,6 +84,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   }
 
   test("singleton set multi-line") {
+    // { 42 }
     compareMultiLine(
       enumSet(42),
       """{
@@ -90,6 +98,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   }
 
   test("enum") {
+    // { 1, 2, 3 }
     compare(
       enumSet(int(1), int(2), int(3)),
       """{"enum":[{"int":"1"},{"int":"2"},{"int":"3"}]}"""
@@ -97,6 +106,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   }
 
   test("enum multi-line") {
+    // { 1, 2, 3 }
     compareMultiLine(
       enumSet(int(1), int(2), int(3)),
       """{
@@ -116,6 +126,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   }
 
   test("tuple") {
+    // << 1, two, "three" >>
     compare(
       tuple(int(1), name("two"), str("three")),
       """{"tuple":[{"int":"1"},"two",{"str":"three"}]}"""
@@ -123,6 +134,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   }
 
   test("conjunction") {
+    // a /\ b /\ c
     compare(
       and(name("a"), name("b"), name("c")),
       """{"and":["a","b","c"]}"""
@@ -130,6 +142,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   }
 
   test("minus") {
+    // 1 - 2
     compare(
       minus(int(1), int(2)),
       """{"-":[{"int":"1"},{"int":"2"}]}"""
@@ -137,6 +150,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   }
 
   test("function definition") {
+    // [ x \in S, y \in T |-> x + y ]
     compareMultiLine(
       funDef(plus("x", "y"), "x", "S", "y", "T"),
       """{
@@ -176,8 +190,76 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     // [f EXCEPT ![k] = v]
     compare(
       except("f", "k", "v"),
-      """{"except":"f","with":["k","v"]}"""
+      """{"except":"f","where":["k","v"]}"""
     )
   }
 
+  test("record / function enumeration") {
+    // [ k_1 |-> v_1, ..., k_n |-> v_n ]
+    compare(
+      enumFun(
+        str("x1"), "y1",
+        str("x2"), "y2",
+        str("x3"), "y3"
+      ),
+      """{"record":[{"str":"x1"},"y1",{"str":"x2"},"y2",{"str":"x3"},"y3"]}"""
+    )
+  }
+
+  test("function set") {
+    // [S -> T]
+    compare(
+      funSet(name("S"), name("T")),
+      """{"function-set":["S","T"]}"""
+    )
+  }
+
+  test("record set") {
+    // [x: S -> T]
+    compare(
+      recSet(
+        str("x"), "S",
+        str("y"), "T",
+        str("z"), "U"
+      ),
+      """{"record-set":[{"str":"x"},"S",{"str":"y"},"T",{"str":"z"},"U"]}"""
+    )
+  }
+
+  test("filter") {
+    // {x \in S: P}
+    compare(
+      filter("x", "S", "P"),
+      """{"filter":["x","S"],"with":"P"}"""
+    )
+  }
+
+  test("filter with predicate") {
+    // {x \in S: P}
+    compareMultiLine(
+      filter("x", "S", lt("x", 5)),
+      """{
+        |  "filter": [
+        |    "x",
+        |    "S"
+        |  ],
+        |  "with": {
+        |    "<": [
+        |      "x",
+        |      {
+        |        "int": "5"
+        |      }
+        |    ]
+        |  }
+        |}""".stripMargin
+    )
+  }
+
+  test("map") {
+    // {x+y: x \in S, y \in T}
+    compare(
+      map(plus("x", "y"), "x", "S", "y", "T"),
+      """{"map":{"+":["x","y"]},"where":["x","S","y","T"]}"""
+    )
+  }
 }
