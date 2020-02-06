@@ -12,7 +12,7 @@ object Limits {
   val MAX_PRODUCT_SIZE = 1000000
 
   /**
-    * An upper bound on the size of an explicitely constructed powerset.
+    * An upper bound on the size of an expanded powerset.
     */
   val POWSET_MAX_SIZE = 1000000
 
