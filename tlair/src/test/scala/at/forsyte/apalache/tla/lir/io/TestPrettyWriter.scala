@@ -158,11 +158,32 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     writer.write(enumSet(1.to(10).map(int): _*))
     printWriter.flush()
     val expected =
+      """{ 1,
+        |  2,
+        |  3,
+        |  4,
+        |  5,
+        |  6,
+        |  7,
+        |  8,
+        |  9,
+        |  10 }""".stripMargin
+    // Igor: I would prefer the layout below, but do not know how to do it with kiama
+    val iLikeItBetterButItDoesNotWork =
       """{
-        |  1, 2, 3, 4, 5, 6, 7,
-        |  8, 9, 10
+        |  1,
+        |  2,
+        |  3,
+        |  4,
+        |  5,
+        |  6,
+        |  7,
+        |  8,
+        |  9,
+        |  10
         |}""".stripMargin
-    assert(expected == stringWriter.toString)
+    val result = stringWriter.toString
+    assert(expected == result)
   }
 
   test("one-line tuple") {

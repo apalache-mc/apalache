@@ -70,8 +70,8 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
       case OperEx(op@TlaSetOper.enumSet, args@_*) =>
         // a set enumeration, e.g., { 1, 2, 3 }
         val argDocs = args.map(toDoc(op.precedence, _))
-        val commaSeparated = ssep(argDocs.toList, text(",") <> softline)
-        group(text("{") <> nest(line <> commaSeparated, indent) <> line <> "}")
+        val commaSeparated = folddoc(argDocs.toList, _ <> text(",") <@> _)
+        group(braces(group(softline <> nest(commaSeparated, indent)) <> softline))
 
       case OperEx(op@TlaFunOper.tuple, args@_*) =>
         // a tuple, e.g., <<1, 2, 3>>
