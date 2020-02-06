@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.BmcOper
 import org.junit.runner.RunWith
@@ -32,6 +32,25 @@ class TestSymbStateRewriterExpand extends RewriterBase {
     val state = new SymbState(funSet, CellTheory(), arena, new Binding)
     val rewriter = create()
     assertThrows[RewriterException](rewriter.rewriteUntilDone(state))
+  }
+
+  // Constructing an explicit set of functions is, of course, expensive. But it should work for small values.
+  // Left for the future...
+  ignore("""Expand([{1, 2} -> {FALSE, TRUE}]) should work""") {
+    val domain = tla.enumSet(tla.int(1), tla.int(2))
+    val codomain = tla.enumSet(tla.bool(false), tla.bool(true))
+    val funSet = OperEx(BmcOper.expand, tla.funSet(domain, codomain))
+    val state = new SymbState(funSet, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    var nextState = rewriter.rewriteUntilDone(state)
+    val funSetCell = nextState.asCell
+    def mkFun(v1: Boolean, v2: Boolean): TlaEx = {
+      val mapEx = tla.ite(tla.eql(NameEx("x"), tla.int(1)), tla.bool(v1), tla.bool(v2))
+      tla.funDef(mapEx, tla.name("x"), domain)
+    }
+    val expected = tla.enumSet(mkFun(false, false), mkFun(false, true),
+                               mkFun(true, false), mkFun(true, true))
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(expected, funSetCell.toNameEx)))
   }
 
 }
