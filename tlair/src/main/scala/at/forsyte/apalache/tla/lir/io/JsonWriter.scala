@@ -47,7 +47,15 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
   }
 
   private def exceptWith(fun: TlaEx, args: Seq[TlaEx]): ujson.Value = {
-    Obj("except" -> toJson(fun), "with" -> args.map(toJson))
+    Obj("except" -> toJson(fun), "where" -> args.map(toJson))
+  }
+
+  private def mapWhere(body: TlaEx, args: Seq[TlaEx]): ujson.Value = {
+    Obj("map" -> toJson(body), "where" -> args.map(toJson))
+  }
+
+  private def filterFromWith(name: TlaEx, from: TlaEx, pred: TlaEx): ujson.Value = {
+    Obj("filter" -> Arr(toJson(name), toJson(from)), "with" -> toJson(pred))
   }
 
   def toJson(expr: TlaEx): ujson.Value = {
@@ -70,30 +78,33 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
       /**
        * Introducing special forms for function definitions and applications seems reasonable:
        * again, they occur so frequently, that they deserve a special treatment to improve readability.
-       * These forms are:
-       *    [ x \in S, y \in T |-> e ] =>
-       *    { "function": "e", "where": [ "x", "S", "y", "T"] }
-       *
-       *    [f EXCEPT ![i_1] = e_1, ![i_2] = e_2] =>
-       *    { "except": "f", "with": [ "i_1", "e_1", "i_2", "e_2"] }
-       *
-       *    f[e] =>
-       *    { "apply": "f", "to": "e" }
        */
+
+      // [ x \in S, y \in T |-> e ]  =>  { "function": "e", "where": [ "x", "S", "y", "T"] }
       case OperEx(TlaFunOper.funDef, fun, keysAndValues@_*) =>
         funWhere(fun, keysAndValues)
 
+      // [f EXCEPT ![i_1] = e_1, ![i_2] = e_2]  =>  { "except": "f", "where": [ "i_1", "e_1", "i_2", "e_2"] }
       case OperEx(TlaFunOper.except, fun, keysAndValues@_*) =>
         exceptWith(fun, keysAndValues)
 
+      // f[e]  =>  { "apply": "f", "to": "e" }
       case OperEx(TlaFunOper.app, funEx, argEx) =>
         applyTo(funEx, argEx)
+
+      //  {x \in S: P} => {"filter": ["x","S"], "with": "P"}
+      case OperEx(TlaSetOper.filter, name, set, pred) =>
+        filterFromWith(name, set, pred)
+
+      // {e: x \in S, y \in T} => {"map":"e","where":["x","S","y","T"]}
+      case OperEx(TlaSetOper.map, body, keysAndValues@_*) =>
+        mapWhere(body, keysAndValues)
 
       /**
        * General handling of unary, binary, and nary operators
        *
        * Unary: op e => { "op": "e" }
-       * Others:
+       * Others: op [x,y,z] => { "op": ["x", "y"," z"] }
        */
 
       case OperEx(op@_, arg) if JsonWriter.unaryOps.contains(op) =>
@@ -161,8 +172,11 @@ object JsonWriter {
   )
 
   protected val naryOps: Map[TlaOper, String] = HashMap(
-    TlaSetOper.enumSet -> "enum", // TODO: instead of `{}`
+    TlaFunOper.enum -> "record", // TODO: instead of `[ |-> ]`
     TlaFunOper.tuple -> "tuple",  // TODO: instead of `<<>>`
+    TlaSetOper.enumSet -> "enum", // TODO: instead of `{}`
+    TlaSetOper.funSet -> "function-set", // TODO: instead of `[ -> ]`
+    TlaSetOper.recSet -> "record-set", // TODO: instead of `[ : ]`
     TlaSetOper.times -> "times",
     TlaArithOper.sum -> "+",  // TODO: we treat `+` as nary operator: in JSON we do not distinguish plus and sum
     TlaArithOper.prod -> "*", // TODO: we treat `*` as nary operator: in JSON we do not distinguish mult and prod
