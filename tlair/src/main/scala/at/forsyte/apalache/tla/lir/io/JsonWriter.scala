@@ -74,6 +74,9 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
     Obj("CASE" -> guardsAndUpdates.map(toJson), "OTHER" -> toJson(other))
   }
 
+  private def actionVars(tla: String, action: TlaEx, vars: TlaEx): ujson.Value = {
+    Obj(tla -> toJson(action), "vars" -> toJson(vars))
+  }
 
   def toJson(expr: TlaEx): ujson.Value = {
     expr match {
@@ -111,22 +114,6 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
       case OperEx(TlaControlOper.ifThenElse, pred, thenEx, elseEx) =>
         ifThenElse(pred, thenEx, elseEx)
 
-      /**
-       * General handling of unary, binary, and nary operators
-       *
-       * Unary: op e => { "op": "e" }
-       * Others: op [x,y,z] => { "op": ["x", "y"," z"] }
-       */
-
-      case OperEx(op@_, arg) if JsonWriter.unaryOps.contains(op) =>
-        unary(JsonWriter.unaryOps(op), arg)
-
-      case OperEx(op@_, arg1, arg2) if JsonWriter.binaryOps.contains(op) =>
-        binary(JsonWriter.binaryOps(op), arg1, arg2)
-
-      case OperEx(op@_, args@_*) if JsonWriter.naryOps.contains(op)  =>
-        nary(JsonWriter.naryOps(op), args)
-
       //  {x \in S: P} => {"filter": ["x","S"], "with": "P"}
       //  \E x \in S : P => {"exists": ["x","S"], "with": "P"}
       //  \A x \in S : P => {"forall": ["x","S"], "with": "P"}
@@ -145,6 +132,32 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
 
       case OperEx(TlaControlOper.caseWithOther, otherEx, guardsAndUpdates@_*) =>
         caseOther(guardsAndUpdates, otherEx)
+
+      //  [A]_vars
+      //  <A>_vars
+      case OperEx(op@_, action, vars) if JsonWriter.stutterOps.contains(op)  =>
+        actionVars(JsonWriter.stutterOps(op), action, vars)
+
+      //  WF_vars(A)
+      //  SF_vars(A)
+      case OperEx(op@_, vars, action) if JsonWriter.fairnessOps.contains(op)  =>
+        actionVars(JsonWriter.fairnessOps(op), action, vars)
+
+      /**
+       * General handling of unary, binary, and nary operators
+       *
+       * Unary: op e => { "op": "e" }
+       * Others: op [x,y,z] => { "op": ["x", "y"," z"] }
+       */
+
+      case OperEx(op@_, arg) if JsonWriter.unaryOps.contains(op) =>
+        unary(JsonWriter.unaryOps(op), arg)
+
+      case OperEx(op@_, arg1, arg2) if JsonWriter.binaryOps.contains(op) =>
+        binary(JsonWriter.binaryOps(op), arg1, arg2)
+
+      case OperEx(op@_, args@_*) if JsonWriter.naryOps.contains(op)  =>
+        nary(JsonWriter.naryOps(op), args)
 
       case _ => True
     }
@@ -226,4 +239,15 @@ object JsonWriter {
     TlaBoolOper.forallUnbounded -> "forall",
     TlaOper.chooseUnbounded -> "CHOOSE"
   )
+
+  protected val stutterOps: Map[TlaOper, String] = HashMap(
+    TlaActionOper.stutter -> "stutter",
+    TlaActionOper.nostutter -> "nostutter"
+  )
+
+  protected val fairnessOps: Map[TlaOper, String] = HashMap(
+    TlaTempOper.weakFairness -> "WF",
+    TlaTempOper.strongFairness -> "SF"
+  )
+
 }

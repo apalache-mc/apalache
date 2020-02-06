@@ -341,4 +341,36 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
       """{"CASE":["guard1","action1","guard2","action2"],"OTHER":"otherAction"}"""
     )
   }
+
+  test("[A]_x") {
+    // [A]_x
+    compare(
+      stutt("A", "x"),
+      """{"stutter":"A","vars":"x"}"""
+    )
+  }
+
+  test("<A>_<<x,y>>") {
+    // <A>_vars
+    compare(
+      nostutt("A", tuple("x", "y")),
+      """{"nostutter":"A","vars":{"tuple":["x","y"]}}"""
+    )
+  }
+
+  test("WF_x(A)") {
+    // [A]_x
+    compare(
+      WF("x", "A"),
+      """{"WF":"A","vars":"x"}"""
+    )
+  }
+
+  test("SF_<<x,y>>(A)") {
+    // <A>_vars
+    compare(
+      SF(tuple("x", "y"), "A"),
+      """{"SF":"A","vars":{"tuple":["x","y"]}}"""
+    )
+  }
 }
