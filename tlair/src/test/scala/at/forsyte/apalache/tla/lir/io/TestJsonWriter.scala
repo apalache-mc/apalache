@@ -262,4 +262,51 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
       """{"map":{"+":["x","y"]},"where":["x","S","y","T"]}"""
     )
   }
+
+  test("exists bounded") {
+    // \E x \in S : P
+    compare(
+      exists("x", "S", "P"),
+      """{"exists":["x","S"],"with":"P"}"""
+    )
+  }
+
+  test("exists unbounded") {
+    // \E x \in S : P
+    compare(
+      exists("x", "P"),
+      """{"exists":"x","with":"P"}"""
+    )
+  }
+
+  test("choose bounded") {
+    // \E x \in S : P
+    compare(
+      choose("x", "S", gt("x",3)),
+      """{"CHOOSE":["x","S"],"with":{">":["x",{"int":"3"}]}}"""
+    )
+  }
+
+  test("choose unbounded") {
+    // \E x \in S : P
+    compareMultiLine(
+      choose("x", gt(plus("x","y"),5)),
+      """{
+        |  "CHOOSE": "x",
+        |  "with": {
+        |    ">": [
+        |      {
+        |        "+": [
+        |          "x",
+        |          "y"
+        |        ]
+        |      },
+        |      {
+        |        "int": "5"
+        |      }
+        |    ]
+        |  }
+        |}""".stripMargin
+    )
+  }
 }

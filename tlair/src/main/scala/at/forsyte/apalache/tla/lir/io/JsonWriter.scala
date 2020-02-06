@@ -54,8 +54,12 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
     Obj("map" -> toJson(body), "where" -> args.map(toJson))
   }
 
-  private def filterFromWith(name: TlaEx, from: TlaEx, pred: TlaEx): ujson.Value = {
-    Obj("filter" -> Arr(toJson(name), toJson(from)), "with" -> toJson(pred))
+  private def boundedWithPred(tla: String, name: TlaEx, from: TlaEx, pred: TlaEx): ujson.Value = {
+    Obj(tla -> Arr(toJson(name), toJson(from)), "with" -> toJson(pred))
+  }
+
+  private def unboundedWithPred(tla: String, name: TlaEx, pred: TlaEx): ujson.Value = {
+    Obj(tla -> toJson(name), "with" -> toJson(pred))
   }
 
   def toJson(expr: TlaEx): ujson.Value = {
@@ -92,10 +96,6 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
       case OperEx(TlaFunOper.app, funEx, argEx) =>
         applyTo(funEx, argEx)
 
-      //  {x \in S: P} => {"filter": ["x","S"], "with": "P"}
-      case OperEx(TlaSetOper.filter, name, set, pred) =>
-        filterFromWith(name, set, pred)
-
       // {e: x \in S, y \in T} => {"map":"e","where":["x","S","y","T"]}
       case OperEx(TlaSetOper.map, body, keysAndValues@_*) =>
         mapWhere(body, keysAndValues)
@@ -115,6 +115,20 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
 
       case OperEx(op@_, args@_*) if JsonWriter.naryOps.contains(op)  =>
         nary(JsonWriter.naryOps(op), args)
+
+      //  {x \in S: P} => {"filter": ["x","S"], "with": "P"}
+      //  \E x \in S : P => {"exists": ["x","S"], "with": "P"}
+      //  \A x \in S : P => {"forall": ["x","S"], "with": "P"}
+      //  CHOOSE x \in S : P => {"CHOOSE": ["x","S"], "with": "P"}
+      case OperEx(op@_, name, set, pred) if JsonWriter.boundedPredOps.contains(op)  =>
+        boundedWithPred(JsonWriter.boundedPredOps(op), name, set, pred)
+
+      //  \E x : P => {"exists": "x", "with": "P"}
+      //  \A x : P => {"forall": "x", "with": "P"}
+      //  CHOOSE x : P => {"CHOOSE": "x", "with": "P"}
+      case OperEx(op@_, name, pred) if JsonWriter.unboundedPredOps.contains(op)  =>
+        unboundedWithPred(JsonWriter.unboundedPredOps(op), name, pred)
+
 
       case _ => True
     }
@@ -182,5 +196,18 @@ object JsonWriter {
     TlaArithOper.prod -> "*", // TODO: we treat `*` as nary operator: in JSON we do not distinguish mult and prod
     TlaBoolOper.and -> "and", // TODO: instead of `/\`
     TlaBoolOper.or -> "or"  // TODO: instead of `\/`
+  )
+
+  protected val boundedPredOps: Map[TlaOper, String] = HashMap(
+    TlaSetOper.filter -> "filter",
+    TlaBoolOper.exists -> "exists",
+    TlaBoolOper.forall -> "forall",
+    TlaOper.chooseBounded -> "CHOOSE"
+  )
+
+  protected val unboundedPredOps: Map[TlaOper, String] = HashMap(
+    TlaBoolOper.existsUnbounded -> "exists",
+    TlaBoolOper.forallUnbounded -> "forall",
+    TlaOper.chooseUnbounded -> "CHOOSE"
   )
 }
