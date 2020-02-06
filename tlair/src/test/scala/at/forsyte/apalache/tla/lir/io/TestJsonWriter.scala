@@ -9,23 +9,12 @@ import at.forsyte.apalache.tla.lir.{OperEx, SimpleFormalParam, TlaEx, TlaOperDec
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
-import scala.reflect.runtime.{universe => ru}
 
 @RunWith(classOf[JUnitRunner])
 class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
 
-  def getTypeTag[T: ru.TypeTag](obj: T) = ru.typeTag[T].tpe
-
   // compare expression and expected result (single-line formatting)
   def compare(ex: TlaEx, expected: String, indent: Int = -1): Unit = {
-    ex match {
-      case OperEx(op@_, args@_*) =>
-        println(op.getClass)
-      case _ => println("_")
-    }
-    // val theType = getTypeTag(ex).
-    // println(ex.oper.toString)
-
     val stringWriter = new StringWriter()
     val printWriter = new PrintWriter(stringWriter)
     val writer = new JsonWriter(printWriter, indent)
@@ -41,14 +30,14 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   test("id") {
     compare(
       name("awesome"),
-      """{"id":"awesome"}"""
+      """"awesome""""
     )
   }
 
   test("str") {
     compare(
       str("Hello, World!"),
-      """"Hello, World!""""
+      """{"str":"Hello, World!"}"""
     )
   }
 
@@ -69,7 +58,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   test("prime name") {
     compare(
       prime("awesome"),
-      """{"prime":{"id":"awesome"}}"""
+      """{"prime":"awesome"}"""
     )
   }
 
@@ -128,15 +117,15 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
 
   test("tuple") {
     compare(
-      tuple(int(1), str("two"), ValEx(TlaRealSet)),
-      """{"tuple":[{"int":"1"},"two",{"set":"Real"}]}"""
+      tuple(int(1), name("two"), str("three")),
+      """{"tuple":[{"int":"1"},"two",{"str":"three"}]}"""
     )
   }
 
   test("conjunction") {
     compare(
       and(name("a"), name("b"), name("c")),
-      """{"/\\":[{"id":"a"},{"id":"b"},{"id":"c"}]}"""
+      """{"and":["a","b","c"]}"""
     )
   }
 
@@ -151,45 +140,43 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     compareMultiLine(
       funDef(plus("x", "y"), "x", "S", "y", "T"),
       """{
-        |  "fun-def": {
+        |  "function": {
         |    "+": [
-        |      {
-        |        "id": "x"
-        |      },
-        |      {
-        |        "id": "y"
-        |      }
+        |      "x",
+        |      "y"
         |    ]
         |  },
-        |  "args": [
-        |    {
-        |      "id": "x"
-        |    },
-        |    {
-        |      "id": "S"
-        |    },
-        |    {
-        |      "id": "y"
-        |    },
-        |    {
-        |      "id": "T"
-        |    }
+        |  "where": [
+        |    "x",
+        |    "S",
+        |    "y",
+        |    "T"
         |  ]
         |}""".stripMargin
     )
   }
 
   test("function application") {
+    // f[e]
     compare(
       appFun("f", "e"),
-      """{"fun-app":{"id":"f"},"arg":{"id":"e"}}"""
+      """{"apply":"f","to":"e"}"""
+    )
+  }
+
+  test("double function application") {
+    // f[e][g]
+    compare(
+      appFun(appFun("f", "e"), "g"),
+      """{"apply":{"apply":"f","to":"e"},"to":"g"}"""
     )
   }
 
   test("function except") {
+    // [f EXCEPT ![k] = v]
     compare(
       except("f", "k", "v"),
-      """{"fun-except":{"id":"f"},"args":[{"id":"k"},{"id":"v"}]}"""
+      """{"except":"f","with":["k","v"]}"""
     )
   }
 
