@@ -38,10 +38,10 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   def compareMultiLine(ex: TlaEx, expected: String): Unit =
     compare(ex, expected, 2)
 
-  test("name") {
+  test("id") {
     compare(
       name("awesome"),
-      """{"name":"awesome"}"""
+      """{"id":"awesome"}"""
     )
   }
 
@@ -69,7 +69,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   test("prime name") {
     compare(
       prime("awesome"),
-      """{"prime":{"name":"awesome"}}"""
+      """{"prime":{"id":"awesome"}}"""
     )
   }
 
@@ -136,7 +136,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   test("conjunction") {
     compare(
       and(name("a"), name("b"), name("c")),
-      """{"/\\":[{"name":"a"},{"name":"b"},{"name":"c"}]}"""
+      """{"/\\":[{"id":"a"},{"id":"b"},{"id":"c"}]}"""
     )
   }
 
@@ -154,25 +154,25 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
         |  "fun-def": {
         |    "+": [
         |      {
-        |        "name": "x"
+        |        "id": "x"
         |      },
         |      {
-        |        "name": "y"
+        |        "id": "y"
         |      }
         |    ]
         |  },
         |  "args": [
         |    {
-        |      "name": "x"
+        |      "id": "x"
         |    },
         |    {
-        |      "name": "S"
+        |      "id": "S"
         |    },
         |    {
-        |      "name": "y"
+        |      "id": "y"
         |    },
         |    {
-        |      "name": "T"
+        |      "id": "T"
         |    }
         |  ]
         |}""".stripMargin
@@ -182,14 +182,14 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   test("function application") {
     compare(
       appFun("f", "e"),
-      """{"fun-app":{"name":"f"},"arg":{"name":"e"}}"""
+      """{"fun-app":{"id":"f"},"arg":{"id":"e"}}"""
     )
   }
 
   test("function except") {
     compare(
       except("f", "k", "v"),
-      """{"fun-except":{"name":"f"},"args":[{"name":"k"},{"name":"v"}]}"""
+      """{"fun-except":{"id":"f"},"args":[{"id":"k"},{"id":"v"}]}"""
     )
   }
 

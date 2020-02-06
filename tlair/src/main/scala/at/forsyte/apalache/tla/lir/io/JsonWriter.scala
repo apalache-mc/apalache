@@ -44,7 +44,7 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
 
   def toJson(expr: TlaEx): ujson.Value = {
     expr match {
-      case NameEx(x) => unary("name", tla.str(x))
+      case NameEx(x) => unary("id", tla.str(x))
 
       case ValEx(TlaStr(str)) => Str(str)
       case ValEx(TlaInt(value)) => unary("int", tla.str(value.toString))
