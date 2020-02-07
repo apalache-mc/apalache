@@ -54,12 +54,12 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
     Obj("map" -> toJson(body), "where" -> args.map(toJson))
   }
 
-  private def boundedWithPred(tla: String, name: TlaEx, from: TlaEx, pred: TlaEx): ujson.Value = {
-    Obj(tla -> Arr(toJson(name), toJson(from)), "with" -> toJson(pred))
+  private def boundedPred(tla: String, name: TlaEx, from: TlaEx, pred: TlaEx): ujson.Value = {
+    Obj(tla -> Arr(toJson(name), toJson(from)), "that" -> toJson(pred))
   }
 
-  private def unboundedWithPred(tla: String, name: TlaEx, pred: TlaEx): ujson.Value = {
-    Obj(tla -> toJson(name), "with" -> toJson(pred))
+  private def unboundedPred(tla: String, name: TlaEx, pred: TlaEx): ujson.Value = {
+    Obj(tla -> toJson(name), "that" -> toJson(pred))
   }
 
   private def ifThenElse(pred: TlaEx, thenEx: TlaEx, elseEx: TlaEx): ujson.Value = {
@@ -76,6 +76,12 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
 
   private def actionVars(tla: String, action: TlaEx, vars: TlaEx): ujson.Value = {
     Obj(tla -> toJson(action), "vars" -> toJson(vars))
+  }
+
+  private def labeled(label: String, decoratedEx: TlaEx, args: Seq[TlaEx]): ujson.Value = {
+    val jsonEx = toJson(decoratedEx)
+    jsonEx("label") = Obj(label -> args.map(toJson))
+    jsonEx
   }
 
   def toJson(expr: TlaEx): ujson.Value = {
@@ -119,13 +125,13 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
       //  \A x \in S : P => {"forall": ["x","S"], "with": "P"}
       //  CHOOSE x \in S : P => {"CHOOSE": ["x","S"], "with": "P"}
       case OperEx(op@_, name, set, pred) if JsonWriter.boundedPredOps.contains(op)  =>
-        boundedWithPred(JsonWriter.boundedPredOps(op), name, set, pred)
+        boundedPred(JsonWriter.boundedPredOps(op), name, set, pred)
 
       //  \E x : P => {"exists": "x", "with": "P"}
       //  \A x : P => {"forall": "x", "with": "P"}
       //  CHOOSE x : P => {"CHOOSE": "x", "with": "P"}
       case OperEx(op@_, name, pred) if JsonWriter.unboundedPredOps.contains(op)  =>
-        unboundedWithPred(JsonWriter.unboundedPredOps(op), name, pred)
+        unboundedPred(JsonWriter.unboundedPredOps(op), name, pred)
 
       case OperEx(TlaControlOper.caseNoOther, guardsAndUpdates@_*) =>
         caseSplit(guardsAndUpdates)
@@ -142,6 +148,15 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
       //  SF_vars(A)
       case OperEx(op@_, vars, action) if JsonWriter.fairnessOps.contains(op)  =>
         actionVars(JsonWriter.fairnessOps(op), action, vars)
+
+      // a labeled expression L3(a, b) :: 42
+      // We model this by just introducing a "label" parameter to the decorated expression
+      case expr @ OperEx(oper @ TlaOper.label, decoratedEx, ValEx(TlaStr(name)), args @ _*) =>
+        val argNames = args map {
+          case ValEx(TlaStr(str)) => NameEx(str) // for a more natural encoding, we change strings to names
+          case _ => throw new MalformedTlaError("Malformed expression", expr)
+        }
+        labeled(name, decoratedEx, argNames)
 
       /**
        * General handling of unary, binary, and nary operators
@@ -211,14 +226,14 @@ object JsonWriter {
     TlcOper.atat -> "@@",
     TlcOper.colonGreater -> ":>",
     BmcOper.assign -> "<-",
-    BmcOper.withType -> "<:"
+    BmcOper.withType -> "<:",
+    TlaSetOper.funSet -> "function-set" // TODO: instead of `[ -> ]`
   )
 
   protected val naryOps: Map[TlaOper, String] = HashMap(
     TlaFunOper.enum -> "record", // TODO: instead of `[ |-> ]`
     TlaFunOper.tuple -> "tuple",  // TODO: instead of `<<>>`
     TlaSetOper.enumSet -> "enum", // TODO: instead of `{}`
-    TlaSetOper.funSet -> "function-set", // TODO: instead of `[ -> ]`
     TlaSetOper.recSet -> "record-set", // TODO: instead of `[ : ]`
     TlaSetOper.times -> "times",
     TlaArithOper.sum -> "+",  // TODO: we treat `+` as nary operator: in JSON we do not distinguish plus and sum
@@ -237,7 +252,9 @@ object JsonWriter {
   protected val unboundedPredOps: Map[TlaOper, String] = HashMap(
     TlaBoolOper.existsUnbounded -> "exists",
     TlaBoolOper.forallUnbounded -> "forall",
-    TlaOper.chooseUnbounded -> "CHOOSE"
+    TlaOper.chooseUnbounded -> "CHOOSE",
+    TlaTempOper.EE -> "exists-temporal",
+    TlaTempOper.AA -> "forall-temporal"
   )
 
   protected val stutterOps: Map[TlaOper, String] = HashMap(
