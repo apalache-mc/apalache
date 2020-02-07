@@ -230,7 +230,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     // {x \in S: P}
     compare(
       filter("x", "S", "P"),
-      """{"filter":["x","S"],"with":"P"}"""
+      """{"filter":["x","S"],"that":"P"}"""
     )
   }
 
@@ -243,7 +243,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
         |    "x",
         |    "S"
         |  ],
-        |  "with": {
+        |  "that": {
         |    "<": [
         |      "x",
         |      {
@@ -267,7 +267,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     // \E x \in S : P
     compare(
       exists("x", "S", "P"),
-      """{"exists":["x","S"],"with":"P"}"""
+      """{"exists":["x","S"],"that":"P"}"""
     )
   }
 
@@ -275,7 +275,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     // \E x : P
     compare(
       exists("x", "P"),
-      """{"exists":"x","with":"P"}"""
+      """{"exists":"x","that":"P"}"""
     )
   }
 
@@ -283,7 +283,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     // CHOOSE x \in S : x > 3
     compare(
       choose("x", "S", gt("x",3)),
-      """{"CHOOSE":["x","S"],"with":{">":["x",{"int":"3"}]}}"""
+      """{"CHOOSE":["x","S"],"that":{">":["x",{"int":"3"}]}}"""
     )
   }
 
@@ -298,7 +298,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
         |      "y"
         |    ]
         |  },
-        |  "with": {
+        |  "that": {
         |    "<=": [
         |      {
         |        "+": [
@@ -371,6 +371,22 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     compare(
       SF(tuple("x", "y"), "A"),
       """{"SF":"A","vars":{"tuple":["x","y"]}}"""
+    )
+  }
+
+  test("L2 :: 1") {
+    // <A>_vars
+    compare(
+      label(int(1), "L2"),
+      """{"int":"1","label":{"L2":[]}}"""
+    )
+  }
+
+  test("L2(a, b) :: 1") {
+    // <A>_vars
+    compare(
+      label(int(1), "L2", "a", "b"),
+      """{"int":"1","label":{"L2":["a","b"]}}"""
     )
   }
 }
