@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
+import at.forsyte.apalache.tla.lir.io.JsonWriter
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -46,6 +47,7 @@ class SanyParserPassImpl @Inject()(val options: PassOptions,
     } else {
       val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
       PrettyWriter.write(rootModule.get, new File(outdir.toFile, "out-parser.tla"))
+      JsonWriter.write(rootModule.get, new File(outdir.toFile, "out-parser.json"))
     }
     rootModule.isDefined
   }
