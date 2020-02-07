@@ -378,15 +378,15 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     // <A>_vars
     compare(
       label(int(1), "L2"),
-      """{"int":"1","label":{"L2":[]}}"""
+      """{"int":"1","label":{"name":"L2","args":[]}}"""
     )
   }
 
-  test("L2(a, b) :: 1") {
+  test("L2(a, b) :: f(x+y)>2") {
     // <A>_vars
     compare(
-      label(int(1), "L2", "a", "b"),
-      """{"int":"1","label":{"L2":["a","b"]}}"""
+      label(appFun("f", gt(plus("x","y"),2)), "L2", "a", "b"),
+      """{"apply":"f","to":{">":[{"+":["x","y"]},{"int":"2"}]},"label":{"name":"L2","args":["a","b"]}}"""
     )
   }
 }
