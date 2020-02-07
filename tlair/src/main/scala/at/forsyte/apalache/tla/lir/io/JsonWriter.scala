@@ -80,7 +80,7 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
 
   private def labeled(label: String, decoratedEx: TlaEx, args: Seq[TlaEx]): ujson.Value = {
     val jsonEx = toJson(decoratedEx)
-    jsonEx("label") = Obj(label -> args.map(toJson))
+    jsonEx("label") = Obj("name" -> label, "args" -> args.map(toJson))
     jsonEx
   }
 
