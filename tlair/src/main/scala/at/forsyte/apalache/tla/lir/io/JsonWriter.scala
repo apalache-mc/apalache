@@ -16,6 +16,10 @@ import scala.collection.immutable.HashMap
 
 class JsonWriter(writer: PrintWriter, indent: Int = 2) {
 
+  def write(mod: TlaModule): Unit = {
+    writer.write(ujson.write(toJson(mod), indent))
+  }
+
   def write(expr: TlaEx): Unit = {
     writer.write(ujson.write(toJson(expr), indent))
   }
@@ -40,6 +44,10 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
 
   private def applyTo(fun: TlaEx, to: TlaEx): ujson.Value = {
     Obj("apply" -> toJson(fun), "to" -> toJson(to))
+  }
+
+  private def applyOpTo(op: String, to: Seq[TlaEx]): ujson.Value = {
+    Obj("apply-operator" -> op, "to" -> to.map(toJson))
   }
 
   private def funWhere(fun: TlaEx, args: Seq[TlaEx]): ujson.Value = {
@@ -84,6 +92,55 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
     jsonEx
   }
 
+  private def operFormalParam(name: String, arity: Int): ujson.Value = {
+    Obj("name" -> name, "arity" -> arity)
+  }
+
+  private def operatorDef(name: String, params: Seq[FormalParam], body: TlaEx): ujson.Value = {
+    Obj("OPERATOR" -> name, "params" -> params.map(toJson), "body" -> toJson((body)))
+  }
+
+  private def letIn(declarations: Seq[TlaDecl], body: TlaEx): ujson.Value = {
+    Obj("LET" ->  declarations.map(toJson), "IN" -> toJson(body))
+  }
+
+  private def module(name: String, declarations: Seq[TlaDecl]): ujson.Value = {
+    Obj("MODULE" -> name, "declarations" -> declarations.map(toJson))
+  }
+
+  // Transformation functions for modules, declarations, expressions
+
+  def toJson(mod: TlaModule): ujson.Value = {
+    module(mod.name, mod.declarations)
+  }
+
+  def toJson(decl: TlaDecl): ujson.Value = {
+    decl match {
+      case TlaConstDecl(name) =>
+        primitive("CONSTANT", name)
+
+      case TlaVarDecl(name) =>
+        primitive("VARIABLE", name)
+
+      case TlaAssumeDecl(body) =>
+        unary("ASSUME", body)
+
+      case TlaOperDecl(name, params, body) =>
+        operatorDef(name, params, body)
+    }
+  }
+
+  private def toJson(param: FormalParam): ujson.Value = {
+    param match {
+      case SimpleFormalParam(name) =>
+        operFormalParam(name, 0)
+      case OperFormalParam(name, arity) =>
+        operFormalParam(name, arity)
+    }
+  }
+
+  // TODO: in LIR, do not see anything about function definitions, as allowed by TLA+ grammar (Andrey)
+
   def toJson(expr: TlaEx): ujson.Value = {
     expr match {
       /**
@@ -112,6 +169,10 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
       // f[e]  =>  { "apply": "f", "to": "e" }
       case OperEx(TlaFunOper.app, funEx, argEx) =>
         applyTo(funEx, argEx)
+
+      // f[e]  =>  { "apply": "f", "to": "e" }
+      case OperEx(op@TlaOper.apply, NameEx(name), args@_*) =>
+        applyOpTo(name, args)
 
       // {e: x \in S, y \in T} => {"map":"e","where":["x","S","y","T"]}
       case OperEx(TlaSetOper.map, body, keysAndValues@_*) =>
@@ -157,6 +218,12 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
           case _ => throw new MalformedTlaError("Malformed expression", expr)
         }
         labeled(name, decoratedEx, argNames)
+
+      case LetInEx(body, decls@_*) =>
+        letIn(decls, body)
+
+
+
 
       /**
        * General handling of unary, binary, and nary operators
