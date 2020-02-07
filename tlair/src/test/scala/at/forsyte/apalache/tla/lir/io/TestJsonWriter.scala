@@ -178,6 +178,14 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     )
   }
 
+  test("operator application") {
+    // A(1,2)
+    compare(
+      OperEx(TlaOper.apply, "A", 1, 2),
+      """{"apply-operator":"A","to":[{"int":"1"},{"int":"2"}]}"""
+    )
+  }
+
   test("double function application") {
     // f[e][g]
     compare(
@@ -343,7 +351,6 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   }
 
   test("[A]_x") {
-    // [A]_x
     compare(
       stutt("A", "x"),
       """{"stutter":"A","vars":"x"}"""
@@ -351,7 +358,6 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   }
 
   test("<A>_<<x,y>>") {
-    // <A>_vars
     compare(
       nostutt("A", tuple("x", "y")),
       """{"nostutter":"A","vars":{"tuple":["x","y"]}}"""
@@ -359,7 +365,6 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   }
 
   test("WF_x(A)") {
-    // [A]_x
     compare(
       WF("x", "A"),
       """{"WF":"A","vars":"x"}"""
@@ -367,7 +372,6 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   }
 
   test("SF_<<x,y>>(A)") {
-    // <A>_vars
     compare(
       SF(tuple("x", "y"), "A"),
       """{"SF":"A","vars":{"tuple":["x","y"]}}"""
@@ -375,7 +379,6 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   }
 
   test("L2 :: 1") {
-    // <A>_vars
     compare(
       label(int(1), "L2"),
       """{"int":"1","label":{"name":"L2","args":[]}}"""
@@ -383,10 +386,113 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
   }
 
   test("L2(a, b) :: f(x+y)>2") {
-    // <A>_vars
     compare(
       label(appFun("f", gt(plus("x","y"),2)), "L2", "a", "b"),
       """{"apply":"f","to":{">":[{"+":["x","y"]},{"int":"2"}]},"label":{"name":"L2","args":["a","b"]}}"""
+    )
+  }
+
+  test("LET A == 1 IN A") {
+    val aDecl = TlaOperDecl("A", List(), 1)
+    compare(
+      letIn(appDecl(aDecl), aDecl),
+      """{"LET":[{"OPERATOR":"A","params":[],"body":{"int":"1"}}],"IN":{"apply-operator":"A","to":[]}}"""
+    )
+  }
+
+  test("LET A(x, y) == x + y IN A(1,2)") {
+    // <A>_vars
+    val decl = TlaOperDecl("A",
+      List(SimpleFormalParam("x"), SimpleFormalParam("y")),
+      plus("x", "y"))
+    compare(
+      letIn(appDecl(decl, int(1), int(2)), decl),
+      """{"LET":[{"OPERATOR":"A","params":[{"name":"x","arity":0},{"name":"y","arity":0}],"body":{"+":["x","y"]}}],"IN":{"apply-operator":"A","to":[{"int":"1"},{"int":"2"}]}}"""
+    )
+  }
+
+  test("LET A(x, y) == x + 1 IN B(x, y) == x - y IN A(1, 2) * B(3, 4)") {
+    // <A>_vars
+    val decl1 = TlaOperDecl("A",
+      List(SimpleFormalParam("x"), SimpleFormalParam("y")),
+      plus("x", "y"))
+    val decl2 = TlaOperDecl("B",
+      List(SimpleFormalParam("x"), SimpleFormalParam("y")),
+      minus("x", "y"))
+    compareMultiLine(
+      letIn(
+        mult(
+          appDecl(decl1, int(1), int(2)),
+          appDecl(decl2, int(3), int(4))),
+        decl1, decl2),
+      """{
+        |  "LET": [
+        |    {
+        |      "OPERATOR": "A",
+        |      "params": [
+        |        {
+        |          "name": "x",
+        |          "arity": 0
+        |        },
+        |        {
+        |          "name": "y",
+        |          "arity": 0
+        |        }
+        |      ],
+        |      "body": {
+        |        "+": [
+        |          "x",
+        |          "y"
+        |        ]
+        |      }
+        |    },
+        |    {
+        |      "OPERATOR": "B",
+        |      "params": [
+        |        {
+        |          "name": "x",
+        |          "arity": 0
+        |        },
+        |        {
+        |          "name": "y",
+        |          "arity": 0
+        |        }
+        |      ],
+        |      "body": {
+        |        "-": [
+        |          "x",
+        |          "y"
+        |        ]
+        |      }
+        |    }
+        |  ],
+        |  "IN": {
+        |    "*": [
+        |      {
+        |        "apply-operator": "A",
+        |        "to": [
+        |          {
+        |            "int": "1"
+        |          },
+        |          {
+        |            "int": "2"
+        |          }
+        |        ]
+        |      },
+        |      {
+        |        "apply-operator": "B",
+        |        "to": [
+        |          {
+        |            "int": "3"
+        |          },
+        |          {
+        |            "int": "4"
+        |          }
+        |        ]
+        |      }
+        |    ]
+        |  }
+        |}""".stripMargin
     )
   }
 }
