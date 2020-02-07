@@ -47,7 +47,10 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
   }
 
   private def applyOpTo(op: String, to: Seq[TlaEx]): ujson.Value = {
-    Obj("apply-operator" -> op, "to" -> to.map(toJson))
+    val json = Obj("eval" -> op)
+    if(to.nonEmpty)
+      json("args") = to.map(toJson)
+    json
   }
 
   private def funWhere(fun: TlaEx, args: Seq[TlaEx]): ujson.Value = {
@@ -97,7 +100,10 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
   }
 
   private def operatorDef(name: String, params: Seq[FormalParam], body: TlaEx): ujson.Value = {
-    Obj("OPERATOR" -> name, "params" -> params.map(toJson), "body" -> toJson((body)))
+    val jsonOp = Obj("OPERATOR" -> name, "body" -> toJson((body)))
+    if(params.nonEmpty) // leave out params if not present
+      jsonOp("params") = params.map(toJson)
+    jsonOp
   }
 
   private def letIn(declarations: Seq[TlaDecl], body: TlaEx): ujson.Value = {
@@ -247,6 +253,21 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
 }
 
 object JsonWriter {
+
+  /**
+   * Write a module to a file (without appending).
+   *
+   * @param module a TLA module
+   * @param outputFile an output file that will be created or overwritten
+   */
+  def write(module: TlaModule, outputFile: File): Unit = {
+    val writer = new PrintWriter(new FileWriter(outputFile, false))
+    try {
+      new JsonWriter(writer).write(module)
+    } finally {
+      writer.close()
+    }
+  }
   protected val unaryOps = HashMap(
     TlaActionOper.prime -> "prime", // TODO: instead of `'`
     TlaBoolOper.not -> "not",
