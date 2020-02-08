@@ -115,7 +115,8 @@ def parse_apalache(ed):
                 nclause_prod += int(m.group(5)) * int(m.group(6))
             line = pf.readline()
 
-    avg_clause_len = math.ceil(nclause_prod / nclauses)
+    avg_clause_len = \
+        math.ceil(nclause_prod / nclauses) if (nclauses > 0) else 0
     entry = { **entry, '12:ncells': ncells,
                 '13:nclauses': nclauses, '14:navg_clause_len': avg_clause_len }
 
