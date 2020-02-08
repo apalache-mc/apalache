@@ -43,7 +43,9 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val finalState = afterEqState
           .setTheory(BoolTheory())
           .setRex(rewriter.lazyEq.safeEq(lhsCell, rhsCell))
-        rewriter.coerce(finalState, state.theory)
+        // bugfix: safeEq may produce ValEx(TlaBool(false)) or ValEx(TlaBool(true)).
+        // Rewrite once more. This can be removed once issue #22 is resolved.
+        rewriter.coerce(rewriter.rewriteUntilDone(finalState), state.theory)
 
       case OperEx(TlaSetOper.in, elem, set) =>
         // TODO: remove theories, see https://github.com/konnov/apalache/issues/22
