@@ -37,7 +37,7 @@ We recommend to start with TLC. It is mature, well-documented, and well-integrat
 
 # 2. System requirements
 
-We build APALACHE on MacOS and Linux. If you like to run APALACHE in Windows, use a docker image. Check the [Docker manual](https://docs.docker.com/docker-for-windows/) and the section on [Using a docker image](#useDocker).
+Every commit to [master](https://github.com/konnov/apalache) and [unstable](https://github.com/konnov/apalache/tree/unstable) is built with [Travis CI](https://travis-ci.org/konnov/apalache) on MacOS (xcode9.3 and JDK 1.8.0) and Linux (OpenJDK8). If you like to run APALACHE in Windows, use a docker image. Check the [Docker manual](https://docs.docker.com/docker-for-windows/) and the section on [Using a docker image](#useDocker).
 
 As APALACHE is using Microsoft Z3 as a backend SMT solver, the required memory largely depends on Z3. We recommend to allocate at least 4GB of memory for the tool.
 
