@@ -39,12 +39,12 @@ branches:
   - feature/keramel
 
 script:
-    - mvn test
+    - make integration
 
 notifications:
     email:
       recipients:
-        apalache-build@forsyte.at
+        apalache-build@forsyte.at andrey@informal.systems
       on_success: change
       on_failure: always
 
