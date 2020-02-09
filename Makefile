@@ -9,8 +9,15 @@ apalache:
 	# tell maven to load the binary libraries and build the package
 	JAVA_LIBRARY_PATH=$(abspath $(DEPDIR)/lib) mvn package
 
+integration: apalache
+	# unit tests are run by mvn package
+	# integration tests are run here
+	cd test \
+	 && JAVA_LIBRARY_PATH=$(abspath $(DEPDIR)/lib) NO_MVN=1 \
+        ./run-integration
+
+
 lib: $(DEPS)
 	# install third-party libraries
-	cd $(DEPDIR)
-	./install-local.sh
+	cd $(DEPDIR) && ./install-local.sh
 
