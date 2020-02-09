@@ -5,7 +5,7 @@ DEPS=$(DEPDIR)/lib/com.microsoft.z3.jar $(DEPDIR)/lib/box.jar
 
 all: apalache
 
-apalache:
+apalache: $(DEPS)
 	# tell maven to load the binary libraries and build the package
 	JAVA_LIBRARY_PATH=$(abspath $(DEPDIR)/lib) mvn package
 
@@ -16,8 +16,11 @@ integration: apalache
 	 && JAVA_LIBRARY_PATH=$(abspath $(DEPDIR)/lib) NO_MVN=1 \
         ./run-integration
 
+$(DEPDIR)/lib/com.microsoft.z3.jar:
+	# install microsoft z3
+	cd $(DEPDIR) && ./install-local.sh
 
-lib: $(DEPS)
-	# install third-party libraries
+$(DEPDIR)/lib/box.jar:
+	# install box by Jure (fix in the future!)
 	cd $(DEPDIR) && ./install-local.sh
 
