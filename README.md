@@ -15,9 +15,9 @@ Apalache runs under the same assumptions as TLC.
 Check the [releases page](https://github.com/konnov/apalache/releases).
 You can always try the latest cool features in the [unstable branch](https://github.com/konnov/apalache/tree/unstable).
 
-## Getting Started
+## Getting started
 
-Read the [user manual](doc/manual.md).
+Read the [user manual](docs/manual.md).
 
 ## Academic papers
 
