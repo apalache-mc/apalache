@@ -4,8 +4,10 @@ matrix:
   include:
     - os: linux
       jdk: openjdk8
-    - os: osx
-      osx_image: xcode9.3 # the latest image compatible with JDK8
+      
+# first, fix the issues with the dynamic libraries
+#    - os: osx
+#      osx_image: xcode9.3 # the latest image compatible with JDK8
 
 python:
     - "2.7"
