@@ -74,7 +74,6 @@ docker container run --rm --name apa apalache:0.6.0 <args>
   - Run `make-jpkg <downloaded-archive>.tgz`
   - Run `sudo dkpg -i <file-by-make-jpkg>.deb`
   - Make sure that `java -version` indeed shows Java 1.8.x
-
 1. Install [Apache Maven](https://maven.apache.org/). For instance, using Debian Linux:
   - Run `sudo apt-get install maven`
 1. Run `make`. This command will install Microsoft Z3, compile APALACHE
@@ -139,6 +138,7 @@ Inv ==
     /\ hasLicense \in BOOLEAN
 =============================================================================
 ```
+
 # 5. Setting up specification parameters <a name="parameters"></a>
 
 Similar to TLC, APALACHE requires the specification parameters to be restricted to finite values. In contrast to TLC, there is a way to initialize parameters by writing a symbolic constraint, see [Section 5.3](#ConstInit).
@@ -307,4 +307,4 @@ check the [following paper](https://forsyte.at/wp-content/uploads/kkt-oopsla19.p
 
 # 9. Supported language features <a name="features"></a>
 
-Check the [supported features](./docs/features.md), [KerA+](./docs/kera.md), and [preprocessing steps](./docs/preprocessing.md).
+Check the [supported features](features.md), [KerA+](kera.md), and [preprocessing steps](preprocessing.md).
