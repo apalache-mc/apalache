@@ -4,9 +4,8 @@ matrix:
   include:
     - os: linux
       jdk: openjdk8
-# the build for osx still does not work, DYLD_LIBRARY_PATH does not solve the problem
-#    - os: osx
-#      osx_image: xcode8 # fixing the issue with oraclejdk8 on macos
+    - os: osx
+      osx_image: xcode9.3 # the latest image compatible with JDK8
 
 python:
     - "2.7"
@@ -39,7 +38,6 @@ branches:
   only:
   - master
   - unstable
-  - feature/keramel
 
 script:
     - make integration
