@@ -25,12 +25,15 @@ cache:
 
 # locally compile z3 and make it available via LD_LIBRARY_PATH
 before_install:
+    - pushd 3rdparty
+    - ./install-local.sh
+    - popd
     #- pip install release-me
 
-    #after_success:
-    #- sudo pip install --upgrade pip
-    #- sudo pip install --user release-me
-    #- ./script/release --overwrite latest-unstable ./script/latest-message.txt
+#after_success:
+#- sudo pip install --upgrade pip
+#- sudo pip install --user release-me
+#- ./script/release --overwrite latest-unstable ./script/latest-message.txt
 
 branches:
   only:
