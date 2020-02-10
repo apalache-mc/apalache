@@ -14,7 +14,7 @@ import scala.collection.immutable.HashMap
  * @author Andrey Kuprianov
  **/
 
-class JsonWriter(writer: PrintWriter, indent: Int = 2) {
+class JsonWriter(writer: PrintWriter, indent: Int = 2, compact: Boolean = true) {
 
   def write(mod: TlaModule): Unit = {
     writer.write(ujson.write(toJson(mod), indent))
@@ -26,8 +26,43 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
 
   // various forms of JSON encodings of TLA expressions
 
+  private def id(name: String): ujson.Value = {
+    if(compact)
+      name
+    else
+      primitive("id", name)
+  }
+
+
   private def primitive(tla: String, value: String): ujson.Value = {
-    Obj(tla -> value)
+    if(compact)
+    // To optimize size, we encode JSON objects containing a single string parameter as "name:value" strings
+      tla + ":" + value
+    else
+      Obj(tla -> value)
+  }
+
+  private def decompress(value: ujson.Value): ujson.Value = {
+    if(value.isInstanceOf[ujson.Str]) {
+      val parts = value.str.split(":")
+      parts.length match {
+        case 1 => Obj("id" -> parts(0))
+        case 2 => Obj(parts(0) -> parts(1))
+        case _ => throw new Exception("Failed to decompress TLA+ JSON string")
+      }
+    }
+    else if(value.isInstanceOf[ujson.Num])
+      Obj("int" -> value.num.toInt.toString)
+    else
+      value
+
+  }
+
+  private def integer(value: BigInt): ujson.Value = {
+    if(value.isValidInt)
+      value.toInt
+    else
+      primitive("int", value.toString)
   }
 
   private def unary(tla: String, arg: TlaEx): ujson.Value = {
@@ -42,15 +77,15 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
     Obj(tla -> args.map(toJson))
   }
 
-  private def applyTo(fun: TlaEx, to: TlaEx): ujson.Value = {
+  private def applyFun(fun: TlaEx, to: TlaEx): ujson.Value = {
     Obj("apply" -> toJson(fun), "to" -> toJson(to))
   }
 
-  private def applyOpTo(op: String, to: Seq[TlaEx]): ujson.Value = {
-    val json = Obj("eval" -> op)
-    if(to.nonEmpty)
-      json("args") = to.map(toJson)
-    json
+  private def applyOp(op: String, args: Seq[TlaEx]): ujson.Value = {
+    if(args.nonEmpty)
+      Obj("eval" -> op, "args" -> args.map(toJson))
+    else
+      primitive("eval", op)
   }
 
   private def funWhere(fun: TlaEx, args: Seq[TlaEx]): ujson.Value = {
@@ -66,11 +101,11 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
   }
 
   private def boundedPred(tla: String, name: TlaEx, from: TlaEx, pred: TlaEx): ujson.Value = {
-    Obj(tla -> Arr(toJson(name), toJson(from)), "that" -> toJson(pred))
+    Obj(tla -> Arr(toJson(name), toJson(from)), "pred" -> toJson(pred))
   }
 
   private def unboundedPred(tla: String, name: TlaEx, pred: TlaEx): ujson.Value = {
-    Obj(tla -> toJson(name), "that" -> toJson(pred))
+    Obj(tla -> toJson(name), "pred" -> toJson(pred))
   }
 
   private def ifThenElse(pred: TlaEx, thenEx: TlaEx, elseEx: TlaEx): ujson.Value = {
@@ -90,13 +125,21 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
   }
 
   private def labeled(label: String, decoratedEx: TlaEx, args: Seq[TlaEx]): ujson.Value = {
-    val jsonEx = toJson(decoratedEx)
-    jsonEx("label") = Obj("name" -> label, "args" -> args.map(toJson))
+    val jsonEx = decompress(toJson(decoratedEx))
+    jsonEx.strOpt
+    jsonEx("label") =
+      if(args.nonEmpty)
+        Obj("label" -> label, "args" -> args.map(toJson))
+      else
+        primitive("label", label)
     jsonEx
   }
 
   private def operFormalParam(name: String, arity: Int): ujson.Value = {
-    Obj("name" -> name, "arity" -> arity)
+    if(arity != 0)
+      Obj("param" -> name, "arity" -> arity)
+    else
+      primitive("param", name)
   }
 
   private def operatorDef(name: String, params: Seq[FormalParam], body: TlaEx): ujson.Value = {
@@ -154,9 +197,9 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
        * we optimize for that case, and encode TLA+ name references as JSON strings,
        * while TLA+ strings as { "str" = "..." } JSON objects.
        */
-      case NameEx(x) => x
+      case NameEx(x) => id(x)
       case ValEx(TlaStr(str)) => primitive("str", str)
-      case ValEx(TlaInt(value)) => primitive("int", value.toString)
+      case ValEx(TlaInt(value)) => integer(value)
       case ValEx(TlaBool(b)) => if (b) True else False
       case ValEx(TlaBoolSet) => primitive("set", "BOOLEAN")
       case ValEx(TlaIntSet) => primitive("set", "Int")
@@ -174,11 +217,11 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
 
       // f[e]  =>  { "apply": "f", "to": "e" }
       case OperEx(TlaFunOper.app, funEx, argEx) =>
-        applyTo(funEx, argEx)
+        applyFun(funEx, argEx)
 
       // f[e]  =>  { "apply": "f", "to": "e" }
       case OperEx(op@TlaOper.apply, NameEx(name), args@_*) =>
-        applyOpTo(name, args)
+        applyOp(name, args)
 
       // {e: x \in S, y \in T} => {"map":"e","where":["x","S","y","T"]}
       case OperEx(TlaSetOper.map, body, keysAndValues@_*) =>
