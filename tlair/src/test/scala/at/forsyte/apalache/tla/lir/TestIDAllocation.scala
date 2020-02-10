@@ -47,7 +47,7 @@ class TestIDAllocation extends FunSuite{
                                              NameEx( "sBit" )
                                      ),
                                      OperEx( TlaArithOper.minus,
-                                             IntEx( 1 ),
+                                             ValEx(TlaInt( 1 )),
                                              NameEx( "sBit" )
                                      )
                              ),
@@ -77,13 +77,13 @@ class TestIDAllocation extends FunSuite{
     )
 
   val sum = OperEx( TlaOper.eq,
-    OperEx( TlaArithOper.plus, IntEx( 4 ), IntEx( 0 ) ),
-    OperEx( TlaArithOper.plus, IntEx( 2 ), IntEx( 2 ) )
+    OperEx( TlaArithOper.plus, ValEx(TlaInt(4)), ValEx(TlaInt(0)) ),
+    OperEx( TlaArithOper.plus, ValEx(TlaInt(2)), ValEx(TlaInt(2)) )
   )
 
   val redundantbool = OperEx( TlaOper.eq,
-    OperEx( TlaBoolOper.and, NameEx( "x" ), ValEx( TlaTrue ) ),
-    OperEx( TlaBoolOper.or, ValEx( TlaFalse ), NameEx( "x" ) )
+    OperEx( TlaBoolOper.and, NameEx( "x" ), ValEx( TlaBool(true) ) ),
+    OperEx( TlaBoolOper.or, ValEx( TlaBool(false) ), NameEx( "x" ) )
   )
 
 
@@ -102,19 +102,19 @@ class TestIDAllocation extends FunSuite{
             OperEx(
               TlaOper.eq,
               NameEx( "x" ),
-              IntEx( 0 )
+              ValEx(TlaInt(0))
             ),
-            IntEx( 0 ),
+            ValEx(TlaInt(0)),
             OperEx(
               TlaArithOper.plus,
-              IntEx( 1 ),
+              ValEx(TlaInt(1)),
               OperEx(
                 TlaOper.apply,
                 NameEx( "Op" ),
                 OperEx(
                   TlaArithOper.minus,
                   NameEx( "x" ),
-                  IntEx( 1 )
+                  ValEx(TlaInt(1))
                 )
               )
             )
@@ -127,7 +127,7 @@ class TestIDAllocation extends FunSuite{
     OperEx(
       TlaArithOper.plus,
       NameEx( "x" ),
-      IntEx( 1 )
+      ValEx(TlaInt(1))
     )
   val plusOne =
     new TlaOperDecl(
@@ -146,7 +146,7 @@ class TestIDAllocation extends FunSuite{
         OperEx(
           TlaArithOper.exp,
           NameEx( "c" ),
-          IntEx( 2 )
+          ValEx(TlaInt(2))
         )
       )
     )
@@ -166,17 +166,17 @@ class TestIDAllocation extends FunSuite{
           TlaOper.eq,
           OperEx(
             TlaArithOper.minus,
-            IntEx( 2 ),
-            IntEx( 1 )
+            ValEx(TlaInt(2)),
+            ValEx(TlaInt(1))
           ),
           OperEx(
             TlaArithOper.plus,
             OperEx(
               TlaOper.apply,
               NameEx( "A" ),
-              IntEx( 0 )
+              ValEx(TlaInt(0))
             ),
-            IntEx( 0 )
+            ValEx(TlaInt(0))
           )
         )
 //      )

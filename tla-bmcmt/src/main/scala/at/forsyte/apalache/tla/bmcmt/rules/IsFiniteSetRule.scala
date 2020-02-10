@@ -31,7 +31,7 @@ class IsFiniteSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
         state.setRex(state.arena.cellTrue())
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 }

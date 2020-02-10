@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 import scala.collection.immutable.SortedSet
 
 /**
-  * Implements the rules: SE-REC-CTOR[1-2].
+  * Rewrites a record constructor [f_1 |-> e_1, ..., f_k |-> e_k].
   *
   * Internally, a record is stored as a tuple,
   * where an index i corresponds to the ith key in the sorted set of record keys.
@@ -36,7 +36,7 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       case OperEx(TlaFunOper.enum, elems@_*) =>
         val keyEs = elems.zipWithIndex.filter(_._2 % 2 == 0).map(_._1) // pick the even indices (starting with 0)
-        val ctorKeys = keysToStr(keyEs.toList)
+        val ctorKeys = keysToStr(state.ex, keyEs.toList)
         val valueEs = elems.zipWithIndex.filter(_._2 % 2 == 1).map(_._1) // pick the odd indices (starting with 0)
         assert(keyEs.lengthCompare(valueEs.length) == 0)
         // rewrite the values, we need it to compute the record type with typeFinder
@@ -94,17 +94,17 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.coerce(finalState, state.theory)
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 
-  private def keysToStr(keys: List[TlaEx]): List[String] = {
+  private def keysToStr(ex: TlaEx, keys: List[TlaEx]): List[String] = {
     def eachKey(k: TlaEx) = k match {
       case ValEx(TlaStr(str)) =>
         str
 
       case _ =>
-        throw new RewriterException("Expected a string as a record key, found: " + k)
+        throw new RewriterException("Expected a string as a record key, found: " + k, ex)
     }
 
     keys map eachKey

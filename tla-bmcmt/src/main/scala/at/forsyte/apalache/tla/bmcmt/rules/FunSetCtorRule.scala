@@ -1,19 +1,17 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.TypeConverter
 import at.forsyte.apalache.tla.bmcmt.types.{FinFunSetT, FinSetT, PowSetT}
 import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
 /**
-  * Implements the rule: SE-FUNSET1, that is, constructs a function set [S -> T].
+  * This rule constructs a cell for a function set [S -> T]. Since we are not expanding function sets by default,
+  * this cell is just pointing to S as its domain and to T as its co-domain.
   *
   * @author Igor Konnov
    */
 class FunSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val typeConverter = new TypeConverter(rewriter)
-
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaSetOper.funSet, _, _) => true
@@ -26,10 +24,8 @@ class FunSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case OperEx(TlaSetOper.funSet, domEx, cdmEx) =>
         // switch to cell theory
         var nextState = rewriter.rewriteUntilDone(state.setRex(domEx).setTheory(CellTheory()))
-        nextState = convertIfNeeded(nextState)
         val dom = nextState.asCell
         nextState = rewriter.rewriteUntilDone(nextState.setRex(cdmEx).setTheory(CellTheory()))
-        nextState = convertIfNeeded(nextState)
         val cdm = nextState.asCell
         val arena = nextState.arena.appendCell(FinFunSetT(dom.cellType, cdm.cellType))
         val newCell = arena.topCell
@@ -41,19 +37,7 @@ class FunSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.coerce(finalState, state.theory)
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
-    }
-  }
-
-  private def convertIfNeeded(state: SymbState): SymbState = {
-    val setCell = state.asCell
-    setCell.cellType match {
-      case FinSetT(_) => state
-
-      case PowSetT(tp @ FinSetT(_)) =>
-        typeConverter.convert(state, FinSetT(tp))
-
-      case tp @ _ => throw new RewriterException("Unsupported domain/co-domain type: " + tp)
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 }

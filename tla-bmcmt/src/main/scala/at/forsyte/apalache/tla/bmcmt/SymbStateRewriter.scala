@@ -1,20 +1,22 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.RewritingResult
-import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore, FreeExistentialsStore}
+import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore}
 import at.forsyte.apalache.tla.bmcmt.caches.{ExprCache, IntValueCache, RecordDomainCache, StrValueCache}
 import at.forsyte.apalache.tla.bmcmt.rewriter.RewriterConfig
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.lir.TlaEx
 
 /**
-  * A trait for a state rewriter. The main purpose of this trait is to rewrite a TLA+ expression
-  * into a graph of cells. As a by-product, it produces SMT constraints on the graph.
+  * <p>A trait for a state rewriter. The main purpose of this trait is to rewrite a TLA+ expression
+  * into a graph of cells (Arena). As a by-product, it produces SMT constraints on the graph.</p>
   *
-  * As this is the central point for the rewriting rules, it exposes many caches and storages.
+  * <p>This is the central access point for the rewriting rules. So it exposes many caches and storages.</p>
   *
-  * This trait implements StackableContext by delegating the respective operations to all the internal caches
-  * and the SMT context. Thus, it is a central access point for context operations.
+  * <p>This trait implements StackableContext by delegating the respective operations to the caches
+  * and the SMT context.</p>
+  *
+  * <p>TODO: rename to Rewriter?</p>
   *
   * @author Igor Konnov
   */
@@ -75,11 +77,6 @@ trait SymbStateRewriter extends StackableContext with MessageStorage {
     * An expression cache.
     */
   def exprCache: ExprCache
-
-  /**
-    * The store that marks free existential quantifiers. By default, empty.
-    */
-  def freeExistentialsStore: FreeExistentialsStore
 
   /**
     * The storage that associates with every expression id a grade, see ExprGrade.

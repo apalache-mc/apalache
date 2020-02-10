@@ -1,12 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStoreImpl
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
+import at.forsyte.apalache.tla.lir.values.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -44,14 +43,17 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
 
   test("""SE-FUN-CTOR[1-2]: [x \in {1,2,3} |-> IF x = 1 THEN {2} ELSE IF x = 2 THEN {3} ELSE {1} ] ~~> $C$k""") {
     val set = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
+
     def intSet(i: Int) = tla.enumSet(tla.int(i))
+
     val mapping = tla.ite(
       tla.eql(tla.name("x"), tla.int(1)),
       intSet(2),
       tla.ite(tla.eql(tla.name("x"), tla.int(2)),
         intSet(3),
         intSet(1))
-    )////
+    )
+    ////
     val fun = tla.funDef(mapping, tla.name("x"), set)
 
     val state = new SymbState(fun, CellTheory(), arena, new Binding)
@@ -79,7 +81,7 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case result @ NameEx(name) =>
+      case result@NameEx(name) =>
         solverContext.push()
         solverContext.assertGroundExpr(result)
         assert(solverContext.sat())
@@ -212,15 +214,15 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
         // which is similar to Leslie's interpretation.
         // The most important thing is that the SMT context is still satisfiable.
         assert(solverContext.sat())
-        /*
-        // the code with failure predicates
-        rewriter.push()
-        val failureOccurs = tla.or(nextState.arena.findCellsByType(FailPredT()).map(_.toNameEx): _*)
-        solverContext.assertGroundExpr(failureOccurs)
-        assert(solverContext.sat())
-        solverContext.assertGroundExpr(tla.not(failureOccurs))
-        assert(!solverContext.sat())
-        */
+      /*
+      // the code with failure predicates
+      rewriter.push()
+      val failureOccurs = tla.or(nextState.arena.findCellsByType(FailPredT()).map(_.toNameEx): _*)
+      solverContext.assertGroundExpr(failureOccurs)
+      assert(solverContext.sat())
+      solverContext.assertGroundExpr(tla.not(failureOccurs))
+      assert(!solverContext.sat())
+      */
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -479,8 +481,8 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
         // check the function domain and co-domain
         val resFun = nextState.asCell
         // no domain anymore
-//        val dom = nextState.arena.getDom(resFun)
-//        assert(nextState.arena.getHas(dom).size == 2)
+        //        val dom = nextState.arena.getDom(resFun)
+        //        assert(nextState.arena.getHas(dom).size == 2)
         val cdm = nextState.arena.getCdm(resFun)
         val cdmSize = nextState.arena.getHas(cdm).size
         assert(cdmSize == 2 || cdmSize == 3) // the co-domain can be overapproximated
@@ -530,8 +532,8 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
         // check the function domain and co-domain
         val resFun = nextState.arena.findCellByName(name)
         // no domain anymore
-//        val dom = nextState.arena.getDom(resFun)
-//        assert(nextState.arena.getHas(dom).size == 2)
+        //        val dom = nextState.arena.getDom(resFun)
+        //        assert(nextState.arena.getHas(dom).size == 2)
         val cdm = nextState.arena.getCdm(resFun)
         val cdmSize = nextState.arena.getHas(cdm).size
         assert(cdmSize == 2 || cdmSize == 3) // the co-domain can be overapproximated
@@ -578,8 +580,8 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
         // check the function domain and co-domain
         val resFun = nextState.arena.findCellByName(name)
         // no domain anymore
-//        val dom = nextState.arena.getDom(resFun)
-//        assert(nextState.arena.getHas(dom).size == 2)
+        //        val dom = nextState.arena.getDom(resFun)
+        //        assert(nextState.arena.getHas(dom).size == 2)
         val cdm = nextState.arena.getCdm(resFun)
         val cdmSize = nextState.arena.getHas(cdm).size
         assert(cdmSize == 2 || cdmSize == 3) // the co-domain can be overapproximated
@@ -626,8 +628,8 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
         // check the function domain and co-domain
         val resFun = nextState.arena.findCellByName(name)
         // no domain anymore
-//        val dom = nextState.arena.getDom(resFun)
-//        assert(nextState.arena.getHas(dom).size == 2)
+        //        val dom = nextState.arena.getDom(resFun)
+        //        assert(nextState.arena.getHas(dom).size == 2)
         val cdm = nextState.arena.getCdm(resFun)
         val cdmSize = nextState.arena.getHas(cdm).size
         assert(cdmSize == 2 || cdmSize == 3) // the co-domain can be overapproximated
@@ -661,16 +663,15 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
   test("""fun in a set: \E x \in {[y \in BOOLEAN |-> ~y]}: x[FALSE]""") {
     // this test was failing in the buggy implementation with PICK .. FROM and FUN-MERGE
     val fun1 = tla.funDef(tla.not(tla.name("y")), tla.name("y"), ValEx(TlaBoolSet))
-    val exists = tla.exists(tla.name("x"),
-      tla.enumSet(fun1),
-      tla.appFun(NameEx("x"), tla.bool(false)))
+    val exists =
+      OperEx(BmcOper.skolem,
+        tla.exists(tla.name("x"),
+          tla.enumSet(fun1),
+          tla.appFun(NameEx("x"), tla.bool(false))))
 
     // here, we have to overred FreeExistentialsStore, and thus cannot use SymbStateRewriterAuto
     val typeFinder = new TrivialTypeFinder()
     val rewriter = new SymbStateRewriterImpl(solverContext, typeFinder)
-    val fex = new FreeExistentialsStoreImpl()
-    fex.store.add(exists.ID)
-    rewriter.freeExistentialsStore = fex
     typeFinder.inferAndSave(exists)
 
     val state = new SymbState(exists, BoolTheory(), arena, new Binding)
@@ -714,7 +715,7 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
         assert(solverContext.sat()) // it should be sat
         rewriter.push()
         val failPreds = nextState.arena.findCellsByType(FailPredT())
-        val failureOccurs = tla.or(failPreds.map(_.toNameEx) :_*)
+        val failureOccurs = tla.or(failPreds.map(_.toNameEx): _*)
         solverContext.assertGroundExpr(tla.not(failureOccurs))
         assert(solverContext.sat()) // no deadlock
 

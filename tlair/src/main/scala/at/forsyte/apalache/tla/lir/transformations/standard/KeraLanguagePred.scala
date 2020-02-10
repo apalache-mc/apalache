@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSeqOper, _}
-import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaIntSet, TlaNatSet}
+import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.transformations.LanguagePred
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 
@@ -110,7 +110,9 @@ object KeraLanguagePred {
       TlaSeqOper.head,
       TlaSeqOper.tail,
       TlaSeqOper.len,
-      TlcOper.printT // TODO: preprocess into NullEx in Keramelizer
+      TlcOper.printT, // TODO: preprocess into NullEx in Keramelizer
+      BmcOper.skolem,
+      BmcOper.expand
       // for the future
       //    TlaActionOper.enabled,
       //    TlaActionOper.unchanged,

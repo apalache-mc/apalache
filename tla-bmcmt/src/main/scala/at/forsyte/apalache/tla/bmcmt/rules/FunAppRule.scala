@@ -51,18 +51,18 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.coerce(finalState, state.theory)
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 
   private def applyRecord(state: SymbState, recordCell: ArenaCell, recEx: TlaEx, argEx: TlaEx): SymbState = {
     val key = argEx match {
       case ValEx(TlaStr(k)) => k
-      case _ => throw new RewriterException(s"Accessing a record $recEx with a non-constant key $argEx")
+      case _ => throw new RewriterException(s"Accessing a record $recEx with a non-constant key $argEx", argEx)
     }
     val fields = recordCell.cellType match {
       case RecordT(f) => f
-      case t @ _ => throw new RewriterException(s"Corrupted record $recEx of a non-record type $t")
+      case t @ _ => throw new RewriterException(s"Corrupted record $recEx of a non-record type $t", recEx)
     }
     val index = fields.keySet.toList.indexOf(key)
     val elems = state.arena.getHas(recordCell)
@@ -81,12 +81,12 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case ValEx(TlaInt(i)) => i.toInt - 1
 
       case _ =>
-        throw new RewriterException(s"Accessing a tuple $funEx with a non-constant index $argEx")
+        throw new RewriterException(s"Accessing a tuple $funEx with a non-constant index $argEx", argEx)
     }
 
     val elems = state.arena.getHas(tupleCell)
     if (index < 0 || index >= elems.length) {
-      throw new RewriterException(s"Out of bounds index ${index + 1} in $funEx[$argEx]")
+      throw new RewriterException(s"Out of bounds index ${index + 1} in $funEx[$argEx]", funEx)
     }
 
     val tupleElem = elems(index)

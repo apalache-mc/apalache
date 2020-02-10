@@ -4,9 +4,10 @@ matrix:
   include:
     - os: linux
       jdk: openjdk8
-# the build for osx still does not work, DYLD_LIBRARY_PATH does not solve the problem
+      
+# first, fix the issues with the dynamic libraries
 #    - os: osx
-#      osx_image: xcode8 # fixing the issue with oraclejdk8 on macos
+#      osx_image: xcode9.3 # the latest image compatible with JDK8
 
 python:
     - "2.7"
@@ -25,31 +26,28 @@ cache:
 
 # locally compile z3 and make it available via LD_LIBRARY_PATH
 before_install:
-  - pushd 3rdparty
-  - ./install-local.sh
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:"$PWD/lib"; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$PWD/lib"; fi
-  - popd
+    - pushd 3rdparty
+    - ./install-local.sh
+    - popd
     #- pip install release-me
 
-    #after_success:
-    #- sudo pip install --upgrade pip
-    #- sudo pip install --user release-me
-    #- ./script/release --overwrite latest-unstable ./script/latest-message.txt
+#after_success:
+#- sudo pip install --upgrade pip
+#- sudo pip install --user release-me
+#- ./script/release --overwrite latest-unstable ./script/latest-message.txt
 
 branches:
   only:
   - master
   - unstable
-  - feature/keramel
 
 script:
-    - mvn package && NO_MVN=1 ./test/run-integration #&& NO_MVN=1 ./test/run-tlaplus-suite
+    - make integration
 
 notifications:
     email:
       recipients:
-        apalache-build@forsyte.at
+        apalache-build@forsyte.at andrey@informal.systems
       on_success: change
       on_failure: always
 

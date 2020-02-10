@@ -44,7 +44,7 @@ class TlcRule(rewriter: SymbStateRewriter) extends RewritingRule {
         extendFun(state, funEx, pairEx)
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 

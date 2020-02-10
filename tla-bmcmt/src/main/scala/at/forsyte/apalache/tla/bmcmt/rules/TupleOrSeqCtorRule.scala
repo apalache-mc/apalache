@@ -7,7 +7,8 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
 
 /**
-  * Implements the rules: SE-TPL-CTOR[1-2]. A tuple may be interpreted as a sequence, if it was properly type-annotated,
+  * Rewrites a tuple or sequence constructor, that is, <<e_1, ..., e_k>>.
+  * A tuple may be interpreted as a sequence, if it was properly type-annotated,
   * e.g., <<>> <: Seq(Int).
   *
   * @author Igor Konnov
@@ -34,14 +35,14 @@ class TupleOrSeqCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
           resultT match {
             case tt@TupleT(_) => createTuple(stateAfterElems, tt, cells)
             case st@SeqT(_) => createSeq(stateAfterElems, st, cells)
-            case _ => throw new RewriterException("Unexpected type: " + resultT)
+            case _ => throw new RewriterException("Unexpected type: " + resultT, state.ex)
           }
 
 
         rewriter.coerce(finalState, state.theory)
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 

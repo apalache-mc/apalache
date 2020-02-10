@@ -7,6 +7,7 @@
 set -e
 
 D=`dirname $0` && D=`cd $D; pwd`
+Z3_DIR="$D/z3-4.8.7"
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
     echo "Assuming that you are using MacOS..."
@@ -16,12 +17,17 @@ else
     OST="linux"
 fi
 
-if [ -f "$D/z3/configure" ]; then
+if [ "$1" == "--nocache" ]; then
+    echo "Cleaning the previous builds"
+    rm -rf "${Z3_DIR}"
+fi
+
+if [ -f "${Z3_DIR}/configure" ]; then
     echo "Using a cached Z3 build..."
 else
     echo "Checking out z3..."
-    git clone https://github.com/Z3Prover/z3.git $D/z3
-    pushd $D/z3
+    git clone https://github.com/Z3Prover/z3.git ${Z3_DIR}
+    pushd ${Z3_DIR}
     git checkout z3-4.8.7
     echo "Configuring z3 locally (Linux)..."
     python scripts/mk_make.py --java -p $D/
@@ -43,7 +49,7 @@ popd
 
 # install Z3 libraries
 echo "Compiling and installing z3..."
-pushd $D/z3
+pushd ${Z3_DIR}
 cd build
 make install # install *.so and *.jar in 3rdparty
 popd
@@ -56,15 +62,6 @@ cp target/box-1.0-SNAPSHOT.jar $D/lib/box.jar
 popd
 echo "Done with Box"
 
-# tla2tools is available from oss.sonatype.org now
-#
-#echo "Downloading TLA2Tools..."
-#wget https://github.com/tlaplus/tlaplus/releases/download/v1.5.7/tla2tools.jar -O $D/tla2tools.jar
-#wget https://tla.msr-inria.inria.fr/tlatoolbox/ci/dist/tla2tools.jar
-#echo "Done with TLA2Tools"
-
-#echo "Installing Z3 and TLA2Tools in your local cache..."
-
 echo "Installing Z3 in your local maven cache..."
 
 mvn -f $D/z3-pom.xml install install:install-file \
@@ -76,6 +73,10 @@ mvn -f $D/z3-pom.xml install install:install-file \
 mvn -f $D/box-pom.xml install install:install-file \
     "-Dfile=$D/lib/box.jar" "-DpomFile=$D/box-pom.xml"
 
+echo ""
+echo "1. To build Apalache, just use make.""
+echo ""
+echo "2. To develop Apalache, set the library paths as follows.""
 echo ""
 echo "Add the following line in your ~/.bashrc or ~/.zshrc"
 if [ "$OST" == "linux" ]; then

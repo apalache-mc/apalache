@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir.ValEx
 import at.forsyte.apalache.tla.lir.values.TlaStr
 
 /**
-  * Implements the rule SE-STR-CONST.
+  * Rewrites a string literal, e.g., "hello".
   *
   * @author Igor Konnov
   */
@@ -29,7 +29,7 @@ class StrConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.coerce(finalState, state.theory)
 
       case _ =>
-        throw new RewriterException(getClass.getSimpleName + " is not applicable")
+        throw new RewriterException(getClass.getSimpleName + " is not applicable", state.ex)
     }
   }
 }

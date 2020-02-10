@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
 /**
-  * Implements the rule: SE-SUBSET1, that is, constructs the powerset SUBSET S for a set S.
+  * Rewrites the powerset SUBSET S for a set S.
   *
   * @author Igor Konnov
    */
@@ -33,7 +33,7 @@ class PowSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.coerce(finalState, state.theory)
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 }

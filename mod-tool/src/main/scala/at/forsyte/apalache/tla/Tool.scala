@@ -120,7 +120,7 @@ object Tool extends App with LazyLogging {
     if (result.isDefined) {
       logger.info("Checker reports no error up to computation length " + check.length)
     } else {
-      logger.info("Checker has failed")
+      logger.info("Checker has found an error")
     }
   }
 
@@ -168,7 +168,7 @@ object Tool extends App with LazyLogging {
       fun()
     } catch {
       case e: Exception if adapter.toMessage.isDefinedAt(e) =>
-        logger.error(adapter.toMessage(e))
+        logger.error(adapter.toMessage(e), e)
 
       case e: PassOptionException =>
         logger.error(e.getMessage)

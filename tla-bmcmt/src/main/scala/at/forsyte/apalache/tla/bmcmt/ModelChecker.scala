@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt
 
 import java.io.{FileWriter, PrintWriter, StringWriter}
 
-import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore, FreeExistentialsStoreImpl}
+import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore}
 import at.forsyte.apalache.tla.bmcmt.rewriter.{ConstSimplifierForSmt, RewriterConfig}
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, MockOracle, Oracle}
 import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy
@@ -12,8 +12,10 @@ import at.forsyte.apalache.tla.bmcmt.util.TlaExUtil
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.io.UTFPrinter
+import at.forsyte.apalache.tla.lir.io.{PrettyWriter, UTFPrinter}
+import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
+import at.forsyte.apalache.tla.lir.values.TlaStr
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.immutable.SortedMap
@@ -26,7 +28,7 @@ import scala.collection.immutable.SortedMap
   *
   * @author Igor Konnov
   */
-class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsStoreImpl,
+class ModelChecker(typeFinder: TypeFinder[CellT],
                    formulaHintsStore: FormulaHintsStore,
                    changeListener: ChangeListener,
                    exprGradeStore: ExprGradeStore, sourceStore: SourceStore, checkerInput: CheckerInput,
@@ -49,7 +51,6 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
   //      new PreproSolverContext(new Z3SolverContext(debug, profile))
 
   private val rewriter: SymbStateRewriterImpl = new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
-  rewriter.freeExistentialsStore = frexStore
   rewriter.formulaHintsStore = formulaHintsStore
   rewriter.config = RewriterConfig(tuningOptions)
 
@@ -308,7 +309,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
         val msg =
           "[Step %d] Next states 0 and %d disagree on the set of assigned variables: %s"
             .format(stepNo, index, diff.mkString(", "))
-        throw new InternalCheckerError(msg)
+        throw new InternalCheckerError(msg, finalState.ex)
       }
 
       def pickVar(x: String): ArenaCell = {
@@ -322,7 +323,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
       val constBinding = oracleState.binding.filter(p => constants.contains(p._1))
       finalState = finalState.setBinding(Binding(finalVarBinding ++ constBinding))
       if (debug && !solverContext.sat()) {
-        throw new InternalCheckerError(s"Error picking next variables (step $stepNo). Report a bug.")
+        throw new InternalCheckerError(s"Error picking next variables (step $stepNo). Report a bug.", finalState.ex)
       }
       // check the invariant, if search invariant.split=false
       if (!invariantSplitByTransition) { checkAllInvariants(stepNo, 0, finalState) }
@@ -360,7 +361,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
         case Some(false) =>
           // this is a clear sign of a bug in one of the translation rules
           logger.debug("UNSAT after pushing transition constraints")
-          throw new CheckerException("A contradiction introduced in rewriting. Report a bug.")
+          throw new CheckerException("A contradiction introduced in rewriting. Report a bug.", state.ex)
 
         case Some(true) => () // SAT
           logger.debug("The transition constraints are OK.")
@@ -514,10 +515,12 @@ class ModelChecker(typeFinder: TypeFinder[CellT], frexStore: FreeExistentialsSto
       writer.println(s"State $i (from transition $transition):")
       writer.println("--------")
       val binding = decoder.decodeStateVariables(state)
-      for (name <- binding.keys.toSeq.sorted) { // sort the keys
-        writer.println("%-15s ->  %s".format(name, UTFPrinter.apply(binding(name))))
+      val args = binding.toList.sortBy(_._1).flatMap(p => List(ValEx(TlaStr(p._1)), p._2))
+      if (args.nonEmpty) {
+        val record = OperEx(TlaFunOper.enum, args :_*)
+        new PrettyWriter(writer).write(record)
       }
-      writer.println("========\n")
+      writer.println("\n========\n")
     }
     writer.close()
     filename

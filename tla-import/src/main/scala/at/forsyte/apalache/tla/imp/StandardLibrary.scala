@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.tla.lir.TlaValue
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaNatSet, TlaRealSet}
+import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet, TlaRealSet}
 import at.forsyte.apalache.tla.lir.values.TlaRealInfinity
 
 /**

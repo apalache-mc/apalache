@@ -11,7 +11,7 @@ target
 3rdparty/Box
 tla2tools.jar
 
-log\.smt
+log*.smt
 test/tla/testSpec\.smt2
 3rdparty/bin/
 3rdparty/include/

@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
 
 /**
-  * Implements subset inclusion.
+  * Rewrites subset inclusion X \subseteq Y.
   *
   * @author Igor Konnov
   */
@@ -39,19 +39,19 @@ class SetInclusionRule(rewriter: SymbStateRewriter) extends RewritingRule {
           case (FinSetT(FinSetT(t1)), PowSetT(FinSetT(t2))) =>
             if (t1 != t2) {
               throw new RewriterException("Unexpected set types: %s and %s in %s"
-                .format(t1, t2, state.ex))
+                .format(t1, t2, state.ex), state.ex)
             } else {
               subsetInPowset(rightState, leftCell, rightCell)
             }
 
           case _ => throw new RewriterException("Unexpected set types: %s and %s in %s"
-            .format(leftCell.cellType, rightCell.cellType, state.ex))
+            .format(leftCell.cellType, rightCell.cellType, state.ex), state.ex)
         }
 
         rewriter.coerce(finalState, state.theory)
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 

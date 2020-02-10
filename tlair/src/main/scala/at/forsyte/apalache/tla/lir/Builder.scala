@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.predef.TlaBoolSet
+import at.forsyte.apalache.tla.lir.values.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values._
 
 
@@ -406,6 +406,17 @@ object Builder {
   def primeInSingleton( p_x : TlaEx,
                         p_y : TlaEx
                       ) : OperEx = in( prime( p_x ), enumSet( p_y ) )
+
+  // d_1 :> e_1 @@ ... @@ d_k :> e_k
+  def atat(args: TlaEx*): OperEx = {
+    if (args.isEmpty) {
+      OperEx(TlcOper.atat)
+    } else {
+      val kvs = args.sliding(2, 2).toList
+      val pairs = kvs.map(p => OperEx(TlcOper.colonGreater, p.head, p(1)))
+      OperEx(TlcOper.atat, pairs :_*)
+    }
+  }
 
   // bmc
   def withType(expr: TlaEx, typeAnnot: TlaEx): OperEx =

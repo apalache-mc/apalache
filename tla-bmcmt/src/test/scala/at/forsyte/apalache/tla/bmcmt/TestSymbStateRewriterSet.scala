@@ -1,13 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.analyses.FreeExistentialsStoreImpl
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaNatSet}
-import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
+import at.forsyte.apalache.tla.lir.oper._
+import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -198,8 +197,8 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
   test("""SE-SET-IN2: \FALSE \in {\FALSE, \TRUE} ~~> b_new""") {
     val ex =
       OperEx(TlaSetOper.in,
-        ValEx(TlaFalse),
-        OperEx(TlaSetOper.enumSet, ValEx(TlaFalse), ValEx(TlaTrue)))
+        ValEx(TlaBool(false)),
+        OperEx(TlaSetOper.enumSet, ValEx(TlaBool(false)), ValEx(TlaBool(true))))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
     rewriter.rewriteOnce(state) match {
@@ -250,7 +249,7 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     val ex =
       OperEx(TlaSetOper.in,
         cell.toNameEx,
-        OperEx(TlaSetOper.enumSet, ValEx(TlaTrue), ValEx(TlaTrue)))
+        OperEx(TlaSetOper.enumSet, ValEx(TlaBool(true)), ValEx(TlaBool(true))))
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = create()
     rewriter.rewriteOnce(state) match {
@@ -586,14 +585,14 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     // regression
     val filter = tla.appFun(tla.funDef(tla.bool(true), "y", "Oper:X"), "x")
     val filteredSet = tla.filter("x", "Oper:X", filter)
-    val ex = tla.letIn(tla.eql(tla.enumSet(), filteredSet),
-      tla.declOp("X", tla.cap(tla.enumSet(1, 2), tla.enumSet(2))))
+    val ex =
+      OperEx(BmcOper.skolem,
+        tla.letIn(tla.eql(tla.enumSet(), filteredSet),
+          tla.declOp("X", tla.cap(tla.enumSet(1, 2), tla.enumSet(2)))))
 
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
-    val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
-    val fex = new FreeExistentialsStoreImpl()
-    fex.store = fex.store + ex.ID
-    rewriter.freeExistentialsStore = fex
+    val rewriter = create()
+
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx@NameEx(name) =>
@@ -609,11 +608,12 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""SE-SET-FILTER: {Q \in SUBSET {1,2,3} : ~(2 \in Q)}""") {
+  test("""SE-SET-FILTER: {Q \in Expand(SUBSET {1,2,3}) : ~(2 \in Q)}""") {
     val set = tla.enumSet(1.to(3).map(tla.int) :_*)
 
     val predEx = tla.not(tla.in(tla.int(2), tla.name("Q")))
-    val ex = tla.filter(tla.name("Q"), tla.powSet(set), predEx)
+    val expandedPowSet = OperEx(BmcOper.expand, tla.powSet(set))
+    val ex = tla.filter(tla.name("Q"), expandedPowSet, predEx)
     val state = new SymbState(ex, CellTheory(), arena, new Binding)
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -629,13 +629,12 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     val baseSet = tla.enumSet(1)
     val filter = tla.appFun(tla.funDef(tla.bool(true), "y", "X"), "x")
     val filteredSet = tla.filter("x", "X", filter)
-    val ex = tla.exists("X", tla.powSet(baseSet), tla.eql(tla.enumSet(), filteredSet))
+    val ex =
+      OperEx(BmcOper.skolem,
+        tla.exists("X", tla.powSet(baseSet), tla.eql(tla.enumSet(), filteredSet)))
 
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
-    val fex = new FreeExistentialsStoreImpl()
-    fex.store = fex.store + ex.ID
-    rewriter.freeExistentialsStore = fex
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx@NameEx(name) =>
@@ -657,13 +656,12 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     val baseSet = tla.enumSet(1)
     val filter = tla.appFun(tla.funDef(tla.bool(true), "y", tla.enumSet(1)), "x")
     val filteredSet = tla.filter("x", "X", filter)
-    val ex = tla.exists("X", tla.powSet(tla.enumSet(1, 2)), tla.eql(tla.enumSet(), filteredSet))
+    val ex =
+      OperEx(BmcOper.skolem,
+        tla.exists("X", tla.powSet(tla.enumSet(1, 2)), tla.eql(tla.enumSet(), filteredSet)))
 
     val state = new SymbState(ex, BoolTheory(), arena, new Binding)
     val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
-    val fex = new FreeExistentialsStoreImpl()
-    fex.store = fex.store + ex.ID
-    rewriter.freeExistentialsStore = fex
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx@NameEx(name) =>
@@ -778,6 +776,17 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
       case _ =>
         fail("Unexpected rewriting result")
     }
+  }
+
+  // type inference would reject this
+  test("""error: {x: x \in Int}""") {
+    val set = ValEx(TlaIntSet)
+    val mapExpr = tla.name("x")
+    val mapSet = tla.map(mapExpr, tla.name("x"), set)
+
+    val state = new SymbState(mapSet, BoolTheory(), arena, new Binding)
+    val rewriter = create()
+    assertThrows[TypeInferenceError](rewriter.rewriteUntilDone(state))
   }
 
   test("""SE-SET-MAP[1-2]: <<2, true>> \in {<<x, y>>: x \in {1,2,3}, y \in {FALSE, TRUE}} ~~> $B$k""") {

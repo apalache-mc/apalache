@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaStrSet}
+import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaStrSet}
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith

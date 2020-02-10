@@ -6,7 +6,7 @@
  * reached a certain age, e.g., age of 18. The software engineers never thought
  * of their program being used until the next century, so they stored the year
  * of birth using only two digits (who would blame them, the magnetic tapes
- * were expensive!). As soon, as the new millenium 
+ * were expensive!). The new millenium came with new bugs.
  *
  * This is a made up example, not reflecting any real code.
  * To learn more about Y2K, check: https://en.wikipedia.org/wiki/Year_2000_problem

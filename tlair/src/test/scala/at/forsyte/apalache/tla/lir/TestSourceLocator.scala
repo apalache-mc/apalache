@@ -5,7 +5,7 @@ import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.Builder._
 import at.forsyte.apalache.tla.lir.aux._
-import at.forsyte.apalache.tla.lir.predef.{TlaIntSet, TlaStrSet}
+import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaStrSet}
 import at.forsyte.apalache.tla.lir.src.{SourceLocation, SourcePosition, SourceRegion}
 import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener, SourceLocator, SourceMap}
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationListener}

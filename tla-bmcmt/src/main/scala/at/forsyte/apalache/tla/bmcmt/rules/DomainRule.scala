@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 
 /**
-  * Implements the rules: SE-DOM.
+  * Rewriting DOMAIN f, that is, translating the domain of a function, record, tuple, or sequence.
   *
   * @author Igor Konnov
   */
@@ -44,13 +44,13 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
               mkFunDomain(funState, funCell)
 
             case _ =>
-              throw new RewriterException("DOMAIN x where type(x) = %s is not implemented".format(funCell.cellType))
+              throw new RewriterException("DOMAIN x where type(x) = %s is not implemented".format(funCell.cellType), state.ex)
           }
 
         rewriter.coerce(finalState, state.theory)
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 

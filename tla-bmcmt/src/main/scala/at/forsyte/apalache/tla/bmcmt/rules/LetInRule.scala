@@ -30,13 +30,13 @@ class LetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val finalState = bodyState.setBinding(finalBinding)
       rewriter.coerce(finalState, state.theory)
     case _ =>
-      throw new RewriterException("%s is not applicable".format(getClass.getSimpleName))
+      throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
   }
 
   private def bindOperator(state: SymbState, decl: TlaOperDecl): SymbState = {
     if (decl.formalParams.nonEmpty) {
       throw new RewriterException("Found unexpanded %d-ary LET-IN %s. This is a preprocessing bug."
-        .format(decl.formalParams.size, decl.name))
+        .format(decl.formalParams.size, decl.name), state.ex)
     }
 
     val newState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(decl.body))

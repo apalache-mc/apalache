@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FailPredT, IntT}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.io.UTFPrinter
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaFalse, TlaInt, TlaTrue}
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
 import com.microsoft.z3._
 import com.microsoft.z3.enumerations.Z3_lbool
 
@@ -92,7 +92,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
       // we report it immediately. Otherwise, it is very hard to find the cause.
       logWriter.flush() // flush the SMT log
       throw new InternalCheckerError("Declaring cell %d, while cell %d has been already declared. Damaged arena?"
-        .format(cell.id, maxCellIdPerContext.head))
+        .format(cell.id, maxCellIdPerContext.head), NullEx)
     } else {
       maxCellIdPerContext = cell.id +: maxCellIdPerContext.tail
     }
@@ -139,7 +139,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
       // Checking consistency. When the user accidentally replaces a fresh arena with an older one,
       // we report it immediately. Otherwise, it is very hard to find the cause.
       logWriter.flush() // flush the SMT log
-      throw new InternalCheckerError(s"Current arena has cell id = $topId, while SMT has ${maxCellIdPerContext.head}. Damaged arena?")
+      throw new InternalCheckerError(s"Current arena has cell id = $topId, while SMT has ${maxCellIdPerContext.head}. Damaged arena?", NullEx)
     }
   }
 
@@ -192,7 +192,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     z3expr match {
       case b: BoolExpr =>
         val isTrue = b.getBoolValue.equals(Z3_lbool.Z3_L_TRUE)
-        ValEx(if (isTrue) TlaTrue else TlaFalse) // in undefined case, just return false
+        ValEx(if (isTrue) TlaBool(true) else TlaBool(false)) // in undefined case, just return false
 
       case i: IntNum =>
         ValEx(TlaInt(i.getBigInteger))
@@ -201,7 +201,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
         if (z3expr.isConst && z3expr.getSort.getName.toString.startsWith("Cell_")) {
           NameEx(z3expr.toString)
         } else {
-          throw new SmtEncodingException("Expected an integer or Boolean, found: " + z3expr)
+          throw new SmtEncodingException("Expected an integer or Boolean, found: " + z3expr, ex)
         }
     }
   }
@@ -292,7 +292,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     val resSig = resultType.signature
     val funName = s"fun$cellName"
     if (funDecls.contains(funName)) {
-      throw new SmtEncodingException(s"Declaring twice the function associated with cell $cellName")
+      throw new SmtEncodingException(s"Declaring twice the function associated with cell $cellName", NullEx)
     } else {
       val domSort = getOrMkCellSort(argType)
       val cdmSort = getOrMkCellSort(resultType)
@@ -309,7 +309,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     if (funDecl.isDefined) {
       funDecl.get._1
     } else {
-      throw new SmtEncodingException(s"A function associated with cell $cellName is not declared")
+      throw new SmtEncodingException(s"A function associated with cell $cellName is not declared", NullEx)
     }
   }
 
@@ -362,7 +362,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     logWriter.flush() // good time to flush
     if (status == Status.UNKNOWN) {
       // that seems to be the only reasonable behavior
-      throw new SmtEncodingException("SMT solver reports UNKNOWN. Perhaps, your specification is outside the supported logic.")
+      throw new SmtEncodingException("SMT solver reports UNKNOWN. Perhaps, your specification is outside the supported logic.", NullEx)
     }
     status == Status.SATISFIABLE
   }
@@ -483,17 +483,17 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
       case NameEx(name) =>
         constCache(name)._1 // the cached expression
 
-      case ValEx(TlaFalse) =>
+      case ValEx(TlaBool(false)) =>
         z3context.mkFalse()
 
-      case ValEx(TlaTrue) =>
+      case ValEx(TlaBool(true)) =>
         z3context.mkTrue()
 
       case ValEx(TlaInt(num)) =>
         if (num.isValidLong) {
           z3context.mkInt(num.toLong)
         } else {
-          throw new SmtEncodingException("A number constant is too large to fit in Long: " + num)
+          throw new SmtEncodingException("A number constant is too large to fit in Long: " + num, NullEx)
         }
 
       case OperEx(oper: TlaArithOper, lex, rex) =>
@@ -597,7 +597,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
         z3context.mkEq(le, re)
 
       case _ =>
-        throw new CheckerException("Incomparable expressions")
+        throw new CheckerException("Incomparable expressions", NullEx)
     }
   }
 
@@ -607,7 +607,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
         if (num.isValidLong) {
           z3context.mkInt(num.toLong)
         } else {
-          throw new SmtEncodingException("A number constant is too large to fit in Long: " + num)
+          throw new SmtEncodingException("A number constant is too large to fit in Long: " + num, ex)
         }
 
       case NameEx(name) =>

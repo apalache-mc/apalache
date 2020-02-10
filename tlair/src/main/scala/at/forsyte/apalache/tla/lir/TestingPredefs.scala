@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.lir
 
-import at.forsyte.apalache.tla.lir.oper.FixedArity
-import at.forsyte.apalache.tla.lir.values.{TlaFalse, TlaInt, TlaTrue}
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
 
 // Igor@02.11.2019: why are TestingPredefs located in src/main?
 // TODO: move TestingPredefs into src/test
@@ -37,8 +36,8 @@ trait TestingPredefs {
   def n_y : NameEx = "y"
   def n_z : NameEx = "z"
 
-  def trueEx  : ValEx = ValEx( TlaTrue )
-  def falseEx : ValEx = ValEx( TlaFalse )
+  def trueEx  : ValEx = ValEx(TlaBool(true))
+  def falseEx : ValEx = ValEx(TlaBool(false))
 
   def arr   : Array[TlaEx] = Array( n_a, n_b, n_c, n_d, n_e, n_f, n_g )
   def arr_s : Seq[TlaEx]   = arr.toSeq

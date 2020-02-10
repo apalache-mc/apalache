@@ -10,17 +10,19 @@ import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaIntSet, TlaNatSet}
+import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 
 import scala.collection.mutable
 
 /**
-  * This class rewrites a symbolic state.
-  * This is the place where all the action regarding the operational semantics is happening.
+  * <p>This class rewrites a symbolic state.
+  * This is the place where all the action regarding the operational semantics is happening.</p>
   *
-  * This class implements StackableContext by delegating the respective operations to all the internal caches
-  * and the SMT context. Thus, it is a central access point for context operations.
+  * <p>This class implements StackableContext by delegating the respective operations to all the internal caches
+  * and the SMT context. Thus, it is a central access point for context operations.</p>
+  *
+  * <p>TODO: rename this class to RewriterImpl?</p>
   *
   * @param solverContext  a fresh solver context that will be populated with constraints
   * @param typeFinder     a type finder (assuming that typeFinder.inferAndSave has been called already)
@@ -81,15 +83,8 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     */
   val exprCache = new ExprCache(exprGradeStore)
 
-  // bound the number of rewriting steps applied to the same rule
-  private val RECURSION_LIMIT: Int = 10000
   private val coercion = new CoercionWithCache(this)
   private val substRule = new SubstRule(this)
-
-  /**
-    * The store that marks free existential quantifiers. By default, empty.
-    */
-  var freeExistentialsStore: FreeExistentialsStore = new FreeExistentialsStoreImpl()
 
   /**
     * The store that contains formula hints. By default, empty.
@@ -152,18 +147,15 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     // logic
     key(tla.eql(tla.name("x"), tla.name("y")))
       -> List(new EqRule(this)),
-//    key(tla.neql(tla.name("x"), tla.name("y")))
-//      -> List(new NeqRule(this)),
     key(tla.or(tla.name("x"), tla.name("y")))
       -> List(new OrRule(this)),
     key(tla.and(tla.name("x"), tla.name("y")))
       -> List(new AndRule(this)),
     key(tla.not(tla.name("x")))
       -> List(new NegRule(this)),
-//    key(tla.impl(tla.name("x"), tla.name("y")))
-//      -> List(new ImplRule(this)),
-//    key(tla.equiv(tla.name("x"), tla.name("y")))
-//      -> List(new EquivRule(this)),
+    key(OperEx(BmcOper.skolem, tla.exists(tla.name("x"),
+               tla.name("S"), tla.name("p"))))
+      -> List(new QuantRule(this)),
     key(tla.exists(tla.name("x"), tla.name("S"), tla.name("p")))
       -> List(new QuantRule(this)),
     key(tla.forall(tla.name("x"), tla.name("S"), tla.name("p")))
@@ -179,16 +171,10 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
       // TODO, rethink TlaOper.apply rule
     key(tla.appDecl( TlaOperDecl("userOp", List(), tla.int(3)) ) ) ->
       List(new UserOperRule(this)),
-    //    key(tla.caseOther(tla.name("otherAction"), tla.name("pred1"), tla.name("action1")))
-    //      -> List(new CaseRule(this)),
-    //    key(tla.caseAny(tla.name("pred1"), tla.name("action1")))
-    //      -> List(new CaseRule(this)),
 
     // sets
     key(tla.in(tla.name("x"), tla.name("S")))
       -> List( new SetInRule(this) ),
-//    key(tla.notin(tla.name("x"), tla.name("S")))
-//      -> List(new SetNotInRule(this)),
     key(tla.enumSet(tla.name("x"))) ->
       List(new SetCtorRule(this)),
     key(tla.subseteq(tla.name("x"), tla.name("S")))
@@ -199,20 +185,8 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
       -> List(new SetFilterRule(this)),
     key(tla.map(tla.name("e"), tla.name("x"), tla.name("S")))
       -> List(new SetMapRule(this)),
-//    key(tla.subset(tla.name("x"), tla.name("S")))
-//      -> List(new SetInclusionRule(this)),
-//    key(tla.supseteq(tla.name("x"), tla.name("S")))
-//      -> List(new SetInclusionRule(this)),
-//    key(tla.supset(tla.name("x"), tla.name("S")))
-//      -> List(new SetInclusionRule(this)),
-//    key(tla.cap(tla.name("X"), tla.name("Y")))
-//      -> List(new SetCapAndMinusRule(this)),
-//    key(tla.setminus(tla.name("X"), tla.name("Y")))
-//      -> List(new SetCapAndMinusRule(this)),
-//    key(tla.times(tla.name("S1"), tla.name("S2")))
-//      -> List(new CartesianProductRule(this)),
-//    key(tla.recSet(tla.str("a"), tla.name("S1"), tla.str("b"), tla.name("S2")))
-//      -> List(new RecordSetRule(this)),
+    key(OperEx(BmcOper.expand, tla.name("X")))
+      -> List(new SetExpandRule(this)),
     key(tla.powSet(tla.name("X")))
       -> List(new PowSetCtorRule(this)),
     key(tla.union(tla.enumSet()))
@@ -325,7 +299,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
           val nextState = substRule.logOnReturn(solverContext, coercedState)
           if (nextState.arena.cellCount < state.arena.cellCount) {
             throw new RewriterException("Implementation error: the number of cells decreased from %d to %d"
-              .format(state.arena.cellCount, nextState.arena.cellCount))
+              .format(state.arena.cellCount, nextState.arena.cellCount), state.ex)
           }
           statListener.exitRule()
           Done(nextState)
@@ -344,7 +318,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
             val nextState = r.logOnReturn(solverContext, r.apply(r.logOnEntry(solverContext, state)))
             if (nextState.arena.cellCount < state.arena.cellCount) {
               throw new RewriterException("Implementation error in rule %s: the number of cells decreased from %d to %d"
-                .format(r.getClass.getSimpleName, state.arena.cellCount, nextState.arena.cellCount))
+                .format(r.getClass.getSimpleName, state.arena.cellCount, nextState.arena.cellCount), state.ex)
             }
             statListener.exitRule()
             Continue(nextState)
@@ -365,9 +339,9 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
   def rewriteUntilDone(state: SymbState): SymbState = {
     // the main reason for using a recursive function here instead of a loop is that it is easier to debug
     def doRecursive(ncalls: Int, st: SymbState): SymbState = {
-      if (ncalls >= RECURSION_LIMIT) {
+      if (ncalls >= Limits.RECURSION_LIMIT) {
         throw new RewriterException("Recursion limit of %d steps is reached. A cycle in the rewriting system?"
-          .format(RECURSION_LIMIT))
+          .format(Limits.RECURSION_LIMIT), state.ex)
       } else {
         rewritingStack +:= state.ex // push the expression on the stack
         rewriteOnce(st) match {
@@ -384,7 +358,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
 
           case NoRule() =>
             // no rule applies, a problem in the tool?
-            throw new RewriterException("No rewriting rule applies to expression: " + st.ex)
+            throw new RewriterException("No rewriting rule applies to expression: " + st.ex, st.ex)
         }
       }
     }

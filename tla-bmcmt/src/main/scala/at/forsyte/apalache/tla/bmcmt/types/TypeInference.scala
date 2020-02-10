@@ -128,7 +128,7 @@ object Signatures {
         Signature( ts2, List( t1 ), t2 )
 
       case _ =>
-        throw new InternalCheckerError( s"Signature for operator [${op.oper.name}] is not implemented" )
+        throw new InternalCheckerError( s"Signature for operator [${op.oper.name}] is not implemented", op )
       //        Signature( List.empty, List.empty, UnknownT() )
     }
     assert( op.oper.isCorrectArity( ret.args.size ) )
@@ -284,7 +284,7 @@ object TypeInference {
               t1 <- internalGOE( rep1 )
               t2 <- internalGOE( rep2 )
 
-              _ = if ( incompatible( t1, t2 ) ) throw new TypeException( s"Types ${t1} and ${t2} are incompatible." )
+              _ = if ( incompatible( t1, t2 ) ) throw new TypeException( s"Types ${t1} and ${t2} are incompatible.", tlaEx )
 
               newT = max( t1, t2 )
 
@@ -296,7 +296,7 @@ object TypeInference {
               rep <- internalFind( v )
               t <- internalGOE( rep )
 
-              _ = if ( incompatible( t, c ) ) throw new TypeException( s"Types ${c} and ${t} are incompatible." )
+              _ = if ( incompatible( t, c ) ) throw new TypeException( s"Types ${c} and ${t} are incompatible.", tlaEx )
 
               newT = max( t, c )
 
@@ -304,7 +304,7 @@ object TypeInference {
 
             } yield ()
 
-            case isType( a, b ) => throw new TypeException( s"Types ${a} and ${b} are incompatible." )
+            case isType( a, b ) => throw new TypeException( s"Types ${a} and ${b} are incompatible.", tlaEx )
           }
         } yield ()
       }

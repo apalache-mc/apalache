@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 
 /**
-  * Implement the rule for conjunction. Similar to TLC, we short-circuit A /\ B as IF A THEN B ELSE FALSE.
+  * Implements the rule for conjunction. Similar to TLC, we short-circuit A /\ B as IF A THEN B ELSE FALSE.
   * This allows us to introduce an optimization on-the-fly for the conjunctions that were marked with a hint.
   * In this optimization, we push the context, assume A and check satisfiability of the SMT context.
   * If the context is unsat, we immediately return FALSE. Otherwise, we pop the context and continue.
@@ -28,7 +28,6 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = {
     val falseConst = SolverContext.falseConst
-    val trueConst = SolverContext.trueConst
     simplifier.simplifyShallow(state.ex) match {
       case OperEx(TlaBoolOper.and, args@_*) =>
         val finalState =
@@ -90,7 +89,7 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.rewriteUntilDone(state.setRex(e))
 
       case e@_ =>
-        throw new RewriterException("%s is not applicable to %s".format(getClass.getSimpleName, e))
+        throw new RewriterException("%s is not applicable to %s".format(getClass.getSimpleName, e), e)
     }
   }
 

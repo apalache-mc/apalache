@@ -1,3 +1,65 @@
+## 0.6.0
+
+ * Using `z3` version `4.8.7`
+
+ * The results of intermediate passes are printed in TLA+ files
+   in the `x/*` directory: `out-analysis.tla`, `out-config.tla`,
+   `out-inline.tla`, `out-opt.tla`, `out-parser.tla`,
+   `out-prepro.tla`, `out-priming.tla`, `out-transition.tla`,
+   `out-vcgen.tla`
+
+ * The model checker is translated only `KerA+` expressions, which
+   are produced by `Keramelizer`
+
+ * Supporting new expressions: `<<1, 2>> \o <<4, 5>>`
+   (sequence concatenation)
+
+ * Multiple optimizations that were previously done by rewriting
+   rules were move to the preprocessing phase, produced by
+   `ExprOptimizer`
+
+ * Introducing Skolem constants for `\E x \in S: P`, such
+   expressions are decorated with `Skolem`
+
+ * Introducing `Expand` for `SUBSET S` and `[S -> T]`, when
+   they must be expanded
+
+ * Translating `e \in a..b` to `a <= e /\ e <= b`, whenever possible
+
+ * Short-circuiting and lazy-circuiting of `a /\ b` and `a \/ b`
+   are disabled by default
+
+ * Introduced `PrettyWriter` to nicely print TLA+ expressions
+   with proper indentation
+
+ * The preprocessing steps -- which were scattered across the code
+   -- are extracted in the module `tla-pp`,
+   which contains: `ConstAndDefRewriter`, `ConstSimplifier`,
+   `Desugarer`, `Normalizer`, see [preprocessing](docs/preprocessing.md)
+
+ * Bounded variables are uniquely renamed by `Renaming`
+   and `IncrementalRenaming`
+
+ * Massive refactoring of the TLA intermediate representation
+
+ * TLA+ importer is not chocking on most of the TLA+ syntax, e.g.,
+   `ASSUME` and `THEOREM`
+
+ * Backtracking expressions to their source location in a TLA+ spec
+
+ * `LET-IN` is translated into `LetInEx` in `tlair`
+
+ * Nullary LET-IN expressions (without arguments) are processed by
+   the model checker directly, no expansion needed
+
+ * The assignment solver has been refactored. The assignments are translated to `BMC!<-`, for instance, `x' <- S`
+
+ * Constant assignment in `ConstInit` are now preprocessed correctly
+
+ * User operators are not translated to `TlaUserOper` anymore, but are called with `TlaOper.apply`
+
+ * Importing `tla2tools.jar` from Maven Central
+
 ## 0.5.0
 
  * support for top-level `INSTANCE` and `INSTANCE WITH` operators
@@ -28,15 +90,14 @@
 ## 0.4.0-pre1
 
  * type annotations and very simple type inference, see the [notes](https://github.com/konnov/apalache/blob/unstable/docs/types-and-annotations.md)
- 
+
  * a dramatic speed up of many operators by using a `QF_NIA` theory and cherry pick
- 
+
  * automatic simplification of expressions, including equality
- 
+
  * decomposition of invariants into smaller pieces
- 
- 
+
+
 ## 0.3.0
 
  * the version presented at the TLA+ community meeting 2018 in Oxford
-
