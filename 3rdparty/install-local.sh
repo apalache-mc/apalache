@@ -73,12 +73,13 @@ mvn -f $D/z3-pom.xml install install:install-file \
 mvn -f $D/box-pom.xml install install:install-file \
     "-Dfile=$D/lib/box.jar" "-DpomFile=$D/box-pom.xml"
 
-echo ""
-echo "1. To build Apalache, just use make.""
-echo ""
-echo "2. To develop Apalache, set the library paths as follows.""
-echo ""
-echo "Add the following line in your ~/.bashrc or ~/.zshrc"
+cat <<EOF
+1. To build Apalache, just use make.
+2. To develop Apalache, set the library paths as follows.
+
+Add the following line in your ~/.bashrc or ~/.zshrc:
+EOF
+
 if [ "$OST" == "linux" ]; then
   echo 'export LD_LIBRARY_PATH="$LD_LIBRARY_PATH":'"$D/lib"
 else
