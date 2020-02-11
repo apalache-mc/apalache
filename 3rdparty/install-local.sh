@@ -16,13 +16,15 @@ else
     OST="linux"
 fi
 
-if [ -f "$D/z3/configure" ]; then
+Z3=z3-4.7.1
+
+if [ -f "$D/$Z3/configure" ]; then
     echo "Using a cached Z3 build..."
 else
     echo "Checking out z3..."
-    git clone https://github.com/Z3Prover/z3.git $D/z3
-    pushd $D/z3
-    git checkout z3-4.7.1
+    git clone https://github.com/Z3Prover/z3.git $D/$Z3
+    pushd $D/$Z3
+    git checkout $Z3
     echo "Configuring z3 locally (Linux)..."
     python scripts/mk_make.py --java -p $D/
     echo "Compiling z3..."
@@ -43,7 +45,7 @@ popd
 
 # install Z3 libraries
 echo "Compiling and installing z3..."
-pushd $D/z3
+pushd $D/$Z3
 cd build
 make install # install *.so and *.jar in 3rdparty
 popd
