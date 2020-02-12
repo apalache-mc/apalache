@@ -60,6 +60,14 @@
 
  * Importing `tla2tools.jar` from Maven Central
 
+## 0.5.2
+
+ * A backport of the build system from 0.6.0
+
+## 0.5.1
+
+ * The artifact accepted at OOPSLA19
+
 ## 0.5.0
 
  * support for top-level `INSTANCE` and `INSTANCE WITH` operators
