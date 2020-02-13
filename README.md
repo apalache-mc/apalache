@@ -23,9 +23,9 @@ Read the [user manual](docs/manual.md).
 
 We are collecting [apalache benchmarks](https://github.com/konnov/apalache-tests).
 See the Apalache performance when
-[checking inductive invariants](https://github.com/konnov/apalache-tests/results/001indinv-report.md)
+[checking inductive invariants](https://github.com/konnov/apalache-tests/blob/master/results/001indinv-report.md)
 and running
-[bounded model checking](https://github.com/konnov/apalache-tests/results/002bmc-report.md). Version 0.6.0 is a major improvement over version 0.5.2
+[bounded model checking](https://github.com/konnov/apalache-tests/blob/master/results/002bmc-report.md). Version 0.6.0 is a major improvement over version 0.5.2
 (the version [reported at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549)).
 
 ## Academic papers
