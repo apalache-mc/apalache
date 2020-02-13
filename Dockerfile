@@ -1,9 +1,11 @@
-FROM maven:3.6.0-jdk-8
+FROM maven:3.6.3-jdk-8-slim
 
 RUN apt-get update && apt-get install -y wget \
     g++ \
     binutils \
-    make
+    make \
+    git \
+    python
 
 ADD . /opt/apalache/
 WORKDIR /opt/apalache/
