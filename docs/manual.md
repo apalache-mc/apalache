@@ -104,26 +104,20 @@ $ docker image build -t apalache:0.6.0 .
 
 1. Install `git`.
 2. Clone the git repository: `git clone https://github.com/konnov/apalache.git`
-3. Install [Oracle
-JDK8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
-or OpenJDK8. **You have to install version 8, as Scala will not compile!. See
-[compatibility
+3. Install OpenJDK8 or
+[Zulu JDK8](https://www.azul.com/downloads/zulu-community/?&architecture=x86-64-bit&package=jdk).
+**You have to install version 8, otherwise Scala will not compile! See
+[see compatibility
 table](https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html).**
 
-   For instance, that is how one installs JDK8 at Debian Linux 9. Since Debian dropped OpenJDK8, we have to do a few hoops to install Oracle JDK8:
-   - Run `sudo apt-get install java-package`
-   - Download JDK of `Java SE 8u*` from the [Oracle page](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) as a tgz archive
-   - Run `make-jpkg <downloaded-archive>.tgz`
-   - Run `sudo dkpg -i <file-by-make-jpkg>.deb`
-   - Make sure that `java -version` indeed shows Java 1.8.x
-4. Install [Apache Maven](https://maven.apache.org/). For instance, using Debian Linux:
-   - Run `sudo apt-get install maven`
+4. Install [Apache Maven](https://maven.apache.org/). For instance,
+   when using Debian Linux or Ubuntu: `sudo apt-get install maven`
 5. Run `make`. This command will install Microsoft Z3, compile Apalache
    and assemble the package
 
 # 4. An example of a TLA+ specification <a name="example"></a>
 
-To illustrate the features of Apalache, we are using the following TLA+ specification, which can be found in `$APALACHE_HOME/test/tla/y2k.tla`:
+To illustrate the features of Apalache, we are using the following TLA+ specification, which can be found in [`test/tla/y2k.tla`](../test/tla/y2k.tla):
 
 ```tla
 -------------------------------- MODULE y2k --------------------------------
@@ -191,7 +185,8 @@ by writing a symbolic constraint, see [Section 5.3](#ConstInit).
 
 You can set the specification parameters, using the standard `INSTANCE`
 expression of TLA+. For instance, below is the example
-`$APALACHE_HOME/test/tla/y2k_instance.tla`, which instantiates `y2k.tla`:
+[`test/tla/y2k_instance.tla`](../test/tla/y2k_instance.tla), which instantiates
+`y2k.tla`:
 
 ```tla
 ---------------------------- MODULE y2k_instance ----------------------------
@@ -383,7 +378,9 @@ Apalache requires two kinds of type annotations:
 - type annotations for empty sets and sequences, and
 - type annotations for records and sets of records.
 
-**Empty sets and sequences.** Consider the following example
+## 7.1. Empty sets and sequences
+
+Consider the following example
 [`test/tla/NeedForTypes.tla`](../test/tla/NeedForTypes.tla):
 
 ```tla
@@ -488,7 +485,9 @@ Having these two annotations, the type checker stops complaining. You can find
 the annotated specification in
 [`test/tla/NeedForTypesWithTypes.tla`](../test/tla/NeedForTypesWithTypes.tla).
 
-**Records and sets of records.** Consider the following example in
+## 7.2. Records and sets of records
+
+Consider the following example in
 [`test/tla/Handshake.tla`](../test/tla/Handshake.tla):
 
 ```tla
