@@ -112,7 +112,7 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
   }
 
   /**
-    * Assignment'-like expressions.
+    * Assignment-like expressions.
     *
     * @return a transformed expression
     */
