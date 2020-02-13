@@ -259,7 +259,7 @@ The arguments are as follows:
   * ``--cinit`` specifies the constant initialization predicate, optional
   * ``--inv`` specifies the invariant to check, optional
   * ``--length`` specifies the upper bound on the length of the finite executions to explore
-  * ``--tuning`` specifies the properties file that stores the options for [fine tuning](docs/tuning.md)
+  * ``--tuning`` specifies the properties file that stores the options for [fine tuning](tuning.md)
 
 If you like to check an inductive invariant ``Inv``, you can run two commands:   
 
@@ -342,7 +342,7 @@ Additionally, the model checker passes produce intermediate TLA+ files are in th
 **NOTE**: [Jure Kukovec](https://forsyte.at/people/kukovec/) is developing
 a completely automatic type inference engine. As soon as it is ready, type
 annotations will be no longer required. Until that happy day, refer to [type
-annotations](./docs/types-and-annotations).
+annotations](types-and-annotations).
 
 Apalache requires two kinds of type annotations:
 - type annotations for empty sets and sequences, and
@@ -587,7 +587,7 @@ Type annotations can be also applied to sets of records. For example:
 ```
 
 You can find more details on the simple type inference algorithm and the type
-annotations in [type annotations](./docs/types-and-annotations).
+annotations in [type annotations](types-and-annotations).
 
 
 # 8. Five minutes of theory <a name="theory5"></a>
