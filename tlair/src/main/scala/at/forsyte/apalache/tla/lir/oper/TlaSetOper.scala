@@ -63,13 +63,13 @@ object TlaSetOper {
 
   val cup = new TlaSetOper {
     override val arity = FixedArity(2)
-    override val name = "\\cup"
+    override val name = "\\union"
     override val precedence: (Int, Int) = (8, 8)
   }
 
   val cap = new TlaSetOper {
     override val arity = FixedArity(2)
-    override val name = "\\cap"
+    override val name = "\\intersect"
     override val precedence: (Int, Int) = (8, 8)
   }
 
