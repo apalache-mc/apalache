@@ -25,7 +25,7 @@ Apalache is working under the following assumptions:
  1. [Shall I use Apalache or TLC?](#apalacheOrTlc)
  1. [System requirements](#sysreq)
  1. [Installation](#installation)
- 1. [A simple TLA+ specification](#example)
+ 1. [An example of a TLA+ specification](#example)
  1. [Setting up specification parameters](#parameters)
  1. [Running the tool](#running)
  1. [Type annotations](#types)
@@ -37,7 +37,7 @@ Apalache is working under the following assumptions:
 
 We recommend to start with TLC. It is mature, well-documented, and well-integrated into TLA+ Toolbox. Once you have debugged your TLA+ specification, and TLC is still producing too many reachable states, switch to Apalache. We are using this approach at [Informal Systems](https://informal.systems/).
 
-# 2. System requirements
+# 2. System requirements <a name="sysreq"></a>
 
 Every commit to [master](https://github.com/konnov/apalache) and
 [unstable](https://github.com/konnov/apalache/tree/unstable) is built with
