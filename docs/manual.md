@@ -11,7 +11,7 @@ Whereas TLC enumerates states that are produced by behaviors of a TLA+ specifica
 
 APALACHE is working under the following assumptions:
 
- 1. As in TLC, all specification parameters are fixed and finite, e.g., the system is initialized integers, finite sets, and functions of finite domains and co-domains.
+ 1. As in TLC, all specification parameters are fixed and finite, i.e., the system state is initialized with integers, finite sets, and functions of finite domains and co-domains.
 
  2. As in TLC, all data structures evaluated during an execution are finite, e.g., a system specification cannot operate on the set of all integers.
 
@@ -50,33 +50,50 @@ to the directory, where Apalache is cloned.
 
 **Starting with release 0.6.0, we will publish Docker images for every release**.
 
+To run an APALACHE image, issue the command:
+
+```
+docker run --rm -v <your-spec-directory>:/var/apalache apalache:0.6.0 <args>
+```
+
+The following docker parameters are used:
+- `--rm` to remove the container after it exits (otherwise your system gets polluted)
+- `-v <your-spec-directory>:/var/apalache` bind-mounts `<your-spec-directory>` into
+  `/var/apalache` in the container. **This is necessary for APALACHE to access your specifications.**
+  For you it will look like APALACHE is executing in this directory; 
+  in particular all tool output will be written there.
+  If you are using SELinux, it may be also necessary to use this modified form of `-v` option:
+    `-v <your-spec-directory>:/var/apalache:z`
+- `apalache:0.6.0` is the docker container tag (the tool version to run)
+- `<args>` are the tool arguments as described in [Running the tool](#running).
+  Please take into acount that the tool will "run" in `<your-spec-directory>`
+
+
+For an end-user there is no need to build an APALACHE image.
+If you still want to do it (e.g. to package into a docker container your modified version),
+please take into account that it will take a considerable amount of time (~30 minutes).
 To build a docker image of APALACHE, issue the following command at `$APALACHE_HOME`:
 
 ```
 docker image build -t apalache:0.6.0 .
 ```
 
-To run an APALACHE image, issue the command:
-
-```
-docker container run --rm --name apa apalache:0.6.0 <args>
-```
 
 ## 3.2.  Building from sources
 
 1. Install `git`.
-1. Clone the git repository: `git clone https://github.com/konnov/apalache.git`
-1. Install [Oracle JDK8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) or OpenJDK8. **You have to install version 8, as Scala will not compile!. See [compatibility table](https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html).**
+2. Clone the git repository: `git clone https://github.com/konnov/apalache.git`
+3. Install [Oracle JDK8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) or OpenJDK8. **You have to install version 8, as Scala will not compile!. See [compatibility table](https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html).**
 
    For instance, that is how one installs JDK8 at Debian Linux 9. Since Debian dropped OpenJDK8, we have to do a few hoops to install Oracle JDK8:
-  - Run `sudo apt-get install java-package`
-  - Download JDK of `Java SE 8u*` from the [Oracle page](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) as a tgz archive
-  - Run `make-jpkg <downloaded-archive>.tgz`
-  - Run `sudo dkpg -i <file-by-make-jpkg>.deb`
-  - Make sure that `java -version` indeed shows Java 1.8.x
-1. Install [Apache Maven](https://maven.apache.org/). For instance, using Debian Linux:
-  - Run `sudo apt-get install maven`
-1. Run `make`. This command will install Microsoft Z3, compile APALACHE
+   - Run `sudo apt-get install java-package`
+   - Download JDK of `Java SE 8u*` from the [Oracle page](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) as a tgz archive
+   - Run `make-jpkg <downloaded-archive>.tgz`
+   - Run `sudo dkpg -i <file-by-make-jpkg>.deb`
+   - Make sure that `java -version` indeed shows Java 1.8.x
+4. Install [Apache Maven](https://maven.apache.org/). For instance, using Debian Linux:
+   - Run `sudo apt-get install maven`
+5. Run `make`. This command will install Microsoft Z3, compile APALACHE
    and assemble the package
 
 # 4. A simple TLA+ specification <a name="example"></a>
@@ -274,7 +291,7 @@ Additionally, the model checker passes produce intermediate TLA+ files are in th
 # 7. Type annotations <a name="types"></a>
 
 **NOTE**: [Jure Kukovec](https://forsyte.at/people/kukovec/) is developing
-a completely automatic type inference engine. As soon as it is ready, type annotations be no longer required.
+a completely automatic type inference engine. As soon as it is ready, type annotations will be no longer required.
 
 We will add examples. For the moment, check [type annotations](./docs/types-and-annotations).
 
@@ -284,9 +301,9 @@ We will add examples. For the moment, check [type annotations](./docs/types-and-
 
 Given a TLA+ specification, with all parameters fixed, our model checker performs the following steps:
 
- 1. It automatically extracts symbolic transitions from the specification. This allows us to partition the action Next into a conjunction of simpler actions `A_1, ..., A_n`.
+ 1. It automatically extracts symbolic transitions from the specification. This allows us to partition the action Next into a disjunction of simpler actions `A_1, ..., A_n`.
 
- 2. APALACHE translates the operators `Init` and `A_1, ..., A_n` to SMT formulas. This allows us to explore bounded executions with an SMT solver (we are using [Microsoft Z3](https://github.com/Z3Prover/z3)). For instance, a sequence of `k` steps, all of which execute action `A_1`, is encoded as a formula `Run(k)` that looks like follows:
+ 2. APALACHE translates operators `Init` and `A_1, ..., A_n` to SMT formulas. This allows us to explore bounded executions with an SMT solver (we are using [Microsoft Z3](https://github.com/Z3Prover/z3)). For instance, a sequence of `k` steps, all of which execute action `A_1`, is encoded as a formula `Run(k)` that looks like follows:
 
 ```tla
 [[Init(s_0)]] /\ [[A_1(s_0, s_1)]] /\ ... /\ [[A_1(s_(k-1), s_k)]]
@@ -295,7 +312,7 @@ Given a TLA+ specification, with all parameters fixed, our model checker perform
 To find an execution of length `k` that violates an invariant `Inv`, the tool adds to the formula `Run(k)` the following constraint:
 
 ```tla
-[[~Inv(s_0)]] \/ ... \/ [[~Inv(s_0)]]
+[[~Inv(s_0)]] \/ ... \/ [[~Inv(s_k)]]
 ```
 
 Here, `[[_]]` is the translator from TLA+ to SMT. Importantly, the values for the states `s_0`, ..., `s_k` are not enumerated as in TLC, but have to be found by the SMT solver.
