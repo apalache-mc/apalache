@@ -8,7 +8,7 @@ DIR=`dirname $0`
 DIR=`cd "$DIR/.."; pwd`
 echo "# Tool home: $DIR"
 # try to find either a release jar, or a local build
-DISTS=`mktemp apalache-dists.XXXX`
+DISTS=`mktemp /tmp/apalache-dists.XXXX`
 find >$DISTS "$DIR" "$DIR/mod-distribution/target/" \
     -maxdepth 1 -name "apalache-pkg-*-full.jar"
 
@@ -30,6 +30,7 @@ case `cat $DISTS | wc -l | sed 's/[[:space:]]*//g'` in
         exit 1
         ;;
 esac
+rm -f "$DISTS"
 
 # set LD_LIBRARY_PATH to find z3 libraries
 export LD_LIBRARY_PATH="$DIR/3rdparty/lib:${LD_LIBRARY_PATH}"
