@@ -1,15 +1,17 @@
-# APALACHE manual
+# Apalache manual
 
 **Version 0.6.0**
 
-**Author: Igor Konnov, igor at informal.systems**
+**Authors: Igor Konnov and Andrey Kuprianov**
+
+**Contact: {igor,andrey} at informal.systems**
 
 # Introduction
 
-APALACHE is a symbolic model checker for [TLA+](https://lamport.azurewebsites.net/tla/tla.html) (*still looking for a better tool name*). Our model checker is a recent alternative to [TLC](https://lamport.azurewebsites.net/tla/tools.html?unhideBut=hide-tlc&unhideDiv=tlc).
-Whereas TLC enumerates states that are produced by behaviors of a TLA+ specification, APALACHE translates the verification problem to a set of logical constraints. These constraints are solved by an [SMT solver](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories), for instance, by [Microsoft Z3](https://github.com/Z3Prover/z3). That is, APALACHE is operating in terms of formulas (i.e., _symbolic_), not enumerating states one by one (i.e., _state enumeration_).
+Apalache is a symbolic model checker for [TLA+](https://lamport.azurewebsites.net/tla/tla.html). (*Still looking for a better tool name.*) Our model checker is a recent alternative to [TLC](https://lamport.azurewebsites.net/tla/tools.html?unhideBut=hide-tlc&unhideDiv=tlc).
+Whereas TLC enumerates states that are produced by behaviors of a TLA+ specification, Apalache translates the verification problem to a set of logical constraints. These constraints are solved by an [SMT solver](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories), for instance, by [Microsoft Z3](https://github.com/Z3Prover/z3). That is, Apalache is operating in terms of formulas (i.e., _symbolic_), not enumerating states one by one (i.e., _state enumeration_).
 
-APALACHE is working under the following assumptions:
+Apalache is working under the following assumptions:
 
  1. As in TLC, all specification parameters are fixed and finite, i.e., the system state is initialized with integers, finite sets, and functions of finite domains and co-domains.
 
@@ -20,7 +22,7 @@ APALACHE is working under the following assumptions:
 
 # Table of Contents
 
- 1. [Shall I use APALACHE or TLC?](#apalacheOrTlc)
+ 1. [Shall I use Apalache or TLC?](#apalacheOrTlc)
  1. [System requirements](#sysreq)
  1. [Installation](#installation)
  1. [A simple TLA+ specification](#example)
@@ -37,42 +39,49 @@ We recommend to start with TLC. It is mature, well-documented, and well-integrat
 
 # 2. System requirements
 
-Every commit to [master](https://github.com/konnov/apalache) and [unstable](https://github.com/konnov/apalache/tree/unstable) is built with [Travis CI](https://travis-ci.org/konnov/apalache) on MacOS (xcode9.3 and JDK 1.8.0) and Linux (OpenJDK8). If you like to run APALACHE in Windows, use a docker image. Check the [Docker manual](https://docs.docker.com/docker-for-windows/) and the section on [Using a docker image](#useDocker).
+Every commit to [master](https://github.com/konnov/apalache) and [unstable](https://github.com/konnov/apalache/tree/unstable) is built with [Travis CI](https://travis-ci.org/konnov/apalache) on MacOS (xcode9.3 and JDK 1.8.0) and Linux (OpenJDK8). If you like to run Apalache in Windows, use a docker image. Check the [Docker manual](https://docs.docker.com/docker-for-windows/) and the section on [Using a docker image](#useDocker).
 
-As APALACHE is using Microsoft Z3 as a backend SMT solver, the required memory largely depends on Z3. We recommend to allocate at least 4GB of memory for the tool.
+As Apalache is using Microsoft Z3 as a backend SMT solver, the required memory largely depends on Z3. We recommend to allocate at least 4GB of memory for the tool.
 
 # 3. Installation <a name="installation"></a>
 
-There are two ways to run APALACHE: (1) Download and run a docker image, or (2) Build APALACHE from sources and run the compiled package. If you just like to try the tool, we recommend to use the docker image. If you like to run the tool on daily basis or to contribute to the project, we recommend to build from the sources. In the following, we write `$APALACHE_HOME` to refer
+There are two ways to run Apalache: (1) Download and run a docker image, or (2) Build Apalache from sources and run the compiled package. If you just like to try the tool, we recommend to use the docker image. If you like to run the tool on daily basis or to contribute to the project, we recommend to build from the sources. In the following, we write `$APALACHE_HOME` to refer
 to the directory, where Apalache is cloned.
 
 ## 3.1. Using a docker image <a name="useDocker"></a>   
 
 **Starting with release 0.6.0, we will publish Docker images for every release**.
 
-To run an APALACHE image, issue the command:
+**Running the image**. To run an Apalache image, issue the command:
 
 ```
 docker run --rm -v <your-spec-directory>:/var/apalache apalache:0.6.0 <args>
 ```
 
 The following docker parameters are used:
-- `--rm` to remove the container after it exits (otherwise your system gets polluted)
+- `--rm` to remove the container on exit
 - `-v <your-spec-directory>:/var/apalache` bind-mounts `<your-spec-directory>` into
-  `/var/apalache` in the container. **This is necessary for APALACHE to access your specifications.**
-  For you it will look like APALACHE is executing in this directory; 
-  in particular all tool output will be written there.
-  If you are using SELinux, it may be also necessary to use this modified form of `-v` option:
+  `/var/apalache` in the container. **This is necessary for
+  Apalache to access your specification and the modules it
+  extends.**
+  From the user perspective, it would work as if Apalache was
+  executing in `<your-spec-directory`.
+  In particular the tool logs are written in that directory.
+
+  When using SELinux, you might have to use the modified form of `-v` option:
     `-v <your-spec-directory>:/var/apalache:z`
-- `apalache:0.6.0` is the docker container tag (the tool version to run)
-- `<args>` are the tool arguments as described in [Running the tool](#running).
-  Please take into acount that the tool will "run" in `<your-spec-directory>`
+- `apalache:0.6.0` is the docker container tag (the tool version
+   to run)
+- `<args>` are the tool arguments as described in
+  [Running the tool](#running).
 
 
-For an end-user there is no need to build an APALACHE image.
-If you still want to do it (e.g. to package into a docker container your modified version),
-please take into account that it will take a considerable amount of time (~30 minutes).
-To build a docker image of APALACHE, issue the following command at `$APALACHE_HOME`:
+**Building an image**. For an end-user there is no need to build an Apalache
+image. If you like to produce a modified docker image,
+take into account that it will about 30 minutes for the image
+to get built, due to compilation times of Microsoft Z3.
+To build a docker image of Apalache, issue the following command
+in `$APALACHE_HOME`:
 
 ```
 docker image build -t apalache:0.6.0 .
@@ -93,12 +102,12 @@ docker image build -t apalache:0.6.0 .
    - Make sure that `java -version` indeed shows Java 1.8.x
 4. Install [Apache Maven](https://maven.apache.org/). For instance, using Debian Linux:
    - Run `sudo apt-get install maven`
-5. Run `make`. This command will install Microsoft Z3, compile APALACHE
+5. Run `make`. This command will install Microsoft Z3, compile Apalache
    and assemble the package
 
-# 4. A simple TLA+ specification <a name="example"></a>
+# 4. An example of a TLA+ specification <a name="example"></a>
 
-To illustrate the features of APALACHE, we are using the following TLA+ specification, which can be found in `$APALACHE_HOME/test/tla/y2k.tla`:
+To illustrate the features of Apalache, we are using the following TLA+ specification, which can be found in `$APALACHE_HOME/test/tla/y2k.tla`:
 
 ```tla
 -------------------------------- MODULE y2k --------------------------------
@@ -158,7 +167,7 @@ Inv ==
 
 # 5. Setting up specification parameters <a name="parameters"></a>
 
-Similar to TLC, APALACHE requires the specification parameters to be restricted to finite values. In contrast to TLC, there is a way to initialize parameters by writing a symbolic constraint, see [Section 5.3](#ConstInit).
+Similar to TLC, Apalache requires the specification parameters to be restricted to finite values. In contrast to TLC, there is a way to initialize parameters by writing a symbolic constraint, see [Section 5.3](#ConstInit).
 
 ## 5.1. Using INSTANCE
 
@@ -207,7 +216,7 @@ $ ../../bin/apalache-mc check --inv=Safety \
   --length=20 --cinit=ConstInit y2k_cinit.tla
 ```
 
-**Parameterized initialization**. As a bonus of this approach, APALACHE allows one to check
+**Parameterized initialization**. As a bonus of this approach, Apalache allows one to check
 a specification over a bounded set of parameters.
 For example:
 
@@ -269,11 +278,51 @@ Usually, ``TypeOK`` as the first line of the invariant is exactly what is needed
 
 ## 6.2. Examples
 
-to-be-added
+**Checking safety up to 20 steps:**
+
+```bash
+$ cd test/tla
+../../bin/apalache-mc check --length=20 --inv=Safety y2k_override.tla
+```
+
+This command checks, whether `Safety` can be violated in 20
+specification steps.
+
+**Checking an inductive invariant:**
+
+```bash
+$ cd test/tla
+../../bin/apalache-mc check --length=0 --init=Init --inv=Inv y2k_override.tla
+../../bin/apalache-mc check --length=1 --init=Inv  --inv=Inv y2k_override.tla
+```
+
+The first call to apalache checks, whether the initial states
+satisfy the invariant. The second call to apalache checks, whether
+a single specification step satisfies the invariant, when starting
+in a state that satisfies the invariant. (That is why these
+invariants are called inductive.)
+
+**Using a constant initializer:**
+
+```bash
+$ cd test/tla
+../../bin/apalache-mc check --cinit=ConstInit --length=20 --inv=Safety y2k_cinit.tla
+```
+
+This command checks, whether `Safety` can be violated in 20
+specification steps. The consants are initialized with the predicate `ConstInit`:
+
+```tla
+ConstInit == BIRTH_YEAR \in 0..99 /\ LICENSE_AGE \in 10..99
+```
+
+In this case, Apalache finds a safety violation, e.g., for
+`BIRTH_YEAR=89` and `LICENSE_AGE=10`. A complete counterexample
+is printed in `counterexample.txt`.
 
 ## 6.3. Detailed output
 
-**Detailed information.** The tool will display only the important messages. A detailed log can be found in `detailed.log`.
+The tool will display only the important messages. A detailed log can be found in `detailed.log`.
 
 Additionally, the model checker passes produce intermediate TLA+ files are in the run-specific directory `x/hh.mm-DD.MM.YYYY-<id>`:
 
@@ -291,9 +340,255 @@ Additionally, the model checker passes produce intermediate TLA+ files are in th
 # 7. Type annotations <a name="types"></a>
 
 **NOTE**: [Jure Kukovec](https://forsyte.at/people/kukovec/) is developing
-a completely automatic type inference engine. As soon as it is ready, type annotations will be no longer required.
+a completely automatic type inference engine. As soon as it is ready, type
+annotations will be no longer required. Until that happy day, refer to [type
+annotations](./docs/types-and-annotations).
 
-We will add examples. For the moment, check [type annotations](./docs/types-and-annotations).
+Apalache requires two kinds of type annotations:
+- type annotations for empty sets and sequences, and
+- type annotations for records and sets of records.
+
+**Empty sets and sequences.** Consider the following example
+[`test/tla/NeedForTypes.tla`](../test/tla/NeedForTypes.tla):
+
+```tla
+------------------------ MODULE NeedForTypes ------------------------------
+(**
+ * This simple example transforms a set into a sequence.
+ *)
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS InSet     \* an input set
+VARIABLES Left,     \* a storage for the yet untransformed elements
+          OutSeq    \* the output sequence
+
+ConstInit == InSet = 1..4
+
+Init ==
+    /\ OutSeq = << >>
+    /\ Left = InSet
+
+Next ==
+    IF Left = {}
+    THEN UNCHANGED <<Left, OutSeq>>
+    ELSE \E x \in Left:
+          /\ OutSeq' = Append(OutSeq, x)
+          /\ Left' = Left \ {x}
+
+Inv == InSet = Left \union { OutSeq[i]: i \in DOMAIN OutSeq }
+===========================================================================
+```
+
+While this example is perfectly fine for TLC, Apalache has to assign types to
+the variables, in order to construct SMT constraints. In some cases, Apalache
+can infer types completely automatically, e.g., as in the `y2k` example (see
+[Section 4](#example)). However, if you run `../../bin/apalache-mc check
+--cinit=ConstInit NeedForTypes.tla`, the tool will complain:
+
+```
+Step 0, level 0: checking if 1 transition(s) are enabled and violate the invariant I@15:17:14.313
+Step 0, level 1: collecting 1 enabled transition(s)               I@15:17:14.360
+Step 1, level 1: checking if 2 transition(s) are enabled and violate the invariant I@15:17:14.374
+NeedForTypes.tla:18:8-18:16, =(...), type error: Expected equal types: FinSet[Int] and FinSet[Unknown] E@15:17:14.379
+The outcome is: Error                                             I@15:17:14.388
+```
+
+In a somewhat obfuscated way, Apalache tells us the following. It has inferred
+ that `Left` is a set of integers, that is, `FinSet[Int]`. First, it found that
+`InSet` is a set of integers, by applying `ConstInit`. Second, as `Left = InSet`
+in `Init`, it inferred that `Left` is also a set of integers. Third, when
+applying `Next`, it processed `{}`, which is an empty set of any kind of
+objects. Hence, `{}` was assigned the type `FinSet[Unknown]`, that is, a set
+of some type. Finally, it found the expression `Left = {}`,
+and here the type checker has failed.
+
+To help the type checker, we have to introduce a few type annotations.
+But before doing that, we introduce the notation for type annotations
+in the specification:
+
+```tla
+a <: b == a
+```
+
+Apalache treats any application of `<:` as a type annotation. At the same time,
+the above definition tells the other tools (e.g., TLC and TLAPS) to ignore
+the type annotation.
+
+Now we can help the type checker by rewriting the condition in Next as follows:
+
+```tla
+Next ==
+    IF Left = {} <: {Int}
+    THEN ...
+    ELSE ...
+```
+
+Now the type checker treats the expression `{}` as a set of integers. However,
+  it complains about another line:
+
+```
+Step 0, level 0: checking if 1 transition(s) are enabled and violate the invariant I@15:43:35.932
+Step 0, level 1: collecting 1 enabled transition(s)               I@15:43:35.977
+Step 1, level 1: checking if 2 transition(s) are enabled and violate the invariant I@15:43:35.992
+NeedForTypes.tla:23:24-23:40, x$1, type error: Expected type Unknown, found Int E@15:43:36.012
+NeedForTypes.tla:23:24-23:40, Append(...), type error: Expected a type, found: None E@15:43:36.018
+NeedForTypes.tla:23:11-24:31, /\(...), type error: Expected a Boolean, found: None E@15:43:36.020
+The outcome is: Error       
+```
+
+Here the type checker stumbles upon the sequence operator `Append(OutSeq, x)`
+and complains about the type mismatch. Similar to `{}`, it has treated
+the expression `<< >>` as a sequence of an unknown type. (In case of `<<1, 2>>`
+it would be even worse, as the type checker would not know, whether `<<1, 2>>`
+should be treated as a sequence or a tuple). Again, we help the type checker
+by modifying `Init` as follows:
+
+```tla
+Init ==
+    /\ OutSeq = << >> <: Seq(Int)
+    ...
+```
+
+Having these two annotations, the type checker stops complaining. You can find
+the annotated specification in
+[`test/tla/NeedForTypesWithTypes.tla`](../test/tla/NeedForTypesWithTypes.tla).
+
+**Records and sets of records.** Consider the following example in
+[`test/tla/Handshake.tla`](../test/tla/Handshake.tla):
+
+```tla
+------------------------ MODULE Handshake ------------------------
+(**
+ * A TCP-like handshake protocol:
+ * https://en.wikipedia.org/wiki/Transmission_Control_Protocol#Connection_establishment
+ *
+ * Igor Konnov, 2020
+ *)
+EXTENDS Integers
+
+VARIABLES msgs,     \* the set of all messages
+          iseqno,   \* Initiator's sequence number
+          rseqno,   \* Receiver's sequence number
+          istate,   \* Initiator's state
+          rstate    \* Receiver's state
+
+a <: b == a
+
+Init ==
+    /\ msgs = {}
+    /\ iseqno = 0
+    /\ rseqno = 0
+    /\ istate = "INIT"
+    /\ rstate = "LISTEN"
+
+SendSyn ==
+    /\ istate = "INIT"
+    /\ \E no \in Nat:
+        /\ msgs' = msgs \union {[syn |-> TRUE,
+                                 ack |-> FALSE, seqno |-> no]}
+        /\ iseqno' = no + 1
+        /\ istate' = "SYN-SENT"
+        /\ UNCHANGED <<rseqno, rstate>>
+
+SendSynAck ==
+    /\ rstate = "LISTEN"
+    /\ \E seqno, ackno \in Nat:
+        /\ [syn |-> TRUE, ack |-> FALSE, seqno |-> seqno] \in msgs
+        /\ msgs' = msgs \union {[syn |-> TRUE, ack |-> TRUE,
+                                 seqno |-> seqno + 1,
+                                 ackno |-> ackno]}
+        /\ rseqno' = ackno + 1
+        /\ rstate' = "SYN-RECEIVED"
+        /\ UNCHANGED <<iseqno, istate>>
+
+SendAck ==
+    /\ istate = "SYN-SENT"
+    /\ \E ackno \in Nat:
+        /\ [syn |-> TRUE, ack |-> TRUE,
+            seqno |-> iseqno, ackno |-> ackno] \in msgs
+        /\ istate' = "ESTABLISHED"
+        /\ msgs' = msgs \union {[syn |-> FALSE, ack |-> TRUE,
+                                 seqno |-> iseqno,
+                                 ackno |-> ackno + 1]}
+        /\ UNCHANGED <<iseqno, rseqno, rstate>>
+
+RcvAck ==
+    /\ rstate = "SYN-RECEIVED"
+    /\ \E seqno \in Nat:
+        /\ ([syn |-> FALSE, ack |-> TRUE,
+             seqno |-> seqno, ackno |-> rseqno]) \in msgs
+        /\ rstate' = "ESTABLISHED"
+        /\ UNCHANGED <<msgs, iseqno, rseqno, istate>>
+
+
+Next == SendSyn \/ SendSynAck \/ SendAck \/ RcvAck
+
+Inv == (istate = "ACK" => rstate = "SYNACK")
+======================================================================
+```
+
+As we have seen before, the type checker complains about the set `msgs`,
+which is initialized as `{}`. So we have to specify the type of `{}`. But which
+type shall we use for the empty set?
+
+In our example, the set `msgs` may contain records of three kinds:
+- a **SYN** request that is modeled as a record `[ack |-> FALSE, syn |-> TRUE, seqno |-> i]` for some number `i`,
+- a **SYN-ACK** reply that is modeled as a record `[ack |-> TRUE, syn |-> TRUE, seqno |-> i, ackno |-> j]` for some numbers `i` and `j`,
+- an **ACK** reply that is modeled as a record `[ack |-> TRUE, syn |-> FALSE, seqno |-> i, ackno |-> j]` for some numbers `i` and `j`.
+
+From the perspective of the type checker, the three records shown above
+have three different types. Although we would love to reject this example as
+an ill-typed one, mixing records of different types is a widely-accepted idiom
+in TLA+, for instance, see
+[Lamport's specification of Paxos](https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla).
+Think of records as of C unions, rather than C structs!
+
+To help the type checker, we first introduce a handy operator for the type that
+contains the fields of the three records:
+
+```tla
+MT == [syn |-> BOOLEAN, ack |-> BOOLEAN, seqno |-> Int, ackno |-> Int]
+```
+
+Then we add annotations as follows:
+
+```tla
+Init ==
+  /\ msgs = {} <: {MT}
+    ...
+
+SendSyn ==
+  ...
+  /\ \E no \in Nat:
+    /\ msgs' = msgs \union {[syn |-> TRUE, ack |-> FALSE, seqno |-> no] <: MT}
+  ...
+
+SendSynAck ==
+  ...
+  /\ \E seqno, ackno \in Nat:
+    /\ ([syn |-> TRUE, ack |-> FALSE, seqno |-> seqno] <: MT) \in msgs
+    ...
+
+SendAck ==
+  ...
+  /\ \E ackno \in Nat:
+    ...
+```
+
+As you can see, we have to annotate only those records that do not have all
+four fields of `MT`. As soon as we have added the annotations, the type checker
+stopped complaining and let the model checker to run. The annotated code
+can be found in [`test/tla/HandshakeWithTypes.tla`](../test/tla/HandshakeWithTypes.tla).
+
+Type annotations can be also applied to sets of records. For example:
+
+```tla
+[syn |-> BOOLEAN, ack |-> BOOLEAN, seqno |-> Int] <: {MT}
+```
+
+You can find more details on the simple type inference algorithm and the type
+annotations in [type annotations](./docs/types-and-annotations).
+
 
 # 8. Five minutes of theory <a name="theory5"></a>
 
@@ -303,7 +598,7 @@ Given a TLA+ specification, with all parameters fixed, our model checker perform
 
  1. It automatically extracts symbolic transitions from the specification. This allows us to partition the action Next into a disjunction of simpler actions `A_1, ..., A_n`.
 
- 2. APALACHE translates operators `Init` and `A_1, ..., A_n` to SMT formulas. This allows us to explore bounded executions with an SMT solver (we are using [Microsoft Z3](https://github.com/Z3Prover/z3)). For instance, a sequence of `k` steps, all of which execute action `A_1`, is encoded as a formula `Run(k)` that looks like follows:
+ 2. Apalache translates operators `Init` and `A_1, ..., A_n` to SMT formulas. This allows us to explore bounded executions with an SMT solver (we are using [Microsoft Z3](https://github.com/Z3Prover/z3)). For instance, a sequence of `k` steps, all of which execute action `A_1`, is encoded as a formula `Run(k)` that looks like follows:
 
 ```tla
 [[Init(s_0)]] /\ [[A_1(s_0, s_1)]] /\ ... /\ [[A_1(s_(k-1), s_k)]]
@@ -317,8 +612,8 @@ To find an execution of length `k` that violates an invariant `Inv`, the tool ad
 
 Here, `[[_]]` is the translator from TLA+ to SMT. Importantly, the values for the states `s_0`, ..., `s_k` are not enumerated as in TLC, but have to be found by the SMT solver.
 
-If you like to learn more about theory behind APALACHE,
-check the [following paper](https://forsyte.at/wp-content/uploads/kkt-oopsla19.pdf).
+If you like to learn more about theory behind Apalache,
+check the [paper at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549).
 
 
 # 9. Supported language features <a name="features"></a>
