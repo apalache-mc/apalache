@@ -39,14 +39,26 @@ We recommend to start with TLC. It is mature, well-documented, and well-integrat
 
 # 2. System requirements
 
-Every commit to [master](https://github.com/konnov/apalache) and [unstable](https://github.com/konnov/apalache/tree/unstable) is built with [Travis CI](https://travis-ci.org/konnov/apalache) on MacOS (xcode9.3 and JDK 1.8.0) and Linux (OpenJDK8). If you like to run Apalache in Windows, use a docker image. Check the [Docker manual](https://docs.docker.com/docker-for-windows/) and the section on [Using a docker image](#useDocker).
+Every commit to [master](https://github.com/konnov/apalache) and
+[unstable](https://github.com/konnov/apalache/tree/unstable) is built with
+[Travis CI](https://travis-ci.org/konnov/apalache) on MacOS (xcode9.3 and JDK
+1.8.0) and Linux (OpenJDK8). If you like to run Apalache in Windows, use a
+docker image. Check the [Docker
+manual](https://docs.docker.com/docker-for-windows/) and the section on [Using
+a docker image](#useDocker).
 
-As Apalache is using Microsoft Z3 as a backend SMT solver, the required memory largely depends on Z3. We recommend to allocate at least 4GB of memory for the tool.
+As Apalache is using Microsoft Z3 as a backend SMT solver, the required memory
+largely depends on Z3. We recommend to allocate at least 4GB of memory for the
+tool.
 
 # 3. Installation <a name="installation"></a>
 
-There are two ways to run Apalache: (1) Download and run a docker image, or (2) Build Apalache from sources and run the compiled package. If you just like to try the tool, we recommend to use the docker image. If you like to run the tool on daily basis or to contribute to the project, we recommend to build from the sources. In the following, we write `$APALACHE_HOME` to refer
-to the directory, where Apalache is cloned.
+There are two ways to run Apalache: (1) Download and run a docker image, or (2)
+Build Apalache from sources and run the compiled package. If you just like to
+try the tool, we recommend to use the docker image. If you like to run the tool
+on daily basis or to contribute to the project, we recommend to build from the
+sources. In the following, we write `$APALACHE_HOME` to refer to the directory,
+where Apalache is cloned.
 
 ## 3.1. Using a docker image <a name="useDocker"></a>   
 
@@ -83,8 +95,8 @@ to get built, due to compilation times of Microsoft Z3.
 To build a docker image of Apalache, issue the following command
 in `$APALACHE_HOME`:
 
-```
-docker image build -t apalache:0.6.0 .
+```bash
+$ docker image build -t apalache:0.6.0 .
 ```
 
 
@@ -92,7 +104,11 @@ docker image build -t apalache:0.6.0 .
 
 1. Install `git`.
 2. Clone the git repository: `git clone https://github.com/konnov/apalache.git`
-3. Install [Oracle JDK8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) or OpenJDK8. **You have to install version 8, as Scala will not compile!. See [compatibility table](https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html).**
+3. Install [Oracle
+JDK8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
+or OpenJDK8. **You have to install version 8, as Scala will not compile!. See
+[compatibility
+table](https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html).**
 
    For instance, that is how one installs JDK8 at Debian Linux 9. Since Debian dropped OpenJDK8, we have to do a few hoops to install Oracle JDK8:
    - Run `sudo apt-get install java-package`
@@ -167,11 +183,15 @@ Inv ==
 
 # 5. Setting up specification parameters <a name="parameters"></a>
 
-Similar to TLC, Apalache requires the specification parameters to be restricted to finite values. In contrast to TLC, there is a way to initialize parameters by writing a symbolic constraint, see [Section 5.3](#ConstInit).
+Similar to TLC, Apalache requires the specification parameters to be restricted
+to finite values. In contrast to TLC, there is a way to initialize parameters
+by writing a symbolic constraint, see [Section 5.3](#ConstInit).
 
 ## 5.1. Using INSTANCE
 
-You can set the specification parameters, using the standard `INSTANCE` expression of TLA+. For instance, below is the example `$APALACHE_HOME/test/tla/y2k_instance.tla`, which instantiates `y2k.tla`:
+You can set the specification parameters, using the standard `INSTANCE`
+expression of TLA+. For instance, below is the example
+`$APALACHE_HOME/test/tla/y2k_instance.tla`, which instantiates `y2k.tla`:
 
 ```tla
 ---------------------------- MODULE y2k_instance ----------------------------
@@ -181,7 +201,8 @@ INSTANCE y2k WITH BIRTH_YEAR <- 80, LICENSE_AGE <- 18
 =============================================================================
 ```
 
-The downside of this approach is that you have to declare the variables of the extended specification.
+The downside of this approach is that you have to declare the variables of the
+extended specification.
 
 ## 5.2. Convention over configuration
 
@@ -196,7 +217,10 @@ OVERRIDE_LICENSE_AGE == 18
 
 ## 5.3. ConstInit predicate <a name="ConstInit"></a>
 
-This approach is similar to the ``Init`` operator, but applied to the constants. We define a special operator, e.g., called ``ConstInit``. For instance, below is the example `$APALACHE_HOME/test/tla/y2k_cinit.tla`:
+This approach is similar to the ``Init`` operator, but applied to the
+constants. We define a special operator, e.g., called ``ConstInit``. For
+instance, below is the example
+[`test/tla/y2k_cinit.tla`](../test/tla/y2k_cinit.tla):
 
 ```tla
 ---------------------------- MODULE y2k_cinit ----------------------------
@@ -208,7 +232,8 @@ ConstInit ==
 =============================================================================
 ```
 
-To use `ConstInit`, pass it as the argument to `apalache-mc`. For instance, for `y2k_cinit`, we would run the model checker as follows:
+To use `ConstInit`, pass it as the argument to `apalache-mc`. For instance, for
+`y2k_cinit`, we would run the model checker as follows:
 
 ```tla
 $ cd $APALACHE_HOME/test/tla
@@ -216,9 +241,8 @@ $ ../../bin/apalache-mc check --inv=Safety \
   --length=20 --cinit=ConstInit y2k_cinit.tla
 ```
 
-**Parameterized initialization**. As a bonus of this approach, Apalache allows one to check
-a specification over a bounded set of parameters.
-For example:
+**Parameterized initialization**. As a bonus of this approach, Apalache allows
+one to check a specification over a bounded set of parameters.  For example:
 
 ```tla
 CONSTANT N, Values
@@ -249,7 +273,8 @@ However, you can write `N \in {10, 20}`.
 The model checker can be run as follows:
 
 ```bash
-$ bin/apalache-mc check [--init=Init] [--cinit=ConstInit] [--next=Next] [--inv=Inv] [--length=10] [--tuning=filename] myspec.tla
+$ bin/apalache-mc check [--init=Init] [--cinit=ConstInit] \
+    [--next=Next] [--inv=Inv] [--length=10] [--tuning=filename] myspec.tla
 ```
 
 The arguments are as follows:
@@ -259,7 +284,8 @@ The arguments are as follows:
   * ``--cinit`` specifies the constant initialization predicate, optional
   * ``--inv`` specifies the invariant to check, optional
   * ``--length`` specifies the upper bound on the length of the finite executions to explore
-  * ``--tuning`` specifies the properties file that stores the options for [fine tuning](tuning.md)
+  * ``--tuning`` specifies the properties file that stores the options for
+  [fine tuning](tuning.md)
 
 If you like to check an inductive invariant ``Inv``, you can run two commands:   
 
@@ -282,7 +308,7 @@ Usually, ``TypeOK`` as the first line of the invariant is exactly what is needed
 
 ```bash
 $ cd test/tla
-../../bin/apalache-mc check --length=20 --inv=Safety y2k_override.tla
+$ ../../bin/apalache-mc check --length=20 --inv=Safety y2k_override.tla
 ```
 
 This command checks, whether `Safety` can be violated in 20
@@ -292,8 +318,8 @@ specification steps.
 
 ```bash
 $ cd test/tla
-../../bin/apalache-mc check --length=0 --init=Init --inv=Inv y2k_override.tla
-../../bin/apalache-mc check --length=1 --init=Inv  --inv=Inv y2k_override.tla
+$ ../../bin/apalache-mc check --length=0 --init=Init --inv=Inv y2k_override.tla
+$ ../../bin/apalache-mc check --length=1 --init=Inv  --inv=Inv y2k_override.tla
 ```
 
 The first call to apalache checks, whether the initial states
@@ -322,17 +348,26 @@ is printed in `counterexample.txt`.
 
 ## 6.3. Detailed output
 
-The tool will display only the important messages. A detailed log can be found in `detailed.log`.
+The tool will display only the important messages. A detailed log can be found
+in `detailed.log`.
 
-Additionally, the model checker passes produce intermediate TLA+ files are in the run-specific directory `x/hh.mm-DD.MM.YYYY-<id>`:
+Additionally, the model checker passes produce intermediate TLA+ files are in
+the run-specific directory `x/hh.mm-DD.MM.YYYY-<id>`:
 
-  - File `out-parser.tla` is produced as a result of parsing and importing into Apalache TLA IR.
-  - File `out-config.tla` is produced as a result of substituting CONSTANTS, as described in [Section 5](#parameters).
-  - File `out-inline.tla` is produced as a result of inlining operator definitions and LET-IN definitions.
-  - File `out-priming.tla` is produced as a result of replacing constants and variables in `ConstInit` and `Init` with their primed versions.
-  - File `out-vcgen.tla` is produced as a result of extracting verification conditions, e.g., invariants to check.
-  - File `out-prepro.tla` is produced as a result of running all preprocessing steps.
-  - File `out-transition.tla` is produced as a result of finding assignments and symbolic transitions.
+  - File `out-parser.tla` is produced as a result of parsing and importing
+    into Apalache TLA IR.
+  - File `out-config.tla` is produced as a result of substituting CONSTANTS,
+    as described in [Section 5](#parameters).
+  - File `out-inline.tla` is produced as a result of inlining operator
+    definitions and LET-IN definitions.
+  - File `out-priming.tla` is produced as a result of replacing constants and
+    variables in `ConstInit` and `Init` with their primed versions.
+  - File `out-vcgen.tla` is produced as a result of extracting verification
+    conditions, e.g., invariants to check.
+  - File `out-prepro.tla` is produced as a result of running all preprocessing
+    steps.
+  - File `out-transition.tla` is produced as a result of finding assignments
+    and symbolic transitions.
   - File `out-opt.tla` is produced as a result of expression optimizations.
   - File `out-analysis.tla` is produced as a result of analysis, e.g.,
     marking Skolemizable expressions and expressions to be expanded.
@@ -342,7 +377,7 @@ Additionally, the model checker passes produce intermediate TLA+ files are in th
 **NOTE**: [Jure Kukovec](https://forsyte.at/people/kukovec/) is developing
 a completely automatic type inference engine. As soon as it is ready, type
 annotations will be no longer required. Until that happy day, refer to [type
-annotations](types-and-annotations).
+annotations](types-and-annotations.md).
 
 Apalache requires two kinds of type annotations:
 - type annotations for empty sets and sequences, and
@@ -532,15 +567,20 @@ which is initialized as `{}`. So we have to specify the type of `{}`. But which
 type shall we use for the empty set?
 
 In our example, the set `msgs` may contain records of three kinds:
-- a **SYN** request that is modeled as a record `[ack |-> FALSE, syn |-> TRUE, seqno |-> i]` for some number `i`,
-- a **SYN-ACK** reply that is modeled as a record `[ack |-> TRUE, syn |-> TRUE, seqno |-> i, ackno |-> j]` for some numbers `i` and `j`,
-- an **ACK** reply that is modeled as a record `[ack |-> TRUE, syn |-> FALSE, seqno |-> i, ackno |-> j]` for some numbers `i` and `j`.
+- a **SYN** request that is modeled as a record
+    `[ack |-> FALSE, syn |-> TRUE, seqno |-> i]` for some number `i`,
+- a **SYN-ACK** reply that is modeled as a record
+    `[ack |-> TRUE, syn |-> TRUE, seqno |-> i, ackno |-> j]`
+    for some numbers `i` and `j`,
+- an **ACK** reply that is modeled as a record
+    `[ack |-> TRUE, syn |-> FALSE, seqno |-> i, ackno |-> j]`
+    for some numbers `i` and `j`.
 
-From the perspective of the type checker, the three records shown above
-have three different types. Although we would love to reject this example as
-an ill-typed one, mixing records of different types is a widely-accepted idiom
-in TLA+, for instance, see
-[Lamport's specification of Paxos](https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla).
+From the perspective of the type checker, the three records shown above have
+three different types. Although we would love to reject this example as an
+ill-typed one, mixing records of different types is a widely-accepted idiom in
+TLA+, for instance, see [Lamport's specification of
+Paxos](https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla).
 Think of records as of C unions, rather than C structs!
 
 To help the type checker, we first introduce a handy operator for the type that
@@ -577,8 +617,9 @@ SendAck ==
 
 As you can see, we have to annotate only those records that do not have all
 four fields of `MT`. As soon as we have added the annotations, the type checker
-stopped complaining and let the model checker to run. The annotated code
-can be found in [`test/tla/HandshakeWithTypes.tla`](../test/tla/HandshakeWithTypes.tla).
+stopped complaining and let the model checker to run. The annotated code can be
+found in
+[`test/tla/HandshakeWithTypes.tla`](../test/tla/HandshakeWithTypes.tla).
 
 Type annotations can be also applied to sets of records. For example:
 
@@ -587,35 +628,46 @@ Type annotations can be also applied to sets of records. For example:
 ```
 
 You can find more details on the simple type inference algorithm and the type
-annotations in [type annotations](types-and-annotations).
+annotations in [type annotations](types-and-annotations.md).
 
 
 # 8. Five minutes of theory <a name="theory5"></a>
 
 **You can safely skip this section**
 
-Given a TLA+ specification, with all parameters fixed, our model checker performs the following steps:
+Given a TLA+ specification, with all parameters fixed, our model checker
+performs the following steps:
 
- 1. It automatically extracts symbolic transitions from the specification. This allows us to partition the action Next into a disjunction of simpler actions `A_1, ..., A_n`.
+ 1. It automatically extracts symbolic transitions from the specification. This
+ allows us to partition the action Next into a disjunction of simpler actions
+ `A_1, ..., A_n`.
 
- 2. Apalache translates operators `Init` and `A_1, ..., A_n` to SMT formulas. This allows us to explore bounded executions with an SMT solver (we are using [Microsoft Z3](https://github.com/Z3Prover/z3)). For instance, a sequence of `k` steps, all of which execute action `A_1`, is encoded as a formula `Run(k)` that looks like follows:
+ 2. Apalache translates operators `Init` and `A_1, ..., A_n` to SMT formulas.
+ This allows us to explore bounded executions with an SMT solver (we are using
+ [Microsoft Z3](https://github.com/Z3Prover/z3)). For instance, a sequence of
+ `k` steps, all of which execute action `A_1`, is encoded as a formula `Run(k)`
+ that looks like follows:
 
 ```tla
 [[Init(s_0)]] /\ [[A_1(s_0, s_1)]] /\ ... /\ [[A_1(s_(k-1), s_k)]]
 ```
 
-To find an execution of length `k` that violates an invariant `Inv`, the tool adds to the formula `Run(k)` the following constraint:
+To find an execution of length `k` that violates an invariant `Inv`, the tool
+adds to the formula `Run(k)` the following constraint:
 
 ```tla
 [[~Inv(s_0)]] \/ ... \/ [[~Inv(s_k)]]
 ```
 
-Here, `[[_]]` is the translator from TLA+ to SMT. Importantly, the values for the states `s_0`, ..., `s_k` are not enumerated as in TLC, but have to be found by the SMT solver.
+Here, `[[_]]` is the translator from TLA+ to SMT. Importantly, the values for
+the states `s_0`, ..., `s_k` are not enumerated as in TLC, but have to be found
+by the SMT solver.
 
-If you like to learn more about theory behind Apalache,
-check the [paper at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549).
+If you like to learn more about theory behind Apalache, check the [paper at
+OOPSLA19](https://dl.acm.org/doi/10.1145/3360549).
 
 
 # 9. Supported language features <a name="features"></a>
 
-Check the [supported features](features.md), [KerA+](kera.md), and [preprocessing steps](preprocessing.md).
+Check the [supported features](features.md), [KerA+](kera.md), and
+[preprocessing steps](preprocessing.md).
