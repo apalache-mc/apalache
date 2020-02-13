@@ -224,11 +224,10 @@ The model checker will try the instances for all the combinations of
 the parameters specified in ``ConstInit``, that is, in our example, it will
 consider ``N \in 3..10`` and all non-empty value sets that are subsets of ``0..4``.
 
-**Provisional limitation**. Note that in the current version, an assignment to a
-constants ``c`` should be written as ``c \in S``, where
-``S`` is a set (you can use ``SUBSET S`` and ``[S -> T``
-as well]). Moreover, ``ConstInit`` should be a conjunction
-of such assignments and possibly of additional constraints on the constants.
+**Limitation**. ``ConstInit`` should be a conjunction
+of such assignments and possibly of additional constraints on the
+constants. For instance, you should not write `N = 10 \/ N = 20`.
+However, you can write `N \in {10, 20}`.
 
 ## 5.4. TLC configuration file
 

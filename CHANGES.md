@@ -2,6 +2,10 @@
 
  * Using `z3` version `4.8.7`
 
+ * A 2-8x speedup for 5 out 16
+   [benchmarks](https://github.com/konnov/apalache-tests),
+   due to the optimizations and maybe switching to z3 4.8.x.
+
  * The results of intermediate passes are printed in TLA+ files
    in the `x/*` directory: `out-analysis.tla`, `out-config.tla`,
    `out-inline.tla`, `out-opt.tla`, `out-parser.tla`,
@@ -59,6 +63,14 @@
  * User operators are not translated to `TlaUserOper` anymore, but are called with `TlaOper.apply`
 
  * Importing `tla2tools.jar` from Maven Central
+
+## 0.5.2
+
+ * A backport of the build system from 0.6.0
+
+## 0.5.1
+
+ * The artifact accepted at OOPSLA19
 
 ## 0.5.0
 
