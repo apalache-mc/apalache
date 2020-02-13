@@ -20,7 +20,7 @@ fi
 
 if [ "$CACHE" == "--nocache" ]; then
     echo "Cleaning the build cache"
-    rm -rf "${Z3_DIR}" Box
+    rm -rf "${Z3_DIR}" "$D/Box"
 fi
 
 if [ -f "${Z3_DIR}/configure" ]; then
@@ -76,7 +76,7 @@ mvn -f $D/box-pom.xml install install:install-file \
 
 if [ "$CACHE" == "--nocache" ]; then
     echo "Cleaning the build cache"
-    rm -rf "${Z3_DIR}" Box
+    rm -rf "${Z3_DIR}" "$D/Box"
 fi
 
 cat <<EOF
