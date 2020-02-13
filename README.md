@@ -25,7 +25,7 @@ We are collecting [apalache benchmarks](https://github.com/konnov/apalache-tests
 See the Apalache performance when
 [checking inductive invariants](https://github.com/konnov/apalache-tests/results/001indinv-report.md)
 and running
-[bounded model checking].(https://github.com/konnov/apalache-tests/results/002bmc-report.md). Version 0.6.0 is a major improvement over version 0.5.2
+[bounded model checking](https://github.com/konnov/apalache-tests/results/002bmc-report.md). Version 0.6.0 is a major improvement over version 0.5.2
 (the version [reported at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549)).
 
 ## Academic papers
@@ -34,4 +34,3 @@ To read an academic paper about the theory behind APALACHE,
 check our [paper at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549).
 Related reports and publications can be found at the
 [Apalache page at TU Wien](http://forsyte.at/research/apalache/).
-
