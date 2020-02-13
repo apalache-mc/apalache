@@ -28,6 +28,8 @@ function check() {
         RES=1
     elif grep -q "The outcome is: Error" "$OUTF"; then
         RES=0
+    elif grep -q "The outcome is: Deadlock" "$OUTF"; then
+        RES=0
     elif grep -q "REPORT A BUG" "$OUTF"; then
         RES=500
     else
