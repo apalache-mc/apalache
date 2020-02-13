@@ -19,6 +19,9 @@ ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/apalache/3rdparty/lib/"
 RUN mvn clean
 # build the package
 RUN mvn package
-
+# TLA parser requires all specification files to be in the same directory
+# We assume the user bind-mounted the spec dir into /var/apalache
+# In case the directory was not bind-mounted, we create one
+RUN mkdir /var/apalache 2>/dev/null
 # what to run
-ENTRYPOINT ["bin/apalache-mc"]
+ENTRYPOINT ["/opt/apalache/bin/run-in-docker-container"]
