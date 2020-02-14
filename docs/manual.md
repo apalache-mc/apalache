@@ -64,6 +64,12 @@ where Apalache is cloned.
 
 **Starting with release 0.6.0, we will publish Docker images for every release**.
 
+To get the latest Apalache image, issue the command:
+
+```
+docker pull apalache/mc
+```
+
 **Running the image**. To run an Apalache image, issue the command:
 
 ```
@@ -86,13 +92,6 @@ The following docker parameters are used:
   version is used; you can also refer to a specific tool version, e.g., `apalache/mc:0.6.0`
 - `<args>` are the tool arguments as described in
   [Running the tool](#running).
-
-To ensure that you are using the latest APALACHE docker image, you might want 
-from time to time run this command:
-
-```
-docker pull apalache/mc
-```
 
 **Building an image**. For an end user there is no need to build an Apalache
 image. If you like to produce a modified docker image,
