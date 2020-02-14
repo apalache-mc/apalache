@@ -1,6 +1,6 @@
 # Apalache manual
 
-**Version 0.6.0**
+**Version 0.6.0** :sunrise_over_mountains:
 
 **Authors: Igor Konnov and Andrey Kuprianov**
 
@@ -56,13 +56,13 @@ tool.
 There are two ways to run Apalache: (1) Download and run a docker image, or (2)
 Build Apalache from sources and run the compiled package. If you just like to
 try the tool, we recommend to use the docker image. If you like to run the tool
-on daily basis or to contribute to the project, we recommend to build from the
-sources. In the following, we write `$APALACHE_HOME` to refer to the directory,
-where Apalache is cloned.
+on daily basis or to contribute to the project, we recommend to build the project
+from the sources. In the following, we write `$APALACHE_HOME` to refer to the
+directory, where Apalache is cloned.
 
 ## 3.1. Using a docker image <a name="useDocker"></a>   
 
-**Starting with release 0.6.0, we will publish Docker images for every release**.
+**Starting with release 0.6.0, we will publish Docker images for every release** :sunglasses:
 
 To get the latest Apalache image, issue the command:
 
@@ -70,10 +70,10 @@ To get the latest Apalache image, issue the command:
 docker pull apalache/mc
 ```
 
-**Running the image**. To run an Apalache image, issue the command:
+**Running the docker image**. To run an Apalache image, issue the command:
 
-```
-docker run --rm -v <your-spec-directory>:/var/apalache apalache/mc <args>
+```bash
+$ docker run --rm -v <your-spec-directory>:/var/apalache apalache/mc <args>
 ```
 
 The following docker parameters are used:
@@ -92,6 +92,15 @@ The following docker parameters are used:
   version is used; you can also refer to a specific tool version, e.g., `apalache/mc:0.6.0`
 - `<args>` are the tool arguments as described in
   [Running the tool](#running).
+
+**Setting an alias.**
+If you are running Apalache on Linux :penguin: or MacOS :green_apple:,
+you can set the handy alias,
+which runs Apalache in docker while sharing the working directory:
+
+```bash
+$ alias apalache="docker run --rm -v `pwd`:/var/apalache apalache/mc"
+```
 
 **Building an image**. For an end user there is no need to build an Apalache
 image. If you like to produce a modified docker image,
