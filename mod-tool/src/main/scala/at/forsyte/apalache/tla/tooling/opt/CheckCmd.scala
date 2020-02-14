@@ -18,10 +18,12 @@ class CheckCmd extends Command(name = "check",
     description = "search type (dfs or bfs), default: bfs")
   var cinit: String = opt[String](
     name = "cinit", default = "",
-    description = "the name of an operator that initializes CONSTANTS, default: None")
+    description = "the name of an operator that initializes CONSTANTS,\n" +
+      "default: None")
   var init: String = opt[String](
     name = "init", default = "Init",
-    description = "the name of an operator that initializes VARIABLES, default: Init")
+    description = "the name of an operator that initializes VARIABLES,\n" +
+      "default: Init")
   var next: String = opt[String](
     name = "next", default = "Next",
     description = "the name of a transition operator, default: Next")
@@ -33,15 +35,14 @@ class CheckCmd extends Command(name = "check",
       description = "the bound on the computation length, default: 10")
   var tuning: String =
     opt[String](name="tuning", default = "",
-      description = "filename of the config with file tuning options (see tuning.md)")
+      description = "filename of the tuning options, see docs/tuning.md")
 
   var randomizeDfs: Boolean = opt[Boolean](
     name = "randomizeDfs", default = true,
-    description = "randomize the choice of the next transition in DFS, default: true")
+    description = "randomize the choice of the next transition in DFS,\n" +
+      "default: true")
   var filter: String =
     opt[String](name = "filter", default = "",
-      description = "A sequence of regular expressions over transitions that filter transitions at every step, e.g., (0|1),(1|2),4,5")
-  var checkRuntime: Boolean =
-    opt[Boolean](name = "checkRuntime", default = false,
-      description = " (BROKEN) check for runtime errors, e.g., applying f[x] when x is outside of f's domain, default: false")
+      description = "A sequence of regexes over transition numbers\n" +
+        "to filter transitions at every step, e.g., (0|1),(1|2),4")
 }
