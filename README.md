@@ -15,6 +15,9 @@ Apalache runs under the same assumptions as TLC.
 Check the [releases page](https://github.com/konnov/apalache/releases).
 You can always try the latest cool features in the [unstable branch](https://github.com/konnov/apalache/tree/unstable).
 
+We recommend you to run the latest docker image `apalache/mc`, see the
+[manual](docs/manual.md#useDocker).
+
 ## Getting started
 
 Read the [user manual](docs/manual.md).
@@ -30,7 +33,7 @@ and running
 
 ## Academic papers
 
-To read an academic paper about the theory behind APALACHE,
+To read an academic paper about the theory behind Apalache,
 check our [paper at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549).
 Related reports and publications can be found at the
 [Apalache page at TU Wien](http://forsyte.at/research/apalache/).
