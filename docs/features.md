@@ -148,7 +148,7 @@ Nat]`
 
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
-``<<...>>``, ``Head``, ``Tail``, ``Len``, ``SubSeq``, `Append`, `\o` | ✔ | - | The sequence constructor ``<<...>>`` needs a [type annotation](types-and-annotations.md).
+``<<...>>``, ``Head``, ``Tail``, ``Len``, ``SubSeq``, `Append`, `\o`, `f[e]` | ✔ | - | The sequence constructor ``<<...>>`` needs a [type annotation](types-and-annotations.md).
 ``EXCEPT`` | ✖ | `0.9` | this operator do not seem to be often used
 ``Seq(S)`` | ✖ | - | We need an upper bound on the length of the sequences.
 ``SelectSeq`` | ✖ | - | will not be supported in the near future
