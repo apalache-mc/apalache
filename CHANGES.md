@@ -5,6 +5,8 @@
  * A 2-8x speedup for 5 out 16
    [benchmarks](https://github.com/konnov/apalache-tests),
    due to the optimizations and maybe switching to z3 4.8.x.
+ 
+ * Distributing the releases with docker as `apalache/mc`
 
  * The results of intermediate passes are printed in TLA+ files
    in the `x/*` directory: `out-analysis.tla`, `out-config.tla`,
@@ -12,11 +14,8 @@
    `out-prepro.tla`, `out-priming.tla`, `out-transition.tla`,
    `out-vcgen.tla`
 
- * The model checker is translated only `KerA+` expressions, which
-   are produced by `Keramelizer`
-
- * Supporting new expressions: `<<1, 2>> \o <<4, 5>>`
-   (sequence concatenation)
+ * The model checker is translating only `KerA+` expressions,
+   which are produced by `Keramelizer`
 
  * Multiple optimizations that were previously done by rewriting
    rules were move to the preprocessing phase, produced by
@@ -30,8 +29,10 @@
 
  * Translating `e \in a..b` to `a <= e /\ e <= b`, whenever possible
 
+ * Supporting sequence concatenation: `<<1, 2>> \o <<4, 5>>`
+
  * Short-circuiting and lazy-circuiting of `a /\ b` and `a \/ b`
-   are disabled by default
+   are disabled by default (see docs/tuning.md on how to enable them)
 
  * Introduced `PrettyWriter` to nicely print TLA+ expressions
    with proper indentation
@@ -46,7 +47,7 @@
 
  * Massive refactoring of the TLA intermediate representation
 
- * TLA+ importer is not chocking on most of the TLA+ syntax, e.g.,
+ * TLA+ importer stopped chocking on the rare TLA+ syntax, e.g.,
    `ASSUME` and `THEOREM`
 
  * Backtracking expressions to their source location in a TLA+ spec
@@ -56,11 +57,13 @@
  * Nullary LET-IN expressions (without arguments) are processed by
    the model checker directly, no expansion needed
 
- * The assignment solver has been refactored. The assignments are translated to `BMC!<-`, for instance, `x' <- S`
+ * The assignment solver has been refactored. The assignments are
+   now translated to `BMC!<-`, for instance, `x' <- S`
 
- * Constant assignment in `ConstInit` are now preprocessed correctly
+ * Constant assignments in `ConstInit` are now preprocessed correctly
 
- * User operators are not translated to `TlaUserOper` anymore, but are called with `TlaOper.apply`
+ * User operators are not translated to `TlaUserOper` anymore,
+   but are called with `TlaOper.apply`
 
  * Importing `tla2tools.jar` from Maven Central
 
