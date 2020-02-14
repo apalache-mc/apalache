@@ -67,7 +67,7 @@ where Apalache is cloned.
 **Running the image**. To run an Apalache image, issue the command:
 
 ```
-docker run --rm -v <your-spec-directory>:/var/apalache apalache:0.6.0 <args>
+docker run --rm -v <your-spec-directory>:/var/apalache apalache/mc <args>
 ```
 
 The following docker parameters are used:
@@ -82,8 +82,8 @@ The following docker parameters are used:
 
   When using SELinux, you might have to use the modified form of `-v` option:
     `-v <your-spec-directory>:/var/apalache:z`
-- `apalache:0.6.0` is the docker container tag (the tool version
-   to run)
+- `apalache/mc` is the APALACHE docker image name. By default, the `latest` stable
+  version is used; you can also refer to a specific tool version, e.g., `apalache/mc:0.6.0`
 - `<args>` are the tool arguments as described in
   [Running the tool](#running).
 
