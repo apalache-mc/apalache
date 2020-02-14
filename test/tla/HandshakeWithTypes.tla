@@ -66,6 +66,6 @@ RcvAck ==
 
 Next == SendSyn \/ SendSynAck \/ SendAck \/ RcvAck
 
-Inv == (istate = "ACK" => rstate = "SYNACK")
+Inv == (rstate = "ESTABLISHED" => istate = "ESTABLISHED")
 
 ======================================================================
