@@ -77,7 +77,7 @@ The following docker parameters are used:
   Apalache to access your specification and the modules it
   extends.**
   From the user perspective, it works as if Apalache was
-  executing in `<your-spec-directory`.
+  executing in `<your-spec-directory>`.
   In particular the tool logs are written in that directory.
 
   When using SELinux, you might have to use the modified form of `-v` option:
@@ -87,6 +87,12 @@ The following docker parameters are used:
 - `<args>` are the tool arguments as described in
   [Running the tool](#running).
 
+To ensure that you are using the latest APALACHE docker image, you might want 
+from time to time run this command:
+
+```
+docker pull apalache/mc
+```
 
 **Building an image**. For an end user there is no need to build an Apalache
 image. If you like to produce a modified docker image,
