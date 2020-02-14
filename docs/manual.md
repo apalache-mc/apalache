@@ -76,7 +76,7 @@ The following docker parameters are used:
   `/var/apalache` in the container. **This is necessary for
   Apalache to access your specification and the modules it
   extends.**
-  From the user perspective, it would work as if Apalache was
+  From the user perspective, it works as if Apalache was
   executing in `<your-spec-directory`.
   In particular the tool logs are written in that directory.
 
@@ -88,9 +88,9 @@ The following docker parameters are used:
   [Running the tool](#running).
 
 
-**Building an image**. For an end-user there is no need to build an Apalache
+**Building an image**. For an end user there is no need to build an Apalache
 image. If you like to produce a modified docker image,
-take into account that it will about 30 minutes for the image
+take into account that it will take about 30 minutes for the image
 to get built, due to compilation times of Microsoft Z3.
 To build a docker image of Apalache, issue the following command
 in `$APALACHE_HOME`:
