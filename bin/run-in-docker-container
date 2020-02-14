@@ -5,5 +5,5 @@ cd /var/apalache
 if [ "$(ls -A *.tla 2>/dev/null)" == "" ]; then
       echo 'WARNING: no .tla files found in /var/apalache'
 fi
-/opt/apalache/bin/apalache-mc $@
+exec /opt/apalache/bin/apalache-mc $@
 
