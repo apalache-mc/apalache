@@ -43,5 +43,18 @@ JVM_ARGS="-Xmx4096m -Djava.library.path=$DIR/3rdparty/lib"
 echo "# JVM args: $JVM_ARGS"
 echo "#"
 
-java $JVM_ARGS -jar "$JAR" "$@"
+# a trap for SIGINT and SIGTERM
+sigterm() {
+    echo "Premature termination requested. Killing apalache-mc (pid $child)" 1>&2
+    trap - SIGTERM SIGINT # unregister to avoid recursion below
+    # send termination to the child process
+    kill SIGTERM $child 2>/dev/null
+}
+
+trap sigterm SIGTERM SIGINT
+
+# run java in the background in order to react to SIGTERM
+java $JVM_ARGS -jar "$JAR" "$@" &
+child=$!
+wait "$child"
 
