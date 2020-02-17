@@ -26,6 +26,6 @@ RUN mvn package
 # In case the directory was not bind-mounted, we create one
 RUN mkdir /var/apalache 2>/dev/null
 # make apalache-mc available in PATH
-ENV PATH="/opt/apalache/bin:${PATH}"
+ENV PATH="/usr/local/openjdk-8/bin/:/opt/apalache/bin:${PATH}"
 # what to run
 ENTRYPOINT ["/opt/apalache/bin/run-in-docker-container"]
