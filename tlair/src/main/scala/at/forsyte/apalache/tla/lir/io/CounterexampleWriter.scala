@@ -38,12 +38,12 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
       printState(nextState._2)
     }
 
-    writer.println("(* Initial state *)")
+    writer.println("(* Initial state *)\n")
     printState(init)
     nextStates.foreach(printNextState)
 
     val last = if(nextStates.isEmpty) init else nextStates.last._2
-    writer.println(s"(* The following formula holds true in ${last._1} and violates the invariant *)")
+    writer.println(s"(* The following formula holds true in ${last._1} and violates the invariant *)\n")
     pretty.write(TlaOperDecl("InvariantViolation", List(), notInvariant._2))
     writer.println("\n")
   }
