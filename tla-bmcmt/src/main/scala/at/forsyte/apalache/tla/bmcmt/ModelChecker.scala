@@ -515,15 +515,15 @@ class ModelChecker(typeFinder: TypeFinder[CellT],
     val writer = new PrintWriter(new FileWriter(filename, false))
     writer.println("%s MODULE Counterexample %s\n".format("-" * 25, "-" * 25))
 
-    var nextStates = new ListBuffer[NextState]()
+    val nextStates = new ListBuffer[NextState]()
     for (((state, oracle), i) <- stack.reverse.zipWithIndex) {
       val decoder = new SymbStateDecoder(solverContext, rewriter)
       val transition = oracle.evalPosition(solverContext, state)
       val binding = decoder.decodeStateVariables(state)
-      nextStates += ((transition.toString, (s"State$i", binding)))
+      nextStates += ((transition.toString, binding))
     }
     val tlaWriter = new TlaCounterexampleWriter(writer)
-    tlaWriter. write(("Invariant", notInv), nextStates.head._2, nextStates.tail.toList)
+    tlaWriter. write(notInv, nextStates.head._2, nextStates.tail.toList)
 
     writer.println("\n%s".format("=" * 80))
     writer.println("\\* Created %s by Apalache".format(Calendar.getInstance().getTime))

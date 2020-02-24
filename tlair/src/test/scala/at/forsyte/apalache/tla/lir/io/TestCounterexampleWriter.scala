@@ -23,14 +23,14 @@ class TestCounterexampleWriter extends FunSuite {
 
   test("single state") {
     compare(
-      ("Inv", gt(name("x"), int(1))),
-      ("ConstInit", Map("x" -> int(2))),
+      gt(name("x"), int(1)),
+      Map("x" -> int(2)),
       List(),
-      """(* Initial state *)
+      """(* Initial state *)"
         |
-        |ConstInit == x = 2
+        |State0 == x = 2
         |
-        |(* The following formula holds true in ConstInit and violates the invariant *)
+        |(* The following formula holds true in State0 and violates the invariant *)
         |
         |InvariantViolation == x > 1
         |
@@ -40,15 +40,15 @@ class TestCounterexampleWriter extends FunSuite {
 
     test("two steps") {
       compare(
-        ("Inv", gt(name("x"), int(1))),
-        ("ConstInit", Map("x" -> int(0))),
+        gt(name("x"), int(1)),
+        Map("x" -> int(0)),
         List(
-          ("Trans1", ("State1",Map("x" -> int(1)))),
-          ("Trans2", ("State2", Map("x" -> int(2))))
+          ("Trans1", Map("x" -> int(1))),
+          ("Trans2", Map("x" -> int(2)))
         ),
-        """(* Initial state *)
+        """(* Initial state *)"
           |
-          |ConstInit == x = 0
+          |State0 == x = 0
           |
           |(* Transition Trans1 to State1 *)
           |
@@ -68,15 +68,15 @@ class TestCounterexampleWriter extends FunSuite {
 
   test("two steps with conjunction") {
     compare(
-      ("Inv", and(gt(name("x"), int(1)), eql(name("y"), int(10)))),
-      ("ConstInit", Map("x" -> int(0), "y" -> int(8))),
+      and(gt(name("x"), int(1)), eql(name("y"), int(10))),
+      Map("x" -> int(0), "y" -> int(8)),
       List(
-        ("Trans1", ("State1",Map("x" -> int(1), "y" -> int(9)))),
-        ("Trans2", ("State2", Map("x" -> int(2), "y" -> int(10))))
+        ("Trans1", Map("x" -> int(1), "y" -> int(9))),
+        ("Trans2", Map("x" -> int(2), "y" -> int(10)))
       ),
-      """(* Initial state *)
+      """(* Initial state *)"
         |
-        |ConstInit == x = 0 /\ y = 8
+        |State0 == x = 0 /\ y = 8
         |
         |(* Transition Trans1 to State1 *)
         |
