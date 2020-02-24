@@ -45,4 +45,8 @@ class CheckCmd extends Command(name = "check",
     opt[String](name = "filter", default = "",
       description = "A sequence of regexes over transition numbers\n" +
         "to filter transitions at every step, e.g., (0|1),(1|2),4")
+  var tlc: Boolean = opt[Boolean](
+    name = "tlc", default = false,
+    description = "produce counterexample in TLC format,\n" +
+      "default: false")
 }

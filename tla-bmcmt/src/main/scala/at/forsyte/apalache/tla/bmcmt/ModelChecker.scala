@@ -37,7 +37,8 @@ class ModelChecker(typeFinder: TypeFinder[CellT],
                    exprGradeStore: ExprGradeStore, sourceStore: SourceStore, checkerInput: CheckerInput,
                    searchStrategy: SearchStrategy,
                    tuningOptions: Map[String, String],
-                   debug: Boolean = false, profile: Boolean = false, checkRuntime: Boolean = false)
+                   debug: Boolean = false, profile: Boolean = false, checkRuntime: Boolean = false,
+                   tlc: Boolean = false)
   extends Checker with LazyLogging {
 
   import Checker._
@@ -511,9 +512,8 @@ class ModelChecker(typeFinder: TypeFinder[CellT],
 
   private def dumpCounterexample(notInv: TlaEx): String = {
     // Assumption: stack cannot be empty
-    val filename = "counterexample.txt"
+    val filename = if(tlc) "MC.out" else "counterexample.tla"
     val writer = new PrintWriter(new FileWriter(filename, false))
-    writer.println("%s MODULE Counterexample %s\n".format("-" * 25, "-" * 25))
 
     val nextStates = new ListBuffer[NextState]()
     for (((state, oracle), i) <- stack.reverse.zipWithIndex) {
@@ -522,12 +522,25 @@ class ModelChecker(typeFinder: TypeFinder[CellT],
       val binding = decoder.decodeStateVariables(state)
       nextStates += ((transition.toString, binding))
     }
-    val tlaWriter = new TlaCounterexampleWriter(writer)
-    tlaWriter. write(notInv, nextStates.head._2, nextStates.tail.toList)
+    if(tlc) {
+      writer.println(
+        s"""@!@!@STARTMSG 2262:0 @!@!@
+          |Created by Apalache on ${Calendar.getInstance().getTime}
+          |@!@!@ENDMSG 2262 @!@!@""".stripMargin
+      )
+      val tlcWriter = new TlcCounterexampleWriter(writer)
+      tlcWriter.write(notInv, nextStates.head._2, nextStates.tail.toList)
+    }
+    else {
+      writer.println("%s MODULE Counterexample %s\n".format("-" * 25, "-" * 25))
+      val tlaWriter = new TlaCounterexampleWriter(writer)
+      tlaWriter.write(notInv, nextStates.head._2, nextStates.tail.toList)
+      writer.println("\n%s".format("=" * 80))
+      writer.println("\\* Created %s by Apalache".format(Calendar.getInstance().getTime))
+      writer.println("\\* https://github.com/konnov/apalache")
 
-    writer.println("\n%s".format("=" * 80))
-    writer.println("\\* Created %s by Apalache".format(Calendar.getInstance().getTime))
-    writer.println("\\* https://github.com/konnov/apalache")
+    }
+
     writer.close()
     filename
   }
