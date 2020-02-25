@@ -532,7 +532,8 @@ class ModelChecker(typeFinder: TypeFinder[CellT],
       tlcWriter.write(notInv, nextStates.head._2, nextStates.tail.toList)
     }
     else {
-      writer.println("%s MODULE Counterexample %s\n".format("-" * 25, "-" * 25))
+      writer.println("%s MODULE counterexample %s\n".format("-" * 25, "-" * 25))
+      writer.println("EXTENDS %s\n\n".format(checkerInput.rootModule.name))
       val tlaWriter = new TlaCounterexampleWriter(writer)
       tlaWriter.write(notInv, nextStates.head._2, nextStates.tail.toList)
       writer.println("\n%s".format("=" * 80))
