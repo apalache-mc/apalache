@@ -18,7 +18,7 @@ We recommend you to run the latest docker image `apalache/mc:latest` and
 checkout the source code from
 [master](https://github.com/konnov/apalache/tree/master), which accumulate
 bugfixes over the latest release, see the [manual](docs/manual.md#useDocker).
-To try the latest cool features in the [unstable
+To try the latest cool features, check the [unstable
 branch](https://github.com/konnov/apalache/tree/unstable).
 
 ## Getting started
