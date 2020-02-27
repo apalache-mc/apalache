@@ -37,8 +37,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT],
                    exprGradeStore: ExprGradeStore, sourceStore: SourceStore, checkerInput: CheckerInput,
                    searchStrategy: SearchStrategy,
                    tuningOptions: Map[String, String],
-                   debug: Boolean = false, profile: Boolean = false, checkRuntime: Boolean = false,
-                   tlc: Boolean = false)
+                   debug: Boolean = false, profile: Boolean = false, checkRuntime: Boolean = false)
   extends Checker with LazyLogging {
 
   import Checker._
@@ -157,8 +156,8 @@ class ModelChecker(typeFinder: TypeFinder[CellT],
       case FinishOnDeadlock() =>
         logger.error(s"Deadlock detected.")
         if (solverContext.sat()) {
-          logger.error("Check an execution leading to a deadlock state in counterexample.txt")
-          dumpCounterexample(ValEx(TlaBool(true)) )
+          val filenames = dumpCounterexample(ValEx(TlaBool(true)) )
+          logger.error(s"Check an execution leading to a deadlock state in any of ${filenames.mkString(", ")}")
         } else {
           logger.error("No model found that would describe the deadlock")
         }
@@ -488,8 +487,8 @@ class ModelChecker(typeFinder: TypeFinder[CellT],
           // introduce a dummy oracle to hold the transition index, we need it for the counterexample
           val oracle = new MockOracle(transitionNo)
           stack = (notInvState, oracle) +: stack
-          val filename = dumpCounterexample(notInv)
-          logger.error(s"Invariant is violated at depth $stepNo. Check the counterexample in $filename")
+          val filenames = dumpCounterexample(notInv)
+          logger.error(s"Invariant is violated at depth $stepNo. Check the counterexample in any of ${filenames.mkString(", ")}")
           if (debug) {
             logger.warn(s"Dumping the arena into smt.log. This may take some time...")
             // dump everything in the log
@@ -510,40 +509,16 @@ class ModelChecker(typeFinder: TypeFinder[CellT],
     }
   }
 
-  private def dumpCounterexample(notInv: TlaEx): String = {
-    // Assumption: stack cannot be empty
-    val filename = if(tlc) "MC.out" else "counterexample.tla"
-    val writer = new PrintWriter(new FileWriter(filename, false))
-
-    val nextStates = new ListBuffer[NextState]()
+  // returns a list of files with counterexample written
+  private def dumpCounterexample(notInv: TlaEx): List[String] = {
+    val states = new ListBuffer[NextState]()
     for (((state, oracle), i) <- stack.reverse.zipWithIndex) {
       val decoder = new SymbStateDecoder(solverContext, rewriter)
       val transition = oracle.evalPosition(solverContext, state)
       val binding = decoder.decodeStateVariables(state)
-      nextStates += ((transition.toString, binding))
+      states += ((transition.toString, binding))
     }
-    if(tlc) {
-      writer.println(
-        s"""@!@!@STARTMSG 2262:0 @!@!@
-          |Created by Apalache on ${Calendar.getInstance().getTime}
-          |@!@!@ENDMSG 2262 @!@!@""".stripMargin
-      )
-      val tlcWriter = new TlcCounterexampleWriter(writer)
-      tlcWriter.write(notInv, nextStates.head._2, nextStates.tail.toList)
-    }
-    else {
-      writer.println("%s MODULE counterexample %s\n".format("-" * 25, "-" * 25))
-      writer.println("EXTENDS %s\n\n".format(checkerInput.rootModule.name))
-      val tlaWriter = new TlaCounterexampleWriter(writer)
-      tlaWriter.write(notInv, nextStates.head._2, nextStates.tail.toList)
-      writer.println("\n%s".format("=" * 80))
-      writer.println("\\* Created %s by Apalache".format(Calendar.getInstance().getTime))
-      writer.println("\\* https://github.com/konnov/apalache")
-
-    }
-
-    writer.close()
-    filename
+    CounterexampleWriter.writeAllFormats(checkerInput.rootModule, notInv, states.toList)
   }
 
   private def checkTypes(expr: TlaEx): Unit = {

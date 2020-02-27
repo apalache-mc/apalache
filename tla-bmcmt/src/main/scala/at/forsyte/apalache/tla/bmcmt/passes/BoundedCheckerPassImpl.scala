@@ -73,11 +73,10 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
         val random = tuning.getOrElse("search.randomDfs", "")
         new DfsStrategy(input, stepsBound, random.toLowerCase.equals("true"))
       }
-    val tlc = options.getOrElse("checker", "tlc", false)
 
     val checker: Checker =
         new ModelChecker(typeFinder, hintsStore, changeListener, exprGradeStore, sourceStore,
-          input, strategy, tuning, debug, profile, checkRuntime, tlc)
+          input, strategy, tuning, debug, profile, checkRuntime)
 
     val outcome = checker.run()
     logger.info("The outcome is: " + outcome)
