@@ -49,18 +49,6 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
     }
   }
 
-//  def printStateFormula(pretty: PrettyWriter, state: State) = {
-//    val body =
-//      if (state.isEmpty) {
-//        ValEx(TlaBool(true))
-//      } else {
-//        val keyVals = state.toList.sortBy(_._1)
-//          .map(p => OperEx(TlaOper.eq, NameEx(p._1), p._2))
-//        OperEx(TlaBoolOper.and, keyVals :_*)
-//      }
-//    pretty.write(body)
-//  }
-
   override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState] ) : Unit = {
     val pretty = new PrettyWriter(writer)
 
