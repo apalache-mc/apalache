@@ -33,7 +33,8 @@ class TestCounterexampleWriter extends FunSuite {
         |
         |(* Initial state *)
         |
-        |State1 == x = 2
+        |State1 ==
+        |/\ x = 2
         |
         |(* The following formula holds true in the last state and violates the invariant *)
         |
@@ -61,15 +62,18 @@ class TestCounterexampleWriter extends FunSuite {
           |
           |(* Initial state *)
           |
-          |State1 == x = 0
+          |State1 ==
+          |/\ x = 0
           |
           |(* Transition Trans1 to State2 *)
           |
-          |State2 == x = 1
+          |State2 ==
+          |/\ x = 1
           |
           |(* Transition Trans2 to State3 *)
           |
-          |State3 == x = 2
+          |State3 ==
+          |/\ x = 2
           |
           |(* The following formula holds true in the last state and violates the invariant *)
           |
@@ -97,15 +101,21 @@ class TestCounterexampleWriter extends FunSuite {
         |
         |(* Initial state *)
         |
-        |State1 == x = 0 /\ y = 8
+        |State1 ==
+        |/\ x = 0
+        |/\ y = 8
         |
         |(* Transition Trans1 to State2 *)
         |
-        |State2 == x = 1 /\ y = 9
+        |State2 ==
+        |/\ x = 1
+        |/\ y = 9
         |
         |(* Transition Trans2 to State3 *)
         |
-        |State3 == x = 2 /\ y = 10
+        |State3 ==
+        |/\ x = 2
+        |/\ y = 10
         |
         |(* The following formula holds true in the last state and violates the invariant *)
         |
@@ -136,7 +146,7 @@ class TestCounterexampleWriter extends FunSuite {
         |@!@!@ENDMSG 2121 @!@!@
         |@!@!@STARTMSG 2217:4 @!@!@
         |1: <Initial predicate>
-        |x = 2
+        |/\ x = 2
         |
         |@!@!@ENDMSG 2217 @!@!@
         |""".stripMargin
@@ -163,17 +173,17 @@ class TestCounterexampleWriter extends FunSuite {
         |@!@!@ENDMSG 2121 @!@!@
         |@!@!@STARTMSG 2217:4 @!@!@
         |1: <Initial predicate>
-        |x = 0
+        |/\ x = 0
         |
         |@!@!@ENDMSG 2217 @!@!@
         |@!@!@STARTMSG 2217:4 @!@!@
         |2: <Next>
-        |x = 1
+        |/\ x = 1
         |
         |@!@!@ENDMSG 2217 @!@!@
         |@!@!@STARTMSG 2217:4 @!@!@
         |3: <Next>
-        |x = 2
+        |/\ x = 2
         |
         |@!@!@ENDMSG 2217 @!@!@
         |""".stripMargin
@@ -200,17 +210,20 @@ class TestCounterexampleWriter extends FunSuite {
         |@!@!@ENDMSG 2121 @!@!@
         |@!@!@STARTMSG 2217:4 @!@!@
         |1: <Initial predicate>
-        |x = 0 /\ y = 8
+        |/\ x = 0
+        |/\ y = 8
         |
         |@!@!@ENDMSG 2217 @!@!@
         |@!@!@STARTMSG 2217:4 @!@!@
         |2: <Next>
-        |x = 1 /\ y = 9
+        |/\ x = 1
+        |/\ y = 9
         |
         |@!@!@ENDMSG 2217 @!@!@
         |@!@!@STARTMSG 2217:4 @!@!@
         |3: <Next>
-        |x = 2 /\ y = 10
+        |/\ x = 2
+        |/\ y = 10
         |
         |@!@!@ENDMSG 2217 @!@!@
         |""".stripMargin

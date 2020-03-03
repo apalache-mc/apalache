@@ -37,16 +37,29 @@ object CounterexampleWriter {
 class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
 
   def printStateFormula(pretty: PrettyWriter, state: State) = {
-    val body =
-      if (state.isEmpty) {
-        ValEx(TlaBool(true))
-      } else {
-        val keyVals = state.toList.sortBy(_._1)
-          .map(p => OperEx(TlaOper.eq, NameEx(p._1), p._2))
-        OperEx(TlaBoolOper.and, keyVals :_*)
+    if (state.isEmpty) {
+      pretty.write(ValEx(TlaBool(true)))
+    } else {
+      state.toList.sortBy(_._1).foreach{
+        case (name,value) =>
+          writer.print("/\\ ")
+          pretty.write(OperEx(TlaOper.eq, NameEx(name), value))
+          writer.println
       }
-    pretty.write(body)
+    }
   }
+
+//  def printStateFormula(pretty: PrettyWriter, state: State) = {
+//    val body =
+//      if (state.isEmpty) {
+//        ValEx(TlaBool(true))
+//      } else {
+//        val keyVals = state.toList.sortBy(_._1)
+//          .map(p => OperEx(TlaOper.eq, NameEx(p._1), p._2))
+//        OperEx(TlaBoolOper.and, keyVals :_*)
+//      }
+//    pretty.write(body)
+//  }
 
   override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState] ) : Unit = {
     val pretty = new PrettyWriter(writer)
@@ -63,9 +76,9 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
         else {
           writer.println(s"(* Transition ${state._1} to State$i *)")
         }
-        writer.print(s"\nState$i == ")
+        writer.println(s"\nState$i ==")
         printStateFormula(pretty, state._2)
-        writer.println("\n")
+        writer.println
     }
     writer.print(
       s"""(* The following formula holds true in the last state and violates the invariant *)
@@ -107,7 +120,6 @@ class TlcCounterexampleWriter(writer: PrintWriter) extends TlaCounterexampleWrit
         printStateFormula(new PrettyWriter(writer), state._2)
         writer.println(
           """|
-             |
              |@!@!@ENDMSG 2217 @!@!@""".stripMargin)
     }
     writer.close()
