@@ -1,16 +1,20 @@
 package at.forsyte.apalache.tla.pp.passes
 
-import java.io.File
+import java.io.{File, FileNotFoundException, FileReader}
 import java.nio.file.Path
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
+import at.forsyte.apalache.io.tlc.TlcConfigParser
+import at.forsyte.apalache.io.tlc.config.TlcConfigParseError
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.pp.ConstAndDefRewriter
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
+import at.forsyte.apalache.tla.pp.TlcConfigImporter
 
 /**
   * The pass that collects the configuration parameters and overrides constants and definitions.
@@ -38,7 +42,20 @@ class ConfigurationPassImpl @Inject()(val options: PassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
-    val module = tlaModule.get
+    var module = tlaModule.get
+
+    // read TLC config if present
+    val filename =
+      options.getOrError("parser", "filename").asInstanceOf[String]
+      .replaceFirst("\\.tla", "\\.cfg")
+    try {
+      val config = TlcConfigParser.apply(new FileReader(filename))
+      module = new TlcConfigImporter(config, new IdleTracker())(module)
+    }
+    catch {
+      case _: FileNotFoundException => logger.info("No TLC configuration found; skipping")
+      case e: TlcConfigParseError => logger.warn("Error parsing TLC configuration file: " + e.msg)
+    }
     val rewritten = new ConstAndDefRewriter(tracker)(module)
 
     // dump the result of preprocessing
