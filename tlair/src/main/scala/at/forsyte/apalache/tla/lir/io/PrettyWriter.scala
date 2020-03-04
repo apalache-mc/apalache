@@ -30,6 +30,10 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
     writer.write(pretty(toDoc(mod), textWidth).layout)
   }
 
+  def write(decl: TlaOperDecl): Unit = {
+    writer.write(pretty(toDoc(decl), textWidth).layout)
+  }
+
   def write(expr: TlaEx): Unit = {
     writer.write(pretty(toDoc((0, 0), expr), textWidth).layout)
   }

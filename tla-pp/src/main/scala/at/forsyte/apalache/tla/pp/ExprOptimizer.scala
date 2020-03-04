@@ -32,7 +32,6 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
     * @return a transformed fun expression
     */
   private def transformFuns: PartialFunction[TlaEx, TlaEx] = {
-    // TODO: add unit tests
     case OperEx(TlaFunOper.app, OperEx(TlaFunOper.enum, ctorArgs@_*), ValEx(TlaStr(accessedKey))) =>
       val rewrittenArgs = ctorArgs map transform
       val found = rewrittenArgs.grouped(2).find {
@@ -68,6 +67,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
       // Rewrite it into \A t1 \in Set: FALSE.
       // If Set = {}, then the conjunction over the empty set is true.
       // If Set /= {}, then at least one element of Set reports FALSE, and the conjunction is false.
+      // The reason why we are not rewriting it to Set = {} is that type inference would fail.
       tla.forall(tla.name(nameGen.newName()), set, tla.bool(false))
 
     case OperEx(TlaArithOper.gt, OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal)))
@@ -89,7 +89,8 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
     case OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal)))
           if intVal == BigInt(2) =>
       // We can find this pattern in real TLA+ benchmarks more often than one would think.
-      // Rewrite into LET T3 = set IN \E t1 \in T3: \E t2 \in T3: t1 /= t2
+      // Rewrite into LET T3 = set IN \E t1 \in T3: \E t2 \in T3: t1 /= t2.
+      // We use let to save on complex occurrences of set.
       val tmp1 = nameGen.newName()
       val tmp2 = nameGen.newName()
       val setName = nameGen.newName()
@@ -112,7 +113,6 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
     * @return a transformed \exists expression
     */
   private def transformExistsOverSets: PartialFunction[TlaEx, TlaEx] = {
-    // TODO: add unit tests
     case OperEx(TlaBoolOper.exists, NameEx(x), OperEx(TlaSetOper.filter, NameEx(y), s, e), g) =>
       // \E x \in {y \in S: e}: g becomes \E y \in S: e /\ g [x replaced with y]
       val newPred = ReplaceFixed(NameEx(x), NameEx(y), tracker).apply(tla.and(e, g))
@@ -127,8 +127,8 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
 
       val letIn: TlaEx = LetInEx(newPred, TlaOperDecl(letName, List(), mapEx))
       // \E y \in S: ... in the example above
-      val pairs = varsAndSets.grouped(2).collect {
-        case NameEx(name) :: set :: _ => (name, set)
+      val pairs = varsAndSets.grouped(2).toSeq.collect {
+        case Seq(NameEx(name), set) => (name, set)
       }
       // create an exists-expression and optimize it again
       def mkExistsRec(name: String, set: TlaEx, pred: TlaEx): TlaEx = {
