@@ -81,9 +81,9 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
       """.stripMargin,
       """----- MODULE test -----
         |
-        |$ASSIGN_$N == "M"
+        |OVERRIDE_N == "M"
         |
-        |$ASSIGN_$K == "L"
+        |OVERRIDE_K == "L"
         |
         |$INIT == Init
         |
@@ -109,9 +109,9 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
       """.stripMargin,
       """----- MODULE test -----
         |
-        |$ASSIGN_$N == "M"
+        |OVERRIDE_N == "M"
         |
-        |$ASSIGN_$K == "L"
+        |OVERRIDE_K == "L"
         |
         |$INIT == Init
         |
@@ -135,9 +135,9 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
       """.stripMargin,
       """----- MODULE test -----
         |
-        |$REPLACE_$A == B
+        |OVERRIDE_A == B
         |
-        |$REPLACE_$C == D
+        |OVERRIDE_C == D
         |
         |$INIT == Init
         |
@@ -163,13 +163,13 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
       """.stripMargin,
       """----- MODULE test -----
         |
-        |$ASSIGN_$N == "M"
+        |OVERRIDE_N == "M"
         |
-        |$ASSIGN_$K == "L"
+        |OVERRIDE_K == "L"
         |
-        |$REPLACE_$A == B
+        |OVERRIDE_A == B
         |
-        |$REPLACE_$C == D
+        |OVERRIDE_C == D
         |
         |$INIT == Init
         |
@@ -301,9 +301,9 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
       """.stripMargin,
       """----- MODULE test -----
         |
-        |$ASSIGN_$N == "M"
+        |OVERRIDE_N == "M"
         |
-        |$REPLACE_$A == B
+        |OVERRIDE_A == B
         |
         |$CONSTRAINT_$0 == Cons1
         |

@@ -16,11 +16,11 @@ class TlcConfigImporter(config: TlcConfig, tracker: TransformationTracker) exten
 
     val assignments = config.constAssignments.map{
       case (param, value) =>
-        TlaOperDecl(TlcConfigImporter.ASSIGN_PREFIX + param, List(), ValEx(TlaStr(value)))
+        TlaOperDecl(ConstAndDefRewriter.OVERRIDE_PREFIX + param, List(), ValEx(TlaStr(value)))
     }
     val replacements = config.constReplacements.map{
       case (param, value) =>
-        TlaOperDecl(TlcConfigImporter.REPLACE_PREFIX + param, List(), NameEx(value))
+        TlaOperDecl(ConstAndDefRewriter.OVERRIDE_PREFIX + param, List(), NameEx(value))
     }
     val stateConstraints = config.stateConstraints.zipWithIndex.map{
       case (value, index) =>
@@ -57,8 +57,6 @@ class TlcConfigImporter(config: TlcConfig, tracker: TransformationTracker) exten
 }
 
 object TlcConfigImporter {
-  val ASSIGN_PREFIX = "$ASSIGN_$"
-  val REPLACE_PREFIX = "$REPLACE_$"
   val STATE_PREFIX = "$CONSTRAINT_$"
   val ACTION_PREFIX = "$ACTION_CONSTRAINT_$"
   val INVARIANT_PREFIX = "$INVARIANT_$"
