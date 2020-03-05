@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.pp
 
 import java.io.{PrintWriter, StringWriter}
 
+import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.io.tlc.TlcConfigParser
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
@@ -43,9 +44,9 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
       """.stripMargin,
       """----- MODULE test -----
         |
-        |$INIT == Init
+        |INIT == Init
         |
-        |$NEXT == Next
+        |NEXT == Next
         |===============
         |""".stripMargin
     )
@@ -61,7 +62,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
       """.stripMargin,
       """----- MODULE test -----
         |
-        |$SPECIFICATION == Spec
+        |SPECIFICATION == Spec
         |===============
         |""".stripMargin
     )
@@ -85,9 +86,9 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |
         |OVERRIDE_K == "L"
         |
-        |$INIT == Init
+        |INIT == Init
         |
-        |$NEXT == Next
+        |NEXT == Next
         |===============
         |""".stripMargin
     )
@@ -113,9 +114,9 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |
         |OVERRIDE_K == "L"
         |
-        |$INIT == Init
+        |INIT == Init
         |
-        |$NEXT == Next
+        |NEXT == Next
         |===============
         |""".stripMargin
     )
@@ -139,9 +140,9 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |
         |OVERRIDE_C == D
         |
-        |$INIT == Init
+        |INIT == Init
         |
-        |$NEXT == Next
+        |NEXT == Next
         |===============
         |""".stripMargin
     )
@@ -171,9 +172,9 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |
         |OVERRIDE_C == D
         |
-        |$INIT == Init
+        |INIT == Init
         |
-        |$NEXT == Next
+        |NEXT == Next
         |===============
         |""".stripMargin
     )
@@ -192,13 +193,13 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
       """.stripMargin,
       """----- MODULE test -----
         |
-        |$INVARIANT_$0 == Inv1
+        |INVARIANT_$0 == Inv1
         |
-        |$INVARIANT_$1 == Inv2
+        |INVARIANT_$1 == Inv2
         |
-        |$INIT == Init
+        |INIT == Init
         |
-        |$NEXT == Next
+        |NEXT == Next
         |===============
         |""".stripMargin
     )
@@ -217,13 +218,13 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
       """.stripMargin,
       """----- MODULE test -----
         |
-        |$PROPERTY_$0 == Prop1
+        |PROPERTY_$0 == Prop1
         |
-        |$PROPERTY_$1 == Prop2
+        |PROPERTY_$1 == Prop2
         |
-        |$INIT == Init
+        |INIT == Init
         |
-        |$NEXT == Next
+        |NEXT == Next
         |===============
         |""".stripMargin
     )
@@ -242,13 +243,13 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
       """.stripMargin,
       """----- MODULE test -----
         |
-        |$CONSTRAINT_$0 == Cons1
+        |CONSTRAINT_$0 == Cons1
         |
-        |$CONSTRAINT_$1 == Cons2
+        |CONSTRAINT_$1 == Cons2
         |
-        |$INIT == Init
+        |INIT == Init
         |
-        |$NEXT == Next
+        |NEXT == Next
         |===============
         |""".stripMargin
     )
@@ -267,13 +268,13 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
       """.stripMargin,
       """----- MODULE test -----
         |
-        |$ACTION_CONSTRAINT_$0 == Cons1
+        |ACTION_CONSTRAINT_$0 == Cons1
         |
-        |$ACTION_CONSTRAINT_$1 == Cons2
+        |ACTION_CONSTRAINT_$1 == Cons2
         |
-        |$INIT == Init
+        |INIT == Init
         |
-        |$NEXT == Next
+        |NEXT == Next
         |===============
         |""".stripMargin
     )
@@ -305,17 +306,17 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |
         |OVERRIDE_A == B
         |
-        |$CONSTRAINT_$0 == Cons1
+        |CONSTRAINT_$0 == Cons1
         |
-        |$ACTION_CONSTRAINT_$0 == Cons2
+        |ACTION_CONSTRAINT_$0 == Cons2
         |
-        |$INVARIANT_$0 == Inv
+        |INVARIANT_$0 == Inv
         |
-        |$PROPERTY_$0 == Prop
+        |PROPERTY_$0 == Prop
         |
-        |$INIT == Init
+        |INIT == Init
         |
-        |$NEXT == Next
+        |NEXT == Next
         |===============
         |""".stripMargin
     )
