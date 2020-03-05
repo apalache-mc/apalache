@@ -3,9 +3,9 @@ package at.forsyte.apalache.tla.pp.passes
 import java.io.{File, FileNotFoundException, FileReader}
 import java.nio.file.Path
 
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
+import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin, WriteablePassOptions}
 import at.forsyte.apalache.io.tlc.TlcConfigParser
-import at.forsyte.apalache.io.tlc.config.TlcConfigParseError
+import at.forsyte.apalache.io.tlc.config._
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
@@ -43,7 +43,6 @@ class ConfigurationPassImpl @Inject()(val options: PassOptions,
     */
   override def execute(): Boolean = {
     var module = tlaModule.get
-
     // read TLC config if present
     val filename =
       options.getOrError("parser", "filename").asInstanceOf[String]
@@ -51,6 +50,22 @@ class ConfigurationPassImpl @Inject()(val options: PassOptions,
     try {
       val config = TlcConfigParser.apply(new FileReader(filename))
       module = new TlcConfigImporter(config, new IdleTracker())(module)
+      config.behaviorSpec match {
+        case InitNextSpec(init, next) =>
+          if(options.getOrElse("checker","init","").isEmpty) {
+            options.asInstanceOf[WriteablePassOptions].set("checker.init", init)
+          }
+          else {
+            logger.warn("Init operator is set both in " + filename + " and via CLI option --init; using the latter")
+          }
+          if(options.getOrElse("checker","next","").isEmpty) {
+            options.asInstanceOf[WriteablePassOptions].set("checker.next", next)
+          }
+          else {
+            logger.warn("Next operator is set both in " + filename + " and via CLI option --next; using the latter")
+          }
+        case _ =>
+      }
     }
     catch {
       case _: FileNotFoundException => logger.info("No TLC configuration found; skipping")
