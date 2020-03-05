@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.pp
 import at.forsyte.apalache.io.tlc.config._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.values.TlaStr
+import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import com.typesafe.scalalogging.LazyLogging
 
 /**
@@ -16,7 +16,12 @@ class TlcConfigImporter(config: TlcConfig, tracker: TransformationTracker) exten
 
     val assignments = config.constAssignments.map{
       case (param, value) =>
-        TlaOperDecl(ConstAndDefRewriter.OVERRIDE_PREFIX + param, List(), ValEx(TlaStr(value)))
+        TlaOperDecl(ConstAndDefRewriter.OVERRIDE_PREFIX + param, List(), ValEx(
+          if(value(0).isDigit)
+            TlaInt(BigInt(value))
+          else
+            TlaStr(value)
+        ))
     }
     val replacements = config.constReplacements.map{
       case (param, value) =>
@@ -57,11 +62,11 @@ class TlcConfigImporter(config: TlcConfig, tracker: TransformationTracker) exten
 }
 
 object TlcConfigImporter {
-  val STATE_PREFIX = "$CONSTRAINT_$"
-  val ACTION_PREFIX = "$ACTION_CONSTRAINT_$"
-  val INVARIANT_PREFIX = "$INVARIANT_$"
-  val TEMPORAL_PREFIX = "$PROPERTY_$"
-  val INIT = "$INIT"
-  val NEXT = "$NEXT"
-  val SPEC = "$SPECIFICATION"
+  val STATE_PREFIX = "CONSTRAINT_$"
+  val ACTION_PREFIX = "ACTION_CONSTRAINT_$"
+  val INVARIANT_PREFIX = "INVARIANT_$"
+  val TEMPORAL_PREFIX = "PROPERTY_$"
+  val INIT = "INIT"
+  val NEXT = "NEXT"
+  val SPEC = "SPECIFICATION"
 }
