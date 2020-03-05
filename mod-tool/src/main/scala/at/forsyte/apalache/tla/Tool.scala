@@ -102,12 +102,13 @@ object Tool extends App with LazyLogging {
         Map[String, String]()
       }
     executor.options.set("general.tuning", tuning)
-
     executor.options.set("general.debug", check.debug)
     executor.options.set("smt.prof", check.smtprof)
     executor.options.set("parser.filename", check.file.getAbsolutePath)
-    executor.options.set("checker.init", check.init)
-    executor.options.set("checker.next", check.next)
+    if (check.init != "")
+      executor.options.set("checker.init", check.init)
+    if (check.next != "")
+      executor.options.set("checker.next", check.next)
     if (check.inv != "")
       executor.options.set("checker.inv", check.inv)
     if (check.cinit != "")
