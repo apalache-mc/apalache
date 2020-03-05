@@ -59,6 +59,21 @@ class TestTlcConfigParser extends FunSuite {
     assert(config.constReplacements.isEmpty)
   }
 
+  test("CONSTANT assignments with numbers") {
+    val text =
+      """
+        |CONSTANT
+        |N = 10
+        |K = -20
+        |INIT Init
+        |NEXT Next
+      """.stripMargin
+
+    val config = TlcConfigParser(text)
+    assert(config.constAssignments == Map("N" -> "10", "K" -> "-20"))
+    assert(config.constReplacements.isEmpty)
+  }
+
   test("CONSTANT assignments and SYMMETRY") {
     val text =
       """

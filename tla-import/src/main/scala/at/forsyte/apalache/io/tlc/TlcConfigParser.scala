@@ -75,7 +75,7 @@ object TlcConfigParser extends Parsers {
   }
 
   private def constList: Parser[List[ConstBinding]] = {
-    CONST() ~ rep1(assignOrReplace) ^^ {
+    CONST() ~ rep1(assign | replace) ^^ {
       case _ ~ bindingList => bindingList
     }
   }
@@ -87,9 +87,15 @@ object TlcConfigParser extends Parsers {
     }
   }
 
-  private def assignOrReplace: Parser[ConstBinding] = {
-    ident ~ (EQ() | LEFT_ARROW()) ~ ident ^^ {
+  private def assign: Parser[ConstBinding] = {
+    ident ~ EQ() ~ (ident|number) ^^ {
       case IDENT(lhs) ~ EQ() ~ IDENT(rhs) => ConstAssignment(lhs, rhs)
+      case IDENT(lhs) ~ EQ() ~ NUMBER(rhs) => ConstAssignment(lhs, rhs)
+    }
+  }
+
+  private def replace: Parser[ConstBinding] = {
+    ident ~ LEFT_ARROW() ~ ident ^^ {
       case IDENT(lhs) ~ LEFT_ARROW() ~ IDENT(rhs) => ConstReplacement(lhs, rhs)
     }
   }
@@ -156,5 +162,9 @@ object TlcConfigParser extends Parsers {
 
   private def ident: Parser[IDENT] = {
     accept("identifier", { case id @ IDENT(_) => id })
+  }
+
+  private def number: Parser[NUMBER] = {
+    accept("number", { case n @ NUMBER(_) => n })
   }
 }
