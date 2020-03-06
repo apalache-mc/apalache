@@ -3,6 +3,9 @@
 
  * Critical bugfix in the optimization of set comprehensions like `\E x \in {e: y \in S}: f`
 
+ * Bugfix for #108: the model checker was skipping the `FALSE` invariant,
+   due to an optimization
+
 ## 0.6.0 [RELEASE]
 
  * Using `z3` version `4.8.7`
