@@ -446,7 +446,9 @@ class ModelChecker(typeFinder: TypeFinder[CellT],
     }
 
     // if the previous step was filtered, we cannot use the unchanged optimization
-    val prevMatchesInvFilter = invFilter == "" || (stepNo - 1).toString.matches("^" + invFilter + "$")
+    // Bugfix to #108: never filter out the initial step
+    val prevMatchesInvFilter =
+      stepNo > 0 && (invFilter == "" || (stepNo - 1).toString.matches("^" + invFilter + "$"))
 
     val invNegs = checkerInput.invariantsAndNegations.map(_._2)
     for ((notInv, invNo) <- invNegs.zipWithIndex) {
@@ -471,7 +473,9 @@ class ModelChecker(typeFinder: TypeFinder[CellT],
 
   private def checkOneInvariant(stepNo: Int, transitionNo: Int, nextState: SymbState, changedPrimed: Set[String], notInv: TlaEx): Unit = {
     val used = TlaExUtil.findUsedNames(notInv).map(_ + "'") // add primes as the invariant is referring to non-primed variables
-    if (used.intersect(changedPrimed).isEmpty) {
+    if (used.nonEmpty && used.intersect(changedPrimed).isEmpty) {
+      // bugfix for #108: check the invariant over CONSTANTS, if it has not been changed before
+      // XXX: it might happen that an invariant over CONSTANTS is checked multiple times. We will fix that in v0.8.0.
       logger.debug(s"The invariant is referring only to the UNCHANGED variables. Skipped.")
     } else {
       rewriter.push()
