@@ -21,12 +21,12 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
         val overridingDef = overrides(name)
         if (overridingDef.formalParams.nonEmpty) {
           val nargs = overridingDef.formalParams.size
-          val msg = s"Replacing constant $name with an operator body that has $nargs parameters"
+          val msg = s"  > Replacing constant $name with an operator body that has $nargs parameters"
           logger.error(msg)
-          logger.error("If you need support for n-ary CONSTANTS, write a feature request.")
+          logger.error("  > If you need support for n-ary CONSTANTS, write a feature request.")
           throw new OverridingError(msg, overridingDef.body)
         } else {
-          logger.info(s"Replaced CONSTANT $name with OVERRIDE_$name")
+          logger.info(s"  > Replaced CONSTANT $name")
           TlaOperDecl(name, List(), overridingDef.body)
         }
 
@@ -35,15 +35,15 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
         if (overridingDef.formalParams.size != dfParams.size) {
           val odNargs = overridingDef.formalParams.size
           val dfNargs = dfParams.size
-          val msg = s"Replacing operator $name ($dfNargs) with an operator ${overridingDef.name} that has $odNargs parameters"
+          val msg = s"  > Replacing operator $name ($dfNargs) with an operator ${overridingDef.name} that has $odNargs parameters"
           throw new OverridingError(msg, overridingDef.body)
         } else {
-          logger.info(s"Replaced operator $name with OVERRIDE_$name")
+          logger.info(s"  > Replaced operator $name with OVERRIDE_$name")
           TlaOperDecl(name, overridingDef.formalParams, overridingDef.body)
         }
 
       case df @ TlaVarDecl(name) if overrides.contains(name) =>
-        val msg = s"Trying to replace variable $name with an operator OVERRIDE_$name. Use INSTANCE ... WITH"
+        val msg = s"  > Trying to replace variable $name with an operator OVERRIDE_$name. Use INSTANCE ... WITH"
         throw new OverridingError(msg, NullEx)
 
       case df => df // keep the definition intact
