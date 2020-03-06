@@ -135,7 +135,7 @@ object Tool extends App with LazyLogging {
     if (check.next != "")
       executor.options.set("checker.next", check.next)
     if (check.inv != "")
-      executor.options.set("checker.inv", check.inv)
+      executor.options.set("checker.inv", List(check.inv))
     if (check.cinit != "")
       executor.options.set("checker.cinit", check.cinit)
     executor.options.set("checker.length", check.length)

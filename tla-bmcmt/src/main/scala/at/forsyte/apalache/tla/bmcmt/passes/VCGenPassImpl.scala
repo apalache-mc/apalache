@@ -40,11 +40,12 @@ class VCGenPassImpl @Inject()(options: PassOptions,
     }
 
     val newModule =
-      options.get[String]("checker", "inv") match {
-        case Some(invName) =>
-          logger.info(s"  > Producing verification conditions from the invariant $invName")
-          new VCGenerator(tracker).gen(tlaModule.get, invName)
-
+      options.get[List[String]]("checker", "inv") match {
+        case Some(invariants) =>
+          invariants.foldLeft(tlaModule.get){ (mod, invName) =>
+            logger.info(s"  > Producing verification conditions from the invariant $invName")
+            new VCGenerator(tracker).gen(mod, invName)
+          }
         case None =>
           logger.info("  > No invariant given. Only deadlocks will be checked")
           tlaModule.get
