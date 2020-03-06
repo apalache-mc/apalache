@@ -137,6 +137,23 @@ class TestTlcConfigParser extends FunSuite {
     assert(config.invariants == List("Inv1", "Inv2"))
   }
 
+// TODO: should this test succeed or fail?
+//  currently it fails, because the order of TLC config sections is strictly prescribed
+//
+//  test("INIT-NEXT and INVARIANTS reordered") {
+//    val text =
+//      """
+//        |INVARIANT Inv1
+//        |INIT Init
+//        |INVARIANTS Inv2
+//        |NEXT Next
+//      """.stripMargin
+//
+//    val config = TlcConfigParser(text)
+//    assert(config.behaviorSpec == InitNextSpec("Init", "Next"))
+//    assert(config.invariants == List("Inv1", "Inv2"))
+//  }
+
   test("INIT-NEXT and PROPERTIES") {
     val text =
       """
