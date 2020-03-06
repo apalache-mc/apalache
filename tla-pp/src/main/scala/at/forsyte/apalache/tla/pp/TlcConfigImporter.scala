@@ -17,7 +17,7 @@ class TlcConfigImporter(config: TlcConfig, tracker: TransformationTracker) exten
     val assignments = config.constAssignments.map{
       case (param, value) =>
         TlaOperDecl(ConstAndDefRewriter.OVERRIDE_PREFIX + param, List(), ValEx(
-          if(value(0).isDigit)
+          if(value(0).isDigit || value(0) == '-')
             TlaInt(BigInt(value))
           else
             TlaStr(value)
