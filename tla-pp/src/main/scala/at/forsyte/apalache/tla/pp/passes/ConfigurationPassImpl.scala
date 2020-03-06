@@ -43,10 +43,11 @@ class ConfigurationPassImpl @Inject()(val options: PassOptions,
     */
   override def execute(): Boolean = {
     var module = tlaModule.get
+
     // read TLC config if present
     val filename =
       options.getOrError("parser", "filename").asInstanceOf[String]
-      .replaceFirst("\\.tla", "\\.cfg")
+      .replaceFirst("\\.tla$", "\\.cfg")
     try {
       val config = TlcConfigParser.apply(new FileReader(filename))
       module = new TlcConfigImporter(config, new IdleTracker())(module)
@@ -64,13 +65,23 @@ class ConfigurationPassImpl @Inject()(val options: PassOptions,
           else {
             logger.warn("Next operator is set both in " + filename + " and via CLI option --next; using the latter")
           }
-        case _ =>
+        case _ => logger.warn("Temporal spec found in " + filename + ", which is not yet supported")
+      }
+      if(config.invariants.nonEmpty) {
+        if(options.getOrElse("checker","inv",List()).isEmpty) {
+          options.asInstanceOf[WriteablePassOptions].set("checker.inv", config.invariants)
+        }
+        else {
+          logger.warn("Invariants are set both in " + filename + " and via CLI option --inv; using the latter")
+        }
+
       }
     }
     catch {
       case _: FileNotFoundException => logger.info("No TLC configuration found; skipping")
       case e: TlcConfigParseError => logger.warn("Error parsing TLC configuration file: " + e.msg)
     }
+
     val rewritten = new ConstAndDefRewriter(tracker)(module)
 
     // dump the result of preprocessing
