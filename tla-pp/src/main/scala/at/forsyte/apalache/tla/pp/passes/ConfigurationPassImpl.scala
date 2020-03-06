@@ -15,6 +15,7 @@ import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.tla.pp.TlcConfigImporter
+import org.apache.commons.io.FilenameUtils
 
 /**
   * The pass that collects the configuration parameters and overrides constants and definitions.
@@ -48,6 +49,7 @@ class ConfigurationPassImpl @Inject()(val options: PassOptions,
     val filename =
       options.getOrError("parser", "filename").asInstanceOf[String]
       .replaceFirst("\\.tla$", "\\.cfg")
+    val basename = FilenameUtils.getName(filename)
     try {
       val config = TlcConfigParser.apply(new FileReader(filename))
       module = new TlcConfigImporter(config, new IdleTracker())(module)
@@ -57,29 +59,29 @@ class ConfigurationPassImpl @Inject()(val options: PassOptions,
             options.asInstanceOf[WriteablePassOptions].set("checker.init", init)
           }
           else {
-            logger.warn("Init operator is set both in " + filename + " and via CLI option --init; using the latter")
+            logger.warn("  > Init operator is set both in " + basename + " and via --init option; using the latter")
           }
           if(options.getOrElse("checker","next","").isEmpty) {
             options.asInstanceOf[WriteablePassOptions].set("checker.next", next)
           }
           else {
-            logger.warn("Next operator is set both in " + filename + " and via CLI option --next; using the latter")
+            logger.warn("  > Next operator is set both in " + basename + " and via --next option; using the latter")
           }
-        case _ => logger.warn("Temporal spec found in " + filename + ", which is not yet supported")
+        case _ => logger.warn("  > Temporal spec found in " + basename + ", which is not yet supported; skipping")
       }
       if(config.invariants.nonEmpty) {
         if(options.getOrElse("checker","inv",List()).isEmpty) {
           options.asInstanceOf[WriteablePassOptions].set("checker.inv", config.invariants)
         }
         else {
-          logger.warn("Invariants are set both in " + filename + " and via CLI option --inv; using the latter")
+          logger.warn("  > Invariants are set both in " + basename + " and via --inv option; using the latter")
         }
 
       }
     }
     catch {
-      case _: FileNotFoundException => logger.info("No TLC configuration found; skipping")
-      case e: TlcConfigParseError => logger.warn("Error parsing TLC configuration file: " + e.msg)
+      case _: FileNotFoundException => logger.info("  > No TLC configuration found; skipping")
+      case e: TlcConfigParseError => logger.warn("  > Error parsing TLC configuration in " + basename + ": " + e.msg)
     }
 
     val rewritten = new ConstAndDefRewriter(tracker)(module)
