@@ -30,6 +30,8 @@ function check() {
         RES=0
     elif grep -q "The outcome is: Deadlock" "$OUTF"; then
         RES=0
+    elif grep -q "EXITCODE: ERROR" "$OUTF"; then
+        RES=99
     elif grep -q "REPORT A BUG" "$OUTF"; then
         RES=500
     else
@@ -49,6 +51,16 @@ function expect_ok() {
 
 function expect_err() {
     if [ "$RES" = "0" ]; then
+        printf '%s TEST %-58s [OK]\n' `tm` "$TEST" >>"$LOGFILE"
+        nok=$((nok+1))
+    else
+        printf '%s TEST %-58s [FAIL]\n' `tm` "$TEST" >>"$LOGFILE"
+        nfail=$((nfail+1))
+    fi
+}
+
+function expect_fail() {
+    if [ "$RES" -gt "1" ]; then
         printf '%s TEST %-58s [OK]\n' `tm` "$TEST" >>"$LOGFILE"
         nok=$((nok+1))
     else
@@ -114,6 +126,8 @@ check "020-HandshakeWithTypes" --length=5 --inv=Inv HandshakeWithTypes.tla \
     && expect_err # deadlock
 check "021-Bug20200306" --length=2 --inv=Inv Bug20200306.tla \
     && expect_err # the invariant FALSE is trivially violated
+check "022-Assignments20200309" --length=1 --inv=Inv Assignments20200309.tla \
+    && expect_fail # Init does not have an assignment
 
 cat "$LOGFILE"
 
