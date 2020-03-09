@@ -28,8 +28,33 @@ import scala.collection.JavaConverters._
   */
 object Tool extends App with LazyLogging {
   private lazy val ISSUES_LINK: String = "[https://github.com/konnov/apalache/issues]"
+  val ERROR_EXIT_CODE = 99
+  val OK_EXIT_CODE = 0
 
+  /**
+    * Run the tool in the standalone mode with the provided arguments.
+    * This method calls System.exit with the computed exit code.
+    * If you like to call the tool without System.exit, use the the Tool#run.
+    *
+    * @param args the command line arguments
+    */
   override def main(args: Array[String]): Unit = {
+    val exitcode = run(args)
+    if (exitcode == OK_EXIT_CODE) {
+      Console.out.println("EXITCODE: OK")
+    } else {
+      Console.out.println(s"EXITCODE: ERROR ($exitcode)")
+    }
+    System.exit(exitcode)
+  }
+
+  /**
+    * Run the tool in a library mode, that is, with a call to System.exit.
+    *
+    * @param args the command line arguments
+    * @return the exit code; as usual, 0 means success.
+    */
+  def run(args: Array[String]): Int = {
     Console.println("# APALACHE version %s build %s".format(Version.version, Version.build))
     Console.println("#")
     Console.println("# WARNING: This tool is in the experimental stage.")
@@ -55,7 +80,8 @@ object Tool extends App with LazyLogging {
           val injector = injectorFactory(check)
           handleExceptions(injector, runCheck(injector, check, _))
 
-        case _ => () // nothing to do
+        case _ =>
+          OK_EXIT_CODE // nothing to do
       }
     } finally {
       printTimeDiff(startTime)
@@ -159,11 +185,12 @@ object Tool extends App with LazyLogging {
     }
   }
 
-  private def handleExceptions(injector: Injector, fun: Unit => Unit): Unit = {
+  private def handleExceptions(injector: Injector, fun: Unit => Unit): Int = {
     val adapter = injector.getInstance(classOf[ExceptionAdapter])
 
     try {
       fun()
+      Tool.OK_EXIT_CODE
     } catch {
       case e: Exception if adapter.toMessage.isDefinedAt(e) =>
         adapter.toMessage(e) match {
@@ -174,13 +201,16 @@ object Tool extends App with LazyLogging {
             Console.err.println("Please report an issue at: " + ISSUES_LINK, e)
             logger.error(text, e)
         }
+        Tool.ERROR_EXIT_CODE
 
       case e: PassOptionException =>
         logger.error(e.getMessage)
+        Tool.ERROR_EXIT_CODE
 
       case e: Throwable =>
         Console.err.println("Please report an issue at: " + ISSUES_LINK, e)
         logger.error("Unhandled exception", e)
+        Tool.ERROR_EXIT_CODE
     }
   }
 }
