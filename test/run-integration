@@ -112,6 +112,8 @@ check "019-HandshakeWithTypes" --length=4 --inv=Inv HandshakeWithTypes.tla \
     && expect_ok
 check "020-HandshakeWithTypes" --length=5 --inv=Inv HandshakeWithTypes.tla \
     && expect_err # deadlock
+check "021-Bug20200306" --length=2 --inv=Inv Bug20200306.tla \
+    && expect_err # the invariant FALSE is trivially violated
 
 cat "$LOGFILE"
 
