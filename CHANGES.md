@@ -1,5 +1,9 @@
+## 0.7.0 [SNAPSHOT] #unstable
 
-## 0.6.1 [SNAPSHOT]
+ * fixed exit codes `EXITCODE: OK` and `EXITCODE: ERROR (<code>)`
+ * normal error messages and failure messages with stack traces
+
+## 0.6.1 [SNAPSHOT] #master
 
  * Critical bugfix in the optimization of set comprehensions like `\E x \in {e: y \in S}: f`
 
