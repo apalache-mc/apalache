@@ -8,9 +8,8 @@ import java.time.temporal.ChronoUnit
 
 import at.forsyte.apalache.infra.log.LogbackConfigurator
 import at.forsyte.apalache.infra.passes.{PassChainExecutor, TlaModuleMixin}
-import at.forsyte.apalache.infra.{ExceptionAdapter, PassOptionException}
+import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorMessage, PassOptionException}
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
-import at.forsyte.apalache.tla.bmcmt.{CheckerException, InternalCheckerError}
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.tooling.Version
 import at.forsyte.apalache.tla.tooling.opt.{CheckCmd, ParseCmd}
@@ -167,21 +166,20 @@ object Tool extends App with LazyLogging {
       fun()
     } catch {
       case e: Exception if adapter.toMessage.isDefinedAt(e) =>
-        logger.error(adapter.toMessage(e), e)
+        adapter.toMessage(e) match {
+          case NormalErrorMessage(text) =>
+            logger.error(text)
+
+          case FailureMessage(text) =>
+            Console.err.println("Please report an issue at: " + ISSUES_LINK, e)
+            logger.error(text, e)
+        }
 
       case e: PassOptionException =>
         logger.error(e.getMessage)
 
-      case e: InternalCheckerError =>
-        Console.err.println("There is a bug in the tool, which should be fixed. REPORT IT: " + ISSUES_LINK, e)
-        logger.error("Internal error", e)
-
-      case e: CheckerException =>
-        Console.err.println("The tool has failed around unknown location. REPORT IT: " + ISSUES_LINK, e)
-        logger.error("Checker error", e)
-
       case e: Throwable =>
-        Console.err.println("This should not have happened, but it did. REPORT IT: " + ISSUES_LINK, e)
+        Console.err.println("Please report an issue at: " + ISSUES_LINK, e)
         logger.error("Unhandled exception", e)
     }
   }
