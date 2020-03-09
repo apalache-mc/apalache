@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.imp.passes
 
-import at.forsyte.apalache.infra.{DefaultExceptionAdapter, ExceptionAdapter}
+import at.forsyte.apalache.infra.ExceptionAdapter
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TerminalPassWithTlaModule, WriteablePassOptions}
+import at.forsyte.apalache.tla.imp.ParserExceptionAdapter
 import com.google.inject.AbstractModule
 import com.google.inject.name.Names
 
@@ -17,7 +18,7 @@ class ParserModule extends AbstractModule {
       .to(classOf[WriteablePassOptions])
     // exception handler
     bind(classOf[ExceptionAdapter])
-      .to(classOf[DefaultExceptionAdapter])
+      .to(classOf[ParserExceptionAdapter])
 
     // SanyParserPassImpl is the default implementation of SanyParserPass
     bind(classOf[SanyParserPass])
