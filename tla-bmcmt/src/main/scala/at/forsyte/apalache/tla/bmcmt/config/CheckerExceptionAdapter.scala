@@ -27,7 +27,7 @@ class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
       NormalErrorMessage("Error by TLA+ parser: " + err.getMessage)
 
     case err: AssignmentException =>
-      NormalErrorMessage("Error when finding assignments: " + err.getMessage)
+      NormalErrorMessage("Assignment error: " + err.getMessage)
 
     case err: TypeInferenceError =>
       val msg = "%s: type error: %s".format(findLoc(err.origin), err.getMessage)
