@@ -27,9 +27,9 @@ import scala.collection.JavaConverters._
   * @author Igor Konnov
   */
 object Tool extends App with LazyLogging {
-  private lazy val ISSUES_LINK: String = "[https://github.com/konnov/apalache/issues]"
-  val ERROR_EXIT_CODE = 99
-  val OK_EXIT_CODE = 0
+  lazy val ISSUES_LINK: String = "[https://github.com/konnov/apalache/issues]"
+  lazy val ERROR_EXIT_CODE = 99
+  lazy val OK_EXIT_CODE = 0
 
   /**
     * Run the tool in the standalone mode with the provided arguments.
