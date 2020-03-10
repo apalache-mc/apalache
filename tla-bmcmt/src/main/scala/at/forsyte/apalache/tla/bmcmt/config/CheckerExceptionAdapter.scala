@@ -9,6 +9,7 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{MalformedTlaError, TlaEx}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.pp.NotInKeraError
+import com.typesafe.scalalogging.LazyLogging
 import javax.inject.{Inject, Singleton}
 
 /**
@@ -18,7 +19,7 @@ import javax.inject.{Inject, Singleton}
   */
 @Singleton
 class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
-                                        changeListener: ChangeListener) extends ExceptionAdapter {
+                                        changeListener: ChangeListener) extends ExceptionAdapter with LazyLogging {
   private lazy val ISSUES_LINK: String = "[https://github.com/konnov/apalache/issues]"
 
   override def toMessage: PartialFunction[Exception, ErrorMessage] = {
@@ -27,6 +28,8 @@ class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
       NormalErrorMessage("Error by TLA+ parser: " + err.getMessage)
 
     case err: AssignmentException =>
+      logger.info("To understand the error, read the manual:")
+      logger.info("  [https://github.com/konnov/apalache/blob/unstable/docs/manual.md#assignments]")
       NormalErrorMessage("Assignment error: " + err.getMessage)
 
     case err: TypeInferenceError =>
