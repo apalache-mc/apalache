@@ -2,11 +2,10 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSeqOper, _}
-import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.transformations.LanguagePred
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
+import at.forsyte.apalache.tla.lir.values._
 
-import scala.collection.immutable.{HashMap, HashSet}
+import scala.collection.immutable.HashSet
 
 /**
   * <p>Test whether the expressions fit into the flat fragment: all calls to user operators are inlined,
@@ -112,7 +111,8 @@ object KeraLanguagePred {
       TlaSeqOper.len,
       TlcOper.printT, // TODO: preprocess into NullEx in Keramelizer
       BmcOper.skolem,
-      BmcOper.expand
+      BmcOper.expand,
+      BmcOper.constCard
       // for the future
       //    TlaActionOper.enabled,
       //    TlaActionOper.unchanged,

@@ -1,9 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.TlaFunOper
+import at.forsyte.apalache.tla.lir.oper.BmcOper
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -27,6 +26,72 @@ class TestSymbStateRewriterFiniteSets extends RewriterBase {
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(tla.int(3), nextState.ex)))
+  }
+
+  test("""BMC!ConstCard(Cardinality({1, 2, 3}) >= 3)""") {
+    val set = tla.enumSet(1.to(3).map(tla.int) :_*)
+    val cardCmp = OperEx(BmcOper.constCard, tla.ge(tla.card(set), tla.int(3)))
+    val state = new SymbState(cardCmp, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    solverContext.assertGroundExpr(nextState.ex)
+    assert(solverContext.sat())
+  }
+
+  test("""BMC!ConstCard(Cardinality({1, 2, 3}) >= 4)""") {
+    val set = tla.enumSet(1.to(3).map(tla.int) :_*)
+    val cardCmp = OperEx(BmcOper.constCard, tla.ge(tla.card(set), tla.int(4)))
+    val state = new SymbState(cardCmp, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    solverContext.assertGroundExpr(nextState.ex)
+    assert(!solverContext.sat())
+  }
+
+  test("""BMC!ConstCard(Cardinality({1, 2, 2, 3}) >= 4)""") {
+    val set = tla.enumSet(List(1, 2, 2, 3).map(tla.int) :_*)
+    val cardCmp = OperEx(BmcOper.constCard, tla.ge(tla.card(set), tla.int(4)))
+    val state = new SymbState(cardCmp, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    solverContext.assertGroundExpr(nextState.ex)
+    assert(!solverContext.sat())
+  }
+
+  test("""BMC!ConstCard(Cardinality({1, 2, 2, 3, 3}) >= 4)""") {
+    val set = tla.enumSet(List(1, 2, 2, 3).map(tla.int) :_*)
+    val cardCmp = OperEx(BmcOper.constCard, tla.ge(tla.card(set), tla.int(4)))
+    val state = new SymbState(cardCmp, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    solverContext.assertGroundExpr(nextState.ex)
+    assert(!solverContext.sat())
+  }
+
+  test("""BMC!ConstCard(Cardinality({}) >= 0)""") {
+    val set = tla.enumSet()
+    val cardCmp = OperEx(BmcOper.constCard, tla.ge(tla.card(set), tla.int(0)))
+    val state = new SymbState(cardCmp, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    solverContext.assertGroundExpr(nextState.ex)
+    assert(solverContext.sat())
+  }
+
+  test("""BMC!ConstCard(Cardinality({}) >= 1)""") {
+    val set = tla.enumSet()
+    val cardCmp = OperEx(BmcOper.constCard, tla.ge(tla.card(set), tla.int(1)))
+    val state = new SymbState(cardCmp, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    solverContext.assertGroundExpr(nextState.ex)
+    assert(!solverContext.sat())
   }
 
   test("""Cardinality({1, 2, 3} \ {2}) = 2""") {

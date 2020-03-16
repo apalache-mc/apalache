@@ -71,40 +71,109 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
       tla.forall(tla.name(nameGen.newName()), set, tla.bool(false))
 
     case OperEx(TlaArithOper.gt, OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal)))
-          if intVal == BigInt(0) =>
+      if intVal == BigInt(0) =>
       // We can find this pattern in real TLA+ benchmarks more often than one would think.
       // Rewrite into \E t1 \in set: TRUE
       tla.exists(tla.name(nameGen.newName()), set, tla.bool(true))
 
     case OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal)))
-          if intVal == BigInt(1) =>
+      if intVal == BigInt(1) =>
       // same as above
       tla.exists(tla.name(nameGen.newName()), set, tla.bool(true))
 
     case OperEx(TlaOper.ne, OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal)))
-          if intVal == BigInt(0) =>
+      if intVal == BigInt(0) =>
       // same as above
       tla.exists(tla.name(nameGen.newName()), set, tla.bool(true))
 
     case OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal)))
-          if intVal == BigInt(2) =>
+      if intVal == BigInt(2) =>
       // We can find this pattern in real TLA+ benchmarks more often than one would think.
       // Rewrite into LET T3 = set IN \E t1 \in T3: \E t2 \in T3: t1 /= t2.
       // We use let to save on complex occurrences of set.
       val tmp1 = nameGen.newName()
       val tmp2 = nameGen.newName()
       val setName = nameGen.newName()
+      val letApp = tla.appOp(NameEx(setName))
       tla.letIn(
-        tla.exists(tla.name(tmp1), tla.name(setName),
-          tla.exists(tla.name(tmp2), tla.name(setName),
+        tla.exists(tla.name(tmp1), letApp,
+          tla.exists(tla.name(tmp2), letApp,
             tla.not(tla.eql(tla.name(tmp1), tla.name(tmp2))))),
         TlaOperDecl(setName, List(), set)
       ) ///
 
-    case OperEx(TlaArithOper.gt, card @ OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal)))
-          if intVal == BigInt(1) =>
-      // reduce to the case above
-      transformCard(tla.ge(card, tla.int(2)))
+      // these rewriting rules are implemented more efficiently in CardinalityConstRule.
+      /*
+    case OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal)))
+      if intVal.isValidInt =>
+      val k = intVal.toInt
+      // introduce k existentials that are mutually exclusive
+      val exNames = 1.to(k).map(_ => NameEx(nameGen.newName())).toList
+      val boundSetAlias = nameGen.newName()
+      val boundLetApp = tla.appOp(NameEx(boundSetAlias))
+      val x = NameEx(nameGen.newName())
+      val y = NameEx(nameGen.newName())
+      val setAlias = nameGen.newName()
+      val letApp = tla.appOp(NameEx(setAlias))
+      val forAllNe =
+        tla.forall(x, boundLetApp,
+          tla.forall(y, boundLetApp,
+            tla.not(tla.eql(x, y))))
+      val letInForAllNe =
+        tla.letIn(
+          forAllNe,
+          TlaOperDecl(boundSetAlias, List(), tla.enumSet(exNames: _*)))
+
+      def mkExists(underlying: TlaEx, names: Seq[NameEx]): TlaEx = {
+        names match {
+          case Nil => underlying
+          case varName :: tl => tla.exists(varName, letApp, mkExists(underlying, tl))
+        }
+      }
+
+      tla.letIn(
+        mkExists(letInForAllNe, exNames),
+        TlaOperDecl(setAlias, List(), set)
+      ) ///
+
+    case OperEx(TlaArithOper.lt, OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal)))
+      if intVal.isValidInt =>
+      val k = intVal.toInt
+      // introduce k universals that have at least two equal values
+      val allNames = 1.to(k).map(_ => NameEx(nameGen.newName())).toList
+      val boundSetAlias = nameGen.newName()
+      val boundLetApp = tla.appOp(NameEx(boundSetAlias))
+      val x = NameEx(nameGen.newName())
+      val y = NameEx(nameGen.newName())
+      val setAlias = nameGen.newName()
+      val letApp = tla.appOp(NameEx(setAlias))
+      val existsEq =
+        tla.exists(x, boundLetApp,
+          tla.exists(y, boundLetApp,
+            tla.eql(x, y)))
+      val letInExistsEq =
+        tla.letIn(
+          existsEq,
+          TlaOperDecl(boundSetAlias, List(), tla.enumSet(allNames: _*)))
+
+      def mkForAll(underlying: TlaEx, names: Seq[NameEx]): TlaEx = {
+        names match {
+          case Nil => underlying
+          case varName :: tl => tla.forall(varName, letApp, mkForAll(underlying, tl))
+        }
+      }
+
+      tla.letIn(
+        mkForAll(letInExistsEq, allNames),
+        TlaOperDecl(setAlias, List(), set)
+      ) ///
+      */
+
+
+    case OperEx(TlaArithOper.gt, card@OperEx(TlaFiniteSetOper.cardinality, _), ValEx(TlaInt(intVal)))
+      if intVal.isValidInt =>
+      // Cardinality(S) > k becomes Cardinality(S) >= k + 1
+      transformCard(tla.ge(card, tla.int(intVal.toInt + 1)))
   }
 
   /**
@@ -119,7 +188,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
       val result = tla.exists(tla.name(y), s, newPred)
       transformExistsOverSets.applyOrElse(result, { _: TlaEx => result }) // apply recursively to the result
 
-    case OperEx(TlaBoolOper.exists, NameEx(boundVar), OperEx(TlaSetOper.map, mapEx, varsAndSets @ _*), pred) =>
+    case OperEx(TlaBoolOper.exists, NameEx(boundVar), OperEx(TlaSetOper.map, mapEx, varsAndSets@_*), pred) =>
       // e.g., \E x \in {e: y \in S}: g becomes \E y \in S: LET tmp == e IN g [x replaced with e]
       // LET x == e IN g in the example above
       val letName = nameGen.newName()
@@ -130,6 +199,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
       val pairs = varsAndSets.grouped(2).toSeq.collect {
         case Seq(NameEx(name), set) => (name, set)
       }
+
       // create an exists-expression and optimize it again
       def mkExistsRec(name: String, set: TlaEx, pred: TlaEx): TlaEx = {
         val exists = tla.exists(tla.name(name), set, pred)
@@ -138,7 +208,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
 
       pairs.foldLeft(letIn) { case (exprBelow, (name, set)) => mkExistsRec(name, set, exprBelow) }
 
-      // TODO: add other kinds of sets?
+    // TODO: add other kinds of sets?
   }
 }
 

@@ -39,7 +39,7 @@ class TestExpansionMarker extends FunSuite with BeforeAndAfterEach {
     assert(expected == output)
   }
 
-  // although the optimizing phase should simplify this expression, we like to no happens, if not
+  // although the optimizing phase should simplify this expression, we like to know what happens, if not
   test("""marked: {} \cup [S -> T]""") {
     val input = tla.in(
       tla.name("x"),
@@ -115,5 +115,4 @@ class TestExpansionMarker extends FunSuite with BeforeAndAfterEach {
 
     assert(input == output)
   }
-
 }

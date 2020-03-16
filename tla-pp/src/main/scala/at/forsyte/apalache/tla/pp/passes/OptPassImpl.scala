@@ -46,6 +46,7 @@ class OptPassImpl @Inject()(val options: PassOptions,
 
     val transformationSequence =
       List(
+        ConstSimplifier(tracker),
         ExprOptimizer(gen, tracker),
         ConstSimplifier(tracker)
       ) ///

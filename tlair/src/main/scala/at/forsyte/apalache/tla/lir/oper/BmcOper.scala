@@ -50,6 +50,17 @@ object BmcOper {
     override def arity: OperArity = FixedArity(1)
     override def precedence: (Int, Int) = (100, 100)
   }
+
+  /**
+    * An optimization hint for a cardinality constraint like Cardinality(S) >= k, where k is a constant.
+    * Similar to BMC!Skolem, this optimization has to be applied carefully, as it is not sound, when the cardinality
+    * test is located under negation.
+    */
+  val constCard: BmcOper = new BmcOper {
+    override def name: String = "BMC!ConstCardinality"
+    override def arity: OperArity = FixedArity(1)
+    override def precedence: (Int, Int) = (100, 100)
+  }
 }
 
 
