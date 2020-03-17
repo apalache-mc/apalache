@@ -83,6 +83,28 @@ class TestSymbStateRewriterFiniteSets extends RewriterBase {
     assert(solverContext.sat())
   }
 
+  test("""BMC!ConstCard(Cardinality({x \in {}: FALSE}) >= 0)""") {
+    val set = tla.filter(tla.name("x"), tla.enumSet(), tla.bool(false))
+    val cardCmp = OperEx(BmcOper.constCard, tla.ge(tla.card(set), tla.int(0)))
+    val state = new SymbState(cardCmp, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    solverContext.assertGroundExpr(nextState.ex)
+    assert(solverContext.sat())
+  }
+
+  test("""BMC!ConstCard(Cardinality({x \in {}: FALSE}) >= 1)""") {
+    val set = tla.filter(tla.name("x"), tla.enumSet(), tla.bool(false))
+    val cardCmp = OperEx(BmcOper.constCard, tla.ge(tla.card(set), tla.int(1)))
+    val state = new SymbState(cardCmp, CellTheory(), arena, new Binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    solverContext.assertGroundExpr(nextState.ex)
+    assert(!solverContext.sat())
+  }
+
   test("""BMC!ConstCard(Cardinality({}) >= 1)""") {
     val set = tla.enumSet()
     val cardCmp = OperEx(BmcOper.constCard, tla.ge(tla.card(set), tla.int(1)))
