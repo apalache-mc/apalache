@@ -3,11 +3,12 @@ package at.forsyte.apalache.tla.lir.io
 import java.io.{File, FileWriter, PrintWriter}
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, _}
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
 import ujson._
 
 import scala.collection.immutable.HashMap
+import scala.collection.mutable.ArrayBuffer
 /**
  * <p>A formatter of TlaEx and TlaModule to JSON, for interoperability with external tools.</p>
  * @author Andrey Kuprianov
@@ -41,16 +42,35 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
       primitive("int", value.toString)
   }
 
-  private def unary(tla: String, arg: TlaEx): ujson.Value = {
-    Obj(tla -> toJson(arg))
+  private def splitIntoPairs(args: Seq[TlaEx]): ujson.Value = {
+    var pair: (ujson.Value, ujson.Value) = (Null, Null)
+    val res = new ArrayBuffer[ujson.Value]()
+    args.foreach(ex =>
+      pair match {
+        case (Null, Null) =>
+          pair = (toJson(ex), Null)
+        case (x, Null) =>
+          res.append(Arr(x, toJson(ex)))
+          pair = (Null, Null)
+      }
+    )
+    Arr(res)
   }
 
-  private def binary(tla: String, arg1: TlaEx, arg2: TlaEx): ujson.Value = {
-    Obj(tla -> Arr(toJson(arg1), toJson(arg2)))
+  private def unary(op: String, arg: TlaEx): ujson.Value = {
+    Obj(op -> toJson(arg))
   }
 
-  private def nary(tla: String, args: Seq[TlaEx]): ujson.Value = {
-    Obj(tla -> args.map(toJson))
+  private def binary(op: String, arg1: TlaEx, arg2: TlaEx): ujson.Value = {
+    Obj(op -> Arr(toJson(arg1), toJson(arg2)))
+  }
+
+  private def nary(op: String, args: Seq[TlaEx]): ujson.Value = {
+    Obj(op -> args.map(toJson))
+  }
+
+  private def naryPair(op: String, args: Seq[TlaEx]): ujson.Value = {
+    Obj(op -> splitIntoPairs(args))
   }
 
   private def applyTo(fun: TlaEx, to: TlaEx): ujson.Value = {
@@ -65,15 +85,15 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
   }
 
   private def funWhere(fun: TlaEx, args: Seq[TlaEx]): ujson.Value = {
-    Obj("function" -> toJson(fun), "where" -> args.map(toJson))
+    Obj("function" -> toJson(fun), "where" -> splitIntoPairs(args))
   }
 
-  private def exceptWith(fun: TlaEx, args: Seq[TlaEx]): ujson.Value = {
-    Obj("except" -> toJson(fun), "where" -> args.map(toJson))
+  private def exceptWhere(fun: TlaEx, args: Seq[TlaEx]): ujson.Value = {
+    Obj("except" -> toJson(fun), "where" -> splitIntoPairs(args))
   }
 
   private def mapWhere(body: TlaEx, args: Seq[TlaEx]): ujson.Value = {
-    Obj("map" -> toJson(body), "where" -> args.map(toJson))
+    Obj("map" -> toJson(body), "where" -> splitIntoPairs(args))
   }
 
   private def boundedPred(tla: String, name: TlaEx, from: TlaEx, pred: TlaEx): ujson.Value = {
@@ -191,7 +211,7 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
 
       // [f EXCEPT ![i_1] = e_1, ![i_2] = e_2]  =>  { "except": "f", "where": [ "i_1", "e_1", "i_2", "e_2"] }
       case OperEx(TlaFunOper.except, fun, keysAndValues@_*) =>
-        exceptWith(fun, keysAndValues)
+        exceptWhere(fun, keysAndValues)
 
       // f[e]  =>  { "apply": "f", "to": "e" }
       case OperEx(TlaFunOper.app, funEx, argEx) =>
@@ -208,16 +228,16 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
       case OperEx(TlaControlOper.ifThenElse, pred, thenEx, elseEx) =>
         ifThenElse(pred, thenEx, elseEx)
 
-      //  {x \in S: P} => {"filter": ["x","S"], "with": "P"}
-      //  \E x \in S : P => {"exists": ["x","S"], "with": "P"}
-      //  \A x \in S : P => {"forall": ["x","S"], "with": "P"}
-      //  CHOOSE x \in S : P => {"CHOOSE": ["x","S"], "with": "P"}
+      //  {x \in S: P} => {"filter": ["x","S"], "that": "P"}
+      //  \E x \in S : P => {"exists": ["x","S"], "that": "P"}
+      //  \A x \in S : P => {"forall": ["x","S"], "that": "P"}
+      //  CHOOSE x \in S : P => {"CHOOSE": ["x","S"], "that": "P"}
       case OperEx(op@_, name, set, pred) if JsonWriter.boundedPredOps.contains(op)  =>
         boundedPred(JsonWriter.boundedPredOps(op), name, set, pred)
 
-      //  \E x : P => {"exists": "x", "with": "P"}
-      //  \A x : P => {"forall": "x", "with": "P"}
-      //  CHOOSE x : P => {"CHOOSE": "x", "with": "P"}
+      //  \E x : P => {"exists": "x", "that": "P"}
+      //  \A x : P => {"forall": "x", "that": "P"}
+      //  CHOOSE x : P => {"CHOOSE": "x", "that": "P"}
       case OperEx(op@_, name, pred) if JsonWriter.unboundedPredOps.contains(op)  =>
         unboundedPred(JsonWriter.unboundedPredOps(op), name, pred)
 
@@ -267,6 +287,9 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
 
       case OperEx(op@_, args@_*) if JsonWriter.naryOps.contains(op)  =>
         nary(JsonWriter.naryOps(op), args)
+
+      case OperEx(op@_, args@_*) if JsonWriter.naryPairOps.contains(op)  =>
+        naryPair(JsonWriter.naryPairOps(op), args)
 
       case _ => True
     }
@@ -340,15 +363,18 @@ object JsonWriter {
   )
 
   protected val naryOps: Map[TlaOper, String] = HashMap(
-    TlaFunOper.enum -> "record",
     TlaFunOper.tuple -> "tuple",
     TlaSetOper.enumSet -> "enum",
-    TlaSetOper.recSet -> "rec-set",
     TlaSetOper.times -> "times",
     TlaArithOper.sum -> "+",
     TlaArithOper.prod -> "*",
     TlaBoolOper.and -> "and",
     TlaBoolOper.or -> "or"
+  )
+
+  protected val naryPairOps: Map[TlaOper, String] = HashMap(
+    TlaFunOper.enum -> "record",
+    TlaSetOper.recSet -> "rec-set"
   )
 
   protected val boundedPredOps: Map[TlaOper, String] = HashMap(

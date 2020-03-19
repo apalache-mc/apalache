@@ -161,10 +161,14 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
         |    ]
         |  },
         |  "where": [
-        |    "x",
-        |    "S",
-        |    "y",
-        |    "T"
+        |    [
+        |      "x",
+        |      "S"
+        |    ],
+        |    [
+        |      "y",
+        |      "T"
+        |    ]
         |  ]
         |}""".stripMargin
     )
@@ -198,7 +202,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     // [f EXCEPT ![k] = v]
     compare(
       except("f", "k", "v"),
-      """{"except":"f","where":["k","v"]}"""
+      """{"except":"f","where":[["k","v"]]}"""
     )
   }
 
@@ -210,7 +214,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
         str("x2"), "y2",
         str("x3"), "y3"
       ),
-      """{"record":[{"str":"x1"},"y1",{"str":"x2"},"y2",{"str":"x3"},"y3"]}"""
+      """{"record":[[{"str":"x1"},"y1"],[{"str":"x2"},"y2"],[{"str":"x3"},"y3"]]}"""
     )
   }
 
@@ -230,7 +234,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
         str("y"), "T",
         str("z"), "U"
       ),
-      """{"rec-set":[{"str":"x"},"S",{"str":"y"},"T",{"str":"z"},"U"]}"""
+      """{"rec-set":[[{"str":"x"},"S"],[{"str":"y"},"T"],[{"str":"z"},"U"]]}"""
     )
   }
 
@@ -265,7 +269,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     // {x+y: x \in S, y \in T}
     compare(
       map(plus("x", "y"), "x", "S", "y", "T"),
-      """{"map":{"+":["x","y"]},"where":["x","S","y","T"]}"""
+      """{"map":{"+":["x","y"]},"where":[["x","S"],["y","T"]]}"""
     )
   }
 
