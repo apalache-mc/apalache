@@ -47,7 +47,15 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     // int
     compare(
       int(42),
-      """{"int":"42"}"""
+      """42"""
+    )
+  }
+
+  test("big int") {
+    // int
+    compare(
+      bigInt(BigInt("9876543210")),
+      """{"int":"9876543210"}"""
     )
   }
 
@@ -79,7 +87,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     // { 42 }
     compare(
       enumSet(42),
-      """{"enum":[{"int":"42"}]}"""
+      """{"enum":[42]}"""
     )
   }
 
@@ -89,9 +97,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
       enumSet(42),
       """{
         |  "enum": [
-        |    {
-        |      "int": "42"
-        |    }
+        |    42
         |  ]
         |}""".stripMargin
     )
@@ -101,7 +107,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     // { 1, 2, 3 }
     compare(
       enumSet(int(1), int(2), int(3)),
-      """{"enum":[{"int":"1"},{"int":"2"},{"int":"3"}]}"""
+      """{"enum":[1,2,3]}"""
     )
   }
 
@@ -111,15 +117,9 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
       enumSet(int(1), int(2), int(3)),
       """{
         |  "enum": [
-        |    {
-        |      "int": "1"
-        |    },
-        |    {
-        |      "int": "2"
-        |    },
-        |    {
-        |      "int": "3"
-        |    }
+        |    1,
+        |    2,
+        |    3
         |  ]
         |}""".stripMargin
     )
@@ -129,7 +129,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     // << 1, two, "three" >>
     compare(
       tuple(int(1), name("two"), str("three")),
-      """{"tuple":[{"int":"1"},"two",{"str":"three"}]}"""
+      """{"tuple":[1,"two",{"str":"three"}]}"""
     )
   }
 
@@ -145,7 +145,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     // 1 - 2
     compare(
       minus(int(1), int(2)),
-      """{"-":[{"int":"1"},{"int":"2"}]}"""
+      """{"-":[1,2]}"""
     )
   }
 
@@ -182,7 +182,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     // A(1,2)
     compare(
       OperEx(TlaOper.apply, "A", 1, 2),
-      """{"eval":"A","args":[{"int":"1"},{"int":"2"}]}"""
+      """{"eval":"A","args":[1,2]}"""
     )
   }
 
@@ -254,9 +254,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
         |  "that": {
         |    "<": [
         |      "x",
-        |      {
-        |        "int": "5"
-        |      }
+        |      5
         |    ]
         |  }
         |}""".stripMargin
@@ -291,7 +289,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     // CHOOSE x \in S : x > 3
     compare(
       choose("x", "S", gt("x",3)),
-      """{"CHOOSE":["x","S"],"that":{">":["x",{"int":"3"}]}}"""
+      """{"CHOOSE":["x","S"],"that":{">":["x",3]}}"""
     )
   }
 
@@ -314,9 +312,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
         |          "y"
         |        ]
         |      },
-        |      {
-        |        "int": "5"
-        |      }
+        |      5
         |    ]
         |  }
         |}""".stripMargin
@@ -385,10 +381,17 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     )
   }
 
+  test("L2 :: x") {
+    compare(
+      label(name("x"), "L2"),
+      """{"id":"x","label":{"name":"L2","args":[]}}"""
+    )
+  }
+
   test("L2(a, b) :: f(x+y)>2") {
     compare(
       label(appFun("f", gt(plus("x","y"),2)), "L2", "a", "b"),
-      """{"apply":"f","to":{">":[{"+":["x","y"]},{"int":"2"}]},"label":{"name":"L2","args":["a","b"]}}"""
+      """{"apply":"f","to":{">":[{"+":["x","y"]},2]},"label":{"name":"L2","args":["a","b"]}}"""
     )
   }
 
@@ -396,7 +399,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     val aDecl = TlaOperDecl("A", List(), 1)
     compare(
       letIn(appDecl(aDecl), aDecl),
-      """{"LET":[{"OPERATOR":"A","body":{"int":"1"}}],"IN":{"eval":"A"}}"""
+      """{"LET":[{"OPERATOR":"A","body":1}],"IN":{"eval":"A"}}"""
     )
   }
 
@@ -407,7 +410,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
       plus("x", "y"))
     compare(
       letIn(appDecl(decl, int(1), int(2)), decl),
-      """{"LET":[{"OPERATOR":"A","body":{"+":["x","y"]},"params":[{"name":"x","arity":0},{"name":"y","arity":0}]}],"IN":{"eval":"A","args":[{"int":"1"},{"int":"2"}]}}"""
+      """{"LET":[{"OPERATOR":"A","body":{"+":["x","y"]},"params":[{"name":"x","arity":0},{"name":"y","arity":0}]}],"IN":{"eval":"A","args":[1,2]}}"""
     )
   }
 
@@ -471,23 +474,15 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
         |      {
         |        "eval": "A",
         |        "args": [
-        |          {
-        |            "int": "1"
-        |          },
-        |          {
-        |            "int": "2"
-        |          }
+        |          1,
+        |          2
         |        ]
         |      },
         |      {
         |        "eval": "B",
         |        "args": [
-        |          {
-        |            "int": "3"
-        |          },
-        |          {
-        |            "int": "4"
-        |          }
+        |          3,
+        |          4
         |        ]
         |      }
         |    ]

@@ -4,7 +4,6 @@ import java.io.{File, FileWriter, PrintWriter}
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, _}
-import at.forsyte.apalache.tla.lir.predef._
 import at.forsyte.apalache.tla.lir.values._
 import ujson._
 
@@ -26,8 +25,20 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
 
   // various forms of JSON encodings of TLA expressions
 
+
+  private def id(name: String): ujson.Value = {
+    primitive("id", name)
+  }
+
   private def primitive(tla: String, value: String): ujson.Value = {
     Obj(tla -> value)
+  }
+
+  private def integer(value: BigInt): ujson.Value = {
+    if(value.isValidInt)
+      value.toInt
+    else
+      primitive("int", value.toString)
   }
 
   private def unary(tla: String, arg: TlaEx): ujson.Value = {
@@ -89,8 +100,18 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
     Obj(tla -> toJson(action), "vars" -> toJson(vars))
   }
 
+
+  private def decompress(value: ujson.Value): ujson.Value = {
+    if (value.isInstanceOf[ujson.Str])
+      Obj("id" -> value)
+    else if (value.isInstanceOf[ujson.Num])
+      Obj("int" -> value.num.toInt.toString)
+    else
+      value
+  }
+
   private def labeled(label: String, decoratedEx: TlaEx, args: Seq[TlaEx]): ujson.Value = {
-    val jsonEx = toJson(decoratedEx)
+    val jsonEx = decompress(toJson(decoratedEx))
     jsonEx("label") = Obj("name" -> label, "args" -> args.map(toJson))
     jsonEx
   }
@@ -156,7 +177,7 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
        */
       case NameEx(x) => x
       case ValEx(TlaStr(str)) => primitive("str", str)
-      case ValEx(TlaInt(value)) => primitive("int", value.toString)
+      case ValEx(TlaInt(value)) => integer(value)
       case ValEx(TlaBool(b)) => if (b) True else False
       case ValEx(TlaBoolSet) => primitive("set", "BOOLEAN")
       case ValEx(TlaIntSet) => primitive("set", "Int")
