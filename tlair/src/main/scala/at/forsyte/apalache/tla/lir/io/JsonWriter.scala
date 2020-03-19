@@ -54,11 +54,11 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
   }
 
   private def applyTo(fun: TlaEx, to: TlaEx): ujson.Value = {
-    Obj("apply" -> toJson(fun), "to" -> toJson(to))
+    Obj("apply-fun" -> toJson(fun), "arg" -> toJson(to))
   }
 
   private def applyOpTo(op: String, to: Seq[TlaEx]): ujson.Value = {
-    val json = Obj("eval" -> op)
+    val json = Obj("apply-op" -> op)
     if(to.nonEmpty)
       json("args") = to.map(toJson)
     json
@@ -307,9 +307,9 @@ object JsonWriter {
     TlaOper.ne -> "/=",
     TlaBoolOper.implies -> "=>",
     TlaBoolOper.equiv -> "<=>",
-    TlaArithOper.plus -> "+", // TODO: we treat `+` as nary operator: in JSON we do not distinguish plus and sum
+    TlaArithOper.plus -> "+",
     TlaArithOper.minus -> "-",
-    TlaArithOper.mult -> "*", // TODO: we treat `*` as nary operator: in JSON we do not distinguish mult and prod
+    TlaArithOper.mult -> "*",
     TlaArithOper.div -> "/",
     TlaArithOper.mod -> "%",
     TlaArithOper.realDiv -> "/.",
@@ -319,36 +319,36 @@ object JsonWriter {
     TlaArithOper.gt -> ">",
     TlaArithOper.le -> "<=",
     TlaArithOper.ge -> ">=",
-    TlaSetOper.in -> "in",  // TODO: instead of `\in`
-    TlaSetOper.notin -> "notin", // TODO: instead of `\notin`
-    TlaSetOper.cap -> "intersect", // TODO: instead of `\cap`
-    TlaSetOper.cup -> "union",  // TODO: instead of `\cup`
-    TlaSetOper.setminus -> "setminus",  // TODO: instead of `\setminus`
-    TlaSetOper.subseteq -> "subseteq",  // TODO: instead of `\subseteq`
-    TlaSetOper.subsetProper -> "subset",  // TODO: instead of `\subset`
-    TlaSetOper.supseteq -> "supseteq",  // TODO: instead of `\supseteq`
-    TlaSetOper.supsetProper -> "supset",  // TODO: instead of `\supset`
-    TlaActionOper.composition -> "compose", // TODO: instead of `\cdot`
+    TlaSetOper.in -> "in",
+    TlaSetOper.notin -> "notin",
+    TlaSetOper.cap -> "intersect",
+    TlaSetOper.cup -> "union",
+    TlaSetOper.setminus -> "setminus",
+    TlaSetOper.subseteq -> "subseteq",
+    TlaSetOper.subsetProper -> "subset",
+    TlaSetOper.supseteq -> "supseteq",
+    TlaSetOper.supsetProper -> "supset",
+    TlaActionOper.composition -> "compose",
     TlaTempOper.leadsTo -> "~>",
     TlaTempOper.guarantees -> "-+->",
-    TlaSeqOper.concat -> "concat",  // TODO: instead of `\o`
+    TlaSeqOper.concat -> "concat",
     TlcOper.atat -> "@@",
     TlcOper.colonGreater -> ":>",
     BmcOper.assign -> "<-",
     BmcOper.withType -> "<:",
-    TlaSetOper.funSet -> "function-set" // TODO: instead of `[ -> ]`
+    TlaSetOper.funSet -> "fun-set"
   )
 
   protected val naryOps: Map[TlaOper, String] = HashMap(
-    TlaFunOper.enum -> "record", // TODO: instead of `[ |-> ]`
-    TlaFunOper.tuple -> "tuple",  // TODO: instead of `<<>>`
-    TlaSetOper.enumSet -> "enum", // TODO: instead of `{}`
-    TlaSetOper.recSet -> "record-set", // TODO: instead of `[ : ]`
+    TlaFunOper.enum -> "record",
+    TlaFunOper.tuple -> "tuple",
+    TlaSetOper.enumSet -> "enum",
+    TlaSetOper.recSet -> "rec-set",
     TlaSetOper.times -> "times",
-    TlaArithOper.sum -> "+",  // TODO: we treat `+` as nary operator: in JSON we do not distinguish plus and sum
-    TlaArithOper.prod -> "*", // TODO: we treat `*` as nary operator: in JSON we do not distinguish mult and prod
-    TlaBoolOper.and -> "and", // TODO: instead of `/\`
-    TlaBoolOper.or -> "or"  // TODO: instead of `\/`
+    TlaArithOper.sum -> "+",
+    TlaArithOper.prod -> "*",
+    TlaBoolOper.and -> "and",
+    TlaBoolOper.or -> "or"
   )
 
   protected val boundedPredOps: Map[TlaOper, String] = HashMap(
@@ -362,8 +362,8 @@ object JsonWriter {
     TlaBoolOper.existsUnbounded -> "exists",
     TlaBoolOper.forallUnbounded -> "forall",
     TlaOper.chooseUnbounded -> "CHOOSE",
-    TlaTempOper.EE -> "exists-temporal",
-    TlaTempOper.AA -> "forall-temporal"
+    TlaTempOper.EE -> "EE",
+    TlaTempOper.AA -> "AA"
   )
 
   protected val stutterOps: Map[TlaOper, String] = HashMap(
