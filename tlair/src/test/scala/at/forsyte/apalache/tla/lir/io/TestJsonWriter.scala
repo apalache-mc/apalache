@@ -4,11 +4,11 @@ import java.io.{PrintWriter, StringWriter}
 
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.predef.TlaRealSet
 import at.forsyte.apalache.tla.lir.{OperEx, SimpleFormalParam, TlaEx, TlaOperDecl, ValEx}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import at.forsyte.apalache.tla.lir.values._
 
 @RunWith(classOf[JUnitRunner])
 class TestJsonWriter extends FunSuite with BeforeAndAfterEach {

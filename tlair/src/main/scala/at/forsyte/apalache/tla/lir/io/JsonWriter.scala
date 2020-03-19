@@ -5,7 +5,7 @@ import java.io.{File, FileWriter, PrintWriter}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, _}
 import at.forsyte.apalache.tla.lir.predef._
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
+import at.forsyte.apalache.tla.lir.values._
 import ujson._
 
 import scala.collection.immutable.HashMap
