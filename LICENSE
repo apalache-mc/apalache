@@ -177,9 +177,15 @@
 
    This software is developed by:
     
-     * Igor Konnov: TU Wien (Austria) 2016-2018; INRIA Nancy (France) 2018-2019,
-     * Jure Kukovec: TU Wien (Austria), 2016-2019,
-     * Thanh Hai Tran: TU Wien (Austria), 2016-2019.
+     * Igor Konnov:
+        - TU Wien (Austria) 2016-2018,
+        - INRIA Nancy (France) 2018-2019,
+        - Interchain Foundation (Switzerland) 2019,
+        - Informal Systems (Austria) 2020.
+     * Jure Kukovec: TU Wien (Austria), 2016-2020.
+     * Andrey Kuprianov: Informal Systems (Austria) 2020.
+     * Thanh Hai Tran: TU Wien (Austria), 2016-2020.
+     * Viktor Sergeev: Univ. of Lorraine (France), 2019.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.

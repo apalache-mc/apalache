@@ -1,7 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import java.io.{FileWriter, PrintWriter, StringWriter}
+import java.util.Calendar
 
+import at.forsyte.apalache.tla.assignments.FalseEx
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore}
 import at.forsyte.apalache.tla.bmcmt.rewriter.{ConstSimplifierForSmt, RewriterConfig}
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, MockOracle, Oracle}
@@ -12,13 +14,14 @@ import at.forsyte.apalache.tla.bmcmt.util.TlaExUtil
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.io.{PrettyWriter, UTFPrinter}
+import at.forsyte.apalache.tla.lir.io._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
-import at.forsyte.apalache.tla.lir.values.TlaStr
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaStr}
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.immutable.SortedMap
+import scala.collection.mutable.ListBuffer
 
 /**
   * A bounded model checker using SMT. The checker itself does not implement a particular search. Instead,
@@ -153,8 +156,8 @@ class ModelChecker(typeFinder: TypeFinder[CellT],
       case FinishOnDeadlock() =>
         logger.error(s"Deadlock detected.")
         if (solverContext.sat()) {
-          logger.error("Check an execution leading to a deadlock state in counterexample.txt")
-          dumpCounterexample()
+          val filenames = dumpCounterexample(ValEx(TlaBool(true)) )
+          logger.error(s"Check an execution leading to a deadlock state in any of ${filenames.mkString(", ")}")
         } else {
           logger.error("No model found that would describe the deadlock")
         }
@@ -446,7 +449,9 @@ class ModelChecker(typeFinder: TypeFinder[CellT],
     }
 
     // if the previous step was filtered, we cannot use the unchanged optimization
-    val prevMatchesInvFilter = invFilter == "" || (stepNo - 1).toString.matches("^" + invFilter + "$")
+    // Bugfix to #108: never filter out the initial step
+    val prevMatchesInvFilter =
+      stepNo > 0 && (invFilter == "" || (stepNo - 1).toString.matches("^" + invFilter + "$"))
 
     val invNegs = checkerInput.invariantsAndNegations.map(_._2)
     for ((notInv, invNo) <- invNegs.zipWithIndex) {
@@ -471,7 +476,9 @@ class ModelChecker(typeFinder: TypeFinder[CellT],
 
   private def checkOneInvariant(stepNo: Int, transitionNo: Int, nextState: SymbState, changedPrimed: Set[String], notInv: TlaEx): Unit = {
     val used = TlaExUtil.findUsedNames(notInv).map(_ + "'") // add primes as the invariant is referring to non-primed variables
-    if (used.intersect(changedPrimed).isEmpty) {
+    if (used.nonEmpty && used.intersect(changedPrimed).isEmpty) {
+      // bugfix for #108: check the invariant over CONSTANTS, if it has not been changed before
+      // XXX: it might happen that an invariant over CONSTANTS is checked multiple times. We will fix that in v0.8.0.
       logger.debug(s"The invariant is referring only to the UNCHANGED variables. Skipped.")
     } else {
       rewriter.push()
@@ -484,8 +491,8 @@ class ModelChecker(typeFinder: TypeFinder[CellT],
           // introduce a dummy oracle to hold the transition index, we need it for the counterexample
           val oracle = new MockOracle(transitionNo)
           stack = (notInvState, oracle) +: stack
-          val filename = dumpCounterexample()
-          logger.error(s"Invariant is violated at depth $stepNo. Check the counterexample in $filename")
+          val filenames = dumpCounterexample(notInv)
+          logger.error(s"Invariant is violated at depth $stepNo. Check the counterexample in any of ${filenames.mkString(", ")}")
           if (debug) {
             logger.warn(s"Dumping the arena into smt.log. This may take some time...")
             // dump everything in the log
@@ -506,24 +513,16 @@ class ModelChecker(typeFinder: TypeFinder[CellT],
     }
   }
 
-  private def dumpCounterexample(): String = {
-    val filename = "counterexample.txt"
-    val writer = new PrintWriter(new FileWriter(filename, false))
+  // returns a list of files with counterexample written
+  private def dumpCounterexample(notInv: TlaEx): List[String] = {
+    val states = new ListBuffer[NextState]()
     for (((state, oracle), i) <- stack.reverse.zipWithIndex) {
       val decoder = new SymbStateDecoder(solverContext, rewriter)
       val transition = oracle.evalPosition(solverContext, state)
-      writer.println(s"State $i (from transition $transition):")
-      writer.println("--------")
       val binding = decoder.decodeStateVariables(state)
-      val args = binding.toList.sortBy(_._1).flatMap(p => List(ValEx(TlaStr(p._1)), p._2))
-      if (args.nonEmpty) {
-        val record = OperEx(TlaFunOper.enum, args :_*)
-        new PrettyWriter(writer).write(record)
-      }
-      writer.println("\n========\n")
+      states += ((transition.toString, binding))
     }
-    writer.close()
-    filename
+    CounterexampleWriter.writeAllFormats(checkerInput.rootModule, notInv, states.toList)
   }
 
   private def checkTypes(expr: TlaEx): Unit = {

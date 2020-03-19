@@ -8,9 +8,8 @@ import java.time.temporal.ChronoUnit
 
 import at.forsyte.apalache.infra.log.LogbackConfigurator
 import at.forsyte.apalache.infra.passes.{PassChainExecutor, TlaModuleMixin}
-import at.forsyte.apalache.infra.{ExceptionAdapter, PassOptionException}
+import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorMessage, PassOptionException}
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
-import at.forsyte.apalache.tla.bmcmt.{CheckerException, InternalCheckerError}
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.tooling.Version
 import at.forsyte.apalache.tla.tooling.opt.{CheckCmd, ParseCmd}
@@ -28,9 +27,34 @@ import scala.collection.JavaConverters._
   * @author Igor Konnov
   */
 object Tool extends App with LazyLogging {
-  private lazy val ISSUES_LINK: String = "[https://github.com/konnov/apalache/issues]"
+  lazy val ISSUES_LINK: String = "[https://github.com/konnov/apalache/issues]"
+  lazy val ERROR_EXIT_CODE = 99
+  lazy val OK_EXIT_CODE = 0
 
+  /**
+    * Run the tool in the standalone mode with the provided arguments.
+    * This method calls System.exit with the computed exit code.
+    * If you like to call the tool without System.exit, use the the Tool#run.
+    *
+    * @param args the command line arguments
+    */
   override def main(args: Array[String]): Unit = {
+    val exitcode = run(args)
+    if (exitcode == OK_EXIT_CODE) {
+      Console.out.println("EXITCODE: OK")
+    } else {
+      Console.out.println(s"EXITCODE: ERROR ($exitcode)")
+    }
+    System.exit(exitcode)
+  }
+
+  /**
+    * Run the tool in a library mode, that is, with a call to System.exit.
+    *
+    * @param args the command line arguments
+    * @return the exit code; as usual, 0 means success.
+    */
+  def run(args: Array[String]): Int = {
     Console.println("# APALACHE version %s build %s".format(Version.version, Version.build))
     Console.println("#")
     Console.println("# WARNING: This tool is in the experimental stage.")
@@ -56,7 +80,8 @@ object Tool extends App with LazyLogging {
           val injector = injectorFactory(check)
           handleExceptions(injector, runCheck(injector, check, _))
 
-        case _ => () // nothing to do
+        case _ =>
+          OK_EXIT_CODE // nothing to do
       }
     } finally {
       printTimeDiff(startTime)
@@ -114,7 +139,6 @@ object Tool extends App with LazyLogging {
       executor.options.set("checker.cinit", check.cinit)
     executor.options.set("checker.length", check.length)
     executor.options.set("checker.search", check.search)
-    executor.options.set("checker.checkRuntime", check.checkRuntime)
 
     val result = executor.run()
     if (result.isDefined) {
@@ -161,29 +185,32 @@ object Tool extends App with LazyLogging {
     }
   }
 
-  private def handleExceptions(injector: Injector, fun: Unit => Unit): Unit = {
+  private def handleExceptions(injector: Injector, fun: Unit => Unit): Int = {
     val adapter = injector.getInstance(classOf[ExceptionAdapter])
 
     try {
       fun()
+      Tool.OK_EXIT_CODE
     } catch {
       case e: Exception if adapter.toMessage.isDefinedAt(e) =>
-        logger.error(adapter.toMessage(e), e)
+        adapter.toMessage(e) match {
+          case NormalErrorMessage(text) =>
+            logger.error(text)
+
+          case FailureMessage(text) =>
+            Console.err.println("Please report an issue at: " + ISSUES_LINK, e)
+            logger.error(text, e)
+        }
+        Tool.ERROR_EXIT_CODE
 
       case e: PassOptionException =>
         logger.error(e.getMessage)
-
-      case e: InternalCheckerError =>
-        Console.err.println("There is a bug in the tool, which should be fixed. REPORT IT: " + ISSUES_LINK, e)
-        logger.error("Internal error", e)
-
-      case e: CheckerException =>
-        Console.err.println("The tool has failed around unknown location. REPORT IT: " + ISSUES_LINK, e)
-        logger.error("Checker error", e)
+        Tool.ERROR_EXIT_CODE
 
       case e: Throwable =>
-        Console.err.println("This should not have happened, but it did. REPORT IT: " + ISSUES_LINK, e)
+        Console.err.println("Please report an issue at: " + ISSUES_LINK, e)
         logger.error("Unhandled exception", e)
+        Tool.ERROR_EXIT_CODE
     }
   }
 }

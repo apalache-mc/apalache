@@ -8,6 +8,7 @@ set -e
 
 D=`dirname $0` && D=`cd $D; pwd`
 Z3_DIR="$D/z3-4.8.7"
+CACHE=$1 # either empty, or --nocache
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
     echo "Assuming that you are using MacOS..."
@@ -17,9 +18,9 @@ else
     OST="linux"
 fi
 
-if [ "$1" == "--nocache" ]; then
-    echo "Cleaning the previous builds"
-    rm -rf "${Z3_DIR}"
+if [ "$CACHE" == "--nocache" ]; then
+    echo "Cleaning the build cache"
+    rm -rf "${Z3_DIR}" "$D/Box"
 fi
 
 if [ -f "${Z3_DIR}/configure" ]; then
@@ -73,12 +74,18 @@ mvn -f $D/z3-pom.xml install install:install-file \
 mvn -f $D/box-pom.xml install install:install-file \
     "-Dfile=$D/lib/box.jar" "-DpomFile=$D/box-pom.xml"
 
-echo ""
-echo "1. To build Apalache, just use make.""
-echo ""
-echo "2. To develop Apalache, set the library paths as follows.""
-echo ""
-echo "Add the following line in your ~/.bashrc or ~/.zshrc"
+if [ "$CACHE" == "--nocache" ]; then
+    echo "Cleaning the build cache"
+    rm -rf "${Z3_DIR}" "$D/Box"
+fi
+
+cat <<EOF
+1. To build Apalache, just use make.
+2. To develop Apalache, set the library paths as follows.
+
+Add the following line in your ~/.bashrc or ~/.zshrc:
+EOF
+
 if [ "$OST" == "linux" ]; then
   echo 'export LD_LIBRARY_PATH="$LD_LIBRARY_PATH":'"$D/lib"
 else
