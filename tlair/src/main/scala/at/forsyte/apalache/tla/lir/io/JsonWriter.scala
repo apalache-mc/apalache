@@ -43,15 +43,15 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
   }
 
   private def splitIntoPairs(args: Seq[TlaEx]): ujson.Value = {
-    var pair: (ujson.Value, ujson.Value) = (Null, Null)
+    var last: ujson.Value = Null
     val res = new ArrayBuffer[ujson.Value]()
     args.foreach(ex =>
-      pair match {
-        case (Null, Null) =>
-          pair = (toJson(ex), Null)
-        case (x, Null) =>
+      last match {
+        case Null =>
+          last = toJson(ex)
+        case x =>
           res.append(Arr(x, toJson(ex)))
-          pair = (Null, Null)
+          last = Null
       }
     )
     Arr(res)
