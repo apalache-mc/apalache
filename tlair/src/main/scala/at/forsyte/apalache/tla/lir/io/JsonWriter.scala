@@ -313,9 +313,9 @@ object JsonWriter {
     }
   }
   protected val unaryOps = HashMap(
-    TlaActionOper.prime -> "prime", // TODO: instead of `'`
+    TlaActionOper.prime -> "prime",
     TlaBoolOper.not -> "not",
-    TlaArithOper.uminus -> "minus", // TODO: instead of `-` for disambiguation from binary operator
+    TlaArithOper.uminus -> "uminus",
     TlaSetOper.union -> "UNION",
     TlaSetOper.powerset -> "SUBSET",
     TlaActionOper.enabled -> "ENABLED",
