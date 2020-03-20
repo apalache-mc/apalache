@@ -336,7 +336,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     //   [] guard2 -> action2
     compare(
       caseSplit("guard1", "action1", "guard2", "action2"),
-      """{"CASE":["guard1","action1","guard2","action2"]}"""
+      """{"CASE":[["guard1","action1"],["guard2","action2"]]}"""
     )
   }
 
@@ -346,7 +346,7 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     //   [] OTHER -> otherAction
     compare(
       caseOther("otherAction", "guard1", "action1", "guard2", "action2"),
-      """{"CASE":["guard1","action1","guard2","action2"],"OTHER":"otherAction"}"""
+      """{"CASE":[["guard1","action1"],["guard2","action2"]],"OTHER":"otherAction"}"""
     )
   }
 

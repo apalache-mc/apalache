@@ -109,11 +109,11 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
   }
 
   private def caseSplit(guardsAndUpdates: Seq[TlaEx]): ujson.Value = {
-    Obj("CASE" -> guardsAndUpdates.map(toJson))
+    Obj("CASE" -> splitIntoPairs(guardsAndUpdates))
   }
 
   private def caseOther(guardsAndUpdates: Seq[TlaEx], other: TlaEx): ujson.Value = {
-    Obj("CASE" -> guardsAndUpdates.map(toJson), "OTHER" -> toJson(other))
+    Obj("CASE" -> splitIntoPairs(guardsAndUpdates), "OTHER" -> toJson(other))
   }
 
   private def actionVars(tla: String, action: TlaEx, vars: TlaEx): ujson.Value = {
