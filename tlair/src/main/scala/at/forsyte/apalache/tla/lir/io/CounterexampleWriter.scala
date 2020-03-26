@@ -21,7 +21,8 @@ object CounterexampleWriter {
   def writeAllFormats(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState] ): List[String] = {
     new TlaCounterexampleWriter(new PrintWriter(new FileWriter("counterexample.tla"))).write(rootModule, notInvariant, states)
     new TlcCounterexampleWriter(new PrintWriter(new FileWriter("MC.out"))).write(rootModule, notInvariant, states)
-    List("counterexample.tla", "MC.out")
+    new JsonCounterexampleWriter(new PrintWriter(new FileWriter("counterexample.json"))).write(rootModule, notInvariant, states)
+    List("counterexample.tla", "MC.out", "counterexample.json")
   }
 
   // factory method to get the desired CE writer
@@ -29,6 +30,7 @@ object CounterexampleWriter {
     kind match {
       case "tla" => new TlaCounterexampleWriter(writer)
       case "tlc" => new TlcCounterexampleWriter(writer)
+      case "json" => new JsonCounterexampleWriter(writer)
       case _ => throw new Exception("unknown couterexample writer requested")
     }
   }
@@ -114,3 +116,22 @@ class TlcCounterexampleWriter(writer: PrintWriter) extends TlaCounterexampleWrit
   }
 }
 
+class JsonCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
+  override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState] ) : Unit = {
+    val json = new JsonWriter(writer)
+
+    val tlaStates = states.zipWithIndex.collect{
+      case ((tran,vars), i) =>
+        val state = vars.collect{
+          case (name,value) => OperEx(TlaOper.eq, NameEx(name), value)
+        }
+        TlaOperDecl(s"State${i+1}", List(), OperEx(TlaBoolOper.and, state.toList: _*))
+
+    }
+
+    val mod = new TlaModule(
+      "counterexample",
+      tlaStates ++ List(TlaOperDecl(s"InvariantViolation", List(), notInvariant)))
+    json.write(mod)
+  }
+}
