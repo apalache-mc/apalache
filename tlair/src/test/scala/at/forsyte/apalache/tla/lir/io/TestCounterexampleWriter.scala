@@ -229,4 +229,200 @@ class TestCounterexampleWriter extends FunSuite {
         |""".stripMargin
     )
   }
+
+  test("JSON single state") {
+    compare("json",
+      new TlaModule("test",List()),
+      gt(name("x"), int(1)),
+      List(
+        ("",Map("x" -> int(2)))
+      ),
+      """{
+        |  "MODULE": "counterexample",
+        |  "declarations": [
+        |    {
+        |      "OPERATOR": "State1",
+        |      "body": {
+        |        "and": [
+        |          {
+        |            "=": [
+        |              "x",
+        |              2
+        |            ]
+        |          }
+        |        ]
+        |      }
+        |    },
+        |    {
+        |      "OPERATOR": "InvariantViolation",
+        |      "body": {
+        |        ">": [
+        |          "x",
+        |          1
+        |        ]
+        |      }
+        |    }
+        |  ]
+        |}""".stripMargin
+    )
+  }
+
+  test("JSON two steps") {
+    compare("json",
+      new TlaModule("test",List()),
+      gt(name("x"), int(1)),
+      List(
+        ("", Map("x" -> int(0))),
+        ("Trans1", Map("x" -> int(1))),
+        ("Trans2", Map("x" -> int(2)))
+      ),
+      """{
+        |  "MODULE": "counterexample",
+        |  "declarations": [
+        |    {
+        |      "OPERATOR": "State1",
+        |      "body": {
+        |        "and": [
+        |          {
+        |            "=": [
+        |              "x",
+        |              0
+        |            ]
+        |          }
+        |        ]
+        |      }
+        |    },
+        |    {
+        |      "OPERATOR": "State2",
+        |      "body": {
+        |        "and": [
+        |          {
+        |            "=": [
+        |              "x",
+        |              1
+        |            ]
+        |          }
+        |        ]
+        |      }
+        |    },
+        |    {
+        |      "OPERATOR": "State3",
+        |      "body": {
+        |        "and": [
+        |          {
+        |            "=": [
+        |              "x",
+        |              2
+        |            ]
+        |          }
+        |        ]
+        |      }
+        |    },
+        |    {
+        |      "OPERATOR": "InvariantViolation",
+        |      "body": {
+        |        ">": [
+        |          "x",
+        |          1
+        |        ]
+        |      }
+        |    }
+        |  ]
+        |}""".stripMargin
+    )
+  }
+
+  test("JSON two steps with conjunction") {
+    compare("json",
+      new TlaModule("test",List()),
+      and(gt(name("x"), int(1)), eql(name("y"), int(10))),
+      List(
+        ("",Map("x" -> int(0), "y" -> int(8))),
+        ("Trans1", Map("x" -> int(1), "y" -> int(9))),
+        ("Trans2", Map("x" -> int(2), "y" -> int(10)))
+      ),
+      """{
+        |  "MODULE": "counterexample",
+        |  "declarations": [
+        |    {
+        |      "OPERATOR": "State1",
+        |      "body": {
+        |        "and": [
+        |          {
+        |            "=": [
+        |              "x",
+        |              0
+        |            ]
+        |          },
+        |          {
+        |            "=": [
+        |              "y",
+        |              8
+        |            ]
+        |          }
+        |        ]
+        |      }
+        |    },
+        |    {
+        |      "OPERATOR": "State2",
+        |      "body": {
+        |        "and": [
+        |          {
+        |            "=": [
+        |              "x",
+        |              1
+        |            ]
+        |          },
+        |          {
+        |            "=": [
+        |              "y",
+        |              9
+        |            ]
+        |          }
+        |        ]
+        |      }
+        |    },
+        |    {
+        |      "OPERATOR": "State3",
+        |      "body": {
+        |        "and": [
+        |          {
+        |            "=": [
+        |              "x",
+        |              2
+        |            ]
+        |          },
+        |          {
+        |            "=": [
+        |              "y",
+        |              10
+        |            ]
+        |          }
+        |        ]
+        |      }
+        |    },
+        |    {
+        |      "OPERATOR": "InvariantViolation",
+        |      "body": {
+        |        "and": [
+        |          {
+        |            ">": [
+        |              "x",
+        |              1
+        |            ]
+        |          },
+        |          {
+        |            "=": [
+        |              "y",
+        |              10
+        |            ]
+        |          }
+        |        ]
+        |      }
+        |    }
+        |  ]
+        |}""".stripMargin
+    )
+  }
+
 }
