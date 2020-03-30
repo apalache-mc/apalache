@@ -19,10 +19,25 @@ trait CounterexampleWriter {
 object CounterexampleWriter {
   // default implementation -- write in all formats, and return the list of files written
   def writeAllFormats(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState] ): List[String] = {
-    new TlaCounterexampleWriter(new PrintWriter(new FileWriter("counterexample.tla"))).write(rootModule, notInvariant, states)
-    new TlcCounterexampleWriter(new PrintWriter(new FileWriter("MC.out"))).write(rootModule, notInvariant, states)
-    new JsonCounterexampleWriter(new PrintWriter(new FileWriter("counterexample.json"))).write(rootModule, notInvariant, states)
-    List("counterexample.tla", "MC.out", "counterexample.json")
+    val fileNames = Map(
+      "tla" -> "counterexample.tla",
+      "tlc" -> "MC.out",
+      "json" -> "counterexample.json"
+    )
+    val files = fileNames.map {
+      case (kind, name) => (kind, new PrintWriter(new FileWriter(name)))
+    }
+    try {
+      files.foreach {
+        case (kind, writer) => apply(kind, writer).write(rootModule, notInvariant, states)
+      }
+      fileNames.values.toList
+    }
+    finally {
+      files.foreach {
+        case (_, writer) => writer.close()
+      }
+    }
   }
 
   // factory method to get the desired CE writer
