@@ -291,6 +291,14 @@ However, you can write `N \in {10, 20}`.
 
 *We are planning to support TLC configuration files soon*. Follow [Issue 76](https://github.com/konnov/apalache/issues/76).
 
+## 5.5. Using recursive operators or functions
+
+The model checker, as part of its preprocessing, inlines all operators with positive arity. As this would clearly not work in the presence of recursion, we instead opt to unfold recursive operators to a certain depth. If you wish to define and use recursive operators or functions you must add the following:
+
+For every recursive operator `Foo`, define ``UNFOLD_TIMES_Foo``, a nullary operator, the body of which must be a single integer value (or expand to one). This defines the unfolding depth. Additionally, define another nullary operator ``UNFOLD_DEFAULT_Foo``, which defines the value ``Foo`` will be given, if the call stack exceeds the depth defined in ``UNFOLD_TIMES_Foo``.
+
+For every recursive function `Bar`, define ``UNFOLD_TIMES_Bar`` in the same way. You will also need an operator ``UNFOLD_DEFAULT_Bar``, which has a similar meaning to its operator analogue, but its value should be a function (e.g. `[x \in 1..10 |-> 1]`) instead of the kind of value `Bar` returns (this is because recursive functions are parsed as recursive operators, which return functions).
+
 # 6. Running the tool <a name="running"></a>
 
 ## 6.1. Command-line parameters
