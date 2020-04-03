@@ -16,6 +16,9 @@ integration: apalache
 	cd test \
 	 && $(ENV) ./run-integration
 
+clean:
+	mvn clean
+
 $(DEPDIR)/lib/com.microsoft.z3.jar:
 	# install microsoft z3
 	cd "$(DEPDIR)" && ./install-local.sh
