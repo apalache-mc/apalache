@@ -4,6 +4,9 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.storage.BodyMap
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.values.TlaInt
+
+import scala.collection.mutable
 
 /**
   * <p>Attempts to instantiate the body of the operator named `name` with the provided arguments.
@@ -16,6 +19,12 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
   */
 class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker)
     extends TlaExTransformation {
+
+  import InlinerOfUserOper.{UNFOLD_DEFAULT_PREFIX, UNFOLD_TIMES_PREFIX}
+
+  private var unfoldCount : mutable.Map[String, Int] = mutable.Map.empty
+  // We will only compute limits if we need them.
+  private var unfoldLimits : mutable.Map[String,BigInt] = mutable.Map.empty
 
   override def apply(expr: TlaEx): TlaEx = {
     transform(expr)
@@ -48,22 +57,70 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker)
     case ex => ex
   }
 
+  private def normalCase( decl: TlaOperDecl, args: Seq[TlaEx] ) : Option[TlaEx] = {
+    // Assumption: |decl.formalParams| = |args|
+
+    // deep copy the body, to ensure uniqueness of the UIDs
+    val bodyCopy = DeepCopy( tracker )( decl.body )
+
+    val newBody = decl.formalParams.zip( args ).foldLeft( bodyCopy ) {
+      case (b, (fParam, arg)) =>
+        ReplaceFixed( NameEx( fParam.name ), arg, tracker )( b )
+    }
+    // newBody may contain calls to other operators, recurse
+    val newInlinedBody = transform( newBody )
+    Option( newInlinedBody )
+  }
+
   private def instantiateBody(name: String, args: TlaEx*): Option[TlaEx] = {
     defBodyMap.get(name) match {
-      case Some((params, body)) if params.size == args.size =>
-        // deep copy the body, to ensure uniqueness of the UIDs
-        val bodyCopy = DeepCopy(tracker)(body)
+      case Some( decl ) if decl.formalParams.size == args.size =>
+        // Check if recursive
+        if ( decl.isRecursive ) {
+          // We increment the recursion counter for this name
+          val unfoldedTimes = unfoldCount.getOrElse( name, 0 ) + 1
+          unfoldCount.put( name, unfoldedTimes )
 
-        val newBody = params.zip(args).foldLeft(bodyCopy) {
-          case (b, (fParam, arg)) =>
-            ReplaceFixed(NameEx(fParam.name), arg, tracker)(b)
+          // We get the unfolding limit, which should be an operator in defBodyMap:
+          val unfoldLimitOperName = s"$UNFOLD_TIMES_PREFIX$name"
+
+          val unfoldLimit = unfoldLimits.getOrElseUpdate( unfoldLimitOperName,
+            // If it is not yet known, we have to look up the defining operator
+            defBodyMap.get( unfoldLimitOperName ) match {
+              case Some( unfoldLimitDecl ) =>
+                // The unfoldLimit operator must not be recursive ...
+                if ( unfoldLimitDecl.isRecursive )
+                  throw new Exception( s"Unfold-limit operator $unfoldLimitOperName is recursive." )
+                else
+                  // ... and must evaluate to a single integer
+                  transform(unfoldLimitDecl.body) match {
+                    case ValEx( TlaInt( n ) ) => n
+                    case _ => throw new Exception( s"Unfold-limit operator $unfoldLimitOperName body must be a single integer." )
+                  }
+              case None => throw new Exception( s"Unfold-limit operator $unfoldLimitOperName for $name is not defined." )
+            }
+          )
+          // Check if unfold limit is exceeded:
+          if ( unfoldedTimes > unfoldLimit ) {
+            // If yes, call the default body operator ...
+            val defaultOperName = s"$UNFOLD_DEFAULT_PREFIX$name"
+            defBodyMap.get( defaultOperName ) match {
+              case Some( defaultDecl ) =>
+                // ... which must not be recursive ...
+                if ( defaultDecl.isRecursive )
+                  throw new Exception( s"Default body operator $unfoldLimitOperName is recursive." )
+                else
+                  // ... but may be defined using other operators, so we call transform on it
+                  Some( transform(defaultDecl.body) )
+              case None => throw new Exception( s"Default body operator $defaultOperName for $name is not defined." )
+            }
+          }
+          else normalCase( decl, args )
         }
-        // newBody may contain calls to other operators, recurse
-        val newInlinedBody = transform(newBody)
-        Option(newInlinedBody)
+        else normalCase( decl, args )
 
-      case Some((params, _)) if params.size != args.size =>
-        val msg = s"Operator $name with arity ${params.size} called with ${args.size} argument(s)."
+      case Some(decl) if decl.formalParams.size != args.size =>
+        val msg = s"Operator $name with arity ${decl.formalParams.size} called with ${args.size} argument(s)."
         throw new IllegalArgumentException(msg)
 
       case _ => None
@@ -72,6 +129,11 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker)
 }
 
 object InlinerOfUserOper {
+
+  // Jure, 2.4.20: By Igor's request, MC recursion specification operators have naming conventions
+  val UNFOLD_TIMES_PREFIX : String = "UNFOLD_TIMES_"
+  val UNFOLD_DEFAULT_PREFIX : String = "UNFOLD_DEFAULT_"
+
   def apply(defBodyMap: BodyMap, tracker: TransformationTracker): InlinerOfUserOper = {
     new InlinerOfUserOper(defBodyMap, tracker)
   }

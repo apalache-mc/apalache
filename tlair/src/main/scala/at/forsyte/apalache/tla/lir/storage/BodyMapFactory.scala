@@ -13,7 +13,7 @@ object BodyMapFactory {
   def makeFromDecl( decl : TlaDecl, initial : BodyMap = newMap ) : BodyMap =
     decl match {
       case decl : TlaOperDecl if !initial.contains( decl.name ) =>
-        initial + (decl.name -> (decl.formalParams, decl.body))
+        initial + (decl.name -> decl)
       case _ => initial
     }
 
