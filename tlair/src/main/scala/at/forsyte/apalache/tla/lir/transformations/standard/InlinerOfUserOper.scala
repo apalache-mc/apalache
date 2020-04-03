@@ -27,6 +27,7 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker)
   private var unfoldLimits : mutable.Map[String,BigInt] = mutable.Map.empty
 
   override def apply(expr: TlaEx): TlaEx = {
+    unfoldCount = mutable.Map.empty
     transform(expr)
   }
 
