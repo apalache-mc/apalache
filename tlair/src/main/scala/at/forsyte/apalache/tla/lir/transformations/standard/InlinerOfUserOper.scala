@@ -103,7 +103,8 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker)
           )
           // Check if unfold limit is exceeded:
           if ( unfoldedTimes > unfoldLimit ) {
-            // If yes, call the default body operator ...
+            // If yes, reset the unfold counter and call the default body operator ...
+            unfoldCount.remove( name )
             val defaultOperName = s"$UNFOLD_DEFAULT_PREFIX$name"
             defBodyMap.get( defaultOperName ) match {
               case Some( defaultDecl ) =>
