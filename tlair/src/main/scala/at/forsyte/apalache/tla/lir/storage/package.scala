@@ -7,7 +7,7 @@ import scala.collection.immutable
 package object storage {
 
   type BodyMapKey = String
-  type BodyMapVal = (List[FormalParam], TlaEx)
+  type BodyMapVal = TlaOperDecl
   type BodyMap = immutable.Map[BodyMapKey, BodyMapVal]
 
   type SourceMap = immutable.Map[UID, SourceLocation]
