@@ -1,10 +1,13 @@
 package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.TlaOper
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.{ModuleByExTransformer, ReplaceFixed}
 import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
 import com.typesafe.scalalogging.LazyLogging
+
+import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.Set
 
 /**
   * A rewriter of definitions and constants that replaces every definition Foo with the definition seen in OVERRIDE_Foo,
@@ -52,7 +55,7 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
     // substitute the constant definitions and operator definitions with the replacement operators
     val transformed = mod.declarations map transformDef
     val filtered = transformed filter (!_.name.startsWith(ConstAndDefRewriter.OVERRIDE_PREFIX))
-
+    val sorted = toposortDefs(filtered)
     // Importantly, for every constant c, replace NameEx(c) with OperEx(TlaOper.apply, replacement).
     // This is needed as we distinguish the operator calls from constant and variable use.
 
@@ -63,7 +66,7 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
     }
 
     val replacedConsts = mod.declarations.collect { case TlaConstDecl(name) if overrides.contains(name) => name }
-    val replaced = replacedConsts.foldLeft(new TlaModule(mod.name, filtered))(replaceConstWithCall)
+    val replaced = replacedConsts.foldLeft(new TlaModule(mod.name, sorted))(replaceConstWithCall)
     replaced
   }
 
@@ -76,6 +79,72 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
 
     Map(overrides :_*)
   }
+
+  private def toposortDefs(defs: Seq[TlaDecl]): Seq[TlaDecl] = {
+
+    var defsWithDeps = List[(TlaDecl,Set[String])](
+      defs.map {
+        case d@TlaOperDecl(_, params, body) =>
+          val paramSet = Set[String](params.collect {
+            case p => p.name
+          }:_*)
+          (d, findDeps(body) -- paramSet)
+       case d => (d, Set[String]())
+      }:_*
+    )
+    var sorted = ListBuffer[TlaDecl]()
+    var added = Set[String]()
+    var newAdded = false
+    do {
+      newAdded = false
+      val remain = ListBuffer[(TlaDecl, Set[String])]()
+      defsWithDeps.foreach {
+        case (d, deps) =>
+          val newDeps = deps -- added
+          if(newDeps.isEmpty) {
+            sorted += d
+            added += d.name
+            newAdded = true
+          }
+          else {
+            remain += ((d, deps))
+          }
+          true
+      }
+      defsWithDeps = remain.toList
+    }
+    while(!defsWithDeps.isEmpty && newAdded)
+    if(!defsWithDeps.isEmpty) {
+      logger.error(s"  > toposort remaining definitions: ${defsWithDeps.toString}")
+      throw new Exception("Circular input dependency detected" )
+    }
+    sorted
+  }
+
+  private def findDeps(expr: TlaEx): Set[String] = {
+    expr match {
+      case NameEx(name) => Set(name)
+      case  OperEx(op, x, s, p)
+        if op == TlaOper.chooseBounded ||  op == TlaBoolOper.exists || op == TlaBoolOper.forall =>
+        findDeps(s) ++ findDeps(p) -- List(x.asInstanceOf[NameEx].name)
+      case  OperEx(op, x, p)
+        if op == TlaOper.chooseUnbounded ||  op == TlaBoolOper.existsUnbounded || op == TlaBoolOper.forallUnbounded =>
+        findDeps(p) -- List(x.asInstanceOf[NameEx].name)
+      case OperEx(op, body, keysAndValues@_*)
+        if op == TlaFunOper.funDef =>
+        val (ks, vs) = keysAndValues.zipWithIndex partition (_._2 % 2 == 0)
+        val (keys, values) = (ks.map(_._1.asInstanceOf[NameEx].name), vs.map(_._1))
+        findDeps(body) ++ values.foldLeft(Set[String]()){
+          case (s, x) => s ++ findDeps(x)
+        } -- keys
+      case OperEx(_, args@_*) =>
+        args.foldLeft(Set[String]()) {
+          case (s, e) => s ++ findDeps(e)
+        }
+      case _ => Set[String]()
+    }
+  }
+
 }
 
 object ConstAndDefRewriter {
