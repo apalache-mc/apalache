@@ -824,11 +824,6 @@ In this case, Apalache unfolds every call to `Sum` exactly `UNFOLD_TIMES_Sum`
 times, that is, four times. On the default branch, Apalache places
 `UNFOLD_DEFAULT_SUM`, that is, 0.
 
-The model checker, as part of its preprocessing, inlines all operators with
-positive arity. As this would clearly not work in the presence of recursion, we
-instead opt to unfold recursive operators to a certain depth. If you wish to
-define and use recursive operators or functions you must add the following:
-
 ### 9.2. Recursive functions
 
 Recursive functions are not supported yet. We do not have an idea of how encode
