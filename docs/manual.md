@@ -2,9 +2,9 @@
 
 **Version 0.7.0** :fireworks:
 
-**Authors: Igor Konnov and Andrey Kuprianov**
+**Authors: Igor Konnov, Jure Kukovec, and Andrey Kuprianov**
 
-**Contact: {igor,andrey} at informal.systems**
+**Contact: {igor,andrey} at informal.systems, jkukovec at forsyte.at**
 
 # Introduction
 
@@ -30,6 +30,7 @@ Apalache is working under the following assumptions:
  1. [Running the tool](#running)
  1. [Understanding assignments](#assignments)
  1. [Type annotations](#types)
+ 1. [Recursive operators and functions](#recursion)
  1. [Five minutes of theory](#theory5)
  1. [Supported language features](#features)
 
@@ -290,14 +291,6 @@ However, you can write `N \in {10, 20}`.
 ## 5.4. TLC configuration file
 
 *We are planning to support TLC configuration files soon*. Follow [Issue 76](https://github.com/konnov/apalache/issues/76).
-
-## 5.5. Using recursive operators or functions
-
-The model checker, as part of its preprocessing, inlines all operators with positive arity. As this would clearly not work in the presence of recursion, we instead opt to unfold recursive operators to a certain depth. If you wish to define and use recursive operators or functions you must add the following:
-
-For every recursive operator `Foo`, define ``UNFOLD_TIMES_Foo``, a nullary operator, the body of which must be a single integer value (or expand to one). This defines the unfolding depth. Additionally, define another nullary operator ``UNFOLD_DEFAULT_Foo``, which defines the value ``Foo`` will be given, if the call stack exceeds the depth defined in ``UNFOLD_TIMES_Foo``.
-
-For every recursive function `Bar`, define ``UNFOLD_TIMES_Bar`` in the same way. You will also need an operator ``UNFOLD_DEFAULT_Bar``, which has a similar meaning to its operator analogue, but its value should be a function (e.g. `[x \in 1..10 |-> 1]`) instead of the kind of value `Bar` returns (this is because recursive functions are parsed as recursive operators, which return functions).
 
 # 6. Running the tool <a name="running"></a>
 
@@ -763,8 +756,86 @@ Type annotations can be also applied to sets of records. For example:
 You can find more details on the simple type inference algorithm and the type
 annotations in [type annotations](types-and-annotations.md).
 
-<a name="theory5"></a>
+<a name="recursion"></a>
+## 9. Recursive operators and functions
 
+### 9.1. Recursive operators
+
+In the preprocessing phase, Apalache replaces every application of a user
+operator with its body. We call this process "operator inlining".
+This cannot be done for recursive operators, for two reasons:
+
+ 1. A recursive operator may be non-terminating (although a non-terminating
+    operator is useless in TLA+);
+
+ 1. A terminating call to an operator may take an unpredicted number of iterations.
+
+However, in practice, when one fixes specification parameters (that is,
+`CONSTANTS`), it is usually easy to find a bound on the number of operator
+iterations. For instance, consider the following specification:
+
+```tla
+--------- MODULE Rec6 -----------------
+CONSTANTS N
+VARIABLES set, count
+
+RECURSIVE Sum(_)
+
+Sum(S) ==
+  IF S = {}
+  THEN 0
+  ELSE LET x == CHOOSE x \in S: TRUE IN
+    x + Sum(S \ {x})
+
+Init ==
+  /\ set = {}
+  /\ count = 0
+
+Next ==
+  \E x \in (1..N) \ set:
+    /\ count' = count + x
+    /\ set' = set \union {x}
+
+Inv == count = Sum(set)
+=======================================    
+```
+
+It is clear that the expression `Sum(S)` requires the number of iterations that
+is equal to `Cardinality(S) + 1`. Moreover, the expression `set \subseteq
+1..N` is an invariant, and thus every call `Sum(set)` requires up to `N+1`
+iterations.
+
+When, we can find an upper bound on the number of iterations, Apalache can
+unfold the recursive operator up to this bound. To this end, we define two
+additional operators. For instance:
+
+```tla
+--------- MC_Rec6 ----------
+VARIABLES set, count
+
+INSTANCE Rec6 WITH N <- 3
+
+UNFOLD_TIMES_Sum == 4
+UNFOLD_DEFAULT_Sum == 0
+============================
+```
+
+In this case, Apalache unfolds every call to `Sum` exactly `UNFOLD_TIMES_Sum`
+times, that is, four times. On the default branch, Apalache places
+`UNFOLD_DEFAULT_SUM`, that is, 0.
+
+The model checker, as part of its preprocessing, inlines all operators with
+positive arity. As this would clearly not work in the presence of recursion, we
+instead opt to unfold recursive operators to a certain depth. If you wish to
+define and use recursive operators or functions you must add the following:
+
+### 9.2. Recursive functions
+
+Recursive functions are not supported yet. We do not have an idea of how encode
+them.
+
+
+<a name="theory5"></a>
 # 9. Five minutes of theory
 
 **You can safely skip this section**
