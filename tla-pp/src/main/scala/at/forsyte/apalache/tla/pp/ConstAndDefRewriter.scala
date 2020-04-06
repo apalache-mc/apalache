@@ -14,6 +14,7 @@ import scala.collection.mutable.Set
   * if OVERRIDE_Foo is present.
   *
   * @author Igor Konnov
+  * @author Andrey Kuprianov (topological sorting)
   */
 class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTransformation with LazyLogging {
   override def apply(mod: TlaModule): TlaModule = {
@@ -83,15 +84,11 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
   private def toposortDefs(defs: Seq[TlaDecl]): Seq[TlaDecl] = {
 
     var defsWithDeps = List[(TlaDecl,Set[String])](
-      defs.map {
-        case d@TlaOperDecl(_, params, body) =>
-          val paramSet = Set[String](params.collect {
-            case p => p.name
-          }:_*)
-          (d, findDeps(body) -- paramSet)
-       case d => (d, Set[String]())
-      }:_*
+      defs.map { case d => (d, findDeps(d)) }:_*
     )
+
+    // logger.info(s"  > toposort definitions: ${defsWithDeps.toString}")
+
     var sorted = ListBuffer[TlaDecl]()
     var added = Set[String]()
     var newAdded = false
@@ -121,15 +118,36 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
     sorted
   }
 
+  private def findDeps(decl: TlaDecl): Set[String] = {
+    decl match {
+      case d@TlaOperDecl(_, params, body) =>
+        val paramSet = Set[String](params.collect {
+          case p => p.name
+        }: _*)
+        val deps = findDeps(body) -- paramSet
+        //logger.info(s"  > toposort processed : ${d.name} = ${deps.toString}")
+        deps
+      case d =>
+        // logger.info(s"  > toposort skipped : ${d.name}")
+        Set[String]()
+    }
+  }
+
   private def findDeps(expr: TlaEx): Set[String] = {
     expr match {
       case NameEx(name) => Set(name)
       case  OperEx(op, x, s, p)
         if op == TlaOper.chooseBounded ||  op == TlaBoolOper.exists || op == TlaBoolOper.forall =>
         findDeps(s) ++ findDeps(p) -- List(x.asInstanceOf[NameEx].name)
-      case  OperEx(op, x, p)
+      case  OperEx(op, NameEx(name), p)
         if op == TlaOper.chooseUnbounded ||  op == TlaBoolOper.existsUnbounded || op == TlaBoolOper.forallUnbounded =>
-        findDeps(p) -- List(x.asInstanceOf[NameEx].name)
+        findDeps(p) -- List(name)
+      case OperEx(TlaFunOper.app, funEx, argEx) =>
+        findDeps(funEx) ++ findDeps(argEx)
+      case OperEx(TlaOper.apply, NameEx(name), args@_*) =>
+        args.foldLeft(Set[String]()) {
+          case (s, e) => s ++ findDeps(e)
+        } ++ List(name)
       case OperEx(op, body, keysAndValues@_*)
         if op == TlaFunOper.funDef =>
         val (ks, vs) = keysAndValues.zipWithIndex partition (_._2 % 2 == 0)
@@ -137,6 +155,14 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
         findDeps(body) ++ values.foldLeft(Set[String]()){
           case (s, x) => s ++ findDeps(x)
         } -- keys
+      case LetInEx(body, decls@_*) =>
+        findDeps(body) ++
+        decls.foldLeft(Set[String]()) {
+          case (s, d) => s ++ findDeps(d)
+        } --
+        decls.foldLeft(Set[String]()) {
+          case (s, d) => s ++ List(d.name)
+        }
       case OperEx(_, args@_*) =>
         args.foldLeft(Set[String]()) {
           case (s, e) => s ++ findDeps(e)
