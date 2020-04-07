@@ -124,7 +124,7 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
         val paramSet = Set[String](params.collect {
           case p => p.name
         }: _*)
-        findDeps(body) -- paramSet
+        findDeps(body) -- paramSet -- List(decl.name)
       case _ =>
         Set[String]()
     }
