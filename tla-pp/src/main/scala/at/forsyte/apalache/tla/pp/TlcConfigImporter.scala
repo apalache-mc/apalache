@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.io.tlc.config._
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import com.typesafe.scalalogging.LazyLogging
@@ -23,9 +24,15 @@ class TlcConfigImporter(config: TlcConfig, tracker: TransformationTracker) exten
             TlaStr(value)
         ))
     }
-    val replacements = config.constReplacements.map{
+    val operators = Set(mod.declarations.collect {
+      case TlaOperDecl(name, _, _) => name
+    }:_*)
+    val replacements = config.constReplacements.map {
       case (param, value) =>
-        TlaOperDecl(ConstAndDefRewriter.OVERRIDE_PREFIX + param, List(), NameEx(value))
+        if(operators.contains(value))
+          TlaOperDecl(ConstAndDefRewriter.OVERRIDE_PREFIX + param, List(), OperEx(TlaOper.apply, NameEx(value)))
+        else
+          TlaOperDecl(ConstAndDefRewriter.OVERRIDE_PREFIX + param, List(), NameEx(value))
     }
     val stateConstraints = config.stateConstraints.zipWithIndex.map{
       case (value, index) =>
