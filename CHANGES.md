@@ -1,7 +1,14 @@
+## 0.7.0 [SNAPSHOT] #unstable
 
-## 0.6.1 [SNAPSHOT]
+ * fixed exit codes `EXITCODE: OK` and `EXITCODE: ERROR (<code>)`
+ * normal error messages and failure messages with stack traces
+
+## 0.6.1 [SNAPSHOT] #master
 
  * Critical bugfix in the optimization of set comprehensions like `\E x \in {e: y \in S}: f`
+
+ * Bugfix for #108: the model checker was skipping the `FALSE` invariant,
+   due to an optimization
 
 ## 0.6.0 [RELEASE]
 

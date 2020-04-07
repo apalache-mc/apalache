@@ -44,5 +44,13 @@
             <artifactId>kiama_2.12</artifactId>
             <version>2.2.1</version>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.lihaoyi/upickle -->
+        <dependency>
+            <groupId>com.lihaoyi</groupId>
+            <artifactId>ujson_2.12</artifactId>
+            <version>0.9.8</version>
+        </dependency>
+
     </dependencies>
 </project>
