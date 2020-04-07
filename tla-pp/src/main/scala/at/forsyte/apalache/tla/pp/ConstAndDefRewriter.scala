@@ -146,7 +146,7 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
           case (s, e) => s ++ findDeps(e)
         } ++ List(name)
       case OperEx(op, body, keysAndValues@_*)
-        if op == TlaFunOper.funDef =>
+        if op == TlaFunOper.funDef  || op == TlaSetOper.map =>
         val (ks, vs) = keysAndValues.zipWithIndex partition (_._2 % 2 == 0)
         val (keys, values) = (ks.map(_._1.asInstanceOf[NameEx].name), vs.map(_._1))
         findDeps(body) ++ values.foldLeft(Set[String]()){
