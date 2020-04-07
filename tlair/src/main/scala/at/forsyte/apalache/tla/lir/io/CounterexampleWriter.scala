@@ -19,9 +19,25 @@ trait CounterexampleWriter {
 object CounterexampleWriter {
   // default implementation -- write in all formats, and return the list of files written
   def writeAllFormats(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState] ): List[String] = {
-    new TlaCounterexampleWriter(new PrintWriter(new FileWriter("counterexample.tla"))).write(rootModule, notInvariant, states)
-    new TlcCounterexampleWriter(new PrintWriter(new FileWriter("MC.out"))).write(rootModule, notInvariant, states)
-    List("counterexample.tla", "MC.out")
+    val fileNames = Map(
+      "tla" -> "counterexample.tla",
+      "tlc" -> "MC.out",
+      "json" -> "counterexample.json"
+    )
+    val files = fileNames.map {
+      case (kind, name) => (kind, new PrintWriter(new FileWriter(name)))
+    }
+    try {
+      files.foreach {
+        case (kind, writer) => apply(kind, writer).write(rootModule, notInvariant, states)
+      }
+      fileNames.values.toList
+    }
+    finally {
+      files.foreach {
+        case (_, writer) => writer.close()
+      }
+    }
   }
 
   // factory method to get the desired CE writer
@@ -29,6 +45,7 @@ object CounterexampleWriter {
     kind match {
       case "tla" => new TlaCounterexampleWriter(writer)
       case "tlc" => new TlcCounterexampleWriter(writer)
+      case "json" => new JsonCounterexampleWriter(writer)
       case _ => throw new Exception("unknown couterexample writer requested")
     }
   }
@@ -114,3 +131,22 @@ class TlcCounterexampleWriter(writer: PrintWriter) extends TlaCounterexampleWrit
   }
 }
 
+class JsonCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
+  override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState] ) : Unit = {
+    val json = new JsonWriter(writer)
+
+    val tlaStates = states.zipWithIndex.collect{
+      case ((tran,vars), i) =>
+        val state = vars.collect{
+          case (name,value) => OperEx(TlaOper.eq, NameEx(name), value)
+        }
+        TlaOperDecl(s"State${i+1}", List(), OperEx(TlaBoolOper.and, state.toList: _*))
+
+    }
+
+    val mod = new TlaModule(
+      "counterexample",
+      tlaStates ++ List(TlaOperDecl(s"InvariantViolation", List(), notInvariant)))
+    json.write(mod)
+  }
+}

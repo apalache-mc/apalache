@@ -2,9 +2,9 @@
 
 **Version 0.7.0** :fireworks:
 
-**Authors: Igor Konnov and Andrey Kuprianov**
+**Authors: Igor Konnov, Jure Kukovec, and Andrey Kuprianov**
 
-**Contact: {igor,andrey} at informal.systems**
+**Contact: {igor,andrey} at informal.systems, jkukovec at forsyte.at**
 
 # Introduction
 
@@ -30,6 +30,7 @@ Apalache is working under the following assumptions:
  1. [Running the tool](#running)
  1. [Understanding assignments](#assignments)
  1. [Type annotations](#types)
+ 1. [Recursive operators and functions](#recursion)
  1. [Five minutes of theory](#theory5)
  1. [Supported language features](#features)
 
@@ -755,8 +756,81 @@ Type annotations can be also applied to sets of records. For example:
 You can find more details on the simple type inference algorithm and the type
 annotations in [type annotations](types-and-annotations.md).
 
-<a name="theory5"></a>
+<a name="recursion"></a>
+## 9. Recursive operators and functions
 
+### 9.1. Recursive operators
+
+In the preprocessing phase, Apalache replaces every application of a user
+operator with its body. We call this process "operator inlining".
+This cannot be done for recursive operators, for two reasons:
+
+ 1. A recursive operator may be non-terminating (although a non-terminating
+    operator is useless in TLA+);
+
+ 1. A terminating call to an operator may take an unpredicted number of iterations.
+
+However, in practice, when one fixes specification parameters (that is,
+`CONSTANTS`), it is usually easy to find a bound on the number of operator
+iterations. For instance, consider the following specification:
+
+```tla
+--------- MODULE Rec6 -----------------
+CONSTANTS N
+VARIABLES set, count
+
+RECURSIVE Sum(_)
+
+Sum(S) ==
+  IF S = {}
+  THEN 0
+  ELSE LET x == CHOOSE x \in S: TRUE IN
+    x + Sum(S \ {x})
+
+Init ==
+  /\ set = {}
+  /\ count = 0
+
+Next ==
+  \E x \in (1..N) \ set:
+    /\ count' = count + x
+    /\ set' = set \union {x}
+
+Inv == count = Sum(set)
+=======================================    
+```
+
+It is clear that the expression `Sum(S)` requires the number of iterations that
+is equal to `Cardinality(S) + 1`. Moreover, the expression `set \subseteq
+1..N` is an invariant, and thus every call `Sum(set)` requires up to `N+1`
+iterations.
+
+When, we can find an upper bound on the number of iterations, Apalache can
+unfold the recursive operator up to this bound. To this end, we define two
+additional operators. For instance:
+
+```tla
+--------- MC_Rec6 ----------
+VARIABLES set, count
+
+INSTANCE Rec6 WITH N <- 3
+
+UNFOLD_TIMES_Sum == 4
+UNFOLD_DEFAULT_Sum == 0
+============================
+```
+
+In this case, Apalache unfolds every call to `Sum` exactly `UNFOLD_TIMES_Sum`
+times, that is, four times. On the default branch, Apalache places
+`UNFOLD_DEFAULT_SUM`, that is, 0.
+
+### 9.2. Recursive functions
+
+Recursive functions are not supported yet. We do not have an idea of how encode
+them.
+
+
+<a name="theory5"></a>
 # 9. Five minutes of theory
 
 **You can safely skip this section**
