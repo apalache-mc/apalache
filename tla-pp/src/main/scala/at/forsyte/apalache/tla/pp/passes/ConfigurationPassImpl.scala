@@ -46,10 +46,15 @@ class ConfigurationPassImpl @Inject()(val options: PassOptions,
     var module = tlaModule.get
 
     // read TLC config if present
+    val configFilename = options.getOrElse("checker","config","")
     val filename =
-      options.getOrError("parser", "filename").asInstanceOf[String]
-      .replaceFirst("\\.tla$", "\\.cfg")
+      if(configFilename.isEmpty)
+        options.getOrError("parser", "filename").asInstanceOf[String]
+        .replaceFirst("\\.tla$", "\\.cfg")
+      else
+        configFilename
     val basename = FilenameUtils.getName(filename)
+    logger.info("  > Loading TLC configuration from " + basename)
     try {
       val config = TlcConfigParser.apply(new FileReader(filename))
       module = new TlcConfigImporter(config, new IdleTracker())(module)
@@ -80,8 +85,14 @@ class ConfigurationPassImpl @Inject()(val options: PassOptions,
       }
     }
     catch {
-      case _: FileNotFoundException => logger.info("  > No TLC configuration found; skipping")
-      case e: TlcConfigParseError => logger.warn("  > Error parsing TLC configuration in " + basename + ": " + e.msg)
+      case _: FileNotFoundException =>
+        if(configFilename.isEmpty) {
+          logger.info("  > No TLC configuration found; skipping")
+        }
+        else {
+          logger.error("  > Could not find TLC config file " + basename + " given via --config option")
+        }
+      case e: TlcConfigParseError => logger.error("  > Could not parse TLC configuration in " + basename + ": " + e.msg)
     }
 
     val rewritten = new ConstAndDefRewriter(tracker)(module)

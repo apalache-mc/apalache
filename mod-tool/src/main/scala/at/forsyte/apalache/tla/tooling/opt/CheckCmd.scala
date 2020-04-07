@@ -13,6 +13,10 @@ class CheckCmd extends Command(name = "check",
   description = "Check a TLA+ specification") with General {
 
   var file: File = arg[File](description = "a file containing a TLA+ specification")
+  var config: String = opt[String](
+    name = "config", default = "",
+    description = "configuration file in TLC format,\n" +
+      "default: <file>.cfg, or none if <file>.cfg not present")
   var search: String = opt[String](
     name = "search", default = "bfs",
     description = "search type (dfs or bfs), default: bfs")
