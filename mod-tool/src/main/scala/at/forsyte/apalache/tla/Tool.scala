@@ -130,6 +130,8 @@ object Tool extends App with LazyLogging {
     executor.options.set("general.debug", check.debug)
     executor.options.set("smt.prof", check.smtprof)
     executor.options.set("parser.filename", check.file.getAbsolutePath)
+    if (check.config != "")
+      executor.options.set("checker.config", check.config)
     if (check.init != "")
       executor.options.set("checker.init", check.init)
     if (check.next != "")
