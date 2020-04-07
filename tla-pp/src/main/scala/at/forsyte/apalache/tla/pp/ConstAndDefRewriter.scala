@@ -112,23 +112,20 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
     }
     while(!defsWithDeps.isEmpty && newAdded)
     if(!defsWithDeps.isEmpty) {
-      logger.error(s"  > toposort remaining definitions: ${defsWithDeps.toString}")
-      throw new Exception("Circular input dependency detected" )
+      logger.error(s"  > topological sort: can't order these definitions: ${defsWithDeps.toString}")
+      throw new Exception("Circular definition dependency detected" )
     }
     sorted
   }
 
   private def findDeps(decl: TlaDecl): Set[String] = {
     decl match {
-      case d@TlaOperDecl(_, params, body) =>
+      case TlaOperDecl(_, params, body) =>
         val paramSet = Set[String](params.collect {
           case p => p.name
         }: _*)
-        val deps = findDeps(body) -- paramSet
-        //logger.info(s"  > toposort processed : ${d.name} = ${deps.toString}")
-        deps
-      case d =>
-        // logger.info(s"  > toposort skipped : ${d.name}")
+        findDeps(body) -- paramSet
+      case _ =>
         Set[String]()
     }
   }
@@ -137,8 +134,8 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
     expr match {
       case NameEx(name) => Set(name)
       case  OperEx(op, x, s, p)
-        if op == TlaOper.chooseBounded ||  op == TlaBoolOper.exists || op == TlaBoolOper.forall =>
-        findDeps(s) ++ findDeps(p) -- List(x.asInstanceOf[NameEx].name)
+        if op == TlaOper.chooseBounded ||  op == TlaBoolOper.exists || op == TlaBoolOper.forall || op == TlaSetOper.filter =>
+        findDeps(s) ++ findDeps(p) -- findDeps(x)
       case  OperEx(op, NameEx(name), p)
         if op == TlaOper.chooseUnbounded ||  op == TlaBoolOper.existsUnbounded || op == TlaBoolOper.forallUnbounded =>
         findDeps(p) -- List(name)
