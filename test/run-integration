@@ -130,6 +130,8 @@ check "022-Assignments20200309" --length=1 --inv=Inv Assignments20200309.tla \
     && expect_fail # Init does not have an assignment
 check "023-Rec1" --length=5 --inv=Inv Rec1.tla \
     && expect_ok
+check "024-Inline" --length=5 Inline.tla \
+    && expect_ok
 
 cat "$LOGFILE"
 
