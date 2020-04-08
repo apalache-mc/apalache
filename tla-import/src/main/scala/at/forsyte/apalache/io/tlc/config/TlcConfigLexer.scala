@@ -37,7 +37,7 @@ object TlcConfigLexer extends RegexParsers {
   def token: Parser[TlcConfigToken] =
     positioned(
       constant | init | next | specification | invariant | property | constraint | actionConstraint |
-        symmetry | leftArrow | eq | identifier
+        symmetry | leftArrow | eq | identifier | number
     ) ///
 
   // it is important that linefeed is not a whiteSpace, as otherwise singleComment consumes the whole input!
@@ -51,6 +51,10 @@ object TlcConfigLexer extends RegexParsers {
 
   private def identifier: Parser[IDENT] = {
     "[a-zA-Z_][a-zA-Z0-9_]*".r ^^ { name => IDENT(name) }
+  }
+
+  private def number: Parser[NUMBER] = {
+    "(|-)[0-9][0-9]*".r ^^ { value => NUMBER(value) }
   }
 
   private def constant: Parser[CONST] = {
