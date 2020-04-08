@@ -1,6 +1,6 @@
 # Apalache manual
 
-**Version 0.7.0** :fireworks:
+**Version 0.7.0 (unstable)** :fireworks:
 
 **Authors: Igor Konnov, Jure Kukovec, and Andrey Kuprianov**
 
@@ -294,7 +294,7 @@ However, you can write `N \in {10, 20}`.
 
 # 6. Running the tool <a name="running"></a>
 
-## 6.1. Command-line parameters
+## 6.1. Model checker command-line parameters
 
 The model checker can be run as follows:
 
@@ -372,6 +372,7 @@ In this case, Apalache finds a safety violation, e.g., for
 `BIRTH_YEAR=89` and `LICENSE_AGE=10`. A complete counterexample
 is printed in `counterexample.txt`.
 
+<a name="detailed"></a>
 ## 6.3. Detailed output
 
 The tool will display only the important messages. A detailed log can be found
@@ -397,6 +398,25 @@ the run-specific directory `x/hh.mm-DD.MM.YYYY-<id>`:
   - File `out-opt.tla` is produced as a result of expression optimizations.
   - File `out-analysis.tla` is produced as a result of analysis, e.g.,
     marking Skolemizable expressions and expressions to be expanded.
+
+<a name="parsing"></a>
+## 6.4. Parsing and pretty-printing
+
+If you like to check that your TLA+ specification is syntactically correct,
+without running the model checker, you can run the following command.
+
+```bash
+$ apalache parse <myspec>.tla
+```
+
+In this case, Apalache performs the following steps:
+
+1. It parses the specification with [SANY](https://lamport.azurewebsites.net/tla/tools.html).
+
+1. It translates SANY semantic nodes into [Apalache IR](https://github.com/konnov/apalache/blob/master/tlair/src/main/scala/at/forsyte/apalache/tla/lir/package.scala).
+
+1. It pretty-prints the IR into `out-parser.tla`, see [Section 6.3](#detailed).
+
 
 <a name="assignments"></a>
 
