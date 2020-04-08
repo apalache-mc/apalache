@@ -59,8 +59,8 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
     } else {
       state.toList.sortBy(_._1).foreach{
         case (name,value) =>
-          writer.print("/\\ ")
-          pretty.write(OperEx(TlaOper.eq, NameEx(name), value))
+          writer.print(s"/\\ $name = " )
+          pretty.write(value)
           writer.println
       }
     }
