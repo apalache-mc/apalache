@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.lir.transformations.standard.{ModuleByExTransform
 import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
 import com.typesafe.scalalogging.LazyLogging
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.Set
 
@@ -82,15 +83,12 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
   }
 
   private def toposortDefs(defs: Seq[TlaDecl]): Seq[TlaDecl] = {
-
-    var defsWithDeps = List[(TlaDecl,Set[String])](
-      defs.map { case d => (d, findDeps(d)) }:_*
-    )
+    var defsWithDeps = defs.toList.map { d => (d, findDeps(d)) }
 
     // logger.info(s"  > toposort definitions: ${defsWithDeps.toString}")
 
     var sorted = ListBuffer[TlaDecl]()
-    var added = Set[String]()
+    var added = mutable.Set[String]()
     var newAdded = false
     do {
       newAdded = false
@@ -110,29 +108,29 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
       }
       defsWithDeps = remain.toList
     }
-    while(!defsWithDeps.isEmpty && newAdded)
-    if(!defsWithDeps.isEmpty) {
+    while(defsWithDeps.nonEmpty && newAdded)
+    if(defsWithDeps.nonEmpty) {
       logger.error(s"  > topological sort: can't order these definitions: ${defsWithDeps.toString}")
       throw new Exception("Circular definition dependency detected" )
     }
     sorted
   }
 
-  private def findDeps(decl: TlaDecl): Set[String] = {
+  private def findDeps(decl: TlaDecl): mutable.Set[String] = {
     decl match {
       case TlaOperDecl(_, params, body) =>
-        val paramSet = Set[String](params.collect {
+        val paramSet = mutable.Set[String](params.collect {
           case p => p.name
         }: _*)
         findDeps(body) -- paramSet -- List(decl.name)
       case _ =>
-        Set[String]()
+        mutable.Set[String]()
     }
   }
 
-  private def findDeps(expr: TlaEx): Set[String] = {
+  private def findDeps(expr: TlaEx): mutable.Set[String] = {
     expr match {
-      case NameEx(name) => Set(name)
+      case NameEx(name) => mutable.Set(name)
       case  OperEx(op, x, s, p)
         if op == TlaOper.chooseBounded ||  op == TlaBoolOper.exists || op == TlaBoolOper.forall || op == TlaSetOper.filter =>
         findDeps(s) ++ findDeps(p) -- findDeps(x)
@@ -142,29 +140,29 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
       case OperEx(TlaFunOper.app, funEx, argEx) =>
         findDeps(funEx) ++ findDeps(argEx)
       case OperEx(TlaOper.apply, NameEx(name), args@_*) =>
-        args.foldLeft(Set[String]()) {
+        args.foldLeft(mutable.Set[String]()) {
           case (s, e) => s ++ findDeps(e)
         } ++ List(name)
       case OperEx(op, body, keysAndValues@_*)
-        if op == TlaFunOper.funDef  || op == TlaSetOper.map =>
+        if op == TlaFunOper.funDef  || op == TlaFunOper.recFunDef || op == TlaSetOper.map =>
         val (ks, vs) = keysAndValues.zipWithIndex partition (_._2 % 2 == 0)
         val (keys, values) = (ks.map(_._1.asInstanceOf[NameEx].name), vs.map(_._1))
-        findDeps(body) ++ values.foldLeft(Set[String]()){
+        findDeps(body) ++ values.foldLeft(mutable.Set[String]()){
           case (s, x) => s ++ findDeps(x)
         } -- keys
       case LetInEx(body, decls@_*) =>
         findDeps(body) ++
-        decls.foldLeft(Set[String]()) {
+        decls.foldLeft(mutable.Set[String]()) {
           case (s, d) => s ++ findDeps(d)
         } --
-        decls.foldLeft(Set[String]()) {
+        decls.foldLeft(mutable.Set[String]()) {
           case (s, d) => s ++ List(d.name)
         }
       case OperEx(_, args@_*) =>
-        args.foldLeft(Set[String]()) {
+        args.foldLeft(mutable.Set[String]()) {
           case (s, e) => s ++ findDeps(e)
         }
-      case _ => Set[String]()
+      case _ => mutable.Set[String]()
     }
   }
 
