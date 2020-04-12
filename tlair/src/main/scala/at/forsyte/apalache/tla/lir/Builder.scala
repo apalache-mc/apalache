@@ -297,6 +297,14 @@ object Builder {
               p_args : TlaEx* /* Expected even size */
             ) : OperEx = OperEx( TlaFunOper.funDef, p_e +: p_x +: p_S +: p_args : _* )
 
+  def recFunDef(body : TlaEx, boundVar : TlaEx, set : TlaEx): OperEx = {
+    OperEx(TlaFunOper.recFunDef, body, boundVar, set)
+  }
+
+  def recFunRef(): OperEx = {
+    OperEx(TlaFunOper.recFunRef)
+  }
+
   def tuple( p_args : TlaEx* ) : OperEx = OperEx( TlaFunOper.tuple, p_args : _* )
 
   /** TlaSeqOper */

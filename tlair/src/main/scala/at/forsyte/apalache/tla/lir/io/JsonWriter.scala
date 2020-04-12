@@ -85,7 +85,15 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
   }
 
   private def funWhere(fun: TlaEx, args: Seq[TlaEx]): ujson.Value = {
-    Obj("function" -> toJson(fun), "where" -> splitIntoPairs(args))
+    Obj("fun" -> toJson(fun), "where" -> splitIntoPairs(args))
+  }
+
+  private def recFunWhere(fun: TlaEx, args: Seq[TlaEx]): ujson.Value = {
+    Obj("recFun" -> toJson(fun), "where" -> splitIntoPairs(args))
+  }
+
+  private def recFunRef(): ujson.Value = {
+    Obj("recFunRef" -> Arr())
   }
 
   private def exceptWhere(fun: TlaEx, args: Seq[TlaEx]): ujson.Value = {
@@ -205,9 +213,16 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
       case ValEx(TlaRealSet) => primitive("set", "Real")
       case ValEx(TlaStrSet) => primitive("set", "STRING")
 
-      // [ x \in S, y \in T |-> e ]  =>  { "function": "e", "where": [ "x", "S", "y", "T"] }
+      // [ x \in S, y \in T |-> e ]  =>  { "fun": "e", "where": [ "x", "S", "y", "T"] }
       case OperEx(TlaFunOper.funDef, fun, keysAndValues@_*) =>
         funWhere(fun, keysAndValues)
+
+      // [x \in S] == e into  { "recFun": "e", "where": [ "x", "S" ] }
+      case OperEx(TlaFunOper.recFunDef, fun, keysAndValues@_*) =>
+        recFunWhere(fun, keysAndValues)
+
+      case OperEx(TlaFunOper.recFunRef) =>
+        recFunRef()
 
       // [f EXCEPT ![i_1] = e_1, ![i_2] = e_2]  =>  { "except": "f", "where": [ "i_1", "e_1", "i_2", "e_2"] }
       case OperEx(TlaFunOper.except, fun, keysAndValues@_*) =>
