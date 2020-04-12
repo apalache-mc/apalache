@@ -176,11 +176,15 @@ class OpApplTranslator(sourceStore: SourceStore, val context: Context, val recSt
           case "$Except" =>
             mkExceptBuiltin(node)
 
-          case "$FcnConstructor" | "$NonRecursiveFcnSpec" | "$RecursiveFcnSpec" =>
-            // Note that we always translate a non-recursive function definition as just a function constructor,
-            // i.e., f(x \in S) == e in TLA+ is translated into f == [x \in S |-> e] in our IR.
-            // Recursive functions are also postprocessed by OpDefTranslator.
+          case "$FcnConstructor" | "$NonRecursiveFcnSpec" =>
+            // Note that we always translate a non-recursive function definition as just a function constructor.
             mkBoundCtorBuiltin(TlaFunOper.funDef, node)
+
+          case "$RecursiveFcnSpec" =>
+            // A recursive function definition `f[x \in S] == e`
+            // is translated into a constructor of a recursive function.
+            // Recursive functions are also post-processed by OpDefTranslator.
+            mkBoundCtorBuiltin(TlaFunOper.recFunDef, node)
 
           case "$SetOfAll" =>
             mkBoundCtorBuiltin(TlaSetOper.map, node)
