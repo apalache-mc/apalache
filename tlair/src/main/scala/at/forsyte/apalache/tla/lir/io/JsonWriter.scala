@@ -89,11 +89,11 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
   }
 
   private def recFunWhere(fun: TlaEx, args: Seq[TlaEx]): ujson.Value = {
-    Obj("recFun" -> toJson(fun), "where" -> splitIntoPairs(args))
+    Obj("rec-fun" -> toJson(fun), "where" -> splitIntoPairs(args))
   }
 
   private def recFunRef(): ujson.Value = {
-    Obj("recFunRef" -> Arr())
+    applyOpTo("rec-fun-ref", Seq())
   }
 
   private def exceptWhere(fun: TlaEx, args: Seq[TlaEx]): ujson.Value = {
