@@ -2,7 +2,9 @@ package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.TlaOper
+import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper}
+import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
+import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
 import tla2sany.semantic.{OpApplNode, OpDefNode}
 
 /**
@@ -18,16 +20,16 @@ class OpDefTranslator(sourceStore: SourceStore, context: Context) {
     if (!node.getInRecursive) {
       node.getBody match {
         case app: OpApplNode if "$RecursiveFcnSpec" == app.getOperator.getName.toString =>
-          // this is a definition of a recursive function
+          // this is a definition of a recursive function, translate to recFunDef
           val body = ExprOrOpArgNodeTranslator(sourceStore, context, OutsideRecursion())
             .translate(node.getBody)
-          // declare a nullary recursive operator instead of a recursive function
-          val newBody = replaceFunWithOper(nodeName, body)
+          // the body still can refer to the function by its name, replace it with recFunRef
+          val replaced = ReplaceFixed(NameEx(nodeName), OperEx(TlaFunOper.recFunRef), new IdleTracker())(body)
           // store the source location
-          sourceStore.addRec(newBody, SourceLocation(node.getBody.getLocation))
+          sourceStore.addRec(replaced, SourceLocation(node.getBody.getLocation))
           // return the operator whose body is a recursive function
-          val operDecl = TlaOperDecl(nodeName, List(), newBody)
-          operDecl.isRecursive = true
+          val operDecl = TlaOperDecl(nodeName, List(), replaced)
+          operDecl.isRecursive = false
           operDecl
 
         case _ =>
@@ -44,20 +46,6 @@ class OpDefTranslator(sourceStore: SourceStore, context: Context) {
       decl.isRecursive = true
       decl
     }
-  }
-
-  private def replaceFunWithOper(name: String, body: TlaEx): TlaEx = {
-    def replace(e: TlaEx): TlaEx = e match {
-      case NameEx(n) if n == name =>
-        OperEx(TlaOper.apply, NameEx(n))
-
-      case OperEx(o, args@_*) =>
-        OperEx(o, args map replace: _*)
-
-      case _ => e
-    }
-
-    replace(body)
   }
 }
 

@@ -26,6 +26,10 @@ import scala.collection.immutable.HashMap
 class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) extends PrettyPrinter {
   override val defaultIndent: Int = indent
 
+  val REC_FUN_UNDEFINED = "recFunNameUndefined"
+  // when printing a recursive function, this variable contains its name
+  private var recFunName: String = REC_FUN_UNDEFINED
+
   def write(mod: TlaModule): Unit = {
     writer.write(pretty(toDoc(mod), textWidth).layout)
   }
@@ -313,6 +317,9 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
         val doc = text(PrettyWriter.unaryOps(op)) <> toDoc(op.precedence, arg)
         wrapWithParen(parentPrecedence, op.precedence, doc)
 
+      case OperEx(TlaFunOper.recFunRef) =>
+        text(recFunName) // even if the name is undefined, print it
+
       case OperEx(op, arg) if PrettyWriter.unaryOps.contains(op) =>
         // in all other cases, introduce parentheses.
         // Yse the minimal precedence, as we are introducing the parentheses in any case.
@@ -378,13 +385,32 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
       case TlaAssumeDecl(body) =>
         group("ASSUME" <> parens(toDoc((0, 0), body)))
 
-      case TlaOperDecl(name, params, body) =>
+        // a declaration of a recursive function
+      case TlaOperDecl(name, List(),
+          OperEx(TlaFunOper.recFunDef, body, NameEx(argName), argDom)) =>
+        // set the name of the recursive function. TLA+ forbids mutual recursion, so we do not need a stack
+        recFunName = name
+        // [x \in S]
+        val binding = brackets(text(argName) <> space <> "\\in" <> space <> toDoc((100, 100), argDom))
+        // f[x \in S] == e
+        val doc = group(name <> binding <> space <> "==" <> space <> toDoc((0, 0), body))
+        recFunName = REC_FUN_UNDEFINED
+        doc
+
+        // an operator declaration (may be recursive)
+      case tod @ TlaOperDecl(name, params, body) =>
+        val recPreambule =
+          if (!tod.isRecursive)
+            text("")
+          else
+            "RECURSIVE" <> space <> toDoc(OperFormalParam(name, params.length)) <> line
+
         val paramsDoc =
           if (params.isEmpty)
             text("")
           else parens(ssep(params map toDoc, "," <> softline))
 
-        group(name <> paramsDoc <> space <> "==" <> nest(line <> toDoc((0, 0), body)))
+        recPreambule <> group(name <> paramsDoc <> space <> "==" <> nest(line <> toDoc((0, 0), body)))
     }
   }
 

@@ -1,5 +1,9 @@
 ## 0.7.0 [SNAPSHOT] #unstable
 
+ * new IR for recursive functions, see #84 and TlaFunctionOper.recFunDef
+ * parser for the TLC configuration files, see #76
+ * exporter to JSON, see #77
+ * counterexamples in the TLC and JSON, see #45 and #116
  * fixed exit codes `EXITCODE: OK` and `EXITCODE: ERROR (<code>)`
  * normal error messages and failure messages with stack traces
 

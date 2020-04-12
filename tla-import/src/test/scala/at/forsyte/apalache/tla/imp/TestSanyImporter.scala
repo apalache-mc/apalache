@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.src.{SourcePosition, SourceRegion}
 import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.lir.{OperEx, ValEx, _}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, ValEx, _}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -1119,9 +1119,9 @@ class TestSanyImporter extends FunSuite {
         val fDecl = defs.head
         assert("f" == fDecl.name)
         val expectedBody =
-          OperEx(TlaFunOper.funDef,
+          OperEx(TlaFunOper.recFunDef,
             OperEx(TlaFunOper.app,
-              OperEx(TlaOper.apply, NameEx("f")),
+              OperEx(TlaFunOper.recFunRef),
               NameEx("x")),
             NameEx("x"),
             ValEx(TlaBoolSet)
@@ -1186,7 +1186,7 @@ class TestSanyImporter extends FunSuite {
       }
     }
 
-    // in the recursive sections, the calls to recursive operators should be replaced with OperFormalParam(...)
+    // in the recursive sections, the calls to recursive operators should be replaced with (apply ...)
     assertRec("R", 1,
       OperEx(TlaOper.apply, NameEx("R"), NameEx("n")))
 
@@ -1255,41 +1255,34 @@ class TestSanyImporter extends FunSuite {
     // the root module and naturals
     val root = modules(rootName)
 
-    def expectDecl(name: String, body: TlaEx): Unit =
-      findAndExpectTlaDecl(locationStore, root, name, List(), body)
-
-    // a non-recursive function becomes a nullary operator that always returns an equivalent function
-    expectDecl("nonRecFun",
-      OperEx(TlaFunOper.funDef, NameEx("x"), NameEx("x"), NameEx("S"))
-    ) ///
-
-    // a recursive function becomes a recursive nullary operator
-    // that returns a function defined w.r.t. the recursive operator
-
-    def assertTlaRecDecl(expectedName: String, body: TlaEx): Unit = {
+    def assertTlaRecFunDecl(expectedName: String, body: TlaEx): Unit = {
       root.declarations.find {
         _.name == expectedName
       } match {
         case Some(d: TlaOperDecl) =>
-          assert(d.isRecursive)
           assert(expectedName == d.name)
-          assert(0 == d.formalParams.length)
           assert(body == d.body)
+          assert(!d.isRecursive)
           assert(locationStore.contains(d.body.ID)) // and source file information has been saved
 
         case _ =>
-          fail("Expected a TlaRecDecl")
+          fail("Expected a TlaOperDecl")
       }
     }
 
-    assertTlaRecDecl("recFun",
+    assertTlaRecFunDecl("nonRecFun",
       OperEx(TlaFunOper.funDef,
-        OperEx(TlaFunOper.app,
-          OperEx(TlaOper.apply, NameEx("recFun")),
-          NameEx("x")),
         NameEx("x"),
-        NameEx("S"))
-    ) ///
+        NameEx("x"),
+        NameEx("S")))
+
+    assertTlaRecFunDecl("recFun",
+      OperEx(TlaFunOper.recFunDef,
+        OperEx(TlaFunOper.app,
+          OperEx(TlaFunOper.recFunRef),
+          NameEx("x")),
+          NameEx("x"),
+          NameEx("S")))
   }
 
   test("instances") {

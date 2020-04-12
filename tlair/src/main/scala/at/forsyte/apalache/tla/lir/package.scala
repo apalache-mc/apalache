@@ -168,16 +168,11 @@ package lir {
   /**
     * <p>An operator definition, e.g. A == 1 + 2, or B(x, y) == x + y, or (C(f(_, _), x, y) == f(x, y).</p>
     *
-    * <p>As in the case with the built-in operators, every operator declaration carries a single operator instance,
-    * which is stored in the public field 'operator'. However, if the operator is recursive, then the operator body
-    * does not contain OperEx(this.operator, ...), but it does contain OperFormalOperParam(this.name),
-    * see TlaRecOperDecl.</p>
+    * <p>If the operator is recursive, then the operator body contains OperEx(TlaOper.apply, NameEx(operName), ...).</p>
     *
     * <p>Note that the body is declared as a variable, which can be overwritten later. We need it to deal with INSTANCE.
     * Similarly, isRecursive is false by default, but it can be set to true during instantiation.
     * </p>
-    *
-    * @see TlaRecOperDecl
     *
     * @param name operator name
     * @param formalParams formal parameters
@@ -195,6 +190,32 @@ package lir {
     override def deepCopy( ): TlaOperDecl =  TlaOperDecl( name, formalParams, body.deepCopy() )
   }
 
+  /**
+    * <p>A definition of a recursive function, see [Specifying Systems][p. 67].</p>
+    *
+    * <p>For instance, Fact[n \in Nat] == IF n <= 1 THEN 1 ELSE n * Fact[n - 1].</p>
+    *
+    * @param name the function name, e.g., Fact
+    * @param arg the name of the bound var, e.g., n
+    * @param argDom the expression that describes the variable bound, e.g., Nat
+    * @param defBody the definition body
+    */
+  case class TlaRecFunDecl(name: String, arg: String, argDom: TlaEx, defBody: TlaEx) extends TlaDecl {
+    override def deepCopy(): TlaDecl = {
+      TlaRecFunDecl(name, arg, argDom, defBody)
+    }
+  }
+
+  /**
+    * <p>A THEOREM declaration. Currently, we do not support operators that are typically used in the proofs.</p>
+    * @param name theorem name
+    * @param body theorem statement
+    */
+  case class TlaTheoremDecl(name: String, body: TlaEx) extends TlaDecl {
+    override def deepCopy(): TlaDecl = {
+      TlaTheoremDecl(name, body)
+    }
+  }
 }
 
 

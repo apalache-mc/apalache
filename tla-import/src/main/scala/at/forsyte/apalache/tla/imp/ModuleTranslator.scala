@@ -46,12 +46,12 @@ class ModuleTranslator(sourceStore: SourceStore) {
     context = opDefs.foldLeft(context)(eachOpDefFirstPass)
 
     // second pass: produce the actual operator bodies and do substitution
-    def eachOpDefSecondPass(opDef: OpDefNode): Unit = {
+    for (opDef <- opDefs) {
       context.lookup(opDef.getName.toString) match {
         case DeclUnit(decl: TlaOperDecl) =>
           val lookupPrefix = opDef.getName.toString.split("!").dropRight(1) // find the instance names
-        // the expression translator should lookup using the lookupPrefix
-        val adjustedContext = context.setLookupPrefix(lookupPrefix.toList)
+          // the expression translator should lookup using the lookupPrefix
+          val adjustedContext = context.setLookupPrefix(lookupPrefix.toList)
           val defTranslator = OpDefTranslator(sourceStore, adjustedContext)
           val updatedDecl = defTranslator.translate(opDef)
           decl.isRecursive = updatedDecl.isRecursive
@@ -60,8 +60,6 @@ class ModuleTranslator(sourceStore: SourceStore) {
         case _ => () // XXX: do something?
       }
     }
-
-    opDefs foreach eachOpDefSecondPass
 
     // translate assumptions after the operator definitions, as the assumptions may use the operators
     context = node.getAssumptions.toList.foldLeft(context) {
