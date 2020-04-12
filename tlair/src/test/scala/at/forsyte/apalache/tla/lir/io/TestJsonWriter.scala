@@ -179,13 +179,11 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     compareMultiLine(
       recFunDef(plus(int(1), recFunRef()), "x", "S"),
       """{
-        |  "recFun": {
+        |  "rec-fun": {
         |    "+": [
         |      1,
         |      {
-        |        "recFunRef": [
-        |
-        |        ]
+        |        "apply-op": "rec-fun-ref"
         |      }
         |    ]
         |  },
