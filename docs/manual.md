@@ -779,6 +779,7 @@ annotations in [type annotations](types-and-annotations.md).
 <a name="recursion"></a>
 ## 9. Recursive operators and functions
 
+<a name="rec-op"></a>
 ### 9.1. Recursive operators
 
 In the preprocessing phase, Apalache replaces every application of a user
@@ -844,10 +845,50 @@ In this case, Apalache unfolds every call to `Sum` exactly `UNFOLD_TIMES_Sum`
 times, that is, four times. On the default branch, Apalache places
 `UNFOLD_DEFAULT_SUM`, that is, 0.
 
+<a name="rec-fun"></a>
 ### 9.2. Recursive functions
 
-Recursive functions are not supported yet. We do not have an idea of how encode
-them.
+Apalache offers limited support for recursive functions. The restrictions are as follows: 
+
+ 1. Apalache supports the recursive functions that return a result of a scalar
+ type: an integer, a Boolean, or a string.
+
+ 1. As Apalache's simple type checker is not able
+to find the type of a recursive function, all uses of a recursive function
+should come with a type annotation.
+
+ 1. As in TLC, the function domain must be a finite set.
+
+The example below shows a recursive function that computes the factorial of `n`.
+
+
+```tla
+------------------------------ MODULE Rec8 ------------------------------------ 
+EXTENDS Integers
+
+VARIABLES f, n
+
+\* the syntax for type annotations
+a <: b == a
+
+\* the type of the factorial function
+FactT == [Int -> Int]
+
+\* the factorial function
+Fact[k \in 1..10] ==
+    IF k <= 1
+    THEN 1
+    ELSE k * (Fact <: FactT)[k - 1]
+
+Init ==
+    /\ n = 0
+    /\ f = Fact[n]
+
+Next ==
+    /\ n' = n + 1
+    /\ f' = Fact[n']
+===============================================================================
+```
 
 
 <a name="theory5"></a>

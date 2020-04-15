@@ -80,9 +80,9 @@ object TlaFunOper {
     * We introduce a three-argument operator, whose arguments are as follows:</p>
     *
     * <ul>
-    *   <li>function body of type TlaEx that may refer to the function via recFunRef.</li>
+    *   <li>function body of type TlaEx that may refer to the function via recFunRef,</li>
     *   <li>NameEx(variableName),</li>
-    *   <li>variable domain of type TlaEx,</li>
+    *   <li>variable domain of type TlaEx.</li>
     * </ul>
     *
     * <p>Hence, a declaration of a recursive operator looks like a nullary operator declaration,
