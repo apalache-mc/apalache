@@ -4,10 +4,6 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values._
 
-
-/* TODO: LET-IN operator!!! */
-/* TODO: the argument names should be self-explanatory, e.g., I cannot see how to use funDef (Igor, 19.11.2017) */
-
 /**
   * A builder for TLA expressions.
   *
@@ -37,6 +33,20 @@ object Builder {
     * @return the value expression that corresponds to BOOLEAN.
     */
   def booleanSet(): ValEx = ValEx(TlaBoolSet)
+
+  /**
+    * The set Int of all integers.
+    *
+    * @return the value expression that corresponds to Int.
+    */
+  def intSet(): ValEx = ValEx(TlaIntSet)
+
+  /**
+    * The set Nat of all natural numbers.
+    *
+    * @return the value expression that corresponds to Nat.
+    */
+  def natSet(): ValEx = ValEx(TlaNatSet)
 
   /** Declarations */
 
