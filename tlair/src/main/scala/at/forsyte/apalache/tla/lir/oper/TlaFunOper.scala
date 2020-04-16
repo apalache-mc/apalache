@@ -133,6 +133,10 @@ object TlaFunOper {
     * @see TlaFunOper.recFunDef
     */
   val recFunRef = new TlaFunOper {
+    /**
+      * A unique name that can be used to refer to a recursive function inside its body.
+      */
+    val uniqueName = "$recFun"
     override def name: String = "rec-fun-ref"
     override def arity: OperArity = FixedArity(0)
     override def precedence: (Int, Int) = (16, 16) // as function application

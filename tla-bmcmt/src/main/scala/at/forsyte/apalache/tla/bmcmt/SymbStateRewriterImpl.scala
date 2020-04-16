@@ -230,6 +230,10 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
       -> List(new FunSetCtorRule(this)),
     key(tla.dom(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S"))))
       -> List(new DomainRule(this, intRangeCache)), // also works for records
+    key(tla.recFunDef(tla.name("e"), tla.name("x"), tla.name("S")))
+      -> List(new RecFunDefAndRefRule(this)),
+    key(tla.recFunRef())
+      -> List(new RecFunDefAndRefRule(this)),
 
     // tuples, records, and sequences
     key(tla.tuple(tla.name("x"), tla.int(2)))
