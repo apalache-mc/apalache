@@ -341,6 +341,8 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
     * Call compute recursively to compute the type of a given expression. This function is expensive,
     * use it only when absolutely necessary.
     *
+    * TODO: remove this function and use inferAndSave instead?
+    *
     * @param ex a TLA+ expression
     * @return the resulting type
     */
@@ -353,6 +355,10 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
     case OperEx(TlaActionOper.prime, NameEx(_)) =>
       // do not recurse in prime, as the type of a primed variable should be computed directly
       compute(ex)
+
+    case LetInEx(body, _*) =>
+      // compute the type of body, assuming that the types of the bound variables were computed by inferAndSave
+      computeRec(body)
 
     case OperEx(_, args@_*) =>
       compute(ex, args map computeRec: _*)

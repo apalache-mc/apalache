@@ -97,7 +97,7 @@ class Renaming (tracker: TransformationTracker) extends TlaExTransformation {
       OperEx(op, NameEx(newName) +: newArgs: _*)
 
     case OperEx(op, result, varsAndSets@_*)
-      if op == TlaSetOper.map || op == TlaFunOper.funDef =>
+      if op == TlaSetOper.map || op == TlaFunOper.funDef || op == TlaFunOper.recFunDef =>
       val names = varsAndSets.zipWithIndex.collect { case (e @ NameEx(_), i) if i % 2 == 0 => e }
       val sets = varsAndSets.zipWithIndex.collect { case (e, i) if i % 2 == 1 => e }
 

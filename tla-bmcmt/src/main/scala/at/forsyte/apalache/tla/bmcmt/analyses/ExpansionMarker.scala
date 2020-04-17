@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.analyses
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaBoolOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.KeraLanguagePred
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 import com.google.inject.Inject
@@ -77,7 +77,8 @@ class ExpansionMarker @Inject()(tracker: TransformationTracker) extends TlaExTra
       // For the moment, we require the set to be expanded. However, we could think of collecting constraints on the way.
       OperEx(op, name, transform(true)(set), transform(false)(pred))
 
-    case OperEx(op @ TlaSetOper.map, body, args @ _*) =>
+    case OperEx(op, body, args @ _*)
+        if op == TlaSetOper.map || op == TlaFunOper.funDef || op == TlaFunOper.recFunDef =>
       val tbody: TlaEx = transform(false)(body)
       val targs = args map transform(true)
       OperEx(op, tbody +: targs: _*)
