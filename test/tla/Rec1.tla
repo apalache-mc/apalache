@@ -15,8 +15,8 @@ Fact(n) ==
   THEN 1
   ELSE n * Fact(n - 1)
 
-UNFOLD_TIMES_Fact == 8
-UNFOLD_DEFAULT_Fact == -1
+UNROLL_TIMES_Fact == 8
+UNROLL_DEFAULT_Fact == -1
 
 Init ==
     f = Fact(4)
