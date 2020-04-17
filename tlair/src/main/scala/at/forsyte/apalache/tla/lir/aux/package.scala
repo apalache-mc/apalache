@@ -5,6 +5,8 @@ import at.forsyte.apalache.tla.lir.oper._
 // Contains methods and classes used in testing/debugging/experimenting
 package object aux {
 
+  type EoV[T] = ExceptionOrValue[T]
+
   def aggregate[T](
                     join : (T, T) => T,
                     base : TlaEx => T
