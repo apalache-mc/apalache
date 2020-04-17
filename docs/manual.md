@@ -848,10 +848,11 @@ times, that is, four times. On the default branch, Apalache places
 <a name="rec-fun"></a>
 ### 9.2. Recursive functions
 
-Apalache offers limited support for recursive functions. The restrictions are as follows: 
+Apalache offers limited support for recursive functions. However, read the
+warning below on why you should not use recursive functions. The restrictions
+are as follows: 
 
- 1. Apalache supports the recursive functions that return a result of a scalar
- type: an integer, a Boolean, or a string.
+ 1. Apalache supports the recursive functions that return an integer or a Boolean.
 
  1. As Apalache's simple type checker is not able
 to find the type of a recursive function, all uses of a recursive function
@@ -863,10 +864,10 @@ The example below shows a recursive function that computes the factorial of `n`.
 
 
 ```tla
------------------------------- MODULE Rec8 ------------------------------------ 
+------------------------------ MODULE Rec8 ------------------------------------
 EXTENDS Integers
 
-VARIABLES f, n
+VARIABLES n, factSpec, factComp
 
 \* the syntax for type annotations
 a <: b == a
@@ -874,21 +875,75 @@ a <: b == a
 \* the type of the factorial function
 FactT == [Int -> Int]
 
-\* the factorial function
-Fact[k \in 1..10] ==
+(*
+ Defining a recursive function on a finite domain. Although it is rather
+ unnatural to define factorial on a finite set, both Apalache and TLC
+ require finite domains. As is usual for function application, the result
+ of the application is not defined on the elements outside of the function
+ domain.
+ *)
+Fact[k \in 1..20] ==
     IF k <= 1
     THEN 1
     ELSE k * (Fact <: FactT)[k - 1]
 
 Init ==
-    /\ n = 0
-    /\ f = Fact[n]
+    /\ n = 1
+    /\ factSpec = Fact[n]
+    /\ factComp = 1
 
-Next ==
+Next ==     
     /\ n' = n + 1
-    /\ f' = Fact[n']
+    /\ factSpec' = Fact[n']
+    /\ factComp' = n' * factComp
+
+Inv ==
+    factComp = factSpec
 ===============================================================================
 ```
+
+Check other examples in
+[`test/tla`](https://github.com/konnov/apalache/tree/unstable/test/tla) that
+start with the prefix `Rec`.
+
+**Why you should avoid recursive functions.** Sometimes, recursive functions
+concisely describe the function that you need. The nice examples are the
+factorial function (see above) and Fibonacci numbers (see
+[Rec3](https://github.com/konnov/apalache/tree/unstable/test/tla/Rec3.tla)).
+However, when you define a recursive function over sets, the complexity gets
+ugly really fast.
+
+Consider the example
+[Rec9](https://github.com/konnov/apalache/tree/unstable/test/tla/Rec9.tla),
+which computes set cardinality. Here is a fragment of the spec:
+
+```tla
+\* the type of the function Card
+CardT == [{Int} -> Int]
+
+\* The set cardinality function
+Card[S \in SUBSET NUMS] ==
+    IF S = IntSet({})
+    THEN 0
+    ELSE LET i == CHOOSE j \in S: TRUE IN
+        1 + (Card <: CardT)[S \ {i}]
+```
+
+Since we cannot fix the order, in which the set elements are evaluated, we
+define function `Card` over `SUBSET NUMS`, that is, all possible subsets of
+`NUMS`. Apalache translates the function in a quantifier-free theory of SMT.
+Hence, in this case, Apalache expands `SUBSET NUMS`, so it introduces
+`2^|NUMS|` sets! Further, Apalache writes down the SMT constraints for the
+domain of `Card`. As a result, it produces `NUMS * 2^|NUMS|` constraints.
+As you can see, recursive functions over sets explode quite fast.
+
+It is usually a good idea to use recursive operators over sets rather than
+recursive functions. The downside is that you have to provide an upper bound on
+the number of the operator iterations. The upside is that recursive operators
+are usually unrolled more efficiently. (If they contain only constant
+expressions, they are even computed by the translator!) For instance, set
+cardinality does not require `2^|NUMS|` constraints, when using a recursive
+operator.
 
 
 <a name="theory5"></a>

@@ -132,6 +132,12 @@ check "023-Rec1" --length=5 --inv=Inv Rec1.tla \
     && expect_ok
 check "024-Inline" --length=5 Inline.tla \
     && expect_ok
+check "025-Rec3" --length=10 --inv=Inv Rec3.tla \
+    && expect_ok
+check "026-Rec8" --length=10 --inv=Inv Rec8.tla \
+    && expect_ok
+check "027-Rec9" --length=5 --inv=Inv Rec9.tla \
+    && expect_ok
 
 cat "$LOGFILE"
 

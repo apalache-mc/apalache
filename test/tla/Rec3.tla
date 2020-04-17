@@ -1,28 +1,42 @@
 --------------------------- MODULE Rec3 -------------------------------------
 (*
- * A test for unfolding recursive functions.
+ * A test for handling recursive functions.
+ * In this test, we compute the Fibonacci sequence in two ways:
+ * (1) using an iterative computation, and (2) using a recursive function.
  *
  * Igor Konnov, April 2020
  *)
 EXTENDS Integers
 
-VARIABLES f
+VARIABLES n, fibComp, fibCompPrev, fibSpec
 
-Fact[n \in Int] ==
-  IF n <= 1
-  THEN 1
-  ELSE n * Fact[n - 1]
+\* the syntax for type annotations
+a <: b == a
 
-UNFOLD_TIMES_Fact == 5
-UNFOLD_DEFAULT_Fact == -1
+\* the type of the function Fib
+FibT == [Int -> Int]
+
+\* a recursive definition of the Fibonacci sequence
+Fib[k \in 0..15] ==
+  IF k <= 0
+  THEN 0
+  ELSE IF k <= 2
+      THEN 1
+      ELSE (Fib <: FibT)[k - 2] + (Fib <: FibT)[k - 1]
 
 Init ==
-    f = Fact[3]
+    /\ n = 0
+    /\ fibComp = 0
+    /\ fibCompPrev = 1
+    /\ fibSpec = Fib[n]
 
 Next ==
-    f' = Fact[4]
+    /\ n' = n + 1
+    /\ fibCompPrev' = fibComp
+    /\ fibComp' = fibComp + fibCompPrev
+    /\ fibSpec' = Fib[n']
 
 Inv ==
-    f >= 1
+    fibSpec = fibComp
 
 =============================================================================
