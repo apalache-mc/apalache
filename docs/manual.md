@@ -827,7 +827,7 @@ is equal to `Cardinality(S) + 1`. Moreover, the expression `set \subseteq
 iterations.
 
 When, we can find an upper bound on the number of iterations, Apalache can
-unfold the recursive operator up to this bound. To this end, we define two
+unroll the recursive operator up to this bound. To this end, we define two
 additional operators. For instance:
 
 ```tla
@@ -836,14 +836,17 @@ VARIABLES set, count
 
 INSTANCE Rec6 WITH N <- 3
 
-UNFOLD_TIMES_Sum == 4
-UNFOLD_DEFAULT_Sum == 0
+UNROLL_TIMES_Sum == 4
+UNROLL_DEFAULT_Sum == 0
 ============================
 ```
 
-In this case, Apalache unfolds every call to `Sum` exactly `UNFOLD_TIMES_Sum`
+In this case, Apalache unrolls every call to `Sum` exactly `UNROLL_TIMES_Sum`
 times, that is, four times. On the default branch, Apalache places
-`UNFOLD_DEFAULT_SUM`, that is, 0.
+`UNROLL_DEFAULT_Sum`, that is, 0.
+
+All recursively defined operators should follow this convention where, for every such operator `Oper`, the user defines both `UNROLL_TIMES_Oper`, which expands to a positive integer value, and `UNROLL_DEFAULT_Oper`, which expands to some default value `Oper(args*)` should take, if the computation would require more than `UNROLL_TIMES_Oper` recursive calls. 
+At present, we only support literals (e.g. `4`) or primitive arithmetic expressions (e.g. `2 + 2`) in the body of `UNROLL_TIMES_Oper`.
 
 <a name="rec-fun"></a>
 ### 9.2. Recursive functions

@@ -47,7 +47,9 @@ class Unroller( tracker : TransformationTracker ) extends TlaModuleTransformatio
           FailWith( new Exception( s"Unroll-limit operator $unrollLimitOperName is recursive." ) )
         else
         // ... and must evaluate to a single integer
-          InlinerOfUserOper( bodyMap, tracker )( unrollLimitDecl.body ) match {
+          ConstSimplifier( tracker )(
+            InlinerOfUserOper( bodyMap, tracker )( unrollLimitDecl.body )
+          ) match {
             case ValEx( TlaInt( n ) ) =>
               SucceedWith( n )
             case _ =>
