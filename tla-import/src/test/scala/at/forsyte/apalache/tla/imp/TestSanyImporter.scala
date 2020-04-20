@@ -1462,6 +1462,36 @@ class TestSanyImporter extends FunSuite {
     assert(expected == bOfM.asInstanceOf[TlaOperDecl].body)
   }
 
+  // this test fails for the moment
+  ignore("RECURSIVE operator inside INSTANCE") {
+    val text =
+      """---- MODULE recInInstance ----
+        |---- MODULE M ----
+        |RECURSIVE a(_)
+        |a(X) == a(X)
+        |================================
+        |RECURSIVE b(_)
+        |b(X) == b(X)
+        |I == INSTANCE M
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter(new SourceStore)
+      .loadFromSource("recInInstance", Source.fromString(text))
+    assert(1 == modules.size)
+    // the root module and naturals
+    val root = modules(rootName)
+    // we strip away the operator declarations by Naturals
+    assert(2 == root.declarations.size)
+    val b = root.declarations.head
+    assert("b" == b.name)
+    assert(b.asInstanceOf[TlaOperDecl].isRecursive)
+    val aOfM = root.declarations(1)
+    // I!a should be recursive
+    assert("I!a" == aOfM.name)
+    assert(aOfM.asInstanceOf[TlaOperDecl].isRecursive)
+  }
+
   test("module nats") {
     // check that the Naturals module is imported properly
     val text =

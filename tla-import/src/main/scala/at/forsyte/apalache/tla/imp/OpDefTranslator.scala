@@ -16,8 +16,9 @@ class OpDefTranslator(sourceStore: SourceStore, context: Context) {
   def translate(node: OpDefNode): TlaOperDecl = {
     val params = node.getParams.toList map FormalParamTranslator().translate
     val nodeName = node.getName.toString.intern()
+    val isRecursive = node.getInRecursive
 
-    if (!node.getInRecursive) {
+    if (!isRecursive) {
       node.getBody match {
         case app: OpApplNode if "$RecursiveFcnSpec" == app.getOperator.getName.toString =>
           // this is a definition of a recursive function, translate to recFunDef
