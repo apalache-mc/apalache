@@ -55,11 +55,14 @@ class KeraLanguagePred extends LanguagePred {
           isOkInContext(letDefs, thenEx) && isOkInContext(letDefs, elseEx)
 
       case OperEx(oper, args@_*)
-        if oper == TlaSetOper.map || oper == TlaFunOper.funDef =>
+        if oper == TlaSetOper.map || oper == TlaFunOper.funDef || oper == TlaFunOper.recFunDef =>
         val evenArgs = args.zipWithIndex.filter { p => p._2 % 2 == 0 } map { _._1 }
         evenArgs forall {
           isOkInContext(letDefs, _)
         }
+
+      case OperEx(TlaFunOper.recFunRef) =>
+        true
 
       case LetInEx(body, defs@_*) =>
         // go inside the let definitions

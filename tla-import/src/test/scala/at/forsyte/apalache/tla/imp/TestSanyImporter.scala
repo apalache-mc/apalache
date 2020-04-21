@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.src.{SourcePosition, SourceRegion}
 import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.lir.{OperEx, ValEx, _}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, ValEx, _}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -318,7 +318,7 @@ class TestSanyImporter extends FunSuite {
     }
   }
 
-  test("LOCAL operator") {
+  test("LOCAL operator defined") {
     val text =
       """---- MODULE localop ----
         |LOCAL LocalOp == TRUE
@@ -331,11 +331,36 @@ class TestSanyImporter extends FunSuite {
     val mod = expectSingleModule("localop", rootName, modules)
     assert(1 == mod.declarations.size)
 
+    // when a local operator is defined in the main module, it is still accessible
     mod.declarations.head match {
       case actionDecl: TlaOperDecl =>
         assert("LocalOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(ValEx(TlaBool(true)) == actionDecl.body)
+        assert(locationStore.contains(actionDecl.body.ID)) // and source file information has been saved
+    }
+  }
+
+  test("LOCAL operator used") {
+    val text =
+      """---- MODULE localop ----
+        |LOCAL LocalOp(X) == X
+        |User(X) == LocalOp(X)
+        |================================
+      """.stripMargin
+
+    val locationStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(locationStore)
+      .loadFromSource("localop", Source.fromString(text))
+    val mod = expectSingleModule("localop", rootName, modules)
+    assert(2 == mod.declarations.size)
+
+    // when a local operator is defined in the main module, it is still accessible
+    mod.declarations.head match {
+      case actionDecl: TlaOperDecl =>
+        assert("LocalOp" == actionDecl.name)
+        assert(1 == actionDecl.formalParams.length)
+        assert(NameEx("X") == actionDecl.body)
         assert(locationStore.contains(actionDecl.body.ID)) // and source file information has been saved
     }
   }
@@ -1119,9 +1144,9 @@ class TestSanyImporter extends FunSuite {
         val fDecl = defs.head
         assert("f" == fDecl.name)
         val expectedBody =
-          OperEx(TlaFunOper.funDef,
+          OperEx(TlaFunOper.recFunDef,
             OperEx(TlaFunOper.app,
-              OperEx(TlaOper.apply, NameEx("f")),
+              OperEx(TlaFunOper.recFunRef),
               NameEx("x")),
             NameEx("x"),
             ValEx(TlaBoolSet)
@@ -1186,7 +1211,7 @@ class TestSanyImporter extends FunSuite {
       }
     }
 
-    // in the recursive sections, the calls to recursive operators should be replaced with OperFormalParam(...)
+    // in the recursive sections, the calls to recursive operators should be replaced with (apply ...)
     assertRec("R", 1,
       OperEx(TlaOper.apply, NameEx("R"), NameEx("n")))
 
@@ -1255,41 +1280,34 @@ class TestSanyImporter extends FunSuite {
     // the root module and naturals
     val root = modules(rootName)
 
-    def expectDecl(name: String, body: TlaEx): Unit =
-      findAndExpectTlaDecl(locationStore, root, name, List(), body)
-
-    // a non-recursive function becomes a nullary operator that always returns an equivalent function
-    expectDecl("nonRecFun",
-      OperEx(TlaFunOper.funDef, NameEx("x"), NameEx("x"), NameEx("S"))
-    ) ///
-
-    // a recursive function becomes a recursive nullary operator
-    // that returns a function defined w.r.t. the recursive operator
-
-    def assertTlaRecDecl(expectedName: String, body: TlaEx): Unit = {
+    def assertTlaRecFunDecl(expectedName: String, body: TlaEx): Unit = {
       root.declarations.find {
         _.name == expectedName
       } match {
         case Some(d: TlaOperDecl) =>
-          assert(d.isRecursive)
           assert(expectedName == d.name)
-          assert(0 == d.formalParams.length)
           assert(body == d.body)
+          assert(!d.isRecursive)
           assert(locationStore.contains(d.body.ID)) // and source file information has been saved
 
         case _ =>
-          fail("Expected a TlaRecDecl")
+          fail("Expected a TlaOperDecl")
       }
     }
 
-    assertTlaRecDecl("recFun",
+    assertTlaRecFunDecl("nonRecFun",
       OperEx(TlaFunOper.funDef,
-        OperEx(TlaFunOper.app,
-          OperEx(TlaOper.apply, NameEx("recFun")),
-          NameEx("x")),
         NameEx("x"),
-        NameEx("S"))
-    ) ///
+        NameEx("x"),
+        NameEx("S")))
+
+    assertTlaRecFunDecl("recFun",
+      OperEx(TlaFunOper.recFunDef,
+        OperEx(TlaFunOper.app,
+          OperEx(TlaFunOper.recFunRef),
+          NameEx("x")),
+          NameEx("x"),
+          NameEx("S")))
   }
 
   test("instances") {
@@ -1392,7 +1410,6 @@ class TestSanyImporter extends FunSuite {
     assert(naturals.declarations.isEmpty)
   }
 
-  // uncomment this test when we decide on how to fix operator overriding
   test("lookup order in INSTANCE") {
     // regression: SanyImporter was resolving the names in the wrong order
     val text =
@@ -1414,10 +1431,65 @@ class TestSanyImporter extends FunSuite {
     val root = modules(rootName)
     // we strip away the operator declarations by Naturals
     assert(4 == root.declarations.size)
-    // check that Naturals were imported properly
     val aOfM = root.declarations.head
     // check that the root module has indeed the definition a(self) == {self}, not a == {}
     assert(aOfM.isInstanceOf[TlaOperDecl] && aOfM.asInstanceOf[TlaOperDecl].formalParams.size == 1)
+  }
+
+  test("LOCAL operator inside INSTANCE") {
+    val text =
+      """---- MODULE localInInstance ----
+        |---- MODULE M ----
+        |LOCAL a == {}
+        |b == a
+        |================================
+        |I == INSTANCE M
+        |c == I!b
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter(new SourceStore)
+      .loadFromSource("localInInstance", Source.fromString(text))
+    assert(1 == modules.size)
+    // the root module and naturals
+    val root = modules(rootName)
+    // we strip away the operator declarations by Naturals
+    assert(2 == root.declarations.size)
+    val bOfM = root.declarations.head
+    // as "a" is LOCAL, it does not appear in the declarations, but it becomes a LET-IN definition inside b
+    assert("I!b" == bOfM.name)
+    val expected = letIn(appOp("a"), TlaOperDecl("a", List(), enumSet()))
+    assert(expected == bOfM.asInstanceOf[TlaOperDecl].body)
+  }
+
+  // this test fails for the moment
+  ignore("RECURSIVE operator inside INSTANCE") {
+    val text =
+      """---- MODULE recInInstance ----
+        |---- MODULE M ----
+        |RECURSIVE a(_)
+        |a(X) == a(X)
+        |================================
+        |RECURSIVE b(_)
+        |b(X) == b(X)
+        |I == INSTANCE M
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter(new SourceStore)
+      .loadFromSource("recInInstance", Source.fromString(text))
+    assert(1 == modules.size)
+    // the root module and naturals
+    val root = modules(rootName)
+    // we strip away the operator declarations by Naturals
+    assert(2 == root.declarations.size)
+    val b = root.declarations.head
+    assert("b" == b.name)
+    assert(b.asInstanceOf[TlaOperDecl].isRecursive)
+    val aOfM = root.declarations(1)
+    // I!a should be recursive
+    assert("I!a" == aOfM.name)
+    assert(aOfM.asInstanceOf[TlaOperDecl].isRecursive)
   }
 
   test("module nats") {
@@ -1809,6 +1881,24 @@ class TestSanyImporter extends FunSuite {
     expectDecl("SetOfTuples",
       OperEx(BmcOper.withType, enumSet(),
         enumSet(tuple(ValEx(TlaIntSet), ValEx(TlaBoolSet)))))
+  }
+
+  test("EXTENDS Bags") {
+    // currently, Bags is imported as a user-defined module, no built-in operators are introduced
+    val text =
+      """---- MODULE localSum ----
+        |EXTENDS Bags
+        |================================
+      """.stripMargin
+
+    val locationStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(locationStore)
+      .loadFromSource("localSum", Source.fromString(text))
+    assert(6 == modules.size) // Naturals, Sequences, TLC, FiniteSets, Bags, and our module
+
+    val root = modules("localSum")
+    // this number may change when a new version of Bags.tla is shipped in tla2tools.jar
+    assert(13 == root.declarations.size)
   }
 
 

@@ -1,16 +1,21 @@
 package at.forsyte.apalache.tla.pp.passes
 
-import java.io.File
+import java.io.{File, FileNotFoundException, FileReader}
 import java.nio.file.Path
 
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
+import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin, WriteablePassOptions}
+import at.forsyte.apalache.io.tlc.TlcConfigParser
+import at.forsyte.apalache.io.tlc.config._
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.pp.ConstAndDefRewriter
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
+import at.forsyte.apalache.tla.pp.TlcConfigImporter
+import org.apache.commons.io.FilenameUtils
 
 /**
   * The pass that collects the configuration parameters and overrides constants and definitions.
@@ -38,7 +43,58 @@ class ConfigurationPassImpl @Inject()(val options: PassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
-    val module = tlaModule.get
+    var module = tlaModule.get
+
+    // read TLC config if present
+    val configFilename = options.getOrElse("checker","config","")
+    val filename =
+      if(configFilename.isEmpty)
+        options.getOrError("parser", "filename").asInstanceOf[String]
+        .replaceFirst("\\.tla$", "\\.cfg")
+      else
+        configFilename
+    val basename = FilenameUtils.getName(filename)
+    logger.info("  > Loading TLC configuration from " + basename)
+    try {
+      val config = TlcConfigParser.apply(new FileReader(filename))
+      module = new TlcConfigImporter(config, new IdleTracker())(module)
+      config.behaviorSpec match {
+        case InitNextSpec(init, next) =>
+          if(options.getOrElse("checker","init","").isEmpty) {
+            options.asInstanceOf[WriteablePassOptions].set("checker.init", init)
+          }
+          else {
+            logger.warn("  > Init operator is set both in " + basename + " and via --init option; using the latter")
+          }
+          if(options.getOrElse("checker","next","").isEmpty) {
+            options.asInstanceOf[WriteablePassOptions].set("checker.next", next)
+          }
+          else {
+            logger.warn("  > Next operator is set both in " + basename + " and via --next option; using the latter")
+          }
+        case _ => logger.warn("  > Temporal spec found in " + basename + ", which is not yet supported; skipping")
+      }
+      if(config.invariants.nonEmpty) {
+        if(options.getOrElse("checker","inv",List()).isEmpty) {
+          options.asInstanceOf[WriteablePassOptions].set("checker.inv", config.invariants)
+        }
+        else {
+          logger.warn("  > Invariants are set both in " + basename + " and via --inv option; using the latter")
+        }
+
+      }
+    }
+    catch {
+      case _: FileNotFoundException =>
+        if(configFilename.isEmpty) {
+          logger.info("  > No TLC configuration found; skipping")
+        }
+        else {
+          logger.error("  > Could not find TLC config file " + basename + " given via --config option")
+        }
+      case e: TlcConfigParseError => logger.error("  > Could not parse TLC configuration in " + basename + ": " + e.msg)
+    }
+
     val rewritten = new ConstAndDefRewriter(tracker)(module)
 
     // dump the result of preprocessing

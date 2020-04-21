@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.storage.BodyMap
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
+
 /**
   * <p>Attempts to instantiate the body of the operator named `name` with the provided arguments.
   * Returns None if the operator name is not a key in `bodyMap`, otherwise returns Some(b), where
@@ -18,23 +19,36 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker)
     extends TlaExTransformation {
 
   override def apply(expr: TlaEx): TlaEx = {
-    transform(expr)
+    transform( stepLimitOpt = None )(expr)
   }
 
-  def transform: TlaExTransformation = tracker.track {
+  def kStepInline( k : BigInt ) : TlaExTransformation =
+    if (k <= 0) throw new IllegalArgumentException( "The number of allowed steps for kStepInline must be a positive integer." )
+    else transform( stepLimitOpt = Some( k ) )
+
+  def transform(stepLimitOpt: Option[BigInt]): TlaExTransformation = tracker.track {
     // interesting case: applying a user-defined operator
     case ex @ OperEx(TlaOper.apply, NameEx(name), args @ _*) =>
       // Jure, 5.7.19: Can 0-arity operators ever appear as standalone NameEx, without
       // a OperEx( TlaOper.apply, NameEx( name ), args@_* ) wrapper? Currently, we consider that invalid
-      instantiateBody(name, args: _*).getOrElse(ex)
+      defBodyMap.get(name) match {
+        case Some( decl ) if decl.formalParams.size == args.size =>
+          instantiateWithArgs(stepLimitOpt)( decl, args )
+
+        case Some(decl) if decl.formalParams.size != args.size =>
+          val msg = s"Operator $name with arity ${decl.formalParams.size} called with ${args.size} argument(s)."
+          throw new IllegalArgumentException(msg)
+
+        case _ => ex
+      }
 
     // recursive processing of composite operators and let-in definitions
     case ex @ LetInEx(body, defs@_*) =>
       // transform bodies of all op.defs
       val newDefs = defs.map { x =>
-        x.copy(body = transform(x.body))
+        x.copy(body = transform(stepLimitOpt)(x.body))
       }
-      val newBody = transform(body)
+      val newBody = transform(stepLimitOpt)(body)
       if (defs == newDefs && body == newBody) {
         ex
       } else {
@@ -42,32 +56,31 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker)
       }
 
     case ex@OperEx(op, args@_*) =>
-      val newArgs = args map transform
+      val newArgs = args map transform(stepLimitOpt)
       if (args == newArgs) ex else OperEx(op, newArgs: _*)
 
     case ex => ex
   }
 
-  private def instantiateBody(name: String, args: TlaEx*): Option[TlaEx] = {
-    defBodyMap.get(name) match {
-      case Some((params, body)) if params.size == args.size =>
-        // deep copy the body, to ensure uniqueness of the UIDs
-        val bodyCopy = DeepCopy(tracker)(body)
+  private def instantiateWithArgs(stepLimitOpt: Option[BigInt])( decl: TlaOperDecl, args: Seq[TlaEx] ) : TlaEx = {
+    // Assumption: |decl.formalParams| = |args|
 
-        val newBody = params.zip(args).foldLeft(bodyCopy) {
-          case (b, (fParam, arg)) =>
-            ReplaceFixed(NameEx(fParam.name), arg, tracker)(b)
-        }
-        // newBody may contain calls to other operators, recurse
-        val newInlinedBody = transform(newBody)
-        Option(newInlinedBody)
+    // deep copy the body, to ensure uniqueness of the UIDs
+    val bodyCopy = DeepCopy( tracker )( decl.body )
 
-      case Some((params, _)) if params.size != args.size =>
-        val msg = s"Operator $name with arity ${params.size} called with ${args.size} argument(s)."
-        throw new IllegalArgumentException(msg)
-
-      case _ => None
+    val newBody = decl.formalParams.zip( args ).foldLeft( bodyCopy ) {
+      case (b, (fParam, arg)) =>
+        ReplaceFixed( NameEx( fParam.name ), arg, tracker )( b )
     }
+
+    // the step limit, if it was defined, decreases by 1
+    val newStepLimit = stepLimitOpt map { _ - 1 }
+
+    // if further steps are allowed then recurse otherwise terminate with current result
+    if ( newStepLimit forall { _ > 0 } )
+      transform(newStepLimit)( newBody )
+    else
+      newBody
   }
 }
 

@@ -149,12 +149,12 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
     )
   }
 
-  test("function definition") {
+  test("function constructor") {
     // [ x \in S, y \in T |-> x + y ]
     compareMultiLine(
       funDef(plus("x", "y"), "x", "S", "y", "T"),
       """{
-        |  "function": {
+        |  "fun": {
         |    "+": [
         |      "x",
         |      "y"
@@ -168,6 +168,29 @@ class TestJsonWriter extends FunSuite with BeforeAndAfterEach {
         |    [
         |      "y",
         |      "T"
+        |    ]
+        |  ]
+        |}""".stripMargin
+    )
+  }
+
+  test("recursive function constructor") {
+    // [x \in S] == 1 + recFunRef
+    compareMultiLine(
+      recFunDef(plus(int(1), recFunRef()), "x", "S"),
+      """{
+        |  "rec-fun": {
+        |    "+": [
+        |      1,
+        |      {
+        |        "apply-op": "rec-fun-ref"
+        |      }
+        |    ]
+        |  },
+        |  "where": [
+        |    [
+        |      "x",
+        |      "S"
         |    ]
         |  ]
         |}""".stripMargin

@@ -38,8 +38,9 @@ class OpApplTranslator(sourceStore: SourceStore, val context: Context, val recSt
         translateConstOper(node)
       }
     } else {
+      val oper = node.getOperator
       // non-constant operators
-      node.getOperator.getKind match {
+      oper.getKind match {
         case ASTConstants.BuiltInKind =>
           translateBuiltin(node)
 
@@ -57,8 +58,17 @@ class OpApplTranslator(sourceStore: SourceStore, val context: Context, val recSt
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  // call a user-defined operator
+  // call to a user-defined operator, either a LOCAL one, or not
   private def translateUserOperator(node: OpApplNode) = {
+    if (node.getOperator.isLocal) {
+      translateLocalOperator(node)
+    } else {
+      translateNonLocalUserOperator(node)
+    }
+  }
+
+  // call a user-defined operator that is not defined with LOCAL
+  private def translateNonLocalUserOperator(node: OpApplNode) = {
     val opcode = node.getOperator.getName.toString
     val exTran = ExprOrOpArgNodeTranslator(sourceStore, context, recStatus)
 
@@ -96,6 +106,28 @@ class OpApplTranslator(sourceStore: SourceStore, val context: Context, val recSt
       }
     } else {
       translateNonRec()
+    }
+  }
+
+  // call a user-defined operator that is defined locally
+  private def translateLocalOperator(node: OpApplNode): TlaEx = {
+    /* Since we do not know the original location of the local operator,
+       we can only re-define it with a LET-IN expression */
+    node.getOperator match {
+      case opdef: OpDefNode =>
+        // translate the declaration of the LOCAL operator
+        val decl = OpDefTranslator(sourceStore, context).translate(opdef)
+        // translate its arguments
+        val exTran = ExprOrOpArgNodeTranslator(sourceStore, context, recStatus)
+        val args = node.getArgs.toList.map { p => exTran.translate(p) }
+        // apply the operator by its name
+        val app = OperEx(TlaOper.apply, NameEx(decl.name) +: args: _*)
+        // return the expression LET F(..) = .. IN F(args)
+        LetInEx(app, decl)
+
+      case _ =>
+        val msg = "Expected a LOCAL operator defined with OpDefNode, found: " + node.getOperator.getClass
+        throw new SanyImporterException(msg)
     }
   }
 
@@ -176,11 +208,15 @@ class OpApplTranslator(sourceStore: SourceStore, val context: Context, val recSt
           case "$Except" =>
             mkExceptBuiltin(node)
 
-          case "$FcnConstructor" | "$NonRecursiveFcnSpec" | "$RecursiveFcnSpec" =>
-            // Note that we always translate a non-recursive function definition as just a function constructor,
-            // i.e., f(x \in S) == e in TLA+ is translated into f == [x \in S |-> e] in our IR.
-            // Recursive functions are also postprocessed by OpDefTranslator.
+          case "$FcnConstructor" | "$NonRecursiveFcnSpec" =>
+            // Note that we always translate a non-recursive function definition as just a function constructor.
             mkBoundCtorBuiltin(TlaFunOper.funDef, node)
+
+          case "$RecursiveFcnSpec" =>
+            // A recursive function definition `f[x \in S] == e`
+            // is translated into a constructor of a recursive function.
+            // Recursive functions are also post-processed by OpDefTranslator.
+            mkBoundCtorBuiltin(TlaFunOper.recFunDef, node)
 
           case "$SetOfAll" =>
             mkBoundCtorBuiltin(TlaSetOper.map, node)

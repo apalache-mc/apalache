@@ -43,7 +43,7 @@ class PrimingPassImpl @Inject()(options: PassOptions,
     val cinitPrimed =
       options.get[String]("checker", "cinit") match {
         case Some(name) =>
-          val operatorBody = bodyMap(name)._2
+          val operatorBody = bodyMap(name).body
           val primeTransformer = Prime(constSet, tracker) // add primes to constants
           val cinitPrimedName = name + "Primed"
           logger.info(s"  > Introducing $cinitPrimedName for $name'")
@@ -60,7 +60,7 @@ class PrimingPassImpl @Inject()(options: PassOptions,
     val initPrimedName = initName + "Primed"
     logger.info(s"  > Introducing $initPrimedName for $initName'")
     // add primes to variables
-    val initPrimed = Some(TlaOperDecl(initPrimedName, List(), primeTransformer(deepCopy(bodyMap(initName)._2))))
+    val initPrimed = Some(TlaOperDecl(initPrimedName, List(), primeTransformer(deepCopy(bodyMap(initName).body))))
 
     val newDeclarations: Seq[TlaDecl] = declarations ++ Seq(cinitPrimed, initPrimed).flatten
     val newModule = new TlaModule(tlaModule.get.name, newDeclarations)

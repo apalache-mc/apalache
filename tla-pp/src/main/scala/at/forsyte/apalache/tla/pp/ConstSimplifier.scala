@@ -177,8 +177,11 @@ class ConstSimplifier(tracker: TransformationTracker) extends TlaExTransformatio
     case OperEx(TlaControlOper.ifThenElse, ValEx(TlaBool(true)), thenEx, _) =>
       thenEx
 
-    case OperEx(TlaControlOper.ifThenElse, pred, ValEx(TlaBool(false)), elseEx) =>
+    case OperEx(TlaControlOper.ifThenElse, ValEx(TlaBool(false)), _, elseEx) =>
       elseEx
+
+    case OperEx(TlaControlOper.ifThenElse, pred, ValEx(TlaBool(false)), elseEx) =>
+      simplifyShallow(OperEx(TlaBoolOper.and, OperEx(TlaBoolOper.not, pred), elseEx))
 
     case OperEx(TlaControlOper.ifThenElse, pred, ValEx(TlaBool(true)), ValEx(TlaBool(false))) =>
       simplifyShallow(pred)

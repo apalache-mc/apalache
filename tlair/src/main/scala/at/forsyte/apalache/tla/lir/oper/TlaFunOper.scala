@@ -67,12 +67,79 @@ object TlaFunOper {
     * comes with its bounding set, e.g., (e, x, S, y, S, <<a, b>>, S).
     *
     * The arguments are always an odd-length list
-    * of the following structure: body, x_1, R_1, ..., x_k, R_k.
+    * of the following structure: body, x_1, S_1, ..., x_k, S_k.
     */
   val funDef = new TlaFunOper {
     override def arity: OperArity = new OperArity( k => k >= 3 && k % 2 == 1 )
     override val name: String = "fun-def"
     override val precedence: (Int, Int) = (16, 16) // as the function application
+  }
+
+  /**
+    * <p>A constructor of a recursive function, which is defined in TLA+ as: `f[x \in S] == ... f[y] ...`.
+    * We introduce a three-argument operator, whose arguments are as follows:</p>
+    *
+    * <ul>
+    *   <li>function body of type TlaEx that may refer to the function via recFunRef,</li>
+    *   <li>NameEx(variableName),</li>
+    *   <li>variable domain of type TlaEx.</li>
+    * </ul>
+    *
+    * <p>Hence, a declaration of a recursive operator looks like a nullary operator declaration,
+    *    whose body contains the constructor of a recursive function. The body of a recursive function may
+    *    refer to the function itself by using the operator recFunRef (see below).
+    *    Note that the output methods should convert this intermediate representation to the standard TLA+ form.</p>
+    *
+    * <p>There is a reason for defining a recursive function with two operators, rather than by introducing
+    * a special case of `TlaDecl`. In TLA+, the operator bodies (as well as function bodies) may refer only to
+    * the names that have been defined before. That is why we keep function definitions intermingled with
+    * operator definitions. Moreover, we do not refer to the function name in its body, as otherwise, we would
+    * run in two problems: (1) the operator name would clash with the function name, an
+    * (2) the renaming transformations would try to rename the function. TLA+ forbids mutually recursive functions,
+    * so it is sound to refer to the function with the operator `recFunDef`.</p>
+    *
+    * <p><b>Example.</b>
+    * `Fact[n \in Int] == IF n <= 1 THEN 1 ELSE n * Fact[n - 1]` is translated into:</p>
+    *
+    * <p>
+    * `TlaOperDecl("Fact", List(),
+    *   OperEx(recFunDef,
+    *     OperEx(TlaControlOper.ifThenElse,
+    *       (* n <= 1 *),
+    *       (* 1 *),
+    *       OperEx(Tla.ArithOper.mult,
+    *         NameEx("n"),
+    *         OperEx(TlaFunOper.app,
+    *           OperEx(recFunRef),
+    *           OperEx(TlaArithOper.minus, NameEx(n), ValEx(TlaInt(1)))
+    *         )
+    *       )
+    *     ),
+    *     NameEx("n"),
+    *     TlaIntSet
+    *   )
+    * )`
+    * </p>
+    */
+  val recFunDef = new TlaFunOper {
+    override def arity: OperArity = FixedArity(3)
+    override def name: String = "rec-fun-def"
+    override def precedence: (Int, Int) = (100, 100) // as the operator declaration
+  }
+
+  /**
+    * A reference to a recursive function inside its definition.
+    *
+    * @see TlaFunOper.recFunDef
+    */
+  val recFunRef = new TlaFunOper {
+    /**
+      * A unique name that can be used to refer to a recursive function inside its body.
+      */
+    val uniqueName = "$recFun"
+    override def name: String = "rec-fun-ref"
+    override def arity: OperArity = FixedArity(0)
+    override def precedence: (Int, Int) = (16, 16) // as function application
   }
 
   /**

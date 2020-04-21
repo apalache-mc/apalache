@@ -766,6 +766,32 @@ class TestTrivialTypeFinder extends RewriterBase {
     assert(IntT() == typeFinder.getVarTypes("A"))
   }
 
+  test("inferAndSave recFunRef w/o annotation") {
+    val typeFinder = new TrivialTypeFinder()
+    val recFunRef = tla.recFunRef()
+    typeFinder.inferAndSave(recFunRef)
+    assert(typeFinder.getTypeErrors.nonEmpty)
+  }
+
+  test("inferAndSave recFunRef with annotation") {
+    val typeFinder = new TrivialTypeFinder()
+    val recFunRef = tla.withType(tla.recFunRef(), tla.funSet(ValEx(TlaIntSet), ValEx(TlaIntSet)))
+    val tp = typeFinder.inferAndSave(recFunRef)
+    assert(typeFinder.getTypeErrors.isEmpty)
+    assert(tp.contains(FunT(FinSetT(IntT()), IntT())))
+  }
+
+  test("inferAndSave recFunDef with annotation") {
+    val typeFinder = new TrivialTypeFinder()
+    val recFunRef = tla.withType(tla.recFunRef(), tla.funSet(ValEx(TlaIntSet), ValEx(TlaIntSet)))
+    val recFunApply = tla.appFun(recFunRef, NameEx("x"))
+    // f[x \in {1, 2}] == f[x]
+    val recFun = tla.recFunDef(recFunApply, NameEx("x"), tla.enumSet(tla.int(1), tla.int(2)))
+    val tp = typeFinder.inferAndSave(recFun)
+    assert(typeFinder.getTypeErrors.isEmpty)
+    assert(tp.contains(FunT(FinSetT(IntT()), IntT())))
+  }
+
   test("inferAndSave type annotation") {
     val typeFinder = new TrivialTypeFinder()
     val ex = tla.enumSet()

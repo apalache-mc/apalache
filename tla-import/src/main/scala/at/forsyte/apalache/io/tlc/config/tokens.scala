@@ -16,6 +16,14 @@ case class IDENT(name: String) extends TlcConfigToken {
 }
 
 /**
+ * A number
+ * @param value the value of the number
+ */
+case class NUMBER(value: String) extends TlcConfigToken {
+  override def toString: String = "number '%s'".format(value)
+}
+
+/**
   * The CONSTANT keyword.
   */
 case class CONST() extends TlcConfigToken {

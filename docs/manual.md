@@ -1,10 +1,10 @@
 # Apalache manual
 
-**Version 0.7.0** :fireworks:
+**Version 0.7.0 (unstable)** :fireworks:
 
-**Authors: Igor Konnov and Andrey Kuprianov**
+**Authors: Igor Konnov, Jure Kukovec, and Andrey Kuprianov**
 
-**Contact: {igor,andrey} at informal.systems**
+**Contact: {igor,andrey} at informal.systems, jkukovec at forsyte.at**
 
 # Introduction
 
@@ -30,6 +30,7 @@ Apalache is working under the following assumptions:
  1. [Running the tool](#running)
  1. [Understanding assignments](#assignments)
  1. [Type annotations](#types)
+ 1. [Recursive operators and functions](#recursion)
  1. [Five minutes of theory](#theory5)
  1. [Supported language features](#features)
 
@@ -293,7 +294,7 @@ However, you can write `N \in {10, 20}`.
 
 # 6. Running the tool <a name="running"></a>
 
-## 6.1. Command-line parameters
+## 6.1. Model checker command-line parameters
 
 The model checker can be run as follows:
 
@@ -371,6 +372,7 @@ In this case, Apalache finds a safety violation, e.g., for
 `BIRTH_YEAR=89` and `LICENSE_AGE=10`. A complete counterexample
 is printed in `counterexample.txt`.
 
+<a name="detailed"></a>
 ## 6.3. Detailed output
 
 The tool will display only the important messages. A detailed log can be found
@@ -396,6 +398,25 @@ the run-specific directory `x/hh.mm-DD.MM.YYYY-<id>`:
   - File `out-opt.tla` is produced as a result of expression optimizations.
   - File `out-analysis.tla` is produced as a result of analysis, e.g.,
     marking Skolemizable expressions and expressions to be expanded.
+
+<a name="parsing"></a>
+## 6.4. Parsing and pretty-printing
+
+If you like to check that your TLA+ specification is syntactically correct,
+without running the model checker, you can run the following command.
+
+```bash
+$ apalache parse <myspec>.tla
+```
+
+In this case, Apalache performs the following steps:
+
+1. It parses the specification with [SANY](https://lamport.azurewebsites.net/tla/tools.html).
+
+1. It translates SANY semantic nodes into [Apalache IR](https://github.com/konnov/apalache/blob/master/tlair/src/main/scala/at/forsyte/apalache/tla/lir/package.scala).
+
+1. It pretty-prints the IR into `out-parser.tla`, see [Section 6.3](#detailed).
+
 
 <a name="assignments"></a>
 
@@ -755,8 +776,180 @@ Type annotations can be also applied to sets of records. For example:
 You can find more details on the simple type inference algorithm and the type
 annotations in [type annotations](types-and-annotations.md).
 
-<a name="theory5"></a>
+<a name="recursion"></a>
+## 9. Recursive operators and functions
 
+<a name="rec-op"></a>
+### 9.1. Recursive operators
+
+In the preprocessing phase, Apalache replaces every application of a user
+operator with its body. We call this process "operator inlining".
+This cannot be done for recursive operators, for two reasons:
+
+ 1. A recursive operator may be non-terminating (although a non-terminating
+    operator is useless in TLA+);
+
+ 1. A terminating call to an operator may take an unpredicted number of iterations.
+
+However, in practice, when one fixes specification parameters (that is,
+`CONSTANTS`), it is usually easy to find a bound on the number of operator
+iterations. For instance, consider the following specification:
+
+```tla
+--------- MODULE Rec6 -----------------
+CONSTANTS N
+VARIABLES set, count
+
+RECURSIVE Sum(_)
+
+Sum(S) ==
+  IF S = {}
+  THEN 0
+  ELSE LET x == CHOOSE x \in S: TRUE IN
+    x + Sum(S \ {x})
+
+Init ==
+  /\ set = {}
+  /\ count = 0
+
+Next ==
+  \E x \in (1..N) \ set:
+    /\ count' = count + x
+    /\ set' = set \union {x}
+
+Inv == count = Sum(set)
+=======================================    
+```
+
+It is clear that the expression `Sum(S)` requires the number of iterations that
+is equal to `Cardinality(S) + 1`. Moreover, the expression `set \subseteq
+1..N` is an invariant, and thus every call `Sum(set)` requires up to `N+1`
+iterations.
+
+When, we can find an upper bound on the number of iterations, Apalache can
+unroll the recursive operator up to this bound. To this end, we define two
+additional operators. For instance:
+
+```tla
+--------- MC_Rec6 ----------
+VARIABLES set, count
+
+INSTANCE Rec6 WITH N <- 3
+
+UNROLL_TIMES_Sum == 4
+UNROLL_DEFAULT_Sum == 0
+============================
+```
+
+In this case, Apalache unrolls every call to `Sum` exactly `UNROLL_TIMES_Sum`
+times, that is, four times. On the default branch, Apalache places
+`UNROLL_DEFAULT_Sum`, that is, 0.
+
+All recursively defined operators should follow this convention where, for every such operator `Oper`, the user defines both `UNROLL_TIMES_Oper`, which expands to a positive integer value, and `UNROLL_DEFAULT_Oper`, which expands to some default value `Oper(args*)` should take, if the computation would require more than `UNROLL_TIMES_Oper` recursive calls. 
+At present, we only support literals (e.g. `4`) or primitive arithmetic expressions (e.g. `2 + 2`) in the body of `UNROLL_TIMES_Oper`.
+
+<a name="rec-fun"></a>
+### 9.2. Recursive functions
+
+Apalache offers limited support for recursive functions. However, read the
+warning below on why you should not use recursive functions. The restrictions
+are as follows: 
+
+ 1. Apalache supports the recursive functions that return an integer or a Boolean.
+
+ 1. As Apalache's simple type checker is not able
+to find the type of a recursive function, all uses of a recursive function
+should come with a type annotation.
+
+ 1. As in TLC, the function domain must be a finite set.
+
+The example below shows a recursive function that computes the factorial of `n`.
+
+
+```tla
+------------------------------ MODULE Rec8 ------------------------------------
+EXTENDS Integers
+
+VARIABLES n, factSpec, factComp
+
+\* the syntax for type annotations
+a <: b == a
+
+\* the type of the factorial function
+FactT == [Int -> Int]
+
+(*
+ Defining a recursive function on a finite domain. Although it is rather
+ unnatural to define factorial on a finite set, both Apalache and TLC
+ require finite domains. As is usual for function application, the result
+ of the application is not defined on the elements outside of the function
+ domain.
+ *)
+Fact[k \in 1..20] ==
+    IF k <= 1
+    THEN 1
+    ELSE k * (Fact <: FactT)[k - 1]
+
+Init ==
+    /\ n = 1
+    /\ factSpec = Fact[n]
+    /\ factComp = 1
+
+Next ==     
+    /\ n' = n + 1
+    /\ factSpec' = Fact[n']
+    /\ factComp' = n' * factComp
+
+Inv ==
+    factComp = factSpec
+===============================================================================
+```
+
+Check other examples in
+[`test/tla`](https://github.com/konnov/apalache/tree/unstable/test/tla) that
+start with the prefix `Rec`.
+
+**Why you should avoid recursive functions.** Sometimes, recursive functions
+concisely describe the function that you need. The nice examples are the
+factorial function (see above) and Fibonacci numbers (see
+[Rec3](https://github.com/konnov/apalache/tree/unstable/test/tla/Rec3.tla)).
+However, when you define a recursive function over sets, the complexity gets
+ugly really fast.
+
+Consider the example
+[Rec9](https://github.com/konnov/apalache/tree/unstable/test/tla/Rec9.tla),
+which computes set cardinality. Here is a fragment of the spec:
+
+```tla
+\* the type of the function Card
+CardT == [{Int} -> Int]
+
+\* The set cardinality function
+Card[S \in SUBSET NUMS] ==
+    IF S = IntSet({})
+    THEN 0
+    ELSE LET i == CHOOSE j \in S: TRUE IN
+        1 + (Card <: CardT)[S \ {i}]
+```
+
+Since we cannot fix the order, in which the set elements are evaluated, we
+define function `Card` over `SUBSET NUMS`, that is, all possible subsets of
+`NUMS`. Apalache translates the function in a quantifier-free theory of SMT.
+Hence, in this case, Apalache expands `SUBSET NUMS`, so it introduces
+`2^|NUMS|` sets! Further, Apalache writes down the SMT constraints for the
+domain of `Card`. As a result, it produces `NUMS * 2^|NUMS|` constraints.
+As you can see, recursive functions over sets explode quite fast.
+
+It is usually a good idea to use recursive operators over sets rather than
+recursive functions. The downside is that you have to provide an upper bound on
+the number of the operator iterations. The upside is that recursive operators
+are usually unrolled more efficiently. (If they contain only constant
+expressions, they are even computed by the translator!) For instance, set
+cardinality does not require `2^|NUMS|` constraints, when using a recursive
+operator.
+
+
+<a name="theory5"></a>
 # 9. Five minutes of theory
 
 **You can safely skip this section**

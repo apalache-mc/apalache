@@ -1,5 +1,12 @@
 ## 0.7.0 [SNAPSHOT] #unstable
 
+ * sound translation of LOCAL operators, see #49
+ * unrolling recursive operators, see #67
+ * support for recursive functions that return integers and Booleans, see #84
+ * new IR for recursive functions, see #84 and TlaFunctionOper.recFunDef
+ * parser for the TLC configuration files, see #76
+ * exporter to JSON, see #77
+ * counterexamples in the TLC and JSON, see #45 and #116
  * fixed exit codes `EXITCODE: OK` and `EXITCODE: ERROR (<code>)`
  * normal error messages and failure messages with stack traces
 

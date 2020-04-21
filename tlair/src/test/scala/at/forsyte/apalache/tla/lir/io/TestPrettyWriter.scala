@@ -2,12 +2,13 @@ package at.forsyte.apalache.tla.lir.io
 
 import java.io.{PrintWriter, StringWriter}
 
-import at.forsyte.apalache.tla.lir.{OperEx, SimpleFormalParam, TlaOperDecl}
+import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.convenience.tla._
-import at.forsyte.apalache.tla.lir.oper.TlaOper
+import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaFunOper, TlaOper}
+import at.forsyte.apalache.tla.lir.values.TlaInt
 
 @RunWith(classOf[JUnitRunner])
 class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
@@ -753,5 +754,116 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
         |  * BVeryLongName(3, 4)""".stripMargin
     assert(expected == stringWriter.toString)
   }
+
+  test("a one-line operator declaration") {
+    val writer = new PrettyWriter(printWriter, 40)
+    val body =
+      OperEx(TlaArithOper.plus, ValEx(TlaInt(1)), NameEx("x"))
+
+    val fDecl = TlaOperDecl(
+      "A",
+      List(SimpleFormalParam("x")),
+      body
+    ) ///
+    writer.write(fDecl)
+    printWriter.flush()
+    val expected =
+      """A(x) == 1 + x""".stripMargin
+    assert(expected == stringWriter.toString)
+  }
+
+  test("a recursive operator declaration") {
+    val writer = new PrettyWriter(printWriter, 40)
+    val body =
+      OperEx(TlaArithOper.plus,
+          ValEx(TlaInt(1)), OperEx(TlaOper.apply, NameEx("A"), NameEx("x")))
+
+    val fDecl = TlaOperDecl(
+      "A",
+      List(SimpleFormalParam("x")),
+      body
+    ) ///
+    fDecl.isRecursive = true
+
+    writer.write(fDecl)
+    printWriter.flush()
+    val expected =
+      """RECURSIVE A(_)
+        |A(x) == 1 + A(x)""".stripMargin
+    assert(expected == stringWriter.toString)
+  }
+
+  test("a recursive operator declaration in LET-IN") {
+    val writer = new PrettyWriter(printWriter, 40)
+    val body =
+      OperEx(TlaArithOper.plus,
+          ValEx(TlaInt(1)), OperEx(TlaOper.apply, NameEx("A"), NameEx("x")))
+
+    val fDecl = TlaOperDecl(
+      "A",
+      List(SimpleFormalParam("x")),
+      body
+    ) ///
+    fDecl.isRecursive = true
+
+    val letInEx = letIn(OperEx(TlaOper.apply, NameEx("A"), ValEx(TlaInt(1))), fDecl)
+
+    writer.write(letInEx)
+    printWriter.flush()
+    // Igor: I would prefer to have an actual line-break between the recursive signature and the operator definition.
+    // However, it is not clear to me how to enforce that in the pretty printer that we are using.
+    val expected =
+      """LET RECURSIVE A(_) A(x) == 1 + A(x) IN
+        |A(1)""".stripMargin
+    assert(expected == stringWriter.toString)
+  }
+
+  test("a one-line recursive function in LET-IN") {
+    val writer = new PrettyWriter(printWriter, 40)
+    val recFun =
+      OperEx(
+        TlaFunOper.recFunDef,
+        OperEx(
+          TlaArithOper.plus,
+          ValEx(TlaInt(1)),
+          OperEx(TlaFunOper.app, OperEx(TlaFunOper.recFunRef), NameEx("x"))),
+        NameEx("x"),
+        NameEx("S"))
+    val fDecl = TlaOperDecl(
+      "f",
+      List(),
+      recFun
+    ) ///
+    val expr = letIn(appDecl(fDecl), fDecl)
+    writer.write(expr)
+    printWriter.flush()
+    val expected =
+      """LET f[x \in S] == 1 + f[x] IN f""".stripMargin
+    assert(expected == stringWriter.toString)
+  }
+
+  test("a one-line recursive function declaration") {
+    val writer = new PrettyWriter(printWriter, 40)
+    val recFun =
+      OperEx(
+        TlaFunOper.recFunDef,
+        OperEx(
+          TlaArithOper.plus,
+          ValEx(TlaInt(1)),
+          OperEx(TlaFunOper.app, OperEx(TlaFunOper.recFunRef), NameEx("x"))),
+        NameEx("x"),
+        NameEx("S"))
+    val fDecl = TlaOperDecl(
+      "f",
+      List(),
+      recFun
+    ) ///
+    writer.write(fDecl)
+    printWriter.flush()
+    val expected =
+      """f[x \in S] == 1 + f[x]""".stripMargin
+    assert(expected == stringWriter.toString)
+  }
+
 }
 

@@ -128,6 +128,16 @@ check "021-Bug20200306" --length=2 --inv=Inv Bug20200306.tla \
     && expect_err # the invariant FALSE is trivially violated
 check "022-Assignments20200309" --length=1 --inv=Inv Assignments20200309.tla \
     && expect_fail # Init does not have an assignment
+check "023-Inline" --length=5 Inline.tla \
+    && expect_ok
+check "024-Rec1" --length=5 --inv=Inv Rec1.tla \
+    && expect_ok
+check "025-Rec3" --length=10 --inv=Inv Rec3.tla \
+    && expect_ok
+check "026-Rec8" --length=10 --inv=Inv Rec8.tla \
+    && expect_ok
+check "027-Rec9" --length=5 --inv=Inv Rec9.tla \
+    && expect_ok
 
 cat "$LOGFILE"
 
