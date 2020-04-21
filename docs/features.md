@@ -9,11 +9,11 @@ Construct  | Supported? | Milestone | Comment
 ``EXTENDS module`` | ✔ | - | As soon as SANY imports the module. Some standard modules are not supported yet
 ``CONSTANTS C1, C2`` | ✔ | -  | Either define a ``ConstInit`` operator to initialize the constants, or declare operators instead of constants, e.g., C1 == 111
 ``VARIABLES x, y, z`` | ✔ | - |
-``ASSUME P`` | ✖ | - | Parsed, but not propagated to the solver
-``F(x1, ..., x_n) == exp`` | ✔ / ✖ | `0.7-dev-calls` | Provisionally, any use of F is replaced with its body. Hence, recursive operators are not supported yet.
-``f[x ∈ S] == exp`` | ? | `0.7-dev-calls` | A global function is replaced by an equivalent operator declaration. This feature has not been tested yet.
-``INSTANCE M WITH ...`` | ✔ / ✖ | - | ``~>``, ``\cdot``, ``ENABLED`` are not treated specially
-``N(x1, ..., x_n) == INSTANCE M WITH...`` | ✔ / ✖ | `0.5-dev-calls` | Parameterized instances are not supported yet, LOCAL operator definitions inside instances may fail to work
+``ASSUME P`` | ✔ / ✖ | - | Parsed, but not propagated to the solver
+``F(x1, ..., x_n) == exp`` | ✔ / ✖ | - | Every application of `F` is replaced with its body. Recursive operators need [unrolling annotations](./manual.md#91-recursive-operators).
+``f[x ∈ S] == exp`` | ✔ / ✖ | - | Only recursive functions that return integers or Booleans are supported.
+``INSTANCE M WITH ...`` | ✔ / ✖ | - | No special treatment for ``~>``, ``\cdot``, ``ENABLED``
+``N(x1, ..., x_n) == INSTANCE M WITH...`` | ✔ / ✖ | - | Parameterized instances are not supported yet, LOCAL operator definitions inside instances may fail to work
 ``THEOREM P`` | ✔ / ✖ | - | Parsed but not used
 ``LOCAL def`` | ✔ | - | Handled by SANY
 
@@ -44,8 +44,8 @@ Operator  | Supported? | Milestone | Comment
 `{e_1, ..., e_n}` | ✔ | - | Empty sets ``{}`` require [type annotations](types-and-annotations.md)
 `{x \in S : p}` | ✔ | - |
 `{e : x \in S}` | ✔ | - |
-`SUBSET S` | ✔ | - | Provided that S is *explicit*. Produces a *symbolic* set.
-`UNION S` |  ✔ | - | Provided that S is *explicit*
+`SUBSET S` | ✔ | - | Sometimes, the powersets are expanded
+`UNION S` |  ✔ | - | Provided that S is expanded
 
 #### Functions
 
@@ -53,8 +53,8 @@ Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 `f[e]` | ✔ | - |
 `DOMAIN f` | ✔ | - |
-`[ x \in S |-> e]` | ✔ / ✖ | - |  
-`[ S -> T ]` | ✔ | - | Produces a *symbolic* set
+`[ x \in S ↦ e]` | ✔ / ✖ | - |  
+`[ S -> T ]` | ✔ | - | Sometimes, the functions sets are expanded
 `[ f EXCEPT ![e1] = e2 ]` | ✔ | - |
 
 #### Records
@@ -66,7 +66,7 @@ Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 `e.h` | ✔ | - |
 `r[e]` | ✔/✖ | - | Provided that e is a constant expression.
-`[ h1 |-> e1, ..., h_n |-> e_n]` | ✔ | - |
+`[ h1 ↦ e1, ..., h_n ↦ e_n]` | ✔ | - |
 `[ h1 : S1, ..., h_n : S_n]` | ✔ | - |
 `[ r EXCEPT !.h = e]` | ✔ | - |
 
@@ -89,16 +89,16 @@ Construct  | Supported? | Milestone | Comment
 `"c1...c_n"` | ✔ | - | A string is always mapped to a unique uninterpreted constant
 `STRING` | ✖ | - | It is an infinite set. We cannot handle infinite sets.
 `d1...d_n` | ✔ | - | As long as the SMT solver (Z3) accepts that large number
-`d1...d_n.d_n+1...d_m` | ✖ | - | Technical issue. We could have implemented it.
+`d1...d_n.d_n+1...d_m` | ✖ | - | Technical issue. We will implemented upon a user request.
 
 #### Miscellaneous Constructs
 
 Construct  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 `IF p THEN e1 ELSE e2` | ✔ | - | Provided that both e1 and e2 have the same type
+`CASE p1 -> e1 [] ... [] p_n -> e_n [] OTHER -> e` | ✔ | - | See the comment above
 `CASE p1 -> e1 [] ... [] p_n -> e_n` | ✖ | - | Introduce the default arm with `OTHER`.
-``CASE p1 -> e1 [] ... [] p_n -> e_n [] OTHER -> e`` | ✔ | - | See the comment above
-``LET d1 == e1 ... d_n == e_n IN e`` | ✔ / ✖ | `0.7-dev-calls` | All applications of `d1`, ..., `d_n` are replaced with the expressions `e1`, ... `e_n` respectively. Applications of nullary LET-definitions are not replaced with  the bodies.
+``LET d1 == e1 ... d_n == e_n IN e`` | ✔ / ✖ | `0.7-dev-calls` | All applications of `d1`, ..., `d_n` are replaced with the expressions `e1`, ... `e_n` respectively. LET-definitions without arguments are kept in place.
 multi-line `/\` and `\/` | ✔ | - |
 
 ### The Action Operators
@@ -127,21 +127,13 @@ Except the standard form `Init /\ [][Next]_e`, no temporal operators are support
 
 For the moment, the model checker does not differentiate between integers and naturals. They are all translated as integers in SMT.
 
-**TODO: explicitly add the constraint x >= 0 for the naturals.**
-
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 `+`, `-`, `*`, `<=`, `>=`, `<`, `>` | ✔ | - | These operators are translated into integer arithmetic of the SMT solver. Linear integer arithmetic is preferred.
 `\div`, `%` | ✔ | - | Integer division and modulo
-`a^b` | ✔ / ✖ | - | Provided a and b are constant expressions.
-`a..b` | ✔ / ✖ | - | Provided a and b are constant expressions, or `a..b`
-is used in a test that can be replaced with a constraint. In general, use
-`{x \in A..B : a <= x /\ x <= b}`, if you know constant bounds `A` and
-`B` on the variables `a` and `b`.
-`Int`, `Nat` | ✔ / ✖ | - | Supported in `\E x \in Nat: p` and `\E x
-\in Int: p`, if the expression is not located under `\A` and `~`. We
-also support assignments like `f' \in [S -> Int]` and tests `f \in [S ->
-Nat]`
+`a^b` | ✔ / ✖ | - | Provided a and b are constant expressions
+`a..b` | ✔ / ✖ | - | Sometimes, `a..b` needs a constant upper bound on the range.  When Apalache complains, use `{x \in A..B : a <= x /\ x <= b}`, provided that `A` and `B` are constant expressions.
+`Int`, `Nat` | ✔ / ✖ | - | Supported in `\E x \in Nat: p` and `\E x \in Int: p`, if the expression is not located under `\A` and `~`. We also support assignments like `f' \in [S -> Int]` and tests `f \in [S -> Nat]`
 `/` | ✖ | - | Real division, not supported
 
 ### Sequences
