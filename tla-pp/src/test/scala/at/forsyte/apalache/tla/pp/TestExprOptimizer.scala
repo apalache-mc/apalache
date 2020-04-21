@@ -107,9 +107,10 @@ class TestExprOptimizer extends FunSuite with BeforeAndAfterEach {
   test("""Cardinality(S) >= 2 becomes LET t_3 == S IN \E t_1 \in t_3: \E t_1 \in t_3: t_1 /= t_2""") {
     val input = tla.ge(tla.card(tla.name("S")), tla.int(2))
     val output = optimizer.apply(input)
+    val letApp = tla.appOp(tla.name("t_3"))
     val letBody =
-      tla.exists(tla.name("t_1"), tla.name("t_3"),
-        tla.exists(tla.name("t_2"), tla.name("t_3"),
+      tla.exists(tla.name("t_1"), letApp,
+        tla.exists(tla.name("t_2"), letApp,
           tla.not(tla.eql(tla.name("t_1"), tla.name("t_2")))))
     val expected = tla.letIn(letBody, TlaOperDecl("t_3", List(), tla.name("S")))
     assert(expected == output)
@@ -118,11 +119,55 @@ class TestExprOptimizer extends FunSuite with BeforeAndAfterEach {
   test("""Cardinality(S) > 1 becomes LET t_3 == S IN \E t_1 \in t_3: \E t_1 \in t_3: t_1 /= t_2""") {
     val input = tla.gt(tla.card(tla.name("S")), tla.int(1))
     val output = optimizer.apply(input)
+    val letApp = tla.appOp(tla.name("t_3"))
     val letBody =
-      tla.exists(tla.name("t_1"), tla.name("t_3"),
-        tla.exists(tla.name("t_2"), tla.name("t_3"),
+      tla.exists(tla.name("t_1"), letApp,
+        tla.exists(tla.name("t_2"), letApp,
           tla.not(tla.eql(tla.name("t_1"), tla.name("t_2")))))
     val expected = tla.letIn(letBody, TlaOperDecl("t_3", List(), tla.name("S")))
+    assert(expected == output)
+  }
+
+  // these optimizations have been subsumed by CardinalityConstRule
+  ignore("""Cardinality(S) >= k becomes LET t_k+3 == S IN \E t_1, ..., t_k \in t_k+3: \A t_k+1, t_k+2 \in {t_1, ..., t_k}: t_k+1 /= t_k+2""") {
+    val input = tla.ge(tla.card(tla.name("S")), tla.int(4))
+    val output = optimizer.apply(input)
+    val letApp = tla.appOp(tla.name("t_8"))
+    val newSet = tla.enumSet(tla.name("t_1"), tla.name("t_2"), tla.name("t_3"), tla.name("t_4"))
+    val letBody =
+      tla.exists(tla.name("t_1"), letApp,
+        tla.exists(tla.name("t_2"), letApp,
+          tla.exists(tla.name("t_3"), letApp,
+            tla.exists(tla.name("t_4"), letApp,
+              tla.letIn(
+                tla.forall(tla.name("t_6"), tla.appOp(tla.name("t_5")),
+                  tla.forall(tla.name("t_7"), tla.appOp(tla.name("t_5")),
+                    tla.not(tla.eql(tla.name("t_6"), tla.name("t_7"))))),
+                TlaOperDecl("t_5", List(), newSet)
+              )
+            ))))
+    val expected = tla.letIn(letBody, TlaOperDecl("t_8", List(), tla.name("S")))
+    assert(expected == output)
+  }
+
+  ignore("""Cardinality(S) < k becomes LET t_k+3 == S IN \A t_1, ..., t_k \in t_k+3: \E t_k+1, t_k+2 \in {t_1, ..., t_k}: t_k+1 = t_k+2""") {
+    val input = tla.lt(tla.card(tla.name("S")), tla.int(4))
+    val output = optimizer.apply(input)
+    val letApp = tla.appOp(tla.name("t_8"))
+    val newSet = tla.enumSet(tla.name("t_1"), tla.name("t_2"), tla.name("t_3"), tla.name("t_4"))
+    val letBody =
+      tla.forall(tla.name("t_1"), letApp,
+        tla.forall(tla.name("t_2"), letApp,
+          tla.forall(tla.name("t_3"), letApp,
+            tla.forall(tla.name("t_4"), letApp,
+              tla.letIn(
+                tla.exists(tla.name("t_6"), tla.appOp(tla.name("t_5")),
+                  tla.exists(tla.name("t_7"), tla.appOp(tla.name("t_5")),
+                    tla.eql(tla.name("t_6"), tla.name("t_7")))),
+                TlaOperDecl("t_5", List(), newSet)
+              )))))
+
+    val expected = tla.letIn(letBody, TlaOperDecl("t_8", List(), tla.name("S")))
     assert(expected == output)
   }
 }

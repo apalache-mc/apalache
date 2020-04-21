@@ -253,7 +253,9 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     key(tla.concat(tla.name("Seq1"), tla.name("Seq2")))
       -> List(new SeqOpsRule(this)),
 
-    // FiniteSets
+   // FiniteSets
+    key(OperEx(BmcOper.constCard, tla.ge(tla.card(tla.name("S")), tla.int(3))))
+      -> List(new CardinalityConstRule(this)),
     key(OperEx(TlaFiniteSetOper.cardinality, tla.name("S")))
       -> List(new CardinalityRule(this)),
     key(OperEx(TlaFiniteSetOper.isFiniteSet, tla.name("S")))

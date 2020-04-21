@@ -1,15 +1,18 @@
 package at.forsyte.apalache.tla.bmcmt.analyses
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaBoolOper, TlaControlOper}
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.lir.values.TlaInt
 
 /**
   * <p>The skolemization analysis finds the existential quantifiers that can be safely replace by constants
-  * (Skolemizable). This class is not a pure analysis but a transformer, that is, it modifies an argument expression.</p>
+  * (Skolemizable). This class is not a pure analysis but a transformer, that is, it modifies an argument expression.
+  * Additionally, this analysis finds the cardinality comparisons like Cardinality(S) >= 4 that can be checked
+  * more optimally than the direct computation of the cardinalities.</p>
   *
   * <p>The previous version of this class was storing the identifiers of the Skolemizable expressions.
   * This had two disadvantages: (1) the code carried around the respective analysis store, and (2) the Skolemizable
@@ -30,6 +33,11 @@ class SkolemizationMarker @Inject()(tracker: TransformationTracker)
     case OperEx(TlaBoolOper.forall, name, set, pred) =>
       // it is fine to skolemize existentials under \A, as \A is translated into a conjunction
       tla.forall(name, set, transform(pred))
+
+    case op @ OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, _), ValEx(TlaInt(intVal)))
+        if intVal.isValidInt =>
+      // this constraint can be solved more efficiently than the direct computation of Cardinality
+      OperEx(BmcOper.constCard, op)
 
     case ex @ OperEx(TlaBoolOper.not, _) =>
       ex // stop here. This should be a leaf (and rare) expression, as we are dealing with the NNF.

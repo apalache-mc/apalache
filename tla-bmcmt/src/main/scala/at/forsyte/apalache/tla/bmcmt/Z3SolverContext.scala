@@ -519,6 +519,9 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
       case OperEx(TlaOper.ne, lhs, rhs) =>
         z3context.mkNot(toExpr(OperEx(TlaOper.eq, lhs, rhs)).asInstanceOf[BoolExpr])
 
+      case OperEx(BmcOper.distinct, args @ _*) =>
+        z3context.mkDistinct(args map toExpr :_*)
+
       case OperEx(TlaBoolOper.and, es@_*) =>
         if (es.size < 1000) {
           val newEs = es.map(e => toExpr(e).asInstanceOf[BoolExpr])
