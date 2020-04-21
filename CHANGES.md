@@ -1,6 +1,7 @@
 ## 0.7.0 [SNAPSHOT] #unstable
 
- * sound translation of LOCAL operators, see #49
+ * optimization for `Cardinality(S) >= k`, see #118
+ * sound translation of `LOCAL` operators, see #49
  * unrolling recursive operators, see #67
  * support for recursive functions that return integers and Booleans, see #84
  * new IR for recursive functions, see #84 and TlaFunctionOper.recFunDef
