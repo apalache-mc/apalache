@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.pp.passes
 import java.io.{File, FileNotFoundException, FileReader}
 import java.nio.file.Path
 
+import at.forsyte.apalache.infra.PassExecException
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin, WriteablePassOptions}
 import at.forsyte.apalache.io.tlc.TlcConfigParser
 import at.forsyte.apalache.io.tlc.config._
@@ -10,11 +11,10 @@ import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.tla.pp.ConstAndDefRewriter
+import at.forsyte.apalache.tla.pp.{ConstAndDefRewriter, TLCConfigurationError, TlcConfigImporter}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.tla.pp.TlcConfigImporter
 import org.apache.commons.io.FilenameUtils
 
 /**
@@ -90,9 +90,10 @@ class ConfigurationPassImpl @Inject()(val options: PassOptions,
           logger.info("  > No TLC configuration found; skipping")
         }
         else {
-          logger.error("  > Could not find TLC config file " + basename + " given via --config option")
+          throw new TLCConfigurationError("  > Could not find TLC config file " + basename + " given via --config option")
         }
-      case e: TlcConfigParseError => logger.error("  > Could not parse TLC configuration in " + basename + ": " + e.msg)
+      case e: TlcConfigParseError =>
+        throw new TLCConfigurationError("  > Could not parse TLC configuration in " + basename + ": " + e.msg)
     }
 
     val rewritten = new ConstAndDefRewriter(tracker)(module)

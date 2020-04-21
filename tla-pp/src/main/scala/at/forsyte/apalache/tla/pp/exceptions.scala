@@ -18,3 +18,8 @@ class NotInKeraError(message: String, cause: TlaEx) extends MalformedTlaError(me
   */
 class OverridingError(message: String, cause: TlaEx) extends MalformedTlaError(message, cause)
 
+/**
+ * An exception that should be thrown when a TLC configuration is wrong/not-found
+ * @param message the error message
+ */
+class TLCConfigurationError(message: String) extends Exception(message)

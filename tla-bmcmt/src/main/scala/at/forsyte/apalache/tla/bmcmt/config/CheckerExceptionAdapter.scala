@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.imp.SanyException
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{MalformedTlaError, TlaEx}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
-import at.forsyte.apalache.tla.pp.NotInKeraError
+import at.forsyte.apalache.tla.pp.{NotInKeraError, TLCConfigurationError}
 import com.typesafe.scalalogging.LazyLogging
 import javax.inject.{Inject, Singleton}
 
@@ -26,6 +26,9 @@ class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
     // normal errors
     case err: SanyException =>
       NormalErrorMessage("Error by TLA+ parser: " + err.getMessage)
+
+    case err: TLCConfigurationError =>
+      NormalErrorMessage(err.getMessage)
 
     case err: AssignmentException =>
       logger.info("To understand the error, read the manual:")
