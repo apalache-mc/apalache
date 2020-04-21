@@ -1,13 +1,13 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
+import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaArithOper, TlaFiniteSetOper}
 import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
-import at.forsyte.apalache.tla.bmcmt.implicitConversions._
-import at.forsyte.apalache.tla.bmcmt.types.BoolT
+import at.forsyte.apalache.tla.lir.{OperEx, ValEx}
 
 
 /**
@@ -64,21 +64,19 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
       nextState.asCell
     }
 
-    val witnesses = 1.to(threshold).map(pick).toList
-
     // create an inequality constraint
-    def mkEq(pair: (ArenaCell, ArenaCell)): TlaEx = {
+    def cacheEq(pair: (ArenaCell, ArenaCell)): Unit = {
       nextState = rewriter.lazyEq.cacheOneEqConstraint(nextState, pair._1, pair._2)
-      tla.not(tla.eql(pair._1, pair._2))
     }
 
     // create the inequality predicate
-    val cons = (witnesses cross witnesses).filter(p => p._1.id < p._2.id).map(mkEq)
+    val witnesses = 1.to(threshold).map(pick).toList
+    (witnesses cross witnesses).filter(p => p._1.id < p._2.id).foreach(cacheEq)
+    val witnessesNotEq = OperEx(BmcOper.distinct, witnesses.map(_.toNameEx) :_*)
     nextState = nextState.updateArena(_.appendCell(BoolT()))
     val pred = nextState.arena.topCell
     // either the set is empty and threshold <= 0, or all witnesses are not equal to each other
     val nonEmptyOrBelow = tla.or(tla.not(emptyPred), tla.bool(threshold <= 0))
-    val witnessesNotEq = tla.and(cons.toSeq: _*)
     solverAssert(tla.eql(pred, tla.and(nonEmptyOrBelow, tla.or(emptyPred, witnessesNotEq))))
 
     // generate constraints

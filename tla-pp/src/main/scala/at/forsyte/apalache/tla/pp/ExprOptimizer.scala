@@ -104,38 +104,6 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
 
       // these rewriting rules are implemented more efficiently in CardinalityConstRule.
       /*
-    case OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal)))
-      if intVal.isValidInt =>
-      val k = intVal.toInt
-      // introduce k existentials that are mutually exclusive
-      val exNames = 1.to(k).map(_ => NameEx(nameGen.newName())).toList
-      val boundSetAlias = nameGen.newName()
-      val boundLetApp = tla.appOp(NameEx(boundSetAlias))
-      val x = NameEx(nameGen.newName())
-      val y = NameEx(nameGen.newName())
-      val setAlias = nameGen.newName()
-      val letApp = tla.appOp(NameEx(setAlias))
-      val forAllNe =
-        tla.forall(x, boundLetApp,
-          tla.forall(y, boundLetApp,
-            tla.not(tla.eql(x, y))))
-      val letInForAllNe =
-        tla.letIn(
-          forAllNe,
-          TlaOperDecl(boundSetAlias, List(), tla.enumSet(exNames: _*)))
-
-      def mkExists(underlying: TlaEx, names: Seq[NameEx]): TlaEx = {
-        names match {
-          case Nil => underlying
-          case varName :: tl => tla.exists(varName, letApp, mkExists(underlying, tl))
-        }
-      }
-
-      tla.letIn(
-        mkExists(letInForAllNe, exNames),
-        TlaOperDecl(setAlias, List(), set)
-      ) ///
-
     case OperEx(TlaArithOper.lt, OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal)))
       if intVal.isValidInt =>
       val k = intVal.toInt
