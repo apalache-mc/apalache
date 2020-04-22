@@ -109,7 +109,7 @@ you can set the handy alias,
 which runs Apalache in docker while sharing the working directory:
 
 ```bash
-$ alias apalache="docker run --rm -v `pwd`:/var/apalache apalache/mc"
+$ alias apalache="docker run --rm -v $(pwd):/var/apalache apalache/mc"
 ```
 
 **Building an image**. For an end user there is no need to build an Apalache
