@@ -107,7 +107,8 @@ $ alias apalache="docker run --rm -v $(pwd):/var/apalache apalache/mc"
 
 The development of Apalache proceeds at a high pace,
 and we introduce a substantial number of new features in the unstable branch before the next stable release,
-roughly at a weekly cadence. Please refer to [Unstable Manual](https://github.com/konnov/apalache/blob/unstable/docs/manual.md)
+roughly at a weekly cadence. Please refer to [Unstable Changes](https://github.com/konnov/apalache/blob/unstable/CHANGES.md)
+and [Unstable Manual](https://github.com/konnov/apalache/blob/unstable/docs/manual.md)
 for the description of new features.
 **We recommend using the unstable version if you want to try all the exciting new features of Apalache**.
 The price you pay for that is the slightly higher tool instability.
