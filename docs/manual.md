@@ -76,7 +76,7 @@ directory, where Apalache is cloned.
 
 To get the latest Apalache image, issue the command:
 
-```
+```bash
 docker pull apalache/mc
 ```
 
@@ -99,9 +99,10 @@ The following docker parameters are used:
   When using SELinux, you might have to use the modified form of `-v` option:
     `-v <your-spec-directory>:/var/apalache:z`
 - `apalache/mc` is the APALACHE docker image name. By default, the `latest` stable
-  version is used; you can also refer to a specific tool version, e.g., `apalache/mc:0.6.0`
+  version is used; you can also refer to a specific tool version, e.g., `apalache/mc:0.6.0` or `apalache/mc:unstable`
 - `<args>` are the tool arguments as described in
   [Running the tool](#running).
+
 
 **Setting an alias.**
 If you are running Apalache on Linux :penguin: or MacOS :green_apple:,
@@ -109,7 +110,35 @@ you can set the handy alias,
 which runs Apalache in docker while sharing the working directory:
 
 ```bash
-$ alias apalache="docker run --rm -v `pwd`:/var/apalache apalache/mc"
+$ alias apalache="docker run --rm -v $(pwd):/var/apalache apalache/mc"
+```
+
+**Using unstable version of Apalache**
+
+The development of Apalache proceeds at a high pace,
+and we introduce a substantial number of new features in the unstable branch before the next stable release,
+roughly at a weekly cadence. Please refer to [Unstable Manual](https://github.com/konnov/apalache/blob/unstable/docs/manual.md)
+for the description of new features.
+**We recommend using the unstable version if you want to try all the exciting new features of Apalache**.
+The price you pay for that is the slightly higher tool instability.
+To use `unstable`, just type `apalache/mc:unstable` instead of `apalache/mc` everywhere.
+
+Do not forget to regularly pull the docker image:
+
+```bash
+docker pull apalache/mc:unstable
+```
+
+Run it with the following command:
+
+```bash
+$ docker run --rm -v <your-spec-directory>:/var/apalache apalache/mc:unstable <args>
+```
+
+To create an alias pointing to `unstable` version:
+
+```bash
+$ alias apalache="docker run --rm -v $(pwd):/var/apalache apalache/mc:unstable"
 ```
 
 **Building an image**. For an end user there is no need to build an Apalache
