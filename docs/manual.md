@@ -76,7 +76,7 @@ directory, where Apalache is cloned.
 
 To get the latest Apalache image, issue the command:
 
-```
+```bash
 docker pull apalache/mc
 ```
 
@@ -99,9 +99,10 @@ The following docker parameters are used:
   When using SELinux, you might have to use the modified form of `-v` option:
     `-v <your-spec-directory>:/var/apalache:z`
 - `apalache/mc` is the APALACHE docker image name. By default, the `latest` stable
-  version is used; you can also refer to a specific tool version, e.g., `apalache/mc:0.6.0`
+  version is used; you can also refer to a specific tool version, e.g., `apalache/mc:0.6.0` or `apalache/mc:unstable`
 - `<args>` are the tool arguments as described in
   [Running the tool](#running).
+
 
 **Setting an alias.**
 If you are running Apalache on Linux :penguin: or MacOS :green_apple:,
@@ -109,7 +110,36 @@ you can set the handy alias,
 which runs Apalache in docker while sharing the working directory:
 
 ```bash
-$ alias apalache="docker run --rm -v `pwd`:/var/apalache apalache/mc"
+$ alias apalache="docker run --rm -v $(pwd):/var/apalache apalache/mc"
+```
+
+**Using unstable version of Apalache**
+
+The development of Apalache proceeds at a high pace,
+and we introduce a substantial number of new features in the unstable branch before the next stable release,
+roughly at a weekly cadence. Please refer to [Unstable Changes](https://github.com/konnov/apalache/blob/unstable/CHANGES.md)
+and [Unstable Manual](https://github.com/konnov/apalache/blob/unstable/docs/manual.md)
+for the description of new features.
+**We recommend using the unstable version if you want to try all the exciting new features of Apalache**.
+The price you pay for that is the slightly higher tool instability.
+To use `unstable`, just type `apalache/mc:unstable` instead of `apalache/mc` everywhere.
+
+Do not forget to regularly pull the docker image:
+
+```bash
+docker pull apalache/mc:unstable
+```
+
+Run it with the following command:
+
+```bash
+$ docker run --rm -v <your-spec-directory>:/var/apalache apalache/mc:unstable <args>
+```
+
+To create an alias pointing to `unstable` version:
+
+```bash
+$ alias apalache="docker run --rm -v $(pwd):/var/apalache apalache/mc:unstable"
 ```
 
 **Building an image**. For an end user there is no need to build an Apalache
@@ -290,7 +320,16 @@ However, you can write `N \in {10, 20}`.
 
 ## 5.4. TLC configuration file
 
-*We are planning to support TLC configuration files soon*. Follow [Issue 76](https://github.com/konnov/apalache/issues/76).
+We support configuring Apalache via TLC configuration files; 
+these files are produced automatically by TLA Toolbox, for example.
+TLC configuration file allows to specify which initialization predicate and transition predicate
+to employ, which invariants to check, as well as to initialize specification parameters.
+A limited syntax of TLC configuration files is supported at the moment, which should be nevertheless
+enough for most uses.
+
+If you are checking a file `<myspec>.tla`,
+and the file `<myspec>.cfg` exists in the same directory, it will be picked up by Apalache automatically.
+You can also explicitely specify which configuration file to use via `--config` option.
 
 # 6. Running the tool <a name="running"></a>
 
@@ -299,12 +338,13 @@ However, you can write `N \in {10, 20}`.
 The model checker can be run as follows:
 
 ```bash
-$ apalache check [--init=Init] [--cinit=ConstInit] \
-    [--next=Next] [--inv=Inv] [--length=10] [--tuning=filename] myspec.tla
+$ apalache check [--config=filename] [--init=Init] [--cinit=ConstInit] \
+    [--next=Next] [--inv=Inv] [--length=10] [--tuning=filename] <myspec>.tla
 ```
 
 The arguments are as follows:
 
+  * ``--config`` specifies the TLC configuration file, the default name is ``<myspec>.cfg``
   * ``--init`` specifies the initialization predicate, the default name is ``Init``
   * ``--next`` specifies the transition predicate, the default name is ``Next``
   * ``--cinit`` specifies the constant initialization predicate, optional
@@ -313,16 +353,19 @@ The arguments are as follows:
   * ``--tuning`` specifies the properties file that stores the options for
   [fine tuning](tuning.md)
 
+If initialization predicate, transition predicate, or invariant is specified both in the configuration file,
+and on the command line, the command line parameters take precedence over those in the configuration file.
+
 If you like to check an inductive invariant ``Inv``, you can run two commands:   
 
 ```bash
-$ apalache check --init=Inv --inv=Inv --length=1 myspec.tla
+$ apalache check --init=Inv --inv=Inv --length=1 <myspec>.tla
 ```
 
 and
 
 ```bash
-$ apalache check --init=Init --inv=Inv --length=0 myspec.tla
+$ apalache check --init=Init --inv=Inv --length=0 <myspec>.tla
 ```
 
 Make sure that ``Inv`` contains necessary constraints on the shape of the variables.
@@ -383,6 +426,8 @@ the run-specific directory `x/hh.mm-DD.MM.YYYY-<id>`:
 
   - File `out-parser.tla` is produced as a result of parsing and importing
     into Apalache TLA IR.
+  - File `out-parser.json` is produced as a result of converting the
+    Apalache TLA IR representation of the input into JSON format.
   - File `out-config.tla` is produced as a result of substituting CONSTANTS,
     as described in [Section 5](#parameters).
   - File `out-inline.tla` is produced as a result of inlining operator
