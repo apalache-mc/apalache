@@ -12,6 +12,28 @@ class Unroller( tracker : TransformationTracker ) extends TlaModuleTransformatio
 
   import Unroller._
 
+  def unrollLetIn(
+                   bodyMap : BodyMap
+                 ) : TlaExTransformation = tracker.track {
+    case ex@LetInEx( body, defs@_* ) =>
+      val newMap = BodyMapFactory.makeFromDecls( defs, bodyMap )
+      val defaultsMap = getDefaults(newMap).getOrThrow
+      val replaceTr = replaceWithDefaults( defaultsMap )
+      val inliner = InlinerOfUserOper( newMap, tracker )
+      val newDefs = defs map {
+        replaceRecursiveDecl( _, newMap, inliner, replaceTr ).asInstanceOf[TlaOperDecl]
+      }
+      val newBody = unrollLetIn( newMap )( body )
+      if ( defs == newDefs && body == newBody )
+        ex
+      else
+        LetInEx( newBody, newDefs:_* )
+    case ex@OperEx( op, args@_* ) =>
+      val newArgs = args map unrollLetIn( bodyMap )
+      if ( args == newArgs ) ex else OperEx( op, newArgs : _* )
+    case ex => ex
+  }
+
   def replaceWithDefaults( defaultsMap : Map[String, TlaEx] ) : TlaExTransformation = tracker.track {
     case ex@OperEx( TlaOper.apply, NameEx( name ), args@_* ) =>
       defaultsMap.getOrElse( name, ex )
@@ -84,23 +106,41 @@ class Unroller( tracker : TransformationTracker ) extends TlaModuleTransformatio
     case d@TlaOperDecl( name, fparams, body ) if d.isRecursive =>
       val unrollLimit = getUnrollLimit( name, bodyMap ).getOrThrow
       val kStepInline = inliner.kStepInline( unrollLimit )
-      val inlined = kStepInline( body )
+      val unrolledLetIn = unrollLetIn( bodyMap )( body )
+      val inlined = kStepInline( unrolledLetIn )
       val defaultReplaced = replaceWithDefaultsTr( inlined )
       TlaOperDecl( name, fparams, defaultReplaced )
+    case d@TlaOperDecl( name, fparams, body ) => // d.isRecursive = false
+      val unrolledLetIn = unrollLetIn( bodyMap )( body )
+      if (body == unrolledLetIn)
+        d
+      else
+        TlaOperDecl( name, fparams, unrolledLetIn )
     case TlaRecFunDecl( name, arg, dom, body ) =>
       // Ignore for now?
       decl
     case _ => decl
   }
 
+  def getDefaults( bodyMap: BodyMap ) : ExceptionOrValue[ Map[String,TlaEx] ] = {
+    val defMap = bodyMap.values withFilter {
+      _.isRecursive
+    } map {
+      decl => decl.name -> getDefaultBody( decl.name, bodyMap )
+    }
+    val init : ExceptionOrValue[Map[String, TlaEx]] = SucceedWith( Map.empty[String, TlaEx] )
+    defMap.foldLeft( init ) {
+      case (SucceedWith( m ), (k, SucceedWith( v ))) =>
+        SucceedWith( m + ( k -> v ) )
+      case (fail : FailWith[Map[String, TlaEx]], _) => fail
+      case (_, (_, fail : FailWith[TlaEx])) => FailWith[Map[String, TlaEx]]( fail.e )
+    }
+  }
+
   override def apply( module : TlaModule ) : TlaModule = {
     val operDecls = module.operDeclarations
     val bodyMap = BodyMapFactory.makeFromDecls( operDecls )
-    val defaultsMap = ( operDecls withFilter {
-      _.isRecursive
-    } map { decl =>
-      decl.name -> getDefaultBody( decl.name, bodyMap ).getOrThrow
-    } ).toMap
+    val defaultsMap = getDefaults(bodyMap).getOrThrow
     val replaceTr = replaceWithDefaults( defaultsMap )
     val inliner = InlinerOfUserOper( bodyMap, tracker )
     val newDecls = module.declarations map {

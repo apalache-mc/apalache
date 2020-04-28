@@ -6,9 +6,8 @@ import java.nio.file.Path
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
-import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
-import at.forsyte.apalache.tla.pp.Unroller
+import at.forsyte.apalache.tla.pp.{Cacher, UniqueNameGenerator, Unroller}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -20,9 +19,11 @@ import com.typesafe.scalalogging.LazyLogging
   * @param tracker transformation tracker
   * @param nextPass next pass to call
   */
-class UnrollPassImpl @Inject()( val options: PassOptions,
-                      tracker: TransformationTracker,
-                     @Named("AfterUnroll") nextPass: Pass with TlaModuleMixin)
+class UnrollPassImpl @Inject()( val options : PassOptions,
+                                nameGenerator : UniqueNameGenerator,
+                                tracker : TransformationTracker,
+                                @Named( "AfterUnroll" ) nextPass : Pass with TlaModuleMixin
+                              )
   extends UnrollPass with LazyLogging {
 
   private var outputTlaModule: Option[TlaModule] = None
@@ -42,10 +43,12 @@ class UnrollPassImpl @Inject()( val options: PassOptions,
   override def execute(): Boolean = {
     val module = tlaModule.get
 
-    val unroller = Unroller(tracker)
+    val unroller = Unroller( tracker )
+    val cacher = Cacher( nameGenerator, tracker )
 
     logger.info("  > %s".format(unroller.getClass.getSimpleName))
-    val newModule = unroller(module)
+    val cached = cacher( module )
+    val newModule = unroller( cached )
 
     // dump the result of preprocessing
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
