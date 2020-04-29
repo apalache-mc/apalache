@@ -53,7 +53,7 @@ class SolutionInterpreter( tvg : TypeVarGenerator ) {
     // application sites, in order to determine the types of operators. Simultaneously,
     // we also collect all the operator names from the BodyMap
     val (backMap, operNames) = bodyMap.foldLeft( (Map.empty[UID, TlaEx], Seq.empty[String]) ) {
-      case ((partialMap, partialOpNames), (name, (_, body))) =>
+      case ((partialMap, partialOpNames), (name, TlaOperDecl( _, _, body ))) =>
         (partialMap ++ aux.uidToExMap( body ), name +: partialOpNames)
     }
 

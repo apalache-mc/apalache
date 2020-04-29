@@ -2,10 +2,9 @@ package at.forsyte.apalache.tla.types
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaIntSet, TlaNatSet, TlaStrSet}
+import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir.smt.SmtTools.{And, BoolFormula}
 import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 import at.forsyte.apalache.tla.types.smt.SmtVarGenerator
 
 
@@ -105,7 +104,7 @@ class UserDefinedTemplateGenerator(
         // Otherwise, n must be a  user-defined operator and we have to perform a virtual call
         if ( !bodyMap.contains( n ) )
           throw new IllegalArgumentException( s"The body of operator $n is unknown" )
-        val (fParams, body) = bodyMap( n )
+        val TlaOperDecl( _, fParams, body ) = bodyMap( n )
         // First, we need to compute a fresh formal signature
         val SigTriple( opType, paramTypes, sigConstraints ) = formSigEnc.sig( fParams )
         // Next, we compute n's template, adding the ID of ex (the virtual call-site) to the operator stack
@@ -138,10 +137,10 @@ class UserDefinedTemplateGenerator(
         nablaInternal( x, equivalentEx, m )( bodyMap, operStack )
       case ex@OperEx( TlaActionOper.unchanged, OperEx( TlaOper.apply, NameEx( n ) ) ) =>
         bodyMap.get( n ) match {
-          case Some( (_, nameEx : NameEx) ) =>
+          case Some( TlaOperDecl(_, _, nameEx : NameEx) ) =>
             val equivalentEx = Builder.primeEq( nameEx.deepCopy(), nameEx )
             nablaInternal( x, equivalentEx, m )( bodyMap, operStack )
-          case Some( (_, OperEx( TlaFunOper.tuple, tupArgs@_* )) ) =>
+          case Some( TlaOperDecl(_, _, OperEx( TlaFunOper.tuple, tupArgs@_* )) ) =>
             val equivalentEx = Builder.and( tupArgs map Builder.unchanged : _* )
             nablaInternal( x, equivalentEx, m )( bodyMap, operStack )
           case _ =>

@@ -59,7 +59,7 @@ object DependencyGraph {
             explorationStack = name +: explorationStack
             // We fetch the body ...
             bodyMap.get( name ) match {
-              case Some( (_, body) ) =>
+              case Some( TlaOperDecl( _, _, body ) ) =>
                 // ... and scan it for any operator calls
                 val children = subCalls( body )
                 // Any operator that is called in such a way, cannot be a basic root,

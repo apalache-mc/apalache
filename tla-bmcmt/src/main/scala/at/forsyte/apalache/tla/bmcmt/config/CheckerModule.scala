@@ -11,6 +11,7 @@ import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
 import at.forsyte.apalache.tla.pp.passes._
+import at.forsyte.apalache.tla.types.passes._
 import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, TypeLiteral}
 
@@ -58,11 +59,17 @@ class CheckerModule extends AbstractModule {
     bind(classOf[Pass])
       .annotatedWith(Names.named("AfterParser"))
       .to(classOf[ConfigurationPass])
+    // the next pass is TypePass
+    bind(classOf[TypeAnnotationPass])
+      .to(classOf[TypeAnnotationPassImpl])
+    bind(classOf[Pass])
+      .annotatedWith(Names.named("AfterConfiguration"))
+      .to(classOf[TypeAnnotationPass])
     // the next pass is UnrollPass
     bind(classOf[UnrollPass])
       .to(classOf[UnrollPassImpl])
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterConfiguration"))
+      .annotatedWith(Names.named("AfterTypes"))
       .to(classOf[UnrollPass])
     // the next pass is InlinePass
     bind(classOf[InlinePass])

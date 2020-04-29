@@ -1,8 +1,7 @@
 package at.forsyte.apalache.tla.types
 
 import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaOper}
-import at.forsyte.apalache.tla.lir.predef.{TlaBoolSet, TlaIntSet, TlaNatSet, TlaStrSet}
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
+import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.storage.BodyMap
 import at.forsyte.apalache.tla.types.TypeComputer.Binding
@@ -331,7 +330,7 @@ class TypeComputer(
             t => UnificationResult( t, substitution )
           } getOrElse {
             // if it's not yet known, we compute it here, once
-            val (fParams, body) = bodyMap( opName )
+            val TlaOperDecl( _, fParams, body ) = bodyMap( opName )
             val UnificationResult( typeOfBody, sub ) = buildTypeAssignment( substitution, body )
             val r = OperT( TupT( fParams map { p => globalBinding( p.name ) } : _* ), typeOfBody )
             knownOperators += opName -> r

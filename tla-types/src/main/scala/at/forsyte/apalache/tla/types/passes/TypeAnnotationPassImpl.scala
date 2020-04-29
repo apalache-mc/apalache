@@ -16,7 +16,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 class TypeAnnotationPassImpl @Inject()(
                                         val options : PassOptions,
-                                        @Named( "TBD" ) nextPass : Pass with TlaModuleMixin
+                                        @Named( "AfterTypes" ) nextPass : Pass with TlaModuleMixin
                                       )
   extends TypeAnnotationPass with LazyLogging {
 
@@ -123,7 +123,7 @@ class TypeAnnotationPassImpl @Inject()(
 
         // First we construct the UID -> TlaEx mapping
         val backMap = bodyMap.foldLeft( Map.empty[UID, TlaEx] ) {
-          case (partialMap, (_, (_, body))) => partialMap ++ aux.uidToExMap( body )
+          case (partialMap, (_, TlaOperDecl( _, _, body ))) => partialMap ++ aux.uidToExMap( body )
         }
 
         val ctx = templateGenerator.getCtx
