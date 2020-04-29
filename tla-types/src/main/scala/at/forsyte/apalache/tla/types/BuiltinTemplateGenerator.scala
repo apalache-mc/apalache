@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.types.smt.SmtVarGenerator
   * @param smtVarGen - generates fresh SMT variables on demand
   */
 class BuiltinTemplateGenerator( private val smtVarGen : SmtVarGenerator ) {
-  private val sigGen    = new SignatureGenerator
+  private val sigGen    = new SignatureGenerator( new TypeVarGenerator )
   private val reduction = new TypeReduction( smtVarGen )
 
   /**

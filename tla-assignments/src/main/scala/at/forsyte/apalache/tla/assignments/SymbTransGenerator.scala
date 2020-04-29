@@ -284,6 +284,8 @@ class SymbTransGenerator( tracker : TransformationTracker ) {
     /** We compute the set of all branch intersections with `asgnStrategy` */
     val selections = allSelections( transformed, Map.empty )
 
+    // TODO: guard against specifications with 0 variables
+
     /** Sanity check, all selections are the same size */
     val allSizes = selections( transformed.ID ).map( _.size )
     assert( allSizes.size == 1 )

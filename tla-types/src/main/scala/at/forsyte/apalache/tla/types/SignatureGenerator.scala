@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.types
 
-import at.forsyte.apalache.tla.lir.{OperEx, ValEx}
+import at.forsyte.apalache.tla.lir.{FormalParam, OperEx, ValEx}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 
@@ -12,9 +12,7 @@ import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
   * the paper describes as infinite families of fixed-arity operators (e.g. {...}),
   * where we can infer the arity (or in the case of records, the fields) from the OperEx arguments
   */
-class SignatureGenerator {
-  private val typeVarGenerator : TypeVarGenerator = new TypeVarGenerator
-
+class SignatureGenerator(private val typeVarGenerator : TypeVarGenerator) {
   def getPossibleSignatures( operEx : OperEx ) : List[PolyOperT] = operEx.oper match {
     /** Logic */
     // \A T . <T> => T

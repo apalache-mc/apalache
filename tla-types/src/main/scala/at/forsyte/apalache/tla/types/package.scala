@@ -19,6 +19,8 @@ package object types {
   // generate mutually exclusive types to the same UIDs appearing in the body of said operator
   type OperatorContext = Map[OperatorApplicationStack, TypeVarAssignment]
 
+  type TypeAssignment = Map[UID, TlaType]
+
   object Names {
     val intVarSymb : String = "i"
     val tVarSymb   : String = "f"

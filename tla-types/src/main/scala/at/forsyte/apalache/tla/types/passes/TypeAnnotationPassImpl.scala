@@ -42,6 +42,8 @@ class TypeAnnotationPassImpl @Inject()(
   override def execute( ) : Boolean = {
     val module = tlaModule.get
 
+    logger.info( "Started type pass")
+
     val operDecls = module.operDeclarations
     val nonOperDecls = module.constDeclarations ++ module.varDeclarations
 
@@ -74,7 +76,9 @@ class TypeAnnotationPassImpl @Inject()(
 
     val solver = new Z3TypeSolver( useSoftConstraints = useSoftConstraints, typeVarGen )
 
+    logger.info( "Start SMT")
     val ret = solver.solve( smtVarGen.allVars, constraints )
+    logger.info("End SMT")
 
     ret match {
       case Solution( solution ) =>
@@ -109,6 +113,7 @@ class TypeAnnotationPassImpl @Inject()(
         val pw = new PrintWriter( new FileWriter( new File( outdir.toFile, "out-types.txt" ), false ) )
         pw.write( outStr )
         pw.close()
+        logger.info( "Ended type pass")
         true
       case UnsatCore( core ) =>
         // We already get the core as conflicting expressions, not labels
@@ -144,6 +149,7 @@ class TypeAnnotationPassImpl @Inject()(
         pw.write( "\n\n" )
         pw.write( descrStr )
         pw.close()
+        logger.info( "Ended type pass")
         false
     }
   }
