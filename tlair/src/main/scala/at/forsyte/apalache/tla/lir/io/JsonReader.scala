@@ -21,6 +21,8 @@ object JsonReader {
   val binaryOps = JsonWriter.binaryOps.map(_.swap)
   val naryOps = JsonWriter.naryOps.map(_.swap)
 
+  val otherOps = Set("str", "int", "set")
+
   val sets = HashMap(
     "BOOLEAN" -> TlaBoolSet,
     "Int" -> TlaIntSet,
@@ -48,12 +50,11 @@ object JsonReader {
     val unary = m.keySet & unaryOps.keySet
     val binary = m.keySet & binaryOps.keySet
     val nary = m.keySet & naryOps.keySet
-
-    if(m.keySet == Set("str"))
-      ValEx(TlaStr(parseStr(m("str"))))
-    else if(unary.size + binary.size < 1)
+    val other = m.keySet & otherOps
+    val ourKeys = unary.size + binary.size + nary.size + other.size
+    if(ourKeys < 1)
       throw new Exception("incorrect TLA+ JSON: expected expression, but none found")
-    else if(unary.size + binary.size > 1)
+    else if(ourKeys > 1)
       throw new Exception("incorrect TLA+ JSON: multiple matching expressions")
     else if(unary.nonEmpty)
       OperEx(unaryOps(unary.head), parseJson(m(unary.head)))
@@ -61,8 +62,23 @@ object JsonReader {
       OperEx(binaryOps(binary.head), parseArray(m(binary.head)):_*)
     else if(nary.nonEmpty)
       OperEx(naryOps(nary.head), parseArray(m(nary.head)):_*)
+    else if(other.nonEmpty) {
+      if(other.head == "str")
+        ValEx(TlaStr(parseStr(m("str"))))
+      else if(other.head == "int")
+        ValEx(TlaInt(BigInt(parseStr(m("int")))))
+      else if(other.head == "set") {
+        val set = parseStr(m("set"))
+        if(sets.contains(set))
+          ValEx(sets(set))
+        else
+          throw new Exception("can't parse TLA+ JSON: reference to unknown set")
+      }
+      else
+        throw new Exception("can't parse TLA+ JSON: unknown JSON key")
+    }
     else
-      OperEx(naryOps(nary.head), parseArray(m(nary.head)):_*)
+      throw new Exception("can't parse TLA+ JSON: unknown JSON key")
   }
 
   // expect ujson.Value to be a string

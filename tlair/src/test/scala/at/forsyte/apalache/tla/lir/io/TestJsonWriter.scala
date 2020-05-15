@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.lir._
 
 class TestJsonWriter extends TestJson {
 
+  // check that after writing to json the result matches expected
   def compare(ex: TlaEx, expected: String, indent: Int = -1): Unit = {
     val stringWriter = new StringWriter()
     val printWriter = new PrintWriter(stringWriter)
