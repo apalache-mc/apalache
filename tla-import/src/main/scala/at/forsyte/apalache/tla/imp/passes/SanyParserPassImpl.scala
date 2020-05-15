@@ -1,14 +1,14 @@
 package at.forsyte.apalache.tla.imp.passes
 
-import java.io.{File, FileWriter, PrintWriter}
+import java.io.File
 import java.nio.file.Path
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.TlaModule
-import at.forsyte.apalache.tla.lir.io.PrettyWriter
-import at.forsyte.apalache.tla.lir.io.JsonWriter
+import at.forsyte.apalache.tla.lir.io.{JsonWriter, PrettyWriter}
+import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -48,6 +48,11 @@ class SanyParserPassImpl @Inject()(val options: PassOptions,
       val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
       PrettyWriter.write(rootModule.get, new File(outdir.toFile, "out-parser.tla"))
       JsonWriter.write(rootModule.get, new File(outdir.toFile, "out-parser.json"))
+
+      if (options.getOrElse("general", "debug", false)) {
+        val sourceLocator = SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
+        rootModule.get.operDeclarations foreach sourceLocator.checkConsistency
+      }
     }
     rootModule.isDefined
   }

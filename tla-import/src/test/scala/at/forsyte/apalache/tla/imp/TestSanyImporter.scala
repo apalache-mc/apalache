@@ -1093,6 +1093,7 @@ class TestSanyImporter extends FunSuite {
       _.name == "A"
     }.collect {
       case TlaOperDecl(_, _, LetInEx(body, defs@_*)) =>
+        assert(locationStore.contains(body.ID))
         assert(3 == defs.length)
         val xDecl = defs.head
         assert("X" == xDecl.name)
@@ -1460,6 +1461,40 @@ class TestSanyImporter extends FunSuite {
     assert("I!b" == bOfM.name)
     val expected = letIn(appOp("a"), TlaOperDecl("a", List(), enumSet()))
     assert(expected == bOfM.asInstanceOf[TlaOperDecl].body)
+  }
+
+  // regression for #112
+  test("LET-IN inside INSTANCE") {
+    val text =
+      """---- MODULE letInInstance ----
+        |---- MODULE M ----
+        |VARIABLE x
+        |a ==
+        |  LET b == {} IN
+        |  b
+        |================================
+        |VARIABLE x
+        |INSTANCE M
+        |================================
+        |""".stripMargin
+
+    val sourceStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(sourceStore)
+      .loadFromSource("letInInstance", Source.fromString(text))
+    assert(1 == modules.size)
+    // the root module and naturals
+    val root = modules(rootName)
+    // we strip away the operator declarations by Naturals
+    assert(2 == root.declarations.size)
+    val aOfM = root.declarations(1)
+    aOfM.asInstanceOf[TlaOperDecl].body match {
+      case LetInEx(body, bDecl) =>
+        assert(sourceStore.contains(body.ID))
+        assert(sourceStore.contains(bDecl.body.ID))
+
+      case _ =>
+        fail("expected declaration of b")
+    }
   }
 
   // this test fails for the moment

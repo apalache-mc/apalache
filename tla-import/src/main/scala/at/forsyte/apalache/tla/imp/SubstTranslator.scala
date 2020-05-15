@@ -21,23 +21,40 @@ class SubstTranslator(sourceStore: SourceStore, context: Context) extends LazyLo
   }
 
   private def subExpr(renaming: Map[String, TlaEx], ex: TlaEx): TlaEx = {
-    def subRec(ex: TlaEx): TlaEx = ex match {
-      case NameEx(name) =>
-        renaming.getOrElse(name, NameEx(name))
+    def subRec(ex: TlaEx): TlaEx = {
+      val newEx =
+        ex match {
+          case NameEx(name) =>
+            renaming.getOrElse(name, NameEx(name))
 
-      case LetInEx( body, defs@_* ) =>
-        def subDecl( d : TlaOperDecl ) = d.copy( body = subRec( d.body ) )
-        LetInEx( subRec(body), defs map subDecl :_*)
+          case LetInEx(body, defs@_*) =>
+            def subDecl(d: TlaOperDecl) = {
+              d.copy(body = subRec(d.body))
+            }
 
-      case OperEx(op, args@_*) =>
-        if (renaming.nonEmpty
-          && Seq(TlaActionOper.enabled, TlaActionOper.composition, TlaTempOper.leadsTo).exists(_.name == op.name)) {
-          // TODO: find out how to deal with ENABLED and other tricky operators
-          logger.warn("Substitution of %s needs care. The current implementation may fail to work.".format(op.name))
+            LetInEx(subRec(body), defs map subDecl: _*)
+
+          case OperEx(op, args@_*) =>
+            if (renaming.nonEmpty
+              && Seq(TlaActionOper.enabled, TlaActionOper.composition, TlaTempOper.leadsTo).exists(_.name == op.name)) {
+              // TODO: find out how to deal with ENABLED and other tricky operators
+              logger.warn("Substitution of %s needs care. The current implementation may fail to work.".format(op.name))
+            }
+            OperEx(op, args map subRec: _*)
+
+          case d => d
         }
-        OperEx(op, args map subRec: _*)
 
-      case d => d
+      // copy the source info
+      sourceStore.find(ex.ID) match {
+        case Some(loc) =>
+          sourceStore.add(newEx.ID, loc)
+
+        case None =>
+          logger.warn("No source for expr@" + ex.ID)
+      }
+      // return
+      newEx
     }
 
     subRec(ex)
@@ -63,7 +80,7 @@ class SubstTranslator(sourceStore: SourceStore, context: Context) extends LazyLo
 }
 
 object SubstTranslator {
-  def apply(sourceStore: SourceStore, context: Context) : SubstTranslator = {
+  def apply(sourceStore: SourceStore, context: Context): SubstTranslator = {
     new SubstTranslator(sourceStore, context)
   }
 }

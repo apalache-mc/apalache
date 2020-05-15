@@ -149,17 +149,12 @@ class IncrementalRenaming @Inject()(tracker : TransformationTracker) extends Tla
     */
   private def getNextUniqueFromBase( name: String ) = getNextUnique( getBase( name ) )
 
-  /**
-    * Returns y, but establishes tracking between x and y. Needed for better granularity of tracking.
-    */
-  private def trackedSubstitution( x : TlaEx, y : TlaEx ) = tracker.track( _ => y )( x )
-
   private def rename( alreadyRenamed: Map[String,String] ): TlaExTransformation = tracker.track {
     case ex @ NameEx(name) =>
       // If a name has been marked for replacement (i.e. is an entry in alreadyRenamed)
       // we simply substitute in the pre-computed new name
       if ( alreadyRenamed.contains( name ) )
-        trackedSubstitution( ex, NameEx( alreadyRenamed( name ) ) )
+        tracker.hold( ex, NameEx( alreadyRenamed( name ) ) )
       else
         ex
 
@@ -175,7 +170,8 @@ class IncrementalRenaming @Inject()(tracker : TransformationTracker) extends Tla
       val newName = getNextUniqueFromBase( name )
       val newRenamed = alreadyRenamed + ( name -> newName )
       val newArgs = otherArgs.map( rename( newRenamed ) )
-      OperEx( op, trackedSubstitution( nex, NameEx( newName ) ) +: newArgs : _* )
+      val trackedName = tracker.hold(nex, NameEx(newName))
+      OperEx( op, trackedName +: newArgs : _* )
 
     // Certain operators introduce several bound variables at once
     case OperEx( op, result, varsAndSets@_* )
