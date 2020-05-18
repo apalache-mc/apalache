@@ -18,9 +18,10 @@ object JsonReader {
   }
 
   val unaryOps = JsonWriter.unaryOps.map(_.swap)
-  val binaryOps = JsonWriter.binaryOps.map(_.swap)
   val naryOps = JsonWriter.naryOps.map(_.swap)
-
+  val functionalOps = JsonWriter.functionalOps.map(_.swap)
+  val boundedPredOps = JsonWriter.boundedPredOps.map(_.swap)
+  val unboundedPredOps = JsonWriter.unboundedPredOps.map(_.swap)
   val otherOps = Set("str", "int", "set")
 
   val sets = HashMap(
@@ -48,20 +49,42 @@ object JsonReader {
   // expect ujson.Value to be an encoding of TLA+ expression
   def parseExpr(m: LinkedHashMap[String, ujson.Value]): TlaEx = {
     val unary = m.keySet & unaryOps.keySet
-    val binary = m.keySet & binaryOps.keySet
+    val functional = m.keySet & functionalOps.keySet
+    val boundedPred = m.keySet & boundedPredOps.keySet
+    val unboundedPred = m.keySet & unboundedPredOps.keySet
     val nary = m.keySet & naryOps.keySet
     val other = m.keySet & otherOps
-    val ourKeys = unary.size + binary.size + nary.size + other.size
+    val ourKeys = unary.size + nary.size + functional.size +
+      + boundedPred.size + unboundedPred.size + other.size
     if(ourKeys < 1)
       throw new Exception("incorrect TLA+ JSON: expected expression, but none found")
     else if(ourKeys > 1)
       throw new Exception("incorrect TLA+ JSON: multiple matching expressions")
     else if(unary.nonEmpty)
       OperEx(unaryOps(unary.head), parseJson(m(unary.head)))
-    else if(binary.nonEmpty)
-      OperEx(binaryOps(binary.head), parseArray(m(binary.head)):_*)
     else if(nary.nonEmpty)
       OperEx(naryOps(nary.head), parseArray(m(nary.head)):_*)
+    else if(functional.nonEmpty) {
+      if(!m.contains("where"))
+        throw new Exception("incorrect TLA+ JSON: expecting 'where' clause")
+      OperEx(functionalOps(functional.head), parseJson(m(functional.head)) +: parsePairs(m("where")) :_*)
+    }
+    else if(unboundedPred.nonEmpty) {
+      if(!m.contains("that"))
+        throw new Exception("incorrect TLA+ JSON: expecting 'that' clause")
+      OperEx(unboundedPredOps(unboundedPred.head), parseJson(m(unboundedPred.head)), parseJson(m("that")))
+    }
+    else if(unboundedPred.nonEmpty) {
+      if(!m.contains("that"))
+        throw new Exception("incorrect TLA+ JSON: expecting 'that' clause")
+      OperEx(unboundedPredOps(unboundedPred.head), parseJson(m(unboundedPred.head)), parseJson(m("that")))
+    }
+    else if(boundedPred.nonEmpty) {
+      val nameSet = parsePair(m(boundedPred.head))
+      if(!m.contains("that"))
+        throw new Exception("incorrect TLA+ JSON: expecting 'that' clause")
+      OperEx(boundedPredOps(boundedPred.head), nameSet(0), nameSet(1), parseJson(m("that")))
+    }
     else if(other.nonEmpty) {
       if(other.head == "str")
         ValEx(TlaStr(parseStr(m("str"))))
@@ -98,6 +121,24 @@ object JsonReader {
       case None => throw new Exception("incorrect TLA+ JSON: expecting expression array")
     }
     arr.map(parseJson)
+  }
+
+  // expect ujson.Value to be an encoding of a set of pairs of expressions
+  def parsePairs(v: ujson.Value): Seq[TlaEx] = {
+    // it should be a JSON array
+    val arr = v.arrOpt match {
+      case Some(value) => value
+      case None => throw new Exception("incorrect TLA+ JSON: expecting array of pairs")
+    }
+    arr.map(parsePair).flatten
+  }
+
+  // expect ujson.Value to be an encoding of a pair of expressions
+  def parsePair(v: ujson.Value): Seq[TlaEx] = {
+    val pair = parseArray(v)
+    if(pair.size != 2)
+      throw new Exception("incorrect TLA+ JSON: expecting a pair")
+    pair
   }
 }
 
