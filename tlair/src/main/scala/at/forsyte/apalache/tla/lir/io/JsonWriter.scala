@@ -79,10 +79,7 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
   }
 
   private def applyOpTo(op: String, to: Seq[TlaEx]): ujson.Value = {
-    val json = Obj("apply-op" -> op)
-    if(to.nonEmpty)
-      json("args") = to.map(toJson)
-    json
+    Obj("apply-op" -> op, "args" -> to.map(toJson))
   }
 
   private def functionalWhere(tla: String, fun: TlaEx, args: Seq[TlaEx]): ujson.Value = {

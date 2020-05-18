@@ -180,24 +180,9 @@ abstract class TestJson extends FunSuite {
 
   test("recursive function constructor") {
     // [x \in S] == 1 + recFunRef
-    compareMultiLine(
+    compare(
       recFunDef(plus(int(1), recFunRef()), "x", "S"),
-      """{
-        |  "rec-fun": {
-        |    "+": [
-        |      1,
-        |      {
-        |        "apply-op": "rec-fun-ref"
-        |      }
-        |    ]
-        |  },
-        |  "where": [
-        |    [
-        |      "x",
-        |      "S"
-        |    ]
-        |  ]
-        |}""".stripMargin
+      """{"rec-fun":{"+":[1,{"apply-op":"rec-fun-ref","args":[]}]},"where":[["x","S"]]}""".stripMargin
     )
   }
 
@@ -304,7 +289,7 @@ abstract class TestJson extends FunSuite {
     // \E x \in S : P
     compare(
       exists("x", "S", "P"),
-      """{"exists":["x","S"],"that":"P"}"""
+      """{"exists-bounded":["x","S"],"that":"P"}"""
     )
   }
 
@@ -320,7 +305,7 @@ abstract class TestJson extends FunSuite {
     // CHOOSE x \in S : x > 3
     compare(
       choose("x", "S", gt("x",3)),
-      """{"CHOOSE":["x","S"],"that":{">":["x",3]}}"""
+      """{"CHOOSE-bounded":["x","S"],"that":{">":["x",3]}}"""
     )
   }
 
@@ -430,7 +415,7 @@ abstract class TestJson extends FunSuite {
     val aDecl = TlaOperDecl("A", List(), 1)
     compare(
       letIn(appDecl(aDecl), aDecl),
-      """{"LET":[{"OPERATOR":"A","body":1}],"IN":{"apply-op":"A"}}"""
+      """{"LET":[{"OPERATOR":"A","body":1}],"IN":{"apply-op":"A","args":[]}}"""
     )
   }
 
