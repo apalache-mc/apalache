@@ -22,6 +22,7 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
 
   def write(expr: TlaEx): Unit = {
     writer.write(ujson.write(toJson(expr), indent))
+    Readable
   }
 
   // various forms of JSON encodings of TLA expressions
@@ -84,24 +85,12 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
     json
   }
 
-  private def funWhere(fun: TlaEx, args: Seq[TlaEx]): ujson.Value = {
-    Obj("fun" -> toJson(fun), "where" -> splitIntoPairs(args))
-  }
-
-  private def recFunWhere(fun: TlaEx, args: Seq[TlaEx]): ujson.Value = {
-    Obj("rec-fun" -> toJson(fun), "where" -> splitIntoPairs(args))
+  private def functionalWhere(tla: String, fun: TlaEx, args: Seq[TlaEx]): ujson.Value = {
+    Obj(tla -> toJson(fun), "where" -> splitIntoPairs(args))
   }
 
   private def recFunRef(): ujson.Value = {
     applyOpTo("rec-fun-ref", Seq())
-  }
-
-  private def exceptWhere(fun: TlaEx, args: Seq[TlaEx]): ujson.Value = {
-    Obj("except" -> toJson(fun), "where" -> splitIntoPairs(args))
-  }
-
-  private def mapWhere(body: TlaEx, args: Seq[TlaEx]): ujson.Value = {
-    Obj("map" -> toJson(body), "where" -> splitIntoPairs(args))
   }
 
   private def boundedPred(tla: String, name: TlaEx, from: TlaEx, pred: TlaEx): ujson.Value = {
@@ -214,31 +203,22 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
       case ValEx(TlaStrSet) => primitive("set", "STRING")
 
       // [ x \in S, y \in T |-> e ]  =>  { "fun": "e", "where": [ "x", "S", "y", "T"] }
-      case OperEx(TlaFunOper.funDef, fun, keysAndValues@_*) =>
-        funWhere(fun, keysAndValues)
-
-      // [x \in S] == e into  { "recFun": "e", "where": [ "x", "S" ] }
-      case OperEx(TlaFunOper.recFunDef, fun, keysAndValues@_*) =>
-        recFunWhere(fun, keysAndValues)
+      // [x \in S] == e =>  { "rec-fun": "e", "where": [ "x", "S" ] }
+      // [f EXCEPT ![i_1] = e_1, ![i_2] = e_2]  =>  { "except": "f", "where": [ "i_1", "e_1", "i_2", "e_2"] }
+      // {e: x \in S, y \in T} => {"map":"e","where":["x","S","y","T"]}
+      case OperEx(op@_, fun, keysAndValues@_*) if JsonWriter.functionalOps.contains(op)  =>
+        functionalWhere(JsonWriter.functionalOps(op), fun, keysAndValues)
 
       case OperEx(TlaFunOper.recFunRef) =>
         recFunRef()
 
-      // [f EXCEPT ![i_1] = e_1, ![i_2] = e_2]  =>  { "except": "f", "where": [ "i_1", "e_1", "i_2", "e_2"] }
-      case OperEx(TlaFunOper.except, fun, keysAndValues@_*) =>
-        exceptWhere(fun, keysAndValues)
-
-      // f[e]  =>  { "apply": "f", "to": "e" }
+      // f[e]  =>  { "apply": "f", "arg": "e" }
       case OperEx(TlaFunOper.app, funEx, argEx) =>
         applyTo(funEx, argEx)
 
-      // f[e]  =>  { "apply": "f", "to": "e" }
+      // x(y,z)  =>  { "apply-op": "x", "args": ["y","z"] }
       case OperEx(op@TlaOper.apply, NameEx(name), args@_*) =>
         applyOpTo(name, args)
-
-      // {e: x \in S, y \in T} => {"map":"e","where":["x","S","y","T"]}
-      case OperEx(TlaSetOper.map, body, keysAndValues@_*) =>
-        mapWhere(body, keysAndValues)
 
       case OperEx(TlaControlOper.ifThenElse, pred, thenEx, elseEx) =>
         ifThenElse(pred, thenEx, elseEx)
@@ -327,7 +307,7 @@ object JsonWriter {
       writer.close()
     }
   }
-  protected val unaryOps = HashMap(
+  val unaryOps = HashMap(
     TlaActionOper.prime -> "prime",
     TlaBoolOper.not -> "not",
     TlaArithOper.uminus -> "uminus",
@@ -340,7 +320,7 @@ object JsonWriter {
     TlaTempOper.diamond -> "<>"
   )
 
-  protected val binaryOps = HashMap(
+  val binaryOps = HashMap(
     TlaOper.eq -> "=",
     TlaOper.ne -> "/=",
     TlaBoolOper.implies -> "=>",
@@ -377,7 +357,7 @@ object JsonWriter {
     TlaSetOper.funSet -> "fun-set"
   )
 
-  protected val naryOps: Map[TlaOper, String] = HashMap(
+  val naryOps: Map[TlaOper, String] = HashMap(
     TlaFunOper.tuple -> "tuple",
     TlaSetOper.enumSet -> "enum",
     TlaSetOper.times -> "times",
@@ -387,19 +367,19 @@ object JsonWriter {
     TlaBoolOper.or -> "or"
   )
 
-  protected val naryPairOps: Map[TlaOper, String] = HashMap(
+  val naryPairOps: Map[TlaOper, String] = HashMap(
     TlaFunOper.enum -> "record",
     TlaSetOper.recSet -> "rec-set"
   )
 
-  protected val boundedPredOps: Map[TlaOper, String] = HashMap(
+  val boundedPredOps: Map[TlaOper, String] = HashMap(
     TlaSetOper.filter -> "filter",
-    TlaBoolOper.exists -> "exists",
-    TlaBoolOper.forall -> "forall",
-    TlaOper.chooseBounded -> "CHOOSE"
+    TlaBoolOper.exists -> "exists-bounded",
+    TlaBoolOper.forall -> "forall-bounded",
+    TlaOper.chooseBounded -> "CHOOSE-bounded"
   )
 
-  protected val unboundedPredOps: Map[TlaOper, String] = HashMap(
+  val unboundedPredOps: Map[TlaOper, String] = HashMap(
     TlaBoolOper.existsUnbounded -> "exists",
     TlaBoolOper.forallUnbounded -> "forall",
     TlaOper.chooseUnbounded -> "CHOOSE",
@@ -407,12 +387,19 @@ object JsonWriter {
     TlaTempOper.AA -> "AA"
   )
 
-  protected val stutterOps: Map[TlaOper, String] = HashMap(
+  val functionalOps: Map[TlaOper, String] = HashMap(
+    TlaFunOper.funDef -> "fun",
+    TlaFunOper.recFunDef -> "rec-fun",
+    TlaFunOper.except -> "except",
+    TlaSetOper.map -> "map"
+  )
+
+  val stutterOps: Map[TlaOper, String] = HashMap(
     TlaActionOper.stutter -> "stutter",
     TlaActionOper.nostutter -> "nostutter"
   )
 
-  protected val fairnessOps: Map[TlaOper, String] = HashMap(
+  val fairnessOps: Map[TlaOper, String] = HashMap(
     TlaTempOper.weakFairness -> "WF",
     TlaTempOper.strongFairness -> "SF"
   )
