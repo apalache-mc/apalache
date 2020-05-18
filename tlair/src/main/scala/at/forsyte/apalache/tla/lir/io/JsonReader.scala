@@ -1,7 +1,9 @@
 package at.forsyte.apalache.tla.lir.io
 
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values._
+
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.LinkedHashMap
 
@@ -22,7 +24,7 @@ object JsonReader {
   val functionalOps = JsonWriter.functionalOps.map(_.swap)
   val boundedPredOps = JsonWriter.boundedPredOps.map(_.swap)
   val unboundedPredOps = JsonWriter.unboundedPredOps.map(_.swap)
-  val otherOps = Set("str", "int", "set")
+  val otherOps = Set("str", "int", "set", "apply-fun", "apply-op")
 
   val sets = HashMap(
     "BOOLEAN" -> TlaBoolSet,
@@ -66,23 +68,18 @@ object JsonReader {
       OperEx(naryOps(nary.head), parseArray(m(nary.head)):_*)
     else if(functional.nonEmpty) {
       if(!m.contains("where"))
-        throw new Exception("incorrect TLA+ JSON: expecting 'where' clause")
+        throw new Exception("incorrect TLA+ JSON: expecting 'where'")
       OperEx(functionalOps(functional.head), parseJson(m(functional.head)) +: parsePairs(m("where")) :_*)
     }
     else if(unboundedPred.nonEmpty) {
       if(!m.contains("that"))
-        throw new Exception("incorrect TLA+ JSON: expecting 'that' clause")
-      OperEx(unboundedPredOps(unboundedPred.head), parseJson(m(unboundedPred.head)), parseJson(m("that")))
-    }
-    else if(unboundedPred.nonEmpty) {
-      if(!m.contains("that"))
-        throw new Exception("incorrect TLA+ JSON: expecting 'that' clause")
+        throw new Exception("incorrect TLA+ JSON: expecting 'that'")
       OperEx(unboundedPredOps(unboundedPred.head), parseJson(m(unboundedPred.head)), parseJson(m("that")))
     }
     else if(boundedPred.nonEmpty) {
       val nameSet = parsePair(m(boundedPred.head))
       if(!m.contains("that"))
-        throw new Exception("incorrect TLA+ JSON: expecting 'that' clause")
+        throw new Exception("incorrect TLA+ JSON: expecting 'that'")
       OperEx(boundedPredOps(boundedPred.head), nameSet(0), nameSet(1), parseJson(m("that")))
     }
     else if(other.nonEmpty) {
@@ -96,6 +93,24 @@ object JsonReader {
           ValEx(sets(set))
         else
           throw new Exception("can't parse TLA+ JSON: reference to unknown set")
+      }
+      else if(other.head == "apply-fun") {
+        if(!m.contains("arg"))
+          throw new Exception("incorrect TLA+ JSON: expecting 'arg'")
+        OperEx(TlaFunOper.app, parseJson(m("apply-fun")), parseJson(m("arg")))
+      }
+      else if(other.head == "apply-op") {
+        if(!m.contains("args"))
+          throw new Exception("incorrect TLA+ JSON: expecting 'args'")
+        val name = parseStr(m("apply-op"))
+        val args = parseArray(m("args"))
+        if(name == "rec-fun-ref") {
+          if(args.nonEmpty)
+            throw new Exception("incorrect TLA+ JSON: found arguments for 'rec-fun-ref'")
+          OperEx(TlaFunOper.recFunRef)
+        }
+        else
+          OperEx(TlaOper.apply, NameEx(name) +: args:_*)
       }
       else
         throw new Exception("can't parse TLA+ JSON: unknown JSON key")
