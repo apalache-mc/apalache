@@ -277,9 +277,6 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
       case OperEx(op@_, arg) if JsonWriter.unaryOps.contains(op) =>
         unary(JsonWriter.unaryOps(op), arg)
 
-      case OperEx(op@_, arg1, arg2) if JsonWriter.binaryOps.contains(op) =>
-        binary(JsonWriter.binaryOps(op), arg1, arg2)
-
       case OperEx(op@_, args@_*) if JsonWriter.naryOps.contains(op)  =>
         nary(JsonWriter.naryOps(op), args)
 
@@ -320,7 +317,7 @@ object JsonWriter {
     TlaTempOper.diamond -> "<>"
   )
 
-  val binaryOps = HashMap(
+  val naryOps: Map[TlaOper, String] = HashMap(
     TlaOper.eq -> "=",
     TlaOper.ne -> "/=",
     TlaBoolOper.implies -> "=>",
@@ -354,15 +351,10 @@ object JsonWriter {
     TlcOper.colonGreater -> ":>",
     BmcOper.assign -> "<-",
     BmcOper.withType -> "<:",
-    TlaSetOper.funSet -> "fun-set"
-  )
-
-  val naryOps: Map[TlaOper, String] = HashMap(
+    TlaSetOper.funSet -> "fun-set",
     TlaFunOper.tuple -> "tuple",
     TlaSetOper.enumSet -> "enum",
     TlaSetOper.times -> "times",
-    TlaArithOper.sum -> "+",
-    TlaArithOper.prod -> "*",
     TlaBoolOper.and -> "and",
     TlaBoolOper.or -> "or"
   )
