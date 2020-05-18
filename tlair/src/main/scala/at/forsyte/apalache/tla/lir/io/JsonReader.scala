@@ -27,7 +27,7 @@ object JsonReader {
   val unboundedPredOps = JsonWriter.unboundedPredOps.map(_.swap)
   val stutterOps = JsonWriter.stutterOps.map(_.swap)
   val fairnessOps = JsonWriter.fairnessOps.map(_.swap)
-  val otherOps = Set("str", "int", "set", "apply-fun", "apply-op", "IF", "CASE")
+  val otherOps = Set("id", "str", "int", "set", "apply-fun", "apply-op", "IF", "CASE")
 
   val sets = HashMap(
     "BOOLEAN" -> TlaBoolSet,
@@ -64,6 +64,7 @@ object JsonReader {
     val other = m.keySet & otherOps
     val ourKeys = unary.size + nary.size + naryPair.size + functional.size +
       + boundedPred.size + unboundedPred.size + stutter.size + fairness.size + other.size
+    val expr =
     if(ourKeys < 1)
       throw new Exception("incorrect TLA+ JSON: expected expression, but none found")
     else if(ourKeys > 1)
@@ -103,6 +104,7 @@ object JsonReader {
     }
     else if(other.nonEmpty) {
       other.head match {
+        case "id" => NameEx(parseStr(m("id")))
         case "str" => ValEx(TlaStr(parseStr(m("str"))))
         case "int" => ValEx(TlaInt(BigInt(parseStr(m("int")))))
         case "set" => {
@@ -147,6 +149,12 @@ object JsonReader {
     }
     else
       throw new Exception("can't parse TLA+ JSON: cannot find a known JSON key")
+    if(m.contains("label")) {
+      val (name, args) = parseLabel(m("label"))
+      OperEx(TlaOper.label, expr +: (ValEx(TlaStr(name)) +: args) :_*)
+    }
+    else
+      expr
   }
 
   // expect ujson.Value to be a string
@@ -184,6 +192,22 @@ object JsonReader {
     if(pair.size != 2)
       throw new Exception("incorrect TLA+ JSON: expecting a pair")
     pair
+  }
+
+  // expect ujson.Value to be an encoding of a label
+  def parseLabel(v: ujson.Value): (String, Seq[TlaEx]) = {
+    // it should be a JSON object
+    val m = v.objOpt match {
+      case Some(value) => value
+      case None => throw new Exception("incorrect TLA+ JSON: expecting a label object")
+    }
+    if(!m.contains("name") || !m.contains("args"))
+      throw new Exception("incorrect TLA+ JSON: malformed label")
+    val name = parseStr(m("name"))
+    val args = parseArray(m("args"))
+    (name, args.map {
+      case NameEx(str) => ValEx(TlaStr(str)) // change back from NameEx to ValEx
+    })
   }
 }
 
