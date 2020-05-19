@@ -415,7 +415,7 @@ abstract class TestJson extends FunSuite {
     val aDecl = TlaOperDecl("A", List(), 1)
     compare(
       letIn(appDecl(aDecl), aDecl),
-      """{"LET":[{"OPERATOR":"A","body":1}],"IN":{"apply-op":"A","args":[]}}"""
+      """{"LET":[{"OPERATOR":"A","body":1,"params":[]}],"IN":{"apply-op":"A","args":[]}}"""
     )
   }
 

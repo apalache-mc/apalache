@@ -135,10 +135,7 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
   }
 
   private def operatorDef(name: String, params: Seq[FormalParam], body: TlaEx): ujson.Value = {
-    val jsonOp = Obj("OPERATOR" -> name, "body" -> toJson((body)))
-    if(params.nonEmpty) // leave out params if not present
-      jsonOp("params") = params.map(toJson)
-    jsonOp
+    Obj("OPERATOR" -> name, "body" -> toJson(body), "params" -> params.map(toJson))
   }
 
   private def letIn(declarations: Seq[TlaDecl], body: TlaEx): ujson.Value = {
