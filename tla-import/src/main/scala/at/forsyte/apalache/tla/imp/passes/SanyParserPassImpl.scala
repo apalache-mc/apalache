@@ -85,6 +85,10 @@ class SanyParserPassImpl @Inject()(val options: PassOptions,
           val sourceLocator = SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
           rootModule.get.operDeclarations foreach sourceLocator.checkConsistency
         }
+        if (options.getOrElse("general", "debug", false)) {
+          val sourceLocator = SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
+          rootModule.get.operDeclarations foreach sourceLocator.checkConsistency
+        }
       }
     }
     rootModule.isDefined
