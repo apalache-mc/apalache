@@ -14,9 +14,24 @@ import scala.collection.mutable.LinkedHashMap
 
 object JsonReader {
 
-  def read(from: ujson.Readable): TlaEx = {
-    val json = ujson.read(from)
-    parseJson(json)
+  def readModule(from: ujson.Readable): TlaModule = {
+    parseModule(ujson.read(from))
+  }
+
+  def readExpr(from: ujson.Readable): TlaEx = {
+    parseJson(ujson.read(from))
+  }
+
+  // expect ujson.Value to be an encoding of a module
+  def parseModule(v: ujson.Value): TlaModule = {
+    // it should be a JSON object
+    val m = v.objOpt match {
+      case Some(value) => value
+      case None => throw new Exception("incorrect TLA+ JSON: expecting a module object")
+    }
+    if(!m.contains("MODULE") || !m.contains("declarations"))
+      throw new Exception("incorrect TLA+ JSON: malformed module object")
+    new TlaModule(parseStr(m("MODULE")), parseDecls(m("declarations")))
   }
 
   val unaryOps = JsonWriter.unaryOps.map(_.swap)

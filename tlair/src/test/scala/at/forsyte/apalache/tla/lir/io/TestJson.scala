@@ -1,19 +1,12 @@
 package at.forsyte.apalache.tla.lir.io
 
-import java.io.{PrintWriter, StringWriter}
-
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatest.FunSuite
 import at.forsyte.apalache.tla.lir.values._
-import upickle._
-
-import scala.collection.immutable.HashMap
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 
 /**
  * <p>Geeneric set of tests for conversion between TLA and JSON.</p>
@@ -24,12 +17,19 @@ import scala.collection.mutable.ArrayBuffer
 abstract class TestJson extends FunSuite {
 
   // This abstract function should be defined in child class
+  // It should check that mod and json match after conversion
+  def compareModule(mod: TlaModule, json: String, indent: Int = -1): Unit
+
+  // This abstract function should be defined in child class
   // It should check that expr and json match after conversion
   def compare(expr: TlaEx, json: String, indent: Int = -1): Unit
 
   // compare, while expecting multi-line formatting
   def compareMultiLine(ex: TlaEx, expected: String): Unit =
     compare(ex, expected, 2)
+
+  def compareModuleMultiLine(mod: TlaModule, expected: String): Unit =
+    compareModule(mod, expected, 2)
 
   test("id") {
     // awesome
@@ -503,6 +503,135 @@ abstract class TestJson extends FunSuite {
         |      }
         |    ]
         |  }
+        |}""".stripMargin
+    )
+  }
+
+  test("empty module") {
+    // awesome
+    compareModule(
+      new TlaModule("TEST", List()),
+      """{"MODULE":"TEST","declarations":[]}"""
+    )
+  }
+
+  test("module trivial") {
+    // awesome
+    compareModule(
+      new TlaModule("trivial", List(
+        TlaOperDecl("A", List(), int(42))
+      )),
+      """{"MODULE":"trivial","declarations":[{"OPERATOR":"A","body":42,"params":[]}]}"""
+    )
+  }
+
+  test("module simpleOperator") {
+    // awesome
+    compareModuleMultiLine(
+      new TlaModule("simpleOperator", List(
+        TlaOperDecl("A", List(SimpleFormalParam("age")), gt(name("age"),int(42)))
+      )),
+      """{
+        |  "MODULE": "simpleOperator",
+        |  "declarations": [
+        |    {
+        |      "OPERATOR": "A",
+        |      "body": {
+        |        ">": [
+        |          "age",
+        |          42
+        |        ]
+        |      },
+        |      "params": [
+        |        {
+        |          "name": "age",
+        |          "arity": 0
+        |        }
+        |      ]
+        |    }
+        |  ]
+        |}""".stripMargin
+    )
+  }
+
+  test("module level2Operators") {
+    // awesome
+    val aDecl = TlaOperDecl("A",
+      List(SimpleFormalParam("i"), SimpleFormalParam("j"), OperFormalParam("f", 1)),
+      OperEx(TlaOper.apply, NameEx("f"),
+        OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j"))))
+    val bDecl = TlaOperDecl("B", List(SimpleFormalParam("y")), NameEx("y"))
+    compareModuleMultiLine(
+      new TlaModule("level2Operators", List(
+        aDecl,
+        bDecl,
+        TlaOperDecl("C", List(SimpleFormalParam("z")),
+          appDecl( aDecl, int(0), NameEx("z"), appDecl(bDecl, int(1))))
+      )),
+      """{
+        |  "MODULE": "level2Operators",
+        |  "declarations": [
+        |    {
+        |      "OPERATOR": "A",
+        |      "body": {
+        |        "apply-op": "f",
+        |        "args": [
+        |          {
+        |            "union": [
+        |              "i",
+        |              "j"
+        |            ]
+        |          }
+        |        ]
+        |      },
+        |      "params": [
+        |        {
+        |          "name": "i",
+        |          "arity": 0
+        |        },
+        |        {
+        |          "name": "j",
+        |          "arity": 0
+        |        },
+        |        {
+        |          "name": "f",
+        |          "arity": 1
+        |        }
+        |      ]
+        |    },
+        |    {
+        |      "OPERATOR": "B",
+        |      "body": "y",
+        |      "params": [
+        |        {
+        |          "name": "y",
+        |          "arity": 0
+        |        }
+        |      ]
+        |    },
+        |    {
+        |      "OPERATOR": "C",
+        |      "body": {
+        |        "apply-op": "A",
+        |        "args": [
+        |          0,
+        |          "z",
+        |          {
+        |            "apply-op": "B",
+        |            "args": [
+        |              1
+        |            ]
+        |          }
+        |        ]
+        |      },
+        |      "params": [
+        |        {
+        |          "name": "z",
+        |          "arity": 0
+        |        }
+        |      ]
+        |    }
+        |  ]
         |}""".stripMargin
     )
   }
