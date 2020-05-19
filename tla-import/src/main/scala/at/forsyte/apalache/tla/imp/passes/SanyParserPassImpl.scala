@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.imp.passes
 
-import java.io.{File, FileWriter, PrintWriter}
+import java.io.File
 import java.nio.file.Path
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.io.{JsonReader, JsonWriter, PrettyWriter}
+import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -39,7 +40,7 @@ class SanyParserPassImpl @Inject()(val options: PassOptions,
     */
   override def execute(): Boolean = {
     val filename = options.getOrError("parser", "filename").asInstanceOf[String]
-    if(filename.endsWith(".json")) {
+    if (filename.endsWith(".json")) {
       try {
         rootModule = Some(JsonReader.readModule(new File(filename)))
       }
@@ -62,14 +63,14 @@ class SanyParserPassImpl @Inject()(val options: PassOptions,
 
       // write parser output to specified destination, if requested
       val output = options.getOrElse("parser", "output", "")
-      if(output.nonEmpty) {
+      if (output.nonEmpty) {
         var tlaOutput = ""
         var jsonOutput = ""
-        if(output.contains(".tla")) {
+        if (output.contains(".tla")) {
           tlaOutput = output
           jsonOutput = output.replaceFirst(".tla", ".json")
         }
-        else if(output.contains(".json")) {
+        else if (output.contains(".json")) {
           jsonOutput = output
           tlaOutput = output.replaceFirst(".json", ".tla")
         }
@@ -79,11 +80,15 @@ class SanyParserPassImpl @Inject()(val options: PassOptions,
         }
         PrettyWriter.write(rootModule.get, new File(tlaOutput))
         JsonWriter.write(rootModule.get, new File(jsonOutput))
+
+        if (options.getOrElse("general", "debug", false)) {
+          val sourceLocator = SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
+          rootModule.get.operDeclarations foreach sourceLocator.checkConsistency
+        }
       }
     }
     rootModule.isDefined
   }
-
   /**
     * Get the next pass in the chain. What is the next pass is up
     * to the module configuration and the pass outcome.

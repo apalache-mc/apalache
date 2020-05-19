@@ -4,8 +4,10 @@ import java.io.File
 import java.nio.file.Path
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
+import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
+import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.pp.{Desugarer, Keramelizer, Normalizer, UniqueNameGenerator}
@@ -24,6 +26,8 @@ class PreproPassImpl @Inject()( val options: PassOptions,
                                 gen: UniqueNameGenerator,
                                 renaming: IncrementalRenaming,
                                 tracker: TransformationTracker,
+                                sourceStore: SourceStore,
+                                changeListener: ChangeListener,
                                 @Named("AfterPrepro") nextPass: Pass with TlaModuleMixin)
     extends PreproPass with LazyLogging {
 
@@ -67,8 +71,13 @@ class PreproPassImpl @Inject()( val options: PassOptions,
     // dump the result of preprocessing
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
     PrettyWriter.write(afterModule, new File(outdir.toFile, "out-prepro.tla"))
-
     outputTlaModule = Some(afterModule)
+
+    if (options.getOrElse("general", "debug", false)) {
+      val sourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
+      outputTlaModule.get.operDeclarations foreach sourceLocator.checkConsistency
+    }
+
     true
   }
 

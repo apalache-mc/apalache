@@ -22,8 +22,17 @@ abstract class AbstractTransformer(tracker: TransformationTracker) extends TlaEx
     * @return a new expression
     */
   def transform: TlaExTransformation = tracker.track {
-    case OperEx(op, args @ _*) =>
-      transformOneLevel(OperEx(op, args map transform :_*))
+    case oper @ OperEx(op, args @ _*) =>
+      val newArgs = args map transform
+      val newOper =
+        if (newArgs.map(_.ID) != args.map(_.ID)) {
+          // Introduce a new operator only if the arguments have changed.
+          // Otherwise, we would introduce lots of redundant chains in ChangeListener.
+          tracker.hold(oper, OperEx(op, newArgs: _*)) // fixes #41
+        } else {
+          oper
+        }
+      transformOneLevel(newOper)
 
     case LetInEx(body, defs @ _*) =>
       def mapDecl(d: TlaOperDecl): TlaOperDecl = {
