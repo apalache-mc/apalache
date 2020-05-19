@@ -50,7 +50,7 @@ class ConfigurationPassImpl @Inject()(val options: PassOptions,
     val filename =
       if(configFilename.isEmpty)
         options.getOrError("parser", "filename").asInstanceOf[String]
-        .replaceFirst("\\.tla$", "\\.cfg")
+        .replaceFirst("\\.(tla|json)$", "\\.cfg")
       else
         configFilename
     val basename = FilenameUtils.getName(filename)

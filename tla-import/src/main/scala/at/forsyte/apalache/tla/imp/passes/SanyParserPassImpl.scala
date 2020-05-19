@@ -7,8 +7,7 @@ import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.TlaModule
-import at.forsyte.apalache.tla.lir.io.PrettyWriter
-import at.forsyte.apalache.tla.lir.io.JsonWriter
+import at.forsyte.apalache.tla.lir.io.{JsonReader, JsonWriter, PrettyWriter}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -40,10 +39,22 @@ class SanyParserPassImpl @Inject()(val options: PassOptions,
     */
   override def execute(): Boolean = {
     val filename = options.getOrError("parser", "filename").asInstanceOf[String]
-    val (rootName, modules) = new SanyImporter(sourceStore).loadFromFile(new File(filename))
-    rootModule = modules.get(rootName)
+    if(filename.endsWith(".json")) {
+      try {
+        rootModule = Some(JsonReader.readModule(new File(filename)))
+      }
+      catch {
+        case e: Exception =>
+          logger.error("  > " + e.getMessage)
+          rootModule = None
+      }
+    }
+    else {
+      val (rootName, modules) = new SanyImporter(sourceStore).loadFromFile(new File(filename))
+      rootModule = modules.get(rootName)
+    }
     if (rootModule.isEmpty) {
-      logger.error("Error parsing file " + filename)
+      logger.error("  > Error parsing file " + filename)
     } else {
       val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
       PrettyWriter.write(rootModule.get, new File(outdir.toFile, "out-parser.tla"))
