@@ -59,6 +59,27 @@ class SanyParserPassImpl @Inject()(val options: PassOptions,
       val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
       PrettyWriter.write(rootModule.get, new File(outdir.toFile, "out-parser.tla"))
       JsonWriter.write(rootModule.get, new File(outdir.toFile, "out-parser.json"))
+
+      // write parser output to specified destination, if requested
+      val output = options.getOrElse("parser", "output", "")
+      if(output.nonEmpty) {
+        var tlaOutput = ""
+        var jsonOutput = ""
+        if(output.contains(".tla")) {
+          tlaOutput = output
+          jsonOutput = output.replaceFirst(".tla", ".json")
+        }
+        else if(output.contains(".json")) {
+          jsonOutput = output
+          tlaOutput = output.replaceFirst(".json", ".tla")
+        }
+        else {
+          tlaOutput = output + ".tla"
+          jsonOutput = output + ".json"
+        }
+        PrettyWriter.write(rootModule.get, new File(tlaOutput))
+        JsonWriter.write(rootModule.get, new File(jsonOutput))
+      }
     }
     rootModule.isDefined
   }
