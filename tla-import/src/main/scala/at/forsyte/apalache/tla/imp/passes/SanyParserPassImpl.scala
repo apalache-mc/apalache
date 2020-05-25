@@ -64,22 +64,12 @@ class SanyParserPassImpl @Inject()(val options: PassOptions,
       // write parser output to specified destination, if requested
       val output = options.getOrElse("parser", "output", "")
       if (output.nonEmpty) {
-        var tlaOutput = ""
-        var jsonOutput = ""
-        if (output.contains(".tla")) {
-          tlaOutput = output
-          jsonOutput = output.replaceFirst(".tla", ".json")
-        }
-        else if (output.contains(".json")) {
-          jsonOutput = output
-          tlaOutput = output.replaceFirst(".json", ".tla")
-        }
-        else {
-          tlaOutput = output + ".tla"
-          jsonOutput = output + ".json"
-        }
-        PrettyWriter.write(rootModule.get, new File(tlaOutput))
-        JsonWriter.write(rootModule.get, new File(jsonOutput))
+        if (output.contains(".tla"))
+          PrettyWriter.write(rootModule.get, new File(output))
+        else if (output.contains(".json"))
+          JsonWriter.write(rootModule.get, new File(output))
+        else
+          logger.error("  > Error writing output: please give either .tla or .json filename")
 
         if (options.getOrElse("general", "debug", false)) {
           val sourceLocator = SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
