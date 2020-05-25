@@ -123,7 +123,7 @@
             <!-- configurations in property files -->
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-configuration2</artifactId>
-            <version>2.4</version>
+            <version>2.7</version>
         </dependency>
         <dependency>
             <!-- commons-configuration2 uses commons-beanutiles (without declaring it in dependencies?) -->
