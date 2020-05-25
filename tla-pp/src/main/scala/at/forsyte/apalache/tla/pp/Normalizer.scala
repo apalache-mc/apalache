@@ -154,28 +154,28 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
       if (!neg) {
         ex
       } else {
-        throw new UnexpectedLanguageError("Negation of ~> is not implemented: " + ex)
+        tla.not(ex) // keep ~(... ~> ...)
       }
 
     case ex @ OperEx(TlaTempOper.guarantees, _*) =>
       if (!neg) {
         ex
       } else {
-        throw new UnexpectedLanguageError("Negation of -+-> is not implemented: " + ex)
+        tla.not(ex) // keep ~(... -+-> ...)
       }
 
     case ex @ OperEx(TlaTempOper.weakFairness, _*) =>
       if (!neg) {
         ex
       } else {
-        throw new UnexpectedLanguageError("Negation of WF is not implemented: " + ex)
+        tla.not(ex) // keep ~WF_vars(A) as ~WF_vars(A)
       }
 
     case ex @ OperEx(TlaTempOper.strongFairness, _*) =>
       if (!neg) {
         ex
       } else {
-        throw new UnexpectedLanguageError("Negation of SF is not implemented: " + ex)
+        tla.not(ex) // keep ~SF_vars(A) as ~SF_vars(A)
       }
 
     case LetInEx(body, defs@_*) =>
