@@ -131,25 +131,34 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
   private def findDeps(expr: TlaEx): mutable.Set[String] = {
     expr match {
       case NameEx(name) => mutable.Set(name)
+
       case  OperEx(op, x, s, p)
         if op == TlaOper.chooseBounded ||  op == TlaBoolOper.exists || op == TlaBoolOper.forall || op == TlaSetOper.filter =>
         findDeps(s) ++ findDeps(p) -- findDeps(x)
+
       case  OperEx(op, NameEx(name), p)
         if op == TlaOper.chooseUnbounded ||  op == TlaBoolOper.existsUnbounded || op == TlaBoolOper.forallUnbounded =>
         findDeps(p) -- List(name)
+
       case OperEx(TlaFunOper.app, funEx, argEx) =>
         findDeps(funEx) ++ findDeps(argEx)
+
       case OperEx(TlaOper.apply, NameEx(name), args@_*) =>
         args.foldLeft(mutable.Set[String]()) {
           case (s, e) => s ++ findDeps(e)
         } ++ List(name)
+
       case OperEx(op, body, keysAndValues@_*)
         if op == TlaFunOper.funDef  || op == TlaFunOper.recFunDef || op == TlaSetOper.map =>
         val (ks, vs) = keysAndValues.zipWithIndex partition (_._2 % 2 == 0)
-        val (keys, values) = (ks.map(_._1.asInstanceOf[NameEx].name), vs.map(_._1))
+        // Note that at this point keys are not always NameEx, they can be tuples.
+        // Thus, extract the names from the keys by using findDeps.
+        val keys = ks.map(_._1).flatMap(findDeps)
+        val values = vs.map(_._1)
         findDeps(body) ++ values.foldLeft(mutable.Set[String]()){
           case (s, x) => s ++ findDeps(x)
         } -- keys
+
       case LetInEx(body, decls@_*) =>
         findDeps(body) ++
         decls.foldLeft(mutable.Set[String]()) {
@@ -158,10 +167,12 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
         decls.foldLeft(mutable.Set[String]()) {
           case (s, d) => s ++ List(d.name)
         }
+
       case OperEx(_, args@_*) =>
         args.foldLeft(mutable.Set[String]()) {
           case (s, e) => s ++ findDeps(e)
         }
+
       case _ => mutable.Set[String]()
     }
   }

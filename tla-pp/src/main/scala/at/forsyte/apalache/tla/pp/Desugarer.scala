@@ -32,32 +32,35 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
       case ex @ NullEx => ex
 
       case ex @ OperEx(TlaFunOper.except, fun, args @ _*) =>
-        val accessors = args.zipWithIndex filter (_._2 % 2 == 0) map (_._1)
-        val newValues = args.zipWithIndex filter (_._2 % 2 == 1) map (_._1)
+        val trArgs = args map transform
+        val accessors = trArgs.zipWithIndex filter (_._2 % 2 == 0) map (_._1)
+        val newValues = trArgs.zipWithIndex filter (_._2 % 2 == 1) map (_._1)
         val nonSingletons = accessors.collect { case OperEx(TlaFunOper.tuple, lst @ _*) => lst.size > 1 }
         if (nonSingletons.isEmpty) {
-          // only singleton tuples, do nothing
-          ex
+          // only singleton tuples, construct the same EXCEPT, but with transformed fun and args
+          OperEx(TlaFunOper.except, transform(fun) +: args :_*)
         } else {
           // multiple accesses, e.g., ![i][j] = ...
-          expandExcept(fun, accessors, newValues)
+          expandExcept(transform(fun), accessors, newValues)
         }
 
       case OperEx(TlaActionOper.unchanged, args @ _*) =>
         // flatten all tuples, e.g., convert <<x, <<y, z>> >> to [x, y, z]
-        val flatArgs = flattenTuples(tla.tuple(args :_*))
+        val flatArgs = flattenTuples(tla.tuple(args.map(transform) :_*))
         // and map every x to x' = x
         val eqs = flatArgs map { x => tla.eql(tla.prime(x), x) }
         tla.and(eqs :_*)
 
       case fex @ OperEx(TlaSetOper.filter, boundEx, setEx, predEx) =>
-        OperEx(TlaSetOper.filter, collapseTuplesInFilter(boundEx, setEx, predEx) :_*)
+        OperEx(TlaSetOper.filter, collapseTuplesInFilter(transform(boundEx), transform(setEx), transform(predEx)) :_*)
 
       case fex @ OperEx(TlaSetOper.map, args @ _*) =>
-        OperEx(TlaSetOper.map, collapseTuplesInMap(args.head, args.tail) :_*)
+        val trArgs = args map transform
+        OperEx(TlaSetOper.map, collapseTuplesInMap(trArgs.head, trArgs.tail) :_*)
 
       case fex @ OperEx(TlaFunOper.funDef, args @ _*) =>
-        OperEx(TlaFunOper.funDef, collapseTuplesInMap(args.head, args.tail) :_*)
+        val trArgs = args map transform
+        OperEx(TlaFunOper.funDef, collapseTuplesInMap(trArgs.head, trArgs.tail) :_*)
 
       case OperEx(op, args @ _*) =>
         OperEx(op, args map transform :_*)
