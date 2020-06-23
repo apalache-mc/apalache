@@ -38,7 +38,7 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
         val nonSingletons = accessors.collect { case OperEx(TlaFunOper.tuple, lst @ _*) => lst.size > 1 }
         if (nonSingletons.isEmpty) {
           // only singleton tuples, construct the same EXCEPT, but with transformed fun and args
-          OperEx(TlaFunOper.except, transform(fun) +: args :_*)
+          OperEx(TlaFunOper.except, transform(fun) +: trArgs :_*)
         } else {
           // multiple accesses, e.g., ![i][j] = ...
           expandExcept(transform(fun), accessors, newValues)
