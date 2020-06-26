@@ -6,12 +6,12 @@ import at.forsyte.apalache.tla.types.smt.SmtVarGenerator
 /**
   * Creates a global name context
   */
-class NameContextBuilder( private val gen : SmtVarGenerator ) {
+class GlobalBindingBuilder( private val gen : SmtVarGenerator ) {
   /**
     * If `primeConsistency` is true, the type of each variable v will be forced to match
     * the type of its prime, v', (they will point at the exact same SMT variable)
     */
-  def build( decls : Traversable[TlaDecl], primeConsistency : Boolean ) : GlobalNameContext =
+  def build( decls : Traversable[TlaDecl], primeConsistency : Boolean ) : GlobalBinding =
     ( decls flatMap {
       case TlaVarDecl( n ) =>
         val vn = gen.getFresh

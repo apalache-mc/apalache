@@ -14,11 +14,14 @@ abstract class SmtDatatype {
   * SmtVariable is either an integer of represents a TlaType
   */
 trait SmtVariable
+trait SmtInt
 
-sealed case class SmtIntVariable( id: Int ) extends SmtVariable {
+sealed case class SmtIntVariable( id: Int ) extends SmtVariable with SmtInt {
   override def toString : String = s"${Names.intVarSymb}($id)"
 }
 sealed case class SmtTypeVariable( id: Int ) extends SmtDatatype with SmtVariable
+
+sealed case class SmtKnownInt( i: Int ) extends SmtInt
 
 /**
   * See paper for a discussion on the datatype.
@@ -30,21 +33,11 @@ object str extends SmtDatatype
 object bool extends SmtDatatype
 sealed case class set( st: SmtDatatype ) extends SmtDatatype
 sealed case class seq( sq: SmtDatatype ) extends SmtDatatype
-sealed case class tup( j: SmtIntVariable ) extends SmtDatatype
-sealed case class rec( r: SmtIntVariable ) extends SmtDatatype
+sealed case class tup( size: SmtInt, idxs: Seq[SmtDatatype] ) extends SmtDatatype
+sealed case class rec( id: SmtIntVariable, fields: Seq[SmtDatatype] ) extends SmtDatatype
 sealed case class fun( arg: SmtDatatype, res: SmtDatatype ) extends SmtDatatype
-sealed case class oper( i: SmtIntVariable, ores: SmtDatatype ) extends SmtDatatype
-
-/**
-  * We include abstractions of the functions used in the constraints
-  *
-  * Note that e.g. hasField(a,b,c) gets translated to [hasField(a,b) && atField(a,b) = c] at
-  * the SMT level, to allow for easier solution recovery from the SMT models
-  */
-sealed case class hasField( v: SmtIntVariable, s: String, t: SmtDatatype ) extends SmtTools.BoolFormula
-sealed case class hasIndex( v: SmtIntVariable, i: Int, t: SmtDatatype  ) extends SmtTools.BoolFormula
-// sizeOf(i) = j
-sealed case class sizeOfEql( i: SmtIntVariable, j: Int ) extends SmtTools.BoolFormula
+sealed case class oper( domTup: tup, ret: SmtDatatype ) extends SmtDatatype
 
 // Eql was not defined in SmtTools.BoolFormula
 sealed case class Eql( lhs: SmtDatatype, rhs: SmtDatatype  ) extends SmtTools.BoolFormula
+sealed case class ge( intVar: SmtIntVariable, minSize: Int ) extends SmtTools.BoolFormula

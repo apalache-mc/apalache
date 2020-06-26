@@ -10,9 +10,13 @@ import at.forsyte.apalache.tla.types.smt.SmtVarGenerator
   *
   * @param smtVarGen - generates fresh SMT variables on demand
   */
-class BuiltinTemplateGenerator( private val smtVarGen : SmtVarGenerator ) {
+class BuiltinTemplateGenerator( val specLimits: SpecLimits, private val smtVarGen : SmtVarGenerator ) {
   private val sigGen    = new SignatureGenerator( new TypeVarGenerator )
-  private val reduction = new TypeReduction( smtVarGen )
+//  private val reduction = new TypeReduction( smtVarGen )
+  private val asserter = new TypeAsserter( specLimits, smtVarGen )
+
+  def getObservedFields: Map[SmtIntVariable, Set[String]] = asserter.getObservedFields
+
 
   /**
     * Generates a template from an OperEx.
@@ -29,7 +33,7 @@ class BuiltinTemplateGenerator( private val smtVarGen : SmtVarGenerator ) {
       val subTemplates = sigs map { case PolyOperT( tVars, OperT( TupT( xs@_* ), y ) ) =>
         // We create fresh SMT variables, which hold the concrete types of the type parameters
         // in this operator call
-        val m : TypeContext = tVars.map(
+        val c : TypeContext = tVars.map(
           _ -> smtVarGen.getFresh
         ).toMap
 
@@ -37,10 +41,10 @@ class BuiltinTemplateGenerator( private val smtVarGen : SmtVarGenerator ) {
         // in its apply(...) method, so we can only enforce run-time arity checks
         assert( ts.length == xs.length )
 
-        // By definition, concat all sub-deltas
+        // By definition, concat all sub-cases
         val conjConstraints =
-          xs.zip( ts ).foldLeft( reduction.delta( e, y, m ) ) {
-            case (cs, (xi, ti)) => reduction.delta( ti, xi, m ) ++: cs
+          xs.zip( ts ).foldLeft( asserter.typeAssert( e, y, c ) ) {
+            case (cs, (xi, ti)) => asserter.typeAssert( ti, xi, c ) ++: cs
           }
 
         // Enforce actual identity on EXCEPT (used with record types)

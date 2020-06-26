@@ -12,7 +12,7 @@ class TestNarrowing extends FunSuite with TestingPredefs with BeforeAndAfter {
   val trivialIdxEval : IndexEvaluator = i => i
 
   test( "No hasField constraints" ){
-    val narrower = new TypeNarrower( Seq.empty, trivialIdxEval )
+    val narrower = new TypeNarrower( Map.empty, trivialIdxEval )
     val recT = RecT( Map( "a" -> IntT, "b" -> StrT ) )
     val expected = RecT( Map.empty )
     val actual = narrower.narrow( recT, 0 )
@@ -21,12 +21,11 @@ class TestNarrowing extends FunSuite with TestingPredefs with BeforeAndAfter {
   }
 
   test( "One spurious field" ){
-    val constraints = Seq(
-      hasField( SmtIntVariable( 0 ) , "a", int),
-      hasField( SmtIntVariable( 0 ) , "b", str)
+    val observed = Map(
+      SmtIntVariable( 0 ) -> Set("a","b")
     )
 
-    val narrower = new TypeNarrower( constraints, trivialIdxEval )
+    val narrower = new TypeNarrower( observed, trivialIdxEval )
     val recT = RecT( Map( "a" -> IntT, "b" -> StrT, "c" -> TupT( IntT, IntT ) ) )
     val expected = RecT( Map( "a" -> IntT, "b" -> StrT ) )
     val actual = narrower.narrow( recT, 0 )
@@ -35,10 +34,9 @@ class TestNarrowing extends FunSuite with TestingPredefs with BeforeAndAfter {
   }
 
   test( "Two records" ){
-    val constraints = Seq(
-      hasField( SmtIntVariable( 0 ) , "a", int),
-      hasField( SmtIntVariable( 0 ) , "b", str),
-      hasField( SmtIntVariable( 1 ) , "c", str)
+    val constraints = Map(
+      SmtIntVariable(0) -> Set("a","b"),
+      SmtIntVariable(1) -> Set("c")
     )
 
     val narrower = new TypeNarrower( constraints, trivialIdxEval )

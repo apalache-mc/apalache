@@ -11,45 +11,32 @@ class TestFSE extends FunSuite with TestingPredefs with BeforeAndAfter {
 
   import at.forsyte.apalache.tla.lir.{Builder => tla}
 
+  val limits = SpecLimits( 7, Set("a","b","c","d","e","f","x","y") )
   var smtVarGen = new SmtVarGenerator
-  var fse       = new FormalSignatureEncoder( smtVarGen )
+  var fse       = new FormalSignatureEncoder( limits, smtVarGen )
 
   before {
     smtVarGen = new SmtVarGenerator
-    fse       = new FormalSignatureEncoder( smtVarGen )
+    fse       = new FormalSignatureEncoder( limits, smtVarGen )
   }
 
   test( "Test paramType: SFP" ) {
+    val f = smtVarGen.getFresh
     val p1 = SimpleFormalParam( "p1" )
-    val p2 = SimpleFormalParam( "p2" )
-    val pt1 = fse.paramType( p1 )
-    val pt2 = fse.paramType( p2 )
-    assert( pt1 == ReductionResult( SmtTypeVariable( 0 ), Seq.empty ) )
-    assert( pt2 == ReductionResult( SmtTypeVariable( 1 ), Seq.empty ) )
+    val pt1 = fse.paramType( p1 )( f )
+    assert( pt1.isEmpty )
   }
 
   test( "Test paramType: OFP" ) {
+    val f = smtVarGen.getFresh
     val o1 = OperFormalParam( "O1", 1 )
     val o2 = OperFormalParam( "O2", 4 )
-    val pt1 = fse.paramType( o1 )
-    val pt2 = fse.paramType( o2 )
-
-    /**
-      * \E i . \E f .
-      *   /\ t = oper( tup(i), f )
-      *   /\ sizeOf(i) = |Oi|
-      *   /\ \A j . \E fj . hasIndex( i, j, fj )
-      */
+    val pt1 = fse.paramType( o1 )( f )
+    val pt2 = fse.paramType( o2 )( f )
 
     assert( List( (pt1, o1.arity), (pt2, o2.arity) ) forall {
-      case (ReductionResult( oper( i, _ ), phi ), arity) =>
-        phi.contains( sizeOfEql( i, arity ) ) &&
-          Range( 0, o1.arity ).forall { j =>
-            phi.exists {
-              case hasIndex( `i`, `j`, _ ) => true
-              case _ => false
-            }
-          }
+      case (Seq( Eql( `f`, oper( tup( SmtKnownInt( i ), _ ), _ ) ) ), arity) =>
+        i == arity
       case _ => false
     } )
   }
@@ -57,8 +44,18 @@ class TestFSE extends FunSuite with TestingPredefs with BeforeAndAfter {
   test( "Test sig: Nullary" ){
     val op = tla.declOp( "X", n_x )
     val opSig = fse.sig( op.formalParams )
+    val of@List(o, f) = smtVarGen.getNFresh(2)
 
-    assert( opSig.paramTypes == List( opSig.opType ) && opSig.constraints.isEmpty )
+    val sigConstraints = opSig( of )
+
+    assert(
+      sigConstraints match {
+        case Seq( Eql( `o`, oper( tup( size, idxs ), `f` ) ) ) =>
+          size == SmtKnownInt( op.formalParams.size )
+        case _ => false
+      }
+    )
+
   }
 
   test( "Test sig: arity >0" ){
@@ -67,14 +64,24 @@ class TestFSE extends FunSuite with TestingPredefs with BeforeAndAfter {
     // H.O.
     val op2 = tla.declOp( "X", n_x, ("p",1), "r", ("s",2)  )
 
-    def assertCond( opDecl: TlaOperDecl ) = fse.sig( opDecl.formalParams ) match {
-      case SigTriple( oper( i, f ), parTs, phi ) if parTs.headOption.contains( f ) =>
-        phi.contains( sizeOfEql( i, opDecl.formalParams.length ) ) &&
-        parTs.tail.zipWithIndex.forall {
-          case (t, j) =>
-            phi.contains( hasIndex( i, j, t ) )
-        }
-      case _ => false
+    def assertCond( opDecl: TlaOperDecl ) = {
+      val of@List(o, f) = smtVarGen.getNFresh(2)
+      val ts = smtVarGen.getNFresh(opDecl.formalParams.size)
+
+      val res = fse.sig( opDecl.formalParams )(of ++ ts)
+      res match {
+        case Eql( `o`, oper( tup( size, idxs ), `f` ) ) +: constraints =>
+          val hoParams = opDecl.formalParams.zip( ts ).filter( pa => pa._1.isInstanceOf[OperFormalParam])
+          size == SmtKnownInt( opDecl.formalParams.size ) &&
+            constraints.zip( hoParams ).forall {
+              case ( c, (OperFormalParam(_,arity), ti) ) => c match {
+                case Eql( `ti`, oper( tup( SmtKnownInt(`arity`), _ ), _ ) ) => true
+                case _ => false
+              }
+              case _ => false
+            }
+        case _ => false
+      }
     }
 
     assert( assertCond( op1 ) )

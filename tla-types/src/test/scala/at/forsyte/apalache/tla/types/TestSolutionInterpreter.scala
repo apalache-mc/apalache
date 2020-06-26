@@ -16,15 +16,18 @@ class TestSolutionInterpreter extends FunSuite with TestingPredefs with BeforeAn
   val useSoftConstraints = false
   val primeConsistency   = false
 
+  val limits = SpecLimits( 7, Set("a","b","c","d","e","f","x","y") )
+
+
   var smtVarGen           = new SmtVarGenerator
   var typeVarGen          = new TypeVarGenerator
-  var solver              = new Z3TypeSolver( useSoftConstraints = useSoftConstraints, typeVarGen )
+  var solver              = new Z3TypeSolver( useSoftConstraints = useSoftConstraints, typeVarGen, limits )
   var solutionInterpreter = new SolutionInterpreter( typeVarGen )
 
   before {
     smtVarGen = new SmtVarGenerator
     typeVarGen = new TypeVarGenerator
-    solver = new Z3TypeSolver( useSoftConstraints = useSoftConstraints, typeVarGen )
+    solver = new Z3TypeSolver( useSoftConstraints = useSoftConstraints, typeVarGen, limits )
     solutionInterpreter = new SolutionInterpreter( typeVarGen )
   }
 
@@ -38,15 +41,15 @@ class TestSolutionInterpreter extends FunSuite with TestingPredefs with BeforeAn
       "p", "q"
     )
 
-    val globNC : GlobalNameContext = Map.empty
+    val globNC : GlobalBinding = Map.empty
 
     def genT( declNext : TlaOperDecl ) : TlaType = {
 
       val globBM = BodyMapFactory.makeFromDecls( Seq( declA, declNext ) )
-      val udtg = new UserDefinedTemplateGenerator( smtVarGen, globNC, globBM )
+      val udtg = new UserDefinedTemplateGenerator( limits, smtVarGen, globNC, globBM )
 
       val e = smtVarGen.getFresh
-      val templ = udtg.makeTemplate( List.empty, declNext.body )
+      val templ = udtg.makeTemplate( declNext )
       val templApp = templ( e +: Nil )
 
       val ret = solver.solve( smtVarGen.allVars, templApp )
@@ -113,13 +116,13 @@ class TestSolutionInterpreter extends FunSuite with TestingPredefs with BeforeAn
         tla.appDecl( tautDecl, tla.str( "a" ) )
       )
 
-    val globNC : GlobalNameContext = Map.empty
+    val globNC : GlobalBinding = Map.empty
 
     val globBM = BodyMapFactory.makeFromDecl( tautDecl )
-    val udtg = new UserDefinedTemplateGenerator( smtVarGen, globNC, globBM )
+    val udtg = new UserDefinedTemplateGenerator( limits, smtVarGen, globNC, globBM )
 
     val e = smtVarGen.getFresh
-    val templ = udtg.makeTemplate( List.empty, nextBody )
+    val templ = udtg.makeTemplate( TlaOperDecl( "Next", List.empty, nextBody ) )
     val templApp = templ( e +: Nil )
 
     val ret = solver.solve( smtVarGen.allVars, templApp )
@@ -168,13 +171,13 @@ class TestSolutionInterpreter extends FunSuite with TestingPredefs with BeforeAn
       )
     )
 
-    val globNC : GlobalNameContext = Map.empty
+    val globNC : GlobalBinding = Map.empty
 
     val globBM = BodyMapFactory.makeFromDecl( polyOperDecl )
-    val udtg = new UserDefinedTemplateGenerator( smtVarGen, globNC, globBM )
+    val udtg = new UserDefinedTemplateGenerator( limits, smtVarGen, globNC, globBM )
 
     val e = smtVarGen.getFresh
-    val templ = udtg.makeTemplate( List.empty, nextBody )
+    val templ = udtg.makeTemplate( TlaOperDecl( "Next", List.empty, nextBody ) )
     val templApp = templ( e +: Nil )
 
     val ret = solver.solve( smtVarGen.allVars, templApp )
@@ -221,16 +224,16 @@ class TestSolutionInterpreter extends FunSuite with TestingPredefs with BeforeAn
 
     val nextDecl = tla.declOp( "Next", nextBody )
 
-    val globNC = new NameContextBuilder( smtVarGen ).build(
+    val globNC = new GlobalBindingBuilder( smtVarGen ).build(
       varDecls ++ constDecls,
       primeConsistency = primeConsistency
     )
 
     val globBM = BodyMapFactory.makeFromDecls( Seq( plusDecl, nextDecl ) )
-    val udtg = new UserDefinedTemplateGenerator( smtVarGen, globNC, globBM )
+    val udtg = new UserDefinedTemplateGenerator( limits, smtVarGen, globNC, globBM )
 
     val e = smtVarGen.getFresh
-    val templ = udtg.makeTemplate( List.empty, nextBody )
+    val templ = udtg.makeTemplate( TlaOperDecl( "Next", List.empty, nextBody ) )
     val templApp = templ( e +: Nil )
 
     val ret = solver.solve( smtVarGen.allVars, templApp )
@@ -288,13 +291,13 @@ class TestSolutionInterpreter extends FunSuite with TestingPredefs with BeforeAn
 
     val nextDecl = tla.declOp( "Next", nextBody )
 
-    val globNC : GlobalNameContext = Map.empty
+    val globNC : GlobalBinding = Map.empty
 
     val globBM = BodyMapFactory.makeFromDecls( Seq( polyOperDecl, nextDecl ) )
-    val udtg = new UserDefinedTemplateGenerator( smtVarGen, globNC, globBM )
+    val udtg = new UserDefinedTemplateGenerator( limits, smtVarGen, globNC, globBM )
 
     val e = smtVarGen.getFresh
-    val templ = udtg.makeTemplate( List.empty, nextBody )
+    val templ = udtg.makeTemplate( TlaOperDecl( "Next", List.empty, nextBody ) )
     val templApp = templ( e +: Nil )
 
     val ret = solver.solve( smtVarGen.allVars, templApp )

@@ -15,16 +15,18 @@ class TestZ3TypeSolver extends FunSuite with TestingPredefs with BeforeAndAfter 
   import at.forsyte.apalache.tla.lir.{Builder => tla}
 
   var smtVarGen = new SmtVarGenerator
+  val limits = SpecLimits( 7, Set("a","b","c","d","e","f","x","y") )
 
-  var globNC : GlobalNameContext = Map(
+
+  var globNC : GlobalBinding = Map(
     "x" -> smtVarGen.getFresh,
     "y" -> smtVarGen.getFresh
   )
 
   val globBM : BodyMap = Map.empty
 
-  var udtg   = new UserDefinedTemplateGenerator( smtVarGen, globNC, globBM )
-  var solver = new Z3TypeSolver( useSoftConstraints = true, new TypeVarGenerator )
+  var udtg   = new UserDefinedTemplateGenerator( limits, smtVarGen, globNC, globBM )
+  var solver = new Z3TypeSolver( useSoftConstraints = false, new TypeVarGenerator, limits )
 
   before {
     smtVarGen = new SmtVarGenerator
@@ -32,8 +34,8 @@ class TestZ3TypeSolver extends FunSuite with TestingPredefs with BeforeAndAfter 
       "x" -> smtVarGen.getFresh,
       "y" -> smtVarGen.getFresh
     )
-    udtg = new UserDefinedTemplateGenerator( smtVarGen, globNC, globBM )
-    solver = new Z3TypeSolver( useSoftConstraints = true, new TypeVarGenerator )
+    udtg = new UserDefinedTemplateGenerator( limits, smtVarGen, globNC, globBM )
+    solver = new Z3TypeSolver( useSoftConstraints = false, new TypeVarGenerator, limits )
   }
 
 
@@ -57,7 +59,7 @@ class TestZ3TypeSolver extends FunSuite with TestingPredefs with BeforeAndAfter 
     val e = smtVarGen.getFresh
     val ts@List( t1, t2 ) = smtVarGen.getNFresh( operX.formalParams.length )
 
-    val templ = udtg.makeTemplate( operX.formalParams, operX.body )
+    val templ = udtg.makeTemplate( operX )
     val templApp = templ( e +: ts ).asInstanceOf[And]
 
     val ret = solver.solve( smtVarGen.allVars, templApp )
@@ -81,15 +83,15 @@ class TestZ3TypeSolver extends FunSuite with TestingPredefs with BeforeAndAfter 
     // B(O(_)) == O(1)
     val declB = tla.declOp( "B", tla.appOp( tla.name( "O" ), tla.int( 1 ) ), ("O", 1) )
     // C == B(A)
-    val declC = tla.declOp( "C", tla.appOp( tla.name( declB.name ), tla.name( declA.name ) ) )
+    val declC = tla.declOp( "C", tla.appDecl( declB, tla.name( declA.name ) ) )
 
     val decls = List( declA, declB, declC )
     val bodyMap = BodyMapFactory.makeFromDecls( decls )
-    udtg = new UserDefinedTemplateGenerator( smtVarGen, globNC, bodyMap )
+    udtg = new UserDefinedTemplateGenerator( limits, smtVarGen, globNC, bodyMap )
 
     val e = smtVarGen.getFresh
 
-    val templ = udtg.makeTemplate( List.empty, declC.body )
+    val templ = udtg.makeTemplate( declC )
     val templApp = templ( e +: Nil ).asInstanceOf[And]
 
     val ret = solver.solve( smtVarGen.allVars, templApp )
@@ -105,7 +107,7 @@ class TestZ3TypeSolver extends FunSuite with TestingPredefs with BeforeAndAfter 
 
     val e = smtVarGen.getFresh
 
-    val templ = udtg.makeTemplate( List.empty, ex )
+    val templ = udtg.makeTemplate( TlaOperDecl( "X", List.empty, ex ) )
     val templApp = templ( e +: Nil ).asInstanceOf[And]
 
     val ret = solver.solve( smtVarGen.allVars, templApp )

@@ -59,9 +59,12 @@ object DependencyGraph {
             explorationStack = name +: explorationStack
             // We fetch the body ...
             bodyMap.get( name ) match {
-              case Some( TlaOperDecl( _, _, body ) ) =>
-                // ... and scan it for any operator calls
-                val children = subCalls( body )
+              case Some( TlaOperDecl( _, params, body ) ) =>
+                val operParams = params.withFilter( _.isInstanceOf[OperFormalParam] ).map {
+                  case OperFormalParam( paramName, _ ) => paramName
+                }
+                // ... and scan it for any operator calls (that arent params)
+                val children = subCalls( body ) -- operParams
                 // Any operator that is called in such a way, cannot be a basic root,
                 // (though it may possibly be chosen as a non-basic root, in the mutual recursion setting)
                 notBasicRoots ++= children

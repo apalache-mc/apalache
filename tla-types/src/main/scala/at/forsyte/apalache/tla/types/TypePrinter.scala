@@ -37,10 +37,16 @@ object TypePrinter {
     case `bool` => "boolT"
     case set( s ) => s"set(${apply( s )})"
     case seq( s ) => s"seq(${apply( s )})"
-    case tup( SmtIntVariable(i) ) => s"tup()"
-    case rec( SmtIntVariable(i) ) => s"rec($intVarSymb$i)"
     case fun( dom, cdm ) => s"fun(${apply(dom)},${apply(cdm)})"
-    case oper( SmtIntVariable(i), cdm ) => s"oper(tup($intVarSymb$i),${apply(cdm)})"
+    case tup( size, idxs ) =>
+      val sizeStr = size match {
+        case SmtIntVariable(i) => s"$intVarSymb$i"
+        case SmtKnownInt(i) => s"$i"
+      }
+      s"tup($sizeStr, ${( idxs map apply ).mkString( ", " )})"
+    case rec( SmtIntVariable(i), fields) => s"rec($intVarSymb$i, ${( fields map apply ).mkString( ", " )})"
+    case oper( domTup, ret ) => s" oper(${apply(domTup)}, ${apply(ret)})"
+    case _ => ""
   }
 
   def apply( bf : BoolFormula ) : String = bf match {
@@ -48,12 +54,8 @@ object TypePrinter {
       args map { a => s"${apply( a )}" } mkString " \u2227 "
     case Or( args@_* ) =>
       args map { a => s"${apply( a )}" } mkString " \u2228 "
-    case hasField( SmtIntVariable( i ), s, t ) =>
-      s"$hasFieldName( $intVarSymb$i, $s, ${apply(t)} )"
-    case hasIndex( SmtIntVariable( i ), j, t ) =>
-      s"$hasIndexName( $intVarSymb$i, $j, ${apply(t)} )"
-    case sizeOfEql( SmtIntVariable( i ), j ) =>
-      s"$sizeOfName( $intVarSymb$i ) \u2265 $j"
+    case ge( SmtIntVariable( i ), minSize ) =>
+      s"$intVarSymb$i \u2265 $minSize"
     case Eql( a, b ) =>
       s"${apply(a)} = ${apply(b)}"
   }

@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.types.smt
 import at.forsyte.apalache.tla.lir.smt.SmtTools.{And, BoolFormula, Or}
 import at.forsyte.apalache.tla.types.Names._
 import at.forsyte.apalache.tla.types._
-import at.forsyte.apalache.tla.types.smt.FunWrappers.{HasAtFunWrapper, SizeFunWrapper}
 import com.microsoft.z3._
 
 object Z3TypeSolver {
@@ -21,14 +20,15 @@ object Z3TypeSolver {
 /**
   * Z3TypeSolver
   */
-class Z3TypeSolver( useSoftConstraints : Boolean, tvg: TypeVarGenerator ) {
+class Z3TypeSolver( useSoftConstraints : Boolean, tvg: TypeVarGenerator, specLimits: SpecLimits ) {
   import Z3TypeSolver._
 
   private val ctx           : Context          = new Context
   private val solver        : Z3Solver         =
     if ( useSoftConstraints ) new MaxSMTSolver( ctx )
     else new ClassicSolver( ctx )
-  private val strEnumerator : StringEnumerator = new StringEnumerator
+  private val enum : Enumeration = specLimits.getEnumeration
+//  private val strEnumerator : StringEnumerator = new StringEnumerator
 
   /************
    *INIT BEGIN*
@@ -52,12 +52,36 @@ class Z3TypeSolver( useSoftConstraints : Boolean, tvg: TypeVarGenerator ) {
     ctx.mkConstructor( seqTName, s"is$seqTName", Array( "sq" ), Array[Sort]( null ), Array( 0 ) )
   private val funTCtor  : Constructor =
     ctx.mkConstructor( funTName, s"is$funTName", Array( "dom", "cdm" ), Array[Sort]( null, null ), Array( 0, 0 ) )
-  private val operTCtor : Constructor =
-    ctx.mkConstructor( operTName, s"is$operTName", Array( "odom", "ocdm" ), Array[Sort]( intS, null ), Array( 0, 0 ) )
-  private val tupTCtor  : Constructor =
-    ctx.mkConstructor( tupTName, s"is$tupTName", Array( "i" ), Array[Sort]( intS ), null )
-  private val recTCtor  : Constructor =
-    ctx.mkConstructor( recTName, s"is$recTName", Array( "r" ), Array[Sort]( intS ), null )
+  private val operTCtor : Constructor = {
+    val M = specLimits.maxIndex
+    val idxNames = ( 1 to M ).toArray map { i => s"oidx$i" }
+    val names = ( "osz" +: idxNames ) :+ "ocdm"
+
+    val sorts : Array[Sort] = intS +: Array.fill( M + 1 )( null )
+    val sortRefs = Array.fill( M + 2 )( 0 )
+
+    ctx.mkConstructor( operTName, s"is$operTName", names, sorts, sortRefs)
+  }
+  private val tupTCtor  : Constructor = {
+    val M = specLimits.maxIndex
+    val idxNames = (1 to M).toArray map { i => s"idx$i" }
+    val names =  "sz" +: idxNames
+
+    val sorts : Array[Sort] = intS +: Array.fill( M )( null )
+    val sortRefs = Array.fill( M + 1 )( 0 )
+
+    ctx.mkConstructor( tupTName, s"is$tupTName", names, sorts, sortRefs )
+  }
+  private val recTCtor  : Constructor = {
+    val N = specLimits.maxNumFields
+    val idxNames = (1 to N).toArray map { i => s"fld$i" }
+    val names =  "id" +: idxNames
+
+    val sorts : Array[Sort] = intS +: Array.fill( N )( null )
+    val sortRefs = Array.fill( N + 1 )( 0 )
+
+    ctx.mkConstructor( recTName, s"is$recTName", names, sorts, sortRefs )
+  }
   private val varTCtor  : Constructor =
     ctx.mkConstructor( varTName, s"is$varTName", Array( "j" ), Array[Sort]( intS ), null )
 
@@ -69,34 +93,6 @@ class Z3TypeSolver( useSoftConstraints : Boolean, tvg: TypeVarGenerator ) {
         funTCtor, operTCtor, tupTCtor, recTCtor, varTCtor
       )
     )
-
-  /**
-    * Declare functions
-    */
-  private val sizeOfDecl   : FuncDecl = ctx.mkFuncDecl( sizeOfName, intS, intS )
-  private val hasIdxDecl   : FuncDecl = ctx.mkFuncDecl( hasIndexName, Array[Sort]( intS, intS ), boolS )
-  private val atIdxDecl    : FuncDecl = ctx.mkFuncDecl( atIndexName, Array[Sort]( intS, intS ), tlaTypeDTS )
-  private val hasFieldDecl : FuncDecl = ctx.mkFuncDecl( hasFieldName, Array[Sort]( intS, intS ), boolS )
-  private val atFieldDecl  : FuncDecl = ctx.mkFuncDecl( atFieldName, Array[Sort]( intS, intS ), tlaTypeDTS )
-
-  private val rankDecl     : FuncDecl = ctx.mkFuncDecl( rankName, tlaTypeDTS, intS )
-
-  /**
-    * Axioms
-    */
-//  private val axiomSizeOf : BoolExpr = {
-//    val i = ctx.mkConst( ctx.mkSymbol( "i" ), intS )
-//    val j = ctx.mkConst( ctx.mkSymbol( "j" ), intS )
-//    ctx.mkForall(
-//      Array[Expr]( i, j ),
-//      ctx.mkImplies(
-//        ctx.mkApp( hasIdxDecl, i, j ).asInstanceOf[BoolExpr],
-//        ctx.mkGe( ctx.mkApp( sizeOfDecl, i ).asInstanceOf[ArithExpr], j.asInstanceOf[ArithExpr] )
-//      ),
-//      0, null, null, null, null
-//    )
-//  }
-//  solver.assert( axiomSizeOf )
 
   /**********
    *INIT END*
@@ -113,9 +109,23 @@ class Z3TypeSolver( useSoftConstraints : Boolean, tvg: TypeVarGenerator ) {
       case set( x ) => ctx.mkApp( setTCtor.ConstructorDecl, dtToSmt( x ) )
       case seq( x ) => ctx.mkApp( seqTCtor.ConstructorDecl, dtToSmt( x ) )
       case fun( x, y ) => ctx.mkApp( funTCtor.ConstructorDecl, dtToSmt( x ), dtToSmt( y ) )
-      case oper( i, y ) => ctx.mkApp( operTCtor.ConstructorDecl, varToConst( i ), dtToSmt( y ) )
-      case tup( i ) => ctx.mkApp( tupTCtor.ConstructorDecl, varToConst( i ) )
-      case rec( i ) => ctx.mkApp( recTCtor.ConstructorDecl, varToConst( i ) )
+      case tup( size, is ) =>
+        val sizeTerm = size match {
+        case i: SmtIntVariable => varToConst( i )
+        case SmtKnownInt( i ) => ctx.mkInt( i )
+      }
+        val indices = is map dtToSmt
+        ctx.mkApp( tupTCtor.ConstructorDecl, sizeTerm +: indices : _* )
+      case oper( tup( size, is ), cdm ) =>
+        val sizeTerm = size match {
+          case i: SmtIntVariable => varToConst( i )
+          case SmtKnownInt( i ) => ctx.mkInt( i )
+        }
+        val indices = is map dtToSmt
+        ctx.mkApp( operTCtor.ConstructorDecl, ( sizeTerm +: indices ) :+ dtToSmt( cdm ) : _* )
+      case rec( id, fs ) =>
+        val fields = fs map dtToSmt
+        ctx.mkApp( recTCtor.ConstructorDecl, varToConst( id ) +: fields : _* )
       case f : SmtTypeVariable => varToConst( f )
     }
 
@@ -123,47 +133,7 @@ class Z3TypeSolver( useSoftConstraints : Boolean, tvg: TypeVarGenerator ) {
       case And( args@_* ) => ctx.mkAnd( args map bfToSmt : _* )
       case Or( args@_* ) => ctx.mkOr( args map bfToSmt : _* )
       case Eql( lhs, rhs ) => ctx.mkEq( dtToSmt( lhs ), dtToSmt( rhs ) )
-      case hasField( v, s, t ) =>
-        val vConst = varToConst( v )
-        val sId = strEnumerator.add( s )
-        val sInt = ctx.mkInt( sId )
-        val exists = ctx.mkApp( hasFieldDecl, vConst, sInt ).asInstanceOf[BoolExpr]
-        val tExpr = dtToSmt( t )
-        val value = ctx.mkEq( ctx.mkApp( atFieldDecl, vConst, sInt ), tExpr )
-//        val rank = ctx.mkEq(
-//          ctx.mkApp( rankDecl, tExpr ),
-//          ctx.mkAdd(
-//            ctx.mkApp( rankDecl, dtToSmt( rec( v ) ) ).asInstanceOf[ArithExpr],
-//            ctx.mkInt( 1 )
-//          )
-//        )
-        val rank = ctx.mkGt(
-          ctx.mkApp( rankDecl, tExpr ).asInstanceOf[ArithExpr],
-          ctx.mkApp( rankDecl, dtToSmt( rec( v ) ) ).asInstanceOf[ArithExpr]
-        )
-        ctx.mkAnd( exists, value, rank )
-      case hasIndex( v, i, t ) =>
-        val vConst = varToConst( v )
-        val iInt = ctx.mkInt( i )
-        val exists = ctx.mkApp( hasIdxDecl, vConst, iInt ).asInstanceOf[BoolExpr]
-        val tExpr = dtToSmt( t )
-        val value = ctx.mkEq( ctx.mkApp( atIdxDecl, vConst, iInt ), tExpr )
-//        val rank = ctx.mkEq(
-//          ctx.mkApp( rankDecl, tExpr ),
-//          ctx.mkAdd(
-//            ctx.mkApp( rankDecl, dtToSmt( tup( v ) ) ).asInstanceOf[ArithExpr],
-//            ctx.mkInt( 1 )
-//          )
-//        )
-        val rank = ctx.mkGt(
-          ctx.mkApp( rankDecl, tExpr ).asInstanceOf[ArithExpr],
-          ctx.mkApp( rankDecl, dtToSmt( tup( v ) ) ).asInstanceOf[ArithExpr]
-        )
-        // Explicit instantiation
-        val sizeAxiom = ctx.mkGe( ctx.mkApp( sizeOfDecl, vConst ).asInstanceOf[ArithExpr], iInt )
-        ctx.mkAnd( exists, value, sizeAxiom )
-      case sizeOfEql( i, j ) =>
-        ctx.mkEq( ctx.mkApp( sizeOfDecl, varToConst( i ) ), ctx.mkInt( j ) )
+      case ge( i, j ) => ctx.mkGe( varToConst( i ).asInstanceOf[ArithExpr], ctx.mkInt( j ) )
       case _ =>
         throw new IllegalArgumentException( "..." )
     }
@@ -191,40 +161,26 @@ class Z3TypeSolver( useSoftConstraints : Boolean, tvg: TypeVarGenerator ) {
     */
   def solve(
              vars : Seq[SmtVariable],
-             constraints : BoolFormula
+             constraints : BoolFormula,
+             observedFieldOpt : Option[Map[SmtIntVariable, Set[String]]] = None
            ) : SolutionOrUnsatCore = {
-    solver.push()
     addVars( vars )
     addConstraints( constraints )
     val status = solver.check()
-    solver.pop()
     status match {
       case Status.SATISFIABLE =>
         val model = solver.getModel
-        val sizeWrap = SizeFunWrapper( ctx, model, sizeOfDecl )
-        val idxWrap = HasAtFunWrapper( ctx, model, hasIdxDecl, atIdxDecl )
-        val fieldWrap = HasAtFunWrapper( ctx, model, hasFieldDecl, atFieldDecl )
 
         val idxEval = new IndexEvaluator {
           override def getValue( i : Int ) : Int = model.eval(
             ctx.mkConst( s"${Names.intVarSymb}$i", intS ),
-            false
+            true
           ).asInstanceOf[IntNum].getInt
         }
 
-        def fieldConstraints( c : BoolFormula ) : Seq[hasField] = c match {
-          case And( cs@_* ) => cs flatMap fieldConstraints
-          case Or( cs@_*) => cs flatMap fieldConstraints
-          case hf: hasField => Seq(hf)
-          case _ => Seq.empty
-        }
+        val narrowerOpt = observedFieldOpt.map( new TypeNarrower( _, idxEval ) )
 
-        val narrower = new TypeNarrower( fieldConstraints( constraints ), idxEval )
-
-        val typeReconstructor = new TypeReconstructor(
-          tvg, idxWrap.apply, fieldWrap.apply,
-          sizeWrap.apply, strEnumerator, Some( narrower )
-        )
+        val recovery = new TypeRecovery( tvg, specLimits, narrowerOpt )
 
         def solutionFn( dt: SmtDatatype ) : TlaType = {
           val expr = Z3Converter.dtToSmt( dt )
@@ -233,7 +189,7 @@ class Z3TypeSolver( useSoftConstraints : Boolean, tvg: TypeVarGenerator ) {
             true // completion:  When this flag is enabled, a model value will be assigned to any constant or function that does not have an interpretation in the model.
             /* TODO: Investigate if true is useful for partial specifications, where some values are still undefined */
           )
-          typeReconstructor( evalEx )
+          recovery( evalEx )
         }
 
         Solution( solutionFn )
@@ -252,7 +208,18 @@ class Z3TypeSolver( useSoftConstraints : Boolean, tvg: TypeVarGenerator ) {
   private def addVars( vars : Seq[SmtVariable] ) : Seq[FuncDecl] =
     vars flatMap {
       case x : SmtIntVariable =>
-        ctx.mkConstDecl( Z3Converter.varToSmtName( x ), intS )
+        val v = ctx.mkConstDecl( Z3Converter.varToSmtName( x ), intS )
+        // Soft constraint : each intVar is unique (e.g. equal to its id)
+        // This makes record identifiers as distinct as possible, allowing for
+        // more precise field recovery
+        solver.assertSoft(
+          ctx.mkEq(
+            ctx.mkConst( v ),
+            ctx.mkInt( x.id )
+          ),
+          1, // default weight
+          "" // no label
+        )
         None
       case x@SmtTypeVariable( f ) =>
         val v = ctx.mkConstDecl( Z3Converter.varToSmtName( x ), tlaTypeDTS )

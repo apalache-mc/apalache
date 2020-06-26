@@ -4,11 +4,12 @@ import java.io.{File, FileWriter, PrintWriter}
 import java.nio.file.Path
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
+import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.smt.SmtTools.And
-import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
+import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.types._
-import at.forsyte.apalache.tla.types.smt.Z3TypeSolver.{Solution, UnsatCore}
+import at.forsyte.apalache.tla.types.smt.Z3TypeSolver.{Solution, SolutionFunction, UnsatCore}
 import at.forsyte.apalache.tla.types.smt.{SmtVarGenerator, Z3TypeSolver}
 import com.google.inject.Inject
 import com.google.inject.name.Named
@@ -16,6 +17,8 @@ import com.typesafe.scalalogging.LazyLogging
 
 class TypeAnnotationPassImpl @Inject()(
                                         val options : PassOptions,
+                                        sourceStore: SourceStore,
+                                        changeListener: ChangeListener,
                                         @Named( "AfterTypes" ) nextPass : Pass with TlaModuleMixin
                                       )
   extends TypeAnnotationPass with LazyLogging {
@@ -26,6 +29,34 @@ class TypeAnnotationPassImpl @Inject()(
 
   private val smtVarGen  = new SmtVarGenerator
   private val typeVarGen = new TypeVarGenerator
+
+  def countCases( solutionFn: SolutionFunction ): Map[String,Int] = {
+    val initMap = Map(
+      "ibs" -> 0,
+      "tup" -> 0,
+      "rec" -> 0,
+      "fn" -> 0,
+      "set" -> 0,
+      "seq" -> 0,
+      "op" -> 0
+    )
+    val varTypes = smtVarGen.allVars.withFilter( _.isInstanceOf[SmtTypeVariable] ) map { t =>
+      solutionFn( t.asInstanceOf[SmtDatatype] )
+    }
+    varTypes.foldLeft( initMap ) { ( m, v ) =>
+      v match {
+        case IntT | BoolT | StrT => m + ( "ibs" -> ( m( "ibs" ) + 1 ) )
+        case _ : TupT => m + ( "tup" -> ( m( "tup" ) + 1 ) )
+        case _ : RecT => m + ( "rec" -> ( m( "rec" ) + 1 ) )
+        case _ : FunT => m + ( "fn" -> ( m( "fn" ) + 1 ) )
+        case _ : SetT => m + ( "set" -> ( m( "set" ) + 1 ) )
+        case _ : SeqT => m + ( "seq" -> ( m( "seq" ) + 1 ) )
+        case _ : OperT => m + ( "op" -> ( m( "op" ) + 1 ) )
+        case _ => m
+      }
+    }
+  }
+
 
   /**
     * The pass name.
@@ -40,21 +71,25 @@ class TypeAnnotationPassImpl @Inject()(
     * @return true, if the pass was successful
     */
   override def execute( ) : Boolean = {
+
+    val startTime = System.currentTimeMillis()
     val module = tlaModule.get
 
     logger.info( "Started type pass")
+
+    val limits = SpecLimits.getLimits( module.declarations )
 
     val operDecls = module.operDeclarations
     val nonOperDecls = module.constDeclarations ++ module.varDeclarations
 
     val bodyMap = BodyMapFactory.makeFromDecls( operDecls )
 
-    val globalNameContext = new NameContextBuilder( smtVarGen ).build(
+    val globalNameContext = new GlobalBindingBuilder( smtVarGen ).build(
       nonOperDecls, primeConsistency
     )
 
     val templateGenerator =
-      new UserDefinedTemplateGenerator( smtVarGen, globalNameContext, bodyMap )
+      new UserDefinedTemplateGenerator( limits, smtVarGen, globalNameContext, bodyMap )
 
     // We compute the dependency graph, so we can get constraints
     // for all operators, by just generating templates for roots
@@ -62,10 +97,10 @@ class TypeAnnotationPassImpl @Inject()(
     val roots = dependencies.root.children
 
     val virtualCalls = operDecls withFilter { d => roots.contains( d.name) } map {
-      case TlaOperDecl( name, fParams, body ) =>
+      case decl@TlaOperDecl( name, fParams, _ ) =>
         val e = smtVarGen.getFresh
         val ts = smtVarGen.getNFresh( fParams.length )
-        val template = templateGenerator.makeTemplate( fParams, body )
+        val template = templateGenerator.makeTemplate( decl )
         val constraint = template( e +: ts )
         name -> (e, ts, constraint)
     }
@@ -74,11 +109,14 @@ class TypeAnnotationPassImpl @Inject()(
       case (_, (_, _, c)) => c
     } : _* )
 
-    val solver = new Z3TypeSolver( useSoftConstraints = useSoftConstraints, typeVarGen )
+    val solver = new Z3TypeSolver( useSoftConstraints = useSoftConstraints, typeVarGen, limits )
 
+    val observedFields = Option( templateGenerator.getObservedFields )
     logger.info( "Start SMT")
-    val ret = solver.solve( smtVarGen.allVars, constraints )
+    val ret = solver.solve( smtVarGen.allVars, constraints, observedFields )
     logger.info("End SMT")
+
+    val runtime = (System.currentTimeMillis() - startTime) / 1000.0
 
     ret match {
       case Solution( solution ) =>
@@ -109,8 +147,17 @@ class TypeAnnotationPassImpl @Inject()(
           case (k, v) => s"$k: $v"
         } mkString "\n"
 
+        val countStr = (countCases( solution ) map {
+          case (k,v) => s"$k:$v"
+        }).mkString(";")
+
+
         val outdir = options.getOrError( "io", "outdir" ).asInstanceOf[Path]
         val pw = new PrintWriter( new FileWriter( new File( outdir.toFile, "out-types.txt" ), false ) )
+        pw.write( runtime.toString )
+        pw.write( "\n\n" )
+        pw.write( countStr )
+        pw.write( "\n\n" )
         pw.write( outStr )
         pw.close()
         logger.info( "Ended type pass")
@@ -128,6 +175,8 @@ class TypeAnnotationPassImpl @Inject()(
 
         val ctx = templateGenerator.getCtx
 
+        val locator = SourceLocator(sourceStore.makeSourceMap, changeListener )
+
         // Then, we pretty-print the information from the OperatorContext
         val varDescription = ctx.toList.sortBy { _._1.length } flatMap {
           case (stack, varAsgn) =>
@@ -135,7 +184,7 @@ class TypeAnnotationPassImpl @Inject()(
             varAsgn.toList.sortBy { _._1.id } flatMap {
               case (uid, tv) =>
                 backMap.get( uid ) map { ex =>
-                  s"$prefix->$tv: $ex"
+                  s"$prefix->$tv: $ex, ${locator.sourceOf(ex)}"
                 }
             }
         }
@@ -145,6 +194,8 @@ class TypeAnnotationPassImpl @Inject()(
         // Lastly, we dump to a file
         val outdir = options.getOrError( "io", "outdir" ).asInstanceOf[Path]
         val pw = new PrintWriter( new FileWriter( new File( outdir.toFile, "out-usc.txt" ), false ) )
+        pw.write( runtime.toString )
+        pw.write( "\n\n" )
         pw.write( outStr )
         pw.write( "\n\n" )
         pw.write( descrStr )
@@ -160,8 +211,12 @@ class TypeAnnotationPassImpl @Inject()(
     *
     * @return the next pass, if exists, or None otherwise
     */
-  override def next( ) : Option[Pass] = tlaModule map { m =>
-    nextPass.setModule( m )
-    nextPass
-  }
+  //  override def next( ) : Option[Pass] = tlaModule map { m =>
+  //    nextPass.setModule( m )
+  //    nextPass
+  //  }
+
+  // Temporary, for experiments
+  override def next( ) : Option[Pass] = None
+
 }

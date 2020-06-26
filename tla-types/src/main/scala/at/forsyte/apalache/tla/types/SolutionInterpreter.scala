@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.types
 
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.storage.BodyMap
 import at.forsyte.apalache.tla.types.smt.Z3TypeSolver.SolutionFunction
 
@@ -41,7 +42,7 @@ class SolutionInterpreter( tvg : TypeVarGenerator ) {
                  virtualCallResults : Map[String, TlaType],
                  bodyMap : BodyMap,
                  operCtx : OperatorContext,
-                 globalNameCtx : GlobalNameContext,
+                 globalNameCtx : GlobalBinding,
                  solution : SolutionFunction
                ) : InterpretedSolution = {
     // For TLA variables, we just evaluate their matching SMT variables directly
@@ -101,7 +102,7 @@ class SolutionInterpreter( tvg : TypeVarGenerator ) {
           // UNCHANGED a is transformed into a' = a. This intermediate
           // expression is ephemeral and as such is not recorded in idToExMap
           idToExMap.get( uid ) match {
-            case Some( NameEx( n ) ) if n == operName =>
+            case Some( NameEx( `operName` ) ) =>
               Some( solution( tv ) )
             case _ => None
           }
@@ -109,7 +110,7 @@ class SolutionInterpreter( tvg : TypeVarGenerator ) {
     }
     allInstanceTypes.toList match {
       case Nil =>
-        // Only use virtual calls if there's no instance-use informaiton
+        // Only use virtual calls if there's no instance-use information
         virtualCallResults.getOrElse( operName ,
           throw new Exception( s"Operator $operName should have at least one type candidate, but has 0." )
         )
