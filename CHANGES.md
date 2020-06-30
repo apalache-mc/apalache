@@ -10,6 +10,7 @@
  * counterexamples in the TLC and JSON, see #45 and #116
  * fixed exit codes `EXITCODE: OK` and `EXITCODE: ERROR (<code>)`
  * normal error messages and failure messages with stack traces
+ * bugfixes: #12, #104, #148
 
 ## 0.6.1 [SNAPSHOT] #master
 

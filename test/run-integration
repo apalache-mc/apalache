@@ -138,6 +138,8 @@ check "026-Rec8" --length=10 --inv=Inv Rec8.tla \
     && expect_ok
 check "027-Rec9" --length=5 --inv=Inv Rec9.tla \
     && expect_ok
+check "028-ExistsAsValue" --inv=Inv ExistsAsValue.tla \
+    && expect_ok
 
 cat "$LOGFILE"
 
