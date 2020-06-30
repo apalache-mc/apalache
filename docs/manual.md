@@ -115,16 +115,18 @@ $ alias apalache="docker run --rm -v $(pwd):/var/apalache apalache/mc"
 
 **Using unstable version of Apalache**
 
-The development of Apalache proceeds at a high pace,
-and we introduce a substantial number of new features in the unstable branch before the next stable release,
-roughly at a weekly cadence. Please refer to [Unstable Changes](https://github.com/konnov/apalache/blob/unstable/CHANGES.md)
-and [Unstable Manual](https://github.com/konnov/apalache/blob/unstable/docs/manual.md)
-for the description of new features.
-**We recommend using the unstable version if you want to try all the exciting new features of Apalache**.
-The price you pay for that is the slightly higher tool instability.
-To use `unstable`, just type `apalache/mc:unstable` instead of `apalache/mc` everywhere.
+The development of Apalache proceeds at a high pace, and we introduce a
+substantial number of improvements in the unstable branch before the next
+stable release biweekly.  Please refer to [Unstable
+Changes](https://github.com/konnov/apalache/blob/unstable/CHANGES.md) and
+[Unstable
+Manual](https://github.com/konnov/apalache/blob/unstable/docs/manual.md) for
+the description of new features.  **We recommend using the unstable version if
+you want to try all the exciting new features of Apalache. But be warned: It is
+called "unstable" for a reason**. To use `unstable`, just type
+`apalache/mc:unstable` instead of `apalache/mc` everywhere.
 
-Do not forget to regularly pull the docker image:
+Do not forget to pull the docker image from time to time:
 
 ```bash
 docker pull apalache/mc:unstable
@@ -150,7 +152,7 @@ To build a docker image of Apalache, issue the following command
 in `$APALACHE_HOME`:
 
 ```bash
-$ docker image build -t apalache:0.6.0 .
+$ docker image build -t apalache:0.7.0 .
 ```
 
 
@@ -161,7 +163,7 @@ $ docker image build -t apalache:0.6.0 .
 3. Install OpenJDK8 or
 [Zulu JDK8](https://www.azul.com/downloads/zulu-community/?&architecture=x86-64-bit&package=jdk).
 **You have to install version 8, otherwise Scala will not compile! See
-[see compatibility
+[compatibility
 table](https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html).**
 
 4. Install [Apache Maven](https://maven.apache.org/). For instance,
@@ -356,20 +358,62 @@ The arguments are as follows:
 If initialization predicate, transition predicate, or invariant is specified both in the configuration file,
 and on the command line, the command line parameters take precedence over those in the configuration file.
 
-If you like to check an inductive invariant ``Inv``, you can run two commands:   
+**Bounded model checking.**
+By default, Apalache performs *bounded model checking*, that is,
+it encodes a symbolic execution of length `k` and an invariant violation
+in SMT:
+
+```tla
+/\ Init[v_0/v]
+/\ Next[v_0/v, v_1/v'] /\ Next[v_1/v, v_2/v'] /\ ... /\ Next[v_{k-1}/v, v_k/v']
+/\ ~Inv[v_0/v] \/ ~Inv[v_1/v] \/ ... \/ ~Inv[v_k/v]
+```
+
+Here an expression `Inv[v_i/v]` means that the state variables `v` are replaced
+with their copies `v_i` for the state `i`.  Likewise, `Next[v_i/v,v_{i+1}/v']`
+means that the state variables `v` are replaced with their copies `v_i` for the
+state `i`, whereas the state variables `v'` are replaced with their copies
+`v_{i+1}` for the state `i+1`.
+
+**Bounded model checking is an incomplete technique.**
+If Apalache finds a bug in this symbolic execution (by querying z3), then
+it reports a counterexample. Otherwise, it reports that no bug was found
+up to given length. If a bug needs a long execution to get revealed, bounded
+model checking may miss it!
+
+
+**Checking an inductive invariant.**
+To check executions of arbitrary lengths, one usually finds a formula that
+satisfies two following properties:
+
+```tla
+/\ Init => TypeOK /\ IndInv
+/\ TypeOK /\ IndInv /\ Next => Inv'
+```
+
+In normal words: (1) The initial states satisfy the constraint `TypeOK /\
+IndInv`, and (2) whenever the specification makes a step when starting in a
+state that satisfies `TypeOK /\ IndInv`, it ends up in a state that again
+satisfies `TypeOK /\ IndInv`.
+
+Note that we usually check `IndInv` in conjunction with `TypeOK`, as we
+have to constrain the variable values. In the `y2k` example, our inductive
+invariant is actually constraing the variables. In fact, such an inductive
+invariant is usually called `TypeOK`.
+
+
+To check an inductive invariant ``IndInv`` in Apalache, you run two commands
+    that check the above two formulas:   
 
 ```bash
-$ apalache check --init=Inv --inv=Inv --length=1 <myspec>.tla
+$ apalache check --init=Init --inv=IndInv --length=0 <myspec>.tla
 ```
 
 and
 
 ```bash
-$ apalache check --init=Init --inv=Inv --length=0 <myspec>.tla
+$ apalache check --init=IndInv --inv=IndInv --length=1 <myspec>.tla
 ```
-
-Make sure that ``Inv`` contains necessary constraints on the shape of the variables.
-Usually, ``TypeOK`` as the first line of the invariant is exactly what is needed.
 
 ## 6.2. Examples
 
@@ -380,8 +424,9 @@ $ cd test/tla
 $ apalache check --length=20 --inv=Safety y2k_override.tla
 ```
 
-This command checks, whether `Safety` can be violated in 20
-specification steps.
+This command checks, whether `Safety` can be violated in 20 specification
+steps. If `Safety` is not violated, your spec might still have a bug, but it
+would require a computation longer than 20 steps.
 
 **Checking an inductive invariant:**
 
