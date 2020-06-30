@@ -62,9 +62,9 @@ class SkolemizationMarker @Inject()(tracker: TransformationTracker)
       }
       LetInEx(transform(body), defs map mapDef :_*)
 
-    case OperEx(oper, args @ _*) =>
-      // try to descend in the children, which may contain Boolean operations, e.g., { \E x \in S: P }
-      OperEx(oper, args map transform :_*)
+    case ex @ OperEx(oper, args @ _*) =>
+      // bugfix for #148: do not descend into value expressions, as Skolemization of non-formulas is unsound
+      ex
 
     case terminal =>
       terminal // terminal expression, stop here
