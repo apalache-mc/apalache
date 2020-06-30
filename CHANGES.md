@@ -1,5 +1,6 @@
 ## 0.7.0 [SNAPSHOT] #unstable
 
+ * Importer from JSON, see #121
  * optimization for `Cardinality(S) >= k`, see #118
  * sound translation of `LOCAL` operators, see #49
  * unrolling recursive operators, see #67
