@@ -105,6 +105,7 @@ object Tool extends App with LazyLogging {
     val executor = injector.getInstance(classOf[PassChainExecutor])
     executor.options.set("io.outdir", createOutputDir())
     executor.options.set("parser.filename", parse.file.getAbsolutePath)
+    executor.options.set("parser.output", parse.output)
 
     val result = executor.run()
     if (result.isDefined) {

@@ -251,7 +251,10 @@ class TestCounterexampleWriter extends FunSuite {
         |            ]
         |          }
         |        ]
-        |      }
+        |      },
+        |      "params": [
+        |        
+        |      ]
         |    },
         |    {
         |      "OPERATOR": "InvariantViolation",
@@ -260,7 +263,10 @@ class TestCounterexampleWriter extends FunSuite {
         |          "x",
         |          1
         |        ]
-        |      }
+        |      },
+        |      "params": [
+        |        
+        |      ]
         |    }
         |  ]
         |}""".stripMargin
@@ -290,7 +296,10 @@ class TestCounterexampleWriter extends FunSuite {
         |            ]
         |          }
         |        ]
-        |      }
+        |      },
+        |      "params": [
+        |        
+        |      ]
         |    },
         |    {
         |      "OPERATOR": "State2",
@@ -303,7 +312,10 @@ class TestCounterexampleWriter extends FunSuite {
         |            ]
         |          }
         |        ]
-        |      }
+        |      },
+        |      "params": [
+        |        
+        |      ]
         |    },
         |    {
         |      "OPERATOR": "State3",
@@ -316,7 +328,10 @@ class TestCounterexampleWriter extends FunSuite {
         |            ]
         |          }
         |        ]
-        |      }
+        |      },
+        |      "params": [
+        |        
+        |      ]
         |    },
         |    {
         |      "OPERATOR": "InvariantViolation",
@@ -325,7 +340,10 @@ class TestCounterexampleWriter extends FunSuite {
         |          "x",
         |          1
         |        ]
-        |      }
+        |      },
+        |      "params": [
+        |        
+        |      ]
         |    }
         |  ]
         |}""".stripMargin
@@ -361,7 +379,10 @@ class TestCounterexampleWriter extends FunSuite {
         |            ]
         |          }
         |        ]
-        |      }
+        |      },
+        |      "params": [
+        |        
+        |      ]
         |    },
         |    {
         |      "OPERATOR": "State2",
@@ -380,7 +401,10 @@ class TestCounterexampleWriter extends FunSuite {
         |            ]
         |          }
         |        ]
-        |      }
+        |      },
+        |      "params": [
+        |        
+        |      ]
         |    },
         |    {
         |      "OPERATOR": "State3",
@@ -399,7 +423,10 @@ class TestCounterexampleWriter extends FunSuite {
         |            ]
         |          }
         |        ]
-        |      }
+        |      },
+        |      "params": [
+        |        
+        |      ]
         |    },
         |    {
         |      "OPERATOR": "InvariantViolation",
@@ -418,7 +445,10 @@ class TestCounterexampleWriter extends FunSuite {
         |            ]
         |          }
         |        ]
-        |      }
+        |      },
+        |      "params": [
+        |        
+        |      ]
         |    }
         |  ]
         |}""".stripMargin
