@@ -93,7 +93,7 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
 
     writer.println("\n\n%s".format("=" * 80))
     writer.println("\\* Created by Apalache on %s".format(Calendar.getInstance().getTime))
-    writer.println("\\* https://github.com/konnov/apalache")
+    writer.println("\\* https://github.com/informalsystems/apalache")
     writer.close()
   }
 }

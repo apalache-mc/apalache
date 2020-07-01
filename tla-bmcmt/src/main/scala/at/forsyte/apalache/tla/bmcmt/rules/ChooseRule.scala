@@ -70,7 +70,7 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   // This translation is sound only in the happy scenario, that is, when CHOOSE is defined on its argument.
-  // It should be used only after resolving the issue #95: https://github.com/konnov/apalache/issues/95
+  // It should be used only after resolving the issue #95: https://github.com/informalsystems/apalache/issues/95
   private def happyChoose(state: SymbState, varName: String, set: TlaEx, pred: TlaEx): SymbState = {
     // rewrite the bounding set
     val nextState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(set))

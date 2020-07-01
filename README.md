@@ -12,14 +12,14 @@ Apalache runs under the same assumptions as TLC.
 
 ## Releases
 
-Check the [releases page](https://github.com/konnov/apalache/releases).
+Check the [releases page](https://github.com/informalsystems/apalache/releases).
 
 We recommend you to run the latest docker image `apalache/mc:latest` and
 checkout the source code from
-[master](https://github.com/konnov/apalache/tree/master), which accumulate
+[master](https://github.com/informalsystems/apalache/tree/master), which accumulate
 bugfixes over the latest release, see the [manual](docs/manual.md#useDocker).
 To try the latest cool features, check the [unstable
-branch](https://github.com/konnov/apalache/tree/unstable).
+branch](https://github.com/informalsystems/apalache/tree/unstable).
 
 ## Getting started
 
@@ -27,11 +27,11 @@ Read the [user manual](docs/manual.md).
 
 ## Performance
 
-We are collecting [apalache benchmarks](https://github.com/konnov/apalache-tests).
+We are collecting [apalache benchmarks](https://github.com/informalsystems/apalache-tests).
 See the Apalache performance when
-[checking inductive invariants](https://github.com/konnov/apalache-tests/blob/master/results/001indinv-report.md)
+[checking inductive invariants](https://github.com/informalsystems/apalache-tests/blob/master/results/001indinv-report.md)
 and running
-[bounded model checking](https://github.com/konnov/apalache-tests/blob/master/results/002bmc-report.md). Version 0.6.0 is a major improvement over version 0.5.2
+[bounded model checking](https://github.com/informalsystems/apalache-tests/blob/master/results/002bmc-report.md). Version 0.6.0 is a major improvement over version 0.5.2
 (the version [reported at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549)).
 
 ## Academic papers

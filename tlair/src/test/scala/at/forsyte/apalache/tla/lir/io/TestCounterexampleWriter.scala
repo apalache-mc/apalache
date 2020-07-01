@@ -42,7 +42,7 @@ class TestCounterexampleWriter extends FunSuite {
         |
         |================================================================================
         |\* Created by Apalache on DATETIME
-        |\* https://github.com/konnov/apalache
+        |\* https://github.com/informalsystems/apalache
         |""".stripMargin
     )
   }
@@ -81,7 +81,7 @@ class TestCounterexampleWriter extends FunSuite {
           |
           |================================================================================
           |\* Created by Apalache on DATETIME
-          |\* https://github.com/konnov/apalache
+          |\* https://github.com/informalsystems/apalache
           |""".stripMargin
       )
     }
@@ -123,7 +123,7 @@ class TestCounterexampleWriter extends FunSuite {
         |
         |================================================================================
         |\* Created by Apalache on DATETIME
-        |\* https://github.com/konnov/apalache
+        |\* https://github.com/informalsystems/apalache
         |""".stripMargin
     )
   }
