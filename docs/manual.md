@@ -154,7 +154,7 @@ Run it with the following command:
 $ docker run --rm -v <your-spec-directory>:/var/apalache apalache/mc:unstable <args>
 ```
 
-To create an alias pointing to `unstable` version:
+To create an alias pointing to the `unstable` version:
 
 ```bash
 $ alias apalache="docker run --rm -v $(pwd):/var/apalache apalache/mc:unstable"
