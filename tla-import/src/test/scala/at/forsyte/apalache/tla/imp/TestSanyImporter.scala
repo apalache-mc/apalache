@@ -1016,6 +1016,27 @@ class TestSanyImporter extends FunSuite {
       */
   }
 
+  test("weird set comprehension") {
+    val text =
+      """---- MODULE weird ----
+        |VARIABLE S
+        |Op == { x \in S: x \in S }
+        |================================
+        |""".stripMargin
+
+    val locationStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(locationStore)
+      .loadFromSource("weird", Source.fromString(text))
+    val mod = expectSingleModule("weird", rootName, modules)
+
+    def expectDecl(name: String, body: TlaEx) = expectTlaDecl(locationStore, name, List(), body)
+
+    val filter =
+      OperEx(TlaSetOper.filter, NameEx("x"), NameEx("S"),
+        OperEx(TlaSetOper.in, NameEx("x"), NameEx("S")))
+    expectDecl("Op", filter) (mod.declarations(1))
+  }
+
   test("level-1 operators") {
     // operators with basic parameters, that is, no operator is passed as a parameter
     val text =
