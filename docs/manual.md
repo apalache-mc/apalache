@@ -93,7 +93,9 @@ To get the latest Apalache image, issue the command:
 docker pull apalache/mc
 ```
 
-**Running the docker image**. To run an Apalache image, issue the command:
+### Running the docker image
+
+To run an Apalache image, issue the command:
 
 ```bash
 $ docker run --rm -v <your-spec-directory>:/var/apalache apalache/mc <args>
@@ -117,27 +119,28 @@ The following docker parameters are used:
   [Running the tool](#running).
 
 
-**Setting an alias.**
-If you are running Apalache on Linux :penguin: or MacOS :green_apple:,
-you can set the handy alias,
-which runs Apalache in docker while sharing the working directory:
+### Setting an alias
+
+If you are running Apalache on Linux :penguin: or MacOS
+:green_apple:, you can define this handy alias in your rc file, which runs
+Apalache in docker while sharing the working directory:
 
 ```bash
 $ alias apalache="docker run --rm -v $(pwd):/var/apalache apalache/mc"
 ```
 
-**Using unstable version of Apalache**
+### Using the unstable version of Apalache
 
 The development of Apalache proceeds at a high pace, and we introduce a
 substantial number of improvements in the unstable branch before the next
-stable release biweekly.  Please refer to [Unstable
-Changes](https://github.com/informalsystems/apalache/blob/unstable/CHANGES.md) and
-[Unstable
-Manual](https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md) for
-the description of new features.  **We recommend using the unstable version if
-you want to try all the exciting new features of Apalache. But be warned: It is
-called "unstable" for a reason**. To use `unstable`, just type
-`apalache/mc:unstable` instead of `apalache/mc` everywhere.
+biweekly stable release. Please refer to the [change
+log](https://github.com/informalsystems/apalache/blob/unstable/CHANGES.md) and
+[manual](https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md)
+on the unstable branch for the description of the newest features. **We recommend using
+the unstable version if you want to try all the exciting new features of
+Apalache. But be warned: It is called "unstable" for a reason**. To use
+`unstable`, just type `apalache/mc:unstable` instead of `apalache/mc`
+everywhere.
 
 Do not forget to pull the docker image from time to time:
 
