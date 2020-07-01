@@ -8,8 +8,17 @@
 
 # Introduction
 
-Apalache is a symbolic model checker for [TLA+](https://lamport.azurewebsites.net/tla/tla.html). (*Still looking for a better tool name.*) Our model checker is a recent alternative to [TLC](https://lamport.azurewebsites.net/tla/tools.html?unhideBut=hide-tlc&unhideDiv=tlc).
-Whereas TLC enumerates states that are produced by behaviors of a TLA+ specification, Apalache translates the verification problem to a set of logical constraints. These constraints are solved by an [SMT solver](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories), for instance, by [Microsoft Z3](https://github.com/Z3Prover/z3). That is, Apalache is operating in terms of formulas (i.e., _symbolic_), not enumerating states one by one (i.e., _state enumeration_).
+Apalache is a symbolic model checker for
+[TLA+](https://lamport.azurewebsites.net/tla/tla.html). (*Still looking for a
+better tool name.*) Our model checker is a recent alternative to
+[TLC](https://lamport.azurewebsites.net/tla/tools.html?unhideBut=hide-tlc&unhideDiv=tlc).
+Whereas TLC enumerates the states produced by the behaviors of a TLA+
+specification, Apalache translates the verification problem to a set of logical
+constraints. These constraints are solved by an [SMT
+solver](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories), for
+instance, by [Microsoft's Z3](https://github.com/Z3Prover/z3). That is, Apalache
+operates on formulas (i.e., _symbolicly_), not by enumerating states one by one
+(i.e., _state enumeration_).
 
 Apalache is working under the following assumptions:
 
