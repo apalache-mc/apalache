@@ -160,12 +160,13 @@ To create an alias pointing to the `unstable` version:
 $ alias apalache="docker run --rm -v $(pwd):/var/apalache apalache/mc:unstable"
 ```
 
-**Building an image**. For an end user there is no need to build an Apalache
-image. If you like to produce a modified docker image,
-take into account that it will take about 30 minutes for the image
-to get built, due to compilation times of Microsoft Z3.
-To build a docker image of Apalache, issue the following command
-in `$APALACHE_HOME`:
+### Building an image
+
+For an end user there is no need to build an Apalache image. If you like to
+produce a modified docker image, take into account that it will take about 30
+minutes for the image to get built, due to compilation times of Microsoft Z3. To
+build a docker image of Apalache, issue the following command in
+`$APALACHE_HOME`:
 
 ```bash
 $ docker image build -t apalache:0.7.0 .
