@@ -196,7 +196,7 @@ $ docker image build -t apalache:0.7.0 .
 <a name="example"></a>
 # 4. An example of a TLA+ specification
 
-To illustrate the features of Apalache, we are using the following TLA+ specification,
+To illustrate the features of Apalache, we use the following TLA+ specification,
 which can be found in [`test/tla/y2k.tla`](../test/tla/y2k.tla):
 
 ```tla
@@ -278,7 +278,8 @@ INSTANCE y2k WITH BIRTH_YEAR <- 80, LICENSE_AGE <- 18
 ```
 
 The downside of this approach is that you have to declare the variables of the
-extended specification.
+extended specification. This is easy with only two variables, but can quickly
+become unwieldy.
 
 ## 5.2. Convention over configuration
 
@@ -334,25 +335,27 @@ The model checker will try the instances for all the combinations of
 the parameters specified in ``ConstInit``, that is, in our example, it will
 consider ``N \in 3..10`` and all non-empty value sets that are subsets of ``0..4``.
 
-**Limitation**. ``ConstInit`` should be a conjunction
-of such assignments and possibly of additional constraints on the
-constants. For instance, you should not write `N = 10 \/ N = 20`.
-However, you can write `N \in {10, 20}`.
+### Limitation
+
+``ConstInit`` should be a conjunction of assignments and possibly of additional
+constraints on the constants. For instance, you should not write `N = 10 \/ N =
+20`. However, you can write `N \in {10, 20}`.
 
 ## 5.4. TLC configuration file
 
-We support configuring Apalache via TLC configuration files; 
-these files are produced automatically by TLA Toolbox, for example.
-TLC configuration file allows to specify which initialization predicate and transition predicate
-to employ, which invariants to check, as well as to initialize specification parameters.
-A limited syntax of TLC configuration files is supported at the moment, which should be nevertheless
-enough for most uses.
+We support configuring Apalache via TLC configuration files; these files are
+produced automatically by TLA Toolbox, for example. TLC configuration files
+allow one to specify which initialization predicate and transition predicate to
+employ, which invariants to check, as well as to initialize specification
+parameters. A limited syntax of TLC configuration files is supported at the
+moment, which should be nevertheless enough for most uses.
 
-If you are checking a file `<myspec>.tla`,
-and the file `<myspec>.cfg` exists in the same directory, it will be picked up by Apalache automatically.
-You can also explicitely specify which configuration file to use via `--config` option.
+If you are checking a file `<myspec>.tla`, and the file `<myspec>.cfg` exists in
+the same directory, it will be picked up by Apalache automatically. You can also
+explicitly specify which configuration file to use via the `--config` option.
 
-# 6. Running the tool <a name="running"></a>
+<a name="running"></a>
+# 6. Running the tool
 
 ## 6.1. Model checker command-line parameters
 
@@ -374,10 +377,11 @@ The arguments are as follows:
   * ``--tuning`` specifies the properties file that stores the options for
   [fine tuning](tuning.md)
 
-If initialization predicate, transition predicate, or invariant is specified both in the configuration file,
+If an initialization predicate, transition predicate, or invariant is specified both in the configuration file,
 and on the command line, the command line parameters take precedence over those in the configuration file.
 
-**Bounded model checking.**
+### Bounded model checking
+
 By default, Apalache performs *bounded model checking*, that is,
 it encodes a symbolic execution of length `k` and an invariant violation
 in SMT:
@@ -394,16 +398,18 @@ means that the state variables `v` are replaced with their copies `v_i` for the
 state `i`, whereas the state variables `v'` are replaced with their copies
 `v_{i+1}` for the state `i+1`.
 
-**Bounded model checking is an incomplete technique.**
-If Apalache finds a bug in this symbolic execution (by querying z3), then
-it reports a counterexample. Otherwise, it reports that no bug was found
-up to given length. If a bug needs a long execution to get revealed, bounded
-model checking may miss it!
+#### Bounded model checking is an incomplete technique
+
+If Apalache finds a bug in this symbolic execution (by querying z3), then it
+reports a counterexample. Otherwise, it reports that no bug was found up to the
+given length. If a bug needs a long execution to get revealed, bounded model
+checking may miss it!
 
 
-**Checking an inductive invariant.**
+### Checking an inductive invariant
+
 To check executions of arbitrary lengths, one usually finds a formula that
-satisfies two following properties:
+satisfies the two following properties:
 
 ```tla
 /\ Init => TypeOK /\ IndInv
@@ -435,7 +441,7 @@ $ apalache check --init=IndInv --inv=IndInv --length=1 <myspec>.tla
 
 ## 6.2. Examples
 
-**Checking safety up to 20 steps:**
+### Checking safety up to 20 steps
 
 ```bash
 $ cd test/tla
@@ -443,10 +449,10 @@ $ apalache check --length=20 --inv=Safety y2k_override.tla
 ```
 
 This command checks, whether `Safety` can be violated in 20 specification
-steps. If `Safety` is not violated, your spec might still have a bug, but it
-would require a computation longer than 20 steps.
+steps. If `Safety` is not violated, your spec might still have a bug that
+requires a computation longer than 20 steps to manifest.
 
-**Checking an inductive invariant:**
+### Checking an inductive invariant:
 
 ```bash
 $ cd test/tla
@@ -460,7 +466,7 @@ a single specification step satisfies the invariant, when starting
 in a state that satisfies the invariant. (That is why these
 invariants are called inductive.)
 
-**Using a constant initializer:**
+### Using a constant initializer:
 
 ```bash
 $ cd test/tla
@@ -468,7 +474,8 @@ apalache check --cinit=ConstInit --length=20 --inv=Safety y2k_cinit.tla
 ```
 
 This command checks, whether `Safety` can be violated in 20
-specification steps. The consants are initialized with the predicate `ConstInit`:
+specification steps. The consants are initialized with the predicate
+`ConstInit`, defined in `y2k_cinit.tla` as:
 
 ```tla
 ConstInit == BIRTH_YEAR \in 0..99 /\ LICENSE_AGE \in 10..99
@@ -481,20 +488,20 @@ is printed in `counterexample.txt`.
 <a name="detailed"></a>
 ## 6.3. Detailed output
 
-The tool will display only the important messages. A detailed log can be found
-in `detailed.log`.
+The tool will display only important messages on stdout, but a detailed log can
+be found in `detailed.log`.
 
-Additionally, the model checker passes produce intermediate TLA+ files are in
+Additionally, each pass of the model checker produces an intermediate TLA+ file in
 the run-specific directory `x/hh.mm-DD.MM.YYYY-<id>`:
 
   - File `out-parser.tla` is produced as a result of parsing and importing
-    into Apalache TLA IR.
+    into the intermediate representation, Apalache TLA IR.
   - File `out-parser.json` is produced as a result of converting the
     Apalache TLA IR representation of the input into JSON format.
   - File `out-config.tla` is produced as a result of substituting CONSTANTS,
     as described in [Section 5](#parameters).
   - File `out-inline.tla` is produced as a result of inlining operator
-    definitions and LET-IN definitions.
+    definitions and `LET-IN` definitions.
   - File `out-priming.tla` is produced as a result of replacing constants and
     variables in `ConstInit` and `Init` with their primed versions.
   - File `out-vcgen.tla` is produced as a result of extracting verification
@@ -510,8 +517,8 @@ the run-specific directory `x/hh.mm-DD.MM.YYYY-<id>`:
 <a name="parsing"></a>
 ## 6.4. Parsing and pretty-printing
 
-If you like to check that your TLA+ specification is syntactically correct,
-without running the model checker, you can run the following command.
+If you'd like to check that your TLA+ specification is syntactically correct,
+without running the model checker, you can run the following command:
 
 ```bash
 $ apalache parse <myspec>.tla
@@ -555,14 +562,13 @@ Next$1 == year - 80 >= 18 /\ hasLicense' <- TRUE /\ (year' <- year)
 
 As you can see, the model checker did two things:
 
- 1. It has translated several expressions that look like `x' = e` into `x' <- e`.
-   For instance, you can see `year' <- 80` and `hasLicense' <- FALSE` in `Init$0`.
-   We call these expressions **assignments**.
-
- 1. It has replaced the operator `Next` into two operators `Next$0` and `Next$1`.
+1. It has translated several expressions that look like `x' = e` into `x' <- e`.
+   For instance, you can see `year' <- 80` and `hasLicense' <- FALSE` in
+   `Init$0`. We call these expressions **assignments**.
+1. It has factored the operator `Next` into two operators `Next$0` and `Next$1`.
    We call these operators **symbolic transitions**.
 
-The pure TLA+ does not have the notions of assignments and symbolic
+Pure TLA+ does not have the notions of assignments and symbolic
 transitions.  However, TLC sometimes treats expressions `x' = e` and `x' \in S`
 as if they were assigning a value to the variable `x'`. TLC does so
 dynamically, during the breadth-first search. Apalache looks statically for assignments
@@ -575,7 +581,7 @@ symbolic transitions is as follows:
 > For every variable `x` declared with `VARIABLE`, there is exactly one
 > assignment of the form `x' <- e` in every symbolic transition `T$n`.
 
-If Apalache cannot find the expressions with the above properties, it fails.
+If Apalache cannot find expressions with the above properties, it fails.
 Consider the example
 [`test/tla/Assignments20200309.tla`](../test/tla/Assignments20200309.tla):
 
@@ -613,7 +619,7 @@ action. Although this is tedious, it allows one to find missing assignments
 rather quickly.
 
 If you are interested in the technique for finding the assignments and symbolic
-transitions that is implemented in Apalache, check our [paper at
+transitions implemented in Apalache, check our [paper at
 ABZ'18](http://forsyte.at/wp-content/uploads/abz2018_full.pdf).  The [journal
 version](http://dx.doi.org/https://doi.org/10.1016/j.scico.2019.102361) is
 unfortunately behind the Elsevier paywall, which will be lifted after the
@@ -624,7 +630,7 @@ two-year embargo period.
 
 **NOTE**: [Jure Kukovec](https://forsyte.at/people/kukovec/) is developing
 a completely automatic type inference engine. As soon as it is ready, type
-annotations will be no longer required. Until that happy day, refer to [type
+annotations will no longer be required. Until that happy day, refer to [type
 annotations](types-and-annotations.md).
 
 Apalache requires two kinds of type annotations:
@@ -679,13 +685,14 @@ The outcome is: Error                                             I@15:17:14.388
 ```
 
 In a somewhat obfuscated way, Apalache tells us the following. It has inferred
- that `Left` is a set of integers, that is, `FinSet[Int]`. First, it found that
+that `Left` is a set of integers, that is, `FinSet[Int]`. First, it found that
 `InSet` is a set of integers, by applying `ConstInit`. Second, as `Left = InSet`
 in `Init`, it inferred that `Left` is also a set of integers. Third, when
 applying `Next`, it processed `{}`, which is an empty set of any kind of
-objects. Hence, `{}` was assigned the type `FinSet[Unknown]`, that is, a set
-of some type. Finally, it found the expression `Left = {}`,
-and here the type checker has failed.
+objects. Hence, `{}` was assigned the type `FinSet[Unknown]`, that is, a set of
+some type. Finally, it found the expression `Left = {}`, and here the type
+checker has failed.
+
 To help the type checker, we have to introduce a few type annotations. But
 before doing that, we introduce the notation for type annotations in the
 specification.
