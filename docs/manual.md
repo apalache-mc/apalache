@@ -846,14 +846,41 @@ In our example, the set `msgs` may contain records of three kinds:
     for some numbers `i` and `j`.
 
 From the perspective of the type checker, the three records shown above have
-three different types. Although we would love to reject this example as an
-ill-typed one, mixing records of different types is a widely-accepted idiom in
-TLA+, for instance, see [Lamport's specification of
+three different types. Mixing records of different types is a widely-accepted
+idiom in TLA+, for instance, see [Lamport's specification of
 Paxos](https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla).
-Think of records as of C unions, rather than C structs!
+Fortunately, there is a well established precedent for a subtyping relationship
+between records (e.g., via [row
+polymorphism](https://en.wikipedia.org/wiki/Row_polymorphism)). Given a record
+of type `[f_1 |-> t_1, f_2 |-> t_2, ..., f_n |-> t_n]`, where the type is
+specified by the correlation of fields `f_1` through `f_n` with their respective
+types `t_1` through `t_n`, any record type consisting of typed fields in the
+subset of `{f |-> t : f \in f_1 .. f_n, t \in t_1 .. t_n }` is a subtype of
+`[f_1 |-> t_1, f_2 |-> t_2, ..., f_n |-> t_n]`. 
 
-To help the type checker, we first introduce a handy operator for the type that
-contains the fields of the three records:
+So, returning to the types in our example, the following type ascriptions are
+make the types for the records `SYN` and `SYN-ACK` explicit:
+
+```tla
+SYN == 
+    [ack |-> FALSE, syn |-> TRUE, seqno |-> i] <: [ack |-> BOOLEAN, syn |-> BOOLEAN, seqno |-> Int]
+SYN-ACK == 
+    [ack |-> TRUE, syn |-> TRUE, seqno |-> i, ackno |-> j] <: [ack |-> BOOLEAN, syn |-> BOOLEAN, seqno |-> Int, ackno |-> Int]
+```
+
+While it is true that `[ack |-> BOOLEAN, syn |-> BOOLEAN, seqno |-> Int]` is a
+different type than `[ack |-> BOOLEAN, syn |-> BOOLEAN, seqno |-> Int, ackno |->
+Int]`, thanks to the subtyping relationship for records, the latter is a subtype
+of former. As a result, the following is a valid type ascription for `SYN`:
+
+```tla
+SYN == 
+    [ack |-> FALSE, syn |-> TRUE, seqno |-> i] <: [ack |-> BOOLEAN, syn |-> BOOLEAN, seqno |-> Int, ackno |-> Int]
+```
+
+To help the type checker, we first introduce an operator for the type that
+contains the most general type, which includes the typed fields in all three
+records:
 
 ```tla
 MT == [syn |-> BOOLEAN, ack |-> BOOLEAN, seqno |-> Int, ackno |-> Int]
@@ -884,14 +911,17 @@ SendAck ==
     ...
 ```
 
-As you can see, we have to annotate only those records that do not have all
-four fields of `MT`. As soon as we have added the annotations, the type checker
-stopped complaining and let the model checker to run. The annotated code can be
-found in
+As you can see, we have to annotate only those records that are subtypes of
+`MT`: since `ackno` has exactly the type `MT`, Apalache's type inference doesn't
+need any help. As soon as we have added the annotations, the type checker stops
+complaining and lets the model checker run. The annotated code can be found in
 [`test/tla/HandshakeWithTypes.tla`](../test/tla/HandshakeWithTypes.tla).
 
-Type annotations can be also applied to sets of records. For example:
+Type annotations can also be applied to sets of records. For example:
 
+<!-- TODO(shonfeder): I read this as saying that the record type on the lhs is a
+     value of the type of a set of `MT`. This doesn't make sense to me, so I am
+     likely reading it wrong. What's the right way to read this? -->
 ```tla
 [syn |-> BOOLEAN, ack |-> BOOLEAN, seqno |-> Int] <: {MT}
 ```
