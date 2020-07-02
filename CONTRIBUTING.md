@@ -41,25 +41,22 @@ Apalache:
 When contributing to the project, the following process leads to the best chance
 of landing changes:
 
-All work on the code base should be motivated by a [Github Issue][]. The issue
-helps capture the problem we're trying to solve and allows for early feedback.
-
-Once the issue is created, maintainers may request more detailed documentation
-in the form of a [Request for Comment (RFC)][rfc] or [Architectural Decision
-Record (ADR)][adr].
-
-Discussion at the RFC stage will build collective understanding of the
-dimensions of the problem and help structure conversations around trade-offs.
-
-When the problem is well understood but the solution leads to large structural
-changes to the code base, these changes should be proposed in the form of an
-ADR. The ADR will help build consensus on an overall strategy to ensure the code
-base maintains coherence in the larger context. If you are not comfortable with
-writing an ADR, you can open a less-formal issue and the maintainers will help
-you turn it into an ADR.
-
-When the problem and proposed solution are well understood, implementation can
-begin by opening a [pull request](#making-a-pull-request).
+1. All work on the code base should be motivated by a [Github Issue][]. The
+   issue helps capture the problem we're trying to solve and allows for early
+   feedback.
+2. Once the issue is created, maintainers may request more detailed
+   documentation in the form of a [Request for Comment (RFC)][rfc] or
+   [Architectural Decision Record (ADR)][adr].
+3. Discussion at the RFC stage will build collective understanding of the
+   dimensions of the problem and help structure conversations around trade-offs.
+4. When the problem is well understood but the solution leads to large
+   structural changes to the code base, these changes should be proposed in the
+   form of an ADR. The ADR will help build consensus on an overall strategy to
+   ensure the code base maintains coherence in the larger context. If you are
+   not comfortable with writing an ADR, you can open a less-formal issue and the
+   maintainers will help you turn it into an ADR.
+5. When the problem and proposed solution are well understood, implementation
+   can begin by opening a [pull request](#making-a-pull-request).
 
 ## Making a pull request
 
