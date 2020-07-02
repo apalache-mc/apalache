@@ -37,9 +37,10 @@ Apalache is working under the following assumptions:
  1. [An example of a TLA+ specification](#example)
  1. [Setting up specification parameters](#parameters)
  1. [Running the tool](#running)
- 1. [Understanding assignments](#assignments)
- 1. [Type annotations](#types)
- 1. [Recursive operators and functions](#recursion)
+ 1. [Principles of symbolic model checking with Apalache](#principles)
+    1. [Assignments and symbolic transitions](#assignments)
+    1. [Type annotations](#types)
+    1. [Recursive operators and functions](#recursion)
  1. [Five minutes of theory](#theory5)
  1. [Supported language features](#features)
 
@@ -557,8 +558,15 @@ In this case, Apalache performs the following steps:
 1. It pretty-prints the IR into `out-parser.tla`, see [Section 6.3](#detailed).
 
 
+<a name="principles"></a>
+# 7. Principles of symbolic model checking with Apalache
+
+In order to take advantage of Apalache's symbolic model checking, there are a
+few principles one must bear in mind when writing TLA.
+
 <a name="assignments"></a>
-# 7. Understanding assignments
+<a name="symbolicTransitions"></a>
+## 7.1 Assignments and symbolic transitions
 
 Let us go back to the example [`test/tla/y2k.tla`](../test/tla/y2k.tla) and
 run `apalache` against [`test/tla/y2k_override.tla`](../test/tla/y2k_override.tla):
@@ -666,7 +674,7 @@ unfortunately behind the Elsevier paywall, which will be lifted after the
 two-year embargo period.
 
 <a name="types"></a>
-# 8. Type annotations
+## 7.2 Type annotations
 
 **NOTE**: [Jure Kukovec](https://forsyte.at/people/kukovec/) is developing
 a completely automatic type inference engine. As soon as it is ready, type
@@ -677,7 +685,7 @@ Apalache requires two kinds of type annotations:
 - type annotations for empty sets and sequences, and
 - type annotations for records and sets of records.
 
-## 8.1. Empty sets and sequences
+### 7.2.1 Empty sets and sequences
 
 Consider the following example
 [`test/tla/NeedForTypes.tla`](../test/tla/NeedForTypes.tla):
@@ -737,7 +745,7 @@ To help the type checker, we have to introduce a few type annotations. But
 before doing that, we introduce the notation for type annotations in the
 specification.
 
-### Syntax for type annotations
+#### Syntax for type annotations
 
 Apalache reads any expression formed with the `<:` operator as an annotation of
 the value of the left hand side with the type on the right. E.g.,
@@ -762,7 +770,7 @@ the file, but other tools are told to simply read any occurrence of `v <: T` as
 
 Now we can help the type checker by rewriting the condition in `Next` as follows:
 
-### Example of using type annotations
+#### Example of using type annotations
 
 ```tla
 Next ==
@@ -801,7 +809,7 @@ Having these two annotations, the type checker stops complaining. You can find
 the annotated specification in
 [`test/tla/NeedForTypesWithTypes.tla`](../test/tla/NeedForTypesWithTypes.tla).
 
-## 8.2. Records and sets of records
+### 7.2.2  Records and sets of records
 
 Consider the following example in
 [`test/tla/Handshake.tla`](../test/tla/Handshake.tla):
@@ -976,10 +984,10 @@ You can find more details on the simple type inference algorithm and the type
 annotations in [type annotations](types-and-annotations.md).
 
 <a name="recursion"></a>
-## 9. Recursive operators and functions
+## 7.3 Recursive operators and functions
 
 <a name="rec-op"></a>
-### 9.1. Recursive operators
+### 7.3.1 Recursive operators
 
 In the preprocessing phase, Apalache replaces every application of a user
 operator with its body. We call this process "operator inlining".
@@ -1048,7 +1056,8 @@ All recursively defined operators should follow this convention where, for every
 At present, we only support literals (e.g. `4`) or primitive arithmetic expressions (e.g. `2 + 2`) in the body of `UNROLL_TIMES_Oper`.
 
 <a name="rec-fun"></a>
-### 9.2. Recursive functions
+
+#### 7.3.2 Recursive functions
 
 Apalache offers limited support for recursive functions. However, read the
 warning below on why you should not use recursive functions. The restrictions
