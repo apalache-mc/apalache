@@ -172,7 +172,6 @@ $ docker image build -t apalache:0.7.0 .
 <a name="building-from-source"></a>
 ## 3.2. Building from source
 
-0. *optionally* install [direnv][] and run `direnv allow`
 1. Install `git`.
 2. Install [OpenJDK8][] or [Zulu JDK8][].
    - Apalache currently requires Scala 12.0 so **you must install version 8 of
@@ -182,9 +181,10 @@ $ docker image build -t apalache:0.7.0 .
    - On Arch: `sudo pacman -Syu maven`
 4. Clone the git repository: `git clone https://github.com/informalsystems/apalache.git`.
 5. Change into the project directory: `cd apalache`.
-6. Run `make`. This command will install Microsoft Z3, compile Apalache
+7. Run `make`. This command will install Microsoft Z3, compile Apalache
    and assemble the package.
-7. Confirm you can run the executable. It should print the inline CLI help message.
+6. *Optionally* install [direnv][] and run `direnv allow`
+8. Confirm you can run the executable. It should print the inline CLI help message.
    - If you used `direnv`, then `apalache-mc` will be in your path.
    - Otherwise, run `./bin/apalache-mc`.
 
