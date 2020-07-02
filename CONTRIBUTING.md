@@ -100,7 +100,27 @@ The necessary shell environment is specified in [.envrc](./.envrc). You can:
 
 ## Testing
 
-TODO
+### Unit tests
+
+Run the units
+
+```sh
+make test
+```
+
+### Integration tests
+
+Run the integration tests with
+
+```sh
+make integration
+```
+
+### Continuous Integration
+
+We run continuous integration tests on the `master` and `unstable` branches via
+[Travis CI](https://travis-ci.org/github/konnov/apalache). The CI configuration
+is located in [.travis.yml](./.travis.yml).
 
 ## Changelog
 
