@@ -90,10 +90,11 @@ source](./docs/manual.md#building-from-source).
 
 ### Environment
 
-The necessary shell environment is specified in [.envrc](./.envrc). You can use
-[direnv][], to load the environment automatically, source this file manually
-from your shell, or use it as a reference for putting stuff in your preferred rc
-files.
+The necessary shell environment is specified in [.envrc](./.envrc). You can:
+
+- use [direnv][] to load the environment automatically
+- source this file manually from your shell
+- or use it as a reference for what to put in your preferred rc files
 
 [direnv]: https://direnv.net/
 
