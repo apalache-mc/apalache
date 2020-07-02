@@ -598,15 +598,22 @@ as if they were assigning a value to the variable `x'`. TLC does so
 dynamically, during the breadth-first search. Apalache looks statically for assignments
 among the expressions `x' = e` and `x' \in S`.
 
-<!-- TODO(shonfeder): The first stentence of the next passage isn't clear to me.
-     It doesn't seem to be exemplified in the example code at all, and no further
-     example of how this is provided. -->
-Moreover, Apalache splits action operators `Init` and `Next` into disjunctions
-(e.g., `A_1 \/ ... \/ A_k`). The main contract between the assignments and
-symbolic transitions is as follows:
+When factoring out operators into symbolic transitions, Apalache splits the
+action operators `Init` and `Next` into disjunctions (e.g., `A_0 \/ ... \/ A_n`),
+represented in the concrete syntax as a sequence of operator definitions of the
+form
+
+``` tla
+A$0 == ...
+...
+A$n == ...
+```
+
+The main contract between the assignments and symbolic transitions is as
+follows:
 
 > For every variable `x` declared with `VARIABLE`, there is exactly one
-> assignment of the form `x' <- e` in every symbolic transition `T$n`.
+> assignment of the form `x' <- e` in every symbolic transition `A_n`.
 
 If Apalache cannot find expressions with the above properties, it fails.
 Consider the example
