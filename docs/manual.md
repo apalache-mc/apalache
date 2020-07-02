@@ -1162,9 +1162,9 @@ performs the following steps:
 
  2. Apalache translates operators `Init` and `A_1, ..., A_n` to SMT formulas.
  This allows us to explore bounded executions with an SMT solver (we are using
- [Microsoft Z3](https://github.com/Z3Prover/z3)). For instance, a sequence of
- `k` steps, all of which execute action `A_1`, is encoded as a formula `Run(k)`
- that looks like follows:
+ [Microsoft's Z3](https://github.com/Z3Prover/z3)). For instance, a sequence of
+ `k` steps `s_0, s_1, ..., s_k`, all of which execute action `A_1`, is encoded
+ as a formula `Run(k)` that looks as follows:
 
 ```tla
 [[Init(s_0)]] /\ [[A_1(s_0, s_1)]] /\ ... /\ [[A_1(s_(k-1), s_k)]]
