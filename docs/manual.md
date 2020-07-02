@@ -572,8 +572,8 @@ Moreover, Apalache splits action operators `Init` and `Next` into disjunctions
 (e.g., `A_1 \/ ... \/ A_k`). The main contract between the assignments and
 symbolic transitions is as follows:
 
-> For every variable `x` declared with `VARIABLE`, there is exactly one assignment
-of the form `x' <- e` in every symbolic transition `A_j`.
+> For every variable `x` declared with `VARIABLE`, there is exactly one
+> assignment of the form `x' <- e` in every symbolic transition `T$n`.
 
 If Apalache cannot find the expressions with the above properties, it fails.
 Consider the example
