@@ -623,6 +623,12 @@ Inv == FALSE
 ===============
 ```
 
+Running the checker with
+
+```bash
+apalache check Assignments20200309.tla
+```
+
 Apalache reports an error as follows:
 
 ```console
