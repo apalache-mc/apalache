@@ -171,6 +171,7 @@ $ docker image build -t apalache:0.7.0 .
 <a name="building-from-source"></a>
 ## 3.2. Building from source
 
+0. *optionally* install [direnv][] and run `direnv allow`
 1. Install `git`.
 2. Clone the git repository: `git clone https://github.com/informalsystems/apalache.git`
 3. Install OpenJDK8 or
