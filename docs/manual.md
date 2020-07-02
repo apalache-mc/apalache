@@ -220,8 +220,8 @@ EXTENDS Integers
 CONSTANT BIRTH_YEAR,    \* the year to start with, between 0 and 99
          LICENSE_AGE    \* the minimum age to obtain a license
 
-ASSUME(BIRTH_YEAR \in 0..99)              
-ASSUME(LICENSE_AGE \in 1..99)              
+ASSUME(BIRTH_YEAR \in 0..99)
+ASSUME(LICENSE_AGE \in 1..99)
 
 VARIABLE year, hasLicense
 
@@ -244,11 +244,11 @@ Next ==
     \/ NewYear
     \/ IssueLicense
 
-\* The somewhat "obvious" invariant, which is violated    
+\* The somewhat "obvious" invariant, which is violated
 Safety ==
     hasLicense => (Age >= LICENSE_AGE)
 
-\* This is probably the only invariant we can formulate, usually, it is called TypeOK    
+\* This is probably the only invariant we can formulate, usually, it is called TypeOK
 Inv ==
     /\ year \in 0..99
     /\ hasLicense \in BOOLEAN
@@ -420,9 +420,8 @@ have to constrain the variable values. In the `y2k` example, our inductive
 invariant is actually constraing the variables. In fact, such an inductive
 invariant is usually called `TypeOK`.
 
-
 To check an inductive invariant ``IndInv`` in Apalache, you run two commands
-    that check the above two formulas:   
+that check the above two formulas:
 
 ```bash
 $ apalache check --init=Init --inv=IndInv --length=0 <myspec>.tla
@@ -726,7 +725,7 @@ Next ==
 ```
 
 Now the type checker treats the expression `{}` as a set of integers. However,
-  it complains about another line:
+it complains about another line:
 
 ```
 Step 0, level 0: checking if 1 transition(s) are enabled and violate the invariant I@15:43:35.932
@@ -735,7 +734,7 @@ Step 1, level 1: checking if 2 transition(s) are enabled and violate the invaria
 NeedForTypes.tla:23:24-23:40, x$1, type error: Expected type Unknown, found Int E@15:43:36.012
 NeedForTypes.tla:23:24-23:40, Append(...), type error: Expected a type, found: None E@15:43:36.018
 NeedForTypes.tla:23:11-24:31, /\(...), type error: Expected a Boolean, found: None E@15:43:36.020
-The outcome is: Error       
+The outcome is: Error
 ```
 
 Here the type checker stumbles upon the sequence operator `Append(OutSeq, x)`
@@ -971,7 +970,7 @@ Next ==
     /\ set' = set \union {x}
 
 Inv == count = Sum(set)
-=======================================    
+=======================================
 ```
 
 It is clear that the expression `Sum(S)` requires the number of iterations that
@@ -998,7 +997,7 @@ In this case, Apalache unrolls every call to `Sum` exactly `UNROLL_TIMES_Sum`
 times, that is, four times. On the default branch, Apalache places
 `UNROLL_DEFAULT_Sum`, that is, 0.
 
-All recursively defined operators should follow this convention where, for every such operator `Oper`, the user defines both `UNROLL_TIMES_Oper`, which expands to a positive integer value, and `UNROLL_DEFAULT_Oper`, which expands to some default value `Oper(args*)` should take, if the computation would require more than `UNROLL_TIMES_Oper` recursive calls. 
+All recursively defined operators should follow this convention where, for every such operator `Oper`, the user defines both `UNROLL_TIMES_Oper`, which expands to a positive integer value, and `UNROLL_DEFAULT_Oper`, which expands to some default value `Oper(args*)` should take, if the computation would require more than `UNROLL_TIMES_Oper` recursive calls.
 At present, we only support literals (e.g. `4`) or primitive arithmetic expressions (e.g. `2 + 2`) in the body of `UNROLL_TIMES_Oper`.
 
 <a name="rec-fun"></a>
@@ -1006,7 +1005,7 @@ At present, we only support literals (e.g. `4`) or primitive arithmetic expressi
 
 Apalache offers limited support for recursive functions. However, read the
 warning below on why you should not use recursive functions. The restrictions
-are as follows: 
+are as follows:
 
  1. Apalache supports the recursive functions that return an integer or a Boolean.
 
@@ -1048,7 +1047,7 @@ Init ==
     /\ factSpec = Fact[n]
     /\ factComp = 1
 
-Next ==     
+Next ==
     /\ n' = n + 1
     /\ factSpec' = Fact[n']
     /\ factComp' = n' * factComp
