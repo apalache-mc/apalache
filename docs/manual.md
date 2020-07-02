@@ -173,17 +173,25 @@ $ docker image build -t apalache:0.7.0 .
 
 0. *optionally* install [direnv][] and run `direnv allow`
 1. Install `git`.
-2. Clone the git repository: `git clone https://github.com/informalsystems/apalache.git`
-3. Install OpenJDK8 or
-[Zulu JDK8](https://www.azul.com/downloads/zulu-community/?&architecture=x86-64-bit&package=jdk).
-**You have to install version 8, otherwise Scala will not compile! See
-[compatibility
-table](https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html).**
+2. Install [OpenJDK8][] or [Zulu JDK8][].
+   - Apalache currently requires Scala 12.0 so **you must install version 8 of
+     Java, otherwise Scala will not compile!** See the [compatibility table][].
+3. Install [Apache Maven][].
+   - On Debian Linux or Ubuntu: `sudo apt-get install maven`.
+   - On Arch: `sudo pacman -Syu maven`
+4. Clone the git repository: `git clone https://github.com/informalsystems/apalache.git`.
+5. Change into the project directory: `cd apalache`.
+6. Run `make`. This command will install Microsoft Z3, compile Apalache
+   and assemble the package.
+7. Confirm you can run the executable. It should print the inline CLI help message.
+   - If you used `direnv`, then `apalache-mc` will be in your path.
+   - Otherwise, run `./bin/apalache-mc`.
 
-4. Install [Apache Maven](https://maven.apache.org/). For instance,
-   when using Debian Linux or Ubuntu: `sudo apt-get install maven`
-5. Run `make`. This command will install Microsoft Z3, compile Apalache
-   and assemble the package
+[OpenJDK8]: https://openjdk.java.net/install/
+[Zulu JDK8]: https://www.azul.com/downloads/zulu-community/?&architecture=x86-64-bit&package=jdk
+[compatibility table]: https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html
+[Apache Maven]: https://maven.apache.org/
+[direnv]: https://direnv.net/
 
 <a name="example"></a>
 # 4. An example of a TLA+ specification
