@@ -492,7 +492,22 @@ ConstInit == BIRTH_YEAR \in 0..99 /\ LICENSE_AGE \in 10..99
 
 In this case, Apalache finds a safety violation, e.g., for
 `BIRTH_YEAR=89` and `LICENSE_AGE=10`. A complete counterexample
-is printed in `counterexample.txt`.
+is printed in `counterexample.tla`.
+
+The final lines in the file clearly indicate the state that violates the
+invariant:
+
+```tla
+State14 ==
+/\ BIRTH_YEAR = 89
+/\ LICENSE_AGE = 10
+/\ hasLicense = TRUE
+/\ year = 0
+
+(* The following formula holds true in the last state and violates the invariant *)
+
+InvariantViolation == hasLicense /\ year - BIRTH_YEAR < LICENSE_AGE
+```
 
 <a name="detailed"></a>
 ## 6.3. Detailed output
