@@ -283,6 +283,10 @@ become unwieldy.
 
 ## 5.2. Convention over configuration
 
+Alternatively, you can extend the base module and ...
+<!-- TODO(shonfeder): how does the following work exactly? Nothing obvious comes up -->
+<!-- when I search for "TLA+ override" -->
+
 ```tla
 ---------------------------- MODULE y2k_override ----------------------------
 EXTENDS y2k
@@ -319,8 +323,13 @@ $ apalache check --inv=Safety \
   --length=20 --cinit=ConstInit y2k_cinit.tla
 ```
 
-**Parameterized initialization**. As a bonus of this approach, Apalache allows
-one to check a specification over a bounded set of parameters.  For example:
+### Parameterized initialization
+
+<!-- TODO(shonfeder) How does this subsection relate to the example? how would it -->
+<!-- apply?  -->
+
+As a bonus of this approach, Apalache allows one to check a specification over a
+bounded set of parameters. For example:
 
 ```tla
 CONSTANT N, Values
@@ -574,6 +583,9 @@ as if they were assigning a value to the variable `x'`. TLC does so
 dynamically, during the breadth-first search. Apalache looks statically for assignments
 among the expressions `x' = e` and `x' \in S`.
 
+<!-- TODO(shonfeder): The first stentence of the next passage isn't clear to me.
+     It doesn't seem to be exemplified in the example code at all, and no further
+     example of how this is provided. -->
 Moreover, Apalache splits action operators `Init` and `Next` into disjunctions
 (e.g., `A_1 \/ ... \/ A_k`). The main contract between the assignments and
 symbolic transitions is as follows:
