@@ -16,17 +16,23 @@ like to work on something else, open an issue to start the discussion.
 The rest of this document outlines the best practices for contributing to
 Apalache:
 
-- [Decision Making](#decision-making) - process for agreeing to changes
-- [Dependencies](#dependencies) - setting up dependencies/tools to work on the repo
-- [Testing](#testing) - how the repo is tested and what testing is expected from
-  changes
-- [Changelog](#changelog) - changes must be recorded in the changelog
-- [Pull Requests](#pull-requests) - what makes a good pull request
-- [Releases](#releases) - how changes make their way into a release
-
 [TLA+]: https://lamport.azurewebsites.net/tla/tla.html
 [help-wanted]: https://github.com/informalsystems/apalache/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22
 [open a new issue]: https://github.com/informalsystems/apalache/issues/new/choose
+
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+**Table of Contents**
+
+- [Contributing](#contributing)
+    - [Decision Making](#decision-making)
+    - [Making a pull request](#making-a-pull-request)
+    - [Dependencies](#dependencies)
+        - [Environment](#environment)
+    - [Testing](#testing)
+    - [Changelog](#changelog)
+    - [Releases](#releases)
+
+<!-- markdown-toc end -->
 
 ## Decision Making
 
@@ -55,7 +61,7 @@ you turn it into an ADR.
 When the problem and proposed solution are well understood, implementation can
 begin by opening a [pull request](#making-a-pull-request).
 
-# Making a pull request
+## Making a pull request
 
 We develop on the `unstable` branch and release stable code on `master`.
 
