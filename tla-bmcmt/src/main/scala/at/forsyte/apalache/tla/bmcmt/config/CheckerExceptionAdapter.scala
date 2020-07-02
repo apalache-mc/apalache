@@ -20,7 +20,7 @@ import javax.inject.{Inject, Singleton}
 @Singleton
 class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
                                         changeListener: ChangeListener) extends ExceptionAdapter with LazyLogging {
-  private lazy val ISSUES_LINK: String = "[https://github.com/konnov/apalache/issues]"
+  private lazy val ISSUES_LINK: String = "[https://github.com/informalsystems/apalache/issues]"
 
   override def toMessage: PartialFunction[Exception, ErrorMessage] = {
     // normal errors
@@ -32,7 +32,7 @@ class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
 
     case err: AssignmentException =>
       logger.info("To understand the error, read the manual:")
-      logger.info("  [https://github.com/konnov/apalache/blob/unstable/docs/manual.md#assignments]")
+      logger.info("  [https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md#assignments]")
       NormalErrorMessage("Assignment error: " + err.getMessage)
 
     case err: TypeInferenceError =>

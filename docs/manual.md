@@ -45,8 +45,8 @@ We recommend to start with TLC. It is mature, well-documented, and well-integrat
 
 # 2. System requirements
 
-Every commit to [master](https://github.com/konnov/apalache) and
-[unstable](https://github.com/konnov/apalache/tree/unstable) is built with
+Every commit to [master](https://github.com/informalsystems/apalache) and
+[unstable](https://github.com/informalsystems/apalache/tree/unstable) is built with
 [Travis CI](https://travis-ci.org/konnov/apalache) on MacOS (xcode9.3 and JDK
 1.8.0) and Linux (OpenJDK8). If you like to run Apalache in Windows, use a
 docker image. Check the [Docker
@@ -118,9 +118,9 @@ $ alias apalache="docker run --rm -v $(pwd):/var/apalache apalache/mc"
 The development of Apalache proceeds at a high pace, and we introduce a
 substantial number of improvements in the unstable branch before the next
 stable release biweekly.  Please refer to [Unstable
-Changes](https://github.com/konnov/apalache/blob/unstable/CHANGES.md) and
+Changes](https://github.com/informalsystems/apalache/blob/unstable/CHANGES.md) and
 [Unstable
-Manual](https://github.com/konnov/apalache/blob/unstable/docs/manual.md) for
+Manual](https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md) for
 the description of new features.  **We recommend using the unstable version if
 you want to try all the exciting new features of Apalache. But be warned: It is
 called "unstable" for a reason**. To use `unstable`, just type
@@ -159,7 +159,7 @@ $ docker image build -t apalache:0.7.0 .
 ## 3.2.  Building from sources
 
 1. Install `git`.
-2. Clone the git repository: `git clone https://github.com/konnov/apalache.git`
+2. Clone the git repository: `git clone https://github.com/informalsystems/apalache.git`
 3. Install OpenJDK8 or
 [Zulu JDK8](https://www.azul.com/downloads/zulu-community/?&architecture=x86-64-bit&package=jdk).
 **You have to install version 8, otherwise Scala will not compile! See
@@ -503,7 +503,7 @@ In this case, Apalache performs the following steps:
 
 1. It parses the specification with [SANY](https://lamport.azurewebsites.net/tla/tools.html).
 
-1. It translates SANY semantic nodes into [Apalache IR](https://github.com/konnov/apalache/blob/master/tlair/src/main/scala/at/forsyte/apalache/tla/lir/package.scala).
+1. It translates SANY semantic nodes into [Apalache IR](https://github.com/informalsystems/apalache/blob/master/tlair/src/main/scala/at/forsyte/apalache/tla/lir/package.scala).
 
 1. It pretty-prints the IR into `out-parser.tla`, see [Section 6.3](#detailed).
 
@@ -579,7 +579,7 @@ Apalache reports an error as follows:
 ...
 PASS #6: TransitionFinderPass                                     I@09:39:33.527
 To understand the error, check the manual:
-[https://github.com/konnov/apalache/blob/unstable/docs/manual.md#assignments]
+[https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md#assignments]
 Assignment error: Failed to find assignments and symbolic transitions in InitPrimed E@09:39:33.676
 It took me 0 days  0 hours  0 min  1 sec                          I@09:39:33.678
 Total time: 1.88 sec                                              I@09:39:33.678
@@ -589,7 +589,7 @@ EXITCODE: ERROR (99)
 This error is cryptic. It does not indicate which parts of the specification
 have caused the problem. In the future, we will add better diagnostic in the
 assignment finder, see [the open
-issue](https://github.com/konnov/apalache/issues/111). Our current approach is
+issue](https://github.com/informalsystems/apalache/issues/111). Our current approach is
 to debug assignments by running TLC first. If running TLC takes too long, you
 may try to comment out parts of the specification to find the problematic
 action. Although this is tedious, it allows one to find missing assignments
@@ -996,18 +996,18 @@ Inv ==
 ```
 
 Check other examples in
-[`test/tla`](https://github.com/konnov/apalache/tree/unstable/test/tla) that
+[`test/tla`](https://github.com/informalsystems/apalache/tree/unstable/test/tla) that
 start with the prefix `Rec`.
 
 **Why you should avoid recursive functions.** Sometimes, recursive functions
 concisely describe the function that you need. The nice examples are the
 factorial function (see above) and Fibonacci numbers (see
-[Rec3](https://github.com/konnov/apalache/tree/unstable/test/tla/Rec3.tla)).
+[Rec3](https://github.com/informalsystems/apalache/tree/unstable/test/tla/Rec3.tla)).
 However, when you define a recursive function over sets, the complexity gets
 ugly really fast.
 
 Consider the example
-[Rec9](https://github.com/konnov/apalache/tree/unstable/test/tla/Rec9.tla),
+[Rec9](https://github.com/informalsystems/apalache/tree/unstable/test/tla/Rec9.tla),
 which computes set cardinality. Here is a fragment of the spec:
 
 ```tla

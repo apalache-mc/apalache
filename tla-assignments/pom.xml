@@ -11,7 +11,7 @@
     <packaging>jar</packaging>
 
     <name>tla-assignments</name>
-    <url>https://github.com/konnov/apalache</url>
+    <url>https://github.com/informalsystems/apalache</url>
 
     <dependencies>
         <dependency>

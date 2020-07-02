@@ -48,7 +48,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.coerce(rewriter.rewriteUntilDone(finalState), state.theory)
 
       case OperEx(TlaSetOper.in, elem, set) =>
-        // TODO: remove theories, see https://github.com/konnov/apalache/issues/22
+        // TODO: remove theories, see https://github.com/informalsystems/apalache/issues/22
         // switch to cell theory
         val elemState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(elem))
         val elemCell = elemState.asCell

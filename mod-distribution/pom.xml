@@ -16,7 +16,7 @@
     <packaging>pom</packaging>
 
     <name>apalache-pkg</name>
-    <url>https://github.com/konnov/apalache</url>
+    <url>https://github.com/informalsystems/apalache</url>
 
     <dependencies>
         <dependency>

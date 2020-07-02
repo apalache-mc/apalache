@@ -25,7 +25,7 @@
  * Using `z3` version `4.8.7`
 
  * A 2-8x speedup for 5 out 16
-   [benchmarks](https://github.com/konnov/apalache-tests),
+   [benchmarks](https://github.com/informalsystems/apalache-tests),
    due to the optimizations and maybe switching to z3 4.8.x.
  
  * Distributing the releases with docker as `apalache/mc`
@@ -120,13 +120,13 @@
 
  * speed up by using constants instead of uninterpreted functions
 
- * options for fine tuning with `--fine-tuning`, see [tuning](https://github.com/konnov/apalache/blob/unstable/docs/tuning.md)
+ * options for fine tuning with `--fine-tuning`, see [tuning](https://github.com/informalsystems/apalache/blob/unstable/docs/tuning.md)
 
  * bugfix in logback configuration
 
 ## 0.4.0-pre1
 
- * type annotations and very simple type inference, see the [notes](https://github.com/konnov/apalache/blob/unstable/docs/types-and-annotations.md)
+ * type annotations and very simple type inference, see the [notes](https://github.com/informalsystems/apalache/blob/unstable/docs/types-and-annotations.md)
 
  * a dramatic speed up of many operators by using a `QF_NIA` theory and cherry pick
 
