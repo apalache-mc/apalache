@@ -72,13 +72,10 @@ tool.
 # 3. Installation
 
 There are two ways to run Apalache: (1) Download and run a docker image, or (2)
-Build Apalache from sources and run the compiled package. If you just like to
-try the tool, we recommend to use the docker image. If you like to run the tool
-on daily basis or to contribute to the project, we recommend to build the project
-from the sources. In the following, we write `$APALACHE_HOME` to refer to the
-directory, where Apalache is cloned.
-
-<a name="useDocker"></a>   
+Build Apalache from sources and run the compiled package. If you just want to
+try the tool, we recommend using the docker image. If you would like to run the
+tool on a daily basis or [to contribute](../CONTRIBUTING.md) to the project, we
+recommend building the project from the source.
 
 <a name="useDocker"></a>
 ## 3.1. Using a docker image
