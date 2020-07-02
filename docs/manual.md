@@ -1025,7 +1025,7 @@ is equal to `Cardinality(S) + 1`. Moreover, the expression `set \subseteq
 1..N` is an invariant, and thus every call `Sum(set)` requires up to `N+1`
 iterations.
 
-When, we can find an upper bound on the number of iterations, Apalache can
+When we can find an upper bound on the number of iterations, Apalache can
 unroll the recursive operator up to this bound. To this end, we define two
 additional operators. For instance:
 
@@ -1054,11 +1054,11 @@ Apalache offers limited support for recursive functions. However, read the
 warning below on why you should not use recursive functions. The restrictions
 are as follows:
 
- 1. Apalache supports the recursive functions that return an integer or a Boolean.
+ 1. Apalache supports recursive functions that return an integer or a Boolean.
 
- 1. As Apalache's simple type checker is not able
-to find the type of a recursive function, all uses of a recursive function
-should come with a type annotation.
+ 1. As Apalache's simple type checker is not able to find the type of a
+recursive function, all uses of a recursive function should come with a type
+annotation.
 
  1. As in TLC, the function domain must be a finite set.
 
@@ -1157,7 +1157,7 @@ Given a TLA+ specification, with all parameters fixed, our model checker
 performs the following steps:
 
  1. It automatically extracts symbolic transitions from the specification. This
- allows us to partition the action Next into a disjunction of simpler actions
+ allows us to partition the action `Next` into a disjunction of simpler actions
  `A_1, ..., A_n`.
 
  2. Apalache translates operators `Init` and `A_1, ..., A_n` to SMT formulas.
@@ -1171,7 +1171,7 @@ performs the following steps:
 ```
 
 To find an execution of length `k` that violates an invariant `Inv`, the tool
-adds to the formula `Run(k)` the following constraint:
+adds the following constraint to the formula `Run(k)`:
 
 ```tla
 [[~Inv(s_0)]] \/ ... \/ [[~Inv(s_k)]]
@@ -1181,8 +1181,8 @@ Here, `[[_]]` is the translator from TLA+ to SMT. Importantly, the values for
 the states `s_0`, ..., `s_k` are not enumerated as in TLC, but have to be found
 by the SMT solver.
 
-If you like to learn more about theory behind Apalache, check the [paper at
-OOPSLA19](https://dl.acm.org/doi/10.1145/3360549).
+If you would like to learn more about theory behind Apalache, check the [paper
+delivered at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549).
 
 <a name="features"></a>
 
