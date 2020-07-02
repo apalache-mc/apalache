@@ -45,7 +45,6 @@ Apalache is working under the following assumptions:
 
 
 <a name="apalacheOrTlc"></a>
-
 # 1. Shall I use Apalache or TLC?
 
 We recommend starting with TLC. It is mature, well-documented, and
@@ -55,7 +54,6 @@ Apalache. We are using this approach at [Informal
 Systems](https://informal.systems/).
 
 <a name="sysreq"></a>
-
 # 2. System requirements
 
 Every commit to [master](https://github.com/informalsystems/apalache) and
@@ -71,7 +69,6 @@ largely depends on Z3. We recommend to allocate at least 4GB of memory for the
 tool.
 
 <a name="installation"></a>
-
 # 3. Installation
 
 There are two ways to run Apalache: (1) Download and run a docker image, or (2)
@@ -83,6 +80,7 @@ directory, where Apalache is cloned.
 
 <a name="useDocker"></a>   
 
+<a name="useDocker"></a>
 ## 3.1. Using a docker image
 
 **Starting with release 0.6.0, we will publish Docker images for every release** :sunglasses:
@@ -173,7 +171,8 @@ $ docker image build -t apalache:0.7.0 .
 ```
 
 
-## 3.2.  Building from sources
+<a name="building-from-source"></a>
+## 3.2. Building from source
 
 1. Install `git`.
 2. Clone the git repository: `git clone https://github.com/informalsystems/apalache.git`
@@ -189,7 +188,6 @@ table](https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html).**
    and assemble the package
 
 <a name="example"></a>
-
 # 4. An example of a TLA+ specification
 
 To illustrate the features of Apalache, we are using the following TLA+ specification,
@@ -252,7 +250,6 @@ Inv ==
 ```
 
 <a name="parameters"></a>
-
 # 5. Setting up specification parameters
 
 Similar to TLC, Apalache requires the specification parameters to be restricted
@@ -289,7 +286,6 @@ OVERRIDE_LICENSE_AGE == 18
 ```
 
 <a name="ConstInit"></a>
-
 ## 5.3. ConstInit predicate
 
 This approach is similar to the ``Init`` operator, but applied to the
@@ -526,7 +522,6 @@ In this case, Apalache performs the following steps:
 
 
 <a name="assignments"></a>
-
 # 7. Understanding assignments
 
 Let us go back to the example [`test/tla/y2k.tla`](../test/tla/y2k.tla) and
@@ -620,7 +615,6 @@ unfortunately behind the Elsevier paywall, which will be lifted after the
 two-year embargo period.
 
 <a name="types"></a>
-
 # 8. Type annotations
 
 **NOTE**: [Jure Kukovec](https://forsyte.at/people/kukovec/) is developing
