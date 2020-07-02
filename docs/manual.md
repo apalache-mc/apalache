@@ -687,20 +687,36 @@ applying `Next`, it processed `{}`, which is an empty set of any kind of
 objects. Hence, `{}` was assigned the type `FinSet[Unknown]`, that is, a set
 of some type. Finally, it found the expression `Left = {}`,
 and here the type checker has failed.
+To help the type checker, we have to introduce a few type annotations. But
+before doing that, we introduce the notation for type annotations in the
+specification.
 
-To help the type checker, we have to introduce a few type annotations.
-But before doing that, we introduce the notation for type annotations
-in the specification:
+### Syntax for type annotations
+
+Apalache reads any expression formed with the `<:` operator as an annotation of
+the value of the left hand side with the type on the right. E.g.,
 
 ```tla
-a <: b == a
+v <: T
 ```
 
-Apalache treats any application of `<:` as a type annotation. At the same time,
-the above definition tells the other tools (e.g., TLC and TLAPS) to ignore
-the type annotation.
+means "value `v` has type `T`".
 
-Now we can help the type checker by rewriting the condition in Next as follows:
+However, other tools (such as TLC and TLAPS) have no support for these
+annotations. To tell them to ignore type annotations, we maintain the convention
+that any file using Apalache type annotations begins with the following definition:
+
+```tla
+v <: T == v
+```
+
+With this in place, Apalache can parse out the type annotations in the rest of
+the file, but other tools are told to simply read any occurrence of `v <: T` as
+`v`, effectively erasing the type ascription.
+
+Now we can help the type checker by rewriting the condition in `Next` as follows:
+
+### Example of using type annotations
 
 ```tla
 Next ==
