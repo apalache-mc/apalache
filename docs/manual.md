@@ -128,14 +128,14 @@ $ alias apalache="docker run --rm -v $(pwd):/var/apalache apalache/mc"
 ### Using the unstable version of Apalache
 
 The development of Apalache proceeds at a high pace, and we introduce a
-substantial number of improvements in the unstable branch before the next
-biweekly stable release. Please refer to the [change
+substantial number of improvements in the unstable branch before the next stable
+release. Please refer to the [change
 log](https://github.com/informalsystems/apalache/blob/unstable/CHANGES.md) and
 [manual](https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md)
-on the unstable branch for the description of the newest features. **We recommend using
-the unstable version if you want to try all the exciting new features of
-Apalache. But be warned: It is called "unstable" for a reason**. To use
-`unstable`, just type `apalache/mc:unstable` instead of `apalache/mc`
+on the unstable branch for the description of the newest features. **We
+recommend using the unstable version if you want to try all the exciting new
+features of Apalache. But be warned: It is called "unstable" for a reason**. To
+use `unstable`, just type `apalache/mc:unstable` instead of `apalache/mc`
 everywhere.
 
 Do not forget to pull the docker image from time to time:
