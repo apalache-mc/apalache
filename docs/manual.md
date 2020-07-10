@@ -479,7 +479,7 @@ apalache check --cinit=ConstInit --length=20 --inv=Safety y2k_cinit.tla
 ```
 
 This command checks, whether `Safety` can be violated in 20
-specification steps. The consants are initialized with the predicate
+specification steps. The constants are initialized with the predicate
 `ConstInit`, defined in `y2k_cinit.tla` as:
 
 ```tla
