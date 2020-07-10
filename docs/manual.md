@@ -284,9 +284,7 @@ become unwieldy.
 
 ## 5.2. Convention over configuration
 
-Alternatively, you can extend the base module and ...
-<!-- TODO(shonfeder): how does the following work exactly? Nothing obvious comes up -->
-<!-- when I search for "TLA+ override" -->
+Alternatively, you can extend the base module and use overrides:
 
 ```tla
 ---------------------------- MODULE y2k_override ----------------------------
@@ -325,9 +323,6 @@ $ apalache check --inv=Safety \
 ```
 
 ### Parameterized initialization
-
-<!-- TODO(shonfeder) How does this subsection relate to the example? how would it -->
-<!-- apply?  -->
 
 As a bonus of this approach, Apalache allows one to check a specification over a
 bounded set of parameters. For example:
