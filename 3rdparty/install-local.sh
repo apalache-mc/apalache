@@ -81,7 +81,7 @@ fi
 
 cat <<EOF
 1. To build Apalache, just use make.
-2. To develop Apalache, set the library paths as follows.
+2. To develop Apalache without using direnv, set the library paths as follows.
 
 Add the following line in your ~/.bashrc or ~/.zshrc:
 EOF

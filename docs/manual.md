@@ -2,14 +2,23 @@
 
 **Version 0.7.0 (unstable)** :fireworks:
 
-**Authors: Igor Konnov, Jure Kukovec, and Andrey Kuprianov**
+**Authors: Igor Konnov, Jure Kukovec, Andrey Kuprianov, Shon Feder**
 
-**Contact: {igor,andrey} at informal.systems, jkukovec at forsyte.at**
+**Contact: {igor,andrey,shon} at informal.systems, jkukovec at forsyte.at**
 
 # Introduction
 
-Apalache is a symbolic model checker for [TLA+](https://lamport.azurewebsites.net/tla/tla.html). (*Still looking for a better tool name.*) Our model checker is a recent alternative to [TLC](https://lamport.azurewebsites.net/tla/tools.html?unhideBut=hide-tlc&unhideDiv=tlc).
-Whereas TLC enumerates states that are produced by behaviors of a TLA+ specification, Apalache translates the verification problem to a set of logical constraints. These constraints are solved by an [SMT solver](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories), for instance, by [Microsoft Z3](https://github.com/Z3Prover/z3). That is, Apalache is operating in terms of formulas (i.e., _symbolic_), not enumerating states one by one (i.e., _state enumeration_).
+Apalache is a symbolic model checker for
+[TLA+](https://lamport.azurewebsites.net/tla/tla.html). (*Still looking for a
+better tool name.*) Our model checker is a recent alternative to
+[TLC](https://lamport.azurewebsites.net/tla/tools.html?unhideBut=hide-tlc&unhideDiv=tlc).
+Whereas TLC enumerates the states produced by the behaviors of a TLA+
+specification, Apalache translates the verification problem to a set of logical
+constraints. These constraints are solved by an [SMT
+solver](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories), for
+instance, by [Microsoft's Z3](https://github.com/Z3Prover/z3). That is, Apalache
+operates on formulas (i.e., _symbolicly_), not by enumerating states one by one
+(i.e., _state enumeration_).
 
 Apalache is working under the following assumptions:
 
@@ -28,48 +37,48 @@ Apalache is working under the following assumptions:
  1. [An example of a TLA+ specification](#example)
  1. [Setting up specification parameters](#parameters)
  1. [Running the tool](#running)
- 1. [Understanding assignments](#assignments)
- 1. [Type annotations](#types)
- 1. [Recursive operators and functions](#recursion)
+ 1. [Principles of symbolic model checking with Apalache](#principles)
+    1. [Assignments and symbolic transitions](#assignments)
+    1. [Type annotations](#types)
+    1. [Recursive operators and functions](#recursion)
  1. [Five minutes of theory](#theory5)
  1. [Supported language features](#features)
 
 
 <a name="apalacheOrTlc"></a>
-
 # 1. Shall I use Apalache or TLC?
 
-We recommend to start with TLC. It is mature, well-documented, and well-integrated into TLA+ Toolbox. Once you have debugged your TLA+ specification, and TLC is still producing too many reachable states, switch to Apalache. We are using this approach at [Informal Systems](https://informal.systems/).
+We recommend starting with TLC. It is mature, well-documented, and
+well-integrated into TLA+ Toolbox. Once you have debugged your TLA+
+specification, and TLC is still producing too many reachable states, switch to
+Apalache. We are using this approach at [Informal
+Systems](https://informal.systems/).
 
 <a name="sysreq"></a>
-
 # 2. System requirements
 
 Every commit to [master](https://github.com/informalsystems/apalache) and
 [unstable](https://github.com/informalsystems/apalache/tree/unstable) is built with
 [Travis CI](https://travis-ci.org/konnov/apalache) on MacOS (xcode9.3 and JDK
-1.8.0) and Linux (OpenJDK8). If you like to run Apalache in Windows, use a
+1.8.0) and Linux (OpenJDK8). If you would like to run Apalache in Windows, use a
 docker image. Check the [Docker
-manual](https://docs.docker.com/docker-for-windows/) and the section on [Using
-a docker image](#useDocker).
+manual](https://docs.docker.com/docker-for-windows/) and the section on [Using a
+docker image](#useDocker) for details.
 
 As Apalache is using Microsoft Z3 as a backend SMT solver, the required memory
 largely depends on Z3. We recommend to allocate at least 4GB of memory for the
 tool.
 
 <a name="installation"></a>
-
 # 3. Installation
 
 There are two ways to run Apalache: (1) Download and run a docker image, or (2)
-Build Apalache from sources and run the compiled package. If you just like to
-try the tool, we recommend to use the docker image. If you like to run the tool
-on daily basis or to contribute to the project, we recommend to build the project
-from the sources. In the following, we write `$APALACHE_HOME` to refer to the
-directory, where Apalache is cloned.
+Build Apalache from sources and run the compiled package. If you just want to
+try the tool, we recommend using the docker image. If you would like to run the
+tool on a daily basis or [to contribute](../CONTRIBUTING.md) to the project, we
+recommend building the project from the source.
 
-<a name="useDocker"></a>   
-
+<a name="useDocker"></a>
 ## 3.1. Using a docker image
 
 **Starting with release 0.6.0, we will publish Docker images for every release** :sunglasses:
@@ -80,7 +89,9 @@ To get the latest Apalache image, issue the command:
 docker pull apalache/mc
 ```
 
-**Running the docker image**. To run an Apalache image, issue the command:
+### Running the docker image
+
+To run an Apalache image, issue the command:
 
 ```bash
 $ docker run --rm -v <your-spec-directory>:/var/apalache apalache/mc <args>
@@ -104,27 +115,28 @@ The following docker parameters are used:
   [Running the tool](#running).
 
 
-**Setting an alias.**
-If you are running Apalache on Linux :penguin: or MacOS :green_apple:,
-you can set the handy alias,
-which runs Apalache in docker while sharing the working directory:
+### Setting an alias
+
+If you are running Apalache on Linux :penguin: or MacOS
+:green_apple:, you can define this handy alias in your rc file, which runs
+Apalache in docker while sharing the working directory:
 
 ```bash
 $ alias apalache="docker run --rm -v $(pwd):/var/apalache apalache/mc"
 ```
 
-**Using unstable version of Apalache**
+### Using the unstable version of Apalache
 
 The development of Apalache proceeds at a high pace, and we introduce a
-substantial number of improvements in the unstable branch before the next
-stable release biweekly.  Please refer to [Unstable
-Changes](https://github.com/informalsystems/apalache/blob/unstable/CHANGES.md) and
-[Unstable
-Manual](https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md) for
-the description of new features.  **We recommend using the unstable version if
-you want to try all the exciting new features of Apalache. But be warned: It is
-called "unstable" for a reason**. To use `unstable`, just type
-`apalache/mc:unstable` instead of `apalache/mc` everywhere.
+substantial number of improvements in the unstable branch before the next stable
+release. Please refer to the [change
+log](https://github.com/informalsystems/apalache/blob/unstable/CHANGES.md) and
+[manual](https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md)
+on the unstable branch for the description of the newest features. **We
+recommend using the unstable version if you want to try all the exciting new
+features of Apalache. But be warned: It is called "unstable" for a reason**. To
+use `unstable`, just type `apalache/mc:unstable` instead of `apalache/mc`
+everywhere.
 
 Do not forget to pull the docker image from time to time:
 
@@ -138,44 +150,54 @@ Run it with the following command:
 $ docker run --rm -v <your-spec-directory>:/var/apalache apalache/mc:unstable <args>
 ```
 
-To create an alias pointing to `unstable` version:
+To create an alias pointing to the `unstable` version:
 
 ```bash
 $ alias apalache="docker run --rm -v $(pwd):/var/apalache apalache/mc:unstable"
 ```
 
-**Building an image**. For an end user there is no need to build an Apalache
-image. If you like to produce a modified docker image,
-take into account that it will take about 30 minutes for the image
-to get built, due to compilation times of Microsoft Z3.
-To build a docker image of Apalache, issue the following command
-in `$APALACHE_HOME`:
+### Building an image
+
+For an end user there is no need to build an Apalache image. If you like to
+produce a modified docker image, take into account that it will take about 30
+minutes for the image to get built, due to compilation times of Microsoft Z3. To
+build a docker image of Apalache, issue the following command in
+`$APALACHE_HOME`:
 
 ```bash
 $ docker image build -t apalache:0.7.0 .
 ```
 
 
-## 3.2.  Building from sources
+<a name="building-from-source"></a>
+## 3.2. Building from source
 
 1. Install `git`.
-2. Clone the git repository: `git clone https://github.com/informalsystems/apalache.git`
-3. Install OpenJDK8 or
-[Zulu JDK8](https://www.azul.com/downloads/zulu-community/?&architecture=x86-64-bit&package=jdk).
-**You have to install version 8, otherwise Scala will not compile! See
-[compatibility
-table](https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html).**
+2. Install [OpenJDK8][] or [Zulu JDK8][].
+   - Apalache currently requires Scala 12.0 so **you must install version 8 of
+     Java, otherwise Scala will not compile!** See the [compatibility table][].
+3. Install [Apache Maven][].
+   - On Debian Linux or Ubuntu: `sudo apt-get install maven`.
+   - On Arch: `sudo pacman -Syu maven`
+4. Clone the git repository: `git clone https://github.com/informalsystems/apalache.git`.
+5. Change into the project directory: `cd apalache`.
+7. Run `make`. This command will install Microsoft Z3, compile Apalache
+   and assemble the package.
+6. *Optionally* install [direnv][] and run `direnv allow`
+8. Confirm you can run the executable. It should print the inline CLI help message.
+   - If you used `direnv`, then `apalache-mc` will be in your path.
+   - Otherwise, run `./bin/apalache-mc`.
 
-4. Install [Apache Maven](https://maven.apache.org/). For instance,
-   when using Debian Linux or Ubuntu: `sudo apt-get install maven`
-5. Run `make`. This command will install Microsoft Z3, compile Apalache
-   and assemble the package
+[OpenJDK8]: https://openjdk.java.net/install/
+[Zulu JDK8]: https://www.azul.com/downloads/zulu-community/?&architecture=x86-64-bit&package=jdk
+[compatibility table]: https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html
+[Apache Maven]: https://maven.apache.org/
+[direnv]: https://direnv.net/
 
 <a name="example"></a>
-
 # 4. An example of a TLA+ specification
 
-To illustrate the features of Apalache, we are using the following TLA+ specification,
+To illustrate the features of Apalache, we use the following TLA+ specification,
 which can be found in [`test/tla/y2k.tla`](../test/tla/y2k.tla):
 
 ```tla
@@ -199,8 +221,8 @@ EXTENDS Integers
 CONSTANT BIRTH_YEAR,    \* the year to start with, between 0 and 99
          LICENSE_AGE    \* the minimum age to obtain a license
 
-ASSUME(BIRTH_YEAR \in 0..99)              
-ASSUME(LICENSE_AGE \in 1..99)              
+ASSUME(BIRTH_YEAR \in 0..99)
+ASSUME(LICENSE_AGE \in 1..99)
 
 VARIABLE year, hasLicense
 
@@ -223,11 +245,11 @@ Next ==
     \/ NewYear
     \/ IssueLicense
 
-\* The somewhat "obvious" invariant, which is violated    
+\* The somewhat "obvious" invariant, which is violated
 Safety ==
     hasLicense => (Age >= LICENSE_AGE)
 
-\* This is probably the only invariant we can formulate, usually, it is called TypeOK    
+\* This is probably the only invariant we can formulate, usually, it is called TypeOK
 Inv ==
     /\ year \in 0..99
     /\ hasLicense \in BOOLEAN
@@ -235,7 +257,6 @@ Inv ==
 ```
 
 <a name="parameters"></a>
-
 # 5. Setting up specification parameters
 
 Similar to TLC, Apalache requires the specification parameters to be restricted
@@ -258,9 +279,12 @@ INSTANCE y2k WITH BIRTH_YEAR <- 80, LICENSE_AGE <- 18
 ```
 
 The downside of this approach is that you have to declare the variables of the
-extended specification.
+extended specification. This is easy with only two variables, but can quickly
+become unwieldy.
 
 ## 5.2. Convention over configuration
+
+Alternatively, you can extend the base module and use overrides:
 
 ```tla
 ---------------------------- MODULE y2k_override ----------------------------
@@ -272,7 +296,6 @@ OVERRIDE_LICENSE_AGE == 18
 ```
 
 <a name="ConstInit"></a>
-
 ## 5.3. ConstInit predicate
 
 This approach is similar to the ``Init`` operator, but applied to the
@@ -299,8 +322,10 @@ $ apalache check --inv=Safety \
   --length=20 --cinit=ConstInit y2k_cinit.tla
 ```
 
-**Parameterized initialization**. As a bonus of this approach, Apalache allows
-one to check a specification over a bounded set of parameters.  For example:
+### Parameterized initialization
+
+As a bonus of this approach, Apalache allows one to check a specification over a
+bounded set of parameters. For example:
 
 ```tla
 CONSTANT N, Values
@@ -315,25 +340,27 @@ The model checker will try the instances for all the combinations of
 the parameters specified in ``ConstInit``, that is, in our example, it will
 consider ``N \in 3..10`` and all non-empty value sets that are subsets of ``0..4``.
 
-**Limitation**. ``ConstInit`` should be a conjunction
-of such assignments and possibly of additional constraints on the
-constants. For instance, you should not write `N = 10 \/ N = 20`.
-However, you can write `N \in {10, 20}`.
+### Limitation
+
+``ConstInit`` should be a conjunction of assignments and possibly of additional
+constraints on the constants. For instance, you should not write `N = 10 \/ N =
+20`. However, you can write `N \in {10, 20}`.
 
 ## 5.4. TLC configuration file
 
-We support configuring Apalache via TLC configuration files; 
-these files are produced automatically by TLA Toolbox, for example.
-TLC configuration file allows to specify which initialization predicate and transition predicate
-to employ, which invariants to check, as well as to initialize specification parameters.
-A limited syntax of TLC configuration files is supported at the moment, which should be nevertheless
-enough for most uses.
+We support configuring Apalache via TLC configuration files; these files are
+produced automatically by TLA Toolbox, for example. TLC configuration files
+allow one to specify which initialization predicate and transition predicate to
+employ, which invariants to check, as well as to initialize specification
+parameters. A limited syntax of TLC configuration files is supported at the
+moment, which should be nevertheless enough for most uses.
 
-If you are checking a file `<myspec>.tla`,
-and the file `<myspec>.cfg` exists in the same directory, it will be picked up by Apalache automatically.
-You can also explicitely specify which configuration file to use via `--config` option.
+If you are checking a file `<myspec>.tla`, and the file `<myspec>.cfg` exists in
+the same directory, it will be picked up by Apalache automatically. You can also
+explicitly specify which configuration file to use via the `--config` option.
 
-# 6. Running the tool <a name="running"></a>
+<a name="running"></a>
+# 6. Running the tool
 
 ## 6.1. Model checker command-line parameters
 
@@ -355,10 +382,11 @@ The arguments are as follows:
   * ``--tuning`` specifies the properties file that stores the options for
   [fine tuning](tuning.md)
 
-If initialization predicate, transition predicate, or invariant is specified both in the configuration file,
+If an initialization predicate, transition predicate, or invariant is specified both in the configuration file,
 and on the command line, the command line parameters take precedence over those in the configuration file.
 
-**Bounded model checking.**
+### Bounded model checking
+
 By default, Apalache performs *bounded model checking*, that is,
 it encodes a symbolic execution of length `k` and an invariant violation
 in SMT:
@@ -375,16 +403,18 @@ means that the state variables `v` are replaced with their copies `v_i` for the
 state `i`, whereas the state variables `v'` are replaced with their copies
 `v_{i+1}` for the state `i+1`.
 
-**Bounded model checking is an incomplete technique.**
-If Apalache finds a bug in this symbolic execution (by querying z3), then
-it reports a counterexample. Otherwise, it reports that no bug was found
-up to given length. If a bug needs a long execution to get revealed, bounded
-model checking may miss it!
+#### Bounded model checking is an incomplete technique
+
+If Apalache finds a bug in this symbolic execution (by querying z3), then it
+reports a counterexample. Otherwise, it reports that no bug was found up to the
+given length. If a bug needs a long execution to get revealed, bounded model
+checking may miss it!
 
 
-**Checking an inductive invariant.**
+### Checking an inductive invariant
+
 To check executions of arbitrary lengths, one usually finds a formula that
-satisfies two following properties:
+satisfies the two following properties:
 
 ```tla
 /\ Init => TypeOK /\ IndInv
@@ -401,9 +431,8 @@ have to constrain the variable values. In the `y2k` example, our inductive
 invariant is actually constraing the variables. In fact, such an inductive
 invariant is usually called `TypeOK`.
 
-
 To check an inductive invariant ``IndInv`` in Apalache, you run two commands
-    that check the above two formulas:   
+that check the above two formulas:
 
 ```bash
 $ apalache check --init=Init --inv=IndInv --length=0 <myspec>.tla
@@ -417,7 +446,7 @@ $ apalache check --init=IndInv --inv=IndInv --length=1 <myspec>.tla
 
 ## 6.2. Examples
 
-**Checking safety up to 20 steps:**
+### Checking safety up to 20 steps
 
 ```bash
 $ cd test/tla
@@ -425,10 +454,10 @@ $ apalache check --length=20 --inv=Safety y2k_override.tla
 ```
 
 This command checks, whether `Safety` can be violated in 20 specification
-steps. If `Safety` is not violated, your spec might still have a bug, but it
-would require a computation longer than 20 steps.
+steps. If `Safety` is not violated, your spec might still have a bug that
+requires a computation longer than 20 steps to manifest.
 
-**Checking an inductive invariant:**
+### Checking an inductive invariant:
 
 ```bash
 $ cd test/tla
@@ -442,7 +471,7 @@ a single specification step satisfies the invariant, when starting
 in a state that satisfies the invariant. (That is why these
 invariants are called inductive.)
 
-**Using a constant initializer:**
+### Using a constant initializer:
 
 ```bash
 $ cd test/tla
@@ -450,7 +479,8 @@ apalache check --cinit=ConstInit --length=20 --inv=Safety y2k_cinit.tla
 ```
 
 This command checks, whether `Safety` can be violated in 20
-specification steps. The consants are initialized with the predicate `ConstInit`:
+specification steps. The constants are initialized with the predicate
+`ConstInit`, defined in `y2k_cinit.tla` as:
 
 ```tla
 ConstInit == BIRTH_YEAR \in 0..99 /\ LICENSE_AGE \in 10..99
@@ -458,25 +488,40 @@ ConstInit == BIRTH_YEAR \in 0..99 /\ LICENSE_AGE \in 10..99
 
 In this case, Apalache finds a safety violation, e.g., for
 `BIRTH_YEAR=89` and `LICENSE_AGE=10`. A complete counterexample
-is printed in `counterexample.txt`.
+is printed in `counterexample.tla`.
+
+The final lines in the file clearly indicate the state that violates the
+invariant:
+
+```tla
+State14 ==
+/\ BIRTH_YEAR = 89
+/\ LICENSE_AGE = 10
+/\ hasLicense = TRUE
+/\ year = 0
+
+(* The following formula holds true in the last state and violates the invariant *)
+
+InvariantViolation == hasLicense /\ year - BIRTH_YEAR < LICENSE_AGE
+```
 
 <a name="detailed"></a>
 ## 6.3. Detailed output
 
-The tool will display only the important messages. A detailed log can be found
-in `detailed.log`.
+The tool will display only important messages on stdout, but a detailed log can
+be found in `detailed.log`.
 
-Additionally, the model checker passes produce intermediate TLA+ files are in
+Additionally, each pass of the model checker produces an intermediate TLA+ file in
 the run-specific directory `x/hh.mm-DD.MM.YYYY-<id>`:
 
   - File `out-parser.tla` is produced as a result of parsing and importing
-    into Apalache TLA IR.
+    into the intermediate representation, Apalache TLA IR.
   - File `out-parser.json` is produced as a result of converting the
     Apalache TLA IR representation of the input into JSON format.
   - File `out-config.tla` is produced as a result of substituting CONSTANTS,
     as described in [Section 5](#parameters).
   - File `out-inline.tla` is produced as a result of inlining operator
-    definitions and LET-IN definitions.
+    definitions and `LET-IN` definitions.
   - File `out-priming.tla` is produced as a result of replacing constants and
     variables in `ConstInit` and `Init` with their primed versions.
   - File `out-vcgen.tla` is produced as a result of extracting verification
@@ -492,8 +537,8 @@ the run-specific directory `x/hh.mm-DD.MM.YYYY-<id>`:
 <a name="parsing"></a>
 ## 6.4. Parsing and pretty-printing
 
-If you like to check that your TLA+ specification is syntactically correct,
-without running the model checker, you can run the following command.
+If you'd like to check that your TLA+ specification is syntactically correct,
+without running the model checker, you can run the following command:
 
 ```bash
 $ apalache parse <myspec>.tla
@@ -508,9 +553,15 @@ In this case, Apalache performs the following steps:
 1. It pretty-prints the IR into `out-parser.tla`, see [Section 6.3](#detailed).
 
 
-<a name="assignments"></a>
+<a name="principles"></a>
+# 7. Principles of symbolic model checking with Apalache
 
-# 7. Understanding assignments
+In order to take advantage of Apalache's symbolic model checking, there are a
+few principles one must bear in mind when writing TLA.
+
+<a name="assignments"></a>
+<a name="symbolicTransitions"></a>
+## 7.1 Assignments and symbolic transitions
 
 Let us go back to the example [`test/tla/y2k.tla`](../test/tla/y2k.tla) and
 run `apalache` against [`test/tla/y2k_override.tla`](../test/tla/y2k_override.tla):
@@ -519,9 +570,9 @@ run `apalache` against [`test/tla/y2k_override.tla`](../test/tla/y2k_override.tl
 $ apalache check y2k_override.tla
 ```
 
-The model checker ran successfully. We can check the detailed output of the
-`TransitionFinderPass` in the file `x/<timestamp>/out-transition.tla`, where
-`<timestamp>` looks like `09.03-10.03.2020-508266549191958257`:
+ We can check the detailed output of the `TransitionFinderPass` in the file
+`x/<timestamp>/out-transition.tla`, where `<timestamp>` looks like
+`09.03-10.03.2020-508266549191958257`:
 
 ```tla
 ----- MODULE y2k_override -----
@@ -538,39 +589,54 @@ Next$1 == year - 80 >= 18 /\ hasLicense' <- TRUE /\ (year' <- year)
 
 As you can see, the model checker did two things:
 
- 1. It has translated several expressions that look like `x' = e` into `x' <- e`.
-   For instance, you can see `year' <- 80` and `hasLicense' <- FALSE` in `Init$0`.
-   We call these expressions **assignments**.
-
- 1. It has replaced the operator `Next` into two operators `Next$0` and `Next$1`.
+1. It has translated several expressions that look like `x' = e` into `x' <- e`.
+   For instance, you can see `year' <- 80` and `hasLicense' <- FALSE` in
+   `Init$0`. We call these expressions **assignments**.
+1. It has factored the operator `Next` into two operators `Next$0` and `Next$1`.
    We call these operators **symbolic transitions**.
 
-The pure TLA+ does not have the notions of assignments and symbolic
+Pure TLA+ does not have the notions of assignments and symbolic
 transitions.  However, TLC sometimes treats expressions `x' = e` and `x' \in S`
 as if they were assigning a value to the variable `x'`. TLC does so
 dynamically, during the breadth-first search. Apalache looks statically for assignments
 among the expressions `x' = e` and `x' \in S`.
 
-Moreover, Apalache splits action operators `Init` and `Next` into disjunctions
-(e.g., `A_1 \/ ... \/ A_k`). The main contract between the assignments and
-symbolic transitions is as follows:
+When factoring out operators into symbolic transitions, Apalache splits the
+action operators `Init` and `Next` into disjunctions (e.g., `A_0 \/ ... \/ A_n`),
+represented in the concrete syntax as a sequence of operator definitions of the
+form
 
-> For every variable `x` declared with `VARIABLE`, there is exactly one assignment
-of the form `x' <- e` in every symbolic transition `A_j`.
+``` tla
+A$0 == ...
+...
+A$n == ...
+```
 
-If Apalache cannot find the expressions with the above properties, it fails.
+The main contract between the assignments and symbolic transitions is as
+follows:
+
+> For every variable `x` declared with `VARIABLE`, there is exactly one
+> assignment of the form `x' <- e` in every symbolic transition `A_n`.
+
+If Apalache cannot find expressions with the above properties, it fails.
 Consider the example
 [`test/tla/Assignments20200309.tla`](../test/tla/Assignments20200309.tla):
 
 ```tla
 ----- MODULE Assignments20200309 -----
 VARIABLE a
-\* this specification fails, as there it has no expression
+\* this specification fails, as it has no expression
 \* that can be treated as an assignment
 Init == TRUE
 Next == a' = a
 Inv == FALSE
 ===============
+```
+
+Running the checker with
+
+```bash
+apalache check Assignments20200309.tla
 ```
 
 Apalache reports an error as follows:
@@ -596,26 +662,25 @@ action. Although this is tedious, it allows one to find missing assignments
 rather quickly.
 
 If you are interested in the technique for finding the assignments and symbolic
-transitions that is implemented in Apalache, check our [paper at
+transitions implemented in Apalache, check our [paper at
 ABZ'18](http://forsyte.at/wp-content/uploads/abz2018_full.pdf).  The [journal
 version](http://dx.doi.org/https://doi.org/10.1016/j.scico.2019.102361) is
 unfortunately behind the Elsevier paywall, which will be lifted after the
 two-year embargo period.
 
 <a name="types"></a>
-
-# 8. Type annotations
+## 7.2 Type annotations
 
 **NOTE**: [Jure Kukovec](https://forsyte.at/people/kukovec/) is developing
 a completely automatic type inference engine. As soon as it is ready, type
-annotations will be no longer required. Until that happy day, refer to [type
+annotations will no longer be required. Until that happy day, refer to [type
 annotations](types-and-annotations.md).
 
 Apalache requires two kinds of type annotations:
 - type annotations for empty sets and sequences, and
 - type annotations for records and sets of records.
 
-## 8.1. Empty sets and sequences
+### 7.2.1 Empty sets and sequences
 
 Consider the following example
 [`test/tla/NeedForTypes.tla`](../test/tla/NeedForTypes.tla):
@@ -663,27 +728,44 @@ The outcome is: Error                                             I@15:17:14.388
 ```
 
 In a somewhat obfuscated way, Apalache tells us the following. It has inferred
- that `Left` is a set of integers, that is, `FinSet[Int]`. First, it found that
+that `Left` is a set of integers, that is, `FinSet[Int]`. First, it found that
 `InSet` is a set of integers, by applying `ConstInit`. Second, as `Left = InSet`
 in `Init`, it inferred that `Left` is also a set of integers. Third, when
 applying `Next`, it processed `{}`, which is an empty set of any kind of
-objects. Hence, `{}` was assigned the type `FinSet[Unknown]`, that is, a set
-of some type. Finally, it found the expression `Left = {}`,
-and here the type checker has failed.
+objects. Hence, `{}` was assigned the type `FinSet[Unknown]`, that is, a set of
+some type. Finally, it found the expression `Left = {}`, and here the type
+checker has failed.
 
-To help the type checker, we have to introduce a few type annotations.
-But before doing that, we introduce the notation for type annotations
-in the specification:
+To help the type checker, we have to introduce a few type annotations. But
+before doing that, we introduce the notation for type annotations in the
+specification.
+
+#### Syntax for type annotations
+
+Apalache reads any expression formed with the `<:` operator as an annotation of
+the value of the left hand side with the type on the right. E.g.,
 
 ```tla
-a <: b == a
+v <: T
 ```
 
-Apalache treats any application of `<:` as a type annotation. At the same time,
-the above definition tells the other tools (e.g., TLC and TLAPS) to ignore
-the type annotation.
+means "value `v` has type `T`".
 
-Now we can help the type checker by rewriting the condition in Next as follows:
+However, other tools (such as TLC and TLAPS) have no support for these
+annotations. To tell them to ignore type annotations, we maintain the convention
+that any file using Apalache type annotations begins with the following definition:
+
+```tla
+v <: T == v
+```
+
+With this in place, Apalache can parse out the type annotations in the rest of
+the file, but other tools are told to simply read any occurrence of `v <: T` as
+`v`, effectively erasing the type ascription.
+
+Now we can help the type checker by rewriting the condition in `Next` as follows:
+
+#### Example of using type annotations
 
 ```tla
 Next ==
@@ -693,7 +775,7 @@ Next ==
 ```
 
 Now the type checker treats the expression `{}` as a set of integers. However,
-  it complains about another line:
+it complains about another line:
 
 ```
 Step 0, level 0: checking if 1 transition(s) are enabled and violate the invariant I@15:43:35.932
@@ -702,7 +784,7 @@ Step 1, level 1: checking if 2 transition(s) are enabled and violate the invaria
 NeedForTypes.tla:23:24-23:40, x$1, type error: Expected type Unknown, found Int E@15:43:36.012
 NeedForTypes.tla:23:24-23:40, Append(...), type error: Expected a type, found: None E@15:43:36.018
 NeedForTypes.tla:23:11-24:31, /\(...), type error: Expected a Boolean, found: None E@15:43:36.020
-The outcome is: Error       
+The outcome is: Error
 ```
 
 Here the type checker stumbles upon the sequence operator `Append(OutSeq, x)`
@@ -722,7 +804,7 @@ Having these two annotations, the type checker stops complaining. You can find
 the annotated specification in
 [`test/tla/NeedForTypesWithTypes.tla`](../test/tla/NeedForTypesWithTypes.tla).
 
-## 8.2. Records and sets of records
+### 7.2.2  Records and sets of records
 
 Consider the following example in
 [`test/tla/Handshake.tla`](../test/tla/Handshake.tla):
@@ -867,10 +949,10 @@ You can find more details on the simple type inference algorithm and the type
 annotations in [type annotations](types-and-annotations.md).
 
 <a name="recursion"></a>
-## 9. Recursive operators and functions
+## 7.3 Recursive operators and functions
 
 <a name="rec-op"></a>
-### 9.1. Recursive operators
+### 7.3.1 Recursive operators
 
 In the preprocessing phase, Apalache replaces every application of a user
 operator with its body. We call this process "operator inlining".
@@ -908,7 +990,7 @@ Next ==
     /\ set' = set \union {x}
 
 Inv == count = Sum(set)
-=======================================    
+=======================================
 ```
 
 It is clear that the expression `Sum(S)` requires the number of iterations that
@@ -916,7 +998,7 @@ is equal to `Cardinality(S) + 1`. Moreover, the expression `set \subseteq
 1..N` is an invariant, and thus every call `Sum(set)` requires up to `N+1`
 iterations.
 
-When, we can find an upper bound on the number of iterations, Apalache can
+When we can find an upper bound on the number of iterations, Apalache can
 unroll the recursive operator up to this bound. To this end, we define two
 additional operators. For instance:
 
@@ -935,21 +1017,22 @@ In this case, Apalache unrolls every call to `Sum` exactly `UNROLL_TIMES_Sum`
 times, that is, four times. On the default branch, Apalache places
 `UNROLL_DEFAULT_Sum`, that is, 0.
 
-All recursively defined operators should follow this convention where, for every such operator `Oper`, the user defines both `UNROLL_TIMES_Oper`, which expands to a positive integer value, and `UNROLL_DEFAULT_Oper`, which expands to some default value `Oper(args*)` should take, if the computation would require more than `UNROLL_TIMES_Oper` recursive calls. 
+All recursively defined operators should follow this convention where, for every such operator `Oper`, the user defines both `UNROLL_TIMES_Oper`, which expands to a positive integer value, and `UNROLL_DEFAULT_Oper`, which expands to some default value `Oper(args*)` should take, if the computation would require more than `UNROLL_TIMES_Oper` recursive calls.
 At present, we only support literals (e.g. `4`) or primitive arithmetic expressions (e.g. `2 + 2`) in the body of `UNROLL_TIMES_Oper`.
 
 <a name="rec-fun"></a>
-### 9.2. Recursive functions
+
+#### 7.3.2 Recursive functions
 
 Apalache offers limited support for recursive functions. However, read the
 warning below on why you should not use recursive functions. The restrictions
-are as follows: 
+are as follows:
 
- 1. Apalache supports the recursive functions that return an integer or a Boolean.
+ 1. Apalache supports recursive functions that return an integer or a Boolean.
 
- 1. As Apalache's simple type checker is not able
-to find the type of a recursive function, all uses of a recursive function
-should come with a type annotation.
+ 1. As Apalache's simple type checker is not able to find the type of a
+recursive function, all uses of a recursive function should come with a type
+annotation.
 
  1. As in TLC, the function domain must be a finite set.
 
@@ -985,7 +1068,7 @@ Init ==
     /\ factSpec = Fact[n]
     /\ factComp = 1
 
-Next ==     
+Next ==
     /\ n' = n + 1
     /\ factSpec' = Fact[n']
     /\ factComp' = n' * factComp
@@ -1048,21 +1131,21 @@ Given a TLA+ specification, with all parameters fixed, our model checker
 performs the following steps:
 
  1. It automatically extracts symbolic transitions from the specification. This
- allows us to partition the action Next into a disjunction of simpler actions
+ allows us to partition the action `Next` into a disjunction of simpler actions
  `A_1, ..., A_n`.
 
  2. Apalache translates operators `Init` and `A_1, ..., A_n` to SMT formulas.
  This allows us to explore bounded executions with an SMT solver (we are using
- [Microsoft Z3](https://github.com/Z3Prover/z3)). For instance, a sequence of
- `k` steps, all of which execute action `A_1`, is encoded as a formula `Run(k)`
- that looks like follows:
+ [Microsoft's Z3](https://github.com/Z3Prover/z3)). For instance, a sequence of
+ `k` steps `s_0, s_1, ..., s_k`, all of which execute action `A_1`, is encoded
+ as a formula `Run(k)` that looks as follows:
 
 ```tla
 [[Init(s_0)]] /\ [[A_1(s_0, s_1)]] /\ ... /\ [[A_1(s_(k-1), s_k)]]
 ```
 
 To find an execution of length `k` that violates an invariant `Inv`, the tool
-adds to the formula `Run(k)` the following constraint:
+adds the following constraint to the formula `Run(k)`:
 
 ```tla
 [[~Inv(s_0)]] \/ ... \/ [[~Inv(s_k)]]
@@ -1072,8 +1155,8 @@ Here, `[[_]]` is the translator from TLA+ to SMT. Importantly, the values for
 the states `s_0`, ..., `s_k` are not enumerated as in TLC, but have to be found
 by the SMT solver.
 
-If you like to learn more about theory behind Apalache, check the [paper at
-OOPSLA19](https://dl.acm.org/doi/10.1145/3360549).
+If you would like to learn more about theory behind Apalache, check the [paper
+delivered at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549).
 
 <a name="features"></a>
 
