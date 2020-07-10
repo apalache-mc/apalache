@@ -968,9 +968,6 @@ complaining and lets the model checker run. The annotated code can be found in
 
 Type annotations can also be applied to sets of records. For example:
 
-<!-- TODO(shonfeder): I read this as saying that the record type on the lhs is a
-     value of the type of a set of `MT`. This doesn't make sense to me, so I am
-     likely reading it wrong. What's the right way to read this? -->
 ```tla
 [syn |-> BOOLEAN, ack |-> BOOLEAN, seqno |-> Int] <: {MT}
 ```
