@@ -2,9 +2,9 @@
 
 **Version 0.7.0 (unstable)** :fireworks:
 
-**Authors: Igor Konnov, Jure Kukovec, and Andrey Kuprianov**
+**Authors: Igor Konnov, Jure Kukovec, Andrey Kuprianov, Shon Feder**
 
-**Contact: {igor,andrey} at informal.systems, jkukovec at forsyte.at**
+**Contact: {igor,andrey,shon} at informal.systems, jkukovec at forsyte.at**
 
 # Introduction
 
