@@ -15,7 +15,7 @@
  * normal error messages and failure messages with stack traces
  * bugfixes: #12, #104, #148
 
-## 0.6.1 [SNAPSHOT] #master
+## 0.6.1 [SNAPSHOT]
 
  * Critical bugfix in the optimization of set comprehensions like `\E x \in {e: y \in S}: f`
 
