@@ -1,4 +1,6 @@
-## 0.7.0 [SNAPSHOT] #unstable
+## Unreleased #unstable
+
+## 0.7.0 [RELEASE]
 
  * Importer from JSON, see #121
  * optimization for `Cardinality(S) >= k`, see #118
