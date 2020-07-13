@@ -42,7 +42,7 @@ fi
 
 if [ "$overwrite" != "" ]; then
     echo "Deleting the previous version first"
-    releaseme delete -r konnov/apalache -t "${tag}" \
+    releaseme delete -r informalsystems/apalache -t "${tag}" \
         || echo "Failed to delete"
 fi
 
@@ -59,7 +59,7 @@ tar zpcf "$TGZF" bin/apalache-mc "$release"
 echo "Releasing version ${ver} as ${tag}"
 git tag -f ${tag}
 git push -f --tags
-releaseme create -r konnov/apalache -t "${tag}" -n ${notes} \
+releaseme create -r informalsystems/apalache -t "${tag}" -n ${notes} \
     -a "$ZIPF" -a "$TGZF"
 echo "Done"
 
