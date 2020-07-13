@@ -128,7 +128,20 @@ Changes, Features, Improvements, Bug Fixes.
 
 ## Releases
 
-TODO
+Assuming the version to be released is `l.m.n`, as per semantic versioning, the
+current release process is as follows:
+
+- [ ] Update [CHANGES.md](./CHANGES.md), adding the heading `## l.m.n` over the
+      unreleased changes.
+- [ ] Copy this section into a new file named `./scripts/release-l.m.n.txt`
+- [ ] Open a PR to merge `unstable` into `master`, titling it `Release l.m.n`
+- [ ] When the PR is merged, checkout `master` and then run `./script/release
+      vl.m.n ./scripts/release-l.m.n.txt`
+- [ ] Build an updated docker container tagged with `l.m.n`
+- [ ] Push the new taged image to dockerhub
+- [ ] If it's a major release or important minor release, announce it to
+  - [ ] https://www.reddit.com/r/tlaplus/
+  - [ ] https://groups.google.com/u/1/g/tlaplus
 
 [Github Issue]: https://github.com/informalsystems/apalache/issues
 [rfc]: https://en.wikipedia.org/wiki/Request_for_Comments
