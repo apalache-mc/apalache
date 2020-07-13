@@ -36,11 +36,6 @@ before_install:
 #- sudo pip install --user release-me
 #- ./script/release --overwrite latest-unstable ./script/latest-message.txt
 
-branches:
-  only:
-  - master
-  - unstable
-
 script:
     - make integration
 
