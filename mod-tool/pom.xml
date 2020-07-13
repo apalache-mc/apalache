@@ -129,7 +129,7 @@
             <!-- commons-configuration2 uses commons-beanutiles (without declaring it in dependencies?) -->
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils</artifactId>
-            <version>1.9.3</version>
+            <version>1.9.4</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
