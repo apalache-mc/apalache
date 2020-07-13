@@ -26,3 +26,5 @@ tla-bmcmt/profile-rules.txt
 *.out
 *.log
 
+# Local envars for direnv
+/.local-envrc
