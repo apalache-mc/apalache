@@ -59,7 +59,7 @@ Systems](https://informal.systems/).
 
 Every commit to [master](https://github.com/informalsystems/apalache) and
 [unstable](https://github.com/informalsystems/apalache/tree/unstable) is built with
-[Travis CI](https://travis-ci.org/konnov/apalache) on MacOS (xcode9.3 and JDK
+[Travis CI](https://travis-ci.org/informalsystems/apalache) on MacOS (xcode9.3 and JDK
 1.8.0) and Linux (OpenJDK8). If you would like to run Apalache in Windows, use a
 docker image. Check the [Docker
 manual](https://docs.docker.com/docker-for-windows/) and the section on [Using a

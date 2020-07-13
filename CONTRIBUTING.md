@@ -116,7 +116,7 @@ make integration
 ### Continuous Integration
 
 We run continuous integration tests on the `master` and `unstable` branches via
-[Travis CI](https://travis-ci.org/github/konnov/apalache). The CI configuration
+[Travis CI](https://travis-ci.org/github/informalsystems/apalache). The CI configuration
 is located in [.travis.yml](./.travis.yml).
 
 ## Changelog
