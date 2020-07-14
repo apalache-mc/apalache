@@ -12,12 +12,14 @@ third issue):
 
 Everybody has a different opinion here. I agree that it would be cool to use
 the native TLA+ constructs to express types. My initial approach, in which
-types are specified as strings over the type grammar, may be seen as a hack.
-However, it clearly distinguishes TLA+ from types, which has some merits. The
-biggest problem I personally have with TLA+ is that it mixes a lot of good and
-interesting concepts in a uniform logic soup. After I have learned how to separate
-potatoes from beans in that soup, I started to appreciate TLA+ :-)
+types are specified as strings over the [type grammar](#typesAsStrings), may be seen
+as a hack.  However, it clearly distinguishes TLA+ from types, which has some
+merits. The biggest problem I personally have with TLA+ is that it mixes a lot
+of good and interesting concepts in a uniform logic soup. After I have learned
+how to separate potatoes from beans in that soup, I started to appreciate TLA+
+:-)
 
+<a name="typesAsTypeOk"></a>
 ### 1.1. TypeOK syntax
 
 The only way to write types in the `TypeOK` style is by set membership.
@@ -40,6 +42,7 @@ For instance:
 I personally find this syntax obfuscated, as it inevitably requires us to write
 types as sets of values.
 
+<a name="typesAsTerms"></a>
 ### 1.2. Types as terms
 
 A classical way of writing types is by using logical terms (or algebraic datatypes).
@@ -116,4 +119,41 @@ e.g., by writing `x <: T`, we can write the above examples as follows:
 
   * __Here we have to pull lambda operators, but at least it is possible to write
     down a type annotation.__
+
+<a name="typesAsStrings"></a>
+### 1.3. Types as strings
+
+Let us introduce the following grammar for types:
+
+```
+T ::= var | Bool | Int | Str | T -> T | Set(T) | Seq(T) |
+      <<T, ..., T>> | [h_1 |-> T, ..., h_k |-> T] | (T, ..., T) => T
+```      
+
+In this grammar, `var` stands for a type variable, which can be instantiated with
+concrete variable names such as `a`, `b`, `c`, etc., whereas `h_1`,...,`h_k` are
+field names. The rule `T -> T` defines a function, while the rule
+`(T, ..., T) => T` defines an operator.
+
+Assuming that we have some syntax for writing down that `x` has type `T`,
+e.g., by writing `isType("x", "T")`, we can write the above examples as follows:
+
+* `x` is an integer: `isType("x", "Int")`.
+* `f` is a function from an integer to an integer: `isType("f", "Int -> Int")`.
+* `f` is a function from a set of integers to a set of integers:
+    `isType("f", "Set(Int) -> Set(Int))"`.
+* `r` is a record that has the fields `a` and `b`, where `a` is an integer
+    and `b` is a string: `isType("r", "[a |-> Int, b |-> Str])"`.
+* `f` is a set of functions from a tuple of integers to an integer:
+    `isType("f", "Set(<<Int, Int>> -> Int))"`.
+* `Foo` is an operator of an `Int` and `STRING` that returns an `Int`:
+    `isType("Foo", "(Int, Str) => Int")`.
+
+* `Bar` is a higher-order operator that takes an operator that takes
+    an `Int` and `STRING` and returns an `Int`, and returns a `BOOLEAN`:
+    `isType("Bar", "((Int, Str) => Int) => Bool")`.
+
+__Note:__ We have to pass names as strings, as it is impossible to pass operator
+    names, e.g., `Foo` and `Bar` in other operators, unless `Foo` and `Bar`
+    are nullary operators and `isType` is a higher-order operator.
 
