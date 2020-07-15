@@ -4,11 +4,11 @@ It is good to have a number of different opinions here. As I can see, we
 actually have three issues, not one (I initially have put emphasis only on the
 third issue):
 
-1. How to encode types in TLA+.
-1. How to encode type annotations.
-1. How to display inferred types.
+1. How to write types in TLA+.
+1. How to write type annotations (as a user).
+1. How to display and use inferred types.
 
-## 1. How to encode types in TLA+
+## 1. How to write types in TLA+
 
 Everybody has a different opinion here. I agree that it would be cool to use
 the native TLA+ constructs to express types. My initial approach, in which
@@ -156,4 +156,197 @@ e.g., by writing `isType("x", "T")`, we can write the above examples as follows:
 __Note:__ We have to pass names as strings, as it is impossible to pass operator
     names, e.g., `Foo` and `Bar` in other operators, unless `Foo` and `Bar`
     are nullary operators and `isType` is a higher-order operator.
+
+
+## 2. How to write type annotations (as a user)
+
+__Note__: This question is not a priority, as we do not expect the user to
+write type annotations. However, it would be good to have a solution, as sometimes
+users want to write types.
+
+Again, we have plenty of options and opinions here:
+
+1. Write type annotations by calling a special operator like `<:` or `|=`.
+1. Write type annotations as assumptions.
+1. Write type annotations in comments.
+1. Write type annotations as operator definitions.
+
+### 2.1. Type annotations with a special operator
+
+This is the current approach in Apalache. One has to define an operator, e.g., `<:`:
+
+```tla
+value <: type == value
+```
+
+Then an expression may be annotated with a type as follows:
+
+```tla
+VARIABLE S
+Init ==
+  S = {} <: {Int}
+```
+
+__Pros__:
+ * Intutive notation, similar to programming languages.
+
+__Cons__:
+
+ * This approach works well for expressions. However, it is not clear how to extend
+   it to operators.
+ * This notation is more like type clarification, rather than a type annotation.
+   Normally types are specified for names, that is, constants, variables, functions,
+   operators, etc.
+ * Same expression may be annotated in a Boolean formula. What shall we do, if the
+   user writes: `x <: BOOLEAN \/ x <: Int`?
+
+__Note:__ The current approach has an issue. If one declares the operator `<:` in
+a module `M` and then uses an unnamed instance `INSTANCE M` in a module `M2`,
+then `M` and `M2` will clash on the operator `<:`. We should define the operator
+once in a special module `Types` or `Apalache`.
+
+<a name="annotationsAsAssumptions"></a>
+### 2.2. Type annotations as assumptions
+
+One can use TLA+ syntax to write assumptions and assertions about the types.
+We are talking only about type assumptions here.
+The similar approach can be used to write theorems about types. 
+Consider the following specification:
+
+```tla
+EXTENDS Sequences
+CONSTANTS Range
+VARIABLES list
+
+Mem(e, es) ==
+  \E i \in DOMAIN es:
+    e = es[i]
+```
+
+In this example, the operator `Mem` is polymorphic, whereas the types of `Range`
+and `list` are parameterized.  If the user wants to
+restrict the types of constants, variables, and operators, they could write (using the
+[TypeOK syntax](#typesAsTypeOk)):
+
+```tla
+ASSUME(Range \in SUBSET Int)
+ASSUME(list \in Seq(Int))
+ASSUME(\A e \in Int, \A es \in Seq(Int): Mem(e, es) \in BOOLEAN)
+```
+
+Moreover, using the proof syntax of
+[TLA+ Version 2](https://lamport.azurewebsites.net/tla/tla2-guide.pdf),
+we can annotate the
+types of variables introduced inside the operators.  For instance, we could
+label the name `i` as follows:
+
+```tla
+Mem(e, es) ==
+  \E i \in DOMAIN es:
+    e = es[i_use :: i]
+```
+
+And then write:
+
+```tla
+ASSUME(\A e, es, i: Mem(e, es)!i_use(i) \in Int)
+```
+
+__Pros__:
+
+ * The assumptions syntax is quite appealing, when writing types of
+    CONSTANTS, VARIABLES, and top-level operators.
+
+__Cons__:
+
+ * The syntax gets verbose and hard to write, when writing types of
+   LET-IN operators and bound variables.
+ * It is not clear how to extend this syntax to higher-order operators.
+
+### 2.3. Type annotations in comments
+ 
+This solution basically gives up on TLA+ syntax and introduces a special
+syntax à la javadoc for type annotations:
+
+```tla
+EXTENDS Sequences
+CONSTANTS Range \*@ Range: Set(Int)
+VARIABLES list  \*@ list: Seq(Int)
+
+Mem(e, es) ==
+\*@ Mem: (Int, Seq(Int)) => Bool
+  \E i \in DOMAIN es:
+    \*@ i: Int
+    e = es[i]
+```
+
+We have not come up with a good syntax for these annotaions. The above
+example demonstrates one possible approach.
+
+__Pros__:
+
+  * Non-verbose, simple syntax
+  * Type annotations do not stand in the way of the specification author
+  * Type annotations may be collapsed, removed, etc.
+  * If we have an annotation preprocessor, we can use it for other
+    kinds of annotations
+
+__Cons__:
+
+  * As we give up on the TLA+ syntax, TLA+ Toolbox will not help us
+    (though it is not uncommon for IDEs to parse javadoc annotations,
+     so there is some hope)
+  * The users have to learn new syntax for writing type annotations and types
+  * We have to write an annotation preprocessor
+
+### 2.4. Type annotations as operator definitions
+
+Operators definitions and LET-IN definitions can be written almost anywhere in
+TLA+. Instead of writing in-comment annotations, we can write annotations
+with operator definitions (assuming [types as strings](#typesAsStrings),
+but this is not necessary):
+
+```tla
+EXTENDS Sequences
+CONSTANTS Range
+Range_type == "set(z)"
+
+VARIABLES list
+list_type == "seq(z)"
+
+Mem(e, es) ==
+  LET Mem_type == "<a, seq(a)> => Bool" IN
+  \E i \in DOMAIN es:
+    LET i_type == "Int" IN
+    e = es[i]
+
+Init ==
+  LET Init_type == "<> => Bool" IN
+  list = <<>>
+
+Next ==
+  LET Next_type == "<> => Bool" IN
+  \E e \in Range:
+    LET e_type == "set(z)" IN
+    list' = Append(list, e)
+```
+
+__Pros:__
+
+ * No need for a comment preprocessor,
+    easy to extract annotations from the operator definitions
+
+__Cons:__
+
+ * Fruitless operator definitions
+ * Looks like a hack
+
+
+## 3. How to display and use inferred types
+
+__TBD__
+
+Basically, use [Language Server
+Protocol](https://microsoft.github.io/language-server-protocol/) and introduce
+THEOREMs (similar to [types as assumptions](#annotationsAsAssumptions)).
 
