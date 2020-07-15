@@ -54,7 +54,7 @@ To this end, we can define a special module `Types.tla`:
 \* but we define it as the corresponding set of values.
 \* Alternatively, we could just define tuples of strings in rhs.
 
-\* a type annotation operator that omits the type
+\* a type annotation operator that erases the type
 value <: type == value
 
 \* the integer type
@@ -349,4 +349,3 @@ __TBD__
 Basically, use [Language Server
 Protocol](https://microsoft.github.io/language-server-protocol/) and introduce
 THEOREMs (similar to [types as assumptions](#annotationsAsAssumptions)).
-
