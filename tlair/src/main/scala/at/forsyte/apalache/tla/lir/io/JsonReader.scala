@@ -29,20 +29,21 @@ object JsonReader {
       case Some(value) => value
       case None => throw new Exception("incorrect TLA+ JSON: expecting a module object")
     }
-    if(!m.contains("MODULE") || !m.contains("declarations"))
+    if(!m.contains("module") || !m.contains("declarations"))
       throw new Exception("incorrect TLA+ JSON: malformed module object")
-    new TlaModule(parseStr(m("MODULE")), parseDecls(m("declarations")))
+    new TlaModule(parseStr(m("module")), parseDecls(m("declarations")))
   }
 
   val unaryOps = JsonWriter.unaryOps.map(_.swap)
   val naryOps = JsonWriter.naryOps.map(_.swap)
+  val binaryOps = JsonWriter.binaryOps.map(_.swap)
   val naryPairOps = JsonWriter.naryPairOps.map(_.swap)
   val functionalOps = JsonWriter.functionalOps.map(_.swap)
   val boundedPredOps = JsonWriter.boundedPredOps.map(_.swap)
   val unboundedPredOps = JsonWriter.unboundedPredOps.map(_.swap)
   val stutterOps = JsonWriter.stutterOps.map(_.swap)
   val fairnessOps = JsonWriter.fairnessOps.map(_.swap)
-  val otherOps = Set("id", "str", "int", "set", "apply-fun", "apply-op", "IF", "CASE", "LET")
+  val otherOps = Set("id", "str", "int", "set", "applyFun", "applyOp", "if", "case", "let")
 
   val sets = HashMap(
     "BOOLEAN" -> TlaBoolSet,
@@ -68,6 +69,7 @@ object JsonReader {
   // expect ujson.Value to be an encoding of TLA+ expression object
   def parseExpr(m: LinkedHashMap[String, ujson.Value]): TlaEx = {
     val unary = m.keySet & unaryOps.keySet
+    val binary = m.keySet & binaryOps.keySet
     val nary = m.keySet & naryOps.keySet
     val naryPair = m.keySet & naryPairOps.keySet
     val functional = m.keySet & functionalOps.keySet
@@ -76,7 +78,7 @@ object JsonReader {
     val stutter = m.keySet & stutterOps.keySet
     val fairness = m.keySet & fairnessOps.keySet
     val other = m.keySet & otherOps
-    val ourKeys = unary.size + nary.size + naryPair.size + functional.size +
+    val ourKeys = unary.size + binary.size + nary.size + naryPair.size + functional.size +
       + boundedPred.size + unboundedPred.size + stutter.size + fairness.size + other.size
     val expr =
     if(ourKeys < 1)
@@ -85,7 +87,11 @@ object JsonReader {
       throw new Exception("incorrect TLA+ JSON: multiple matching expressions")
     else if(unary.nonEmpty)
       OperEx(unaryOps(unary.head), parseJson(m(unary.head)))
-    else if(nary.nonEmpty)
+    else if(binary.nonEmpty) {
+      if(!m.contains("arg"))
+        throw new Exception("incorrect TLA+ JSON: expecting 'arg'")
+      OperEx(binaryOps(binary.head), parseJson(m(binary.head)), parseJson(m("arg")))
+    } else if(nary.nonEmpty)
       OperEx(naryOps(nary.head), parseArray(m(nary.head)):_*)
     else if(naryPair.nonEmpty) {
       OperEx(naryPairOps(naryPair.head), parsePairs(m(naryPair.head)) :_*)
@@ -128,39 +134,39 @@ object JsonReader {
           else
             throw new Exception("can't parse TLA+ JSON: reference to unknown set")
         }
-        case "apply-fun" => {
+        case "applyFun" => {
           if(!m.contains("arg"))
             throw new Exception("incorrect TLA+ JSON: expecting 'arg'")
-          OperEx(TlaFunOper.app, parseJson(m("apply-fun")), parseJson(m("arg")))
+          OperEx(TlaFunOper.app, parseJson(m("applyFun")), parseJson(m("arg")))
         }
-        case "apply-op" => {
+        case "applyOp" => {
           if(!m.contains("args"))
             throw new Exception("incorrect TLA+ JSON: expecting 'args'")
-          val name = parseStr(m("apply-op"))
+          val name = parseStr(m("applyOp"))
           val args = parseArray(m("args"))
-          if(name == "rec-fun-ref") {
+          if(name == "recFunRef") {
             if(args.nonEmpty)
-              throw new Exception("incorrect TLA+ JSON: found arguments for 'rec-fun-ref'")
+              throw new Exception("incorrect TLA+ JSON: found arguments for 'recFunRef'")
             OperEx(TlaFunOper.recFunRef)
           }
           else
             OperEx(TlaOper.apply, NameEx(name) +: args:_*)
         }
-        case "IF" => {
-          if(!m.contains("THEN") || !m.contains("ELSE"))
-            throw new Exception("incorrect TLA+ JSON: malformed 'IF'")
-          OperEx(TlaControlOper.ifThenElse, parseJson(m("IF")), parseJson(m("THEN")), parseJson(m("ELSE")))
+        case "if" => {
+          if(!m.contains("then") || !m.contains("else"))
+            throw new Exception("incorrect TLA+ JSON: malformed 'if'")
+          OperEx(TlaControlOper.ifThenElse, parseJson(m("if")), parseJson(m("then")), parseJson(m("else")))
         }
-        case "CASE" => {
-          if(m.contains("OTHER"))
-            OperEx(TlaControlOper.caseWithOther, parseJson(m("OTHER")) +: parsePairs(m("CASE")) :_*)
+        case "case" => {
+          if(m.contains("other"))
+            OperEx(TlaControlOper.caseWithOther, parseJson(m("other")) +: parsePairs(m("case")) :_*)
           else
-            OperEx(TlaControlOper.caseNoOther, parsePairs(m("CASE")):_*)
+            OperEx(TlaControlOper.caseNoOther, parsePairs(m("case")):_*)
         }
-        case "LET" => {
-          if(!m.contains("IN"))
-            throw new Exception("incorrect TLA+ JSON: malformed 'LET'")
-          LetInEx(parseJson(m("IN")), parseOperDecls(m("LET")):_*)
+        case "let" => {
+          if(!m.contains("body"))
+            throw new Exception("incorrect TLA+ JSON: malformed 'let'")
+          LetInEx(parseJson(m("body")), parseOperDecls(m("let")):_*)
         }
         case _ =>
           throw new Exception("can't parse TLA+ JSON: unknown JSON key")
@@ -207,10 +213,15 @@ object JsonReader {
 
   // expect ujson.Value to be an encoding of a pair of expressions
   def parsePair(v: ujson.Value): Seq[TlaEx] = {
-    val pair = parseArray(v)
-    if(pair.size != 2)
-      throw new Exception("incorrect TLA+ JSON: expecting a pair")
-    pair
+    val m = v.objOpt match {
+      case Some(value) => value
+      case None => throw new Exception("incorrect TLA+ JSON: expecting a key-value object")
+    }
+    if(!m.contains("key") || !m.contains("value"))
+      throw new Exception("incorrect TLA+ JSON: malformed key-value object")
+    val key = parseJson(m("key"))
+    val value = parseJson(m("value"))
+    Seq(key, value)
   }
 
   // expect ujson.Value to be an encoding of a label
@@ -226,6 +237,7 @@ object JsonReader {
     val args = parseArray(m("args"))
     (name, args.map {
       case NameEx(str) => ValEx(TlaStr(str)) // change back from NameEx to ValEx
+      case _ => throw new Exception("incorrect TLA+ JSON: malformed label")
     })
   }
 
@@ -244,16 +256,16 @@ object JsonReader {
       case Some(value) => value
       case None => throw new Exception("incorrect TLA+ JSON: expecting a declaration object")
     }
-    if(m.contains("CONSTANT"))
-      TlaConstDecl(parseStr(m("CONSTANT")))
-    else if(m.contains("VARIABLE"))
-      TlaVarDecl(parseStr(m("VARIABLE")))
-    else if(m.contains("ASSUME"))
-      TlaAssumeDecl(parseJson(m("ASSUME")))
-    else if(m.contains("OPERATOR")) {
+    if(m.contains("constant"))
+      TlaConstDecl(parseStr(m("constant")))
+    else if(m.contains("variable"))
+      TlaVarDecl(parseStr(m("variable")))
+    else if(m.contains("assume"))
+      TlaAssumeDecl(parseJson(m("assume")))
+    else if(m.contains("operator")) {
       if(!m.contains("body") || !m.contains("params"))
         throw new Exception("incorrect TLA+ JSON: malformed operator declaration")
-      TlaOperDecl(parseStr(m("OPERATOR")), parseParams(m("params")).toList, parseJson(m("body")))
+      TlaOperDecl(parseStr(m("operator")), parseParams(m("params")).toList, parseJson(m("body")))
     }
     else
       throw new Exception("incorrect TLA+ JSON: malformed declaration object")
@@ -274,9 +286,9 @@ object JsonReader {
       case Some(value) => value
       case None => throw new Exception("incorrect TLA+ JSON: expecting a declaration object")
     }
-    if(!m.contains("OPERATOR") || !m.contains("body") || !m.contains("params"))
+    if(!m.contains("operator") || !m.contains("body") || !m.contains("params"))
         throw new Exception("incorrect TLA+ JSON: malformed operator declaration")
-    TlaOperDecl(parseStr(m("OPERATOR")), parseParams(m("params")).toList, parseJson(m("body")))
+    TlaOperDecl(parseStr(m("operator")), parseParams(m("params")).toList, parseJson(m("body")))
   }
 
   // expect ujson.Value to be an encoding of TLA+ params array
