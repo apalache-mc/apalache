@@ -28,7 +28,16 @@ Apalache:
     - [Making a pull request](#making-a-pull-request)
     - [Dependencies](#dependencies)
         - [Environment](#environment)
+    - [Development Environment](#development-environment)
+        - [Emacs](#emacs)
+            - [Install `metals-emacs`](#install-metals-emacs)
+                - [Arch](#arch)
+            - [Doom Emacs](#doom-emacs)
+            - [Vanilla Emacs](#vanilla-emacs)
     - [Testing](#testing)
+        - [Unit tests](#unit-tests)
+        - [Integration tests](#integration-tests)
+        - [Continuous Integration](#continuous-integration)
     - [Changelog](#changelog)
     - [Releases](#releases)
 
@@ -94,6 +103,53 @@ The necessary shell environment is specified in [.envrc](./.envrc). You can:
 - or use it as a reference for what to put in your preferred rc files
 
 [direnv]: https://direnv.net/
+
+## Development Environment
+
+If you use a different development environment or editor set up, please document
+it here!
+
+### Emacs
+
+You can use the [metals][] Scala language server together with [lsp-mode][] for
+a nice IDE experience in the world's best lisp driven operating system.
+
+#### Install `metals-emacs`
+
+##### Arch
+
+Using yay to install from AUR:
+
+```sh
+yay -Syu metals
+```
+
+#### Doom Emacs
+
+[Doom Emacs][doom-emacs] streamlines configuration and installation:
+
+Edit your [~/.doom.d/init.el](~/.doom.d/init.el), to uncomment `scala` and
+configure it use lsp:
+
+```elisp
+       (scala              ; java, but good
+        +lsp)
+```
+
+Run `doom sync` and restart. That's it.
+
+If you hit any snags, you might also consult [this
+writeup][writeup]
+
+[doom-emacs]: https://github.com/hlissner/doom-emacs
+[metals]: https://scalameta.org/metals/
+[lsp-mode]: https://github.com/emacs-lsp/lsp-mode
+[writeup]: https://siawyoung.com/blog/code/2020-02-06-installing-metals-emacs-doom
+
+#### Vanilla Emacs
+
+For installation and configuration in vanilla emacs, see
+https://scalameta.org/metals/docs/editors/emacs.html
 
 ## Testing
 
