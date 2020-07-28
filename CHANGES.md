@@ -1,4 +1,5 @@
 ## Unreleased #unstable
+ * Simplify JSON format to make it suitable for JsonPath queries, see #153
 
 ## 0.7.0 [RELEASE]
 
