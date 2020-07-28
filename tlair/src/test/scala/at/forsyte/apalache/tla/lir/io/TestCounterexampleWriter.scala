@@ -238,17 +238,15 @@ class TestCounterexampleWriter extends FunSuite {
         ("",Map("x" -> int(2)))
       ),
       """{
-        |  "MODULE": "counterexample",
+        |  "module": "counterexample",
         |  "declarations": [
         |    {
-        |      "OPERATOR": "State1",
+        |      "operator": "State1",
         |      "body": {
         |        "and": [
         |          {
-        |            "=": [
-        |              "x",
-        |              2
-        |            ]
+        |            "eq": "x",
+        |            "arg": 2
         |          }
         |        ]
         |      },
@@ -257,12 +255,10 @@ class TestCounterexampleWriter extends FunSuite {
         |      ]
         |    },
         |    {
-        |      "OPERATOR": "InvariantViolation",
+        |      "operator": "InvariantViolation",
         |      "body": {
-        |        ">": [
-        |          "x",
-        |          1
-        |        ]
+        |        "gt": "x",
+        |        "arg": 1
         |      },
         |      "params": [
         |        
@@ -283,17 +279,15 @@ class TestCounterexampleWriter extends FunSuite {
         ("Trans2", Map("x" -> int(2)))
       ),
       """{
-        |  "MODULE": "counterexample",
+        |  "module": "counterexample",
         |  "declarations": [
         |    {
-        |      "OPERATOR": "State1",
+        |      "operator": "State1",
         |      "body": {
         |        "and": [
         |          {
-        |            "=": [
-        |              "x",
-        |              0
-        |            ]
+        |            "eq": "x",
+        |            "arg": 0
         |          }
         |        ]
         |      },
@@ -302,14 +296,12 @@ class TestCounterexampleWriter extends FunSuite {
         |      ]
         |    },
         |    {
-        |      "OPERATOR": "State2",
+        |      "operator": "State2",
         |      "body": {
         |        "and": [
         |          {
-        |            "=": [
-        |              "x",
-        |              1
-        |            ]
+        |            "eq": "x",
+        |            "arg": 1
         |          }
         |        ]
         |      },
@@ -318,14 +310,12 @@ class TestCounterexampleWriter extends FunSuite {
         |      ]
         |    },
         |    {
-        |      "OPERATOR": "State3",
+        |      "operator": "State3",
         |      "body": {
         |        "and": [
         |          {
-        |            "=": [
-        |              "x",
-        |              2
-        |            ]
+        |            "eq": "x",
+        |            "arg": 2
         |          }
         |        ]
         |      },
@@ -334,12 +324,10 @@ class TestCounterexampleWriter extends FunSuite {
         |      ]
         |    },
         |    {
-        |      "OPERATOR": "InvariantViolation",
+        |      "operator": "InvariantViolation",
         |      "body": {
-        |        ">": [
-        |          "x",
-        |          1
-        |        ]
+        |        "gt": "x",
+        |        "arg": 1
         |      },
         |      "params": [
         |        
@@ -360,23 +348,19 @@ class TestCounterexampleWriter extends FunSuite {
         ("Trans2", Map("x" -> int(2), "y" -> int(10)))
       ),
       """{
-        |  "MODULE": "counterexample",
+        |  "module": "counterexample",
         |  "declarations": [
         |    {
-        |      "OPERATOR": "State1",
+        |      "operator": "State1",
         |      "body": {
         |        "and": [
         |          {
-        |            "=": [
-        |              "x",
-        |              0
-        |            ]
+        |            "eq": "x",
+        |            "arg": 0
         |          },
         |          {
-        |            "=": [
-        |              "y",
-        |              8
-        |            ]
+        |            "eq": "y",
+        |            "arg": 8
         |          }
         |        ]
         |      },
@@ -385,20 +369,16 @@ class TestCounterexampleWriter extends FunSuite {
         |      ]
         |    },
         |    {
-        |      "OPERATOR": "State2",
+        |      "operator": "State2",
         |      "body": {
         |        "and": [
         |          {
-        |            "=": [
-        |              "x",
-        |              1
-        |            ]
+        |            "eq": "x",
+        |            "arg": 1
         |          },
         |          {
-        |            "=": [
-        |              "y",
-        |              9
-        |            ]
+        |            "eq": "y",
+        |            "arg": 9
         |          }
         |        ]
         |      },
@@ -407,20 +387,16 @@ class TestCounterexampleWriter extends FunSuite {
         |      ]
         |    },
         |    {
-        |      "OPERATOR": "State3",
+        |      "operator": "State3",
         |      "body": {
         |        "and": [
         |          {
-        |            "=": [
-        |              "x",
-        |              2
-        |            ]
+        |            "eq": "x",
+        |            "arg": 2
         |          },
         |          {
-        |            "=": [
-        |              "y",
-        |              10
-        |            ]
+        |            "eq": "y",
+        |            "arg": 10
         |          }
         |        ]
         |      },
@@ -429,20 +405,16 @@ class TestCounterexampleWriter extends FunSuite {
         |      ]
         |    },
         |    {
-        |      "OPERATOR": "InvariantViolation",
+        |      "operator": "InvariantViolation",
         |      "body": {
         |        "and": [
         |          {
-        |            ">": [
-        |              "x",
-        |              1
-        |            ]
+        |            "gt": "x",
+        |            "arg": 1
         |          },
         |          {
-        |            "=": [
-        |              "y",
-        |              10
-        |            ]
+        |            "eq": "y",
+        |            "arg": 10
         |          }
         |        ]
         |      },

@@ -83,7 +83,7 @@ abstract class TestJson extends FunSuite {
     // { }
     compare(
       enumSet(),
-      """{"enum":[]}"""
+      """{"enumSet":[]}"""
     )
   }
   //
@@ -91,7 +91,7 @@ abstract class TestJson extends FunSuite {
     // { 42 }
     compare(
       enumSet(42),
-      """{"enum":[42]}"""
+      """{"enumSet":[42]}"""
     )
   }
 
@@ -100,7 +100,7 @@ abstract class TestJson extends FunSuite {
     compareMultiLine(
       enumSet(42),
       """{
-        |  "enum": [
+        |  "enumSet": [
         |    42
         |  ]
         |}""".stripMargin
@@ -111,7 +111,7 @@ abstract class TestJson extends FunSuite {
     // { 1, 2, 3 }
     compare(
       enumSet(int(1), int(2), int(3)),
-      """{"enum":[1,2,3]}"""
+      """{"enumSet":[1,2,3]}"""
     )
   }
 
@@ -120,7 +120,7 @@ abstract class TestJson extends FunSuite {
     compareMultiLine(
       enumSet(int(1), int(2), int(3)),
       """{
-        |  "enum": [
+        |  "enumSet": [
         |    1,
         |    2,
         |    3
@@ -149,7 +149,7 @@ abstract class TestJson extends FunSuite {
     // 1 - 2
     compare(
       minus(int(1), int(2)),
-      """{"-":[1,2]}"""
+      """{"minus":1,"arg":2}"""
     )
   }
 
@@ -158,21 +158,19 @@ abstract class TestJson extends FunSuite {
     compareMultiLine(
       funDef(plus("x", "y"), "x", "S", "y", "T"),
       """{
-        |  "fun": {
-        |    "+": [
-        |      "x",
-        |      "y"
-        |    ]
+        |  "funDef": {
+        |    "plus": "x",
+        |    "arg": "y"
         |  },
         |  "where": [
-        |    [
-        |      "x",
-        |      "S"
-        |    ],
-        |    [
-        |      "y",
-        |      "T"
-        |    ]
+        |    {
+        |      "key": "x",
+        |      "value": "S"
+        |    },
+        |    {
+        |      "key": "y",
+        |      "value": "T"
+        |    }
         |  ]
         |}""".stripMargin
     )
@@ -182,7 +180,7 @@ abstract class TestJson extends FunSuite {
     // [x \in S] == 1 + recFunRef
     compare(
       recFunDef(plus(int(1), recFunRef()), "x", "S"),
-      """{"rec-fun":{"+":[1,{"apply-op":"rec-fun-ref","args":[]}]},"where":[["x","S"]]}""".stripMargin
+      """{"recFunDef":{"plus":1,"arg":{"applyOp":"recFunRef","args":[]}},"where":[{"key":"x","value":"S"}]}""".stripMargin
     )
   }
 
@@ -190,7 +188,7 @@ abstract class TestJson extends FunSuite {
     // f[e]
     compare(
       appFun("f", "e"),
-      """{"apply-fun":"f","arg":"e"}"""
+      """{"applyFun":"f","arg":"e"}"""
     )
   }
 
@@ -198,7 +196,7 @@ abstract class TestJson extends FunSuite {
     // A(1,2)
     compare(
       OperEx(TlaOper.apply, "A", 1, 2),
-      """{"apply-op":"A","args":[1,2]}"""
+      """{"applyOp":"A","args":[1,2]}"""
     )
   }
 
@@ -206,7 +204,7 @@ abstract class TestJson extends FunSuite {
     // f[e][g]
     compare(
       appFun(appFun("f", "e"), "g"),
-      """{"apply-fun":{"apply-fun":"f","arg":"e"},"arg":"g"}"""
+      """{"applyFun":{"applyFun":"f","arg":"e"},"arg":"g"}"""
     )
   }
 
@@ -214,7 +212,7 @@ abstract class TestJson extends FunSuite {
     // [f EXCEPT ![k] = v]
     compare(
       except("f", "k", "v"),
-      """{"except":"f","where":[["k","v"]]}"""
+      """{"except":"f","where":[{"key":"k","value":"v"}]}"""
     )
   }
 
@@ -226,7 +224,7 @@ abstract class TestJson extends FunSuite {
         str("x2"), "y2",
         str("x3"), "y3"
       ),
-      """{"record":[[{"str":"x1"},"y1"],[{"str":"x2"},"y2"],[{"str":"x3"},"y3"]]}"""
+      """{"record":[{"key":{"str":"x1"},"value":"y1"},{"key":{"str":"x2"},"value":"y2"},{"key":{"str":"x3"},"value":"y3"}]}"""
     )
   }
 
@@ -234,7 +232,7 @@ abstract class TestJson extends FunSuite {
     // [S -> T]
     compare(
       funSet(name("S"), name("T")),
-      """{"fun-set":["S","T"]}"""
+      """{"funSet":"S","arg":"T"}"""
     )
   }
 
@@ -246,7 +244,7 @@ abstract class TestJson extends FunSuite {
         str("y"), "T",
         str("z"), "U"
       ),
-      """{"rec-set":[[{"str":"x"},"S"],[{"str":"y"},"T"],[{"str":"z"},"U"]]}"""
+      """{"recSet":[{"key":{"str":"x"},"value":"S"},{"key":{"str":"y"},"value":"T"},{"key":{"str":"z"},"value":"U"}]}"""
     )
   }
 
@@ -254,7 +252,7 @@ abstract class TestJson extends FunSuite {
     // {x \in S: P}
     compare(
       filter("x", "S", "P"),
-      """{"filter":["x","S"],"that":"P"}"""
+      """{"filter":{"key":"x","value":"S"},"that":"P"}"""
     )
   }
 
@@ -263,15 +261,13 @@ abstract class TestJson extends FunSuite {
     compareMultiLine(
       filter("x", "S", lt("x", 5)),
       """{
-        |  "filter": [
-        |    "x",
-        |    "S"
-        |  ],
+        |  "filter": {
+        |    "key": "x",
+        |    "value": "S"
+        |  },
         |  "that": {
-        |    "<": [
-        |      "x",
-        |      5
-        |    ]
+        |    "lt": "x",
+        |    "arg": 5
         |  }
         |}""".stripMargin
     )
@@ -281,7 +277,7 @@ abstract class TestJson extends FunSuite {
     // {x+y: x \in S, y \in T}
     compare(
       map(plus("x", "y"), "x", "S", "y", "T"),
-      """{"map":{"+":["x","y"]},"where":[["x","S"],["y","T"]]}"""
+      """{"map":{"plus":"x","arg":"y"},"where":[{"key":"x","value":"S"},{"key":"y","value":"T"}]}"""
     )
   }
 
@@ -289,7 +285,7 @@ abstract class TestJson extends FunSuite {
     // \E x \in S : P
     compare(
       exists("x", "S", "P"),
-      """{"exists-bounded":["x","S"],"that":"P"}"""
+      """{"existsBounded":{"key":"x","value":"S"},"that":"P"}"""
     )
   }
 
@@ -305,7 +301,7 @@ abstract class TestJson extends FunSuite {
     // CHOOSE x \in S : x > 3
     compare(
       choose("x", "S", gt("x",3)),
-      """{"CHOOSE-bounded":["x","S"],"that":{">":["x",3]}}"""
+      """{"chooseBounded":{"key":"x","value":"S"},"that":{"gt":"x","arg":3}}"""
     )
   }
 
@@ -314,22 +310,18 @@ abstract class TestJson extends FunSuite {
     compareMultiLine(
       choose(tuple("x", "y"), le(plus("x","y"),5)),
       """{
-        |  "CHOOSE": {
+        |  "choose": {
         |    "tuple": [
         |      "x",
         |      "y"
         |    ]
         |  },
         |  "that": {
-        |    "<=": [
-        |      {
-        |        "+": [
-        |          "x",
-        |          "y"
-        |        ]
-        |      },
-        |      5
-        |    ]
+        |    "le": {
+        |      "plus": "x",
+        |      "arg": "y"
+        |    },
+        |    "arg": 5
         |  }
         |}""".stripMargin
     )
@@ -339,7 +331,7 @@ abstract class TestJson extends FunSuite {
     // \E x \in S : P
     compare(
       ite("p", "x", "y"),
-      """{"IF":"p","THEN":"x","ELSE":"y"}"""
+      """{"if":"p","then":"x","else":"y"}"""
     )
   }
 
@@ -348,7 +340,7 @@ abstract class TestJson extends FunSuite {
     //   [] guard2 -> action2
     compare(
       caseSplit("guard1", "action1", "guard2", "action2"),
-      """{"CASE":[["guard1","action1"],["guard2","action2"]]}"""
+      """{"case":[{"key":"guard1","value":"action1"},{"key":"guard2","value":"action2"}]}"""
     )
   }
 
@@ -358,7 +350,7 @@ abstract class TestJson extends FunSuite {
     //   [] OTHER -> otherAction
     compare(
       caseOther("otherAction", "guard1", "action1", "guard2", "action2"),
-      """{"CASE":[["guard1","action1"],["guard2","action2"]],"OTHER":"otherAction"}"""
+      """{"case":[{"key":"guard1","value":"action1"},{"key":"guard2","value":"action2"}],"other":"otherAction"}"""
     )
   }
 
@@ -379,14 +371,14 @@ abstract class TestJson extends FunSuite {
   test("WF_x(A)") {
     compare(
       WF("x", "A"),
-      """{"WF":"A","vars":"x"}"""
+      """{"weakFairness":"A","vars":"x"}"""
     )
   }
 
   test("SF_<<x,y>>(A)") {
     compare(
       SF(tuple("x", "y"), "A"),
-      """{"SF":"A","vars":{"tuple":["x","y"]}}"""
+      """{"strongFairness":"A","vars":{"tuple":["x","y"]}}"""
     )
   }
 
@@ -407,7 +399,7 @@ abstract class TestJson extends FunSuite {
   test("L2(a, b) :: f(x+y)>2") {
     compare(
       label(appFun("f", gt(plus("x","y"),2)), "L2", "a", "b"),
-      """{"apply-fun":"f","arg":{">":[{"+":["x","y"]},2]},"label":{"name":"L2","args":["a","b"]}}"""
+      """{"applyFun":"f","arg":{"gt":{"plus":"x","arg":"y"},"arg":2},"label":{"name":"L2","args":["a","b"]}}"""
     )
   }
 
@@ -415,7 +407,7 @@ abstract class TestJson extends FunSuite {
     val aDecl = TlaOperDecl("A", List(), 1)
     compare(
       letIn(appDecl(aDecl), aDecl),
-      """{"LET":[{"OPERATOR":"A","body":1,"params":[]}],"IN":{"apply-op":"A","args":[]}}"""
+      """{"let":[{"operator":"A","body":1,"params":[]}],"body":{"applyOp":"A","args":[]}}"""
     )
   }
 
@@ -426,7 +418,7 @@ abstract class TestJson extends FunSuite {
       plus("x", "y"))
     compare(
       letIn(appDecl(decl, int(1), int(2)), decl),
-      """{"LET":[{"OPERATOR":"A","body":{"+":["x","y"]},"params":[{"name":"x","arity":0},{"name":"y","arity":0}]}],"IN":{"apply-op":"A","args":[1,2]}}"""
+      """{"let":[{"operator":"A","body":{"plus":"x","arg":"y"},"params":[{"name":"x","arity":0},{"name":"y","arity":0}]}],"body":{"applyOp":"A","args":[1,2]}}"""
     )
   }
 
@@ -445,14 +437,12 @@ abstract class TestJson extends FunSuite {
           appDecl(decl2, int(3), int(4))),
         decl1, decl2),
       """{
-        |  "LET": [
+        |  "let": [
         |    {
-        |      "OPERATOR": "A",
+        |      "operator": "A",
         |      "body": {
-        |        "+": [
-        |          "x",
-        |          "y"
-        |        ]
+        |        "plus": "x",
+        |        "arg": "y"
         |      },
         |      "params": [
         |        {
@@ -466,12 +456,10 @@ abstract class TestJson extends FunSuite {
         |      ]
         |    },
         |    {
-        |      "OPERATOR": "B",
+        |      "operator": "B",
         |      "body": {
-        |        "-": [
-        |          "x",
-        |          "y"
-        |        ]
+        |        "minus": "x",
+        |        "arg": "y"
         |      },
         |      "params": [
         |        {
@@ -485,23 +473,21 @@ abstract class TestJson extends FunSuite {
         |      ]
         |    }
         |  ],
-        |  "IN": {
-        |    "*": [
-        |      {
-        |        "apply-op": "A",
-        |        "args": [
-        |          1,
-        |          2
-        |        ]
-        |      },
-        |      {
-        |        "apply-op": "B",
-        |        "args": [
-        |          3,
-        |          4
-        |        ]
-        |      }
-        |    ]
+        |  "body": {
+        |    "mult": {
+        |      "applyOp": "A",
+        |      "args": [
+        |        1,
+        |        2
+        |      ]
+        |    },
+        |    "arg": {
+        |      "applyOp": "B",
+        |      "args": [
+        |        3,
+        |        4
+        |      ]
+        |    }
         |  }
         |}""".stripMargin
     )
@@ -511,7 +497,7 @@ abstract class TestJson extends FunSuite {
     // awesome
     compareModule(
       new TlaModule("TEST", List()),
-      """{"MODULE":"TEST","declarations":[]}"""
+      """{"module":"TEST","declarations":[]}"""
     )
   }
 
@@ -521,7 +507,7 @@ abstract class TestJson extends FunSuite {
       new TlaModule("trivial", List(
         TlaOperDecl("A", List(), int(42))
       )),
-      """{"MODULE":"trivial","declarations":[{"OPERATOR":"A","body":42,"params":[]}]}"""
+      """{"module":"trivial","declarations":[{"operator":"A","body":42,"params":[]}]}"""
     )
   }
 
@@ -532,15 +518,13 @@ abstract class TestJson extends FunSuite {
         TlaOperDecl("A", List(SimpleFormalParam("age")), gt(name("age"),int(42)))
       )),
       """{
-        |  "MODULE": "simpleOperator",
+        |  "module": "simpleOperator",
         |  "declarations": [
         |    {
-        |      "OPERATOR": "A",
+        |      "operator": "A",
         |      "body": {
-        |        ">": [
-        |          "age",
-        |          42
-        |        ]
+        |        "gt": "age",
+        |        "arg": 42
         |      },
         |      "params": [
         |        {
@@ -569,18 +553,16 @@ abstract class TestJson extends FunSuite {
           appDecl( aDecl, int(0), NameEx("z"), appDecl(bDecl, int(1))))
       )),
       """{
-        |  "MODULE": "level2Operators",
+        |  "module": "level2Operators",
         |  "declarations": [
         |    {
-        |      "OPERATOR": "A",
+        |      "operator": "A",
         |      "body": {
-        |        "apply-op": "f",
+        |        "applyOp": "f",
         |        "args": [
         |          {
-        |            "union": [
-        |              "i",
-        |              "j"
-        |            ]
+        |            "cup": "i",
+        |            "arg": "j"
         |          }
         |        ]
         |      },
@@ -600,7 +582,7 @@ abstract class TestJson extends FunSuite {
         |      ]
         |    },
         |    {
-        |      "OPERATOR": "B",
+        |      "operator": "B",
         |      "body": "y",
         |      "params": [
         |        {
@@ -610,14 +592,14 @@ abstract class TestJson extends FunSuite {
         |      ]
         |    },
         |    {
-        |      "OPERATOR": "C",
+        |      "operator": "C",
         |      "body": {
-        |        "apply-op": "A",
+        |        "applyOp": "A",
         |        "args": [
         |          0,
         |          "z",
         |          {
-        |            "apply-op": "B",
+        |            "applyOp": "B",
         |            "args": [
         |              1
         |            ]
