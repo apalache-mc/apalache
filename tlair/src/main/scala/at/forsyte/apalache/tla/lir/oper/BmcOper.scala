@@ -1,9 +1,10 @@
 package at.forsyte.apalache.tla.lir.oper
 
 /**
-  * The operators defined in the BMC module. This module give the users a facility to provide hints.
-  * To use this module, the user would have to copy the module somewhere. As our tool is not widely used,
-  * we just hijack some operators during the import stage, e.g., <:
+  * The operators defined in the module Apalache.tla. This module gives the users a facility to provide hints.
+  * The module Apalache is automatically looked up when Apalache is running.
+  *
+  * TODO: rename this class to ApalacheOper, once ik/multicore is merged into unstable.
   *
   * @author konnov
  */
@@ -64,7 +65,9 @@ object BmcOper {
 
   /**
     * The distinct operator that is equivalent to (distinct ...) in SMT-LIB.
-    * Formally, BMC!Distinct(x_1, ..., x_n) is equivalent to \A i, j \in 1..n: i /= j => x_i /= x_j
+    * Formally, BMC!Distinct(x_1, ..., x_n) is equivalent to \A i, j \in 1..n: i /= j => x_i /= x_j.
+    *
+    * XXX: there seems to be no way of defining a user-defined variadic operator in Apalache.tla.
     */
   val distinct: BmcOper = new BmcOper {
     override def name: String = "BMC!Distinct"

@@ -1957,45 +1957,28 @@ class TestSanyImporter extends FunSuite {
     assert(13 == root.declarations.size)
   }
 
-
-  /*
-  TODO: we need a good way to propagate this module to the standard library
-
-  test("module BMC") {
-    // check that the module BMC is imported properly
+  test("EXTENDS Apalache") {
     val text =
-      """---- MODULE bmc ----
-        |EXTENDS BMC
-        |
-        |VARIABLES i
-        |
-        |AWithType == WithType(i, "IntT")
+      """---- MODULE root ----
+        |EXTENDS Apalache
         |================================
-        |""".stripMargin
+      """.stripMargin
 
-    val (rootName, modules) = new SanyImporter().loadFromSource("bmc", Source.fromString(text))
-    assert(2 == modules.size) // our module
-    // the root module and naturals
-    val root = modules(rootName)
+    // We have to set TLA-Library, in order to look up for Apalache.tla. This is done automatically in pom.xml.
+    // If you run this test in an IDE, and the test fails, add the following line to the VM parameters
+    // (don't forget to replace <APALACHE_HOME> with the directory where you checked out the project):
+    //
+    // -DTLA-Library=<APALACHE_HOME>/src/tla
+    System.out.println("TLA-Library = %s".format(System.getProperty("TLA-Library")))
 
-    def assertTlaDecl(expectedName: String, body: TlaEx): Unit = {
-      root.declarations.find {
-        _.name == expectedName
-      } match {
-        case Some(d: TlaOperDecl) =>
-          assert(expectedName == d.name)
-          assert(0 == d.formalParams.length)
-          assert(body == d.body)
+    val locationStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(locationStore)
+      .loadFromSource("root", Source.fromString(text))
+    assert(2 == modules.size) // Apalache and root
 
-        case _ =>
-          fail("Expected a TlaDecl")
-      }
-    }
-
-    assertTlaDecl("AWithType",
-      OperEx(BmcOper.withType, name("i"), str("IntT")))
+    val root = modules("root")
+    assert(4 == root.declarations.size)
   }
-  */
 
   test("assumptions") {
     // checking that the assumptions are imported properly
