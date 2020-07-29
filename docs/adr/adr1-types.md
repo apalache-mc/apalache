@@ -234,6 +234,10 @@ ASSUME(list \in Seq(Int))
 ASSUME(\A e \in Int, \A es \in Seq(Int): Mem(e, es) \in BOOLEAN)
 ```
 
+SANY parser only accepts the first assumption in the above
+example. __The two other assumptions are rejected by the parser, as they
+refer to non-constant values.__
+
 Moreover, using the proof syntax of
 [TLA+ Version 2](https://lamport.azurewebsites.net/tla/tla2-guide.pdf),
 we can annotate the
@@ -262,6 +266,7 @@ __Cons__:
  * The syntax gets verbose and hard to write, when writing types of
    LET-IN operators and bound variables.
  * It is not clear how to extend this syntax to higher-order operators.
+ * __One cannot write assumptions about state variables.__
 
 ### 2.3. Type annotations in comments
  
