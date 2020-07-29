@@ -1,6 +1,6 @@
 # Apalache manual
 
-**Version 0.7.0 (unstable)** :fireworks:
+**Version 0.7.1 (unstable)** :fireworks:
 
 **Authors: Igor Konnov, Jure Kukovec, Andrey Kuprianov, Shon Feder**
 
@@ -505,8 +505,38 @@ State14 ==
 InvariantViolation == hasLicense /\ year - BIRTH_YEAR < LICENSE_AGE
 ```
 
+<a name="lookup"></a>
+## 6.3. Module lookup
+
+Apalache uses [the SANY
+parser](https://lamport.azurewebsites.net/tla/tools.html), which is the
+standard parser of TLC and TLA+ Toolbox. By default, SANY is looking for the
+modules in the current working directory and in the Java package
+`tla2sany.StandardModules`, which is usually provided by `tla2tools.jar` that is
+included in the Java classpath.
+
+Additionally, Apalache includes the directory `$APALACHE_HOME/src/tla` into the
+SANY lookup list via the Java system variable called `TLA-Library`. (The script
+`bin/apalache-mc` automatically sets `APALACHE_HOME` to its parent directory.)
+
+On top of that, Apalache adds all the directories specified in the environment
+variable `TLA_PATH` into the SANY lookup list. See [issue
+187](https://github.com/informalsystems/apalache/issues/187).
+
+So the module lookup order in Apalache is as follows:
+
+1. The current working directory.
+1. The directory `$APALACHE_HOME/src/tla`.
+1. The directories specified in the environment variable `TLA_PATH`.
+1. The Java package `tla2sany.StandardModules`.
+
+__Note:__ To let TLA+ Toolbox and TLC know about the Apalache modules, include
+`$APALACHE_HOME/src/tla` in the lookup directories, as explained by Markus
+Kuppe for the [TLA+ Community
+Modules](https://github.com/tlaplus/CommunityModules).
+
 <a name="detailed"></a>
-## 6.3. Detailed output
+## 6.4. Detailed output
 
 The tool will display only important messages on stdout, but a detailed log can
 be found in `detailed.log`.
@@ -535,7 +565,7 @@ the run-specific directory `x/hh.mm-DD.MM.YYYY-<id>`:
     marking Skolemizable expressions and expressions to be expanded.
 
 <a name="parsing"></a>
-## 6.4. Parsing and pretty-printing
+## 6.5. Parsing and pretty-printing
 
 If you'd like to check that your TLA+ specification is syntactically correct,
 without running the model checker, you can run the following command:
