@@ -1,4 +1,5 @@
 ## Unreleased #unstable
+ * Lookup for modules using TLA_PATH, see #187
  * Simplify JSON format to make it suitable for JsonPath queries, see #153
 
 ## 0.7.0 [RELEASE]
