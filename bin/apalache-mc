@@ -40,6 +40,11 @@ JVM_ARGS="-Xmx4096m -Djava.library.path=$DIR/3rdparty/lib"
 # uncomment to track memory usage with: jcmd <pid> VM.native_memory summary
 #JVM_ARGS="${JVM_ARGS} -XX:NativeMemoryTracking=summary"
 
+# This is a temporary solution for handling TLA_PATH via a Java variable.
+# See apalache/#187.
+# Once tlaplus/#490,#493 are release, remove this workaround.
+test -z "$TLA_PATH" || JVM_ARGS="$JVM_ARGS -DTLA-Library=$TLA_PATH"
+
 echo "# JVM args: $JVM_ARGS"
 echo "#"
 
