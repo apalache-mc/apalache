@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.lir.oper
 
 /**
   * The operators defined in the module Apalache.tla. This module gives the users a facility to provide hints.
-  * The module Apalache is automatically looked up when Apalache is running.
+  * The "Apalache" module is automatically looked up when Apalache is running.
   *
   * TODO: rename this class to ApalacheOper, once ik/multicore is merged into unstable.
   *
@@ -75,5 +75,4 @@ object BmcOper {
     override def precedence: (Int, Int) = (5, 5)
   }
 }
-
 
