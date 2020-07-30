@@ -516,13 +516,12 @@ modules in the current working directory and in the Java package
 `tla2sany.StandardModules`, which is usually provided by the `tla2tools.jar` that is
 included in the Java classpath.
 
-Additionally, Apalache includes the directory `$APALACHE_HOME/src/tla` into the
-SANY lookup list via the Java system variable called `TLA-Library`. (The script
-`bin/apalache-mc` automatically sets `APALACHE_HOME` to its parent directory.)
+In addition to the modules in the current working directory, Appalache provides
 
-On top of that, Apalache adds all the directories specified in the environment
-variable `TLA_PATH` into the SANY lookup list. See [issue
-187](https://github.com/informalsystems/apalache/issues/187).
+- a small standard library (located in `$APALACHE_HOME/src/tla`), and
+- support for additional source directories specified in the environment variable `TLA_PATH`. `TLA_PATH` should be a list of paths to directories separated by `:`. 
+
+(Directories in the `TLA_PATH` are provided to SANY via the `TLA-Library` Java system variable.)    
 
 So the module lookup order in Apalache is as follows:
 
