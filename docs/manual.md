@@ -513,7 +513,7 @@ Apalache uses [the SANY
 parser](https://lamport.azurewebsites.net/tla/tools.html), which is the
 standard parser of TLC and TLA+ Toolbox. By default, SANY is looking for the
 modules in the current working directory and in the Java package
-`tla2sany.StandardModules`, which is usually provided by `tla2tools.jar` that is
+`tla2sany.StandardModules`, which is usually provided by the `tla2tools.jar` that is
 included in the Java classpath.
 
 Additionally, Apalache includes the directory `$APALACHE_HOME/src/tla` into the
