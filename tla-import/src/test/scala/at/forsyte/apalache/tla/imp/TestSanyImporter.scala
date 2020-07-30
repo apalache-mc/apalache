@@ -1975,7 +1975,7 @@ class TestSanyImporter extends FunSuite {
         |================================
       """.stripMargin
 
-    // We have to set TLA-Library, in order to look up for Apalache.tla. This is done automatically in pom.xml.
+    // We have to set TLA-Library, in order to look up Apalache.tla. This is done automatically in pom.xml.
     // If you run this test in an IDE, and the test fails, add the following line to the VM parameters
     // (don't forget to replace <APALACHE_HOME> with the directory where you checked out the project):
     //
