@@ -4,6 +4,7 @@ import java.io.{File, PrintWriter}
 import java.nio.file.Files
 
 import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.Builder.name
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.src.{SourcePosition, SourceRegion}
@@ -45,7 +46,7 @@ class TestSanyImporter extends FunSuite {
       _.name == name
     } match {
       case Some(d: TlaOperDecl) =>
-        expectTlaDecl(sourceStore, name, List(), body)
+        expectTlaDecl(sourceStore, name, List(), body)(d)
 
       case _ =>
         fail("Expected a TlaDecl")
@@ -576,10 +577,10 @@ class TestSanyImporter extends FunSuite {
       OperEx(TlaFunOper.funDef, cup, NameEx("y"), NameEx("x")))
     expectDecl("FcnCtor2",
       OperEx(TlaFunOper.funDef, OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")),
-        NameEx("a"), NameEx("x"), NameEx("b"), NameEx("x")))
+        NameEx("a"), NameEx("x"), NameEx("b"), ValEx(TlaBoolSet)))
     expectDecl("FcnCtor3",
       OperEx(TlaFunOper.funDef, OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")),
-        OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")), NameEx("x")))
+        OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")), OperEx(TlaSetOper.times, NameEx("x"), ValEx(TlaBoolSet))))
     expectDecl("IfThenElse",
       OperEx(TlaControlOper.ifThenElse, ValEx(TlaBool(true)), ValEx(TlaBool(false)), ValEx(TlaBool(true))))
     expectDecl("RcdCtor",
@@ -613,7 +614,9 @@ class TestSanyImporter extends FunSuite {
     expectDecl("SetOfAll",
       OperEx(TlaSetOper.map, ValEx(TlaInt(1)), NameEx("y"), NameEx("x")))
     expectDecl("SetOfTuples",
-      OperEx(TlaSetOper.map, OperEx(TlaFunOper.tuple), NameEx("a"), NameEx("x"), NameEx("b"), NameEx("x")))
+      OperEx(TlaSetOper.map,
+        OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")),
+          NameEx("a"), NameEx("x"), NameEx("b"), NameEx("x")))
     expectDecl("SubsetOf",
       OperEx(TlaSetOper.filter, NameEx("y"), NameEx("x"), ValEx(TlaBool(true))))
     expectDecl("Boolean", ValEx(TlaBoolSet))
@@ -655,7 +658,9 @@ class TestSanyImporter extends FunSuite {
     expectDecl("MapTuples2",
       OperEx(TlaSetOper.map,
         OperEx(TlaOper.eq, NameEx("x"), ValEx(TlaInt(1))),
-        OperEx(TlaFunOper.tuple, NameEx("x"), NameEx("y")),
+        NameEx("x"),
+        NameEx("XY"),
+        NameEx("y"),
         NameEx("XY")
       ))////
   }
@@ -1590,7 +1595,7 @@ class TestSanyImporter extends FunSuite {
     expectDecl("Leq", OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Geq", OperEx(TlaArithOper.ge, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Mod", OperEx(TlaArithOper.mod, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
-    expectDecl("Div", OperEx(TlaArithOper.realDiv, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Div", OperEx(TlaArithOper.div, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Range", OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(3))))
 
     // check the source info
@@ -1650,7 +1655,7 @@ class TestSanyImporter extends FunSuite {
     expectDecl("Leq", OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Geq", OperEx(TlaArithOper.ge, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Mod", OperEx(TlaArithOper.mod, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
-    expectDecl("Div", OperEx(TlaArithOper.realDiv, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Div", OperEx(TlaArithOper.div, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Range", OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(3))))
     expectDecl("UnaryMinus", OperEx(TlaArithOper.uminus, ValEx(TlaInt(2))))
   }
@@ -1700,7 +1705,7 @@ class TestSanyImporter extends FunSuite {
     expectDecl("Leq", OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Geq", OperEx(TlaArithOper.ge, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Mod", OperEx(TlaArithOper.mod, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
-    expectDecl("Div", OperEx(TlaArithOper.realDiv, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Div", OperEx(TlaArithOper.div, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Range", OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(3))))
     expectDecl("UnaryMinus", OperEx(TlaArithOper.uminus, ValEx(TlaInt(2))))
     expectDecl("RealDiv", OperEx(TlaArithOper.realDiv, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
@@ -1961,6 +1966,9 @@ class TestSanyImporter extends FunSuite {
     val text =
       """---- MODULE root ----
         |EXTENDS Apalache
+        |VARIABLE x
+        |
+        |Assn == x' := 1
         |================================
       """.stripMargin
 
@@ -1977,7 +1985,16 @@ class TestSanyImporter extends FunSuite {
     assert(2 == modules.size) // Apalache and root
 
     val root = modules("root")
-    assert(4 == root.declarations.size)
+    assert(6 == root.declarations.size)
+
+    def expectDecl(name: String, body: TlaEx) = {
+      findAndExpectTlaDecl(locationStore, root, name, List(), body)
+    }
+
+    expectDecl("Assn",
+      OperEx(BmcOper.assign, OperEx(TlaActionOper.prime, NameEx("x")), ValEx(TlaInt(1))))
+
+    fail("it should have failed earlier!")
   }
 
   test("assumptions") {
