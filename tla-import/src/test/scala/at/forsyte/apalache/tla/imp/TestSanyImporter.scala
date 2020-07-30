@@ -1965,10 +1965,13 @@ class TestSanyImporter extends FunSuite {
   test("EXTENDS Apalache") {
     val text =
       """---- MODULE root ----
-        |EXTENDS Apalache
-        |VARIABLE x
+        |EXTENDS Integers, FiniteSets, Apalache
+        |VARIABLE x, S
         |
         |Assn == x' := 1
+        |Sklm == Skolem(\E y \in S: TRUE)
+        |Expnd == Expand(SUBSET S)
+        |CC == ConstCardinality(Cardinality(S) >= 2)
         |================================
       """.stripMargin
 
@@ -1982,7 +1985,7 @@ class TestSanyImporter extends FunSuite {
     val locationStore = new SourceStore
     val (rootName, modules) = new SanyImporter(locationStore)
       .loadFromSource("root", Source.fromString(text))
-    assert(2 == modules.size) // Apalache and root
+    assert(6 == modules.size) // root, Apalache, Integers, FiniteSets, and whatever they import
 
     val root = modules("root")
     assert(6 == root.declarations.size)
@@ -1993,8 +1996,17 @@ class TestSanyImporter extends FunSuite {
 
     expectDecl("Assn",
       OperEx(BmcOper.assign, OperEx(TlaActionOper.prime, NameEx("x")), ValEx(TlaInt(1))))
-
-    fail("it should have failed earlier!")
+    expectDecl("Sklm",
+      OperEx(BmcOper.skolem,
+        OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("S"), ValEx(TlaBool(true)))))
+    expectDecl("Expnd",
+      OperEx(BmcOper.expand,
+        OperEx(TlaSetOper.powerset, NameEx("S"))))
+    expectDecl("CC",
+      OperEx(BmcOper.constCard,
+        OperEx(TlaArithOper.ge,
+          OperEx(TlaFiniteSetOper.cardinality, NameEx("S")),
+          ValEx(TlaInt(2)))))
   }
 
   test("assumptions") {

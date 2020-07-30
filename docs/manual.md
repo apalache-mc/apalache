@@ -41,6 +41,7 @@ Apalache is working under the following assumptions:
     1. [Assignments and symbolic transitions](#assignments)
     1. [Type annotations](#types)
     1. [Recursive operators and functions](#recursion)
+ 1. [The Apalache module](#apalacheMod)
  1. [Five minutes of theory](#theory5)
  1. [Supported language features](#features)
 
@@ -611,16 +612,16 @@ VARIABLE hasLicense
 ASSUME(80 \in 0 .. 99)
 ASSUME(18 \in 1 .. 99)
 
-Init$0 == year' <- 80 /\ hasLicense' <- FALSE
-Next$0 == year' <- ((year + 1) % 100) /\ (hasLicense' <- hasLicense)
-Next$1 == year - 80 >= 18 /\ hasLicense' <- TRUE /\ (year' <- year)
+Init$0 == year' := 80 /\ hasLicense' := FALSE
+Next$0 == year' := ((year + 1) % 100) /\ (hasLicense' := hasLicense)
+Next$1 == year - 80 >= 18 /\ hasLicense' := TRUE /\ (year' := year)
 ===============
 ```
 
 As you can see, the model checker did two things:
 
-1. It has translated several expressions that look like `x' = e` into `x' <- e`.
-   For instance, you can see `year' <- 80` and `hasLicense' <- FALSE` in
+1. It has translated several expressions that look like `x' = e` into `x' := e`.
+   For instance, you can see `year' := 80` and `hasLicense' := FALSE` in
    `Init$0`. We call these expressions **assignments**.
 1. It has factored the operator `Next` into two operators `Next$0` and `Next$1`.
    We call these operators **symbolic transitions**.
@@ -646,7 +647,7 @@ The main contract between the assignments and symbolic transitions is as
 follows:
 
 > For every variable `x` declared with `VARIABLE`, there is exactly one
-> assignment of the form `x' <- e` in every symbolic transition `A_n`.
+> assignment of the form `x' := e` in every symbolic transition `A_n`.
 
 If Apalache cannot find expressions with the above properties, it fails.
 Consider the example
@@ -1152,8 +1153,27 @@ cardinality does not require `2^|NUMS|` constraints, when using a recursive
 operator.
 
 
+<a name="apalacheMod"></a>
+# 9. The Apalache module
+
+Similar to the `TLC` module, we provide the module called `Apalache`, which can
+be found in
+[src/tla](https://github.com/informalsystems/apalache/tree/unstable/src/tla).
+Most of the operators in that modules are introduce internally by Apalache,
+when it is rewriting a TLA+ specification.  It is useful to read the comments
+to the operators defined in `Apalache.tla`, as they will help you in
+understanding the [detailed output](#detailed) produced by the tool, see.
+Perhaps, the most interesting operator in `Apalache` is the type assignment
+operator that is defined as follows:
+
+```tla
+x := e == x = e
+```
+
+See the [discussion](#assignments) on the role of assignments in Apalache.
+
 <a name="theory5"></a>
-# 9. Five minutes of theory
+# 10. Five minutes of theory
 
 **You can safely skip this section**
 
@@ -1190,7 +1210,7 @@ delivered at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549).
 
 <a name="features"></a>
 
-# 10. Supported language features
+# 11. Supported language features
 
 Check the [supported features](features.md), [KerA+](kera.md), and
 [preprocessing steps](preprocessing.md).
