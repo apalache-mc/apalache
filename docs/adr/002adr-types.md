@@ -117,7 +117,7 @@ expression `ex` with a type `tp`.  This operator return `ex` itself, that is, it
 performs type erasure (for compatibility with other TLA+ tools).  As these
 operators return values of different types, we decided to use different
 graphical notation for them. Initially, we thought of writing `<:` and `:>`,
-which was quite confusing to the assymetric nature of those operators.
+which was quite confusing due to the assymetric nature of those operators.
 
 In the following, we discuss how to annotate different TLA+ names.
 
@@ -189,7 +189,7 @@ operators (note though that we are using `->` instead of `=>`):
 Card[S \in T] == "Set(Set(a)) -> Int" ##
     IF S = {}
     THEN 0
-    ELSE LET one_elem == "() => a" :>
+    ELSE LET one_elem == "() => a" ##
             (CHOOSE x \in S: TRUE)
          IN
          1 + Card[S \ {one_elem}]
