@@ -1,4 +1,4 @@
-# ADR 1: types and type annotations
+# RFC 001: types and type annotations
 
 It is good to have a number of different opinions here. As I can see, we
 actually have three issues, not one (I initially have put emphasis only on the
