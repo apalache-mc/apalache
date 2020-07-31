@@ -1,6 +1,10 @@
 # RFC 001: types and type annotations
 
-It is good to have a number of different opinions here. As I can see, we
+This is an RFC that reviews a number of possibilities.
+A concrete proposal can be found in [ADR-002](docs/adr/002adr-types.md).
+
+
+It is good to have a number of different opinions here. We
 actually have three issues, not one (I initially have put emphasis only on the
 third issue):
 
