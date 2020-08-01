@@ -15,7 +15,7 @@ QUICK_MAVEN_OPTS := "-XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:non
 # - run up to 4 threads per core (4C): https://cwiki.apache.org/confluence/display/MAVEN/Parallel+builds+in+Maven+3
 QUICK_MAVEN_ARGS := -DskipTests -Dscoverage.skip=true -T 4C
 
-.PHONY: all, apalache, build, test, integration, clean
+.PHONY: all, apalache, compile, build, test, integration, clean
 
 all: apalache
 
