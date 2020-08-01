@@ -13,6 +13,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <scoverage.plugin.version>1.4.0</scoverage.plugin.version>
         <scoverage.aggregate>true</scoverage.aggregate>
+        <logback.version>1.2.3</logback.version>
     </properties>
 
     <repositories>
@@ -73,7 +74,7 @@
                 <dependency>
                     <groupId>org.scala-lang.modules</groupId>
                     <artifactId>scala-parser-combinators_${scalaBinaryVersion}</artifactId>
-                    <version>1.0.4</version>
+                    <version>1.1.2</version>
                 </dependency>
             </dependencies>
         </profile>
@@ -85,19 +86,42 @@
             <dependency>
                 <groupId>com.google.inject</groupId>
                 <artifactId>guice</artifactId>
-                <version>4.2.2</version>
+                <version>4.2.3</version>
+            </dependency>
+
+            <!-- Logging -->
+            <!-- This dependency configuration is to prevent
+                 http://www.slf4j.org/codes.html#StaticLoggerBinder
+                 See https://stackoverflow.com/a/56089477/1187277 -->
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-classic</artifactId>
-                <version>1.1.8</version>
+                <artifactId>logback-core</artifactId>
+                <version>${logback.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>1.7.30</version>
+            </dependency>
+
+            <!-- <dependency> -->
+            <!--     <groupId>org.slf4j</groupId> -->
+            <!--     <artifactId>slf4j-simple</artifactId> -->
+            <!--     <version>1.7.30</version> -->
+            <!-- </dependency> -->
+
 
             <dependency>
                 <groupId>com.typesafe.scala-logging</groupId>
                 <artifactId>scala-logging_${scalaBinaryVersion}</artifactId>
-                <version>3.5.0</version>
+                <version>3.9.2</version>
             </dependency>
 
             <dependency>
@@ -109,7 +133,7 @@
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.11</version>
+                <version>4.13</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -124,7 +148,7 @@
             <dependency>
                 <groupId>org.easymock</groupId>
                 <artifactId>easymock</artifactId>
-                <version>3.5.1</version>
+                <version>4.2</version>
                 <scope>test</scope>
             </dependency>
 
@@ -202,7 +226,7 @@
                 -->
                 <plugin>
                     <artifactId>maven-assembly-plugin</artifactId>
-                    <version>3.1.0</version>
+                    <version>3.3.0</version>
                     <configuration>
                         <descriptors>
                             <descriptor>src/assembly/bin.xml</descriptor>
