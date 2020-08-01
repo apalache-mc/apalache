@@ -11,7 +11,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <scoverage.plugin.version>1.3.0</scoverage.plugin.version>
+        <scoverage.plugin.version>1.4.0</scoverage.plugin.version>
         <scoverage.aggregate>true</scoverage.aggregate>
     </properties>
 
