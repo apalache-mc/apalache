@@ -186,7 +186,7 @@ operator. However, the annotation syntax is quite similar to that of the
 operators (note though that we are using `->` instead of `=>`):
 
 ```tla
-Card[S \in T] == "Set(Set(a)) -> Int" ##
+Card[S \in T] == "Set(a) -> Int" ##
     IF S = {}
     THEN 0
     ELSE LET one_elem == "() => a" ##
