@@ -101,49 +101,50 @@ it __Type System 1__. Feel free to suggest __Type System 2__ :-)
 ## 2. How to write type annotations (as a user)
 
 We define the Apalache module `Typing.tla` that contains definitions of two
-infix operators:
+operators:
 
 ```tla
 ---- MODULE Typing ----
-ex <: tp == TRUE
-tp ## ex == ex
+AssumeType(ex, tp) == TRUE
+tp :> ex == ex
 =======================
 ```
 
-The operator `ex <: tp` is a type assumption. It states that `ex` has the type
-whose supertype is `tp` (the records in `tp` may contain additional fields).
-This operator always returns `TRUE`.  The operator `tp ## ex` annotates an
-expression `ex` with a type `tp`.  This operator return `ex` itself, that is, it
-performs type erasure (for compatibility with other TLA+ tools).  As these
-operators return values of different types, we decided to use different
-graphical notation for them. Initially, we thought of writing `<:` and `:>`,
-which was quite confusing due to the assymetric nature of those operators.
+The operator `AssumeType(ex, tp)` is a type assumption. It states that `ex`
+should have the type whose supertype is `tp` (the records in `tp` may contain
+additional fields).  This operator always returns `TRUE`.  The operator `tp :>
+ex` annotates an expression `ex` with a type `tp`. This operator returns `ex`
+itself, that is, it performs type erasure (for compatibility with other TLA+
+tools).
 
-In the following, we discuss how to annotate different TLA+ names.
+In the following, we discuss how to annotate different TLA+ names.  The
+operator `AssumeType` is designated for annotating constants and state
+variables, whereas the operator `:>` is designated for annotating user-defined
+operators.
 
 ### 2.1. Annotating CONSTANTS and VARIABLES
 
 Ideally, we would like to use `ASSUME(...)` to annotate the types of state
-variables and constants. However, `ASSUME` only allows for constant expressions.
-Hence, we require the annotations of variables and constants to be
-defined once per specification with an operator called `TypeAxiom`. See the
-following example:
+variables and constants. However, `ASSUME` only allows for constant
+expressions.  Hence, we require the annotations of variables and constants to
+be defined once per specification with an operator called `TypeAssumptions`.
+See the following example:
 
 ```tla
 EXTENDS Typing
 CONSTANT N, Base
 VARIABLE x, S
 
-TypeAxiom ==
-  /\ N <: "Int"
-  /\ Base <: "Set(ID)"
-  /\ x <: "ID"
-  /\ S <: "Set(ID)
+TypeAssumptions ==
+  /\ AssumeType(N, "Int")
+  /\ AssumeType(Base, "Set(ID)")
+  /\ AssumeType(x, "ID")
+  /\ AssumeType(S, "Set(ID)")
 ```
 
-`TypeAxiom` must be a conjunction of expressions of the form `nm <: tp`, where
-`nm` is the name of a VARIABLE or a CONSTANT, and `tp` is a string in the
-grammar TS1. No other syntactic forms are allowed.
+`TypeAssumptions` must be a conjunction of expressions of the form
+`AssumeType(nm, tp)`, where `nm` is the name of a VARIABLE or a CONSTANT, and
+`tp` is a string in the grammar TS1. No other syntactic forms are allowed.
 
 __Why don't we use THEOREMs?__ It is tempting to declare the types of variables
 as theorems. For example:
@@ -152,13 +153,11 @@ as theorems. For example:
 THEOREM N <: "Int"
 ```
 
-However, this theorem must be proven. A *type inference engine* would be able to
-infer the type of `N` and thus state such a theorem. However, with a type axiom,
-the user merely states the variable types and the *type checker* has a simple
-job of checking type consistency and finding the types of the expressions.
-
-As in mathematics, type axioms are not an absolute truth, but are simply a
-consistent set of typing assumptions.
+However, this theorem must be proven. A *type inference engine* would be able
+to infer the type of `N` and thus state such a theorem. However, with type
+assumptions, the user merely states the variable types and the *type checker*
+has a simple job of checking type consistency and finding the types of the
+expressions.
 
 ### 2.2. Annotating Operators
 
@@ -168,14 +167,14 @@ annotate an operator, we prepend its body with `##` (as proposed by
 @shonfeder for `:>`). For example:
 
 ```tla
-Mem(e, es) == "(a, Seq(a)) => Bool" ##
+Mem(e, es) == "(a, Seq(a)) => Bool" :>
     e \in {es[i]: i \in DOMAIN es}
 ```
 
 Higher-order operators are also easy to annotate:
 
 ```tla
-Find(Pred(_), es) == "((a) => Bool, Seq(a)) => Int" ##
+Find(Pred(_), es) == "((a) => Bool, Seq(a)) => Int" :>
     IF \E i \in DOMAIN es: Pred(es[i])
     THEN CHOOSE i \in DOMAIN es: Pred(es[i])
     ELSE -1
@@ -186,10 +185,10 @@ operator. However, the annotation syntax is quite similar to that of the
 operators (note though that we are using `->` instead of `=>`):
 
 ```tla
-Card[S \in T] == "Set(a) -> Int" ##
+Card[S \in T] == "Set(a) -> Int" :>
     IF S = {}
     THEN 0
-    ELSE LET one_elem == "() => a" ##
+    ELSE LET one_elem == "() => a" :>
             (CHOOSE x \in S: TRUE)
          IN
          1 + Card[S \ {one_elem}]
@@ -233,9 +232,9 @@ In these rare cases, you can wrap the problematic expression with `LET-IN` and
 annotate this auxillary operator:
 
 ```tla
-/\ LET Empty == "() => Set(Int)" ## {} IN
+/\ LET Empty == "() => Set(Int)" :> {} IN
     \E x \in Empty: x > 1
-/\ LET Empty == "() => Set(Str)" ## {} IN
+/\ LET Empty == "() => Set(Str)" :> {} IN
     f = [x \in Empty |-> 2]
 ```
 
@@ -281,30 +280,30 @@ ASSUME /\ Offers \subseteq (SUBSET Ingredients)
 TypeOK == /\ smokers \in [Ingredients -> [smoking: BOOLEAN]]
           /\ dealer  \in Offers \/ dealer = {}
 
-(* is not TypeAxiom easier? *)
-TypeAxiom ==
-    /\ Ingredients <: "Set(INGREDIENT)"
-    /\ Offers <: "Set(Set(INGREDIENT))"
-    /\ smokers <: "INGREDIENT -> [smoking: Bool]"
-    /\ dealer <: "Set(INGREDIENT)"
+(* are not TypeAssumptions easier? *)
+TypeAssumptions ==
+    /\ AssumeType(Ingredients, "Set(INGREDIENT)")
+    /\ AssumeType(Offers, "Set(Set(INGREDIENT))")
+    /\ AssumeType(smokers, "INGREDIENT -> [smoking: Bool]")
+    /\ AssumeType(dealer, "Set(INGREDIENT)")
 
 (* this operator has a parametric signature *)
-ChooseOne(S, P(_)) == "(Set(a), (a) => Bool) => a" ##
+ChooseOne(S, P(_)) == "(Set(a), (a) => Bool) => a" :>
     CHOOSE x \in S : P(x) /\ \A y \in S : P(y) => y = x
 
 (* the types of the actions are fairly obvious *)
 
-Init == "() => Bool" ##
+Init == "() => Bool" :>
     /\ smokers = [r \in Ingredients |-> [smoking |-> FALSE]]
     /\ dealer \in Offers
 
-startSmoking == "() => Bool" ##
+startSmoking == "() => Bool" :>
     /\ dealer /= {}
     /\ smokers' = [r \in Ingredients |->
                     [smoking |-> {r} \cup dealer = Ingredients]]
     /\ dealer' = {}
 
-stopSmoking == "() => Bool" ##
+stopSmoking == "() => Bool" :>
     /\ dealer = {}
         (* the type of LAMBDA should be inferred from the types
            of ChooseOne and Ingredients *)
@@ -312,15 +311,15 @@ stopSmoking == "() => Bool" ##
        IN smokers' = [smokers EXCEPT ![r].smoking = FALSE] 
     /\ dealer' \in Offers
 
-Next == "() => Bool" ##
+Next == "() => Bool" :>
     startSmoking \/ stopSmoking
 
-Spec == "() => Bool" ##
+Spec == "() => Bool" :>
     Init /\ [][Next]_vars
 
-FairSpec == "() => Bool" ##
+FairSpec == "() => Bool" :>
     Spec /\ WF_vars(Next)    
 
-AtMostOne == "() => Bool" ##
+AtMostOne == "() => Bool" :>
     Cardinality({r \in Ingredients : smokers[r].smoking}) <= 1
 ```
