@@ -8,9 +8,8 @@ This is an RFC that reviews a number of possibilities.
 A concrete proposal can be found in [ADR-002](002adr-types.md).
 
 
-It is good to have a number of different opinions here. We
-actually have three issues, not one (I initially have put emphasis only on the
-third issue):
+It is good to have a number of different opinions here. We have three
+questions:
 
 1. How to write types in TLA+.
 1. How to write type annotations (as a user).
@@ -18,11 +17,8 @@ third issue):
 
 ## 1. How to write types in TLA+
 
-Everybody has a different opinion here. I agree that it would be cool to use
-the native TLA+ constructs to express types. My initial approach, in which
-types are specified as strings over the [type grammar](#typesAsStrings), may be
-seen as a hack.  However, it clearly distinguishes TLA+ from types, which has
-some merits.
+Everybody has a different opinion here. It would be great to use
+the native TLA+ constructs to express types.
 
 <a name="typesAsTypeOk"></a>
 ### 1.1. TypeOK syntax
