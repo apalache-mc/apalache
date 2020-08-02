@@ -1,5 +1,9 @@
 # RFC 001: types and type annotations
 
+Contributors (in alphabetical order): Shon Feder @shonfeder,
+    Igor Konnov @konnov, Jure Kukovec @Kukovec,
+    Markus Kuppe @lemmy, Andrey Kupriyanov @andrey-kuprianov, Leslie Lamport
+
 This is an RFC that reviews a number of possibilities.
 A concrete proposal can be found in [ADR-002](002adr-types.md).
 
@@ -16,12 +20,9 @@ third issue):
 
 Everybody has a different opinion here. I agree that it would be cool to use
 the native TLA+ constructs to express types. My initial approach, in which
-types are specified as strings over the [type grammar](#typesAsStrings), may be seen
-as a hack.  However, it clearly distinguishes TLA+ from types, which has some
-merits. The biggest problem I personally have with TLA+ is that it mixes a lot
-of good and interesting concepts in a uniform logic soup. After I have learned
-how to separate potatoes from beans in that soup, I started to appreciate TLA+
-:-)
+types are specified as strings over the [type grammar](#typesAsStrings), may be
+seen as a hack.  However, it clearly distinguishes TLA+ from types, which has
+some merits.
 
 <a name="typesAsTypeOk"></a>
 ### 1.1. TypeOK syntax
@@ -41,10 +42,23 @@ For instance:
     `\A a \in Int: \A b \in STRING: Foo(a, b) \in Int`
 * `Bar` is a higher-order operator that takes an operator that takes
     an `Int` and `STRING` and returns an `Int`, and returns a `BOOLEAN`.
-    We cannot quantify over operators. __Anybody has an idea how to write that down?__
 
-I personally find this syntax obfuscated, as it inevitably requires us to write
-types as sets of values.
+Here is an approach to higher-order operators suggested by Leslie Lamport,
+where he uses a theorem:
+
+```tla
+THEOREM BarType ==
+  ASSUME NEW G(_,_),
+         \A x \in Int, y \in STRING : G(x,y) \in Int
+         PROVE  Bar(G) \in BOOLEAN
+```
+
+Similar to that, we can write a theorem about the type of `Foo`:
+
+```tla
+THEOREM FooType ==
+  \A a \in Int: \A b \in STRING: Foo(a, b) \in Int
+```
 
 <a name="typesAsTerms"></a>
 ### 1.2. Types as terms
@@ -357,4 +371,4 @@ __TBD__
 
 Basically, use [Language Server
 Protocol](https://microsoft.github.io/language-server-protocol/) and introduce
-THEOREMs (similar to [types as assumptions](#annotationsAsAssumptions)).
+THEOREMs in the spirit of [types as TypeOK](#typesAsTypeOk).
