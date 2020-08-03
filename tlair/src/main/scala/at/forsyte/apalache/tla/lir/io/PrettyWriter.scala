@@ -503,7 +503,7 @@ object PrettyWriter {
       TlaTempOper.guarantees -> "-+->",
       TlaSeqOper.concat -> "\\o",
       TlcOper.colonGreater -> ":>",
-      BmcOper.assign -> "<-",
+      BmcOper.assign -> ":=",
       BmcOper.withType -> "<:"
     ) ////
 
