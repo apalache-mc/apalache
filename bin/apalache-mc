@@ -38,7 +38,7 @@ TLA_LIB="$DIR/src/tla"
 # This is a temporary solution for handling TLA_PATH via a Java variable.
 # See apalache/#187.
 # Once tlaplus/#490,#493 are released, remove this workaround.
-(test -z "$TLA_PATH" && TLA_PATH="$TLA_LIB") || TLA_PATH="TLA_LIB:$TLA_PATH" 
+(test -z "$TLA_PATH" && TLA_PATH="$TLA_LIB") || TLA_PATH="$TLA_LIB:$TLA_PATH"
 
 # set LD_LIBRARY_PATH to find z3 libraries
 export LD_LIBRARY_PATH="$DIR/3rdparty/lib:${LD_LIBRARY_PATH}"
@@ -48,7 +48,7 @@ JVM_ARGS="-Xmx4096m -Djava.library.path=$DIR/3rdparty/lib "
 # uncomment to track memory usage with: jcmd <pid> VM.native_memory summary
 #JVM_ARGS="${JVM_ARGS} -XX:NativeMemoryTracking=summary"
 
-JVM_ARGS="$JVM_ARGS -DTLA-Library=$TLA_LIB"
+JVM_ARGS="$JVM_ARGS -DTLA-Library=$TLA_PATH"
 
 echo "# JVM args: $JVM_ARGS"
 echo "#"
