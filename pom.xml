@@ -106,13 +106,6 @@
                 <version>1.7.30</version>
             </dependency>
 
-            <!-- <dependency> -->
-            <!--     <groupId>org.slf4j</groupId> -->
-            <!--     <artifactId>slf4j-simple</artifactId> -->
-            <!--     <version>1.7.30</version> -->
-            <!-- </dependency> -->
-
-
             <dependency>
                 <groupId>com.typesafe.scala-logging</groupId>
                 <artifactId>scala-logging_${scalaBinaryVersion}</artifactId>
