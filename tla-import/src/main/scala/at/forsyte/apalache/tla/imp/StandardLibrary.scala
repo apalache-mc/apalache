@@ -16,7 +16,7 @@ object StandardLibrary {
     * operator definitions from the user modules. (Moreover, the standard modules sometimes contain garbage
     * or complex definitions that should not be analyzed by our tool.)
     */
-  val standardModules: Set[String] = Set("Naturals", "Integers", "Sequences", "TLC", "FiniteSets", "Reals")
+  val standardModules: Set[String] = Set("Naturals", "Integers", "Sequences", "TLC", "FiniteSets", "Reals", "Apalache")
 
   val libraryValues: Map[Tuple2[String, String], TlaValue] =
     Map(
@@ -66,11 +66,16 @@ object StandardLibrary {
       ("TLC", "TLCSet") -> TlcOper.tlcSet,
       ("TLC", "ToString") -> TlcOper.tlcToString,
       ("TLC", "Print") -> TlcOper.print,
-      ("TLC", "PrintT") -> TlcOper.printT
+      ("TLC", "PrintT") -> TlcOper.printT,
+      ("Apalache", ":=") -> BmcOper.assign,
+      ("Apalache", "Skolem") -> BmcOper.skolem,
+      ("Apalache", "Expand") -> BmcOper.expand,
+      ("Apalache", "ConstCardinality") -> BmcOper.constCard
     )////
 
   val globalOperators: Map[String, TlaOper] =
     Map[String, TlaOper](
+      // TODO: this operator should be replaced with <: in Types
       "<:" -> BmcOper.withType
     )////
 }

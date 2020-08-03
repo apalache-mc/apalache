@@ -1,6 +1,6 @@
 # Apalache manual
 
-**Version 0.7.0 (unstable)** :fireworks:
+**Version 0.7.1 (unstable)** :fireworks:
 
 **Authors: Igor Konnov, Jure Kukovec, Andrey Kuprianov, Shon Feder**
 
@@ -41,6 +41,7 @@ Apalache is working under the following assumptions:
     1. [Assignments and symbolic transitions](#assignments)
     1. [Type annotations](#types)
     1. [Recursive operators and functions](#recursion)
+ 1. [The Apalache module](#apalacheMod)
  1. [Five minutes of theory](#theory5)
  1. [Supported language features](#features)
 
@@ -505,8 +506,37 @@ State14 ==
 InvariantViolation == hasLicense /\ year - BIRTH_YEAR < LICENSE_AGE
 ```
 
+<a name="lookup"></a>
+## 6.3. Module lookup
+
+Apalache uses [the SANY
+parser](https://lamport.azurewebsites.net/tla/tools.html), which is the
+standard parser of TLC and TLA+ Toolbox. By default, SANY is looking for the
+modules in the current working directory and in the Java package
+`tla2sany.StandardModules`, which is usually provided by the `tla2tools.jar` that is
+included in the Java classpath.
+
+In addition to the modules in the current working directory, Appalache provides
+
+- a small standard library (located in `$APALACHE_HOME/src/tla`), and
+- support for additional source directories specified in the environment variable `TLA_PATH`. `TLA_PATH` should be a list of paths to directories separated by `:`. 
+
+(Directories in the `TLA_PATH` are provided to SANY via the `TLA-Library` Java system variable.)    
+
+So the module lookup order in Apalache is as follows:
+
+1. The current working directory.
+1. The directory `$APALACHE_HOME/src/tla`.
+1. The directories specified in the environment variable `TLA_PATH`.
+1. The Java package `tla2sany.StandardModules`.
+
+__Note:__ To let TLA+ Toolbox and TLC know about the Apalache modules, include
+`$APALACHE_HOME/src/tla` in the lookup directories, as explained by Markus
+Kuppe for the [TLA+ Community
+Modules](https://github.com/tlaplus/CommunityModules).
+
 <a name="detailed"></a>
-## 6.3. Detailed output
+## 6.4. Detailed output
 
 The tool will display only important messages on stdout, but a detailed log can
 be found in `detailed.log`.
@@ -535,7 +565,7 @@ the run-specific directory `x/hh.mm-DD.MM.YYYY-<id>`:
     marking Skolemizable expressions and expressions to be expanded.
 
 <a name="parsing"></a>
-## 6.4. Parsing and pretty-printing
+## 6.5. Parsing and pretty-printing
 
 If you'd like to check that your TLA+ specification is syntactically correct,
 without running the model checker, you can run the following command:
@@ -581,16 +611,16 @@ VARIABLE hasLicense
 ASSUME(80 \in 0 .. 99)
 ASSUME(18 \in 1 .. 99)
 
-Init$0 == year' <- 80 /\ hasLicense' <- FALSE
-Next$0 == year' <- ((year + 1) % 100) /\ (hasLicense' <- hasLicense)
-Next$1 == year - 80 >= 18 /\ hasLicense' <- TRUE /\ (year' <- year)
+Init$0 == year' := 80 /\ hasLicense' := FALSE
+Next$0 == year' := ((year + 1) % 100) /\ (hasLicense' := hasLicense)
+Next$1 == year - 80 >= 18 /\ hasLicense' := TRUE /\ (year' := year)
 ===============
 ```
 
 As you can see, the model checker did two things:
 
-1. It has translated several expressions that look like `x' = e` into `x' <- e`.
-   For instance, you can see `year' <- 80` and `hasLicense' <- FALSE` in
+1. It has translated several expressions that look like `x' = e` into `x' := e`.
+   For instance, you can see `year' := 80` and `hasLicense' := FALSE` in
    `Init$0`. We call these expressions **assignments**.
 1. It has factored the operator `Next` into two operators `Next$0` and `Next$1`.
    We call these operators **symbolic transitions**.
@@ -616,7 +646,7 @@ The main contract between the assignments and symbolic transitions is as
 follows:
 
 > For every variable `x` declared with `VARIABLE`, there is exactly one
-> assignment of the form `x' <- e` in every symbolic transition `A_n`.
+> assignment of the form `x' := e` in every symbolic transition `A_n`.
 
 If Apalache cannot find expressions with the above properties, it fails.
 Consider the example
@@ -1122,8 +1152,27 @@ cardinality does not require `2^|NUMS|` constraints, when using a recursive
 operator.
 
 
+<a name="apalacheMod"></a>
+# 9. The Apalache module
+
+Similar to the `TLC` module, we provide the module called `Apalache`, which can
+be found in
+[src/tla](https://github.com/informalsystems/apalache/tree/unstable/src/tla).
+Most of the operators in that modules are introduced internally by Apalache,
+when it is rewriting a TLA+ specification.  It is useful to read the comments
+to the operators defined in `Apalache.tla`, as they will help you in
+understanding the [detailed output](#detailed) produced by the tool, see.
+Perhaps, the most interesting operator in `Apalache` is the type assignment
+operator that is defined as follows:
+
+```tla
+x := e == x = e
+```
+
+See the [discussion](#assignments) on the role of assignments in Apalache.
+
 <a name="theory5"></a>
-# 9. Five minutes of theory
+# 10. Five minutes of theory
 
 **You can safely skip this section**
 
@@ -1160,7 +1209,7 @@ delivered at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549).
 
 <a name="features"></a>
 
-# 10. Supported language features
+# 11. Supported language features
 
 Check the [supported features](features.md), [KerA+](kera.md), and
 [preprocessing steps](preprocessing.md).
