@@ -31,3 +31,6 @@ tla-bmcmt/profile-rules.txt
 
 # Ignore directories where test artifacts are stored
 x/
+
+# Ignore backup files created by `mvn versions`
+*.versionsBackup
