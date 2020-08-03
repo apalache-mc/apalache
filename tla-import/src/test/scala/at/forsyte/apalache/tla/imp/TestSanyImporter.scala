@@ -46,7 +46,7 @@ class TestSanyImporter extends FunSuite {
       _.name == name
     } match {
       case Some(d: TlaOperDecl) =>
-        expectTlaDecl(sourceStore, name, List(), body)(d)
+        expectTlaDecl(sourceStore, name, params, body)(d)
 
       case _ =>
         fail("Expected a TlaDecl")
@@ -2007,6 +2007,53 @@ class TestSanyImporter extends FunSuite {
         OperEx(TlaArithOper.ge,
           OperEx(TlaFiniteSetOper.cardinality, NameEx("S")),
           ValEx(TlaInt(2)))))
+  }
+
+  test("EXTENDS Typing") {
+    val text =
+      """---- MODULE root ----
+        |EXTENDS Typing
+        |VARIABLE x, S
+        |TypeAssumptions ==
+        |  /\ AssumeType(x, "Int")
+        |  /\ AssumeType(S, "Set(Int)")
+        |
+        |Foo(y) == "(Int) -> Set(Int)" :> {y}
+        |================================
+      """.stripMargin
+
+    // We have to set TLA-Library, in order to look up Typing.tla. This is done automatically in pom.xml.
+    // If you run this test in an IDE, and the test fails, add the following line to the VM parameters
+    // (don't forget to replace <APALACHE_HOME> with the directory where you checked out the project):
+    //
+    // -DTLA-Library=<APALACHE_HOME>/src/tla
+    System.out.println("TLA-Library = %s".format(System.getProperty("TLA-Library")))
+
+    val locationStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(locationStore)
+      .loadFromSource("root", Source.fromString(text))
+    assert(2 == modules.size) // root, Typing
+
+    val root = modules("root")
+    assert(4 == root.declarations.size)
+
+    def expectDecl(name: String, body: TlaEx) = {
+      findAndExpectTlaDecl(locationStore, root, name, List(), body)
+    }
+
+    expectDecl("TypeAssumptions",
+      OperEx(TlaBoolOper.and,
+        OperEx(TypingOper.assumeType, NameEx("x"), ValEx(TlaStr("Int"))),
+        OperEx(TypingOper.assumeType, NameEx("S"), ValEx(TlaStr("Set(Int)")))
+      )
+    ) ///
+
+    findAndExpectTlaDecl(locationStore, root, "Foo", List(SimpleFormalParam("y")),
+      OperEx(TypingOper.withType,
+        ValEx(TlaStr("(Int) -> Set(Int)")),
+        OperEx(TlaSetOper.enumSet, NameEx("y"))
+      )
+    ) ///
   }
 
   test("assumptions") {

@@ -1,3 +1,4 @@
+---------------------------- MODULE Typing ----------------------------------
 (****************************************************************************)
 (* An Apalache module that defines the operators for type annotations.      *)
 (* The standard language of TLA+ is untyped. However, if you like to        *)
@@ -45,3 +46,4 @@ AssumeType(name, tp) == TRUE
 (****************************************************************************)
 type_str :> ex == ex
 
+=============================================================================

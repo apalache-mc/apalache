@@ -16,7 +16,8 @@ object StandardLibrary {
     * operator definitions from the user modules. (Moreover, the standard modules sometimes contain garbage
     * or complex definitions that should not be analyzed by our tool.)
     */
-  val standardModules: Set[String] = Set("Naturals", "Integers", "Sequences", "TLC", "FiniteSets", "Reals", "Apalache")
+  val standardModules: Set[String] =
+    Set("Naturals", "Integers", "Sequences", "TLC", "FiniteSets", "Reals", "Apalache", "Typing")
 
   val libraryValues: Map[Tuple2[String, String], TlaValue] =
     Map(
@@ -70,12 +71,14 @@ object StandardLibrary {
       ("Apalache", ":=") -> BmcOper.assign,
       ("Apalache", "Skolem") -> BmcOper.skolem,
       ("Apalache", "Expand") -> BmcOper.expand,
-      ("Apalache", "ConstCardinality") -> BmcOper.constCard
+      ("Apalache", "ConstCardinality") -> BmcOper.constCard,
+      ("Typing", "AssumeType") -> TypingOper.assumeType,
+      ("Typing", ":>") -> TypingOper.withType
     )////
 
   val globalOperators: Map[String, TlaOper] =
     Map[String, TlaOper](
-      // TODO: this operator should be replaced with <: in Types
+      // TODO: this operator is deprecated, the user should use Typing, add a warning when the type checker is in place
       "<:" -> BmcOper.withType
     )////
 }
