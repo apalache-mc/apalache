@@ -31,11 +31,12 @@ object Type1Lexer extends RegexParsers {
 
   def token: Parser[Type1Token] =
     positioned(
-      int | bool | str | set | seq |
-        capsIdentifier | letterIdentifier | rightArrow | doubleRightArrow | leftParen | rightParen
+      int | bool | str | set | seq | capsIdentifier | letterIdentifier | fieldIdentifier |
+        rightArrow | doubleRightArrow | leftParen | rightParen | leftBracket | rightBracket |
+        doubleLeftAngle | doubleRightAngle | comma | colon
     ) ///
 
-  // it is important that linefeed is not a whiteSpace, as otherwise singleComment consumes the whole input!
+  // a linefeed is not a white-space
   def skip: Parser[Unit] = rep(whiteSpace) ^^^ Unit
 
   private def capsIdentifier: Parser[CAPS_IDENT] = {
@@ -44,6 +45,10 @@ object Type1Lexer extends RegexParsers {
 
   private def letterIdentifier: Parser[LETTER_IDENT] = {
     "[a-z]".r ^^ { name => LETTER_IDENT(name) }
+  }
+
+  private def fieldIdentifier: Parser[FIELD_IDENT] = {
+    "[A-Za-z_][A-Za-z0-9_]*".r ^^ { name => FIELD_IDENT(name) }
   }
 
   private def int: Parser[INT] = {
@@ -82,12 +87,28 @@ object Type1Lexer extends RegexParsers {
     ")" ^^ { _ => RPAREN() }
   }
 
+  private def leftBracket: Parser[LBRACKET] = {
+    "[" ^^ { _ => LBRACKET() }
+  }
+
+  private def rightBracket: Parser[RBRACKET] = {
+    "]" ^^ { _ => RBRACKET() }
+  }
+
   private def doubleLeftAngle: Parser[DOUBLE_LEFT_ANGLE] = {
     "<<".r ^^ { _ => DOUBLE_LEFT_ANGLE() }
   }
 
   private def doubleRightAngle: Parser[DOUBLE_RIGHT_ANGLE] = {
     ">>".r ^^ { _ => DOUBLE_RIGHT_ANGLE() }
+  }
+
+  private def comma: Parser[COMMA] = {
+    ",".r ^^ { _ => COMMA() }
+  }
+
+  private def colon: Parser[COLON] = {
+    ":".r ^^ { _ => COLON() }
   }
 }
 

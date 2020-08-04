@@ -54,7 +54,8 @@ case class VarT1(name: String) extends TlaType1 {
   * @param res the type of the result
   */
 case class FunT1(arg: TlaType1, res: TlaType1) extends TlaType1 {
-  override def toString: String = s"$arg -> $res"
+  // always wrap a function with parenthesis, to make it non-ambiguous
+  override def toString: String = s"($arg -> $res)"
 }
 
 /**

@@ -27,6 +27,16 @@ case class LETTER_IDENT(name: String) extends Type1Token {
 }
 
 /**
+  * A field identifier. Since it syntactically includes CAPS_IDENT and LETTER_IDENT, one has to expect
+  * CAPS_IDENT, LETTER_INDENT, and FIELD_INDENT, whenever a record field is expected.
+  *
+  * @param name the name associated with the field
+  */
+case class FIELD_IDENT(name: String) extends Type1Token {
+  override def toString: String = "record field '%s'".format(name)
+}
+
+/**
   * An integer identifier: Int
   */
 case class INT() extends Type1Token {
@@ -76,6 +86,20 @@ case class DOUBLE_RIGHT_ARROW() extends Type1Token {
 }
 
 /**
+  * A comma.
+  */
+case class COMMA() extends Type1Token {
+  override def toString: String = ","
+}
+
+/**
+  * A colon.
+  */
+case class COLON() extends Type1Token {
+  override def toString: String = ":"
+}
+
+/**
   * Left parenthesis "(".
   */
 case class LPAREN() extends Type1Token {
@@ -87,6 +111,20 @@ case class LPAREN() extends Type1Token {
   */
 case class RPAREN() extends Type1Token {
   override def toString: String = ")"
+}
+
+/**
+  * Left bracket "[".
+  */
+case class LBRACKET() extends Type1Token {
+  override def toString: String = "["
+}
+
+/**
+  * Right bracket "]".
+  */
+case class RBRACKET() extends Type1Token {
+  override def toString: String = "]"
 }
 
 /**

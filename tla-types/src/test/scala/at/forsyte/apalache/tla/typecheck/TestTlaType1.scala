@@ -18,7 +18,7 @@ class TestTlaType1  extends FunSuite {
     assert("Set(Int)" == SetT1(IntT1()).toString)
     assert("Seq(a)" == SeqT1(VarT1("a")).toString)
     assert("Seq(Int)" == SeqT1(IntT1()).toString)
-    assert("Int -> Bool" == FunT1(IntT1(), BoolT1()).toString)
+    assert("(Int -> Bool)" == FunT1(IntT1(), BoolT1()).toString)
     assert("<<Int, Bool, Str>>" == TupT1(IntT1(), BoolT1(), StrT1()).toString)
     val recType = RecT1(SortedMap("f1" -> IntT1(), "f2" -> BoolT1(), "f3" -> StrT1()))
     assert("[f1: Int, f2: Bool, f3: Str]" == recType.toString)
