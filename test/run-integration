@@ -140,6 +140,17 @@ check "027-Rec9" --length=5 --inv=Inv Rec9.tla \
     && expect_ok
 check "028-ExistsAsValue" --inv=Inv ExistsAsValue.tla \
     && expect_ok
+check "029-Empty" Empty.tla \
+    && expect_fail
+check "030-HourClock" --init=NonExistantInit \
+    HourClock.tla \
+    && expect_fail
+check "031-HourClock" --next=NonExistantNext \
+    HourClock.tla \
+    && expect_fail
+check "032-HourClock" --inv=NonExistantInv \
+    HourClock.tla \
+    && expect_fail
 
 cat "$LOGFILE"
 
