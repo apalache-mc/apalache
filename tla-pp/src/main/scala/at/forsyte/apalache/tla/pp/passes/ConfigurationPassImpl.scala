@@ -52,7 +52,6 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
     PrettyWriter.write(configuredModule, new File(outdir.toFile, "out-config.tla"))
 
-    // set fallback options
     setFallbackOptions()
 
     // make sure that the operators are defined
