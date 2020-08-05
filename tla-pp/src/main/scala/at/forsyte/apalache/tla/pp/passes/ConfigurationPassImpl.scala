@@ -54,7 +54,7 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
 
     setFallbackOptions()
 
-    // make sure that the operators are defined
+    // make sure that the required operators are defined
     ensureDeclarationsArePresent(configuredModule)
 
     outputTlaModule = Some(configuredModule)
