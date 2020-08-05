@@ -20,7 +20,7 @@ import org.apache.commons.io.FilenameUtils
   * The pass that collects the configuration parameters and overrides constants and definitions.
   * This pass also overrides attributes in the PassOptions object:
   * checker.init, checker.next, checker.cinit, checker.inv. In general, passes should not override options.
-  * This is a reasonable exception to this rule.
+  * This is a reasonable exception to this rule, as this pass configures the options based on the user input.
   *
   * @param options pass options
   * @param nextPass next pass to call
