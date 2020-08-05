@@ -1,4 +1,7 @@
 ## Unreleased #unstable
+
+## 0.7.1 [RELEASE]
+
  * safe checks for the user options in ConfigurationPassImpl, see #193
  * introduced the tool module `Typing.tla`, see #162
  * introduced the tool module `Apalache.tla`, see #183
