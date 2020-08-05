@@ -7,7 +7,7 @@ target
 3rdparty/bin
 3rdparty/include
 3rdparty/lib
-3rdparty/z3
+3rdparty/z3*
 3rdparty/Box
 tla2tools.jar
 
@@ -26,3 +26,11 @@ tla-bmcmt/profile-rules.txt
 *.out
 *.log
 
+# Local envars for direnv
+/.local-envrc
+
+# Ignore directories where test artifacts are stored
+x/
+
+# Ignore backup files created by `mvn versions`
+*.versionsBackup

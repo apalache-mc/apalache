@@ -1,5 +1,13 @@
 ## Unreleased #unstable
 
+## 0.7.1 [RELEASE]
+
+ * safe checks for the user options in ConfigurationPassImpl, see #193
+ * introduced the tool module `Typing.tla`, see #162
+ * introduced the tool module `Apalache.tla`, see #183
+ * Lookup for modules using TLA_PATH, see #187
+ * Simplify JSON format to make it suitable for JsonPath queries, see #153
+
 ## 0.7.0 [RELEASE]
 
  * Importer from JSON, see #121

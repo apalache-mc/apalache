@@ -28,7 +28,16 @@ Apalache:
     - [Making a pull request](#making-a-pull-request)
     - [Dependencies](#dependencies)
         - [Environment](#environment)
+    - [Development Environment](#development-environment)
+        - [Emacs](#emacs)
+            - [Install `metals-emacs`](#install-metals-emacs)
+                - [Arch](#arch)
+            - [Doom Emacs](#doom-emacs)
+            - [Vanilla Emacs](#vanilla-emacs)
     - [Testing](#testing)
+        - [Unit tests](#unit-tests)
+        - [Integration tests](#integration-tests)
+        - [Continuous Integration](#continuous-integration)
     - [Changelog](#changelog)
     - [Releases](#releases)
 
@@ -95,6 +104,53 @@ The necessary shell environment is specified in [.envrc](./.envrc). You can:
 
 [direnv]: https://direnv.net/
 
+## Development Environment
+
+If you use a different development environment or editor set up, please document
+it here!
+
+### Emacs
+
+You can use the [metals][] Scala language server together with [lsp-mode][] for
+a nice IDE experience in the world's best lisp driven operating system.
+
+#### Install `metals-emacs`
+
+##### Arch
+
+Using yay to install from AUR:
+
+```sh
+yay -Syu metals
+```
+
+#### Doom Emacs
+
+[Doom Emacs][doom-emacs] streamlines configuration and installation:
+
+Edit your [~/.doom.d/init.el](~/.doom.d/init.el), to uncomment `scala` and
+configure it use lsp:
+
+```elisp
+       (scala              ; java, but good
+        +lsp)
+```
+
+Run `doom sync` and restart. That's it.
+
+If you hit any snags, you might also consult [this
+writeup][writeup]
+
+[doom-emacs]: https://github.com/hlissner/doom-emacs
+[metals]: https://scalameta.org/metals/
+[lsp-mode]: https://github.com/emacs-lsp/lsp-mode
+[writeup]: https://siawyoung.com/blog/code/2020-02-06-installing-metals-emacs-doom
+
+#### Vanilla Emacs
+
+For installation and configuration in vanilla emacs, see
+https://scalameta.org/metals/docs/editors/emacs.html
+
 ## Testing
 
 ### Unit tests
@@ -116,7 +172,7 @@ make integration
 ### Continuous Integration
 
 We run continuous integration tests on the `master` and `unstable` branches via
-[Travis CI](https://travis-ci.org/github/konnov/apalache). The CI configuration
+[Travis CI](https://travis-ci.org/github/informalsystems/apalache). The CI configuration
 is located in [.travis.yml](./.travis.yml).
 
 ## Changelog
@@ -128,7 +184,20 @@ Changes, Features, Improvements, Bug Fixes.
 
 ## Releases
 
-TODO
+Assuming the version to be released is `l.m.n`, as per semantic versioning, the
+current release process is as follows:
+
+- [ ] Update [CHANGES.md](./CHANGES.md), adding the heading `## l.m.n` over the
+      unreleased changes.
+- [ ] Copy this section into a new file named `./script/release-l.m.n.txt`
+- [ ] Open a PR to merge `unstable` into `master`, titling it `Release l.m.n`
+- [ ] When the PR is merged, checkout `master` and then run `./script/release
+      vl.m.n ./scripts/release-l.m.n.txt`
+- [ ] Build an updated docker container tagged with `l.m.n`
+- [ ] Push the new taged image to dockerhub
+- [ ] If it's a major release or important minor release, announce it to
+  - [ ] https://www.reddit.com/r/tlaplus/
+  - [ ] https://groups.google.com/u/1/g/tlaplus
 
 [Github Issue]: https://github.com/informalsystems/apalache/issues
 [rfc]: https://en.wikipedia.org/wiki/Request_for_Comments

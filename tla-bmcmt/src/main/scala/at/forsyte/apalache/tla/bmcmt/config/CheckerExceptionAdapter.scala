@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.imp.SanyException
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{MalformedTlaError, TlaEx}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
-import at.forsyte.apalache.tla.pp.{NotInKeraError, TLCConfigurationError}
+import at.forsyte.apalache.tla.pp.{ConfigurationError, IrrecoverablePreprocessingError, NotInKeraError, TLCConfigurationError}
 import com.typesafe.scalalogging.LazyLogging
 import javax.inject.{Inject, Singleton}
 
@@ -27,8 +27,8 @@ class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
     case err: SanyException =>
       NormalErrorMessage("Error by TLA+ parser: " + err.getMessage)
 
-    case err: TLCConfigurationError =>
-      NormalErrorMessage(err.getMessage)
+    case err: ConfigurationError =>
+      NormalErrorMessage("Configuration error (see the manual): " + err.getMessage)
 
     case err: AssignmentException =>
       logger.info("To understand the error, read the manual:")
@@ -40,6 +40,10 @@ class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
       NormalErrorMessage(msg)
 
     // tool failures
+    case err: IrrecoverablePreprocessingError =>
+      val msg = s"Irrecoverable preprocessing error: ${err.getMessage}. Report an issue at $ISSUES_LINK"
+      FailureMessage(msg)
+
     case err: NoRuleException =>
       val msg =
         "%s: no rule to rewrite a TLA+ expression: %s".format(findLoc(err.causeExpr), err.getMessage)

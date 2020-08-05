@@ -4,6 +4,7 @@ import java.io.{File, PrintWriter}
 import java.nio.file.Files
 
 import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.Builder.name
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.src.{SourcePosition, SourceRegion}
@@ -45,7 +46,7 @@ class TestSanyImporter extends FunSuite {
       _.name == name
     } match {
       case Some(d: TlaOperDecl) =>
-        expectTlaDecl(sourceStore, name, List(), body)
+        expectTlaDecl(sourceStore, name, params, body)(d)
 
       case _ =>
         fail("Expected a TlaDecl")
@@ -576,10 +577,10 @@ class TestSanyImporter extends FunSuite {
       OperEx(TlaFunOper.funDef, cup, NameEx("y"), NameEx("x")))
     expectDecl("FcnCtor2",
       OperEx(TlaFunOper.funDef, OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")),
-        NameEx("a"), NameEx("x"), NameEx("b"), NameEx("x")))
+        NameEx("a"), NameEx("x"), NameEx("b"), ValEx(TlaBoolSet)))
     expectDecl("FcnCtor3",
       OperEx(TlaFunOper.funDef, OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")),
-        OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")), NameEx("x")))
+        OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")), OperEx(TlaSetOper.times, NameEx("x"), ValEx(TlaBoolSet))))
     expectDecl("IfThenElse",
       OperEx(TlaControlOper.ifThenElse, ValEx(TlaBool(true)), ValEx(TlaBool(false)), ValEx(TlaBool(true))))
     expectDecl("RcdCtor",
@@ -613,7 +614,9 @@ class TestSanyImporter extends FunSuite {
     expectDecl("SetOfAll",
       OperEx(TlaSetOper.map, ValEx(TlaInt(1)), NameEx("y"), NameEx("x")))
     expectDecl("SetOfTuples",
-      OperEx(TlaSetOper.map, OperEx(TlaFunOper.tuple), NameEx("a"), NameEx("x"), NameEx("b"), NameEx("x")))
+      OperEx(TlaSetOper.map,
+        OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")),
+          NameEx("a"), NameEx("x"), NameEx("b"), NameEx("x")))
     expectDecl("SubsetOf",
       OperEx(TlaSetOper.filter, NameEx("y"), NameEx("x"), ValEx(TlaBool(true))))
     expectDecl("Boolean", ValEx(TlaBoolSet))
@@ -655,7 +658,9 @@ class TestSanyImporter extends FunSuite {
     expectDecl("MapTuples2",
       OperEx(TlaSetOper.map,
         OperEx(TlaOper.eq, NameEx("x"), ValEx(TlaInt(1))),
-        OperEx(TlaFunOper.tuple, NameEx("x"), NameEx("y")),
+        NameEx("x"),
+        NameEx("XY"),
+        NameEx("y"),
         NameEx("XY")
       ))////
   }
@@ -1590,7 +1595,7 @@ class TestSanyImporter extends FunSuite {
     expectDecl("Leq", OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Geq", OperEx(TlaArithOper.ge, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Mod", OperEx(TlaArithOper.mod, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
-    expectDecl("Div", OperEx(TlaArithOper.realDiv, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Div", OperEx(TlaArithOper.div, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Range", OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(3))))
 
     // check the source info
@@ -1650,7 +1655,7 @@ class TestSanyImporter extends FunSuite {
     expectDecl("Leq", OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Geq", OperEx(TlaArithOper.ge, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Mod", OperEx(TlaArithOper.mod, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
-    expectDecl("Div", OperEx(TlaArithOper.realDiv, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Div", OperEx(TlaArithOper.div, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Range", OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(3))))
     expectDecl("UnaryMinus", OperEx(TlaArithOper.uminus, ValEx(TlaInt(2))))
   }
@@ -1700,7 +1705,7 @@ class TestSanyImporter extends FunSuite {
     expectDecl("Leq", OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Geq", OperEx(TlaArithOper.ge, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Mod", OperEx(TlaArithOper.mod, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
-    expectDecl("Div", OperEx(TlaArithOper.realDiv, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Div", OperEx(TlaArithOper.div, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Range", OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(3))))
     expectDecl("UnaryMinus", OperEx(TlaArithOper.uminus, ValEx(TlaInt(2))))
     expectDecl("RealDiv", OperEx(TlaArithOper.realDiv, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
@@ -1957,45 +1962,99 @@ class TestSanyImporter extends FunSuite {
     assert(13 == root.declarations.size)
   }
 
-
-  /*
-  TODO: we need a good way to propagate this module to the standard library
-
-  test("module BMC") {
-    // check that the module BMC is imported properly
+  test("EXTENDS Apalache") {
     val text =
-      """---- MODULE bmc ----
-        |EXTENDS BMC
+      """---- MODULE root ----
+        |EXTENDS Integers, FiniteSets, Apalache
+        |VARIABLE x, S
         |
-        |VARIABLES i
-        |
-        |AWithType == WithType(i, "IntT")
+        |Assn == x' := 1
+        |Sklm == Skolem(\E y \in S: TRUE)
+        |Expnd == Expand(SUBSET S)
+        |CC == ConstCardinality(Cardinality(S) >= 2)
         |================================
-        |""".stripMargin
+      """.stripMargin
 
-    val (rootName, modules) = new SanyImporter().loadFromSource("bmc", Source.fromString(text))
-    assert(2 == modules.size) // our module
-    // the root module and naturals
-    val root = modules(rootName)
+    // We have to set TLA-Library, in order to look up Apalache.tla. This is done automatically in pom.xml.
+    // If you run this test in an IDE, and the test fails, add the following line to the VM parameters
+    // (don't forget to replace <APALACHE_HOME> with the directory where you checked out the project):
+    //
+    // -DTLA-Library=<APALACHE_HOME>/src/tla
+    System.out.println("TLA-Library = %s".format(System.getProperty("TLA-Library")))
 
-    def assertTlaDecl(expectedName: String, body: TlaEx): Unit = {
-      root.declarations.find {
-        _.name == expectedName
-      } match {
-        case Some(d: TlaOperDecl) =>
-          assert(expectedName == d.name)
-          assert(0 == d.formalParams.length)
-          assert(body == d.body)
+    val locationStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(locationStore)
+      .loadFromSource("root", Source.fromString(text))
+    assert(6 == modules.size) // root, Apalache, Integers, FiniteSets, and whatever they import
 
-        case _ =>
-          fail("Expected a TlaDecl")
-      }
+    val root = modules("root")
+    assert(6 == root.declarations.size)
+
+    def expectDecl(name: String, body: TlaEx) = {
+      findAndExpectTlaDecl(locationStore, root, name, List(), body)
     }
 
-    assertTlaDecl("AWithType",
-      OperEx(BmcOper.withType, name("i"), str("IntT")))
+    expectDecl("Assn",
+      OperEx(BmcOper.assign, OperEx(TlaActionOper.prime, NameEx("x")), ValEx(TlaInt(1))))
+    expectDecl("Sklm",
+      OperEx(BmcOper.skolem,
+        OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("S"), ValEx(TlaBool(true)))))
+    expectDecl("Expnd",
+      OperEx(BmcOper.expand,
+        OperEx(TlaSetOper.powerset, NameEx("S"))))
+    expectDecl("CC",
+      OperEx(BmcOper.constCard,
+        OperEx(TlaArithOper.ge,
+          OperEx(TlaFiniteSetOper.cardinality, NameEx("S")),
+          ValEx(TlaInt(2)))))
   }
-  */
+
+  test("EXTENDS Typing") {
+    val text =
+      """---- MODULE root ----
+        |EXTENDS Typing
+        |VARIABLE x, S
+        |TypeAssumptions ==
+        |  /\ AssumeType(x, "Int")
+        |  /\ AssumeType(S, "Set(Int)")
+        |
+        |Foo(y) == "(Int) -> Set(Int)" :> {y}
+        |================================
+      """.stripMargin
+
+    // We have to set TLA-Library, in order to look up Typing.tla. This is done automatically in pom.xml.
+    // If you run this test in an IDE, and the test fails, add the following line to the VM parameters
+    // (don't forget to replace <APALACHE_HOME> with the directory where you checked out the project):
+    //
+    // -DTLA-Library=<APALACHE_HOME>/src/tla
+    System.out.println("TLA-Library = %s".format(System.getProperty("TLA-Library")))
+
+    val locationStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(locationStore)
+      .loadFromSource("root", Source.fromString(text))
+    assert(2 == modules.size) // root, Typing
+
+    val root = modules("root")
+    assert(4 == root.declarations.size)
+
+    def expectDecl(name: String, body: TlaEx) = {
+      findAndExpectTlaDecl(locationStore, root, name, List(), body)
+    }
+
+    expectDecl("TypeAssumptions",
+      OperEx(TlaBoolOper.and,
+        OperEx(TypingOper.assumeType, NameEx("x"), ValEx(TlaStr("Int"))),
+        OperEx(TypingOper.assumeType, NameEx("S"), ValEx(TlaStr("Set(Int)")))
+      )
+    ) ///
+
+    findAndExpectTlaDecl(locationStore, root, "Foo", List(SimpleFormalParam("y")),
+      OperEx(TypingOper.withType,
+        ValEx(TlaStr("(Int) -> Set(Int)")),
+        OperEx(TlaSetOper.enumSet, NameEx("y"))
+      )
+    ) ///
+  }
 
   test("assumptions") {
     // checking that the assumptions are imported properly

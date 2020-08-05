@@ -32,13 +32,23 @@ case `cat $DISTS | wc -l | sed 's/[[:space:]]*//g'` in
 esac
 rm -f "$DISTS"
 
+# an additional lookup list for the TLA+ modules
+TLA_LIB="$DIR/src/tla"
+
+# This is a temporary solution for handling TLA_PATH via a Java variable.
+# See apalache/#187.
+# Once tlaplus/#490,#493 are released, remove this workaround.
+(test -z "$TLA_PATH" && TLA_PATH="$TLA_LIB") || TLA_PATH="$TLA_LIB:$TLA_PATH"
+
 # set LD_LIBRARY_PATH to find z3 libraries
 export LD_LIBRARY_PATH="$DIR/3rdparty/lib:${LD_LIBRARY_PATH}"
 # 1. The maximum heap size, Z3 will use much more as a native library.
 # 2. Duplicating LD_LIBRARY_PATH, tell JVM to find the third-party libraries.
-JVM_ARGS="-Xmx4096m -Djava.library.path=$DIR/3rdparty/lib"
+JVM_ARGS="-Xmx4096m -Djava.library.path=$DIR/3rdparty/lib "
 # uncomment to track memory usage with: jcmd <pid> VM.native_memory summary
 #JVM_ARGS="${JVM_ARGS} -XX:NativeMemoryTracking=summary"
+
+JVM_ARGS="$JVM_ARGS -DTLA-Library=$TLA_PATH"
 
 echo "# JVM args: $JVM_ARGS"
 echo "#"
@@ -57,4 +67,3 @@ trap sigterm SIGTERM SIGINT
 java $JVM_ARGS -jar "$JAR" "$@" &
 child=$!
 wait "$child"
-
