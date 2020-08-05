@@ -68,7 +68,7 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
       options.set("checker.init", "Init")
     }
     if (options.get("checker", "next").isEmpty) {
-      logger.info("  > Option --next is not set. Using Next")
+      logger.debug("  > Option --next is not set. Using Next")
       options.set("checker.next", "Next")
     }
   }
