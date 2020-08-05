@@ -993,7 +993,7 @@ somebody else extends your module and also `Integers`, should be the type
 of `42` be an integer?
 
 Apalache still allows you to extend `Naturals`. However, it will treat all
-number-like literals as integers. This is consistent with that the naturals are
+number-like literals as integers. This is consistent with the view that the naturals are
 a subset of integers, and integers are a subset of reals.  Classically, one
 would not define subtraction for naturals. However, the module `Naturals`
 defines binary minus, which can easily drive a variable outside of `Nat`. For
