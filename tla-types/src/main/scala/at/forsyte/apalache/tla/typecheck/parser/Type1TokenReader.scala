@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.typecheck.parser
 
 import scala.util.parsing.input.{NoPosition, Position, Reader}
 
+private[parser]
 class Type1TokenReader(tokens: Seq[Type1Token]) extends Reader[Type1Token] {
   override def first: Type1Token = tokens.head
   override def atEnd: Boolean = tokens.isEmpty
