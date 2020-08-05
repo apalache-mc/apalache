@@ -701,10 +701,13 @@ two-year embargo period.
 <a name="types"></a>
 ## 7.2 Type annotations
 
-**NOTE**: [Jure Kukovec](https://forsyte.at/people/kukovec/) is developing
+**NOTE 1**: [Jure Kukovec](https://forsyte.at/people/kukovec/) is developing
 a completely automatic type inference engine. As soon as it is ready, type
 annotations will no longer be required. Until that happy day, refer to [type
 annotations](types-and-annotations.md).
+
+**NOTE 2**: We are currently working on a better syntax for type annotations
+and a better type checker. Hence, the syntax will change in the future.
 
 Apalache requires two kinds of type annotations:
 - type annotations for empty sets and sequences, and
@@ -977,6 +980,46 @@ Type annotations can be also applied to sets of records. For example:
 
 You can find more details on the simple type inference algorithm and the type
 annotations in [type annotations](types-and-annotations.md).
+
+### 7.2.3  Naturals
+
+If you look carefully at the [type annotations](types-and-annotations.md), you
+will find that there is no designated type for naturals. Indeed, one can just
+use the type `Int`, whenever a natural number is required. If we introduced a
+special type for naturals, that would cause a lot of confusion for the type
+checker. What would be the type of the literal `42`? That depends on, whether
+you extend `Naturals` or `Integers`. And if you extend `Naturals` and later
+somebody else extends your module and also `Integers`, should be the type
+of `42` be an integer?
+
+Apalache still allows you to extend `Naturals`. However, it will treat all
+number-like literals as integers. This is consistent with that the naturals are
+a subset of integers, and integers are a subset of reals.  Classically, one
+would not define subtraction for naturals. However, the module `Naturals`
+defines binary minus, which can easily drive a variable outside of `Nat`. For
+instance, see the following example:
+
+```tla
+----------------------------- MODULE NatCounter ------------------------        
+EXTENDS Naturals
+
+VARIABLE x
+
+Init == x = 3
+
+\* a natural counter can go below zero, and this is expected behavior
+Next == x' = x - 1
+
+Inv == x >= 0
+========================================================================
+```
+
+Given that you will need the value `Int` for a type annotation, it probably
+does not make a lot of sense to extend `Naturals` in your own specifications,
+as you will have to extend `Integers` for the type annotation too.  We are
+currently working on a different kind of type annotations, which would not
+require `Int`.
+
 
 <a name="recursion"></a>
 ## 7.3 Recursive operators and functions
