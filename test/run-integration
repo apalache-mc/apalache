@@ -151,6 +151,9 @@ check "031-HourClock" --next=NonExistantNext \
 check "032-HourClock" --inv=NonExistantInv \
     HourClock.tla \
     && expect_fail
+TLA_PATH=./tla-path-tests \
+    check "033-set-TLA_PATH" ./tla-path-tests/ImportingModule.tla \
+    && expect_ok
 
 cat "$LOGFILE"
 
