@@ -64,7 +64,7 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
   // if checker.init and checker.next are not set, set them to Init and Next, respectively
   private def setFallbackOptions(): Unit = {
     if (options.get("checker", "init").isEmpty) {
-      logger.info("  > Option --init is not set. Using Init")
+      logger.debug("  > Option --init is not set. Using Init")
       options.set("checker.init", "Init")
     }
     if (options.get("checker", "next").isEmpty) {
