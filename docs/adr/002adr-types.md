@@ -26,7 +26,7 @@ We simply write types as strings that follow the type grammar:
 
 ```
 T ::= typeConst | typeVar | Bool | Int | Str | T -> T | Set(T) | Seq(T) |
-      <<T, ..., T>> | [h_1: T, ..., h_k: T] | (T, ..., T) => T
+      <<T, ..., T>> | [h_1: T, ..., h_k: T] | (T, ..., T) => T | (T)
 typeConst ::= <an identifier that matches [A-Z_][A-Z0-9_]*>
 typeVar ::= <a single letter from [a-z]>
 ```      
@@ -36,7 +36,10 @@ function, while the rule `(T, ..., T) => T` defines an operator.  Importantly, a
 multi-argument function always receives a tuple, e.g., `<<Int, Bool>> -> Int`,
 whereas a single-argument function receives the type of its argument, e.g., `Int
 -> Int`.  An operator always has the types of its arguments inside `(...)`,
-e.g., `(Int, Bool) => Int` and `() => Bool`.
+e.g., `(Int, Bool) => Int` and `() => Bool`. The arrow `->` is right-associative,
+e.g., `A -> B -> C` is understood as `A -> (B -> C)`, which is consistent with
+programming languages. If you like to change the priority of `->`, use parentheses, as usual.
+For example, you may write `(A -> B) -> C`. 
 
 If a type `T` contains a type variable, e.g., `a`, then `T` is a
 polymorphic type, in which `a` can be instantiated with a monotype (a
