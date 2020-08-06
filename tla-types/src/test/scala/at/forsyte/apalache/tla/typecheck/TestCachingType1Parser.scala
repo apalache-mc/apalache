@@ -7,7 +7,7 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TestCachingType1Parser  extends FunSuite {
   test("Int") {
-    val parser = TypeParserFactory.cacheType1Parser()
+    val parser = TypeParserFactory.cachingType1Parser()
     val result = parser("Int")
     assert(IntT1() == result)
   }

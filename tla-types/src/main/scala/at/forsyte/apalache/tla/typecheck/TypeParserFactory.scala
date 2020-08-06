@@ -10,7 +10,7 @@ import at.forsyte.apalache.tla.typecheck.parser.DefaultType1Parser
   * @author Igor Konnov
   */
 object TypeParserFactory {
-  private val cachingType1Parser = new CachingType1Parser(DefaultType1Parser)
+  private val cachingType1ParserInstance = new CachingType1Parser(DefaultType1Parser)
 
   /**
     * Create a parser for type system 1.
@@ -25,7 +25,7 @@ object TypeParserFactory {
     * Create a caching parser for type system 1.
     * @return a parser instance
     */
-  def cacheType1Parser(): Type1Parser = {
-    cachingType1Parser
+  def cachingType1Parser(): Type1Parser = {
+    cachingType1ParserInstance
   }
 }

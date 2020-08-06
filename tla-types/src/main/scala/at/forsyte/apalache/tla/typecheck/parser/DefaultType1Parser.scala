@@ -27,7 +27,7 @@ object DefaultType1Parser extends Parsers with Type1Parser {
     * Parse a type from a string.
     *
     * @param text a string
-    * @return a type on success; throws TlcConfigParseError on failure
+    * @return a type on success; throws Type1ParseError on failure
     */
   def apply(text: String): TlaType1 = {
     apply(new StringReader(text))
@@ -36,7 +36,7 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   /**
     * Parse a type file from a reader.
     * @param reader a reader
-    * @return a typeExpr on success; throws TlcConfigParseError on failure
+    * @return a typeExpr on success; throws Type1ParseError on failure
     */
   def apply(reader: Reader): TlaType1 = {
     closedTypeExpr(new Type1TokenReader(Type1Lexer(reader))) match {
@@ -53,7 +53,7 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   private def typeExpr: Parser[TlaType1] = {
     // functions are tricky, as they start as other expressions, so we have to distinguish them by RIGHT_ARROW
     (noFunExpr ~ opt((RIGHT_ARROW() | DOUBLE_RIGHT_ARROW()) ~ typeExpr)) ^^ {
-      case (lhs :: Nil) ~ Some(RIGHT_ARROW() ~ rt) => FunT1(lhs, rt)
+      case (lhs :: Nil) ~ Some(RIGHT_ARROW() ~ rhs) => FunT1(lhs, rhs)
       case (lhs :: Nil) ~ None => lhs
       case args ~ Some(DOUBLE_RIGHT_ARROW() ~ result) => OperT1(args, result)
     }
@@ -109,14 +109,14 @@ object DefaultType1Parser extends Parsers with Type1Parser {
 
   // a record type like [a: Int, b: Bool]
   private def record: Parser[TlaType1] = {
-    LBRACKET() ~ rep1sep(keyType, COMMA()) ~ RBRACKET() ^^ {
+    LBRACKET() ~ rep1sep(typedField, COMMA()) ~ RBRACKET() ^^ {
       case _ ~ list ~ _ =>
         RecT1(SortedMap(list :_*))
     }
   }
 
   // a single component of record type, e.g., a: Int
-  private def keyType: Parser[(String, TlaType1)] = {
+  private def typedField: Parser[(String, TlaType1)] = {
     fieldName ~ COLON() ~ typeExpr ^^ {
       case FIELD_IDENT(name) ~ _ ~ fieldType => (name, fieldType)
     }
