@@ -10,8 +10,7 @@ import scala.collection.immutable.SortedMap
 @RunWith(classOf[JUnitRunner])
 class TestDefaultType1Parser  extends FunSuite {
   test("non-sense") {
-    val result = DefaultType1Parser("non-sense")
-    assert(BoolT1() == result)
+    assertThrows[Type1ParseError](DefaultType1Parser("non-sense"))
   }
 
   test("Int") {
