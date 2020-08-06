@@ -193,11 +193,9 @@ current release process is as follows:
 - [ ] Open a PR to merge `unstable` into `master`, titling it `Release l.m.n`
 - [ ] When the PR is merged, checkout `master` and then run `./script/release
       vl.m.n ./scripts/release-l.m.n.txt`
-- [ ] Build an updated docker container tagged with `l.m.n`
-- [ ] Push the new taged image to dockerhub
-- [ ] If it's a major release or important minor release, announce it to
-  - [ ] https://www.reddit.com/r/tlaplus/
-  - [ ] https://groups.google.com/u/1/g/tlaplus
+- [ ] Build an updated docker container `docker build -t apalache/mv:l.m.n`
+- [ ] Push the new taged image to dockerhub `docker push apalache/mc:l.m.n`
+- [ ] Post a notification to the (internal) `#releases` slack channel.
 
 [Github Issue]: https://github.com/informalsystems/apalache/issues
 [rfc]: https://en.wikipedia.org/wiki/Request_for_Comments
