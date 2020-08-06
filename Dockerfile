@@ -56,11 +56,14 @@ FROM openjdk:8-slim
 
 WORKDIR /opt/apalache/
 
+COPY --from=builder \
+    /opt/apalache/LICENSE \
+    /opt/apalache/LICENSE
 # Vendored binaries
 COPY --from=builder \
     /opt/apalache/3rdparty/bin/ \
     /opt/apalache/3rdparty/bin/
-# Vendored libraies
+# Vendored libraries
 COPY --from=builder \
     /opt/apalache/3rdparty/lib/ \
     /opt/apalache/3rdparty/lib/
@@ -73,12 +76,12 @@ COPY --from=builder \
 RUN true
 # The jars
 COPY --from=builder \
-    /opt/apalache/mod-distribution/target/ \
+    /opt/apalache/mod-distribution/target/apalache-pkg-*.jar \
     /opt/apalache/mod-distribution/target/
 # Apalache's .tla libraries
 COPY --from=builder \
-    /opt/apalache/src/ \
-    /opt/apalache/src/
+    /opt/apalache/src/tla \
+    /opt/apalache/src/tla
 
 # Workaround for Surefire not finding ForkedBooter
 # (see https://stackoverflow.com/questions/53010200/maven-surefire-could-not-find-forkedbooter-class)
