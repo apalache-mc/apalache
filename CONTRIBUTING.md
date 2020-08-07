@@ -109,6 +109,11 @@ The necessary shell environment is specified in [.envrc](./.envrc). You can:
 If you use a different development environment or editor set up, please document
 it here!
 
+### IntelliJ IDEA
+
+Download the community edition of [IntelliJ IDEA](https://www.jetbrains.com/idea/)
+and set up a new project.
+
 ### Emacs
 
 You can use the [metals][] Scala language server together with [lsp-mode][] for
@@ -195,6 +200,7 @@ current release process is as follows:
       vl.m.n ./scripts/release-l.m.n.txt`
 - [ ] Build an updated docker container `docker build -t apalache/mv:l.m.n`
 - [ ] Push the new taged image to dockerhub `docker push apalache/mc:l.m.n`
+- [ ] Bump the version in unstable to `l.m.(n+1)` by running `mvn release:update-versions`
 - [ ] Post a notification to the (internal) `#releases` slack channel.
 
 [Github Issue]: https://github.com/informalsystems/apalache/issues
