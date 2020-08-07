@@ -16,6 +16,13 @@ case class IntT1() extends TlaType1 {
 }
 
 /**
+  * An real type.
+  */
+case class RealT1() extends TlaType1 {
+  override def toString: String = "Real"
+}
+
+/**
   * A Boolean type.
   */
 case class BoolT1() extends TlaType1 {

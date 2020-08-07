@@ -44,6 +44,13 @@ private[parser] case class INT() extends Type1Token {
 }
 
 /**
+  * A real identifier: Real
+  */
+private[parser] case class REAL() extends Type1Token {
+  override def toString: String = "Real"
+}
+
+/**
   * A string identifier: Str
   */
 private[parser] case class STR() extends Type1Token {

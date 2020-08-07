@@ -10,6 +10,7 @@ import scala.collection.immutable.SortedMap
 class TestTlaType1  extends FunSuite {
   test("TlaType1.toString") {
     assert("Int" == IntT1().toString)
+    assert("Real" == RealT1().toString)
     assert("Bool" == BoolT1().toString)
     assert("Str" == StrT1().toString)
     assert("PID" == ConstT1("PID").toString)

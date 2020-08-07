@@ -32,7 +32,7 @@ object Type1Lexer extends RegexParsers {
 
   def token: Parser[Type1Token] =
     positioned(
-      int | bool | str | set | seq | capsIdentifier | letterIdentifier | fieldIdentifier |
+      int | real | bool | str | set | seq | capsIdentifier | letterIdentifier | fieldIdentifier |
         rightArrow | doubleRightArrow | leftParen | rightParen | leftBracket | rightBracket |
         doubleLeftAngle | doubleRightAngle | comma | colon
     ) ///
@@ -54,6 +54,10 @@ object Type1Lexer extends RegexParsers {
 
   private def int: Parser[INT] = {
     "Int".r ^^ { _ => INT() }
+  }
+
+  private def real: Parser[REAL] = {
+    "Real".r ^^ { _ => REAL() }
   }
 
   private def bool: Parser[BOOL] = {
