@@ -12,7 +12,8 @@ import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorM
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.tooling.Version
-import at.forsyte.apalache.tla.tooling.opt.{CheckCmd, ParseCmd}
+import at.forsyte.apalache.tla.tooling.opt.{CheckCmd, ParseCmd, TypeCheckCmd}
+import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.google.inject.{Guice, Injector}
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.configuration2.builder.fluent.Configurations
@@ -66,9 +67,10 @@ object Tool extends App with LazyLogging {
     val startTime = LocalDateTime.now()
     val parseCmd = new ParseCmd
     val checkCmd = new CheckCmd
+    val typecheckCmd = new TypeCheckCmd
     try {
       Cli.parse(args).withProgramName("apalache-mc").version(Version.version)
-        .withCommands(parseCmd, checkCmd) match {
+        .withCommands(parseCmd, checkCmd, typecheckCmd) match {
         case Some(parse: ParseCmd) =>
           logger.info("Parse " + parse.file)
           val injector = injectorFactory(parseCmd)
@@ -79,6 +81,11 @@ object Tool extends App with LazyLogging {
             .format(check.file, check.init, check.next, check.inv))
           val injector = injectorFactory(check)
           handleExceptions(injector, runCheck(injector, check, _))
+
+        case Some(parse: TypeCheckCmd) =>
+          logger.info("Type checking " + parse.file)
+          val injector = injectorFactory(typecheckCmd)
+          handleExceptions(injector, runTypeCheck(injector, typecheckCmd, _))
 
         case _ =>
           OK_EXIT_CODE // nothing to do
@@ -152,6 +159,20 @@ object Tool extends App with LazyLogging {
     }
   }
 
+  private def runTypeCheck(injector: Injector, parse: TypeCheckCmd, u: Unit): Unit = {
+    // type checker
+    val executor = injector.getInstance(classOf[PassChainExecutor])
+    executor.options.set("io.outdir", createOutputDir())
+    executor.options.set("parser.filename", parse.file.getAbsolutePath)
+
+    val result = executor.run()
+    if (result.isDefined) {
+      logger.info("Type checker [OK]")
+    } else {
+      logger.info("Type checker [FAILED]")
+    }
+  }
+
   private def loadProperties(filename: String): Map[String, String] = {
     // use an apache-commons library, as it supports variable substitution
     try {
@@ -185,6 +206,7 @@ object Tool extends App with LazyLogging {
     cmd match {
       case _: ParseCmd => Guice.createInjector(new ParserModule)
       case _: CheckCmd => Guice.createInjector(new CheckerModule)
+      case _: TypeCheckCmd => Guice.createInjector(new TypeCheckerModule)
       case _ => throw new RuntimeException("Unexpected command: " + cmd)
     }
   }
