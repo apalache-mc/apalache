@@ -195,6 +195,7 @@ current release process is as follows:
 - [ ] Update [CHANGES.md](./CHANGES.md), adding the heading `## l.m.n` over the
       unreleased changes.
 - [ ] Copy this section into a new file named `./script/release-l.m.n.txt`
+- [ ] Mark the version as RELEASE via `mvn versions:set -DnewVersion=l.m.n-RELEASE`
 - [ ] Open a PR to merge `unstable` into `master`, titling it `Release l.m.n`
 - [ ] When the PR is merged, checkout `master` and then run `./script/release
       vl.m.n ./scripts/release-l.m.n.txt`
