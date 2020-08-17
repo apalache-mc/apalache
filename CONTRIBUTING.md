@@ -29,6 +29,7 @@ Apalache:
     - [Dependencies](#dependencies)
         - [Environment](#environment)
     - [Development Environment](#development-environment)
+        - [IntelliJ IDEA](#intellij-idea)
         - [Emacs](#emacs)
             - [Install `metals-emacs`](#install-metals-emacs)
                 - [Arch](#arch)
@@ -40,6 +41,11 @@ Apalache:
         - [Continuous Integration](#continuous-integration)
     - [Changelog](#changelog)
     - [Releases](#releases)
+        - [Prepare the release](#prepare-the-release)
+        - [Cut the release](#cut-the-release)
+        - [Publish a docker image](#publish-a-docker-image)
+        - [Advance the version on unstable](#advance-the-version-on-unstable)
+        - [Announce the relesae](#announce-the-relesae)
 
 <!-- markdown-toc end -->
 
@@ -192,16 +198,37 @@ Changes, Features, Improvements, Bug Fixes.
 Assuming the version to be released is `l.m.n`, as per semantic versioning, the
 current release process is as follows:
 
+### Prepare the release
+
 - [ ] Update [CHANGES.md](./CHANGES.md), adding the heading `## l.m.n` over the
       unreleased changes.
 - [ ] Copy this section into a new file named `./script/release-l.m.n.txt`
 - [ ] Mark the version as RELEASE via `mvn versions:set -DnewVersion=l.m.n-RELEASE`
+- [ ] Commit the changes: `git add . && git commit -m "Prepare for release l.m."`
 - [ ] Open a PR to merge `unstable` into `master`, titling it `Release l.m.n`
-- [ ] When the PR is merged, checkout `master` and then run `./script/release
-      vl.m.n ./scripts/release-l.m.n.txt`
-- [ ] Build an updated docker container `docker build -t apalache/mv:l.m.n`
-- [ ] Push the new taged image to dockerhub `docker push apalache/mc:l.m.n`
-- [ ] Bump the version in unstable to `l.m.(n+1)` by running `mvn release:update-versions`
+
+### Cut the release
+
+When the PR is merged into `master`:
+
+- [ ] Checkout `master`
+- [ ] Sync with upstream via`git pull origin master`
+- [ ] Build the artifact with `make`
+- [ ] Post the relese with `./script/release vl.m.n ./scripts/release-l.m.n.txt`
+
+### Publish a docker image
+
+- [ ] Build an updated docker container: `docker build -t apalache/mv:l.m.n`
+- [ ] Push the new taged image to dockerhub: `docker push apalache/mc:l.m.n`
+
+### Advance the version on unstable
+
+- [ ] Checkout `unstable`
+- [ ] Run `mvn release:update-versions`
+- [ ] Commit the chnages `git add . && git commit -m "Bump version to l.m.(n+1)-SNAPSHOT" && git push`
+
+### Announce the relesae
+
 - [ ] Post a notification to the (internal) `#releases` slack channel.
 
 [Github Issue]: https://github.com/informalsystems/apalache/issues
