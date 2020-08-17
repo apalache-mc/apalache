@@ -219,7 +219,8 @@ When the PR is merged into `master`:
 ### Publish a docker image
 
 - [ ] Build an updated docker container: `docker build -t apalache/mv:l.m.n`
-- [ ] Push the new taged image to dockerhub: `docker push apalache/mc:l.m.n`
+- [ ] Tag the new version as `latest`: `docker tag apalache/mc:l.m.n latest`
+- [ ] Push the new taged images to dockerhub: `docker push apalache/mc:l.m.n && docker push apalache/mc:latest`
 
 ### Advance the version on unstable
 
