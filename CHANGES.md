@@ -1,5 +1,9 @@
 ## Unreleased #unstable
 
+## 0.7.2 [RELEASE]
+
+ * fixed an omitted version number update
+
 ## 0.7.1 [RELEASE]
 
  * safe checks for the user options in ConfigurationPassImpl, see #193
