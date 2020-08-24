@@ -36,6 +36,11 @@
             <artifactId>guice</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.scala-lang.modules</groupId>
+            <artifactId>scala-parser-combinators_${scalaBinaryVersion}</artifactId>
+        </dependency>
+
         <!-- parent's dependencies -->
         <dependency>
             <groupId>org.lamport</groupId>

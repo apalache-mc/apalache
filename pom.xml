@@ -10,6 +10,8 @@
     <url>https://github.com/informalsystems/apalache</url>
 
     <properties>
+        <scalaVersion>2.12.0</scalaVersion> <!-- required by scala-xml 1.0.6 -->
+        <scalaBinaryVersion>2.12</scalaBinaryVersion>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <scoverage.plugin.version>1.4.0</scoverage.plugin.version>
         <scoverage.aggregate>true</scoverage.aggregate>
@@ -48,36 +50,14 @@
         <module>mod-distribution</module>
     </modules>
 
-    <!-- the profile settings are copied from:
-         https://github.com/scala/scala-module-dependency-sample/blob/master/maven-sample/pom.xml -->
-    <profiles>
-        <profile>
-            <id>scala-2.12</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <scalaVersion>2.12.0</scalaVersion> <!-- required by scala-xml 1.0.6 -->
-                <scalaBinaryVersion>2.12</scalaBinaryVersion>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>scala-library</artifactId>
-                    <version>${scalaVersion}</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.scala-lang.modules</groupId>
-                    <artifactId>scala-parser-combinators_${scalaBinaryVersion}</artifactId>
-                    <version>1.1.2</version>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
-
     <!-- shared dependencies are set up here, use them in the submodules -->
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.scala-lang</groupId>
+                <artifactId>scala-library</artifactId>
+                <version>${scalaVersion}</version>
+            </dependency>
             <dependency>
                 <groupId>com.google.inject</groupId>
                 <artifactId>guice</artifactId>
@@ -114,7 +94,7 @@
 
             <dependency>
                 <groupId>org.scala-lang.modules</groupId>
-                <artifactId>scala-parser-combinators</artifactId>
+                <artifactId>scala-parser-combinators_${scalaBinaryVersion}</artifactId>
                 <version>1.1.2</version>
             </dependency>
 
