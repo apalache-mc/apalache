@@ -126,7 +126,7 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
           throw new TLCConfigurationError("  > Could not find TLC config file " + basename + " given via --config option")
         }
       case e: TlcConfigParseError =>
-        throw new TLCConfigurationError("  > Could not parse TLC configuration in " + basename + ": " + e.msg)
+        throw new TLCConfigurationError("  > Could not parse TLC configuration in " + basename + " at position " + e.pos.toString() + ": " + e.msg)
     }
 
     // rewrite constants and declarations
