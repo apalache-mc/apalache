@@ -16,17 +16,6 @@ private[parser] case class CAPS_IDENT(name: String) extends Type1Token {
 }
 
 /**
-  * A single-letter identifier. For consistency with CAPS_INDENT, we assign a String to name, not Char.
-  *
-  * @param name the name associated with the identifier
-  */
-private[parser] case class LETTER_IDENT(name: String) extends Type1Token {
-  require(name.length == 1)
-
-  override def toString: String = "letter ident '%s'".format(name)
-}
-
-/**
   * A field identifier. Since it syntactically includes CAPS_IDENT and LETTER_IDENT, one has to expect
   * CAPS_IDENT, LETTER_INDENT, and FIELD_INDENT, whenever a record field is expected.
   *

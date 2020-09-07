@@ -32,7 +32,7 @@ object Type1Lexer extends RegexParsers {
 
   def token: Parser[Type1Token] =
     positioned(
-      int | real | bool | str | set | seq | capsIdentifier | letterIdentifier | fieldIdentifier |
+      int | real | bool | str | set | seq | capsIdentifier | fieldIdentifier |
         rightArrow | doubleRightArrow | leftParen | rightParen | leftBracket | rightBracket |
         doubleLeftAngle | doubleRightAngle | comma | colon
     ) ///
@@ -42,10 +42,6 @@ object Type1Lexer extends RegexParsers {
 
   private def capsIdentifier: Parser[CAPS_IDENT] = {
     "[A-Z_][A-Z0-9_]*".r ^^ { name => CAPS_IDENT(name) }
-  }
-
-  private def letterIdentifier: Parser[LETTER_IDENT] = {
-    "[a-z]".r ^^ { name => LETTER_IDENT(name) }
   }
 
   private def fieldIdentifier: Parser[FIELD_IDENT] = {

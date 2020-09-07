@@ -61,11 +61,12 @@ object DefaultType1Parser extends Parsers with Type1Parser {
 
   // A type expression. We wrap it with a list, as (type, ..., type) may start an operator type
   private def noFunExpr: Parser[List[TlaType1]] = {
-    (INT() | BOOL() | STR() | typeVar | typeConst | set | seq | tuple | record | parenExpr) ^^ {
+    (INT() | REAL() | BOOL() | STR() | typeVar | typeConst | set | seq | tuple | record | parenExpr) ^^ {
       case INT() => List(IntT1())
+      case REAL() => List(RealT1())
       case BOOL() => List(BoolT1())
       case STR() => List(StrT1())
-      case LETTER_IDENT(name) => List(VarT1(name))
+      case FIELD_IDENT(name) => List(VarT1(name))
       case CAPS_IDENT(name) => List(ConstT1(name))
       case s @ SetT1(_) => List(s)
       case s @ SeqT1(_) => List(s)
@@ -126,14 +127,13 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   private def fieldName: Parser[FIELD_IDENT] = {
     accept("field name", {
       case f @ FIELD_IDENT(_) => f
-      case LETTER_IDENT(letter) => FIELD_IDENT(letter)
       case CAPS_IDENT(name) => FIELD_IDENT(name)
     })
   }
 
   // a type variable, e.g., c
-  private def typeVar: Parser[LETTER_IDENT] = {
-    accept("typeVar", { case id @ LETTER_IDENT(_) => id })
+  private def typeVar: Parser[FIELD_IDENT] = {
+    accept("typeVar", { case id @ FIELD_IDENT(_) => id })
   }
 
   // a type constant, e.g., BAZ

@@ -18,6 +18,11 @@ class TestDefaultType1Parser  extends FunSuite {
     assert(IntT1() == result)
   }
 
+  test("Real") {
+    val result = DefaultType1Parser("Real")
+    assert(RealT1() == result)
+  }
+
   test("Bool") {
     val result = DefaultType1Parser("Bool")
     assert(BoolT1() == result)
@@ -74,6 +79,11 @@ class TestDefaultType1Parser  extends FunSuite {
   test("[a: Int, b: Bool]") {
     val result = DefaultType1Parser("[a: Int, b: Bool]")
     assert(RecT1(SortedMap("a" -> IntT1(), "b" -> BoolT1())) == result)
+  }
+
+  test("[f1: Int, f2: Bool]") {
+    val result = DefaultType1Parser("[f1: Int, f2: Bool]")
+    assert(RecT1(SortedMap("f1" -> IntT1(), "f2" -> BoolT1())) == result)
   }
 
   test("Set(Int) -> Bool") {
