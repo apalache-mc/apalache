@@ -28,6 +28,7 @@ package oper {
     /** this operator is defined by the user and unknown to TLA+ */
     val User: Interpretation.Value = Value
     /** this operator does not have any definition but is used as a signature, e.g., f(_, _) in operator parameters */
+      // Igor (28.08.2020): this interpretation is no longer in use. Remove.
     val Signature: Interpretation.Value = Value
   }
 
@@ -176,7 +177,11 @@ package oper {
       override val precedence: (Int, Int) = (0, 0) // see Section 15.2.1 in Lamport's book
     }
 
-    /** The CHOOSE idiom: CHOOSE x : x \notin S */
+    /**
+      * The CHOOSE idiom: CHOOSE x : x \notin S.
+      *
+      * Igor (28.08.2020): having this operator in the IR is a hack. We should just remove it.
+      */
     val chooseIdiom: TlaOper = new TlaOper {
       // TODO: move this operator to TlaBoolOper? (Igor)
       override val name: String = "CHOOSEI"
