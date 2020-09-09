@@ -124,6 +124,28 @@ private[parser] case class RBRACKET() extends Type1Token {
 }
 
 /**
+  * Left curly bracket "{".
+  */
+private[parser] case class LCURLY() extends Type1Token {
+  override def toString: String = "{"
+}
+
+/**
+  * Right curly bracket "}".
+  */
+private[parser] case class RCURLY() extends Type1Token {
+  override def toString: String = "}"
+}
+
+/**
+  * A field number, e.g., 3
+  * @param no the number
+  */
+private[parser] case class FIELD_NO(no: Int) extends Type1Token {
+  override def toString: String = no.toString
+}
+
+/**
   * Tuple opening "<<".
   */
 private[parser] case class DOUBLE_LEFT_ANGLE() extends Type1Token {

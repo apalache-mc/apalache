@@ -61,7 +61,7 @@ object DefaultType1Parser extends Parsers with Type1Parser {
 
   // A type expression. We wrap it with a list, as (type, ..., type) may start an operator type
   private def noFunExpr: Parser[List[TlaType1]] = {
-    (INT() | REAL() | BOOL() | STR() | typeVar | typeConst | set | seq | tuple | record | parenExpr) ^^ {
+    (INT() | REAL() | BOOL() | STR() | typeVar | typeConst | set | seq | tuple | sparseTuple | record | parenExpr) ^^ {
       case INT() => List(IntT1())
       case REAL() => List(RealT1())
       case BOOL() => List(BoolT1())
@@ -72,6 +72,7 @@ object DefaultType1Parser extends Parsers with Type1Parser {
       case s @ SeqT1(_) => List(s)
       case f @ FunT1(_, _) => List(f)
       case t @ TupT1(_*) => List(t)
+      case t @ SparseTupT1(_) => List(t)
       case r @ RecT1(_) => List(r)
       case lst: List[TupT1] => lst
     }
@@ -108,9 +109,31 @@ object DefaultType1Parser extends Parsers with Type1Parser {
     }
   }
 
+  // a sparse tuple type like {3: Int, 5: Bool}
+  private def sparseTuple: Parser[TlaType1] = {
+    LCURLY() ~ repsep(typedFieldNo, COMMA()) ~ RCURLY() ^^ {
+      case _ ~ list ~ _ =>
+        SparseTupT1(SortedMap(list :_*))
+    }
+  }
+
+  // a single component of a sparse tuple, e.g., 3: Int
+  private def typedFieldNo: Parser[(Int, TlaType1)] = {
+    fieldNo ~ COLON() ~ typeExpr ^^ {
+      case FIELD_NO(no) ~ _ ~ fieldType => (no, fieldType)
+    }
+  }
+
+  // a field number in a sparse tuple, like 3
+  private def fieldNo: Parser[FIELD_NO] = {
+    accept("field number", {
+      case f @ FIELD_NO(_) => f
+    })
+  }
+
   // a record type like [a: Int, b: Bool]
   private def record: Parser[TlaType1] = {
-    LBRACKET() ~ rep1sep(typedField, COMMA()) ~ RBRACKET() ^^ {
+    LBRACKET() ~ repsep(typedField, COMMA()) ~ RBRACKET() ^^ {
       case _ ~ list ~ _ =>
         RecT1(SortedMap(list :_*))
     }

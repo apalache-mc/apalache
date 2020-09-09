@@ -96,6 +96,18 @@ case class TupT1(elems: TlaType1*) extends TlaType1 {
 }
 
 /**
+  * A sparse tuple type. The keys are sorted by their names.
+  *
+  * @param fieldTypes a sorted map from field names to their types
+  */
+case class SparseTupT1(fieldTypes: SortedMap[Int, TlaType1]) extends TlaType1 {
+  override def toString: String = {
+    val keyTypeStrs = fieldTypes.map(p => "%s: %s".format(p._1, p._2))
+    "{%s}".format(keyTypeStrs.mkString(", "))
+  }
+}
+
+/**
   * A record type. The keys are sorted by their names.
   *
   * @param fieldTypes a sorted map from field names to their types

@@ -67,8 +67,14 @@ class TestDefaultType1Parser  extends FunSuite {
     assert(TupT1(BoolT1(), IntT1()) == result)
   }
 
-  test("[] is rejected") {
-    assertThrows[Type1ParseError](DefaultType1Parser("[]"))
+  test("{ 3: Bool, 5: Int }") {
+    val result = DefaultType1Parser("{ 3: Bool, 5: Int }")
+    assert(SparseTupT1(SortedMap(3 -> BoolT1(), 5 -> IntT1())) == result)
+  }
+
+  test("[] is ok") {
+    val result = DefaultType1Parser("[]")
+    assert(RecT1(SortedMap()) == result)
   }
 
   test("[a: Int]") {

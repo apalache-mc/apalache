@@ -32,9 +32,9 @@ object Type1Lexer extends RegexParsers {
 
   def token: Parser[Type1Token] =
     positioned(
-      int | real | bool | str | set | seq | capsIdentifier | fieldIdentifier |
+      int | real | bool | str | set | seq | capsIdentifier | fieldIdentifier | fieldNumber |
         rightArrow | doubleRightArrow | leftParen | rightParen | leftBracket | rightBracket |
-        doubleLeftAngle | doubleRightAngle | comma | colon
+        leftCurly | rightCurly | doubleLeftAngle | doubleRightAngle | comma | colon
     ) ///
 
   // a linefeed is not a white-space
@@ -46,6 +46,10 @@ object Type1Lexer extends RegexParsers {
 
   private def fieldIdentifier: Parser[FIELD_IDENT] = {
     "[A-Za-z_][A-Za-z0-9_]*".r ^^ { name => FIELD_IDENT(name) }
+  }
+
+  private def fieldNumber: Parser[FIELD_NO] = {
+    "[0-9]+".r ^^ { str => FIELD_NO(Integer.parseInt(str)) }
   }
 
   private def int: Parser[INT] = {
@@ -94,6 +98,14 @@ object Type1Lexer extends RegexParsers {
 
   private def rightBracket: Parser[RBRACKET] = {
     "]" ^^ { _ => RBRACKET() }
+  }
+
+  private def leftCurly: Parser[LCURLY] = {
+    "{" ^^ { _ => LCURLY() }
+  }
+
+  private def rightCurly: Parser[RCURLY] = {
+    "}" ^^ { _ => RCURLY() }
   }
 
   private def doubleLeftAngle: Parser[DOUBLE_LEFT_ANGLE] = {
