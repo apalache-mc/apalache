@@ -316,6 +316,25 @@ class TlaExTranslator {
     case OperEx(TlaFunOper.recFunRef) =>
       STCName(TlaFunOper.recFunRef.uniqueName) (ex.ID)
 
+    //******************************************** CONTROL **************************************************
+
+    case OperEx(TlaControlOper.ifThenElse, predEx, thenEx, elseEx) =>
+      // IF e1 THEN e2 ELSE E2
+      // (Bool, a, a) => a
+      val opsig = OperT1(List(BoolT1(), VarT1("a"), VarT1("a")), VarT1("a"))
+      mkApp(ex.ID, opsig, Seq(predEx, thenEx, elseEx))
+
+    case OperEx(op, args @ _*) if op == TlaControlOper.caseNoOther || op == TlaControlOper.caseWithOther =>
+      // CASE p1 -> e1 [] p2 -> e2
+      // CASE p1 -> e1 [] p2 -> e2 OTHER e3
+      val nargs = args.length
+      val nargs2 = (args.length / 2) * 2 // the largest even number below nargs
+      // Bool, a, Bool, a, ...
+      val boolAndAs = 0.until(nargs2).map(i => if (i % 2 == 0) BoolT1() else VarT1("a"))
+      val operArgs = if (nargs % 2 == 1) boolAndAs :+ VarT1("a") else boolAndAs
+      val opsig = OperT1(operArgs, VarT1("a"))
+      mkApp(ex.ID, opsig, args)
+
     //******************************************** INTEGERS **************************************************
     case OperEx(TlaArithOper.uminus, args @ _*) =>
       // -x

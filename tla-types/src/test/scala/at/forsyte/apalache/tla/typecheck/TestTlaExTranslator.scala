@@ -389,4 +389,26 @@ class TestTlaExTranslator extends FunSuite with BeforeAndAfterEach {
     val funRef = tla.recFunRef()
     assert(expected == gen(funRef))
   }
+
+  test("IF e1 THEN e2 ELSE e3") {
+    val iteType = STCConst(parser("(Bool, a, a) => a")) (UID.unique)
+    val expected = mkAppByType(iteType, BoolT1(), IntT1(), IntT1())
+    val ite = tla.ite(tla.bool(true), tla.int(1), tla.int(2))
+    assert(expected == gen(ite))
+  }
+
+  test("CASE p1 -> e1 [] p2 -> e2") {
+    val caseType = STCConst(parser("(Bool, a, Bool, a) => a")) (UID.unique)
+    val expected = mkAppByType(caseType, BoolT1(), IntT1(), BoolT1(), IntT1())
+    val caseEx = tla.caseSplit(tla.bool(true), tla.int(1), tla.bool(false), tla.int(2))
+    assert(expected == gen(caseEx))
+  }
+
+  test("CASE p1 -> e1 [] p2 -> e2 OTHER e3") {
+    val caseType = STCConst(parser("(Bool, a, Bool, a, a) => a")) (UID.unique)
+    val expected = mkAppByType(caseType, BoolT1(), IntT1(), BoolT1(), IntT1(), IntT1())
+    val caseEx = tla.caseOther(tla.bool(true), tla.int(1),
+      tla.bool(false), tla.int(2), tla.int(3))
+    assert(expected == gen(caseEx))
+  }
 }
