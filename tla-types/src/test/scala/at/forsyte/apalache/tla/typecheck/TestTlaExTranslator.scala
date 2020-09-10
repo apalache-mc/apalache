@@ -516,4 +516,32 @@ class TestTlaExTranslator extends FunSuite with BeforeAndAfterEach {
     val ex = tla.selectseq(tla.name("s"), tla.name("A"))
     assert(expected == gen(ex))
   }
+
+  test("unary temporal operators") {
+    val unary = STCConst(parser("Bool => Bool")) (UID.unique)
+    val expectedUnary = mkAppByName(unary, "A")
+    assert(expectedUnary == gen(tla.box(tla.name("A"))))
+    assert(expectedUnary == gen(tla.diamond(tla.name("A"))))
+  }
+
+  test("binary temporal operators") {
+    val binary = STCConst(parser("(Bool, Bool) => Bool")) (UID.unique)
+    val expectedBinary = mkAppByName(binary, "A", "B")
+    assert(expectedBinary == gen(tla.leadsTo(tla.name("A"), tla.name("B"))))
+    assert(expectedBinary == gen(tla.guarantees(tla.name("A"), tla.name("B"))))
+  }
+
+  test("WF_x(A) and SF_x(A)") {
+    val typ = STCConst(parser("(a, Bool) => Bool")) (UID.unique)
+    val expected = mkAppByName(typ, "x", "A")
+    assert(expected == gen(tla.WF(tla.name("x"), tla.name("A"))))
+    assert(expected == gen(tla.SF(tla.name("x"), tla.name("A"))))
+  }
+
+  test("\\EE x: A and \\AA x: A") {
+    val typ = STCConst(parser("(a, Bool) => Bool")) (UID.unique)
+    val expected = mkAppByName(typ, "x", "A")
+    assert(expected == gen(tla.AA(tla.name("x"), tla.name("A"))))
+    assert(expected == gen(tla.EE(tla.name("x"), tla.name("A"))))
+  }
 }

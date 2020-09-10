@@ -436,6 +436,24 @@ class TlaExTranslator {
       val opsig = OperT1(List(RealT1(), RealT1()), RealT1())
       mkApp(ex.ID, opsig, args)
 
+    //***************************************** TEMPORAL *************************************************
+    case OperEx(op, inner) if op == TlaTempOper.box || op == TlaTempOper.diamond =>
+      val opsig = OperT1(Seq(BoolT1()), BoolT1())       // Bool => Bool
+      mkApp(ex.ID, opsig, Seq(inner))
+
+    case OperEx(op, lhs, rhs) if op == TlaTempOper.guarantees || op == TlaTempOper.leadsTo =>
+      val opsig = OperT1(Seq(BoolT1(), BoolT1()), BoolT1())       // (Bool, Bool) => Bool
+      mkApp(ex.ID, opsig, Seq(lhs, rhs))
+
+    case OperEx(op, sub, act) if op == TlaTempOper.weakFairness || op == TlaTempOper.strongFairness =>
+      val opsig = OperT1(Seq(VarT1("a"), BoolT1()), BoolT1())       // (a, Bool) => Bool
+      mkApp(ex.ID, opsig, Seq(sub, act))
+
+    case OperEx(op, varName, act) if op == TlaTempOper.AA || op == TlaTempOper.EE =>
+      val opsig = OperT1(Seq(VarT1("a"), BoolT1()), BoolT1())       // (a, Bool) => Bool
+      mkApp(ex.ID, opsig, Seq(varName, act))
+
+    //******************************************** MISC **************************************************
     case _ =>
       STCConst(VarT1("a"))(ex.ID)
   }
