@@ -305,6 +305,17 @@ class TlaExTranslator {
       val xargs = accessors.zip(newValues).flatMap(p => List(this (p._1), this (p._2)))
       STCApp(disjunctiveType, this(fun) +: xargs :_*) (ex.ID)
 
+    case OperEx(TlaFunOper.recFunDef, body, NameEx(name), bindingSet) =>
+      // the expected type is: ((a -> b) => (a -> b)) (λ $recFun ∈ Set(a -> b). λ x ∈ Int. x)
+      val funType = FunT1(VarT1("a"), VarT1("b"))
+      val principal = OperT1(Seq(funType), funType)
+      val innerLambda = STCAbs(this(body), (name, this(bindingSet))) (body.ID)
+      val outerLambda = STCAbs(innerLambda, (TlaFunOper.recFunRef.uniqueName, STCConst(SetT1(funType)) (ex.ID))) (ex.ID)
+      STCApp(STCConst(principal)(ex.ID), outerLambda) (ex.ID)
+
+    case OperEx(TlaFunOper.recFunRef) =>
+      STCName(TlaFunOper.recFunRef.uniqueName) (ex.ID)
+
     //******************************************** INTEGERS **************************************************
     case OperEx(TlaArithOper.uminus, args @ _*) =>
       // -x

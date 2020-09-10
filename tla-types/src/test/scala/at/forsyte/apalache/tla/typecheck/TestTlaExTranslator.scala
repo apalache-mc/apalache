@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.typecheck
 
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.TlaReal
 import at.forsyte.apalache.tla.lir.{UID, ValEx}
 import at.forsyte.apalache.tla.typecheck.parser.DefaultType1Parser
@@ -364,5 +365,28 @@ class TestTlaExTranslator extends FunSuite with BeforeAndAfterEach {
     val ex = tla.except(tla.name("f"),
       tla.int(3), tla.name("e2"), tla.int(5), tla.name("e4"))
     assert(expected == gen(ex))
+  }
+
+  test("recursive function definition f[x \\in Int] == x") {
+    // the expected type is: ((a -> b) => (a -> b)) (λ $recFun ∈ Set(a -> b). λ x ∈ Int. x)
+    val funType = FunT1(VarT1("a"), VarT1("b"))
+    val principal = OperT1(Seq(funType), funType)
+    // inner lambda
+    val innerLambda = STCAbs(STCName("x")(UID.unique),
+      ("x", STCConst(SetT1(IntT1())) (UID.unique))) (UID.unique)
+    // outer lambda
+    val outerLambda = STCAbs(innerLambda,
+      (TlaFunOper.recFunRef.uniqueName, STCConst(SetT1(funType)) (UID.unique) )) (UID.unique)
+    // the resulting expression is (a -> b) outerLambda
+    val expected = STCApp(STCConst(principal)(UID.unique), outerLambda) (UID.unique)
+    val fun = tla.recFunDef(tla.name("x"),
+      tla.name("x"), tla.intSet())
+    assert(expected == gen(fun))
+  }
+
+  test("recursive function call") {
+    val expected = STCName(TlaFunOper.recFunRef.uniqueName) (UID.unique)
+    val funRef = tla.recFunRef()
+    assert(expected == gen(funRef))
   }
 }
