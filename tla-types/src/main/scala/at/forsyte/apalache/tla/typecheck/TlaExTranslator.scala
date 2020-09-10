@@ -371,6 +371,36 @@ class TlaExTranslator {
       val opsig = OperT1(Seq(BoolT1(), BoolT1()), BoolT1())       // (Bool, Bool) => Bool
       mkApp(ex.ID, opsig, Seq(a, b))
 
+    //******************************************** Sequences *************************************************
+    case OperEx(TlaSeqOper.head, s) =>
+      val opsig = OperT1(Seq(SeqT1(VarT1("a"))), VarT1("a"))       // Seq(a) => a
+      mkApp(ex.ID, opsig, Seq(s))
+
+    case OperEx(TlaSeqOper.tail, s) =>
+      val opsig = OperT1(Seq(SeqT1(VarT1("a"))), SeqT1(VarT1("a")))       // Seq(a) => Seq(a)
+      mkApp(ex.ID, opsig, Seq(s))
+
+    case OperEx(TlaSeqOper.append, args @ _*) =>
+      val opsig = OperT1(Seq(SeqT1(VarT1("a")), VarT1("a")), SeqT1(VarT1("a")))       // Seq(a), a => Seq(a)
+      mkApp(ex.ID, opsig, args)
+
+    case OperEx(TlaSeqOper.concat, s, t) =>
+      val opsig = OperT1(Seq(SeqT1(VarT1("a")), SeqT1(VarT1("a"))), SeqT1(VarT1("a"))) // Seq(a), Seq(a) => Seq(a)
+      mkApp(ex.ID, opsig, Seq(s, t))
+
+    case OperEx(TlaSeqOper.len, s) =>
+      val opsig = OperT1(Seq(SeqT1(VarT1("a"))), IntT1())                             // Seq(a) => Int
+      mkApp(ex.ID, opsig, Seq(s))
+
+    case OperEx(TlaSeqOper.subseq, args @ _*) =>
+      val opsig = OperT1(Seq(SeqT1(VarT1("a")), IntT1(), IntT1()), SeqT1(VarT1("a"))) // Seq(a), Int, Int => Seq(a)
+      mkApp(ex.ID, opsig, args)
+
+    case OperEx(TlaSeqOper.selectseq, args @ _*) =>
+      val filter = OperT1(Seq(VarT1("a")), BoolT1())
+      val opsig = OperT1(Seq(SeqT1(VarT1("a")), filter), SeqT1(VarT1("a"))) // Seq(a), (a => Bool) => Seq(a)
+      mkApp(ex.ID, opsig, args)
+
     //******************************************** INTEGERS **************************************************
     case OperEx(TlaArithOper.uminus, args @ _*) =>
       // -x

@@ -467,4 +467,53 @@ class TestTlaExTranslator extends FunSuite with BeforeAndAfterEach {
     val ex = tla.comp(tla.name("A"), tla.name("B"))
     assert(expected == gen(ex))
   }
+
+  test("Head(seq)") {
+    val typ = STCConst(parser("Seq(a) => a")) (UID.unique)
+    val expected = mkAppByName(typ, "seq")
+    val ex = tla.head(tla.name("seq"))
+    assert(expected == gen(ex))
+  }
+
+  test("Tail(seq)") {
+    val typ = STCConst(parser("Seq(a) => Seq(a)")) (UID.unique)
+    val expected = mkAppByName(typ, "seq")
+    val ex = tla.tail(tla.name("seq"))
+    assert(expected == gen(ex))
+  }
+
+  test("Append(seq, x)") {
+    val typ = STCConst(parser("(Seq(a), a) => Seq(a)")) (UID.unique)
+    val expected = mkAppByName(typ, "seq", "x")
+    val ex = tla.append(tla.name("seq"), tla.name("x"))
+    assert(expected == gen(ex))
+  }
+
+  test("s \\o t") {
+    val typ = STCConst(parser("(Seq(a), Seq(a)) => Seq(a)")) (UID.unique)
+    val expected = mkAppByName(typ, "s", "t")
+    val ex = tla.concat(tla.name("s"), tla.name("t"))
+    assert(expected == gen(ex))
+  }
+
+  test("Len(s)") {
+    val typ = STCConst(parser("Seq(a) => Int")) (UID.unique)
+    val expected = mkAppByName(typ, "s")
+    val ex = tla.len(tla.name("s"))
+    assert(expected == gen(ex))
+  }
+
+  test("SubSeq(s, 2, 3)") {
+    val typ = STCConst(parser("(Seq(a), Int, Int) => Seq(a)")) (UID.unique)
+    val expected = mkAppByName(typ, "s", "i", "j")
+    val ex = tla.subseq(tla.name("s"), tla.name("i"), tla.name("j"))
+    assert(expected == gen(ex))
+  }
+
+  test("SelectSeq(s, A)") {
+    val typ = STCConst(parser("(Seq(a), (a => Bool)) => Seq(a)")) (UID.unique)
+    val expected = mkAppByName(typ, "s", "A")
+    val ex = tla.selectseq(tla.name("s"), tla.name("A"))
+    assert(expected == gen(ex))
+  }
 }
