@@ -411,4 +411,60 @@ class TestTlaExTranslator extends FunSuite with BeforeAndAfterEach {
       tla.bool(false), tla.int(2), tla.int(3))
     assert(expected == gen(caseEx))
   }
+
+  test("IsFinite(S)") {
+    val finType = STCConst(parser("(Set(a) => Bool)")) (UID.unique)
+    val expected = mkAppByName(finType, "S")
+    val ex = tla.isFin(tla.name("S"))
+    assert(expected == gen(ex))
+  }
+
+  test("Cardinality(S)") {
+    val finType = STCConst(parser("(Set(a) => Int)")) (UID.unique)
+    val expected = mkAppByName(finType, "S")
+    val ex = tla.card(tla.name("S"))
+    assert(expected == gen(ex))
+  }
+
+  test("Prime") {
+    val typ = STCConst(parser("(a => a)")) (UID.unique)
+    val expected = mkAppByName(typ, "x")
+    val ex = tla.prime(tla.name("x"))
+    assert(expected == gen(ex))
+  }
+
+  test("stutter") {
+    val typ = STCConst(parser("(Bool, a) => Bool")) (UID.unique)
+    val expected = mkAppByName(typ, "A", "x")
+    val ex = tla.stutt(tla.name("A"), tla.name("x"))
+    assert(expected == gen(ex))
+  }
+
+  test("no stutter") {
+    val typ = STCConst(parser("(Bool, a) => Bool")) (UID.unique)
+    val expected = mkAppByName(typ, "A", "x")
+    val ex = tla.nostutt(tla.name("A"), tla.name("x"))
+    assert(expected == gen(ex))
+  }
+
+  test("ENABLED") {
+    val typ = STCConst(parser("Bool => Bool")) (UID.unique)
+    val expected = mkAppByName(typ, "A")
+    val ex = tla.enabled(tla.name("A"))
+    assert(expected == gen(ex))
+  }
+
+  test("UNCHANGED") {
+    val typ = STCConst(parser("a => Bool")) (UID.unique)
+    val expected = mkAppByName(typ, "x")
+    val ex = tla.unchanged(tla.name("x"))
+    assert(expected == gen(ex))
+  }
+
+  test("composition") {
+    val typ = STCConst(parser("(Bool, Bool) => Bool")) (UID.unique)
+    val expected = mkAppByName(typ, "A", "B")
+    val ex = tla.comp(tla.name("A"), tla.name("B"))
+    assert(expected == gen(ex))
+  }
 }

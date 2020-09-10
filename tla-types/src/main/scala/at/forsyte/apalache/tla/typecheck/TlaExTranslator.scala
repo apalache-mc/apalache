@@ -335,6 +335,42 @@ class TlaExTranslator {
       val opsig = OperT1(operArgs, VarT1("a"))
       mkApp(ex.ID, opsig, args)
 
+    //******************************************** FiniteSets ************************************************
+    case OperEx(TlaFiniteSetOper.isFiniteSet, setEx) =>
+      val opsig = OperT1(Seq(SetT1(VarT1("a"))), BoolT1())  // Set(a) => Bool
+      mkApp(ex.ID, opsig, Seq(setEx))
+
+    case OperEx(TlaFiniteSetOper.cardinality, setEx) =>
+      val opsig = OperT1(Seq(SetT1(VarT1("a"))), IntT1())   // Set(a) => Int
+      mkApp(ex.ID, opsig, Seq(setEx))
+
+    //*************************************** ACTION OPERATORS ***********************************************
+    case OperEx(TlaActionOper.prime, inner) =>
+      val opsig = OperT1(Seq(VarT1("a")), VarT1("a"))       // a => a
+      mkApp(ex.ID, opsig, Seq(inner))
+
+    case OperEx(TlaActionOper.stutter, args @ _*) =>
+      // Bool, a, b, c => Bool
+      val opsig = OperT1(BoolT1() +: mkBoundVars(0, args.length - 1), BoolT1())
+      mkApp(ex.ID, opsig, args)
+
+    case OperEx(TlaActionOper.nostutter, args @ _*) =>
+      // Bool, a, b, c => Bool
+      val opsig = OperT1(BoolT1() +: mkBoundVars(0, args.length - 1), BoolT1())
+      mkApp(ex.ID, opsig, args)
+
+    case OperEx(TlaActionOper.enabled, inner) =>
+      val opsig = OperT1(Seq(BoolT1()), BoolT1())       // Bool => Bool
+      mkApp(ex.ID, opsig, Seq(inner))
+
+    case OperEx(TlaActionOper.unchanged, args @ _*) =>
+      val opsig = OperT1(mkBoundVars(0, args.length), BoolT1())       // a, b, c => Bool
+      mkApp(ex.ID, opsig, args)
+
+    case OperEx(TlaActionOper.composition, a, b) =>
+      val opsig = OperT1(Seq(BoolT1(), BoolT1()), BoolT1())       // (Bool, Bool) => Bool
+      mkApp(ex.ID, opsig, Seq(a, b))
+
     //******************************************** INTEGERS **************************************************
     case OperEx(TlaArithOper.uminus, args @ _*) =>
       // -x
