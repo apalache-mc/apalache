@@ -3,20 +3,20 @@ package at.forsyte.apalache.tla.typecheck
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.TlaReal
-import at.forsyte.apalache.tla.lir.{UID, ValEx}
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck.parser.DefaultType1Parser
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 
 @RunWith(classOf[JUnitRunner])
-class TestTlaExTranslator extends FunSuite with BeforeAndAfterEach {
+class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
   var parser: Type1Parser = _
-  var gen: TlaExTranslator = _
+  var gen: ToSTCExpr = _
 
   override protected def beforeEach(): Unit = {
     parser = DefaultType1Parser
-    gen = new TlaExTranslator()
+    gen = new ToSTCExpr()
   }
 
   private def mkAppByType(opexp: STCExpr, args: TlaType1*): STCApp = {
@@ -79,9 +79,6 @@ class TestTlaExTranslator extends FunSuite with BeforeAndAfterEach {
   }
 
   test("equality and inequality") {
-    val parser = DefaultType1Parser
-    val gen = new TlaExTranslator()
-
     // equality and inequality
     val a2ToBool = parser("(a, a) => Bool")
     val expected = mkConstAppByType(a2ToBool, parser("Int"), parser("Int"))
@@ -96,6 +93,27 @@ class TestTlaExTranslator extends FunSuite with BeforeAndAfterEach {
       STCConst(BoolT1())(UID.unique))(UID.unique)
 
     assert(expected2 == gen(tla.appOp(tla.name("F"), tla.int(1), tla.bool(true))))
+  }
+
+  test("LET-IN simple") {
+    // LET Foo(x) == x IN TRUE
+    val foo = TlaOperDecl("Foo", List(SimpleFormalParam("x")), tla.name("x"))
+    // becomes: let Foo = λ x ∈ Set(a). x in Bool
+    val fooType = STCAbs(STCName("x") (UID.unique), ("x", STCConst(SetT1(VarT1("a"))) (UID.unique))) (UID.unique)
+    val ex = LetInEx(tla.bool(true), foo)
+    val expected = STCLet("Foo", fooType, STCConst(BoolT1()) (UID.unique)) (UID.unique)
+    assert(expected == gen(ex))
+  }
+
+  test("LET-IN higher order") {
+    // LET Foo(Bar(_)) == 1 IN TRUE
+    val foo = TlaOperDecl("Foo", List(OperFormalParam("Bar", 1)), tla.int(1))
+    // becomes: let Foo = λ Bar ∈ Set(a => b). Int in Bool
+    val fooType = STCAbs(STCConst(IntT1()) (UID.unique),
+      ("Bar", STCConst(SetT1(OperT1(Seq(VarT1("a")), VarT1("b")))) (UID.unique))) (UID.unique)
+    val ex = LetInEx(tla.bool(true), foo)
+    val expected = STCLet("Foo", fooType, STCConst(BoolT1()) (UID.unique)) (UID.unique)
+    assert(expected == gen(ex))
   }
 
   test("CHOOSE") {

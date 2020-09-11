@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir._
 import scala.collection.immutable.SortedMap
 
 /**
-  * TlaExTranslator takes a TLA+ expression and produces an STCExpr.
+  * ToSTCExpr takes a TLA+ expression and produces an STCExpr.
   * The most interesting part of this translation is dealing with the built-in operators.
   * This translator is an extension of the ideas that appear in SignatureGenerator by Jure Kukovec.
   *
@@ -15,7 +15,9 @@ import scala.collection.immutable.SortedMap
   *
   * @author Igor Konnov
   */
-class TlaExTranslator {
+class ToSTCExpr {
+
+  // TODO: a long string of translation rules. Can we decompose it?
   def apply(ex: TlaEx): STCExpr = ex match {
     case NameEx(name) =>
       // x becomes x
@@ -76,6 +78,10 @@ class TlaExTranslator {
       val chooseLambda = STCAbs(this(pred), (bindingVar, this(bindingSet)))(ex.ID)
       // the resulting expression is (((a => Bool) => a) (λ x ∈ S. P))
       STCApp(STCConst(chooseType)(ex.ID), chooseLambda) (ex.ID)
+
+    //******************************************** LET-IN ****************************************************
+    case LetInEx(body, decls @ _*) =>
+      translateTlaDecl(decls, body)
 
     //******************************************** BOOLEANS **************************************************
     case OperEx(op, args @ _*)
@@ -196,9 +202,9 @@ class TlaExTranslator {
         case (_, i) if i % 2 == 0 => throw new IllegalArgumentException("Expected ValEx(TlaStr(_)) as a field name")
       }
       val values = args.zipWithIndex.filter(_._2 % 2 == 1).map(p => this(p._1))
-      assert(fields.length <= TlaExTranslator.QNAMES.length) // does anybody need more than 26 record fields?
+      assert(fields.length <= ToSTCExpr.QNAMES.length) // does anybody need more than 26 record fields?
       val typeVars = fields.indices
-        .map(i => TlaExTranslator.QNAMES(i).toString)
+        .map(i => ToSTCExpr.QNAMES(i).toString)
         .map(l => VarT1(l))
       // (a, b) => [f1 |-> a, f2 |-> b]
       val sig = OperT1(typeVars, RecT1(SortedMap(fields.zip(typeVars) : _*)))
@@ -206,7 +212,7 @@ class TlaExTranslator {
 
     case OperEx(TlaFunOper.tuple, args @ _*) =>
       // <<e_1, ..., e_n>>
-      assert(args.length <= TlaExTranslator.QNAMES.length) // does anybody need more than 26 tuple fields?
+      assert(args.length <= ToSTCExpr.QNAMES.length) // does anybody need more than 26 tuple fields?
       val typeVars = mkBoundVars(0, args.length)
       val values = args.map(this(_))
       val tuple = OperT1(typeVars, TupT1(typeVars :_*))
@@ -458,9 +464,42 @@ class TlaExTranslator {
       STCConst(VarT1("a"))(ex.ID)
   }
 
+  private def translateTlaDecl(ds: Seq[TlaOperDecl], terminal: TlaEx): STCExpr = {
+    def translateParams(start: Int, params: Seq[FormalParam]): Seq[(String, TlaType1)] = {
+      params match {
+        case Seq() => Seq()
+
+        case SimpleFormalParam(name) +: tail =>
+          // a simple parameter, just introduce a new variable, e.g., b
+          val paramType = mkBoundVar(start)
+          (name, paramType) +: translateParams(start + 1, tail)
+
+        case OperFormalParam(name, arity) +: tail =>
+          // a higher-order operator, introduce an operator type (b, c, ...) => z
+          val paramType = OperT1(mkBoundVars(start, arity), mkBoundVar(start + arity))
+          (name, paramType) +: translateParams(start + 1 + arity, tail)
+      }
+    }
+
+    ds match {
+      case Seq() => this(terminal)
+
+      case first +: rest =>
+        val paramsAndDoms = translateParams(0, first.formalParams).
+          map(p => (p._1, STCConst(SetT1(p._2)) (first.body.ID)))
+        val lambda = STCAbs(this(first.body), paramsAndDoms :_*) (first.body.ID)
+        STCLet(first.name, lambda, translateTlaDecl(rest, terminal)) (first.body.ID)
+    }
+  }
+
   private def mkBoundVars(start: Int, size: Int): Seq[VarT1] = {
-    assert(start >= 0 && start + size <= TlaExTranslator.QNAMES.length)
-    TlaExTranslator.QNAMES.slice(start, start + size).map(l => VarT1(l))
+    assert(start >= 0 && start + size <= ToSTCExpr.QNAMES.length)
+    ToSTCExpr.QNAMES.slice(start, start + size).map(l => VarT1(l))
+  }
+
+  private def mkBoundVar(i: Int): VarT1 = {
+    assert(i >= 0 && i < ToSTCExpr.QNAMES.length)
+    VarT1(ToSTCExpr.QNAMES(i))
   }
 
   private def mkApp(uid: UID, sig: OperT1, args: Seq[TlaEx]): STCExpr = {
@@ -474,7 +513,7 @@ class TlaExTranslator {
   }
 }
 
-object TlaExTranslator {
+object ToSTCExpr {
   protected val QNAMES = List(
     "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
     "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z")
