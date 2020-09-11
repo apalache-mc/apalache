@@ -15,10 +15,6 @@ RUN apt-get update && apt-get install -y wget \
 ADD ./3rdparty /opt/apalache/3rdparty
 WORKDIR /opt/apalache/
 
-# Workaround for Surefire not finding ForkedBooter
-# (see https://stackoverflow.com/questions/53010200/maven-surefire-could-not-find-forkedbooter-class)
-ENV _JAVA_OPTIONS="-Djdk.net.URLClassPath.disableClassPathURLCheck=true"
-
 RUN 3rdparty/install-local.sh --nocache
 
 FROM maven:3.6.3-jdk-8-slim AS builder
@@ -34,10 +30,6 @@ COPY --from=thirdparty /opt/apalache/3rdparty/bin /opt/apalache/3rdparty/bin
 COPY --from=thirdparty /opt/apalache/3rdparty/lib /opt/apalache/3rdparty/lib
 # The maven repository
 COPY --from=thirdparty /root/.m2 /root/.m2
-
-# Workaround for Surefire not finding ForkedBooter
-# (see https://stackoverflow.com/questions/53010200/maven-surefire-could-not-find-forkedbooter-class)
-ENV _JAVA_OPTIONS="-Djdk.net.URLClassPath.disableClassPathURLCheck=true"
 
 ENV LD_LIBRARY_PATH="/opt/apalache/3rdparty/lib/:${LD_LIBRARY_PATH}"
 
