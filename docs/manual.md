@@ -115,6 +115,18 @@ The following docker parameters are used:
 - `<args>` are the tool arguments as described in
   [Running the tool](#running).
 
+We provide a convenience wrapper for this docker command in
+`script/run-docker.sh`. To run the `latest` image using the script, execute
+
+```bash
+$ $APALACHE_HOME/script/run-docker.sh <args>
+```
+
+To specify a different image, set `APALACHE_TAG` like so:
+
+```bash
+$ APALACHE_TAG=foo $APALACHE_HOME/script/run-docker.sh <args>
+```
 
 ### Setting an alias
 
