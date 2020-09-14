@@ -1,5 +1,7 @@
 ## Unreleased #unstable
 
+ * Use a staged docker build, reducing container size ~70%, see #195
+
 ## 0.7.2 [RELEASE]
 
  * fixed an omitted version number update

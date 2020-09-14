@@ -22,7 +22,7 @@ function check() {
     OUTF="$TEST.out"
     ERRF="$TEST.err"
     shift
-    "$DIR"/bin/apalache-mc check $@ 2>"$ERRF" | tee "$OUTF"
+    "$CMD" check $@ 2>"$ERRF" | tee "$OUTF"
 
     if grep -q "The outcome is: NoError" "$OUTF"; then
         RES=1
@@ -68,6 +68,15 @@ function expect_fail() {
         nfail=$((nfail+1))
     fi
 }
+
+if [[ "$USE_DOCKER" == "true" ]]
+then
+    echo "# Using docker..."
+    CMD="${DIR}/script/run-docker.sh"
+    NO_MVN="true"
+else
+    CMD="${DIR}/bin/apalache-mc"
+fi
 
 
 cd "$DIR"
