@@ -66,26 +66,26 @@ class TestTypeUnifier  extends FunSuite with EasyMockSugar with BeforeAndAfterEa
   }
 
   test("unifying polytypes") {
-    assert(unifier.unify(Substitution.empty, VarT1("a"), IntT1())
-      .contains((Substitution("a" -> IntT1()), IntT1())))
-    assert(unifier.unify(Substitution.empty, FunT1(VarT1("a"), IntT1()), FunT1(BoolT1(), VarT1("b")))
-      .contains((Substitution("a" -> BoolT1(), "b" -> IntT1()), FunT1(BoolT1(), IntT1()))))
+    assert(unifier.unify(Substitution.empty, VarT1(0), IntT1())
+      .contains((Substitution(0 -> IntT1()), IntT1())))
+    assert(unifier.unify(Substitution.empty, FunT1(VarT1(0), IntT1()), FunT1(BoolT1(), VarT1(1)))
+      .contains((Substitution(0 -> BoolT1(), 1 -> IntT1()), FunT1(BoolT1(), IntT1()))))
 
     val rec1 = RecT1("foo" -> BoolT1())
     val rec2 = RecT1("bar" -> IntT1())
     val rec3 = RecT1("foo" -> BoolT1(), "bar" -> IntT1())
-    assert(unifier.unify(Substitution("a" -> rec1), VarT1("a"), rec2)
-      .contains((Substitution("a" -> rec3), rec3)))
+    assert(unifier.unify(Substitution(0 -> rec1), VarT1(0), rec2)
+      .contains((Substitution(0 -> rec3), rec3)))
   }
 
   test("unifying tricky polytypes") {
-    assert(unifier.unify(Substitution.empty, VarT1("a"), VarT1("a"))
-        .contains((Substitution.empty, VarT1("a"))))
-    assert(unifier.unify(Substitution("a" -> IntT1()), VarT1("a"), VarT1("a"))
-      .contains((Substitution("a" -> IntT1()), IntT1())))
-    assert(unifier.unify(Substitution.empty, VarT1("a"), VarT1("b"))
-      .contains((Substitution("b" -> VarT1("a")), VarT1("a"))))
-    assert(unifier.unify(Substitution("b" -> IntT1()), VarT1("a"), VarT1("b"))
-      .contains((Substitution("a" -> IntT1(), "b" -> IntT1()), IntT1())))
+    assert(unifier.unify(Substitution.empty, VarT1(0), VarT1(0))
+        .contains((Substitution.empty, VarT1(0))))
+    assert(unifier.unify(Substitution(0 -> IntT1()), VarT1(0), VarT1(0))
+      .contains((Substitution(0 -> IntT1()), IntT1())))
+    assert(unifier.unify(Substitution.empty, VarT1(0), VarT1(1))
+      .contains((Substitution(1 -> VarT1(0)), VarT1(0))))
+    assert(unifier.unify(Substitution(1 -> IntT1()), VarT1(0), VarT1(1))
+      .contains((Substitution(0 -> IntT1(), 1 -> IntT1()), IntT1())))
   }
 }

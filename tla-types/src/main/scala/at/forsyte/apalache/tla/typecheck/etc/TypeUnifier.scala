@@ -14,7 +14,7 @@ import scala.collection.immutable.SortedMap
   */
 class TypeUnifier {
   // a partial solution to the unification problem is stored here during unification
-  private var solution: Map[String, TlaType1] = Map.empty
+  private var solution: Map[Int, TlaType1] = Map.empty
 
   def unify(substitution: Substitution, lhs: TlaType1, rhs: TlaType1): Option[(Substitution, TlaType1)] = {
     // start with the substitution
@@ -189,7 +189,7 @@ class TypeUnifier {
   }
 
   // insert a type into the substitution, by applying unification
-  private def insert(key: String, tp: TlaType1): Boolean = {
+  private def insert(key: Int, tp: TlaType1): Boolean = {
     solution.get(key) match {
       case None =>
         solution += key -> tp // associate the type with the key

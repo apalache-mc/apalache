@@ -202,9 +202,7 @@ class ToSTCExpr {
         case (_, i) if i % 2 == 0 => throw new IllegalArgumentException("Expected ValEx(TlaStr(_)) as a field name")
       }
       val values = args.zipWithIndex.filter(_._2 % 2 == 1).map(p => this(p._1))
-      assert(fields.length <= ToSTCExpr.QNAMES.length) // does anybody need more than 26 record fields?
       val typeVars = fields.indices
-        .map(i => ToSTCExpr.QNAMES(i).toString)
         .map(l => VarT1(l))
       // (a, b) => [f1 |-> a, f2 |-> b]
       val sig = OperT1(typeVars, RecT1(SortedMap(fields.zip(typeVars) : _*)))
@@ -212,7 +210,6 @@ class ToSTCExpr {
 
     case OperEx(TlaFunOper.tuple, args @ _*) =>
       // <<e_1, ..., e_n>>
-      assert(args.length <= ToSTCExpr.QNAMES.length) // does anybody need more than 26 tuple fields?
       val typeVars = mkBoundVars(0, args.length)
       val values = args.map(this(_))
       val tuple = OperT1(typeVars, TupT1(typeVars :_*))
@@ -243,8 +240,8 @@ class ToSTCExpr {
       // DOMAIN f
       val funType = OperT1(Seq(FunT1(VarT1("a"), VarT1("b"))), SetT1(VarT1("a"))) // (a -> b) => Set(a)
       val seqType = OperT1(Seq(SeqT1(VarT1("a"))), SetT1(IntT1())) // Seq(a) => Set(Int)
-      val recType = OperT1(Seq(RecT1(SortedMap.empty)), SetT1(StrT1())) // [] => Set(Str)
-      val tupType = OperT1(Seq(SparseTupT1(SortedMap.empty)), SetT1(IntT1())) // {} => Set(Int)
+      val recType = OperT1(Seq(RecT1()), SetT1(StrT1())) // [] => Set(Str)
+      val tupType = OperT1(Seq(SparseTupT1()), SetT1(IntT1())) // {} => Set(Int)
       STCApp(STCConst(funType, seqType, recType, tupType)(ex.ID), this(fun)) (ex.ID)
 
     case OperEx(TlaFunOper.funDef, mapExpr, args @ _*) =>
@@ -312,9 +309,9 @@ class ToSTCExpr {
       STCApp(disjunctiveType, this(fun) +: xargs :_*) (ex.ID)
 
     case OperEx(TlaFunOper.recFunDef, body, NameEx(name), bindingSet) =>
-      // the expected type is: ((a -> b) => (a -> b)) (λ $recFun ∈ Set(a -> b). λ x ∈ Int. x)
+      // the expected type is: ((a -> b, a => b) => (a -> b)) (λ $recFun ∈ Set(a -> b). λ x ∈ Int. x)
       val funType = FunT1(VarT1("a"), VarT1("b"))
-      val principal = OperT1(Seq(funType), funType)
+      val principal = OperT1(Seq(funType, OperT1(Seq(VarT1("a")), VarT1("b"))), funType)
       val innerLambda = STCAbs(this(body), (name, this(bindingSet))) (body.ID)
       val outerLambda = STCAbs(innerLambda, (TlaFunOper.recFunRef.uniqueName, STCConst(SetT1(funType)) (ex.ID))) (ex.ID)
       STCApp(STCConst(principal)(ex.ID), outerLambda) (ex.ID)
@@ -471,12 +468,12 @@ class ToSTCExpr {
 
         case SimpleFormalParam(name) +: tail =>
           // a simple parameter, just introduce a new variable, e.g., b
-          val paramType = mkBoundVar(start)
+          val paramType = VarT1(start)
           (name, paramType) +: translateParams(start + 1, tail)
 
         case OperFormalParam(name, arity) +: tail =>
           // a higher-order operator, introduce an operator type (b, c, ...) => z
-          val paramType = OperT1(mkBoundVars(start, arity), mkBoundVar(start + arity))
+          val paramType = OperT1(mkBoundVars(start, arity), VarT1(start + arity))
           (name, paramType) +: translateParams(start + 1 + arity, tail)
       }
     }
@@ -493,13 +490,7 @@ class ToSTCExpr {
   }
 
   private def mkBoundVars(start: Int, size: Int): Seq[VarT1] = {
-    assert(start >= 0 && start + size <= ToSTCExpr.QNAMES.length)
-    ToSTCExpr.QNAMES.slice(start, start + size).map(l => VarT1(l))
-  }
-
-  private def mkBoundVar(i: Int): VarT1 = {
-    assert(i >= 0 && i < ToSTCExpr.QNAMES.length)
-    VarT1(ToSTCExpr.QNAMES(i))
+    start.until(start + size).map(l => VarT1(l))
   }
 
   private def mkApp(uid: UID, sig: OperT1, args: Seq[TlaEx]): STCExpr = {
@@ -511,10 +502,4 @@ class ToSTCExpr {
     // TODO: Avoid using the same uid twice. Otherwise, we cannot easily map expressions to their types
     STCApp(this(opName), args.map(this(_)) :_*)(uid)
   }
-}
-
-object ToSTCExpr {
-  protected val QNAMES = List(
-    "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
-    "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z")
 }

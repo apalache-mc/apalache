@@ -6,17 +6,11 @@ import at.forsyte.apalache.tla.typecheck._
   * A substitution from type variables to types.
   * @param map a mapping from variable names to types.
   */
-class Substitution(val map: Map[String, TlaType1]) {
+class Substitution(val map: Map[Int, TlaType1]) {
   def apply(tp: TlaType1): TlaType1 = {
     tp match {
-      case ConstT1(name) =>
-        map.get(name) match {
-          case Some(tt) => tt
-          case None => tp
-        }
-
-      case VarT1(name) =>
-        map.get(name) match {
+      case VarT1(no) =>
+        map.get(no) match {
           case Some(tt) => tt
           case None => tp
         }
@@ -43,7 +37,7 @@ class Substitution(val map: Map[String, TlaType1]) {
         OperT1(args.map(this(_)), this(res))
 
       case _ =>
-        tp // Bool, Int, Real, Str
+        tp // Bool, Int, Real, Str, Const(_)
     }
   }
 
@@ -69,11 +63,11 @@ class Substitution(val map: Map[String, TlaType1]) {
 object Substitution {
   val empty = new Substitution(Map.empty)
 
-  def apply(elems: (String, TlaType1)*): Substitution = {
+  def apply(elems: (Int, TlaType1)*): Substitution = {
     new Substitution(Map(elems: _*))
   }
 
-  def apply(map: Map[String, TlaType1]): Substitution = {
+  def apply(map: Map[Int, TlaType1]): Substitution = {
     new Substitution(map)
   }
 }

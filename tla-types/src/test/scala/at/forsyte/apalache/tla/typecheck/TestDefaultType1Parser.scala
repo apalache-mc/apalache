@@ -74,7 +74,7 @@ class TestDefaultType1Parser  extends FunSuite {
 
   test("[] is ok") {
     val result = DefaultType1Parser("[]")
-    assert(RecT1(SortedMap()) == result)
+    assert(RecT1() == result)
   }
 
   test("[a: Int]") {

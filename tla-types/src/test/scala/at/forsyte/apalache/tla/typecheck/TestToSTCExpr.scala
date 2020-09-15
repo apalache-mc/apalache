@@ -96,6 +96,7 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
   }
 
   test("LET-IN simple") {
+    // TODO: we need a type annotation here!
     // LET Foo(x) == x IN TRUE
     val foo = TlaOperDecl("Foo", List(SimpleFormalParam("x")), tla.name("x"))
     // becomes: let Foo = λ x ∈ Set(a). x in Bool
@@ -106,6 +107,7 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
   }
 
   test("LET-IN higher order") {
+    // TODO: we need a type annotation here!
     // LET Foo(Bar(_)) == 1 IN TRUE
     val foo = TlaOperDecl("Foo", List(OperFormalParam("Bar", 1)), tla.int(1))
     // becomes: let Foo = λ Bar ∈ Set(a => b). Int in Bool
@@ -386,9 +388,10 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
   }
 
   test("recursive function definition f[x \\in Int] == x") {
-    // the expected type is: ((a -> b) => (a -> b)) (λ $recFun ∈ Set(a -> b). λ x ∈ Int. x)
+    // the expected expression is:
+    //   (A a, b: (a -> b, a => b) => a -> b) (A a, b: λ $recFun ∈ Set(a -> b). λ x ∈ Set(Int). x)
     val funType = FunT1(VarT1("a"), VarT1("b"))
-    val principal = OperT1(Seq(funType), funType)
+    val principal = OperT1(Seq(funType, OperT1(Seq(VarT1("a")), VarT1("b"))), funType)
     // inner lambda
     val innerLambda = STCAbs(STCName("x")(UID.unique),
       ("x", STCConst(SetT1(IntT1())) (UID.unique))) (UID.unique)

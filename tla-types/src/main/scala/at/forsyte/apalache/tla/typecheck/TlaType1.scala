@@ -8,10 +8,10 @@ import scala.collection.immutable.SortedMap
   */
 sealed trait TlaType1 {
   /**
-    * Compute the set of the names used in the type. These are names declared with either VarT1, or ConstT1.
-    * @return the set of names that are used in the type.
+    * Compute the set of the names used in the type. These are names declared with VarT1.
+    * @return the set of variable names (actually, integers) that are used in the type.
     */
-  def usedNames: Set[String]
+  def usedNames: Set[Int]
 }
 
 /**
@@ -20,7 +20,7 @@ sealed trait TlaType1 {
 case class IntT1() extends TlaType1 {
   override def toString: String = "Int"
 
-  override def usedNames: Set[String] = Set.empty
+  override def usedNames: Set[Int] = Set.empty
 }
 
 /**
@@ -29,7 +29,7 @@ case class IntT1() extends TlaType1 {
 case class RealT1() extends TlaType1 {
   override def toString: String = "Real"
 
-  override def usedNames: Set[String] = Set.empty
+  override def usedNames: Set[Int] = Set.empty
 }
 
 /**
@@ -38,7 +38,7 @@ case class RealT1() extends TlaType1 {
 case class BoolT1() extends TlaType1 {
   override def toString: String = "Bool"
 
-  override def usedNames: Set[String] = Set.empty
+  override def usedNames: Set[Int] = Set.empty
 }
 
 /**
@@ -47,7 +47,7 @@ case class BoolT1() extends TlaType1 {
 case class StrT1() extends TlaType1 {
   override def toString: String = "Str"
 
-  override def usedNames: Set[String] = Set.empty
+  override def usedNames: Set[Int] = Set.empty
 }
 
 /**
@@ -58,20 +58,65 @@ case class StrT1() extends TlaType1 {
 case class ConstT1(name: String) extends TlaType1 {
   override def toString: String = name
 
-  override def usedNames: Set[String] = Set(name)
+  override def usedNames: Set[Int] = Set.empty
 }
 
 /**
-  * A type variable.
+  * A type variable. Instead of using strings for names, we are just using integers, which makes it easier
+  * to process them. To make vars user-friendly, we assign the names a..z to the numbers 0..25.
+  * The rest are called a27, a28, etc.
   *
-  * TODO: as we will have numerous type variables during type inference, use integers instead of strings.
-  *
-  * @param name a variable name that should be assigned a type
+  * @param no the variable number
   */
-case class VarT1(name: String) extends TlaType1 {
-  override def toString: String = name
+case class VarT1(no: Int) extends TlaType1 {
+  override def toString: String = {
+    if (no >= 0 && no < VarT1.QNAMES_LEN) {
+      VarT1.QNAMES(no)
+    } else {
+      "a" + no
+    }
+  }
 
-  override def usedNames: Set[String] = Set(name)
+  override def usedNames: Set[Int] = Set(no)
+}
+
+object VarT1 {
+  // human-friendly names of the first 26 variables
+  protected val QNAMES: List[String] = List(
+    "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+    "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z")
+
+  // how many human-friendly names we have
+  protected val QNAMES_LEN: Int = QNAMES.length
+
+  /**
+    * Construct a variable from the human-readable form like 'b' or 'a100'.
+    * We use this method to write human-readable variable names in tests.
+    *
+    * @param name a human-readable name
+    * @return the variable that matches to that name
+    */
+  def apply(name: String): VarT1 = {
+    val len = name.length
+    if (len < 1) {
+      throw new IllegalArgumentException("Expected either a lower-case letter or a[0-9]+, found: " + name)
+    } else if (len == 1) {
+      val index = QNAMES.indexOf(name)
+      if (index >= 0) {
+        VarT1(index)
+      } else {
+        throw new IllegalArgumentException("Expected a lower-case letter or a[0-9]+, found: " + name)
+      }
+    } else {
+      try {
+        val no = Integer.parseUnsignedInt(name.substring(1))
+        VarT1(no)
+      } catch {
+        case _: NumberFormatException =>
+          throw new IllegalArgumentException("Expected either a lower-case letter or a[0-9]+, found: " + name)
+      }
+    }
+  }
 }
 
 /**
@@ -84,7 +129,7 @@ case class FunT1(arg: TlaType1, res: TlaType1) extends TlaType1 {
   // always wrap a function with parenthesis, to make it non-ambiguous
   override def toString: String = s"($arg -> $res)"
 
-  override def usedNames: Set[String] = arg.usedNames ++ res.usedNames
+  override def usedNames: Set[Int] = arg.usedNames ++ res.usedNames
 }
 
 /**
@@ -95,7 +140,7 @@ case class FunT1(arg: TlaType1, res: TlaType1) extends TlaType1 {
 case class SetT1(elem: TlaType1) extends TlaType1 {
   override def toString: String = s"Set($elem)"
 
-  override def usedNames: Set[String] = elem.usedNames
+  override def usedNames: Set[Int] = elem.usedNames
 }
 
 /**
@@ -106,7 +151,7 @@ case class SetT1(elem: TlaType1) extends TlaType1 {
 case class SeqT1(elem: TlaType1) extends TlaType1 {
   override def toString: String = s"Seq($elem)"
 
-  override def usedNames: Set[String] = elem.usedNames
+  override def usedNames: Set[Int] = elem.usedNames
 }
 
 /**
@@ -120,7 +165,7 @@ case class TupT1(elems: TlaType1*) extends TlaType1 {
     "<<%s>>".format(elemStrs.mkString(", "))
   }
 
-  override def usedNames: Set[String] = elems.foldLeft(Set[String]()) { (s, t) => s ++ t.usedNames }
+  override def usedNames: Set[Int] = elems.foldLeft(Set[Int]()) { (s, t) => s ++ t.usedNames }
 }
 
 /**
@@ -134,7 +179,7 @@ case class SparseTupT1(fieldTypes: SortedMap[Int, TlaType1]) extends TlaType1 {
     "{%s}".format(keyTypeStrs.mkString(", "))
   }
 
-  override def usedNames: Set[String] = fieldTypes.values.foldLeft(Set[String]()) { (s, t) => s ++ t.usedNames }
+  override def usedNames: Set[Int] = fieldTypes.values.foldLeft(Set[Int]()) { (s, t) => s ++ t.usedNames }
 }
 
 object SparseTupT1 {
@@ -154,7 +199,7 @@ case class RecT1(fieldTypes: SortedMap[String, TlaType1]) extends TlaType1 {
     "[%s]".format(keyTypeStrs.mkString(", "))
   }
 
-  override def usedNames: Set[String] = fieldTypes.values.foldLeft(Set[String]()) { (s, t) => s ++ t.usedNames }
+  override def usedNames: Set[Int] = fieldTypes.values.foldLeft(Set[Int]()) { (s, t) => s ++ t.usedNames }
 }
 
 object RecT1 {
@@ -175,5 +220,5 @@ case class OperT1(args: Seq[TlaType1], res: TlaType1) extends TlaType1 {
     "(%s) => %s".format(argStrs.mkString(", "), res.toString)
   }
 
-  override def usedNames: Set[String] = res.usedNames ++ args.foldLeft(Set[String]()) { (s, t) => s ++ t.usedNames }
+  override def usedNames: Set[Int] = res.usedNames ++ args.foldLeft(Set[Int]()) { (s, t) => s ++ t.usedNames }
 }
