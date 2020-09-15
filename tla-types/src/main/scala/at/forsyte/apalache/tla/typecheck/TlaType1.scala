@@ -6,13 +6,21 @@ import scala.collection.immutable.SortedMap
   * Trait for a type in Type System 1 as specified in
   * <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/adr/002adr-types.md">ADR-002</a>.
   */
-sealed trait TlaType1
+sealed trait TlaType1 {
+  /**
+    * Compute the set of the names used in the type. These are names declared with either VarT1, or ConstT1.
+    * @return the set of names that are used in the type.
+    */
+  def usedNames: Set[String]
+}
 
 /**
   * An integer type.
   */
 case class IntT1() extends TlaType1 {
   override def toString: String = "Int"
+
+  override def usedNames: Set[String] = Set.empty
 }
 
 /**
@@ -20,6 +28,8 @@ case class IntT1() extends TlaType1 {
   */
 case class RealT1() extends TlaType1 {
   override def toString: String = "Real"
+
+  override def usedNames: Set[String] = Set.empty
 }
 
 /**
@@ -27,6 +37,8 @@ case class RealT1() extends TlaType1 {
   */
 case class BoolT1() extends TlaType1 {
   override def toString: String = "Bool"
+
+  override def usedNames: Set[String] = Set.empty
 }
 
 /**
@@ -34,6 +46,8 @@ case class BoolT1() extends TlaType1 {
   */
 case class StrT1() extends TlaType1 {
   override def toString: String = "Str"
+
+  override def usedNames: Set[String] = Set.empty
 }
 
 /**
@@ -43,15 +57,21 @@ case class StrT1() extends TlaType1 {
   */
 case class ConstT1(name: String) extends TlaType1 {
   override def toString: String = name
+
+  override def usedNames: Set[String] = Set(name)
 }
 
 /**
   * A type variable.
   *
+  * TODO: as we will have numerous type variables during type inference, use integers instead of strings.
+  *
   * @param name a variable name that should be assigned a type
   */
 case class VarT1(name: String) extends TlaType1 {
   override def toString: String = name
+
+  override def usedNames: Set[String] = Set(name)
 }
 
 /**
@@ -63,6 +83,8 @@ case class VarT1(name: String) extends TlaType1 {
 case class FunT1(arg: TlaType1, res: TlaType1) extends TlaType1 {
   // always wrap a function with parenthesis, to make it non-ambiguous
   override def toString: String = s"($arg -> $res)"
+
+  override def usedNames: Set[String] = arg.usedNames ++ res.usedNames
 }
 
 /**
@@ -72,6 +94,8 @@ case class FunT1(arg: TlaType1, res: TlaType1) extends TlaType1 {
   */
 case class SetT1(elem: TlaType1) extends TlaType1 {
   override def toString: String = s"Set($elem)"
+
+  override def usedNames: Set[String] = elem.usedNames
 }
 
 /**
@@ -81,6 +105,8 @@ case class SetT1(elem: TlaType1) extends TlaType1 {
   */
 case class SeqT1(elem: TlaType1) extends TlaType1 {
   override def toString: String = s"Seq($elem)"
+
+  override def usedNames: Set[String] = elem.usedNames
 }
 
 /**
@@ -93,6 +119,8 @@ case class TupT1(elems: TlaType1*) extends TlaType1 {
     val elemStrs = elems.map(_.toString)
     "<<%s>>".format(elemStrs.mkString(", "))
   }
+
+  override def usedNames: Set[String] = elems.foldLeft(Set[String]()) { (s, t) => s ++ t.usedNames }
 }
 
 /**
@@ -105,6 +133,14 @@ case class SparseTupT1(fieldTypes: SortedMap[Int, TlaType1]) extends TlaType1 {
     val keyTypeStrs = fieldTypes.map(p => "%s: %s".format(p._1, p._2))
     "{%s}".format(keyTypeStrs.mkString(", "))
   }
+
+  override def usedNames: Set[String] = fieldTypes.values.foldLeft(Set[String]()) { (s, t) => s ++ t.usedNames }
+}
+
+object SparseTupT1 {
+  def apply(keysAndTypes: (Int, TlaType1)*): SparseTupT1 = {
+    SparseTupT1(SortedMap(keysAndTypes :_*))
+  }
 }
 
 /**
@@ -116,6 +152,14 @@ case class RecT1(fieldTypes: SortedMap[String, TlaType1]) extends TlaType1 {
   override def toString: String = {
     val keyTypeStrs = fieldTypes.map(p => "%s: %s".format(p._1, p._2))
     "[%s]".format(keyTypeStrs.mkString(", "))
+  }
+
+  override def usedNames: Set[String] = fieldTypes.values.foldLeft(Set[String]()) { (s, t) => s ++ t.usedNames }
+}
+
+object RecT1 {
+  def apply(keysAndTypes: (String, TlaType1)*): RecT1 = {
+    RecT1(SortedMap(keysAndTypes :_*))
   }
 }
 
@@ -130,4 +174,6 @@ case class OperT1(args: Seq[TlaType1], res: TlaType1) extends TlaType1 {
     val argStrs = args.map(_.toString)
     "(%s) => %s".format(argStrs.mkString(", "), res.toString)
   }
+
+  override def usedNames: Set[String] = res.usedNames ++ args.foldLeft(Set[String]()) { (s, t) => s ++ t.usedNames }
 }
