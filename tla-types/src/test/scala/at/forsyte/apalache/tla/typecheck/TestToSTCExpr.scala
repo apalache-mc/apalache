@@ -10,7 +10,7 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 
 @RunWith(classOf[JUnitRunner])
-class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
+class TestToSTCExpr extends FunSuite with BeforeAndAfterEach with STCBuilder {
   var parser: Type1Parser = _
   var gen: ToSTCExpr = _
 
@@ -20,23 +20,19 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
   }
 
   private def mkAppByType(opexp: STCExpr, args: TlaType1*): STCApp = {
-    STCApp(opexp,
-      args.map(a => STCConst(a)(UID.unique)): _*)(UID.unique)
+    mkUniqApp(opexp, args.map(a => mkUniqConst(a)): _*)
   }
 
   private def mkAppByName(opexp: STCExpr, args: String*): STCApp = {
-    STCApp(opexp,
-      args.map(a => STCName(a)(UID.unique)): _*)(UID.unique)
+    mkUniqApp(opexp, args.map(mkUniqName): _*)
   }
 
   private def mkConstAppByType(opsig: TlaType1, args: TlaType1*): STCApp = {
-    STCApp(STCConst(opsig)(UID.unique),
-      args.map(a => STCConst(a)(UID.unique)): _*)(UID.unique)
+    mkUniqApp(mkUniqConst(opsig), args.map(a => mkUniqConst(a)): _*)
   }
 
   private def mkConstAppByName(opsig: TlaType1, args: String*): STCApp = {
-    STCApp(STCConst(opsig)(UID.unique),
-      args.map(a => STCName(a)(UID.unique)): _*)(UID.unique)
+    mkUniqApp(mkUniqConst(opsig), args.map(mkUniqName): _*)
   }
 
   test("integer arithmetic") {
@@ -88,9 +84,7 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
 
   test("operator application") {
     // operator application should be just application
-    val expected2 = STCApp(STCName("F")(UID.unique),
-      STCConst(IntT1())(UID.unique),
-      STCConst(BoolT1())(UID.unique))(UID.unique)
+    val expected2 = mkUniqApp(mkUniqName("F"), mkUniqConst(IntT1()), mkUniqConst(BoolT1()))
 
     assert(expected2 == gen(tla.appOp(tla.name("F"), tla.int(1), tla.bool(true))))
   }
@@ -100,9 +94,9 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
     // LET Foo(x) == x IN TRUE
     val foo = TlaOperDecl("Foo", List(SimpleFormalParam("x")), tla.name("x"))
     // becomes: let Foo = λ x ∈ Set(a). x in Bool
-    val fooType = STCAbs(STCName("x") (UID.unique), ("x", STCConst(SetT1(VarT1("a"))) (UID.unique))) (UID.unique)
+    val fooType = mkUniqAbs(mkUniqName("x"), ("x", mkUniqConst(SetT1(VarT1("a")))))
     val ex = LetInEx(tla.bool(true), foo)
-    val expected = STCLet("Foo", fooType, STCConst(BoolT1()) (UID.unique)) (UID.unique)
+    val expected = mkUniqLet("Foo", fooType, mkUniqConst(BoolT1()))
     assert(expected == gen(ex))
   }
 
@@ -111,20 +105,19 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
     // LET Foo(Bar(_)) == 1 IN TRUE
     val foo = TlaOperDecl("Foo", List(OperFormalParam("Bar", 1)), tla.int(1))
     // becomes: let Foo = λ Bar ∈ Set(a => b). Int in Bool
-    val fooType = STCAbs(STCConst(IntT1()) (UID.unique),
-      ("Bar", STCConst(SetT1(OperT1(Seq(VarT1("a")), VarT1("b")))) (UID.unique))) (UID.unique)
+    val fooType = mkUniqAbs(mkUniqConst(IntT1()), ("Bar", mkUniqConst(parser("Set(a => b)"))))
     val ex = LetInEx(tla.bool(true), foo)
-    val expected = STCLet("Foo", fooType, STCConst(BoolT1()) (UID.unique)) (UID.unique)
+    val expected = mkUniqLet("Foo", fooType, mkUniqConst(BoolT1()))
     assert(expected == gen(ex))
   }
 
   test("CHOOSE") {
-      // the principal type of CHOOSE is (a => Bool) => a
-    val chooseType = OperT1(Seq(OperT1(Seq(VarT1("a")), BoolT1())), VarT1("a"))
+    // the principal type of CHOOSE is (a => Bool) => a
+    val chooseType = parser("(a => Bool) => a")
     // CHOOSE implicitly introduces a lambda abstraction: λ x ∈ S. P
-    val chooseLambda = STCAbs(STCName("P")(UID.unique), ("x", STCName("S")(UID.unique)))(UID.unique)
+    val chooseLambda = mkUniqAbs(mkUniqName("P"), ("x", mkUniqName("S")))
     // the resulting expression is (((a => Bool) => a) (λ x ∈ S. P))
-    val chooseExpected = STCApp(STCConst(chooseType)(UID.unique), chooseLambda)(UID.unique)
+    val chooseExpected = mkUniqApp(mkUniqConst(chooseType), chooseLambda)
     assert(chooseExpected == gen(tla.choose(tla.name("x"), tla.name("S"), tla.name("P"))))
   }
 
@@ -145,11 +138,11 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
 
   test("quantifiers: \\E and \\A") {
     // the principal type of \A and \E is (a => Bool) => Bool
-    val quantType = OperT1(Seq(OperT1(Seq(VarT1("a")), BoolT1())), BoolT1())
+    val quantType = parser("(a => Bool) => Bool")
     // similar to CHOOSE, \E and \A implicitly introduce a lambda abstraction: λ x ∈ S. P
-    val quantLambda = STCAbs(STCName("P")(UID.unique), ("x", STCName("S")(UID.unique)))(UID.unique)
+    val quantLambda = mkUniqAbs(mkUniqName("P"), ("x", mkUniqName("S")))
     // the resulting expression is (((a => Bool) => Bool) (λ x ∈ S. P))
-    val quantExpected = STCApp(STCConst(quantType)(UID.unique), quantLambda)(UID.unique)
+    val quantExpected = mkUniqApp(mkUniqConst(quantType), quantLambda)
     assert(quantExpected == gen(tla.exists(tla.name("x"), tla.name("S"), tla.name("P"))))
     assert(quantExpected == gen(tla.forall(tla.name("x"), tla.name("S"), tla.name("P"))))
   }
@@ -169,7 +162,8 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
   test("record set constructor") {
     val funOperType = parser("(Set(a), Set(b)) => Set([x: a, y: b])")
     val expected = mkConstAppByName(funOperType, "S", "T")
-    assert(expected == gen(tla.recSet(tla.str("x"), tla.name("S"), tla.str("y"), tla.name("T"))))
+    assert(expected == gen(tla.recSet(tla.str("x"), tla.name("S"),
+      tla.str("y"), tla.name("T"))))
   }
 
   test("sequence set") {
@@ -180,14 +174,14 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
 
   test("set membership") {
     val elemAndSetToBool = parser("(a, Set(a)) => Bool")
-    val expected = mkConstAppByType(elemAndSetToBool, IntT1(), SetT1(IntT1()))
+    val expected = mkConstAppByType(elemAndSetToBool, parser("Int"), parser("Set(Int)"))
     assert(expected == gen(tla.in(tla.int(1), tla.intSet())))
     assert(expected == gen(tla.notin(tla.int(1), tla.intSet())))
   }
 
   test("\\union, \\intersect, \\setminus") {
     val binarySetOp = parser("(Set(a), Set(a)) => Set(a)")
-    val expected = mkConstAppByType(binarySetOp, SetT1(IntT1()), SetT1(IntT1()))
+    val expected = mkConstAppByType(binarySetOp, parser("Set(Int)"), parser("Set(Int)"))
     assert(expected == gen(tla.cup(tla.intSet(), tla.intSet())))
     assert(expected == gen(tla.cap(tla.intSet(), tla.intSet())))
     assert(expected == gen(tla.setminus(tla.intSet(), tla.intSet())))
@@ -195,7 +189,7 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
 
   test("\\subseteq, \\subset, \\supseteq, \\supset") {
     val elemAndSetToBool = parser("(Set(a), Set(a)) => Bool")
-    val expected = mkConstAppByType(elemAndSetToBool, SetT1(IntT1()), SetT1(IntT1()))
+    val expected = mkConstAppByType(elemAndSetToBool, parser("Set(Int)"), parser("Set(Int)"))
     assert(expected == gen(tla.subset(tla.intSet(), tla.intSet())))
     assert(expected == gen(tla.subseteq(tla.intSet(), tla.intSet())))
     assert(expected == gen(tla.supseteq(tla.intSet(), tla.intSet())))
@@ -204,7 +198,7 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
 
   test("SUBSET") {
     val setToPowerset = parser("Set(a) => Set(Set(a))")
-    val expected = mkConstAppByType(setToPowerset, SetT1(IntT1()))
+    val expected = mkConstAppByType(setToPowerset, parser("Set(Int)"))
     assert(expected == gen(tla.powSet(tla.intSet())))
   }
 
@@ -222,22 +216,21 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
 
   test("set filter { x \\in S: P }") {
     // the principal type of is (a => Bool) => Set(a)
-    val principal = OperT1(Seq(OperT1(Seq(VarT1("a")), BoolT1())), SetT1(VarT1("a")))
+    val principal = parser("(a => Bool) => Set(a)")
     // filter implicitly introduce a lambda abstraction: λ x ∈ S. P
-    val lambda = STCAbs(STCName("P")(UID.unique), ("x", STCName("S")(UID.unique)))(UID.unique)
+    val lambda = mkUniqAbs(mkUniqName("P"), ("x", mkUniqName("S")))
     // the resulting expression is (((a => Bool) => Set(a)) (λ x ∈ S. P))
-    val expected = STCApp(STCConst(principal)(UID.unique), lambda)(UID.unique)
+    val expected = mkUniqApp(mkUniqConst(principal), lambda)
     assert(expected == gen(tla.filter(tla.name("x"), tla.name("S"), tla.name("P"))))
   }
 
   test("set map { x \\in S: e }") {
     // the principal type of is (b => a) => Set(a)
-    val principal = OperT1(Seq(OperT1(Seq(VarT1("b")), VarT1("a"))), SetT1(VarT1("a")))
+    val principal = parser("(b => a) => Set(a)")
     // map implicitly introduces a lambda abstraction: λ x ∈ S. e
-    val lambda = STCAbs(STCName("e")(UID.unique),
-      ("x", STCName("S")(UID.unique)))(UID.unique)
+    val lambda = mkUniqAbs(mkUniqName("e"), ("x", mkUniqName("S")))
     // the resulting expression is (b => a) => Set(a) (λ x ∈ S. e)
-    val expected = STCApp(STCConst(principal)(UID.unique), lambda)(UID.unique)
+    val expected = mkUniqApp(mkUniqConst(principal), lambda)
     val map = tla.map(tla.name("e"),
       tla.name("x"), tla.name("S"))
     assert(expected == gen(map))
@@ -245,14 +238,14 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
 
   test("set map { x \\in S, y \\in T: e }") {
     // the principal type of is ((b, c) => a) => Set(a)
-    val principal = OperT1(Seq(OperT1(Seq(VarT1("b"), VarT1("c")), VarT1("a"))), SetT1(VarT1("a")))
+    val principal = parser("((b, c) => a) => Set(a)")
     // map implicitly introduces a lambda abstraction: λ x ∈ S, y ∈ T. e
-    val lambda = STCAbs(STCName("e")(UID.unique),
-                        ("x", STCName("S")(UID.unique)), ("y", STCName("T")(UID.unique)))(UID.unique)
+    val lambda = mkUniqAbs(mkUniqName("e"),
+      ("x", mkUniqName("S")), ("y", mkUniqName("T")))
     // the resulting expression is ((b, c) => a) => Set(a) (λ x ∈ S, y ∈ T. e)
-    val expected = STCApp(STCConst(principal)(UID.unique), lambda)(UID.unique)
+    val expected = mkUniqApp(mkUniqConst(principal), lambda)
     val map = tla.map(tla.name("e"),
-                      tla.name("x"), tla.name("S"), tla.name("y"), tla.name("T"))
+      tla.name("x"), tla.name("S"), tla.name("y"), tla.name("T"))
     assert(expected == gen(map))
   }
 
@@ -265,7 +258,7 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
   }
 
   test("<<1, 2>>") {
-    val tupleOrFun = STCConst(parser("(a, b) => <<a, b>>"), parser("(a, a) => Seq(a)")) (UID.unique)
+    val tupleOrFun = mkUniqConst(parser("(a, b) => <<a, b>>"), parser("(a, a) => Seq(a)"))
     val expected = mkAppByType(tupleOrFun, IntT1(), IntT1())
     val tuple = tla.tuple(tla.int(1), tla.int(2))
     assert(expected == gen(tuple))
@@ -273,7 +266,7 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
 
   test("f[e]") {
     // when e is not a literal, f can be a function or a sequence
-    val funOrSeq = STCConst(parser("((a -> b), a) => b"), parser("(Seq(a), Int) => a")) (UID.unique)
+    val funOrSeq = mkUniqConst(parser("((a -> b), a) => b"), parser("(Seq(a), Int) => a"))
     val expected = mkAppByName(funOrSeq, "f", "e")
     val access = tla.appFun(tla.name("f"), tla.name("e"))
     assert(expected == gen(access))
@@ -281,10 +274,11 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
 
   test("f[2]") {
     // one of the three: a function, a sequence, or a tuple
-    val funOrSeqOrTuple = STCConst(parser("((Int -> a), Int) => a"),
-                            parser("(Seq(a), Int) => a"),
-                            parser("({ 2: a }, Int) => a")) (UID.unique)
-    val expected = STCApp(funOrSeqOrTuple, STCName("f") (UID.unique), STCConst(IntT1()) (UID.unique)) (UID.unique)
+    val funOrSeqOrTuple =
+      mkUniqConst(parser("((Int -> a), Int) => a"),
+        parser("(Seq(a), Int) => a"),
+        parser("({ 2: a }, Int) => a"))
+    val expected = mkUniqApp(funOrSeqOrTuple, mkUniqName("f"), mkUniqConst(IntT1()))
     val access = tla.appFun(tla.name("f"), tla.int(2))
     assert(expected == gen(access))
   }
@@ -292,20 +286,20 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
   test("""f["foo"]""") {
     // either a function, or a record
     val funOrReq = STCConst(parser("((Str -> a), Str) => a"),
-                            parser("([foo: a], Str) => a")) (UID.unique)
-    val expected = STCApp(funOrReq, STCName("f") (UID.unique), STCConst(StrT1()) (UID.unique)) (UID.unique)
+      parser("([foo: a], Str) => a"))(UID.unique)
+    val expected = mkUniqApp(funOrReq, mkUniqName("f"), mkUniqConst(StrT1()))
     val access = tla.appFun(tla.name("f"), tla.str("foo"))
     assert(expected == gen(access))
   }
 
   test("DOMAIN f") {
     // DOMAIN is applied to one of the four objects: a function, a sequence, a record, or a sparse tuple
-    val types = STCConst(
+    val types = mkUniqConst(
       parser("(a -> b) => Set(a)"),
       parser("Seq(a) => Set(Int)"),
       parser("[] => Set(Str)"),
-      parser("{} => Set(Int)")
-    ) (UID.unique)
+      parser("{} => Set(Int)"))
+
     val expected = mkAppByName(types, "f")
     val tuple = tla.dom(tla.name("f"))
     assert(expected == gen(tuple))
@@ -313,13 +307,12 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
 
   test("function definition [ x \\in S, y \\in T |-> e ]") {
     // the principal type is ((b, c) => a) => (<<b, c>> -> a)
-    val principal = OperT1(Seq(OperT1(Seq(VarT1("b"), VarT1("c")), VarT1("a"))),
-      FunT1(TupT1(VarT1("b"), VarT1("c")), VarT1("a")))
+    val principal =  parser("((b, c) => a) => (<<b, c>> -> a)")
     // map implicitly introduces a lambda abstraction: λ x ∈ S, y ∈ T. e
-    val lambda = STCAbs(STCName("e")(UID.unique),
-      ("x", STCName("S")(UID.unique)), ("y", STCName("T")(UID.unique)))(UID.unique)
+    val lambda = mkUniqAbs(mkUniqName("e"),
+      ("x", mkUniqName("S")), ("y", mkUniqName("T")))
     // the resulting expression is (((b, c) => a) => (<<b, c>> -> a)) (λ x ∈ S, y ∈ T. e)
-    val expected = STCApp(STCConst(principal)(UID.unique), lambda)(UID.unique)
+    val expected = mkUniqApp(mkUniqConst(principal), lambda)
     val fun = tla.funDef(tla.name("e"),
       tla.name("x"), tla.name("S"), tla.name("y"), tla.name("T"))
     assert(expected == gen(fun))
@@ -327,9 +320,9 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
 
   test("function update [ f EXCEPT ![e1] = e2 ]") {
     // a function or a sequence
-    val types = STCConst(
+    val types = mkUniqConst(
       parser("((a -> b), a, b) => (a -> b)"),
-      parser("(Seq(a), Int, a) => Seq(a)")) (UID.unique)
+      parser("(Seq(a), Int, a) => Seq(a)"))
 
     val expected = mkAppByName(types, "f", "e1", "e2")
     val ex = tla.except(tla.name("f"), tla.name("e1"), tla.name("e2"))
@@ -338,9 +331,9 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
 
   test("function update [ f EXCEPT ![e1] = e2, ![e3] = e4 ]") {
     // a function or a sequence
-    val types = STCConst(
+    val types = mkUniqConst(
       parser("((a -> b), a, b, a, b) => (a -> b)"),
-      parser("(Seq(a), Int, a, Int, a) => Seq(a)")) (UID.unique)
+      parser("(Seq(a), Int, a, Int, a) => Seq(a)"))
 
     val expected = mkAppByName(types, "f", "e1", "e2", "e3", "e4")
     val ex = tla.except(tla.name("f"),
@@ -350,38 +343,37 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
 
   test("record update [ f EXCEPT !['foo'] = e2 ]") {
     // a function or a record
-    val types = STCConst(
+    val types = mkUniqConst(
       parser("((a -> b), a, b) => (a -> b)"),
-      parser("([foo: a], Str, a) => [foo: a]")) (UID.unique)
+      parser("([foo: a], Str, a) => [foo: a]"))
 
-    val expected = STCApp(types, STCName("f") (UID.unique), STCConst(StrT1()) (UID.unique), STCName("e2") (UID.unique)) (UID.unique)
+    val expected = mkUniqApp(types, mkUniqName("f"), mkUniqConst(StrT1()), mkUniqName("e2"))
     val ex = tla.except(tla.name("f"), tla.str("foo"), tla.name("e2"))
     assert(expected == gen(ex))
   }
 
   test("tuple update [ f EXCEPT ![3] = e2 ]") {
     // a function or a record
-    val types = STCConst(
+    val types = mkUniqConst(
       parser("((a -> b), a, b) => (a -> b)"),
       parser("(Seq(a), Int, a) => Seq(a)"),
-      parser("({3: a}, Int, a) => {3: a}")) (UID.unique)
+      parser("({3: a}, Int, a) => {3: a}"))
 
-    val expected = STCApp(types, STCName("f") (UID.unique), STCConst(IntT1()) (UID.unique), STCName("e2") (UID.unique)) (UID.unique)
+    val expected = mkUniqApp(types, mkUniqName("f"), mkUniqConst(IntT1()), mkUniqName("e2"))
     val ex = tla.except(tla.name("f"), tla.int(3), tla.name("e2"))
     assert(expected == gen(ex))
   }
 
   test("tuple update [ f EXCEPT ![3] = e2 ], ![5] = e4") {
     // a function or a record
-    val types = STCConst(
+    val types = mkUniqConst(
       parser("((a -> b), a, b, a, b) => (a -> b)"),
       parser("(Seq(a), Int, a, Int, a) => Seq(a)"),
-      parser("({3: a, 5: b}, Int, a, Int, b) => {3: a, 5: b}")) (UID.unique)
+      parser("({3: a, 5: b}, Int, a, Int, b) => {3: a, 5: b}"))
 
-    val expected = STCApp(types, STCName("f") (UID.unique),
-      STCConst(IntT1()) (UID.unique), STCName("e2") (UID.unique),
-      STCConst(IntT1()) (UID.unique), STCName("e4") (UID.unique)
-    ) (UID.unique)
+    val expected = mkUniqApp(types, mkUniqName("f"),
+      mkUniqConst(IntT1()), mkUniqName("e2"),
+      mkUniqConst(IntT1()), mkUniqName("e4"))
     val ex = tla.except(tla.name("f"),
       tla.int(3), tla.name("e2"), tla.int(5), tla.name("e4"))
     assert(expected == gen(ex))
@@ -390,43 +382,43 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
   test("recursive function definition f[x \\in Int] == x") {
     // the expected expression is:
     //   (A a, b: (a -> b, a => b) => a -> b) (A a, b: λ $recFun ∈ Set(a -> b). λ x ∈ Set(Int). x)
-    val funType = FunT1(VarT1("a"), VarT1("b"))
-    val principal = OperT1(Seq(funType, OperT1(Seq(VarT1("a")), VarT1("b"))), funType)
+    val funType = parser("a -> b")
+    val principal = parser("((a -> b), (a => b)) => (a -> b)")
     // inner lambda
-    val innerLambda = STCAbs(STCName("x")(UID.unique),
-      ("x", STCConst(SetT1(IntT1())) (UID.unique))) (UID.unique)
+    val innerLambda = mkUniqAbs(mkUniqName("x"),
+      ("x", mkUniqConst(SetT1(IntT1()))))
     // outer lambda
-    val outerLambda = STCAbs(innerLambda,
-      (TlaFunOper.recFunRef.uniqueName, STCConst(SetT1(funType)) (UID.unique) )) (UID.unique)
+    val outerLambda = mkUniqAbs(innerLambda,
+      (TlaFunOper.recFunRef.uniqueName, mkUniqConst(SetT1(funType))))
     // the resulting expression is (a -> b) outerLambda
-    val expected = STCApp(STCConst(principal)(UID.unique), outerLambda) (UID.unique)
+    val expected = mkUniqApp(mkUniqConst(principal), outerLambda)
     val fun = tla.recFunDef(tla.name("x"),
       tla.name("x"), tla.intSet())
     assert(expected == gen(fun))
   }
 
   test("recursive function call") {
-    val expected = STCName(TlaFunOper.recFunRef.uniqueName) (UID.unique)
+    val expected = mkUniqName(TlaFunOper.recFunRef.uniqueName)
     val funRef = tla.recFunRef()
     assert(expected == gen(funRef))
   }
 
   test("IF e1 THEN e2 ELSE e3") {
-    val iteType = STCConst(parser("(Bool, a, a) => a")) (UID.unique)
+    val iteType = mkUniqConst(parser("(Bool, a, a) => a"))
     val expected = mkAppByType(iteType, BoolT1(), IntT1(), IntT1())
     val ite = tla.ite(tla.bool(true), tla.int(1), tla.int(2))
     assert(expected == gen(ite))
   }
 
   test("CASE p1 -> e1 [] p2 -> e2") {
-    val caseType = STCConst(parser("(Bool, a, Bool, a) => a")) (UID.unique)
+    val caseType = mkUniqConst(parser("(Bool, a, Bool, a) => a"))
     val expected = mkAppByType(caseType, BoolT1(), IntT1(), BoolT1(), IntT1())
     val caseEx = tla.caseSplit(tla.bool(true), tla.int(1), tla.bool(false), tla.int(2))
     assert(expected == gen(caseEx))
   }
 
   test("CASE p1 -> e1 [] p2 -> e2 OTHER e3") {
-    val caseType = STCConst(parser("(Bool, a, Bool, a, a) => a")) (UID.unique)
+    val caseType = mkUniqConst(parser("(Bool, a, Bool, a, a) => a"))
     val expected = mkAppByType(caseType, BoolT1(), IntT1(), BoolT1(), IntT1(), IntT1())
     val caseEx = tla.caseOther(tla.bool(true), tla.int(1),
       tla.bool(false), tla.int(2), tla.int(3))
@@ -434,133 +426,133 @@ class TestToSTCExpr extends FunSuite with BeforeAndAfterEach {
   }
 
   test("IsFinite(S)") {
-    val finType = STCConst(parser("(Set(a) => Bool)")) (UID.unique)
+    val finType = mkUniqConst(parser("(Set(a) => Bool)"))
     val expected = mkAppByName(finType, "S")
     val ex = tla.isFin(tla.name("S"))
     assert(expected == gen(ex))
   }
 
   test("Cardinality(S)") {
-    val finType = STCConst(parser("(Set(a) => Int)")) (UID.unique)
+    val finType = mkUniqConst(parser("(Set(a) => Int)"))
     val expected = mkAppByName(finType, "S")
     val ex = tla.card(tla.name("S"))
     assert(expected == gen(ex))
   }
 
   test("Prime") {
-    val typ = STCConst(parser("(a => a)")) (UID.unique)
+    val typ = mkUniqConst(parser("(a => a)"))
     val expected = mkAppByName(typ, "x")
     val ex = tla.prime(tla.name("x"))
     assert(expected == gen(ex))
   }
 
   test("stutter") {
-    val typ = STCConst(parser("(Bool, a) => Bool")) (UID.unique)
+    val typ = mkUniqConst(parser("(Bool, a) => Bool"))
     val expected = mkAppByName(typ, "A", "x")
     val ex = tla.stutt(tla.name("A"), tla.name("x"))
     assert(expected == gen(ex))
   }
 
   test("no stutter") {
-    val typ = STCConst(parser("(Bool, a) => Bool")) (UID.unique)
+    val typ = mkUniqConst(parser("(Bool, a) => Bool"))
     val expected = mkAppByName(typ, "A", "x")
     val ex = tla.nostutt(tla.name("A"), tla.name("x"))
     assert(expected == gen(ex))
   }
 
   test("ENABLED") {
-    val typ = STCConst(parser("Bool => Bool")) (UID.unique)
+    val typ = mkUniqConst(parser("Bool => Bool"))
     val expected = mkAppByName(typ, "A")
     val ex = tla.enabled(tla.name("A"))
     assert(expected == gen(ex))
   }
 
   test("UNCHANGED") {
-    val typ = STCConst(parser("a => Bool")) (UID.unique)
+    val typ = mkUniqConst(parser("a => Bool"))
     val expected = mkAppByName(typ, "x")
     val ex = tla.unchanged(tla.name("x"))
     assert(expected == gen(ex))
   }
 
   test("composition") {
-    val typ = STCConst(parser("(Bool, Bool) => Bool")) (UID.unique)
+    val typ = mkUniqConst(parser("(Bool, Bool) => Bool"))
     val expected = mkAppByName(typ, "A", "B")
     val ex = tla.comp(tla.name("A"), tla.name("B"))
     assert(expected == gen(ex))
   }
 
   test("Head(seq)") {
-    val typ = STCConst(parser("Seq(a) => a")) (UID.unique)
+    val typ = mkUniqConst(parser("Seq(a) => a"))
     val expected = mkAppByName(typ, "seq")
     val ex = tla.head(tla.name("seq"))
     assert(expected == gen(ex))
   }
 
   test("Tail(seq)") {
-    val typ = STCConst(parser("Seq(a) => Seq(a)")) (UID.unique)
+    val typ = mkUniqConst(parser("Seq(a) => Seq(a)"))
     val expected = mkAppByName(typ, "seq")
     val ex = tla.tail(tla.name("seq"))
     assert(expected == gen(ex))
   }
 
   test("Append(seq, x)") {
-    val typ = STCConst(parser("(Seq(a), a) => Seq(a)")) (UID.unique)
+    val typ = mkUniqConst(parser("(Seq(a), a) => Seq(a)"))
     val expected = mkAppByName(typ, "seq", "x")
     val ex = tla.append(tla.name("seq"), tla.name("x"))
     assert(expected == gen(ex))
   }
 
   test("s \\o t") {
-    val typ = STCConst(parser("(Seq(a), Seq(a)) => Seq(a)")) (UID.unique)
+    val typ = mkUniqConst(parser("(Seq(a), Seq(a)) => Seq(a)"))
     val expected = mkAppByName(typ, "s", "t")
     val ex = tla.concat(tla.name("s"), tla.name("t"))
     assert(expected == gen(ex))
   }
 
   test("Len(s)") {
-    val typ = STCConst(parser("Seq(a) => Int")) (UID.unique)
+    val typ = mkUniqConst(parser("Seq(a) => Int"))
     val expected = mkAppByName(typ, "s")
     val ex = tla.len(tla.name("s"))
     assert(expected == gen(ex))
   }
 
   test("SubSeq(s, 2, 3)") {
-    val typ = STCConst(parser("(Seq(a), Int, Int) => Seq(a)")) (UID.unique)
+    val typ = mkUniqConst(parser("(Seq(a), Int, Int) => Seq(a)"))
     val expected = mkAppByName(typ, "s", "i", "j")
     val ex = tla.subseq(tla.name("s"), tla.name("i"), tla.name("j"))
     assert(expected == gen(ex))
   }
 
   test("SelectSeq(s, A)") {
-    val typ = STCConst(parser("(Seq(a), (a => Bool)) => Seq(a)")) (UID.unique)
+    val typ = mkUniqConst(parser("(Seq(a), (a => Bool)) => Seq(a)"))
     val expected = mkAppByName(typ, "s", "A")
     val ex = tla.selectseq(tla.name("s"), tla.name("A"))
     assert(expected == gen(ex))
   }
 
   test("unary temporal operators") {
-    val unary = STCConst(parser("Bool => Bool")) (UID.unique)
+    val unary = mkUniqConst(parser("Bool => Bool"))
     val expectedUnary = mkAppByName(unary, "A")
     assert(expectedUnary == gen(tla.box(tla.name("A"))))
     assert(expectedUnary == gen(tla.diamond(tla.name("A"))))
   }
 
   test("binary temporal operators") {
-    val binary = STCConst(parser("(Bool, Bool) => Bool")) (UID.unique)
+    val binary = mkUniqConst(parser("(Bool, Bool) => Bool"))
     val expectedBinary = mkAppByName(binary, "A", "B")
     assert(expectedBinary == gen(tla.leadsTo(tla.name("A"), tla.name("B"))))
     assert(expectedBinary == gen(tla.guarantees(tla.name("A"), tla.name("B"))))
   }
 
   test("WF_x(A) and SF_x(A)") {
-    val typ = STCConst(parser("(a, Bool) => Bool")) (UID.unique)
+    val typ = mkUniqConst(parser("(a, Bool) => Bool"))
     val expected = mkAppByName(typ, "x", "A")
     assert(expected == gen(tla.WF(tla.name("x"), tla.name("A"))))
     assert(expected == gen(tla.SF(tla.name("x"), tla.name("A"))))
   }
 
   test("\\EE x: A and \\AA x: A") {
-    val typ = STCConst(parser("(a, Bool) => Bool")) (UID.unique)
+    val typ = mkUniqConst(parser("(a, Bool) => Bool"))
     val expected = mkAppByName(typ, "x", "A")
     assert(expected == gen(tla.AA(tla.name("x"), tla.name("A"))))
     assert(expected == gen(tla.EE(tla.name("x"), tla.name("A"))))

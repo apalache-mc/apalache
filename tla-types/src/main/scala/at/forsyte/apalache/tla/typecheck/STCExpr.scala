@@ -4,7 +4,11 @@ import at.forsyte.apalache.tla.lir.UID
 
 /**
   * An expression in a simple typed lambda calculus. Here we do not care about the concrete values,
-  * but only care about the types that the expressions carry.
+  * but only care about the types that the expressions carry. Since we introduce type variables and quantifiers
+  * in the principal types, this calculus is probably not that simple. If you have an idea, whether it is in
+  * System F, or System F_\omega, or whatever, let us know.
+  *
+  * @author Igor Konnov
   */
 sealed trait STCExpr {
   /**
@@ -22,7 +26,7 @@ sealed trait STCExpr {
   */
 case class STCConst(types: TlaType1*)(val tlaId: UID) extends STCExpr {
   override def toString: String = {
-    "(" + String.join(" | ", types.map(_.toString): _*) + ")"
+    tlaId + "@(" + String.join(" | ", types.map(_.toString): _*) + ")"
   }
 }
 
@@ -34,7 +38,7 @@ case class STCConst(types: TlaType1*)(val tlaId: UID) extends STCExpr {
   * @param tlaId the identifier of the TLA+ expression that resulted in this STCExpr (ignored in equals).
   */
 case class STCName(name: String)(val tlaId: UID) extends STCExpr {
-  override def toString: String = name
+  override def toString: String = tlaId + "@" + name
 }
 
 /**
@@ -48,7 +52,7 @@ case class STCName(name: String)(val tlaId: UID) extends STCExpr {
 case class STCAbs(body: STCExpr, paramsAndDoms: (String, STCExpr)*)(val tlaId: UID) extends STCExpr {
   override def toString: String = {
     val bindings = paramsAndDoms.map(p => "%s ∈ %s".format(p._1, p._2))
-    "λ %s. %s".format(String.join(", ", bindings: _*), body)
+    tlaId + "@λ %s. %s".format(String.join(", ", bindings: _*), body)
   }
 }
 
@@ -61,7 +65,7 @@ case class STCAbs(body: STCExpr, paramsAndDoms: (String, STCExpr)*)(val tlaId: U
   */
 case class STCApp(oper: STCExpr, args: STCExpr*)(val tlaId: UID) extends STCExpr {
   override def toString: String = {
-    "(%s %s)".format(oper, String.join(" ", args.map(_.toString): _*))
+    tlaId + "@(%s %s)".format(oper, String.join(" ", args.map(_.toString): _*))
   }
 }
 
@@ -75,6 +79,18 @@ case class STCApp(oper: STCExpr, args: STCExpr*)(val tlaId: UID) extends STCExpr
   */
 case class STCLet(name: String, bound: STCExpr, body: STCExpr)(val tlaId: UID) extends STCExpr {
   override def toString: String = {
-    "let %s = %s in %s".format(name, bound, body)
+    tlaId + "@let %s = %s in %s".format(name, bound, body)
+  }
+}
+
+/**
+  * Introduce a type variable in the scope of an expression.
+  * @param name the variable name
+  * @param scope the expression, to which the type variable appplies
+  * @param tlaId the identifier of the TLA+ expression that resulted in this STCExpr (ignored in equals).
+  */
+case class STCIntroTypeVar(name: String, scope: STCExpr)(val tlaId: UID) extends STCExpr {
+  override def toString: String = {
+    tlaId + "@LAMBDA %s. %s".format(name, scope)
   }
 }
