@@ -45,7 +45,13 @@ integration: apalache
 clean:
 	mvn clean
 
+distclean: clean
+	rm -rf $(DEPDIR)/lib
+	rm -rf $(DEPDIR)/bin
+	rm -rf $(DEPDIR)/include
+	rm -rf $(DEPDIR)/traget
+	rm -rf $(DEPDIR)/z3-*/
+
 $(DEPDIR)/lib:
 	mkdir -p $(DEPDIR)/lib
-	# install box by Jure (fix in the future!)
 	cd "$(DEPDIR)" && ./install-local.sh
