@@ -366,4 +366,36 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
       assert(computed.contains(recType))
     }
   }
+
+  test("sound unification application") {
+    val oper = parser("Seq(a) => Set(a)")
+    val arg = mkUniqConst(parser("a"))
+    val app = mkUniqApp(Seq(oper), arg)
+    val listener = mock[TypeCheckerListener]
+    expecting {
+      listener.onTypeFound(arg.sourceRef.asInstanceOf[ExactRef], parser("Seq(a)")).atLeastOnce()
+      listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("Set(a)")).atLeastOnce()
+    }
+    whenExecuting(listener) {
+      val computed = checker.compute(listener, TypeContext.empty, app)
+      assert(computed.contains(parser("Set(a)")))
+    }
+  }
+
+  test("no unification in application") {
+    val oper = parser("(a, Str) => Set(a)")
+    val arg1 = mkUniqConst(parser("Int"))
+    val arg2 = mkUniqConst(parser("a"))
+    val app = mkUniqApp(Seq(oper), arg1, arg2)
+    val listener = mock[TypeCheckerListener]
+    expecting {
+      listener.onTypeFound(arg1.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
+      listener.onTypeFound(arg2.sourceRef.asInstanceOf[ExactRef], parser("Str")).atLeastOnce()
+      listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("Set(Int)")).atLeastOnce()
+    }
+    whenExecuting(listener) {
+      val computed = checker.compute(listener, TypeContext.empty, app)
+      assert(computed.contains(parser("Set(Int)")))
+    }
+  }
 }

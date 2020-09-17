@@ -42,7 +42,7 @@ class Substitution(val map: Map[Int, TlaType1]) {
   }
 
   override def toString: String = {
-    "Sub{%s}".format(String.join(", ", map.toSeq.map(p => "%s -> %s".format(p._1, p._2)) :_*))
+    "Sub{%s}".format(String.join(", ", map.toSeq.map(p => "%s -> %s".format(VarT1(p._1), p._2)) :_*))
   }
 
   def canEqual(other: Any): Boolean = other.isInstanceOf[Substitution]

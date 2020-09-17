@@ -88,4 +88,10 @@ class TestTypeUnifier  extends FunSuite with EasyMockSugar with BeforeAndAfterEa
     assert(unifier.unify(Substitution(1 -> IntT1()), VarT1(0), VarT1(1))
       .contains((Substitution(0 -> IntT1(), 1 -> IntT1()), IntT1())))
   }
+
+  test("non-unifying polytypes") {
+    // a and Set(a) must be non-unifiable
+    assert(unifier.unify(Substitution.empty, parser("a"), parser("Set(a)")).isEmpty)
+    assert(unifier.unify(Substitution.empty, parser("<<a, b, c>>"), parser("<<b, c, a>>")).isEmpty)
+  }
 }

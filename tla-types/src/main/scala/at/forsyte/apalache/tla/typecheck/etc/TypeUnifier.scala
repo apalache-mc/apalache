@@ -25,7 +25,13 @@ class TypeUnifier {
         None
 
       case Some(unifiedType) =>
-        val result = Some((new Substitution(solution), unifiedType))
+        val result =
+          if (isCyclic) {
+            None
+          } else {
+            Some((new Substitution(solution), unifiedType))
+          }
+
         solution = Map.empty // let GC collect the solution map later
         result
     }
@@ -101,14 +107,14 @@ class TypeUnifier {
             Some(lvar)
         }
 
-      case (v @ VarT1(name), other) =>
+      case (VarT1(name), other) =>
         if (insert(name, other)) {
           Some(solution(name))
         } else {
           None
         }
 
-      case (other, v @ VarT1(name)) =>
+      case (other, VarT1(name)) =>
         if (insert(name, other)) {
           Some(solution(name))
         } else {
@@ -222,5 +228,23 @@ class TypeUnifier {
         }
 
     }
+  }
+
+  // Check, whether the solution is cyclic.
+  // This solution is computing the greatest fix-point, so it probably not the most optimal.
+  // However, our substitutions in the type checker are quite small.
+  private def isCyclic: Boolean = {
+    // successors for every variable
+    val succ = solution.mapValues(_.usedNames)
+    var prev = Set[Int]()
+    var next = succ.keySet
+    // compute the greatest fixpoint under the successor function
+    while (prev != next) {
+      prev = next
+      next = next.foldLeft(Set[Int]()) { case (s, i) => s ++ succ.getOrElse(i, Set.empty) }
+    }
+
+    // if the fix-point is empty, there is no cycle
+    next.nonEmpty
   }
 }
