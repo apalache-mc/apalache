@@ -31,6 +31,22 @@ class TypeUnifier {
     }
   }
 
+  def unify(substitution: Substitution, pairs: Seq[(TlaType1, TlaType1)]): Option[(Substitution, Seq[TlaType1])] = {
+    // start with the substitution
+    solution = substitution.map
+
+    val unified = pairs.map { case (l, r) => compute(l, r) }
+    val result =
+      if (unified.forall(_.isDefined)) {
+        Some((Substitution(solution), unified.map(_.get)))
+      } else {
+        None
+      }
+
+    solution = Map.empty // let GC collect the solution map later
+    result
+  }
+
   private def computeOptions(lhs: Option[TlaType1], rhs: Option[TlaType1]): Option[TlaType1] = {
     (lhs, rhs) match {
       case (Some(l), Some(r)) => compute(l, r)
