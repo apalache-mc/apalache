@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.typecheck._
 import scala.collection.immutable.SortedMap
 
 /**
-  * The embarrassingly simple type checker.
+  * ETC: Embarrassingly simple Type Checker.
   *
   * @author Igor Konnov
   */
