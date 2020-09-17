@@ -441,4 +441,93 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
       assert(computed.contains(parser("Set(Int)")))
     }
   }
+
+  test("CHOOSE") {
+    // (((a => Bool) => a) (λ x ∈ Set(Int). x = Int))
+    val x = mkUniqName("x")
+    val int = mkUniqConst(parser("Int"))
+    val eq = mkUniqApp(Seq(parser("(a, a) => Bool")), x, int)
+    val xDom = mkUniqConst(parser("Set(Int)"))
+    val lambda = mkUniqAbs(eq, ("x", xDom))
+    val oper = parser("(a => Bool) => a")
+    val app = mkUniqApp(Seq(oper), lambda)
+    val listener = mock[TypeCheckerListener]
+    expecting {
+      listener.onTypeFound(xDom.sourceRef.asInstanceOf[ExactRef], parser("Set(Int)")).atLeastOnce()
+      listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
+      listener.onTypeFound(int.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
+      listener.onTypeFound(x.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
+      listener.onTypeFound(eq.sourceRef.asInstanceOf[ExactRef], parser("Bool")).atLeastOnce()
+      listener.onTypeFound(lambda.sourceRef.asInstanceOf[ExactRef], parser("(Int) => Bool")).atLeastOnce()
+    }
+    whenExecuting(listener) {
+      val computed = checker.compute(listener, TypeContext.empty, app)
+      assert(computed.contains(parser("Int")))
+    }
+  }
+
+  test("record set constructor") {
+    // [x: Set(Int), y: Set(Str)]
+    val operType = parser("(Set(a), Set(b)) => Set([x: a, y: b])")
+    val arg1 = mkUniqConst(parser("Set(Int)"))
+    val arg2 = mkUniqConst(parser("Set(Str)"))
+    val app = mkUniqApp(Seq(operType), arg1, arg2)
+    val listener = mock[TypeCheckerListener]
+    expecting {
+      listener.onTypeFound(arg1.sourceRef.asInstanceOf[ExactRef], parser("Set(Int)")).atLeastOnce()
+      listener.onTypeFound(arg2.sourceRef.asInstanceOf[ExactRef], parser("Set(Str)")).atLeastOnce()
+      listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("Set([x: Int, y: Str])")).atLeastOnce()
+    }
+    whenExecuting(listener) {
+      val computed = checker.compute(listener, TypeContext.empty, app)
+      assert(computed.contains(parser("Set([x: Int, y: Str])")))
+    }
+  }
+
+  test("DOMAIN f") {
+    val operTypes = Seq(
+      parser("(a -> b) => Set(a)"),
+      parser("Seq(a) => Set(Int)"),
+      parser("[] => Set(Str)"),
+      parser("{} => Set(Int)"))
+    val arg1 = mkUniqConst(parser("[foo: Int, bar: Bool]"))
+    val app = mkUniqApp(operTypes, arg1)
+    val listener = mock[TypeCheckerListener]
+    expecting {
+      listener.onTypeFound(arg1.sourceRef.asInstanceOf[ExactRef], parser("[foo: Int, bar: Bool]")).atLeastOnce()
+      listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("Set(Str)")).atLeastOnce()
+    }
+    whenExecuting(listener) {
+      val computed = checker.compute(listener, TypeContext.empty, app)
+      assert(computed.contains(parser("Set(Str)")))
+    }
+  }
+
+  // this is the toughest expression that is produced by the TLA+ syntax
+  test("recursive function") {
+    //   (((a -> b) => (a => b)) => a -> b) (λ $recFun ∈ Set(c -> d). (λ x ∈ Set(Int). x))
+    val operType = parser("((a -> b) => (a => b)) => a -> b")
+    val recFunDom = mkUniqConst(parser("Set(c -> d)"))
+    val xDom = mkUniqConst(parser("Set(Int)"))
+    val x = mkUniqName("x")
+    val innerLambda = mkUniqAbs(x, ("x", xDom))
+    val recFun = mkUniqName("$recFun")
+    val outerLambda = mkUniqAbs(innerLambda, ("$recFun", recFunDom))
+    val app = mkUniqApp(Seq(operType), outerLambda)
+    val listener = mock[TypeCheckerListener]
+    expecting {
+      listener.onTypeFound(recFunDom.sourceRef.asInstanceOf[ExactRef], parser("Set(c -> d)")).atLeastOnce()
+      listener.onTypeFound(xDom.sourceRef.asInstanceOf[ExactRef], parser("Set(Int)")).atLeastOnce()
+      listener.onTypeFound(innerLambda.sourceRef.asInstanceOf[ExactRef], parser("Int => Int")).atLeastOnce()
+      listener.onTypeFound(outerLambda.sourceRef.asInstanceOf[ExactRef],
+        parser("(c -> d) => (Int => Int)")).atLeastOnce()
+      listener.onTypeFound(outerLambda.sourceRef.asInstanceOf[ExactRef],
+        parser("(Int -> Int) => (Int => Int)")).atLeastOnce()
+      listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("Int -> Int")).atLeastOnce()
+    }
+    whenExecuting(listener) {
+      val computed = checker.compute(listener, TypeContext.empty, app)
+      assert(computed.contains(parser("Int -> Int")))
+    }
+  }
 }

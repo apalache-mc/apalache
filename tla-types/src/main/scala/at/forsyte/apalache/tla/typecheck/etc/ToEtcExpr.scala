@@ -308,9 +308,10 @@ class ToEtcExpr extends EtcBuilder {
       mkApp(ExactRef(ex.ID), disjunctiveType, this(fun) +: xargs :_*)
 
     case OperEx(TlaFunOper.recFunDef, body, NameEx(name), bindingSet) =>
-      // the expected type is: ((a -> b, a => b) => (a -> b)) (λ $recFun ∈ Set(c -> d). λ x ∈ Int. x)
+      // the expected type is: (((a -> b) => (a => b)) => (a -> b)) (λ $recFun ∈ Set(c -> d). λ x ∈ Int. x)
       val funType = FunT1(VarT1("a"), VarT1("b"))
-      val principal = OperT1(Seq(funType, OperT1(Seq(VarT1("a")), VarT1("b"))), funType)
+      val aToB = OperT1(Seq(VarT1("a")), VarT1("b"))
+      val principal = OperT1(Seq(OperT1(Seq(funType), aToB)), funType)
       val innerLambda = mkAbs(ExactRef(body.ID), this(body), (name, this(bindingSet)))
       val outerLambda = mkAbs(BlameRef(ex.ID), innerLambda,
         (TlaFunOper.recFunRef.uniqueName, mkConst(BlameRef(ex.ID), SetT1(FunT1(VarT1("c"), VarT1("d"))))))

@@ -91,7 +91,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
   }
 
   test("LET-IN simple") {
-    // TODO: we need a type annotation here!
+    // TODO: connect to type annotations
     // LET Foo(x) == x IN TRUE
     val foo = TlaOperDecl("Foo", List(SimpleFormalParam("x")), tla.name("x"))
     // becomes: let Foo = λ x ∈ Set(a). x in Bool
@@ -102,7 +102,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
   }
 
   test("LET-IN higher order") {
-    // TODO: we need a type annotation here!
+    // TODO: connect to type annotations
     // LET Foo(Bar(_)) == 1 IN TRUE
     val foo = TlaOperDecl("Foo", List(OperFormalParam("Bar", 1)), tla.int(1))
     // becomes: let Foo = λ Bar ∈ Set(a => b). Int in Bool
@@ -230,7 +230,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     val principal = parser("(b => a) => Set(a)")
     // map implicitly introduces a lambda abstraction: λ x ∈ S. e
     val lambda = mkUniqAbs(mkUniqName("e"), ("x", mkUniqName("S")))
-    // the resulting expression is (b => a) => Set(a) (λ x ∈ S. e)
+    // the resulting expression is ((b => a) => Set(a)) (λ x ∈ S. e)
     val expected = mkUniqApp(Seq(principal), lambda)
     val map = tla.map(tla.name("e"),
       tla.name("x"), tla.name("S"))
@@ -382,8 +382,8 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
 
   test("recursive function definition f[x \\in Int] == x") {
     // the expected expression is:
-    //   ((a -> b, a => b) => a -> b) (λ $recFun ∈ Set(c -> d). λ x ∈ Set(Int). x)
-    val principal = parser("((a -> b), (a => b)) => (a -> b)")
+    //   ((a -> b) => a => b) => a -> b) (λ $recFun ∈ Set(c -> d)) (λ x ∈ Set(Int). x)
+    val principal = parser("((a -> b) => (a => b)) => (a -> b)")
     // inner lambda
     val innerLambda = mkUniqAbs(mkUniqName("x"),
       ("x", mkUniqConst(SetT1(IntT1()))))
