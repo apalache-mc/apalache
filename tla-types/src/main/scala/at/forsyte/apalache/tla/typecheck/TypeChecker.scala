@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla.typecheck
 
+import at.forsyte.apalache.tla.typecheck.etc.EtcExpr
+
 /**
   * The interface to a type checker.
   *
@@ -15,5 +17,5 @@ trait TypeChecker {
     * @param ex an expression
     * @return Some(type), if the expression is well-typed; and None otherwise.
     */
-  def compute(listener: TypeCheckerListener, ctx: TypeContext, ex: STCExpr): Option[TlaType1]
+  def compute(listener: TypeCheckerListener, ctx: TypeContext, ex: EtcExpr): Option[TlaType1]
 }

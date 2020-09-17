@@ -1,37 +1,38 @@
-package at.forsyte.apalache.tla.typecheck
+package at.forsyte.apalache.tla.typecheck.etc
 
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.TlaReal
-import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.typecheck._
 import at.forsyte.apalache.tla.typecheck.parser.DefaultType1Parser
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 
 @RunWith(classOf[JUnitRunner])
-class TestToSTCExpr extends FunSuite with BeforeAndAfterEach with STCBuilder {
+class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
   var parser: Type1Parser = _
-  var gen: ToSTCExpr = _
+  var gen: ToEtcExpr = _
 
   override protected def beforeEach(): Unit = {
     parser = DefaultType1Parser
-    gen = new ToSTCExpr()
+    gen = new ToEtcExpr()
   }
 
-  private def mkAppByType(operTypes: Seq[TlaType1], args: TlaType1*): STCApp = {
+  private def mkAppByType(operTypes: Seq[TlaType1], args: TlaType1*): EtcApp = {
     mkUniqApp(operTypes, args.map(a => mkUniqConst(a)): _*)
   }
 
-  private def mkAppByName(operTypes: Seq[TlaType1], args: String*): STCApp = {
+  private def mkAppByName(operTypes: Seq[TlaType1], args: String*): EtcApp = {
     mkUniqApp(operTypes, args.map(mkUniqName): _*)
   }
 
-  private def mkConstAppByType(opsig: TlaType1, args: TlaType1*): STCApp = {
+  private def mkConstAppByType(opsig: TlaType1, args: TlaType1*): EtcApp = {
     mkUniqApp(Seq(opsig), args.map(a => mkUniqConst(a)): _*)
   }
 
-  private def mkConstAppByName(opsig: TlaType1, args: String*): STCApp = {
+  private def mkConstAppByName(opsig: TlaType1, args: String*): EtcApp = {
     mkUniqApp(Seq(opsig), args.map(mkUniqName): _*)
   }
 

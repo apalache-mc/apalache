@@ -1,6 +1,7 @@
-package at.forsyte.apalache.tla.typecheck
+package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.lir.UID
+import at.forsyte.apalache.tla.typecheck.TlaType1
 
 /**
   * An expression in a simple typed lambda calculus. Here we do not care about the concrete values,
@@ -10,7 +11,7 @@ import at.forsyte.apalache.tla.lir.UID
   *
   * @author Igor Konnov
   */
-sealed trait STCExpr {
+sealed trait EtcExpr {
   /**
     * The identifier of the TLA+ expression that resulted in this STCExpr.
     * This identifier is not taken into account in equals and hash.
@@ -24,7 +25,7 @@ sealed trait STCExpr {
   * @param polytype a type constant that may have free variables (polytype).
   * @param tlaId the identifier of the TLA+ expression that resulted in this STCExpr (ignored in equals).
   */
-case class STCConst(polytype: TlaType1)(val tlaId: UID) extends STCExpr {
+case class EtcConst(polytype: TlaType1)(val tlaId: UID) extends EtcExpr {
   override def toString: String = {
 //    tlaId + "@(" + String.join(" | ", types.map(_.toString): _*) + ")"
     s"$tlaId@$polytype"
@@ -38,7 +39,7 @@ case class STCConst(polytype: TlaType1)(val tlaId: UID) extends STCExpr {
   * @param name  a name
   * @param tlaId the identifier of the TLA+ expression that resulted in this STCExpr (ignored in equals).
   */
-case class STCName(name: String)(val tlaId: UID) extends STCExpr {
+case class EtcName(name: String)(val tlaId: UID) extends EtcExpr {
   override def toString: String = tlaId + "@" + name
 }
 
@@ -50,7 +51,7 @@ case class STCName(name: String)(val tlaId: UID) extends STCExpr {
   * @param paramsAndDoms parameter names and type expressions that encode sets of values
   * @param tlaId         the identifier of the TLA+ expression that resulted in this STCExpr (ignored in equals).
   */
-case class STCAbs(body: STCExpr, paramsAndDoms: (String, STCExpr)*)(val tlaId: UID) extends STCExpr {
+case class EtcAbs(body: EtcExpr, paramsAndDoms: (String, EtcExpr)*)(val tlaId: UID) extends EtcExpr {
   override def toString: String = {
     val bindings = paramsAndDoms.map(p => "%s ∈ %s".format(p._1, p._2))
     tlaId + "@λ %s. %s".format(String.join(", ", bindings: _*), body)
@@ -64,7 +65,7 @@ case class STCAbs(body: STCExpr, paramsAndDoms: (String, STCExpr)*)(val tlaId: U
   * @param args  operator arguments
   * @param tlaId the identifier of the TLA+ expression that resulted in this STCExpr (ignored in equals).
   */
-case class STCApp(operTypes: Seq[TlaType1], args: STCExpr*)(val tlaId: UID) extends STCExpr {
+case class EtcApp(operTypes: Seq[TlaType1], args: EtcExpr*)(val tlaId: UID) extends EtcExpr {
   override def toString: String = {
     tlaId + "@((%s) %s)".format(String.join(" | ", operTypes.map(_.toString): _*),
       String.join(" ", args.map(_.toString): _*))
@@ -79,7 +80,7 @@ case class STCApp(operTypes: Seq[TlaType1], args: STCExpr*)(val tlaId: UID) exte
   * @param args operator arguments
   * @param tlaId identifier of the TLA+ expression that resulted in this STCExpr (ignored in equals).
   */
-case class STCAppByName(name: String, args: STCExpr*)(val tlaId: UID) extends STCExpr {
+case class EtcAppByName(name: String, args: EtcExpr*)(val tlaId: UID) extends EtcExpr {
   override def toString: String = {
     tlaId + "@(%s %s)".format(name, String.join(" ", args.map(_.toString): _*))
   }
@@ -94,7 +95,7 @@ case class STCAppByName(name: String, args: STCExpr*)(val tlaId: UID) extends ST
   * @param body  the expression the binding applies to
   * @param tlaId the identifier of the TLA+ expression that resulted in this STCExpr (ignored in equals).
   */
-case class STCLet(name: String, bound: STCExpr, body: STCExpr)(val tlaId: UID) extends STCExpr {
+case class EtcLet(name: String, bound: EtcExpr, body: EtcExpr)(val tlaId: UID) extends EtcExpr {
   override def toString: String = {
     tlaId + "@let %s = %s in %s".format(name, bound, body)
   }

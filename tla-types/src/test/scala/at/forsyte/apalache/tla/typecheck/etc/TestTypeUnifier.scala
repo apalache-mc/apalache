@@ -8,7 +8,7 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 
 @RunWith(classOf[JUnitRunner])
-class TestTypeUnifier  extends FunSuite with EasyMockSugar with BeforeAndAfterEach with STCBuilder {
+class TestTypeUnifier  extends FunSuite with EasyMockSugar with BeforeAndAfterEach with EtcBuilder {
   private val parser: Type1Parser = DefaultType1Parser
   private var unifier: TypeUnifier = _
 

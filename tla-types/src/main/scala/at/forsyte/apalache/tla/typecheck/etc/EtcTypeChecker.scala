@@ -1,7 +1,7 @@
-package at.forsyte.apalache.tla.typecheck
+package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.lir.UID
-import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier}
+import at.forsyte.apalache.tla.typecheck._
 
 import scala.collection.immutable.SortedMap
 
@@ -10,7 +10,7 @@ import scala.collection.immutable.SortedMap
   *
   * @author Igor Konnov
   */
-class EtcTypeChecker extends TypeChecker with STCBuilder {
+class EtcTypeChecker extends TypeChecker with EtcBuilder {
   private val typeUnifier: TypeUnifier = new TypeUnifier()
   private var listener: TypeCheckerListener = new DefaultTypeCheckerListener()
 
@@ -23,16 +23,16 @@ class EtcTypeChecker extends TypeChecker with STCBuilder {
     * @param rootEx       an expression
     * @return Some(type), if the expression is well-typed; and None otherwise.
     */
-  override def compute(typeListener: TypeCheckerListener, rootCtx: TypeContext, rootEx: STCExpr): Option[TlaType1] = {
+  override def compute(typeListener: TypeCheckerListener, rootCtx: TypeContext, rootEx: EtcExpr): Option[TlaType1] = {
     listener = typeListener // set the type listener, so we do not have to pass it around
 
     // The types are computed in operator applications, add extra tests and listener calls for non-operators
     rootEx match {
       // operator applications do all checks and reporting by themselves
-      case STCApp(_, _) =>
+      case EtcApp(_, _) =>
         computeRec(rootCtx, rootEx)
 
-      case STCAppByName(_, _) =>
+      case EtcAppByName(_, _) =>
         computeRec(rootCtx, rootEx)
 
       // constant expressions need more tests and reporting
@@ -53,13 +53,13 @@ class EtcTypeChecker extends TypeChecker with STCBuilder {
     }
   }
 
-  private def computeRec(ctx: TypeContext, ex: STCExpr): Option[TlaType1] = {
+  private def computeRec(ctx: TypeContext, ex: EtcExpr): Option[TlaType1] = {
     ex match {
-      case STCConst(polytype) =>
+      case EtcConst(polytype) =>
         // a type, either monotype or polytype
         Some(polytype) // propagate backwards, some variables may be still not assigned
 
-      case STCName(name) =>
+      case EtcName(name) =>
         // a variable name, either an operator name, or a variable introduced by lambda (STCAbs)
         if (ctx.types.contains(name)) {
           Some(ctx.types(name)) // propagate the type upwards
@@ -68,7 +68,7 @@ class EtcTypeChecker extends TypeChecker with STCBuilder {
           None
         }
 
-      case appEx@STCApp(operTypes, args@_*) =>
+      case appEx@EtcApp(operTypes, args@_*) =>
         // the most interesting part: the operator application
         val pargs = args.map(e => computeRec(ctx, e))
 
@@ -81,7 +81,7 @@ class EtcTypeChecker extends TypeChecker with STCBuilder {
           matchApp(appEx, operTypes, argTypes)
         }
 
-      case STCAppByName(name, args@_*) =>
+      case EtcAppByName(name, args@_*) =>
         // Operator application by name. Resolve the name and pass the resolved expression to the application case.
         if (ctx.types.contains(name)) {
           computeRec(ctx, mkApp(ex.tlaId, Seq(ctx.types(name)), args: _*))
@@ -90,7 +90,7 @@ class EtcTypeChecker extends TypeChecker with STCBuilder {
           None
         }
 
-      case STCAbs(scopedEx, binders@_*) =>
+      case EtcAbs(scopedEx, binders@_*) =>
         // lambda x \in e1, y \in e2, ...: scopedEx
         val names = binders.map(_._1)
         for {
@@ -101,7 +101,7 @@ class EtcTypeChecker extends TypeChecker with STCBuilder {
           _ <- Some(listener.onTypeFound(ex.tlaId, operType))
         } yield operType
 
-      case STCLet(name, absEx@STCAbs(boundEx, paramsAndDoms@_*), scopedEx) =>
+      case EtcLet(name, absEx@EtcAbs(boundEx, paramsAndDoms@_*), scopedEx) =>
         // let name = lambda x \in X, y \in Y, ...: boundEx in scopedEx
         val extCtx =
           if (ctx.types.contains(name)) {
@@ -122,7 +122,7 @@ class EtcTypeChecker extends TypeChecker with STCBuilder {
           _ <- Some(listener.onTypeFound(ex.tlaId, result))
         } yield result
 
-      case STCLet(name, boundEx, scopedEx) =>
+      case EtcLet(name, boundEx, scopedEx) =>
         // A parameterless operator: let name = boundEx in scopeEx.
         // Just let the code above work for us.
         val nullaryLambda = mkLet(ex.tlaId, name, mkAbs(boundEx.tlaId, boundEx), scopedEx)
@@ -136,7 +136,7 @@ class EtcTypeChecker extends TypeChecker with STCBuilder {
   // lambda x \in e1, y \in e2, ...: scopedEx
   private def matchLambdaDefs(ctx: TypeContext,
                               sourceId: UID,
-                              binders: Seq[(String, STCExpr)],
+                              binders: Seq[(String, EtcExpr)],
                               optParamTypes: Option[Seq[TlaType1]]): Option[(Substitution, TypeContext)] = {
     // check, whether the domain types are well-typed
     val namedTypeOpts = binders.map { case (name, argEx) => (name, computeRec(ctx, argEx)) }
@@ -188,8 +188,8 @@ class EtcTypeChecker extends TypeChecker with STCBuilder {
   private def matchDef(ctx: TypeContext,
                        sourceId: UID,
                        operType: TlaType1,
-                       binders: Seq[(String, STCExpr)],
-                       defBody: STCExpr): Option[TlaType1] = {
+                       binders: Seq[(String, EtcExpr)],
+                       defBody: EtcExpr): Option[TlaType1] = {
     operType match {
       case OperT1(paramTypes, res) =>
         def unifyWithResult(extCtx: TypeContext,
@@ -222,7 +222,7 @@ class EtcTypeChecker extends TypeChecker with STCBuilder {
     }
   }
 
-  private def matchApp(appEx: STCApp,
+  private def matchApp(appEx: EtcApp,
                        operTypes: Seq[TlaType1],
                        argTypes: Seq[TlaType1]): Option[TlaType1] = {
     // match one operator signature

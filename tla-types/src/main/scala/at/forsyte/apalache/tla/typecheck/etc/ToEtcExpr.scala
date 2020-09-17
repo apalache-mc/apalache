@@ -1,8 +1,9 @@
-package at.forsyte.apalache.tla.typecheck
+package at.forsyte.apalache.tla.typecheck.etc
 
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.typecheck._
 
 /**
   * ToSTCExpr takes a TLA+ expression and produces an STCExpr.
@@ -13,50 +14,50 @@ import at.forsyte.apalache.tla.lir._
   *
   * @author Igor Konnov
   */
-class ToSTCExpr extends STCBuilder {
+class ToEtcExpr extends EtcBuilder {
 
   // TODO: a long string of translation rules. Can we decompose it?
-  def apply(ex: TlaEx): STCExpr = ex match {
+  def apply(ex: TlaEx): EtcExpr = ex match {
     case NameEx(name) =>
       // x becomes x
-      STCName(name)(ex.ID)
+      EtcName(name)(ex.ID)
 
     //*********************************************** LITERALS **************************************************
     case ValEx(TlaInt(_)) =>
       // an integer literal becomes IntT1
-      STCConst(IntT1())(ex.ID)
+      EtcConst(IntT1())(ex.ID)
 
     case ValEx(TlaBool(_)) =>
       // a Boolean literal becomes BoolT1
-      STCConst(BoolT1())(ex.ID)
+      EtcConst(BoolT1())(ex.ID)
 
     case ValEx(TlaStr(_)) =>
       // a string literal becomes StrT1
-      STCConst(StrT1())(ex.ID)
+      EtcConst(StrT1())(ex.ID)
 
     case ValEx(TlaReal()) =>
       // a real literal becomes RealT1
-      STCConst(RealT1())(ex.ID)
+      EtcConst(RealT1())(ex.ID)
 
     case ValEx(TlaIntSet) =>
       // the set of all integers is SetT1(IntT1)
-      STCConst(SetT1(IntT1()))(ex.ID)
+      EtcConst(SetT1(IntT1()))(ex.ID)
 
     case ValEx(TlaNatSet) =>
       // the set of all naturals is SetT1(IntT1)
-      STCConst(SetT1(IntT1()))(ex.ID)
+      EtcConst(SetT1(IntT1()))(ex.ID)
 
     case ValEx(TlaRealSet) =>
       // the set of all reals is SetT1(RealT1)
-      STCConst(SetT1(RealT1()))(ex.ID)
+      EtcConst(SetT1(RealT1()))(ex.ID)
 
     case ValEx(TlaBoolSet) =>
       // the set of all Booleans is SetT1(BoolT1)
-      STCConst(SetT1(BoolT1()))(ex.ID)
+      EtcConst(SetT1(BoolT1()))(ex.ID)
 
     case ValEx(TlaStrSet) =>
       // the set of all strings is SetT1(StrT1)
-      STCConst(SetT1(StrT1()))(ex.ID)
+      EtcConst(SetT1(StrT1()))(ex.ID)
 
     //******************************************** GENERAL OPERATORS **************************************************
     case OperEx(op, args @ _*) if op == TlaOper.eq || op == TlaOper.ne =>
@@ -457,10 +458,10 @@ class ToSTCExpr extends STCBuilder {
 
     //******************************************** MISC **************************************************
     case _ =>
-      STCConst(VarT1("a"))(ex.ID)
+      EtcConst(VarT1("a"))(ex.ID)
   }
 
-  private def translateTlaDecl(ds: Seq[TlaOperDecl], terminal: TlaEx): STCExpr = {
+  private def translateTlaDecl(ds: Seq[TlaOperDecl], terminal: TlaEx): EtcExpr = {
     def translateParams(start: Int, params: Seq[FormalParam]): Seq[(String, TlaType1)] = {
       params match {
         case Seq() => Seq()
@@ -482,9 +483,9 @@ class ToSTCExpr extends STCBuilder {
 
       case first +: rest =>
         val paramsAndDoms = translateParams(0, first.formalParams).
-          map(p => (p._1, STCConst(SetT1(p._2)) (first.body.ID)))
-        val lambda = STCAbs(this(first.body), paramsAndDoms :_*) (first.body.ID)
-        STCLet(first.name, lambda, translateTlaDecl(rest, terminal)) (first.body.ID)
+          map(p => (p._1, EtcConst(SetT1(p._2)) (first.body.ID)))
+        val lambda = EtcAbs(this(first.body), paramsAndDoms :_*) (first.body.ID)
+        EtcLet(first.name, lambda, translateTlaDecl(rest, terminal)) (first.body.ID)
     }
   }
 
@@ -492,13 +493,13 @@ class ToSTCExpr extends STCBuilder {
     start.until(start + size).map(l => VarT1(l))
   }
 
-  private def mkApp(uid: UID, sig: OperT1, args: Seq[TlaEx]): STCExpr = {
+  private def mkApp(uid: UID, sig: OperT1, args: Seq[TlaEx]): EtcExpr = {
     mkApp(uid, Seq(sig), args.map(this(_)) :_*)
   }
 
-  private def mkAppByName(uid: UID, opName: TlaEx, args: Seq[TlaEx]): STCExpr = {
+  private def mkAppByName(uid: UID, opName: TlaEx, args: Seq[TlaEx]): EtcExpr = {
     opName match {
-      case NameEx(name) => STCAppByName(name, args.map(this(_)) :_*)(uid)
+      case NameEx(name) => EtcAppByName(name, args.map(this(_)) :_*)(uid)
       case _ => throw new RuntimeException("Bug in ToSTCExpr. Expected opName, found: " + opName)
     }
   }
