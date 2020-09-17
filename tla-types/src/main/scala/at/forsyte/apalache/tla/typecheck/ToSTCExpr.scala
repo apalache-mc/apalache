@@ -4,8 +4,6 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir._
 
-import scala.collection.immutable.SortedMap
-
 /**
   * ToSTCExpr takes a TLA+ expression and produces an STCExpr.
   * The most interesting part of this translation is dealing with the built-in operators.
@@ -15,7 +13,7 @@ import scala.collection.immutable.SortedMap
   *
   * @author Igor Konnov
   */
-class ToSTCExpr {
+class ToSTCExpr extends STCBuilder {
 
   // TODO: a long string of translation rules. Can we decompose it?
   def apply(ex: TlaEx): STCExpr = ex match {
@@ -75,9 +73,9 @@ class ToSTCExpr {
       // the principal type of CHOOSE is (a => Bool) => a
       val chooseType = OperT1(Seq(OperT1(Seq(VarT1("a")), BoolT1())), VarT1("a"))
       // CHOOSE implicitly introduces a lambda abstraction: λ x ∈ S. P
-      val chooseLambda = STCAbs(this(pred), (bindingVar, this(bindingSet)))(ex.ID)
+      val chooseLambda = mkAbs(ex.ID, this(pred), (bindingVar, this(bindingSet)))
       // the resulting expression is (((a => Bool) => a) (λ x ∈ S. P))
-      STCApp(STCConst(chooseType)(ex.ID), chooseLambda) (ex.ID)
+      mkApp(ex.ID, Seq(chooseType), chooseLambda)
 
     //******************************************** LET-IN ****************************************************
     case LetInEx(body, decls @ _*) =>
@@ -101,9 +99,9 @@ class ToSTCExpr {
       // the principal type of \A and \E is (a => Bool) => Bool
       val quantType = OperT1(Seq(OperT1(Seq(VarT1("a")), BoolT1())), BoolT1())
       // \E and \A implicitly introduce a lambda abstraction: λ x ∈ S. P
-      val lambda = STCAbs(this(pred), (bindingVar, this(bindingSet)))(ex.ID)
+      val lambda = mkAbs(ex.ID, this(pred), (bindingVar, this(bindingSet)))
       // the resulting expression is (((a => Bool) => a) (λ x ∈ S. P))
-      STCApp(STCConst(quantType)(ex.ID), lambda) (ex.ID)
+      mkApp(ex.ID, Seq(quantType), lambda)
 
     //******************************************** SETS **************************************************
     case OperEx(TlaSetOper.enumSet, args @ _*) =>
@@ -128,7 +126,7 @@ class ToSTCExpr {
       }
       val sets = args.zipWithIndex.filter(_._2 % 2 == 1).map(_._1)
       val typeVars = mkBoundVars(0, sets.length)
-      val recSetType = SetT1(RecT1(SortedMap(fields.zip(typeVars) :_*)))
+      val recSetType = SetT1(RecT1(fields.zip(typeVars) :_*))
       val opType = OperT1(typeVars.map(SetT1(_)), recSetType)
       mkApp(ex.ID, opType, sets)
 
@@ -176,9 +174,9 @@ class ToSTCExpr {
       // the principal type is (a => Bool) => Set(a)
       val principal = OperT1(Seq(OperT1(Seq(VarT1("a")), BoolT1())), SetT1(VarT1("a")))
       // { x \in S: P } implicitly introduces a lambda abstraction: λ x ∈ S. P
-      val lambda = STCAbs(this(pred), (bindingVar, this(bindingSet)))(ex.ID)
+      val lambda = mkAbs(ex.ID, this(pred), (bindingVar, this(bindingSet)))
       // the resulting expression is (((a => Bool) => Set(a)) (λ x ∈ S. P))
-      STCApp(STCConst(principal)(ex.ID), lambda) (ex.ID)
+      mkApp(ex.ID, Seq(principal), lambda)
 
     case OperEx(TlaSetOper.map, mapExpr, args @ _*) =>
       // { x \in S, y \in T: e }
@@ -191,8 +189,8 @@ class ToSTCExpr {
       // the principal type of is ((b, c) => a) => Set(a)
       val principal = OperT1(Seq(OperT1(typeVars, VarT1("a"))), SetT1(VarT1("a")))
       // map implicitly introduces a lambda abstraction: λ x ∈ S, y ∈ T. e
-      val lambda = STCAbs(this(mapExpr), boundVarNames.zip(sets).map(p => (p._1, this(p._2))) :_*)(mapExpr.ID)
-      STCApp(STCConst(principal)(ex.ID), lambda) (ex.ID)
+      val lambda = mkAbs(mapExpr.ID, this(mapExpr), boundVarNames.zip(sets).map(p => (p._1, this(p._2))) :_*)
+      mkApp(ex.ID, Seq(principal), lambda)
 
     //******************************************** FUNCTIONS **************************************************
     case OperEx(TlaFunOper.enum, args @ _*) =>
@@ -205,8 +203,8 @@ class ToSTCExpr {
       val typeVars = fields.indices
         .map(l => VarT1(l))
       // (a, b) => [f1 |-> a, f2 |-> b]
-      val sig = OperT1(typeVars, RecT1(SortedMap(fields.zip(typeVars) : _*)))
-      STCApp(STCConst(sig)(ex.ID), values: _*) (ex.ID)
+      val sig = OperT1(typeVars, RecT1(fields.zip(typeVars) : _*))
+      mkApp(ex.ID, Seq(sig), values: _*)
 
     case OperEx(TlaFunOper.tuple, args @ _*) =>
       // <<e_1, ..., e_n>>
@@ -215,26 +213,26 @@ class ToSTCExpr {
       val tuple = OperT1(typeVars, TupT1(typeVars :_*))
       val as = List.fill(args.length)(VarT1("a"))
       val seq = OperT1(as, SeqT1(VarT1("a")))
-      STCApp(STCConst(tuple, seq)(ex.ID), values: _*) (ex.ID)
+      mkApp(ex.ID, Seq(tuple, seq), values: _*)
 
     case OperEx(TlaFunOper.app, fun, arg @ ValEx(TlaInt(fieldNo))) =>
       // f[i], where i is an integer literal
       val funType = OperT1(Seq(FunT1(IntT1(), VarT1("a")), IntT1()), VarT1("a")) // ((Int -> a), Int) => a
       val seqType = OperT1(Seq(SeqT1(VarT1("a")), IntT1()), VarT1("a")) // (Seq(a), Int) => a
-      val tupType = OperT1(Seq(SparseTupT1(SortedMap(fieldNo.toInt -> VarT1("a"))), IntT1()), VarT1("a")) // ({ 3: a }, Int) => a
-      STCApp(STCConst(funType, seqType, tupType)(ex.ID), this(fun), STCConst(IntT1()) (arg.ID)) (ex.ID)
+      val tupType = OperT1(Seq(SparseTupT1(fieldNo.toInt -> VarT1("a")), IntT1()), VarT1("a")) // ({ 3: a }, Int) => a
+      mkApp(ex.ID, Seq(funType, seqType, tupType), this(fun), mkConst(arg.ID, IntT1()))
 
     case OperEx(TlaFunOper.app, fun, arg @ ValEx(TlaStr(fieldName))) =>
       // f[s], where s is a string literal
       val funType = OperT1(Seq(FunT1(StrT1(), VarT1("a")), StrT1()), VarT1("a")) // ((Str -> a), Str) => a
-      val recType = OperT1(Seq(RecT1(SortedMap(fieldName -> VarT1("a"))), StrT1()), VarT1("a")) // ({ foo: a }, Str) => a
-      STCApp(STCConst(funType, recType)(ex.ID), this(fun), STCConst(StrT1()) (arg.ID)) (ex.ID)
+      val recType = OperT1(Seq(RecT1(fieldName -> VarT1("a")), StrT1()), VarT1("a")) // ({ foo: a }, Str) => a
+      mkApp(ex.ID, Seq(funType, recType), this(fun), mkConst(arg.ID, StrT1()))
 
     case OperEx(TlaFunOper.app, fun, arg) =>
       // the general case of f[e]
       val funType = OperT1(Seq(FunT1(VarT1("a"), VarT1("b")), VarT1("a")), VarT1("b")) // ((a -> b), a) => b
       val seqType = OperT1(Seq(SeqT1(VarT1("a")), IntT1()), VarT1("a")) // (Seq(a), Int) => a
-      STCApp(STCConst(funType, seqType)(ex.ID), this(fun), this(arg)) (ex.ID)
+      mkApp(ex.ID, Seq(funType, seqType), this(fun), this(arg))
 
     case OperEx(TlaFunOper.domain, fun) =>
       // DOMAIN f
@@ -242,7 +240,7 @@ class ToSTCExpr {
       val seqType = OperT1(Seq(SeqT1(VarT1("a"))), SetT1(IntT1())) // Seq(a) => Set(Int)
       val recType = OperT1(Seq(RecT1()), SetT1(StrT1())) // [] => Set(Str)
       val tupType = OperT1(Seq(SparseTupT1()), SetT1(IntT1())) // {} => Set(Int)
-      STCApp(STCConst(funType, seqType, recType, tupType)(ex.ID), this(fun)) (ex.ID)
+      mkApp(ex.ID, Seq(funType, seqType, recType, tupType), this(fun))
 
     case OperEx(TlaFunOper.funDef, mapExpr, args @ _*) =>
       // [ x \in S, y \in T |-> e ]
@@ -256,8 +254,8 @@ class ToSTCExpr {
       val principal = OperT1(Seq(OperT1(typeVars, VarT1("a"))),
         FunT1(TupT1(typeVars :_*), VarT1("a")))
       // the function definition implicitly introduces a lambda abstraction: λ x ∈ S, y ∈ T. e
-      val lambda = STCAbs(this(mapExpr), boundVarNames.zip(sets).map(p => (p._1, this(p._2))) :_*)(mapExpr.ID)
-      STCApp(STCConst(principal)(ex.ID), lambda) (ex.ID)
+      val lambda = mkAbs(mapExpr.ID, this(mapExpr), boundVarNames.zip(sets).map(p => (p._1, this(p._2))) :_*)
+      mkApp(ex.ID, Seq(principal), lambda)
 
     case OperEx(TlaFunOper.except, fun, args @ _*) =>
       // the hardest expression: [f EXCEPT ![e1] = e2, ![e3] = e4, ...]
@@ -286,38 +284,39 @@ class ToSTCExpr {
       // a record: ([foo: a, bar: b, ...], Str, a, Str, b, ...) => [foo: a, bar: b, ...]
       val typeVars = mkBoundVars(0, accessors.length) // introduce type variables a, b, c, ...
       val recFields = accessors.zip(typeVars).collect { case (ValEx(TlaStr(fieldName)), tv) => (fieldName, tv)}
-      val rec = RecT1(SortedMap(recFields :_*))
+      val rec = RecT1(recFields :_*)
       val strAndVars = typeVars.flatMap(v => List(StrT1(), v))
       val recType = OperT1(rec +: strAndVars, rec)
       // a tuple: ({3: a, 5: b, ...}, Int, a, Int, b, ...) => {3: a, 5: b, ...}
       val tupFields = accessors.zip(typeVars).collect { case (ValEx(TlaInt(fieldNo)), tv) => (fieldNo.toInt, tv)}
-      val tup = SparseTupT1(SortedMap(tupFields :_*))
+      val tup = SparseTupT1(tupFields :_*)
       val intAndVars = typeVars.flatMap(v => List(IntT1(), v))
       val tupType = OperT1(tup +: intAndVars, tup)
 
       // construct the disjunctive type
       val disjunctiveType =
         if (allStrings)
-          STCConst(funType, recType)(ex.ID)
+          Seq(funType, recType)
         else if (allInts)
-          STCConst(funType, seqType, tupType)(ex.ID)
+          Seq(funType, seqType, tupType)
         else
-          STCConst(funType, seqType)(ex.ID)
+          Seq(funType, seqType)
 
       // translate the arguments and interleave them
       val xargs = accessors.zip(newValues).flatMap(p => List(this (p._1), this (p._2)))
-      STCApp(disjunctiveType, this(fun) +: xargs :_*) (ex.ID)
+      mkApp(ex.ID, disjunctiveType, this(fun) +: xargs :_*)
 
     case OperEx(TlaFunOper.recFunDef, body, NameEx(name), bindingSet) =>
-      // the expected type is: ((a -> b, a => b) => (a -> b)) (λ $recFun ∈ Set(a -> b). λ x ∈ Int. x)
+      // the expected type is: ((a -> b, a => b) => (a -> b)) (λ $recFun ∈ Set(c -> d). λ x ∈ Int. x)
       val funType = FunT1(VarT1("a"), VarT1("b"))
       val principal = OperT1(Seq(funType, OperT1(Seq(VarT1("a")), VarT1("b"))), funType)
-      val innerLambda = STCAbs(this(body), (name, this(bindingSet))) (body.ID)
-      val outerLambda = STCAbs(innerLambda, (TlaFunOper.recFunRef.uniqueName, STCConst(SetT1(funType)) (ex.ID))) (ex.ID)
-      STCApp(STCConst(principal)(ex.ID), outerLambda) (ex.ID)
+      val innerLambda = mkAbs(body.ID, this(body), (name, this(bindingSet)))
+      val outerLambda = mkAbs(ex.ID, innerLambda,
+        (TlaFunOper.recFunRef.uniqueName, mkConst(ex.ID, SetT1(FunT1(VarT1("c"), VarT1("d"))))))
+      mkApp(ex.ID, Seq(principal), outerLambda)
 
     case OperEx(TlaFunOper.recFunRef) =>
-      STCName(TlaFunOper.recFunRef.uniqueName) (ex.ID)
+      mkName(ex.ID, TlaFunOper.recFunRef.uniqueName)
 
     //******************************************** CONTROL **************************************************
 
@@ -494,12 +493,13 @@ class ToSTCExpr {
   }
 
   private def mkApp(uid: UID, sig: OperT1, args: Seq[TlaEx]): STCExpr = {
-    // TODO: Avoid using the same uid twice. Otherwise, we cannot easily map expressions to their types
-    STCApp(STCConst(sig)(uid), args.map(this(_)) :_*)(uid)
+    mkApp(uid, Seq(sig), args.map(this(_)) :_*)
   }
 
   private def mkAppByName(uid: UID, opName: TlaEx, args: Seq[TlaEx]): STCExpr = {
-    // TODO: Avoid using the same uid twice. Otherwise, we cannot easily map expressions to their types
-    STCApp(this(opName), args.map(this(_)) :_*)(uid)
+    opName match {
+      case NameEx(name) => STCAppByName(name, args.map(this(_)) :_*)(uid)
+      case _ => throw new RuntimeException("Bug in ToSTCExpr. Expected opName, found: " + opName)
+    }
   }
 }

@@ -11,12 +11,12 @@ import at.forsyte.apalache.tla.lir.UID
   * @author Igor Konnov
   */
 trait STCBuilder {
-  def mkConst(id: UID, types: TlaType1*): STCConst = {
-    STCConst(types :_*) (id)
+  def mkConst(id: UID, tt: TlaType1): STCConst = {
+    STCConst(tt) (id)
   }
 
-  def mkUniqConst(types: TlaType1*): STCConst = {
-    mkConst(UID.unique, types :_*)
+  def mkUniqConst(tt: TlaType1): STCConst = {
+    mkConst(UID.unique, tt)
   }
 
   def mkName(id: UID, name: String): STCName = {
@@ -35,12 +35,20 @@ trait STCBuilder {
     mkAbs(UID.unique, body, paramsAndDoms :_*)
   }
 
-  def mkApp(id: UID, oper: STCExpr, args: STCExpr*): STCApp = {
-    STCApp(oper, args :_*) (id)
+  def mkApp(id: UID, operTypes: Seq[TlaType1], args: STCExpr*): STCApp = {
+    STCApp(operTypes, args :_*) (id)
   }
 
-  def mkUniqApp(oper: STCExpr, args: STCExpr*): STCApp = {
-    mkApp(UID.unique, oper, args :_*)
+  def mkUniqApp(operTypes: Seq[TlaType1], args: STCExpr*): STCApp = {
+    mkApp(UID.unique, operTypes, args :_*)
+  }
+
+  def mkAppByName(id: UID, name: String, args: STCExpr*): STCAppByName = {
+    STCAppByName(name, args :_*) (id)
+  }
+
+  def mkUniqAppByName(name: String, args: STCExpr*): STCAppByName = {
+    mkAppByName(UID.unique, name, args :_*)
   }
 
   def mkLet(id: UID, name: String, bound: STCExpr, body: STCExpr): STCLet = {
@@ -49,13 +57,5 @@ trait STCBuilder {
 
   def mkUniqLet(name: String, bound: STCExpr, body: STCExpr): STCLet = {
     mkLet(UID.unique, name, bound, body)
-  }
-
-  def mkIntro(id: UID, name: String, scope: STCExpr): STCIntroTypeVar = {
-    STCIntroTypeVar(name, scope) (id)
-  }
-
-  def mkUniqIntro(name: String, scope: STCExpr): STCIntroTypeVar = {
-    mkIntro(UID.unique, name, scope)
   }
 }

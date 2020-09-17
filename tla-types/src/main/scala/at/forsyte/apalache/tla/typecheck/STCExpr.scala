@@ -21,12 +21,13 @@ sealed trait STCExpr {
 /**
   * A constant expression, i.e., just a type (may be polymorphic).
   *
-  * @param types a list type constants; usually, a singleton, but may be more, in case of overloaded operators.
+  * @param polytype a type constant that may have free variables (polytype).
   * @param tlaId the identifier of the TLA+ expression that resulted in this STCExpr (ignored in equals).
   */
-case class STCConst(types: TlaType1*)(val tlaId: UID) extends STCExpr {
+case class STCConst(polytype: TlaType1)(val tlaId: UID) extends STCExpr {
   override def toString: String = {
-    tlaId + "@(" + String.join(" | ", types.map(_.toString): _*) + ")"
+//    tlaId + "@(" + String.join(" | ", types.map(_.toString): _*) + ")"
+    s"$tlaId@$polytype"
   }
 }
 
@@ -57,20 +58,36 @@ case class STCAbs(body: STCExpr, paramsAndDoms: (String, STCExpr)*)(val tlaId: U
 }
 
 /**
-  * Operator application. We are talking about operators of the simple typed lambda calculus.
+  * Application of an operator whose signature is known. An operator may have several overloaded polytypes, e.g., f[e].
   *
-  * @param oper  an STC expression that represents an operator type
-  * @param args  function arguments
+  * @param operTypes  an STC expression that represents an operator type
+  * @param args  operator arguments
   * @param tlaId the identifier of the TLA+ expression that resulted in this STCExpr (ignored in equals).
   */
-case class STCApp(oper: STCExpr, args: STCExpr*)(val tlaId: UID) extends STCExpr {
+case class STCApp(operTypes: Seq[TlaType1], args: STCExpr*)(val tlaId: UID) extends STCExpr {
   override def toString: String = {
-    tlaId + "@(%s %s)".format(oper, String.join(" ", args.map(_.toString): _*))
+    tlaId + "@((%s) %s)".format(String.join(" | ", operTypes.map(_.toString): _*),
+      String.join(" ", args.map(_.toString): _*))
+  }
+}
+
+/**
+  * Application of an operator by its name. The operator type should be resolved with a type signature that is
+  * encoded in a type context.
+  *
+  * @param name operator name
+  * @param args operator arguments
+  * @param tlaId identifier of the TLA+ expression that resulted in this STCExpr (ignored in equals).
+  */
+case class STCAppByName(name: String, args: STCExpr*)(val tlaId: UID) extends STCExpr {
+  override def toString: String = {
+    tlaId + "@(%s %s)".format(name, String.join(" ", args.map(_.toString): _*))
   }
 }
 
 /**
   * Bind an expression to a name. To bind an operator of multiple arguments, use STCAbs.
+  * The operator type should be resolved with a type signature that is encoded in a type context.
   *
   * @param name  an expression name in the let-in binding
   * @param bound the expression to bind
@@ -80,17 +97,5 @@ case class STCApp(oper: STCExpr, args: STCExpr*)(val tlaId: UID) extends STCExpr
 case class STCLet(name: String, bound: STCExpr, body: STCExpr)(val tlaId: UID) extends STCExpr {
   override def toString: String = {
     tlaId + "@let %s = %s in %s".format(name, bound, body)
-  }
-}
-
-/**
-  * Introduce a type variable in the scope of an expression.
-  * @param name the variable name
-  * @param scope the expression, to which the type variable appplies
-  * @param tlaId the identifier of the TLA+ expression that resulted in this STCExpr (ignored in equals).
-  */
-case class STCIntroTypeVar(name: String, scope: STCExpr)(val tlaId: UID) extends STCExpr {
-  override def toString: String = {
-    tlaId + "@LAMBDA %s. %s".format(name, scope)
   }
 }
