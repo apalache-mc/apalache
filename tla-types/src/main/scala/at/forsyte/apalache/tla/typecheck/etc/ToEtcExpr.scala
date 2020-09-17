@@ -20,44 +20,44 @@ class ToEtcExpr extends EtcBuilder {
   def apply(ex: TlaEx): EtcExpr = ex match {
     case NameEx(name) =>
       // x becomes x
-      EtcName(name)(ex.ID)
+      mkName(ExactRef(ex.ID), name)
 
     //*********************************************** LITERALS **************************************************
     case ValEx(TlaInt(_)) =>
       // an integer literal becomes IntT1
-      EtcConst(IntT1())(ex.ID)
+      mkConst(ExactRef(ex.ID), IntT1())
 
     case ValEx(TlaBool(_)) =>
       // a Boolean literal becomes BoolT1
-      EtcConst(BoolT1())(ex.ID)
+      mkConst(ExactRef(ex.ID), BoolT1())
 
     case ValEx(TlaStr(_)) =>
       // a string literal becomes StrT1
-      EtcConst(StrT1())(ex.ID)
+      mkConst(ExactRef(ex.ID), StrT1())
 
     case ValEx(TlaReal()) =>
       // a real literal becomes RealT1
-      EtcConst(RealT1())(ex.ID)
+      mkConst(ExactRef(ex.ID), RealT1())
 
     case ValEx(TlaIntSet) =>
       // the set of all integers is SetT1(IntT1)
-      EtcConst(SetT1(IntT1()))(ex.ID)
+      mkConst(ExactRef(ex.ID), SetT1(IntT1()))
 
     case ValEx(TlaNatSet) =>
       // the set of all naturals is SetT1(IntT1)
-      EtcConst(SetT1(IntT1()))(ex.ID)
+      mkConst(ExactRef(ex.ID), SetT1(IntT1()))
 
     case ValEx(TlaRealSet) =>
       // the set of all reals is SetT1(RealT1)
-      EtcConst(SetT1(RealT1()))(ex.ID)
+      mkConst(ExactRef(ex.ID), SetT1(RealT1()))
 
     case ValEx(TlaBoolSet) =>
       // the set of all Booleans is SetT1(BoolT1)
-      EtcConst(SetT1(BoolT1()))(ex.ID)
+      mkConst(ExactRef(ex.ID), SetT1(BoolT1()))
 
     case ValEx(TlaStrSet) =>
       // the set of all strings is SetT1(StrT1)
-      EtcConst(SetT1(StrT1()))(ex.ID)
+      mkConst(ExactRef(ex.ID), SetT1(StrT1()))
 
     //******************************************** GENERAL OPERATORS **************************************************
     case OperEx(op, args @ _*) if op == TlaOper.eq || op == TlaOper.ne =>
@@ -74,9 +74,9 @@ class ToEtcExpr extends EtcBuilder {
       // the principal type of CHOOSE is (a => Bool) => a
       val chooseType = OperT1(Seq(OperT1(Seq(VarT1("a")), BoolT1())), VarT1("a"))
       // CHOOSE implicitly introduces a lambda abstraction: λ x ∈ S. P
-      val chooseLambda = mkAbs(ex.ID, this(pred), (bindingVar, this(bindingSet)))
+      val chooseLambda = mkAbs(BlameRef(ex.ID), this(pred), (bindingVar, this(bindingSet)))
       // the resulting expression is (((a => Bool) => a) (λ x ∈ S. P))
-      mkApp(ex.ID, Seq(chooseType), chooseLambda)
+      mkApp(ExactRef(ex.ID), Seq(chooseType), chooseLambda)
 
     //******************************************** LET-IN ****************************************************
     case LetInEx(body, decls @ _*) =>
@@ -100,9 +100,9 @@ class ToEtcExpr extends EtcBuilder {
       // the principal type of \A and \E is (a => Bool) => Bool
       val quantType = OperT1(Seq(OperT1(Seq(VarT1("a")), BoolT1())), BoolT1())
       // \E and \A implicitly introduce a lambda abstraction: λ x ∈ S. P
-      val lambda = mkAbs(ex.ID, this(pred), (bindingVar, this(bindingSet)))
+      val lambda = mkAbs(BlameRef(ex.ID), this(pred), (bindingVar, this(bindingSet)))
       // the resulting expression is (((a => Bool) => a) (λ x ∈ S. P))
-      mkApp(ex.ID, Seq(quantType), lambda)
+      mkApp(ExactRef(ex.ID), Seq(quantType), lambda)
 
     //******************************************** SETS **************************************************
     case OperEx(TlaSetOper.enumSet, args @ _*) =>
@@ -175,9 +175,9 @@ class ToEtcExpr extends EtcBuilder {
       // the principal type is (a => Bool) => Set(a)
       val principal = OperT1(Seq(OperT1(Seq(VarT1("a")), BoolT1())), SetT1(VarT1("a")))
       // { x \in S: P } implicitly introduces a lambda abstraction: λ x ∈ S. P
-      val lambda = mkAbs(ex.ID, this(pred), (bindingVar, this(bindingSet)))
+      val lambda = mkAbs(BlameRef(ex.ID), this(pred), (bindingVar, this(bindingSet)))
       // the resulting expression is (((a => Bool) => Set(a)) (λ x ∈ S. P))
-      mkApp(ex.ID, Seq(principal), lambda)
+      mkApp(ExactRef(ex.ID), Seq(principal), lambda)
 
     case OperEx(TlaSetOper.map, mapExpr, args @ _*) =>
       // { x \in S, y \in T: e }
@@ -190,8 +190,8 @@ class ToEtcExpr extends EtcBuilder {
       // the principal type of is ((b, c) => a) => Set(a)
       val principal = OperT1(Seq(OperT1(typeVars, VarT1("a"))), SetT1(VarT1("a")))
       // map implicitly introduces a lambda abstraction: λ x ∈ S, y ∈ T. e
-      val lambda = mkAbs(mapExpr.ID, this(mapExpr), boundVarNames.zip(sets).map(p => (p._1, this(p._2))) :_*)
-      mkApp(ex.ID, Seq(principal), lambda)
+      val lambda = mkAbs(BlameRef(mapExpr.ID), this(mapExpr), boundVarNames.zip(sets).map(p => (p._1, this(p._2))) :_*)
+      mkApp(ExactRef(ex.ID), Seq(principal), lambda)
 
     //******************************************** FUNCTIONS **************************************************
     case OperEx(TlaFunOper.enum, args @ _*) =>
@@ -205,7 +205,7 @@ class ToEtcExpr extends EtcBuilder {
         .map(l => VarT1(l))
       // (a, b) => [f1 |-> a, f2 |-> b]
       val sig = OperT1(typeVars, RecT1(fields.zip(typeVars) : _*))
-      mkApp(ex.ID, Seq(sig), values: _*)
+      mkApp(ExactRef(ex.ID), Seq(sig), values: _*)
 
     case OperEx(TlaFunOper.tuple, args @ _*) =>
       // <<e_1, ..., e_n>>
@@ -214,26 +214,26 @@ class ToEtcExpr extends EtcBuilder {
       val tuple = OperT1(typeVars, TupT1(typeVars :_*))
       val as = List.fill(args.length)(VarT1("a"))
       val seq = OperT1(as, SeqT1(VarT1("a")))
-      mkApp(ex.ID, Seq(tuple, seq), values: _*)
+      mkApp(ExactRef(ex.ID), Seq(tuple, seq), values: _*)
 
     case OperEx(TlaFunOper.app, fun, arg @ ValEx(TlaInt(fieldNo))) =>
       // f[i], where i is an integer literal
       val funType = OperT1(Seq(FunT1(IntT1(), VarT1("a")), IntT1()), VarT1("a")) // ((Int -> a), Int) => a
       val seqType = OperT1(Seq(SeqT1(VarT1("a")), IntT1()), VarT1("a")) // (Seq(a), Int) => a
       val tupType = OperT1(Seq(SparseTupT1(fieldNo.toInt -> VarT1("a")), IntT1()), VarT1("a")) // ({ 3: a }, Int) => a
-      mkApp(ex.ID, Seq(funType, seqType, tupType), this(fun), mkConst(arg.ID, IntT1()))
+      mkApp(ExactRef(ex.ID), Seq(funType, seqType, tupType), this(fun), mkConst(ExactRef(arg.ID), IntT1()))
 
     case OperEx(TlaFunOper.app, fun, arg @ ValEx(TlaStr(fieldName))) =>
       // f[s], where s is a string literal
       val funType = OperT1(Seq(FunT1(StrT1(), VarT1("a")), StrT1()), VarT1("a")) // ((Str -> a), Str) => a
       val recType = OperT1(Seq(RecT1(fieldName -> VarT1("a")), StrT1()), VarT1("a")) // ({ foo: a }, Str) => a
-      mkApp(ex.ID, Seq(funType, recType), this(fun), mkConst(arg.ID, StrT1()))
+      mkApp(ExactRef(ex.ID), Seq(funType, recType), this(fun), mkConst(ExactRef(arg.ID), StrT1()))
 
     case OperEx(TlaFunOper.app, fun, arg) =>
       // the general case of f[e]
       val funType = OperT1(Seq(FunT1(VarT1("a"), VarT1("b")), VarT1("a")), VarT1("b")) // ((a -> b), a) => b
       val seqType = OperT1(Seq(SeqT1(VarT1("a")), IntT1()), VarT1("a")) // (Seq(a), Int) => a
-      mkApp(ex.ID, Seq(funType, seqType), this(fun), this(arg))
+      mkApp(ExactRef(ex.ID), Seq(funType, seqType), this(fun), this(arg))
 
     case OperEx(TlaFunOper.domain, fun) =>
       // DOMAIN f
@@ -241,7 +241,7 @@ class ToEtcExpr extends EtcBuilder {
       val seqType = OperT1(Seq(SeqT1(VarT1("a"))), SetT1(IntT1())) // Seq(a) => Set(Int)
       val recType = OperT1(Seq(RecT1()), SetT1(StrT1())) // [] => Set(Str)
       val tupType = OperT1(Seq(SparseTupT1()), SetT1(IntT1())) // {} => Set(Int)
-      mkApp(ex.ID, Seq(funType, seqType, recType, tupType), this(fun))
+      mkApp(ExactRef(ex.ID), Seq(funType, seqType, recType, tupType), this(fun))
 
     case OperEx(TlaFunOper.funDef, mapExpr, args @ _*) =>
       // [ x \in S, y \in T |-> e ]
@@ -255,8 +255,8 @@ class ToEtcExpr extends EtcBuilder {
       val principal = OperT1(Seq(OperT1(typeVars, VarT1("a"))),
         FunT1(TupT1(typeVars :_*), VarT1("a")))
       // the function definition implicitly introduces a lambda abstraction: λ x ∈ S, y ∈ T. e
-      val lambda = mkAbs(mapExpr.ID, this(mapExpr), boundVarNames.zip(sets).map(p => (p._1, this(p._2))) :_*)
-      mkApp(ex.ID, Seq(principal), lambda)
+      val lambda = mkAbs(BlameRef(mapExpr.ID), this(mapExpr), boundVarNames.zip(sets).map(p => (p._1, this(p._2))) :_*)
+      mkApp(ExactRef(ex.ID), Seq(principal), lambda)
 
     case OperEx(TlaFunOper.except, fun, args @ _*) =>
       // the hardest expression: [f EXCEPT ![e1] = e2, ![e3] = e4, ...]
@@ -305,19 +305,19 @@ class ToEtcExpr extends EtcBuilder {
 
       // translate the arguments and interleave them
       val xargs = accessors.zip(newValues).flatMap(p => List(this (p._1), this (p._2)))
-      mkApp(ex.ID, disjunctiveType, this(fun) +: xargs :_*)
+      mkApp(ExactRef(ex.ID), disjunctiveType, this(fun) +: xargs :_*)
 
     case OperEx(TlaFunOper.recFunDef, body, NameEx(name), bindingSet) =>
       // the expected type is: ((a -> b, a => b) => (a -> b)) (λ $recFun ∈ Set(c -> d). λ x ∈ Int. x)
       val funType = FunT1(VarT1("a"), VarT1("b"))
       val principal = OperT1(Seq(funType, OperT1(Seq(VarT1("a")), VarT1("b"))), funType)
-      val innerLambda = mkAbs(body.ID, this(body), (name, this(bindingSet)))
-      val outerLambda = mkAbs(ex.ID, innerLambda,
-        (TlaFunOper.recFunRef.uniqueName, mkConst(ex.ID, SetT1(FunT1(VarT1("c"), VarT1("d"))))))
-      mkApp(ex.ID, Seq(principal), outerLambda)
+      val innerLambda = mkAbs(ExactRef(body.ID), this(body), (name, this(bindingSet)))
+      val outerLambda = mkAbs(BlameRef(ex.ID), innerLambda,
+        (TlaFunOper.recFunRef.uniqueName, mkConst(BlameRef(ex.ID), SetT1(FunT1(VarT1("c"), VarT1("d"))))))
+      mkApp(ExactRef(ex.ID), Seq(principal), outerLambda)
 
     case OperEx(TlaFunOper.recFunRef) =>
-      mkName(ex.ID, TlaFunOper.recFunRef.uniqueName)
+      mkName(ExactRef(ex.ID), TlaFunOper.recFunRef.uniqueName)
 
     //******************************************** CONTROL **************************************************
 
@@ -458,7 +458,7 @@ class ToEtcExpr extends EtcBuilder {
 
     //******************************************** MISC **************************************************
     case _ =>
-      EtcConst(VarT1("a"))(ex.ID)
+      mkConst(ExactRef(ex.ID), VarT1("a"))
   }
 
   private def translateTlaDecl(ds: Seq[TlaOperDecl], terminal: TlaEx): EtcExpr = {
@@ -483,9 +483,9 @@ class ToEtcExpr extends EtcBuilder {
 
       case first +: rest =>
         val paramsAndDoms = translateParams(0, first.formalParams).
-          map(p => (p._1, EtcConst(SetT1(p._2)) (first.body.ID)))
-        val lambda = EtcAbs(this(first.body), paramsAndDoms :_*) (first.body.ID)
-        EtcLet(first.name, lambda, translateTlaDecl(rest, terminal)) (first.body.ID)
+          map(p => (p._1, mkConst(BlameRef(first.body.ID), SetT1(p._2)) ))
+        val lambda = mkAbs(ExactRef(first.body.ID), this(first.body), paramsAndDoms :_*)
+        mkLet(BlameRef(first.body.ID), first.name, lambda, translateTlaDecl(rest, terminal))
     }
   }
 
@@ -494,12 +494,12 @@ class ToEtcExpr extends EtcBuilder {
   }
 
   private def mkApp(uid: UID, sig: OperT1, args: Seq[TlaEx]): EtcExpr = {
-    mkApp(uid, Seq(sig), args.map(this(_)) :_*)
+    mkApp(ExactRef(uid), Seq(sig), args.map(this(_)) :_*)
   }
 
   private def mkAppByName(uid: UID, opName: TlaEx, args: Seq[TlaEx]): EtcExpr = {
     opName match {
-      case NameEx(name) => EtcAppByName(name, args.map(this(_)) :_*)(uid)
+      case NameEx(name) => mkAppByName(ExactRef(uid), name, args.map(this(_)) :_*)
       case _ => throw new RuntimeException("Bug in ToSTCExpr. Expected opName, found: " + opName)
     }
   }

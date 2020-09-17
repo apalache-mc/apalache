@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.typecheck
 
-import at.forsyte.apalache.tla.lir.UID
+import at.forsyte.apalache.tla.typecheck.etc.{EtcRef, ExactRef}
 
 /**
   * <p>Type checker calls the listener on important events:</p>
@@ -15,15 +15,15 @@ import at.forsyte.apalache.tla.lir.UID
 trait TypeCheckerListener {
   /**
     * This method is called when the type checker finds the type of an expression.
-    * @param id expression id
+    * @param sourceRef a reference to the source expression; this reference must be exact
     * @param monotype its monotype
     */
-  def onTypeFound(id: UID, monotype: TlaType1)
+  def onTypeFound(sourceRef: ExactRef, monotype: TlaType1)
 
   /**
     * This method is called when the type checker finds a type error.
-    * @param id expression id
+    * @param sourceRef a reference to the source expression; this one does not have to be exact
     * @param message the error description
     */
-  def onTypeError(id: UID, message: String)
+  def onTypeError(sourceRef: EtcRef, message: String)
 }

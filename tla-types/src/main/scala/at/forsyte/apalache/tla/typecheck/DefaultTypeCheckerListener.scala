@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.typecheck
 
-import at.forsyte.apalache.tla.lir.UID
+import at.forsyte.apalache.tla.typecheck.etc.{EtcRef, ExactRef}
 
 /**
   * The default implementation of TypeCheckerListener that does nothing.
@@ -11,16 +11,16 @@ class DefaultTypeCheckerListener extends TypeCheckerListener {
   /**
     * This method is called when the type checker finds the type of an expression.
     *
-    * @param id       expression id
+    * @param sourceRef an exact reference to the source expression
     * @param monotype its monotype
     */
-  override def onTypeFound(id: UID, monotype: TlaType1): Unit = {}
+  override def onTypeFound(sourceRef: ExactRef, monotype: TlaType1): Unit = {}
 
   /**
     * This method is called when the type checker finds a type error.
     *
-    * @param id       expression id
+    * @param sourceRef a reference to the source expression
     * @param message the error description
     */
-  override def onTypeError(id: UID, message: String): Unit = {}
+  override def onTypeError(sourceRef: EtcRef, message: String): Unit = {}
 }

@@ -12,51 +12,75 @@ import at.forsyte.apalache.tla.typecheck._
   * @author Igor Konnov
   */
 trait EtcBuilder {
-  def mkConst(id: UID, tt: TlaType1): EtcConst = {
-    EtcConst(tt) (id)
+  def mkConst(sourceRef: EtcRef, tt: TlaType1): EtcConst = {
+    EtcConst(tt) (sourceRef)
   }
 
   def mkUniqConst(tt: TlaType1): EtcConst = {
-    mkConst(UID.unique, tt)
+    mkConst(ExactRef(UID.unique), tt)
   }
 
-  def mkName(id: UID, name: String): EtcName = {
-    EtcName(name) (id)
+  def mkBlameConst(tt: TlaType1): EtcConst = {
+    mkConst(BlameRef(UID.unique), tt)
+  }
+
+  def mkName(sourceRef: EtcRef, name: String): EtcName = {
+    EtcName(name) (sourceRef)
   }
 
   def mkUniqName(name: String): EtcName = {
-    mkName(UID.unique, name)
+    mkName(ExactRef(UID.unique), name)
   }
 
-  def mkAbs(id: UID, body: EtcExpr, paramsAndDoms: (String, EtcExpr)*): EtcAbs = {
-    EtcAbs(body, paramsAndDoms :_*) (id)
+  def mkBlameName(name: String): EtcName = {
+    mkName(BlameRef(UID.unique), name)
+  }
+
+  def mkAbs(sourceRef: EtcRef, body: EtcExpr, paramsAndDoms: (String, EtcExpr)*): EtcAbs = {
+    EtcAbs(body, paramsAndDoms :_*) (sourceRef)
   }
 
   def mkUniqAbs(body: EtcExpr, paramsAndDoms: (String, EtcExpr)*): EtcAbs = {
-    mkAbs(UID.unique, body, paramsAndDoms :_*)
+    mkAbs(ExactRef(UID.unique), body, paramsAndDoms :_*)
   }
 
-  def mkApp(id: UID, operTypes: Seq[TlaType1], args: EtcExpr*): EtcApp = {
-    EtcApp(operTypes, args :_*) (id)
+  def mkBlameAbs(body: EtcExpr, paramsAndDoms: (String, EtcExpr)*): EtcAbs = {
+    mkAbs(BlameRef(UID.unique), body, paramsAndDoms :_*)
+  }
+
+  def mkApp(sourceRef: EtcRef, operTypes: Seq[TlaType1], args: EtcExpr*): EtcApp = {
+    EtcApp(operTypes, args :_*) (sourceRef)
   }
 
   def mkUniqApp(operTypes: Seq[TlaType1], args: EtcExpr*): EtcApp = {
-    mkApp(UID.unique, operTypes, args :_*)
+    mkApp(ExactRef(UID.unique), operTypes, args :_*)
   }
 
-  def mkAppByName(id: UID, name: String, args: EtcExpr*): EtcAppByName = {
-    EtcAppByName(name, args :_*) (id)
+  def mkBlameApp(operTypes: Seq[TlaType1], args: EtcExpr*): EtcApp = {
+    mkApp(BlameRef(UID.unique), operTypes, args :_*)
+  }
+
+  def mkAppByName(sourceRef: EtcRef, name: String, args: EtcExpr*): EtcAppByName = {
+    EtcAppByName(name, args :_*) (sourceRef)
   }
 
   def mkUniqAppByName(name: String, args: EtcExpr*): EtcAppByName = {
-    mkAppByName(UID.unique, name, args :_*)
+    mkAppByName(ExactRef(UID.unique), name, args :_*)
   }
 
-  def mkLet(id: UID, name: String, bound: EtcExpr, body: EtcExpr): EtcLet = {
-    EtcLet(name, bound, body) (id)
+  def mkBlameAppByName(name: String, args: EtcExpr*): EtcAppByName = {
+    mkAppByName(BlameRef(UID.unique), name, args :_*)
+  }
+
+  def mkLet(sourceRef: EtcRef, name: String, bound: EtcExpr, body: EtcExpr): EtcLet = {
+    EtcLet(name, bound, body) (sourceRef)
   }
 
   def mkUniqLet(name: String, bound: EtcExpr, body: EtcExpr): EtcLet = {
-    mkLet(UID.unique, name, bound, body)
+    mkLet(ExactRef(UID.unique), name, bound, body)
+  }
+
+  def mkBlameLet(name: String, bound: EtcExpr, body: EtcExpr): EtcLet = {
+    mkLet(BlameRef(UID.unique), name, bound, body)
   }
 }
