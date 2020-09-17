@@ -276,13 +276,13 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
         parser("Int")).atLeastOnce()
       // the signature a => a gives us the polymorhic type of x
       listener.onTypeFound(xInF.sourceRef.asInstanceOf[ExactRef],
-        parser("a")).atLeastOnce()
+        parser("b")).atLeastOnce()
       // the signature a => a gives us the polymorphic type of xDomain
       listener.onTypeFound(xDomain.sourceRef.asInstanceOf[ExactRef],
-        parser("Set(a)")).atLeastOnce()
+        parser("Set(b)")).atLeastOnce()
       // the signature a => a gives us the polymorphic type for the definition of F
       listener.onTypeFound(fBody.sourceRef.asInstanceOf[ExactRef],
-        parser("a => a")).atLeastOnce()
+        parser("b => b")).atLeastOnce()
       // interestingly, we do not infer the type of F at the application site
 //      listener.onTypeFound(fBody.tlaId, parser("Int => Int")).atLeastOnce()
       // the overall result of LET-IN
@@ -292,6 +292,47 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
     whenExecuting(listener) {
       // we do not compute principal types here....
       val annotations = TypeContext("F" -> parser("a => a"))
+      val computed = checker.compute(listener, annotations, letIn)
+      assert(computed.contains(parser("Int")))
+    }
+  }
+
+  test("intersecting variables in let-in") {
+    // let F == lambda x \in Set(a), y \in Set(Int): y in F(Bool, Int)
+    val xDomain = mkUniqConst(parser("Set(a)"))
+    val yDomain = mkUniqConst(parser("Set(Int)"))
+    val yInF = mkUniqName("y")
+    val fBody = mkUniqAbs(yInF, ("x", xDomain), ("y", yDomain))
+
+    val arg1 = mkUniqConst(BoolT1())
+    val arg2 = mkUniqConst(IntT1())
+    val fApp = mkUniqAppByName("F", arg1, arg2)
+    val letIn = mkUniqLet("F", fBody, fApp)
+
+    val listener = mock[TypeCheckerListener]
+    expecting {
+      // the signature a => a gives us the polymorphic type of xDomain
+      listener.onTypeFound(xDomain.sourceRef.asInstanceOf[ExactRef],
+        parser("Set(Bool)")).atLeastOnce()
+      listener.onTypeFound(yDomain.sourceRef.asInstanceOf[ExactRef],
+        parser("Set(Int)")).atLeastOnce()
+      listener.onTypeFound(arg1.sourceRef.asInstanceOf[ExactRef],
+        parser("Bool")).atLeastOnce()
+      listener.onTypeFound(arg2.sourceRef.asInstanceOf[ExactRef],
+        parser("Int")).atLeastOnce()
+      listener.onTypeFound(yInF.sourceRef.asInstanceOf[ExactRef],
+        parser("Int")).atLeastOnce()
+      // the signature (Bool, a) => a gives us the polymorphic type for the definition of F
+      listener.onTypeFound(fBody.sourceRef.asInstanceOf[ExactRef],
+        parser("(Bool, Int) => Int")).atLeastOnce()
+      listener.onTypeFound(fApp.sourceRef.asInstanceOf[ExactRef],
+        parser("Int")).atLeastOnce()
+      listener.onTypeFound(letIn.sourceRef.asInstanceOf[ExactRef],
+        parser("Int")).atLeastOnce()
+    }
+    whenExecuting(listener) {
+      // we do not compute principal types here....
+      val annotations = TypeContext("F" -> parser("(Bool, a) => a"))
       val computed = checker.compute(listener, annotations, letIn)
       assert(computed.contains(parser("Int")))
     }
@@ -367,22 +408,24 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
     }
   }
 
-  test("sound unification application") {
+  test("partial unification in application") {
     val oper = parser("Seq(a) => Set(a)")
     val arg = mkUniqConst(parser("a"))
     val app = mkUniqApp(Seq(oper), arg)
     val listener = mock[TypeCheckerListener]
     expecting {
-      listener.onTypeFound(arg.sourceRef.asInstanceOf[ExactRef], parser("Seq(a)")).atLeastOnce()
-      listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("Set(a)")).atLeastOnce()
+      listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef],
+        "Unresolved a in operator signature: (Seq(a)) => Set(a)")
+      listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef],
+        "No matching signature for argument type(s): a")
     }
     whenExecuting(listener) {
       val computed = checker.compute(listener, TypeContext.empty, app)
-      assert(computed.contains(parser("Set(a)")))
+      assert(computed.isEmpty)
     }
   }
 
-  test("no unification in application") {
+  test("sound unification in application") {
     val oper = parser("(a, Str) => Set(a)")
     val arg1 = mkUniqConst(parser("Int"))
     val arg2 = mkUniqConst(parser("a"))

@@ -12,6 +12,27 @@ sealed trait TlaType1 {
     * @return the set of variable names (actually, integers) that are used in the type.
     */
   def usedNames: Set[Int]
+
+  /**
+    * The interval [a, b) of variable numbers. This interval is used to quickly find, whether two types may
+    * intersect in their sets of used names.
+    *
+    * @return [min(U), max(U) + 1) for the set of used variables U.
+    */
+  def varInterval: (Int, Int)
+}
+
+object TlaType1 {
+  def joinVarIntervals(ts: TlaType1*): (Int, Int) = {
+    val nonEmpty = ts.map(_.varInterval).filter { case (a, b) => a < b }
+    if (nonEmpty.isEmpty) {
+      (0, 0)
+    } else {
+      val min = nonEmpty.map(_._1).reduce(Math.min)
+      val max = nonEmpty.map(_._2).reduce(Math.max)
+      (min, max)
+    }
+  }
 }
 
 /**
@@ -21,6 +42,8 @@ case class IntT1() extends TlaType1 {
   override def toString: String = "Int"
 
   override def usedNames: Set[Int] = Set.empty
+
+  override def varInterval: (Int, Int) = (0, 0)
 }
 
 /**
@@ -30,6 +53,8 @@ case class RealT1() extends TlaType1 {
   override def toString: String = "Real"
 
   override def usedNames: Set[Int] = Set.empty
+
+  override def varInterval: (Int, Int) = (0, 0)
 }
 
 /**
@@ -39,6 +64,8 @@ case class BoolT1() extends TlaType1 {
   override def toString: String = "Bool"
 
   override def usedNames: Set[Int] = Set.empty
+
+  override def varInterval: (Int, Int) = (0, 0)
 }
 
 /**
@@ -48,6 +75,8 @@ case class StrT1() extends TlaType1 {
   override def toString: String = "Str"
 
   override def usedNames: Set[Int] = Set.empty
+
+  override def varInterval: (Int, Int) = (0, 0)
 }
 
 /**
@@ -59,6 +88,8 @@ case class ConstT1(name: String) extends TlaType1 {
   override def toString: String = name
 
   override def usedNames: Set[Int] = Set.empty
+
+  override def varInterval: (Int, Int) = (0, 0)
 }
 
 /**
@@ -78,6 +109,8 @@ case class VarT1(no: Int) extends TlaType1 {
   }
 
   override def usedNames: Set[Int] = Set(no)
+
+  override def varInterval: (Int, Int) = (no,  no + 1)
 }
 
 object VarT1 {
@@ -130,6 +163,8 @@ case class FunT1(arg: TlaType1, res: TlaType1) extends TlaType1 {
   override def toString: String = s"($arg -> $res)"
 
   override def usedNames: Set[Int] = arg.usedNames ++ res.usedNames
+
+  override val varInterval: (Int, Int) = TlaType1.joinVarIntervals(arg, res)
 }
 
 /**
@@ -141,6 +176,8 @@ case class SetT1(elem: TlaType1) extends TlaType1 {
   override def toString: String = s"Set($elem)"
 
   override def usedNames: Set[Int] = elem.usedNames
+
+  override def varInterval: (Int, Int) = elem.varInterval
 }
 
 /**
@@ -152,6 +189,8 @@ case class SeqT1(elem: TlaType1) extends TlaType1 {
   override def toString: String = s"Seq($elem)"
 
   override def usedNames: Set[Int] = elem.usedNames
+
+  override def varInterval: (Int, Int) = elem.varInterval
 }
 
 /**
@@ -166,6 +205,8 @@ case class TupT1(elems: TlaType1*) extends TlaType1 {
   }
 
   override def usedNames: Set[Int] = elems.foldLeft(Set[Int]()) { (s, t) => s ++ t.usedNames }
+
+  override val varInterval: (Int, Int) = TlaType1.joinVarIntervals(elems :_*)
 }
 
 /**
@@ -180,6 +221,8 @@ case class SparseTupT1(fieldTypes: SortedMap[Int, TlaType1]) extends TlaType1 {
   }
 
   override def usedNames: Set[Int] = fieldTypes.values.foldLeft(Set[Int]()) { (s, t) => s ++ t.usedNames }
+
+  override val varInterval: (Int, Int) = TlaType1.joinVarIntervals(fieldTypes.values.toSeq :_*)
 }
 
 object SparseTupT1 {
@@ -200,6 +243,8 @@ case class RecT1(fieldTypes: SortedMap[String, TlaType1]) extends TlaType1 {
   }
 
   override def usedNames: Set[Int] = fieldTypes.values.foldLeft(Set[Int]()) { (s, t) => s ++ t.usedNames }
+
+  override val varInterval: (Int, Int) = TlaType1.joinVarIntervals(fieldTypes.values.toSeq :_*)
 }
 
 object RecT1 {
@@ -221,4 +266,6 @@ case class OperT1(args: Seq[TlaType1], res: TlaType1) extends TlaType1 {
   }
 
   override def usedNames: Set[Int] = res.usedNames ++ args.foldLeft(Set[Int]()) { (s, t) => s ++ t.usedNames }
+
+  override val varInterval: (Int, Int) = TlaType1.joinVarIntervals(res +: args :_*)
 }

@@ -8,37 +8,7 @@ import at.forsyte.apalache.tla.typecheck._
   */
 class Substitution(val map: Map[Int, TlaType1]) {
   def apply(tp: TlaType1): TlaType1 = {
-    tp match {
-      case VarT1(no) =>
-        map.get(no) match {
-          case Some(tt) => tt
-          case None => tp
-        }
-
-      case SetT1(elem) =>
-        SetT1(this(elem))
-
-      case SeqT1(elem) =>
-        SeqT1(this(elem))
-
-      case TupT1(elems @ _*) =>
-        TupT1(elems.map(this(_)) :_*)
-
-      case SparseTupT1(fieldTypes) =>
-        SparseTupT1(fieldTypes.map(kv => (kv._1, this(kv._2))))
-
-      case RecT1(fieldTypes) =>
-        RecT1(fieldTypes.map(kv => (kv._1, this(kv._2))))
-
-      case FunT1(arg, res) =>
-        FunT1(this(arg), this(res))
-
-      case OperT1(args, res) =>
-        OperT1(args.map(this(_)), this(res))
-
-      case _ =>
-        tp // Bool, Int, Real, Str, Const(_)
-    }
+    Substitution.mk(map)(tp)
   }
 
   override def toString: String = {
@@ -69,5 +39,42 @@ object Substitution {
 
   def apply(map: Map[Int, TlaType1]): Substitution = {
     new Substitution(map)
+  }
+
+  def mk(fun: PartialFunction[Int, TlaType1]): TlaType1 => TlaType1 = {
+    def recFun: TlaType1 => TlaType1 = {
+      case tp @ VarT1(no) =>
+        if (fun.isDefinedAt(no)) {
+          fun(no)
+        } else {
+          tp
+        }
+
+      case SetT1(elem) =>
+        SetT1(recFun(elem))
+
+      case SeqT1(elem) =>
+        SeqT1(recFun(elem))
+
+      case TupT1(elems@_*) =>
+        TupT1(elems.map(recFun): _*)
+
+      case SparseTupT1(fieldTypes) =>
+        SparseTupT1(fieldTypes.map(kv => (kv._1, recFun(kv._2))))
+
+      case RecT1(fieldTypes) =>
+        RecT1(fieldTypes.map(kv => (kv._1, recFun(kv._2))))
+
+      case FunT1(arg, res) =>
+        FunT1(recFun(arg), recFun(res))
+
+      case OperT1(args, res) =>
+        OperT1(args.map(recFun), recFun(res))
+
+      case tp =>
+        tp // Bool, Int, Real, Str, Const(_)
+    }
+
+    recFun
   }
 }

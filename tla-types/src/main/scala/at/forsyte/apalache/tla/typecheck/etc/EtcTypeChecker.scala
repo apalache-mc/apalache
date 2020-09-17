@@ -163,9 +163,9 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
           Some((Substitution.empty, extCtx))
         } else {
           // unify optParamTypes with element types
-          // TODO: rename optParamTypes, so they are distinct from the variables in elemTypes
           val elemTypes = bindingTypes.map(_._2)
-          typeUnifier.unify(Substitution.empty, elemTypes.zip(optParamTypes.get)).collect {
+          val renamedElemTypes = renameOnCollision(optParamTypes.get, elemTypes)
+          typeUnifier.unify(Substitution.empty, renamedElemTypes.zip(optParamTypes.get)).collect {
             case (sub, unifiedArgs) =>
               // all good, extend the context with the bindings for the lambda variables
               val bindings = bindingTypes.map(_._1).zip(unifiedArgs)
@@ -230,7 +230,8 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
             "Expected %d arguments, found %d".format(paramTypes.length, argTypes.length))
           None
         } else {
-          typeUnifier.unify(Substitution.empty, paramTypes.zip(argTypes)) match {
+          val renamedArgTypes = renameOnCollision(resType +: paramTypes, argTypes)
+          typeUnifier.unify(Substitution.empty, paramTypes.zip(renamedArgTypes)) match {
             case Some((sub, unifiedArgs)) =>
               // Tadaaa. The operator arguments match one of its signatures.
               // However, we have to do plenty of tedious tests.
@@ -280,6 +281,23 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
       onTypeFound(appEx.sourceRef, unifiedRes)
 
       Some(unifiedRes)
+    }
+  }
+
+  // if primary and secondary intersect on the sets of used variables, renamed secondary to ensure non-intersection
+  private def renameOnCollision(primary: Seq[TlaType1], secondary: Seq[TlaType1]): Seq[TlaType1] = {
+    val pInt = TlaType1.joinVarIntervals(primary :_*)
+    val sInt = TlaType1.joinVarIntervals(secondary :_*)
+    if (pInt._2 > sInt._1 || sInt._2 > pInt._1) {
+      // the intervals intersect, simply shift the variable indices
+      def subFun: PartialFunction[Int, VarT1] = {
+        case i => VarT1(i + pInt._2)
+      }
+
+      secondary.map(Substitution.mk(subFun)(_))
+    } else {
+      // no intersection
+      secondary
     }
   }
 
