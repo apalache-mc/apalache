@@ -42,7 +42,7 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
 
           case Some(tt) =>
             if (tt.usedNames.nonEmpty) {
-              listener.onTypeError(rootEx.sourceRef, s"Unresolved ${tt.usedNames} in type: $tt")
+              onTypeError(rootEx.sourceRef, s"Unresolved ${tt.usedNames} in type: $tt")
               None
             } else {
               onTypeFound(rootEx.sourceRef, tt)
@@ -63,7 +63,7 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
         if (ctx.types.contains(name)) {
           Some(ctx.types(name)) // propagate the type upwards
         } else {
-          listener.onTypeError(ex.sourceRef, s"Undefined name $name")
+          onTypeError(ex.sourceRef, s"Undefined name $name")
           None
         }
 
@@ -85,7 +85,7 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
         if (ctx.types.contains(name)) {
           computeRec(ctx, mkApp(ex.sourceRef, Seq(ctx.types(name)), args: _*))
         } else {
-          listener.onTypeError(ex.sourceRef, s"Undefined operator name $name")
+          onTypeError(ex.sourceRef, s"Undefined operator name $name")
           None
         }
 
@@ -149,7 +149,7 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
         val failedNamesAndSets =
           namedTypeOpts.collect { case (name, Some(tt)) if failedNames.contains(name) => (name, tt) }
         for ((n, t) <- failedNamesAndSets) {
-          listener.onTypeError(sourceRef, s"Expected variable $n to be bound by a set, found: $t")
+          onTypeError(sourceRef, s"Expected variable $n to be bound by a set, found: $t")
         }
         None
       } else {
@@ -195,7 +195,7 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
           // unify the body type with the operator result, as per the signature
           val unifiedRes = typeUnifier.unify(Substitution.empty, expectedResType, inferredResType)
           if (unifiedRes.isEmpty) {
-            listener.onTypeError(sourceRef, s"Expected the result $expectedResType, found $inferredResType")
+            onTypeError(sourceRef, s"Expected the result $expectedResType, found $inferredResType")
             None
           } else {
             // All matches, return the unified operator type, which can be used as a result of type inference
@@ -226,8 +226,7 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
     def matchOneType: TlaType1 => Option[(Seq[TlaType1], TlaType1)] = {
       case operT@OperT1(paramTypes, resType) =>
         if (paramTypes.length != argTypes.length) {
-          listener.onTypeError(appEx.sourceRef,
-            "Expected %d arguments, found %d".format(paramTypes.length, argTypes.length))
+          onTypeError(appEx.sourceRef, "Expected %d arguments, found %d".format(paramTypes.length, argTypes.length))
           None
         } else {
           val renamedArgTypes = renameOnCollision(resType +: paramTypes, argTypes)
@@ -237,16 +236,16 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
               // However, we have to do plenty of tedious tests.
               // We do not allow type variables escaping the operator application.
               if (unifiedArgs.exists(_.usedNames.nonEmpty)) {
-                val usedNames = String.join(", ", unifiedArgs.flatMap(_.usedNames.map(i => VarT1(i).toString)): _*)
-                listener.onTypeError(appEx.sourceRef,
-                  s"Unresolved $usedNames in operator signature: $operT")
+                val usedNames = String.join(", ",
+                  unifiedArgs.flatMap(_.usedNames.map(i => VarT1(i).toString)): _*)
+                onTypeError(appEx.sourceRef, s"Unresolved $usedNames in operator signature: $operT")
                 None
               } else {
                 val subResType = sub(resType)
                 if (subResType.usedNames.nonEmpty) {
-                  val usedNames = String.join(", ", subResType.usedNames.toSeq.map(i => VarT1(i).toString): _*)
-                  listener.onTypeError(appEx.sourceRef,
-                    s"Unresolved $usedNames in operator signature: $operT")
+                  val usedNames = String.join(", ",
+                    subResType.usedNames.toSeq.map(i => VarT1(i).toString): _*)
+                  onTypeError(appEx.sourceRef, s"Unresolved $usedNames in operator signature: $operT")
                   None
                 } else {
                   Some((unifiedArgs, subResType))
@@ -265,11 +264,11 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
 
     if (matches.isEmpty) {
       val separated = String.join(", ", argTypes.map(_.toString): _*)
-      listener.onTypeError(appEx.sourceRef, "No matching signature for argument type(s): " + separated)
+      onTypeError(appEx.sourceRef, "No matching signature for argument type(s): " + separated)
       None
     } else if (matches.length > 1) {
       val separated = String.join(", ", argTypes.map(_.toString): _*)
-      listener.onTypeError(appEx.sourceRef,
+      onTypeError(appEx.sourceRef,
         s"${matches.length} matching signatures for argument type(s): $separated")
       None
     } else {
@@ -308,5 +307,9 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
 
       case _ =>
     }
+  }
+
+  private def onTypeError(sourceRef: EtcRef, message: String): Unit = {
+    listener.onTypeError(sourceRef, message)
   }
 }
