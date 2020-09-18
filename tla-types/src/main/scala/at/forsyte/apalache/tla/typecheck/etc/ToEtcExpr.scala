@@ -131,6 +131,25 @@ class ToEtcExpr extends EtcBuilder {
       // the set of all strings is SetT1(StrT1)
       mkConst(ExactRef(ex.ID), SetT1(StrT1()))
 
+    //**************************************** EMPTY SETS AND SEQUENCES ***********************************************
+    case OperEx(TypingOper.emptySet, ValEx(TlaStr(elemTypeText))) =>
+      try {
+        val elemType = type1Parser(elemTypeText)
+        mkConst(ExactRef(ex.ID), SetT1(elemType))
+      } catch {
+        case e: Type1ParseError =>
+          throw new TypingInputException(s"Parser error in Typing!EmptySet($elemTypeText): ${e.msg}")
+      }
+
+    case OperEx(TypingOper.emptySeq, ValEx(TlaStr(elemTypeText))) =>
+      try {
+        val elemType = type1Parser(elemTypeText)
+        mkConst(ExactRef(ex.ID), SeqT1(elemType))
+      } catch {
+        case e: Type1ParseError =>
+          throw new TypingInputException(s"Parser error in Typing!EmptySeq($elemTypeText): ${e.msg}")
+      }
+
     //******************************************** GENERAL OPERATORS **************************************************
     case OperEx(op, args @ _*) if op == TlaOper.eq || op == TlaOper.ne =>
       // x = y, x /= y
@@ -180,6 +199,10 @@ class ToEtcExpr extends EtcBuilder {
       mkApp(ExactRef(ex.ID), Seq(quantType), lambda)
 
     //******************************************** SETS **************************************************
+    case OperEx(TlaSetOper.enumSet) =>
+      // empty set {} is not an operator but a constant
+      mkConst(ExactRef(ex.ID), SetT1(VarT1("a")))
+
     case OperEx(TlaSetOper.enumSet, args @ _*) =>
       // { 1, 2, 3 }
       val a = VarT1("a")
@@ -281,6 +304,10 @@ class ToEtcExpr extends EtcBuilder {
       // (a, b) => [f1 |-> a, f2 |-> b]
       val sig = OperT1(typeVars, RecT1(fields.zip(typeVars) : _*))
       mkApp(ExactRef(ex.ID), Seq(sig), values: _*)
+
+    case OperEx(TlaFunOper.tuple) =>
+      // an empty sequence << >> is not an operator, but a polymorphic constant
+      mkConst(ExactRef(ex.ID), SeqT1(VarT1("a")))
 
     case OperEx(TlaFunOper.tuple, args @ _*) =>
       // <<e_1, ..., e_n>>

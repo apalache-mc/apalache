@@ -108,20 +108,29 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
       // let name = lambda x \in X, y \in Y, ...: boundEx in scopedEx
       case EtcLet(name, absEx@EtcAbs(boundEx, paramsAndDoms@_*), scopedEx) =>
         val extCtx =
-          if (ctx.types.contains(name)) {
-            // The definition has a type annotation
-            ctx
-          } else {
-            // Try to compute the type. If it fails, the user has to annotate the definition
-            val nargs = paramsAndDoms.length
-            val operType = OperT1(1.to(nargs).map(VarT1(_)), VarT1(nargs + 1))
-            new TypeContext(ctx.types + (name -> operType))
+          ctx.types.get(name) match {
+            case Some(OperT1(_, _)) =>
+              // the definition has a type annotation
+              ctx
+
+            case Some(someType: TlaType1) =>
+              // The definition has a type annotation which is not an operator. Assume it is a nullary operator.
+              // Strictly speaking, this is a hack. However, it is quite common to declare a constant with LET.
+              new TypeContext(ctx.types + (name -> OperT1(Seq(), someType)))
+
+            case None =>
+              // Try to compute the type. If it fails, the user has to annotate the definition
+              val nargs = paramsAndDoms.length
+              val operType = OperT1(1.to(nargs).map(VarT1(_)), VarT1(nargs + 1))
+              new TypeContext(ctx.types + (name -> operType))
           }
 
         for {
+          // unify the parameter types in the signature and the types of the actual parameters
           unifiedOperType <- matchDef(extCtx, ex.sourceRef, extCtx(name), paramsAndDoms, boundEx)
           _ <- Some(onTypeFound(absEx.sourceRef, unifiedOperType))
           uniCtx <- Some(new TypeContext(ctx.types + (name -> unifiedOperType)))
+          // compute the expression in the scope by assuming the instantiated signature
           result <- computeRec(uniCtx, scopedEx)
           _ <- Some(onTypeFound(ex.sourceRef, result))
         } yield result

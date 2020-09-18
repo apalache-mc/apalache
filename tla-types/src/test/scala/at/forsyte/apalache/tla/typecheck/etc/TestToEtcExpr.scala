@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.TlaFunOper
+import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TypingOper}
 import at.forsyte.apalache.tla.lir.values.TlaReal
 import at.forsyte.apalache.tla.typecheck._
 import at.forsyte.apalache.tla.typecheck.parser.DefaultType1Parser
@@ -157,6 +157,30 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     val ternary = parser("(a, a, a) => Set(a)")
     val expected = mkConstAppByType(ternary, parser("Int"), parser("Int"), parser("Int"))
     assert(expected == gen(tla.enumSet(tla.int(1), tla.int(2), tla.int(3))))
+  }
+
+  test("{}") {
+    val expected = mkUniqConst(parser("Set(a)"))
+    val result = gen(tla.enumSet())
+    assert(expected == result)
+  }
+
+  test("<<>>") {
+    val expected = mkUniqConst(parser("Seq(a)"))
+    val result = gen(tla.tuple())
+    assert(expected == result)
+  }
+
+  test("EmptySet(Int)") {
+    val expected = mkUniqConst(parser("Set(Int)"))
+    val result = gen(OperEx(TypingOper.emptySet, tla.str("Int")))
+    assert(expected == result)
+  }
+
+  test("EmptySeq(Int)") {
+    val expected = mkUniqConst(parser("Seq(Int)"))
+    val result = gen(OperEx(TypingOper.emptySeq, tla.str("Int")))
+    assert(expected == result)
   }
 
   test("[S -> T]") {
