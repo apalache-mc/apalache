@@ -10,6 +10,11 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 
+/**
+  * Unit tests for translating TLA+ expressions to EtcExpr.
+  *
+  * @author Igor Konnov
+  */
 @RunWith(classOf[JUnitRunner])
 class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
   var parser: Type1Parser = _

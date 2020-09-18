@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.typecheck._
+import at.forsyte.apalache.tla.typecheck.parser.{DefaultType1Parser, Type1ParseError}
 
 /**
   * ToSTCExpr takes a TLA+ expression and produces an STCExpr.
@@ -15,6 +16,77 @@ import at.forsyte.apalache.tla.typecheck._
   * @author Igor Konnov
   */
 class ToEtcExpr extends EtcBuilder {
+  private val type1Parser = DefaultType1Parser
+
+  // TODO: add support for recursive functions
+
+  /**
+    * Translate an operator declaration.
+    *
+    * @param decl an operator declaration
+    * @param inScopeEx an expression to chain in the bottom of let-definition, it should have been translated
+    * @return the translated let-in expression with inScopeEx attached
+    */
+  def apply(decl: TlaOperDecl, inScopeEx: EtcExpr): EtcExpr = {
+    val paramsAndDoms = formalParamsToTypeVars(0, decl.formalParams).map {
+      case (paramName, paramType) =>
+        (paramName, mkConst(BlameRef(decl.body.ID), SetT1(paramType)) )
+    }
+
+    if (decl.name.startsWith("TypeAssumptions")) {
+      // the special form for type annotations over state variables and constants
+      parseTypeAssumptions(decl, inScopeEx)
+    } else {
+      // The type of the lambda is what we want to see as the type of the declaration.
+      // There are two cases: (1) the definition body contains a type annotation, and (2) no type annotation
+      decl.body match {
+        case OperEx(TypingOper.withType, ValEx(TlaStr(typeText)), body) =>
+          // case 1: the definition body contains a type annotation
+          val parsedType =
+            try {
+              type1Parser(typeText)
+            } catch {
+              case e: Type1ParseError =>
+                throw new TypingInputException(s"Parser error in type annotation of ${decl.name}: ${e.msg}")
+            }
+
+          val lambda = mkAbs(ExactRef(body.ID), this (body), paramsAndDoms: _*)
+          val letIn = mkLet(BlameRef(body.ID), decl.name, lambda, inScopeEx)
+          mkTypeDecl(ExactRef(decl.body.ID), decl.name, parsedType, letIn)
+
+        case _ =>
+          // case 2: no type annotation
+          val lambda = mkAbs(ExactRef(decl.body.ID), this (decl.body), paramsAndDoms: _*)
+          mkLet(BlameRef(decl.body.ID), decl.name, lambda, inScopeEx)
+      }
+    }
+  }
+
+  // parse the type annotations inside TypeAssumptions
+  private def parseTypeAssumptions(decl: TlaOperDecl, inScopeEx: EtcExpr): EtcExpr = {
+    decl.body match {
+      case OperEx(TlaBoolOper.and, args @ _*) =>
+        val annotations =
+          args.collect { case OperEx(TypingOper.assumeType, NameEx(name), ValEx(TlaStr(typeText))) =>  (name, typeText) }
+        if (annotations.length != args.length) {
+          throw new TypingInputException(s"""Error in ${decl.name}: Expected AssumeType(varName, "typeString")""")
+        } else {
+          annotations.foldRight(inScopeEx) {
+            case ((name, typeText), terminal) =>
+              try {
+                val tt = type1Parser(typeText)
+                mkTypeDecl(ExactRef(decl.body.ID), name, tt, terminal)
+              } catch {
+                case e: Type1ParseError =>
+                  throw new TypingInputException(s"Parser error in type annotation of $name: ${e.msg}")
+              }
+          }
+        }
+
+      case _ =>
+        throw new TypingInputException(s"""Error in ${decl.name}: Expected /\ AssumeType(varName, "typeString") /\ ...""")
+    }
+  }
 
   // TODO: a long string of translation rules. Can we decompose it?
   def apply(ex: TlaEx): EtcExpr = ex match {
@@ -65,9 +137,12 @@ class ToEtcExpr extends EtcBuilder {
       val opsig = OperT1(Seq(VarT1("a"), VarT1("a")), BoolT1())
       mkApp(ex.ID, opsig, args)
 
-    case OperEx(TlaOper.apply, opName, args @ _*) =>
+    case OperEx(TlaOper.apply, NameEx(name), args @ _*) =>
       // F(e_1, ..., e_n)
-      mkAppByName(ex.ID, opName, args)
+      mkAppByName(ExactRef(ex.ID), name, args.map(this(_)) :_*)
+
+    case OperEx(TlaOper.apply, opName, args @ _*) =>
+      throw new TypingException("Bug in ToSTCExpr. Expected an operator name, found: " + opName)
 
     case OperEx(TlaOper.chooseBounded, NameEx(bindingVar), bindingSet, pred) =>
       // CHOOSE x \in S: P
@@ -79,8 +154,8 @@ class ToEtcExpr extends EtcBuilder {
       mkApp(ExactRef(ex.ID), Seq(chooseType), chooseLambda)
 
     //******************************************** LET-IN ****************************************************
-    case LetInEx(body, decls @ _*) =>
-      translateTlaDecl(decls, body)
+    case LetInEx(body, declarations @ _*) =>
+      declarations.foldRight(this(body)) { case (decl, term) => this(decl, term) }
 
     //******************************************** BOOLEANS **************************************************
     case OperEx(op, args @ _*)
@@ -458,35 +533,27 @@ class ToEtcExpr extends EtcBuilder {
       mkApp(ex.ID, opsig, Seq(varName, act))
 
     //******************************************** MISC **************************************************
+    case wte @ OperEx(TypingOper.withType, _*) =>
+      throw new TypingInputException("Found a type annotation in an unexpected place: " + wte)
+
     case _ =>
       mkConst(ExactRef(ex.ID), VarT1("a"))
   }
 
-  private def translateTlaDecl(ds: Seq[TlaOperDecl], terminal: TlaEx): EtcExpr = {
-    def translateParams(start: Int, params: Seq[FormalParam]): Seq[(String, TlaType1)] = {
-      params match {
-        case Seq() => Seq()
+  // Translate a sequence of formal parameters into type variables
+  private def formalParamsToTypeVars(start: Int, params: Seq[FormalParam]): Seq[(String, TlaType1)] = {
+    params match {
+      case Seq() => Seq()
 
-        case SimpleFormalParam(name) +: tail =>
-          // a simple parameter, just introduce a new variable, e.g., b
-          val paramType = VarT1(start)
-          (name, paramType) +: translateParams(start + 1, tail)
+      case SimpleFormalParam(name) +: tail =>
+        // a simple parameter, just introduce a new variable, e.g., b
+        val paramType = VarT1(start)
+        (name, paramType) +: formalParamsToTypeVars(start + 1, tail)
 
-        case OperFormalParam(name, arity) +: tail =>
-          // a higher-order operator, introduce an operator type (b, c, ...) => z
-          val paramType = OperT1(mkBoundVars(start, arity), VarT1(start + arity))
-          (name, paramType) +: translateParams(start + 1 + arity, tail)
-      }
-    }
-
-    ds match {
-      case Seq() => this(terminal)
-
-      case first +: rest =>
-        val paramsAndDoms = translateParams(0, first.formalParams).
-          map(p => (p._1, mkConst(BlameRef(first.body.ID), SetT1(p._2)) ))
-        val lambda = mkAbs(ExactRef(first.body.ID), this(first.body), paramsAndDoms :_*)
-        mkLet(BlameRef(first.body.ID), first.name, lambda, translateTlaDecl(rest, terminal))
+      case OperFormalParam(name, arity) +: tail =>
+        // a higher-order operator, introduce an operator type (b, c, ...) => z
+        val paramType = OperT1(mkBoundVars(start, arity), VarT1(start + arity))
+        (name, paramType) +: formalParamsToTypeVars(start + 1 + arity, tail)
     }
   }
 
@@ -496,12 +563,5 @@ class ToEtcExpr extends EtcBuilder {
 
   private def mkApp(uid: UID, sig: OperT1, args: Seq[TlaEx]): EtcExpr = {
     mkApp(ExactRef(uid), Seq(sig), args.map(this(_)) :_*)
-  }
-
-  private def mkAppByName(uid: UID, opName: TlaEx, args: Seq[TlaEx]): EtcExpr = {
-    opName match {
-      case NameEx(name) => mkAppByName(ExactRef(uid), name, args.map(this(_)) :_*)
-      case _ => throw new RuntimeException("Bug in ToSTCExpr. Expected opName, found: " + opName)
-    }
   }
 }

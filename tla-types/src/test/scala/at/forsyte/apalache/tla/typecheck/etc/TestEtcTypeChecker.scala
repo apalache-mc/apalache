@@ -530,4 +530,20 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
       assert(computed.contains(parser("Int -> Int")))
     }
   }
+
+  test("check type declaration") {
+    val scopedEx = mkUniqName("foo")
+    val typeDecl = mkUniqTypeDecl("foo", parser("Set(Int)"), scopedEx)
+    val listener = mock[TypeCheckerListener]
+    expecting {
+      listener.onTypeFound(typeDecl.sourceRef.asInstanceOf[ExactRef], parser("Set(Int)")).atLeastOnce()
+      // The scoped expression is not reported in this case, as a name may be refined by unification.
+      // Is it the expected behavior?
+      //      listener.onTypeFound(scopedEx.sourceRef.asInstanceOf[ExactRef], parser("Set(Int)")).atLeastOnce()
+    }
+    whenExecuting(listener) {
+      val computed = checker.compute(listener, TypeContext.empty, typeDecl)
+      assert(computed.contains(parser("Set(Int)")))
+    }
+  }
 }

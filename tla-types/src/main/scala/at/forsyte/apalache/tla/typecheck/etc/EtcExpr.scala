@@ -26,7 +26,6 @@ sealed trait EtcExpr {
   */
 case class EtcConst(polytype: TlaType1)(val sourceRef: EtcRef) extends EtcExpr {
   override def toString: String = {
-//    tlaId + "@(" + String.join(" | ", types.map(_.toString): _*) + ")"
     s"$sourceRef@$polytype"
   }
 }
@@ -97,5 +96,22 @@ case class EtcAppByName(name: String, args: EtcExpr*)(val sourceRef: EtcRef) ext
 case class EtcLet(name: String, bound: EtcExpr, body: EtcExpr)(val sourceRef: EtcRef) extends EtcExpr {
   override def toString: String = {
     "%s@let %s = %s in %s".format(sourceRef, name, bound, body)
+  }
+}
+
+/**
+  * A built-in type annotation for a name. In a programming language, like Scala, a type annotation is usually
+  * given right in the declaration. In the TLA+ case, type declarations are not part of the language.
+  * That is why we separate EtcTypeDecl from EtcLet. In a TLA+ specification, a type annotation may be placed
+  * far away from the variable declaration.
+  *
+  * @param name a name, with which the type is associated
+  * @param declaredType the type to be associated with the name
+  * @param scopedEx the expression in the scope of the type declaration
+  * @param sourceRef a reference to the original expression
+  */
+case class EtcTypeDecl(name: String, declaredType: TlaType1, scopedEx: EtcExpr)(val sourceRef: EtcRef) extends EtcExpr {
+  override def toString: String = {
+    "%s@%s: %s in %s".format(sourceRef, name, declaredType, scopedEx)
   }
 }

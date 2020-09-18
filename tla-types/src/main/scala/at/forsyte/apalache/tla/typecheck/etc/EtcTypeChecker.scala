@@ -58,6 +58,11 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
       case EtcConst(polytype) =>
         Some(polytype) // propagate backwards, some variables may be still not assigned
 
+      // an inline type declaration
+      case EtcTypeDecl(name: String, declaredType: TlaType1, scopedEx: EtcExpr) =>
+        val extCtx = new TypeContext(ctx.types + (name -> declaredType))
+        computeRec(extCtx, scopedEx)
+
       // a variable name, either an operator name, or a variable introduced by lambda (STCAbs)
       case EtcName(name) =>
         if (ctx.types.contains(name)) {

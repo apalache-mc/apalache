@@ -83,4 +83,16 @@ trait EtcBuilder {
   def mkBlameLet(name: String, bound: EtcExpr, body: EtcExpr): EtcLet = {
     mkLet(BlameRef(UID.unique), name, bound, body)
   }
+
+  def mkTypeDecl(sourceRef: EtcRef, name: String, declaredType: TlaType1, scopedEx: EtcExpr): EtcTypeDecl = {
+    EtcTypeDecl(name, declaredType, scopedEx) (sourceRef)
+  }
+
+  def mkUniqTypeDecl(name: String, declaredType: TlaType1, scopedEx: EtcExpr): EtcTypeDecl = {
+    mkTypeDecl(ExactRef(UID.unique), name, declaredType, scopedEx)
+  }
+
+  def mkBlameTypeDecl(name: String, declaredType: TlaType1, scopedEx: EtcExpr): EtcTypeDecl = {
+    mkTypeDecl(BlameRef(UID.unique), name, declaredType, scopedEx)
+  }
 }
