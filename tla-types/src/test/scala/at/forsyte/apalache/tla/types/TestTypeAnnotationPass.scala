@@ -81,12 +81,21 @@ class TestTypeAnnotationPass extends FunSuite with TestingPredefs with BeforeAnd
     testFromFile( "realSpecs/Paxos.tla" )
   }
 
-//  test( "Test: Blockchain" ) {
+//  ignore( "Test: Blockchain" ) {
 //    testFromFile( "realSpecs/BlockchainP1.tla" )
 //  }
 //
-//  test( "Test: test7.tla (Lightclient)" ) {
+//  ignore( "Test: test7.tla (Lightclient)" ) {
 //    testFromFile( "test7.tla" )
 //  }
+
+  test( "Test: testReviewer.tla" ) {
+    assertThrows[TestFailedException] {
+      testFromFile( "testReviewer.tla" )
+    }
+  }
+  test( "Test: testReviewerCorrect.tla" ) {
+    testFromFile( "testReviewerCorrect.tla" )
+  }
 
 }

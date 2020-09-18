@@ -249,7 +249,8 @@ object UTFPrinter extends Printer {
     def pr_param(p: FormalParam): String = {
       val arity = p.arity
       val params =
-        if (arity == 0) "" else "(%s)".format(1.to(arity).map("_").mkString(", "))
+        if ( arity == 0 ) ""
+        else "(%s)".format( Seq.fill( arity )( "_" ).mkString( ", " ) )
       p.name + params
     }
 
@@ -312,7 +313,7 @@ object SimplePrinter extends Printer {
       case _ => p_str
     }
   }
-  
+
   override def apply( p_ex : TlaEx ) : String = UTFPrinter.apply( p_ex ).map( c => getSimple(c.toString ) ).mkString
 }
 
