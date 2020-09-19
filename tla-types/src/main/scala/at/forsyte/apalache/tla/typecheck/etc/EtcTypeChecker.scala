@@ -292,9 +292,10 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
       onTypeError(appEx.sourceRef, "No matching signature for argument type(s): " + separated)
       None
     } else if (matches.length > 1) {
-      val separated = String.join(", ", argTypes.map(_.toString): _*)
+      val separatedArgs = String.join(", ", argTypes.map(_.toString): _*)
+      val separatedSigs = String.join(" and ", matches.map(p => OperT1(p._1, p._2).toString()) :_*)
       onTypeError(appEx.sourceRef,
-        s"${matches.length} matching signatures for argument type(s): $separated")
+        s"Argument type(s) $separatedArgs have ${matches.length} signatures: " + separatedSigs)
       None
     } else {
       // all good

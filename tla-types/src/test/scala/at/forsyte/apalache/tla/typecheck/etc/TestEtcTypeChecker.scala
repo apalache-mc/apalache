@@ -161,7 +161,7 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
     val listener = mock[TypeCheckerListener]
     expecting {
       listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef],
-        "2 matching signatures for argument type(s): Int")
+        "Argument type(s) Int have 2 signatures: (Int) => Int and (Int) => Bool")
     }
     whenExecuting(listener) {
       val computed = checker.compute(listener, TypeContext.empty, app)

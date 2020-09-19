@@ -171,7 +171,7 @@ annotate an operator, we prepend its body with `##` (as proposed by
 
 ```tla
 Mem(e, es) == "(a, Seq(a)) => Bool" :>
-    e \in {es[i]: i \in DOMAIN es}
+    (e \in {es[i]: i \in DOMAIN es})
 ```
 
 Higher-order operators are also easy to annotate:
@@ -229,17 +229,25 @@ However, there are a few pathological cases. For example:
 ```tla
 /\ \E x \in {}: x > 1
 /\ f = [x \in {} |-> 2]
+/\ z \in DOMAIN << >>
 ```
 
-In these rare cases, you can wrap the problematic expression with `LET-IN` and
-annotate this auxillary operator:
+In these rare cases, use the auxillary operators in the module `Typing`:
 
 ```tla
-/\ LET Empty == "() => Set(Int)" :> {} IN
-    \E x \in Empty: x > 1
-/\ LET Empty == "() => Set(Str)" :> {} IN
-    f = [x \in Empty |-> 2]
+EXTENDS Typing
+...
+
+/\ \E x \in EmptySet("Int"): x > 1
+/\ f = [x \in EmptySet("Str") |-> 2]
+/\ z \in DOMAIN EmptySeq("Int")
 ```
+
+The type checker uses the type annotation to refine the type of an empty set
+(or, of an empty sequence). To keep compatibility with TLC and other tools,
+the module `Typing` defines the operators `EmptySet(...)` and `EmptySeq(...)`
+as `{}` and `<<>>>`, respectively. However, the type checker overrides these
+definitions with the refined types.
 
 ## 3. Example
 
