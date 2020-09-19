@@ -1,7 +1,7 @@
 # a good old Makefile for the end users, as Maven is too much pain
 
 DEPDIR=3rdparty
-DEPS=$(DEPDIR)/lib/com.microsoft.z3.jar $(DEPDIR)/lib/box.jar
+DEPS=$(DEPDIR)/lib
 ENV=JAVA_LIBRARY_PATH="$(abspath $(DEPDIR)/lib)" NO_MVN=1 LD_LIBRARY_PATH="$(abspath $(DEPDIR)/lib)"
 
 # See https://www.jrebel.com/blog/how-to-speed-up-your-maven-build
@@ -43,11 +43,7 @@ integration: apalache
 clean:
 	mvn clean
 
-$(DEPDIR)/lib/com.microsoft.z3.jar:
-	# install microsoft z3
-	cd "$(DEPDIR)" && ./install-local.sh
-
-$(DEPDIR)/lib/box.jar:
+$(DEPDIR)/lib:
+	mkdir -p $(DEPDIR)/lib
 	# install box by Jure (fix in the future!)
 	cd "$(DEPDIR)" && ./install-local.sh
-

@@ -46,10 +46,6 @@
             <artifactId>tla2tools</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.microsoft</groupId>
-            <artifactId>z3</artifactId>
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
@@ -58,6 +54,10 @@
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_${scalaBinaryVersion}</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.tudo-aqua</groupId>
+            <artifactId>z3-turnkey</artifactId>
         </dependency>
     </dependencies>
 </project>

@@ -40,8 +40,8 @@
             <artifactId>tla2tools</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.microsoft</groupId>
-            <artifactId>z3</artifactId>
+            <groupId>io.github.tudo-aqua</groupId>
+            <artifactId>z3-turnkey</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

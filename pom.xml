@@ -126,12 +126,12 @@
                 <version>1.6.0-SNAPSHOT</version>
             </dependency>
 
-            <!-- Dependencies that are not available from the Maven repository, see 3rdparty/README.md -->
-
+            <!-- Z3-TurnKey provides Z3 and the integration of its Java API in
+                 a portable way. See https://github.com/tudo-aqua/z3-turnkey -->
             <dependency>
-                <groupId>com.microsoft</groupId>
-                <artifactId>z3</artifactId>
-                <version>4.8.7</version>
+                <groupId>io.github.tudo-aqua</groupId>
+                <artifactId>z3-turnkey</artifactId>
+                <version>4.8.7.1</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
