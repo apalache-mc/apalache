@@ -15,11 +15,13 @@ QUICK_MAVEN_OPTS := "-XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:non
 # - run up to 4 threads per core (4C): https://cwiki.apache.org/confluence/display/MAVEN/Parallel+builds+in+Maven+3
 QUICK_MAVEN_ARGS := -DskipTests -Dscoverage.skip=true -T 4C
 
-.PHONY: all apalache compile build-quick test integration clean
+.PHONY: all apalache compile build-quick test integration clean deps
 
 all: apalache
 
-apalache: $(DEPS)
+deps: $(DEPS)
+
+apalache: deps
 	# tell maven to load the binary libraries and build the package
 	$(ENV) mvn package
 
