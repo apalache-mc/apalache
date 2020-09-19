@@ -352,13 +352,22 @@ class ToEtcExpr extends EtcBuilder {
         case (_, i) if i % 2 == 0 => throw new IllegalArgumentException("Expected NameEx(_) as a var name")
       }
       val sets = args.zipWithIndex.filter(_._2 % 2 == 1).map(_._1)
-      val typeVars = mkBoundVars(1, sets.length) // start with "b", as "a" goes to the result
-      // the principal type of is ((b, c) => a) => (<<b, c>> -> a)
-      val principal = OperT1(Seq(OperT1(typeVars, VarT1("a"))),
-        FunT1(TupT1(typeVars :_*), VarT1("a")))
-      // the function definition implicitly introduces a lambda abstraction: λ x ∈ S, y ∈ T. e
-      val lambda = mkAbs(BlameRef(mapExpr.ID), this(mapExpr), boundVarNames.zip(sets).map(p => (p._1, this(p._2))) :_*)
-      mkApp(ExactRef(ex.ID), Seq(principal), lambda)
+      if (boundVarNames.length == 1) {
+        // the principal type of is (b => a) => (b -> a)
+        val typeVar = VarT1(1)
+        val principal = OperT1(Seq(OperT1(Seq(typeVar), VarT1("a"))), FunT1(typeVar, VarT1("a")))
+        // the function definition implicitly introduces a lambda abstraction: λ x ∈ S, y ∈ T. e
+        val lambda = mkAbs(BlameRef(mapExpr.ID), this(mapExpr), boundVarNames.zip(sets).map(p => (p._1, this(p._2))) :_*)
+        mkApp(ExactRef(ex.ID), Seq(principal), lambda)
+      } else {
+        // the principal type of is ((b, c) => a) => (<<b, c>> -> a)
+        val typeVars = mkBoundVars(1, sets.length) // start with "b", as "a" goes to the result
+        val principal = OperT1(Seq(OperT1(typeVars, VarT1("a"))),
+          FunT1(TupT1(typeVars :_*), VarT1("a")))
+        // the function definition implicitly introduces a lambda abstraction: λ x ∈ S, y ∈ T. e
+        val lambda = mkAbs(BlameRef(mapExpr.ID), this(mapExpr), boundVarNames.zip(sets).map(p => (p._1, this(p._2))) :_*)
+        mkApp(ExactRef(ex.ID), Seq(principal), lambda)
+      }
 
     case OperEx(TlaFunOper.except, fun, args @ _*) =>
       // the hardest expression: [f EXCEPT ![e1] = e2, ![e3] = e4, ...]

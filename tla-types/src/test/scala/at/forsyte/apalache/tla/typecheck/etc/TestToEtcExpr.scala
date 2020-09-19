@@ -335,6 +335,17 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     assert(expected == gen(tuple))
   }
 
+  test("one-argument function definition [ x \\in S |-> e ]") {
+    // the principal type is (b => a) => (b -> a)
+    val principal =  parser("(b => a) => (b -> a)")
+    // map implicitly introduces a lambda abstraction: λ x ∈ S. e
+    val lambda = mkUniqAbs(mkUniqName("e"), ("x", mkUniqName("S")))
+    // the resulting expression is ((b => a) => (b -> a)) (λ x ∈ S. e)
+    val expected = mkUniqApp(Seq(principal), lambda)
+    val fun = tla.funDef(tla.name("e"), tla.name("x"), tla.name("S"))
+    assert(expected == gen(fun))
+  }
+
   test("function definition [ x \\in S, y \\in T |-> e ]") {
     // the principal type is ((b, c) => a) => (<<b, c>> -> a)
     val principal =  parser("((b, c) => a) => (<<b, c>> -> a)")
