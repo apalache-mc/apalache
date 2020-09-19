@@ -83,7 +83,7 @@ class TypeUnifier {
         if (other != c) None else Some(c)
 
         // variables contribute to the solutions
-      case (lvar @ VarT1(lname), VarT1(rname)) =>
+      case (lvar @ VarT1(lname), rvar @ VarT1(rname)) =>
         (solution.get(lname), solution.get(rname)) match {
           case (Some(lvalue), Some(rvalue)) =>
             if (insert(lname, rvalue) && insert(rname, lvalue)) {
@@ -101,10 +101,17 @@ class TypeUnifier {
             Some(rvalue)
 
           case (None, None) =>
-            if (lname != rname) {
-              insert(rname, lvar) // unify b with a in the solution, to reduce the number of variables
+            // assign one variable to another, while preserving the variable order
+            if (lname > rname) {
+              insert(lname, rvar) // b <- a, as in our type checking, b is more precise
+              Some(rvar)
+            } else if (lname < rname) {
+              insert(rname, lvar) // b <- a
+              Some(lvar)
+            } else {
+              // else it is the same variable, do nothing
+              Some(lvar)
             }
-            Some(lvar)
         }
 
       case (VarT1(name), other) =>

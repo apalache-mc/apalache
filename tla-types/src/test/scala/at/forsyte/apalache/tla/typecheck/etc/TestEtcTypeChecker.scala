@@ -57,6 +57,21 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
     }
   }
 
+  test("well-typed polymorphic application") {
+    val oper = parser("a => Seq(a)")
+    val arg = mkUniqConst(parser("Set(b)")) // the argument is parameterized itself
+    val app = mkUniqApp(Seq(oper), arg)
+    val listener = mock[TypeCheckerListener]
+    expecting {
+      listener.onTypeFound(arg.sourceRef.asInstanceOf[ExactRef], parser("Set(b)"))
+      listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("Seq(Set(b))"))
+    }
+    whenExecuting(listener) {
+      val computed = checker.compute(listener, TypeContext.empty, app)
+      assert(computed.contains(parser("Seq(Set(b))")))
+    }
+  }
+
   test("ill-typed application") {
     val oper = parser("Int => Int")
     val arg = mkUniqConst(BoolT1())
@@ -72,13 +87,13 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
   }
 
   test("unresolved argument") {
-    val oper = parser("a => Int")
+    val oper = parser("a => c")
     val arg = mkUniqConst(parser("b"))
     val app = mkUniqApp(Seq(oper), arg)
     val listener = mock[TypeCheckerListener]
     expecting {
       listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef],
-        "Unresolved a in operator signature: (a) => Int")
+        "Unresolved e in operator signature: (c) => e")
       listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef],
         "No matching signature for argument type(s): b")
     }
@@ -276,13 +291,13 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
         parser("Int")).atLeastOnce()
       // the signature a => a gives us the polymorhic type of x
       listener.onTypeFound(xInF.sourceRef.asInstanceOf[ExactRef],
-        parser("b")).atLeastOnce()
+        parser("a")).atLeastOnce()
       // the signature a => a gives us the polymorphic type of xDomain
       listener.onTypeFound(xDomain.sourceRef.asInstanceOf[ExactRef],
-        parser("Set(b)")).atLeastOnce()
+        parser("Set(a)")).atLeastOnce()
       // the signature a => a gives us the polymorphic type for the definition of F
       listener.onTypeFound(fBody.sourceRef.asInstanceOf[ExactRef],
-        parser("b => b")).atLeastOnce()
+        parser("a => a")).atLeastOnce()
       // interestingly, we do not infer the type of F at the application site
 //      listener.onTypeFound(fBody.tlaId, parser("Int => Int")).atLeastOnce()
       // the overall result of LET-IN
@@ -415,7 +430,7 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
     val listener = mock[TypeCheckerListener]
     expecting {
       listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef],
-        "Unresolved a in operator signature: (Seq(a)) => Set(a)")
+        "Unresolved b in operator signature: (Seq(b)) => Set(b)")
       listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef],
         "No matching signature for argument type(s): a")
     }

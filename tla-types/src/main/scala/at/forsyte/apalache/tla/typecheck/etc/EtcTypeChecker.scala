@@ -178,8 +178,10 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
         } else {
           // unify optParamTypes with element types
           val elemTypes = bindingTypes.map(_._2)
-          val renamedElemTypes = renameOnCollision(optParamTypes.get, elemTypes)
-          typeUnifier.unify(Substitution.empty, renamedElemTypes.zip(optParamTypes.get)).collect {
+          val uniqueSub = uniqueSubstitution(optParamTypes.get, elemTypes)
+          val uniqueElemTypes = elemTypes.map(uniqueSub(_))
+
+          typeUnifier.unify(Substitution.empty, uniqueElemTypes.zip(optParamTypes.get)).collect {
             case (sub, unifiedArgs) =>
               // all good, extend the context with the bindings for the lambda variables
               val bindings = bindingTypes.map(_._1).zip(unifiedArgs)
@@ -243,23 +245,32 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
           onTypeError(appEx.sourceRef, "Expected %d arguments, found %d".format(paramTypes.length, argTypes.length))
           None
         } else {
-          val renamedArgTypes = renameOnCollision(resType +: paramTypes, argTypes)
-          typeUnifier.unify(Substitution.empty, paramTypes.zip(renamedArgTypes)) match {
+          // Make sure that the operator signatures does not clash with the arguments on the free variables.
+          // To this end, we may rename the free variables in the operator signature.
+          val paramSub = uniqueSubstitution(argTypes, resType +: paramTypes)
+          val renResType = paramSub(resType)
+          val renParamTypes = paramTypes.map(paramSub(_))
+          val renOperT = paramSub(operT)
+          // freeVars are the free variables in the signature, which must be resolved.
+          // Note that argTypes also may have free variables; they may stay unresolved at this level
+          val freeVars = renParamTypes.foldLeft(renResType.usedNames) { (s, t) => s ++ t.usedNames}
+
+          typeUnifier.unify(Substitution.empty, renParamTypes.zip(argTypes)) match {
             case Some((sub, unifiedArgs)) =>
+              def unresolved(t: TlaType1) = t.usedNames.intersect(freeVars).map(i => VarT1(i).toString)
+
               // Tadaaa. The operator arguments match one of its signatures.
               // However, we have to do plenty of tedious tests.
               // We do not allow type variables escaping the operator application.
-              if (unifiedArgs.exists(_.usedNames.nonEmpty)) {
-                val usedNames = String.join(", ",
-                  unifiedArgs.flatMap(_.usedNames.map(i => VarT1(i).toString)): _*)
-                onTypeError(appEx.sourceRef, s"Unresolved $usedNames in operator signature: $operT")
+              if (unifiedArgs.exists(_.usedNames.intersect(freeVars).nonEmpty)) {
+                val usedNames = String.join(", ", unifiedArgs.flatMap(unresolved): _*)
+                onTypeError(appEx.sourceRef, s"Unresolved $usedNames in operator signature: $renOperT")
                 None
               } else {
-                val subResType = sub(resType)
-                if (subResType.usedNames.nonEmpty) {
-                  val usedNames = String.join(", ",
-                    subResType.usedNames.toSeq.map(i => VarT1(i).toString): _*)
-                  onTypeError(appEx.sourceRef, s"Unresolved $usedNames in operator signature: $operT")
+                val subResType = sub(renResType)
+                if (subResType.usedNames.intersect(freeVars).nonEmpty) {
+                  val usedNames = String.join(", ", unresolved(subResType).toSeq: _*)
+                  onTypeError(appEx.sourceRef, s"Unresolved $usedNames in operator signature: $renOperT")
                   None
                 } else {
                   Some((unifiedArgs, subResType))
@@ -297,20 +308,18 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
     }
   }
 
-  // if primary and secondary intersect on the sets of used variables, renamed secondary to ensure non-intersection
-  private def renameOnCollision(primary: Seq[TlaType1], secondary: Seq[TlaType1]): Seq[TlaType1] = {
+  // if primary and secondary intersect on the sets of used variables, produce a substitution that renames secondary
+  private def uniqueSubstitution(primary: Seq[TlaType1], secondary: Seq[TlaType1]): Substitution = {
     val pInt = TlaType1.joinVarIntervals(primary :_*)
     val sInt = TlaType1.joinVarIntervals(secondary :_*)
     if (pInt._2 > sInt._1 || sInt._2 > pInt._1) {
-      // the intervals intersect, simply shift the variable indices
-      def subFun: PartialFunction[Int, VarT1] = {
-        case i => VarT1(i + pInt._2)
-      }
-
-      secondary.map(Substitution.mk(subFun)(_))
+      val usedVars = secondary.foldLeft(Set[Int]()) { case (s, t) => s ++ t.usedNames }
+      // shift the variable indices
+      val shift = usedVars.toSeq.map(i => i -> VarT1(i + pInt._2))
+      Substitution(shift :_*)
     } else {
       // no intersection
-      secondary
+      Substitution()
     }
   }
 
