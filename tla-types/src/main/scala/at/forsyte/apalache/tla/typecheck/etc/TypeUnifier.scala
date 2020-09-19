@@ -76,11 +76,9 @@ class TypeUnifier {
       case (RealT1(), RealT1()) =>
         Some(RealT1())
 
-      case (c @ ConstT1(_), other) =>
-        if (other != c) None else Some(c)
-
-      case (other, c @ ConstT1(_)) =>
-        if (other != c) None else Some(c)
+      case (c @ ConstT1(lname), ConstT1(rname)) =>
+        // uninterpreted constant types must have the same name
+        if (lname != rname) None else Some(c)
 
         // variables contribute to the solutions
       case (lvar @ VarT1(lname), rvar @ VarT1(rname)) =>

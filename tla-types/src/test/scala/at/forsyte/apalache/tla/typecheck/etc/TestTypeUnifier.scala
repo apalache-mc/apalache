@@ -70,6 +70,10 @@ class TestTypeUnifier  extends FunSuite with EasyMockSugar with BeforeAndAfterEa
       .contains((Substitution(0 -> IntT1()), IntT1())))
     assert(unifier.unify(Substitution.empty, FunT1(VarT1(0), IntT1()), FunT1(BoolT1(), VarT1(1)))
       .contains((Substitution(0 -> BoolT1(), 1 -> IntT1()), FunT1(BoolT1(), IntT1()))))
+    assert(unifier.unify(Substitution.empty, VarT1(0), ConstT1("ID"))
+      .contains((Substitution(0 -> ConstT1("ID")), ConstT1("ID"))))
+    assert(unifier.unify(Substitution.empty, ConstT1("ID"), VarT1(0))
+      .contains((Substitution(0 -> ConstT1("ID")), ConstT1("ID"))))
 
     val rec1 = parser("[foo: Bool]")
     val rec2 = parser("[bar: Int]")
