@@ -177,7 +177,8 @@ class TypeUnifier {
 
         // sparse tuples consume tuples
       case (l @ SparseTupT1(_), TupT1(relems @ _*)) =>
-        compute(l, SparseTupT1(SortedMap(relems.zipWithIndex.map(p => (p._2, p._1)) :_*)))
+        // remember that tuples indices are starting with 1, not 0
+        compute(l, SparseTupT1(SortedMap(relems.zipWithIndex.map(p => (1 + p._2, p._1)) :_*)))
 
         // sparse tuples consume tuples
       case (l @ TupT1(_), r @ SparseTupT1(_)) =>
