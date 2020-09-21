@@ -68,7 +68,7 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
         if (ctx.types.contains(name)) {
           Some(ctx.types(name)) // propagate the type upwards
         } else {
-          onTypeError(ex.sourceRef, s"Undefined name $name")
+          onTypeError(ex.sourceRef, s"Undefined name $name. Introduce a type annotation.")
           None
         }
 
@@ -90,7 +90,7 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
         if (ctx.types.contains(name)) {
           computeRec(ctx, mkApp(ex.sourceRef, Seq(ctx.types(name)), args: _*))
         } else {
-          onTypeError(ex.sourceRef, s"Undefined operator name $name")
+          onTypeError(ex.sourceRef, s"Undefined operator name $name. Introduce a type annotation.")
           None
         }
 
