@@ -61,10 +61,16 @@ class TestTypeUnifier  extends FunSuite with EasyMockSugar with BeforeAndAfterEa
     assert(unifier.unify(Substitution.empty, intAndBoolToInt, boolAndIntToInt).isEmpty)
     val tup1 =  parser("<<Int, Bool>>")
     val tup2 =  parser("<<Int, Str>>")
+    val tup3 =  parser("<<Str, Int>>")
     assert(unifier.unify(Substitution.empty, tup1, tup2).isEmpty)
+    assert(unifier.unify(Substitution.empty, tup2, tup3).isEmpty)
+
     val sparse1 = parser("{2: Int, 4: Bool}")
     val sparse2 = parser("{2: Int, 4: Int}")
     assert(unifier.unify(Substitution.empty, sparse1, sparse2).isEmpty)
+    // a sparse tuple is not allowed to extend the tuple domain
+    assert(unifier.unify(Substitution.empty, tup3, sparse1).isEmpty)
+
     val rec1 = parser("[foo: Bool, bar: Int]")
     val rec2 = parser("[foo: Bool, bar: Bool]")
     assert(unifier.unify(Substitution.empty, rec1, rec2).isEmpty)

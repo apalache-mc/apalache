@@ -177,13 +177,19 @@ class TypeUnifier {
 
       // a sparse tuple is consumed by a tuple
       case (l @ SparseTupT1(_), TupT1(relems @ _*)) =>
-        // remember that tuples indices are starting with 1, not 0
-        compute(l, SparseTupT1(SortedMap(relems.zipWithIndex.map(p => (1 + p._2, p._1)) :_*))) match {
-          case Some(SparseTupT1(fieldTypes)) =>
-            // turn the total sparse tuple into a tuple
-            Some(TupT1(1.to(relems.length).map(fieldTypes) :_*))
+        val nelems = relems.length
+        if (l.fieldTypes.keySet.exists(i => i < 1 || i > nelems)) {
+          // the sparse tuple is not allowed to have indices outside of the tuple domain
+          None
+        } else {
+          // remember that tuples indices are starting with 1, not 0
+          compute(l, SparseTupT1(SortedMap(relems.zipWithIndex.map(p => (1 + p._2, p._1)): _*))) match {
+            case Some(SparseTupT1(fieldTypes)) =>
+              // turn the total sparse tuple into a tuple
+              Some(TupT1(1.to(relems.length).map(fieldTypes): _*))
 
-          case _ => None // no unifier as sparse tuples
+            case _ => None // no unifier as sparse tuples
+          }
         }
 
       // a sparse tuple is consumed by a tuple
