@@ -268,27 +268,37 @@ class ToEtcExpr extends EtcBuilder {
       val opsig = OperT1(typeVars.map(SetT1(_)), SetT1(TupT1(typeVars :_*)))
       mkApp(ex.ID, opsig, args)
 
-    case OperEx(TlaSetOper.filter, NameEx(bindingVar), bindingSet, pred) =>
+    case OperEx(TlaSetOper.filter, bindingEx, bindingSet, pred) =>
       // { x \in S: P }
+      // or, { <<x, ..., z>> \in S: P }
       // the principal type is (a => Bool) => Set(a)
-      val principal = OperT1(Seq(OperT1(Seq(VarT1("a")), BoolT1())), SetT1(VarT1("a")))
-      // { x \in S: P } implicitly introduces a lambda abstraction: λ x ∈ S. P
-      val lambda = mkAbs(BlameRef(ex.ID), this(pred), (bindingVar, this(bindingSet)))
-      // the resulting expression is (((a => Bool) => Set(a)) (λ x ∈ S. P))
+      val bindings = translateBindings(0, (bindingEx, bindingSet))
+      val typeVars = mkBoundVars(0, bindings.length) // start with "a"
+
+      // 1. When there is one argument, a set element has type "a", no tuple is involved.
+      // 2. When there are multiple arguments,
+      //    a set element has type type <<a, b>>, that is, it is a tuple
+      val funFrom = if (bindings.length == 1) typeVars.head else TupT1(typeVars :_*)
+      // the principal type is ((a, b) => Bool) => Set(<<a, b>>) or just (a => Bool) => Set(a)
+      val principal = OperT1(Seq(OperT1(typeVars, BoolT1())), SetT1(funFrom))
+
+      // map implicitly introduces a lambda abstraction: λ x ∈ S, y ∈ T. P
+      val lambda = mkAbs(BlameRef(ex.ID), this(pred), bindings :_*)
+      // the resulting expression is ((((a, b) => Bool) => Set(<<a, b>>)) (λ x ∈ S, y ∈ T. P)
       mkApp(ExactRef(ex.ID), Seq(principal), lambda)
 
     case OperEx(TlaSetOper.map, mapExpr, args @ _*) =>
       // { x \in S, y \in T: e }
-      val boundVarNames = args.zipWithIndex.collect {
-        case (NameEx(name), i) if i % 2 == 0 => name
-        case (_, i) if i % 2 == 0 => throw new IllegalArgumentException("Expected NameEx(_) as a var name")
+      val (vars, sets) = args.zipWithIndex.partition(_._2 % 2 == 0)
+      if (vars.length != sets.length) {
+        throw new TypingException("Invalid bound variables and sets in: " + ex)
       }
-      val sets = args.zipWithIndex.filter(_._2 % 2 == 1).map(_._1)
-      val typeVars = mkBoundVars(1, sets.length) // start with "b", as "a" goes to the result
+      val bindings = translateBindings(1, vars.map(_._1).zip(sets.map(_._1)) :_*)
+      val typeVars = mkBoundVars(1, bindings.length) // start with "b", as "a" goes to the result
       // the principal type of is ((b, c) => a) => Set(a)
       val principal = OperT1(Seq(OperT1(typeVars, VarT1("a"))), SetT1(VarT1("a")))
       // map implicitly introduces a lambda abstraction: λ x ∈ S, y ∈ T. e
-      val lambda = mkAbs(BlameRef(mapExpr.ID), this(mapExpr), boundVarNames.zip(sets).map(p => (p._1, this(p._2))) :_*)
+      val lambda = mkAbs(BlameRef(mapExpr.ID), this(mapExpr), bindings: _*)
       mkApp(ExactRef(ex.ID), Seq(principal), lambda)
 
     //******************************************** FUNCTIONS **************************************************
@@ -347,27 +357,24 @@ class ToEtcExpr extends EtcBuilder {
 
     case OperEx(TlaFunOper.funDef, mapExpr, args @ _*) =>
       // [ x \in S, y \in T |-> e ]
-      val boundVarNames = args.zipWithIndex.collect {
-        case (NameEx(name), i) if i % 2 == 0 => name
-        case (_, i) if i % 2 == 0 => throw new IllegalArgumentException("Expected NameEx(_) as a var name")
+      // or, [ <<x, y>> \in S, z \in T |-> e ]
+      val (vars, sets) = args.zipWithIndex.partition(_._2 % 2 == 0)
+      if (vars.length != sets.length) {
+        throw new TypingException("Invalid bound variables and sets in: " + ex)
       }
-      val sets = args.zipWithIndex.filter(_._2 % 2 == 1).map(_._1)
-      if (boundVarNames.length == 1) {
-        // the principal type of is (b => a) => (b -> a)
-        val typeVar = VarT1(1)
-        val principal = OperT1(Seq(OperT1(Seq(typeVar), VarT1("a"))), FunT1(typeVar, VarT1("a")))
-        // the function definition implicitly introduces a lambda abstraction: λ x ∈ S, y ∈ T. e
-        val lambda = mkAbs(BlameRef(mapExpr.ID), this(mapExpr), boundVarNames.zip(sets).map(p => (p._1, this(p._2))) :_*)
-        mkApp(ExactRef(ex.ID), Seq(principal), lambda)
-      } else {
-        // the principal type of is ((b, c) => a) => (<<b, c>> -> a)
-        val typeVars = mkBoundVars(1, sets.length) // start with "b", as "a" goes to the result
-        val principal = OperT1(Seq(OperT1(typeVars, VarT1("a"))),
-          FunT1(TupT1(typeVars :_*), VarT1("a")))
-        // the function definition implicitly introduces a lambda abstraction: λ x ∈ S, y ∈ T. e
-        val lambda = mkAbs(BlameRef(mapExpr.ID), this(mapExpr), boundVarNames.zip(sets).map(p => (p._1, this(p._2))) :_*)
-        mkApp(ExactRef(ex.ID), Seq(principal), lambda)
-      }
+      val bindings = translateBindings(1, vars.map(_._1).zip(sets.map(_._1)) :_*)
+      val typeVars = mkBoundVars(1, bindings.length) // start with "b", as "a" goes to the result
+      // 1. When there is one argument, the generated function has the type b -> a, that is, no tuple is involved.
+      // 2. When there are multiple arguments,
+      // the generated function has the type <<b, c>> -> a, that is, it accepts a tuple
+      val funFrom = if (bindings.length == 1) typeVars.head else TupT1(typeVars :_*)
+      // The principal type of is ((b, c) => a) => (<<b, c>> -> a).
+      // Note that the generated function has the type <<b, c>> -> a, that is, it accepts a tuple.
+      val principal = OperT1(Seq(OperT1(typeVars, VarT1("a"))),
+        FunT1(funFrom, VarT1("a")))
+      // the function definition implicitly introduces a lambda abstraction: λ x ∈ S, y ∈ T. e
+      val lambda = mkAbs(BlameRef(mapExpr.ID), this(mapExpr), bindings :_*)
+      mkApp(ExactRef(ex.ID), Seq(principal), lambda)
 
     case OperEx(TlaFunOper.except, fun, args @ _*) =>
       // the hardest expression: [f EXCEPT ![e1] = e2, ![e3] = e4, ...]
@@ -574,6 +581,44 @@ class ToEtcExpr extends EtcBuilder {
 
     case _ =>
       mkConst(ExactRef(ex.ID), VarT1("a"))
+  }
+
+  /**
+    * Usually, one uses bindings like x \in S, y \in T in set comprehensions and function definitions.
+    * However, TLA+ allows for advanced syntax in bindings, e.g., << x, y >> \in S, << a, << b, c >> >> \in T.
+    * This method does a general translation for variable bindings
+    *
+    * @param bindings pairs of expressions, e.g., (NameEx("x"), NameEx("S"))
+    * @return translated bindings, where all tuples have been unpacked
+    */
+  private def translateBindings(start: Int, bindings: (TlaEx, TlaEx)*): Seq[(String, EtcExpr)] = {
+    // project a set of dim-tuples on the ith element (starting with 0!)
+    def project(id: UID, setEx: EtcExpr, dim: Int, index: Int): EtcExpr = {
+      val typeVars = mkBoundVars(start, dim)
+      // e.g., Set(<<a, b, c>>) => Set(b)
+      val operType = OperT1(Seq(SetT1(TupT1(typeVars :_*))), SetT1(typeVars(index)))
+      // (operType set)
+      mkApp(BlameRef(id), Seq(operType), setEx)
+    }
+
+    def unpackOne(id: UID, target: TlaEx, set: EtcExpr): Seq[(String, EtcExpr)] = {
+      target match {
+          // simplest case: name is bound to set
+        case NameEx(name) =>
+          Seq((name, set))
+
+          // advanced case: <<x, y, ..., z>> is bound to set
+        case OperEx(TlaFunOper.tuple, args @ _*) =>
+          args.zipWithIndex.flatMap { case (a, i) => unpackOne(id, a, project(id, set, args.length, i)) }
+
+        case _ =>
+          throw new TypingInputException(s"Unexpected binding $target \\in $set")
+      }
+
+    }
+
+    // unpack x \in S, <<y, z>> \in T into x \in S, y \in project(T, 1), z \in project(T, 2)
+    bindings.flatMap { case (target, set) => unpackOne(set.ID, target, this(set)) }
   }
 
   // Translate a sequence of formal parameters into type variables

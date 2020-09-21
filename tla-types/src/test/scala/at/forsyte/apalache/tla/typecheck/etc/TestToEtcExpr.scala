@@ -254,6 +254,22 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     assert(expected == gen(tla.filter(tla.name("x"), tla.name("S"), tla.name("P"))))
   }
 
+  test("set filter { <<x, y>> \\in S: P }") {
+    // the principal type of is ((a, b) => Bool) => Set(<<a, b>>)
+    val principal = parser("((a, b) => Bool) => Set(<<a, b>>)")
+    // filter implicitly introduce a lambda abstraction: λ x ∈ (...), y ∈ (...). P
+    // the binding <<x, y>> \in S gives us two lambda abstractions
+    val proj_x =
+      mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("a"), VarT1("b")))), SetT1(VarT1("a")))), mkUniqName("S"))
+    val proj_y =
+      mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("a"), VarT1("b")))), SetT1(VarT1("b")))), mkUniqName("S"))
+    val lambda = mkUniqAbs(mkUniqName("P"), ("x", proj_x), ("y", proj_y))
+    // the resulting expression is ((((a, b) => Bool) => Set(a)) (λ x ∈ (...), y ∈ (...). P))
+    val expected = mkUniqApp(Seq(principal), lambda)
+    assert(expected == gen(tla.filter(tla.tuple(tla.name("x"), tla.name("y")),
+      tla.name("S"), tla.name("P"))))
+  }
+
   test("set map { x \\in S: e }") {
     // the principal type of is (b => a) => Set(a)
     val principal = parser("(b => a) => Set(a)")
@@ -263,6 +279,23 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     val expected = mkUniqApp(Seq(principal), lambda)
     val map = tla.map(tla.name("e"),
       tla.name("x"), tla.name("S"))
+    assert(expected == gen(map))
+  }
+
+  // translating the advanced syntax in set comprehensions
+  test("set map { <<x, y>> \\in S: e }") {
+    // given an operator from (b, c) to a, map it to the set of a: ((b, c) => a) => Set(a)
+    val principal = parser("((b, c) => a) => Set(a)")
+    // the binding <<x, y>> \in S gives us two lambda abstractions
+    val proj_y = mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("b"), VarT1("c")))), SetT1(VarT1("c")))), mkUniqName("S"))
+    val proj_x = mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("b"), VarT1("c")))), SetT1(VarT1("b")))), mkUniqName("S"))
+    val lambda = mkUniqAbs(mkUniqName("e"), ("x", proj_x), ("y", proj_y))
+
+    // the resulting expression is (((b, c) => a) => Set(a)) (λ x ∈ (...), y ∈ (...). e)
+    val expected = mkUniqApp(Seq(principal), lambda)
+    // { <<x, y>> \in S: e }
+    val map = tla.map(tla.name("e"),
+      tla.tuple(tla.name("x"), tla.name("y")), tla.name("S"))
     assert(expected == gen(map))
   }
 
@@ -356,6 +389,20 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     val expected = mkUniqApp(Seq(principal), lambda)
     val fun = tla.funDef(tla.name("e"),
       tla.name("x"), tla.name("S"), tla.name("y"), tla.name("T"))
+    assert(expected == gen(fun))
+  }
+
+  test("function definition [ <<x, y>> \\in S |-> e ]") {
+    // the principal type is ((b, c) => a) => (<<b, c>> -> a)
+    val principal =  parser("((b, c) => a) => (<<b, c>> -> a)")
+    // the binding <<x, y>> \in S gives us a lambda of two arguments
+    val proj_y = mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("b"), VarT1("c")))), SetT1(VarT1("c")))), mkUniqName("S"))
+    val proj_x = mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("b"), VarT1("c")))), SetT1(VarT1("b")))), mkUniqName("S"))
+    val lambda = mkUniqAbs(mkUniqName("e"), ("x", proj_x), ("y", proj_y))
+    // the resulting expression is (((b, c) => a) => (<<b, c>> -> a)) (λ x ∈ (...), y ∈ (...). e)
+    val expected = mkUniqApp(Seq(principal), lambda)
+    val fun = tla.funDef(tla.name("e"),
+      tla.tuple(tla.name("x"), tla.name("y")), tla.name("S"))
     assert(expected == gen(fun))
   }
 
