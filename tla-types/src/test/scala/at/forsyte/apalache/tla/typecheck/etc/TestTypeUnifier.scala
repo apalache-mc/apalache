@@ -29,11 +29,16 @@ class TestTypeUnifier  extends FunSuite with EasyMockSugar with BeforeAndAfterEa
       .contains((Substitution.empty, intAndBoolToInt)))
     val tup1 =  parser("<<Int, Bool>>")
     assert(unifier.unify(Substitution.empty, tup1, tup1).contains((Substitution.empty, tup1)))
+
     val sparse1 = parser("{2: Int, 4: Bool}")
     val sparse2 = parser("{3: Str}")
     val sparse3 = parser("{2: Int, 3: Str, 4: Bool}")
-
+    val sparse4 = parser("{1: Int}")
+    val sparse5 = parser("{1: Int, 2: Bool}")
     assert(unifier.unify(Substitution.empty, sparse1, sparse2).contains((Substitution.empty, sparse3)))
+    assert(unifier.unify(Substitution.empty, tup1, sparse4).contains((Substitution.empty, tup1)))
+    assert(unifier.unify(Substitution.empty, sparse4, tup1).contains((Substitution.empty, tup1)))
+
     val rec1 = parser("[foo: Bool, bar: Int]")
     val rec2 = parser("[baz: Str]")
     val rec3 = parser("[foo: Bool, bar: Int, baz: Str]")

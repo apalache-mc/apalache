@@ -175,13 +175,19 @@ class TypeUnifier {
           Some(unifiedTuple)
         }
 
-        // sparse tuples consume tuples
+      // a sparse tuple is consumed by a tuple
       case (l @ SparseTupT1(_), TupT1(relems @ _*)) =>
         // remember that tuples indices are starting with 1, not 0
-        compute(l, SparseTupT1(SortedMap(relems.zipWithIndex.map(p => (1 + p._2, p._1)) :_*)))
+        compute(l, SparseTupT1(SortedMap(relems.zipWithIndex.map(p => (1 + p._2, p._1)) :_*))) match {
+          case Some(SparseTupT1(fieldTypes)) =>
+            // turn the total sparse tuple into a tuple
+            Some(TupT1(1.to(relems.length).map(fieldTypes) :_*))
 
-        // sparse tuples consume tuples
-      case (l @ TupT1(_), r @ SparseTupT1(_)) =>
+          case _ => None // no unifier as sparse tuples
+        }
+
+      // a sparse tuple is consumed by a tuple
+      case (l @ TupT1(_ @ _*), r @ SparseTupT1(_)) =>
         compute(r, l)
 
         // records join their keys, but the values for the intersecting keys should unify
