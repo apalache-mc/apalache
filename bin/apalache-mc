@@ -38,7 +38,11 @@ TLA_LIB="$DIR/src/tla"
 # This is a temporary solution for handling TLA_PATH via a Java variable.
 # See apalache/#187.
 # Once tlaplus/#490,#493 are released, remove this workaround.
-(test -z "$TLA_PATH" && TLA_PATH="$TLA_LIB") || TLA_PATH="$TLA_LIB:$TLA_PATH"
+if [ -z "$TLA_PATH" ]; then
+    TLA_PATH="$TLA_LIB"
+else
+    TLA_PATH="$TLA_LIB:$TLA_PATH"
+fi
 
 # 1. The maximum heap size, Z3 will use much more as a native library.
 JVM_ARGS="-Xmx4096m"
