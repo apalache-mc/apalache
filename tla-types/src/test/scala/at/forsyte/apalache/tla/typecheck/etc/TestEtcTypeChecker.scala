@@ -561,4 +561,54 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
       assert(computed.contains(parser("Set(Int)")))
     }
   }
+
+  test("rejected tuple syntax") {
+    // Without a type annotation, it is impossible to choose between a tuple or a sequence.
+    // <<Int, Int>> is rejected. Is it a tuple or a sequence? Use a type annotation.
+    val seq = OperT1(Seq(IntT1(), IntT1()), SeqT1(IntT1()))
+    val tup = OperT1(Seq(IntT1(), IntT1()), TupT1(IntT1(), IntT1()))
+    val app = mkUniqApp(Seq(seq, tup), mkUniqConst(IntT1()), mkUniqConst(IntT1()))
+
+    val listener = mock[TypeCheckerListener]
+    expecting {
+      listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef],
+        "Argument type(s) Int and Int have 2 signatures: (Int, Int) => Seq(Int) and (Int, Int) => <<Int, Int>>")
+    }
+    whenExecuting(listener) {
+      // we do not compute principal types here....
+      val computed = checker.compute(listener, TypeContext.empty, app)
+      assert(computed.isEmpty)
+    }
+  }
+
+  test("annotated tuple") {
+    // use the annotation to resolve overloading by the resulting type
+
+    // let F == <<Int, Int>> in F
+    // without a type annotation, it is impossible to choose between a tuple or a sequence
+    val seq = OperT1(Seq(IntT1(), IntT1()), SeqT1(IntT1()))
+    val tup = OperT1(Seq(IntT1(), IntT1()), TupT1(IntT1(), IntT1()))
+    val intT = mkUniqConst(IntT1())
+    val fBody = mkUniqApp(Seq(seq, tup), intT, intT)
+    // for consistency of the expression language, we have to wrap the body with lambda in any case
+    val lambda = mkUniqAbs(fBody)
+    val fApp = mkUniqAppByName("F")
+    val letIn = mkUniqLet("F", lambda, fApp)
+
+    val listener = mock[TypeCheckerListener]
+    expecting {
+      listener.onTypeFound(intT.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
+      listener.onTypeFound(fBody.sourceRef.asInstanceOf[ExactRef], parser("<<Int, Int>>")).atLeastOnce()
+      listener.onTypeFound(lambda.sourceRef.asInstanceOf[ExactRef], parser("() => <<Int, Int>>")).atLeastOnce()
+      listener.onTypeFound(fApp.sourceRef.asInstanceOf[ExactRef], parser("<<Int, Int>>")).atLeastOnce()
+      listener.onTypeFound(letIn.sourceRef.asInstanceOf[ExactRef], parser("<<Int, Int>>")).atLeastOnce()
+    }
+    whenExecuting(listener) {
+      // we do not compute principal types here....
+      val annotations = TypeContext("F" -> parser("<<Int, Int>>"))
+      val computed = checker.compute(listener, annotations, letIn)
+      assert(computed.contains(parser("<<Int, Int>>")))
+    }
+  }
+
 }

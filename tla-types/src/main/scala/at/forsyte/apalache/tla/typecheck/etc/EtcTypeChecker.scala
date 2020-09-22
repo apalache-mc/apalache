@@ -29,14 +29,14 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
     rootEx match {
       // operator applications do all checks and reporting by themselves
       case EtcApp(_, _) =>
-        computeRec(rootCtx, rootEx)
+        computeRec(rootCtx, rootEx, None)
 
       case EtcAppByName(_, _) =>
-        computeRec(rootCtx, rootEx)
+        computeRec(rootCtx, rootEx, None)
 
       // constant expressions need more tests and reporting
       case _ =>
-        computeRec(rootCtx, rootEx) match {
+        computeRec(rootCtx, rootEx, None) match {
           case None =>
             None
 
@@ -52,21 +52,36 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
     }
   }
 
-  private def computeRec(ctx: TypeContext, ex: EtcExpr): Option[TlaType1] = {
+  private def computeRec(ctx: TypeContext, ex: EtcExpr, forcedResult: Option[TlaType1]): Option[TlaType1] = {
     ex match {
-      // a type, either monotype or polytype
+      // a type: either monotype or polytype
       case EtcConst(polytype) =>
-        Some(polytype) // propagate backwards, some variables may be still not assigned
+        if (forcedResult.isEmpty) {
+          Some(polytype) // propagate backwards, some variables may be still not assigned
+        } else {
+          // unify the polytype with the forced result (propagated from an annotation).
+          // Complain if they cannot be unified.
+          typeUnifier.unify(Substitution.empty, polytype, forcedResult.get) match {
+            case None =>
+              onTypeError(ex.sourceRef, s"Expected %s from annotation, found %s".format(forcedResult.get, polytype))
+              None
+
+            case Some((_, refined)) =>
+              Some(refined)
+          }
+        }
 
       // an inline type declaration
       case EtcTypeDecl(name: String, declaredType: TlaType1, scopedEx: EtcExpr) =>
         val extCtx = new TypeContext(ctx.types + (name -> declaredType))
-        computeRec(extCtx, scopedEx)
+        // propagate the forced result downwards
+        computeRec(extCtx, scopedEx, forcedResult)
 
       // a variable name, either an operator name, or a variable introduced by lambda (STCAbs)
       case EtcName(name) =>
         if (ctx.types.contains(name)) {
-          Some(ctx.types(name)) // propagate the type upwards
+          // process as a constant, as we might want to force the expected result
+          computeRec(ctx, mkConst(BlameRef(ex.sourceRef.tlaId), ctx.types(name)), forcedResult)
         } else {
           onTypeError(ex.sourceRef, s"Undefined name $name. Introduce a type annotation.")
           None
@@ -74,7 +89,7 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
 
       // the most interesting part: the operator application
       case appEx@EtcApp(operTypes, args@_*) =>
-        val pargs = args.map(e => computeRec(ctx, e))
+        val pargs = args.map(e => computeRec(ctx, e, None)) // the parameter types are not enforced
 
         if (pargs.exists(_.isEmpty)) {
           // there is a problem in the bottom layer, it should have been registered with the listener
@@ -82,13 +97,13 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
         } else {
           // no typing errors so far, do type unification
           val argTypes = pargs.map(_.get) // unpack the option type, now we have a sequence of TlaType1
-          matchApp(appEx, operTypes, argTypes)
+          matchApp(appEx, operTypes, argTypes, forcedResult)
         }
 
       // Operator application by name. Resolve the name and pass the resolved expression to the application case.
       case EtcAppByName(name, args@_*) =>
         if (ctx.types.contains(name)) {
-          computeRec(ctx, mkApp(ex.sourceRef, Seq(ctx.types(name)), args: _*))
+          computeRec(ctx, mkApp(ex.sourceRef, Seq(ctx.types(name)), args: _*), forcedResult)
         } else {
           onTypeError(ex.sourceRef, s"Undefined operator name $name. Introduce a type annotation.")
           None
@@ -100,7 +115,7 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
         for {
           (_, extCtx) <- matchLambdaDefs(ctx, ex.sourceRef, binders, None)
           // compute the expression in the scope of the extended context
-          scopedType <- computeRec(extCtx, scopedEx)
+          scopedType <- computeRec(extCtx, scopedEx, forcedResult)
           operType <- Some(OperT1(names.map(extCtx.types), scopedType))
           _ <- Some(onTypeFound(ex.sourceRef, operType))
         } yield operType
@@ -131,7 +146,7 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
           _ <- Some(onTypeFound(absEx.sourceRef, unifiedOperType))
           uniCtx <- Some(new TypeContext(ctx.types + (name -> unifiedOperType)))
           // compute the expression in the scope by assuming the instantiated signature
-          result <- computeRec(uniCtx, scopedEx)
+          result <- computeRec(uniCtx, scopedEx, forcedResult)
           _ <- Some(onTypeFound(ex.sourceRef, result))
         } yield result
 
@@ -150,7 +165,7 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
                               binders: Seq[(String, EtcExpr)],
                               optParamTypes: Option[Seq[TlaType1]]): Option[(Substitution, TypeContext)] = {
     // check, whether the domain types are well-typed
-    val namedTypeOpts = binders.map { case (name, argEx) => (name, computeRec(ctx, argEx)) }
+    val namedTypeOpts = binders.map { case (name, argEx) => (name, computeRec(ctx, argEx, None)) }
     if (namedTypeOpts.exists(_._2.isEmpty)) {
       // type checking has failed for a binding set, this is reported in the bottom layer
       None
@@ -223,10 +238,14 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
           }
         }
 
+        // We only enforce the result for nullary operators (i.e., constants), to resolve overloading.
+        // Otherwise, we would break contra-variance and thus break (Reynolds'?) substitution principle.
+        val forcedResult = if (paramTypes.isEmpty) Some(res) else None
+
         for {
           (sub, extCtx) <- matchLambdaDefs(ctx, sourceRef, binders, Some(paramTypes))
           // check the definition body
-          inferredResType <- computeRec(extCtx, defBody)
+          inferredResType <- computeRec(extCtx, defBody, forcedResult)
           finalResType <- unifyWithResult(extCtx, inferredResType, sub(res))
         } yield finalResType
 
@@ -237,7 +256,8 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
 
   private def matchApp(appEx: EtcApp,
                        operTypes: Seq[TlaType1],
-                       argTypes: Seq[TlaType1]): Option[TlaType1] = {
+                       argTypes: Seq[TlaType1],
+                       forcedResult: Option[TlaType1]): Option[TlaType1] = {
     // match one operator signature
     def matchOneType: TlaType1 => Option[(Seq[TlaType1], TlaType1)] = {
       case operT@OperT1(paramTypes, resType) =>
@@ -273,7 +293,16 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
                   onTypeError(appEx.sourceRef, s"Unresolved $usedNames in operator signature: $renOperT")
                   None
                 } else {
-                  Some((unifiedArgs, subResType))
+                  // Everything is computed. If the result should be forced, see if it allows us to reject the signature.
+                  if (forcedResult.isEmpty) {
+                    Some((unifiedArgs, subResType))
+                  } else {
+                    // both types may clash on type variable, rename subResType
+                    val forceSub = uniqueSubstitution(Seq(forcedResult.get), Seq(subResType))
+                    // if the types can be unified, return the resulting signature
+                    typeUnifier.unify(Substitution.empty, forcedResult.get, forceSub(subResType))
+                      .map { case (_, result) => (unifiedArgs, result) }
+                  }
                 }
               }
 
