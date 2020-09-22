@@ -26,10 +26,11 @@ class EtcTypeCheckerPassImpl @Inject()(val options: PassOptions,
     */
   override def execute(): Boolean = {
     if (tlaModule.isDefined) {
-      logger.info(" > running ETC: Embarrassingly simple Type Checker ^_^")
+      logger.info(" > running ETC: Embarrassingly simple Type Checker")
+      logger.info("   ^_^")
       val isWellDefined = new TypeCheckerTool().check(new LoggingTypeCheckerListener(sourceStore), tlaModule.get)
       // all new software needs emojis
-      logger.info(if (isWellDefined) "=^_^=" else ":-|")
+      logger.info(if (isWellDefined) "  =^_^=" else "  :-|")
       isWellDefined
     } else {
       logger.info(" > no input for type checker")
