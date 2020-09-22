@@ -505,10 +505,11 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
   }
 
   test("CASE p1 -> e1 [] p2 -> e2 OTHER e3") {
-    val caseType = parser("(Bool, a, Bool, a, a) => a")
-    val expected = mkAppByType(Seq(caseType), BoolT1(), IntT1(), BoolT1(), IntT1(), IntT1())
-    val caseEx = tla.caseOther(tla.bool(true), tla.int(1),
-      tla.bool(false), tla.int(2), tla.int(3))
+    // CASE..OTHER has the default argument first
+    val caseType = parser("(a, Bool, a, Bool, a) => a")
+    val expected = mkAppByType(Seq(caseType), IntT1(), BoolT1(), IntT1(), BoolT1(), IntT1())
+    val caseEx = tla.caseOther(tla.int(3), tla.bool(true), tla.int(1),
+      tla.bool(false), tla.int(2))
     assert(expected == gen(caseEx))
   }
 

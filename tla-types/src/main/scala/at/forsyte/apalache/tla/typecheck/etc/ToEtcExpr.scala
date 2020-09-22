@@ -453,7 +453,7 @@ class ToEtcExpr extends EtcBuilder {
       val nargs2 = (args.length / 2) * 2 // the largest even number below nargs
       // Bool, a, Bool, a, ...
       val boolAndAs = 0.until(nargs2).map(i => if (i % 2 == 0) BoolT1() else VarT1("a"))
-      val operArgs = if (nargs % 2 == 1) boolAndAs :+ VarT1("a") else boolAndAs
+      val operArgs = if (nargs % 2 == 1) VarT1("a") +: boolAndAs  else boolAndAs
       val opsig = OperT1(operArgs, VarT1("a"))
       mkApp(ex.ID, opsig, args)
 
