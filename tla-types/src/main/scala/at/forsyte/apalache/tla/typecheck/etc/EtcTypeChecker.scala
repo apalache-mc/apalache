@@ -324,7 +324,7 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
       val separatedArgs = String.join(" and ", argTypes.map(_.toString): _*)
       val separatedSigs = String.join(" and ", matches.map(p => OperT1(p._1, p._2).toString()) :_*)
       onTypeError(appEx.sourceRef,
-        s"Argument type(s) $separatedArgs have ${matches.length} signatures: " + separatedSigs)
+        s"Need annotation. Argument type(s) $separatedArgs produce ${matches.length} signatures: " + separatedSigs)
       None
     } else {
       // all good

@@ -161,7 +161,7 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
     val listener = mock[TypeCheckerListener]
     expecting {
       listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef],
-        "Argument type(s) Int have 2 signatures: (Int) => Int and (Int) => Bool")
+        "Need annotation. Argument type(s) Int produce 2 signatures: (Int) => Int and (Int) => Bool")
     }
     whenExecuting(listener) {
       val computed = checker.compute(listener, TypeContext.empty, app)
@@ -572,7 +572,7 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
     val listener = mock[TypeCheckerListener]
     expecting {
       listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef],
-        "Argument type(s) Int and Int have 2 signatures: (Int, Int) => Seq(Int) and (Int, Int) => <<Int, Int>>")
+        "Need annotation. Argument type(s) Int and Int produce 2 signatures: (Int, Int) => Seq(Int) and (Int, Int) => <<Int, Int>>")
     }
     whenExecuting(listener) {
       // we do not compute principal types here....
