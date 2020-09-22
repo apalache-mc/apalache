@@ -29,7 +29,9 @@ class TypeUnifier {
           if (isCyclic) {
             None
           } else {
-            Some((new Substitution(solution), unifiedType))
+            computeClosureWhenAcyclic()
+            val substitution = new Substitution(solution)
+            Some((substitution, substitution(unifiedType)))
           }
 
         solution = Map.empty // let GC collect the solution map later
@@ -43,8 +45,10 @@ class TypeUnifier {
 
     val unified = pairs.map { case (l, r) => compute(l, r) }
     val result =
-      if (unified.forall(_.isDefined)) {
-        Some((Substitution(solution), unified.map(_.get)))
+      if (unified.forall(_.isDefined) && !isCyclic) {
+        computeClosureWhenAcyclic()
+        val substitution = new Substitution(solution)
+        Some((substitution, unified.map { opt => substitution(opt.get) } ))
       } else {
         None
       }
@@ -264,5 +268,30 @@ class TypeUnifier {
 
     // if the fix-point is empty, there is no cycle
     next.nonEmpty
+  }
+
+  // Compute the transitive closure of the solution, provided that the solution is acyclic.
+  // We separate the closure computation from the acyclicity checking, as acyclicity checking is a bit more efficient.
+  // (Though both methods are not optimized at all.)
+  //
+  // Shall we propagate the result in insert, as soon as they are available?
+  private def computeClosureWhenAcyclic(): Unit = {
+    var modified = true
+
+    def substituteOne(sub: Substitution, inType: TlaType1): TlaType1 = {
+      val outType = sub(inType)
+      if (outType != inType) {
+        modified = true
+        outType
+      } else {
+        inType
+      }
+    }
+
+    while (modified) {
+      modified = false
+      val sub = Substitution(solution)
+      solution = solution.mapValues(substituteOne(sub, _))
+    }
   }
 }
