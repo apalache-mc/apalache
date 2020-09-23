@@ -115,9 +115,7 @@ case class VarT1(no: Int) extends TlaType1 {
 
 object VarT1 {
   // human-friendly names of the first 26 variables
-  protected val QNAMES: List[String] = List(
-    "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
-    "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z")
+  protected val QNAMES: List[String] = ('a' to 'z').toList.map(_.toString)
 
   // how many human-friendly names we have
   protected val QNAMES_LEN: Int = QNAMES.length
