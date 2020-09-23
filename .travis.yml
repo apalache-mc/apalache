@@ -12,13 +12,6 @@ matrix:
 python:
   - "2.7"
 
-# required to compile z3
-addons:
-  apt:
-    packages:
-      - gcc-4.7
-      - g++-4.7
-
 cache:
   directories:
     - $HOME/.m2
