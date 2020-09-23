@@ -1,8 +1,6 @@
 # a good old Makefile for the end users, as Maven is too much pain
 
-DEPDIR=3rdparty
-DEPS=$(DEPDIR)/lib
-ENV=JAVA_LIBRARY_PATH="$(abspath $(DEPDIR)/lib)" NO_MVN=1 LD_LIBRARY_PATH="$(abspath $(DEPDIR)/lib)"
+ENV=NO_MVN=1
 
 # See https://www.jrebel.com/blog/how-to-speed-up-your-maven-build
 #
@@ -19,18 +17,16 @@ QUICK_MAVEN_ARGS := -DskipTests -Dscoverage.skip=true -T 4C
 
 all: apalache
 
-deps: $(DEPS)
-
-apalache: deps
+apalache:
 	# tell maven to load the binary libraries and build the package
 	$(ENV) mvn package
 
 # Just compile with quick settings
-compile: $(DEPS)
+compile:
 	MAVEN_OPTS=$(QUICK_MAVEN_OPTS) mvn $(QUICK_MAVEN_ARGS) compile
 
 # Build with quick settings, but and skip the tests
-build-quick: $(DEPS)
+build-quick:
 	MAVEN_OPTS=$(QUICK_MAVEN_OPTS) mvn $(QUICK_MAVEN_ARGS) package
 
 test:
@@ -44,8 +40,3 @@ integration: apalache
 
 clean:
 	mvn clean
-
-$(DEPDIR)/lib:
-	mkdir -p $(DEPDIR)/lib
-	# install box by Jure (fix in the future!)
-	cd "$(DEPDIR)" && ./install-local.sh

@@ -21,13 +21,7 @@ addons:
 
 cache:
   directories:
-    - 3rdparty/z3
     - $HOME/.m2
-
-# locally compile z3 and make it available via LD_LIBRARY_PATH
-before_install:
-  - make deps
-  #- pip install release-me
 
 #after_success:
 #- sudo pip install --upgrade pip
