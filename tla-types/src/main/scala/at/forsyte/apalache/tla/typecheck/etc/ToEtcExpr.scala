@@ -172,6 +172,19 @@ class ToEtcExpr extends EtcBuilder {
       // the resulting expression is (((a => Bool) => a) (λ x ∈ S. P))
       mkApp(ExactRef(ex.ID), Seq(chooseType), chooseLambda)
 
+    case OperEx(TlaOper.chooseUnbounded, NameEx(bindingVar), pred) =>
+      // CHOOSE x: P
+      // the principal type of CHOOSE is (a => Bool) => a
+      //
+      // Igor: I am not sure that this is a good solution, as the type checker will not propagate the possible
+      // values of b from P. This expression will always give us a polytype.
+      val chooseType = OperT1(Seq(OperT1(Seq(VarT1("a")), BoolT1())), VarT1("a"))
+      // unbounded CHOOSE implicitly introduces a lambda abstraction: λ x ∈ Set(b). P
+      val chooseLambda = mkAbs(BlameRef(ex.ID), this(pred),
+        (bindingVar, mkConst(BlameRef(ex.ID), SetT1(VarT1("b")))))
+      // the resulting expression is (((a => Bool) => a) (λ x ∈ Set(b). P))
+      mkApp(ExactRef(ex.ID), Seq(chooseType), chooseLambda)
+
     //******************************************** LET-IN ****************************************************
     case LetInEx(body, declarations @ _*) =>
       declarations.foldRight(this(body)) { case (decl, term) => this(decl, term) }

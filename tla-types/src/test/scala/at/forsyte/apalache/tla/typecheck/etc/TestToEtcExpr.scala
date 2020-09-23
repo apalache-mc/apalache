@@ -118,6 +118,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
   }
 
   test("CHOOSE") {
+    // The bounded form: CHOOSE x |in S: P.
     // the principal type of CHOOSE is (a => Bool) => a
     val chooseType = parser("(a => Bool) => a")
     // CHOOSE implicitly introduces a lambda abstraction: λ x ∈ S. P
@@ -125,6 +126,17 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     // the resulting expression is (((a => Bool) => a) (λ x ∈ S. P))
     val chooseExpected = mkUniqApp(Seq(chooseType), chooseLambda)
     assert(chooseExpected == gen(tla.choose(tla.name("x"), tla.name("S"), tla.name("P"))))
+  }
+
+  test("unbounded CHOOSE") {
+    // The unbounded form: CHOOSE x: P. The only hope to figure out the type is to use the type of the predicate P.
+    // the principal type of CHOOSE is (a => Bool) => a
+    val chooseType = parser("(a => Bool) => a")
+    // CHOOSE implicitly introduces a lambda abstraction: λ x ∈ S. P
+    val chooseLambda = mkUniqAbs(mkUniqName("P"), ("x", mkUniqConst(SetT1(VarT1("b")))))
+    // the resulting expression is (((a => Bool) => a) (λ x ∈ Set(a). P))
+    val chooseExpected = mkUniqApp(Seq(chooseType), chooseLambda)
+    assert(chooseExpected == gen(tla.choose(tla.name("x"), tla.name("P"))))
   }
 
   test("binary Boolean connectives") {
