@@ -57,7 +57,9 @@ case class EtcAbs(body: EtcExpr, paramsAndDoms: (String, EtcExpr)*)(val sourceRe
 }
 
 /**
-  * Application of an operator whose signature is known. An operator may have several overloaded polytypes, e.g., f[e].
+  * Application of an EtcExpr term (which must be an abstraction) whose signature is known. An EtcExpr abstraction may have several overloaded polytypes, e.g., f[e].
+  
+  We abstractions to represent TLA operators, so this application models the application of an operator to its arguments.
   *
   * @param operTypes  an STC expression that represents an operator type
   * @param args  operator arguments
