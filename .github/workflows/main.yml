@@ -31,7 +31,7 @@ jobs:
       - name: Build the docker image
         run: docker build -t apalache/mc:ci .
       - name: Run integration tests in docker container
-        run: make
+        run: ./test/run-integration
         env:
           USE_DOCKER: true
           APALACHE_TAG: ci
