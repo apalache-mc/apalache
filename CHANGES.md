@@ -1,6 +1,9 @@
 ## Unreleased #unstable
 
  * Use a staged docker build, reducing container size ~70%, see #195
+ * Use [Z3-TurnKey](https://github.com/tudo-aqua/z3-turnkey) instead of a
+   bespoke Z3 build, see #219
+ * Use Z3 version 4.8.7.1, see #219
 
 ## 0.7.2 [RELEASE]
 

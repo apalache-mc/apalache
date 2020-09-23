@@ -1,7 +1,7 @@
 # a good old Makefile for the end users, as Maven is too much pain
 
 DEPDIR=3rdparty
-DEPS=$(DEPDIR)/lib/com.microsoft.z3.jar $(DEPDIR)/lib/box.jar
+DEPS=$(DEPDIR)/lib
 ENV=JAVA_LIBRARY_PATH="$(abspath $(DEPDIR)/lib)" NO_MVN=1 LD_LIBRARY_PATH="$(abspath $(DEPDIR)/lib)"
 
 # See https://www.jrebel.com/blog/how-to-speed-up-your-maven-build
@@ -15,11 +15,13 @@ QUICK_MAVEN_OPTS := "-XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:non
 # - run up to 4 threads per core (4C): https://cwiki.apache.org/confluence/display/MAVEN/Parallel+builds+in+Maven+3
 QUICK_MAVEN_ARGS := -DskipTests -Dscoverage.skip=true -T 4C
 
-.PHONY: all apalache compile build-quick test integration clean
+.PHONY: all apalache compile build-quick test integration clean deps
 
 all: apalache
 
-apalache: $(DEPS)
+deps: $(DEPS)
+
+apalache: deps
 	# tell maven to load the binary libraries and build the package
 	$(ENV) mvn package
 
@@ -43,11 +45,7 @@ integration: apalache
 clean:
 	mvn clean
 
-$(DEPDIR)/lib/com.microsoft.z3.jar:
-	# install microsoft z3
-	cd "$(DEPDIR)" && ./install-local.sh
-
-$(DEPDIR)/lib/box.jar:
+$(DEPDIR)/lib:
+	mkdir -p $(DEPDIR)/lib
 	# install box by Jure (fix in the future!)
 	cd "$(DEPDIR)" && ./install-local.sh
-
