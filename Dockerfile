@@ -5,8 +5,9 @@ FROM maven:3.6.3-jdk-8-slim AS builder
 ADD . /opt/apalache/
 WORKDIR /opt/apalache/
 
-# clean the leftovers from the previous non-docker builds and build the package
-RUN mvn package
+# --batch-mode because we are running non-interactive
+# skipTests because we check the test in CI, not when packaing the container
+RUN mvn --batch-mode -DskipTests package
 
 FROM openjdk:8-slim
 
