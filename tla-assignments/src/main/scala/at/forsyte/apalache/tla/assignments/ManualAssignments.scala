@@ -14,7 +14,9 @@ import at.forsyte.apalache.tla.lir._
   * or assignment finding will fail.
   *
   * Any variable, for which no manual assignemt exists, is handled in the standard way.
-  */
+*
+* @author Jure Kukovec
+*/ 
 object ManualAssignments {
   type varnameT = String
 
@@ -35,4 +37,3 @@ object ManualAssignments {
     case _ => Set.empty
   }
 }
-
