@@ -13,7 +13,7 @@
         <scalaVersion>2.12.12</scalaVersion>
         <scalaBinaryVersion>2.12</scalaBinaryVersion>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <scoverage.plugin.version>1.4.0</scoverage.plugin.version>
+        <scoverage.plugin.version>1.4.1</scoverage.plugin.version>
         <scoverage.aggregate>true</scoverage.aggregate>
         <logback.version>1.2.3</logback.version>
     </properties>
