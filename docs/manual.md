@@ -194,8 +194,7 @@ $ docker image build -t apalache:0.7.0 .
    - On Arch: `sudo pacman -Syu maven`
 4. Clone the git repository: `git clone https://github.com/informalsystems/apalache.git`.
 5. Change into the project directory: `cd apalache`.
-7. Run `make`. This command will install third party dependencies, compile
-   Apalache, and assemble the package.
+7. Run `make`.
 6. *Optionally* install [direnv][] and run `direnv allow`
 8. Confirm you can run the executable. It should print the inline CLI help message.
    - If you used `direnv`, then `apalache-mc` will be in your path.
