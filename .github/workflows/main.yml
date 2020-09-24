@@ -1,6 +1,6 @@
 on: [push]
 
-name: Apalache Continuous Integration
+name: build
 
 jobs:
   unit-tests:
