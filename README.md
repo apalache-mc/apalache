@@ -4,9 +4,14 @@
 
 A symbolic model checker for TLA+
 
-**master**: [![Build Status](https://travis-ci.org/informalsystems/apalache.svg?branch=master)](https://travis-ci.org/informalsystems/apalache)
-&nbsp;&nbsp;&nbsp;
-**unstable**: [![Build Status](https://travis-ci.org/informalsystems/apalache.svg?branch=unstable)](https://travis-ci.org/informalsystems/apalache)
+|             master             |              unstable              |
+| :----------------------------: | :--------------------------------: |
+| [![master badge][]][master-ci] | [![unstable badge][]][unstable-ci] |
+
+[master badge]: https://travis-ci.org/informalsystems/apalache.svg?branch=master
+[master-ci]: https://travis-ci.org/github/informalsystems/apalache/branches
+[unstable badge]: https://github.com/informalsystems/apalache/workflows/build/badge.svg
+[unstable-ci]: https://github.com/informalsystems/apalache/actions?query=branch%3Aunstable+workflow%3Abuild
 
 Apalache translates TLA+ in the logic supported by the SMT solvers, for instance, [Microsoft Z3](https://github.com/Z3Prover/z3). Apalache can check inductive invariants (for fixed or bounded parameters) and check safety of bounded executions (bounded model checking). To see the list of supported
 TLA+ constructs, check the [supported features](docs/features.md). In general,
