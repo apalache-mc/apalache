@@ -273,8 +273,8 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
   }
 
   test("well-typed application of let-in") {
-    // let F == lambda x \in Set(a): x in F(Int)
-    val xDomain = mkUniqConst(parser("Set(a)"))
+    // let F == lambda x \in Set(Int): x in F(Int)
+    val xDomain = mkUniqConst(parser("Set(Int)"))
     val xInF = mkUniqName("x")
     val fBody = mkUniqAbs(xInF, ("x", xDomain))
     val fArg = mkUniqConst(IntT1())
@@ -291,13 +291,13 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
         parser("Int")).atLeastOnce()
       // the signature a => a gives us the polymorhic type of x
       listener.onTypeFound(xInF.sourceRef.asInstanceOf[ExactRef],
-        parser("a")).atLeastOnce()
+        parser("Int")).atLeastOnce()
       // the signature a => a gives us the polymorphic type of xDomain
       listener.onTypeFound(xDomain.sourceRef.asInstanceOf[ExactRef],
-        parser("Set(a)")).atLeastOnce()
+        parser("Set(Int)")).atLeastOnce()
       // the signature a => a gives us the polymorphic type for the definition of F
       listener.onTypeFound(fBody.sourceRef.asInstanceOf[ExactRef],
-        parser("a => a")).atLeastOnce()
+        parser("Int => Int")).atLeastOnce()
       // interestingly, we do not infer the type of F at the application site
 //      listener.onTypeFound(fBody.tlaId, parser("Int => Int")).atLeastOnce()
       // the overall result of LET-IN
@@ -306,7 +306,7 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
     }
     whenExecuting(listener) {
       // we do not compute principal types here....
-      val annotations = TypeContext("F" -> parser("a => a"))
+      val annotations = TypeContext("F" -> parser("Int => Int"))
       val computed = checker.compute(listener, annotations, letIn)
       assert(computed.contains(parser("Int")))
     }
@@ -389,6 +389,33 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
     whenExecuting(listener) {
       val computed = checker.compute(listener, TypeContext.empty, letIn)
       assert(computed.contains(parser("Int")))
+    }
+  }
+
+  // We explicitly forbid polymorphic user-defined operators, to detect errors as soon as possible.
+  // That is, although the built-in operators are polymorphic and overloaded by design,
+  // the user-defined operators should be simple: no overloading, no polymorphism.
+  // This may change in the future.
+  test("no polymorphic let-definitions") {
+    // let F == lambda x \in Set(a): x in F(Int)
+    val xDomain = mkUniqConst(parser("Set(a)"))
+    val xInF = mkUniqName("x")
+    val fBody = mkUniqAbs(xInF, ("x", xDomain))
+    val fArg = mkUniqConst(IntT1())
+    val fApp = mkUniqAppByName("F", fArg)
+    val letIn = mkUniqLet("F", fBody, fApp)
+
+    val listener = mock[TypeCheckerListener]
+    expecting {
+      // xDomain is Set(b), the type b propagates
+      listener.onTypeFound(xDomain.sourceRef.asInstanceOf[ExactRef],
+        parser("Set(b)")).atLeastOnce()
+      listener.onTypeError(letIn.sourceRef,
+        "Expected a concrete type of operator F, found polymorphic type: (b) => b")
+    }
+    whenExecuting(listener) {
+      val computed = checker.compute(listener, TypeContext.empty, letIn)
+      assert(computed.isEmpty)
     }
   }
 

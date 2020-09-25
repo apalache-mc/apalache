@@ -142,7 +142,7 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
 
         for {
           // unify the parameter types in the signature and the types of the actual parameters
-          unifiedOperType <- matchDef(extCtx, ex.sourceRef, extCtx(name), paramsAndDoms, boundEx)
+          unifiedOperType <- matchDef(extCtx, name, ex.sourceRef, paramsAndDoms, boundEx)
           _ <- Some(onTypeFound(absEx.sourceRef, unifiedOperType))
           uniCtx <- Some(new TypeContext(ctx.types + (name -> unifiedOperType)))
           // compute the expression in the scope by assuming the instantiated signature
@@ -214,11 +214,11 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
   }
 
   private def matchDef(ctx: TypeContext,
+                       name: String,
                        sourceRef: EtcRef,
-                       operType: TlaType1,
                        binders: Seq[(String, EtcExpr)],
                        defBody: EtcExpr): Option[TlaType1] = {
-    operType match {
+    ctx(name) match {
       case OperT1(paramTypes, res) =>
         def unifyWithResult(extCtx: TypeContext,
                             inferredResType: TlaType1,
@@ -233,8 +233,17 @@ class EtcTypeChecker extends TypeChecker with EtcBuilder {
             val names = binders.map(_._1)
             val argTypes = names.map(extCtx.types)
             val unifiedResType = unifiedRes.get._2
-            onTypeFound(defBody.sourceRef, unifiedResType)
-            Some(OperT1(argTypes, unifiedResType))
+            // We check on purpose that neither the unified arguments, nor the results are polymorphic.
+            // In the future, we might want to lift this restriction, but polymorphism tends to delay type errors.
+            val inferredOperType = OperT1(argTypes, unifiedResType)
+            if (argTypes.exists(_.usedNames.nonEmpty) || unifiedResType.usedNames.nonEmpty) {
+              onTypeError(sourceRef,
+                s"Expected a concrete type of operator $name, found polymorphic type: " + inferredOperType)
+              None
+            } else {
+              onTypeFound(defBody.sourceRef, unifiedResType)
+              Some(inferredOperType)
+            }
           }
         }
 
