@@ -17,6 +17,10 @@ import at.forsyte.apalache.tla.typecheck.parser.{DefaultType1Parser, Type1ParseE
   */
 class ToEtcExpr extends EtcBuilder {
   private val type1Parser = DefaultType1Parser
+  /**
+    * The counter that we use to produce fresh variables
+    */
+  private var nextVarNum = 0
 
   // TODO: add support for recursive functions
 
@@ -28,17 +32,17 @@ class ToEtcExpr extends EtcBuilder {
     * @return the translated let-in expression with inScopeEx attached
     */
   def apply(decl: TlaOperDecl, inScopeEx: EtcExpr): EtcExpr = {
-    val paramsAndDoms = formalParamsToTypeVars(0, decl.formalParams).map {
-      case (paramName, paramType) =>
-        (paramName, mkConst(BlameRef(decl.body.ID), SetT1(paramType)) )
-    }
-
     if (decl.name.startsWith("TypeAssumptions")) {
       // the special form for type annotations over state variables and constants
       parseTypeAssumptions(decl, inScopeEx)
     } else {
       // The type of the lambda is what we want to see as the type of the declaration.
       // There are two cases: (1) the definition body contains a type annotation, and (2) no type annotation
+      val paramsAndDoms = formalParamsToTypeVars(decl.formalParams).map {
+        case (paramName, paramType) =>
+          (paramName, mkConst(BlameRef(decl.body.ID), SetT1(paramType)) )
+      }
+
       decl.body match {
         case OperEx(TypingOper.withType, ValEx(TlaStr(typeText)), body) =>
           // case 1: the definition body contains a type annotation
@@ -153,7 +157,8 @@ class ToEtcExpr extends EtcBuilder {
     //******************************************** GENERAL OPERATORS **************************************************
     case OperEx(op, args @ _*) if op == TlaOper.eq || op == TlaOper.ne =>
       // x = y, x /= y
-      val opsig = OperT1(Seq(VarT1("a"), VarT1("a")), BoolT1())
+      val a = mkFreshVar
+      val opsig = OperT1(Seq(a, a), BoolT1())
       mkApp(ex.ID, opsig, args)
 
     case OperEx(TlaOper.apply, NameEx(name), args @ _*) =>
@@ -166,7 +171,8 @@ class ToEtcExpr extends EtcBuilder {
     case OperEx(TlaOper.chooseBounded, NameEx(bindingVar), bindingSet, pred) =>
       // CHOOSE x \in S: P
       // the principal type of CHOOSE is (a => Bool) => a
-      val chooseType = OperT1(Seq(OperT1(Seq(VarT1("a")), BoolT1())), VarT1("a"))
+      val a = mkFreshVar
+      val chooseType = OperT1(Seq(OperT1(Seq(a), BoolT1())), a)
       // CHOOSE implicitly introduces a lambda abstraction: λ x ∈ S. P
       val chooseLambda = mkAbs(BlameRef(ex.ID), this(pred), (bindingVar, this(bindingSet)))
       // the resulting expression is (((a => Bool) => a) (λ x ∈ S. P))
@@ -178,10 +184,12 @@ class ToEtcExpr extends EtcBuilder {
       //
       // Igor: I am not sure that this is a good solution, as the type checker will not propagate the possible
       // values of b from P. This expression will always give us a polytype.
-      val chooseType = OperT1(Seq(OperT1(Seq(VarT1("a")), BoolT1())), VarT1("a"))
+      val a = mkFreshVar
+      val chooseType = OperT1(Seq(OperT1(Seq(a), BoolT1())), a)
       // unbounded CHOOSE implicitly introduces a lambda abstraction: λ x ∈ Set(b). P
+      val b = mkFreshVar
       val chooseLambda = mkAbs(BlameRef(ex.ID), this(pred),
-        (bindingVar, mkConst(BlameRef(ex.ID), SetT1(VarT1("b")))))
+        (bindingVar, mkConst(BlameRef(ex.ID), SetT1(b))))
       // the resulting expression is (((a => Bool) => a) (λ x ∈ Set(b). P))
       mkApp(ExactRef(ex.ID), Seq(chooseType), chooseLambda)
 
@@ -205,7 +213,8 @@ class ToEtcExpr extends EtcBuilder {
         if op == TlaBoolOper.exists || op == TlaBoolOper.forall =>
       // \E x \in S: P, \A x \in S: P
       // the principal type of \A and \E is (a => Bool) => Bool
-      val quantType = OperT1(Seq(OperT1(Seq(VarT1("a")), BoolT1())), BoolT1())
+      val a = mkFreshVar
+      val quantType = OperT1(Seq(OperT1(Seq(a), BoolT1())), BoolT1())
       // \E and \A implicitly introduce a lambda abstraction: λ x ∈ S. P
       val lambda = mkAbs(BlameRef(ex.ID), this(pred), (bindingVar, this(bindingSet)))
       // the resulting expression is (((a => Bool) => a) (λ x ∈ S. P))
@@ -214,18 +223,19 @@ class ToEtcExpr extends EtcBuilder {
     //******************************************** SETS **************************************************
     case OperEx(TlaSetOper.enumSet) =>
       // empty set {} is not an operator but a constant
-      mkConst(ExactRef(ex.ID), SetT1(VarT1("a")))
+      val a = mkFreshVar
+      mkConst(ExactRef(ex.ID), SetT1(a))
 
     case OperEx(TlaSetOper.enumSet, args @ _*) =>
       // { 1, 2, 3 }
-      val a = VarT1("a")
+      val a = mkFreshVar
       val as = List.fill(args.length)(a)
       mkApp(ex.ID, OperT1(as, SetT1(a)), args)
 
     case OperEx(TlaSetOper.funSet, args @ _*) =>
       // [S -> T]
-      val a = VarT1("a")
-      val b = VarT1("b")
+      val a = mkFreshVar
+      val b = mkFreshVar
       // (Set(a), Set(b)) => Set(a -> b)
       val sig = OperT1(Seq(SetT1(a), SetT1(b)), SetT1(FunT1(a, b)))
       mkApp(ex.ID, sig, args)
@@ -237,32 +247,35 @@ class ToEtcExpr extends EtcBuilder {
         case (_, i) if i % 2 == 0 => throw new IllegalArgumentException("Expected ValEx(TlaStr(_)) as a field name")
       }
       val sets = args.zipWithIndex.filter(_._2 % 2 == 1).map(_._1)
-      val typeVars = mkBoundVars(0, sets.length)
+      val typeVars = mkFreshVars(sets.length)
       val recSetType = SetT1(RecT1(fields.zip(typeVars) :_*))
       val opType = OperT1(typeVars.map(SetT1(_)), recSetType)
       mkApp(ex.ID, opType, sets)
 
     case OperEx(TlaSetOper.seqSet, arg) =>
       // Seq(S)
-      val a = VarT1("a")
+      val a = mkFreshVar
       val sig = OperT1(Seq(SetT1(a)), SeqT1(a))
       mkApp(ex.ID, sig, Seq(arg))
 
     case OperEx(op, args @ _*) if op == TlaSetOper.in || op == TlaSetOper.notin =>
       // x \in S, x \notin S
-      val opsig = OperT1(List(VarT1("a"), SetT1(VarT1("a"))), BoolT1())
+      val a = mkFreshVar
+      val opsig = OperT1(List(a, SetT1(a)), BoolT1())
       mkApp(ex.ID, opsig, args)
 
     case OperEx(op, args @ _*)
         if op == TlaSetOper.subseteq || op == TlaSetOper.subsetProper
           || op == TlaSetOper.supseteq || op == TlaSetOper.supsetProper =>
       // S \subseteq T, S \subset T, S \supseteq T, S \supset T
-      val opsig = OperT1(List(SetT1(VarT1("a")), SetT1(VarT1("a"))), BoolT1())
+      val a = mkFreshVar
+      val opsig = OperT1(List(SetT1(a), SetT1(a)), BoolT1())
       mkApp(ex.ID, opsig, args)
 
     case OperEx(TlaSetOper.SUBSET, args @ _*) =>
       // SUBSET S
-      val opsig = OperT1(List(SetT1(VarT1("a"))), SetT1(SetT1(VarT1("a"))))
+      val a = mkFreshVar
+      val opsig = OperT1(List(SetT1(a)), SetT1(SetT1(a)))
       mkApp(ex.ID, opsig, args)
 
     case OperEx(TlaSetOper.union, args @ _*) =>
@@ -272,12 +285,13 @@ class ToEtcExpr extends EtcBuilder {
 
     case OperEx(op, args @ _*) if op == TlaSetOper.cap || op == TlaSetOper.cup || op == TlaSetOper.setminus =>
       // S \\intersect T, S \\union T, S \\ T
-      val opsig = OperT1(List(SetT1(VarT1("a")), SetT1(VarT1("a"))), SetT1(VarT1("a")))
+      val a = mkFreshVar
+      val opsig = OperT1(List(SetT1(a), SetT1(a)), SetT1(a))
       mkApp(ex.ID, opsig, args)
 
     case OperEx(TlaSetOper.times, args @ _*) =>
       // S \X T
-      val typeVars = mkBoundVars(0, args.length)
+      val typeVars = mkFreshVars(args.length)
       val opsig = OperT1(typeVars.map(SetT1(_)), SetT1(TupT1(typeVars :_*)))
       mkApp(ex.ID, opsig, args)
 
@@ -285,8 +299,8 @@ class ToEtcExpr extends EtcBuilder {
       // { x \in S: P }
       // or, { <<x, ..., z>> \in S: P }
       // the principal type is (a => Bool) => Set(a)
-      val bindings = translateBindings(0, (bindingEx, bindingSet))
-      val typeVars = mkBoundVars(0, bindings.length) // start with "a"
+      val bindings = translateBindings((bindingEx, bindingSet))
+      val typeVars = mkFreshVars(bindings.length)
 
       // 1. When there is one argument, a set element has type "a", no tuple is involved.
       // 2. When there are multiple arguments,
@@ -306,10 +320,11 @@ class ToEtcExpr extends EtcBuilder {
       if (vars.length != sets.length) {
         throw new TypingException("Invalid bound variables and sets in: " + ex)
       }
-      val bindings = translateBindings(1, vars.map(_._1).zip(sets.map(_._1)) :_*)
-      val typeVars = mkBoundVars(1, bindings.length) // start with "b", as "a" goes to the result
+      val bindings = translateBindings(vars.map(_._1).zip(sets.map(_._1)) :_*)
+      val a = mkFreshVar
+      val otherTypeVars = mkFreshVars(bindings.length) // start with "b", as "a" goes to the result
       // the principal type of is ((b, c) => a) => Set(a)
-      val principal = OperT1(Seq(OperT1(typeVars, VarT1("a"))), SetT1(VarT1("a")))
+      val principal = OperT1(Seq(OperT1(otherTypeVars, a)), SetT1(a))
       // map implicitly introduces a lambda abstraction: λ x ∈ S, y ∈ T. e
       val lambda = mkAbs(BlameRef(mapExpr.ID), this(mapExpr), bindings: _*)
       mkApp(ExactRef(ex.ID), Seq(principal), lambda)
@@ -322,8 +337,7 @@ class ToEtcExpr extends EtcBuilder {
         case (_, i) if i % 2 == 0 => throw new IllegalArgumentException("Expected ValEx(TlaStr(_)) as a field name")
       }
       val values = args.zipWithIndex.filter(_._2 % 2 == 1).map(p => this(p._1))
-      val typeVars = fields.indices
-        .map(l => VarT1(l))
+      val typeVars = fields.indices.map(_ => mkFreshVar)
       // (a, b) => [f1 |-> a, f2 |-> b]
       val sig = OperT1(typeVars, RecT1(fields.zip(typeVars) : _*))
       mkApp(ExactRef(ex.ID), Seq(sig), values: _*)
@@ -334,36 +348,43 @@ class ToEtcExpr extends EtcBuilder {
 
     case OperEx(TlaFunOper.tuple, args @ _*) =>
       // <<e_1, ..., e_n>>
-      val typeVars = mkBoundVars(0, args.length)
+      val typeVars = mkFreshVars(args.length)
+      val a = if (typeVars.nonEmpty) typeVars.head else mkFreshVar
       val values = args.map(this(_))
       val tuple = OperT1(typeVars, TupT1(typeVars :_*))
-      val as = List.fill(args.length)(VarT1("a"))
-      val seq = OperT1(as, SeqT1(VarT1("a")))
+      val as = List.fill(args.length)(a)
+      val seq = OperT1(as, SeqT1(a))
       mkApp(ExactRef(ex.ID), Seq(tuple, seq), values: _*)
 
     case OperEx(TlaFunOper.app, fun, arg @ ValEx(TlaInt(fieldNo))) =>
       // f[i], where i is an integer literal
-      val funType = OperT1(Seq(FunT1(IntT1(), VarT1("a")), IntT1()), VarT1("a")) // ((Int -> a), Int) => a
-      val seqType = OperT1(Seq(SeqT1(VarT1("a")), IntT1()), VarT1("a")) // (Seq(a), Int) => a
-      val tupType = OperT1(Seq(SparseTupT1(fieldNo.toInt -> VarT1("a")), IntT1()), VarT1("a")) // ({ 3: a }, Int) => a
+      val a = mkFreshVar
+      val funType = OperT1(Seq(FunT1(IntT1(), a), IntT1()), a) // ((Int -> a), Int) => a
+      val seqType = OperT1(Seq(SeqT1(a), IntT1()), a) // (Seq(a), Int) => a
+      val tupType = OperT1(Seq(SparseTupT1(fieldNo.toInt -> a), IntT1()), a) // ({ 3: a }, Int) => a
       mkApp(ExactRef(ex.ID), Seq(funType, seqType, tupType), this(fun), mkConst(ExactRef(arg.ID), IntT1()))
 
     case OperEx(TlaFunOper.app, fun, arg @ ValEx(TlaStr(fieldName))) =>
       // f[s], where s is a string literal
-      val funType = OperT1(Seq(FunT1(StrT1(), VarT1("a")), StrT1()), VarT1("a")) // ((Str -> a), Str) => a
-      val recType = OperT1(Seq(RecT1(fieldName -> VarT1("a")), StrT1()), VarT1("a")) // ({ foo: a }, Str) => a
+      val a = mkFreshVar
+      val funType = OperT1(Seq(FunT1(StrT1(), a), StrT1()), a) // ((Str -> a), Str) => a
+      val recType = OperT1(Seq(RecT1(fieldName -> a), StrT1()), a) // ({ foo: a }, Str) => a
       mkApp(ExactRef(ex.ID), Seq(funType, recType), this(fun), mkConst(ExactRef(arg.ID), StrT1()))
 
     case OperEx(TlaFunOper.app, fun, arg) =>
       // the general case of f[e]
-      val funType = OperT1(Seq(FunT1(VarT1("a"), VarT1("b")), VarT1("a")), VarT1("b")) // ((a -> b), a) => b
-      val seqType = OperT1(Seq(SeqT1(VarT1("a")), IntT1()), VarT1("a")) // (Seq(a), Int) => a
+      val a = mkFreshVar
+      val b = mkFreshVar
+      val funType = OperT1(Seq(FunT1(a, b), a), b) // ((a -> b), a) => b
+      val seqType = OperT1(Seq(SeqT1(a), IntT1()), a) // (Seq(a), Int) => a
       mkApp(ExactRef(ex.ID), Seq(funType, seqType), this(fun), this(arg))
 
     case OperEx(TlaFunOper.domain, fun) =>
       // DOMAIN f
-      val funType = OperT1(Seq(FunT1(VarT1("a"), VarT1("b"))), SetT1(VarT1("a"))) // (a -> b) => Set(a)
-      val seqType = OperT1(Seq(SeqT1(VarT1("a"))), SetT1(IntT1())) // Seq(a) => Set(Int)
+      val a = mkFreshVar
+      val b = mkFreshVar
+      val funType = OperT1(Seq(FunT1(a, b)), SetT1(a)) // (a -> b) => Set(a)
+      val seqType = OperT1(Seq(SeqT1(a)), SetT1(IntT1())) // Seq(a) => Set(Int)
       val recType = OperT1(Seq(RecT1()), SetT1(StrT1())) // [] => Set(Str)
       val tupType = OperT1(Seq(SparseTupT1()), SetT1(IntT1())) // {} => Set(Int)
       mkApp(ExactRef(ex.ID), Seq(funType, seqType, recType, tupType), this(fun))
@@ -371,20 +392,21 @@ class ToEtcExpr extends EtcBuilder {
     case OperEx(TlaFunOper.funDef, mapExpr, args @ _*) =>
       // [ x \in S, y \in T |-> e ]
       // or, [ <<x, y>> \in S, z \in T |-> e ]
-      val (vars, sets) = args.zipWithIndex.partition(_._2 % 2 == 0)
-      if (vars.length != sets.length) {
+      val (varEs, setEs) = args.zipWithIndex.partition(_._2 % 2 == 0)
+      if (varEs.length != setEs.length) {
         throw new TypingException("Invalid bound variables and sets in: " + ex)
       }
-      val bindings = translateBindings(1, vars.map(_._1).zip(sets.map(_._1)) :_*)
-      val typeVars = mkBoundVars(1, bindings.length) // start with "b", as "a" goes to the result
+      val bindings = translateBindings(varEs.map(_._1).zip(setEs.map(_._1)) :_*)
+      val a = mkFreshVar
+      val typeVars = mkFreshVars(bindings.length) // start with "b", as "a" goes to the result
       // 1. When there is one argument, the generated function has the type b -> a, that is, no tuple is involved.
       // 2. When there are multiple arguments,
       // the generated function has the type <<b, c>> -> a, that is, it accepts a tuple
       val funFrom = if (bindings.length == 1) typeVars.head else TupT1(typeVars :_*)
       // The principal type of is ((b, c) => a) => (<<b, c>> -> a).
       // Note that the generated function has the type <<b, c>> -> a, that is, it accepts a tuple.
-      val principal = OperT1(Seq(OperT1(typeVars, VarT1("a"))),
-        FunT1(funFrom, VarT1("a")))
+      val principal = OperT1(Seq(OperT1(typeVars, a)),
+        FunT1(funFrom, a))
       // the function definition implicitly introduces a lambda abstraction: λ x ∈ S, y ∈ T. e
       val lambda = mkAbs(BlameRef(mapExpr.ID), this(mapExpr), bindings :_*)
       mkApp(ExactRef(ex.ID), Seq(principal), lambda)
@@ -408,13 +430,16 @@ class ToEtcExpr extends EtcBuilder {
 
       // a function: ((a -> b), a, b) => (a -> b)
       // introduce a sequence of a, b, a, b, ... (as many as there are accessors)
-      val aAndBs = List.fill(accessors.length)(List(VarT1("a"), VarT1("b"))).flatten
-      val funType = OperT1(FunT1(VarT1("a"), VarT1("b")) +: aAndBs, FunT1(VarT1("a"), VarT1("b")))
+      val a1 = mkFreshVar
+      val b1 = mkFreshVar
+      val aAndBs = List.fill(accessors.length)(List(a1, b1)).flatten
+      val funType = OperT1(FunT1(a1, b1) +: aAndBs, FunT1(a1, b1))
       // a sequence: (Seq(a), Int, a, Int, a, ...) => Seq(a)
-      val intAndAs = List.fill(accessors.length)(List(IntT1(), VarT1("a"))).flatten
-      val seqType = OperT1(SeqT1(VarT1("a")) +: intAndAs, SeqT1(VarT1("a")))
+      val a2 = mkFreshVar
+      val intAndAs = List.fill(accessors.length)(List(IntT1(), a2)).flatten
+      val seqType = OperT1(SeqT1(a2) +: intAndAs, SeqT1(a2))
       // a record: ([foo: a, bar: b, ...], Str, a, Str, b, ...) => [foo: a, bar: b, ...]
-      val typeVars = mkBoundVars(0, accessors.length) // introduce type variables a, b, c, ...
+      val typeVars = mkFreshVars(accessors.length) // introduce type variables a, b, c, ...
       val recFields = accessors.zip(typeVars).collect { case (ValEx(TlaStr(fieldName)), tv) => (fieldName, tv)}
       val rec = RecT1(recFields :_*)
       val strAndVars = typeVars.flatMap(v => List(StrT1(), v))
@@ -440,12 +465,16 @@ class ToEtcExpr extends EtcBuilder {
 
     case OperEx(TlaFunOper.recFunDef, body, NameEx(name), bindingSet) =>
       // the expected type is: (((a -> b) => (a => b)) => (a -> b)) (λ $recFun ∈ Set(c -> d). λ x ∈ Int. x)
-      val funType = FunT1(VarT1("a"), VarT1("b"))
-      val aToB = OperT1(Seq(VarT1("a")), VarT1("b"))
+      val a = mkFreshVar
+      val b = mkFreshVar
+      val funType = FunT1(a, b)
+      val aToB = OperT1(Seq(a), b)
       val principal = OperT1(Seq(OperT1(Seq(funType), aToB)), funType)
       val innerLambda = mkAbs(ExactRef(body.ID), this(body), (name, this(bindingSet)))
+      val c = mkFreshVar
+      val d = mkFreshVar
       val outerLambda = mkAbs(BlameRef(ex.ID), innerLambda,
-        (TlaFunOper.recFunRef.uniqueName, mkConst(BlameRef(ex.ID), SetT1(FunT1(VarT1("c"), VarT1("d"))))))
+        (TlaFunOper.recFunRef.uniqueName, mkConst(BlameRef(ex.ID), SetT1(FunT1(c, d)))))
       mkApp(ExactRef(ex.ID), Seq(principal), outerLambda)
 
     case OperEx(TlaFunOper.recFunRef) =>
@@ -456,7 +485,8 @@ class ToEtcExpr extends EtcBuilder {
     case OperEx(TlaControlOper.ifThenElse, predEx, thenEx, elseEx) =>
       // IF e1 THEN e2 ELSE E2
       // (Bool, a, a) => a
-      val opsig = OperT1(List(BoolT1(), VarT1("a"), VarT1("a")), VarT1("a"))
+      val a = mkFreshVar
+      val opsig = OperT1(List(BoolT1(), a, a), a)
       mkApp(ex.ID, opsig, Seq(predEx, thenEx, elseEx))
 
     case OperEx(op, args @ _*) if op == TlaControlOper.caseNoOther || op == TlaControlOper.caseWithOther =>
@@ -465,33 +495,37 @@ class ToEtcExpr extends EtcBuilder {
       val nargs = args.length
       val nargs2 = (args.length / 2) * 2 // the largest even number below nargs
       // Bool, a, Bool, a, ...
-      val boolAndAs = 0.until(nargs2).map(i => if (i % 2 == 0) BoolT1() else VarT1("a"))
-      val operArgs = if (nargs % 2 == 1) VarT1("a") +: boolAndAs  else boolAndAs
-      val opsig = OperT1(operArgs, VarT1("a"))
+      val a = mkFreshVar
+      val boolAndAs = 0.until(nargs2).map(i => if (i % 2 == 0) BoolT1() else a)
+      val operArgs = if (nargs % 2 == 1) a +: boolAndAs  else boolAndAs
+      val opsig = OperT1(operArgs, a)
       mkApp(ex.ID, opsig, args)
 
     //******************************************** FiniteSets ************************************************
     case OperEx(TlaFiniteSetOper.isFiniteSet, setEx) =>
-      val opsig = OperT1(Seq(SetT1(VarT1("a"))), BoolT1())  // Set(a) => Bool
+      val a = mkFreshVar
+      val opsig = OperT1(Seq(SetT1(a)), BoolT1())  // Set(a) => Bool
       mkApp(ex.ID, opsig, Seq(setEx))
 
     case OperEx(TlaFiniteSetOper.cardinality, setEx) =>
-      val opsig = OperT1(Seq(SetT1(VarT1("a"))), IntT1())   // Set(a) => Int
+      val a = mkFreshVar
+      val opsig = OperT1(Seq(SetT1(a)), IntT1())   // Set(a) => Int
       mkApp(ex.ID, opsig, Seq(setEx))
 
     //*************************************** ACTION OPERATORS ***********************************************
     case OperEx(TlaActionOper.prime, inner) =>
-      val opsig = OperT1(Seq(VarT1("a")), VarT1("a"))       // a => a
+      val a = mkFreshVar
+      val opsig = OperT1(Seq(a), a)       // a => a
       mkApp(ex.ID, opsig, Seq(inner))
 
     case OperEx(TlaActionOper.stutter, args @ _*) =>
       // Bool, a, b, c => Bool
-      val opsig = OperT1(BoolT1() +: mkBoundVars(0, args.length - 1), BoolT1())
+      val opsig = OperT1(BoolT1() +: mkFreshVars(args.length - 1), BoolT1())
       mkApp(ex.ID, opsig, args)
 
     case OperEx(TlaActionOper.nostutter, args @ _*) =>
       // Bool, a, b, c => Bool
-      val opsig = OperT1(BoolT1() +: mkBoundVars(0, args.length - 1), BoolT1())
+      val opsig = OperT1(BoolT1() +: mkFreshVars(args.length - 1), BoolT1())
       mkApp(ex.ID, opsig, args)
 
     case OperEx(TlaActionOper.enabled, inner) =>
@@ -499,7 +533,7 @@ class ToEtcExpr extends EtcBuilder {
       mkApp(ex.ID, opsig, Seq(inner))
 
     case OperEx(TlaActionOper.unchanged, args @ _*) =>
-      val opsig = OperT1(mkBoundVars(0, args.length), BoolT1())       // a, b, c => Bool
+      val opsig = OperT1(mkFreshVars(args.length), BoolT1())       // a, b, c => Bool
       mkApp(ex.ID, opsig, args)
 
     case OperEx(TlaActionOper.composition, a, b) =>
@@ -508,32 +542,39 @@ class ToEtcExpr extends EtcBuilder {
 
     //******************************************** Sequences *************************************************
     case OperEx(TlaSeqOper.head, s) =>
-      val opsig = OperT1(Seq(SeqT1(VarT1("a"))), VarT1("a"))       // Seq(a) => a
+      val a = mkFreshVar
+      val opsig = OperT1(Seq(SeqT1(a)), a)       // Seq(a) => a
       mkApp(ex.ID, opsig, Seq(s))
 
     case OperEx(TlaSeqOper.tail, s) =>
-      val opsig = OperT1(Seq(SeqT1(VarT1("a"))), SeqT1(VarT1("a")))       // Seq(a) => Seq(a)
+      val a = mkFreshVar
+      val opsig = OperT1(Seq(SeqT1(a)), SeqT1(a))       // Seq(a) => Seq(a)
       mkApp(ex.ID, opsig, Seq(s))
 
     case OperEx(TlaSeqOper.append, args @ _*) =>
-      val opsig = OperT1(Seq(SeqT1(VarT1("a")), VarT1("a")), SeqT1(VarT1("a")))       // Seq(a), a => Seq(a)
+      val a = mkFreshVar
+      val opsig = OperT1(Seq(SeqT1(a), a), SeqT1(a))       // Seq(a), a => Seq(a)
       mkApp(ex.ID, opsig, args)
 
     case OperEx(TlaSeqOper.concat, s, t) =>
-      val opsig = OperT1(Seq(SeqT1(VarT1("a")), SeqT1(VarT1("a"))), SeqT1(VarT1("a"))) // Seq(a), Seq(a) => Seq(a)
+      val a = mkFreshVar
+      val opsig = OperT1(Seq(SeqT1(a), SeqT1(a)), SeqT1(a)) // Seq(a), Seq(a) => Seq(a)
       mkApp(ex.ID, opsig, Seq(s, t))
 
     case OperEx(TlaSeqOper.len, s) =>
-      val opsig = OperT1(Seq(SeqT1(VarT1("a"))), IntT1())                             // Seq(a) => Int
+      val a = mkFreshVar
+      val opsig = OperT1(Seq(SeqT1(a)), IntT1())                             // Seq(a) => Int
       mkApp(ex.ID, opsig, Seq(s))
 
     case OperEx(TlaSeqOper.subseq, args @ _*) =>
-      val opsig = OperT1(Seq(SeqT1(VarT1("a")), IntT1(), IntT1()), SeqT1(VarT1("a"))) // Seq(a), Int, Int => Seq(a)
+      val a = mkFreshVar
+      val opsig = OperT1(Seq(SeqT1(a), IntT1(), IntT1()), SeqT1(a)) // Seq(a), Int, Int => Seq(a)
       mkApp(ex.ID, opsig, args)
 
     case OperEx(TlaSeqOper.selectseq, args @ _*) =>
-      val filter = OperT1(Seq(VarT1("a")), BoolT1())
-      val opsig = OperT1(Seq(SeqT1(VarT1("a")), filter), SeqT1(VarT1("a"))) // Seq(a), (a => Bool) => Seq(a)
+      val a = mkFreshVar
+      val filter = OperT1(Seq(a), BoolT1())
+      val opsig = OperT1(Seq(SeqT1(a), filter), SeqT1(a)) // Seq(a), (a => Bool) => Seq(a)
       mkApp(ex.ID, opsig, args)
 
     //******************************************** INTEGERS **************************************************
@@ -581,11 +622,13 @@ class ToEtcExpr extends EtcBuilder {
       mkApp(ex.ID, opsig, Seq(lhs, rhs))
 
     case OperEx(op, sub, act) if op == TlaTempOper.weakFairness || op == TlaTempOper.strongFairness =>
-      val opsig = OperT1(Seq(VarT1("a"), BoolT1()), BoolT1())       // (a, Bool) => Bool
+      val a = mkFreshVar
+      val opsig = OperT1(Seq(a, BoolT1()), BoolT1())       // (a, Bool) => Bool
       mkApp(ex.ID, opsig, Seq(sub, act))
 
     case OperEx(op, varName, act) if op == TlaTempOper.AA || op == TlaTempOper.EE =>
-      val opsig = OperT1(Seq(VarT1("a"), BoolT1()), BoolT1())       // (a, Bool) => Bool
+      val a = mkFreshVar
+      val opsig = OperT1(Seq(a, BoolT1()), BoolT1())       // (a, Bool) => Bool
       mkApp(ex.ID, opsig, Seq(varName, act))
 
     //******************************************** MISC **************************************************
@@ -593,21 +636,22 @@ class ToEtcExpr extends EtcBuilder {
       throw new TypingInputException("Found a type annotation in an unexpected place: " + wte)
 
     case _ =>
-      mkConst(ExactRef(ex.ID), VarT1("a"))
+      val a = mkFreshVar
+      mkConst(ExactRef(ex.ID), a)
   }
 
   /**
     * Usually, one uses bindings like x \in S, y \in T in set comprehensions and function definitions.
-    * However, TLA+ allows for advanced syntax in bindings, e.g., << x, y >> \in S, << a, << b, c >> >> \in T.
+    * However, TLA+ allows for advanced syntax in bindings, e.g., << x, y >> \in S, << u, << v, w >> >> \in T.
     * This method does a general translation for variable bindings
     *
     * @param bindings pairs of expressions, e.g., (NameEx("x"), NameEx("S"))
     * @return translated bindings, where all tuples have been unpacked
     */
-  private def translateBindings(start: Int, bindings: (TlaEx, TlaEx)*): Seq[(String, EtcExpr)] = {
+  private def translateBindings(bindings: (TlaEx, TlaEx)*): Seq[(String, EtcExpr)] = {
     // project a set of dim-tuples on the ith element (starting with 0!)
     def project(id: UID, setEx: EtcExpr, dim: Int, index: Int): EtcExpr = {
-      val typeVars = mkBoundVars(start, dim)
+      val typeVars = mkFreshVars(dim)
       // e.g., Set(<<a, b, c>>) => Set(b)
       val operType = OperT1(Seq(SetT1(TupT1(typeVars :_*))), SetT1(typeVars(index)))
       // (operType set)
@@ -635,24 +679,32 @@ class ToEtcExpr extends EtcBuilder {
   }
 
   // Translate a sequence of formal parameters into type variables
-  private def formalParamsToTypeVars(start: Int, params: Seq[FormalParam]): Seq[(String, TlaType1)] = {
+  private def formalParamsToTypeVars(params: Seq[FormalParam]): Seq[(String, TlaType1)] = {
     params match {
       case Seq() => Seq()
 
       case SimpleFormalParam(name) +: tail =>
         // a simple parameter, just introduce a new variable, e.g., b
-        val paramType = VarT1(start)
-        (name, paramType) +: formalParamsToTypeVars(start + 1, tail)
+        val paramType = mkFreshVar
+        (name, paramType) +: formalParamsToTypeVars(tail)
 
       case OperFormalParam(name, arity) +: tail =>
         // a higher-order operator, introduce an operator type (b, c, ...) => z
-        val paramType = OperT1(mkBoundVars(start, arity), VarT1(start + arity))
-        (name, paramType) +: formalParamsToTypeVars(start + 1 + arity, tail)
+        val paramType = OperT1(mkFreshVars(arity), mkFreshVar)
+        (name, paramType) +: formalParamsToTypeVars(tail)
     }
   }
 
-  private def mkBoundVars(start: Int, size: Int): Seq[VarT1] = {
-    start.until(start + size).map(l => VarT1(l))
+  private def mkFreshVar: VarT1 = {
+    val fresh = VarT1(nextVarNum)
+    nextVarNum += 1
+    fresh
+  }
+
+  private def mkFreshVars(size: Int): Seq[VarT1] = {
+    val vars = nextVarNum.until(nextVarNum + size).map(l => VarT1(l))
+    nextVarNum += size
+    vars
   }
 
   private def mkApp(uid: UID, sig: OperT1, args: Seq[TlaEx]): EtcExpr = {

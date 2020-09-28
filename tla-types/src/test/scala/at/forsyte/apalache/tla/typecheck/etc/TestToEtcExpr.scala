@@ -18,11 +18,9 @@ import org.scalatest.{BeforeAndAfterEach, FunSuite}
 @RunWith(classOf[JUnitRunner])
 class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
   var parser: Type1Parser = _
-  var gen: ToEtcExpr = _
 
   override protected def beforeEach(): Unit = {
     parser = DefaultType1Parser
-    gen = new ToEtcExpr()
   }
 
   private def mkAppByType(operTypes: Seq[TlaType1], args: TlaType1*): EtcApp = {
@@ -40,6 +38,9 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
   private def mkConstAppByName(opsig: TlaType1, args: String*): EtcApp = {
     mkUniqApp(Seq(opsig), args.map(mkUniqName): _*)
   }
+
+  // create a new instance of the translator, as it gives unique names to the variables
+  private def gen: ToEtcExpr = new ToEtcExpr()
 
   test("integer arithmetic") {
     // integers
@@ -267,16 +268,16 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
   }
 
   test("set filter { <<x, y>> \\in S: P }") {
-    // the principal type of is ((a, b) => Bool) => Set(<<a, b>>)
-    val principal = parser("((a, b) => Bool) => Set(<<a, b>>)")
+    // the principal type of is ((e, f) => Bool) => Set(<<e, f>>)
+    val principal = parser("((e, f) => Bool) => Set(<<e, f>>)")
     // filter implicitly introduce a lambda abstraction: λ x ∈ (...), y ∈ (...). P
     // the binding <<x, y>> \in S gives us two lambda abstractions
     val proj_x =
       mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("a"), VarT1("b")))), SetT1(VarT1("a")))), mkUniqName("S"))
     val proj_y =
-      mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("a"), VarT1("b")))), SetT1(VarT1("b")))), mkUniqName("S"))
+      mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("c"), VarT1("d")))), SetT1(VarT1("d")))), mkUniqName("S"))
     val lambda = mkUniqAbs(mkUniqName("P"), ("x", proj_x), ("y", proj_y))
-    // the resulting expression is ((((a, b) => Bool) => Set(a)) (λ x ∈ (...), y ∈ (...). P))
+    // the resulting expression is ((((e, f) => Bool) => Set(<<e, f>>)) (λ x ∈ (...), y ∈ (...). P))
     val expected = mkUniqApp(Seq(principal), lambda)
     assert(expected == gen(tla.filter(tla.tuple(tla.name("x"), tla.name("y")),
       tla.name("S"), tla.name("P"))))
@@ -296,14 +297,14 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
 
   // translating the advanced syntax in set comprehensions
   test("set map { <<x, y>> \\in S: e }") {
-    // given an operator from (b, c) to a, map it to the set of a: ((b, c) => a) => Set(a)
-    val principal = parser("((b, c) => a) => Set(a)")
+    // given an operator from (f, g) to e, map it to the set of e: ((f, g) => e) => Set(e)
+    val principal = parser("((f, g) => e) => Set(e)")
     // the binding <<x, y>> \in S gives us two lambda abstractions
-    val proj_y = mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("b"), VarT1("c")))), SetT1(VarT1("c")))), mkUniqName("S"))
-    val proj_x = mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("b"), VarT1("c")))), SetT1(VarT1("b")))), mkUniqName("S"))
+    val proj_x = mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("a"), VarT1("b")))), SetT1(VarT1("a")))), mkUniqName("S"))
+    val proj_y = mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("c"), VarT1("d")))), SetT1(VarT1("d")))), mkUniqName("S"))
     val lambda = mkUniqAbs(mkUniqName("e"), ("x", proj_x), ("y", proj_y))
 
-    // the resulting expression is (((b, c) => a) => Set(a)) (λ x ∈ (...), y ∈ (...). e)
+    // the resulting expression is (((f, g) => e) => Set(e)) (λ x ∈ (...), y ∈ (...). e)
     val expected = mkUniqApp(Seq(principal), lambda)
     // { <<x, y>> \in S: e }
     val map = tla.map(tla.name("e"),
@@ -391,29 +392,29 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     assert(expected == gen(fun))
   }
 
-  test("function definition [ x \\in S, y \\in T |-> e ]") {
+  test("function definition [ x \\in S, y \\in T |-> ex ]") {
     // the principal type is ((b, c) => a) => (<<b, c>> -> a)
     val principal =  parser("((b, c) => a) => (<<b, c>> -> a)")
-    // map implicitly introduces a lambda abstraction: λ x ∈ S, y ∈ T. e
-    val lambda = mkUniqAbs(mkUniqName("e"),
+    // map implicitly introduces a lambda abstraction: λ x ∈ S, y ∈ T. ex
+    val lambda = mkUniqAbs(mkUniqName("ex"),
       ("x", mkUniqName("S")), ("y", mkUniqName("T")))
     // the resulting expression is (((b, c) => a) => (<<b, c>> -> a)) (λ x ∈ S, y ∈ T. e)
     val expected = mkUniqApp(Seq(principal), lambda)
-    val fun = tla.funDef(tla.name("e"),
+    val fun = tla.funDef(tla.name("ex"),
       tla.name("x"), tla.name("S"), tla.name("y"), tla.name("T"))
     assert(expected == gen(fun))
   }
 
-  test("function definition [ <<x, y>> \\in S |-> e ]") {
-    // the principal type is ((b, c) => a) => (<<b, c>> -> a)
-    val principal =  parser("((b, c) => a) => (<<b, c>> -> a)")
+  test("function definition [ <<x, y>> \\in S |-> ex ]") {
+    // the principal type is ((f, g) => e) => (<<f, g>> -> e)
+    val principal =  parser("((f, g) => e) => (<<f, g>> -> e)")
     // the binding <<x, y>> \in S gives us a lambda of two arguments
-    val proj_y = mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("b"), VarT1("c")))), SetT1(VarT1("c")))), mkUniqName("S"))
-    val proj_x = mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("b"), VarT1("c")))), SetT1(VarT1("b")))), mkUniqName("S"))
-    val lambda = mkUniqAbs(mkUniqName("e"), ("x", proj_x), ("y", proj_y))
-    // the resulting expression is (((b, c) => a) => (<<b, c>> -> a)) (λ x ∈ (...), y ∈ (...). e)
+    val proj_x = mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("a"), VarT1("b")))), SetT1(VarT1("a")))), mkUniqName("S"))
+    val proj_y = mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("c"), VarT1("d")))), SetT1(VarT1("d")))), mkUniqName("S"))
+    val lambda = mkUniqAbs(mkUniqName("ex"), ("x", proj_x), ("y", proj_y))
+    // the resulting expression is (((f, g) => e) => (<<f, g>> -> e)) (λ x ∈ (...), y ∈ (...). ex)
     val expected = mkUniqApp(Seq(principal), lambda)
-    val fun = tla.funDef(tla.name("e"),
+    val fun = tla.funDef(tla.name("ex"),
       tla.tuple(tla.name("x"), tla.name("y")), tla.name("S"))
     assert(expected == gen(fun))
   }
@@ -422,7 +423,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     // a function or a sequence
     val types = Seq(
       parser("((a -> b), a, b) => (a -> b)"),
-      parser("(Seq(a), Int, a) => Seq(a)"))
+      parser("(Seq(c), Int, c) => Seq(c)"))
 
     val expected = mkAppByName(types, "f", "e1", "e2")
     val ex = tla.except(tla.name("f"), tla.name("e1"), tla.name("e2"))
@@ -433,7 +434,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     // a function or a sequence
     val types = Seq(
       parser("((a -> b), a, b, a, b) => (a -> b)"),
-      parser("(Seq(a), Int, a, Int, a) => Seq(a)"))
+      parser("(Seq(c), Int, c, Int, c) => Seq(c)"))
 
     val expected = mkAppByName(types, "f", "e1", "e2", "e3", "e4")
     val ex = tla.except(tla.name("f"),
@@ -445,7 +446,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     // a function or a record
     val types = Seq(
       parser("((a -> b), a, b) => (a -> b)"),
-      parser("([foo: a], Str, a) => [foo: a]"))
+      parser("([foo: d], Str, d) => [foo: d]"))
 
     val expected = mkUniqApp(types, mkUniqName("f"), mkUniqConst(StrT1()), mkUniqName("e2"))
     val ex = tla.except(tla.name("f"), tla.str("foo"), tla.name("e2"))
@@ -456,8 +457,8 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     // a function or a record
     val types = Seq(
       parser("((a -> b), a, b) => (a -> b)"),
-      parser("(Seq(a), Int, a) => Seq(a)"),
-      parser("({3: a}, Int, a) => {3: a}"))
+      parser("(Seq(c), Int, c) => Seq(c)"),
+      parser("({3: d}, Int, d) => {3: d}"))
 
     val expected = mkUniqApp(types, mkUniqName("f"), mkUniqConst(IntT1()), mkUniqName("e2"))
     val ex = tla.except(tla.name("f"), tla.int(3), tla.name("e2"))
@@ -468,8 +469,8 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     // a function or a record
     val types = Seq(
       parser("((a -> b), a, b, a, b) => (a -> b)"),
-      parser("(Seq(a), Int, a, Int, a) => Seq(a)"),
-      parser("({3: a, 5: b}, Int, a, Int, b) => {3: a, 5: b}"))
+      parser("(Seq(c), Int, c, Int, c) => Seq(c)"),
+      parser("({3: d, 5: e}, Int, d, Int, e) => {3: d, 5: e}"))
 
     val expected = mkUniqApp(types, mkUniqName("f"),
       mkUniqConst(IntT1()), mkUniqName("e2"),
