@@ -2,7 +2,7 @@
 \* Testing the Apalache type checker (ETC).
 \* A simple specification that has a bit of type annotations.
 
-EXTENDS Sequences, Typing
+EXTENDS Integers, Sequences, Typing
 
 CONSTANT N, Base
 VARIABLE x, seq
@@ -21,7 +21,9 @@ TrickyTypes ==
   /\ \E z \in {<< >>}:
         TRUE
 
-Mem(e, es) == "(a, Seq(a)) => Bool" :>
+F(y, z) == y + z        
+
+Mem(e, es) == "(ID, Seq(ID)) => Bool" :>
   (e \in {es[i]: i \in DOMAIN es})
 
 \* No need for type annotation. It is pretty trivial.

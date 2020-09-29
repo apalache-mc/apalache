@@ -17,30 +17,27 @@ TypeAssumptions ==
 vars == grid
 
 RECURSIVE Sum(_, _)
-Sum(f, S) == "(<<Int, Int>> -> Int, Set(<<Int, Int>>)) => Int" :>
+Sum(f, S) == \*"(<<Int, Int>> -> Int, Set(<<Int, Int>>)) => Int" :>
     IF S = {} THEN 0
-    ELSE LET x == CHOOSE x \in S : TRUE
+    ELSE LET x == "<<Int, Int>>" :> CHOOSE x \in S : TRUE
          IN  f[x] + Sum(f, S \ {x})
 
-\* The type check fails on <<1, 2>>. We need an explicit annotation.
-Tup2(x, y) ==
-    LET tup == "<<Int, Int>>" :> <<x, y>> IN tup
-
-Pos ==
-    {Tup2(x, y): x, y \in 1..N}
+Pos == "Set(<<Int, Int>>)" :>
+    {<<x, y>>: x, y \in 1..N}
 
 TypeOK == grid \in [Pos -> BOOLEAN]
 
 sc[<<x, y>> \in (0 .. N + 1) \X
                 (0 .. N + 1)] == CASE \/ x = 0 \/ y = 0
                                       \/ x > N \/ y > N
-                                      \/ ~grid[Tup2(x, y)] -> 0
+                                      \/ ~grid[<<x, y>>] -> 0
                                    [] OTHER -> 1
 
 score(p) == "<<Int, Int>> => Int" :>
             LET nbrs == {x \in {-1, 0, 1} \X
-                               {-1, 0, 1} : x /= Tup2(0, 0)}
-                points == {Tup2(p[1] + x, p[2] + y) : <<x, y>> \in nbrs}
+                               {-1, 0, 1} : x /= <<0, 0>>}
+                points == "Set(<<Int, Int>>)" :>
+                    {<<p[1] + x, p[2] + y>> : <<x, y>> \in nbrs}
             IN Sum(sc, points)
                    
 Init == grid \in [Pos -> BOOLEAN]
