@@ -21,7 +21,7 @@ class TestToEtcExprDecls extends FunSuite with BeforeAndAfterEach with EtcBuilde
 
   override protected def beforeEach(): Unit = {
     parser = DefaultType1Parser
-    gen = new ToEtcExpr()
+    gen = new ToEtcExpr(new TypeVarPool())
   }
 
   test("An annotated operator declaration") {

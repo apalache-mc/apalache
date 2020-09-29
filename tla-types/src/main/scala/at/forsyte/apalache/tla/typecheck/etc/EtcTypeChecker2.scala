@@ -8,15 +8,8 @@ import at.forsyte.apalache.tla.typecheck.etc.EtcTypeChecker2.UnwindException
   *
   * @author Igor Konnov
   */
-class EtcTypeChecker2(startIndex: Int) extends TypeChecker with EtcBuilder {
-  private var nextVarNum: Int = startIndex
+class EtcTypeChecker2(varPool: TypeVarPool) extends TypeChecker with EtcBuilder {
   private var listener: TypeCheckerListener = new DefaultTypeCheckerListener()
-
-  private def mkFreshVar: VarT1 = {
-    val fresh = VarT1(nextVarNum)
-    nextVarNum += 1
-    fresh
-  }
 
   /**
     * Compute the expression type in a type context. If the expression is not well-typed, return None.
@@ -71,7 +64,7 @@ class EtcTypeChecker2(startIndex: Int) extends TypeChecker with EtcBuilder {
       // a type: either monotype or polytype
       case EtcConst(polytype) =>
         // add the constraint: x = polytype, for a fresh x
-        val fresh = mkFreshVar
+        val fresh = varPool.fresh
         val clause = EqClause(fresh, polytype)
             .setOnTypeFound(onTypeFound(ex.sourceRef, _))
             .setOnTypeError(_ => onTypeError(ex.sourceRef, "Unresolved type"))
@@ -84,7 +77,7 @@ class EtcTypeChecker2(startIndex: Int) extends TypeChecker with EtcBuilder {
         // add the constraint from the underlying expression
         val scopedType = computeRec(extCtx, solver, scopedEx)
         // add the constraint from the annotation
-        val fresh = mkFreshVar
+        val fresh = varPool.fresh
         def onFound(tt: TlaType1): Unit = onTypeFound(ex.sourceRef, tt)
         def onError(types: Seq[TlaType1]): Unit =
           onTypeError(ex.sourceRef,
@@ -92,7 +85,6 @@ class EtcTypeChecker2(startIndex: Int) extends TypeChecker with EtcBuilder {
 
         solver.addConstraint(EqClause(fresh, declaredType).setOnTypeFound(onFound))
         solver.addConstraint(EqClause(fresh, scopedType).setOnTypeError(onError))
-        // TODO: register with the listener
         fresh
 
       // a variable name, either an operator name, or a variable introduced by lambda (STCAbs)
@@ -108,8 +100,8 @@ class EtcTypeChecker2(startIndex: Int) extends TypeChecker with EtcBuilder {
       // the most interesting part: the operator application
       case appEx@EtcApp(operTypes, args@_*) =>
         val argTypes = args.map(arg => computeRec(ctx, solver, arg))
-        val resVar = mkFreshVar
-        val operVar = mkFreshVar
+        val resVar = varPool.fresh
+        val operVar = varPool.fresh
 
         def onFound: TlaType1 => Unit = {
           case OperT1(_, res) =>
@@ -155,9 +147,9 @@ class EtcTypeChecker2(startIndex: Int) extends TypeChecker with EtcBuilder {
       case EtcAbs(scopedEx, binders@_*) =>
         val setTypes = binders.map(binder => computeRec(ctx, solver, binder._2))
         // introduce type variables b_1, ..., b_k for the binding sets
-        val setVars = 1.to(binders.size).map(_ => mkFreshVar)
+        val setVars = 1.to(binders.size).map(_ => varPool.fresh)
         // ...and type variables a_1, ..., a_k for the set elements
-        val elemVars = 1.to(binders.size).map(_ => mkFreshVar)
+        val elemVars = 1.to(binders.size).map(_ => varPool.fresh)
         // require that these type variables capture the sets: b_i = Set(a_i) for 1 <= i <= k
         binders.zip(setVars.zip(elemVars)).foreach { case ((_, setEx), (setVar, elemVar)) =>
           val clause = EqClause(setVar, SetT1(elemVar))
@@ -175,7 +167,7 @@ class EtcTypeChecker2(startIndex: Int) extends TypeChecker with EtcBuilder {
         val extCtx = new TypeContext(ctx.types ++ binders.map(_._1).zip(elemVars))
         val underlyingType = computeRec(extCtx, solver, scopedEx)
         // introduce a variable for lambda, in order to propagate the type to the listener
-        val lambdaTypeVar = mkFreshVar
+        val lambdaTypeVar = varPool.fresh
         val operType = OperT1(elemVars, underlyingType)
         // lambdaTypeVar = (a_1, ..., a_k) => resType
         val lambdaClause = EqClause(lambdaTypeVar, operType)
@@ -187,7 +179,7 @@ class EtcTypeChecker2(startIndex: Int) extends TypeChecker with EtcBuilder {
 
       // let name = lambda x \in X, y \in Y, ...: boundEx in scopedEx
       case EtcLet(name, defEx@EtcAbs(_, paramsAndDoms@_*), scopedEx) =>
-        val operVar = mkFreshVar
+        val operVar = varPool.fresh
 
         // introduce a new instance of the constraint solver for the operator definition
         val letInSolver = new ConstraintSolver
@@ -203,7 +195,7 @@ class EtcTypeChecker2(startIndex: Int) extends TypeChecker with EtcBuilder {
 
           case None =>
             // Let the solver compute the type. If it fails, the user has to annotate the definition
-            OperT1(1.to(paramsAndDoms.length).map(_ => mkFreshVar), mkFreshVar)
+            OperT1(1.to(paramsAndDoms.length).map(_ => varPool.fresh), varPool.fresh)
         }
 
         def onError(ts: Seq[TlaType1]): Unit = {

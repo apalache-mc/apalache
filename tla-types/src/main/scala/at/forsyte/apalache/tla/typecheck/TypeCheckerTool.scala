@@ -12,8 +12,9 @@ class TypeCheckerTool {
   def check(listener: TypeCheckerListener, module: TlaModule): Boolean = {
     // TODO: remember to type check the assumptions!
 
+    val varPool = new TypeVarPool()
     // translate the whole TLA+ module into a long EtcExpr. Is not that cool?
-    val toEtc = new ToEtcExpr
+    val toEtc = new ToEtcExpr(varPool)
     // Bool is the final expression in the chain of let-definitions
     val terminalExpr: EtcExpr = EtcConst(BoolT1()) (BlameRef(UID.unique))
     val rootExpr =
@@ -21,7 +22,7 @@ class TypeCheckerTool {
         case (decl, inScopeEx) => toEtc(decl, inScopeEx)
       }
     // run the type checker
-    val result = new EtcTypeChecker().compute(listener, TypeContext.empty, rootExpr)
+    val result = new EtcTypeChecker2(varPool).compute(listener, TypeContext.empty, rootExpr)
     result.isDefined
   }
 }

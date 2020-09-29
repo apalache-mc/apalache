@@ -40,7 +40,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
   }
 
   // create a new instance of the translator, as it gives unique names to the variables
-  private def gen: ToEtcExpr = new ToEtcExpr()
+  private def gen: ToEtcExpr = new ToEtcExpr(new TypeVarPool())
 
   test("integer arithmetic") {
     // integers
