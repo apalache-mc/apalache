@@ -241,14 +241,35 @@ class TypeUnifier {
   }
 
   // insert a type into the substitution, by applying unification
-  private def insert(key: Int, tp: TlaType1): Boolean = {
-    solution.get(key) match {
-      case None =>
-        solution += key -> tp // associate the type with the key
+  private def insert(left: Int, tp: TlaType1): Boolean = {
+    (solution.get(left), tp) match {
+      case (None, VarT1(right)) =>
+        // It is crucial to break cycles between the variables.
+        // The larger index is pointing to the smaller index.
+        if (left > right) {
+          solution += left -> VarT1(right)
+        } else if (right > left) {
+          solution += right -> VarT1(left)
+        } // else ignore a self-loop
         true
 
-      case Some(other) =>
-        if (tp == VarT1(key)) {
+      case (None, _) =>
+        solution += left -> tp // associate the type with the key
+        true
+
+      case (Some(other), VarT1(right)) =>
+        if (left > right) {
+          // copy over the contents of the left
+          insert(right, other)
+        } else if (right > left) {
+          // just place a pointer to left
+          solution += right -> VarT1(left)
+        } // else ignore a self-loop
+
+        true
+
+      case (Some(other), _) =>
+        if (tp == VarT1(left)) {
           throw new CycleDetected
         }
 
@@ -257,7 +278,7 @@ class TypeUnifier {
             false // insertion failed
 
           case Some(unifiedType) =>
-            solution += key -> unifiedType // unified two values
+            solution += left -> unifiedType // unified two values
             true
         }
 
@@ -265,7 +286,7 @@ class TypeUnifier {
   }
 
   // Check, whether the solution is cyclic.
-  // This solution is computing the greatest fix-point, so it probably not the most optimal.
+  // This solution is computing the greatest fix-point, so it is probably not the most optimal.
   // However, our substitutions in the type checker are quite small.
   private def isCyclic: Boolean = {
     // successors for every variable

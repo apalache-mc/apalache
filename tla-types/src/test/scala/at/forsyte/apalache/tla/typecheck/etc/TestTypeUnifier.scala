@@ -102,12 +102,16 @@ class TestTypeUnifier  extends FunSuite with EasyMockSugar with BeforeAndAfterEa
       .contains((Substitution(1 -> VarT1(0)), VarT1(0))))
     assert(unifier.unify(Substitution(1 -> IntT1()), VarT1(0), VarT1(1))
       .contains((Substitution(0 -> IntT1(), 1 -> IntT1()), IntT1())))
+    // there is no problem with the cycle a -> b -> c -> a
+    val expectedSub = Substitution(1 -> VarT1(0), 2 -> VarT1(0))
+    assert(unifier.unify(Substitution.empty,
+      parser("<<a, b, c>>"), parser("<<b, c, a>>"))
+        .contains((expectedSub, parser("<<a, a, a>>"))))
   }
 
   test("non-unifying polytypes") {
     // a and Set(a) must be non-unifiable
     assert(unifier.unify(Substitution.empty, parser("a"), parser("Set(a)")).isEmpty)
-    assert(unifier.unify(Substitution.empty, parser("<<a, b, c>>"), parser("<<b, c, a>>")).isEmpty)
   }
 
   test("unifying with transitivity") {
@@ -116,6 +120,7 @@ class TestTypeUnifier  extends FunSuite with EasyMockSugar with BeforeAndAfterEa
       .contains((expectedSubstitution, parser("Set(PERSON) -> Set(PERSON)"))))
   }
 
+  // regression
   test("unifying variables via sets") {
     val sub = Substitution(1003 -> SetT1(VarT1(0)), 1004 -> SetT1(VarT1(1005)))
     val expected = Substitution(1003 -> SetT1(VarT1(0)), 1004 -> SetT1(VarT1(0)), 1005 -> VarT1(0))
@@ -123,6 +128,24 @@ class TestTypeUnifier  extends FunSuite with EasyMockSugar with BeforeAndAfterEa
       .contains((expected, SetT1(VarT1(0)))))
   }
 
+  // regression
+  test("unifying variables via operators") {
+    val sub = Substitution(
+      1004 -> VarT1(1000),
+      1005 -> OperT1(Seq(VarT1(1000)), VarT1(1001)),
+      1006 -> VarT1(1000)
+    ) ////
+    val expected = Substitution(
+      1001 -> VarT1(1000),
+      1004 -> VarT1(1000),
+      1005 -> OperT1(Seq(VarT1(1000)), VarT1(1000)),
+      1006 -> VarT1(1000)
+    ) ////
+    assert(unifier.unify(sub, VarT1(1005), OperT1(Seq(VarT1(1004)), VarT1(1006)))
+      .contains((expected, OperT1(Seq(VarT1(1000)), VarT1(1000)))))
+  }
+
+  // regression
   test("cycle detection") {
     val expectedSubstitution = Substitution(0 -> VarT1("a"), 1 -> VarT1("a"))
     assert(unifier.unify(Substitution(0 -> VarT1("b"), 1 -> VarT1("a")), VarT1("a"), VarT1("b")).isEmpty)
