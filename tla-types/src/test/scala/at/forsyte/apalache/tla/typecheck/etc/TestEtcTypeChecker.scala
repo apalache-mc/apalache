@@ -550,13 +550,13 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
   }
 
   test("unbounded CHOOSE") {
-    // (((a => Bool) => a) (λ x ∈ Set(a). x = Int))
+    // (((c => Bool) => c) (λ x ∈ Set(b). x = Int))
     val x = mkUniqName("x")
     val int = mkUniqConst(parser("Int"))
     val eq = mkUniqApp(Seq(parser("(a, a) => Bool")), x, int)
     val xDom = mkUniqConst(SetT1(VarT1("b")))
     val lambda = mkUniqAbs(eq, ("x", xDom))
-    val oper = parser("(a => Bool) => a")
+    val oper = parser("(c => Bool) => c")
     val app = mkUniqApp(Seq(oper), lambda)
     val wrapper = wrapWithLet(app)
     val listener = new DefaultTypeCheckerListener()

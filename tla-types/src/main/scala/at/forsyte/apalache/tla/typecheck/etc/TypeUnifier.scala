@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.typecheck._
+import at.forsyte.apalache.tla.typecheck.etc.TypeUnifier.CycleDetected
 
 import scala.collection.immutable.SortedMap
 
@@ -20,22 +21,28 @@ class TypeUnifier {
     // start with the substitution
     solution = substitution.map
     // try to unify
-    compute(lhs, rhs) match {
-      case None => // no unifier
-        None
+    try {
+      compute(lhs, rhs) match {
+        case None => // no unifier
+          None
 
-      case Some(unifiedType) =>
-        val result =
-          if (isCyclic) {
-            None
-          } else {
-            computeClosureWhenAcyclic()
-            val substitution = new Substitution(solution)
-            Some((substitution, substitution(unifiedType)))
-          }
+        case Some(unifiedType) =>
+          val result =
+            if (isCyclic) {
+              None
+            } else {
+              computeClosureWhenAcyclic()
+              val substitution = new Substitution(solution)
+              Some((substitution, substitution(unifiedType)))
+            }
 
+          solution = Map.empty // let GC collect the solution map later
+          result
+      }
+    } catch {
+      case _: CycleDetected =>
         solution = Map.empty // let GC collect the solution map later
-        result
+        None
     }
   }
 
@@ -88,14 +95,11 @@ class TypeUnifier {
         // variables contribute to the solutions
       case (lvar @ VarT1(lname), rvar @ VarT1(rname)) =>
         (solution.get(lname), solution.get(rname)) match {
-          case (Some(lvalue), Some(rvalue)) =>
-            compute(lvalue, rvalue) match {
-              case None =>
-                None // a = b, but their values do not unify
-
-              case Some(unifier) =>
-                solution = solution + (lname -> lvalue, rname -> rvalue)
-                Some(unifier)
+          case (Some(_), Some(rvalue)) =>
+            if (insert(lname, rvalue) && insert(rname, solution(lname))) {
+              Some(solution(lname)) // both values unify
+            } else {
+              None  // a = b, but their values do not unify
             }
 
           case (Some(lvalue), None) =>
@@ -244,6 +248,10 @@ class TypeUnifier {
         true
 
       case Some(other) =>
+        if (tp == VarT1(key)) {
+          throw new CycleDetected
+        }
+
         compute(tp, other) match {
           case None =>
             false // insertion failed
@@ -298,4 +306,8 @@ class TypeUnifier {
       solution = solution.mapValues(substituteOne(sub, _))
     }
   }
+}
+
+object TypeUnifier {
+  class CycleDetected extends RuntimeException
 }

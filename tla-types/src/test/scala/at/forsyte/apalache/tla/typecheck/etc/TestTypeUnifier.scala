@@ -122,4 +122,9 @@ class TestTypeUnifier  extends FunSuite with EasyMockSugar with BeforeAndAfterEa
     assert(unifier.unify(sub, VarT1(1004), VarT1(1003))
       .contains((expected, SetT1(VarT1(0)))))
   }
+
+  test("cycle detection") {
+    val expectedSubstitution = Substitution(0 -> VarT1("a"), 1 -> VarT1("a"))
+    assert(unifier.unify(Substitution(0 -> VarT1("b"), 1 -> VarT1("a")), VarT1("a"), VarT1("b")).isEmpty)
+  }
 }

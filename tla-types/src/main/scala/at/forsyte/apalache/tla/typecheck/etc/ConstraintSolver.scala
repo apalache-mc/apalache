@@ -7,7 +7,8 @@ import at.forsyte.apalache.tla.typecheck.TlaType1
   *
   * @author Igor Konnov
   */
-class ConstraintSolver {
+class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
+  private var solution: Substitution = approximateSolution
   private var constraints: List[Clause] = List.empty
   private var typesToReport: List[(Clause, TlaType1)] = List.empty
 
@@ -15,11 +16,8 @@ class ConstraintSolver {
     constraints = constraints :+ cons
   }
 
-  def solve(): Option[Substitution] = {
-    typesToReport = List.empty
-
+  def solvePartially(): Option[Substitution] = {
     var progress = true
-    var solution: Substitution = Substitution.empty
     while (constraints.nonEmpty && progress) {
       var postponed: List[Clause] = List.empty
       progress = false
@@ -42,6 +40,8 @@ class ConstraintSolver {
               // no solution for a unit constraint:
               // flag an error immediately
               cons.onTypeError(Seq(solution(term)))
+              // reset the constraints, so they are not reported later
+              constraints = List.empty
               return None
           }
         }
@@ -51,7 +51,14 @@ class ConstraintSolver {
       constraints = postponed
     }
 
-    if (constraints.isEmpty) {
+    // return the partial solution
+    Some(solution)
+  }
+
+  def solve(): Option[Substitution] = {
+    val isDefined = solvePartially().isDefined
+
+    if (isDefined && constraints.isEmpty) {
       // all constraints have been solved, report the types
       for ((c, t) <- typesToReport) {
         c.onTypeFound(solution(t))
@@ -67,7 +74,6 @@ class ConstraintSolver {
         case c @ EqClause(_, term) =>
           c.onTypeError(Seq(solution(term)))
       }
-      assert(!progress)
       None
     }
   }

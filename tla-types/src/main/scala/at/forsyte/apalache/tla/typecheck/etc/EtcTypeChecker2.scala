@@ -162,10 +162,13 @@ class EtcTypeChecker2(varPool: TypeVarPool) extends TypeChecker with EtcBuilder 
 
       // let name = lambda x \in X, y \in Y, ...: boundEx in scopedEx
       case EtcLet(name, defEx@EtcAbs(_, paramsAndDoms@_*), scopedEx) =>
-        val operVar = varPool.fresh
+        // Before analyzing the operator definition, try to partially solve the equations in the current context.
+        // If it is successful, use the partial solution to refine the types in the type context.
+        val approxSolution = solver.solvePartially().getOrElse(throw new UnwindException)
 
+        val operVar = varPool.fresh
         // introduce a new instance of the constraint solver for the operator definition
-        val letInSolver = new ConstraintSolver
+        val letInSolver = new ConstraintSolver()
         val operSig =
           ctx.types.get(name) match {
           case Some(declaredType @ OperT1(_, _)) =>
@@ -192,7 +195,7 @@ class EtcTypeChecker2(varPool: TypeVarPool) extends TypeChecker with EtcBuilder 
         letInSolver.addConstraint(sigClause)
 
         // compute the constraints for the definition
-        val extCtx = new TypeContext(ctx.types + (name -> operVar))
+        val extCtx = new TypeContext((ctx.types + (name -> operSig)).mapValues(approxSolution(_)))
         val defType = computeRec(extCtx, letInSolver, defEx)
         // add the constraint from the annotation
         val defClause = EqClause(operVar, defType)
