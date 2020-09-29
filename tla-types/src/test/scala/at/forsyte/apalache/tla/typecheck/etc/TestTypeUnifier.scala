@@ -115,4 +115,11 @@ class TestTypeUnifier  extends FunSuite with EasyMockSugar with BeforeAndAfterEa
     assert(unifier.unify(Substitution.empty, parser("Set(b) -> Set(b)"), parser("Set(c) -> Set(PERSON)"))
       .contains((expectedSubstitution, parser("Set(PERSON) -> Set(PERSON)"))))
   }
+
+  test("unifying variables via sets") {
+    val sub = Substitution(1003 -> SetT1(VarT1(0)), 1004 -> SetT1(VarT1(1005)))
+    val expected = Substitution(1003 -> SetT1(VarT1(0)), 1004 -> SetT1(VarT1(0)), 1005 -> VarT1(0))
+    assert(unifier.unify(sub, VarT1(1004), VarT1(1003))
+      .contains((expected, SetT1(VarT1(0)))))
+  }
 }

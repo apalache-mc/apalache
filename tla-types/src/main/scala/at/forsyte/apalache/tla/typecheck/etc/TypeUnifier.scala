@@ -39,6 +39,7 @@ class TypeUnifier {
     }
   }
 
+  @deprecated("Use ConstraintSolver")
   def unify(substitution: Substitution, pairs: Seq[(TlaType1, TlaType1)]): Option[(Substitution, Seq[TlaType1])] = {
     // start with the substitution
     solution = substitution.map
@@ -88,10 +89,13 @@ class TypeUnifier {
       case (lvar @ VarT1(lname), rvar @ VarT1(rname)) =>
         (solution.get(lname), solution.get(rname)) match {
           case (Some(lvalue), Some(rvalue)) =>
-            if (insert(lname, rvalue) && insert(rname, lvalue)) {
-              Some(solution(lname)) // both values unify
-            } else {
-              None  // a = b, but their values do not unify
+            compute(lvalue, rvalue) match {
+              case None =>
+                None // a = b, but their values do not unify
+
+              case Some(unifier) =>
+                solution = solution + (lname -> lvalue, rname -> rvalue)
+                Some(unifier)
             }
 
           case (Some(lvalue), None) =>
