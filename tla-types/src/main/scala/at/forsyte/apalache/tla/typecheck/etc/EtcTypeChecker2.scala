@@ -168,7 +168,7 @@ class EtcTypeChecker2(varPool: TypeVarPool) extends TypeChecker with EtcBuilder 
 
         // translate the binders in the lambda expression, so we can quickly propagate the types of the parameters
         val preCtx = new TypeContext((ctx.types + (name -> operSig)).mapValues(approxSolution(_)))
-        val extCtx = translateBinders(preCtx, solver, binders)
+        val extCtx = translateBinders(preCtx, letInSolver, binders)
         val annotationParams = operSig.asInstanceOf[OperT1].args
         annotationParams.zip(binders.map { case (pname, _) => (pname, extCtx(pname)) }).foreach {
           case (annotParam, (pname, paramVar @ VarT1(_))) =>

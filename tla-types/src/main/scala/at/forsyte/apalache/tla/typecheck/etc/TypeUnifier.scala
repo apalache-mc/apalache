@@ -261,18 +261,14 @@ class TypeUnifier {
         if (left > right) {
           // copy over the contents of the left
           insert(right, other)
+          solution += left -> VarT1(right)
         } else if (right > left) {
           // just place a pointer to left
           solution += right -> VarT1(left)
         } // else ignore a self-loop
-
         true
 
       case (Some(other), _) =>
-        if (tp == VarT1(left)) {
-          throw new CycleDetected
-        }
-
         compute(tp, other) match {
           case None =>
             false // insertion failed
