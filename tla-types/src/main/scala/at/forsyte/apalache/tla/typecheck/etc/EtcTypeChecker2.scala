@@ -128,30 +128,13 @@ class EtcTypeChecker2(varPool: TypeVarPool) extends TypeChecker with EtcBuilder 
 
       // lambda x \in e1, y \in e2, ...: scopedEx
       case EtcAbs(scopedEx, binders@_*) =>
-        val setTypes = binders.map(binder => computeRec(ctx, solver, binder._2))
-        // introduce type variables b_1, ..., b_k for the binding sets
-        val setVars = 1.to(binders.size).map(_ => varPool.fresh)
-        // ...and type variables a_1, ..., a_k for the set elements
-        val elemVars = 1.to(binders.size).map(_ => varPool.fresh)
-        // require that these type variables capture the sets: b_i = Set(a_i) for 1 <= i <= k
-        binders.zip(setVars.zip(elemVars)).foreach { case ((_, setEx), (setVar, elemVar)) =>
-          val clause = EqClause(setVar, SetT1(elemVar))
-              .setOnTypeFound(onTypeFound(setEx.sourceRef, _))
-              .setOnTypeError(ts => onTypeError(setEx.sourceRef, "Expected a set. Found: " + ts.head))
-          solver.addConstraint(clause)
-        }
-        // require that these type variables are equal to the computed set types
-        binders.zip(setVars.zip(setTypes)).foreach { case ((_, setEx), (setVar, setType)) =>
-          val clause = EqClause(setVar, setType)
-            .setOnTypeError(ts => onTypeError(setEx.sourceRef, "Expected a set. Found: " + ts.head))
-          solver.addConstraint(clause)
-        }
-        // compute the expression in the scope, by associating the variables names with the elements of elemVars
-        val extCtx = new TypeContext(ctx.types ++ binders.map(_._1).zip(elemVars))
+        val extCtx = translateBinders(ctx, solver, binders)
+        // compute the expression in the scope
         val underlyingType = computeRec(extCtx, solver, scopedEx)
         // introduce a variable for lambda, in order to propagate the type to the listener
         val lambdaTypeVar = varPool.fresh
-        val operType = OperT1(elemVars, underlyingType)
+        val varNames = binders.map { case (name, _) => extCtx(name) }
+        val operType = OperT1(varNames, underlyingType)
         // lambdaTypeVar = (a_1, ..., a_k) => resType
         val lambdaClause = EqClause(lambdaTypeVar, operType)
             .setOnTypeFound(tt => onTypeFound(ex.sourceRef, tt))
@@ -161,12 +144,11 @@ class EtcTypeChecker2(varPool: TypeVarPool) extends TypeChecker with EtcBuilder 
         operType
 
       // let name = lambda x \in X, y \in Y, ...: boundEx in scopedEx
-      case EtcLet(name, defEx@EtcAbs(_, paramsAndDoms@_*), scopedEx) =>
+      case EtcLet(name, defEx@EtcAbs(defBody, binders@_*), scopedEx) =>
         // Before analyzing the operator definition, try to partially solve the equations in the current context.
         // If it is successful, use the partial solution to refine the types in the type context.
         val approxSolution = solver.solvePartially().getOrElse(throw new UnwindException)
 
-        val operVar = varPool.fresh
         // introduce a new instance of the constraint solver for the operator definition
         val letInSolver = new ConstraintSolver()
         val operSig =
@@ -181,22 +163,36 @@ class EtcTypeChecker2(varPool: TypeVarPool) extends TypeChecker with EtcBuilder 
 
           case None =>
             // Let the solver compute the type. If it fails, the user has to annotate the definition
-            OperT1(1.to(paramsAndDoms.length).map(_ => varPool.fresh), varPool.fresh)
+            OperT1(1.to(binders.length).map(_ => varPool.fresh), varPool.fresh)
         }
 
+        // translate the binders in the lambda expression, so we can quickly propagate the types of the parameters
+        val preCtx = new TypeContext((ctx.types + (name -> operSig)).mapValues(approxSolution(_)))
+        val extCtx = translateBinders(preCtx, solver, binders)
+        val annotationParams = operSig.asInstanceOf[OperT1].args
+        annotationParams.zip(binders.map { case (pname, _) => (pname, extCtx(pname)) }).foreach {
+          case (annotParam, (pname, paramVar @ VarT1(_))) =>
+            val clause = EqClause(paramVar, annotParam)
+              .setOnTypeError(ts => s"Mismatch in parameter $pname. Found: " + ts.head)
+            letInSolver.addConstraint(clause)
+        }
+
+        // produce constraints for the operator signature
         def onError(ts: Seq[TlaType1]): Unit = {
           val sepSigs = String.join(" and ", ts.map(_.toString()) :_*)
           onTypeError(defEx.sourceRef, s"Expected $operSig in $name. Found: $sepSigs")
         }
 
+        val operVar = varPool.fresh
         val sigClause = EqClause(operVar, operSig)
           .setOnTypeFound(onTypeFound(defEx.sourceRef, _))
           .setOnTypeError(onError)
         letInSolver.addConstraint(sigClause)
 
-        // compute the constraints for the definition
-        val extCtx = new TypeContext((ctx.types + (name -> operSig)).mapValues(approxSolution(_)))
-        val defType = computeRec(extCtx, letInSolver, defEx)
+        // compute the constraints for the operator definition
+        val defBodyType = computeRec(extCtx, letInSolver, defBody)
+        val paramTypes = binders.map(p => extCtx(p._1))
+        val defType = OperT1(paramTypes, defBodyType)
         // add the constraint from the annotation
         val defClause = EqClause(operVar, defType)
             .setOnTypeFound(onTypeFound(defEx.sourceRef, _))
@@ -230,6 +226,32 @@ class EtcTypeChecker2(varPool: TypeVarPool) extends TypeChecker with EtcBuilder 
       case EtcLet(_, _, _) =>
         throw new RuntimeException("Bug in type checker. Ill-formed let-expression: " + ex)
     }
+  }
+
+  // produce constraints for the binders that are used in a lambda expression
+  private def translateBinders(ctx: TypeContext,
+                               solver: ConstraintSolver,
+                               binders: Seq[(String, EtcExpr)]): TypeContext = {
+    val setTypes = binders.map(binder => computeRec(ctx, solver, binder._2))
+    // introduce type variables b_1, ..., b_k for the binding sets
+    val setVars = 1.to(binders.size).map(_ => varPool.fresh)
+    // ...and type variables a_1, ..., a_k for the set elements
+    val elemVars = 1.to(binders.size).map(_ => varPool.fresh)
+    // require that these type variables capture the sets: b_i = Set(a_i) for 1 <= i <= k
+    binders.zip(setVars.zip(elemVars)).foreach { case ((_, setEx), (setVar, elemVar)) =>
+      val clause = EqClause(setVar, SetT1(elemVar))
+        .setOnTypeFound(onTypeFound(setEx.sourceRef, _))
+        .setOnTypeError(ts => onTypeError(setEx.sourceRef, "Expected a set. Found: " + ts.head))
+      solver.addConstraint(clause)
+    }
+    // require that these type variables are equal to the computed set types
+    binders.zip(setVars.zip(setTypes)).foreach { case ((_, setEx), (setVar, setType)) =>
+      val clause = EqClause(setVar, setType)
+        .setOnTypeError(ts => onTypeError(setEx.sourceRef, "Expected a set. Found: " + ts.head))
+      solver.addConstraint(clause)
+    }
+    // compute the expression in the scope, by associating the variables names with the elements of elemVars
+    new TypeContext(ctx.types ++ binders.map(_._1).zip(elemVars))
   }
 
   private def onTypeFound(sourceRef: EtcRef, tt: TlaType1): Unit = {
