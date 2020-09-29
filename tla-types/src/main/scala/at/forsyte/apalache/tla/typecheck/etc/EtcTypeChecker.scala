@@ -9,6 +9,7 @@ import scala.collection.immutable.SortedMap
   *
   * @author Igor Konnov
   */
+@deprecated("This checker happened to be too complex. Use EtcTypeChecker2.")
 class EtcTypeChecker extends TypeChecker with EtcBuilder {
   private val typeUnifier: TypeUnifier = new TypeUnifier()
   private var listener: TypeCheckerListener = new DefaultTypeCheckerListener()

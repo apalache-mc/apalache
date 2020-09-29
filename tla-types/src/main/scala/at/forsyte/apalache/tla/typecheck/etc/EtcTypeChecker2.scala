@@ -24,37 +24,30 @@ class EtcTypeChecker2(varPool: TypeVarPool) extends TypeChecker with EtcBuilder 
     listener = typeListener // set the type listener, so we do not have to pass it around
 
     // The types are computed in operator applications, add extra tests and listener calls for non-operators
-    rootEx match {
-      case EtcLet(name, _, _) =>
-        try {
-          val rootSolver = new ConstraintSolver
-          // The whole expression has been processed. Compute the type of the expression.
-          val rootType = computeRec(rootCtx, rootSolver, rootEx)
-          rootSolver.solve() match {
-            case None =>
-              onTypeError(rootEx.sourceRef, s"Error when computing the type of the root expression")
-              None
+    try {
+      val rootSolver = new ConstraintSolver
+      // The whole expression has been processed. Compute the type of the expression.
+      val rootType = computeRec(rootCtx, rootSolver, rootEx)
+      rootSolver.solve() match {
+        case None =>
+          onTypeError(rootEx.sourceRef, s"Error when computing the type of the top expression")
+          None
 
-            case Some(sub) =>
-              val exactType = sub(rootType)
-              if (exactType.usedNames.nonEmpty) {
-                onTypeError(rootEx.sourceRef,
-                  s"Expected a concrete type of operator $name, found polymorphic type: " + exactType)
-                None
-              } else {
-                onTypeFound(rootEx.sourceRef, exactType)
-                Some(exactType)
-              }
-          }
-
-        } catch {
-          case _: UnwindException =>
-            // the type checker has flagged an type error down in the syntax tree
+        case Some(sub) =>
+          val exactType = sub(rootType)
+          if (exactType.usedNames.nonEmpty) {
+            onTypeError(rootEx.sourceRef,
+              s"Expected the top expression to have a concrete type, found polymorphic type: " + exactType)
             None
-        }
+          } else {
+            onTypeFound(rootEx.sourceRef, exactType)
+            Some(exactType)
+          }
+      }
 
-      case _ =>
-        listener.onTypeError(rootEx.sourceRef, "Expected the top expression to be an operator definition")
+    } catch {
+      case _: UnwindException =>
+        // the type checker has flagged an type error down in the syntax tree
         None
     }
   }
@@ -73,19 +66,9 @@ class EtcTypeChecker2(varPool: TypeVarPool) extends TypeChecker with EtcBuilder 
 
       // an inline type declaration
       case EtcTypeDecl(name: String, declaredType: TlaType1, scopedEx: EtcExpr) =>
+        // Just propagate the annotated name down the tree. It will be used in a let definition.
         val extCtx = new TypeContext(ctx.types + (name -> declaredType))
-        // add the constraint from the underlying expression
-        val scopedType = computeRec(extCtx, solver, scopedEx)
-        // add the constraint from the annotation
-        val fresh = varPool.fresh
-        def onFound(tt: TlaType1): Unit = onTypeFound(ex.sourceRef, tt)
-        def onError(types: Seq[TlaType1]): Unit =
-          onTypeError(ex.sourceRef,
-            s"Expected $declaredType, found: " + String.join(" or ", types.map(_.toString) :_*))
-
-        solver.addConstraint(EqClause(fresh, declaredType).setOnTypeFound(onFound))
-        solver.addConstraint(EqClause(fresh, scopedType).setOnTypeError(onError))
-        fresh
+        computeRec(extCtx, solver, scopedEx)
 
       // a variable name, either an operator name, or a variable introduced by lambda (STCAbs)
       case EtcName(name) =>
@@ -171,7 +154,7 @@ class EtcTypeChecker2(varPool: TypeVarPool) extends TypeChecker with EtcBuilder 
         val operType = OperT1(elemVars, underlyingType)
         // lambdaTypeVar = (a_1, ..., a_k) => resType
         val lambdaClause = EqClause(lambdaTypeVar, operType)
-            .setOnTypeFound(tt => onTypeFound(ex.sourceRef.asInstanceOf[ExactRef], tt))
+            .setOnTypeFound(tt => onTypeFound(ex.sourceRef, tt))
             .setOnTypeError(ts => onTypeError(ex.sourceRef.asInstanceOf[ExactRef],
               "Type error in lambda: " + ts.head))
         solver.addConstraint(lambdaClause)
