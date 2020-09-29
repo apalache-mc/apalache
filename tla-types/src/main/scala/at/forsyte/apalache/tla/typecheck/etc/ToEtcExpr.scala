@@ -22,6 +22,13 @@ class ToEtcExpr extends EtcBuilder {
     */
   private var nextVarNum = 0
 
+  /**
+    * Get the number just above the maximum variable number
+    * @return an upper bound on the variable numbers
+    */
+  def varNumUpperBound: Int = nextVarNum
+
+
   // TODO: add support for recursive functions
 
   /**
@@ -48,7 +55,7 @@ class ToEtcExpr extends EtcBuilder {
           // case 1: the definition body contains a type annotation
           val parsedType =
             try {
-              type1Parser(typeText)
+              renameVars(type1Parser(typeText))
             } catch {
               case e: Type1ParseError =>
                 throw new TypingInputException(s"Parser error in type annotation of ${decl.name}: ${e.msg}")
@@ -78,7 +85,7 @@ class ToEtcExpr extends EtcBuilder {
           annotations.foldRight(inScopeEx) {
             case ((name, typeText), terminal) =>
               try {
-                val tt = type1Parser(typeText)
+                val tt = renameVars(type1Parser(typeText))
                 mkTypeDecl(ExactRef(decl.body.ID), name, tt, terminal)
               } catch {
                 case e: Type1ParseError =>
@@ -138,7 +145,7 @@ class ToEtcExpr extends EtcBuilder {
     //**************************************** EMPTY SETS AND SEQUENCES ***********************************************
     case OperEx(TypingOper.emptySet, ValEx(TlaStr(elemTypeText))) =>
       try {
-        val elemType = type1Parser(elemTypeText)
+        val elemType = renameVars(type1Parser(elemTypeText))
         mkConst(ExactRef(ex.ID), SetT1(elemType))
       } catch {
         case e: Type1ParseError =>
@@ -147,7 +154,7 @@ class ToEtcExpr extends EtcBuilder {
 
     case OperEx(TypingOper.emptySeq, ValEx(TlaStr(elemTypeText))) =>
       try {
-        val elemType = type1Parser(elemTypeText)
+        val elemType = renameVars(type1Parser(elemTypeText))
         mkConst(ExactRef(ex.ID), SeqT1(elemType))
       } catch {
         case e: Type1ParseError =>
@@ -709,5 +716,11 @@ class ToEtcExpr extends EtcBuilder {
 
   private def mkApp(uid: UID, sig: OperT1, args: Seq[TlaEx]): EtcExpr = {
     mkApp(ExactRef(uid), Seq(sig), args.map(this(_)) :_*)
+  }
+
+  private def renameVars(tt: TlaType1): TlaType1 = {
+    val shift = tt.usedNames.toSeq.map(i => i -> VarT1(i + nextVarNum))
+    nextVarNum += shift.size
+    Substitution(shift :_*)(tt)
   }
 }
