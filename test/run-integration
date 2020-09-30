@@ -5,10 +5,13 @@
 #
 # Shon Feder, 2020
 
-# Ensure the environment is set
-source .envrc
-
 # The directory of this file
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+# Ensure the environment is set
+source "$DIR"/.envrc
+
+# Shadow potential DIR in sourced .envrc
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # Ensure the mdx executable is on the path
