@@ -119,7 +119,5 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # Run diff to check the corrected results against the expected results
-    cmd = ["diff", "--unified=4"]
-    cmd.extend([test_file_str, corrected_file_str])
-    result = run(cmd)
+    result = run(["diff", "--unified=4", test_file_str, corrected_file_str])
     sys.exit(result.returncode)
