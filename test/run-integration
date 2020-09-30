@@ -7,7 +7,12 @@
 
 # Ensure the environment is set
 source .envrc
+
+# The directory of this file
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+# Ensure the mdx executable is on the path
 eval $(opam env)
 
 # Execute the wrapper script
-./mdx-test.py
+"$DIR"/mdx-test.py
