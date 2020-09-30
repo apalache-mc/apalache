@@ -3,7 +3,7 @@
 VARIABLES x
 
 Init ==
-    x = FALSE
+    x = TRUE
 
 Next ==
     x' = \E y \in {1, 2}: y /= 1
