@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+#
+# Run the integration tests with the appropriate environment.
+# Primarily for use in integration tests
+#
+# Shon Feder, 2020
+
+# Ensure the environment is set
+source .envrc
+eval $(opam env)
+
+# Execute the wrapper script
+./mdx-test.py
