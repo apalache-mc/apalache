@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# This script is used as the entrypoint for running apalache inside of the
+# docker container defined in ../Dockerfile
+
 echo 'Assuming you bind-mounted your local directory into /var/apalache...'
 cd /var/apalache
 if [ "$(ls -A *.tla 2>/dev/null)" == "" ]; then
