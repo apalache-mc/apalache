@@ -39,7 +39,7 @@ test:
 	mvn test
 
 integration: apalache-jar
-	test/mdx-test.py
+	test/run-integration
 
 # Invokes the md targets below
 promote: $(TEST_MD_FILES)

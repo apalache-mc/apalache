@@ -57,10 +57,7 @@ jobs:
       - name: Build apalache
         run: make apalache-jar
       - name: Run integration tests
-        run: |
-          source ./.envrc
-          eval $(opam env)
-          test/mdx-test.py
+        run: ./run-integration
 
   docker-tests:
     runs-on: ubuntu-latest
@@ -69,7 +66,7 @@ jobs:
       - name: Build the docker image
         run: docker build -t apalache/mc:ci .
       - name: Run integration tests in docker container
-        run: ./test/run-integration
+        run: ./run-integration
         env:
           USE_DOCKER: true
           APALACHE_TAG: ci
