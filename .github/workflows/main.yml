@@ -55,11 +55,13 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+      - name: Build apalache
+        run: make apalache-jar
       - name: Run integration tests
         run: |
           source ./.envrc
           eval $(opam env)
-          make integration
+          test/mdx-test.py
 
   integration-tests:
     runs-on: ${{ matrix.operating-system }}
