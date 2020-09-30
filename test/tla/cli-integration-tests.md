@@ -3,63 +3,68 @@
 The code blocks in this file use [mdx](https://github.com/realworldocaml/mdx) to
 run integration tests of the Apalache CLI interface.
 
-To run these tests, execute the [../mdx-test.py](../mdx-test.py) script with no 
+To run these tests, execute the [../mdx-test.py](../mdx-test.py) script with no
 arguments.
 
 ## How to write a test
 
-Any `sh` code block will be run as a test. 
+Any `sh` code block will be run as a test.
 
-The test executes the command following a `$` which it expects to produce the
-output on the subsequent lines.
+The test executes the command following a `$`. The command is expected to
+produce the output on the subsequent lines of the code block.
 
-Use `...` to omit lines in the match. This is useful for  nondeterministic
-output.
+Some tips:
 
-Specify a non-zero return code `n` by adding `[n]` on a line by itself after
-all output.
-
-Pipe through filters to get arbitrary control of the expected output.
+- Use `...` to omit irrelevant lines in output. This is useful for
+  nondeterministic output or to hide noise.
+- Specify a non-zero return code `n` by adding `[n]` on a line by itself after
+  the output.
+- Pipe into filters to get arbitrary control of the expected output.
 
 The usual flow is:
 
 1. Write a failing test that executes the command to be run.
 2. Run the test (see below).
-3. Check that the corrected output is what you expect, then run `make promote`, 
+3. Check that the corrected output is what you expect, then run `make promote`,
    to copy the output back into this file.
 4. Replace any non-essential lines with `...`.
 
-See the documentation on `mdx` for more.
+See the documentation on `mdx` for more features and flexibility.
 
 ## How to run tests
+
+(From the project root.)
 
 ### Run all the tests in this file
 
 <!-- $MDX skip -->
 ```sh
-test/mdx-test.py "Can print version"
+test/mdx-test.py
 ```
 
 ### Run a single test
 
-Each section, demarcated by headings, can be run selectively by supplying an 
+Each section, demarcated by headings, can be run selectively by supplying an
 argument that matches the heading.
 
 E.g., to run just the test for the `version` command, run
 
 <!-- $MDX skip -->
 ```sh
-test/mdx-test.py "Can print version"
+test/mdx-test.py "executable prints version"
 ```
+
+**NOTE**: This only runs code blocks directly in the named section, and will not
+include execution of blocks in nested subsections.
 
 ### Run all tests in sections matching a pattern
 
-The matching is based on (perl) pattern matching, so you can run all the tests
-in sections that include, e.g., `y2k` in their section headings with
+The matching is based on (perl) pattern matching. E.g., you can run all the
+tests in sections that include the string `"executable"` in their headings with
 
 <!-- $MDX skip -->
 ```sh
-test/mdx-test.py y2k
+test/mdx-test.py executable
 ```
 
 ## test environment
@@ -376,4 +381,3 @@ $ TLA_PATH=./tla-path-tests apalache-mc check ./tla-path-tests/ImportingModule.t
 The outcome is: NoError
 ...
 ```
-
