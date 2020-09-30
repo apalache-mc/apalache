@@ -24,14 +24,14 @@ TypeAssumptions ==
 
 (* The following predicate determines if queens i and j attack each other
    in a placement of queens (represented by a sequence as above). *)
-Attacks(queens,i,j) == "(Seq(Int), Int, Int) => Bool" :>
+Attacks(queens,i,j) == "(Seq(Int), Int, Int) => Bool" ##
   \/ queens[i] = queens[j]                 \** same column
   \/ queens[i] - queens[j] = i - j         \** first diagonal
   \/ queens[j] - queens[i] = i - j         \** second diagonal
 
 (* A placement represents a (partial) solution if no two different queens
    attack each other in it. *)
-IsSolution(queens) == \*"Seq(Int) => Bool" :>
+IsSolution(queens) == \*"Seq(Int) => Bool" ##
   \A i \in 1 .. Len(queens)-1 : \A j \in i+1 .. Len(queens) : 
        ~ Attacks(queens,i,j) 
 

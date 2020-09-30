@@ -34,13 +34,13 @@ TypeAssumptions ==
   /\ AssumeType(tmPrepared, "Set(RM)")
   /\ AssumeType(msgs, "Set([type: Str, rm: RM])")
 
-Message == \*"Set([type: Str, rm: RM])" :>
+Message == \*"Set([type: Str, rm: RM])" ##
   {[type |-> t, rm |-> r]: t \in {"Prepared"}, r \in RM }
     \cup
   {[type |-> t] : t \in {"Commit", "Abort"} }
 
  
-TPTypeOK == \*"() => Bool" :>
+TPTypeOK == \*"() => Bool" ##
   (*************************************************************************)
   (* The type-correctness invariant                                        *)
   (*************************************************************************)
@@ -49,7 +49,7 @@ TPTypeOK == \*"() => Bool" :>
   /\ tmPrepared \in SUBSET RM
   /\ msgs \in SUBSET Message
 
-Init == \*"() => Bool" :>
+Init == \*"() => Bool" ##
   (*************************************************************************)
   (* The initial predicate.                                                *)
   (*************************************************************************)
@@ -62,7 +62,7 @@ Init == \*"() => Bool" :>
 (* We now define the actions that may be performed by the processes, first *)
 (* the TM's actions, then the RMs' actions.                                *)
 (***************************************************************************)
-TMRcvPrepared(rm) == \*"(RM) => Bool" :>
+TMRcvPrepared(rm) == \*"(RM) => Bool" ##
   (*************************************************************************)
   (* The TM receives a $"Prepared"$ message from resource manager $rm$.    *)
   (*************************************************************************)
@@ -71,7 +71,7 @@ TMRcvPrepared(rm) == \*"(RM) => Bool" :>
   /\ tmPrepared' = tmPrepared \cup {rm}
   /\ UNCHANGED <<rmState, tmState, msgs>>
 
-TMCommit == \*"() => Bool" :>
+TMCommit == \*"() => Bool" ##
   (*************************************************************************)
   (* The TM commits the transaction; enabled iff the TM is in its initial  *)
   (* state and every RM has sent a $"Prepared"$ message.                   *)
@@ -82,7 +82,7 @@ TMCommit == \*"() => Bool" :>
   /\ msgs' = msgs \cup {[type |-> "Commit"]}
   /\ UNCHANGED <<rmState, tmPrepared>>
 
-TMAbort == \*"() => Bool" :>
+TMAbort == \*"() => Bool" ##
   (*************************************************************************)
   (* The TM spontaneously aborts the transaction.                          *)
   (*************************************************************************)
@@ -91,7 +91,7 @@ TMAbort == \*"() => Bool" :>
   /\ msgs' = msgs \cup {[type |-> "Abort"]}
   /\ UNCHANGED <<rmState, tmPrepared>>
 
-RMPrepare(rm) ==  \*"(RM) => Bool" :>
+RMPrepare(rm) ==  \*"(RM) => Bool" ##
   (*************************************************************************)
   (* Resource manager $rm$ prepares.                                       *)
   (*************************************************************************)
@@ -100,7 +100,7 @@ RMPrepare(rm) ==  \*"(RM) => Bool" :>
   /\ msgs' = msgs \cup {[type |-> "Prepared", rm |-> rm]}
   /\ UNCHANGED <<tmState, tmPrepared>>
   
-RMChooseToAbort(rm) == \*"(RM) => Bool" :>
+RMChooseToAbort(rm) == \*"(RM) => Bool" ##
   (*************************************************************************)
   (* Resource manager $rm$ spontaneously decides to abort.  As noted       *)
   (* above, $rm$ does not send any message in our simplified spec.         *)
@@ -109,7 +109,7 @@ RMChooseToAbort(rm) == \*"(RM) => Bool" :>
   /\ rmState' = [rmState EXCEPT ![rm] = "aborted"]
   /\ UNCHANGED <<tmState, tmPrepared, msgs>>
 
-RMRcvCommitMsg(rm) == \*"(RM) => Bool" :>
+RMRcvCommitMsg(rm) == \*"(RM) => Bool" ##
   (*************************************************************************)
   (* Resource manager $rm$ is told by the TM to commit.                    *)
   (*************************************************************************)
@@ -117,7 +117,7 @@ RMRcvCommitMsg(rm) == \*"(RM) => Bool" :>
   /\ rmState' = [rmState EXCEPT ![rm] = "committed"]
   /\ UNCHANGED <<tmState, tmPrepared, msgs>>
 
-RMRcvAbortMsg(rm) == \*"(RM) => Bool" :>
+RMRcvAbortMsg(rm) == \*"(RM) => Bool" ##
   (*************************************************************************)
   (* Resource manager $rm$ is told by the TM to abort.                     *)
   (*************************************************************************)
@@ -125,20 +125,20 @@ RMRcvAbortMsg(rm) == \*"(RM) => Bool" :>
   /\ rmState' = [rmState EXCEPT ![rm] = "aborted"]
   /\ UNCHANGED <<tmState, tmPrepared, msgs>>
 
-Next == \*"() => Bool" :>
+Next == \*"() => Bool" ##
   \/ TMCommit \/ TMAbort
   \/ \E rm \in RM : 
       /\ \/ TMRcvPrepared(rm) \/ RMPrepare(rm) \/ RMChooseToAbort(rm)
          \/ RMRcvCommitMsg(rm) \/ RMRcvAbortMsg(rm)
 -----------------------------------------------------------------------------
-TPSpec == \*"() => Bool" :>
+TPSpec == \*"() => Bool" ##
     Init /\ [][Next]_<<rmState, tmState, tmPrepared, msgs>>
   (*************************************************************************)
   (* The complete spec of the Two-Phase Commit protocol.                   *)
   (*************************************************************************)
 
 \* copied from TCommit
-TCConsistent ==  \*"() => Bool" :>
+TCConsistent ==  \*"() => Bool" ##
   (*************************************************************************)
   (* A state predicate asserting that two RMs have not arrived at          *)
   (* conflicting decisions.                                                *)

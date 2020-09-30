@@ -34,7 +34,7 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
         |TypeAssumptions ==
         |  /\ AssumeType(msgs, "Set([type: Str, val: Int])")
         |
-        |Send(m) == "[type: Str, val: Int] => Bool" :>
+        |Send(m) == "[type: Str, val: Int] => Bool" ##
         |  (msgs' = msgs \cup {m})
         |
         |A(x, y) == x + y

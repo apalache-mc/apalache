@@ -172,7 +172,7 @@ OtherBank(b) == IF b = "E" THEN "W" ELSE "E"
 (* of the two variables (their values in state t) in terms of their old    *)
 (* values (their values in state s).                                       *)
 (***************************************************************************)
-Move(S,b) == "(Set(PERSON), Str) => Bool" :>
+Move(S,b) == "(Set(PERSON), Str) => Bool" ##
              /\ Cardinality(S) \in {1,2}
              /\ LET newThisBank  == who_is_on_bank[b] \ S
                     newOtherBank == who_is_on_bank[OtherBank(b)] \cup S

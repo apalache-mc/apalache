@@ -17,12 +17,12 @@ TypeAssumptions ==
 vars == grid
 
 RECURSIVE Sum(_, _)
-Sum(f, S) == \*"(<<Int, Int>> -> Int, Set(<<Int, Int>>)) => Int" :>
+Sum(f, S) == \*"(<<Int, Int>> -> Int, Set(<<Int, Int>>)) => Int" ##
     IF S = {} THEN 0
-    ELSE LET x == "<<Int, Int>>" :> CHOOSE x \in S : TRUE
+    ELSE LET x == "<<Int, Int>>" ## CHOOSE x \in S : TRUE
          IN  f[x] + Sum(f, S \ {x})
 
-Pos == "Set(<<Int, Int>>)" :>
+Pos == "Set(<<Int, Int>>)" ##
     {<<x, y>>: x, y \in 1..N}
 
 TypeOK == grid \in [Pos -> BOOLEAN]
@@ -33,10 +33,10 @@ sc[<<x, y>> \in (0 .. N + 1) \X
                                       \/ ~grid[<<x, y>>] -> 0
                                    [] OTHER -> 1
 
-score(p) == "<<Int, Int>> => Int" :>
+score(p) == "<<Int, Int>> => Int" ##
             LET nbrs == {x \in {-1, 0, 1} \X
                                {-1, 0, 1} : x /= <<0, 0>>}
-                points == "Set(<<Int, Int>>)" :>
+                points == "Set(<<Int, Int>>)" ##
                     {<<p[1] + x, p[2] + y>> : <<x, y>> \in nbrs}
             IN Sum(sc, points)
                    

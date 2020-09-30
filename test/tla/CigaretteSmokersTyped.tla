@@ -41,7 +41,7 @@ TypeOK == /\ smokers \in [Ingredients -> [smoking: BOOLEAN]]
 
 (* this operator has a parametric signature *)
 ChooseOne(S, P(_)) ==
-    "(Set(INGREDIENT), (INGREDIENT) => Bool) => INGREDIENT" :>
+    "(Set(INGREDIENT), (INGREDIENT) => Bool) => INGREDIENT" ##
     (CHOOSE x \in S : P(x) /\ \A y \in S : P(y) => y = x)
 
 Init ==

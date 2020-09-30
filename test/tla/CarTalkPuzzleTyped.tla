@@ -51,8 +51,7 @@ TypeAssumptions ==
 (* such that P(v) is true, if such a value exists.                         *)
 (***************************************************************************)
 RECURSIVE Sum(_,_)
-\* below is a type annotation for the ETC type checker in Apalache
-Sum(f,S) == "(Int -> Int, Set(Int)) => Int" :>
+Sum(f,S) == "(Int -> Int, Set(Int)) => Int" ##
     IF S = {} THEN 0
     ELSE LET x == CHOOSE x \in S : TRUE
     IN  f[x] + Sum(f, S \ {x})
@@ -73,7 +72,7 @@ Sum(f,S) == "(Int -> Int, Set(Int)) => Int" :>
 (* In TLA+, [S -> T] is the set of all functions with domain S and range a *)
 (* subset of T.  \A and \E are the universal and existential quantifiers.  *)
 (***************************************************************************)
-Break == \*"Set(Int -> Int)" :>
+Break ==
     {B \in [1..P -> 1..N] :    Sum(B, 1..P) = N
                                  /\ \A i \in 1..P : \A j \in (i+1)..P : B[i] =< B[j]}
 
@@ -89,7 +88,6 @@ Break == \*"Set(Int -> Int)" :>
 (* type: (Int, Int -> Int, Set(Int), Set(Int)) => Bool                     *)
 (***************************************************************************)
 IsRepresentation(w, B, S, T) ==
-    \*"(Int, Int -> Int, Set(Int), Set(Int)) => Bool" :>
     /\ S \cap T = {}
     /\ w + Sum(B,S) = Sum(B,T)
 
@@ -99,7 +97,7 @@ IsRepresentation(w, B, S, T) ==
 (*                                                                         *)
 (* SUBSET S is the set of all subsets of S (the power set of S).           *)
 (***************************************************************************)
-IsSolution(B) == \*"(Int -> Int) => Bool" :>
+IsSolution(B) ==
     \A w \in 1..N : 
       \E S, T \in SUBSET (1..P) : IsRepresentation(w, B, S, T) 
 
@@ -107,7 +105,7 @@ IsSolution(B) == \*"(Int -> Int) => Bool" :>
 (* I define AllSolutions to be the set of all breaks B that solve the      *)
 (* problem.                                                                *)
 (***************************************************************************)
-AllSolutions == \*"Set(Int -> Int)" :>
+AllSolutions ==
     { B \in Break : IsSolution(B) }
 
 (***************************************************************************)
@@ -170,9 +168,9 @@ AllSolutions == \*"Set(Int -> Int)" :>
 ExpandSolutions ==
   LET PiecesFor(w, B) == CHOOSE ST \in (SUBSET (1..P)) \X (SUBSET (1..P)) :
                            IsRepresentation(w, B, ST[1], ST[2])
-      Image(S, B) == "(Set(Int), Int -> Int) => Set(Int)" :>
+      Image(S, B) == "(Set(Int), Int -> Int) => Set(Int)" ##
         {B[x] : x \in S}
-      SolutionFor(w, B) == \*"(Int, Int -> Int) => <<Int, Set(Int), Set(Int)>>" :>
+      SolutionFor(w, B) ==
                             << w, 
                               Image(PiecesFor(w, B)[1], B), 
                               Image(PiecesFor(w, B)[2], B) >>
