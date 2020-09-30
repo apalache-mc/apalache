@@ -11,7 +11,7 @@ import os
 import sys
 
 from pathlib import Path
-from subprocess import run
+from subprocess import run, PIPE
 
 
 # NOTE: The script assumes the /.envrc file in this repo's root has been loaded
@@ -114,7 +114,7 @@ if __name__ == "__main__":
             )
             sys.exit(1)
 
-    result = run(cmd, capture_output=True)
+    result = run(cmd, stdout=PIPE, stderr=PIPE)
     logging.debug(f"command args: {result.args}")
 
     if result.returncode != 0:
