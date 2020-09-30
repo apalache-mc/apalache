@@ -56,9 +56,6 @@ def cli_parser(working_dir) -> argparse.ArgumentParser:
         nargs="?",
         help="Test to run. Determined by markdown section headers",
     )
-    parser.add_argument(
-        "color", action="store_true",
-    )
     return parser
 
 
@@ -123,8 +120,6 @@ if __name__ == "__main__":
 
     # Run diff to check the corrected results against the expected results
     cmd = ["diff", "--unified=4"]
-    if args.color:
-        cmd.append("--color=always")
     cmd.extend([test_file_str, corrected_file_str])
     result = run(cmd)
     sys.exit(result.returncode)
