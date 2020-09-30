@@ -35,9 +35,9 @@ jobs:
       - name: Cache local opam repository
         uses: actions/cache@v2
         with:
-          path: ~/.opam/4.11.0
+          path: ~/.opam
           key: ${{ runner.os }}-opam-4.11.0
-      - name: Set up OCaml
+      - name: Set up opam
         uses: avsm/setup-ocaml@v1
         with:
           ocaml-version: 4.11.0
