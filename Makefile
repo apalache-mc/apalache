@@ -16,8 +16,6 @@ QUICK_MAVEN_ARGS := -DskipTests -Dscoverage.skip=true -T 4C
 # Markdown files used for integration tests
 TEST_MD_FILES := $(wildcard test/tla/*.md)
 
-APALACHE_JAR := $(wildcard  mod-distribution/target/apalache-pkg-*-full.jar)
-
 .PHONY: all apalache apalache-jar compile build-quick test integration clean deps promote
 
 all: apalache
@@ -26,9 +24,7 @@ apalache:
 	# tell maven to load the binary libraries and build the package
 	mvn package
 
-apalache-jar: $(APALACHE_JAR)
-
-$(APALACHE_JAR): $(wildcard **/*.scala)
+apalache-jar:
 	mvn --batch-mode --no-transfer-progress -DskipTests package
 
 # Just compile with quick settings
@@ -42,7 +38,7 @@ build-quick:
 test:
 	mvn test
 
-integration: $(APALACHE_JAR)
+integration: apalache-jar
 	test/mdx-test.py
 
 # Invokes the md targets below

@@ -58,6 +58,7 @@ jobs:
       - name: Run integration tests
         run: |
           source ./.envrc
+          eval $(opam env)
           make integration
 
   integration-tests:
