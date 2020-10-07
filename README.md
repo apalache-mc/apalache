@@ -32,6 +32,26 @@ branch](https://github.com/informalsystems/apalache/tree/unstable).
 
 Read the [user manual](docs/manual.md).
 
+## Talks
+
+ * [Model-based testing with TLA+ and Apalache](https://youtu.be/aveoIMphzW8).
+    TLA+ Community Event 2020 (October 2020).
+
+ * [Type inference for TLA+ in Apalache](https://youtu.be/hnp25hmCMN8).
+    TLA+ Community Event 2020 (October 2020).
+
+ * [Formal Spec and Model Checking of the Tendermint Blockchain Synchronization Protocol](https://youtu.be/h2Ovc1KWlXM)
+    2nd Workshop on Formal Methods for Blockchains (July 2020).
+
+ * [Showing safety of Tendermint Consensus with TLA+ and Apalache](https://www.youtube.com/watch?v=aF20-28sMII).
+    Dev session at Informal Systems (May 2020).
+
+ * [TLA+ model checking made symbolic](https://www.youtube.com/watch?v=e66FGgRzaqw)
+    OOPSLA 2019 (October 2019).
+
+ * [Bounded model checking of TLA+ specifications with SMT](https://www.youtube.com/watch?v=Xl1--arESl8)
+   TLA+ Community Event 2018 (July 2018).
+
 ## Performance
 
 We are collecting [apalache benchmarks](https://github.com/informalsystems/apalache-tests).
