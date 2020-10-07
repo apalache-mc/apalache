@@ -40,6 +40,9 @@ Read the [user manual](docs/manual.md).
  * [Type inference for TLA+ in Apalache](https://youtu.be/hnp25hmCMN8).
     TLA+ Community Event 2020 (October 2020).
 
+ * [Formal Spec and Model Checking of the Tendermint Blockchain Synchronization Protocol](https://youtu.be/h2Ovc1KWlXM)
+    2nd Workshop on Formal Methods for Blockchains (July 2020).
+
  * [Showing safety of Tendermint Consensus with TLA+ and Apalache](https://www.youtube.com/watch?v=aF20-28sMII).
     Dev session at Informal Systems (May 2020).
 
