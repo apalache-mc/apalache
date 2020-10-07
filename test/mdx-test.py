@@ -1,7 +1,17 @@
 #!/usr/bin/env python3
 #
 # Run an integration test suite using mdx
-# See the tla/cli-integration-tests.md for details.
+#
+# This script is responsible for:
+#
+# - Sequencing two command invoations (ocaml-mdx and diff)
+# - Ensures pretty feedback on test failure
+# - Provides some defensive automation to protect against misuse or common
+#   errors
+# - Managing paths in a general way, to prevent polluting our working directory
+#   with test artifacts
+#
+# See tla/cli-integration-tests.md for on usage details.
 #
 # Shon Feder, 2020
 
