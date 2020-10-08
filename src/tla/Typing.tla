@@ -46,4 +46,16 @@ AssumeType(name, tp) == TRUE
 (****************************************************************************)
 type_str :> ex == ex
 
+(****************************************************************************)
+(* Produce an empty set, whose elements have the type tp.                   *)
+(* Use this operator, if the type checker cannot infer the type of { }.     *)
+(****************************************************************************)
+EmptySet(tp) == { }
+
+(****************************************************************************)
+(* Produce an empty sequence, whose elements have the type tp.              *)
+(* Use this operator, if the type checker cannot infer the type of << >>.   *)
+(****************************************************************************)
+EmptySeq(tp) == << >>
+
 =============================================================================
