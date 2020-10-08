@@ -126,10 +126,7 @@ class TypeAnnotationPassImpl @Inject()(
         // but we know their types (they're determined by the templates)
         val partialSolution = ( virtualCalls map {
           case (name, (e, ts, _)) =>
-            name -> ( ts match {
-              case Nil => solution( e )
-              case _ => OperT( TupT( ts map solution : _* ), solution( e ) )
-            } )
+            name -> OperT( TupT( ts map solution : _* ), solution( e ) )
         } ).toMap
 
         // TODO: propagate the solution to other passes

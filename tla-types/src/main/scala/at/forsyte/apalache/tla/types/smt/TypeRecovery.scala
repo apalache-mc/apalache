@@ -42,7 +42,7 @@ class TypeRecovery(
           val Array(sizeEx, indexExsAndCdm@_*) = d.getArgs
           val size = sizeEx.asInstanceOf[IntNum].getInt
           if ( size < 1 ) {
-            TupT()
+            OperT( TupT( ), apply( indexExsAndCdm.last ) )
           } else {
             val Nrelevant = math.min( size, limits.maxIndex )
             val relevantExes = indexExsAndCdm.take( Nrelevant )
