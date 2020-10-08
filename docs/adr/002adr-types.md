@@ -224,7 +224,9 @@ Indeed, they are all introducing bound variables that range over sets.
 In most cases, a type checker should be able to extract the element type
 from a set expression.
 
-However, there are a few pathological cases. For example:
+
+However, there are a few pathological cases arising from empty collections. For
+example:
 
 ```tla
 /\ \E x \in {}: x > 1
@@ -232,7 +234,8 @@ However, there are a few pathological cases. For example:
 /\ z \in DOMAIN << >>
 ```
 
-In these rare cases, use the auxillary operators in the module `Typing`:
+In these rare cases, use the auxiliary operators in the module `Typing` for
+specifying the type of the empty collection:
 
 ```tla
 EXTENDS Typing
