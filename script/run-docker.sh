@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+#
+# This script wraps invocation of apalache-mc docker imgages. It is uses
+# to invoke a dockerized apalache-mc, and takes care of supplying
+# boilerplate arguments to the docker executable.
+
 set -euo pipefail
 
 default_tag=latest

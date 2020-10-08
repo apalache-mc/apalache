@@ -38,6 +38,8 @@ Apalache:
     - [Testing](#testing)
         - [Unit tests](#unit-tests)
         - [Integration tests](#integration-tests)
+            - [Installing Dependencies](#installing-dependencies)
+            - [Running the tests](#running-the-tests)
         - [Continuous Integration](#continuous-integration)
     - [Changelog](#changelog)
     - [Releases](#releases)
@@ -174,17 +176,37 @@ make test
 
 ### Integration tests
 
-Run the integration tests with
+#### Installing Dependencies
+
+We use [mdx](https://github.com/realworldocaml/mdx) for CLI integration tests.
+
+Here is a platform agnostic installation recipe:
+
+```sh
+# Install opam
+sh <(curl -sL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)
+# Install mdx
+opam install mdx
+```
+
+For alternative installation methods for opam, see https://opam.ocaml.org/doc/Install.html
+
+#### Running the tests
+
+To build a fresh executable and run all the integration tests, execute
 
 ```sh
 make integration
 ```
 
+For more details on running the integration tests, see [./test/tla/cli-integration-tests.md](./test/tla/cli-integration-tests.md).
+
 ### Continuous Integration
 
-We run continuous integration tests on the `master` and `unstable` branches via
-[Travis CI](https://travis-ci.org/github/informalsystems/apalache). The CI configuration
-is located in [.travis.yml](./.travis.yml).
+We run continuous integration tests using [GitHub actions](https://github.com/informalsystems/apalache/actions).
+
+The CI configuration is located in
+[.github/workflows/main.yml](.github/workflows/main.yml).
 
 ## Changelog
 

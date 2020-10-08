@@ -13,13 +13,19 @@ QUICK_MAVEN_OPTS := "-XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:non
 # - run up to 4 threads per core (4C): https://cwiki.apache.org/confluence/display/MAVEN/Parallel+builds+in+Maven+3
 QUICK_MAVEN_ARGS := -DskipTests -Dscoverage.skip=true -T 4C
 
-.PHONY: all apalache compile build-quick test integration clean deps
+# Markdown files used for integration tests
+TEST_MD_FILES := $(wildcard test/tla/*.md)
+
+.PHONY: all apalache apalache-jar compile build-quick test integration clean deps promote
 
 all: apalache
 
 apalache:
 	# tell maven to load the binary libraries and build the package
-	$(ENV) mvn package
+	mvn package
+
+apalache-jar:
+	mvn --batch-mode --no-transfer-progress -DskipTests package
 
 # Just compile with quick settings
 compile:
@@ -32,11 +38,16 @@ build-quick:
 test:
 	mvn test
 
-integration: apalache
-	# unit tests are run by mvn package
-	# integration tests are run here
-	cd test \
-	 && $(ENV) ./run-integration
+integration: apalache-jar
+	test/run-integration
+
+# Invokes the md targets below
+promote: $(TEST_MD_FILES)
+
+# Copy corrected results over the incorrect expectations in the md files
+test/tla/%.md: target/test/tla/%.md.corrected
+	cp -f $< $@
 
 clean:
 	mvn clean
+	rm -rf target/
