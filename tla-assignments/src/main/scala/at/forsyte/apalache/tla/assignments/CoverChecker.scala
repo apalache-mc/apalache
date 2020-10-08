@@ -76,6 +76,18 @@ class CoverChecker( allVariables: Set[String], manuallyAssigned: Set[String] = S
     mkCoverInternal( Map.empty )(ex)
   }
 
+  /** Computes the set of all variables, which are covered by `ex` */
+  def coveredVars( ex: TlaEx ) : Set[String] = {
+    val cd = mkCover(ex)
+
+    val potentialProblemMap = (allVariables map {
+      v => v -> CoverData.uncoveredBranchPoints( v )( cd )
+    }).toMap
+
+
+    potentialProblemMap.keySet.filter { k => potentialProblemMap(k).noProblem }
+
+  }
 
   def findProblems( ex: TlaEx ): Option[Map[ String, ProblemData ]] = {
     val cd = mkCover(ex)

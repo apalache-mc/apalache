@@ -17,6 +17,14 @@ object CoverData{
 
   class CoverException( s : String ) extends Exception( s )
 
+  class IncompleteCover(seq: Seq[UID]) {
+    def get: Seq[UID] = seq
+    def isEmpty: Boolean = seq.isEmpty
+  }
+  sealed case class AtLeastOne( seq: Seq[UID] ) extends IncompleteCover(seq)
+  sealed case class All( seq: Seq[UID] ) extends IncompleteCover(seq)
+  sealed case class NoProblem() extends IncompleteCover( Seq.empty )
+
   /**
     * ProblemData represents potential witnesses to cover violations.
     * The collection `problemUIDs` lists the largest subexpressions (by UID), which
@@ -27,8 +35,8 @@ object CoverData{
     * as the root of computation.
     */
   sealed case class ProblemData(
-                                 problemUIDs: Seq[UID],
-                                 blameMap: Map[UID, Seq[UID]]
+                                 problemUIDs: IncompleteCover,
+                                 blameMap: Map[UID, IncompleteCover]
                                ) {
     /** Checks if any witnesses exist */
     def noProblem: Boolean = problemUIDs.isEmpty && blameMap.isEmpty
@@ -39,45 +47,43 @@ object CoverData{
       * by tracing `blameMap`
       */
     def focusOn( uid: UID ): Option[ProblemData] =
-        blameMap.get( uid ) map { seq =>
-          ProblemData( seq, blameMap )
+        blameMap.get( uid ) map { ic =>
+          ProblemData( ic, blameMap )
         }
 
     /**
       * Enumerates all possible ways to refine witnesses.
       */
-    def focusCandidates: Seq[ProblemData] = problemUIDs flatMap focusOn
+    def focusCandidates: Seq[ProblemData] = problemUIDs.get flatMap focusOn
 
-    /**
-      * Corrects all groups of expressions, where at least one is expected
-      * to be an assignment candidate
-      */
-    def allProblemLeaves: Seq[Seq[UID]] = {
-      val cand = focusCandidates
-      if (cand.isEmpty) Seq(problemUIDs)
-      else cand flatMap {_.allProblemLeaves}
-    }
   }
 
   def uncoveredBranchPoints( varName: String )( cd: CoverData ) : ProblemData = cd match {
     case Candidate( v, loc ) =>
-      val problem = if ( varName == v ) Seq.empty else Seq( loc )
+      // Candidate(v, _) covers varName iff v == varName
+      val problem = if ( varName == v ) NoProblem() else AtLeastOne( Seq( loc ) )
       ProblemData( problem, Map.empty )
-    case NonCandidate( loc ) => ProblemData( Seq( loc ), Map.empty )
+    case NonCandidate( loc ) =>
+      // NonCandidate never covers varname, but is also a leaf in blameMap
+      ProblemData( AtLeastOne( Seq( loc ) ), Map.empty )
     case BranchPoint( loc, branches@_* ) =>
+      // BranchPoint represents disjunction/ITE, so it covers varName iff
+      // *all* disjuncts/ITE branches cover varName
       val branchIssues =
-        branches.foldLeft( ProblemData( Seq.empty, Map.empty ) ) {
+        branches.foldLeft( ProblemData( NoProblem(), Map.empty ) ) {
           case (pd,brCd) =>
             val brPd = uncoveredBranchPoints( varName )( brCd )
             ProblemData(
-              pd.problemUIDs ++ brPd.problemUIDs,
+              All( pd.problemUIDs.get ++ brPd.problemUIDs.get ),
               pd.blameMap ++ brPd.blameMap
             )
         }
 
-      if (branchIssues.problemUIDs.nonEmpty){
+      if (!branchIssues.problemUIDs.isEmpty){
+        // If a subexpression contains a cover violation the BranchPoint sets itself
+        // as a problem location and pushes the subexpression issues into blameMap
         ProblemData(
-          Seq( loc ),
+          All( Seq( loc ) ),
           branchIssues.blameMap + ( loc -> branchIssues.problemUIDs )
         )
       } else {
@@ -85,21 +91,27 @@ object CoverData{
       }
 
     case NonBranch( loc, elements@_* ) =>
+      // NonBranch corresponds to conjunction, so it covers varName if any of its
+      // subexpressions cover varName
       val elemIssues = elements map uncoveredBranchPoints( varName )
       if ( elemIssues.exists( _.problemUIDs.isEmpty ) ) {
-        ProblemData( Seq.empty, Map.empty )
+        // If a suitable cover is found, report NoProblem
+        ProblemData( NoProblem(), Map.empty )
       } else {
-        val problemAggregate = elemIssues.foldLeft( ProblemData( Seq.empty, Map.empty ) ) {
+        // Otherwise, no sub-expression covers varName, so we aggregate all sub-locations
+        val problemAggregate = elemIssues.foldLeft( ProblemData( NoProblem(), Map.empty ) ) {
           case (pd,brPd) =>
             ProblemData(
-              pd.problemUIDs ++ brPd.problemUIDs,
+              AtLeastOne( pd.problemUIDs.get ++ brPd.problemUIDs.get),
               pd.blameMap ++ brPd.blameMap
             )
         }
+        // Then, NonBranch sets itself as a problem location, as in the previous case
         ProblemData(
-          Seq( loc ),
+          AtLeastOne( Seq( loc ) ),
           problemAggregate.blameMap + ( loc -> problemAggregate.problemUIDs )
         )
       }
   }
+
 }

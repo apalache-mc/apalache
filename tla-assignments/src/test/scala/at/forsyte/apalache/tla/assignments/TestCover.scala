@@ -71,7 +71,7 @@ class TestCover extends FunSuite with TestingPredefs {
     assert( !uncovered.noProblem )
 
     assert( uncovered.problemUIDs == Seq( topId ) )
-    assert( uncovered.blameMap( topId ).length == 2 )
+    assert( uncovered.blameMap( topId ).get.length == 2 )
 
   }
 
@@ -120,10 +120,6 @@ class TestCover extends FunSuite with TestingPredefs {
     val xProblems = CoverData.uncoveredBranchPoints( "x" )( cover )
 
     assert( !xProblems.noProblem )
-
-    assert( xProblems.allProblemLeaves.exists {
-      _.contains( problem.ID )
-    } )
   }
 
 

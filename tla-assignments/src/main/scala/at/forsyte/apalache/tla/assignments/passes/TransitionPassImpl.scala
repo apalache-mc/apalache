@@ -4,7 +4,6 @@ import java.io.File
 import java.nio.file.Path
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
-import at.forsyte.apalache.tla.assignments
 import at.forsyte.apalache.tla.assignments._
 import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.imp.src.SourceStore
@@ -92,27 +91,6 @@ class TransitionPassImpl @Inject()(options: PassOptions,
     val vars = module.varDeclarations.map(_.name)
 
     val sourceLoc = SourceLocator(sourceStore.makeSourceMap, changeListener)
-
-    // Before attempting to encode transitions, we can check covering syntactically
-    val coverChecker = new CoverChecker(vars.toSet, Set.empty) //todo, fix empty
-    val problems = coverChecker.findProblems( primedName ).map {
-      _.map {
-        case (k,v) => (k, v.allProblemLeaves )
-      }
-    }
-    if ( problems.nonEmpty ) {
-      val problemMap = problems.get
-
-      val problemStrings = problemMap flatMap {
-        case (k, v) =>
-          v map { seq =>
-            val locs = seq flatMap { uid => sourceLoc.sourceOf(uid) }
-            s"At least one of the following expressions must be an assignment to $k: ${ locs.mkString(", ")}."
-          }
-      }
-      // Throw
-      throw new assignments.CoverData.CoverException( problemStrings.mkString("\n") )
-    }
 
     val transitionPairs = SymbolicTransitionExtractor(tracker)(vars, primedName)
     // sort the transitions by their occurrence in the source code
