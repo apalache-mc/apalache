@@ -28,6 +28,7 @@ package oper {
     /** this operator is defined by the user and unknown to TLA+ */
     val User: Interpretation.Value = Value
     /** this operator does not have any definition but is used as a signature, e.g., f(_, _) in operator parameters */
+      // Igor (28.08.2020): this interpretation is no longer in use. Remove.
     val Signature: Interpretation.Value = Value
   }
 
@@ -103,12 +104,38 @@ package oper {
     }
 
     /**
-      * Operator application by name, e.g, OperEx(apply, f, x, y) calls f(x, y).
+      * <p>Operator application by name, e.g, <code>OperEx(apply, f, x, y)</code> calls <code>f(x, y)</code>.
+      * This operator is similar to a function call in the programming languages.
+      * </p>
       *
-      * This is an operator that you will not find in TLA+ code.
-      * The only case where this operator is used are the level 2 user-defined operators,
-      * that is, when one defines A(f(_), i) == f(i), the A's body is defined as
-      * OperEx(apply, NameEx("f"), NameEx("i")).
+      * <p>This is an operator that you will not find in TLA+ code.
+      * This operator appears in IR in two cases:
+      * (1) when a user-defined operator is called, either defined with a top-level definition or LET-IN, and
+      * (2) when a parameter of a user-defined operator is an operator itself, and it is applied to an argument.</p>
+      *
+      * <p>
+      * Examples:
+      * <ol>
+      *  <li>Consider two top-level definitions:
+      *
+      *  <pre>
+      * A(i) == i + 1
+      * B(j) == A(j)
+      *  </pre>
+      *
+      * The body of B is represented as <code>OperEx(apply, NameEx("A"), NameEx("j"))</code>
+      *
+      *  </li>
+      *  <li>Consider a top-level definition:
+      *
+      *  <pre>
+      * A(f(_), i) == f(i)
+      *  </pre>
+      *
+      *      The body of A is represented as <code>OperEx(apply, NameEx("f"), NameEx("i"))</code>
+      *  </li>
+      * </ol>
+      * </p>
       *
       * @see TestSanyImporter.test("level-2 operators")
       */
@@ -150,7 +177,11 @@ package oper {
       override val precedence: (Int, Int) = (0, 0) // see Section 15.2.1 in Lamport's book
     }
 
-    /** The CHOOSE idiom: CHOOSE x : x \notin S */
+    /**
+      * The CHOOSE idiom: CHOOSE x : x \notin S.
+      *
+      * Igor (28.08.2020): having this operator in the IR is a hack. We should just remove it.
+      */
     val chooseIdiom: TlaOper = new TlaOper {
       // TODO: move this operator to TlaBoolOper? (Igor)
       override val name: String = "CHOOSEI"

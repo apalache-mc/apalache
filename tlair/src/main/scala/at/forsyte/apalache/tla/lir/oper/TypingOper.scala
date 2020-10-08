@@ -31,6 +31,35 @@ object TypingOper {
     override val precedence: (Int, Int) = (100, 100)
   }
 
+  /**
+    * <p>Produce an empty set, whose elements have the type tp. Use this operator, if you are running the type checker.
+    * It is impossible to infer the type of an empty set without additional context.</p>
+    *
+    * <p>The only argument of this operator should be of shape `ValEx(TlaStr(text))`, where `text` is a type annotation
+    * in Type System 1.</p>
+    */
+  val emptySet: TypingOper = new TypingOper {
+    override def name: String = "Typing!EmptySet"
+
+    override def arity: OperArity = FixedArity(1)
+
+    override def precedence: (Int, Int) = (100, 100)
+  }
+
+  /**
+    * <p>Produce an empty sequence, whose elements have the type tp. Use this operator, if you are running the
+    * type checker. It is impossible to infer the type of an empty set without additional context.</p>
+    *
+    * <p>The only argument of this operator should be of shape `ValEx(TlaStr(text))`, where `text` is a type annotation
+    * in Type System 1.</p>
+    */
+  val emptySeq: TypingOper = new TypingOper {
+    override def name: String = "Typing!EmptySeq"
+
+    override def arity: OperArity = FixedArity(1)
+
+    override def precedence: (Int, Int) = (100, 100)
+  }
 }
 
 

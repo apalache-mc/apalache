@@ -3,8 +3,8 @@ package at.forsyte.apalache.tla.lir.oper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 /**
- * Function operators.
- */
+  * Function operators.
+  */
 abstract class TlaFunOper extends TlaOper {
   override def interpretation: Interpretation.Value = Interpretation.Predefined
 }
@@ -16,14 +16,15 @@ object TlaFunOper {
     * Note that in case of records, k_1, ..., k_n are strings, that is, ValEx(TlaStr(...)), not NameEx.
     */
   val enum = new TlaFunOper {
-    override def arity: OperArity = new OperArity( k => k >= 2 && k % 2 == 0 )
+    override def arity: OperArity = new OperArity(k => k >= 2 && k % 2 == 0)
+
     override val name: String = "fun-enum"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   /**
-    Define a tuple by listing its elements, i.e., < e_1, ..., e_k >.
-    One can use enum to achieve the same effect.
+    * Define a tuple by listing its elements, i.e., < e_1, ..., e_k >.
+    * One can use enum to achieve the same effect.
     */
   val tuple = new TlaFunOper {
     override val arity = AnyArity()
@@ -70,7 +71,8 @@ object TlaFunOper {
     * of the following structure: body, x_1, S_1, ..., x_k, S_k.
     */
   val funDef = new TlaFunOper {
-    override def arity: OperArity = new OperArity( k => k >= 3 && k % 2 == 1 )
+    override def arity: OperArity = new OperArity(k => k >= 3 && k % 2 == 1)
+
     override val name: String = "fun-def"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
@@ -80,15 +82,15 @@ object TlaFunOper {
     * We introduce a three-argument operator, whose arguments are as follows:</p>
     *
     * <ul>
-    *   <li>function body of type TlaEx that may refer to the function via recFunRef,</li>
-    *   <li>NameEx(variableName),</li>
-    *   <li>variable domain of type TlaEx.</li>
+    * <li>function body of type TlaEx that may refer to the function via recFunRef,</li>
+    * <li>NameEx(variableName),</li>
+    * <li>variable domain of type TlaEx.</li>
     * </ul>
     *
     * <p>Hence, a declaration of a recursive operator looks like a nullary operator declaration,
-    *    whose body contains the constructor of a recursive function. The body of a recursive function may
-    *    refer to the function itself by using the operator recFunRef (see below).
-    *    Note that the output methods should convert this intermediate representation to the standard TLA+ form.</p>
+    * whose body contains the constructor of a recursive function. The body of a recursive function may
+    * refer to the function itself by using the operator recFunRef (see below).
+    * Note that the output methods should convert this intermediate representation to the standard TLA+ form.</p>
     *
     * <p>There is a reason for defining a recursive function with two operators, rather than by introducing
     * a special case of `TlaDecl`. In TLA+, the operator bodies (as well as function bodies) may refer only to
@@ -103,27 +105,29 @@ object TlaFunOper {
     *
     * <p>
     * `TlaOperDecl("Fact", List(),
-    *   OperEx(recFunDef,
-    *     OperEx(TlaControlOper.ifThenElse,
-    *       (* n <= 1 *),
-    *       (* 1 *),
-    *       OperEx(Tla.ArithOper.mult,
-    *         NameEx("n"),
-    *         OperEx(TlaFunOper.app,
-    *           OperEx(recFunRef),
-    *           OperEx(TlaArithOper.minus, NameEx(n), ValEx(TlaInt(1)))
-    *         )
-    *       )
-    *     ),
-    *     NameEx("n"),
-    *     TlaIntSet
-    *   )
+    * OperEx(recFunDef,
+    * OperEx(TlaControlOper.ifThenElse,
+    * (* n <= 1 *),
+    * (* 1 *),
+    * OperEx(Tla.ArithOper.mult,
+    * NameEx("n"),
+    * OperEx(TlaFunOper.app,
+    * OperEx(recFunRef),
+    * OperEx(TlaArithOper.minus, NameEx(n), ValEx(TlaInt(1)))
+    * )
+    * )
+    * ),
+    * NameEx("n"),
+    * TlaIntSet
+    * )
     * )`
     * </p>
     */
   val recFunDef = new TlaFunOper {
     override def arity: OperArity = FixedArity(3)
+
     override def name: String = "rec-fun-def"
+
     override def precedence: (Int, Int) = (100, 100) // as the operator declaration
   }
 
@@ -137,23 +141,38 @@ object TlaFunOper {
       * A unique name that can be used to refer to a recursive function inside its body.
       */
     val uniqueName = "$recFun"
+
     override def name: String = "rec-fun-ref"
+
     override def arity: OperArity = FixedArity(0)
+
     override def precedence: (Int, Int) = (16, 16) // as function application
   }
 
   /**
-    * A function update, e.g., [f EXCEPT ![i_1] = e_1, ![i_2] = e_2, ..., ![i_k] = e_k].
-    * The order of the arguments is as follows: (f, i_1, e_1, ..., i_k, e_k).
+    * <p>A function update, e.g., [f EXCEPT ![i_1] = e_1, ![i_2] = e_2, ..., ![i_k] = e_k].
+    * The order of the arguments is as follows: (f, i_1, e_1, ..., i_k, e_k).</p>
     *
-    * Note that all indices i_1, ..., i_k are tuples. For one-dimensional functions,
+    * <p>Note that all indices i_1, ..., i_k are tuples. For one-dimensional functions,
     * they are singleton tuples, whereas for multidimensional functions the indices are
     * tuples of arbitrary length. This is the design choice that comes from SANY.
     * When you write f[<<1>>] in TLA+, expect to deal with (except (tuple (tuple 1))) here.
+    * The method `unpackIndex` maps singleton tuples to their contents.
+    * </p>
     */
   val except = new TlaFunOper {
-    override def arity: OperArity = new OperArity( k => k >= 3 && k % 2 == 1 )
+    override def arity: OperArity = new OperArity(k => k >= 3 && k % 2 == 1)
+
     override val name: String = "EXCEPT"
     override val precedence: (Int, Int) = (16, 16) // as the function application
+
+    /**
+      * SANY always packs an EXCEPT accessor in a tuple, even if the index is one-dimensional.
+      * Unpack the one-dimensional index.
+      */
+    def unpackIndex: TlaEx => TlaEx = {
+      case OperEx(TlaFunOper.tuple, one) => one
+      case e => e
+    }
   }
 }
