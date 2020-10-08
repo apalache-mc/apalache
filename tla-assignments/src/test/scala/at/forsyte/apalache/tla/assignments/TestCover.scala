@@ -43,8 +43,8 @@ class TestCover extends FunSuite with TestingPredefs {
 
     assert( !uncovered.noProblem )
 
-    assert( uncovered.problemUIDs == Seq( branchId ) )
-    assert( uncovered.blameMap( branchId ) == Seq( nonCandId ) )
+    assert( uncovered.problemUIDs.get == Seq( branchId ) )
+    assert( uncovered.blameMap( branchId ).get == Seq( nonCandId ) )
 
   }
 
@@ -70,7 +70,7 @@ class TestCover extends FunSuite with TestingPredefs {
 
     assert( !uncovered.noProblem )
 
-    assert( uncovered.problemUIDs == Seq( topId ) )
+    assert( uncovered.problemUIDs.get == Seq( topId ) )
     assert( uncovered.blameMap( topId ).get.length == 2 )
 
   }
