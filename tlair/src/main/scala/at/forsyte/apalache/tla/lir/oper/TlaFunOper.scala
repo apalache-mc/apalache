@@ -105,21 +105,21 @@ object TlaFunOper {
     *
     * <p>
     * `TlaOperDecl("Fact", List(),
-    * OperEx(recFunDef,
-    * OperEx(TlaControlOper.ifThenElse,
-    * (* n <= 1 *),
-    * (* 1 *),
-    * OperEx(Tla.ArithOper.mult,
-    * NameEx("n"),
-    * OperEx(TlaFunOper.app,
-    * OperEx(recFunRef),
-    * OperEx(TlaArithOper.minus, NameEx(n), ValEx(TlaInt(1)))
-    * )
-    * )
-    * ),
-    * NameEx("n"),
-    * TlaIntSet
-    * )
+    *   OperEx(recFunDef,
+    *     OperEx(TlaControlOper.ifThenElse,
+    *       (* n <= 1 *),
+    *       (* 1 *),
+    *       OperEx(Tla.ArithOper.mult,
+    *         NameEx("n"),
+    *         OperEx(TlaFunOper.app,
+    *           OperEx(recFunRef),
+    *           OperEx(TlaArithOper.minus, NameEx(n), ValEx(TlaInt(1)))
+    *         )
+    *       )
+    *     ),
+    *     NameEx("n"),
+    *     TlaIntSet
+    *   )
     * )`
     * </p>
     */
