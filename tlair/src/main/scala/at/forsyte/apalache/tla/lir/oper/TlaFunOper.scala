@@ -3,8 +3,8 @@ package at.forsyte.apalache.tla.lir.oper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 /**
- * Function operators.
- */
+  * Function operators.
+  */
 abstract class TlaFunOper extends TlaOper {
   override def interpretation: Interpretation.Value = Interpretation.Predefined
 }
@@ -23,8 +23,8 @@ object TlaFunOper {
   }
 
   /**
-  Define a tuple by listing its elements, i.e., < e_1, ..., e_k >.
-    One can use enum to achieve the same effect.
+    * Define a tuple by listing its elements, i.e., < e_1, ..., e_k >.
+    * One can use enum to achieve the same effect.
     */
   object tuple extends TlaFunOper {
     override val arity = AnyArity()
@@ -144,17 +144,28 @@ object TlaFunOper {
   }
 
   /**
-    * A function update, e.g., [f EXCEPT ![i_1] = e_1, ![i_2] = e_2, ..., ![i_k] = e_k].
-    * The order of the arguments is as follows: (f, i_1, e_1, ..., i_k, e_k).
+    * <p>A function update, e.g., [f EXCEPT ![i_1] = e_1, ![i_2] = e_2, ..., ![i_k] = e_k].
+    * The order of the arguments is as follows: (f, i_1, e_1, ..., i_k, e_k).</p>
     *
-    * Note that all indices i_1, ..., i_k are tuples. For one-dimensional functions,
+    * <p>Note that all indices i_1, ..., i_k are tuples. For one-dimensional functions,
     * they are singleton tuples, whereas for multidimensional functions the indices are
     * tuples of arbitrary length. This is the design choice that comes from SANY.
     * When you write f[<<1>>] in TLA+, expect to deal with (except (tuple (tuple 1))) here.
+    * The method `unpackIndex` maps singleton tuples to their contents.
+    * </p>
     */
   object except extends TlaFunOper {
     override def arity: OperArity = new OperArity( k => k >= 3 && k % 2 == 1 )
     override val name: String = "EXCEPT"
     override val precedence: (Int, Int) = (16, 16) // as the function application
+
+    /**
+      * SANY always packs an EXCEPT accessor in a tuple, even if the index is one-dimensional.
+      * Unpack the one-dimensional index.
+      */
+    def unpackIndex: TlaEx => TlaEx = {
+      case OperEx(TlaFunOper.tuple, one) => one
+      case e => e
+    }
   }
 }
