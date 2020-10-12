@@ -467,3 +467,20 @@ Configuration error (see the manual): Operator NoLiveness not found (used as a t
 EXITCODE: ERROR (99)
 ```
 
+### configure via TLC config with SPECIFICATION
+
+```sh
+$ apalache-mc check --config=Config2.cfg Config.tla | sed 's/[IEW]@.*//'
+...
+  > Loading TLC configuration from Config2.cfg
+...
+  > Config2.cfg: Using SPECIFICATION Spec2
+...
+  > Set the initialization predicate to Init2
+  > Set the transition predicate to Next2
+  > Set an invariant to Inv2
+...
+The outcome is: NoError
+...
+```
+

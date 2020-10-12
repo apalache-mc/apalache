@@ -6,8 +6,9 @@ import java.nio.file.Path
 import at.forsyte.apalache.infra.passes.{Pass, TlaModuleMixin, WriteablePassOptions}
 import at.forsyte.apalache.io.tlc.TlcConfigParser
 import at.forsyte.apalache.io.tlc.config._
-import at.forsyte.apalache.tla.lir.TlaModule
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
+import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.pp._
@@ -89,34 +90,45 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
         configFilename
     val basename = FilenameUtils.getName(filename)
     logger.info("  > Loading TLC configuration from " + basename)
+
+    def setInit(init: String): Unit = {
+      options.get[String]("checker","init") match {
+        case None =>
+          // In general, passes should not override options. This is a reasonable exception to this rule.
+          logger.info(s"  > Using the init predicate $init from the TLC config")
+          options.set("checker.init", init)
+
+        case Some(cmdInit) =>
+          logger.warn(s"  > $basename: Init operator is set both in TLC config and via --init option; using $cmdInit")
+      }
+    }
+
+    def setNext(next: String): Unit = {
+      options.get[String]("checker", "next") match {
+        case None =>
+          // In general, passes should not override options. This is a reasonable exception to this rule.
+          logger.info(s"  > Using the next predicate $next from the TLC config")
+          options.set("checker.next", next)
+
+        case Some(cmdNext) =>
+          val msg = s"  > $basename: Next operator is set both in TLC config and via --next command line option; using $cmdNext"
+          logger.warn(msg)
+      }
+    }
+
     try {
       val config = TlcConfigParser.apply(new FileReader(filename))
       configuredModule = new TlcConfigImporter(config, new IdleTracker())(module)
       config.behaviorSpec match {
         case InitNextSpec(init, next) =>
-          options.get[String]("checker","init") match {
-            case None =>
-              // In general, passes should not override options. This is a reasonable exception to this rule.
-              logger.info(s"Using the init predicate $init from the TLC config")
-              options.set("checker.init", init)
+          setInit(init)
+          setNext(next)
 
-            case Some(cmdInit) =>
-              logger.warn(s"  > $basename: Init operator is set both in TLC config and via --init option; using $cmdInit")
-          }
-
-          options.get[String]("checker", "next") match {
-            case None =>
-              // In general, passes should not override options. This is a reasonable exception to this rule.
-              logger.info(s"Using the next predicate $next from the TLC config")
-              options.set("checker.next", next)
-
-            case Some(cmdNext) =>
-              val msg = s"  > $basename: Next operator is set both in TLC config and via --next command line option; using $cmdNext"
-              logger.warn(msg)
-          }
-
-        case specName =>
-          logger.warn(s"  > $basename: SPECIFICATION $specName is not supported yet. Use INIT and NEXT instead.")
+        case TemporalSpec(specName) =>
+          val (init, next) = extractFromSpec(module, basename, specName)
+          logger.info(s"  > $basename: Using SPECIFICATION $specName")
+          setInit(init)
+          setNext(next)
       }
       if (config.invariants.nonEmpty) {
         options.get[List[String]]("checker", "inv") match {
@@ -197,6 +209,39 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
 
       case None =>
         () // this is fine, temporal properties are not supported anyway
+    }
+  }
+
+  /**
+    * Extract Init and Next from the spec definition that has the canonical form Init /\ [Next]_vars /\ ...
+    * @param module TLA+ module
+    * @param specName the name of the specification definition
+    * @return the pair (Init, Next)
+    */
+  private def extractFromSpec(module: TlaModule, contextName: String, specName: String): (String, String) = {
+    module.operDeclarations.find(_.name == specName) match {
+      case None =>
+        throw new ConfigurationError(s"$contextName: Operator $specName not found (used as SPECIFICATION)")
+
+        // the canonical form: Init /\ [Next]_vars /\ ...
+      case Some(TlaOperDecl(_, List(),
+        OperEx(TlaBoolOper.and,
+          // Init
+          OperEx(TlaOper.apply, NameEx(init)),
+          // [Next]_vars
+          OperEx(TlaActionOper.stutter,
+            // Next
+            OperEx(TlaOper.apply, NameEx(next)),
+            // vars
+            _*
+          ), ///
+          _*))) =>
+        (init, next)
+
+      case Some(d) =>
+        val msg = s"$contextName: Expected $specName to be in the canonical form Init /\\ [Next]_vars /\\ ..."
+        logger.error(s"Operator $specName of ${d.formalParams.length} arguments is defined as: " + d.body)
+        throw new ConfigurationError(msg)
     }
   }
 

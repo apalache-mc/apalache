@@ -20,9 +20,6 @@ Init2 ==
 Next ==
     UNCHANGED x
 
-Spec ==
-    Init /\ [Next]_x
-
 \* the transition predicate we set in .cfg
 Next1 ==
     x' = x + 1
@@ -30,6 +27,12 @@ Next1 ==
 \* the next predicate that we override with command-line options
 Next2 ==
     x' = x + 2
+
+Spec ==
+    Init /\ [Next]_x
+
+Spec2 ==
+    Init2 /\ [Next2]_x
 
 \* the default invariant
 Inv ==
