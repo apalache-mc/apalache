@@ -126,7 +126,11 @@ object TlaOper {
     override val precedence: (Int, Int) = (0, 0) // see Section 15.2.1 in Lamport's book
   }
 
-  /** The CHOOSE idiom: CHOOSE x : x \notin S */
+  /**
+    * The CHOOSE idiom: CHOOSE x : x \notin S.
+    * 
+    * Igor (28.08.2020): having this operator in the IR is a hack. We should just remove it.
+    */
   object chooseIdiom extends TlaOper {
     // TODO: move this operator to TlaBoolOper? (Igor)
     override val name: String = "CHOOSEI"
