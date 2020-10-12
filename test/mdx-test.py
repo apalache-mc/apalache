@@ -21,8 +21,10 @@ import os
 import sys
 
 from pathlib import Path
-from subprocess import run, PIPE
+from subprocess import run, Popen, PIPE, STDOUT
 
+logger = logging.getLogger("integration test logger")
+logger.setLevel(logging.DEBUG)
 
 # NOTE: The script assumes the /.envrc file in this repo's root has been loaded
 
@@ -39,15 +41,21 @@ def get_target_dir() -> Path:
     return Path(target_dir_str) / "test"
 
 
-def configure_logger() -> None:
+def configure_logger(debug: bool) -> None:
+    formatter = logging.Formatter("[%(asctime)s] %(levelname)s:%(message)s")
+
+    console_handler_level = logging.DEBUG if debug else logging.WARNING
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.WARNING)
-    logging.basicConfig(
-        format="[%(asctime)s] %(levelname)s:%(message)s",
-        filename=log_file,
-        level=logging.DEBUG,
-        handlers=[console_handler],
-    )
+    console_handler.setLevel(console_handler_level)
+
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setLevel(logging.DEBUG)
+
+    for h in (console_handler, file_handler):
+        h.setFormatter(formatter)
+        logger.addHandler(h)
+
+    logger.debug(f"Output level: {logging.getLevelName(console_handler_level)}")
 
 
 def cli_parser(working_dir) -> argparse.ArgumentParser:
@@ -65,6 +73,13 @@ def cli_parser(working_dir) -> argparse.ArgumentParser:
         default=None,
         nargs="?",
         help="Test to run. Determined by markdown section headers",
+    )
+    parser.add_argument(
+        "--debug",
+        "-d",
+        action="store_true",
+        default=False,
+        help="Enable debugging output",
     )
     return parser
 
@@ -101,10 +116,15 @@ if __name__ == "__main__":
     test_file_str = str(corrected_file)
     corrected_file_str = str(test_file)
 
+    # Must come after the `test_target_dir` is created
+    configure_logger(args.debug)
+
     # Run the mdx tests to generate the corrected file
     cmd = [
         "ocaml-mdx",
         "test",
+        "--verbosity",
+        "info",
         "--root",
         working_dir_str,
         "--output",
@@ -121,11 +141,14 @@ if __name__ == "__main__":
             )
             sys.exit(1)
 
-    result = run(cmd, stdout=PIPE, stderr=PIPE)
-    logging.debug(f"command args: {result.args}")
+    process = Popen(cmd, stdout=PIPE, stderr=STDOUT)
+    logger.debug(f"running command: {process.args}")
+    while process.poll() is None:
+        line = process.stdout.readline().rstrip()
+        logger.info(line)
 
-    if result.returncode != 0:
-        logging.error(f"Failed to run test. Check {log_file}. Result: {result}")
+    if process.returncode != 0:
+        logger.error(f"Failed to run test. Check {log_file}. Result: {result}")
         sys.exit(1)
 
     # Run diff to check the corrected results against the expected results
