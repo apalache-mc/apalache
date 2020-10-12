@@ -101,8 +101,6 @@ if __name__ == "__main__":
 
     args = cli_parser(working_dir).parse_args()
 
-    configure_logger(args.debug)
-
     # The file holding the integration tests
     test_file = args.test_file.resolve()
 
@@ -117,6 +115,9 @@ if __name__ == "__main__":
     working_dir_str = str(working_dir)
     test_file_str = str(corrected_file)
     corrected_file_str = str(test_file)
+
+    # Must come after the `test_target_dir` is created
+    configure_logger(args.debug)
 
     # Run the mdx tests to generate the corrected file
     cmd = [
