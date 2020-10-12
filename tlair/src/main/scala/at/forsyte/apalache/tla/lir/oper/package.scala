@@ -26,6 +26,7 @@ package oper {
     /** this operator is defined by the user and unknown to TLA+ */
     val User: Interpretation.Value = Value
     /** this operator does not have any definition but is used as a signature, e.g., f(_, _) in operator parameters */
+      // Igor (28.08.2020): this interpretation is no longer in use. Remove.
     val Signature: Interpretation.Value = Value
   }
 

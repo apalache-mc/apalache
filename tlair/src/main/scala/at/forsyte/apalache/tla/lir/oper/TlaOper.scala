@@ -53,12 +53,38 @@ object TlaOper {
   }
 
   /**
-    * Operator application by name, e.g, OperEx(apply, f, x, y) calls f(x, y).
+    * <p>Operator application by name, e.g, <code>OperEx(apply, f, x, y)</code> calls <code>f(x, y)</code>.
+    * This operator is similar to a function call in the programming languages.
+    * </p>
     *
-    * This is an operator that you will not find in TLA+ code.
-    * The only case where this operator is used are the level 2 user-defined operators,
-    * that is, when one defines A(f(_), i) == f(i), the A's body is defined as
-    * OperEx(apply, NameEx("f"), NameEx("i")).
+    * <p>This is an operator that you will not find in TLA+ code.
+    * This operator appears in IR in two cases:
+    * (1) when a user-defined operator is called, either defined with a top-level definition or LET-IN, and
+    * (2) when a parameter of a user-defined operator is an operator itself, and it is applied to an argument.</p>
+    *
+    * <p>
+    * Examples:
+    * <ol>
+    *  <li>Consider two top-level definitions:
+    *
+    *  <pre>
+    * A(i) == i + 1
+    * B(j) == A(j)
+    *  </pre>
+    *
+    * The body of B is represented as <code>OperEx(apply, NameEx("A"), NameEx("j"))</code>
+    *
+    *  </li>
+    *  <li>Consider a top-level definition:
+    *
+    *  <pre>
+    * A(f(_), i) == f(i)
+    *  </pre>
+    *
+    *      The body of A is represented as <code>OperEx(apply, NameEx("f"), NameEx("i"))</code>
+    *  </li>
+    * </ol>
+    * </p>
     *
     * @see TestSanyImporter.test("level-2 operators")
     */
