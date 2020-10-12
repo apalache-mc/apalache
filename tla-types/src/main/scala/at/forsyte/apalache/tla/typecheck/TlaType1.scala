@@ -101,7 +101,7 @@ case class ConstT1(name: String) extends TlaType1 {
   */
 case class VarT1(no: Int) extends TlaType1 {
   override def toString: String = {
-    if (no >= 0 && no < VarT1.QNAMES_LEN) {
+    if (no >= 0 && no < VarT1.QNAMES.length) {
       VarT1.QNAMES(no)
     } else {
       "a" + no
@@ -115,12 +115,9 @@ case class VarT1(no: Int) extends TlaType1 {
 
 object VarT1 {
   // human-friendly names of the first 26 variables
-  protected val QNAMES: List[String] = List(
+  protected val QNAMES: Vector[String] = Vector(
     "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
     "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z")
-
-  // how many human-friendly names we have
-  protected val QNAMES_LEN: Int = QNAMES.length
 
   /**
     * Construct a variable from the human-readable form like 'b' or 'a100'.
