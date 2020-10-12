@@ -381,3 +381,89 @@ $ TLA_PATH=./tla-path-tests apalache-mc check ./tla-path-tests/ImportingModule.t
 The outcome is: NoError
 ...
 ```
+
+## configure the check command
+
+### configure default Init and Next
+
+```sh
+$ apalache-mc check Config.tla | sed 's/I@.*//'
+...
+  > Command line option --init is not set. Using Init
+  > Command line option --next is not set. Using Next
+...
+  > Set the initialization predicate to Init
+  > Set the transition predicate to Next
+...
+The outcome is: NoError
+...
+```
+
+### configure an invariant in CLI
+
+```sh
+$ apalache-mc check --inv=Inv Config.tla | sed 's/I@.*//'
+...
+  > Set an invariant to Inv
+...
+The outcome is: NoError
+...
+```
+
+### configure via command-line
+
+```sh
+$ apalache-mc check --init=Init1 --next=Next1 --inv=Inv Config.tla | sed 's/I@.*//'
+...
+  > Set the initialization predicate to Init1
+  > Set the transition predicate to Next1
+  > Set an invariant to Inv
+...
+The outcome is: Error
+...
+```
+
+### configure via TLC config
+
+```sh
+$ apalache-mc check --config=Config1.cfg Config.tla | sed 's/[IEW]@.*//'
+...
+  > Loading TLC configuration from Config1.cfg
+...
+  > Config1.cfg: PROPERTY AwesomeLiveness is ignored. Only INVARIANTS are supported.
+...
+  > Set the initialization predicate to Init1
+  > Set the transition predicate to Next1
+  > Set an invariant to Inv1
+...
+The outcome is: NoError
+...
+```
+
+### configure via TLC config and override it!
+
+```sh
+$ apalache-mc check --config=Config1.cfg --init=Init2 --next=Next2 Config.tla | sed 's/[IEW]@.*//'
+...
+  > Loading TLC configuration from Config1.cfg
+...
+  > Set the initialization predicate to Init2
+  > Set the transition predicate to Next2
+  > Set an invariant to Inv1
+...
+The outcome is: Error
+...
+```
+
+### configure missing property in TLC config 
+
+```sh
+$ apalache-mc check --config=Config3.cfg Config.tla | sed 's/[IE]@.*//'
+...
+  > Loading TLC configuration from Config3.cfg
+...
+Configuration error (see the manual): Operator NoLiveness not found (used as a temporal property)
+...
+EXITCODE: ERROR (99)
+```
+

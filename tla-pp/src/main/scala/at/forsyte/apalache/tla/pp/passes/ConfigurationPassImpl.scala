@@ -45,17 +45,20 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
+    val inModule = tlaModule.get
     // try to read from the TLC configuration file
-    val configuredModule = tryConfigureFromTlcConfig(tlaModule.get)
+    loadOptionsFromTlcConfig(inModule)
+    setFallbackOptions()
+
+    // make sure that the required operators are defined
+    ensureDeclarationsArePresent(inModule)
+
+    // rewrite constants and declarations
+    val configuredModule = new ConstAndDefRewriter(tracker)(inModule)
 
     // dump the configuration result
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
     PrettyWriter.write(configuredModule, new File(outdir.toFile, "out-config.tla"))
-
-    setFallbackOptions()
-
-    // make sure that the required operators are defined
-    ensureDeclarationsArePresent(configuredModule)
 
     outputTlaModule = Some(configuredModule)
     true
@@ -64,17 +67,17 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
   // if checker.init and checker.next are not set, set them to Init and Next, respectively
   private def setFallbackOptions(): Unit = {
     if (options.get("checker", "init").isEmpty) {
-      logger.debug("  > Option --init is not set. Using Init")
+      logger.info("  > Command line option --init is not set. Using Init")
       options.set("checker.init", "Init")
     }
     if (options.get("checker", "next").isEmpty) {
-      logger.debug("  > Option --next is not set. Using Next")
+      logger.info("  > Command line option --next is not set. Using Next")
       options.set("checker.next", "Next")
     }
   }
 
   // set the configuration options from a TLC config, if it is present
-  private def tryConfigureFromTlcConfig(module: TlaModule): TlaModule = {
+  private def loadOptionsFromTlcConfig(module: TlaModule): Unit = {
     var configuredModule = module
     // read TLC config if present
     val configFilename = options.getOrElse("checker","config","")
@@ -91,30 +94,50 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
       configuredModule = new TlcConfigImporter(config, new IdleTracker())(module)
       config.behaviorSpec match {
         case InitNextSpec(init, next) =>
-          if(options.getOrElse("checker","init","").isEmpty) {
-            options.set("checker.init", init)
-          }
-          else {
-            logger.warn("  > Init operator is set both in " + basename + " and via --init option; using the latter")
-          }
-          if(options.getOrElse("checker","next","").isEmpty) {
-            // In general, passes should not override options. This is a reasonable exception to this rule.
-            options.set("checker.next", next)
-          }
-          else {
-            logger.warn("  > Next operator is set both in " + basename + " and via --next option; using the latter")
-          }
-        case _ => logger.warn("  > Temporal spec found in " + basename + ", which is not yet supported. Skipping.")
-      }
-      if(config.invariants.nonEmpty) {
-        if(options.getOrElse("checker","inv",List()).isEmpty) {
-          // In general, passes should not override options. This is a reasonable exception to this rule.
-          options.set("checker.inv", config.invariants)
-        }
-        else {
-          logger.warn("  > Invariants are set both in " + basename + " and via --inv option; using the latter")
-        }
+          options.get[String]("checker","init") match {
+            case None =>
+              // In general, passes should not override options. This is a reasonable exception to this rule.
+              logger.info(s"Using the init predicate $init from the TLC config")
+              options.set("checker.init", init)
 
+            case Some(cmdInit) =>
+              logger.warn(s"  > $basename: Init operator is set both in TLC config and via --init option; using $cmdInit")
+          }
+
+          options.get[String]("checker", "next") match {
+            case None =>
+              // In general, passes should not override options. This is a reasonable exception to this rule.
+              logger.info(s"Using the next predicate $next from the TLC config")
+              options.set("checker.next", next)
+
+            case Some(cmdNext) =>
+              val msg = s"  > $basename: Next operator is set both in TLC config and via --next command line option; using $cmdNext"
+              logger.warn(msg)
+          }
+
+        case specName =>
+          logger.warn(s"  > $basename: SPECIFICATION $specName is not supported yet. Use INIT and NEXT instead.")
+      }
+      if (config.invariants.nonEmpty) {
+        options.get[List[String]]("checker", "inv") match {
+          case None =>
+            // In general, passes should not override options. This is a reasonable exception to this rule.
+            logger.info(s"  > $basename: found INVARIANTS: " + String.join(", ", config.invariants :_*))
+            options.set("checker.inv", config.invariants)
+
+          case Some(cmdInvariants) =>
+            logger.warn(s"  > $basename: found INVARIANTS: " + String.join(", ", config.invariants :_*))
+            val cmdInvariantsStr = cmdInvariants.map(s => "--inv " + s)
+            logger.warn(s"  > Overriding with command line arguments: " + String.join(" ", cmdInvariantsStr :_*))
+        }
+      }
+
+      if (config.temporalProps.nonEmpty) {
+        // set the temporal properties, but warn the user that they are not used
+        options.set("checker.temporalProps", config.temporalProps)
+        for (prop <- config.temporalProps) {
+          logger.warn(s"  > $basename: PROPERTY $prop is ignored. Only INVARIANTS are supported.")
+        }
       }
     }
     catch {
@@ -123,19 +146,17 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
           logger.info("  > No TLC configuration found. Skipping.")
         }
         else {
-          throw new TLCConfigurationError("  > Could not find TLC config file " + basename + " given via --config option")
+          throw new TLCConfigurationError(s"  > $basename: TLC config is provided with --config, but not found")
         }
       case e: TlcConfigParseError =>
-        throw new TLCConfigurationError("  > Could not parse TLC configuration in " + basename + " at position " + e.pos.toString() + ": " + e.msg)
+        throw new TLCConfigurationError(s"  > $basename:${e.pos}:  Error parsing the TLC config file: " + e.msg)
     }
-
-    // rewrite constants and declarations
-    new ConstAndDefRewriter(tracker)(configuredModule)
   }
 
   // Make sure that all operators passed via --init, --cinit, --next, --inv are present.
   private def ensureDeclarationsArePresent(mod: TlaModule): Unit = {
     def assertDecl(role: String, name: String): Unit = {
+      logger.info(s"  > Set $role to $name")
       if (mod.operDeclarations.forall(_.name != name)) {
         throw new ConfigurationError(s"Operator $name not found (used as $role)")
       }
@@ -168,6 +189,14 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
 
       case None =>
         () // this is fine, invariants are optional
+    }
+
+    options.get[List[String]]("checker", "temporalProps") match {
+      case Some(props) =>
+        props.foreach(assertDecl("a temporal property", _))
+
+      case None =>
+        () // this is fine, temporal properties are not supported anyway
     }
   }
 
