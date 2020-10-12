@@ -18,43 +18,43 @@ abstract class TlaSeqOper extends TlaOper {
   */
 object TlaSeqOper {
 
-  val head = new TlaSeqOper {
+  object head extends TlaSeqOper {
     override val arity = FixedArity(1)
     override val name = "Head"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
-  val tail = new TlaSeqOper {
+  object tail extends TlaSeqOper {
     override val arity = FixedArity(1)
     override val name = "Tail"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
-  val append = new TlaSeqOper {
+  object append extends TlaSeqOper {
     override val arity = FixedArity(2)
     override val name = "Append"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
-  val concat = new TlaSeqOper {
+  object concat extends TlaSeqOper {
     override val arity = FixedArity(2)
     override val name = "\\o"
     override val precedence: (Int, Int) = (13, 13)
   }
 
-  val len = new TlaSeqOper {
+  object len extends TlaSeqOper {
     override val arity = FixedArity(1)
     override val name = "Len"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
-  val subseq = new TlaSeqOper {
+  object subseq extends TlaSeqOper {
     override val arity = FixedArity(3)
     override val name = "SubSeq"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
-  val selectseq = new TlaSeqOper {
+  object selectseq extends TlaSeqOper {
     override val arity = FixedArity(2)
     override val name = "SelectSeq"
     override val precedence: (Int, Int) = (16, 16) // as the function application

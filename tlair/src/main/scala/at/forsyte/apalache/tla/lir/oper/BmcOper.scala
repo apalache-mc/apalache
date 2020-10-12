@@ -16,7 +16,7 @@ object BmcOper {
   /**
     * A type annotation of an expression with another expression that encodes a type.
     */
-  val withType: BmcOper = new BmcOper {
+  object withType extends BmcOper {
     override def name: String = "BMC!<:"
     override def arity: OperArity = FixedArity(2)
     override val precedence: (Int, Int) = (100, 100)
@@ -25,7 +25,7 @@ object BmcOper {
   /**
     * An operator x <- e that is interpreted as an assignment of e to x (the variable can have a prime too).
     */
-  val assign: BmcOper = new BmcOper {
+  object assign extends BmcOper {
     override def name: String = "BMC!:="
     override def arity: OperArity = FixedArity(2)
     override val precedence: (Int, Int) = (100, 100)
@@ -35,7 +35,7 @@ object BmcOper {
     * Skolemization hint. In an expression Skolem(\E x \in S: e), the existential may be skolemized, that is, translated
     * into a constant.
     */
-  val skolem: BmcOper = new BmcOper {
+  object skolem extends BmcOper {
     override def name: String = "BMC!Skolem"
     override def arity: OperArity = FixedArity(1)
     override def precedence: (Int, Int) = (100, 100)
@@ -46,7 +46,7 @@ object BmcOper {
     * to expand the underlying expression into a finite set. Since, such an expansion results in an exponential
     * blow up, this should be done carefully (and avoided as much as possible).
     */
-  val expand: BmcOper = new BmcOper {
+  object expand extends BmcOper {
     override def name: String = "BMC!Expand"
     override def arity: OperArity = FixedArity(1)
     override def precedence: (Int, Int) = (100, 100)
@@ -57,7 +57,7 @@ object BmcOper {
     * Similar to BMC!Skolem, this optimization has to be applied carefully, as it is not sound, when the cardinality
     * test is located under negation.
     */
-  val constCard: BmcOper = new BmcOper {
+  object constCard extends BmcOper {
     override def name: String = "BMC!ConstCardinality"
     override def arity: OperArity = FixedArity(1)
     override def precedence: (Int, Int) = (100, 100)
@@ -69,7 +69,7 @@ object BmcOper {
     *
     * XXX: there seems to be no way of defining a user-defined variadic operator in Apalache.tla.
     */
-  val distinct: BmcOper = new BmcOper {
+  object distinct extends BmcOper {
     override def name: String = "BMC!Distinct"
     override def arity: OperArity = AnyArity()
     override def precedence: (Int, Int) = (5, 5)
