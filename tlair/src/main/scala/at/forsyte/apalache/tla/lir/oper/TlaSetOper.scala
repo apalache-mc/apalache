@@ -9,20 +9,20 @@ abstract class TlaSetOper extends TlaOper {
 
 object TlaSetOper {
   /**
-    Define a set by enumerating its elements, i.e., {e_1, ..., e_k}
+  Define a set by enumerating its elements, i.e., {e_1, ..., e_k}
     Note that we explicitly forbid to construct an empty set using this operator.
     To construct an empty set, use emptySet.
-   */
-  val enumSet = new TlaSetOper {
+    */
+  object enumSet extends TlaSetOper {
     override val arity = AnyArity() // FIX: we allow zero arguments as well
     override val name = "{...}"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   /**
-   * Construct a set of functions from a set S to a set T, i.e., [S -> T].
-   */
-  val funSet = new TlaSetOper {
+    * Construct a set of functions from a set S to a set T, i.e., [S -> T].
+    */
+  object funSet extends TlaSetOper {
     override def arity: OperArity = FixedArity(2)
     override val name: String = "[S -> T]"
     override val precedence: (Int, Int) = (16, 16) // as the function application
@@ -34,7 +34,7 @@ object TlaSetOper {
     * The field names f_1, ..., f_k are string constants,
     * that is, ValEx(TlaStr("...")) and not NameEx("...")
     */
-  val recSet = new TlaSetOper {
+  object recSet extends TlaSetOper {
     override def arity: OperArity = AnyEvenArity()
     override val name: String = "$SetOfRcds"
     override val precedence: (Int, Int) = (16, 16) // as the function application
@@ -43,38 +43,38 @@ object TlaSetOper {
   /**
     * Construct a set of sequences from a set S i.e., Seq(S).
     */
-  val seqSet = new TlaSetOper {
+  object seqSet extends TlaSetOper {
     override def arity: OperArity = FixedArity(1)
     override val name: String = "Seq"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
-  val in = new TlaSetOper {
+  object in extends TlaSetOper {
     override val arity = FixedArity(2)
     override val name = "\\in"
     override val precedence: (Int, Int) = (5, 5)
   }
 
-  val notin = new TlaSetOper {
+  object notin extends TlaSetOper {
     override val arity = FixedArity(2)
     override val name = "\\notin"
     override val precedence: (Int, Int) = (5, 5)
   }
 
-  val cup = new TlaSetOper {
+  object cup extends TlaSetOper {
     override val arity = FixedArity(2)
     override val name = "\\union"
     override val precedence: (Int, Int) = (8, 8)
   }
 
-  val cap = new TlaSetOper {
+  object cap extends TlaSetOper {
     override val arity = FixedArity(2)
     override val name = "\\intersect"
     override val precedence: (Int, Int) = (8, 8)
   }
 
   /** the standard \subseteq operator */
-  val subseteq = new TlaSetOper {
+  object subseteq extends TlaSetOper {
     override val arity = FixedArity(2)
     override val name = "\\subseteq"
     override val precedence: (Int, Int) = (5, 5)
@@ -85,28 +85,27 @@ object TlaSetOper {
     *
     * WARNING: Do not confuse with SUBSET that is implemented by TlaSetOper.powerset.
     */
-  val subsetProper = new TlaSetOper {
+  object subsetProper extends TlaSetOper {
     override val arity = FixedArity(2)
     override val name = "\\subset"
     override val precedence: (Int, Int) = (5, 5)
   }
 
-  /** the standard \supset operator */
-  val supsetProper = new TlaSetOper {
+  object supsetProper extends TlaSetOper {
     override val arity = FixedArity(2)
     override val name = "\\supset"
     override val precedence: (Int, Int) = (5, 5)
   }
 
   /** the standard \supseteq operator */
-  val supseteq = new TlaSetOper {
+  object supseteq extends TlaSetOper {
     override val arity = FixedArity(2)
     override val name = "\\supseteq"
     override val precedence: (Int, Int) = (5, 5)
   }
 
   /** the standard set difference */
-  val setminus = new TlaSetOper {
+  object setminus extends TlaSetOper {
     override val arity = FixedArity(2)
     override val name = "\\setminus"
     override val precedence: (Int, Int) = (8, 8)
@@ -116,7 +115,7 @@ object TlaSetOper {
     * A restricted set comprehension: { x \in S : p }.
     * The argument order is: (x, S, p). Note that x may be a tuple.
     */
-  val filter = new TlaSetOper {
+  object filter extends TlaSetOper {
     // Jure, 24.11.2017:
     // Should we unify notation with TlaFunOper.funDef? funDef has args (e, (x, S)+ )
     //
@@ -132,7 +131,7 @@ object TlaSetOper {
     * A set mapping: { e: x_1 \in S_1, ..., x_k \in S_k }.
     * The argument order is: (e, x_1, S_1, ..., x_k, S_k)
     */
-  val map = new TlaSetOper {
+  object map extends TlaSetOper {
     override val arity = new OperArity( k => k >= 3 && k % 2 == 1 )
     override val name = "map"
     override val precedence: (Int, Int) = (16, 16)
@@ -141,7 +140,7 @@ object TlaSetOper {
   /** TLA SUBSET, i.e., the set of all subsets (of a given set).
     We use the name 'powerset' to avoid confusion with \subset and \subseteq.
     */
-  val powerset = new TlaSetOper {
+  object powerset extends TlaSetOper {
     override val arity = FixedArity(1)
     override val name = "SUBSET"
     override val precedence: (Int, Int) = (8, 8)
@@ -158,7 +157,7 @@ object TlaSetOper {
 
     WARNING: use it when you really need it. In all other cases, use \cup.
     */
-  val union = new TlaSetOper {
+  object union extends TlaSetOper {
     override val arity = FixedArity(1)
     override val name = "UNION"
     override val precedence: (Int, Int) = (8, 8)
@@ -169,7 +168,7 @@ object TlaSetOper {
     Note that we explicitly forbid to construct an empty set using this operator.
     To construct an empty set, use enumSet with no arguments.
     */
-  val times = new TlaSetOper {
+  object times extends TlaSetOper {
     override val arity = AnyArity()
     override val name = "\\times"
     override val precedence: (Int, Int) = (10, 13)

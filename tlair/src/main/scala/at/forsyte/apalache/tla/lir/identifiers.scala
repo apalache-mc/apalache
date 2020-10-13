@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicLong
   *
   * @param id the value of the identifier.
   */
-class UID protected(val id: Long) {
+class UID protected(val id: Long) extends Serializable {
 
   override def hashCode(): Int = id.hashCode()
 
