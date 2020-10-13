@@ -94,6 +94,19 @@ $ apalache-mc help
 EXITCODE: OK
 ```
 
+## running the parse command
+
+This command parses a TLA+ specification with the SANY parser.
+
+### parse Rec12 succeeds
+
+```sh
+$ apalache-mc parse Rec12.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+...
+```
+
 ## running the check command
 
 ### check Bug20190118 succeeds
