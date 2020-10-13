@@ -48,14 +48,14 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
   override def execute(): Boolean = {
     val currentModule = tlaModule.get
     // try to read from the TLC configuration file
-    loadOptionsFromTlcConfig(inModule)
+    loadOptionsFromTlcConfig(currentModule)
     setFallbackOptions()
 
     // make sure that the required operators are defined
-    ensureDeclarationsArePresent(inModule)
+    ensureDeclarationsArePresent(currentModule)
 
     // rewrite constants and declarations
-    val configuredModule = new ConstAndDefRewriter(tracker)(inModule)
+    val configuredModule = new ConstAndDefRewriter(tracker)(currentModule)
 
     // dump the configuration result
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
