@@ -1,5 +1,5 @@
 ------------------------------ MODULE Config -------------------------------------------
-(* a specification to check, whether the configuration files are parsed *)
+(* a specification to check whether the configuration files are parsed *)
 EXTENDS Integers
 
 VARIABLES x
