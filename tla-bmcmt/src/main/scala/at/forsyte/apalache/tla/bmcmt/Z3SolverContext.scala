@@ -93,9 +93,9 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     if (maxCellIdPerContext.head >= cell.id) {
       // Checking consistency. When the user accidentally replaces a fresh arena with an older one,
       // we report it immediately. Otherwise, it is very hard to find the cause.
-      logWriter.flush() // flush the SMT log
-      throw new InternalCheckerError("SMT %d: Declaring cell %d, while cell %d has been already declared. Damaged arena?"
-        .format(id, cell.id, maxCellIdPerContext.head), NullEx)
+      val msg = "SMT %d: Declaring cell %d, while cell %d has been already declared. Damaged arena?"
+        .format(id, cell.id, maxCellIdPerContext.head)
+      flushAndThrow(new InternalCheckerError(msg, NullEx))
     } else {
       maxCellIdPerContext = cell.id +: maxCellIdPerContext.tail
     }
@@ -141,8 +141,9 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     if (maxCellIdPerContext.head > topId) {
       // Checking consistency. When the user accidentally replaces a fresh arena with an older one,
       // we report it immediately. Otherwise, it is very hard to find the cause.
-      logWriter.flush() // flush the SMT log
-      throw new InternalCheckerError(s"SMT $id: Current arena has cell id = $topId, while SMT has ${maxCellIdPerContext.head}. Damaged arena?", NullEx)
+      val msg = "SMT %d: Declaring cell %d, while cell %d has been already declared. Damaged arena?"
+        .format(id, topId, maxCellIdPerContext.head)
+      flushAndThrow(new InternalCheckerError(msg, NullEx))
     }
   }
 
@@ -190,8 +191,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
         if (z3expr.isConst && z3expr.getSort.getName.toString.startsWith("Cell_")) {
           NameEx(z3expr.toString)
         } else {
-          logWriter.flush() // flush the SMT log
-          throw new SmtEncodingException(s"SMT $id: Expected an integer or Boolean, found: $z3expr", ex)
+          flushAndThrow(new SmtEncodingException(s"SMT $id: Expected an integer or Boolean, found: $z3expr", ex))
         }
     }
   }
@@ -282,8 +282,8 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     val resSig = resultType.signature
     val funName = s"fun$cellName"
     if (funDecls.contains(funName)) {
-      logWriter.flush() // flush the SMT log
-      throw new SmtEncodingException(s"SMT $id: Declaring twice the function associated with cell $cellName", NullEx)
+      val msg = s"SMT $id: Declaring twice the function associated with cell $cellName"
+      flushAndThrow(new SmtEncodingException(msg, NullEx))
     } else {
       val domSort = getOrMkCellSort(argType)
       val cdmSort = getOrMkCellSort(resultType)
@@ -350,8 +350,8 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     logWriter.flush() // good time to flush
     if (status == Status.UNKNOWN) {
       // that seems to be the only reasonable behavior
-      logWriter.flush() // flush the SMT log
-      throw new SmtEncodingException(s"SMT $id: z3 reports UNKNOWN. Maybe, your specification is outside the supported logic.", NullEx)
+      val msg = s"SMT $id: z3 reports UNKNOWN. Maybe, your specification is outside the supported logic."
+      flushAndThrow(new SmtEncodingException(msg, NullEx))
     }
     status == Status.SATISFIABLE
   }
@@ -425,7 +425,8 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
 
     constCache.get(name) match {
       case None =>
-        throw new IllegalStateException(s"Trying to use in($elemName, $setName) while $elemName is not in $setName arena")
+        val msg = s"Trying to use in($elemName, $setName) while $elemName is not in $setName arena"
+        flushAndThrow(new IllegalStateException(msg))
 
       case Some((const, _, _)) =>
         const
@@ -447,8 +448,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
         if (num.isValidLong) {
           z3context.mkInt(num.toLong)
         } else {
-          logWriter.flush() // flush the SMT log
-          throw new SmtEncodingException(s"SMT $id: A number constant is too large to fit in Long: $num", NullEx)
+          flushAndThrow(new SmtEncodingException(s"SMT $id: A number constant is too large to fit in Long: $num", NullEx))
         }
 
       case OperEx(oper: TlaArithOper, lex, rex) =>
@@ -478,13 +478,13 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
         z3context.mkDistinct(args map toExpr :_*)
 
       case OperEx(TlaBoolOper.and, es@_*) =>
-        val newEs = es.map(e => toExpr(e).asInstanceOf[BoolExpr])
+        val newEs = es.map(toExpr(_).asInstanceOf[BoolExpr])
         z3context.mkAnd(newEs: _*)
 
       case OperEx(TlaBoolOper.or, es@_*) =>
         val mapped_es = es map toExpr
         // check the assertion before casting, to make debugging easier
-        assert(mapped_es.forall(e => e.isInstanceOf[BoolExpr]))
+        assert(mapped_es.forall(_.isInstanceOf[BoolExpr]))
         val cast_es = mapped_es.map(_.asInstanceOf[BoolExpr])
         z3context.mkOr(cast_es: _*)
 
@@ -518,13 +518,11 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
 
       // the old implementation allowed us to do that, but the new one is encoding edges directly
     case OperEx(TlaSetOper.in, ValEx(TlaInt(_)), NameEx(_))
-        | OperEx(TlaSetOper.in, ValEx(TlaBool(_)), NameEx(_)) =>
-        logWriter.flush() // flush the SMT log
-        throw new InvalidTlaExException(s"SMT $id: Preprocessing introduced a literal inside tla.in: $ex", ex)
+          | OperEx(TlaSetOper.in, ValEx(TlaBool(_)), NameEx(_)) =>
+        flushAndThrow(new InvalidTlaExException(s"SMT $id: Preprocessing introduced a literal inside tla.in: $ex", ex))
 
       case _ =>
-        logWriter.flush() // flush the SMT log
-        throw new InvalidTlaExException(s"SMT $id: Unexpected TLA+ expression: $ex", ex)
+        flushAndThrow(new InvalidTlaExException(s"SMT $id: Unexpected TLA+ expression: $ex", ex))
     }
   }
 
@@ -547,8 +545,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
         z3context.mkEq(le, re)
 
       case _ =>
-        logWriter.flush() // flush the SMT log
-        throw new CheckerException(s"SMT $id: Incomparable expressions", NullEx)
+        flushAndThrow(throw new CheckerException(s"SMT $id: Incomparable expressions", NullEx))
     }
   }
 
@@ -558,8 +555,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
         if (num.isValidLong) {
           z3context.mkInt(num.toLong)
         } else {
-          logWriter.flush() // flush the SMT log
-          throw new SmtEncodingException(s"SMT $id: A number constant is too large to fit in Long: " + num, ex)
+          flushAndThrow(new SmtEncodingException(s"SMT $id: A number constant is too large to fit in Long: " + num, ex))
         }
 
       case NameEx(name) =>
@@ -610,12 +606,20 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
         val elseZ3 = toArithExpr(elseExpr)
         z3context.mkITE(boolCond, thenZ3, elseZ3)
 
-
       case _ =>
-        logWriter.flush() // flush the SMT log
-        throw new InvalidTlaExException(s"SMT $id: Unexpected arithmetic expression: $ex", ex)
+        flushAndThrow(new InvalidTlaExException(s"SMT $id: Unexpected arithmetic expression: $ex", ex))
     }
+  }
 
+  /**
+    * Flush the SMT log and throw the provided exception.
+    *
+    * @param e an exception to throw
+    * @return nothing, as an exception is unconditionally thrown
+    */
+  private def flushAndThrow(e: Exception): Nothing = {
+    logWriter.flush() // flush the SMT log
+    throw e
   }
 }
 
