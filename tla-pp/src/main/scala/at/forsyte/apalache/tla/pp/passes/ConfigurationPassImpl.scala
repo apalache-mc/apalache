@@ -131,14 +131,14 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
           setNext(next)
       }
       if (config.invariants.nonEmpty) {
+        logger.info(s"  > $basename: found INVARIANTS: " + String.join(", ", config.invariants :_*))
+
         options.get[List[String]]("checker", "inv") match {
           case None =>
             // In general, passes should not override options. This is a reasonable exception to this rule.
-            logger.info(s"  > $basename: found INVARIANTS: " + String.join(", ", config.invariants :_*))
             options.set("checker.inv", config.invariants)
 
           case Some(cmdInvariants) =>
-            logger.warn(s"  > $basename: found INVARIANTS: " + String.join(", ", config.invariants :_*))
             val cmdInvariantsStr = cmdInvariants.map(s => "--inv " + s)
             logger.warn(s"  > Overriding with command line arguments: " + String.join(" ", cmdInvariantsStr :_*))
         }

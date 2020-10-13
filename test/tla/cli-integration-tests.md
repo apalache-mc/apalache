@@ -384,6 +384,10 @@ The outcome is: NoError
 
 ## configure the check command
 
+Testing various flags that are set via command-line options and the TLC
+configuration file. The CLI has priority over the TLC config. So we have to
+test that it all works together.
+
 ### configure default Init and Next
 
 ```sh
