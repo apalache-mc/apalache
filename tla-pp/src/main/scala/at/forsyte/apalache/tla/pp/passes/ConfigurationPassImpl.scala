@@ -99,7 +99,7 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
           options.set("checker.init", init)
 
         case Some(cmdInit) =>
-          logger.warn(s"  > $basename: Init operator is set both in TLC config and via --init option; using $cmdInit")
+          logger.warn(s"  > $basename: Init operator is set in TLC config but overridden via --init command line option; using $cmdInit")
       }
     }
 
