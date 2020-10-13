@@ -399,7 +399,7 @@ The outcome is: NoError
 ...
 ```
 
-### configure an invariant in CLI
+### configure an invariant via CLI
 
 ```sh
 $ apalache-mc check --inv=Inv Config.tla | sed 's/I@.*//'
@@ -483,4 +483,3 @@ $ apalache-mc check --config=Config2.cfg Config.tla | sed 's/[IEW]@.*//'
 The outcome is: NoError
 ...
 ```
-
