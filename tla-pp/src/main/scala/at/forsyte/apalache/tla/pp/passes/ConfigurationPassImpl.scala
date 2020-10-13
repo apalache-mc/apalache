@@ -111,7 +111,7 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
           options.set("checker.next", next)
 
         case Some(cmdNext) =>
-          val msg = s"  > $basename: Next operator is set both in TLC config and via --next command line option; using $cmdNext"
+          val msg = s"  > $basename: Next operator is set in TLC config but overridden via --next command line option; using $cmdNext"
           logger.warn(msg)
       }
     }
