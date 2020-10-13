@@ -22,6 +22,9 @@ class CoercionWithCache(val stateRewriter: SymbStateRewriter) extends StackableC
     */
   private var level: Int = 0
 
+  // a temporary fix for StackableContext. This class is planned for deletion.
+  override def contextLevel: Int = level
+
   // cache the integer constants that are introduced in SMT for integer literals
   private var cache: Map[SourceT, (TargetT, Int)] = Map()
 

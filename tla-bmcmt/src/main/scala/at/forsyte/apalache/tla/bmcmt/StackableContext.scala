@@ -8,6 +8,13 @@ package at.forsyte.apalache.tla.bmcmt
   */
 trait StackableContext {
   /**
+    * Get the current context level, that is the difference between the number of pushes and pops made so far.
+    *
+    * @return the current level, always non-negative.
+    */
+  def contextLevel: Int
+
+  /**
     * Save the current context and push it on the stack for a later recovery with pop.
     */
   def push(): Unit
@@ -19,7 +26,7 @@ trait StackableContext {
   def pop(): Unit
 
   /**
-    * Pop the context as many times as needed to reach a given level.
+    * Pop the context n times.
     * @param n pop n times, if n > 0, otherwise, do nothing
     */
   def pop(n: Int)

@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
-import at.forsyte.apalache.tla.bmcmt.types.{ConstT, FinSetT, IntT}
+import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, IntT}
 import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell, SolverContext}
 import at.forsyte.apalache.tla.lir.convenience.tla
 
@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
   * @author Igor Konnov
   */
 class IntRangeCache(solverContext: SolverContext, intValueCache: IntValueCache)
-  extends AbstractCache[Arena, (Int, Int), ArenaCell] {
+  extends AbstractCache[Arena, (Int, Int), ArenaCell] with Serializable {
 
   /**
     * Create a set a..b.
