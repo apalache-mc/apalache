@@ -444,7 +444,7 @@ The outcome is: NoError
 ...
 ```
 
-### configure via TLC config and override it!
+### configure via TLC config and override it via CLI
 
 ```sh
 $ apalache-mc check --config=Config1.cfg --init=Init2 --next=Next2 Config.tla | sed 's/[IEW]@.*//'
