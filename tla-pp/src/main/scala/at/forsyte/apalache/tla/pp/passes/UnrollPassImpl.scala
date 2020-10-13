@@ -47,8 +47,9 @@ class UnrollPassImpl @Inject()( val options : PassOptions,
     val cacher = Cacher( nameGenerator, tracker )
 
     logger.info("  > %s".format(unroller.getClass.getSimpleName))
-    val cached = cacher( module )
-    val newModule = unroller( cached )
+//    val cached = cacher( module )
+//    val newModule = unroller( cached )
+    val newModule = unroller( module )
 
     // dump the result of preprocessing
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
