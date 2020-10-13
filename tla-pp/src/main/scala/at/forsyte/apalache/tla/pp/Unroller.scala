@@ -64,10 +64,10 @@ class Unroller( tracker : TransformationTracker ) extends TlaModuleTransformatio
     bodyMap.get( unrollLimitOperName ) match {
       case Some( unrollLimitDecl ) =>
         // The unrollLimit operator must not be recursive ...
-        val msg = s"Expected an integer bound in $unrollLimitOperName, found a recursive operator. See: " + MANUAL_LINK
-        if ( unrollLimitDecl.isRecursive )
+        if ( unrollLimitDecl.isRecursive ) {
+          val msg = s"Expected an integer bound in $unrollLimitOperName, found a recursive operator. See: " + MANUAL_LINK
           FailWith( new TlaInputError( msg ) )
-        else
+        } else {
         // ... and must evaluate to a single integer
           ConstSimplifier( tracker )(
             InlinerOfUserOper( bodyMap, tracker )( unrollLimitDecl.body )
@@ -77,6 +77,8 @@ class Unroller( tracker : TransformationTracker ) extends TlaModuleTransformatio
             case e =>
               FailWith( new TlaInputError(s"Expected an integer bound in $unrollLimitOperName, found: " + e) )
           }
+        }
+
       case None =>
         val msg = s"Recursive operator $name requires an annotation $unrollLimitOperName. See: " + MANUAL_LINK
         FailWith( new TlaInputError( msg ) )
@@ -88,12 +90,14 @@ class Unroller( tracker : TransformationTracker ) extends TlaModuleTransformatio
     bodyMap.get( defaultOperName ) match {
       case Some( defaultDecl ) =>
         // ... which must not be recursive ...
-        val msg = s"Expected a default value in $defaultOperName, found a recursive operator. See: " + MANUAL_LINK
-        if ( defaultDecl.isRecursive )
+        if ( defaultDecl.isRecursive ) {
+          val msg = s"Expected a default value in $defaultOperName, found a recursive operator. See: " + MANUAL_LINK
           FailWith( new TlaInputError( msg ) )
-        else
-        // ... but may be defined using other operators, so we call transform on it
+        } else {
+          // ... but may be defined using other operators, so we call transform on it
           SucceedWith( InlinerOfUserOper( bodyMap, tracker )( defaultDecl.body ) )
+        }
+
       case None =>
         FailWith( new TlaInputError( s"Recursive operator $name requires an annotation $defaultOperName. See: " + MANUAL_LINK ) )
     }
