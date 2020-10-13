@@ -328,6 +328,27 @@ The outcome is: NoError
 ...
 ```
 
+### check Rec10.tla fails without UNROLL_DEFAULT_Fact
+
+```sh
+$ apalache-mc check Rec10.tla | sed 's/[IEW]@.*//'
+...
+Input error (see the manual): Recursive operator Fact requires an annotation UNROLL_DEFAULT_Fact. See: https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md#recursion
+...
+EXITCODE: ERROR (99)
+```
+
+### check Rec11.tla fails without UNROLL_TIMES_Fact
+
+```sh
+$ apalache-mc check Rec11.tla | sed 's/[IEW]@.*//'
+...
+Input error (see the manual): Recursive operator Fact requires an annotation UNROLL_TIMES_Fact. See: https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md#recursion
+...
+EXITCODE: ERROR (99)
+```
+
+
 ### check ExistsAsValue.tla succeeds
 
 ```sh
