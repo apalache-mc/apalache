@@ -239,8 +239,8 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
         (init, next)
 
       case Some(d) =>
-        val msg = s"$contextName: Expected $specName to be in the canonical form Init /\\ [Next]_vars /\\ ..."
         logger.error(s"Operator $specName of ${d.formalParams.length} arguments is defined as: " + d.body)
+        val msg = s"$contextName: Expected $specName to be in the canonical form Init /\\ [Next]_vars /\\ ..."
         throw new ConfigurationError(msg)
     }
   }
