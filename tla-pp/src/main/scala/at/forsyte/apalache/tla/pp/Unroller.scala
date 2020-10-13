@@ -9,7 +9,6 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModu
 import at.forsyte.apalache.tla.lir.values.TlaInt
 
 class Unroller( tracker : TransformationTracker ) extends TlaModuleTransformation {
-
   import Unroller._
 
   def unrollLetIn(
@@ -65,20 +64,24 @@ class Unroller( tracker : TransformationTracker ) extends TlaModuleTransformatio
     bodyMap.get( unrollLimitOperName ) match {
       case Some( unrollLimitDecl ) =>
         // The unrollLimit operator must not be recursive ...
-        if ( unrollLimitDecl.isRecursive )
-          FailWith( new Exception( s"Unroll-limit operator $unrollLimitOperName is recursive." ) )
-        else
+        if ( unrollLimitDecl.isRecursive ) {
+          val msg = s"Expected an integer bound in $unrollLimitOperName, found a recursive operator. See: " + MANUAL_LINK
+          FailWith( new TlaInputError( msg ) )
+        } else {
         // ... and must evaluate to a single integer
           ConstSimplifier( tracker )(
             InlinerOfUserOper( bodyMap, tracker )( unrollLimitDecl.body )
           ) match {
             case ValEx( TlaInt( n ) ) =>
               SucceedWith( n )
-            case _ =>
-              FailWith( new Exception( s"Unroll-limit operator $unrollLimitOperName body must be a single integer." ) )
+            case e =>
+              FailWith( new TlaInputError(s"Expected an integer bound in $unrollLimitOperName, found: " + e) )
           }
+        }
+
       case None =>
-        FailWith( new Exception( s"Unroll-limit operator $unrollLimitOperName for $name is not defined." ) )
+        val msg = s"Recursive operator $name requires an annotation $unrollLimitOperName. See: " + MANUAL_LINK
+        FailWith( new TlaInputError( msg ) )
     }
   }
 
@@ -87,13 +90,16 @@ class Unroller( tracker : TransformationTracker ) extends TlaModuleTransformatio
     bodyMap.get( defaultOperName ) match {
       case Some( defaultDecl ) =>
         // ... which must not be recursive ...
-        if ( defaultDecl.isRecursive )
-          FailWith( new Exception( s"Default body operator $defaultOperName is recursive." ) )
-        else
-        // ... but may be defined using other operators, so we call transform on it
+        if ( defaultDecl.isRecursive ) {
+          val msg = s"Expected a default value in $defaultOperName, found a recursive operator. See: " + MANUAL_LINK
+          FailWith( new TlaInputError( msg ) )
+        } else {
+          // ... but may be defined using other operators, so we call transform on it
           SucceedWith( InlinerOfUserOper( bodyMap, tracker )( defaultDecl.body ) )
+        }
+
       case None =>
-        FailWith( new Exception( s"Default body operator $defaultOperName for $name is not defined." ) )
+        FailWith( new TlaInputError( s"Recursive operator $name requires an annotation $defaultOperName. See: " + MANUAL_LINK ) )
     }
   }
 
@@ -154,6 +160,7 @@ class Unroller( tracker : TransformationTracker ) extends TlaModuleTransformatio
 object Unroller {
   val UNROLL_TIMES_PREFIX   : String = "UNROLL_TIMES_"
   val UNROLL_DEFAULT_PREFIX : String = "UNROLL_DEFAULT_"
+  val MANUAL_LINK: String = "https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md#recursion"
 
   def apply( tracker : TransformationTracker ) : Unroller = {
     new Unroller( tracker )
