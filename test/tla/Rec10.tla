@@ -1,6 +1,6 @@
 --------------------------- MODULE Rec10 -------------------------------------
 (*
- * A test for unfolding recursive definitions.
+ * Test for missing annotation UNROLL_DEFAULT_Fact.
  *
  * Igor Konnov, April 2020
  *)

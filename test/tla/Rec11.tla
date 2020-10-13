@@ -1,6 +1,6 @@
 --------------------------- MODULE Rec11 -------------------------------------
 (*
- * A test for unfolding recursive definitions.
+ * Testing whether Unroller complains about missing UNROLL_TIMES_Fact.
  *
  * Igor Konnov, April 2020
  *)
