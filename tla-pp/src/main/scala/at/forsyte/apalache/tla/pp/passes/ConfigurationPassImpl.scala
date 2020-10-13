@@ -46,7 +46,7 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
-    val inModule = tlaModule.get
+    val currentModule = tlaModule.get
     // try to read from the TLC configuration file
     loadOptionsFromTlcConfig(inModule)
     setFallbackOptions()
