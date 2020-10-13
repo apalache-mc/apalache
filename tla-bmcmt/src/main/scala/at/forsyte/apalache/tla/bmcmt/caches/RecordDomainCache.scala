@@ -13,7 +13,7 @@ import scala.collection.immutable.SortedSet
   * @author Igor Konnov
   */
 class RecordDomainCache(solverContext: SolverContext, strValueCache: StrValueCache)
-  extends AbstractCache[Arena, (SortedSet[String], SortedSet[String]), ArenaCell] {
+  extends AbstractCache[Arena, (SortedSet[String], SortedSet[String]), ArenaCell] with Serializable {
 
   /**
     * Create a set for a sorted set of record keys.

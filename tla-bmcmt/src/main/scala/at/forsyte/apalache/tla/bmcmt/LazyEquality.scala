@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.caches.EqCache
+import at.forsyte.apalache.tla.bmcmt.caches.{EqCache, EqCacheSnapshot}
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
-import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
+import at.forsyte.apalache.tla.bmcmt.rewriter.{ConstSimplifierForSmt, Recoverable}
 import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -13,11 +13,13 @@ import at.forsyte.apalache.tla.lir.{NameEx, NullEx, TlaEx}
   *
   * @author Igor Konnov
   */
-class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
-  private val simplifier = new ConstSimplifierForSmt
+class LazyEquality(rewriter: SymbStateRewriter)
+    extends StackableContext with Serializable with Recoverable[EqCacheSnapshot] {
 
-  private val eqCache = new EqCache(NameEx(SolverContext.falseConst),
-    NameEx(SolverContext.trueConst))
+  @transient
+  private lazy val simplifier = new ConstSimplifierForSmt
+
+  private val eqCache = new EqCache()
 
   /**
     * This method ensure that a pair of its arguments can be safely compared by the SMT equality,
@@ -317,6 +319,33 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
       rewriter.solverContext.assertGroundExpr(tla.eql(pred, forEachNotInOrExists))
       newState.setTheory(BoolTheory()).setRex(pred)
     }
+  }
+
+  /**
+    * Take a snapshot and return it
+    *
+    * @return the snapshot
+    */
+  override def snapshot(): EqCacheSnapshot = {
+    eqCache.snapshot()
+  }
+
+  /**
+    * Recover a previously saved snapshot (not necessarily saved by this object).
+    *
+    * @param shot a snapshot
+    */
+  override def recover(shot: EqCacheSnapshot): Unit = {
+    eqCache.recover(shot)
+  }
+
+  /**
+    * Get the current context level, that is the difference between the number of pushes and pops made so far.
+    *
+    * @return the current level, always non-negative.
+    */
+  override def contextLevel: Int = {
+    eqCache.contextLevel
   }
 
 

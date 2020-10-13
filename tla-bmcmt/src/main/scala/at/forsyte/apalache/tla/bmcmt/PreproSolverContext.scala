@@ -240,6 +240,13 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
   override def setSmtListener(listener: SmtListener): Unit = context.setSmtListener(listener)
 
   /**
+    * Get the current context level, that is the difference between the number of pushes and pops made so far.
+    *
+    * @return the current level, always non-negative.
+    */
+  override def contextLevel: Int = context.contextLevel
+
+  /**
     * Save the current context and push it on the stack for a later recovery with pop.
     */
   override def push(): Unit = {

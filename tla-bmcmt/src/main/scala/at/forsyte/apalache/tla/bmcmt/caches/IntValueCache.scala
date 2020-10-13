@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.lir.{OperEx, ValEx}
   *
   * @author Igor Konnov
   */
-class IntValueCache(solverContext: SolverContext) extends AbstractCache[Arena, Int, ArenaCell] {
+class IntValueCache(solverContext: SolverContext) extends AbstractCache[Arena, Int, ArenaCell] with Serializable {
 
   def create(arena: Arena, intValue: Int): (Arena, ArenaCell) = {
     // introduce a new constant
