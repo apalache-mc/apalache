@@ -410,7 +410,7 @@ The outcome is: NoError
 ...
 ```
 
-### configure via command-line
+### configure all params via CLI
 
 ```sh
 $ apalache-mc check --init=Init1 --next=Next1 --inv=Inv Config.tla | sed 's/I@.*//'
