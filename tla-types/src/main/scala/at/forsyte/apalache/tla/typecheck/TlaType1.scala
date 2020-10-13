@@ -12,13 +12,6 @@ sealed trait TlaType1 {
     * @return the set of variable names (actually, integers) that are used in the type.
     */
   def usedNames: Set[Int]
-
-  /**
-    * The interval [a, b) of variable numbers. This interval is used to quickly find, whether two types may
-    * intersect in their sets of used names.
-    *
-    * @return [min(U), max(U) + 1) for the set of used variables U.
-    */
 }
 
 /**
