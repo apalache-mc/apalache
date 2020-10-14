@@ -90,9 +90,11 @@ class TransitionPassImpl @Inject()(options: PassOptions,
     val primedName = findBodyOf(inOperName, module.declarations: _*)
     val vars = module.varDeclarations.map(_.name)
 
+    val sourceLoc = SourceLocator(sourceStore.makeSourceMap, changeListener)
+
     val transitionPairs = SymbolicTransitionExtractor(tracker)(vars, primedName)
     // sort the transitions by their occurrence in the source code
-    val sorter = new TransitionOrder(SourceLocator(sourceStore.makeSourceMap, changeListener))
+    val sorter = new TransitionOrder( sourceLoc )
     val sortedPairs = sorter.sortBySource(transitionPairs)
     if (sortedPairs.isEmpty) {
       throw new AssignmentException("Failed to find assignments and symbolic transitions in " + inOperName)

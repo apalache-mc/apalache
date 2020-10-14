@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.config
 
 import at.forsyte.apalache.infra.{DefaultExceptionAdapter, ExceptionAdapter}
 import at.forsyte.apalache.infra.passes._
-import at.forsyte.apalache.tla.assignments.passes.{PrimingPass, PrimingPassImpl, TransitionPass, TransitionPassImpl}
+import at.forsyte.apalache.tla.assignments.passes._
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.passes._
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
@@ -88,11 +88,17 @@ class CheckerModule extends AbstractModule {
     bind(classOf[Pass])
       .annotatedWith(Names.named("AfterVCGen"))
       .to(classOf[PreproPass])
-    // the next pass after PreproPass is AssignmentPass
+    // the next pass after PreproPass is CoverAnalysisPass
+    bind(classOf[CoverAnalysisPass])
+      .to(classOf[CoverAnalysisPassImpl])
+    bind(classOf[Pass])
+      .annotatedWith(Names.named("AfterPrepro"))
+      .to(classOf[CoverAnalysisPass])
+    // the next pass after CoverAnalysisPass is AssignmentPass
     bind(classOf[TransitionPass])
       .to(classOf[TransitionPassImpl])
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterPrepro"))
+      .annotatedWith(Names.named("AfterCoverAnalysis"))
       .to(classOf[TransitionPass])
     // the next pass after AssignmentPass is AnalysisPass
     bind(classOf[OptPass])
