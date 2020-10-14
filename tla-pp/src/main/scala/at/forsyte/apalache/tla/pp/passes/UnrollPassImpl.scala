@@ -7,7 +7,7 @@ import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
-import at.forsyte.apalache.tla.pp.{Cacher, UniqueNameGenerator, Unroller}
+import at.forsyte.apalache.tla.pp.{UniqueNameGenerator, Unroller}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -44,11 +44,9 @@ class UnrollPassImpl @Inject()( val options : PassOptions,
     val module = tlaModule.get
 
     val unroller = Unroller( tracker )
-    val cacher = Cacher( nameGenerator, tracker )
-
     logger.info("  > %s".format(unroller.getClass.getSimpleName))
-//    val cached = cacher( module )
-//    val newModule = unroller( cached )
+
+    // TODO: re-enable cacher once caching is reworked (see #276 for context)
     val newModule = unroller( module )
 
     // dump the result of preprocessing
