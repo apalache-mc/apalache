@@ -73,7 +73,7 @@ object StandardLibrary {
       ("Apalache", "Expand") -> BmcOper.expand,
       ("Apalache", "ConstCardinality") -> BmcOper.constCard,
       ("Typing", "AssumeType") -> TypingOper.assumeType,
-      ("Typing", ":>") -> TypingOper.withType,
+      ("Typing", "##") -> TypingOper.withType,
       ("Typing", "EmptySet") -> TypingOper.emptySet,
       ("Typing", "EmptySeq") -> TypingOper.emptySeq
     )////
