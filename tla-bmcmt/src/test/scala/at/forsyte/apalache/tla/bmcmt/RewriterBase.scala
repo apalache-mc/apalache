@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt
 
 import java.io.{PrintWriter, StringWriter}
 
+import at.forsyte.apalache.tla.bmcmt.smt.{PreproSolverContext, SolverContext, Z3SolverContext}
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir.convenience.tla
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
@@ -32,7 +33,7 @@ class RewriterBase extends FunSuite with BeforeAndAfterEach {
   }
 
   protected def assumeTlaEx(rewriter: SymbStateRewriter, state: SymbState): SymbState = {
-    val nextState = rewriter.rewriteUntilDone(state.setTheory(BoolTheory()))
+    val nextState = rewriter.rewriteUntilDone(state)
     solverContext.assertGroundExpr(nextState.ex)
     assert(solverContext.sat())
     nextState
@@ -40,7 +41,7 @@ class RewriterBase extends FunSuite with BeforeAndAfterEach {
 
   protected def assertTlaExAndRestore(rewriter: SymbStateRewriter, state: SymbState): Unit = {
     rewriter.push()
-    val nextState = rewriter.rewriteUntilDone(state.setTheory(BoolTheory()))
+    val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     rewriter.push()
     solverContext.assertGroundExpr(nextState.ex)

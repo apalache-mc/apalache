@@ -27,19 +27,18 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   override def apply(state: SymbState): SymbState = {
-    val falseConst = SolverContext.falseConst
     simplifier.simplifyShallow(state.ex) match {
       case OperEx(TlaBoolOper.and, args@_*) =>
         val finalState =
           if (args.isEmpty) {
             // empty conjunction is always true
-            state.setRex(state.arena.cellTrue().toNameEx).setTheory(CellTheory())
+            state.setRex(state.arena.cellTrue().toNameEx)
           } else {
             // use short-circuiting on state-level expressions (like in TLC)
             def toIte(es: Seq[TlaEx]): TlaEx = {
               es match {
                 case Seq(last) => last
-                case hd +: tail => tla.ite(hd, toIte(tail), NameEx(falseConst))
+                case hd +: tail => tla.ite(hd, toIte(tail), state.arena.cellFalse().toNameEx)
               }
             }
 
@@ -51,12 +50,12 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
               val result = lazyCircuit(state, args)
               if (simplifier.isFalseConst(result.ex)) {
                 rewriter.pop(rewriter.contextLevel - level) // roll back, nothing to keep
-                result.setRex(state.arena.cellFalse().toNameEx).setTheory(CellTheory())
+                result.setRex(state.arena.cellFalse().toNameEx)
               } else {
                 // We have to pop the context. Otherwise, we break the stack contract.
                 rewriter.pop()
                 // is there a workaround?
-                val newState = state.setRex(toIte(args)).setTheory(CellTheory())
+                val newState = state.setRex(toIte(args))
                 rewriter.rewriteUntilDone(newState)
               }
             } else {
@@ -64,25 +63,25 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
               val newState =
                 if (rewriter.config.shortCircuit) {
                   // create a chain of IF-THEN-ELSE expressions and rewrite them
-                  state.setRex(toIte(args)).setTheory(CellTheory())
+                  state.setRex(toIte(args))
                 } else {
                   // simply translate to a conjunction
                   var nextState = state.updateArena(_.appendCell(BoolT()))
                   val pred = nextState.arena.topCell.toNameEx
                   def mapArg(argEx: TlaEx): TlaEx = {
-                    nextState = rewriter.rewriteUntilDone(nextState.setRex(argEx).setTheory(CellTheory()))
+                    nextState = rewriter.rewriteUntilDone(nextState.setRex(argEx))
                     nextState.ex
                   }
 
                   val rewrittenArgs = args map mapArg
                   rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.and(rewrittenArgs :_*)))
-                  nextState.setRex(pred).setTheory(CellTheory())
+                  nextState.setRex(pred)
                 }
               rewriter.rewriteUntilDone(newState)
             }
           }
 
-        rewriter.coerce(finalState, state.theory) // coerce if needed
+        finalState
 
       case e@ValEx(_) =>
         // the simplifier has rewritten the disjunction to TRUE or FALSE
@@ -96,10 +95,10 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private def lazyCircuit(state: SymbState, es: Seq[TlaEx]): SymbState = {
     val cellFalse = state.arena.cellFalse()
     if (es.isEmpty) {
-      state.setRex(state.arena.cellTrue().toNameEx).setTheory(CellTheory())
+      state.setRex(state.arena.cellTrue().toNameEx)
     } else {
       val (head, tail) = (es.head, es.tail)
-      val headState = rewriter.rewriteUntilDone(state.setRex(head).setTheory(CellTheory()))
+      val headState = rewriter.rewriteUntilDone(state.setRex(head))
       val headCell = headState.asCell
       rewriter.solverContext.push()
       rewriter.solverContext.assertGroundExpr(headCell.toNameEx)
@@ -107,7 +106,7 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
       rewriter.solverContext.pop()
       if (!sat) {
         // always unsat, prune immediately
-        headState.setRex(cellFalse.toNameEx).setTheory(CellTheory())
+        headState.setRex(cellFalse.toNameEx)
       } else {
         val tailState = lazyCircuit(headState, tail)
         if (simplifier.isFalseConst(tailState.ex)) {
@@ -118,7 +117,7 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
           var nextState = tailState.updateArena(_.appendCell(BoolT()))
           val pred = nextState.asCell.toNameEx
           rewriter.solverContext.assertGroundExpr(tla.equiv(pred, tla.and(headCell.toNameEx, tailState.ex)))
-          nextState.setRex(pred).setTheory(CellTheory())
+          nextState.setRex(pred)
         }
       }
     }

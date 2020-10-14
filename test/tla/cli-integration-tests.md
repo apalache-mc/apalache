@@ -214,10 +214,10 @@ Checker has found an error
 ...
 ```
 
-#### check y2k with length 20 succeeds
+#### check y2k with length 19 succeeds
 
 ```sh
-$ apalache-mc check --length=20 --inv=Safety y2k_instance.tla | sed 's/I@.*//'
+$ apalache-mc check --length=19 --inv=Safety y2k_instance.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...

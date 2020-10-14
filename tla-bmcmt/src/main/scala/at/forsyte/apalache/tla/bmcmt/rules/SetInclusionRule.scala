@@ -28,11 +28,11 @@ class SetInclusionRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       case OperEx(TlaSetOper.subseteq, left, right) =>
         // switch to cell theory
-        val leftState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(left))
+        val leftState = rewriter.rewriteUntilDone(state.setRex(left))
         val leftCell = leftState.arena.findCellByNameEx(leftState.ex)
         val rightState = rewriter.rewriteUntilDone(leftState.setRex(right))
         val rightCell = rightState.arena.findCellByNameEx(rightState.ex)
-        val finalState: SymbState = (leftCell.cellType, rightCell.cellType) match {
+        (leftCell.cellType, rightCell.cellType) match {
           case (FinSetT(_), FinSetT(_)) =>
             rewriter.lazyEq.subsetEq(rightState, leftCell, rightCell)
 
@@ -48,8 +48,6 @@ class SetInclusionRule(rewriter: SymbStateRewriter) extends RewritingRule {
             .format(leftCell.cellType, rightCell.cellType, state.ex), state.ex)
         }
 
-        rewriter.coerce(finalState, state.theory)
-
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
@@ -60,7 +58,7 @@ class SetInclusionRule(rewriter: SymbStateRewriter) extends RewritingRule {
     def eachElem(state: SymbState, elem: ArenaCell): SymbState = {
       val newState = rewriter.lazyEq.subsetEq(state, elem, powDom)
       val outOrSubsetEq = tla.or(tla.not(tla.in(elem.toNameEx, leftCell.toNameEx)), newState.ex)
-      newState.setRex(outOrSubsetEq).setTheory(BoolTheory())
+      newState.setRex(outOrSubsetEq)
     }
 
     startState.arena.getHas(leftCell).foldLeft(startState)(eachElem)

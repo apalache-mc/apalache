@@ -11,12 +11,11 @@ import org.scalatest.junit.JUnitRunner
 class TestSymbStateRewriterTlc extends RewriterBase {
   test("SE-TLC-PRINT: PRINT(...) -> TRUE") {
     val print = OperEx(TlcOper.print, tla.int(1), tla.str("hello"))
-    val state = new SymbState(print, BoolTheory(), arena, new Binding)
+    val state = new SymbState(print, arena, Binding())
     val rewriter = create()
     val nextStateRed = rewriter.rewriteUntilDone(state)
     nextStateRed.ex match {
       case predEx@NameEx(name) =>
-        assert(BoolTheory() == nextStateRed.theory)
         solverContext.assertGroundExpr(nextStateRed.ex)
         assert(solverContext.sat())
         val failPreds = state.arena.findCellsByType(FailPredT())
@@ -30,13 +29,11 @@ class TestSymbStateRewriterTlc extends RewriterBase {
 
   test("SE-TLC-PRINT: PRINTT(...) -> TRUE") {
     val print = OperEx(TlcOper.printT, tla.str("hello"))
-    val state = new SymbState(print,
-      BoolTheory(), arena, new Binding)
+    val state = new SymbState(print, arena, Binding())
     val rewriter = create()
     val nextStateRed = rewriter.rewriteUntilDone(state)
     nextStateRed.ex match {
       case predEx@NameEx(name) =>
-        assert(BoolTheory() == nextStateRed.theory)
         solverContext.assertGroundExpr(nextStateRed.ex)
         assert(solverContext.sat())
         val failPreds = state.arena.findCellsByType(FailPredT())
@@ -50,12 +47,11 @@ class TestSymbStateRewriterTlc extends RewriterBase {
 
   test("SE-TLC-ASSERT: Assert(TRUE, _) -> reach") {
     val assertEx = OperEx(TlcOper.assert, tla.bool(true), tla.str("oops"))
-    val state = new SymbState(assertEx, BoolTheory(), arena, new Binding)
+    val state = new SymbState(assertEx, arena, Binding())
     val rewriter = create()
     val nextStateRed = rewriter.rewriteUntilDone(state)
     nextStateRed.ex match {
       case predEx@NameEx(name) =>
-        assert(BoolTheory() == nextStateRed.theory)
         solverContext.assertGroundExpr(nextStateRed.ex)
         assert(solverContext.sat())
         val failPreds = nextStateRed.arena.findCellsByType(FailPredT())
@@ -69,12 +65,11 @@ class TestSymbStateRewriterTlc extends RewriterBase {
 
   test("SE-TLC-ASSERT: Assert(FALSE, _) -> TRUE") {
     val assertEx = OperEx(TlcOper.assert, tla.bool(false), tla.str("oops"))
-    val state = new SymbState(assertEx, BoolTheory(), arena, new Binding)
+    val state = new SymbState(assertEx, arena, Binding())
     val rewriter = create()
     val nextStateRed = rewriter.rewriteUntilDone(state)
     nextStateRed.ex match {
       case predEx@NameEx(name) =>
-        assert(BoolTheory() == nextStateRed.theory)
         solverContext.assertGroundExpr(nextStateRed.ex)
         assert(solverContext.sat())
         val failPreds = nextStateRed.arena.findCellsByType(FailPredT())
@@ -95,12 +90,11 @@ class TestSymbStateRewriterTlc extends RewriterBase {
     val assertEx = tla.ite(tla.bool(false),
       OperEx(TlcOper.assert, tla.bool(false), tla.str("oops")),
       tla.bool(true))
-    val state = new SymbState(assertEx, BoolTheory(), arena, new Binding)
+    val state = new SymbState(assertEx, arena, Binding())
     val rewriter = create()
     val nextStateRed = rewriter.rewriteUntilDone(state)
     nextStateRed.ex match {
       case predEx@NameEx(name) =>
-        assert(BoolTheory() == nextStateRed.theory)
         solverContext.assertGroundExpr(nextStateRed.ex)
         assert(solverContext.sat())
         val failPreds = nextStateRed.arena.findCellsByType(FailPredT())
@@ -122,11 +116,10 @@ class TestSymbStateRewriterTlc extends RewriterBase {
     val assertEx = tla.or(x.toNameEx,
       OperEx(TlcOper.assert, tla.bool(false), tla.str("oops")))
     val rewriter = create()
-    val state = new SymbState(assertEx, BoolTheory(), arena, new Binding)
+    val state = new SymbState(assertEx, arena, Binding())
     val nextStateRed = rewriter.rewriteUntilDone(state)
     nextStateRed.ex match {
       case predEx@NameEx(name) =>
-        assert(BoolTheory() == nextStateRed.theory)
         solverContext.assertGroundExpr(nextStateRed.ex)
         val failPreds = nextStateRed.arena.findCellsByType(FailPredT())
         assert(failPreds.length == 1)

@@ -3,7 +3,8 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.RewritingResult
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore}
 import at.forsyte.apalache.tla.bmcmt.caches.{ExprCache, IntValueCache, RecordDomainCache, StrValueCache}
-import at.forsyte.apalache.tla.bmcmt.rewriter.RewriterConfig
+import at.forsyte.apalache.tla.bmcmt.rewriter.{Recoverable, RewriterConfig, SymbStateRewriterSnapshot}
+import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.lir.TlaEx
 
@@ -18,13 +19,22 @@ import at.forsyte.apalache.tla.lir.TlaEx
   *
   * <p>TODO: rename to Rewriter?</p>
   *
+  * <p>FIXME: typeFinder should implement StackableContext!</p>
+  *
   * @author Igor Konnov
   */
-trait SymbStateRewriter extends StackableContext with MessageStorage {
+trait SymbStateRewriter extends StackableContext with MessageStorage with Recoverable[SymbStateRewriterSnapshot] {
   /**
     * A solver context that is populated by the rewriter.
     */
   def solverContext: SolverContext
+
+  /**
+    * Set the new solver context. Warning: the new context should be at the same stack depth as the rewriter.
+    * Otherwise, pop may produce unexpected results.
+    * @param newContext new context
+    */
+  def solverContext_=(newContext: SolverContext): Unit
 
   /**
     * Get the current context level, that is the difference between the number of pushes and pops made so far.
@@ -45,13 +55,6 @@ trait SymbStateRewriter extends StackableContext with MessageStorage {
     * @return a type finder that can produce cell types
     */
   def typeFinder: TypeFinder[CellT]
-
-  /**
-    * Introduce failure predicates?
-    *
-    * @return if so
-    */
-  var introFailures: Boolean
 
   /**
     * The cache for lazy equalities, to avoid generating the same equality constraints many times.
@@ -124,15 +127,6 @@ trait SymbStateRewriter extends StackableContext with MessageStorage {
     * @return a pair (the old state in a new context, the rewritten expressions)
     */
   def rewriteBoundSeqUntilDone(state: SymbState, es: Seq[(Binding, TlaEx)]): (SymbState, Seq[TlaEx])
-
-  /**
-    * Coerce the state expression from the current theory to another theory.
-    *
-    * @param state        a symbolic state
-    * @param targetTheory a target theory
-    * @return a new symbolic state, if possible
-    */
-  def coerce(state: SymbState, targetTheory: Theory): SymbState
 
   /**
     * Flush collected statistics.

@@ -31,24 +31,22 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       case OperEx(TlaFunOper.app, funEx, argEx) =>
         // SE-FUN-APP1
-        val funState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(funEx))
+        val funState = rewriter.rewriteUntilDone(state.setRex(funEx))
         val funCell = funState.asCell
 
-        val finalState =
-          funCell.cellType match {
-            case TupleT(_) =>
-              applyTuple(funState, funCell, funEx, argEx)
+        funCell.cellType match {
+          case TupleT(_) =>
+            applyTuple(funState, funCell, funEx, argEx)
 
-            case RecordT(_) =>
-              applyRecord(funState, funCell, funEx, argEx)
+          case RecordT(_) =>
+            applyRecord(funState, funCell, funEx, argEx)
 
-            case SeqT(_) =>
-              applySeq(funState, funCell, argEx)
+          case SeqT(_) =>
+            applySeq(funState, funCell, argEx)
 
-            case _ => // general functions
-              applyFun(funState, funCell, argEx)
-          }
-        rewriter.coerce(finalState, state.theory)
+          case _ => // general functions
+            applyFun(funState, funCell, argEx)
+        }
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
@@ -67,7 +65,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val index = fields.keySet.toList.indexOf(key)
     val elems = state.arena.getHas(recordCell)
     if (index >= 0 && index < elems.length) {
-      state.setTheory(CellTheory()).setRex(elems(index))
+      state.setRex(elems(index))
     } else {
       // This case should have been caught by type inference. Throw an exception immediately.
       val msg = s"Accessing record $recEx of type ${recordCell.cellType} with the field $argEx. Type inference should have caught this."
@@ -76,7 +74,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   private def applyTuple(state: SymbState, tupleCell: ArenaCell, funEx: TlaEx, argEx: TlaEx): SymbState = {
-    val simpleArg = simplifier.simplify(argEx)
+    val simpleArg = simplifier.simplifyDeep(argEx)
     val index = simpleArg match {
       case ValEx(TlaInt(i)) => i.toInt - 1
 
@@ -90,12 +88,12 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
 
     val tupleElem = elems(index)
-    state.setTheory(CellTheory()).setRex(tupleElem)
+    state.setRex(tupleElem)
   }
 
   private def applySeq(state: SymbState, seqCell: ArenaCell, argEx: TlaEx): SymbState = {
     val solverAssert = rewriter.solverContext.assertGroundExpr _
-    var nextState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(argEx))
+    var nextState = rewriter.rewriteUntilDone(state.setRex(argEx))
     val argCell = nextState.asCell
     val seqChildren = state.arena.getHas(seqCell)
     val start = seqChildren.head // starts with 0
@@ -125,14 +123,14 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val oracleEqArg = tla.eql(indexCell, oracle.intCell)
       val oracleIsN = oracle.whenEqualTo(nextState, nelems)
       solverAssert(tla.or(tla.and(inRange, oracleEqArg), tla.and(tla.not(inRange), oracleIsN)))
-      nextState.setRex(pickedResult).setTheory(CellTheory())
+      nextState.setRex(pickedResult)
     }
   }
 
   private def applyFun(state: SymbState, funCell: ArenaCell, argEx: TlaEx): SymbState = {
     val solverAssert = rewriter.solverContext.assertGroundExpr _
     // SE-FUN-APP2
-    var nextState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(argEx))
+    var nextState = rewriter.rewriteUntilDone(state.setRex(argEx))
     val argCell = nextState.asCell
 
     val relationCell = nextState.arena.getCdm(funCell)
@@ -169,7 +167,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
       // If oracle = N, the picked cell is not constrained. In the past, we used a default value here,
       // but it sometimes produced conflicts (e.g., a picked record domain had to coincide with a default domain)
-      nextState.setRex(pickedRes.toNameEx).setTheory(CellTheory())
+      nextState.setRex(pickedRes.toNameEx)
     }
   }
 }

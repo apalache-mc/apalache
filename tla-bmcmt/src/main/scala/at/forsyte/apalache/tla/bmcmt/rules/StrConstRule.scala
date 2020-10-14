@@ -22,11 +22,9 @@ class StrConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       case ValEx(TlaStr(str)) =>
         val (newArena: Arena, newCell: ArenaCell) = rewriter.strValueCache.getOrCreate(state.arena, str)
-        val finalState =
-          state.setTheory(CellTheory())
-            .setArena(newArena)
-            .setRex(newCell.toNameEx)
-        rewriter.coerce(finalState, state.theory)
+        state
+          .setArena(newArena)
+          .setRex(newCell.toNameEx)
 
       case _ =>
         throw new RewriterException(getClass.getSimpleName + " is not applicable", state.ex)

@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
+import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.ConstT
-import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell, SolverContext}
+import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.lir.convenience.tla
 
 /**

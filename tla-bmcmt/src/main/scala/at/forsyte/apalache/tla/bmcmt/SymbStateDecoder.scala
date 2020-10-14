@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt
 import java.io.PrintWriter
 
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
+import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
@@ -58,20 +59,10 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     for (cls <- classes) {
       writer.println("Equiv. class: {%s}".format(cls.mkString(", ")))
     }
-
-    for (name <- solverContext.getBoolConsts) {
-      val value = solverContext.evalGroundExpr(NameEx(name))
-      writer.println(s"$name = $value")
-    }
-
-    for (name <- solverContext.getIntConsts) {
-      val value = solverContext.evalGroundExpr(NameEx(name))
-      writer.println(s"$name = $value")
-    }
   }
 
   def decodeStateVariables(state: SymbState): Map[String, TlaEx] = {
-    state.binding.map(p => (p._1, reverseMapVar(decodeCellToTlaEx(state.arena, p._2), p._1, p._2)))
+    state.binding.toMap.map(p => (p._1, reverseMapVar(decodeCellToTlaEx(state.arena, p._2), p._1, p._2)))
   }
 
   def decodeCellToTlaEx(arena: Arena, cell: ArenaCell): TlaEx = cell.cellType match {

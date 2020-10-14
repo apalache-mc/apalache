@@ -23,18 +23,16 @@ class FunSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       case OperEx(TlaSetOper.funSet, domEx, cdmEx) =>
         // switch to cell theory
-        var nextState = rewriter.rewriteUntilDone(state.setRex(domEx).setTheory(CellTheory()))
+        var nextState = rewriter.rewriteUntilDone(state.setRex(domEx))
         val dom = nextState.asCell
-        nextState = rewriter.rewriteUntilDone(nextState.setRex(cdmEx).setTheory(CellTheory()))
+        nextState = rewriter.rewriteUntilDone(nextState.setRex(cdmEx))
         val cdm = nextState.asCell
         val arena = nextState.arena.appendCell(FinFunSetT(dom.cellType, cdm.cellType))
         val newCell = arena.topCell
         val newArena = arena
           .setDom(newCell, dom)
           .setCdm(newCell, cdm)
-        val finalState =
-          state.setArena(newArena).setRex(newCell.toNameEx)
-        rewriter.coerce(finalState, state.theory)
+        state.setArena(newArena).setRex(newCell.toNameEx)
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
