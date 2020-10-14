@@ -83,7 +83,7 @@ class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
       FailureMessage(msg)
 
     case err: CoverData.CoverException =>
-      val msg = "Incomplete assignment cover: \n%s\n".format(err.getMessage)
+      val msg = "Unable to find assignments for all state variables: \n%s\n [see docs/manual.md 7.1]".format(err.getMessage)
       NormalErrorMessage(msg)
   }
 

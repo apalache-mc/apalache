@@ -28,10 +28,16 @@ class CoverAnalysisPassImpl @Inject()(options: PassOptions,
 
     val bodyMap = BodyMapFactory.makeFromDecls(operDecls)
 
+    val initName = options.getOrElse("checker", "init", "Init")
+    val initPrimedName = initName + "Primed"
     val nextName = options.getOrElse("checker", "next", "Next")
+
+    // We check for manual assignments in InitPrime and Next
+    val initBody= findBodyOf(initPrimedName, inModule.declarations: _*)
     val nextBody = findBodyOf(nextName, inModule.declarations: _*)
-    // We only check for manual assignments in Next
-    val manualAssignments = ManualAssignments.findAll( nextBody )
+
+    val manualAssignments =
+      ManualAssignments.findAll( initBody ) ++ ManualAssignments.findAll( nextBody )
     val coverChecker = new CoverChecker(varSet, manualAssignments)
 
     logger.info(s"  > Computing assignment cover for $nextName")
