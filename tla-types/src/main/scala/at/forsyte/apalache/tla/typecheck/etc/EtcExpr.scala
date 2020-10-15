@@ -22,7 +22,7 @@ sealed trait EtcExpr {
   * A constant expression, i.e., just a type (may be polymorphic).
   *
   * @param polytype a type constant that may have free variables (polytype).
-  * @param sourceRef the identifier of the TLA+ expression that resulted in this STCExpr (ignored in equals).
+  * @param sourceRef the identifier of the TLA+ expression that resulted in this EtcExpr (ignored in equals).
   */
 case class EtcConst(polytype: TlaType1)(val sourceRef: EtcRef) extends EtcExpr {
   override def toString: String = {
@@ -31,11 +31,11 @@ case class EtcConst(polytype: TlaType1)(val sourceRef: EtcRef) extends EtcExpr {
 }
 
 /**
-  * A reference to a name, which can be introduced in the initial type context, or with STCAbs.
+  * A reference to a name, which can be introduced in the initial type context, or with EtcAbs.
   * Note that name is not a type variable, but rather a TLA+ name that carries a type.
   *
   * @param name  a name
-  * @param sourceRef the identifier of the TLA+ expression that resulted in this STCExpr (ignored in equals).
+  * @param sourceRef the identifier of the TLA+ expression that resulted in this EtcExpr (ignored in equals).
   */
 case class EtcName(name: String)(val sourceRef: EtcRef) extends EtcExpr {
   override def toString: String = s"$sourceRef@$name"
@@ -47,7 +47,7 @@ case class EtcName(name: String)(val sourceRef: EtcRef) extends EtcExpr {
   *
   * @param body          the function body
   * @param paramsAndDoms parameter names and type expressions that encode sets of values
-  * @param sourceRef     the identifier of the TLA+ expression that resulted in this STCExpr (ignored in equals).
+  * @param sourceRef     the identifier of the TLA+ expression that resulted in this EtcExpr (ignored in equals).
   */
 case class EtcAbs(body: EtcExpr, paramsAndDoms: (String, EtcExpr)*)(val sourceRef: EtcRef) extends EtcExpr {
   override def toString: String = {
@@ -59,9 +59,9 @@ case class EtcAbs(body: EtcExpr, paramsAndDoms: (String, EtcExpr)*)(val sourceRe
 /**
   * Application of an operator whose signature is known. An operator may have several overloaded polytypes, e.g., f[e].
   *
-  * @param operTypes  an STC expression that represents an operator type
+  * @param operTypes  an Etc expression that represents an operator type
   * @param args  operator arguments
-  * @param sourceRef the identifier of the TLA+ expression that resulted in this STCExpr (ignored in equals).
+  * @param sourceRef the identifier of the TLA+ expression that resulted in this EtcExpr (ignored in equals).
   */
 case class EtcApp(operTypes: Seq[TlaType1], args: EtcExpr*)(val sourceRef: EtcRef) extends EtcExpr {
   override def toString: String = {
@@ -76,7 +76,7 @@ case class EtcApp(operTypes: Seq[TlaType1], args: EtcExpr*)(val sourceRef: EtcRe
   *
   * @param name operator name
   * @param args operator arguments
-  * @param sourceRef identifier of the TLA+ expression that resulted in this STCExpr (ignored in equals).
+  * @param sourceRef identifier of the TLA+ expression that resulted in this EtcExpr (ignored in equals).
   */
 case class EtcAppByName(name: String, args: EtcExpr*)(val sourceRef: EtcRef) extends EtcExpr {
   override def toString: String = {
@@ -85,13 +85,13 @@ case class EtcAppByName(name: String, args: EtcExpr*)(val sourceRef: EtcRef) ext
 }
 
 /**
-  * Bind an expression to a name. To bind an operator of multiple arguments, use STCAbs.
+  * Bind an expression to a name. To bind an operator of multiple arguments, use EtcAbs.
   * The operator type should be resolved with a type signature that is encoded in a type context.
   *
   * @param name  an expression name in the let-in binding
   * @param bound the expression to bind
   * @param body  the expression the binding applies to
-  * @param sourceRef the identifier of the TLA+ expression that resulted in this STCExpr (ignored in equals).
+  * @param sourceRef the identifier of the TLA+ expression that resulted in this EtcExpr (ignored in equals).
   */
 case class EtcLet(name: String, bound: EtcExpr, body: EtcExpr)(val sourceRef: EtcRef) extends EtcExpr {
   override def toString: String = {
