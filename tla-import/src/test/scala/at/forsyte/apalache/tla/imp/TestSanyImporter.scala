@@ -2018,7 +2018,7 @@ class TestSanyImporter extends FunSuite {
         |  /\ AssumeType(x, "Int")
         |  /\ AssumeType(S, "Set(Int)")
         |
-        |Foo(y) == "(Int) -> Set(Int)" :> {y}
+        |Foo(y) == "(Int) -> Set(Int)" ## {y}
         |================================
       """.stripMargin
 
