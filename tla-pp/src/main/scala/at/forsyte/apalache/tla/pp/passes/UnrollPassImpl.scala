@@ -43,7 +43,7 @@ class UnrollPassImpl @Inject()( val options : PassOptions,
   override def execute(): Boolean = {
     val module = tlaModule.get
 
-    val unroller = Unroller( tracker )
+    val unroller = Unroller( nameGenerator, tracker )
     logger.info("  > %s".format(unroller.getClass.getSimpleName))
 
     // TODO: re-enable cacher once caching is reworked (see #276 for context)

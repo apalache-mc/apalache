@@ -4,11 +4,12 @@ import at.forsyte.apalache.tla.lir.aux.{ExceptionOrValue, FailWith, SucceedWith}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
-import at.forsyte.apalache.tla.lir.transformations.standard.InlinerOfUserOper
+import at.forsyte.apalache.tla.lir.transformations.standard.{InlinerOfUserOper, ReplaceFixed}
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.TlaInt
 
-class Unroller( tracker : TransformationTracker ) extends TlaModuleTransformation {
+class Unroller( nameGenerator : UniqueNameGenerator, tracker : TransformationTracker ) extends TlaModuleTransformation {
+
   import Unroller._
 
   def unrollLetIn(
@@ -16,7 +17,7 @@ class Unroller( tracker : TransformationTracker ) extends TlaModuleTransformatio
                  ) : TlaExTransformation = tracker.track {
     case ex@LetInEx( body, defs@_* ) =>
       val newMap = BodyMapFactory.makeFromDecls( defs, bodyMap )
-      val defaultsMap = getDefaults(newMap).getOrThrow
+      val defaultsMap = getDefaults( newMap ).getOrThrow
       val replaceTr = replaceWithDefaults( defaultsMap )
       val inliner = InlinerOfUserOper( newMap, tracker )
       val newDefs = defs map {
@@ -26,7 +27,7 @@ class Unroller( tracker : TransformationTracker ) extends TlaModuleTransformatio
       if ( defs == newDefs && body == newBody )
         ex
       else
-        LetInEx( newBody, newDefs:_* )
+        LetInEx( newBody, newDefs : _* )
     case ex@OperEx( op, args@_* ) =>
       val newArgs = args map unrollLetIn( bodyMap )
       if ( args == newArgs ) ex else OperEx( op, newArgs : _* )
@@ -69,14 +70,14 @@ class Unroller( tracker : TransformationTracker ) extends TlaModuleTransformatio
           val msg = s"Expected an integer bound in $unrollLimitOperName, found a recursive operator. See: " + MANUAL_LINK
           FailWith( new TlaInputError( msg ) )
         } else {
-        // ... and must evaluate to a single integer
+          // ... and must evaluate to a single integer
           ConstSimplifier( tracker )(
             InlinerOfUserOper( bodyMap, tracker )( unrollLimitDecl.body )
           ) match {
             case ValEx( TlaInt( n ) ) =>
               SucceedWith( n )
             case e =>
-              FailWith( new TlaInputError(s"Expected an integer bound in $unrollLimitOperName, found: " + e) )
+              FailWith( new TlaInputError( s"Expected an integer bound in $unrollLimitOperName, found: " + e ) )
           }
         }
 
@@ -120,7 +121,7 @@ class Unroller( tracker : TransformationTracker ) extends TlaModuleTransformatio
       TlaOperDecl( name, fparams, defaultReplaced )
     case d@TlaOperDecl( name, fparams, body ) => // d.isRecursive = false
       val unrolledLetIn = unrollLetIn( bodyMap )( body )
-      if (body == unrolledLetIn)
+      if ( body == unrolledLetIn )
         d
       else
         TlaOperDecl( name, fparams, unrolledLetIn )
@@ -130,7 +131,7 @@ class Unroller( tracker : TransformationTracker ) extends TlaModuleTransformatio
     case _ => decl
   }
 
-  def getDefaults( bodyMap: BodyMap ) : ExceptionOrValue[ Map[String,TlaEx] ] = {
+  def getDefaults( bodyMap : BodyMap ) : ExceptionOrValue[Map[String, TlaEx]] = {
     val defMap = bodyMap.values withFilter {
       _.isRecursive
     } map {
@@ -146,25 +147,28 @@ class Unroller( tracker : TransformationTracker ) extends TlaModuleTransformatio
   }
 
   override def apply( module : TlaModule ) : TlaModule = {
-    val operDecls = module.operDeclarations
+    val parameterNormalizer = ParameterNormalizer( nameGenerator, tracker )
+    val paramNormModule = parameterNormalizer.apply(module)
+
+    val operDecls = paramNormModule.operDeclarations
     val bodyMap = BodyMapFactory.makeFromDecls( operDecls )
-    val defaultsMap = getDefaults(bodyMap).getOrThrow
+    val defaultsMap = getDefaults( bodyMap ).getOrThrow
     val replaceTr = replaceWithDefaults( defaultsMap )
     val inliner = InlinerOfUserOper( bodyMap, tracker )
-    val newDecls = module.declarations map {
+    val newDecls = paramNormModule.declarations map {
       replaceRecursiveDecl( _, bodyMap, inliner, replaceTr )
     }
 
-    new TlaModule( module.name, newDecls )
+    new TlaModule( paramNormModule.name, newDecls )
   }
 }
 
 object Unroller {
   val UNROLL_TIMES_PREFIX   : String = "UNROLL_TIMES_"
   val UNROLL_DEFAULT_PREFIX : String = "UNROLL_DEFAULT_"
-  val MANUAL_LINK: String = "https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md#recursion"
+  val MANUAL_LINK           : String = "https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md#recursion"
 
-  def apply( tracker : TransformationTracker ) : Unroller = {
-    new Unroller( tracker )
+  def apply( nameGenerator : UniqueNameGenerator, tracker : TransformationTracker ) : Unroller = {
+    new Unroller( nameGenerator, tracker )
   }
 }
