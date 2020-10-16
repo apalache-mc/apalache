@@ -8,7 +8,7 @@ import at.forsyte.apalache.io.tlc.TlcConfigParser
 import at.forsyte.apalache.io.tlc.config._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
-import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaTempOper, TlaOper}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.pp._
@@ -223,24 +223,26 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
       case None =>
         throw new ConfigurationError(s"$contextName: Operator $specName not found (used as SPECIFICATION)")
 
-        // the canonical form: Init /\ [Next]_vars /\ ...
+        // the canonical form: Init /\ [][Next]_vars /\ ...
       case Some(TlaOperDecl(_, List(),
         OperEx(TlaBoolOper.and,
           // Init
           OperEx(TlaOper.apply, NameEx(init)),
-          // [Next]_vars
-          OperEx(TlaActionOper.stutter,
-            // Next
-            OperEx(TlaOper.apply, NameEx(next)),
-            // vars
+          // [][Next]_vars
+          OperEx(TlaTempOper.box,
+            // [Next]_vars
+            OperEx(TlaActionOper.stutter,
+              // Next
+              OperEx(TlaOper.apply, NameEx(next)),
+              // vars
             _*
-          ), ///
+          )), ///
           _*))) =>
         (init, next)
 
       case Some(d) =>
         logger.error(s"Operator $specName of ${d.formalParams.length} arguments is defined as: " + d.body)
-        val msg = s"$contextName: Expected $specName to be in the canonical form Init /\\ [Next]_vars /\\ ..."
+        val msg = s"$contextName: Expected $specName to be in the canonical form Init /\\ [][Next]_vars /\\ ..."
         throw new ConfigurationError(msg)
     }
   }
