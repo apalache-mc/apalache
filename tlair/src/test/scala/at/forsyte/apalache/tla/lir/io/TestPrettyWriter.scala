@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.lir.io
 import java.io.{PrintWriter, StringWriter}
 
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.convenience.tla
 import org.junit.runner.RunWith
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.junit.JUnitRunner
@@ -763,6 +764,26 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     printWriter.flush()
     val expected =
       """LAMBDA x: x""".stripMargin
+    assert(expected == stringWriter.toString)
+  }
+
+  test("nested lambdas") {
+    // A(LAMBDA x: A(LAMBDA y: y, x), z)
+    val writer = new PrettyWriter(printWriter, 40)
+    // A(LAMBDA y: y + 1, x)
+    val innerDecl =
+      TlaOperDecl("LAMBDA", List(SimpleFormalParam("y")), tla.name("y"))
+    val innerLambda = tla.letIn(tla.name("LAMBDA"), innerDecl)
+    val innerA = tla.appOp(tla.name("A"), innerLambda, tla.name("x"))
+    // A(LAMBDA x: A(LAMBDA y: y + 1, x), z)
+    val outerDecl =
+        TlaOperDecl("LAMBDA", List(SimpleFormalParam("x")), innerA)
+    val outerLambda = letIn(NameEx("LAMBDA"), outerDecl)
+    val outerA = tla.appOp(tla.name("A"), outerLambda, tla.name("z"))
+    writer.write(outerA)
+    printWriter.flush()
+    val expected =
+      """A(LAMBDA x: A(LAMBDA y: y, x), z)""".stripMargin
     assert(expected == stringWriter.toString)
   }
 

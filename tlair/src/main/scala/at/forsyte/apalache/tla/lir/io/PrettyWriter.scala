@@ -29,8 +29,8 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
   val REC_FUN_UNDEFINED = "recFunNameUndefined"
   // when printing a recursive function, this variable contains its name
   private var recFunName: String = REC_FUN_UNDEFINED
-  // if a declaration of lambda was introduced, this variable stores this declaration
-  private var lambda: Option[TlaOperDecl] = None
+  // the stack of lambda declarations
+  private var lambdaStack: List[TlaOperDecl] = Nil
 
   def write(mod: TlaModule): Unit = {
     writer.write(pretty(toDoc(mod), textWidth).layout)
@@ -55,18 +55,18 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
     expr match {
       case NameEx(x) if x == "LAMBDA" =>
         // this is reference to the lambda expression that was introduced ealier
-        lambda match {
-          case None => throw new IllegalStateException("Expected LAMBDA to be introduced earlier")
+        lambdaStack match {
+          case Nil => throw new IllegalStateException("Expected LAMBDA to be introduced earlier")
 
-          case Some(d) =>
+          case top :: _ =>
             val paramsDoc =
-              if (d.formalParams.isEmpty)
+              if (top.formalParams.isEmpty)
                 text("")
               else
-                ssep(d.formalParams map toDoc, "," <> softline)
+                ssep(top.formalParams map toDoc, "," <> softline)
 
             group("LAMBDA" <> space <> paramsDoc <> text(":") <> space <>
-              toDoc((0, 0), d.body))
+              toDoc((0, 0), top.body))
         }
 
       case NameEx(x) =>
@@ -359,6 +359,7 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
         wrapWithParen(parentPrecedence, op.precedence, group(doc))
 
       case OperEx(op@TlaOper.apply, NameEx(name), args@_*) =>
+        // apply an operator by its name, e.g., F(x)
         val argDocs = args.map(toDoc(op.precedence, _)).toList
         val commaSeparated = ssep(argDocs, "," <> softline)
         val doc =
@@ -367,6 +368,14 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
           } else {
             group(name <> parens(commaSeparated))
           }
+
+        wrapWithParen(parentPrecedence, op.precedence, doc)
+
+      case OperEx(op@TlaOper.apply, operEx, args@_*) =>
+        // apply an operator by its definition, e.g., (LAMBDA x: x)(y)
+        val argDocs = args.map(toDoc(op.precedence, _)).toList
+        val commaSeparated = ssep(argDocs, "," <> softline)
+        val doc = group(parens(toDoc((0, 0), operEx)) <> parens(commaSeparated))
 
         wrapWithParen(parentPrecedence, op.precedence, doc)
 
@@ -385,8 +394,10 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
 
       case LetInEx(body, d @ TlaOperDecl("LAMBDA", _, _)) =>
         // save the declaration and unpack it later, when NameEx(LAMBDA) is met
-        lambda = Some(d)
-        toDoc((0, 0), body)
+        lambdaStack = d :: lambdaStack // push the lambda definition on the top
+        val doc = toDoc((0, 0), body)
+        lambdaStack = lambdaStack.tail // pop the lambda definition
+        doc
 
       case LetInEx(body, decls@_*) =>
         def eachDecl(d: TlaOperDecl) = {
