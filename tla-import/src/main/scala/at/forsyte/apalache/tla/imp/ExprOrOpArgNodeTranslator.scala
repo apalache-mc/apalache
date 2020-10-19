@@ -126,7 +126,7 @@ class ExprOrOpArgNodeTranslator(sourceStore: SourceStore,
       case defNode: OpDefNode if name == "LAMBDA" =>
         val decl = OpDefTranslator(sourceStore, context).translate(defNode)
         // e.g., LET Foo(x) == e1 in Foo
-        LetInEx(NameEx(opArgNode.getName.toString), decl)
+        LetInEx(name, decl)
 
       // an operator that is passed as an argument to another operator
       case _: OpDefNode =>
