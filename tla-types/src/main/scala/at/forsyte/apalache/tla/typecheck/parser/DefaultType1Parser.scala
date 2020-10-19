@@ -61,16 +61,18 @@ object DefaultType1Parser extends Parsers with Type1Parser {
 
   // A type expression. We wrap it with a list, as (type, ..., type) may start an operator type
   private def noFunExpr: Parser[List[TlaType1]] = {
-    (INT() | BOOL() | STR() | typeVar | typeConst | set | seq | tuple | record | parenExpr) ^^ {
+    (INT() | REAL() | BOOL() | STR() | typeVar | typeConst | set | seq | tuple | sparseTuple | record | parenExpr) ^^ {
       case INT() => List(IntT1())
+      case REAL() => List(RealT1())
       case BOOL() => List(BoolT1())
       case STR() => List(StrT1())
-      case LETTER_IDENT(name) => List(VarT1(name))
+      case FIELD_IDENT(name) => List(VarT1(name))
       case CAPS_IDENT(name) => List(ConstT1(name))
       case s @ SetT1(_) => List(s)
       case s @ SeqT1(_) => List(s)
       case f @ FunT1(_, _) => List(f)
       case t @ TupT1(_*) => List(t)
+      case t @ SparseTupT1(_) => List(t)
       case r @ RecT1(_) => List(r)
       case lst: List[TupT1] => lst
     }
@@ -107,9 +109,31 @@ object DefaultType1Parser extends Parsers with Type1Parser {
     }
   }
 
+  // a sparse tuple type like {3: Int, 5: Bool}
+  private def sparseTuple: Parser[TlaType1] = {
+    LCURLY() ~ repsep(typedFieldNo, COMMA()) ~ RCURLY() ^^ {
+      case _ ~ list ~ _ =>
+        SparseTupT1(SortedMap(list :_*))
+    }
+  }
+
+  // a single component of a sparse tuple, e.g., 3: Int
+  private def typedFieldNo: Parser[(Int, TlaType1)] = {
+    fieldNo ~ COLON() ~ typeExpr ^^ {
+      case FIELD_NO(no) ~ _ ~ fieldType => (no, fieldType)
+    }
+  }
+
+  // a field number in a sparse tuple, like 3
+  private def fieldNo: Parser[FIELD_NO] = {
+    accept("field number", {
+      case f @ FIELD_NO(_) => f
+    })
+  }
+
   // a record type like [a: Int, b: Bool]
   private def record: Parser[TlaType1] = {
-    LBRACKET() ~ rep1sep(typedField, COMMA()) ~ RBRACKET() ^^ {
+    LBRACKET() ~ repsep(typedField, COMMA()) ~ RBRACKET() ^^ {
       case _ ~ list ~ _ =>
         RecT1(SortedMap(list :_*))
     }
@@ -126,14 +150,13 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   private def fieldName: Parser[FIELD_IDENT] = {
     accept("field name", {
       case f @ FIELD_IDENT(_) => f
-      case LETTER_IDENT(letter) => FIELD_IDENT(letter)
       case CAPS_IDENT(name) => FIELD_IDENT(name)
     })
   }
 
   // a type variable, e.g., c
-  private def typeVar: Parser[LETTER_IDENT] = {
-    accept("typeVar", { case id @ LETTER_IDENT(_) => id })
+  private def typeVar: Parser[FIELD_IDENT] = {
+    accept("typeVar", { case id @ FIELD_IDENT(_) => id })
   }
 
   // a type constant, e.g., BAZ

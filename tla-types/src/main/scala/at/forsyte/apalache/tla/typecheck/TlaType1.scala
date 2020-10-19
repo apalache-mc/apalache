@@ -34,6 +34,7 @@ case class RealT1() extends TlaType1 {
 
 }
 
+
 /**
   * A Boolean type.
   */
@@ -172,7 +173,6 @@ case class TupT1(elems: TlaType1*) extends TlaType1 {
   }
 
   override def usedNames: Set[Int] = elems.foldLeft(Set[Int]()) { (s, t) => s ++ t.usedNames }
-
 }
 
 /**
