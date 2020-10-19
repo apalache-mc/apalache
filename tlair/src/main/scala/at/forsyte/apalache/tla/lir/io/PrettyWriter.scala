@@ -29,6 +29,8 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
   val REC_FUN_UNDEFINED = "recFunNameUndefined"
   // when printing a recursive function, this variable contains its name
   private var recFunName: String = REC_FUN_UNDEFINED
+  // if a declaration of lambda was introduced, this variable stores this declaration
+  private var lambda: Option[TlaOperDecl] = None
 
   def write(mod: TlaModule): Unit = {
     writer.write(pretty(toDoc(mod), textWidth).layout)
@@ -51,7 +53,24 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
 
   def toDoc(parentPrecedence: (Int, Int), expr: TlaEx): Doc = {
     expr match {
-      case NameEx(x) => text(x)
+      case NameEx(x) if x == "LAMBDA" =>
+        // this is reference to the lambda expression that was introduced ealier
+        lambda match {
+          case None => throw new IllegalStateException("Expected LAMBDA to be introduced earlier")
+
+          case Some(d) =>
+            val paramsDoc =
+              if (d.formalParams.isEmpty)
+                text("")
+              else
+                ssep(d.formalParams map toDoc, "," <> softline)
+
+            group("LAMBDA" <> space <> paramsDoc <> text(":") <> space <>
+              toDoc((0, 0), d.body))
+        }
+
+      case NameEx(x) =>
+        text(x)
 
       case ValEx(TlaStr(str)) => text("\"%s\"".format(str))
       case ValEx(TlaInt(value)) => text(value.toString)
@@ -363,6 +382,11 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
           }
 
         wrapWithParen(parentPrecedence, op.precedence, doc)
+
+      case LetInEx(body, d @ TlaOperDecl("LAMBDA", _, _)) =>
+        // save the declaration and unpack it later, when NameEx(LAMBDA) is met
+        lambda = Some(d)
+        toDoc((0, 0), body)
 
       case LetInEx(body, decls@_*) =>
         def eachDecl(d: TlaOperDecl) = {

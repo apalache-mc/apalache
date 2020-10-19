@@ -755,6 +755,17 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     assert(expected == stringWriter.toString)
   }
 
+  test("a LAMBDA as LET-IN") {
+    val writer = new PrettyWriter(printWriter, 40)
+    val aDecl = TlaOperDecl("LAMBDA", List(SimpleFormalParam("x")), NameEx("x"))
+    val expr = letIn(NameEx("LAMBDA"), aDecl)
+    writer.write(expr)
+    printWriter.flush()
+    val expected =
+      """LAMBDA x: x""".stripMargin
+    assert(expected == stringWriter.toString)
+  }
+
   test("a one-line operator declaration") {
     val writer = new PrettyWriter(printWriter, 40)
     val body =

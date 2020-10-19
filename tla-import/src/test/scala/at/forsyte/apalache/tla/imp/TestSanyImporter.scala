@@ -1075,7 +1075,7 @@ class TestSanyImporter extends FunSuite {
       """---- MODULE level2Operators ----
         |VARIABLE x, y
         |A(i, j, f(_)) == f(i \cup j)
-        |B(z) == z
+        |B(z) == {z}
         |C == A(0, 1, B)
         |================================
         |""".stripMargin
@@ -1142,6 +1142,39 @@ class TestSanyImporter extends FunSuite {
         assert(locationStore.contains(xDecl.body.ID)) // and source file information has been saved
     }
   }
+
+  test("LAMBDA") {
+    val text =
+      """---- MODULE lambda ----
+        |A(F(_), x) == F(x)
+        |B(y) ==
+        |  A(LAMBDA x: x = 1, 2)
+        |================================
+        |""".stripMargin
+
+    val locationStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(locationStore)
+      .loadFromSource("lambda", Source.fromString(text))
+    assert(1 == modules.size)
+    // the root module and naturals
+    val root = modules(rootName)
+
+    root.declarations.find {
+      _.name == "B"
+    } collect {
+      case TlaOperDecl(_, _, OperEx(TlaOper.apply, NameEx("A"), lambda, ValEx(TlaInt(i)))) =>
+        lambda match {
+          case LetInEx(NameEx("LAMBDA"),
+              TlaOperDecl("LAMBDA", List(SimpleFormalParam("x")),
+                OperEx(TlaOper.eq, NameEx("x"), ValEx(TlaInt(_))))) =>
+            // ok
+
+          case _ => fail("expected a LET-IN definition of LAMBDA and its usage by name")
+        }
+
+      case _ => fail("expected A")
+    }
+   }
 
   // LET-IN with recursive operators
   test("let-in-rec") {
