@@ -4,8 +4,8 @@ import at.forsyte.apalache.tla.lir.UID
 import at.forsyte.apalache.tla.typecheck._
 
 /**
-  * A builder trait to conveniently construct instances STCExpr.
-  * Mix this trait to your class to construct STC expressions without pain.
+  * A builder trait to conveniently construct instances of EtcExpr.
+  * Mix this trait to your class to construct Etc expressions without pain.
   * This class shields the user from the weird syntax of case classes that have two kinds of fields:
   * the fields counted in equals, and the fields that are ignored in equals.
   *
