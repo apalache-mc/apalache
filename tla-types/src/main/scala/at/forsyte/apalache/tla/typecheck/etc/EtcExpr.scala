@@ -32,7 +32,8 @@ case class EtcConst(polytype: TlaType1)(val sourceRef: EtcRef) extends EtcExpr {
 
 /**
   * A reference to a name, which can be introduced in the initial type context, or with EtcAbs.
-  * Note that name is not a type variable, but rather a TLA+ name that carries a type.
+  * Note that name is not a type variable, but rather a TLA+ name. The type can be retrieved
+  * by looking up the name in the type context.
   *
   * @param name  a name
   * @param sourceRef the identifier of the TLA+ expression that resulted in this EtcExpr (ignored in equals).
