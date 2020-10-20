@@ -14,7 +14,7 @@ class SubstRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       case NameEx(x) =>
         // make sure that x is not an SMT constant, but a variable name
-        !CellTheory().hasConst(x) && !BoolTheory().hasConst(x)
+        !ArenaCell.isValidName(x)
 
       case _ => false
     }
@@ -24,7 +24,7 @@ class SubstRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       case NameEx(x) =>
         if (state.binding.contains(x)) {
-          val cell = state.binding.apply(x)
+          val cell = state.binding(x)
           state.setRex(NameEx(cell.toString))
         } else {
           throw new RewriterException(s"${getClass.getSimpleName}: Variable $x is not assigned a value", state.ex)

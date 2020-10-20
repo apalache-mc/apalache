@@ -22,7 +22,7 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       case OperEx(TlaSetOper.filter, NameEx(varName), setEx, predEx) =>
         // rewrite the set expression into a memory cell
-        var newState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(setEx))
+        var newState = rewriter.rewriteUntilDone(state.setRex(setEx))
         newState = newState.asCell.cellType match {
           case FinSetT(_) => newState
           case tp @ _ => throw new NotImplementedError("A set filter over %s is not implemented".format(tp))
@@ -35,10 +35,10 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         def eachElem(potentialCell: ArenaCell): TlaEx = {
           // add [cell/x]
-          val newBinding = newState.binding + (varName -> potentialCell)
-          val cellState = new SymbState(predEx, BoolTheory(), newState.arena, newBinding)
+          val newBinding = Binding(newState.binding.toMap + (varName -> potentialCell))
+          val cellState = new SymbState(predEx, newState.arena, newBinding)
           val ns = rewriter.rewriteUntilDone(cellState)
-          newState = ns.setBinding(ns.binding - varName) // reset binding
+          newState = ns.setBinding(Binding(ns.binding.toMap - varName)) // reset binding
           ns.ex
         }
 
@@ -68,10 +68,7 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         for ((cell, pred) <- filteredCellsAndPreds)
           addCellCons(cell, pred)
 
-        val finalState =
-          newState.setTheory(CellTheory())
-            .setArena(newArena).setRex(newSetCell.toNameEx)
-        rewriter.coerce(finalState, state.theory) // coerce to the source theory
+        newState.setArena(newArena).setRex(newSetCell.toNameEx)
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)

@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.smt.Z3SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, UnknownT}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite

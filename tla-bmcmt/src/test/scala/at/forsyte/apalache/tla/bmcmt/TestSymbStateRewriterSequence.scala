@@ -15,7 +15,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
     val tuple = TlaFunOper.mkTuple()
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
 
-    val state = new SymbState(annotatedTuple, CellTheory(), arena, new Binding)
+    val state = new SymbState(annotatedTuple, arena, Binding())
     val nextState = create().rewriteUntilDone(state)
     assert(solverContext.sat())
     nextState.ex match {
@@ -33,7 +33,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
     val tuple = TlaFunOper.mkTuple(1.to(3) map tla.int :_*)
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
 
-    val state = new SymbState(annotatedTuple, CellTheory(), arena, new Binding)
+    val state = new SymbState(annotatedTuple, arena, Binding())
     val nextState = create().rewriteUntilDone(state)
     assert(solverContext.sat())
     nextState.ex match {
@@ -51,7 +51,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
     val tuple = TlaFunOper.mkTuple(3.to(5) map tla.int :_*)
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
 
-    val state = new SymbState(annotatedTuple, CellTheory(), arena, new Binding)
+    val state = new SymbState(annotatedTuple, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
@@ -69,7 +69,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
     val tuple = TlaFunOper.mkTuple()
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
 
-    val state = new SymbState(annotatedTuple, CellTheory(), arena, new Binding)
+    val state = new SymbState(annotatedTuple, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
@@ -80,7 +80,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
     val seqApp = tla.head(annotatedTuple)
 
-    val state = new SymbState(seqApp, CellTheory(), arena, new Binding)
+    val state = new SymbState(seqApp, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
@@ -94,7 +94,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
     val seqApp = tla.len(annotatedTuple)
 
-    val state = new SymbState(seqApp, CellTheory(), arena, new Binding)
+    val state = new SymbState(seqApp, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
@@ -108,7 +108,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
     val seqTail = tla.tail(annotatedTuple)
 
-    val state = new SymbState(seqTail, CellTheory(), arena, new Binding)
+    val state = new SymbState(seqTail, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
@@ -125,7 +125,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
     val annotatedTuple = tla.withType(emptyTuple, AnnotationParser.toTla(SeqT(IntT())))
     val seqTail = tla.tail(annotatedTuple)
 
-    val state = new SymbState(seqTail, CellTheory(), arena, new Binding)
+    val state = new SymbState(seqTail, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     // in this case, Tail may return an arbitrary value, but it should not get stuck!
@@ -139,7 +139,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
     val subseqEx = tla.subseq(annotatedTuple, tla.int(2), tla.int(3))
 
-    val state = new SymbState(subseqEx, CellTheory(), arena, new Binding)
+    val state = new SymbState(subseqEx, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
@@ -158,7 +158,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
     val subseqEx = tla.subseq(annotatedTuple, tla.int(3), tla.int(1))
 
-    val state = new SymbState(subseqEx, CellTheory(), arena, new Binding)
+    val state = new SymbState(subseqEx, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     // in this case, the solver should not be stuck by unsat, the value is simply arbitrary
@@ -172,7 +172,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
     val append = tla.append(annotatedTuple, tla.int(10))
 
-    val state = new SymbState(append, CellTheory(), arena, new Binding)
+    val state = new SymbState(append, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
@@ -194,7 +194,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
     val subseqEx = tla.subseq(annotatedTuple, tla.int(2), tla.int(3))
     val append = tla.append(subseqEx, tla.int(10))
 
-    val state = new SymbState(append, CellTheory(), arena, new Binding)
+    val state = new SymbState(append, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
@@ -219,7 +219,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
     val annot45 = tla.withType(tuple45, AnnotationParser.toTla(SeqT(IntT())))
     val eq = tla.eql(annot45, subseqEx)
 
-    val state = new SymbState(eq, CellTheory(), arena, new Binding)
+    val state = new SymbState(eq, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
@@ -235,7 +235,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
     val subseqEx = tla.subseq(annot3456, tla.int(2), tla.int(3))
     val domEx = tla.dom(subseqEx)
 
-    val state = new SymbState(domEx, CellTheory(), arena, new Binding)
+    val state = new SymbState(domEx, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
@@ -251,7 +251,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
     val tuple9_10 = tla.withType(TlaFunOper.mkTuple(tla.int(9), tla.int(10)), seqT)
     val concat = tla.concat(tuple9_10, subseq)
 
-    val state = new SymbState(concat, CellTheory(), arena, new Binding)
+    val state = new SymbState(concat, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
@@ -270,7 +270,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
     // Tail(<<>>) produces some undefined value. In this case, \o should also produce an undefined value.
     val concat = tla.concat(tuple9_10, tla.tail(empty))
 
-    val state = new SymbState(concat, CellTheory(), arena, new Binding)
+    val state = new SymbState(concat, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     // the result is undefined, but it should be sat

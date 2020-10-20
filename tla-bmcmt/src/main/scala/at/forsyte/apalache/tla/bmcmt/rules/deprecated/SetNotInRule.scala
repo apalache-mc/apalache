@@ -23,9 +23,8 @@ class SetNotInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       case OperEx(TlaSetOper.notin, cand, set) =>
         val notInState =
-          state.setTheory(CellTheory()).setRex(tla.not(tla.in(cand, set)))
-        val finalState = rewriter.rewriteUntilDone(notInState)
-        rewriter.coerce(finalState, state.theory)
+          state.setRex(tla.not(tla.in(cand, set)))
+        rewriter.rewriteUntilDone(notInState)
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)

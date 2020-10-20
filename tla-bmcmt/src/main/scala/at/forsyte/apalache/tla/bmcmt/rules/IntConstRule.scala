@@ -25,11 +25,8 @@ class IntConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
           throw new RewriterException(s"BigInt $n does not fit into integer range. Do not know how to translate in SMT.", state.ex)
         }
         val (newArena: Arena, intCell: ArenaCell) = rewriter.intValueCache.getOrCreate(state.arena, n.toInt)
-        val finalState =
-          state.setArena(newArena)
-            .setRex(intCell.toNameEx)
-            .setTheory(CellTheory())
-        rewriter.coerce(finalState, state.theory)
+        state.setArena(newArena)
+          .setRex(intCell.toNameEx)
 
       case _ =>
         throw new RewriterException(getClass.getSimpleName + " is not applicable", state.ex)

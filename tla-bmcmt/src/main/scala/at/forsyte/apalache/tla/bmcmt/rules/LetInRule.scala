@@ -23,12 +23,12 @@ class LetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = state.ex match {
     case LetInEx( body, defs@_* ) =>
       val boundState = defs.foldLeft(state) (bindOperator)
-      val bodyState = rewriter.rewriteUntilDone(boundState.setTheory(state.theory).setRex(body))
+      val bodyState = rewriter.rewriteUntilDone(boundState.setRex(body))
       // forget the bindings that were introduced by let-definitions of this expression
-      val newDefs = (bodyState.binding.keySet -- state.binding.keySet).filter(_.startsWith(LetInRule.namePrefix))
-      val finalBinding = bodyState.binding -- newDefs
-      val finalState = bodyState.setBinding(finalBinding)
-      rewriter.coerce(finalState, state.theory)
+      val newDefs = (bodyState.binding.toMap.keySet -- state.binding.toMap.keySet).filter(_.startsWith(LetInRule.namePrefix))
+      val finalBinding = Binding(bodyState.binding.toMap -- newDefs)
+      bodyState.setBinding(finalBinding)
+
     case _ =>
       throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
   }
@@ -39,9 +39,9 @@ class LetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
         .format(decl.formalParams.size, decl.name), state.ex)
     }
 
-    val newState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(decl.body))
+    val newState = rewriter.rewriteUntilDone(state.setRex(decl.body))
     val newCell = newState.arena.findCellByNameEx(newState.ex)
-    val newBinding = newState.binding + (LetInRule.namePrefix + decl.name -> newCell)
+    val newBinding = Binding(newState.binding.toMap + (LetInRule.namePrefix + decl.name -> newCell))
     newState.setBinding(newBinding)
   }
 }

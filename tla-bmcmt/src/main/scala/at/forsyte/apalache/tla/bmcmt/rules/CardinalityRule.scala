@@ -27,11 +27,10 @@ class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case OperEx(TlaFiniteSetOper.cardinality, setEx) =>
-        var nextState = rewriter.rewriteUntilDone(state.setRex(setEx).setTheory(CellTheory()))
+        var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
         val setCell = nextState.asCell
         val elems = nextState.arena.getHas(setCell)
-        nextState = makeCardEquations(nextState, setCell, elems)
-        rewriter.coerce(nextState, state.theory)
+        makeCardEquations(nextState, setCell, elems)
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
@@ -84,6 +83,6 @@ class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
     solverAssert(tla.eql(initialCounter, tla.int(0)))
     val finalCounter = mkEq(Seq(), initialCounter, cells)
 
-    nextState.setArena(arena).setRex(finalCounter).setTheory(CellTheory())
+    nextState.setArena(arena).setRex(finalCounter)
   }
 }

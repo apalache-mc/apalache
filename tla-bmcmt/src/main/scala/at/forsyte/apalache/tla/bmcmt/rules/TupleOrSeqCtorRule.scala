@@ -26,20 +26,16 @@ class TupleOrSeqCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case OperEx(TlaFunOper.tuple, elems@_*) =>
         // switch to cell theory
         val (stateAfterElems: SymbState, groundElems: Seq[TlaEx]) =
-          rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), elems)
+          rewriter.rewriteSeqUntilDone(state, elems)
         val cells = groundElems.map(stateAfterElems.arena.findCellByNameEx)
 
         // Get the resulting type from the type finder. It may happen to be a sequence!
         val resultT = rewriter.typeFinder.compute(state.ex, cells.map(_.cellType): _*)
-        val finalState =
-          resultT match {
-            case tt@TupleT(_) => createTuple(stateAfterElems, tt, cells)
-            case st@SeqT(_) => createSeq(stateAfterElems, st, cells)
-            case _ => throw new RewriterException("Unexpected type: " + resultT, state.ex)
-          }
-
-
-        rewriter.coerce(finalState, state.theory)
+        resultT match {
+          case tt@TupleT(_) => createTuple(stateAfterElems, tt, cells)
+          case st@SeqT(_) => createSeq(stateAfterElems, st, cells)
+          case _ => throw new RewriterException("Unexpected type: " + resultT, state.ex)
+        }
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
@@ -68,7 +64,7 @@ class TupleOrSeqCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val end = nextState.asCell
     nextState = nextState.updateArena(_.appendHasNoSmt(seq, start +: end +: cells: _*))
     // we do not add SMT constraints as they are not important
-    nextState.setRex(seq.toNameEx).setTheory(CellTheory())
+    nextState.setRex(seq.toNameEx)
   }
 
 }

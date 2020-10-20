@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types.TypeInferenceError
 import at.forsyte.apalache.tla.imp.SanyException
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.{MalformedTlaError, TlaEx}
+import at.forsyte.apalache.tla.lir.{MalformedTlaError, OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.pp.{ConfigurationError, IrrecoverablePreprocessingError, NotInKeraError, TLCConfigurationError, TlaInputError}
 import com.typesafe.scalalogging.LazyLogging
@@ -38,8 +38,8 @@ class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
       logger.info("  [https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md#assignments]")
       NormalErrorMessage("Assignment error: " + err.getMessage)
 
-    case err: TypeInferenceError =>
-      val msg = "%s: type error: %s".format(findLoc(err.origin), err.getMessage)
+    case err: TypeInferenceException =>
+      val msg = "%s\n%s".format(err.getMessage, err.errors.map(ofTypeInferenceError).mkString("\n"))
       NormalErrorMessage(msg)
 
     // tool failures
@@ -61,8 +61,7 @@ class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
       FailureMessage(msg)
 
     case err: TypeException =>
-      val msg = "%s: type error: %s".format(findLoc(err.causeExpr), err.getMessage)
-      FailureMessage(msg)
+      FailureMessage("%s: type error: %s".format(findLoc(err.causeExpr), err.getMessage))
 
     case err: InvalidTlaExException =>
       val msg = "%s: unexpected TLA+ expression: %s".format(findLoc(err.causeExpr), err.getMessage)
@@ -97,5 +96,14 @@ class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
       case Some(loc) => loc.toString
       case None => "<unknown>"
     }
+  }
+
+  def ofTypeInferenceError(e: TypeInferenceError): String = {
+    val locInfo = findLoc(e.origin)
+    val exStr = e.origin match {
+      case OperEx(op, _*) => op.name
+      case ex@_ => ex.toString()
+    }
+    "%s, %s, type error: %s".format(locInfo, exStr, e.explanation)
   }
 }

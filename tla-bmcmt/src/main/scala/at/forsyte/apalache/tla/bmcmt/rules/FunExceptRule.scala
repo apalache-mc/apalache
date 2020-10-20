@@ -37,25 +37,20 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         // second, rewrite all the arguments
         val (groundState: SymbState, groundArgs: Seq[TlaEx]) =
-          rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), funEx +: (unpackedIndices ++ valEs))
+          rewriter.rewriteSeqUntilDone(state, funEx +: (unpackedIndices ++ valEs))
         val funCell = groundState.arena.findCellByNameEx(groundArgs.head)
         val indexCells = groundArgs.slice(1, 1 + unpackedIndices.size)
           .map(groundState.arena.findCellByNameEx)
         val valueCells = groundArgs
           .slice(1 + unpackedIndices.size, 1 + unpackedIndices.size + valEs.size)
           .map(groundState.arena.findCellByNameEx)
-        var nextState =
-          funCell.cellType match {
-            case FunT(_, _) => rewriteFun(groundState, funCell, indexCells, valueCells)
-            case rt @ RecordT(_) => rewriteRec(groundState, funCell, rt, unpackedIndices, valueCells)
-            case tt @ TupleT(_) => rewriteTuple(groundState, funCell, tt, unpackedIndices, valueCells)
-            case _ => throw new NotImplementedError(
-              s"EXCEPT is not implemented for ${funCell.cellType}. Write a feature request.")
-          }
-
-        val finalState = nextState
-          .setTheory(CellTheory())
-        rewriter.coerce(finalState, state.theory)
+        funCell.cellType match {
+          case FunT(_, _) => rewriteFun(groundState, funCell, indexCells, valueCells)
+          case rt @ RecordT(_) => rewriteRec(groundState, funCell, rt, unpackedIndices, valueCells)
+          case tt @ TupleT(_) => rewriteTuple(groundState, funCell, tt, unpackedIndices, valueCells)
+          case _ => throw new NotImplementedError(
+            s"EXCEPT is not implemented for ${funCell.cellType}. Write a feature request.")
+        }
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)

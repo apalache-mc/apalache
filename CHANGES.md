@@ -1,5 +1,7 @@
 ## Unreleased #unstable
 
+ * no theories in the model checker due to types, see #22
+ * operators and checker caches made Serializable
  * better diagnostics for the recursive operators, see #272 
  * Use a staged docker build, reducing container size ~70%, see #195
  * Use [Z3-TurnKey](https://github.com/tudo-aqua/z3-turnkey) instead of a

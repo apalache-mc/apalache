@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
-import at.forsyte.apalache.tla.bmcmt.{SolverContext, SymbState}
+import at.forsyte.apalache.tla.bmcmt.SymbState
+import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 

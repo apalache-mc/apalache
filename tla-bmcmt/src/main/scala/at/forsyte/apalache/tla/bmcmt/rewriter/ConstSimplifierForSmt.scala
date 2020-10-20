@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rewriter
 
-import at.forsyte.apalache.tla.bmcmt.{Arena, SolverContext}
+import at.forsyte.apalache.tla.bmcmt.Arena
+import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
@@ -15,7 +16,7 @@ class ConstSimplifierForSmt {
   def isFalseConst(ex: TlaEx): Boolean = {
     ex match {
       case ValEx(TlaBool(false)) => true
-      case NameEx(name) => name == SolverContext.falseConst || name == Arena.falseName
+      case NameEx(name) => name == Arena.falseName
       case _ => false
     }
   }
@@ -23,14 +24,15 @@ class ConstSimplifierForSmt {
   def isTrueConst(ex: TlaEx): Boolean = {
     ex match {
       case ValEx(TlaBool(true)) => true
-      case NameEx(name) => name == SolverContext.trueConst || name == Arena.trueName
+      case NameEx(name) => name == Arena.trueName
       case _ => false
     }
   }
 
   def isBoolConst(ex: TlaEx): Boolean = isFalseConst(ex) || isTrueConst(ex)
 
-  def simplify(rootExpr: TlaEx): TlaEx = {
+  @deprecated("This simplification causes a 30% slowdown on real benchmarks, use simplifyShallow")
+  def simplifyDeep(rootExpr: TlaEx): TlaEx = {
     def rewriteDeep(ex: TlaEx): TlaEx = ex match {
       case NameEx(_) | ValEx(_) =>
         if (isFalseConst(ex)) {
@@ -50,9 +52,9 @@ class ConstSimplifierForSmt {
 
       case LetInEx(body, defs @ _*) =>
         val newDefs = defs.map {
-          d => TlaOperDecl(d.name, d.formalParams, simplify(d.body))
+          d => TlaOperDecl(d.name, d.formalParams, simplifyDeep(d.body))
         }
-        LetInEx(simplify(body), newDefs :_*)
+        LetInEx(simplifyDeep(body), newDefs :_*)
 
       case _ =>
         ex
@@ -61,6 +63,12 @@ class ConstSimplifierForSmt {
     rewriteDeep(rootExpr)
   }
 
+  /**
+    * A shallow simplification that does not recurse into the expression structure.
+    *
+    * @param ex an expression to simplify
+    * @return an equivalent expression whose top-level structure might be different from ex
+    */
   def simplifyShallow(ex: TlaEx): TlaEx = ex match {
     case NameEx(_) | ValEx(_) =>
       if (isFalseConst(ex)) {
@@ -158,9 +166,6 @@ class ConstSimplifierForSmt {
 
     case OperEx(TlaBoolOper.not, OperEx(TlaOper.ne, lhs, rhs)) =>
       OperEx(TlaOper.eq, lhs, rhs)
-
-    case OperEx(TlaBoolOper.not, OperEx(TlaOper.eq, lhs, rhs)) =>
-      OperEx(TlaOper.ne, lhs, rhs)
 
     case OperEx(TlaBoolOper.implies, ValEx(TlaBool(left)), ValEx(TlaBool(right))) =>
       ValEx(TlaBool(!left || right))

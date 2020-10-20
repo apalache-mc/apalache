@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.types.BoolT
-import at.forsyte.apalache.tla.bmcmt.{Binding, CellTheory, RewriterBase, SymbState}
+import at.forsyte.apalache.tla.bmcmt.{Binding, RewriterBase, SymbState}
 import at.forsyte.apalache.tla.lir.TestingPredefs
 import at.forsyte.apalache.tla.lir.convenience.tla
 import org.junit.runner.RunWith
@@ -11,7 +11,7 @@ import org.scalatest.junit.JUnitRunner
 class TestUninterpretedConstOracle extends RewriterBase with TestingPredefs {
   test("""Oracle.create""") {
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), CellTheory(), arena, new Binding)
+    var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
     val (nextState, oracle) = UninterpretedConstOracle.create(rewriter, state, 6)
     assert(solverContext.sat())
@@ -19,7 +19,7 @@ class TestUninterpretedConstOracle extends RewriterBase with TestingPredefs {
 
   test("""Oracle.whenEqualTo""") {
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), CellTheory(), arena, new Binding)
+    var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
     val (nextState, oracle) = UninterpretedConstOracle.create(rewriter, state, 6)
     assert(solverContext.sat())
@@ -31,7 +31,7 @@ class TestUninterpretedConstOracle extends RewriterBase with TestingPredefs {
 
   test("""Oracle.evalPosition""") {
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), CellTheory(), arena, new Binding)
+    var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
     val (nextState, oracle) = UninterpretedConstOracle.create(rewriter, state, 6)
     assert(solverContext.sat())
@@ -43,7 +43,7 @@ class TestUninterpretedConstOracle extends RewriterBase with TestingPredefs {
 
   test("""Oracle.caseAssertions""") {
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), CellTheory(), arena, new Binding)
+    var state = new SymbState(tla.bool(true), arena, Binding())
     state = state.updateArena(_.appendCell(BoolT()))
     val flag = state.arena.topCell
     // introduce an oracle
