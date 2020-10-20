@@ -521,3 +521,14 @@ $ apalache-mc check --config=Config2.cfg Config.tla | sed 's/[IEW]@.*//'
 The outcome is: NoError
 ...
 ```
+
+### configure complains about circular dependencies
+
+```sh
+$ apalache-mc check ConfigUnsorted.tla | sed 's/[IEW]@.*//'
+...
+Configuration error (see the manual): Circular definition dependency detected
+...
+EXITCODE: ERROR (99)
+```
+
