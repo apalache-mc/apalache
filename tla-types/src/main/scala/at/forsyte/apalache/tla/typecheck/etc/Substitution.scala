@@ -37,8 +37,8 @@ object Substitution {
     new Substitution(Map(elems: _*))
   }
 
-  def apply(map: Map[Int, TlaType1]): Substitution = {
-    new Substitution(map)
+  def apply(context: Map[Int, TlaType1]): Substitution = {
+    new Substitution(context)
   }
 
   def mk(fun: PartialFunction[Int, TlaType1]): TlaType1 => TlaType1 = {
