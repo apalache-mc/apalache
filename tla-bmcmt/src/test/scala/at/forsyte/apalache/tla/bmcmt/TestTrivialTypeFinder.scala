@@ -802,6 +802,14 @@ class TestTrivialTypeFinder extends RewriterBase {
     assert(FinSetT(IntT()) == typeFinder.compute(ex))
   }
 
+  // regression, see issue #292
+  test("error on type annotation inside type annotation") {
+    val typeFinder = new TrivialTypeFinder()
+    val ex = tla.enumSet()
+    val annotatedEx = tla.withType(ex, tla.withType(tla.enumSet(), tla.enumSet(ValEx(TlaIntSet))))
+    assertThrows[TypeException] { typeFinder.inferAndSave(annotatedEx) }
+  }
+
   // Since the introduction of BmcOper.assign, the old assignments need to be transformed
   // into the form \E t \in S: x' = t
   test( "inferAndSave from the wild" ){
