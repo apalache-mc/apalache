@@ -19,7 +19,7 @@ class TypeUnifier {
 
   def unify(substitution: Substitution, lhs: TlaType1, rhs: TlaType1): Option[(Substitution, TlaType1)] = {
     // start with the substitution
-    solution = substitution.map
+    solution = substitution.context
     // try to unify
     try {
       compute(lhs, rhs) match {
@@ -49,7 +49,7 @@ class TypeUnifier {
   @deprecated("Use ConstraintSolver")
   def unify(substitution: Substitution, pairs: Seq[(TlaType1, TlaType1)]): Option[(Substitution, Seq[TlaType1])] = {
     // start with the substitution
-    solution = substitution.map
+    solution = substitution.context
 
     val unified = pairs.map { case (l, r) => compute(l, r) }
     val result =
