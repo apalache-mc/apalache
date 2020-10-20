@@ -42,37 +42,39 @@ object Substitution {
   }
 
   def mk(fun: PartialFunction[Int, TlaType1]): TlaType1 => TlaType1 = {
-    def recFun: TlaType1 => TlaType1 = {
-      case tp @ VarT1(no) =>
-        if (fun.isDefinedAt(no)) {
-          fun(no)
-        } else {
+    def recFun(tp: TlaType1): TlaType1 = {
+      tp match {
+        case VarT1(no) =>
+          if (fun.isDefinedAt(no)) {
+            fun(no)
+          } else {
+            tp
+          }
+
+        case IntT1() | BoolT1() | RealT1() | StrT1() | ConstT1(_) =>
           tp
-        }
 
-      case SetT1(elem) =>
-        SetT1(recFun(elem))
+        case SetT1(elem) =>
+          SetT1(recFun(elem))
 
-      case SeqT1(elem) =>
-        SeqT1(recFun(elem))
+        case SeqT1(elem) =>
+          SeqT1(recFun(elem))
 
-      case TupT1(elems@_*) =>
-        TupT1(elems.map(recFun): _*)
+        case TupT1(elems@_*) =>
+          TupT1(elems.map(recFun): _*)
 
-      case SparseTupT1(fieldTypes) =>
-        SparseTupT1(fieldTypes.map(kv => (kv._1, recFun(kv._2))))
+        case SparseTupT1(fieldTypes) =>
+          SparseTupT1(fieldTypes.map(kv => (kv._1, recFun(kv._2))))
 
-      case RecT1(fieldTypes) =>
-        RecT1(fieldTypes.map(kv => (kv._1, recFun(kv._2))))
+        case RecT1(fieldTypes) =>
+          RecT1(fieldTypes.map(kv => (kv._1, recFun(kv._2))))
 
-      case FunT1(arg, res) =>
-        FunT1(recFun(arg), recFun(res))
+        case FunT1(arg, res) =>
+          FunT1(recFun(arg), recFun(res))
 
-      case OperT1(args, res) =>
-        OperT1(args.map(recFun), recFun(res))
-
-      case tp =>
-        tp // Bool, Int, Real, Str, Const(_)
+        case OperT1(args, res) =>
+          OperT1(args.map(recFun), recFun(res))
+      }
     }
 
     recFun
