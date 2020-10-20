@@ -16,17 +16,6 @@ private[parser] case class CAPS_IDENT(name: String) extends Type1Token {
 }
 
 /**
-  * A single-letter identifier. For consistency with CAPS_INDENT, we assign a String to name, not Char.
-  *
-  * @param name the name associated with the identifier
-  */
-private[parser] case class LETTER_IDENT(name: String) extends Type1Token {
-  require(name.length == 1)
-
-  override def toString: String = "letter ident '%s'".format(name)
-}
-
-/**
   * A field identifier. Since it syntactically includes CAPS_IDENT and LETTER_IDENT, one has to expect
   * CAPS_IDENT, LETTER_INDENT, and FIELD_INDENT, whenever a record field is expected.
   *
@@ -41,6 +30,13 @@ private[parser] case class FIELD_IDENT(name: String) extends Type1Token {
   */
 private[parser] case class INT() extends Type1Token {
   override def toString: String = "Int"
+}
+
+/**
+  * A real identifier: Real
+  */
+private[parser] case class REAL() extends Type1Token {
+  override def toString: String = "Real"
 }
 
 /**
@@ -125,6 +121,28 @@ private[parser] case class LBRACKET() extends Type1Token {
   */
 private[parser] case class RBRACKET() extends Type1Token {
   override def toString: String = "]"
+}
+
+/**
+  * Left curly bracket "{".
+  */
+private[parser] case class LCURLY() extends Type1Token {
+  override def toString: String = "{"
+}
+
+/**
+  * Right curly bracket "}".
+  */
+private[parser] case class RCURLY() extends Type1Token {
+  override def toString: String = "}"
+}
+
+/**
+  * A field number, e.g., 3
+  * @param no the number
+  */
+private[parser] case class FIELD_NO(no: Int) extends Type1Token {
+  override def toString: String = no.toString
 }
 
 /**
