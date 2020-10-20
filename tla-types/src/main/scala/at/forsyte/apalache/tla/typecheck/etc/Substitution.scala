@@ -4,15 +4,15 @@ import at.forsyte.apalache.tla.typecheck._
 
 /**
   * A substitution from type variables to types.
-  * @param map a mapping from variable names to types.
+  * @param context a mapping from variable names to types.
   */
-class Substitution(val map: Map[Int, TlaType1]) {
+class Substitution(val context: Map[Int, TlaType1]) {
   def apply(tp: TlaType1): TlaType1 = {
-    Substitution.mk(map)(tp)
+    Substitution.mk(context)(tp)
   }
 
   override def toString: String = {
-    "Sub{%s}".format(String.join(", ", map.toSeq.map(p => "%s -> %s".format(VarT1(p._1), p._2)) :_*))
+    "Sub{%s}".format(String.join(", ", context.toSeq.map(p => "%s -> %s".format(VarT1(p._1), p._2)) :_*))
   }
 
   def canEqual(other: Any): Boolean = other.isInstanceOf[Substitution]
@@ -20,12 +20,12 @@ class Substitution(val map: Map[Int, TlaType1]) {
   override def equals(other: Any): Boolean = other match {
     case that: Substitution =>
       (that canEqual this) &&
-        map == that.map
+        context == that.context
     case _ => false
   }
 
   override def hashCode(): Int = {
-    val state = Seq(map)
+    val state = Seq(context)
     state.map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
   }
 }
