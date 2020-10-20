@@ -92,7 +92,7 @@ class ExpansionMarker @Inject()(tracker: TransformationTracker) extends TlaExTra
       LetInEx(transform(shallExpand)(body), defs map mapDef: _*)
 
     case OperEx(BmcOper.withType, expr, annot) =>
-      // transform the expression, but not the annotation! See #292
+      // transform the expression, but not the annotation! See https://github.com/informalsystems/apalache/issues/292
       OperEx(BmcOper.withType, transform(shallExpand)(expr), annot)
 
     case OperEx(oper, args@_*) =>
