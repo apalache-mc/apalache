@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.types
 
-import at.forsyte.apalache.tla.bmcmt.RewriterException
+import at.forsyte.apalache.tla.bmcmt.{RewriterException, TypeException}
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaFunOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaStrSet}
 import at.forsyte.apalache.tla.lir.values.TlaStr
 import at.forsyte.apalache.tla.lir.{NullEx, OperEx, TlaEx, ValEx}
@@ -45,7 +45,7 @@ object AnnotationParser {
         val keys = kv.zipWithIndex.filter(_._2 % 2 == 0).map(_._1) // pick the even indices (starting with 0)
       def toStr(key: TlaEx) = key match {
         case ValEx(TlaStr(s)) => s
-        case _ => throw new RewriterException("Expected a string, found: %s".format(key), annot)
+        case _ => throw new TypeException("Expected a string, found: %s".format(key), annot)
       }
 
         val vals = kv.zipWithIndex.filter(_._2 % 2 == 1).map(_._1) // pick the odd indices (starting with 0)
@@ -70,12 +70,15 @@ object AnnotationParser {
         val argPairs = args.grouped( 2 ).toSeq map {
           case Seq( ValEx( TlaStr( s ) ), value ) =>
             (s, fromTla( value ))
-          case e => throw new RewriterException("Expected a Seq(string, _) found: %s".format(e), annot)
+          case e => throw new TypeException("Expected a Seq(string, _) found: %s".format(e), annot)
         }
         RecordT( SortedMap( argPairs : _* ) )
 
+      case OperEx(BmcOper.withType, _, otherAnnot) =>
+        throw new TypeException(s"Found another annotation ${otherAnnot} inside the annotation: $annot", annot)
+
       case e =>
-        throw new RewriterException("Unexpected type annotation: %s".format(annot), annot)
+        throw new TypeException("Unexpected type annotation: %s".format(annot), annot)
     }
   }
 
@@ -105,7 +108,7 @@ object AnnotationParser {
         OperEx(TlaFunOper.enum, args :_*)
 
       case _ =>
-        throw new RewriterException("No translation of type %s to a TLA+ expression".format(tp), NullEx)
+        throw new TypeException("No translation of type %s to a TLA+ expression".format(tp), NullEx)
     }
   }
 }
