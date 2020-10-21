@@ -105,34 +105,19 @@ class TypeUnifier {
 
       // operators should unify component-wise
       case (OperT1(largs, lres), OperT1(rargs, rres)) =>
-        unifySeqs(lres +: largs, rres +: rargs) match {
-          case None =>
-            None
-
-          case Some(unified) =>
-            Some(OperT1(unified.tail, unified.head))
-        }
+        unifySeqs(lres +: largs, rres +: rargs).map(unified => OperT1(unified.tail, unified.head))
 
       // sets unify on their elements
       case (SetT1(lelem), SetT1(relem)) =>
-        compute(lelem, relem) match {
-          case None => None
-          case Some(unified) => Some(SetT1(unified))
-        }
+        compute(lelem, relem).map(SetT1)
 
       // sequences unify on their elements
       case (SeqT1(lelem), SeqT1(relem)) =>
-        compute(lelem, relem) match {
-          case None => None
-          case Some(unified) => Some(SeqT1(unified))
-        }
+        compute(lelem, relem).map(SeqT1)
 
       // tuples unify component-wise
       case (TupT1(lelems @ _*), TupT1(relems @ _*)) =>
-        unifySeqs(lelems, relems) match {
-          case None => None
-          case Some(unified) => Some(TupT1(unified :_*))
-        }
+        unifySeqs(lelems, relems).map(unified => TupT1(unified :_*))
 
       // sparse tuples join their keys, but the values for the intersecting keys should unify
       case (SparseTupT1(lfields), SparseTupT1(rfields)) =>
