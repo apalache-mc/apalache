@@ -56,7 +56,7 @@ class TypeUnifier {
 
   private def compute(lhs: TlaType1, rhs: TlaType1): Option[TlaType1] = {
     (lhs, rhs) match {
-        // unifying constant types is trivial
+      // unifying constant types is trivial
       case (BoolT1(), BoolT1()) =>
         Some(BoolT1())
 
@@ -96,7 +96,7 @@ class TypeUnifier {
 
       case (other, VarT1(name)) => insert(name, other)
 
-        // functions should unify component-wise
+      // functions should unify component-wise
       case (FunT1(larg, lres), FunT1(rarg, rres)) =>
         (compute(larg, rarg), compute(lres, rres)) match {
           case (Some(uarg), Some(ures)) => Some(FunT1(uarg, ures))
@@ -113,14 +113,14 @@ class TypeUnifier {
             Some(OperT1(unified.tail, unified.head))
         }
 
-        // sets unify on their elements
+      // sets unify on their elements
       case (SetT1(lelem), SetT1(relem)) =>
         compute(lelem, relem) match {
           case None => None
           case Some(unified) => Some(SetT1(unified))
         }
 
-        // sequences unify on their elements
+      // sequences unify on their elements
       case (SeqT1(lelem), SeqT1(relem)) =>
         compute(lelem, relem) match {
           case None => None
@@ -166,7 +166,7 @@ class TypeUnifier {
       case (l @ TupT1(_ @ _*), r @ SparseTupT1(_)) =>
         compute(r, l)
 
-        // records join their keys, but the values for the intersecting keys should unify
+      // records join their keys, but the values for the intersecting keys should unify
       case (RecT1(lfields), RecT1(rfields)) =>
         val jointKeys = (lfields.keySet ++ rfields.keySet).toSeq
         val pairs = jointKeys.map(key => (key, computeOptions(lfields.get(key), rfields.get(key))))
@@ -177,7 +177,7 @@ class TypeUnifier {
           Some(unifiedTuple)
         }
 
-        // everything else does not unify
+      // everything else does not unify
       case _ =>
         None // no unifier
     }
