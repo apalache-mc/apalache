@@ -71,7 +71,7 @@ class OpApplTranslator(sourceStore: SourceStore, val context: Context, val recSt
       // For instance, if the user writes LOCAL INSTANCE Sequences
       applyNode.getOperator match {
         case opdef: OpDefNode =>
-            // translate as an application of a standard library operator
+          // translate as an application of a standard library operator
           translateLocalLibraryOperatorOrValue(opdef, applyNode)
             .getOrElse {
               // or as an application of a local user-defined operator
