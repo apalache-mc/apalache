@@ -73,51 +73,28 @@ class TypeUnifier {
         // uninterpreted constant types must have the same name
         if (lname != rname) None else Some(c)
 
-        // variables contribute to the solutions
-      case (lvar @ VarT1(lname), rvar @ VarT1(rname)) =>
+      // variables contribute to the solutions
+      case (VarT1(lname), rvar @ VarT1(rname)) =>
         (solution.get(lname), solution.get(rname)) match {
-          case (Some(_), Some(rvalue)) =>
-            if (insert(lname, rvalue) && insert(rname, solution(lname))) {
-              Some(solution(lname)) // both values unify
-            } else {
-              None  // a = b, but their values do not unify
-            }
+          case (Some(lvalue), Some(rvalue)) =>
+            for {
+              _ <- insert(lname, rvalue)
+              unification <- insert(rname, lvalue)
+            } yield unification
 
           case (Some(lvalue), None) =>
             insert(rname, lvalue) // None and lvalue for sure unify, associate lvalue with rname
-            Some(lvalue)
 
           case (None, Some(rvalue)) =>
             insert(lname, rvalue) // None and rvalue for sure unify, associate rvalue with lname
-            Some(rvalue)
 
           case (None, None) =>
-            // assign one variable to another, while preserving the variable order
-            if (lname > rname) {
-              insert(lname, rvar) // b <- a, as in our type checking, b is more precise
-              Some(rvar)
-            } else if (lname < rname) {
-              insert(rname, lvar) // b <- a
-              Some(lvar)
-            } else {
-              // else it is the same variable, do nothing
-              Some(lvar)
-            }
+            insert(lname, rvar)
         }
 
-      case (VarT1(name), other) =>
-        if (insert(name, other)) {
-          Some(solution(name))
-        } else {
-          None
-        }
+      case (VarT1(name), other) => insert(name, other)
 
-      case (other, VarT1(name)) =>
-        if (insert(name, other)) {
-          Some(solution(name))
-        } else {
-          None
-        }
+      case (other, VarT1(name)) => insert(name, other)
 
         // functions should unify component-wise
       case (FunT1(larg, lres), FunT1(rarg, rres)) =>
@@ -222,43 +199,36 @@ class TypeUnifier {
   }
 
   // insert a type into the substitution, by applying unification
-  private def insert(left: Int, tp: TlaType1): Boolean = {
-    (solution.get(left), tp) match {
-      case (None, VarT1(right)) =>
-        // It is crucial to break cycles between the variables.
-        // The larger index is pointing to the smaller index.
-        if (left > right) {
-          solution += left -> VarT1(right)
-        } else if (right > left) {
-          solution += right -> VarT1(left)
-        } // else ignore a self-loop
-        true
+  private def insert(varNo: Int, tp: TlaType1): Option[TlaType1] = {
+    tp match {
+      case VarT1(otherVarNo) =>
+        // The optional value bound to varNo
+        val varNoValOpt = solution.get(varNo)
+        if (varNo != otherVarNo) {
+          val larger = varNo max otherVarNo
+          val smaller = varNo min otherVarNo
+          // If varNo was bound, assign its value to the smaller variable
+          varNoValOpt.map(insert(smaller, _))
+          // Assign the larger variable to the smaller
+          solution += larger -> VarT1(smaller)
+        } // Otherwise, vars are identical, so it's a no-op
+        varNoValOpt.orElse(Some(tp))
 
-      case (None, _) =>
-        solution += left -> tp // associate the type with the key
-        true
-
-      case (Some(other), VarT1(right)) =>
-        if (left > right) {
-          // copy over the contents of the left
-          insert(right, other)
-          solution += left -> VarT1(right)
-        } else if (right > left) {
-          // just place a pointer to left
-          solution += right -> VarT1(left)
-        } // else ignore a self-loop
-        true
-
-      case (Some(other), _) =>
-        compute(tp, other) match {
+      // When tp isn't a variable
+      case someTp =>
+        solution.get(varNo) match {
+          // varNo names a free variable, so bind it
           case None =>
-            false // insertion failed
+            solution += varNo -> someTp
+            Some(someTp)
 
-          case Some(unifiedType) =>
-            solution += left -> unifiedType // unified two values
-            true
+          // when varNo is bound to a type
+          case Some(otherTp) =>
+            compute(someTp, otherTp).map(unifiedTp => {
+              solution += varNo -> unifiedTp
+              unifiedTp
+            })
         }
-
     }
   }
 
