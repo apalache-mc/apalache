@@ -17,6 +17,12 @@ class TypeUnifier {
   // a partial solution to the unification problem is stored here during unification
   private var solution: Map[Int, TlaType1] = Map.empty
 
+  /**
+    * Try to unify lhs and rhs by starting with the given substitution. If successful, it returns Some(mgu, t),
+    * where mgu is the solution set showing how to unify lhs and rhs and t is the type resulting from
+    * successfully unifying lhs and rhs using mgu. Note that apart from variable substitution, our unification
+    * also involves merging record types. When there is no unifier, it returns None.
+    */
   def unify(substitution: Substitution, lhs: TlaType1, rhs: TlaType1): Option[(Substitution, TlaType1)] = {
     // start with the substitution
     solution = substitution.context
