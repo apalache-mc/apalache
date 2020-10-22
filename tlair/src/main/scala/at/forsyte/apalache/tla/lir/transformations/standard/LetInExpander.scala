@@ -27,7 +27,10 @@ class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean) extend
         d.copy(body = transform(d.body))
       }
 
-      def needsExpansion(d: TlaOperDecl): Boolean = !keepNullary || d.formalParams.nonEmpty
+      def needsExpansion(d: TlaOperDecl): Boolean = {
+        // expand only the definitions that are: not lambdas, non-nullary, or nullary if keepNullary = false
+        (!keepNullary || d.formalParams.nonEmpty) && d.name != "LAMBDA"
+      }
 
       val (defsToExpand, defsToKeep) = expandedDefs.partition(needsExpansion)
 

@@ -56,7 +56,8 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
       case NameEx(x) if x == "LAMBDA" =>
         // this is reference to the lambda expression that was introduced ealier
         lambdaStack match {
-          case Nil => throw new IllegalStateException("Expected LAMBDA to be introduced earlier")
+          case Nil =>
+            throw new IllegalStateException("Expected LAMBDA to be introduced earlier")
 
           case top :: _ =>
             val paramsDoc =
