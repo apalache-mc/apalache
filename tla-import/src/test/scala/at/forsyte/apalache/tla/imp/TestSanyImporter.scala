@@ -2147,6 +2147,61 @@ class TestSanyImporter extends FunSuite {
     }
   }
 
+  test("operators of local instances of the standard modules") {
+    // Issue #295: the built-in operators are not eliminated when using LOCAL INSTANCE
+    val text =
+      """---- MODULE issue295 ----
+        |---- MODULE A ----
+        |LOCAL INSTANCE Sequences
+        |A == Append(<<>>, {})
+        |==================
+        |INSTANCE A
+        |================================
+        |""".stripMargin
+
+    val locationStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(locationStore)
+      .loadFromSource("issue295", Source.fromString(text))
+    // the root module and naturals
+    val root = modules(rootName)
+    // the definitions of the standard operators are filtered out
+    assert(1 == root.declarations.size)
+    root.declarations(0) match {
+      case TlaOperDecl("A", _, body) =>
+        assert(append(tuple(), enumSet()) == body)
+
+      case d => fail("unexpected declaration: " + d)
+    }
+  }
+
+  test("values of local instances of the standard modules") {
+    // Issue #295: the built-in operators are not eliminated when using LOCAL INSTANCE
+    val text =
+      """---- MODULE issue295 ----
+        |---- MODULE A ----
+        |LOCAL INSTANCE Integers
+        |A == Int
+        |==================
+        |INSTANCE A
+        |================================
+        |""".stripMargin
+
+    val locationStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(locationStore)
+      .loadFromSource("issue295", Source.fromString(text))
+    // the root module and naturals
+    val root = modules(rootName)
+    // the definitions of the standard operators are filtered out
+    assert(1 == root.declarations.size)
+    root.declarations(0) match {
+      case TlaOperDecl("A", _, body) =>
+        assert(ValEx(TlaIntSet) == body)
+
+      case d => fail("unexpected declaration: " + d)
+    }
+  }
+
+
   test("ignore theorems") {
     // this proof is a garbage, just to check, whether the translator works
     val text =

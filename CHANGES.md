@@ -1,5 +1,7 @@
 ## Unreleased #unstable
-
+ 
+ * support for standard modules that are instantiated with LOCAL INSTANCE, see #295
+ * support for LAMBDAs, see #285 and #289
  * no theories in the model checker due to types, see #22
  * operators and checker caches made Serializable
  * better diagnostics for the recursive operators, see #272 
