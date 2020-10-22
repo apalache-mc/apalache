@@ -111,7 +111,7 @@ class OpApplTranslator(sourceStore: SourceStore, val context: Context, val recSt
   // call a user-defined operator that is defined locally
   private def translateLocalOperator(opdef: OpDefNode, node: OpApplNode): TlaEx = {
     // Since we do not know the original location of the local operator,
-      // we can only re-define it with a LET-IN expression
+    // we can only re-define it with a LET-IN expression
     // translate the declaration of the LOCAL operator
     val decl = OpDefTranslator(sourceStore, context).translate(opdef)
     // translate its arguments
