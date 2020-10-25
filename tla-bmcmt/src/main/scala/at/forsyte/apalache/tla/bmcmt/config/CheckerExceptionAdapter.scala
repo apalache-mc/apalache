@@ -42,6 +42,9 @@ class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
       val msg = "%s\n%s".format(err.getMessage, err.errors.map(ofTypeInferenceError).mkString("\n"))
       NormalErrorMessage(msg)
 
+    case err: NotInKeraError =>
+      NormalErrorMessage("Input error (see the manual): " + err.getMessage)
+
     // tool failures
     case err: IrrecoverablePreprocessingError =>
       val msg = s"Irrecoverable preprocessing error: ${err.getMessage}. Report an issue at $ISSUES_LINK"

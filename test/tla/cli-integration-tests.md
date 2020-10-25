@@ -407,6 +407,19 @@ EXITCODE: ERROR (99)
 [99]
 ```
 
+### check Callback.tla succeeds
+
+This tests demonstrates that one can implement non-determinism with
+exists and use a callback to do an assignment to a variable.
+As it requires tricky operator inlining, here is the test.
+
+```sh
+$ apalache-mc check Callback.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
 ### check use of TLA_PATH for modules in child directory succeeds
 
 ```sh
