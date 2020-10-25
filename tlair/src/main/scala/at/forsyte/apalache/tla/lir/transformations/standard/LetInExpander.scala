@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 
 /**
@@ -14,7 +15,7 @@ import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
   * @author Jure Kukovec
   */
 class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean) extends TlaExTransformation {
-  override def apply(ex: TlaEx) = transform(ex)
+  override def apply(ex: TlaEx): TlaEx = transform(ex)
 
   def transform: TlaExTransformation = tracker.track {
     // interesting case
@@ -28,7 +29,10 @@ class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean) extend
       }
 
       def needsExpansion(d: TlaOperDecl): Boolean = {
-        // expand only the definitions that are: not lambdas, non-nullary, or nullary if keepNullary = false
+        // Expand only the definitions that:
+        //  1. Either have at least one parameter (if keepNullary = false), or
+        //     have any number of parameters (if keepNullary = true)
+        //  2. Are not defining a LAMBDA operator, which is treated by the special case below.
         (!keepNullary || d.formalParams.nonEmpty) && d.name != "LAMBDA"
       }
 
@@ -44,10 +48,23 @@ class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean) extend
           expandedBody                          // all definitions were expanded
         }
 
-      /** Inline the operators using the map of definitions */
+      // Inline the operators using the map of definitions
       InlinerOfUserOper(bodyMap, tracker)(expandedLetIn)
 
-      // recursive processing of composite operators
+      // this is the special form for LAMBDAs
+    case OperEx(TlaOper.apply,
+                LetInEx(NameEx("LAMBDA"), TlaOperDecl("LAMBDA", params, lambdaBody)),
+                args @ _*) =>
+      // Substitute params with args in the body of the lambda expression.
+      // I don't think we need to deep copy lambdaBody, as it should appear only once.
+      assert(params.length == args.length)
+      params.zip(args).foldLeft(lambdaBody) {
+        // replace every parameter with the respective argument
+        case (expr, (param, arg)) =>
+          ReplaceFixed(NameEx(param.name), arg, tracker)(expr)
+      }
+
+    // recursive processing of composite operators
     case ex@OperEx(op, args@_*) =>
       val newArgs = args map transform
       if (args == newArgs) ex else OperEx(op, newArgs: _*)
