@@ -45,11 +45,16 @@ class TypeUnifier {
     result
   }
 
-  private def computeOptions(lhs: Option[TlaType1], rhs: Option[TlaType1]): Option[TlaType1] = {
-    (lhs, rhs) match {
+  // Compute the unification of the value corresponding to the key in the two maps of fields
+  private def computeFields[K](key: K, lhsFields: SortedMap[K, TlaType1], rhsFields: SortedMap[K, TlaType1]): Option[TlaType1]= {
+    (lhsFields.get(key), rhsFields.get(key)) match {
+      case (None, None) => None
       case (Some(l), Some(r)) => compute(l, r)
-      case (None, Some(r)) => Some(r)
-      case (l @ _, None) => l // Some or None
+      // Unifying a present field with an absent one is solved by the present one, as per
+      // the typing rules on records that allows records with non-overlapping fields to
+      // be values of the same type.
+      case (None, r @ Some(_)) => r
+      case (l @ Some(_), None) => l
     }
   }
 
@@ -121,7 +126,7 @@ class TypeUnifier {
       // sparse tuples join their keys, but the values for the intersecting keys should unify
       case (SparseTupT1(lfields), SparseTupT1(rfields)) =>
         val jointKeys = (lfields.keySet ++ rfields.keySet).toSeq
-        val pairs = jointKeys.map(key => (key, computeOptions(lfields.get(key), rfields.get(key))))
+        val pairs = jointKeys.map(key => (key, computeFields(key, lfields, rfields)))
         if (pairs.exists(_._2.isEmpty)) {
           None
         } else {
@@ -153,7 +158,7 @@ class TypeUnifier {
       // records join their keys, but the values for the intersecting keys should unify
       case (RecT1(lfields), RecT1(rfields)) =>
         val jointKeys = (lfields.keySet ++ rfields.keySet).toSeq
-        val pairs = jointKeys.map(key => (key, computeOptions(lfields.get(key), rfields.get(key))))
+        val pairs = jointKeys.map(key => (key, computeFields(key, lfields, rfields)))
         if (pairs.exists(_._2.isEmpty)) {
           None
         } else {
