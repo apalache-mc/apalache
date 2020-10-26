@@ -27,29 +27,22 @@ class TypeUnifier {
     // start with the substitution
     solution = substitution.context
     // try to unify
-    try {
-      compute(lhs, rhs) match {
-        case None => // no unifier
+    val result = try {
+      compute(lhs, rhs) flatMap { unifiedType =>
+        if (isCyclic) {
           None
-
-        case Some(unifiedType) =>
-          val result =
-            if (isCyclic) {
-              None
-            } else {
-              computeClosureWhenAcyclic()
-              val substitution = new Substitution(solution)
-              Some((substitution, substitution(unifiedType)))
-            }
-
-          solution = Map.empty // let GC collect the solution map later
-          result
+        } else {
+          computeClosureWhenAcyclic()
+          val substitution = new Substitution(solution)
+          Some((substitution, substitution(unifiedType)))
+        }
       }
     } catch {
       case _: CycleDetected =>
-        solution = Map.empty // let GC collect the solution map later
         None
     }
+    solution = Map.empty // let GC collect the solution map later
+    result
   }
 
   private def computeOptions(lhs: Option[TlaType1], rhs: Option[TlaType1]): Option[TlaType1] = {
