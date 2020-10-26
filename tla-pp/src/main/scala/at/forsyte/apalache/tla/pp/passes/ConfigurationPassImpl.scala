@@ -57,7 +57,7 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
 
     // copy the relevant options back in options
     for (name <- NormalizedNames.STANDARD_OPTION_NAMES) {
-      relevantOptions.get[String]("checker", name)
+      relevantOptions.get[Any]("checker", name)
         .collect { case value => options.set("checker." + name, value) }
     }
 
@@ -90,7 +90,7 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
   private def copyRelevantOptions(): WriteablePassOptions = {
     val outOptions = new WriteablePassOptions()
     for (name <- NormalizedNames.STANDARD_OPTION_NAMES) {
-      options.get[String]("checker", name)
+      options.get[Any]("checker", name)
         .collect { case value => outOptions.set("checker." + name, value) }
     }
     outOptions
