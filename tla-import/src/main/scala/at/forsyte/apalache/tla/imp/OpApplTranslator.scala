@@ -417,11 +417,13 @@ class OpApplTranslator(sourceStore: SourceStore, val context: Context, val recSt
   private def mkExceptBuiltin(node: OpApplNode): TlaEx = {
     val exTran = ExprOrOpArgNodeTranslator(sourceStore, context, recStatus)
     node.getArgs.toList match {
-      case (fnode: OpApplNode) :: pairNodes =>
-        // ![e1] = e2
+      case (fnode: ExprNode) :: pairNodes =>
+        // For instance, [f EXCEPT ![e1] = e2, ![e3] = e4] or [@ EXCEPT ![e1] = e2, ![e3] = e4]
+        // First, translate the expression that encodes the function to be updated.
         val fun = exTran.translate(fnode)
+        // Second, translate the expressions that encode the update pairs (e1, e2), (e3, e4), etc.
         // Note that -- as in TLA tools -- the updated indices are represented with sequences (i.e., tuples),
-        // in order to support multidimensional arrays
+        // in order to support multidimensional arrays.
         OperEx(TlaFunOper.except, fun +: unpackPairs(exTran)(pairNodes): _*)
 
       case _ =>

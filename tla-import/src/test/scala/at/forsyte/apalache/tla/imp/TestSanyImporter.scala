@@ -908,8 +908,8 @@ class TestSanyImporter extends FunSuite {
         NameEx("f"),
         TlaFunOper.mkTuple(ValEx(TlaInt(0))),
         OperEx(TlaFunOper.except,
-          TlaFunOper.mkTuple(ValEx(TlaInt(0))), // that is what @ gives us
-          ValEx(TlaStr("state")),
+          OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaInt(0))), // this is the equivalent of @
+          TlaFunOper.mkTuple(ValEx(TlaStr("state"))),
           ValEx(TlaInt(4)))
       ))(mod.declarations(4))
   }
