@@ -79,7 +79,7 @@ class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
       FailureMessage(msg)
 
     case err: NotInKeraError =>
-      val msg = "%s: expression outside of KerA, report an issue: %s [see docs/kera.md]".
+      val msg = "%s: expression outside of the supported fragment KerA, report an issue: %s [see docs/kera.md]".
         format(findLoc(err.causeExpr), err.getMessage)
       FailureMessage(msg)
 

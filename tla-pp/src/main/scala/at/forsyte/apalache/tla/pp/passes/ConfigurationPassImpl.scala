@@ -47,7 +47,8 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
     */
   override def execute(): Boolean = {
     val currentModule = tlaModule.get
-    val relevantOptions = copyRelevantOptions()
+    val relevantOptions = new WriteablePassOptions()
+    copyRelevantOptions(options, relevantOptions)
     // try to read from the TLC configuration file
     loadOptionsFromTlcConfig(currentModule, relevantOptions)
     setFallbackOptions(relevantOptions)
@@ -56,10 +57,7 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
     ensureDeclarationsArePresent(currentModule, relevantOptions)
 
     // copy the relevant options back in options
-    for (name <- NormalizedNames.STANDARD_OPTION_NAMES) {
-      relevantOptions.get[Any]("checker", name)
-        .collect { case value => options.set("checker." + name, value) }
-    }
+    copyRelevantOptions(relevantOptions, options)
 
     // rewrite constants and declarations
     val configuredModule = new ConstAndDefRewriter(tracker)(currentModule)
@@ -87,13 +85,12 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
   }
 
   // copy the relevant options
-  private def copyRelevantOptions(): WriteablePassOptions = {
+  private def copyRelevantOptions(from: PassOptions, to: WriteablePassOptions): Unit = {
     val outOptions = new WriteablePassOptions()
     for (name <- NormalizedNames.STANDARD_OPTION_NAMES) {
-      options.get[Any]("checker", name)
-        .collect { case value => outOptions.set("checker." + name, value) }
+      from.get[Any]("checker", name)
+        .collect { case value => to.set("checker." + name, value) }
     }
-    outOptions
   }
 
   // produce the configuration options from a TLC config, if it is present
