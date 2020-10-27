@@ -4,12 +4,12 @@ import java.io.File
 import java.nio.file.Path
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
-import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
-import at.forsyte.apalache.tla.pp.{Desugarer, Keramelizer, Normalizer, UniqueNameGenerator}
+import at.forsyte.apalache.tla.lir.{TlaModule, TlaOperDecl}
+import at.forsyte.apalache.tla.pp.{NormalizedNames, UniqueNameGenerator}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -50,8 +50,10 @@ class InlinePassImpl @Inject()(val options: PassOptions,
     val transformationSequence =
       List(
         InlinerOfUserOper(defBodyMap, tracker),
-        LetInExpander(tracker, keepNullary = true)
-      )
+        LetInExpander(tracker, keepNullary = true),
+        // the second pass of Inliner may be needed, when the higher-order operators were inlined by LetInExpander
+        InlinerOfUserOper(defBodyMap, tracker)
+      ) ///
 
     val inlined = transformationSequence.foldLeft(module){
       case (m, tr) =>
@@ -59,11 +61,24 @@ class InlinePassImpl @Inject()(val options: PassOptions,
         ModuleByExTransformer(tr) (m)
     }
 
+    // Fixing issue 283: https://github.com/informalsystems/apalache/issues/283
+    // Remove the operators that are not needed,
+    // as some of them may contain higher-order operators that cannot be substituted
+    val relevantOperators = NormalizedNames.userOperatorNamesFromOptions(options).toSet
+    logger.info("Leaving only relevant operators: " + relevantOperators.toList.sorted.mkString(", "))
+    val filteredDefs = inlined.declarations.filter {
+      case TlaOperDecl(name, _, _) =>
+        relevantOperators.contains(name)
+      case _ => true // accept all other declarations
+    }
+
+    val filtered = new TlaModule(inlined.name, filteredDefs)
+
     // dump the result of preprocessing
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    PrettyWriter.write(inlined, new File(outdir.toFile, "out-inline.tla"))
+    PrettyWriter.write(filtered, new File(outdir.toFile, "out-inline.tla"))
 
-    outputTlaModule = Some(inlined)
+    outputTlaModule = Some(filtered)
     true
   }
 

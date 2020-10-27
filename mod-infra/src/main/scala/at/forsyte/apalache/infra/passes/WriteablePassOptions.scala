@@ -42,7 +42,12 @@ class WriteablePassOptions extends PassOptions {
     */
   def get[T](passName: String, optionName: String): Option[T] = {
     store.get(passName + "." + optionName) match {
-      case Some(value) => Some(value.asInstanceOf[T])
+      case Some(value: T) =>
+        Some(value)
+
+      case Some(value) =>
+        throw new IllegalArgumentException(s"Option $optionName has unexpected type: " + value.getClass)
+
       case None => None
     }
   }

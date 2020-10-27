@@ -42,6 +42,9 @@ class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
       val msg = "%s\n%s".format(err.getMessage, err.errors.map(ofTypeInferenceError).mkString("\n"))
       NormalErrorMessage(msg)
 
+    case err: NotInKeraError =>
+      NormalErrorMessage("Input error (see the manual): " + err.getMessage)
+
     // tool failures
     case err: IrrecoverablePreprocessingError =>
       val msg = s"Irrecoverable preprocessing error: ${err.getMessage}. Report an issue at $ISSUES_LINK"
@@ -76,7 +79,7 @@ class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
       FailureMessage(msg)
 
     case err: NotInKeraError =>
-      val msg = "%s: expression outside of KerA, report an issue: %s [see docs/kera.md]".
+      val msg = "%s: expression outside of the supported fragment KerA, report an issue: %s [see docs/kera.md]".
         format(findLoc(err.causeExpr), err.getMessage)
       FailureMessage(msg)
 
