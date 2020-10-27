@@ -418,13 +418,14 @@ class OpApplTranslator(sourceStore: SourceStore, val context: Context, val recSt
     val exTran = ExprOrOpArgNodeTranslator(sourceStore, context, recStatus)
     node.getArgs.toList match {
       case (fnode: OpApplNode) :: pairNodes =>
+        // ![e1] = e2
         val fun = exTran.translate(fnode)
         // Note that -- as in TLA tools -- the updated indices are represented with sequences (i.e., tuples),
         // in order to support multidimensional arrays
         OperEx(TlaFunOper.except, fun +: unpackPairs(exTran)(pairNodes): _*)
 
       case _ =>
-        throw new SanyImporterException("Unexpected structure of EXCEPT")
+        throw new SanyImporterException("Unexpected structure of EXCEPT: " + node)
     }
   }
 }

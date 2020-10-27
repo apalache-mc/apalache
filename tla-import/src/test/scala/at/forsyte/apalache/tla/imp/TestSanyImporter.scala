@@ -865,6 +865,7 @@ class TestSanyImporter extends FunSuite {
         |E1 == [ f EXCEPT ![0] = 1, ![2] = 3 ]
         |E2 == [ f EXCEPT ![0][1][2] = 3 ]
         |E3 == [ f EXCEPT ![0,1,2] = 3 ]
+        |E4 == [ f EXCEPT ![0] = [@ EXCEPT !.state = 4] ]
         |================================
         |""".stripMargin
 
@@ -894,28 +895,23 @@ class TestSanyImporter extends FunSuite {
       )
     ) (mod.declarations(2))
 
-    /* // the old test when Desugarer was part of SanyImporter
-    expectDecl("E2",
-      OperEx(TlaFunOper.except,
-        NameEx("f"),
-        TlaFunOper.mkTuple(ValEx(TlaInt(0))),
-        OperEx(TlaFunOper.except,
-          OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaInt(0))),
-          TlaFunOper.mkTuple(ValEx(TlaInt(1))),
-          OperEx(TlaFunOper.except,
-            OperEx(TlaFunOper.app, OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaInt(0))), ValEx(TlaInt(1))),
-            TlaFunOper.mkTuple(ValEx(TlaInt(2))),
-            ValEx(TlaInt(3)))
-        )//
-      ))(mod.declarations(2))
-      */
-
     expectDecl("E3",
       OperEx(TlaFunOper.except,
         NameEx("f"),
         TlaFunOper.mkTuple(TlaFunOper.mkTuple(ValEx(TlaInt(0)), ValEx(TlaInt(1)), ValEx(TlaInt(2)))),
         ValEx(TlaInt(3))
       ))(mod.declarations(3))
+
+    // using @ in EXCEPT: https://github.com/informalsystems/apalache/issues/286
+    expectDecl("E4",
+      OperEx(TlaFunOper.except,
+        NameEx("f"),
+        TlaFunOper.mkTuple(ValEx(TlaInt(0))),
+        OperEx(TlaFunOper.except,
+          TlaFunOper.mkTuple(ValEx(TlaInt(0))), // that is what @ gives us
+          ValEx(TlaStr("state")),
+          ValEx(TlaInt(4)))
+      ))(mod.declarations(4))
   }
 
   test("complex record selects") {
