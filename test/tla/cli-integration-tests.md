@@ -410,7 +410,7 @@ EXITCODE: ERROR (99)
 ### check Callback.tla succeeds
 
 `Callback.tla` demonstrates that one can implement non-determinism with
-exists and use a callback to do an assignment to a variable.
+the existential operator and use a callback to do an assignment to a variable.
 As it requires tricky operator inlining, here is the test.
 
 ```sh
