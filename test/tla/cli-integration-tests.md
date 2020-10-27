@@ -409,7 +409,7 @@ EXITCODE: ERROR (99)
 
 ### check Callback.tla succeeds
 
-This tests demonstrates that one can implement non-determinism with
+`Callback.tla` demonstrates that one can implement non-determinism with
 exists and use a callback to do an assignment to a variable.
 As it requires tricky operator inlining, here is the test.
 
@@ -544,4 +544,3 @@ Configuration error (see the manual): Circular definition dependency detected
 ...
 EXITCODE: ERROR (99)
 ```
-
