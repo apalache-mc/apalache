@@ -81,6 +81,12 @@ trait Context {
   def setLookupPrefix(prefix: List[String]): Context
 
   /**
+    * Get the lookup prefix that represents the instantiation path from the root module down to the instances
+    * @return the sequence of instance names
+    */
+  val lookupPrefix: List[String]
+
+  /**
     * Add all definitions from the other context. We assume that the keys in the both contexts do not intersect.
     * If the keys intersect, an implementation is free to throw an IllegalStateException at some point...
     *
