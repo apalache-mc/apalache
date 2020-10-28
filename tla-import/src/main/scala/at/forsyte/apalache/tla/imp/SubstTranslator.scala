@@ -7,8 +7,8 @@ import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic._
 
 /**
-  * Translate a module instance. This class needs extensive testing,
-  * as the module instantiation rules are quite sophisticated (Ch. 17).
+  * Translate a substitution, that is the part that goes after WITH in INSTANCE Foo WITH x <- e1, y <- e2.
+  * The module instantiation rules are quite sophisticated, see Specifying Systems [Ch. 17].
   *
   * @author konnov
   */
