@@ -1,22 +1,20 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
-import at.forsyte.apalache.tla.lir.SimpleFormalParam
-import org.scalatest.FunSuite
+import at.forsyte.apalache.tla.lir.{SimpleFormalParam, TlaModule}
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.TlaModule
 
-class TestFlatLanguagePred extends FunSuite {
+class TestFlatLanguagePred extends LanguagePredTestSuite {
   private val pred = new FlatLanguagePred
 
   test("a flat expression") {
     val expr = tla.enumSet(tla.int(1), tla.str("abc"), tla.bool(false))
-    assert(pred.isExprOk(expr))
+    expectOk(pred.isExprOk(expr))
   }
 
   test("a call to a user operator") {
     val expr = tla.enumSet(tla.int(1), tla.str("abc"), tla.bool(false))
     val app = tla.appOp(tla.name("UserOp"), expr)
-    assert(!pred.isExprOk(app))
+    expectFail(pred.isExprOk(app))
   }
 
   test("a non-nullary let-in ") {
@@ -25,7 +23,7 @@ class TestFlatLanguagePred extends FunSuite {
       tla.declOp("UserOp",
         tla.plus(tla.int(1), tla.name("x")),
         SimpleFormalParam("x")))
-    assert(!pred.isExprOk(app))
+    expectFail(pred.isExprOk(app))
   }
 
   test("a nullary let-in ") {
@@ -33,7 +31,7 @@ class TestFlatLanguagePred extends FunSuite {
     val letIn = tla.letIn(app,
       tla.declOp("UserOp",
         tla.plus(tla.int(1), tla.int(2))))
-    assert(pred.isExprOk(letIn))
+    expectOk(pred.isExprOk(letIn))
   }
 
   test("nested nullary let-in ") {
@@ -45,20 +43,20 @@ class TestFlatLanguagePred extends FunSuite {
       tla.letIn(letIn,
         tla.declOp("B",
           tla.int(3)))
-    assert(pred.isExprOk(outerLetIn))
+    expectOk(pred.isExprOk(outerLetIn))
   }
 
   test("a call to a user operator in a module") {
     val appB = tla.appOp(tla.name("B"), tla.int(1))
     val defA = tla.declOp("A", appB)
     val mod = new TlaModule("mod", Seq(defA))
-    assert(!pred.isModuleOk(mod))
+    expectFail(pred.isModuleOk(mod))
   }
 
   test("a module without calls") {
     val appB = tla.int(1)
     val defA = tla.declOp("A", appB)
     val mod = new TlaModule("mod", Seq(defA))
-    assert(pred.isModuleOk(mod))
+    expectOk(pred.isModuleOk(mod))
   }
 }
