@@ -1,0 +1,31 @@
+strict digraph DiskGraph {
+1146 [label="Lambda",style = filled];
+1285 [style=filled,shape=diamond,fillcolor="red",label="B"];
+1146 -> 1285
+1408 [color="green",label="A(LAMBDAx:x=1,2)"];
+1285 -> 1408
+1275 [style=filled,shape=diamond,fillcolor="red",label="A"];
+1408 -> 1275
+1398 [color="green",label="F(x)"];
+1275 -> 1398
+1397 [color="green",label="x"];
+1398 -> 1397
+1375 [label="LAMBDAx:x=1"];
+1408 -> 1375
+1281 [style=filled,shape=diamond,fillcolor="red",label="LAMBDA"];
+1375 -> 1281
+1404 [color="green",label="x=1"];
+1281 -> 1404
+1402 [color="green",label="x"];
+1404 -> 1402
+1620 [label="1"];
+1404 -> 1620
+1624 [label="2"];
+1408 -> 1624
+1275 [style=filled,shape=diamond,fillcolor="red",label="A"];
+1146 -> 1275
+1398 [color="green",label="F(x)"];
+1275 -> 1398
+1397 [color="green",label="x"];
+1398 -> 1397
+}

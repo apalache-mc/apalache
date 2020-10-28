@@ -1,0 +1,6 @@
+Rule profiling statistics
+--------------------------------------------------------------------------------
+                name     calls     cells smt-consts smt-asserts smt-avg-size
+--------------------------------------------------------------------------------
+AssignmentRule               1         0         0         0         0
+IntConstRule                 1         1         0         1         3

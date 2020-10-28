@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.lamport.tla.toolbox.tool.tlc.modelCheck">
+    <stringAttribute key="configurationName" value="Model_1"/>
+    <intAttribute key="fpIndex" value="68"/>
+    <stringAttribute key="modelBehaviorInit" value="Init"/>
+    <stringAttribute key="modelBehaviorNext" value="Next"/>
+    <intAttribute key="modelBehaviorSpecType" value="2"/>
+    <intAttribute key="modelEditorOpenTabs" value="8"/>
+    <intAttribute key="modelVersion" value="20191005"/>
+    <stringAttribute key="specName" value="Inst2"/>
+</launchConfiguration>

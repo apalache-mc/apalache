@@ -1,0 +1,138 @@
+{
+  "module": "counterexample",
+  "declarations": [
+    {
+      "operator": "State1",
+      "body": {
+        "and": [
+          
+        ]
+      },
+      "params": [
+        
+      ]
+    },
+    {
+      "operator": "State2",
+      "body": {
+        "and": [
+          {
+            "eq": "x",
+            "arg": 2
+          }
+        ]
+      },
+      "params": [
+        
+      ]
+    },
+    {
+      "operator": "State3",
+      "body": {
+        "and": [
+          {
+            "eq": "x",
+            "arg": 4
+          }
+        ]
+      },
+      "params": [
+        
+      ]
+    },
+    {
+      "operator": "State4",
+      "body": {
+        "and": [
+          {
+            "eq": "x",
+            "arg": 6
+          }
+        ]
+      },
+      "params": [
+        
+      ]
+    },
+    {
+      "operator": "State5",
+      "body": {
+        "and": [
+          {
+            "eq": "x",
+            "arg": 8
+          }
+        ]
+      },
+      "params": [
+        
+      ]
+    },
+    {
+      "operator": "State6",
+      "body": {
+        "and": [
+          {
+            "eq": "x",
+            "arg": 10
+          }
+        ]
+      },
+      "params": [
+        
+      ]
+    },
+    {
+      "operator": "State7",
+      "body": {
+        "and": [
+          {
+            "eq": "x",
+            "arg": 12
+          }
+        ]
+      },
+      "params": [
+        
+      ]
+    },
+    {
+      "operator": "State8",
+      "body": {
+        "and": [
+          {
+            "eq": "x",
+            "arg": 14
+          }
+        ]
+      },
+      "params": [
+        
+      ]
+    },
+    {
+      "operator": "State9",
+      "body": {
+        "and": [
+          {
+            "eq": "x",
+            "arg": 16
+          }
+        ]
+      },
+      "params": [
+        
+      ]
+    },
+    {
+      "operator": "InvariantViolation",
+      "body": {
+        "ge": "x",
+        "arg": 15
+      },
+      "params": [
+        
+      ]
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+Rule profiling statistics
+--------------------------------------------------------------------------------
+                name     calls     cells smt-consts smt-asserts smt-avg-size
+--------------------------------------------------------------------------------
+SubstRule                 1464         0         0         0         0
+IfThenElseRule            1036      5380      1072     12332         9
+EqRule                     612       612        16       644         5
+TupleOrSeqCtorRule         421       421         0         0         0
+AssignmentRule             344        36         8        80        11
+AndRule                    269         0        66        66         3
+FunAppRule                 214      2177       300      8798        18
+SetCtorRule                146       146       120       120         3
+QuantRule                  132       330       330      1254        15
+SetInclusionRule           132       125       597      2658        14
+FunExceptRule              116       232       464       464         7
+NegRule                     99        99        99       198         3
+NeqRule                     99         0         0         0         0
+PowSetCtorRule              66        66         0         0         0
+CartesianProductRule        66        66       264       264        11
+SetCapAndMinusRule          66        66       264       264        42
+SetCupRule                  50        50       242       242         7
+TypeAnnotationRule          28         0         0         0         0
+IntArithRule                17        17         0        17         5
+StrConstRule                17        17         0        39         3
+IntCmpRule                  17        17         0        17         5
+OrRule                      16        16         0        16         3
+PrimeRule                   16         0         0         0         0
+IntConstRule                 7         4         0         4         3
+FunCtorRule                  2         4         8         8         7
+FunSetCtorRule               2         2         0         0         0
+IntDotDotRule                1         3         4         7         4

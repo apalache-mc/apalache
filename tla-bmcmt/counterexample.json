@@ -1,0 +1,86 @@
+{
+  "module": "counterexample",
+  "declarations": [
+    {
+      "operator": "State1",
+      "body": {
+        "and": [
+          
+        ]
+      },
+      "params": [
+        
+      ]
+    },
+    {
+      "operator": "State2",
+      "body": {
+        "and": [
+          {
+            "eq": "x",
+            "arg": 0
+          }
+        ]
+      },
+      "params": [
+        
+      ]
+    },
+    {
+      "operator": "State3",
+      "body": {
+        "and": [
+          {
+            "eq": "x",
+            "arg": 1
+          }
+        ]
+      },
+      "params": [
+        
+      ]
+    },
+    {
+      "operator": "State4",
+      "body": {
+        "and": [
+          {
+            "eq": "x",
+            "arg": 2
+          }
+        ]
+      },
+      "params": [
+        
+      ]
+    },
+    {
+      "operator": "State5",
+      "body": {
+        "and": [
+          {
+            "eq": "x",
+            "arg": 3
+          }
+        ]
+      },
+      "params": [
+        
+      ]
+    },
+    {
+      "operator": "InvariantViolation",
+      "body": {
+        "not": {
+          "not": {
+            "eq": "x",
+            "arg": 3
+          }
+        }
+      },
+      "params": [
+        
+      ]
+    }
+  ]
+}

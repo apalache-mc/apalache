@@ -1,0 +1,29 @@
+strict digraph DiskGraph {
+1146 [label="Updates",style = filled];
+1209 [shape=square,color="yellow",label="f"];
+1146 -> 1209
+1283 [style=filled,shape=diamond,fillcolor="red",label="E4"];
+1146 -> 1283
+1397 [color="green",label="[fEXCEPT![0]=[@EXCEPT!.state=4]]"];
+1283 -> 1397
+1396 [color="green",label="f"];
+1397 -> 1396
+1209 [shape=square,color="yellow",label="f"];
+1396 -> 1209
+1400 [color="green",label="![0]=[@EXCEPT!.state=4]"];
+1397 -> 1400
+1399 [color="green",label="![0]=[@EXCEPT!.state=4]"];
+1400 -> 1399
+1615 [label="0"];
+1399 -> 1615
+1402 [color="green",label="[@EXCEPT!.state=4]"];
+1400 -> 1402
+1405 [color="green",label="!.state=4"];
+1402 -> 1405
+1404 [color="green",label="!.state=4"];
+1405 -> 1404
+1682 [label="state"];
+1404 -> 1682
+1623 [label="4"];
+1405 -> 1623
+}
