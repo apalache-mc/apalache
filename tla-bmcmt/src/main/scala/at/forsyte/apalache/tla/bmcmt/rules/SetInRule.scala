@@ -17,10 +17,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(state: SymbState): Boolean = {
     state.ex match {
       case OperEx(TlaSetOper.in, NameEx(name), _) =>
-        (CellTheory().hasConst(name)
-          || BoolTheory().hasConst(name)
-          || IntTheory().hasConst(name)
-          || state.binding.contains(name))
+        ArenaCell.isValidName(name) || state.binding.contains(name)
 
       case OperEx(TlaSetOper.in, _, _) =>
         true
@@ -36,25 +33,19 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       // a common pattern x \in {y} that is equivalent to x = y, e.g., the assignment solver creates it
       case OperEx(TlaSetOper.in, NameEx(name), OperEx(TlaSetOper.enumSet, rhs)) =>
-        val nextState = rewriter.rewriteUntilDone(state.setRex(rhs).setTheory(CellTheory()))
+        val nextState = rewriter.rewriteUntilDone(state.setRex(rhs))
         val rhsCell = nextState.arena.findCellByNameEx(nextState.ex)
         val lhsCell = state.binding(name)
         val afterEqState = rewriter.lazyEq.cacheOneEqConstraint(nextState, lhsCell, rhsCell)
-        val finalState = afterEqState
-          .setTheory(BoolTheory())
-          .setRex(rewriter.lazyEq.safeEq(lhsCell, rhsCell))
         // bugfix: safeEq may produce ValEx(TlaBool(false)) or ValEx(TlaBool(true)).
-        // Rewrite once more. This can be removed once issue #22 is resolved.
-        rewriter.coerce(rewriter.rewriteUntilDone(finalState), state.theory)
+        rewriter.rewriteUntilDone(afterEqState.setRex(rewriter.lazyEq.safeEq(lhsCell, rhsCell)))
 
       case OperEx(TlaSetOper.in, elem, set) =>
-        // TODO: remove theories, see https://github.com/informalsystems/apalache/issues/22
-        // switch to cell theory
-        val elemState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(elem))
+        val elemState = rewriter.rewriteUntilDone(state.setRex(elem))
         val elemCell = elemState.asCell
         val setState = rewriter.rewriteUntilDone(elemState.setRex(set))
         val setCell = setState.asCell
-        val finalState: SymbState = setCell.cellType match {
+        setCell.cellType match {
           case FinSetT(elemType) =>
             basicIn(setState, setCell, elemCell, elemType)
 
@@ -70,10 +61,6 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
           case _ => throw new RewriterException("SetInRule is not implemented for type %s (found in %s)"
             .format(setCell.cellType, state.ex), state.ex)
         }
-
-        val coercedState = rewriter.coerce(finalState, state.theory)
-        assert(coercedState.arena.cellCount >= finalState.arena.cellCount) // catching a tricky bug
-        coercedState
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
@@ -132,7 +119,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val relElems = nextState.arena.getHas(relation)
     rewriter.solverContext.assertGroundExpr(tla.equiv(pred, tla.and(relElems map onPair: _*)))
 
-    rewriter.rewriteUntilDone(nextState.setRex(pred).setTheory(CellTheory()))
+    rewriter.rewriteUntilDone(nextState.setRex(pred))
   }
 
   private def intOrNatSetIn(state: SymbState, setCell: ArenaCell, elemCell: ArenaCell, elemType: types.CellT): SymbState = {
@@ -146,7 +133,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       var nextState = state.updateArena(_.appendCell(BoolT()))
       val pred = nextState.arena.topCell
       rewriter.solverContext.assertGroundExpr(tla.equiv(pred, tla.ge(elemCell, tla.int(0))))
-      nextState.setRex(pred).setTheory(CellTheory())
+      nextState.setRex(pred)
     }
   }
 
@@ -155,8 +142,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     assert(elemCell.cellType == elemType) // otherwise, type finder is incorrect
     if (potentialElems.isEmpty) {
       // SE-SET-IN1: the set cell points to no other cell => return false
-      //      state.setTheory(BoolTheory()).setRex(NameEx(SolverContext.falseConst))
-      state.setTheory(CellTheory()).setRex(state.arena.cellFalse())
+      state.setRex(state.arena.cellFalse())
     } else {
       var nextState = state.updateArena(_.appendCell(BoolT()))
       val pred = nextState.arena.topCell.toNameEx
@@ -178,7 +164,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         val elemsInAndEq = potentialElems.map(inAndEq)
         rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.or(elemsInAndEq: _*)))
-        eqState.setTheory(CellTheory()).setRex(pred)
+        eqState.setRex(pred)
       //}
     }
   }

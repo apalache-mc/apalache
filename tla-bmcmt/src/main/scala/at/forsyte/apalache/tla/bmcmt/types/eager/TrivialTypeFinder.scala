@@ -1,13 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt.types.eager
 
+import at.forsyte.apalache.tla.bmcmt.ArenaCell
+import at.forsyte.apalache.tla.bmcmt.rewriter.Recoverable
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.bmcmt.{ArenaCell, BoolTheory, IntTheory}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.transformations.TransformationListener
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
-import com.google.inject.Singleton
+import at.forsyte.apalache.tla.lir.values._
 
 import scala.collection.immutable.{Map, SortedMap}
 
@@ -29,11 +28,11 @@ import scala.collection.immutable.{Map, SortedMap}
   *
   * @author Igor Konnov
   */
-@Singleton
-class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
-  private var varTypes: SortedMap[String, CellT] = SortedMap()
-  private var typeAnnotations: Map[UID, CellT] = Map()
-  private var errors: Seq[TypeInferenceError] = Seq()
+class TrivialTypeFinder extends TypeFinder[CellT]
+    with TransformationListener with Serializable with Recoverable[TrivialTypeSnapshot] {
+  private var _varTypes: SortedMap[String, CellT] = SortedMap()
+  private var _typeAnnotations: Map[UID, CellT] = Map()
+  private var _typeErrors: Seq[TypeInferenceError] = Seq()
 
   /**
     * Get the types of the variables that are computed by inferAndSave. The method must return the types of
@@ -41,15 +40,15 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
     *
     * @return a mapping of names to types
     */
-  override def getVarTypes: SortedMap[String, CellT] = varTypes
+  override def varTypes: SortedMap[String, CellT] = _varTypes
 
   /**
     * Restore variable types from a map.
     *
     * @param newVarTypes a mapping of names to types
     */
-  override def setVarTypes(newVarTypes: SortedMap[String, CellT]): Unit = {
-    varTypes = newVarTypes
+  override def varTypes_(newVarTypes: SortedMap[String, CellT]): Unit = {
+    _varTypes = newVarTypes
   }
 
   /**
@@ -58,9 +57,28 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
     * @param newVarTypes types of the global variables (VARIABLE and CONSTANT)
     */
   override def reset(newVarTypes: Map[String, CellT]): Unit = {
-    varTypes = SortedMap(newVarTypes.toSeq: _*)
-    typeAnnotations = Map()
-    errors = Seq()
+    _varTypes = SortedMap(newVarTypes.toSeq: _*)
+    _typeAnnotations = Map()
+    _typeErrors = Seq()
+  }
+
+  /**
+    * Take a snapshot and return it
+    *
+    * @return the snapshot
+    */
+  override def snapshot(): TrivialTypeSnapshot = {
+    new TrivialTypeSnapshot(_typeAnnotations, _varTypes)
+  }
+
+  /**
+    * Recover a previously saved snapshot (not necessarily saved by this object).
+    *
+    * @param shot a snapshot
+    */
+  override def recover(shot: TrivialTypeSnapshot): Unit = {
+    _typeAnnotations = shot.typeAnnotations
+    _varTypes = shot.varTypes
   }
 
   /**
@@ -69,13 +87,13 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
     * @param cell an arena cell
     */
   def extendWithCellType(cell: ArenaCell): Unit = {
-    varTypes += cell.toString -> cell.cellType
+    _varTypes += cell.toString -> cell.cellType
   }
 
   override def onTransformation(originalEx: TlaEx, newEx: TlaEx): Unit = {
-    typeAnnotations.get(originalEx.ID) match {
+    _typeAnnotations.get(originalEx.ID) match {
         // propagate type annotations
-      case Some(tp) => typeAnnotations += newEx.ID -> tp
+      case Some(tp) => _typeAnnotations += newEx.ID -> tp
       case _ => ()
     }
   }
@@ -106,7 +124,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
             val resT = inferAndSave(d.body)
             // Bind the let name to the computed type of the result.
             // XXX: It is not a type of a variable, which may confuse the model checker.
-            varTypes += d.name -> resT.getOrElse(UnknownT())
+            _varTypes += d.name -> resT.getOrElse(UnknownT())
           }
         }
 
@@ -118,15 +136,14 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
       case OperEx(BmcOper.assign, OperEx(TlaActionOper.prime, NameEx(varName)), rhs) =>
         def assignTypeAndReturnBool(assignedType: CellT): Option[CellT] = {
           val primedVar = varName + "'"
-          if (varTypes.contains(primedVar)) {
-            if (varTypes(primedVar) != assignedType) {
-              val e = new TypeInferenceError(expr,
+          if (_varTypes.contains(primedVar)) {
+            if (_varTypes(primedVar) != assignedType) {
+              error(expr,
                 "Assigning a type %s, while assigned type %s earlier"
-                  .format(assignedType, varTypes(primedVar)))
-              addError(e)
+                  .format(assignedType, _varTypes(primedVar)))
             }
           } else {
-            varTypes = varTypes + (primedVar -> assignedType)
+            _varTypes = _varTypes + (primedVar -> assignedType)
           }
           Some(BoolT())
         }
@@ -135,28 +152,25 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
           case Some(tp) =>
             assignTypeAndReturnBool(tp)
           case tp@None =>
-            addError(new TypeInferenceError(rhs, "Expected a type, found: " + tp))
-            None
+            errorThenNone(rhs, "Expected a type, found: " + tp)
         }
 
       // { x \in S: e }
       case OperEx(TlaSetOper.filter, NameEx(x), set, pred) =>
         inferAndSave(set) match {
           case Some(setT@FinSetT(elemT)) =>
-            assert(!varTypes.contains(x))
-            varTypes = varTypes + (x -> elemT)
+            assert(!_varTypes.contains(x))
+            _varTypes = _varTypes + (x -> elemT)
             val predT = inferAndSave(pred)
             if (predT.contains(BoolT())) {
               Some(setT)
             } else {
-              addError(new TypeInferenceError(pred, "Expected a Boolean, found: " + predT))
-              None
+              errorThenNone(pred, "Expected a Boolean, found: " + predT)
             }
 
           case tp@_ =>
-            addError(new TypeInferenceError(set, "Expected a finite set, found: " + tp))
-            varTypes = varTypes + (x -> UnknownT()) // otherwise, the type rewriter may throw an exception
-            None
+            _varTypes = _varTypes + (x -> UnknownT()) // otherwise, the type rewriter may throw an exception
+            errorThenNone(set, "Expected a finite set, found: " + tp)
         }
 
       // {e : x \in S}
@@ -167,16 +181,16 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
         def bind(name: String, set: TlaEx): Unit = {
           inferAndSave(set) match {
             case Some(setT@FinSetT(elemT)) =>
-              assert(!varTypes.contains(name))
-              varTypes = varTypes + (name -> elemT)
+              assert(!_varTypes.contains(name))
+              _varTypes = _varTypes + (name -> elemT)
 
             case Some(PowSetT(setT@FinSetT(_))) =>
-              assert(!varTypes.contains(name))
-              varTypes = varTypes + (name -> setT)
+              assert(!_varTypes.contains(name))
+              _varTypes = _varTypes + (name -> setT)
 
             case tp@_ =>
-              addError(new TypeInferenceError(set, "Expected a finite set, found: " + tp))
-              varTypes = varTypes + (name -> UnknownT()) // otherwise, the type rewriter may throw an exception
+              _varTypes = _varTypes + (name -> UnknownT()) // otherwise, the type rewriter may throw an exception
+              errorThenNone(set, "Expected a finite set, found: " + tp)
           }
         }
 
@@ -191,12 +205,12 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
         def bind(name: String, set: TlaEx): Unit = {
           inferAndSave(set) match {
             case Some(setT@FinSetT(elemT)) =>
-              assert(!varTypes.contains(name))
-              varTypes = varTypes + (name -> elemT)
+              assert(!_varTypes.contains(name))
+              _varTypes = _varTypes + (name -> elemT)
 
             case tp@_ =>
-              addError(new TypeInferenceError(set, "Expected a finite set, found: " + tp))
-              varTypes = varTypes + (name -> UnknownT()) // otherwise, the type rewriter throws an exception 10 lines below
+              _varTypes = _varTypes + (name -> UnknownT()) // otherwise, the type rewriter throws an exception 10 lines below
+              errorThenNone(set, "Expected a finite set, found: " + tp)
           }
         }
 
@@ -205,10 +219,10 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
         val domT =
           if (names.length == 1) {
             // a function of one argument
-            FinSetT(varTypes(names.head))
+            FinSetT(_varTypes(names.head))
           } else {
             // a function of multiple arguments is a function from a Cartesian product to the result type
-            FinSetT(TupleT(names.map(varTypes(_))))
+            FinSetT(TupleT(names.map(_varTypes(_))))
           }
         Some(FunT(domT, resT))
 
@@ -218,8 +232,8 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
 
         // infer result by having computed the set type (below)
         def inferResult(elemT: CellT) = {
-          assert(!varTypes.contains(x))
-          varTypes = varTypes + (x -> elemT)
+          assert(!_varTypes.contains(x))
+          _varTypes = _varTypes + (x -> elemT)
           val predT = inferAndSave(pred)
           if (predT.contains(BoolT())) {
             if (op == TlaOper.chooseBounded) {
@@ -228,8 +242,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
               Some(BoolT()) // exists/forall
             }
           } else {
-            addError(new TypeInferenceError(pred, "Expected a Boolean, found: " + predT))
-            None
+            errorThenNone(pred, "Expected a Boolean, found: " + predT)
           }
         }
 
@@ -245,19 +258,17 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
           case Some(_@InfSetT(elemT)) if op == TlaOper.chooseBounded || op == TlaBoolOper.forall =>
             // complain right away
             val name = if (op == TlaOper.chooseBounded) "CHOOSE" else "\\A"
-            addError(new TypeInferenceError(set, s"$name over an infinite set"))
-            None
+            errorThenNone(set, s"$name over an infinite set")
 
           case tp@_ =>
-            addError(new TypeInferenceError(set, "Expected a finite set, found: " + tp))
-            varTypes = varTypes + (x -> UnknownT()) // otherwise, the type rewriter may throw an exception
-            None
+            _varTypes = _varTypes + (x -> UnknownT()) // otherwise, the type rewriter may throw an exception
+            errorThenNone(set, "Expected a finite set, found: " + tp)
         }
 
       // a type annotation for a recursive function call
       case OperEx(BmcOper.withType, ex @ OperEx(TlaFunOper.recFunRef), annot) =>
         val annotT = AnnotationParser.fromTla(annot)
-        typeAnnotations += (ex.ID -> annotT)
+        _typeAnnotations += (ex.ID -> annotT)
         Some(annotT)
 
       // a type annotation
@@ -267,63 +278,43 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
         val unifier = unifyOption(Some(annotT), exT)
         if (unifier.isDefined) {
           // save the type annotation and return the type
-          typeAnnotations += (ex.ID -> unifier.get)
+          _typeAnnotations += (ex.ID -> unifier.get)
           unifier
         } else {
           val exTStr = if (exT.isDefined) exT.get.toString else None.toString
-          addError(new TypeInferenceError(annot,
-            s"No unifier for type $annotT and type $exTStr (from type annotation $annot and expression $ex)"))
-          None
+          errorThenNone(annot,
+            s"No unifier for type $annotT and type $exTStr (from type annotation $annot and expression $ex)")
         }
 
       case OperEx(TlaActionOper.prime, NameEx(name)) =>
         val primed = name + "'"
-        val result = varTypes.get(primed)
+        val result = _varTypes.get(primed)
         if (result.isEmpty) {
-          addError(new TypeInferenceError(expr, s"Failed to find type of variable $primed"))
+          errorThenNone(expr, s"Failed to find type of variable $primed")
         }
         result
 
       case ex@OperEx(TlaActionOper.prime, arg) =>
-        Some(error(ex, "Expected a name under ', found: " + arg))
+        errorThenNone(ex, "Expected a name under ', found: " + arg)
 
       // other operators
       case OperEx(_, args@_*) =>
         val argTypes = args.map(inferAndSave)
         if (argTypes.forall(_.isDefined)) {
-          try {
-            Some(compute(expr, argTypes.map(_.get): _*))
-          } catch {
-            case e: TypeInferenceError =>
-              addError(e)
-              None
-          }
+          Some(compute(expr, argTypes.map(_.get): _*))
         } else {
           None
         }
 
       case NameEx(name) =>
-        var result = varTypes.get(name)
+        var result = _varTypes.get(name)
         if (result.isEmpty) {
-          // TODO: this is a temporary solution until the moment we have eliminated BoolTheory and IntTheory
-          if (IntTheory().hasConst(name)) {
-            result = Some(IntT())
-          } else if (BoolTheory().hasConst(name)) {
-            result = Some(BoolT())
-          } else {
-            addError(new TypeInferenceError(expr, "Failed to find type of variable " + name))
-          }
+          error(expr, "Failed to find type of variable " + name)
         }
         result
 
       case ValEx(_) =>
-        try {
-          Some(compute(expr))
-        } catch {
-          case e: TypeInferenceError =>
-            addError(e)
-            None
-        }
+        Some(compute(expr))
 
       case _ =>
         None
@@ -335,7 +326,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
     *
     * @return a list of type errors
     */
-  override def getTypeErrors: Seq[TypeInferenceError] = errors
+  override def typeErrors: Seq[TypeInferenceError] = _typeErrors
 
   /**
     * Call compute recursively to compute the type of a given expression. This function is expensive,
@@ -349,8 +340,8 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
   override def computeRec(ex: TlaEx): CellT = ex match {
     case OperEx(BmcOper.withType, annotated, _) =>
       // a pre-computed type annotation overrides the type info
-      assert(typeAnnotations.contains(annotated.ID)) // otherwise, the engine is broken
-      typeAnnotations(annotated.ID)
+      assert(_typeAnnotations.contains(annotated.ID)) // otherwise, the engine is broken
+      _typeAnnotations(annotated.ID)
 
     case OperEx(TlaActionOper.prime, NameEx(_)) =>
       // do not recurse in prime, as the type of a primed variable should be computed directly
@@ -376,9 +367,9 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
     * @throws TypeInferenceError if the type cannot be computed.
     */
   override def compute(ex: TlaEx, argTypes: CellT*): CellT = {
-    if (typeAnnotations.contains(ex.ID)) {
+    if (_typeAnnotations.contains(ex.ID)) {
       // this expression has been annotated with a type
-      typeAnnotations(ex.ID)
+      _typeAnnotations(ex.ID)
     } else {
       // chain partial functions to handle different types of operators with different functions
       val handlers =
@@ -419,12 +410,12 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
 
   private def computeBasicOps(argTypes: Seq[CellT]): PartialFunction[TlaEx, CellT] = {
     case ne@NameEx(name) =>
-      varTypes.get(name)
+      _varTypes.get(name)
         .orElse(Some(error(ne, "No type assigned to " + name)))
         .get
 
     case app @ OperEx(TlaOper.apply, NameEx(opName)) =>
-      varTypes.get(opName.toString) // String.toString ??
+      _varTypes.get(opName.toString) // String.toString ??
         .orElse(Some(error(app, "No type assigned to " + opName)))
         .get
 
@@ -433,7 +424,7 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
 
     case ne@OperEx(TlaActionOper.prime, NameEx(name)) =>
       val primed = name + "'"
-      varTypes.get(primed)
+      _varTypes.get(primed)
         .orElse(Some(error(ne, "No type assigned to " + primed)))
         .get
 
@@ -1023,15 +1014,17 @@ class TrivialTypeFinder extends TypeFinder[CellT] with TransformationListener {
   }
 
   private def error(ex: TlaEx, message: String): CellT = {
-    throw new TypeInferenceError(ex, message)
+    _typeErrors :+= new TypeInferenceError(ex, message)
+    UnknownT()
+  }
+
+  private def errorThenNone(ex: TlaEx, message: String): Option[CellT] = {
+    error(ex, message)
+    None
   }
 
   private def notImplemented: PartialFunction[TlaEx, CellT] = {
     case ex => throw new NotImplementedError("Type construction for %s is not implemented. Report a bug!".format(ex))
-  }
-
-  private def addError(error: TypeInferenceError): Unit = {
-    errors :+= error
   }
 
   /**

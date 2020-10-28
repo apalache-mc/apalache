@@ -58,6 +58,6 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
     rewriter.solverContext.log("; } %s returns %s [%d arena cells])"
       .format(getClass.getSimpleName, state.ex, state.arena.cellCount))
 
-    state.setArena(arena).setRex(powsetCell).setTheory(CellTheory())
+    state.setArena(arena).setRex(powsetCell)
   }
 }

@@ -41,7 +41,7 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         assert(keyEs.lengthCompare(valueEs.length) == 0)
         // rewrite the values, we need it to compute the record type with typeFinder
         val (newState: SymbState, newValues: Seq[TlaEx]) =
-          rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), valueEs)
+          rewriter.rewriteSeqUntilDone(state, valueEs)
         // compute the types of the field values and then use the type finder
         val valueCells = newValues.map(newState.arena.findCellByNameEx)
         val typeArgs = elems.zipWithIndex.map(p => if (p._2 % 2 == 0) ConstT() else valueCells(p._2 / 2).cellType)
@@ -90,8 +90,7 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
           rewriter.solverContext.assertGroundExpr(tla.and(extraOutsideOfDomain.toSeq :_*))
         }
 
-        val finalState = nextState.setRex(recordCell.toNameEx)
-        rewriter.coerce(finalState, state.theory)
+        nextState.setRex(recordCell.toNameEx)
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)

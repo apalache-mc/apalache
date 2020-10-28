@@ -3,12 +3,12 @@ package at.forsyte.apalache.tla.pp.passes
 import java.io.{File, FileNotFoundException, FileReader}
 import java.nio.file.Path
 
-import at.forsyte.apalache.infra.passes.{Pass, TlaModuleMixin, WriteablePassOptions}
+import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin, WriteablePassOptions}
 import at.forsyte.apalache.io.tlc.TlcConfigParser
 import at.forsyte.apalache.io.tlc.config._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
-import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaOper, TlaTempOper}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.pp._
@@ -47,15 +47,22 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
     */
   override def execute(): Boolean = {
     val currentModule = tlaModule.get
+    val relevantOptions = new WriteablePassOptions()
+    copyRelevantOptions(options, relevantOptions)
     // try to read from the TLC configuration file
-    loadOptionsFromTlcConfig(currentModule)
-    setFallbackOptions()
+    loadOptionsFromTlcConfig(currentModule, relevantOptions)
+    setFallbackOptions(relevantOptions)
 
     // make sure that the required operators are defined
-    ensureDeclarationsArePresent(currentModule)
+    ensureDeclarationsArePresent(currentModule, relevantOptions)
+
+    // copy the relevant options back in options
+    copyRelevantOptions(relevantOptions, options)
 
     // rewrite constants and declarations
     val configuredModule = new ConstAndDefRewriter(tracker)(currentModule)
+    // Igor: I thought of rewriting all definitions in NormalizedNames.OPTION_NAMES into normalized names.
+    // However, that should be done very carefully. Maybe we should do that in the future.
 
     // dump the configuration result
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
@@ -66,53 +73,63 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
   }
 
   // if checker.init and checker.next are not set, set them to Init and Next, respectively
-  private def setFallbackOptions(): Unit = {
-    if (options.get("checker", "init").isEmpty) {
+  private def setFallbackOptions(relevantOptions: WriteablePassOptions): Unit = {
+    if (relevantOptions.get("checker", "init").isEmpty) {
       logger.info("  > Command line option --init is not set. Using Init")
-      options.set("checker.init", "Init")
+      relevantOptions.set("checker.init", "Init")
     }
-    if (options.get("checker", "next").isEmpty) {
+    if (relevantOptions.get("checker", "next").isEmpty) {
       logger.info("  > Command line option --next is not set. Using Next")
-      options.set("checker.next", "Next")
+      relevantOptions.set("checker.next", "Next")
     }
   }
 
-  // set the configuration options from a TLC config, if it is present
-  private def loadOptionsFromTlcConfig(module: TlaModule): Unit = {
+  // copy the relevant options
+  private def copyRelevantOptions(from: PassOptions, to: WriteablePassOptions): Unit = {
+    val outOptions = new WriteablePassOptions()
+    for (name <- NormalizedNames.STANDARD_OPTION_NAMES) {
+      from.get[Any]("checker", name)
+        .collect { case value => to.set("checker." + name, value) }
+    }
+  }
+
+  // produce the configuration options from a TLC config, if it is present
+  private def loadOptionsFromTlcConfig(module: TlaModule, outOptions: WriteablePassOptions): Unit = {
     var configuredModule = module
     // read TLC config if present
     val configFilename = options.getOrElse("checker","config","")
     val filename =
-      if(configFilename.isEmpty)
+      if(configFilename.isEmpty) {
         options.getOrError("parser", "filename").asInstanceOf[String]
           .replaceFirst("\\.(tla|json)$", "\\.cfg")
-      else
+      } else {
         configFilename
+      }
     val basename = FilenameUtils.getName(filename)
-    logger.info("  > Loading TLC configuration from " + basename)
+    logger.info(s"  > $basename: Loading TLC configuration")
 
     def setInit(init: String): Unit = {
-      options.get[String]("checker","init") match {
+      outOptions.get[String]("checker","init") match {
         case None =>
-          // In general, passes should not override options. This is a reasonable exception to this rule.
           logger.info(s"  > Using the init predicate $init from the TLC config")
-          options.set("checker.init", init)
+          outOptions.set("checker.init", init)
 
         case Some(cmdInit) =>
           logger.warn(s"  > $basename: Init operator is set in TLC config but overridden via --init command line option; using $cmdInit")
+          outOptions.set("checker.init", cmdInit)
       }
     }
 
     def setNext(next: String): Unit = {
-      options.get[String]("checker", "next") match {
+      outOptions.get[String]("checker", "next") match {
         case None =>
-          // In general, passes should not override options. This is a reasonable exception to this rule.
           logger.info(s"  > Using the next predicate $next from the TLC config")
-          options.set("checker.next", next)
+          outOptions.set("checker.next", next)
 
         case Some(cmdNext) =>
           val msg = s"  > $basename: Next operator is set in TLC config but overridden via --next command line option; using $cmdNext"
           logger.warn(msg)
+          outOptions.set("checker.next", cmdNext)
       }
     }
 
@@ -133,40 +150,40 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
       if (config.invariants.nonEmpty) {
         logger.info(s"  > $basename: found INVARIANTS: " + String.join(", ", config.invariants :_*))
 
-        options.get[List[String]]("checker", "inv") match {
+        outOptions.get[List[String]]("checker", "inv") match {
           case None =>
-            // In general, passes should not override options. This is a reasonable exception to this rule.
-            options.set("checker.inv", config.invariants)
+            outOptions.set("checker.inv", config.invariants)
 
           case Some(cmdInvariants) =>
             val cmdInvariantsStr = cmdInvariants.map(s => "--inv " + s)
             logger.warn(s"  > Overriding with command line arguments: " + String.join(" ", cmdInvariantsStr :_*))
+            outOptions.set("checker.inv", cmdInvariants)
         }
       }
 
       if (config.temporalProps.nonEmpty) {
         // set the temporal properties, but warn the user that they are not used
-        options.set("checker.temporalProps", config.temporalProps)
+        outOptions.set("checker.temporalProps", config.temporalProps)
         for (prop <- config.temporalProps) {
           logger.warn(s"  > $basename: PROPERTY $prop is ignored. Only INVARIANTS are supported.")
         }
       }
-    }
-    catch {
+    } catch {
       case _: FileNotFoundException =>
         if(configFilename.isEmpty) {
           logger.info("  > No TLC configuration found. Skipping.")
-        }
-        else {
+          outOptions
+        } else {
           throw new TLCConfigurationError(s"  > $basename: TLC config is provided with --config, but not found")
         }
+
       case e: TlcConfigParseError =>
         throw new TLCConfigurationError(s"  > $basename:${e.pos}:  Error parsing the TLC config file: " + e.msg)
     }
   }
 
   // Make sure that all operators passed via --init, --cinit, --next, --inv are present.
-  private def ensureDeclarationsArePresent(mod: TlaModule): Unit = {
+  private def ensureDeclarationsArePresent(mod: TlaModule, configOptions: PassOptions): Unit = {
     def assertDecl(role: String, name: String): Unit = {
       logger.info(s"  > Set $role to $name")
       if (mod.operDeclarations.forall(_.name != name)) {
@@ -175,27 +192,27 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
     }
 
     // let's make this code as fool-proof as possible, so the following passes do not fail with exceptions
-    options.get[String]("checker", "init") match {
+    configOptions.get[String]("checker", "init") match {
       case Some(init) => assertDecl("the initialization predicate", init)
 
       case None =>
         throw new IrrecoverablePreprocessingError("Option checker.init not set")
     }
 
-    options.get[String]("checker", "cinit") match {
+    configOptions.get[String]("checker", "cinit") match {
       case Some(cinit) => assertDecl("the constant initialization predicate", cinit)
 
       case None => () // cinit is optional
     }
 
-    options.get[String]("checker", "next") match {
+    configOptions.get[String]("checker", "next") match {
       case Some(next) => assertDecl("the transition predicate", next)
 
       case None =>
         throw new IrrecoverablePreprocessingError("Option checker.next not set")
     }
 
-    options.get[List[String]]("checker", "inv") match {
+    configOptions.get[List[String]]("checker", "inv") match {
       case Some(invs) =>
         invs.foreach(assertDecl("an invariant", _))
 
@@ -203,7 +220,7 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
         () // this is fine, invariants are optional
     }
 
-    options.get[List[String]]("checker", "temporalProps") match {
+    configOptions.get[List[String]]("checker", "temporalProps") match {
       case Some(props) =>
         props.foreach(assertDecl("a temporal property", _))
 
@@ -223,24 +240,26 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
       case None =>
         throw new ConfigurationError(s"$contextName: Operator $specName not found (used as SPECIFICATION)")
 
-        // the canonical form: Init /\ [Next]_vars /\ ...
+        // the canonical form: Init /\ [][Next]_vars /\ ...
       case Some(TlaOperDecl(_, List(),
         OperEx(TlaBoolOper.and,
           // Init
           OperEx(TlaOper.apply, NameEx(init)),
-          // [Next]_vars
-          OperEx(TlaActionOper.stutter,
-            // Next
-            OperEx(TlaOper.apply, NameEx(next)),
-            // vars
+          // [][Next]_vars
+          OperEx(TlaTempOper.box,
+            // [Next]_vars
+            OperEx(TlaActionOper.stutter,
+              // Next
+              OperEx(TlaOper.apply, NameEx(next)),
+              // vars
             _*
-          ), ///
+          )), ///
           _*))) =>
         (init, next)
 
       case Some(d) =>
         logger.error(s"Operator $specName of ${d.formalParams.length} arguments is defined as: " + d.body)
-        val msg = s"$contextName: Expected $specName to be in the canonical form Init /\\ [Next]_vars /\\ ..."
+        val msg = s"$contextName: Expected $specName to be in the canonical form Init /\\ [][Next]_vars /\\ ..."
         throw new ConfigurationError(msg)
     }
   }

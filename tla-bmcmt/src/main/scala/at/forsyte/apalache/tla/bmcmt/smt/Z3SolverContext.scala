@@ -1,8 +1,9 @@
-package at.forsyte.apalache.tla.bmcmt
+package at.forsyte.apalache.tla.bmcmt.smt
 
 import java.io.{File, PrintWriter}
 import java.util.concurrent.atomic.AtomicLong
 
+import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.profiler.{IdleSmtListener, SmtListener}
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FailPredT, IntT}
@@ -30,7 +31,6 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
 
   var level: Int = 0
   var nBoolConsts: Int = 0 // the solver introduces Boolean constants internally
-  var nIntConsts: Int = 0
   private val z3context: Context = new Context()
   private val z3solver = z3context.mkSolver()
   private val simplifier = new ConstSimplifierForSmt()
@@ -55,13 +55,14 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     * Let's cache the constants, if Z3 cannot do it well.
     * Again, the cache carries the context level, to support push and pop.
     */
-  private val constCache: mutable.Map[String, (Expr, CellT, Int)] =
-    new mutable.HashMap[String, (Expr, CellT, Int)]
+  private val cellCache: mutable.Map[Int, (Expr, CellT, Int)] =
+    new mutable.HashMap[Int, (Expr, CellT, Int)]
 
-  val falseConst: String = introBoolConst() // introduce $B$0
-  val trueConst: String = introBoolConst()  // introduce $B$1
-  assertGroundExpr(NameEx(trueConst))
-  assertGroundExpr(OperEx(TlaBoolOper.not, NameEx(falseConst)))
+  /**
+    * A cache for the in-relation between a set and its potential element.
+    */
+  private val inCache: mutable.Map[(Int, Int), (Expr, Int)] =
+    new mutable.HashMap[(Int, Int), (Expr, Int)]
 
   /**
     * Sometimes, we lose a fresh arena in the rewriting rules. As this situation is very hard to debug,
@@ -77,7 +78,8 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
   override def dispose(): Unit = {
     z3context.close()
     logWriter.close()
-    constCache.clear()
+    cellCache.clear()
+    inCache.clear()
     funDecls.clear()
     cellSorts.clear()
   }
@@ -106,7 +108,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     val cellName = cell.toString
     z3context.mkConstDecl(cellName, cellSort)
     val const = z3context.mkConst(cellName, cellSort)
-    constCache += (cellName -> (const, cell.cellType, level))
+    cellCache += (cell.id -> (const, cell.cellType, level))
 
     if (cell.id <= 1) {
       // Either FALSE or TRUE. Enforce its value explicitely
@@ -120,14 +122,28 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
   override def declareInPredIfNeeded(set: ArenaCell, elem: ArenaCell): Unit = {
     val elemT = elem.cellType
     val setT = set.cellType
-    val name = s"in_${elemT.signature}${elem}_${setT.signature}$set"
-    if (!constCache.contains(name)) {
+    val name = s"in_${elemT.signature}${elem.id}_${setT.signature}${set.id}"
+    if (!inCache.contains((set.id, elem.id))) {
       smtListener.onIntroSmtConst(name)
       log(s";; declare edge predicate $name: Bool")
       log(s"(declare-const $name Bool)")
       nBoolConsts += 1
       val const = z3context.mkConst(name, z3context.getBoolSort)
-      constCache += (name -> (const, BoolT(), level))
+      inCache += ((set.id, elem.id) -> (const, level))
+    }
+  }
+
+  private def getInPred(setId: Int, elemId: Int): Expr = {
+    inCache.get((setId, elemId)) match {
+      case None =>
+        val setT = cellCache(setId)._2
+        val elemT = cellCache(elemId)._2
+        val name = s"in_${elemT.signature}${elemId}_${setT.signature}$setId"
+        logWriter.flush() // flush the SMT log
+        throw new IllegalStateException(s"SMT $id: The Boolean constant $name (set membership) is missing from the SMT context")
+
+      case Some((const, _)) =>
+        const
     }
   }
 
@@ -217,60 +233,6 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
   }
 
   /**
-    * Introduce a new Boolean constant.
-    *
-    * @return the name of a new constant
-    */
-  override def introBoolConst(): String = {
-    val name = "%s%d".format(BoolTheory().namePrefix, nBoolConsts)
-    smtListener.onIntroSmtConst(name)
-    log(s";; declare bool $name")
-    log(s"(declare-const $name Bool)")
-    nBoolConsts += 1
-    val const = z3context.mkConst(name, z3context.getBoolSort)
-    constCache += (name -> (const, BoolT(), level))
-    name
-  }
-
-  /**
-    * Get the names of the active Boolean constants (not the cells of type BoolT).
-    * This method is used for debugging purposes and may be slow.
-    *
-    * @return a list of Boolean constant that are active in the current context
-    */
-  override def getBoolConsts: Iterable[String] = {
-    val boolTheory = BoolTheory()
-    constCache.keys filter boolTheory.hasConst
-  }
-
-  /**
-    * Get the names of the active integers constants (not the cells of type BoolT).
-    * This method is used for debugging purposes and may be slow.
-    *
-    * @return a list of int constant that are active in the current context
-    */
-  override def getIntConsts: Iterable[String] = {
-    val intTheory = IntTheory()
-    constCache.keys filter intTheory.hasConst
-  }
-
-  /**
-    * Introduce a new integer constant.
-    *
-    * @return the name of a new constant
-    */
-  override def introIntConst(): String = {
-    val name = "%s%d".format(IntTheory().namePrefix, nIntConsts)
-    smtListener.onIntroSmtConst(name)
-    log(s";; declare int $name")
-    log(s"(declare-const $name Int)")
-    nIntConsts += 1
-    val const = z3context.mkConst(name, z3context.getIntSort)
-    constCache += (name -> (const, IntT(), level))
-    name
-  }
-
-  /**
     * Introduce an uninterpreted function associated with a cell.
     *
     * @param argType    an argument type
@@ -325,7 +287,8 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
       // clean the caches
       cellSorts.retain((_, value) => value._2 <= level)
       funDecls.retain((_, value) => value._2 <= level)
-      constCache.retain((_, value) => value._3 <= level)
+      cellCache.retain((_, value) => value._3 <= level)
+      inCache.retain((_, value) => value._2 <= level)
     }
   }
 
@@ -339,7 +302,8 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
       // clean the caches
       cellSorts.retain((_, value) => value._2 <= level)
       funDecls.retain((_, value) => value._2 <= level)
-      constCache.retain((_, value) => value._3 <= level)
+      cellCache.retain((_, value) => value._3 <= level)
+      inCache.retain((_, value) => value._2 <= level)
     }
   }
 
@@ -413,6 +377,9 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
           case _ =>
             log(s"(declare-sort $sig 0)")
             z3context.mkUninterpretedSort(sig)
+          // In preliminary experiments, the following trick sped up solving by 30%.
+          // TODO: Figure out whether we can always do that.
+//            z3context.mkUninterpretedSort(sig + "_" + level)
         }
 
       cellSorts += (sig -> (newSort, level))
@@ -420,23 +387,10 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     }
   }
 
-  private def getInPred(setName: String, setT: CellT, elemName: String, elemT: CellT): Expr = {
-    val name = s"in_${elemT.signature}${elemName}_${setT.signature}$setName"
-
-    constCache.get(name) match {
-      case None =>
-        val msg = s"Trying to use in($elemName, $setName) while $elemName is not in $setName arena"
-        flushAndThrow(new IllegalStateException(msg))
-
-      case Some((const, _, _)) =>
-        const
-    }
-  }
-
   private def toExpr(ex: TlaEx): Expr = {
-    ex match {
+    simplifier.simplifyShallow(ex) match {
       case NameEx(name) =>
-        constCache(name)._1 // the cached expression
+        cellCache(ArenaCell.idFromName(name))._1 // the cached cell
 
       case ValEx(TlaBool(false)) =>
         z3context.mkFalse()
@@ -460,9 +414,9 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
         toArithExpr(ex)
 
       case OperEx(TlaOper.eq, lhs@NameEx(lname), rhs@NameEx(rname)) =>
-        if (CellTheory().hasConst(lname) && CellTheory().hasConst(rname)) {
+        if (ArenaCell.isValidName(lname) && ArenaCell.isValidName(rname)) {
           // just comparing cells
-          z3context.mkEq(constCache(lname)._1, constCache(rname)._1)
+          z3context.mkEq(cellCache(ArenaCell.idFromName(lname))._1, cellCache(ArenaCell.idFromName(rname))._1)
         } else {
           // comparing integers and Boolean to cells, Booleans to Booleans, and Integers to Integers
           toEqExpr(toExpr(lhs), toExpr(rhs))
@@ -512,9 +466,9 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
         z3context.mkNot(toExpr(OperEx(TlaSetOper.in, elem, set)).asInstanceOf[BoolExpr])
 
       case OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName)) =>
-        val setEntry = constCache(setName)
-        val elemEntry = constCache(elemName)
-        getInPred(setName, setEntry._2, elemName, elemEntry._2)
+        val setId = ArenaCell.idFromName(setName)
+        val elemId = ArenaCell.idFromName(elemName)
+        getInPred(setId, elemId)
 
       // the old implementation allowed us to do that, but the new one is encoding edges directly
     case OperEx(TlaSetOper.in, ValEx(TlaInt(_)), NameEx(_))

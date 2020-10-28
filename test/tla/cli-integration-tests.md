@@ -214,10 +214,10 @@ Checker has found an error
 ...
 ```
 
-#### check y2k with length 20 succeeds
+#### check y2k with length 19 succeeds
 
 ```sh
-$ apalache-mc check --length=20 --inv=Safety y2k_instance.tla | sed 's/I@.*//'
+$ apalache-mc check --length=19 --inv=Safety y2k_instance.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -407,6 +407,19 @@ EXITCODE: ERROR (99)
 [99]
 ```
 
+### check Callback.tla succeeds
+
+`Callback.tla` demonstrates that one can implement non-determinism with
+the existential operator and use a callback to do an assignment to a variable.
+As it requires tricky operator inlining, here is the test.
+
+```sh
+$ apalache-mc check Callback.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
 ### check use of TLA_PATH for modules in child directory succeeds
 
 ```sh
@@ -466,7 +479,7 @@ The outcome is: Error
 ```sh
 $ apalache-mc check --config=Config1.cfg Config.tla | sed 's/[IEW]@.*//'
 ...
-  > Loading TLC configuration from Config1.cfg
+  > Config1.cfg: Loading TLC configuration
 ...
   > Config1.cfg: PROPERTY AwesomeLiveness is ignored. Only INVARIANTS are supported.
 ...
@@ -483,7 +496,7 @@ The outcome is: NoError
 ```sh
 $ apalache-mc check --config=Config1.cfg --init=Init2 --next=Next2 Config.tla | sed 's/[IEW]@.*//'
 ...
-  > Loading TLC configuration from Config1.cfg
+  > Config1.cfg: Loading TLC configuration
 ...
   > Set the initialization predicate to Init2
   > Set the transition predicate to Next2
@@ -498,7 +511,7 @@ The outcome is: Error
 ```sh
 $ apalache-mc check --config=Config3.cfg Config.tla | sed 's/[IE]@.*//'
 ...
-  > Loading TLC configuration from Config3.cfg
+  > Config3.cfg: Loading TLC configuration
 ...
 Configuration error (see the manual): Operator NoLiveness not found (used as a temporal property)
 ...
@@ -510,7 +523,7 @@ EXITCODE: ERROR (99)
 ```sh
 $ apalache-mc check --config=Config2.cfg Config.tla | sed 's/[IEW]@.*//'
 ...
-  > Loading TLC configuration from Config2.cfg
+  > Config2.cfg: Loading TLC configuration
 ...
   > Config2.cfg: Using SPECIFICATION Spec2
 ...
@@ -520,4 +533,14 @@ $ apalache-mc check --config=Config2.cfg Config.tla | sed 's/[IEW]@.*//'
 ...
 The outcome is: NoError
 ...
+```
+
+### configure complains about circular dependencies
+
+```sh
+$ apalache-mc check ConfigUnsorted.tla | sed 's/[IEW]@.*//'
+...
+Configuration error (see the manual): Circular definition dependency detected
+...
+EXITCODE: ERROR (99)
 ```

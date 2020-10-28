@@ -1,22 +1,23 @@
-package at.forsyte.apalache.tla.bmcmt
+package at.forsyte.apalache.tla.bmcmt.smt
 
-import at.forsyte.apalache.tla.bmcmt.PreproSolverContext.{CacheEntry, EqEntry, InEntry}
+import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.caches.SimpleCache
 import at.forsyte.apalache.tla.bmcmt.profiler.SmtListener
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
+import at.forsyte.apalache.tla.bmcmt.smt.PreproSolverContext.{PreproEqEntry, PreproInEntry, PreproCacheEntry}
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
-import at.forsyte.apalache.tla.lir.convenience.tla
 
 object PreproSolverContext {
-  sealed abstract class CacheEntry {
+  sealed abstract class PreproCacheEntry {
     def asTlaEx(negate: Boolean): TlaEx
   }
 
-  case class EqEntry(isEq: Boolean) extends CacheEntry {
+  case class PreproEqEntry(isEq: Boolean) extends PreproCacheEntry {
     override def asTlaEx(negate: Boolean): TlaEx = tla.bool(if (negate) !isEq else isEq)
   }
-  case class InEntry(isIn: Boolean) extends CacheEntry {
+  case class PreproInEntry(isIn: Boolean) extends PreproCacheEntry {
     override def asTlaEx(negate: Boolean): TlaEx = tla.bool(if (negate) !isIn else isIn)
   }
 }
@@ -39,7 +40,7 @@ object PreproSolverContext {
 class PreproSolverContext(context: SolverContext) extends SolverContext {
   private val simplifier = new ConstSimplifierForSmt()
   // FIXME: it would be much better to use cells here, but we do not have access to the arena
-  private val cache: SimpleCache[(String, String), CacheEntry] = new SimpleCache()
+  private val cache: SimpleCache[(String, String), PreproCacheEntry] = new SimpleCache()
 
   /**
     * Assert that a Boolean TLA+ expression holds true.
@@ -48,35 +49,35 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
     */
   override def assertGroundExpr(ex: TlaEx): Unit = {
     // there are plenty of top-level constraints like (= c1 c2) or tla.in(c1, c2)
-    val ppex = simplifier.simplify(preprocess(simplifier.simplify(ex)))
+    val ppex = simplifier.simplifyDeep(preprocess(simplifier.simplifyDeep(ex)))
     ppex match {
       case OperEx(TlaOper.eq, NameEx(left), NameEx(right)) =>
         // eq and not(ne), the latter is transformed by simplifier
-        if (CellTheory().hasConst(left) && CellTheory().hasConst(right)) {
+        if (ArenaCell.isValidName(left) && ArenaCell.isValidName(right)) {
           val pair = if (left.compareTo(right) <= 0) (left, right) else (right, left)
-          cache.put(pair, EqEntry(true))
+          cache.put(pair, PreproEqEntry(true))
           context.log(";;    -> pp eq cached as true ")
         }
 
       case OperEx(TlaOper.ne, NameEx(left), NameEx(right)) =>
         // ne and not(eq), the latter is transformed by simplifier
-        if (CellTheory().hasConst(left) && CellTheory().hasConst(right)) {
+        if (ArenaCell.isValidName(left) && ArenaCell.isValidName(right)) {
           val pair = if (left.compareTo(right) <= 0) (left, right) else (right, left)
-          cache.put(pair, EqEntry(false))
+          cache.put(pair, PreproEqEntry(false))
           context.log(";;    -> pp eq cached as false ")
         }
 
       case OperEx(TlaSetOper.in, NameEx(left), NameEx(right)) =>
         // in and not(notin), the latter is transformed by simplifier
-        if (CellTheory().hasConst(left) && CellTheory().hasConst(right)) {
-          cache.put((left, right), InEntry(true))
+        if (ArenaCell.isValidName(left) && ArenaCell.isValidName(right)) {
+          cache.put((left, right), PreproInEntry(true))
           context.log(";;    -> pp in cached as true ")
         }
 
       case OperEx(TlaSetOper.notin, NameEx(left), NameEx(right)) =>
         // notin and not(in), the latter is transformed by simplifier
-        if (CellTheory().hasConst(left) && CellTheory().hasConst(right)) {
-          cache.put((left, right), InEntry(false))
+        if (ArenaCell.isValidName(left) && ArenaCell.isValidName(right)) {
+          cache.put((left, right), PreproInEntry(false))
           context.log(";;    -> pp in cached as false ")
         }
 
@@ -168,46 +169,6 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
     * @param arena an arena
     */
   override def checkConsistency(arena: Arena): Unit = context.checkConsistency(arena)
-
-  /**
-    * Introduce a new Boolean constant.
-    *
-    * @return the name of a new constant
-    */
-  override def introBoolConst(): String = context.introBoolConst()
-
-  /**
-    * Get the names of the active Boolean constants (not the cells of type BoolT).
-    * This method is used for debugging purposes and may be slow.
-    *
-    * @return a list of Boolean constant that are active in the current context
-    */
-  override def getBoolConsts: Iterable[String] = context.getBoolConsts
-
-  /**
-    * Get the names of the active integer constants (not the cells of type IntT).
-    * This method is used for debugging purposes and may be slow.
-    *
-    * @return a list of integer constants that are active in the current context
-    */
-  def getIntConsts: Iterable[String] = context.getIntConsts
-
-  /**
-    * Introduce a new integer constant.
-    *
-    * @return the name of a new constant
-    */
-  override def introIntConst(): String = context.introIntConst()
-
-  /**
-    * Introduce an uninterpreted function associated with a cell.
-    *
-    * @param domainType a type of the domain
-    * @param resultType a type of the result
-    * @return the name of the new function (declared in SMT)
-    */
-  override def declareCellFun(cellName: String, domainType: types.CellT, resultType: types.CellT): Unit =
-    context.declareCellFun(cellName, domainType, resultType)
 
   /**
     * Write a message to the log file. This is helpful to debug the SMT encoding.

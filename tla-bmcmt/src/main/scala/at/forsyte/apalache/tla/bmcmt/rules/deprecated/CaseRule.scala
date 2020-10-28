@@ -32,13 +32,12 @@ class CaseRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // similar to TLC, translate into the chain of IF-THEN-ELSE
         val revGuardsAndActions = mkGuardsAndActions(args)
         val iteWaterfall = revGuardsAndActions.foldLeft(otherEx)(decorateWithIf)
-        val finalState = rewriter.rewriteUntilDone(state.setRex(iteWaterfall))
-        rewriter.coerce(finalState, state.theory)
+        rewriter.rewriteUntilDone(state.setRex(iteWaterfall))
 
       case OperEx(TlaControlOper.caseNoOther, args @ _*) =>
         // first, rewrite all the arguments
         val (newState: SymbState, newArgs: Seq[TlaEx]) =
-          rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), args)
+          rewriter.rewriteSeqUntilDone(state, args)
         val revGuardsAndActions = mkGuardsAndActions(newArgs)
         val cells = newArgs.map(newState.arena.findCellByNameEx)
         // get the expression type from the type finder (use the original expression as it could have been annotated!)
@@ -48,8 +47,7 @@ class CaseRule(rewriter: SymbStateRewriter) extends RewritingRule {
           .typedAssert(newState, resultType, tla.bool(false),
             "It may happen that no guard in CASE is applicable")
         val iteWaterfall = revGuardsAndActions.foldLeft(assertState.ex)(decorateWithIf)
-        val finalState = rewriter.rewriteUntilDone(assertState.setRex(iteWaterfall))
-        rewriter.coerce(finalState, state.theory)
+        rewriter.rewriteUntilDone(assertState.setRex(iteWaterfall))
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)

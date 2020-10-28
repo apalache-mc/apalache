@@ -1,17 +1,23 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
 import scala.collection.immutable.HashMap
 
 object Arena {
-  val falseName: String = CellTheory().namePrefix + "0"
-  val trueName: String = CellTheory().namePrefix + "1"
-  val booleanSetName: String = CellTheory().namePrefix + "2"
-  val natSetName: String = CellTheory().namePrefix + "3"
-  val intSetName: String = CellTheory().namePrefix + "4"
+  /**
+    * The prefix of all cells.
+    */
+  val namePrefix = "$C$"
+
+  val falseName: String = namePrefix + "0"
+  val trueName: String = namePrefix + "1"
+  val booleanSetName: String = namePrefix + "2"
+  val natSetName: String = namePrefix + "3"
+  val intSetName: String = namePrefix + "4"
 
   def create(solverContext: SolverContext): Arena = {
     var arena = new Arena(solverContext, 0,
@@ -51,20 +57,27 @@ object Arena {
 }
 
 /**
-  * A memory arena represents a memory layout. The arena is dynamically populated, when new objects are created.
+  * <p>A memory arena represents a memory layout. The arena is dynamically populated, when new objects are created.
   * Currently, an arena is a directed acyclic graph, where edges are pointing from a container object
-  * to the associated cells, e.g., a set cell points to the cells that store its elements.
+  * to the associated cells, e.g., a set cell points to the cells that store its elements.</p>
+  *
+  * <p>Do not use solverContext, as it is going to be removed in the future.</p>
   *
   * @author Igor Konnov
   */
 class Arena private(val solverContext: SolverContext,
-                    val cellCount: Int, val topCell: ArenaCell,
+                    val cellCount: Int,
+                    val topCell: ArenaCell,
                     val cellMap: Map[String, ArenaCell],
                     private val hasEdges: Map[ArenaCell, List[ArenaCell]],
                     private val domEdges: Map[ArenaCell, ArenaCell],
-                    private val cdmEdges: Map[ArenaCell, ArenaCell]
-                   ) {
+                    private val cdmEdges: Map[ArenaCell, ArenaCell]) extends Serializable {
   // TODO: remove solverContext from Arena!
+  def setSolver(newSolverContext: SolverContext): Arena = {
+    // this is a temporary solution
+    new Arena(newSolverContext, cellCount, topCell, cellMap, hasEdges, domEdges, cdmEdges)
+  }
+
   /**
     * A fixed cell that equals to false in the Boolean theory.
     * @return the false cell
@@ -125,7 +138,14 @@ class Arena private(val solverContext: SolverContext,
     * @throws NoSuchElementException when no cell is found
     */
   def findCellByNameEx(nameEx: TlaEx): ArenaCell = {
-    cellMap(CellTheory().nameExToString(nameEx))
+    nameEx match {
+      case NameEx(name) if ArenaCell.isValidName(name) =>
+        cellMap(name)
+
+      case _ =>
+        throw new CheckerException("Expected NameEx with a cell name, found: %s".format(nameEx), nameEx)
+    }
+
   }
 
   /**

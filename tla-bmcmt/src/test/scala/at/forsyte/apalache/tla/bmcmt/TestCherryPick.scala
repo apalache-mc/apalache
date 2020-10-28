@@ -32,7 +32,7 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
 
   test("""CHERRY-PICK {1, 2, 2} ~~> $B$k""") {
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), CellTheory(), arena, new Binding)
+    var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 3)
     state = oracleState
@@ -58,7 +58,7 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
 
   test("""CHERRY-PICK {<<1, 2>>, <<3, 4>>} ~~> $B$k""") {
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), CellTheory(), arena, new Binding)
+    var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
@@ -79,7 +79,7 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
 
   test("""CHERRY-PICK {<<1, <<2, 3>> >>, <<3, <<4, 5>> >>} ~~> $B$k""") {
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), CellTheory(), arena, new Binding)
+    var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
@@ -100,7 +100,7 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
 
   test("""CHERRY-PICK-SEQ {<<1, 2>>, <<3, 4>>}""") {
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), CellTheory(), arena, new Binding)
+    var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
@@ -122,7 +122,7 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
 
   test("""CHERRY-PICK {[a |-> 1, b |-> 2], [a |-> 3, b |-> 4]} ~~> $B$k""") {
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), CellTheory(), arena, new Binding)
+    var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
@@ -142,7 +142,7 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
 
   test("""CHERRY-PICK { {1, 2}, {3, 4} } ~~> $B$k""") {
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), CellTheory(), arena, new Binding)
+    var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
@@ -162,7 +162,7 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
 
   test("""CHERRY-PICK { {1, 2}, {} }""") {
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), CellTheory(), arena, new Binding)
+    var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
@@ -182,7 +182,7 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
 
   test("""CHERRY-PICK { {} } ~~> $B$k""") {
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), CellTheory(), arena, new Binding)
+    var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
@@ -201,7 +201,7 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
 
   test("""CHERRY-PICK { {{1, 2}, {3, 4}}, {{5, 6}} }""") {
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), CellTheory(), arena, new Binding)
+    var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
@@ -223,7 +223,7 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
 
   test("""CHERRY-PICK { [x \in {1, 2} |-> 2 + x], [x \in {2, 3} |-> 2 * x] } ~~> $B$k""") {
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), CellTheory(), arena, new Binding)
+    var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState

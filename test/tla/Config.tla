@@ -29,10 +29,10 @@ Next2 ==
     x' = x + 2
 
 Spec ==
-    Init /\ [Next]_x
+    Init /\ [][Next]_x
 
 Spec2 ==
-    Init2 /\ [Next2]_x
+    Init2 /\ [][Next2]_x
 
 \* the default invariant
 Inv ==

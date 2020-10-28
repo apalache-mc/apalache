@@ -1,7 +1,15 @@
 ## Unreleased #unstable
 
  * correct translation of chained substitutions in INSTANCEs, see #143
- * better diagnostics for the recursive operators, see #272 
+ * friendly messages for unexpected expressions, see #303
+ * better operator inlining, see #283
+ * support for standard modules that are instantiated with LOCAL INSTANCE, see #295
+ * support for LAMBDAs, see #285 and #289
+ * bugfix in treatment of recursive operators, see #273
+ * no theories in the model checker due to types, see #22
+ * operators and checker caches made Serializable
+ * better diagnostics for the recursive operators, see #272
+ * verbose output for the config parser, see #266 
  * Use a staged docker build, reducing container size ~70%, see #195
  * Use [Z3-TurnKey](https://github.com/tudo-aqua/z3-turnkey) instead of a
    bespoke Z3 build, see #219

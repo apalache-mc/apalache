@@ -41,12 +41,15 @@ class OpApplTranslator(sourceStore: SourceStore, val context: Context, val recSt
       val oper = node.getOperator
       // non-constant operators
       oper.getKind match {
+          // an operator that is at the core of TLA+, e.g., { 1 }, \A x \in S: e
         case ASTConstants.BuiltInKind =>
           translateBuiltin(node)
 
+          // an operator parameter that must be an operator itself
         case ASTConstants.FormalParamKind =>
           translateFormalParam(node)
 
+          // either a user-defined operator or an operator from the standard library, e.g., Sequences
         case ASTConstants.UserDefinedOpKind =>
           translateUserOperator(node)
 
@@ -58,13 +61,66 @@ class OpApplTranslator(sourceStore: SourceStore, val context: Context, val recSt
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  // call to a user-defined operator, either a LOCAL one, or not
-  private def translateUserOperator(node: OpApplNode) = {
-    if (node.getOperator.isLocal) {
-      translateLocalOperator(node)
+  // call to a user-defined operator (may come from the standard library), either a LOCAL one, or not
+  private def translateUserOperator(applyNode: OpApplNode) = {
+    if (!applyNode.getOperator.isLocal) {
+      translateNonLocalUserOperator(applyNode)
     } else {
-      translateNonLocalUserOperator(node)
+      // issue 295: https://github.com/informalsystems/apalache/issues/295
+      // LOCAL operators may originate from the standard library :face_palm
+      // For instance, if the user writes LOCAL INSTANCE Sequences
+      applyNode.getOperator match {
+        case opdef: OpDefNode =>
+          // translate as an application of a standard library operator
+          translateLocalLibraryOperatorOrValue(opdef, applyNode)
+            .getOrElse {
+              // or as an application of a local user-defined operator
+              translateLocalOperator(opdef, applyNode)
+            }
+
+        case _ =>
+          val msg = "Expected a LOCAL operator defined with OpDefNode, found: " + applyNode.getOperator.getClass
+          throw new SanyImporterException(msg)
+      }
     }
+  }
+
+  // call an operator or a value (e.g., Sequences!Append or Integers!Int) from a standard module
+  // that is instantiated with LOCAL INSTANCE
+  private def translateLocalLibraryOperatorOrValue(opdef: OpDefNode, applyNode: OpApplNode): Option[TlaEx] = {
+    val source = opdef.getSource
+    if (source == null || source.getOriginallyDefinedInModuleNode == null) {
+      None
+    } else {
+      val operatorName = source.getName.toString
+      // the original module, in which the operator is defined
+      val modName = source.getOriginallyDefinedInModuleNode.getName.toString
+      StandardLibrary.libraryOperators.get((modName, operatorName)).map {
+            // a library operator
+        tlaOper =>
+          val exTran = ExprOrOpArgNodeTranslator(sourceStore, context, recStatus)
+          val args = applyNode.getArgs.toList.map { p => exTran.translate(p) }
+          OperEx(tlaOper, args: _*)
+      }.orElse {
+            // a library value
+        StandardLibrary.libraryValues.get((modName, operatorName)).map(ValEx)
+      }
+    }
+  }
+
+  // call a user-defined operator that is defined locally
+  private def translateLocalOperator(opdef: OpDefNode, node: OpApplNode): TlaEx = {
+    // Since we do not know the original location of the local operator,
+    // we can only re-define it with a LET-IN expression
+    // translate the declaration of the LOCAL operator
+    val decl = OpDefTranslator(sourceStore, context).translate(opdef)
+    // translate its arguments
+    val exTran = ExprOrOpArgNodeTranslator(sourceStore, context, recStatus)
+    val args = node.getArgs.toList.map { p => exTran.translate(p) }
+    // apply the operator by its name
+    val app = OperEx(TlaOper.apply, NameEx(decl.name) +: args: _*)
+    // return the expression LET F(..) = .. IN F(args)
+    LetInEx(app, decl)
   }
 
   // call a user-defined operator that is not defined with LOCAL
@@ -106,28 +162,6 @@ class OpApplTranslator(sourceStore: SourceStore, val context: Context, val recSt
       }
     } else {
       translateNonRec()
-    }
-  }
-
-  // call a user-defined operator that is defined locally
-  private def translateLocalOperator(node: OpApplNode): TlaEx = {
-    /* Since we do not know the original location of the local operator,
-       we can only re-define it with a LET-IN expression */
-    node.getOperator match {
-      case opdef: OpDefNode =>
-        // translate the declaration of the LOCAL operator
-        val decl = OpDefTranslator(sourceStore, context).translate(opdef)
-        // translate its arguments
-        val exTran = ExprOrOpArgNodeTranslator(sourceStore, context, recStatus)
-        val args = node.getArgs.toList.map { p => exTran.translate(p) }
-        // apply the operator by its name
-        val app = OperEx(TlaOper.apply, NameEx(decl.name) +: args: _*)
-        // return the expression LET F(..) = .. IN F(args)
-        LetInEx(app, decl)
-
-      case _ =>
-        val msg = "Expected a LOCAL operator defined with OpDefNode, found: " + node.getOperator.getClass
-        throw new SanyImporterException(msg)
     }
   }
 
@@ -417,14 +451,17 @@ class OpApplTranslator(sourceStore: SourceStore, val context: Context, val recSt
   private def mkExceptBuiltin(node: OpApplNode): TlaEx = {
     val exTran = ExprOrOpArgNodeTranslator(sourceStore, context, recStatus)
     node.getArgs.toList match {
-      case (fnode: OpApplNode) :: pairNodes =>
+      case (fnode: ExprNode) :: pairNodes =>
+        // For instance, [f EXCEPT ![e1] = e2, ![e3] = e4] or [@ EXCEPT ![e1] = e2, ![e3] = e4]
+        // First, translate the expression that encodes the function to be updated.
         val fun = exTran.translate(fnode)
+        // Second, translate the expressions that encode the update pairs (e1, e2), (e3, e4), etc.
         // Note that -- as in TLA tools -- the updated indices are represented with sequences (i.e., tuples),
-        // in order to support multidimensional arrays
+        // in order to support multidimensional arrays.
         OperEx(TlaFunOper.except, fun +: unpackPairs(exTran)(pairNodes): _*)
 
       case _ =>
-        throw new SanyImporterException("Unexpected structure of EXCEPT")
+        throw new SanyImporterException("Unexpected structure of EXCEPT: " + node)
     }
   }
 }

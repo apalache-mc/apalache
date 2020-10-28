@@ -865,6 +865,7 @@ class TestSanyImporter extends FunSuite {
         |E1 == [ f EXCEPT ![0] = 1, ![2] = 3 ]
         |E2 == [ f EXCEPT ![0][1][2] = 3 ]
         |E3 == [ f EXCEPT ![0,1,2] = 3 ]
+        |E4 == [ f EXCEPT ![0] = [@ EXCEPT !.state = 4] ]
         |================================
         |""".stripMargin
 
@@ -894,28 +895,23 @@ class TestSanyImporter extends FunSuite {
       )
     ) (mod.declarations(2))
 
-    /* // the old test when Desugarer was part of SanyImporter
-    expectDecl("E2",
-      OperEx(TlaFunOper.except,
-        NameEx("f"),
-        TlaFunOper.mkTuple(ValEx(TlaInt(0))),
-        OperEx(TlaFunOper.except,
-          OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaInt(0))),
-          TlaFunOper.mkTuple(ValEx(TlaInt(1))),
-          OperEx(TlaFunOper.except,
-            OperEx(TlaFunOper.app, OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaInt(0))), ValEx(TlaInt(1))),
-            TlaFunOper.mkTuple(ValEx(TlaInt(2))),
-            ValEx(TlaInt(3)))
-        )//
-      ))(mod.declarations(2))
-      */
-
     expectDecl("E3",
       OperEx(TlaFunOper.except,
         NameEx("f"),
         TlaFunOper.mkTuple(TlaFunOper.mkTuple(ValEx(TlaInt(0)), ValEx(TlaInt(1)), ValEx(TlaInt(2)))),
         ValEx(TlaInt(3))
       ))(mod.declarations(3))
+
+    // using @ in EXCEPT: https://github.com/informalsystems/apalache/issues/286
+    expectDecl("E4",
+      OperEx(TlaFunOper.except,
+        NameEx("f"),
+        TlaFunOper.mkTuple(ValEx(TlaInt(0))),
+        OperEx(TlaFunOper.except,
+          OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaInt(0))), // this is the equivalent of @
+          TlaFunOper.mkTuple(ValEx(TlaStr("state"))),
+          ValEx(TlaInt(4)))
+      ))(mod.declarations(4))
   }
 
   test("complex record selects") {
@@ -1075,7 +1071,7 @@ class TestSanyImporter extends FunSuite {
       """---- MODULE level2Operators ----
         |VARIABLE x, y
         |A(i, j, f(_)) == f(i \cup j)
-        |B(z) == z
+        |B(z) == {z}
         |C == A(0, 1, B)
         |================================
         |""".stripMargin
@@ -1142,6 +1138,39 @@ class TestSanyImporter extends FunSuite {
         assert(locationStore.contains(xDecl.body.ID)) // and source file information has been saved
     }
   }
+
+  test("LAMBDA") {
+    val text =
+      """---- MODULE lambda ----
+        |A(F(_), x) == F(x)
+        |B(y) ==
+        |  A(LAMBDA x: x = 1, 2)
+        |================================
+        |""".stripMargin
+
+    val locationStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(locationStore)
+      .loadFromSource("lambda", Source.fromString(text))
+    assert(1 == modules.size)
+    // the root module and naturals
+    val root = modules(rootName)
+
+    root.declarations.find {
+      _.name == "B"
+    } collect {
+      case TlaOperDecl(_, _, OperEx(TlaOper.apply, NameEx("A"), lambda, ValEx(TlaInt(i)))) =>
+        lambda match {
+          case LetInEx(NameEx("LAMBDA"),
+              TlaOperDecl("LAMBDA", List(SimpleFormalParam("x")),
+                OperEx(TlaOper.eq, NameEx("x"), ValEx(TlaInt(_))))) =>
+            // ok
+
+          case _ => fail("expected a LET-IN definition of LAMBDA and its usage by name")
+        }
+
+      case _ => fail("expected A")
+    }
+   }
 
   // LET-IN with recursive operators
   test("let-in-rec") {
@@ -2094,7 +2123,7 @@ class TestSanyImporter extends FunSuite {
         |  /\ AssumeType(x, "Int")
         |  /\ AssumeType(S, "Set(Int)")
         |
-        |Foo(y) == "(Int) -> Set(Int)" :> {y}
+        |Foo(y) == "(Int) -> Set(Int)" ## {y}
         |================================
       """.stripMargin
 
@@ -2189,6 +2218,61 @@ class TestSanyImporter extends FunSuite {
       case d => fail("unexpected declaration: " + d)
     }
   }
+
+  test("operators of local instances of the standard modules") {
+    // Issue #295: the built-in operators are not eliminated when using LOCAL INSTANCE
+    val text =
+      """---- MODULE issue295 ----
+        |---- MODULE A ----
+        |LOCAL INSTANCE Sequences
+        |A == Append(<<>>, {})
+        |==================
+        |INSTANCE A
+        |================================
+        |""".stripMargin
+
+    val locationStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(locationStore)
+      .loadFromSource("issue295", Source.fromString(text))
+    // the root module and naturals
+    val root = modules(rootName)
+    // the definitions of the standard operators are filtered out
+    assert(1 == root.declarations.size)
+    root.declarations(0) match {
+      case TlaOperDecl("A", _, body) =>
+        assert(append(tuple(), enumSet()) == body)
+
+      case d => fail("unexpected declaration: " + d)
+    }
+  }
+
+  test("values of local instances of the standard modules") {
+    // Issue #295: the built-in operators are not eliminated when using LOCAL INSTANCE
+    val text =
+      """---- MODULE issue295 ----
+        |---- MODULE A ----
+        |LOCAL INSTANCE Integers
+        |A == Int
+        |==================
+        |INSTANCE A
+        |================================
+        |""".stripMargin
+
+    val locationStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(locationStore)
+      .loadFromSource("issue295", Source.fromString(text))
+    // the root module and naturals
+    val root = modules(rootName)
+    // the definitions of the standard operators are filtered out
+    assert(1 == root.declarations.size)
+    root.declarations(0) match {
+      case TlaOperDecl("A", _, body) =>
+        assert(ValEx(TlaIntSet) == body)
+
+      case d => fail("unexpected declaration: " + d)
+    }
+  }
+
 
   test("ignore theorems") {
     // this proof is a garbage, just to check, whether the translator works

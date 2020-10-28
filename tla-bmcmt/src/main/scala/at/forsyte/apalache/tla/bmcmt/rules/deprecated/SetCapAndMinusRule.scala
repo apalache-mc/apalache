@@ -28,12 +28,10 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case OperEx(TlaSetOper.cap, leftSet, rightSet) =>
-        val finalState: SymbState = intersectOrDiff(OpEnum.CAP, state, leftSet, rightSet)
-        rewriter.coerce(finalState, state.theory) // coerce to the source theory
+        intersectOrDiff(OpEnum.CAP, state, leftSet, rightSet)
 
       case OperEx(TlaSetOper.setminus, leftSet, rightSet) =>
-        val finalState: SymbState = intersectOrDiff(OpEnum.MINUS, state, leftSet, rightSet)
-        rewriter.coerce(finalState, state.theory) // coerce to the source theory
+        intersectOrDiff(OpEnum.MINUS, state, leftSet, rightSet)
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
@@ -41,9 +39,9 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   private def intersectOrDiff(op: OpEnum.Value, state: SymbState, leftSet: TlaEx, rightSet: TlaEx): SymbState = {
-    var newState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(leftSet))
+    var newState = rewriter.rewriteUntilDone(state.setRex(leftSet))
     val leftSetCell = newState.asCell
-    newState = rewriter.rewriteUntilDone(newState.setTheory(CellTheory()).setRex(rightSet))
+    newState = rewriter.rewriteUntilDone(newState.setRex(rightSet))
     val rightSetCell = newState.asCell
     val leftElemCells = newState.arena.getHas(leftSetCell)
     val rightElemCells = newState.arena.getHas(rightSetCell)
@@ -100,7 +98,7 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
       }
 
     // that's it
-    newState.setTheory(CellTheory()).setRex(resultSetCell.toNameEx)
+    newState.setRex(resultSetCell.toNameEx)
   }
 
   private def in(e: ArenaCell, s: ArenaCell) = OperEx(TlaSetOper.in, e.toNameEx, s.toNameEx)

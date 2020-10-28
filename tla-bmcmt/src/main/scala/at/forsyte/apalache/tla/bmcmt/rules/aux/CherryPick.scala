@@ -196,7 +196,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     newState
       .setArena(newArena)
       .setRex(newTuple.toNameEx)
-      .setTheory(CellTheory())
+
   }
 
   /**
@@ -247,7 +247,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     rewriter.solverContext.log(s"; } CHERRY-PICK $newRecord:$cellType")
 
     newState.setArena(newArena)
-      .setTheory(CellTheory())
+
       .setRex(newRecord.toNameEx)
   }
 
@@ -291,7 +291,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
         val keysMatch = tla.and(keyCells map iffKey: _*)
         rewriter.solverContext.assertGroundExpr(tla.impl(oracle.whenEqualTo(nextState, no), keysMatch))
       }
-      nextState.setRex(newDom).setTheory(CellTheory())
+      nextState.setRex(newDom)
     }
   }
 
@@ -507,7 +507,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     val newArena = nextState.arena.setCdm(funCell, pickedRelation)
     rewriter.solverContext.log(s"; } CHERRY-PICK $funCell:$funType")
     // That's it! Compare to pickFunPreWarp.
-    nextState.setArena(newArena).setRex(funCell).setTheory(CellTheory())
+    nextState.setArena(newArena).setRex(funCell)
   }
 
   /**
@@ -599,6 +599,6 @@ class CherryPick(rewriter: SymbStateRewriter) {
     if (set == state.arena.cellNatSet()) {
       rewriter.solverContext.assertGroundExpr(tla.ge(intCell.toNameEx, tla.int(0)))
     }
-    nextState.setRex(intCell).setTheory(CellTheory())
+    nextState.setRex(intCell)
   }
 }

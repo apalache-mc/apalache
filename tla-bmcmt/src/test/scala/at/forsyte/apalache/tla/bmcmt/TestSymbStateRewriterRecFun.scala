@@ -25,7 +25,7 @@ class TestSymbStateRewriterRecFun extends RewriterBase with TestingPredefs {
     val fun = recFunDef(map, tla.name("n"), set)
 
     val rewriter = create()
-    var state = rewriter.rewriteUntilDone(new SymbState(fun, CellTheory(), arena, new Binding))
+    var state = rewriter.rewriteUntilDone(new SymbState(fun, arena, Binding()))
     val funCell = state.ex
 
     def resEq(i: Int, j: Int) = eql(int(j), appFun(funCell, int(i)))

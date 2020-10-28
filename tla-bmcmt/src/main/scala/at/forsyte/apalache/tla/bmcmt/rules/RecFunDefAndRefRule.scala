@@ -35,7 +35,7 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case OperEx(TlaFunOper.recFunRef) =>
         val name = TlaFunOper.recFunRef.uniqueName
         if (state.binding.contains(name)) {
-          state.setRex(state.binding(name)).setTheory(CellTheory())
+          state.setRex(state.binding(name))
         } else {
           throw new RewriterException("Referencing a recursive function that is undefined", state.ex)
         }
@@ -48,7 +48,7 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   private def rewriteFunCtor(state: SymbState, mapEx: TlaEx, varName: String, setEx: TlaEx) = {
     // rewrite the set expression into a memory cell
-    var nextState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(setEx))
+    var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
     val domainCell = nextState.asCell
     val elemT = domainCell.cellType match {
       case FinSetT(et) => et
@@ -76,13 +76,14 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // pick a function from the function set
     nextState = pick.pickFunFromFunSet(funT, funSetCell, nextState)
     val funCell = nextState.asCell
-    nextState = nextState.setBinding(nextState.binding + (TlaFunOper.recFunRef.uniqueName -> funCell))
+    nextState = nextState.setBinding(new Binding(nextState.binding.toMap + (TlaFunOper.recFunRef.uniqueName -> funCell)))
     // for every element of the domain, add the constraint imposed by the definition
     val domainCells = nextState.arena.getHas(domainCell)
     for (elem <- domainCells) {
       val oldBinding = nextState.binding
       // compute the right-hand side of the constraint by the recursive function
-      nextState = rewriter.rewriteUntilDone(nextState.setRex(mapEx).setBinding(oldBinding + (varName -> elem)))
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(mapEx)
+        .setBinding(new Binding(oldBinding.toMap + (varName -> elem))))
       val rhs = nextState.asCell
       // Compute the left-hand side of the constraint, that is, f[elem].
       nextState = nextState.setBinding(oldBinding)
@@ -94,9 +95,7 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
 
     // that's it
-    val finalState = nextState.setRex(funCell.toNameEx)
-      .setBinding(nextState.binding - TlaFunOper.recFunRef.uniqueName)
-      .setTheory(CellTheory())
-    rewriter.coerce(finalState, state.theory)
+    nextState.setRex(funCell.toNameEx)
+      .setBinding(new Binding(nextState.binding.toMap - TlaFunOper.recFunRef.uniqueName))
   }
 }

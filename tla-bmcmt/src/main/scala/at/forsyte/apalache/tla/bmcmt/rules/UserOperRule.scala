@@ -28,8 +28,7 @@ class UserOperRule(rewriter: SymbStateRewriter) extends RewritingRule {
         throw new RewriterException(s"Operator $operName not found", state.ex)
       }
 
-      val finalState = state.setRex(state.binding(boundName).toNameEx)
-      rewriter.coerce(finalState, state.theory)
+      state.setRex(state.binding(boundName).toNameEx)
 
     case _ =>
       throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
