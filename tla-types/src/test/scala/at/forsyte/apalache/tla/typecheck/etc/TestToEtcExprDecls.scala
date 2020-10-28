@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.TypingOper
+import at.forsyte.apalache.tla.lir.oper.{TypingOper, TlaBoolOper}
 import at.forsyte.apalache.tla.typecheck._
 import at.forsyte.apalache.tla.typecheck.parser.DefaultType1Parser
 import org.junit.runner.RunWith
@@ -69,6 +69,20 @@ class TestToEtcExprDecls extends FunSuite with BeforeAndAfterEach with EtcBuilde
     // Translate the declaration of positive.
     // We have to pass the next expression in scope, which is just TRUE in this case.
     assert(expected == gen(typeAssumptions, mkUniqConst(BoolT1())))
+  }
+
+  test("invalid declarations in TypeAssumptions") {
+    // translating the invalid TypeAssumption declaration
+    // TypeAssumptions ==
+    //   /\ AssumeType(x, "Int")
+    //   /\ x <=> x  (* Invalid: should trigger error *)
+    val assumeX = OperEx(TypingOper.assumeType, NameEx("x"), tla.str("Int"))
+    val xEquivX = OperEx(TlaBoolOper.equiv, NameEx("x"), NameEx("x"))
+    val typeAssumptions = tla.declOp("TypeAssumptions", tla.and(assumeX, xEquivX))
+
+    val exn = intercept[TypingInputException](gen(typeAssumptions, mkUniqConst(BoolT1())))
+    // Ensure that the problematic expression is reported in the error
+    assert(exn.getMessage.contains(xEquivX.toString))
   }
 
 }

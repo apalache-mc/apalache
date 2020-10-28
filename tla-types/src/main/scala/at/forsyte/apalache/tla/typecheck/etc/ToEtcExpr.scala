@@ -85,31 +85,25 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
     decl.body match {
       case OperEx(TlaBoolOper.and, args @ _*) =>
         val annotations =
-          args.collect {
-            case OperEx(
-                  TypingOper.assumeType,
-                  NameEx(name),
-                  ValEx(TlaStr(typeText))
-                ) =>
+          args.map {
+            case OperEx(TypingOper.assumeType, NameEx(name), ValEx(TlaStr(typeText))) =>
               (name, typeText)
+            case invalidEx =>
+              throw new TypingInputException(
+                s"""Error in ${decl.name}: Expected AssumeType(varName, "typeString") found ${invalidEx}"""
+              )
           }
-        if (annotations.length != args.length) {
-          throw new TypingInputException(
-            s"""Error in ${decl.name}: Expected AssumeType(varName, "typeString")"""
-          )
-        } else {
-          annotations.foldRight(inScopeEx) {
-            case ((name, typeText), terminal) =>
-              try {
-                val tt = renameVars(type1Parser(typeText))
-                mkTypeDecl(ExactRef(decl.body.ID), name, tt, terminal)
-              } catch {
-                case e: Type1ParseError =>
-                  throw new TypingInputException(
-                    s"Parser error in type annotation of $name: ${e.msg}"
-                  )
-              }
-          }
+        annotations.foldRight(inScopeEx) {
+          case ((name, typeText), terminal) =>
+            try {
+              val tt = renameVars(type1Parser(typeText))
+              mkTypeDecl(ExactRef(decl.body.ID), name, tt, terminal)
+            } catch {
+              case e: Type1ParseError =>
+                throw new TypingInputException(
+                  s"Parser error in type annotation of $name: ${e.msg}"
+                )
+            }
         }
 
       case _ =>
