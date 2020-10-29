@@ -113,49 +113,27 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
     }
   }
 
+  private val typeOfLiteralExpr: TlaValue => TlaType1 = {
+    case TlaInt(_)  => IntT1()
+    case TlaBool(_) => BoolT1()
+    case TlaStr(_)  => StrT1()
+    case TlaReal()  => RealT1()
+    case TlaIntSet  => SetT1(IntT1())
+    case TlaNatSet  => SetT1(IntT1())
+    case TlaRealSet => SetT1(RealT1())
+    case TlaBoolSet => SetT1(BoolT1())
+    case TlaStrSet  => SetT1(StrT1())
+  }
+
   // TODO: a long string of translation rules. Can we decompose it?
-  def apply(ex: TlaEx): EtcExpr =
+  def apply(ex: TlaEx): EtcExpr = {
+    val ref = ExactRef(ex.ID)
     ex match {
       case NameEx(name) =>
         // x becomes x
         mkName(ExactRef(ex.ID), name)
 
-      //*********************************************** LITERALS **************************************************
-      case ValEx(TlaInt(_)) =>
-        // an integer literal becomes IntT1
-        mkConst(ExactRef(ex.ID), IntT1())
-
-      case ValEx(TlaBool(_)) =>
-        // a Boolean literal becomes BoolT1
-        mkConst(ExactRef(ex.ID), BoolT1())
-
-      case ValEx(TlaStr(_)) =>
-        // a string literal becomes StrT1
-        mkConst(ExactRef(ex.ID), StrT1())
-
-      case ValEx(TlaReal()) =>
-        // a real literal becomes RealT1
-        mkConst(ExactRef(ex.ID), RealT1())
-
-      case ValEx(TlaIntSet) =>
-        // the set of all integers is SetT1(IntT1)
-        mkConst(ExactRef(ex.ID), SetT1(IntT1()))
-
-      case ValEx(TlaNatSet) =>
-        // the set of all naturals is SetT1(IntT1)
-        mkConst(ExactRef(ex.ID), SetT1(IntT1()))
-
-      case ValEx(TlaRealSet) =>
-        // the set of all reals is SetT1(RealT1)
-        mkConst(ExactRef(ex.ID), SetT1(RealT1()))
-
-      case ValEx(TlaBoolSet) =>
-        // the set of all Booleans is SetT1(BoolT1)
-        mkConst(ExactRef(ex.ID), SetT1(BoolT1()))
-
-      case ValEx(TlaStrSet) =>
-        // the set of all strings is SetT1(StrT1)
-        mkConst(ExactRef(ex.ID), SetT1(StrT1()))
+      case ValEx(v) => mkConst(ref, typeOfLiteralExpr(v))
 
       //**************************************** EMPTY SETS AND SEQUENCES ***********************************************
       case OperEx(TypingOper.emptySet, ValEx(TlaStr(elemTypeText))) =>
@@ -766,6 +744,7 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
         val a = varPool.fresh
         mkConst(ExactRef(ex.ID), a)
     }
+  }
 
   /**
     * Usually, one uses bindings like x \in S, y \in T in set comprehensions and function definitions.
