@@ -116,67 +116,6 @@ class CoverChecker( allVariables: Set[String], manuallyAssigned: Set[String] = S
   }
 
 
-//  private def mkCoverInternal2( initialLetInOperBodyMap : operCoverMapType )
-//                           ( ex: TlaEx ): CoverData = ex match {
-//    /** Recursive case, connectives */
-//    case OperEx( oper, args@_* ) if oper == TlaBoolOper.and || oper == TlaBoolOper.or =>
-//
-//      /** First, process children */
-//      val processedChildArgs : Seq[CoverData] =
-//        args.map( mkCoverInternal2(initialLetInOperBodyMap) )
-//
-//      /** Compute parent cover from children */
-//
-//      if ( oper == TlaBoolOper.and )
-//        NonBranch( ex.ID, processedChildArgs:_* ) else
-//        BranchPoint( ex.ID, processedChildArgs : _* )
-//
-//
-//    /** Base case, assignment candidates */
-//    case OperEx( TlaOper.eq, OperEx( TlaActionOper.prime, NameEx( name ) ), star ) =>
-//      /** it's a candidate for name iff name \notin manuallyAssigned */
-//      if ( !manuallyAssigned.contains( name ) ) Candidate( name, ex.ID ) else NonCandidate( ex.ID )
-//    case OperEx( BmcOper.assign, OperEx( TlaActionOper.prime, NameEx( name ) ), star ) =>
-//      /** it's a candidate for name iff name \in manuallyAssigned */
-//      if ( manuallyAssigned.contains( name ) ) Candidate( name, ex.ID ) else NonCandidate( ex.ID )
-//
-//    /** Recursive case, quantifier */
-//    case OperEx( TlaBoolOper.exists, NameEx( _ ), star, subEx ) =>
-//      mkCoverInternal2( initialLetInOperBodyMap )( subEx )
-//
-//    case OperEx( TlaControlOper.ifThenElse, star, thenExpr, elseExpr ) =>
-//      /** Recurse on both branches */
-//      val thenResults = mkCoverInternal2( initialLetInOperBodyMap )(thenExpr)
-//      val elseResults = mkCoverInternal2( initialLetInOperBodyMap )(elseExpr)
-//
-//      /** Continue as with disjunction */
-//      BranchPoint( ex.ID,  thenResults, elseResults )
-//
-//    /** Recursive case, nullary LetIn */
-//    case LetInEx( body, defs@_* ) =>
-//      // Sanity check, all operators must be nullary
-//      assert( defs.forall { _.formalParams.isEmpty } )
-//      /** First, analyze the bodies, to reuse later */
-//      val bodyResults = (defs map { d =>
-//        d.name -> mkCoverInternal2( initialLetInOperBodyMap )( d.body )
-//      }).toMap
-//
-//      /** Then, analyze the body, with the bodyResults map */
-//      mkCoverInternal2( initialLetInOperBodyMap ++ bodyResults )( body )
-//
-//    /** Nullary apply */
-//    case OperEx( TlaOper.apply, NameEx(operName) ) =>
-//      // Apply may appear in higher order operators, so it might not be possible to pre-analyze
-//      initialLetInOperBodyMap.getOrElse( operName, NonCandidate( ex.ID ) )
-//
-//    /** In the other cases, return the default args */
-//    case _ => NonCandidate( ex.ID )
-//  }
-//
-//  def mkCover2( ex: TlaEx) : CoverData = {
-//    mkCoverInternal2( Map.empty )(ex)
-//  }
-
   /** Computes the set of all variables, which are covered by each operator */
   def coveredVars( coverMap: operCoverMapType ) : Map[ String, Set[String]] = {
     coverMap map {

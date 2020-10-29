@@ -8,7 +8,6 @@ import at.forsyte.apalache.tla.assignments.{CoverChecker, ManualAssignments}
 import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener, SourceLocator}
-import at.forsyte.apalache.tla.lir.TlaOperDecl
 import at.forsyte.apalache.tla.lir.src.SourceLocation
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import com.google.inject.Inject
