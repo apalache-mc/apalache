@@ -126,6 +126,12 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
   }
 
   // TODO: a long string of translation rules. Can we decompose it?
+  /**
+    * Translate an expression.
+    *
+    * @param ex a TLA expression
+    * @return an expression in the simply typed lambda calculus varient Etc
+    */
   def apply(ex: TlaEx): EtcExpr = {
     val ref = ExactRef(ex.ID)
     ex match {
