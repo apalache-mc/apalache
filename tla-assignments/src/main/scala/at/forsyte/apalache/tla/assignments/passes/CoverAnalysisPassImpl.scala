@@ -44,15 +44,14 @@ class CoverAnalysisPassImpl @Inject()(options: PassOptions,
       ManualAssignments.findAll( initBody ) ++ ManualAssignments.findAll( nextBody )
     val coverChecker = new CoverChecker(varSet, manualAssignments)
 
-    logger.info(s"  > Computing assignment cover for $nextName")
-    val mustCoverMap = bodyMap map { case (opName, TlaOperDecl( _, _, body )) =>
-      // technically suboptimal, since the same CoverData is computed multiple times,
-      // but no need to change it if it doesn't impact runtime
-      opName -> coverChecker.coveredVars( body )
-    }
+    logger.info(s"  > Computing assignment cover")
+    val coverMap = coverChecker.mkCover( bodyMap )
+
+    val mustCoverMap = coverChecker.coveredVars( coverMap )
+
     // we compute assignment witnesses
-    val asgns =
-      coverChecker.assignmentLocaitons( nextBody ) ++ coverChecker.assignmentLocaitons( initBody )
+    val asgnMap = coverChecker.assignmentLocaitons( coverMap )
+    val asgns = asgnMap( nextName ) ++ asgnMap( initPrimedName )
 
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
     val outFile = new File(outdir.toFile, "out-cover.txt")
@@ -128,12 +127,19 @@ class CoverAnalysisPassImpl @Inject()(options: PassOptions,
         // for Init we know any updates appear only in InitPrime
         val initPrimeNameCorrection = if (opName == initName) initPrimedName else opName
         val mustVars = mustCoverMap.getOrElse( initPrimeNameCorrection, Set.empty )
+        // Because of the order of terms, may-update witnesses sometimes do not include variables
+        // computed by must analysis.
+        // For example: A == x' = 1, B == x' = 2 /\ y' = 3, Next == A /\ B
+        // The may-analysis would only list that A may update x, but not B. Because A must update x
+        // we don't need to present the fact that B must also update x to the user, so we filter the must-variables
+        // by the may-variables for presentation purposes
+        val filtered = mustVars.intersect( mayCoverMap( opName ) )
         // if there are no guaranteed vars we don't want any output
         val mustStrOpt =
-          if (mustVars.isEmpty)
+          if (filtered.isEmpty)
             None
           else
-            Some( formatStringMust.format( loc.toString, opName, sortedVarString(mustVars) ) )
+            Some( formatStringMust.format( loc.toString, opName, sortedVarString(filtered) ) )
         val notGuaranteed = mayCoverMap(opName) -- mustVars
         // Similarly, we only want to see a warning if `notGuaranteed` is nonempty
         val warningOpt =

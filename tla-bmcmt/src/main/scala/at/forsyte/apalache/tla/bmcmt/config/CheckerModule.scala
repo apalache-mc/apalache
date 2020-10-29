@@ -64,23 +64,29 @@ class CheckerModule extends AbstractModule {
     bind(classOf[Pass])
       .annotatedWith(Names.named("AfterConfiguration"))
       .to(classOf[UnrollPass])
-    // the next pass is InlinePass
-    bind(classOf[InlinePass])
-      .to(classOf[InlinePassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterUnroll"))
-      .to(classOf[InlinePass])
     // the next pass is PrimingPass
     bind(classOf[PrimingPass])
       .to(classOf[PrimingPassImpl])
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterInline"))
+      .annotatedWith(Names.named("AfterUnroll"))
       .to(classOf[PrimingPass])
+    // the next pass is CoverAnalysisPass
+    bind(classOf[CoverAnalysisPass])
+      .to(classOf[CoverAnalysisPassImpl])
+    bind(classOf[Pass])
+      .annotatedWith(Names.named("AfterPriming"))
+      .to(classOf[CoverAnalysisPass])
+    // the next pass is InlinePass
+    bind(classOf[InlinePass])
+      .to(classOf[InlinePassImpl])
+    bind(classOf[Pass])
+      .annotatedWith(Names.named("AfterCoverAnalysis"))
+      .to(classOf[InlinePass])
     // the next pass is VCGenPass
     bind(classOf[VCGenPass])
       .to(classOf[VCGenPassImpl])
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterPriming"))
+      .annotatedWith(Names.named("AfterInline"))
       .to(classOf[VCGenPass])
     // the next pass after SanyParserPass is PreproPass
     bind(classOf[PreproPass])
@@ -88,17 +94,11 @@ class CheckerModule extends AbstractModule {
     bind(classOf[Pass])
       .annotatedWith(Names.named("AfterVCGen"))
       .to(classOf[PreproPass])
-    // the next pass after PreproPass is CoverAnalysisPass
-    bind(classOf[CoverAnalysisPass])
-      .to(classOf[CoverAnalysisPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterPrepro"))
-      .to(classOf[CoverAnalysisPass])
     // the next pass after CoverAnalysisPass is AssignmentPass
     bind(classOf[TransitionPass])
       .to(classOf[TransitionPassImpl])
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterCoverAnalysis"))
+      .annotatedWith(Names.named("AfterPrepro"))
       .to(classOf[TransitionPass])
     // the next pass after AssignmentPass is AnalysisPass
     bind(classOf[OptPass])

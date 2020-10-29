@@ -82,7 +82,7 @@ class TestCover extends FunSuite with TestingPredefs {
     )
 
     val checker = new CoverChecker( Set( "x" ) )
-    val cover = checker.mkCover( ex )
+    val cover = checker.mkCoverEx( Map.empty )( ex )
 
     assert( CoverData.uncoveredBranchPoints( "x" )( cover ).noProblem )
 
@@ -113,7 +113,7 @@ class TestCover extends FunSuite with TestingPredefs {
     val vars = Set( "x", "y" )
 
     val checker = new CoverChecker( vars )
-    val cover = checker.mkCover( ex )
+    val cover = checker.mkCoverEx( Map.empty )( ex )
 
     assert( CoverData.uncoveredBranchPoints( "y" )( cover ).noProblem )
 
