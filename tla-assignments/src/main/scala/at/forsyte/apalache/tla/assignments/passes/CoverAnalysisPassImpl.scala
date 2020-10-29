@@ -104,8 +104,8 @@ class CoverAnalysisPassImpl @Inject()(options: PassOptions,
       }
 
     // For nicer formatting, we compute the max width for the source and name fields
-    val longestLoc = outTriples.map( _._1.length ).max
-    val longestOpName = outTriples.map( _._2.length ).max
+    val longestLoc = if (outTriples.isEmpty) 0 else outTriples.map( _._1.length ).max
+    val longestOpName = if (outTriples.isEmpty) 0 else outTriples.map( _._2.length ).max
 
     val formatStringMay = s"%-${longestLoc}s: %${longestOpName}s may update %s"
     val formatStringMust = s"%-${longestLoc}s: %${longestOpName}s always updates: %s"
@@ -120,7 +120,11 @@ class CoverAnalysisPassImpl @Inject()(options: PassOptions,
 
     // The second part of the output lists, for each operator, all variables it must update (if any)
     // and a warning for each variable that may be updated but is not guaranteed to be updated
-    val outStrMustWarning = mayCoverMap.keySet.toList.sortBy( k => opLocs(k).get) flatMap { opName: String =>
+
+    // TODO: All operators should have trackable locations, but some other bug is causing lookup errors here.
+    // For now, the code will filter out all operators for which source is unavailable.
+    val operatorsWithLocs = mayCoverMap.keySet.toList.filter( k => opLocs(k).nonEmpty )
+    val outStrMustWarning = operatorsWithLocs.sortBy( k => opLocs(k).get) flatMap { opName: String =>
       val locOpt = opLocs(opName)
       locOpt map { loc =>
         // for Init we know any updates appear only in InitPrime

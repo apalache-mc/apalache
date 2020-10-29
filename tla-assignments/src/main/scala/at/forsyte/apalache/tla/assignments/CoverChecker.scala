@@ -76,8 +76,6 @@ class CoverChecker( allVariables: Set[String], manuallyAssigned: Set[String] = S
 
     /** Recursive case, nullary LetIn */
     case LetInEx( body, defs@_* ) =>
-      // Sanity check, all operators must be nullary
-      assert( defs.forall { _.formalParams.isEmpty } )
       /** First, analyze the bodies, to reuse later */
       val (newLetInMap, sideComputedMap) = defs.foldLeft( initialLetInOperBodyMap, initialOperMap ) {
         case ((partialLetInMap, partialSideComputation), TlaOperDecl( letInDeclName, _, letInDeclbody )) =>
