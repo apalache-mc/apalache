@@ -1552,6 +1552,82 @@ class TestSanyImporter extends FunSuite {
     }
   }
 
+  // regression for #143
+  test("Lookup inside substitutions") {
+    val text =
+      """------------------- MODULE P ----------------------
+        |------------------- MODULE Vot ----------------------
+        |------------------- MODULE Cons -------------------
+        |VARIABLE chosen
+        |Init == chosen = {}
+        |Next == chosen = {2}
+        |===================================================
+        |chosen == {2}
+        |C == INSTANCE Cons
+        |===================================================
+        |V == INSTANCE Vot
+        |===================================================""".stripMargin
+
+    val sourceStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(sourceStore)
+      .loadFromSource("P", Source.fromString(text))
+    assert(1 == modules.size)
+    // the root module and naturals
+    val root = modules(rootName)
+    // expect V!chosen, V!C!Init and V!C!Next
+    assert(3 == root.declarations.size)
+    val next = root.declarations.find(_.name == "V!C!Next")
+      .getOrElse(fail("V!C!Next not found"))
+    assert("V!C!Next" == next.name)
+    next.asInstanceOf[TlaOperDecl].body match {
+      case body @ OperEx(TlaOper.eq,
+                         OperEx(TlaOper.apply, NameEx("V!chosen")),
+                         OperEx(TlaSetOper.enumSet, ValEx(TlaInt(i)))) =>
+        assert(i == 2)
+        assert(sourceStore.contains(body.ID))
+
+      case _ =>
+        fail("expected V!C!Next == V!chosen = {2}")
+    }
+  }
+
+  // regression for #143
+  test("Series of substitutions") {
+    val text =
+      """------------------- MODULE A ----------------------
+        |------------------- MODULE B ----------------------
+        |------------------- MODULE C -------------------
+        |VARIABLE x
+        |magic == x /= 2
+        |===================================================
+        |VARIABLE y
+        |C1 == INSTANCE C WITH x <- y
+        |===================================================
+        |VARIABLE z
+        |B1 == INSTANCE B WITH y <- z
+        |===================================================""".stripMargin
+
+    val sourceStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(sourceStore)
+      .loadFromSource("A", Source.fromString(text))
+    assert(1 == modules.size)
+    // the root module and naturals
+    val root = modules(rootName)
+    // expect B1!C1!magic and z
+    assert(2 == root.declarations.size)
+    val magic = root.declarations.find(_.name == "B1!C1!magic")
+      .getOrElse(fail("B1!C1!magic not found"))
+    assert("B1!C1!magic" == magic.name)
+    magic.asInstanceOf[TlaOperDecl].body match {
+      case body @ OperEx(TlaOper.ne, NameEx("z"), ValEx(TlaInt(i))) =>
+        assert(i == 2)
+        assert(sourceStore.contains(body.ID))
+
+      case _ =>
+        fail("expected B1!C1!magic == z /= 2")
+    }
+  }
+
   // this test fails for the moment
   ignore("RECURSIVE operator inside INSTANCE") {
     val text =

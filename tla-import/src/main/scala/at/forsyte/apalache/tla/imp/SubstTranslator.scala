@@ -7,10 +7,8 @@ import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic._
 
 /**
-  * Translate a module instance. This class needs extensive testing,
-  * as the module instantiation rules are quite sophisticated (Ch. 17).
-  *
-  * TODO: is this class actually used? If not, remove.
+  * Translate a substitution, that is the part that goes after WITH in INSTANCE Foo WITH x <- e1, y <- e2.
+  * The module instantiation rules are quite sophisticated, see Specifying Systems [Ch. 17].
   *
   * @author konnov
   */
@@ -61,11 +59,32 @@ class SubstTranslator(sourceStore: SourceStore, context: Context) extends LazyLo
   }
 
   private def mkRenaming(substInNode: SubstInNode): Map[String, TlaEx] = {
-    val exprTranslator = ExprOrOpArgNodeTranslator(sourceStore, context, OutsideRecursion())
+    // In the substitution INSTANCE ... WITH x <- e, the expression e should be evaluated in the context one level up.
+    // Consider the following example:
+    //    ------------------- MODULE A ----------------------
+    //    ------------------- MODULE B ----------------------
+    //    ------------------- MODULE C -------------------
+    //    VARIABLE x
+    //    magic == x /= 2
+    //    ===================================================
+    //    VARIABLE y
+    //    C1 == INSTANCE C WITH x <- y
+    //    ===================================================
+    //    VARIABLE z
+    //    B1 == INSTANCE B WITH y <- z
+    //    ===================================================
+    //
+    // SANY gives us the operator B1!C1!magic == (x /= 2)[x <- y][y <- z]
+    // Note that y should be translated in the context of B1, whereas z should be translated in the root context.
+    //
+    // See issue #143: https://github.com/informalsystems/apalache/issues/143
+    val upperLookupPrefix = context.lookupPrefix.dropRight(1)
+    val upperContext = context.setLookupPrefix(upperLookupPrefix)
+    val exprTranslator = ExprOrOpArgNodeTranslator(sourceStore, upperContext, OutsideRecursion())
 
     def eachSubst(s: Subst): (String, TlaEx) = {
       val replacement = exprTranslator.translate(s.getExpr)
-      // TODO: what if a constant happens to be an operator?
+      // only constants and variables are allowed in the left-hand side of operator substitutions
       if (s.getOp.getKind != ASTConstants.ConstantDeclKind && s.getOp.getKind != ASTConstants.VariableDeclKind) {
         throw new SanyImporterException("Expected a substituted name %s to be a CONSTANT or a VARIABLE, found kind %d"
           .format(s.getOp.getName, s.getOp.getKind))

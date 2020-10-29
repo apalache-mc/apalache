@@ -1,5 +1,6 @@
 ## Unreleased #unstable
- 
+
+ * correct translation of chained substitutions in INSTANCEs, see #143
  * friendly messages for unexpected expressions, see #303
  * better operator inlining, see #283
  * support for standard modules that are instantiated with LOCAL INSTANCE, see #295
