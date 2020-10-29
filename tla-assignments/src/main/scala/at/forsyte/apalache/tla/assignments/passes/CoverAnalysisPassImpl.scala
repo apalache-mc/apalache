@@ -20,7 +20,11 @@ class CoverAnalysisPassImpl @Inject()(options: PassOptions,
 
   override def name: String = "CoverAnalysisPass"
 
-  override def execute(): Boolean = {
+
+  // TODO: disabled for the purposes of pass reordering, re-introduced in #308
+  override def execute( ) : Boolean = true
+
+  def execute2(): Boolean = {
     val inModule = tlaModule.get
 
     val operDecls = inModule.operDeclarations
