@@ -104,8 +104,8 @@ class CoverAnalysisPassImpl @Inject()(options: PassOptions,
       }
 
     // For nicer formatting, we compute the max width for the source and name fields
-    val longestLoc = if (outTriples.isEmpty) 0 else outTriples.map( _._1.length ).max
-    val longestOpName = if (outTriples.isEmpty) 0 else outTriples.map( _._2.length ).max
+    val longestLoc = if (outTriples.isEmpty) 1 else outTriples.map( _._1.length ).max
+    val longestOpName = if (outTriples.isEmpty) 1 else outTriples.map( _._2.length ).max
 
     val formatStringMay = s"%-${longestLoc}s: %${longestOpName}s may update %s"
     val formatStringMust = s"%-${longestLoc}s: %${longestOpName}s always updates: %s"
