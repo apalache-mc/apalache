@@ -89,6 +89,14 @@ class CoverChecker( allVariables: Set[String], manuallyAssigned: Set[String] = S
 
   }
 
+  /** Computes a set of assignment candidates under `ex` */
+  def assignmentLocaitons( ex: TlaEx ) : Set[Candidate] = {
+    val cd = mkCover( ex )
+    allVariables flatMap {
+      v => CoverData.uncoveredBranchPoints( v )( cd ).problemUIDs.asgns
+    }
+  }
+
   def findProblems( ex: TlaEx ): Option[Map[ String, ProblemData ]] = {
     val cd = mkCover(ex)
 

@@ -7,7 +7,7 @@ package at.forsyte.apalache.tla.lir.src
   *
   * @author Igor Konnov
   */
-class SourceLocation(val filename: String, val region: SourceRegion) {
+class SourceLocation(val filename: String, val region: SourceRegion) extends Ordered[SourceLocation]{
   override def toString: String = filename + ".tla:" + region
 
 
@@ -25,4 +25,11 @@ class SourceLocation(val filename: String, val region: SourceRegion) {
     val state = Seq(filename, region)
     state.map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
   }
+
+  // Defines an ordering on SourceLocation
+  override def compare( other : SourceLocation) : Int =
+    Ordering.Tuple3[String, Int, Int].compare(
+    (filename, region.start.offset, region.end.offset),
+    (other.filename, other.region.start.offset, other.region.end.offset)
+  )
 }
