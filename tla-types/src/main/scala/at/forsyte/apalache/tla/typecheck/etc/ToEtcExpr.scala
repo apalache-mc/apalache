@@ -125,9 +125,28 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
     case TlaStrSet  => SetT1(StrT1())
   }
 
+  // Valid when the input seq has two items, the first of which is a VlaEx(TlaStr(_))
+  val validateRecordPair : Seq[TlaEx] => (String, TlaEx) = {
+    // Only pairs coordinating pairs and sets are valid. See TlaSetOper.recSet
+    case Seq(ValEx(TlaStr(name)), set) =>
+      (name, set)
+
+    case Seq(invalid, _) =>
+      throw new IllegalArgumentException(s"Expected ValEx(TlaStr(_)) as a field name, found ${invalid}")
+
+    case Seq(orphan) =>
+      throw new IllegalArgumentException(s"Expected key-set pair, found ${orphan}")
+
+    // since we group by 2 below, this case should be unreachable
+    case moreThanTwo =>
+      throw new IllegalArgumentException(
+        s"Reached impossible state in validateRecSetPair: ${moreThanTwo}"
+      )
+  }
+
   // TODO: a long string of translation rules. Can we decompose it?
   /**
-    * Translate an expression.
+   * Translate an expression.
     *
     * @param ex a TLA expression
     * @return an expression in the simply typed lambda calculus varient Etc
@@ -266,14 +285,10 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
 
       case OperEx(TlaSetOper.recSet, args @ _*) =>
         // [x: S, y: T]
-        val fields = args.zipWithIndex.collect {
-          case (ValEx(TlaStr(name)), i) if i % 2 == 0 => name
-          case (_, i) if i % 2 == 0 =>
-            throw new IllegalArgumentException(
-              "Expected ValEx(TlaStr(_)) as a field name"
-            )
-        }
-        val sets = args.zipWithIndex.filter(_._2 % 2 == 1).map(_._1)
+
+        val (fields, sets) =
+          args.grouped(2).map(validateRecordPair).toSeq.unzip
+
         val typeVars = varPool.fresh(sets.length)
         val recSetType = SetT1(RecT1(fields.zip(typeVars): _*))
         val opType = OperT1(typeVars.map(SetT1(_)), recSetType)
@@ -368,16 +383,10 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
       //******************************************** FUNCTIONS **************************************************
       case OperEx(TlaFunOper.enum, args @ _*) =>
         // [f1 |-> e1, f2 |-> e2]
-        val fields = args.zipWithIndex.collect {
-          case (ValEx(TlaStr(name)), i) if i % 2 == 0 => name
-          case (_, i) if i % 2 == 0 =>
-            throw new IllegalArgumentException(
-              "Expected ValEx(TlaStr(_)) as a field name"
-            )
-        }
-        val values =
-          args.zipWithIndex.filter(_._2 % 2 == 1).map(p => this(p._1))
-        val typeVars = fields.indices.map(_ => varPool.fresh)
+        val (fields, vs) =
+          args.grouped(2).map(validateRecordPair).toSeq.unzip
+        val values = vs.map(this(_))
+        val typeVars = varPool.fresh(fields.length)
         // (a, b) => [f1 |-> a, f2 |-> b]
         val sig = OperT1(typeVars, RecT1(fields.zip(typeVars): _*))
         mkApp(ExactRef(ex.ID), Seq(sig), values: _*)

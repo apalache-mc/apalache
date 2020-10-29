@@ -209,6 +209,14 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
       tla.str("y"), tla.name("T"))))
   }
 
+  test("invalid field string in record set construction") {
+    val invalid = "invalidName"
+    val exn = intercept[IllegalArgumentException](
+      gen(tla.recSet(tla.name(invalid), tla.str("x")))
+    )
+    assert(exn.getMessage.contains(invalid))
+  }
+
   test("sequence set") {
     val setToSeq = parser("Set(a) => Seq(a)")
     val expected = mkConstAppByName(setToSeq, "S")
