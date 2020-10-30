@@ -63,7 +63,7 @@ object DependencyGraph {
                 val operParams = params.withFilter( _.isInstanceOf[OperFormalParam] ).map {
                   case OperFormalParam( paramName, _ ) => paramName
                 }
-                // ... and scan it for any operator calls (that arent params)
+                // ... and scan it for any operator calls (that aren't params)
                 val children = subCalls( body ) -- operParams
                 // Any operator that is called in such a way, cannot be a basic root,
                 // (though it may possibly be chosen as a non-basic root, in the mutual recursion setting)
@@ -77,6 +77,8 @@ object DependencyGraph {
                 constructed += name -> node
                 explorationStack = explorationStack.tail
               case None =>
+                // The body of the operator is unknown, so it's either a CONSTANT or a higher-order
+                // operator parameter. Should be treated as a leaf.
                 throw new IllegalArgumentException( s"The body of operator $name is unknown" )
             }
           case n =>
@@ -150,13 +152,20 @@ object DependencyGraph {
         _ ++ _
       }
     case LetInEx( letInBody, defs@_* ) =>
-      ( defs map { case TlaOperDecl( _, _, b ) => subCalls( b ) } ).foldLeft(
+      ( defs map {
+        case TlaOperDecl( _, params, b ) =>
+          val operParams = params.withFilter( _.isInstanceOf[OperFormalParam] ).map {
+          case OperFormalParam( paramName, _ ) => paramName
+          }
+          subCalls( b ) -- operParams
+      } ).foldLeft(
         subCalls( letInBody )
       ) {
         _ ++ _
       } -- ( defs map {
         _.name
       } )
+
     case _ => Set.empty[String]
   }
 
