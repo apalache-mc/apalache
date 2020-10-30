@@ -30,6 +30,7 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case OperEx(TlaFunOper.recFunDef, mapEx, NameEx(varName), setEx) =>
+        // note that we only have a single-argument case here, as Desugarer collapses multiple arguments into a tuple
         rewriteFunCtor(state, mapEx, varName, setEx)
 
       case OperEx(TlaFunOper.recFunRef) =>

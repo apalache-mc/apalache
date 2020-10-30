@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaFunOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.transformations.standard.FlatLanguagePred
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 import javax.inject.Singleton
@@ -31,10 +31,9 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
       case ex @ ValEx(_) => ex
       case ex @ NullEx => ex
 
-      case ex @ OperEx(TlaFunOper.except, fun, args @ _*) =>
+      case OperEx(TlaFunOper.except, fun, args @ _*) =>
         val trArgs = args map transform
-        val accessors = trArgs.zipWithIndex filter (_._2 % 2 == 0) map (_._1)
-        val newValues = trArgs.zipWithIndex filter (_._2 % 2 == 1) map (_._1)
+        val (accessors, newValues) = TlaOper.deinterleave(trArgs)
         val nonSingletons = accessors.collect { case OperEx(TlaFunOper.tuple, lst @ _*) => lst.size > 1 }
         if (nonSingletons.isEmpty) {
           // only singleton tuples, construct the same EXCEPT, but with transformed fun and args
@@ -51,16 +50,38 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
         val eqs = flatArgs map { x => tla.eql(tla.prime(x), x) }
         tla.and(eqs :_*)
 
-      case fex @ OperEx(TlaSetOper.filter, boundEx, setEx, predEx) =>
+      case OperEx(TlaSetOper.filter, boundEx, setEx, predEx) =>
         OperEx(TlaSetOper.filter, collapseTuplesInFilter(transform(boundEx), transform(setEx), transform(predEx)) :_*)
 
-      case fex @ OperEx(TlaSetOper.map, args @ _*) =>
+      case OperEx(TlaSetOper.map, args @ _*) =>
         val trArgs = args map transform
         OperEx(TlaSetOper.map, collapseTuplesInMap(trArgs.head, trArgs.tail) :_*)
 
-      case fex @ OperEx(TlaFunOper.funDef, args @ _*) =>
+      case OperEx(TlaFunOper.funDef, args @ _*) =>
         val trArgs = args map transform
-        OperEx(TlaFunOper.funDef, collapseTuplesInMap(trArgs.head, trArgs.tail) :_*)
+        val fun = trArgs.head
+        val (vars, sets) = TlaOper.deinterleave(trArgs.tail)
+        val (onlyVar, onlySet) =
+          if (vars.length > 1) {
+            (tla.tuple(vars :_*), tla.times(sets :_*))
+          } else {
+            (vars.head, sets.head)
+          }
+        // transform the function into a single-argument function and collapse tuples
+        OperEx(TlaFunOper.funDef, collapseTuplesInMap(fun, Seq(onlyVar, onlySet)) :_*)
+
+      case OperEx(TlaFunOper.recFunDef, args @ _*) =>
+        val trArgs = args map transform
+        val fun = trArgs.head
+        val (vars, sets) = TlaOper.deinterleave(trArgs.tail)
+        val (onlyVar, onlySet) =
+          if (vars.length > 1) {
+            (tla.tuple(vars :_*), tla.times(sets :_*))
+          } else {
+            (vars.head, sets.head)
+          }
+        // transform the function into a single-argument function and collapse tuples
+        OperEx(TlaFunOper.recFunDef, collapseTuplesInMap(fun, Seq(onlyVar, onlySet)) :_*)
 
       case OperEx(op, args @ _*) =>
         OperEx(op, args map transform :_*)
@@ -103,9 +124,8 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
       val rhs = unfoldKey(Seq(indices.head), indices.tail, newValue)
       (lhs, rhs)
     }
-    val expandedPairs = accessors.zip(newValues) map (eachPair _).tupled
-    val expandedArgs = 0.until(2 * expandedPairs.size) map
-      (i => if (i % 2 == 0) expandedPairs(i / 2)._1 else expandedPairs(i / 2)._2)
+    val expandedPairs = accessors.zip(newValues).map((eachPair _).tupled)
+    val expandedArgs = (TlaOper.interleave _).tupled(expandedPairs.unzip)
     OperEx(TlaFunOper.except, topFun +: expandedArgs :_*)
   }
 
@@ -131,17 +151,13 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
     * @return transformed arguments
     */
   def collapseTuplesInMap(mapEx: TlaEx, args: Seq[TlaEx]): Seq[TlaEx] = {
-    val boundEs = args.zipWithIndex filter (_._2 % 2 == 0) map (_._1)
-    val setEs = args.zipWithIndex filter (_._2 % 2 == 1) map (_._1)
+    val (boundEs, setEs) = TlaOper.deinterleave(args)
     val boundNames = boundEs map mkTupleName // rename tuples into a names, if needed
     // variable substitutions for the variables inside the tuples
     val subs = boundEs.foldLeft(Map[String, TlaEx]())(collectSubstitutions)
     val newMapEx = substituteNames(subs, mapEx)
     // collect the arguments back
-    val newArgs = 0.until(2 * boundEs.length) map
-      { i => if (i % 2 == 0) NameEx(boundNames(i / 2)) else setEs(i / 2) }
-
-    newMapEx +: newArgs
+    newMapEx +: TlaOper.interleave(boundNames.map(NameEx), setEs)
   }
 
   private def collectSubstitutions(subs: Map[String, TlaEx], ex: TlaEx): Map[String, TlaEx] = {
