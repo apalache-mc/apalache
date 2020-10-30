@@ -35,7 +35,7 @@ sealed case class SourceLocator(sourceMap : SourceMap,
     if (sourceOf(ex).isEmpty) {
       var str = ex.toString
       str = if (str.length > 70) str.substring(0, 69) + "..." else str
-      logger.error("No source for expr@%s: %s".format(ex.ID, str))
+      logger.error("No source location for expr@%s: %s".format(ex.ID, str))
     } else {
       ex match {
         case OperEx(_, args @ _*) =>

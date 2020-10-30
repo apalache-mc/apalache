@@ -25,12 +25,16 @@ class SubstTranslator(sourceStore: SourceStore, context: Context) extends LazyLo
           case NameEx(name) =>
             renaming.getOrElse(name, NameEx(name))
 
-          case LetInEx(body, defs@_*) =>
+          case letIn @ LetInEx(body, defs@_*) =>
             def subDecl(d: TlaOperDecl) = {
-              d.copy(body = subRec(d.body))
+              val copy = d.copy(body = subRec(d.body))
+              sourceStore.find(d.body.ID).foreach { id => sourceStore.add(copy.body.ID, id) }
+              copy
             }
 
-            LetInEx(subRec(body), defs map subDecl: _*)
+            val newLetIn = LetInEx(subRec(body), defs map subDecl: _*)
+            sourceStore.find(letIn.ID).foreach { id => sourceStore.add(newLetIn.ID, id) }
+            newLetIn
 
           case OperEx(op, args@_*) =>
             if (renaming.nonEmpty
@@ -44,13 +48,7 @@ class SubstTranslator(sourceStore: SourceStore, context: Context) extends LazyLo
         }
 
       // copy the source info
-      sourceStore.find(ex.ID) match {
-        case Some(loc) =>
-          sourceStore.add(newEx.ID, loc)
-
-        case None =>
-          logger.warn("No source for expr@" + ex.ID)
-      }
+      sourceStore.findOrLog(ex.ID).foreach { loc => sourceStore.add(newEx.ID, loc) }
       // return
       newEx
     }
