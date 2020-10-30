@@ -308,7 +308,8 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
 
       case OperEx(TlaSetOper.union, args @ _*) =>
         // UNION S
-        val opsig = OperT1(List(SetT1(SetT1(VarT1("a")))), SetT1(VarT1("a")))
+        val a = varPool.fresh
+        val opsig = OperT1(List(SetT1(SetT1(a))), SetT1(a))
         mkApp(ex.ID, opsig, args)
 
       case OperEx(op, args @ _*)
@@ -383,7 +384,7 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
 
       case OperEx(TlaFunOper.tuple) =>
         // an empty sequence << >> is not an operator, but a polymorphic constant
-        mkConst(ExactRef(ex.ID), SeqT1(VarT1("a")))
+        mkConst(ExactRef(ex.ID), SeqT1(varPool.fresh))
 
       case OperEx(TlaFunOper.tuple, args @ _*) =>
         // <<e_1, ..., e_n>>
