@@ -1,13 +1,10 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.{ValEx, _}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.typecheck._
-import at.forsyte.apalache.tla.typecheck.parser.{
-  DefaultType1Parser,
-  Type1ParseError
-}
+import at.forsyte.apalache.tla.typecheck.parser.{DefaultType1Parser, Type1ParseError}
 
 /**
   * ToEtcExpr takes a TLA+ expression and produces an EtcExpr.
@@ -495,64 +492,79 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
 
       case OperEx(TlaFunOper.except, fun, args @ _*) =>
         // the hardest expression: [f EXCEPT ![e1] = e2, ![e3] = e4, ...]
-        val accessors = args.zipWithIndex.filter(_._2 % 2 == 0) map { p =>
-          TlaFunOper.except.unpackIndex(p._1)
-        }
-        val newValues = args.zipWithIndex.filter(_._2 % 2 == 1) map { _._1 }
-        assert(accessors.length == newValues.length)
+        val accessorsWithNewValues =
+          args.grouped(2).map {
+            case Seq(a, b) => (TlaFunOper.except.unpackIndex(a), b)
+            case orphan => throw new TypingException( s"Orphan ${orphan} in except expression: ${ex}" )
+          }.toSeq
 
-        // if all accessors are string literals, then we are dealing with a record
-        val allStrings = accessors.forall {
+        val accessors = accessorsWithNewValues.map(_._1)
+
+        // a function: ((a -> b), a, b) => (a -> b)
+        val a1 = varPool.fresh
+        val b1 = varPool.fresh
+        // introduce a sequence of a, b, a, b, ... (as many as there are accessors)
+        val aAndBs = List.fill(accessors.length)(List(a1, b1)).flatten
+        val funType = OperT1(FunT1(a1, b1) +: aAndBs, FunT1(a1, b1))
+
+        val typeVars = varPool.fresh(accessors.length) // introduce type variables a, b, c, ...
+        val accessorsWithTypeVars = accessors.zip(typeVars)
+
+        // The following values are related by mutual exclusion, so we make
+        // them lazy to avoid unnecesary computations
+
+        lazy val recType = {
+          // a record: ([foo: a, bar: b, ...], Str, a, Str, b, ...) => [foo: a, bar: b, ...]
+          val recFields = accessorsWithTypeVars.collect {
+            case (ValEx(TlaStr(fieldName)), tv) => (fieldName, tv)
+          }
+          val rec = RecT1(recFields: _*)
+          val strAndVars = typeVars.flatMap(v => List(StrT1(), v))
+          OperT1(rec +: strAndVars, rec)
+        }
+
+        lazy val tupType = {
+          // a tuple: ({3: a, 5: b, ...}, Int, a, Int, b, ...) => {3: a, 5: b, ...}
+          val tupFields = accessorsWithTypeVars.collect {
+            case (ValEx(TlaInt(fieldNo)), tv) => (fieldNo.toInt, tv)
+          }
+          val tup = SparseTupT1(tupFields: _*)
+          val intAndVars = typeVars.flatMap(v => List(IntT1(), v))
+          OperT1(tup +: intAndVars, tup)
+        }
+
+        lazy val seqType = {
+          // a sequence: (Seq(a), Int, a, Int, a, ...) => Seq(a)
+          val intAndAs = List.fill(accessors.length)(List(IntT1(), a1)).flatten
+          OperT1(SeqT1(a1) +: intAndAs, SeqT1(a1))
+        }
+
+        val isTlaStr : TlaEx => Boolean = {
           case ValEx(TlaStr(_)) => true
           case _                => false
         }
-        // if all accessors are integer literals, then we are dealing with a tuple, a sequence, or a function
-        val allInts = accessors.forall {
+
+        val isTlaInt : TlaEx => Boolean = {
           case ValEx(TlaInt(_)) => true
           case _                => false
         }
 
-        // a function: ((a -> b), a, b) => (a -> b)
-        // introduce a sequence of a, b, a, b, ... (as many as there are accessors)
-        val a1 = varPool.fresh
-        val b1 = varPool.fresh
-        val aAndBs = List.fill(accessors.length)(List(a1, b1)).flatten
-        val funType = OperT1(FunT1(a1, b1) +: aAndBs, FunT1(a1, b1))
-        // a sequence: (Seq(a), Int, a, Int, a, ...) => Seq(a)
-        val a2 = varPool.fresh
-        val intAndAs = List.fill(accessors.length)(List(IntT1(), a2)).flatten
-        val seqType = OperT1(SeqT1(a2) +: intAndAs, SeqT1(a2))
-        // a record: ([foo: a, bar: b, ...], Str, a, Str, b, ...) => [foo: a, bar: b, ...]
-        val typeVars =
-          varPool.fresh(
-            accessors.length
-          ) // introduce type variables a, b, c, ...
-        val recFields = accessors.zip(typeVars).collect {
-          case (ValEx(TlaStr(fieldName)), tv) => (fieldName, tv)
-        }
-        val rec = RecT1(recFields: _*)
-        val strAndVars = typeVars.flatMap(v => List(StrT1(), v))
-        val recType = OperT1(rec +: strAndVars, rec)
-        // a tuple: ({3: a, 5: b, ...}, Int, a, Int, b, ...) => {3: a, 5: b, ...}
-        val tupFields = accessors.zip(typeVars).collect {
-          case (ValEx(TlaInt(fieldNo)), tv) => (fieldNo.toInt, tv)
-        }
-        val tup = SparseTupT1(tupFields: _*)
-        val intAndVars = typeVars.flatMap(v => List(IntT1(), v))
-        val tupType = OperT1(tup +: intAndVars, tup)
-
         // construct the disjunctive type
         val disjunctiveType =
-          if (allStrings)
+          if (accessors.forall(isTlaStr)) {
+            // we are dealing with a function or a record
             Seq(funType, recType)
-          else if (allInts)
+          } else if (accessors.forall(isTlaInt)) {
+            // we are dealing with a tuple, a sequence, or a function
             Seq(funType, seqType, tupType)
-          else
+          } else {
+            // we are dealing with a function or a sequence
             Seq(funType, seqType)
+          }
 
         // translate the arguments and interleave them
         val xargs =
-          accessors.zip(newValues).flatMap(p => List(this(p._1), this(p._2)))
+          accessorsWithNewValues.flatMap(p => List(this(p._1), this(p._2)))
         mkApp(ExactRef(ex.ID), disjunctiveType, this(fun) +: xargs: _*)
 
       case OperEx(TlaFunOper.recFunDef, body, NameEx(name), bindingSet) =>

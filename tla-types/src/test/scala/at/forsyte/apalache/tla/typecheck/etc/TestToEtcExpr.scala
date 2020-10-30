@@ -431,7 +431,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     // a function or a sequence
     val types = Seq(
       parser("((a -> b), a, b) => (a -> b)"),
-      parser("(Seq(c), Int, c) => Seq(c)"))
+      parser("(Seq(a), Int, a) => Seq(a)"))
 
     val expected = mkAppByName(types, "f", "e1", "e2")
     val ex = tla.except(tla.name("f"), tla.name("e1"), tla.name("e2"))
@@ -442,7 +442,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     // a function or a sequence
     val types = Seq(
       parser("((a -> b), a, b, a, b) => (a -> b)"),
-      parser("(Seq(c), Int, c, Int, c) => Seq(c)"))
+      parser("(Seq(a), Int, a, Int, a) => Seq(a)"))
 
     val expected = mkAppByName(types, "f", "e1", "e2", "e3", "e4")
     val ex = tla.except(tla.name("f"),
@@ -454,7 +454,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     // a function or a record
     val types = Seq(
       parser("((a -> b), a, b) => (a -> b)"),
-      parser("([foo: d], Str, d) => [foo: d]"))
+      parser("([foo: c], Str, c) => [foo: c]"))
 
     val expected = mkUniqApp(types, mkUniqName("f"), mkUniqConst(StrT1()), mkUniqName("e2"))
     val ex = tla.except(tla.name("f"), tla.str("foo"), tla.name("e2"))
@@ -465,8 +465,8 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     // a function or a record
     val types = Seq(
       parser("((a -> b), a, b) => (a -> b)"),
-      parser("(Seq(c), Int, c) => Seq(c)"),
-      parser("({3: d}, Int, d) => {3: d}"))
+      parser("(Seq(a), Int, a) => Seq(a)"),
+      parser("({3: c}, Int, c) => {3: c}"))
 
     val expected = mkUniqApp(types, mkUniqName("f"), mkUniqConst(IntT1()), mkUniqName("e2"))
     val ex = tla.except(tla.name("f"), tla.int(3), tla.name("e2"))
@@ -477,8 +477,8 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     // a function or a record
     val types = Seq(
       parser("((a -> b), a, b, a, b) => (a -> b)"),
-      parser("(Seq(c), Int, c, Int, c) => Seq(c)"),
-      parser("({3: d, 5: e}, Int, d, Int, e) => {3: d, 5: e}"))
+      parser("(Seq(a), Int, a, Int, a) => Seq(a)"),
+      parser("({3: c, 5: d}, Int, c, Int, d) => {3: c, 5: d}"))
 
     val expected = mkUniqApp(types, mkUniqName("f"),
       mkUniqConst(IntT1()), mkUniqName("e2"),
