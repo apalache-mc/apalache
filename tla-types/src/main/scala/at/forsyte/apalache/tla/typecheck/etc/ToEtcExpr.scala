@@ -467,26 +467,26 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
       case OperEx(TlaFunOper.funDef, mapExpr, args @ _*) =>
         // [ x \in S, y \in T |-> e ]
         // or, [ <<x, y>> \in S, z \in T |-> e ]
-        val (varEs, setEs) = args.zipWithIndex.partition(_._2 % 2 == 0)
-        if (varEs.length != setEs.length) {
-          throw new TypingException(
-            "Invalid bound variables and sets in: " + ex
+        val bindings =
+          translateBindings(
+            args.grouped(2).map {
+              case Seq(varEx, setEx) => (varEx, setEx)
+              case orphan => throw new TypingException( s"Invalid bound variables and sets ${orphan} in: ${ex}" )
+            }.toSeq :_*
           )
-        }
-        val bindings = translateBindings(
-          varEs.map(_._1).zip(setEs.map(_._1)): _*
-        )
+
         val a = varPool.fresh
-        val typeVars =
-          varPool.fresh(
-            bindings.length
-          ) // start with "b", as "a" goes to the result
-        // 1. When there is one argument, the generated function has the type b -> a, that is, no tuple is involved.
-        // 2. When there are multiple arguments,
-        // the generated function has the type <<b, c>> -> a, that is, it accepts a tuple
-        val funFrom =
-          if (bindings.length == 1) typeVars.head else TupT1(typeVars: _*)
-        // The principal type of is ((b, c) => a) => (<<b, c>> -> a).
+        // start with "b", as "a" goes to the result
+        val typeVars = varPool.fresh(bindings.length)
+
+        val funFrom = typeVars match {
+          // With one argument, the generated function has the type b -> a, that is, no tuple is involved.
+          case Seq(v) => v
+          // With multiple arguments, the generated function has the type <<b, c>> -> a, that is, it accepts a tuple
+          case _ => TupT1(typeVars: _*)
+        }
+
+        // The principal type is ((b, c) => a) => (<<b, c>> -> a).
         // Note that the generated function has the type <<b, c>> -> a, that is, it accepts a tuple.
         val principal = OperT1(Seq(OperT1(typeVars, a)), FunT1(funFrom, a))
         // the function definition implicitly introduces a lambda abstraction: λ x ∈ S, y ∈ T. e
