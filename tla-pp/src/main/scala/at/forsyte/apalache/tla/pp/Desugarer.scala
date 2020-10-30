@@ -57,31 +57,22 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
         val trArgs = args map transform
         OperEx(TlaSetOper.map, collapseTuplesInMap(trArgs.head, trArgs.tail) :_*)
 
-      case OperEx(TlaFunOper.funDef, args @ _*) =>
+      case OperEx(funDefOp, args @ _*) if (funDefOp == TlaFunOper.funDef || funDefOp == TlaFunOper.recFunDef) =>
         val trArgs = args map transform
         val fun = trArgs.head
         val (vars, sets) = TlaOper.deinterleave(trArgs.tail)
         val (onlyVar, onlySet) =
           if (vars.length > 1) {
-            (tla.tuple(vars :_*), tla.times(sets :_*))
+            val pair = (tla.tuple(vars :_*), tla.times(sets :_*))
+            // track the modification to point to the first variable and set
+            tracker.hold(vars.head, pair._1)
+            tracker.hold(sets.head, pair._2)
+            pair
           } else {
             (vars.head, sets.head)
           }
         // transform the function into a single-argument function and collapse tuples
-        OperEx(TlaFunOper.funDef, collapseTuplesInMap(fun, Seq(onlyVar, onlySet)) :_*)
-
-      case OperEx(TlaFunOper.recFunDef, args @ _*) =>
-        val trArgs = args map transform
-        val fun = trArgs.head
-        val (vars, sets) = TlaOper.deinterleave(trArgs.tail)
-        val (onlyVar, onlySet) =
-          if (vars.length > 1) {
-            (tla.tuple(vars :_*), tla.times(sets :_*))
-          } else {
-            (vars.head, sets.head)
-          }
-        // transform the function into a single-argument function and collapse tuples
-        OperEx(TlaFunOper.recFunDef, collapseTuplesInMap(fun, Seq(onlyVar, onlySet)) :_*)
+        OperEx(funDefOp, collapseTuplesInMap(fun, Seq(onlyVar, onlySet)) :_*)
 
       case OperEx(op, args @ _*) =>
         OperEx(op, args map transform :_*)
