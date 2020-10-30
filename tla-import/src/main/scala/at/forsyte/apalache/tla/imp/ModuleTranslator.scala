@@ -58,7 +58,7 @@ class ModuleTranslator(sourceStore: SourceStore) extends LazyLogging {
           decl.isRecursive = updatedDecl.isRecursive
           decl.body = updatedDecl.body
 
-          // temporary bugfix for the issue #130. Remove as soon as it is fixed in tla2tools.
+          // TODO(igor) temporary bugfix for the issue #130. Remove as soon as it is fixed in tla2tools.
           // https://github.com/informalsystems/apalache/issues/130
           workaroundMarkRecursive(Set(decl), decl.body)
 
@@ -122,7 +122,7 @@ class ModuleTranslator(sourceStore: SourceStore) extends LazyLogging {
 
   /**
     * This is a temporary bugfix for the issue 130: https://github.com/informalsystems/apalache/issues/130
-    * Once it is fixed in SANY, remove this method. This method does not detect mutually recursive operators,
+    * TODO(igor) Once it is fixed in SANY, remove this method. This method does not detect mutually recursive operators,
     * but I have never seen mutual recursion in TLA+.
     *
     * @param declared the set of names that have been introduced at higher levels.
