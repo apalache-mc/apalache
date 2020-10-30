@@ -32,4 +32,7 @@ Init ==
 Next ==
     votingPower' \in [Procs -> 0..MAX_POWER]
 
+Inv ==
+    Sum(votingPower) < 10
+
 =============================================================================

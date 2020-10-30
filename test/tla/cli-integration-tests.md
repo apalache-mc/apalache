@@ -323,6 +323,17 @@ The outcome is: NoError
 ...
 ```
 
+### check Rec4.tla succeeds
+
+Unfolding Fibonacci numbers
+
+```sh
+$ apalache-mc check --length=10 --inv=Inv Rec4.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
 ### check Rec8.tla succeeds
 
 ```sh
@@ -359,6 +370,26 @@ $ apalache-mc check Rec11.tla | sed 's/[IEW]@.*//'
 Input error (see the manual): Recursive operator Fact requires an annotation UNROLL_TIMES_Fact. See: https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md#recursion
 ...
 EXITCODE: ERROR (99)
+```
+
+### check Rec12.tla works with Init
+
+```sh
+$ apalache-mc check --inv=Inv Rec12.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check Rec12.tla produces an error with Init2
+
+```sh
+$ apalache-mc check --init=Init2 --inv=Inv Rec12.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: Error
+...
+EXITCODE: OK
 ```
 
 

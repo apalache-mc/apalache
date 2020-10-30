@@ -18,12 +18,11 @@ Card(S) ==
   IF S = IntSet({})
   THEN 0
   ELSE
-    LET x == CHOOSE y \in S: TRUE IN
-    LET T == S \ {x} IN
+    LET T == S \ {CHOOSE y \in S: TRUE} IN
     1 + Card(T)
 
 \* unfold the operator Card up to 10 times
-UNROLL_TIMES_Card == 2
+UNROLL_TIMES_Card == 10
 \* on the 11th time, return just 0
 UNROLL_DEFAULT_Card == 0
 

@@ -59,8 +59,9 @@ class Unroller( tracker : TransformationTracker ) extends TlaModuleTransformatio
 
 
   def getUnrollLimit( name : String, bodyMap : BodyMap ) : ExceptionOrValue[BigInt] = {
-    // We get the unrolling limit, which should be an operator in bodyMap:
-    val unrollLimitOperName = s"$UNROLL_TIMES_PREFIX$name"
+    // We get the unrolling limit, which should be an operator in bodyMap.
+    // note that operators inside named instances have a qualified name, e.g., I!Foo. Replace "!" with "_".
+    val unrollLimitOperName = s"$UNROLL_TIMES_PREFIX$name".replace('!', '_')
     bodyMap.get( unrollLimitOperName ) match {
       case Some( unrollLimitDecl ) =>
         // The unrollLimit operator must not be recursive ...
@@ -86,7 +87,8 @@ class Unroller( tracker : TransformationTracker ) extends TlaModuleTransformatio
   }
 
   def getDefaultBody( name : String, bodyMap : BodyMap ) : ExceptionOrValue[TlaEx] = {
-    val defaultOperName = s"$UNROLL_DEFAULT_PREFIX$name"
+    // note that operators inside named instances have a qualified name, e.g., I!Foo. Replace "!" with "_".
+    val defaultOperName = s"$UNROLL_DEFAULT_PREFIX$name".replace('!', '_')
     bodyMap.get( defaultOperName ) match {
       case Some( defaultDecl ) =>
         // ... which must not be recursive ...
