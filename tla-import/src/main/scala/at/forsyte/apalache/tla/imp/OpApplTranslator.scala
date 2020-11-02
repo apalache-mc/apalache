@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaStrSet}
@@ -117,8 +117,11 @@ class OpApplTranslator(sourceStore: SourceStore, val context: Context, val recSt
     // translate its arguments
     val exTran = ExprOrOpArgNodeTranslator(sourceStore, context, recStatus)
     val args = node.getArgs.toList.map { p => exTran.translate(p) }
+    val refByName = NameEx(decl.name)
+    sourceStore.add(refByName.ID, SourceLocation(node.getLocation)) // record the source location
     // apply the operator by its name
-    val app = OperEx(TlaOper.apply, NameEx(decl.name) +: args: _*)
+    val app = OperEx(TlaOper.apply, refByName +: args: _*)
+    sourceStore.add(app.ID, SourceLocation(node.getLocation)) // record the source location
     // return the expression LET F(..) = .. IN F(args)
     LetInEx(app, decl)
   }

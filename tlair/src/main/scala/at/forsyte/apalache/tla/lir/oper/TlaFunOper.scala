@@ -78,12 +78,15 @@ object TlaFunOper {
 
   /**
     * <p>A constructor of a recursive function, which is defined in TLA+ as: `f[x \in S] == ... f[y] ...`.
-    * We introduce a three-argument operator, whose arguments are as follows:</p>
+    * We introduce an operator that have at least 3 arguments, whose meaning is as follows:</p>
     *
     * <ul>
     *   <li>function body of type TlaEx that may refer to the function via recFunRef,</li>
-    *   <li>NameEx(variableName),</li>
-    *   <li>variable domain of type TlaEx.</li>
+    *   <li>NameEx(variableName1),</li>
+    *   <li>variable1 domain of type TlaEx.</li>
+    *   <li>...</li>
+    *   <li>NameEx(variableName_k),</li>
+    *   <li>variable_k domain of type TlaEx.</li>
     * </ul>
     *
     * <p>Hence, a declaration of a recursive operator looks like a nullary operator declaration,
@@ -123,7 +126,7 @@ object TlaFunOper {
     * </p>
     */
   object recFunDef extends TlaFunOper {
-    override def arity: OperArity = FixedArity(3)
+    override def arity: OperArity = new OperArity(_ >= 3)
     override def name: String = "rec-fun-def"
     override def precedence: (Int, Int) = (100, 100) // as the operator declaration
   }

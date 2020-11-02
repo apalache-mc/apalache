@@ -897,5 +897,19 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     assert(expected == stringWriter.toString)
   }
 
+  test("declaration of a recursive function of two arguments") {
+    val writer = new PrettyWriter(printWriter, 40)
+    val body = tla.appFun(tla.recFunRef(), tla.tuple(tla.name("y"), tla.name("x")))
+    val recFun =
+      tla.recFunDef(body, tla.name("x"), tla.name("S"), tla.name("y"), tla.name("S"))
+
+    val fDecl = TlaOperDecl("f", List(), recFun)
+    writer.write(fDecl)
+    printWriter.flush()
+    val expected =
+      """f[x \in S, y \in S] == f[y, x]""".stripMargin
+    assert(expected == stringWriter.toString)
+  }
+
 }
 

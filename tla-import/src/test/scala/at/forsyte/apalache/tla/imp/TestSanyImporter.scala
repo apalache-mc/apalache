@@ -1326,6 +1326,7 @@ class TestSanyImporter extends FunSuite {
         |CONSTANT S
         |nonRecFun[x \in S] == x
         |recFun[x \in S] == recFun[x]
+        |recFun2[x \in S, y \in S] == recFun2[y, x]
         |================================
         |""".stripMargin
 
@@ -1364,6 +1365,12 @@ class TestSanyImporter extends FunSuite {
           NameEx("x")),
           NameEx("x"),
           NameEx("S")))
+
+    val bodyOfFun2 = OperEx(TlaFunOper.app,
+      OperEx(TlaFunOper.recFunRef),
+      OperEx(TlaFunOper.tuple, NameEx("y"), NameEx("x")))
+    assertTlaRecFunDecl("recFun2",
+      OperEx(TlaFunOper.recFunDef, bodyOfFun2, NameEx("x"), NameEx("S"), NameEx("y"), NameEx("S")))
   }
 
   test("instances") {

@@ -218,6 +218,15 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
           text("{") <> nest(line <> binding <> ":" <> nest(line <> filter)) <> line <> text("}")
         ) ///
 
+        // a function of multiple arguments that are packed into a tuple: don't print the angular brackets <<...>>
+      case OperEx(op @ TlaFunOper.app, funEx, OperEx(TlaFunOper.tuple, args @ _*)) =>
+        val argDocs = args.map(toDoc(op.precedence, _))
+        val commaSeparatedArgs = folddoc(argDocs.toList, _ <> text(",") <@> _)
+        group(
+          toDoc(TlaFunOper.app.precedence, funEx) <> brackets(commaSeparatedArgs)
+        ) ///
+
+        // a function of a single argument
       case OperEx(TlaFunOper.app, funEx, argEx) =>
         group(
           toDoc(TlaFunOper.app.precedence, funEx) <>
@@ -422,12 +431,21 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
         group("ASSUME" <> parens(toDoc((0, 0), body)))
 
         // a declaration of a recursive function
-      case TlaOperDecl(name, List(),
-          OperEx(TlaFunOper.recFunDef, body, NameEx(argName), argDom)) =>
+      case TlaOperDecl(name, List(), OperEx(TlaFunOper.recFunDef, body, keysAndValues @ _*)) =>
+        val (ks, vs) = keysAndValues.zipWithIndex partition (_._2 % 2 == 0)
+        val (keys, values) = (ks.map(_._1), vs.map(_._1))
+        // format each key-value pair (k, v) into k \in v
+        val boxes =
+          keys.zip(values).map(p =>
+            group(toDoc((0, 0), p._1) <> space <> "\\in" <> nest(line <> toDoc((0, 0), p._2)))
+          ) ///
+
+        val binders = ssep(boxes.toList, comma <> line)
+
         // set the name of the recursive function. TLA+ forbids mutual recursion, so we do not need a stack
         recFunName = name
         // [x \in S]
-        val binding = brackets(text(argName) <> space <> "\\in" <> space <> toDoc((100, 100), argDom))
+        val binding = brackets(binders)
         // f[x \in S] == e
         val doc = group(name <> binding <> space <> "==" <> space <> toDoc((0, 0), body))
         recFunName = REC_FUN_UNDEFINED

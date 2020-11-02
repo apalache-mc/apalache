@@ -3,6 +3,8 @@ package at.forsyte.apalache.tla.lir.oper
 import at.forsyte.apalache.tla.lir.{TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.values.TlaStr
 
+import scala.annotation.tailrec
+
 /** An abstract operator */
 trait TlaOper extends Serializable {
   def name: String
@@ -36,6 +38,37 @@ trait TlaOper extends Serializable {
 }
 
 object TlaOper {
+  /**
+    * Group a list of arguments into two lists: even and odd. The indices are starting with 0.
+    * @param args a list of expressions
+    * @return a pair of lists: on even positions and on odd positions
+    */
+  def deinterleave(args: Seq[TlaEx]): (Seq[TlaEx], Seq[TlaEx]) = {
+    assert(args.length % 2 == 0)
+    @tailrec
+    def consume(even: Seq[TlaEx], odd: Seq[TlaEx], list: Seq[TlaEx]): (Seq[TlaEx], Seq[TlaEx]) = {
+      list match {
+        case Seq(a, b, tl@_*) => consume(even :+ a, odd :+ b, tl)
+        case Seq() => (even, odd)
+      }
+    }
+
+    consume(List.empty, List.empty, args)
+  }
+
+  /**
+    * Group two lists of arguments into a single interleaved list, starting with the head of even.
+    * @param even the list of even arguments
+    * @param odd the list of odd arguments
+    * @return the interleaved list
+    */
+  def interleave(even: Seq[TlaEx], odd: Seq[TlaEx]): Seq[TlaEx] = {
+    assert(even.length == odd.length)
+    even.zip(odd).foldLeft(List.empty[TlaEx]) {
+      case (l, (a, b)) => l :+ a :+ b
+    }
+  }
+
   /** Equality of two TLA+ objects */
   object eq extends TlaOper {
     val name = "="
