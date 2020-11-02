@@ -1628,8 +1628,9 @@ class TestSanyImporter extends FunSuite {
     }
   }
 
-  // this test fails for the moment
-  ignore("RECURSIVE operator inside INSTANCE") {
+  // This test works due a temporary bugfix for issue #130.
+  // We should test it again, once the bug in SANY is fixed.
+  test("RECURSIVE operator inside INSTANCE") {
     val text =
       """---- MODULE recInInstance ----
         |---- MODULE M ----
