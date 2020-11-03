@@ -19,17 +19,6 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
   private val type1Parser = DefaultType1Parser
 
   /**
-    * The counter that we use to produce fresh variables
-    */
-  private var nextVarNum = 0
-
-  /**
-    * Get the number just above the maximum variable number
-    * @return an upper bound on the variable numbers
-    */
-  def varNumUpperBound: Int = nextVarNum
-
-  /**
     * Translate an operator declaration.
     *
     * @param decl an operator declaration
@@ -851,8 +840,7 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
   }
 
   private def renameVars(tt: TlaType1): TlaType1 = {
-    val shift = tt.usedNames.toSeq.map(i => i -> VarT1(i + nextVarNum))
-    nextVarNum += shift.size
-    Substitution(shift: _*)(tt)
+    val varRenamingMap = tt.usedNames.toSeq.map(i => i -> varPool.fresh)
+    Substitution(varRenamingMap: _*)(tt)
   }
 }
