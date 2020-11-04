@@ -363,13 +363,8 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
 
       case OperEx(TlaSetOper.map, mapExpr, args @ _*) =>
         // { x \in S, y \in T: e }
-        val (vars, sets) = args.zipWithIndex.partition(_._2 % 2 == 0)
-        if (vars.length != sets.length) {
-          throw new TypingException(
-            "Invalid bound variables and sets in: " + ex
-          )
-        }
-        val bindings = translateBindings(vars.map(_._1).zip(sets.map(_._1)): _*)
+        val (vars, sets) = TlaOper.deinterleave(args)
+        val bindings = translateBindings(vars zip sets: _*)
         val a = varPool.fresh
         val otherTypeVars =
           varPool.fresh(
