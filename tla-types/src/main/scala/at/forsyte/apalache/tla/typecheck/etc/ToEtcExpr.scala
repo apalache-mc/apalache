@@ -771,9 +771,9 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
           "Found a type annotation in an unexpected place: " + wte
         )
 
-      case _ =>
-        val a = varPool.fresh
-        mkConst(ref, a)
+      // This should be unreachable
+      case expr =>
+        throw new IllegalArgumentException(s"Unknown TlaEx expression ${expr}")
     }
   }
 
