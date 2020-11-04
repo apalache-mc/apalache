@@ -181,6 +181,9 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     log(s"(assert ${z3expr.toString})")
     z3solver.add(z3expr.asInstanceOf[BoolExpr])
 
+    /*
+    // the old way to profile, which is quite slow and not very useful
+
     if (profile) {
       val timeBefore = System.nanoTime()
       sat()
@@ -189,6 +192,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
       val diffNano = (timeAfter - timeBefore) % 1000000000
       log(";;;;;  @@ TIME TO SAT: %05d.%09d sec @@".format(diffSec, diffNano))
     }
+     */
   }
 
   /**

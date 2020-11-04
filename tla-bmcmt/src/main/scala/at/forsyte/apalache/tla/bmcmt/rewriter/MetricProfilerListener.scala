@@ -20,7 +20,13 @@ class MetricProfilerListener(sourceStore: SourceStore, changeListener: ChangeLis
     extends SymbStateRewriterListener with LazyLogging {
   private var _metricsPerId: Map[UID, SolverContextMetrics] = Map()
   private val sourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
+  private var syncTimestampSecMillis: Long = System.currentTimeMillis()
 
+  /**
+    * This method is called by the symbolic state rewriter.
+    * @param translatedEx an expression to report
+    * @param metricsDelta the SMT metrics that were reported during the translation to SMT
+    */
   override def onRewrite(translatedEx: TlaEx, metricsDelta: SolverContextMetrics): Unit = {
     val id = translatedEx.ID
     if (changeListener.isDefinedAt(id) || sourceStore.contains(id)) {
@@ -31,6 +37,12 @@ class MetricProfilerListener(sourceStore: SourceStore, changeListener: ChangeLis
 
         case Some(old: SolverContextMetrics) =>
           _metricsPerId += id -> old.add(metricsDelta)
+      }
+
+      val now = System.currentTimeMillis()
+      if (now - syncTimestampSecMillis >= MetricProfilerListener.FILE_SYNC_MS) {
+        syncTimestampSecMillis = now
+        dumpToFile()
       }
     }
   }
@@ -75,7 +87,12 @@ object MetricProfilerListener {
   /**
     * The minimal weight that is required to print a profile entry
     */
-  val MIN_WEIGHT = 3
+  val MIN_WEIGHT = 1
+
+  /**
+    * How often (in milliseconds) an update triggers a sync to file.
+    */
+  val FILE_SYNC_MS = 60000
 
   protected object EntryOrdering extends Ordering[(UID, SolverContextMetrics)] {
     override def compare(x: (UID, SolverContextMetrics), y: (UID, SolverContextMetrics)): Int = {

@@ -56,7 +56,7 @@ class ModelChecker(typeFinder: TypeFinder[CellT],
       solverContext,
       typeFinder, exprGradeStore,
       if (profile) {
-        Some(new MetricProfilerListener(sourceStore, changeListener, new File("profile.txt")))
+        Some(new MetricProfilerListener(sourceStore, changeListener, new File("profile.csv")))
       } else {
         None
       })
