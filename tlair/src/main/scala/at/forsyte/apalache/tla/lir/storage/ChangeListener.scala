@@ -60,6 +60,15 @@ class ChangeListener extends TransformationListener {
     }
   }
 
+  /**
+    * Is identifier p_id registered as a result of translation?
+    * @param p_id expression identifier
+    * @return true, if p_id has been registered
+    */
+  def isDefinedAt(p_id: UID): Boolean = {
+    map.isDefinedAt(p_id)
+  }
+
   def traceBack( p_id : UID ) : UID = map.get( p_id ) match {
     case Some( id ) => traceBack( id )
     case _ => p_id

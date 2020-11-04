@@ -6,5 +6,5 @@ class IdleSmtListener extends SmtListener {
 
   override def onIntroCell(id: Long): Unit = {}
 
-  override def onSmtAssert(e: TlaEx): Unit = {}
+  override def onSmtAssert(e: TlaEx, nSmtNodes: Long): Unit = {}
 }
