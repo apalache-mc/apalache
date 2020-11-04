@@ -130,7 +130,6 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
       )
   }
 
-  // TODO: a long string of translation rules. Can we decompose it?
   /**
    * Translate an expression.
     *
