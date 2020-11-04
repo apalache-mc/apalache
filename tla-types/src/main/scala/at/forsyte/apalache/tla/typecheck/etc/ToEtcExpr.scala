@@ -630,12 +630,7 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
         val opsig = OperT1(Seq(a), a) // a => a
         mkExRefApp(opsig, Seq(inner))
 
-      case OperEx(TlaActionOper.stutter, args @ _*) =>
-        // Bool, a, b, c => Bool
-        val opsig = OperT1(BoolT1() +: varPool.fresh(args.length - 1), BoolT1())
-        mkExRefApp(opsig, args)
-
-      case OperEx(TlaActionOper.nostutter, args @ _*) =>
+      case OperEx(op, args @ _*) if op == TlaActionOper.stutter || op == TlaActionOper.nostutter =>
         // Bool, a, b, c => Bool
         val opsig = OperT1(BoolT1() +: varPool.fresh(args.length - 1), BoolT1())
         mkExRefApp(opsig, args)
