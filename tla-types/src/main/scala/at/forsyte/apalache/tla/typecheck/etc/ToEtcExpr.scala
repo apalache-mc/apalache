@@ -111,6 +111,11 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
     case TlaStrSet  => SetT1(StrT1())
   }
 
+  private def typeOfBoolOperArgs(args: Seq[TlaEx]): OperT1 = {
+    val nBools = List.fill(args.length)(BoolT1())
+    OperT1(nBools, BoolT1())
+  }
+
   // Valid when the input seq has two items, the first of which is a VlaEx(TlaStr(_))
   val validateRecordPair : Seq[TlaEx] => (String, TlaEx) = {
     // Only pairs coordinating pairs and sets are valid. See TlaSetOper.recSet
@@ -232,12 +237,16 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
         }
 
       //******************************************** BOOLEANS **************************************************
+      case OperEx(op, a, b)
+        if op == TlaBoolOper.equiv || op == TlaBoolOper.implies =>
+        // A <=> B, A => B
+        val args = Seq(a, b)
+        mkExRefApp(typeOfBoolOperArgs(args), args)
+
       case OperEx(op, args @ _*)
-          if op == TlaBoolOper.and || op == TlaBoolOper.or || op == TlaBoolOper.equiv || op == TlaBoolOper.implies =>
-        // A /\ B, A \/ B, A <=> B, A => B
-        val nBools = List.fill(args.length)(BoolT1())
-        val opsig = OperT1(nBools, BoolT1())
-        mkExRefApp(opsig, args)
+          if op == TlaBoolOper.and || op == TlaBoolOper.or  =>
+        // A /\ B /\ ... /\ C, A \/ B \/ ... \/ C
+        mkExRefApp(typeOfBoolOperArgs(args), args)
 
       case OperEx(TlaBoolOper.not, arg) =>
         // ~A
