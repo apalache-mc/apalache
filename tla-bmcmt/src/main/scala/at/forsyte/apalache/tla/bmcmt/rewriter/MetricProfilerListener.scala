@@ -87,7 +87,7 @@ object MetricProfilerListener {
   /**
     * The minimal weight that is required to print a profile entry
     */
-  val MIN_WEIGHT = 1
+  val MIN_WEIGHT = 0
 
   /**
     * How often (in milliseconds) an update triggers a sync to file.
