@@ -1254,7 +1254,7 @@ Inv ==
 =========================================================================
 ```
 
-Apalache has its own bottlenecks. As it using the SMT solver z3,
+Apalache has its own bottlenecks. As it's using the SMT solver z3,
 we cannot precisely profile your TLA+ specification. However, we can profile
 the number of SMT variables and constraints that Apalache produces for different
 parts of your specification. To activate this profiling mode, use the option
@@ -1288,6 +1288,9 @@ The meaning of the columns is as follows:
 
   * `nSmtExprs` is the number of SMT expressions that are produced by the translator.
     We also include all subexpressions, when counting this metric.
+
+  * `location` is the location in the source code where the expression
+     was found, indicated by the file name correlated with a range of `line:column` pairs.
 
 To visualize the profiling data, you can use the script `script/heatmap.py`:
 

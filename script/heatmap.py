@@ -110,8 +110,7 @@ def find_max_weight(regions):
 
 
 def write_heatmap(heatfile, code_filename, regions):
-    """Write code lines with while coloring them by code regions"""
-
+    """Write code lines while coloring them by code regions"""
 
     def drop_old_regions(regions, line_no):
         # remove the regions that end before line_no
@@ -235,7 +234,7 @@ if __name__ == "__main__":
     </style>
   </head>
   <body>
-    <h2>What is that?</h2>
+    <h2>What is this?</h2>
 
     <p>This is a heatmap of your TLA+ specification that was produced by
         <a href="https://github.com/informalsystems/apalache">Apalache</a>.
@@ -274,4 +273,3 @@ if __name__ == "__main__":
             write_heatmap(heatfile, filename, regions_by_filename[filename])
 
         print("</body><html>", file=heatfile)
-

@@ -404,7 +404,6 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
         val smtWatermark = solverContext.metrics()
         val nextState = doRecursive(0, state)
         profilerListener.foreach{ _.onRewrite(state.ex, solverContext.metrics().delta(smtWatermark)) }
-        // listener.recordMetrics(delta)
         exprCache.put(state.ex, nextState.ex) // the grade is not important
         nextState
     }
