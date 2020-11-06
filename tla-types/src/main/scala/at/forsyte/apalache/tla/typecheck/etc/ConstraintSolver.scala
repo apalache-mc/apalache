@@ -12,8 +12,8 @@ class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
   private var constraints: List[Clause] = List.empty
   private var typesToReport: List[(Clause, TlaType1)] = List.empty
 
-  def addConstraint(cons: Clause): Unit = {
-    constraints = constraints :+ cons
+  def addConstraint(constraint: Clause): Unit = {
+    constraints = constraints :+ constraint
   }
 
   def solvePartially(): Option[Substitution] = {
