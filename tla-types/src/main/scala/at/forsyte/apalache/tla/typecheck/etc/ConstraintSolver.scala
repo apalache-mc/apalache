@@ -86,13 +86,9 @@ class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
 
       case OrClause(eqs @ _*) =>
         // try to solve a disjunctive clause
-        val solutions = eqs.map(e => solveOne(solution, e)).collect { case Some(s) => s }
-        if (solutions.size != 1) {
-          // either no solution, or multiple solutions
-          None
-        } else {
-          // there is a unique solution
-          Some(solutions.head)
+        eqs.flatMap(solveOne(solution, _)) match {
+          case Seq(uniqueSolution) => Some(uniqueSolution)
+          case _noneOrAmbiguous => None
         }
     }
   }
