@@ -189,19 +189,6 @@ class Z3SolverContext(config: SolverConfig) extends SolverContext {
     val z3expr = toExpr(ex)
     log(s"(assert ${z3expr.toString})")
     z3solver.add(z3expr.asInstanceOf[BoolExpr])
-
-    /**
-    // The old and inefficient way to profile.
-    // Instead, use: https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md#profiler
-    if (config.profile) {
-      val timeBefore = System.nanoTime()
-      sat()
-      val timeAfter = System.nanoTime()
-      val diffSec = (timeAfter - timeBefore) / 1000000000
-      val diffNano = (timeAfter - timeBefore) % 1000000000
-      log(";;;;;  @@ TIME TO SAT: %05d.%09d sec @@".format(diffSec, diffNano))
-    }
-    */
   }
 
   /**
