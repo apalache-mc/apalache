@@ -227,7 +227,7 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
 
     for (i <- List(1, 2, 3)) {
       // reinitialize the arena and the solver
-      solverContext = new PreproSolverContext(new Z3SolverContext(debug = true))
+      solverContext = new PreproSolverContext(solverContext)
       arena = Arena.create(solverContext)
       arena = arena.appendCell(IntT())
       val icell = arena.topCell
@@ -271,7 +271,7 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
 
     for (i <- List(1, 2, 3, 99)) {
       // reinitialize the arena and the solver
-      solverContext = new PreproSolverContext(new Z3SolverContext(debug = true))
+      solverContext = new PreproSolverContext(solverContext)
       arena = Arena.create(solverContext)
       arena = arena.appendCell(IntT())
       val icell = arena.topCell

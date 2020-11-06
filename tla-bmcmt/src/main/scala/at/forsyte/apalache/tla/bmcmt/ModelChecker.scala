@@ -1,24 +1,21 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import java.io.{FileWriter, PrintWriter, StringWriter}
-import java.util.Calendar
 
-import at.forsyte.apalache.tla.assignments.FalseEx
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore}
 import at.forsyte.apalache.tla.bmcmt.rewriter.{ConstSimplifierForSmt, RewriterConfig}
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, MockOracle, Oracle}
 import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy
 import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy._
-import at.forsyte.apalache.tla.bmcmt.smt.{SolverContext, Z3SolverContext}
+import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, SolverContext, Z3SolverContext}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.bmcmt.util.TlaExUtil
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.io._
-import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaStr}
+import at.forsyte.apalache.tla.lir.values.TlaBool
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.immutable.SortedMap
@@ -50,7 +47,9 @@ class ModelChecker(typeFinder: TypeFinder[CellT],
     */
   private var stack: List[(SymbState, Oracle)] = List()
   private var typesStack: Seq[SortedMap[String, CellT]] = Seq()
-  private val solverContext: SolverContext = new Z3SolverContext(debug, profile)
+  private val solverContext: SolverContext =
+    new Z3SolverContext(SolverConfig(debug, profile,
+      randomSeed = tuningOptions.getOrElse("smt.randomSeed", "0").toInt))
   // TODO: figure out why the preprocessor slows down invariant checking. Most likely, there is a bug.
   //      new PreproSolverContext(new Z3SolverContext(debug, profile))
 
