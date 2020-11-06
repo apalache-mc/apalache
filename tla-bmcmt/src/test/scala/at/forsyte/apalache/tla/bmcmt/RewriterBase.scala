@@ -2,17 +2,17 @@ package at.forsyte.apalache.tla.bmcmt
 
 import java.io.{PrintWriter, StringWriter}
 
-import at.forsyte.apalache.tla.bmcmt.smt.{PreproSolverContext, SolverContext, Z3SolverContext}
+import at.forsyte.apalache.tla.bmcmt.smt.{PreproSolverContext, SolverConfig, SolverContext, Z3SolverContext}
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir.convenience.tla
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 
 class RewriterBase extends FunSuite with BeforeAndAfterEach {
-  protected var solverContext: SolverContext = new PreproSolverContext(new Z3SolverContext())
-  protected var arena: Arena = Arena.create(solverContext)
+  protected var solverContext: SolverContext = _
+  protected var arena: Arena = _
 
   override def beforeEach() {
-    solverContext = new PreproSolverContext(new Z3SolverContext(debug = true))
+    solverContext = new PreproSolverContext(new Z3SolverContext(SolverConfig.default.copy(debug = true)))
     arena = Arena.create(solverContext)
   }
 

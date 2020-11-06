@@ -17,17 +17,32 @@ import com.microsoft.z3.enumerations.Z3_lbool
 import scala.collection.mutable
 
 /**
-  * An implementation of a SolverContext using Z3.
+  * <p>
+  * An implementation of a SolverContext using Z3. Note that this class overrides the global z3 settings
+  * `sat.random_seed`, `smt.random_seed`, `fp.spacer.random_seed`, and `sls.random_seed` with `config.randomSeed`.
+  * Although it is usually not a good idea to override the global settings, we do it to isolate the code
+  * specific to z3 in this class.
+  * </p>
   *
   * @author Igor Konnov
   */
-class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends SolverContext {
+class Z3SolverContext(config: SolverConfig) extends SolverContext {
   private val id: Long = Z3SolverContext.createId()
 
   /**
     * A log writer, for debugging purposes.
     */
   private val logWriter: PrintWriter = initLog()
+
+  // dump the configuration parameters in the log
+  // set the global configuration parameters for z3 modules
+  Z3SolverContext.RANDOM_SEED_PARAMS.foreach {
+    p =>
+      Global.setParameter(p, config.randomSeed.toString)
+      logWriter.println(";; %s = %s".format(p, config.randomSeed))
+//    the following fails with an exception: java.lang.NoSuchFieldError: value
+//      logWriter.println(";; %s = %s".format(p, Global.getParameter(p)))
+  }
 
   var level: Int = 0
   var nBoolConsts: Int = 0 // the solver introduces Boolean constants internally
@@ -180,19 +195,6 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     smtListener.onSmtAssert(ex, size)
     log(s"(assert ${z3expr.toString})")
     z3solver.add(z3expr.asInstanceOf[BoolExpr])
-
-    /*
-    // the old way to profile, which is quite slow and not very useful
-
-    if (profile) {
-      val timeBefore = System.nanoTime()
-      sat()
-      val timeAfter = System.nanoTime()
-      val diffSec = (timeAfter - timeBefore) / 1000000000
-      val diffNano = (timeAfter - timeBefore) % 1000000000
-      log(";;;;;  @@ TIME TO SAT: %05d.%09d sec @@".format(diffSec, diffNano))
-    }
-     */
   }
 
   /**
@@ -225,7 +227,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
 
   private def initLog(): PrintWriter = {
     val writer = new PrintWriter(new File(s"log$id.smt"))
-    if (!debug) {
+    if (!config.debug) {
       writer.println("Logging is disabled (Z3SolverContext.debug = false). Activate with --debug.")
       writer.flush()
     }
@@ -238,7 +240,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     * @param message message text, called by name, so evaluated only when needed
     */
   def log(message: => String): Unit = {
-    if (debug) {
+    if (config.debug) {
       logWriter.println(message)
     }
   }
@@ -628,4 +630,10 @@ object Z3SolverContext {
   private def createId(): Long = {
     nextId.getAndIncrement()
   }
+
+  /**
+    * The names of all parameters that are used to set the random seeds in z3.
+    */
+  val RANDOM_SEED_PARAMS: List[String] =
+    List("sat.random_seed", "smt.random_seed", "fp.spacer.random_seed", "sls.random_seed")
 }

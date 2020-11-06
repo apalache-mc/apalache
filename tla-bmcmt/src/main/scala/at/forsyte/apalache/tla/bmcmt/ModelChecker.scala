@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.bmcmt.rewriter.{ConstSimplifierForSmt, MetricProf
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, MockOracle, Oracle}
 import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy
 import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy._
-import at.forsyte.apalache.tla.bmcmt.smt.{SolverContext, Z3SolverContext}
+import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, SolverContext, Z3SolverContext}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.bmcmt.util.TlaExUtil
 import at.forsyte.apalache.tla.imp.src.SourceStore
@@ -47,7 +47,9 @@ class ModelChecker(typeFinder: TypeFinder[CellT],
     */
   private var stack: List[(SymbState, Oracle)] = List()
   private var typesStack: Seq[SortedMap[String, CellT]] = Seq()
-  private val solverContext: SolverContext = new Z3SolverContext(debug, profile)
+  private val solverContext: SolverContext =
+    new Z3SolverContext(SolverConfig(debug, profile,
+      randomSeed = tuningOptions.getOrElse("smt.randomSeed", "0").toInt))
   // TODO: figure out why the preprocessor slows down invariant checking. Most likely, there is a bug.
   //      new PreproSolverContext(new Z3SolverContext(debug, profile))
 
