@@ -35,10 +35,10 @@ trait SolverContext extends StackableContext {
   def checkConsistency(arena: Arena): Unit
 
     /**
-    * Assert that a Boolean TLA+ expression holds true.
-    *
-    * @param ex a simplified TLA+ expression over cells
-    */
+      * Assert that a Boolean TLA+ expression holds true.
+      *
+      * @param ex a simplified TLA+ expression over cells
+      */
   def assertGroundExpr(ex: TlaEx): Unit
 
   /**
@@ -79,4 +79,10 @@ trait SolverContext extends StackableContext {
     * @param listener register a listener, overrides the previous listener, if it was set before
     */
   def setSmtListener(listener: SmtListener): Unit
+
+  /**
+    * Get the current metrics in the solver context. The metrics may change when the other methods are called.
+    * @return the current metrics
+    */
+  def metrics(): SolverContextMetrics
 }

@@ -35,6 +35,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
   private val z3solver = z3context.mkSolver()
   private val simplifier = new ConstSimplifierForSmt()
   private var smtListener: SmtListener = new IdleSmtListener()
+  private var _metrics: SolverContextMetrics = SolverContextMetrics.empty
 
   /**
     * Caching one uninterpreted sort for each cell signature. For integers, the integer sort.
@@ -117,6 +118,8 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
         else NameEx(cellName)
       assertGroundExpr(expr)
     }
+
+    _metrics = _metrics.addNCells(1)
   }
 
   override def declareInPredIfNeeded(set: ArenaCell, elem: ArenaCell): Unit = {
@@ -130,6 +133,8 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
       nBoolConsts += 1
       val const = z3context.mkConst(name, z3context.getBoolSort)
       inCache += ((set.id, elem.id) -> (const, level))
+
+      _metrics = _metrics.addNConsts(1)
     }
   }
 
@@ -169,11 +174,15 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     * @param ex a simplified TLA+ expression over cells
     */
   def assertGroundExpr(ex: TlaEx): Unit = {
-    smtListener.onSmtAssert(ex)
     log(s";; assert ${UTFPrinter.apply(ex)}")
-    val z3expr = toExpr(ex)
+    val (z3expr, size) = toExpr(ex)
+    _metrics = _metrics.addNSmtExprs(size)
+    smtListener.onSmtAssert(ex, size)
     log(s"(assert ${z3expr.toString})")
     z3solver.add(z3expr.asInstanceOf[BoolExpr])
+
+    /*
+    // the old way to profile, which is quite slow and not very useful
 
     if (profile) {
       val timeBefore = System.nanoTime()
@@ -183,6 +192,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
       val diffNano = (timeAfter - timeBefore) % 1000000000
       log(";;;;;  @@ TIME TO SAT: %05d.%09d sec @@".format(diffSec, diffNano))
     }
+     */
   }
 
   /**
@@ -194,7 +204,8 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     * @return a TLA+ value
     */
   def evalGroundExpr(ex: TlaEx): TlaEx = {
-    val z3expr = z3solver.getModel.eval(toExpr(ex), true)
+    val (smtEx, _) = toExpr(ex)
+    val z3expr = z3solver.getModel.eval(smtEx, true)
     z3expr match {
       case b: BoolExpr =>
         val isTrue = b.getBoolValue.equals(Z3_lbool.Z3_L_TRUE)
@@ -253,6 +264,7 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
       log(s"(declare-fun $funName ($domSort) $cdmSort)")
       val funDecl = z3context.mkFuncDecl(funName, domSort, cdmSort)
       funDecls += (funName -> (funDecl, level))
+      _metrics = _metrics.addNConsts(1)
     }
   }
 
@@ -357,6 +369,14 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     smtListener = listener
   }
 
+
+  /**
+    * Get the current metrics in the solver context. The metrics may change when the other methods are called.
+    *
+    * @return the current metrics
+    */
+  override def metrics(): SolverContextMetrics = _metrics
+
   private def getOrMkCellSort(cellType: CellT): Sort = {
     val sig = "Cell_" + cellType.signature
     val sort = cellSorts.get(sig)
@@ -387,20 +407,24 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     }
   }
 
-  private def toExpr(ex: TlaEx): Expr = {
+  private def toExpr(ex: TlaEx): (Expr, Long) = {
     simplifier.simplifyShallow(ex) match {
       case NameEx(name) =>
-        cellCache(ArenaCell.idFromName(name))._1 // the cached cell
+        val nm = cellCache(ArenaCell.idFromName(name))._1 // the cached cell
+        (nm, 1)
 
       case ValEx(TlaBool(false)) =>
-        z3context.mkFalse()
+        val bool = z3context.mkFalse()
+        (bool, 1)
 
       case ValEx(TlaBool(true)) =>
-        z3context.mkTrue()
+        val bool = z3context.mkTrue()
+        (bool, 1)
 
       case ValEx(TlaInt(num)) =>
         if (num.isValidLong) {
-          z3context.mkInt(num.toLong)
+          val int = z3context.mkInt(num.toLong)
+          (int, 1)
         } else {
           flushAndThrow(new SmtEncodingException(s"SMT $id: A number constant is too large to fit in Long: $num", NullEx))
         }
@@ -416,59 +440,74 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
       case OperEx(TlaOper.eq, lhs@NameEx(lname), rhs@NameEx(rname)) =>
         if (ArenaCell.isValidName(lname) && ArenaCell.isValidName(rname)) {
           // just comparing cells
-          z3context.mkEq(cellCache(ArenaCell.idFromName(lname))._1, cellCache(ArenaCell.idFromName(rname))._1)
+          val eq = z3context.mkEq(cellCache(ArenaCell.idFromName(lname))._1, cellCache(ArenaCell.idFromName(rname))._1)
+          (eq, 1)
         } else {
           // comparing integers and Boolean to cells, Booleans to Booleans, and Integers to Integers
-          toEqExpr(toExpr(lhs), toExpr(rhs))
+          val (le, ln) = toExpr(lhs)
+          val (re, rn) = toExpr(rhs)
+          val eq = toEqExpr(le, re)
+          (eq, 1 + ln + rn)
         }
 
       case OperEx(TlaOper.eq, lhs, rhs) =>
-        toEqExpr(toExpr(lhs), toExpr(rhs))
+        val (le, ln) = toExpr(lhs)
+        val (re, rn) = toExpr(rhs)
+        val eq = toEqExpr(le, re)
+        (eq, 1 + ln + rn)
 
       case OperEx(TlaOper.ne, lhs, rhs) =>
-        z3context.mkNot(toExpr(OperEx(TlaOper.eq, lhs, rhs)).asInstanceOf[BoolExpr])
+        val (eq, n) = toExpr(OperEx(TlaOper.eq, lhs, rhs))
+        (z3context.mkNot(eq.asInstanceOf[BoolExpr]), 1 + n)
 
       case OperEx(BmcOper.distinct, args @ _*) =>
-        z3context.mkDistinct(args map toExpr :_*)
+        val (es, ns) = (args map toExpr).unzip
+        val distinct = z3context.mkDistinct(es :_*)
+        (distinct, ns.foldLeft(1L){ _ + _ })
 
-      case OperEx(TlaBoolOper.and, es@_*) =>
-        val newEs = es.map(toExpr(_).asInstanceOf[BoolExpr])
-        z3context.mkAnd(newEs: _*)
+      case OperEx(TlaBoolOper.and, args@_*) =>
+        val (es, ns) = (args map toExpr).unzip
+        val and = z3context.mkAnd(es.map(_.asInstanceOf[BoolExpr]) :_*)
+        (and, ns.foldLeft(1L){ _ + _ })
 
-      case OperEx(TlaBoolOper.or, es@_*) =>
-        val mapped_es = es map toExpr
-        // check the assertion before casting, to make debugging easier
-        assert(mapped_es.forall(_.isInstanceOf[BoolExpr]))
-        val cast_es = mapped_es.map(_.asInstanceOf[BoolExpr])
-        z3context.mkOr(cast_es: _*)
+      case OperEx(TlaBoolOper.or, args @ _*) =>
+        val (es, ns) = (args map toExpr).unzip
+        val or = z3context.mkOr(es.map(_.asInstanceOf[BoolExpr]) :_*)
+        (or, ns.foldLeft(1L){ _ + _ })
 
       case OperEx(TlaBoolOper.implies, lhs, rhs) =>
-        val lhsZ3 = toExpr(lhs).asInstanceOf[BoolExpr]
-        val rhsZ3 = toExpr(rhs).asInstanceOf[BoolExpr]
-        z3context.mkImplies(lhsZ3, rhsZ3)
+        val (lhsZ3, ln) = toExpr(lhs)
+        val (rhsZ3, rn) = toExpr(rhs)
+        val imp = z3context.mkImplies(lhsZ3.asInstanceOf[BoolExpr], rhsZ3.asInstanceOf[BoolExpr])
+        (imp, 1 + ln + rn)
 
       case OperEx(TlaBoolOper.equiv, lhs, rhs) =>
-        val lhsZ3 = toExpr(lhs).asInstanceOf[BoolExpr]
-        val rhsZ3 = toExpr(rhs).asInstanceOf[BoolExpr]
-        z3context.mkEq(lhsZ3, rhsZ3)
+        val (lhsZ3, ln) = toExpr(lhs)
+        val (rhsZ3, rn) = toExpr(rhs)
+        val equiv = z3context.mkEq(lhsZ3.asInstanceOf[BoolExpr], rhsZ3.asInstanceOf[BoolExpr])
+        (equiv, 1 + ln + rn)
 
       case OperEx(TlaControlOper.ifThenElse, cond, thenExpr, elseExpr) =>
-        val boolCond = toExpr(cond).asInstanceOf[BoolExpr]
-        val thenZ3 = toExpr(thenExpr)
-        val elseZ3 = toExpr(elseExpr)
-        z3context.mkITE(boolCond, thenZ3, elseZ3)
+        val (boolCond, cn) = toExpr(cond)
+        val (thenZ3, tn) = toExpr(thenExpr)
+        val (elseZ3, en) = toExpr(elseExpr)
+        val ite = z3context.mkITE(boolCond.asInstanceOf[BoolExpr], thenZ3, elseZ3)
+        (ite, 1 + cn + tn + en)
 
       case OperEx(TlaBoolOper.not, e) =>
-        val exZ3 = toExpr(e).asInstanceOf[BoolExpr]
-        z3context.mkNot(exZ3)
+        val (exZ3, n) = toExpr(e)
+        val not = z3context.mkNot(exZ3.asInstanceOf[BoolExpr])
+        (not, 1 + n)
 
       case OperEx(TlaSetOper.notin, elem, set) =>
-        z3context.mkNot(toExpr(OperEx(TlaSetOper.in, elem, set)).asInstanceOf[BoolExpr])
+        val (e, n) = toExpr(OperEx(TlaSetOper.in, elem, set))
+        val not = z3context.mkNot(e.asInstanceOf[BoolExpr])
+        (not, 1 + n)
 
       case OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName)) =>
         val setId = ArenaCell.idFromName(setName)
         val elemId = ArenaCell.idFromName(elemName)
-        getInPred(setId, elemId)
+        (getInPred(setId, elemId), 1)
 
       // the old implementation allowed us to do that, but the new one is encoding edges directly
     case OperEx(TlaSetOper.in, ValEx(TlaInt(_)), NameEx(_))
@@ -503,62 +542,68 @@ class Z3SolverContext(debug: Boolean = false, profile: Boolean = false) extends 
     }
   }
 
-  private def toArithExpr(ex: TlaEx): Expr = {
+  private def toArithExpr(ex: TlaEx): (Expr, Long) = {
+    def mkBinEx(ctor: (ArithExpr, ArithExpr) => Expr, left: TlaEx, right: TlaEx): (Expr, Long) = {
+      val (le, ln) = toArithExpr(left)
+      val (re, rn) = toArithExpr(right)
+      val z3ex = ctor(le.asInstanceOf[ArithExpr], re.asInstanceOf[ArithExpr])
+      (z3ex, 1 + ln + rn)
+    }
+
     ex match {
       case ValEx(TlaInt(num)) =>
         if (num.isValidLong) {
-          z3context.mkInt(num.toLong)
+          val n = z3context.mkInt(num.toLong)
+          (n, 1)
         } else {
           flushAndThrow(new SmtEncodingException(s"SMT $id: A number constant is too large to fit in Long: " + num, ex))
         }
 
       case NameEx(name) =>
-        z3context.mkIntConst(name) // TODO: incompatible sorts?
+        val n = z3context.mkIntConst(name) // TODO: incompatible sorts?
+        (n, 1)
 
       case OperEx(TlaArithOper.lt, left, right) =>
-        z3context.mkLt(toArithExpr(left).asInstanceOf[ArithExpr],
-          toArithExpr(right).asInstanceOf[ArithExpr])
+        mkBinEx(z3context.mkLt, left, right)
 
       case OperEx(TlaArithOper.le, left, right) =>
-        z3context.mkLe(toArithExpr(left).asInstanceOf[ArithExpr],
-          toArithExpr(right).asInstanceOf[ArithExpr])
+        mkBinEx(z3context.mkLe, left, right)
 
       case OperEx(TlaArithOper.gt, left, right) =>
-        z3context.mkGt(toArithExpr(left).asInstanceOf[ArithExpr],
-          toArithExpr(right).asInstanceOf[ArithExpr])
+        mkBinEx(z3context.mkGt, left, right)
 
       case OperEx(TlaArithOper.ge, left, right) =>
-        z3context.mkGe(toArithExpr(left).asInstanceOf[ArithExpr],
-          toArithExpr(right).asInstanceOf[ArithExpr])
+        mkBinEx(z3context.mkGe, left, right)
 
       case OperEx(TlaArithOper.plus, left, right) =>
-        z3context.mkAdd(toArithExpr(left).asInstanceOf[ArithExpr],
-          toArithExpr(right).asInstanceOf[ArithExpr])
+        mkBinEx({ case (l, r) => z3context.mkAdd(l, r) }, left, right)
 
       case OperEx(TlaArithOper.minus, left, right) =>
-        z3context.mkSub(toArithExpr(left).asInstanceOf[ArithExpr],
-          toArithExpr(right).asInstanceOf[ArithExpr])
+        mkBinEx({ case (l, r) => z3context.mkSub(l, r) }, left, right)
 
       case OperEx(TlaArithOper.mult, left, right) =>
-        z3context.mkMul(toArithExpr(left).asInstanceOf[ArithExpr],
-          toArithExpr(right).asInstanceOf[ArithExpr])
+        mkBinEx({ case (l, r) => z3context.mkMul(l, r) }, left, right)
 
       case OperEx(TlaArithOper.div, left, right) =>
-        z3context.mkDiv(toArithExpr(left).asInstanceOf[ArithExpr],
-          toArithExpr(right).asInstanceOf[ArithExpr])
+        mkBinEx(z3context.mkDiv, left, right)
 
       case OperEx(TlaArithOper.mod, left, right) =>
-        z3context.mkMod(toArithExpr(left).asInstanceOf[IntExpr],
-          toArithExpr(right).asInstanceOf[IntExpr])
+        val (le, ln) = toArithExpr(left)
+        val (re, rn) = toArithExpr(right)
+        val mod = z3context.mkMod(le.asInstanceOf[IntExpr], re.asInstanceOf[IntExpr])
+        (mod, 1 + ln + rn)
 
       case OperEx(TlaArithOper.uminus, subex) =>
-        z3context.mkUnaryMinus(toArithExpr(subex).asInstanceOf[IntExpr])
+        val (e, n) = toArithExpr(subex)
+        val minus = z3context.mkUnaryMinus(e.asInstanceOf[IntExpr])
+        (minus, 1 + n)
 
       case OperEx(TlaControlOper.ifThenElse, cond, thenExpr, elseExpr) =>
-        val boolCond = toExpr(cond).asInstanceOf[BoolExpr]
-        val thenZ3 = toArithExpr(thenExpr)
-        val elseZ3 = toArithExpr(elseExpr)
-        z3context.mkITE(boolCond, thenZ3, elseZ3)
+        val (boolCond, cn) = toExpr(cond)
+        val (thenZ3, tn) = toArithExpr(thenExpr)
+        val (elseZ3, en) = toArithExpr(elseExpr)
+        val ite = z3context.mkITE(boolCond.asInstanceOf[BoolExpr], thenZ3, elseZ3)
+        (ite, 1 + cn + tn + en)
 
       case _ =>
         flushAndThrow(new InvalidTlaExException(s"SMT $id: Unexpected arithmetic expression: $ex", ex))
