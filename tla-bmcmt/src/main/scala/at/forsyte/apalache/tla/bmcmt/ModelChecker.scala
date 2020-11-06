@@ -1,9 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import java.io.{FileWriter, PrintWriter, StringWriter}
+import java.io.{File, FileWriter, PrintWriter, StringWriter}
 
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore}
-import at.forsyte.apalache.tla.bmcmt.rewriter.{ConstSimplifierForSmt, RewriterConfig}
+import at.forsyte.apalache.tla.bmcmt.rewriter.{ConstSimplifierForSmt, MetricProfilerListener, RewriterConfig}
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, MockOracle, Oracle}
 import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy
 import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy._
@@ -53,7 +53,16 @@ class ModelChecker(typeFinder: TypeFinder[CellT],
   // TODO: figure out why the preprocessor slows down invariant checking. Most likely, there is a bug.
   //      new PreproSolverContext(new Z3SolverContext(debug, profile))
 
-  private val rewriter: SymbStateRewriterImpl = new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
+  private val rewriter: SymbStateRewriterImpl =
+    new SymbStateRewriterImpl(
+      solverContext,
+      typeFinder, exprGradeStore,
+      if (profile) {
+        Some(new MetricProfilerListener(sourceStore, changeListener, new File("profile.csv")))
+      } else {
+        None
+      })
+
   rewriter.formulaHintsStore = formulaHintsStore
   rewriter.config = RewriterConfig(tuningOptions)
 

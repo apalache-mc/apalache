@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.profiler
 
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 /**
   * A listener that keeps a stack of rule statistics entries and updates the statistics on respective calls.
@@ -32,7 +32,7 @@ class RuleStatListener extends SmtListener {
       stack.head.nCellsSelf += 1
   }
 
-  override def onSmtAssert(e: TlaEx): Unit = {
+  override def onSmtAssert(e: TlaEx, nSmtNodes: Long): Unit = {
     if (stack.nonEmpty) {
       stack.head.nSmtAssertsSelf += 1
       stack.head.smtAssertsSizeTotal += exprSize(e)

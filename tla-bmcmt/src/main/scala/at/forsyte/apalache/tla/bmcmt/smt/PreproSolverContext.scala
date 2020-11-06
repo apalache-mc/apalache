@@ -207,6 +207,14 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
     */
   override def contextLevel: Int = context.contextLevel
 
+
+  /**
+    * Get the current metrics in the solver context. The metrics may change when the other methods are called.
+    *
+    * @return the current metrics
+    */
+  override def metrics(): SolverContextMetrics = context.metrics()
+
   /**
     * Save the current context and push it on the stack for a later recovery with pop.
     */

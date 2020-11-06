@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.{Continue, Done, NoRule, 
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.caches._
 import at.forsyte.apalache.tla.bmcmt.profiler.RuleStatListener
-import at.forsyte.apalache.tla.bmcmt.rewriter.{Recoverable, RewriterConfig, SymbStateRewriterSnapshot}
+import at.forsyte.apalache.tla.bmcmt.rewriter.{MetricProfilerListener, Recoverable, RewriterConfig, SymbStateRewriterSnapshot}
 import at.forsyte.apalache.tla.bmcmt.rules._
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
@@ -30,12 +30,15 @@ import scala.collection.mutable
   * @param typeFinder     a type finder (assuming that typeFinder.inferAndSave has been called already)
   * @param exprGradeStore a labeling scheme that associated a grade with each expression;
   *                       it is required to distinguish between state-level and action-level expressions.
+  * @param profilerListener optional listener that is used to profile the rewriting rules
   *
   * @author Igor Konnov
   */
 class SymbStateRewriterImpl(private var _solverContext: SolverContext,
                             var typeFinder: TypeFinder[CellT],
-                            val exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl())
+                            val exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl(),
+                            val profilerListener: Option[MetricProfilerListener] = None
+                           )
     extends SymbStateRewriter with Serializable with Recoverable[SymbStateRewriterSnapshot] {
 
 
@@ -131,6 +134,7 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
     * Statistics listener
     *
     * TODO: remove this listener, as it does not seem to be compatible with serialization.
+    * TODO: does this listener consume too many resources?
     */
   @transient
   lazy val statListener: RuleStatListener = new RuleStatListener()
@@ -394,7 +398,12 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
         state.setRex(eg._1)
 
       case None =>
+        // Get the SMT metrics before translating the expression.
+        // Note that we are not doing that in the recursive function,
+        // as the new expressions there will not have source information.
+        val smtWatermark = solverContext.metrics()
         val nextState = doRecursive(0, state)
+        profilerListener.foreach{ _.onRewrite(state.ex, solverContext.metrics().delta(smtWatermark)) }
         exprCache.put(state.ex, nextState.ex) // the grade is not important
         nextState
     }
@@ -532,6 +541,7 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
     recordDomainCache.dispose()
     lazyEq.dispose()
     solverContext.dispose()
+    profilerListener.foreach { _.dispose() }
   }
 
 
