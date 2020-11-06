@@ -23,27 +23,26 @@ class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
       progress = false
 
       for (cons <- constraints) {
-        val result = solveOne(solution, cons)
-        if (result.isDefined) {
-          // there is a unique solution
-          progress = true
-          solution = result.get._1
-          typesToReport :+= (cons, solution(result.get._2))
-        } else {
-          cons match {
-            case OrClause(_@_*) =>
-              // no solution for a disjunctive constraint:
-              // try to resolve the unit constraints and postpone the disjunctive one for later
-              postponed = postponed :+ cons
+        solveOne(solution, cons) match {
+          case Some((uniqueSolution, typ)) =>
+            progress = true
+            solution = uniqueSolution
+            typesToReport :+= (cons, solution(typ))
+          case None =>
+            cons match {
+              case OrClause(_@_*) =>
+                // no solution for a disjunctive constraint:
+                // try to resolve the unit constraints and postpone the disjunctive one for later
+                postponed = postponed :+ cons
 
-            case EqClause(_, term) =>
-              // no solution for a unit constraint:
-              // flag an error immediately
-              cons.onTypeError(Seq(solution(term)))
-              // reset the constraints, so they are not reported later
-              constraints = List.empty
-              return None
-          }
+              case EqClause(_, term) =>
+                // no solution for a unit constraint:
+                // flag an error immediately
+                cons.onTypeError(Seq(solution(term)))
+                // reset the constraints, so they are not reported later
+                constraints = List.empty
+                return None
+            }
         }
       }
 
