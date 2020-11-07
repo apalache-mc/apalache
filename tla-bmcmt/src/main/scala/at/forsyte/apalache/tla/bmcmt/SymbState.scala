@@ -9,25 +9,18 @@ import at.forsyte.apalache.tla.lir.TlaEx
   *
   * @author Igor Konnov
   */
-class SymbState(val ex: TlaEx,
-                val theory: Theory,
-                val arena: Arena,
-                val binding: Binding) {
+class SymbState(val ex: TlaEx, val arena: Arena, val binding: Binding) extends Serializable {
 
   def setRex(nex: TlaEx): SymbState = {
-    new SymbState(nex, theory, arena, binding)
-  }
-
-  def setTheory(newTheory: Theory): SymbState = {
-    new SymbState(ex, newTheory, arena, binding)
+    new SymbState(nex, arena, binding)
   }
 
   def setArena(newArena: Arena): SymbState = {
-    new SymbState(ex, theory, newArena, binding)
+    new SymbState(ex, newArena, binding)
   }
 
   def setBinding(newBinding: Binding): SymbState = {
-    new SymbState(ex, theory, arena, newBinding)
+    new SymbState(ex, arena, newBinding)
   }
 
   /**
@@ -68,7 +61,7 @@ class SymbState(val ex: TlaEx,
       }
     }
 
-    binding.keySet.foldLeft(Set[String]())(eachName)
+    binding.toMap.keySet.foldLeft(Set[String]())(eachName)
   }
 
 }

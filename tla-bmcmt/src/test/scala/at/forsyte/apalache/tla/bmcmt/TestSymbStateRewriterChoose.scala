@@ -12,7 +12,7 @@ class TestSymbStateRewriterChoose extends RewriterBase with TestingPredefs {
     val ex = tla.choose(tla.name("x"),
       tla.enumSet(tla.int(1), tla.int(2), tla.int(3)),
       tla.gt(tla.name("x"), tla.int(1)))
-    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+    val state = new SymbState(ex, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
@@ -39,7 +39,7 @@ class TestSymbStateRewriterChoose extends RewriterBase with TestingPredefs {
     val ex = tla.choose(tla.name("x"),
       tla.enumSet(tla.int(1)),
       tla.gt(tla.name("x"), tla.int(1)))
-    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+    val state = new SymbState(ex, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     // the buggy implementation of choose fails on a dynamically empty set
@@ -53,7 +53,7 @@ class TestSymbStateRewriterChoose extends RewriterBase with TestingPredefs {
     val ex = tla.choose(tla.name("x"),
       tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(IntT()))),
       tla.gt(tla.name("x"), tla.int(1)))
-    val state = new SymbState(ex, CellTheory(), arena, new Binding)
+    val state = new SymbState(ex, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     // the buggy implementation of choose fails on a dynamically empty set

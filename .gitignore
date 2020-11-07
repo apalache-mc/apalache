@@ -4,20 +4,9 @@ out
 target
 .directory
 
-3rdparty/bin
-3rdparty/include
-3rdparty/lib
-3rdparty/z3*
-3rdparty/Box
-tla2tools.jar
-
 log*.smt
 test/tla/testSpec\.smt2
-3rdparty/bin/
-3rdparty/include/
-3rdparty/lib/
-3rdparty/tla2tools\.jar
-3rdparty/z3
+
 tla-assignments/src/test/resources/assignmentTest1.smt2
 tla-bmcmt/counterexample.txt
 tla-bmcmt/profile-rules.txt
@@ -31,3 +20,6 @@ tla-bmcmt/profile-rules.txt
 
 # Ignore directories where test artifacts are stored
 x/
+
+# Ignore backup files created by `mvn versions`
+*.versionsBackup

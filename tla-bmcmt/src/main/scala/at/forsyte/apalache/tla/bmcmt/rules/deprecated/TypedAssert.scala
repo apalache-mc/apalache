@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.deprecated
 
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, FailPredT}
-import at.forsyte.apalache.tla.bmcmt.{BoolTheory, SymbState, SymbStateRewriter}
+import at.forsyte.apalache.tla.bmcmt.{SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 
@@ -17,7 +17,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 @deprecated("We do not have clean semantics for assert")
 class TypedAssert(rewriter: SymbStateRewriter) {
   def typedAssert(state: SymbState, targetType: CellT, arg: TlaEx, message: String): SymbState = {
-    val valueState = rewriter.rewriteUntilDone(state.setRex(arg).setTheory(BoolTheory()))
+    val valueState = rewriter.rewriteUntilDone(state.setRex(arg))
     // introduce an unknown value for the outcome of assert, since this value may be unified in IF-THEN-ELSE
     var arena = valueState.arena.appendCell(targetType)
     val result = arena.topCell
@@ -30,11 +30,7 @@ class TypedAssert(rewriter: SymbStateRewriter) {
     rewriter.solverContext.assertGroundExpr(constraint)
     // return isReachable. If there is a model M s.t. M |= isReachable, then M |= failPred allows us
     // to check, whether the assertion is violated or not
-    val finalState = valueState.setArena(arena)
-      .setRex(result.toNameEx)
-      .setTheory(BoolTheory())
-
-    rewriter.coerce(finalState, state.theory)
+    valueState.setArena(arena).setRex(result.toNameEx)
   }
 
 }

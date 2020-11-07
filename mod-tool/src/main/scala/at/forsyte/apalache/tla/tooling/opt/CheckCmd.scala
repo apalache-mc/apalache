@@ -39,7 +39,7 @@ class CheckCmd extends Command(name = "check",
       description = "the bound on the computation length, default: 10")
   var tuning: String =
     opt[String](name="tuning", default = "",
-      description = "filename of the tuning options, see docs/tuning.md")
+      description = "filename of the tuning options, see apalache/docs/tuning.md")
 
   var randomizeDfs: Boolean = opt[Boolean](
     name = "randomizeDfs", default = true,

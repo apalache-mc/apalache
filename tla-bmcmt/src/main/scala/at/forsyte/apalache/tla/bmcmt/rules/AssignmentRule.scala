@@ -1,11 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, OracleHelper}
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinFunSetT, FinSetT, PowSetT}
-import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaActionOper, TlaSetOper}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
+import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaActionOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
-import at.forsyte.apalache.tla.lir.convenience.tla
 
 /**
   * Implements the assignment rule.
@@ -22,9 +20,7 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def isApplicable(state: SymbState): Boolean = {
     def isUnbound(name: String) =
-      (!CellTheory().hasConst(name)
-        && !BoolTheory().hasConst(name)
-        && !IntTheory().hasConst(name)
+      (!ArenaCell.isValidName(name)
         && !state.binding.contains(name + "'"))
 
     state.ex match {
@@ -40,13 +36,12 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       // general case
       case OperEx(BmcOper.assign, OperEx(TlaActionOper.prime, NameEx(name)), rhs) =>
-        val nextState = rewriter.rewriteUntilDone(state.setRex(rhs).setTheory(CellTheory()))
+        val nextState = rewriter.rewriteUntilDone(state.setRex(rhs))
         val rhsCell = nextState.arena.findCellByNameEx(nextState.ex)
-        val finalState = nextState
-          .setTheory(CellTheory())
+        nextState
           .setRex(state.arena.cellTrue().toNameEx) // just return TRUE
-          .setBinding(nextState.binding + (name + "'" -> rhsCell)) // bind the cell to the name
-        rewriter.coerce(finalState, state.theory)
+          .setBinding(Binding(nextState.binding.toMap + (name + "'" -> rhsCell))) // bind the cell to the name
+
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }

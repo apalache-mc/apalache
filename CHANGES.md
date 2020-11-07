@@ -1,5 +1,33 @@
 ## Unreleased #unstable
 
+ * random seed for z3, see docs/tuning.md and #318
+ * correct translation of chained substitutions in INSTANCEs, see #143
+ * friendly messages for unexpected expressions, see #303
+ * better operator inlining, see #283
+ * support for standard modules that are instantiated with LOCAL INSTANCE, see #295
+ * support for LAMBDAs, see #285 and #289
+ * bugfix in treatment of recursive operators, see #273
+ * no theories in the model checker due to types, see #22
+ * operators and checker caches made Serializable
+ * better diagnostics for the recursive operators, see #272
+ * verbose output for the config parser, see #266 
+ * Use a staged docker build, reducing container size ~70%, see #195
+ * Use [Z3-TurnKey](https://github.com/tudo-aqua/z3-turnkey) instead of a
+   bespoke Z3 build, see #219
+ * Use Z3 version 4.8.7.1, see #219
+
+## 0.7.2 [RELEASE]
+
+ * fixed an omitted version number update
+
+## 0.7.1 [RELEASE]
+
+ * safe checks for the user options in ConfigurationPassImpl, see #193
+ * introduced the tool module `Typing.tla`, see #162
+ * introduced the tool module `Apalache.tla`, see #183
+ * Lookup for modules using TLA_PATH, see #187
+ * Simplify JSON format to make it suitable for JsonPath queries, see #153
+
 ## 0.7.0 [RELEASE]
 
  * Importer from JSON, see #121

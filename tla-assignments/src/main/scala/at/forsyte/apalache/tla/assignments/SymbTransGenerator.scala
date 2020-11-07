@@ -279,7 +279,9 @@ class SymbTransGenerator( tracker : TransformationTracker ) {
       * Since the new assignments have different UIDs, the new strategy is obtained
       * by replacing the UIDs in the old strategy (preserving order)
       */
-    val newStrat = asgnStrategy map asgnTransform.getReplacements
+
+    // In the case of manual assignments, return own UID (no need to populate the map)
+    val newStrat = asgnStrategy map { x => asgnTransform.getReplacements.getOrElse(x, x) }
 
     /** We compute the set of all branch intersections with `asgnStrategy` */
     val selections = allSelections( transformed, Map.empty )

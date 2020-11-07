@@ -1,8 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
+import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.{ConstT, FinSetT}
-import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell, SolverContext}
+import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.lir.convenience.tla
 
 import scala.collection.immutable.SortedSet
@@ -13,7 +14,7 @@ import scala.collection.immutable.SortedSet
   * @author Igor Konnov
   */
 class RecordDomainCache(solverContext: SolverContext, strValueCache: StrValueCache)
-  extends AbstractCache[Arena, (SortedSet[String], SortedSet[String]), ArenaCell] {
+  extends AbstractCache[Arena, (SortedSet[String], SortedSet[String]), ArenaCell] with Serializable {
 
   /**
     * Create a set for a sorted set of record keys.

@@ -25,9 +25,9 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       case OperEx(TlaSetOper.cup, leftSet, rightSet) =>
         // rewrite the set expressions into memory cells
-        var nextState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(leftSet))
+        var nextState = rewriter.rewriteUntilDone(state.setRex(leftSet))
         val leftSetCell = nextState.asCell
-        nextState = rewriter.rewriteUntilDone(nextState.setTheory(CellTheory()).setRex(rightSet))
+        nextState = rewriter.rewriteUntilDone(nextState.setRex(rightSet))
         val rightSetCell = nextState.asCell
         val leftElems = nextState.arena.getHas(leftSetCell)
         val rightElems = nextState.arena.getHas(rightSetCell)
@@ -74,8 +74,7 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
         common foreach addEitherCellCons
 
         // that's it
-        val finalState = nextState.setTheory(CellTheory()).setRex(newSetCell.toNameEx)
-        rewriter.coerce(finalState, state.theory) // coerce to the source theory
+        nextState.setRex(newSetCell.toNameEx)
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)

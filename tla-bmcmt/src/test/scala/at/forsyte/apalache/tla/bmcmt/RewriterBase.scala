@@ -2,16 +2,17 @@ package at.forsyte.apalache.tla.bmcmt
 
 import java.io.{PrintWriter, StringWriter}
 
+import at.forsyte.apalache.tla.bmcmt.smt.{PreproSolverContext, SolverConfig, SolverContext, Z3SolverContext}
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir.convenience.tla
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 
 class RewriterBase extends FunSuite with BeforeAndAfterEach {
-  protected var solverContext: SolverContext = new PreproSolverContext(new Z3SolverContext())
-  protected var arena: Arena = Arena.create(solverContext)
+  protected var solverContext: SolverContext = _
+  protected var arena: Arena = _
 
   override def beforeEach() {
-    solverContext = new PreproSolverContext(new Z3SolverContext(debug = true))
+    solverContext = new PreproSolverContext(new Z3SolverContext(SolverConfig.default.copy(debug = true)))
     arena = Arena.create(solverContext)
   }
 
@@ -32,7 +33,7 @@ class RewriterBase extends FunSuite with BeforeAndAfterEach {
   }
 
   protected def assumeTlaEx(rewriter: SymbStateRewriter, state: SymbState): SymbState = {
-    val nextState = rewriter.rewriteUntilDone(state.setTheory(BoolTheory()))
+    val nextState = rewriter.rewriteUntilDone(state)
     solverContext.assertGroundExpr(nextState.ex)
     assert(solverContext.sat())
     nextState
@@ -40,7 +41,7 @@ class RewriterBase extends FunSuite with BeforeAndAfterEach {
 
   protected def assertTlaExAndRestore(rewriter: SymbStateRewriter, state: SymbState): Unit = {
     rewriter.push()
-    val nextState = rewriter.rewriteUntilDone(state.setTheory(BoolTheory()))
+    val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     rewriter.push()
     solverContext.assertGroundExpr(nextState.ex)

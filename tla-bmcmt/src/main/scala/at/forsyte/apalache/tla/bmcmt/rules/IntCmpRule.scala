@@ -34,7 +34,7 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
       if (oper == TlaArithOper.lt || oper == TlaArithOper.le
         || oper == TlaArithOper.gt || oper == TlaArithOper.ge)
     =>
-      rewriteGeneral(state, simplifier.simplify(state.ex))
+      rewriteGeneral(state, simplifier.simplifyDeep(state.ex))
 
     case _ =>
       throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
@@ -43,12 +43,11 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private def rewriteGeneral(state: SymbState, ex: TlaEx) = ex match {
     case ValEx(TlaBool(value)) =>
       // keep the simplified expression
-      val finalState = rewriter.rewriteUntilDone(state.setRex(ex).setTheory(BoolTheory()))
-      rewriter.coerce(finalState, state.theory)
+      rewriter.rewriteUntilDone(state.setRex(ex))
 
     case OperEx(oper, left, right) =>
-      val leftState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(left))
-      val rightState = rewriter.rewriteUntilDone(leftState.setTheory(CellTheory()).setRex(right))
+      val leftState = rewriter.rewriteUntilDone(state.setRex(left))
+      val rightState = rewriter.rewriteUntilDone(leftState.setRex(right))
       // compare integers directly in SMT
       var arena = rightState.arena.appendCell(BoolT())
       val eqPred = arena.topCell
@@ -57,8 +56,7 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
           eqPred.toNameEx,
           OperEx(oper, leftState.ex, rightState.ex))
       rewriter.solverContext.assertGroundExpr(cons)
-      val finalState = rightState.setArena(arena).setTheory(CellTheory()).setRex(eqPred.toNameEx)
-      rewriter.coerce(finalState, state.theory)
+      rightState.setArena(arena).setRex(eqPred.toNameEx)
 
     case _ =>
       throw new RewriterException("It should not happen. Report a bug", ex)

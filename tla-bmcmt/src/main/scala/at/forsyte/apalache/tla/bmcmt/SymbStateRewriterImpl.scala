@@ -4,8 +4,10 @@ import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.{Continue, Done, NoRule, 
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.caches._
 import at.forsyte.apalache.tla.bmcmt.profiler.RuleStatListener
-import at.forsyte.apalache.tla.bmcmt.rewriter.RewriterConfig
+import at.forsyte.apalache.tla.bmcmt.rewriter.{MetricProfilerListener, Recoverable, RewriterConfig, SymbStateRewriterSnapshot}
 import at.forsyte.apalache.tla.bmcmt.rules._
+import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
+import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -24,16 +26,41 @@ import scala.collection.mutable
   *
   * <p>TODO: rename this class to RewriterImpl?</p>
   *
-  * @param solverContext  a fresh solver context that will be populated with constraints
+  * @param _solverContext  a fresh solver context that will be populated with constraints
   * @param typeFinder     a type finder (assuming that typeFinder.inferAndSave has been called already)
   * @param exprGradeStore a labeling scheme that associated a grade with each expression;
   *                       it is required to distinguish between state-level and action-level expressions.
+  * @param profilerListener optional listener that is used to profile the rewriting rules
   *
   * @author Igor Konnov
   */
-class SymbStateRewriterImpl(val solverContext: SolverContext,
-                            val typeFinder: TypeFinder[CellT],
-                            val exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl()) extends SymbStateRewriter {
+class SymbStateRewriterImpl(private var _solverContext: SolverContext,
+                            var typeFinder: TypeFinder[CellT],
+                            val exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl(),
+                            val profilerListener: Option[MetricProfilerListener] = None
+                           )
+    extends SymbStateRewriter with Serializable with Recoverable[SymbStateRewriterSnapshot] {
+
+
+  /**
+    * <p>A solver context that is populated by the rewriter.</p>
+    *
+    * <p>This method will be removed when solving #105.</p>
+    */
+  override def solverContext: SolverContext = _solverContext
+
+  /**
+    * <p>Set the new solver context. Warning: the new context should be at the same stack depth as the rewriter.
+    * Otherwise, pop may produce unexpected results.</p>
+    *
+    * <p>This method will be removed when solving #105.</p>
+    *
+    * @param newContext new context
+    */
+  override def solverContext_=(newContext: SolverContext): Unit = {
+    _solverContext = newContext
+  }
+
   /**
     * We collect the sequence of expressions in the rewriting process,
     * in order to diagnose an error when an exception occurs. The latest expression in on top.
@@ -83,8 +110,8 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     */
   val exprCache = new ExprCache(exprGradeStore)
 
-  private val coercion = new CoercionWithCache(this)
-  private val substRule = new SubstRule(this)
+  @transient
+  private lazy val substRule = new SubstRule(this)
 
   /**
     * The store that contains formula hints. By default, empty.
@@ -97,11 +124,6 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
   private var messages: mutable.Map[Int, String] = new mutable.HashMap()
 
   /**
-    * Introduce failure predicate to do runtime checks
-    */
-  var introFailures: Boolean = true
-
-  /**
     * Get the current context level, that is the difference between the number of pushes and pops made so far.
     *
     * @return the current level, always non-negative.
@@ -110,14 +132,19 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
 
   /**
     * Statistics listener
+    *
+    * TODO: remove this listener, as it does not seem to be compatible with serialization.
+    * TODO: does this listener consume too many resources?
     */
-  val statListener: RuleStatListener = new RuleStatListener()
+  @transient
+  lazy val statListener: RuleStatListener = new RuleStatListener()
   solverContext.setSmtListener(statListener) // subscribe to the SMT solver
 
   // A nice way to guess the candidate rules by looking at the expression key.
   // We use simple expressions to generate the keys.
   // For each key, there is a short list of rules that may be applicable.
-  private val ruleLookupTable: Map[String, List[RewritingRule]] = Map(
+  @transient
+  lazy val ruleLookupTable: Map[String, List[RewritingRule]] = { Map(
     // the order is only important to improve readability
 
     // substitution
@@ -277,7 +304,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
       -> List(new TlcRule(this)),
     key(OperEx(TlcOper.atat, NameEx("fun"), NameEx("pair")))  // @@
       -> List(new TlcRule(this))
-  ) ///// ADD YOUR RULES ABOVE
+  ) } ///// ADD YOUR RULES ABOVE
 
 
   /**
@@ -288,21 +315,15 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     */
   def rewriteOnce(state: SymbState): RewritingResult = {
     state.ex match {
-      case NameEx(name) if CellTheory().hasConst(name) =>
-        Done(coerce(state.setTheory(CellTheory()), state.theory))
-
-      case NameEx(name) if BoolTheory().hasConst(name) =>
-        Done(coerce(state.setTheory(BoolTheory()), state.theory))
-
-      case NameEx(name) if IntTheory().hasConst(name) =>
-        Done(coerce(state.setTheory(IntTheory()), state.theory))
+      case NameEx(name) if ArenaCell.isValidName(name) =>
+        Done(state)
 
       case NameEx(name) =>
         if (substRule.isApplicable(state)) {
           statListener.enterRule(substRule.getClass.getSimpleName)
           // a variable that can be substituted with a cell
-          val coercedState = coerce(substRule.apply(substRule.logOnEntry(solverContext, state)), state.theory)
-          val nextState = substRule.logOnReturn(solverContext, coercedState)
+          var nextState = substRule.apply(substRule.logOnEntry(solverContext, state))
+          nextState = substRule.logOnReturn(solverContext, nextState)
           if (nextState.arena.cellCount < state.arena.cellCount) {
             throw new RewriterException("Implementation error: the number of cells decreased from %d to %d"
               .format(state.arena.cellCount, nextState.arena.cellCount), state.ex)
@@ -354,6 +375,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
           case Done(nextState) =>
             // converged to a single cell
             rewritingStack = rewritingStack.tail // pop the expression of the stack
+            solverContext.checkConsistency(nextState.arena) // debugging
             nextState
 
           case Continue(nextState) =>
@@ -373,10 +395,15 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     exprCache.get(state.ex) match {
       case Some(eg: (TlaEx, ExprGrade.Value)) =>
         solverContext.log(s"; Using cached value ${eg._1} for expression ${state.ex}")
-        coerce(state.setRex(eg._1), state.theory)
+        state.setRex(eg._1)
 
       case None =>
+        // Get the SMT metrics before translating the expression.
+        // Note that we are not doing that in the recursive function,
+        // as the new expressions there will not have source information.
+        val smtWatermark = solverContext.metrics()
         val nextState = doRecursive(0, state)
+        profilerListener.foreach{ _.onRewrite(state.ex, solverContext.metrics().delta(smtWatermark)) }
         exprCache.put(state.ex, nextState.ex) // the grade is not important
         nextState
     }
@@ -393,14 +420,14 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     var newState = state // it is easier to write this code with a side effect on the state
     // we should be very careful about propagating arenas here
     def eachExpr(e: TlaEx): TlaEx = {
-      val ns = rewriteUntilDone(new SymbState(e, state.theory, newState.arena, newState.binding))
+      val ns = rewriteUntilDone(new SymbState(e, newState.arena, newState.binding))
       assert(ns.arena.cellCount >= newState.arena.cellCount)
       newState = ns
       ns.ex
     }
 
     val rewrittenExprs = es map eachExpr
-    (newState.setRex(state.ex).setTheory(state.theory), rewrittenExprs)
+    (newState.setRex(state.ex), rewrittenExprs)
   }
 
   /**
@@ -414,33 +441,44 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     var newState = state // it is easier to write this code with a side effect on the state
     // we should be very careful about propagating arenas here
     def eachExpr(be: (Binding, TlaEx)): TlaEx = {
-      val ns = rewriteUntilDone(new SymbState(be._2, state.theory, newState.arena, be._1))
+      val ns = rewriteUntilDone(new SymbState(be._2, newState.arena, be._1))
       assert(ns.arena.cellCount >= newState.arena.cellCount)
       newState = ns
       ns.ex
     }
 
     val rewrittenExprs = es map eachExpr
-    (newState.setRex(state.ex).setTheory(state.theory), rewrittenExprs)
+    (newState.setRex(state.ex), rewrittenExprs)
   }
-
-  /**
-    * Coerce the state expression from the current theory to another theory.
-    *
-    * @param state        a symbolic state
-    * @param targetTheory a target theory
-    * @return a new symbolic state, if possible
-    */
-  def coerce(state: SymbState, targetTheory: Theory): SymbState = {
-    solverContext.checkConsistency(state.arena)
-    coercion.coerce(state, targetTheory)
-  }
-
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
   /**
+    * Take a snapshot and return it
+    *
+    * @return the snapshot
+    */
+  override def snapshot(): SymbStateRewriterSnapshot = {
+    new SymbStateRewriterSnapshot(typeFinder.asInstanceOf[TrivialTypeFinder].snapshot(), intValueCache.snapshot(),
+      intRangeCache.snapshot(), strValueCache.snapshot(), recordDomainCache.snapshot(), exprCache.snapshot())
+  }
+
+  /**
+    * Recover a previously saved snapshot (not necessarily saved by this object).
+    * Note that caches have a reference to SolverContext, which is not recovered!
+    *
+    * @param shot a snapshot
+    */
+  override def recover(shot: SymbStateRewriterSnapshot): Unit = {
+    typeFinder.asInstanceOf[TrivialTypeFinder].recover(shot.typeFinderSnapshot)
+    intValueCache.recover(shot.intValueCacheSnapshot)
+    intRangeCache.recover(shot.intRangeCacheSnapshot)
+    strValueCache.recover(shot.strValueCacheSnapshot)
+    recordDomainCache.recover(shot.recordDomainCache)
+    exprCache.recover(shot.exprCacheSnapshot)
+  }
+/**
     * Save the current context and push it on the stack for a later recovery with pop.
     */
   override def push(): Unit = {
@@ -451,7 +489,6 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     recordDomainCache.push()
     lazyEq.push()
     exprCache.push()
-    coercion.push()
     solverContext.push()
   }
 
@@ -468,7 +505,6 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     lazyEq.pop()
     exprCache.pop()
     solverContext.pop()
-    coercion.pop()
     level -= 1
   }
 
@@ -486,7 +522,6 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     lazyEq.pop(n)
     exprCache.pop(n)
     solverContext.pop(n)
-    coercion.pop(n)
     level -= n
   }
 
@@ -506,7 +541,7 @@ class SymbStateRewriterImpl(val solverContext: SolverContext,
     recordDomainCache.dispose()
     lazyEq.dispose()
     solverContext.dispose()
-    coercion.dispose()
+    profilerListener.foreach { _.dispose() }
   }
 
 

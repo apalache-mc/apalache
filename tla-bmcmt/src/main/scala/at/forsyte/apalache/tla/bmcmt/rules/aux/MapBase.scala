@@ -26,7 +26,7 @@ class MapBase(rewriter: SymbStateRewriter) {
                             varNames: Seq[String],
                             setEs: Seq[TlaEx]): SymbState = {
     // first, rewrite the variable domains S_1, ..., S_n
-    var (nextState, sets) = rewriter.rewriteSeqUntilDone(state.setTheory(CellTheory()), setEs)
+    var (nextState, sets) = rewriter.rewriteSeqUntilDone(state, setEs)
     def findSetCellAndElemType(setCell: ArenaCell): (ArenaCell, CellT) = {
       setCell.cellType match {
         case FinSetT(elemType) =>
@@ -57,10 +57,7 @@ class MapBase(rewriter: SymbStateRewriter) {
       mapCellsManyArgs(nextState, resultSetCell, mapEx, varNames, setsAsCells, tupleIter)
 
     // that's it
-    val finalState =
-      newState.setTheory(CellTheory())
-        .setRex(resultSetCell.toNameEx)
-    rewriter.coerce(finalState, state.theory)
+    newState.setRex(resultSetCell.toNameEx)
   }
 
   private def mapCellsManyArgs(state: SymbState,
@@ -89,15 +86,17 @@ class MapBase(rewriter: SymbStateRewriter) {
                                    setsAsCells: Seq[ArenaCell],
                                    valuesAsCells: Seq[ArenaCell]): (SymbState, ArenaCell) = {
     // bind the variables to the corresponding cells
-    val newBinding: Binding = varNames.zip(valuesAsCells).foldLeft(state.binding)((m, p) => m + p)
-    val mapState = state.setTheory(CellTheory()).setBinding(newBinding).setRex(mapEx)
+    val newBinding: Binding = varNames.zip(valuesAsCells).foldLeft(state.binding)((m, p) => Binding(m.toMap + p))
+    val mapState = state.setBinding(newBinding).setRex(mapEx)
     var nextState = rewriter.rewriteUntilDone(mapState)
     val mapResultCell = nextState.asCell
 
     // require each new cell to be in the new set iff the old cell was in the old set
     val inNewSet = OperEx(TlaSetOper.in, mapResultCell.toNameEx, targetSetCell.toNameEx)
+
     def inSourceSet(arg: ArenaCell, set: ArenaCell) = OperEx(TlaSetOper.in, arg.toNameEx, set.toNameEx)
-    val argsInSourceSets = tla.and(valuesAsCells.zip(setsAsCells) map (inSourceSet _).tupled :_*)
+
+    val argsInSourceSets = tla.and(valuesAsCells.zip(setsAsCells) map (inSourceSet _).tupled: _*)
     val ifAndOnlyIf = OperEx(TlaOper.eq, inNewSet, argsInSourceSets)
     // add the edge before adding the constraint
     nextState = nextState.updateArena(_.appendHas(targetSetCell, mapResultCell))

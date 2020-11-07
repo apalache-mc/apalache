@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.lir.io
 import java.io.{PrintWriter, StringWriter}
 
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.convenience.tla
 import org.junit.runner.RunWith
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.junit.JUnitRunner
@@ -49,11 +50,11 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     assert("A(1, 2)" == stringWriter.toString)
   }
 
-  test("assignment: x' <- 2") {
+  test("assignment: x' := 2") {
     val writer = new PrettyWriter(printWriter, 80)
     writer.write(assignPrime(name("x"), int(2)))
     printWriter.flush()
-    assert("x' <- 2" == stringWriter.toString)
+    assert("x' := 2" == stringWriter.toString)
   }
 
   test("ENABLED and prime") {
@@ -755,6 +756,37 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     assert(expected == stringWriter.toString)
   }
 
+  test("a LAMBDA as LET-IN") {
+    val writer = new PrettyWriter(printWriter, 40)
+    val aDecl = TlaOperDecl("LAMBDA", List(SimpleFormalParam("x")), NameEx("x"))
+    val expr = letIn(NameEx("LAMBDA"), aDecl)
+    writer.write(expr)
+    printWriter.flush()
+    val expected =
+      """LAMBDA x: x""".stripMargin
+    assert(expected == stringWriter.toString)
+  }
+
+  test("nested lambdas") {
+    // A(LAMBDA x: A(LAMBDA y: y, x), z)
+    val writer = new PrettyWriter(printWriter, 40)
+    // A(LAMBDA y: y + 1, x)
+    val innerDecl =
+      TlaOperDecl("LAMBDA", List(SimpleFormalParam("y")), tla.name("y"))
+    val innerLambda = tla.letIn(tla.name("LAMBDA"), innerDecl)
+    val innerA = tla.appOp(tla.name("A"), innerLambda, tla.name("x"))
+    // A(LAMBDA x: A(LAMBDA y: y + 1, x), z)
+    val outerDecl =
+        TlaOperDecl("LAMBDA", List(SimpleFormalParam("x")), innerA)
+    val outerLambda = letIn(NameEx("LAMBDA"), outerDecl)
+    val outerA = tla.appOp(tla.name("A"), outerLambda, tla.name("z"))
+    writer.write(outerA)
+    printWriter.flush()
+    val expected =
+      """A(LAMBDA x: A(LAMBDA y: y, x), z)""".stripMargin
+    assert(expected == stringWriter.toString)
+  }
+
   test("a one-line operator declaration") {
     val writer = new PrettyWriter(printWriter, 40)
     val body =
@@ -862,6 +894,20 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     printWriter.flush()
     val expected =
       """f[x \in S] == 1 + f[x]""".stripMargin
+    assert(expected == stringWriter.toString)
+  }
+
+  test("declaration of a recursive function of two arguments") {
+    val writer = new PrettyWriter(printWriter, 40)
+    val body = tla.appFun(tla.recFunRef(), tla.tuple(tla.name("y"), tla.name("x")))
+    val recFun =
+      tla.recFunDef(body, tla.name("x"), tla.name("S"), tla.name("y"), tla.name("S"))
+
+    val fDecl = TlaOperDecl("f", List(), recFun)
+    writer.write(fDecl)
+    printWriter.flush()
+    val expected =
+      """f[x \in S, y \in S] == f[y, x]""".stripMargin
     assert(expected == stringWriter.toString)
   }
 

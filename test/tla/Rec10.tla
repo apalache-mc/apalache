@@ -1,19 +1,27 @@
+--------------------------- MODULE Rec10 -------------------------------------
 (*
- * A regression test.
- * Recursive operators that are declared via instances should not fail.
+ * Test for missing annotation UNROLL_DEFAULT_Fact.
+ *
+ * Igor Konnov, April 2020
  *)
--------------------------------- MODULE test -------------------------------
------------------------------ MODULE inner ---------------------------
-RECURSIVE A(_)
-A(x) == IF x = 1 THEN 1 ELSE A(1)
-======================================================================
+EXTENDS Integers
 
 VARIABLES f
-I == INSTANCE inner
 
-Init == f = I!A(0)
+RECURSIVE Fact(_)
 
-Next == UNCHANGED f
+Fact(n) ==
+  IF n <= 1
+  THEN 1
+  ELSE n * Fact(n - 1)
 
-Inv == TRUE
-============================================================================
+Init ==
+    f = Fact(4)
+
+Next ==
+    f' = Fact(7)
+
+Inv ==
+    f >= 1
+
+=============================================================================

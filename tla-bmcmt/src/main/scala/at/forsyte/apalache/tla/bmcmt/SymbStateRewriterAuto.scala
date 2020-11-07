@@ -2,7 +2,8 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.caches.{ExprCache, IntValueCache, RecordDomainCache, StrValueCache}
-import at.forsyte.apalache.tla.bmcmt.rewriter.RewriterConfig
+import at.forsyte.apalache.tla.bmcmt.rewriter.{RewriterConfig, SymbStateRewriterSnapshot}
+import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir.TlaEx
@@ -16,7 +17,7 @@ import at.forsyte.apalache.tla.lir.TlaEx
   *
   * @author Igor Konnov
   */
-class SymbStateRewriterAuto(val solverContext: SolverContext) extends SymbStateRewriter {
+class SymbStateRewriterAuto(private var _solverContext: SolverContext) extends SymbStateRewriter {
   /**
     * The names that are treated as constants.
     */
@@ -29,6 +30,22 @@ class SymbStateRewriterAuto(val solverContext: SolverContext) extends SymbStateR
   var config: RewriterConfig = new RewriterConfig
 
   val typeFinder = new TrivialTypeFinder()
+
+
+  /**
+    * A solver context that is populated by the rewriter.
+    */
+  override def solverContext: SolverContext = _solverContext
+
+  /**
+    * Set the new solver context. Warning: the new context should be at the same stack depth as the rewriter.
+    * Otherwise, pop may produce unexpected results.
+    *
+    * @param newContext new context
+    */
+  override def solverContext_=(newContext: SolverContext): Unit = {
+    _solverContext = newContext
+  }
 
   private val exprGradeStoreImpl = new ExprGradeStoreImpl()
   private val exprGradeAnalysis = new ExprGradeAnalysis(exprGradeStoreImpl)
@@ -50,13 +67,11 @@ class SymbStateRewriterAuto(val solverContext: SolverContext) extends SymbStateR
 
   override def exprGradeStore: ExprGradeStore = exprGradeStoreImpl
 
-  override var introFailures: Boolean = true
-
   private def reset(arena: Arena, binding: Binding): Unit = {
     def add(m: Map[String, CellT], c: ArenaCell) = m + (c.toString -> c.cellType)
     val cellTypes = arena.cellMap.values.foldLeft(Map[String, CellT]()) (add)
     def addName(m: Map[String, CellT], p: (String, ArenaCell)) = m + (p._1 -> p._2.cellType)
-    val cellAndBindingTypes = binding.foldLeft(cellTypes) (addName)
+    val cellAndBindingTypes = binding.toMap.foldLeft(cellTypes) (addName)
     // propagate cell types and bindings to the type inference engine
     typeFinder.reset(cellAndBindingTypes)
   }
@@ -64,8 +79,8 @@ class SymbStateRewriterAuto(val solverContext: SolverContext) extends SymbStateR
   private def preprocess(ex: TlaEx): Unit = {
     exprGradeAnalysis.labelExpr(consts, vars, ex)
     typeFinder.inferAndSave(ex)
-    if (typeFinder.getTypeErrors.nonEmpty) {
-      throw typeFinder.getTypeErrors.head // just throw the first error
+    if (typeFinder.typeErrors.nonEmpty) {
+      throw new TypeInferenceException(typeFinder.typeErrors)
     }
   }
 
@@ -98,16 +113,31 @@ class SymbStateRewriterAuto(val solverContext: SolverContext) extends SymbStateR
     impl.rewriteBoundSeqUntilDone(state, es)
   }
 
-  override def coerce(state: SymbState, targetTheory: Theory): SymbState = {
-    impl.coerce(state, targetTheory)
-  }
-
   override def addMessage(id: Int, message: String): Unit = {
     impl.addMessage(id, message)
   }
 
   override def findMessage(id: Int): String = {
     impl.findMessage(id)
+  }
+
+
+  /**
+    * Take a snapshot and return it
+    *
+    * @return the snapshot
+    */
+  override def snapshot(): SymbStateRewriterSnapshot = {
+    impl.snapshot()
+  }
+
+  /**
+    * Recover a previously saved snapshot (not necessarily saved by this object).
+    *
+    * @param shot a snapshot
+    */
+  override def recover(shot: SymbStateRewriterSnapshot): Unit = {
+    impl.recover(shot)
   }
 
   override def push(): Unit = {

@@ -29,6 +29,8 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
   val REC_FUN_UNDEFINED = "recFunNameUndefined"
   // when printing a recursive function, this variable contains its name
   private var recFunName: String = REC_FUN_UNDEFINED
+  // the stack of lambda declarations
+  private var lambdaStack: List[TlaOperDecl] = Nil
 
   def write(mod: TlaModule): Unit = {
     writer.write(pretty(toDoc(mod), textWidth).layout)
@@ -51,7 +53,25 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
 
   def toDoc(parentPrecedence: (Int, Int), expr: TlaEx): Doc = {
     expr match {
-      case NameEx(x) => text(x)
+      case NameEx(x) if x == "LAMBDA" =>
+        // this is reference to the lambda expression that was introduced ealier
+        lambdaStack match {
+          case Nil =>
+            throw new IllegalStateException("Expected LAMBDA to be introduced earlier")
+
+          case top :: _ =>
+            val paramsDoc =
+              if (top.formalParams.isEmpty)
+                text("")
+              else
+                ssep(top.formalParams map toDoc, "," <> softline)
+
+            group("LAMBDA" <> space <> paramsDoc <> text(":") <> space <>
+              toDoc((0, 0), top.body))
+        }
+
+      case NameEx(x) =>
+        text(x)
 
       case ValEx(TlaStr(str)) => text("\"%s\"".format(str))
       case ValEx(TlaInt(value)) => text(value.toString)
@@ -198,6 +218,15 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
           text("{") <> nest(line <> binding <> ":" <> nest(line <> filter)) <> line <> text("}")
         ) ///
 
+        // a function of multiple arguments that are packed into a tuple: don't print the angular brackets <<...>>
+      case OperEx(op @ TlaFunOper.app, funEx, OperEx(TlaFunOper.tuple, args @ _*)) =>
+        val argDocs = args.map(toDoc(op.precedence, _))
+        val commaSeparatedArgs = folddoc(argDocs.toList, _ <> text(",") <@> _)
+        group(
+          toDoc(TlaFunOper.app.precedence, funEx) <> brackets(commaSeparatedArgs)
+        ) ///
+
+        // a function of a single argument
       case OperEx(TlaFunOper.app, funEx, argEx) =>
         group(
           toDoc(TlaFunOper.app.precedence, funEx) <>
@@ -340,6 +369,7 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
         wrapWithParen(parentPrecedence, op.precedence, group(doc))
 
       case OperEx(op@TlaOper.apply, NameEx(name), args@_*) =>
+        // apply an operator by its name, e.g., F(x)
         val argDocs = args.map(toDoc(op.precedence, _)).toList
         val commaSeparated = ssep(argDocs, "," <> softline)
         val doc =
@@ -348,6 +378,14 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
           } else {
             group(name <> parens(commaSeparated))
           }
+
+        wrapWithParen(parentPrecedence, op.precedence, doc)
+
+      case OperEx(op@TlaOper.apply, operEx, args@_*) =>
+        // apply an operator by its definition, e.g., (LAMBDA x: x)(y)
+        val argDocs = args.map(toDoc(op.precedence, _)).toList
+        val commaSeparated = ssep(argDocs, "," <> softline)
+        val doc = group(parens(toDoc((0, 0), operEx)) <> parens(commaSeparated))
 
         wrapWithParen(parentPrecedence, op.precedence, doc)
 
@@ -363,6 +401,13 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
           }
 
         wrapWithParen(parentPrecedence, op.precedence, doc)
+
+      case LetInEx(body, d @ TlaOperDecl("LAMBDA", _, _)) =>
+        // save the declaration and unpack it later, when NameEx(LAMBDA) is met
+        lambdaStack = d :: lambdaStack // push the lambda definition on the top
+        val doc = toDoc((0, 0), body)
+        lambdaStack = lambdaStack.tail // pop the lambda definition
+        doc
 
       case LetInEx(body, decls@_*) =>
         def eachDecl(d: TlaOperDecl) = {
@@ -386,12 +431,21 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
         group("ASSUME" <> parens(toDoc((0, 0), body)))
 
         // a declaration of a recursive function
-      case TlaOperDecl(name, List(),
-          OperEx(TlaFunOper.recFunDef, body, NameEx(argName), argDom)) =>
+      case TlaOperDecl(name, List(), OperEx(TlaFunOper.recFunDef, body, keysAndValues @ _*)) =>
+        val (ks, vs) = keysAndValues.zipWithIndex partition (_._2 % 2 == 0)
+        val (keys, values) = (ks.map(_._1), vs.map(_._1))
+        // format each key-value pair (k, v) into k \in v
+        val boxes =
+          keys.zip(values).map(p =>
+            group(toDoc((0, 0), p._1) <> space <> "\\in" <> nest(line <> toDoc((0, 0), p._2)))
+          ) ///
+
+        val binders = ssep(boxes.toList, comma <> line)
+
         // set the name of the recursive function. TLA+ forbids mutual recursion, so we do not need a stack
         recFunName = name
         // [x \in S]
-        val binding = brackets(text(argName) <> space <> "\\in" <> space <> toDoc((100, 100), argDom))
+        val binding = brackets(binders)
         // f[x \in S] == e
         val doc = group(name <> binding <> space <> "==" <> space <> toDoc((0, 0), body))
         recFunName = REC_FUN_UNDEFINED
@@ -503,7 +557,7 @@ object PrettyWriter {
       TlaTempOper.guarantees -> "-+->",
       TlaSeqOper.concat -> "\\o",
       TlcOper.colonGreater -> ":>",
-      BmcOper.assign -> "<-",
+      BmcOper.assign -> ":=",
       BmcOper.withType -> "<:"
     ) ////
 

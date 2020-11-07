@@ -38,10 +38,10 @@ class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
         || oper == TlaArithOper.mult || oper == TlaArithOper.div
         || oper == TlaArithOper.mod || oper == TlaArithOper.exp)
     =>
-      rewriteGeneral(state, simplifier.simplify(state.ex))
+      rewriteGeneral(state, simplifier.simplifyDeep(state.ex))
 
     case OperEx(TlaArithOper.uminus, _) =>
-      rewriteGeneral(state, simplifier.simplify(state.ex))
+      rewriteGeneral(state, simplifier.simplifyDeep(state.ex))
 
     case _ =>
       throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
@@ -50,28 +50,26 @@ class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private def rewriteGeneral(state: SymbState, ex: TlaEx) = ex match {
     case ValEx(TlaInt(_)) =>
       // just use the constant rule, which will compare with the integer cache
-      intConstRule.apply(state.setTheory(CellTheory()).setRex(ex))
+      intConstRule.apply(state.setRex(ex))
 
     case OperEx(TlaArithOper.uminus, subex) =>
-      val subState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(subex))
+      val subState = rewriter.rewriteUntilDone(state.setRex(subex))
       // TODO: think how to stop introducing cells for intermediate expressions
       val newArena = subState.arena.appendCell(IntT())
       val newCell = newArena.topCell
       rewriter.solverContext.assertGroundExpr(tla.eql(newCell.toNameEx, tla.uminus(subState.ex)))
-      val finalState = subState.setRex(newCell.toNameEx).setArena(newArena).setTheory(CellTheory())
-      rewriter.coerce(finalState, state.theory)
+      subState.setRex(newCell.toNameEx).setArena(newArena)
 
     case OperEx(oper: TlaArithOper, left, right) =>
-      val leftState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(left))
-      val rightState = rewriter.rewriteUntilDone(leftState.setTheory(CellTheory()).setRex(right))
+      val leftState = rewriter.rewriteUntilDone(state.setRex(left))
+      val rightState = rewriter.rewriteUntilDone(leftState.setRex(right))
       // TODO: think how to stop introducing cells for intermediate expressions
       val newArena = rightState.arena.appendCell(IntT())
       val newCell = newArena.topCell
       // introduce an integer constant to store the result
       val cons = tla.eql(newCell.toNameEx, OperEx(oper, leftState.ex, rightState.ex))
       rewriter.solverContext.assertGroundExpr(cons)
-      val finalState = rightState.setTheory(CellTheory()).setArena(newArena).setRex(newCell.toNameEx)
-      rewriter.coerce(finalState, state.theory)
+      rightState.setArena(newArena).setRex(newCell.toNameEx)
 
     case _ =>
       throw new RewriterException("It should not happen. Report a bug", state.ex)

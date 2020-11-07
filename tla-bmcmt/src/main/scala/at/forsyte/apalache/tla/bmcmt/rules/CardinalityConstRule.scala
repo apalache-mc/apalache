@@ -34,7 +34,7 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case OperEx(BmcOper.constCard,
       OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, setEx), ValEx(TlaInt(thresholdBigInt)))) =>
         val threshold = thresholdBigInt.toInt
-        var nextState = rewriter.rewriteUntilDone(state.setRex(setEx).setTheory(CellTheory()))
+        var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
         val setCell = nextState.asCell
         val elems = nextState.arena.getHas(setCell)
         if (threshold <= 0) {
@@ -80,6 +80,6 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
     solverAssert(tla.eql(pred, tla.and(nonEmptyOrBelow, tla.or(emptyPred, witnessesNotEq))))
 
     // generate constraints
-    nextState.setRex(pred).setTheory(CellTheory())
+    nextState.setRex(pred)
   }
 }

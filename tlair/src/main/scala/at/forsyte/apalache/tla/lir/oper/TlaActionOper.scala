@@ -11,7 +11,7 @@ object TlaActionOper {
   /**
     * The prime operator. By the TLA+ restrictions, we cannot apply it twice, e.g., (x')' is illegal.
     */
-  val prime = new TlaActionOper {
+  object prime extends TlaActionOper {
     override val name: String = "'"
 
     override def arity: OperArity = FixedArity(1)
@@ -22,7 +22,7 @@ object TlaActionOper {
   /**
     * The operator that executes an action or keeps the variable values.
     */
-  val stutter = new TlaActionOper {
+  object stutter extends TlaActionOper {
     override val name: String = "[A]_e"
 
     override def arity: OperArity = FixedArity(2)
@@ -33,7 +33,7 @@ object TlaActionOper {
   /**
     * The operator that executes an action and enforces the values to change.
     */
-  val nostutter = new TlaActionOper {
+  object nostutter extends TlaActionOper {
     override val name: String = "<A>_e"
 
     override def arity: OperArity = FixedArity(2)
@@ -44,7 +44,7 @@ object TlaActionOper {
   /**
     * The ENABLED operator.
     */
-  val enabled = new TlaActionOper {
+  object enabled extends TlaActionOper {
     override val name: String = "ENABLED"
 
     override def arity: OperArity = FixedArity(1)
@@ -55,7 +55,7 @@ object TlaActionOper {
   /**
     * The operator that executes an action or keeps the variable values.
     */
-  val unchanged = new TlaActionOper {
+  object unchanged extends TlaActionOper {
     override val name: String = "UNCHANGED"
 
     override def arity: OperArity = FixedArity(1)
@@ -69,7 +69,7 @@ object TlaActionOper {
     * Jure@17.11.16: Arity 2?
     * Igor@12.03.17: Arity 2. Fixed.
     */
-  val composition = new TlaActionOper {
+  object composition extends TlaActionOper {
     override val name: String = "\\cdot"
     override def arity: OperArity = FixedArity(2)
     override def precedence: (Int, Int) = (13, 13)
