@@ -14,7 +14,7 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
   private var checker: TypeChecker = _
 
   override protected def beforeEach(): Unit = {
-    checker = new EtcTypeChecker2(new TypeVarPool(start = 1000))
+    checker = new EtcTypeChecker(new TypeVarPool(start = 1000))
   }
 
   // wrap an expression with a let-in definition, as we like to test individual expressions

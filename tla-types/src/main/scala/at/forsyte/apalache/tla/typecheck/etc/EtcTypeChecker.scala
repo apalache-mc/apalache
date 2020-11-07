@@ -1,14 +1,14 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.typecheck._
-import at.forsyte.apalache.tla.typecheck.etc.EtcTypeChecker2.UnwindException
+import at.forsyte.apalache.tla.typecheck.etc.EtcTypeChecker.UnwindException
 
 /**
   * ETC: Embarrassingly simple Type Checker.
   *
   * @author Igor Konnov
   */
-class EtcTypeChecker2(varPool: TypeVarPool) extends TypeChecker with EtcBuilder {
+class EtcTypeChecker(varPool: TypeVarPool) extends TypeChecker with EtcBuilder {
   private var listener: TypeCheckerListener = new DefaultTypeCheckerListener()
 
   /**
@@ -268,7 +268,7 @@ class EtcTypeChecker2(varPool: TypeVarPool) extends TypeChecker with EtcBuilder 
   }
 }
 
-object EtcTypeChecker2 {
+object EtcTypeChecker {
 
   /**
     * We use this exception to quickly unwind the search stack
