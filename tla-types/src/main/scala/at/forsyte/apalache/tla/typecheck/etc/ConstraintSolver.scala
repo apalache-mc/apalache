@@ -77,8 +77,8 @@ class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
     }
   }
 
-  private def solveOne(solution: Substitution, cons: Clause): Option[(Substitution, TlaType1)] = {
-    cons match {
+  private def solveOne(solution: Substitution, constraint: Clause): Option[(Substitution, TlaType1)] = {
+    constraint match {
       case EqClause(unknown, term) =>
         // If there is a solution, we return it. We ignore the type, as it should be bound to `unknown`.
         new TypeUnifier().unify(solution, unknown, term)
