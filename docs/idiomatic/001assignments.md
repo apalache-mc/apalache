@@ -1,107 +1,181 @@
-# Idiom 1: Let there be (few) assignments
+# Idiom 1: Update state variables with assignments
 
 ## Description
 
-TLA+ does not have special syntax for assignments to the variables.  For a good
-reason. The power of TLA+ is in writing constraints on variables rather than in
-writing detailed commands. If you have been writing in languages such as C, C++,
-Java, Python, your first reflex would be to define a variable to store the
-intermediate result of a complex computation.
+The idiom "[Keep state variables to the
+minimum](000keep-minimum-state-variables.md)" tells us to store the absolutely
+necessary minimum in the state variables. By following this idiom, we develop
+the specification by writing constraints over the primed variables.
 
-Consider the following implementation of
-[bubble sort](https://en.wikipedia.org/wiki/Bubble_sort) in Python:
+TLA+ comes with a great freedom of expressing constraints over variables.
+While we love TLA+ for that freedom, we believe that constraints over primed
+variables are sometimes confusing.
 
-```python
-  in_list = [5, 4, 3, 8, 1]
-  my_list = in_list
-  finished = False
-  while not finished:
-    finished = True
-    for i in range(1, len(my_list)):
-      if my_list[i - 1] > my_list[]:
-        tmp = my_list[i - 1]
-        my_list[i - 1] = my_list[i]
-        my_list[i] = tmp
-        finished = False
-```
+### Issue 1
 
-Notice that there are four assignments under the `if`-expression, one of them
-introduces a local variable `tmp`. In TLA+, one does not
-introduce local variables for the intermediate results of the computation, but rather
-introduces variables to represent the essential part of the algorithm state. In the
-above example, the essential variables are `finished` and `my_list`.
-
-Compare the above code to (a slightly more abstract) [bubble sort in
-TLA+](./example/bubble.tla):
+Consider the expression:
 
 ```tla
-EXTENDS Integers, Sequences
-
-in_list == <<5, 4, 3, 8, 1>>
-VARIABLES my_list, finished
-
-Init ==
-    /\ my_list = in_list
-    /\ finished = FALSE
-
-IsSorted(lst) ==
-    \A i \in DOMAIN lst \ {1}:
-        lst[i - 1] <= lst[i]
-
-WhenSorted ==
-    /\ IsSorted(my_list)
-    /\ finished' = TRUE
-    /\ UNCHANGED my_list
-
-WhenUnsorted ==
-    /\ \E i \in DOMAIN my_list \ {1}:
-        /\ my_list[i - 1] > my_list[i]
-        /\ my_list' = [my_list EXCEPT ![i - 1] = my_list[i],
-                                      ![i] = my_list[i - 1]]
-    /\ finished' = FALSE
-
-Next ==
-    IF finished
-    THEN UNCHANGED <<my_list, finished>>
-    ELSE WhenSorted \/ WhenUnsorted
-
+  x' = x + 1
 ```
 
-The TLA+ code contains only two state variables: `my_list` and `finished`.
-Other variables are introduced by quantifiers (e.g., `\E i \in ...`).
-The state variables are not updated in the sense of programming languages.
-Rather, one writes constraints over unprimed and primed versions, e.g.:
+It is all clear here. The value of `x` in the next states (there may be many)
+is equal to `val(x)+1`, where `val(x)` is the value of `x` in the current
+state.
+
+Wait. Is it clear? What if that expression was just the first line of the following
+expression:
 
 ```tla
-        ...
-        /\ my_list' = [my_list EXCEPT ![i - 1] = my_list[i],
-                                      ![i] = my_list[i - 1]]
+  x' = x + 1
+    => x' = 3
 ```
 
-Of course, one can introduce aliases for intermediate expressions, for instance,
-by using let-definitions:
+This expression implies that `x'` may receive a value from the set:
 
 ```tla
-        ...
-        LET prev == my_list[i - 1]
-            next == my_list[i]
-        IN
-        /\ prev > next
-        /\ my_list' = [my_list EXCEPT ![i - 1] = next, ![i] = prev]
+  { 3 } \union { y \in Int: y /= val(x) + 1 }
 ```
 
-However, the let-definitions are not variables, they are just aliases of more
-complex expressions. Importantly, one cannot update the value of an expression
-that is defined with a let-definition. In this sense, TLA+ is similar to
-the functional languages, where side effects are carefully avoided and minimized.
+But maybe the author of that specification just made a typo and never
+meant to put the implication `=>` in the first place. Actually, the intended
+specification looks like follows:
 
-In contrast to the functional languages, the value of TLA+ is not in computing
-the result of a function application, but in producing sequences of states
-(called behaviors). 
+```tla
+  x' = x + 1
+    \/ x' = 3
+```
 
-## Example
+We believe that it is helpful to label the expressions that intend to denote the
+values of the state variables in the next state. Apalache introduces the infix
+operator `:=` in the module `Apalache.tla` for that purpose:
+
+```tla
+  x' := x + 1
+    \/ x' := 3
+```
+
+Hence, it would be obvious in our motivating example that the author made a typo:
+
+```tla  
+  x' := x + 1
+    => x' := 3
+```
+
+### Issue 2
+
+Another common use of primed variables is to select the next value of a variable
+from a set:
+
+```tla
+  x' \in { 1, 2, 3 }
+```
+
+This expression can be rewritten as an equivalent one:
+
+```tla
+  \E y \in { 1, 2, 3 }:
+    x' = y
+```
+
+Which one to choose? The first one is more concise. The second one highlights
+the important effect, namely, non-deterministic choice of the next value of `x`.
+When combined with the operator `:=`, the effect of non-deterministic choice is
+clearly visible:
+
+```tla
+  \E y \in { 1, 2, 3 }:
+    x' := y
+```
+
+In fact, every constraint over primes can be translated into the existential form.
+For instance, consider the expression:
+
+```tla
+  x' * x' = 4
+```
+
+It can be written as:
+
+```tla
+  \E y \in x \in Int:
+    /\ y * y = 4
+    /\ x' := y
+```
 
 ## Advantages
 
+ - The reader clearly sees the writer's intention about the updates
+   to the primed variables.
+
+ - Non-determinism is clearly isolated in existential choice: `\E y \in S: x' := y`.
+   If there is no existential choice, the assignment is deterministic.
+
+ - When the existential form is used, the range of the values is clearly indicated.
+   This is in contrast to the negated form such as: `~(x' = 10)`.
+
+ - TLC treats the expressions of the form `x' = e` and `x' \in S` as assignments,
+   as long as `x'` is not bound to a value. 
+
+ - Apalache uses assignments to decompose the specification into smaller pieces.
+   Although Apalache tries to find assignments automatically, it often has to choose
+   from several expressions, some of them may be more complex than the others.
+
 ## Disadvantages
+
+  - Replacing `x' \in S` with `\E y \in S: x' := y` makes the specification a bit larger.
+
+## Example
+
+The following example [deliver.tla](./example/deliver.tla) demonstrates how
+one can clear mark assignments.
+
+```tla
+------------------------------ MODULE deliver ----------------------------------
+(*
+ * A simple specification of two processes in the network: sender and receiver.
+ * The sender sends messages in sequence. The receiver may receive the sent
+ * messages out of order, but delivers them to the client in order.
+ *
+ * Igor Konnov, 2020
+ *)
+EXTENDS Integers, Apalache
+
+VARIABLES
+    sentSeqNo,      \* the sequence number of the next message to be sent
+    sent,           \* the messages that are sent by the sender
+    received,       \* the messages that are received by the receiver
+    deliveredSeqNo  \* the sequence number of the last delivered message
+
+Init ==
+    /\ sentSeqNo := 0
+    /\ sent := {}
+    /\ received := {}
+    /\ deliveredSeqNo := -1
+
+Send ==
+    /\ sent' := sent \union {sentSeqNo}
+    /\ sentSeqNo' := sentSeqNo + 1
+    /\ UNCHANGED <<received, deliveredSeqNo>>
+
+Receive ==
+    /\ \E msgs \in SUBSET (sent \ received):
+        received' := received \union msgs
+    /\ UNCHANGED <<sentSeqNo, sent, deliveredSeqNo>>
+
+Deliver ==
+    /\ (deliveredSeqNo + 1) \in received
+    /\ deliveredSeqNo' := deliveredSeqNo + 1
+        \* deliver the message with the sequence number deliveredSeqNo'
+    /\ UNCHANGED <<sentSeqNo, sent, received>>
+
+Next ==
+    \/ Send
+    \/ Receive
+    \/ Deliver
+
+Inv ==
+    (deliveredSeqNo >= 0) => deliveredSeqNo \in sent
+================================================================================
+```
 

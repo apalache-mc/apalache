@@ -39,33 +39,36 @@ does not work for you in your specific setting, don't follow it.
 
 ## The idioms
 
-__Idiom 0:__ [Keep state variables to the minimum](000keep-minimum-state-variables.md)
+__Idiom 0:__
+    [Keep state variables to the minimum](000keep-minimum-state-variables.md) :battery:
 
-__Idiom 1:__ [Update state variables with assignments](001assignments.md)
+__Idiom 1:__ [Update state variables with assignments](001assignments.md) :date:
 
-__Idiom 2:__ Isolate updates to VARIABLES
+__Idiom 2:__ Write a prime only on the right-hand side of a variable :pushpin:
 
-__Idiom 3:__ Isolate non-determinism in actions
+__Idiom 3:__ Isolate updates to VARIABLES :ghost:
 
-__Idiom 4:__ Introduce pure operators
+__Idiom 4:__ Isolate non-determinism in actions :crystal_ball:
 
-__Idiom 5:__ Name convention for operator parameters
+__Idiom 5:__ Introduce pure operators :see_no_evil:
 
-__Idiom 6:__ Use Boolean operators in actions, not `IF-THEN-ELSE`
+__Idiom 6:__ Introduce a naming convention for operator parameters :passport_control:
 
-__Idiom 7:__ `CHOOSE` smart, prefer `\E`
+__Idiom 7:__ Use Boolean operators in actions, not `IF-THEN-ELSE` :no_good:
 
-__Idiom 8:__ Do not over-structure
+__Idiom 8:__ `CHOOSE` smart, prefer `\E` :guardsman:
 
-__Idiom 9:__ Do not over-modularize
+__Idiom 9:__ Do not over-structure :microscope:
 
-__Idiom 10:__ Separate normal paths from error paths.
+__Idiom 10:__ Do not over-modularize :duck:
 
-__Idiom 11:__ Do you really need those nice recursive operators?
+__Idiom 11:__ Separate normal paths from error paths. :zap:
 
-__Idiom 12:__ Do you really need set cardinalities?
+__Idiom 12:__ Do you really need those nice recursive operators? :cyclone:
 
-__Idiom 13:__ Do you really need integers?
+__Idiom 13:__ Do you really need set cardinalities? :pizza:
+
+__Idiom 14:__ Do you really need integers? :1234:
 
 
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html
