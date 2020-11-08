@@ -98,7 +98,7 @@ For instance, consider the expression:
 It can be written as:
 
 ```tla
-  \E y \in x \in Int:
+  \E y \in Int:
     /\ y * y = 4
     /\ x' := y
 ```
