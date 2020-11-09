@@ -36,6 +36,15 @@ So it is useful to read Lamport's [Specifying Systems]. Importantly, these are
 _idioms_, not the rules set in stone. If you believe that one of those idioms
 does not work for you in your specific setting, don't follow it.
 
+If this is the first page where you encounter the word "TLA+", we do not
+recommend continue reading the material. It is better to start with [The TLA+
+Video Course](http://lamport.azurewebsites.net/video/videos.html) by Leslie
+Lamport.  Once you have understood the basics and tried the language, it makes
+sense to ask the question: "How do I write a specification that other people
+understand?".  We believe that many TLA+ users reinvent the rules that are
+similar to our idioms.  By providing you with a bit of thought, we hope to
+reduce your discomfort when learning TLA+.
+
 
 ## The idioms
 
@@ -44,7 +53,7 @@ __Idiom 0:__
 
 __Idiom 1:__ [Update state variables with assignments](001assignments.md) :date:
 
-__Idiom 2:__ Write a prime only on the right-hand side of a variable :pushpin:
+__Idiom 2:__ [Apply primes only to state variables](002primes.md) :pushpin:
 
 __Idiom 3:__ Isolate updates to VARIABLES :ghost:
 
