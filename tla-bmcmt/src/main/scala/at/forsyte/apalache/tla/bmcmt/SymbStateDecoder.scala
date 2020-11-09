@@ -23,7 +23,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
   def dumpArena(state: SymbState, writer: PrintWriter): Unit = {
     val sortedCells = SortedSet[ArenaCell]() ++ state.arena.cellMap.values
     for (c <- sortedCells) {
-      writer.println("%s = %s".format(c, decodeCellToTlaEx(state.arena, c)))
+      writer.println("; %s = %s".format(c, decodeCellToTlaEx(state.arena, c)))
     }
 
     // compute the equivalence classes for the cells, totally suboptimally
@@ -57,7 +57,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       }
     }
     for (cls <- classes) {
-      writer.println("Equiv. class: {%s}".format(cls.mkString(", ")))
+      writer.println("; Equiv. class: {%s}".format(cls.mkString(", ")))
     }
   }
 
