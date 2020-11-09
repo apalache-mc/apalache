@@ -47,7 +47,7 @@ class EtcTypeChecker(varPool: TypeVarPool) extends TypeChecker with EtcBuilder {
 
     } catch {
       case _: UnwindException =>
-        // the type checker has flagged an type error down in the syntax tree
+        // the type checker has flagged a type error down in the syntax tree
         None
     }
   }
