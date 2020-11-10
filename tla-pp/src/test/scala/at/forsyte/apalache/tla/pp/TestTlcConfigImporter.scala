@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.pp
 import java.io.{PrintWriter, StringWriter}
 
 import at.forsyte.apalache.infra.passes.PassOptions
-import at.forsyte.apalache.io.tlc.TlcConfigParser
+import at.forsyte.apalache.io.tlc.TlcConfigParserApalache
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.convenience._
@@ -20,7 +20,7 @@ import scala.io.Source
 class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
 
   def configureAndCompare(tla: String, tlc: String, expected: String) = {
-    val config = TlcConfigParser(tlc)
+    val config = TlcConfigParserApalache(tlc)
     val (rootName, modules) = new SanyImporter(new SourceStore)
       .loadFromSource("test", Source.fromString(tla))
     val mod = modules(rootName)
