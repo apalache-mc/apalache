@@ -575,3 +575,56 @@ Configuration error (see the manual): Circular definition dependency detected
 ...
 EXITCODE: ERROR (99)
 ```
+
+### configure via TLC config and assign constants
+
+```sh
+$ apalache-mc check --config=ConfigParams.cfg ConfigParams.tla | sed 's/[IEW]@.*//'
+...
+  > ConfigParams.cfg: Loading TLC configuration
+  > Using the init predicate Init from the TLC config
+  > Using the next predicate Next from the TLC config
+  > ConfigParams.cfg: found INVARIANTS: Inv
+  > Set the initialization predicate to Init
+  > Set the transition predicate to Next
+  > Set an invariant to Inv
+  > Replaced CONSTANT MyInt with 42
+  > Replaced CONSTANT MyStr with "hello"
+  > Replaced CONSTANT MyModelValue1 with "Model1"
+  > Replaced CONSTANT MyModelValue2 with "Model2"
+  > Replaced CONSTANT MySet with {1, 2, 3}
+...
+The outcome is: NoError
+...
+```
+
+### configure via TLC config and replace operators
+
+```sh
+$ apalache-mc check --config=ConfigReplacements2.cfg ConfigReplacements.tla | sed 's/[IEW]@.*//'
+...
+  > ConfigReplacements2.cfg: Loading TLC configuration
+  > Using the init predicate Init from the TLC config
+  > Using the next predicate Next from the TLC config
+  > ConfigReplacements2.cfg: found INVARIANTS: Inv
+  > Set the initialization predicate to Init
+  > Set the transition predicate to Next
+  > Set an invariant to Inv
+  > Replaced operator Value with OVERRIDE_Value
+...
+The outcome is: NoError
+...
+```
+
+### configure via TLC config and replace operators helps us to keep the invariant
+
+```sh
+$ apalache-mc check --inv=Inv ConfigReplacements.tla | sed 's/[IEW]@.*//'
+...
+  > ConfigReplacements.cfg: Loading TLC configuration
+  > No TLC configuration found. Skipping.
+...
+The outcome is: Error
+...
+```
+
