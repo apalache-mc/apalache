@@ -1,5 +1,6 @@
 ## Unreleased #unstable
 
+ * support for advanced syntax in TLC configs, see #208
  * random seed for z3, see docs/tuning.md and #318
  * correct translation of chained substitutions in INSTANCEs, see #143
  * friendly messages for unexpected expressions, see #303
