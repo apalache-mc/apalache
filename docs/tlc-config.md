@@ -9,18 +9,21 @@ comments on the treatment of its sections in
 [Apalache](https://github.com/informalsystems/apalache). A detailed discussion
 on using the config files with TLC can be found in Leslie Lamport's 
 [Specifying Systems],
-Chapter 14.  In particular, the TLA+ specification of TLC configuration files
+Chapter 14 and in
+[Current Versions of the TLA+ Tools](https://lamport.azurewebsites.net/tla/current-tools.pdf).
+In particular, the TLA+ specification of TLC configuration files
 is given in Section 14.7.1. The standard parser can be found in
 [`tlc2.tool.impl.ModelConfig`](https://github.com/tlaplus/tlaplus/blob/master/tlatools/org.lamport.tlatools/src/tlc2/tool/impl/ModelConfig.java).
 As the configuration files have simple syntax, we implement our own parser in
 Apalache.
 
-```
+```ebnf
 // The configuration file is a non-empty sequence of configuration options.
 config ::=
     options+
 
 // Possible options, in no particular order, all of them are optional.
+// Apalache expects Init after Next, or Next after Init.
 options ::=
     Init
   | Next
@@ -32,6 +35,9 @@ options ::=
   | ActionConstraints
   | Symmetry
   | View
+  | Alias
+  | Postcondition
+  | CheckDeadlock
 
 // Set the initialization predicate (over unprimed variables), e.g., Init.
 Init ::=
@@ -125,6 +131,21 @@ Symmetry ::=
 // APALACHE IGNORES THIS CONFIGURATION OPTION.
 View ::=
     "VIEW" ident
+
+// Whether the tools should check for deadlocks.
+// APALACHE IGNORES THIS CONFIGURATION OPTION.
+CheckDeadlock ::=
+    "CHECK_DEADLOCK" ("FALSE" | "TRUE")
+
+// Recent feature: https://lamport.azurewebsites.net/tla/current-tools.pdf
+// APALACHE IGNORES THIS CONFIGURATION OPTION.
+Postcondition ::=
+    "POSTCONDITION" ident
+
+// Very recent feature: https://github.com/tlaplus/tlaplus/issues/485
+// APALACHE IGNORES THIS CONFIGURATION OPTION.
+Alias ::=
+    "ALIAS" ident
 
 // A TLA+ identifier, must be different from the above keywords.
 ident ::=
