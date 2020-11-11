@@ -1679,6 +1679,7 @@ class TestSanyImporter extends FunSuite {
         |Less == 3 < 2
         |Greater == 3 > 2
         |Leq == 3 <= 2
+        |Leq2 == 3 =< 2
         |Geq == 3 >= 2
         |Mod == 3 % 2
         |Div == 3 \div 2
@@ -1706,6 +1707,7 @@ class TestSanyImporter extends FunSuite {
     expectDecl("Less", OperEx(TlaArithOper.lt, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Greater", OperEx(TlaArithOper.gt, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Leq", OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Leq2", OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Geq", OperEx(TlaArithOper.ge, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Mod", OperEx(TlaArithOper.mod, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
     expectDecl("Div", OperEx(TlaArithOper.div, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
