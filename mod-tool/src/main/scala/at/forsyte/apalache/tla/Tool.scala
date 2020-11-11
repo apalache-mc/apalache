@@ -165,11 +165,9 @@ object Tool extends App with LazyLogging {
     executor.options.set("io.outdir", createOutputDir())
     executor.options.set("parser.filename", parse.file.getAbsolutePath)
 
-    val result = executor.run()
-    if (result.isDefined) {
-      logger.info("Type checker [OK]")
-    } else {
-      logger.info("Type checker [FAILED]")
+    executor.run() match {
+      case None => logger.info("Type checker [FAILED]")
+      case Some(_) => logger.info("Type checker [OK]")
     }
   }
 
