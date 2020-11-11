@@ -10,7 +10,8 @@ and `x'` is that the transitions are often described as relations over unprimed
 and primed variables, e.g., `x' = x+1`. It is easy to extend this idea to
 vectors of variables, but for simplicity we will use only one variable.
 
-TLA+ goes further and declares prime (`'`) as an operator! Assume that we
+TLA+ goes further and declares prime (`'`) as an operator! This operator distributes over
+any state variables in the scope of its application. For example, assume that we
 evaluate a TLA+ expression `A` over `x` and `x'`, and `v[i]` and `v[i+1]` are
 meant to be the values of `x` in the ith state and i+1-th state, respectively.
 Then `x` is evaluated to `v[i]` and `x'` is evaluated to `v[i+1]`.  Naturally,
@@ -130,4 +131,3 @@ Next ==
 
 
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html
-

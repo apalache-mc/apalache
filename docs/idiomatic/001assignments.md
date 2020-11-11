@@ -10,8 +10,10 @@ the specification by writing constraints over the primed variables.
 TLA+ comes with a great freedom of expressing constraints over variables.
 While we love TLA+ for that freedom, we believe that constraints over primed
 variables are sometimes confusing.
-
+TLA+ uses the same glyph, `=`, for assignment, asserting equality, and binding variables. But these are very different operations and have different semantics.
 ### Issue 1
+
+**tl;dr:** Use `:=` (supplied by the `Apalache.tla` module) instead of `=` for assignment.
 
 Consider the expression:
 
@@ -31,7 +33,8 @@ expression:
     => x' = 3
 ```
 
-This expression implies that `x'` may receive a value from the set:
+This says, "if `x'` is equal to `x + 1`, then assign `x'` to `3` in the next state", which
+implies that `x'` may receive a value from the set:
 
 ```tla
   { 3 } \union { y \in Int: y /= val(x) + 1 }
@@ -61,8 +64,10 @@ Hence, it would be obvious in our motivating example that the author made a typo
   x' := x + 1
     => x' := 3
 ```
-
+because the assignment `x' := x + 1` does not express a boolean value
+and so cannot be the antecedent of the conditional.
 ### Issue 2
+**tl;dr:** Use existential variables with the `:=` operator for non-deterministic assignment.
 
 Another common use of primed variables is to select the next value of a variable
 from a set:
@@ -119,7 +124,9 @@ It can be written as:
 
  - Apalache uses assignments to decompose the specification into smaller pieces.
    Although Apalache tries to find assignments automatically, it often has to choose
-   from several expressions, some of them may be more complex than the others.
+   from several expressions, some of them may be more complex than the others. By using
+   the `:=` operator, Apalache gets unambiguous instructions about when assignment is taking
+   place
 
 ## Disadvantages
 
@@ -128,7 +135,7 @@ It can be written as:
 ## Example
 
 The following example [deliver.tla](./example/deliver.tla) demonstrates how
-one can clear mark assignments.
+one can clearly mark assignments using the `:=` operator.
 
 ```tla
 ------------------------------ MODULE deliver ----------------------------------
@@ -146,19 +153,22 @@ VARIABLES
     sent,           \* the messages that are sent by the sender
     received,       \* the messages that are received by the receiver
     deliveredSeqNo  \* the sequence number of the last delivered message
-
+(* We assign to the unprimed state variables to set their initial values. *)
 Init ==
     /\ sentSeqNo := 0
     /\ sent := {}
     /\ received := {}
     /\ deliveredSeqNo := -1
 
+(* Subsequent assignments are all to primed variables, designating changed values
+   after state transition. *)
 Send ==
     /\ sent' := sent \union {sentSeqNo}
     /\ sentSeqNo' := sentSeqNo + 1
     /\ UNCHANGED <<received, deliveredSeqNo>>
 
 Receive ==
+    (* We make the nonderministic assignment explicit, by use of existential quantification *)
     /\ \E msgs \in SUBSET (sent \ received):
         received' := received \union msgs
     /\ UNCHANGED <<sentSeqNo, sent, deliveredSeqNo>>
@@ -178,4 +188,3 @@ Inv ==
     (deliveredSeqNo >= 0) => deliveredSeqNo \in sent
 ================================================================================
 ```
-

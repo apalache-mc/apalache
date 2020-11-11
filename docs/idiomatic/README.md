@@ -16,16 +16,16 @@ specifications that are:
 
 If you believe, that the above points are contradictory when put together, it is
 to some extent true. TLA+ is an extremely general specification language. As a
-result, it is easy to write a short specification that leaves puzzled a human
-reader. It is even easier to write a (syntactically correct) specification that
-turns to dust any program reasoning about TLA+. 
+result, it is easy to write a short specification that leaves a human reader
+puzzled . It is even easier to write a (syntactically correct) specification that
+turns any program trying to reason about TLA+ to dust. 
 
 Nevertheless, we find TLA+ quite useful when writing concise specifications of
 distributed protocols at [Informal Systems]. Other specification languages --
 especially, those designed for software verification -- would require us to
 introduce unnecessary book-keeping details that would both obfuscate the
 protocols and make their verification harder. However, we do not always need
-_"all power of mathematics"_, so we find it useful to introduce additional
+_"all the power of mathematics"_, so we find it useful to introduce additional
 structure in TLA+ specifications.
 
 Below, we summarize the idioms that help us in maintaining that structure.  As
@@ -33,17 +33,17 @@ a bonus, these idioms usually aid the Apalache model checker in analyzing the
 specifications. Our idioms are quite likely different from the original ideas
 of [Leslie Lamport] (the author of TLA+).
 So it is useful to read Lamport's [Specifying Systems]. Importantly, these are
-_idioms_, not the rules set in stone. If you believe that one of those idioms
+_idioms_, not rules set in stone. If you believe that one of those idioms
 does not work for you in your specific setting, don't follow it.
 
 If this is the first page where you encounter the word "TLA+", we do not
-recommend continue reading the material. It is better to start with [The TLA+
+recommend that you continue to read the material. It is better to start with [The TLA+
 Video Course](http://lamport.azurewebsites.net/video/videos.html) by Leslie
 Lamport.  Once you have understood the basics and tried the language, it makes
 sense to ask the question: "How do I write a specification that other people
-understand?".  We believe that many TLA+ users reinvent the rules that are
-similar to our idioms.  By providing you with a bit of thought, we hope to
-reduce your discomfort when learning TLA+.
+understand?".  We believe that many TLA+ users reinvent rules that are
+similar to our idioms.  By providing you with a bit of guidance, we hope to
+reduce your discomfort when learning more advanced TLA+.
 
 
 ## The idioms
@@ -83,4 +83,3 @@ __Idiom 14:__ Do you really need integers? :1234:
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html
 [Leslie Lamport]: https://lamport.azurewebsites.net/
 [Informal Systems]: https://informal.systems
-

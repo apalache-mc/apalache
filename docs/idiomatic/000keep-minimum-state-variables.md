@@ -44,10 +44,10 @@ Consider the following implementation of [Bubble sort] in Python:
 
 ```python
     my_list = [5, 4, 3, 8, 1]
-    changed = True
+    finished = False
     my_list_len = len(my_list)  # cache the length
-    while changed:
-        changed = False
+    while not finished:
+        finished = True
         if my_list_len > 0:
             prev = my_list[0]       # save the first element to use in the loop
         for i in range(1, my_list_len):
@@ -59,7 +59,7 @@ Consider the following implementation of [Bubble sort] in Python:
                 # swap the elements
                 my_list[i - 1] = current
                 my_list[i] = prev
-                changed = True
+                finished = False
 ```
 
 Notice that we have introduced three local variables to optimize the code:
@@ -138,12 +138,11 @@ by using let-definitions:
 However, the let-definitions are not variables, they are just aliases for more
 complex expressions. Importantly, one cannot update the value of an expression
 that is defined with a let-definition. In this sense, TLA+ is similar to
-the functional languages, where side effects are carefully avoided and minimized.
+functional languages, where side effects are carefully avoided and minimized.
 
-In contrast to the functional languages, the value of TLA+ is not in computing
+In contrast to functional languages, the value of TLA+ is not in computing
 the result of a function application, but in producing sequences of states
-(called behaviors). Hence, some parts of a TLA+ specification should have side effects:
-To record the states.
+(called behaviors). Hence, some parts of a useful TLA+ specification should have side effects to record the states.
 
 
 [Bubble sort]: https://en.wikipedia.org/wiki/Bubble_sort
