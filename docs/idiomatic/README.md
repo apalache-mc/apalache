@@ -1,6 +1,6 @@
 # Idiomatic TLA+
 
-**Authors:** Igor Konnov + (who likes to contribute?)
+**Authors:** Shon Feder, Igor Konnov + (who likes to contribute?)
 
 _This document is under construction.
 If you like to contribute, open a pull request._
