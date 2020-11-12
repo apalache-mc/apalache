@@ -2,8 +2,9 @@
 
 In this document, we summarize the standard TLA+ operators in a form that is
 similar to manuals on programming languages. The purpose of this document is to
-provide you with a quick reference, whenever you are looking at the [Summary of
-TLA]. For a comprehensive description and philosophy of the language, check
+provide you with a quick reference, whenever you are looking at the
+[Summary of TLA]. For a comprehensive description and philosophy of the
+language, check
 [Specifying Systems] and the [TLA+ Home Page].
 
 We also explain the semantics of the operators under the lenses of the
@@ -14,6 +15,19 @@ necessary for writing and reading system specifications.  Moreover, we treat
 equally the "core" operators of TLA+ and the "library" operators: This
 distinction is less important to the language users than to the tool developers.
 
+In this document, we present the semantics of TLA+, as if it was executed on a
+computer that is equipped with an additional device that we call an _oracle_.
+Most of the TLA+ operators are understood as deterministic operators, so they
+can be executed on your computer. A few operators are non-deterministic, so
+they require the oracle to resolve non-determinism, see
+[Control Flow and Non-determinism]. This is one of the most important features that makes TLA+
+distinct from programming languages.  Wherever possible, we complement the
+English semantics with code in [Python](https://www.python.org/). Although our
+semantics is more restrictive that the denotational semantics in Chapter 16 of
+[Specifying Systems], it is very close to the treatment of TLA+ by the model
+checkers: [Apalache](https://github.com/informalsystems/apalache) and
+[TLC](http://lamport.azurewebsites.net/tla/tools.html).
+
 _Here, we are using the ASCII notation of TLA+, as this is what you
 type. We give the nice LaTeX notation in the detailed description.  The
 translation table between the LaTeX notation and ASCII can be found in [Summary
@@ -23,7 +37,7 @@ of TLA]._
 
 ### Booleans
 
-_Good old Booleans_
+_Good old Booleans_. [Learn more](./booleans.md)
 
  - Boolean algebra:
     `TRUE`, `FALSE`, `A /\ B` (also `A \land B`), `A \/ B` (also `A \lor B`),
@@ -104,7 +118,7 @@ _Like lists in Python_
 
   - All operators of functions and tuples
   - Sequence constructor: `<< e_1, ..., e_n >>` (exactly as tuple)
-  - Concatentation: `s \o t` (also `s \circ t`)
+  - Concatenation: `s \o t` (also `s \circ t`)
   - Add to end: `Append(s, e)`
   - First and rest: `Head(s)` and `Tail(s)`
   - Length: `Len(s)`
@@ -112,14 +126,23 @@ _Like lists in Python_
   - Sequence filter: `SelectSeq(s, Test)`
   - Set of finite sequences over `S`: `Seq(S)`
 
-### Control Flow
+### Control Flow and Non-determinism
 
- - Branching and composition: `A_1 \/ ... \/ A_n` and `A_1 /\ ... /\ A_n`
- - Branching and conditional: `IF p THEN e_1 ELSE e_2`
+ _Hidden powers of TLA+_. [Learn more](./control-and-nondeterminism.md)
+
+ - Branching and composition:
+  - `A_1 \/ ... \/ A_n` and `A_1 /\ ... /\ A_n`
+ - Branching and conditional:
+  - `IF p THEN e_1 ELSE e_2`
  - Branching and multiple conditions:
-   - `CASE p_1 -> e_1 [] ... [] p_n -> e_n`
-   - `CASE p_1 -> e_1 [] ... [] p_n -> e_n [] OTHER -> e`
- - LET-definitions: `LET d_1 == e_1 ... d_n == e_n IN e`
+  - `CASE p_1 -> e_1 [] ... [] p_n -> e_n`
+  - `CASE p_1 -> e_1 [] ... [] p_n -> e_n [] OTHER -> e`
+ - LET-definitions:
+  - `LET d_1 == e_1 ... d_n == e_n IN e`
+
+### Bags
+
+  - TBD
 
 ### Reals
 
@@ -162,7 +185,9 @@ _Like lists in Python_
  - Temporal hiding: `\EE x: F`
  - Temporal universal quantification: `\AA x: F`
 
+[Control Flow and Non-determinism]: ./control-and-nondeterminism.md
 [Apalache model checker]: https://github.com/informalsystems/apalache
+[TLC model checker]: http://lamport.azurewebsites.net/tla/tools.html
 [Summary of TLA]: https://lamport.azurewebsites.net/tla/summary.pdf
 [TLA+ Home Page]: http://lamport.azurewebsites.net/tla/tla.html
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
