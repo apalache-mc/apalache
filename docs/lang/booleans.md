@@ -43,7 +43,7 @@ the possible effects of non-determinism of each argument are combined.  See
 [Control Flow and Non-determinism].
 
 **Errors:** In pure TLA+, the result is undefined, if a non-Boolean argument
-is involved in the evaluation (the evaluation semantincs is lazy).  In this
+is involved in the evaluation (the evaluation is lazy).  In this
 case, Apalache statically reports a type error, whereas TLC reports a runtime
 error.
 
@@ -65,6 +65,27 @@ True  and True
 False and True
 True  and False
 False and False
+```
+
+**Special syntax form:** To minimize the number of parentheses, conjunction can
+be written in the indented form:
+
+```tla
+  /\ F_1
+    /\ G_1
+    ...
+    /\ G_k
+  /\ F_2
+  ...
+  /\ F_n
+```
+
+Similar to scopes in Python, the TLA+ parser groups the expressions according
+to the number of spaces in front of `/\`. The formula in the above example
+is equivalent to:
+
+```tla
+  (F_1) /\ ((G_1) /\ ... /\ (G_k)) /\ (F_2) /\ ... /\ (F_n)
 ```
 
 ----------------------------------------------------------------------------
@@ -94,7 +115,7 @@ If the arguments contain primes, disjunctions produce non-determinism,
 see [Control Flow and Non-determinism].
 
 **Errors:** In pure TLA+, the result is undefined, if a non-Boolean argument
-is involved in the evaluation (the evaluation semantincs is lazy).  In this
+is involved in the evaluation (the evaluation is lazy).  In this
 case, Apalache statically reports a type error, whereas TLC reports a runtime
 error.
 
@@ -116,6 +137,42 @@ True  or True
 False or True
 True  or False
 False or False
+```
+
+**Special syntax form:** To minimize the number of parentheses, disjunction can
+be written in the indented form:
+
+```tla
+  \/ F_1
+    \/ G_1
+    ...
+    \/ G_k
+  \/ F_2
+  ...
+  \/ F_n
+```
+
+Similar to scopes in Python, the TLA+ parser groups the expressions according
+to the number of spaces in front of `\/`. The formula in the above example
+is equivalent to:
+
+```tla
+  (F_1) \/ ((G_1) \/ ... \/ (G_k)) \/ (F_2) \/ ... \/ (F_n)
+```
+
+The indented form allows you to combine conjunctions and disjunctions:
+
+```tla
+  \/ /\ F
+     /\ G
+  \/ \/ H
+     \/ J
+```
+
+The above formula is equivalent to:
+
+```tla
+  (F /\ G) \/ (H \/ J)
 ```
 
 ----------------------------------------------------------------------------
