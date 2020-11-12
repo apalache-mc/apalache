@@ -13,10 +13,11 @@ you try to treat `FALSE` and `TRUE` as sets or integers.
 
 ## Operators
 
-**Warning**: Below, we discuss Boolean operators, as they are usually defined in
-programming languages. It is important to understand the effects of `F /\ G`
-and `F \/ G`, when `F` and `G` contain the operator prime (`'`). We discuss
-this in [Control Flow and Non-determinism].
+**Warning**: Below, we discuss Boolean operators, as they are usually defined
+in programming languages. It is important to understand the effects `F \/ G`,
+when `F` and `G` contain the operator prime (`'`), or when they are used inside
+the initialization predicate `Init`. We discuss this in [Control Flow and
+Non-determinism].
 
 ----------------------------------------------------------------------------
 

@@ -46,7 +46,7 @@ _Good old Booleans_. [Learn more](./booleans.md)
 
 ### Integers
 
-_Unbounded integers like at school_
+_Unbounded integers like in Python_
 
  - Integer algebra: `-i`, `i + k`, `i - k`, `i * k`, `i^k`, `i \div k`, `i % k`
  - Integer predicates: `i < k`, `i > k`, `i <= k` (also `i =< k` and `i \leq k`), 
@@ -65,7 +65,7 @@ _String constants_
 _Almost like sets in Python, but cooler_
 
  - Set algebra:
-    `S \union T` (also `\cup`), `S \intersect T` (also `\cap`), `S \ T`
+    `S \union T` (also `S \cup T`), `S \intersect T` (also `S \cap T`), `S \ T`
  - Set predicates:
     `x \in S`, `x \notin S`, `S \subset T`, `S \subseteq T`,
     `S \supset T`, `S \supseteq T`
@@ -126,19 +126,30 @@ _Like lists in Python_
   - Sequence filter: `SelectSeq(s, Test)`
   - Set of finite sequences over `S`: `Seq(S)`
 
-### Control Flow and Non-determinism
+### Control flow and non-determinism
 
  _Hidden powers of TLA+_. [Learn more](./control-and-nondeterminism.md)
 
- - Branching and composition:
-  - `A_1 \/ ... \/ A_n` and `A_1 /\ ... /\ A_n`
- - Branching and conditional:
-  - `IF p THEN e_1 ELSE e_2`
- - Branching and multiple conditions:
-  - `CASE p_1 -> e_1 [] ... [] p_n -> e_n`
-  - `CASE p_1 -> e_1 [] ... [] p_n -> e_n [] OTHER -> e`
+ - Non-determinism with `A_1 \/ ... \/ A_n`
+ - Non-determinism with `\E x \in S: P`
+ - Non-determinism with `IF p THEN e_1 ELSE e_2`
+ - Non-determinism with `CASE` and `CASE-OTHER`
+
+### Deterministic conditionals
+
+ _Sometimes they come in handy_
+
+ - Deterministic `IF-THEN-ELSE`
+ - Deterministic `CASE`
+
+### User-defined operators and recursive functions
+
+ - Top-level operators, including `RECURSIVE` operators
+
  - LET-definitions:
   - `LET d_1 == e_1 ... d_n == e_n IN e`
+
+ - Recursive functions 
 
 ### Bags
 
