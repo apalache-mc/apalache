@@ -137,7 +137,7 @@ _Like lists in Python_
 
 ### Deterministic conditionals
 
- _Sometimes they come in handy_
+ _Sometimes they come in handy_. [Learn more](./conditionals.md)
 
  - Deterministic `IF-THEN-ELSE`
  - Deterministic `CASE`
@@ -146,8 +146,7 @@ _Like lists in Python_
 
  - Top-level operators, including `RECURSIVE` operators
 
- - LET-definitions:
-  - `LET d_1 == e_1 ... d_n == e_n IN e`
+ - LET-definitions: `LET d_1 == e_1 ... d_n == e_n IN e`
 
  - Recursive functions 
 

@@ -1,5 +1,7 @@
 # Control Flow and Non-determinism in TLA+
 
+[[Back to all operators]](./standard-operators.md)
+
 **Author:** Igor Konnov
 
 Non-determinism is one of the TLA+ features that makes it different from
@@ -111,11 +113,11 @@ of the specification `coord3`:
 
 ![diag2](./img/diag2.png)
 
-Notice that specification `coord` describes one infinite computation 
-(and infinitely prefixes of it that we call finite computations).
-Specification `coord2` describes three infinite computations.
-Specification `coord3` describes infinitely many infinite computations:
-At every step, `Next` may choose between `y' = x` or `y' = x+1`.
+Notice that specification `coord` describes one infinite computation (and
+infinitely many finite computations that are prefixes the infinite
+computation).  Specification `coord2` describes three infinite computations.
+Specification `coord3` describes infinitely many infinite computations: At
+every step, `Next` may choose between `y' = x` or `y' = x+1`.
 
 Why are these specifications so different? The answer lies in non-determinism.
 Specification `coord` is completely deterministic: There is just one state that
@@ -134,8 +136,9 @@ guess the states and transitions. If we could ask our logician friend to guess
 the states and transitions for us every time we read a TLA+ specification, that
 would be great. But this approach does not scale well.
 
-*Can we explain non-determinism to the computer?* It turns out that we can.
-TLC and Apalache work because their authors managed to program reasoning about
+*Can we explain non-determinism to a computer?* It turns out that we can.
+TLC and Apalache work because their authors managed to write programs
+that are reasoning about
 non-determinism. Of course, this comes with constraints on the structure of the
 specifications. After all, people are much better at solving certain logical
 puzzles than computers, though people get bored much faster than computers. 
@@ -155,7 +158,13 @@ that is
 
 ### Non-determinism in Boolean `IF-THEN-ELSE`
 
+For the deterministic use of `IF-THEN-ELSE`,
+    see [Deterministic conditionals](./conditionals.md)
+
 ### Non-determinism in Boolean `CASE`
+
+For the deterministic use of `CASE`,
+    see [Deterministic conditionals](./conditionals.md)
 
 Non-Boolean IF-THEN-ELSE
 
