@@ -9,7 +9,7 @@
 (* omitted for brevity.                                                    *)
 (*                                                                         *)
 (* The original specification by @mryndzionek can be found here:           *)
-(* https://github.com/tlaplus/Examples/blob/master/specifications/CigaretteSmokers/CigaretteSmokers.tla                                                   *)
+(* https://github.com/tlaplus/Examples/blob/master/specifications/CigaretteSmokers/CigaretteSmokers.tla *)
 (***************************************************************************)
 
 EXTENDS Integers, FiniteSets, Typing
