@@ -149,8 +149,67 @@ non-determinism that is closer to Apalache.
 
 ## Explaining non-determinism to a computer
 
-**Partial states.** Assume that `vars` is a tuple of all state variables,
-that is
+To see how a program could evaluate a TLA+ expression, we need two more
+ingredients: partial states and the oracle.
+
+**Partial states.** We introduce a special value `Null` that we will use to
+denote that a state variable has not been assigned a value yet. Note that
+`Null` is not a standard keyword in TLA+, but it is our special keyword that we
+use for evaluating TLA+ expressions.  A _partial state_ is a mapping that
+assigns to every state variable either a TLA+ value or the special value
+`Null`.
+
+**Evaluating deterministic expressions.** Consider the specification `coord`,
+which was given above.  By starting with the partial state `[x |-> Null, y |->
+Null]`, we can see how to automatically evaluate the body of the operator
+`Init`:
+
+```tla
+x = 0 /\ y = 0 
+```
+
+By following [semantics of conjunction](./booleans.md), we see that `/\` is
+evaluated from left-to-right. The left-hand side equality `x = 0` is treated
+as an assignment to `x`, since `x` has value `Null` in the partial state 
+`[x |-> Null, y |-> Null]`. The expression `x = 0` effects in the partial state 
+`[x |-> 0, y |-> Null]`. Likewise, the right-hand side equality `y = 0` is also
+treated as an assignment to `y`. Hence, the expression `y = 0` effects in the
+partial state `[x |-> 0, y |-> 0]`.
+
+Let's see how to evaluate the body of the operator `Next` starting with the
+partial state `[x |-> 3, y |-> 3, x' |-> Null, y' |-> Null]`:
+
+```tla
+x' = x + 1 /\ y' = y + 1
+```
+
+Similar to the conjunction in `Init`, the conjunction in `Next` is evaluated
+first to `[x |-> 3, y |-> 3, x' |-> 4, y' |-> Null]` and then to `[x |-> 3, y
+|-> 3, x' |-> 4, y' |-> 4]`.  However, note that if we evaluate `Next` in the
+state `[x |-> 3, y |-> 3, x' |-> 1, y' |-> 1]`, the result will be `FALSE`, as
+the left-hand side of the conjunction `x' = x + 1` evaluates to `FALSE`.
+Indeed, `x'` has value `1`, whereas `x` has value `3`, so `x' = x + 1` is
+evaluated as `1 = 3 + 1` in the state `[x |-> 3, y |-> 3, x' |-> 1, y' |-> 1]`,
+which gives us `FALSE`. Hence, `<< <<x |-> 3, y |-> 3>>, <<x |-> 1, y |-> 1>> >>`
+is not a transition that is accepted by `Next`.
+
+So far, we only considered unconditional operators. Let's have a look at the
+operator `A`:
+
+`A == y > x /\ y' = x /\ x' = x`
+
+If we evaluate `A` in the partial state `[x |-> 3, y |-> 10, x' |-> Null, y'
+|-> Null]`, we produce the state `[x |-> 3, y |-> 10, x' |-> 3, y' |-> 3]`.
+However, if we evaluate `A` in the partial state `[x |-> 10, y |-> 3, x' |->
+Null, y' |-> Null]`, the leftmost condition `y > x` fails, and thus there is
+no next state from that partial state that would be accepted by `A`.
+
+Until this moment, we have been considering only deterministic examples, that is,
+there was no "branching" in our reasoning. Such examples can be easily put into
+a program. What about the operators, where we can choose from multiple options
+that are simultaneously enabled? We introduce an oracle to resolve this issue.
+
+**The oracle.**
 
 ### Non-determinism in disjunctions
 
@@ -165,10 +224,6 @@ For the deterministic use of `IF-THEN-ELSE`,
 
 For the deterministic use of `CASE`,
     see [Deterministic conditionals](./conditionals.md)
-
-Non-Boolean IF-THEN-ELSE
-
-Non-Boolean CASE
 
 [[Back to all operators]](./standard-operators.md)
 

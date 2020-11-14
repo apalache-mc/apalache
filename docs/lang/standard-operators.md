@@ -44,6 +44,22 @@ _Good old Booleans_. [Learn more](./booleans.md)
     `~A` (also `\lnot A` and `\neg A`), `A => B`, `A <=> B` (also `A \equiv B`)
  - Boolean set: `BOOLEAN`
 
+### Control flow and non-determinism
+
+ _Hidden powers of TLA+_. [Learn more](./control-and-nondeterminism.md)
+
+ - Non-determinism with `A_1 \/ ... \/ A_n`
+ - Non-determinism with `\E x \in S: P`
+ - Non-determinism with `IF p THEN e_1 ELSE e_2`
+ - Non-determinism with `CASE` and `CASE-OTHER`
+
+### Deterministic conditionals
+
+ _Sometimes they come in handy_. [Learn more](./conditionals.md)
+
+ - Deterministic `IF-THEN-ELSE`
+ - Deterministic `CASE`
+
 ### Integers
 
 _Unbounded integers like in Python_
@@ -125,22 +141,6 @@ _Like lists in Python_
   - Subsequence: `SubSeq(s, i, k)`
   - Sequence filter: `SelectSeq(s, Test)`
   - Set of finite sequences over `S`: `Seq(S)`
-
-### Control flow and non-determinism
-
- _Hidden powers of TLA+_. [Learn more](./control-and-nondeterminism.md)
-
- - Non-determinism with `A_1 \/ ... \/ A_n`
- - Non-determinism with `\E x \in S: P`
- - Non-determinism with `IF p THEN e_1 ELSE e_2`
- - Non-determinism with `CASE` and `CASE-OTHER`
-
-### Deterministic conditionals
-
- _Sometimes they come in handy_. [Learn more](./conditionals.md)
-
- - Deterministic `IF-THEN-ELSE`
- - Deterministic `CASE`
 
 ### User-defined operators and recursive functions
 
