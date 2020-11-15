@@ -13,7 +13,7 @@ predicate and of the transition predicate. These are usually called `Init` and
 means in the mathematical framework of TLA+, and then proceed with the
 explanation that is friendly to computers and software engineers.
 
-## Explaining non-determinism to a human
+## Explaining non-determinism to human
 
 **States, transitions, actions, computations.** Every TLA+ specification comes
 with a set of state variables. For instance, the following specification
@@ -147,10 +147,10 @@ To understand how TLC enumerates states, check Chapter 14 of [[Specifying
 Systems]]. In the rest of this document, we focus on treatment of
 non-determinism that is closer to Apalache.
 
-## Explaining non-determinism to a computer
+## Explaining non-determinism to computer
 
 To see how a program could evaluate a TLA+ expression, we need two more
-ingredients: partial states and the oracle.
+ingredients: partial states and oracles.
 
 **Partial states.** We introduce a special value `Null` that we will use to
 denote that a state variable has not been assigned a value yet. Note that
@@ -196,7 +196,10 @@ is not a transition that is accepted by `Next`.
 So far, we only considered unconditional operators. Let's have a look at the
 operator `A`:
 
-`A == y > x /\ y' = x /\ x' = x`
+```tla
+A ==
+  y > x /\ y' = x /\ x' = x
+```
 
 If we evaluate `A` in the partial state `[x |-> 3, y |-> 10, x' |-> Null, y'
 |-> Null]`, we produce the state `[x |-> 3, y |-> 10, x' |-> 3, y' |-> 3]`.
@@ -209,21 +212,288 @@ there was no "branching" in our reasoning. Such examples can be easily put into
 a program. What about the operators, where we can choose from multiple options
 that are simultaneously enabled? We introduce an oracle to resolve this issue.
 
-**The oracle.**
+**Oracles.** For multiple choices, we introduce an external device that we call
+an oracle. More formally, we assume that there is a device called `GUESS` that
+has the following properties:
 
-### Non-determinism in disjunctions
+ 1. For a non-empty set `S`, a call `GUESS S` returns
+    some value `v \in S`.
+ 1. A call `GUESS {}` halts the evaluation.
+ 1. There are no assumptions about fairness of `GUESS`. It is free to return
+   elements in any order, produce duplicates and ignore some elements.
+
+Why do we call it a device? We cannot call it a function, as functions are
+deterministic by definition. For the same reason, it is not a TLA+
+operator. In logic, we would say that `GUESS` is simply a binary relation on
+sets and their elements, which would not be different from the membership
+relation `\in`.
+
+Why do we need `GUESS S` and cannot use `CHOOSE x \in S: TRUE` instead?
+Actually, `CHOOSE x \in S: TRUE` is *deterministic*. It is guaranteed to return
+the same value, when it is called on two equals sets: if `S = T`, then
+`(CHOOSE x \in S: TRUE) = (CHOOSE x \in T: TRUE)`. Our `GUESS S` does not have
+this guarantee. It is free to return an arbitrary element of `S` each time
+we call it.
+
+How to implement `GUESS S`? There is no general answer to this question.
+However, we know of multiple sources of non-determinism in computer science. So
+we can think of `GUESS S` as being one of the following implementations:
+
+ 1. `GUESS S` can be a remote procedure call in a distributed system.  Unless,
+ we have centralized control over the distributed system, the returned value of
+ RPC may be non-deterministic.
+
+ 1. `GUESS S` can be simply the user input. In this case, the user resolves
+ non-determinism.
+
+ 1. `GUESS S` can be controlled by an adversary, who is trying to break the
+ system.
+
+ 1. `GUESS S` can pick an element by calling a random number generator.
+ However, note that RNG is a very special way of resolving non-determinism: It
+ assumes probabilistic distribution of elements (usually, it is close to the
+ [uniform
+ distribution](https://en.wikipedia.org/wiki/Discrete_uniform_distribution)).
+ Thus, the probability of producing an unfair choice of elements with RNG will
+ be approaching 0.
+
+
+As you see, there are multiple sources of non-determinism. With `GUESS S` we can
+model all of them. As TLA+ does not introduce special primitives for different
+kinds of non-determinism, neither do we fix any implementation of `GUESS S`.
+
+**Halting.** Note that `GUESS {}` halts the evaluation. What does it mean? The
+evaluation cannot continue in the current partial state. It does not imply that
+we have found a deadlock in our TLA+ specification. It simply means that we
+made wrong choices on the way. If we like to enumerate all possible state
+successors, like TLC does, we have to backtrack. In general, the course of
+action depends on the program analysis that you implement. For instance,
+a random simulator could simply backtrack and randomly choose another value.
 
 ### Non-determinism in `\E x \in S: P`
 
+We only have to consider the following case: `\E x \in S: P` is evaluated in a
+partial state `s`, and there is a primed state variable `y'` that satisfies two
+conditions:
+
+ 1. The predicate `P` refers to `y'`, that is, `P` has to assign a value to `y'`.
+ 2. The value of `y'` is not defined yet, that is, `s.y' = Null`.
+
+If the above assumptions do not hold true, the expression `\E x \in S: P` does
+not have non-determinism and it can be evaluated by following the standard
+deterministic semantics of exists, see [[Logic]](./logic.md).
+
+Now it is very easy to evaluate `\E x \in S: P`. We simply evaluate the
+following expression:
+
+```tla
+  LET x == GUESS S IN P
+```
+
+Now it is the job of `GUESS S` to tell us what value of `x` should be
+evaluated. There are three possible outcomes:
+
+ 1. Predicate `P` evaluates to `TRUE` when using the provided value of `x`.
+ In this case, `P` assigns the value of an expression `e` to `y'` as soon as
+ the evaluator meets the expression `y' = e`.
+ The evaluation may continue.
+ 1. Predicate `P` evaluates to `FALSE` when using the provided value of `x`.
+ Well, that was a wrong guess. According to our semantics, the evaluation
+ halts. See the above discussion on "halting".
+ 1. The set `S` is empty, and `GUESS S` halts.  See the above discussion on
+ "halting". 
+
+**Example.** Consider the following specification:
+
+```tla
+VARIABLE x
+Init == x = 0
+Next ==
+  \E i \in Int:
+    i > x /\ x' = i
+```
+
+It is easy to evaluate `Init`: It does not contain non-determinism and it
+evaluates to the state `[x |-> 0]`. When evaluating `Next` in the partial state
+`[x |-> 0, x' |-> Null]`, we have plenty of choices. Actually, we have
+infinitely many choices, as the set `Int` is infinite.  TLC would immediately
+fail here. But there is no reason for our evaluation to fail.  Simply ask the
+oracle. Below we give three examples of how the evaluation works:
+
+```
+1. (GUESS Int) returns 10. (LET i == 10 IN i > x /\ x' = i) is TRUE, x' is assigned 10.
+2. (GUESS Int) returns 0. (LET i == 0 IN i > x /\ x' = i) is FALSE. Halt.
+3. (GUESS Int) returns -20. (LET i == -20 IN i > x /\ x' = i) is FALSE. Halt.
+```
+
+### Non-determinism in disjunctions
+
+Consider a disjunction that comprises `n` clauses:
+
+```tla
+  \/ P_1
+  \/ P_2
+  ...
+  \/ P_n
+```
+
+Assume that we evaluate the disjunction in a partial state `s`. Further,
+let us say that `Unassigned(s)` is the set of state variables that evaluate
+to `Null` in `s`. For every `P_i` we construct the set of state variables 
+`Use_i` that contains every variable `x'` that is mentioned in `P_i`.
+There are three cases to consider:
+
+ 1. All sets `Use_i` agree on which variables are to be assigned.
+    Formally, `Use_i \intersect Unassigned(s) = Use_j \intersect Unassigned(s)`
+    for `i, j \in 1..n`. This is the case that we consider below.
+ 2. Two clauses disagree on the set of variables to be assigned.
+    Formally, there is a pair `i, j \in 1..n` that satisfy the inequality:
+    `Use_i \intersect Unassigned(s) /= Use_j \intersect Unassigned(s)`.
+    In this case, the specification is ill-structured. TLC would
+    raise an error when it found a partial state like this.
+    Apalache would detect this problem when preprocessing the specification.
+ 3. The clauses do not assign values to the primed variables.
+    Formally, `Use_i \intersect Unassigned(s) = {}` for `i \in 1..n`.
+    This is the deterministic case. It can be evaluated by using the
+    deterministic semantics of [Boolean operators](./boolean.md).
+
+We introduce a fresh variable to contain the choice of the clause.  Here we
+call it `choice`. In a real implementation of an evaluator, we would have to
+give it a unique name. Now we evaluate the following _conjunction_:
+
+```tla
+LET choice == GUESS 1..n IN
+  /\ (choice = 1) => P_1
+  /\ (choice = 2) => P_2
+  ...
+  /\ (choice = n) => P_n
+```
+
+Importantly, at most one clause in the conjunction will be actually evaluated.
+As a result, we cannot produce conflicting assignments to the primed variables.
+
+**Example:** Consider the following specification:
+
+```tla
+VARIABLES x, y
+Init == x == 0 /\ y == 0
+Next ==
+    \/ x >= 0 /\ y' = x /\ x' = x + 1
+    \/ x <= 0 /\ y' = -x /\ x' = -(x + 1)
+```
+
+As you can see, the operator `Next` is non-deterministic: The both clauses may
+be activated when `x = 0`.
+
+First, let's evaluate `Next` in the partial state `[x |-> 3, y |-> 3]`:
+
+```
+1. (GUESS 1..2) returns 1. (LET i == 1 IN Next) is TRUE, x' is assigned 4, y' is assigned 3.
+2. (GUESS 1..2) returns 2. (LET i == 2 IN Next) is FALSE. Halt.
+```
+
+Second, evaluate `Next` in the partial state `[x |-> -3, y |-> 3]`:
+
+```
+1. (GUESS 1..2) returns 1. (LET i == 1 IN Next) is FALSE. Halt.
+2. (GUESS 1..2) returns 2. (LET i == 2 IN Next) is TRUE, x' is assigned 4, y' is assigned -3.
+```
+
+Third, evaluate `Next` in the partial state `[x |-> 0, y |-> 0]`:
+
+```
+1. (GUESS 1..2) returns 1. (LET i == 1 IN Next) is TRUE. x' is assigned 1, y' is assigned 0.
+2. (GUESS 1..2) returns 2. (LET i == 2 IN Next) is TRUE, x' is assigned -1, y' is assigned 0.
+```
+
+*Important note. In contrast to [short-circuiting of
+disjunction](./booleans.md) in the deterministic case, we have
+non-deterministic choice here. Hence, short-circuiting does not apply to
+non-deterministic disjunctions.*
+
 ### Non-determinism in Boolean `IF-THEN-ELSE`
 
-For the deterministic use of `IF-THEN-ELSE`,
-    see [Deterministic conditionals](./conditionals.md)
+For the deterministic use of `IF-THEN-ELSE`, see [Deterministic
+conditionals](./conditionals.md).
+
+Consider an `IF-THEN-ELSE` expression to be evaluated in a partial state `s`:
+
+```tla
+IF A THEN B ELSE C
+```
+
+Here we assume that both `B` and `C` produce Boolean results and `B` and `C`
+refer to a primed variable `y'` that is undefined in `s`. Otherwise, the
+expression can be evaluated as a [deterministic
+conditional](./conditionals.md).
+
+In this case, `IF-THEN-ELSE` can be evaluated as the equivalent expression:
+
+```tla
+  \/  P /\ B
+  \/ ~P /\ C
+```
+
+_We do not recommend you to use IF-THEN-ELSE with non-determinism. The structure
+ of the disjunction provides a clear indication that the expression may
+ assign to variables as a side effect. IF-THEN-ELSE has two thinking
+ step: what is the expected result, and what are the possible side effects._
 
 ### Non-determinism in Boolean `CASE`
 
 For the deterministic use of `CASE`,
-    see [Deterministic conditionals](./conditionals.md)
+    see [Deterministic conditionals](./conditionals.md).
+
+**CASE without OTHER.**    
+Consider a `CASE` expression:
+
+```tla
+CASE P_1 -> e_1
+  [] P_2 -> e_2
+  ...
+  [] P_n -> e_n
+```
+
+We assume that `e_1, ..., e_n` produce Boolean results. Otherwise,
+see [Deterministic conditionals](./conditionals.md).
+
+This operator is equivalent to the following disjunction:
+
+```tla
+\/ P_1 /\ e_1
+\/ P_2 /\ e_2
+...
+\/ P_n /\ e_n
+```
+
+_Similar to IF-THEN-ELSE, we do not recommend you using CASE for expressing
+non-determinism. When you are using disjunction, the Boolean result and
+possible side effects are expected._
+
+**CASE with OTHER.** The more general form of `CASE` is like follows:
+
+```tla
+CASE P_1 -> e_1
+  [] P_2 -> e_2
+  ...
+  [] P_n -> e_n
+  [] OTHER -> e_other
+```
+
+This operator is equivalent to the following disjunction:
+
+```tla
+\/ P_1 /\ e_1
+\/ P_2 /\ e_2
+...
+\/ P_n /\ e_n
+\/ ~P_1 /\ ... /\ ~P_n /\ e_other
+```
+
+_The use of CASE with OTHER together with non-determinism is quite rare.
+ It is not clear why would one need a fallback option in the Boolean formula.
+ We recommend you to use the disjunctive form instead._
+
 
 [[Back to all operators]](./standard-operators.md)
 

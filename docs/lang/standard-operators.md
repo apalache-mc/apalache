@@ -92,7 +92,7 @@ _Almost like sets in Python, but cooler_
 
 ### Logic
 
-_Like loops_
+_Like loops_. [Learn more](./logic.md)
 
  - Equality:
     `=`, `/=` (also `#`)
