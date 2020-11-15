@@ -13,7 +13,7 @@ predicate and of the transition predicate. These are usually called `Init` and
 means in the mathematical framework of TLA+, and then proceed with the
 explanation that is friendly to computers and software engineers.
 
-## Explaining non-determinism to human
+## Explaining non-determinism to humans
 
 **States, transitions, actions, computations.** Every TLA+ specification comes
 with a set of state variables. For instance, the following specification
@@ -147,7 +147,7 @@ To understand how TLC enumerates states, check Chapter 14 of [[Specifying
 Systems]]. In the rest of this document, we focus on treatment of
 non-determinism that is closer to Apalache.
 
-## Explaining non-determinism to computer
+## Explaining non-determinism to computers
 
 To see how a program could evaluate a TLA+ expression, we need two more
 ingredients: partial states and oracles.
@@ -290,7 +290,7 @@ following expression:
   LET x == GUESS S IN P
 ```
 
-Now it is the job of `GUESS S` to tell us what value of `x` should be
+It is the job of `GUESS S` to tell us what value of `x` should be
 evaluated. There are three possible outcomes:
 
  1. Predicate `P` evaluates to `TRUE` when using the provided value of `x`.
@@ -437,7 +437,7 @@ In this case, `IF-THEN-ELSE` can be evaluated as the equivalent expression:
 _We do not recommend you to use IF-THEN-ELSE with non-determinism. The structure
  of the disjunction provides a clear indication that the expression may
  assign to variables as a side effect. IF-THEN-ELSE has two thinking
- step: what is the expected result, and what are the possible side effects._
+ steps: what is the expected result, and what are the possible side effects._
 
 ### Non-determinism in Boolean `CASE`
 
