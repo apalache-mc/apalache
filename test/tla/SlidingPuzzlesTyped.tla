@@ -23,7 +23,7 @@ Klotski == "Set(Set(<<Int, Int>>))" ##
 KlotskiGoal == {<<1, 3>>, <<1, 4>>, <<2, 3>>, <<2, 4>>} \in board
             
 ChooseOne(S, P(_)) ==
-    "(Set(Set(<<Int, Int>>)), Set(<<Int, Int>>) => Bool) => Set(<<Int, Int>>)" ####
+    "(Set(Set(<<Int, Int>>)), Set(<<Int, Int>>) => Bool) => Set(<<Int, Int>>)" ##
     CHOOSE x \in S : P(x) /\ \A y \in S : P(y) => y = x
 
 TypeOK == board \in SUBSET Piece
