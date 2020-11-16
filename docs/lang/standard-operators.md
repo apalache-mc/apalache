@@ -2,12 +2,13 @@
 
 In this document, we summarize the standard TLA+ operators in a form that is
 similar to manuals on programming languages. The purpose of this document is to
-provide you with a quick reference, whenever you are looking at the
-[Summary of TLA]. For a comprehensive description and philosophy of the
-language, check
-[Specifying Systems] and the [TLA+ Home Page].
+provide you with a quick reference, whenever you are looking at the [Summary of
+TLA]. For a comprehensive description and philosophy of the language, check
+[Specifying Systems] and the [TLA+ Home Page]. This manual completely ignores
+Pluscal -- a higher-level language on top of TLA+.  If you are interested in
+learning Pluscal, check [LearnTla.com](https://learntla.com) by Hillel Wayne.
 
-We also explain the semantics of the operators under the lenses of the
+We explain the semantics of the operators under the lenses of the
 [Apalache model checker].  Traditionally, the emphasis was put on the temporal
 operators and action operators, as they build the foundation of TLA. We focus
 on the "+" aspect of the language, as this part of the language is absolutely
@@ -92,7 +93,7 @@ _Almost like sets in Python, but cooler_
 
 ### Logic
 
-_Like loops_. [Learn more](./logic.md)
+_How logicians write loops_. [Learn more](./logic.md)
 
  - Equality:
     `=`, `/=` (also `#`)
@@ -130,7 +131,7 @@ _Well, tuples_
 
 ### Sequences
 
-_Like lists in Python_
+_Like lists in Python, but the first index is 1, not 0_
 
   - All operators of functions and tuples
   - Sequence constructor: `<< e_1, ..., e_n >>` (exactly as tuple)
@@ -143,6 +144,8 @@ _Like lists in Python_
   - Set of finite sequences over `S`: `Seq(S)`
 
 ### User-defined operators and recursive functions
+
+_Like macros, to do a lot of things in one step_
 
  - Top-level operators, including `RECURSIVE` operators
 
