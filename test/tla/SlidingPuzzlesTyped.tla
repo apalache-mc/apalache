@@ -42,7 +42,7 @@ dir(p, es) == "(<<Int, Int>>, Set(<<Int, Int>>)) => Set(<<Int, Int>>)" ##
 (* Given a position and a unit translation vector return a pair of         *)
 (* pieces, before and after translation in opposite this vector direction  *)
 (***************************************************************************)      
-move(p, d) == "(<<Int, Int>>, <<Int, Int>>) => <<Set(<<Int, Int>>), Set(<<Int, Int)>>" ##
+move(p, d) == "(<<Int, Int>>, <<Int, Int>>) => <<Set(<<Int, Int>>), Set(<<Int, Int>>)>>" ##
               LET s == "<<Int, Int>>" ##
                     <<p[1] + d[1], p[2] + d[2]>>
                   pc == ChooseOne(board, LAMBDA pc : s \in pc)
@@ -53,7 +53,8 @@ move(p, d) == "(<<Int, Int>>, <<Int, Int>>) => <<Set(<<Int, Int>>), Set(<<Int, I
 (* a set of boards updated by moving appropriate pieces to that            *)
 (* free position                                                           *)
 (***************************************************************************)                 
-update(e, es) == LET dirs  == dir(e, es)
+update(e, es) == "(<<Int, Int>>, Set(<<Int, Int>>)) => Set(Set(Set(<<Int, Int>>)))" ##
+                 LET dirs  == dir(e, es)
                      moved == {move(e, d) : d \in dirs}
                      free  == {<<pc, m>> \in moved :
                                  /\ m \cap (UNION (board \ {pc})) = {}
