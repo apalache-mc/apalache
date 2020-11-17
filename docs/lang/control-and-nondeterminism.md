@@ -439,6 +439,10 @@ _We do not recommend you to use IF-THEN-ELSE with non-determinism. The structure
  assign to variables as a side effect. IF-THEN-ELSE has two thinking
  steps: what is the expected result, and what are the possible side effects._
 
+**Warning:** While it is technically possible to write `x' = e` inside the
+condition, the effect of `x' = e` is not obvious when `x'` is not assigned a
+value.
+
 ### Non-determinism in Boolean `CASE`
 
 For the deterministic use of `CASE`,
