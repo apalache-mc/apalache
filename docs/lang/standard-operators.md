@@ -7,6 +7,8 @@ TLA]. For a comprehensive description and philosophy of the language, check
 [Specifying Systems] and the [TLA+ Home Page]. This manual completely ignores
 Pluscal -- a higher-level language on top of TLA+.  If you are interested in
 learning Pluscal, check [LearnTla.com](https://learntla.com) by Hillel Wayne.
+You can find handy extensions of the standard library in [Community
+Modules](https://github.com/tlaplus/CommunityModules).
 
 We explain the semantics of the operators under the lenses of the
 [Apalache model checker].  Traditionally, the emphasis was put on the temporal
@@ -20,14 +22,16 @@ In this document, we present the semantics of TLA+, as if it was executed on a
 computer that is equipped with an additional device that we call an _oracle_.
 Most of the TLA+ operators are understood as deterministic operators, so they
 can be executed on your computer. A few operators are non-deterministic, so
-they require the oracle to resolve non-determinism, see
-[Control Flow and Non-determinism]. This is one of the most important features that makes TLA+
+they require the oracle to resolve non-determinism, see [Control Flow and
+Non-determinism]. This is one of the most important features that makes TLA+
 distinct from programming languages.  Wherever possible, we complement the
 English semantics with code in [Python](https://www.python.org/). Although our
 semantics is more restrictive that the denotational semantics in Chapter 16 of
 [Specifying Systems], it is very close to the treatment of TLA+ by the model
 checkers: [Apalache](https://github.com/informalsystems/apalache) and
-[TLC](http://lamport.azurewebsites.net/tla/tools.html).
+[TLC](http://lamport.azurewebsites.net/tla/tools.html). Our relation between
+TLA+ operators and Python code bears some resemblance to
+[SALT](https://github.com/Viasat/salt).
 
 _Here, we are using the ASCII notation of TLA+, as this is what you
 type. We give the nice LaTeX notation in the detailed description.  The
@@ -38,7 +42,7 @@ of TLA]._
 
 ### Booleans
 
-_Good old Booleans_. [Learn more](./booleans.md)
+_Good old Booleans_. [Learn more...](./booleans.md)
 
  - Boolean algebra:
     `TRUE`, `FALSE`, `A /\ B` (also `A \land B`), `A \/ B` (also `A \lor B`),
@@ -47,7 +51,7 @@ _Good old Booleans_. [Learn more](./booleans.md)
 
 ### Control flow and non-determinism
 
- _Hidden powers of TLA+_. [Learn more](./control-and-nondeterminism.md)
+ _Hidden powers of TLA+_. [Learn more...](./control-and-nondeterminism.md)
 
  - Non-determinism with `A_1 \/ ... \/ A_n`
  - Non-determinism with `\E x \in S: P`
@@ -56,16 +60,16 @@ _Good old Booleans_. [Learn more](./booleans.md)
 
 ### Deterministic conditionals
 
- _Sometimes they come in handy_. [Learn more](./conditionals.md)
+ _You need them less often than you think_. [Learn more...](./conditionals.md)
 
  - Deterministic `IF-THEN-ELSE`
- - Deterministic `CASE`
+ - Deterministic `CASE` and `CASE-OTHER`
 
 ### Integers
 
-_Unbounded integers like in Python_
+_Unbounded integers like in Python._ [Learn more...](./integers.md)
 
- - Integer algebra: `-i`, `i + k`, `i - k`, `i * k`, `i^k`, `i \div k`, `i % k`
+ - Integer algebra: `-i`, `i + k`, `i - k`, `i * k`, `i \div k`, `i % k`, `i^k`
  - Integer predicates: `i < k`, `i > k`, `i <= k` (also `i =< k` and `i \leq k`), 
    `i => k` (also `i >= k` and `i \geq k`)
  - Integer sets: `i..k`, `Int`, `Nat`
@@ -93,7 +97,7 @@ _Almost like sets in Python, but cooler_
 
 ### Logic
 
-_How logicians write loops_. [Learn more](./logic.md)
+_How logicians write loops_. [Learn more...](./logic.md)
 
  - Equality:
     `=`, `/=` (also `#`)
