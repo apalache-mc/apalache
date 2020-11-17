@@ -42,7 +42,7 @@ dir(p, es) == "(<<Int, Int>>, Set(<<Int, Int>>)) => Set(<<Int, Int>>)" ##
 (* Given a position and a unit translation vector return a pair of         *)
 (* pieces, before and after translation in opposite this vector direction  *)
 (***************************************************************************)      
-move(p, d) == "(<<Int, Int>>, <<Int, Int>>) => <<Int, Int>>" ##
+move(p, d) == "(<<Int, Int>>, <<Int, Int>>) => <<Set(<<Int, Int>>), Set(<<Int, Int)>>" ##
               LET s == "<<Int, Int>>" ##
                     <<p[1] + d[1], p[2] + d[2]>>
                   pc == ChooseOne(board, LAMBDA pc : s \in pc)
