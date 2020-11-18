@@ -1,5 +1,7 @@
 # Idiom 0: Keep state variables to the minimum
 
+In imperative programming, it is common to use mutable variable assignments liberally, but to exercise caution whenever mutable variables have a global scope. In TLA+, mutable variables are always global, so it is important to use them carefully and in a way that accurately reflects the global state of the system you are specifying.  
+
 ## Description
 
 _A good TLA+ specification minimizes the computation state and makes it visible_.
