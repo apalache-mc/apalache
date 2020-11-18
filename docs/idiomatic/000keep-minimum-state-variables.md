@@ -6,7 +6,7 @@ In imperative programming, it is common to use mutable variable assignments libe
 
 _A good TLA+ specification minimizes the computation state and makes it visible_.
 
-TLA+ does not have special syntax for assignments to the variables.  For a good
+TLA+ does not have special syntax for variable assignment.  For a good
 reason. The power of TLA+ is in writing constraints on variables rather than in
 writing detailed commands. If you have been writing in languages such as C, C++,
 Java, Python, your first reflex would be to define a variable to store the
