@@ -235,23 +235,35 @@ are evaluated to integer values, and the second argument is different from 0.
 
 **Effect:** `a \div b` is defined as follows:
 
- - when `a >= 0` and `b > 0`, then the result of `a \div b` is
+ 1. When `a >= 0` and `b > 0`, then the result of `a \div b` is
     the integer `c` that has the property: `a = b * c + d`
     for some `d` in `0..(b-1)`.
- - when `a >= 0` and `b < 0`, then the result of `a \div b` is
-    the integer `c` that has the property: `a = b * c + d`
-    for some `d` in `0..(-b-1)`.
- - when `a < 0` and `b < 0`, then the result of `a \div b` is
-    the integer `c` that has the property: `a = b * c + d`
-    for some `d` in `0..(-b-1)`.
- - when `a < 0` and `b > 0`, then the result of `a \div b` is
+ 2. When `a < 0` and `b > 0`, then the result of `a \div b` is
     the integer `c` that has the property: `a = b * c + d`
     for some `d` in `0..(b-1)`.
+ 3. When `a >= 0` and `b < 0`, then the result of `a \div b` is
+    the integer `c` that has the property: `a = b * c + d`
+    for some `d` in `0..(-b-1)`.
+ 4. When `a < 0` and `b < 0`, then the result of `a \div b` is
+    the integer `c` that has the property: `a = b * c + d`
+    for some `d` in `0..(-b-1)`.
 
-_Note that when `a < 0` or `b < 0`, the result of the integer division `a \div
+_When `a < 0` or `b < 0`, the result of the integer division `a \div
 b` according to the TLA+ definition is different from the integer division `a /
-b` in the programming languages (C, Python, Java, Scala, Rust).  See the
-examples below._
+b` in the programming languages (C, Java, Scala, Rust).  See the
+table below._
+
+   C (clang 12) | Scala 2.13 | Rust | Python 3.8.6 | TLA+ (TLC) | SMT (z3 4.8.8)
+ -- | -- | -- | -- | -- | --
+ 100 / 3 == 33 | 100 / 3 == 33 | 100 / 3 == 33 | 100 // 3 == 33 | (100 \div 3) = 33 | (assert (= 33 (div 100 3)))
+ -100 / 3 == -33 | -100 / 3 == -33 | -100 / 3 == -33 | -100 // 3 == -34 | ((-100) \div 3) = -34 | (assert (= (- 0 34) (div (- 0 100) 3)))
+ 100 / (-3) == -33 | 100 / (-3) == -33 | 100 / (-3) == -33 | 100 // (-3) == -34 | (100 \div (-3)) = -34 | (assert (= (- 0 33) (div 100 (- 0 3))))
+ -100 / (-3) == 33 | -100 / (-3) == 33 | -100 / (-3) == 33 | -100 // (-3) == 33 | ((-100) \div (-3)) = 33 | (assert (= 34 (div (- 0 100) (- 0 3))))
+
+_Unfortunately, [Specifying Systems] gives us only the definition for the case
+`b > 0` (that is, cases 1-2 in our description). The implementation in SMT and
+TLC produce incompatible results for `b < 0`. See [issue #331 in
+Apalache](https://github.com/informalsystems/apalache/issues/331)._
 
 **Determinism:** Deterministic.
 
@@ -260,23 +272,24 @@ one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error. The value
 of `a \div b` is undefined for `b = 0`.
 
-**Example in TLA+:** Here are the examples for the four combinations of signs:
+**Example in TLA+:** Here are the examples for the four combinations of signs
+    (according to TLC):
 
 ```tla
-   100 \div 3       \*  33
-  -100 \div (-3)    \*  34
-   100 \div (-3)    \* -33       
-  -100 \div 3       \* -34       
+    100  \div   3   \*  33
+  (-100) \div   3   \* -34
+    100  \div (-3)  \* -34 in TLC
+  (-100) \div (-3)  \*  33 in TLC
 ```
 
 **Example in Python:** Here are the examples for the four combinations of signs
 to produce the same results as in TLA+:
 
 ```python
-  int(100 / 3)          #  33
-  int(-100 / (-3)) + 1  #  34
-  int(100 / (-3))       # -33
-  int(-100 / 3) - 1     # -34
+  100    //   3     #  33
+  -100   //   3     # -34
+  100    // (-3)    # -34
+  (-100) // (-3)    #  33
 ```
 
 ----------------------------------------------------------------------------

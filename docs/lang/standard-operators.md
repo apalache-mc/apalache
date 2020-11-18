@@ -4,10 +4,8 @@ In this document, we summarize the standard TLA+ operators in a form that is
 similar to manuals on programming languages. The purpose of this document is to
 provide you with a quick reference, whenever you are looking at the [Summary of
 TLA]. For a comprehensive description and philosophy of the language, check
-[Specifying Systems] and the [TLA+ Home Page]. This manual completely ignores
-Pluscal -- a higher-level language on top of TLA+.  If you are interested in
-learning Pluscal, check [LearnTla.com] by Hillel Wayne.  You can find handy
-extensions of the standard library in [Community Modules].
+[Specifying Systems] and the [TLA+ Home Page]. You can find handy extensions of
+the standard library in [Community Modules].
 
 We explain the semantics of the operators under the lenses of the
 [Apalache model checker].  Traditionally, the emphasis was put on the temporal

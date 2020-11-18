@@ -2,7 +2,7 @@
 
 In this manual, we summarize our knowledge about TLA+ and about its treatment
 with the [Apalache model checker]. This is not the manual on Apalache, which
-can be found in [Apalache manua].  For a comprehensive description and
+can be found in [Apalache manual].  For a comprehensive description and
 philosophy of the language, check [Specifying Systems] and the [TLA+ Home
 Page]. There are plenty of interesting talks on TLA+ at [TLA Channel] of Markus
 Kuppe. This manual completely ignores Pluscal -- a higher-level language on top
