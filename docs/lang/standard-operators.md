@@ -6,9 +6,8 @@ provide you with a quick reference, whenever you are looking at the [Summary of
 TLA]. For a comprehensive description and philosophy of the language, check
 [Specifying Systems] and the [TLA+ Home Page]. This manual completely ignores
 Pluscal -- a higher-level language on top of TLA+.  If you are interested in
-learning Pluscal, check [LearnTla.com](https://learntla.com) by Hillel Wayne.
-You can find handy extensions of the standard library in [Community
-Modules](https://github.com/tlaplus/CommunityModules).
+learning Pluscal, check [LearnTla.com] by Hillel Wayne.  You can find handy
+extensions of the standard library in [Community Modules].
 
 We explain the semantics of the operators under the lenses of the
 [Apalache model checker].  Traditionally, the emphasis was put on the temporal
@@ -208,3 +207,6 @@ _Like macros, to do a lot of things in one step_
 [Summary of TLA]: https://lamport.azurewebsites.net/tla/summary.pdf
 [TLA+ Home Page]: http://lamport.azurewebsites.net/tla/tla.html
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
+[Community Modules]: https://github.com/tlaplus/CommunityModules
+[LearnTla.com]: https://learntla.com
+
