@@ -110,11 +110,19 @@ EXITCODE: OK
 ## running the check command
 
 
-
 ### check Bug20201118 succeeds: regression for issue 333
 
 ```sh
-$ apalache-mc check --length=1 --init=Init --next=Next --inv=Inv Bug20201118.tla | sed 's/I@.*//'
+$ apalache-mc check --length=10 --init=Init --next=Next --inv=Inv Bug20201118.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
+### check Fix333 succeeds: another regression for issue 333
+
+```sh
+$ apalache-mc check --length=2 --init=Init --next=Next --inv=Inv Fix333.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
