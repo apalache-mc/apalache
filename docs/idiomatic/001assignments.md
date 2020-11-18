@@ -3,8 +3,8 @@
 ## Description
 
 The idiom "[Keep state variables to the
-minimum](000keep-minimum-state-variables.md)" tells us to store the absolutely
-necessary minimum in the state variables. By following this idiom, we develop
+minimum](000keep-minimum-state-variables.md)" tells us to store the minimum
+necessary state variables. By following this idiom, we develop
 the specification by writing constraints over the primed variables.
 
 TLA+ comes with a great freedom of expressing constraints over variables.
