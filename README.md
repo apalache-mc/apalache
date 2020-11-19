@@ -19,17 +19,24 @@ alt="Apalache Logo">
 </div>
 
 ---
+
+Apalache translates TLA+ into the logic supported by SMT solvers such as
+[Microsoft Z3](https://github.com/Z3Prover/z3). Apalache can check inductive
+invariants (for fixed or bounded parameters) and check safety of bounded
+executions (bounded model checking). To see the list of supported TLA+
+constructs, check the [supported features](docs/features.md). In general,
 Apalache runs under the same assumptions as TLC.
 
 ## Releases
 
 Check the [releases page](https://github.com/informalsystems/apalache/releases).
 
-We recommend you to run the latest docker image `apalache/mc:latest` and
-checkout the source code from
-[master](https://github.com/informalsystems/apalache/tree/master), which accumulate
-bugfixes over the latest release, see the [manual](docs/manual.md#useDocker).
-To try the latest cool features, check the [unstable
+We recommend that you run the latest stable docker image `apalache/mc:latest`,
+or checkout the source code from
+[master](https://github.com/informalsystems/apalache/tree/master), which
+accumulates bugfixes over the latest release. For more information, see [the
+manual](docs/manual.md#useDocker). To try the latest cool features, check out
+the [unstable
 branch](https://github.com/informalsystems/apalache/tree/unstable).
 
 ## Getting started
