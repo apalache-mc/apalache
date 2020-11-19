@@ -65,10 +65,17 @@ class InlinePassImpl @Inject()(val options: PassOptions,
     // Remove the operators that are not needed,
     // as some of them may contain higher-order operators that cannot be substituted
     val relevantOperators = NormalizedNames.userOperatorNamesFromOptions(options).toSet
-    logger.info("Leaving only relevant operators: " + relevantOperators.toList.sorted.mkString(", "))
+
+    // Since PrimingPass now happens before inlining, we have to add InitPrime and CInitPrime as well
+    val initName = options.getOrElse("checker", "init", "Init")
+    val cinitName = options.getOrElse("checker", "cinit", "CInit")
+    val initPrimedName = initName + "Primed"
+    val cinitPrimedName = cinitName + "Primed"
+    val relevantOperatorsAndInitCInitPrimed = relevantOperators + initPrimedName + cinitPrimedName
+    logger.info("Leaving only relevant operators: " + relevantOperatorsAndInitCInitPrimed.toList.sorted.mkString(", "))
     val filteredDefs = inlined.declarations.filter {
       case TlaOperDecl(name, _, _) =>
-        relevantOperators.contains(name)
+        relevantOperatorsAndInitCInitPrimed.contains(name)
       case _ => true // accept all other declarations
     }
 
