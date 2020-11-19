@@ -124,7 +124,7 @@ _Records like everywhere else_
 
 ### Tuples
 
-_Well, tuples_
+_Well, tuples_. [Learn more...](./tuples.md)
 
   - All operators of functions
   - Tuple constructor: `<< e_1, ..., e_n >>`

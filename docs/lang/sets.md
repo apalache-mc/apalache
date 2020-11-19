@@ -59,9 +59,9 @@ If this is not the case, the type checker flags an error.
 **Example in Python:** TLA+ sets are immutable, so we are using `frozenset`:
 
 ```python
-  frozenset([1, 2, 3])
-  frozenset([frozenset([1, 2]), frozenset([2, 3])])
-  frozenset([False, 1])
+  frozenset({1, 2, 3})
+  frozenset({frozenset({1, 2}), frozenset({2, 3})})
+  frozenset({False, 1})
 ```
 
 ----------------------------------------------------------------------------
@@ -96,19 +96,19 @@ incompatible with the type of elements of `S`, or if `S` is not a set.
 **Example in TLA+:**
 
 ```tla
-  1 \in { 1, 2, 3 }         \* TRUE
+   1 \in { 1, 2, 3 }        \* TRUE
   10 \in { 1, 2, 3 }        \* FALSE
   {} \in { {1}, {2} }       \* FALSE
-  1 \in { "a", "b" }        \* model checking error in TLC,
+   1 \in { "a", "b" }       \* model checking error in TLC,
                             \* static type error in Apalache
 ```
 
 **Example in Python:** Python conveniently offers us `in`:
 
 ```python
-  1 in frozenset([1, 2, 3])     # True
-  10 in frozenset([1, 2, 3])    # False
-  1 in frozenset(["a", "b"])    # False
+  1 in frozenset({1, 2, 3})     # True
+  10 in frozenset({1, 2, 3})    # False
+  1 in frozenset({"a", "b"})    # False
 ```
 
 ----------------------------------------------------------------------------
@@ -139,19 +139,19 @@ incompatible with the type of elements of `S`, or if `S` is not a set.
 **Example in TLA+:**
 
 ```tla
-  1 \notin { 1, 2, 3 }      \* FALSE
+   1 \notin { 1, 2, 3 }     \* FALSE
   10 \notin { 1, 2, 3 }     \* TRUE
   {} \notin { {1}, {2} }    \* TRUE
-  1 \notin { "a", "b" }     \* model checking error in TLC,
+   1 \notin { "a", "b" }    \* model checking error in TLC,
                             \* static type error in Apalache
 ```
 
 **Example in Python:** Python conveniently offers us `not in`:
 
 ```python
-  1 not in frozenset([1, 2, 3])     # False
-  10 not in frozenset([1, 2, 3])    # True
-  1 not in frozenset(["a", "b"])    # True
+  1 not in frozenset({1, 2, 3})     # False
+  10 not in frozenset({1, 2, 3})    # True
+  1 not in frozenset({"a", "b"})    # True
 ```
 
 ----------------------------------------------------------------------------
@@ -188,20 +188,20 @@ either not sets, or sets of incompatible types.
 **Example in TLA+:**
 
 ```tla
-  { 1, 2 }    \subseteq { 1, 2, 3 }     \* TRUE
+     { 1, 2 } \subseteq { 1, 2, 3 }     \* TRUE
   { 1, 2, 3 } \subseteq { 1, 2, 3 }     \* TRUE
   { 1, 2, 3 } \subseteq { 1, 2 }        \* FALSE
-  { {1} }     \subseteq { 1, 2, 3 }     \* FALSE, model checking error in TLC
+      { {1} } \subseteq { 1, 2, 3 }     \* FALSE, model checking error in TLC
                                         \* static type error in Apalache
 ```
 
 **Example in Python:** Python conveniently offers us `<=`:
 
 ```python
-  frozenset([1, 2]) <= frozenset([1, 2, 3])             # True
-  frozenset([1, 2, 3]) <= frozenset([1, 2, 3])          # True
-  frozenset([1, 2, 3]) <= frozenset([1, 2])             # False
-  frozenset([frozenset([1])]) <= frozenset([1, 2, 3])   # False
+  frozenset({1, 2}) <= frozenset({1, 2, 3})             # True
+  frozenset({1, 2, 3}) <= frozenset({1, 2, 3})          # True
+  frozenset({1, 2, 3}) <= frozenset({1, 2})             # False
+  frozenset({frozenset({1})}) <= frozenset({1, 2, 3})   # False
 ```
 
 ----------------------------------------------------------------------------
@@ -231,20 +231,20 @@ either not sets, or sets of incompatible types.
 **Example in TLA+:**
 
 ```tla
-  { 1, 2 }    \subset { 1, 2, 3 }     \* TRUE
+     { 1, 2 } \subset { 1, 2, 3 }     \* TRUE
   { 1, 2, 3 } \subset { 1, 2, 3 }     \* FALSE
   { 1, 2, 3 } \subset { 1, 2 }        \* FALSE
-  { {1} }     \subset { 1, 2, 3 }     \* FALSE, model checking error in TLC
+      { {1} } \subset { 1, 2, 3 }     \* FALSE, model checking error in TLC
                                       \* static type error in Apalache
 ```
 
 **Example in Python:** Python conveniently offers us `<`:
 
 ```python
-  frozenset([1, 2]) < frozenset([1, 2, 3])             # True
-  frozenset([1, 2, 3]) < frozenset([1, 2, 3])          # False
-  frozenset([1, 2, 3]) < frozenset([1, 2])             # False
-  frozenset([frozenset([1])]) < frozenset([1, 2, 3])   # False
+  frozenset({1, 2}) < frozenset({1, 2, 3})             # True
+  frozenset({1, 2, 3}) < frozenset({1, 2, 3})          # False
+  frozenset({1, 2, 3}) < frozenset({1, 2})             # False
+  frozenset({frozenset({1})}) < frozenset({1, 2, 3})   # False
 ```
 
 ----------------------------------------------------------------------------
@@ -276,20 +276,20 @@ either not sets, or sets of incompatible types.
 **Example in TLA+:**
 
 ```tla
-  { 1, 2 }    \supseteq { 1, 2, 3 }     \* FALSE
+     { 1, 2 } \supseteq { 1, 2, 3 }     \* FALSE
   { 1, 2, 3 } \supseteq { 1, 2, 3 }     \* TRUE
   { 1, 2, 3 } \supseteq { 1, 2 }        \* TRUE
-  { {1} }     \supseteq { 1, 2, 3 }     \* FALSE, model checking error in TLC
+      { {1} } \supseteq { 1, 2, 3 }     \* FALSE, model checking error in TLC
                                         \* static type error in Apalache
 ```
 
 **Example in Python:** Python conveniently offers us `>=`:
 
 ```python
-  frozenset([1, 2]) >= frozenset([1, 2, 3])             # False
-  frozenset([1, 2, 3]) >= frozenset([1, 2, 3])          # True
-  frozenset([1, 2, 3]) >= frozenset([1, 2])             # True
-  frozenset([frozenset([1])]) >= frozenset([1, 2, 3])   # False
+  frozenset({1, 2}) >= frozenset({1, 2, 3})             # False
+  frozenset({1, 2, 3}) >= frozenset({1, 2, 3})          # True
+  frozenset({1, 2, 3}) >= frozenset({1, 2})             # True
+  frozenset({frozenset({1})}) >= frozenset({1, 2, 3})   # False
 ```
 
 ----------------------------------------------------------------------------
@@ -319,23 +319,260 @@ either not sets, or sets of incompatible types.
 **Example in TLA+:**
 
 ```tla
-  { 1, 2 }    \supset { 1, 2, 3 }       \* FALSE
+     { 1, 2 } \supset { 1, 2, 3 }       \* FALSE
   { 1, 2, 3 } \supset { 1, 2, 3 }       \* FALSE
   { 1, 2, 3 } \supset { 1, 2 }          \* TRUE
-  { {1} }     \supseteq { 1, 2, 3 }     \* FALSE, model checking error in TLC
+      { {1} } \supseteq { 1, 2, 3 }     \* FALSE, model checking error in TLC
                                         \* static type error in Apalache
 ```
 
 **Example in Python:** Python conveniently offers us `>`:
 
 ```python
-  frozenset([1, 2]) > frozenset([1, 2, 3])              # False
-  frozenset([1, 2, 3]) > frozenset([1, 2, 3])           # False
-  frozenset([1, 2, 3]) > frozenset([1, 2])              # True
-  frozenset([frozenset([1])]) >= frozenset([1, 2, 3])   # False
+  frozenset({1, 2}) > frozenset({1, 2, 3})              # False
+  frozenset({1, 2, 3}) > frozenset({1, 2, 3})           # False
+  frozenset({1, 2, 3}) > frozenset({1, 2})              # True
+  frozenset({frozenset({1})}) >= frozenset({1, 2, 3})   # False
 ```
 
+----------------------------------------------------------------------------
 
+### Binary set union
+
+**Notation:** `S \union T` or `S \cup T`
+
+**LaTeX notation:** ![cup](./img/cup.png)
+
+**Arguments:** Two arguments.  If both arguments are not sets, the result
+is undefined.
+
+**Effect:** This operator evaluates to the set that contains the elements 
+of `S` **as well** as the elements of `T`, and no other values.
+
+**Determinism:** Deterministic.
+
+**Errors:** Pure TLA+ does not restrict the operator arguments.  TLC flags a
+model checking error, when it discovers that elements of `S` cannot be compared
+to the elements of `T`. Apalache produces a static type error, `S` and `T` are
+either not sets, or sets of incompatible types.
+
+**Example in TLA+:**
+
+```tla
+  { 0, 1, 2 } \union { 1, 2, 3 } \* { 0, 1, 2, 3 }
+          { } \union { 1, 2, 3 } \* { 1, 2, 3 }
+  { 1, 2, 3 } \union { }         \* { 1, 2, 3 }
+      { {1} } \union { 1, 2 }    \* { {1}, 1, 2 }, model checking error in TLC
+                                 \* static type error in Apalache
+```
+
+**Example in Python:** Python conveniently offers us `union`
+                       that can be written as `|`:
+
+```python
+  frozenset({0, 1, 2}) | frozenset({1, 2, 3})  # frozenset({0, 1, 2, 3})
+  frozenset({}) | frozenset({1, 2, 3})         # frozenset({ 1, 2, 3})
+  frozenset({1, 2, 3}) | frozenset({})         # frozenset({ 1, 2, 3})
+  frozenset({frozenset({1})}) | frozenset({1, 2}) # frozenset({1, 2, frozenset({1})})
+```
+
+----------------------------------------------------------------------------
+
+### Set intersection
+
+**Notation:** `S \intersect T` or `S \cap T`
+
+**LaTeX notation:** ![cap](./img/cap.png)
+
+**Arguments:** Two arguments.  If both arguments are not sets, the result
+is undefined.
+
+**Effect:** This operator evaluates to the set that contains only those elements
+of `S` that **also** belong to `T`, and no other values.
+
+**Determinism:** Deterministic.
+
+**Errors:** Pure TLA+ does not restrict the operator arguments.  TLC flags a
+model checking error, when it discovers that elements of `S` cannot be compared
+to the elements of `T`. Apalache produces a static type error, `S` and `T` are
+either not sets, or sets of incompatible types.
+
+**Example in TLA+:**
+
+```tla
+  { 0, 1, 2 } \intersect { 1, 2, 3 } \* { 1, 2 }
+          { } \intersect { 1, 2, 3 } \* { }
+  { 1, 2, 3 } \intersect { }         \* { }
+      { {1} } \intersect { 1, 2 }    \* { }, model checking error in TLC
+                                     \* static type error in Apalache
+```
+
+**Example in Python:** Python conveniently offers us `intersection`, which
+    can be also written as `&`:
+
+```python
+  frozenset({0, 1, 2}) & frozenset({1, 2, 3})  # frozenset({ 1, 2 })
+  frozenset({}) & frozenset({1, 2, 3})         # frozenset()
+  frozenset({1, 2, 3}) & frozenset({})         # frozenset()
+  frozenset({frozenset({1})}) & frozenset({1, 2}) # frozenset()
+```
+
+----------------------------------------------------------------------------
+
+### Set difference
+
+**Notation:** `S \ T`
+
+**LaTeX notation:** ![setminus](./img/setminus.png)
+
+**Arguments:** Two arguments.  If both arguments are not sets, the result
+is undefined.
+
+**Effect:** This operator evaluates to the set that contains only those elements
+of `S` that **do not** belong to `T`, and no other values.
+
+**Determinism:** Deterministic.
+
+**Errors:** Pure TLA+ does not restrict the operator arguments.  TLC flags a
+model checking error, when it discovers that elements of `S` cannot be compared
+to the elements of `T`. Apalache produces a static type error, `S` and `T` are
+either not sets, or sets of incompatible types.
+
+**Example in TLA+:**
+
+```tla
+  { 0, 1, 2 } \ { 1, 2, 3 }     \* { }
+          { } \ { 1, 2, 3 }     \* { }
+  { 1, 2, 3 } \ { }             \* { }
+      { {1} } \ { 1, 2 }        \* { {1} }, model checking error in TLC
+                                \* static type error in Apalache
+```
+
+**Example in Python:** Python conveniently offers us `intersection`, which
+    can be also written as `&`:
+
+```python
+  frozenset({0, 1, 2}) - frozenset({1, 2, 3})  # frozenset({ 0 })
+  frozenset({}) - frozenset({1, 2, 3})         # frozenset()
+  frozenset({1, 2, 3}) - frozenset({})         # frozenset({ 1, 2, 3 })
+  frozenset({frozenset({1})}) - frozenset({1, 2}) # frozenset({frozenset({1})})
+```
+
+----------------------------------------------------------------------------
+
+### Set filter
+
+**Notation:** `{ x \in S: P }`
+
+**LaTeX notation:** ![filter](./img/filter.png)
+
+**Arguments:** Three arguments: a variable name (or a tuple of names, see
+**Advanced syntax**), a set, and an expression.
+
+
+**Effect:** This operator constructs a new set `F` as follows.  For every
+element `e` of `S`, do the following (we give a sequence of steps to ease
+the understanding):
+ 
+ 1. Bind the element `e` to variable `x`,
+ 2. Evaluate the predicate `P`,
+ 3. If `P` evaluates to `TRUE` under the binding `[x |-> e]`,
+    then insert the element of `e` into set `F`.
+   
+**Determinism:** Deterministic.
+
+**Errors:** Pure TLA+ does not restrict the operator arguments.  TLC flags a
+model checking error, if `S` is infinite.  Apalache produces a static type
+error, if the type of elements of `S` is not compatible in the context of `P`
+when an element of `S` is bound to `x`.
+
+** Advanced syntax:** Instead of a single variable `x`, one can use a tuple
+syntax to unpack variables from a Cartesian product, see [Tuples](./tuples.md).
+For instance, one can write `{ <<x, y>> \in S: P }`. In this case, for every
+element `e` of `S`, the variable `x` is bound to `e[1]` and `y` is bound to
+`e[2]`. The filter expression constructs the set of elements (tuples) that make
+`P` evaluate to `TRUE`.
+
+**Example in TLA+:**
+
+```tla
+  { x \in {1, 2, 3, 4}: x > 2 }             \* { 3, 4 }
+  { x \in {1, 2, 3, 4}: x > 10 }            \* { }
+  \* check the section on tuples to understand the following syntax
+  { <<x, y>> \in 1..4 \X 1..4: y = 3 } \* {<<1, 3>>, <<2, 3>>, <<3, 3>>, <<4, 3>>}
+```
+
+**Example in Python:** Python conveniently offers us the set comprehension
+syntax:
+
+```python
+  S = frozenset({1, 2, 3, 4})
+  frozenset({ x for x in S if x > 2 })      # frozenset({3, 4})
+  frozenset({ x for x in S if x > 10 })     # frozenset()
+  S2 = frozenset({(x, y) for x in S for y in S})
+  frozenset({(x, y) for (x, y) in S2 if y == 3})
+    # frozenset({(1, 3), (2, 3), (3, 3), (4, 3)})
+```
+
+----------------------------------------------------------------------------
+
+### Set map
+
+**Notation:** `{ e: x \in S }` or `{ e: x \in S, y \in T }`, or more arguments 
+
+**LaTeX notation:** ![map](./img/map.png)
+
+**Arguments:** At least three arguments: a mapping expression,
+    a variable name (or a tuple of names, see **Advanced syntax**),
+    a set. Additional arguments are variables names and sets, interleaved.
+
+
+**Effect:** We give the semantics for two arguments.
+This operator constructs a new set `M` as follows.
+    For every element `e_1` of `S` and every element `e_2` of `T`
+    (we give a sequence of steps to ease understanding):
+ 
+ 1. Bind the element `e_1` to variable `x`,
+ 2. Bind the element `e_2` to variable `y`,
+ 2. Compute the value of `e` under the binding `[x |-> e_1, y |-> e_2]`,
+ 3. Insert the element `e` into the set `M`.
+   
+**Determinism:** Deterministic.
+
+**Errors:** Pure TLA+ does not restrict the operator arguments.  TLC flags a
+model checking error, if `S` is infinite.  Apalache produces a static type
+error, if the type of elements of `S` is not compatible in the context of `P`
+when an element of `S` is bound to `x`.
+
+** Advanced syntax:** Instead of a single variable `x`, one can use a tuple
+syntax to unpack variables from a Cartesian product, see [Tuples](./tuples.md).
+For instance, one can write `{ x + y: <<x, y>> \in S }`. In this case, for every
+element `e` of `S`, the variable `x` is bound to `e[1]` and `y` is bound to
+`e[2]`. The map expression constructs the set of expressions that are computed
+under this binding.
+
+**Example in TLA+:**
+
+```tla
+  { 2 * x: x \in { 1, 2, 3, 4 } }      \* { 2, 4, 6, 8 }
+  \* check the section on tuples to understand the following syntax
+  { x + y: x \in 1..2, y \in 1..2 }
+    \* { 2, 3, 4 }
+  { x + y: <<x, y>> \in 1..2 \X 1..2 }
+    \* { 2, 3, 4 }
+```
+
+**Example in Python:** Python conveniently offers us the set comprehension
+syntax:
+
+```python
+  S = frozenset({1, 2, 3, 4})
+  frozenset({ 2 * x for x in S })           # frozenset({2, 4, 6, 8})
+  T = frozenset({1, 2})
+  frozenset({ x + y for x in T for y in T}) # frozenset({2, 3, 4})
+  T2 = frozenset((x, y) for x in T for y in T) # {(1,1), (1, 2), (2, 1), (2, 2) }
+  frozenset({ x + y for (x, y) in T2})      # frozenset({2, 3, 4})
+```
 
 
 [Control Flow and Non-determinism]: ./control-and-nondeterminism.md
