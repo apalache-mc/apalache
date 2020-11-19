@@ -30,9 +30,13 @@ branch](https://github.com/informalsystems/apalache/tree/unstable).
 
 ## Getting started
 
-Read the [Apalache user manual](./docs/manual.md).
+- Read the [Apalache user manual](./docs/manual.md).
+- Consult the (WIP) [Idioms for writing better TLA+](./docs/idiomatic)
 
-WIP: [Idioms for writing better TLA+](./docs/idiomatic)
+## Community
+
+- Join the chat in the [Apalache zulip stream](https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache).
+- [Contribute](./CONTRIBUTING.md) to the development of Apalache.
 
 ## Talks
 
