@@ -541,7 +541,7 @@ This operator constructs a new set `M` as follows.
 
 **Errors:** Pure TLA+ does not restrict the operator arguments.  TLC flags a
 model checking error, if `S` is infinite.  Apalache produces a static type
-error, if the type of elements of `S` is not compatible in the context of `P`
+error, if the type of elements of `S` is not compatible in the context of `e`
 when an element of `S` is bound to `x`.
 
 ** Advanced syntax:** Instead of a single variable `x`, one can use a tuple
@@ -573,6 +573,164 @@ syntax:
   T2 = frozenset((x, y) for x in T for y in T) # {(1,1), (1, 2), (2, 1), (2, 2) }
   frozenset({ x + y for (x, y) in T2})      # frozenset({2, 3, 4})
 ```
+
+----------------------------------------------------------------------------
+
+### Powerset
+
+**Notation:** `SUBSET S`
+
+**LaTeX notation:** `SUBSET S`
+
+**Warning:** Do not confuse `SUBSET S` with `S \subset T`. These are two
+different operators, which unfortunately have similar-looking names.
+
+**Arguments:** One argument. If it is not a set, the result
+is undefined.
+
+**Effect:** This operator computes the set of all subsets of `S`.
+    That is, the set `T` the has the following properties:
+
+ - If `X \in T`, then `X \subseteq S`.
+ - If `X \subseteq S`, then `X \in T`.
+
+
+**Determinism:** Deterministic.
+
+**Errors:** Pure TLA+ does not restrict the operator argument.  TLC flags a
+model checking error, when it discovers that `S` is not a set.  Apalache
+produces a static type error, if the type of `S` is different from set.
+
+**Example in TLA+:**
+
+```tla
+  SUBSET { 0, 1, 2 }
+  \* { {}, {0}, {1}, {2}, {0, 1}, {1, 2}, {0, 2}, {0, 1, 2} }
+```
+
+**Example in Python:** An implementation of `SUBSET S` in Python is not trivial.
+To appreciate the power of TLA+, see [subset.py](./examples/subset.py).
+
+----------------------------------------------------------------------------
+
+### Set folding
+
+**Notation:** `UNION S`
+
+**LaTeX notation:** `UNION S`
+
+**Warning:** Do not confuse `UNION S` with `S \union T`. These are two
+different operators, which unfortunately have similar-looking names.
+
+**Arguments:** One argument. If it is not a set of sets, the result
+is undefined.
+
+**Effect:** Given that `S` is a set of subsets, this operator computes the set
+`T` that contains all elements of elements of `S`:
+
+ - If `X \in S`, then `X \subseteq T`.
+ - If `y \in T`, then there is a set `Y \in S` that contains `y`,
+    that is, `y \in Y`.
+
+In particular, `UNION` folds the explosion that is produced by `SUBSET`. That
+is, `(UNION (SUBSET S)) = S`.
+
+
+**Determinism:** Deterministic.
+
+**Errors:** Pure TLA+ does not restrict the operator argument.  TLC flags a
+model checking error, when it discovers that `S` is not a set of sets.
+Apalache produces a static type error, if the type of `S` is different from a
+set of sets.
+
+**Example in TLA+:**
+
+```tla
+  UNION { {0, 1}, {1, 2}, {3} }
+  \* { 0, 1, 2, 3 }
+```
+
+**Example in Python:** In contrast to `SUBSET S`, an implementation of `UNION S`
+in Python is quite simple:
+
+```python
+    functools.reduce(lambda x, y: x | y, s, frozenset())
+```
+
+----------------------------------------------------------------------------
+
+### Set cardinality
+
+**Notation:** `Cardinality(S)`
+
+**LaTeX notation:** `Cardinality(S)`
+
+**Warning:** `Cardinality(S)` is defined in the module `FiniteSets`.
+
+**Arguments:** One argument. If `S` is not a set, or `S` is an infinite set,
+the result is undefined.
+
+**Effect:** `Cardinality(S)` evaluates to the number of elements in `S`.
+
+**Determinism:** Deterministic.
+
+**Errors:** Pure TLA+ does not restrict the operator argument.  TLC flags a
+model checking error, when it discovers that `S` is not a set, or when it is an
+infinite set.  Apalache produces a static type error, if the type of `S` is
+different from a finite set.
+
+**Example in TLA+:**
+
+```tla
+  EXTENDS FiniteSets
+  ...
+  Cardinality({ 1, 2, 3 })
+  \* 3
+```
+
+**Example in Python:** In Python, we just use the set size:
+
+```python
+    S = frozenset({ 1, 2, 3 })
+    len(S)  # 3
+```
+
+----------------------------------------------------------------------------
+
+### Set finiteness
+
+**Notation:** `IsFinite(S)`
+
+**LaTeX notation:** `IsFinite(S)`
+
+**Warning:** `IsFinite(S)` is defined in the module `FiniteSets`.
+
+**Arguments:** One argument. If `S` is not a set, the result is undefined.
+
+**Effect:** `IsFinite(S)` evaluates to:
+
+ - `TRUE`, when `S` is a finite set,
+ - `FALSE`, when `S` is an infinite set.
+
+**Determinism:** Deterministic.
+
+**Errors:** Pure TLA+ does not restrict the operator argument.  TLC flags a
+model checking error, when it discovers that `S` is not a set. Apalache
+produces a static type error, if the type of `S` is different from a set.
+
+**Example in TLA+:**
+
+```tla
+  EXTENDS FiniteSets
+  ...
+  IsFiniteSet({ 1, 2, 3 })      \* TRUE
+  IsFiniteSet(BOOLEAN)          \* TRUE
+  IsFiniteSet(Nat)              \* FALSE
+  IsFiniteSet(Int)              \* FALSE
+  IsFiniteSet(STRING)           \* FALSE
+```
+
+**Example in Python:** We can construct only finite sets in Python.
 
 
 [Control Flow and Non-determinism]: ./control-and-nondeterminism.md
