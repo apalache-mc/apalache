@@ -33,7 +33,7 @@ expression:
     => x' = 3
 ```
 
-This says, "if `x'` is equal to `x + 1`, then assign `x'` to `3` in the next state", which
+This says, "if `x'` is equal to `x + 1`, then assign the value of `3` to `x'` in the next state", which
 implies that `x'` may receive a value from the set:
 
 ```tla
