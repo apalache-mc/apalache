@@ -80,7 +80,7 @@ _String constants_
 
 ### Sets
 
-_Almost like sets in Python, but cooler_
+_Almost like sets in Python, but cooler_ [Learn more...](./sets.md)
 
  - Set algebra:
     `S \union T` (also `S \cup T`), `S \intersect T` (also `S \cap T`), `S \ T`
