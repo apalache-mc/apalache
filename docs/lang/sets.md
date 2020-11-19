@@ -4,20 +4,66 @@
 
 Sets are the foundational data structure in TLA+. (Similar to what lists are in
 Lisp and Python). The other TLA+ data structures can be all expressed with
-sets: functions, records, tuples, sequences. So it is important to understand
-TLA+ sets well. In contrast to programming languages, there is no efficiency
-penalty in using sets instead of sequences: TLA+ does not have a compiler, the
-efficiency is measured in time it takes the human brain to understand the
-specification.
+sets: functions, records, tuples, sequences. In theory, even Booleans and
+integers can be expressed with sets. In practice, TLA+ tools treat Booleans and
+integers as special values that are different from sets. It is important to
+understand TLA+ sets well. In contrast to programming languages, there is no
+efficiency penalty in using sets instead of sequences: TLA+ does not have a
+compiler, the efficiency is measured in time it takes the human brain to
+understand the specification.
 
-Basic properties of sets...
+In TLA+, a set is an *immutable* data structure that stores its elements in *no
+particular order*. All elements of a set are unique. In fact, those two
+sentences do not make a lot of sense in TLA. we have written them to build the
+bridge from a programming language to TLA+, as TLA+ does not have a memory
+model :wink:
 
-Sets are immutable.
+Sets may be constructed by enumerating values in *some order*, allowing for
+duplicates:
 
-Sets are similar to `frozenset` in Python and immutable `Set` in `Java`.
-But we don't need hashes, only equality.
+```tla
+  { 1, 2, 3, 2, 4, 3 }
+```
 
-Comparable values in a set. See Section 14.7.2 of [Specifying Systems].
+Note that the above set is equal to the sets `{ 1, 2, 3, 4 }` and `{ 4, 3, 2, 1
+}`. They are actually the same set, though they are constructed by passing
+various number of arguments in different orders.
+
+The most basic set operation is the set membership that checks, whether a set
+contains a value:
+
+```tla
+  3 \in S
+```
+
+TLA+ sets are similar to
+[`frozenset`](https://docs.python.org/3/library/stdtypes.html#frozenset) in
+Python and immutable `Set[Object]` in Java.  In contrast to programming
+languages, set elements do not need hashes, as implementation efficiency is not
+an issue in TLA+.
+
+In pure TLA+, sets may contain any kinds of elements. For instance, a set may
+mix integers, Booleans, and other sets:
+
+```tla
+  { 2020, { "is" }, TRUE, "fail" }
+```
+
+TLC restricts set elements to comparable values. See Section 14.7.2 of
+[Specifying Systems]. In a nutshell, if you do not mix the following five
+kinds of values in a single set, TLC would not complain about your sets:
+    
+ 1. Booleans,
+ 1. integers,
+ 1. strings,
+ 1. sets,
+ 1. functions, tuples, records, sequences.
+
+
+
+
+Apalache requires set elements to have the same type. This is enforced by the
+type checker.
 
 ----------------------------------------------------------------------------
 
@@ -670,7 +716,8 @@ in Python is quite simple:
 **Arguments:** One argument. If `S` is not a set, or `S` is an infinite set,
 the result is undefined.
 
-**Effect:** `Cardinality(S)` evaluates to the number of elements in `S`.
+**Effect:** `Cardinality(S)` evaluates to the number of (unique) elements in
+`S`.
 
 **Determinism:** Deterministic.
 
