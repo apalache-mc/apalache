@@ -45,7 +45,7 @@ model checking error, if `S` is infinite.  Apalache produces a static type
 error, if the type of elements of `S` is not compatible in the context of `P`
 when an element of `S` is bound to `x`.
 
-** Advanced syntax: ** Instead of a single variable `x`, you can use the tuple
+**Advanced syntax:** Instead of a single variable `x`, you can use the tuple
 syntax to unpack variables from a Cartesian product, see [Tuples](./tuples.md).
 For instance, one can write `\A <<x, y>> \in S: P`. In this case, for every
 element `e` of `S`, the variable `x` is bound to `e[1]` and `y` is bound to
@@ -313,7 +313,7 @@ element of the set? Well, sets are not ordered, so there is no first element.
 Why shall you use it? Actually, you should not. Unless you have no other
 choice :bowtie:
 
-There are two common use cases, where the use of `CHOOSE` is well justified.
+There are two common use cases, where the use of `CHOOSE` is well justified:
 
  - _Use case 1:_ Retrieving the only element of a singleton set. If you know
     that `Cardinality({x \in S: P}) = 1`, then `CHOOSE x \in S: P` returns
