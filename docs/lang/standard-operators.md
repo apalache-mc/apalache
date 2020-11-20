@@ -1,5 +1,7 @@
 # The standard operators of TLA+
 
+[Back to top](./README.md)
+
 In this document, we summarize the standard TLA+ operators in a form that is
 similar to manuals on programming languages. The purpose of this document is to
 provide you with a quick reference, whenever you are looking at the [Summary of
@@ -37,16 +39,20 @@ of TLA]._
 
 ## The "+" Operators in TLA+
 
-### Booleans
+### Booleans :traffic_light:
 
 _Good old Booleans_. [Learn more...](./booleans.md)
 
  - Boolean algebra:
-    `TRUE`, `FALSE`, `A /\ B` (also `A \land B`), `A \/ B` (also `A \lor B`),
-    `~A` (also `\lnot A` and `\neg A`), `A => B`, `A <=> B` (also `A \equiv B`)
+  - `FALSE` and `TRUE`,
+  - `A /\ B` (also `A \land B`),
+  - `A \/ B` (also `A \lor B`),
+  - `~A` (also `\lnot A` and `\neg A`),
+  - `A => B`,
+  - `A <=> B` (also `A \equiv B`)
  - Boolean set: `BOOLEAN`
 
-### Control flow and non-determinism
+### Control flow and non-determinism :twisted_rightwards_arrows:
 
  _Hidden powers of TLA+_. [Learn more...](./control-and-nondeterminism.md)
 
@@ -55,14 +61,14 @@ _Good old Booleans_. [Learn more...](./booleans.md)
  - Non-determinism with `IF p THEN e_1 ELSE e_2`
  - Non-determinism with `CASE` and `CASE-OTHER`
 
-### Deterministic conditionals
+### Deterministic conditionals :taxi:
 
  _You need them less often than you think_. [Learn more...](./conditionals.md)
 
  - Deterministic `IF-THEN-ELSE`
  - Deterministic `CASE` and `CASE-OTHER`
 
-### Integers
+### Integers :1234:
 
 _Unbounded integers like in Python._ [Learn more...](./integers.md)
 
@@ -74,14 +80,14 @@ _Unbounded integers like in Python._ [Learn more...](./integers.md)
     - `i => k` (also `i >= k` and `i \geq k`)
  - Integer sets: `i..k`, `Int`, `Nat`
 
-### Strings
+### Strings :abcd:
 
 _String constants_. You learned it!
 
  - String literals, e.g., `"hello"` and `"TLA+ is awesome"`
  - Set of all finite strings: `STRING`
 
-### Sets
+### Sets :sushi:
 
 _Almost like sets in Python, but cooler_ [Learn more...](./sets.md)
 
@@ -97,7 +103,7 @@ _Almost like sets in Python, but cooler_ [Learn more...](./sets.md)
  - Powers: `SUBSET S` and `UNION S`
  - Finite sets: `Cardinality` and `IsFinite`
 
-### Logic
+### Logic :octopus:
 
 _How logicians write loops_. [Learn more...](./logic.md)
 
@@ -110,7 +116,7 @@ _How logicians write loops_. [Learn more...](./logic.md)
  - Choice:
     `CHOOSE x \in S: p` and `CHOOSE x: p`
 
-### Functions
+### Functions :chart:
 
 _Like dictionaries in Python, but cooler_
 
@@ -120,7 +126,7 @@ _Like dictionaries in Python, but cooler_
  - Function update: `[ f EXCEPT ![e_1] = e_2 ]`
  - Function domain: `DOMAIN f`
 
-### Records
+### Records :books:
 
 _Records like everywhere else_
 
@@ -129,7 +135,7 @@ _Records like everywhere else_
  - Set of records: `[ h_1: S_1, ..., h_n: S_n ]`
  - Access by field name: `e.h`
 
-### Tuples
+### Tuples :triangular_ruler:
 
 _Well, tuples_. [Learn more...](./tuples.md)
 
@@ -137,7 +143,7 @@ _Well, tuples_. [Learn more...](./tuples.md)
   - Tuple constructor: `<< e_1, ..., e_n >>`
   - Cartesian product: `S_1 \X ... \X S_n` (also `S_1 \times ... \times S_n`)
 
-### Sequences
+### Sequences :bar_chart:
 
 _Functions that pretend to be lists, the first index is 1, not 0_
 
@@ -151,17 +157,7 @@ _Functions that pretend to be lists, the first index is 1, not 0_
   - Sequence filter: `SelectSeq(s, Test)`
   - Set of finite sequences over `S`: `Seq(S)`
 
-### User-defined operators and recursive functions
-
-_Like macros, to do a lot of things in one step_
-
- - Top-level operators, including `RECURSIVE` operators
-
- - LET-definitions: `LET d_1 == e_1 ... d_n == e_n IN e`
-
- - Recursive functions 
-
-### Bags
+### Bags :handbag:
 
   - TBD
 
@@ -193,7 +189,7 @@ _Like macros, to do a lot of things in one step_
 
 ## The "TL" Operators in TLA+
 
-### Temporal operators
+### Temporal operators :soon:
 
  _Talking about computations, finite and infinite_
  

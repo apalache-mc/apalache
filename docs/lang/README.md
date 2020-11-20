@@ -1,4 +1,4 @@
-# TLA+ Language Reference Manual
+# TLA+ Language Reference Manual :green_book:
 
 In this manual, we summarize our knowledge about TLA+ and about its treatment
 with the [Apalache model checker]. This is not the manual on Apalache, which
@@ -11,7 +11,9 @@ Hillel Wayne.
 
 ## Contents
 
- 1. [The standard operators of TLA+](./standard-operators.md)
+ 1. [The standard operators of TLA+](./standard-operators.md) :electric_plug:
+ 1. [User-defined operators](./user-operators.md) :bulb:
+ 1. MODULE, EXTENDS and INSTANCES :scissors:
 
 [Apalache model checker]: https://github.com/informalsystems/apalache
 [Apalache manual]: https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md
