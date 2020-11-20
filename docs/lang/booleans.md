@@ -2,6 +2,9 @@
 
 [[Back to all operators]](./standard-operators.md)
 
+You find these operators in every programming language and every textbook on
+logic. These operators form _propositional logic_.
+
 ## Constants
 
 TLA+ contains three special constants: `TRUE`, `FALSE`, and `BOOLEAN`.
@@ -315,4 +318,5 @@ False == False
 True  == False
 ```
 
-[Control Flow and Non-determinism]: ./control-flow.md
+[Control Flow and Non-determinism]: ./control-and-nondeterminism.md
+

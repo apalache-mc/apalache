@@ -590,7 +590,7 @@ model checking error, if `S` is infinite.  Apalache produces a static type
 error, if the type of elements of `S` is not compatible in the context of `e`
 when an element of `S` is bound to `x`.
 
-** Advanced syntax:** Instead of a single variable `x`, one can use a tuple
+** Advanced syntax:** Instead of a single variable `x`, one can use the tuple
 syntax to unpack variables from a Cartesian product, see [Tuples](./tuples.md).
 For instance, one can write `{ x + y: <<x, y>> \in S }`. In this case, for every
 element `e` of `S`, the variable `x` is bound to `e[1]` and `y` is bound to
