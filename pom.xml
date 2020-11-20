@@ -10,7 +10,7 @@
     <url>https://github.com/informalsystems/apalache</url>
 
     <properties>
-        <scalaVersion>2.12.12</scalaVersion>
+        <scalaVersion>2.13.4</scalaVersion>
         <scalaBinaryVersion>2.12</scalaBinaryVersion>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <scoverage.plugin.version>1.4.1</scoverage.plugin.version>
