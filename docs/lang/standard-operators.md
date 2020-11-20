@@ -67,13 +67,16 @@ _Good old Booleans_. [Learn more...](./booleans.md)
 _Unbounded integers like in Python._ [Learn more...](./integers.md)
 
  - Integer algebra: `-i`, `i + k`, `i - k`, `i * k`, `i \div k`, `i % k`, `i^k`
- - Integer predicates: `i < k`, `i > k`, `i <= k` (also `i =< k` and `i \leq k`), 
-   `i => k` (also `i >= k` and `i \geq k`)
+ - Integer predicates:
+    - `i < k`,
+    - `i > k`,
+    - `i <= k` (also `i =< k` and `i \leq k`), 
+    - `i => k` (also `i >= k` and `i \geq k`)
  - Integer sets: `i..k`, `Int`, `Nat`
 
 ### Strings
 
-_String constants_
+_String constants_. You learned it!
 
  - String literals, e.g., `"hello"` and `"TLA+ is awesome"`
  - Set of all finite strings: `STRING`
@@ -83,10 +86,12 @@ _String constants_
 _Almost like sets in Python, but cooler_ [Learn more...](./sets.md)
 
  - Set algebra:
-    `S \union T` (also `S \cup T`), `S \intersect T` (also `S \cap T`), `S \ T`
+   - `S \union T` (also `S \cup T`),
+   - `S \intersect T` (also `S \cap T`),
+   - `S \ T`
  - Set predicates:
-    `x \in S`, `x \notin S`, `S \subset T`, `S \subseteq T`,
-    `S \supset T`, `S \supseteq T`
+    - `x \in S` and `x \notin S`,
+    - `S \subset T`, `S \subseteq T`, `S \supset T`, `S \supseteq T`
  - Set filter: `{ x \in S: p }`
  - Set map: `{ e: x \in S }`
  - Powers: `SUBSET S` and `UNION S`
@@ -97,11 +102,13 @@ _Almost like sets in Python, but cooler_ [Learn more...](./sets.md)
 _How logicians write loops_. [Learn more...](./logic.md)
 
  - Equality:
-    `=`, `/=` (also `#`)
- - Quantifiers:
-    `\A x \in S: p`, `\exists x \in S: p`, `\A x: p`, `\E x: p`
+    `=` and `/=` (also `#`)
+ - Bounded quantifiers:
+    `\A x \in S: p` and `\exists x \in S: p`
+ - Unbounded quantifiers:
+    `\A x: p` and `\E x: p`
  - Choice:
-    `CHOOSE x \in S: p`, `CHOOSE x: p`
+    `CHOOSE x \in S: p` and `CHOOSE x: p`
 
 ### Functions
 
@@ -132,7 +139,7 @@ _Well, tuples_. [Learn more...](./tuples.md)
 
 ### Sequences
 
-_Like lists in Python, but the first index is 1, not 0_
+_Functions that pretend to be lists, the first index is 1, not 0_
 
   - All operators of functions and tuples
   - Sequence constructor: `<< e_1, ..., e_n >>` (exactly as tuple)
