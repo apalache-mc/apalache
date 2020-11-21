@@ -110,7 +110,7 @@ _How logicians write loops_. [Learn more...](./logic.md)
  - Equality:
     `=` and `/=` (also `#`)
  - Bounded quantifiers:
-    `\A x \in S: p` and `\exists x \in S: p`
+    `\A x \in S: p` and `\E x \in S: p`
  - Unbounded quantifiers:
     `\A x: p` and `\E x: p`
  - Choice:
@@ -182,9 +182,9 @@ _Functions that pretend to be lists, the first index is 1, not 0_
  _Taking a step_
 
  - Prime: `e'`
+ - Preservation: `UNCHANGED e`
  - Stuttering: `[A]_e` and `<A>_e`
  - Action enablement: `ENABLED A`
- - Preservation: `UNCHANGED e`
  - Sequential composition: `A \cdot B`
 
 ## The "TL" Operators in TLA+
