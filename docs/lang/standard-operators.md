@@ -118,7 +118,7 @@ _How logicians write loops_. [Learn more...](./logic.md)
 
 ### Functions :chart:
 
-_Like dictionaries in Python, but cooler_
+_Like dictionaries in Python, but cooler_. [Learn more...](./functions.md)
 
  - Function constructor: `[ x \in S |-> e ]`
  - Set of functions: `[S -> T]`

@@ -12,11 +12,11 @@ efficiency penalty in using sets instead of sequences: TLA+ does not have a
 compiler, the efficiency is measured in time it takes the human brain to
 understand the specification.
 
-In TLA+, a set is an *immutable* data structure that stores its elements in *no
-particular order*. All elements of a set are unique. In fact, those two
-sentences do not make a lot of sense in TLA. we have written them to build the
-bridge from a programming language to TLA+, as TLA+ does not have a memory
-model :wink:
+**Immutability.** In TLA+, a set is an *immutable* data structure that stores
+its elements in *no particular order*. All elements of a set are unique. In
+fact, those two sentences do not make a lot of sense in TLA. we have written
+them to build the bridge from a programming language to TLA+, as TLA+ does not
+have a memory model :wink:
 
 Sets may be constructed by enumerating values in *some order*, allowing for
 duplicates:
@@ -42,8 +42,8 @@ Python and immutable `Set[Object]` in Java.  In contrast to programming
 languages, set elements do not need hashes, as implementation efficiency is not
 an issue in TLA+.
 
-In pure TLA+, sets may contain any kinds of elements. For instance, a set may
-mix integers, Booleans, and other sets:
+**Types.** In pure TLA+, sets may contain any kinds of elements. For instance,
+a set may mix integers, Booleans, and other sets:
 
 ```tla
   { 2020, { "is" }, TRUE, "fail" }
@@ -574,14 +574,14 @@ syntax:
 
 
 **Effect:** We give the semantics for two arguments.
+We write it as a sequence of steps to ease understanding.
 This operator constructs a new set `M` as follows.
-    For every element `e_1` of `S` and every element `e_2` of `T`
-    (we give a sequence of steps to ease understanding):
+For every element `e_1` of `S` and every element `e_2` of `T`:
  
  1. Bind the element `e_1` to variable `x`,
  2. Bind the element `e_2` to variable `y`,
  2. Compute the value of `e` under the binding `[x |-> e_1, y |-> e_2]`,
- 3. Insert the element `e` into the set `M`.
+ 3. Insert the value `e` into the set `M`.
    
 **Determinism:** Deterministic.
 
