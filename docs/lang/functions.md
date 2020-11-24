@@ -6,9 +6,9 @@ Functions is probably the second most used TLA+ data structure after sets. TLA+
 functions are not like functions in programming languages. In programming
 languages, functions contain code that calls other functions. Although it is
 technically possible to use functions when constructing a function in TLA+,
-functions are used like tables or dictionaries. For instance, in [Two-phase
-commit](https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit/TwoPhase.tla),
-the function `rmState` stores the transaction state for each process:
+functions are more often used like tables or dictionaries. For instance, in
+[Two-phase commit], the function `rmState` stores the transaction state for
+each process:
 
 ```tla
 "process1",  "working"
@@ -163,6 +163,8 @@ Apalache rejects the three above examples.
 In the Python examples, we are using the package [frozendict], to produce an
 immutable dictionary.
 
+----------------------------------------------------------------------------
+
 ### Function constructor
 
 **Notation:** `[ x \in S |-> e ]` or `[ x \in S, y \in T |-> e ]`, or more
@@ -205,7 +207,7 @@ Apalache goes further: It requires the function domain to be well-typed (as a
 set), and it requires the mapping expression `e` to be well-typed. If this
 is not the case, the type checker flags an error.
 
-** Advanced syntax:** Instead of a single variable `x`, one can use the tuple
+**Advanced syntax:** Instead of a single variable `x`, one can use the tuple
 syntax to unpack variables from a Cartesian product, see [Tuples](./tuples.md).
 For instance, one can write `[ <<x, y>> \in S |-> x + y ]`. In this case, for
 every element `e` of `S`, the variable `x` is bound to `e[1]` and `y` is bound
@@ -239,6 +241,7 @@ that are computed under such a binding.
   frozendict({ (x, y): x + y  for (x, y) in XY })
 ```
 
+----------------------------------------------------------------------------
 
 ### Function set constructor
 
@@ -347,6 +350,8 @@ variable.
   })
   f3[3][2]
 ```
+
+----------------------------------------------------------------------------
 
 ### Function replacement
 
@@ -474,6 +479,8 @@ This is syntax sugar for:
   #              3: <frozendict {1: 4, 2: 5, 3: 6}>}>
 ```
 
+----------------------------------------------------------------------------
+
 ### Function domain
 
 **Notation:** `DOMAIN f`
@@ -514,3 +521,4 @@ error.
 [Control Flow and Non-determinism]: ./control-and-nondeterminism.md
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
 [frozendict]: https://pypi.org/project/frozendict/
+[Two-phase commit]: https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit/TwoPhase.tla

@@ -128,7 +128,7 @@ _Like frozen dictionaries in Python, but cooler_. [Learn more...](./functions.md
 
 ### Records :books:
 
-_Records like everywhere else_
+_Records like everywhere else_. [Learn more...](./records.md)
 
  - All operators of functions
  - Record constructor: `[ h_1 |-> e_1, ..., h_n |-> e_n ]`

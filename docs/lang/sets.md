@@ -8,15 +8,15 @@ sets: functions, records, tuples, sequences. In theory, even Booleans and
 integers can be expressed with sets. In practice, TLA+ tools treat Booleans and
 integers as special values that are different from sets. It is important to
 understand TLA+ sets well. In contrast to programming languages, there is no
-efficiency penalty in using sets instead of sequences: TLA+ does not have a
+performance penalty in using sets instead of sequences: TLA+ does not have a
 compiler, the efficiency is measured in time it takes the human brain to
 understand the specification.
 
 **Immutability.** In TLA+, a set is an *immutable* data structure that stores
 its elements in *no particular order*. All elements of a set are unique. In
-fact, those two sentences do not make a lot of sense in TLA. we have written
+fact, those two sentences do not make a lot of sense in TLA+. We have written
 them to build the bridge from a programming language to TLA+, as TLA+ does not
-have a memory model :wink:
+have a memory model. :wink:
 
 Sets may be constructed by enumerating values in *some order*, allowing for
 duplicates:
@@ -532,7 +532,7 @@ model checking error, if `S` is infinite.  Apalache produces a static type
 error, if the type of elements of `S` is not compatible in the context of `P`
 when an element of `S` is bound to `x`.
 
-** Advanced syntax:** Instead of a single variable `x`, one can use a tuple
+**Advanced syntax:** Instead of a single variable `x`, one can use a tuple
 syntax to unpack variables from a Cartesian product, see [Tuples](./tuples.md).
 For instance, one can write `{ <<x, y>> \in S: P }`. In this case, for every
 element `e` of `S`, the variable `x` is bound to `e[1]` and `y` is bound to
@@ -590,7 +590,7 @@ model checking error, if `S` is infinite.  Apalache produces a static type
 error, if the type of elements of `S` is not compatible in the context of `e`
 when an element of `S` is bound to `x`.
 
-** Advanced syntax:** Instead of a single variable `x`, one can use the tuple
+**Advanced syntax:** Instead of a single variable `x`, one can use the tuple
 syntax to unpack variables from a Cartesian product, see [Tuples](./tuples.md).
 For instance, one can write `{ x + y: <<x, y>> \in S }`. In this case, for every
 element `e` of `S`, the variable `x` is bound to `e[1]` and `y` is bound to
