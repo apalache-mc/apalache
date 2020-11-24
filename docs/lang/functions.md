@@ -51,7 +51,7 @@ domain. (Though in the above example, it is obvious that we could treat the
 function symbolically, without enumerating all of its elements.)
 
 Another way to construct a function is to *non-deterministically* pick one
-from the set of all functions, e.g.:
+from a set of functions, e.g.:
 
 ```tla
 Init ==
@@ -174,10 +174,6 @@ arguments
 see **Advanced syntax**), a set, and a mapping expression. Instead of one
 variable and one set, you can use multiple variables and multiple sets.
 
-**Effect:** Produce the set that contains the values of the expressions `e_1,
-..., e_n`, in no particular order, and only these values. If `n = 0`, the
-empty set is constructed.
-
 **Effect:** We give the semantics for one argument.  We write a sequence of
 steps to ease the understanding.  This operator constructs a function `f` of
 the domain `S` as follows.  For every element `elem` of `S`, do the following:
@@ -185,7 +181,7 @@ the domain `S` as follows.  For every element `elem` of `S`, do the following:
  1. Bind the element `elem` to variable `x`,
  2. Compute the value of `e` under the binding `[x |-> elem]` and store it
     in a temporary variable called `result`.
- 3. Store that `f` returns `result` when called with `elem` as the argument.
+ 3. Set `f[elem]` to `result`.
 
 Of course, the semantics of the function constructor in [Specifying Systems]
 does not require us to compute the function at all. However, we believe that
@@ -226,6 +222,10 @@ that are computed under such a binding.
   [ <<x, y>> \in 1..3 \X 4..6 |-> x + y ]
     \* a function that maps <<1, 4>>, <<1, 5>>, <<1, 6>>, ..., <<2, 6>>, <<3, 6>>
     \* to 5, 6, 7, ..., 8, 9
+  [ n \in 1..3 |->
+      [ i \in 1..n |-> n + i ]]
+    \* a function that maps a number n from 1 to 3
+    \* to a function from 1..n to n + i. Like an array of arrays.
 ```
 
 **Example in Python:** TLA+ functions are immutable, so we are using [frozendict]:
@@ -237,6 +237,277 @@ that are computed under such a binding.
   Y = frozenset({ 4, 5, 6 })
   XY = frozenset((x, y) for x in X for y in Y)
   frozendict({ (x, y): x + y  for (x, y) in XY })
+```
+
+
+### Function set constructor
+
+**Notation:** `[ S -> T ]`
+
+**LaTeX notation:** ![funset](./img/funset.png)
+
+**Arguments:** Two arguments. Both have to be sets. Otherwise, the result is
+undefined.
+
+**Effect:** This operator constructs the set of all possible functions that
+have `S` as their domain, and for each argument `x \in S` return a value `y \in
+T`.
+
+Note that if one of the sets is infinite, then the set `[S -> T]` is infinite
+too. TLC flags an error, if `S` or `T` are infinite. Apalache flags an error,
+if `S` is infinite. But when Apalache does not have to explicitly construct `[S
+-> T]`, it may accept infinite `T`. For instance:
+
+```tla
+  \E f \in [ 1..3 -> 4..6]:
+    ...
+```
+
+**Determinism:** Deterministic.
+
+**Errors:** In pure TLA+, if `S` and `T` are not sets, then `[S -> T]`
+is undefined. If `S` or `T` are not sets, TLC flags a model checking error.
+Apalache flags a static type error.
+
+**Example in TLA+:**
+
+```tla
+  [ 1..3 |-> 1..100 ]
+    \* the set of functions that map 1, 2, 3 to values from 1 to 100
+  [ Int -> BOOLEAN ]
+    \* The infinite set of functions that map every integer to a Boolean.
+    \* Error in TLC.
+```
+
+**Example in Python:** We do not give here the code that enumerates all
+functions. It should be similar in spirit to [subset.py](./examples/subset.py),
+but it should enumerate strings over the alphabet of `0..(Cardinality(T) - 1)`
+values, rather than over the alphabet of 2 values.
+
+### Function application
+
+**Notation:** `f[e]` or `f[e_1, ..., e_n]`
+
+**LaTeX notation:** `f[e]` or `f[e_1, ..., e_n]`
+
+**Arguments:** At least two arguments. The first one should be a function,
+the other arguments are the arguments to the function. Several arguments
+are treated as a tuple. For instance, `f[e_1, ..., e_n]` is a shorthand for
+`f[<<e_1, ..., e_n>>]`.
+
+**Effect:** This operator evaluates as follows:
+
+ - If `e \in DOMAIN f`, then `f[e]` evaluates to the value that function
+ `f` associates with the value of `e`.
+ - If `e \notin DOMAIN f`, then the value is undefined.
+
+**Determinism:** Deterministic.
+
+**Errors:** When `e \notin DOMAIN f`, TLC flags a model checking error.
+
+When `e` has the type incompatible with the type of `DOMAIN f`, Apalache flags
+a type error. When `e \notin DOMAIN f`, Apalache assigns some type-compatible
+value to `f[e]`, but does not report any error. This is not a bug in Apalache,
+but the feature of the SMT encoding. Usually, an illegal access surfaces
+somewhere, when checking a specification.  If you like to detect an access
+outside of the function domain, instrument your code with an additional state
+variable.
+
+**Example in TLA+:**
+
+```tla
+  [x \in 1..10 |-> x * x][5]                \* 25
+  [x \in 1..3, y \in 1..3 |-> x * y][2, 2]
+    \* Result = 4. Accessing a two-dimensional matrix by a pair
+  [ n \in 1..3 |->
+      [ i \in 1..n |-> n + i ]][3][2]
+    \* The first access returns a function, the second access returns 5.
+  [x \in 1..10 |-> x * x][100]              \* model checking error in TLC,
+                                            \* Apalache produces some value
+```
+
+**Example in Python:**
+
+```python
+  S10 = frozenset(range(1, 10 + 1))
+  # TLA: [x \in 1..10 |-> x * x]
+  f1 = frozendict({ x: x * x for x in S10 })
+  f1[5]         # 25
+  S3 = frozenset({ 1, 2, 3 })
+  # TLA: [x, y \in 1..3 |-> x * y]
+  f2 = frozendict({ (x, y): x * y for x in S3 for y in S3 })
+  f2[(2, 2)]    # 4
+  # TLA: [ n \in 1..3 |-> [ i \in 1..n |-> n + i ]]
+  f3 = frozendict({
+    n: frozendict({
+      i: n + i
+        for i in frozenset(range(1, n + 1))
+    })
+        for n in S3
+  })
+  f3[3][2]
+```
+
+### Function replacement
+
+**Notation:** `[f EXCEPT ![a_1] = e_1, ..., ![a_n] = e_n]`
+
+**LaTeX notation:** `[f EXCEPT ![a_1] = e_1, ..., ![a_n] = e_n]`
+
+**Arguments:** At least three arguments. The first one should be a function,
+the other arguments are interleaved pairs of argument expressions and value
+expressions.
+
+**Effect:** This operator evaluates to a new function `g` that is constructed
+    as follows:
+
+ - Set the domain of `g` to `DOMAIN f`.
+ - For every element `b \in DOMAIN f`, do:
+   - If `b = a_i` for some `i \in 1..n`, then set `g[b]` to `e_i`.
+   - If `b \notin { a_1, ..., a_n }`, then set `g[b]` to `f[b]`.
+
+_Importantly, `g` is a new function, the function `f` is not modified!_
+
+**Determinism:** Deterministic.
+
+**Errors:** When `a_i \notin DOMAIN f` for some `i \in 1..n`,
+TLC flags a model checking error.
+
+When `a_1, ..., a_n` are not type-compatible with the type of `DOMAIN f`,
+Apalache flags a type error. When `a_i \notin DOMAIN f`, Apalache ignores this
+update. This is consistent with the semantics of TLA+ in [Specifying Systems].
+
+**Advanced syntax:** There are three extensions to the basic syntax.
+
+ _Extension 1_. If the function `f` has the domain over tuples, then, similar to
+ function application, the expressions `a_1, ..., a_n` can be written without
+ the tuple braces `<<...>>`. For example:
+
+```tla
+  [ f EXCEPT ![1, 2] = e ]
+```
+
+In the above example, the element `f[<<1, 2>>]` is replaced with `e`.
+As you can see, this is just syntax sugar.
+
+ _Extension 2_. The operator `EXCEPT` introduces an implicit alias `@`
+that refers to the element `f[a_i]` that is going to be replaced:
+
+```tla
+  [ f EXCEPT ![1] = @ + 1, ![2] = @ + 3 ]
+```
+
+In the above example, the element `f[1]` is replaced with `f[1] + 1`, whereas
+the element `f[2]` is replaced with `f[2] + 3`.
+This is also syntax sugar.
+
+ _Extension 3_. The advanced syntax of `EXCEPT` allows for chained replacements.
+ For example:
+
+```tla
+  [ f EXCEPT ![a_1][a_2]...[a_n] = e ]
+```
+
+This is syntax sugar for:
+
+```tla
+  [ f EXCEPT ![a_1] =
+    [ @ EXCEPT ![a_2] =
+        ...
+            [ @ EXCEPT ![a_n] = e ]]]
+```
+
+
+**Example in TLA+:**
+
+```tla
+  LET f1 == [ p \in 1..3 |-> "working" ] IN
+  [ f1 EXCEPT ![2] = "aborted" ]
+    \* a new function that maps: 1 to "working", 2 to "aborted", 3 to "working"
+
+  LET f2 == [x \in 1..3, y \in 1..3 |-> x * y] IN
+  [ f2 EXCEPT ![1, 1] = 0 ]
+    \* a new function that maps:
+    \*   <<1, 1>> to 0, and <<x, y>> to x * y when `x /= 0` or `y /= 0`
+  LET f3 ==  [ n \in 1..3 |-> [ i \in 1..n |-> n + i ]] IN
+  [ f3 EXCEPT ![2][2] = 100 ]
+    \* a new function that maps:
+    \*   1 to the function that maps: 1 to 2
+    \*   2 to the function that maps: 1 to 3, 2 to 100
+    \*   3 to the function that maps: 1 to 4, 2 to 5, 3 to 6
+```
+
+**Example in Python:**
+
+```python
+  f1 = frozendict({ i: "working" for i in range(1, 3 + 1) })
+  tmp = dict(f1)
+  tmp[2] = "aborted"
+  g1 = frozendict(tmp)
+  # g1 is <frozendict {1: 'working', 2: 'aborted', 3: 'working'}>
+
+  S3 = frozenset({ 1, 2, 3 })
+  # TLA: [x, y \in 1..3 |-> x * y]
+  f2 = frozendict({ (x, y): x * y for x in S3 for y in S3 })
+  tmp = dict(f2)
+  tmp[(1, 1)] = 0
+  g2 = frozendict(tmp)
+  # <frozendict {(1, 1): 0, (1, 2): 2, (1, 3): 3, (2, 1): 2, (2, 2): 4,
+  #              (2, 3): 6, (3, 1): 3, (3, 2): 6, (3, 3): 9}>
+
+  # TLA: [ n \in 1..3 |-> [ i \in 1..n |-> n + i ]]
+  f3 = frozendict({
+    n: frozendict({
+      i: n + i
+        for i in frozenset(range(1, n + 1))
+    })
+        for n in S3
+  })
+  # [ f3 EXCEPT ![2][2] = 100 ]
+  tmp = dict(f3[2])
+  tmp[2] = 100
+  tmp2 = dict(f3)
+  tmp2[2] = tmp
+  g3 = frozendict(tmp2)
+  # <frozendict {1: <frozendict {1: 2}>,
+  #              2: {1: 3, 2: 100},
+  #              3: <frozendict {1: 4, 2: 5, 3: 6}>}>
+```
+
+### Function domain
+
+**Notation:** `DOMAIN f`
+
+**LaTeX notation:** `DOMAIN f`
+
+**Arguments:** One argument, which should be a function
+               (respectively, a record, tuple, sequence).
+
+**Effect:** `DOMAIN f` returns the set of values, on which the function
+has been defined, see: Function constructor and Function set constructor.
+
+**Determinism:** Deterministic.
+
+**Errors:** In pure TLA+, the result is undefined, if `f` is not a function
+(respectively, a record, tuple, or sequence). TLC flags a model checking error
+if `f` is a value that does not have a domain. Apalache flags a type checking
+error.
+
+
+**Example in TLA+:**
+
+```tla
+  DOMAIN [ x \in 1..3 |-> 2 * x ]
+  \* { 1, 2, 3 }
+```
+
+**Example in Python:** 
+
+```python
+  X = frozenset({ 1, 2, 3 })
+  f = frozendict({ x: 2 * x for x in X })
+  frozenset(f.keys())
+  # frozenset({1, 2, 3})
 ```
 
 

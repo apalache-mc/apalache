@@ -89,7 +89,7 @@ _String constants_. You learned it!
 
 ### Sets :sushi:
 
-_Almost like sets in Python, but cooler_ [Learn more...](./sets.md)
+_Like frozen sets in Python, but cooler_ [Learn more...](./sets.md)
 
  - Set algebra:
    - `S \union T` (also `S \cup T`),
@@ -118,7 +118,7 @@ _How logicians write loops_. [Learn more...](./logic.md)
 
 ### Functions :chart:
 
-_Like dictionaries in Python, but cooler_. [Learn more...](./functions.md)
+_Like frozen dictionaries in Python, but cooler_. [Learn more...](./functions.md)
 
  - Function constructor: `[ x \in S |-> e ]`
  - Set of functions: `[S -> T]`
