@@ -45,12 +45,12 @@ of TLA]._
 _Good old Booleans_. [Learn more...](./booleans.md)
 
  - Boolean algebra:
-  - `FALSE` and `TRUE`,
-  - `A /\ B` (also `A \land B`),
-  - `A \/ B` (also `A \lor B`),
-  - `~A` (also `\lnot A` and `\neg A`),
-  - `A => B`,
-  - `A <=> B` (also `A \equiv B`)
+   - `FALSE` and `TRUE`,
+   - `A /\ B` (also `A \land B`),
+   - `A \/ B` (also `A \lor B`),
+   - `~A` (also `\lnot A` and `\neg A`),
+   - `A => B`,
+   - `A <=> B` (also `A \equiv B`)
  - Boolean set: `BOOLEAN`
 
 ### Control flow and non-determinism :twisted_rightwards_arrows:
