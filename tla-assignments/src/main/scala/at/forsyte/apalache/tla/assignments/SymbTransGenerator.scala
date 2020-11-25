@@ -10,6 +10,13 @@ import at.forsyte.apalache.tla.lir.values.TlaBool
   */
 class SymbTransGenerator( tracker : TransformationTracker ) {
 
+
+  private def mkReordering( fn: TlaEx => Option[Int]) : Reordering[Option[Int]] = new Reordering[Option[Int]](
+    Reordering.IntOptOrdering,
+    fn,
+    tracker
+  )
+
   private[assignments] object helperFunctions {
     type LabelMapType = Map[UID, Set[UID]]
     type AssignmentSelections = Set[Set[UID]]
@@ -247,12 +254,30 @@ class SymbTransGenerator( tracker : TransformationTracker ) {
                         strategy : StrategyType,
                         selections : SelMapType
                       ) : Seq[SymbTrans] =
-      selections( ex.ID ).map( s =>
+      selections( ex.ID ).map { s =>
+        val ordered = mkOrdered( s, strategy )
+        def rankingFn( tlaEx: TlaEx) : Option[Int] = {
+          // the union of all sets in selections( tlaEx.ID ) lists all the assignments below
+          val assignmentsBelow = selections( tlaEx.ID ).foldLeft( Set.empty[UID] ){ _ ++ _ }
+          // We filter them via the current selection (to ignore assignments on a branch we're not currently on)
+          val filtered = assignmentsBelow.intersect( s )
+          // Of all the assignment candidates, the one with the lowest position in `ordered` determines the rank
+          filtered.foldLeft( None : Option[Int] ) {
+            case (rankCand, uid) =>
+              val uidRank = ordered.find( _ == tlaEx.ID ) map {
+                ordered.indexOf
+              }
+              Reordering.IntOptOrdering.min( rankCand, uidRank )
+          }
+        }
+
+        val reordering = mkReordering( rankingFn )
+
         (
-          mkOrdered( s, strategy ),
-          sliceWith( s, selections )( ex )
+          ordered,
+          reordering.reorder( sliceWith( s, selections )( ex ) )
         )
-      ).toSeq
+      }.toSeq
     }
 
   /**
