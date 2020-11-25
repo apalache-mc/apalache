@@ -315,6 +315,15 @@ The outcome is: NoError
 ...
 ```
 
+### check Rec2.tla succeeds
+
+```sh
+$ apalache-mc check --length=5 --inv=Inv Rec2.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
 ### check Rec3.tla succeeds
 ```sh
 $ apalache-mc check --length=10 --inv=Inv Rec3.tla | sed 's/I@.*//'
@@ -334,6 +343,25 @@ The outcome is: NoError
 ...
 ```
 
+### check Rec5.tla succeeds
+
+```sh
+$ apalache-mc check --length=5 --inv=Inv Rec5.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+$ echo "test"
+```
+
+### check Rec6.tla succeeds
+
+```sh
+$ apalache-mc check --length=5 --inv=Inv Rec6.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
 ### check Rec8.tla succeeds
 
 ```sh
@@ -346,7 +374,7 @@ The outcome is: NoError
 ### check Rec9.tla succeeds
 
 ```sh
-$ apalache-mc check --length=5 --inv=Inv Rec9.tla | sed 's/I@.*//'
+$ apalache-mc check --length=3 --inv=Inv Rec9.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...

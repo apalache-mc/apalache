@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.{TlaModule, TlaOperDecl}
-import at.forsyte.apalache.tla.pp.{NormalizedNames, UniqueNameGenerator}
+import at.forsyte.apalache.tla.pp.{AppWrap, NormalizedNames, ParameterNormalizer, UniqueNameGenerator}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -44,7 +44,12 @@ class InlinePassImpl @Inject()(val options: PassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
-    val module = tlaModule.get
+    val baseModule = tlaModule.get
+
+    val appWrap = AppWrap( gen, tracker )
+    val operNames = (baseModule.operDeclarations map {_.name}).toSet
+    val module = appWrap.moduleTransform( operNames )( baseModule )
+
     val defBodyMap = BodyMapFactory.makeFromDecls(module.operDeclarations)
 
     val transformationSequence =

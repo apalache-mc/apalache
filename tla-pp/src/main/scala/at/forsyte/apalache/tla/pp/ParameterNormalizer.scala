@@ -25,7 +25,7 @@ class ParameterNormalizer(
     case _ => decl
   }
 
-  def paramNormal( paramNames : List[FormalParam] ) : TlaExTransformation = tracker.track { ex =>
+  private def paramNormal( paramNames : List[FormalParam] ) : TlaExTransformation = tracker.track { ex =>
     paramNames.foldLeft( ex ) {
       case (partialEx, fParam) =>
         // For each formal parameter we invent a fresh operator name
@@ -69,7 +69,7 @@ class ParameterNormalizer(
     }
   }
 
-  def apply : TlaModuleTransformation = { m =>
+  def normalize : TlaModuleTransformation = { m =>
     // Iterates over all declarations and replaces those for which decisionFn returns true
     // (by default, for all recursive)
     val newDecls = m.declarations map {
