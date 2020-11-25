@@ -22,13 +22,13 @@ assigned value `TRUE`.
   [ a |-> 2, b |-> TRUE ]
 ```
 
-Similar to the function set `[S -> T]`, there is a record constructor:
+Similar to the function set `[S -> T]`, there is a record set constructor:
 
 ```tla
   [ name: { "Alice", "Bob" }, year_of_birth: { 1900..2000} ]
 ```
 
-The expression in the above example construct a set of records that have: the
+The expression in the above example constructs a set of records that have: the
 `name` field set to either "Alice" or "Bob", and the `year_of_birth` field set
 to an integer from 1900 to 2000.
 
@@ -51,8 +51,8 @@ carries the information about the names of the record fields and their types.
 Similarly, Apalache assigns the type of a set of records, when it processes a
 record set constructor.  See the [Apalache ADR002] on types.
 
-Owing to the type information, records are translated into SMT more efficiently
-by Apalache than the general functions.
+_Owing to the type information, records are translated into SMT more efficiently
+by Apalache than the general functions._
 
 
 It is quite common to mix records of different shapes into sets. For instance,

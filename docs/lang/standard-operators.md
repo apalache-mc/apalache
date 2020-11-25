@@ -162,15 +162,15 @@ _Functions that pretend to be lists, indexed with 1, 2, 3,..._
 
   - TBD
 
-### Reals
+### Reals :lollipop:
 
  _Like "reals" in your math classes, not floating point_
 
- - All operators of `Integers`
+ - All operators of `Integers` but interpreted over reals
 
  - `a / b`, `Real`, `Infinity`
 
-### Naturals
+### Naturals :paw_prints:
 
  _If you are Indiana Jones..._
 
@@ -178,7 +178,7 @@ _Functions that pretend to be lists, indexed with 1, 2, 3,..._
 
 ## The "A" Operators in TLA+
 
-### Action operators
+### Action operators :runner:
 
  _Taking a step_
 
