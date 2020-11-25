@@ -17,8 +17,8 @@ the domain `1..n` can be also treated as a tuple (or a sequence!), and vice
 versa, tuples and sequences are also functions. So you can use all function
 operators on tuples.
 
-Importantly, the domain of a tuple is `1..n` for some `n > 0`. So the first
-index of a tuple is 1. For instance, `<<1, 2>>[1]` gives us 1, whereas `<<1,
+Importantly, the domain of a tuple is `1..n` for some `n > 0`. So tuples never
+have a 0th element. For instance, `<<1, 2>>[1]` gives us 1, whereas `<<1,
 2>>[2]` gives us 2.
 
 **Construction.** TLA+ provides you with a convenient syntax for constructing
@@ -47,10 +47,10 @@ tuples are immutable.
 
 **Types.** In contrast to pure TLA+ and TLC, the Apalache model checker
 distinguishes between general functions, tuples, and sequences. They all have
-different types. Essentially, a function has the type `T_1 -> T_2` that
+different types. Essentially, a function has the type `A -> B` that
 restricts the arguments and results as follows: the arguments have the type
-`T_1` and the results have the type `T_2`. A sequence has the type `Int ->
-T_2`, which restricts the sequence elements to have the same type `T_2`. In
+`A` and the results have the type `B`. A sequence has the type
+`Seq(C)`, which restricts the sequence elements to have the same type `C`. In
 contrast, tuples have more fine-grained types in Apalache: `<<T_1>>`, `<<T_1,
 T_2>>`, `<<T_1, T_2, T_3>>` and so on. As a result, different tuple fields are
 allowed to carry elements of different types, whereas functions and sequences
@@ -75,7 +75,7 @@ immutable dictionary.
 ----------------------------------------------------------------------------
 
 
-### Tuple constructor
+### Tuple/Sequence constructor
 
 **Notation:** `<<e_1, ..., e_n>>` 
 
@@ -158,6 +158,13 @@ is picked with `\E t \in S_1 \X S_2`.
   frozenset({ frozendict({ 1: n, 2: p })
                 for n in { "A", "B", "C" } for p in range(1, 65535 + 1) })
 ```
+
+----------------------------------------------------------------------------
+
+### Function application
+
+As tuples are functions, you can access tuple elements by
+[function application](./functions.md#funApp), e.g., `tup[2]`.
 
 
 [Control Flow and Non-determinism]: ./control-and-nondeterminism.md

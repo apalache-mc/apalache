@@ -287,6 +287,7 @@ functions. It should be similar in spirit to [subset.py](./examples/subset.py),
 but it should enumerate strings over the alphabet of `0..(Cardinality(T) - 1)`
 values, rather than over the alphabet of 2 values.
 
+<a name="funApp"></a>
 ### Function application
 
 **Notation:** `f[e]` or `f[e_1, ..., e_n]`
