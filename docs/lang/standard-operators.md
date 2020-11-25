@@ -25,12 +25,13 @@ they require the oracle to resolve non-determinism, see [Control Flow and
 Non-determinism]. This is one of the most important features that makes TLA+
 distinct from programming languages.  Wherever possible, we complement the
 English semantics with code in [Python](https://www.python.org/). Although our
-semantics is more restrictive that the denotational semantics in Chapter 16 of
+semantics is more restrictive than the denotational semantics in Chapter 16 of
 [Specifying Systems], it is very close to the treatment of TLA+ by the model
 checkers: [Apalache](https://github.com/informalsystems/apalache) and
 [TLC](http://lamport.azurewebsites.net/tla/tools.html). Our relation between
 TLA+ operators and Python code bears some resemblance to
-[SALT](https://github.com/Viasat/salt).
+[SALT](https://github.com/Viasat/salt) and
+[PlusPy](https://github.com/tlaplus/PlusPy).
 
 _Here, we are using the ASCII notation of TLA+, as this is what you
 type. We give the nice LaTeX notation in the detailed description.  The
@@ -137,15 +138,15 @@ _Records like everywhere else_. [Learn more...](./records.md)
 
 ### Tuples :triangular_ruler:
 
-_Well, tuples_. [Learn more...](./tuples.md)
+_Well, tuples_, indexed with 1, 2, 3... [Learn more...](./tuples.md)
 
   - All operators of functions
   - Tuple constructor: `<< e_1, ..., e_n >>`
   - Cartesian product: `S_1 \X ... \X S_n` (also `S_1 \times ... \times S_n`)
 
-### Sequences :bar_chart:
+### Sequences :snake:
 
-_Functions that pretend to be lists, the first index is 1, not 0_
+_Functions that pretend to be lists, indexed with 1, 2, 3,..._
 
   - All operators of functions and tuples
   - Sequence constructor: `<< e_1, ..., e_n >>` (exactly as tuple)

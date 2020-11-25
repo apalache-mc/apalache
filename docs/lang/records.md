@@ -51,6 +51,9 @@ carries the information about the names of the record fields and their types.
 Similarly, Apalache assigns the type of a set of records, when it processes a
 record set constructor.  See the [Apalache ADR002] on types.
 
+Owing to the type information, records are translated into SMT more efficiently
+by Apalache than the general functions.
+
 
 It is quite common to mix records of different shapes into sets. For instance,
 see how the variable `msgs` is updated in [Paxos]. To address this pattern,
@@ -97,6 +100,46 @@ as follows:
   [ name |-> "Printer", port |-> 631 ]
     \* A record that has two fields:
     \* field "name" that is equal to "Printer", and field "port" that is equal to 631.
+```
+
+**Example in Python:** TLA+ functions are immutable, so we are using [frozendict]:
+
+```python
+  frozendict({ "name": "Printer", "port": 631 })
+```
+
+----------------------------------------------------------------------------
+
+### Record set constructor
+
+**Notation:** `[ field_1: S_1, ..., field_n: S_n]`
+
+**LaTeX notation:** ![recset-ctor](./img/recset-ctor.png)
+
+**Arguments:** An even number of arguments: field names and field values,
+interleaved. At least one field is expected. Note that field names are TLA+
+identifiers, not strings.
+
+**Effect:** The record set constructor `[ field_1: S_1, ..., field_n: S_n]`
+is syntax sugar for the set comprehension:
+
+```tla
+{ [ field_1 |-> e_1, ..., field_n |-> e_n]: e_1 \in S_1, ..., e_n \in S_n }
+```
+
+**Determinism:** Deterministic.
+
+**Errors:** The arguments `S_1, ..., S_n` must be sets. If they are not sets,
+the result is undefined in pure TLA+. TLC raises a model checking error. Apalache
+flags a static type error.
+
+TLC raises a model checking error, whenever one of the sets `S_1, ..., S_n` is
+infinite. Apalache can handle infinite records sets in some cases, when one record
+is picked with `\E r \in [ field_1: S_1, ..., field_n: S_n]`.
+
+**Example in TLA+:**
+
+```tla
   [ name: { "A", "B", "C" }, port: 1..65535 ]
     \* A set of records. Each has two fields:
     \* field "name" that has the value from the set { "A", "B", "C" }, and
@@ -106,9 +149,49 @@ as follows:
 **Example in Python:** TLA+ functions are immutable, so we are using [frozendict]:
 
 ```python
-  frozendict({ "name": "Printer", "port": 631 })
   frozenset({ frozendict({ "name": n, "port": p })
                 for n in { "A", "B", "C" } for p in range(1, 65535 + 1) })
+```
+
+----------------------------------------------------------------------------
+
+### Access by field name
+
+**Notation:** `r.field`
+
+**LaTeX notation:** `r.field`
+
+**Arguments:** Two arguments: a record and a field name (as an identifier).
+
+**Effect:** As records are also functions, this operator works as `r["field"]`.
+
+Apalache treats records as values of a record type. In comparison to the
+general function application `r["field"]`, the operator `r.field` is handled
+much more efficiently in Apalache. Due to the use of types, Apalache can
+extract the respective field when translating the access expression into SMT.
+
+**Determinism:** Deterministic.
+
+**Errors:** The arguments `S_1, ..., S_n` must be sets. If they are not sets,
+the result is undefined in pure TLA+. TLC raises a model checking error. Apalache
+flags a static type error.
+
+TLC raises a model checking error, whenever one of the sets `S_1, ..., S_n` is
+infinite. Apalache can handle infinite records sets in some cases, when one record
+is picked with `\E r \in [ field_1: S_1, ..., field_n: S_n]`.
+
+**Example in TLA+:**
+
+```tla
+  LET r == [ name |-> "Printer", port |-> 631 ] IN
+  r.name    \* "Printer"
+```
+
+**Example in Python:** TLA+ functions are immutable, so we are using [frozendict]:
+
+```python
+  r = frozendict({ "name": "Printer", "port": 631 })
+  r["name"]    # "Printer"
 ```
 
 ----------------------------------------------------------------------------
