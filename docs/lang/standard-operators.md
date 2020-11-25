@@ -149,11 +149,10 @@ _Well, tuples_, indexed with 1, 2, 3... [Learn more...](./tuples.md)
 _Functions that pretend to be lists, indexed with 1, 2, 3,..._
 
   - All operators of functions and tuples
-  - Sequence constructor: `<< e_1, ..., e_n >>` (exactly as tuple)
-  - Concatenation: `s \o t` (also `s \circ t`)
   - Add to end: `Append(s, e)`
   - First and rest: `Head(s)` and `Tail(s)`
   - Length: `Len(s)`
+  - Concatenation: `s \o t` (also `s \circ t`)
   - Subsequence: `SubSeq(s, i, k)`
   - Sequence filter: `SelectSeq(s, Test)`
   - Set of finite sequences over `S`: `Seq(S)`
