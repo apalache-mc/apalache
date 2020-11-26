@@ -2,12 +2,13 @@
 
 In this manual, we summarize our knowledge about TLA+ and about its treatment
 with the [Apalache model checker]. This is not the manual on Apalache, which
-can be found in [Apalache manual].  For a comprehensive description and
-philosophy of the language, check [Specifying Systems] and the [TLA+ Home
-Page]. There are plenty of interesting talks on TLA+ at [TLA Channel] of Markus
-Kuppe. This manual completely ignores Pluscal -- a higher-level language on top
-of TLA+.  If you are interested in learning Pluscal, check [LearnTla.com] by
-Hillel Wayne.
+can be found in [Apalache manual]. The [TLA+ Video Course] by Leslie Lamport is
+an excellent starting point, if you are new to TLA+. For a comprehensive
+description and philosophy of the language, check [Specifying Systems] and the
+[TLA+ Home Page]. There are plenty of interesting talks on TLA+ at [TLA
+Channel] of Markus Kuppe. This manual completely ignores Pluscal -- a
+higher-level language on top of TLA+.  If you are interested in learning
+Pluscal, check [LearnTla.com] by Hillel Wayne.
 
 ## Contents
 
@@ -23,4 +24,5 @@ Hillel Wayne.
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
 [LearnTla.com]: https://learntla.com
 [TLA Channel]: https://www.youtube.com/channel/UCLHtwjeqBxVSEhjV0clKblA/videos
+[TLA+ Video Course]: http://lamport.azurewebsites.net/video/videos.html
 

@@ -74,6 +74,7 @@ immutable dictionary.
 
 ----------------------------------------------------------------------------
 
+<a name="recCtor"></a>
 ### Record constructor
 
 **Notation:** `[ field_1 |-> e_1, ..., field_n |-> e_n]`
@@ -110,6 +111,7 @@ as follows:
 
 ----------------------------------------------------------------------------
 
+<a name="recSetCtor"></a>
 ### Record set constructor
 
 **Notation:** `[ field_1: S_1, ..., field_n: S_n]`
@@ -155,6 +157,7 @@ is picked with `\E r \in [ field_1: S_1, ..., field_n: S_n]`.
 
 ----------------------------------------------------------------------------
 
+<a name="recApp"></a>
 ### Access by field name
 
 **Notation:** `r.field`

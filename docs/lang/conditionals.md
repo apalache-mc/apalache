@@ -26,6 +26,7 @@ instead of `CASE`.
 
 ----------------------------------------------------------------------------
 
+<a name="ite"></a>
 ## Deterministic IF-THEN-ELSE
 
 _Use it when choosing between two values, not to structure your code._
@@ -67,6 +68,7 @@ Note that we are using the expression syntax for `if-else` in python.
 This is because we write an expression, not a series of statements that assign
 values to variables!
 
+<a name="case"></a>
 ## Deterministic CASE
 
 _Read the description and never use this operator_
@@ -177,6 +179,7 @@ give executable semantics for the fixed evaluation order of the predicates.
   case_example()
 ```
 
+<a name="caseOther"></a>
 ## Deterministic CASE-OTHER
 
 _Better use IF-THEN-ELSE._

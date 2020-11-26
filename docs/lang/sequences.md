@@ -84,6 +84,7 @@ on sets in Apalache._
 ## Operators
 
 
+<a name="seqCtor"></a>
 ### Tuple/Sequence constructor
 
 **Notation:** `<<e_1, ..., e_n>>` 
@@ -123,6 +124,7 @@ principle "sequences are functions", we have to use a dictionary.
 
 ----------------------------------------------------------------------------
 
+<a name="append"></a>
 ### Sequence append
 
 **Notation:** `Append(seq, e)`
@@ -169,6 +171,7 @@ the types of sequence elements.
 
 ----------------------------------------------------------------------------
 
+<a name="app"></a>
 ### Function application
 
 As sequences are functions, you can access sequence elements with
@@ -176,6 +179,7 @@ As sequences are functions, you can access sequence elements with
 
 ----------------------------------------------------------------------------
 
+<a name="head"></a>
 ### Sequence head
 
 **Notation:** `Head(seq)`
@@ -214,6 +218,7 @@ error.
 
 ----------------------------------------------------------------------------
 
+<a name="tail"></a>
 ### Sequence tail
 
 **Notation:** `Tail(seq)`
@@ -261,6 +266,7 @@ error.
 
 ----------------------------------------------------------------------------
 
+<a name="len"></a>
 ### Sequence length
 
 **Notation:** `Len(seq)`
@@ -303,6 +309,7 @@ error.
 
 ----------------------------------------------------------------------------
 
+<a name="concat"></a>
 ### Sequence concatenation
 
 **Notation:** `s \o t` (or `s \circ t`)
@@ -351,6 +358,7 @@ incompatible.
 
 ----------------------------------------------------------------------------
 
+<a name="subseq"></a>
 ### Subsequence
 
 **Notation:** `SubSeq(seq, m, n)`
@@ -398,6 +406,7 @@ error. Apalache flags a static type error.
 
 ----------------------------------------------------------------------------
 
+<a name="filter"></a>
 ### Sequence filter
 
 **Notation:** `SelectSeq(seq, Test)`
@@ -455,6 +464,7 @@ result is undefined in pure TLA+. TLC raises a model checking error.
 
 ----------------------------------------------------------------------------
 
+<a name="seq"></a>
 ### All sequences
 
 **Notation:** `Seq(S)`

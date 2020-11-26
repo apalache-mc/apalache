@@ -5,9 +5,12 @@
 In this document, we summarize the standard TLA+ operators in a form that is
 similar to manuals on programming languages. The purpose of this document is to
 provide you with a quick reference, whenever you are looking at the [Summary of
-TLA]. For a comprehensive description and philosophy of the language, check
-[Specifying Systems] and the [TLA+ Home Page]. You can find handy extensions of
-the standard library in [Community Modules].
+TLA]. The [TLA+ Video
+Course](http://lamport.azurewebsites.net/video/videos.html) by Leslie Lamport
+is an excellent starting point, if you are new to TLA+.  For a comprehensive
+description and philosophy of the language, check [Specifying Systems] and the
+[TLA+ Home Page]. You can find handy extensions of the standard library in
+[Community Modules].
 
 We explain the semantics of the operators under the lenses of the
 [Apalache model checker].  Traditionally, the emphasis was put on the temporal
@@ -45,41 +48,45 @@ of TLA]._
 _Good old Booleans_. [Learn more...](./booleans.md)
 
  - Boolean algebra:
-   - `FALSE` and `TRUE`,
-   - `A /\ B` (also `A \land B`),
-   - `A \/ B` (also `A \lor B`),
-   - `~A` (also `\lnot A` and `\neg A`),
-   - `A => B`,
-   - `A <=> B` (also `A \equiv B`)
- - Boolean set: `BOOLEAN`
+   - [`FALSE`](./booleans.md#const) and [`TRUE`](./booleans.md#const),
+   - [`A /\ B`](./booleans.md#and) (also `A \land B`),
+   - [`A \/ B`](./booleans.md#or) (also `A \lor B`),
+   - [`~A`](./booleans.md#or) (also `\lnot A` and `\neg A`),
+   - [`A => B`](./booleans.md#implies),
+   - [`A <=> B`](./booleans.md#equiv) (also `A \equiv B`)
+ - Boolean set: [`BOOLEAN`](./booleans.md#const)
 
 ### Control flow and non-determinism :twisted_rightwards_arrows:
 
  _Hidden powers of TLA+_. [Learn more...](./control-and-nondeterminism.md)
 
- - Non-determinism with `A_1 \/ ... \/ A_n`
- - Non-determinism with `\E x \in S: P`
- - Non-determinism with `IF p THEN e_1 ELSE e_2`
- - Non-determinism with `CASE` and `CASE-OTHER`
+ - Non-determinism with [`A_1 \/ ... \/ A_n`](./control-and-nondeterminism.md#nondetOr)
+ - Non-determinism with [`\E x \in S: P`](./control-and-nondeterminism.md#nondetExists)
+ - Non-determinism with [`IF p THEN e_1 ELSE e_2`](./control-and-nondeterminism.md#nondetIte)
+ - Non-determinism with [`CASE` and `CASE-OTHER`](./control-and-nondeterminism.md#nondetCase)
 
 ### Deterministic conditionals :taxi:
 
  _You need them less often than you think_. [Learn more...](./conditionals.md)
 
- - Deterministic `IF-THEN-ELSE`
- - Deterministic `CASE` and `CASE-OTHER`
+ - Deterministic [`IF-THEN-ELSE`](./conditionals.md#ite)
+ - Deterministic [`CASE`](./conditionals.md#case) and [`CASE-OTHER`](./conditionals.md#caseOther)
 
 ### Integers :1234:
 
 _Unbounded integers like in Python._ [Learn more...](./integers.md)
 
- - Integer algebra: `-i`, `i + k`, `i - k`, `i * k`, `i \div k`, `i % k`, `i^k`
+ - Integer algebra:
+    - [`-i`](./integers.md#uminus), [`i + k`](./integers.md#plus),
+    - [`i - k`](./integers.md#minus), [`i * k`](./integers.md#mult),
+      [`i \div k`](./integers.md#div), [`i % k`](./integers.md#mod),
+      [`i^k`](./integers.md#pow)
  - Integer predicates:
-    - `i < k`,
-    - `i > k`,
-    - `i <= k` (also `i =< k` and `i \leq k`), 
-    - `i => k` (also `i >= k` and `i \geq k`)
- - Integer sets: `i..k`, `Int`, `Nat`
+    - [`i < k`](./integers.md#lt), [`i > k`](./integers.md#gt),
+    - [`i <= k`](./integers.md#lte) (also `i =< k` and `i \leq k`), 
+    - [`i => k`](./integers.md#gte) (also `i >= k` and `i \geq k`)
+ - Integer sets: [`i..k`](./integers.md#range),
+    [`Int`](./integers.md#const), [`Nat`](./integers.md#const)
 
 ### Strings :abcd:
 
@@ -93,69 +100,72 @@ _String constants_. You learned it!
 _Like frozen sets in Python, but cooler_ [Learn more...](./sets.md)
 
  - Set algebra:
-   - `S \union T` (also `S \cup T`),
-   - `S \intersect T` (also `S \cap T`),
-   - `S \ T`
+   - [`S \union T`](./sets.md#union) (also `S \cup T`),
+   - [`S \intersect T`](./sets.md#intersect) (also `S \cap T`),
+   - [`S \ T`](./sets.md#setminus)
  - Set predicates:
-    - `x \in S` and `x \notin S`,
-    - `S \subset T`, `S \subseteq T`, `S \supset T`, `S \supseteq T`
- - Set filter: `{ x \in S: p }`
- - Set map: `{ e: x \in S }`
- - Powers: `SUBSET S` and `UNION S`
- - Finite sets: `Cardinality` and `IsFinite`
+    - [`x \in S`](./sets.md#in) and [`x \notin S`](./sets.md#notin),
+    - [`S \subset T`](./sets.md#subset),
+        [`S \subseteq T`](./sets.md#subseteq),
+        [`S \supset T`](./sets.md#supset),
+        [`S \supseteq T`](./sets.md#supseteq)
+ - Set filter: [`{ x \in S: p }`](./sets.md#filter)
+ - Set map: [`{ e: x \in S }`](./sets.md#map)
+ - Powers: [`SUBSET S`](./sets.md#powerset) and [`UNION S`](./sets.md#fold)
+ - Finite sets: [`Cardinality`](./sets.md#card) and [`IsFinite`](./sets.md#finite)
 
 ### Logic :octopus:
 
 _How logicians write loops_. [Learn more...](./logic.md)
 
  - Equality:
-    `=` and `/=` (also `#`)
+    [`=`](./logic.md#eq) and [`/=`](./logic.md#neq) (also `#`)
  - Bounded quantifiers:
-    `\A x \in S: p` and `\E x \in S: p`
+    [`\A x \in S: p`](./logic.md#forallBounded) and [`\E x \in S: p`](./logic.md#existsBounded)
  - Unbounded quantifiers:
-    `\A x: p` and `\E x: p`
+    [`\A x: p`](./logic.md#forall) and [`\E x: p`](./logic.md#exists)
  - Choice:
-    `CHOOSE x \in S: p` and `CHOOSE x: p`
+    [`CHOOSE x \in S: p`](./logic.md#chooseBounded) and [`CHOOSE x: p`](./logic.md#choose)
 
 ### Functions :chart:
 
 _Like frozen dictionaries in Python, but cooler_. [Learn more...](./functions.md)
 
- - Function constructor: `[ x \in S |-> e ]`
- - Set of functions: `[S -> T]`
- - Function application: `f[e]`
- - Function update: `[ f EXCEPT ![e_1] = e_2 ]`
- - Function domain: `DOMAIN f`
+ - [Function constructor](./functions.md#funCtor): `[ x \in S |-> e ]`
+ - [Set of functions](./functions.md#funSetCtor): `[S -> T]`
+ - [Function application](./functions.md#funApp): `f[e]`
+ - [Function update](./functions.md#except): `[ f EXCEPT ![e_1] = e_2 ]`
+ - [Function domain](./functions.md#domain): `DOMAIN f`
 
 ### Records :books:
 
 _Records like everywhere else_. [Learn more...](./records.md)
 
- - All operators of functions
- - Record constructor: `[ h_1 |-> e_1, ..., h_n |-> e_n ]`
- - Set of records: `[ h_1: S_1, ..., h_n: S_n ]`
- - Access by field name: `e.h`
+ - All operators of [functions](./functions.md)
+ - [Record constructor](./records.md#recCtor): `[ h_1 |-> e_1, ..., h_n |-> e_n ]`
+ - [Set of records](./records.md#recSetCtor): `[ h_1: S_1, ..., h_n: S_n ]`
+ - [Access by field name](./records.md#recApp): `e.h`
 
 ### Tuples :triangular_ruler:
 
 _Well, tuples_, indexed with 1, 2, 3... [Learn more...](./tuples.md)
 
-  - All operators of functions
-  - Tuple constructor: `<< e_1, ..., e_n >>`
-  - Cartesian product: `S_1 \X ... \X S_n` (also `S_1 \times ... \times S_n`)
+  - All operators of [functions](./functions.md)
+  - [Tuple constructor](./tuples.md#tuple): `<< e_1, ..., e_n >>`
+  - [Cartesian product](./tuples.md#times): `S_1 \X ... \X S_n` (also `S_1 \times ... \times S_n`)
 
 ### Sequences :snake:
 
 _Functions that pretend to be lists, indexed with 1, 2, 3,..._
 
-  - All operators of functions and tuples
-  - Add to end: `Append(s, e)`
-  - First and rest: `Head(s)` and `Tail(s)`
-  - Length: `Len(s)`
-  - Concatenation: `s \o t` (also `s \circ t`)
-  - Subsequence: `SubSeq(s, i, k)`
-  - Sequence filter: `SelectSeq(s, Test)`
-  - Set of finite sequences over `S`: `Seq(S)`
+  - All operators of [functions](./functions.md) and [tuples](./tuples.md)
+  - Add to end: [`Append(s, e)`](./sequences.md#append)
+  - First and rest: [`Head(s)`](./sequences.md#head) and [`Tail(s)`](./sequences.md#tail)
+  - Length: [`Len(s)`](./sequences.md#len)
+  - Concatenation: [`s \o t`](./sequences.md#concat) (also `s \circ t`)
+  - Subsequence: [`SubSeq(s, i, k)`](./sequences.md#subseq)
+  - Sequence filter: [`SelectSeq(s, Test)`](./sequences.md#filter)
+  - Set of finite sequences over `S`: [`Seq(S)`](./sequences.md#seq)
 
 ### Bags :handbag:
 
@@ -210,4 +220,5 @@ _Functions that pretend to be lists, indexed with 1, 2, 3,..._
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
 [Community Modules]: https://github.com/tlaplus/CommunityModules
 [LearnTla.com]: https://learntla.com
+[TLA+ Video Course]: http://lamport.azurewebsites.net/video/videos.html
 

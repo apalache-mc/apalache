@@ -69,6 +69,7 @@ type checker.
 
 ## Operators
 
+<a name="setCtor"></a>
 ### Set constructor
 
 **Notation:** `{e_1, ..., e_n}`
@@ -112,6 +113,7 @@ If this is not the case, the type checker flags an error.
 
 ----------------------------------------------------------------------------
 
+<a name="in"></a>
 ### Set membership
 
 **Notation:** `e \in S`
@@ -159,6 +161,7 @@ incompatible with the type of elements of `S`, or if `S` is not a set.
 
 ----------------------------------------------------------------------------
 
+<a name="notin"></a>
 ### Set non-membership
 
 **Notation:** `e \notin S`
@@ -202,6 +205,7 @@ incompatible with the type of elements of `S`, or if `S` is not a set.
 
 ----------------------------------------------------------------------------
 
+<a name="eq"></a>
 ### Equality and inequality
 
 The operators `a = b` and `a /= b` are core operators of TLA+,
@@ -209,6 +213,7 @@ see [Logic](./logic.md).
 
 ----------------------------------------------------------------------------
 
+<a name="subseteq"></a>
 ### Set inclusion
 
 **Notation:** `S \subseteq T`
@@ -252,6 +257,7 @@ either not sets, or sets of incompatible types.
 
 ----------------------------------------------------------------------------
 
+<a name="subset"></a>
 ### Proper set inclusion
 
 **Notation:** `S \subset T`
@@ -295,6 +301,7 @@ either not sets, or sets of incompatible types.
 
 ----------------------------------------------------------------------------
 
+<a name="supseteq"></a>
 ### Set containment
 
 **Notation:** `S \supseteq T`
@@ -340,6 +347,7 @@ either not sets, or sets of incompatible types.
 
 ----------------------------------------------------------------------------
 
+<a name="supset"></a>
 ### Proper set containment
 
 **Notation:** `S \supset T`
@@ -383,6 +391,7 @@ either not sets, or sets of incompatible types.
 
 ----------------------------------------------------------------------------
 
+<a name="union"></a>
 ### Binary set union
 
 **Notation:** `S \union T` or `S \cup T`
@@ -424,6 +433,7 @@ either not sets, or sets of incompatible types.
 
 ----------------------------------------------------------------------------
 
+<a name="intersect"></a>
 ### Set intersection
 
 **Notation:** `S \intersect T` or `S \cap T`
@@ -465,6 +475,7 @@ either not sets, or sets of incompatible types.
 
 ----------------------------------------------------------------------------
 
+<a name="setminus"></a>
 ### Set difference
 
 **Notation:** `S \ T`
@@ -506,6 +517,7 @@ either not sets, or sets of incompatible types.
 
 ----------------------------------------------------------------------------
 
+<a name="filter"></a>
 ### Set filter
 
 **Notation:** `{ x \in S: P }`
@@ -562,6 +574,7 @@ syntax:
 
 ----------------------------------------------------------------------------
 
+<a name="map"></a>
 ### Set map
 
 **Notation:** `{ e: x \in S }` or `{ e: x \in S, y \in T }`, or more arguments 
@@ -622,6 +635,7 @@ syntax:
 
 ----------------------------------------------------------------------------
 
+<a name="powerset"></a>
 ### Powerset
 
 **Notation:** `SUBSET S`
@@ -659,6 +673,7 @@ To appreciate the power of TLA+, see [subset.py](./examples/subset.py).
 
 ----------------------------------------------------------------------------
 
+<a name="fold"></a>
 ### Set folding
 
 **Notation:** `UNION S`
@@ -705,6 +720,7 @@ in Python is quite simple:
 
 ----------------------------------------------------------------------------
 
+<a name="card"></a>
 ### Set cardinality
 
 **Notation:** `Cardinality(S)`
@@ -744,6 +760,7 @@ different from a finite set.
 
 ----------------------------------------------------------------------------
 
+<a name="finite"></a>
 ### Set finiteness
 
 **Notation:** `IsFinite(S)`

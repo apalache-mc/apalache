@@ -5,6 +5,7 @@
 You find these operators in every programming language and every textbook on
 logic. These operators form _propositional logic_.
 
+<a name="const"></a>
 ## Constants
 
 TLA+ contains three special constants: `TRUE`, `FALSE`, and `BOOLEAN`.
@@ -24,6 +25,7 @@ and Non-determinism].
 
 ----------------------------------------------------------------------------
 
+<a name="and"></a>
 ### And (conjunction)
 
 **Notation:** `F /\ G` or `F \land G`
@@ -94,6 +96,7 @@ is equivalent to:
 
 ----------------------------------------------------------------------------
 
+<a name="or"></a>
 ### Or (disjunction)
 
 **Notation:** `F \/ G` or `F \lor G`
@@ -181,6 +184,7 @@ The above formula is equivalent to:
 
 ----------------------------------------------------------------------------
 
+<a name="not"></a>
 ### Negation
 
 **Notation:** `~F` or `\neg F` or `\lnot F`
@@ -219,6 +223,7 @@ not False
 
 ----------------------------------------------------------------------------
 
+<a name="implies"></a>
 ### Implication
 
 **Notation:** `F => G`
@@ -266,6 +271,7 @@ Recall that `A => B` is equivalent to `~A \/ B`.
 
 ----------------------------------------------------------------------------
 
+<a name="equiv"></a>
 ### Equivalence
 
 **Notation:** `F <=> G` or `F \equiv G`

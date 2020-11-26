@@ -165,6 +165,7 @@ immutable dictionary.
 
 ----------------------------------------------------------------------------
 
+<a name="funCtor"></a>
 ### Function constructor
 
 **Notation:** `[ x \in S |-> e ]` or `[ x \in S, y \in T |-> e ]`, or more
@@ -243,6 +244,7 @@ that are computed under such a binding.
 
 ----------------------------------------------------------------------------
 
+<a name="funSetCtor"></a>
 ### Function set constructor
 
 **Notation:** `[ S -> T ]`
@@ -354,6 +356,7 @@ variable.
 
 ----------------------------------------------------------------------------
 
+<a name="except"></a>
 ### Function replacement
 
 **Notation:** `[f EXCEPT ![a_1] = e_1, ..., ![a_n] = e_n]`
@@ -482,6 +485,7 @@ This is syntax sugar for:
 
 ----------------------------------------------------------------------------
 
+<a name="domain"></a>
 ### Function domain
 
 **Notation:** `DOMAIN f`

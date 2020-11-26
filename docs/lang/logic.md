@@ -14,6 +14,7 @@ section, we only consider the deterministic version.
 
 ----------------------------------------------------------------------------
 
+<a name="forallBounded"></a>
 ### Bounded universal quantifier
 
 **Notation:** `\A x \in S: P`
@@ -83,6 +84,7 @@ simply syntax sugar for the form with nested quantifiers: `\A x \in S: \A y
 
 ----------------------------------------------------------------------------
 
+<a name="existsBounded"></a>
 ### Bounded existential quantifier
 
 **Notation:** `\E x \in S: P`
@@ -160,6 +162,7 @@ simply syntax sugar for the form with nested quantifiers: `\E x \in S: \E y
 
 ----------------------------------------------------------------------------
 
+<a name="eq"></a>
 ### Equality
 
 _A foundational operator in TLA+_
@@ -267,6 +270,7 @@ match.
 
 ----------------------------------------------------------------------------
 
+<a name="neq"></a>
 ### Inequality
 
 **Notation:** `e_1 /= e_2` or `e_1 # e_2`
@@ -279,6 +283,7 @@ match.
 
 ----------------------------------------------------------------------------
 
+<a name="chooseBounded"></a>
 ### Bounded Choice
 
 _This operator causes a lot of confusion. Read carefully!_
@@ -379,6 +384,7 @@ if __name__ == "__main__":
 
 ----------------------------------------------------------------------------
 
+<a name="forall"></a>
 ### Unbounded universal quantifier
 
 **Notation:** `\A x: P`
@@ -400,6 +406,7 @@ when writing proofs with [TLAPS].
 
 ----------------------------------------------------------------------------
 
+<a name="exists"></a>
 ### Unbounded existential quantifier
 
 **Notation:** `\E x: P`
@@ -421,6 +428,7 @@ when writing proofs with [TLAPS].
 
 ----------------------------------------------------------------------------
 
+<a name="choose"></a>
 ### Unbounded CHOOSE
 
 **Notation:** `CHOOSE x: P`
