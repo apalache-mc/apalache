@@ -453,6 +453,63 @@ result is undefined in pure TLA+. TLC raises a model checking error.
   })
 ```
 
+----------------------------------------------------------------------------
+
+### All sequences
+
+**Notation:** `Seq(S)`
+
+**LaTeX notation:** `Seq(S)`
+
+**Arguments:** One argument that should be a set.
+
+**Effect:** The operator `Seq(S)` constructs the set of all (finite) sequences
+that contain elements from `S`. This set is infinite.
+
+It is easy to give a recursive definition of all sequences whose length
+is bounded by some `n >= 0`:
+
+```tla
+RECURSIVE BSeq(_, _)
+BSeq(S, n) ==
+  IF n = 0
+  THEN {<< >>}  \* the set that contains the empty sequence
+  ELSE LET Shorter == BSeq(S, n - 1) IN
+        Shorter \union { Append(seq, x): seq \in Shorter, x \in S }
+```
+
+Then we can define `Seq(S)` to be `UNION { BSeq(S, n): n \in Nat }`.
+
+**Determinism:** Deterministic.
+
+**Errors:** The argument `S` must be a set.
+Apalache flags a static type error, if `S` is not a set.
+
+TLC raises a model checking error, when it meets `Seq(S)`, as `Seq(S)` is
+infinite. You can override `Seq(S)` with its bounded version `BSeq(S, n)`
+for some `n`. See: [Overriding Seq in TLC].
+
+Apalache does not support `Seq(S)` yet. As a workaround, you can manually
+replace `Seq(S)` with `BSeq(S, n)` for some constant `n`.  See the progress in
+[Issue 314](https://github.com/informalsystems/apalache/issues/314).
+
+**Example in TLA+:**
+
+```tla
+  Seq({1, 2, 3})
+    \* The infinite set
+      { <<>>,
+        <<1>>, <<2>>, <<3>>,
+        <<1, 1>>, <<1, 2>>, <<1, 3>>,
+            <<2, 1>>, <<2, 2>>, <<2, 3>>, <<3, 1>>, <<3, 2>>, <<3, 3>>
+        ...
+      }
+```
+
+**Example in Python:** We cannot construct an infinite set in Python. However,
+we could write an iterator that enumerates the sequences in `Seq(S)`
+till the end of the universe.
+
 
 
 
@@ -463,3 +520,4 @@ result is undefined in pure TLA+. TLC raises a model checking error.
 [Apalache ADR002]: https://github.com/informalsystems/apalache/blob/unstable/docs/adr/002adr-types.md
 [Cartesian product]: https://en.wikipedia.org/wiki/Cartesian_product
 [type annotation]: https://github.com/informalsystems/apalache/blob/unstable/docs/types-and-annotations.md
+[Overriding Seq in TLC]: https://groups.google.com/g/tlaplus/c/sYx_6e3YyWk/m/4CnwPqIVAgAJ
