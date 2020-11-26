@@ -51,7 +51,7 @@ _Good old Booleans_. [Learn more...](./booleans.md)
    - [`FALSE`](./booleans.md#const) and [`TRUE`](./booleans.md#const),
    - [`A /\ B`](./booleans.md#and) (also `A \land B`),
    - [`A \/ B`](./booleans.md#or) (also `A \lor B`),
-   - [`~A`](./booleans.md#or) (also `\lnot A` and `\neg A`),
+   - [`~A`](./booleans.md#not) (also `\lnot A` and `\neg A`),
    - [`A => B`](./booleans.md#implies),
    - [`A <=> B`](./booleans.md#equiv) (also `A \equiv B`)
  - Boolean set: [`BOOLEAN`](./booleans.md#const)
@@ -78,7 +78,8 @@ _Unbounded integers like in Python._ [Learn more...](./integers.md)
 
  - Integer algebra:
     - [`-i`](./integers.md#uminus), [`i + k`](./integers.md#plus),
-    - [`i - k`](./integers.md#minus), [`i * k`](./integers.md#mult),
+        [`i - k`](./integers.md#minus),
+    - [`i * k`](./integers.md#mult),
       [`i \div k`](./integers.md#div), [`i % k`](./integers.md#mod),
       [`i^k`](./integers.md#pow)
  - Integer predicates:
@@ -134,7 +135,7 @@ _Like frozen dictionaries in Python, but cooler_. [Learn more...](./functions.md
  - [Function constructor](./functions.md#funCtor): `[ x \in S |-> e ]`
  - [Set of functions](./functions.md#funSetCtor): `[S -> T]`
  - [Function application](./functions.md#funApp): `f[e]`
- - [Function update](./functions.md#except): `[ f EXCEPT ![e_1] = e_2 ]`
+ - [Function replacement](./functions.md#except): `[ f EXCEPT ![e_1] = e_2 ]`
  - [Function domain](./functions.md#domain): `DOMAIN f`
 
 ### Records :books:
