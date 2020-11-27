@@ -9,7 +9,7 @@ WORKDIR /opt/apalache/
 # skipTests because we check the test in CI, not when packaing the container
 RUN mvn --batch-mode -DskipTests package
 
-FROM openjdk:8-slim
+FROM openjdk:9-slim
 
 # This is the app image
 #
