@@ -3,6 +3,7 @@ package at.forsyte.apalache.io.tlc
 import java.io.{Reader, StringReader}
 
 import at.forsyte.apalache.io.tlc.config._
+import com.typesafe.scalalogging.LazyLogging
 
 import scala.util.parsing.combinator.Parsers
 import scala.util.parsing.input.NoPosition
@@ -16,7 +17,7 @@ import scala.util.parsing.input.NoPosition
   *
   * @author Igor Konnov
   */
-object TlcConfigParserApalache extends Parsers with TlcConfigParser {
+object TlcConfigParserApalache extends Parsers with TlcConfigParser with LazyLogging {
   override type Elem = TlcConfigToken
 
   private abstract class ConstBinding
@@ -72,35 +73,45 @@ object TlcConfigParserApalache extends Parsers with TlcConfigParser {
   // SYMMETRY constraints. Ignore.
   private def symmetry: Parser[TlcConfig] = {
     SYMMETRY() ~ ident ^^ {
-      case _ ~ _ => TlcConfig.empty
+      case _ ~ name =>
+        logger.warn("TLC config option SYMMETRY %s will be ignored".format(name))
+        TlcConfig.empty
     }
   }
 
   // VIEW definition. Ignore.
   private def view: Parser[TlcConfig] = {
     VIEW() ~ ident ^^ {
-      case _ ~ _ => TlcConfig.empty
+      case _ ~ name =>
+        logger.warn("TLC config option VIEW %s will be ignored".format(name))
+        TlcConfig.empty
     }
   }
 
   // ALIAS definition. Ignore.
   private def alias: Parser[TlcConfig] = {
     ALIAS() ~ ident ^^ {
-      case _ ~ _ => TlcConfig.empty
+      case _ ~ name =>
+        logger.warn("TLC config option ALIAS %s will be ignored".format(name))
+        TlcConfig.empty
     }
   }
 
   // POSTCONDITION definition. Ignore.
   private def postcondition: Parser[TlcConfig] = {
     POSTCONDITION() ~ ident ^^ {
-      case _ ~ _ => TlcConfig.empty
+      case _ ~ name =>
+        logger.warn("TLC config option POSTCONDITION %s will be ignored".format(name))
+        TlcConfig.empty
     }
   }
 
   // CHECK_DEADLOCK definition. Ignore.
   private def checkDeadlock: Parser[TlcConfig] = {
     CHECK_DEADLOCK() ~ boolean ^^ {
-      case _ ~ _ => TlcConfig.empty
+      case _ ~ flag =>
+        logger.warn("TLC config option CHECK_DEADLOCK %b will be ignored".format(flag))
+        TlcConfig.empty
     }
   }
 
