@@ -1499,6 +1499,27 @@ class TestSanyImporter extends FunSuite {
     assert(aOfM.isInstanceOf[TlaOperDecl] && aOfM.asInstanceOf[TlaOperDecl].formalParams.size == 1)
   }
 
+  test("substitution in INSTANCE") {
+    // regression: the importer was not able to substitute a variable with an operator, e.g., in Paxos
+    val text =
+      """---- MODULE Paxos ----
+        |---- MODULE Consensus ----
+        |VARIABLE chosen
+        |C == chosen
+        |================================
+        |---- MODULE Voting ----
+        |chosen == 1
+        |C == INSTANCE Consensus
+        |================================
+        |V == INSTANCE Voting
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter(new SourceStore)
+      .loadFromSource("Paxos", Source.fromString(text))
+    assert(1 == modules.size)
+  }
+
   test("LOCAL operator inside INSTANCE") {
     val text =
       """---- MODULE localInInstance ----

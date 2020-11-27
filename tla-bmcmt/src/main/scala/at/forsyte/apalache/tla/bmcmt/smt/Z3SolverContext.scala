@@ -127,11 +127,18 @@ class Z3SolverContext(config: SolverConfig) extends SolverContext {
     cellCache += (cell.id -> (const, cell.cellType, level))
 
     if (cell.id <= 1) {
-      // Either FALSE or TRUE. Enforce its value explicitely
-      val expr =
-        if (cell.id == 0) OperEx(TlaBoolOper.not, NameEx(cellName))
-        else NameEx(cellName)
-      assertGroundExpr(expr)
+      // Either FALSE or TRUE. Add an explicit assert at the SMT level.
+      // Fix 333: avoid assertGroundExpr, as it simplifies our constants to false and true,
+      // which renders this step useless.
+      val z3expr =
+        if (cell.id == 0) {
+          z3context.mkEq(const, z3context.mkFalse())
+        } else {
+          z3context.mkEq(const, z3context.mkTrue())
+        }
+
+      log(s"(assert $z3expr)")
+      z3solver.add(z3expr)
     }
 
     _metrics = _metrics.addNCells(1)
