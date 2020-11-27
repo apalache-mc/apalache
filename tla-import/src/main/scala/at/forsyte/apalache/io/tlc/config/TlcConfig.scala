@@ -1,8 +1,10 @@
 package at.forsyte.apalache.io.tlc.config
 
+import at.forsyte.apalache.io.tlc.config.ConfigModelValue.STR_PREFIX
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
+
 import scala.util.parsing.input.NoPosition
 
 /**
@@ -41,12 +43,19 @@ abstract sealed class ConfigConstExpr {
   def toTlaEx: TlaEx
 }
 
+object ConfigModelValue {
+  /**
+    * Every model value is prefixed with this string when converted to a string.
+    */
+  val STR_PREFIX = "ModelValue_"
+}
+
 /**
   * A TLC model value, that is, a unique identifier that is treated as an uninterpreted constant.
   * @param name the name of a model value
   */
 case class ConfigModelValue(name: String) extends ConfigConstExpr {
-  override def toTlaEx: TlaEx = ValEx(TlaStr(name))
+  override def toTlaEx: TlaEx = ValEx(TlaStr(STR_PREFIX + name))
 }
 
 /**
