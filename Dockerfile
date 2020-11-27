@@ -1,8 +1,8 @@
 # NOTE: We build the docker image for Apalache in two phases:
 #
-# 1. BUILD IMAGE: We use a robust JDK 8 base iamge to build the package
+# 1. BUILD IMAGE: We use a robust JDK 8 base image to build the package.
 # 2. APP IMAGE: We then use a smaller base image, with a different JDK fur
-#    execution, and copy over the artifacts from the build image.
+#    execution, and copy over the executable artifacts from the build image.
 #
 # We use a different base image for two reasons: first, it allows us to provide
 # a docker image with a much smaller memory footprint, since we can drop many
