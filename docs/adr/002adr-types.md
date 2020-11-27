@@ -109,20 +109,20 @@ operators:
 ```tla
 ---- MODULE Typing ----
 AssumeType(ex, tp) == TRUE
-tp :> ex == ex
+tp ## ex == ex
 =======================
 ```
 
 The operator `AssumeType(ex, tp)` is a type assumption. It states that `ex`
 should have the type whose supertype is `tp` (the records in `tp` may contain
-additional fields).  This operator always returns `TRUE`.  The operator `tp :>
+additional fields).  This operator always returns `TRUE`.  The operator `tp ##
 ex` annotates an expression `ex` with a type `tp`. This operator returns `ex`
 itself, that is, it performs type erasure (for compatibility with other TLA+
 tools).
 
 In the following, we discuss how to annotate different TLA+ names.  The
 operator `AssumeType` is designated for annotating constants and state
-variables, whereas the operator `:>` is designated for annotating user-defined
+variables, whereas the operator `##` is designated for annotating user-defined
 operators.
 
 ### 2.1. Annotating CONSTANTS and VARIABLES
@@ -167,17 +167,17 @@ expressions.
 The operators in TLA+ are not values, but are similar to macros. Hence, we
 cannot refer to an operator by its name, without applying this operator.  To
 annotate an operator, we prepend its body with `##` (as proposed by
-@shonfeder for `:>`). For example:
+@shonfeder). For example:
 
 ```tla
-Mem(e, es) == "(a, Seq(a)) => Bool" :>
+Mem(e, es) == "(a, Seq(a)) => Bool" ##
     (e \in {es[i]: i \in DOMAIN es})
 ```
 
 Higher-order operators are also easy to annotate:
 
 ```tla
-Find(Pred(_), es) == "((a) => Bool, Seq(a)) => Int" :>
+Find(Pred(_), es) == "((a) => Bool, Seq(a)) => Int" ##
     IF \E i \in DOMAIN es: Pred(es[i])
     THEN CHOOSE i \in DOMAIN es: Pred(es[i])
     ELSE -1
@@ -188,10 +188,10 @@ operator. However, the annotation syntax is quite similar to that of the
 operators (note though that we are using `->` instead of `=>`):
 
 ```tla
-Card[S \in T] == "Set(a) -> Int" :>
+Card[S \in T] == "Set(a) -> Int" ##
     IF S = {}
     THEN 0
-    ELSE LET one_elem == "() => a" :>
+    ELSE LET one_elem == "() => a" ##
             (CHOOSE x \in S: TRUE)
          IN
          1 + Card[S \ {one_elem}]
@@ -249,7 +249,7 @@ EXTENDS Typing
 The type checker uses the type annotation to refine the type of an empty set
 (or, of an empty sequence). To keep compatibility with TLC and other tools,
 the module `Typing` defines the operators `EmptySet(...)` and `EmptySeq(...)`
-as `{}` and `<<>>>`, respectively. However, the type checker overrides these
+as `{}` and `<<>>`, respectively. However, the type checker overrides these
 definitions with the refined types.
 
 ## 3. Example
@@ -302,22 +302,22 @@ TypeAssumptions ==
     /\ AssumeType(dealer, "Set(INGREDIENT)")
 
 (* this operator has a parametric signature *)
-ChooseOne(S, P(_)) == "(Set(a), (a) => Bool) => a" :>
+ChooseOne(S, P(_)) == "(Set(a), (a) => Bool) => a" ##
     CHOOSE x \in S : P(x) /\ \A y \in S : P(y) => y = x
 
 (* the types of the actions are fairly obvious *)
 
-Init == "() => Bool" :>
+Init == "() => Bool" ##
     /\ smokers = [r \in Ingredients |-> [smoking |-> FALSE]]
     /\ dealer \in Offers
 
-startSmoking == "() => Bool" :>
+startSmoking == "() => Bool" ##
     /\ dealer /= {}
     /\ smokers' = [r \in Ingredients |->
                     [smoking |-> {r} \cup dealer = Ingredients]]
     /\ dealer' = {}
 
-stopSmoking == "() => Bool" :>
+stopSmoking == "() => Bool" ##
     /\ dealer = {}
         (* the type of LAMBDA should be inferred from the types
            of ChooseOne and Ingredients *)
@@ -325,15 +325,15 @@ stopSmoking == "() => Bool" :>
        IN smokers' = [smokers EXCEPT ![r].smoking = FALSE] 
     /\ dealer' \in Offers
 
-Next == "() => Bool" :>
+Next == "() => Bool" ##
     startSmoking \/ stopSmoking
 
-Spec == "() => Bool" :>
+Spec == "() => Bool" ##
     Init /\ [][Next]_vars
 
-FairSpec == "() => Bool" :>
+FairSpec == "() => Bool" ##
     Spec /\ WF_vars(Next)    
 
-AtMostOne == "() => Bool" :>
+AtMostOne == "() => Bool" ##
     Cardinality({r \in Ingredients : smokers[r].smoking}) <= 1
 ```
