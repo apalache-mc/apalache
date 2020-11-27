@@ -595,6 +595,187 @@ Configuration error (see the manual): Circular definition dependency detected
 EXITCODE: ERROR (99)
 ```
 
+### configure via TLC config and assign constants
+
+```sh
+$ apalache-mc check --config=ConfigParams.cfg ConfigParams.tla | sed 's/[IEW]@.*//'
+...
+  > ConfigParams.cfg: Loading TLC configuration
+  > Using the init predicate Init from the TLC config
+  > Using the next predicate Next from the TLC config
+  > ConfigParams.cfg: found INVARIANTS: Inv
+  > Set the initialization predicate to Init
+  > Set the transition predicate to Next
+  > Set an invariant to Inv
+  > Replaced CONSTANT MyInt with 42
+  > Replaced CONSTANT MyStr with "hello"
+  > Replaced CONSTANT MyModelValue1 with "ModelValue_Model1"
+  > Replaced CONSTANT MyModelValue2 with "ModelValue_Model2"
+  > Replaced CONSTANT MySet with {1, 2, 3}
+...
+The outcome is: NoError
+...
+```
+
+### configure via TLC config and replace operators
+
+```sh
+$ apalache-mc check --config=ConfigReplacements2.cfg ConfigReplacements.tla | sed 's/[IEW]@.*//'
+...
+  > ConfigReplacements2.cfg: Loading TLC configuration
+  > Using the init predicate Init from the TLC config
+  > Using the next predicate Next from the TLC config
+  > ConfigReplacements2.cfg: found INVARIANTS: Inv
+  > Set the initialization predicate to Init
+  > Set the transition predicate to Next
+  > Set an invariant to Inv
+  > Replaced operator Value with OVERRIDE_Value
+...
+The outcome is: NoError
+...
+```
+
+### configure via TLC config and replace operators helps us to keep the invariant
+
+```sh
+$ apalache-mc check --inv=Inv ConfigReplacements.tla | sed 's/[IEW]@.*//'
+...
+  > ConfigReplacements.cfg: Loading TLC configuration
+  > No TLC configuration found. Skipping.
+...
+The outcome is: Error
+...
+```
+
+## running the typecheck command
+
+### typecheck CarTalkPuzzleTyped.tla
+
+```sh
+$ apalache-mc typecheck CarTalkPuzzleTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > running ETC: Embarrassingly simple Type Checker
+   ^_^
+  =^_^=
+PASS #2: Terminal
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck CigaretteSmokersTyped.tla
+
+```sh
+$ apalache-mc typecheck CigaretteSmokersTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > running ETC: Embarrassingly simple Type Checker
+   ^_^
+  =^_^=
+PASS #2: Terminal
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck GameOfLifeTyped.tla
+
+```sh
+$ apalache-mc typecheck GameOfLifeTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > running ETC: Embarrassingly simple Type Checker
+   ^_^
+  =^_^=
+PASS #2: Terminal
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck MissionariesAndCannibalsTyped.tla
+
+```sh
+$ apalache-mc typecheck MissionariesAndCannibalsTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > running ETC: Embarrassingly simple Type Checker
+   ^_^
+  =^_^=
+PASS #2: Terminal
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck PrisonersTyped.tla
+
+```sh
+$ apalache-mc typecheck PrisonersTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > running ETC: Embarrassingly simple Type Checker
+   ^_^
+  =^_^=
+PASS #2: Terminal
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck QueensTyped.tla fails
+
+We are not currently able to typecheck this spec, since we need a way of
+coercing functions on integers into sequences, or a way to recognize the former
+as subtypes of the latter. This failing test is added to document the current limitation
+of the Etc type checkers, and we expect it will be changed into a passing test
+once the desired  functionality and added.
+
+```sh
+$ apalache-mc typecheck QueensTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > running ETC: Embarrassingly simple Type Checker
+   ^_^
+[QueensTyped.tla:41:44-41:61]: Mismatch in argument types. Expected: (Seq(Int)) => Bool
+[QueensTyped.tla:41:14-41:63]: Error when computing the type of Solutions
+  :-|
+Type checker [FAILED]
+...
+EXITCODE: OK
+```
+
+### typecheck SlidingPuzzlesTyped.tla
+
+```sh
+$ apalache-mc typecheck SlidingPuzzlesTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > running ETC: Embarrassingly simple Type Checker
+   ^_^
+  =^_^=
+PASS #2: Terminal
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck TwoPhaseTyped.tla
+
+```sh
+$ apalache-mc typecheck TwoPhaseTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > running ETC: Embarrassingly simple Type Checker
+   ^_^
+  =^_^=
+PASS #2: Terminal
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck CarTalkPuzzleTyped.tla

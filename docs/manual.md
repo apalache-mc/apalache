@@ -365,12 +365,13 @@ We support configuring Apalache via TLC configuration files; these files are
 produced automatically by TLA Toolbox, for example. TLC configuration files
 allow one to specify which initialization predicate and transition predicate to
 employ, which invariants to check, as well as to initialize specification
-parameters. A limited syntax of TLC configuration files is supported at the
-moment, which should be nevertheless enough for most uses.
+parameters. Some features of the TLC configuration files are not supported yet.
+Check the manual page on
+["Syntax of TLC Configuration Files"](./docs/tlc-config.md).
 
-If you are checking a file `<myspec>.tla`, and the file `<myspec>.cfg` exists in
+_If you are checking a file `<myspec>.tla`, and the file `<myspec>.cfg` exists in
 the same directory, it will be picked up by Apalache automatically. You can also
-explicitly specify which configuration file to use via the `--config` option.
+explicitly specify which configuration file to use via the `--config` option._
 
 <a name="running"></a>
 # 6. Running the tool
@@ -386,7 +387,8 @@ $ apalache check [--config=filename] [--init=Init] [--cinit=ConstInit] \
 
 The arguments are as follows:
 
-  * ``--config`` specifies the TLC configuration file, the default name is ``<myspec>.cfg``
+  * ``--config`` specifies the [TLC configuration file](./docs/tlc-config.md),
+    the default name is ``<myspec>.cfg``
   * ``--init`` specifies the initialization predicate, the default name is ``Init``
   * ``--next`` specifies the transition predicate, the default name is ``Next``
   * ``--cinit`` specifies the constant initialization predicate, optional

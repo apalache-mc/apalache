@@ -31,7 +31,7 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
           logger.error("  > If you need support for n-ary CONSTANTS, write a feature request.")
           throw new OverridingError(msg, overridingDef.body)
         } else {
-          logger.info(s"  > Replaced CONSTANT $name")
+          logger.info(s"  > Replaced CONSTANT $name with ${overridingDef.body}")
           TlaOperDecl(name, List(), overridingDef.body)
         }
 

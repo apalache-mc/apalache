@@ -4,11 +4,13 @@ import at.forsyte.apalache.io.tlc.config._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import com.typesafe.scalalogging.LazyLogging
 
 /**
-  * An importer of all components of a parsed TLC config into a TLA module.
+  * <p>An importer of all components of a parsed TLC config into a TLA module.</p>
+  *
+  * <p>Igor: This class does not compose well with the rest of ConfigurationPassImpl. So we are not using the result
+  * of rewriting. We should come back to this class later.</p>
   *
   * @author Andrey Kuprianov
   */
@@ -17,12 +19,7 @@ class TlcConfigImporter(config: TlcConfig, tracker: TransformationTracker) exten
 
     val assignments = config.constAssignments.map{
       case (param, value) =>
-        TlaOperDecl(ConstAndDefRewriter.OVERRIDE_PREFIX + param, List(), ValEx(
-          if(value(0).isDigit || value(0) == '-')
-            TlaInt(BigInt(value))
-          else
-            TlaStr(value)
-        ))
+        TlaOperDecl(ConstAndDefRewriter.OVERRIDE_PREFIX + param, List(), value.toTlaEx)
     }
     val operators = Set(mod.declarations.collect {
       case TlaOperDecl(name, _, _) => name
@@ -56,10 +53,14 @@ class TlcConfigImporter(config: TlcConfig, tracker: TransformationTracker) exten
           TlaOperDecl(TlcConfigImporter.INIT, List(), NameEx(init)),
           TlaOperDecl(TlcConfigImporter.NEXT, List(), NameEx(next))
         )
+
       case TemporalSpec(name) =>
         List(
           TlaOperDecl(TlcConfigImporter.SPEC, List(), NameEx(name))
         )
+
+      case NullSpec() =>
+        throw new TLCConfigurationError("Neither INIT and NEXT, nor SPECIFICATION found in the TLC configuration file")
     }
     new TlaModule(mod.name, mod.declarations
       ++ assignments ++ replacements ++ stateConstraints ++ actionConstraints
