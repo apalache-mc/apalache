@@ -1,5 +1,6 @@
 ## Unreleased #unstable
 
+ * use openjdk-9 for deterministic Apalache Docker images, see #318
  * support for advanced syntax in TLC configs, see #208
  * random seed for z3, see docs/tuning.md and #318
  * correct translation of chained substitutions in INSTANCEs, see #143
