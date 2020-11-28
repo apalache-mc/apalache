@@ -258,7 +258,7 @@ class SymbTransGenerator( tracker : TransformationTracker ) {
         val ordered = mkOrdered( s, strategy )
         def rankingFn( tlaEx: TlaEx) : Option[Int] = {
           // the union of all sets in selections( tlaEx.ID ) lists all the assignments below
-          val assignmentsBelow = selections( tlaEx.ID ).foldLeft( Set.empty[UID] ){ _ ++ _ }
+          val assignmentsBelow = selections.getOrElse( tlaEx.ID, Set.empty[Set[UID]] ).foldLeft( Set.empty[UID] ){ _ ++ _ }
           // We filter them via the current selection (to ignore assignments on a branch we're not currently on)
           val filtered = assignmentsBelow.intersect( s )
           // Of all the assignment candidates, the one with the lowest position in `ordered` determines the rank
@@ -273,10 +273,10 @@ class SymbTransGenerator( tracker : TransformationTracker ) {
 
         val reordering = mkReordering( rankingFn )
 
-        (
-          ordered,
-          reordering.reorder( sliceWith( s, selections )( ex ) )
-        )
+        val sliced = sliceWith( s, selections )( ex )
+        val reordered = reordering.reorder( sliced )
+
+        (ordered, reordered)
       }.toSeq
     }
 
