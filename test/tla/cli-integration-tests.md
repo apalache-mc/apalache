@@ -421,6 +421,16 @@ The outcome is: NoError
 ...
 ```
 
+### check APAbcastByz.tla succeeds
+
+```sh
+$ apalache-mc check --length=1 --init=IndInv_Unforg_NoBcast --inv=IndInv_Unforg_NoBcast --cinit=ConstInit4 APAbcastByz.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
+
 ### check Empty.tla fails
 
 ```sh

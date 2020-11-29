@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
+import at.forsyte.apalache.tla.lir.transformations.standard.Flatten
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.TlaBool
 
@@ -264,7 +265,7 @@ class SymbTransGenerator( tracker : TransformationTracker ) {
           // Of all the assignment candidates, the one with the lowest position in `ordered` determines the rank
           filtered.foldLeft( None : Option[Int] ) {
             case (rankCand, uid) =>
-              val uidRank = ordered.find( _ == tlaEx.ID ) map {
+              val uidRank = ordered.find( _ == uid ) map {
                 ordered.indexOf
               }
               Reordering.IntOptOrdering.min( rankCand, uidRank )
@@ -274,7 +275,9 @@ class SymbTransGenerator( tracker : TransformationTracker ) {
         val reordering = mkReordering( rankingFn )
 
         val sliced = sliceWith( s, selections )( ex )
-        val reordered = reordering.reorder( sliced )
+        // Flatten /\, so we can reorder properly
+        val flattened = Flatten(tracker)( sliced )
+        val reordered = reordering.reorder( flattened )
 
         (ordered, reordered)
       }.toSeq
