@@ -61,6 +61,7 @@ class Unroller( nameGenerator : UniqueNameGenerator, tracker : TransformationTra
       val newDefs = defs map {
         replaceRecursiveDecl( _, newMap, inliner, replaceTr ).asInstanceOf[TlaOperDecl]
       }
+
       // Since the body may contain more LET-expressions we call unrollLetIn again
       val newBody = unrollLetIn( newMap )( body )
       if ( defs == newDefs && body == newBody )

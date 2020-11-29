@@ -16,13 +16,31 @@ class ParameterNormalizer(
   //                    y_new( p1, p2) == y(p_1,p_2)
   //                IN e[ x_new/x, y_new/y ]
   // This allows us to limit the number of substitutions when inlining A
-  def mkParamNormalForm( decl : TlaDecl ) : TlaDecl = decl match {
-    case d@TlaOperDecl( name, params, body ) =>
-      val newDecl = d.copy( body = paramNormal( params )( body ) )
-      // Copy doesn't preserve .isRecursive!
-      newDecl.isRecursive = d.isRecursive
-      newDecl
-    case _ => decl
+  def mkParamNormalForm( decl : TlaOperDecl ) : TlaOperDecl = {
+    val normalizedLetIn = normalizeInternalLetIn( decl.body )
+    val newBody =
+      if ( decisionFn( decl ) ) paramNormal( decl.formalParams )( normalizedLetIn )
+      else normalizedLetIn
+    val newDecl = decl.copy( body = newBody )
+    // Copy doesn't preserve .isRecursive!
+    newDecl.isRecursive = decl.isRecursive
+    newDecl
+  }
+
+  private def normalizeInternalLetIn : TlaExTransformation = tracker.track {
+    case ex@LetInEx( body, defs@_* ) =>
+      val newDefs = defs map { d => mkParamNormalForm( d ) }
+      val newBody = normalizeInternalLetIn( body )
+      if ( defs == newDefs && body == newBody ) ex
+      else LetInEx( newBody, newDefs : _* )
+
+    case ex@OperEx( op, args@_* ) =>
+      val newArgs = args map normalizeInternalLetIn
+      if ( args == newArgs ) ex
+      else OperEx( op, newArgs : _* )
+
+    case ex => ex
+
   }
 
   private def paramNormal( paramNames : List[FormalParam] ) : TlaExTransformation = tracker.track { ex =>
@@ -73,8 +91,7 @@ class ParameterNormalizer(
     // Iterates over all declarations and replaces those for which decisionFn returns true
     // (by default, for all recursive)
     val newDecls = m.declarations map {
-      case d : TlaOperDecl if decisionFn( d ) =>
-        mkParamNormalForm( d )
+      case d : TlaOperDecl => mkParamNormalForm( d )
       case d => d
     }
     new TlaModule( m.name, newDecls )

@@ -24,7 +24,10 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker)
   }
 
   def kStepInline( k : BigInt, post: TlaExTransformation = Predef.identity ) : TlaExTransformation =
-    if (k <= 0) throw new IllegalArgumentException( "The number of allowed steps for kStepInline must be a positive integer." )
+    if (k < 0) throw new IllegalArgumentException( "The number of unrolling steps must be a non-negative integer." )
+    // 0-step is always just the identity transform, even if post is non-trivial, because, conceptually,
+    // 0-step inlining is a no-op
+    else if (k == 0) Predef.identity
     else transform( stepLimitOpt = Some( kStepParameters( k, post ) ) )
 
   def transform(stepLimitOpt: Option[kStepParameters]): TlaExTransformation = tracker.track {
