@@ -350,7 +350,6 @@ $ apalache-mc check --length=5 --inv=Inv Rec5.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
-$ echo "test"
 ```
 
 ### check Rec6.tla succeeds
