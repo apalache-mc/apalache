@@ -438,6 +438,15 @@ The outcome is: Error
 EXITCODE: OK
 ```
 
+### check Rec13.tla succeeds
+
+```sh
+$ apalache-mc check --inv=Inv Rec13.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
 
 ### check ExistsAsValue.tla succeeds
 
