@@ -45,11 +45,23 @@ class UnrollPassImpl @Inject()( val options : PassOptions,
   override def execute(): Boolean = {
     val module = tlaModule.get
 
+    // We have to rename the input, as LOCAL-toplevel TLA+ functions get
+    // introduced as LET-IN operators (copying the definition). The problem is,
+    // the operator bodies may introduce namespace collisions, e.g. with
+    //
+    // LOCAL f[x \in S] = x
+    // Op(x) == f[x + 1]
+    //   |
+    //   V
+    // Op(x) == LET f == [x \in S] In f[(x + 1)] <- namespace collision on x
+    //
+    val renamedModule = renaming.renameInModule(module)
+
     val unroller = Unroller( nameGenerator, tracker, renaming )
     logger.info("  > %s".format(unroller.getClass.getSimpleName))
 
     // TODO: re-enable cacher once caching is reworked (see #276 for context)
-    val newModule = unroller( module )
+    val newModule = unroller( renamedModule )
 
     // dump the result of preprocessing
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
