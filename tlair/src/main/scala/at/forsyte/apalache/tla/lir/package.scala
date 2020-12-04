@@ -187,6 +187,17 @@ package lir {
       */
     var isRecursive: Boolean = false
 
+    // Temporary solution, until #345 is resolved
+    def copy(
+              name : String = this.name,
+              formalParams : List[FormalParam] = this.formalParams,
+              body : TlaEx = this.body
+            ) : TlaOperDecl = {
+      val ret = TlaOperDecl( name, formalParams, body )
+      ret.isRecursive = this.isRecursive
+      ret
+    }
+
     override def deepCopy( ): TlaOperDecl =  TlaOperDecl( name, formalParams, body.deepCopy() )
   }
 
