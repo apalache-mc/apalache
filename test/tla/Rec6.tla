@@ -5,10 +5,12 @@ N == 5
 
 VARIABLES set, count
 
+a <: b == a
+
 RECURSIVE Sum(_)
 
 Sum(S) ==
-  IF S = {}
+  IF S = {} <: {Int}
   THEN 0
   ELSE LET x == CHOOSE y \in S: TRUE IN
     x + Sum(S \ {x})
@@ -17,7 +19,7 @@ UNROLL_DEFAULT_Sum == 0
 UNROLL_TIMES_Sum == N
 
 Init ==
-  /\ set = {}
+  /\ set = {} <: {Int}
   /\ count = 0
 
 Next ==

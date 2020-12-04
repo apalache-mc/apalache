@@ -18,7 +18,11 @@ Card(S) ==
   IF S = IntSet({})
   THEN 0
   ELSE
-    LET T == S \ {CHOOSE y \in S: TRUE} IN
+    \* CHOOSE is introduced with a LET definition, to fix its value, whatever it may be
+    \* Note that CHOOSE in APALACHE is non-deterministic and therefore
+    \* S \ { CHOOSE x \in S : TRUE } leads to a false-positive C.E.
+    LET x == CHOOSE y \in S: TRUE IN
+    LET T == S \ {x} IN
     1 + Card(T)
 
 \* unfold the operator Card up to 10 times
