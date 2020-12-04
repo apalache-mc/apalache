@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
+import at.forsyte.apalache.tla.lir.transformations.standard.Flatten
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.TlaBool
 
@@ -9,6 +10,13 @@ import at.forsyte.apalache.tla.lir.values.TlaBool
   * Constructs symbolic transitions from an assignment strategy.
   */
 class SymbTransGenerator( tracker : TransformationTracker ) {
+
+
+  private def mkReordering( fn: TlaEx => Option[Int]) : Reordering[Option[Int]] = new Reordering[Option[Int]](
+    Reordering.IntOptOrdering,
+    fn,
+    tracker
+  )
 
   private[assignments] object helperFunctions {
     type LabelMapType = Map[UID, Set[UID]]
@@ -235,10 +243,46 @@ class SymbTransGenerator( tracker : TransformationTracker ) {
     }
 
     /**
-      * Gathers the ordered selections and their corresponding restricted formulas.
+      * Constructs a ranking function which assigns
+      * to each `tlaEx` the following value:
+      *   - Some( min S ), if the set filtered = { e.ID | e is a subexpression of tlaEx and s.contains( e.ID ) } of
+      *     assignment subexpression IDs is nonempty and the set S = { j | orderedAssignments[j] \in filtered }
+      *     of positions those assignments hold w.r.t. orderedAssignments is nonempty
+      *   - None otherwise
+      *
+      * Example:
+      *   s = { 1, 3, 42},
+      *   orderedAssignments = [ 3, 42, 1 ]
+      *   tlaEx = /\ x' = 1 (uid 1)
+      *           /\ x' = 2 (uid 2)
+      *           /\ y' = 3 (uid 3)
+      *
+      *   Then, filtered = { 1, 3 }, S = { 0, 2 } and the ranking function for tlaEx returns Some( 0 )
+      *   (i.e. in reordering, tlaEx has the same rank as its lowest-ranking assingment subexpression `y' = 3`)
+      */
+    private def mkRankingFun( s: Set[UID],
+                              selections : SelMapType,
+                              orderedAssignments: StrategyType
+                            ) : TlaEx => Option[Int] = { tlaEx =>
+      // the union of all sets in selections( tlaEx.ID ) lists all the assignments in the subexpressions of TlaEx
+      val assignmentsBelow = selections.getOrElse( tlaEx.ID, Set.empty[Set[UID]] ).foldLeft( Set.empty[UID] ){ _ ++ _ }
+      // We filter them via the current selection (to ignore assignments on a branch we're not currently on)
+      val filtered = assignmentsBelow.intersect( s )
+      // Of all the assignment candidates, the one with the lowest position in `orderedAssignments` determines the rank
+      filtered.foldLeft( None : Option[Int] ) {
+        case (rankCand, uid) =>
+          val uidRank = orderedAssignments.find( _ == uid ) map {
+            orderedAssignments.indexOf
+          }
+          Reordering.IntOptOrdering.min( rankCand, uidRank )
+      }
+    }
+
+    /**
+      * Gathers the orderedAssignments selections and their corresponding restricted formulas.
       *
       * @param ex         Input formula.
-      * @param strategy      Assignment strategy
+      * @param strategy   Assignment strategy
       * @param selections Map of partial assignment selections.
       * @return A sequence of pairs of ordered assignment selections and their symbolic transitions.
       */
@@ -247,12 +291,21 @@ class SymbTransGenerator( tracker : TransformationTracker ) {
                         strategy : StrategyType,
                         selections : SelMapType
                       ) : Seq[SymbTrans] =
-      selections( ex.ID ).map( s =>
-        (
-          mkOrdered( s, strategy ),
-          sliceWith( s, selections )( ex )
-        )
-      ).toSeq
+      selections( ex.ID ).map { s =>
+        val sliced = sliceWith( s, selections )( ex )
+        // Flatten /\, so we can reorder properly
+        val flattened = Flatten(tracker)( sliced )
+
+        // To proceed, we need to have elements of `s` in the order defined by `strategy`
+        val orderedAssignments = mkOrdered( s, strategy )
+        // `orderedAssignments` helps define a ranking function ...
+        val rankingFn = mkRankingFun(s, selections, orderedAssignments)
+        // ... which we can use to reorder the flattened expression
+        val reordering = mkReordering( rankingFn )
+        val reorderedEx = reordering.reorder( flattened )
+
+        (orderedAssignments, reorderedEx)
+      }.toSeq
     }
 
   /**

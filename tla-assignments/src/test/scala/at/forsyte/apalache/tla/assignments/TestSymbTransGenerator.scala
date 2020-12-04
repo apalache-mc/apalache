@@ -209,6 +209,12 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
       and(n_B, appDecl( xDecl ) )
     )
 
+    // Reordering pushes assignment to the front
+    val disjOrdered = or(
+      and(appDecl( xDecl ), n_A ),
+      and(appDecl( xDecl ), n_B )
+    )
+
     val next = letIn(
       disj,
       xDecl
@@ -218,7 +224,7 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
 
     val ret = stg( next, strat ) map { _._2 }
     assert( ret == Seq(
-      letIn( disj, declOp( "X", assignPrime( n_x, int( 1 ) ) ) )
+      letIn( disjOrdered, declOp( "X", assignPrime( n_x, int( 1 ) ) ) )
     ) )
   }
 
