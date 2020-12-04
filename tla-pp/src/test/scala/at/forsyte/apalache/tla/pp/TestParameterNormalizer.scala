@@ -23,7 +23,7 @@ class TestParameterNormalizer extends FunSuite with BeforeAndAfterEach with Test
     // A == 1
     val decl = tla.declOp( "A", 1 )
 
-    val pnf = parNorm.mkParamNormalForm( decl )
+    val pnf = parNorm.normalizeDeclaration( decl )
 
     assert( pnf == decl )
 
@@ -34,7 +34,7 @@ class TestParameterNormalizer extends FunSuite with BeforeAndAfterEach with Test
     // A(p) == p
     val decl = tla.declOp( "A", n_p, "p" )
 
-    val pnf = parNorm.mkParamNormalForm( decl )
+    val pnf = parNorm.normalizeDeclaration( decl )
 
     val assertCond = pnf match {
       case TlaOperDecl( name, SimpleFormalParam( p ) :: Nil, body ) =>
@@ -55,7 +55,7 @@ class TestParameterNormalizer extends FunSuite with BeforeAndAfterEach with Test
     // A(T(_)) == T(0)
     val decl = tla.declOp( "A", tla.appOp( n_T, 0 ) , ("T", 1) )
 
-    val pnf = parNorm.mkParamNormalForm( decl )
+    val pnf = parNorm.normalizeDeclaration( decl )
 
     val assertCond = pnf match {
       case TlaOperDecl( name, OperFormalParam( opName, 1 ) :: Nil, body ) =>

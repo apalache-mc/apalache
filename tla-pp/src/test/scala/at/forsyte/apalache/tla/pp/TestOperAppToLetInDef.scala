@@ -9,12 +9,12 @@ import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.junit.JUnitRunner
 
 @RunWith( classOf[JUnitRunner] )
-class TestAppWrap extends FunSuite with BeforeAndAfterEach with TestingPredefs {
+class TestOperAppToLetInDef extends FunSuite with BeforeAndAfterEach with TestingPredefs {
 
-  private var wrapper = new AppWrap( new UniqueNameGenerator, TrackerWithListeners() )
+  private var wrapper = new OperAppToLetInDef( new UniqueNameGenerator, TrackerWithListeners() )
 
   override def beforeEach( ) : Unit = {
-    wrapper = new AppWrap( new UniqueNameGenerator, TrackerWithListeners() )
+    wrapper = new OperAppToLetInDef( new UniqueNameGenerator, TrackerWithListeners() )
   }
 
   test( "No app" ) {
@@ -38,6 +38,9 @@ class TestAppWrap extends FunSuite with BeforeAndAfterEach with TestingPredefs {
     val newEx2 = tr2( ex )
 
     val assertCond1 = newEx1 == ex
+
+    assert( assertCond1 )
+
     val assertCond2 = newEx2 match {
       case LetInEx(
       OperEx( TlaOper.apply, NameEx( someName ) ),
@@ -46,7 +49,7 @@ class TestAppWrap extends FunSuite with BeforeAndAfterEach with TestingPredefs {
       case _ => false
     }
 
-    assert( assertCond1 && assertCond2 )
+    assert( assertCond2 )
   }
 
 

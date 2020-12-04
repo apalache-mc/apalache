@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModu
 import at.forsyte.apalache.tla.lir.values.TlaInt
 
 /**
-  * Replaces definitions of user-defined recursive operators with a finite-step unrolling.
+  * Replaces definitions of user-defined recursive operators with a bounded chain of the operator bodies.
   *
   * For each recursive operator A the user must define two additional TLA+ operators,
   *  - [UNROLL_TIMES_PREFIX]_A
@@ -100,7 +100,7 @@ class Unroller( nameGenerator : UniqueNameGenerator, tracker : TransformationTra
     case ex => ex
   }
 
-  /** Given an operator name, A, extracts the value of [UNROLL_TIMES_PREFIX]_A or propmts a `TlaInputError` */
+  /** Given an operator name, A, extracts the value of [UNROLL_TIMES_PREFIX]_A or throws a `TlaInputError` */
   private def getUnrollLimit( name : String, bodyMap : BodyMap ) : ExceptionOrValue[BigInt] = {
     // We get the unrolling limit, which should be an operator in bodyMap.
     // note that operators inside named instances have a qualified name, e.g., I!Foo. Replace "!" with "_".
@@ -200,7 +200,7 @@ class Unroller( nameGenerator : UniqueNameGenerator, tracker : TransformationTra
     // Before unrolling we transform all recursive operators into parameter-normal form
     // This reduces the number of inlining calls when operator arguments aren't primitive
     val parameterNormalizer = ParameterNormalizer( nameGenerator, tracker, ParameterNormalizer.DecisionFn.recursive )
-    val paramNormModule = parameterNormalizer.normalize(module)
+    val paramNormModule = parameterNormalizer.normalizeModule(module)
 
     // Next we prepare the various maps and transformations ...
     val operDecls = paramNormModule.operDeclarations

@@ -5,31 +5,38 @@ import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation, TransformationTracker}
 
+/**
+  * Transforms a declaration A(x,y(_,_)) == e
+  * into parameter-normal form, i.e.
+  * A(x,y(_,_)) == LET x_new == x
+  *               y_new(p1, p2) == y(p1,p2)
+  *           IN e[ x_new/x, y_new/y ]
+  * This allows us to limit the number of substitutions when inlining A.
+  * @param decisionFn Normal-form transformation will only be applied to operator declarations (both top-level and LET-IN),
+  *                   for which `decisionFn` evaluates to true. Default: returns true for all recursive operators.
+  */
 class ParameterNormalizer(
                            nameGenerator: UniqueNameGenerator,
                            tracker: TransformationTracker,
                            decisionFn: TlaOperDecl => Boolean
                          ) {
-
-  // Transforms a declaration A(x,y(_,_)) == e
-  // into A(x,y) == LET x_new == x
-  //                    y_new( p1, p2) == y(p_1,p_2)
-  //                IN e[ x_new/x, y_new/y ]
-  // This allows us to limit the number of substitutions when inlining A
-  def mkParamNormalForm( decl : TlaOperDecl ) : TlaOperDecl = {
-    val normalizedLetIn = normalizeInternalLetIn( decl.body )
+  /** Declaration-level transformation */
+  def normalizeDeclaration( decl : TlaOperDecl ) : TlaOperDecl = {
+    // Since the body may contain LET-IN defined operators, we first normalize all of them
+    val normalizedBody = normalizeInternalLetIn( decl.body )
     val newBody =
-      if ( decisionFn( decl ) ) paramNormal( decl.formalParams )( normalizedLetIn )
-      else normalizedLetIn
+      if ( decisionFn( decl ) ) normalizeParametersInEx( decl.formalParams )( normalizedBody )
+      else normalizedBody
     val newDecl = decl.copy( body = newBody )
     // Copy doesn't preserve .isRecursive!
     newDecl.isRecursive = decl.isRecursive
     newDecl
   }
 
+  /** Expression-level LET-IN transformation, applies `mkParamNormalForm` to all LET-IN declarations */
   private def normalizeInternalLetIn : TlaExTransformation = tracker.track {
     case ex@LetInEx( body, defs@_* ) =>
-      val newDefs = defs map { d => mkParamNormalForm( d ) }
+      val newDefs = defs map { d => normalizeDeclaration( d ) }
       val newBody = normalizeInternalLetIn( body )
       if ( defs == newDefs && body == newBody ) ex
       else LetInEx( newBody, newDefs : _* )
@@ -43,12 +50,11 @@ class ParameterNormalizer(
 
   }
 
-  private def paramNormal( paramNames : List[FormalParam] ) : TlaExTransformation = tracker.track { ex =>
+  /** Iteratively introduces a new operator for each formal parameter */
+  private def normalizeParametersInEx( paramNames : List[FormalParam] ) : TlaExTransformation = tracker.track { ex =>
     paramNames.foldLeft( ex ) {
       case (partialEx, fParam) =>
-        // For each formal parameter we invent a fresh operator name
         val paramOperName = nameGenerator.newName()
-        // We split now, based on whether fParam is a simple or operator parameter
         fParam match {
           case SimpleFormalParam( name ) =>
             // We replace all instances of `fParam` with `paramOperName`
@@ -87,11 +93,10 @@ class ParameterNormalizer(
     }
   }
 
-  def normalize : TlaModuleTransformation = { m =>
-    // Iterates over all declarations and replaces those for which decisionFn returns true
-    // (by default, for all recursive)
+  /** Module-level transformation, calls `mkParamNormalForm` on all operator declarations */
+  def normalizeModule : TlaModuleTransformation = { m =>
     val newDecls = m.declarations map {
-      case d : TlaOperDecl => mkParamNormalForm( d )
+      case d : TlaOperDecl => normalizeDeclaration( d )
       case d => d
     }
     new TlaModule( m.name, newDecls )
@@ -102,6 +107,7 @@ class ParameterNormalizer(
 
 object ParameterNormalizer {
 
+  // Two standard options for `decisionFn`
   object DecisionFn {
     def all : TlaOperDecl => Boolean = _ => true
     def recursive : TlaOperDecl => Boolean = _.isRecursive

@@ -11,12 +11,12 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModu
   *
   * Operator constants and formal parameters are ignored.
   */
-class AppWrap(
+class OperAppToLetInDef(
                nameGenerator : UniqueNameGenerator,
                tracker : TransformationTracker
              ) {
 
-  import AppWrap.NAME_PREFIX
+  import OperAppToLetInDef.NAME_PREFIX
 
   private def setTracking( oldEx : => TlaEx, newEx : => TlaEx ) : TlaEx = {
     val tr = tracker.track {
@@ -75,11 +75,11 @@ class AppWrap(
   }
 }
 
-object AppWrap {
-  val NAME_PREFIX = "APP"
+object OperAppToLetInDef {
+  val NAME_PREFIX = "CALL"
 
   def apply(
              nameGenerator : UniqueNameGenerator,
              tracker : TransformationTracker
-           ) = new AppWrap( nameGenerator, tracker )
+           ) = new OperAppToLetInDef( nameGenerator, tracker )
 }
