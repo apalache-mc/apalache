@@ -39,6 +39,9 @@ manual](docs/manual.md#useDocker). To try the latest cool features, check out
 the [unstable
 branch](https://github.com/informalsystems/apalache/tree/unstable).
 
+*The head of `unstable` is broken. We are working on a fix. For the moment,
+build the project from 014dd5669417dd8d2f459e4e71840de9e014be73.*
+
 ## Getting started
 
 - Read the [Apalache user manual](./docs/manual.md).
