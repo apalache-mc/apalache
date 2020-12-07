@@ -110,6 +110,33 @@ EXITCODE: OK
 ## running the check command
 
 
+### check Fix365_ExistsSubset succeeds: regression for issue 365
+
+```sh
+$ apalache-mc check --length=10 Fix365_ExistsSubset.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
+### check Fix365_ExistsSubset2 succeeds: regression for issue 365
+
+```sh
+$ apalache-mc check --length=10 Fix365_ExistsSubset2.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
+### check Fix365_ExistsSubset3 succeeds: regression for issue 365
+
+```sh
+$ apalache-mc check --length=10 Fix365_ExistsSubset3.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
 ### check Bug20201118 succeeds: regression for issue 333
 
 ```sh
