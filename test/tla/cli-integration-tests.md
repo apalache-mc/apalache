@@ -693,6 +693,53 @@ The outcome is: Error
 ...
 ```
 
+## testing the slicer of symbolic transitions in TransitionFinderPass
+
+### check Slicer1
+
+```sh
+$ apalache-mc check --inv=Inv Slicer1.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: Error
+...
+```
+
+### check Slicer2
+
+```sh
+$ apalache-mc check --inv=Inv Slicer2.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: Error
+...
+```
+
+### check Slicer3
+
+```sh
+$ apalache-mc check --inv=Inv Slicer3.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: Error
+...
+```
+
+### check Slicer4
+
+```sh
+$ apalache-mc check --inv=Inv Slicer4.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: Error
+...
+```
+
+### check Slicer5
+
+```sh
+$ apalache-mc check --inv=Inv Slicer5.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: Error
+...
+```
+
 ## running the typecheck command
 
 ### typecheck CarTalkPuzzleTyped.tla
