@@ -457,13 +457,23 @@ The outcome is: NoError
 ...
 ```
 
-### check APAbcastByz.tla succeeds: regression for issue 157
+### check reorderTest.tla MayFail succeeds: fixed SMT fails under SMT-based assignment finding
 
 ```sh
-$ apalache-mc check --length=1 --init=IndInv_Unforg_NoBcast --inv=IndInv_Unforg_NoBcast --cinit=ConstInit4 APAbcastByz.tla | sed 's/I@.*//'
+$ apalache-mc check --next=MayFail --tuning=reorderTest.properties reorderTest.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+```
+
+### check reorderTest.tla MustFail fails
+
+```sh
+$ apalache-mc check --next=MustFail reorderTest.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: Error
+...
+EXITCODE: OK
 ```
 
 
