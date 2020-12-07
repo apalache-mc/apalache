@@ -28,7 +28,7 @@ MayFail == /\ v1' = 1     \* (1)
            
 
 \* MustFail cannot be reordered, because (2) has a use-case dependency
-\* on (4) (and (3) on (1)), but the \E blocks are reordered as a single unit
+\* on (3) (and (4) on (1)), but the \E blocks are reordered as a single unit
 
 \* In left-to-right processing, assignments do not exist, due to the 
 \* assignment-before-use paradigm
