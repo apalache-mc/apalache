@@ -23,9 +23,17 @@ class SmtFreeSymbolicTransitionExtractor(
 
   /** Checks whether expressions, which cannot contain assignments, use unassigned variables */
   private def throwOnUseBeforeAssignment( unassignedVars: Set[String] ) : TlaEx => Unit = {
+    /** Manual assignments at such locations throw exceptions */
+    case ex@OperEx( BmcOper.assign, OperEx( TlaActionOper.prime, NameEx( _ ) ), _ ) =>
+      val locString = getLocString( ex )
+      // TODO: Update manual on assignments, see #368
+      throw new AssignmentException(
+        s"$locString: Illegal assignment inside an assignment-free expression. See ${SmtFreeSymbolicTransitionExtractor.MANUAL_LINK}"
+      )
     case ex@OperEx( TlaActionOper.prime, NameEx( name ) ) if unassignedVars.contains( name ) =>
       val locString = getLocString( ex )
-      throw new AssignmentException( s"$locString: $name' is used before it is assigned." )
+      // TODO: Update manual on assignments, see #368
+      throw new AssignmentException( s"$locString: $name' is used before it is assigned. See ${SmtFreeSymbolicTransitionExtractor.MANUAL_LINK}" )
     case OperEx( _, args@_* ) =>
       args foreach throwOnUseBeforeAssignment( unassignedVars )
     case LetInEx( body, defs@_* ) =>
@@ -55,7 +63,7 @@ class SmtFreeSymbolicTransitionExtractor(
           if ( s.isEmpty ) None
           else {
             val locString = getLocString( childEx )
-            Some( s"$locString - Missing assignments to: ${s.mkString( "," )}" )
+            Some( s"$locString: Missing assignments to: ${s.mkString( "," )}" )
           }
       }
 
@@ -67,47 +75,52 @@ class SmtFreeSymbolicTransitionExtractor(
   }
 
   // Transition method between partial states
-  private def getStrategyOptInternal( s: PartialState, letInOperMap: BodyMap ): TlaEx => PartialState = {
+  private def getStrategyOptInternal( currentState: PartialState, letInOperMap: BodyMap ): TlaEx => PartialState = {
     /** Base case, assignment candidates  */
-    case ex@OperEx( TlaOper.eq, OperEx( TlaActionOper.prime, NameEx( name ) ), star ) =>
-      // First, check if star contains unassigned varaible access
-      throwOnUseBeforeAssignment( s.unassignedVars )( star )
+    case ex@OperEx( TlaOper.eq, OperEx( TlaActionOper.prime, NameEx( name ) ), assignmentFreeRhs ) =>
+      // First, check if assignmentFreeRhs contains unassigned varaible access
+      throwOnUseBeforeAssignment( currentState.unassignedVars )( assignmentFreeRhs )
       // if `name` is not yet assigned, this spot becomes an assignment
-      if ( s.unassignedVars.contains( name )) PartialState( s.unassignedVars - name, s.partialStrat :+ ex.ID )
-      else s
+      if ( currentState.unassignedVars.contains( name ))
+        PartialState( currentState.unassignedVars - name, currentState.partialStrat :+ ex.ID )
+      else currentState
 
     /** Base case, manual assignments */
-    case ex@OperEx( BmcOper.assign, OperEx( TlaActionOper.prime, NameEx( name ) ), star ) =>
+    case ex@OperEx( BmcOper.assign, OperEx( TlaActionOper.prime, NameEx( name ) ), assignmentFreeRhs ) =>
       // Similar to above, except manual assignments throw if spurious
-      throwOnUseBeforeAssignment( s.unassignedVars )( star )
-      if ( s.unassignedVars.contains( name )) PartialState( s.unassignedVars - name, s.partialStrat :+ ex.ID )
+      throwOnUseBeforeAssignment( currentState.unassignedVars )( assignmentFreeRhs )
+      if ( currentState.unassignedVars.contains( name ))
+        PartialState( currentState.unassignedVars - name, currentState.partialStrat :+ ex.ID )
       else {
         val locString = getLocString( ex )
-        throw new AssignmentException( s"Manual assignment at $locString is spurious: $name is already assigned!" )
+        // TODO: Update manual on assignments, see #368
+        throw new AssignmentException(
+          s"$locString: Manual assignment is spurious, $name is already assigned! See ${SmtFreeSymbolicTransitionExtractor.MANUAL_LINK}"
+        )
       }
 
     /** Conjunction */
     case OperEx( TlaBoolOper.and, args@_* ) =>
       // We sequentially update the partial state
-      args.foldLeft( s ) { getStrategyOptInternal(_, letInOperMap)(_) }
+      args.foldLeft( currentState ) { getStrategyOptInternal(_, letInOperMap)(_) }
     /** Disjunction */
     case ex@OperEx( TlaBoolOper.or, args@_* ) =>
-      handleDisjunctionOrITE( s, letInOperMap,  args)
+      handleDisjunctionOrITE( currentState, letInOperMap,  args)
 
     /** \E quantifier */
-    case OperEx( TlaBoolOper.exists, NameEx( _ ), star, subEx ) =>
-      // We need to check that star does not contain unassigned primes.
-      throwOnUseBeforeAssignment( s.unassignedVars )( star )
-      // if no exception is thrown, continue in setEx
-      getStrategyOptInternal( s, letInOperMap )( subEx )
+    case OperEx( TlaBoolOper.exists, NameEx( _ ), assignmentFreeSetEx, subEx ) =>
+      // We need to check that assignmentFreeSetEx does not contain unassigned primes.
+      throwOnUseBeforeAssignment( currentState.unassignedVars )( assignmentFreeSetEx )
+      // if no exception is thrown, continue in subEx
+      getStrategyOptInternal( currentState, letInOperMap )( subEx )
 
 
     /** ITE */
-    case OperEx( TlaControlOper.ifThenElse, star, thenAndElse@_* ) =>
-      // We need to check that star does not contain unassigned primes.
-      throwOnUseBeforeAssignment( s.unassignedVars )( star )
+    case OperEx( TlaControlOper.ifThenElse, assignmentFreeCond, thenAndElse@_* ) =>
+      // We need to check that assignmentFreeCond does not contain unassigned primes.
+      throwOnUseBeforeAssignment( currentState.unassignedVars )( assignmentFreeCond )
       // The rest is equivalent to the disjunction case
-      handleDisjunctionOrITE( s, letInOperMap, thenAndElse)
+      handleDisjunctionOrITE( currentState, letInOperMap, thenAndElse)
 
     /** Nullary LetIn */
     case LetInEx( body, defs@_* ) =>
@@ -116,24 +129,24 @@ class SmtFreeSymbolicTransitionExtractor(
       // We memorize the let-in operators, to recall when we see an apply
       val newMap = BodyMapFactory.makeFromDecls( defs, letInOperMap)
       // finally, we check the let-in body as well
-      getStrategyOptInternal( s, newMap )( body )
+      getStrategyOptInternal( currentState, newMap )( body )
 
     /** Nullary apply */
     case OperEx( TlaOper.apply, NameEx(operName) ) =>
-      // Apply may appear in higher order operators, so it might not be possible to pre-analyze
+      // If the body is known ( i.e. introduced by LET-IN ), we read it from the map
       val knownBodyOpt = letInOperMap.get( operName ) map { _.body }
-      val newStateOpt = knownBodyOpt map { getStrategyOptInternal(s, letInOperMap)(_) }
-
-      newStateOpt.getOrElse( s )
+      val newStateOpt = knownBodyOpt map { getStrategyOptInternal(currentState, letInOperMap)(_) }
+      // In all other cases, the operator application cannot introduce assignments
+      newStateOpt.getOrElse( currentState )
 
     /** Misc. operator */
     case OperEx( _, args@_* ) =>
       // For other operators, make sure they don't use unassigned variables ...
-      args foreach throwOnUseBeforeAssignment( s.unassignedVars )
+      args foreach throwOnUseBeforeAssignment( currentState.unassignedVars )
       // ... but don't update assignments
-      s
+      currentState
     /** In the other cases, return the default args */
-    case _ => s
+    case _ => currentState
   }
 
   def getStrategy(vars: Set[String], actionEx: TlaEx): StrategyType = {
@@ -167,6 +180,8 @@ class SmtFreeSymbolicTransitionExtractor(
 }
 
 object SmtFreeSymbolicTransitionExtractor {
+  val MANUAL_LINK = "https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md#assignments"
+
   def apply(tracker: TransformationTracker, sourceLoc: SourceLocator): SmtFreeSymbolicTransitionExtractor = {
     new SmtFreeSymbolicTransitionExtractor(tracker, sourceLoc)
   }
