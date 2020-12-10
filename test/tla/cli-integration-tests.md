@@ -469,11 +469,10 @@ The outcome is: NoError
 ### check reorderTest.tla MustFail fails
 
 ```sh
-$ apalache-mc check --next=MustFail reorderTest.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --next=MustFail reorderTest.tla
 ...
-The outcome is: Error
-...
-EXITCODE: OK
+EXITCODE: ERROR (99)
+[99]
 ```
 
 
