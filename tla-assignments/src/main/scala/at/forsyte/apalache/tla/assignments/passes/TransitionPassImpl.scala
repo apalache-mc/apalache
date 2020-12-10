@@ -92,7 +92,7 @@ class TransitionPassImpl @Inject()(options: PassOptions,
 
     val sourceLoc = SourceLocator(sourceStore.makeSourceMap, changeListener)
 
-    val transitionPairs = SymbolicTransitionExtractor(tracker)(vars, primedName)
+    val transitionPairs = SmtFreeSymbolicTransitionExtractor(tracker, sourceLoc)(vars.toSet, primedName)
     // sort the transitions by their occurrence in the source code
     val sorter = new TransitionOrder( sourceLoc )
     val sortedPairs = sorter.sortBySource(transitionPairs)
