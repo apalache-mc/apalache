@@ -821,7 +821,7 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     // whose elements are sets that refer to the same cells,
     // namely the cells for the records [a: 1, b: 1] and [a: 1, b: 2].
     // If one record is included in a subset, but the other is not, then the map rule produces a contradicting constraint
-    // for the element "a": it must be in the resulting set, and at the same time it must be not in the resulting set.
+    // for the element "a": it must be in the resulting set, and at the same time it must not be in the resulting set.
     val rec1 = tla.enumFun(tla.str("a"), tla.str("a"), tla.str("b"), tla.int(1))
     val rec2 = tla.enumFun(tla.str("a"), tla.str("a"), tla.str("b"), tla.int(2))
     val base = tla.enumSet(rec1, rec2)
