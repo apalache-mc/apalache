@@ -484,7 +484,8 @@ class ModelChecker(typeFinder: TypeFinder[CellT],
 
   private def checkOneInvariant(stepNo: Int, transitionNo: Int, nextState: SymbState, changedPrimed: Set[String], notInv: TlaEx): Unit = {
     val used = TlaExUtil.findUsedNames(notInv).map(_ + "'") // add primes as the invariant is referring to non-primed variables
-    if (used.nonEmpty && used.intersect(changedPrimed).isEmpty) {
+    if (stepNo != 0 && used.nonEmpty && used.intersect(changedPrimed).isEmpty) {
+      // another bugfix: look at unchecked variables, except for the case when Init has been applied!
       // bugfix for #108: check the invariant over CONSTANTS, if it has not been changed before
       // XXX: it might happen that an invariant over CONSTANTS is checked multiple times. We will fix that in v0.8.0.
       logger.debug(s"The invariant is referring only to the UNCHANGED variables. Skipped.")
