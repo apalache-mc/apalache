@@ -815,7 +815,7 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
   }
 
   // Regression for the issue 365: https://github.com/informalsystems/apalache/issues/365
-  // This test goes throught without a need for a fix.
+  // This test goes through without a need for a fix.
   test("""MAP: \E S \in SUBSET { [a: "a", b: 1], [a: "a", b: 2] }:  "a" \in { r.a: r \in S }""") {
     // this tests reveals a deep bug in the encoding: SUBSET {[a: 1, b: 1], [a: 1, b: 2]} produces a powerset,
     // whose elements are sets that refer to the same cells,
