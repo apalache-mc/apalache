@@ -1,11 +1,14 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
+import scala.collection.mutable.{HashMap, MultiMap, Set}
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.bmcmt.util.IntTupleIterator
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
+
+import scala.collection.mutable
 
 /**
   * The base rules for a set map {e : x ∈ S}. This class was extracted from SetMapRule, as it was used in other rules
@@ -65,18 +68,35 @@ class MapBase(rewriter: SymbStateRewriter) {
                                mapEx: TlaEx,
                                varNames: Seq[String],
                                setsAsCells: Seq[ArenaCell],
-                               cellsIter: Iterator[Seq[ArenaCell]]): (SymbState, Seq[ArenaCell]) = {
+                               cellsIter: Iterator[Seq[ArenaCell]]): (SymbState, Iterable[ArenaCell]) = {
     // we could have done it with foldLeft, but that would be even less readable
     var newState = state
-    var resultCells: Seq[ArenaCell] = Seq()
-    while (cellsIter.hasNext) {
-      val argCells = cellsIter.next()
-      val (ns, resultCell) = mapCellsManyArgsOnce(newState, targetSetCell, mapEx, varNames, setsAsCells, argCells)
+    // Collect target cells and the possible membership expressions in a hash map.
+    // This is probably a memory-hungry solution.
+    // We will replace it with a better one in an array-based SMT encoding:
+    // https://github.com/informalsystems/apalache/issues/365
+    var resultsToSource = new HashMap[ArenaCell, Set[TlaEx]] with MultiMap[ArenaCell, TlaEx]
+    for (argCells <- cellsIter) {
+      val (ns, resultCell, memEx) = mapCellsManyArgsOnce(newState, targetSetCell, mapEx, varNames, setsAsCells, argCells)
       newState = ns
-      resultCells :+= resultCell
+      resultsToSource.addBinding(resultCell, memEx)
     }
 
-    (newState, resultCells.distinct)
+    // add the membership constraints: one per target cell
+    for ((targetCell, memExpressions) <- resultsToSource) {
+      val inNewSet = OperEx(TlaSetOper.in, targetCell.toNameEx, targetSetCell.toNameEx)
+      val inSourceSet = {
+        if (memExpressions.size == 1) {
+          memExpressions.head
+        } else {
+          tla.or(memExpressions.toSeq: _*)
+        }
+      }
+      // the target cell belongs to the resulting set if and only if one of its preimages belongs to the original sets
+      rewriter.solverContext.assertGroundExpr(tla.eql(inNewSet, inSourceSet))
+    }
+
+    (newState, resultsToSource.keys)
   }
 
   private def mapCellsManyArgsOnce(state: SymbState,
@@ -84,24 +104,29 @@ class MapBase(rewriter: SymbStateRewriter) {
                                    mapEx: TlaEx,
                                    varNames: Seq[String],
                                    setsAsCells: Seq[ArenaCell],
-                                   valuesAsCells: Seq[ArenaCell]): (SymbState, ArenaCell) = {
+                                   valuesAsCells: Seq[ArenaCell]): (SymbState, ArenaCell, TlaEx) = {
     // bind the variables to the corresponding cells
     val newBinding: Binding = varNames.zip(valuesAsCells).foldLeft(state.binding)((m, p) => Binding(m.toMap + p))
     val mapState = state.setBinding(newBinding).setRex(mapEx)
     var nextState = rewriter.rewriteUntilDone(mapState)
     val mapResultCell = nextState.asCell
 
-    // require each new cell to be in the new set iff the old cell was in the old set
-    val inNewSet = OperEx(TlaSetOper.in, mapResultCell.toNameEx, targetSetCell.toNameEx)
-
+    // bug 365: what can happen here is that several tuples are mapped to exactly the same cell, e.g., a record field.
+    // We have to collect all source tuples for the same cell and say that the result belongs to the set,
+    // if and only if one of the source tuples belong to the source set.
     def inSourceSet(arg: ArenaCell, set: ArenaCell) = OperEx(TlaSetOper.in, arg.toNameEx, set.toNameEx)
 
-    val argsInSourceSets = tla.and(valuesAsCells.zip(setsAsCells) map (inSourceSet _).tupled: _*)
-    val ifAndOnlyIf = OperEx(TlaOper.eq, inNewSet, argsInSourceSets)
-    // add the edge before adding the constraint
+    val argsInSourceSets = {
+      if (valuesAsCells.length == 1) {
+        inSourceSet(valuesAsCells.head, setsAsCells.head) // in_value_set
+      } else {
+        tla.and(valuesAsCells.zip(setsAsCells) map (inSourceSet _).tupled: _*) // (and in_val1_set1 ... in_valk_setk)
+      }
+    }
+    // add the edge to the resulting set
     nextState = nextState.updateArena(_.appendHas(targetSetCell, mapResultCell))
-    rewriter.solverContext.assertGroundExpr(ifAndOnlyIf)
 
-    (nextState.setBinding(state.binding), mapResultCell) // reset the binding and return the result
+    // reset the binding and return the resulting cell and the source membership expression
+    (nextState.setBinding(state.binding), mapResultCell, argsInSourceSets)
   }
 }

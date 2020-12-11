@@ -33,7 +33,8 @@ class TypeException(message: String, causeExpr: TlaEx) extends CheckerException(
   * @param errors the list of type inference errors
   */
 class TypeInferenceException(val errors: Seq[TypeInferenceError])
-  extends CheckerException("Type inference failed",
+  extends CheckerException("Type inference failed, first error: %s"
+      .format(if (errors.nonEmpty) errors.head.explanation else "unknown"),
     if (errors.nonEmpty) errors.head.origin else NullEx)
 
 /**
