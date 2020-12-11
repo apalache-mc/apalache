@@ -18,6 +18,7 @@
    bespoke Z3 build, see #219
  * Use Z3 version 4.8.7.1, see #219
  * Re-stabilized tests on recursive operators, see #344
+ * Changed the assignment paradigm; solver now finds assignments without SMT, see #366
 
 ## 0.7.2 [RELEASE]
 
