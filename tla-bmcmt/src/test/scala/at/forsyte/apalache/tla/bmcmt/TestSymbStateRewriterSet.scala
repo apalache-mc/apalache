@@ -815,13 +815,13 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
   }
 
   // Regression for the issue 365: https://github.com/informalsystems/apalache/issues/365
-  // This test goes throught without a need for a fix.
+  // This test goes through without a need for a fix.
   test("""MAP: \E S \in SUBSET { [a: "a", b: 1], [a: "a", b: 2] }:  "a" \in { r.a: r \in S }""") {
     // this test reveals a deep bug in the encoding: SUBSET {[a: 1, b: 1], [a: 1, b: 2]} produces a powerset,
     // whose elements are sets that refer to the same cells,
     // namely the cells for the records [a: 1, b: 1] and [a: 1, b: 2].
     // If one record is included in a subset, but the other is not, then the map rule produces a contradicting constraint
-    // for the element "a": it must be in the resulting set, and at the same time it must be not in the resulting set.
+    // for the element "a": it must be in the resulting set, and at the same time it must not be in the resulting set.
     val rec1 = tla.enumFun(tla.str("a"), tla.str("a"), tla.str("b"), tla.int(1))
     val rec2 = tla.enumFun(tla.str("a"), tla.str("a"), tla.str("b"), tla.int(2))
     val base = tla.enumSet(rec1, rec2)
