@@ -76,8 +76,7 @@ class MapBase(rewriter: SymbStateRewriter) {
     // We will replace it with a better one in an array-based SMT encoding:
     // https://github.com/informalsystems/apalache/issues/365
     var resultsToSource = new HashMap[ArenaCell, Set[TlaEx]] with MultiMap[ArenaCell, TlaEx]
-    while (cellsIter.hasNext) {
-      val argCells = cellsIter.next()
+    for (argCells <- cellsIter) {
       val (ns, resultCell, memEx) = mapCellsManyArgsOnce(newState, targetSetCell, mapEx, varNames, setsAsCells, argCells)
       newState = ns
       resultsToSource.addBinding(resultCell, memEx)
