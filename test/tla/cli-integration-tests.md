@@ -361,6 +361,15 @@ The outcome is: NoError
 ...
 ```
 
+### check Rec2.tla succeeds
+
+```sh
+$ apalache-mc check --length=5 --inv=Inv Rec2.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
 ### check Rec3.tla succeeds
 ```sh
 $ apalache-mc check --length=10 --inv=Inv Rec3.tla | sed 's/I@.*//'
@@ -380,6 +389,24 @@ The outcome is: NoError
 ...
 ```
 
+### check Rec5.tla succeeds
+
+```sh
+$ apalache-mc check --length=5 --inv=Inv Rec5.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
+### check Rec6.tla succeeds
+
+```sh
+$ apalache-mc check --length=5 --inv=Inv Rec6.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
 ### check Rec8.tla succeeds
 
 ```sh
@@ -392,7 +419,7 @@ The outcome is: NoError
 ### check Rec9.tla succeeds
 
 ```sh
-$ apalache-mc check --length=5 --inv=Inv Rec9.tla | sed 's/I@.*//'
+$ apalache-mc check --length=3 --inv=Inv Rec9.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -438,6 +465,15 @@ The outcome is: Error
 EXITCODE: OK
 ```
 
+### check Rec13.tla succeeds
+
+```sh
+$ apalache-mc check --inv=Inv Rec13.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
 
 ### check ExistsAsValue.tla succeeds
 
@@ -447,6 +483,25 @@ $ apalache-mc check --inv=Inv ExistsAsValue.tla | sed 's/I@.*//'
 The outcome is: NoError
 ...
 ```
+
+### check reorderTest.tla MayFail succeeds: fixed SMT fails under SMT-based assignment finding
+
+```sh
+$ apalache-mc check --next=MayFail --tuning=reorderTest.properties reorderTest.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
+### check reorderTest.tla MustFail fails
+
+```sh
+$ apalache-mc check --next=MustFail reorderTest.tla
+...
+EXITCODE: ERROR (99)
+[99]
+```
+
 
 ### check Empty.tla fails
 
@@ -620,6 +675,234 @@ $ apalache-mc check ConfigUnsorted.tla | sed 's/[IEW]@.*//'
 Configuration error (see the manual): Circular definition dependency detected
 ...
 EXITCODE: ERROR (99)
+```
+
+### configure via TLC config and assign constants
+
+```sh
+$ apalache-mc check --config=ConfigParams.cfg ConfigParams.tla | sed 's/[IEW]@.*//'
+...
+  > ConfigParams.cfg: Loading TLC configuration
+  > Using the init predicate Init from the TLC config
+  > Using the next predicate Next from the TLC config
+  > ConfigParams.cfg: found INVARIANTS: Inv
+  > Set the initialization predicate to Init
+  > Set the transition predicate to Next
+  > Set an invariant to Inv
+  > Replaced CONSTANT MyInt with 42
+  > Replaced CONSTANT MyStr with "hello"
+  > Replaced CONSTANT MyModelValue1 with "ModelValue_Model1"
+  > Replaced CONSTANT MyModelValue2 with "ModelValue_Model2"
+  > Replaced CONSTANT MySet with {1, 2, 3}
+...
+The outcome is: NoError
+...
+```
+
+### configure via TLC config and replace operators
+
+```sh
+$ apalache-mc check --config=ConfigReplacements2.cfg ConfigReplacements.tla | sed 's/[IEW]@.*//'
+...
+  > ConfigReplacements2.cfg: Loading TLC configuration
+  > Using the init predicate Init from the TLC config
+  > Using the next predicate Next from the TLC config
+  > ConfigReplacements2.cfg: found INVARIANTS: Inv
+  > Set the initialization predicate to Init
+  > Set the transition predicate to Next
+  > Set an invariant to Inv
+  > Replaced operator Value with OVERRIDE_Value
+...
+The outcome is: NoError
+...
+```
+
+### configure via TLC config and replace operators helps us to keep the invariant
+
+```sh
+$ apalache-mc check --inv=Inv ConfigReplacements.tla | sed 's/[IEW]@.*//'
+...
+  > ConfigReplacements.cfg: Loading TLC configuration
+  > No TLC configuration found. Skipping.
+...
+The outcome is: Error
+...
+```
+
+## testing the slicer of symbolic transitions in TransitionFinderPass
+
+### check Slicer1
+
+```sh
+$ apalache-mc check --inv=Inv Slicer1.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: Error
+...
+```
+
+### check Slicer2
+
+```sh
+$ apalache-mc check --inv=Inv Slicer2.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: Error
+...
+```
+
+### check Slicer3
+
+```sh
+$ apalache-mc check --inv=Inv Slicer3.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: Error
+...
+```
+
+### check Slicer4
+
+```sh
+$ apalache-mc check --inv=Inv Slicer4.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: Error
+...
+```
+
+### check Slicer5
+
+```sh
+$ apalache-mc check --inv=Inv Slicer5.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: Error
+...
+```
+
+## running the typecheck command
+
+### typecheck CarTalkPuzzleTyped.tla
+
+```sh
+$ apalache-mc typecheck CarTalkPuzzleTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > running ETC: Embarrassingly simple Type Checker
+   ^_^
+  =^_^=
+PASS #2: Terminal
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck CigaretteSmokersTyped.tla
+
+```sh
+$ apalache-mc typecheck CigaretteSmokersTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > running ETC: Embarrassingly simple Type Checker
+   ^_^
+  =^_^=
+PASS #2: Terminal
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck GameOfLifeTyped.tla
+
+```sh
+$ apalache-mc typecheck GameOfLifeTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > running ETC: Embarrassingly simple Type Checker
+   ^_^
+  =^_^=
+PASS #2: Terminal
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck MissionariesAndCannibalsTyped.tla
+
+```sh
+$ apalache-mc typecheck MissionariesAndCannibalsTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > running ETC: Embarrassingly simple Type Checker
+   ^_^
+  =^_^=
+PASS #2: Terminal
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck PrisonersTyped.tla
+
+```sh
+$ apalache-mc typecheck PrisonersTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > running ETC: Embarrassingly simple Type Checker
+   ^_^
+  =^_^=
+PASS #2: Terminal
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck QueensTyped.tla fails
+
+We are not currently able to typecheck this spec, since we need a way of
+coercing functions on integers into sequences, or a way to recognize the former
+as subtypes of the latter. This failing test is added to document the current limitation
+of the Etc type checkers, and we expect it will be changed into a passing test
+once the desired  functionality and added.
+
+```sh
+$ apalache-mc typecheck QueensTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > running ETC: Embarrassingly simple Type Checker
+   ^_^
+[QueensTyped.tla:41:44-41:61]: Mismatch in argument types. Expected: (Seq(Int)) => Bool
+[QueensTyped.tla:41:14-41:63]: Error when computing the type of Solutions
+  :-|
+Type checker [FAILED]
+...
+EXITCODE: OK
+```
+
+### typecheck SlidingPuzzlesTyped.tla
+
+```sh
+$ apalache-mc typecheck SlidingPuzzlesTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > running ETC: Embarrassingly simple Type Checker
+   ^_^
+  =^_^=
+PASS #2: Terminal
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck TwoPhaseTyped.tla
+
+```sh
+$ apalache-mc typecheck TwoPhaseTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > running ETC: Embarrassingly simple Type Checker
+   ^_^
+  =^_^=
+PASS #2: Terminal
+Type checker [OK]
+...
+EXITCODE: OK
 ```
 
 ## running the typecheck command

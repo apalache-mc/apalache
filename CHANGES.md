@@ -1,5 +1,7 @@
 ## Unreleased #unstable
 
+ * use openjdk-9 for deterministic Apalache Docker images, see #318
+ * support for advanced syntax in TLC configs, see #208
  * random seed for z3, see docs/tuning.md and #318
  * correct translation of chained substitutions in INSTANCEs, see #143
  * friendly messages for unexpected expressions, see #303
@@ -15,6 +17,7 @@
  * Use [Z3-TurnKey](https://github.com/tudo-aqua/z3-turnkey) instead of a
    bespoke Z3 build, see #219
  * Use Z3 version 4.8.7.1, see #219
+ * Re-stabilized tests on recursive operators, see #344
 
 ## 0.7.2 [RELEASE]
 

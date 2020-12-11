@@ -1,6 +1,17 @@
-FROM maven:3.6.3-jdk-8-slim AS builder
+# NOTE: We build the docker image for Apalache in two phases:
+#
+# 1. BUILD IMAGE: We use a robust JDK 8 base image to build the package.
+# 2. APP IMAGE: We then use a smaller base image, with a different JDK fur
+#    execution, and copy over the executable artifacts from the build image.
+#
+# We use a different base image for two reasons: first, it allows us to provide
+# a docker image with a much smaller memory footprint, since we can drop many
+# build dependencies; second, JDK 8 is currently necessary for building, but it
+# introduces nondetermistic behavior into the Z3 library -- JDK 9+ doesn't have
+# this problem.
 
-# This is the image for building apalache itself
+# 1. BUILD IMAGE
+FROM maven:3.6.3-jdk-8-slim AS builder
 
 ADD . /opt/apalache/
 WORKDIR /opt/apalache/
@@ -9,11 +20,11 @@ WORKDIR /opt/apalache/
 # skipTests because we check the test in CI, not when packaing the container
 RUN mvn --batch-mode -DskipTests package
 
-FROM openjdk:8-slim
 
-# This is the app image
-#
-# To prepare it, we
+# 2. APP IMAGE
+FROM openjdk:9-slim
+
+# To prepare the app image, we do the following:
 #
 # - copy over all the artifacts needed to run
 # - prepare the enviroment

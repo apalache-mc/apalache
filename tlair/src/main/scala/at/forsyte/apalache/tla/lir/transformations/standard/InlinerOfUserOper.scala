@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.storage.BodyMap
+import at.forsyte.apalache.tla.lir.transformations.standard.InlinerOfUserOper.kStepParameters
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
 
@@ -22,11 +23,14 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker)
     transform( stepLimitOpt = None )(expr)
   }
 
-  def kStepInline( k : BigInt ) : TlaExTransformation =
-    if (k <= 0) throw new IllegalArgumentException( "The number of allowed steps for kStepInline must be a positive integer." )
-    else transform( stepLimitOpt = Some( k ) )
+  def kStepInline( k : BigInt, post: TlaExTransformation = Predef.identity ) : TlaExTransformation =
+    if (k < 0) throw new IllegalArgumentException( "The number of unrolling steps must be a non-negative integer." )
+    // 0-step is always just the identity transform, even if post is non-trivial, because, conceptually,
+    // 0-step inlining is a no-op
+    else if (k == 0) Predef.identity
+    else transform( stepLimitOpt = Some( kStepParameters( k, post ) ) )
 
-  def transform(stepLimitOpt: Option[BigInt]): TlaExTransformation = tracker.track {
+  def transform(stepLimitOpt: Option[kStepParameters]): TlaExTransformation = tracker.track {
     // interesting case: applying a user-defined operator
     case ex @ OperEx(TlaOper.apply, NameEx(name), args @ _*) =>
       // Jure, 5.7.19: Can 0-arity operators ever appear as standalone NameEx, without
@@ -62,11 +66,12 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker)
     case ex => ex
   }
 
-  private def instantiateWithArgs(stepLimitOpt: Option[BigInt])( decl: TlaOperDecl, args: Seq[TlaEx] ) : TlaEx = {
+  private def instantiateWithArgs(stepLimitOpt: Option[kStepParameters])( decl: TlaOperDecl, args: Seq[TlaEx] ) : TlaEx = {
     // Assumption: |decl.formalParams| = |args|
 
+    val postTr = stepLimitOpt map { _.postTransform } getOrElse { Predef.identity[TlaEx] _ }
     // deep copy the body, to ensure uniqueness of the UIDs
-    val bodyCopy = DeepCopy( tracker )( decl.body )
+    val bodyCopy = postTr( DeepCopy( tracker )( decl.body ) )
 
     val newBody = decl.formalParams.zip( args ).foldLeft( bodyCopy ) {
       case (b, (fParam, arg)) =>
@@ -77,14 +82,22 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker)
     val newStepLimit = stepLimitOpt map { _ - 1 }
 
     // if further steps are allowed then recurse otherwise terminate with current result
-    if ( newStepLimit forall { _ > 0 } )
-      transform(newStepLimit)( newBody )
+    if ( newStepLimit forall { _ > 0 } ) {
+      transform( newStepLimit )( newBody )
+    }
     else
       newBody
   }
 }
 
 object InlinerOfUserOper {
+
+  sealed case class kStepParameters( k : BigInt, postTransform : TlaExTransformation ) {
+    def -( x : BigInt ) : kStepParameters = kStepParameters( k - x, postTransform )
+    def >( x : BigInt ) : Boolean = k > x
+  }
+
+
   def apply(defBodyMap: BodyMap, tracker: TransformationTracker): InlinerOfUserOper = {
     new InlinerOfUserOper(defBodyMap, tracker)
   }

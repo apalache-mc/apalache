@@ -235,10 +235,10 @@ class SymbTransGenerator( tracker : TransformationTracker ) {
     }
 
     /**
-      * Gathers the ordered selections and their corresponding restricted formulas.
+      * Gathers the orderedAssignments selections and their corresponding restricted formulas.
       *
       * @param ex         Input formula.
-      * @param strategy      Assignment strategy
+      * @param strategy   Assignment strategy
       * @param selections Map of partial assignment selections.
       * @return A sequence of pairs of ordered assignment selections and their symbolic transitions.
       */
@@ -247,12 +247,9 @@ class SymbTransGenerator( tracker : TransformationTracker ) {
                         strategy : StrategyType,
                         selections : SelMapType
                       ) : Seq[SymbTrans] =
-      selections( ex.ID ).map( s =>
-        (
-          mkOrdered( s, strategy ),
-          sliceWith( s, selections )( ex )
-        )
-      ).toSeq
+      selections( ex.ID ).map { s =>
+        (mkOrdered( s, strategy ), sliceWith( s, selections )( ex ))
+      }.toSeq
     }
 
   /**

@@ -13,12 +13,12 @@ VARIABLES votingPower
 
 a <: b == a
 
-IntSet(S) == S <: {Int}
+StrSet(S) == S <: {STRING}
 
 RECURSIVE Sum(_)
 
 Sum(S) ==
-  IF S = IntSet({})
+  IF S = StrSet({})
   THEN 0
   ELSE LET x == CHOOSE y \in S: TRUE IN
     votingPower[x] + Sum(S \ {x})
@@ -33,6 +33,6 @@ Next ==
     votingPower' \in [Procs -> 0..MAX_POWER]
 
 Inv ==
-    Sum(votingPower) < 10
+    Sum(Procs) < 10
 
 =============================================================================
