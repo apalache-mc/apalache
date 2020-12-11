@@ -786,11 +786,12 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
     }
   }
 
-  // FIXME: fix asap, this is soundness issue
-  ignore("""SE-SET-MAP[1-2]: <<TRUE>> \in {<<y>>: x \in {1,2} \ {2}, y \in {FALSE, TRUE}} ~~> $B$k""") {
-    // this expression may be problematic as it might conflict with cached expressions
-    val set12 = tla.enumSet(1 to 2 map tla.int :_*)
-    val set12minus2 = tla.setminus(set12, tla.enumSet(tla.int(2)))
+  test("""SE-SET-MAP[1-2]: <<TRUE>> \in {<<y>>: x \in {1,2} \ {2}, y \in {FALSE, TRUE}}""") {
+    // this expression tests regressions in cached expressions
+    // we express {1, 2} \ {2} as a filter, as set difference is not in KerA+
+    val set12minus2 = tla.filter(tla.name("z"),
+      tla.enumSet(tla.int(1),
+        tla.int(2)), tla.eql(tla.name("z"), tla.int(1)))
     val setBool = tla.enumSet(tla.bool(false), tla.bool(true))
     val mapping = tla.tuple(tla.name("y"))
     val mappedSet = tla.map(mapping, tla.name("x"), set12minus2, tla.name("y"), setBool)
@@ -811,6 +812,54 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
       case _ =>
         fail("Unexpected rewriting result")
     }
+  }
+
+  // Regression for the issue 365: https://github.com/informalsystems/apalache/issues/365
+  // This test goes through without a need for a fix.
+  test("""MAP: \E S \in SUBSET { [a: "a", b: 1], [a: "a", b: 2] }:  "a" \in { r.a: r \in S }""") {
+    // this test reveals a deep bug in the encoding: SUBSET {[a: 1, b: 1], [a: 1, b: 2]} produces a powerset,
+    // whose elements are sets that refer to the same cells,
+    // namely the cells for the records [a: 1, b: 1] and [a: 1, b: 2].
+    // If one record is included in a subset, but the other is not, then the map rule produces a contradicting constraint
+    // for the element "a": it must be in the resulting set, and at the same time it must not be in the resulting set.
+    val rec1 = tla.enumFun(tla.str("a"), tla.str("a"), tla.str("b"), tla.int(1))
+    val rec2 = tla.enumFun(tla.str("a"), tla.str("a"), tla.str("b"), tla.int(2))
+    val base = tla.enumSet(rec1, rec2)
+    val powerset = tla.powSet(base)
+    val map = tla.map(tla.appFun(tla.name("r"), tla.str("a")), tla.name("r"), tla.name("S"))
+    val mem = tla.in(tla.str("a"), map)
+    val exists = OperEx(BmcOper.skolem, tla.exists(tla.name("S"), powerset, mem))
+
+    val rewriter = create()
+    val state = new SymbState(exists, arena, Binding())
+    assumeTlaEx(rewriter, state)
+  }
+
+  // Regression for the issue 365: https://github.com/informalsystems/apalache/issues/365
+  // This test captures the core of the functional test in `test/tla/Fix365_ExistsSubset3.tla`.
+  test("""MAP: \E S \in SUBSET { [a: "a", b: 1], [a: "a", b: 2] }:  "a" \in { r.a: r \in S } /\ \A x \in S: x.b = 2""") {
+    // this tests reveals a deep bug in the encoding: SUBSET {[a: 1, b: 1], [a: 1, b: 2]} produces a powerset,
+    // whose elements are sets that refer to the same cells,
+    // namely the cells for the records [a: 1, b: 1] and [a: 1, b: 2].
+    // If one record is included in a subset, but the other is not, then the map rule produces a contradicting constraint
+    // for the element "a": it must be in the resulting set, and at the same time it must be not in the resulting set.
+    val rec1 = tla.enumFun(tla.str("a"), tla.str("a"), tla.str("b"), tla.int(1))
+    val rec2 = tla.enumFun(tla.str("a"), tla.str("a"), tla.str("b"), tla.int(2))
+    val base = tla.enumSet(rec1, rec2)
+    val powerset = tla.powSet(base)
+    val map = tla.map(tla.appFun(tla.name("r"), tla.str("a")), tla.name("r"), tla.name("S"))
+    val mem = tla.in(tla.str("a"), map)
+    val forall = tla.forall(tla.name("x"),
+      tla.name("S"),
+      tla.eql(tla.appFun(tla.name("x"),
+              tla.str("b")),
+              tla.int(2)))
+    val and = tla.and(mem, forall)
+    val exists = OperEx(BmcOper.skolem, tla.exists(tla.name("S"), powerset, and))
+
+    val rewriter = create()
+    val state = new SymbState(exists, arena, Binding())
+    assumeTlaEx(rewriter, state)
   }
 
   test("""SE-SET-CUP[1-2]: {1, 3} \cup {3, 4} = {1, 3, 4}""") {
