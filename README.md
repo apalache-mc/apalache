@@ -102,7 +102,7 @@ Related reports and publications can be found at the
 [Apalache user manual]: ./docs/manual.md
 [Idioms for writing better TLA+]: ./docs/idiomatic
 [Apalache zulip stream]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache
-[Tendermint specs]: https://github.com/tendermint/spec/tree/master/rust-specs
+[Tendermint specs]: https://github.com/tendermint/spec/tree/master/rust-spec
 [Tendermint blockchain]: https://github.com/tendermint
 [standard repository of TLA+ examples]: https://github.com/tlaplus/Examples
 [apalache benchmarks]: https://github.com/informalsystems/apalache-tests
