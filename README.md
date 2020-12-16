@@ -58,6 +58,9 @@ the [unstable branch].
 
 ## Talks
 
+- [How TLA+ and Apalache Helped Us to Design the Tendermint Light Client](https://www.crowdcast.io/e/interchain-conversations-II/38).
+    Interchain Conversations 2020 (December 2020).
+
 - [Model-based testing with TLA+ and Apalache](https://youtu.be/aveoIMphzW8).
   TLA+ Community Event 2020 (October 2020).
 
