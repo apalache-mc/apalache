@@ -85,7 +85,7 @@ _Unbounded integers like in Python._ [Learn more...](./integers.md)
  - Integer predicates:
     - [`i < k`](./integers.md#lt), [`i > k`](./integers.md#gt),
     - [`i <= k`](./integers.md#lte) (also `i =< k` and `i \leq k`), 
-    - [`i => k`](./integers.md#gte) (also `i >= k` and `i \geq k`)
+    - [`i >= k`](./integers.md#gte) (also `i \geq k`)
  - Integer sets: [`i..k`](./integers.md#range),
     [`Int`](./integers.md#const), [`Nat`](./integers.md#const)
 
