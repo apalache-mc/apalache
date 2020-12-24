@@ -148,7 +148,7 @@ of integers).
 
 Apalache enforces stricter types. It has designated types for all four
 data structures: general functions, records, tuples, and sequences.
-Moreover, the elements of the function domain must have the same type.
+Moreover, all elements of the function domain must have the same type.
 A general function must return the values of the same type. This is enforced
 by the type checker.
 
