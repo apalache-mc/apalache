@@ -6,7 +6,7 @@ Functions are probably the second most used TLA+ data structure after sets. TLA+
 functions are not like functions in programming languages. In programming
 languages, functions contain code that calls other functions. Although it is
 technically possible to use functions when constructing a function in TLA+,
-functions are more often used like tables or dictionaries. For instance, in
+functions are more often used like tables or dictionaries: they are simple maps from a set of inputs to a set of outputs. For instance, in
 [Two-phase commit], the function `rmState` stores the transaction state for
 each process:
 
