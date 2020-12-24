@@ -2,7 +2,7 @@
 
 [[Back to all operators]](./standard-operators.md)
 
-Functions is probably the second most used TLA+ data structure after sets. TLA+
+Functions are probably the second most used TLA+ data structure after sets. TLA+
 functions are not like functions in programming languages. In programming
 languages, functions contain code that calls other functions. Although it is
 technically possible to use functions when constructing a function in TLA+,
