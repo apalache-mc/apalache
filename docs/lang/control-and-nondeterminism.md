@@ -474,7 +474,7 @@ This operator is equivalent to the following disjunction:
 \/ P_n /\ e_n
 ```
 
-_Similar to IF-THEN-ELSE, we do not recommend you using CASE for expressing
+_Similar to IF-THEN-ELSE, we do not recommend using CASE for expressing
 non-determinism. When you are using disjunction, the Boolean result and
 possible side effects are expected._
 
