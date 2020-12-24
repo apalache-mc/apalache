@@ -35,9 +35,9 @@ semantics only for a single variable:
    `e` of `S` that makes the expression `P` evaluate to `FALSE` against the
    binding `[x |-> e]`.
 
- _Importantly, when `S = {}`, the expression `\A x \ in S: P` evaluates to
+ _Importantly, when `S = {}`, the expression `\A x \in S: P` evaluates to
  `TRUE`, independently of what is written in `P`. Likewise, when `{x \in S: P}
- = {}`, the expression `\A x \ in S: P` evaluates to `TRUE`._
+ = {}`, the expression `\A x \in S: P` evaluates to `TRUE`._
    
 **Determinism:** Deterministic.
 
