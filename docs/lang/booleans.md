@@ -11,9 +11,9 @@ logic. These operators form _propositional logic_.
 TLA+ contains three special constants: `TRUE`, `FALSE`, and `BOOLEAN`.
 The constant `BOOLEAN` is defined as the set `{FALSE, TRUE}`.
 
-In theory, `TRUE` and `FALSE` are also sets, but in practice they are treated
-as indivisible values. For instance, Apalache and TLC will report an error, if
-you try to treat `FALSE` and `TRUE` as sets or integers.
+A note for set-theory purists: In theory, `TRUE` and `FALSE` are also sets, but
+in practice they are treated as indivisible values. For instance, Apalache and
+TLC will report an error, if you try to treat `FALSE` and `TRUE` as sets.
 
 ## Operators
 
@@ -118,9 +118,9 @@ The binary case `F \/ G` evaluates to:
 The general case `F_1 \/ ... \/ F_n` can be understood by evaluating
 the expression `F_1 \/ (F_2 \/ ... \/ (F_{n-1} \/ F_n)...)`.
 
-**Determinism:** deterministic, if the arguments do not contain primes.
-If the arguments contain primes, disjunctions produce non-determinism,
-see [Control Flow and Non-determinism].
+**Determinism:** deterministic, if the arguments may not update primed
+variables.  If the arguments may update primed variables, disjunctions may
+result in non-determinism, see [Control Flow and Non-determinism].
 
 **Errors:** In pure TLA+, the result is undefined, if a non-Boolean argument
 is involved in the evaluation (the evaluation is lazy).  In this
@@ -141,10 +141,10 @@ TRUE  \/ 1       \* TRUE in TLC, type error in Apalache
 **Example in Python:**
 
 ```python
-True  or True
-False or True
-True  or False
-False or False
+True  or True   # True
+False or True   # True
+True  or False  # True
+False or False  # False
 ```
 
 **Special syntax form:** To minimize the number of parentheses, disjunction can
