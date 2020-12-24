@@ -2,20 +2,19 @@
 
 [[Back to all operators]](./standard-operators.md)
 
-In this section, we consider the instances of `IF-THEN-ELSE` and `CASE` that do
-not contain unassigned primed variables inside. For the case, when the
-operators inside `IF-THEN-ELSE` or `CASE` can be used to do non-deterministic
-assignments, see [Control Flow and
-Non-determinism](control-and-nondeterminism.md).
+In this section, we consider the instances of `IF-THEN-ELSE` and `CASE` that
+may not update primed variables. For the case, when the operators inside
+`IF-THEN-ELSE` or `CASE` can be used to do non-deterministic assignments, see
+[Control Flow and Non-determinism](control-and-nondeterminism.md).
 
-**Warning:** Because frequent use of `IF-THEN-ELSE` is very common in most programming languages, 
-TLA+ specification authors with programming experience often default to writing expressions such as `IF A THEN B ELSE C`. 
-We encourage those authors to use this construct more sparingly. 
-In our experience, the use of `IF-THEN-ELSE` is rarely required. 
-Many things can be done with [Boolean operators](./boolean.md),
-which provide more structure in TLA+ code than in
-programming languages.  We recommend using `IF-THEN-ELSE` to compute predicate-dependent values, 
-not to structure code.
+**Warning:** Because frequent use of `IF-THEN-ELSE` is very common in most
+programming languages, TLA+ specification authors with programming experience
+often default to writing expressions such as `IF A THEN B ELSE C`.  We
+encourage those authors to use this construct more sparingly.  In our
+experience, the use of `IF-THEN-ELSE` is rarely required.  Many things can be
+done with [Boolean operators](./boolean.md), which provide more structure in
+TLA+ code than in programming languages.  We recommend using `IF-THEN-ELSE` to
+compute predicate-dependent values, not to structure code.
 
 **Warning 2:** `CASE` is considered deterministic in this
 section, as it is defined with the `CHOOSE` operator in
@@ -46,8 +45,9 @@ _Use it when choosing between two values, not to structure your code._
 version, see [Control Flow and Non-determinism](control-and-nondeterminism.md).
 
 **Errors:** If `A` evaluates to a non-Boolean value, the result is undefined.
-TLC raises an error during model checking. Apalache raises a type error
-when preprocessing.
+TLC raises an error during model checking. Apalache raises a type error when
+preprocessing. Additionally, if `B` and `C` may evaluate to values of different
+types, Apalache raises a type error.
 
 **Example in TLA+:** Consider the following TLA+ expression:
 
@@ -134,7 +134,8 @@ Which branch is evaluated depends on the `CHOOSE` operator, see [[Logic]](./logi
 
 **Errors:** If one of `p_1, ..., p_n` evaluates to a non-Boolean value, the
 result is undefined.  TLC raises an error during model checking. Apalache
-raises a type error when preprocessing.
+raises a type error when preprocessing. Additionally, if `e_1`, ..., `e_n`
+may evaluate to values of different types, Apalache raises a type error.
 
 **Example in TLA+:** The following expression classifies an integer variable
 `n` with one of the three strings: "negative", "zero", or "positive".
@@ -191,13 +192,13 @@ CASE p_1 -> e_1
   [] p_2 -> e_2
   ...
   [] p_n -> e_n
-  [] OTHER -> e
+  [] OTHER -> e_0
 ```
 
 **LaTeX notation:** ![case-other](./img/case-other.png)
 
-**Arguments:** Boolean expressions `p_1, ..., p_n` and expressions `e_1, ...,
-e_n, e`.
+**Arguments:** Boolean expressions `p_1, ..., p_n` and expressions `e_0, e_1, ...,
+e_n`.
 
 **Effect:** This operator is equivalent to the following version of `CASE`:
 
@@ -206,7 +207,7 @@ CASE p_1 -> e_1
   [] p_2 -> e_2
   ...
   [] p_n -> e_n
-  [] ~(p_1 \/ p_2 \/ ... \/ p_n) -> e
+  [] ~(p_1 \/ p_2 \/ ... \/ p_n) -> e_0
 ```
 
 Both TLC and Apalache interpret this `CASE` operator as a chain of
@@ -217,24 +218,25 @@ Both TLC and Apalache interpret this `CASE` operator as a chain of
   ELSE IF p_2 THEN e_2
   ...
   ELSE IF p_n THEN e_n
-  ELSE e
+  ELSE e_0
 ```
 
 All the idiosyncrasies of `CASE` apply to `CASE-OTHER`. Hence, we recommend
 using `IF-THEN-ELSE` instead of `CASE-OTHER`. Although `IF-THEN-ELSE`
 is a bit more verbose, its semantics are precisely defined.
 
-**Determinism.** The result of `CASE-OTHER` is deterministic, if there are no
-primes inside.  For the non-deterministic version, see [[Control Flow and
-Non-determinism]](control-and-nondeterminism.md).  When the predicates are
-mutually exclusive, the semantics is clearly specified. When the predicates are
-not mutually exclusive, the operator is still deterministic, but only one of
-the simultaneously enabled branches is evaluated. The choice of the branch is
-implemented with the operator `CHOOSE`, see [[Logic]](./logic.md).
+**Determinism.** The result of `CASE-OTHER` is deterministic, if `e_0`, `e_1`,
+..., `e_n` may not update primed variables.  For the non-deterministic version,
+see [[Control Flow and Non-determinism]](control-and-nondeterminism.md).  When
+the predicates are mutually exclusive, the semantics is clearly specified. When
+the predicates are not mutually exclusive, the operator is still deterministic,
+but only one of the simultaneously enabled branches is evaluated. The choice of
+the branch is implemented with the operator `CHOOSE`, see
+[[Logic]](./logic.md).
 
 **Errors:** If one of `p_1, ..., p_n` evaluates to a non-Boolean value, the
 result is undefined.  TLC raises an error during model checking. Apalache
-raises a type error when preprocessing.
-
+raises a type error when preprocessing.  Additionally, if `e_0`, `e_1`, ...,
+`e_n` may evaluate to values of different types, Apalache raises a type error.
 
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
