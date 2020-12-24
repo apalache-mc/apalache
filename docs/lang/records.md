@@ -25,7 +25,7 @@ assigned value `TRUE`.
 Similar to the function set `[S -> T]`, there is a record set constructor:
 
 ```tla
-  [ name: { "Alice", "Bob" }, year_of_birth: { 1900..2000} ]
+  [ name: { "Alice", "Bob" }, year_of_birth: 1900..2000 ]
 ```
 
 The expression in the above example constructs a set of records that have: the
