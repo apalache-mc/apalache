@@ -10,7 +10,7 @@ propositional logic, see [Booleans](./booleans.md).
 
 Note that the special form `\E y \in S: x' = y` is often used to express
 non-determinism in TLA+. See [Control Flow and Non-determinism]. In this
-section, we only consider the deterministic version.
+section, we only consider the deterministic use of the existential quantifier.
 
 ----------------------------------------------------------------------------
 
