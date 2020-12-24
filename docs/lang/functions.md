@@ -45,7 +45,7 @@ how to map every argument to the result:
   [ fahrenheit \in Int |-> (fahrenheit - 32) * 5 \div 9 ]
 ```
 
-Note that this function efficiently defines an infinite table, as the set `Int`
+Note that this function effectively defines an infinite table, as the set `Int`
 is infinite. Both TLC and Apalache would give up on a function with an infinite
 domain. (Though in the above example, it is obvious that we could treat the
 function symbolically, without enumerating all of its elements.)
