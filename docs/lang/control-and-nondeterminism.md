@@ -5,7 +5,7 @@
 **Author:** Igor Konnov
 
 Non-determinism is one of the TLA+ features that makes it different from
-programming languages. However, it is very easy to overlook it: There is no
+mainstream programming languages. However, it is very easy to overlook it: There is no
 special syntax for expressing non-determinism. In pure TLA+, whether your
 specification is deterministic or not, depends on the evaluation of the initial
 predicate and of the transition predicate. These are usually called `Init` and
