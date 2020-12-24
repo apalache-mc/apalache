@@ -114,7 +114,7 @@ of the specification `coord3`:
 ![diag2](./img/diag2.png)
 
 Notice that specification `coord` describes one infinite computation (and
-infinitely many finite computations that are prefixes the infinite
+infinitely many finite computations that are prefixes of the infinite
 computation).  Specification `coord2` describes three infinite computations.
 Specification `coord3` describes infinitely many infinite computations: At
 every step, `Next` may choose between `y' = x` or `y' = x+1`.
