@@ -206,7 +206,7 @@ values of `e_1` and `e_2`. Let `e_1` and `e_2` evaluate to the values
  - TLC and Apalache report an error, if the values have incomparable types.
    
 **Determinism:** Deterministic, unless `e_1` has the form `x'`, which can be
-interpreted an assignment to the variable `x'`.  For the non-deterministic
+interpreted as an assignment to the variable `x'`.  For the non-deterministic
 case, see [Control Flow and Non-determinism].
 
 **Errors:** Pure TLA+ does not restrict the operator arguments. TLC flags a
