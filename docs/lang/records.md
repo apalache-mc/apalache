@@ -2,7 +2,7 @@
 
 [[Back to all operators]](./standard-operators.md)
 
-Records in TLA+ are a special kind of [functions](./functions.md) that have the
+Records in TLA+ are special kinds of [functions](./functions.md) that have the
 following properties:
 
  - The domain of a record contains only strings.
