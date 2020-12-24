@@ -8,14 +8,14 @@ operators inside `IF-THEN-ELSE` or `CASE` can be used to do non-deterministic
 assignments, see [Control Flow and
 Non-determinism](control-and-nondeterminism.md).
 
-**Warning:** We are all so used to reducing multiple things to `IF-THEN-ELSE`
-when writing programs, that almost every time you write a TLA+ specification,
-you will like to write `IF A THEN B ELSE C`. When you are trying to do that,
-stop and think again. It is actually quite rare that you would need
-`IF-THEN-ELSE`. Many things can be done with [Boolean operators](./boolean.md),
-which are used more often to structure TLA+ code than they are used in
-programming languages.  Use `IF-THEN-ELSE`, when you like to compute
-different values, depending on a predicate, not to structure your code.
+**Warning:** Because frequent use of `IF-THEN-ELSE` is very common in most programming languages, 
+TLA+ specification authors with programming experience often default to writing expressions such as `IF A THEN B ELSE C`. 
+We encourage those authors to use this construct more sparingly. 
+In our experience, the use of `IF-THEN-ELSE` is rarely required. 
+Many things can be done with [Boolean operators](./boolean.md),
+which provide more structure in TLA+ code than in
+programming languages.  We recommend using `IF-THEN-ELSE` to compute predicate-dependent values, 
+not to structure code.
 
 **Warning 2:** Although we are talking about deterministic `CASE` in this
 section, `CASE` is made deterministic by using the `CHOOSE` operator in
