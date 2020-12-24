@@ -12,13 +12,14 @@ description and philosophy of the language, check [Specifying Systems] and the
 [TLA+ Home Page]. You can find handy extensions of the standard library in
 [Community Modules].
 
-We explain the semantics of the operators under the lenses of the
-[Apalache model checker].  Traditionally, the emphasis was put on the temporal
-operators and action operators, as they build the foundation of TLA. We focus
-on the "+" aspect of the language, as this part of the language is absolutely
-necessary for writing and reading system specifications.  Moreover, we treat
-equally the "core" operators of TLA+ and the "library" operators: This
-distinction is less important to the language users than to the tool developers.
+We explain the semantics of the operators under the lenses of the [Apalache
+model checker].  Traditionally, the emphasis was put on the temporal operators
+and action operators, as they build the foundation of TLA. We focus on the "+"
+aspect of the language, which provides you with a language for writing a single
+step by a state machine.  This part of the language is absolutely necessary for
+writing and reading system specifications.  Moreover, we treat equally the
+"core" operators of TLA+ and the "library" operators: This distinction is less
+important to the language users than to the tool developers.
 
 In this document, we present the semantics of TLA+, as if it was executed on a
 computer that is equipped with an additional device that we call an _oracle_.
@@ -84,8 +85,8 @@ _Unbounded integers like in Python._ [Learn more...](./integers.md)
       [`i^k`](./integers.md#pow)
  - Integer predicates:
     - [`i < k`](./integers.md#lt), [`i > k`](./integers.md#gt),
-    - [`i <= k`](./integers.md#lte) (also `i =< k` and `i \leq k`), 
-    - [`i >= k`](./integers.md#gte) (also `i \geq k`)
+    - [`i <= k`](./integers.md#lte) (also `i =< k` and `i \leq k`),
+        [`i >= k`](./integers.md#gte) (also `i \geq k`)
  - Integer sets: [`i..k`](./integers.md#range),
     [`Int`](./integers.md#const), [`Nat`](./integers.md#const)
 
@@ -100,20 +101,23 @@ _String constants_. You learned it!
 
 _Like frozen sets in Python, but cooler_ [Learn more...](./sets.md)
 
+ - Set constructors:
+   - Enumeration: [`{ e_1, ..., e_n }`](./sets.md#setEnum)
+   - Filter: [`{ x \in S: p }`](./sets.md#filter)
+   - Map: [`{ e: x \in S }`](./sets.md#map)
+   - Powers: [`SUBSET S`](./sets.md#powerset) and [`UNION S`](./sets.md#fold)
  - Set algebra:
-   - [`S \union T`](./sets.md#union) (also `S \cup T`),
-   - [`S \intersect T`](./sets.md#intersect) (also `S \cap T`),
-   - [`S \ T`](./sets.md#setminus)
+   - Union: [`S \union T`](./sets.md#union) (also `S \cup T`),
+   - Intersection: [`S \intersect T`](./sets.md#intersect) (also `S \cap T`),
+   - Difference: [`S \ T`](./sets.md#setminus)
  - Set predicates:
-    - [`x \in S`](./sets.md#in) and [`x \notin S`](./sets.md#notin),
-    - [`S \subset T`](./sets.md#subset),
+    - Membership: [`x \in S`](./sets.md#in) and [`x \notin S`](./sets.md#notin),
+    - Subsets: [`S \subset T`](./sets.md#subset),
         [`S \subseteq T`](./sets.md#subseteq),
         [`S \supset T`](./sets.md#supset),
         [`S \supseteq T`](./sets.md#supseteq)
- - Set filter: [`{ x \in S: p }`](./sets.md#filter)
- - Set map: [`{ e: x \in S }`](./sets.md#map)
- - Powers: [`SUBSET S`](./sets.md#powerset) and [`UNION S`](./sets.md#fold)
- - Finite sets: [`Cardinality`](./sets.md#card) and [`IsFinite`](./sets.md#finite)
+    - Finiteness: [`IsFinite`](./sets.md#finite)    
+ - Cardinality of a finite set: [`Cardinality`](./sets.md#card)
 
 ### Logic :octopus:
 
@@ -142,24 +146,23 @@ _Like frozen dictionaries in Python, but cooler_. [Learn more...](./functions.md
 
 _Records like everywhere else_. [Learn more...](./records.md)
 
- - All operators of [functions](./functions.md)
  - [Record constructor](./records.md#recCtor): `[ h_1 |-> e_1, ..., h_n |-> e_n ]`
  - [Set of records](./records.md#recSetCtor): `[ h_1: S_1, ..., h_n: S_n ]`
  - [Access by field name](./records.md#recApp): `e.h`
+ - Records are functions. All operators of [functions](./functions.md) are supported.
 
 ### Tuples :triangular_ruler:
 
 _Well, tuples_, indexed with 1, 2, 3... [Learn more...](./tuples.md)
 
-  - All operators of [functions](./functions.md)
   - [Tuple constructor](./tuples.md#tuple): `<< e_1, ..., e_n >>`
   - [Cartesian product](./tuples.md#times): `S_1 \X ... \X S_n` (also `S_1 \times ... \times S_n`)
+  - Tuples are functions. All operators of [functions](./functions.md) are supported.
 
 ### Sequences :snake:
 
 _Functions that pretend to be lists, indexed with 1, 2, 3,..._
 
-  - All operators of [functions](./functions.md) and [tuples](./tuples.md)
   - Add to end: [`Append(s, e)`](./sequences.md#append)
   - First and rest: [`Head(s)`](./sequences.md#head) and [`Tail(s)`](./sequences.md#tail)
   - Length: [`Len(s)`](./sequences.md#len)
@@ -167,6 +170,8 @@ _Functions that pretend to be lists, indexed with 1, 2, 3,..._
   - Subsequence: [`SubSeq(s, i, k)`](./sequences.md#subseq)
   - Sequence filter: [`SelectSeq(s, Test)`](./sequences.md#filter)
   - Set of finite sequences over `S`: [`Seq(S)`](./sequences.md#seq)
+  - Sequences are functions.
+    All operators of [functions](./functions.md) and [tuples](./tuples.md) are supported.
 
 ### Bags :handbag:
 

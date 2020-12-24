@@ -69,8 +69,8 @@ type checker.
 
 ## Operators
 
-<a name="setCtor"></a>
-### Set constructor
+<a name="setEnum"></a>
+### Set constructor by enumeration
 
 **Notation:** `{e_1, ..., e_n}`
 
