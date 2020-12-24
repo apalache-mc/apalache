@@ -14,7 +14,7 @@ them.
 
 In pure TLA+, sequences are just [tuples](./tuples). As a tuple, a sequence is
 a function of the domain `1..n` for some `n >= 0` (the domain may be empty).
-We have the duck typing here: Any function with the domain `1..n` can be also
+The duck-typing principle applies to sequences too: Any function with the domain `1..n` can also be
 treated as a sequence (or a tuple), and vice versa, tuples and sequences are
 also functions. So you can use all function and tuple operators on sequences.
 
@@ -47,7 +47,7 @@ to override this operator, see [Specifying Systems], page 237.
 
 **Application.** Simply use function application, e.g., `s[2]`.
 
-**Immutability.** As sequences are a special kind of
+**Immutability.** As sequences are special kinds of
 [functions](./functions.md), sequences are immutable.
 
 **Sequence operators.** The module `Sequences` provides you with convenient
@@ -75,9 +75,9 @@ is a tuple, as Apalache does not allow sequences to carry elements of different
 types. However, there is no way to say, whether `<<1, 2, 3>>` should be treated
 as a tuple or a sequence. This needs a [type annotation].
 
-_The current SMT encoding of sequences in Apalache needs to be improved.
-So operations on sequences are often significantly slower than operations
-on sets in Apalache._
+_The current SMT encoding of sequences in Apalache is not optimized, 
+so operations on sequences are often significantly slower than operations
+on sets._
 
 ----------------------------------------------------------------------------
 
@@ -114,7 +114,7 @@ annotation].
 ```
 
 **Example in Python:** Python provides us with the syntax for constructing
-lists, which are indexed with 0!. If we like to stick to the
+lists, which are indexed with 0!. If we want to stick to the
 principle "sequences are functions", we have to use a dictionary.
 
 ```python
@@ -143,12 +143,12 @@ constructs a new sequence `newSeq` as follows:
 
 **Determinism:** Deterministic.
 
-**Errors:** The arguments `seq` must be a sequence, that is, a function over
+**Errors:** The argument `seq` must be a sequence, that is, a function over
 integers `1..n` for some `n`. Otherwise, the result is undefined in pure TLA+.
 TLC raises a model checking error. Apalache flags a static type error.
 
 Apalache flags a static type error, when the type of `e` is not compatible with
-the types of sequence elements.
+the type of the sequence elements.
 
 **Example in TLA+:**
 
@@ -175,7 +175,7 @@ the types of sequence elements.
 ### Function application
 
 As sequences are functions, you can access sequence elements with
-[function application](./functions.md#funApp), e.g., `tup[2]`.
+[function application](./functions.md#funApp), e.g., `seq[2]`.
 
 ----------------------------------------------------------------------------
 
@@ -327,7 +327,7 @@ constructs a new sequence `newSeq` as follows:
 
 **Determinism:** Deterministic.
 
-**Errors:** The arguments `s` and `t` must be sequences, that is, a functions
+**Errors:** The arguments `s` and `t` must be sequences, that is, functions
 over integers `1..n` and `1..k` for some `n` and `k`. Otherwise, the result is
 undefined in pure TLA+. TLC raises a model checking error. Apalache flags a
 static type error.

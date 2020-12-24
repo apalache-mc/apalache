@@ -8,8 +8,8 @@ sets: functions, records, tuples, sequences. In theory, even Booleans and
 integers can be expressed with sets. In practice, TLA+ tools treat Booleans and
 integers as special values that are different from sets. It is important to
 understand TLA+ sets well. In contrast to programming languages, there is no
-performance penalty in using sets instead of sequences: TLA+ does not have a
-compiler, the efficiency is measured in time it takes the human brain to
+performance penalty for using sets instead of sequences: TLA+ does not have a
+compiler, the efficiency is measured in the time it takes the human brain to
 understand the specification.
 
 **Immutability.** In TLA+, a set is an *immutable* data structure that stores
@@ -87,11 +87,11 @@ empty set is constructed.
 **Errors:** Pure TLA+ does not restrict the set elements. They can be any
 combination of TLA+ values: Booleans, integers, strings, sets, functions, etc.
 
-TLC only allows to construct sets out of the elements that are comparable. For
+TLC only allows a user to construct sets out of elements that are comparable. For
 instance, two integers are comparable, but an integer and a set are not
 comparable. See Section 14.7.2 of [Specifying Systems].
 
-Apalache goes further and requires the set elements to have the same type.
+Apalache goes further and requires that all set elements have the same type.
 If this is not the case, the type checker flags an error.
 
 **Example in TLA+:**
@@ -226,8 +226,8 @@ is undefined.
 **Effect:** This operator evaluates to:
 
   - `TRUE`, if `S` and `T` are sets, and every element of `S` is a member of `T`;
-  - `FALSE`, if `S` and `T` are sets, and there is an element of `T` that
-    is not a member of `S`.
+  - `FALSE`, if `S` and `T` are sets, and there is an element of `S` that
+    is not a member of `T`.
 
 **Determinism:** Deterministic.
 
@@ -314,8 +314,8 @@ is undefined.
 **Effect:** This operator evaluates to:
 
   - `TRUE`, if `S` and `T` are sets, and every element of `T` is a member of `S`;
-  - `FALSE`, if `S` and `T` are sets, and there is an element of `S` that
-    is not a member of `T`.
+  - `FALSE`, if `S` and `T` are sets, and there is an element of `T` that
+    is not a member of `S`.
 
   It is easy to see, that `S \supseteq T` if and only if `T \subseteq S`.
 
@@ -659,7 +659,7 @@ is undefined.
 
 **Errors:** Pure TLA+ does not restrict the operator argument.  TLC flags a
 model checking error, when it discovers that `S` is not a set.  Apalache
-produces a static type error, if the type of `S` is different from set.
+produces a static type error, if the type of `S` is not a set type.
 
 **Example in TLA+:**
 
@@ -686,7 +686,7 @@ different operators, which unfortunately have similar-looking names.
 **Arguments:** One argument. If it is not a set of sets, the result
 is undefined.
 
-**Effect:** Given that `S` is a set of subsets, this operator computes the set
+**Effect:** Given that `S` is a set of sets, this operator computes the set
 `T` that contains all elements of elements of `S`:
 
  - If `X \in S`, then `X \subseteq T`.
@@ -799,4 +799,3 @@ produces a static type error, if the type of `S` is different from a set.
 
 [Control Flow and Non-determinism]: ./control-and-nondeterminism.md
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
-

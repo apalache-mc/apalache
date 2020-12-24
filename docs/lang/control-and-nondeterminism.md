@@ -7,7 +7,7 @@
 Non-determinism is one of the TLA+ features that makes it different from
 mainstream programming languages. However, it is very easy to overlook it: There is no
 special syntax for expressing non-determinism. In pure TLA+, whether your
-specification is deterministic or not, depends on the evaluation of the initial
+specification is deterministic or not depends on the evaluation of the initial
 predicate and of the transition predicate. These are usually called `Init` and
 `Next`, respectively. In the following, we first intuitively explain what non-determinism
 means in the mathematical framework of TLA+, and then proceed with the
@@ -124,10 +124,10 @@ Specification `coord` is completely deterministic: There is just one state that
 evaluates `Init` to `TRUE`, and every state is the first component of exactly
 one transition, as specified by `Next`. Specification `coord2` has
 non-determinism in the operator `Init`. Specification `coord3` has
-non-determinism in operator `Next`.
+non-determinism in the operator `Next`.
 
 **Discussion.**
-So far we have been talking about the intuition. If you like to know more about
+So far we have been talking about the intuition. If you would like to know more about
 the logic behind TLA+ and the semantics of TLA+, check Chapter 16 of
 [[Specifying Systems]] and [[The Specification Language TLA+]].
 
@@ -171,9 +171,9 @@ x = 0 /\ y = 0
 By following [semantics of conjunction](./booleans.md), we see that `/\` is
 evaluated from left-to-right. The left-hand side equality `x = 0` is treated
 as an assignment to `x`, since `x` has value `Null` in the partial state 
-`[x |-> Null, y |-> Null]`. The expression `x = 0` effects in the partial state 
+`[x |-> Null, y |-> Null]`. The expression `x = 0` leads to the partial state 
 `[x |-> 0, y |-> Null]`. Likewise, the right-hand side equality `y = 0` is also
-treated as an assignment to `y`. Hence, the expression `y = 0` effects in the
+treated as an assignment to `y`. Hence, the expression `y = 0` leads to the
 partial state `[x |-> 0, y |-> 0]`.
 
 Let's see how to evaluate the body of the operator `Next` starting with the
@@ -265,7 +265,7 @@ kinds of non-determinism, neither do we fix any implementation of `GUESS S`.
 **Halting.** Note that `GUESS {}` halts the evaluation. What does it mean? The
 evaluation cannot continue in the current partial state. It does not imply that
 we have found a deadlock in our TLA+ specification. It simply means that we
-made wrong choices on the way. If we like to enumerate all possible state
+made wrong choices on the way. If we would like to enumerate all possible state
 successors, like TLC does, we have to backtrack. In general, the course of
 action depends on the program analysis that you implement. For instance,
 a random simulator could simply backtrack and randomly choose another value.

@@ -29,7 +29,7 @@ expression `x * y > 5` belongs to non-linear integer arithmetic, which is
 harder to solve than linear arithmetic.
 
 When your specification is using only integer literals, e.g., `1`, `2`, `42`,
-but it is not using the operators from the `Integers` module, the integers can
+but none of the operators from the `Integers` module, the integers can
 be avoided altogether.  For instance, you can replace the integer constants
 with string constants, e.g., `"1"`, `"2"`, `"42"`. The string constants are
 translated as constants in the SMT constraints. This simple trick may bring
@@ -267,7 +267,7 @@ table below._
  100 / (-3) == -33 | 100 / (-3) == -33 | 100 / (-3) == -33 | 100 // (-3) == -34 | (100 \div (-3)) = -34 | (assert (= (- 0 33) (div 100 (- 0 3))))
  -100 / (-3) == 33 | -100 / (-3) == 33 | -100 / (-3) == 33 | -100 // (-3) == 33 | ((-100) \div (-3)) = 33 | (assert (= 34 (div (- 0 100) (- 0 3))))
 
-_Unfortunately, [Specifying Systems] gives us only the definition for the case
+_Unfortunately, [Specifying Systems] only gives us the definition for the case
 `b > 0` (that is, cases 1-2 in our description). The implementation in SMT and
 TLC produce incompatible results for `b < 0`. See [issue #331 in
 Apalache](https://github.com/informalsystems/apalache/issues/331)._
@@ -421,7 +421,7 @@ are evaluated to integer values.
 
 **Determinism:** Deterministic.
 
-**Errors:** No overflow is possible. In pure TLA+, the result is undefined, if
+**Errors:** In pure TLA+, the result is undefined, if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.
 
@@ -568,4 +568,3 @@ not defined in the module `Integers`, see [Logic](./logic.md).
 
 
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
-

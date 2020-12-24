@@ -5,8 +5,8 @@
 In this section, you find the operators that, together with [Sets](./sets.md)
 form the foundation of TLA+. It is a bit strange that we call this section
 "Logic", as the whole language of TLA+ is a logic. However, the operators
-of this section can be often seen in first-order logic, as opposite to the
-propositional logic, see [Booleans](./booleans.md).
+of this section are often seen in first-order logic, as opposed to
+propositional logic (see [Booleans](./booleans.md)).
 
 Note that the special form `\E y \in S: x' = y` is often used to express
 non-determinism in TLA+. See [Control Flow and Non-determinism]. In this
@@ -210,8 +210,8 @@ interpreted as an assignment to the variable `x'`.  For the non-deterministic
 case, see [Control Flow and Non-determinism].
 
 **Errors:** Pure TLA+ does not restrict the operator arguments. TLC flags a
-model checking error, `e_1` and `e_2` evaluate to incomparable values.
-Apalache produces a static type error, if the type of `e_1` and `e_2` do not
+model checking error, if `e_1` and `e_2` evaluate to incomparable values.
+Apalache produces a static type error, if the types of `e_1` and `e_2` do not
 match.
 
 **Example in TLA+:**

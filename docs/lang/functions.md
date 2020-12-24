@@ -51,7 +51,7 @@ domain. (Though in the above example, it is obvious that we could treat the
 function symbolically, without enumerating all of its elements.)
 
 Another way to construct a function is to *non-deterministically* pick one
-from a set of functions, e.g.:
+from a set of functions by using the [function set constructor](#funSetCtor), `->`. E.g.:
 
 ```tla
 Init ==
@@ -65,9 +65,9 @@ initialized "by default". Rather, we say that `rmState` can be set to an
 arbitrary function that receives arguments from the set `{ "process1",
 "process2", "process3" }` and returns values that belong to the set `{
 "working", "prepared", "committed", "aborted" }`. As a result, TLC has to
-enumerate all possible functions that match this constraint. On contrary,
+enumerate all possible functions that match this constraint. On the contrary,
 Apalache introduces one instance of a function and restricts it with the
-symbolic constraints. So it efficiently, considers all possible functions
+symbolic constraints. So it efficiently considers all possible functions
 without enumerating them. However, this trick only works with existential
 quantifiers. If you use a universal quantifier over a set of functions,
 both TLC and Apalache unfold this set.
@@ -80,10 +80,10 @@ immutable*. Hence, they are even closer to immutable maps in Scala.  As in the
 case of sets, you do not need to define hash or equality, in order to use
 functions.
 
-If you like to update a function, you have to produce another function and
+If you want to update a function, you have to produce another function and
 describe how it is different from the original function. Luckily, TLA+ provides
 you with operators for describing these updates in a compact way: By using the
-function constructor (above) and by using `EXCEPT`. For instance, to produce a
+function constructor (above) along with `EXCEPT`. For instance, to produce a
 new function from `rmState`, we write the following:
 
 ```tla
@@ -131,7 +131,7 @@ TLA+ functions are also free to return any kinds of values:
   ]
 ```
 
-As in case of [sets](./sets.md), TLC restricts function domains to comparable
+As in the case of [sets](./sets.md), TLC restricts function domains to comparable
 values. See Section 14.7.2 of [Specifying Systems]. So, TLC rejects the two
 examples that are given above.
 
@@ -149,7 +149,7 @@ of integers).
 Apalache enforces stricter types. It has designated types for all four
 data structures: general functions, records, tuples, and sequences.
 Moreover, all elements of the function domain must have the same type.
-A general function must return the values of the same type. This is enforced
+The same is true for the codomain. This is enforced
 by the type checker.
 
 In this sense, the type restrictions of Apalache are similar to those for the
@@ -160,7 +160,7 @@ Apalache rejects the three above examples.
 
 ## Operators
 
-In the Python examples, we are using the package [frozendict], to produce an
+**NOTE**: In the Python examples below we use the package [frozendict], to produce an
 immutable dictionary.
 
 ----------------------------------------------------------------------------
@@ -178,7 +178,7 @@ see **Advanced syntax**), a set, and a mapping expression. Instead of one
 variable and one set, you can use multiple variables and multiple sets.
 
 **Effect:** We give the semantics for one argument.  We write a sequence of
-steps to ease the understanding.  This operator constructs a function `f` of
+steps to ease the understanding.  This operator constructs a function `f` over
 the domain `S` as follows.  For every element `elem` of `S`, do the following:
  
  1. Bind the element `elem` to variable `x`,
@@ -260,7 +260,7 @@ T`.
 
 Note that if one of the sets is infinite, then the set `[S -> T]` is infinite
 too. TLC flags an error, if `S` or `T` are infinite. Apalache flags an error,
-if `S` is infinite. But when Apalache does not have to explicitly construct `[S
+if `S` is infinite, but when it does not have to explicitly construct `[S
 -> T]`, it may accept infinite `T`. For instance:
 
 ```tla
@@ -271,7 +271,7 @@ if `S` is infinite. But when Apalache does not have to explicitly construct `[S
 **Determinism:** Deterministic.
 
 **Errors:** In pure TLA+, if `S` and `T` are not sets, then `[S -> T]`
-is undefined. If `S` or `T` are not sets, TLC flags a model checking error.
+is undefined. If either `S` or `T` is not a set, TLC flags a model checking error.
 Apalache flags a static type error.
 
 **Example in TLA+:**
@@ -298,10 +298,10 @@ values, rather than over the alphabet of 2 values.
 
 **Arguments:** At least two arguments. The first one should be a function,
 the other arguments are the arguments to the function. Several arguments
-are treated as a tuple. For instance, `f[e_1, ..., e_n]` is a shorthand for
+are treated as a tuple. For instance, `f[e_1, ..., e_n]` is shorthand for
 `f[<<e_1, ..., e_n>>]`.
 
-**Effect:** This operator evaluates as follows:
+**Effect:** This operator is evaluated as follows:
 
  - If `e \in DOMAIN f`, then `f[e]` evaluates to the value that function
  `f` associates with the value of `e`.
@@ -311,11 +311,11 @@ are treated as a tuple. For instance, `f[e_1, ..., e_n]` is a shorthand for
 
 **Errors:** When `e \notin DOMAIN f`, TLC flags a model checking error.
 
-When `e` has the type incompatible with the type of `DOMAIN f`, Apalache flags
+When `e` has a type incompatible with the type of `DOMAIN f`, Apalache flags
 a type error. When `e \notin DOMAIN f`, Apalache assigns some type-compatible
 value to `f[e]`, but does not report any error. This is not a bug in Apalache,
-but the feature of the SMT encoding. Usually, an illegal access surfaces
-somewhere, when checking a specification.  If you like to detect an access
+but a feature of the SMT encoding. Usually, an illegal access surfaces
+somewhere, when checking a specification.  If you want to detect an access
 outside of the function domain, instrument your code with an additional state
 variable.
 
@@ -375,7 +375,7 @@ expressions.
    - If `b = a_i` for some `i \in 1..n`, then set `g[b]` to `e_i`.
    - If `b \notin { a_1, ..., a_n }`, then set `g[b]` to `f[b]`.
 
-_Importantly, `g` is a new function, the function `f` is not modified!_
+_Importantly, `g` is a new function: the function `f` is not modified!_
 
 **Determinism:** Deterministic.
 
@@ -388,7 +388,7 @@ update. This is consistent with the semantics of TLA+ in [Specifying Systems].
 
 **Advanced syntax:** There are three extensions to the basic syntax.
 
- _Extension 1_. If the function `f` has the domain over tuples, then, similar to
+ _Extension 1_. If the domain elements of a function `f` are tuples, then, similar to
  function application, the expressions `a_1, ..., a_n` can be written without
  the tuple braces `<<...>>`. For example:
 

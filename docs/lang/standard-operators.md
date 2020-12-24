@@ -29,8 +29,8 @@ they require the oracle to resolve non-determinism, see [Control Flow and
 Non-determinism]. This is one of the most important features that makes TLA+
 distinct from programming languages.  Wherever possible, we complement the
 English semantics with code in [Python](https://www.python.org/). Although our
-semantics is more restrictive than the denotational semantics in Chapter 16 of
-[Specifying Systems], it is very close to the treatment of TLA+ by the model
+semantics are more restrictive than the denotational semantics in Chapter 16 of
+[Specifying Systems], they are very close to the treatment of TLA+ by the model
 checkers: [Apalache](https://github.com/informalsystems/apalache) and
 [TLC](http://lamport.azurewebsites.net/tla/tools.html). Our relation between
 TLA+ operators and Python code bears some resemblance to
@@ -227,4 +227,3 @@ _Functions that pretend to be lists, indexed with 1, 2, 3,..._
 [Community Modules]: https://github.com/tlaplus/CommunityModules
 [LearnTla.com]: https://learntla.com
 [TLA+ Video Course]: http://lamport.azurewebsites.net/video/videos.html
-

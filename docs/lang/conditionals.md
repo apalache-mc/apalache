@@ -17,12 +17,12 @@ which provide more structure in TLA+ code than in
 programming languages.  We recommend using `IF-THEN-ELSE` to compute predicate-dependent values, 
 not to structure code.
 
-**Warning 2:** Although we are talking about deterministic `CASE` in this
-section, `CASE` is made deterministic by using the `CHOOSE` operator in
-[Specifying Systems], see Section 16.1.4. For this reason, you have to be
-careful and use `CASE` only when all of its guards are mutually exclusive.
-Given all the complications of `CASE`, we recommend to use `IF-THEN-ELSE`
-instead of `CASE`.
+**Warning 2:** `CASE` is considered deterministic in this
+section, as it is defined with the `CHOOSE` operator in
+[Specifying Systems], Section 16.1.4. 
+For this reason, `CASE` should only be used when all of its guards are mutually exclusive.
+Given all the intricacies of `CASE`,
+we recommend using nested `IF-THEN-ELSE` instead.
 
 ----------------------------------------------------------------------------
 
@@ -127,10 +127,10 @@ it treats as a chain of `IF-THEN-ELSE` expressions.
 **Determinism.** The result of `CASE` is deterministic, if there are no primes
 inside.  For the non-deterministic version, see [[Control Flow and
 Non-determinism]](control-and-nondeterminism.md).  When the predicates are
-mutually exclusive, the semantics is clearly specified. When the predicates are
+mutually exclusive, the evaluation result is clearly specified. When the predicates are
 not mutually exclusive, the operator is still deterministic, but only one of
-the simultaneously enabled branches is evaluated. The choice of the branch is
-implemented with the operator `CHOOSE`, see [[Logic]](./logic.md).
+the simultaneously enabled branches is evaluated. 
+Which branch is evaluated depends on the `CHOOSE` operator, see [[Logic]](./logic.md).
 
 **Errors:** If one of `p_1, ..., p_n` evaluates to a non-Boolean value, the
 result is undefined.  TLC raises an error during model checking. Apalache
@@ -160,7 +160,7 @@ The following expression contains non-exclusive predicates:
 Note that by looking at the specification, we cannot tell, whether this
 expression returns "odd" or "prime", when `n = 17`. We only know that the
 case expression should consistently return the same value, whenever it is
-called on `n = 17`.
+evaluated with `n = 17`.
 
 **Example in Python:** Consider our first example in TLA+. Similar to TLC, we
 give executable semantics for the fixed evaluation order of the predicates.
@@ -221,8 +221,8 @@ Both TLC and Apalache interpret this `CASE` operator as a chain of
 ```
 
 All the idiosyncrasies of `CASE` apply to `CASE-OTHER`. Hence, we recommend
-you to use `IF-THEN-ELSE` instead of `CASE-OTHER`. Although `IF-THEN-ELSE`
-is a bit more verbose, its semantics is precisely defined.
+using `IF-THEN-ELSE` instead of `CASE-OTHER`. Although `IF-THEN-ELSE`
+is a bit more verbose, its semantics are precisely defined.
 
 **Determinism.** The result of `CASE-OTHER` is deterministic, if there are no
 primes inside.  For the non-deterministic version, see [[Control Flow and

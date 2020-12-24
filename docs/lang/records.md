@@ -41,7 +41,7 @@ a record field by following C-style struct-member notation. For example:
 
 This is essentially syntax sugar for `r["myField"]`.
 
-**Immutability**. As records are a special kind of [functions](./functions.md),
+**Immutability**. As records are special kinds of [functions](./functions.md),
 records are immutable.
 
 **Types.** In contrast to pure TLA+ and TLC, the Apalache model checker

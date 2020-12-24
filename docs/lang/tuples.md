@@ -2,13 +2,13 @@
 
 [[Back to all operators]](./standard-operators.md)
 
-Tuples in TLA+ are a special kind of [functions](./functions.md) that satisfy one
+Tuples in TLA+ are special kinds of [functions](./functions.md) that satisfy one
 of the following properties:
 
  - The domain is either empty, that is, `{}`, or
  - The domain is `1..n` for some `n > 0`.
 
-That is right. You can construct the empty tuple `<<>>`in TLA+ as well as a
+That is right. You can construct the empty tuple `<<>>` in TLA+ as well as a
 single-element tuple, e.g., `<<1>>`. You can also construct pairs, triples, an
 so on, e.g., `<<1, TRUE>>`, `<<"Hello", "world", 2020>>`. If you think that
 empty tuples do not make sense: In TLA+, there is no difference between tuples
@@ -17,7 +17,7 @@ the domain `1..n` can be also treated as a tuple (or a sequence!), and vice
 versa, tuples and sequences are also functions. So you can use all function
 operators on tuples.
 
-Importantly, the domain of a tuple is `1..n` for some `n > 0`. So tuples never
+Importantly, the domain of a nonempty tuple is `1..n` for some `n > 0`. So tuples never
 have a 0th element. For instance, `<<1, 2>>[1]` gives us 1, whereas `<<1,
 2>>[2]` gives us 2.
 
@@ -42,7 +42,7 @@ to an integer from 1900 to 2000.
 
 **Application.** Simply use function application, e.g., `t[2]`.
 
-**Immutability**. As tuples are a special kind of [functions](./functions.md),
+**Immutability**. As tuples are special kinds of [functions](./functions.md),
 tuples are immutable.
 
 **Types.** In contrast to pure TLA+ and TLC, the Apalache model checker
@@ -105,7 +105,7 @@ annotation].
 ```
 
 **Example in Python:** Python provides us with the syntax for constructing
-tuples, which are indexed with 0!. If we like to stick to the
+tuples, which are indexed with 0!. If we want to stick to the
 principle "tuples are functions", we have to use a dictionary.
 
 ```python
