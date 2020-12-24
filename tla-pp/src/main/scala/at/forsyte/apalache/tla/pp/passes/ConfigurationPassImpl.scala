@@ -4,7 +4,7 @@ import java.io.{File, FileNotFoundException, FileReader}
 import java.nio.file.Path
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin, WriteablePassOptions}
-import at.forsyte.apalache.io.tlc.TlcConfigParser
+import at.forsyte.apalache.io.tlc.TlcConfigParserApalache
 import at.forsyte.apalache.io.tlc.config._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
@@ -46,21 +46,23 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
+    // this pass is hard to read, too many things are happening here...
     val currentModule = tlaModule.get
     val relevantOptions = new WriteablePassOptions()
     copyRelevantOptions(options, relevantOptions)
-    // try to read from the TLC configuration file
-    loadOptionsFromTlcConfig(currentModule, relevantOptions)
+    // try to read from the TLC configuration file and produce constant overrides
+    val overrides = loadOptionsFromTlcConfig(currentModule, relevantOptions)
+    val currentAndOverrides = new TlaModule(currentModule.name, currentModule.declarations ++ overrides)
     setFallbackOptions(relevantOptions)
 
     // make sure that the required operators are defined
-    ensureDeclarationsArePresent(currentModule, relevantOptions)
+    ensureDeclarationsArePresent(currentAndOverrides, relevantOptions)
 
     // copy the relevant options back in options
     copyRelevantOptions(relevantOptions, options)
 
     // rewrite constants and declarations
-    val configuredModule = new ConstAndDefRewriter(tracker)(currentModule)
+    val configuredModule = new ConstAndDefRewriter(tracker)(currentAndOverrides)
     // Igor: I thought of rewriting all definitions in NormalizedNames.OPTION_NAMES into normalized names.
     // However, that should be done very carefully. Maybe we should do that in the future.
 
@@ -86,15 +88,19 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
 
   // copy the relevant options
   private def copyRelevantOptions(from: PassOptions, to: WriteablePassOptions): Unit = {
-    val outOptions = new WriteablePassOptions()
     for (name <- NormalizedNames.STANDARD_OPTION_NAMES) {
       from.get[Any]("checker", name)
         .collect { case value => to.set("checker." + name, value) }
     }
   }
 
-  // produce the configuration options from a TLC config, if it is present
-  private def loadOptionsFromTlcConfig(module: TlaModule, outOptions: WriteablePassOptions): Unit = {
+  /**
+    * Produce the configuration options from a TLC config, if it is present.
+    * @param module the input module
+    * @param outOptions the pass options to update from the configuration file
+    * @return additional declarations, which originate from assignments and replacements
+   */
+  private def loadOptionsFromTlcConfig(module: TlaModule, outOptions: WriteablePassOptions): Seq[TlaDecl] = {
     var configuredModule = module
     // read TLC config if present
     val configFilename = options.getOrElse("checker","config","")
@@ -134,7 +140,7 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
     }
 
     try {
-      val config = TlcConfigParser.apply(new FileReader(filename))
+      val config = TlcConfigParserApalache.apply(new FileReader(filename))
       configuredModule = new TlcConfigImporter(config, new IdleTracker())(module)
       config.behaviorSpec match {
         case InitNextSpec(init, next) =>
@@ -146,6 +152,9 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
           logger.info(s"  > $basename: Using SPECIFICATION $specName")
           setInit(init)
           setNext(next)
+
+        case NullSpec() =>
+          () // do nothing
       }
       if (config.invariants.nonEmpty) {
         logger.info(s"  > $basename: found INVARIANTS: " + String.join(", ", config.invariants :_*))
@@ -168,11 +177,16 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
           logger.warn(s"  > $basename: PROPERTY $prop is ignored. Only INVARIANTS are supported.")
         }
       }
+
+      val namesOfOverrides =
+        (config.constAssignments.keySet ++ config.constReplacements.keySet)
+          .map(ConstAndDefRewriter.OVERRIDE_PREFIX + _)
+      configuredModule.declarations.filter(d => namesOfOverrides.contains(d.name))
     } catch {
       case _: FileNotFoundException =>
         if(configFilename.isEmpty) {
           logger.info("  > No TLC configuration found. Skipping.")
-          outOptions
+          List()
         } else {
           throw new TLCConfigurationError(s"  > $basename: TLC config is provided with --config, but not found")
         }

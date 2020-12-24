@@ -1,6 +1,6 @@
 package at.forsyte.apalache.io.tlc
 
-import at.forsyte.apalache.io.tlc.config.{InitNextSpec, TemporalSpec, TlcConfigParseError}
+import at.forsyte.apalache.io.tlc.config.{ConfigIntValue, ConfigModelValue, ConfigSetValue, ConfigStrValue, InitNextSpec, TemporalSpec, TlcConfigParseError}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -11,7 +11,7 @@ import org.scalatest.junit.JUnitRunner
   * @author Igor Konnov
   */
 @RunWith(classOf[JUnitRunner])
-class TestTlcConfigParser extends FunSuite {
+class TestTlcConfigParserApalache extends FunSuite {
 
   test("INIT-NEXT") {
     val text =
@@ -20,7 +20,18 @@ class TestTlcConfigParser extends FunSuite {
         |NEXT Next
       """.stripMargin
 
-    val config = TlcConfigParser(text)
+    val config = TlcConfigParserApalache(text)
+    assert(config.behaviorSpec == InitNextSpec("Init", "Next"))
+  }
+
+  test("NEXT-INIT") {
+    val text =
+      """
+        |NEXT Next
+        |INIT Init
+      """.stripMargin
+
+    val config = TlcConfigParserApalache(text)
     assert(config.behaviorSpec == InitNextSpec("Init", "Next"))
   }
 
@@ -31,7 +42,7 @@ class TestTlcConfigParser extends FunSuite {
         |NEXT Next
       """.stripMargin
 
-    assertThrows[TlcConfigParseError](TlcConfigParser(text))
+    assertThrows[TlcConfigParseError](TlcConfigParserApalache(text))
   }
 
   test("SPECIFICATION") {
@@ -40,22 +51,22 @@ class TestTlcConfigParser extends FunSuite {
         |SPECIFICATION Spec
       """.stripMargin
 
-    val config = TlcConfigParser(text)
+    val config = TlcConfigParserApalache(text)
     assert(config.behaviorSpec == TemporalSpec("Spec"))
   }
 
-  test("CONSTANT assignments") {
+  test("CONSTANT assignments with model values") {
     val text =
       """
+        |INIT Init
+        |NEXT Next
         |CONSTANT
         |N = M
         |K = L
-        |INIT Init
-        |NEXT Next
       """.stripMargin
 
-    val config = TlcConfigParser(text)
-    assert(config.constAssignments == Map("N" -> "M", "K" -> "L"))
+    val config = TlcConfigParserApalache(text)
+    assert(config.constAssignments == Map("N" -> ConfigModelValue("M"), "K" -> ConfigModelValue("L")))
     assert(config.constReplacements.isEmpty)
   }
 
@@ -69,8 +80,38 @@ class TestTlcConfigParser extends FunSuite {
         |NEXT Next
       """.stripMargin
 
-    val config = TlcConfigParser(text)
-    assert(config.constAssignments == Map("N" -> "10", "K" -> "-20"))
+    val config = TlcConfigParserApalache(text)
+    assert(config.constAssignments == Map("N" -> ConfigIntValue(10), "K" -> ConfigIntValue(-20)))
+    assert(config.constReplacements.isEmpty)
+  }
+
+  test("CONSTANT assignments with strings") {
+    val text =
+      """
+        |CONSTANTS
+        |N = "foo"
+        |K = "bar"
+        |INIT Init
+        |NEXT Next
+      """.stripMargin
+
+    val config = TlcConfigParserApalache(text)
+    assert(config.constAssignments == Map("N" -> ConfigStrValue("foo"), "K" -> ConfigStrValue("bar")))
+    assert(config.constReplacements.isEmpty)
+  }
+
+  test("CONSTANT assignments with sets") {
+    val text =
+      """
+        |CONSTANTS
+        |N = {"foo", {1, Moo}}
+        |INIT Init
+        |NEXT Next
+      """.stripMargin
+
+    val config = TlcConfigParserApalache(text)
+    assert(config.constAssignments ==
+      Map("N" -> ConfigSetValue(ConfigStrValue("foo"), ConfigSetValue(ConfigIntValue(1), ConfigModelValue("Moo")))))
     assert(config.constReplacements.isEmpty)
   }
 
@@ -86,8 +127,25 @@ class TestTlcConfigParser extends FunSuite {
         |NEXT Next
       """.stripMargin
 
-    val config = TlcConfigParser(text)
-    assert(config.constAssignments == Map("N" -> "M", "K" -> "L"))
+    val config = TlcConfigParserApalache(text)
+    assert(config.constAssignments == Map("N" -> ConfigModelValue("M"), "K" -> ConfigModelValue("L")))
+    assert(config.constReplacements.isEmpty)
+  }
+
+  test("CONSTANT assignments and VIEW") {
+    val text =
+      """
+        |VIEW viewDef1
+        |CONSTANT
+        |N = M
+        |\* vire definitions are skipped by our parser
+        |CONSTANT K = L
+        |INIT Init
+        |NEXT Next
+      """.stripMargin
+
+    val config = TlcConfigParserApalache(text)
+    assert(config.constAssignments == Map("N" -> ConfigModelValue("M"), "K" -> ConfigModelValue("L")))
     assert(config.constReplacements.isEmpty)
   }
 
@@ -101,7 +159,7 @@ class TestTlcConfigParser extends FunSuite {
         |NEXT Next
       """.stripMargin
 
-    val config = TlcConfigParser(text)
+    val config = TlcConfigParserApalache(text)
     assert(config.constAssignments.isEmpty)
     assert(config.constReplacements == Map("A" -> "B", "C" -> "D"))
   }
@@ -118,8 +176,8 @@ class TestTlcConfigParser extends FunSuite {
         |NEXT Next
       """.stripMargin
 
-    val config = TlcConfigParser(text)
-    assert(config.constAssignments == Map("N" -> "M", "K" -> "L"))
+    val config = TlcConfigParserApalache(text)
+    assert(config.constAssignments == Map("N" -> ConfigModelValue("M"), "K" -> ConfigModelValue("L")))
     assert(config.constReplacements == Map("A" -> "B", "C" -> "D"))
   }
 
@@ -132,7 +190,7 @@ class TestTlcConfigParser extends FunSuite {
         |INVARIANTS Inv2
       """.stripMargin
 
-    val config = TlcConfigParser(text)
+    val config = TlcConfigParserApalache(text)
     assert(config.behaviorSpec == InitNextSpec("Init", "Next"))
     assert(config.invariants == List("Inv1", "Inv2"))
   }
@@ -163,7 +221,7 @@ class TestTlcConfigParser extends FunSuite {
         |PROPERTIES Prop2
       """.stripMargin
 
-    val config = TlcConfigParser(text)
+    val config = TlcConfigParserApalache(text)
     assert(config.behaviorSpec == InitNextSpec("Init", "Next"))
     assert(config.temporalProps == List("Prop1", "Prop2"))
   }
@@ -177,7 +235,7 @@ class TestTlcConfigParser extends FunSuite {
         |NEXT Next
       """.stripMargin
 
-    val config = TlcConfigParser(text)
+    val config = TlcConfigParserApalache(text)
     assert(config.behaviorSpec == InitNextSpec("Init", "Next"))
     assert(config.stateConstraints == List("Cons1", "Cons2"))
   }
@@ -191,7 +249,7 @@ class TestTlcConfigParser extends FunSuite {
         |NEXT Next
       """.stripMargin
 
-    val config = TlcConfigParser(text)
+    val config = TlcConfigParserApalache(text)
     assert(config.behaviorSpec == InitNextSpec("Init", "Next"))
     assert(config.actionConstraints == List("Cons1", "Cons2"))
   }
@@ -205,7 +263,7 @@ class TestTlcConfigParser extends FunSuite {
         |NEXT Next
       """.stripMargin
 
-    val config = TlcConfigParser(text)
+    val config = TlcConfigParserApalache(text)
     assert(config.behaviorSpec == InitNextSpec("Init", "Next"))
   }
 
@@ -222,7 +280,7 @@ class TestTlcConfigParser extends FunSuite {
         |NEXT Next
       """.stripMargin
 
-    val config = TlcConfigParser(text)
+    val config = TlcConfigParserApalache(text)
     assert(config.behaviorSpec == InitNextSpec("Init", "Next"))
   }
 
@@ -242,10 +300,16 @@ class TestTlcConfigParser extends FunSuite {
         |Inv
         |PROPERTY
         |Prop
+        |ALIAS
+        |Baz
+        |POSTCONDITION
+        |Church
+        |CHECK_DEADLOCK
+        |TRUE
       """.stripMargin
 
-    val config = TlcConfigParser(text)
-    assert(config.constAssignments == Map("N" -> "M"))
+    val config = TlcConfigParserApalache(text)
+    assert(config.constAssignments == Map("N" -> ConfigModelValue("M")))
     assert(config.constReplacements == Map("A" -> "B"))
   }
 }

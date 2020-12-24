@@ -138,6 +138,11 @@ class OpApplTranslator(sourceStore: SourceStore, val context: Context, val recSt
           val args = node.getArgs.toList.map { p => exTran.translate(p) }
           OperEx(TlaOper.apply, NameEx(decl.name) +: args: _*)
 
+        case NoneUnit() =>
+          // call the user-defined operator that is under construction
+          val args = node.getArgs.toList.map { p => exTran.translate(p) }
+          OperEx(TlaOper.apply, NameEx(opcode) +: args: _*)
+
         case OperAliasUnit(_, oper) =>
           // call the library operator that is bound to the alias, e.g., instead of I!+ call +.
           val args = node.getArgs.toList.map { p => exTran.translate(p) }

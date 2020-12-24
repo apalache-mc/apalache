@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.{TlaModule, TlaOperDecl}
-import at.forsyte.apalache.tla.pp.{NormalizedNames, UniqueNameGenerator}
+import at.forsyte.apalache.tla.pp.{OperAppToLetInDef, NormalizedNames, ParameterNormalizer, UniqueNameGenerator}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -44,7 +44,12 @@ class InlinePassImpl @Inject()(val options: PassOptions,
     * @return true, if the pass was successful
     */
   override def execute(): Boolean = {
-    val module = tlaModule.get
+    val baseModule = tlaModule.get
+
+    val appWrap = OperAppToLetInDef( gen, tracker )
+    val operNames = (baseModule.operDeclarations map {_.name}).toSet
+    val module = appWrap.moduleTransform( operNames )( baseModule )
+
     val defBodyMap = BodyMapFactory.makeFromDecls(module.operDeclarations)
 
     val transformationSequence =
@@ -65,10 +70,17 @@ class InlinePassImpl @Inject()(val options: PassOptions,
     // Remove the operators that are not needed,
     // as some of them may contain higher-order operators that cannot be substituted
     val relevantOperators = NormalizedNames.userOperatorNamesFromOptions(options).toSet
-    logger.info("Leaving only relevant operators: " + relevantOperators.toList.sorted.mkString(", "))
+
+    // Since PrimingPass now happens before inlining, we have to add InitPrime and CInitPrime as well
+    val initName = options.getOrElse("checker", "init", "Init")
+    val cinitName = options.getOrElse("checker", "cinit", "CInit")
+    val initPrimedName = initName + "Primed"
+    val cinitPrimedName = cinitName + "Primed"
+    val relevantOperatorsAndInitCInitPrimed = relevantOperators + initPrimedName + cinitPrimedName
+    logger.info("Leaving only relevant operators: " + relevantOperatorsAndInitCInitPrimed.toList.sorted.mkString(", "))
     val filteredDefs = inlined.declarations.filter {
       case TlaOperDecl(name, _, _) =>
-        relevantOperators.contains(name)
+        relevantOperatorsAndInitCInitPrimed.contains(name)
       case _ => true // accept all other declarations
     }
 

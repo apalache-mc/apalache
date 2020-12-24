@@ -35,7 +35,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     xyBinding = Binding("x" -> x, "y" -> y, "S" -> set)
   }
 
-  test("SE-BOOL-FALSE [Cell]: FALSE ~~> $C$0") {
+  test("FALSE ~~> $C$0") {
     val ex = ValEx(TlaBool(false))
     val state = new SymbState(ex, arena, Binding())
     create().rewriteOnce(state) match {
@@ -49,11 +49,12 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     }
   }
 
-  test("SE-SET-BOOLEAN: BOOLEAN ~~> c_BOOLEAN") {
-    val state = new SymbState(ValEx(TlaBoolSet), arena, Binding())
+  test("TRUE ~~> $C$1") {
+    val ex = ValEx(TlaBool(true))
+    val state = new SymbState(ex, arena, Binding())
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
-        val expected = NameEx("$C$2")
+        val expected = NameEx("$C$1")
         assert(expected == nextState.ex)
         assert(state.arena == nextState.arena)
 
@@ -62,12 +63,11 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     }
   }
 
-  test("SE-BOOL-TRUE [Cell]: TRUE ~~> $C$1") {
-    val ex = ValEx(TlaBool(true))
-    val state = new SymbState(ex, arena, Binding())
+  test("SE-SET-BOOLEAN: BOOLEAN ~~> c_BOOLEAN") {
+    val state = new SymbState(ValEx(TlaBoolSet), arena, Binding())
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
-        val expected = NameEx("$C$1")
+        val expected = NameEx("$C$2")
         assert(expected == nextState.ex)
         assert(state.arena == nextState.arena)
 
@@ -140,6 +140,32 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
 
   test("""SE-BOOL-NEG9: ~x ~~> TRUE""") {
     val ex = OperEx(TlaBoolOper.not, NameEx("x"))
+    val binding = Binding("x" -> arena.cellFalse())
+    val state = new SymbState(ex, arena, binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(nextState.ex, tla.bool(true))))
+  }
+
+  test("""FALSE = TRUE ~~> FALSE""") {
+    val ex = tla.eql(arena.cellFalse().toNameEx, arena.cellTrue().toNameEx)
+    val state = new SymbState(ex, arena, Binding())
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(nextState.ex, arena.cellFalse().toNameEx)))
+  }
+
+  test("""x = TRUE ~~> FALSE when x = FALSE""") {
+    val ex = tla.eql(tla.name("x"), tla.bool(true))
+    val binding = Binding("x" -> arena.cellFalse())
+    val state = new SymbState(ex, arena, binding)
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(nextState.ex, tla.bool(false))))
+  }
+
+  test("""~(x = TRUE) ~~> TRUE when x = FALSE""") {
+    val ex = tla.not(tla.eql(tla.name("x"), tla.bool(true)))
     val binding = Binding("x" -> arena.cellFalse())
     val state = new SymbState(ex, arena, binding)
     val rewriter = create()

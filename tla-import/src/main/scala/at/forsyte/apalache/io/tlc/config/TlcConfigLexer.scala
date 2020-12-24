@@ -37,7 +37,8 @@ object TlcConfigLexer extends RegexParsers {
   def token: Parser[TlcConfigToken] =
     positioned(
       constant | init | next | specification | invariant | property | constraint | actionConstraint |
-        symmetry | leftArrow | eq | identifier | number
+        symmetry | view | alias | postcondition | checkDeadlock |
+        leftArrow | eq | leftBrace | rightBrace | comma | boolean | identifier | number | string
     ) ///
 
   // it is important that linefeed is not a whiteSpace, as otherwise singleComment consumes the whole input!
@@ -53,8 +54,16 @@ object TlcConfigLexer extends RegexParsers {
     "[a-zA-Z_][a-zA-Z0-9_]*".r ^^ { name => IDENT(name) }
   }
 
+  private def string: Parser[STRING] = {
+    """"[a-zA-Z0-9_~!@#\\$%^&*-+=|(){}\[\],:;`'<>.?/ ]*"""".r ^^ { name => STRING(name.substring(1, name.length - 1)) }
+  }
+
   private def number: Parser[NUMBER] = {
     "(|-)[0-9][0-9]*".r ^^ { value => NUMBER(value) }
+  }
+
+  private def boolean: Parser[BOOLEAN] = {
+    "(FALSE|TRUE)".r ^^ { value => BOOLEAN(value) }
   }
 
   private def constant: Parser[CONST] = {
@@ -93,11 +102,39 @@ object TlcConfigLexer extends RegexParsers {
     "SYMMETRY".r ^^ (_ => SYMMETRY())
   }
 
+  private def view: Parser[VIEW] = {
+    "VIEW".r ^^ (_ => VIEW())
+  }
+
+  private def alias: Parser[ALIAS] = {
+    "ALIAS".r ^^ (_ => ALIAS())
+  }
+
+  private def postcondition: Parser[POSTCONDITION] = {
+    "POSTCONDITION".r ^^ (_ => POSTCONDITION())
+  }
+
+  private def checkDeadlock: Parser[CHECK_DEADLOCK] = {
+    "CHECK_DEADLOCK".r ^^ (_ => CHECK_DEADLOCK())
+  }
+
   private def leftArrow: Parser[LEFT_ARROW] = {
     "<-" ^^ (_ => LEFT_ARROW())
   }
 
   private def eq: Parser[EQ] = {
     "=" ^^ (_ => EQ())
+  }
+
+  private def leftBrace: Parser[LEFT_BRACE] = {
+    "{" ^^ (_ => LEFT_BRACE())
+  }
+
+  private def rightBrace: Parser[RIGHT_BRACE] = {
+    "}" ^^ (_ => RIGHT_BRACE())
+  }
+
+  private def comma: Parser[COMMA] = {
+    "," ^^ (_ => COMMA())
   }
 }
