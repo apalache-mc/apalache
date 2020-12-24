@@ -33,7 +33,7 @@ The expression in the above example constructs a set of records that have: the
 to an integer from 1900 to 2000.
 
 **Application.** TLA+ provides you with a shorthand operator for accessing
-a record field by following the common notation. For example:
+a record field by following C-style struct-member notation. For example:
 
 ```tla
   r.myField
