@@ -137,7 +137,7 @@ result is undefined.  TLC raises an error during model checking. Apalache
 raises a type error when preprocessing.
 
 **Example in TLA+:** The following expression classifies an integer variable
-`n` with one the three strings: "negative", "zero", or "positive".
+`n` with one of the three strings: "negative", "zero", or "positive".
 
 ```tla
   CASE n < 0 -> "negative"
@@ -238,4 +238,3 @@ raises a type error when preprocessing.
 
 
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
-
