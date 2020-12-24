@@ -21,7 +21,7 @@ while the second column is the function result. An important property of this
 table is that no value appears in the first column more than once, so
 *every argument value is assigned at most one result value*.
 
-Importantly, every function comes with the set of arguments, on which it is
+Importantly, every function is defined in terms of the set of arguments over which it is
 defined. This set is called the function domain.  There is even a special
 operator `DOMAIN f`, which returns the domain of a function `f`.
 
