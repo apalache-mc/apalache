@@ -8,7 +8,7 @@ following properties:
  - The domain of a record contains only strings.
  - The domain of a record is finite.
 
-That is it in the pure TLA+. Essentially, TLA+ is following the duck typing for
+That is it in pure TLA+. Essentially, TLA+ is following the duck-typing principle for
 records: Any function over strings can be also treated as a record, and vice
 versa, a record is also a function. So you can use all function operators on
 records too.
