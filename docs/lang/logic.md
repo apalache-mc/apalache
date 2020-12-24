@@ -315,7 +315,7 @@ Importantly, when `{x \in S: P} = {}`, the expression `CHOOSE x \ in S: P`
 How does it work? We don't know. Nobody knows. Maybe it returns the first
 element of the set? Well, sets are not ordered, so there is no first element.
 
-Why shall you use it? Actually, you should not. Unless you have no other
+Why should you use it? Actually, you should not. Unless you have no other
 choice :bowtie:
 
 There are two common use cases, where the use of `CHOOSE` is well justified:
