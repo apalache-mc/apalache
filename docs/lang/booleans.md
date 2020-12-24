@@ -289,7 +289,7 @@ result is only defined when both arguments are evaluated to Boolean values.
   - `FALSE`, if one of the arguments evaluates to `TRUE`,
     while the other argument evaluates to `FALSE`.
 
-How is `F <=> G` is different from `F = G`? Actually, `F <=> G` is equality
+How is `F <=> G` different from `F = G`? Actually, `F <=> G` is equality
 that is defined only for Boolean values. In other words, if `F` and `G` are
 evaluated to Boolean values, then `F <=> G` and `F = G` are evaluated to the
 same Boolean value. We prefer `F <=> G` to `F = G`, as `F <=> G` clearly
