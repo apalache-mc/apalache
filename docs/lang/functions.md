@@ -22,7 +22,7 @@ table is that no value appears in the first column more than once, so
 *every argument value is assigned at most one result value*.
 
 Importantly, every function is defined in terms of the set of arguments over which it is
-defined. This set is called the function domain.  There is even a special
+defined. This set is called the function's _domain_.  There is even a special
 operator `DOMAIN f`, which returns the domain of a function `f`.
 
 In contrast to TLA+ operators, _TLA+ functions are proper values_, so they can be
