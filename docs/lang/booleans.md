@@ -67,11 +67,12 @@ FALSE /\ 1       \* FALSE in TLC, type error in Apalache
 **Example in Python:**
 
 ```python
-True  and True
-False and True
-True  and False
-False and False
-```
+True  and True # True
+False and True # False
+True  and False # False
+False and False # False
+False and 1 # False, because 1 is cast to True
+1 and False # False, because 1 is cast to True
 
 **Special syntax form:** To minimize the number of parentheses, conjunction can
 be written in the indented form:
