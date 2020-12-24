@@ -202,8 +202,8 @@ values of `e_1` and `e_2`. Let `e_1` and `e_2` evaluate to the values
       DOMAIN v_1 = DOMAIN v_2 /\ \A x \in DOMAIN v_1: v_1[x] = v_2[x]
     ```
 
- - In other cases, `e_1 = e_2` evaluates to `FALSE`. TLC and Apalache report an
-   error, as the values have incomparable types.
+ - In other cases, `e_1 = e_2` evaluates to `FALSE` if the values have comparable types.
+ - TLC and Apalache report an error, if the values have incomparable types.
    
 **Determinism:** Deterministic, unless `e_1` has the form `x'`, which can be
 interpreted an assignment to the variable `x'`.  For the non-deterministic
