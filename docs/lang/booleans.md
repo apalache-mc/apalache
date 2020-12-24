@@ -17,11 +17,11 @@ you try to treat `FALSE` and `TRUE` as sets or integers.
 
 ## Operators
 
-**Warning**: Below, we discuss Boolean operators in a way as they are usually
-defined in programming languages. It is important to understand the effects `F
-\/ G`, when `F` and `G` contain the operator prime (`'`), or when they are used
-inside the initialization predicate `Init`. We discuss this in [Control Flow
-and Non-determinism].
+**Warning**: Below, we discuss Boolean operators in terms of the way they are usually
+defined in programming languages. However, it is important to understand that the
+disjunction operator `F \/ G` induces a nondeterministic effect when `F` or `G` contain
+the prime operator  (`'`), or when they are used inside the initialization predicate `Init`.
+We discuss this effect [Control Flow and Non-determinism].
 
 ----------------------------------------------------------------------------
 
@@ -325,4 +325,3 @@ True  == False
 ```
 
 [Control Flow and Non-determinism]: ./control-and-nondeterminism.md
-
