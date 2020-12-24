@@ -426,7 +426,7 @@ IF A THEN B ELSE C
 ```
 
 Here we assume that both `B` and `C` produce Boolean results and `B` and `C`
-refer to a primed variable `y'` that is undefined in `s`. Otherwise, the
+refer to at least one primed variable `y'` that is undefined in `s`. Otherwise, the
 expression can be evaluated as a [deterministic
 conditional](./conditionals.md).
 
