@@ -5,11 +5,11 @@
 **Author:** Igor Konnov
 
 Non-determinism is one of the TLA+ features that makes it different from
-programming languages. However, it is very easy to overlook it: There is no
+mainstream programming languages. However, it is very easy to overlook it: There is no
 special syntax for expressing non-determinism. In pure TLA+, whether your
 specification is deterministic or not, depends on the evaluation of the initial
 predicate and of the transition predicate. These are usually called `Init` and
-`Next`. In the following, we first intuitively explain what non-determinism
+`Next`, respectively. In the following, we first intuitively explain what non-determinism
 means in the mathematical framework of TLA+, and then proceed with the
 explanation that is friendly to computers and software engineers.
 
@@ -114,7 +114,7 @@ of the specification `coord3`:
 ![diag2](./img/diag2.png)
 
 Notice that specification `coord` describes one infinite computation (and
-infinitely many finite computations that are prefixes the infinite
+infinitely many finite computations that are prefixes of the infinite
 computation).  Specification `coord2` describes three infinite computations.
 Specification `coord3` describes infinitely many infinite computations: At
 every step, `Next` may choose between `y' = x` or `y' = x+1`.
@@ -384,7 +384,7 @@ Next ==
     \/ x <= 0 /\ y' = -x /\ x' = -(x + 1)
 ```
 
-As you can see, the operator `Next` is non-deterministic: The both clauses may
+As you can see, the operator `Next` is non-deterministic since both clauses may
 be activated when `x = 0`.
 
 First, let's evaluate `Next` in the partial state `[x |-> 3, y |-> 3]`:

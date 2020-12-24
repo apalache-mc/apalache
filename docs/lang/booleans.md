@@ -17,11 +17,11 @@ you try to treat `FALSE` and `TRUE` as sets or integers.
 
 ## Operators
 
-**Warning**: Below, we discuss Boolean operators in a way as they are usually
-defined in programming languages. It is important to understand the effects `F
-\/ G`, when `F` and `G` contain the operator prime (`'`), or when they are used
-inside the initialization predicate `Init`. We discuss this in [Control Flow
-and Non-determinism].
+**Warning**: Below, we discuss Boolean operators in terms of the way they are usually
+defined in programming languages. However, it is important to understand that the
+disjunction operator `F \/ G` induces a nondeterministic effect when `F` or `G` contain
+the prime operator  (`'`), or when they are used inside the initialization predicate `Init`.
+We discuss this effect [Control Flow and Non-determinism].
 
 ----------------------------------------------------------------------------
 
@@ -48,8 +48,8 @@ the expression `F_1 /\ (F_2 /\ ... /\ (F_{n-1} /\ F_n)...)`.
 the possible effects of non-determinism of each argument are combined.  See
 [Control Flow and Non-determinism].
 
-**Errors:** In pure TLA+, the result is undefined, if a non-Boolean argument
-is involved in the evaluation (the evaluation is lazy).  In this
+**Errors:** In pure TLA+, the result is undefined if either conjunct evaluates to
+a non-Boolean value (the evaluation is lazy).  In this
 case, Apalache statically reports a type error, whereas TLC reports a runtime
 error.
 
@@ -67,11 +67,12 @@ FALSE /\ 1       \* FALSE in TLC, type error in Apalache
 **Example in Python:**
 
 ```python
-True  and True
-False and True
-True  and False
-False and False
-```
+True  and True # True
+False and True # False
+True  and False # False
+False and False # False
+False and 1 # False, because 1 is cast to True
+1 and False # False, because 1 is cast to True
 
 **Special syntax form:** To minimize the number of parentheses, conjunction can
 be written in the indented form:
@@ -289,7 +290,7 @@ result is only defined when both arguments are evaluated to Boolean values.
   - `FALSE`, if one of the arguments evaluates to `TRUE`,
     while the other argument evaluates to `FALSE`.
 
-How is `F <=> G` is different from `F = G`? Actually, `F <=> G` is equality
+How is `F <=> G` different from `F = G`? Actually, `F <=> G` is equality
 that is defined only for Boolean values. In other words, if `F` and `G` are
 evaluated to Boolean values, then `F <=> G` and `F = G` are evaluated to the
 same Boolean value. We prefer `F <=> G` to `F = G`, as `F <=> G` clearly
@@ -325,4 +326,3 @@ True  == False
 ```
 
 [Control Flow and Non-determinism]: ./control-and-nondeterminism.md
-
