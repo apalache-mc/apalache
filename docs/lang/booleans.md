@@ -48,8 +48,8 @@ the expression `F_1 /\ (F_2 /\ ... /\ (F_{n-1} /\ F_n)...)`.
 the possible effects of non-determinism of each argument are combined.  See
 [Control Flow and Non-determinism].
 
-**Errors:** In pure TLA+, the result is undefined, if a non-Boolean argument
-is involved in the evaluation (the evaluation is lazy).  In this
+**Errors:** In pure TLA+, the result is undefined if either conjunct evaluates to
+a non-Boolean value (the evaluation is lazy).  In this
 case, Apalache statically reports a type error, whereas TLC reports a runtime
 error.
 
