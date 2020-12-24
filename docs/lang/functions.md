@@ -17,8 +17,8 @@ each process:
 ```
 
 In the above table, the first column is the value of the function argument,
-while the second column is the function result. The important property of this
-table is that the no value appears in the first column more than once, so
+while the second column is the function result. An important property of this
+table is that no value appears in the first column more than once, so
 *every argument value is assigned at most one result value*.
 
 Importantly, every function comes with the set of arguments, on which it is
