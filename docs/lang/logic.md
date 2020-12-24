@@ -445,7 +445,7 @@ Neither TLC, nor Apalache support this operator. It is impossible to give
 operational semantics for this operator, unless we explicitly introduce the
 universe and introduce a fixed rule for enumerating its elements.
 
-Congratulations! You have reached the bottom of this page. If you like to learn
+Congratulations! You have reached the bottom of this page. If you want to learn
 more about unbounded `CHOOSE`, read Section 16.1.2 of [Specifying Systems].
 
 
