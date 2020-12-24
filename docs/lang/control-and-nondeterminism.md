@@ -384,7 +384,7 @@ Next ==
     \/ x <= 0 /\ y' = -x /\ x' = -(x + 1)
 ```
 
-As you can see, the operator `Next` is non-deterministic: The both clauses may
+As you can see, the operator `Next` is non-deterministic since both clauses may
 be activated when `x = 0`.
 
 First, let's evaluate `Next` in the partial state `[x |-> 3, y |-> 3]`:
