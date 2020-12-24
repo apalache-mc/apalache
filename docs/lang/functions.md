@@ -107,8 +107,8 @@ equivalent to `rmState`:
   [ rmState EXCEPT !["process10"] = "working" ]
 ```
 
-**Types.** In pure TLA+, functions are free to mix whatever values in its
-domain. See the example below:
+**Types.** In pure TLA+, functions are free to mix values of different types in their domains. 
+See the example below:
 
 ```tla
   [ x \in { 0, "FALSE", FALSE, 1, "TRUE", TRUE } |->
