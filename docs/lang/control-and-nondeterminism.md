@@ -9,7 +9,7 @@ programming languages. However, it is very easy to overlook it: There is no
 special syntax for expressing non-determinism. In pure TLA+, whether your
 specification is deterministic or not, depends on the evaluation of the initial
 predicate and of the transition predicate. These are usually called `Init` and
-`Next`. In the following, we first intuitively explain what non-determinism
+`Next`, respectively. In the following, we first intuitively explain what non-determinism
 means in the mathematical framework of TLA+, and then proceed with the
 explanation that is friendly to computers and software engineers.
 
