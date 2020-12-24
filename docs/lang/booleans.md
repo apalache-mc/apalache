@@ -104,7 +104,7 @@ is equivalent to:
 
 **LaTeX notation:** ![lor](./img/lor.png)
 
-**Arguments:** Two or more arbitrary expressions.
+**Arguments:** Two or more Boolean expressions.
 
 **Effect:**
 
@@ -218,8 +218,8 @@ whereas TLC reports a runtime error.
 **Example in Python:**
 
 ```python
-not True
-not False
+not True    # False
+not False   # True
 ```
 
 ----------------------------------------------------------------------------
@@ -264,10 +264,10 @@ TRUE  => 1       \* runtime error in TLC, type error in Apalache
 Recall that `A => B` is equivalent to `~A \/ B`.
 
 ```python
-(not False) or True
-(not True)  or True
-(not False) or False
-(not True)  or False
+(not False) or True     # True
+(not True)  or True     # True
+(not False) or False    # True
+(not True)  or False    # False
 ```
 
 ----------------------------------------------------------------------------
@@ -319,10 +319,10 @@ FALSE <=> 1      \* runtime error in TLC, type error in Apalache
 Assuming that both expressions are Boolean, `F <=> G` is equivalent to `F = G`.
 
 ```python
-False == True
-True  == True
-False == False
-True  == False
+False == True   # False
+True  == True   # True
+False == False  # True
+True  == False  # False
 ```
 
 [Control Flow and Non-determinism]: ./control-and-nondeterminism.md
