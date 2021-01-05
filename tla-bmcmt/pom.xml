@@ -1,25 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>at.forsyte.apalache</groupId>
         <artifactId>apalache</artifactId>
-        <version>0.7.2-RELEASE</version>
+        <version>0.7.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>tla-bmcmt</artifactId>
-        <version>0.7.2-RELEASE</version>
+        <version>0.7.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>tla-bmcmt</name>
     <url>https://github.com/informalsystems/apalache</url>
     
     <dependencies>
-        <dependency>
-            <groupId>box</groupId>
-            <artifactId>box</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
         <dependency>
             <groupId>at.forsyte.apalache</groupId>
             <artifactId>tlair</artifactId>
@@ -52,8 +49,8 @@
             <artifactId>tla2tools</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.microsoft</groupId>
-            <artifactId>z3</artifactId>
+            <groupId>io.github.tudo-aqua</groupId>
+            <artifactId>z3-turnkey</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

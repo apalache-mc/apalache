@@ -55,7 +55,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   private def translateTail(state: SymbState, seq: TlaEx) = {
-    var nextState = rewriter.rewriteUntilDone(state.setRex(seq).setTheory(CellTheory()))
+    var nextState = rewriter.rewriteUntilDone(state.setRex(seq))
     val seqCell = nextState.asCell
     val cells = nextState.arena.getHas(seqCell)
     val start = cells.head
@@ -69,13 +69,13 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     nextState = nextState.updateArena(_.appendCell(seqCell.cellType))
     val newSeqCell = nextState.arena.topCell
     nextState = nextState.updateArena(_.appendHasNoSmt(newSeqCell, newStart +: cells.tail: _*))
-    nextState.setRex(newSeqCell).setTheory(CellTheory())
+    nextState.setRex(newSeqCell)
   }
 
   private def translateSubSeq(state: SymbState, seq: TlaEx, newStartEx: TlaEx, newEndEx: TlaEx) = {
     var nextState = state
     def rewriteToCell(ex: TlaEx): ArenaCell = {
-      nextState = rewriter.rewriteUntilDone(nextState.setRex(ex).setTheory(CellTheory()))
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(ex))
       nextState.asCell
     }
 
@@ -102,12 +102,12 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     nextState = nextState.updateArena(_.appendCell(seqCell.cellType))
     val newSeqCell = nextState.arena.topCell
     nextState = nextState.updateArena(_.appendHasNoSmt(newSeqCell, newStart :: newEnd +: cells.tail.tail: _*))
-    nextState.setRex(newSeqCell).setTheory(CellTheory())
+    nextState.setRex(newSeqCell)
   }
 
   private def translateAppend(state: SymbState, seq: TlaEx, newElem: TlaEx) = {
     def solverAssert = rewriter.solverContext.assertGroundExpr _
-    var nextState = rewriter.rewriteUntilDone(state.setRex(seq).setTheory(CellTheory()))
+    var nextState = rewriter.rewriteUntilDone(state.setRex(seq))
     val seqCell = nextState.asCell
     val cells = nextState.arena.getHas(seqCell)
     val start = cells.head
@@ -115,7 +115,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val oldElems = cells.tail.tail
     nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.plus(tla.int(1), end)))
     val newEnd = nextState.asCell
-    nextState = rewriter.rewriteUntilDone(nextState.setRex(newElem).setTheory(CellTheory()))
+    nextState = rewriter.rewriteUntilDone(nextState.setRex(newElem))
     val newElemCell = nextState.asCell
     // as we do not know the actual values of the range [start, end),
     // pick from the original value s[i] and the new element, and restrict the choice
@@ -140,11 +140,11 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     nextState = nextState.updateArena(_.appendCell(seqCell.cellType))
     val newSeqCell = nextState.arena.topCell
     nextState = nextState.updateArena(_.appendHasNoSmt(newSeqCell, start :: newEnd +: newCells: _*))
-    nextState.setRex(newSeqCell).setTheory(CellTheory())
+    nextState.setRex(newSeqCell)
   }
 
   private def translateLen(state: SymbState, seq: TlaEx) = {
-    var nextState = rewriter.rewriteUntilDone(state.setRex(seq).setTheory(CellTheory()))
+    var nextState = rewriter.rewriteUntilDone(state.setRex(seq))
     val cells = nextState.arena.getHas(nextState.asCell)
     val start = cells.head
     val end = cells.tail.head
@@ -159,7 +159,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     var nextState = state
 
     def rewriteSeq(seqEx: TlaEx): (ArenaCell, ArenaCell, ArenaCell, Seq[ArenaCell], CellT) = {
-      nextState = rewriter.rewriteUntilDone(nextState.setRex(seqEx).setTheory(CellTheory()))
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(seqEx))
       val cell = nextState.asCell
       val connectedCells = nextState.arena.getHas(cell)
       val start = connectedCells.head

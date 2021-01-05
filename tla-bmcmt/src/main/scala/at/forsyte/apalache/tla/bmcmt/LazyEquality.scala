@@ -1,9 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.caches.EqCache
+import at.forsyte.apalache.tla.bmcmt.caches.{EqCache, EqCacheSnapshot}
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
-import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
-import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
+import at.forsyte.apalache.tla.bmcmt.rewriter.{ConstSimplifierForSmt, Recoverable}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.{NameEx, NullEx, TlaEx}
@@ -13,13 +12,15 @@ import at.forsyte.apalache.tla.lir.{NameEx, NullEx, TlaEx}
   *
   * @author Igor Konnov
   */
-class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
-  private val simplifier = new ConstSimplifierForSmt
+class LazyEquality(rewriter: SymbStateRewriter)
+    extends StackableContext with Serializable with Recoverable[EqCacheSnapshot] {
 
-  private val eqCache = new EqCache(NameEx(SolverContext.falseConst),
-    NameEx(SolverContext.trueConst))
+  @transient
+  private lazy val simplifier = new ConstSimplifierForSmt
 
-  /**
+  private val eqCache = new EqCache()
+
+/**
     * This method ensure that a pair of its arguments can be safely compared by the SMT equality,
     * that is, all the necessary constraints have been generated with cacheEqualities.
     *
@@ -221,25 +222,16 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
       // in general, we need 2 * |X| * |Y| comparisons
       val leftToRight: SymbState = subsetEq(state, left, right)
       val rightToLeft: SymbState = subsetEq(leftToRight, right, left)
-      if (left.cellType.signature == right.cellType.signature) {
-        // These two sets have the same signature and thus belong to the same sort.
-        // Hence, we can use SMT equality. This equality is needed by uninterpreted functions.
-        val eq = simplifier.simplify(tla.equiv(tla.eql(left, right), tla.and(leftToRight.ex, rightToLeft.ex)))
-        rewriter.solverContext.assertGroundExpr(eq)
-        eqCache.put(left, right, EqCache.EqEntry())
-      } else {
-        // The signatures differ and thus SMT will flag a sort error.
-        // Introduce a predicate that carries equality constraints.
-        // This predicate is needed for equality and membership tests,
-        // e.g., {{}} \in {{{}}}, which are particularly hard to handle.
-        // TODO: if two sets S and T are found to be equal, congruence might be violated: f(S) != f(T)
-        val pred = tla.name(rewriter.solverContext.introBoolConst())
-        rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.and(leftToRight.ex, rightToLeft.ex)))
-        eqCache.put(left, right, EqCache.ExprEntry(pred))
-      }
+      // the type checker makes sure that this holds true
+      assert(left.cellType.signature == right.cellType.signature)
+      // These two sets have the same signature and thus belong to the same sort.
+      // Hence, we can use SMT equality. This equality is needed by uninterpreted functions.
+      val eq = tla.equiv(tla.eql(left, right), tla.and(leftToRight.ex, rightToLeft.ex))
+      rewriter.solverContext.assertGroundExpr(eq)
+      eqCache.put(left, right, EqCache.EqEntry())
 
       // recover the original expression and theory
-      rewriter.coerce(rightToLeft.setRex(state.ex), state.theory)
+      rightToLeft.setRex(state.ex)
     }
   }
 
@@ -252,12 +244,13 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
       state
     } else {
       // The other set might be empty in some models. Add a predicate.
-      val pred = tla.name(rewriter.solverContext.introBoolConst())
+      val newState = state.updateArena(_.appendCell(BoolT()))
+      val pred = newState.arena.topCell
       val emptyEx = tla.and(otherElems.map(e => tla.not(tla.in(e, otherSet))) :_*)
       rewriter.solverContext.assertGroundExpr(tla.eql(pred, emptyEx))
       // this predicate will be later used as an equality test
       eqCache.put(emptySet, otherSet, EqCache.ExprEntry(pred))
-      state
+      newState
     }
   }
 
@@ -277,48 +270,77 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
     val rightElems = state.arena.getHas(right)
     if (leftElems.isEmpty) {
       // SE-SUBSETEQ1
-      state.setRex(state.arena.cellTrue()).setTheory(CellTheory())
+      state.setRex(state.arena.cellTrue())
     } else if (rightElems.isEmpty) {
       // SE-SUBSETEQ2
       def notIn(le: ArenaCell) = {
         tla.not(tla.in(le, left))
       }
 
-      val pred = tla.name(rewriter.solverContext.introBoolConst())
+      val newState = state.updateArena(_.appendCell(BoolT()))
+      val pred = newState.arena.topCell
       rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.and(leftElems.map(notIn): _*)))
-      state.setRex(pred).setTheory(BoolTheory())
+      newState.setRex(pred)
     } else {
       // SE-SUBSETEQ3
-      val newState = cacheEqConstraints(state, leftElems cross rightElems) // cache all the equalities
+      var newState = cacheEqConstraints(state, leftElems cross rightElems) // cache all the equalities
       def exists(lelem: ArenaCell) = {
         def inAndEq(relem: ArenaCell) = {
-          tla.and(tla.in(relem, right), cachedEq(lelem, relem))
+          simplifier.simplifyShallow(tla.and(tla.in(relem, right), cachedEq(lelem, relem)))
         }
 
         // There are plenty of valid subformulas. Simplify!
-        simplifier.simplify(tla.or(rightElems.map(inAndEq): _*))
+        simplifier.simplifyShallow(tla.or(rightElems.map(inAndEq): _*))
       }
 
       def notInOrExists(lelem: ArenaCell) = {
-        val notInOrExists = simplifier.simplify(tla.or(tla.not(tla.in(lelem, left)), exists(lelem)))
+        val notInOrExists = simplifier.simplifyShallow(tla.or(tla.not(tla.in(lelem, left)), exists(lelem)))
         if (simplifier.isBoolConst(notInOrExists)) {
           notInOrExists // just return the constant
         } else {
           // BUG: this produced OOM on the inductive invariant of Paxos
           // BUGFIX: push this query to the solver, in order to avoid constructing enormous assertions
-          val pred = tla.name(rewriter.solverContext.introBoolConst())
-          rewriter.solverContext.assertGroundExpr(tla.equiv(pred, notInOrExists))
-          pred
+          newState = newState.updateArena(_.appendCell(BoolT()))
+          val pred = newState.arena.topCell
+          rewriter.solverContext.assertGroundExpr(simplifier.simplifyShallow(tla.equiv(pred, notInOrExists)))
+          pred.toNameEx
         }
       }
 
-      val forEachNotInOrExists = simplifier.simplify(tla.and(leftElems.map(notInOrExists): _*))
-      val pred = tla.name(rewriter.solverContext.introBoolConst())
+      val forEachNotInOrExists = simplifier.simplifyShallow(tla.and(leftElems.map(notInOrExists): _*))
+      newState = newState.updateArena(_.appendCell(BoolT()))
+      val pred = newState.arena.topCell
       rewriter.solverContext.assertGroundExpr(tla.eql(pred, forEachNotInOrExists))
-      newState.setTheory(BoolTheory()).setRex(pred)
+      newState.setRex(pred)
     }
   }
 
+  /**
+    * Take a snapshot and return it
+    *
+    * @return the snapshot
+    */
+  override def snapshot(): EqCacheSnapshot = {
+    eqCache.snapshot()
+  }
+
+  /**
+    * Recover a previously saved snapshot (not necessarily saved by this object).
+    *
+    * @param shot a snapshot
+    */
+  override def recover(shot: EqCacheSnapshot): Unit = {
+    eqCache.recover(shot)
+  }
+
+  /**
+    * Get the current context level, that is the difference between the number of pushes and pops made so far.
+    *
+    * @return the current level, always non-negative.
+    */
+  override def contextLevel: Int = {
+    eqCache.contextLevel
+  }
 
   /**
     * Save the current context and push it on the stack for a later recovery with pop.
@@ -366,7 +388,7 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
     eqCache.put(leftFun, rightFun, EqCache.EqEntry())
 
     // restore the original expression and theory
-    rewriter.coerce(relEq.setRex(state.ex), state.theory)
+    relEq.setRex(state.ex)
   }
 
   private def mkRecordEq(state: SymbState, leftRec: ArenaCell, rightRec: ArenaCell): SymbState = {
@@ -409,7 +431,7 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
     eqCache.put(leftRec, rightRec, EqCache.EqEntry())
 
     // restore the original expression and theory
-    rewriter.coerce(newState.setRex(state.ex), state.theory)
+    newState.setRex(state.ex)
   }
 
   private def mkTupleEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {
@@ -433,7 +455,7 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
       eqCache.put(left, right, EqCache.EqEntry())
 
       // restore the original expression and theory
-      rewriter.coerce(newState.setRex(state.ex), state.theory)
+      newState.setRex(state.ex)
     }
   }
 
@@ -462,6 +484,6 @@ class LazyEquality(rewriter: SymbStateRewriter) extends StackableContext {
     eqCache.put(left, right, EqCache.EqEntry())
 
     // restore the original expression and theory
-    rewriter.coerce(nextState.setRex(state.ex), state.theory)
+    nextState.setRex(state.ex)
   }
 }

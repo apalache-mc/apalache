@@ -22,18 +22,10 @@ class BuiltinConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case ValEx(TlaBool(false)) =>
-        if (state.theory == CellTheory()) {
-          state.setRex(NameEx(state.arena.cellFalse().toString))
-        } else {
-          state.setRex(NameEx(SolverContext.falseConst))
-        }
+        state.setRex(state.arena.cellFalse().toNameEx)
 
       case ValEx(TlaBool(true)) =>
-        if (state.theory == CellTheory()) {
-          state.setRex(NameEx(state.arena.cellTrue().toString))
-        } else {
-          state.setRex(NameEx(SolverContext.trueConst))
-        }
+        state.setRex(state.arena.cellTrue().toNameEx)
 
       case ValEx(TlaBoolSet) =>
         state.setRex(NameEx(state.arena.cellBooleanSet().toString))

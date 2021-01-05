@@ -7,7 +7,7 @@ import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
-import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import com.google.inject.Inject
 import com.google.inject.name.Named
@@ -19,13 +19,17 @@ import com.typesafe.scalalogging.LazyLogging
 class PrimingPassImpl @Inject()(options: PassOptions,
                                 tracker: TransformationTracker,
                                 @Named("AfterPriming") nextPass: Pass with TlaModuleMixin )
-      extends PrimingPass with LazyLogging {
+  extends PrimingPass with LazyLogging {
   /**
     * The name of the pass
     *
     * @return the name associated with the pass
     */
   override def name: String = "PrimingPass"
+
+  private def trSeq( seq: Seq[TlaExTransformation] ) : TlaExTransformation = {
+    ex => seq.foldLeft( ex ) { case (partial,tr) => tr(partial) }
+  }
 
   /**
     * Run the pass
@@ -40,6 +44,16 @@ class PrimingPassImpl @Inject()(options: PassOptions,
 
     val bodyMap = BodyMapFactory.makeFromDecls(declarations)
 
+    // The solution to breaking the impossible dependency of Inlining > Priming > Cover Analysis > Inlining
+    // is for Priming to manually inline just the relevant Init/CInit operator
+    val baseTransformationSequence =
+      List(
+        InlinerOfUserOper(bodyMap, tracker),
+        LetInExpander(tracker, keepNullary = true),
+        // the second pass of Inliner may be needed, when the higher-order operators were inlined by LetInExpander
+        InlinerOfUserOper(bodyMap, tracker)
+      )
+
     val cinitPrimed =
       options.get[String]("checker", "cinit") match {
         case Some(name) =>
@@ -47,9 +61,8 @@ class PrimingPassImpl @Inject()(options: PassOptions,
           val primeTransformer = Prime(constSet, tracker) // add primes to constants
           val cinitPrimedName = name + "Primed"
           logger.info(s"  > Introducing $cinitPrimedName for $name'")
-          Some(TlaOperDecl(cinitPrimedName,
-                           List(),
-                           primeTransformer(deepCopy(operatorBody))))
+          val newBody = trSeq( baseTransformationSequence :+ primeTransformer)(deepCopy(operatorBody))
+          Some( TlaOperDecl( cinitPrimedName, List(), newBody ) )
 
         case _ =>
           None
@@ -60,7 +73,8 @@ class PrimingPassImpl @Inject()(options: PassOptions,
     val initPrimedName = initName + "Primed"
     logger.info(s"  > Introducing $initPrimedName for $initName'")
     // add primes to variables
-    val initPrimed = Some(TlaOperDecl(initPrimedName, List(), primeTransformer(deepCopy(bodyMap(initName).body))))
+    val newBody = trSeq( baseTransformationSequence :+ primeTransformer )( deepCopy( bodyMap( initName ).body ) )
+    val initPrimed = Some( TlaOperDecl( initPrimedName, List(), newBody ) )
 
     val newDeclarations: Seq[TlaDecl] = declarations ++ Seq(cinitPrimed, initPrimed).flatten
     val newModule = new TlaModule(tlaModule.get.name, newDeclarations)

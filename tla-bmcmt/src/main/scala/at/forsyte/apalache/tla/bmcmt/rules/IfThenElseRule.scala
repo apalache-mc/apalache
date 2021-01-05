@@ -28,15 +28,15 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case OperEx(TlaControlOper.ifThenElse, predEx, thenEx, elseEx) =>
-        var nextState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(predEx))
+        var nextState = rewriter.rewriteUntilDone(state.setRex(predEx))
         val predCell = nextState.asCell
         // Some rules immediately return TRUE or FALSE. In combination with assignments, this may lead to rewriting errors.
         // See: TestSymbStateRewriterBool.test("""IF-THEN-ELSE with \E...""")
         // In such cases, we should prune the branches
         if (simplifier.isTrueConst(predCell)) {
-          rewriter.coerce(rewriter.rewriteUntilDone(nextState.setRex(thenEx)), state.theory)
+          rewriter.rewriteUntilDone(nextState.setRex(thenEx))
         } else if (simplifier.isFalseConst(predCell)) {
-          rewriter.coerce(rewriter.rewriteUntilDone(nextState.setRex(elseEx)), state.theory)
+          rewriter.rewriteUntilDone(nextState.setRex(elseEx))
         } else {
           nextState = rewriter.rewriteUntilDone(nextState.setRex(thenEx))
           val thenCell = nextState.asCell
@@ -44,15 +44,13 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
           val elseCell = nextState.asCell
 
           val resultType = rewriter.typeFinder.compute(state.ex, BoolT(), thenCell.cellType, elseCell.cellType)
-          val finalState =
-            resultType match {
-              // basic types, we can use SMT equality
-              case BoolT() | IntT() | ConstT() => iteBasic(nextState, resultType, predCell, thenCell, elseCell)
+          resultType match {
+            // basic types, we can use SMT equality
+            case BoolT() | IntT() | ConstT() => iteBasic(nextState, resultType, predCell, thenCell, elseCell)
 
-              // sets, functions, records, tuples, sequence: use pick
-              case _ => iteGeneral(nextState, resultType, predCell, thenCell, elseCell)
-            }
-          rewriter.coerce(finalState, state.theory) // coerce to the source theory
+            // sets, functions, records, tuples, sequence: use pick
+            case _ => iteGeneral(nextState, resultType, predCell, thenCell, elseCell)
+          }
         }
 
       case _ =>
@@ -66,7 +64,7 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // it's OK to use the SMT equality and ite, as we are dealing with the basic types here
     val iffIte = tla.eql(newCell, tla.ite(pred, thenCell, elseCell))
     rewriter.solverContext.assertGroundExpr(iffIte)
-    state.setArena(newArena).setRex(newCell.toNameEx).setTheory(CellTheory())
+    state.setArena(newArena).setRex(newCell.toNameEx)
   }
 
   // Just use PICK FROM { thenValue, elseValue } to pick one of the two values.

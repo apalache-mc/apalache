@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
+import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.ConstT
-import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell, SolverContext}
+import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.lir.convenience.tla
 
 /**
@@ -11,7 +12,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
   *
   * @author Igor Konnov
   */
-class StrValueCache(solverContext: SolverContext) extends AbstractCache[Arena, String, ArenaCell] {
+class StrValueCache(solverContext: SolverContext) extends AbstractCache[Arena, String, ArenaCell] with Serializable {
 
   override protected def create(arena: Arena, strValue: String): (Arena, ArenaCell) = {
     // introduce a new cell

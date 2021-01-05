@@ -42,6 +42,7 @@ Apalache is working under the following assumptions:
     1. [Type annotations](#types)
     1. [Recursive operators and functions](#recursion)
  1. [The Apalache module](#apalacheMod)
+ 1. [Profiling your specification](#profiling)
  1. [Five minutes of theory](#theory5)
  1. [Supported language features](#features)
 
@@ -115,6 +116,18 @@ The following docker parameters are used:
 - `<args>` are the tool arguments as described in
   [Running the tool](#running).
 
+We provide a convenience wrapper for this docker command in
+`script/run-docker.sh`. To run the `latest` image using the script, execute
+
+```bash
+$ $APALACHE_HOME/script/run-docker.sh <args>
+```
+
+To specify a different image, set `APALACHE_TAG` like so:
+
+```bash
+$ APALACHE_TAG=foo $APALACHE_HOME/script/run-docker.sh <args>
+```
 
 ### Setting an alias
 
@@ -123,7 +136,10 @@ If you are running Apalache on Linux :penguin: or MacOS
 Apalache in docker while sharing the working directory:
 
 ```bash
+# using the latest stable
 $ alias apalache="docker run --rm -v $(pwd):/var/apalache apalache/mc"
+# using the latest unstable
+$ alias apalache="docker run --rm -v $(pwd):/var/apalache apalache/mc:unstable"
 ```
 
 ### Using the unstable version of Apalache
@@ -182,8 +198,7 @@ $ docker image build -t apalache:0.7.0 .
    - On Arch: `sudo pacman -Syu maven`
 4. Clone the git repository: `git clone https://github.com/informalsystems/apalache.git`.
 5. Change into the project directory: `cd apalache`.
-7. Run `make`. This command will install Microsoft Z3, compile Apalache
-   and assemble the package.
+7. Run `make`.
 6. *Optionally* install [direnv][] and run `direnv allow`
 8. Confirm you can run the executable. It should print the inline CLI help message.
    - If you used `direnv`, then `apalache-mc` will be in your path.
@@ -353,12 +368,13 @@ We support configuring Apalache via TLC configuration files; these files are
 produced automatically by TLA Toolbox, for example. TLC configuration files
 allow one to specify which initialization predicate and transition predicate to
 employ, which invariants to check, as well as to initialize specification
-parameters. A limited syntax of TLC configuration files is supported at the
-moment, which should be nevertheless enough for most uses.
+parameters. Some features of the TLC configuration files are not supported yet.
+Check the manual page on
+["Syntax of TLC Configuration Files"](./docs/tlc-config.md).
 
-If you are checking a file `<myspec>.tla`, and the file `<myspec>.cfg` exists in
+_If you are checking a file `<myspec>.tla`, and the file `<myspec>.cfg` exists in
 the same directory, it will be picked up by Apalache automatically. You can also
-explicitly specify which configuration file to use via the `--config` option.
+explicitly specify which configuration file to use via the `--config` option._
 
 <a name="running"></a>
 # 6. Running the tool
@@ -374,7 +390,8 @@ $ apalache check [--config=filename] [--init=Init] [--cinit=ConstInit] \
 
 The arguments are as follows:
 
-  * ``--config`` specifies the TLC configuration file, the default name is ``<myspec>.cfg``
+  * ``--config`` specifies the [TLC configuration file](./docs/tlc-config.md),
+    the default name is ``<myspec>.cfg``
   * ``--init`` specifies the initialization predicate, the default name is ``Init``
   * ``--next`` specifies the transition predicate, the default name is ``Next``
   * ``--cinit`` specifies the constant initialization predicate, optional
@@ -1214,8 +1231,93 @@ x := e == x = e
 
 See the [discussion](#assignments) on the role of assignments in Apalache.
 
+<a name="profiling"></a>
+# 10. Profiling your specification
+
+As Apalache translates the TLA+ specification to SMT, it often defeats
+our intuition about the standard bottlenecks that one learns about when running
+TLC. For instance, whereas TLC needs a lot of time to compute the initial states
+for the following specification, Apalache can check the executions of length up
+to ten steps in seconds:
+
+```tla
+---------------------------- MODULE powerset ----------------------------
+EXTENDS Integers
+VARIABLE S
+
+Init ==
+    /\ S \in SUBSET (1..50)
+    /\ 3 \notin S
+
+Next ==
+    \/ \E x \in S:
+        S' = S \ {x}
+    \/ UNCHANGED S
+
+Inv ==
+    3 \notin S
+=========================================================================
+```
+
+Apalache has its own bottlenecks. As it's using the SMT solver z3,
+we cannot precisely profile your TLA+ specification. However, we can profile
+the number of SMT variables and constraints that Apalache produces for different
+parts of your specification. To activate this profiling mode, use the option
+`--smtprof`:
+
+```sh
+apalache check --smtprof powerset.tla
+```
+
+The profiling data is written in the file `profiler.csv`:
+
+```
+# weight,nCells,nConsts,nSmtExprs,location                                      
+4424,2180,2076,28460,powerset.tla:11:5-13:18
+4098,2020,1969,12000,powerset.tla:12:9-12:20
+4098,2020,1969,12000,powerset.tla:12:14-12:20 
+...
+```
+
+The meaning of the columns is as follows:
+
+  * `weight` is the weight of the expression.
+    Currently it is computed as `nCells + nConsts + sqrt(nSmtExprs)`.
+    We may change this formula in the future.
+
+  * `nCells` is the number of arena cells that are created during the translation.
+    Intuitively, the cells are used to keep the potential shapes of the data structures
+    that are captured by the expression.
+
+  * `nConsts` is the number of SMT constants that are produced by the translator.
+
+  * `nSmtExprs` is the number of SMT expressions that are produced by the translator.
+    We also include all subexpressions, when counting this metric.
+
+  * `location` is the location in the source code where the expression
+     was found, indicated by the file name correlated with a range of `line:column` pairs.
+
+To visualize the profiling data, you can use the script `script/heatmap.py`:
+
+```sh
+$APALACHE_HOME/script/heatmap.py profile.csv heatmap.html
+```
+
+The produced file `heatmap.html` looks as follows:
+
+![Here you should see a heatmap](./img/profiler2.png "A heatmap")
+
+
+The heatmap may give you an idea about the expression that are hard for Apalache.
+The following picture highlights one part of the Raft specification that produces
+a lot of constraints:
+
+![Here you should see a heatmap](./img/profiler.png "A heatmap of Raft")
+
+
+
 <a name="theory5"></a>
-# 10. Five minutes of theory
+# 11. Five minutes of theory
 
 **You can safely skip this section**
 
@@ -1252,7 +1354,7 @@ delivered at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549).
 
 <a name="features"></a>
 
-# 11. Supported language features
+# 12. Supported language features
 
 Check the [supported features](features.md), [KerA+](kera.md), and
 [preprocessing steps](preprocessing.md).

@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.lir.storage.SourceMap
 import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, UID}
 import com.google.inject.Singleton
+import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.mutable
 
@@ -20,7 +21,7 @@ import scala.collection.mutable
   * @author Igor Konnov
   */
 @Singleton
-class SourceStore extends TransformationListener {
+class SourceStore extends TransformationListener with LazyLogging {
   /**
     * A mapping from a filenames to an index in trees. This map is typically quite small.
     */
@@ -110,6 +111,20 @@ class SourceStore extends TransformationListener {
         Some(SourceLocation(indexToFilename(filenameIndex), region))
 
       case None => None
+    }
+  }
+
+  /**
+    * Behaves as find, but also logs a warning when find returns None.
+    * @param id an expression identifier
+    * @return Some(location), when the expression has source information, and None otherwise
+    */
+  def findOrLog(id: UID): Option[SourceLocation] = {
+    find(id) match {
+      case some @ Some(_) => some
+      case None =>
+        logger.warn(s"No source location for expression $id")
+        None
     }
   }
 

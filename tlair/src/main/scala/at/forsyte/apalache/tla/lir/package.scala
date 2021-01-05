@@ -16,7 +16,7 @@ package lir {
     *
     * TODO: rename to TlaDef.
     */
-  abstract class TlaDecl {
+  abstract class TlaDecl extends Serializable {
     def name: String
     def deepCopy(): TlaDecl
   }
@@ -29,7 +29,7 @@ package lir {
     * @param name the module name
     * @param declarations all kinds of declarations
     */
-  class TlaModule(val name: String, val declarations: Seq[TlaDecl]) {
+  class TlaModule(val name: String, val declarations: Seq[TlaDecl]) extends Serializable {
     def constDeclarations: Seq[TlaConstDecl] = {
       declarations.collect { case d: TlaConstDecl => d }
     }
@@ -48,12 +48,12 @@ package lir {
   }
 
   /** a constant as defined by CONSTANT */
-  case class TlaConstDecl(name: String) extends TlaDecl{
+  case class TlaConstDecl(name: String) extends TlaDecl with Serializable {
     override def deepCopy( ): TlaConstDecl =  TlaConstDecl( name )
   }
 
   /** a variable as defined by VARIABLE */
-  case class TlaVarDecl(name: String) extends TlaDecl{
+  case class TlaVarDecl(name: String) extends TlaDecl with Serializable {
     override def deepCopy( ): TlaVarDecl =  TlaVarDecl( name )
   }
 
@@ -61,7 +61,7 @@ package lir {
     * An assumption defined by ASSUME(...)
     * @param body the assumption body
     */
-  case class TlaAssumeDecl(body: TlaEx) extends TlaDecl {
+  case class TlaAssumeDecl(body: TlaEx) extends TlaDecl with Serializable {
     val name: String = "ASSUME" + body.ID
     override def deepCopy(): TlaAssumeDecl = TlaAssumeDecl(body.deepCopy())
   }
@@ -73,7 +73,7 @@ package lir {
     *
     * FIXME: a candidate for removal. Just use TlaModule?
     */
-  case class TlaSpec( name: String, declarations: List[TlaDecl] ){
+  case class TlaSpec( name: String, declarations: List[TlaDecl] ) extends Serializable {
     def deepCopy() : TlaSpec = TlaSpec( name, declarations.map( _.deepCopy() ) )
 
   }
@@ -84,7 +84,7 @@ package lir {
   /**
   A formal parameter of an operator.
     */
-  sealed abstract class FormalParam {
+  sealed abstract class FormalParam extends Serializable {
     def name: String
 
     def arity: Int
@@ -92,17 +92,16 @@ package lir {
   }
 
   /** An ordinary formal parameter, e.g., x used in A(x) == ... */
-  case class SimpleFormalParam(name: String) extends FormalParam {
+  case class SimpleFormalParam(name: String) extends FormalParam with Serializable {
     override def arity: Int = 0
   }
 
   /** A function signature, e.g., f(_, _) used in A(f(_, _), x, y) */
-  case class OperFormalParam(name: String, arity: Int) extends FormalParam {
+  case class OperFormalParam(name: String, arity: Int) extends FormalParam with Serializable {
   }
 
   /** An abstract TLA+ expression. Note that the class is sealed, so we allow only a limited set of values. */
-  sealed abstract class TlaEx extends Identifiable {
-
+  sealed abstract class TlaEx extends Identifiable with Serializable {
     // TODO: there must be a nice way of defining default printers in scala, so we do not have to make a choice here
     override def toString: String =  UTFPrinter( this )
 
@@ -117,31 +116,31 @@ package lir {
     * gibberish definitions by SANY.
     * We could use Option[TlaEx], but that would introduce unnecessary many pattern matches, as NoneEx will be rare.
     */
-  object NullEx extends TlaEx {
+  object NullEx extends TlaEx with Serializable {
     override def deepCopy() : TlaEx = NullEx
     override def toSimpleString: String = toString
   }
 
   /** just using a TLA+ value */
-  case class ValEx(value: TlaValue) extends TlaEx{
+  case class ValEx(value: TlaValue) extends TlaEx with Serializable {
     override def toSimpleString: String = value.toString
     override def deepCopy() : ValEx = ValEx( value )
   }
 
   /** referring to a variable, constant, operator, etc. by a name. */
-  case class NameEx(name: String) extends TlaEx{
+  case class NameEx(name: String) extends TlaEx with Serializable {
     override def toSimpleString: String = name
     override def deepCopy() : NameEx = NameEx(name)
   }
 
   // Introducing a LET-IN expression
-  case class LetInEx( body: TlaEx, decls: TlaOperDecl* ) extends TlaEx {
+  case class LetInEx( body: TlaEx, decls: TlaOperDecl* ) extends TlaEx with Serializable {
     override def deepCopy( ) = LetInEx( body.deepCopy(), decls map { _.deepCopy() } :_*)
     override def toSimpleString: String = s"LET ${decls.mkString(" ")} IN $body"
   }
 
   // applying an operator, including the one defined by OperFormalParam
-  case class OperEx(oper: TlaOper, args: TlaEx*) extends TlaEx {
+  case class OperEx(oper: TlaOper, args: TlaEx*) extends TlaEx with Serializable {
     require(oper.isCorrectArity(args.size),
       "unexpected arity %d in %s applied to %s".format(args.size, oper.name, args.map(_.toString) mkString ", "))
 
@@ -178,7 +177,8 @@ package lir {
     * @param formalParams formal parameters
     * @param body operator definition, that is a TLA+ expression that captures the operator definition
     */
-  case class TlaOperDecl( name: String, formalParams: List[FormalParam], var body: TlaEx ) extends TlaDecl {
+  case class TlaOperDecl( name: String, formalParams: List[FormalParam], var body: TlaEx )
+    extends TlaDecl with Serializable {
     // this is no longer required, as module instantiation uses null bodies
     //    require( !body.isNull )
 
@@ -186,6 +186,17 @@ package lir {
       * Is the operator definition recursive? Similar to body, this is a variable that can be changed later.
       */
     var isRecursive: Boolean = false
+
+    // Temporary solution, until #345 is resolved
+    def copy(
+              name : String = this.name,
+              formalParams : List[FormalParam] = this.formalParams,
+              body : TlaEx = this.body
+            ) : TlaOperDecl = {
+      val ret = TlaOperDecl( name, formalParams, body )
+      ret.isRecursive = this.isRecursive
+      ret
+    }
 
     override def deepCopy( ): TlaOperDecl =  TlaOperDecl( name, formalParams, body.deepCopy() )
   }

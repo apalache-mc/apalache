@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
+import at.forsyte.apalache.tla.imp.src.{SaveToStoreTracker, SourceLocation, SourceStore}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
 import tla2sany.semantic.{OpApplNode, OpDefNode}
@@ -24,8 +24,11 @@ class OpDefTranslator(sourceStore: SourceStore, context: Context) {
           // this is a definition of a recursive function, translate to recFunDef
           val body = ExprOrOpArgNodeTranslator(sourceStore, context, OutsideRecursion())
             .translate(node.getBody)
+          val recFunRef = OperEx(TlaFunOper.recFunRef)
+          // save the source location of the call to the recursive function, point to the definition
+          sourceStore.addRec(recFunRef, SourceLocation(node.getBody.getLocation))
           // the body still can refer to the function by its name, replace it with recFunRef
-          val replaced = ReplaceFixed(NameEx(nodeName), OperEx(TlaFunOper.recFunRef), new IdleTracker())(body)
+          val replaced = ReplaceFixed(NameEx(nodeName), recFunRef, new SaveToStoreTracker(sourceStore))(body)
           // store the source location
           sourceStore.addRec(replaced, SourceLocation(node.getBody.getLocation))
           // return the operator whose body is a recursive function

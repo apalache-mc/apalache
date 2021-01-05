@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
 import at.forsyte.apalache.tla.bmcmt.StackableContext
+import at.forsyte.apalache.tla.bmcmt.rewriter.Recoverable
 
 import scala.collection.immutable.HashMap
 
@@ -9,7 +10,7 @@ import scala.collection.immutable.HashMap
   *
   * @author Igor Konnov
   */
-class SimpleCache[KeyT, ValueT] extends StackableContext {
+class SimpleCache[KeyT, ValueT] extends StackableContext with Recoverable[SimpleCacheSnapshot[KeyT, ValueT]] {
   /**
     * A context level, see StackableContext
     */
@@ -44,6 +45,32 @@ class SimpleCache[KeyT, ValueT] extends StackableContext {
       case None => None
     }
   }
+
+  /**
+    * Take a snapshot and return it
+    *
+    * @return the snapshot
+    */
+  override def snapshot(): SimpleCacheSnapshot[KeyT, ValueT] = {
+    val squashedCache = cache.map { case (key, (value, _)) => (key, (value, 0)) }
+    new SimpleCacheSnapshot(squashedCache)
+  }
+
+  /**
+    * Recover a previously saved snapshot (not necessarily saved by this object).
+    *
+    * @param shot a snapshot
+    */
+  override def recover(shot: SimpleCacheSnapshot[KeyT, ValueT]): Unit = {
+    cache = shot.cache
+  }
+
+  /**
+    * Get the current context level, that is the difference between the number of pushes and pops made so far.
+    *
+    * @return the current level, always non-negative.
+    */
+  override def contextLevel: Int = level
 
   /**
     * Save the current context and push it on the stack for a later recovery with pop.

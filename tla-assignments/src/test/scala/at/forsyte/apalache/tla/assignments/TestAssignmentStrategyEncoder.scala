@@ -17,7 +17,7 @@ class TestAssignmentStrategyEncoder extends FunSuite with TestingPredefs {
   val encoder = new AssignmentStrategyEncoder()
 
   def analyze( phi : TlaEx, vars : Set[String] ) : StaticAnalysisData =
-    encoder.staticAnalysis( phi, vars, Set[String](), Map.empty[String, StaticAnalysisData] )
+    encoder.staticAnalysis( phi, vars, Set[String](), Map.empty[String, StaticAnalysisData], Set.empty )
 
   // We make a custom assert, so that if/when it fails, we can more easily identify the problematic field
   def assertEqualSAD( a: StaticAnalysisData, b: StaticAnalysisData ): Unit = {

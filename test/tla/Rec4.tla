@@ -17,14 +17,14 @@ Fib(n) ==
       THEN 1
       ELSE Fib(n - 2) + Fib(n - 1)
 
-UNFOLD_TIMES_Fib == 5
-UNFOLD_DEFAULT_Fib == -1
+UNROLL_TIMES_Fib == 6
+UNROLL_DEFAULT_Fib == -1
 
 Init ==
-    f = Fib(3)
+    f = Fib(4)
 
 Next ==
-    f' = Fib(4)
+    f' = Fib(5)
 
 Inv ==
     f >= 1

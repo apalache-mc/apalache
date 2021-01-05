@@ -31,7 +31,7 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
           logger.error("  > If you need support for n-ary CONSTANTS, write a feature request.")
           throw new OverridingError(msg, overridingDef.body)
         } else {
-          logger.info(s"  > Replaced CONSTANT $name")
+          logger.info(s"  > Replaced CONSTANT $name with ${overridingDef.body}")
           TlaOperDecl(name, List(), overridingDef.body)
         }
 
@@ -110,10 +110,19 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
     }
     while(defsWithDeps.nonEmpty && newAdded)
     if(defsWithDeps.nonEmpty) {
-      logger.error(s"  > topological sort: can't order these definitions: ${defsWithDeps.toString}")
-      throw new Exception("Circular definition dependency detected" )
+      val msg = "  > topological sort: can't order these definitions: " + defsWithDepsAsHumanReadable(defsWithDeps)
+      logger.error(msg)
+      throw new ConfigurationError("Circular definition dependency detected" )
     }
     sorted
+  }
+
+  // convert the dependencies into a readable form
+  private def defsWithDepsAsHumanReadable(dds: List[(TlaDecl, Set[String])]): String = {
+    def depToString(decl: TlaDecl, uses: Set[String]): String = {
+      "Operator %s uses %s".format(decl.name, uses.toSeq.sorted.mkString(", "))
+    }
+    dds.map(p => depToString(p._1, p._2)).mkString("; ")
   }
 
   private def findDeps(decl: TlaDecl): mutable.Set[String] = {

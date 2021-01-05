@@ -57,11 +57,16 @@ class PreproPassImpl @Inject()( val options: PassOptions,
         ("Keramelizer", ModuleByExTransformer(Keramelizer(gen, tracker)))
       )
 
+    val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
+
     logger.info(" > Applying standard transformations:")
     val preprocessed = transformationSequence.foldLeft(input) {
       case (m, (name, xformer)) =>
         logger.info(s"  > $name")
-        xformer(m)
+        val transfomed = xformer(m)
+        // dump the result of preprocessing after every transformation, in case the next one fails
+        PrettyWriter.write(transfomed, new File(outdir.toFile, s"out-prepro-$name.tla"))
+        transfomed
     }
 
     // unique renaming after all transformations
@@ -69,7 +74,6 @@ class PreproPassImpl @Inject()( val options: PassOptions,
     val afterModule = renaming.renameInModule(preprocessed)
 
     // dump the result of preprocessing
-    val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
     PrettyWriter.write(afterModule, new File(outdir.toFile, "out-prepro.tla"))
     outputTlaModule = Some(afterModule)
 

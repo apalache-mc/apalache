@@ -26,7 +26,7 @@ We simply write types as strings that follow the type grammar:
 
 ```
 T ::= typeConst | typeVar | Bool | Int | Str | T -> T | Set(T) | Seq(T) |
-      <<T, ..., T>> | [h_1: T, ..., h_k: T] | (T, ..., T) => T
+      <<T, ..., T>> | [h_1: T, ..., h_k: T] | (T, ..., T) => T | (T)
 typeConst ::= <an identifier that matches [A-Z_][A-Z0-9_]*>
 typeVar ::= <a single letter from [a-z]>
 ```      
@@ -36,7 +36,10 @@ function, while the rule `(T, ..., T) => T` defines an operator.  Importantly, a
 multi-argument function always receives a tuple, e.g., `<<Int, Bool>> -> Int`,
 whereas a single-argument function receives the type of its argument, e.g., `Int
 -> Int`.  An operator always has the types of its arguments inside `(...)`,
-e.g., `(Int, Bool) => Int` and `() => Bool`.
+e.g., `(Int, Bool) => Int` and `() => Bool`. The arrow `->` is right-associative,
+e.g., `A -> B -> C` is understood as `A -> (B -> C)`, which is consistent with
+programming languages. If you like to change the priority of `->`, use parentheses, as usual.
+For example, you may write `(A -> B) -> C`. 
 
 If a type `T` contains a type variable, e.g., `a`, then `T` is a
 polymorphic type, in which `a` can be instantiated with a monotype (a
@@ -106,20 +109,20 @@ operators:
 ```tla
 ---- MODULE Typing ----
 AssumeType(ex, tp) == TRUE
-tp :> ex == ex
+tp ## ex == ex
 =======================
 ```
 
 The operator `AssumeType(ex, tp)` is a type assumption. It states that `ex`
 should have the type whose supertype is `tp` (the records in `tp` may contain
-additional fields).  This operator always returns `TRUE`.  The operator `tp :>
+additional fields).  This operator always returns `TRUE`.  The operator `tp ##
 ex` annotates an expression `ex` with a type `tp`. This operator returns `ex`
 itself, that is, it performs type erasure (for compatibility with other TLA+
 tools).
 
 In the following, we discuss how to annotate different TLA+ names.  The
 operator `AssumeType` is designated for annotating constants and state
-variables, whereas the operator `:>` is designated for annotating user-defined
+variables, whereas the operator `##` is designated for annotating user-defined
 operators.
 
 ### 2.1. Annotating CONSTANTS and VARIABLES
@@ -164,17 +167,17 @@ expressions.
 The operators in TLA+ are not values, but are similar to macros. Hence, we
 cannot refer to an operator by its name, without applying this operator.  To
 annotate an operator, we prepend its body with `##` (as proposed by
-@shonfeder for `:>`). For example:
+@shonfeder). For example:
 
 ```tla
-Mem(e, es) == "(a, Seq(a)) => Bool" :>
-    e \in {es[i]: i \in DOMAIN es}
+Mem(e, es) == "(a, Seq(a)) => Bool" ##
+    (e \in {es[i]: i \in DOMAIN es})
 ```
 
 Higher-order operators are also easy to annotate:
 
 ```tla
-Find(Pred(_), es) == "((a) => Bool, Seq(a)) => Int" :>
+Find(Pred(_), es) == "((a) => Bool, Seq(a)) => Int" ##
     IF \E i \in DOMAIN es: Pred(es[i])
     THEN CHOOSE i \in DOMAIN es: Pred(es[i])
     ELSE -1
@@ -185,10 +188,10 @@ operator. However, the annotation syntax is quite similar to that of the
 operators (note though that we are using `->` instead of `=>`):
 
 ```tla
-Card[S \in T] == "Set(a) -> Int" :>
+Card[S \in T] == "Set(a) -> Int" ##
     IF S = {}
     THEN 0
-    ELSE LET one_elem == "() => a" :>
+    ELSE LET one_elem == "() => a" ##
             (CHOOSE x \in S: TRUE)
          IN
          1 + Card[S \ {one_elem}]
@@ -221,22 +224,33 @@ Indeed, they are all introducing bound variables that range over sets.
 In most cases, a type checker should be able to extract the element type
 from a set expression.
 
-However, there are a few pathological cases. For example:
+
+However, there are a few pathological cases arising from empty collections. For
+example:
 
 ```tla
 /\ \E x \in {}: x > 1
 /\ f = [x \in {} |-> 2]
+/\ z \in DOMAIN << >>
 ```
 
-In these rare cases, you can wrap the problematic expression with `LET-IN` and
-annotate this auxillary operator:
+In these rare cases, use the auxiliary operators in the module `Typing` for
+specifying the type of the empty collection:
 
 ```tla
-/\ LET Empty == "() => Set(Int)" :> {} IN
-    \E x \in Empty: x > 1
-/\ LET Empty == "() => Set(Str)" :> {} IN
-    f = [x \in Empty |-> 2]
+EXTENDS Typing
+...
+
+/\ \E x \in EmptySet("Int"): x > 1
+/\ f = [x \in EmptySet("Str") |-> 2]
+/\ z \in DOMAIN EmptySeq("Int")
 ```
+
+The type checker uses the type annotation to refine the type of an empty set
+(or, of an empty sequence). To keep compatibility with TLC and other tools,
+the module `Typing` defines the operators `EmptySet(...)` and `EmptySeq(...)`
+as `{}` and `<<>>`, respectively. However, the type checker overrides these
+definitions with the refined types.
 
 ## 3. Example
 
@@ -288,22 +302,22 @@ TypeAssumptions ==
     /\ AssumeType(dealer, "Set(INGREDIENT)")
 
 (* this operator has a parametric signature *)
-ChooseOne(S, P(_)) == "(Set(a), (a) => Bool) => a" :>
+ChooseOne(S, P(_)) == "(Set(a), (a) => Bool) => a" ##
     CHOOSE x \in S : P(x) /\ \A y \in S : P(y) => y = x
 
 (* the types of the actions are fairly obvious *)
 
-Init == "() => Bool" :>
+Init == "() => Bool" ##
     /\ smokers = [r \in Ingredients |-> [smoking |-> FALSE]]
     /\ dealer \in Offers
 
-startSmoking == "() => Bool" :>
+startSmoking == "() => Bool" ##
     /\ dealer /= {}
     /\ smokers' = [r \in Ingredients |->
                     [smoking |-> {r} \cup dealer = Ingredients]]
     /\ dealer' = {}
 
-stopSmoking == "() => Bool" :>
+stopSmoking == "() => Bool" ##
     /\ dealer = {}
         (* the type of LAMBDA should be inferred from the types
            of ChooseOne and Ingredients *)
@@ -311,15 +325,15 @@ stopSmoking == "() => Bool" :>
        IN smokers' = [smokers EXCEPT ![r].smoking = FALSE] 
     /\ dealer' \in Offers
 
-Next == "() => Bool" :>
+Next == "() => Bool" ##
     startSmoking \/ stopSmoking
 
-Spec == "() => Bool" :>
+Spec == "() => Bool" ##
     Init /\ [][Next]_vars
 
-FairSpec == "() => Bool" :>
+FairSpec == "() => Bool" ##
     Spec /\ WF_vars(Next)    
 
-AtMostOne == "() => Bool" :>
+AtMostOne == "() => Bool" ##
     Cardinality({r \in Ingredients : smokers[r].smoking}) <= 1
 ```

@@ -103,6 +103,22 @@ class TestExpansionMarker extends FunSuite with BeforeAndAfterEach {
     assert(input == output)
   }
 
+  test("""not marked: x \in {} <: {[Int -> Int]}""") {
+    val input =
+      tla.exists(
+        tla.name("x"),
+        OperEx(BmcOper.withType,
+          tla.enumSet(),
+          tla.enumSet(tla.funSet(tla.intSet(), tla.intSet()))
+        ),
+        tla.bool(true)
+      ) //
+
+    val output = marker.apply(input)
+
+    assert(input == output)
+  }
+
   test("""not marked: \CHOOSE x \in SUBSET S: P""") {
     val input =
         tla.choose(

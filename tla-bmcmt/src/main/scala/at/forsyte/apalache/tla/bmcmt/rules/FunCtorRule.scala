@@ -35,7 +35,7 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   private def rewriteFunCtor(state: SymbState, mapEx: TlaEx, varName: String, setEx: TlaEx) = {
     // rewrite the set expression into a memory cell
-    var nextState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(setEx))
+    var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
     val domainCell = nextState.asCell
     val elemT = domainCell.cellType match {
       case FinSetT(et) => et
@@ -81,8 +81,7 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
       addCellCons(domElem, relElem)
 
     // that's it
-    val finalState = nextState.setRex(funCell.toNameEx).setTheory(CellTheory())
-    rewriter.coerce(finalState, state.theory)
+    nextState.setRex(funCell.toNameEx)
   }
 
   private def mapCells(state: SymbState, mapEx: TlaEx, varName: String, setEx: TlaEx, oldCells: Seq[ArenaCell]) = {
@@ -94,8 +93,8 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         case cell :: tail =>
           val (ts: SymbState, nt: List[TlaEx]) = process(st, tail)
-          val newBinding = ts.binding + (varName -> cell)
-          val cellState = new SymbState(mapEx, CellTheory(), ts.arena, newBinding)
+          val newBinding = Binding(ts.binding.toMap + (varName -> cell))
+          val cellState = new SymbState(mapEx, ts.arena, newBinding)
           // add [cell/x]
           val ns = rewriter.rewriteUntilDone(cellState)
           (ns.setBinding(ts.binding), ns.ex :: nt) // reset binding and add the new expression in the head

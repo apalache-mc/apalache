@@ -36,7 +36,7 @@ AssumeType(name, tp) == TRUE
 (* @see ADR-002.                                                            *)
 (*                                                                          *)
 (* Example:                                                                 *)
-(* Plus(x, y) == "(Int, Int) => Int" :>                                     *)
+(* Plus(x, y) == "(Int, Int) => Int" ##                                     *)
 (*               x + y                                                      *)
 (*                                                                          *)
 (* @param type_str is a string that represents a type in Type System 1      *)
@@ -44,6 +44,18 @@ AssumeType(name, tp) == TRUE
 (* @param ex the operator body to be wrapped with a type                    *)
 (* @return ex, that is, erase type information                              *)
 (****************************************************************************)
-type_str :> ex == ex
+type_str ## ex == ex
+
+(****************************************************************************)
+(* Produce an empty set, whose elements have the type tp.                   *)
+(* Use this operator, if the type checker cannot infer the type of { }.     *)
+(****************************************************************************)
+EmptySet(tp) == { }
+
+(****************************************************************************)
+(* Produce an empty sequence, whose elements have the type tp.              *)
+(* Use this operator, if the type checker cannot infer the type of << >>.   *)
+(****************************************************************************)
+EmptySeq(tp) == << >>
 
 =============================================================================
