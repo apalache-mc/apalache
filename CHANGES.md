@@ -1,5 +1,7 @@
 ## Unreleased #unstable
 
+## 0.8.0 [RELEASE]
+
  * use openjdk-9 for deterministic Apalache Docker images, see #318
  * support for advanced syntax in TLC configs, see #208
  * random seed for z3, see docs/tuning.md and #318
