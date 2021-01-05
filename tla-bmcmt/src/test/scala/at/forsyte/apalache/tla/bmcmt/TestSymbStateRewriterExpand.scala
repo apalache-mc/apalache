@@ -12,7 +12,7 @@ class TestSymbStateRewriterExpand extends RewriterBase {
   test("""Expand(SUBSET {1, 2})""") {
     val baseset = tla.enumSet(tla.int(1), tla.int(2))
     val expandPowset = OperEx(BmcOper.expand, tla.powSet(baseset))
-    val state = new SymbState(expandPowset, CellTheory(), arena, new Binding)
+    val state = new SymbState(expandPowset, arena, Binding())
     val rewriter = create()
     var nextState = rewriter.rewriteUntilDone(state)
     val powCell = nextState.asCell
@@ -29,7 +29,7 @@ class TestSymbStateRewriterExpand extends RewriterBase {
     val domain = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val codomain = tla.enumSet(tla.bool(false), tla.bool(true))
     val funSet = OperEx(BmcOper.expand, tla.funSet(domain, codomain))
-    val state = new SymbState(funSet, CellTheory(), arena, new Binding)
+    val state = new SymbState(funSet, arena, Binding())
     val rewriter = create()
     assertThrows[RewriterException](rewriter.rewriteUntilDone(state))
   }
@@ -40,7 +40,7 @@ class TestSymbStateRewriterExpand extends RewriterBase {
     val domain = tla.enumSet(tla.int(1), tla.int(2))
     val codomain = tla.enumSet(tla.bool(false), tla.bool(true))
     val funSet = OperEx(BmcOper.expand, tla.funSet(domain, codomain))
-    val state = new SymbState(funSet, CellTheory(), arena, new Binding)
+    val state = new SymbState(funSet, arena, Binding())
     val rewriter = create()
     var nextState = rewriter.rewriteUntilDone(state)
     val funSetCell = nextState.asCell

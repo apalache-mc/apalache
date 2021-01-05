@@ -24,30 +24,27 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case OperEx(TlaFunOper.domain, funEx) =>
-        val funState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(funEx))
+        val funState = rewriter.rewriteUntilDone(state.setRex(funEx))
         val funCell = funState.asCell
 
         // no type information from the type finder is needed, as types are propagated in a straightforward manner
-        val finalState =
-          funCell.cellType match {
-            case RecordT(_) =>
-              val dom = funState.arena.getDom(funCell)
-              funState.setRex(dom)
+        funCell.cellType match {
+          case RecordT(_) =>
+            val dom = funState.arena.getDom(funCell)
+            funState.setRex(dom)
 
-            case TupleT(_) =>
-              mkTupleDomain(funState, funCell)
+          case TupleT(_) =>
+            mkTupleDomain(funState, funCell)
 
-            case SeqT(_) =>
-              mkSeqDomain(funState, funCell)
+          case SeqT(_) =>
+            mkSeqDomain(funState, funCell)
 
-            case FunT(_, _) =>
-              mkFunDomain(funState, funCell)
+          case FunT(_, _) =>
+            mkFunDomain(funState, funCell)
 
             case _ =>
               throw new RewriterException("DOMAIN x where type(x) = %s is not implemented".format(funCell.cellType), state.ex)
           }
-
-        rewriter.coerce(finalState, state.theory)
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
@@ -57,7 +54,7 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
   private def mkTupleDomain(state: SymbState, funCell: ArenaCell): SymbState = {
     val tupleT = funCell.cellType.asInstanceOf[TupleT]
     val (newArena, dom) = intRangeCache.create(state.arena, (1, tupleT.args.size))
-    state.setArena(newArena).setRex(dom).setTheory(CellTheory())
+    state.setArena(newArena).setRex(dom)
   }
 
   private def mkSeqDomain(state: SymbState, seqCell: ArenaCell): SymbState = {
@@ -76,7 +73,7 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
       rewriter.solverContext.assertGroundExpr(tla.eql(inDom, inRange))
     }
 
-    state.setArena(arena).setRex(dom).setTheory(CellTheory())
+    state.setArena(arena).setRex(dom)
   }
 
   private def mkFunDomain(state: SymbState, funCell: ArenaCell): SymbState = {

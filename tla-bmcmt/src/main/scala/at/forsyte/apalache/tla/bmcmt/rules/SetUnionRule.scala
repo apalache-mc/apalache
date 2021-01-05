@@ -24,7 +24,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       case OperEx(TlaSetOper.union, topSet) =>
         // rewrite the arguments into memory cells
-        var nextState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(topSet))
+        var nextState = rewriter.rewriteUntilDone(state.setRex(topSet))
         val topSetCell = nextState.asCell
         val elemType =
           topSetCell.cellType match {
@@ -43,8 +43,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
         if (unionOfSets.isEmpty) {
           // just return an empty set
           // TODO: cache empty sets!
-          val finalState = nextState.setRex(newSetCell)
-          rewriter.coerce(finalState, state.theory) // coerce to the source theory
+          nextState.setRex(newSetCell)
         } else {
           // add all the elements to the arena
           nextState = nextState.updateArena(_.appendHas(newSetCell, unionOfSets.toSeq: _*))
@@ -75,8 +74,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
           unionOfSets foreach addOneElemCons
 
           // that's it
-          val finalState = nextState.setRex(newSetCell.toNameEx)
-          rewriter.coerce(finalState, state.theory) // coerce to the source theory
+          nextState.setRex(newSetCell.toNameEx)
         }
 
       case _ =>

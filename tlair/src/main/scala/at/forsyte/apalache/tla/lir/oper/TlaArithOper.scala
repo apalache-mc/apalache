@@ -28,7 +28,7 @@ object TlaArithOper {
   /**
     * An n-ary sum, that is, Sum(x_1, ..., x_n) = x_1 + ... + x_n.
     */
-  val sum = new TlaArithOper {
+  object sum extends TlaArithOper {
     override val arity = AnyArity()
     // Empty sum = 0
     override val name = "SUM"
@@ -38,7 +38,7 @@ object TlaArithOper {
   /**
     * A binary addition.
     */
-  val plus = new TlaArithOper {
+  object plus extends TlaArithOper {
     override val arity = FixedArity(2)
     override val name = "(+)"
     override val precedence: (Int, Int) = (10, 10)
@@ -47,7 +47,7 @@ object TlaArithOper {
   /**
     * A unary minus. Note that Naturals do not have unary minus.
     */
-  val uminus = new TlaArithOper {
+  object uminus extends TlaArithOper {
     override val arity = FixedArity(1)
     override val name = "-."
     override val precedence: (Int, Int) = (12, 12)
@@ -56,7 +56,7 @@ object TlaArithOper {
   /**
     * A binary minus.
     */
-  val minus = new TlaArithOper {
+  object minus extends TlaArithOper {
     override val arity = FixedArity(2)
     override val name = "(-)"
     override val precedence: (Int, Int) = (11, 11)
@@ -65,7 +65,7 @@ object TlaArithOper {
   /**
     * An n-ary product of the arguments, that is, Prod(x_1, ..., x_n) = x_1 * ... * x_n.
     */
-  val prod = new TlaArithOper {
+  object prod extends TlaArithOper {
     override def arity = AnyArity()
     // empty prod = 1
     override val name = "PROD"
@@ -75,7 +75,7 @@ object TlaArithOper {
   /**
     * A multiplication.
     */
-  val mult = new TlaArithOper {
+  object mult extends TlaArithOper {
     override def arity: OperArity = FixedArity(2)
     override val name: String = "(*)"
     override val precedence: (Int, Int) = (13, 13)
@@ -84,7 +84,7 @@ object TlaArithOper {
   /**
     * Integer division.
     */
-  val div = new TlaArithOper {
+  object div extends TlaArithOper {
     override def arity: OperArity = FixedArity(2)
     override val name: String = "(\\div)"
     override val precedence: (Int, Int) = (13, 13)
@@ -93,7 +93,7 @@ object TlaArithOper {
   /**
     * Remainder of an integer division.
     */
-  val mod = new TlaArithOper {
+  object mod extends TlaArithOper {
     override def arity: OperArity = FixedArity(2)
     override val name: String = "(%)"
     override val precedence: (Int, Int) = (10, 11)
@@ -102,7 +102,7 @@ object TlaArithOper {
   /**
     * Real division.
     */
-  val realDiv = new TlaArithOper {
+  object realDiv extends TlaArithOper {
     override def arity: OperArity = FixedArity(2)
     override val name: String = "(/)"
     override val precedence: (Int, Int) = (13, 13)
@@ -111,7 +111,7 @@ object TlaArithOper {
   /**
     * Exponent, i.e., x^y gives us x multiplied by itself (y-1) times.
     **/
-  val exp = new TlaArithOper {
+  object exp extends TlaArithOper {
     override def arity: OperArity = FixedArity(2)
     override val name: String = "(^)"
     override val precedence: (Int, Int) = (14, 14)
@@ -120,7 +120,7 @@ object TlaArithOper {
   /**
     * An integer/natural range, that is, a..b = {a,...,b}
     */
-  val dotdot = new TlaArithOper {
+  object dotdot extends TlaArithOper {
     override val arity = FixedArity(2)
     override val name = "_.._"
     override val precedence: (Int, Int) = (9, 9)
@@ -129,7 +129,7 @@ object TlaArithOper {
   /**
     * Less than.
     */
-  val lt = new TlaArithOper {
+  object lt extends TlaArithOper {
     /* the number of arguments the operator has */
     override def arity: OperArity = FixedArity(2)
     override val name: String = "(<)"
@@ -139,7 +139,7 @@ object TlaArithOper {
   /**
     * Greater than.
     */
-  val gt = new TlaArithOper {
+  object gt extends TlaArithOper {
     /* the number of arguments the operator has */
     override def arity: OperArity = FixedArity(2)
     override val name: String = "(>)"
@@ -149,7 +149,7 @@ object TlaArithOper {
   /**
     * Less than or equals.
     */
-  val le = new TlaArithOper {
+  object le extends TlaArithOper {
     /* the number of arguments the operator has */
     override def arity: OperArity = FixedArity(2)
     override val name: String = "(<=)"
@@ -159,11 +159,10 @@ object TlaArithOper {
   /**
     * Greater than or equals.
     */
-  val ge = new TlaArithOper {
+  object ge extends TlaArithOper {
     /* the number of arguments the operator has */
     override def arity: OperArity = FixedArity(2)
     override val name: String = "(>=)"
     override val precedence: (Int, Int) = (5, 5)
   }
-
 }

@@ -7,7 +7,7 @@ import com.google.inject.Singleton
 import scala.collection.mutable
 
 @Singleton
-class FormulaHintsStoreImpl extends FormulaHintsStore {
+class FormulaHintsStoreImpl extends FormulaHintsStore with Serializable {
   var store: mutable.Map[UID, FormulaHint] = mutable.HashMap[UID, FormulaHint]()
 
   override def getHint(uid: UID): Option[FormulaHint] = {

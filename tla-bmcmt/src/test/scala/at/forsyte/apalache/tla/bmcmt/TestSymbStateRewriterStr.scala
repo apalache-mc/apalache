@@ -9,14 +9,11 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterStr extends RewriterBase {
   test("SE-STR-CTOR: \"red\" -> $C$k") {
-    val state = new SymbState(ValEx(TlaStr("red")),
-      CellTheory(), arena, new Binding)
+    val state = new SymbState(ValEx(TlaStr("red")), arena, Binding())
     val rewriter = create()
     val nextStateRed = rewriter.rewriteUntilDone(state)
     nextStateRed.ex match {
       case predEx@NameEx(name) =>
-        assert(CellTheory().hasConst(name))
-        assert(CellTheory() == state.theory)
         assert(solverContext.sat())
         val redEqBlue = tla.eql(tla.str("blue"), tla.str("red"))
         val nextStateEq = rewriter.rewriteUntilDone(nextStateRed.setRex(redEqBlue))

@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
 import at.forsyte.apalache.tla.bmcmt.StackableContext
+import at.forsyte.apalache.tla.bmcmt.rewriter.Recoverable
 
 import scala.collection.immutable.HashMap
 
@@ -9,7 +10,9 @@ import scala.collection.immutable.HashMap
   *
   * @author Igor Konnov
   */
-abstract class AbstractCache[ContextT, SourceT, TargetT] extends StackableContext {
+abstract class AbstractCache[ContextT, SourceT, TargetT]
+    extends StackableContext with Serializable with Recoverable[AbstractCacheSnapshot[ContextT, SourceT, TargetT]] {
+
   /**
     * A context level, see StackableContext
     */
@@ -75,6 +78,34 @@ abstract class AbstractCache[ContextT, SourceT, TargetT] extends StackableContex
       case None => None
     }
   }
+
+  /**
+    * Take a snapshot and return it
+    *
+    * @return the snapshot
+    */
+  override def snapshot(): AbstractCacheSnapshot[ContextT, SourceT, TargetT] = {
+    val squashedCache = cache.map { case (source, (target, _)) => (source, (target, 0)) }
+    val squashedRevCache = reverseCache.map { case (target, (source, _)) => (target, (source, 0)) }
+    new AbstractCacheSnapshot(squashedCache, squashedRevCache)
+  }
+
+  /**
+    * Recover a previously saved snapshot (not necessarily saved by this object).
+    *
+    * @param shot a snapshot
+    */
+  override def recover(shot: AbstractCacheSnapshot[ContextT, SourceT, TargetT]): Unit = {
+    cache = shot.cache
+    reverseCache = shot.reverseCache
+  }
+
+  /**
+    * Get the current context level, that is the difference between the number of pushes and pops made so far.
+    *
+    * @return the current level, always non-negative.
+    */
+  override def contextLevel: Int = level
 
   /**
     * Save the current context and push it on the stack for a later recovery with pop.

@@ -13,7 +13,7 @@ object TlcOper {
   /**
     * Print(out, val) from TLC.
     */
-  val print: TlcOper = new TlcOper {
+  object print extends TlcOper {
     override def name: String = "TLC!Print"
     override def arity: OperArity = FixedArity(2)
     override val precedence: (Int, Int) = (16, 16)
@@ -22,7 +22,7 @@ object TlcOper {
   /**
     * PrintT(out) from TLC.
     */
-  val printT: TlcOper = new TlcOper {
+  object printT extends TlcOper {
     override def name: String = "TLC!PrintT"
     override def arity: OperArity = FixedArity(1)
     override val precedence: (Int, Int) = (16, 16)
@@ -31,7 +31,7 @@ object TlcOper {
   /**
     * Assert(out, val) from TLC.
     */
-  val assert: TlcOper = new TlcOper {
+  object assert extends TlcOper {
     override def name: String = "TLC!Assert"
     override def arity: OperArity = FixedArity(2)
     override val precedence: (Int, Int) = (16, 16)
@@ -40,7 +40,7 @@ object TlcOper {
   /**
     * JavaTime from TLC.
     */
-  val javaTime: TlcOper = new TlcOper {
+  object javaTime extends TlcOper {
     override def name: String = "TLC!javaTime"
     override def arity: OperArity = FixedArity(0)
     override val precedence: (Int, Int) = (16, 16)
@@ -49,7 +49,7 @@ object TlcOper {
   /**
     * TLCGet(i) from TLC.
     */
-  val tlcGet: TlcOper = new TlcOper {
+  object tlcGet extends TlcOper {
     override def name: String = "TLC!TLCGet"
     override def arity: OperArity = FixedArity(1)
     override val precedence: (Int, Int) = (16, 16)
@@ -58,7 +58,7 @@ object TlcOper {
   /**
     * TLCSet(i, v) from TLC.
     */
-  val tlcSet: TlcOper = new TlcOper {
+  object tlcSet extends TlcOper {
     override def name: String = "TLC!TLCSet"
     override def arity: OperArity = FixedArity(2)
     override val precedence: (Int, Int) = (16, 16)
@@ -67,7 +67,7 @@ object TlcOper {
   /**
     * _ :> _ from TLC.
     */
-  val colonGreater: TlcOper = new TlcOper {
+  object colonGreater extends TlcOper {
     override def name: String = "TLC!:>"
     override def arity: OperArity = FixedArity(2)
     override val precedence: (Int, Int) = (7, 7)
@@ -76,7 +76,7 @@ object TlcOper {
   /**
     * _ @@ _ from TLC.
     */
-  val atat: TlcOper = new TlcOper {
+  object atat extends TlcOper {
     override def name: String = "TLC!@@"
     override def arity: OperArity = AnyArity()
     override val precedence: (Int, Int) = (6, 6)
@@ -85,7 +85,7 @@ object TlcOper {
   /**
     * Permutations(S) from TLC.
     */
-  val permutations: TlcOper = new TlcOper {
+  object permutations extends TlcOper {
     override def name: String = "TLC!Permutations"
     override def arity: OperArity = FixedArity(1)
     override val precedence: (Int, Int) = (16, 16)
@@ -94,7 +94,7 @@ object TlcOper {
   /**
     * SortSeq(s, Op(_, _)) from TLC.
     */
-  val sortSeq: TlcOper = new TlcOper {
+  object sortSeq extends TlcOper {
     override def name: String = "TLC!SortSeq"
     override def arity: OperArity = FixedArity(2)
     override val precedence: (Int, Int) = (16, 16)
@@ -103,7 +103,7 @@ object TlcOper {
   /**
     * RandomElement(S) from TLC.
     */
-  val randomElement: TlcOper = new TlcOper {
+  object randomElement extends TlcOper {
     override def name: String = "TLC!RandomElement"
     override def arity: OperArity = FixedArity(1)
     override val precedence: (Int, Int) = (16, 16)
@@ -112,7 +112,7 @@ object TlcOper {
   /**
     * any from TLC.
     */
-  val any: TlcOper = new TlcOper {
+  object any extends TlcOper {
     override def name: String = "TLC!Any"
     override def arity: OperArity = FixedArity(0)
     override val precedence: (Int, Int) = (16, 16)
@@ -121,7 +121,7 @@ object TlcOper {
   /**
     * ToString(S) from TLC.
     */
-  val tlcToString: TlcOper = new TlcOper {
+  object tlcToString extends TlcOper {
     override def name: String = "TLC!ToString"
     override def arity: OperArity = FixedArity(1)
     override val precedence: (Int, Int) = (16, 16)
@@ -130,7 +130,7 @@ object TlcOper {
   /**
     * TLCEval(v) from TLC.
     */
-  val tlcEval: TlcOper = new TlcOper {
+  object tlcEval extends TlcOper {
     override def name: String = "TLC!TLCEval"
     override def arity: OperArity = FixedArity(1)
     override val precedence: (Int, Int) = (16, 16)

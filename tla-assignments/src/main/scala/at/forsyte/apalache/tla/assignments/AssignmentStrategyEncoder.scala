@@ -62,7 +62,8 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
                                            phi : TlaEx,
                                            vars : Set[String],
                                            initialFrozenVarSet : frozenVarSetType,
-                                           initialLetInOperBodyMap : letInOperBodyMapType
+                                           initialLetInOperBodyMap : letInOperBodyMapType,
+                                           manuallyAssigned: Set[String]
                                          ) : StaticAnalysisData = {
     import AlphaTLApTools._
 
@@ -83,7 +84,7 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
 
         /** First, process children */
         val processedChildArgs : Seq[StaticAnalysisData] =
-          args.map( staticAnalysis( _, vars, initialFrozenVarSet, initialLetInOperBodyMap ) )
+          args.map( staticAnalysis( _, vars, initialFrozenVarSet, initialLetInOperBodyMap, manuallyAssigned ) )
 
         /** Compute parent delta from children */
         def deltaConnective( args : Seq[BoolFormula] ) =
@@ -128,21 +129,45 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
         }
 
 
-      /** Base case, assignment candidates */
+      /** Base case, assignment candidates  */
       case OperEx( TlaOper.eq, OperEx( TlaActionOper.prime, NameEx( name ) ), star ) =>
+        // if `name` has any manual assignments, this assignment candidate is ignored
+        if ( !manuallyAssigned.contains( name )) {
+          val n : Long = phi.ID.id
+
+          /** delta_v creates a fresh variable from the unique ID if name == v */
+          val delta : deltaType = ( vars map { v =>
+            (v, if ( name == v ) Variable( n ) else False())
+          } ).toMap
+
+          StaticAnalysisData(
+            seen = Set[Long]( n ), /** Mark the node as seen */
+            collocSet = Set[(Long, Long)]( (n, n) ), /** A terminal node, is always collocated exactly with itself */
+            nonCollocSet = Set.empty[(Long, Long)],
+            delta = delta,
+            frozen = Map( n -> ( initialFrozenVarSet ++ findPrimes( star ) ) ), /** At a terminal node, we know the exact values for the frozen sets */
+            uidToExmap = Map( n -> phi ) /** Add the mapping from n to its expr. */
+          )
+        }
+        else {
+          defaultArgs
+        }
+
+      /** Base case, manual assignments */
+      case OperEx( BmcOper.assign, OperEx( TlaActionOper.prime, NameEx( name ) ), star ) =>
         val n : Long = phi.ID.id
 
         /** delta_v creates a fresh variable from the unique ID if name == v */
-        val delta: deltaType = (vars map { v =>
+        val delta : deltaType = ( vars map { v =>
           (v, if ( name == v ) Variable( n ) else False())
-        }).toMap
+        } ).toMap
 
         StaticAnalysisData(
           seen = Set[Long]( n ), /** Mark the node as seen */
-          collocSet = Set[(Long,Long)]( (n, n) ), /** A terminal node, is always collocated exactly with itself */
+          collocSet = Set[(Long, Long)]( (n, n) ), /** A terminal node, is always collocated exactly with itself */
           nonCollocSet = Set.empty[(Long, Long)],
           delta = delta,
-          frozen = Map( n -> (initialFrozenVarSet ++ findPrimes( star )) ), /** At a terminal node, we know the exact values for the frozen sets */
+          frozen = Map( n -> ( initialFrozenVarSet ++ findPrimes( star ) ) ), /** At a terminal node, we know the exact values for the frozen sets */
           uidToExmap = Map( n -> phi ) /** Add the mapping from n to its expr. */
         )
 
@@ -152,15 +177,15 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
         val newFrozenVarSet = initialFrozenVarSet ++ findPrimes( star )
 
         /** Recurse on the child with a bigger frozen set */
-        staticAnalysis( subPhi, vars, newFrozenVarSet, initialLetInOperBodyMap )
+        staticAnalysis( subPhi, vars, newFrozenVarSet, initialLetInOperBodyMap, manuallyAssigned )
 
       case OperEx( TlaControlOper.ifThenElse, star, thenExpr, elseExpr ) =>
         /** All primes in the star expr. contribute to the frozen sets of bothe subexpr. */
         val starPrimes = findPrimes( star )
         val newFrozenVarSet = initialFrozenVarSet ++ starPrimes
         /** Recurse on both branches */
-        val thenResults = staticAnalysis( thenExpr, vars, newFrozenVarSet, initialLetInOperBodyMap )
-        val elseResults = staticAnalysis( elseExpr, vars, newFrozenVarSet, initialLetInOperBodyMap )
+        val thenResults = staticAnalysis( thenExpr, vars, newFrozenVarSet, initialLetInOperBodyMap, manuallyAssigned )
+        val elseResults = staticAnalysis( elseExpr, vars, newFrozenVarSet, initialLetInOperBodyMap, manuallyAssigned )
 
         /** Continue as with disjunction */
         val delta: deltaType = (vars map { v =>
@@ -183,11 +208,11 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
         assert( defs.forall { _.formalParams.isEmpty } )
         /** First, analyze the bodies, to reuse later */
         val bodyResults = (defs map { d =>
-          d.name -> staticAnalysis( d.body, vars, initialFrozenVarSet, initialLetInOperBodyMap )
+          d.name -> staticAnalysis( d.body, vars, initialFrozenVarSet, initialLetInOperBodyMap, manuallyAssigned )
         }).toMap
 
         /** Then, analyze the body, with the bodyResults map */
-        staticAnalysis( body, vars, initialFrozenVarSet, initialLetInOperBodyMap ++ bodyResults )
+        staticAnalysis( body, vars, initialFrozenVarSet, initialLetInOperBodyMap ++ bodyResults, manuallyAssigned )
 
       /** Nullary apply */
       case OperEx( TlaOper.apply, NameEx(operName) ) =>
@@ -217,9 +242,10 @@ class AssignmentStrategyEncoder( val m_varSym : String = "b", val m_fnSym : Stri
 
     import AlphaTLApTools._
 
+    val manuallyAssigned = ManualAssignments.findAll( phi )
     /** Extract the list of leaf ids, the collocated set, the delta mapping and the frozen mapping */
     val StaticAnalysisData( seen, colloc, _, delta, frozen, uidMap ) =
-      staticAnalysis( phi, vars, Set[String](), Map.empty[String, StaticAnalysisData] ).simplified
+      staticAnalysis( phi, vars, Set[String](), Map.empty[String, StaticAnalysisData], manuallyAssigned ).simplified
 
     /**
       * We need two subsets of colloc, Colloc_\triangleleft for \tau_A

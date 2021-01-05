@@ -235,10 +235,10 @@ class SymbTransGenerator( tracker : TransformationTracker ) {
     }
 
     /**
-      * Gathers the ordered selections and their corresponding restricted formulas.
+      * Gathers the orderedAssignments selections and their corresponding restricted formulas.
       *
       * @param ex         Input formula.
-      * @param strategy      Assignment strategy
+      * @param strategy   Assignment strategy
       * @param selections Map of partial assignment selections.
       * @return A sequence of pairs of ordered assignment selections and their symbolic transitions.
       */
@@ -247,12 +247,9 @@ class SymbTransGenerator( tracker : TransformationTracker ) {
                         strategy : StrategyType,
                         selections : SelMapType
                       ) : Seq[SymbTrans] =
-      selections( ex.ID ).map( s =>
-        (
-          mkOrdered( s, strategy ),
-          sliceWith( s, selections )( ex )
-        )
-      ).toSeq
+      selections( ex.ID ).map { s =>
+        (mkOrdered( s, strategy ), sliceWith( s, selections )( ex ))
+      }.toSeq
     }
 
   /**
@@ -279,7 +276,9 @@ class SymbTransGenerator( tracker : TransformationTracker ) {
       * Since the new assignments have different UIDs, the new strategy is obtained
       * by replacing the UIDs in the old strategy (preserving order)
       */
-    val newStrat = asgnStrategy map asgnTransform.getReplacements
+
+    // In the case of manual assignments, return own UID (no need to populate the map)
+    val newStrat = asgnStrategy map { x => asgnTransform.getReplacements.getOrElse(x, x) }
 
     /** We compute the set of all branch intersections with `asgnStrategy` */
     val selections = allSelections( transformed, Map.empty )

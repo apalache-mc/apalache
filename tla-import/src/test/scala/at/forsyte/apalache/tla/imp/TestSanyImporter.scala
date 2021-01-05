@@ -865,6 +865,7 @@ class TestSanyImporter extends FunSuite {
         |E1 == [ f EXCEPT ![0] = 1, ![2] = 3 ]
         |E2 == [ f EXCEPT ![0][1][2] = 3 ]
         |E3 == [ f EXCEPT ![0,1,2] = 3 ]
+        |E4 == [ f EXCEPT ![0] = [@ EXCEPT !.state = 4] ]
         |================================
         |""".stripMargin
 
@@ -894,28 +895,23 @@ class TestSanyImporter extends FunSuite {
       )
     ) (mod.declarations(2))
 
-    /* // the old test when Desugarer was part of SanyImporter
-    expectDecl("E2",
-      OperEx(TlaFunOper.except,
-        NameEx("f"),
-        TlaFunOper.mkTuple(ValEx(TlaInt(0))),
-        OperEx(TlaFunOper.except,
-          OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaInt(0))),
-          TlaFunOper.mkTuple(ValEx(TlaInt(1))),
-          OperEx(TlaFunOper.except,
-            OperEx(TlaFunOper.app, OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaInt(0))), ValEx(TlaInt(1))),
-            TlaFunOper.mkTuple(ValEx(TlaInt(2))),
-            ValEx(TlaInt(3)))
-        )//
-      ))(mod.declarations(2))
-      */
-
     expectDecl("E3",
       OperEx(TlaFunOper.except,
         NameEx("f"),
         TlaFunOper.mkTuple(TlaFunOper.mkTuple(ValEx(TlaInt(0)), ValEx(TlaInt(1)), ValEx(TlaInt(2)))),
         ValEx(TlaInt(3))
       ))(mod.declarations(3))
+
+    // using @ in EXCEPT: https://github.com/informalsystems/apalache/issues/286
+    expectDecl("E4",
+      OperEx(TlaFunOper.except,
+        NameEx("f"),
+        TlaFunOper.mkTuple(ValEx(TlaInt(0))),
+        OperEx(TlaFunOper.except,
+          OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaInt(0))), // this is the equivalent of @
+          TlaFunOper.mkTuple(ValEx(TlaStr("state"))),
+          ValEx(TlaInt(4)))
+      ))(mod.declarations(4))
   }
 
   test("complex record selects") {
@@ -1075,7 +1071,7 @@ class TestSanyImporter extends FunSuite {
       """---- MODULE level2Operators ----
         |VARIABLE x, y
         |A(i, j, f(_)) == f(i \cup j)
-        |B(z) == z
+        |B(z) == {z}
         |C == A(0, 1, B)
         |================================
         |""".stripMargin
@@ -1142,6 +1138,39 @@ class TestSanyImporter extends FunSuite {
         assert(locationStore.contains(xDecl.body.ID)) // and source file information has been saved
     }
   }
+
+  test("LAMBDA") {
+    val text =
+      """---- MODULE lambda ----
+        |A(F(_), x) == F(x)
+        |B(y) ==
+        |  A(LAMBDA x: x = 1, 2)
+        |================================
+        |""".stripMargin
+
+    val locationStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(locationStore)
+      .loadFromSource("lambda", Source.fromString(text))
+    assert(1 == modules.size)
+    // the root module and naturals
+    val root = modules(rootName)
+
+    root.declarations.find {
+      _.name == "B"
+    } collect {
+      case TlaOperDecl(_, _, OperEx(TlaOper.apply, NameEx("A"), lambda, ValEx(TlaInt(i)))) =>
+        lambda match {
+          case LetInEx(NameEx("LAMBDA"),
+              TlaOperDecl("LAMBDA", List(SimpleFormalParam("x")),
+                OperEx(TlaOper.eq, NameEx("x"), ValEx(TlaInt(_))))) =>
+            // ok
+
+          case _ => fail("expected a LET-IN definition of LAMBDA and its usage by name")
+        }
+
+      case _ => fail("expected A")
+    }
+   }
 
   // LET-IN with recursive operators
   test("let-in-rec") {
@@ -1297,6 +1326,7 @@ class TestSanyImporter extends FunSuite {
         |CONSTANT S
         |nonRecFun[x \in S] == x
         |recFun[x \in S] == recFun[x]
+        |recFun2[x \in S, y \in S] == recFun2[y, x]
         |================================
         |""".stripMargin
 
@@ -1335,6 +1365,12 @@ class TestSanyImporter extends FunSuite {
           NameEx("x")),
           NameEx("x"),
           NameEx("S")))
+
+    val bodyOfFun2 = OperEx(TlaFunOper.app,
+      OperEx(TlaFunOper.recFunRef),
+      OperEx(TlaFunOper.tuple, NameEx("y"), NameEx("x")))
+    assertTlaRecFunDecl("recFun2",
+      OperEx(TlaFunOper.recFunDef, bodyOfFun2, NameEx("x"), NameEx("S"), NameEx("y"), NameEx("S")))
   }
 
   test("instances") {
@@ -1463,6 +1499,27 @@ class TestSanyImporter extends FunSuite {
     assert(aOfM.isInstanceOf[TlaOperDecl] && aOfM.asInstanceOf[TlaOperDecl].formalParams.size == 1)
   }
 
+  test("substitution in INSTANCE") {
+    // regression: the importer was not able to substitute a variable with an operator, e.g., in Paxos
+    val text =
+      """---- MODULE Paxos ----
+        |---- MODULE Consensus ----
+        |VARIABLE chosen
+        |C == chosen
+        |================================
+        |---- MODULE Voting ----
+        |chosen == 1
+        |C == INSTANCE Consensus
+        |================================
+        |V == INSTANCE Voting
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = new SanyImporter(new SourceStore)
+      .loadFromSource("Paxos", Source.fromString(text))
+    assert(1 == modules.size)
+  }
+
   test("LOCAL operator inside INSTANCE") {
     val text =
       """---- MODULE localInInstance ----
@@ -1523,8 +1580,85 @@ class TestSanyImporter extends FunSuite {
     }
   }
 
-  // this test fails for the moment
-  ignore("RECURSIVE operator inside INSTANCE") {
+  // regression for #143
+  test("Lookup inside substitutions") {
+    val text =
+      """------------------- MODULE P ----------------------
+        |------------------- MODULE Vot ----------------------
+        |------------------- MODULE Cons -------------------
+        |VARIABLE chosen
+        |Init == chosen = {}
+        |Next == chosen = {2}
+        |===================================================
+        |chosen == {2}
+        |C == INSTANCE Cons
+        |===================================================
+        |V == INSTANCE Vot
+        |===================================================""".stripMargin
+
+    val sourceStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(sourceStore)
+      .loadFromSource("P", Source.fromString(text))
+    assert(1 == modules.size)
+    // the root module and naturals
+    val root = modules(rootName)
+    // expect V!chosen, V!C!Init and V!C!Next
+    assert(3 == root.declarations.size)
+    val next = root.declarations.find(_.name == "V!C!Next")
+      .getOrElse(fail("V!C!Next not found"))
+    assert("V!C!Next" == next.name)
+    next.asInstanceOf[TlaOperDecl].body match {
+      case body @ OperEx(TlaOper.eq,
+                         OperEx(TlaOper.apply, NameEx("V!chosen")),
+                         OperEx(TlaSetOper.enumSet, ValEx(TlaInt(i)))) =>
+        assert(i == 2)
+        assert(sourceStore.contains(body.ID))
+
+      case _ =>
+        fail("expected V!C!Next == V!chosen = {2}")
+    }
+  }
+
+  // regression for #143
+  test("Series of substitutions") {
+    val text =
+      """------------------- MODULE A ----------------------
+        |------------------- MODULE B ----------------------
+        |------------------- MODULE C -------------------
+        |VARIABLE x
+        |magic == x /= 2
+        |===================================================
+        |VARIABLE y
+        |C1 == INSTANCE C WITH x <- y
+        |===================================================
+        |VARIABLE z
+        |B1 == INSTANCE B WITH y <- z
+        |===================================================""".stripMargin
+
+    val sourceStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(sourceStore)
+      .loadFromSource("A", Source.fromString(text))
+    assert(1 == modules.size)
+    // the root module and naturals
+    val root = modules(rootName)
+    // expect B1!C1!magic and z
+    assert(2 == root.declarations.size)
+    val magic = root.declarations.find(_.name == "B1!C1!magic")
+      .getOrElse(fail("B1!C1!magic not found"))
+    assert("B1!C1!magic" == magic.name)
+    magic.asInstanceOf[TlaOperDecl].body match {
+      case body @ OperEx(TlaOper.ne, NameEx("z"), ValEx(TlaInt(i))) =>
+        assert(i == 2)
+        assert(sourceStore.contains(body.ID))
+
+      case _ =>
+        fail("expected B1!C1!magic == z /= 2")
+    }
+  }
+
+  // This test works due a temporary bugfix for issue #130.
+  // We should test it again, once the bug in SANY is fixed.
+  test("RECURSIVE operator inside INSTANCE") {
     val text =
       """---- MODULE recInInstance ----
         |---- MODULE M ----
@@ -2018,7 +2152,7 @@ class TestSanyImporter extends FunSuite {
         |  /\ AssumeType(x, "Int")
         |  /\ AssumeType(S, "Set(Int)")
         |
-        |Foo(y) == "(Int) -> Set(Int)" :> {y}
+        |Foo(y) == "(Int) -> Set(Int)" ## {y}
         |================================
       """.stripMargin
 
@@ -2113,6 +2247,61 @@ class TestSanyImporter extends FunSuite {
       case d => fail("unexpected declaration: " + d)
     }
   }
+
+  test("operators of local instances of the standard modules") {
+    // Issue #295: the built-in operators are not eliminated when using LOCAL INSTANCE
+    val text =
+      """---- MODULE issue295 ----
+        |---- MODULE A ----
+        |LOCAL INSTANCE Sequences
+        |A == Append(<<>>, {})
+        |==================
+        |INSTANCE A
+        |================================
+        |""".stripMargin
+
+    val locationStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(locationStore)
+      .loadFromSource("issue295", Source.fromString(text))
+    // the root module and naturals
+    val root = modules(rootName)
+    // the definitions of the standard operators are filtered out
+    assert(1 == root.declarations.size)
+    root.declarations(0) match {
+      case TlaOperDecl("A", _, body) =>
+        assert(append(tuple(), enumSet()) == body)
+
+      case d => fail("unexpected declaration: " + d)
+    }
+  }
+
+  test("values of local instances of the standard modules") {
+    // Issue #295: the built-in operators are not eliminated when using LOCAL INSTANCE
+    val text =
+      """---- MODULE issue295 ----
+        |---- MODULE A ----
+        |LOCAL INSTANCE Integers
+        |A == Int
+        |==================
+        |INSTANCE A
+        |================================
+        |""".stripMargin
+
+    val locationStore = new SourceStore
+    val (rootName, modules) = new SanyImporter(locationStore)
+      .loadFromSource("issue295", Source.fromString(text))
+    // the root module and naturals
+    val root = modules(rootName)
+    // the definitions of the standard operators are filtered out
+    assert(1 == root.declarations.size)
+    root.declarations(0) match {
+      case TlaOperDecl("A", _, body) =>
+        assert(ValEx(TlaIntSet) == body)
+
+      case d => fail("unexpected declaration: " + d)
+    }
+  }
+
 
   test("ignore theorems") {
     // this proof is a garbage, just to check, whether the translator works

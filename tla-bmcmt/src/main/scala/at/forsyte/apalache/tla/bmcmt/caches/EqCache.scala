@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
 import at.forsyte.apalache.tla.bmcmt.caches.EqCache._
+import at.forsyte.apalache.tla.bmcmt.rewriter.Recoverable
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, StackableContext}
 import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -24,7 +25,7 @@ object EqCache {
   *
   * @author Igor Konnov
   */
-class EqCache(val falseConst: TlaEx, val trueConst: TlaEx) extends StackableContext {
+class EqCache() extends StackableContext with Serializable with Recoverable[EqCacheSnapshot] {
   /**
     * The current context level, see StackableContext.
     */
@@ -61,10 +62,10 @@ class EqCache(val falseConst: TlaEx, val trueConst: TlaEx) extends StackableCont
   def toTla(left: ArenaCell, right: ArenaCell, cacheResult: CacheEntry): TlaEx =
     cacheResult match {
       case FalseEntry() =>
-        falseConst
+        tla.bool(false)
 
       case TrueEntry() =>
-        trueConst
+        tla.bool(true)
 
       case EqEntry() =>
         tla.eql(left.toNameEx, right.toNameEx)
@@ -78,6 +79,32 @@ class EqCache(val falseConst: TlaEx, val trueConst: TlaEx) extends StackableCont
     * @return the immutable copy of the cache entries
     */
   def getMap: Map[(ArenaCell, ArenaCell), (CacheEntry, Int)] = eqCache.toMap
+
+  /**
+    * Take a snapshot and return it
+    *
+    * @return the snapshot
+    */
+  override def snapshot(): EqCacheSnapshot = {
+    val squashedCache = eqCache.map { case (key, (value, _)) => (key, (value, 0)) }
+    new EqCacheSnapshot(squashedCache)
+  }
+
+  /**
+    * Recover a previously saved snapshot (not necessarily saved by this object).
+    *
+    * @param shot a snapshot
+    */
+  override def recover(shot: EqCacheSnapshot): Unit = {
+    eqCache = shot.cache
+  }
+
+  /**
+    * Get the current context level, that is the difference between the number of pushes and pops made so far.
+    *
+    * @return the current level, always non-negative.
+    */
+  override def contextLevel: Int = level
 
   /**
     * Save the current context and push it on the stack for a later recovery with pop.

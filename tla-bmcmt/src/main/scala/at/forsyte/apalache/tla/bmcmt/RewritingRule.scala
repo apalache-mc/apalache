@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
+
 /**
   * A single rewriting rule that implements operational semantics.
   */

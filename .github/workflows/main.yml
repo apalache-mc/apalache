@@ -1,0 +1,84 @@
+on: [push]
+
+name: build
+
+jobs:
+  unit-tests:
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        operating-system: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: Build and Unit Test
+        run: mvn --batch-mode --no-transfer-progress test
+
+  integration-tests:
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        operating-system: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache local opam repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.opam
+          key: ${{ runner.os }}-opam-4.11.0
+      - name: Set up opam
+        uses: avsm/setup-ocaml@v1
+        with:
+          ocaml-version: 4.11.0
+      - name: Install mdx
+        run: |
+          opam pin https://github.com/realworldocaml/mdx.git#e5a86b0b0588d07cabbb3b1bedde84d1ebb35d1b
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: Build apalache
+        run: make apalache-jar
+      - name: Run integration tests
+        run: ./test/run-integration
+
+  docker-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache local opam repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.opam
+          key: ${{ runner.os }}-opam-4.11.0
+      - name: Set up opam
+        uses: avsm/setup-ocaml@v1
+        with:
+          ocaml-version: 4.11.0
+      - name: Install mdx
+        run: |
+          opam pin https://github.com/realworldocaml/mdx.git#e5a86b0b0588d07cabbb3b1bedde84d1ebb35d1b
+      - name: Build the docker image
+        run: docker build -t apalache/mc:ci .
+      - name: Run integration tests in docker container
+        run: ./test/run-integration
+        env:
+          USE_DOCKER: true
+          APALACHE_TAG: ci

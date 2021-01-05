@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
+import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.IntT
-import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell, SolverContext}
+import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir.{OperEx, ValEx}
@@ -11,7 +12,7 @@ import at.forsyte.apalache.tla.lir.{OperEx, ValEx}
   *
   * @author Igor Konnov
   */
-class IntValueCache(solverContext: SolverContext) extends AbstractCache[Arena, Int, ArenaCell] {
+class IntValueCache(solverContext: SolverContext) extends AbstractCache[Arena, Int, ArenaCell] with Serializable {
 
   def create(arena: Arena, intValue: Int): (Arena, ArenaCell) = {
     // introduce a new constant

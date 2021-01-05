@@ -4,14 +4,16 @@
     <groupId>at.forsyte.apalache</groupId>
     <artifactId>apalache</artifactId>
     <packaging>pom</packaging>
-    <version>0.7.2-RELEASE</version>
+    <version>0.8.0-RELEASE</version>
 
     <name>APALACHE project</name>
     <url>https://github.com/informalsystems/apalache</url>
 
     <properties>
+        <scalaVersion>2.12.12</scalaVersion>
+        <scalaBinaryVersion>2.12</scalaBinaryVersion>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <scoverage.plugin.version>1.4.0</scoverage.plugin.version>
+        <scoverage.plugin.version>1.4.1</scoverage.plugin.version>
         <scoverage.aggregate>true</scoverage.aggregate>
         <logback.version>1.2.3</logback.version>
     </properties>
@@ -48,36 +50,14 @@
         <module>mod-distribution</module>
     </modules>
 
-    <!-- the profile settings are copied from:
-         https://github.com/scala/scala-module-dependency-sample/blob/master/maven-sample/pom.xml -->
-    <profiles>
-        <profile>
-            <id>scala-2.12</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <scalaVersion>2.12.0</scalaVersion> <!-- required by scala-xml 1.0.6 -->
-                <scalaBinaryVersion>2.12</scalaBinaryVersion>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>scala-library</artifactId>
-                    <version>${scalaVersion}</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.scala-lang.modules</groupId>
-                    <artifactId>scala-parser-combinators_${scalaBinaryVersion}</artifactId>
-                    <version>1.1.2</version>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
-
     <!-- shared dependencies are set up here, use them in the submodules -->
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.scala-lang</groupId>
+                <artifactId>scala-library</artifactId>
+                <version>${scalaVersion}</version>
+            </dependency>
             <dependency>
                 <groupId>com.google.inject</groupId>
                 <artifactId>guice</artifactId>
@@ -114,14 +94,14 @@
 
             <dependency>
                 <groupId>org.scala-lang.modules</groupId>
-                <artifactId>scala-parser-combinators</artifactId>
+                <artifactId>scala-parser-combinators_${scalaBinaryVersion}</artifactId>
                 <version>1.1.2</version>
             </dependency>
 
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.13</version>
+                <version>4.13.1</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -143,15 +123,15 @@
             <dependency>
                 <groupId>org.lamport</groupId>
                 <artifactId>tla2tools</artifactId>
-                <version>1.6.0-SNAPSHOT</version>
+                <version>1.7.0-SNAPSHOT</version>
             </dependency>
 
-            <!-- Dependencies that are not available from the Maven repository, see 3rdparty/README.md -->
-
+            <!-- Z3-TurnKey provides Z3 and the integration of its Java API in
+                 a portable way. See https://github.com/tudo-aqua/z3-turnkey -->
             <dependency>
-                <groupId>com.microsoft</groupId>
-                <artifactId>z3</artifactId>
-                <version>4.8.7</version>
+                <groupId>io.github.tudo-aqua</groupId>
+                <artifactId>z3-turnkey</artifactId>
+                <version>4.8.7.1</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

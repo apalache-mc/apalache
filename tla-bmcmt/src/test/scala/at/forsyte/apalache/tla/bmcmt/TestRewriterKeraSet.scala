@@ -24,7 +24,7 @@ class TestRewriterKeraSet extends RewriterBase with TestingPredefs {
     val capSet = keramelizer.transform(tla.cap(left, right))
     val eqExpected = tla.eql(capSet, expected)
 
-    val state = new SymbState(eqExpected, BoolTheory(), arena, new Binding)
+    val state = new SymbState(eqExpected, arena, Binding())
     val rewriter = create()
     assertTlaExAndRestore(rewriter, state)
   }
@@ -38,7 +38,7 @@ class TestRewriterKeraSet extends RewriterBase with TestingPredefs {
     val minusSet = keramelizer.transform(tla.setminus(left, right))
     val eqExpected = tla.eql(minusSet, expected)
 
-    val state = new SymbState(eqExpected, BoolTheory(), arena, new Binding)
+    val state = new SymbState(eqExpected, arena, Binding())
     val rewriter = create()
     assertTlaExAndRestore(rewriter, state)
   }
@@ -53,7 +53,7 @@ class TestRewriterKeraSet extends RewriterBase with TestingPredefs {
     // R = S \cup T = {}
     val set3 = tla.cup(set1, set2) // the buggy implementation will try in(1, T) and this may return true!
     val trans = keramelizer.transform(tla.in(tla.int(1), set3))
-    val state = new SymbState(trans, BoolTheory(), arena, new Binding)
+    val state = new SymbState(trans, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     solverContext.assertGroundExpr(nextState.ex)

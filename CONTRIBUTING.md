@@ -29,6 +29,7 @@ Apalache:
     - [Dependencies](#dependencies)
         - [Environment](#environment)
     - [Development Environment](#development-environment)
+        - [IntelliJ IDEA](#intellij-idea)
         - [Emacs](#emacs)
             - [Install `metals-emacs`](#install-metals-emacs)
                 - [Arch](#arch)
@@ -37,9 +38,16 @@ Apalache:
     - [Testing](#testing)
         - [Unit tests](#unit-tests)
         - [Integration tests](#integration-tests)
+            - [Installing Dependencies](#installing-dependencies)
+            - [Running the tests](#running-the-tests)
         - [Continuous Integration](#continuous-integration)
     - [Changelog](#changelog)
     - [Releases](#releases)
+        - [Prepare the release](#prepare-the-release)
+        - [Cut the release](#cut-the-release)
+        - [Publish a docker image](#publish-a-docker-image)
+        - [Advance the version on unstable](#advance-the-version-on-unstable)
+        - [Announce the relesae](#announce-the-relesae)
 
 <!-- markdown-toc end -->
 
@@ -109,6 +117,11 @@ The necessary shell environment is specified in [.envrc](./.envrc). You can:
 If you use a different development environment or editor set up, please document
 it here!
 
+### IntelliJ IDEA
+
+Download the community edition of [IntelliJ IDEA](https://www.jetbrains.com/idea/)
+and set up a new project.
+
 ### Emacs
 
 You can use the [metals][] Scala language server together with [lsp-mode][] for
@@ -163,17 +176,37 @@ make test
 
 ### Integration tests
 
-Run the integration tests with
+#### Installing Dependencies
+
+We use [mdx](https://github.com/realworldocaml/mdx) for CLI integration tests.
+
+Here is a platform agnostic installation recipe:
+
+```sh
+# Install opam
+sh <(curl -sL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)
+# Install mdx
+opam install mdx
+```
+
+For alternative installation methods for opam, see https://opam.ocaml.org/doc/Install.html
+
+#### Running the tests
+
+To build a fresh executable and run all the integration tests, execute
 
 ```sh
 make integration
 ```
 
+For more details on running the integration tests, see [./test/tla/cli-integration-tests.md](./test/tla/cli-integration-tests.md).
+
 ### Continuous Integration
 
-We run continuous integration tests on the `master` and `unstable` branches via
-[Travis CI](https://travis-ci.org/github/informalsystems/apalache). The CI configuration
-is located in [.travis.yml](./.travis.yml).
+We run continuous integration tests using [GitHub actions](https://github.com/informalsystems/apalache/actions).
+
+The CI configuration is located in
+[.github/workflows/main.yml](.github/workflows/main.yml).
 
 ## Changelog
 
@@ -187,17 +220,39 @@ Changes, Features, Improvements, Bug Fixes.
 Assuming the version to be released is `l.m.n`, as per semantic versioning, the
 current release process is as follows:
 
+### Prepare the release
+
 - [ ] Update [CHANGES.md](./CHANGES.md), adding the heading `## l.m.n` over the
       unreleased changes.
 - [ ] Copy this section into a new file named `./script/release-l.m.n.txt`
+- [ ] Mark the version as RELEASE via `mvn versions:set -DnewVersion=l.m.n-RELEASE`
+- [ ] Commit the changes: `git add . && git commit -m "Prepare for release l.m."`
 - [ ] Open a PR to merge `unstable` into `master`, titling it `Release l.m.n`
-- [ ] When the PR is merged, checkout `master` and then run `./script/release
-      vl.m.n ./scripts/release-l.m.n.txt`
-- [ ] Build an updated docker container tagged with `l.m.n`
-- [ ] Push the new taged image to dockerhub
-- [ ] If it's a major release or important minor release, announce it to
-  - [ ] https://www.reddit.com/r/tlaplus/
-  - [ ] https://groups.google.com/u/1/g/tlaplus
+
+### Cut the release
+
+When the PR is merged into `master`:
+
+- [ ] Checkout `master`
+- [ ] Sync with upstream via`git pull origin master`
+- [ ] Build the artifact with `make`
+- [ ] Post the relese with `./script/release vl.m.n ./scripts/release-l.m.n.txt`
+
+### Publish a docker image
+
+- [ ] Build an updated docker container: `docker build -t apalache/mv:l.m.n`
+- [ ] Tag the new version as `latest`: `docker tag apalache/mc:l.m.n latest`
+- [ ] Push the new taged images to dockerhub: `docker push apalache/mc:l.m.n && docker push apalache/mc:latest`
+
+### Advance the version on unstable
+
+- [ ] Checkout `unstable`
+- [ ] Run `mvn release:update-versions`
+- [ ] Commit the chnages `git add . && git commit -m "Bump version to l.m.(n+1)-SNAPSHOT" && git push`
+
+### Announce the relesae
+
+- [ ] Post a notification to the (internal) `#releases` slack channel.
 
 [Github Issue]: https://github.com/informalsystems/apalache/issues
 [rfc]: https://en.wikipedia.org/wiki/Request_for_Comments

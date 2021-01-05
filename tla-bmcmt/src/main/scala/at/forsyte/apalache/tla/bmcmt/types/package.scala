@@ -12,7 +12,7 @@ package object types {
   /**
     * A simple type system for the symbolic memory cells.
     */
-  sealed abstract class CellT {
+  sealed abstract class CellT extends Serializable {
     /**
       * Test whether two types may produce objects that are comparable.
       *
@@ -149,7 +149,7 @@ package object types {
   /**
     * A type variable.
     */
-  sealed case class UnknownT() extends CellT {
+  sealed case class UnknownT() extends CellT with Serializable {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
@@ -167,7 +167,7 @@ package object types {
     * a certain operation failed.
     */
   @deprecated("failure predicates were abandoned")
-  sealed case class FailPredT() extends CellT {
+  sealed case class FailPredT() extends CellT with Serializable {
     override val signature: String = "E"
 
     override val toString: String = "FailPred"
@@ -176,7 +176,7 @@ package object types {
   /**
     * A cell constant, that is, just a name that expresses string constants in TLA+.
     */
-  sealed case class ConstT() extends CellT {
+  sealed case class ConstT() extends CellT with Serializable {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
@@ -192,7 +192,7 @@ package object types {
   /**
     * A Boolean cell type.
     */
-  sealed case class BoolT() extends CellT {
+  sealed case class BoolT() extends CellT with Serializable {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
@@ -208,7 +208,7 @@ package object types {
   /**
     * An integer cell type.
     */
-  sealed case class IntT() extends CellT {
+  sealed case class IntT() extends CellT with Serializable {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
@@ -226,7 +226,7 @@ package object types {
     *
     * @param elemType the elements type
     */
-  sealed case class FinSetT(elemType: CellT) extends CellT {
+  sealed case class FinSetT(elemType: CellT) extends CellT with Serializable {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
@@ -245,7 +245,7 @@ package object types {
     *
     * @param elemType the elements type
     */
-  sealed case class InfSetT(elemType: CellT) extends CellT {
+  sealed case class InfSetT(elemType: CellT) extends CellT with Serializable {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
@@ -263,7 +263,7 @@ package object types {
     * @param domType the type of the argument is a finite set, i.e., typeof(S) in SUBSET S.
     *                Currently, only FinSetT(_) is supported.
     */
-  sealed case class PowSetT(domType: CellT) extends CellT {
+  sealed case class PowSetT(domType: CellT) extends CellT with Serializable {
     require(domType.isInstanceOf[FinSetT]) // currently, we support only PowSetT(FinSetT(_))
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
@@ -286,7 +286,7 @@ package object types {
     * @param domType    the type of the domain (a finite set, a powerset, or a cross product).
     * @param resultType result type (not the co-domain!)
     */
-  sealed case class FunT(domType: CellT, resultType: CellT) extends CellT {
+  sealed case class FunT(domType: CellT, resultType: CellT) extends CellT with Serializable {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
@@ -312,7 +312,7 @@ package object types {
     * @param domType the type of the domain (must be either a finite set or a powerset).
     * @param cdmType the type of the co-domain (must be either a finite set or a powerset).
     */
-  sealed case class FinFunSetT(domType: CellT, cdmType: CellT) extends CellT {
+  sealed case class FinFunSetT(domType: CellT, cdmType: CellT) extends CellT with Serializable {
     require((domType.isInstanceOf[FinSetT] || domType.isInstanceOf[PowSetT])
             && (cdmType.isInstanceOf[FinSetT] || cdmType.isInstanceOf[PowSetT]
                   || cdmType.isInstanceOf[FinFunSetT] || cdmType.isInstanceOf[InfSetT]))
@@ -345,7 +345,7 @@ package object types {
     *
     * @param args the types of the tuple elements
     */
-  sealed case class TupleT(args: Seq[CellT]) extends CellT {
+  sealed case class TupleT(args: Seq[CellT]) extends CellT with Serializable {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling.
@@ -364,7 +364,7 @@ package object types {
     *
     * @param res the type of the elements in the co-domain
     */
-  sealed case class SeqT(res: CellT) extends CellT {
+  sealed case class SeqT(res: CellT) extends CellT with Serializable {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling.
@@ -385,7 +385,7 @@ package object types {
     * @param args
     */
   @deprecated("Never been used")
-  sealed case class CrossProdT( args: Seq[FinSetT] ) extends CellT {
+  sealed case class CrossProdT( args: Seq[FinSetT] ) extends CellT with Serializable {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,
@@ -401,7 +401,7 @@ package object types {
     *
     * @param fields a map of fields and their types
     */
-  sealed case class RecordT(fields: SortedMap[String, CellT]) extends CellT {
+  sealed case class RecordT(fields: SortedMap[String, CellT]) extends CellT with Serializable {
     /**
       * Produce a short signature that uniquely describes the type (up to unification),
       * similar to Java's signature mangling. If one type can be unified to another,

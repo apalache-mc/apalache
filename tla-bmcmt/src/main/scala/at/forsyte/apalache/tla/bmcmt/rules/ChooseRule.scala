@@ -38,11 +38,11 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
         def solverAssert = rewriter.solverContext.assertGroundExpr _
         // compute set comprehension and then pick an element from it
         val filterEx = tla.filter(varName, set, pred)
-        var nextState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(filterEx))
+        var nextState = rewriter.rewriteUntilDone(state.setRex(filterEx))
         // pick an arbitrary witness
         val setCell = nextState.asCell
         if (nextState.arena.getHas(setCell).isEmpty) {
-          rewriter.coerce(defaultValueFactory.makeUpValue(nextState, setCell), state.theory)
+          defaultValueFactory.makeUpValue(nextState, setCell)
         } else {
           val elems = nextState.arena.getHas(setCell)
           val nelems = elems.size
@@ -59,7 +59,7 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
           // If oracle = N, the picked cell is not constrained. In the past, we used a default value here,
           // but it sometimes produced conflicts (e.g., a picked record domain had to coincide with a default domain)
-          rewriter.coerce(nextState.setRex(pickedCell.toNameEx), state.theory)
+          nextState.setRex(pickedCell.toNameEx)
         }
 
       // once the issue #95 has been resolved, use happyChoose
@@ -73,7 +73,7 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
   // It should be used only after resolving the issue #95: https://github.com/informalsystems/apalache/issues/95
   private def happyChoose(state: SymbState, varName: String, set: TlaEx, pred: TlaEx): SymbState = {
     // rewrite the bounding set
-    val nextState = rewriter.rewriteUntilDone(state.setTheory(CellTheory()).setRex(set))
+    val nextState = rewriter.rewriteUntilDone(state.setRex(set))
     val setCell = nextState.asCell
     val isFinSet = PartialFunction.cond(setCell.cellType) { case FinSetT(_) => true }
     if (isFinSet) {
@@ -99,11 +99,11 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
       nextState = pickRule.pickByOracle(nextState, oracle, elems, trueEx)
       val witness = nextState.asCell
       // assert that the predicate holds -- we are in the happy case
-      val tempBinding = nextState.binding + (varName -> witness)
+      val tempBinding = Binding(nextState.binding.toMap + (varName -> witness))
       nextState = rewriter.rewriteUntilDone(nextState.setRex(pred).setBinding(tempBinding))
       solverAssert(nextState.ex)
       // return the witness
-      nextState.setRex(witness.toNameEx).setBinding(nextState.binding - varName)
+      nextState.setRex(witness.toNameEx).setBinding(Binding(nextState.binding.toMap - varName))
     }
   }
 
@@ -114,11 +114,11 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
     var nextState = pickRule.pick(setCell, state, state.arena.cellFalse().toNameEx)
     val witness = nextState.asCell
     // assert that the witness satisfies the predicate -- we are in the happy case
-    val tempBinding = nextState.binding + (varName -> witness)
+    val tempBinding = Binding(nextState.binding.toMap + (varName -> witness))
     nextState = rewriter.rewriteUntilDone(nextState.setRex(pred).setBinding(tempBinding))
     solverAssert(nextState.ex)
     // return the witness
-    nextState.setRex(witness.toNameEx).setBinding(nextState.binding - varName)
+    nextState.setRex(witness.toNameEx).setBinding(Binding(nextState.binding.toMap - varName))
   }
 
 }

@@ -5,7 +5,9 @@ The parameters for fine tuning can be passed to the checker in a properties file
 Its name is given with the command-line option ``--tuning=my.properties.`` This file
 supports variable substitution, e.g., ``${x}`` is replaced with the value of ``x``, if it was
 previously declared.
- 
+
+1. __Randomization__: `smt.randomSeed=<int>` passes the random seed to `z3` (via
+  `z3`'s parameters `sat.random_seed` and `smt.random_seed`). 
 
 1. __Timeouts__: ``search.transition.timeout=<seconds>`` and ``search.invariant.timeout=<seconds>`` set timeouts
   in seconds for checking whether a transition is enabled and whether the invariant holds, respectively.

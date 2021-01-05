@@ -6,22 +6,6 @@ import scala.collection.immutable.HashMap
 
 package object bmcmt {
   /**
-    * Binding variables to memory cells.
-    */
-  type Binding = HashMap[String, ArenaCell]
-
-  // a handy companion object
-  object Binding {
-    def apply(args: (String, ArenaCell)*): Binding ={
-      HashMap[String, ArenaCell](args :_*)
-    }
-
-    def apply(map: Map[String, ArenaCell]): Binding = {
-      HashMap(map.toSeq :_*)
-    }
-  }
-
-  /**
     * A theory used to evaluate a TLA+ expression: cells, Booleans, and integers.
     *
     * This concept is obsolete and will be removed in the future.
@@ -84,47 +68,5 @@ package object bmcmt {
     }
 
     override def toString: String = "Cell"
-  }
-
-  case class BoolTheory() extends Theory {
-    /**
-      * The prefix of all Boolean constants.
-      */
-    val namePrefix = "$B$"
-
-    /**
-      * Check whether a constant is named after the theory naming convention.
-      *
-      * @param name a constant name
-      * @return if the name follows the naming conventions of this theory.
-      */
-    override def hasConst(name: String): Boolean = {
-      name.startsWith(namePrefix)
-    }
-
-    override def toString: String = "Bool"
-  }
-
-  /**
-    * A theory of integers. This theory is obsolete and will be removed soon,
-    * as we are now using cells of type IntT().
-    */
-  case class IntTheory() extends Theory {
-    /**
-      * The prefix of all integer constants.
-      */
-    val namePrefix = "$Z$"
-
-    /**
-      * Check whether a constant is named after the theory naming convention.
-      *
-      * @param name a constant name
-      * @return if the name follows the naming conventions of this theory.
-      */
-    override def hasConst(name: String): Boolean = {
-      name.startsWith(namePrefix)
-    }
-
-    override def toString: String = "Int"
   }
 }

@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.config
 
 import at.forsyte.apalache.infra.{DefaultExceptionAdapter, ExceptionAdapter}
 import at.forsyte.apalache.infra.passes._
-import at.forsyte.apalache.tla.assignments.passes.{PrimingPass, PrimingPassImpl, TransitionPass, TransitionPassImpl}
+import at.forsyte.apalache.tla.assignments.passes._
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.passes._
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
@@ -64,23 +64,29 @@ class CheckerModule extends AbstractModule {
     bind(classOf[Pass])
       .annotatedWith(Names.named("AfterConfiguration"))
       .to(classOf[UnrollPass])
-    // the next pass is InlinePass
-    bind(classOf[InlinePass])
-      .to(classOf[InlinePassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterUnroll"))
-      .to(classOf[InlinePass])
     // the next pass is PrimingPass
     bind(classOf[PrimingPass])
       .to(classOf[PrimingPassImpl])
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterInline"))
+      .annotatedWith(Names.named("AfterUnroll"))
       .to(classOf[PrimingPass])
+    // the next pass is CoverAnalysisPass
+    bind(classOf[CoverAnalysisPass])
+      .to(classOf[CoverAnalysisPassImpl])
+    bind(classOf[Pass])
+      .annotatedWith(Names.named("AfterPriming"))
+      .to(classOf[CoverAnalysisPass])
+    // the next pass is InlinePass
+    bind(classOf[InlinePass])
+      .to(classOf[InlinePassImpl])
+    bind(classOf[Pass])
+      .annotatedWith(Names.named("AfterCoverAnalysis"))
+      .to(classOf[InlinePass])
     // the next pass is VCGenPass
     bind(classOf[VCGenPass])
       .to(classOf[VCGenPassImpl])
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterPriming"))
+      .annotatedWith(Names.named("AfterInline"))
       .to(classOf[VCGenPass])
     // the next pass after SanyParserPass is PreproPass
     bind(classOf[PreproPass])

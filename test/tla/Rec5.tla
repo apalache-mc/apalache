@@ -4,33 +4,35 @@
  *
  * Igor Konnov, April 2020
  *)
-EXTENDS Integers
+EXTENDS Integers, FiniteSets
 
-CONSTANTS
-    MAX_POWER,  \* a maximal voting power
-    Procs       \* a set of processes
+MAX_POWER == 3              \* the maximal voting power
+Procs == {"a", "b", "c"}     \* the set of processes
 
 VARIABLES votingPower
 
 a <: b == a
 
-IntSet(S) == S <: {Int}
+StrSet(S) == S <: {STRING}
 
 RECURSIVE Sum(_)
 
 Sum(S) ==
-  IF S = IntSet({})
+  IF S = StrSet({})
   THEN 0
   ELSE LET x == CHOOSE y \in S: TRUE IN
     votingPower[x] + Sum(S \ {x})
 
-UNFOLD_TIMES_Sum == Cardinality(Procs)
-UNFOLD_DEFAULT_Sum == 0
+UNROLL_TIMES_Sum == 3
+UNROLL_DEFAULT_Sum == 0
 
 Init ==
     votingPower \in [Procs -> 0..MAX_POWER]
 
 Next ==
     votingPower' \in [Procs -> 0..MAX_POWER]
+
+Inv ==
+    Sum(Procs) < 10
 
 =============================================================================

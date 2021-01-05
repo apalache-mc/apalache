@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.lir.TlaEx
+import at.forsyte.apalache.tla.bmcmt.types.TypeInferenceError
+import at.forsyte.apalache.tla.lir.{NullEx, TlaEx}
 
 /**
   * A generic error that occurred in the model checker.
@@ -25,6 +26,16 @@ class RewriterException(message: String, causeExpr: TlaEx) extends CheckerExcept
   * @param causeExpr the problematic TLA+ expression, may be NullEx
   */
 class TypeException(message: String, causeExpr: TlaEx) extends CheckerException(message, causeExpr)
+
+
+/**
+  * An exception that is thrown when at least one type inference error was found.
+  * @param errors the list of type inference errors
+  */
+class TypeInferenceException(val errors: Seq[TypeInferenceError])
+  extends CheckerException("Type inference failed, first error: %s"
+      .format(if (errors.nonEmpty) errors.head.explanation else "unknown"),
+    if (errors.nonEmpty) errors.head.origin else NullEx)
 
 /**
   * This exception is thrown when QStateRewrite cannot find an applicable rule.

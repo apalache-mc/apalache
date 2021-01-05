@@ -21,31 +21,43 @@ class ExprOrOpArgNodeTranslator(sourceStore: SourceStore,
       node match {
         // as tlatools do not provide us with a visitor pattern, we have to enumerate classes here
         case num: NumeralNode =>
+          // an integer literal, e.g., 123
           translateNumeral(num)
 
         case str: StringNode =>
+          // a string literal
           translateString(str)
 
         case dec: DecimalNode =>
+          // a decimal literal, e.g., 123.456 (not a floating point!)
           translateDecimal(dec)
 
         case opApp: OpApplNode =>
+          // application of an operator, e.g., F(x)
           OpApplTranslator(sourceStore, context, recStatus).translate(opApp)
 
-        case arg: OpArgNode =>
-          // we just pass the name of the argument without any extra information
-          NameEx(arg.getName.toString.intern())
+        case opArg: OpArgNode =>
+          // An operator definition that is used as an expression, e.g., LAMBDA x: x = 1.
+          // There are at least two cases:
+          //   1. An operator that is passed as an argument to another operator, e.g., B in A(B)
+          //   2. A lambda-expression that is passed as an argument ao another operator, e.g., A(LAMBDA x: x)
+          translateLambdaOrOperatorAsArgument(opArg)
 
         case letIn: LetInNode =>
+          // Example: LET Foo(a, b) == e1 IN e2
           translateLetIn(letIn)
 
         case substIn: SubstInNode =>
+          // A substitution that originates from INSTANCE Foo WITH x <- a, y <- b.
+          // The substitution contains the bindings x <- a, y <- b.
           translateSubstIn(substIn)
 
         case at: AtNode =>
+          // the shortcut "@" that is used in EXCEPT
           translateAt(at)
 
         case label: LabelNode =>
+          // a node label, e.g., lab(x) :: e
           translateLabel(label)
 
         case n =>
@@ -101,6 +113,29 @@ class ExprOrOpArgNodeTranslator(sourceStore: SourceStore,
     val body = ExprOrOpArgNodeTranslator(sourceStore, letInContext, recStatus)
       .translate(letIn.getBody)
     LetInEx( body, letInDeclarations : _* )
+  }
+
+  // translate an operator definition that is used as an expression, that is, LAMBDA
+  private def translateLambdaOrOperatorAsArgument(opArgNode: OpArgNode): TlaEx = {
+    // Instead of extending the IR with a new expression type, we simply introduce a local LET-IN definition.
+    // Although this is a well-defined expression in the IR, it does not correspond to a well-defined TLA+ expression.
+    // Hence, one has to take care of this, when printing the output to the user.
+    val name = opArgNode.getName.toString
+    opArgNode.getOp match {
+      // a lambda-definition is passed as an argument
+      case defNode: OpDefNode if name == "LAMBDA" =>
+        val decl = OpDefTranslator(sourceStore, context).translate(defNode)
+        // e.g., LET Foo(x) == e1 in Foo
+        LetInEx(NameEx(name), decl)
+
+      // an operator that is passed as an argument to another operator
+      case _: OpDefNode =>
+        // simply return a reference to the operator by name
+        NameEx(name)
+
+      case e =>
+        throw new SanyImporterException("Expected an operator definition as an argument, found: " + e)
+    }
   }
 
   // substitute an expression with the declarations that come from INSTANCE M WITH ...

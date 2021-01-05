@@ -13,7 +13,7 @@ object TlaFiniteSetOper {
   /**
     * The operator that checks, whether a set is finite.
     */
-  val isFiniteSet = new TlaFiniteSetOper {
+  object isFiniteSet extends TlaFiniteSetOper {
     override val arity = FixedArity(1)
     override val name = "IsFiniteSet"
     override val precedence: (Int, Int) = (16, 16) // as the function application
@@ -22,7 +22,7 @@ object TlaFiniteSetOper {
   /**
     * The operator that returns the cardinality of a finite set.
     */
-  val cardinality = new TlaFiniteSetOper {
+  object cardinality extends TlaFiniteSetOper {
     override val arity = FixedArity(1)
     override val name = "Cardinality"
     override val precedence: (Int, Int) = (16, 16) // as the function application

@@ -1,15 +1,25 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, UnknownT}
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
+import org.scalatest.{BeforeAndAfterEach, FunSuite}
 
 @RunWith(classOf[JUnitRunner])
-class TestArena extends FunSuite {
+class TestArena extends FunSuite with BeforeAndAfterEach {
+  private var solver: Z3SolverContext = _
+
+  override protected def beforeEach(): Unit = {
+    solver = new Z3SolverContext(SolverConfig.default.copy(debug = true))
+  }
+
+  override protected def afterEach(): Unit = {
+    solver.dispose()
+  }
+
   test("create cells") {
-    val solverContext = new Z3SolverContext()
-    val emptyArena = Arena.create(solverContext)
+    val emptyArena = Arena.create(solver)
     val arena = emptyArena.appendCell(UnknownT())
     assert(emptyArena.cellCount + 1 == arena.cellCount)
     assert(UnknownT() == arena.topCell.cellType)
@@ -19,8 +29,7 @@ class TestArena extends FunSuite {
   }
 
   test("add 'has' edges") {
-    val solverContext = new Z3SolverContext()
-    val arena = Arena.create(solverContext).appendCell(FinSetT(UnknownT()))
+    val arena = Arena.create(solver).appendCell(FinSetT(UnknownT()))
     val set = arena.topCell
     val arena2 = arena.appendCell(BoolT())
     val elem = arena2.topCell
@@ -29,8 +38,7 @@ class TestArena extends FunSuite {
   }
 
   test("BOOLEAN has FALSE and TRUE") {
-    val solverContext = new Z3SolverContext()
-    val arena = Arena.create(solverContext)
+    val arena = Arena.create(solver)
     val boolean = arena.cellBooleanSet()
     assert(List(arena.cellFalse(), arena.cellTrue()) == arena.getHas(arena.cellBooleanSet()))
   }

@@ -6,12 +6,12 @@ import at.forsyte.apalache.tla.lir.TlaEx
 import scala.collection.immutable.{Map, SortedMap}
 
 /**
-  * A diagnostic message that can be thrown as an exception or used in a list of errors.
+  * A diagnostic message that is added in a list of errors.
   *
   * @param origin      the expression that caused the type error
   * @param explanation the explanation
   */
-class TypeInferenceError(val origin: TlaEx, val explanation: String) extends Exception(explanation)
+class TypeInferenceError(val origin: TlaEx, val explanation: String)
 
 /**
   * A general interface to a type inference engine. Check the description in docs/types-api.md.
@@ -36,7 +36,7 @@ trait TypeFinder[T] {
     *
     * @return a list of type errors
     */
-  def getTypeErrors: Seq[TypeInferenceError]
+  def typeErrors: Seq[TypeInferenceError]
 
   /**
     * Given a TLA+ expression and the types of its arguments, compute the resulting type, if possible.
@@ -67,14 +67,14 @@ trait TypeFinder[T] {
     *
     * @return a mapping of names to types
     */
-  def getVarTypes: SortedMap[String, T]
+  def varTypes: SortedMap[String, T]
 
   /**
     * Restore variable types from a map. This method does not update type annotations.
     *
     * @param newVarTypes a mapping of names to types
     */
-  def setVarTypes(newVarTypes: SortedMap[String, CellT]): Unit
+  def varTypes_(newVarTypes: SortedMap[String, CellT]): Unit
 
     /**
     * Record the cell name and its type.

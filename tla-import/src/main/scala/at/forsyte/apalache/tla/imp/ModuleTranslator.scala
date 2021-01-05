@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
+import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic.{InstanceNode, ModuleNode, OpDefNode}
 
 import scala.collection.JavaConverters._
@@ -11,7 +12,7 @@ import scala.collection.JavaConverters._
   *
   * @author konnov
   */
-class ModuleTranslator(sourceStore: SourceStore) {
+class ModuleTranslator(sourceStore: SourceStore) extends LazyLogging {
   def translate(node: ModuleNode): TlaModule = {
     var context = node.getConstantDecls.toList.foldLeft(Context()) {
       (ctx, node) => ctx.push(DeclUnit(TlaConstDecl(node.getName.toString)))
@@ -56,6 +57,10 @@ class ModuleTranslator(sourceStore: SourceStore) {
           val updatedDecl = defTranslator.translate(opDef)
           decl.isRecursive = updatedDecl.isRecursive
           decl.body = updatedDecl.body
+
+          // TODO(igor) temporary bugfix for the issue #130. Remove as soon as it is fixed in tla2tools.
+          // https://github.com/informalsystems/apalache/issues/130
+          workaroundMarkRecursive(Set(decl), decl.body)
 
         case _ => () // XXX: do something?
       }
@@ -113,6 +118,42 @@ class ModuleTranslator(sourceStore: SourceStore) {
     }
 
     node.getInstances.toList.foldLeft(newCtx)(eachInstance)
+  }
+
+  /**
+    * This is a temporary bugfix for the issue 130: https://github.com/informalsystems/apalache/issues/130
+    * TODO(igor) Once it is fixed in SANY, remove this method. This method does not detect mutually recursive operators,
+    * but I have never seen mutual recursion in TLA+.
+    *
+    * @param declared the set of names that have been introduced at higher levels.
+    */
+  private def workaroundMarkRecursive(declared: Set[TlaOperDecl], ex: TlaEx): Unit = {
+    ex match {
+      case NameEx(name) =>
+        declared.find(_.name == name).foreach {
+              // the operator is used inside its own definition, mark as recursive
+          d =>
+            if (!d.isRecursive) {
+              logger.warn(s"WORKAROUND #130: labelling operator $name as recursive, though SANY did not tell us so.")
+              d.isRecursive = true
+            }
+        }
+
+      case LetInEx(body, defs @ _*) =>
+        for (d <- defs) {
+          // go inside the definition and mark it recursive if needed
+          workaroundMarkRecursive(declared + d, d.body)
+        }
+
+        // traverse the body for nested LET-IN definitions
+        workaroundMarkRecursive(declared, body)
+
+      case OperEx(_, args @ _*) =>
+        // traverse the arguments for nested LET-IN definitions
+        args.foreach(workaroundMarkRecursive(declared, _))
+
+      case _ => () // a terminal expression
+    }
   }
 }
 
