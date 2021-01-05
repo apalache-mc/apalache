@@ -1,10 +1,7 @@
-## Apalache
-
-<div align="center">
 !["Apalache Logo"](./logo-apalache.png "Apalache Logo")
 
 [Features][] | [User manual][] | [Releases][] | [User chat][] | [Contribute][]
-</div>
+{: style="font-size: 2em; text-align: center;"}
 
 Apalache translates [TLA+][] into the logic supported by SMT solvers such as
 [Microsoft Z3][]. Apalache can check [inductive invariants][] (for fixed or
