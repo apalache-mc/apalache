@@ -107,7 +107,7 @@
             <dependency>
                 <groupId>org.scalatest</groupId>
                 <artifactId>scalatest_${scalaBinaryVersion}</artifactId>
-                <version>3.0.1</version>
+                <version>3.3.0-SNAP3</version>
                 <scope>test</scope>
             </dependency>
             <!--
