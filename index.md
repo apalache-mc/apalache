@@ -1,37 +1,62 @@
-## Welcome to GitHub Pages
+## Apalache
 
-You can use the [editor on GitHub](https://github.com/informalsystems/apalache/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+<div align="center">
+!["Apalache Logo"](./logo-apalache.png "Apalache Logo")
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+[Features][] | [User manual][] | [Releases][] | [User chat][] | [Contribute][]
+</div>
 
-### Markdown
+Apalache translates [TLA+][] into the logic supported by SMT solvers such as
+[Microsoft Z3][]. Apalache can check [inductive invariants][] (for fixed or
+bounded parameters) and check safety of bounded executions ([bounded model
+checking][]). To see the list of supported TLA+ constructs, check the supported
+features. In general, Apalache runs under the same assumptions as [TLC][].
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+To learn more about TLA+, visit [Leslie Lamport's page on TLA+][] and see his
+[video course][].
 
-```markdown
-Syntax highlighted code block
+## Talks and tutorials
 
-# Header 1
-## Header 2
-### Header 3
+- [How TLA+ and Apalache Helped Us to Design the Tendermint Light Client](https://www.crowdcast.io/e/interchain-conversations-II/38).
+    Interchain Conversations 2020 (December 2020).
 
-- Bulleted
-- List
+- [Model-based testing with TLA+ and Apalache](https://youtu.be/aveoIMphzW8).
+  TLA+ Community Event 2020 (October 2020).
 
-1. Numbered
-2. List
+- [Type inference for TLA+ in Apalache](https://youtu.be/hnp25hmCMN8).
+  TLA+ Community Event 2020 (October 2020).
 
-**Bold** and _Italic_ and `Code` text
+- [Formal Spec and Model Checking of the Tendermint Blockchain Synchronization Protocol](https://youtu.be/h2Ovc1KWlXM)
+  2nd Workshop on Formal Methods for Blockchains (July 2020).
 
-[Link](url) and ![Image](src)
-```
+- [Showing safety of Tendermint Consensus with TLA+ and Apalache](https://www.youtube.com/watch?v=aF20-28sMII).
+  Dev session at Informal Systems (May 2020).
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+- [TLA+ model checking made symbolic](https://www.youtube.com/watch?v=e66FGgRzaqw)
+  OOPSLA 2019 (October 2019).
 
-### Jekyll Themes
+- [Bounded model checking of TLA+ specifications with SMT](https://www.youtube.com/watch?v=Xl1--arESl8)
+  TLA+ Community Event 2018 (July 2018).
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/informalsystems/apalache/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+## Academic papers
 
-### Support or Contact
+To read an academic paper about the theory behind Apalache,
+check our [paper at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549).
+Related reports and publications can be found at the
+[Apalache page at TU Wien](http://forsyte.at/research/apalache/).
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+
+<!-- LINKS -->
+
+[TLA+]: http://lamport.azurewebsites.net/tla/tla.html
+[Microsoft Z3]: https://github.com/Z3Prover/z3
+[Features]: ./docs/features.md
+[TLC]: http://lamport.azurewebsites.net/tla/tools.html
+[Leslie Lamport's page on TLA+]: http://lamport.azurewebsites.net/tla/tla.html
+[Video course]: http://lamport.azurewebsites.net/video/videos.html
+[Releases]: https://github.com/informalsystems/apalache/releases
+[Contribute]: https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md
+[User manual]: ./docs/manual.md
+[User chat]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache
+[inductive invariants]: https://github.com/informalsystems/apalache-tests/blob/master/results/001indinv-report.md
+[bounded model checking]: https://github.com/informalsystems/apalache-tests/blob/master/results/002bmc-report.md

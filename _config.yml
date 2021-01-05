@@ -2,4 +2,3 @@ theme: jekyll-theme-tactile
 title: Apalache
 description: The Symbolic Model Checker for TLA+
 show_downloads: "true"
-logo: ./logo-apalache.png
