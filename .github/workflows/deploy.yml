@@ -22,6 +22,7 @@ jobs:
       - run: |
           cd docs
           mdbook build
+          rm ../target/docs/.nojekyll
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
