@@ -17,7 +17,7 @@ Pluscal, check [LearnTla.com] by Hillel Wayne.
  1. MODULE, EXTENDS and INSTANCES :scissors:
 
 [Apalache model checker]: https://github.com/informalsystems/apalache
-[Apalache manual]: https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md
+[Apalache manual]: https://github.com/informalsystems/apalache/blob/unstable/docs/src/manual.md
 [TLC model checker]: http://lamport.azurewebsites.net/tla/tools.html
 [Summary of TLA]: https://lamport.azurewebsites.net/tla/summary.pdf
 [TLA+ Home Page]: http://lamport.azurewebsites.net/tla/tla.html

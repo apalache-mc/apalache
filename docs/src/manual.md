@@ -119,7 +119,7 @@ The development of Apalache proceeds at a high pace, and we introduce a
 substantial number of improvements in the unstable branch before the next stable
 release. Please refer to the [change
 log](https://github.com/informalsystems/apalache/blob/unstable/CHANGES.md) and
-[manual](https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md)
+[manual](https://github.com/informalsystems/apalache/blob/unstable/docs/src/manual.md)
 on the unstable branch for the description of the newest features. **We
 recommend using the unstable version if you want to try all the exciting new
 features of Apalache. But be warned: It is called "unstable" for a reason**. To
@@ -663,7 +663,7 @@ Apalache reports an error as follows:
 ...
 PASS #6: TransitionFinderPass                                     I@09:39:33.527
 To understand the error, check the manual:
-[https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md#assignments]
+[https://github.com/informalsystems/apalache/blob/unstable/docs/src/manual.md#assignments]
 Assignment error: Failed to find assignments and symbolic transitions in InitPrimed E@09:39:33.676
 It took me 0 days  0 hours  0 min  1 sec                          I@09:39:33.678
 Total time: 1.88 sec                                              I@09:39:33.678

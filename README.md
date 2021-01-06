@@ -36,7 +36,7 @@ Check the [releases page].
 We recommend that you run the latest stable docker image `apalache/mc:latest`,
 or checkout the source code from [master], which accumulates bugfixes over the
 latest release. For more information, see [the
-manual](docs/manual.md#useDocker). To try the latest cool features, check out
+manual](docs/src/manual.md#useDocker). To try the latest cool features, check out
 the [unstable branch].
 
 ## Getting started
@@ -103,7 +103,7 @@ Related reports and publications can be found at the
 [releases page]: https://github.com/informalsystems/apalache/releases
 [master]: https://github.com/informalsystems/apalache/tree/master
 [unstable branch]: https://github.com/informalsystems/apalache/tree/unstable
-[Apalache user manual]: ./docs/manual.md
+[Apalache user manual]: ./docs/src/manual.md
 [Idioms for writing better TLA+]: ./docs/idiomatic
 [TLA+ language manual for engineers]: ./docs/lang
 [Apalache zulip stream]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache

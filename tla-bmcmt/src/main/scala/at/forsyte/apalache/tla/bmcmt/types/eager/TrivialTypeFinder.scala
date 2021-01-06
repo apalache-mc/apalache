@@ -698,7 +698,7 @@ class TrivialTypeFinder extends TypeFinder[CellT]
     case ex @ OperEx(TlaFunOper.recFunRef) =>
       // no annotation met, produce an error
       error(ex,"Reference to a recursive function needs type annotation, see:" +
-      " https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md#ref-fun")
+      " https://github.com/informalsystems/apalache/blob/unstable/docs/src/manual.md#ref-fun")
 
     case ex@OperEx(op@TlaFunOper.except, e, bindings@_*) =>
       val funType = argTypes.head

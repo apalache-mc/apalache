@@ -180,7 +180,7 @@ class SmtFreeSymbolicTransitionExtractor(
 }
 
 object SmtFreeSymbolicTransitionExtractor {
-  val MANUAL_LINK = "https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md#assignments"
+  val MANUAL_LINK = "https://github.com/informalsystems/apalache/blob/unstable/docs/src/manual.md#assignments"
 
   def apply(tracker: TransformationTracker, sourceLoc: SourceLocator): SmtFreeSymbolicTransitionExtractor = {
     new SmtFreeSymbolicTransitionExtractor(tracker, sourceLoc)
