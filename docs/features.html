@@ -1,0 +1,357 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Supported Features - Apalache User Manual</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="favicon.png">
+        
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        
+        <link rel="stylesheet" href="css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">User Manual</li><li class="chapter-item expanded "><a href="index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="manual.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="tlc-config.html"><strong aria-hidden="true">3.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="types-and-annotations.html"><strong aria-hidden="true">4.</strong> Types and Annotations</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ language guide and manual</li><li class="chapter-item expanded "><a href="lang/index.html"><strong aria-hidden="true">5.</strong> TLA+ Language Lamnaul for Engineers</a></li><li class="chapter-item expanded "><a href="idiomatic/index.html"><strong aria-hidden="true">6.</strong> Idiomatic TLA+</a></li><li class="chapter-item expanded affix "><li class="part-title">Reference</li><li class="chapter-item expanded "><a href="features.html" class="active"><strong aria-hidden="true">7.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="preprocessing.html"><strong aria-hidden="true">8.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="tuning.html"><strong aria-hidden="true">9.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="kera.html"><strong aria-hidden="true">10.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded "><a href="types-api.html"><strong aria-hidden="true">11.</strong> Type Reconstruction API</a></li><li class="chapter-item expanded "><a href="smt/Cardinality.html"><strong aria-hidden="true">12.</strong> SMT encoding for set cardinalities</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="adr/001rfc-types.html"><strong aria-hidden="true">13.</strong> RFC 001: types and type annotations</a></li><li class="chapter-item expanded "><a href="adr/002adr-types.html"><strong aria-hidden="true">14.</strong> ADR-002: types and type annotations</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache User Manual</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <p>Here is the list of the TLA+ language features that are currently supported by Apalache, following the <a href="https://lamport.azurewebsites.net/tla/summary.pdf">Summary of TLA+</a>.</p>
+<h2><a class="header" href="#language" id="language">Language</a></h2>
+<h3><a class="header" href="#module-level-constructs" id="module-level-constructs">Module-Level constructs</a></h3>
+<table><thead><tr><th>Construct</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>EXTENDS module</code></td><td align="center">✔</td><td align="center">-</td><td>As soon as SANY imports the module. Some standard modules are not supported yet</td></tr>
+<tr><td><code>CONSTANTS C1, C2</code></td><td align="center">✔</td><td align="center">-</td><td>Either define a <code>ConstInit</code> operator to initialize the constants, or declare operators instead of constants, e.g., C1 == 111</td></tr>
+<tr><td><code>VARIABLES x, y, z</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>ASSUME P</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Parsed, but not propagated to the solver</td></tr>
+<tr><td><code>F(x1, ..., x_n) == exp</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Every application of <code>F</code> is replaced with its body. Recursive operators need <a href="./manual.html#91-recursive-operators">unrolling annotations</a>.</td></tr>
+<tr><td><code>f[x ∈ S] == exp</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Only recursive functions that return integers or Booleans are supported.</td></tr>
+<tr><td><code>INSTANCE M WITH ...</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>No special treatment for <code>~&gt;</code>, <code>\cdot</code>, <code>ENABLED</code></td></tr>
+<tr><td><code>N(x1, ..., x_n) == INSTANCE M WITH...</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Parameterized instances are not supported yet, LOCAL operator definitions inside instances may fail to work</td></tr>
+<tr><td><code>THEOREM P</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Parsed but not used</td></tr>
+<tr><td><code>LOCAL def</code></td><td align="center">✔</td><td align="center">-</td><td>Handled by SANY</td></tr>
+</tbody></table>
+<h3><a class="header" href="#the-constant-operators" id="the-constant-operators">The constant operators</a></h3>
+<h4><a class="header" href="#logic" id="logic">Logic</a></h4>
+<table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>/\</code>, <code>\/</code>, <code>~</code>, <code>=&gt;</code>, <code>&lt;=&gt;</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>TRUE</code>, <code>FALSE</code>, <code>BOOLEAN</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>\A x \in S: p</code>, <code>\E x \in S : p</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>CHOOSE x \in S : p</code></td><td align="center">✔/✖</td><td align="center">-</td><td>Similar to TLC, we implement a non-deterministic choice. We will add a deterministic version in the future.</td></tr>
+<tr><td><code>CHOOSE x : x \notin S</code></td><td align="center">✖</td><td align="center">?</td><td>That is a commonly used idiom</td></tr>
+<tr><td><code>\A x : p, \E x : p</code></td><td align="center">✖</td><td align="center"><strong>NEVER</strong></td><td>Use the versions above</td></tr>
+<tr><td><code>CHOOSE x : p</code></td><td align="center">✖</td><td align="center"><strong>NEVER</strong></td><td>Use the version above</td></tr>
+</tbody></table>
+<h4><a class="header" href="#sets" id="sets">Sets</a></h4>
+<p><strong>Note:</strong> only finite sets are supported. Additionally, existential
+quantification over <code>Int</code> and <code>Nat</code> is supported, as soon as it can be
+replaced with a constant.</p>
+<table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>=</code>, <code>/=</code>, <code>\in</code>, <code>\notin</code>, <code>\intersect</code>, <code>\union</code>, <code>\subseteq</code>, <code>\</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>{e_1, ..., e_n}</code></td><td align="center">✔</td><td align="center">-</td><td>Empty sets <code>{}</code> require <a href="types-and-annotations.html">type annotations</a></td></tr>
+<tr><td><code>{x \in S : p}</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>{e : x \in S}</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>SUBSET S</code></td><td align="center">✔</td><td align="center">-</td><td>Sometimes, the powersets are expanded</td></tr>
+<tr><td><code>UNION S</code></td><td align="center">✔</td><td align="center">-</td><td>Provided that S is expanded</td></tr>
+</tbody></table>
+<h4><a class="header" href="#functions" id="functions">Functions</a></h4>
+<table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>f[e]</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>DOMAIN f</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>[ x \in S ↦ e]</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td></td></tr>
+<tr><td><code>[ S -&gt; T ]</code></td><td align="center">✔</td><td align="center">-</td><td>Sometimes, the functions sets are expanded</td></tr>
+<tr><td><code>[ f EXCEPT ![e1] = e2 ]</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+</tbody></table>
+<h4><a class="header" href="#records" id="records">Records</a></h4>
+<p><em>Use <a href="types-and-annotations.html">type annotations</a> to help the model checker in finding the right types.</em>
+Note that our type system distinguishes records from general functions.</p>
+<table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>e.h</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>r[e]</code></td><td align="center">✔/✖</td><td align="center">-</td><td>Provided that e is a constant expression.</td></tr>
+<tr><td><code>[ h1 ↦ e1, ..., h_n ↦ e_n]</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>[ h1 : S1, ..., h_n : S_n]</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>[ r EXCEPT !.h = e]</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+</tbody></table>
+<h4><a class="header" href="#tuples" id="tuples">Tuples</a></h4>
+<p><em>Use <a href="types-and-annotations.html">type annotations</a> to help the model checker in finding the right types.</em>
+Note that our type system distinguishes tuples from general functions.</p>
+<table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>e[i]</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Provided that <code>i</code> is a constant expression</td></tr>
+<tr><td><code>&lt;&lt; e1, ..., e_n &gt;&gt;</code></td><td align="center">✔</td><td align="center">-</td><td>By default, a tuple is constructed. Use a <a href="types-and-annotations.html">type annotation</a> to construct a sequence of proper type.</td></tr>
+<tr><td><code>S1 \X ... \X S_n</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>[ t EXCEPT ![i] = e]</code></td><td align="center">✔/✖</td><td align="center">-</td><td>Provided that <code>i</code> is a constant expression</td></tr>
+</tbody></table>
+<h4><a class="header" href="#strings-and-numbers" id="strings-and-numbers">Strings and numbers</a></h4>
+<table><thead><tr><th>Construct</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>&quot;c1...c_n&quot;</code></td><td align="center">✔</td><td align="center">-</td><td>A string is always mapped to a unique uninterpreted constant</td></tr>
+<tr><td><code>STRING</code></td><td align="center">✖</td><td align="center">-</td><td>It is an infinite set. We cannot handle infinite sets.</td></tr>
+<tr><td><code>d1...d_n</code></td><td align="center">✔</td><td align="center">-</td><td>As long as the SMT solver (Z3) accepts that large number</td></tr>
+<tr><td><code>d1...d_n.d_n+1...d_m</code></td><td align="center">✖</td><td align="center">-</td><td>Technical issue. We will implemented upon a user request.</td></tr>
+</tbody></table>
+<h4><a class="header" href="#miscellaneous-constructs" id="miscellaneous-constructs">Miscellaneous Constructs</a></h4>
+<table><thead><tr><th>Construct</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>IF p THEN e1 ELSE e2</code></td><td align="center">✔</td><td align="center">-</td><td>Provided that both e1 and e2 have the same type</td></tr>
+<tr><td><code>CASE p1 -&gt; e1 [] ... [] p_n -&gt; e_n [] OTHER -&gt; e</code></td><td align="center">✔</td><td align="center">-</td><td>See the comment above</td></tr>
+<tr><td><code>CASE p1 -&gt; e1 [] ... [] p_n -&gt; e_n</code></td><td align="center">✖</td><td align="center">-</td><td>Introduce the default arm with <code>OTHER</code>.</td></tr>
+<tr><td><code>LET d1 == e1 ... d_n == e_n IN e</code></td><td align="center">✔ / ✖</td><td align="center"><code>0.7-dev-calls</code></td><td>All applications of <code>d1</code>, ..., <code>d_n</code> are replaced with the expressions <code>e1</code>, ... <code>e_n</code> respectively. LET-definitions without arguments are kept in place.</td></tr>
+<tr><td>multi-line <code>/\</code> and <code>\/</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+</tbody></table>
+<h3><a class="header" href="#the-action-operators" id="the-action-operators">The Action Operators</a></h3>
+<table><thead><tr><th>Construct</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>e'</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Provided that e is a variable</td></tr>
+<tr><td><code>[A]_e</code></td><td align="center">✖</td><td align="center">-</td><td>It does not matter for safety</td></tr>
+<tr><td><code>&lt; A &gt;_e</code></td><td align="center">✖</td><td align="center">-</td><td></td></tr>
+<tr><td><code>ENABLED A</code></td><td align="center">✖</td><td align="center">-</td><td></td></tr>
+<tr><td><code>UNCHANGED &lt;&lt;e_1, ..., e_k&gt;&gt;</code></td><td align="center">✔</td><td align="center">-</td><td>Always replaced with <code>e_1' = e_1 /\ ... /\ e_k' = e_k</code></td></tr>
+<tr><td><code>A ∙ B</code></td><td align="center">✖</td><td align="center">-</td><td></td></tr>
+</tbody></table>
+<h3><a class="header" href="#the-temporal-operators" id="the-temporal-operators">The Temporal Operators</a></h3>
+<p>The model checker assumes that the specification has the form <code>Init /\ [][Next]_e</code>. Given an invariant candidate <code>Inv</code>, the tool checks, whether
+<code>Inv</code> is violated by an execution whose length is bounded by the given
+argument.</p>
+<p>Except the standard form <code>Init /\ [][Next]_e</code>, no temporal operators are supported.</p>
+<h2><a class="header" href="#standard-modules" id="standard-modules">Standard modules</a></h2>
+<h3><a class="header" href="#integers-and-naturals" id="integers-and-naturals">Integers and Naturals</a></h3>
+<p>For the moment, the model checker does not differentiate between integers and naturals. They are all translated as integers in SMT.</p>
+<table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>+</code>, <code>-</code>, <code>*</code>, <code>&lt;=</code>, <code>&gt;=</code>, <code>&lt;</code>, <code>&gt;</code></td><td align="center">✔</td><td align="center">-</td><td>These operators are translated into integer arithmetic of the SMT solver. Linear integer arithmetic is preferred.</td></tr>
+<tr><td><code>\div</code>, <code>%</code></td><td align="center">✔</td><td align="center">-</td><td>Integer division and modulo</td></tr>
+<tr><td><code>a^b</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Provided a and b are constant expressions</td></tr>
+<tr><td><code>a..b</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Sometimes, <code>a..b</code> needs a constant upper bound on the range.  When Apalache complains, use <code>{x \in A..B : a &lt;= x /\ x &lt;= b}</code>, provided that <code>A</code> and <code>B</code> are constant expressions.</td></tr>
+<tr><td><code>Int</code>, <code>Nat</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Supported in <code>\E x \in Nat: p</code> and <code>\E x \in Int: p</code>, if the expression is not located under <code>\A</code> and <code>~</code>. We also support assignments like <code>f' \in [S -&gt; Int]</code> and tests <code>f \in [S -&gt; Nat]</code></td></tr>
+<tr><td><code>/</code></td><td align="center">✖</td><td align="center">-</td><td>Real division, not supported</td></tr>
+</tbody></table>
+<h3><a class="header" href="#sequences" id="sequences">Sequences</a></h3>
+<table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>&lt;&lt;...&gt;&gt;</code>, <code>Head</code>, <code>Tail</code>, <code>Len</code>, <code>SubSeq</code>, <code>Append</code>, <code>\o</code>, <code>f[e]</code></td><td align="center">✔</td><td align="center">-</td><td>The sequence constructor <code>&lt;&lt;...&gt;&gt;</code> needs a <a href="types-and-annotations.html">type annotation</a>.</td></tr>
+<tr><td><code>EXCEPT</code></td><td align="center">✖</td><td align="center"><code>0.9</code></td><td>this operator do not seem to be often used</td></tr>
+<tr><td><code>Seq(S)</code></td><td align="center">✖</td><td align="center">-</td><td>We need an upper bound on the length of the sequences.</td></tr>
+<tr><td><code>SelectSeq</code></td><td align="center">✖</td><td align="center">-</td><td>will not be supported in the near future</td></tr>
+</tbody></table>
+<h3><a class="header" href="#finitesets" id="finitesets">FiniteSets</a></h3>
+<table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>IsFinite</code></td><td align="center">✔</td><td align="center">-</td><td>Always returns true, as all the supported sets are finite</td></tr>
+<tr><td><code>Cardinality</code></td><td align="center">✔</td><td align="center">-</td><td>Try to avoid it, as Cardinality(S) produces <code>O(n^2)</code> constraints in SMT for cardinality <code>n</code></td></tr>
+</tbody></table>
+<h3><a class="header" href="#tlc" id="tlc">TLC</a></h3>
+<table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>f @@ a :&gt; b</code></td><td align="center">✔</td><td align="center">-</td><td>Extends the function relation with the pair <code>&lt;&lt;a, b&gt;&gt;</code></td></tr>
+</tbody></table>
+<h3><a class="header" href="#reals" id="reals">Reals</a></h3>
+<p>Not supported, not a priority</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="idiomatic/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="preprocessing.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="idiomatic/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="preprocessing.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

@@ -1,0 +1,573 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>RFC 001: types and type annotations - Apalache User Manual</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">User Manual</li><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../manual.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../tlc-config.html"><strong aria-hidden="true">3.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../types-and-annotations.html"><strong aria-hidden="true">4.</strong> Types and Annotations</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ language guide and manual</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">5.</strong> TLA+ Language Lamnaul for Engineers</a></li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">6.</strong> Idiomatic TLA+</a></li><li class="chapter-item expanded affix "><li class="part-title">Reference</li><li class="chapter-item expanded "><a href="../features.html"><strong aria-hidden="true">7.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../preprocessing.html"><strong aria-hidden="true">8.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../tuning.html"><strong aria-hidden="true">9.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../kera.html"><strong aria-hidden="true">10.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded "><a href="../types-api.html"><strong aria-hidden="true">11.</strong> Type Reconstruction API</a></li><li class="chapter-item expanded "><a href="../smt/Cardinality.html"><strong aria-hidden="true">12.</strong> SMT encoding for set cardinalities</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/001rfc-types.html" class="active"><strong aria-hidden="true">13.</strong> RFC 001: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">14.</strong> ADR-002: types and type annotations</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache User Manual</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#rfc-001-types-and-type-annotations" id="rfc-001-types-and-type-annotations">RFC 001: types and type annotations</a></h1>
+<p>Contributors (in alphabetical order): Shon Feder @shonfeder,
+Igor Konnov @konnov, Jure Kukovec @Kukovec,
+Markus Kuppe @lemmy, Andrey Kupriyanov @andrey-kuprianov, Leslie Lamport</p>
+<p>This is an RFC that reviews a number of possibilities.
+A concrete proposal can be found in <a href="002adr-types.html">ADR-002</a>.</p>
+<p>It is good to have a number of different opinions here. We have three
+questions:</p>
+<ol>
+<li>How to write types in TLA+.</li>
+<li>How to write type annotations (as a user).</li>
+<li>How to display and use inferred types.</li>
+</ol>
+<h2><a class="header" href="#1-how-to-write-types-in-tla" id="1-how-to-write-types-in-tla">1. How to write types in TLA+</a></h2>
+<p>Everybody has a different opinion here. It would be great to use
+the native TLA+ constructs to express types.</p>
+<p><a name="typesAsTypeOk"></a></p>
+<h3><a class="header" href="#11-typeok-syntax" id="11-typeok-syntax">1.1. TypeOK syntax</a></h3>
+<p>The only way to write types in the <code>TypeOK</code> style is by set membership.
+For instance:</p>
+<ul>
+<li><code>x</code> is an integer: <code>x \in Int</code></li>
+<li><code>f</code> is a function from an integer to an integer: <code>f \in [Int -&gt; Int]</code></li>
+<li><code>f</code> is a function from a set of integers to a set of integers:
+<code>f \in [SUBSET Int -&gt; SUBSET Int]</code></li>
+<li><code>r</code> is a record that has the fields <code>a</code> and <code>b</code>, where <code>a</code> is an integer
+and <code>b</code> is a string: <code>r \in [a: Int, b: STRING]</code></li>
+<li><code>f</code> is a set of functions from a tuple of integers to an integer:
+<code>f \in SUBSET [Int \X Int -&gt; Int]</code></li>
+<li><code>Foo</code> is an operator of an <code>Int</code> and <code>STRING</code> that returns an <code>Int</code>:
+<code>\A a \in Int: \A b \in STRING: Foo(a, b) \in Int</code></li>
+<li><code>Bar</code> is a higher-order operator that takes an operator that takes
+an <code>Int</code> and <code>STRING</code> and returns an <code>Int</code>, and returns a <code>BOOLEAN</code>.</li>
+</ul>
+<p>Here is an approach to higher-order operators suggested by Leslie Lamport,
+where he uses a theorem:</p>
+<pre><code class="language-tla">THEOREM BarType ==
+  ASSUME NEW G(_,_),
+         \A x \in Int, y \in STRING : G(x,y) \in Int
+         PROVE  Bar(G) \in BOOLEAN
+</code></pre>
+<p>Similar to that, we can write a theorem about the type of <code>Foo</code>:</p>
+<pre><code class="language-tla">THEOREM FooType ==
+  \A a \in Int: \A b \in STRING: Foo(a, b) \in Int
+</code></pre>
+<p><a name="typesAsTerms"></a></p>
+<h3><a class="header" href="#12-types-as-terms" id="12-types-as-terms">1.2. Types as terms</a></h3>
+<p>A classical way of writing types is by using logical terms (or algebraic datatypes).
+To this end, we can define a special module <code>Types.tla</code>:</p>
+<pre><code class="language-tla">---- MODULE Types ----
+\* Types as terms. The right-hand side of an operator does not play a role,
+\* but we define it as the corresponding set of values.
+\* Alternatively, we could just define tuples of strings in rhs.
+
+\* a type annotation operator that erases the type
+value &lt;: type == value
+
+\* the integer type
+IntT == Int
+\* the Boolean type
+BoolT == BOOLEAN
+\* the string type
+StrT == STRING
+
+\* a set type
+SetT(elemT) == SUBSET elemT
+\* a function type
+FunT(fromT, toT) == [fromT -&gt; toT]
+\* a sequence type
+SeqT(elemT) == Seq(elemT)
+
+\* tuple types
+Tup0T == {}
+Tup1T(t1) == t1
+Tup2T(t1, t2) == t1 \X t2
+Tup3T(t1, t2, t3) == t1 \X t2 \X t3
+\* and so on, e.g., Scala has 26 tuples. how many do we like to have?
+
+\* Record types. We assume that field names are alphabetically ordered.
+\* We cannot use record-set notation here,
+\* as the field names are parameters. So I gave up here on giving corresponding sets.
+Rec1T(f1, t1) == &lt;&lt;&quot;Rec1&quot;, f1, t1&gt;&gt;
+Rec2T(f1, t1, f2, t2) == &lt;&lt;&quot;Rec2&quot;, f1, t1, f2, t2&gt;&gt;
+Rec3T(f1, t1, f2, t2, f3, t3) == &lt;&lt;&quot;Rec3&quot;, f1, t1, f2, t2, f3, t3&gt;&gt;
+\* and so on
+
+\* Operator types. No clear set semantics.
+\* Note that the arguments can be operators as well!
+\* So this approach gives us higher-order operators for free.
+Oper0T(resT) == &lt;&lt;&quot;Oper0&quot;, resT&gt;&gt;
+Oper1T(arg1T, resT) == &lt;&lt;&quot;Oper1&quot;, arg1T, res1T&gt;&gt;
+Oper2T(arg1T, arg2T, resT) == &lt;&lt;&quot;Oper2&quot;, arg1T, arg2T, res1T&gt;&gt;
+\* and so on
+======================
+</code></pre>
+<p>Assuming that we have some syntax for writing down that <code>x</code> has type <code>T</code>,
+e.g., by writing <code>x &lt;: T</code>, we can write the above examples as follows:</p>
+<ul>
+<li>
+<p><code>x</code> is an integer: <code>x &lt;: IntT</code></p>
+</li>
+<li>
+<p><code>f</code> is a function from an integer to an integer: <code>f &lt;: FunT(IntT, IntT)</code></p>
+</li>
+<li>
+<p><code>f</code> is a function from a set of integers to a set of integers:
+<code>f &lt;: FunT(SetT(IntT), SetT(IntT))</code></p>
+</li>
+<li>
+<p><code>r</code> is a record that has the fields <code>a</code> and <code>b</code>, where <code>a</code> is an integer
+and <code>b</code> is a string: <code>r &lt;: Rec2T(&quot;a&quot;, IntT, &quot;b&quot;, StrT)</code></p>
+</li>
+<li>
+<p><code>f</code> is a set of functions from a tuple of integers to an integer:
+<code>f &lt;: SetT(FunT(Tup2T(IntT, IntT), IntT))</code></p>
+</li>
+<li>
+<p><code>Foo</code> is an operator of an <code>Int</code> and <code>STRING</code> that returns an <code>Int</code>:
+<code>\A a: \A b: Foo(a, b) &lt;: Oper2(IntT, StrT, IntT)</code>.</p>
+<ul>
+<li><strong>Here it gets tricky, as the TLA+ syntax does not allow us to
+mention an operator by name without applying it.</strong></li>
+</ul>
+</li>
+<li>
+<p><code>Bar</code> is a higher-order operator that takes an operator that takes
+an <code>Int</code> and <code>STRING</code> and returns an <code>Int</code>, and returns a <code>BOOLEAN</code>.
+<code>\A a, b, c: Bar(LAMBDA a, b: c) &lt;: Oper1(Oper2(IntT, StrT, IntT), BoolT)</code>.</p>
+<ul>
+<li><strong>Here we have to pull lambda operators, but at least it is possible to write
+down a type annotation.</strong></li>
+</ul>
+</li>
+</ul>
+<p><a name="typesAsStrings"></a></p>
+<h3><a class="header" href="#13-types-as-strings" id="13-types-as-strings">1.3. Types as strings</a></h3>
+<p>Let us introduce the following grammar for types:</p>
+<pre><code>T ::= var | Bool | Int | Str | T -&gt; T | Set(T) | Seq(T) |
+      &lt;&lt;T, ..., T&gt;&gt; | [h_1 |-&gt; T, ..., h_k |-&gt; T] | (T, ..., T) =&gt; T
+</code></pre>
+<p>In this grammar, <code>var</code> stands for a type variable, which can be instantiated with
+concrete variable names such as <code>a</code>, <code>b</code>, <code>c</code>, etc., whereas <code>h_1</code>,...,<code>h_k</code> are
+field names. The rule <code>T -&gt; T</code> defines a function, while the rule
+<code>(T, ..., T) =&gt; T</code> defines an operator.</p>
+<p>Assuming that we have some syntax for writing down that <code>x</code> has type <code>T</code>,
+e.g., by writing <code>isType(&quot;x&quot;, &quot;T&quot;)</code>, we can write the above examples as follows:</p>
+<ul>
+<li>
+<p><code>x</code> is an integer: <code>isType(&quot;x&quot;, &quot;Int&quot;)</code>.</p>
+</li>
+<li>
+<p><code>f</code> is a function from an integer to an integer: <code>isType(&quot;f&quot;, &quot;Int -&gt; Int&quot;)</code>.</p>
+</li>
+<li>
+<p><code>f</code> is a function from a set of integers to a set of integers:
+<code>isType(&quot;f&quot;, &quot;Set(Int) -&gt; Set(Int))&quot;</code>.</p>
+</li>
+<li>
+<p><code>r</code> is a record that has the fields <code>a</code> and <code>b</code>, where <code>a</code> is an integer
+and <code>b</code> is a string: <code>isType(&quot;r&quot;, &quot;[a |-&gt; Int, b |-&gt; Str])&quot;</code>.</p>
+</li>
+<li>
+<p><code>f</code> is a set of functions from a tuple of integers to an integer:
+<code>isType(&quot;f&quot;, &quot;Set(&lt;&lt;Int, Int&gt;&gt; -&gt; Int))&quot;</code>.</p>
+</li>
+<li>
+<p><code>Foo</code> is an operator of an <code>Int</code> and <code>STRING</code> that returns an <code>Int</code>:
+<code>isType(&quot;Foo&quot;, &quot;(Int, Str) =&gt; Int&quot;)</code>.</p>
+</li>
+<li>
+<p><code>Bar</code> is a higher-order operator that takes an operator that takes
+an <code>Int</code> and <code>STRING</code> and returns an <code>Int</code>, and returns a <code>BOOLEAN</code>:
+<code>isType(&quot;Bar&quot;, &quot;((Int, Str) =&gt; Int) =&gt; Bool&quot;)</code>.</p>
+</li>
+</ul>
+<p><strong>Note:</strong> We have to pass names as strings, as it is impossible to pass operator
+names, e.g., <code>Foo</code> and <code>Bar</code> in other operators, unless <code>Foo</code> and <code>Bar</code>
+are nullary operators and <code>isType</code> is a higher-order operator.</p>
+<h2><a class="header" href="#2-how-to-write-type-annotations-as-a-user" id="2-how-to-write-type-annotations-as-a-user">2. How to write type annotations (as a user)</a></h2>
+<p><strong>Note</strong>: This question is not a priority, as we do not expect the user to
+write type annotations. However, it would be good to have a solution, as sometimes
+users want to write types.</p>
+<p>Again, we have plenty of options and opinions here:</p>
+<ol>
+<li>Write type annotations by calling a special operator like <code>&lt;:</code> or <code>|=</code>.</li>
+<li>Write type annotations as assumptions.</li>
+<li>Write type annotations in comments.</li>
+<li>Write type annotations as operator definitions.</li>
+</ol>
+<h3><a class="header" href="#21-type-annotations-with-a-special-operator" id="21-type-annotations-with-a-special-operator">2.1. Type annotations with a special operator</a></h3>
+<p>This is the current approach in Apalache. One has to define an operator, e.g., <code>&lt;:</code>:</p>
+<pre><code class="language-tla">value &lt;: type == value
+</code></pre>
+<p>Then an expression may be annotated with a type as follows:</p>
+<pre><code class="language-tla">VARIABLE S
+Init ==
+  S = {} &lt;: {Int}
+</code></pre>
+<p><strong>Pros</strong>:</p>
+<ul>
+<li>Intutive notation, similar to programming languages.</li>
+</ul>
+<p><strong>Cons</strong>:</p>
+<ul>
+<li>This approach works well for expressions. However, it is not clear how to extend
+it to operators.</li>
+<li>This notation is more like type clarification, rather than a type annotation.
+Normally types are specified for names, that is, constants, variables, functions,
+operators, etc.</li>
+<li>Same expression may be annotated in a Boolean formula. What shall we do, if the
+user writes: <code>x &lt;: BOOLEAN \/ x &lt;: Int</code>?</li>
+</ul>
+<p><strong>Note:</strong> The current approach has an issue. If one declares the operator <code>&lt;:</code> in
+a module <code>M</code> and then uses an unnamed instance <code>INSTANCE M</code> in a module <code>M2</code>,
+then <code>M</code> and <code>M2</code> will clash on the operator <code>&lt;:</code>. We should define the operator
+once in a special module <code>Types</code> or <code>Apalache</code>.</p>
+<p><a name="annotationsAsAssumptions"></a></p>
+<h3><a class="header" href="#22-type-annotations-as-assumptions" id="22-type-annotations-as-assumptions">2.2. Type annotations as assumptions</a></h3>
+<p>One can use TLA+ syntax to write assumptions and assertions about the types.
+We are talking only about type assumptions here.
+The similar approach can be used to write theorems about types. 
+Consider the following specification:</p>
+<pre><code class="language-tla">EXTENDS Sequences
+CONSTANTS Range
+VARIABLES list
+
+Mem(e, es) ==
+  \E i \in DOMAIN es:
+    e = es[i]
+</code></pre>
+<p>In this example, the operator <code>Mem</code> is polymorphic, whereas the types of <code>Range</code>
+and <code>list</code> are parameterized.  If the user wants to
+restrict the types of constants, variables, and operators, they could write (using the
+<a href="#typesAsTypeOk">TypeOK syntax</a>):</p>
+<pre><code class="language-tla">ASSUME(Range \in SUBSET Int)
+ASSUME(list \in Seq(Int))
+ASSUME(\A e \in Int, \A es \in Seq(Int): Mem(e, es) \in BOOLEAN)
+</code></pre>
+<p>SANY parser only accepts the first assumption in the above
+example. <strong>The two other assumptions are rejected by the parser, as they
+refer to non-constant values.</strong></p>
+<p>Moreover, using the proof syntax of
+<a href="https://lamport.azurewebsites.net/tla/tla2-guide.pdf">TLA+ Version 2</a>,
+we can annotate the
+types of variables introduced inside the operators.  For instance, we could
+label the name <code>i</code> as follows:</p>
+<pre><code class="language-tla">Mem(e, es) ==
+  \E i \in DOMAIN es:
+    e = es[i_use :: i]
+</code></pre>
+<p>And then write:</p>
+<pre><code class="language-tla">ASSUME(\A e, es, i: Mem(e, es)!i_use(i) \in Int)
+</code></pre>
+<p><strong>Pros</strong>:</p>
+<ul>
+<li>The assumptions syntax is quite appealing, when writing types of
+CONSTANTS, VARIABLES, and top-level operators.</li>
+</ul>
+<p><strong>Cons</strong>:</p>
+<ul>
+<li>The syntax gets verbose and hard to write, when writing types of
+LET-IN operators and bound variables.</li>
+<li>It is not clear how to extend this syntax to higher-order operators.</li>
+<li><strong>One cannot write assumptions about state variables.</strong></li>
+</ul>
+<h3><a class="header" href="#23-type-annotations-in-comments" id="23-type-annotations-in-comments">2.3. Type annotations in comments</a></h3>
+<p>This solution basically gives up on TLA+ syntax and introduces a special
+syntax à la javadoc for type annotations:</p>
+<pre><code class="language-tla">EXTENDS Sequences
+CONSTANTS Range \*@ Range: Set(Int)
+VARIABLES list  \*@ list: Seq(Int)
+
+Mem(e, es) ==
+\*@ Mem: (Int, Seq(Int)) =&gt; Bool
+  \E i \in DOMAIN es:
+    \*@ i: Int
+    e = es[i]
+</code></pre>
+<p>We have not come up with a good syntax for these annotaions. The above
+example demonstrates one possible approach.</p>
+<p><strong>Pros</strong>:</p>
+<ul>
+<li>Non-verbose, simple syntax</li>
+<li>Type annotations do not stand in the way of the specification author</li>
+<li>Type annotations may be collapsed, removed, etc.</li>
+<li>If we have an annotation preprocessor, we can use it for other
+kinds of annotations</li>
+</ul>
+<p><strong>Cons</strong>:</p>
+<ul>
+<li>As we give up on the TLA+ syntax, TLA+ Toolbox will not help us
+(though it is not uncommon for IDEs to parse javadoc annotations,
+so there is some hope)</li>
+<li>The users have to learn new syntax for writing type annotations and types</li>
+<li>We have to write an annotation preprocessor</li>
+</ul>
+<h3><a class="header" href="#24-type-annotations-as-operator-definitions" id="24-type-annotations-as-operator-definitions">2.4. Type annotations as operator definitions</a></h3>
+<p>Operators definitions and LET-IN definitions can be written almost anywhere in
+TLA+. Instead of writing in-comment annotations, we can write annotations
+with operator definitions (assuming <a href="#typesAsStrings">types as strings</a>,
+but this is not necessary):</p>
+<pre><code class="language-tla">EXTENDS Sequences
+CONSTANTS Range
+Range_type == &quot;set(z)&quot;
+
+VARIABLES list
+list_type == &quot;seq(z)&quot;
+
+Mem(e, es) ==
+  LET Mem_type == &quot;&lt;a, seq(a)&gt; =&gt; Bool&quot; IN
+  \E i \in DOMAIN es:
+    LET i_type == &quot;Int&quot; IN
+    e = es[i]
+
+Init ==
+  LET Init_type == &quot;&lt;&gt; =&gt; Bool&quot; IN
+  list = &lt;&lt;&gt;&gt;
+
+Next ==
+  LET Next_type == &quot;&lt;&gt; =&gt; Bool&quot; IN
+  \E e \in Range:
+    LET e_type == &quot;set(z)&quot; IN
+    list' = Append(list, e)
+</code></pre>
+<p><strong>Pros:</strong></p>
+<ul>
+<li>No need for a comment preprocessor,
+easy to extract annotations from the operator definitions</li>
+</ul>
+<p><strong>Cons:</strong></p>
+<ul>
+<li>Fruitless operator definitions</li>
+<li>Looks like a hack</li>
+</ul>
+<h2><a class="header" href="#3-how-to-display-and-use-inferred-types" id="3-how-to-display-and-use-inferred-types">3. How to display and use inferred types</a></h2>
+<p><strong>TBD</strong></p>
+<p>Basically, use <a href="https://microsoft.github.io/language-server-protocol/">Language Server
+Protocol</a> and introduce
+THEOREMs in the spirit of <a href="#typesAsTypeOk">types as TypeOK</a>.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../smt/Cardinality.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../adr/002adr-types.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../smt/Cardinality.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../adr/002adr-types.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

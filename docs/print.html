@@ -1,0 +1,2819 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Apalache User Manual</title>
+        
+        <meta name="robots" content="noindex" />
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="favicon.png">
+        
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        
+        <link rel="stylesheet" href="css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">User Manual</li><li class="chapter-item expanded "><a href="index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="manual.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="tlc-config.html"><strong aria-hidden="true">3.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="types-and-annotations.html"><strong aria-hidden="true">4.</strong> Types and Annotations</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ language guide and manual</li><li class="chapter-item expanded "><a href="lang/index.html"><strong aria-hidden="true">5.</strong> TLA+ Language Lamnaul for Engineers</a></li><li class="chapter-item expanded "><a href="idiomatic/index.html"><strong aria-hidden="true">6.</strong> Idiomatic TLA+</a></li><li class="chapter-item expanded affix "><li class="part-title">Reference</li><li class="chapter-item expanded "><a href="features.html"><strong aria-hidden="true">7.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="preprocessing.html"><strong aria-hidden="true">8.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="tuning.html"><strong aria-hidden="true">9.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="kera.html"><strong aria-hidden="true">10.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded "><a href="types-api.html"><strong aria-hidden="true">11.</strong> Type Reconstruction API</a></li><li class="chapter-item expanded "><a href="smt/Cardinality.html"><strong aria-hidden="true">12.</strong> SMT encoding for set cardinalities</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="adr/001rfc-types.html"><strong aria-hidden="true">13.</strong> RFC 001: types and type annotations</a></li><li class="chapter-item expanded "><a href="adr/002adr-types.html"><strong aria-hidden="true">14.</strong> ADR-002: types and type annotations</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache User Manual</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#apalache-manual" id="apalache-manual">Apalache Manual</a></h1>
+<p><strong>Authors: Igor Konnov, Jure Kukovec, Andrey Kuprianov, Shon Feder</strong></p>
+<p><strong>Contact: {igor,andrey,shon} at informal.systems, jkukovec at forsyte.at</strong></p>
+<p>Apalache is a symbolic model checker for
+<a href="https://lamport.azurewebsites.net/tla/tla.html">TLA+</a>. (<em>Still looking for a
+better tool name.</em>) Our model checker is a recent alternative to
+<a href="https://lamport.azurewebsites.net/tla/tools.html?unhideBut=hide-tlc&amp;unhideDiv=tlc">TLC</a>.
+Whereas TLC enumerates the states produced by the behaviors of a TLA+
+specification, Apalache translates the verification problem to a set of logical
+constraints. These constraints are solved by an <a href="https://en.wikipedia.org/wiki/Satisfiability_modulo_theories">SMT
+solver</a>, for
+instance, by <a href="https://github.com/Z3Prover/z3">Microsoft's Z3</a>. That is, Apalache
+operates on formulas (i.e., <em>symbolicly</em>), not by enumerating states one by one
+(i.e., <em>state enumeration</em>).</p>
+<p>Apalache is working under the following assumptions:</p>
+<ol>
+<li>As in TLC, all specification parameters are fixed and finite, i.e., the
+system state is initialized with integers, finite sets, and functions of
+finite domains and co-domains.</li>
+<li>As in TLC, all data structures evaluated during an execution are finite,
+e.g., a system specification cannot operate on the set of all integers.</li>
+<li>Only finite executions of bounded length are analyzed.</li>
+</ol>
+<h1><a class="header" href="#getting-started" id="getting-started">Getting Started</a></h1>
+<p><strong>Table of Contents</strong></p>
+<ol>
+<li><a href="manual.html#apalacheOrTlc">Shall I use Apalache or TLC?</a></li>
+<li><a href="manual.html#sysreq">System requirements</a></li>
+<li><a href="manual.html#installation">Installation</a></li>
+<li><a href="manual.html#example">An example of a TLA+ specification</a></li>
+<li><a href="manual.html#parameters">Setting up specification parameters</a></li>
+<li><a href="manual.html#running">Running the tool</a></li>
+<li><a href="manual.html#principles">Principles of symbolic model checking with Apalache</a>
+<ol>
+<li><a href="manual.html#assignments">Assignments and symbolic transitions</a></li>
+<li><a href="manual.html#types">Type annotations</a></li>
+<li><a href="manual.html#recursion">Recursive operators and functions</a></li>
+</ol>
+</li>
+<li><a href="manual.html#apalacheMod">The Apalache module</a></li>
+<li><a href="manual.html#profiling">Profiling your specification</a></li>
+<li><a href="manual.html#theory5">Five minutes of theory</a></li>
+<li><a href="manual.html#features">Supported language features</a></li>
+</ol>
+<p><a name="apalacheOrTlc"></a></p>
+<h1><a class="header" href="#1-shall-i-use-apalache-or-tlc" id="1-shall-i-use-apalache-or-tlc">1. Shall I use Apalache or TLC?</a></h1>
+<p>We recommend starting with TLC. It is mature, well-documented, and
+well-integrated into TLA+ Toolbox. Once you have debugged your TLA+
+specification, and TLC is still producing too many reachable states, switch to
+Apalache. We are using this approach at <a href="https://informal.systems/">Informal
+Systems</a>.</p>
+<p><a name="sysreq"></a></p>
+<h1><a class="header" href="#2-system-requirements" id="2-system-requirements">2. System requirements</a></h1>
+<p>Every commit to <a href="https://github.com/informalsystems/apalache">master</a> and
+<a href="https://github.com/informalsystems/apalache/tree/unstable">unstable</a> is built with
+<a href="https://travis-ci.org/informalsystems/apalache">Travis CI</a> on MacOS (xcode9.3 and JDK
+1.8.0) and Linux (OpenJDK8). If you would like to run Apalache in Windows, use a
+docker image. Check the <a href="https://docs.docker.com/docker-for-windows/">Docker
+manual</a> and the section on <a href="manual.html#useDocker">Using a
+docker image</a> for details.</p>
+<p>As Apalache is using Microsoft Z3 as a backend SMT solver, the required memory
+largely depends on Z3. We recommend to allocate at least 4GB of memory for the
+tool.</p>
+<p><a name="installation"></a></p>
+<h1><a class="header" href="#3-installation" id="3-installation">3. Installation</a></h1>
+<p>There are two ways to run Apalache: (1) Download and run a docker image, or (2)
+Build Apalache from sources and run the compiled package. If you just want to
+try the tool, we recommend using the docker image. If you would like to run the
+tool on a daily basis or <a href="../CONTRIBUTING.html">to contribute</a> to the project, we
+recommend building the project from the source.</p>
+<p><a name="useDocker"></a></p>
+<h2><a class="header" href="#31-using-a-docker-image" id="31-using-a-docker-image">3.1. Using a docker image</a></h2>
+<p><strong>Starting with release 0.6.0, we will publish Docker images for every release</strong> :sunglasses:</p>
+<p>To get the latest Apalache image, issue the command:</p>
+<pre><code class="language-bash">docker pull apalache/mc
+</code></pre>
+<h3><a class="header" href="#running-the-docker-image" id="running-the-docker-image">Running the docker image</a></h3>
+<p>To run an Apalache image, issue the command:</p>
+<pre><code class="language-bash">$ docker run --rm -v &lt;your-spec-directory&gt;:/var/apalache apalache/mc &lt;args&gt;
+</code></pre>
+<p>The following docker parameters are used:</p>
+<ul>
+<li>
+<p><code>--rm</code> to remove the container on exit</p>
+</li>
+<li>
+<p><code>-v &lt;your-spec-directory&gt;:/var/apalache</code> bind-mounts <code>&lt;your-spec-directory&gt;</code> into
+<code>/var/apalache</code> in the container. <strong>This is necessary for
+Apalache to access your specification and the modules it
+extends.</strong>
+From the user perspective, it works as if Apalache was
+executing in <code>&lt;your-spec-directory&gt;</code>.
+In particular the tool logs are written in that directory.</p>
+<p>When using SELinux, you might have to use the modified form of <code>-v</code> option:
+<code>-v &lt;your-spec-directory&gt;:/var/apalache:z</code></p>
+</li>
+<li>
+<p><code>apalache/mc</code> is the APALACHE docker image name. By default, the <code>latest</code> stable
+version is used; you can also refer to a specific tool version, e.g., <code>apalache/mc:0.6.0</code> or <code>apalache/mc:unstable</code></p>
+</li>
+<li>
+<p><code>&lt;args&gt;</code> are the tool arguments as described in
+<a href="manual.html#running">Running the tool</a>.</p>
+</li>
+</ul>
+<p>We provide a convenience wrapper for this docker command in
+<code>script/run-docker.sh</code>. To run the <code>latest</code> image using the script, execute</p>
+<pre><code class="language-bash">$ $APALACHE_HOME/script/run-docker.sh &lt;args&gt;
+</code></pre>
+<p>To specify a different image, set <code>APALACHE_TAG</code> like so:</p>
+<pre><code class="language-bash">$ APALACHE_TAG=foo $APALACHE_HOME/script/run-docker.sh &lt;args&gt;
+</code></pre>
+<h3><a class="header" href="#setting-an-alias" id="setting-an-alias">Setting an alias</a></h3>
+<p>If you are running Apalache on Linux :penguin: or MacOS
+:green_apple:, you can define this handy alias in your rc file, which runs
+Apalache in docker while sharing the working directory:</p>
+<pre><code class="language-bash"># using the latest stable
+$ alias apalache=&quot;docker run --rm -v $(pwd):/var/apalache apalache/mc&quot;
+# using the latest unstable
+$ alias apalache=&quot;docker run --rm -v $(pwd):/var/apalache apalache/mc:unstable&quot;
+</code></pre>
+<h3><a class="header" href="#using-the-unstable-version-of-apalache" id="using-the-unstable-version-of-apalache">Using the unstable version of Apalache</a></h3>
+<p>The development of Apalache proceeds at a high pace, and we introduce a
+substantial number of improvements in the unstable branch before the next stable
+release. Please refer to the <a href="https://github.com/informalsystems/apalache/blob/unstable/CHANGES.md">change
+log</a> and
+<a href="https://github.com/informalsystems/apalache/blob/unstable/docs/src/manual.md">manual</a>
+on the unstable branch for the description of the newest features. <strong>We
+recommend using the unstable version if you want to try all the exciting new
+features of Apalache. But be warned: It is called &quot;unstable&quot; for a reason</strong>. To
+use <code>unstable</code>, just type <code>apalache/mc:unstable</code> instead of <code>apalache/mc</code>
+everywhere.</p>
+<p>Do not forget to pull the docker image from time to time:</p>
+<pre><code class="language-bash">docker pull apalache/mc:unstable
+</code></pre>
+<p>Run it with the following command:</p>
+<pre><code class="language-bash">$ docker run --rm -v &lt;your-spec-directory&gt;:/var/apalache apalache/mc:unstable &lt;args&gt;
+</code></pre>
+<p>To create an alias pointing to the <code>unstable</code> version:</p>
+<pre><code class="language-bash">$ alias apalache=&quot;docker run --rm -v $(pwd):/var/apalache apalache/mc:unstable&quot;
+</code></pre>
+<h3><a class="header" href="#building-an-image" id="building-an-image">Building an image</a></h3>
+<p>For an end user there is no need to build an Apalache image. If you like to
+produce a modified docker image, take into account that it will take about 30
+minutes for the image to get built, due to compilation times of Microsoft Z3. To
+build a docker image of Apalache, issue the following command in
+<code>$APALACHE_HOME</code>:</p>
+<pre><code class="language-bash">$ docker image build -t apalache:0.7.0 .
+</code></pre>
+<p><a name="building-from-source"></a></p>
+<h2><a class="header" href="#32-building-from-source" id="32-building-from-source">3.2. Building from source</a></h2>
+<ol>
+<li>Install <code>git</code>.</li>
+<li>Install <a href="https://openjdk.java.net/install/">OpenJDK8</a> or <a href="https://www.azul.com/downloads/zulu-community/?&amp;architecture=x86-64-bit&amp;package=jdk">Zulu JDK8</a>.
+<ul>
+<li>Apalache currently requires Scala 12.0 so <strong>you must install version 8 of
+Java, otherwise Scala will not compile!</strong> See the <a href="https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html">compatibility table</a>.</li>
+</ul>
+</li>
+<li>Install <a href="https://maven.apache.org/">Apache Maven</a>.
+<ul>
+<li>On Debian Linux or Ubuntu: <code>sudo apt-get install maven</code>.</li>
+<li>On Arch: <code>sudo pacman -Syu maven</code></li>
+</ul>
+</li>
+<li>Clone the git repository: <code>git clone https://github.com/informalsystems/apalache.git</code>.</li>
+<li>Change into the project directory: <code>cd apalache</code>.</li>
+<li>Run <code>make</code>.</li>
+<li><em>Optionally</em> install <a href="https://direnv.net/">direnv</a> and run <code>direnv allow</code></li>
+<li>Confirm you can run the executable. It should print the inline CLI help message.
+<ul>
+<li>If you used <code>direnv</code>, then <code>apalache-mc</code> will be in your path.</li>
+<li>Otherwise, run <code>./bin/apalache-mc</code>.</li>
+</ul>
+</li>
+</ol>
+<p><a name="example"></a></p>
+<h1><a class="header" href="#4-an-example-of-a-tla-specification" id="4-an-example-of-a-tla-specification">4. An example of a TLA+ specification</a></h1>
+<p>To illustrate the features of Apalache, we use the following TLA+ specification,
+which can be found in <a href="../test/tla/y2k.tla"><code>test/tla/y2k.tla</code></a>:</p>
+<pre><code class="language-tla">-------------------------------- MODULE y2k --------------------------------
+(*
+ * A simple specification of a year counter that is subject to the Y2K problem.
+ * In this specification, a registration office keeps records of birthdays and
+ * issues driver's licenses. As usual, a person may get a license, if they
+ * reached a certain age, e.g., age of 18. The software engineers never thought
+ * of their program being used until the next century, so they stored the year
+ * of birth using only two digits (who would blame them, the magnetic tapes
+ * were expensive!). The new millennium came with new bugs.
+ *
+ * This is a made up example, not reflecting any real code.
+ * To learn more about Y2K, check: https://en.wikipedia.org/wiki/Year_2000_problem
+ *
+ * Igor Konnov, January 2020
+ *)
+EXTENDS Integers
+
+CONSTANT BIRTH_YEAR,    \* the year to start with, between 0 and 99
+         LICENSE_AGE    \* the minimum age to obtain a license
+
+ASSUME(BIRTH_YEAR \in 0..99)
+ASSUME(LICENSE_AGE \in 1..99)
+
+VARIABLE year, hasLicense
+
+Age == year - BIRTH_YEAR
+
+Init ==
+    /\ year = BIRTH_YEAR
+    /\ hasLicense = FALSE
+
+NewYear ==
+    /\ year' = (year + 1) % 100 \* the programmers decided to use two digits
+    /\ UNCHANGED hasLicense
+
+IssueLicense ==
+    /\ Age &gt;= LICENSE_AGE
+    /\ hasLicense' = TRUE
+    /\ UNCHANGED year
+
+Next ==
+    \/ NewYear
+    \/ IssueLicense
+
+\* The somewhat &quot;obvious&quot; invariant, which is violated
+Safety ==
+    hasLicense =&gt; (Age &gt;= LICENSE_AGE)
+
+\* This is probably the only invariant we can formulate, usually, it is called TypeOK
+Inv ==
+    /\ year \in 0..99
+    /\ hasLicense \in BOOLEAN
+=============================================================================
+</code></pre>
+<p><a name="parameters"></a></p>
+<h1><a class="header" href="#5-setting-up-specification-parameters" id="5-setting-up-specification-parameters">5. Setting up specification parameters</a></h1>
+<p>Similar to TLC, Apalache requires the specification parameters to be restricted
+to finite values. In contrast to TLC, there is a way to initialize parameters
+by writing a symbolic constraint, see <a href="manual.html#ConstInit">Section 5.3</a>.</p>
+<h2><a class="header" href="#51-using-instance" id="51-using-instance">5.1. Using INSTANCE</a></h2>
+<p>You can set the specification parameters, using the standard <code>INSTANCE</code>
+expression of TLA+. For instance, below is the example
+<a href="../test/tla/y2k_instance.tla"><code>test/tla/y2k_instance.tla</code></a>, which instantiates
+<code>y2k.tla</code>:</p>
+<pre><code class="language-tla">---------------------------- MODULE y2k_instance ----------------------------
+VARIABLE year, hasLicense
+
+INSTANCE y2k WITH BIRTH_YEAR &lt;- 80, LICENSE_AGE &lt;- 18
+=============================================================================
+</code></pre>
+<p>The downside of this approach is that you have to declare the variables of the
+extended specification. This is easy with only two variables, but can quickly
+become unwieldy.</p>
+<h2><a class="header" href="#52-convention-over-configuration" id="52-convention-over-configuration">5.2. Convention over configuration</a></h2>
+<p>Alternatively, you can extend the base module and use overrides:</p>
+<pre><code class="language-tla">---------------------------- MODULE y2k_override ----------------------------
+EXTENDS y2k
+
+OVERRIDE_BIRTH_YEAR == 80
+OVERRIDE_LICENSE_AGE == 18
+=============================================================================
+</code></pre>
+<p><a name="ConstInit"></a></p>
+<h2><a class="header" href="#53-constinit-predicate" id="53-constinit-predicate">5.3. ConstInit predicate</a></h2>
+<p>This approach is similar to the <code>Init</code> operator, but applied to the
+constants. We define a special operator, e.g., called <code>ConstInit</code>. For
+instance, below is the example
+<a href="../test/tla/y2k_cinit.tla"><code>test/tla/y2k_cinit.tla</code></a>:</p>
+<pre><code class="language-tla">---------------------------- MODULE y2k_cinit ----------------------------
+EXTENDS y2k
+
+ConstInit ==
+    /\ BIRTH_YEAR \in 0..99
+    /\ LICENSE_AGE \in 10..99
+=============================================================================
+</code></pre>
+<p>To use <code>ConstInit</code>, pass it as the argument to <code>apalache</code>. For instance, for
+<code>y2k_cinit</code>, we would run the model checker as follows:</p>
+<pre><code class="language-tla">$ cd $APALACHE_HOME/test/tla
+$ apalache check --inv=Safety \
+  --length=20 --cinit=ConstInit y2k_cinit.tla
+</code></pre>
+<h3><a class="header" href="#parameterized-initialization" id="parameterized-initialization">Parameterized initialization</a></h3>
+<p>As a bonus of this approach, Apalache allows one to check a specification over a
+bounded set of parameters. For example:</p>
+<pre><code class="language-tla">CONSTANT N, Values
+
+ConstInit ==
+  /\ N \in 3..10
+  /\ Values \in SUBSET 0..4
+  /\ Values /= {}
+</code></pre>
+<p>The model checker will try the instances for all the combinations of
+the parameters specified in <code>ConstInit</code>, that is, in our example, it will
+consider <code>N \in 3..10</code> and all non-empty value sets that are subsets of <code>0..4</code>.</p>
+<h3><a class="header" href="#limitation" id="limitation">Limitation</a></h3>
+<p><code>ConstInit</code> should be a conjunction of assignments and possibly of additional
+constraints on the constants. For instance, you should not write <code>N = 10 \/ N = 20</code>. However, you can write <code>N \in {10, 20}</code>.</p>
+<h2><a class="header" href="#54-tlc-configuration-file" id="54-tlc-configuration-file">5.4. TLC configuration file</a></h2>
+<p>We support configuring Apalache via TLC configuration files; these files are
+produced automatically by TLA Toolbox, for example. TLC configuration files
+allow one to specify which initialization predicate and transition predicate to
+employ, which invariants to check, as well as to initialize specification
+parameters. Some features of the TLC configuration files are not supported yet.
+Check the manual page on
+<a href="./docs/tlc-config.html">&quot;Syntax of TLC Configuration Files&quot;</a>.</p>
+<p><em>If you are checking a file <code>&lt;myspec&gt;.tla</code>, and the file <code>&lt;myspec&gt;.cfg</code> exists in
+the same directory, it will be picked up by Apalache automatically. You can also
+explicitly specify which configuration file to use via the <code>--config</code> option.</em></p>
+<p><a name="running"></a></p>
+<h1><a class="header" href="#6-running-the-tool" id="6-running-the-tool">6. Running the tool</a></h1>
+<h2><a class="header" href="#61-model-checker-command-line-parameters" id="61-model-checker-command-line-parameters">6.1. Model checker command-line parameters</a></h2>
+<p>The model checker can be run as follows:</p>
+<pre><code class="language-bash">$ apalache check [--config=filename] [--init=Init] [--cinit=ConstInit] \
+    [--next=Next] [--inv=Inv] [--length=10] [--tuning=filename] &lt;myspec&gt;.tla
+</code></pre>
+<p>The arguments are as follows:</p>
+<ul>
+<li><code>--config</code> specifies the <a href="./docs/tlc-config.html">TLC configuration file</a>,
+the default name is <code>&lt;myspec&gt;.cfg</code></li>
+<li><code>--init</code> specifies the initialization predicate, the default name is <code>Init</code></li>
+<li><code>--next</code> specifies the transition predicate, the default name is <code>Next</code></li>
+<li><code>--cinit</code> specifies the constant initialization predicate, optional</li>
+<li><code>--inv</code> specifies the invariant to check, optional</li>
+<li><code>--length</code> specifies the upper bound on the length of the finite executions to explore</li>
+<li><code>--tuning</code> specifies the properties file that stores the options for
+<a href="tuning.html">fine tuning</a></li>
+</ul>
+<p>If an initialization predicate, transition predicate, or invariant is specified both in the configuration file,
+and on the command line, the command line parameters take precedence over those in the configuration file.</p>
+<h3><a class="header" href="#bounded-model-checking" id="bounded-model-checking">Bounded model checking</a></h3>
+<p>By default, Apalache performs <em>bounded model checking</em>, that is,
+it encodes a symbolic execution of length <code>k</code> and an invariant violation
+in SMT:</p>
+<pre><code class="language-tla">/\ Init[v_0/v]
+/\ Next[v_0/v, v_1/v'] /\ Next[v_1/v, v_2/v'] /\ ... /\ Next[v_{k-1}/v, v_k/v']
+/\ ~Inv[v_0/v] \/ ~Inv[v_1/v] \/ ... \/ ~Inv[v_k/v]
+</code></pre>
+<p>Here an expression <code>Inv[v_i/v]</code> means that the state variables <code>v</code> are replaced
+with their copies <code>v_i</code> for the state <code>i</code>.  Likewise, <code>Next[v_i/v,v_{i+1}/v']</code>
+means that the state variables <code>v</code> are replaced with their copies <code>v_i</code> for the
+state <code>i</code>, whereas the state variables <code>v'</code> are replaced with their copies
+<code>v_{i+1}</code> for the state <code>i+1</code>.</p>
+<h4><a class="header" href="#bounded-model-checking-is-an-incomplete-technique" id="bounded-model-checking-is-an-incomplete-technique">Bounded model checking is an incomplete technique</a></h4>
+<p>If Apalache finds a bug in this symbolic execution (by querying z3), then it
+reports a counterexample. Otherwise, it reports that no bug was found up to the
+given length. If a bug needs a long execution to get revealed, bounded model
+checking may miss it!</p>
+<h3><a class="header" href="#checking-an-inductive-invariant" id="checking-an-inductive-invariant">Checking an inductive invariant</a></h3>
+<p>To check executions of arbitrary lengths, one usually finds a formula that
+satisfies the two following properties:</p>
+<pre><code class="language-tla">/\ Init =&gt; TypeOK /\ IndInv
+/\ TypeOK /\ IndInv /\ Next =&gt; Inv'
+</code></pre>
+<p>In normal words: (1) The initial states satisfy the constraint <code>TypeOK /\ IndInv</code>, and (2) whenever the specification makes a step when starting in a
+state that satisfies <code>TypeOK /\ IndInv</code>, it ends up in a state that again
+satisfies <code>TypeOK /\ IndInv</code>.</p>
+<p>Note that we usually check <code>IndInv</code> in conjunction with <code>TypeOK</code>, as we
+have to constrain the variable values. In the <code>y2k</code> example, our inductive
+invariant is actually constraing the variables. In fact, such an inductive
+invariant is usually called <code>TypeOK</code>.</p>
+<p>To check an inductive invariant <code>IndInv</code> in Apalache, you run two commands
+that check the above two formulas:</p>
+<pre><code class="language-bash">$ apalache check --init=Init --inv=IndInv --length=0 &lt;myspec&gt;.tla
+</code></pre>
+<p>and</p>
+<pre><code class="language-bash">$ apalache check --init=IndInv --inv=IndInv --length=1 &lt;myspec&gt;.tla
+</code></pre>
+<h2><a class="header" href="#62-examples" id="62-examples">6.2. Examples</a></h2>
+<h3><a class="header" href="#checking-safety-up-to-20-steps" id="checking-safety-up-to-20-steps">Checking safety up to 20 steps</a></h3>
+<pre><code class="language-bash">$ cd test/tla
+$ apalache check --length=20 --inv=Safety y2k_override.tla
+</code></pre>
+<p>This command checks, whether <code>Safety</code> can be violated in 20 specification
+steps. If <code>Safety</code> is not violated, your spec might still have a bug that
+requires a computation longer than 20 steps to manifest.</p>
+<h3><a class="header" href="#checking-an-inductive-invariant-1" id="checking-an-inductive-invariant-1">Checking an inductive invariant:</a></h3>
+<pre><code class="language-bash">$ cd test/tla
+$ apalache check --length=0 --init=Init --inv=Inv y2k_override.tla
+$ apalache check --length=1 --init=Inv  --inv=Inv y2k_override.tla
+</code></pre>
+<p>The first call to apalache checks, whether the initial states
+satisfy the invariant. The second call to apalache checks, whether
+a single specification step satisfies the invariant, when starting
+in a state that satisfies the invariant. (That is why these
+invariants are called inductive.)</p>
+<h3><a class="header" href="#using-a-constant-initializer" id="using-a-constant-initializer">Using a constant initializer:</a></h3>
+<pre><code class="language-bash">$ cd test/tla
+apalache check --cinit=ConstInit --length=20 --inv=Safety y2k_cinit.tla
+</code></pre>
+<p>This command checks, whether <code>Safety</code> can be violated in 20
+specification steps. The constants are initialized with the predicate
+<code>ConstInit</code>, defined in <code>y2k_cinit.tla</code> as:</p>
+<pre><code class="language-tla">ConstInit == BIRTH_YEAR \in 0..99 /\ LICENSE_AGE \in 10..99
+</code></pre>
+<p>In this case, Apalache finds a safety violation, e.g., for
+<code>BIRTH_YEAR=89</code> and <code>LICENSE_AGE=10</code>. A complete counterexample
+is printed in <code>counterexample.tla</code>.</p>
+<p>The final lines in the file clearly indicate the state that violates the
+invariant:</p>
+<pre><code class="language-tla">State14 ==
+/\ BIRTH_YEAR = 89
+/\ LICENSE_AGE = 10
+/\ hasLicense = TRUE
+/\ year = 0
+
+(* The following formula holds true in the last state and violates the invariant *)
+
+InvariantViolation == hasLicense /\ year - BIRTH_YEAR &lt; LICENSE_AGE
+</code></pre>
+<p><a name="lookup"></a></p>
+<h2><a class="header" href="#63-module-lookup" id="63-module-lookup">6.3. Module lookup</a></h2>
+<p>Apalache uses <a href="https://lamport.azurewebsites.net/tla/tools.html">the SANY
+parser</a>, which is the
+standard parser of TLC and TLA+ Toolbox. By default, SANY is looking for the
+modules in the current working directory and in the Java package
+<code>tla2sany.StandardModules</code>, which is usually provided by the <code>tla2tools.jar</code> that is
+included in the Java classpath.</p>
+<p>In addition to the modules in the current working directory, Appalache provides</p>
+<ul>
+<li>a small standard library (located in <code>$APALACHE_HOME/src/tla</code>), and</li>
+<li>support for additional source directories specified in the environment variable <code>TLA_PATH</code>. <code>TLA_PATH</code> should be a list of paths to directories separated by <code>:</code>. </li>
+</ul>
+<p>(Directories in the <code>TLA_PATH</code> are provided to SANY via the <code>TLA-Library</code> Java system variable.)</p>
+<p>So the module lookup order in Apalache is as follows:</p>
+<ol>
+<li>The current working directory.</li>
+<li>The directory <code>$APALACHE_HOME/src/tla</code>.</li>
+<li>The directories specified in the environment variable <code>TLA_PATH</code>.</li>
+<li>The Java package <code>tla2sany.StandardModules</code>.</li>
+</ol>
+<p><strong>Note:</strong> To let TLA+ Toolbox and TLC know about the Apalache modules, include
+<code>$APALACHE_HOME/src/tla</code> in the lookup directories, as explained by Markus
+Kuppe for the <a href="https://github.com/tlaplus/CommunityModules">TLA+ Community
+Modules</a>.</p>
+<p><a name="detailed"></a></p>
+<h2><a class="header" href="#64-detailed-output" id="64-detailed-output">6.4. Detailed output</a></h2>
+<p>The tool will display only important messages on stdout, but a detailed log can
+be found in <code>detailed.log</code>.</p>
+<p>Additionally, each pass of the model checker produces an intermediate TLA+ file in
+the run-specific directory <code>x/hh.mm-DD.MM.YYYY-&lt;id&gt;</code>:</p>
+<ul>
+<li>File <code>out-parser.tla</code> is produced as a result of parsing and importing
+into the intermediate representation, Apalache TLA IR.</li>
+<li>File <code>out-parser.json</code> is produced as a result of converting the
+Apalache TLA IR representation of the input into JSON format.</li>
+<li>File <code>out-config.tla</code> is produced as a result of substituting CONSTANTS,
+as described in <a href="manual.html#parameters">Section 5</a>.</li>
+<li>File <code>out-inline.tla</code> is produced as a result of inlining operator
+definitions and <code>LET-IN</code> definitions.</li>
+<li>File <code>out-priming.tla</code> is produced as a result of replacing constants and
+variables in <code>ConstInit</code> and <code>Init</code> with their primed versions.</li>
+<li>File <code>out-vcgen.tla</code> is produced as a result of extracting verification
+conditions, e.g., invariants to check.</li>
+<li>File <code>out-prepro.tla</code> is produced as a result of running all preprocessing
+steps.</li>
+<li>File <code>out-transition.tla</code> is produced as a result of finding assignments
+and symbolic transitions.</li>
+<li>File <code>out-opt.tla</code> is produced as a result of expression optimizations.</li>
+<li>File <code>out-analysis.tla</code> is produced as a result of analysis, e.g.,
+marking Skolemizable expressions and expressions to be expanded.</li>
+</ul>
+<p><a name="parsing"></a></p>
+<h2><a class="header" href="#65-parsing-and-pretty-printing" id="65-parsing-and-pretty-printing">6.5. Parsing and pretty-printing</a></h2>
+<p>If you'd like to check that your TLA+ specification is syntactically correct,
+without running the model checker, you can run the following command:</p>
+<pre><code class="language-bash">$ apalache parse &lt;myspec&gt;.tla
+</code></pre>
+<p>In this case, Apalache performs the following steps:</p>
+<ol>
+<li>
+<p>It parses the specification with <a href="https://lamport.azurewebsites.net/tla/tools.html">SANY</a>.</p>
+</li>
+<li>
+<p>It translates SANY semantic nodes into <a href="https://github.com/informalsystems/apalache/blob/master/tlair/src/main/scala/at/forsyte/apalache/tla/lir/package.scala">Apalache IR</a>.</p>
+</li>
+<li>
+<p>It pretty-prints the IR into <code>out-parser.tla</code>, see <a href="manual.html#detailed">Section 6.3</a>.</p>
+</li>
+</ol>
+<p><a name="principles"></a></p>
+<h1><a class="header" href="#7-principles-of-symbolic-model-checking-with-apalache" id="7-principles-of-symbolic-model-checking-with-apalache">7. Principles of symbolic model checking with Apalache</a></h1>
+<p>In order to take advantage of Apalache's symbolic model checking, there are a
+few principles one must bear in mind when writing TLA.</p>
+<p><a name="assignments"></a>
+<a name="symbolicTransitions"></a></p>
+<h2><a class="header" href="#71-assignments-and-symbolic-transitions" id="71-assignments-and-symbolic-transitions">7.1 Assignments and symbolic transitions</a></h2>
+<p>Let us go back to the example <a href="../test/tla/y2k.tla"><code>test/tla/y2k.tla</code></a> and
+run <code>apalache</code> against <a href="../test/tla/y2k_override.tla"><code>test/tla/y2k_override.tla</code></a>:</p>
+<pre><code class="language-console">$ apalache check y2k_override.tla
+</code></pre>
+<p>We can check the detailed output of the <code>TransitionFinderPass</code> in the file
+<code>x/&lt;timestamp&gt;/out-transition.tla</code>, where <code>&lt;timestamp&gt;</code> looks like
+<code>09.03-10.03.2020-508266549191958257</code>:</p>
+<pre><code class="language-tla">----- MODULE y2k_override -----
+VARIABLE year
+VARIABLE hasLicense
+ASSUME(80 \in 0 .. 99)
+ASSUME(18 \in 1 .. 99)
+
+Init$0 == year' := 80 /\ hasLicense' := FALSE
+Next$0 == year' := ((year + 1) % 100) /\ (hasLicense' := hasLicense)
+Next$1 == year - 80 &gt;= 18 /\ hasLicense' := TRUE /\ (year' := year)
+===============
+</code></pre>
+<p>As you can see, the model checker did two things:</p>
+<ol>
+<li>It has translated several expressions that look like <code>x' = e</code> into <code>x' := e</code>.
+For instance, you can see <code>year' := 80</code> and <code>hasLicense' := FALSE</code> in
+<code>Init$0</code>. We call these expressions <strong>assignments</strong>.</li>
+<li>It has factored the operator <code>Next</code> into two operators <code>Next$0</code> and <code>Next$1</code>.
+We call these operators <strong>symbolic transitions</strong>.</li>
+</ol>
+<p>Pure TLA+ does not have the notions of assignments and symbolic
+transitions.  However, TLC sometimes treats expressions <code>x' = e</code> and <code>x' \in S</code>
+as if they were assigning a value to the variable <code>x'</code>. TLC does so
+dynamically, during the breadth-first search. Apalache looks statically for assignments
+among the expressions <code>x' = e</code> and <code>x' \in S</code>.</p>
+<p>When factoring out operators into symbolic transitions, Apalache splits the
+action operators <code>Init</code> and <code>Next</code> into disjunctions (e.g., <code>A_0 \/ ... \/ A_n</code>),
+represented in the concrete syntax as a sequence of operator definitions of the
+form</p>
+<pre><code class="language-tla">A$0 == ...
+...
+A$n == ...
+</code></pre>
+<p>The main contract between the assignments and symbolic transitions is as
+follows:</p>
+<blockquote>
+<p>For every variable <code>x</code> declared with <code>VARIABLE</code>, there is exactly one
+assignment of the form <code>x' := e</code> in every symbolic transition <code>A_n</code>.</p>
+</blockquote>
+<p>If Apalache cannot find expressions with the above properties, it fails.
+Consider the example
+<a href="../test/tla/Assignments20200309.tla"><code>test/tla/Assignments20200309.tla</code></a>:</p>
+<pre><code class="language-tla">----- MODULE Assignments20200309 -----
+VARIABLE a
+\* this specification fails, as it has no expression
+\* that can be treated as an assignment
+Init == TRUE
+Next == a' = a
+Inv == FALSE
+===============
+</code></pre>
+<p>Running the checker with</p>
+<pre><code class="language-bash">apalache check Assignments20200309.tla
+</code></pre>
+<p>Apalache reports an error as follows:</p>
+<pre><code class="language-console">...
+PASS #6: TransitionFinderPass                                     I@09:39:33.527
+To understand the error, check the manual:
+[https://github.com/informalsystems/apalache/blob/unstable/docs/src/manual.md#assignments]
+Assignment error: Failed to find assignments and symbolic transitions in InitPrimed E@09:39:33.676
+It took me 0 days  0 hours  0 min  1 sec                          I@09:39:33.678
+Total time: 1.88 sec                                              I@09:39:33.678
+EXITCODE: ERROR (99)
+</code></pre>
+<p>This error is cryptic. It does not indicate which parts of the specification
+have caused the problem. In the future, we will add better diagnostic in the
+assignment finder, see <a href="https://github.com/informalsystems/apalache/issues/111">the open
+issue</a>. Our current approach is
+to debug assignments by running TLC first. If running TLC takes too long, you
+may try to comment out parts of the specification to find the problematic
+action. Although this is tedious, it allows one to find missing assignments
+rather quickly.</p>
+<p>If you are interested in the technique for finding the assignments and symbolic
+transitions implemented in Apalache, check our <a href="http://forsyte.at/wp-content/uploads/abz2018_full.pdf">paper at
+ABZ'18</a>.  The <a href="http://dx.doi.org/https://doi.org/10.1016/j.scico.2019.102361">journal
+version</a> is
+unfortunately behind the Elsevier paywall, which will be lifted after the
+two-year embargo period.</p>
+<p><a name="types"></a></p>
+<h2><a class="header" href="#72-type-annotations" id="72-type-annotations">7.2 Type annotations</a></h2>
+<p><strong>NOTE 1</strong>: <a href="https://forsyte.at/people/kukovec/">Jure Kukovec</a> is developing
+a completely automatic type inference engine. As soon as it is ready, type
+annotations will no longer be required. Until that happy day, refer to <a href="types-and-annotations.html">type
+annotations</a>.</p>
+<p><strong>NOTE 2</strong>: We are currently working on a better syntax for type annotations
+and a better type checker. Hence, the syntax will change in the future.</p>
+<p>Apalache requires two kinds of type annotations:</p>
+<ul>
+<li>type annotations for empty sets and sequences, and</li>
+<li>type annotations for records and sets of records.</li>
+</ul>
+<h3><a class="header" href="#721-empty-sets-and-sequences" id="721-empty-sets-and-sequences">7.2.1 Empty sets and sequences</a></h3>
+<p>Consider the following example
+<a href="../test/tla/NeedForTypes.tla"><code>test/tla/NeedForTypes.tla</code></a>:</p>
+<pre><code class="language-tla">------------------------ MODULE NeedForTypes ------------------------------
+(**
+ * This simple example transforms a set into a sequence.
+ *)
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS InSet     \* an input set
+VARIABLES Left,     \* a storage for the yet untransformed elements
+          OutSeq    \* the output sequence
+
+ConstInit == InSet = 1..4
+
+Init ==
+    /\ OutSeq = &lt;&lt; &gt;&gt;
+    /\ Left = InSet
+
+Next ==
+    IF Left = {}
+    THEN UNCHANGED &lt;&lt;Left, OutSeq&gt;&gt;
+    ELSE \E x \in Left:
+          /\ OutSeq' = Append(OutSeq, x)
+          /\ Left' = Left \ {x}
+
+Inv == InSet = Left \union { OutSeq[i]: i \in DOMAIN OutSeq }
+===========================================================================
+</code></pre>
+<p>While this example is perfectly fine for TLC, Apalache has to assign types to
+the variables, in order to construct SMT constraints. In some cases, Apalache
+can infer types completely automatically, e.g., as in the <code>y2k</code> example (see
+<a href="manual.html#example">Section 4</a>). However, if you run <code>apalache check --cinit=ConstInit NeedForTypes.tla</code>, the tool will complain:</p>
+<pre><code>Step 0, level 0: checking if 1 transition(s) are enabled and violate the invariant I@15:17:14.313
+Step 0, level 1: collecting 1 enabled transition(s)               I@15:17:14.360
+Step 1, level 1: checking if 2 transition(s) are enabled and violate the invariant I@15:17:14.374
+NeedForTypes.tla:18:8-18:16, =(...), type error: Expected equal types: FinSet[Int] and FinSet[Unknown] E@15:17:14.379
+The outcome is: Error                                             I@15:17:14.388
+</code></pre>
+<p>In a somewhat obfuscated way, Apalache tells us the following. It has inferred
+that <code>Left</code> is a set of integers, that is, <code>FinSet[Int]</code>. First, it found that
+<code>InSet</code> is a set of integers, by applying <code>ConstInit</code>. Second, as <code>Left = InSet</code>
+in <code>Init</code>, it inferred that <code>Left</code> is also a set of integers. Third, when
+applying <code>Next</code>, it processed <code>{}</code>, which is an empty set of any kind of
+objects. Hence, <code>{}</code> was assigned the type <code>FinSet[Unknown]</code>, that is, a set of
+some type. Finally, it found the expression <code>Left = {}</code>, and here the type
+checker has failed.</p>
+<p>To help the type checker, we have to introduce a few type annotations. But
+before doing that, we introduce the notation for type annotations in the
+specification.</p>
+<h4><a class="header" href="#syntax-for-type-annotations" id="syntax-for-type-annotations">Syntax for type annotations</a></h4>
+<p>Apalache reads any expression formed with the <code>&lt;:</code> operator as an annotation of
+the value of the left hand side with the type on the right. E.g.,</p>
+<pre><code class="language-tla">v &lt;: T
+</code></pre>
+<p>means &quot;value <code>v</code> has type <code>T</code>&quot;.</p>
+<p>However, other tools (such as TLC and TLAPS) have no support for these
+annotations. To tell them to ignore type annotations, we maintain the convention
+that any file using Apalache type annotations begins with the following definition:</p>
+<pre><code class="language-tla">v &lt;: T == v
+</code></pre>
+<p>With this in place, Apalache can parse out the type annotations in the rest of
+the file, but other tools are told to simply read any occurrence of <code>v &lt;: T</code> as
+<code>v</code>, effectively erasing the type ascription.</p>
+<p>Now we can help the type checker by rewriting the condition in <code>Next</code> as follows:</p>
+<h4><a class="header" href="#example-of-using-type-annotations" id="example-of-using-type-annotations">Example of using type annotations</a></h4>
+<pre><code class="language-tla">Next ==
+    IF Left = {} &lt;: {Int}
+    THEN ...
+    ELSE ...
+</code></pre>
+<p>Now the type checker treats the expression <code>{}</code> as a set of integers. However,
+it complains about another line:</p>
+<pre><code>Step 0, level 0: checking if 1 transition(s) are enabled and violate the invariant I@15:43:35.932
+Step 0, level 1: collecting 1 enabled transition(s)               I@15:43:35.977
+Step 1, level 1: checking if 2 transition(s) are enabled and violate the invariant I@15:43:35.992
+NeedForTypes.tla:23:24-23:40, x$1, type error: Expected type Unknown, found Int E@15:43:36.012
+NeedForTypes.tla:23:24-23:40, Append(...), type error: Expected a type, found: None E@15:43:36.018
+NeedForTypes.tla:23:11-24:31, /\(...), type error: Expected a Boolean, found: None E@15:43:36.020
+The outcome is: Error
+</code></pre>
+<p>Here the type checker stumbles upon the sequence operator <code>Append(OutSeq, x)</code>
+and complains about the type mismatch. Similar to <code>{}</code>, it has treated
+the expression <code>&lt;&lt; &gt;&gt;</code> as a sequence of an unknown type. (In case of <code>&lt;&lt;1, 2&gt;&gt;</code>
+it would be even worse, as the type checker would not know, whether <code>&lt;&lt;1, 2&gt;&gt;</code>
+should be treated as a sequence or a tuple). Again, we help the type checker
+by modifying <code>Init</code> as follows:</p>
+<pre><code class="language-tla">Init ==
+    /\ OutSeq = &lt;&lt; &gt;&gt; &lt;: Seq(Int)
+    ...
+</code></pre>
+<p>Having these two annotations, the type checker stops complaining. You can find
+the annotated specification in
+<a href="../test/tla/NeedForTypesWithTypes.tla"><code>test/tla/NeedForTypesWithTypes.tla</code></a>.</p>
+<h3><a class="header" href="#722--records-and-sets-of-records" id="722--records-and-sets-of-records">7.2.2  Records and sets of records</a></h3>
+<p>Consider the following example in
+<a href="../test/tla/Handshake.tla"><code>test/tla/Handshake.tla</code></a>:</p>
+<pre><code class="language-tla">------------------------ MODULE Handshake ------------------------
+(**
+ * A TCP-like handshake protocol:
+ * https://en.wikipedia.org/wiki/Transmission_Control_Protocol#Connection_establishment
+ *
+ * Igor Konnov, 2020
+ *)
+EXTENDS Integers
+
+VARIABLES msgs,     \* the set of all messages
+          iseqno,   \* Initiator's sequence number
+          rseqno,   \* Receiver's sequence number
+          istate,   \* Initiator's state
+          rstate    \* Receiver's state
+
+a &lt;: b == a
+
+Init ==
+    /\ msgs = {}
+    /\ iseqno = 0
+    /\ rseqno = 0
+    /\ istate = &quot;INIT&quot;
+    /\ rstate = &quot;LISTEN&quot;
+
+SendSyn ==
+    /\ istate = &quot;INIT&quot;
+    /\ \E no \in Nat:
+        /\ msgs' = msgs \union {[syn |-&gt; TRUE,
+                                 ack |-&gt; FALSE, seqno |-&gt; no]}
+        /\ iseqno' = no + 1
+        /\ istate' = &quot;SYN-SENT&quot;
+        /\ UNCHANGED &lt;&lt;rseqno, rstate&gt;&gt;
+
+SendSynAck ==
+    /\ rstate = &quot;LISTEN&quot;
+    /\ \E seqno, ackno \in Nat:
+        /\ [syn |-&gt; TRUE, ack |-&gt; FALSE, seqno |-&gt; seqno] \in msgs
+        /\ msgs' = msgs \union {[syn |-&gt; TRUE, ack |-&gt; TRUE,
+                                 seqno |-&gt; seqno + 1,
+                                 ackno |-&gt; ackno]}
+        /\ rseqno' = ackno + 1
+        /\ rstate' = &quot;SYN-RECEIVED&quot;
+        /\ UNCHANGED &lt;&lt;iseqno, istate&gt;&gt;
+
+SendAck ==
+    /\ istate = &quot;SYN-SENT&quot;
+    /\ \E ackno \in Nat:
+        /\ [syn |-&gt; TRUE, ack |-&gt; TRUE,
+            seqno |-&gt; iseqno, ackno |-&gt; ackno] \in msgs
+        /\ istate' = &quot;ESTABLISHED&quot;
+        /\ msgs' = msgs \union {[syn |-&gt; FALSE, ack |-&gt; TRUE,
+                                 seqno |-&gt; iseqno,
+                                 ackno |-&gt; ackno + 1]}
+        /\ UNCHANGED &lt;&lt;iseqno, rseqno, rstate&gt;&gt;
+
+RcvAck ==
+    /\ rstate = &quot;SYN-RECEIVED&quot;
+    /\ \E seqno \in Nat:
+        /\ ([syn |-&gt; FALSE, ack |-&gt; TRUE,
+             seqno |-&gt; seqno, ackno |-&gt; rseqno]) \in msgs
+        /\ rstate' = &quot;ESTABLISHED&quot;
+        /\ UNCHANGED &lt;&lt;msgs, iseqno, rseqno, istate&gt;&gt;
+
+
+Next == SendSyn \/ SendSynAck \/ SendAck \/ RcvAck
+
+Inv == (rstate = &quot;ESTABLISHED&quot; =&gt; istate = &quot;ESTABLISHED&quot;)
+======================================================================
+</code></pre>
+<p>As we have seen before, the type checker complains about the set <code>msgs</code>,
+which is initialized as <code>{}</code>. So we have to specify the type of <code>{}</code>. But which
+type shall we use for the empty set?</p>
+<p>In our example, the set <code>msgs</code> may contain records of three kinds:</p>
+<ul>
+<li>a <strong>SYN</strong> request that is modeled as a record
+<code>[ack |-&gt; FALSE, syn |-&gt; TRUE, seqno |-&gt; i]</code> for some number <code>i</code>,</li>
+<li>a <strong>SYN-ACK</strong> reply that is modeled as a record
+<code>[ack |-&gt; TRUE, syn |-&gt; TRUE, seqno |-&gt; i, ackno |-&gt; j]</code>
+for some numbers <code>i</code> and <code>j</code>,</li>
+<li>an <strong>ACK</strong> reply that is modeled as a record
+<code>[ack |-&gt; TRUE, syn |-&gt; FALSE, seqno |-&gt; i, ackno |-&gt; j]</code>
+for some numbers <code>i</code> and <code>j</code>.</li>
+</ul>
+<p>From the perspective of the type checker, the three records shown above have
+three different types. Although we would love to reject this example as an
+ill-typed one, mixing records of different types is a widely-accepted idiom in
+TLA+, for instance, see <a href="https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla">Lamport's specification of
+Paxos</a>.
+Think of records as of C unions, rather than C structs!</p>
+<p>To help the type checker, we first introduce a handy operator for the type that
+contains the fields of the three records:</p>
+<pre><code class="language-tla">MT == [syn |-&gt; BOOLEAN, ack |-&gt; BOOLEAN, seqno |-&gt; Int, ackno |-&gt; Int]
+</code></pre>
+<p>Then we add annotations as follows:</p>
+<pre><code class="language-tla">Init ==
+  /\ msgs = {} &lt;: {MT}
+    ...
+
+SendSyn ==
+  ...
+  /\ \E no \in Nat:
+    /\ msgs' = msgs \union {[syn |-&gt; TRUE, ack |-&gt; FALSE, seqno |-&gt; no] &lt;: MT}
+  ...
+
+SendSynAck ==
+  ...
+  /\ \E seqno, ackno \in Nat:
+    /\ ([syn |-&gt; TRUE, ack |-&gt; FALSE, seqno |-&gt; seqno] &lt;: MT) \in msgs
+    ...
+
+SendAck ==
+  ...
+  /\ \E ackno \in Nat:
+    ...
+</code></pre>
+<p>As you can see, we have to annotate only those records that do not have all
+four fields of <code>MT</code>. As soon as we have added the annotations, the type checker
+stopped complaining and let the model checker to run. The annotated code can be
+found in
+<a href="../test/tla/HandshakeWithTypes.tla"><code>test/tla/HandshakeWithTypes.tla</code></a>.</p>
+<p>Type annotations can be also applied to sets of records. For example:</p>
+<pre><code class="language-tla">[syn |-&gt; BOOLEAN, ack |-&gt; BOOLEAN, seqno |-&gt; Int] &lt;: {MT}
+</code></pre>
+<p>You can find more details on the simple type inference algorithm and the type
+annotations in <a href="types-and-annotations.html">type annotations</a>.</p>
+<h3><a class="header" href="#723--naturals" id="723--naturals">7.2.3  Naturals</a></h3>
+<p>If you look carefully at the <a href="types-and-annotations.html">type annotations</a>, you
+will find that there is no designated type for naturals. Indeed, one can just
+use the type <code>Int</code>, whenever a natural number is required. If we introduced a
+special type for naturals, that would cause a lot of confusion for the type
+checker. What would be the type of the literal <code>42</code>? That depends on, whether
+you extend <code>Naturals</code> or <code>Integers</code>. And if you extend <code>Naturals</code> and later
+somebody else extends your module and also <code>Integers</code>, should be the type
+of <code>42</code> be an integer?</p>
+<p>Apalache still allows you to extend <code>Naturals</code>. However, it will treat all
+number-like literals as integers. This is consistent with the view that the naturals are
+a subset of the integers, and the integers are a subset of the reals.  Classically, one
+would not define subtraction for naturals. However, the module <code>Naturals</code>
+defines binary minus, which can easily drive a variable outside of <code>Nat</code>. For
+instance, see the following example:</p>
+<pre><code class="language-tla">----------------------------- MODULE NatCounter ------------------------        
+EXTENDS Naturals
+
+VARIABLE x
+
+Init == x = 3
+
+\* a natural counter can go below zero, and this is expected behavior
+Next == x' = x - 1
+
+Inv == x &gt;= 0
+========================================================================
+</code></pre>
+<p>Given that you will need the value <code>Int</code> for a type annotation, it probably
+does not make a lot of sense to extend <code>Naturals</code> in your own specifications,
+as you will have to extend <code>Integers</code> for the type annotation too.  We are
+currently working on a different kind of type annotations, which would not
+require <code>Int</code>.</p>
+<p><a name="recursion"></a></p>
+<h2><a class="header" href="#73-recursive-operators-and-functions" id="73-recursive-operators-and-functions">7.3 Recursive operators and functions</a></h2>
+<p><a name="rec-op"></a></p>
+<h3><a class="header" href="#731-recursive-operators" id="731-recursive-operators">7.3.1 Recursive operators</a></h3>
+<p>In the preprocessing phase, Apalache replaces every application of a user
+operator with its body. We call this process &quot;operator inlining&quot;.
+This cannot be done for recursive operators, for two reasons:</p>
+<ol>
+<li>
+<p>A recursive operator may be non-terminating (although a non-terminating
+operator is useless in TLA+);</p>
+</li>
+<li>
+<p>A terminating call to an operator may take an unpredicted number of iterations.</p>
+</li>
+</ol>
+<p>However, in practice, when one fixes specification parameters (that is,
+<code>CONSTANTS</code>), it is usually easy to find a bound on the number of operator
+iterations. For instance, consider the following specification:</p>
+<pre><code class="language-tla">--------- MODULE Rec6 -----------------
+CONSTANTS N
+VARIABLES set, count
+
+RECURSIVE Sum(_)
+
+Sum(S) ==
+  IF S = {}
+  THEN 0
+  ELSE LET x == CHOOSE x \in S: TRUE IN
+    x + Sum(S \ {x})
+
+Init ==
+  /\ set = {}
+  /\ count = 0
+
+Next ==
+  \E x \in (1..N) \ set:
+    /\ count' = count + x
+    /\ set' = set \union {x}
+
+Inv == count = Sum(set)
+=======================================
+</code></pre>
+<p>It is clear that the expression <code>Sum(S)</code> requires the number of iterations that
+is equal to <code>Cardinality(S) + 1</code>. Moreover, the expression <code>set \subseteq 1..N</code> is an invariant, and thus every call <code>Sum(set)</code> requires up to <code>N+1</code>
+iterations.</p>
+<p>When we can find an upper bound on the number of iterations, Apalache can
+unroll the recursive operator up to this bound. To this end, we define two
+additional operators. For instance:</p>
+<pre><code class="language-tla">--------- MC_Rec6 ----------
+VARIABLES set, count
+
+INSTANCE Rec6 WITH N &lt;- 3
+
+UNROLL_TIMES_Sum == 4
+UNROLL_DEFAULT_Sum == 0
+============================
+</code></pre>
+<p>In this case, Apalache unrolls every call to <code>Sum</code> exactly <code>UNROLL_TIMES_Sum</code>
+times, that is, four times. On the default branch, Apalache places
+<code>UNROLL_DEFAULT_Sum</code>, that is, 0.</p>
+<p>All recursively defined operators should follow this convention where, for every such operator <code>Oper</code>, the user defines both <code>UNROLL_TIMES_Oper</code>, which expands to a positive integer value, and <code>UNROLL_DEFAULT_Oper</code>, which expands to some default value <code>Oper(args*)</code> should take, if the computation would require more than <code>UNROLL_TIMES_Oper</code> recursive calls.
+At present, we only support literals (e.g. <code>4</code>) or primitive arithmetic expressions (e.g. <code>2 + 2</code>) in the body of <code>UNROLL_TIMES_Oper</code>.</p>
+<p><a name="rec-fun"></a></p>
+<h4><a class="header" href="#732-recursive-functions" id="732-recursive-functions">7.3.2 Recursive functions</a></h4>
+<p>Apalache offers limited support for recursive functions. However, read the
+warning below on why you should not use recursive functions. The restrictions
+are as follows:</p>
+<ol>
+<li>
+<p>Apalache supports recursive functions that return an integer or a Boolean.</p>
+</li>
+<li>
+<p>As Apalache's simple type checker is not able to find the type of a
+recursive function, all uses of a recursive function should come with a type
+annotation.</p>
+</li>
+<li>
+<p>As in TLC, the function domain must be a finite set.</p>
+</li>
+</ol>
+<p>The example below shows a recursive function that computes the factorial of <code>n</code>.</p>
+<pre><code class="language-tla">------------------------------ MODULE Rec8 ------------------------------------
+EXTENDS Integers
+
+VARIABLES n, factSpec, factComp
+
+\* the syntax for type annotations
+a &lt;: b == a
+
+\* the type of the factorial function
+FactT == [Int -&gt; Int]
+
+(*
+ Defining a recursive function on a finite domain. Although it is rather
+ unnatural to define factorial on a finite set, both Apalache and TLC
+ require finite domains. As is usual for function application, the result
+ of the application is not defined on the elements outside of the function
+ domain.
+ *)
+Fact[k \in 1..20] ==
+    IF k &lt;= 1
+    THEN 1
+    ELSE k * (Fact &lt;: FactT)[k - 1]
+
+Init ==
+    /\ n = 1
+    /\ factSpec = Fact[n]
+    /\ factComp = 1
+
+Next ==
+    /\ n' = n + 1
+    /\ factSpec' = Fact[n']
+    /\ factComp' = n' * factComp
+
+Inv ==
+    factComp = factSpec
+===============================================================================
+</code></pre>
+<p>Check other examples in
+<a href="https://github.com/informalsystems/apalache/tree/unstable/test/tla"><code>test/tla</code></a> that
+start with the prefix <code>Rec</code>.</p>
+<p><strong>Why you should avoid recursive functions.</strong> Sometimes, recursive functions
+concisely describe the function that you need. The nice examples are the
+factorial function (see above) and Fibonacci numbers (see
+<a href="https://github.com/informalsystems/apalache/tree/unstable/test/tla/Rec3.tla">Rec3</a>).
+However, when you define a recursive function over sets, the complexity gets
+ugly really fast.</p>
+<p>Consider the example
+<a href="https://github.com/informalsystems/apalache/tree/unstable/test/tla/Rec9.tla">Rec9</a>,
+which computes set cardinality. Here is a fragment of the spec:</p>
+<pre><code class="language-tla">\* the type of the function Card
+CardT == [{Int} -&gt; Int]
+
+\* The set cardinality function
+Card[S \in SUBSET NUMS] ==
+    IF S = IntSet({})
+    THEN 0
+    ELSE LET i == CHOOSE j \in S: TRUE IN
+        1 + (Card &lt;: CardT)[S \ {i}]
+</code></pre>
+<p>Since we cannot fix the order, in which the set elements are evaluated, we
+define function <code>Card</code> over <code>SUBSET NUMS</code>, that is, all possible subsets of
+<code>NUMS</code>. Apalache translates the function in a quantifier-free theory of SMT.
+Hence, in this case, Apalache expands <code>SUBSET NUMS</code>, so it introduces
+<code>2^|NUMS|</code> sets! Further, Apalache writes down the SMT constraints for the
+domain of <code>Card</code>. As a result, it produces <code>NUMS * 2^|NUMS|</code> constraints.
+As you can see, recursive functions over sets explode quite fast.</p>
+<p>It is usually a good idea to use recursive operators over sets rather than
+recursive functions. The downside is that you have to provide an upper bound on
+the number of the operator iterations. The upside is that recursive operators
+are usually unrolled more efficiently. (If they contain only constant
+expressions, they are even computed by the translator!) For instance, set
+cardinality does not require <code>2^|NUMS|</code> constraints, when using a recursive
+operator.</p>
+<p><a name="apalacheMod"></a></p>
+<h1><a class="header" href="#9-the-apalache-module" id="9-the-apalache-module">9. The Apalache module</a></h1>
+<p>Similar to the <code>TLC</code> module, we provide the module called <code>Apalache</code>, which can
+be found in
+<a href="https://github.com/informalsystems/apalache/tree/unstable/src/tla">src/tla</a>.
+Most of the operators in that modules are introduced internally by Apalache,
+when it is rewriting a TLA+ specification.  It is useful to read the comments
+to the operators defined in <code>Apalache.tla</code>, as they will help you in
+understanding the <a href="manual.html#detailed">detailed output</a> produced by the tool, see.
+Perhaps, the most interesting operator in <code>Apalache</code> is the type assignment
+operator that is defined as follows:</p>
+<pre><code class="language-tla">x := e == x = e
+</code></pre>
+<p>See the <a href="manual.html#assignments">discussion</a> on the role of assignments in Apalache.</p>
+<p><a name="profiling"></a></p>
+<h1><a class="header" href="#10-profiling-your-specification" id="10-profiling-your-specification">10. Profiling your specification</a></h1>
+<p>As Apalache translates the TLA+ specification to SMT, it often defeats
+our intuition about the standard bottlenecks that one learns about when running
+TLC. For instance, whereas TLC needs a lot of time to compute the initial states
+for the following specification, Apalache can check the executions of length up
+to ten steps in seconds:</p>
+<pre><code class="language-tla">---------------------------- MODULE powerset ----------------------------
+EXTENDS Integers
+VARIABLE S
+
+Init ==
+    /\ S \in SUBSET (1..50)
+    /\ 3 \notin S
+
+Next ==
+    \/ \E x \in S:
+        S' = S \ {x}
+    \/ UNCHANGED S
+
+Inv ==
+    3 \notin S
+=========================================================================
+</code></pre>
+<p>Apalache has its own bottlenecks. As it's using the SMT solver z3,
+we cannot precisely profile your TLA+ specification. However, we can profile
+the number of SMT variables and constraints that Apalache produces for different
+parts of your specification. To activate this profiling mode, use the option
+<code>--smtprof</code>:</p>
+<pre><code class="language-sh">apalache check --smtprof powerset.tla
+</code></pre>
+<p>The profiling data is written in the file <code>profiler.csv</code>:</p>
+<pre><code># weight,nCells,nConsts,nSmtExprs,location                                      
+4424,2180,2076,28460,powerset.tla:11:5-13:18
+4098,2020,1969,12000,powerset.tla:12:9-12:20
+4098,2020,1969,12000,powerset.tla:12:14-12:20 
+...
+</code></pre>
+<p>The meaning of the columns is as follows:</p>
+<ul>
+<li>
+<p><code>weight</code> is the weight of the expression.
+Currently it is computed as <code>nCells + nConsts + sqrt(nSmtExprs)</code>.
+We may change this formula in the future.</p>
+</li>
+<li>
+<p><code>nCells</code> is the number of arena cells that are created during the translation.
+Intuitively, the cells are used to keep the potential shapes of the data structures
+that are captured by the expression.</p>
+</li>
+<li>
+<p><code>nConsts</code> is the number of SMT constants that are produced by the translator.</p>
+</li>
+<li>
+<p><code>nSmtExprs</code> is the number of SMT expressions that are produced by the translator.
+We also include all subexpressions, when counting this metric.</p>
+</li>
+<li>
+<p><code>location</code> is the location in the source code where the expression
+was found, indicated by the file name correlated with a range of <code>line:column</code> pairs.</p>
+</li>
+</ul>
+<p>To visualize the profiling data, you can use the script <code>script/heatmap.py</code>:</p>
+<pre><code class="language-sh">$APALACHE_HOME/script/heatmap.py profile.csv heatmap.html
+</code></pre>
+<p>The produced file <code>heatmap.html</code> looks as follows:</p>
+<p><img src="./img/profiler2.png" alt="Here you should see a heatmap" title="A heatmap" /></p>
+<p>The heatmap may give you an idea about the expression that are hard for Apalache.
+The following picture highlights one part of the Raft specification that produces
+a lot of constraints:</p>
+<p><img src="./img/profiler.png" alt="Here you should see a heatmap" title="A heatmap of Raft" /></p>
+<p><a name="theory5"></a></p>
+<h1><a class="header" href="#11-five-minutes-of-theory" id="11-five-minutes-of-theory">11. Five minutes of theory</a></h1>
+<p><strong>You can safely skip this section</strong></p>
+<p>Given a TLA+ specification, with all parameters fixed, our model checker
+performs the following steps:</p>
+<ol>
+<li>
+<p>It automatically extracts symbolic transitions from the specification. This
+allows us to partition the action <code>Next</code> into a disjunction of simpler actions
+<code>A_1, ..., A_n</code>.</p>
+</li>
+<li>
+<p>Apalache translates operators <code>Init</code> and <code>A_1, ..., A_n</code> to SMT formulas.
+This allows us to explore bounded executions with an SMT solver (we are using
+<a href="https://github.com/Z3Prover/z3">Microsoft's Z3</a>). For instance, a sequence of
+<code>k</code> steps <code>s_0, s_1, ..., s_k</code>, all of which execute action <code>A_1</code>, is encoded
+as a formula <code>Run(k)</code> that looks as follows:</p>
+</li>
+</ol>
+<pre><code class="language-tla">[[Init(s_0)]] /\ [[A_1(s_0, s_1)]] /\ ... /\ [[A_1(s_(k-1), s_k)]]
+</code></pre>
+<p>To find an execution of length <code>k</code> that violates an invariant <code>Inv</code>, the tool
+adds the following constraint to the formula <code>Run(k)</code>:</p>
+<pre><code class="language-tla">[[~Inv(s_0)]] \/ ... \/ [[~Inv(s_k)]]
+</code></pre>
+<p>Here, <code>[[_]]</code> is the translator from TLA+ to SMT. Importantly, the values for
+the states <code>s_0</code>, ..., <code>s_k</code> are not enumerated as in TLC, but have to be found
+by the SMT solver.</p>
+<p>If you would like to learn more about theory behind Apalache, check the <a href="https://dl.acm.org/doi/10.1145/3360549">paper
+delivered at OOPSLA19</a>.</p>
+<p><a name="features"></a></p>
+<h1><a class="header" href="#12-supported-language-features" id="12-supported-language-features">12. Supported language features</a></h1>
+<p>Check the <a href="features.html">supported features</a>, <a href="kera.html">KerA+</a>, and
+<a href="preprocessing.html">preprocessing steps</a>.</p>
+<h1><a class="header" href="#syntax-of-tlc-configuration-files" id="syntax-of-tlc-configuration-files">Syntax of TLC Configuration Files</a></h1>
+<p><strong>Author:</strong> Igor Konnov, 2020</p>
+<p>This file presents the syntax of
+<a href="http://lamport.azurewebsites.net/tla/tools.html">TLC</a> configuration files
+in <a href="https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form">EBNF</a> and
+comments on the treatment of its sections in
+<a href="https://github.com/informalsystems/apalache">Apalache</a>. A detailed discussion
+on using the config files with TLC can be found in Leslie Lamport's 
+<a href="http://lamport.azurewebsites.net/tla/book.html">Specifying Systems</a>,
+Chapter 14 and in
+<a href="https://lamport.azurewebsites.net/tla/current-tools.pdf">Current Versions of the TLA+ Tools</a>.
+In particular, the TLA+ specification of TLC configuration files
+is given in Section 14.7.1. The standard parser can be found in
+<a href="https://github.com/tlaplus/tlaplus/blob/master/tlatools/org.lamport.tlatools/src/tlc2/tool/impl/ModelConfig.java"><code>tlc2.tool.impl.ModelConfig</code></a>.
+As the configuration files have simple syntax, we implement our own parser in
+Apalache.</p>
+<pre><code class="language-ebnf">// The configuration file is a non-empty sequence of configuration options.
+config ::=
+    options+
+
+// Possible options, in no particular order, all of them are optional.
+// Apalache expects Init after Next, or Next after Init.
+options ::=
+    Init
+  | Next
+  | Specification
+  | Constants
+  | Invariants
+  | Properties
+  | StateConstraints
+  | ActionConstraints
+  | Symmetry
+  | View
+  | Alias
+  | Postcondition
+  | CheckDeadlock
+
+// Set the initialization predicate (over unprimed variables), e.g., Init.
+Init ::=
+    &quot;INIT&quot; ident
+
+// Set the next predicate (over unprimed and primed variables), e.g., Next.
+Next ::=
+    &quot;NEXT&quot; ident
+
+// Set the specification predicate, e.g., Spec.
+// A specification predicate usually looks like Init /\ [][Next]_vars /\ ...
+Specification ::=
+    &quot;SPECIFICATION&quot; ident
+
+// Set the constants to specific values or substitute them with other names.
+Constants ::=
+    (&quot;CONSTANT&quot; | &quot;CONSTANTS&quot;) (replacement | assignment)*
+
+// Replace the constant in the left-hand side
+// with the identifier in the right-hand side.
+replacement ::=
+    ident &quot;&lt;-&quot; ident
+
+// Replace the constant in the left-hand side
+// with the constant expression in the right-hand side.
+assignment ::=
+    ident &quot;=&quot; constExpr
+
+// A constant expression that may appear in
+// the right-hand side of an assignment.
+constExpr ::=
+    modelValue
+  | integer
+  | string
+  | &quot;{&quot; &quot;}&quot;
+  | &quot;{&quot; constExpr (&quot;,&quot; constExpr)* &quot;}&quot;
+
+// The name of a model value, see Section 14.5.3 of Specifying Systems.
+// A model value is essentially an uninterpreted constant.
+// All model values are distinct from one another. Moreover, they are
+// not equal to other values such as integers, strings, sets, etc.
+// Apalache treats model values as strings, which it declares as
+// uninterpreted constants in SMT.
+modelValue ::= ident
+
+// An integer (no bit-width assumed)
+integer ::=
+      &lt;string matching regex [0-9]+&gt;
+    | &quot;-&quot; &lt;string matching regex [0-9]+&gt;
+
+// A string, starts and ends with quotes,
+// a restricted set of characters is allowed (pre-UTF8 era, Paxon scripts?)
+string ::=
+    '&quot;' &lt;string matching regex [a-zA-Z0-9_~!@#\$%^&amp;*-+=|(){}[\],:;`'&lt;&gt;.?/ ]*&gt; '&quot;'
+
+// Set an invariant (over unprimed variables) to be checked against
+// every reachable state.
+Invariants ::=
+    (&quot;INVARIANT&quot; | &quot;INVARIANTS&quot;) ident*
+
+// Set a temporal property to be checked against the initial states.
+// Temporal properties reason about finite or infinite computations,
+// which are called behaviors in TLA+. Importantly, the computations
+// originate from the initial states.
+// APALACHE IGNORES THIS CONFIGURATION OPTION.
+Properties ::=
+    (&quot;PROPERTY&quot; | &quot;PROPERTIES&quot;) ident*
+
+// Set a state predicate (over unprimed variables)
+// that restricts the state space to be explored.
+// APALACHE IGNORES THIS CONFIGURATION OPTION.
+StateConstraints ::=
+    (&quot;CONSTRAINT&quot; | &quot;CONSTRAINTS&quot;) ident*
+
+// Set an action predicate (over unprimed and primed variables)
+// that restricts the transitions to be explored.
+// APALACHE IGNORES THIS CONFIGURATION OPTION.
+ActionConstraints ::=
+    (&quot;ACTION-CONSTRAINT&quot; | &quot;ACTION-CONSTRAINTS&quot;) ident*
+
+// Set the name of an operator that produces a set of permutations
+// for symmetry reduction.
+// See Section 14.3.3 in Specifying Systems.
+// APALACHE IGNORES THIS CONFIGURATION OPTION.
+Symmetry ::=
+    &quot;SYMMETRY&quot; ident
+
+// Set the name of an operator that produces a state view
+// (some form of abstraction).
+// See Section 14.3.3 in Specifying Systems.
+// APALACHE IGNORES THIS CONFIGURATION OPTION.
+View ::=
+    &quot;VIEW&quot; ident
+
+// Whether the tools should check for deadlocks.
+// APALACHE IGNORES THIS CONFIGURATION OPTION.
+CheckDeadlock ::=
+    &quot;CHECK_DEADLOCK&quot; (&quot;FALSE&quot; | &quot;TRUE&quot;)
+
+// Recent feature: https://lamport.azurewebsites.net/tla/current-tools.pdf
+// APALACHE IGNORES THIS CONFIGURATION OPTION.
+Postcondition ::=
+    &quot;POSTCONDITION&quot; ident
+
+// Very recent feature: https://github.com/tlaplus/tlaplus/issues/485
+// APALACHE IGNORES THIS CONFIGURATION OPTION.
+Alias ::=
+    &quot;ALIAS&quot; ident
+
+// A TLA+ identifier, must be different from the above keywords.
+ident ::=
+    &lt;string matching regex [a-zA-Z_]([a-zA-Z0-9_])*&gt;
+
+</code></pre>
+<h2><a class="header" href="#simple-type-inference-and-type-annotations" id="simple-type-inference-and-type-annotations">Simple type inference and type annotations</a></h2>
+<p><strong>WARNING:</strong> We have recently implemented a better type checker, see <a href="https://youtu.be/hnp25hmCMN8">the
+talk</a>. The type annotations will be replaced with
+the new annotations as documented in
+<a href="https://github.com/informalsystems/apalache/blob/unstable/docs/adr/002adr-types.md">ADR002</a>.
+The new annotations will be implemented in the upcoming release.</p>
+<hr />
+<p>Our model checker assigns types to variables, in order to encode TLA+ expressions
+in <a href="https://github.com/Z3Prover/z3">Z3</a>. Hence, the expressions that are ill-typed
+(from the point of view of our type system), will be rejected right away. Some
+expressions, such as <code>{}</code> and <code>&lt;&lt;&gt;&gt;</code> require an advanced type inference algorithm,
+so the model checker will ask the user to provide the tool with a type annotation.
+To get an idea of our type system, check Section 2. In a nutshell,
+if a TLA+ expression cannot be decorated with a type annotation,
+it is not supported <em>yet</em>. Exception is made for non-recursive TLA+ operators, as they are
+expanded before the type inference is run. </p>
+<h3><a class="header" href="#1-type-inference" id="1-type-inference">1. Type inference</a></h3>
+<p>The version <code>0.4.0</code> of our model checker runs the naive type inference
+algorithm for every computation step:</p>
+<ol>
+<li>
+<p>It assumes that all operator definitions have been replaced with their
+bodies. (Hence, recursive operators are not supported.)</p>
+</li>
+<li>
+<p>It assumes that non-primed variables have been assigned types already.
+As expected, the non-primed variables get their initial types by running
+type inference on <code>Init</code>.</p>
+</li>
+<li>
+<p>It recursively computes the types of subexpressions in a TLA+ expression in
+a bottom-up way as follows:</p>
+</li>
+</ol>
+<pre><code>1. A literal is assigned the respective basic type. That is, an integer,
+ a Boolean, or a string gets assigned the integer, Boolean, or the constant
+ type respectively.
+1. An assignment-like expression ``x' = e`` or ``x' \in S`` assigns to ``x'``
+ the type of ``e`` and the type of ``S`` elements respectively. The type
+ checker requires that ``x'`` is assigned the same type across all formula
+ branches. However, variables _may_ have different types at different steps.
+ For instance, the definitions ``Init == x = 1`` and ``Next == x' = {x}``
+ will be processed perfectly fine: ``x`` is assigned the type ``Int`` in the initial
+ states, and the type ``Set(...(Set(Int)))`` of _n_ nested sets at the _n_-th step, ``n &gt;= 0``.
+1. The expressions that introduce bound variables, e.g., ``{e: x \in S}``,
+are treated as usual: first, the type of ``S`` is computed and ``x`` is assigned
+the element type, and then the type of ``e`` is computed, which immediately
+gives us the type of the set expression.
+</code></pre>
+<p>This approach manages to automatically compute types of many TLA+ expressions.
+However, there a few problematic cases that require type annotations:</p>
+<ol>
+<li>An empty set <code>{}</code> gets assigned the type <code>Set[Unknown]</code>. When it is later
+combined with a more precise type, e.g., as in <code>{} \cup {1}</code>, the type finder
+reports a type error. In this case, the user has to write a type annotation.
+For instance, the above-mentioned problematic expression can be fixed as follows:
+<code>({} &lt;: {Int}) \cup {1}</code>.</li>
+<li>Similar to an empty set, an empty sequence <code>&lt;&lt;&gt;&gt;</code> gets assigned the type
+<code>Seq[Unknown]</code>. Hence <code>&lt;&lt;&gt;&gt; \o &lt;&lt;1&gt;&gt;</code> produces a type error. To resolve this,
+the user has to write a type annotation <code>(&lt;&lt;&gt;&gt; &lt;: Seq(Int)) \o &lt;&lt;1&gt;&gt;</code>.</li>
+<li>It is common to mix records that have different sets of fields, e.g.,
+see <a href="https://github.com/tlaplus/Examples/tree/master/specifications/Paxos">Paxos</a>.
+However, our type checker will report a type error on the following expression:
+<code>{[type |-&gt; &quot;1a&quot;, bal |-&gt; 1]} \cup {[type |-&gt; &quot;2a&quot;, bal |-&gt; 2, val |-&gt; 3]}</code>.
+To resolve this, the user has to write a type annotation:
+<code>{[type |-&gt; &quot;1a&quot;, bal |-&gt; 1] &lt;: MT} \cup {[type |-&gt; &quot;2a&quot;, bal |-&gt; 2, val |-&gt; 3]}</code>,
+where <code>MT</code> is defined as <code>[type |-&gt; STRING, bal |-&gt; Int, val |-&gt; Int]</code>.
+The type checker requires that the fields with the same name are assigned
+the same type.</li>
+</ol>
+<h3><a class="header" href="#2-type-annotations" id="2-type-annotations">2. Type annotations</a></h3>
+<p>As there is no standard way of specifying types in TLA+ (hey, it is untyped by design),
+we introduce a simple convention to specify types by writing special TLA+ expressions.</p>
+<p>As a preliminary step, the user has to introduce the operator <code>&lt;:</code> as follows:</p>
+<pre><code class="language-tla">a &lt;: b == a
+</code></pre>
+<p>This operator does not nothing else but returns its first argument, so the standard TLA+
+tools will ignore the second argument, which contains a type annotation. Our model checker
+interprets the second argument of the operator <code>&lt;:</code> as a type annotation.
+(This also means that you should not assign any other meaning to <code>&lt;:</code> in your specifications.)</p>
+<p>Further, the user may use <code>&lt;:</code> to define types of problematic expressions, see the
+examples in Section 1.</p>
+<p>The syntax for type annotations is given below. Note that these expressions should not be
+understood as sets of values, as one would expects from type invariants such as <code>TypeOK</code>. Rather,
+they are TLA+ expressions that are parsed by the model checker, in order to construct types.</p>
+<p>The syntax of type annotations is as follows:</p>
+<ol>
+<li><code>Int</code> specifies the integer type. For instance, <code>x &lt;: Int</code> specifies that <code>x</code>
+is an integer, but not a set of integers.</li>
+<li><code>BOOLEAN</code> specifies the Boolean type. Again, although we are using a set here,
+its purpose is to say that an expression is a Boolean, not a set of Booleans.</li>
+<li><code>STRING</code> specifies the type of constants, e.g., <code>&quot;a&quot;</code> and <code>&quot;hello&quot;</code>
+are such constants.</li>
+<li><code>{T}</code> specifies the set whose elements have type <code>T</code>. For instance,
+<code>{Int}</code> specifies a set of integers, whereas <code>{{BOOLEAN}}</code> specifies
+a set of sets of Booleans. Note that you should always use singleton sets in
+type annotations. For instance, <code>{Int, BOOLEAN}</code> would be immediately rejected.
+Hence, sets should contain the elements of the same type (there is some flexibility
+for records, see Section 1)</li>
+<li><code>[T_1 -&gt; T_2]</code> specifies the type of a function whose arguments have type <code>T_1</code>,
+and the results are of type <code>T_2</code>. Hence, a function should return the values
+of the same type.</li>
+<li><code>&lt;&lt;T_1, ..., T_k&gt;&gt;</code> specifies the type of a <em>k</em>-element tuple whose
+elements have types <code>T_1, ..., T_k</code> respectively. Note that different fields
+of a tuple are allowed to have different types. In these sense, we differentiate them
+from the general functions.</li>
+<li><code>[f_1 |-&gt; T_1, ..., f_k |-&gt; T_k]</code> specifies the type of a <em>k</em>-field record,
+whose field <code>f_i</code> is of the type <code>T_i</code>. The types <code>T_1, ..., T_k</code> may differ. Again,
+that makes them different from the general functions.</li>
+<li><code>Seq(T)</code> specifies the type of finite sequences, whose elements are of type <code>T</code>.
+There are no restrictions on the sequence length, except finiteness. In theory,
+a sequence of type <code>Seq[T]</code> is no different from a function of type <code>[Int -&gt; T]</code>.
+In practice, we use different encodings for the general functions and sequences.</li>
+</ol>
+<h1><a class="header" href="#tla-language-reference-manual-green_book" id="tla-language-reference-manual-green_book">TLA+ Language Reference Manual :green_book:</a></h1>
+<p>In this manual, we summarize our knowledge about TLA+ and about its treatment
+with the <a href="https://github.com/informalsystems/apalache">Apalache model checker</a>. This is not the manual on Apalache, which
+can be found in <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/src/manual.md">Apalache manual</a>. The <a href="http://lamport.azurewebsites.net/video/videos.html">TLA+ Video Course</a> by Leslie Lamport is
+an excellent starting point, if you are new to TLA+. For a comprehensive
+description and philosophy of the language, check <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a> and the
+<a href="http://lamport.azurewebsites.net/tla/tla.html">TLA+ Home Page</a>. There are plenty of interesting talks on TLA+ at <a href="https://www.youtube.com/channel/UCLHtwjeqBxVSEhjV0clKblA/videos">TLA
+Channel</a> of Markus Kuppe. This manual completely ignores Pluscal -- a
+higher-level language on top of TLA+.  If you are interested in learning
+Pluscal, check <a href="https://learntla.com">LearnTla.com</a> by Hillel Wayne.</p>
+<h2><a class="header" href="#contents" id="contents">Contents</a></h2>
+<ol>
+<li><a href="lang/./standard-operators.html">The standard operators of TLA+</a> :electric_plug:</li>
+<li><a href="lang/./user-operators.html">User-defined operators</a> :bulb:</li>
+<li>MODULE, EXTENDS and INSTANCES :scissors:</li>
+</ol>
+<h1><a class="header" href="#idiomatic-tla" id="idiomatic-tla">Idiomatic TLA+</a></h1>
+<p><strong>Authors:</strong> Shon Feder, Igor Konnov + (who likes to contribute?)</p>
+<p><em>This document is under construction.
+If you like to contribute, open a pull request.</em></p>
+<h2><a class="header" href="#introduction" id="introduction">Introduction</a></h2>
+<p>In this document, we collect specification idioms that aid us in writing TLA+
+specifications that are:</p>
+<ol>
+<li>understood by distributed system engineers,</li>
+<li>understood by verification engineers, and</li>
+<li>understood by automatic analysis tools such as the Apalache model checker.</li>
+</ol>
+<p>If you believe, that the above points are contradictory when put together, it is
+to some extent true. TLA+ is an extremely general specification language. As a
+result, it is easy to write a short specification that leaves a human reader
+puzzled . It is even easier to write a (syntactically correct) specification that
+turns any program trying to reason about TLA+ to dust. </p>
+<p>Nevertheless, we find TLA+ quite useful when writing concise specifications of
+distributed protocols at <a href="https://informal.systems">Informal Systems</a>. Other specification languages --
+especially, those designed for software verification -- would require us to
+introduce unnecessary book-keeping details that would both obfuscate the
+protocols and make their verification harder. However, we do not always need
+<em>&quot;all the power of mathematics&quot;</em>, so we find it useful to introduce additional
+structure in TLA+ specifications.</p>
+<p>Below, we summarize the idioms that help us in maintaining that structure.  As
+a bonus, these idioms usually aid the Apalache model checker in analyzing the
+specifications. Our idioms are quite likely different from the original ideas
+of <a href="https://lamport.azurewebsites.net/">Leslie Lamport</a> (the author of TLA+).
+So it is useful to read Lamport's <a href="http://lamport.azurewebsites.net/tla/book.html">Specifying Systems</a>. Importantly, these are
+<em>idioms</em>, not rules set in stone. If you believe that one of those idioms
+does not work for you in your specific setting, don't follow it.</p>
+<p>If this is the first page where you encounter the word &quot;TLA+&quot;, we do not
+recommend that you continue to read the material. It is better to start with <a href="http://lamport.azurewebsites.net/video/videos.html">The TLA+
+Video Course</a> by Leslie
+Lamport.  Once you have understood the basics and tried the language, it makes
+sense to ask the question: &quot;How do I write a specification that other people
+understand?&quot;.  We believe that many TLA+ users reinvent rules that are
+similar to our idioms.  By providing you with a bit of guidance, we hope to
+reduce your discomfort when learning more advanced TLA+.</p>
+<h2><a class="header" href="#the-idioms" id="the-idioms">The idioms</a></h2>
+<p><strong>Idiom 0:</strong>
+<a href="idiomatic/000keep-minimum-state-variables.html">Keep state variables to the minimum</a> :battery:</p>
+<p><strong>Idiom 1:</strong> <a href="idiomatic/001assignments.html">Update state variables with assignments</a> :date:</p>
+<p><strong>Idiom 2:</strong> <a href="idiomatic/002primes.html">Apply primes only to state variables</a> :pushpin:</p>
+<p><strong>Idiom 3:</strong> Isolate updates to VARIABLES :ghost:</p>
+<p><strong>Idiom 4:</strong> Isolate non-determinism in actions :crystal_ball:</p>
+<p><strong>Idiom 5:</strong> Introduce pure operators :see_no_evil:</p>
+<p><strong>Idiom 6:</strong> Introduce a naming convention for operator parameters :passport_control:</p>
+<p><strong>Idiom 7:</strong> Use Boolean operators in actions, not <code>IF-THEN-ELSE</code> :no_good:</p>
+<p><strong>Idiom 8:</strong> <code>CHOOSE</code> smart, prefer <code>\E</code> :guardsman:</p>
+<p><strong>Idiom 9:</strong> Do not over-structure :microscope:</p>
+<p><strong>Idiom 10:</strong> Do not over-modularize :duck:</p>
+<p><strong>Idiom 11:</strong> Separate normal paths from error paths. :zap:</p>
+<p><strong>Idiom 12:</strong> Do you really need those nice recursive operators? :cyclone:</p>
+<p><strong>Idiom 13:</strong> Do you really need set cardinalities? :pizza:</p>
+<p><strong>Idiom 14:</strong> Do you really need integers? :1234:</p>
+<p>Here is the list of the TLA+ language features that are currently supported by Apalache, following the <a href="https://lamport.azurewebsites.net/tla/summary.pdf">Summary of TLA+</a>.</p>
+<h2><a class="header" href="#language" id="language">Language</a></h2>
+<h3><a class="header" href="#module-level-constructs" id="module-level-constructs">Module-Level constructs</a></h3>
+<table><thead><tr><th>Construct</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>EXTENDS module</code></td><td align="center">✔</td><td align="center">-</td><td>As soon as SANY imports the module. Some standard modules are not supported yet</td></tr>
+<tr><td><code>CONSTANTS C1, C2</code></td><td align="center">✔</td><td align="center">-</td><td>Either define a <code>ConstInit</code> operator to initialize the constants, or declare operators instead of constants, e.g., C1 == 111</td></tr>
+<tr><td><code>VARIABLES x, y, z</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>ASSUME P</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Parsed, but not propagated to the solver</td></tr>
+<tr><td><code>F(x1, ..., x_n) == exp</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Every application of <code>F</code> is replaced with its body. Recursive operators need <a href="./manual.html#91-recursive-operators">unrolling annotations</a>.</td></tr>
+<tr><td><code>f[x ∈ S] == exp</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Only recursive functions that return integers or Booleans are supported.</td></tr>
+<tr><td><code>INSTANCE M WITH ...</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>No special treatment for <code>~&gt;</code>, <code>\cdot</code>, <code>ENABLED</code></td></tr>
+<tr><td><code>N(x1, ..., x_n) == INSTANCE M WITH...</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Parameterized instances are not supported yet, LOCAL operator definitions inside instances may fail to work</td></tr>
+<tr><td><code>THEOREM P</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Parsed but not used</td></tr>
+<tr><td><code>LOCAL def</code></td><td align="center">✔</td><td align="center">-</td><td>Handled by SANY</td></tr>
+</tbody></table>
+<h3><a class="header" href="#the-constant-operators" id="the-constant-operators">The constant operators</a></h3>
+<h4><a class="header" href="#logic" id="logic">Logic</a></h4>
+<table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>/\</code>, <code>\/</code>, <code>~</code>, <code>=&gt;</code>, <code>&lt;=&gt;</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>TRUE</code>, <code>FALSE</code>, <code>BOOLEAN</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>\A x \in S: p</code>, <code>\E x \in S : p</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>CHOOSE x \in S : p</code></td><td align="center">✔/✖</td><td align="center">-</td><td>Similar to TLC, we implement a non-deterministic choice. We will add a deterministic version in the future.</td></tr>
+<tr><td><code>CHOOSE x : x \notin S</code></td><td align="center">✖</td><td align="center">?</td><td>That is a commonly used idiom</td></tr>
+<tr><td><code>\A x : p, \E x : p</code></td><td align="center">✖</td><td align="center"><strong>NEVER</strong></td><td>Use the versions above</td></tr>
+<tr><td><code>CHOOSE x : p</code></td><td align="center">✖</td><td align="center"><strong>NEVER</strong></td><td>Use the version above</td></tr>
+</tbody></table>
+<h4><a class="header" href="#sets" id="sets">Sets</a></h4>
+<p><strong>Note:</strong> only finite sets are supported. Additionally, existential
+quantification over <code>Int</code> and <code>Nat</code> is supported, as soon as it can be
+replaced with a constant.</p>
+<table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>=</code>, <code>/=</code>, <code>\in</code>, <code>\notin</code>, <code>\intersect</code>, <code>\union</code>, <code>\subseteq</code>, <code>\</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>{e_1, ..., e_n}</code></td><td align="center">✔</td><td align="center">-</td><td>Empty sets <code>{}</code> require <a href="types-and-annotations.html">type annotations</a></td></tr>
+<tr><td><code>{x \in S : p}</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>{e : x \in S}</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>SUBSET S</code></td><td align="center">✔</td><td align="center">-</td><td>Sometimes, the powersets are expanded</td></tr>
+<tr><td><code>UNION S</code></td><td align="center">✔</td><td align="center">-</td><td>Provided that S is expanded</td></tr>
+</tbody></table>
+<h4><a class="header" href="#functions" id="functions">Functions</a></h4>
+<table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>f[e]</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>DOMAIN f</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>[ x \in S ↦ e]</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td></td></tr>
+<tr><td><code>[ S -&gt; T ]</code></td><td align="center">✔</td><td align="center">-</td><td>Sometimes, the functions sets are expanded</td></tr>
+<tr><td><code>[ f EXCEPT ![e1] = e2 ]</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+</tbody></table>
+<h4><a class="header" href="#records" id="records">Records</a></h4>
+<p><em>Use <a href="types-and-annotations.html">type annotations</a> to help the model checker in finding the right types.</em>
+Note that our type system distinguishes records from general functions.</p>
+<table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>e.h</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>r[e]</code></td><td align="center">✔/✖</td><td align="center">-</td><td>Provided that e is a constant expression.</td></tr>
+<tr><td><code>[ h1 ↦ e1, ..., h_n ↦ e_n]</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>[ h1 : S1, ..., h_n : S_n]</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>[ r EXCEPT !.h = e]</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+</tbody></table>
+<h4><a class="header" href="#tuples" id="tuples">Tuples</a></h4>
+<p><em>Use <a href="types-and-annotations.html">type annotations</a> to help the model checker in finding the right types.</em>
+Note that our type system distinguishes tuples from general functions.</p>
+<table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>e[i]</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Provided that <code>i</code> is a constant expression</td></tr>
+<tr><td><code>&lt;&lt; e1, ..., e_n &gt;&gt;</code></td><td align="center">✔</td><td align="center">-</td><td>By default, a tuple is constructed. Use a <a href="types-and-annotations.html">type annotation</a> to construct a sequence of proper type.</td></tr>
+<tr><td><code>S1 \X ... \X S_n</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>[ t EXCEPT ![i] = e]</code></td><td align="center">✔/✖</td><td align="center">-</td><td>Provided that <code>i</code> is a constant expression</td></tr>
+</tbody></table>
+<h4><a class="header" href="#strings-and-numbers" id="strings-and-numbers">Strings and numbers</a></h4>
+<table><thead><tr><th>Construct</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>&quot;c1...c_n&quot;</code></td><td align="center">✔</td><td align="center">-</td><td>A string is always mapped to a unique uninterpreted constant</td></tr>
+<tr><td><code>STRING</code></td><td align="center">✖</td><td align="center">-</td><td>It is an infinite set. We cannot handle infinite sets.</td></tr>
+<tr><td><code>d1...d_n</code></td><td align="center">✔</td><td align="center">-</td><td>As long as the SMT solver (Z3) accepts that large number</td></tr>
+<tr><td><code>d1...d_n.d_n+1...d_m</code></td><td align="center">✖</td><td align="center">-</td><td>Technical issue. We will implemented upon a user request.</td></tr>
+</tbody></table>
+<h4><a class="header" href="#miscellaneous-constructs" id="miscellaneous-constructs">Miscellaneous Constructs</a></h4>
+<table><thead><tr><th>Construct</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>IF p THEN e1 ELSE e2</code></td><td align="center">✔</td><td align="center">-</td><td>Provided that both e1 and e2 have the same type</td></tr>
+<tr><td><code>CASE p1 -&gt; e1 [] ... [] p_n -&gt; e_n [] OTHER -&gt; e</code></td><td align="center">✔</td><td align="center">-</td><td>See the comment above</td></tr>
+<tr><td><code>CASE p1 -&gt; e1 [] ... [] p_n -&gt; e_n</code></td><td align="center">✖</td><td align="center">-</td><td>Introduce the default arm with <code>OTHER</code>.</td></tr>
+<tr><td><code>LET d1 == e1 ... d_n == e_n IN e</code></td><td align="center">✔ / ✖</td><td align="center"><code>0.7-dev-calls</code></td><td>All applications of <code>d1</code>, ..., <code>d_n</code> are replaced with the expressions <code>e1</code>, ... <code>e_n</code> respectively. LET-definitions without arguments are kept in place.</td></tr>
+<tr><td>multi-line <code>/\</code> and <code>\/</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+</tbody></table>
+<h3><a class="header" href="#the-action-operators" id="the-action-operators">The Action Operators</a></h3>
+<table><thead><tr><th>Construct</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>e'</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Provided that e is a variable</td></tr>
+<tr><td><code>[A]_e</code></td><td align="center">✖</td><td align="center">-</td><td>It does not matter for safety</td></tr>
+<tr><td><code>&lt; A &gt;_e</code></td><td align="center">✖</td><td align="center">-</td><td></td></tr>
+<tr><td><code>ENABLED A</code></td><td align="center">✖</td><td align="center">-</td><td></td></tr>
+<tr><td><code>UNCHANGED &lt;&lt;e_1, ..., e_k&gt;&gt;</code></td><td align="center">✔</td><td align="center">-</td><td>Always replaced with <code>e_1' = e_1 /\ ... /\ e_k' = e_k</code></td></tr>
+<tr><td><code>A ∙ B</code></td><td align="center">✖</td><td align="center">-</td><td></td></tr>
+</tbody></table>
+<h3><a class="header" href="#the-temporal-operators" id="the-temporal-operators">The Temporal Operators</a></h3>
+<p>The model checker assumes that the specification has the form <code>Init /\ [][Next]_e</code>. Given an invariant candidate <code>Inv</code>, the tool checks, whether
+<code>Inv</code> is violated by an execution whose length is bounded by the given
+argument.</p>
+<p>Except the standard form <code>Init /\ [][Next]_e</code>, no temporal operators are supported.</p>
+<h2><a class="header" href="#standard-modules" id="standard-modules">Standard modules</a></h2>
+<h3><a class="header" href="#integers-and-naturals" id="integers-and-naturals">Integers and Naturals</a></h3>
+<p>For the moment, the model checker does not differentiate between integers and naturals. They are all translated as integers in SMT.</p>
+<table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>+</code>, <code>-</code>, <code>*</code>, <code>&lt;=</code>, <code>&gt;=</code>, <code>&lt;</code>, <code>&gt;</code></td><td align="center">✔</td><td align="center">-</td><td>These operators are translated into integer arithmetic of the SMT solver. Linear integer arithmetic is preferred.</td></tr>
+<tr><td><code>\div</code>, <code>%</code></td><td align="center">✔</td><td align="center">-</td><td>Integer division and modulo</td></tr>
+<tr><td><code>a^b</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Provided a and b are constant expressions</td></tr>
+<tr><td><code>a..b</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Sometimes, <code>a..b</code> needs a constant upper bound on the range.  When Apalache complains, use <code>{x \in A..B : a &lt;= x /\ x &lt;= b}</code>, provided that <code>A</code> and <code>B</code> are constant expressions.</td></tr>
+<tr><td><code>Int</code>, <code>Nat</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Supported in <code>\E x \in Nat: p</code> and <code>\E x \in Int: p</code>, if the expression is not located under <code>\A</code> and <code>~</code>. We also support assignments like <code>f' \in [S -&gt; Int]</code> and tests <code>f \in [S -&gt; Nat]</code></td></tr>
+<tr><td><code>/</code></td><td align="center">✖</td><td align="center">-</td><td>Real division, not supported</td></tr>
+</tbody></table>
+<h3><a class="header" href="#sequences" id="sequences">Sequences</a></h3>
+<table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>&lt;&lt;...&gt;&gt;</code>, <code>Head</code>, <code>Tail</code>, <code>Len</code>, <code>SubSeq</code>, <code>Append</code>, <code>\o</code>, <code>f[e]</code></td><td align="center">✔</td><td align="center">-</td><td>The sequence constructor <code>&lt;&lt;...&gt;&gt;</code> needs a <a href="types-and-annotations.html">type annotation</a>.</td></tr>
+<tr><td><code>EXCEPT</code></td><td align="center">✖</td><td align="center"><code>0.9</code></td><td>this operator do not seem to be often used</td></tr>
+<tr><td><code>Seq(S)</code></td><td align="center">✖</td><td align="center">-</td><td>We need an upper bound on the length of the sequences.</td></tr>
+<tr><td><code>SelectSeq</code></td><td align="center">✖</td><td align="center">-</td><td>will not be supported in the near future</td></tr>
+</tbody></table>
+<h3><a class="header" href="#finitesets" id="finitesets">FiniteSets</a></h3>
+<table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>IsFinite</code></td><td align="center">✔</td><td align="center">-</td><td>Always returns true, as all the supported sets are finite</td></tr>
+<tr><td><code>Cardinality</code></td><td align="center">✔</td><td align="center">-</td><td>Try to avoid it, as Cardinality(S) produces <code>O(n^2)</code> constraints in SMT for cardinality <code>n</code></td></tr>
+</tbody></table>
+<h3><a class="header" href="#tlc" id="tlc">TLC</a></h3>
+<table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>f @@ a :&gt; b</code></td><td align="center">✔</td><td align="center">-</td><td>Extends the function relation with the pair <code>&lt;&lt;a, b&gt;&gt;</code></td></tr>
+</tbody></table>
+<h3><a class="header" href="#reals" id="reals">Reals</a></h3>
+<p>Not supported, not a priority</p>
+<h1><a class="header" href="#preprocessing-in-apalache" id="preprocessing-in-apalache">Preprocessing in APALACHE</a></h1>
+<p>Before translating a specification into SMT, <code>apalache</code> performs a number of
+preprocessing steps:</p>
+<ul>
+<li><code>InlinerOfUserOper</code>: replaces every call to a user-defined operator with the operator's body.</li>
+<li><code>LetInExpander</code>: replaces every call to a let-in defined operator of arity at least 1 with the operator's body</li>
+<li><code>PrimingPass</code>: adds primes to variables in <code>Init</code> and <code>ConstInit</code> (required by <code>TransitionPass</code>)</li>
+<li><code>VCGen</code>: extracts verification conditions from the invariant candidate.</li>
+<li><code>Desugarer</code>: removes syntactic sugar like short-hand expressions in <code>EXCEPT</code>.</li>
+<li><code>Normalizer</code>: rewrites all expressions in <a href="https://en.wikipedia.org/wiki/Negation_normal_form">negation-normal form</a>.</li>
+<li><code>Keramelizer</code>: translates TLA+ expressions into the kernel language <a href="./kera.html">KerA</a>.</li>
+<li><code>PrimedEqualityToMembership</code>: replaces <code>x = e</code> with <code>x \in {e}</code> (required by <code>TransitionPass</code>)</li>
+<li><code>ExprOptimizer</code>: statically computes select expressions (e.g. record field access from a known record)</li>
+<li><code>ConstSimplifier</code>: propagates constants</li>
+</ul>
+<h2><a class="header" href="#keramelizer" id="keramelizer">Keramelizer</a></h2>
+<p>Keramelizer rewrites TLA+ expressions into <a href="./kera.html">KerA</a>. For many TLA+ expressions
+this translation is clear, however, some expressions cannot be easily translated. Below
+we discuss such expressions and the decisions that we have made.</p>
+<h3><a class="header" href="#case-a-namekera-casea" id="case-a-namekera-casea">CASE <a name="kera-case"></a></a></h3>
+<p>TLA+ supports two kinds of CASE expressions:</p>
+<ul>
+<li><code>CASE</code>. These are expressions without a default value:</li>
+</ul>
+<pre><code class="language-tla">    CASE
+         p_1 -&gt; e_1
+      [] p_2 -&gt; e_2
+         ...
+      [] p_n -&gt; e_n
+</code></pre>
+<ul>
+<li><code>CASE-OTHER</code>. These are expressions with a default value:</li>
+</ul>
+<pre><code class="language-tla">   CASE
+        p_1 -&gt; e_1
+     [] p_2 -&gt; e_2
+        ...
+     [] p_n -&gt; e_n
+     [] OTHER -&gt; e_def
+</code></pre>
+<p>Keramelizer supports only <code>CASE-OTHER</code> and asks the user to translate <code>CASE</code> expressions
+into <code>CASE-OTHER</code>. One could imagine that <code>CASE</code> could be expressed as
+<code>(p_1 /\ e_1) \/ ... \/ (p_n /\ e_n)</code>. However, this approach only works for Boolean
+expressions, which requires type inference. Moreover, the user expects a warning when
+neither of the conditions <code>p_1, ..., p_n</code> holds true.
+Hence, Leslie Lamport defines semantics of case in <a href="preprocessing.html#spec2004">Specifying Systems, p. 298</a> as:</p>
+<pre><code class="language-tla">  CHOOSE v: (p_1 /\ (v = e_1) \/ ... \/ (p_n /\ (v = e_n)))
+</code></pre>
+<p>Similarly, <code>CASE-OTHER</code> is defined  as:</p>
+<pre><code class="language-tla"> CHOOSE v: (p_1 /\ (v = e_1) \/ ... \/ (p_n /\ (v = e_n)) \/ (~p_1 /\ ... ~p_n /\ (v = e_ def)))
+</code></pre>
+<p>As a result, if there are several conditions among <code>p_1, ..., p_n</code> that hold true,
+then <code>CHOOSE</code> always selects the same condition <code>p_i</code> for equivalent formulas.
+<em>It is hard to enforce these general semantics in a model checker</em>. Thus, we have decided to select
+a fixed order of evaluating the conditions: the top-to-bottom order that is commonly used in
+programming languages. By using this approach, it is easy to translate <code>CASE-OTHER</code> as follows:</p>
+<pre><code class="language-tla">IF p_1
+THEN e_1
+ELSE
+  IF p_2
+  THEN e_2
+  ...
+    IF p_n
+    THEN e_n
+    ELSE e_def
+</code></pre>
+<p>With this approach it is not obvious how one would translate <code>CASE</code> in a sound way.
+We could drop the last condition <code>p_n</code> and unconditionally use the expression <code>e_n</code> in the bottom
+else arm. Hence, we ask the user to add the <code>OTHER</code> case to a <code>CASE</code> expression. Usually,
+the user has a better idea about the default case than an automatic tool. For instance,
+one can also rewrite the (presumably impossible) default case using the <code>CHOOSE</code> operator:</p>
+<pre><code class="language-tla">   CASE
+        p_1 -&gt; e_1
+     [] p_2 -&gt; e_2
+        ...
+     [] p_n -&gt; e_n
+     [] OTHER -&gt; CHOOSE x \in {}: FALSE
+</code></pre>
+<h1><a class="header" href="#references" id="references">References</a></h1>
+<ul>
+<li>Leslie Lamport. Specifying Systems: The TLA+ Language and Tools for Hardware and Software Engineers.
+Addison-Wesley Professional, 2004. <a name="spec2004"></a></li>
+</ul>
+<h1><a class="header" href="#parameters-for-fine-tuning" id="parameters-for-fine-tuning">Parameters for fine tuning</a></h1>
+<p>The parameters for fine tuning can be passed to the checker in a properties file.
+Its name is given with the command-line option <code>--tuning=my.properties.</code> This file
+supports variable substitution, e.g., <code>${x}</code> is replaced with the value of <code>x</code>, if it was
+previously declared.</p>
+<ol>
+<li>
+<p><strong>Randomization</strong>: <code>smt.randomSeed=&lt;int&gt;</code> passes the random seed to <code>z3</code> (via
+<code>z3</code>'s parameters <code>sat.random_seed</code> and <code>smt.random_seed</code>). </p>
+</li>
+<li>
+<p><strong>Timeouts</strong>: <code>search.transition.timeout=&lt;seconds&gt;</code> and <code>search.invariant.timeout=&lt;seconds&gt;</code> set timeouts
+in seconds for checking whether a transition is enabled and whether the invariant holds, respectively.
+When a timeout occurs, while transition is checked, the transition is considered disabled
+and the search continues. When a timeout occurs, while the invariant is checked, the invariant
+is considered satisfied. Obviously, one can miss a bug by setting small timeouts.</p>
+</li>
+<li>
+<p><strong>Guided search</strong>: <code>search.transitionFilter=&lt;sequence&gt;</code>. Restrict the choice of symbolic
+transitions at every step with a regular expression. For instance, <code>search.filter=0,5,2|3</code>
+requires to start with the 0th transition, continue with the 5th transition,
+then execute either the 2nd or the 3rd transition and after that execute
+arbitrary transitions until the <code>length.</code> Note that there is no direct correspondence
+between the transition numbers and the actions in the TLA+ spec. Check the 
+transition numbers in <code>./x/**/out-transition.tla</code>: 0th transition is called <code>Next$0</code>, 1st transition is called <code>Next$1</code>, etc.</p>
+</li>
+<li>
+<p><strong>Invariant checking at certain steps</strong>: <code>search.invariantFilter=regex</code>.
+Check the invariant only at the steps that satisfy the regular expression.
+For instance, <code>search.invariantFilter=10|15|20</code> tells the model checker to
+check the invariant only <em>after</em> exactly 10, 15, or 20 step were made. Step 0 corresponds
+to the initialization with <code>Init</code>, step 1 is the first step with <code>Next</code>, etc.
+This option is useful for checking consensus algorithms, where the decision
+cannot be revoked. So instead of checking the invariant after each step, we can
+do that after the algorithm has made a good number of steps. </p>
+</li>
+<li>
+<p><strong>Invariant checking by splitting</strong>: <code>search.invariant.split=(false|true)</code>. If the option
+is set to true, the invariant is checked individually for every enabled transition. Otherwise,
+the invariant is checked once after all enabled transitions have been added into the SMT context.
+By default, <code>search.invariant.split=true</code></p>
+</li>
+<li>
+<p><strong>Learning from invariants</strong>: <code>search.invariant.learnFromUnsat=(false|true)</code>. If the option
+is set to true, once the checked found that <code>~Inv</code> does not hold for some depth, it adds the
+assumption <code>Inv</code> in the SMT context. </p>
+</li>
+<li>
+<p><strong>Randomized search</strong>: <code>search.randomDfs=(false|true)</code>. When the symbolic transitions
+are enumerated in the depth-first order, that is, <code>search=dfs</code>, choose the next transition
+randomly.</p>
+</li>
+<li>
+<p><strong>Translation to SMT</strong>:</p>
+</li>
+<li>
+<p><strong>Short circuiting</strong>: <code>rewriter.shortCircuit=(false|true)</code>. When <code>rewriter.shortCircuit=true</code>, <code>A \/ B</code> and <code>A /\ B</code> are translated to SMT as if-then-else expressions, e.g., <code>(ite A true B)</code>. Otherwise, disjunctions and conjunctions are directly translated to <code>(or ...)</code> and <code>(and ...)</code> respectively. By default, <code>rewriter.shortCircuit=false</code>.</p>
+</li>
+<li>
+<p><strong>Lazy short circuiting</strong>: <code>rewriter.lazyCircuit=(false|true)</code>. Given <code>A /\ B</code>, first check with the solver, whether <code>A</code> is satisfiable. If not, return reduce to <code>false</code> immediately; otherwise, rewrite <code>B</code>. By default, <code>rewriter.lazyCircuit=false</code>.</p>
+</li>
+</ol>
+<h1><a class="header" href="#kera-kernel-logic-of-actions" id="kera-kernel-logic-of-actions">KerA: kernel logic of actions</a></h1>
+<p>See <a href="https://dl.acm.org/citation.cfm?id=3360549">TLA+ model checking made symbolic</a>.</p>
+<h1><a class="header" href="#type-reconstruction-api" id="type-reconstruction-api">Type reconstruction API</a></h1>
+<p><strong>Author: Igor Konnov</strong></p>
+<p>In this note, we focus on the client interface of a type inference engine for TLA+.
+In the following, we refer to this interface as <code>TI</code>.
+By fixing this interface we give the users the freedom of choosing from several
+type inference engines.</p>
+<p>Given a TLA+ expression <code>ex</code>, the ultimate goal of type inference is to assign a type
+to each subexpression of <code>ex</code> in a sound and non-contradictory way. Since there may exist
+many good type systems for TLA+, the type inference API <em>should</em> be parameterized by the
+base class of the type system. For instance, if a concrete type inference engine <code>TIE</code> is
+implemented for the <code>CellT</code> type system, then <code>TIE</code> implements <code>TI[CellT]</code>. Obviously,
+a concrete implementation <em>may</em> support one type system.</p>
+<p>An implementation of <code>TI</code> <em>must</em> support two main phases of operation:</p>
+<ol>
+<li>
+<p><strong>Type inference/reconstruction</strong>. In this phase, <code>TIE</code> takes a TLA+ expression
+at its input, typically the body of <code>Init</code> or <code>Next</code>, and it tries to find a type
+assignment to the variables, operator definitions, and operator usages. The challenges of
+this analysis are as follows:</p>
+<ol>
+<li>
+<p>Resolving operator overloading, e.g., the expressions <code>&lt;&lt;1, 2&gt;&gt;</code> and <code>f[e]</code>
+can be treated as expressions either over tuples, or sequences.</p>
+</li>
+<li>
+<p>Finding signatures for operator definitions, e.g., <code>F(x) == x + 1</code> should have
+the signature <code>Int =&gt; Int</code>.</p>
+</li>
+</ol>
+<p>If successful, the results of this analysis should be stored somewhere for the subsequent use
+in the <em>Type computation</em> mode. Note that it is not necessary to store the types of all the intermediate
+subexpressions -- that would be wasteful. This analysis should store only the results that cannot
+be deterministically computed in the next phase such as resolved operator signatures and types of the variables.
+<code>TIE</code> <em>may</em> use expression identifiers to save the type information in some storage.</p>
+</li>
+<li>
+<p><strong>Type computation</strong>. In this phase, the client queries <code>TIE</code> by giving a <code>TLA+</code> expression
+and the types of its arguments. <code>TIE</code> computes and returns the resulting type of the expression.
+For instance, given the expression <code>F(e)</code> and the type <code>Int</code> of <code>e</code>, <code>TIE</code> finds the signature
+<code>F: 'a -&gt; 'a</code> in its internal storage and returns the type <code>Int</code>. Given the expression <code>{x, y}</code>
+and the argument types <code>x: Int</code> and <code>y: Int</code>, it can find the resulting type <code>Set[Int]</code> without
+referring to the storage. In other words, <code>TIE</code> provides the user with <strong>one step</strong> of type inference.
+If there are no ambiguities in the type computation or the ambiguities can be resolved by quering the storage,
+<code>TIE</code> <em>must</em> return the resulting type. <strong>Importantly</strong>, <code>TIE</code> <em>must</em> assume that it can be given expressions
+that have not been analyzed in the first stage. Such expressions may originate from the rewriting techniques
+used by the client. In this case, <code>TIE</code> <em>must</em> try to compute the resulting type. Only if the resulting type
+cannot be deterministically computed (e.g., there is not relevant type information in the storage),
+should <code>TIE</code> fail.</p>
+</li>
+</ol>
+<h2><a class="header" href="#tie-interface" id="tie-interface">TIE Interface</a></h2>
+<pre><code class="language-scala">/**
+  * A diagnostic message.
+  * @param origin the expression that caused the type error
+  * @param explanation the explanation
+  */
+class TypeError(val origin: TlaEx, val explanation: String)
+
+/**
+  * A general interface to a type inference engine. Check the description in docs/types-api.md.
+  *
+  * @tparam T the base class of the type system
+  * @see CellT
+  * @author Igor Konnov
+  */
+trait TypeFinder[T] {
+  /**
+    * Given a TLA+ expression, reconstruct the types and store them in an internal storage.
+    * If the expression is not well-typed, diagnostic messages can be accessed with getTypeErrors.
+    *
+    * @param e a TLA+ expression.
+    * @return true, if type inference was successful.
+    */
+  def inferAndSave(e: TlaEx): Boolean
+
+  /**
+    * Retrieve the type errors from the latest call to inferAndSave.
+    * @return a list of type errors
+    */
+  val getTypeErrors: Seq[TypeError]
+
+  /**
+    * Given a TLA+ expression and the types of its arguments, compute the resulting type, if possible.
+    * @param e a TLA+ expression
+    * @param argTypes the types of the arguments.
+    * @return the resulting type, if it can be computed
+    * @throws TypeException, if the type cannot be computed.
+    */
+  def compute(e: TlaEx, argTypes: Seq[T]): T
+}
+</code></pre>
+<h1><a class="header" href="#smt-encoding-for-set-cardinalities" id="smt-encoding-for-set-cardinalities">SMT encoding for set cardinalities</a></h1>
+<p><strong>Author: Igor Konnov, March 2020</strong></p>
+<p>This document contains rationale and the proposal for a better SMT encoding of
+the <code>Cardinality</code> operator. The encoding of v0.6.0 is explained in the
+<a href="https://dl.acm.org/doi/10.1145/3360549">OOPSLA19 paper</a>.  In the following, we
+are using the terminology of that paper. Moreover, we use the TLA+ ASCII
+notation, wherever possible.</p>
+<h2><a class="header" href="#1-problem" id="1-problem">1. Problem</a></h2>
+<p>Assume that a set <code>S</code> is over-approximated with arena cells <code>c_1, ..., c_n</code>.
+Some of these cells actually belong to the set, and some do not. A Boolean
+constant <code>in_i</code>, if and only if cell <code>c_i</code> belongs to the set <code>S</code>.</p>
+<p>In the following, we assume that the equality <code>=</code> is interpreted on <code>c_1</code>, ...,
+<code>c_n</code> as the structural equality. As Apalache is using lazy equality, we assume
+that the equality constraints <code>c_i = c_j</code> have been constructed for <code>i, j \in 1..n</code>.</p>
+<h2><a class="header" href="#2-the-quadratic-encoding-in-v050-and-v060" id="2-the-quadratic-encoding-in-v050-and-v060">2. The quadratic encoding in v0.5.0 and v0.6.0</a></h2>
+<p>In this encoding, we introduce <code>n + 1</code> counters <code>k_0</code>, <code>k_1</code>, ..., <code>k_n</code>. The
+counter <code>k_i</code> contains the cardinality of the set that is over-approximated
+with the cells <code>c_1</code>, ..., <code>c_i</code>. The counters are defined by the following
+equations for <code>i \in 1..n</code>.</p>
+<pre><code class="language-tla">k_0 = 0
+k_i =  k_{i-1} + (IF in_{i+1} /\ notSeen_i THEN 1 ELSE 0)
+</code></pre>
+<p>where the formula <code>notSeen_i</code> is defined as follows:</p>
+<pre><code class="language-tla">notSeen_i == \A j \in 1..(i-1): ~in_j \/ c_j /= c_i
+</code></pre>
+<p><strong>Proposition 1.</strong> <code>Cardinality(S) = k_n</code>.</p>
+<p><strong>Complexity.</strong> To get an idea of complexity, we count the number of literals
+that are produced by this encoding. It is easy to see that every equation for
+<code>k_i</code> produces <code>O(i)</code> literals, <code>i</code> inequality tests appear in the formula
+<code>notSeen_i</code>. If we compute the sum 0 + ... + n - 1, we get <code>(n - 1) * n</code>.
+Hence, our encoding produces <code>O(n^2)</code> literals, that is, it is <strong>quadratic</strong> in
+the number of elements that over-approximate <code>S</code>.</p>
+<h2><a class="header" href="#3-a-linear-encoding-for-a-comparison-against-a-constant-in-v070" id="3-a-linear-encoding-for-a-comparison-against-a-constant-in-v070">3. A linear encoding for a comparison against a constant in v0.7.0</a></h2>
+<p><strong>Lower bounds.</strong> We have developed a more efficient encoding for the formulas
+that have the following form:</p>
+<pre><code class="language-tla">Cardinality(S) &gt;= k,
+</code></pre>
+<p>where <code>S</code> is a set, and <code>k</code> is a constant integer expression.</p>
+<p>Essentially, this encoding can be translated into the following formula
+<code>[ExistsForm]</code>:</p>
+<pre><code class="language-tla">\E x_1, ..., x_k \in S:
+  \A y, z \in {x_1, ..., x_k}:
+    y /= z
+</code></pre>
+<p>We have implemented the translation to the form <code>[ExistsForm]</code>. This encoding
+introduces intermediate sets such as <code>{x_1, ..., x_k}</code>. After that, we have
+implemented a direct rewriting rule <code>CardConstRule</code>.</p>
+<p><strong>Note.</strong> The translation to <code>ExistsForm</code> is only sound, if the expression is
+in the positive form, that is, it is not located under any negation. Apalache
+automatically computes the negated normal form, so the user does not have to
+massage the specification.</p>
+<p><strong>Upper bound.</strong> We have not found a reasonable translation for the formulas of
+the form <code>Cardinality(S) &lt; k</code>.</p>
+<h2><a class="header" href="#4-a-proposal-for-a-better-general-encoding-unsound" id="4-a-proposal-for-a-better-general-encoding-unsound">4. A proposal for a better general encoding (unsound)</a></h2>
+<p><strong>The following encoding is unsound. We are not sure, whether it can be fixed.</strong></p>
+<p><em>Enforcing the structural equality <code>c_i = c_j</code> requires a set of constraints
+that is quadratic in <code>n</code>. Given that the equality has been already encoded,
+the constraints presented below are linear in <code>n</code>.</em></p>
+<p><strong>Equivalence classes.</strong>
+The new encoding is using uninterpreted functions and constants. We introduce a
+fresh sort <code>Z</code> whose only elements are uninterpreted constants <code>z_1</code>, ...,
+<code>z_n</code>.  The idea is to map the cells <code>c_1</code>, ..., <code>c_n</code> on <code>z_1</code>, ..., <code>z_n</code>, so
+that every pair of cells <code>c_i</code> and <code>c_j</code> is mapped on some <code>z_k</code> if and only if
+<code>c_i = c_j</code>. That is, the constants <code>z_1</code>, ..., <code>z_n</code> represent the equivalence
+classes of the cells <code>c_1</code>, ..., <code>c_n</code>. (It is possible that some constant <code>z_i</code>
+represents the empty equivalence class.)</p>
+<p>To this end, we introduce two uninterpreted functions:</p>
+<ul>
+<li>
+<p>The function <code>class \in [Sort_C -&gt; Sort_Z]</code> that maps the cells of the sort
+<code>C</code>, which includes the constants <code>c_1</code>, ..., <code>c_n</code> on the constants of the
+sort <code>Z</code>, that is <code>z_1</code>, ..., <code>z_n</code>.</p>
+</li>
+<li>
+<p>The function <code>repr \in [Sort_Z -&gt; Sort_C</code> that maps the constants <code>z_1</code>,
+..., <code>z_n</code> on the constants of the sort <code>C</code>, which includes the constants
+<code>c_1</code>, ..., <code>c_n</code>.  This function returns the representative of an
+equivalence class.</p>
+</li>
+</ul>
+<p><strong>TODO:</strong> <em>The function <code>repr</code> may map a constant <code>z_k</code> to a constant that is
+not identical to the cells <code>c_1</code>, ..., <code>c_n</code>. We are using lazy equality in
+Apalache. Is it a problem?</em></p>
+<p>Our goal is to guarantee the following property, which says that the function
+<code>class</code> is indeed encoding equivalence classes:</p>
+<pre><code class="language-tla">\A i \in 1..n:  c_i = c_j &lt;=&gt; class[c_i] = class[c_j]                   [EquivClass]
+</code></pre>
+<p>The direction <code>c_i = c_j =&gt; class[c_i] = class[c_j]</code> holds true, due to the
+<strong>congruence</strong> property of uninterpreted functions.</p>
+<p>How do we enforce the other direction? We impose the following constraint:</p>
+<pre><code class="language-tla">\A i \in 1..n: repr[class[c_i]] = c_i                                   [Repr]
+</code></pre>
+<p><strong>Proposition 2.</strong> Condition <code>[Repr]</code> implies <code>class[c_i] = class[c_j] =&gt; c_i = c_j</code>
+for <code>i \in 1..n</code>.</p>
+<p><em>Proof:</em></p>
+<p>Suppose that there is a pair <code>c_i</code> and <code>c_j</code> that satisfies the conditions:</p>
+<ol>
+<li>
+<p><code>class[c_i] = class[c_j]</code>, and</p>
+</li>
+<li>
+<p><code>c_i /= c_j</code>.</p>
+<p>We prove that the existence of such a pair contradicts the condition <code>[Repr]</code>.</p>
+</li>
+<li>
+<p>Let <code>z_i = repr[c_i]</code> and <code>z_j = repr[c_j]</code>.</p>
+</li>
+<li>
+<p>We have <code>repr[z_i] = repr[z_j]</code>. Indeed, from Condition 1., we have <code>z_i = z_j</code>.
+Hence, by the congruence property applied to <code>repr</code></p>
+<p>Let <code>c_k = repr[z_i]</code> and <code>c_l = repr[z_j]</code>. We have the following:</p>
+</li>
+<li>
+<p><code>c_k = c_l</code> by Condition 4.</p>
+</li>
+<li>
+<p><code>c_k = repr[class[c_i]] = c_i</code>. By Condition 2.</p>
+</li>
+<li>
+<p><code>c_l = repr[class[c_j]] = c_j</code>. By Condition 2.</p>
+</li>
+<li>
+<p>Finally, <code>c_i = c_j</code>. By 5.-7. This contradicts with the assumption <code>c_i /= c_j</code>.</p>
+</li>
+</ol>
+<p><em>QED</em></p>
+<p>By combining Proposition 2 with congruence of <code>class</code>, we obtain the desired
+property <code>[EquivClass]</code>. Hence, the functions <code>class</code> and <code>repr</code> provide us
+with a way to compute equivalence classes.</p>
+<p><strong>Set membership.</strong> It remains to take the membership relation into account.
+That is, we would like to use as representatives only the cells that actually
+belong to the set <code>S</code>. To this end, we introduce an uninterpreted <code>cin \in [Sort_C -&gt; BOOLEAN]</code>, which for every <code>c_i</code> encodes, whether <code>c_i</code>
+belongs to the set <code>S</code>. This uninterpreted function is identical to the Boolean
+variables <code>in_1</code>, ..., <code>in_n</code>, that is, the following constraint holds true,
+for i \in 1..n:</p>
+<pre><code class="language-tla">cin[c_i] = in_i        [DefCin]
+</code></pre>
+<p>The purpose of the function <code>cin</code> is solely to use congruence of the set
+membership relation.</p>
+<p><strong>BUG:</strong> It might happen that a pair of equal cells <code>c_i</code> disagree
+on the set membership, that is, <code>c_i = c_j/\ in_i /\ ~in_j</code> holds true.</p>
+<p><strong>Cardinality computation.</strong>  Finally, we count the number of equivalence
+classes that satisfy the following predicate <code>isCounted_i</code> for <code>i \in 1..n</code>:</p>
+<pre><code class="language-tla">class[repr[z_i]] = z_i /\ cin[repr[z_i]]
+</code></pre>
+<p><strong>NOTE:</strong> It might happen that <code>repr[z_i]</code> is mapped on a constant <code>d</code> that is
+syntactically different from <code>c_1</code>, ..., <code>c_n</code>. This, however, does not pose
+a problem, as the congruence property of <code>cin</code> enforces <code>cin[c_i] = cin[d]</code>.</p>
+<p>We introduce equations to count the number of equivalence classes for <code>i \in 1..n</code>:</p>
+<pre><code class="language-tla">    /\ k_0 = 0
+    /\ isCounted =&gt; k_i = k_{i-1} + 1
+    /\ ~isCounted =&gt; k_i = k_{i-1}
+</code></pre>
+<p>By collecting the constraints in this section, <code>[DefCin]</code> and <code>[Repr]</code>, we have
+a complete set of constraints for computing <code>k_n = Cardinality(S)</code>. As one can
+see, the number of literals in this encoding is <strong>linear</strong>, that is, <code>O(n)</code>.</p>
+<p><strong>NOTE:</strong> Although the number of constraints is linear, we have to analyze complexity
+of the underlying SMT problem, which may happen to be as hard as the SMT problem
+that is constructed in v0.6.0.</p>
+<h1><a class="header" href="#rfc-001-types-and-type-annotations" id="rfc-001-types-and-type-annotations">RFC 001: types and type annotations</a></h1>
+<p>Contributors (in alphabetical order): Shon Feder @shonfeder,
+Igor Konnov @konnov, Jure Kukovec @Kukovec,
+Markus Kuppe @lemmy, Andrey Kupriyanov @andrey-kuprianov, Leslie Lamport</p>
+<p>This is an RFC that reviews a number of possibilities.
+A concrete proposal can be found in <a href="adr/002adr-types.html">ADR-002</a>.</p>
+<p>It is good to have a number of different opinions here. We have three
+questions:</p>
+<ol>
+<li>How to write types in TLA+.</li>
+<li>How to write type annotations (as a user).</li>
+<li>How to display and use inferred types.</li>
+</ol>
+<h2><a class="header" href="#1-how-to-write-types-in-tla" id="1-how-to-write-types-in-tla">1. How to write types in TLA+</a></h2>
+<p>Everybody has a different opinion here. It would be great to use
+the native TLA+ constructs to express types.</p>
+<p><a name="typesAsTypeOk"></a></p>
+<h3><a class="header" href="#11-typeok-syntax" id="11-typeok-syntax">1.1. TypeOK syntax</a></h3>
+<p>The only way to write types in the <code>TypeOK</code> style is by set membership.
+For instance:</p>
+<ul>
+<li><code>x</code> is an integer: <code>x \in Int</code></li>
+<li><code>f</code> is a function from an integer to an integer: <code>f \in [Int -&gt; Int]</code></li>
+<li><code>f</code> is a function from a set of integers to a set of integers:
+<code>f \in [SUBSET Int -&gt; SUBSET Int]</code></li>
+<li><code>r</code> is a record that has the fields <code>a</code> and <code>b</code>, where <code>a</code> is an integer
+and <code>b</code> is a string: <code>r \in [a: Int, b: STRING]</code></li>
+<li><code>f</code> is a set of functions from a tuple of integers to an integer:
+<code>f \in SUBSET [Int \X Int -&gt; Int]</code></li>
+<li><code>Foo</code> is an operator of an <code>Int</code> and <code>STRING</code> that returns an <code>Int</code>:
+<code>\A a \in Int: \A b \in STRING: Foo(a, b) \in Int</code></li>
+<li><code>Bar</code> is a higher-order operator that takes an operator that takes
+an <code>Int</code> and <code>STRING</code> and returns an <code>Int</code>, and returns a <code>BOOLEAN</code>.</li>
+</ul>
+<p>Here is an approach to higher-order operators suggested by Leslie Lamport,
+where he uses a theorem:</p>
+<pre><code class="language-tla">THEOREM BarType ==
+  ASSUME NEW G(_,_),
+         \A x \in Int, y \in STRING : G(x,y) \in Int
+         PROVE  Bar(G) \in BOOLEAN
+</code></pre>
+<p>Similar to that, we can write a theorem about the type of <code>Foo</code>:</p>
+<pre><code class="language-tla">THEOREM FooType ==
+  \A a \in Int: \A b \in STRING: Foo(a, b) \in Int
+</code></pre>
+<p><a name="typesAsTerms"></a></p>
+<h3><a class="header" href="#12-types-as-terms" id="12-types-as-terms">1.2. Types as terms</a></h3>
+<p>A classical way of writing types is by using logical terms (or algebraic datatypes).
+To this end, we can define a special module <code>Types.tla</code>:</p>
+<pre><code class="language-tla">---- MODULE Types ----
+\* Types as terms. The right-hand side of an operator does not play a role,
+\* but we define it as the corresponding set of values.
+\* Alternatively, we could just define tuples of strings in rhs.
+
+\* a type annotation operator that erases the type
+value &lt;: type == value
+
+\* the integer type
+IntT == Int
+\* the Boolean type
+BoolT == BOOLEAN
+\* the string type
+StrT == STRING
+
+\* a set type
+SetT(elemT) == SUBSET elemT
+\* a function type
+FunT(fromT, toT) == [fromT -&gt; toT]
+\* a sequence type
+SeqT(elemT) == Seq(elemT)
+
+\* tuple types
+Tup0T == {}
+Tup1T(t1) == t1
+Tup2T(t1, t2) == t1 \X t2
+Tup3T(t1, t2, t3) == t1 \X t2 \X t3
+\* and so on, e.g., Scala has 26 tuples. how many do we like to have?
+
+\* Record types. We assume that field names are alphabetically ordered.
+\* We cannot use record-set notation here,
+\* as the field names are parameters. So I gave up here on giving corresponding sets.
+Rec1T(f1, t1) == &lt;&lt;&quot;Rec1&quot;, f1, t1&gt;&gt;
+Rec2T(f1, t1, f2, t2) == &lt;&lt;&quot;Rec2&quot;, f1, t1, f2, t2&gt;&gt;
+Rec3T(f1, t1, f2, t2, f3, t3) == &lt;&lt;&quot;Rec3&quot;, f1, t1, f2, t2, f3, t3&gt;&gt;
+\* and so on
+
+\* Operator types. No clear set semantics.
+\* Note that the arguments can be operators as well!
+\* So this approach gives us higher-order operators for free.
+Oper0T(resT) == &lt;&lt;&quot;Oper0&quot;, resT&gt;&gt;
+Oper1T(arg1T, resT) == &lt;&lt;&quot;Oper1&quot;, arg1T, res1T&gt;&gt;
+Oper2T(arg1T, arg2T, resT) == &lt;&lt;&quot;Oper2&quot;, arg1T, arg2T, res1T&gt;&gt;
+\* and so on
+======================
+</code></pre>
+<p>Assuming that we have some syntax for writing down that <code>x</code> has type <code>T</code>,
+e.g., by writing <code>x &lt;: T</code>, we can write the above examples as follows:</p>
+<ul>
+<li>
+<p><code>x</code> is an integer: <code>x &lt;: IntT</code></p>
+</li>
+<li>
+<p><code>f</code> is a function from an integer to an integer: <code>f &lt;: FunT(IntT, IntT)</code></p>
+</li>
+<li>
+<p><code>f</code> is a function from a set of integers to a set of integers:
+<code>f &lt;: FunT(SetT(IntT), SetT(IntT))</code></p>
+</li>
+<li>
+<p><code>r</code> is a record that has the fields <code>a</code> and <code>b</code>, where <code>a</code> is an integer
+and <code>b</code> is a string: <code>r &lt;: Rec2T(&quot;a&quot;, IntT, &quot;b&quot;, StrT)</code></p>
+</li>
+<li>
+<p><code>f</code> is a set of functions from a tuple of integers to an integer:
+<code>f &lt;: SetT(FunT(Tup2T(IntT, IntT), IntT))</code></p>
+</li>
+<li>
+<p><code>Foo</code> is an operator of an <code>Int</code> and <code>STRING</code> that returns an <code>Int</code>:
+<code>\A a: \A b: Foo(a, b) &lt;: Oper2(IntT, StrT, IntT)</code>.</p>
+<ul>
+<li><strong>Here it gets tricky, as the TLA+ syntax does not allow us to
+mention an operator by name without applying it.</strong></li>
+</ul>
+</li>
+<li>
+<p><code>Bar</code> is a higher-order operator that takes an operator that takes
+an <code>Int</code> and <code>STRING</code> and returns an <code>Int</code>, and returns a <code>BOOLEAN</code>.
+<code>\A a, b, c: Bar(LAMBDA a, b: c) &lt;: Oper1(Oper2(IntT, StrT, IntT), BoolT)</code>.</p>
+<ul>
+<li><strong>Here we have to pull lambda operators, but at least it is possible to write
+down a type annotation.</strong></li>
+</ul>
+</li>
+</ul>
+<p><a name="typesAsStrings"></a></p>
+<h3><a class="header" href="#13-types-as-strings" id="13-types-as-strings">1.3. Types as strings</a></h3>
+<p>Let us introduce the following grammar for types:</p>
+<pre><code>T ::= var | Bool | Int | Str | T -&gt; T | Set(T) | Seq(T) |
+      &lt;&lt;T, ..., T&gt;&gt; | [h_1 |-&gt; T, ..., h_k |-&gt; T] | (T, ..., T) =&gt; T
+</code></pre>
+<p>In this grammar, <code>var</code> stands for a type variable, which can be instantiated with
+concrete variable names such as <code>a</code>, <code>b</code>, <code>c</code>, etc., whereas <code>h_1</code>,...,<code>h_k</code> are
+field names. The rule <code>T -&gt; T</code> defines a function, while the rule
+<code>(T, ..., T) =&gt; T</code> defines an operator.</p>
+<p>Assuming that we have some syntax for writing down that <code>x</code> has type <code>T</code>,
+e.g., by writing <code>isType(&quot;x&quot;, &quot;T&quot;)</code>, we can write the above examples as follows:</p>
+<ul>
+<li>
+<p><code>x</code> is an integer: <code>isType(&quot;x&quot;, &quot;Int&quot;)</code>.</p>
+</li>
+<li>
+<p><code>f</code> is a function from an integer to an integer: <code>isType(&quot;f&quot;, &quot;Int -&gt; Int&quot;)</code>.</p>
+</li>
+<li>
+<p><code>f</code> is a function from a set of integers to a set of integers:
+<code>isType(&quot;f&quot;, &quot;Set(Int) -&gt; Set(Int))&quot;</code>.</p>
+</li>
+<li>
+<p><code>r</code> is a record that has the fields <code>a</code> and <code>b</code>, where <code>a</code> is an integer
+and <code>b</code> is a string: <code>isType(&quot;r&quot;, &quot;[a |-&gt; Int, b |-&gt; Str])&quot;</code>.</p>
+</li>
+<li>
+<p><code>f</code> is a set of functions from a tuple of integers to an integer:
+<code>isType(&quot;f&quot;, &quot;Set(&lt;&lt;Int, Int&gt;&gt; -&gt; Int))&quot;</code>.</p>
+</li>
+<li>
+<p><code>Foo</code> is an operator of an <code>Int</code> and <code>STRING</code> that returns an <code>Int</code>:
+<code>isType(&quot;Foo&quot;, &quot;(Int, Str) =&gt; Int&quot;)</code>.</p>
+</li>
+<li>
+<p><code>Bar</code> is a higher-order operator that takes an operator that takes
+an <code>Int</code> and <code>STRING</code> and returns an <code>Int</code>, and returns a <code>BOOLEAN</code>:
+<code>isType(&quot;Bar&quot;, &quot;((Int, Str) =&gt; Int) =&gt; Bool&quot;)</code>.</p>
+</li>
+</ul>
+<p><strong>Note:</strong> We have to pass names as strings, as it is impossible to pass operator
+names, e.g., <code>Foo</code> and <code>Bar</code> in other operators, unless <code>Foo</code> and <code>Bar</code>
+are nullary operators and <code>isType</code> is a higher-order operator.</p>
+<h2><a class="header" href="#2-how-to-write-type-annotations-as-a-user" id="2-how-to-write-type-annotations-as-a-user">2. How to write type annotations (as a user)</a></h2>
+<p><strong>Note</strong>: This question is not a priority, as we do not expect the user to
+write type annotations. However, it would be good to have a solution, as sometimes
+users want to write types.</p>
+<p>Again, we have plenty of options and opinions here:</p>
+<ol>
+<li>Write type annotations by calling a special operator like <code>&lt;:</code> or <code>|=</code>.</li>
+<li>Write type annotations as assumptions.</li>
+<li>Write type annotations in comments.</li>
+<li>Write type annotations as operator definitions.</li>
+</ol>
+<h3><a class="header" href="#21-type-annotations-with-a-special-operator" id="21-type-annotations-with-a-special-operator">2.1. Type annotations with a special operator</a></h3>
+<p>This is the current approach in Apalache. One has to define an operator, e.g., <code>&lt;:</code>:</p>
+<pre><code class="language-tla">value &lt;: type == value
+</code></pre>
+<p>Then an expression may be annotated with a type as follows:</p>
+<pre><code class="language-tla">VARIABLE S
+Init ==
+  S = {} &lt;: {Int}
+</code></pre>
+<p><strong>Pros</strong>:</p>
+<ul>
+<li>Intutive notation, similar to programming languages.</li>
+</ul>
+<p><strong>Cons</strong>:</p>
+<ul>
+<li>This approach works well for expressions. However, it is not clear how to extend
+it to operators.</li>
+<li>This notation is more like type clarification, rather than a type annotation.
+Normally types are specified for names, that is, constants, variables, functions,
+operators, etc.</li>
+<li>Same expression may be annotated in a Boolean formula. What shall we do, if the
+user writes: <code>x &lt;: BOOLEAN \/ x &lt;: Int</code>?</li>
+</ul>
+<p><strong>Note:</strong> The current approach has an issue. If one declares the operator <code>&lt;:</code> in
+a module <code>M</code> and then uses an unnamed instance <code>INSTANCE M</code> in a module <code>M2</code>,
+then <code>M</code> and <code>M2</code> will clash on the operator <code>&lt;:</code>. We should define the operator
+once in a special module <code>Types</code> or <code>Apalache</code>.</p>
+<p><a name="annotationsAsAssumptions"></a></p>
+<h3><a class="header" href="#22-type-annotations-as-assumptions" id="22-type-annotations-as-assumptions">2.2. Type annotations as assumptions</a></h3>
+<p>One can use TLA+ syntax to write assumptions and assertions about the types.
+We are talking only about type assumptions here.
+The similar approach can be used to write theorems about types. 
+Consider the following specification:</p>
+<pre><code class="language-tla">EXTENDS Sequences
+CONSTANTS Range
+VARIABLES list
+
+Mem(e, es) ==
+  \E i \in DOMAIN es:
+    e = es[i]
+</code></pre>
+<p>In this example, the operator <code>Mem</code> is polymorphic, whereas the types of <code>Range</code>
+and <code>list</code> are parameterized.  If the user wants to
+restrict the types of constants, variables, and operators, they could write (using the
+<a href="adr/001rfc-types.html#typesAsTypeOk">TypeOK syntax</a>):</p>
+<pre><code class="language-tla">ASSUME(Range \in SUBSET Int)
+ASSUME(list \in Seq(Int))
+ASSUME(\A e \in Int, \A es \in Seq(Int): Mem(e, es) \in BOOLEAN)
+</code></pre>
+<p>SANY parser only accepts the first assumption in the above
+example. <strong>The two other assumptions are rejected by the parser, as they
+refer to non-constant values.</strong></p>
+<p>Moreover, using the proof syntax of
+<a href="https://lamport.azurewebsites.net/tla/tla2-guide.pdf">TLA+ Version 2</a>,
+we can annotate the
+types of variables introduced inside the operators.  For instance, we could
+label the name <code>i</code> as follows:</p>
+<pre><code class="language-tla">Mem(e, es) ==
+  \E i \in DOMAIN es:
+    e = es[i_use :: i]
+</code></pre>
+<p>And then write:</p>
+<pre><code class="language-tla">ASSUME(\A e, es, i: Mem(e, es)!i_use(i) \in Int)
+</code></pre>
+<p><strong>Pros</strong>:</p>
+<ul>
+<li>The assumptions syntax is quite appealing, when writing types of
+CONSTANTS, VARIABLES, and top-level operators.</li>
+</ul>
+<p><strong>Cons</strong>:</p>
+<ul>
+<li>The syntax gets verbose and hard to write, when writing types of
+LET-IN operators and bound variables.</li>
+<li>It is not clear how to extend this syntax to higher-order operators.</li>
+<li><strong>One cannot write assumptions about state variables.</strong></li>
+</ul>
+<h3><a class="header" href="#23-type-annotations-in-comments" id="23-type-annotations-in-comments">2.3. Type annotations in comments</a></h3>
+<p>This solution basically gives up on TLA+ syntax and introduces a special
+syntax à la javadoc for type annotations:</p>
+<pre><code class="language-tla">EXTENDS Sequences
+CONSTANTS Range \*@ Range: Set(Int)
+VARIABLES list  \*@ list: Seq(Int)
+
+Mem(e, es) ==
+\*@ Mem: (Int, Seq(Int)) =&gt; Bool
+  \E i \in DOMAIN es:
+    \*@ i: Int
+    e = es[i]
+</code></pre>
+<p>We have not come up with a good syntax for these annotaions. The above
+example demonstrates one possible approach.</p>
+<p><strong>Pros</strong>:</p>
+<ul>
+<li>Non-verbose, simple syntax</li>
+<li>Type annotations do not stand in the way of the specification author</li>
+<li>Type annotations may be collapsed, removed, etc.</li>
+<li>If we have an annotation preprocessor, we can use it for other
+kinds of annotations</li>
+</ul>
+<p><strong>Cons</strong>:</p>
+<ul>
+<li>As we give up on the TLA+ syntax, TLA+ Toolbox will not help us
+(though it is not uncommon for IDEs to parse javadoc annotations,
+so there is some hope)</li>
+<li>The users have to learn new syntax for writing type annotations and types</li>
+<li>We have to write an annotation preprocessor</li>
+</ul>
+<h3><a class="header" href="#24-type-annotations-as-operator-definitions" id="24-type-annotations-as-operator-definitions">2.4. Type annotations as operator definitions</a></h3>
+<p>Operators definitions and LET-IN definitions can be written almost anywhere in
+TLA+. Instead of writing in-comment annotations, we can write annotations
+with operator definitions (assuming <a href="adr/001rfc-types.html#typesAsStrings">types as strings</a>,
+but this is not necessary):</p>
+<pre><code class="language-tla">EXTENDS Sequences
+CONSTANTS Range
+Range_type == &quot;set(z)&quot;
+
+VARIABLES list
+list_type == &quot;seq(z)&quot;
+
+Mem(e, es) ==
+  LET Mem_type == &quot;&lt;a, seq(a)&gt; =&gt; Bool&quot; IN
+  \E i \in DOMAIN es:
+    LET i_type == &quot;Int&quot; IN
+    e = es[i]
+
+Init ==
+  LET Init_type == &quot;&lt;&gt; =&gt; Bool&quot; IN
+  list = &lt;&lt;&gt;&gt;
+
+Next ==
+  LET Next_type == &quot;&lt;&gt; =&gt; Bool&quot; IN
+  \E e \in Range:
+    LET e_type == &quot;set(z)&quot; IN
+    list' = Append(list, e)
+</code></pre>
+<p><strong>Pros:</strong></p>
+<ul>
+<li>No need for a comment preprocessor,
+easy to extract annotations from the operator definitions</li>
+</ul>
+<p><strong>Cons:</strong></p>
+<ul>
+<li>Fruitless operator definitions</li>
+<li>Looks like a hack</li>
+</ul>
+<h2><a class="header" href="#3-how-to-display-and-use-inferred-types" id="3-how-to-display-and-use-inferred-types">3. How to display and use inferred types</a></h2>
+<p><strong>TBD</strong></p>
+<p>Basically, use <a href="https://microsoft.github.io/language-server-protocol/">Language Server
+Protocol</a> and introduce
+THEOREMs in the spirit of <a href="adr/001rfc-types.html#typesAsTypeOk">types as TypeOK</a>.</p>
+<h1><a class="header" href="#adr-002-types-and-type-annotations" id="adr-002-types-and-type-annotations">ADR-002: types and type annotations</a></h1>
+<p>This is a follow up of <a href="adr/001rfc-types.html">RFC-001</a>, which discusses plenty of
+alternative solutions. In this <strong>ADR-002</strong>, we fix one solution that seems to be
+most suitable. The interchange format for the type inference tools will be
+discussed in a separate ADR.</p>
+<ol>
+<li>How to write types in TLA+ (Type System 1).</li>
+<li>How to write type annotations (as a user).</li>
+</ol>
+<p>This document assumes that one can write a simple type checker that computes the
+types of all expressions based on the annotations provided by the user.
+Although there is no such a type checker yet, we are going to write one.  In
+contrast, the <a href="https://github.com/informalsystems/apalache/tree/types">type inference
+algorithm</a> by @Kukovec
+is fully automatic and thus it eliminates the need for type annotations.
+(Jure's algorithm is using Type System 1 too.) However, system engineers
+often want to write type annotations and quickly check types when writing
+TLA+ specifications. This document is filling this gap.</p>
+<h2><a class="header" href="#1-how-to-write-types-in-tla-1" id="1-how-to-write-types-in-tla-1">1. How to write types in TLA+</a></h2>
+<h3><a class="header" href="#11-type-grammar-type-system-1-or-ts1" id="11-type-grammar-type-system-1-or-ts1">1.1. Type grammar (Type System 1, or TS1)</a></h3>
+<p>We simply write types as strings that follow the type grammar:</p>
+<pre><code>T ::= typeConst | typeVar | Bool | Int | Str | T -&gt; T | Set(T) | Seq(T) |
+      &lt;&lt;T, ..., T&gt;&gt; | [h_1: T, ..., h_k: T] | (T, ..., T) =&gt; T | (T)
+typeConst ::= &lt;an identifier that matches [A-Z_][A-Z0-9_]*&gt;
+typeVar ::= &lt;a single letter from [a-z]&gt;
+</code></pre>
+<p>In this grammar, <code>h_1</code>,...,<code>h_k</code> are field names. The rule <code>T -&gt; T</code> defines a
+function, while the rule <code>(T, ..., T) =&gt; T</code> defines an operator.  Importantly, a
+multi-argument function always receives a tuple, e.g., <code>&lt;&lt;Int, Bool&gt;&gt; -&gt; Int</code>,
+whereas a single-argument function receives the type of its argument, e.g., <code>Int -&gt; Int</code>.  An operator always has the types of its arguments inside <code>(...)</code>,
+e.g., <code>(Int, Bool) =&gt; Int</code> and <code>() =&gt; Bool</code>. The arrow <code>-&gt;</code> is right-associative,
+e.g., <code>A -&gt; B -&gt; C</code> is understood as <code>A -&gt; (B -&gt; C)</code>, which is consistent with
+programming languages. If you like to change the priority of <code>-&gt;</code>, use parentheses, as usual.
+For example, you may write <code>(A -&gt; B) -&gt; C</code>. </p>
+<p>If a type <code>T</code> contains a type variable, e.g., <code>a</code>, then <code>T</code> is a
+polymorphic type, in which <code>a</code> can be instantiated with a monotype (a
+variable-free term). Type variables are useful for describing the types of
+polymorphic operators. A type constant should be understood as a type we don't
+know and we don't want to know, that is, an uninterpreted type. Type constants
+are useful for fixing the types of CONSTANTS and using them later in a
+specification. Two different type constants correspond to two different -- yet
+uninterpreted -- types. If you know <a href="https://github.com/Z3Prover/z3">Microsoft
+Z3</a>, a type constant can be understood as an
+uninterpreted sort in SMT. Essentially, values of an uninterpreted type can
+be only checked for equality.</p>
+<p>Assume that notation <code>e &lt;: T</code> means that an expression <code>e</code> has type <code>T</code>.
+(More precisely, <code>T</code> is a supertype of the type of <code>e</code>.)
+The following examples demonstrate the use of the type grammar:</p>
+<ul>
+<li><code>x</code> is an integer: <code>x &lt;: &quot;Int&quot;</code>.</li>
+<li><code>f</code> is a function from an integer to an integer: <code>f &lt;: &quot;Int -&gt; Int&quot;</code>.</li>
+<li><code>f</code> is a function from a set of integers to a set of integers:
+<code>f &lt;: &quot;Set(Int) -&gt; Set(Int)&quot;</code>.</li>
+<li><code>r</code> is a record that has the fields <code>a</code> and <code>b</code>, where <code>a</code> is an integer
+and <code>b</code> is a string: <code>r &lt;: &quot;[a: Int, b: Str]&quot;</code>.</li>
+<li><code>F</code> is a set of functions from a tuple of integers to an integer:
+<code>F &lt;: &quot;Set(&lt;&lt;Int, Int&gt;&gt; -&gt; Int)&quot;</code>.</li>
+<li><code>Foo</code> is an operator of an integer and of a string that returns an integer:
+<code>Foo &lt;: &quot;(Int, Str) =&gt; Int&quot;</code>.</li>
+<li><code>Bar</code> is a higher-order operator that takes an operator that takes
+an integer and a string and returns an integer, and returns a Boolean:
+<code>Bar &lt;: &quot;((Int, Str) =&gt; Int) =&gt; Bool&quot;</code>.</li>
+<li><code>Baz</code> is a polymorphic operator that takes two arguments of the same type
+and returns a value of the type equal to the types of its arguments:
+<code>Baz &lt;: &quot;(a, a) =&gt; a&quot;</code>.</li>
+<li><code>Proc</code> and <code>Faulty</code> are sets of the same type:
+<code>Proc &lt;: &quot;Set(PID)&quot;</code> and <code>Faulty &lt;: &quot;Set(PID)&quot;</code>.</li>
+</ul>
+<h3><a class="header" href="#12-discussion" id="12-discussion">1.2. Discussion</a></h3>
+<p>Our type grammar presents a minimal type system that, in our understanding,
+captures all interesting cases that occur in practice. Obviously, this type
+system considers ill-typed some perfectly legal TLA+ values. For instance, we
+cannot assign a reasonable type to <code>{1, TRUE}</code>. However, we can assign a
+reasonable type to <code>{[type |-&gt; &quot;1a&quot;, bal |-&gt; 1], [type |-&gt; &quot;2a&quot;, bal |-&gt; 2, val |-&gt; 3]}</code>, a pattern that often occurs in practice, e.g., see
+<a href="https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla">Paxos</a>.
+The type of that set will be <code>Set([type: Str, bal: Int, val: Int])</code>, which is
+probably not what you expected, but it is the best type we can actually compute
+without having algebraic datatypes in TLA+. It also reminds the user that one
+better tests the field <code>type</code> carefully.</p>
+<p>Type System 1 is also very much in line with the <a href="https://dblp.org/search?q=Automatic+Verification+of+%7BTLA%7D+%2B+Proof+Obligations+with+%7BSMT%7D+Solvers">type system by Stephan Merz
+and Hernan
+Vanzetto</a>,
+which is used internally by
+<a href="https://tla.msr-inria.inria.fr/tlaps/content/Home.html">TLAPS</a> when translating
+proof obligations in SMT.  We introduce types for user-defined operators, on top
+of their types for TLA+ expressions that do not contain user-defined operators.</p>
+<p>We expect that this type system will evolve in the future. That is why we call
+it <strong>Type System 1</strong>. Feel free to suggest <strong>Type System 2</strong> :-)</p>
+<h2><a class="header" href="#2-how-to-write-type-annotations-as-a-user-1" id="2-how-to-write-type-annotations-as-a-user-1">2. How to write type annotations (as a user)</a></h2>
+<p>We define the Apalache module <code>Typing.tla</code> that contains definitions of two
+operators:</p>
+<pre><code class="language-tla">---- MODULE Typing ----
+AssumeType(ex, tp) == TRUE
+tp ## ex == ex
+=======================
+</code></pre>
+<p>The operator <code>AssumeType(ex, tp)</code> is a type assumption. It states that <code>ex</code>
+should have the type whose supertype is <code>tp</code> (the records in <code>tp</code> may contain
+additional fields).  This operator always returns <code>TRUE</code>.  The operator <code>tp ## ex</code> annotates an expression <code>ex</code> with a type <code>tp</code>. This operator returns <code>ex</code>
+itself, that is, it performs type erasure (for compatibility with other TLA+
+tools).</p>
+<p>In the following, we discuss how to annotate different TLA+ names.  The
+operator <code>AssumeType</code> is designated for annotating constants and state
+variables, whereas the operator <code>##</code> is designated for annotating user-defined
+operators.</p>
+<h3><a class="header" href="#21-annotating-constants-and-variables" id="21-annotating-constants-and-variables">2.1. Annotating CONSTANTS and VARIABLES</a></h3>
+<p>Ideally, we would like to use <code>ASSUME(...)</code> to annotate the types of state
+variables and constants. However, <code>ASSUME</code> only allows for constant
+expressions.  Hence, we require the annotations of variables and constants to
+be defined once per specification with an operator called <code>TypeAssumptions</code>.
+See the following example:</p>
+<pre><code class="language-tla">EXTENDS Typing
+CONSTANT N, Base
+VARIABLE x, S
+
+TypeAssumptions ==
+  /\ AssumeType(N, &quot;Int&quot;)
+  /\ AssumeType(Base, &quot;Set(ID)&quot;)
+  /\ AssumeType(x, &quot;ID&quot;)
+  /\ AssumeType(S, &quot;Set(ID)&quot;)
+</code></pre>
+<p><code>TypeAssumptions</code> must be a conjunction of expressions of the form
+<code>AssumeType(nm, tp)</code>, where <code>nm</code> is the name of a VARIABLE or a CONSTANT, and
+<code>tp</code> is a string in the grammar TS1. No other syntactic forms are allowed.</p>
+<p><strong>Why don't we use THEOREMs?</strong> It is tempting to declare the types of variables
+as theorems. For example:</p>
+<pre><code class="language-tla">THEOREM N &lt;: &quot;Int&quot;
+</code></pre>
+<p>However, this theorem must be proven. A <em>type inference engine</em> would be able
+to infer the type of <code>N</code> and thus state such a theorem. However, with type
+assumptions, the user merely states the variable types and the <em>type checker</em>
+has a simple job of checking type consistency and finding the types of the
+expressions.</p>
+<h3><a class="header" href="#22-annotating-operators" id="22-annotating-operators">2.2. Annotating Operators</a></h3>
+<p>The operators in TLA+ are not values, but are similar to macros. Hence, we
+cannot refer to an operator by its name, without applying this operator.  To
+annotate an operator, we prepend its body with <code>##</code> (as proposed by
+@shonfeder). For example:</p>
+<pre><code class="language-tla">Mem(e, es) == &quot;(a, Seq(a)) =&gt; Bool&quot; ##
+    (e \in {es[i]: i \in DOMAIN es})
+</code></pre>
+<p>Higher-order operators are also easy to annotate:</p>
+<pre><code class="language-tla">Find(Pred(_), es) == &quot;((a) =&gt; Bool, Seq(a)) =&gt; Int&quot; ##
+    IF \E i \in DOMAIN es: Pred(es[i])
+    THEN CHOOSE i \in DOMAIN es: Pred(es[i])
+    ELSE -1
+</code></pre>
+<p>The following definition declares a (global) recursive function, not an
+operator. However, the annotation syntax is quite similar to that of the
+operators (note though that we are using <code>-&gt;</code> instead of <code>=&gt;</code>):</p>
+<pre><code class="language-tla">Card[S \in T] == &quot;Set(a) -&gt; Int&quot; ##
+    IF S = {}
+    THEN 0
+    ELSE LET one_elem == &quot;() =&gt; a&quot; ##
+            (CHOOSE x \in S: TRUE)
+         IN
+         1 + Card[S \ {one_elem}]
+</code></pre>
+<p>In the definition of <code>Card</code>, we annotated the let-definition
+<code>one_elem</code> with its type, though any type checker should be able to compute
+the type of <code>one_elem</code> from its context. So the type of <code>one_elem</code> is there for
+clarification. Note that <code>one_elem</code> has the type <code>() =&gt; Int</code>, as <code>LET-IN</code>
+defines an operator. Although TLA+ blends in nullary operators with other names,
+we feel that it is important to keep this distinction, since we go for a typing
+discipline.</p>
+<h3><a class="header" href="#23-dealing-with-bound-variables" id="23-dealing-with-bound-variables">2.3. Dealing with bound variables</a></h3>
+<p>A number of TLA+ operators are defining bound variables. Following <a href="https://lamport.azurewebsites.net/tla/summary.pdf">TLA+
+Summary</a>, we list these
+operators here (we omit the unbounded quantifiers and temporal quantifiers):</p>
+<ul>
+<li><code>\A x \in S: P</code></li>
+<li><code>\E x \in S: P</code></li>
+<li><code>CHOOSE x: P</code></li>
+<li><code>{x \in S: P}</code></li>
+<li><code>{e: x \in S}</code></li>
+<li><code>[x \in S |-&gt; e}</code></li>
+</ul>
+<p>We do not introduce any special annotation to support these operators.
+Indeed, they are all introducing bound variables that range over sets.
+In most cases, a type checker should be able to extract the element type
+from a set expression.</p>
+<p>However, there are a few pathological cases arising from empty collections. For
+example:</p>
+<pre><code class="language-tla">/\ \E x \in {}: x &gt; 1
+/\ f = [x \in {} |-&gt; 2]
+/\ z \in DOMAIN &lt;&lt; &gt;&gt;
+</code></pre>
+<p>In these rare cases, use the auxiliary operators in the module <code>Typing</code> for
+specifying the type of the empty collection:</p>
+<pre><code class="language-tla">EXTENDS Typing
+...
+
+/\ \E x \in EmptySet(&quot;Int&quot;): x &gt; 1
+/\ f = [x \in EmptySet(&quot;Str&quot;) |-&gt; 2]
+/\ z \in DOMAIN EmptySeq(&quot;Int&quot;)
+</code></pre>
+<p>The type checker uses the type annotation to refine the type of an empty set
+(or, of an empty sequence). To keep compatibility with TLC and other tools,
+the module <code>Typing</code> defines the operators <code>EmptySet(...)</code> and <code>EmptySeq(...)</code>
+as <code>{}</code> and <code>&lt;&lt;&gt;&gt;</code>, respectively. However, the type checker overrides these
+definitions with the refined types.</p>
+<h2><a class="header" href="#3-example" id="3-example">3. Example</a></h2>
+<p>As an example that contains non-trivial type information, we chose the
+specification of <a href="https://github.com/tlaplus/Examples/blob/master/specifications/CigaretteSmokers/CigaretteSmokers.tla">Cigarette
+Smokers</a>
+by @mryndzionek from <a href="https://github.com/tlaplus/Examples/tree/master/specifications">TLA+
+Examples</a>.  In
+this document, we focus on the type information and give a shorter version of
+the specification. For detailed comments, check <a href="https://github.com/tlaplus/Examples/blob/master/specifications/CigaretteSmokers/CigaretteSmokers.tla">the original
+specification</a>.</p>
+<pre><code class="language-tla">-------------------------- MODULE CigaretteSmokers --------------------------
+(***************************************************************************)
+(* A specification of the cigarette smokers problem, originally            *)
+(* described in 1971 by Suhas Patil.                                       *)
+(* https://en.wikipedia.org/wiki/Cigarette_smokers_problem                 *)
+(*                                                                         *)
+(* This specification has been extended with type annotations for the      *)
+(* demonstration purposes. Some parts of the original specification are    *)
+(* omitted for brevity.                                                    *)
+(***************************************************************************)
+EXTENDS Integers, FiniteSets
+
+EXTENDS Typing \* using the Apalache module for types
+
+CONSTANT Ingredients, Offers
+VARIABLE smokers, dealer
+
+(* try to guess the types in the code below *)
+ASSUME /\ Offers \subseteq (SUBSET Ingredients)
+       /\ \A n \in Offers : Cardinality(n) = Cardinality(Ingredients) - 1
+
+(***************************************************************************)
+(* 'smokers' is a function from the ingredient the smoker has              *)
+(* infinite supply of, to a BOOLEAN flag signifying smoker's state         *)
+(* (smoking/not smoking)                                                   *)
+(* 'dealer' is an element of 'Offers', or an empty set                     *)
+(***************************************************************************)
+TypeOK == /\ smokers \in [Ingredients -&gt; [smoking: BOOLEAN]]
+          /\ dealer  \in Offers \/ dealer = {}
+
+(* are not TypeAssumptions easier? *)
+TypeAssumptions ==
+    /\ AssumeType(Ingredients, &quot;Set(INGREDIENT)&quot;)
+    /\ AssumeType(Offers, &quot;Set(Set(INGREDIENT))&quot;)
+    /\ AssumeType(smokers, &quot;INGREDIENT -&gt; [smoking: Bool]&quot;)
+    /\ AssumeType(dealer, &quot;Set(INGREDIENT)&quot;)
+
+(* this operator has a parametric signature *)
+ChooseOne(S, P(_)) == &quot;(Set(a), (a) =&gt; Bool) =&gt; a&quot; ##
+    CHOOSE x \in S : P(x) /\ \A y \in S : P(y) =&gt; y = x
+
+(* the types of the actions are fairly obvious *)
+
+Init == &quot;() =&gt; Bool&quot; ##
+    /\ smokers = [r \in Ingredients |-&gt; [smoking |-&gt; FALSE]]
+    /\ dealer \in Offers
+
+startSmoking == &quot;() =&gt; Bool&quot; ##
+    /\ dealer /= {}
+    /\ smokers' = [r \in Ingredients |-&gt;
+                    [smoking |-&gt; {r} \cup dealer = Ingredients]]
+    /\ dealer' = {}
+
+stopSmoking == &quot;() =&gt; Bool&quot; ##
+    /\ dealer = {}
+        (* the type of LAMBDA should be inferred from the types
+           of ChooseOne and Ingredients *)
+    /\ LET r == ChooseOne(Ingredients, LAMBDA x : smokers[x].smoking)
+       IN smokers' = [smokers EXCEPT ![r].smoking = FALSE] 
+    /\ dealer' \in Offers
+
+Next == &quot;() =&gt; Bool&quot; ##
+    startSmoking \/ stopSmoking
+
+Spec == &quot;() =&gt; Bool&quot; ##
+    Init /\ [][Next]_vars
+
+FairSpec == &quot;() =&gt; Bool&quot; ##
+    Spec /\ WF_vars(Next)    
+
+AtMostOne == &quot;() =&gt; Bool&quot; ##
+    Cardinality({r \in Ingredients : smokers[r].smoking}) &lt;= 1
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+        
+        <script type="text/javascript">
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+        
+        
+
+    </body>
+</html>

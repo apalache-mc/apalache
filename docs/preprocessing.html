@@ -1,0 +1,317 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>TLA+ Preprocessing - Apalache User Manual</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="favicon.png">
+        
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        
+        <link rel="stylesheet" href="css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">User Manual</li><li class="chapter-item expanded "><a href="index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="manual.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="tlc-config.html"><strong aria-hidden="true">3.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="types-and-annotations.html"><strong aria-hidden="true">4.</strong> Types and Annotations</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ language guide and manual</li><li class="chapter-item expanded "><a href="lang/index.html"><strong aria-hidden="true">5.</strong> TLA+ Language Lamnaul for Engineers</a></li><li class="chapter-item expanded "><a href="idiomatic/index.html"><strong aria-hidden="true">6.</strong> Idiomatic TLA+</a></li><li class="chapter-item expanded affix "><li class="part-title">Reference</li><li class="chapter-item expanded "><a href="features.html"><strong aria-hidden="true">7.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="preprocessing.html" class="active"><strong aria-hidden="true">8.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="tuning.html"><strong aria-hidden="true">9.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="kera.html"><strong aria-hidden="true">10.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded "><a href="types-api.html"><strong aria-hidden="true">11.</strong> Type Reconstruction API</a></li><li class="chapter-item expanded "><a href="smt/Cardinality.html"><strong aria-hidden="true">12.</strong> SMT encoding for set cardinalities</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="adr/001rfc-types.html"><strong aria-hidden="true">13.</strong> RFC 001: types and type annotations</a></li><li class="chapter-item expanded "><a href="adr/002adr-types.html"><strong aria-hidden="true">14.</strong> ADR-002: types and type annotations</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache User Manual</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#preprocessing-in-apalache" id="preprocessing-in-apalache">Preprocessing in APALACHE</a></h1>
+<p>Before translating a specification into SMT, <code>apalache</code> performs a number of
+preprocessing steps:</p>
+<ul>
+<li><code>InlinerOfUserOper</code>: replaces every call to a user-defined operator with the operator's body.</li>
+<li><code>LetInExpander</code>: replaces every call to a let-in defined operator of arity at least 1 with the operator's body</li>
+<li><code>PrimingPass</code>: adds primes to variables in <code>Init</code> and <code>ConstInit</code> (required by <code>TransitionPass</code>)</li>
+<li><code>VCGen</code>: extracts verification conditions from the invariant candidate.</li>
+<li><code>Desugarer</code>: removes syntactic sugar like short-hand expressions in <code>EXCEPT</code>.</li>
+<li><code>Normalizer</code>: rewrites all expressions in <a href="https://en.wikipedia.org/wiki/Negation_normal_form">negation-normal form</a>.</li>
+<li><code>Keramelizer</code>: translates TLA+ expressions into the kernel language <a href="./kera.html">KerA</a>.</li>
+<li><code>PrimedEqualityToMembership</code>: replaces <code>x = e</code> with <code>x \in {e}</code> (required by <code>TransitionPass</code>)</li>
+<li><code>ExprOptimizer</code>: statically computes select expressions (e.g. record field access from a known record)</li>
+<li><code>ConstSimplifier</code>: propagates constants</li>
+</ul>
+<h2><a class="header" href="#keramelizer" id="keramelizer">Keramelizer</a></h2>
+<p>Keramelizer rewrites TLA+ expressions into <a href="./kera.html">KerA</a>. For many TLA+ expressions
+this translation is clear, however, some expressions cannot be easily translated. Below
+we discuss such expressions and the decisions that we have made.</p>
+<h3><a class="header" href="#case-a-namekera-casea" id="case-a-namekera-casea">CASE <a name="kera-case"></a></a></h3>
+<p>TLA+ supports two kinds of CASE expressions:</p>
+<ul>
+<li><code>CASE</code>. These are expressions without a default value:</li>
+</ul>
+<pre><code class="language-tla">    CASE
+         p_1 -&gt; e_1
+      [] p_2 -&gt; e_2
+         ...
+      [] p_n -&gt; e_n
+</code></pre>
+<ul>
+<li><code>CASE-OTHER</code>. These are expressions with a default value:</li>
+</ul>
+<pre><code class="language-tla">   CASE
+        p_1 -&gt; e_1
+     [] p_2 -&gt; e_2
+        ...
+     [] p_n -&gt; e_n
+     [] OTHER -&gt; e_def
+</code></pre>
+<p>Keramelizer supports only <code>CASE-OTHER</code> and asks the user to translate <code>CASE</code> expressions
+into <code>CASE-OTHER</code>. One could imagine that <code>CASE</code> could be expressed as
+<code>(p_1 /\ e_1) \/ ... \/ (p_n /\ e_n)</code>. However, this approach only works for Boolean
+expressions, which requires type inference. Moreover, the user expects a warning when
+neither of the conditions <code>p_1, ..., p_n</code> holds true.
+Hence, Leslie Lamport defines semantics of case in <a href="#spec2004">Specifying Systems, p. 298</a> as:</p>
+<pre><code class="language-tla">  CHOOSE v: (p_1 /\ (v = e_1) \/ ... \/ (p_n /\ (v = e_n)))
+</code></pre>
+<p>Similarly, <code>CASE-OTHER</code> is defined  as:</p>
+<pre><code class="language-tla"> CHOOSE v: (p_1 /\ (v = e_1) \/ ... \/ (p_n /\ (v = e_n)) \/ (~p_1 /\ ... ~p_n /\ (v = e_ def)))
+</code></pre>
+<p>As a result, if there are several conditions among <code>p_1, ..., p_n</code> that hold true,
+then <code>CHOOSE</code> always selects the same condition <code>p_i</code> for equivalent formulas.
+<em>It is hard to enforce these general semantics in a model checker</em>. Thus, we have decided to select
+a fixed order of evaluating the conditions: the top-to-bottom order that is commonly used in
+programming languages. By using this approach, it is easy to translate <code>CASE-OTHER</code> as follows:</p>
+<pre><code class="language-tla">IF p_1
+THEN e_1
+ELSE
+  IF p_2
+  THEN e_2
+  ...
+    IF p_n
+    THEN e_n
+    ELSE e_def
+</code></pre>
+<p>With this approach it is not obvious how one would translate <code>CASE</code> in a sound way.
+We could drop the last condition <code>p_n</code> and unconditionally use the expression <code>e_n</code> in the bottom
+else arm. Hence, we ask the user to add the <code>OTHER</code> case to a <code>CASE</code> expression. Usually,
+the user has a better idea about the default case than an automatic tool. For instance,
+one can also rewrite the (presumably impossible) default case using the <code>CHOOSE</code> operator:</p>
+<pre><code class="language-tla">   CASE
+        p_1 -&gt; e_1
+     [] p_2 -&gt; e_2
+        ...
+     [] p_n -&gt; e_n
+     [] OTHER -&gt; CHOOSE x \in {}: FALSE
+</code></pre>
+<h1><a class="header" href="#references" id="references">References</a></h1>
+<ul>
+<li>Leslie Lamport. Specifying Systems: The TLA+ Language and Tools for Hardware and Software Engineers.
+Addison-Wesley Professional, 2004. <a name="spec2004"></a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="features.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="tuning.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="features.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="tuning.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

@@ -1,0 +1,393 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>SMT encoding for set cardinalities - Apalache User Manual</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">User Manual</li><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../manual.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../tlc-config.html"><strong aria-hidden="true">3.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../types-and-annotations.html"><strong aria-hidden="true">4.</strong> Types and Annotations</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ language guide and manual</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">5.</strong> TLA+ Language Lamnaul for Engineers</a></li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">6.</strong> Idiomatic TLA+</a></li><li class="chapter-item expanded affix "><li class="part-title">Reference</li><li class="chapter-item expanded "><a href="../features.html"><strong aria-hidden="true">7.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../preprocessing.html"><strong aria-hidden="true">8.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../tuning.html"><strong aria-hidden="true">9.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../kera.html"><strong aria-hidden="true">10.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded "><a href="../types-api.html"><strong aria-hidden="true">11.</strong> Type Reconstruction API</a></li><li class="chapter-item expanded "><a href="../smt/Cardinality.html" class="active"><strong aria-hidden="true">12.</strong> SMT encoding for set cardinalities</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/001rfc-types.html"><strong aria-hidden="true">13.</strong> RFC 001: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">14.</strong> ADR-002: types and type annotations</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache User Manual</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#smt-encoding-for-set-cardinalities" id="smt-encoding-for-set-cardinalities">SMT encoding for set cardinalities</a></h1>
+<p><strong>Author: Igor Konnov, March 2020</strong></p>
+<p>This document contains rationale and the proposal for a better SMT encoding of
+the <code>Cardinality</code> operator. The encoding of v0.6.0 is explained in the
+<a href="https://dl.acm.org/doi/10.1145/3360549">OOPSLA19 paper</a>.  In the following, we
+are using the terminology of that paper. Moreover, we use the TLA+ ASCII
+notation, wherever possible.</p>
+<h2><a class="header" href="#1-problem" id="1-problem">1. Problem</a></h2>
+<p>Assume that a set <code>S</code> is over-approximated with arena cells <code>c_1, ..., c_n</code>.
+Some of these cells actually belong to the set, and some do not. A Boolean
+constant <code>in_i</code>, if and only if cell <code>c_i</code> belongs to the set <code>S</code>.</p>
+<p>In the following, we assume that the equality <code>=</code> is interpreted on <code>c_1</code>, ...,
+<code>c_n</code> as the structural equality. As Apalache is using lazy equality, we assume
+that the equality constraints <code>c_i = c_j</code> have been constructed for <code>i, j \in 1..n</code>.</p>
+<h2><a class="header" href="#2-the-quadratic-encoding-in-v050-and-v060" id="2-the-quadratic-encoding-in-v050-and-v060">2. The quadratic encoding in v0.5.0 and v0.6.0</a></h2>
+<p>In this encoding, we introduce <code>n + 1</code> counters <code>k_0</code>, <code>k_1</code>, ..., <code>k_n</code>. The
+counter <code>k_i</code> contains the cardinality of the set that is over-approximated
+with the cells <code>c_1</code>, ..., <code>c_i</code>. The counters are defined by the following
+equations for <code>i \in 1..n</code>.</p>
+<pre><code class="language-tla">k_0 = 0
+k_i =  k_{i-1} + (IF in_{i+1} /\ notSeen_i THEN 1 ELSE 0)
+</code></pre>
+<p>where the formula <code>notSeen_i</code> is defined as follows:</p>
+<pre><code class="language-tla">notSeen_i == \A j \in 1..(i-1): ~in_j \/ c_j /= c_i
+</code></pre>
+<p><strong>Proposition 1.</strong> <code>Cardinality(S) = k_n</code>.</p>
+<p><strong>Complexity.</strong> To get an idea of complexity, we count the number of literals
+that are produced by this encoding. It is easy to see that every equation for
+<code>k_i</code> produces <code>O(i)</code> literals, <code>i</code> inequality tests appear in the formula
+<code>notSeen_i</code>. If we compute the sum 0 + ... + n - 1, we get <code>(n - 1) * n</code>.
+Hence, our encoding produces <code>O(n^2)</code> literals, that is, it is <strong>quadratic</strong> in
+the number of elements that over-approximate <code>S</code>.</p>
+<h2><a class="header" href="#3-a-linear-encoding-for-a-comparison-against-a-constant-in-v070" id="3-a-linear-encoding-for-a-comparison-against-a-constant-in-v070">3. A linear encoding for a comparison against a constant in v0.7.0</a></h2>
+<p><strong>Lower bounds.</strong> We have developed a more efficient encoding for the formulas
+that have the following form:</p>
+<pre><code class="language-tla">Cardinality(S) &gt;= k,
+</code></pre>
+<p>where <code>S</code> is a set, and <code>k</code> is a constant integer expression.</p>
+<p>Essentially, this encoding can be translated into the following formula
+<code>[ExistsForm]</code>:</p>
+<pre><code class="language-tla">\E x_1, ..., x_k \in S:
+  \A y, z \in {x_1, ..., x_k}:
+    y /= z
+</code></pre>
+<p>We have implemented the translation to the form <code>[ExistsForm]</code>. This encoding
+introduces intermediate sets such as <code>{x_1, ..., x_k}</code>. After that, we have
+implemented a direct rewriting rule <code>CardConstRule</code>.</p>
+<p><strong>Note.</strong> The translation to <code>ExistsForm</code> is only sound, if the expression is
+in the positive form, that is, it is not located under any negation. Apalache
+automatically computes the negated normal form, so the user does not have to
+massage the specification.</p>
+<p><strong>Upper bound.</strong> We have not found a reasonable translation for the formulas of
+the form <code>Cardinality(S) &lt; k</code>.</p>
+<h2><a class="header" href="#4-a-proposal-for-a-better-general-encoding-unsound" id="4-a-proposal-for-a-better-general-encoding-unsound">4. A proposal for a better general encoding (unsound)</a></h2>
+<p><strong>The following encoding is unsound. We are not sure, whether it can be fixed.</strong></p>
+<p><em>Enforcing the structural equality <code>c_i = c_j</code> requires a set of constraints
+that is quadratic in <code>n</code>. Given that the equality has been already encoded,
+the constraints presented below are linear in <code>n</code>.</em></p>
+<p><strong>Equivalence classes.</strong>
+The new encoding is using uninterpreted functions and constants. We introduce a
+fresh sort <code>Z</code> whose only elements are uninterpreted constants <code>z_1</code>, ...,
+<code>z_n</code>.  The idea is to map the cells <code>c_1</code>, ..., <code>c_n</code> on <code>z_1</code>, ..., <code>z_n</code>, so
+that every pair of cells <code>c_i</code> and <code>c_j</code> is mapped on some <code>z_k</code> if and only if
+<code>c_i = c_j</code>. That is, the constants <code>z_1</code>, ..., <code>z_n</code> represent the equivalence
+classes of the cells <code>c_1</code>, ..., <code>c_n</code>. (It is possible that some constant <code>z_i</code>
+represents the empty equivalence class.)</p>
+<p>To this end, we introduce two uninterpreted functions:</p>
+<ul>
+<li>
+<p>The function <code>class \in [Sort_C -&gt; Sort_Z]</code> that maps the cells of the sort
+<code>C</code>, which includes the constants <code>c_1</code>, ..., <code>c_n</code> on the constants of the
+sort <code>Z</code>, that is <code>z_1</code>, ..., <code>z_n</code>.</p>
+</li>
+<li>
+<p>The function <code>repr \in [Sort_Z -&gt; Sort_C</code> that maps the constants <code>z_1</code>,
+..., <code>z_n</code> on the constants of the sort <code>C</code>, which includes the constants
+<code>c_1</code>, ..., <code>c_n</code>.  This function returns the representative of an
+equivalence class.</p>
+</li>
+</ul>
+<p><strong>TODO:</strong> <em>The function <code>repr</code> may map a constant <code>z_k</code> to a constant that is
+not identical to the cells <code>c_1</code>, ..., <code>c_n</code>. We are using lazy equality in
+Apalache. Is it a problem?</em></p>
+<p>Our goal is to guarantee the following property, which says that the function
+<code>class</code> is indeed encoding equivalence classes:</p>
+<pre><code class="language-tla">\A i \in 1..n:  c_i = c_j &lt;=&gt; class[c_i] = class[c_j]                   [EquivClass]
+</code></pre>
+<p>The direction <code>c_i = c_j =&gt; class[c_i] = class[c_j]</code> holds true, due to the
+<strong>congruence</strong> property of uninterpreted functions.</p>
+<p>How do we enforce the other direction? We impose the following constraint:</p>
+<pre><code class="language-tla">\A i \in 1..n: repr[class[c_i]] = c_i                                   [Repr]
+</code></pre>
+<p><strong>Proposition 2.</strong> Condition <code>[Repr]</code> implies <code>class[c_i] = class[c_j] =&gt; c_i = c_j</code>
+for <code>i \in 1..n</code>.</p>
+<p><em>Proof:</em></p>
+<p>Suppose that there is a pair <code>c_i</code> and <code>c_j</code> that satisfies the conditions:</p>
+<ol>
+<li>
+<p><code>class[c_i] = class[c_j]</code>, and</p>
+</li>
+<li>
+<p><code>c_i /= c_j</code>.</p>
+<p>We prove that the existence of such a pair contradicts the condition <code>[Repr]</code>.</p>
+</li>
+<li>
+<p>Let <code>z_i = repr[c_i]</code> and <code>z_j = repr[c_j]</code>.</p>
+</li>
+<li>
+<p>We have <code>repr[z_i] = repr[z_j]</code>. Indeed, from Condition 1., we have <code>z_i = z_j</code>.
+Hence, by the congruence property applied to <code>repr</code></p>
+<p>Let <code>c_k = repr[z_i]</code> and <code>c_l = repr[z_j]</code>. We have the following:</p>
+</li>
+<li>
+<p><code>c_k = c_l</code> by Condition 4.</p>
+</li>
+<li>
+<p><code>c_k = repr[class[c_i]] = c_i</code>. By Condition 2.</p>
+</li>
+<li>
+<p><code>c_l = repr[class[c_j]] = c_j</code>. By Condition 2.</p>
+</li>
+<li>
+<p>Finally, <code>c_i = c_j</code>. By 5.-7. This contradicts with the assumption <code>c_i /= c_j</code>.</p>
+</li>
+</ol>
+<p><em>QED</em></p>
+<p>By combining Proposition 2 with congruence of <code>class</code>, we obtain the desired
+property <code>[EquivClass]</code>. Hence, the functions <code>class</code> and <code>repr</code> provide us
+with a way to compute equivalence classes.</p>
+<p><strong>Set membership.</strong> It remains to take the membership relation into account.
+That is, we would like to use as representatives only the cells that actually
+belong to the set <code>S</code>. To this end, we introduce an uninterpreted <code>cin \in [Sort_C -&gt; BOOLEAN]</code>, which for every <code>c_i</code> encodes, whether <code>c_i</code>
+belongs to the set <code>S</code>. This uninterpreted function is identical to the Boolean
+variables <code>in_1</code>, ..., <code>in_n</code>, that is, the following constraint holds true,
+for i \in 1..n:</p>
+<pre><code class="language-tla">cin[c_i] = in_i        [DefCin]
+</code></pre>
+<p>The purpose of the function <code>cin</code> is solely to use congruence of the set
+membership relation.</p>
+<p><strong>BUG:</strong> It might happen that a pair of equal cells <code>c_i</code> disagree
+on the set membership, that is, <code>c_i = c_j/\ in_i /\ ~in_j</code> holds true.</p>
+<p><strong>Cardinality computation.</strong>  Finally, we count the number of equivalence
+classes that satisfy the following predicate <code>isCounted_i</code> for <code>i \in 1..n</code>:</p>
+<pre><code class="language-tla">class[repr[z_i]] = z_i /\ cin[repr[z_i]]
+</code></pre>
+<p><strong>NOTE:</strong> It might happen that <code>repr[z_i]</code> is mapped on a constant <code>d</code> that is
+syntactically different from <code>c_1</code>, ..., <code>c_n</code>. This, however, does not pose
+a problem, as the congruence property of <code>cin</code> enforces <code>cin[c_i] = cin[d]</code>.</p>
+<p>We introduce equations to count the number of equivalence classes for <code>i \in 1..n</code>:</p>
+<pre><code class="language-tla">    /\ k_0 = 0
+    /\ isCounted =&gt; k_i = k_{i-1} + 1
+    /\ ~isCounted =&gt; k_i = k_{i-1}
+</code></pre>
+<p>By collecting the constraints in this section, <code>[DefCin]</code> and <code>[Repr]</code>, we have
+a complete set of constraints for computing <code>k_n = Cardinality(S)</code>. As one can
+see, the number of literals in this encoding is <strong>linear</strong>, that is, <code>O(n)</code>.</p>
+<p><strong>NOTE:</strong> Although the number of constraints is linear, we have to analyze complexity
+of the underlying SMT problem, which may happen to be as hard as the SMT problem
+that is constructed in v0.6.0.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../types-api.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../adr/001rfc-types.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../types-api.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../adr/001rfc-types.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
