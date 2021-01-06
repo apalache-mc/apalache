@@ -240,7 +240,7 @@ When the PR is merged into `master`:
 - [ ] Checkout `master`
 - [ ] Sync with upstream via`git pull origin master`
 - [ ] Build the artifact with `make`
-- [ ] Post the relese with `./script/release vl.m.n ./scripts/release-l.m.n.txt`
+- [ ] Post the release with `./script/release vl.m.n ./scripts/release-l.m.n.txt`
 - [ ] Update the download links at https://github.com/informalsystems/apalache/blob/gh-pages/_config.yml#L7
 
 ### Advance the version on unstable
