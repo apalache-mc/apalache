@@ -217,6 +217,9 @@ Changes, Features, Improvements, Bug Fixes.
 
 ## Releases
 
+You must have release-me installed and configured with a token. See
+https://pypi.org/project/release-me/
+
 Assuming the version to be released is `l.m.n`, as per semantic versioning, the
 current release process is as follows:
 
