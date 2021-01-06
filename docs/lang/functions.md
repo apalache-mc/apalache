@@ -10,11 +10,11 @@ functions are more often used like tables or dictionaries: they are simple maps 
 [Two-phase commit], the function `rmState` stores the transaction state for
 each process:
 
-```tla
-"process1",  "working"
-"process2",  "aborted"
-"process3",  "prepared"
-```
+| argument   | rmState[argument] |
+| ---------- | ----------------- |
+| "process1" | "working"         |
+| "process2" | "aborted"         |
+| "process3" | "prepared"        |
 
 In the above table, the first column is the value of the function argument,
 while the second column is the function result. An important property of this
@@ -187,9 +187,9 @@ the domain `S` as follows.  For every element `elem` of `S`, do the following:
  3. Set `f[elem]` to `result`.
 
 Of course, the semantics of the function constructor in [Specifying Systems]
-does not require us to compute the function at all. However, we believe that
-it helps you to see that there is a way to compute this data structure, alas,
-this way is very straightforward.
+does not require us to compute the function at all. We believe that
+our description helps you to see that there is a way to compute this data
+structure, though in a very straightforward and inefficient way.
 
 If the function constructor introduces multiple variables, then the constructed
 function maps a tuple to a value. See **Example**.
@@ -384,7 +384,7 @@ TLC flags a model checking error.
 
 When `a_1, ..., a_n` are not type-compatible with the type of `DOMAIN f`,
 Apalache flags a type error. When `a_i \notin DOMAIN f`, Apalache ignores this
-update. This is consistent with the semantics of TLA+ in [Specifying Systems].
+argument. This is consistent with the semantics of TLA+ in [Specifying Systems].
 
 **Advanced syntax:** There are three extensions to the basic syntax.
 
