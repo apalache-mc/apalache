@@ -1,7 +1,5 @@
 # Apalache manual
 
-**Version 0.7.1 (unstable)** :fireworks:
-
 **Authors: Igor Konnov, Jure Kukovec, Andrey Kuprianov, Shon Feder**
 
 **Contact: {igor,andrey,shon} at informal.systems, jkukovec at forsyte.at**
