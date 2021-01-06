@@ -29,5 +29,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./target/docs
           destination_dir: docs
-          enable_jekyll: true # We use GitHub's builtin jekyll for rendering the main landing page
+          keep_files: true
+          # We use GitHub's builtin jekyll for rendering the main landing page
+          enable_jekyll: true
 
