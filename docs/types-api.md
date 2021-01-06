@@ -1,7 +1,7 @@
 Type reconstruction API
 =======================
 
-###### Author: Igor Konnov
+**Author: Igor Konnov**
 
 In this note, we focus on the client interface of a type inference engine for TLA+.
 In the following, we refer to this interface as ``TI``.

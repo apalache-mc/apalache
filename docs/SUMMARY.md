@@ -10,7 +10,7 @@
 # TLA+ language guide and manual
 
 - [TLA+ Language Lamnaul for Engineers](./lang/README.md)
-- [Idiomatic TLA+](./idiomatic/README.dm)
+- [Idiomatic TLA+](./idiomatic/README.md)
 
 # Reference
 

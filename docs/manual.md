@@ -1,8 +1,6 @@
-# Apalache manual
+# Getting Started
 
-**Authors: Igor Konnov, Jure Kukovec, Andrey Kuprianov, Shon Feder**
-
-# Table of Contents
+**Table of Contents**
 
  1. [Shall I use Apalache or TLC?](#apalacheOrTlc)
  1. [System requirements](#sysreq)
