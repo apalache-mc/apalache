@@ -136,7 +136,10 @@ If you are running Apalache on Linux :penguin: or MacOS
 Apalache in docker while sharing the working directory:
 
 ```bash
+# using the latest stable
 $ alias apalache="docker run --rm -v $(pwd):/var/apalache apalache/mc"
+# using the latest unstable
+$ alias apalache="docker run --rm -v $(pwd):/var/apalache apalache/mc:unstable"
 ```
 
 ### Using the unstable version of Apalache
