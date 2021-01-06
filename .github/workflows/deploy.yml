@@ -1,11 +1,11 @@
+name: deploy
+
 on:
   push:
     branches:
       - master
       - unstable
       - shon/manual-as-mdbook # FIXME
-
-name: deploy
 
 jobs:
   deploy:
