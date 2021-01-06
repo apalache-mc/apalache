@@ -43,8 +43,8 @@ semantics only for a single variable:
 
 **Errors:** Pure TLA+ does not restrict the operator arguments.  TLC flags a
 model checking error, if `S` is infinite.  Apalache produces a static type
-error, if the type of elements of `S` is not compatible in the context of `P`
-when an element of `S` is bound to `x`.
+error, if the type of elements of `S` is not compatible with the type
+of `x` that is expected in the predicate `P`.
 
 **Advanced syntax:** Instead of a single variable `x`, you can use the tuple
 syntax to unpack variables from a Cartesian product, see [Tuples](./tuples.md).
@@ -55,7 +55,8 @@ element `e` of `S`, the variable `x` is bound to `e[1]` and `y` is bound to
 Moreover, instead of introducing one variable, one can quantify over several
 sets. For instance, you can write: `\A x \in S, y \in T: P`. This form is
 simply syntax sugar for the form with nested quantifiers: `\A x \in S: \A y
-\in T: P`.
+\in T: P`. Similarly, `\A x, y \in S: P` is syntax sugar for
+`\A x \in S: \A y \in S: P`.
 
 **Example in TLA+:**
 
@@ -108,16 +109,17 @@ semantics only for a single variable:
 
  _Importantly, when `S = {}`, the expression `\E x \ in S: P` evaluates to
  `FALSE`, independently of what is written in `P`. Likewise, when `{x \in S: P}
- = {}`, the expression `\A x \ in S: P` evaluates to `FALSE`._
+ = {}`, the expression `\E x \ in S: P` evaluates to `FALSE`._
 
  As you probably have noticed, `\E x \in S: P` is equivalent to `~(\A x \in S:
  P)`, and `\A x \in S: P` is equivalent to `~(\E x \in S: P)`. This is called
- _duality_ in logic. But take care!  If `P` contains primes inside, `\E x \in
- S: P` may work as a non-deterministic assignment. In this case, duality does
- not work anymore!  See [Control Flow and Non-determinism].
+ _duality_ in logic. But take care!  If `\E x \in S: P` may act as a
+ non-deterministic assignment, duality does not work anymore!  See [Control
+ Flow and Non-determinism].
    
-**Determinism:** Deterministic, unless `P` contains primes.
-For the non-deterministic case, see [Control Flow and Non-determinism].
+**Determinism:** Deterministic when `P` contains no action operators (including
+the prime operator `'`).  For the non-deterministic case, see [Control Flow and
+Non-determinism].
 
 **Errors:** Pure TLA+ does not restrict the operator arguments.  TLC flags a
 model checking error, if `S` is infinite.  Apalache produces a static type
@@ -132,8 +134,9 @@ element `e` of `S`, the variable `x` is bound to `e[1]` and `y` is bound to
 
 Moreover, instead of introducing one variable, one can quantify over several
 sets. For instance, you can write: `\E x \in S, y \in T: P`. This form is
-simply syntax sugar for the form with nested quantifiers: `\E x \in S: \E y
-\in T: P`.
+simply syntax sugar for the form with nested quantifiers: `\E x \in S: \E y \in
+T: P`. Similarly, `\E x, y \in S: P` is syntax sugar for `\E x \in S: \E y \in
+S: P`.
 
 **Example in TLA+:**
 
@@ -295,14 +298,12 @@ _This operator causes a lot of confusion. Read carefully!_
 **Arguments:** Three arguments: a variable name, a set, and an
 expression.
 
-**Effect:** This operator is a magical device by the definition, no kidding. It
-is a blackbox algorithm that _somehow_ picks one element `e` of `S` that
-satisfies the expression `P` against the binding `[x |-> e]` and returns this
-element `e`.
-
-Did we say "an algorithm"? Yes! `CHOOSE x \in S: P` is deterministic.  If you
-give it two equal sets and two equivalent predicates, it will give you the
-same value. More formally, the only known property of `CHOOSE` is as follows:
+**Effect:** This operator implements a black-box algorithm that _somehow_ picks
+one element from the set `{x \in S: P}`.  Is it an algorithm? Yes! `CHOOSE x
+\in S: P` is deterministic.  When you give it two equal sets and two equivalent
+predicates, `CHOOSE` produces the same value. Formally, the only known property
+of `CHOOSE` is as follows (which is slightly more general than what we wrote
+above):
 
 ```tla
   {x \in S: P} = {y \in T: Q} =>
@@ -312,10 +313,11 @@ same value. More formally, the only known property of `CHOOSE` is as follows:
 Importantly, when `{x \in S: P} = {}`, the expression `CHOOSE x \ in S: P`
     evaluates to an undefined value.
 
-How does it work? We don't know. Nobody knows. Maybe it returns the first
-element of the set? Well, sets are not ordered, so there is no first element.
+How does `CHOOSE` actually work? TLA+ does not fix an algorithm for `CHOOSE` by
+design. Maybe it returns the first element of the set? Sets are not ordered, so
+there is no first element.
 
-Why should you use it? Actually, you should not. Unless you have no other
+Why should you use `CHOOSE`? Actually, you should not. Unless you have no other
 choice :bowtie:
 
 There are two common use cases, where the use of `CHOOSE` is well justified:
@@ -344,8 +346,8 @@ in your specification, [open an issue...]
 
 **Errors:** Pure TLA+ does not restrict the operator arguments.  TLC flags a
 model checking error, if `S` is infinite.  Apalache produces a static type
-error, if the type of elements of `S` is not compatible in the context of `P`
-when an element of `S` is bound to `x`.
+error, if the type of elements of `S` is not compatible with the type of `x`
+as expected in `P`.
 
 **Example in TLA+:**
 
