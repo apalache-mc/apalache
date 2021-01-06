@@ -43,6 +43,7 @@ the [unstable branch].
 
 - Read the [Apalache user manual].
 - Consult the (WIP) [Idioms for writing better TLA+].
+- Consult the (WIP) [TLA+ language manual for engineers].
 
 ## Community
 
@@ -104,6 +105,7 @@ Related reports and publications can be found at the
 [unstable branch]: https://github.com/informalsystems/apalache/tree/unstable
 [Apalache user manual]: ./docs/manual.md
 [Idioms for writing better TLA+]: ./docs/idiomatic
+[TLA+ language manual for engineers]: ./docs/lang
 [Apalache zulip stream]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache
 [Tendermint specs]: https://github.com/tendermint/spec/tree/master/rust-spec
 [Tendermint blockchain]: https://github.com/tendermint
