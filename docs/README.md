@@ -1,4 +1,4 @@
-# Introduction
+# Apalache Manual
 
 **Authors: Igor Konnov, Jure Kukovec, Andrey Kuprianov, Shon Feder**
 
