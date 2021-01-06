@@ -1,7 +1,12 @@
-!["Apalache Logo"](./logo-apalache.png "Apalache Logo")
+<!-- NOTE: We use some kramdown to tweak the styling here. -->
 
-[Features][] | [User manual][] | [Releases][] | [User chat][] | [Contribute][]
-{: style="font-size: 2em; text-align: center;"}
+<!-- For refdef, see see https://stackoverflow.com/a/31712482/1187277 -->
+{:refdef: style="text-align: center;"}
+!["Apalache Logo"](./logo-apalache.png "Apalache Logo"){: height="100px"}
+{:refdef}
+
+[Features][] • [User manual][] • [Releases][] • [User chat][] • [Contribute][]
+{: style="font-size: 1.2em; text-align: center;"}
 
 Apalache translates [TLA+][] into the logic supported by SMT solvers such as
 [Microsoft Z3][]. Apalache can check [inductive invariants][] (for fixed or
