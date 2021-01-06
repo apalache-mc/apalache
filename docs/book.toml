@@ -2,7 +2,7 @@
 
 title = "Apalache User Manual"
 authors = ["Igor Konnov", "Jure Kukovec", "Andrey Kuprianov", "Shon Feder"]
-src = "."
+src = "src"
 language = "en"
 
 [build]
