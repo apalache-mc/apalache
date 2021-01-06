@@ -45,7 +45,6 @@ Apalache:
     - [Releases](#releases)
         - [Prepare the release](#prepare-the-release)
         - [Cut the release](#cut-the-release)
-        - [Publish a docker image](#publish-a-docker-image)
         - [Advance the version on unstable](#advance-the-version-on-unstable)
         - [Announce the relesae](#announce-the-relesae)
 
@@ -217,16 +216,21 @@ Changes, Features, Improvements, Bug Fixes.
 
 ## Releases
 
+You must have release-me installed and configured with a token. See
+https://pypi.org/project/release-me/
+
 Assuming the version to be released is `l.m.n`, as per semantic versioning, the
 current release process is as follows:
 
 ### Prepare the release
 
+- [ ] Create a new feature branch, `release-l.m.n` and check it out
 - [ ] Update [CHANGES.md](./CHANGES.md), adding the heading `## l.m.n` over the
       unreleased changes.
 - [ ] Copy this section into a new file named `./script/release-l.m.n.txt`
 - [ ] Mark the version as RELEASE via `mvn versions:set -DnewVersion=l.m.n-RELEASE`
-- [ ] Commit the changes: `git add . && git commit -m "Prepare for release l.m."`
+- [ ] Commit the changes: `git add . && git commit -m "Prepare for release l.m.n"`
+- [ ] Open a PR merging the feature branch into `develop`. Get it merged.
 - [ ] Open a PR to merge `unstable` into `master`, titling it `Release l.m.n`
 
 ### Cut the release
@@ -236,18 +240,13 @@ When the PR is merged into `master`:
 - [ ] Checkout `master`
 - [ ] Sync with upstream via`git pull origin master`
 - [ ] Build the artifact with `make`
-- [ ] Post the relese with `./script/release vl.m.n ./scripts/release-l.m.n.txt`
-
-### Publish a docker image
-
-- [ ] Build an updated docker container: `docker build -t apalache/mv:l.m.n`
-- [ ] Tag the new version as `latest`: `docker tag apalache/mc:l.m.n latest`
-- [ ] Push the new taged images to dockerhub: `docker push apalache/mc:l.m.n && docker push apalache/mc:latest`
+- [ ] Post the release with `./script/release vl.m.n ./scripts/release-l.m.n.txt`
+- [ ] Update the download links at https://github.com/informalsystems/apalache/blob/gh-pages/_config.yml#L7
 
 ### Advance the version on unstable
 
 - [ ] Checkout `unstable`
-- [ ] Run `mvn release:update-versions`
+- [ ] Run `mvn --batch-mode release:update-versions -DautoVersionSubmodules=true -DdevelopmentVersion=l.m.(n+1)-SNAPSHOT`
 - [ ] Commit the chnages `git add . && git commit -m "Bump version to l.m.(n+1)-SNAPSHOT" && git push`
 
 ### Announce the relesae
