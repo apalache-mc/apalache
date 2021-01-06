@@ -130,7 +130,7 @@ is undefined.
   - `FALSE`, if `S` is a set and all of its elements are not equal to the
     value of `e`.
     
-**Warning:** If you are using the special form `x' \in S`, this operator may
+*Warning:* If you are using the special form `x' \in S`, this operator may
 assign a value to `x'` as a side effect. See [Control Flow and Non-determinism].
 
 **Determinism:** Deterministic, unless you are using the special form `x' \in
@@ -177,6 +177,10 @@ is undefined.
     of `e`; and
   - `TRUE`, if `S` is a set and all of its elements are not equal to the
     value of `e`.
+    
+*Warning:* In contrast to `x' \in S`, the expression `x' \notin T`,
+which is equivalent to `~(x' \in T)` is never
+treated as an assignment in Apalache and TLC.
 
 **Determinism:** Deterministic.
 
@@ -505,8 +509,8 @@ either not sets, or sets of incompatible types.
                                 \* static type error in Apalache
 ```
 
-**Example in Python:** Python conveniently offers us `intersection`, which
-    can be also written as `&`:
+**Example in Python:** Python conveniently offers us `difference`, which
+    can be also written as `-`:
 
 ```python
   frozenset({0, 1, 2}) - frozenset({1, 2, 3})  # frozenset({ 0 })
@@ -541,8 +545,8 @@ the understanding):
 
 **Errors:** Pure TLA+ does not restrict the operator arguments.  TLC flags a
 model checking error, if `S` is infinite.  Apalache produces a static type
-error, if the type of elements of `S` is not compatible in the context of `P`
-when an element of `S` is bound to `x`.
+error, if the type of elements of `S` is not compatible with the type of `x`
+as expected in `P`.
 
 **Advanced syntax:** Instead of a single variable `x`, one can use a tuple
 syntax to unpack variables from a Cartesian product, see [Tuples](./tuples.md).
