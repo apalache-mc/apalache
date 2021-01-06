@@ -390,7 +390,7 @@ defined in `s`. For every `P_i` we construct the set of state variables
 There are three cases to consider:
 
  1. All sets `Use_i` agree on which variables are to be assigned.
-    Formally, `Use_i \intersect Unassigned(s) = Use_j \intersect Unassigned(s)`
+    Formally, `Use_i \intersect Unassigned(s) = Use_j \intersect Unassigned(s) /= {}`
     for `i, j \in 1..n`. This is the case that we consider below.
  2. Two clauses disagree on the set of variables to be assigned.
     Formally, there is a pair `i, j \in 1..n` that satisfy the inequality:
