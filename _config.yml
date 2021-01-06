@@ -4,6 +4,7 @@ description: The Symbolic Model Checker for TLA+
 show_downloads: "true"
 
 # Fix the download links
+# TODO Automate generation of these to point to latest release
 github:
   zip_url: https://github.com/informalsystems/apalache/releases/download/v0.8.0/apalache-v0.8.0.zip
   tar_url: https://github.com/informalsystems/apalache/releases/download/v0.8.0/apalache-v0.8.0.tgz
