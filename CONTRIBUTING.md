@@ -45,7 +45,6 @@ Apalache:
     - [Releases](#releases)
         - [Prepare the release](#prepare-the-release)
         - [Cut the release](#cut-the-release)
-        - [Publish a docker image](#publish-a-docker-image)
         - [Advance the version on unstable](#advance-the-version-on-unstable)
         - [Announce the relesae](#announce-the-relesae)
 
