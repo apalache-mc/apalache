@@ -5,7 +5,7 @@
 !["Apalache Logo"](./logo-apalache.png "Apalache Logo"){: height="100px"}
 {:refdef}
 
-[Features][] • [User manual][] • [Releases][] • [User chat][] • [Contribute][]
+[Features][] • [Installation][] • [Manual][] • [Releases][] • [Chat][] • [Contribute][]
 {: style="font-size: 1.2em; text-align: center;"}
 
 Apalache translates [TLA+][] into the logic supported by SMT solvers such as
@@ -50,15 +50,16 @@ Related reports and publications can be found at the
 
 <!-- LINKS -->
 
-[TLA+]: http://lamport.azurewebsites.net/tla/tla.html
-[Microsoft Z3]: https://github.com/Z3Prover/z3
-[Features]: ./docs/features.md
-[TLC]: http://lamport.azurewebsites.net/tla/tools.html
-[Leslie Lamport's page on TLA+]: http://lamport.azurewebsites.net/tla/tla.html
-[Video course]: http://lamport.azurewebsites.net/video/videos.html
-[Releases]: https://github.com/informalsystems/apalache/releases
+[Chat]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache
 [Contribute]: https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md
-[User manual]: ./docs/manual.md
-[User chat]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache
-[inductive invariants]: https://github.com/informalsystems/apalache-tests/blob/master/results/001indinv-report.md
+[Features]: ./docs/features.html
+[Installation]: ./docs/manual.html#installation
+[Leslie Lamport's page on TLA+]: http://lamport.azurewebsites.net/tla/tla.html
+[Manual]: ./docs
+[Microsoft Z3]: https://github.com/Z3Prover/z3
+[Releases]: https://github.com/informalsystems/apalache/releases
+[TLA+]: http://lamport.azurewebsites.net/tla/tla.html
+[TLC]: http://lamport.azurewebsites.net/tla/tools.html
+[Video course]: http://lamport.azurewebsites.net/video/videos.html
 [bounded model checking]: https://github.com/informalsystems/apalache-tests/blob/master/results/002bmc-report.md
+[inductive invariants]: https://github.com/informalsystems/apalache-tests/blob/master/results/001indinv-report.md
