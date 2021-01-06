@@ -4,6 +4,8 @@
 
 **Author:** Igor Konnov
 
+**Peer review:** Shon Feder, Jure Kukovec
+
 Non-determinism is one of the TLA+ features that makes it different from
 mainstream programming languages. However, it is very easy to overlook it: There is no
 special syntax for expressing non-determinism. In pure TLA+, whether your
@@ -37,10 +39,11 @@ In the above example, the operator `Init` evaluates to `TRUE` on exactly one
 state, which we can conveniently write using the record constructor as follows:
 `[x |-> 0, y |-> 0]`.
 
-The operator `Next` contains primes (`'`) and thus accepts pairs of states,
+The operator `Next` contains primes (`'`) and thus represents pairs of states,
 which we call _transitions_. An operator over unprimed and primed variables
 is called an _action_ in TLA+. Intuitively, the operator `Next` in our example
-evaluates to `TRUE` on infinitely many pairs of states that look like follows:
+evaluates to `TRUE` on infinitely many pairs of states. For instance, `Next`
+evaluates to `TRUE` on the following pairs:
 
 ```tla
 <<[x |-> 0, y |-> 0], [x |-> 1, y |-> 1]>>
@@ -77,6 +80,24 @@ Below we plot the values of `x` and `y` in the first 16 states with red dots.
 Not surprisingly, we just get a line.
 
 ![diagonal](./img/diagonal.png)
+
+**Note:** In the above examples, we only showed transitions that could be
+produced by computations, which (by our definition) originate from the initial
+states. These transitions contain _reachable_ states. In principle, `Next` may
+also describe transitions that contain unreachable states. For instance, the
+operator `Next` from our example evaluates to `TRUE` on the following pairs as
+well:
+
+```tla
+<<[x |-> -100, y |-> -100], [x |-> -99, y |-> -99]>>
+<<[x |-> -100, y |-> 100], [x |-> -99, y |-> 101]>>
+<<[x |-> 100, y |-> -100], [x |-> 101, y |-> -99]>>
+...
+```
+
+There is no reason to restrict transitions only to the reachable states
+(and it would be hard to do, technically). This feature is often used to reason
+about inductive invariants.
 
 **Determinism and non-determinism.** Our specification is quite boring: It
 describes exactly one initial state, and there is no variation in computing the
@@ -136,62 +157,77 @@ guess the states and transitions. If we could ask our logician friend to guess
 the states and transitions for us every time we read a TLA+ specification, that
 would be great. But this approach does not scale well.
 
-*Can we explain non-determinism to a computer?* It turns out that we can.
-TLC and Apalache work because their authors managed to write programs
-that are reasoning about
-non-determinism. Of course, this comes with constraints on the structure of the
-specifications. After all, people are much better at solving certain logical
-puzzles than computers, though people get bored much faster than computers. 
+**Can we explain non-determinism to a computer?** It turns out that we can.
+In fact, many model checkers support non-determinism in their input languages.
+For instance, see [[Boogie]] and [[Spin]].
+Of course, this comes with constraints on the structure of the specifications.
+After all, people are much better at solving certain logical puzzles than
+computers, though people get bored much faster than computers. 
 
 To understand how TLC enumerates states, check Chapter 14 of [[Specifying
 Systems]]. In the rest of this document, we focus on treatment of
-non-determinism that is closer to Apalache.
+non-determinism that is close to the approach in Apalache.
 
 ## Explaining non-determinism to computers
 
 To see how a program could evaluate a TLA+ expression, we need two more
-ingredients: partial states and oracles.
+ingredients: bindings and oracles.
 
-**Partial states.** We introduce a special value `Null` that we will use to
-denote that a state variable has not been assigned a value yet. Note that
-`Null` is not a standard keyword in TLA+, but it is our special keyword that we
-use for evaluating TLA+ expressions.  A _partial state_ is a mapping that
-assigns to every state variable either a TLA+ value or the special value
-`Null`.
+**Bindings.** We generalize states to bindings: Given a set of names `N`, a
+*binding* maps every name from `N` to a value.  When `N` is the set of all
+state variables, a binding describes a state.  However, a binding does not have
+to assign values to all state variables.  Moreover, a binding may assign values
+to names that are not the names of state variables. In the following, we are
+using bindings over subsets of names that contain: (1) names of the state
+variables, and (2) names of the primed state variables.
+
+To graphically distinguish bindings from states, we use parentheses and arrows
+to define bindings. For instance, `(x -> 1, x' -> 3)` is a binding that maps
+`x` to 1 and `x'` to 3. (This is our notation, not a common TLA+ notation.)
 
 **Evaluating deterministic expressions.** Consider the specification `coord`,
-which was given above.  By starting with the partial state `[x |-> Null, y |->
-Null]`, we can see how to automatically evaluate the body of the operator
-`Init`:
+which was given above.  By starting with the empty binding `()`, we can see how
+to automatically evaluate the body of the operator `Init`:
 
 ```tla
 x = 0 /\ y = 0 
 ```
 
 By following [semantics of conjunction](./booleans.md), we see that `/\` is
-evaluated from left-to-right. The left-hand side equality `x = 0` is treated
-as an assignment to `x`, since `x` has value `Null` in the partial state 
-`[x |-> Null, y |-> Null]`. The expression `x = 0` leads to the partial state 
-`[x |-> 0, y |-> Null]`. Likewise, the right-hand side equality `y = 0` is also
-treated as an assignment to `y`. Hence, the expression `y = 0` leads to the
-partial state `[x |-> 0, y |-> 0]`.
+evaluated from left-to-right. The left-hand side equality `x = 0` is treated as
+an assignment to `x`, since `x` is not assigned a value in the empty binding
+`()`, which it is evaluated against.  Hence, the expression `x = 0` produces
+the binding `(x -> 0)`. When applied to this binding, the right-hand side
+equality `y = 0` is also treated as an assignment to `y`. Hence, the expression
+`y = 0` results in the binding `(x -> 0, y -> 0)`. This binding is defined over
+all state variables, so it gives us the only initial state `[x |-> 0, y |-> 0]`.
 
-Let's see how to evaluate the body of the operator `Next` starting with the
-partial state `[x |-> 3, y |-> 3, x' |-> Null, y' |-> Null]`:
+Let's see how to evaluate the body of the operator `Next`:
 
 ```tla
 x' = x + 1 /\ y' = y + 1
 ```
 
-Similar to the conjunction in `Init`, the conjunction in `Next` is evaluated
-first to `[x |-> 3, y |-> 3, x' |-> 4, y' |-> Null]` and then to `[x |-> 3, y
-|-> 3, x' |-> 4, y' |-> 4]`.  However, note that if we evaluate `Next` in the
-state `[x |-> 3, y |-> 3, x' |-> 1, y' |-> 1]`, the result will be `FALSE`, as
-the left-hand side of the conjunction `x' = x + 1` evaluates to `FALSE`.
-Indeed, `x'` has value `1`, whereas `x` has value `3`, so `x' = x + 1` is
-evaluated as `1 = 3 + 1` in the state `[x |-> 3, y |-> 3, x' |-> 1, y' |-> 1]`,
-which gives us `FALSE`. Hence, `<< <<x |-> 3, y |-> 3>>, <<x |-> 1, y |-> 1>> >>`
-is not a transition that is accepted by `Next`.
+As we have seen, `Next` describes pairs of states. Thus, we will use produce
+bindings over non-primed and primed variables, that is, over `x, x', y, y'`.
+Non-primed variables represent the state before a transition fires, whereas
+primed variables represent the state after the transition has been fired.
+
+Consider evaluation of `Next` in the state `[x |-> 3, y |-> 3]`, that is, the
+evaluation starts with the binding `(x -> 3, y -> 3)`.  Similar to the
+conjunction in `Init`, the conjunction in `Next` first produces the binding `(x
+-> 3, y -> 3, x' -> 4)` and then the binding `(x -> 3, y -> 3, x' -> 4, y' ->
+4)`.  Moreover, `Next` evaluates to `TRUE` when it is evaluated against the
+binding `(x -> 3, y -> 3)`. Hence, the state `[x |-> 3, y |-> 3]` has the only
+successor `[x |-> 4, y |-> 4]`, when following the transition predicate `Next`.
+
+In contrast, if we evaluate `Next` when starting with the binding `(x -> 3, y
+-> 3, x' -> 1, y' -> 1)`, the result will be `FALSE`, as the left-hand side of
+the conjunction `x' = x + 1` evaluates to `FALSE`.  Indeed, `x'` has value `1`,
+whereas `x` has value `3`, so `x' = x + 1` is evaluated as `1 = 3 + 1` against
+the binding `(x -> 3, y -> 3, x' -> 1, y' -> 1)`, which gives us `FALSE`.
+Hence, the pair of states `[x |-> 3, y |-> 3]` and `[x |-> 1, y |-> 1]` is not
+a valid transition as represented by `Next`.
 
 So far, we only considered unconditional operators. Let's have a look at the
 operator `A`:
@@ -201,11 +237,12 @@ A ==
   y > x /\ y' = x /\ x' = x
 ```
 
-If we evaluate `A` in the partial state `[x |-> 3, y |-> 10, x' |-> Null, y'
-|-> Null]`, we produce the state `[x |-> 3, y |-> 10, x' |-> 3, y' |-> 3]`.
-However, if we evaluate `A` in the partial state `[x |-> 10, y |-> 3, x' |->
-Null, y' |-> Null]`, the leftmost condition `y > x` fails, and thus there is
-no next state from that partial state that would be accepted by `A`.
+Evaluation of `A` against the binding `(x -> 3, y -> 10)` produces the binding
+`(x -> 3, y -> 10, x' -> 3, y' -> 3)` and the result `TRUE`.  However, in the
+evaluation of `A` against the binding `(x -> 10, y -> 3)`, the leftmost
+condition `y > x` evaluates to `FALSE`, so `A` evaluates to `FALSE` against the
+binding `(x -> 10, y -> 3)`. Hence, no next state can be produced from the
+the state `[x |-> 3, y |-> 10]` by using operator `A`.
 
 Until this moment, we have been considering only deterministic examples, that is,
 there was no "branching" in our reasoning. Such examples can be easily put into
@@ -225,7 +262,7 @@ has the following properties:
 Why do we call it a device? We cannot call it a function, as functions are
 deterministic by definition. For the same reason, it is not a TLA+
 operator. In logic, we would say that `GUESS` is simply a binary relation on
-sets and their elements, which would not be different from the membership
+sets and their elements, which would be no different from the membership
 relation `\in`.
 
 Why do we need `GUESS S` and cannot use `CHOOSE x \in S: TRUE` instead?
@@ -249,7 +286,7 @@ we can think of `GUESS S` as being one of the following implementations:
  1. `GUESS S` can be controlled by an adversary, who is trying to break the
  system.
 
- 1. `GUESS S` can pick an element by calling a random number generator.
+ 1. `GUESS S` can pick an element by calling a pseudo-random number generator.
  However, note that RNG is a very special way of resolving non-determinism: It
  assumes probabilistic distribution of elements (usually, it is close to the
  [uniform
@@ -263,26 +300,32 @@ model all of them. As TLA+ does not introduce special primitives for different
 kinds of non-determinism, neither do we fix any implementation of `GUESS S`.
 
 **Halting.** Note that `GUESS {}` halts the evaluation. What does it mean? The
-evaluation cannot continue in the current partial state. It does not imply that
-we have found a deadlock in our TLA+ specification. It simply means that we
-made wrong choices on the way. If we would like to enumerate all possible state
-successors, like TLC does, we have to backtrack. In general, the course of
-action depends on the program analysis that you implement. For instance,
-a random simulator could simply backtrack and randomly choose another value.
+evaluation cannot continue. It does not imply that we have found a deadlock in
+our TLA+ specification. It simply means that we made wrong choices on the way.
+If we would like to enumerate all possible state successors, like TLC does, we
+have to backtrack (though that needs fairness of `GUESS`). In general, the
+course of action depends on the program analysis that you implement. For
+instance, a random simulator could simply backtrack and randomly choose another
+value.
 
 <a name="nondetExists"></a>
 ### Non-determinism in `\E x \in S: P`
 
-We only have to consider the following case: `\E x \in S: P` is evaluated in a
-partial state `s`, and there is a primed state variable `y'` that satisfies two
+We only have to consider the following case: `\E x \in S: P` is evaluated against
+a binding `s`, and there is a primed state variable `y'` that satisfies two
 conditions:
 
  1. The predicate `P` refers to `y'`, that is, `P` has to assign a value to `y'`.
- 2. The value of `y'` is not defined yet, that is, `s.y' = Null`.
+ 2. The value of `y'` is not defined yet, that is, binding `s` does not have a
+    value for the name `y'`.
 
 If the above assumptions do not hold true, the expression `\E x \in S: P` does
 not have non-determinism and it can be evaluated by following the standard
 deterministic semantics of exists, see [[Logic]](./logic.md).
+
+**Note:** We do not consider action operators like `UNCHANGED y`. They can be
+translated into an equivalent form, e.g., `UNCHANGED x` is equivalent to `y' =
+y`.
 
 Now it is very easy to evaluate `\E x \in S: P`. We simply evaluate the
 following expression:
@@ -315,11 +358,12 @@ Next ==
 ```
 
 It is easy to evaluate `Init`: It does not contain non-determinism and it
-evaluates to the state `[x |-> 0]`. When evaluating `Next` in the partial state
-`[x |-> 0, x' |-> Null]`, we have plenty of choices. Actually, we have
-infinitely many choices, as the set `Int` is infinite.  TLC would immediately
-fail here. But there is no reason for our evaluation to fail.  Simply ask the
-oracle. Below we give three examples of how the evaluation works:
+produces the binding `(x -> 0)` and the state `[x |-> 0]`, respectively. When
+evaluating `Next` against the binding `(x -> 0)`, we have plenty of choices.
+Actually, we have infinitely many choices, as the set `Int` is infinite.  TLC
+would immediately fail here. But there is no reason for our evaluation to fail.
+Simply ask the oracle. Below we give three examples of how the evaluation
+works:
 
 ```
 1. (GUESS Int) returns 10. (LET i == 10 IN i > x /\ x' = i) is TRUE, x' is assigned 10.
@@ -339,9 +383,9 @@ Consider a disjunction that comprises `n` clauses:
   \/ P_n
 ```
 
-Assume that we evaluate the disjunction in a partial state `s`. Further,
-let us say that `Unassigned(s)` is the set of state variables that evaluate
-to `Null` in `s`. For every `P_i` we construct the set of state variables 
+Assume that we evaluate the disjunction against a binding `s`. Further,
+let us say that `Unassigned(s)` is the set of variables that are not
+defined in `s`. For every `P_i` we construct the set of state variables 
 `Use_i` that contains every variable `x'` that is mentioned in `P_i`.
 There are three cases to consider:
 
@@ -352,7 +396,7 @@ There are three cases to consider:
     Formally, there is a pair `i, j \in 1..n` that satisfy the inequality:
     `Use_i \intersect Unassigned(s) /= Use_j \intersect Unassigned(s)`.
     In this case, the specification is ill-structured. TLC would
-    raise an error when it found a partial state like this.
+    raise an error when it found a binding like this.
     Apalache would detect this problem when preprocessing the specification.
  3. The clauses do not assign values to the primed variables.
     Formally, `Use_i \intersect Unassigned(s) = {}` for `i \in 1..n`.
@@ -387,21 +431,21 @@ Next ==
 As you can see, the operator `Next` is non-deterministic since both clauses may
 be activated when `x = 0`.
 
-First, let's evaluate `Next` in the partial state `[x |-> 3, y |-> 3]`:
+First, let's evaluate `Next` against the binding `(x -> 3, y -> 3)`:
 
 ```
 1. (GUESS 1..2) returns 1. (LET i == 1 IN Next) is TRUE, x' is assigned 4, y' is assigned 3.
 2. (GUESS 1..2) returns 2. (LET i == 2 IN Next) is FALSE. Halt.
 ```
 
-Second, evaluate `Next` in the partial state `[x |-> -3, y |-> 3]`:
+Second, evaluate `Next` against the binding `(x -> -3, y -> 3)`:
 
 ```
 1. (GUESS 1..2) returns 1. (LET i == 1 IN Next) is FALSE. Halt.
 2. (GUESS 1..2) returns 2. (LET i == 2 IN Next) is TRUE, x' is assigned 4, y' is assigned -3.
 ```
 
-Third, evaluate `Next` in the partial state `[x |-> 0, y |-> 0]`:
+Third, evaluate `Next` against the binding `(x -> 0, y -> 0)`:
 
 ```
 1. (GUESS 1..2) returns 1. (LET i == 1 IN Next) is TRUE. x' is assigned 1, y' is assigned 0.
@@ -507,3 +551,5 @@ _The use of CASE with OTHER together with non-determinism is quite rare.
 
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
 [The Specification Language TLA+]: https://members.loria.fr/SMerz/papers/tla+logic2008.pdf
+[Boogie]: https://github.com/boogie-org/boogie
+[Spin]: http://spinroot.com/spin/whatispin.html
