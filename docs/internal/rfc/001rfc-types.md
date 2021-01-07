@@ -5,7 +5,7 @@ Contributors (in alphabetical order): Shon Feder @shonfeder,
     Markus Kuppe @lemmy, Andrey Kupriyanov @andrey-kuprianov, Leslie Lamport
 
 This is an RFC that reviews a number of possibilities.
-A concrete proposal can be found in [ADR-002](002adr-types.md).
+A concrete proposal can be found in [ADR-002](../../src/adr/002adr-types.md).
 
 
 It is good to have a number of different opinions here. We have three
