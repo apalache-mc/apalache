@@ -23,3 +23,7 @@ x/
 
 # Ignore backup files created by `mvn versions`
 *.versionsBackup
+
+# Ignore artifacts created when previewing the gh-pages site
+/Gemfile.lock
+/_site/
