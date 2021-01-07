@@ -22,6 +22,8 @@ jobs:
       - run: |
           cd docs
           mdbook build
+          # mdbook generates this file automatically but it breaks the gh-pages
+          # jekyll rendering we use for the base site
           rm ../target/docs/.nojekyll
 
       - name: Deploy
