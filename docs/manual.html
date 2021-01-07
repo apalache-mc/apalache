@@ -215,8 +215,8 @@ tool.</p>
 <p>There are two ways to run Apalache: (1) Download and run a docker image, or (2)
 Build Apalache from sources and run the compiled package. If you just want to
 try the tool, we recommend using the docker image. If you would like to run the
-tool on a daily basis or <a href="../CONTRIBUTING.html">to contribute</a> to the project, we
-recommend building the project from the source.</p>
+tool on a daily basis or <a href="https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md">contribute</a> to the project, we recommend building
+the project from the source.</p>
 <p><a name="useDocker"></a></p>
 <h2><a class="header" href="#31-using-a-docker-image" id="31-using-a-docker-image">3.1. Using a docker image</a></h2>
 <p><strong>Starting with release 0.6.0, we will publish Docker images for every release</strong> :sunglasses:</p>
@@ -326,7 +326,7 @@ Java, otherwise Scala will not compile!</strong> See the <a href="https://docs.s
 <p><a name="example"></a></p>
 <h1><a class="header" href="#4-an-example-of-a-tla-specification" id="4-an-example-of-a-tla-specification">4. An example of a TLA+ specification</a></h1>
 <p>To illustrate the features of Apalache, we use the following TLA+ specification,
-which can be found in <a href="../test/tla/y2k.tla"><code>test/tla/y2k.tla</code></a>:</p>
+which can be found in <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k.tla"><code>test/tla/y2k.tla</code></a>:</p>
 <pre><code class="language-tla">-------------------------------- MODULE y2k --------------------------------
 (*
  * A simple specification of a year counter that is subject to the Y2K problem.
@@ -389,7 +389,7 @@ by writing a symbolic constraint, see <a href="#ConstInit">Section 5.3</a>.</p>
 <h2><a class="header" href="#51-using-instance" id="51-using-instance">5.1. Using INSTANCE</a></h2>
 <p>You can set the specification parameters, using the standard <code>INSTANCE</code>
 expression of TLA+. For instance, below is the example
-<a href="../test/tla/y2k_instance.tla"><code>test/tla/y2k_instance.tla</code></a>, which instantiates
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k_instance.tla"><code>test/tla/y2k_instance.tla</code></a>, which instantiates
 <code>y2k.tla</code>:</p>
 <pre><code class="language-tla">---------------------------- MODULE y2k_instance ----------------------------
 VARIABLE year, hasLicense
@@ -414,7 +414,7 @@ OVERRIDE_LICENSE_AGE == 18
 <p>This approach is similar to the <code>Init</code> operator, but applied to the
 constants. We define a special operator, e.g., called <code>ConstInit</code>. For
 instance, below is the example
-<a href="../test/tla/y2k_cinit.tla"><code>test/tla/y2k_cinit.tla</code></a>:</p>
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k_cinit.tla"><code>test/tla/y2k_cinit.tla</code></a>:</p>
 <pre><code class="language-tla">---------------------------- MODULE y2k_cinit ----------------------------
 EXTENDS y2k
 
@@ -451,8 +451,7 @@ produced automatically by TLA Toolbox, for example. TLC configuration files
 allow one to specify which initialization predicate and transition predicate to
 employ, which invariants to check, as well as to initialize specification
 parameters. Some features of the TLC configuration files are not supported yet.
-Check the manual page on
-<a href="./docs/tlc-config.html">&quot;Syntax of TLC Configuration Files&quot;</a>.</p>
+Check the manual page on <a href="./tlc-config.html">&quot;Syntax of TLC Configuration Files&quot;</a>.</p>
 <p><em>If you are checking a file <code>&lt;myspec&gt;.tla</code>, and the file <code>&lt;myspec&gt;.cfg</code> exists in
 the same directory, it will be picked up by Apalache automatically. You can also
 explicitly specify which configuration file to use via the <code>--config</code> option.</em></p>
@@ -634,8 +633,8 @@ few principles one must bear in mind when writing TLA.</p>
 <p><a name="assignments"></a>
 <a name="symbolicTransitions"></a></p>
 <h2><a class="header" href="#71-assignments-and-symbolic-transitions" id="71-assignments-and-symbolic-transitions">7.1 Assignments and symbolic transitions</a></h2>
-<p>Let us go back to the example <a href="../test/tla/y2k.tla"><code>test/tla/y2k.tla</code></a> and
-run <code>apalache</code> against <a href="../test/tla/y2k_override.tla"><code>test/tla/y2k_override.tla</code></a>:</p>
+<p>Let us go back to the example <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k.tla"><code>test/tla/y2k.tla</code></a> and
+run <code>apalache</code> against <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k_override.tla"><code>test/tla/y2k_override.tla</code></a>:</p>
 <pre><code class="language-console">$ apalache check y2k_override.tla
 </code></pre>
 <p>We can check the detailed output of the <code>TransitionFinderPass</code> in the file
@@ -681,7 +680,7 @@ assignment of the form <code>x' := e</code> in every symbolic transition <code>A
 </blockquote>
 <p>If Apalache cannot find expressions with the above properties, it fails.
 Consider the example
-<a href="../test/tla/Assignments20200309.tla"><code>test/tla/Assignments20200309.tla</code></a>:</p>
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/Assignments20200309.tla"><code>test/tla/Assignments20200309.tla</code></a>:</p>
 <pre><code class="language-tla">----- MODULE Assignments20200309 -----
 VARIABLE a
 \* this specification fails, as it has no expression
@@ -733,7 +732,7 @@ and a better type checker. Hence, the syntax will change in the future.</p>
 </ul>
 <h3><a class="header" href="#721-empty-sets-and-sequences" id="721-empty-sets-and-sequences">7.2.1 Empty sets and sequences</a></h3>
 <p>Consider the following example
-<a href="../test/tla/NeedForTypes.tla"><code>test/tla/NeedForTypes.tla</code></a>:</p>
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/NeedForTypes.tla"><code>test/tla/NeedForTypes.tla</code></a>:</p>
 <pre><code class="language-tla">------------------------ MODULE NeedForTypes ------------------------------
 (**
  * This simple example transforms a set into a sequence.
@@ -824,10 +823,10 @@ by modifying <code>Init</code> as follows:</p>
 </code></pre>
 <p>Having these two annotations, the type checker stops complaining. You can find
 the annotated specification in
-<a href="../test/tla/NeedForTypesWithTypes.tla"><code>test/tla/NeedForTypesWithTypes.tla</code></a>.</p>
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/NeedForTypesWithTypes.tla"><code>test/tla/NeedForTypesWithTypes.tla</code></a>.</p>
 <h3><a class="header" href="#722--records-and-sets-of-records" id="722--records-and-sets-of-records">7.2.2  Records and sets of records</a></h3>
 <p>Consider the following example in
-<a href="../test/tla/Handshake.tla"><code>test/tla/Handshake.tla</code></a>:</p>
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/Handshake.tla"><code>test/tla/Handshake.tla</code></a>:</p>
 <pre><code class="language-tla">------------------------ MODULE Handshake ------------------------
 (**
  * A TCP-like handshake protocol:
@@ -947,7 +946,7 @@ SendAck ==
 four fields of <code>MT</code>. As soon as we have added the annotations, the type checker
 stopped complaining and let the model checker to run. The annotated code can be
 found in
-<a href="../test/tla/HandshakeWithTypes.tla"><code>test/tla/HandshakeWithTypes.tla</code></a>.</p>
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/HandshakeWithTypes.tla"><code>test/tla/HandshakeWithTypes.tla</code></a>.</p>
 <p>Type annotations can be also applied to sets of records. For example:</p>
 <pre><code class="language-tla">[syn |-&gt; BOOLEAN, ack |-&gt; BOOLEAN, seqno |-&gt; Int] &lt;: {MT}
 </code></pre>

@@ -240,8 +240,8 @@ tool.</p>
 <p>There are two ways to run Apalache: (1) Download and run a docker image, or (2)
 Build Apalache from sources and run the compiled package. If you just want to
 try the tool, we recommend using the docker image. If you would like to run the
-tool on a daily basis or <a href="../CONTRIBUTING.html">to contribute</a> to the project, we
-recommend building the project from the source.</p>
+tool on a daily basis or <a href="https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md">contribute</a> to the project, we recommend building
+the project from the source.</p>
 <p><a name="useDocker"></a></p>
 <h2><a class="header" href="#31-using-a-docker-image" id="31-using-a-docker-image">3.1. Using a docker image</a></h2>
 <p><strong>Starting with release 0.6.0, we will publish Docker images for every release</strong> :sunglasses:</p>
@@ -351,7 +351,7 @@ Java, otherwise Scala will not compile!</strong> See the <a href="https://docs.s
 <p><a name="example"></a></p>
 <h1><a class="header" href="#4-an-example-of-a-tla-specification" id="4-an-example-of-a-tla-specification">4. An example of a TLA+ specification</a></h1>
 <p>To illustrate the features of Apalache, we use the following TLA+ specification,
-which can be found in <a href="../test/tla/y2k.tla"><code>test/tla/y2k.tla</code></a>:</p>
+which can be found in <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k.tla"><code>test/tla/y2k.tla</code></a>:</p>
 <pre><code class="language-tla">-------------------------------- MODULE y2k --------------------------------
 (*
  * A simple specification of a year counter that is subject to the Y2K problem.
@@ -414,7 +414,7 @@ by writing a symbolic constraint, see <a href="manual.html#ConstInit">Section 5.
 <h2><a class="header" href="#51-using-instance" id="51-using-instance">5.1. Using INSTANCE</a></h2>
 <p>You can set the specification parameters, using the standard <code>INSTANCE</code>
 expression of TLA+. For instance, below is the example
-<a href="../test/tla/y2k_instance.tla"><code>test/tla/y2k_instance.tla</code></a>, which instantiates
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k_instance.tla"><code>test/tla/y2k_instance.tla</code></a>, which instantiates
 <code>y2k.tla</code>:</p>
 <pre><code class="language-tla">---------------------------- MODULE y2k_instance ----------------------------
 VARIABLE year, hasLicense
@@ -439,7 +439,7 @@ OVERRIDE_LICENSE_AGE == 18
 <p>This approach is similar to the <code>Init</code> operator, but applied to the
 constants. We define a special operator, e.g., called <code>ConstInit</code>. For
 instance, below is the example
-<a href="../test/tla/y2k_cinit.tla"><code>test/tla/y2k_cinit.tla</code></a>:</p>
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k_cinit.tla"><code>test/tla/y2k_cinit.tla</code></a>:</p>
 <pre><code class="language-tla">---------------------------- MODULE y2k_cinit ----------------------------
 EXTENDS y2k
 
@@ -476,8 +476,7 @@ produced automatically by TLA Toolbox, for example. TLC configuration files
 allow one to specify which initialization predicate and transition predicate to
 employ, which invariants to check, as well as to initialize specification
 parameters. Some features of the TLC configuration files are not supported yet.
-Check the manual page on
-<a href="./docs/tlc-config.html">&quot;Syntax of TLC Configuration Files&quot;</a>.</p>
+Check the manual page on <a href="./tlc-config.html">&quot;Syntax of TLC Configuration Files&quot;</a>.</p>
 <p><em>If you are checking a file <code>&lt;myspec&gt;.tla</code>, and the file <code>&lt;myspec&gt;.cfg</code> exists in
 the same directory, it will be picked up by Apalache automatically. You can also
 explicitly specify which configuration file to use via the <code>--config</code> option.</em></p>
@@ -659,8 +658,8 @@ few principles one must bear in mind when writing TLA.</p>
 <p><a name="assignments"></a>
 <a name="symbolicTransitions"></a></p>
 <h2><a class="header" href="#71-assignments-and-symbolic-transitions" id="71-assignments-and-symbolic-transitions">7.1 Assignments and symbolic transitions</a></h2>
-<p>Let us go back to the example <a href="../test/tla/y2k.tla"><code>test/tla/y2k.tla</code></a> and
-run <code>apalache</code> against <a href="../test/tla/y2k_override.tla"><code>test/tla/y2k_override.tla</code></a>:</p>
+<p>Let us go back to the example <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k.tla"><code>test/tla/y2k.tla</code></a> and
+run <code>apalache</code> against <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k_override.tla"><code>test/tla/y2k_override.tla</code></a>:</p>
 <pre><code class="language-console">$ apalache check y2k_override.tla
 </code></pre>
 <p>We can check the detailed output of the <code>TransitionFinderPass</code> in the file
@@ -706,7 +705,7 @@ assignment of the form <code>x' := e</code> in every symbolic transition <code>A
 </blockquote>
 <p>If Apalache cannot find expressions with the above properties, it fails.
 Consider the example
-<a href="../test/tla/Assignments20200309.tla"><code>test/tla/Assignments20200309.tla</code></a>:</p>
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/Assignments20200309.tla"><code>test/tla/Assignments20200309.tla</code></a>:</p>
 <pre><code class="language-tla">----- MODULE Assignments20200309 -----
 VARIABLE a
 \* this specification fails, as it has no expression
@@ -758,7 +757,7 @@ and a better type checker. Hence, the syntax will change in the future.</p>
 </ul>
 <h3><a class="header" href="#721-empty-sets-and-sequences" id="721-empty-sets-and-sequences">7.2.1 Empty sets and sequences</a></h3>
 <p>Consider the following example
-<a href="../test/tla/NeedForTypes.tla"><code>test/tla/NeedForTypes.tla</code></a>:</p>
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/NeedForTypes.tla"><code>test/tla/NeedForTypes.tla</code></a>:</p>
 <pre><code class="language-tla">------------------------ MODULE NeedForTypes ------------------------------
 (**
  * This simple example transforms a set into a sequence.
@@ -849,10 +848,10 @@ by modifying <code>Init</code> as follows:</p>
 </code></pre>
 <p>Having these two annotations, the type checker stops complaining. You can find
 the annotated specification in
-<a href="../test/tla/NeedForTypesWithTypes.tla"><code>test/tla/NeedForTypesWithTypes.tla</code></a>.</p>
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/NeedForTypesWithTypes.tla"><code>test/tla/NeedForTypesWithTypes.tla</code></a>.</p>
 <h3><a class="header" href="#722--records-and-sets-of-records" id="722--records-and-sets-of-records">7.2.2  Records and sets of records</a></h3>
 <p>Consider the following example in
-<a href="../test/tla/Handshake.tla"><code>test/tla/Handshake.tla</code></a>:</p>
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/Handshake.tla"><code>test/tla/Handshake.tla</code></a>:</p>
 <pre><code class="language-tla">------------------------ MODULE Handshake ------------------------
 (**
  * A TCP-like handshake protocol:
@@ -972,7 +971,7 @@ SendAck ==
 four fields of <code>MT</code>. As soon as we have added the annotations, the type checker
 stopped complaining and let the model checker to run. The annotated code can be
 found in
-<a href="../test/tla/HandshakeWithTypes.tla"><code>test/tla/HandshakeWithTypes.tla</code></a>.</p>
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/HandshakeWithTypes.tla"><code>test/tla/HandshakeWithTypes.tla</code></a>.</p>
 <p>Type annotations can be also applied to sets of records. For example:</p>
 <pre><code class="language-tla">[syn |-&gt; BOOLEAN, ack |-&gt; BOOLEAN, seqno |-&gt; Int] &lt;: {MT}
 </code></pre>
@@ -1822,7 +1821,7 @@ randomly.</p>
 <h1><a class="header" href="#tla-language-reference-manual-green_book" id="tla-language-reference-manual-green_book">TLA+ Language Reference Manual :green_book:</a></h1>
 <p>In this manual, we summarize our knowledge about TLA+ and about its treatment
 with the <a href="https://github.com/informalsystems/apalache">Apalache model checker</a>. This is not the manual on Apalache, which
-can be found in <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/src/manual.md">Apalache manual</a>. The <a href="http://lamport.azurewebsites.net/video/videos.html">TLA+ Video Course</a> by Leslie Lamport is
+can be found in <a href="lang/../.">Apalache manual</a>. The <a href="http://lamport.azurewebsites.net/video/videos.html">TLA+ Video Course</a> by Leslie Lamport is
 an excellent starting point, if you are new to TLA+. For a comprehensive
 description and philosophy of the language, check <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a> and the
 <a href="http://lamport.azurewebsites.net/tla/tla.html">TLA+ Home Page</a>. There are plenty of interesting talks on TLA+ at <a href="https://www.youtube.com/channel/UCLHtwjeqBxVSEhjV0clKblA/videos">TLA
@@ -2296,7 +2295,7 @@ False == False  # True
 True  == False  # False
 </code></pre>
 <h1><a class="header" href="#control-flow-and-non-determinism-in-tla" id="control-flow-and-non-determinism-in-tla">Control Flow and Non-determinism in TLA+</a></h1>
-<p><a href="lang/./standard-operators.html">[Back to all operators]</a></p>
+<p><a href="lang/./standard-operators.html">Back to all operators</a></p>
 <p><strong>Author:</strong> Igor Konnov</p>
 <p><strong>Peer review:</strong> Shon Feder, Jure Kukovec</p>
 <p>Non-determinism is one of the TLA+ features that makes it different from
@@ -2411,19 +2410,19 @@ non-determinism in the operator <code>Next</code>.</p>
 <p><strong>Discussion.</strong>
 So far we have been talking about the intuition. If you would like to know more about
 the logic behind TLA+ and the semantics of TLA+, check Chapter 16 of
-[<a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>] and [<a href="https://members.loria.fr/SMerz/papers/tla+logic2008.pdf">The Specification Language TLA+</a>].</p>
+<a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a> and <a href="https://members.loria.fr/SMerz/papers/tla+logic2008.pdf">The Specification Language TLA+</a>.</p>
 <p>When we look at the operators like <code>Init</code> and <code>Next</code> in our examples, we can
 guess the states and transitions. If we could ask our logician friend to guess
 the states and transitions for us every time we read a TLA+ specification, that
 would be great. But this approach does not scale well.</p>
 <p><strong>Can we explain non-determinism to a computer?</strong> It turns out that we can.
 In fact, many model checkers support non-determinism in their input languages.
-For instance, see [<a href="https://github.com/boogie-org/boogie">Boogie</a>] and [<a href="http://spinroot.com/spin/whatispin.html">Spin</a>].
+For instance, see <a href="https://github.com/boogie-org/boogie">Boogie</a> and <a href="http://spinroot.com/spin/whatispin.html">Spin</a>.
 Of course, this comes with constraints on the structure of the specifications.
 After all, people are much better at solving certain logical puzzles than
 computers, though people get bored much faster than computers. </p>
-<p>To understand how TLC enumerates states, check Chapter 14 of [<a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying
-Systems</a>]. In the rest of this document, we focus on treatment of
+<p>To understand how TLC enumerates states, check Chapter 14 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying
+Systems</a>. In the rest of this document, we focus on treatment of
 non-determinism that is close to the approach in Apalache.</p>
 <h2><a class="header" href="#explaining-non-determinism-to-computers" id="explaining-non-determinism-to-computers">Explaining non-determinism to computers</a></h2>
 <p>To see how a program could evaluate a TLA+ expression, we need two more
@@ -2555,7 +2554,7 @@ value for the name <code>y'</code>.</li>
 </ol>
 <p>If the above assumptions do not hold true, the expression <code>\E x \in S: P</code> does
 not have non-determinism and it can be evaluated by following the standard
-deterministic semantics of exists, see <a href="lang/./logic.html">[Logic]</a>.</p>
+deterministic semantics of exists, see <a href="lang/./logic.html">Logic</a>.</p>
 <p><strong>Note:</strong> We do not consider action operators like <code>UNCHANGED y</code>. They can be
 translated into an equivalent form, e.g., <code>UNCHANGED x</code> is equivalent to <code>y' = y</code>.</p>
 <p>Now it is very easy to evaluate <code>\E x \in S: P</code>. We simply evaluate the
@@ -2619,7 +2618,7 @@ Apalache would detect this problem when preprocessing the specification.</li>
 <li>The clauses do not assign values to the primed variables.
 Formally, <code>Use_i \intersect Unassigned(s) = {}</code> for <code>i \in 1..n</code>.
 This is the deterministic case. It can be evaluated by using the
-deterministic semantics of <a href="lang/./boolean.html">Boolean operators</a>.</li>
+deterministic semantics of <a href="lang/./booleans.html">Boolean operators</a>.</li>
 </ol>
 <p>We introduce a fresh variable to contain the choice of the clause.  Here we
 call it <code>choice</code>. In a real implementation of an evaluator, we would have to
@@ -2718,7 +2717,7 @@ possible side effects are expected.</em></p>
 <p><em>The use of CASE with OTHER together with non-determinism is quite rare.
 It is not clear why would one need a fallback option in the Boolean formula.
 We recommend you to use the disjunctive form instead.</em></p>
-<p><a href="lang/./standard-operators.html">[Back to all operators]</a></p>
+<p><a href="lang/./standard-operators.html">Back to all operators</a></p>
 <h1><a class="header" href="#deterministic-conditionals" id="deterministic-conditionals">Deterministic conditionals</a></h1>
 <p><a href="lang/./standard-operators.html">[Back to all operators]</a></p>
 <p>In this section, we consider the instances of <code>IF-THEN-ELSE</code> and <code>CASE</code> that
@@ -5637,7 +5636,7 @@ Next ==
 ===============================================================================
 </code></pre>
 <h1><a class="header" href="#adr-002-types-and-type-annotations" id="adr-002-types-and-type-annotations">ADR-002: types and type annotations</a></h1>
-<p>This is a follow up of <a href="adr/001rfc-types.html">RFC-001</a>, which discusses plenty of
+<p>This is a follow up of <a href="adr/../../internal/rfc/001rfc-types.html">RFC-001</a>, which discusses plenty of
 alternative solutions. In this <strong>ADR-002</strong>, we fix one solution that seems to be
 most suitable. The interchange format for the type inference tools will be
 discussed in a separate ADR.</p>
