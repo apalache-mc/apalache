@@ -429,9 +429,32 @@ The outcome is: NoError
 
 ```sh
 $ apalache-mc check Rec10.tla | sed 's/[IEW]@.*//'
-...
-Input error (see the manual): Recursive operator Fact requires an annotation UNROLL_DEFAULT_Fact. See: https://github.com/informalsystems/apalache/blob/unstable/docs/src/manual.md#recursion
-...
+# Tool home: /home/sf/Sync/informal-systems/apalache/apalache-core
+# Package:   /home/sf/Sync/informal-systems/apalache/apalache-core/mod-distribution/target/apalache-pkg-0.8.1-SNAPSHOT-full.jar
+# JVM args: -Xmx4096m -DTLA-Library=/home/sf/Sync/informal-systems/apalache/apalache-core/src/tla
+#
+# APALACHE version 0.8.1-SNAPSHOT build v0.7.2-138-gf6a1988-dirty
+#
+# WARNING: This tool is in the experimental stage.
+#          Please report bugs at: [https://github.com/informalsystems/apalache/issues]
+
+Checker options: filename=Rec10.tla, init=, next=, inv=
+PASS #0: SanyParser
+Parsing file /home/sf/Sync/informal-systems/apalache/apalache-core/test/tla/Rec10.tla
+Parsing file /tmp/Integers.tla
+Parsing file /tmp/Naturals.tla
+PASS #1: ConfigurationPass
+  > Rec10.cfg: Loading TLC configuration
+  > No TLC configuration found. Skipping.
+  > Command line option --init is not set. Using Init
+  > Command line option --next is not set. Using Next
+  > Set the initialization predicate to Init
+  > Set the transition predicate to Next
+PASS #2: UnrollPass
+  > Unroller
+Input error (see the manual): Recursive operator Fact requires an annotation UNROLL_DEFAULT_Fact. See: http://informalsystems.github.io/apalache/docs/manual.html#recursion
+It took me 0 days  0 hours  0 min  0 sec
+Total time: 0.633 sec
 EXITCODE: ERROR (99)
 ```
 
@@ -439,9 +462,32 @@ EXITCODE: ERROR (99)
 
 ```sh
 $ apalache-mc check Rec11.tla | sed 's/[IEW]@.*//'
-...
-Input error (see the manual): Recursive operator Fact requires an annotation UNROLL_TIMES_Fact. See: https://github.com/informalsystems/apalache/blob/unstable/docs/src/manual.md#recursion
-...
+# Tool home: /home/sf/Sync/informal-systems/apalache/apalache-core
+# Package:   /home/sf/Sync/informal-systems/apalache/apalache-core/mod-distribution/target/apalache-pkg-0.8.1-SNAPSHOT-full.jar
+# JVM args: -Xmx4096m -DTLA-Library=/home/sf/Sync/informal-systems/apalache/apalache-core/src/tla
+#
+# APALACHE version 0.8.1-SNAPSHOT build v0.7.2-138-gf6a1988-dirty
+#
+# WARNING: This tool is in the experimental stage.
+#          Please report bugs at: [https://github.com/informalsystems/apalache/issues]
+
+Checker options: filename=Rec11.tla, init=, next=, inv=
+PASS #0: SanyParser
+Parsing file /home/sf/Sync/informal-systems/apalache/apalache-core/test/tla/Rec11.tla
+Parsing file /tmp/Integers.tla
+Parsing file /tmp/Naturals.tla
+PASS #1: ConfigurationPass
+  > Rec11.cfg: Loading TLC configuration
+  > No TLC configuration found. Skipping.
+  > Command line option --init is not set. Using Init
+  > Command line option --next is not set. Using Next
+  > Set the initialization predicate to Init
+  > Set the transition predicate to Next
+PASS #2: UnrollPass
+  > Unroller
+Input error (see the manual): Recursive operator Fact requires an annotation UNROLL_TIMES_Fact. See: http://informalsystems.github.io/apalache/docs/manual.html#recursion
+It took me 0 days  0 hours  0 min  0 sec
+Total time: 0.646 sec
 EXITCODE: ERROR (99)
 ```
 
