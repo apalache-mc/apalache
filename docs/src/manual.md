@@ -31,12 +31,13 @@ Systems](https://informal.systems/).
 # 2. System requirements
 
 Every commit to [master](https://github.com/informalsystems/apalache) and
-[unstable](https://github.com/informalsystems/apalache/tree/unstable) is built with
-[Travis CI](https://travis-ci.org/informalsystems/apalache) on MacOS (xcode9.3 and JDK
-1.8.0) and Linux (OpenJDK8). If you would like to run Apalache in Windows, use a
-docker image. Check the [Docker
-manual](https://docs.docker.com/docker-for-windows/) and the section on [Using a
-docker image](#useDocker) for details.
+[unstable](https://github.com/informalsystems/apalache/tree/unstable) is built
+with [GitHub
+actions](https://github.com/informalsystems/apalache/actions?query=branch%3Aunstable+workflow%3Abuild)
+on MacOS (JDK 1.8.0) and Linux (OpenJDK8). If you would like to run Apalache in
+Windows, use a docker image. Check the [Docker
+manual](https://docs.docker.com/docker-for-windows/) and the section on [Using
+a docker image](#useDocker) for details.
 
 As Apalache is using Microsoft Z3 as a backend SMT solver, the required memory
 largely depends on Z3. We recommend to allocate at least 4GB of memory for the
@@ -45,18 +46,58 @@ tool.
 <a name="installation"></a>
 # 3. Installation
 
-There are two ways to run Apalache: (1) Download and run a docker image, or (2)
-Build Apalache from sources and run the compiled package. If you just want to
-try the tool, we recommend using the docker image. If you would like to run the
-tool on a daily basis or [contribute][] to the project, we recommend building
-the project from the source.
+There are three ways to run Apalache:
+
+  1. Download the [latest release](https://github.com/informalsystems/apalache/releases)
+    and run apalache in JVM,
+  1. Download and run a [docker](https://docker.com) image, or
+  1. Build Apalache from sources and run the compiled package.
+
+If you just want to try the tool, we recommend downloading the release or
+pulling the docker image. If you would like to run the tool on a daily basis or
+[contribute][] to the project, we recommend building the project from the
+source.
 
 [contribute]: https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md
 
-<a name="useDocker"></a>
-## 3.1. Using a docker image
+<a name="runningJava"></a>
+## 3.1. Running in Java Virtual Machine
 
-**Starting with release 0.6.0, we will publish Docker images for every release** :sunglasses:
+You have to download and install a Java Virtual Machine first. For instance,
+[OpenJDK](https://openjdk.java.net/) should work (we tried Apalache with OpenJDK 11).
+
+Once you have installed Java, download the [latest
+release](https://github.com/informalsystems/apalache/releases) and unpack into
+a directory of your choice. Depending on your OS, you have two options.
+
+*Option 1: Linux, MacOS.* You can run the script `./bin/apalache-mc`. It is
+that simple.
+
+*Option 2: Windows.* You have to run Java directly:
+
+  - Check the application name in the directory `mod-distribution\target`.
+    It should be called `apalache-pkg-X.Y.Z-RELEASE-full.jar`, where `X.Y.Z`
+    is the release number, for instance, 0.8.0.
+
+  - Run Java as follows:
+
+  ```
+  java.exe -cp mod-distribution\target\apalache-pkg-X.Y.Z-RELEASE-full.jar <args>
+  ```
+
+  The arguments `<args>` are explained in [Running the tool](#running).
+
+If you would like to contribute a command-line script for running Apalache in
+Windows, please [open a pull
+request](https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md#making-a-pull-request).
+
+<a name="useDocker"></a>
+## 3.2. Using a docker image
+
+**We publish Docker images for every release** :sunglasses:
+
+[Docker](https://docker.com) lets you to run Apalache in an isolated container.
+All dependencies are already installed in docker. However, you have to install docker.
 
 To get the latest Apalache image, issue the command:
 
@@ -160,7 +201,7 @@ $ docker image build -t apalache:0.7.0 .
 
 
 <a name="building-from-source"></a>
-## 3.2. Building from source
+## 3.3. Building from source
 
 1. Install `git`.
 2. Install [OpenJDK8][] or [Zulu JDK8][].
@@ -408,7 +449,7 @@ satisfies the two following properties:
 
 ```tla
 /\ Init => TypeOK /\ IndInv
-/\ TypeOK /\ IndInv /\ Next => Inv'
+/\ TypeOK /\ IndInv /\ Next => TypeOK' /\ IndInv'
 ```
 
 In normal words: (1) The initial states satisfy the constraint `TypeOK /\
