@@ -1,6 +1,6 @@
 # Control Flow and Non-determinism in TLA+
 
-[[Back to all operators]](./standard-operators.md)
+[Back to all operators](./standard-operators.md)
 
 **Author:** Igor Konnov
 
@@ -150,7 +150,7 @@ non-determinism in the operator `Next`.
 **Discussion.**
 So far we have been talking about the intuition. If you would like to know more about
 the logic behind TLA+ and the semantics of TLA+, check Chapter 16 of
-[[Specifying Systems]] and [[The Specification Language TLA+]].
+[Specifying Systems][] and [The Specification Language TLA+][].
 
 When we look at the operators like `Init` and `Next` in our examples, we can
 guess the states and transitions. If we could ask our logician friend to guess
@@ -159,13 +159,13 @@ would be great. But this approach does not scale well.
 
 **Can we explain non-determinism to a computer?** It turns out that we can.
 In fact, many model checkers support non-determinism in their input languages.
-For instance, see [[Boogie]] and [[Spin]].
+For instance, see [Boogie][] and [Spin][].
 Of course, this comes with constraints on the structure of the specifications.
 After all, people are much better at solving certain logical puzzles than
 computers, though people get bored much faster than computers. 
 
-To understand how TLC enumerates states, check Chapter 14 of [[Specifying
-Systems]]. In the rest of this document, we focus on treatment of
+To understand how TLC enumerates states, check Chapter 14 of [Specifying
+Systems][]. In the rest of this document, we focus on treatment of
 non-determinism that is close to the approach in Apalache.
 
 ## Explaining non-determinism to computers
@@ -321,7 +321,7 @@ conditions:
 
 If the above assumptions do not hold true, the expression `\E x \in S: P` does
 not have non-determinism and it can be evaluated by following the standard
-deterministic semantics of exists, see [[Logic]](./logic.md).
+deterministic semantics of exists, see [Logic](./logic.md).
 
 **Note:** We do not consider action operators like `UNCHANGED y`. They can be
 translated into an equivalent form, e.g., `UNCHANGED x` is equivalent to `y' =
@@ -401,7 +401,7 @@ There are three cases to consider:
  3. The clauses do not assign values to the primed variables.
     Formally, `Use_i \intersect Unassigned(s) = {}` for `i \in 1..n`.
     This is the deterministic case. It can be evaluated by using the
-    deterministic semantics of [Boolean operators](./boolean.md).
+    deterministic semantics of [Boolean operators](./booleans.md).
 
 We introduce a fresh variable to contain the choice of the clause.  Here we
 call it `choice`. In a real implementation of an evaluator, we would have to
@@ -547,7 +547,7 @@ _The use of CASE with OTHER together with non-determinism is quite rare.
  We recommend you to use the disjunctive form instead._
 
 
-[[Back to all operators]](./standard-operators.md)
+[Back to all operators](./standard-operators.md)
 
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
 [The Specification Language TLA+]: https://members.loria.fr/SMerz/papers/tla+logic2008.pdf

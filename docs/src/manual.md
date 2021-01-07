@@ -48,8 +48,10 @@ tool.
 There are two ways to run Apalache: (1) Download and run a docker image, or (2)
 Build Apalache from sources and run the compiled package. If you just want to
 try the tool, we recommend using the docker image. If you would like to run the
-tool on a daily basis or [to contribute](../CONTRIBUTING.md) to the project, we
-recommend building the project from the source.
+tool on a daily basis or [contribute][] to the project, we recommend building
+the project from the source.
+
+[contribute]: https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md
 
 <a name="useDocker"></a>
 ## 3.1. Using a docker image
@@ -185,7 +187,7 @@ $ docker image build -t apalache:0.7.0 .
 # 4. An example of a TLA+ specification
 
 To illustrate the features of Apalache, we use the following TLA+ specification,
-which can be found in [`test/tla/y2k.tla`](../test/tla/y2k.tla):
+which can be found in [`test/tla/y2k.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k.tla):
 
 ```tla
 -------------------------------- MODULE y2k --------------------------------
@@ -254,7 +256,7 @@ by writing a symbolic constraint, see [Section 5.3](#ConstInit).
 
 You can set the specification parameters, using the standard `INSTANCE`
 expression of TLA+. For instance, below is the example
-[`test/tla/y2k_instance.tla`](../test/tla/y2k_instance.tla), which instantiates
+[`test/tla/y2k_instance.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k_instance.tla), which instantiates
 `y2k.tla`:
 
 ```tla
@@ -288,7 +290,7 @@ OVERRIDE_LICENSE_AGE == 18
 This approach is similar to the ``Init`` operator, but applied to the
 constants. We define a special operator, e.g., called ``ConstInit``. For
 instance, below is the example
-[`test/tla/y2k_cinit.tla`](../test/tla/y2k_cinit.tla):
+[`test/tla/y2k_cinit.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k_cinit.tla):
 
 ```tla
 ---------------------------- MODULE y2k_cinit ----------------------------
@@ -340,8 +342,7 @@ produced automatically by TLA Toolbox, for example. TLC configuration files
 allow one to specify which initialization predicate and transition predicate to
 employ, which invariants to check, as well as to initialize specification
 parameters. Some features of the TLC configuration files are not supported yet.
-Check the manual page on
-["Syntax of TLC Configuration Files"](./docs/tlc-config.md).
+Check the manual page on ["Syntax of TLC Configuration Files"](./tlc-config.md).
 
 _If you are checking a file `<myspec>.tla`, and the file `<myspec>.cfg` exists in
 the same directory, it will be picked up by Apalache automatically. You can also
@@ -581,8 +582,8 @@ few principles one must bear in mind when writing TLA.
 <a name="symbolicTransitions"></a>
 ## 7.1 Assignments and symbolic transitions
 
-Let us go back to the example [`test/tla/y2k.tla`](../test/tla/y2k.tla) and
-run `apalache` against [`test/tla/y2k_override.tla`](../test/tla/y2k_override.tla):
+Let us go back to the example [`test/tla/y2k.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k.tla) and
+run `apalache` against [`test/tla/y2k_override.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k_override.tla):
 
 ```console
 $ apalache check y2k_override.tla
@@ -638,7 +639,7 @@ follows:
 
 If Apalache cannot find expressions with the above properties, it fails.
 Consider the example
-[`test/tla/Assignments20200309.tla`](../test/tla/Assignments20200309.tla):
+[`test/tla/Assignments20200309.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/Assignments20200309.tla):
 
 ```tla
 ----- MODULE Assignments20200309 -----
@@ -704,7 +705,7 @@ Apalache requires two kinds of type annotations:
 ### 7.2.1 Empty sets and sequences
 
 Consider the following example
-[`test/tla/NeedForTypes.tla`](../test/tla/NeedForTypes.tla):
+[`test/tla/NeedForTypes.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/NeedForTypes.tla):
 
 ```tla
 ------------------------ MODULE NeedForTypes ------------------------------
@@ -823,12 +824,12 @@ Init ==
 
 Having these two annotations, the type checker stops complaining. You can find
 the annotated specification in
-[`test/tla/NeedForTypesWithTypes.tla`](../test/tla/NeedForTypesWithTypes.tla).
+[`test/tla/NeedForTypesWithTypes.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/NeedForTypesWithTypes.tla).
 
 ### 7.2.2  Records and sets of records
 
 Consider the following example in
-[`test/tla/Handshake.tla`](../test/tla/Handshake.tla):
+[`test/tla/Handshake.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/Handshake.tla):
 
 ```tla
 ------------------------ MODULE Handshake ------------------------
@@ -958,7 +959,7 @@ As you can see, we have to annotate only those records that do not have all
 four fields of `MT`. As soon as we have added the annotations, the type checker
 stopped complaining and let the model checker to run. The annotated code can be
 found in
-[`test/tla/HandshakeWithTypes.tla`](../test/tla/HandshakeWithTypes.tla).
+[`test/tla/HandshakeWithTypes.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/HandshakeWithTypes.tla).
 
 Type annotations can be also applied to sets of records. For example:
 
