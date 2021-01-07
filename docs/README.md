@@ -1,7 +1,7 @@
 # Apalache User Manual
 
-The apalache user manual is written in markdown files and compiled using
-[mdbook](https://github.com/rust-lang/mdBook).
+The apalache user manual is written in markdown files in the [./src](./src)
+directory and compiled using [mdbook](https://github.com/rust-lang/mdBook).
 
 ## Building and previewing the documentation
 
@@ -23,3 +23,8 @@ mdbook serve
 The [./src/SUMMARY.md](./src/SUMMARY.md) specifies the table of contents shown
 in the sidebar of the documentation. Any top-level chaptes must be linked from
 there.
+
+## Internal documentation
+
+Design notes and memos that are part of the documentation of our design process
+or for reference by developers are collected in [./internal](./internal).
