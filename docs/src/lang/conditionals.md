@@ -12,7 +12,7 @@ programming languages, TLA+ specification authors with programming experience
 often default to writing expressions such as `IF A THEN B ELSE C`.  We
 encourage those authors to use this construct more sparingly.  In our
 experience, the use of `IF-THEN-ELSE` is rarely required.  Many things can be
-done with [Boolean operators](./boolean.md), which provide more structure in
+done with [Boolean operators](./booleans.md), which provide more structure in
 TLA+ code than in programming languages.  We recommend using `IF-THEN-ELSE` to
 compute predicate-dependent values, not to structure code.
 

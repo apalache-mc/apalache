@@ -1,35 +1,6 @@
-# Apalache manual
+# Getting Started
 
-**Version 0.7.1 (unstable)** :fireworks:
-
-**Authors: Igor Konnov, Jure Kukovec, Andrey Kuprianov, Shon Feder**
-
-**Contact: {igor,andrey,shon} at informal.systems, jkukovec at forsyte.at**
-
-# Introduction
-
-Apalache is a symbolic model checker for
-[TLA+](https://lamport.azurewebsites.net/tla/tla.html). (*Still looking for a
-better tool name.*) Our model checker is a recent alternative to
-[TLC](https://lamport.azurewebsites.net/tla/tools.html?unhideBut=hide-tlc&unhideDiv=tlc).
-Whereas TLC enumerates the states produced by the behaviors of a TLA+
-specification, Apalache translates the verification problem to a set of logical
-constraints. These constraints are solved by an [SMT
-solver](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories), for
-instance, by [Microsoft's Z3](https://github.com/Z3Prover/z3). That is, Apalache
-operates on formulas (i.e., _symbolicly_), not by enumerating states one by one
-(i.e., _state enumeration_).
-
-Apalache is working under the following assumptions:
-
- 1. As in TLC, all specification parameters are fixed and finite, i.e., the system state is initialized with integers, finite sets, and functions of finite domains and co-domains.
-
- 2. As in TLC, all data structures evaluated during an execution are finite, e.g., a system specification cannot operate on the set of all integers.
-
- 3. Only finite executions of bounded length are analyzed.
-
-
-# Table of Contents
+**Table of Contents**
 
  1. [Shall I use Apalache or TLC?](#apalacheOrTlc)
  1. [System requirements](#sysreq)
@@ -60,12 +31,13 @@ Systems](https://informal.systems/).
 # 2. System requirements
 
 Every commit to [master](https://github.com/informalsystems/apalache) and
-[unstable](https://github.com/informalsystems/apalache/tree/unstable) is built with
-[Travis CI](https://travis-ci.org/informalsystems/apalache) on MacOS (xcode9.3 and JDK
-1.8.0) and Linux (OpenJDK8). If you would like to run Apalache in Windows, use a
-docker image. Check the [Docker
-manual](https://docs.docker.com/docker-for-windows/) and the section on [Using a
-docker image](#useDocker) for details.
+[unstable](https://github.com/informalsystems/apalache/tree/unstable) is built
+with [GitHub
+actions](https://github.com/informalsystems/apalache/actions?query=branch%3Aunstable+workflow%3Abuild)
+on MacOS (JDK 1.8.0) and Linux (OpenJDK8). If you would like to run Apalache in
+Windows, use a docker image. Check the [Docker
+manual](https://docs.docker.com/docker-for-windows/) and the section on [Using
+a docker image](#useDocker) for details.
 
 As Apalache is using Microsoft Z3 as a backend SMT solver, the required memory
 largely depends on Z3. We recommend to allocate at least 4GB of memory for the
@@ -74,16 +46,58 @@ tool.
 <a name="installation"></a>
 # 3. Installation
 
-There are two ways to run Apalache: (1) Download and run a docker image, or (2)
-Build Apalache from sources and run the compiled package. If you just want to
-try the tool, we recommend using the docker image. If you would like to run the
-tool on a daily basis or [to contribute](../CONTRIBUTING.md) to the project, we
-recommend building the project from the source.
+There are three ways to run Apalache:
+
+  1. Download the [latest release](https://github.com/informalsystems/apalache/releases)
+    and run apalache in JVM,
+  1. Download and run a [docker](https://docker.com) image, or
+  1. Build Apalache from sources and run the compiled package.
+
+If you just want to try the tool, we recommend downloading the release or
+pulling the docker image. If you would like to run the tool on a daily basis or
+[contribute][] to the project, we recommend building the project from the
+source.
+
+[contribute]: https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md
+
+<a name="runningJava"></a>
+## 3.1. Running in Java Virtual Machine
+
+You have to download and install a Java Virtual Machine first. For instance,
+[OpenJDK](https://openjdk.java.net/) should work (we tried Apalache with OpenJDK 11).
+
+Once you have installed Java, download the [latest
+release](https://github.com/informalsystems/apalache/releases) and unpack into
+a directory of your choice. Depending on your OS, you have two options.
+
+*Option 1: Linux, MacOS.* You can run the script `./bin/apalache-mc`. It is
+that simple.
+
+*Option 2: Windows.* You have to run Java directly:
+
+  - Check the application name in the directory `mod-distribution\target`.
+    It should be called `apalache-pkg-X.Y.Z-RELEASE-full.jar`, where `X.Y.Z`
+    is the release number, for instance, 0.8.0.
+
+  - Run Java as follows:
+
+  ```
+  java.exe -cp mod-distribution\target\apalache-pkg-X.Y.Z-RELEASE-full.jar <args>
+  ```
+
+  The arguments `<args>` are explained in [Running the tool](#running).
+
+If you would like to contribute a command-line script for running Apalache in
+Windows, please [open a pull
+request](https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md#making-a-pull-request).
 
 <a name="useDocker"></a>
-## 3.1. Using a docker image
+## 3.2. Using a docker image
 
-**Starting with release 0.6.0, we will publish Docker images for every release** :sunglasses:
+**We publish Docker images for every release** :sunglasses:
+
+[Docker](https://docker.com) lets you to run Apalache in an isolated container.
+All dependencies are already installed in docker. However, you have to install docker.
 
 To get the latest Apalache image, issue the command:
 
@@ -148,7 +162,7 @@ The development of Apalache proceeds at a high pace, and we introduce a
 substantial number of improvements in the unstable branch before the next stable
 release. Please refer to the [change
 log](https://github.com/informalsystems/apalache/blob/unstable/CHANGES.md) and
-[manual](https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md)
+[manual](https://github.com/informalsystems/apalache/blob/unstable/docs/src/manual.md)
 on the unstable branch for the description of the newest features. **We
 recommend using the unstable version if you want to try all the exciting new
 features of Apalache. But be warned: It is called "unstable" for a reason**. To
@@ -187,7 +201,7 @@ $ docker image build -t apalache:0.7.0 .
 
 
 <a name="building-from-source"></a>
-## 3.2. Building from source
+## 3.3. Building from source
 
 1. Install `git`.
 2. Install [OpenJDK8][] or [Zulu JDK8][].
@@ -214,7 +228,7 @@ $ docker image build -t apalache:0.7.0 .
 # 4. An example of a TLA+ specification
 
 To illustrate the features of Apalache, we use the following TLA+ specification,
-which can be found in [`test/tla/y2k.tla`](../test/tla/y2k.tla):
+which can be found in [`test/tla/y2k.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k.tla):
 
 ```tla
 -------------------------------- MODULE y2k --------------------------------
@@ -283,7 +297,7 @@ by writing a symbolic constraint, see [Section 5.3](#ConstInit).
 
 You can set the specification parameters, using the standard `INSTANCE`
 expression of TLA+. For instance, below is the example
-[`test/tla/y2k_instance.tla`](../test/tla/y2k_instance.tla), which instantiates
+[`test/tla/y2k_instance.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k_instance.tla), which instantiates
 `y2k.tla`:
 
 ```tla
@@ -317,7 +331,7 @@ OVERRIDE_LICENSE_AGE == 18
 This approach is similar to the ``Init`` operator, but applied to the
 constants. We define a special operator, e.g., called ``ConstInit``. For
 instance, below is the example
-[`test/tla/y2k_cinit.tla`](../test/tla/y2k_cinit.tla):
+[`test/tla/y2k_cinit.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k_cinit.tla):
 
 ```tla
 ---------------------------- MODULE y2k_cinit ----------------------------
@@ -369,8 +383,7 @@ produced automatically by TLA Toolbox, for example. TLC configuration files
 allow one to specify which initialization predicate and transition predicate to
 employ, which invariants to check, as well as to initialize specification
 parameters. Some features of the TLC configuration files are not supported yet.
-Check the manual page on
-["Syntax of TLC Configuration Files"](./docs/tlc-config.md).
+Check the manual page on ["Syntax of TLC Configuration Files"](./tlc-config.md).
 
 _If you are checking a file `<myspec>.tla`, and the file `<myspec>.cfg` exists in
 the same directory, it will be picked up by Apalache automatically. You can also
@@ -390,7 +403,7 @@ $ apalache check [--config=filename] [--init=Init] [--cinit=ConstInit] \
 
 The arguments are as follows:
 
-  * ``--config`` specifies the [TLC configuration file](./docs/tlc-config.md),
+  * ``--config`` specifies the [TLC configuration file](./tlc-config.md),
     the default name is ``<myspec>.cfg``
   * ``--init`` specifies the initialization predicate, the default name is ``Init``
   * ``--next`` specifies the transition predicate, the default name is ``Next``
@@ -436,7 +449,7 @@ satisfies the two following properties:
 
 ```tla
 /\ Init => TypeOK /\ IndInv
-/\ TypeOK /\ IndInv /\ Next => Inv'
+/\ TypeOK /\ IndInv /\ Next => TypeOK' /\ IndInv'
 ```
 
 In normal words: (1) The initial states satisfy the constraint `TypeOK /\
@@ -610,8 +623,8 @@ few principles one must bear in mind when writing TLA.
 <a name="symbolicTransitions"></a>
 ## 7.1 Assignments and symbolic transitions
 
-Let us go back to the example [`test/tla/y2k.tla`](../test/tla/y2k.tla) and
-run `apalache` against [`test/tla/y2k_override.tla`](../test/tla/y2k_override.tla):
+Let us go back to the example [`test/tla/y2k.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k.tla) and
+run `apalache` against [`test/tla/y2k_override.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k_override.tla):
 
 ```console
 $ apalache check y2k_override.tla
@@ -667,7 +680,7 @@ follows:
 
 If Apalache cannot find expressions with the above properties, it fails.
 Consider the example
-[`test/tla/Assignments20200309.tla`](../test/tla/Assignments20200309.tla):
+[`test/tla/Assignments20200309.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/Assignments20200309.tla):
 
 ```tla
 ----- MODULE Assignments20200309 -----
@@ -692,7 +705,7 @@ Apalache reports an error as follows:
 ...
 PASS #6: TransitionFinderPass                                     I@09:39:33.527
 To understand the error, check the manual:
-[https://github.com/informalsystems/apalache/blob/unstable/docs/manual.md#assignments]
+[https://github.com/informalsystems/apalache/blob/unstable/docs/src/manual.md#assignments]
 Assignment error: Failed to find assignments and symbolic transitions in InitPrimed E@09:39:33.676
 It took me 0 days  0 hours  0 min  1 sec                          I@09:39:33.678
 Total time: 1.88 sec                                              I@09:39:33.678
@@ -733,7 +746,7 @@ Apalache requires two kinds of type annotations:
 ### 7.2.1 Empty sets and sequences
 
 Consider the following example
-[`test/tla/NeedForTypes.tla`](../test/tla/NeedForTypes.tla):
+[`test/tla/NeedForTypes.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/NeedForTypes.tla):
 
 ```tla
 ------------------------ MODULE NeedForTypes ------------------------------
@@ -852,12 +865,12 @@ Init ==
 
 Having these two annotations, the type checker stops complaining. You can find
 the annotated specification in
-[`test/tla/NeedForTypesWithTypes.tla`](../test/tla/NeedForTypesWithTypes.tla).
+[`test/tla/NeedForTypesWithTypes.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/NeedForTypesWithTypes.tla).
 
 ### 7.2.2  Records and sets of records
 
 Consider the following example in
-[`test/tla/Handshake.tla`](../test/tla/Handshake.tla):
+[`test/tla/Handshake.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/Handshake.tla):
 
 ```tla
 ------------------------ MODULE Handshake ------------------------
@@ -987,7 +1000,7 @@ As you can see, we have to annotate only those records that do not have all
 four fields of `MT`. As soon as we have added the annotations, the type checker
 stopped complaining and let the model checker to run. The annotated code can be
 found in
-[`test/tla/HandshakeWithTypes.tla`](../test/tla/HandshakeWithTypes.tla).
+[`test/tla/HandshakeWithTypes.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/HandshakeWithTypes.tla).
 
 Type annotations can be also applied to sets of records. For example:
 
