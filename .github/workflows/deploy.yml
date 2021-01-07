@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - shon/maual-as-mdbook
 
 jobs:
   deploy:
