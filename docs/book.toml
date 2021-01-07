@@ -1,6 +1,6 @@
 [book]
 
-title = "Apalache User Manual"
+title = "Apalache Documentation"
 authors = ["Igor Konnov", "Jure Kukovec", "Andrey Kuprianov", "Shon Feder"]
 src = "src"
 language = "en"
