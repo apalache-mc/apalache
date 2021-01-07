@@ -1,0 +1,592 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Logic - Apalache User Manual</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../manual.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../tlc-config.html"><strong aria-hidden="true">3.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../types-and-annotations.html"><strong aria-hidden="true">4.</strong> Types and Annotations</a></li><li class="chapter-item expanded "><a href="../features.html"><strong aria-hidden="true">5.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../preprocessing.html"><strong aria-hidden="true">6.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../tuning.html"><strong aria-hidden="true">7.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../kera.html"><strong aria-hidden="true">8.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded "><a href="../types-api.html"><strong aria-hidden="true">9.</strong> Type Reconstruction API</a></li><li class="chapter-item expanded "><a href="../smt/Cardinality.html"><strong aria-hidden="true">10.</strong> SMT encoding for set cardinalities</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">11.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">12.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/booleans.html"><strong aria-hidden="true">12.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../lang/control-and-nondeterminism.html"><strong aria-hidden="true">12.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../lang/conditionals.html"><strong aria-hidden="true">12.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../lang/integers.html"><strong aria-hidden="true">12.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../lang/sets.html"><strong aria-hidden="true">12.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../lang/logic.html" class="active"><strong aria-hidden="true">12.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../lang/functions.html"><strong aria-hidden="true">12.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../lang/records.html"><strong aria-hidden="true">12.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../lang/tuples.html"><strong aria-hidden="true">12.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../lang/sequences.html"><strong aria-hidden="true">12.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">12.11.</strong> Bags</div></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">12.12.</strong> Standard Operators</a></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">12.13.</strong> User Operators</a></li></ol></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">13.</strong> User-defined operators</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.</strong> Modules, Extends, and Instances</div></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">15.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../idiomatic/000keep-minimum-state-variables.html"><strong aria-hidden="true">16.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../idiomatic/001assignments.html"><strong aria-hidden="true">17.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../idiomatic/002primes.html"><strong aria-hidden="true">18.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/001rfc-types.html"><strong aria-hidden="true">19.</strong> RFC 001: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">20.</strong> ADR-002: types and type annotations</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache User Manual</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#logic" id="logic">Logic</a></h1>
+<p><a href="./standard-operators.html">[Back to all operators]</a></p>
+<p>In this section, you find the operators that, together with <a href="./sets.html">Sets</a>
+form the foundation of TLA+. It is a bit strange that we call this section
+&quot;Logic&quot;, as the whole language of TLA+ is a logic. However, the operators
+of this section are often seen in first-order logic, as opposed to
+propositional logic (see <a href="./booleans.html">Booleans</a>).</p>
+<p>Note that the special form <code>\E y \in S: x' = y</code> is often used to express
+non-determinism in TLA+. See <a href="./control-and-nondeterminism.html">Control Flow and Non-determinism</a>. In this
+section, we only consider the deterministic use of the existential quantifier.</p>
+<hr />
+<p><a name="forallBounded"></a></p>
+<h3><a class="header" href="#bounded-universal-quantifier" id="bounded-universal-quantifier">Bounded universal quantifier</a></h3>
+<p><strong>Notation:</strong> <code>\A x \in S: P</code></p>
+<p><strong>LaTeX notation:</strong> <img src="./img/forall-bounded.png" alt="forall-bounded" /></p>
+<p><strong>Arguments:</strong> At least three arguments: a variable name, a set, and an
+expression. As usual in TLA+, if the second argument is not a set, the result is
+undefined. You can also use multiple variables and tuples, see <strong>Advanced
+syntax</strong>. </p>
+<p><strong>Effect:</strong> This operator evaluates to a Boolean value. We explain
+semantics only for a single variable:</p>
+<ul>
+<li><code>\A x \in S: P</code> evaluates to <code>TRUE</code>, if for every element <code>e</code> of <code>S</code>, the
+expression <code>P</code> evaluates to <code>TRUE</code> against the binding <code>[x |-&gt; e]</code>.</li>
+<li>Conversely, <code>\A x \in S: P</code> evaluates to <code>FALSE</code>, if there exists an element
+<code>e</code> of <code>S</code> that makes the expression <code>P</code> evaluate to <code>FALSE</code> against the
+binding <code>[x |-&gt; e]</code>.</li>
+</ul>
+<p><em>Importantly, when <code>S = {}</code>, the expression <code>\A x \in S: P</code> evaluates to
+<code>TRUE</code>, independently of what is written in <code>P</code>. Likewise, when <code>{x \in S: P} = {}</code>, the expression <code>\A x \in S: P</code> evaluates to <code>TRUE</code>.</em></p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
+model checking error, if <code>S</code> is infinite.  Apalache produces a static type
+error, if the type of elements of <code>S</code> is not compatible with the type
+of <code>x</code> that is expected in the predicate <code>P</code>.</p>
+<p><strong>Advanced syntax:</strong> Instead of a single variable <code>x</code>, you can use the tuple
+syntax to unpack variables from a Cartesian product, see <a href="./tuples.html">Tuples</a>.
+For instance, one can write <code>\A &lt;&lt;x, y&gt;&gt; \in S: P</code>. In this case, for every
+element <code>e</code> of <code>S</code>, the variable <code>x</code> is bound to <code>e[1]</code> and <code>y</code> is bound to
+<code>e[2]</code>. The predicate <code>P</code> is evaluated against this binding.</p>
+<p>Moreover, instead of introducing one variable, one can quantify over several
+sets. For instance, you can write: <code>\A x \in S, y \in T: P</code>. This form is
+simply syntax sugar for the form with nested quantifiers: <code>\A x \in S: \A y \in T: P</code>. Similarly, <code>\A x, y \in S: P</code> is syntax sugar for
+<code>\A x \in S: \A y \in S: P</code>.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  \A x \in {1, 2, 3, 4}:
+    x &gt; 0
+  \* TRUE 
+  \A x \in {1, 2, 3, 4}:
+    x &gt; 2
+  \* FALSE
+  \* check the section on tuples to understand the following syntax
+  \A &lt;&lt;x, y&gt;&gt; \in { 1, 2 } \X { 3, 4 }:
+    x &lt; y
+  \* TRUE
+</code></pre>
+<p><strong>Example in Python:</strong> Python conveniently offers us a concise syntax:</p>
+<pre><code class="language-python">  S = frozenset({1, 2, 3, 4})
+  all(x &gt; 0 for x in S)         # True
+  all(x &gt; 2 for x in S)         # False
+  T2 = frozenset((x, y) for x in [1, 2] for y in [3, 4])
+  all(x &lt; y for (x, y) in T2)   # True
+</code></pre>
+<hr />
+<p><a name="existsBounded"></a></p>
+<h3><a class="header" href="#bounded-existential-quantifier" id="bounded-existential-quantifier">Bounded existential quantifier</a></h3>
+<p><strong>Notation:</strong> <code>\E x \in S: P</code></p>
+<p><strong>LaTeX notation:</strong> <img src="./img/exists-bounded.png" alt="exists-bounded" /></p>
+<p><strong>Arguments:</strong> At least three arguments: a variable name, a set, and an
+expression. As usual in TLA+, if the second argument is not a set, the result is
+undefined.You can also use multiple variables and tuples, see <strong>Advanced
+syntax</strong>. </p>
+<p><strong>Effect:</strong> This operator evaluates to a Boolean value. We explain
+semantics only for a single variable:</p>
+<ul>
+<li><code>\E x \in S: P</code> evaluates to <code>TRUE</code>, if there is an element <code>e</code> of <code>S</code>
+that makes the expression <code>P</code> evaluate to <code>TRUE</code> against the binding
+<code>[x |-&gt; e]</code>.</li>
+<li>Conversely, <code>\E x \in S: P</code> evaluates to <code>FALSE</code>, if for all elements
+<code>e</code> of <code>S</code>, the expression <code>P</code> evaluate to <code>FALSE</code> against the
+binding <code>[x |-&gt; e]</code>.</li>
+</ul>
+<p><em>Importantly, when <code>S = {}</code>, the expression <code>\E x \ in S: P</code> evaluates to
+<code>FALSE</code>, independently of what is written in <code>P</code>. Likewise, when <code>{x \in S: P} = {}</code>, the expression <code>\E x \ in S: P</code> evaluates to <code>FALSE</code>.</em></p>
+<p>As you probably have noticed, <code>\E x \in S: P</code> is equivalent to <code>~(\A x \in S: P)</code>, and <code>\A x \in S: P</code> is equivalent to <code>~(\E x \in S: P)</code>. This is called
+<em>duality</em> in logic. But take care!  If <code>\E x \in S: P</code> may act as a
+non-deterministic assignment, duality does not work anymore!  See <a href="./control-and-nondeterminism.html">Control
+Flow and Non-determinism</a>.</p>
+<p><strong>Determinism:</strong> Deterministic when <code>P</code> contains no action operators (including
+the prime operator <code>'</code>).  For the non-deterministic case, see <a href="./control-and-nondeterminism.html">Control Flow and
+Non-determinism</a>.</p>
+<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
+model checking error, if <code>S</code> is infinite.  Apalache produces a static type
+error, if the type of elements of <code>S</code> is not compatible in the context of <code>P</code>
+when an element of <code>S</code> is bound to <code>x</code>.</p>
+<p><strong>Advanced syntax:</strong> Instead of a single variable <code>x</code>, you can use the tuple
+syntax to unpack variables from a Cartesian product, see <a href="./tuples.html">Tuples</a>.
+For instance, one can write <code>\E &lt;&lt;x, y&gt;&gt; \in S: P</code>. In this case, for every
+element <code>e</code> of <code>S</code>, the variable <code>x</code> is bound to <code>e[1]</code> and <code>y</code> is bound to
+<code>e[2]</code>. The predicate <code>P</code> is evaluated against this binding.</p>
+<p>Moreover, instead of introducing one variable, one can quantify over several
+sets. For instance, you can write: <code>\E x \in S, y \in T: P</code>. This form is
+simply syntax sugar for the form with nested quantifiers: <code>\E x \in S: \E y \in T: P</code>. Similarly, <code>\E x, y \in S: P</code> is syntax sugar for <code>\E x \in S: \E y \in S: P</code>.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  \E x \in {1, 2, 3, 4}:
+    x &gt; 0
+  \* TRUE 
+  \E x \in {1, 2, 3, 4}:
+    x &gt; 2
+  \* TRUE
+  \* check the section on tuples to understand the following syntax
+  \E &lt;&lt;x, y&gt;&gt; \in { 1, 2 } \X { 3, 4 }:
+    x &lt; y
+  \* TRUE
+</code></pre>
+<p><strong>Example in Python:</strong> Python conveniently offers us a concise syntax:</p>
+<pre><code class="language-python">  S = frozenset({1, 2, 3, 4})
+  some(x &gt; 0 for x in S)        # True
+  some(x &gt; 2 for x in S)        # False
+  T2 = frozenset((x, y) for x in [1, 2] for y in [3, 4])
+  some(x &lt; y for (x, y) in T2)  # True
+</code></pre>
+<hr />
+<p><a name="eq"></a></p>
+<h3><a class="header" href="#equality" id="equality">Equality</a></h3>
+<p><em>A foundational operator in TLA+</em></p>
+<p><strong>Notation:</strong> <code>e_1 = e_2</code></p>
+<p><strong>LaTeX notation:</strong> <img src="./img/eq.png" alt="eq" /></p>
+<p><strong>Arguments:</strong> Two arguments.</p>
+<p><strong>Effect:</strong> This operator evaluates to a Boolean value. It tests the values
+of <code>e_1</code> and <code>e_2</code> for structural equality. The exact effect depends on the
+values of <code>e_1</code> and <code>e_2</code>. Let <code>e_1</code> and <code>e_2</code> evaluate to the values
+<code>v_1</code> and <code>v_2</code>. Then <code>e_1 = e_2</code> evaluates to:</p>
+<ul>
+<li>
+<p>If <code>v_1</code> and <code>v_2</code> are Booleans, then <code>e_1 = e_2</code> evaluates to <code>v_1 &lt;=&gt; v_2</code>.</p>
+</li>
+<li>
+<p>If <code>v_1</code> and <code>v_2</code> are integers, then <code>e_1 = e_2</code> evaluates to <code>TRUE</code>
+if and only if <code>v_1</code> and <code>v_2</code> are exactly the same integers.</p>
+</li>
+<li>
+<p>If <code>v_1</code> and <code>v_2</code> are strings, then <code>e_1 = e_2</code> evaluates to <code>TRUE</code>
+if and only if <code>v_1</code> and <code>v_2</code> are exactly the same strings.</p>
+</li>
+<li>
+<p>If <code>v_1</code> and <code>v_2</code> are sets, then <code>e_1 = e_2</code> evaluates to <code>TRUE</code>
+if and only if the following expression evaluates to <code>TRUE</code>:</p>
+<pre><code class="language-tla">v_1 \subseteq v_2 /\ v_2 \subseteq v_1
+</code></pre>
+</li>
+<li>
+<p>If <code>v_1</code> and <code>v_2</code> are functions, tuples, records, or sequences,
+then <code>e_1 = e_2</code> evaluates to <code>TRUE</code>
+if and only if the following expression evaluates to <code>TRUE</code>:</p>
+<pre><code class="language-tla">  DOMAIN v_1 = DOMAIN v_2 /\ \A x \in DOMAIN v_1: v_1[x] = v_2[x]
+</code></pre>
+</li>
+<li>
+<p>In other cases, <code>e_1 = e_2</code> evaluates to <code>FALSE</code> if the values have comparable types.</p>
+</li>
+<li>
+<p>TLC and Apalache report an error, if the values have incomparable types.</p>
+</li>
+</ul>
+<p><strong>Determinism:</strong> Deterministic, unless <code>e_1</code> has the form <code>x'</code>, which can be
+interpreted as an assignment to the variable <code>x'</code>.  For the non-deterministic
+case, see <a href="./control-and-nondeterminism.html">Control Flow and Non-determinism</a>.</p>
+<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments. TLC flags a
+model checking error, if <code>e_1</code> and <code>e_2</code> evaluate to incomparable values.
+Apalache produces a static type error, if the types of <code>e_1</code> and <code>e_2</code> do not
+match.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  FALSE = FALSE         \* TRUE
+  FALSE = TRUE          \* FALSE
+  10 = 20               \* FALSE
+  15 = 15               \* TRUE
+  &quot;Hello&quot; = &quot;world&quot;     \* FALSE
+  &quot;Hello&quot; = &quot;hello&quot;     \* FALSE
+  &quot;Bob&quot; = &quot;Bob&quot;         \* TRUE
+  { 1, 2 } = { 2, 3}    \* FALSE
+  { 1, 2 } = { 2, 1}    \* TRUE
+  { 1 } \ { 1 } = { &quot;a&quot; } \ { &quot;a&quot; } \* TRUE in pure TLA+ and TLC,
+                                    \* type error in Apalache
+  { { 1, 2 } } = { { 1, 2, 2, 2 } } \* TRUE
+  &lt;&lt;1, &quot;a&quot;&gt;&gt; = &lt;&lt;1, &quot;a&quot;&gt;&gt;           \* TRUE
+  &lt;&lt;1, &quot;a&quot;&gt;&gt; = &lt;&lt;1, &quot;b&quot;&gt;&gt;           \* FALSE
+  &lt;&lt;1, FALSE&gt;&gt; = &lt;&lt;2&gt;&gt;              \* FALSE in pure TLA+ and TLC,
+                                    \* type error in Apalache
+  &lt;&lt;1, 2&gt;&gt; = &lt;&lt;1, 2, 3&gt;&gt;            \* FALSE in pure TLA+ and TLC,
+                                    \* FALSE in Apalache, when both values
+                                    \* are treated as sequences
+  [ a |-&gt; 1, b |-&gt; 3 ] = [ a |-&gt; 1, b |-&gt; 3 ]           \* TRUE
+  [ a |-&gt; 1, b |-&gt; 3 ] = [ a |-&gt; 1 ]                    \* FALSE
+  [ x \in 2..2 |-&gt; x + x ] = [ x \in {2} |-&gt; 2 * x ]    \* TRUE
+  [ x \in 2..3 |-&gt; x + x ] = [ x \in {2, 3} |-&gt; 2 * x ] \* FALSE
+</code></pre>
+<p><strong>Example in Python:</strong> The standard data structures also implement
+structural equality in Python, though we have to be careful to
+use <code>==</code> instead of <code>=</code>:</p>
+<pre><code class="language-python">  False == False
+  False == True
+  10 == 20
+  15 == 15
+  &quot;Hello&quot; == &quot;world&quot;
+  &quot;Hello&quot; == &quot;hello&quot;
+  &quot;Bob&quot; == &quot;Bob&quot;
+  frozenset({ 1, 2 }) == frozenset({ 2, 3 })
+  frozenset({ 1, 2 }) == frozenset({ 2, 1 })
+  frozenset({ 1 }) - frozenset({ 1 }) == frozenset({ &quot;a&quot; }) - frozenset({ &quot;a&quot; })
+  frozenset({ frozenset({ 1, 2 }) }) == frozenset({ frozenset({ 1, 2, 2, 2 }) })
+  (1, &quot;a&quot;) == (1, &quot;a&quot;)
+  (1, &quot;a&quot;) == (1, &quot;b&quot;)
+  (1, False) == (2, )
+  (1, 2) == (1, 2, 3)
+  { &quot;a&quot;: 1, &quot;b&quot;: 3 } == { &quot;a&quot;: 1, &quot;b&quot;: 3 }
+  { &quot;a&quot;: 1, &quot;b&quot;: 3 } == { &quot;a&quot;: 1 }
+  { x: (x + x) for x in { 2 } } == { x: (x * x) for x in { 2 } }
+  { x: (x + x) for x in { 2, 3 } } == { x: 2 * x for x in { 2, 3 } } 
+</code></pre>
+<hr />
+<p><a name="neq"></a></p>
+<h3><a class="header" href="#inequality" id="inequality">Inequality</a></h3>
+<p><strong>Notation:</strong> <code>e_1 /= e_2</code> or <code>e_1 # e_2</code></p>
+<p><strong>LaTeX notation:</strong> <img src="./img/ne.png" alt="ne" /></p>
+<p><strong>Arguments:</strong> Two arguments.</p>
+<p><strong>Effect:</strong> This operator is syntax sugar for <code>~(e_1 = e_2)</code>. Full stop.</p>
+<hr />
+<p><a name="chooseBounded"></a></p>
+<h3><a class="header" href="#bounded-choice" id="bounded-choice">Bounded Choice</a></h3>
+<p><em>This operator causes a lot of confusion. Read carefully!</em></p>
+<p><strong>Notation:</strong> <code>CHOOSE x \in S: P</code></p>
+<p><strong>LaTeX notation:</strong> <img src="./img/choose-bounded.png" alt="choose-bounded" /></p>
+<p><strong>Arguments:</strong> Three arguments: a variable name, a set, and an
+expression.</p>
+<p><strong>Effect:</strong> This operator implements a black-box algorithm that <em>somehow</em> picks
+one element from the set <code>{x \in S: P}</code>.  Is it an algorithm? Yes! <code>CHOOSE x \in S: P</code> is deterministic.  When you give it two equal sets and two equivalent
+predicates, <code>CHOOSE</code> produces the same value. Formally, the only known property
+of <code>CHOOSE</code> is as follows (which is slightly more general than what we wrote
+above):</p>
+<pre><code class="language-tla">  {x \in S: P} = {y \in T: Q} =&gt;
+      (CHOOSE x \in S: P) = (CHOOSE y \in T: Q)
+</code></pre>
+<p>Importantly, when <code>{x \in S: P} = {}</code>, the expression <code>CHOOSE x \ in S: P</code>
+evaluates to an undefined value.</p>
+<p>How does <code>CHOOSE</code> actually work? TLA+ does not fix an algorithm for <code>CHOOSE</code> by
+design. Maybe it returns the first element of the set? Sets are not ordered, so
+there is no first element.</p>
+<p>Why should you use <code>CHOOSE</code>? Actually, you should not. Unless you have no other
+choice :bowtie:</p>
+<p>There are two common use cases, where the use of <code>CHOOSE</code> is well justified:</p>
+<ul>
+<li>
+<p><em>Use case 1:</em> Retrieving the only element of a singleton set. If you know
+that <code>Cardinality({x \in S: P}) = 1</code>, then <code>CHOOSE x \in S: P</code> returns
+the only element of <code>{x \in S: P}</code>. No magic.
+For instance, see: <a href="https://github.com/tlaplus/CommunityModules/blob/master/modules/FiniteSetsExt.tla#L63-L64">Min and Max in FiniteSetsExt</a>.</p>
+</li>
+<li>
+<p><em>Use case 2:</em> Enumerating set elements in a fixed but unknown order.
+For instance, see: <a href="https://github.com/tlaplus/CommunityModules/blob/master/modules/FiniteSetsExt.tla#L5-L17">ReduceSet in FiniteSetsExt</a>.</p>
+</li>
+</ul>
+<p>In other cases, we believe that <code>CHOOSE</code> is bound to do <a href="https://en.wikipedia.org/wiki/Program_synthesis">Program synthesis</a>.
+So TLC does some form of synthesis by brute force when it has to evaluate
+<code>CHOOSE</code>.</p>
+<p><strong>Determinism:</strong> Deterministic. Very much deterministic. Don't try to model
+non-determinism with <code>CHOOSE</code>. For non-determinism, see:
+<a href="./control-and-nondeterminism.html">Control Flow and Non-determinism</a>.</p>
+<p>Apalache picks a set element that satisfies the predicate <code>P</code>, but it does not
+guarantee the repeatability property of CHOOSE. It does not guarantee
+non-determinism either. Interestingly, this behavior does not really make a
+difference for the use cases 1 and 2. If you believe that this causes a problem
+in your specification, <a href="https://github.com/informalsystems/apalache/issues/new/choose">open an issue...</a></p>
+<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
+model checking error, if <code>S</code> is infinite.  Apalache produces a static type
+error, if the type of elements of <code>S</code> is not compatible with the type of <code>x</code>
+as expected in <code>P</code>.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  CHOOSE x \in 1..3: x &gt;= 3
+  \* 3
+  CHOOSE x \in 1..3:
+    \A y \in 1..3: y &gt;= x
+  \* 1, the minimum
+  CHOOSE f \in [ 1..10 -&gt; BOOLEAN ]:
+    \E x, y \in DOMAIN f:
+      f[x] /\ ~f[y]
+  \* some Boolean function from 1..10 that covers FALSE and TRUE
+</code></pre>
+<p><strong>Example in Python:</strong> Python does not have anything similar to <code>CHOOSE</code>.
+The closest possible solution is to sort the filtered set by the string values
+and pick the first one (or the last one). So we have introduced a particular
+way of implementing CHOOSE, see <a href="./examples/choose.py">choose.py</a>:</p>
+<pre><code class="language-python"># A fixed implementation of CHOOSE x \in S: TRUE
+# that sorts the set by the string representation and picks the head 
+def choose(s):
+    lst = sorted([(str(e), e) for e in s], key=(lambda pair: pair[0]))
+    (_, e) = lst[0]
+    return e
+
+
+if __name__ == &quot;__main__&quot;:
+    s = frozenset({ 1, 2, 3}) 
+    print(&quot;CHOOSE {} = {}&quot;.format(s, choose(s)))
+    s2 = frozenset({ frozenset({1}), frozenset({2}), frozenset({3})})
+    print(&quot;CHOOSE {} = {}&quot;.format(s2, choose(s2)))
+</code></pre>
+<hr />
+<p><a name="forall"></a></p>
+<h3><a class="header" href="#unbounded-universal-quantifier" id="unbounded-universal-quantifier">Unbounded universal quantifier</a></h3>
+<p><strong>Notation:</strong> <code>\A x: P</code></p>
+<p><strong>LaTeX notation:</strong> <img src="./img/forall.png" alt="forall" /></p>
+<p><strong>Arguments:</strong> At least two arguments: a variable name and an
+expression. </p>
+<p><strong>Effect:</strong> This operator evaluates to a Boolean value. It evaluates to <code>TRUE</code>,
+when every element in the logical universe makes the expression <code>P</code> evaluate to
+<code>TRUE</code> against the binding <code>[x |-&gt; e]</code>. More precisely, we have to consider
+only the elements that produced a defined result when evaluating <code>P</code>.</p>
+<p>Neither TLC, nor Apalache support this operator. It is impossible to give
+operational semantics for this operator, unless we explicitly introduce the
+universe. It requires a first-order logic solver. This operator may be useful
+when writing proofs with <a href="https://tla.msr-inria.inria.fr/tlaps/content/Home.html">TLAPS</a>.</p>
+<hr />
+<p><a name="exists"></a></p>
+<h3><a class="header" href="#unbounded-existential-quantifier" id="unbounded-existential-quantifier">Unbounded existential quantifier</a></h3>
+<p><strong>Notation:</strong> <code>\E x: P</code></p>
+<p><strong>LaTeX notation:</strong> <img src="./img/exists.png" alt="exists" /></p>
+<p><strong>Arguments:</strong> At least two arguments: a variable name and an
+expression. </p>
+<p><strong>Effect:</strong> This operator evaluates to a Boolean value. It evaluates to <code>TRUE</code>,
+when at least one element in the logical universe makes the expression <code>P</code>
+evaluate to <code>TRUE</code> against the binding <code>[x |-&gt; e]</code>. More precisely, we have to
+consider only the elements that produced a defined result when evaluating <code>P</code>.</p>
+<p>Neither TLC, nor Apalache support this operator. It is impossible to give
+operational semantics for this operator, unless we explicitly introduce the
+universe. It requires a first-order logic solver. This operator may be useful
+when writing proofs with <a href="https://tla.msr-inria.inria.fr/tlaps/content/Home.html">TLAPS</a>.</p>
+<hr />
+<p><a name="choose"></a></p>
+<h3><a class="header" href="#unbounded-choose" id="unbounded-choose">Unbounded CHOOSE</a></h3>
+<p><strong>Notation:</strong> <code>CHOOSE x: P</code></p>
+<p><strong>LaTeX notation:</strong> CHOOSE x: P</p>
+<p><strong>Arguments:</strong> At least two arguments: a variable name and an
+expression. </p>
+<p><strong>Effect:</strong> This operator evaluates to some value <code>v</code> in the logical universe
+that evaluates <code>P</code> to <code>TRUE</code> against the binding <code>[x |-&gt; v]</code>.</p>
+<p>Neither TLC, nor Apalache support this operator. It is impossible to give
+operational semantics for this operator, unless we explicitly introduce the
+universe and introduce a fixed rule for enumerating its elements.</p>
+<p>Congratulations! You have reached the bottom of this page. If you want to learn
+more about unbounded <code>CHOOSE</code>, read Section 16.1.2 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../lang/sets.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../lang/functions.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../lang/sets.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../lang/functions.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

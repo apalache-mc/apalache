@@ -1,0 +1,665 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Control And Nondeterminism - Apalache User Manual</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../manual.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../tlc-config.html"><strong aria-hidden="true">3.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../types-and-annotations.html"><strong aria-hidden="true">4.</strong> Types and Annotations</a></li><li class="chapter-item expanded "><a href="../features.html"><strong aria-hidden="true">5.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../preprocessing.html"><strong aria-hidden="true">6.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../tuning.html"><strong aria-hidden="true">7.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../kera.html"><strong aria-hidden="true">8.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded "><a href="../types-api.html"><strong aria-hidden="true">9.</strong> Type Reconstruction API</a></li><li class="chapter-item expanded "><a href="../smt/Cardinality.html"><strong aria-hidden="true">10.</strong> SMT encoding for set cardinalities</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">11.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">12.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/booleans.html"><strong aria-hidden="true">12.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../lang/control-and-nondeterminism.html" class="active"><strong aria-hidden="true">12.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../lang/conditionals.html"><strong aria-hidden="true">12.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../lang/integers.html"><strong aria-hidden="true">12.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../lang/sets.html"><strong aria-hidden="true">12.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../lang/logic.html"><strong aria-hidden="true">12.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../lang/functions.html"><strong aria-hidden="true">12.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../lang/records.html"><strong aria-hidden="true">12.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../lang/tuples.html"><strong aria-hidden="true">12.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../lang/sequences.html"><strong aria-hidden="true">12.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">12.11.</strong> Bags</div></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">12.12.</strong> Standard Operators</a></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">12.13.</strong> User Operators</a></li></ol></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">13.</strong> User-defined operators</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.</strong> Modules, Extends, and Instances</div></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">15.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../idiomatic/000keep-minimum-state-variables.html"><strong aria-hidden="true">16.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../idiomatic/001assignments.html"><strong aria-hidden="true">17.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../idiomatic/002primes.html"><strong aria-hidden="true">18.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/001rfc-types.html"><strong aria-hidden="true">19.</strong> RFC 001: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">20.</strong> ADR-002: types and type annotations</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache User Manual</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#control-flow-and-non-determinism-in-tla" id="control-flow-and-non-determinism-in-tla">Control Flow and Non-determinism in TLA+</a></h1>
+<p><a href="./standard-operators.html">[Back to all operators]</a></p>
+<p><strong>Author:</strong> Igor Konnov</p>
+<p><strong>Peer review:</strong> Shon Feder, Jure Kukovec</p>
+<p>Non-determinism is one of the TLA+ features that makes it different from
+mainstream programming languages. However, it is very easy to overlook it: There is no
+special syntax for expressing non-determinism. In pure TLA+, whether your
+specification is deterministic or not depends on the evaluation of the initial
+predicate and of the transition predicate. These are usually called <code>Init</code> and
+<code>Next</code>, respectively. In the following, we first intuitively explain what non-determinism
+means in the mathematical framework of TLA+, and then proceed with the
+explanation that is friendly to computers and software engineers.</p>
+<h2><a class="header" href="#explaining-non-determinism-to-humans" id="explaining-non-determinism-to-humans">Explaining non-determinism to humans</a></h2>
+<p><strong>States, transitions, actions, computations.</strong> Every TLA+ specification comes
+with a set of state variables. For instance, the following specification
+declares two state variables <code>x</code> and <code>y</code>:</p>
+<pre><code class="language-tla">-------- MODULE coord ----------
+VARIABLES x, y
+Init == x = 0 /\ y = 0
+Next == x' = x + 1 /\ y' = y + 1
+================================
+</code></pre>
+<p>A <em>state</em> is a mapping from state variables to TLA+ values. We do not go into
+the mathematical depths of precisely defining TLA+ values. Due to the
+background theory of ZFC, this set is well-defined and is not subject to
+logical paradoxes. Basically, the values are Booleans, integers, strings, sets,
+functions, etc.</p>
+<p>In the above example, the operator <code>Init</code> evaluates to <code>TRUE</code> on exactly one
+state, which we can conveniently write using the record constructor as follows:
+<code>[x |-&gt; 0, y |-&gt; 0]</code>.</p>
+<p>The operator <code>Next</code> contains primes (<code>'</code>) and thus represents pairs of states,
+which we call <em>transitions</em>. An operator over unprimed and primed variables
+is called an <em>action</em> in TLA+. Intuitively, the operator <code>Next</code> in our example
+evaluates to <code>TRUE</code> on infinitely many pairs of states. For instance, <code>Next</code>
+evaluates to <code>TRUE</code> on the following pairs:</p>
+<pre><code class="language-tla">&lt;&lt;[x |-&gt; 0, y |-&gt; 0], [x |-&gt; 1, y |-&gt; 1]&gt;&gt;
+&lt;&lt;[x |-&gt; 1, y |-&gt; 1], [x |-&gt; 2, y |-&gt; 2]&gt;&gt;
+&lt;&lt;[x |-&gt; 2, y |-&gt; 2], [x |-&gt; 3, y |-&gt; 3]&gt;&gt;
+...
+</code></pre>
+<p>In our example, the second state of every transition matches the first state
+of the next transition in the list. This is because the above sequence of
+transitions describes the following sequence of states:</p>
+<pre><code class="language-tla">[x |-&gt; 0, y |-&gt; 0]
+[x |-&gt; 1, y |-&gt; 1]
+[x |-&gt; 2, y |-&gt; 2]
+[x |-&gt; 3, y |-&gt; 3]
+...
+</code></pre>
+<p>Actually, we have just written a computation of our specification.
+A <em>finite computation</em> is a finite sequence of states <code>s_0, s_1, ..., s_k</code>
+that satisfies the following properties:</p>
+<ul>
+<li>The operator <code>Init</code> evaluates to <code>TRUE</code> on state <code>s_0</code>, and</li>
+<li>The operator <code>Next</code> evaluates to <code>TRUE</code> on every pair of states <code>&lt;&lt;s_i, s_j&gt;&gt;</code>
+for <code>0 &lt;= i &lt; k</code> and <code>j = i + 1</code>.</li>
+</ul>
+<p>We can also define an <em>infinite computation</em> by considering an infinite
+sequence of states that are connected via <code>Init</code> and <code>Next</code> as above, but
+without stopping at any index <code>k</code>.</p>
+<p>Below we plot the values of <code>x</code> and <code>y</code> in the first 16 states with red dots.
+Not surprisingly, we just get a line.</p>
+<p><img src="./img/diagonal.png" alt="diagonal" /></p>
+<p><strong>Note:</strong> In the above examples, we only showed transitions that could be
+produced by computations, which (by our definition) originate from the initial
+states. These transitions contain <em>reachable</em> states. In principle, <code>Next</code> may
+also describe transitions that contain unreachable states. For instance, the
+operator <code>Next</code> from our example evaluates to <code>TRUE</code> on the following pairs as
+well:</p>
+<pre><code class="language-tla">&lt;&lt;[x |-&gt; -100, y |-&gt; -100], [x |-&gt; -99, y |-&gt; -99]&gt;&gt;
+&lt;&lt;[x |-&gt; -100, y |-&gt; 100], [x |-&gt; -99, y |-&gt; 101]&gt;&gt;
+&lt;&lt;[x |-&gt; 100, y |-&gt; -100], [x |-&gt; 101, y |-&gt; -99]&gt;&gt;
+...
+</code></pre>
+<p>There is no reason to restrict transitions only to the reachable states
+(and it would be hard to do, technically). This feature is often used to reason
+about inductive invariants.</p>
+<p><strong>Determinism and non-determinism.</strong> Our specification is quite boring: It
+describes exactly one initial state, and there is no variation in computing the
+next states.  We can make it a bit more interesting:</p>
+<pre><code class="language-tla">------------ MODULE coord2 ---------------
+VARIABLES x, y
+Init == x = 0 /\ (y = 0 \/ y = 1 \/ y = 2)
+Next == x' = x + 1 /\ y' = y + 1
+==========================================
+</code></pre>
+<p>Now our plot has a bit more variation. It presents three computations
+that are starting in three different initial states: <code>[x |-&gt; 0, y |-&gt; 0]</code>,
+<code>[x |-&gt; 0, y |-&gt; 1]</code>, and <code>[x |-&gt; 0, y |-&gt; 2]</code>.</p>
+<p><img src="./img/diagonal3.png" alt="diagonal3" /></p>
+<p>However, there is still not much variation in <code>Next</code>. For every state <code>s</code>,
+we can precisely say which state follows <code>s</code> according to <code>Next</code>. We can
+define <code>Next</code> as follows (note that <code>Init</code> is defined as in <code>coord</code>):</p>
+<pre><code class="language-tla">------------ MODULE coord3 -----------------
+VARIABLES x, y
+Init == x = 0 /\ y = 0
+Next == x' = x + 1 /\ (y' = x \/ y' = x + 1)
+============================================
+</code></pre>
+<p>The following plot shows the states that are visited by the computations
+of the specification <code>coord3</code>:</p>
+<p><img src="./img/diag2.png" alt="diag2" /></p>
+<p>Notice that specification <code>coord</code> describes one infinite computation (and
+infinitely many finite computations that are prefixes of the infinite
+computation).  Specification <code>coord2</code> describes three infinite computations.
+Specification <code>coord3</code> describes infinitely many infinite computations: At
+every step, <code>Next</code> may choose between <code>y' = x</code> or <code>y' = x+1</code>.</p>
+<p>Why are these specifications so different? The answer lies in non-determinism.
+Specification <code>coord</code> is completely deterministic: There is just one state that
+evaluates <code>Init</code> to <code>TRUE</code>, and every state is the first component of exactly
+one transition, as specified by <code>Next</code>. Specification <code>coord2</code> has
+non-determinism in the operator <code>Init</code>. Specification <code>coord3</code> has
+non-determinism in the operator <code>Next</code>.</p>
+<p><strong>Discussion.</strong>
+So far we have been talking about the intuition. If you would like to know more about
+the logic behind TLA+ and the semantics of TLA+, check Chapter 16 of
+[<a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>] and [<a href="https://members.loria.fr/SMerz/papers/tla+logic2008.pdf">The Specification Language TLA+</a>].</p>
+<p>When we look at the operators like <code>Init</code> and <code>Next</code> in our examples, we can
+guess the states and transitions. If we could ask our logician friend to guess
+the states and transitions for us every time we read a TLA+ specification, that
+would be great. But this approach does not scale well.</p>
+<p><strong>Can we explain non-determinism to a computer?</strong> It turns out that we can.
+In fact, many model checkers support non-determinism in their input languages.
+For instance, see [<a href="https://github.com/boogie-org/boogie">Boogie</a>] and [<a href="http://spinroot.com/spin/whatispin.html">Spin</a>].
+Of course, this comes with constraints on the structure of the specifications.
+After all, people are much better at solving certain logical puzzles than
+computers, though people get bored much faster than computers. </p>
+<p>To understand how TLC enumerates states, check Chapter 14 of [<a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying
+Systems</a>]. In the rest of this document, we focus on treatment of
+non-determinism that is close to the approach in Apalache.</p>
+<h2><a class="header" href="#explaining-non-determinism-to-computers" id="explaining-non-determinism-to-computers">Explaining non-determinism to computers</a></h2>
+<p>To see how a program could evaluate a TLA+ expression, we need two more
+ingredients: bindings and oracles.</p>
+<p><strong>Bindings.</strong> We generalize states to bindings: Given a set of names <code>N</code>, a
+<em>binding</em> maps every name from <code>N</code> to a value.  When <code>N</code> is the set of all
+state variables, a binding describes a state.  However, a binding does not have
+to assign values to all state variables.  Moreover, a binding may assign values
+to names that are not the names of state variables. In the following, we are
+using bindings over subsets of names that contain: (1) names of the state
+variables, and (2) names of the primed state variables.</p>
+<p>To graphically distinguish bindings from states, we use parentheses and arrows
+to define bindings. For instance, <code>(x -&gt; 1, x' -&gt; 3)</code> is a binding that maps
+<code>x</code> to 1 and <code>x'</code> to 3. (This is our notation, not a common TLA+ notation.)</p>
+<p><strong>Evaluating deterministic expressions.</strong> Consider the specification <code>coord</code>,
+which was given above.  By starting with the empty binding <code>()</code>, we can see how
+to automatically evaluate the body of the operator <code>Init</code>:</p>
+<pre><code class="language-tla">x = 0 /\ y = 0 
+</code></pre>
+<p>By following <a href="./booleans.html">semantics of conjunction</a>, we see that <code>/\</code> is
+evaluated from left-to-right. The left-hand side equality <code>x = 0</code> is treated as
+an assignment to <code>x</code>, since <code>x</code> is not assigned a value in the empty binding
+<code>()</code>, which it is evaluated against.  Hence, the expression <code>x = 0</code> produces
+the binding <code>(x -&gt; 0)</code>. When applied to this binding, the right-hand side
+equality <code>y = 0</code> is also treated as an assignment to <code>y</code>. Hence, the expression
+<code>y = 0</code> results in the binding <code>(x -&gt; 0, y -&gt; 0)</code>. This binding is defined over
+all state variables, so it gives us the only initial state <code>[x |-&gt; 0, y |-&gt; 0]</code>.</p>
+<p>Let's see how to evaluate the body of the operator <code>Next</code>:</p>
+<pre><code class="language-tla">x' = x + 1 /\ y' = y + 1
+</code></pre>
+<p>As we have seen, <code>Next</code> describes pairs of states. Thus, we will use produce
+bindings over non-primed and primed variables, that is, over <code>x, x', y, y'</code>.
+Non-primed variables represent the state before a transition fires, whereas
+primed variables represent the state after the transition has been fired.</p>
+<p>Consider evaluation of <code>Next</code> in the state <code>[x |-&gt; 3, y |-&gt; 3]</code>, that is, the
+evaluation starts with the binding <code>(x -&gt; 3, y -&gt; 3)</code>.  Similar to the
+conjunction in <code>Init</code>, the conjunction in <code>Next</code> first produces the binding <code>(x -&gt; 3, y -&gt; 3, x' -&gt; 4)</code> and then the binding <code>(x -&gt; 3, y -&gt; 3, x' -&gt; 4, y' -&gt; 4)</code>.  Moreover, <code>Next</code> evaluates to <code>TRUE</code> when it is evaluated against the
+binding <code>(x -&gt; 3, y -&gt; 3)</code>. Hence, the state <code>[x |-&gt; 3, y |-&gt; 3]</code> has the only
+successor <code>[x |-&gt; 4, y |-&gt; 4]</code>, when following the transition predicate <code>Next</code>.</p>
+<p>In contrast, if we evaluate <code>Next</code> when starting with the binding <code>(x -&gt; 3, y -&gt; 3, x' -&gt; 1, y' -&gt; 1)</code>, the result will be <code>FALSE</code>, as the left-hand side of
+the conjunction <code>x' = x + 1</code> evaluates to <code>FALSE</code>.  Indeed, <code>x'</code> has value <code>1</code>,
+whereas <code>x</code> has value <code>3</code>, so <code>x' = x + 1</code> is evaluated as <code>1 = 3 + 1</code> against
+the binding <code>(x -&gt; 3, y -&gt; 3, x' -&gt; 1, y' -&gt; 1)</code>, which gives us <code>FALSE</code>.
+Hence, the pair of states <code>[x |-&gt; 3, y |-&gt; 3]</code> and <code>[x |-&gt; 1, y |-&gt; 1]</code> is not
+a valid transition as represented by <code>Next</code>.</p>
+<p>So far, we only considered unconditional operators. Let's have a look at the
+operator <code>A</code>:</p>
+<pre><code class="language-tla">A ==
+  y &gt; x /\ y' = x /\ x' = x
+</code></pre>
+<p>Evaluation of <code>A</code> against the binding <code>(x -&gt; 3, y -&gt; 10)</code> produces the binding
+<code>(x -&gt; 3, y -&gt; 10, x' -&gt; 3, y' -&gt; 3)</code> and the result <code>TRUE</code>.  However, in the
+evaluation of <code>A</code> against the binding <code>(x -&gt; 10, y -&gt; 3)</code>, the leftmost
+condition <code>y &gt; x</code> evaluates to <code>FALSE</code>, so <code>A</code> evaluates to <code>FALSE</code> against the
+binding <code>(x -&gt; 10, y -&gt; 3)</code>. Hence, no next state can be produced from the
+the state <code>[x |-&gt; 3, y |-&gt; 10]</code> by using operator <code>A</code>.</p>
+<p>Until this moment, we have been considering only deterministic examples, that is,
+there was no &quot;branching&quot; in our reasoning. Such examples can be easily put into
+a program. What about the operators, where we can choose from multiple options
+that are simultaneously enabled? We introduce an oracle to resolve this issue.</p>
+<p><strong>Oracles.</strong> For multiple choices, we introduce an external device that we call
+an oracle. More formally, we assume that there is a device called <code>GUESS</code> that
+has the following properties:</p>
+<ol>
+<li>For a non-empty set <code>S</code>, a call <code>GUESS S</code> returns
+some value <code>v \in S</code>.</li>
+<li>A call <code>GUESS {}</code> halts the evaluation.</li>
+<li>There are no assumptions about fairness of <code>GUESS</code>. It is free to return
+elements in any order, produce duplicates and ignore some elements.</li>
+</ol>
+<p>Why do we call it a device? We cannot call it a function, as functions are
+deterministic by definition. For the same reason, it is not a TLA+
+operator. In logic, we would say that <code>GUESS</code> is simply a binary relation on
+sets and their elements, which would be no different from the membership
+relation <code>\in</code>.</p>
+<p>Why do we need <code>GUESS S</code> and cannot use <code>CHOOSE x \in S: TRUE</code> instead?
+Actually, <code>CHOOSE x \in S: TRUE</code> is <em>deterministic</em>. It is guaranteed to return
+the same value, when it is called on two equals sets: if <code>S = T</code>, then
+<code>(CHOOSE x \in S: TRUE) = (CHOOSE x \in T: TRUE)</code>. Our <code>GUESS S</code> does not have
+this guarantee. It is free to return an arbitrary element of <code>S</code> each time
+we call it.</p>
+<p>How to implement <code>GUESS S</code>? There is no general answer to this question.
+However, we know of multiple sources of non-determinism in computer science. So
+we can think of <code>GUESS S</code> as being one of the following implementations:</p>
+<ol>
+<li>
+<p><code>GUESS S</code> can be a remote procedure call in a distributed system.  Unless,
+we have centralized control over the distributed system, the returned value of
+RPC may be non-deterministic.</p>
+</li>
+<li>
+<p><code>GUESS S</code> can be simply the user input. In this case, the user resolves
+non-determinism.</p>
+</li>
+<li>
+<p><code>GUESS S</code> can be controlled by an adversary, who is trying to break the
+system.</p>
+</li>
+<li>
+<p><code>GUESS S</code> can pick an element by calling a pseudo-random number generator.
+However, note that RNG is a very special way of resolving non-determinism: It
+assumes probabilistic distribution of elements (usually, it is close to the
+<a href="https://en.wikipedia.org/wiki/Discrete_uniform_distribution">uniform
+distribution</a>).
+Thus, the probability of producing an unfair choice of elements with RNG will
+be approaching 0.</p>
+</li>
+</ol>
+<p>As you see, there are multiple sources of non-determinism. With <code>GUESS S</code> we can
+model all of them. As TLA+ does not introduce special primitives for different
+kinds of non-determinism, neither do we fix any implementation of <code>GUESS S</code>.</p>
+<p><strong>Halting.</strong> Note that <code>GUESS {}</code> halts the evaluation. What does it mean? The
+evaluation cannot continue. It does not imply that we have found a deadlock in
+our TLA+ specification. It simply means that we made wrong choices on the way.
+If we would like to enumerate all possible state successors, like TLC does, we
+have to backtrack (though that needs fairness of <code>GUESS</code>). In general, the
+course of action depends on the program analysis that you implement. For
+instance, a random simulator could simply backtrack and randomly choose another
+value.</p>
+<p><a name="nondetExists"></a></p>
+<h3><a class="header" href="#non-determinism-in-e-x-in-s-p" id="non-determinism-in-e-x-in-s-p">Non-determinism in <code>\E x \in S: P</code></a></h3>
+<p>We only have to consider the following case: <code>\E x \in S: P</code> is evaluated against
+a binding <code>s</code>, and there is a primed state variable <code>y'</code> that satisfies two
+conditions:</p>
+<ol>
+<li>The predicate <code>P</code> refers to <code>y'</code>, that is, <code>P</code> has to assign a value to <code>y'</code>.</li>
+<li>The value of <code>y'</code> is not defined yet, that is, binding <code>s</code> does not have a
+value for the name <code>y'</code>.</li>
+</ol>
+<p>If the above assumptions do not hold true, the expression <code>\E x \in S: P</code> does
+not have non-determinism and it can be evaluated by following the standard
+deterministic semantics of exists, see <a href="./logic.html">[Logic]</a>.</p>
+<p><strong>Note:</strong> We do not consider action operators like <code>UNCHANGED y</code>. They can be
+translated into an equivalent form, e.g., <code>UNCHANGED x</code> is equivalent to <code>y' = y</code>.</p>
+<p>Now it is very easy to evaluate <code>\E x \in S: P</code>. We simply evaluate the
+following expression:</p>
+<pre><code class="language-tla">  LET x == GUESS S IN P
+</code></pre>
+<p>It is the job of <code>GUESS S</code> to tell us what value of <code>x</code> should be
+evaluated. There are three possible outcomes:</p>
+<ol>
+<li>Predicate <code>P</code> evaluates to <code>TRUE</code> when using the provided value of <code>x</code>.
+In this case, <code>P</code> assigns the value of an expression <code>e</code> to <code>y'</code> as soon as
+the evaluator meets the expression <code>y' = e</code>.
+The evaluation may continue.</li>
+<li>Predicate <code>P</code> evaluates to <code>FALSE</code> when using the provided value of <code>x</code>.
+Well, that was a wrong guess. According to our semantics, the evaluation
+halts. See the above discussion on &quot;halting&quot;.</li>
+<li>The set <code>S</code> is empty, and <code>GUESS S</code> halts.  See the above discussion on
+&quot;halting&quot;. </li>
+</ol>
+<p><strong>Example.</strong> Consider the following specification:</p>
+<pre><code class="language-tla">VARIABLE x
+Init == x = 0
+Next ==
+  \E i \in Int:
+    i &gt; x /\ x' = i
+</code></pre>
+<p>It is easy to evaluate <code>Init</code>: It does not contain non-determinism and it
+produces the binding <code>(x -&gt; 0)</code> and the state <code>[x |-&gt; 0]</code>, respectively. When
+evaluating <code>Next</code> against the binding <code>(x -&gt; 0)</code>, we have plenty of choices.
+Actually, we have infinitely many choices, as the set <code>Int</code> is infinite.  TLC
+would immediately fail here. But there is no reason for our evaluation to fail.
+Simply ask the oracle. Below we give three examples of how the evaluation
+works:</p>
+<pre><code>1. (GUESS Int) returns 10. (LET i == 10 IN i &gt; x /\ x' = i) is TRUE, x' is assigned 10.
+2. (GUESS Int) returns 0. (LET i == 0 IN i &gt; x /\ x' = i) is FALSE. Halt.
+3. (GUESS Int) returns -20. (LET i == -20 IN i &gt; x /\ x' = i) is FALSE. Halt.
+</code></pre>
+<p><a name="nondetOr"></a></p>
+<h3><a class="header" href="#non-determinism-in-disjunctions" id="non-determinism-in-disjunctions">Non-determinism in disjunctions</a></h3>
+<p>Consider a disjunction that comprises <code>n</code> clauses:</p>
+<pre><code class="language-tla">  \/ P_1
+  \/ P_2
+  ...
+  \/ P_n
+</code></pre>
+<p>Assume that we evaluate the disjunction against a binding <code>s</code>. Further,
+let us say that <code>Unassigned(s)</code> is the set of variables that are not
+defined in <code>s</code>. For every <code>P_i</code> we construct the set of state variables 
+<code>Use_i</code> that contains every variable <code>x'</code> that is mentioned in <code>P_i</code>.
+There are three cases to consider:</p>
+<ol>
+<li>All sets <code>Use_i</code> agree on which variables are to be assigned.
+Formally, <code>Use_i \intersect Unassigned(s) = Use_j \intersect Unassigned(s) /= {}</code>
+for <code>i, j \in 1..n</code>. This is the case that we consider below.</li>
+<li>Two clauses disagree on the set of variables to be assigned.
+Formally, there is a pair <code>i, j \in 1..n</code> that satisfy the inequality:
+<code>Use_i \intersect Unassigned(s) /= Use_j \intersect Unassigned(s)</code>.
+In this case, the specification is ill-structured. TLC would
+raise an error when it found a binding like this.
+Apalache would detect this problem when preprocessing the specification.</li>
+<li>The clauses do not assign values to the primed variables.
+Formally, <code>Use_i \intersect Unassigned(s) = {}</code> for <code>i \in 1..n</code>.
+This is the deterministic case. It can be evaluated by using the
+deterministic semantics of <a href="./boolean.html">Boolean operators</a>.</li>
+</ol>
+<p>We introduce a fresh variable to contain the choice of the clause.  Here we
+call it <code>choice</code>. In a real implementation of an evaluator, we would have to
+give it a unique name. Now we evaluate the following <em>conjunction</em>:</p>
+<pre><code class="language-tla">LET choice == GUESS 1..n IN
+  /\ (choice = 1) =&gt; P_1
+  /\ (choice = 2) =&gt; P_2
+  ...
+  /\ (choice = n) =&gt; P_n
+</code></pre>
+<p>Importantly, at most one clause in the conjunction will be actually evaluated.
+As a result, we cannot produce conflicting assignments to the primed variables.</p>
+<p><strong>Example:</strong> Consider the following specification:</p>
+<pre><code class="language-tla">VARIABLES x, y
+Init == x == 0 /\ y == 0
+Next ==
+    \/ x &gt;= 0 /\ y' = x /\ x' = x + 1
+    \/ x &lt;= 0 /\ y' = -x /\ x' = -(x + 1)
+</code></pre>
+<p>As you can see, the operator <code>Next</code> is non-deterministic since both clauses may
+be activated when <code>x = 0</code>.</p>
+<p>First, let's evaluate <code>Next</code> against the binding <code>(x -&gt; 3, y -&gt; 3)</code>:</p>
+<pre><code>1. (GUESS 1..2) returns 1. (LET i == 1 IN Next) is TRUE, x' is assigned 4, y' is assigned 3.
+2. (GUESS 1..2) returns 2. (LET i == 2 IN Next) is FALSE. Halt.
+</code></pre>
+<p>Second, evaluate <code>Next</code> against the binding <code>(x -&gt; -3, y -&gt; 3)</code>:</p>
+<pre><code>1. (GUESS 1..2) returns 1. (LET i == 1 IN Next) is FALSE. Halt.
+2. (GUESS 1..2) returns 2. (LET i == 2 IN Next) is TRUE, x' is assigned 4, y' is assigned -3.
+</code></pre>
+<p>Third, evaluate <code>Next</code> against the binding <code>(x -&gt; 0, y -&gt; 0)</code>:</p>
+<pre><code>1. (GUESS 1..2) returns 1. (LET i == 1 IN Next) is TRUE. x' is assigned 1, y' is assigned 0.
+2. (GUESS 1..2) returns 2. (LET i == 2 IN Next) is TRUE, x' is assigned -1, y' is assigned 0.
+</code></pre>
+<p><em>Important note. In contrast to <a href="./booleans.html">short-circuiting of
+disjunction</a> in the deterministic case, we have
+non-deterministic choice here. Hence, short-circuiting does not apply to
+non-deterministic disjunctions.</em></p>
+<p><a name="nondetIte"></a></p>
+<h3><a class="header" href="#non-determinism-in-boolean-if-then-else" id="non-determinism-in-boolean-if-then-else">Non-determinism in Boolean <code>IF-THEN-ELSE</code></a></h3>
+<p>For the deterministic use of <code>IF-THEN-ELSE</code>, see <a href="./conditionals.html">Deterministic
+conditionals</a>.</p>
+<p>Consider an <code>IF-THEN-ELSE</code> expression to be evaluated in a partial state <code>s</code>:</p>
+<pre><code class="language-tla">IF A THEN B ELSE C
+</code></pre>
+<p>Here we assume that both <code>B</code> and <code>C</code> produce Boolean results and <code>B</code> and <code>C</code>
+refer to at least one primed variable <code>y'</code> that is undefined in <code>s</code>. Otherwise, the
+expression can be evaluated as a <a href="./conditionals.html">deterministic
+conditional</a>.</p>
+<p>In this case, <code>IF-THEN-ELSE</code> can be evaluated as the equivalent expression:</p>
+<pre><code class="language-tla">  \/  P /\ B
+  \/ ~P /\ C
+</code></pre>
+<p><em>We do not recommend you to use IF-THEN-ELSE with non-determinism. The structure
+of the disjunction provides a clear indication that the expression may
+assign to variables as a side effect. IF-THEN-ELSE has two thinking
+steps: what is the expected result, and what are the possible side effects.</em></p>
+<p><strong>Warning:</strong> While it is technically possible to write <code>x' = e</code> inside the
+condition, the effect of <code>x' = e</code> is not obvious when <code>x'</code> is not assigned a
+value.</p>
+<p><a name="nondetCase"></a></p>
+<h3><a class="header" href="#non-determinism-in-boolean-case" id="non-determinism-in-boolean-case">Non-determinism in Boolean <code>CASE</code></a></h3>
+<p>For the deterministic use of <code>CASE</code>,
+see <a href="./conditionals.html">Deterministic conditionals</a>.</p>
+<p><strong>CASE without OTHER.</strong><br />
+Consider a <code>CASE</code> expression:</p>
+<pre><code class="language-tla">CASE P_1 -&gt; e_1
+  [] P_2 -&gt; e_2
+  ...
+  [] P_n -&gt; e_n
+</code></pre>
+<p>We assume that <code>e_1, ..., e_n</code> produce Boolean results. Otherwise,
+see <a href="./conditionals.html">Deterministic conditionals</a>.</p>
+<p>This operator is equivalent to the following disjunction:</p>
+<pre><code class="language-tla">\/ P_1 /\ e_1
+\/ P_2 /\ e_2
+...
+\/ P_n /\ e_n
+</code></pre>
+<p><em>Similar to IF-THEN-ELSE, we do not recommend using CASE for expressing
+non-determinism. When you are using disjunction, the Boolean result and
+possible side effects are expected.</em></p>
+<p><strong>CASE with OTHER.</strong> The more general form of <code>CASE</code> is like follows:</p>
+<pre><code class="language-tla">CASE P_1 -&gt; e_1
+  [] P_2 -&gt; e_2
+  ...
+  [] P_n -&gt; e_n
+  [] OTHER -&gt; e_other
+</code></pre>
+<p>This operator is equivalent to the following disjunction:</p>
+<pre><code class="language-tla">\/ P_1 /\ e_1
+\/ P_2 /\ e_2
+...
+\/ P_n /\ e_n
+\/ ~P_1 /\ ... /\ ~P_n /\ e_other
+</code></pre>
+<p><em>The use of CASE with OTHER together with non-determinism is quite rare.
+It is not clear why would one need a fallback option in the Boolean formula.
+We recommend you to use the disjunctive form instead.</em></p>
+<p><a href="./standard-operators.html">[Back to all operators]</a></p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../lang/booleans.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../lang/conditionals.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../lang/booleans.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../lang/conditionals.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

@@ -1,0 +1,626 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Integers - Apalache User Manual</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../manual.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../tlc-config.html"><strong aria-hidden="true">3.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../types-and-annotations.html"><strong aria-hidden="true">4.</strong> Types and Annotations</a></li><li class="chapter-item expanded "><a href="../features.html"><strong aria-hidden="true">5.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../preprocessing.html"><strong aria-hidden="true">6.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../tuning.html"><strong aria-hidden="true">7.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../kera.html"><strong aria-hidden="true">8.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded "><a href="../types-api.html"><strong aria-hidden="true">9.</strong> Type Reconstruction API</a></li><li class="chapter-item expanded "><a href="../smt/Cardinality.html"><strong aria-hidden="true">10.</strong> SMT encoding for set cardinalities</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">11.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">12.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/booleans.html"><strong aria-hidden="true">12.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../lang/control-and-nondeterminism.html"><strong aria-hidden="true">12.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../lang/conditionals.html"><strong aria-hidden="true">12.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../lang/integers.html" class="active"><strong aria-hidden="true">12.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../lang/sets.html"><strong aria-hidden="true">12.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../lang/logic.html"><strong aria-hidden="true">12.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../lang/functions.html"><strong aria-hidden="true">12.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../lang/records.html"><strong aria-hidden="true">12.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../lang/tuples.html"><strong aria-hidden="true">12.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../lang/sequences.html"><strong aria-hidden="true">12.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">12.11.</strong> Bags</div></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">12.12.</strong> Standard Operators</a></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">12.13.</strong> User Operators</a></li></ol></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">13.</strong> User-defined operators</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.</strong> Modules, Extends, and Instances</div></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">15.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../idiomatic/000keep-minimum-state-variables.html"><strong aria-hidden="true">16.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../idiomatic/001assignments.html"><strong aria-hidden="true">17.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../idiomatic/002primes.html"><strong aria-hidden="true">18.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/001rfc-types.html"><strong aria-hidden="true">19.</strong> RFC 001: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">20.</strong> ADR-002: types and type annotations</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache User Manual</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#integers" id="integers">Integers</a></h1>
+<p><a href="./standard-operators.html">[Back to all operators]</a></p>
+<p>The integer literals belong to the core language. They are written by
+using the standard syntax: 0, 1, -1, 2, -2, 3, -3, ... Importantly, TLA+
+integers are unbounded. They do not have any fixed bit width, and they cannot
+overflow.</p>
+<p>The integer operators are defined in the standard module <code>Integers</code>. To use
+it, write the <code>EXTENDS</code> clause in the first lines of your module. Like this:</p>
+<pre><code class="language-tla">---- MODULE MyArithmetics ----
+EXTENDS Integers
+...
+==============================
+</code></pre>
+<h2><a class="header" href="#integers-in-apalache-and-smt" id="integers-in-apalache-and-smt">Integers in Apalache and SMT</a></h2>
+<p>Although you can write arbitrary expressions over integers in TLA+, Apalache
+translates these expressions as constraints in
+<a href="https://en.wikipedia.org/wiki/Satisfiability_modulo_theories">SMT</a>.  Some
+expressions are easier to solve than the others. For instance, the expression
+<code>2 * x &gt; 5</code> belongs to linear integer arithmetic, which can be solved more
+efficiently than general arithmetic.  For state variables <code>x</code> and <code>y</code>, the
+expression <code>x * y &gt; 5</code> belongs to non-linear integer arithmetic, which is
+harder to solve than linear arithmetic.</p>
+<p>When your specification is using only integer literals, e.g., <code>1</code>, <code>2</code>, <code>42</code>,
+but none of the operators from the <code>Integers</code> module, the integers can
+be avoided altogether.  For instance, you can replace the integer constants
+with string constants, e.g., <code>&quot;1&quot;</code>, <code>&quot;2&quot;</code>, <code>&quot;42&quot;</code>. The string constants are
+translated as constants in the SMT constraints. This simple trick may bring
+your specification into a much simpler theory. Sometimes, this trick allows z3
+to use parallel algorithms.</p>
+<p><a name="const"></a></p>
+<h2><a class="header" href="#constants" id="constants">Constants</a></h2>
+<p>The module <code>Integers</code> defines two constant sets (technically, they are
+operators without arguments):</p>
+<ul>
+<li>The set <code>Int</code> that consists of all integers. <em>This set is infinite.</em></li>
+<li>The set <code>Nat</code> that consists of all natural numbers, that is,
+<code>Nat</code> contains every integer <code>x</code> that has the property <code>x &gt;= 0</code>.
+<em>This set is infinite.</em></li>
+</ul>
+<hr />
+<h2><a class="header" href="#operators" id="operators">Operators</a></h2>
+<p><a name="range"></a></p>
+<h3><a class="header" href="#integer-range" id="integer-range">Integer range</a></h3>
+<p><strong>Notation:</strong> <code>a..b</code></p>
+<p><strong>LaTeX notation:</strong> <code>a..b</code></p>
+<p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
+are evaluated to integer values.</p>
+<p><strong>Effect:</strong> <code>a..b</code> evaluates to the finite set <code>{i \in Int: a &lt;= i /\ i &lt;= b}</code>,
+that is, the set of all integers in the range from <code>a</code> to <code>b</code>, including <code>a</code>
+and <code>b</code>.  If <code>a &gt; b</code>, then <code>a..b</code> is the empty set <code>{}</code>.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> In pure TLA+, the result is undefined, if one of the arguments
+evaluates to a non-integer value. In this case, Apalache statically reports a
+type error, whereas TLC reports a runtime error.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  0..10    \* { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }
+  -5..3    \* { -5, -4, -3, -2, -1, 0, 1, 2, 3 }
+  10..0    \* { }
+  &quot;a&quot;..&quot;z&quot; \* runtime error in TLC, type error in Apalache
+  {1}..{3} \* runtime error in TLC, type error in Apalache
+</code></pre>
+<p><strong>Example in Python:</strong> <code>a..b</code> can be written as <code>set(range(a, b + 1))</code> in
+python.</p>
+<pre><code class="language-python">  set(range(0, 10 + 1))     # {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+  set(range(10, 2))         # set()
+</code></pre>
+<hr />
+<p><a name="uminus"></a></p>
+<h3><a class="header" href="#unary-integer-negation" id="unary-integer-negation">Unary integer negation</a></h3>
+<p><strong>Notation:</strong> <code>-i</code></p>
+<p><strong>LaTeX notation:</strong> <code>-i</code></p>
+<p><strong>Arguments:</strong> One argument. The result is only defined when the argument
+evaluates to an integer.</p>
+<p><strong>Effect:</strong> <code>-i</code> evaluates to the negation of <code>i</code>.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> In pure TLA+, the result is undefined, if the argument
+evaluates to a non-integer value. In this case, Apalache statically reports a
+type error, whereas TLC reports a runtime error.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  -(5)    \* -5, note that '-5' is just a literal, not operator application
+  -(-5)   \* 5
+  -x      \* negated value of x
+</code></pre>
+<p><strong>Example in Python:</strong> </p>
+<pre><code class="language-python">  -(5)
+  -(-5)
+</code></pre>
+<hr />
+<p><a name="plus"></a></p>
+<h3><a class="header" href="#integer-addition" id="integer-addition">Integer addition</a></h3>
+<p><strong>Notation:</strong> <code>a + b</code></p>
+<p><strong>LaTeX notation:</strong> <code>a + b</code></p>
+<p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
+are evaluated to integer values.</p>
+<p><strong>Effect:</strong> <code>a + b</code> evaluates to the sum of <code>a</code> and <code>b</code>.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+one of the arguments evaluates to a non-integer value. In this case, Apalache
+statically reports a type error, whereas TLC reports a runtime error.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  5 + 3     \* 8
+  (-5) + 3  \* -2
+</code></pre>
+<p><strong>Example in Python:</strong> </p>
+<pre><code class="language-python">  5 + 3
+  (-5) + 3
+</code></pre>
+<hr />
+<p><a name="minus"></a></p>
+<h3><a class="header" href="#integer-subtraction" id="integer-subtraction">Integer subtraction</a></h3>
+<p><strong>Notation:</strong> <code>a - b</code></p>
+<p><strong>LaTeX notation:</strong> <code>a - b</code></p>
+<p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
+are evaluated to integer values.</p>
+<p><strong>Effect:</strong> <code>a - b</code> evaluates to the difference of <code>a</code> and <code>b</code>.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+one of the arguments evaluates to a non-integer value. In this case, Apalache
+statically reports a type error, whereas TLC reports a runtime error.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  5 - 3         \* 2
+  (-5) - 3      \* -8
+  (-5) - (-3)   \* -2
+</code></pre>
+<p><strong>Example in Python:</strong> </p>
+<pre><code class="language-python">  5 - 3
+  (-5) - 3
+  (-5) - (-3)
+</code></pre>
+<hr />
+<p><a name="mult"></a></p>
+<h3><a class="header" href="#integer-multiplication" id="integer-multiplication">Integer multiplication</a></h3>
+<p><strong>Notation:</strong> <code>a * b</code></p>
+<p><strong>LaTeX notation:</strong> <code>a * b</code></p>
+<p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
+are evaluated to integer values.</p>
+<p><strong>Effect:</strong> <code>a * b</code> evaluates to the product of <code>a</code> and <code>b</code>.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+one of the arguments evaluates to a non-integer value. In this case, Apalache
+statically reports a type error, whereas TLC reports a runtime error.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  5 * 3     \* 15
+  (-5) * 3  \* -15
+</code></pre>
+<p><strong>Example in Python:</strong> </p>
+<pre><code class="language-python">  5 * 3
+  (-5) * 3
+</code></pre>
+<hr />
+<p><a name="div"></a></p>
+<h3><a class="header" href="#integer-division" id="integer-division">Integer division</a></h3>
+<p><strong>Notation:</strong> <code>a \div b</code></p>
+<p><strong>LaTeX notation:</strong> <img src="./img/div.png" alt="div" /></p>
+<p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
+are evaluated to integer values, and the second argument is different from 0.</p>
+<p><strong>Effect:</strong> <code>a \div b</code> is defined as follows:</p>
+<ol>
+<li>When <code>a &gt;= 0</code> and <code>b &gt; 0</code>, then the result of <code>a \div b</code> is
+the integer <code>c</code> that has the property: <code>a = b * c + d</code>
+for some <code>d</code> in <code>0..(b-1)</code>.</li>
+<li>When <code>a &lt; 0</code> and <code>b &gt; 0</code>, then the result of <code>a \div b</code> is
+the integer <code>c</code> that has the property: <code>a = b * c + d</code>
+for some <code>d</code> in <code>0..(b-1)</code>.</li>
+<li>When <code>a &gt;= 0</code> and <code>b &lt; 0</code>, then the result of <code>a \div b</code> is
+the integer <code>c</code> that has the property: <code>a = b * c + d</code>
+for some <code>d</code> in <code>0..(-b-1)</code>.</li>
+<li>When <code>a &lt; 0</code> and <code>b &lt; 0</code>, then the result of <code>a \div b</code> is
+the integer <code>c</code> that has the property: <code>a = b * c + d</code>
+for some <code>d</code> in <code>0..(-b-1)</code>.</li>
+</ol>
+<p><em>When <code>a &lt; 0</code> or <code>b &lt; 0</code>, the result of the integer division <code>a \div b</code> according to the TLA+ definition is different from the integer division <code>a / b</code> in the programming languages (C, Java, Scala, Rust).  See the
+table below.</em></p>
+<table><thead><tr><th>   C (clang 12)</th><th>Scala 2.13</th><th>Rust</th><th>Python 3.8.6</th><th>TLA+ (TLC)</th><th>SMT (z3 4.8.8)</th></tr></thead><tbody>
+<tr><td>100 / 3 == 33</td><td>100 / 3 == 33</td><td>100 / 3 == 33</td><td>100 // 3 == 33</td><td>(100 \div 3) = 33</td><td>(assert (= 33 (div 100 3)))</td></tr>
+<tr><td>-100 / 3 == -33</td><td>-100 / 3 == -33</td><td>-100 / 3 == -33</td><td>-100 // 3 == -34</td><td>((-100) \div 3) = -34</td><td>(assert (= (- 0 34) (div (- 0 100) 3)))</td></tr>
+<tr><td>100 / (-3) == -33</td><td>100 / (-3) == -33</td><td>100 / (-3) == -33</td><td>100 // (-3) == -34</td><td>(100 \div (-3)) = -34</td><td>(assert (= (- 0 33) (div 100 (- 0 3))))</td></tr>
+<tr><td>-100 / (-3) == 33</td><td>-100 / (-3) == 33</td><td>-100 / (-3) == 33</td><td>-100 // (-3) == 33</td><td>((-100) \div (-3)) = 33</td><td>(assert (= 34 (div (- 0 100) (- 0 3))))</td></tr>
+</tbody></table>
+<p><em>Unfortunately, <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a> only gives us the definition for the case
+<code>b &gt; 0</code> (that is, cases 1-2 in our description). The implementation in SMT and
+TLC produce incompatible results for <code>b &lt; 0</code>. See <a href="https://github.com/informalsystems/apalache/issues/331">issue #331 in
+Apalache</a>.</em></p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+one of the arguments evaluates to a non-integer value. In this case, Apalache
+statically reports a type error, whereas TLC reports a runtime error. The value
+of <code>a \div b</code> is undefined for <code>b = 0</code>.</p>
+<p><strong>Example in TLA+:</strong> Here are the examples for the four combinations of signs
+(according to TLC):</p>
+<pre><code class="language-tla">    100  \div   3   \*  33
+  (-100) \div   3   \* -34
+    100  \div (-3)  \* -34 in TLC
+  (-100) \div (-3)  \*  33 in TLC
+</code></pre>
+<p><strong>Example in Python:</strong> Here are the examples for the four combinations of signs
+to produce the same results as in TLA+:</p>
+<pre><code class="language-python">  100    //   3     #  33
+  -100   //   3     # -34
+  100    // (-3)    # -34
+  (-100) // (-3)    #  33
+</code></pre>
+<hr />
+<p><a name="mod"></a></p>
+<h3><a class="header" href="#integer-remainder" id="integer-remainder">Integer remainder</a></h3>
+<p><strong>Notation:</strong> <code>a % b</code></p>
+<p><strong>LaTeX notation:</strong> <code>a % b</code></p>
+<p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
+are evaluated to integer values, and the second argument is different from 0.</p>
+<p><strong>Effect:</strong> <code>a % b</code> is the number <code>c</code> that has the property:
+<code>a = b * (a \div b) + c</code>.</p>
+<p><em>Note that when <code>a &lt; 0</code> or <code>b &lt; 0</code>, the result of the integer remainder <code>a % b</code>
+according to the TLA+ definition is different from the integer remainder <code>a % b</code> in the programming languages (C, Python, Java, Scala, Rust).  See the
+examples below.</em></p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+one of the arguments evaluates to a non-integer value. In this case, Apalache
+statically reports a type error, whereas TLC reports a runtime error. The value
+of <code>a % b</code> is undefined for <code>b = 0</code>.</p>
+<p><strong>Example in TLA+:</strong> Here are the examples for the four combinations of signs:</p>
+<pre><code class="language-tla">  100  % 3      \* 1
+  -100 % (-3)   \* 2
+  100  % (-3)   \* 1
+  -100 % 3      \* 2
+</code></pre>
+<p><strong>Example in Python:</strong> Here are the examples for the four combinations of signs
+to produce the same results as in TLA+:</p>
+<pre><code class="language-python">  100 % 3          # 1
+  -100 % (-3) + 3  # 2
+  100 % (-3) + 3   # 1
+  -100 % 3         # 2
+</code></pre>
+<hr />
+<p><a name="pow"></a></p>
+<h3><a class="header" href="#integer-exponentiation" id="integer-exponentiation">Integer exponentiation</a></h3>
+<p><strong>Notation:</strong> <code>a^b</code></p>
+<p><strong>LaTeX notation:</strong> <img src="./img/exp.png" alt="exp" /></p>
+<p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
+are evaluated to integer values, and these values fall into one of the several
+cases:</p>
+<ol>
+<li><code>b &gt; 0</code>,</li>
+<li><code>b = 0</code> and <code>a /= 0</code>.</li>
+</ol>
+<p><strong>Effect:</strong> <code>a^b</code> evaluates to <code>a</code> raised to the <code>b</code>-th power:</p>
+<ul>
+<li>If <code>b = 1</code>, then <code>a^b</code> is defined as <code>a</code>.</li>
+<li>If <code>a = 0</code> and <code>b &gt; 0</code>, then <code>a^b</code> is defined as <code>0</code>.</li>
+<li>If <code>a /= 0</code> and <code>b &gt; 1</code>, then <code>a^b</code> is defined as <code>a * a^(b-1)</code>.</li>
+<li>In all other cases, <code>a^b</code> is undefined.</li>
+</ul>
+<p>In TLA+, <code>a^b</code> extends to reals, see Chapter 18 in <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>.
+For instance, <code>3^(-5)</code> is defined on reals. However, reals are supported
+neither by TLC, nor by Apalache.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+one of the arguments evaluates to a non-integer value. In this case, Apalache
+statically reports a type error, whereas TLC reports a runtime error.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  5^3       \* 125
+  (-5)^3    \* -125
+  0^3       \* 0
+  1^5       \* 1
+  (-1)^5    \* -1
+  0^0       \* undefined on integers, TLC reports a runtime error
+  5^(-3)    \* undefined on integers, TLC reports a runtime error
+</code></pre>
+<p><strong>Example in Python:</strong> </p>
+<pre><code class="language-python">  5 ** 3
+  (-5) ** 3
+  0 ** 3
+  1 ** 5
+  (-1) ** 5
+  0 ** 0    # 0 in python %)
+  5 ** (-3) # floating point 0.008 in python
+</code></pre>
+<hr />
+<p><a name="lt"></a></p>
+<h3><a class="header" href="#integer-less-than" id="integer-less-than">Integer less-than</a></h3>
+<p><strong>Notation:</strong> <code>a &lt; b</code></p>
+<p><strong>LaTeX notation:</strong> <code>a &lt; b</code></p>
+<p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
+are evaluated to integer values.</p>
+<p><strong>Effect:</strong> <code>a &lt; b</code> evaluates to:</p>
+<ul>
+<li><code>TRUE</code>, if <code>a</code> is less than <code>b</code>,</li>
+<li><code>FALSE</code>, otherwise. </li>
+</ul>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> In pure TLA+, the result is undefined, if
+one of the arguments evaluates to a non-integer value. In this case, Apalache
+statically reports a type error, whereas TLC reports a runtime error.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  1 &lt; 5     \* TRUE
+  5 &lt; 5     \* FALSE
+  5 &lt; 1     \* FALSE
+</code></pre>
+<p><strong>Example in Python:</strong> </p>
+<pre><code class="language-python">  1 &lt; 5
+  5 &lt; 5
+  5 &lt; 1
+</code></pre>
+<hr />
+<p><a name="lte"></a></p>
+<h3><a class="header" href="#integer-less-than-or-equal" id="integer-less-than-or-equal">Integer less-than-or-equal</a></h3>
+<p><strong>Notation:</strong> <code>a &lt;= b</code> or <code>a =&lt; b</code> or <code>a \leq b</code></p>
+<p><strong>LaTeX notation:</strong>  <img src="./img/leq.png" alt="leq" /></p>
+<p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
+are evaluated to integer values.</p>
+<p><strong>Effect:</strong> <code>a &lt;= b</code> evaluates to:</p>
+<ul>
+<li><code>TRUE</code>, if <code>a &lt; b</code> or <code>a = b</code>.</li>
+<li><code>FALSE</code>, otherwise. </li>
+</ul>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+one of the arguments evaluates to a non-integer value. In this case, Apalache
+statically reports a type error, whereas TLC reports a runtime error.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  1 &lt;= 5     \* TRUE
+  5 &lt;= 5     \* TRUE
+  5 &lt;= 1     \* FALSE
+</code></pre>
+<p><strong>Example in Python:</strong> </p>
+<pre><code class="language-python">  1 &lt;= 5
+  5 &lt;= 5
+  5 &lt;= 1
+</code></pre>
+<hr />
+<p><a name="gt"></a></p>
+<h3><a class="header" href="#integer-greater-than" id="integer-greater-than">Integer greater-than</a></h3>
+<p><strong>Notation:</strong> <code>a &gt; b</code></p>
+<p><strong>LaTeX notation:</strong> <code>a &gt; b</code></p>
+<p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
+are evaluated to integer values.</p>
+<p><strong>Effect:</strong> <code>a &gt; b</code> evaluates to:</p>
+<ul>
+<li><code>TRUE</code>, if <code>a</code> is greater than <code>b</code>,</li>
+<li><code>FALSE</code>, otherwise. </li>
+</ul>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+one of the arguments evaluates to a non-integer value. In this case, Apalache
+statically reports a type error, whereas TLC reports a runtime error.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  1 &gt; 5     \* FALSE
+  5 &lt; 5     \* FALSE
+  5 &gt; 1     \* TRUE
+</code></pre>
+<p><strong>Example in Python:</strong> </p>
+<pre><code class="language-python">  1 &gt; 5
+  5 &gt; 5
+  5 &gt; 1
+</code></pre>
+<hr />
+<p><a name="gte"></a></p>
+<h3><a class="header" href="#integer-greater-than-or-equal" id="integer-greater-than-or-equal">Integer greater-than-or-equal</a></h3>
+<p><strong>Notation:</strong> <code>a &gt;= b</code> or <code>a \geq b</code></p>
+<p><strong>LaTeX notation:</strong>  <img src="./img/geq.png" alt="geq" /></p>
+<p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
+are evaluated to integer values.</p>
+<p><strong>Effect:</strong> <code>a &gt;= b</code> evaluates to:</p>
+<ul>
+<li><code>TRUE</code>, if <code>a &gt; b</code> or <code>a = b</code>.</li>
+<li><code>FALSE</code>, otherwise. </li>
+</ul>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+one of the arguments evaluates to a non-integer value. In this case, Apalache
+statically reports a type error, whereas TLC reports a runtime error.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  1 &gt;= 5     \* FALSE
+  5 &gt;= 5     \* TRUE
+  5 &gt;= 1     \* TRUE
+</code></pre>
+<p><strong>Example in Python:</strong> </p>
+<pre><code class="language-python">  1 &gt;= 5
+  5 &gt;= 5
+  5 &gt;= 1
+</code></pre>
+<hr />
+<p><a name="eq"></a></p>
+<h3><a class="header" href="#equality-and-inequality" id="equality-and-inequality">Equality and inequality</a></h3>
+<p>The operators <code>a = b</code> and <code>a /= b</code> are core operators of TLA+ and thus they are
+not defined in the module <code>Integers</code>, see <a href="./logic.html">Logic</a>.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../lang/conditionals.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../lang/sets.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../lang/conditionals.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../lang/sets.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

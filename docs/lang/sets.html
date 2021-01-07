@@ -1,0 +1,792 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Sets - Apalache User Manual</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../manual.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../tlc-config.html"><strong aria-hidden="true">3.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../types-and-annotations.html"><strong aria-hidden="true">4.</strong> Types and Annotations</a></li><li class="chapter-item expanded "><a href="../features.html"><strong aria-hidden="true">5.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../preprocessing.html"><strong aria-hidden="true">6.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../tuning.html"><strong aria-hidden="true">7.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../kera.html"><strong aria-hidden="true">8.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded "><a href="../types-api.html"><strong aria-hidden="true">9.</strong> Type Reconstruction API</a></li><li class="chapter-item expanded "><a href="../smt/Cardinality.html"><strong aria-hidden="true">10.</strong> SMT encoding for set cardinalities</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">11.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">12.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/booleans.html"><strong aria-hidden="true">12.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../lang/control-and-nondeterminism.html"><strong aria-hidden="true">12.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../lang/conditionals.html"><strong aria-hidden="true">12.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../lang/integers.html"><strong aria-hidden="true">12.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../lang/sets.html" class="active"><strong aria-hidden="true">12.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../lang/logic.html"><strong aria-hidden="true">12.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../lang/functions.html"><strong aria-hidden="true">12.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../lang/records.html"><strong aria-hidden="true">12.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../lang/tuples.html"><strong aria-hidden="true">12.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../lang/sequences.html"><strong aria-hidden="true">12.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">12.11.</strong> Bags</div></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">12.12.</strong> Standard Operators</a></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">12.13.</strong> User Operators</a></li></ol></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">13.</strong> User-defined operators</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.</strong> Modules, Extends, and Instances</div></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">15.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../idiomatic/000keep-minimum-state-variables.html"><strong aria-hidden="true">16.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../idiomatic/001assignments.html"><strong aria-hidden="true">17.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../idiomatic/002primes.html"><strong aria-hidden="true">18.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/001rfc-types.html"><strong aria-hidden="true">19.</strong> RFC 001: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">20.</strong> ADR-002: types and type annotations</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache User Manual</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#sets" id="sets">Sets</a></h1>
+<p><a href="./standard-operators.html">[Back to all operators]</a></p>
+<p>Sets are the foundational data structure in TLA+. (Similar to what lists are in
+Lisp and Python). The other TLA+ data structures can be all expressed with
+sets: functions, records, tuples, sequences. In theory, even Booleans and
+integers can be expressed with sets. In practice, TLA+ tools treat Booleans and
+integers as special values that are different from sets. It is important to
+understand TLA+ sets well. In contrast to programming languages, there is no
+performance penalty for using sets instead of sequences: TLA+ does not have a
+compiler, the efficiency is measured in the time it takes the human brain to
+understand the specification.</p>
+<p><strong>Immutability.</strong> In TLA+, a set is an <em>immutable</em> data structure that stores
+its elements in <em>no particular order</em>. All elements of a set are unique. In
+fact, those two sentences do not make a lot of sense in TLA+. We have written
+them to build the bridge from a programming language to TLA+, as TLA+ does not
+have a memory model. :wink:</p>
+<p>Sets may be constructed by enumerating values in <em>some order</em>, allowing for
+duplicates:</p>
+<pre><code class="language-tla">  { 1, 2, 3, 2, 4, 3 }
+</code></pre>
+<p>Note that the above set is equal to the sets <code>{ 1, 2, 3, 4 }</code> and <code>{ 4, 3, 2, 1 }</code>. They are actually the same set, though they are constructed by passing
+various number of arguments in different orders.</p>
+<p>The most basic set operation is the set membership that checks, whether a set
+contains a value:</p>
+<pre><code class="language-tla">  3 \in S
+</code></pre>
+<p>TLA+ sets are similar to
+<a href="https://docs.python.org/3/library/stdtypes.html#frozenset"><code>frozenset</code></a> in
+Python and immutable <code>Set[Object]</code> in Java.  In contrast to programming
+languages, set elements do not need hashes, as implementation efficiency is not
+an issue in TLA+.</p>
+<p><strong>Types.</strong> In pure TLA+, sets may contain any kinds of elements. For instance,
+a set may mix integers, Booleans, and other sets:</p>
+<pre><code class="language-tla">  { 2020, { &quot;is&quot; }, TRUE, &quot;fail&quot; }
+</code></pre>
+<p>TLC restricts set elements to comparable values. See Section 14.7.2 of
+<a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>. In a nutshell, if you do not mix the following five
+kinds of values in a single set, TLC would not complain about your sets:</p>
+<ol>
+<li>Booleans,</li>
+<li>integers,</li>
+<li>strings,</li>
+<li>sets,</li>
+<li>functions, tuples, records, sequences.</li>
+</ol>
+<p>Apalache requires set elements to have the same type. This is enforced by the
+type checker.</p>
+<hr />
+<h2><a class="header" href="#operators" id="operators">Operators</a></h2>
+<p><a name="setEnum"></a></p>
+<h3><a class="header" href="#set-constructor-by-enumeration" id="set-constructor-by-enumeration">Set constructor by enumeration</a></h3>
+<p><strong>Notation:</strong> <code>{e_1, ..., e_n}</code></p>
+<p><strong>LaTeX notation:</strong> <code>{e_1, ..., e_n}</code></p>
+<p><strong>Arguments:</strong> Any number of arguments, <code>n &gt;= 0</code>.</p>
+<p><strong>Effect:</strong> Produce the set that contains the values of the expressions <code>e_1, ..., e_n</code>, in no particular order, and only these values. If <code>n = 0</code>, the
+empty set is constructed.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> Pure TLA+ does not restrict the set elements. They can be any
+combination of TLA+ values: Booleans, integers, strings, sets, functions, etc.</p>
+<p>TLC only allows a user to construct sets out of elements that are comparable. For
+instance, two integers are comparable, but an integer and a set are not
+comparable. See Section 14.7.2 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>.</p>
+<p>Apalache goes further and requires that all set elements have the same type.
+If this is not the case, the type checker flags an error.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  { 1, 2, 3 }               \* a flat set of integers
+  { { 1, 2 }, { 2, 3 } }    \* a set of sets of integers
+  { FALSE, 1 }              \* a set of mixed elements.
+                            \* Model checking error in TLC, type error in Apalache
+</code></pre>
+<p><strong>Example in Python:</strong> TLA+ sets are immutable, so we are using <code>frozenset</code>:</p>
+<pre><code class="language-python">  frozenset({1, 2, 3})
+  frozenset({frozenset({1, 2}), frozenset({2, 3})})
+  frozenset({False, 1})
+</code></pre>
+<hr />
+<p><a name="in"></a></p>
+<h3><a class="header" href="#set-membership" id="set-membership">Set membership</a></h3>
+<p><strong>Notation:</strong> <code>e \in S</code></p>
+<p><strong>LaTeX notation:</strong> <img src="./img/in-set.png" alt="in" /></p>
+<p><strong>Arguments:</strong> Two arguments.  If the second argument is not a set, the result
+is undefined.</p>
+<p><strong>Effect:</strong> This operator evaluates to:</p>
+<ul>
+<li><code>TRUE</code>, if <code>S</code> is a set that contains an element that is equal to the value
+of <code>e</code>; and</li>
+<li><code>FALSE</code>, if <code>S</code> is a set and all of its elements are not equal to the
+value of <code>e</code>.</li>
+</ul>
+<p><em>Warning:</em> If you are using the special form <code>x' \in S</code>, this operator may
+assign a value to <code>x'</code> as a side effect. See <a href="./control-and-nondeterminism.html">Control Flow and Non-determinism</a>.</p>
+<p><strong>Determinism:</strong> Deterministic, unless you are using the special form <code>x' \in S</code> to assign a value to <code>x'</code>, see <a href="./control-and-nondeterminism.html">Control Flow and Non-determinism</a>.</p>
+<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
+model checking error, when it discovers that <code>e</code> cannot be compared to the
+elements of <code>S</code>. Apalache produces a static type error, if the type of <code>e</code> is
+incompatible with the type of elements of <code>S</code>, or if <code>S</code> is not a set.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">   1 \in { 1, 2, 3 }        \* TRUE
+  10 \in { 1, 2, 3 }        \* FALSE
+  {} \in { {1}, {2} }       \* FALSE
+   1 \in { &quot;a&quot;, &quot;b&quot; }       \* model checking error in TLC,
+                            \* static type error in Apalache
+</code></pre>
+<p><strong>Example in Python:</strong> Python conveniently offers us <code>in</code>:</p>
+<pre><code class="language-python">  1 in frozenset({1, 2, 3})     # True
+  10 in frozenset({1, 2, 3})    # False
+  1 in frozenset({&quot;a&quot;, &quot;b&quot;})    # False
+</code></pre>
+<hr />
+<p><a name="notin"></a></p>
+<h3><a class="header" href="#set-non-membership" id="set-non-membership">Set non-membership</a></h3>
+<p><strong>Notation:</strong> <code>e \notin S</code></p>
+<p><strong>LaTeX notation:</strong> <img src="./img/notin-set.png" alt="notin" /></p>
+<p><strong>Arguments:</strong> Two arguments.  If the second argument is not a set, the result
+is undefined.</p>
+<p><strong>Effect:</strong> This operator evaluates to:</p>
+<ul>
+<li><code>FALSE</code>, if <code>S</code> is a set that contains an element that is equal to the value
+of <code>e</code>; and</li>
+<li><code>TRUE</code>, if <code>S</code> is a set and all of its elements are not equal to the
+value of <code>e</code>.</li>
+</ul>
+<p><em>Warning:</em> In contrast to <code>x' \in S</code>, the expression <code>x' \notin T</code>,
+which is equivalent to <code>~(x' \in T)</code> is never
+treated as an assignment in Apalache and TLC.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
+model checking error, when it discovers that <code>e</code> cannot be compared to the
+elements of <code>S</code>. Apalache produces a static type error, if the type of <code>e</code> is
+incompatible with the type of elements of <code>S</code>, or if <code>S</code> is not a set.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">   1 \notin { 1, 2, 3 }     \* FALSE
+  10 \notin { 1, 2, 3 }     \* TRUE
+  {} \notin { {1}, {2} }    \* TRUE
+   1 \notin { &quot;a&quot;, &quot;b&quot; }    \* model checking error in TLC,
+                            \* static type error in Apalache
+</code></pre>
+<p><strong>Example in Python:</strong> Python conveniently offers us <code>not in</code>:</p>
+<pre><code class="language-python">  1 not in frozenset({1, 2, 3})     # False
+  10 not in frozenset({1, 2, 3})    # True
+  1 not in frozenset({&quot;a&quot;, &quot;b&quot;})    # True
+</code></pre>
+<hr />
+<p><a name="eq"></a></p>
+<h3><a class="header" href="#equality-and-inequality" id="equality-and-inequality">Equality and inequality</a></h3>
+<p>The operators <code>a = b</code> and <code>a /= b</code> are core operators of TLA+,
+see <a href="./logic.html">Logic</a>.</p>
+<hr />
+<p><a name="subseteq"></a></p>
+<h3><a class="header" href="#set-inclusion" id="set-inclusion">Set inclusion</a></h3>
+<p><strong>Notation:</strong> <code>S \subseteq T</code></p>
+<p><strong>LaTeX notation:</strong> <img src="./img/subseteq.png" alt="subseteq" /></p>
+<p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
+is undefined.</p>
+<p><strong>Effect:</strong> This operator evaluates to:</p>
+<ul>
+<li><code>TRUE</code>, if <code>S</code> and <code>T</code> are sets, and every element of <code>S</code> is a member of <code>T</code>;</li>
+<li><code>FALSE</code>, if <code>S</code> and <code>T</code> are sets, and there is an element of <code>S</code> that
+is not a member of <code>T</code>.</li>
+</ul>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
+model checking error, when it discovers that elements of <code>S</code> cannot be compared
+to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
+either not sets, or sets of incompatible types.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">     { 1, 2 } \subseteq { 1, 2, 3 }     \* TRUE
+  { 1, 2, 3 } \subseteq { 1, 2, 3 }     \* TRUE
+  { 1, 2, 3 } \subseteq { 1, 2 }        \* FALSE
+      { {1} } \subseteq { 1, 2, 3 }     \* FALSE, model checking error in TLC
+                                        \* static type error in Apalache
+</code></pre>
+<p><strong>Example in Python:</strong> Python conveniently offers us <code>&lt;=</code>:</p>
+<pre><code class="language-python">  frozenset({1, 2}) &lt;= frozenset({1, 2, 3})             # True
+  frozenset({1, 2, 3}) &lt;= frozenset({1, 2, 3})          # True
+  frozenset({1, 2, 3}) &lt;= frozenset({1, 2})             # False
+  frozenset({frozenset({1})}) &lt;= frozenset({1, 2, 3})   # False
+</code></pre>
+<hr />
+<p><a name="subset"></a></p>
+<h3><a class="header" href="#proper-set-inclusion" id="proper-set-inclusion">Proper set inclusion</a></h3>
+<p><strong>Notation:</strong> <code>S \subset T</code></p>
+<p><strong>LaTeX notation:</strong> <img src="./img/subset.png" alt="subset" /></p>
+<p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
+is undefined.</p>
+<p><strong>Effect:</strong> This operator evaluates to:</p>
+<ul>
+<li><code>TRUE</code>, if <code>S \subseteq T /\ S /= T</code> evaluates to <code>TRUE</code>;</li>
+<li><code>FALSE</code>, if <code>S</code> and <code>T</code> are sets, and <code>~(S \subseteq T) \/ S = T</code> evaluates
+to <code>TRUE</code>.</li>
+</ul>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
+model checking error, when it discovers that elements of <code>S</code> cannot be compared
+to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
+either not sets, or sets of incompatible types.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">     { 1, 2 } \subset { 1, 2, 3 }     \* TRUE
+  { 1, 2, 3 } \subset { 1, 2, 3 }     \* FALSE
+  { 1, 2, 3 } \subset { 1, 2 }        \* FALSE
+      { {1} } \subset { 1, 2, 3 }     \* FALSE, model checking error in TLC
+                                      \* static type error in Apalache
+</code></pre>
+<p><strong>Example in Python:</strong> Python conveniently offers us <code>&lt;</code>:</p>
+<pre><code class="language-python">  frozenset({1, 2}) &lt; frozenset({1, 2, 3})             # True
+  frozenset({1, 2, 3}) &lt; frozenset({1, 2, 3})          # False
+  frozenset({1, 2, 3}) &lt; frozenset({1, 2})             # False
+  frozenset({frozenset({1})}) &lt; frozenset({1, 2, 3})   # False
+</code></pre>
+<hr />
+<p><a name="supseteq"></a></p>
+<h3><a class="header" href="#set-containment" id="set-containment">Set containment</a></h3>
+<p><strong>Notation:</strong> <code>S \supseteq T</code></p>
+<p><strong>LaTeX notation:</strong> <img src="./img/supseteq.png" alt="supseteq" /></p>
+<p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
+is undefined.</p>
+<p><strong>Effect:</strong> This operator evaluates to:</p>
+<ul>
+<li><code>TRUE</code>, if <code>S</code> and <code>T</code> are sets, and every element of <code>T</code> is a member of <code>S</code>;</li>
+<li><code>FALSE</code>, if <code>S</code> and <code>T</code> are sets, and there is an element of <code>T</code> that
+is not a member of <code>S</code>.</li>
+</ul>
+<p>It is easy to see, that <code>S \supseteq T</code> if and only if <code>T \subseteq S</code>.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
+model checking error, when it discovers that elements of <code>S</code> cannot be compared
+to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
+either not sets, or sets of incompatible types.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">     { 1, 2 } \supseteq { 1, 2, 3 }     \* FALSE
+  { 1, 2, 3 } \supseteq { 1, 2, 3 }     \* TRUE
+  { 1, 2, 3 } \supseteq { 1, 2 }        \* TRUE
+      { {1} } \supseteq { 1, 2, 3 }     \* FALSE, model checking error in TLC
+                                        \* static type error in Apalache
+</code></pre>
+<p><strong>Example in Python:</strong> Python conveniently offers us <code>&gt;=</code>:</p>
+<pre><code class="language-python">  frozenset({1, 2}) &gt;= frozenset({1, 2, 3})             # False
+  frozenset({1, 2, 3}) &gt;= frozenset({1, 2, 3})          # True
+  frozenset({1, 2, 3}) &gt;= frozenset({1, 2})             # True
+  frozenset({frozenset({1})}) &gt;= frozenset({1, 2, 3})   # False
+</code></pre>
+<hr />
+<p><a name="supset"></a></p>
+<h3><a class="header" href="#proper-set-containment" id="proper-set-containment">Proper set containment</a></h3>
+<p><strong>Notation:</strong> <code>S \supset T</code></p>
+<p><strong>LaTeX notation:</strong> <img src="./img/supset.png" alt="supset" /></p>
+<p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
+is undefined.</p>
+<p><strong>Effect:</strong> This operator evaluates to:</p>
+<ul>
+<li><code>TRUE</code>, if <code>S \supseteq T /\ S /= T</code> evaluates to <code>TRUE</code>;</li>
+<li><code>FALSE</code>, if <code>S</code> and <code>T</code> are sets, and <code>~(S \supseteq T) \/ S = T</code> evaluates
+to <code>TRUE</code>.</li>
+</ul>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
+model checking error, when it discovers that elements of <code>S</code> cannot be compared
+to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
+either not sets, or sets of incompatible types.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">     { 1, 2 } \supset { 1, 2, 3 }       \* FALSE
+  { 1, 2, 3 } \supset { 1, 2, 3 }       \* FALSE
+  { 1, 2, 3 } \supset { 1, 2 }          \* TRUE
+      { {1} } \supseteq { 1, 2, 3 }     \* FALSE, model checking error in TLC
+                                        \* static type error in Apalache
+</code></pre>
+<p><strong>Example in Python:</strong> Python conveniently offers us <code>&gt;</code>:</p>
+<pre><code class="language-python">  frozenset({1, 2}) &gt; frozenset({1, 2, 3})              # False
+  frozenset({1, 2, 3}) &gt; frozenset({1, 2, 3})           # False
+  frozenset({1, 2, 3}) &gt; frozenset({1, 2})              # True
+  frozenset({frozenset({1})}) &gt;= frozenset({1, 2, 3})   # False
+</code></pre>
+<hr />
+<p><a name="union"></a></p>
+<h3><a class="header" href="#binary-set-union" id="binary-set-union">Binary set union</a></h3>
+<p><strong>Notation:</strong> <code>S \union T</code> or <code>S \cup T</code></p>
+<p><strong>LaTeX notation:</strong> <img src="./img/cup.png" alt="cup" /></p>
+<p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
+is undefined.</p>
+<p><strong>Effect:</strong> This operator evaluates to the set that contains the elements 
+of <code>S</code> <strong>as well</strong> as the elements of <code>T</code>, and no other values.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
+model checking error, when it discovers that elements of <code>S</code> cannot be compared
+to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
+either not sets, or sets of incompatible types.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  { 0, 1, 2 } \union { 1, 2, 3 } \* { 0, 1, 2, 3 }
+          { } \union { 1, 2, 3 } \* { 1, 2, 3 }
+  { 1, 2, 3 } \union { }         \* { 1, 2, 3 }
+      { {1} } \union { 1, 2 }    \* { {1}, 1, 2 }, model checking error in TLC
+                                 \* static type error in Apalache
+</code></pre>
+<p><strong>Example in Python:</strong> Python conveniently offers us <code>union</code>
+that can be written as <code>|</code>:</p>
+<pre><code class="language-python">  frozenset({0, 1, 2}) | frozenset({1, 2, 3})  # frozenset({0, 1, 2, 3})
+  frozenset({}) | frozenset({1, 2, 3})         # frozenset({ 1, 2, 3})
+  frozenset({1, 2, 3}) | frozenset({})         # frozenset({ 1, 2, 3})
+  frozenset({frozenset({1})}) | frozenset({1, 2}) # frozenset({1, 2, frozenset({1})})
+</code></pre>
+<hr />
+<p><a name="intersect"></a></p>
+<h3><a class="header" href="#set-intersection" id="set-intersection">Set intersection</a></h3>
+<p><strong>Notation:</strong> <code>S \intersect T</code> or <code>S \cap T</code></p>
+<p><strong>LaTeX notation:</strong> <img src="./img/cap.png" alt="cap" /></p>
+<p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
+is undefined.</p>
+<p><strong>Effect:</strong> This operator evaluates to the set that contains only those elements
+of <code>S</code> that <strong>also</strong> belong to <code>T</code>, and no other values.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
+model checking error, when it discovers that elements of <code>S</code> cannot be compared
+to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
+either not sets, or sets of incompatible types.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  { 0, 1, 2 } \intersect { 1, 2, 3 } \* { 1, 2 }
+          { } \intersect { 1, 2, 3 } \* { }
+  { 1, 2, 3 } \intersect { }         \* { }
+      { {1} } \intersect { 1, 2 }    \* { }, model checking error in TLC
+                                     \* static type error in Apalache
+</code></pre>
+<p><strong>Example in Python:</strong> Python conveniently offers us <code>intersection</code>, which
+can be also written as <code>&amp;</code>:</p>
+<pre><code class="language-python">  frozenset({0, 1, 2}) &amp; frozenset({1, 2, 3})  # frozenset({ 1, 2 })
+  frozenset({}) &amp; frozenset({1, 2, 3})         # frozenset()
+  frozenset({1, 2, 3}) &amp; frozenset({})         # frozenset()
+  frozenset({frozenset({1})}) &amp; frozenset({1, 2}) # frozenset()
+</code></pre>
+<hr />
+<p><a name="setminus"></a></p>
+<h3><a class="header" href="#set-difference" id="set-difference">Set difference</a></h3>
+<p><strong>Notation:</strong> <code>S \ T</code></p>
+<p><strong>LaTeX notation:</strong> <img src="./img/setminus.png" alt="setminus" /></p>
+<p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
+is undefined.</p>
+<p><strong>Effect:</strong> This operator evaluates to the set that contains only those elements
+of <code>S</code> that <strong>do not</strong> belong to <code>T</code>, and no other values.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
+model checking error, when it discovers that elements of <code>S</code> cannot be compared
+to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
+either not sets, or sets of incompatible types.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  { 0, 1, 2 } \ { 1, 2, 3 }     \* { }
+          { } \ { 1, 2, 3 }     \* { }
+  { 1, 2, 3 } \ { }             \* { }
+      { {1} } \ { 1, 2 }        \* { {1} }, model checking error in TLC
+                                \* static type error in Apalache
+</code></pre>
+<p><strong>Example in Python:</strong> Python conveniently offers us <code>difference</code>, which
+can be also written as <code>-</code>:</p>
+<pre><code class="language-python">  frozenset({0, 1, 2}) - frozenset({1, 2, 3})  # frozenset({ 0 })
+  frozenset({}) - frozenset({1, 2, 3})         # frozenset()
+  frozenset({1, 2, 3}) - frozenset({})         # frozenset({ 1, 2, 3 })
+  frozenset({frozenset({1})}) - frozenset({1, 2}) # frozenset({frozenset({1})})
+</code></pre>
+<hr />
+<p><a name="filter"></a></p>
+<h3><a class="header" href="#set-filter" id="set-filter">Set filter</a></h3>
+<p><strong>Notation:</strong> <code>{ x \in S: P }</code></p>
+<p><strong>LaTeX notation:</strong> <img src="./img/filter.png" alt="filter" /></p>
+<p><strong>Arguments:</strong> Three arguments: a variable name (or a tuple of names, see
+<strong>Advanced syntax</strong>), a set, and an expression.</p>
+<p><strong>Effect:</strong> This operator constructs a new set <code>F</code> as follows.  For every
+element <code>e</code> of <code>S</code>, do the following (we give a sequence of steps to ease
+the understanding):</p>
+<ol>
+<li>Bind the element <code>e</code> to variable <code>x</code>,</li>
+<li>Evaluate the predicate <code>P</code>,</li>
+<li>If <code>P</code> evaluates to <code>TRUE</code> under the binding <code>[x |-&gt; e]</code>,
+then insert the element of <code>e</code> into set <code>F</code>.</li>
+</ol>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
+model checking error, if <code>S</code> is infinite.  Apalache produces a static type
+error, if the type of elements of <code>S</code> is not compatible with the type of <code>x</code>
+as expected in <code>P</code>.</p>
+<p><strong>Advanced syntax:</strong> Instead of a single variable <code>x</code>, one can use a tuple
+syntax to unpack variables from a Cartesian product, see <a href="./tuples.html">Tuples</a>.
+For instance, one can write <code>{ &lt;&lt;x, y&gt;&gt; \in S: P }</code>. In this case, for every
+element <code>e</code> of <code>S</code>, the variable <code>x</code> is bound to <code>e[1]</code> and <code>y</code> is bound to
+<code>e[2]</code>. The filter expression constructs the set of elements (tuples) that make
+<code>P</code> evaluate to <code>TRUE</code>.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  { x \in {1, 2, 3, 4}: x &gt; 2 }             \* { 3, 4 }
+  { x \in {1, 2, 3, 4}: x &gt; 10 }            \* { }
+  \* check the section on tuples to understand the following syntax
+  { &lt;&lt;x, y&gt;&gt; \in 1..4 \X 1..4: y = 3 } \* {&lt;&lt;1, 3&gt;&gt;, &lt;&lt;2, 3&gt;&gt;, &lt;&lt;3, 3&gt;&gt;, &lt;&lt;4, 3&gt;&gt;}
+</code></pre>
+<p><strong>Example in Python:</strong> Python conveniently offers us the set comprehension
+syntax:</p>
+<pre><code class="language-python">  S = frozenset({1, 2, 3, 4})
+  frozenset({ x for x in S if x &gt; 2 })      # frozenset({3, 4})
+  frozenset({ x for x in S if x &gt; 10 })     # frozenset()
+  S2 = frozenset({(x, y) for x in S for y in S})
+  frozenset({(x, y) for (x, y) in S2 if y == 3})
+    # frozenset({(1, 3), (2, 3), (3, 3), (4, 3)})
+</code></pre>
+<hr />
+<p><a name="map"></a></p>
+<h3><a class="header" href="#set-map" id="set-map">Set map</a></h3>
+<p><strong>Notation:</strong> <code>{ e: x \in S }</code> or <code>{ e: x \in S, y \in T }</code>, or more arguments </p>
+<p><strong>LaTeX notation:</strong> <img src="./img/map.png" alt="map" /></p>
+<p><strong>Arguments:</strong> At least three arguments: a mapping expression,
+a variable name (or a tuple of names, see <strong>Advanced syntax</strong>),
+a set. Additional arguments are variables names and sets, interleaved.</p>
+<p><strong>Effect:</strong> We give the semantics for two arguments.
+We write it as a sequence of steps to ease understanding.
+This operator constructs a new set <code>M</code> as follows.
+For every element <code>e_1</code> of <code>S</code> and every element <code>e_2</code> of <code>T</code>:</p>
+<ol>
+<li>Bind the element <code>e_1</code> to variable <code>x</code>,</li>
+<li>Bind the element <code>e_2</code> to variable <code>y</code>,</li>
+<li>Compute the value of <code>e</code> under the binding <code>[x |-&gt; e_1, y |-&gt; e_2]</code>,</li>
+<li>Insert the value <code>e</code> into the set <code>M</code>.</li>
+</ol>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
+model checking error, if <code>S</code> is infinite.  Apalache produces a static type
+error, if the type of elements of <code>S</code> is not compatible in the context of <code>e</code>
+when an element of <code>S</code> is bound to <code>x</code>.</p>
+<p><strong>Advanced syntax:</strong> Instead of a single variable <code>x</code>, one can use the tuple
+syntax to unpack variables from a Cartesian product, see <a href="./tuples.html">Tuples</a>.
+For instance, one can write <code>{ x + y: &lt;&lt;x, y&gt;&gt; \in S }</code>. In this case, for every
+element <code>e</code> of <code>S</code>, the variable <code>x</code> is bound to <code>e[1]</code> and <code>y</code> is bound to
+<code>e[2]</code>. The map expression constructs the set of expressions that are computed
+under this binding.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  { 2 * x: x \in { 1, 2, 3, 4 } }      \* { 2, 4, 6, 8 }
+  \* check the section on tuples to understand the following syntax
+  { x + y: x \in 1..2, y \in 1..2 }
+    \* { 2, 3, 4 }
+  { x + y: &lt;&lt;x, y&gt;&gt; \in 1..2 \X 1..2 }
+    \* { 2, 3, 4 }
+</code></pre>
+<p><strong>Example in Python:</strong> Python conveniently offers us the set comprehension
+syntax:</p>
+<pre><code class="language-python">  S = frozenset({1, 2, 3, 4})
+  frozenset({ 2 * x for x in S })           # frozenset({2, 4, 6, 8})
+  T = frozenset({1, 2})
+  frozenset({ x + y for x in T for y in T}) # frozenset({2, 3, 4})
+  T2 = frozenset((x, y) for x in T for y in T) # {(1,1), (1, 2), (2, 1), (2, 2) }
+  frozenset({ x + y for (x, y) in T2})      # frozenset({2, 3, 4})
+</code></pre>
+<hr />
+<p><a name="powerset"></a></p>
+<h3><a class="header" href="#powerset" id="powerset">Powerset</a></h3>
+<p><strong>Notation:</strong> <code>SUBSET S</code></p>
+<p><strong>LaTeX notation:</strong> <code>SUBSET S</code></p>
+<p><strong>Warning:</strong> Do not confuse <code>SUBSET S</code> with <code>S \subset T</code>. These are two
+different operators, which unfortunately have similar-looking names.</p>
+<p><strong>Arguments:</strong> One argument. If it is not a set, the result
+is undefined.</p>
+<p><strong>Effect:</strong> This operator computes the set of all subsets of <code>S</code>.
+That is, the set <code>T</code> the has the following properties:</p>
+<ul>
+<li>If <code>X \in T</code>, then <code>X \subseteq S</code>.</li>
+<li>If <code>X \subseteq S</code>, then <code>X \in T</code>.</li>
+</ul>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator argument.  TLC flags a
+model checking error, when it discovers that <code>S</code> is not a set.  Apalache
+produces a static type error, if the type of <code>S</code> is not a set type.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  SUBSET { 0, 1, 2 }
+  \* { {}, {0}, {1}, {2}, {0, 1}, {1, 2}, {0, 2}, {0, 1, 2} }
+</code></pre>
+<p><strong>Example in Python:</strong> An implementation of <code>SUBSET S</code> in Python is not trivial.
+To appreciate the power of TLA+, see <a href="./examples/subset.py">subset.py</a>.</p>
+<hr />
+<p><a name="fold"></a></p>
+<h3><a class="header" href="#set-folding" id="set-folding">Set folding</a></h3>
+<p><strong>Notation:</strong> <code>UNION S</code></p>
+<p><strong>LaTeX notation:</strong> <code>UNION S</code></p>
+<p><strong>Warning:</strong> Do not confuse <code>UNION S</code> with <code>S \union T</code>. These are two
+different operators, which unfortunately have similar-looking names.</p>
+<p><strong>Arguments:</strong> One argument. If it is not a set of sets, the result
+is undefined.</p>
+<p><strong>Effect:</strong> Given that <code>S</code> is a set of sets, this operator computes the set
+<code>T</code> that contains all elements of elements of <code>S</code>:</p>
+<ul>
+<li>If <code>X \in S</code>, then <code>X \subseteq T</code>.</li>
+<li>If <code>y \in T</code>, then there is a set <code>Y \in S</code> that contains <code>y</code>,
+that is, <code>y \in Y</code>.</li>
+</ul>
+<p>In particular, <code>UNION</code> folds the explosion that is produced by <code>SUBSET</code>. That
+is, <code>(UNION (SUBSET S)) = S</code>.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator argument.  TLC flags a
+model checking error, when it discovers that <code>S</code> is not a set of sets.
+Apalache produces a static type error, if the type of <code>S</code> is different from a
+set of sets.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  UNION { {0, 1}, {1, 2}, {3} }
+  \* { 0, 1, 2, 3 }
+</code></pre>
+<p><strong>Example in Python:</strong> In contrast to <code>SUBSET S</code>, an implementation of <code>UNION S</code>
+in Python is quite simple:</p>
+<pre><code class="language-python">    functools.reduce(lambda x, y: x | y, s, frozenset())
+</code></pre>
+<hr />
+<p><a name="card"></a></p>
+<h3><a class="header" href="#set-cardinality" id="set-cardinality">Set cardinality</a></h3>
+<p><strong>Notation:</strong> <code>Cardinality(S)</code></p>
+<p><strong>LaTeX notation:</strong> <code>Cardinality(S)</code></p>
+<p><strong>Warning:</strong> <code>Cardinality(S)</code> is defined in the module <code>FiniteSets</code>.</p>
+<p><strong>Arguments:</strong> One argument. If <code>S</code> is not a set, or <code>S</code> is an infinite set,
+the result is undefined.</p>
+<p><strong>Effect:</strong> <code>Cardinality(S)</code> evaluates to the number of (unique) elements in
+<code>S</code>.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator argument.  TLC flags a
+model checking error, when it discovers that <code>S</code> is not a set, or when it is an
+infinite set.  Apalache produces a static type error, if the type of <code>S</code> is
+different from a finite set.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  EXTENDS FiniteSets
+  ...
+  Cardinality({ 1, 2, 3 })
+  \* 3
+</code></pre>
+<p><strong>Example in Python:</strong> In Python, we just use the set size:</p>
+<pre><code class="language-python">    S = frozenset({ 1, 2, 3 })
+    len(S)  # 3
+</code></pre>
+<hr />
+<p><a name="finite"></a></p>
+<h3><a class="header" href="#set-finiteness" id="set-finiteness">Set finiteness</a></h3>
+<p><strong>Notation:</strong> <code>IsFinite(S)</code></p>
+<p><strong>LaTeX notation:</strong> <code>IsFinite(S)</code></p>
+<p><strong>Warning:</strong> <code>IsFinite(S)</code> is defined in the module <code>FiniteSets</code>.</p>
+<p><strong>Arguments:</strong> One argument. If <code>S</code> is not a set, the result is undefined.</p>
+<p><strong>Effect:</strong> <code>IsFinite(S)</code> evaluates to:</p>
+<ul>
+<li><code>TRUE</code>, when <code>S</code> is a finite set,</li>
+<li><code>FALSE</code>, when <code>S</code> is an infinite set.</li>
+</ul>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator argument.  TLC flags a
+model checking error, when it discovers that <code>S</code> is not a set. Apalache
+produces a static type error, if the type of <code>S</code> is different from a set.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  EXTENDS FiniteSets
+  ...
+  IsFiniteSet({ 1, 2, 3 })      \* TRUE
+  IsFiniteSet(BOOLEAN)          \* TRUE
+  IsFiniteSet(Nat)              \* FALSE
+  IsFiniteSet(Int)              \* FALSE
+  IsFiniteSet(STRING)           \* FALSE
+</code></pre>
+<p><strong>Example in Python:</strong> We can construct only finite sets in Python.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../lang/integers.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../lang/logic.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../lang/integers.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../lang/logic.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

@@ -1,0 +1,351 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Apply primes only to state variables - Apalache User Manual</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../manual.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../tlc-config.html"><strong aria-hidden="true">3.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../types-and-annotations.html"><strong aria-hidden="true">4.</strong> Types and Annotations</a></li><li class="chapter-item expanded "><a href="../features.html"><strong aria-hidden="true">5.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../preprocessing.html"><strong aria-hidden="true">6.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../tuning.html"><strong aria-hidden="true">7.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../kera.html"><strong aria-hidden="true">8.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded "><a href="../types-api.html"><strong aria-hidden="true">9.</strong> Type Reconstruction API</a></li><li class="chapter-item expanded "><a href="../smt/Cardinality.html"><strong aria-hidden="true">10.</strong> SMT encoding for set cardinalities</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">11.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">12.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/booleans.html"><strong aria-hidden="true">12.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../lang/control-and-nondeterminism.html"><strong aria-hidden="true">12.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../lang/conditionals.html"><strong aria-hidden="true">12.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../lang/integers.html"><strong aria-hidden="true">12.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../lang/sets.html"><strong aria-hidden="true">12.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../lang/logic.html"><strong aria-hidden="true">12.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../lang/functions.html"><strong aria-hidden="true">12.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../lang/records.html"><strong aria-hidden="true">12.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../lang/tuples.html"><strong aria-hidden="true">12.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../lang/sequences.html"><strong aria-hidden="true">12.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">12.11.</strong> Bags</div></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">12.12.</strong> Standard Operators</a></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">12.13.</strong> User Operators</a></li></ol></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">13.</strong> User-defined operators</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.</strong> Modules, Extends, and Instances</div></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">15.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../idiomatic/000keep-minimum-state-variables.html"><strong aria-hidden="true">16.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../idiomatic/001assignments.html"><strong aria-hidden="true">17.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../idiomatic/002primes.html" class="active"><strong aria-hidden="true">18.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/001rfc-types.html"><strong aria-hidden="true">19.</strong> RFC 001: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">20.</strong> ADR-002: types and type annotations</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache User Manual</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#idiom-2-apply-primes-only-to-state-variables" id="idiom-2-apply-primes-only-to-state-variables">Idiom 2: Apply primes only to state variables</a></h1>
+<p>(<em>Until you learn how prime actually works!</em>)</p>
+<h2><a class="header" href="#description" id="description">Description</a></h2>
+<p>In many formal languages, the notation <code>x'</code> denotes the value that a variable
+<code>x</code> has after the system has fired a transition. The reason for having both <code>x</code>
+and <code>x'</code> is that the transitions are often described as relations over unprimed
+and primed variables, e.g., <code>x' = x+1</code>. It is easy to extend this idea to
+vectors of variables, but for simplicity we will use only one variable.</p>
+<p>TLA+ goes further and declares prime (<code>'</code>) as an operator! This operator distributes over
+any state variables in the scope of its application. For example, assume that we
+evaluate a TLA+ expression <code>A</code> over <code>x</code> and <code>x'</code>, and <code>v[i]</code> and <code>v[i+1]</code> are
+meant to be the values of <code>x</code> in the ith state and i+1-th state, respectively.
+Then <code>x</code> is evaluated to <code>v[i]</code> and <code>x'</code> is evaluated to <code>v[i+1]</code>.  Naturally,
+<code>x + 3</code> is evaluated to <code>v[i] + 3</code>, whereas <code>x' + 4</code> is evaluated to <code>v[i+1] + 4</code>. We can go further and evaluate <code>(x + 4)'</code>, which can be rewritten as <code>x' + 4</code>.</p>
+<p>Intuitively, there is nothing wrong with the operator &quot;prime&quot;. However, you
+have to understand this operator well, in order to use it right. For starters, check
+the warning by Leslie Lamport in <a href="http://lamport.azurewebsites.net/tla/book.html">Specifying Systems</a> on page 82. The following
+example illustrates the warning:</p>
+<pre><code class="language-tla">--------------------------- MODULE clocks3 ------------------------------------
+(* Model a system of three processes, each one equipped with a logical clock *)
+EXTENDS Integers, Apalache
+VARIABLES clocks, turn
+
+\* a shortcut to refer to the clock of the process that is taking the step
+MyClock == clocks[turn]
+\* a shortcut to refer to the processes that are not taking the step
+Others == DOMAIN clocks \ {turn}
+
+Init ==
+    /\ clocks := [p \in 1..3 |-&gt; 0]  \* initialize the clocks with 0
+    /\ turn := 1                     \* process 1 makes the first step
+
+Next ==
+    \* update the clocks of the processes (the section Example shows a better way)
+    /\ \E f \in [1..3 -&gt; Int]:
+        clocks' := f
+    \* increment the clock of the process that is taking the step
+    /\ MyClock' = MyClock + 1
+    \* all clocks of the other processes keep their clock values
+    /\ \A i \in Others:
+        clocks'[i] = clocks[i]
+    \* use round-robin to decide who makes the next step
+    /\ turn' := 1 + (turn + 1) % 3
+===============================================================================
+</code></pre>
+<p>Did you spot a problem in the above example? If not, check these lines again:</p>
+<pre><code class="language-tla">    \* increment the clock of the process that is taking the step
+    /\ MyClock' = MyClock + 1
+</code></pre>
+<p>The code does not match the comment. By writing <code>MyClock'</code>, we get
+<code>(clocks[turn])'</code> that is equivalent to <code>clocks'[turn']</code>. So our constraint
+says: Increment the clock of the process that is taking the next step.  By
+looking at the next constraint, we can see that <code>Next</code> can never be evaluated
+to true (a logician would say that <code>Next</code> is &quot;unsatisfiable&quot;):</p>
+<pre><code class="language-tla">    \* all clocks of the other processes keep their clock values
+    /\ \A i \in Others:
+        clocks'[i] = clocks[i]
+</code></pre>
+<p>Our intention was to make the specification easier to read, but instead we have
+introduced a deadlock in the system. In a larger specification, this bug would be
+much harder to find.</p>
+<p>We recommend to follow this simple rule: <em>Apply primes only to state variables</em></p>
+<p>Can we remove the &quot;prime&quot; operator altogether and agree to use <code>x</code> and <code>x'</code> as
+names of the variables? Not really. More advanced features of TLA+ require this
+operator.  In a nutshell, TLA+ is built around the idea of refinement, that is,
+replacing an abstract specification with a more detailed one. Concretely, this
+idea is implemented by module instances in TLA+. It often happens that
+refinement requires us to replace a state variable of the abstract
+specification with an operator of the detailed specification.  Voilà. You have
+to apply prime to an expression. For the details, 
+see Chapter 5 and pages 312-313 of <a href="http://lamport.azurewebsites.net/tla/book.html">Specifying Systems</a>.</p>
+<h2><a class="header" href="#advantages" id="advantages">Advantages</a></h2>
+<ul>
+<li>
+<p>It is easy to see, whether the specification author intended to talk about
+the variables in the next state or about the variable in the current state.</p>
+</li>
+<li>
+<p>It is harder to make an unexpected substitution mistake, as in the above
+example.</p>
+</li>
+</ul>
+<h2><a class="header" href="#disadvantages" id="disadvantages">Disadvantages</a></h2>
+<ul>
+<li>Sometimes, the operator &quot;prime&quot; helps us in avoiding code duplication.
+For instance, you can write a state invariant <code>Inv</code> and later evaluate it
+against a next state by simply writing <code>Inv'</code>. However, you have to be
+careful about propagation of primes in <code>Inv</code>.</li>
+</ul>
+<h2><a class="header" href="#example" id="example">Example</a></h2>
+<p>A better version of the <code>clocks</code> example applies prime only to state variables.
+By doing so, we notice that the specification can be further simplified:</p>
+<pre><code class="language-tla">--------------------------- MODULE clocks3_2 ----------------------------------
+(* Model a system of three processes, each one equipped with a digital clock *)
+EXTENDS Integers, Apalache
+VARIABLES clocks, turn
+
+Init ==
+    /\ clocks := [p \in 1..3 |-&gt; 0]  \* initialize the clocks with 0
+    /\ turn := 1                     \* process 1 makes the first step
+
+Next ==
+    \* update the clocks of the processes
+    /\ clocks' :=
+        [p \in 1..3 |-&gt;
+            IF p = turn THEN clocks[turn] + 1 ELSE clocks[p]]
+    \* use round-robin to decide who makes the next step
+    /\ turn' := 1 + (turn + 1) % 3
+===============================================================================
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../idiomatic/001assignments.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../adr/001rfc-types.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../idiomatic/001assignments.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../adr/001rfc-types.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

@@ -1,0 +1,628 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Functions - Apalache User Manual</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../manual.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../tlc-config.html"><strong aria-hidden="true">3.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../types-and-annotations.html"><strong aria-hidden="true">4.</strong> Types and Annotations</a></li><li class="chapter-item expanded "><a href="../features.html"><strong aria-hidden="true">5.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../preprocessing.html"><strong aria-hidden="true">6.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../tuning.html"><strong aria-hidden="true">7.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../kera.html"><strong aria-hidden="true">8.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded "><a href="../types-api.html"><strong aria-hidden="true">9.</strong> Type Reconstruction API</a></li><li class="chapter-item expanded "><a href="../smt/Cardinality.html"><strong aria-hidden="true">10.</strong> SMT encoding for set cardinalities</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">11.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">12.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/booleans.html"><strong aria-hidden="true">12.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../lang/control-and-nondeterminism.html"><strong aria-hidden="true">12.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../lang/conditionals.html"><strong aria-hidden="true">12.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../lang/integers.html"><strong aria-hidden="true">12.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../lang/sets.html"><strong aria-hidden="true">12.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../lang/logic.html"><strong aria-hidden="true">12.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../lang/functions.html" class="active"><strong aria-hidden="true">12.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../lang/records.html"><strong aria-hidden="true">12.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../lang/tuples.html"><strong aria-hidden="true">12.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../lang/sequences.html"><strong aria-hidden="true">12.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">12.11.</strong> Bags</div></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">12.12.</strong> Standard Operators</a></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">12.13.</strong> User Operators</a></li></ol></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">13.</strong> User-defined operators</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.</strong> Modules, Extends, and Instances</div></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">15.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../idiomatic/000keep-minimum-state-variables.html"><strong aria-hidden="true">16.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../idiomatic/001assignments.html"><strong aria-hidden="true">17.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../idiomatic/002primes.html"><strong aria-hidden="true">18.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/001rfc-types.html"><strong aria-hidden="true">19.</strong> RFC 001: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">20.</strong> ADR-002: types and type annotations</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache User Manual</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#functions" id="functions">Functions</a></h1>
+<p><a href="./standard-operators.html">[Back to all operators]</a></p>
+<p>Functions are probably the second most used TLA+ data structure after sets. TLA+
+functions are not like functions in programming languages. In programming
+languages, functions contain code that calls other functions. Although it is
+technically possible to use functions when constructing a function in TLA+,
+functions are more often used like tables or dictionaries: they are simple maps from a set of inputs to a set of outputs. For instance, in
+<a href="https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit/TwoPhase.tla">Two-phase commit</a>, the function <code>rmState</code> stores the transaction state for
+each process:</p>
+<table><thead><tr><th>argument</th><th>rmState[argument]</th></tr></thead><tbody>
+<tr><td>&quot;process1&quot;</td><td>&quot;working&quot;</td></tr>
+<tr><td>&quot;process2&quot;</td><td>&quot;aborted&quot;</td></tr>
+<tr><td>&quot;process3&quot;</td><td>&quot;prepared&quot;</td></tr>
+</tbody></table>
+<p>In the above table, the first column is the value of the function argument,
+while the second column is the function result. An important property of this
+table is that no value appears in the first column more than once, so
+<em>every argument value is assigned at most one result value</em>.</p>
+<p>Importantly, every function is defined in terms of the set of arguments over which it is
+defined. This set is called the function's <em>domain</em>.  There is even a special
+operator <code>DOMAIN f</code>, which returns the domain of a function <code>f</code>.</p>
+<p>In contrast to TLA+ operators, <em>TLA+ functions are proper values</em>, so they can be
+used as values in more complex data structures.</p>
+<p><strong>Construction.</strong> Typically, the predicate <code>Init</code> constructs a function that
+maps all elements of its domain to a default value.
+In the example below we map the set <code>{ &quot;process1&quot;, &quot;process2&quot;, &quot;process3&quot; }</code>
+to the value &quot;working&quot;:</p>
+<pre><code class="language-tla">Init ==
+  rmState = [ p \in { &quot;process1&quot;, &quot;process2&quot;, &quot;process3&quot; } |-&gt; &quot;working&quot; ]
+</code></pre>
+<p>In general, we can construct a function by giving an expression that shows us
+how to map every argument to the result:</p>
+<pre><code class="language-tla">  [ fahrenheit \in Int |-&gt; (fahrenheit - 32) * 5 \div 9 ]
+</code></pre>
+<p>Note that this function effectively defines an infinite table, as the set <code>Int</code>
+is infinite. Both TLC and Apalache would give up on a function with an infinite
+domain. (Though in the above example, it is obvious that we could treat the
+function symbolically, without enumerating all of its elements.)</p>
+<p>Another way to construct a function is to <em>non-deterministically</em> pick one
+from a set of functions by using the <a href="#funSetCtor">function set constructor</a>, <code>-&gt;</code>. E.g.:</p>
+<pre><code class="language-tla">Init ==
+    \E f \in [ { &quot;process1&quot;, &quot;process2&quot;, &quot;process3&quot; } -&gt;
+                    { &quot;working&quot;, &quot;prepared&quot;, &quot;committed&quot;, &quot;aborted&quot; } ]:
+        rmState = f
+</code></pre>
+<p>In the above example we are not talking about one function that is somehow
+initialized &quot;by default&quot;. Rather, we say that <code>rmState</code> can be set to an
+arbitrary function that receives arguments from the set <code>{ &quot;process1&quot;, &quot;process2&quot;, &quot;process3&quot; }</code> and returns values that belong to the set <code>{ &quot;working&quot;, &quot;prepared&quot;, &quot;committed&quot;, &quot;aborted&quot; }</code>. As a result, TLC has to
+enumerate all possible functions that match this constraint. On the contrary,
+Apalache introduces one instance of a function and restricts it with the
+symbolic constraints. So it efficiently considers all possible functions
+without enumerating them. However, this trick only works with existential
+quantifiers. If you use a universal quantifier over a set of functions,
+both TLC and Apalache unfold this set.</p>
+<p><strong>Immutability</strong>. As you can see, TLA+ functions are similar to <a href="https://docs.python.org/3/library/stdtypes.html#dict">dictionaries
+in Python</a> and <a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html">maps in
+Java</a> rather than
+to normal functions in programming languages. However, <em>TLA+ functions are
+immutable</em>. Hence, they are even closer to immutable maps in Scala.  As in the
+case of sets, you do not need to define hash or equality, in order to use
+functions.</p>
+<p>If you want to update a function, you have to produce another function and
+describe how it is different from the original function. Luckily, TLA+ provides
+you with operators for describing these updates in a compact way: By using the
+function constructor (above) along with <code>EXCEPT</code>. For instance, to produce a
+new function from <code>rmState</code>, we write the following:</p>
+<pre><code class="language-tla">  [ rmState EXCEPT ![&quot;process3&quot;] = &quot;committed&quot; ]
+</code></pre>
+<p>This new function is like <code>rmState</code>, except that it returns <code>&quot;committed&quot;</code>
+on the argument <code>&quot;process3&quot;</code>:</p>
+<pre><code class="language-tla">&quot;process1&quot;,  &quot;working&quot;
+&quot;process2&quot;,  &quot;aborted&quot;
+&quot;process3&quot;,  &quot;committed&quot;
+</code></pre>
+<p><em>Importantly, you cannot extend the function domain by using <code>EXCEPT</code>.</em>
+For instance, the following expression produces the function that is
+equivalent to <code>rmState</code>:</p>
+<pre><code class="language-tla">  [ rmState EXCEPT ![&quot;process10&quot;] = &quot;working&quot; ]
+</code></pre>
+<p><strong>Types.</strong> In pure TLA+, functions are free to mix values of different types in their domains. 
+See the example below:</p>
+<pre><code class="language-tla">  [ x \in { 0, &quot;FALSE&quot;, FALSE, 1, &quot;TRUE&quot;, TRUE } |-&gt;
+        IF x \in { 1, &quot;TRUE&quot;, TRUE}
+        THEN TRUE
+        ELSE FALSE
+  ]
+</code></pre>
+<p>TLA+ functions are also free to return any kinds of values:</p>
+<pre><code class="language-tla">  [ x \in { 0, &quot;FALSE&quot;, FALSE, 1, &quot;TRUE&quot;, TRUE } |-&gt;
+    CASE x = 0 -&gt; 1
+      [] x = 1 -&gt; 0
+      [] x = &quot;FALSE&quot; -&gt; &quot;TRUE&quot;
+      [] x = &quot;TRUE&quot; -&gt; &quot;FALSE&quot;
+      [] x = FALSE -&gt; TRUE
+      OTHER -&gt; FALSE
+  ]
+</code></pre>
+<p>As in the case of <a href="./sets.html">sets</a>, TLC restricts function domains to comparable
+values. See Section 14.7.2 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>. So, TLC rejects the two
+examples that are given above.</p>
+<p>However, functions in TLC are free to return different kinds of values:</p>
+<pre><code class="language-tla">  [ x \in { 1, 2 } |-&gt;
+                        IF x = 1 THEN FALSE ELSE 3 ]  
+</code></pre>
+<p>This is why, in pure TLA+ and TLC, records, tuples, and sequences are just
+functions over particular domains (finite sets of strings and finite sets
+of integers).</p>
+<p>Apalache enforces stricter types. It has designated types for all four
+data structures: general functions, records, tuples, and sequences.
+Moreover, all elements of the function domain must have the same type.
+The same is true for the codomain. This is enforced
+by the type checker.</p>
+<p>In this sense, the type restrictions of Apalache are similar to those for the
+generic collections of Java and Scala.  As a result, the type checker in
+Apalache rejects the three above examples.</p>
+<hr />
+<h2><a class="header" href="#operators" id="operators">Operators</a></h2>
+<p><strong>NOTE</strong>: In the Python examples below we use the package <a href="https://pypi.org/project/frozendict/">frozendict</a>, to produce an
+immutable dictionary.</p>
+<hr />
+<p><a name="funCtor"></a></p>
+<h3><a class="header" href="#function-constructor" id="function-constructor">Function constructor</a></h3>
+<p><strong>Notation:</strong> <code>[ x \in S |-&gt; e ]</code> or <code>[ x \in S, y \in T |-&gt; e ]</code>, or more
+arguments</p>
+<p><strong>LaTeX notation:</strong> <img src="./img/fun-ctor.png" alt="fun-ctor" /></p>
+<p><strong>Arguments:</strong> At least three arguments: a variable name (or a tuple of names,
+see <strong>Advanced syntax</strong>), a set, and a mapping expression. Instead of one
+variable and one set, you can use multiple variables and multiple sets.</p>
+<p><strong>Effect:</strong> We give the semantics for one argument.  We write a sequence of
+steps to ease the understanding.  This operator constructs a function <code>f</code> over
+the domain <code>S</code> as follows.  For every element <code>elem</code> of <code>S</code>, do the following:</p>
+<ol>
+<li>Bind the element <code>elem</code> to variable <code>x</code>,</li>
+<li>Compute the value of <code>e</code> under the binding <code>[x |-&gt; elem]</code> and store it
+in a temporary variable called <code>result</code>.</li>
+<li>Set <code>f[elem]</code> to <code>result</code>.</li>
+</ol>
+<p>Of course, the semantics of the function constructor in <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>
+does not require us to compute the function at all. We believe that
+our description helps you to see that there is a way to compute this data
+structure, though in a very straightforward and inefficient way.</p>
+<p>If the function constructor introduces multiple variables, then the constructed
+function maps a tuple to a value. See <strong>Example</strong>.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> Pure TLA+ does not restrict the function domain and the mapping
+expression. They can be any
+combination of TLA+ values: Booleans, integers, strings, sets, functions, etc.</p>
+<p>TLC accepts function domains of comparable values. For
+instance, two integers are comparable, but an integer and a set are not
+comparable. See Section 14.7.2 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>.</p>
+<p>Apalache goes further: It requires the function domain to be well-typed (as a
+set), and it requires the mapping expression <code>e</code> to be well-typed. If this
+is not the case, the type checker flags an error.</p>
+<p><strong>Advanced syntax:</strong> Instead of a single variable <code>x</code>, one can use the tuple
+syntax to unpack variables from a Cartesian product, see <a href="./tuples.html">Tuples</a>.
+For instance, one can write <code>[ &lt;&lt;x, y&gt;&gt; \in S |-&gt; x + y ]</code>. In this case, for
+every element <code>e</code> of <code>S</code>, the variable <code>x</code> is bound to <code>e[1]</code> and <code>y</code> is bound
+to <code>e[2]</code>. The function constructor maps the tuples from <code>S</code> to the values
+that are computed under such a binding.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  [ x \in 1..3 |-&gt; 2 * x ]  \* a function that maps 1, 2, 3 to 2, 4, 6
+  [ x, y \in 1..3 |-&gt; x * y ]
+    \* a function that maps &lt;&lt;1, 1&gt;&gt;, &lt;&lt;1, 2&gt;&gt;, &lt;&lt;1, 3&gt;&gt;, ..., &lt;&lt;2, 3&gt;&gt;, &lt;&lt;3, 3&gt;&gt;
+    \* to 1, 2, 3, ..., 6, 9
+  [ &lt;&lt;x, y&gt;&gt; \in 1..3 \X 4..6 |-&gt; x + y ]
+    \* a function that maps &lt;&lt;1, 4&gt;&gt;, &lt;&lt;1, 5&gt;&gt;, &lt;&lt;1, 6&gt;&gt;, ..., &lt;&lt;2, 6&gt;&gt;, &lt;&lt;3, 6&gt;&gt;
+    \* to 5, 6, 7, ..., 8, 9
+  [ n \in 1..3 |-&gt;
+      [ i \in 1..n |-&gt; n + i ]]
+    \* a function that maps a number n from 1 to 3
+    \* to a function from 1..n to n + i. Like an array of arrays.
+</code></pre>
+<p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
+<pre><code class="language-python">  X = frozenset({ 1, 2, 3 })
+  frozendict({ x: 2 * x for x in X })
+  frozendict({ (x, y): x * y for x in X for y in X })
+  Y = frozenset({ 4, 5, 6 })
+  XY = frozenset((x, y) for x in X for y in Y)
+  frozendict({ (x, y): x + y  for (x, y) in XY })
+</code></pre>
+<hr />
+<p><a name="funSetCtor"></a></p>
+<h3><a class="header" href="#function-set-constructor" id="function-set-constructor">Function set constructor</a></h3>
+<p><strong>Notation:</strong> <code>[ S -&gt; T ]</code></p>
+<p><strong>LaTeX notation:</strong> <img src="./img/funset.png" alt="funset" /></p>
+<p><strong>Arguments:</strong> Two arguments. Both have to be sets. Otherwise, the result is
+undefined.</p>
+<p><strong>Effect:</strong> This operator constructs the set of all possible functions that
+have <code>S</code> as their domain, and for each argument <code>x \in S</code> return a value <code>y \in T</code>.</p>
+<p>Note that if one of the sets is infinite, then the set <code>[S -&gt; T]</code> is infinite
+too. TLC flags an error, if <code>S</code> or <code>T</code> are infinite. Apalache flags an error,
+if <code>S</code> is infinite, but when it does not have to explicitly construct <code>[S -&gt; T]</code>, it may accept infinite <code>T</code>. For instance:</p>
+<pre><code class="language-tla">  \E f \in [ 1..3 -&gt; 4..6]:
+    ...
+</code></pre>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> In pure TLA+, if <code>S</code> and <code>T</code> are not sets, then <code>[S -&gt; T]</code>
+is undefined. If either <code>S</code> or <code>T</code> is not a set, TLC flags a model checking error.
+Apalache flags a static type error.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  [ 1..3 |-&gt; 1..100 ]
+    \* the set of functions that map 1, 2, 3 to values from 1 to 100
+  [ Int -&gt; BOOLEAN ]
+    \* The infinite set of functions that map every integer to a Boolean.
+    \* Error in TLC.
+</code></pre>
+<p><strong>Example in Python:</strong> We do not give here the code that enumerates all
+functions. It should be similar in spirit to <a href="./examples/subset.py">subset.py</a>,
+but it should enumerate strings over the alphabet of <code>0..(Cardinality(T) - 1)</code>
+values, rather than over the alphabet of 2 values.</p>
+<p><a name="funApp"></a></p>
+<h3><a class="header" href="#function-application" id="function-application">Function application</a></h3>
+<p><strong>Notation:</strong> <code>f[e]</code> or <code>f[e_1, ..., e_n]</code></p>
+<p><strong>LaTeX notation:</strong> <code>f[e]</code> or <code>f[e_1, ..., e_n]</code></p>
+<p><strong>Arguments:</strong> At least two arguments. The first one should be a function,
+the other arguments are the arguments to the function. Several arguments
+are treated as a tuple. For instance, <code>f[e_1, ..., e_n]</code> is shorthand for
+<code>f[&lt;&lt;e_1, ..., e_n&gt;&gt;]</code>.</p>
+<p><strong>Effect:</strong> This operator is evaluated as follows:</p>
+<ul>
+<li>If <code>e \in DOMAIN f</code>, then <code>f[e]</code> evaluates to the value that function
+<code>f</code> associates with the value of <code>e</code>.</li>
+<li>If <code>e \notin DOMAIN f</code>, then the value is undefined.</li>
+</ul>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> When <code>e \notin DOMAIN f</code>, TLC flags a model checking error.</p>
+<p>When <code>e</code> has a type incompatible with the type of <code>DOMAIN f</code>, Apalache flags
+a type error. When <code>e \notin DOMAIN f</code>, Apalache assigns some type-compatible
+value to <code>f[e]</code>, but does not report any error. This is not a bug in Apalache,
+but a feature of the SMT encoding. Usually, an illegal access surfaces
+somewhere, when checking a specification.  If you want to detect an access
+outside of the function domain, instrument your code with an additional state
+variable.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  [x \in 1..10 |-&gt; x * x][5]                \* 25
+  [x \in 1..3, y \in 1..3 |-&gt; x * y][2, 2]
+    \* Result = 4. Accessing a two-dimensional matrix by a pair
+  [ n \in 1..3 |-&gt;
+      [ i \in 1..n |-&gt; n + i ]][3][2]
+    \* The first access returns a function, the second access returns 5.
+  [x \in 1..10 |-&gt; x * x][100]              \* model checking error in TLC,
+                                            \* Apalache produces some value
+</code></pre>
+<p><strong>Example in Python:</strong></p>
+<pre><code class="language-python">  S10 = frozenset(range(1, 10 + 1))
+  # TLA: [x \in 1..10 |-&gt; x * x]
+  f1 = frozendict({ x: x * x for x in S10 })
+  f1[5]         # 25
+  S3 = frozenset({ 1, 2, 3 })
+  # TLA: [x, y \in 1..3 |-&gt; x * y]
+  f2 = frozendict({ (x, y): x * y for x in S3 for y in S3 })
+  f2[(2, 2)]    # 4
+  # TLA: [ n \in 1..3 |-&gt; [ i \in 1..n |-&gt; n + i ]]
+  f3 = frozendict({
+    n: frozendict({
+      i: n + i
+        for i in frozenset(range(1, n + 1))
+    })
+        for n in S3
+  })
+  f3[3][2]
+</code></pre>
+<hr />
+<p><a name="except"></a></p>
+<h3><a class="header" href="#function-replacement" id="function-replacement">Function replacement</a></h3>
+<p><strong>Notation:</strong> <code>[f EXCEPT ![a_1] = e_1, ..., ![a_n] = e_n]</code></p>
+<p><strong>LaTeX notation:</strong> <code>[f EXCEPT ![a_1] = e_1, ..., ![a_n] = e_n]</code></p>
+<p><strong>Arguments:</strong> At least three arguments. The first one should be a function,
+the other arguments are interleaved pairs of argument expressions and value
+expressions.</p>
+<p><strong>Effect:</strong> This operator evaluates to a new function <code>g</code> that is constructed
+as follows:</p>
+<ul>
+<li>Set the domain of <code>g</code> to <code>DOMAIN f</code>.</li>
+<li>For every element <code>b \in DOMAIN f</code>, do:
+<ul>
+<li>If <code>b = a_i</code> for some <code>i \in 1..n</code>, then set <code>g[b]</code> to <code>e_i</code>.</li>
+<li>If <code>b \notin { a_1, ..., a_n }</code>, then set <code>g[b]</code> to <code>f[b]</code>.</li>
+</ul>
+</li>
+</ul>
+<p><em>Importantly, <code>g</code> is a new function: the function <code>f</code> is not modified!</em></p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> When <code>a_i \notin DOMAIN f</code> for some <code>i \in 1..n</code>,
+TLC flags a model checking error.</p>
+<p>When <code>a_1, ..., a_n</code> are not type-compatible with the type of <code>DOMAIN f</code>,
+Apalache flags a type error. When <code>a_i \notin DOMAIN f</code>, Apalache ignores this
+argument. This is consistent with the semantics of TLA+ in <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>.</p>
+<p><strong>Advanced syntax:</strong> There are three extensions to the basic syntax.</p>
+<p><em>Extension 1</em>. If the domain elements of a function <code>f</code> are tuples, then, similar to
+function application, the expressions <code>a_1, ..., a_n</code> can be written without
+the tuple braces <code>&lt;&lt;...&gt;&gt;</code>. For example:</p>
+<pre><code class="language-tla">  [ f EXCEPT ![1, 2] = e ]
+</code></pre>
+<p>In the above example, the element <code>f[&lt;&lt;1, 2&gt;&gt;]</code> is replaced with <code>e</code>.
+As you can see, this is just syntax sugar.</p>
+<p><em>Extension 2</em>. The operator <code>EXCEPT</code> introduces an implicit alias <code>@</code>
+that refers to the element <code>f[a_i]</code> that is going to be replaced:</p>
+<pre><code class="language-tla">  [ f EXCEPT ![1] = @ + 1, ![2] = @ + 3 ]
+</code></pre>
+<p>In the above example, the element <code>f[1]</code> is replaced with <code>f[1] + 1</code>, whereas
+the element <code>f[2]</code> is replaced with <code>f[2] + 3</code>.
+This is also syntax sugar.</p>
+<p><em>Extension 3</em>. The advanced syntax of <code>EXCEPT</code> allows for chained replacements.
+For example:</p>
+<pre><code class="language-tla">  [ f EXCEPT ![a_1][a_2]...[a_n] = e ]
+</code></pre>
+<p>This is syntax sugar for:</p>
+<pre><code class="language-tla">  [ f EXCEPT ![a_1] =
+    [ @ EXCEPT ![a_2] =
+        ...
+            [ @ EXCEPT ![a_n] = e ]]]
+</code></pre>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  LET f1 == [ p \in 1..3 |-&gt; &quot;working&quot; ] IN
+  [ f1 EXCEPT ![2] = &quot;aborted&quot; ]
+    \* a new function that maps: 1 to &quot;working&quot;, 2 to &quot;aborted&quot;, 3 to &quot;working&quot;
+
+  LET f2 == [x \in 1..3, y \in 1..3 |-&gt; x * y] IN
+  [ f2 EXCEPT ![1, 1] = 0 ]
+    \* a new function that maps:
+    \*   &lt;&lt;1, 1&gt;&gt; to 0, and &lt;&lt;x, y&gt;&gt; to x * y when `x /= 0` or `y /= 0`
+  LET f3 ==  [ n \in 1..3 |-&gt; [ i \in 1..n |-&gt; n + i ]] IN
+  [ f3 EXCEPT ![2][2] = 100 ]
+    \* a new function that maps:
+    \*   1 to the function that maps: 1 to 2
+    \*   2 to the function that maps: 1 to 3, 2 to 100
+    \*   3 to the function that maps: 1 to 4, 2 to 5, 3 to 6
+</code></pre>
+<p><strong>Example in Python:</strong></p>
+<pre><code class="language-python">  f1 = frozendict({ i: &quot;working&quot; for i in range(1, 3 + 1) })
+  tmp = dict(f1)
+  tmp[2] = &quot;aborted&quot;
+  g1 = frozendict(tmp)
+  # g1 is &lt;frozendict {1: 'working', 2: 'aborted', 3: 'working'}&gt;
+
+  S3 = frozenset({ 1, 2, 3 })
+  # TLA: [x, y \in 1..3 |-&gt; x * y]
+  f2 = frozendict({ (x, y): x * y for x in S3 for y in S3 })
+  tmp = dict(f2)
+  tmp[(1, 1)] = 0
+  g2 = frozendict(tmp)
+  # &lt;frozendict {(1, 1): 0, (1, 2): 2, (1, 3): 3, (2, 1): 2, (2, 2): 4,
+  #              (2, 3): 6, (3, 1): 3, (3, 2): 6, (3, 3): 9}&gt;
+
+  # TLA: [ n \in 1..3 |-&gt; [ i \in 1..n |-&gt; n + i ]]
+  f3 = frozendict({
+    n: frozendict({
+      i: n + i
+        for i in frozenset(range(1, n + 1))
+    })
+        for n in S3
+  })
+  # [ f3 EXCEPT ![2][2] = 100 ]
+  tmp = dict(f3[2])
+  tmp[2] = 100
+  tmp2 = dict(f3)
+  tmp2[2] = tmp
+  g3 = frozendict(tmp2)
+  # &lt;frozendict {1: &lt;frozendict {1: 2}&gt;,
+  #              2: {1: 3, 2: 100},
+  #              3: &lt;frozendict {1: 4, 2: 5, 3: 6}&gt;}&gt;
+</code></pre>
+<hr />
+<p><a name="domain"></a></p>
+<h3><a class="header" href="#function-domain" id="function-domain">Function domain</a></h3>
+<p><strong>Notation:</strong> <code>DOMAIN f</code></p>
+<p><strong>LaTeX notation:</strong> <code>DOMAIN f</code></p>
+<p><strong>Arguments:</strong> One argument, which should be a function
+(respectively, a record, tuple, sequence).</p>
+<p><strong>Effect:</strong> <code>DOMAIN f</code> returns the set of values, on which the function
+has been defined, see: Function constructor and Function set constructor.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> In pure TLA+, the result is undefined, if <code>f</code> is not a function
+(respectively, a record, tuple, or sequence). TLC flags a model checking error
+if <code>f</code> is a value that does not have a domain. Apalache flags a type checking
+error.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  DOMAIN [ x \in 1..3 |-&gt; 2 * x ]
+  \* { 1, 2, 3 }
+</code></pre>
+<p><strong>Example in Python:</strong> </p>
+<pre><code class="language-python">  X = frozenset({ 1, 2, 3 })
+  f = frozendict({ x: 2 * x for x in X })
+  frozenset(f.keys())
+  # frozenset({1, 2, 3})
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../lang/logic.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../lang/records.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../lang/logic.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../lang/records.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

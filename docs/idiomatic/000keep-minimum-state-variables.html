@@ -1,0 +1,363 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Keep state variables to the minimum - Apalache User Manual</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../manual.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../tlc-config.html"><strong aria-hidden="true">3.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../types-and-annotations.html"><strong aria-hidden="true">4.</strong> Types and Annotations</a></li><li class="chapter-item expanded "><a href="../features.html"><strong aria-hidden="true">5.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../preprocessing.html"><strong aria-hidden="true">6.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../tuning.html"><strong aria-hidden="true">7.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../kera.html"><strong aria-hidden="true">8.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded "><a href="../types-api.html"><strong aria-hidden="true">9.</strong> Type Reconstruction API</a></li><li class="chapter-item expanded "><a href="../smt/Cardinality.html"><strong aria-hidden="true">10.</strong> SMT encoding for set cardinalities</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">11.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">12.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/booleans.html"><strong aria-hidden="true">12.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../lang/control-and-nondeterminism.html"><strong aria-hidden="true">12.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../lang/conditionals.html"><strong aria-hidden="true">12.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../lang/integers.html"><strong aria-hidden="true">12.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../lang/sets.html"><strong aria-hidden="true">12.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../lang/logic.html"><strong aria-hidden="true">12.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../lang/functions.html"><strong aria-hidden="true">12.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../lang/records.html"><strong aria-hidden="true">12.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../lang/tuples.html"><strong aria-hidden="true">12.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../lang/sequences.html"><strong aria-hidden="true">12.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">12.11.</strong> Bags</div></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">12.12.</strong> Standard Operators</a></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">12.13.</strong> User Operators</a></li></ol></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">13.</strong> User-defined operators</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.</strong> Modules, Extends, and Instances</div></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">15.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../idiomatic/000keep-minimum-state-variables.html" class="active"><strong aria-hidden="true">16.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../idiomatic/001assignments.html"><strong aria-hidden="true">17.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../idiomatic/002primes.html"><strong aria-hidden="true">18.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/001rfc-types.html"><strong aria-hidden="true">19.</strong> RFC 001: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">20.</strong> ADR-002: types and type annotations</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache User Manual</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#idiom-0-keep-state-variables-to-the-minimum" id="idiom-0-keep-state-variables-to-the-minimum">Idiom 0: Keep state variables to the minimum</a></h1>
+<p>In imperative programming, it is common to use mutable variable assignments liberally, but to exercise caution whenever mutable variables have a global scope. In TLA+, mutable variables are always global, so it is important to use them carefully and in a way that accurately reflects the global state of the system you are specifying.</p>
+<h2><a class="header" href="#description" id="description">Description</a></h2>
+<p><em>A good TLA+ specification minimizes the computation state and makes it visible</em>.</p>
+<p>TLA+ does not have special syntax for variable assignment.  For a good
+reason. The power of TLA+ is in writing constraints on variables rather than in
+writing detailed commands. If you have been writing in languages such as C, C++,
+Java, Python, your first reflex would be to define a variable to store the
+intermediate result of a complex computation.</p>
+<p>In programming languages, we introduce temporary variables for several reasons:</p>
+<ol>
+<li>To avoid repetitive computations of the same expression,</li>
+<li>To break down a large expression into a series of smaller expressions, </li>
+<li>To make the code concise.</li>
+</ol>
+<p>Point 1 is a non-issue in TLA+, as it is mostly executed in the reader's brain,
+and people are probably less efficient in caching expressions than computers.
+Points 2 and 3 can be nicely addressed with LET-definitions in TLA+. Hence,
+there is no need for auxiliary variables.</p>
+<p>Usually, we should minimize the specification state, that is, the scope of the data
+structures that are declared with <code>VARIABLES</code>. It does not mean that one variable
+is always better than two. It means that what is stored in <code>VARIABLES</code> should be
+absolutely necessary to describe the computations or the observed properties.</p>
+<h2><a class="header" href="#advantages" id="advantages">Advantages</a></h2>
+<p>By avoiding auxiliary state variables, we localize the updates to the state.
+This improves specification readability. It also helps the tools, as large parts
+of the specification become deterministic.</p>
+<h2><a class="header" href="#disadvantages" id="disadvantages">Disadvantages</a></h2>
+<p>Sometimes, we have to expose the internals of the computation. For instance,
+if we want to closely monitor the values of the computed expressions, when using
+the specification for model-based testing.</p>
+<p>Sometimes, we have to break this idiom to make the specification more readable. Here is an example by Markus Kuppe. The specification of <a href="https://github.com/lemmy/BlockingQueue/blob/3a66f46f6f5703f2863f71baaf0aedaaee58836f/BlockingQueueSplit.tla#L16-L51">BlockingQueue</a> that has one more variable is easier to read than <a href="https://github.com/lemmy/BlockingQueue/blob/3a66f46f6f5703f2863f71baaf0aedaaee58836f/BlockingQueue.tla">the original specification</a> with a minimal number of variables.</p>
+<h2><a class="header" href="#example" id="example">Example</a></h2>
+<p>Consider the following implementation of <a href="https://en.wikipedia.org/wiki/Bubble_sort">Bubble sort</a> in Python:</p>
+<pre><code class="language-python">    my_list = [5, 4, 3, 8, 1]
+    finished = False
+    my_list_len = len(my_list)  # cache the length
+    while not finished:
+        finished = True
+        if my_list_len &gt; 0:
+            prev = my_list[0]       # save the first element to use in the loop
+        for i in range(1, my_list_len):
+            current = my_list[i]
+            if prev &lt;= current:
+                # save current for the next iteration
+                prev = current
+            else:
+                # swap the elements
+                my_list[i - 1] = current
+                my_list[i] = prev
+                finished = False
+</code></pre>
+<p>Notice that we have introduced three local variables to optimize the code:</p>
+<ul>
+<li><code>my_list_len</code> to cache the length of the list,</li>
+<li><code>prev</code> to cache the previously accessed element of the list,
+in order to minimize the number of list accesses,</li>
+<li><code>current</code> to cache the iterated element of the list.</li>
+</ul>
+<p>In TLA+, one usually does not introduce local variables for the intermediate
+results of the computation, but rather introduces variables to represent the
+essential part of the algorithm state. (While we have spent some time on code
+optimization, we might have missed the fact that our sorting algorithm is not
+as good as <a href="https://en.wikipedia.org/wiki/Quicksort">Quicksort</a>.) In the above example, the essential variables are
+<code>finished</code> and <code>my_list</code>.</p>
+<p>Compare the above code to (a slightly more abstract) <a href="./example/bubble.tla">bubble sort in
+TLA+</a>:</p>
+<pre><code class="language-tla">EXTENDS Integers, Sequences
+
+in_list == &lt;&lt;5, 4, 3, 8, 1&gt;&gt;
+VARIABLES my_list, finished
+
+Init ==
+    /\ my_list = in_list
+    /\ finished = FALSE
+
+IsSorted(lst) ==
+    \A i \in DOMAIN lst \ {1}:
+        lst[i - 1] &lt;= lst[i]
+
+WhenSorted ==
+    /\ IsSorted(my_list)
+    /\ finished' = TRUE
+    /\ UNCHANGED my_list
+
+WhenUnsorted ==
+    /\ \E i \in DOMAIN my_list \ {1}:
+        /\ my_list[i - 1] &gt; my_list[i]
+        /\ my_list' = [my_list EXCEPT ![i - 1] = my_list[i],
+                                      ![i] = my_list[i - 1]]
+    /\ finished' = FALSE
+
+Next ==
+    IF finished
+    THEN UNCHANGED &lt;&lt;my_list, finished&gt;&gt;
+    ELSE WhenSorted \/ WhenUnsorted
+
+</code></pre>
+<p>Our TLA+ code contains only two state variables: <code>my_list</code> and <code>finished</code>.
+Other variables are introduced by quantifiers (e.g., <code>\E i \in ...</code>).
+The state variables are not updated in the sense of programming languages.
+Rather, one writes constraints over unprimed and primed versions, e.g.:</p>
+<pre><code class="language-tla">        ...
+        /\ my_list' = [my_list EXCEPT ![i - 1] = my_list[i],
+                                      ![i] = my_list[i - 1]]
+</code></pre>
+<p>Of course, one can introduce aliases for intermediate expressions, for instance,
+by using let-definitions:</p>
+<pre><code class="language-tla">        ...
+        LET prev == my_list[i - 1]
+            current == my_list[i]
+        IN
+        /\ prev &gt; current
+        /\ my_list' = [my_list EXCEPT ![i - 1] = current, ![i] = prev]
+</code></pre>
+<p>However, the let-definitions are not variables, they are just aliases for more
+complex expressions. Importantly, one cannot update the value of an expression
+that is defined with a let-definition. In this sense, TLA+ is similar to
+functional languages, where side effects are carefully avoided and minimized.</p>
+<p>In contrast to functional languages, the value of TLA+ is not in computing
+the result of a function application, but in producing sequences of states
+(called behaviors). Hence, some parts of a useful TLA+ specification should have side effects to record the states.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../idiomatic/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../idiomatic/001assignments.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../idiomatic/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../idiomatic/001assignments.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

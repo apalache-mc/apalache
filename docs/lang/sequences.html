@@ -1,0 +1,606 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Sequences - Apalache User Manual</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../manual.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../tlc-config.html"><strong aria-hidden="true">3.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../types-and-annotations.html"><strong aria-hidden="true">4.</strong> Types and Annotations</a></li><li class="chapter-item expanded "><a href="../features.html"><strong aria-hidden="true">5.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../preprocessing.html"><strong aria-hidden="true">6.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../tuning.html"><strong aria-hidden="true">7.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../kera.html"><strong aria-hidden="true">8.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded "><a href="../types-api.html"><strong aria-hidden="true">9.</strong> Type Reconstruction API</a></li><li class="chapter-item expanded "><a href="../smt/Cardinality.html"><strong aria-hidden="true">10.</strong> SMT encoding for set cardinalities</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">11.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">12.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/booleans.html"><strong aria-hidden="true">12.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../lang/control-and-nondeterminism.html"><strong aria-hidden="true">12.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../lang/conditionals.html"><strong aria-hidden="true">12.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../lang/integers.html"><strong aria-hidden="true">12.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../lang/sets.html"><strong aria-hidden="true">12.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../lang/logic.html"><strong aria-hidden="true">12.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../lang/functions.html"><strong aria-hidden="true">12.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../lang/records.html"><strong aria-hidden="true">12.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../lang/tuples.html"><strong aria-hidden="true">12.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../lang/sequences.html" class="active"><strong aria-hidden="true">12.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">12.11.</strong> Bags</div></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">12.12.</strong> Standard Operators</a></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">12.13.</strong> User Operators</a></li></ol></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">13.</strong> User-defined operators</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.</strong> Modules, Extends, and Instances</div></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">15.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../idiomatic/000keep-minimum-state-variables.html"><strong aria-hidden="true">16.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../idiomatic/001assignments.html"><strong aria-hidden="true">17.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../idiomatic/002primes.html"><strong aria-hidden="true">18.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/001rfc-types.html"><strong aria-hidden="true">19.</strong> RFC 001: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">20.</strong> ADR-002: types and type annotations</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache User Manual</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#sequences" id="sequences">Sequences</a></h1>
+<p><a href="./standard-operators.html">[Back to all operators]</a></p>
+<p>On the surface, TLA+ sequences are very much like lists in your programming
+language of choice.  If you are writing code in Java, Python, Lisp, C++, Scala,
+you will be tempted to use sequences in TLA+ too. This is simply due to the
+fact that arrays, vectors, and lists are the most efficient collections in
+programming languages (for many tasks, but not all of them). But TLA+ is not
+about efficient compilation of your data structures!  Many algorithms can be
+expressed in a much nicer way with <a href="./sets.html">sets</a> and
+<a href="./functions.html">functions</a>. In general, use sequences when you really need
+them.</p>
+<p>In pure TLA+, sequences are just <a href="./tuples">tuples</a>. As a tuple, a sequence is
+a function of the domain <code>1..n</code> for some <code>n &gt;= 0</code> (the domain may be empty).
+The duck-typing principle applies to sequences too: Any function with the domain <code>1..n</code> can also be
+treated as a sequence (or a tuple), and vice versa, tuples and sequences are
+also functions. So you can use all function and tuple operators on sequences.</p>
+<p>Importantly, the domain of a sequence is <code>1..n</code> for some <code>n &gt;= 0</code>. So the
+indices in a sequence start with 1, not 0. For instance, <code>&lt;&lt;1, 2&gt;&gt;[1]</code> gives us
+1, whereas <code>&lt;&lt;1, 2&gt;&gt;[2]</code> gives us 2.</p>
+<p>The operators on sequences are defined in the standard module <code>Sequences</code>. To
+use it, write the <code>EXTENDS</code> clause in the first lines of your module. Like
+this:</p>
+<pre><code class="language-tla">------ MODULE MyLists ----====
+EXTENDS Sequences
+...
+==============================
+</code></pre>
+<p><strong>Construction.</strong> Sequences are constructed exactly as tuples in TLA+:</p>
+<pre><code class="language-tla">  &lt;&lt;2, 4, 8&gt;&gt;
+</code></pre>
+<p>Sometimes, you have to talk about all possible sequences. The operator
+<code>Seq(S)</code> constructs the set of all (finite) sequences that draw elements
+from the set <code>S</code>. For instance, <code>&lt;&lt;1, 2, 2, 1&gt;&gt; \in Seq({1, 2, 3})</code>.
+Note that <code>Seq(S)</code> is an infinite set. To use it with TLC, you often have
+to override this operator, see <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>, page 237.</p>
+<p><strong>Application.</strong> Simply use function application, e.g., <code>s[2]</code>.</p>
+<p><strong>Immutability.</strong> As sequences are special kinds of
+<a href="./functions.html">functions</a>, sequences are immutable.</p>
+<p><strong>Sequence operators.</strong> The module <code>Sequences</code> provides you with convenient
+operators on sequences:</p>
+<ul>
+<li>Add to end: <code>Append(s, e)</code></li>
+<li>First and rest: <code>Head(s)</code> and <code>Tail(s)</code></li>
+<li>Length: <code>Len(s)</code></li>
+<li>Concatenation: <code>s \o t</code></li>
+<li>Subsequence: <code>SubSeq(s, i, k)</code></li>
+<li>Sequence filter: <code>SelectSeq(s, Test)</code></li>
+</ul>
+<p>See the detailed description in <strong>Operators</strong>.</p>
+<p><strong>Types.</strong> In contrast to pure TLA+ and TLC, the Apalache model checker
+distinguishes between general functions, tuples, and sequences. They all have
+different types. Essentially, a function has the type <code>T_1 -&gt; T_2</code> that
+restricts the arguments and results as follows: the arguments have the type
+<code>T_1</code> and the results have the type <code>T_2</code>. A sequence has the type <code>Seq(T_3)</code>,
+which restricts the sequence elements to have the same type <code>T_3</code>.</p>
+<p>As sequences are also tuples in TLA+, this poses a challenge for the Apalache
+type checker. For instance, it can immediately figure out that <code>&lt;&lt;1, &quot;Foo&quot;&gt;&gt;</code>
+is a tuple, as Apalache does not allow sequences to carry elements of different
+types. However, there is no way to say, whether <code>&lt;&lt;1, 2, 3&gt;&gt;</code> should be treated
+as a tuple or a sequence. This needs a <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/types-and-annotations.md">type annotation</a>.</p>
+<p><em>The current SMT encoding of sequences in Apalache is not optimized, 
+so operations on sequences are often significantly slower than operations
+on sets.</em></p>
+<hr />
+<h2><a class="header" href="#operators" id="operators">Operators</a></h2>
+<p><a name="seqCtor"></a></p>
+<h3><a class="header" href="#tuplesequence-constructor" id="tuplesequence-constructor">Tuple/Sequence constructor</a></h3>
+<p><strong>Notation:</strong> <code>&lt;&lt;e_1, ..., e_n&gt;&gt;</code> </p>
+<p><strong>LaTeX notation:</strong> <img src="./img/tuple.png" alt="tuple" /></p>
+<p><strong>Arguments:</strong> An arbitrary number of arguments.</p>
+<p><strong>Effect:</strong> The tuple/sequence constructor returns a function <code>t</code> that is
+constructed as follows:</p>
+<ul>
+<li>set <code>DOMAIN t</code> to <code>1..n</code>,</li>
+<li>set <code>r[i]</code> to the value of <code>e_i</code> for <code>i \in 1..n</code>.</li>
+</ul>
+<p>In Apalache, this constructor may be used to construct either a tuple, or a
+sequence. To distinguish between them, you will sometimes need a <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/types-and-annotations.md">type
+annotation</a>.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> No errors.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  &lt;&lt;&quot;Printer&quot;, 631&gt;&gt;
+</code></pre>
+<p><strong>Example in Python:</strong> Python provides us with the syntax for constructing
+lists, which are indexed with 0!. If we want to stick to the
+principle &quot;sequences are functions&quot;, we have to use a dictionary.</p>
+<pre><code class="language-python">  [&quot;Printer&quot;, 631]                      # the pythonic way, a two-element list
+  frozendict({ 1: &quot;Printer&quot;, 2: 631 })  # the &quot;sequences-are-functions&quot; way
+</code></pre>
+<hr />
+<p><a name="append"></a></p>
+<h3><a class="header" href="#sequence-append" id="sequence-append">Sequence append</a></h3>
+<p><strong>Notation:</strong> <code>Append(seq, e)</code></p>
+<p><strong>LaTeX notation:</strong> <code>Append(seq, e)</code></p>
+<p><strong>Arguments:</strong> Two arguments. The first argument should be a sequence, the
+second one is an arbitrary expression.</p>
+<p><strong>Effect:</strong> The operator <code>Append(seq, e)</code>
+constructs a new sequence <code>newSeq</code> as follows:</p>
+<ul>
+<li>set <code>DOMAIN newSeq</code> to be <code>(DOMAIN seq) \union { Len(seq) + 1 }</code>.</li>
+<li>set <code>newSeq[i]</code> to <code>seq[i]</code> for <code>i \in 1..Len(seq)</code>.</li>
+<li>set <code>newSeq[Len(seq) + 1]</code> to <code>e</code>.</li>
+</ul>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> The argument <code>seq</code> must be a sequence, that is, a function over
+integers <code>1..n</code> for some <code>n</code>. Otherwise, the result is undefined in pure TLA+.
+TLC raises a model checking error. Apalache flags a static type error.</p>
+<p>Apalache flags a static type error, when the type of <code>e</code> is not compatible with
+the type of the sequence elements.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  Append(&lt;&lt;1, 2&gt;&gt;, 5)
+    \* The sequence &lt;&lt;1, 2, 5&gt;&gt;
+</code></pre>
+<p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
+<pre><code class="language-python">  # the pythonic way: a list (indexed with 0, 1, ...)  
+  l = [ 1, 2 ]
+  l.append(5)
+  # the TLA+ way
+  l = frozendict({ 1: 1, 2: 2 })
+  frozendict({ i: l[i] if i &lt;= len(l) else 5
+    for i in range(1, len(l) + 2) })
+</code></pre>
+<hr />
+<p><a name="app"></a></p>
+<h3><a class="header" href="#function-application" id="function-application">Function application</a></h3>
+<p>As sequences are functions, you can access sequence elements with
+<a href="./functions.html#funApp">function application</a>, e.g., <code>seq[2]</code>.</p>
+<hr />
+<p><a name="head"></a></p>
+<h3><a class="header" href="#sequence-head" id="sequence-head">Sequence head</a></h3>
+<p><strong>Notation:</strong> <code>Head(seq)</code></p>
+<p><strong>LaTeX notation:</strong> <code>Head(seq)</code></p>
+<p><strong>Arguments:</strong> One argument. The argument should be a sequence (or a tuple).</p>
+<p><strong>Effect:</strong> The operator <code>Head(seq)</code> evaluates to <code>seq[1]</code>.
+If <code>seq</code> is an empty sequence, the result is undefined.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> The arguments <code>seq</code> must be a sequence (or a tuple), that is, a
+function over integers <code>1..n</code> for some <code>n</code>. Otherwise, the result is undefined
+in pure TLA+. TLC raises a model checking error. Apalache flags a static type
+error.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  Head(&lt;&lt;3, 4&gt;&gt;)
+    \* 3
+</code></pre>
+<p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
+<pre><code class="language-python">  # the pythonic way: using the list
+  l = [ 3, 4 ]
+  l[0]  # 3
+  # the TLA+ way
+  l = frozendict({ 1: 3, 2: 4 })
+  l[1]  # 3
+</code></pre>
+<hr />
+<p><a name="tail"></a></p>
+<h3><a class="header" href="#sequence-tail" id="sequence-tail">Sequence tail</a></h3>
+<p><strong>Notation:</strong> <code>Tail(seq)</code></p>
+<p><strong>LaTeX notation:</strong> <code>Tail(seq)</code></p>
+<p><strong>Arguments:</strong> One argument. The argument should be a sequence (or a tuple).</p>
+<p><strong>Effect:</strong> The operator <code>Tail(seq)</code> constructs a new sequence <code>newSeq</code> as
+follows:</p>
+<ul>
+<li>set <code>DOMAIN newSeq</code> to be <code>(DOMAIN seq) \ { Len(seq) }</code>.</li>
+<li>set <code>newSeq[i]</code> to <code>seq[i + 1]</code> for <code>i \in 1..(Len(seq) - 1)</code>.</li>
+</ul>
+<p>If <code>seq</code> is an empty sequence, the result is undefined. </p>
+<p>Apalache encodes a sequences as a triple <code>&lt;&lt;fun, start, end&gt;&gt;</code>, where
+<code>start</code> and <code>end</code> define a slice of the function <code>fun</code>. As a result,
+<code>Tail</code> is a very simple operation that just increments <code>start</code>.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> The arguments <code>seq</code> must be a sequence (or a tuple), that is, a
+function over integers <code>1..n</code> for some <code>n</code>. Otherwise, the result is undefined
+in pure TLA+. TLC raises a model checking error. Apalache flags a static type
+error.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  Tail(&lt;&lt;3, 4, 5&gt;&gt;)
+    \* &lt;&lt;4, 5&gt;&gt;
+</code></pre>
+<p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
+<pre><code class="language-python">  # the pythonic way: using the list
+  l = [ 3, 4, 5 ]
+  l[1:]  # 4, 5
+  # the TLA+ way
+  l = frozendict({ 1: 3, 2: 4, 3: 5 })
+  frozendict({ i: l[i + 1] for i in range(1, len(l)) })
+</code></pre>
+<hr />
+<p><a name="len"></a></p>
+<h3><a class="header" href="#sequence-length" id="sequence-length">Sequence length</a></h3>
+<p><strong>Notation:</strong> <code>Len(seq)</code></p>
+<p><strong>LaTeX notation:</strong> <code>Len(seq)</code></p>
+<p><strong>Arguments:</strong> One argument. The argument should be a sequence (or a tuple).</p>
+<p><strong>Effect:</strong> The operator <code>Len(seq)</code> is semantically equivalent to
+<code>Cardinality(DOMAIN seq)</code>.</p>
+<p>Apalache encodes a sequences as a triple <code>&lt;&lt;fun, start, end&gt;&gt;</code>, where
+<code>start</code> and <code>end</code> define a slice of the function <code>fun</code>. As a result,
+<code>Len</code> is simply computed as <code>end - start</code>.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> The argument <code>seq</code> must be a sequence (or a tuple), that is, a
+function over integers <code>1..n</code> for some <code>n</code>. Otherwise, the result is undefined
+in pure TLA+. TLC raises a model checking error. Apalache flags a static type
+error.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  Len(&lt;&lt;3, 4, 5&gt;&gt;)
+    \* 3
+</code></pre>
+<p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
+<pre><code class="language-python">  # the pythonic way: using the list
+  l = [ 3, 4, 5 ]
+  len(l)    # 3
+  # the TLA+ way
+  l = frozendict({ 1: 3, 2: 4, 3: 5 })
+  len(l.keys())
+</code></pre>
+<hr />
+<p><a name="concat"></a></p>
+<h3><a class="header" href="#sequence-concatenation" id="sequence-concatenation">Sequence concatenation</a></h3>
+<p><strong>Notation:</strong> <code>s \o t</code> (or <code>s \circ t</code>)</p>
+<p><strong>LaTeX notation:</strong> <img src="./img/seq-concat.png" alt="seq-concat" /></p>
+<p><strong>Arguments:</strong> Two arguments: both should be sequences (or tuples).</p>
+<p><strong>Effect:</strong> The operator <code>s \o t</code>
+constructs a new sequence <code>newSeq</code> as follows:</p>
+<ul>
+<li>set <code>DOMAIN newSeq</code> to be <code>1..(Len(s) + Len(t))</code>.</li>
+<li>set <code>newSeq[i]</code> to <code>s[i]</code> for <code>i \in 1..Len(s)</code>.</li>
+<li>set <code>newSeq[Len(s) + i]</code> to <code>t[i]</code> for <code>i \in 1..Len(t)</code>.</li>
+</ul>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> The arguments <code>s</code> and <code>t</code> must be sequences, that is, functions
+over integers <code>1..n</code> and <code>1..k</code> for some <code>n</code> and <code>k</code>. Otherwise, the result is
+undefined in pure TLA+. TLC raises a model checking error. Apalache flags a
+static type error.</p>
+<p>Apalache flags a static type error, when the types of <code>s</code> and <code>t</code> are
+incompatible.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  &lt;&lt;3, 5&gt;&gt; \o &lt;&lt;7, 9&gt;&gt;
+    \* The sequence &lt;&lt;3, 5, 7, 9&gt;&gt;
+</code></pre>
+<p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
+<pre><code class="language-python">  # the pythonic way: a list (indexed with 0, 1, ...)  
+  l1 = [ 3, 5 ]
+  l2 = [ 7, 9 ]
+  l1 + l2
+  # the TLA+ way
+  l1 = frozendict({ 1: 3, 2: 5 })
+  l2 = frozendict({ 1: 7, 2: 9 })
+  frozendict({ i: l1[i] if i &lt;= len(l1) else l2[i - len(l1)]
+    for i in range(1, len(l1) + len(l2) + 1) })
+</code></pre>
+<hr />
+<p><a name="subseq"></a></p>
+<h3><a class="header" href="#subsequence" id="subsequence">Subsequence</a></h3>
+<p><strong>Notation:</strong> <code>SubSeq(seq, m, n)</code></p>
+<p><strong>LaTeX notation:</strong> <code>SubSeq(seq, m, n)</code></p>
+<p><strong>Arguments:</strong> Three arguments: a sequence (tuple), and two integers.</p>
+<p><strong>Effect:</strong> The operator <code>SubSeq(seq, m, n)</code>
+constructs a new sequence <code>newSeq</code> as follows:</p>
+<ul>
+<li>set <code>DOMAIN newSeq</code> to be <code>1..(n - m)</code>.</li>
+<li>set <code>newSeq[i]</code> to <code>s[m + i - 1]</code> for <code>i \in 1..(n - m + 1)</code>.</li>
+</ul>
+<p>If <code>m &gt; n</code>, then <code>newSeq</code> is equal to the empty sequence <code>&lt;&lt; &gt;&gt;</code>.
+If <code>m &lt; 1</code> or <code>n &gt; Len(seq)</code>, then the result is undefined.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> The argument <code>seq</code> must be a sequence, that is, a function over
+integers <code>1..k</code> for some <code>k</code>. The arguments <code>m</code> and <code>n</code> must be integers.
+Otherwise, the result is undefined in pure TLA+. TLC raises a model checking
+error. Apalache flags a static type error.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  SubSeq(&lt;&lt;3, 5, 9, 10&gt;&gt;, 2, 3)
+    \* The sequence &lt;&lt;5, 9&gt;&gt;
+</code></pre>
+<p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
+<pre><code class="language-python">  # the pythonic way: a list (indexed with 0, 1, ...)  
+  l = [ 3, 5, 9, 10 ]
+  l[1:3]
+  # the TLA+ way
+  l = frozendict({ 1: 3, 2: 5, 3: 9, 4: 10 })
+  m = 2
+  n = 3
+  frozendict({ i: l[i + m - 1]
+    for i in range(1, n - m + 2) })
+</code></pre>
+<hr />
+<p><a name="filter"></a></p>
+<h3><a class="header" href="#sequence-filter" id="sequence-filter">Sequence filter</a></h3>
+<p><strong>Notation:</strong> <code>SelectSeq(seq, Test)</code></p>
+<p><strong>LaTeX notation:</strong> <code>SelectSeq(seq, Test)</code></p>
+<p><strong>Arguments:</strong> Two arguments: a sequence (a tuple) and a one-argument
+operator that evaluates to <code>TRUE</code> or <code>FALSE</code> when called with
+an element of <code>seq</code> as its argument.</p>
+<p><strong>Effect:</strong> The operator <code>SelectSeq(seq, Test)</code> constructs a new sequence
+<code>newSeq</code> that contains every element <code>e</code> of <code>seq</code> on which <code>Test(e)</code> evaluates
+to <code>TRUE</code>.</p>
+<p>It is much easier to describe the effect of <code>SelectSeq</code> in words than to
+give a precise sequence of steps. See <strong>Examples</strong>.</p>
+<p><em>This operator is not supported by Apalache, as it inlines all operators,
+before translating the specification in SMT. Hence, it cannot pass <code>Test</code>
+into a built-in operator. To work around it, write a user-defined
+recursive operator that is equivalent to <code>SelectSeq</code>.</em></p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> If the arguments are not as described in <strong>Arguments</strong>, then the
+result is undefined in pure TLA+. TLC raises a model checking error.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  LET Test(x) ==
+    x % 2 = 0
+  IN
+  SelectSeq(&lt;&lt;3, 4, 9, 10, 11&gt;&gt;, Test)
+    \* The sequence &lt;&lt;4, 10&gt;&gt;
+</code></pre>
+<p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
+<pre><code class="language-python">  # the pythonic way: a list (indexed with 0, 1, ...)  
+  def test(x):
+    return x % 2 == 0
+
+  l = [ 3, 4, 9, 10, 11 ]
+  [ x for x in l if test(x) ]
+  # the TLA+ way
+  l = frozendict({ 1: 3, 2: 4, 3: 9, 4: 10, 5: 11 })
+  as_list = sorted(list(l.items()))
+  filtered = [ x for (_, x) in as_list if test(x) ]
+  frozendict({ i: x
+    for (i, x) in zip(range(1, len(filtered) + 1), filtered)
+  })
+</code></pre>
+<hr />
+<p><a name="seq"></a></p>
+<h3><a class="header" href="#all-sequences" id="all-sequences">All sequences</a></h3>
+<p><strong>Notation:</strong> <code>Seq(S)</code></p>
+<p><strong>LaTeX notation:</strong> <code>Seq(S)</code></p>
+<p><strong>Arguments:</strong> One argument that should be a set.</p>
+<p><strong>Effect:</strong> The operator <code>Seq(S)</code> constructs the set of all (finite) sequences
+that contain elements from <code>S</code>. This set is infinite.</p>
+<p>It is easy to give a recursive definition of all sequences whose length
+is bounded by some <code>n &gt;= 0</code>:</p>
+<pre><code class="language-tla">RECURSIVE BSeq(_, _)
+BSeq(S, n) ==
+  IF n = 0
+  THEN {&lt;&lt; &gt;&gt;}  \* the set that contains the empty sequence
+  ELSE LET Shorter == BSeq(S, n - 1) IN
+        Shorter \union { Append(seq, x): seq \in Shorter, x \in S }
+</code></pre>
+<p>Then we can define <code>Seq(S)</code> to be <code>UNION { BSeq(S, n): n \in Nat }</code>.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong> The argument <code>S</code> must be a set.
+Apalache flags a static type error, if <code>S</code> is not a set.</p>
+<p>TLC raises a model checking error, when it meets <code>Seq(S)</code>, as <code>Seq(S)</code> is
+infinite. You can override <code>Seq(S)</code> with its bounded version <code>BSeq(S, n)</code>
+for some <code>n</code>. See: <a href="https://groups.google.com/g/tlaplus/c/sYx_6e3YyWk/m/4CnwPqIVAgAJ">Overriding Seq in TLC</a>.</p>
+<p>Apalache does not support <code>Seq(S)</code> yet. As a workaround, you can manually
+replace <code>Seq(S)</code> with <code>BSeq(S, n)</code> for some constant <code>n</code>.  See the progress in
+<a href="https://github.com/informalsystems/apalache/issues/314">Issue 314</a>.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">  Seq({1, 2, 3})
+    \* The infinite set
+      { &lt;&lt;&gt;&gt;,
+        &lt;&lt;1&gt;&gt;, &lt;&lt;2&gt;&gt;, &lt;&lt;3&gt;&gt;,
+        &lt;&lt;1, 1&gt;&gt;, &lt;&lt;1, 2&gt;&gt;, &lt;&lt;1, 3&gt;&gt;,
+            &lt;&lt;2, 1&gt;&gt;, &lt;&lt;2, 2&gt;&gt;, &lt;&lt;2, 3&gt;&gt;, &lt;&lt;3, 1&gt;&gt;, &lt;&lt;3, 2&gt;&gt;, &lt;&lt;3, 3&gt;&gt;
+        ...
+      }
+</code></pre>
+<p><strong>Example in Python:</strong> We cannot construct an infinite set in Python. However,
+we could write an iterator that enumerates the sequences in <code>Seq(S)</code>
+till the end of the universe.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../lang/tuples.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../lang/standard-operators.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../lang/tuples.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../lang/standard-operators.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
