@@ -226,25 +226,60 @@ Systems</a>.</p>
 <p><a name="sysreq"></a></p>
 <h1><a class="header" href="#2-system-requirements" id="2-system-requirements">2. System requirements</a></h1>
 <p>Every commit to <a href="https://github.com/informalsystems/apalache">master</a> and
-<a href="https://github.com/informalsystems/apalache/tree/unstable">unstable</a> is built with
-<a href="https://travis-ci.org/informalsystems/apalache">Travis CI</a> on MacOS (xcode9.3 and JDK
-1.8.0) and Linux (OpenJDK8). If you would like to run Apalache in Windows, use a
-docker image. Check the <a href="https://docs.docker.com/docker-for-windows/">Docker
-manual</a> and the section on <a href="manual.html#useDocker">Using a
-docker image</a> for details.</p>
+<a href="https://github.com/informalsystems/apalache/tree/unstable">unstable</a> is built
+with <a href="https://github.com/informalsystems/apalache/actions?query=branch%3Aunstable+workflow%3Abuild">GitHub
+actions</a>
+on MacOS (JDK 1.8.0) and Linux (OpenJDK8). If you would like to run Apalache in
+Windows, use a docker image. Check the <a href="https://docs.docker.com/docker-for-windows/">Docker
+manual</a> and the section on <a href="manual.html#useDocker">Using
+a docker image</a> for details.</p>
 <p>As Apalache is using Microsoft Z3 as a backend SMT solver, the required memory
 largely depends on Z3. We recommend to allocate at least 4GB of memory for the
 tool.</p>
 <p><a name="installation"></a></p>
 <h1><a class="header" href="#3-installation" id="3-installation">3. Installation</a></h1>
-<p>There are two ways to run Apalache: (1) Download and run a docker image, or (2)
-Build Apalache from sources and run the compiled package. If you just want to
-try the tool, we recommend using the docker image. If you would like to run the
-tool on a daily basis or <a href="https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md">contribute</a> to the project, we recommend building
-the project from the source.</p>
+<p>There are three ways to run Apalache:</p>
+<ol>
+<li>Download the <a href="https://github.com/informalsystems/apalache/releases">latest release</a>
+and run apalache in JVM,</li>
+<li>Download and run a <a href="https://docker.com">docker</a> image, or</li>
+<li>Build Apalache from sources and run the compiled package.</li>
+</ol>
+<p>If you just want to try the tool, we recommend downloading the release or
+pulling the docker image. If you would like to run the tool on a daily basis or
+<a href="https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md">contribute</a> to the project, we recommend building the project from the
+source.</p>
+<p><a name="runningJava"></a></p>
+<h2><a class="header" href="#31-running-in-java-virtual-machine" id="31-running-in-java-virtual-machine">3.1. Running in Java Virtual Machine</a></h2>
+<p>You have to download and install a Java Virtual Machine first. For instance,
+<a href="https://openjdk.java.net/">OpenJDK</a> should work (we tried Apalache with OpenJDK 11).</p>
+<p>Once you have installed Java, download the <a href="https://github.com/informalsystems/apalache/releases">latest
+release</a> and unpack into
+a directory of your choice. Depending on your OS, you have two options.</p>
+<p><em>Option 1: Linux, MacOS.</em> You can run the script <code>./bin/apalache-mc</code>. It is
+that simple.</p>
+<p><em>Option 2: Windows.</em> You have to run Java directly:</p>
+<ul>
+<li>
+<p>Check the application name in the directory <code>mod-distribution\target</code>.
+It should be called <code>apalache-pkg-X.Y.Z-RELEASE-full.jar</code>, where <code>X.Y.Z</code>
+is the release number, for instance, 0.8.0.</p>
+</li>
+<li>
+<p>Run Java as follows:</p>
+</li>
+</ul>
+<pre><code>java.exe -cp mod-distribution\target\apalache-pkg-X.Y.Z-RELEASE-full.jar &lt;args&gt;
+</code></pre>
+<p>The arguments <code>&lt;args&gt;</code> are explained in <a href="manual.html#running">Running the tool</a>.</p>
+<p>If you would like to contribute a command-line script for running Apalache in
+Windows, please <a href="https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md#making-a-pull-request">open a pull
+request</a>.</p>
 <p><a name="useDocker"></a></p>
-<h2><a class="header" href="#31-using-a-docker-image" id="31-using-a-docker-image">3.1. Using a docker image</a></h2>
-<p><strong>Starting with release 0.6.0, we will publish Docker images for every release</strong> :sunglasses:</p>
+<h2><a class="header" href="#32-using-a-docker-image" id="32-using-a-docker-image">3.2. Using a docker image</a></h2>
+<p><strong>We publish Docker images for every release</strong> :sunglasses:</p>
+<p><a href="https://docker.com">Docker</a> lets you to run Apalache in an isolated container.
+All dependencies are already installed in docker. However, you have to install docker.</p>
 <p>To get the latest Apalache image, issue the command:</p>
 <pre><code class="language-bash">docker pull apalache/mc
 </code></pre>
@@ -322,7 +357,7 @@ build a docker image of Apalache, issue the following command in
 <pre><code class="language-bash">$ docker image build -t apalache:0.7.0 .
 </code></pre>
 <p><a name="building-from-source"></a></p>
-<h2><a class="header" href="#32-building-from-source" id="32-building-from-source">3.2. Building from source</a></h2>
+<h2><a class="header" href="#33-building-from-source" id="33-building-from-source">3.3. Building from source</a></h2>
 <ol>
 <li>Install <code>git</code>.</li>
 <li>Install <a href="https://openjdk.java.net/install/">OpenJDK8</a> or <a href="https://www.azul.com/downloads/zulu-community/?&amp;architecture=x86-64-bit&amp;package=jdk">Zulu JDK8</a>.
@@ -523,7 +558,7 @@ checking may miss it!</p>
 <p>To check executions of arbitrary lengths, one usually finds a formula that
 satisfies the two following properties:</p>
 <pre><code class="language-tla">/\ Init =&gt; TypeOK /\ IndInv
-/\ TypeOK /\ IndInv /\ Next =&gt; Inv'
+/\ TypeOK /\ IndInv /\ Next =&gt; TypeOK' /\ IndInv'
 </code></pre>
 <p>In normal words: (1) The initial states satisfy the constraint <code>TypeOK /\ IndInv</code>, and (2) whenever the specification makes a step when starting in a
 state that satisfies <code>TypeOK /\ IndInv</code>, it ends up in a state that again
