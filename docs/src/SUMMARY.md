@@ -28,8 +28,6 @@
     - [Tuples](./lang/tuples.md)
     - [Sequences](./lang/sequences.md)
     - [Bags]()
-    - [Standard Operators](./lang/standard-operators.md)
-    - [User Operators](./lang/user-operators.md)
 - [User-defined operators](./lang/user-operators.md)
 - [Modules, Extends, and Instances]()
 
