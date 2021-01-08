@@ -802,4 +802,4 @@ produces a static type error, if the type of `S` is different from a set.
 
 
 [Control Flow and Non-determinism]: ./control-and-nondeterminism.md
-[Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
+[Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html

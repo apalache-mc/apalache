@@ -220,7 +220,7 @@ class Unroller( nameGenerator : UniqueNameGenerator, tracker : TransformationTra
 object Unroller {
   val UNROLL_TIMES_PREFIX   : String = "UNROLL_TIMES_"
   val UNROLL_DEFAULT_PREFIX : String = "UNROLL_DEFAULT_"
-  val MANUAL_LINK           : String = "http://informalsystems.github.io/apalache/docs/manual.html#recursion"
+  val MANUAL_LINK           : String = "https://apalache.informal.systems/docs/apalache/principles.html#recursion"
 
   def apply( nameGenerator : UniqueNameGenerator, tracker : TransformationTracker, renaming: IncrementalRenaming ) : Unroller = {
     new Unroller( nameGenerator, tracker, renaming )
