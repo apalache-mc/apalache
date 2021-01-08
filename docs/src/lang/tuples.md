@@ -54,13 +54,13 @@ restricts the arguments and results as follows: the arguments have the type
 contrast, tuples have more fine-grained types in Apalache: `<<T_1>>`, `<<T_1,
 T_2>>`, `<<T_1, T_2, T_3>>` and so on. As a result, different tuple fields are
 allowed to carry elements of different types, whereas functions and sequences
-are not allowed to do that. See the [Apalache ADR002] on types for details.
+are not allowed to do that. See the [Apalache ADR002][] on types for details.
 
 As tuples are also sequences in TLA+, this poses a challenge for the Apalache
 type checker. For instance, it can immediately figure out that `<<1, "Foo">>`
 is a tuple, as Apalache does not allow sequences to carry elements of different
 types. However, there is no way to say, whether `<<1, 2, 3>>` should be treated
-as a tuple or a sequence. This needs a [type annotation].
+as a tuple or a sequence. This needs a [type annotation][].
 
 _Owing to the type information, tuples are translated into SMT much more efficiently
 by Apalache than the general functions and sequences!_
@@ -171,9 +171,9 @@ As tuples are functions, you can access tuple elements by
 
 
 [Control Flow and Non-determinism]: ./control-and-nondeterminism.md
-[Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
+[Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html
 [frozendict]: https://pypi.org/project/frozendict/
 [Paxos]: https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla
-[Apalache ADR002]: https://github.com/informalsystems/apalache/blob/unstable/docs/adr/002adr-types.md
+[Apalache ADR002]: ../adr/002adr-types.md
 [Cartesian product]: https://en.wikipedia.org/wiki/Cartesian_product
-[type annotation]: https://github.com/informalsystems/apalache/blob/unstable/docs/types-and-annotations.md
+[type annotation]: ../apalache/types-and-annotations.md

@@ -129,41 +129,16 @@ Apalache requires two kinds of type annotations:
 
 ### Empty sets and sequences
 
-Consider the following example
-[`test/tla/NeedForTypes.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/NeedForTypes.tla):
+Consider the following example [`NeedForTypes.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/NeedForTypes.tla):
 
 ```tla
------------------------- MODULE NeedForTypes ------------------------------
-(**
- * This simple example transforms a set into a sequence.
- *)
-EXTENDS Integers, Sequences, FiniteSets
-
-CONSTANTS InSet     \* an input set
-VARIABLES Left,     \* a storage for the yet untransformed elements
-          OutSeq    \* the output sequence
-
-ConstInit == InSet = 1..4
-
-Init ==
-    /\ OutSeq = << >>
-    /\ Left = InSet
-
-Next ==
-    IF Left = {}
-    THEN UNCHANGED <<Left, OutSeq>>
-    ELSE \E x \in Left:
-          /\ OutSeq' = Append(OutSeq, x)
-          /\ Left' = Left \ {x}
-
-Inv == InSet = Left \union { OutSeq[i]: i \in DOMAIN OutSeq }
-===========================================================================
+{{#include ../../../test/tla/NeedForTypes.tla}}
 ```
 
 While this example is perfectly fine for TLC, Apalache has to assign types to
 the variables, in order to construct SMT constraints. In some cases, Apalache
 can infer types completely automatically, e.g., as in the `y2k` example (see
-[Section 4](#example)). However, if you run `apalache check
+[the example](./example.md)). However, if you run `apalache check
 --cinit=ConstInit NeedForTypes.tla`, the tool will complain:
 
 ```
@@ -572,24 +547,16 @@ start with the prefix `Rec`.
 **Why you should avoid recursive functions.** Sometimes, recursive functions
 concisely describe the function that you need. The nice examples are the
 factorial function (see above) and Fibonacci numbers (see
-[Rec3](https://github.com/informalsystems/apalache/tree/unstable/test/tla/Rec3.tla)).
+[Rec3](https://github.com/informalsystems/apalache/blob/unstable/test/tla/Rec3.tla)).
 However, when you define a recursive function over sets, the complexity gets
 ugly really fast.
 
 Consider the example
-[Rec9](https://github.com/informalsystems/apalache/tree/unstable/test/tla/Rec9.tla),
+[Rec9](https://github.com/informalsystems/apalache/blob/unstable/test/tla/Rec9.tla),
 which computes set cardinality. Here is a fragment of the spec:
 
 ```tla
-\* the type of the function Card
-CardT == [{Int} -> Int]
-
-\* The set cardinality function
-Card[S \in SUBSET NUMS] ==
-    IF S = IntSet({})
-    THEN 0
-    ELSE LET i == CHOOSE j \in S: TRUE IN
-        1 + (Card <: CardT)[S \ {i}]
+{{#include ../../../test/tla/Rec9.tla:19:32}}
 ```
 
 Since we cannot fix the order, in which the set elements are evaluated, we

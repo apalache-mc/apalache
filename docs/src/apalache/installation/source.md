@@ -15,8 +15,9 @@
    - If you used `direnv`, then `apalache-mc` will be in your path.
    - Otherwise, run `./bin/apalache-mc`.
 
+
 [OpenJDK8]: https://openjdk.java.net/install/
-[Zulu JDK8]: https://www.azul.com/downloads/zulu-community/?&architecture=x86-64-bit&package=jdk
+[Zulu JDK8]: https://www.azul.com/downloads/zulu-community/?version=java-8-lts&architecture=x86-64-bit&package=jdk
 [compatibility table]: https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html
 [Apache Maven]: https://maven.apache.org/
 [direnv]: https://direnv.net/

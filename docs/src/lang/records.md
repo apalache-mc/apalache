@@ -49,7 +49,7 @@ distinguishes between general functions and records. When Apalache processes a
 record constructor, it assigns the record type to the result. This record type
 carries the information about the names of the record fields and their types.
 Similarly, Apalache assigns the type of a set of records, when it processes a
-record set constructor.  See the [Apalache ADR002] on types.
+record set constructor.  See the [Apalache ADR002][] on types.
 
 _Owing to the type information, records are translated into SMT more efficiently
 by Apalache than the general functions._
@@ -199,10 +199,8 @@ is picked with `\E r \in [ field_1: S_1, ..., field_n: S_n]`.
 
 ----------------------------------------------------------------------------
 
-
-
 [Control Flow and Non-determinism]: ./control-and-nondeterminism.md
-[Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
+[Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html
 [frozendict]: https://pypi.org/project/frozendict/
 [Paxos]: https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla
-[Apalache ADR002]: https://github.com/informalsystems/apalache/blob/unstable/docs/adr/002adr-types.md
+[Apalache ADR002]: ../adr/002adr-types.md

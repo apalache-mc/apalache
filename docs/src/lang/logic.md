@@ -325,10 +325,10 @@ There are two common use cases, where the use of `CHOOSE` is well justified:
  - _Use case 1:_ Retrieving the only element of a singleton set. If you know
     that `Cardinality({x \in S: P}) = 1`, then `CHOOSE x \in S: P` returns
     the only element of `{x \in S: P}`. No magic.
-    For instance, see: [Min and Max in FiniteSetsExt].
+    For instance, see: [Min and Max in FiniteSetsExt][].
 
  - _Use case 2:_ Enumerating set elements in a fixed but unknown order.
-    For instance, see: [ReduceSet in FiniteSetsExt].
+    For instance, see: [ReduceSet in FiniteSetsExt][].
 
 In other cases, we believe that `CHOOSE` is bound to do [Program synthesis].
 So TLC does some form of synthesis by brute force when it has to evaluate
@@ -451,7 +451,7 @@ Congratulations! You have reached the bottom of this page. If you want to learn
 more about unbounded `CHOOSE`, read Section 16.1.2 of [Specifying Systems].
 
 
-[Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
+[Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html
 [Control Flow and Non-determinism]: ./control-and-nondeterminism.md
 [TLAPS]: https://tla.msr-inria.inria.fr/tlaps/content/Home.html
 [Min and Max in FiniteSetsExt]: https://github.com/tlaplus/CommunityModules/blob/master/modules/FiniteSetsExt.tla#L63-L64

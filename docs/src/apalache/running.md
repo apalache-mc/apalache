@@ -187,7 +187,7 @@ the run-specific directory `x/hh.mm-DD.MM.YYYY-<id>`:
   - File `out-parser.json` is produced as a result of converting the
     Apalache TLA IR representation of the input into JSON format.
   - File `out-config.tla` is produced as a result of substituting CONSTANTS,
-    as described in [Section 5](#parameters).
+    as described in [Setting up specification parameters](./parameters.md).
   - File `out-inline.tla` is produced as a result of inlining operator
     definitions and `LET-IN` definitions.
   - File `out-priming.tla` is produced as a result of replacing constants and

@@ -2,7 +2,7 @@
 
 **We publish Docker images for every release** :sunglasses:
 
-[Docker](https://docker.com) lets you to run Apalache in an isolated container.
+[Docker](https://www.docker.com/) lets you to run Apalache in an isolated container.
 All dependencies are already installed in docker. However, you have to install docker.
 
 To get the latest Apalache image, issue the command:
@@ -33,8 +33,7 @@ The following docker parameters are used:
     `-v <your-spec-directory>:/var/apalache:z`
 - `apalache/mc` is the APALACHE docker image name. By default, the `latest` stable
   version is used; you can also refer to a specific tool version, e.g., `apalache/mc:0.6.0` or `apalache/mc:unstable`
-- `<args>` are the tool arguments as described in
-  [Running the tool](#running).
+- `<args>` are the tool arguments as described in [Running the Tool](../running.md).
 
 We provide a convenience wrapper for this docker command in
 `script/run-docker.sh`. To run the `latest` image using the script, execute

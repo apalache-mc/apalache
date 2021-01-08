@@ -22,7 +22,7 @@ that simple.
   java.exe -cp mod-distribution\target\apalache-pkg-X.Y.Z-RELEASE-full.jar <args>
   ```
 
-  The arguments `<args>` are explained in [Running the tool](#running).
+  The arguments `<args>` are explained in [Running the Tool](../running.md).
 
 If you would like to contribute a command-line script for running Apalache in
 Windows, please [open a pull
