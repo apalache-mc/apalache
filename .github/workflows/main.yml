@@ -19,6 +19,9 @@ jobs:
           mdbook build
 
       - name: Check Links
+        # FIXME: Remove once
+        # https://github.com/lycheeverse/lychee-action/issues/4 is fixed
+        continue-on-error: true
         uses: lycheeverse/lychee-action@v1
         with:
           args: -v target/docs/*.html
