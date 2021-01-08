@@ -11,9 +11,9 @@ alt="Apalache Logo">
 | :----------------------------: | :--------------------------------: |
 | [![master badge][]][master-ci] | [![unstable badge][]][unstable-ci] |
 
-[master badge]: https://travis-ci.org/informalsystems/apalache.svg?branch=master
-[master-ci]: https://travis-ci.org/github/informalsystems/apalache/branches
-[unstable badge]: https://github.com/informalsystems/apalache/workflows/build/badge.svg
+[master badge]: https://github.com/informalsystems/apalache/workflows/build/badge.svg?branch=master
+[master-ci]: https://github.com/informalsystems/apalache/actions?query=branch%3Amaster+workflow%3Abuild
+[unstable badge]: https://github.com/informalsystems/apalache/workflows/build/badge.svg?branch=unstable
 [unstable-ci]: https://github.com/informalsystems/apalache/actions?query=branch%3Aunstable+workflow%3Abuild
 
 </div>
