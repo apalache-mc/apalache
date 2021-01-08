@@ -12,13 +12,15 @@ import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorM
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.tooling.Version
-import at.forsyte.apalache.tla.tooling.opt.{CheckCmd, ParseCmd, TypeCheckCmd}
+import at.forsyte.apalache.tla.tooling.opt.{CheckCmd, ConfigCmd, General, ParseCmd, TypeCheckCmd}
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.google.inject.{Guice, Injector}
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.configuration2.builder.fluent.Configurations
 import org.apache.commons.configuration2.ex.ConfigurationException
 import org.backuity.clist.{Cli, Command}
+import util.ExecutionStatisticsCollector
+import util.ExecutionStatisticsCollector.Selection
 
 import scala.collection.JavaConverters._
 
@@ -56,42 +58,56 @@ object Tool extends App with LazyLogging {
     * @return the exit code; as usual, 0 means success.
     */
   def run(args: Array[String]): Int = {
-    Console.println("# APALACHE version %s build %s".format(Version.version, Version.build))
-    Console.println("#")
-    Console.println("# WARNING: This tool is in the experimental stage.")
-    Console.println("#          Please report bugs at: " + ISSUES_LINK)
-    Console.println("")
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably
     new LogbackConfigurator().configureDefaultContext()
-    // start
-    val startTime = LocalDateTime.now()
-    val parseCmd = new ParseCmd
-    val checkCmd = new CheckCmd
-    val typecheckCmd = new TypeCheckCmd
-    try {
-      Cli.parse(args).withProgramName("apalache-mc").version(Version.version)
-        .withCommands(parseCmd, checkCmd, typecheckCmd) match {
-        case Some(parse: ParseCmd) =>
-          logger.info("Parse " + parse.file)
-          val injector = injectorFactory(parseCmd)
-          handleExceptions(injector, runParse(injector, parse, _))
 
-        case Some(check: CheckCmd) =>
-          logger.info("Checker options: filename=%s, init=%s, next=%s, inv=%s"
-            .format(check.file, check.init, check.next, check.inv))
-          val injector = injectorFactory(check)
-          handleExceptions(injector, runCheck(injector, check, _))
+    // first, call the arguments parser, which can also handle the standard commands such as --help and --version
+    val command =
+      Cli.parse(args)
+      .withProgramName("apalache-mc")
+      .version("%s build %s".format(Version.version, Version.build), "--version")
+      .withCommands(new ParseCmd, new CheckCmd, new TypeCheckCmd, new ConfigCmd)
 
-        case Some(parse: TypeCheckCmd) =>
-          logger.info("Type checking " + parse.file)
-          val injector = injectorFactory(typecheckCmd)
-          handleExceptions(injector, runTypeCheck(injector, typecheckCmd, _))
+    if (!command.isInstanceOf[Some[General]]) {
+      // A standard option, e.g., --version or --help. No header, no timer.
+      OK_EXIT_CODE
+    } else {
+      // One of our commands. Print the header and measure time
+      printHeaderAndConfig()
+      val startTime = LocalDateTime.now()
 
-        case _ =>
-          OK_EXIT_CODE // nothing to do
+      try {
+        command match {
+          case Some(parse: ParseCmd) =>
+            logger.info("Parse " + parse.file)
+            submitStatisticsIfEnabled(Map("command" -> "parse"))
+            val injector = injectorFactory(parse)
+            handleExceptions(injector, runParse(injector, parse, _))
+
+          case Some(check: CheckCmd) =>
+            logger.info("Checker options: filename=%s, init=%s, next=%s, inv=%s"
+              .format(check.file, check.init, check.next, check.inv))
+            submitStatisticsIfEnabled(Map("command" -> "check"))
+            val injector = injectorFactory(check)
+            handleExceptions(injector, runCheck(injector, check, _))
+
+          case Some(typecheck: TypeCheckCmd) =>
+            logger.info("Type checking " + typecheck.file)
+            submitStatisticsIfEnabled(Map("command" -> "typecheck"))
+            val injector = injectorFactory(typecheck)
+            handleExceptions(injector, runTypeCheck(injector, typecheck, _))
+
+          case Some(config: ConfigCmd) =>
+            logger.info("Configuring Apalache")
+            configure(config)
+            OK_EXIT_CODE
+
+          case _ =>
+            OK_EXIT_CODE // nothing to do
+        }
+      } finally {
+        printTimeDiff(startTime)
       }
-    } finally {
-      printTimeDiff(startTime)
     }
   }
 
@@ -213,7 +229,7 @@ object Tool extends App with LazyLogging {
     val adapter = injector.getInstance(classOf[ExceptionAdapter])
 
     try {
-      fun()
+      fun(_)
       Tool.OK_EXIT_CODE
     } catch {
       case e: Exception if adapter.toMessage.isDefinedAt(e) =>
@@ -235,6 +251,63 @@ object Tool extends App with LazyLogging {
         Console.err.println("Please report an issue at: " + ISSUES_LINK, e)
         logger.error("Unhandled exception", e)
         Tool.ERROR_EXIT_CODE
+    }
+  }
+
+  private def printHeaderAndConfig(): Unit = {
+    Console.println("# APALACHE version %s build %s".format(Version.version, Version.build))
+    Console.println("#")
+    Console.println("# WARNING: This tool is in the experimental stage.")
+    Console.println("#          Please report bugs at: " + ISSUES_LINK)
+    Console.println("# ")
+
+    if (ExecutionStatisticsCollector.promptUser()) {
+      // Statistics collection is not enabled. Cry for help.
+      Console.println("# Usage statistics is OFF. We care about your privacy.")
+      Console.println("# If you want to help our project, consider enabling statistics with config --submit-stats=true.")
+    } else {
+      // Statistic collection is enabled. Thank the user
+      Console.println("# Usage statistics is ON. Thank you!")
+      Console.println("# If you have changed your mind, disable the statistics with config --submit-stats=false.")
+    }
+    Console.println("")
+  }
+
+  private def configure(config: ConfigCmd): Unit = {
+    config.submitStats match {
+      case Some(isEnabled) =>
+        val statCollector = new ExecutionStatisticsCollector()
+        if (isEnabled) {
+          logger.info("Statistics collection is ON.")
+          logger.info("This also enabled TLC and TLA+ Toolbox statistics.")
+          statCollector.set(Selection.ON)
+        } else {
+          logger.info("Statistics collection is OFF.")
+          logger.info("This also disabled TLC and TLA+ Toolbox statistics.")
+          statCollector.set(Selection.NO_ESC)
+        }
+
+      case None =>
+        ()
+    }
+  }
+
+  // We are collecting statistics with the code from tlatools:
+  //
+  // https://github.com/tlaplus/tlaplus/blob/master/tlatools/org.lamport.tlatools/src/util/ExecutionStatisticsCollector.java
+  private def submitStatisticsIfEnabled(commandParams: Map[String, String]): Unit = {
+    val statCollector = new ExecutionStatisticsCollector()
+    if (statCollector.isEnabled) {
+      val params = new java.util.HashMap[String, String]()
+      params.put("ver", "apalache-%s-%s".format(Version.version, Version.build))
+      params.put("osName", System.getProperty("os.name"))
+      params.put("osArch", System.getProperty("os.arch"))
+      params.put("jvmVendor", System.getProperty("java.vendor"))
+      params.put("jvmVersion", System.getProperty("java.version"))
+      params.put("jvmArch", System.getProperty("os.arch"))
+      params.put("ts", (System.currentTimeMillis() / 1000).toString)
+      params.putAll(commandParams.asJava)
+      statCollector.collect(params)
     }
   }
 }
