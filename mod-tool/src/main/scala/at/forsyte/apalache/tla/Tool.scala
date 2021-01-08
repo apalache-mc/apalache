@@ -61,11 +61,11 @@ object Tool extends App with LazyLogging {
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably
     new LogbackConfigurator().configureDefaultContext()
 
-    // first, call the arguments parser, which can also handle the standard commands such as --help and --version
+    // first, call the arguments parser, which can also handle the standard commands such as version
     val command =
       Cli.parse(args)
       .withProgramName("apalache-mc")
-      .version("%s build %s".format(Version.version, Version.build), "--version")
+      .version("%s build %s".format(Version.version, Version.build), "version")
       .withCommands(new ParseCmd, new CheckCmd, new TypeCheckCmd, new ConfigCmd)
 
     if (!command.isInstanceOf[Some[General]]) {
