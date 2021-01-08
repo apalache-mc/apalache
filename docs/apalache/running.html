@@ -1,0 +1,411 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Running the Tool - Apalache Documentation</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../apalache/index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../apalache/getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/apalache-or-tlc.html"><strong aria-hidden="true">2.1.</strong> Shall I use Apalache or TLC?</a></li><li class="chapter-item expanded "><a href="../apalache/system-reqs.html"><strong aria-hidden="true">2.2.</strong> System Requirements</a></li><li class="chapter-item expanded "><a href="../apalache/installation/index.html"><strong aria-hidden="true">2.3.</strong> Installation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/installation/jvm.html"><strong aria-hidden="true">2.3.1.</strong> Prebuilt Packages</a></li><li class="chapter-item expanded "><a href="../apalache/installation/docker.html"><strong aria-hidden="true">2.3.2.</strong> Docker</a></li><li class="chapter-item expanded "><a href="../apalache/installation/source.html"><strong aria-hidden="true">2.3.3.</strong> Source</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/running.html" class="active"><strong aria-hidden="true">2.4.</strong> Running the Tool</a></li><li class="chapter-item expanded "><a href="../apalache/example.html"><strong aria-hidden="true">2.5.</strong> An Example TLA+ Specification</a></li><li class="chapter-item expanded "><a href="../apalache/parameters.html"><strong aria-hidden="true">2.6.</strong> Specification Parameters</a></li><li class="chapter-item expanded "><a href="../apalache/principles.html"><strong aria-hidden="true">2.7.</strong> Principles of Symbolic Model Checking with Apalache</a></li><li class="chapter-item expanded "><a href="../apalache/apalache-mod.html"><strong aria-hidden="true">2.8.</strong> The Apalache Module</a></li><li class="chapter-item expanded "><a href="../apalache/profiling.html"><strong aria-hidden="true">2.9.</strong> Profiling Your Specification</a></li><li class="chapter-item expanded "><a href="../apalache/theory.html"><strong aria-hidden="true">2.10.</strong> Five minutes of theory</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/tlc-config.html"><strong aria-hidden="true">3.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../apalache/types-and-annotations.html"><strong aria-hidden="true">4.</strong> Types and Annotations</a></li><li class="chapter-item expanded "><a href="../apalache/features.html"><strong aria-hidden="true">5.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../apalache/preprocessing.html"><strong aria-hidden="true">6.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../apalache/tuning.html"><strong aria-hidden="true">7.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../apalache/kera.html"><strong aria-hidden="true">8.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">9.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">10.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/booleans.html"><strong aria-hidden="true">10.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../lang/control-and-nondeterminism.html"><strong aria-hidden="true">10.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../lang/conditionals.html"><strong aria-hidden="true">10.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../lang/integers.html"><strong aria-hidden="true">10.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../lang/sets.html"><strong aria-hidden="true">10.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../lang/logic.html"><strong aria-hidden="true">10.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../lang/functions.html"><strong aria-hidden="true">10.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../lang/records.html"><strong aria-hidden="true">10.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../lang/tuples.html"><strong aria-hidden="true">10.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../lang/sequences.html"><strong aria-hidden="true">10.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">10.11.</strong> Bags</div></li></ol></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">11.</strong> User-defined operators</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">12.</strong> Modules, Extends, and Instances</div></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">13.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../idiomatic/000keep-minimum-state-variables.html"><strong aria-hidden="true">14.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../idiomatic/001assignments.html"><strong aria-hidden="true">15.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../idiomatic/002primes.html"><strong aria-hidden="true">16.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">17.</strong> ADR-002: types and type annotations</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache Documentation</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#running-the-tool" id="running-the-tool">Running the Tool</a></h1>
+<h2><a class="header" href="#model-checker-command-line-parameters" id="model-checker-command-line-parameters">Model checker command-line parameters</a></h2>
+<p>The model checker can be run as follows:</p>
+<pre><code class="language-bash">$ apalache check [--config=filename] [--init=Init] [--cinit=ConstInit] \
+    [--next=Next] [--inv=Inv] [--length=10] [--tuning=filename] &lt;myspec&gt;.tla
+</code></pre>
+<p>The arguments are as follows:</p>
+<ul>
+<li><code>--config</code> specifies the <a href="./tlc-config.html">TLC configuration file</a>,
+the default name is <code>&lt;myspec&gt;.cfg</code></li>
+<li><code>--init</code> specifies the initialization predicate, the default name is <code>Init</code></li>
+<li><code>--next</code> specifies the transition predicate, the default name is <code>Next</code></li>
+<li><code>--cinit</code> specifies the constant initialization predicate, optional</li>
+<li><code>--inv</code> specifies the invariant to check, optional</li>
+<li><code>--length</code> specifies the upper bound on the length of the finite executions to explore</li>
+<li><code>--tuning</code> specifies the properties file that stores the options for
+<a href="tuning.html">fine tuning</a></li>
+</ul>
+<p>If an initialization predicate, transition predicate, or invariant is specified both in the configuration file,
+and on the command line, the command line parameters take precedence over those in the configuration file.</p>
+<h3><a class="header" href="#bounded-model-checking" id="bounded-model-checking">Bounded model checking</a></h3>
+<p>By default, Apalache performs <em>bounded model checking</em>, that is,
+it encodes a symbolic execution of length <code>k</code> and an invariant violation
+in SMT:</p>
+<pre><code class="language-tla">/\ Init[v_0/v]
+/\ Next[v_0/v, v_1/v'] /\ Next[v_1/v, v_2/v'] /\ ... /\ Next[v_{k-1}/v, v_k/v']
+/\ ~Inv[v_0/v] \/ ~Inv[v_1/v] \/ ... \/ ~Inv[v_k/v]
+</code></pre>
+<p>Here an expression <code>Inv[v_i/v]</code> means that the state variables <code>v</code> are replaced
+with their copies <code>v_i</code> for the state <code>i</code>.  Likewise, <code>Next[v_i/v,v_{i+1}/v']</code>
+means that the state variables <code>v</code> are replaced with their copies <code>v_i</code> for the
+state <code>i</code>, whereas the state variables <code>v'</code> are replaced with their copies
+<code>v_{i+1}</code> for the state <code>i+1</code>.</p>
+<h4><a class="header" href="#bounded-model-checking-is-an-incomplete-technique" id="bounded-model-checking-is-an-incomplete-technique">Bounded model checking is an incomplete technique</a></h4>
+<p>If Apalache finds a bug in this symbolic execution (by querying z3), then it
+reports a counterexample. Otherwise, it reports that no bug was found up to the
+given length. If a bug needs a long execution to get revealed, bounded model
+checking may miss it!</p>
+<h3><a class="header" href="#checking-an-inductive-invariant" id="checking-an-inductive-invariant">Checking an inductive invariant</a></h3>
+<p>To check executions of arbitrary lengths, one usually finds a formula that
+satisfies the two following properties:</p>
+<pre><code class="language-tla">/\ Init =&gt; TypeOK /\ IndInv
+/\ TypeOK /\ IndInv /\ Next =&gt; TypeOK' /\ IndInv'
+</code></pre>
+<p>In normal words: (1) The initial states satisfy the constraint <code>TypeOK /\ IndInv</code>, and (2) whenever the specification makes a step when starting in a
+state that satisfies <code>TypeOK /\ IndInv</code>, it ends up in a state that again
+satisfies <code>TypeOK /\ IndInv</code>.</p>
+<p>Note that we usually check <code>IndInv</code> in conjunction with <code>TypeOK</code>, as we
+have to constrain the variable values. In the <code>y2k</code> example, our inductive
+invariant is actually constraing the variables. In fact, such an inductive
+invariant is usually called <code>TypeOK</code>.</p>
+<p>To check an inductive invariant <code>IndInv</code> in Apalache, you run two commands
+that check the above two formulas:</p>
+<pre><code class="language-bash">$ apalache check --init=Init --inv=IndInv --length=0 &lt;myspec&gt;.tla
+</code></pre>
+<p>and</p>
+<pre><code class="language-bash">$ apalache check --init=IndInv --inv=IndInv --length=1 &lt;myspec&gt;.tla
+</code></pre>
+<h2><a class="header" href="#examples" id="examples">Examples</a></h2>
+<h3><a class="header" href="#checking-safety-up-to-20-steps" id="checking-safety-up-to-20-steps">Checking safety up to 20 steps</a></h3>
+<pre><code class="language-bash">$ cd test/tla
+$ apalache check --length=20 --inv=Safety y2k_override.tla
+</code></pre>
+<p>This command checks, whether <code>Safety</code> can be violated in 20 specification
+steps. If <code>Safety</code> is not violated, your spec might still have a bug that
+requires a computation longer than 20 steps to manifest.</p>
+<h3><a class="header" href="#checking-an-inductive-invariant-1" id="checking-an-inductive-invariant-1">Checking an inductive invariant:</a></h3>
+<pre><code class="language-bash">$ cd test/tla
+$ apalache check --length=0 --init=Init --inv=Inv y2k_override.tla
+$ apalache check --length=1 --init=Inv  --inv=Inv y2k_override.tla
+</code></pre>
+<p>The first call to apalache checks, whether the initial states
+satisfy the invariant. The second call to apalache checks, whether
+a single specification step satisfies the invariant, when starting
+in a state that satisfies the invariant. (That is why these
+invariants are called inductive.)</p>
+<h3><a class="header" href="#using-a-constant-initializer" id="using-a-constant-initializer">Using a constant initializer:</a></h3>
+<pre><code class="language-bash">$ cd test/tla
+apalache check --cinit=ConstInit --length=20 --inv=Safety y2k_cinit.tla
+</code></pre>
+<p>This command checks, whether <code>Safety</code> can be violated in 20
+specification steps. The constants are initialized with the predicate
+<code>ConstInit</code>, defined in <code>y2k_cinit.tla</code> as:</p>
+<pre><code class="language-tla">ConstInit == BIRTH_YEAR \in 0..99 /\ LICENSE_AGE \in 10..99
+</code></pre>
+<p>In this case, Apalache finds a safety violation, e.g., for
+<code>BIRTH_YEAR=89</code> and <code>LICENSE_AGE=10</code>. A complete counterexample
+is printed in <code>counterexample.tla</code>.</p>
+<p>The final lines in the file clearly indicate the state that violates the
+invariant:</p>
+<pre><code class="language-tla">State14 ==
+/\ BIRTH_YEAR = 89
+/\ LICENSE_AGE = 10
+/\ hasLicense = TRUE
+/\ year = 0
+
+(* The following formula holds true in the last state and violates the invariant *)
+
+InvariantViolation == hasLicense /\ year - BIRTH_YEAR &lt; LICENSE_AGE
+</code></pre>
+<p><a name="lookup"></a></p>
+<h2><a class="header" href="#module-lookup" id="module-lookup">Module lookup</a></h2>
+<p>Apalache uses <a href="https://lamport.azurewebsites.net/tla/tools.html">the SANY
+parser</a>, which is the
+standard parser of TLC and TLA+ Toolbox. By default, SANY is looking for the
+modules in the current working directory and in the Java package
+<code>tla2sany.StandardModules</code>, which is usually provided by the <code>tla2tools.jar</code> that is
+included in the Java classpath.</p>
+<p>In addition to the modules in the current working directory, Appalache provides</p>
+<ul>
+<li>a small standard library (located in <code>$APALACHE_HOME/src/tla</code>), and</li>
+<li>support for additional source directories specified in the environment variable <code>TLA_PATH</code>. <code>TLA_PATH</code> should be a list of paths to directories separated by <code>:</code>. </li>
+</ul>
+<p>(Directories in the <code>TLA_PATH</code> are provided to SANY via the <code>TLA-Library</code> Java system variable.)</p>
+<p>So the module lookup order in Apalache is as follows:</p>
+<ol>
+<li>The current working directory.</li>
+<li>The directory <code>$APALACHE_HOME/src/tla</code>.</li>
+<li>The directories specified in the environment variable <code>TLA_PATH</code>.</li>
+<li>The Java package <code>tla2sany.StandardModules</code>.</li>
+</ol>
+<p><strong>Note:</strong> To let TLA+ Toolbox and TLC know about the Apalache modules, include
+<code>$APALACHE_HOME/src/tla</code> in the lookup directories, as explained by Markus
+Kuppe for the <a href="https://github.com/tlaplus/CommunityModules">TLA+ Community
+Modules</a>.</p>
+<p><a name="detailed"></a></p>
+<h2><a class="header" href="#detailed-output" id="detailed-output">Detailed output</a></h2>
+<p>The tool will display only important messages on stdout, but a detailed log can
+be found in <code>detailed.log</code>.</p>
+<p>Additionally, each pass of the model checker produces an intermediate TLA+ file in
+the run-specific directory <code>x/hh.mm-DD.MM.YYYY-&lt;id&gt;</code>:</p>
+<ul>
+<li>File <code>out-parser.tla</code> is produced as a result of parsing and importing
+into the intermediate representation, Apalache TLA IR.</li>
+<li>File <code>out-parser.json</code> is produced as a result of converting the
+Apalache TLA IR representation of the input into JSON format.</li>
+<li>File <code>out-config.tla</code> is produced as a result of substituting CONSTANTS,
+as described in <a href="#parameters">Section 5</a>.</li>
+<li>File <code>out-inline.tla</code> is produced as a result of inlining operator
+definitions and <code>LET-IN</code> definitions.</li>
+<li>File <code>out-priming.tla</code> is produced as a result of replacing constants and
+variables in <code>ConstInit</code> and <code>Init</code> with their primed versions.</li>
+<li>File <code>out-vcgen.tla</code> is produced as a result of extracting verification
+conditions, e.g., invariants to check.</li>
+<li>File <code>out-prepro.tla</code> is produced as a result of running all preprocessing
+steps.</li>
+<li>File <code>out-transition.tla</code> is produced as a result of finding assignments
+and symbolic transitions.</li>
+<li>File <code>out-opt.tla</code> is produced as a result of expression optimizations.</li>
+<li>File <code>out-analysis.tla</code> is produced as a result of analysis, e.g.,
+marking Skolemizable expressions and expressions to be expanded.</li>
+</ul>
+<p><a name="parsing"></a></p>
+<h2><a class="header" href="#parsing-and-pretty-printing" id="parsing-and-pretty-printing">Parsing and pretty-printing</a></h2>
+<p>If you'd like to check that your TLA+ specification is syntactically correct,
+without running the model checker, you can run the following command:</p>
+<pre><code class="language-bash">$ apalache parse &lt;myspec&gt;.tla
+</code></pre>
+<p>In this case, Apalache performs the following steps:</p>
+<ol>
+<li>
+<p>It parses the specification with <a href="https://lamport.azurewebsites.net/tla/tools.html">SANY</a>.</p>
+</li>
+<li>
+<p>It translates SANY semantic nodes into <a href="https://github.com/informalsystems/apalache/blob/master/tlair/src/main/scala/at/forsyte/apalache/tla/lir/package.scala">Apalache IR</a>.</p>
+</li>
+<li>
+<p>It pretty-prints the IR into <code>out-parser.tla</code>, see <a href="#detailed">Detailed output</a>.</p>
+</li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../apalache/installation/source.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../apalache/example.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../apalache/installation/source.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../apalache/example.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

@@ -1,0 +1,754 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Principles of Symbolic Model Checking with Apalache - Apalache Documentation</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../apalache/index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../apalache/getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/apalache-or-tlc.html"><strong aria-hidden="true">2.1.</strong> Shall I use Apalache or TLC?</a></li><li class="chapter-item expanded "><a href="../apalache/system-reqs.html"><strong aria-hidden="true">2.2.</strong> System Requirements</a></li><li class="chapter-item expanded "><a href="../apalache/installation/index.html"><strong aria-hidden="true">2.3.</strong> Installation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/installation/jvm.html"><strong aria-hidden="true">2.3.1.</strong> Prebuilt Packages</a></li><li class="chapter-item expanded "><a href="../apalache/installation/docker.html"><strong aria-hidden="true">2.3.2.</strong> Docker</a></li><li class="chapter-item expanded "><a href="../apalache/installation/source.html"><strong aria-hidden="true">2.3.3.</strong> Source</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/running.html"><strong aria-hidden="true">2.4.</strong> Running the Tool</a></li><li class="chapter-item expanded "><a href="../apalache/example.html"><strong aria-hidden="true">2.5.</strong> An Example TLA+ Specification</a></li><li class="chapter-item expanded "><a href="../apalache/parameters.html"><strong aria-hidden="true">2.6.</strong> Specification Parameters</a></li><li class="chapter-item expanded "><a href="../apalache/principles.html" class="active"><strong aria-hidden="true">2.7.</strong> Principles of Symbolic Model Checking with Apalache</a></li><li class="chapter-item expanded "><a href="../apalache/apalache-mod.html"><strong aria-hidden="true">2.8.</strong> The Apalache Module</a></li><li class="chapter-item expanded "><a href="../apalache/profiling.html"><strong aria-hidden="true">2.9.</strong> Profiling Your Specification</a></li><li class="chapter-item expanded "><a href="../apalache/theory.html"><strong aria-hidden="true">2.10.</strong> Five minutes of theory</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/tlc-config.html"><strong aria-hidden="true">3.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../apalache/types-and-annotations.html"><strong aria-hidden="true">4.</strong> Types and Annotations</a></li><li class="chapter-item expanded "><a href="../apalache/features.html"><strong aria-hidden="true">5.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../apalache/preprocessing.html"><strong aria-hidden="true">6.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../apalache/tuning.html"><strong aria-hidden="true">7.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../apalache/kera.html"><strong aria-hidden="true">8.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">9.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">10.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/booleans.html"><strong aria-hidden="true">10.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../lang/control-and-nondeterminism.html"><strong aria-hidden="true">10.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../lang/conditionals.html"><strong aria-hidden="true">10.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../lang/integers.html"><strong aria-hidden="true">10.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../lang/sets.html"><strong aria-hidden="true">10.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../lang/logic.html"><strong aria-hidden="true">10.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../lang/functions.html"><strong aria-hidden="true">10.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../lang/records.html"><strong aria-hidden="true">10.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../lang/tuples.html"><strong aria-hidden="true">10.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../lang/sequences.html"><strong aria-hidden="true">10.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">10.11.</strong> Bags</div></li></ol></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">11.</strong> User-defined operators</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">12.</strong> Modules, Extends, and Instances</div></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">13.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../idiomatic/000keep-minimum-state-variables.html"><strong aria-hidden="true">14.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../idiomatic/001assignments.html"><strong aria-hidden="true">15.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../idiomatic/002primes.html"><strong aria-hidden="true">16.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">17.</strong> ADR-002: types and type annotations</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache Documentation</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#principles-of-symbolic-model-checking-with-apalache" id="principles-of-symbolic-model-checking-with-apalache">Principles of Symbolic Model Checking with Apalache</a></h1>
+<p>In order to take advantage of Apalache's symbolic model checking, there are a
+few principles one must bear in mind when writing TLA.</p>
+<p><a name="assignments"></a>
+<a name="symbolicTransitions"></a></p>
+<h2><a class="header" href="#assignments-and-symbolic-transitions" id="assignments-and-symbolic-transitions">Assignments and symbolic transitions</a></h2>
+<p>Let us go back to the example <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k.tla"><code>test/tla/y2k.tla</code></a> and
+run <code>apalache</code> against <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k_override.tla"><code>test/tla/y2k_override.tla</code></a>:</p>
+<pre><code class="language-console">$ apalache check y2k_override.tla
+</code></pre>
+<p>We can check the detailed output of the <code>TransitionFinderPass</code> in the file
+<code>x/&lt;timestamp&gt;/out-transition.tla</code>, where <code>&lt;timestamp&gt;</code> looks like
+<code>09.03-10.03.2020-508266549191958257</code>:</p>
+<pre><code class="language-tla">----- MODULE y2k_override -----
+VARIABLE year
+VARIABLE hasLicense
+ASSUME(80 \in 0 .. 99)
+ASSUME(18 \in 1 .. 99)
+
+Init$0 == year' := 80 /\ hasLicense' := FALSE
+Next$0 == year' := ((year + 1) % 100) /\ (hasLicense' := hasLicense)
+Next$1 == year - 80 &gt;= 18 /\ hasLicense' := TRUE /\ (year' := year)
+===============
+</code></pre>
+<p>As you can see, the model checker did two things:</p>
+<ol>
+<li>It has translated several expressions that look like <code>x' = e</code> into <code>x' := e</code>.
+For instance, you can see <code>year' := 80</code> and <code>hasLicense' := FALSE</code> in
+<code>Init$0</code>. We call these expressions <strong>assignments</strong>.</li>
+<li>It has factored the operator <code>Next</code> into two operators <code>Next$0</code> and <code>Next$1</code>.
+We call these operators <strong>symbolic transitions</strong>.</li>
+</ol>
+<p>Pure TLA+ does not have the notions of assignments and symbolic
+transitions.  However, TLC sometimes treats expressions <code>x' = e</code> and <code>x' \in S</code>
+as if they were assigning a value to the variable <code>x'</code>. TLC does so
+dynamically, during the breadth-first search. Apalache looks statically for assignments
+among the expressions <code>x' = e</code> and <code>x' \in S</code>.</p>
+<p>When factoring out operators into symbolic transitions, Apalache splits the
+action operators <code>Init</code> and <code>Next</code> into disjunctions (e.g., <code>A_0 \/ ... \/ A_n</code>),
+represented in the concrete syntax as a sequence of operator definitions of the
+form</p>
+<pre><code class="language-tla">A$0 == ...
+...
+A$n == ...
+</code></pre>
+<p>The main contract between the assignments and symbolic transitions is as
+follows:</p>
+<blockquote>
+<p>For every variable <code>x</code> declared with <code>VARIABLE</code>, there is exactly one
+assignment of the form <code>x' := e</code> in every symbolic transition <code>A_n</code>.</p>
+</blockquote>
+<p>If Apalache cannot find expressions with the above properties, it fails.
+Consider the example
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/Assignments20200309.tla"><code>test/tla/Assignments20200309.tla</code></a>:</p>
+<pre><code class="language-tla">----- MODULE Assignments20200309 -----
+VARIABLE a
+\* this specification fails, as it has no expression
+\* that can be treated as an assignment
+Init == TRUE
+Next == a' = a
+Inv == FALSE
+===============
+</code></pre>
+<p>Running the checker with</p>
+<pre><code class="language-bash">apalache check Assignments20200309.tla
+</code></pre>
+<p>Apalache reports an error as follows:</p>
+<pre><code class="language-console">...
+PASS #6: TransitionFinderPass                                     I@09:39:33.527
+To understand the error, check the manual:
+[https://github.com/informalsystems/apalache/blob/unstable/docs/src/manual.md#assignments]
+Assignment error: Failed to find assignments and symbolic transitions in InitPrimed E@09:39:33.676
+It took me 0 days  0 hours  0 min  1 sec                          I@09:39:33.678
+Total time: 1.88 sec                                              I@09:39:33.678
+EXITCODE: ERROR (99)
+</code></pre>
+<p>This error is cryptic. It does not indicate which parts of the specification
+have caused the problem. In the future, we will add better diagnostic in the
+assignment finder, see <a href="https://github.com/informalsystems/apalache/issues/111">the open
+issue</a>. Our current approach is
+to debug assignments by running TLC first. If running TLC takes too long, you
+may try to comment out parts of the specification to find the problematic
+action. Although this is tedious, it allows one to find missing assignments
+rather quickly.</p>
+<p>If you are interested in the technique for finding the assignments and symbolic
+transitions implemented in Apalache, check our <a href="http://forsyte.at/wp-content/uploads/abz2018_full.pdf">paper at
+ABZ'18</a>.  The <a href="http://dx.doi.org/https://doi.org/10.1016/j.scico.2019.102361">journal
+version</a> is
+unfortunately behind the Elsevier paywall, which will be lifted after the
+two-year embargo period.</p>
+<p><a name="types"></a></p>
+<h2><a class="header" href="#type-annotations" id="type-annotations">Type annotations</a></h2>
+<p><strong>NOTE 1</strong>: <a href="https://forsyte.at/people/kukovec/">Jure Kukovec</a> is developing
+a completely automatic type inference engine. As soon as it is ready, type
+annotations will no longer be required. Until that happy day, refer to <a href="types-and-annotations.html">type
+annotations</a>.</p>
+<p><strong>NOTE 2</strong>: We are currently working on a better syntax for type annotations
+and a better type checker. Hence, the syntax will change in the future.</p>
+<p>Apalache requires two kinds of type annotations:</p>
+<ul>
+<li>type annotations for empty sets and sequences, and</li>
+<li>type annotations for records and sets of records.</li>
+</ul>
+<h3><a class="header" href="#empty-sets-and-sequences" id="empty-sets-and-sequences">Empty sets and sequences</a></h3>
+<p>Consider the following example
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/NeedForTypes.tla"><code>test/tla/NeedForTypes.tla</code></a>:</p>
+<pre><code class="language-tla">------------------------ MODULE NeedForTypes ------------------------------
+(**
+ * This simple example transforms a set into a sequence.
+ *)
+EXTENDS Integers, Sequences, FiniteSets
+
+CONSTANTS InSet     \* an input set
+VARIABLES Left,     \* a storage for the yet untransformed elements
+          OutSeq    \* the output sequence
+
+ConstInit == InSet = 1..4
+
+Init ==
+    /\ OutSeq = &lt;&lt; &gt;&gt;
+    /\ Left = InSet
+
+Next ==
+    IF Left = {}
+    THEN UNCHANGED &lt;&lt;Left, OutSeq&gt;&gt;
+    ELSE \E x \in Left:
+          /\ OutSeq' = Append(OutSeq, x)
+          /\ Left' = Left \ {x}
+
+Inv == InSet = Left \union { OutSeq[i]: i \in DOMAIN OutSeq }
+===========================================================================
+</code></pre>
+<p>While this example is perfectly fine for TLC, Apalache has to assign types to
+the variables, in order to construct SMT constraints. In some cases, Apalache
+can infer types completely automatically, e.g., as in the <code>y2k</code> example (see
+<a href="#example">Section 4</a>). However, if you run <code>apalache check --cinit=ConstInit NeedForTypes.tla</code>, the tool will complain:</p>
+<pre><code>Step 0, level 0: checking if 1 transition(s) are enabled and violate the invariant I@15:17:14.313
+Step 0, level 1: collecting 1 enabled transition(s)               I@15:17:14.360
+Step 1, level 1: checking if 2 transition(s) are enabled and violate the invariant I@15:17:14.374
+NeedForTypes.tla:18:8-18:16, =(...), type error: Expected equal types: FinSet[Int] and FinSet[Unknown] E@15:17:14.379
+The outcome is: Error                                             I@15:17:14.388
+</code></pre>
+<p>In a somewhat obfuscated way, Apalache tells us the following. It has inferred
+that <code>Left</code> is a set of integers, that is, <code>FinSet[Int]</code>. First, it found that
+<code>InSet</code> is a set of integers, by applying <code>ConstInit</code>. Second, as <code>Left = InSet</code>
+in <code>Init</code>, it inferred that <code>Left</code> is also a set of integers. Third, when
+applying <code>Next</code>, it processed <code>{}</code>, which is an empty set of any kind of
+objects. Hence, <code>{}</code> was assigned the type <code>FinSet[Unknown]</code>, that is, a set of
+some type. Finally, it found the expression <code>Left = {}</code>, and here the type
+checker has failed.</p>
+<p>To help the type checker, we have to introduce a few type annotations. But
+before doing that, we introduce the notation for type annotations in the
+specification.</p>
+<h4><a class="header" href="#syntax-for-type-annotations" id="syntax-for-type-annotations">Syntax for type annotations</a></h4>
+<p>Apalache reads any expression formed with the <code>&lt;:</code> operator as an annotation of
+the value of the left hand side with the type on the right. E.g.,</p>
+<pre><code class="language-tla">v &lt;: T
+</code></pre>
+<p>means &quot;value <code>v</code> has type <code>T</code>&quot;.</p>
+<p>However, other tools (such as TLC and TLAPS) have no support for these
+annotations. To tell them to ignore type annotations, we maintain the convention
+that any file using Apalache type annotations begins with the following definition:</p>
+<pre><code class="language-tla">v &lt;: T == v
+</code></pre>
+<p>With this in place, Apalache can parse out the type annotations in the rest of
+the file, but other tools are told to simply read any occurrence of <code>v &lt;: T</code> as
+<code>v</code>, effectively erasing the type ascription.</p>
+<p>Now we can help the type checker by rewriting the condition in <code>Next</code> as follows:</p>
+<h4><a class="header" href="#example-of-using-type-annotations" id="example-of-using-type-annotations">Example of using type annotations</a></h4>
+<pre><code class="language-tla">Next ==
+    IF Left = {} &lt;: {Int}
+    THEN ...
+    ELSE ...
+</code></pre>
+<p>Now the type checker treats the expression <code>{}</code> as a set of integers. However,
+it complains about another line:</p>
+<pre><code>Step 0, level 0: checking if 1 transition(s) are enabled and violate the invariant I@15:43:35.932
+Step 0, level 1: collecting 1 enabled transition(s)               I@15:43:35.977
+Step 1, level 1: checking if 2 transition(s) are enabled and violate the invariant I@15:43:35.992
+NeedForTypes.tla:23:24-23:40, x$1, type error: Expected type Unknown, found Int E@15:43:36.012
+NeedForTypes.tla:23:24-23:40, Append(...), type error: Expected a type, found: None E@15:43:36.018
+NeedForTypes.tla:23:11-24:31, /\(...), type error: Expected a Boolean, found: None E@15:43:36.020
+The outcome is: Error
+</code></pre>
+<p>Here the type checker stumbles upon the sequence operator <code>Append(OutSeq, x)</code>
+and complains about the type mismatch. Similar to <code>{}</code>, it has treated
+the expression <code>&lt;&lt; &gt;&gt;</code> as a sequence of an unknown type. (In case of <code>&lt;&lt;1, 2&gt;&gt;</code>
+it would be even worse, as the type checker would not know, whether <code>&lt;&lt;1, 2&gt;&gt;</code>
+should be treated as a sequence or a tuple). Again, we help the type checker
+by modifying <code>Init</code> as follows:</p>
+<pre><code class="language-tla">Init ==
+    /\ OutSeq = &lt;&lt; &gt;&gt; &lt;: Seq(Int)
+    ...
+</code></pre>
+<p>Having these two annotations, the type checker stops complaining. You can find
+the annotated specification in
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/NeedForTypesWithTypes.tla"><code>test/tla/NeedForTypesWithTypes.tla</code></a>.</p>
+<h3><a class="header" href="#records-and-sets-of-records" id="records-and-sets-of-records">Records and sets of records</a></h3>
+<p>Consider the following example in
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/Handshake.tla"><code>test/tla/Handshake.tla</code></a>:</p>
+<pre><code class="language-tla">------------------------ MODULE Handshake ------------------------
+(**
+ * A TCP-like handshake protocol:
+ * https://en.wikipedia.org/wiki/Transmission_Control_Protocol#Connection_establishment
+ *
+ * Igor Konnov, 2020
+ *)
+EXTENDS Integers
+
+VARIABLES msgs,     \* the set of all messages
+          iseqno,   \* Initiator's sequence number
+          rseqno,   \* Receiver's sequence number
+          istate,   \* Initiator's state
+          rstate    \* Receiver's state
+
+a &lt;: b == a
+
+Init ==
+    /\ msgs = {}
+    /\ iseqno = 0
+    /\ rseqno = 0
+    /\ istate = &quot;INIT&quot;
+    /\ rstate = &quot;LISTEN&quot;
+
+SendSyn ==
+    /\ istate = &quot;INIT&quot;
+    /\ \E no \in Nat:
+        /\ msgs' = msgs \union {[syn |-&gt; TRUE,
+                                 ack |-&gt; FALSE, seqno |-&gt; no]}
+        /\ iseqno' = no + 1
+        /\ istate' = &quot;SYN-SENT&quot;
+        /\ UNCHANGED &lt;&lt;rseqno, rstate&gt;&gt;
+
+SendSynAck ==
+    /\ rstate = &quot;LISTEN&quot;
+    /\ \E seqno, ackno \in Nat:
+        /\ [syn |-&gt; TRUE, ack |-&gt; FALSE, seqno |-&gt; seqno] \in msgs
+        /\ msgs' = msgs \union {[syn |-&gt; TRUE, ack |-&gt; TRUE,
+                                 seqno |-&gt; seqno + 1,
+                                 ackno |-&gt; ackno]}
+        /\ rseqno' = ackno + 1
+        /\ rstate' = &quot;SYN-RECEIVED&quot;
+        /\ UNCHANGED &lt;&lt;iseqno, istate&gt;&gt;
+
+SendAck ==
+    /\ istate = &quot;SYN-SENT&quot;
+    /\ \E ackno \in Nat:
+        /\ [syn |-&gt; TRUE, ack |-&gt; TRUE,
+            seqno |-&gt; iseqno, ackno |-&gt; ackno] \in msgs
+        /\ istate' = &quot;ESTABLISHED&quot;
+        /\ msgs' = msgs \union {[syn |-&gt; FALSE, ack |-&gt; TRUE,
+                                 seqno |-&gt; iseqno,
+                                 ackno |-&gt; ackno + 1]}
+        /\ UNCHANGED &lt;&lt;iseqno, rseqno, rstate&gt;&gt;
+
+RcvAck ==
+    /\ rstate = &quot;SYN-RECEIVED&quot;
+    /\ \E seqno \in Nat:
+        /\ ([syn |-&gt; FALSE, ack |-&gt; TRUE,
+             seqno |-&gt; seqno, ackno |-&gt; rseqno]) \in msgs
+        /\ rstate' = &quot;ESTABLISHED&quot;
+        /\ UNCHANGED &lt;&lt;msgs, iseqno, rseqno, istate&gt;&gt;
+
+
+Next == SendSyn \/ SendSynAck \/ SendAck \/ RcvAck
+
+Inv == (rstate = &quot;ESTABLISHED&quot; =&gt; istate = &quot;ESTABLISHED&quot;)
+======================================================================
+</code></pre>
+<p>As we have seen before, the type checker complains about the set <code>msgs</code>,
+which is initialized as <code>{}</code>. So we have to specify the type of <code>{}</code>. But which
+type shall we use for the empty set?</p>
+<p>In our example, the set <code>msgs</code> may contain records of three kinds:</p>
+<ul>
+<li>a <strong>SYN</strong> request that is modeled as a record
+<code>[ack |-&gt; FALSE, syn |-&gt; TRUE, seqno |-&gt; i]</code> for some number <code>i</code>,</li>
+<li>a <strong>SYN-ACK</strong> reply that is modeled as a record
+<code>[ack |-&gt; TRUE, syn |-&gt; TRUE, seqno |-&gt; i, ackno |-&gt; j]</code>
+for some numbers <code>i</code> and <code>j</code>,</li>
+<li>an <strong>ACK</strong> reply that is modeled as a record
+<code>[ack |-&gt; TRUE, syn |-&gt; FALSE, seqno |-&gt; i, ackno |-&gt; j]</code>
+for some numbers <code>i</code> and <code>j</code>.</li>
+</ul>
+<p>From the perspective of the type checker, the three records shown above have
+three different types. Although we would love to reject this example as an
+ill-typed one, mixing records of different types is a widely-accepted idiom in
+TLA+, for instance, see <a href="https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla">Lamport's specification of
+Paxos</a>.
+Think of records as of C unions, rather than C structs!</p>
+<p>To help the type checker, we first introduce a handy operator for the type that
+contains the fields of the three records:</p>
+<pre><code class="language-tla">MT == [syn |-&gt; BOOLEAN, ack |-&gt; BOOLEAN, seqno |-&gt; Int, ackno |-&gt; Int]
+</code></pre>
+<p>Then we add annotations as follows:</p>
+<pre><code class="language-tla">Init ==
+  /\ msgs = {} &lt;: {MT}
+    ...
+
+SendSyn ==
+  ...
+  /\ \E no \in Nat:
+    /\ msgs' = msgs \union {[syn |-&gt; TRUE, ack |-&gt; FALSE, seqno |-&gt; no] &lt;: MT}
+  ...
+
+SendSynAck ==
+  ...
+  /\ \E seqno, ackno \in Nat:
+    /\ ([syn |-&gt; TRUE, ack |-&gt; FALSE, seqno |-&gt; seqno] &lt;: MT) \in msgs
+    ...
+
+SendAck ==
+  ...
+  /\ \E ackno \in Nat:
+    ...
+</code></pre>
+<p>As you can see, we have to annotate only those records that do not have all
+four fields of <code>MT</code>. As soon as we have added the annotations, the type checker
+stopped complaining and let the model checker to run. The annotated code can be
+found in
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/HandshakeWithTypes.tla"><code>test/tla/HandshakeWithTypes.tla</code></a>.</p>
+<p>Type annotations can be also applied to sets of records. For example:</p>
+<pre><code class="language-tla">[syn |-&gt; BOOLEAN, ack |-&gt; BOOLEAN, seqno |-&gt; Int] &lt;: {MT}
+</code></pre>
+<p>You can find more details on the simple type inference algorithm and the type
+annotations in <a href="types-and-annotations.html">type annotations</a>.</p>
+<h3><a class="header" href="#naturals" id="naturals">Naturals</a></h3>
+<p>If you look carefully at the <a href="types-and-annotations.html">type annotations</a>, you
+will find that there is no designated type for naturals. Indeed, one can just
+use the type <code>Int</code>, whenever a natural number is required. If we introduced a
+special type for naturals, that would cause a lot of confusion for the type
+checker. What would be the type of the literal <code>42</code>? That depends on, whether
+you extend <code>Naturals</code> or <code>Integers</code>. And if you extend <code>Naturals</code> and later
+somebody else extends your module and also <code>Integers</code>, should be the type
+of <code>42</code> be an integer?</p>
+<p>Apalache still allows you to extend <code>Naturals</code>. However, it will treat all
+number-like literals as integers. This is consistent with the view that the naturals are
+a subset of the integers, and the integers are a subset of the reals.  Classically, one
+would not define subtraction for naturals. However, the module <code>Naturals</code>
+defines binary minus, which can easily drive a variable outside of <code>Nat</code>. For
+instance, see the following example:</p>
+<pre><code class="language-tla">----------------------------- MODULE NatCounter ------------------------        
+EXTENDS Naturals
+
+VARIABLE x
+
+Init == x = 3
+
+\* a natural counter can go below zero, and this is expected behavior
+Next == x' = x - 1
+
+Inv == x &gt;= 0
+========================================================================
+</code></pre>
+<p>Given that you will need the value <code>Int</code> for a type annotation, it probably
+does not make a lot of sense to extend <code>Naturals</code> in your own specifications,
+as you will have to extend <code>Integers</code> for the type annotation too.  We are
+currently working on a different kind of type annotations, which would not
+require <code>Int</code>.</p>
+<p><a name="recursion"></a></p>
+<h2><a class="header" href="#recursive-operators-and-functions" id="recursive-operators-and-functions">Recursive operators and functions</a></h2>
+<p><a name="rec-op"></a></p>
+<h3><a class="header" href="#recursive-operators" id="recursive-operators">Recursive operators</a></h3>
+<p>In the preprocessing phase, Apalache replaces every application of a user
+operator with its body. We call this process &quot;operator inlining&quot;.
+This cannot be done for recursive operators, for two reasons:</p>
+<ol>
+<li>
+<p>A recursive operator may be non-terminating (although a non-terminating
+operator is useless in TLA+);</p>
+</li>
+<li>
+<p>A terminating call to an operator may take an unpredicted number of iterations.</p>
+</li>
+</ol>
+<p>However, in practice, when one fixes specification parameters (that is,
+<code>CONSTANTS</code>), it is usually easy to find a bound on the number of operator
+iterations. For instance, consider the following specification:</p>
+<pre><code class="language-tla">--------- MODULE Rec6 -----------------
+CONSTANTS N
+VARIABLES set, count
+
+RECURSIVE Sum(_)
+
+Sum(S) ==
+  IF S = {}
+  THEN 0
+  ELSE LET x == CHOOSE x \in S: TRUE IN
+    x + Sum(S \ {x})
+
+Init ==
+  /\ set = {}
+  /\ count = 0
+
+Next ==
+  \E x \in (1..N) \ set:
+    /\ count' = count + x
+    /\ set' = set \union {x}
+
+Inv == count = Sum(set)
+=======================================
+</code></pre>
+<p>It is clear that the expression <code>Sum(S)</code> requires the number of iterations that
+is equal to <code>Cardinality(S) + 1</code>. Moreover, the expression <code>set \subseteq 1..N</code> is an invariant, and thus every call <code>Sum(set)</code> requires up to <code>N+1</code>
+iterations.</p>
+<p>When we can find an upper bound on the number of iterations, Apalache can
+unroll the recursive operator up to this bound. To this end, we define two
+additional operators. For instance:</p>
+<pre><code class="language-tla">--------- MC_Rec6 ----------
+VARIABLES set, count
+
+INSTANCE Rec6 WITH N &lt;- 3
+
+UNROLL_TIMES_Sum == 4
+UNROLL_DEFAULT_Sum == 0
+============================
+</code></pre>
+<p>In this case, Apalache unrolls every call to <code>Sum</code> exactly <code>UNROLL_TIMES_Sum</code>
+times, that is, four times. On the default branch, Apalache places
+<code>UNROLL_DEFAULT_Sum</code>, that is, 0.</p>
+<p>All recursively defined operators should follow this convention where, for every such operator <code>Oper</code>, the user defines both <code>UNROLL_TIMES_Oper</code>, which expands to a positive integer value, and <code>UNROLL_DEFAULT_Oper</code>, which expands to some default value <code>Oper(args*)</code> should take, if the computation would require more than <code>UNROLL_TIMES_Oper</code> recursive calls.
+At present, we only support literals (e.g. <code>4</code>) or primitive arithmetic expressions (e.g. <code>2 + 2</code>) in the body of <code>UNROLL_TIMES_Oper</code>.</p>
+<p><a name="rec-fun"></a></p>
+<h4><a class="header" href="#recursive-functions" id="recursive-functions">Recursive functions</a></h4>
+<p>Apalache offers limited support for recursive functions. However, read the
+warning below on why you should not use recursive functions. The restrictions
+are as follows:</p>
+<ol>
+<li>
+<p>Apalache supports recursive functions that return an integer or a Boolean.</p>
+</li>
+<li>
+<p>As Apalache's simple type checker is not able to find the type of a
+recursive function, all uses of a recursive function should come with a type
+annotation.</p>
+</li>
+<li>
+<p>As in TLC, the function domain must be a finite set.</p>
+</li>
+</ol>
+<p>The example below shows a recursive function that computes the factorial of <code>n</code>.</p>
+<pre><code class="language-tla">------------------------------ MODULE Rec8 ------------------------------------
+EXTENDS Integers
+
+VARIABLES n, factSpec, factComp
+
+\* the syntax for type annotations
+a &lt;: b == a
+
+\* the type of the factorial function
+FactT == [Int -&gt; Int]
+
+(*
+ Defining a recursive function on a finite domain. Although it is rather
+ unnatural to define factorial on a finite set, both Apalache and TLC
+ require finite domains. As is usual for function application, the result
+ of the application is not defined on the elements outside of the function
+ domain.
+ *)
+Fact[k \in 1..20] ==
+    IF k &lt;= 1
+    THEN 1
+    ELSE k * (Fact &lt;: FactT)[k - 1]
+
+Init ==
+    /\ n = 1
+    /\ factSpec = Fact[n]
+    /\ factComp = 1
+
+Next ==
+    /\ n' = n + 1
+    /\ factSpec' = Fact[n']
+    /\ factComp' = n' * factComp
+
+Inv ==
+    factComp = factSpec
+===============================================================================
+</code></pre>
+<p>Check other examples in
+<a href="https://github.com/informalsystems/apalache/tree/unstable/test/tla"><code>test/tla</code></a> that
+start with the prefix <code>Rec</code>.</p>
+<p><strong>Why you should avoid recursive functions.</strong> Sometimes, recursive functions
+concisely describe the function that you need. The nice examples are the
+factorial function (see above) and Fibonacci numbers (see
+<a href="https://github.com/informalsystems/apalache/tree/unstable/test/tla/Rec3.tla">Rec3</a>).
+However, when you define a recursive function over sets, the complexity gets
+ugly really fast.</p>
+<p>Consider the example
+<a href="https://github.com/informalsystems/apalache/tree/unstable/test/tla/Rec9.tla">Rec9</a>,
+which computes set cardinality. Here is a fragment of the spec:</p>
+<pre><code class="language-tla">\* the type of the function Card
+CardT == [{Int} -&gt; Int]
+
+\* The set cardinality function
+Card[S \in SUBSET NUMS] ==
+    IF S = IntSet({})
+    THEN 0
+    ELSE LET i == CHOOSE j \in S: TRUE IN
+        1 + (Card &lt;: CardT)[S \ {i}]
+</code></pre>
+<p>Since we cannot fix the order, in which the set elements are evaluated, we
+define function <code>Card</code> over <code>SUBSET NUMS</code>, that is, all possible subsets of
+<code>NUMS</code>. Apalache translates the function in a quantifier-free theory of SMT.
+Hence, in this case, Apalache expands <code>SUBSET NUMS</code>, so it introduces
+<code>2^|NUMS|</code> sets! Further, Apalache writes down the SMT constraints for the
+domain of <code>Card</code>. As a result, it produces <code>NUMS * 2^|NUMS|</code> constraints.
+As you can see, recursive functions over sets explode quite fast.</p>
+<p>It is usually a good idea to use recursive operators over sets rather than
+recursive functions. The downside is that you have to provide an upper bound on
+the number of the operator iterations. The upside is that recursive operators
+are usually unrolled more efficiently. (If they contain only constant
+expressions, they are even computed by the translator!) For instance, set
+cardinality does not require <code>2^|NUMS|</code> constraints, when using a recursive
+operator.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../apalache/parameters.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../apalache/apalache-mod.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../apalache/parameters.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../apalache/apalache-mod.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
