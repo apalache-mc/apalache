@@ -35,7 +35,7 @@ class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
 
     case err: AssignmentException =>
       logger.info("To understand the error, read the manual:")
-      logger.info("  [http://informalsystems.github.io/apalache/docs/manual.html#assignments]")
+      logger.info("  [https://apalache.informal.systems/docs/apalache/principles.html#assignments]")
       NormalErrorMessage("Assignment error: " + err.getMessage)
 
     case err: TypeInferenceException =>
@@ -90,7 +90,7 @@ class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
       FailureMessage(msg)
 
     case err: CoverData.CoverException =>
-      val msg = "Unable to find assignments for all state variables: \n%s\n [see http://informalsystems.github.io/apalache/docs/manual.html#assignments]".format(err.getMessage)
+      val msg = "Unable to find assignments for all state variables: \n%s\n [see https://apalache.informal.systems/docs/apalache/principles.html#assignments]".format(err.getMessage)
       NormalErrorMessage(msg)
   }
 
