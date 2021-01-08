@@ -21,8 +21,11 @@ mdbook serve
 ## Notes on writing the documentation
 
 The [./src/SUMMARY.md](./src/SUMMARY.md) specifies the table of contents shown
-in the sidebar of the documentation. Any top-level chaptes must be linked from
+in the sidebar of the documentation. Any top-level chapters must be linked from
 there.
+
+Each chapter must link a file: internal links to anchors within files do not
+work.
 
 ## Internal documentation
 
