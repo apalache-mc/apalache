@@ -267,7 +267,7 @@ table below._
  100 / (-3) == -33 | 100 / (-3) == -33 | 100 / (-3) == -33 | 100 // (-3) == -34 | (100 \div (-3)) = -34 | (assert (= (- 0 33) (div 100 (- 0 3))))
  -100 / (-3) == 33 | -100 / (-3) == 33 | -100 / (-3) == 33 | -100 // (-3) == 33 | ((-100) \div (-3)) = 33 | (assert (= 34 (div (- 0 100) (- 0 3))))
 
-_Unfortunately, [Specifying Systems] only gives us the definition for the case
+_Unfortunately, [Specifying Systems][] only gives us the definition for the case
 `b > 0` (that is, cases 1-2 in our description). The implementation in SMT and
 TLC produce incompatible results for `b < 0`. See [issue #331 in
 Apalache](https://github.com/informalsystems/apalache/issues/331)._
@@ -567,4 +567,4 @@ The operators `a = b` and `a /= b` are core operators of TLA+ and thus they are
 not defined in the module `Integers`, see [Logic](./logic.md).
 
 
-[Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
+[Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html

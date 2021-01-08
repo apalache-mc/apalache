@@ -1,11 +1,9 @@
-
 ## Simple type inference and type annotations
 
 **WARNING:** We have recently implemented a better type checker, see [the
 talk](https://youtu.be/hnp25hmCMN8). The type annotations will be replaced with
-the new annotations as documented in
-[ADR002](https://github.com/informalsystems/apalache/blob/unstable/docs/adr/002adr-types.md).
-The new annotations will be implemented in the upcoming release.
+the new annotations as documented in [ADR002](../adr/002adr-types.md).  The new
+annotations will be implemented in the upcoming release.
 
 ------------------------------------------------------------------------------------
 

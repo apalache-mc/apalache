@@ -524,10 +524,10 @@ till the end of the universe.
 
 
 [Control Flow and Non-determinism]: ./control-and-nondeterminism.md
-[Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
+[Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html
 [frozendict]: https://pypi.org/project/frozendict/
 [Paxos]: https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla
 [Apalache ADR002]: https://github.com/informalsystems/apalache/blob/unstable/docs/adr/002adr-types.md
 [Cartesian product]: https://en.wikipedia.org/wiki/Cartesian_product
-[type annotation]: https://github.com/informalsystems/apalache/blob/unstable/docs/types-and-annotations.md
+[type annotation]: ../apalache/types-and-annotations.md
 [Overriding Seq in TLC]: https://groups.google.com/g/tlaplus/c/sYx_6e3YyWk/m/4CnwPqIVAgAJ
