@@ -229,7 +229,7 @@ object Tool extends App with LazyLogging {
     val adapter = injector.getInstance(classOf[ExceptionAdapter])
 
     try {
-      fun(_)
+      fun(())
       Tool.OK_EXIT_CODE
     } catch {
       case e: Exception if adapter.toMessage.isDefinedAt(e) =>
