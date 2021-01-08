@@ -223,7 +223,7 @@ with <a href="https://github.com/informalsystems/apalache/actions?query=branch%3
 actions</a>
 on MacOS (JDK 1.8.0) and Linux (OpenJDK8). If you would like to run Apalache in
 Windows, use a docker image. Check the <a href="https://docs.docker.com/docker-for-windows/">Docker
-manual</a> and the section on <a href="apalache/system-reqs.html#useDocker">Using
+manual</a> and the section on <a href="apalache/./installation/docker.html">Using
 a docker image</a> for details.</p>
 <p>As Apalache is using Microsoft Z3 as a backend SMT solver, the required memory
 largely depends on Z3. We recommend to allocate at least 4GB of memory for the
@@ -235,7 +235,7 @@ tool.</p>
 <li><a href="apalache/installation/./docker.html">Docker</a>: download and run a Docker image.</li>
 <li><a href="apalache/installation/./source.html">Source</a>: build Apalache from sources and run the compiled package.</li>
 </ol>
-<p>If you just want to try the tool, we recommend <a href="apalache/installation/./jmv.html">downloading the
+<p>If you just want to try the tool, we recommend <a href="apalache/installation/./jvm.html">downloading the
 release</a> or <a href="apalache/installation/./docker.html">pulling the docker image</a>. If you would like
 to run the tool on a daily basis or <a href="https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md">contribute</a> to the project, we recommend
 <a href="apalache/installation/./source.html">building the project from the source</a>.</p>
@@ -260,13 +260,13 @@ is the release number, for instance, 0.8.0.</p>
 </ul>
 <pre><code>java.exe -cp mod-distribution\target\apalache-pkg-X.Y.Z-RELEASE-full.jar &lt;args&gt;
 </code></pre>
-<p>The arguments <code>&lt;args&gt;</code> are explained in <a href="apalache/installation/jvm.html#running">Running the tool</a>.</p>
+<p>The arguments <code>&lt;args&gt;</code> are explained in <a href="apalache/installation/../running.html">Running the Tool</a>.</p>
 <p>If you would like to contribute a command-line script for running Apalache in
 Windows, please <a href="https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md#making-a-pull-request">open a pull
 request</a>.</p>
 <h1><a class="header" href="#using-a-docker-image" id="using-a-docker-image">Using a docker image</a></h1>
 <p><strong>We publish Docker images for every release</strong> :sunglasses:</p>
-<p><a href="https://docker.com">Docker</a> lets you to run Apalache in an isolated container.
+<p><a href="https://www.docker.com/">Docker</a> lets you to run Apalache in an isolated container.
 All dependencies are already installed in docker. However, you have to install docker.</p>
 <p>To get the latest Apalache image, issue the command:</p>
 <pre><code class="language-bash">docker pull apalache/mc
@@ -296,8 +296,7 @@ In particular the tool logs are written in that directory.</p>
 version is used; you can also refer to a specific tool version, e.g., <code>apalache/mc:0.6.0</code> or <code>apalache/mc:unstable</code></p>
 </li>
 <li>
-<p><code>&lt;args&gt;</code> are the tool arguments as described in
-<a href="apalache/installation/docker.html#running">Running the tool</a>.</p>
+<p><code>&lt;args&gt;</code> are the tool arguments as described in <a href="apalache/installation/../running.html">Running the Tool</a>.</p>
 </li>
 </ul>
 <p>We provide a convenience wrapper for this docker command in
@@ -351,7 +350,7 @@ build a docker image of Apalache, issue the following command in
 <h1><a class="header" href="#building-from-source" id="building-from-source">Building from source</a></h1>
 <ol>
 <li>Install <code>git</code>.</li>
-<li>Install <a href="https://openjdk.java.net/install/">OpenJDK8</a> or <a href="https://www.azul.com/downloads/zulu-community/?&amp;architecture=x86-64-bit&amp;package=jdk">Zulu JDK8</a>.
+<li>Install <a href="https://openjdk.java.net/install/">OpenJDK8</a> or <a href="https://www.azul.com/downloads/zulu-community/?version=java-8-lts&amp;architecture=x86-64-bit&amp;package=jdk">Zulu JDK8</a>.
 <ul>
 <li>Apalache currently requires Scala 12.0 so <strong>you must install version 8 of
 Java, otherwise Scala will not compile!</strong> See the <a href="https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html">compatibility table</a>.</li>
@@ -511,7 +510,7 @@ into the intermediate representation, Apalache TLA IR.</li>
 <li>File <code>out-parser.json</code> is produced as a result of converting the
 Apalache TLA IR representation of the input into JSON format.</li>
 <li>File <code>out-config.tla</code> is produced as a result of substituting CONSTANTS,
-as described in <a href="apalache/running.html#parameters">Section 5</a>.</li>
+as described in <a href="apalache/./parameters.html">Setting up specification parameters</a>.</li>
 <li>File <code>out-inline.tla</code> is produced as a result of inlining operator
 definitions and <code>LET-IN</code> definitions.</li>
 <li>File <code>out-priming.tla</code> is produced as a result of replacing constants and
@@ -798,8 +797,7 @@ and a better type checker. Hence, the syntax will change in the future.</p>
 <li>type annotations for records and sets of records.</li>
 </ul>
 <h3><a class="header" href="#empty-sets-and-sequences" id="empty-sets-and-sequences">Empty sets and sequences</a></h3>
-<p>Consider the following example
-<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/NeedForTypes.tla"><code>test/tla/NeedForTypes.tla</code></a>:</p>
+<p>Consider the following example <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/NeedForTypes.tla"><code>NeedForTypes.tla</code></a>:</p>
 <pre><code class="language-tla">------------------------ MODULE NeedForTypes ------------------------------
 (**
  * This simple example transforms a set into a sequence.
@@ -829,7 +827,7 @@ Inv == InSet = Left \union { OutSeq[i]: i \in DOMAIN OutSeq }
 <p>While this example is perfectly fine for TLC, Apalache has to assign types to
 the variables, in order to construct SMT constraints. In some cases, Apalache
 can infer types completely automatically, e.g., as in the <code>y2k</code> example (see
-<a href="apalache/principles.html#example">Section 4</a>). However, if you run <code>apalache check --cinit=ConstInit NeedForTypes.tla</code>, the tool will complain:</p>
+<a href="apalache/./example.html">the example</a>). However, if you run <code>apalache check --cinit=ConstInit NeedForTypes.tla</code>, the tool will complain:</p>
 <pre><code>Step 0, level 0: checking if 1 transition(s) are enabled and violate the invariant I@15:17:14.313
 Step 0, level 1: collecting 1 enabled transition(s)               I@15:17:14.360
 Step 1, level 1: checking if 2 transition(s) are enabled and violate the invariant I@15:17:14.374
@@ -1177,16 +1175,21 @@ start with the prefix <code>Rec</code>.</p>
 <p><strong>Why you should avoid recursive functions.</strong> Sometimes, recursive functions
 concisely describe the function that you need. The nice examples are the
 factorial function (see above) and Fibonacci numbers (see
-<a href="https://github.com/informalsystems/apalache/tree/unstable/test/tla/Rec3.tla">Rec3</a>).
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/Rec3.tla">Rec3</a>).
 However, when you define a recursive function over sets, the complexity gets
 ugly really fast.</p>
 <p>Consider the example
-<a href="https://github.com/informalsystems/apalache/tree/unstable/test/tla/Rec9.tla">Rec9</a>,
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/Rec9.tla">Rec9</a>,
 which computes set cardinality. Here is a fragment of the spec:</p>
 <pre><code class="language-tla">\* the type of the function Card
 CardT == [{Int} -&gt; Int]
 
-\* The set cardinality function
+(*
+ The set cardinality function. It needs an upper bound on the set size.
+ Although this function looks nice, be warned that this definition requires us
+ to construct the powerset SUBSET NUMS and then write down the constraints
+ for the function Card. This encoding is (at least) double-exponential.
+ *)
 Card[S \in SUBSET NUMS] ==
     IF S = IntSet({})
     THEN 0
@@ -1214,12 +1217,12 @@ be found in
 Most of the operators in that modules are introduced internally by Apalache,
 when it is rewriting a TLA+ specification.  It is useful to read the comments
 to the operators defined in <code>Apalache.tla</code>, as they will help you in
-understanding the <a href="apalache/apalache-mod.html#detailed">detailed output</a> produced by the tool, see.
+understanding the <a href="apalache/./running.html#detailed">detailed output</a> produced by the tool, see.
 Perhaps, the most interesting operator in <code>Apalache</code> is the type assignment
 operator that is defined as follows:</p>
 <pre><code class="language-tla">x := e == x = e
 </code></pre>
-<p>See the <a href="apalache/apalache-mod.html#assignments">discussion</a> on the role of assignments in Apalache.</p>
+<p>See the <a href="apalache/./principles.html#assignments">discussion</a> on the role of assignments in Apalache.</p>
 <h1><a class="header" href="#profiling-your-specification" id="profiling-your-specification">Profiling Your Specification</a></h1>
 <p>As Apalache translates the TLA+ specification to SMT, it often defeats
 our intuition about the standard bottlenecks that one learns about when running
@@ -1472,9 +1475,8 @@ ident ::=
 <h2><a class="header" href="#simple-type-inference-and-type-annotations" id="simple-type-inference-and-type-annotations">Simple type inference and type annotations</a></h2>
 <p><strong>WARNING:</strong> We have recently implemented a better type checker, see <a href="https://youtu.be/hnp25hmCMN8">the
 talk</a>. The type annotations will be replaced with
-the new annotations as documented in
-<a href="https://github.com/informalsystems/apalache/blob/unstable/docs/adr/002adr-types.md">ADR002</a>.
-The new annotations will be implemented in the upcoming release.</p>
+the new annotations as documented in <a href="apalache/../adr/002adr-types.html">ADR002</a>.  The new
+annotations will be implemented in the upcoming release.</p>
 <hr />
 <p>Our model checker assigns types to variables, in order to encode TLA+ expressions
 in <a href="https://github.com/Z3Prover/z3">Z3</a>. Hence, the expressions that are ill-typed
@@ -1591,7 +1593,7 @@ In practice, we use different encodings for the general functions and sequences.
 <tr><td><code>CONSTANTS C1, C2</code></td><td align="center">✔</td><td align="center">-</td><td>Either define a <code>ConstInit</code> operator to initialize the constants, or declare operators instead of constants, e.g., C1 == 111</td></tr>
 <tr><td><code>VARIABLES x, y, z</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>ASSUME P</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Parsed, but not propagated to the solver</td></tr>
-<tr><td><code>F(x1, ..., x_n) == exp</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Every application of <code>F</code> is replaced with its body. Recursive operators need <a href="apalache/./manual.html#91-recursive-operators">unrolling annotations</a>.</td></tr>
+<tr><td><code>F(x1, ..., x_n) == exp</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Every application of <code>F</code> is replaced with its body. Recursive operators need <a href="apalache/./principles.html#recursive-operators">unrolling annotations</a>.</td></tr>
 <tr><td><code>f[x ∈ S] == exp</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Only recursive functions that return integers or Booleans are supported.</td></tr>
 <tr><td><code>INSTANCE M WITH ...</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>No special treatment for <code>~&gt;</code>, <code>\cdot</code>, <code>ENABLED</code></td></tr>
 <tr><td><code>N(x1, ..., x_n) == INSTANCE M WITH...</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Parameterized instances are not supported yet, LOCAL operator definitions inside instances may fail to work</td></tr>
@@ -1876,7 +1878,7 @@ provide you with a quick reference, whenever you are looking at the <a href="htt
 TLA</a>. The <a href="http://lamport.azurewebsites.net/video/videos.html">TLA+ Video
 Course</a> by Leslie Lamport
 is an excellent starting point, if you are new to TLA+.  For a comprehensive
-description and philosophy of the language, check <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a> and the
+description and philosophy of the language, check <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a> and the
 <a href="http://lamport.azurewebsites.net/tla/tla.html">TLA+ Home Page</a>. You can find handy extensions of the standard library in
 <a href="https://github.com/tlaplus/CommunityModules">Community Modules</a>.</p>
 <p>We explain the semantics of the operators under the lenses of the <a href="https://github.com/informalsystems/apalache">Apalache
@@ -1896,7 +1898,7 @@ Non-determinism</a>. This is one of the most important features that makes TLA+
 distinct from programming languages.  Wherever possible, we complement the
 English semantics with code in <a href="https://www.python.org/">Python</a>. Although our
 semantics are more restrictive than the denotational semantics in Chapter 16 of
-<a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>, they are very close to the treatment of TLA+ by the model
+<a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>, they are very close to the treatment of TLA+ by the model
 checkers: <a href="https://github.com/informalsystems/apalache">Apalache</a> and
 <a href="http://lamport.azurewebsites.net/tla/tools.html">TLC</a>. Our relation between
 TLA+ operators and Python code bears some resemblance to
@@ -2445,7 +2447,7 @@ non-determinism in the operator <code>Next</code>.</p>
 <p><strong>Discussion.</strong>
 So far we have been talking about the intuition. If you would like to know more about
 the logic behind TLA+ and the semantics of TLA+, check Chapter 16 of
-<a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a> and <a href="https://members.loria.fr/SMerz/papers/tla+logic2008.pdf">The Specification Language TLA+</a>.</p>
+<a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a> and <a href="https://members.loria.fr/SMerz/papers/tla+logic2008.pdf">The Specification Language TLA+</a>.</p>
 <p>When we look at the operators like <code>Init</code> and <code>Next</code> in our examples, we can
 guess the states and transitions. If we could ask our logician friend to guess
 the states and transitions for us every time we read a TLA+ specification, that
@@ -2456,7 +2458,7 @@ For instance, see <a href="https://github.com/boogie-org/boogie">Boogie</a> and 
 Of course, this comes with constraints on the structure of the specifications.
 After all, people are much better at solving certain logical puzzles than
 computers, though people get bored much faster than computers. </p>
-<p>To understand how TLC enumerates states, check Chapter 14 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying
+<p>To understand how TLC enumerates states, check Chapter 14 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying
 Systems</a>. In the rest of this document, we focus on treatment of
 non-determinism that is close to the approach in Apalache.</p>
 <h2><a class="header" href="#explaining-non-determinism-to-computers" id="explaining-non-determinism-to-computers">Explaining non-determinism to computers</a></h2>
@@ -2769,7 +2771,7 @@ TLA+ code than in programming languages.  We recommend using <code>IF-THEN-ELSE<
 compute predicate-dependent values, not to structure code.</p>
 <p><strong>Warning 2:</strong> <code>CASE</code> is considered deterministic in this
 section, as it is defined with the <code>CHOOSE</code> operator in
-<a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>, Section 16.1.4. 
+<a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>, Section 16.1.4. 
 For this reason, <code>CASE</code> should only be used when all of its guards are mutually exclusive.
 Given all the intricacies of <code>CASE</code>,
 we recommend using nested <code>IF-THEN-ELSE</code> instead.</p>
@@ -3107,7 +3109,7 @@ table below.</em></p>
 <tr><td>100 / (-3) == -33</td><td>100 / (-3) == -33</td><td>100 / (-3) == -33</td><td>100 // (-3) == -34</td><td>(100 \div (-3)) = -34</td><td>(assert (= (- 0 33) (div 100 (- 0 3))))</td></tr>
 <tr><td>-100 / (-3) == 33</td><td>-100 / (-3) == 33</td><td>-100 / (-3) == 33</td><td>-100 // (-3) == 33</td><td>((-100) \div (-3)) = 33</td><td>(assert (= 34 (div (- 0 100) (- 0 3))))</td></tr>
 </tbody></table>
-<p><em>Unfortunately, <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a> only gives us the definition for the case
+<p><em>Unfortunately, <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a> only gives us the definition for the case
 <code>b &gt; 0</code> (that is, cases 1-2 in our description). The implementation in SMT and
 TLC produce incompatible results for <code>b &lt; 0</code>. See <a href="https://github.com/informalsystems/apalache/issues/331">issue #331 in
 Apalache</a>.</em></p>
@@ -3179,7 +3181,7 @@ cases:</p>
 <li>If <code>a /= 0</code> and <code>b &gt; 1</code>, then <code>a^b</code> is defined as <code>a * a^(b-1)</code>.</li>
 <li>In all other cases, <code>a^b</code> is undefined.</li>
 </ul>
-<p>In TLA+, <code>a^b</code> extends to reals, see Chapter 18 in <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>.
+<p>In TLA+, <code>a^b</code> extends to reals, see Chapter 18 in <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>.
 For instance, <code>3^(-5)</code> is defined on reals. However, reals are supported
 neither by TLC, nor by Apalache.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
@@ -3349,7 +3351,7 @@ a set may mix integers, Booleans, and other sets:</p>
 <pre><code class="language-tla">  { 2020, { &quot;is&quot; }, TRUE, &quot;fail&quot; }
 </code></pre>
 <p>TLC restricts set elements to comparable values. See Section 14.7.2 of
-<a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>. In a nutshell, if you do not mix the following five
+<a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>. In a nutshell, if you do not mix the following five
 kinds of values in a single set, TLC would not complain about your sets:</p>
 <ol>
 <li>Booleans,</li>
@@ -3374,7 +3376,7 @@ empty set is constructed.</p>
 combination of TLA+ values: Booleans, integers, strings, sets, functions, etc.</p>
 <p>TLC only allows a user to construct sets out of elements that are comparable. For
 instance, two integers are comparable, but an integer and a set are not
-comparable. See Section 14.7.2 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>.</p>
+comparable. See Section 14.7.2 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>.</p>
 <p>Apalache goes further and requires that all set elements have the same type.
 If this is not the case, the type checker flags an error.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -4214,7 +4216,7 @@ that evaluates <code>P</code> to <code>TRUE</code> against the binding <code>[x 
 operational semantics for this operator, unless we explicitly introduce the
 universe and introduce a fixed rule for enumerating its elements.</p>
 <p>Congratulations! You have reached the bottom of this page. If you want to learn
-more about unbounded <code>CHOOSE</code>, read Section 16.1.2 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>.</p>
+more about unbounded <code>CHOOSE</code>, read Section 16.1.2 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>.</p>
 <h1><a class="header" href="#functions-1" id="functions-1">Functions</a></h1>
 <p><a href="lang/./standard-operators.html">[Back to all operators]</a></p>
 <p>Functions are probably the second most used TLA+ data structure after sets. TLA+
@@ -4313,7 +4315,7 @@ See the example below:</p>
   ]
 </code></pre>
 <p>As in the case of <a href="lang/./sets.html">sets</a>, TLC restricts function domains to comparable
-values. See Section 14.7.2 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>. So, TLC rejects the two
+values. See Section 14.7.2 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>. So, TLC rejects the two
 examples that are given above.</p>
 <p>However, functions in TLC are free to return different kinds of values:</p>
 <pre><code class="language-tla">  [ x \in { 1, 2 } |-&gt;
@@ -4352,7 +4354,7 @@ the domain <code>S</code> as follows.  For every element <code>elem</code> of <c
 in a temporary variable called <code>result</code>.</li>
 <li>Set <code>f[elem]</code> to <code>result</code>.</li>
 </ol>
-<p>Of course, the semantics of the function constructor in <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>
+<p>Of course, the semantics of the function constructor in <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>
 does not require us to compute the function at all. We believe that
 our description helps you to see that there is a way to compute this data
 structure, though in a very straightforward and inefficient way.</p>
@@ -4364,7 +4366,7 @@ expression. They can be any
 combination of TLA+ values: Booleans, integers, strings, sets, functions, etc.</p>
 <p>TLC accepts function domains of comparable values. For
 instance, two integers are comparable, but an integer and a set are not
-comparable. See Section 14.7.2 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>.</p>
+comparable. See Section 14.7.2 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>.</p>
 <p>Apalache goes further: It requires the function domain to be well-typed (as a
 set), and it requires the mapping expression <code>e</code> to be well-typed. If this
 is not the case, the type checker flags an error.</p>
@@ -4502,7 +4504,7 @@ as follows:</p>
 TLC flags a model checking error.</p>
 <p>When <code>a_1, ..., a_n</code> are not type-compatible with the type of <code>DOMAIN f</code>,
 Apalache flags a type error. When <code>a_i \notin DOMAIN f</code>, Apalache ignores this
-argument. This is consistent with the semantics of TLA+ in <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>.</p>
+argument. This is consistent with the semantics of TLA+ in <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>.</p>
 <p><strong>Advanced syntax:</strong> There are three extensions to the basic syntax.</p>
 <p><em>Extension 1</em>. If the domain elements of a function <code>f</code> are tuples, then, similar to
 function application, the expressions <code>a_1, ..., a_n</code> can be written without
@@ -4638,7 +4640,7 @@ distinguishes between general functions and records. When Apalache processes a
 record constructor, it assigns the record type to the result. This record type
 carries the information about the names of the record fields and their types.
 Similarly, Apalache assigns the type of a set of records, when it processes a
-record set constructor.  See the <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/adr/002adr-types.md">Apalache ADR002</a> on types.</p>
+record set constructor.  See the <a href="lang/../adr/002adr-types.html">Apalache ADR002</a> on types.</p>
 <p><em>Owing to the type information, records are translated into SMT more efficiently
 by Apalache than the general functions.</em></p>
 <p>It is quite common to mix records of different shapes into sets. For instance,
@@ -4773,12 +4775,12 @@ restricts the arguments and results as follows: the arguments have the type
 <code>Seq(C)</code>, which restricts the sequence elements to have the same type <code>C</code>. In
 contrast, tuples have more fine-grained types in Apalache: <code>&lt;&lt;T_1&gt;&gt;</code>, <code>&lt;&lt;T_1, T_2&gt;&gt;</code>, <code>&lt;&lt;T_1, T_2, T_3&gt;&gt;</code> and so on. As a result, different tuple fields are
 allowed to carry elements of different types, whereas functions and sequences
-are not allowed to do that. See the <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/adr/002adr-types.md">Apalache ADR002</a> on types for details.</p>
+are not allowed to do that. See the <a href="lang/../adr/002adr-types.html">Apalache ADR002</a> on types for details.</p>
 <p>As tuples are also sequences in TLA+, this poses a challenge for the Apalache
 type checker. For instance, it can immediately figure out that <code>&lt;&lt;1, &quot;Foo&quot;&gt;&gt;</code>
 is a tuple, as Apalache does not allow sequences to carry elements of different
 types. However, there is no way to say, whether <code>&lt;&lt;1, 2, 3&gt;&gt;</code> should be treated
-as a tuple or a sequence. This needs a <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/types-and-annotations.md">type annotation</a>.</p>
+as a tuple or a sequence. This needs a <a href="lang/../apalache/types-and-annotations.html">type annotation</a>.</p>
 <p><em>Owing to the type information, tuples are translated into SMT much more efficiently
 by Apalache than the general functions and sequences!</em></p>
 <hr />
@@ -4798,7 +4800,7 @@ as follows:</p>
 <li>set <code>r[i]</code> to the value of <code>e_i</code> for <code>i \in 1..n</code>.</li>
 </ul>
 <p>In Apalache, this constructor may be used to construct either a tuple, or a
-sequence. To distinguish between them, you will sometimes need a <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/types-and-annotations.md">type
+sequence. To distinguish between them, you will sometimes need a <a href="lang/../apalache/types-and-annotations.html">type
 annotation</a>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No errors.</p>
@@ -4881,7 +4883,7 @@ EXTENDS Sequences
 <code>Seq(S)</code> constructs the set of all (finite) sequences that draw elements
 from the set <code>S</code>. For instance, <code>&lt;&lt;1, 2, 2, 1&gt;&gt; \in Seq({1, 2, 3})</code>.
 Note that <code>Seq(S)</code> is an infinite set. To use it with TLC, you often have
-to override this operator, see <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>, page 237.</p>
+to override this operator, see <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>, page 237.</p>
 <p><strong>Application.</strong> Simply use function application, e.g., <code>s[2]</code>.</p>
 <p><strong>Immutability.</strong> As sequences are special kinds of
 <a href="lang/./functions.html">functions</a>, sequences are immutable.</p>
@@ -4906,7 +4908,7 @@ which restricts the sequence elements to have the same type <code>T_3</code>.</p
 type checker. For instance, it can immediately figure out that <code>&lt;&lt;1, &quot;Foo&quot;&gt;&gt;</code>
 is a tuple, as Apalache does not allow sequences to carry elements of different
 types. However, there is no way to say, whether <code>&lt;&lt;1, 2, 3&gt;&gt;</code> should be treated
-as a tuple or a sequence. This needs a <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/types-and-annotations.md">type annotation</a>.</p>
+as a tuple or a sequence. This needs a <a href="lang/../apalache/types-and-annotations.html">type annotation</a>.</p>
 <p><em>The current SMT encoding of sequences in Apalache is not optimized, 
 so operations on sequences are often significantly slower than operations
 on sets.</em></p>
@@ -4924,7 +4926,7 @@ constructed as follows:</p>
 <li>set <code>r[i]</code> to the value of <code>e_i</code> for <code>i \in 1..n</code>.</li>
 </ul>
 <p>In Apalache, this constructor may be used to construct either a tuple, or a
-sequence. To distinguish between them, you will sometimes need a <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/types-and-annotations.md">type
+sequence. To distinguish between them, you will sometimes need a <a href="lang/../apalache/types-and-annotations.html">type
 annotation</a>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No errors.</p>
@@ -5671,10 +5673,11 @@ Next ==
 ===============================================================================
 </code></pre>
 <h1><a class="header" href="#adr-002-types-and-type-annotations" id="adr-002-types-and-type-annotations">ADR-002: types and type annotations</a></h1>
-<p>This is a follow up of <a href="adr/../../internal/rfc/001rfc-types.html">RFC-001</a>, which discusses plenty of
-alternative solutions. In this <strong>ADR-002</strong>, we fix one solution that seems to be
-most suitable. The interchange format for the type inference tools will be
-discussed in a separate ADR.</p>
+<p>This is a follow up of
+<a href="https://github.com/informalsystems/apalache/blob/unstable/docs/internal/rfc/001rfc-types.md">RFC-001</a>,
+which discusses plenty of alternative solutions. In this <strong>ADR-002</strong>, we fix one
+solution that seems to be most suitable. The interchange format for the type
+inference tools will be discussed in a separate ADR.</p>
 <ol>
 <li>How to write types in TLA+ (Type System 1).</li>
 <li>How to write type annotations (as a user).</li>

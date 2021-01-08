@@ -274,8 +274,7 @@ and a better type checker. Hence, the syntax will change in the future.</p>
 <li>type annotations for records and sets of records.</li>
 </ul>
 <h3><a class="header" href="#empty-sets-and-sequences" id="empty-sets-and-sequences">Empty sets and sequences</a></h3>
-<p>Consider the following example
-<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/NeedForTypes.tla"><code>test/tla/NeedForTypes.tla</code></a>:</p>
+<p>Consider the following example <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/NeedForTypes.tla"><code>NeedForTypes.tla</code></a>:</p>
 <pre><code class="language-tla">------------------------ MODULE NeedForTypes ------------------------------
 (**
  * This simple example transforms a set into a sequence.
@@ -305,7 +304,7 @@ Inv == InSet = Left \union { OutSeq[i]: i \in DOMAIN OutSeq }
 <p>While this example is perfectly fine for TLC, Apalache has to assign types to
 the variables, in order to construct SMT constraints. In some cases, Apalache
 can infer types completely automatically, e.g., as in the <code>y2k</code> example (see
-<a href="#example">Section 4</a>). However, if you run <code>apalache check --cinit=ConstInit NeedForTypes.tla</code>, the tool will complain:</p>
+<a href="./example.html">the example</a>). However, if you run <code>apalache check --cinit=ConstInit NeedForTypes.tla</code>, the tool will complain:</p>
 <pre><code>Step 0, level 0: checking if 1 transition(s) are enabled and violate the invariant I@15:17:14.313
 Step 0, level 1: collecting 1 enabled transition(s)               I@15:17:14.360
 Step 1, level 1: checking if 2 transition(s) are enabled and violate the invariant I@15:17:14.374
@@ -653,16 +652,21 @@ start with the prefix <code>Rec</code>.</p>
 <p><strong>Why you should avoid recursive functions.</strong> Sometimes, recursive functions
 concisely describe the function that you need. The nice examples are the
 factorial function (see above) and Fibonacci numbers (see
-<a href="https://github.com/informalsystems/apalache/tree/unstable/test/tla/Rec3.tla">Rec3</a>).
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/Rec3.tla">Rec3</a>).
 However, when you define a recursive function over sets, the complexity gets
 ugly really fast.</p>
 <p>Consider the example
-<a href="https://github.com/informalsystems/apalache/tree/unstable/test/tla/Rec9.tla">Rec9</a>,
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/Rec9.tla">Rec9</a>,
 which computes set cardinality. Here is a fragment of the spec:</p>
 <pre><code class="language-tla">\* the type of the function Card
 CardT == [{Int} -&gt; Int]
 
-\* The set cardinality function
+(*
+ The set cardinality function. It needs an upper bound on the set size.
+ Although this function looks nice, be warned that this definition requires us
+ to construct the powerset SUBSET NUMS and then write down the constraints
+ for the function Card. This encoding is (at least) double-exponential.
+ *)
 Card[S \in SUBSET NUMS] ==
     IF S = IntSet({})
     THEN 0

@@ -206,7 +206,7 @@ a set may mix integers, Booleans, and other sets:</p>
 <pre><code class="language-tla">  { 2020, { &quot;is&quot; }, TRUE, &quot;fail&quot; }
 </code></pre>
 <p>TLC restricts set elements to comparable values. See Section 14.7.2 of
-<a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>. In a nutshell, if you do not mix the following five
+<a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>. In a nutshell, if you do not mix the following five
 kinds of values in a single set, TLC would not complain about your sets:</p>
 <ol>
 <li>Booleans,</li>
@@ -231,7 +231,7 @@ empty set is constructed.</p>
 combination of TLA+ values: Booleans, integers, strings, sets, functions, etc.</p>
 <p>TLC only allows a user to construct sets out of elements that are comparable. For
 instance, two integers are comparable, but an integer and a set are not
-comparable. See Section 14.7.2 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>.</p>
+comparable. See Section 14.7.2 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>.</p>
 <p>Apalache goes further and requires that all set elements have the same type.
 If this is not the case, the type checker flags an error.</p>
 <p><strong>Example in TLA+:</strong></p>

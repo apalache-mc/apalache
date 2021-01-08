@@ -204,7 +204,7 @@ EXTENDS Sequences
 <code>Seq(S)</code> constructs the set of all (finite) sequences that draw elements
 from the set <code>S</code>. For instance, <code>&lt;&lt;1, 2, 2, 1&gt;&gt; \in Seq({1, 2, 3})</code>.
 Note that <code>Seq(S)</code> is an infinite set. To use it with TLC, you often have
-to override this operator, see <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>, page 237.</p>
+to override this operator, see <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>, page 237.</p>
 <p><strong>Application.</strong> Simply use function application, e.g., <code>s[2]</code>.</p>
 <p><strong>Immutability.</strong> As sequences are special kinds of
 <a href="./functions.html">functions</a>, sequences are immutable.</p>
@@ -229,7 +229,7 @@ which restricts the sequence elements to have the same type <code>T_3</code>.</p
 type checker. For instance, it can immediately figure out that <code>&lt;&lt;1, &quot;Foo&quot;&gt;&gt;</code>
 is a tuple, as Apalache does not allow sequences to carry elements of different
 types. However, there is no way to say, whether <code>&lt;&lt;1, 2, 3&gt;&gt;</code> should be treated
-as a tuple or a sequence. This needs a <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/types-and-annotations.md">type annotation</a>.</p>
+as a tuple or a sequence. This needs a <a href="../apalache/types-and-annotations.html">type annotation</a>.</p>
 <p><em>The current SMT encoding of sequences in Apalache is not optimized, 
 so operations on sequences are often significantly slower than operations
 on sets.</em></p>
@@ -247,7 +247,7 @@ constructed as follows:</p>
 <li>set <code>r[i]</code> to the value of <code>e_i</code> for <code>i \in 1..n</code>.</li>
 </ul>
 <p>In Apalache, this constructor may be used to construct either a tuple, or a
-sequence. To distinguish between them, you will sometimes need a <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/types-and-annotations.md">type
+sequence. To distinguish between them, you will sometimes need a <a href="../apalache/types-and-annotations.html">type
 annotation</a>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No errors.</p>

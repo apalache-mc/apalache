@@ -349,7 +349,7 @@ table below.</em></p>
 <tr><td>100 / (-3) == -33</td><td>100 / (-3) == -33</td><td>100 / (-3) == -33</td><td>100 // (-3) == -34</td><td>(100 \div (-3)) = -34</td><td>(assert (= (- 0 33) (div 100 (- 0 3))))</td></tr>
 <tr><td>-100 / (-3) == 33</td><td>-100 / (-3) == 33</td><td>-100 / (-3) == 33</td><td>-100 // (-3) == 33</td><td>((-100) \div (-3)) = 33</td><td>(assert (= 34 (div (- 0 100) (- 0 3))))</td></tr>
 </tbody></table>
-<p><em>Unfortunately, <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a> only gives us the definition for the case
+<p><em>Unfortunately, <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a> only gives us the definition for the case
 <code>b &gt; 0</code> (that is, cases 1-2 in our description). The implementation in SMT and
 TLC produce incompatible results for <code>b &lt; 0</code>. See <a href="https://github.com/informalsystems/apalache/issues/331">issue #331 in
 Apalache</a>.</em></p>
@@ -421,7 +421,7 @@ cases:</p>
 <li>If <code>a /= 0</code> and <code>b &gt; 1</code>, then <code>a^b</code> is defined as <code>a * a^(b-1)</code>.</li>
 <li>In all other cases, <code>a^b</code> is undefined.</li>
 </ul>
-<p>In TLA+, <code>a^b</code> extends to reals, see Chapter 18 in <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>.
+<p>In TLA+, <code>a^b</code> extends to reals, see Chapter 18 in <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>.
 For instance, <code>3^(-5)</code> is defined on reals. However, reals are supported
 neither by TLC, nor by Apalache.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>

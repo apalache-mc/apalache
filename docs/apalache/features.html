@@ -178,7 +178,7 @@
 <tr><td><code>CONSTANTS C1, C2</code></td><td align="center">✔</td><td align="center">-</td><td>Either define a <code>ConstInit</code> operator to initialize the constants, or declare operators instead of constants, e.g., C1 == 111</td></tr>
 <tr><td><code>VARIABLES x, y, z</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>ASSUME P</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Parsed, but not propagated to the solver</td></tr>
-<tr><td><code>F(x1, ..., x_n) == exp</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Every application of <code>F</code> is replaced with its body. Recursive operators need <a href="./manual.html#91-recursive-operators">unrolling annotations</a>.</td></tr>
+<tr><td><code>F(x1, ..., x_n) == exp</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Every application of <code>F</code> is replaced with its body. Recursive operators need <a href="./principles.html#recursive-operators">unrolling annotations</a>.</td></tr>
 <tr><td><code>f[x ∈ S] == exp</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Only recursive functions that return integers or Booleans are supported.</td></tr>
 <tr><td><code>INSTANCE M WITH ...</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>No special treatment for <code>~&gt;</code>, <code>\cdot</code>, <code>ENABLED</code></td></tr>
 <tr><td><code>N(x1, ..., x_n) == INSTANCE M WITH...</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Parameterized instances are not supported yet, LOCAL operator definitions inside instances may fail to work</td></tr>

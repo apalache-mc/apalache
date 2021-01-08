@@ -268,7 +268,7 @@ See the example below:</p>
   ]
 </code></pre>
 <p>As in the case of <a href="./sets.html">sets</a>, TLC restricts function domains to comparable
-values. See Section 14.7.2 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>. So, TLC rejects the two
+values. See Section 14.7.2 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>. So, TLC rejects the two
 examples that are given above.</p>
 <p>However, functions in TLC are free to return different kinds of values:</p>
 <pre><code class="language-tla">  [ x \in { 1, 2 } |-&gt;
@@ -307,7 +307,7 @@ the domain <code>S</code> as follows.  For every element <code>elem</code> of <c
 in a temporary variable called <code>result</code>.</li>
 <li>Set <code>f[elem]</code> to <code>result</code>.</li>
 </ol>
-<p>Of course, the semantics of the function constructor in <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>
+<p>Of course, the semantics of the function constructor in <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>
 does not require us to compute the function at all. We believe that
 our description helps you to see that there is a way to compute this data
 structure, though in a very straightforward and inefficient way.</p>
@@ -319,7 +319,7 @@ expression. They can be any
 combination of TLA+ values: Booleans, integers, strings, sets, functions, etc.</p>
 <p>TLC accepts function domains of comparable values. For
 instance, two integers are comparable, but an integer and a set are not
-comparable. See Section 14.7.2 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>.</p>
+comparable. See Section 14.7.2 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>.</p>
 <p>Apalache goes further: It requires the function domain to be well-typed (as a
 set), and it requires the mapping expression <code>e</code> to be well-typed. If this
 is not the case, the type checker flags an error.</p>
@@ -457,7 +457,7 @@ as follows:</p>
 TLC flags a model checking error.</p>
 <p>When <code>a_1, ..., a_n</code> are not type-compatible with the type of <code>DOMAIN f</code>,
 Apalache flags a type error. When <code>a_i \notin DOMAIN f</code>, Apalache ignores this
-argument. This is consistent with the semantics of TLA+ in <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>.</p>
+argument. This is consistent with the semantics of TLA+ in <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>.</p>
 <p><strong>Advanced syntax:</strong> There are three extensions to the basic syntax.</p>
 <p><em>Extension 1</em>. If the domain elements of a function <code>f</code> are tuples, then, similar to
 function application, the expressions <code>a_1, ..., a_n</code> can be written without

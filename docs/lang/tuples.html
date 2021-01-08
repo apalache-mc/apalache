@@ -211,12 +211,12 @@ restricts the arguments and results as follows: the arguments have the type
 <code>Seq(C)</code>, which restricts the sequence elements to have the same type <code>C</code>. In
 contrast, tuples have more fine-grained types in Apalache: <code>&lt;&lt;T_1&gt;&gt;</code>, <code>&lt;&lt;T_1, T_2&gt;&gt;</code>, <code>&lt;&lt;T_1, T_2, T_3&gt;&gt;</code> and so on. As a result, different tuple fields are
 allowed to carry elements of different types, whereas functions and sequences
-are not allowed to do that. See the <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/adr/002adr-types.md">Apalache ADR002</a> on types for details.</p>
+are not allowed to do that. See the <a href="../adr/002adr-types.html">Apalache ADR002</a> on types for details.</p>
 <p>As tuples are also sequences in TLA+, this poses a challenge for the Apalache
 type checker. For instance, it can immediately figure out that <code>&lt;&lt;1, &quot;Foo&quot;&gt;&gt;</code>
 is a tuple, as Apalache does not allow sequences to carry elements of different
 types. However, there is no way to say, whether <code>&lt;&lt;1, 2, 3&gt;&gt;</code> should be treated
-as a tuple or a sequence. This needs a <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/types-and-annotations.md">type annotation</a>.</p>
+as a tuple or a sequence. This needs a <a href="../apalache/types-and-annotations.html">type annotation</a>.</p>
 <p><em>Owing to the type information, tuples are translated into SMT much more efficiently
 by Apalache than the general functions and sequences!</em></p>
 <hr />
@@ -236,7 +236,7 @@ as follows:</p>
 <li>set <code>r[i]</code> to the value of <code>e_i</code> for <code>i \in 1..n</code>.</li>
 </ul>
 <p>In Apalache, this constructor may be used to construct either a tuple, or a
-sequence. To distinguish between them, you will sometimes need a <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/types-and-annotations.md">type
+sequence. To distinguish between them, you will sometimes need a <a href="../apalache/types-and-annotations.html">type
 annotation</a>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No errors.</p>
