@@ -80,20 +80,20 @@ object Tool extends App with LazyLogging {
         command match {
           case Some(parse: ParseCmd) =>
             logger.info("Parse " + parse.file)
-            submitStatisticsIfEnabled(Map("mode" -> "apalache/parse"))
+            submitStatisticsIfEnabled(Map("mode" -> "apalache-parse"))
             val injector = injectorFactory(parse)
             handleExceptions(injector, runParse(injector, parse, _))
 
           case Some(check: CheckCmd) =>
             logger.info("Checker options: filename=%s, init=%s, next=%s, inv=%s"
               .format(check.file, check.init, check.next, check.inv))
-            submitStatisticsIfEnabled(Map("mode" -> "apalache/check"))
+            submitStatisticsIfEnabled(Map("mode" -> "apalache-check"))
             val injector = injectorFactory(check)
             handleExceptions(injector, runCheck(injector, check, _))
 
           case Some(typecheck: TypeCheckCmd) =>
             logger.info("Type checking " + typecheck.file)
-            submitStatisticsIfEnabled(Map("mode" -> "apalache/typecheck"))
+            submitStatisticsIfEnabled(Map("mode" -> "apalache-typecheck"))
             val injector = injectorFactory(typecheck)
             handleExceptions(injector, runTypeCheck(injector, typecheck, _))
 
