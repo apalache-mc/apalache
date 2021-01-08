@@ -1,5 +1,8 @@
 # Getting Started
 
+This section covers all the basic information you need to get started with the
+Apalache model checker.
+
 **Table of Contents**
 
  1. [Shall I use Apalache or TLC?](#apalacheOrTlc)

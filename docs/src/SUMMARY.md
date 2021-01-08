@@ -1,15 +1,17 @@
 # Summary
 
+[Overview](./README.md)
+
 # Apalache User Manual
 
-- [Introduction](./README.md)
-- [Getting Started](./manual.md)
-- [TLC Configuration Files](./tlc-config.md)
-- [Types and Annotations](./types-and-annotations.md)
-- [Supported Features](./features.md)
-- [TLA+ Preprocessing](./preprocessing.md)
-- [Fine Tuning](./tuning.md)
-- [KerA: kernel logic of actions](./kera.md)
+- [Introduction](./apalache/README.md)
+- [Getting Started](./apalache/manual.md)
+- [TLC Configuration Files](./apalache/tlc-config.md)
+- [Types and Annotations](./apalache/types-and-annotations.md)
+- [Supported Features](./apalache/features.md)
+- [TLA+ Preprocessing](./apalache/preprocessing.md)
+- [Fine Tuning](./apalache/tuning.md)
+- [KerA: kernel logic of actions](./apalache/kera.md)
 
 # TLA+ Language Manual for Engineers
 
