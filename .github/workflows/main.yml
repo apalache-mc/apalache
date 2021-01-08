@@ -22,6 +22,10 @@ jobs:
         uses: lycheeverse/lychee-action@v1
         with:
           args: -v target/docs/*.html
+        env:
+          # Needed to avoid rate limiting while checking github.com links
+          # See https://github.com/lycheeverse/lychee#github-token
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   unit-tests:
     runs-on: ${{ matrix.operating-system }}
