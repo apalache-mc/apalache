@@ -1,6 +1,6 @@
-# Apalache User Manual
+# Apalache Documentation
 
-The apalache user manual is written in markdown files in the [./src](./src)
+The Apalache documentation is written in markdown files in the [./src](./src)
 directory and compiled using [mdbook](https://github.com/rust-lang/mdBook).
 
 ## Building and previewing the documentation
@@ -20,12 +20,24 @@ mdbook serve
 
 ## Notes on writing the documentation
 
+### The Table of Contents
+
 The [./src/SUMMARY.md](./src/SUMMARY.md) specifies the table of contents shown
 in the sidebar of the documentation. Any top-level chapters must be linked from
 there.
 
 Each chapter must link a file: internal links to anchors within files do not
-work.
+work. There is an [open issue](https://github.com/rust-lang/mdBook/issues/167)
+to fix this behavior.
+
+### Referring to `README.md` pages
+
+Within the book, any `README.md` page gets converted to an `index.md` page
+during compilation. You can link to `README.md` pages in the `SUMMARY.md`, but
+everywhere else you must write the link pointed towards `index.md`.
+
+There is an [open issue](https://github.com/rust-lang/mdBook/issues/1268) to fix
+this behavior.
 
 ## Internal documentation
 
