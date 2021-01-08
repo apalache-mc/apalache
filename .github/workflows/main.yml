@@ -26,6 +26,7 @@ jobs:
           # Needed to avoid rate limiting while checking github.com links
           # See https://github.com/lycheeverse/lychee#github-token
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUST_BACKTRACE: 1
 
   unit-tests:
     runs-on: ${{ matrix.operating-system }}
