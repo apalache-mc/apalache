@@ -18,6 +18,11 @@ jobs:
           cd docs
           mdbook build
 
+      - name: Check Links
+        uses: lycheeverse/lychee-action@v1
+        with:
+          args: -v target/docs/*.html
+
   unit-tests:
     runs-on: ${{ matrix.operating-system }}
     strategy:
