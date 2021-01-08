@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - master
-      # FIXME
-      - shon/mdbook-toc-improvement
 
 jobs:
   deploy:
