@@ -1,5 +1,7 @@
 ## Unreleased #unstable
 
+ * opt-in for statistics collection (shared with TLC and TLA+ Toolbox), see #288
+
 ### Documentation
 
 - Compile the manuals into [a static
