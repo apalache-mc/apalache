@@ -1,5 +1,11 @@
 ## Unreleased #unstable
 
+### Documentation
+
+- Compile the manuals into [a static
+  site](http://informalsystems.github.io/apalache/docs/) using
+  [mdBook](https://github.com/rust-lang/mdBook), see #400
+
 ## 0.8.0 [RELEASE]
 
  * use openjdk-9 for deterministic Apalache Docker images, see #318

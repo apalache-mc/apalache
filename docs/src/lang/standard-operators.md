@@ -1,7 +1,5 @@
 # The standard operators of TLA+
 
-[Back to top](./README.md)
-
 In this document, we summarize the standard TLA+ operators in a form that is
 similar to manuals on programming languages. The purpose of this document is to
 provide you with a quick reference, whenever you are looking at the [Summary of

@@ -1,6 +1,6 @@
 # ADR-002: types and type annotations
 
-This is a follow up of [RFC-001](001rfc-types.md), which discusses plenty of
+This is a follow up of [RFC-001](../../internal/rfc/001rfc-types.md), which discusses plenty of
 alternative solutions. In this __ADR-002__, we fix one solution that seems to be
 most suitable. The interchange format for the type inference tools will be
 discussed in a separate ADR.

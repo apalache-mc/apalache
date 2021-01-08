@@ -1,7 +1,5 @@
 # User-defined operators and recursive functions
 
-[Back to top](./README.md)
-
 _Like macros, to do a lot of things in one step_
 
  - Top-level operators

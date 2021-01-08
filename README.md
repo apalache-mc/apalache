@@ -35,15 +35,14 @@ Check the [releases page].
 
 We recommend that you run the latest stable docker image `apalache/mc:latest`,
 or checkout the source code from [master], which accumulates bugfixes over the
-latest release. For more information, see [the
-manual](docs/manual.md#useDocker). To try the latest cool features, check out
-the [unstable branch].
+latest release. For more information, see [the manual][manual-docker].
+To try the latest cool features, check out the [unstable branch].
 
 ## Getting started
 
-- Read the [Apalache user manual].
-- Consult the (WIP) [Idioms for writing better TLA+].
-- Consult the (WIP) [TLA+ language manual for engineers].
+- Read the [Apalache user manual][user-manual].
+- Consult the (WIP) [Idioms for writing better TLA+][idioms].
+- Consult the (WIP) [TLA+ language manual for engineers][language-manual].
 
 ## Community
 
@@ -103,9 +102,6 @@ Related reports and publications can be found at the
 [releases page]: https://github.com/informalsystems/apalache/releases
 [master]: https://github.com/informalsystems/apalache/tree/master
 [unstable branch]: https://github.com/informalsystems/apalache/tree/unstable
-[Apalache user manual]: ./docs/manual.md
-[Idioms for writing better TLA+]: ./docs/idiomatic
-[TLA+ language manual for engineers]: ./docs/lang
 [Apalache zulip stream]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache
 [Tendermint specs]: https://github.com/tendermint/spec/tree/master/rust-spec
 [Tendermint blockchain]: https://github.com/tendermint
@@ -113,3 +109,7 @@ Related reports and publications can be found at the
 [apalache benchmarks]: https://github.com/informalsystems/apalache-tests
 [checking inductive invariants]: https://github.com/informalsystems/apalache-tests/blob/master/results/001indinv-report.md
 [bounded model checking]: https://github.com/informalsystems/apalache-tests/blob/master/results/002bmc-report.md
+[user-manual]: http://informalsystems.github.io/apalache/docs/index.html
+[user-manual-docker]: http://informalsystems.github.io/apalache/docs/manual.html#31-using-a-docker-image
+[language-manual]: http://informalsystems.github.io/apalache/docs/lang/index.html
+[idioms]: http://informalsystems.github.io/apalache/docs/idiomatic/index.html

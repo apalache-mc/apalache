@@ -1,0 +1,16 @@
+[book]
+
+title = "Apalache Documentation"
+authors = ["Igor Konnov", "Jure Kukovec", "Andrey Kuprianov", "Shon Feder"]
+src = "src"
+language = "en"
+
+[build]
+
+build-dir = "../target/docs"
+# Don't create empty files when a chapter doesn't exist
+create-missing = false
+
+[output.html]
+mathjax-support = true
+git-repository-url = "https://github.com/informalsystems/apalache"

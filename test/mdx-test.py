@@ -141,14 +141,14 @@ if __name__ == "__main__":
             )
             sys.exit(1)
 
-    process = Popen(cmd, stdout=PIPE, stderr=STDOUT)
+    process = Popen(cmd, stdout=PIPE, stderr=PIPE)
     logger.debug(f"running command: {process.args}")
     while process.poll() is None:
         line = process.stdout.readline().rstrip()
         logger.info(line)
 
     if process.returncode != 0:
-        logger.error(f"Failed to run test. Check {log_file}. Result: {result}")
+        logger.error(f"Failed to run test. Check {log_file}. Error: {process.stderr}")
         sys.exit(1)
 
     # Run diff to check the corrected results against the expected results

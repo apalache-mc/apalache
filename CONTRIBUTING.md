@@ -99,7 +99,7 @@ contributors and maintainers to make sure:
 ## Dependencies
 
 For setting up the local build, see the [instructions on building form
-source](./docs/manual.md#building-from-source).
+source](http://informalsystems.github.io/apalache/docs/manual.html#32-building-from-source).
 
 ### Environment
 
