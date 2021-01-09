@@ -430,7 +430,7 @@ The outcome is: NoError
 ```sh
 $ apalache-mc check Rec10.tla | sed 's/[IEW]@.*//'
 ...
-Input error (see the manual): Recursive operator Fact requires an annotation UNROLL_DEFAULT_Fact. See: http://informalsystems.github.io/apalache/docs/manual.html#recursion
+Input error (see the manual): Recursive operator Fact requires an annotation UNROLL_DEFAULT_Fact. See: https://apalache.informal.systems/docs/apalache/principles.html#recursion
 ...
 EXITCODE: ERROR (99)
 ```
@@ -440,7 +440,7 @@ EXITCODE: ERROR (99)
 ```sh
 $ apalache-mc check Rec11.tla | sed 's/[IEW]@.*//'
 ...
-Input error (see the manual): Recursive operator Fact requires an annotation UNROLL_TIMES_Fact. See: http://informalsystems.github.io/apalache/docs/manual.html#recursion
+Input error (see the manual): Recursive operator Fact requires an annotation UNROLL_TIMES_Fact. See: https://apalache.informal.systems/docs/apalache/principles.html#recursion
 ...
 EXITCODE: ERROR (99)
 ```

@@ -221,7 +221,7 @@ _Functions that pretend to be lists, indexed with 1, 2, 3,..._
 [TLC model checker]: http://lamport.azurewebsites.net/tla/tools.html
 [Summary of TLA]: https://lamport.azurewebsites.net/tla/summary.pdf
 [TLA+ Home Page]: http://lamport.azurewebsites.net/tla/tla.html
-[Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
+[Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html
 [Community Modules]: https://github.com/tlaplus/CommunityModules
 [LearnTla.com]: https://learntla.com
 [TLA+ Video Course]: http://lamport.azurewebsites.net/video/videos.html

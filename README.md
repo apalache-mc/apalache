@@ -110,6 +110,6 @@ Related reports and publications can be found at the
 [checking inductive invariants]: https://github.com/informalsystems/apalache-tests/blob/master/results/001indinv-report.md
 [bounded model checking]: https://github.com/informalsystems/apalache-tests/blob/master/results/002bmc-report.md
 [user-manual]: http://informalsystems.github.io/apalache/docs/index.html
-[user-manual-docker]: http://informalsystems.github.io/apalache/docs/manual.html#31-using-a-docker-image
-[language-manual]: http://informalsystems.github.io/apalache/docs/lang/index.html
-[idioms]: http://informalsystems.github.io/apalache/docs/idiomatic/index.html
+[user-manual-docker]: https://apalache.informal.systems/docs/apalache/installation/docker.html
+[language-manual]: https://apalache.informal.systems/docs/lang/index.html
+[idioms]: https://apalache.informal.systems//docs/idiomatic/index.html

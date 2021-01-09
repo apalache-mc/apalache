@@ -1,9 +1,10 @@
 # ADR-002: types and type annotations
 
-This is a follow up of [RFC-001](../../internal/rfc/001rfc-types.md), which discusses plenty of
-alternative solutions. In this __ADR-002__, we fix one solution that seems to be
-most suitable. The interchange format for the type inference tools will be
-discussed in a separate ADR.
+This is a follow up of
+[RFC-001](https://github.com/informalsystems/apalache/blob/unstable/docs/internal/rfc/001rfc-types.md),
+which discusses plenty of alternative solutions. In this __ADR-002__, we fix one
+solution that seems to be most suitable. The interchange format for the type
+inference tools will be discussed in a separate ADR.
 
 1. How to write types in TLA+ (Type System 1).
 1. How to write type annotations (as a user).

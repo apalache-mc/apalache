@@ -239,4 +239,4 @@ result is undefined.  TLC raises an error during model checking. Apalache
 raises a type error when preprocessing.  Additionally, if `e_0`, `e_1`, ...,
 `e_n` may evaluate to values of different types, Apalache raises a type error.
 
-[Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
+[Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html

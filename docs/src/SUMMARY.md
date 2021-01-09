@@ -1,15 +1,30 @@
 # Summary
 
+[Overview](./README.md)
+
 # Apalache User Manual
 
-- [Introduction](./README.md)
-- [Getting Started](./manual.md)
-- [TLC Configuration Files](./tlc-config.md)
-- [Types and Annotations](./types-and-annotations.md)
-- [Supported Features](./features.md)
-- [TLA+ Preprocessing](./preprocessing.md)
-- [Fine Tuning](./tuning.md)
-- [KerA: kernel logic of actions](./kera.md)
+- [Introduction](./apalache/README.md)
+- [Getting Started](./apalache/getting-started.md)
+    - [Shall I use Apalache or TLC?](./apalache/apalache-or-tlc.md)
+    - [System Requirements](./apalache/system-reqs.md)
+    - [Installation](./apalache/installation/README.md)
+        - [Prebuilt Packages](./apalache/installation/jvm.md)
+        - [Docker](./apalache/installation/docker.md)
+        - [Source](./apalache/installation/source.md)
+    - [Running the Tool](./apalache/running.md)
+    - [An Example TLA+ Specification](./apalache/example.md)
+    - [Specification Parameters](./apalache/parameters.md)
+    - [Principles of Symbolic Model Checking with Apalache](./apalache/principles.md)
+    - [The Apalache Module](./apalache/apalache-mod.md)
+    - [Profiling Your Specification](./apalache/profiling.md)
+    - [Five minutes of theory](./apalache/theory.md)
+- [TLC Configuration Files](./apalache/tlc-config.md)
+- [Types and Annotations](./apalache/types-and-annotations.md)
+- [Supported Features](./apalache/features.md)
+- [TLA+ Preprocessing](./apalache/preprocessing.md)
+- [Fine Tuning](./apalache/tuning.md)
+- [KerA: kernel logic of actions](./apalache/kera.md)
 
 # TLA+ Language Manual for Engineers
 

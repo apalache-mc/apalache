@@ -549,7 +549,7 @@ _The use of CASE with OTHER together with non-determinism is quite rare.
 
 [Back to all operators](./standard-operators.md)
 
-[Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
+[Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html
 [The Specification Language TLA+]: https://members.loria.fr/SMerz/papers/tla+logic2008.pdf
 [Boogie]: https://github.com/boogie-org/boogie
 [Spin]: http://spinroot.com/spin/whatispin.html

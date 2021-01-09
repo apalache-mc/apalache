@@ -132,7 +132,7 @@ TLA+ functions are also free to return any kinds of values:
 ```
 
 As in the case of [sets](./sets.md), TLC restricts function domains to comparable
-values. See Section 14.7.2 of [Specifying Systems]. So, TLC rejects the two
+values. See Section 14.7.2 of [Specifying Systems][]. So, TLC rejects the two
 examples that are given above.
 
 However, functions in TLC are free to return different kinds of values:
@@ -524,6 +524,6 @@ error.
 
 
 [Control Flow and Non-determinism]: ./control-and-nondeterminism.md
-[Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
+[Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html
 [frozendict]: https://pypi.org/project/frozendict/
 [Two-phase commit]: https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit/TwoPhase.tla
