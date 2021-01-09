@@ -1,7 +1,8 @@
 # Running in Java Virtual Machine
 
 You have to download and install a Java Virtual Machine first. For instance,
-[OpenJDK](https://openjdk.java.net/) should work (we tried Apalache with OpenJDK 11).
+[AdoptOpenJDK](https://adoptopenjdk.net/) should work (we tried Apalache with
+OpenJDK 11 and OpenJDK 15).
 
 Once you have installed Java, download the [latest
 release](https://github.com/informalsystems/apalache/releases) and unpack into
@@ -19,7 +20,7 @@ that simple.
   - Run Java as follows:
 
   ```
-  java.exe -cp mod-distribution\target\apalache-pkg-X.Y.Z-RELEASE-full.jar <args>
+  java.exe -jar mod-distribution\target\apalache-pkg-X.Y.Z-RELEASE-full.jar <args>
   ```
 
   The arguments `<args>` are explained in [Running the Tool](../running.md).
