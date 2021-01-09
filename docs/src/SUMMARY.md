@@ -13,6 +13,7 @@
         - [Docker](./apalache/installation/docker.md)
         - [Source](./apalache/installation/source.md)
     - [Running the Tool](./apalache/running.md)
+    - [TLA+ Execution Statistics](./apalache/statistics.md)
     - [An Example TLA+ Specification](./apalache/example.md)
     - [Specification Parameters](./apalache/parameters.md)
     - [Principles of Symbolic Model Checking with Apalache](./apalache/principles.md)
