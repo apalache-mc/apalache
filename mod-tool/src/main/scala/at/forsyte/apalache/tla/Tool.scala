@@ -23,6 +23,7 @@ import util.ExecutionStatisticsCollector
 import util.ExecutionStatisticsCollector.Selection
 
 import scala.collection.JavaConverters._
+import scala.util.Random
 
 /**
   * Command line access to the APALACHE tools.
@@ -265,11 +266,11 @@ object Tool extends App with LazyLogging {
     if (ExecutionStatisticsCollector.promptUser()) {
       // Statistics collection is not enabled. Cry for help.
       Console.println("# Usage statistics is OFF. We care about your privacy.")
-      Console.println("# If you want to help our project, consider enabling statistics with config --submit-stats=true.")
+      Console.println("# If you want to help our project, consider enabling statistics with config --enable-stats=true.")
     } else {
       // Statistic collection is enabled. Thank the user
       Console.println("# Usage statistics is ON. Thank you!")
-      Console.println("# If you have changed your mind, disable the statistics with config --submit-stats=false.")
+      Console.println("# If you have changed your mind, disable the statistics with config --enable-stats=false.")
     }
     Console.println("")
   }
@@ -293,7 +294,7 @@ object Tool extends App with LazyLogging {
     }
   }
 
-  // We are collecting statistics with the code from tlatools:
+  // If the user has opted-in, collect statistics with the code from tlatools:
   //
   // https://github.com/tlaplus/tlaplus/blob/master/tlatools/org.lamport.tlatools/src/util/ExecutionStatisticsCollector.java
   //
@@ -312,7 +313,9 @@ object Tool extends App with LazyLogging {
       params.put("cores", Runtime.getRuntime.availableProcessors.toString)
       val heapMemory = Runtime.getRuntime.maxMemory / 1024L / 1024L
       params.put("jvmHeapMem", heapMemory.toString)
-      params.put("ts", (System.currentTimeMillis() / 1000).toString)
+      val saltSec = Random.nextInt(600) // a random salt to introduce a bit of entropy in the timestamp
+      val timestampSec = System.currentTimeMillis() / 1000 - saltSec
+      params.put("ts", timestampSec.toString)
       params.putAll(commandParams.asJava)
       statCollector.collect(params)
     }
