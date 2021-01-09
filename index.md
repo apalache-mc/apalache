@@ -53,7 +53,7 @@ Related reports and publications can be found at the
 [Chat]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache
 [Contribute]: https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md
 [Features]: ./docs/features.html
-[Installation]: ./docs/manual.html#installation
+[Installation]: ./docs/apalache/installation/index.html
 [Leslie Lamport's page on TLA+]: http://lamport.azurewebsites.net/tla/tla.html
 [Manual]: ./docs
 [Microsoft Z3]: https://github.com/Z3Prover/z3
