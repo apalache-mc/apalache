@@ -80,20 +80,21 @@ object Tool extends App with LazyLogging {
         command match {
           case Some(parse: ParseCmd) =>
             logger.info("Parse " + parse.file)
-            submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> "parse"))
+            submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> "parse", "workers" -> "1"))
             val injector = injectorFactory(parse)
             handleExceptions(injector, runParse(injector, parse, _))
 
           case Some(check: CheckCmd) =>
             logger.info("Checker options: filename=%s, init=%s, next=%s, inv=%s"
               .format(check.file, check.init, check.next, check.inv))
-            submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> "check"))
+            // TODO: update workers when the multicore branch is integrated
+            submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> "check", "workers" -> "1"))
             val injector = injectorFactory(check)
             handleExceptions(injector, runCheck(injector, check, _))
 
           case Some(typecheck: TypeCheckCmd) =>
             logger.info("Type checking " + typecheck.file)
-            submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> "typecheck"))
+            submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> "typecheck", "workers" -> "1"))
             val injector = injectorFactory(typecheck)
             handleExceptions(injector, runTypeCheck(injector, typecheck, _))
 
@@ -295,6 +296,9 @@ object Tool extends App with LazyLogging {
   // We are collecting statistics with the code from tlatools:
   //
   // https://github.com/tlaplus/tlaplus/blob/master/tlatools/org.lamport.tlatools/src/util/ExecutionStatisticsCollector.java
+  //
+  // See how TLC does it:
+  // https://github.com/tlaplus/tlaplus/blob/master/tlatools/org.lamport.tlatools/src/tlc2/TLC.java
   private def submitStatisticsIfEnabled(commandParams: Map[String, String]): Unit = {
     val statCollector = new ExecutionStatisticsCollector()
     if (statCollector.isEnabled) {
@@ -305,6 +309,9 @@ object Tool extends App with LazyLogging {
       params.put("jvmVendor", System.getProperty("java.vendor"))
       params.put("jvmVersion", System.getProperty("java.version"))
       params.put("jvmArch", System.getProperty("os.arch"))
+      params.put("cores", Runtime.getRuntime.availableProcessors.toString)
+      val heapMemory = Runtime.getRuntime.maxMemory / 1024L / 1024L
+      params.put("jvmHeapMem", heapMemory.toString)
       params.put("ts", (System.currentTimeMillis() / 1000).toString)
       params.putAll(commandParams.asJava)
       statCollector.collect(params)
