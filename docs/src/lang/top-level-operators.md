@@ -179,32 +179,35 @@ The above transformation is usually called [Beta reduction].
 applying the substitution approach several times, we transform `Next` in
 several steps as follows:
 
-  1. After substituting the body of `UpdateCelsius`:
-    ```tla
+  First, by substituting the body of `UpdateCelsius`:
+
+  ```tla
     Next ==
         /\ fahrenheit' \in -1000..1000
         /\ celcius' = Max(ABSOLUTE_ZERO_IN_CELCIUS, Fahrenheit2Celcius(fahrenheit'))
-    ```
+  ```
 
-  1. After substituting the body of `Max`:
-    ```tla
+  Second, by substituting the body of `Max`:
+
+  ```tla
     Next ==
         /\ fahrenheit' \in -1000..1000
         /\ celcius' =
             IF ABSOLUTE_ZERO_IN_CELCIUS >= Fahrenheit2Celcius(fahrenheit')
             THEN ABSOLUTE_ZERO_IN_CELCIUS
             ELSE Fahrenheit2Celcius(fahrenheit')
-    ```
+  ```
 
-  1. After substituting the body of `Fahrenheit2Celcius` (twice):
-    ```tla
+  Third, by substituting the body of `Fahrenheit2Celcius` (twice):
+
+  ```tla
     Next ==
         /\ fahrenheit' \in -1000..1000
         /\ celcius' =
             IF ABSOLUTE_ZERO_IN_CELCIUS >= (fahrenheit' - 32) * 10 / 18
             THEN ABSOLUTE_ZERO_IN_CELCIUS
             ELSE (fahrenheit' - 32) * 10 / 18
-    ```
+  ```
 
 You could notice that we applied beta reduction syntactically from top to
 bottom, like peeling an onion. We could do it in another direction: First
