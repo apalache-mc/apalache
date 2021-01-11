@@ -163,7 +163,6 @@ in `B`:
   `B`). This is the well-known technique of [Alpha conversion] in programming
   languages. This may also require renaming of the parameters `p_1, ..., p_n`.
   Let the result of alpha conversion be the following operator:
-
   ```tla
   uniq_A(uniq_p_1, ..., uniq_p_n) == body_of_uniq_A
   ```
@@ -181,7 +180,6 @@ applying the substitution approach several times, we transform `Next` in
 several steps as follows:
 
   1. After substituting the body of `UpdateCelsius`:
-
     ```tla
     Next ==
         /\ fahrenheit' \in -1000..1000
@@ -189,7 +187,6 @@ several steps as follows:
     ```
 
   1. After substituting the body of `Max`:
-
     ```tla
     Next ==
         /\ fahrenheit' \in -1000..1000
@@ -200,7 +197,6 @@ several steps as follows:
     ```
 
   1. After substituting the body of `Fahrenheit2Celcius` (twice):
-
     ```tla
     Next ==
         /\ fahrenheit' \in -1000..1000
