@@ -307,6 +307,7 @@ object Tool extends App with LazyLogging {
       params.put("ver", "apalache-%s-%s".format(Version.version, Version.build))
       params.put("osName", System.getProperty("os.name"))
       params.put("osArch", System.getProperty("os.arch"))
+      params.put("osVersion", System.getProperty("os.version"))
       params.put("jvmVendor", System.getProperty("java.vendor"))
       params.put("jvmVersion", System.getProperty("java.version"))
       params.put("jvmArch", System.getProperty("os.arch"))
@@ -317,6 +318,8 @@ object Tool extends App with LazyLogging {
       val timestampSec = System.currentTimeMillis() / 1000 - saltSec
       params.put("ts", timestampSec.toString)
       params.putAll(commandParams.asJava)
+      // fix #288: one more parameter to keep compatibility with TLC reporting
+      params.put("jvmOffHeapMem", "0")
       statCollector.collect(params)
     }
   }
