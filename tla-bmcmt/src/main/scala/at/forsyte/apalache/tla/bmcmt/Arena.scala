@@ -72,7 +72,7 @@ class Arena private(val solverContext: SolverContext,
                     private val hasEdges: Map[ArenaCell, List[ArenaCell]],
                     private val domEdges: Map[ArenaCell, ArenaCell],
                     private val cdmEdges: Map[ArenaCell, ArenaCell]) extends Serializable {
-  // TODO: remove solverContext from Arena!
+  // TODO: remove solverContext from Arena, see issue #105
   def setSolver(newSolverContext: SolverContext): Arena = {
     // this is a temporary solution
     new Arena(newSolverContext, cellCount, topCell, cellMap, hasEdges, domEdges, cdmEdges)
