@@ -26,7 +26,7 @@ import scala.collection.mutable
   *
   * @author Igor Konnov
   */
-class Z3SolverContext(config: SolverConfig) extends SolverContext {
+class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   private val id: Long = Z3SolverContext.createId()
 
   /**

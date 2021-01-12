@@ -29,7 +29,7 @@ object RecordingZ3SolverContext {
   * @author Igor Konnov
   */
 @SerialVersionUID(700L)
-class RecordingZ3SolverContext private (parentLog: Option[SmtLog], config: SolverConfig)
+class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: SolverConfig)
     extends SolverContext with Serializable with LazyLogging {
 
   import SmtLog._
@@ -48,6 +48,10 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], config: Solve
     */
   private var lastLogRev: List[Record] = List()
 
+  /**
+    * Extract a differential SMT log from the current context.
+    * @return SMT log
+    */
   def extractLog(): SmtLog = {
     val newRecords = (lastLogRev ++ logStackRev.flatten).reverse
     new SmtLog(parentLog, newRecords)

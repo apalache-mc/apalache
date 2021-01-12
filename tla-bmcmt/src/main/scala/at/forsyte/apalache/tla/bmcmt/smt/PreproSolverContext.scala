@@ -43,6 +43,11 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
   private val cache: SimpleCache[(String, String), PreproCacheEntry] = new SimpleCache()
 
   /**
+    * Configuration parameters.
+    */
+  override val config: SolverConfig = context.config
+
+  /**
     * Assert that a Boolean TLA+ expression holds true.
     *
     * @param ex a simplified TLA+ expression over cells
