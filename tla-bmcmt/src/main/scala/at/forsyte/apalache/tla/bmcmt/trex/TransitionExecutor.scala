@@ -29,7 +29,7 @@ trait TransitionExecutor[ExecutorContextT] extends Recoverable[ExecutorSnapshot[
     *
     * @return the accumulated execution
     */
-  def execution: ReducedExecution
+  def execution: EncodedExecution
 
   /**
     * Initialize CONSTANTS by applying assignments within a given expression.
@@ -109,7 +109,7 @@ trait TransitionExecutor[ExecutorContextT] extends Recoverable[ExecutorSnapshot[
   def sat(timeoutSec: Long): Option[Boolean]
 
   /**
-    * Decode the current symbolic execution
+    * Decode the current symbolic execution from the SMT model (if the constraints are satisfiable)
     *
     * @return the decoded execution
     */

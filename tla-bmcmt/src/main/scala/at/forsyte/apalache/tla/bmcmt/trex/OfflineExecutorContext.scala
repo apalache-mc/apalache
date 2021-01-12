@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
+import at.forsyte.apalache.tla.bmcmt.smt.RecordingZ3SolverContext
 import at.forsyte.apalache.tla.bmcmt.{SymbStateRewriter, SymbStateRewriterImpl}
-import at.forsyte.apalache.tla.bmcmt.smt.{RecordingZ3SolverContext, SolverConfig}
 import com.typesafe.scalalogging.LazyLogging
 
 /**
@@ -10,7 +10,7 @@ import com.typesafe.scalalogging.LazyLogging
   * @param rewriter an expression rewriter
   */
 class OfflineExecutorContext(var rewriter: SymbStateRewriter)
-    extends ExecutorContext[OfflineSnapshot] with LazyLogging {
+    extends ExecutorContext[OfflineExecutorContextSnapshot] with LazyLogging {
 
   /**
     * Create a snapshot of the context. This method is non-destructive, that is,
@@ -18,11 +18,11 @@ class OfflineExecutorContext(var rewriter: SymbStateRewriter)
     *
     * @return a snapshot
     */
-  override def snapshot(): OfflineSnapshot = {
+  override def snapshot(): OfflineExecutorContextSnapshot = {
     val rs = rewriter.snapshot()
     val smtLog = rewriter.solverContext.asInstanceOf[RecordingZ3SolverContext].extractLog()
     logger.debug("Offline snapshot has %d entries".format(smtLog.lengthRec))
-    new OfflineSnapshot(rewriter.solverContext.config, rs, smtLog, typeFinder.varTypes)
+    new OfflineExecutorContextSnapshot(rewriter.solverContext.config, rs, smtLog, typeFinder.varTypes)
   }
 
   /**
@@ -38,7 +38,7 @@ class OfflineExecutorContext(var rewriter: SymbStateRewriter)
     * @param snapshot a snapshot
     * @throws IllegalStateException when recovery is impossible
     */
-  override def recover(snapshot: OfflineSnapshot): Unit = {
+  override def recover(snapshot: OfflineExecutorContextSnapshot): Unit = {
     val solver = RecordingZ3SolverContext(Some(snapshot.smtLog), snapshot.solverConfig)
     // TODO: issue #105, remove references to SolverContext, so recovery becomes less of a hack
     val newRewriter = new SymbStateRewriterImpl(solver, typeFinder, rewriter.exprGradeStore)

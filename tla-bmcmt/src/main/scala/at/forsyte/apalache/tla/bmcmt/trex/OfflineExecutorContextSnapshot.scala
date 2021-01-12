@@ -9,9 +9,9 @@ import at.forsyte.apalache.tla.bmcmt.types.CellT
   *
   * @author Igor Konnov
   */
-class OfflineSnapshot(val solverConfig: SolverConfig,
-                      val rewriterSnapshot: SymbStateRewriterSnapshot,
-                      val smtLog: SmtLog,
-                      val varTypes: Map[String, CellT]) {
+class OfflineExecutorContextSnapshot(val solverConfig: SolverConfig,
+                                     val rewriterSnapshot: SymbStateRewriterSnapshot,
+                                     val smtLog: SmtLog,
+                                     val varTypes: Map[String, CellT]) {
 }
 

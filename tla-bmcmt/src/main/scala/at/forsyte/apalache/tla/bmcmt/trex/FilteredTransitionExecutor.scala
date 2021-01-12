@@ -71,7 +71,7 @@ class FilteredTransitionExecutor[SnapshotT](stepFilter: String,
     *
     * @return the accumulated execution
     */
-  override def execution: ReducedExecution = trex.execution
+  override def execution: EncodedExecution = trex.execution
 
   /**
     * Assume that a previously prepared transition fires. Use this method to check,

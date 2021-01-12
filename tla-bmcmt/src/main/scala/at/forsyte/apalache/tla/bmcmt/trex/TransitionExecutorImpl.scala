@@ -39,7 +39,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
   private var revStack: List[(Binding, Oracle)] = List((Binding(), new MockOracle(0)))
 
   // the transitions that are translated with prepareTransition in the current step
-  private var preparedTransitions: Map[Int, ReducedTransition] = Map[Int, ReducedTransition]()
+  private var preparedTransitions: Map[Int, EncodedTransition] = Map[Int, EncodedTransition]()
 
   /**
     * The step that is currently encoded.
@@ -50,7 +50,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     * Retrieve the translated symbolic execution
     * @return the accumulated execution
     */
-  override def execution: ReducedExecution = ReducedExecution(lastState.arena, revStack.reverse)
+  override def execution: EncodedExecution = EncodedExecution(lastState.arena, revStack.reverse)
 
   /**
     * Initialize CONSTANTS by applying assignments within a given expression.
@@ -127,7 +127,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
       collect { case (name, _) if name.endsWith("'") => name.substring(0, name.length - 1) }
     if (assignedVars.toSet == vars) {
       // the transition can be accessed
-      preparedTransitions += transitionNo -> ReducedTransition(lastState.asCell, newBinding)
+      preparedTransitions += transitionNo -> EncodedTransition(lastState.asCell, newBinding)
       true // the transition is probably enabled
     } else {
       logger.debug(s"Transition $transitionNo produces partial assignment. Disabled.")
@@ -330,7 +330,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     * @return a snapshot
     */
   def snapshot(): ExecutorSnapshot[ExecCtxT] = {
-    val exe = new ReducedExecution(lastState.arena, ((lastState.binding, new MockOracle(0)) :: revStack).reverse)
+    val exe = new EncodedExecution(lastState.arena, ((lastState.binding, new MockOracle(0)) :: revStack).reverse)
     new ExecutorSnapshot[ExecCtxT](controlState, exe, preparedTransitions, ctx.snapshot())
   }
 
@@ -340,7 +340,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     * @param snapshot a snapshot that was created by an earlier call to snapshot.
     */
   def recover(snapshot: ExecutorSnapshot[ExecCtxT]): Unit = {
-    ctx.recover(snapshot.ctxSnapshot)
+    ctx.recover(snapshot.contextSnapshot)
     val rs = snapshot.execution.path.reverse
     val arena = snapshot.execution.arena.setSolver(ctx.solver)
     lastState = new SymbState(arena.cellTrue().toNameEx, arena, rs.head._1)

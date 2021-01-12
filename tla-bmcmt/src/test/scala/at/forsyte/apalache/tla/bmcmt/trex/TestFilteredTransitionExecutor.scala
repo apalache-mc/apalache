@@ -17,7 +17,7 @@ import org.scalatest.junit.JUnitRunner
   */
 @RunWith(classOf[JUnitRunner])
 class TestFilteredTransitionExecutor extends fixture.FunSuite {
-  type SnapshotT = IncrementalSnapshot
+  type SnapshotT = IncrementalExecutorContextSnapshot
   type ExecutorContextT = ExecutorContext[SnapshotT]
   type FixtureParam = ExecutorContextT
 
