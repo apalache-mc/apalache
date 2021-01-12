@@ -51,7 +51,7 @@ reduce your discomfort when learning more advanced TLA+.
 __Idiom 0:__
     [Keep state variables to the minimum](000keep-minimum-state-variables.md) :battery:
 
-__Idiom 1:__ [Update state variables with assignments](001assignments.md) :date:
+__Idiom 1:__ [Update state variables with assignments](assignments.md) :date:
 
 __Idiom 2:__ [Apply primes only to state variables](002primes.md) :pushpin:
 
