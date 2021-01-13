@@ -2,27 +2,6 @@
 
 _Like macros, to do a lot of things in one system step..._
 
-## For the impatient
-
-The syntax and semantics of various kinds of operators
-as well as of recursive functions:
-
- - [Top-level operator definitions]
-
- - [LET-IN definitions]
-
- - [Higher-order operator definitions]
-
- - [Anonymous operator definitions]
-
- - [Recursive operator definitions]
-
- - [Local operator definitions]
-
- - [Recursive functions]
-
-## For the patient
-
 User-defined operators in TLA+ may be confusing. At first, they look like
 functions in programming languages. (Recall that [TLA+
 functions](./functions.md) are more like dictionaries or hash maps, not
