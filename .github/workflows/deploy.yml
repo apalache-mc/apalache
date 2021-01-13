@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+      # TODO Remove once deploying unstable versions separately
+      - unstable
 
 jobs:
   deploy:
@@ -14,7 +16,7 @@ jobs:
       - name: Setup mdBook
         uses: peaceiris/actions-mdbook@v1
         with:
-          mdbook-version: '0.4.5'
+          mdbook-version: "0.4.5"
           # mdbook-version: 'latest'
 
       - run: |
@@ -32,4 +34,3 @@ jobs:
           destination_dir: docs
           # We use GitHub's builtin jekyll for rendering the main landing page
           enable_jekyll: true
-
