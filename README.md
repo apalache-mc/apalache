@@ -11,7 +11,7 @@ a PR to edit that page if you need to fix/add/remove anything.
 
 The documentation is built into HTML in the [./docs](./docs) directory. This is
 done automatically by our CI system when new merges are made into either the
-master or usntable branches. Do not edit those files by hand.
+master or unstable branches. Do not edit those files by hand.
 
 ## Building locally
 
