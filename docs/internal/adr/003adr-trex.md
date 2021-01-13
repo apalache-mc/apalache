@@ -65,22 +65,52 @@ following TLA+ specification, which has been preprocessed by the passes
 preceding the model checker pass:
 
 ```tla
+------------- MODULE Test -------------
 EXTENDS Integers
 CONSTANT N
 VARIABLES x
 
+ConstInit ==
+  N > 0
+
 Init$0 ==
-  x = 0
+  x = 10
 
 Next$0 ==
-  x' = x + N
+  x < 0 /\ x' = x + N
 
 Next$1 ==
-  x' = x - N
+  x >= 0 /\ x' = x - N
 
 Inv ==
   x >= 0
+
+=======================================
 ```
+
+The sequence diagram below shows how the sequential model checker translates
+`ConstInit` to SMT and then translates `Init$0`.
+
+![Initialization](./trex-initialization.png)
+
+The sequence diagram below shows how the sequential model checker translates
+`Next$0` and `Next$1` to SMT. It first finds that `Next$0` is disabled and
+then it finds that `Next$1` is enabled. The enabled transition is picked.
+
+![Step](./trex-step.png)
+
+The sequence diagram below shows how the sequential model checker translates
+`~Inv` to SMT and checks, whether there is a concrete state that witnesses
+the negation of the invariant.
+
+![Invariant](./trex-inv.png)
+
+As you can see, `TransitionExecutor` is still offering a lot flexibility to the
+model checker layer, while it is completely hiding the lower layer.  We do not
+explain how the parallel checker is working. This is a subject to another ADR.
+
+To sum up, this layer is offering you a nice abstraction to write different
+model checking strategies.
 
 [KerA+]: https://apalache.informal.systems/docs/apalache/kera.html
 
