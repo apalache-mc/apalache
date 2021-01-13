@@ -44,12 +44,12 @@
     - [Bags]()
 - [User-defined operators](./lang/user-operators.md)
     - [Top-level operator definitions](./lang/user/top-level-operators.md)
-    - [LET-IN definitions]()
-    - [Higher-order operators definitions]()
-    - [Anonymous operator definitions]()
-    - [Recursive operator definitions]()
-    - [Local operator definitions]()
-    - [Recursive functions]()
+    - [LET-IN definitions](./lang/user/let-in.md)
+    - [Higher-order operators definitions](./lang/user/higher-order-operators.md)
+    - [Anonymous operator definitions](./lang/user/lambdas.md)
+    - [Recursive operator definitions](./lang/user/recursive-operators.md)
+    - [Local operator definitions](./lang/user/local-operators.md)
+    - [Recursive functions](./lang/user/recursive-functions.md)
 - [Modules, Extends, and Instances]()
 
 # Idiomatic TLA+
