@@ -93,6 +93,19 @@ check our [paper at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549).
 Related reports and publications can be found at the
 [Apalache page at TU Wien](http://forsyte.at/research/apalache/).
 
+## Website
+
+Our current website is served at https://apalache.informal.systems .
+
+The site is hosted by github, and changes can be made through PRs into the
+[gh-pages](https://github.com/informalsystems/apalache/tree/gh-pages) branch of
+this repository. See the README.md on that branch for more information.
+
+The user documentation is automatically deployed to the website branch as per
+the [CI configuration](./.github/workflows/deploy.yml).
+
+Our old website is still available at https://forsyte.at/research/apalache/ .
+
 [TLA+]: http://lamport.azurewebsites.net/tla/tla.html
 [Microsoft Z3]: https://github.com/Z3Prover/z3
 [supported features]: ./docs/features.md
