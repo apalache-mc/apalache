@@ -13,7 +13,7 @@ import org.scalatest.fixture
   * @tparam SnapshotT the snapshot type
   */
 abstract class AbstractTestTransitionExecutorImpl[SnapshotT] extends fixture.FunSuite {
-  type ExecutorContextT = ExecutorContext[SnapshotT]
+  type ExecutorContextT = ExecutionContext[SnapshotT]
   type FixtureParam = ExecutorContextT
 
   test("constant initialization") { exeCtx: ExecutorContextT =>

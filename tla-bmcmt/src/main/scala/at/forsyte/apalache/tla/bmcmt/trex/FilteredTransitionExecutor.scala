@@ -136,14 +136,14 @@ class FilteredTransitionExecutor[SnapshotT](stepFilter: String,
     *
     * @return the snapshot
     */
-  override def snapshot(): ExecutorSnapshot[SnapshotT] = trex.snapshot()
+  override def snapshot(): ExecutionSnapshot[SnapshotT] = trex.snapshot()
 
   /**
     * Recover a previously saved snapshot (not necessarily saved by this object).
     *
     * @param shot a snapshot
     */
-  override def recover(shot: ExecutorSnapshot[SnapshotT]): Unit = trex.recover(shot)
+  override def recover(shot: ExecutionSnapshot[SnapshotT]): Unit = trex.recover(shot)
 
   /**
     * Decode the current symbolic execution

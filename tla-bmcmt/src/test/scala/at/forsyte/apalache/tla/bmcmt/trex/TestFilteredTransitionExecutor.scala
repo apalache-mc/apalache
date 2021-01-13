@@ -17,15 +17,15 @@ import org.scalatest.junit.JUnitRunner
   */
 @RunWith(classOf[JUnitRunner])
 class TestFilteredTransitionExecutor extends fixture.FunSuite {
-  type SnapshotT = IncrementalExecutorContextSnapshot
-  type ExecutorContextT = ExecutorContext[SnapshotT]
+  type SnapshotT = IncrementalExecutionContextSnapshot
+  type ExecutorContextT = ExecutionContext[SnapshotT]
   type FixtureParam = ExecutorContextT
 
   override protected def withFixture(test: OneArgTest): Outcome = {
     val typeFinder = new TrivialTypeFinder()
     val solver = new Z3SolverContext(SolverConfig(debug = false, profile = false, randomSeed = 0))
     val rewriter = new SymbStateRewriterImpl(solver, typeFinder, new ExprGradeStoreImpl())
-    val exeCtx = new IncrementalExecutorContext(rewriter)
+    val exeCtx = new IncrementalExecutionContext(rewriter)
     try {
       test(exeCtx)
     } finally {

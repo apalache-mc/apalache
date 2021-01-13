@@ -12,7 +12,7 @@ import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
   *
   * @author Igor Konnov
   */
-trait ExecutorContext[SnapshotT] extends Recoverable[SnapshotT] {
+trait ExecutionContext[SnapshotT] extends Recoverable[SnapshotT] {
   type SnapT = SnapshotT
 
   def rewriter: SymbStateRewriter

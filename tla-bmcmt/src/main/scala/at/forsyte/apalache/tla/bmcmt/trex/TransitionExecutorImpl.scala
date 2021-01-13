@@ -19,7 +19,7 @@ import com.typesafe.scalalogging.LazyLogging
   *
   * @author Igor Konnov
   */
-class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], ctx: ExecutorContext[ExecCtxT])
+class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], ctx: ExecutionContext[ExecCtxT])
   extends TransitionExecutor[ExecCtxT] with LazyLogging {
 
   /**
@@ -329,9 +329,9 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     *
     * @return a snapshot
     */
-  def snapshot(): ExecutorSnapshot[ExecCtxT] = {
+  def snapshot(): ExecutionSnapshot[ExecCtxT] = {
     val exe = new EncodedExecution(lastState.arena, ((lastState.binding, new MockOracle(0)) :: revStack).reverse)
-    new ExecutorSnapshot[ExecCtxT](controlState, exe, preparedTransitions, ctx.snapshot())
+    new ExecutionSnapshot[ExecCtxT](controlState, exe, preparedTransitions, ctx.snapshot())
   }
 
   /**
@@ -339,7 +339,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     *
     * @param snapshot a snapshot that was created by an earlier call to snapshot.
     */
-  def recover(snapshot: ExecutorSnapshot[ExecCtxT]): Unit = {
+  def recover(snapshot: ExecutionSnapshot[ExecCtxT]): Unit = {
     ctx.recover(snapshot.contextSnapshot)
     val rs = snapshot.execution.path.reverse
     val arena = snapshot.execution.arena.setSolver(ctx.solver)
