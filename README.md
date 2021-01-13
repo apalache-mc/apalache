@@ -3,7 +3,7 @@
 src="https://raw.githubusercontent.com/informalsystems/apalache/99e58d6f5eebcc41f432a126a13a5f8d2ae7afe6/logo-apalache.svg"
 alt="Apalache Logo">
 
-<h1>APALACHE</h1>
+<h1><a href="https://apalache.informal.systems/">APALACHE</a></h1>
 
 <p>A symbolic model checker for TLA+<p>
 
