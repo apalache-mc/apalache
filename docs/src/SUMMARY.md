@@ -43,6 +43,13 @@
     - [Sequences](./lang/sequences.md)
     - [Bags]()
 - [User-defined operators](./lang/user-operators.md)
+    - [Top-level operator definitions](./lang/user/top-level-operators.md)
+    - [LET-IN definitions]()
+    - [Higher-order operators definitions]()
+    - [Anonymous operator definitions]()
+    - [Recursive operator definitions]()
+    - [Local operator definitions]()
+    - [Recursive functions]()
 - [Modules, Extends, and Instances]()
 
 # Idiomatic TLA+

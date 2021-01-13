@@ -7,19 +7,19 @@ _Like macros, to do a lot of things in one system step..._
 The syntax and semantics of various kinds of operators
 as well as of recursive functions:
 
- - [Top-level operator definitions](./top-level-operators.md)
+ - [Top-level operator definitions]
 
- - [LET-IN definitions](./let-in.md)
+ - [LET-IN definitions]
 
- - [Higher-order operators definitions](./higher-order-operators.md)
+ - [Higher-order operators definitions]
 
- - [Anonymous operator definitions](./lambdas.md)
+ - [Anonymous operator definitions]
 
- - [Recursive operator definitions](./recursive-operators.md)
+ - [Recursive operator definitions]
 
- - [Local operator definitions](./local-operators.md)
+ - [Local operator definitions]
 
- - [Recursive functions](./recursive-functions.md)
+ - [Recursive functions]
 
 ## For the patient
 
@@ -80,19 +80,19 @@ user-defined operators that you would probably find unexpected:
 **Details about operators.** We go in detail about different kinds of operators
 and recursive functions below:
 
- - [Top-level operator definitions](./top-level-operators.md)
+ - [Top-level operator definitions]
 
- - [LET-IN definitions](./let-in.md)
+ - [LET-IN definitions]
 
- - [Higher-order operators definitions](./higher-order-operators.md)
+ - [Higher-order operators definitions]
 
- - [Anonymous operator definitions](./lambdas.md)
+ - [Anonymous operator definitions]
 
- - [Recursive operator definitions](./recursive-operators.md)
+ - [Recursive operator definitions]
 
- - [Local operator definitions](./local-operators.md)
+ - [Local operator definitions]
 
- - [Recursive functions](./recursive-functions.md)
+ - [Recursive functions]
 
 
 
@@ -100,3 +100,12 @@ and recursive functions below:
 [Advanced topics]: http://lamport.azurewebsites.net/tla/advanced.html?back-link=user-operators.html
 [TLA+ version 2]: https://lamport.azurewebsites.net/tla/tla2-guide.pdf
 [Currying]: https://en.wikipedia.org/wiki/Currying
+
+[Top-level operator definitions]: ./user/top-level-operators.md
+[LET-IN definitions]: ./user/let-in.md
+[Higher-order operators definitions]: ./user/higher-order-operators.md
+[Anonymous operator definitions]: ./user/lambdas.md
+[Recursive operator definitions]: ./user/recursive-operators.md
+[Local operator definitions]: ./user/local-operators.md
+[Recursive functions]: ./user/recursive-functions.md
+
