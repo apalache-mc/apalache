@@ -21,7 +21,7 @@ following:
 
 
 TRex can be thought of as an API for a satisfiability solver on top of TLA+ (in
-the fragment of [KerA+]). We can even say that TRex is a solver for TLA+, in
+the fragment of [KerA+][]). We can even say that TRex is a solver for TLA+, in
 contrast to an SMT solver, which is a solver for theories in first-order logic.
 As TLA+ is built around the concepts of a state and a transition, the TRex API
 abstracts symbolic execution in terms of symbolic states and symbolic
@@ -113,4 +113,3 @@ To sum up, this layer is offering you a nice abstraction to write different
 model checking strategies.
 
 [KerA+]: https://apalache.informal.systems/docs/apalache/kera.html
-
