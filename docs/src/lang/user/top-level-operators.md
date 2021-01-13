@@ -4,8 +4,8 @@
 
 ## Quick example
 
-Without going into details, here is a quick example of a top-level user
-operator (which has to be defined in a module) and of its application:
+Here is a quick example of a top-level user operator (which has to be defined
+in a module) and of its application:
 
 ```tla
 ----------------------- MODULE QuickTopOperator -------------------------------
@@ -149,7 +149,7 @@ of another operator `B`:
 ```tla
 A(p_1, ..., p_n) == body_of_A
 ...
-B(r_1, ..., r_k) ==
+B(p_1, ..., p_k) ==
     ...
     A(e_1, ..., e_n)
     ...
