@@ -68,7 +68,7 @@ user-defined operators that you would probably find unexpected:
 
   1. Although operators may be passed as parameters, they are not first-class
   citizens in TLA+. For instance, an operator cannot be returned as a result of
-  another operator. Nor an operator can be assigned to a variable (only the result
+  another operator. Nor can an operator be assigned to a variable (only the result
   of its application may be assigned to a variable).
 
   1. Operators do not support [Currying]. That is, you can only apply an operator
@@ -100,4 +100,3 @@ and recursive functions below:
 [Advanced topics]: http://lamport.azurewebsites.net/tla/advanced.html?back-link=user-operators.html
 [TLA+ version 2]: https://lamport.azurewebsites.net/tla/tla2-guide.pdf
 [Currying]: https://en.wikipedia.org/wiki/Currying
-
