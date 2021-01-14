@@ -1,0 +1,422 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Top-level operator definitions - Apalache Documentation</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../../favicon.png">
+        
+        <link rel="stylesheet" href="../../css/variables.css">
+        <link rel="stylesheet" href="../../css/general.css">
+        <link rel="stylesheet" href="../../css/chrome.css">
+        
+        <link rel="stylesheet" href="../../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../../highlight.css">
+        <link rel="stylesheet" href="../../tomorrow-night.css">
+        <link rel="stylesheet" href="../../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../../index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../../apalache/index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../../apalache/getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../apalache/apalache-or-tlc.html"><strong aria-hidden="true">2.1.</strong> Shall I use Apalache or TLC?</a></li><li class="chapter-item expanded "><a href="../../apalache/system-reqs.html"><strong aria-hidden="true">2.2.</strong> System Requirements</a></li><li class="chapter-item expanded "><a href="../../apalache/installation/index.html"><strong aria-hidden="true">2.3.</strong> Installation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../apalache/installation/jvm.html"><strong aria-hidden="true">2.3.1.</strong> Prebuilt Packages</a></li><li class="chapter-item expanded "><a href="../../apalache/installation/docker.html"><strong aria-hidden="true">2.3.2.</strong> Docker</a></li><li class="chapter-item expanded "><a href="../../apalache/installation/source.html"><strong aria-hidden="true">2.3.3.</strong> Source</a></li></ol></li><li class="chapter-item expanded "><a href="../../apalache/running.html"><strong aria-hidden="true">2.4.</strong> Running the Tool</a></li><li class="chapter-item expanded "><a href="../../apalache/statistics.html"><strong aria-hidden="true">2.5.</strong> TLA+ Execution Statistics</a></li><li class="chapter-item expanded "><a href="../../apalache/example.html"><strong aria-hidden="true">2.6.</strong> An Example TLA+ Specification</a></li><li class="chapter-item expanded "><a href="../../apalache/parameters.html"><strong aria-hidden="true">2.7.</strong> Specification Parameters</a></li><li class="chapter-item expanded "><a href="../../apalache/principles.html"><strong aria-hidden="true">2.8.</strong> Principles of Symbolic Model Checking with Apalache</a></li><li class="chapter-item expanded "><a href="../../apalache/apalache-mod.html"><strong aria-hidden="true">2.9.</strong> The Apalache Module</a></li><li class="chapter-item expanded "><a href="../../apalache/profiling.html"><strong aria-hidden="true">2.10.</strong> Profiling Your Specification</a></li><li class="chapter-item expanded "><a href="../../apalache/theory.html"><strong aria-hidden="true">2.11.</strong> Five minutes of theory</a></li></ol></li><li class="chapter-item expanded "><a href="../../apalache/tlc-config.html"><strong aria-hidden="true">3.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../../apalache/types-and-annotations.html"><strong aria-hidden="true">4.</strong> Types and Annotations</a></li><li class="chapter-item expanded "><a href="../../apalache/features.html"><strong aria-hidden="true">5.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../../apalache/preprocessing.html"><strong aria-hidden="true">6.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../../apalache/tuning.html"><strong aria-hidden="true">7.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../../apalache/kera.html"><strong aria-hidden="true">8.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../../lang/index.html"><strong aria-hidden="true">9.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../../lang/standard-operators.html"><strong aria-hidden="true">10.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../lang/booleans.html"><strong aria-hidden="true">10.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../../lang/control-and-nondeterminism.html"><strong aria-hidden="true">10.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../../lang/conditionals.html"><strong aria-hidden="true">10.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../../lang/integers.html"><strong aria-hidden="true">10.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../../lang/sets.html"><strong aria-hidden="true">10.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../../lang/logic.html"><strong aria-hidden="true">10.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../../lang/functions.html"><strong aria-hidden="true">10.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../../lang/records.html"><strong aria-hidden="true">10.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../../lang/tuples.html"><strong aria-hidden="true">10.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../../lang/sequences.html"><strong aria-hidden="true">10.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">10.11.</strong> Bags</div></li></ol></li><li class="chapter-item expanded "><a href="../../lang/user-operators.html"><strong aria-hidden="true">11.</strong> User-defined operators</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../lang/user/top-level-operators.html" class="active"><strong aria-hidden="true">11.1.</strong> Top-level operator definitions</a></li><li class="chapter-item expanded "><a href="../../lang/user/let-in.html"><strong aria-hidden="true">11.2.</strong> LET-IN definitions</a></li><li class="chapter-item expanded "><a href="../../lang/user/higher-order-operators.html"><strong aria-hidden="true">11.3.</strong> Higher-order operators definitions</a></li><li class="chapter-item expanded "><a href="../../lang/user/lambdas.html"><strong aria-hidden="true">11.4.</strong> Anonymous operator definitions</a></li><li class="chapter-item expanded "><a href="../../lang/user/recursive-operators.html"><strong aria-hidden="true">11.5.</strong> Recursive operator definitions</a></li><li class="chapter-item expanded "><a href="../../lang/user/local-operators.html"><strong aria-hidden="true">11.6.</strong> Local operator definitions</a></li><li class="chapter-item expanded "><a href="../../lang/user/recursive-functions.html"><strong aria-hidden="true">11.7.</strong> Recursive functions</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">12.</strong> Modules, Extends, and Instances</div></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../../idiomatic/index.html"><strong aria-hidden="true">13.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../../idiomatic/000keep-minimum-state-variables.html"><strong aria-hidden="true">14.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../../idiomatic/001assignments.html"><strong aria-hidden="true">15.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../../idiomatic/002primes.html"><strong aria-hidden="true">16.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../../adr/002adr-types.html"><strong aria-hidden="true">17.</strong> ADR-002: types and type annotations</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache Documentation</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#top-level-operator-definitions" id="top-level-operator-definitions">Top-level operator definitions</a></h1>
+<p><a href="./user-operators.html">[Back to user operators]</a></p>
+<h2><a class="header" href="#quick-example" id="quick-example">Quick example</a></h2>
+<p>Here is a quick example of a top-level user operator (which has to be defined
+in a module) and of its application:</p>
+<pre><code class="language-tla">----------------------- MODULE QuickTopOperator -------------------------------
+...
+Abs(i) == IF i &gt;= 0 THEN i ELSE -i
+...
+B(k) == Abs(k)
+===============================================================================
+</code></pre>
+<p>As you most probably guessed, the operator <code>Abs</code> expects one argument <code>i</code>.
+Given an integer <code>j</code>, then the result of computing <code>Abs(j)</code> is the absolute
+value of <code>j</code>. The same applies, when <code>j</code> is a natural number or a real number.</p>
+<h2><a class="header" href="#syntax-of-operator-definitions" id="syntax-of-operator-definitions">Syntax of operator definitions</a></h2>
+<p>In general, operators of <code>n</code> arguments are
+defined as follows:</p>
+<pre><code class="language-tla">\* an operator without arguments (nullary)
+Opa0 == body_0
+
+\* an operator of one argument (unary)
+Opa1(param1) == body_1
+
+\* an operator of two arguments (binary)
+Opa2(param1, param2) == body_2
+...
+</code></pre>
+<p>In this form, the operator arguments are not allowed to be operators. If you want
+to receive an operator as an argument, see the syntax of <a href="./higher-order-operators.html">Higher-order operators</a>.</p>
+<p>Here are concrete examples of operator definitions:</p>
+<pre><code class="language-tla">----------------------------- MODULE FandC ------------------------------------
+EXTENDS Integers
+...
+
+ABSOLUTE_ZERO_IN_CELCIUS ==
+    -273
+
+Fahrenheit2Celcius(t) ==
+    (t - 32) * 10 / 18
+
+Max(s, t) ==
+    IF s &gt;= t THEN s ELSE t
+...
+===============================================================================
+</code></pre>
+<p><em>What is their arity (number of arguments)?</em></p>
+<p>If you are used to imperative languages such as Python or Java, then you are
+probably surprised that operator definitions do not have any <code>return</code>
+statement. The reason for that is simple: TLA+ is not executed on any hardware.
+To understand how operators are evaluated, see the semantics below.</p>
+<h2><a class="header" href="#syntax-of-operator-applications" id="syntax-of-operator-applications">Syntax of operator applications</a></h2>
+<p>Having defined an operator, you can apply it inside another operator as follows
+(in a module):</p>
+<pre><code class="language-tla">----------------------------- MODULE FandC ------------------------------------
+EXTENDS Integers
+VARIABLE fahrenheit, celcius
+\* skipping the definitions of
+\* ABSOLUTE_ZERO_IN_CELCIUS, Fahrenheit2Celcius, and Max
+...
+
+UpdateCelcius(t) ==
+    celcius' = Max(ABSOLUTE_ZERO_IN_CELCIUS, Fahrenheit2Celcius(t))
+
+Next ==
+    /\ fahrenheit' \in -1000..1000
+    /\ UpdateCelcius(fahrenheit')
+...    
+===============================================================================
+</code></pre>
+<p>In the above example, you see examples of four operator applications:</p>
+<ol>
+<li>
+<p>The nullary operator <code>ABSOLUTE_ZERO_IN_CELCIUS</code> is applied without any
+arguments, just by its name. Note how a nullary operator does not require
+parentheses <code>()</code>. Yet another quirk of TLA+.</p>
+</li>
+<li>
+<p>The one-argument operator Fahrenheit2Celcius is applied to <code>t</code>,
+which is a parameter of the operator <code>UpdateCelcius</code>.</p>
+</li>
+<li>
+<p>The two-argument operator <code>Max</code> is applied to <code>ABSOLUTE_ZERO_IN_CELCIUS</code>
+and <code>Fahrenheit2Celcius(t)</code>.</p>
+</li>
+<li>
+<p>The one-argument operator <code>UpdateCelcius</code> is applied to <code>fahrenheit'</code>,
+which is the value of state variable <code>fahrenheit</code> in the next state of the
+state machine. TLA+ has no problem applying the operator to <code>fahrenheit'</code> or
+to <code>fahrenheit</code>.</p>
+</li>
+</ol>
+<p>Technically, there are more than four operator applications in our example.
+However, all other operators are the <a href="./standard-operators.html">standard
+operators</a>. We do not focus on them here.</p>
+<p><strong>Note on the operator order.</strong> As you can see, we are applying operators after
+they have been defined in a module. This is a general rule in TLA+: A name can
+be only referred to, if it has been defined in the code before. TLA+ is not
+the first language to impose that rule. For instance, <a href="https://en.wikipedia.org/wiki/Pascal_(programming_language)">Pascal</a> had it too.</p>
+<p><strong>Note on shadowing.</strong> TLA+ does not allow you to use the same name as an
+operator parameter, if it has been defined in the context of the operator
+definition. For instance, the following is not allowed:</p>
+<pre><code class="language-tla">-------------------------- MODULE NoShadowing ---------------------------------
+VARIABLE x
+
+\* the following operator definition produces a semantic error:
+\* the parameter x is shadowing the state variable x
+IsZero(x) == x = 0
+===============================================================================
+</code></pre>
+<p>There are a few tricky cases, where shadowing can actually happen, e.g., see
+the operator <code>dir</code> in <a href="https://github.com/tlaplus/Examples/blob/master/specifications/SlidingPuzzles/SlidingPuzzles.tla">SlidingPuzzles</a>. However, we recommend to keep things
+simple and avoid shadowing at all.</p>
+<h2><a class="header" href="#semantics-of-operator-application" id="semantics-of-operator-application">Semantics of operator application</a></h2>
+<p>Precise treatment of operator application is given on page 320 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=user-operators.html">Specifying
+Systems</a>. In a nutshell, operator application in TLA+ is a <a href="https://en.wikipedia.org/wiki/Evaluation_strategy#Call_by_macro_expansion">Call by macro
+expansion</a>, though it is a bit smarter: It does not blindly mix names from the
+operator's body and its application context. For example, the following
+semantics by substitution is implemented in the <a href="https://apalache.informal.systems">Apalache</a> model checker.</p>
+<p>Here we give a simple explanation for non-recursive operators. Consider the
+definition of an <code>n</code>-ary operator <code>A</code> and its application in the definition
+of another operator <code>B</code>:</p>
+<pre><code class="language-tla">A(p_1, ..., p_n) == body_of_A
+...
+B(p_1, ..., p_k) ==
+    ...
+    A(e_1, ..., e_n)
+    ...
+</code></pre>
+<p>The following three steps allow us to replace application of the operator <code>A</code>
+in <code>B</code>:</p>
+<ol>
+<li>Change the names in the definition of <code>A</code> in such a way such they do not
+clash with the names in <code>B</code> (as well as with other names that may be used in
+<code>B</code>). This is the well-known technique of <a href="https://en.wikipedia.org/wiki/Lambda_calculus#%CE%B1-conversion">Alpha conversion</a> in programming
+languages. This may also require renaming of the parameters <code>p_1, ..., p_n</code>.
+Let the result of alpha conversion be the following operator:</li>
+</ol>
+<pre><code class="language-tla">uniq_A(uniq_p_1, ..., uniq_p_n) == body_of_uniq_A
+</code></pre>
+<ol>
+<li>
+<p>Substitute the expression <code>A(e_1, ..., e_n)</code> in the definition of <code>B</code> with
+<code>body_of_uniq_A</code>.</p>
+</li>
+<li>
+<p>Substitute the names <code>uniq_p_1, ..., uniq_p_n</code> with the expressions <code>e_1, ..., e_n</code>, respectively.</p>
+</li>
+</ol>
+<p>The above transformation is usually called <a href="https://en.wikipedia.org/wiki/Lambda_calculus#%CE%B2-reduction">Beta reduction</a>.</p>
+<p><strong>Example.</strong> Let's go back to the module <code>FandC</code>, which we considered above. By
+applying the substitution approach several times, we transform <code>Next</code> in
+several steps as follows:</p>
+<p>First, by substituting the body of <code>UpdateCelsius</code>:</p>
+<pre><code class="language-tla">  Next ==
+      /\ fahrenheit' \in -1000..1000
+      /\ celcius' = Max(ABSOLUTE_ZERO_IN_CELCIUS, Fahrenheit2Celcius(fahrenheit'))
+</code></pre>
+<p>Second, by substituting the body of <code>Max</code>:</p>
+<pre><code class="language-tla">  Next ==
+      /\ fahrenheit' \in -1000..1000
+      /\ celcius' =
+          IF ABSOLUTE_ZERO_IN_CELCIUS &gt;= Fahrenheit2Celcius(fahrenheit')
+          THEN ABSOLUTE_ZERO_IN_CELCIUS
+          ELSE Fahrenheit2Celcius(fahrenheit')
+</code></pre>
+<p>Third, by substituting the body of <code>Fahrenheit2Celcius</code> (twice):</p>
+<pre><code class="language-tla">  Next ==
+      /\ fahrenheit' \in -1000..1000
+      /\ celcius' =
+          IF ABSOLUTE_ZERO_IN_CELCIUS &gt;= (fahrenheit' - 32) * 10 / 18
+          THEN ABSOLUTE_ZERO_IN_CELCIUS
+          ELSE (fahrenheit' - 32) * 10 / 18
+</code></pre>
+<p>You could notice that we applied beta reduction syntactically from top to
+bottom, like peeling an onion. We could do it in another direction: First
+starting with the application of <code>Fahrenheit2Celcius</code>. This actually does not
+matter, as long as our goal is to produce a TLA+ expression that is free of
+user-defined operators. For instance, <a href="https://apalache.informal.systems">Apalache</a> applies <a href="https://en.wikipedia.org/wiki/Lambda_calculus#%CE%B1-conversion">Alpha conversion</a> and
+<a href="https://en.wikipedia.org/wiki/Lambda_calculus#%CE%B2-reduction">Beta reduction</a> to remove user-defined operator and then translates the TLA+
+expression to SMT.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../../lang/user-operators.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../../lang/user/let-in.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../../lang/user-operators.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../../lang/user/let-in.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
