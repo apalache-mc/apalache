@@ -5,7 +5,7 @@ package lir {
   import at.forsyte.apalache.tla.lir.io.UTFPrinter
   import at.forsyte.apalache.tla.lir.oper._
 
-  /** the base class for the universe of objects used in TLA+ */
+  /** the base class for the universe of values (integers, Booleans, strings) used in TLA+ */
   abstract class TlaValue
 
   /**
@@ -14,7 +14,7 @@ package lir {
     * TLA+ definitions, see Specifying Systems, Ch. 17.3. Unfortunately, there are
     * variable declarations and operator definitions...
     */
-  abstract class TlaDecl extends Serializable {
+  abstract class TlaDecl extends Identifiable with Serializable {
     def name: String
     @deprecated("Marked for removal. Use the DeepCopy transformation.")
     def deepCopy(): TlaDecl
