@@ -1,15 +1,6 @@
-## Unreleased #unstable
-
-### Features
-
- * opt-in for statistics collection (shared with TLC and TLA+ Toolbox), see #288
-
-### Documentation
-
- - Compile the manuals into [a static
-  site](http://informalsystems.github.io/apalache/docs/) using
-  [mdBook](https://github.com/rust-lang/mdBook), see #400
- * Description of top-level user operators
+<!-- NOTE:
+     This file is generated. Do not write release notes here.
+     Notes for unreleased changes go in ./UNRELEASED.md -->
 
 ## 0.8.0 [RELEASE]
 
