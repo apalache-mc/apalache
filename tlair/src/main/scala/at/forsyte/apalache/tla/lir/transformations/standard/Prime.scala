@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx}
+import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaOperDecl}
 
 object Prime {
   private def primeLeaf( vars : Set[String], tracker : TransformationTracker ) : TlaExTransformation =
@@ -27,11 +27,14 @@ object Prime {
     ex match {
       case LetInEx( body, defs@_* ) =>
         // Transform bodies of all op.defs
-        val newDefs = defs.map { x =>
-          x.copy(
-            body = self( x.body )
-          )
-        }
+        def xform: TlaOperDecl => TlaOperDecl =
+          tracker.trackOperDecl { d: TlaOperDecl =>
+            d.copy(
+              body = self(d.body)
+            )
+          }
+
+        val newDefs = defs map xform
         val newBody = self( body )
         val retEx = if ( defs == newDefs && body == newBody ) ex else LetInEx( newBody, newDefs : _* )
         tr( retEx )

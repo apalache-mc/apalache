@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.lir.transformations.impl
 
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.TlaOperDecl
+import at.forsyte.apalache.tla.lir.transformations.{TlaDeclTransformation, TlaExTransformation, TransformationTracker}
 
 /**
   * An implementation of TransformationTracker that does not do anything.
@@ -8,6 +9,26 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
   */
 class IdleTracker extends TransformationTracker {
   override def track(transformation: TlaExTransformation): TlaExTransformation = {
+    transformation
+  }
+
+  /**
+    * Decorate a declaration transformation with a tracker.
+    *
+    * @param transformation a declaration transformation
+    * @return a new declaration transformation that applies tr and tracks the changes
+    */
+  override def trackDecl(transformation: TlaDeclTransformation): TlaDeclTransformation = {
+    transformation
+  }
+
+  /**
+    * A specialized version of trackDecl, which is tuned to TlaOperDecl.
+    *
+    * @param transformation a declaration transformation
+    * @return a new declaration transformation that applies tr and tracks the changes
+    */
+  override def trackOperDecl(transformation: TlaOperDecl => TlaOperDecl): TlaOperDecl => TlaOperDecl = {
     transformation
   }
 }

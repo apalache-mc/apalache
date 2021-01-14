@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
-import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx, TlaOperDecl}
 import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.transformations._
 
@@ -23,9 +23,14 @@ class PrimedEqualityToMembership(tracker: TransformationTracker) extends TlaExTr
     // standard recursive processing of composite operators and let-in definitions
     case ex@LetInEx(body, defs@_*) =>
       // Transform bodies of all op.defs
-      val newDefs = defs.map { x =>
-        x.copy(body = transform(x.body))
-      }
+      def xform: TlaOperDecl => TlaOperDecl =
+        tracker.trackOperDecl { d: TlaOperDecl =>
+          d.copy(
+            body = transform(d.body)
+          )
+        }
+
+      val newDefs = defs map xform
       val newBody = transform(body)
       if (defs == newDefs && body == newBody) ex else LetInEx(newBody, newDefs: _*)
 

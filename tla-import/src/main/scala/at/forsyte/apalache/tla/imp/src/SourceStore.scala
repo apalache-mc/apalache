@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.imp.src
 import at.forsyte.apalache.tla.lir.src.{RegionTree, SourceLocation}
 import at.forsyte.apalache.tla.lir.storage.SourceMap
 import at.forsyte.apalache.tla.lir.transformations.TransformationListener
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, UID}
+import at.forsyte.apalache.tla.lir.{OperEx, TlaDecl, TlaEx, UID}
 import com.google.inject.Singleton
 import com.typesafe.scalalogging.LazyLogging
 
@@ -55,6 +55,18 @@ class SourceStore extends TransformationListener with LazyLogging {
         throw new IllegalArgumentException("The original expression (UID = %s) does not have source data: %s"
           .format(originEx.ID, originEx))
          */
+      }
+    }
+  }
+
+  override def onDeclTransformation(originalDecl: TlaDecl, newDecl: TlaDecl): Unit = {
+    if (originalDecl.ID != newDecl.ID) {
+      find(originalDecl.ID) match {
+        case Some(loc) =>
+          add(newDecl.ID, loc)
+
+        case None =>
+          ()
       }
     }
   }

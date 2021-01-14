@@ -49,9 +49,14 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker)
     // recursive processing of composite operators and let-in definitions
     case ex @ LetInEx(body, defs@_*) =>
       // transform bodies of all op.defs
-      val newDefs = defs.map { x =>
-        x.copy(body = transform(stepLimitOpt)(x.body))
-      }
+      def xform: TlaOperDecl => TlaOperDecl =
+        tracker.trackOperDecl { d: TlaOperDecl =>
+          d.copy(
+            body = transform(stepLimitOpt)(d.body)
+          )
+        }
+
+      val newDefs = defs map xform
       val newBody = transform(stepLimitOpt)(body)
       if (defs == newDefs && body == newBody) {
         ex

@@ -24,9 +24,14 @@ class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean) extend
       val expandedBody = transform(body)
 
       /** .. or another operator */
-      val expandedDefs = defs map { d =>
-        d.copy(body = transform(d.body))
-      }
+      def xform: TlaOperDecl => TlaOperDecl =
+        tracker.trackOperDecl { d: TlaOperDecl =>
+          d.copy(
+            body = transform(d.body)
+          )
+        }
+
+      val expandedDefs = defs map xform
 
       def needsExpansion(d: TlaOperDecl): Boolean = {
         // Expand only the definitions that:

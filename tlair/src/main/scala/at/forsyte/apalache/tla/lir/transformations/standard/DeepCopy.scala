@@ -1,7 +1,10 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
-import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaEx}
-import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.{
+  TlaExTransformation,
+  TransformationTracker
+}
+import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaEx, TlaOperDecl}
 
 class DeepCopy(tracker: TransformationTracker) extends TlaExTransformation {
   override def apply(expr: TlaEx): TlaEx = {
@@ -11,23 +14,27 @@ class DeepCopy(tracker: TransformationTracker) extends TlaExTransformation {
   /**
     * Calls deep copy in a way that sets up tracking between every replacement (not just top-level)
     */
-  def transform: TlaExTransformation = tracker.track {
-    // LetInEx and OperEx are composite expressions
-    case LetInEx(body, defs@_*) =>
-      // Transform bodies of all op.defs
-      val newDefs = defs.map { x =>
-        x.copy(
-          body = transform(x.body)
-        )
-      }
-      LetInEx(transform(body), newDefs: _*)
+  def transform: TlaExTransformation =
+    tracker.track {
+      // LetInEx and OperEx are composite expressions
+      case LetInEx(body, defs @ _*) =>
+        // Transform bodies of all op.defs
+        def xform: TlaOperDecl => TlaOperDecl =
+          tracker.trackOperDecl { d: TlaOperDecl =>
+            d.copy(
+              body = transform(d.body)
+            )
+          }
 
-    case OperEx(op, args@_*) =>
-      OperEx(op, args map transform: _*)
+        val newDefs = defs map xform
+        LetInEx(transform(body), newDefs: _*)
 
-    // terminal expressions, just copy
-    case ex => ex.deepCopy()
-  }
+      case OperEx(op, args @ _*) =>
+        OperEx(op, args map transform: _*)
+
+      // terminal expressions, just copy
+      case ex => ex.deepCopy()
+    }
 }
 
 object DeepCopy {

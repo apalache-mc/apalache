@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
-import at.forsyte.apalache.tla.lir.{LetInEx, OperEx}
+import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaOperDecl}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations._
 
@@ -23,11 +23,14 @@ object PruneApalacheAnnotations {
     ex match {
       case LetInEx( body, defs@_* ) =>
         // Transform bodies of all op.defs
-        val newDefs = defs.map { x =>
-          x.copy(
-            body = self( x.body )
-          )
-        }
+        def xform: TlaOperDecl => TlaOperDecl =
+          tracker.trackOperDecl { d: TlaOperDecl =>
+            d.copy(
+              body = self(d.body)
+            )
+          }
+
+        val newDefs = defs map xform
         val newBody = self( body )
         val retEx = if ( defs == newDefs && body == newBody ) ex else LetInEx( newBody, newDefs : _* )
         tr( retEx )

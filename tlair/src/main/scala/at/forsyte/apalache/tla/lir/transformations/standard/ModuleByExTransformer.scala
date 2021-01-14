@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation}
 
 /**
-  * This transformer uses a TlaExTransformer to modify all expressions inside a module.
+  * This transformer uses a TlaExTransformer to modify the bodies of operator declarations inside a module.
   *
   * @author Igor Konnov
   */
