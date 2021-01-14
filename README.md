@@ -3,7 +3,7 @@
 src="https://raw.githubusercontent.com/informalsystems/apalache/99e58d6f5eebcc41f432a126a13a5f8d2ae7afe6/logo-apalache.svg"
 alt="Apalache Logo">
 
-<h1>APALACHE</h1>
+<h1><a href="https://apalache.informal.systems/">APALACHE</a></h1>
 
 <p>A symbolic model checker for TLA+<p>
 
@@ -92,6 +92,19 @@ To read an academic paper about the theory behind Apalache,
 check our [paper at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549).
 Related reports and publications can be found at the
 [Apalache page at TU Wien](http://forsyte.at/research/apalache/).
+
+## Website
+
+Our current website is served at https://apalache.informal.systems .
+
+The site is hosted by github, and changes can be made through PRs into the
+[gh-pages](https://github.com/informalsystems/apalache/tree/gh-pages) branch of
+this repository. See the README.md on that branch for more information.
+
+The user documentation is automatically deployed to the website branch as per
+the [CI configuration](./.github/workflows/deploy.yml).
+
+Our old website is still available at https://forsyte.at/research/apalache/ .
 
 [TLA+]: http://lamport.azurewebsites.net/tla/tla.html
 [Microsoft Z3]: https://github.com/Z3Prover/z3
