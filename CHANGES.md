@@ -6,9 +6,10 @@
 
 ### Documentation
 
-- Compile the manuals into [a static
+ - Compile the manuals into [a static
   site](http://informalsystems.github.io/apalache/docs/) using
   [mdBook](https://github.com/rust-lang/mdBook), see #400
+ * Description of top-level user operators
 
 ## 0.8.0 [RELEASE]
 

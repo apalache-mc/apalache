@@ -14,7 +14,7 @@ Pluscal, check [LearnTla.com] by Hillel Wayne.
 
  1. [The standard operators of TLA+](./standard-operators.md) :electric_plug:
  1. [User-defined operators](./user-operators.md) :bulb:
- 1. MODULE, EXTENDS and INSTANCES :scissors:
+ 1. [Modules and instances](./modules.md): MODULE, EXTENDS and INSTANCES :scissors:
 
 [Apalache model checker]: https://github.com/informalsystems/apalache
 [Apalache manual]: ../.
