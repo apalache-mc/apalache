@@ -209,10 +209,29 @@ The CI configuration is located in
 
 ## Changelog
 
-Every non-trivial PR must update the [change log](./CHANGES.md).
+### Structure
 
-Changes for a given release should be split between the four sections: Breaking
-Changes, Features, Improvements, Bug Fixes.
+[./UNRELEASED.md](./UNRELEASED.md)
+: A living record of the changes not yet released.
+
+[./RELEASE-NOTES.md](./RELEASE-NOTES.md)
+: A frozen record documenting the changes added since the last release, only
+  present in release-commits.
+
+[./CHANGES.md](./CHANGES.md)
+: The accumulated history of all the changes, across all versions.
+
+### Recording changes
+
+Every non-trivial PR must update the [unreleased changes log](./UNRELEASED.md).
+
+Changes for a given release should be split between the five sections:
+
+1. Breaking Changes
+2. Features 
+3. Improvements
+4. Bug Fixes
+5. Documentation
 
 ## Releases
 
@@ -225,9 +244,8 @@ current release process is as follows:
 ### Prepare the release
 
 - [ ] Create a new feature branch, `release-l.m.n` and check it out
-- [ ] Update [CHANGES.md](./CHANGES.md), adding the heading `## l.m.n` over the
-      unreleased changes.
-- [ ] Copy this section into a new file named `./script/release-l.m.n.txt`
+- [ ] Generate the release notes by running `./script/release-notes.sh`, this
+      will create a file `RELEASE-NOTES.md`.
 - [ ] Mark the version as RELEASE via `mvn versions:set -DnewVersion=l.m.n-RELEASE`
 - [ ] Commit the changes: `git add . && git commit -m "Prepare for release l.m.n"`
 - [ ] Open a PR merging the feature branch into `develop`. Get it merged.
@@ -246,8 +264,9 @@ When the PR is merged into `master`:
 ### Advance the version on unstable
 
 - [ ] Checkout `unstable`
+- [ ] Update the `CHANGES.md` and refresh the `UNRELEASED.md` by running `./scripts/update-changes.sh`.
 - [ ] Run `mvn --batch-mode release:update-versions -DautoVersionSubmodules=true -DdevelopmentVersion=l.m.(n+1)-SNAPSHOT`
-- [ ] Commit the chnages `git add . && git commit -m "Bump version to l.m.(n+1)-SNAPSHOT" && git push`
+- [ ] Commit the changes `git add . && git commit -m "Bump version to l.m.(n+1)-SNAPSHOT" && git push`
 
 ### Announce the relesae
 
