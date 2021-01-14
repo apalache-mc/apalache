@@ -16,6 +16,7 @@ package lir {
     */
   abstract class TlaDecl extends Serializable {
     def name: String
+    @deprecated("Marked for removal. Use the DeepCopy transformation.")
     def deepCopy(): TlaDecl
   }
 
@@ -96,6 +97,7 @@ package lir {
 
     def toSimpleString: String = ""
 
+    @deprecated("Marked for removal. Use the DeepCopy transformation.")
     def deepCopy() : TlaEx
   }
 
