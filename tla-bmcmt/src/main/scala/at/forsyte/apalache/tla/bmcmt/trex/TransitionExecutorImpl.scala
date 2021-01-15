@@ -7,9 +7,9 @@ import at.forsyte.apalache.tla.lir.TlaEx
 import com.typesafe.scalalogging.LazyLogging
 
 /**
-An implementation of TransitionExecutor.
-
-@see at.forsyte.apalache.tla.bmcmt.trex.TransitionExecutor
+  * An implementation of TransitionExecutor.
+  *
+  * @see at.forsyte.apalache.tla.bmcmt.trex.TransitionExecutor
   *
   * @author Igor Konnov
   */
@@ -146,7 +146,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
       ctx.rewriter.solverContext.assertGroundExpr(transition.trigger.toNameEx)
       lastState = lastState.setBinding(transition.binding)
       // add the binding and the oracle on the stack
-      revStack = (lastState.binding.shiftBinding(consts), new MockOracle(transitionNo)) :: revStack
+      pushLastState(new MockOracle(transitionNo))
     }
 
     controlState = Picked()
@@ -223,7 +223,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
       val transitionNo = sortedTransitions.head._1
       // use a fixed transition
       val mockOracle = new MockOracle(transitionNo)
-      revStack = (lastState.binding.shiftBinding(consts), mockOracle) :: revStack
+      pushLastState(mockOracle)
     } else {
       // if oracle = i, then the ith transition is enabled
       ctx.solver.assertGroundExpr(oracle.caseAssertions(oracleState, sortedTransitions.map(_._2.trigger.toNameEx)))
@@ -249,7 +249,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
       lastState = nextState.setBinding(finalVarBinding ++ constBinding)
       // the sparse oracle is mapping the oracle values to the transition numbers
       val sparseOracle = new SparseOracle(oracle, preparedTransitions.keySet)
-      revStack = (lastState.binding.shiftBinding(consts), sparseOracle) :: revStack
+      pushLastState(sparseOracle)
       if (debug && !ctx.solver.sat()) {
         throw new InternalCheckerError(s"Error picking next variables (step $stepNo). Report a bug.", lastState.ex)
       }
@@ -351,6 +351,16 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     */
   def dispose(): Unit = {
     ctx.dispose()
+  }
+
+  /**
+    * Push the last state by renaming primed variable to unprimed.
+    * Record the picked transition by using the provided oracle.
+    *
+    * @param oracle the oracle that records the choice of the transition.
+    */
+  private def pushLastState(oracle: Oracle): Unit = {
+    revStack = (lastState.binding.shiftBinding(consts), oracle) :: revStack
   }
 
 
