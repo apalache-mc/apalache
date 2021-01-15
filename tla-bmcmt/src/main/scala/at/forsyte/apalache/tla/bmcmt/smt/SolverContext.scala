@@ -11,6 +11,11 @@ import at.forsyte.apalache.tla.lir.TlaEx
   */
 trait SolverContext extends StackableContext {
   /**
+    * Configuration parameters.
+    */
+  val config: SolverConfig
+
+  /**
     * Declare a constant for an arena cell.
     * This method is called automatically by the arena.
     *
