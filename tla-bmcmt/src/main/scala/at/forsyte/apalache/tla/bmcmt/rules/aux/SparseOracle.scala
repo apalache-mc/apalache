@@ -18,7 +18,7 @@ class SparseOracle(oracle: Oracle, val values: Set[Int]) extends Oracle {
   private val indexMap: Map[Int, Int] = Map(sortedValues.zipWithIndex :_*)
 
   /**
-    * Produce an expression that states that the oracle values equals to the given integer position.
+    * Produce an expression that states that the oracle value is equal to the given integer position.
     * The actual implementation may be different from an integer comparison.
     *
     * @param state    a symbolic state

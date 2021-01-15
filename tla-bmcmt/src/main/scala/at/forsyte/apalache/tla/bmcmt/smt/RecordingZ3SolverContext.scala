@@ -9,12 +9,7 @@ import com.typesafe.scalalogging.LazyLogging
 object RecordingZ3SolverContext {
   def apply(parentLog: Option[SmtLog], config: SolverConfig): RecordingZ3SolverContext = {
     val context = new RecordingZ3SolverContext(parentLog, config)
-    parentLog match {
-      case Some(log) =>
-        log.replay(context.solver)
-
-      case None => ()
-    }
+    parentLog.forEach(_.replay(context.solver))
     context
   }
 }
@@ -115,7 +110,7 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
 
   /**
     * Declare an arena edge of type 'has'. This method introduces a Boolean variable for the edge.
-    * This method is called automatically by the arena. If the context already contains the constant
+    * This method is called automatically by the arena. If the context already contains a constant
     * with the same name, then this method does nothing.
     *
     * @param set  the containing set
