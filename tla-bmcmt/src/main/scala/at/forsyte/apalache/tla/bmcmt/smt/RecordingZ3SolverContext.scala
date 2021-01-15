@@ -9,7 +9,7 @@ import com.typesafe.scalalogging.LazyLogging
 object RecordingZ3SolverContext {
   def apply(parentLog: Option[SmtLog], config: SolverConfig): RecordingZ3SolverContext = {
     val context = new RecordingZ3SolverContext(parentLog, config)
-    parentLog.forEach(_.replay(context.solver))
+    parentLog.foreach(_.replay(context.solver))
     context
   }
 }
