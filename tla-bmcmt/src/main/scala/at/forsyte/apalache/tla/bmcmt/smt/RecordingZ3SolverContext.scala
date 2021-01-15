@@ -38,22 +38,16 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
 
   /**
     * The sequence of logs (the last added element is in the head),
-    * one per context, except the last log, which is maintained in lastLog.
-    * Every list in logStackRev is stored in the reverse order.
+    * one per context. Every element of stackOfInverseLogs is stored in the reverse order.
     */
-  private var logStackRev: List[List[Record]] = List()
-
-  /**
-    * The current log, the last added element is in the head.
-    */
-  private var lastLogRev: List[Record] = List()
+  private var stackOfInverseLogs: List[List[Record]] = List(List())
 
   /**
     * Extract a differential SMT log from the current context.
     * @return SMT log
     */
   def extractLog(): SmtLog = {
-    val newRecords = (lastLogRev ++ logStackRev.flatten).reverse
+    val newRecords = stackOfInverseLogs.flatten.reverse
     new SmtLog(parentLog, newRecords)
   }
 
@@ -69,8 +63,7 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
     */
   override def push(): Unit = {
     solver.push()
-    logStackRev = lastLogRev :: logStackRev
-    lastLogRev = List()
+    stackOfInverseLogs = List() :: stackOfInverseLogs
   }
 
   /**
@@ -78,9 +71,7 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
     * to save only the latest context.
     */
   override def pop(): Unit = {
-    solver.pop()
-    lastLogRev = logStackRev.head
-    logStackRev = logStackRev.tail
+    pop(1)
   }
 
   /**
@@ -89,10 +80,11 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
     * @param n pop n times, if n > 0, otherwise, do nothing
     */
   override def pop(n: Int): Unit = {
+    if (contextLevel - n < 0) {
+      throw new IllegalArgumentException(s"Trying to pop $n contexts while there are only $contextLevel of them.")
+    }
     solver.pop(n)
-    logStackRev = logStackRev.drop(n - 1) // n - 1 in logStack + 1 in lastLog
-    lastLogRev = logStackRev.head
-    logStackRev = logStackRev.tail
+    stackOfInverseLogs = stackOfInverseLogs.drop(n)
   }
 
   /**
@@ -109,7 +101,7 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
     * @param cell a (previously undeclared) cell
     */
   override def declareCell(cell: ArenaCell): Unit = {
-    lastLogRev = DeclareCellRecord(cell) :: lastLogRev
+    appendToTopLog(DeclareCellRecord(cell))
     solver.declareCell(cell)
   }
 
@@ -122,7 +114,7 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
     * @param elem a set element
     */
   override def declareInPredIfNeeded(set: ArenaCell, elem: ArenaCell): Unit = {
-    lastLogRev = DeclareInPredRecord(set, elem) :: lastLogRev
+    appendToTopLog(DeclareInPredRecord(set, elem))
     solver.declareInPredIfNeeded(set, elem)
   }
 
@@ -141,7 +133,7 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
     * @param ex a simplified TLA+ expression over cells
     */
   override def assertGroundExpr(ex: TlaEx): Unit = {
-    lastLogRev = AssertGroundExprRecord(ex) :: lastLogRev
+    appendToTopLog(AssertGroundExprRecord(ex))
     solver.assertGroundExpr(ex)
   }
 
@@ -203,5 +195,13 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
     */
   override def metrics(): SolverContextMetrics = {
     solver.metrics()
+  }
+
+  /**
+    * Push a record in the topmost log
+    * @param rec a record to push
+    */
+  private def appendToTopLog(rec: Record): Unit = {
+    stackOfInverseLogs = (rec :: stackOfInverseLogs.head) :: stackOfInverseLogs.tail
   }
 }

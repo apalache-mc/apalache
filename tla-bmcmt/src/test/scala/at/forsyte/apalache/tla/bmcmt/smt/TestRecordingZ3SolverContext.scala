@@ -1,7 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
-
 import at.forsyte.apalache.tla.bmcmt.Arena
 import at.forsyte.apalache.tla.bmcmt.types.IntT
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -40,5 +38,10 @@ class TestRecordingZ3SolverContext extends FunSuite {
     // the restored context should be satisfiable
     assert(restoredSolver.sat())
     assert(restoredSolver.evalGroundExpr(x.toNameEx) == tla.int(42))
+  }
+
+  test("pop on empty") {
+    val solver = RecordingZ3SolverContext(None, defaultSolverConfig)
+    assertThrows[IllegalArgumentException](solver.pop(2))
   }
 }
