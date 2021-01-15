@@ -9,11 +9,11 @@ import org.scalatest.junit.JUnitRunner
 
 
 @RunWith(classOf[JUnitRunner])
-class TestRecordingZ3SolverContext extends FunSuite {
+class TestRecordingSolverContext extends FunSuite {
   private val defaultSolverConfig = SolverConfig(debug = false, profile = false, randomSeed = 0)
 
   test("operations proxied") {
-    val solver = RecordingZ3SolverContext(None, defaultSolverConfig)
+    val solver = RecordingSolverContext.createZ3(None, defaultSolverConfig)
     var arena = Arena.create(solver).appendCell(IntT())
     val x = arena.topCell
     solver.assertGroundExpr(tla.eql(x.toNameEx, tla.int(42)))
@@ -22,7 +22,7 @@ class TestRecordingZ3SolverContext extends FunSuite {
   }
 
   test("write and read") {
-    val solver = RecordingZ3SolverContext(None, defaultSolverConfig)
+    val solver = RecordingSolverContext.createZ3(None, defaultSolverConfig)
     var arena = Arena.create(solver).appendCell(IntT())
     val x = arena.topCell
     solver.assertGroundExpr(tla.eql(x.toNameEx, tla.int(42)))
@@ -34,14 +34,14 @@ class TestRecordingZ3SolverContext extends FunSuite {
     solver.assertGroundExpr(tla.gt(x.toNameEx, tla.int(1000)))
     assert(!solver.sat())
     // restore the context
-    val restoredSolver = RecordingZ3SolverContext(Some(log), defaultSolverConfig)
+    val restoredSolver = RecordingSolverContext.createZ3(Some(log), defaultSolverConfig)
     // the restored context should be satisfiable
     assert(restoredSolver.sat())
     assert(restoredSolver.evalGroundExpr(x.toNameEx) == tla.int(42))
   }
 
   test("pop on empty") {
-    val solver = RecordingZ3SolverContext(None, defaultSolverConfig)
+    val solver = RecordingSolverContext.createZ3(None, defaultSolverConfig)
     assertThrows[IllegalArgumentException](solver.pop(2))
   }
 }

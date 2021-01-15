@@ -5,11 +5,20 @@ import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.lir.TlaEx
 import com.typesafe.scalalogging.LazyLogging
 
-
-object RecordingZ3SolverContext {
-  def apply(parentLog: Option[SmtLog], config: SolverConfig): RecordingZ3SolverContext = {
-    val context = new RecordingZ3SolverContext(parentLog, config)
-    parentLog.foreach(_.replay(context.solver))
+object RecordingSolverContext {
+  /**
+    * A factory method to create a recording context on top of a Z3 solver context.
+    * The entries in the parent log are replayed right after the start.
+    * @param parentLog the parent log for the solver
+    * @param config solver config
+    * @return a recording solver that works on top of Z3
+    */
+  def createZ3(
+      parentLog: Option[SmtLog],
+      config: SolverConfig
+  ): RecordingSolverContext = {
+    val context = new RecordingSolverContext(parentLog, config, new Z3SolverContext(config))
+    parentLog.foreach(_.replay(context.solverImpl))
     context
   }
 }
@@ -24,12 +33,15 @@ object RecordingZ3SolverContext {
   * @author Igor Konnov
   */
 @SerialVersionUID(700L)
-class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: SolverConfig)
-    extends SolverContext with Serializable with LazyLogging {
+class RecordingSolverContext private(
+    parentLog: Option[SmtLog],
+    val config: SolverConfig,
+    val solverImpl: SolverContext
+) extends SolverContext
+    with Serializable
+    with LazyLogging {
 
   import SmtLog._
-
-  private val solver = new Z3SolverContext(config)
 
   /**
     * The sequence of logs (the last added element is in the head),
@@ -51,13 +63,13 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
     *
     * @return the current level, always non-negative.
     */
-  override def contextLevel: Int = solver.contextLevel
+  override def contextLevel: Int = solverImpl.contextLevel
 
   /**
     * Save the current context and push it on the stack for a later recovery with pop.
     */
   override def push(): Unit = {
-    solver.push()
+    solverImpl.push()
     stackOfInverseLogs = List() :: stackOfInverseLogs
   }
 
@@ -76,9 +88,11 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
     */
   override def pop(n: Int): Unit = {
     if (contextLevel - n < 0) {
-      throw new IllegalArgumentException(s"Trying to pop $n contexts while there are only $contextLevel of them.")
+      throw new IllegalArgumentException(
+        s"Trying to pop $n contexts while there are only $contextLevel of them."
+      )
     }
-    solver.pop(n)
+    solverImpl.pop(n)
     stackOfInverseLogs = stackOfInverseLogs.drop(n)
   }
 
@@ -86,7 +100,7 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
     * Clean the context
     */
   override def dispose(): Unit = {
-    solver.dispose()
+    solverImpl.dispose()
   }
 
   /**
@@ -97,7 +111,7 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
     */
   override def declareCell(cell: ArenaCell): Unit = {
     appendToTopLog(DeclareCellRecord(cell))
-    solver.declareCell(cell)
+    solverImpl.declareCell(cell)
   }
 
   /**
@@ -110,7 +124,7 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
     */
   override def declareInPredIfNeeded(set: ArenaCell, elem: ArenaCell): Unit = {
     appendToTopLog(DeclareInPredRecord(set, elem))
-    solver.declareInPredIfNeeded(set, elem)
+    solverImpl.declareInPredIfNeeded(set, elem)
   }
 
   /**
@@ -119,7 +133,7 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
     * @param arena an arena
     */
   override def checkConsistency(arena: Arena): Unit = {
-    solver.checkConsistency(arena)
+    solverImpl.checkConsistency(arena)
   }
 
   /**
@@ -129,7 +143,7 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
     */
   override def assertGroundExpr(ex: TlaEx): Unit = {
     appendToTopLog(AssertGroundExprRecord(ex))
-    solver.assertGroundExpr(ex)
+    solverImpl.assertGroundExpr(ex)
   }
 
   /**
@@ -141,7 +155,7 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
     * @return a TLA+ value
     */
   override def evalGroundExpr(ex: TlaEx): TlaEx = {
-    solver.evalGroundExpr(ex)
+    solverImpl.evalGroundExpr(ex)
   }
 
   /**
@@ -151,7 +165,7 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
     */
   override def log(message: => String): Unit = {
     if (config.debug) {
-      solver.log(message)
+      solverImpl.log(message)
     }
   }
 
@@ -161,7 +175,7 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
     * @return true if and only if the context is satisfiable
     */
   override def sat(): Boolean = {
-    solver.sat()
+    solverImpl.sat()
   }
 
   /**
@@ -171,7 +185,7 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
     * @return Some(result), if no timeout happened; otherwise, None
     */
   override def satOrTimeout(timeoutSec: Long): Option[Boolean] = {
-    solver.satOrTimeout(timeoutSec)
+    solverImpl.satOrTimeout(timeoutSec)
   }
 
   /**
@@ -180,7 +194,7 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
     * @param listener register a listener, overrides the previous listener, if it was set before
     */
   override def setSmtListener(listener: SmtListener): Unit = {
-    solver.setSmtListener(listener)
+    solverImpl.setSmtListener(listener)
   }
 
   /**
@@ -189,7 +203,7 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
     * @return the current metrics
     */
   override def metrics(): SolverContextMetrics = {
-    solver.metrics()
+    solverImpl.metrics()
   }
 
   /**
@@ -197,6 +211,7 @@ class RecordingZ3SolverContext private (parentLog: Option[SmtLog], val config: S
     * @param rec a record to push
     */
   private def appendToTopLog(rec: Record): Unit = {
-    stackOfInverseLogs = (rec :: stackOfInverseLogs.head) :: stackOfInverseLogs.tail
+    stackOfInverseLogs =
+      (rec :: stackOfInverseLogs.head) :: stackOfInverseLogs.tail
   }
 }
