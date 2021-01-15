@@ -11,7 +11,6 @@
          * Another change description, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
-
 ### Features
 
  * opt-in for statistics collection (shared with TLC and TLA+ Toolbox), see #288

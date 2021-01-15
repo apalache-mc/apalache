@@ -23,7 +23,7 @@ class FilteredTransitionExecutor[SnapshotT](stepFilter: String,
   /**
     * Translate a transition into SMT and save it under the given number. This method returns false,
     * if the transition was found to be disabled during the translation. In this case, the translation result
-    * is still saved in the SMT context. It is user's responsibility to pop the context, e.g., by recovering from
+    * is still saved in the SMT context. It is the user's responsibility to pop the context, e.g., by recovering from
     * a snapshot. (In an incremental solver, it is cheap; in an offline solver, this may slow down the checker.)
     *
     * @param transitionNo a number associated with the transition, must be unique for the current step

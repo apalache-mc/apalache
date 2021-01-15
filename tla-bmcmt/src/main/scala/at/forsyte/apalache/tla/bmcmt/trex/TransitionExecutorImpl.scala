@@ -7,15 +7,9 @@ import at.forsyte.apalache.tla.lir.TlaEx
 import com.typesafe.scalalogging.LazyLogging
 
 /**
-  * <p>A general-purpose symbolic transition executor (or T-Rex).
-  * It accumulates the basic logic for executing TLA+
-  * transitions, which is used both in the sequential and parallel model checkers.
-  * (It could be used to implement predicate abstraction too.)
-  * This class is imperative, as taking SMT snapshots and recovering them
-  * in the non-incremental case is far from being functional.</p>
-  *
-  * <p>This class is parameterized by the type of an executor context. Currently, there are two choices:
-  * (1) IncrementalExecutorContext and (2) OfflineExecutorContext.</p>
+An implementation of TransitionExecutor.
+
+@see at.forsyte.apalache.tla.bmcmt.trex.TransitionExecutor
   *
   * @author Igor Konnov
   */
