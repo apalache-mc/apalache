@@ -539,6 +539,15 @@ EXITCODE: ERROR (99)
 [99]
 ```
 
+### check NonNullaryLet succeeds: regression for issue 429
+
+```sh
+$ apalache-mc check NonNullaryLet.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
 ### check Callback.tla succeeds
 
 `Callback.tla` demonstrates that one can implement non-determinism with

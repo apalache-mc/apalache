@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaOper}
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation, TransformationTracker}
 
 /** Replaces instances of user-defined operator applications with a LET-IN wrapper.
@@ -32,7 +33,8 @@ class OperAppToLetInDef(
         if ( args == newArgs ) ex
         else setTracking( ex, Builder.appOp( NameEx( opName ), newArgs : _* ) )
 
-      val newName = s"${NAME_PREFIX}_${opName}_${nameGenerator.newName()}"
+      val baseName = IncrementalRenaming.getBase( opName )
+      val newName = s"${NAME_PREFIX}_${baseName}_${nameGenerator.newName()}"
       val newDecl = TlaOperDecl( newName, List.empty, newEx )
       LetInEx( Builder.appDecl( newDecl ), newDecl )
       // On type annot. ignore the RHS
