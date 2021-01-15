@@ -30,15 +30,9 @@ class SmtLog(val parentLog: Option[SmtLog], val records: List[SmtLog.Record]) {
     }
 
     // replay the parent's log first
-    parentLog match {
-      case Some(parent) => parent.replay(solver)
-      case None => ()
-    }
-
+    parentLog.foreach(_.replay(solver))
     // then, replay the diff
-    for (record <- records) {
-      applyRecord(record)
-    }
+    records foreach applyRecord
   }
 
   /**
