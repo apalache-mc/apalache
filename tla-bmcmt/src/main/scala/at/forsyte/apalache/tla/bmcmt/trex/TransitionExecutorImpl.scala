@@ -90,10 +90,9 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     if (preparedTransitions.contains(transitionNo)) {
       throw new IllegalStateException(s"prepareTransition is called for $transitionNo two times")
     }
-    logger.debug("Step #%d, transition #%d, SMT context level %d"
-      .format(stepNo, transitionNo, ctx.rewriter.contextLevel))
+    logger.debug(s"Step #${stepNo}, transition #${transitionNo}")
     inferTypes(transitionEx)
-    ctx.rewriter.solverContext.log("; ------- STEP: %d, STACK LEVEL: %d TRANSITION: %d {"
+    ctx.rewriter.solverContext.log("; ------- STEP: %d, SMT LEVEL: %d TRANSITION: %d {"
       .format(stepNo, ctx.rewriter.contextLevel, transitionNo))
     logger.debug("Translating to SMT...")
     val erased = lastState.setBinding(lastState.binding.forgetPrimed) // forget the previous assignments
@@ -166,15 +165,15 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
 
     // copied from SymbState.changed. Remove it from SymbState?
     def addOrSkipVar(set: Set[String], name: String): Set[String] = {
-      if (name.endsWith("'")) {
+      if (!name.endsWith("'")) {
+        set
+      } else {
         val nonPrimed = name.substring(0, name.length - 1)
         if (!binding.contains(nonPrimed) || binding(nonPrimed) != binding(name)) {
           set + name
         } else {
           set
         }
-      } else {
-        set
       }
     }
 
