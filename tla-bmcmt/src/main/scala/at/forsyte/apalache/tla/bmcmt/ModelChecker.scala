@@ -29,6 +29,7 @@ import scala.collection.mutable.ListBuffer
   *
   * @author Igor Konnov
   */
+@deprecated("Use SeqModelChecker")
 class ModelChecker(typeFinder: TypeFinder[CellT],
                    formulaHintsStore: FormulaHintsStore,
                    changeListener: ChangeListener,
