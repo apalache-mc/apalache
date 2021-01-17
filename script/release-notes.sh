@@ -28,14 +28,17 @@ PREAMBLE="<!-- NOTE:
 
 PREAMBLE_LINES=$(( $(echo "$PREAMBLE" | wc -l | cut -d' ' -f 1) + 1))
 
-# See https://stackoverflow.com/a/26514030/1187277
-MVN_VERSION=$(mvn -q \
-    -Dexec.executable=echo \
-    -Dexec.args='${project.version}' \
-    --non-recursive \
-    exec:exec)
+if [ -z "$RELEASE_VERSION" ]
+then
+    # See https://stackoverflow.com/a/26514030/1187277
+    RELEASE_VERSION=$(mvn -q \
+        -Dexec.executable=echo \
+        -Dexec.args='${project.version}' \
+        --non-recursive \
+        exec:exec)
+fi
 
-echo "## $MVN_VERSION" > "$RELEASE_NOTES"
+echo "## $RELEASE_VERSION" > "$RELEASE_NOTES"
 echo "" >> "$RELEASE_NOTES"
 tail -n +"$PREAMBLE_LINES" "$UNRELEASED" >> "$RELEASE_NOTES"
 
