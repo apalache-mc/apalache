@@ -9,14 +9,19 @@ previously declared.
 1. __Randomization__: `smt.randomSeed=<int>` passes the random seed to `z3` (via
   `z3`'s parameters `sat.random_seed` and `smt.random_seed`). 
 
-1. __Timeouts__: ``search.transition.timeout=<seconds>`` and ``search.invariant.timeout=<seconds>`` set timeouts
-  in seconds for checking whether a transition is enabled and whether the invariant holds, respectively.
-  When a timeout occurs, while transition is checked, the transition is considered disabled
-  and the search continues. When a timeout occurs, while the invariant is checked, the invariant
-  is considered satisfied. Obviously, one can miss a bug by setting small timeouts.
-  
-1. __Guided search__: ``search.transitionFilter=<sequence>``. Restrict the choice of symbolic
-  transitions at every step with a regular expression. For instance, ``search.filter=0,5,2|3``
+1. __Timeouts__: ``search.smt.timeout=<seconds>`` defines the timeout to the SMT solver
+  in seconds. The default value is `0`, which stands for the unbounded timeout.
+  For instance, the timeout is used in the following cases:
+  checking if a transition is enabled, checking an invariant, checking for deadlocks.
+  If the solver times out, it reports 'UNKNOWN', and the model checker reports a runtime
+  error.
+
+1. __Guided search__: ``search.transitionFilter=<regex>``.
+  Restrict the choice of symbolic transitions at every step with a regular expression.
+  The regular expression should recognize words over of the form 's->t', where `s`
+  is a regular expression over step numbers and `t` is a regular expression over
+  transition numbers. For instance,
+  `search.transitionFilter=(0->0|1->5|2->2|3->3|[4-9]->.*|[1-9][0-9]+->.*)`
   requires to start with the 0th transition, continue with the 5th transition,
   then execute either the 2nd or the 3rd transition and after that execute
   arbitrary transitions until the ``length.`` Note that there is no direct correspondence
@@ -31,19 +36,6 @@ previously declared.
   This option is useful for checking consensus algorithms, where the decision
   cannot be revoked. So instead of checking the invariant after each step, we can
   do that after the algorithm has made a good number of steps. 
-  
-1. __Invariant checking by splitting__: `search.invariant.split=(false|true)`. If the option
-is set to true, the invariant is checked individually for every enabled transition. Otherwise,
-the invariant is checked once after all enabled transitions have been added into the SMT context.
-By default, `search.invariant.split=true`
-  
-1. __Learning from invariants__: ``search.invariant.learnFromUnsat=(false|true)``. If the option
-is set to true, once the checked found that `~Inv` does not hold for some depth, it adds the
-assumption `Inv` in the SMT context. 
-   
-1. __Randomized search__: ``search.randomDfs=(false|true)``. When the symbolic transitions
-  are enumerated in the depth-first order, that is, ``search=dfs``, choose the next transition
-  randomly.
   
 1. __Translation to SMT__:
   
