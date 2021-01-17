@@ -159,6 +159,26 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     assert(Checker.Outcome.Error == outcome)
   }
 
+  test("Init + Next x 2 (LET-IN) + Inv => ERR") {
+    // x' <- 1
+    val initTrans = List(mkAssign("x", 1))
+    // x' <- x + 1
+    val assign = mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
+    val nextTrans = List(assign)
+    // x < 3
+    val lt = tla.lt(tla.name("x"), tla.int(3))
+    val letIn = tla.letIn(tla.appOp(tla.name("Foo")), tla.declOp("Foo", lt))
+    val inv = letIn
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, tla.not(inv))))
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 2, new File("."), Map(), false)
+    // initialize the model checker
+    val ctx = new IncrementalExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
+    val checker = new SeqModelChecker(params, checkerInput, trex)
+    val outcome = checker.run()
+    assert(Checker.Outcome.Error == outcome)
+  }
+
   test("determinstic Init + 2 steps (regression)") {
     // y' <- 1 /\ x' <- 1
     val initTrans = List(tla.and(mkAssign("y", 1), mkAssign("x", 1)))
