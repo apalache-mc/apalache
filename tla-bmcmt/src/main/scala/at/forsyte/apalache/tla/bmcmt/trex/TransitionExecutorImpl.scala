@@ -205,8 +205,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
   override def pickTransition(): Oracle = {
     assert(controlState == Preparing())
     // assert that there is at least one prepared transition
-    logger.info("Step %d, level %d: picking a transition out of %d transition(s)"
-      .format(stepNo, ctx.rewriter.contextLevel, preparedTransitions.size))
+    logger.info("Step %d: picking a transition out of %d transition(s)".format(stepNo, preparedTransitions.size))
     assert(preparedTransitions.nonEmpty)
     val sortedTransitions = preparedTransitions.toSeq.sortBy(_._1)
 

@@ -77,7 +77,7 @@ class SeqModelChecker[ExecutorContextT](val params: ModelCheckerParams,
     trex.nextState()
 
     // check the invariants
-    checkInvariants(maybeInvariantNos)
+    checkInvariants(trex.stepNo - 1, maybeInvariantNos)
   }
 
   private def prepareTransitions(transitions: Seq[TlaEx]): (Checker.Outcome.Value, Set[Int]) = {
@@ -137,11 +137,15 @@ class SeqModelChecker[ExecutorContextT](val params: ModelCheckerParams,
     }
   }
 
-  private def checkInvariants(maybeInvariantNos: Set[Int]): Checker.Outcome.Value = {
+  private def checkInvariants(stateNo: Int, maybeInvariantNos: Set[Int]): Checker.Outcome.Value = {
     // check the invariants
+    if (maybeInvariantNos.nonEmpty) {
+      logger.info(s"State $stateNo: checking invariants")
+    }
+
     for (((_, notInv), invNo) <- checkerInput.invariantsAndNegations.zipWithIndex) {
       if (maybeInvariantNos.contains(invNo)) {
-        logger.debug(s"Step %d: checking invariant %d".format(trex.stepNo, invNo))
+        logger.debug(s"State $stateNo: checking invariant $invNo")
         // save the context
         val snapshot = trex.snapshot()
 
