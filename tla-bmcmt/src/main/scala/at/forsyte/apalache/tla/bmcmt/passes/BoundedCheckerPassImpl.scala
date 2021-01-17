@@ -1,14 +1,17 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
+import java.nio.file.Path
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
+import at.forsyte.apalache.tla.bmcmt.Checker.Outcome
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore}
-import at.forsyte.apalache.tla.bmcmt.search.{BfsStrategy, BfsStrategyStopWatchDecorator, DfsStrategy}
-import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.bmcmt.rewriter.RewriterConfig
+import at.forsyte.apalache.tla.bmcmt.search._
+import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
+import at.forsyte.apalache.tla.bmcmt.trex._
+import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir.NullEx
-import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.LanguageWatchdog
 import at.forsyte.apalache.tla.lir.transformations.standard.KeraLanguagePred
 import at.forsyte.apalache.tla.pp.NormalizedNames
@@ -22,11 +25,8 @@ import com.typesafe.scalalogging.LazyLogging
   * @author Igor Konnov
   */
 class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
-                                        typeFinder: TypeFinder[CellT],
                                         hintsStore: FormulaHintsStore,
                                         exprGradeStore: ExprGradeStore,
-                                        sourceStore: SourceStore,
-                                        changeListener: ChangeListener,
                                         @Named("AfterChecker") nextPass: Pass)
       extends BoundedCheckerPass with LazyLogging {
 
@@ -60,28 +60,160 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
     val invariantsAndNegations = vcInvs.zip(vcNotInvs)
 
     val input = new CheckerInput(module, initTrans.toList, nextTrans.toList, cinitP, invariantsAndNegations.toList)
+/*
+        TODO: uncomment when the parallel checker is transferred from ik/multicore
+    val nworkers = options.getOrElse("checker", "nworkers", 1)
+*/
     val stepsBound = options.getOrElse("checker", "length", 10)
-    val debug = options.getOrElse("general", "debug", false)
-    val profile = options.getOrElse("smt", "prof", false)
-    val search = options.getOrElse("checker", "search", "dfs")
     val tuning = options.getOrElse("general", "tuning", Map[String, String]())
-    val checkRuntime = false // deprecated, will be removed in 0.7.0
-    val strategy =
-      if (search == "bfs") {
-        new BfsStrategyStopWatchDecorator(new BfsStrategy(input, stepsBound), filename="bfs.csv")
-      } else {
-        val random = tuning.getOrElse("search.randomDfs", "")
-        new DfsStrategy(input, stepsBound, random.toLowerCase.equals("true"))
-      }
+    val debug = options.getOrElse("general", "debug", false)
+    val saveDir = options.getOrError("io", "outdir").asInstanceOf[Path].toFile
 
-    val checker: Checker =
-        new ModelChecker(typeFinder, hintsStore, changeListener, exprGradeStore, sourceStore,
-          input, strategy, tuning, debug, profile, checkRuntime)
+    val params = new ModelCheckerParams(input, stepsBound, saveDir, tuning, debug)
+    params.pruneDisabled = !options.getOrElse("checker", "allEnabled", false)
+    params.checkForDeadlocks = !options.getOrElse("checker", "noDeadlocks", false)
 
-    val outcome = checker.run()
-    logger.info("The outcome is: " + outcome)
-    outcome == Checker.Outcome.NoError
+    val smtProfile = options.getOrElse("smt", "prof", false)
+    val smtRandomSeed = tuning.getOrElse("smt.randomSeed", "0").toInt
+    val solverConfig = SolverConfig(debug, smtProfile, smtRandomSeed)
+
+    options.getOrElse("checker", "algo", "incremental") match {
+        /*
+        TODO: uncomment when the parallel checker is transferred from ik/multicore
+      case "parallel" => runParallelChecker(params, input, tuning, nworkers)
+         */
+      case "incremental" => runIncrementalChecker(params, input, tuning, solverConfig)
+      case "offline" => runOfflineChecker(params, input, tuning, solverConfig)
+      case algo => throw new IllegalArgumentException(s"Unexpected checker.algo=$algo")
+    }
+
   }
+
+  private def runIncrementalChecker(params: ModelCheckerParams,
+                                    input: CheckerInput,
+                                    tuning: Map[String, String],
+                                    solverConfig: SolverConfig
+                                   ): Boolean = {
+    val profile = options.getOrElse("smt", "prof", false)
+    val solverContext: RecordingSolverContext = RecordingSolverContext.createZ3(None, solverConfig)
+
+    val typeFinder = new TrivialTypeFinder
+    val rewriter: SymbStateRewriterImpl = new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
+    rewriter.formulaHintsStore = hintsStore
+    rewriter.config = RewriterConfig(tuning)
+
+    type SnapshotT = IncrementalExecutionContextSnapshot
+    val executorContext = new IncrementalExecutionContext(rewriter)
+    val trex =
+      new TransitionExecutorImpl[SnapshotT](params.consts, params.vars, executorContext)
+    val filteredTrex =
+      new FilteredTransitionExecutor[SnapshotT](params.transitionFilter, params.invFilter, trex)
+
+    val checker = new SeqModelChecker[SnapshotT](params, input, filteredTrex)
+    val outcome = checker.run()
+    logger.info(s"The outcome is: " + outcome)
+    outcome == Outcome.NoError
+  }
+
+  private def runOfflineChecker(params: ModelCheckerParams,
+                                input: CheckerInput,
+                                tuning: Map[String, String],
+                                solverConfig: SolverConfig
+                               ): Boolean = {
+    val profile = options.getOrElse("smt", "prof", false)
+    val solverContext: RecordingSolverContext = RecordingSolverContext.createZ3(None, solverConfig)
+
+    val typeFinder = new TrivialTypeFinder
+    val rewriter: SymbStateRewriterImpl = new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
+    rewriter.formulaHintsStore = hintsStore
+    rewriter.config = RewriterConfig(tuning)
+
+    type SnapshotT = OfflineExecutionContextSnapshot
+    val executorContext = new OfflineExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl[SnapshotT](params.consts, params.vars, executorContext)
+    val filteredTrex = new FilteredTransitionExecutor[SnapshotT](params.transitionFilter, params.invFilter, trex)
+
+    val checker = new SeqModelChecker[SnapshotT](params, input, filteredTrex)
+    val outcome = checker.run()
+    logger.info(s"The outcome is: " + outcome)
+    outcome == Outcome.NoError
+  }
+
+  /*
+  TODO: the following code will be uncommented when the paralel checker is transferred from ik/multicore
+
+  private def runParallelChecker(params: ModelCheckerParams,
+                                 input: CheckerInput,
+                                 tuning: Map[String, String],
+                                 nworkers: Int): Boolean = {
+    val sharedState = new SharedSearchState(nworkers)
+
+    def createCheckerThread(rank: Int): Thread = {
+      new Thread {
+        override def run(): Unit = {
+          try {
+            val checker = createParallelWorker(rank, sharedState, params, input, tuning)
+            val outcome = checker.run()
+            logger.info(s"Worker $rank: The outcome is: $outcome")
+          } catch {
+            case e: Exception if exceptionAdapter.toMessage.isDefinedAt(e) =>
+              val message = exceptionAdapter.toMessage(e)
+              logger.info(s"Worker $rank: The outcome is: Error")
+              logger.error("Worker %s: %s".format(rank, message))
+
+            case e: Throwable =>
+              logger.error(s"Worker $rank has thrown an exception", e)
+              System.exit(EXITCODE_ON_EXCEPTION)
+          }
+        }
+      }
+    }
+
+    // run the threads and join
+    val workerThreads = 1.to(nworkers) map createCheckerThread
+    val shutdownHook = createShutdownHook(workerThreads)
+    Runtime.getRuntime.addShutdownHook(shutdownHook)    // shutdown the threads, if needed
+    workerThreads.foreach(_.start())                    // start the workers
+    workerThreads.foreach(_.join())                     // wait for their termination
+    Runtime.getRuntime.removeShutdownHook(shutdownHook) // no need for the hook anymore
+
+    sharedState.workerStates.values.forall(_ == BugFreeState())
+  }
+
+  private def createParallelWorker(rank: Int,
+                                 sharedState: SharedSearchState,
+                                 params: ModelCheckerParams,
+                                 input: CheckerInput,
+                                 tuning: Map[String, String]): ParModelChecker = {
+    val profile = options.getOrElse("smt", "prof", false)
+    val solverContext: RecordingZ3SolverContext = RecordingZ3SolverContext(None, params.debug, profile)
+
+    val typeFinder = new TrivialTypeFinder
+    val rewriter: SymbStateRewriterImpl = new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
+    rewriter.formulaHintsStore = hintsStore
+    rewriter.config = RewriterConfig(tuning)
+
+    val executorContext = new OfflineExecutorContext(rewriter)
+    val trex = new TransitionExecutorImpl[OfflineSnapshot](params.consts, params.vars, executorContext)
+    val filteredTrex = new FilteredTransitionExecutor[OfflineSnapshot](params.transitionFilter, params.invFilter, trex)
+    val context = new WorkerContext(rank, sharedState.searchRoot, filteredTrex)
+
+    new ParModelChecker(input, params, sharedState, context)
+  }
+
+  private def createShutdownHook(workerThreads: Seq[Thread]): Thread = {
+    new Thread() {
+      override def run(): Unit = {
+        logger.error("Shutdown hook activated. Interrupting the workers and joining them for %d ms."
+          .format(JOIN_TIMEOUT_MS))
+        workerThreads.foreach(_.interrupt())
+        workerThreads.foreach(_.join(JOIN_TIMEOUT_MS))
+        logger.error("Forced shutdown")
+        Runtime.getRuntime.halt(EXITCODE_ON_SHUTDOWN)
+      }
+    }
+  }
+   */
 
   /**
     * Get the next pass in the chain. What is the next pass is up

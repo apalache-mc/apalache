@@ -6,6 +6,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 import scala.util.Random
 
+@deprecated("The new search is adaptively splitting transitions when needed")
 class DfsStrategy(input: CheckerInput, stepsBound: Int, randomize: Boolean) extends SearchStrategy with LazyLogging {
   var stepNo = 0
   var terminate = false

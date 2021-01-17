@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.search
 import at.forsyte.apalache.tla.bmcmt.CheckerInput
 import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy.Command
 
+@deprecated
 class BfsStrategy(input: CheckerInput, stepsBound: Int) extends SearchStrategy {
   var stepNo = 0
   var deadlock = false

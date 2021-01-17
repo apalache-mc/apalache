@@ -5,7 +5,6 @@ import java.nio.file.{Files, Path, Paths}
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-
 import at.forsyte.apalache.infra.log.LogbackConfigurator
 import at.forsyte.apalache.infra.passes.{PassChainExecutor, TlaModuleMixin}
 import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorMessage, PassOptionException}
@@ -59,6 +58,11 @@ object Tool extends App with LazyLogging {
     * @return the exit code; as usual, 0 means success.
     */
   def run(args: Array[String]): Int = {
+    Console.println("# APALACHE version %s build %s".format(Version.version, Version.build))
+    Console.println("#")
+    Console.println("# WARNING: This tool is in the experimental stage.")
+    Console.println("#          Please report bugs at: " + ISSUES_LINK)
+    Console.println("")
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably
     new LogbackConfigurator().configureDefaultContext()
 
@@ -166,8 +170,11 @@ object Tool extends App with LazyLogging {
       executor.options.set("checker.inv", List(check.inv))
     if (check.cinit != "")
       executor.options.set("checker.cinit", check.cinit)
+    executor.options.set("checker.nworkers", check.nworkers)
     executor.options.set("checker.length", check.length)
-    executor.options.set("checker.search", check.search)
+    executor.options.set("checker.allEnabled", check.enabled)
+    executor.options.set("checker.noDeadlocks", check.noDeadlocks)
+    executor.options.set("checker.algo", check.algo)
 
     val result = executor.run()
     if (result.isDefined) {

@@ -9,6 +9,7 @@ import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy.{Command, Response}
   *
   * @author Igor Konnov
   */
+@deprecated
 trait SearchStrategy {
   def getCommand: Command
 

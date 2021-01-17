@@ -11,19 +11,31 @@ The model checker can be run as follows:
 
 ```bash
 $ apalache check [--config=filename] [--init=Init] [--cinit=ConstInit] \
-    [--next=Next] [--inv=Inv] [--length=10] [--tuning=filename] <myspec>.tla
+    [--next=Next] [--inv=Inv] [--length=10] [--algo=(incremental|offline)] \
+    [--all-enabled] [--no-deadlock] [--tuning=filename] <myspec>.tla
 ```
 
 The arguments are as follows:
 
-  * ``--config`` specifies the [TLC configuration file](./tlc-config.md),
-    the default name is ``<myspec>.cfg``
-  * ``--init`` specifies the initialization predicate, the default name is ``Init``
-  * ``--next`` specifies the transition predicate, the default name is ``Next``
-  * ``--cinit`` specifies the constant initialization predicate, optional
-  * ``--inv`` specifies the invariant to check, optional
-  * ``--length`` specifies the upper bound on the length of the finite executions to explore
-  * ``--tuning`` specifies the properties file that stores the options for
+  * General parameters:
+    - `--config` specifies the [TLC configuration file](./tlc-config.md),
+    the default name is `<myspec>.cfg`
+    - `--init` specifies the initialization predicate, *`Init` by default*
+    - `--next` specifies the transition predicate, *`Next` by default*
+    - `--cinit` specifies the constant initialization predicate, *optional*
+    - `--inv` specifies the invariant to check, *optional*
+    - `--length` specifies the maximal number of `Next` steps, *10 by default*
+
+  * Advanced parameters:
+    - `--algo` lets you to choose the search algorithm: `incremental` is using
+    the incremental SMT solver, `offline` is using the non-incremental
+    (offline) SMT solver
+    - `--all-enabled` lets you to skip the test of whether symbolic transitions
+    are enabled and execute them unconditionally (in a sound way!).  If you
+    know that many transitions are enabled, this speeds up model checking.
+    - `--no-deadlock` disables deadlock-checking, when `--all-enabled` is on.
+    Without `--all-enabled`, deadlocks are found in any case.
+    - `--tuning` specifies the properties file that stores the options for
   [fine tuning](tuning.md)
 
 If an initialization predicate, transition predicate, or invariant is specified both in the configuration file,

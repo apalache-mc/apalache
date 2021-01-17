@@ -16,6 +16,7 @@ import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy.{Finish, FinishOnDead
   *
   * @author Igor Konnov
   */
+@deprecated
 class BfsStrategyStopWatchDecorator(strategy: SearchStrategy, filename: String) extends SearchStrategy {
   private var currentStep: Int = 0
   private var printWriter: Option[PrintWriter] = None
