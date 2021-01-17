@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Run this script to create release notes for based on the changes recorded in the
+# Run this script to create release notes based on the changes recorded in the
 # UNRELEASED.md file. The version for the release notes is determined by the
 # version of the software specified in the pom.xml.
 
