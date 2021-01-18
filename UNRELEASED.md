@@ -10,6 +10,10 @@
          * Another change description, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+### Bug fixes
+
+ * critical bugfix in unique renaming, #429
+
 ### Features
 
  * opt-in for statistics collection (shared with TLC and TLA+ Toolbox), see #288
