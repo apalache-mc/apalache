@@ -1,0 +1,33 @@
+Apalache
+
+This software is developed by:
+
+ * Igor Konnov:
+    - TU Wien (Austria) 2016-2018,
+    - INRIA Nancy (France) 2018-2019,
+    - Interchain Foundation (Switzerland) 2019,
+    - Informal Systems (Austria) 2020-2021.
+ * Jure Kukovec: TU Wien (Austria), 2016-2021.
+ * Shon Feder: Informal Systems (Canada), 2020-2021.
+ * Andrey Kuprianov: Informal Systems (Austria) 2020.
+ * Thanh Hai Tran: TU Wien (Austria), 2016-2020.
+ * Viktor Sergeev: Univ. of Lorraine (France), 2019.
+
+Licensed under the Apache License, Version 2.0, see LICENSE
+
+This product includes software developed at:
+  
+  * TLA2 Tools: org.lamport.tla2tools
+    - URL: https://github.com/tlaplus/tlaplus
+    - License: MIT License
+  
+  * Microsoft Z3
+    - URL: https://github.com/Z3Prover/z3
+    - License: MIT License
+
+  * Scala
+    - URL: https://www.scala-lang.org/
+    - License: Apache 2.0
+
+  * TBA  
+
