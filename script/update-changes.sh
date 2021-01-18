@@ -8,7 +8,7 @@ set -euo pipefail
 # the directory of this file
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # shellcheck source=./shared.sh
-source "$DIR"/shared.sh
+. "$DIR"/shared.sh
 
 if ! [ -f "$RELEASE_NOTES" ]
 then

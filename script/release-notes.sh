@@ -9,7 +9,7 @@ set -euo pipefail
 # The directory of this file
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # shellcheck source=./shared.sh
-source "$DIR"/shared.sh
+. "$DIR"/shared.sh
 
 RELEASE_VERSION=${RELEASE_VERSION:-''}
 
