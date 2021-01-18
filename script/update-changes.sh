@@ -7,10 +7,8 @@ set -euo pipefail
 
 # The directory of this file
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-PROJ_ROOT=$DIR"/.."
-
-CHANGES=$PROJ_ROOT"/TEST-CHANGES.md"
-RELEASE_NOTES=$PROJ_ROOT"/RELEASE-NOTES.md"
+# shellcheck source=./shared.sh
+source "$DIR"/shared.sh
 
 PREAMBLE="<!-- NOTE:
      This file is generated. Do not write release notes here.
