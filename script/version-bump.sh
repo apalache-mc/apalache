@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# set -o xtrace
+set -o xtrace
 
 # Increment the version to a SNAPSHOT and update the changelog
 
