@@ -238,7 +238,7 @@ Changes for a given release should be split between the five sections:
 You must have release-me installed and configured with a token. See
 https://pypi.org/project/release-me/
 
-Assuming the current version recorded in the project's `.pom` files is
+Assuming the current version recorded in the project's `pom.xml` files is
 `l.m.n-SNAPSHOT`, the manual release process is as follows:
 
 ### Prepare the release
