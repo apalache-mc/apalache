@@ -42,6 +42,8 @@ Apalache:
             - [Running the tests](#running-the-tests)
         - [Continuous Integration](#continuous-integration)
     - [Changelog](#changelog)
+        - [Structure](#structure)
+        - [Recording changes](#recording-changes)
     - [Releases](#releases)
         - [Prepare the release](#prepare-the-release)
         - [Cut the release](#cut-the-release)
@@ -228,7 +230,7 @@ Every non-trivial PR must update the [unreleased changes log](./UNRELEASED.md).
 Changes for a given release should be split between the five sections:
 
 1. Breaking Changes
-2. Features 
+2. Features
 3. Improvements
 4. Bug Fixes
 5. Documentation
@@ -238,18 +240,23 @@ Changes for a given release should be split between the five sections:
 You must have release-me installed and configured with a token. See
 https://pypi.org/project/release-me/
 
-Assuming the version to be released is `l.m.n`, as per semantic versioning, the
-current release process is as follows:
+Assuming the current version recorded in the project's `.pom` files is
+`l.m.n-SNAPSHOT`, the manual release process is as follows:
 
 ### Prepare the release
 
-- [ ] Create a new feature branch, `release-l.m.n` and check it out
-- [ ] Generate the release notes by running `./script/release-notes.sh`, this
-      will create a file `RELEASE-NOTES.md`.
-- [ ] Mark the version as RELEASE via `mvn versions:set -DnewVersion=l.m.n-RELEASE`
-- [ ] Commit the changes: `git add . && git commit -m "Prepare for release l.m.n"`
-- [ ] Open a PR merging the feature branch into `develop`. Get it merged.
-- [ ] Open a PR to merge `unstable` into `master`, titling it `Release l.m.n`
+- [ ] `git checkout unstable && git pull`
+- [ ] Run `./script/release-prepare.sh`, which will prepare the release on a
+      branch `release/l.m.n`.
+- [ ] Open a PR merging the newly created branch into `unstable`, with the title
+      `Release l.m.n`. Get it merged.
+
+If you need to set a specific version (e.g., to increment to a major version),
+override the `RELEASE_VERSION`:
+
+```sh
+RELEASE_VERSION=l.m.n ./script/release-prepare.sh
+```
 
 ### Cut the release
 
