@@ -13,7 +13,14 @@
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Features
 
+ * new sequential model checker that is using TransitionExecutor
  * opt-in for statistics collection (shared with TLC and TLA+ Toolbox), see #288
+
+## Bugfixes
+
+ * the new sequential model checker has uncovered a bug that was not found
+   by the old model checker
+ * critical bugfix in unique renaming, #429
  
 ### Architecture
  
