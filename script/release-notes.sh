@@ -30,12 +30,7 @@ PREAMBLE_LINES=$(( $(echo "$PREAMBLE" | wc -l | cut -d' ' -f 1) + 1))
 
 if [ -z "$RELEASE_VERSION" ]
 then
-    # See https://stackoverflow.com/a/26514030/1187277
-    RELEASE_VERSION=$(mvn -q \
-        -Dexec.executable=echo \
-        -Dexec.args='${project.version}' \
-        --non-recursive \
-        exec:exec)
+    RELEASE_VERSION=$("$DIR"/get-version.sh)
 fi
 
 echo "## $RELEASE_VERSION" > "$RELEASE_NOTES"
