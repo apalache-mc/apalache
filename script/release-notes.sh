@@ -26,7 +26,7 @@ PREAMBLE="<!-- NOTE:
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->"
 
-PREAMBLE_LINES=$(( $(echo "$PREAMBLE" | wc -l | cut -d' ' -f 1) + 1))
+PREAMBLE_LINES=$(( $(echo "$PREAMBLE" | wc -l | cut -d' ' -f 1) + 1 ))
 
 if [ -z "$RELEASE_VERSION" ]
 then
