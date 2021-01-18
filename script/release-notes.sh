@@ -8,10 +8,10 @@ set -euo pipefail
 
 # The directory of this file
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-PROJ_ROOT=$DIR"/.."
+# shellcheck source=./shared.sh
+source "$DIR"/shared.sh
 
-UNRELEASED=$PROJ_ROOT"/UNRELEASED.md"
-RELEASE_NOTES=$PROJ_ROOT"/RELEASE-NOTES.md"
+RELEASE_VERSION=${RELEASE_VERSION:-''}
 
 PREAMBLE="<!-- NOTE:
      Release notes for unreleased changes go here, following this format:
