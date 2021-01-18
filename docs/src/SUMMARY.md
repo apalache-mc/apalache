@@ -26,6 +26,7 @@
 - [TLA+ Preprocessing](./apalache/preprocessing.md)
 - [Fine Tuning](./apalache/tuning.md)
 - [KerA: kernel logic of actions](./apalache/kera.md)
+- [Assignments in Apalache](./apalache/assignments.md)
 
 # TLA+ Language Manual for Engineers
 
