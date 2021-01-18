@@ -246,13 +246,13 @@ Assuming the current version recorded in the project's `.pom` files is
 - [ ] `git checkout unstable && git pull`
 - [ ] Run `./script/release-prepare.sh` to
   - create and checkout a branch `release/l.m.n`.
-  - prepare an commit a release commit `[release] l.m.n`
+  - prepare and add a release commit `[release] l.m.n`
 - [ ] Run `./script/version-bump.sh` to
   - update the changelog
   - bump the version number
   - commit the changes
 - [ ] Open a PR merging the newly created branch into `unstable`, with the title
-      `Release l.m.n`.
+      `[release] l.m.n`.
 - [ ] Get the PR reviewed and merged and **DO NOT SQUASH THE CHANGES** on merge.
 
 If you need to set a specific version (e.g., to increment to a major version),
