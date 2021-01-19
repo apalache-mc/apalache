@@ -45,8 +45,11 @@ Apalache:
         - [Structure](#structure)
         - [Recording changes](#recording-changes)
     - [Releases](#releases)
-        - [Prepare the release](#prepare-the-release)
-        - [Cut the release](#cut-the-release)
+        - [Via GitHub](#via-github)
+        - [Manually](#manually)
+            - [Requirements](#requirements)
+            - [Prepare the release](#prepare-the-release)
+            - [Cut the release](#cut-the-release)
 
 <!-- markdown-toc end -->
 
@@ -235,24 +238,50 @@ Changes for a given release should be split between the five sections:
 
 ## Releases
 
-You must have release-me installed and configured with a token. See
-https://pypi.org/project/release-me/
+### Via GitHub
+
+We have configured our GitHub CI to automate the release process. The workflows
+are configured in [./.github/workflows/prepare-release.yml][] and
+[./.github/workflows/release.yml][].
+
+The process proceeds in two steps:
+
+1. CI prepares a release, and opens a PR with the version changes and release
+   notes. These are triggered every Monday by a cron job or [manually via the
+   GitHub UI][github-ui].
+2. A human reviews the PR, approves it, and merges into the trunk, at which
+   point CI kicks in to:
+   - tag the commit
+   - package the artifact
+   - publish it as a GitHub release
+   - announce the release in our internal `#releases` slack channel
+
+[./.github/workflows/prepare-release.yml]: ./.github/workflows/prepare-release.yml 
+[./.github/workflows/release.yml]: ./.github/workflows/prepare-release.yml
+[github-ui]: https://github.com/informalsystems/apalache/actions?query=workflow%3A%22Prepare+Release%22
+
+### Manually
+
+#### Requirements
+
+- [hub](https://github.com/github/hub) installed
+  - With a `GITHUB_TOKEN` variable in your shell environment holding an access
+    token with repo permissions (you can use the same token as for
+    `release-me`).
+
+#### Prepare the release
 
 Assuming the current version recorded in the project's `pom.xml` files is
 `l.m.n-SNAPSHOT`, the manual release process is as follows:
-
-### Prepare the release
 
 - [ ] `git checkout unstable && git pull`
 - [ ] Run `./script/release-prepare.sh` to
   - create and checkout a branch `release/l.m.n`.
   - prepare and add a release commit `[release] l.m.n`
-- [ ] Run `./script/version-bump.sh` to
   - update the changelog
   - bump the version number
   - commit the changes
-- [ ] Open a PR merging the newly created branch into `unstable`, with the title
-      `[release] l.m.n`.
+  - opens a pr into `unstable` with the title `[release] l.m.n`.
 - [ ] Get the PR reviewed and merged and **DO NOT SQUASH THE CHANGES** on merge.
 
 If you need to set a specific version (e.g., to increment to a major version),
@@ -262,13 +291,15 @@ override the `RELEASE_VERSION` when preparing the release:
 RELEASE_VERSION=l.m.n ./script/release-prepare.sh
 ```
 
-### Cut the release
+#### Cut the release
 
 When the PR is merged into `unstable`:
 
 - [ ] Checkout the `[release] l.m.n` commit from the latest `unstable`
-- [ ] Build the artifact with `make`
-- [ ] Post the release with `./script/release vl.m.n ./scripts/release-l.m.n.txt`
+- [ ] Run `./script/release-publish.sh` to
+  - tag the release commit
+  - package the
+  - create the release on github
 - [ ] Update the download links at https://github.com/informalsystems/apalache/blob/gh-pages/_config.yml#L7
 
 [Github Issue]: https://github.com/informalsystems/apalache/issues
