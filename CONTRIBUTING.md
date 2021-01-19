@@ -235,24 +235,27 @@ Changes for a given release should be split between the five sections:
 
 ## Releases
 
-You must have release-me installed and configured with a token. See
-https://pypi.org/project/release-me/
+### Requirements
+
+- [release-me](https://pypi.org/project/release-me/) installed and configured with a token
+- [hub](https://github.com/github/hub) installed
+  - With a `GITHUB_TOKEN` variable in your shell environment holding an access
+    token with repo permissions (you can use the same token as for
+    `release-me`).
+
+### Prepare the release
 
 Assuming the current version recorded in the project's `pom.xml` files is
 `l.m.n-SNAPSHOT`, the manual release process is as follows:
-
-### Prepare the release
 
 - [ ] `git checkout unstable && git pull`
 - [ ] Run `./script/release-prepare.sh` to
   - create and checkout a branch `release/l.m.n`.
   - prepare and add a release commit `[release] l.m.n`
-- [ ] Run `./script/version-bump.sh` to
   - update the changelog
   - bump the version number
   - commit the changes
-- [ ] Open a PR merging the newly created branch into `unstable`, with the title
-      `[release] l.m.n`.
+  - opens a pr into `unstable` with the title `[release] l.m.n`.
 - [ ] Get the PR reviewed and merged and **DO NOT SQUASH THE CHANGES** on merge.
 
 If you need to set a specific version (e.g., to increment to a major version),
