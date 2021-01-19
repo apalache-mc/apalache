@@ -19,4 +19,4 @@ jobs:
           git config --global user.name "$GITHUB_ACTOR"
           git config --global user.email "github@actions.ci"
           cit checkout HEAD~1
-          ./script/release-pgk.sh
+          ./script/release-publish.sh
