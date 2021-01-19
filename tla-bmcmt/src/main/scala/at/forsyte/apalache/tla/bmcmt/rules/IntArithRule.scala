@@ -33,15 +33,15 @@ class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   override def apply(state: SymbState): SymbState = state.ex match {
-    case OperEx(oper: TlaArithOper, left, right)
+    case OperEx(oper: TlaArithOper, _, _)
       if (oper == TlaArithOper.plus || oper == TlaArithOper.minus
         || oper == TlaArithOper.mult || oper == TlaArithOper.div
         || oper == TlaArithOper.mod || oper == TlaArithOper.exp)
     =>
-      rewriteGeneral(state, simplifier.simplifyDeep(state.ex))
+      rewriteGeneral(state, state.ex)
 
     case OperEx(TlaArithOper.uminus, _) =>
-      rewriteGeneral(state, simplifier.simplifyDeep(state.ex))
+      rewriteGeneral(state, state.ex)
 
     case _ =>
       throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)

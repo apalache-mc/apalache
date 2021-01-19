@@ -13,10 +13,12 @@
 ### Bug fixes
 
  * critical bugfix in unique renaming, #429
+ * handling big integers, #450
 
 ### Features
 
  * opt-in for statistics collection (shared with TLC and TLA+ Toolbox), see #288
+ * constant simplification over strings, #197
  
 ### Architecture
  

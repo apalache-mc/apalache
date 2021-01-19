@@ -110,6 +110,15 @@ EXITCODE: OK
 ## running the check command
 
 
+### check SafeMath deadlocks (no error): regression for issue 450
+
+```sh
+$ apalache-mc check --length=1 SafeMath.tla | sed 's/I@.*//'
+...
+The outcome is: Deadlock
+...
+```
+
 ### check Fix365_ExistsSubset succeeds: regression for issue 365
 
 ```sh
