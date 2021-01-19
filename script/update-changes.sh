@@ -5,12 +5,18 @@
 
 set -euo pipefail
 
-# The directory of this file
+# the directory of this file
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-PROJ_ROOT=$DIR"/.."
+# shellcheck source=./shared.sh
+. "$DIR"/shared.sh
 
-CHANGES=$PROJ_ROOT"/TEST-CHANGES.md"
-RELEASE_NOTES=$PROJ_ROOT"/RELEASE-NOTES.md"
+if ! [ -f "$RELEASE_NOTES" ]
+then
+    echo "error: RELEASE-NOTES.md is missing."
+    echo "Did you run script/release-notes.sh first?"
+    exit 1
+fi
+
 
 PREAMBLE="<!-- NOTE:
      This file is generated. Do not write release notes here.

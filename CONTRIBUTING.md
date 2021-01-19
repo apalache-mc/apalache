@@ -42,11 +42,11 @@ Apalache:
             - [Running the tests](#running-the-tests)
         - [Continuous Integration](#continuous-integration)
     - [Changelog](#changelog)
+        - [Structure](#structure)
+        - [Recording changes](#recording-changes)
     - [Releases](#releases)
         - [Prepare the release](#prepare-the-release)
         - [Cut the release](#cut-the-release)
-        - [Advance the version on unstable](#advance-the-version-on-unstable)
-        - [Announce the relesae](#announce-the-relesae)
 
 <!-- markdown-toc end -->
 
@@ -228,7 +228,7 @@ Every non-trivial PR must update the [unreleased changes log](./UNRELEASED.md).
 Changes for a given release should be split between the five sections:
 
 1. Breaking Changes
-2. Features 
+2. Features
 3. Improvements
 4. Bug Fixes
 5. Documentation
@@ -238,39 +238,38 @@ Changes for a given release should be split between the five sections:
 You must have release-me installed and configured with a token. See
 https://pypi.org/project/release-me/
 
-Assuming the version to be released is `l.m.n`, as per semantic versioning, the
-current release process is as follows:
+Assuming the current version recorded in the project's `pom.xml` files is
+`l.m.n-SNAPSHOT`, the manual release process is as follows:
 
 ### Prepare the release
 
-- [ ] Create a new feature branch, `release-l.m.n` and check it out
-- [ ] Generate the release notes by running `./script/release-notes.sh`, this
-      will create a file `RELEASE-NOTES.md`.
-- [ ] Mark the version as RELEASE via `mvn versions:set -DnewVersion=l.m.n-RELEASE`
-- [ ] Commit the changes: `git add . && git commit -m "Prepare for release l.m.n"`
-- [ ] Open a PR merging the feature branch into `develop`. Get it merged.
-- [ ] Open a PR to merge `unstable` into `master`, titling it `Release l.m.n`
+- [ ] `git checkout unstable && git pull`
+- [ ] Run `./script/release-prepare.sh` to
+  - create and checkout a branch `release/l.m.n`.
+  - prepare and add a release commit `[release] l.m.n`
+- [ ] Run `./script/version-bump.sh` to
+  - update the changelog
+  - bump the version number
+  - commit the changes
+- [ ] Open a PR merging the newly created branch into `unstable`, with the title
+      `[release] l.m.n`.
+- [ ] Get the PR reviewed and merged and **DO NOT SQUASH THE CHANGES** on merge.
+
+If you need to set a specific version (e.g., to increment to a major version),
+override the `RELEASE_VERSION` when preparing the release:
+
+```sh
+RELEASE_VERSION=l.m.n ./script/release-prepare.sh
+```
 
 ### Cut the release
 
-When the PR is merged into `master`:
+When the PR is merged into `unstable`:
 
-- [ ] Checkout `master`
-- [ ] Sync with upstream via`git pull origin master`
+- [ ] Checkout the `[release] l.m.n` commit from the latest `unstable`
 - [ ] Build the artifact with `make`
 - [ ] Post the release with `./script/release vl.m.n ./scripts/release-l.m.n.txt`
 - [ ] Update the download links at https://github.com/informalsystems/apalache/blob/gh-pages/_config.yml#L7
-
-### Advance the version on unstable
-
-- [ ] Checkout `unstable`
-- [ ] Update the `CHANGES.md` and refresh the `UNRELEASED.md` by running `./scripts/update-changes.sh`.
-- [ ] Run `mvn --batch-mode release:update-versions -DautoVersionSubmodules=true -DdevelopmentVersion=l.m.(n+1)-SNAPSHOT`
-- [ ] Commit the changes `git add . && git commit -m "Bump version to l.m.(n+1)-SNAPSHOT" && git push`
-
-### Announce the relesae
-
-- [ ] Post a notification to the (internal) `#releases` slack channel.
 
 [Github Issue]: https://github.com/informalsystems/apalache/issues
 [rfc]: https://en.wikipedia.org/wiki/Request_for_Comments
