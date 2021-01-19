@@ -98,4 +98,8 @@ Inv ==
         => is_error <=>
             arg2 = 0 \/ arg1 % arg2 > MAX_UNSIGNED \/ res /= arg1 % arg2
 
+
+\* check this to see an overflow
+FalseInv ==
+    arg1 + arg2 < MAX_UNSIGNED
 ==============================================================================

@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaControlOper, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values._
 
+import java.lang.NumberFormatException
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.LinkedHashMap
 
@@ -58,8 +59,14 @@ object JsonReader {
     v match {
       case ujson.Str(value) => NameEx(value)
       case ujson.Num(value) =>
-        if(value.isValidInt) ValEx(TlaInt(value.toInt))
-        else throw new Exception("incorrect TLA+ JSON: wrong number")
+        try {
+          // numbers are floating point in JavaScript. Go through the conversion hell.
+          val decimal = BigDecimal(value.toString.toDouble).setScale(0, BigDecimal.RoundingMode.DOWN)
+          ValEx(TlaInt(decimal.toBigInt()))
+        } catch {
+          case e: NumberFormatException =>
+            throw new Exception("incorrect TLA+ JSON: " + e.getMessage)
+        }
       case ujson.Bool(value) => ValEx(TlaBool(value))
       case ujson.Obj(value) => parseExpr(value)
       case _ => throw new Exception("incorrect TLA+ JSON: unexpected input")
