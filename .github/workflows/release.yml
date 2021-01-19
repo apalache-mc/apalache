@@ -1,0 +1,22 @@
+name: release
+
+on:
+  push:
+    branches: unstable
+    # This file only changes when we've prepared a new release
+    paths: ./RELEASE-NOTES.md
+
+jobs:
+  cut-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Cut Release
+        run: |
+          git config --global user.name "$GITHUB_ACTOR"
+          git config --global user.email "github@actions.ci"
+          cit checkout HEAD~1
+          ./script/release-publish.sh
