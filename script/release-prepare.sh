@@ -32,6 +32,17 @@ fi
 git checkout -b "release/${RELEASE_VERSION}"
 RELEASE_VERSION=$RELEASE_VERSION "$DIR"/release-notes.sh
 
+# Make the release commit
+commit_msg="[release] ${RELEASE_VERSION}"
 git add --update
 git add "$RELEASE_NOTES"
-git commit -m "[release] ${RELEASE_VERSION}"
+git commit -m "$commit_msg"
+
+pr_msg="${commit_msg}\n$(cat "$RELEASE_NOTES")"
+
+# Bump the version
+"$DIR"/version-bump.sh
+
+# Open a pull request for the release
+# See https://hub.github.com/hub-pull-request.1.html
+hub pull-request --message="$pr_msg" --push --base="unstable"
