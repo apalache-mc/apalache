@@ -113,7 +113,7 @@ EXITCODE: OK
 ### check SafeMath deadlocks (no error): regression for issue 450
 
 ```sh
-$ apalache-mc check --length=1 SafeMath.tla | sed 's/I@.*//'
+$ apalache-mc check --length=1 --inv=Inv SafeMath.tla | sed 's/I@.*//'
 ...
 The outcome is: Deadlock
 ...
