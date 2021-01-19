@@ -39,11 +39,10 @@ git add "$RELEASE_NOTES"
 git commit -m "$commit_msg"
 
 body=$(cat "$RELEASE_NOTES")
-pr_msg=$(printf "%s\n\n%s" "$commit_msg"  "$body")
 
 # Bump the version
 "$DIR"/version-bump.sh
 
 # Open a pull request for the release
 # See https://hub.github.com/hub-pull-request.1.html
-hub pull-request --message="$pr_msg" --push --base="unstable"
+hub pull-request --push --message="$commit_msg" --message="$body" --base="unstable"
