@@ -56,11 +56,12 @@ zip -r "$ZIPF" bin/apalache-mc "$release"
 tar zpcf "$TGZF" bin/apalache-mc "$release"
 
 # Tag the commit and push the tag
-git tag -a $TAG_NAME -m "$msg"
+git tag -a "$TAG_NAME" -m "$msg"
 git push --tags
 
 # Publish the release
 body=$(cat "$RELEASE_NOTES")
 hub release create \
     --attach="$ZIPF" --attach="$TGZF" \
-    --message="$TAG_NAME" --message="$body"
+    --message="$TAG_NAME" --message="$body" \
+    "$TAG_NAME"
