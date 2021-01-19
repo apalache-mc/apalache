@@ -32,6 +32,12 @@ fi
 git checkout -b "release/${RELEASE_VERSION}"
 RELEASE_VERSION=$RELEASE_VERSION "$DIR"/release-notes.sh
 
+msg="[release] ${RELEASE_VERSION}"
+
 git add --update
 git add "$RELEASE_NOTES"
-git commit -m "[release] ${RELEASE_VERSION}"
+git commit -m "$msg"
+
+# Open a pull request for the release
+# See https://hub.github.com/hub-pull-request.1.html
+hub pull-request --message="$msg" --push --base="unstable"
