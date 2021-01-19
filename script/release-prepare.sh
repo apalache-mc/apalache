@@ -35,3 +35,7 @@ RELEASE_VERSION=$RELEASE_VERSION "$DIR"/release-notes.sh
 git add --update
 git add "$RELEASE_NOTES"
 git commit -m "[release] ${RELEASE_VERSION}"
+
+# Open a pull request for the release
+# See https://hub.github.com/hub-pull-request.1.html
+hub pull-request --no-edit --push
