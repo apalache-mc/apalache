@@ -61,12 +61,12 @@ TestTry(code, Op(_, _)) ==
     \E a, b \in Int:
         /\ InRange(a)
         /\ InRange(b)
-        /\ LET flag_c == Op(a, b) IN
+        /\ LET flag_and_c == Op(a, b) IN
             /\ opcode' = code
             /\ arg1' = a
             /\ arg2' = b
-            /\ is_error' = flag_c[1]
-            /\ res' = flag_c[2]
+            /\ is_error' = ~flag_and_c[1]
+            /\ res' = flag_and_c[2]
 
 Init ==
     /\ opcode = "NOP"
@@ -79,24 +79,36 @@ Next ==
     \/ /\ opcode = "NOP"
        /\ \/ TestTry("ADD", TryAdd)
           \/ TestTry("SUB", TrySub)
+          \* The following operators are too hard for z3 to work out
+          \* of the box. Perhaps, we have to use bitvectors.
+          (*
           \/ TestTry("MUL", TryMul)
           \/ TestTry("DIV", TryDiv)
           \/ TestTry("MOD", TryMod)
+            *)
     \/ opcode /= "NOP" /\ UNCHANGED vars
 
-Inv ==
-    /\ opcode = "ADD"
-        => is_error <=> (arg1 + arg2 > MAX_UNSIGNED \/ res /= arg1 + arg2)
-    /\ opcode = "SUB"
-        => is_error <=> (arg1 - arg2 < 0 \/ res /= arg1 - arg2)
-    /\ opcode = "MUL"
-        => is_error <=> (arg1 * arg2 > MAX_UNSIGNED \/ res /= arg1 * arg2 )
-    /\ opcode = "DIV"
+InvAdd ==
+    opcode = "ADD"
+        => is_error <=> (arg1 + arg2 > MAX_UNSIGNED /\ res /= arg1 + arg2)
+
+InvSub ==
+    opcode = "SUB"
+        => is_error <=> (arg1 - arg2 < 0 /\ res /= arg1 - arg2)
+
+InvMul ==
+    opcode = "MUL"
+        => is_error <=> (arg1 * arg2 > MAX_UNSIGNED /\ res /= arg1 * arg2 )
+
+InvDiv ==
+    opcode = "DIV"
         => is_error <=>
-            arg2 = 0 \/ arg1 \div arg2 > MAX_UNSIGNED \/ res /= arg1 \div arg2
-    /\ opcode = "MOD"
+            arg2 = 0 \/ (arg1 \div arg2 > MAX_UNSIGNED /\ res /= arg1 \div arg2)
+
+InvMod ==
+    opcode = "MOD"
         => is_error <=>
-            arg2 = 0 \/ arg1 % arg2 > MAX_UNSIGNED \/ res /= arg1 % arg2
+            arg2 = 0 \/ (arg1 % arg2 > MAX_UNSIGNED /\ res /= arg1 % arg2)
 
 
 \* check this to see an overflow
