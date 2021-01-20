@@ -14,9 +14,10 @@
 ### Features
 
  * new sequential model checker that is using TransitionExecutor
+ * new command-line option `--tune-here` to pass tuning parameters in CLI  
  * opt-in for statistics collection (shared with TLC and TLA+ Toolbox), see #288
 
-## Bugfixes
+### Bugfixes
 
  * the new sequential model checker has uncovered a bug that was not found
    by the old model checker
