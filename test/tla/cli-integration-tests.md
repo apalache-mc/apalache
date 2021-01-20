@@ -119,12 +119,12 @@ The outcome is: NoError
 ...
 ```
 
-### check InvAdd for SafeMath reports an error: regression for issue 450
+### check InvAdd for SafeMath reports no error: regression for issue 450
 
 ```sh
 $ apalache-mc check --length=1 --inv=InvAdd SafeMath.tla | sed 's/I@.*//'
 ...
-The outcome is: Error
+The outcome is: NoError
 ...
 ```
 
