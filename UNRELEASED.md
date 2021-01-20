@@ -12,8 +12,9 @@
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Bug fixes
 
- * critical bugfix in unique renaming, #429
  * handling big integers, #450
+ * critical bugfix in unique renaming, see #429
+ * include missing {Apalache,Typing}.tla modules in release package, see #447
 
 ### Features
 
