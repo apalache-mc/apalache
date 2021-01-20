@@ -1,10 +1,19 @@
 Parameters for fine tuning
 ==========================
 
-The parameters for fine tuning can be passed to the checker in a properties file.
-Its name is given with the command-line option ``--tuning=my.properties.`` This file
-supports variable substitution, e.g., ``${x}`` is replaced with the value of ``x``, if it was
-previously declared.
+The parameters for fine tuning can be passed to the checker in a properties
+file.  Its name is given with the command-line option `--tuning=my.properties.`
+This file supports variable substitution, e.g., `${x}` is replaced with the
+value of `x`, if it was previously declared.
+
+Alternatively, you can pass the tuning options right in the command-line by
+passing the option `--tune-here` that has the following format:
+    
+    ```
+    --tune-here=key1=val1
+    --tune-here=key1=val1:key2=val2
+    ...
+    ```
 
 1. __Randomization__: `smt.randomSeed=<int>` passes the random seed to `z3` (via
   `z3`'s parameters `sat.random_seed` and `smt.random_seed`). 

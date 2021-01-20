@@ -150,12 +150,11 @@ object Tool extends App with LazyLogging {
   private def runCheck(injector: Injector, check: CheckCmd, u: Unit): Unit = {
     val executor = injector.getInstance(classOf[PassChainExecutor])
     executor.options.set("io.outdir", createOutputDir())
-    val tuning =
-      if (check.tuning != "") {
-        loadProperties(check.tuning)
-      } else {
-        Map[String, String]()
-      }
+    var tuning =
+      if (check.tuning != "") loadProperties(check.tuning) else Map[String, String]()
+    tuning = overrideProperties(tuning, check.tuneHere)
+    logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
+
     executor.options.set("general.tuning", tuning)
     executor.options.set("general.debug", check.debug)
     executor.options.set("smt.prof", check.smtprof)
@@ -213,6 +212,22 @@ object Tool extends App with LazyLogging {
       case e: ConfigurationException =>
         throw new PassOptionException(s"Error in the properties file $filename: ${e.getMessage}")
     }
+  }
+
+  private def overrideProperties(props: Map[String, String], propsAsString: String): Map[String, String] = {
+    def parseKeyValue(text: String): (String, String) = {
+      val parts = text.split('=')
+      if (parts.length != 2 || parts.head.trim == "" || parts(1) == "") {
+        throw new PassOptionException(s"Expected key=value in --tune-here=$propsAsString")
+      } else {
+        // trim the key, we never have spaces in keys, but let the value to have spaces
+        (parts.head.trim, parts(1))
+      }
+    }
+
+    val hereProps = propsAsString.split(':').map(parseKeyValue).toMap
+    // hereProps may override the values in props
+    props ++ hereProps
   }
 
   private def createOutputDir(): Path = {

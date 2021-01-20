@@ -43,6 +43,9 @@ class CheckCmd extends Command(name = "check",
   var tuning: String =
     opt[String](name="tuning", default = "",
       description = "filename of the tuning options, see docs/tuning.md")
+  var tuneHere: String =
+    opt[String](name = "tune-here", default = "",
+      description = "tuning options as arguments in the format key1=val1:key2=val2:key3=val3 (priority over --tuning)")
   var enabled: Boolean = opt[Boolean](
     name = "all-enabled", default = false,
     description = "treat all transitions as enabled, to save on SMT queries, default: false")
