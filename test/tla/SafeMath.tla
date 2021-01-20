@@ -18,6 +18,7 @@ EXTENDS Integers
 
 \* the width of the unsigned integers, like in Solidity
 BITWIDTH == 256
+POWER == 2^BITWIDTH
 MAX_UNSIGNED == (2^BITWIDTH) - 1
 
 VARIABLE opcode, arg1, arg2, res, is_error
@@ -28,7 +29,7 @@ InRange(i) ==
     i >= 0 /\ i <= MAX_UNSIGNED
 
 TryAdd(a, b) ==
-    LET c == (a + b) % MAX_UNSIGNED IN
+    LET c == (a + b) % POWER IN
     IF c < a
     THEN <<FALSE, 0>>
     ELSE <<TRUE, c>>
@@ -36,12 +37,12 @@ TryAdd(a, b) ==
 TrySub(a, b) ==
     IF b > a
     THEN <<FALSE, 0>>
-    ELSE <<TRUE, (a - b) % MAX_UNSIGNED>>
+    ELSE <<TRUE, (a - b) % POWER>>
 
 TryMul(a, b) ==
     IF a = 0
     THEN <<TRUE, 0>>
-    ELSE LET c == (a * b) % MAX_UNSIGNED IN
+    ELSE LET c == (a * b) % POWER IN
         IF c \div a /= b
         THEN <<FALSE, 0>>
         ELSE <<TRUE, c>>
