@@ -110,16 +110,16 @@ EXITCODE: OK
 ## running the check command
 
 
-### check SafeMath deadlocks (no error): regression for issue 450
+### check InvSub for SafeMath reports no error: regression for issue 450
 
 ```sh
 $ apalache-mc check --length=1 --inv=InvSub SafeMath.tla | sed 's/I@.*//'
 ...
-The outcome is: Deadlock
+The outcome is: NoError
 ...
 ```
 
-### check SafeMath reports an error: regression for issue 450
+### check InvAdd for SafeMath reports an error: regression for issue 450
 
 ```sh
 $ apalache-mc check --length=1 --inv=InvAdd SafeMath.tla | sed 's/I@.*//'
