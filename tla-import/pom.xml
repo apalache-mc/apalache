@@ -4,11 +4,11 @@
     <parent>
         <groupId>at.forsyte.apalache</groupId>
         <artifactId>apalache</artifactId>
-        <version>0.8.2-SNAPSHOT</version>
+        <version>0.0.2-test</version>
     </parent>
 
     <artifactId>tla-import</artifactId>
-        <version>0.8.2-SNAPSHOT</version>
+        <version>0.0.2-test</version>
     <packaging>jar</packaging>
 
     <name>tla-import</name>

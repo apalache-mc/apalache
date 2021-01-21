@@ -4,14 +4,14 @@
     <parent>
         <groupId>at.forsyte.apalache</groupId>
         <artifactId>apalache</artifactId>
-        <version>0.8.2-SNAPSHOT</version>
+        <version>0.0.2-test</version>
     </parent>
 
     <!--
         All command line tooling and option parsing goes here... and nothing else!
     -->
     <artifactId>tool</artifactId>
-        <version>0.8.2-SNAPSHOT</version>
+        <version>0.0.2-test</version>
     <packaging>jar</packaging>
 
     <name>tool</name>
