@@ -13,7 +13,11 @@
 ### Features
 
  * new sequential model checker that is using TransitionExecutor
- * new command-line option `--tune-here` to pass tuning parameters in CLI  
+ * new command-line options, see the manual for details:
+   - choose the algorithm: `--algo=(offline|incremental)`
+   - fire transitions without filtering the enabled ones: `--all-enabled`
+   - do not check for deadlocks: `--no-deadlock`
+   - pass tuning parameters in CLI: `--tune-here`
 
 ### Bugfixes
 
