@@ -5,9 +5,6 @@ set -o xtrace
 
 # Package a release and tag the commit
 
-# Whether we are running this in CI. Set to true automatically by GitHub
-CI=${CI:-'false'}
-
 # The directory of this file
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # shellcheck source=./shared.sh
@@ -36,16 +33,11 @@ then
     exit 5
 fi
 
-# When not running in CI, we build the package
-# otherwise, we expect the artifact has already been built
-if [[ "$CI" == false ]]
-then
-    # Build the package
-    make clean
-    make apalache
-fi
-
 cd "$PROJ_ROOT"
+
+# Build the package
+make clean
+make apalache
 
 # Location of the jar that get's published in releases
 RELEASE_JAR="{$PROJ_ROOT}/mod-distribution/target/apalache-pkg-${VERSION}-full.jar"
