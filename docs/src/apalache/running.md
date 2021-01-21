@@ -12,7 +12,8 @@ The model checker can be run as follows:
 ```bash
 $ apalache check [--config=filename] [--init=Init] [--cinit=ConstInit] \
     [--next=Next] [--inv=Inv] [--length=10] [--algo=(incremental|offline)] \
-    [--all-enabled] [--no-deadlock] [--tuning=filename] <myspec>.tla
+    [--all-enabled] [--no-deadlock] [--tuning=filename] [--tune-here=options] \
+    <myspec>.tla
 ```
 
 The arguments are as follows:
@@ -36,7 +37,9 @@ The arguments are as follows:
     - `--no-deadlock` disables deadlock-checking, when `--all-enabled` is on.
     Without `--all-enabled`, deadlocks are found in any case.
     - `--tuning` specifies the properties file that stores the options for
-  [fine tuning](tuning.md)
+    [fine tuning](tuning.md)
+    - `--tune-here=key1=val1:key2=val2:...` pass the tuning properties
+    right in the command line as a single string
 
 If an initialization predicate, transition predicate, or invariant is specified both in the configuration file,
 and on the command line, the command line parameters take precedence over those in the configuration file.
