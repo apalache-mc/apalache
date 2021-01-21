@@ -3,6 +3,7 @@ name: release
 on:
   pull_request:
     branches: [unstable]
+    types: [closed]
 
 jobs:
   cut-release:
