@@ -1,7 +1,7 @@
 ---------------------------- MODULE SafeMath -----------------------------------
 (*
  * Test that the operations over big integers go through.
- * This specification is expected to deadlock, but not violating the invariant.
+ * This specification is expected to deadlock, without violating the invariant.
  *
  * Here we are testing SafeMath:
  *
