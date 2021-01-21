@@ -53,4 +53,7 @@ fi
 
 # Open a pull request for the release
 # See https://hub.github.com/hub-pull-request.1.html
-hub pull-request --push --message="$commit_msg" --message="$body" --base="unstable"
+hub pull-request \
+    --push \
+    --message="$commit_msg" --message="$body" \
+    --base="unstable"
