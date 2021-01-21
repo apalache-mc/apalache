@@ -2,13 +2,14 @@ name: release
 
 on:
   pull_request:
-    types: [submitted]
     branches: [unstable]
 
 jobs:
   cut-release:
     # Trigger only on merge of [release] pull request
-    if: startsWith(github.event.pull_request.title, '[release]') && github.event.pull_request.merged == true
+    if: startsWith(github.event.pull_request.title, '[release]')
+    # FIXME
+    # && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
