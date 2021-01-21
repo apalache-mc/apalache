@@ -10,12 +10,18 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # shellcheck source=./shared.sh
 . "$DIR"/shared.sh
 
-VERSION=$("$DIR"/get-version.sh)
-"$DIR"/update-changes.sh
-git add --update
-git commit -m "Update changelog for version ${VERSION}"
+msg=$(git show -s --format=%s HEAD)
+if [[ "$msg" != "[release] ${VERSION}" ]]
+then
+    echo "error: HEAD commit must be a [release] commit"
+    echo "found: ${msg}"
+    exit 4
+fi
 
 mvn --batch-mode release:update-versions -DautoVersionSubmodules=true
+
+VERSION=$("$DIR"/get-version.sh)
+"$DIR"/update-changes.sh
 
 DEV_VERSION=$("$DIR"/get-version.sh)
 git add --update
