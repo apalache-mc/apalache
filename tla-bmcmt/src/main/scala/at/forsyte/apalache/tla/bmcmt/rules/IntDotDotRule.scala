@@ -39,7 +39,8 @@ class IntDotDotRule(rewriter: SymbStateRewriter,
   }
 
   private def getRange(ex: TlaEx, elems: Seq[TlaEx]): (Int, Int) = {
-    elems map (simplifier.simplifyDeep(_)) match {
+    // Do a shallow simplification. The expression optimizer pass should have done a deep one.
+    elems map (simplifier.simplifyShallow(_)) match {
       case Seq(ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
         if (!left.isValidInt || !right.isValidInt) {
           throw new RewriterException("Range bounds are too large to fit in scala.Int", ex)
