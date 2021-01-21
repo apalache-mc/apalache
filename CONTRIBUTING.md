@@ -250,7 +250,7 @@ The process proceeds in two steps:
    notes. These are triggered every Monday by a cron job or [manually via the
    GitHub UI][github-ui].
 
-   <img src="./trigger-release.png" alt="How to trigger a release" width="300px">
+   <img src="./trigger-release.png" alt="How to trigger a release" width="700px">
 2. A human reviews the PR, approves it, and **merges** (_DO NOT SQUASH OR
    REBASE_) into the trunk, at which point CI kicks in to:
    - tag the commit
