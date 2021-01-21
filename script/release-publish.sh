@@ -40,7 +40,7 @@ make clean
 make apalache
 
 # Location of the jar that get's published in releases
-RELEASE_JAR="{$PROJ_ROOT}/mod-distribution/target/apalache-pkg-${VERSION}-full.jar"
+RELEASE_JAR="${PROJ_ROOT}/mod-distribution/target/apalache-pkg-${VERSION}-full.jar"
 
 # Confirm the jar was produced
 if [ ! -f "$RELEASE_JAR" ]; then
