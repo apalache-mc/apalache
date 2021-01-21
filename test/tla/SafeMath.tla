@@ -90,26 +90,31 @@ Next ==
     \/ opcode /= "NOP" /\ UNCHANGED vars
 
 InvAdd ==
+    LET perfectInt == arg1 + arg2 IN
     opcode = "ADD"
-        => is_error <=> (arg1 + arg2 > MAX_UNSIGNED /\ res /= arg1 + arg2)
+        => is_error <=> (perfectInt > MAX_UNSIGNED /\ res /= perfectInt)
 
 InvSub ==
+    LET perfectInt == arg1 - arg2 IN
     opcode = "SUB"
-        => is_error <=> (arg1 - arg2 < 0 /\ res /= arg1 - arg2)
+        => is_error <=> (perfectInt < 0 /\ res /= perfectInt)
 
 InvMul ==
+    LET perfectInt == arg1 * arg2 IN
     opcode = "MUL"
-        => is_error <=> (arg1 * arg2 > MAX_UNSIGNED /\ res /= arg1 * arg2 )
+        => is_error <=> (perfectInt > MAX_UNSIGNED /\ res /= perfectInt)
 
 InvDiv ==
+    LET perfectInt == arg1 \div arg2 IN
     opcode = "DIV"
         => is_error <=>
-            arg2 = 0 \/ (arg1 \div arg2 > MAX_UNSIGNED /\ res /= arg1 \div arg2)
+            arg2 = 0 \/ (perfectInt > MAX_UNSIGNED /\ res /= perfectInt)
 
 InvMod ==
+    LET perfectInt == arg1 % arg2 IN
     opcode = "MOD"
         => is_error <=>
-            arg2 = 0 \/ (arg1 % arg2 > MAX_UNSIGNED /\ res /= arg1 % arg2)
+            arg2 = 0 \/ (perfectInt > MAX_UNSIGNED /\ res /= perfectInt)
 
 
 \* check this to see an overflow
