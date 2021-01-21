@@ -18,6 +18,9 @@ jobs:
   prepare-release:
     env:
       RELEASE_VERSION: ${{ github.event.inputs.release_version }}
+      # NOTE: We must not use the default GITHUB_TOKEN for auth here,
+      # or else CI won't run on the resulting PR.
+      # See https://github.com/peter-evans/create-pull-request/blob/master/docs/concepts-guidelines.md#workarounds-to-trigger-further-workflow-runs
       GITHUB_TOKEN: ${{ secrets.APALACHE_BOT_TOKEN }}
     runs-on: ubuntu-latest
     steps:
