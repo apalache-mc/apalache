@@ -121,10 +121,10 @@ class SeqModelChecker[ExecutorContextT](
           val assumeSnapshot = trex.snapshot()
           // assume that the transition is fired and check, whether the constraints are satisfiable
           trex.assumeTransition(no)
-          logger.info(s"Step ${trex.stepNo}: Transition #$no. Is it enabled?")
+          logger.debug(s"Step ${trex.stepNo}: Transition #$no. Is it enabled?")
           trex.sat(params.smtTimeoutSec) match {
             case Some(true) =>
-              logger.info(s"Step ${trex.stepNo}: Transition #$no is enabled")
+              logger.debug(s"Step ${trex.stepNo}: Transition #$no is enabled")
               // recover to the state before the transition was fired
               snapshot = Some(assumeSnapshot)
 
