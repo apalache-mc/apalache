@@ -7,9 +7,7 @@ on:
 jobs:
   cut-release:
     # Trigger only on merge of [release] pull request
-    if: startsWith(github.event.pull_request.title, '[release]')
-    # FIXME
-    # && github.event.pull_request.merged == true
+    if: startsWith(github.event.pull_request.title, '[release]') && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -28,11 +26,5 @@ jobs:
         run: |
           git config --global user.name "$GITHUB_ACTOR"
           git config --global user.email "github@actions.ci"
-          git branch
-          git log -3
           git checkout HEAD~1
-          git log -1
-          git status
-
-  # FIXME
-  # ./script/release-publish.sh
+          ./script/release-publish.sh
