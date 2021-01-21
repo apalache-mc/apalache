@@ -18,7 +18,7 @@ jobs:
   prepare-release:
     env:
       RELEASE_VERSION: ${{ github.event.inputs.release_version }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.APALACHE_BOT_TOKEN }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
