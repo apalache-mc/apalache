@@ -3,7 +3,13 @@ set -euo pipefail
 
 set -o xtrace
 
-# Perpare a release on the current branch
+# Perpare a release on the current branch.
+#
+# NOTE: You must have a release commit checked out to run thie script
+# successfully.
+#
+# NOTE: While this script can be run locally, is mainly desgined for use in our
+# `prepare-release` CI workflow.
 
 # Set to false to prevent posting release notes in pull request
 POST_BODY=${POST_BODY:-'true'}

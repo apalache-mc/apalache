@@ -4,6 +4,9 @@ set -euo pipefail
 set -o xtrace
 
 # Increment the version to a SNAPSHOT and update the changelog
+#
+# NOTE: While this script can be run locally, is mainly desgined for use in our
+# `prepare-release` CI workflow.
 
 # The directory of this file
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"

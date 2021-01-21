@@ -4,6 +4,9 @@ set -euo pipefail
 set -o xtrace
 
 # Package a release and tag the commit
+#
+# NOTE: While this script can be run locally, is mainly desgined for use in our
+# `release` CI workflow.
 
 # The directory of this file
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"

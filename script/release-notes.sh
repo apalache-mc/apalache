@@ -3,6 +3,9 @@
 # Run this script to create release notes based on the changes recorded in the
 # UNRELEASED.md file. The version for the release notes is determined by the
 # version of the software specified in the pom.xml.
+#
+# NOTE: While this script can be run locally, is mainly desgined for use in our
+# `prepare-release` CI workflow.
 
 set -euo pipefail
 
