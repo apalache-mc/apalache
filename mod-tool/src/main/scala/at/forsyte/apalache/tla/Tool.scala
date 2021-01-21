@@ -225,7 +225,13 @@ object Tool extends App with LazyLogging {
       }
     }
 
-    val hereProps = propsAsString.split(':').map(parseKeyValue).toMap
+    val hereProps = {
+      if (propsAsString.trim.nonEmpty) {
+        propsAsString.split(':').map(parseKeyValue).toMap
+      } else {
+        Map.empty
+      }
+    }
     // hereProps may override the values in props
     props ++ hereProps
   }
