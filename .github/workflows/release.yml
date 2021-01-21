@@ -1,13 +1,14 @@
 name: release
 
 on:
-  push:
-    branches: unstable
-    # This file only changes when we've prepared a new release
-    paths: ./RELEASE-NOTES.md
+  pull_request:
+    types: [submitted]
+    branches: [unstable]
 
 jobs:
   cut-release:
+    # Trigger only on merge of [release] pull request
+    if: startsWith(github.event.pull_request.title, '[release]') && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -15,8 +16,18 @@ jobs:
         with:
           java-version: 1.8
       - name: Cut Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_REF: ${{ github.head_ref }}
         run: |
           git config --global user.name "$GITHUB_ACTOR"
           git config --global user.email "github@actions.ci"
-          cit checkout HEAD~1
-          ./script/release-publish.sh
+          git branch
+          git log -3
+          echo $HEAD_REF
+          git checkout $HEAD_REF~1
+          git log -1
+          git status
+
+  # FIXME
+  # ./script/release-publish.sh
