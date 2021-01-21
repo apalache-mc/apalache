@@ -8,9 +8,12 @@ exports () {
     local DIR
     DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-    export PROJ_ROOT=$DIR"/.."
-    export UNRELEASED=$PROJ_ROOT"/UNRELEASED.md"
-    export CHANGES=$PROJ_ROOT"/CHANGES.md"
-    export RELEASE_NOTES=$PROJ_ROOT"/RELEASE-NOTES.md"
+    export PROJ_ROOT="${DIR}/.."
+    export UNRELEASED="${PROJ_ROOT}/UNRELEASED.md"
+    export CHANGES="${PROJ_ROOT}/CHANGES.md"
+    export RELEASE_NOTES="${PROJ_ROOT}/RELEASE-NOTES.md"
+
+    # Location of the jar that get's published in releases
+    export RELEASE_JAR="{$PROJ_ROOT}/mod-distribution/target/apalache-pkg-${VERSION}-full.jar"
 }
 exports

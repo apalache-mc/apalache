@@ -5,8 +5,8 @@ set -o xtrace
 
 # Package a release and tag the commit
 
-# Set to false if you have already built the jar
-BUILD=${BUILD:-'true'}
+# Whether we are running this in CI. Set to true automatically by GitHub
+CI=${CI:-'false'}
 
 # The directory of this file
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
@@ -36,7 +36,9 @@ then
     exit 5
 fi
 
-if [[ "$BUILD" == true ]]
+# When not running in CI, we build the package
+# otherwise, we expect the artifact has already been built
+if [[ "$CI" == false ]]
 then
     # Build the package
     make clean
@@ -45,11 +47,9 @@ fi
 
 cd "$PROJ_ROOT"
 
-release="mod-distribution/target/apalache-pkg-${VERSION}-full.jar"
-
 # Confirm the jar was produced
-if [ ! -f "$release" ]; then
-    echo "error: release file not found: $release"
+if [ ! -f "$RELEASE_JAR" ]; then
+    echo "error: release file not found: $RELEASE_JAR"
     exit 6
 fi
 
@@ -58,8 +58,8 @@ TAG_NAME="v${VERSION}"
 # Package the artifacts
 ZIPF="target/apalache-${TAG_NAME}.zip"
 TGZF="target/apalache-${TAG_NAME}.tgz"
-zip -r "$ZIPF" bin/apalache-mc "$release"
-tar zpcf "$TGZF" bin/apalache-mc "$release"
+zip -r "$ZIPF" bin/apalache-mc "$RELEASE_JAR"
+tar zpcf "$TGZF" bin/apalache-mc "$RELEASE_JAR"
 
 # Tag the commit and push the tag
 git tag -a "$TAG_NAME" -m "$msg"
