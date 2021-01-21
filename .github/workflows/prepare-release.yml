@@ -33,11 +33,3 @@ jobs:
         run: |
           # FIXME
           POST_BODY=false ./script/release-prepare.sh
-      - name: Upload release artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: release-artifacts
-          if-no-files-found: error
-          path: |
-            mod-distribution/target/apalache-pkg-*-full.jar
-            release-commit-sha
