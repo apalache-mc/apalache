@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
       - uses: actions/setup-java@v1
         with:
           java-version: 1.8
@@ -25,10 +27,7 @@ jobs:
           git config --global user.email "github@actions.ci"
           git branch
           git log -3
-          echo $HEAD_REF
-          git branch
-          # git checkout $HEAD_REF
-          # git checkout HEAD~1
+          git checkout HEAD~1
           git log -1
           git status
 
