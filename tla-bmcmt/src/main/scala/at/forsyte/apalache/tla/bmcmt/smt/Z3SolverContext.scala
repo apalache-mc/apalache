@@ -435,7 +435,9 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
           val int = z3context.mkInt(num.toLong)
           (int, 1)
         } else {
-          flushAndThrow(new SmtEncodingException(s"SMT $id: A number constant is too large to fit in Long: $num", NullEx))
+          // support big integers, issue #450
+          val n = z3context.mkInt(num.toString())
+          (n, 1)
         }
 
       case OperEx(oper: TlaArithOper, lex, rex) =>
@@ -565,7 +567,9 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
           val n = z3context.mkInt(num.toLong)
           (n, 1)
         } else {
-          flushAndThrow(new SmtEncodingException(s"SMT $id: A number constant is too large to fit in Long: " + num, ex))
+          // support big integers, issue #450
+          val n = z3context.mkInt(num.toString())
+          (n, 1)
         }
 
       case NameEx(name) =>

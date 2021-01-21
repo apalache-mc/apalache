@@ -460,7 +460,8 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
     * @return the snapshot
     */
   override def snapshot(): SymbStateRewriterSnapshot = {
-    new SymbStateRewriterSnapshot(typeFinder.asInstanceOf[TrivialTypeFinder].snapshot(), intValueCache.snapshot(),
+    new SymbStateRewriterSnapshot(typeFinder.asInstanceOf[TrivialTypeFinder].snapshot(),
+      intValueCache.snapshot(),
       intRangeCache.snapshot(), strValueCache.snapshot(), recordDomainCache.snapshot(), exprCache.snapshot())
   }
 
