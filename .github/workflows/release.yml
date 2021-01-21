@@ -26,7 +26,8 @@ jobs:
           git branch
           git log -3
           echo $HEAD_REF
-          git checkout $HEAD_REF~1
+          git checkout $HEAD_REF
+          git checkout HEAD~1
           git log -1
           git status
 
