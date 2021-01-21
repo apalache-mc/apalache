@@ -5,13 +5,13 @@ set -o xtrace
 
 # Package a release and tag the commit
 
+# Set to false if you have already built the jar
+BUILD=${BUILD:-'true'}
+
 # The directory of this file
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # shellcheck source=./shared.sh
 . "$DIR"/shared.sh
-
-VERSION=$("$DIR"/get-version.sh)
-msg=$(git show -s --format=%s HEAD)
 
 # make sure that we do not release uncommited files
 if ! (git diff --exit-code && git diff --cached --exit-code) >/dev/null
@@ -19,6 +19,9 @@ then
     echo "error: Git directory is not clean. Remove changes to tracked files."
     exit 3
 fi
+
+VERSION=$("$DIR"/get-version.sh)
+msg=$(git show -s --format=%s HEAD)
 
 if [[ "$msg" != "[release] ${VERSION}" ]]
 then
@@ -33,11 +36,14 @@ then
     exit 5
 fi
 
-cd "$PROJ_ROOT"
+if [[ "$BUILD" == true ]]
+then
+    # Build the package
+    make clean
+    make apalache
+fi
 
-# Build the package
-make clean
-make apalache
+cd "$PROJ_ROOT"
 
 release="mod-distribution/target/apalache-pkg-${VERSION}-full.jar"
 
@@ -47,9 +53,9 @@ if [ ! -f "$release" ]; then
     exit 6
 fi
 
-# Package the artifacts
 TAG_NAME="v${VERSION}"
 
+# Package the artifacts
 ZIPF="target/apalache-${TAG_NAME}.zip"
 TGZF="target/apalache-${TAG_NAME}.tgz"
 zip -r "$ZIPF" bin/apalache-mc "$release"
