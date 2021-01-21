@@ -249,14 +249,16 @@ The process proceeds in two steps:
 1. CI prepares a release, and opens a PR with the version changes and release
    notes. These are triggered every Monday by a cron job or [manually via the
    GitHub UI][github-ui].
-2. A human reviews the PR, approves it, and merges into the trunk, at which
-   point CI kicks in to:
+
+   <img src="./trigger-release.png" alt="How to trigger a release" width="300px">
+2. A human reviews the PR, approves it, and **merges** (_DO NOT SQUASH OR
+   REBASE_) into the trunk, at which point CI kicks in to:
    - tag the commit
    - package the artifact
    - publish it as a GitHub release
    - announce the release in our internal `#releases` slack channel
 
-[./.github/workflows/prepare-release.yml]: ./.github/workflows/prepare-release.yml 
+[./.github/workflows/prepare-release.yml]: ./.github/workflows/prepare-release.yml
 [./.github/workflows/release.yml]: ./.github/workflows/prepare-release.yml
 [github-ui]: https://github.com/informalsystems/apalache/actions?query=workflow%3A%22Prepare+Release%22
 
