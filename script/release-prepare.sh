@@ -5,6 +5,9 @@ set -o xtrace
 
 # Perpare a release on the current branch
 
+# Set to false to prevent posting release notes in pull request
+POST_BODY=${POST_BODY:-'true'}
+
 # The directory of this file
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # shellcheck source=./shared.sh
@@ -38,7 +41,12 @@ git add --update
 git add "$RELEASE_NOTES"
 git commit -m "$commit_msg"
 
-body=$(cat "$RELEASE_NOTES")
+if [[ "$POST_BODY" == true ]]
+then
+    body=$(cat "$RELEASE_NOTES")
+else
+    body=''
+fi
 
 # Bump the version
 "$DIR"/version-bump.sh
