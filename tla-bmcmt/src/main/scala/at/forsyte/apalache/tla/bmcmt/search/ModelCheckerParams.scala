@@ -1,8 +1,21 @@
 package at.forsyte.apalache.tla.bmcmt.search
 
 import java.io.File
-
 import at.forsyte.apalache.tla.bmcmt.CheckerInput
+import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode.{AfterJoin, BeforeJoin, InvariantMode}
+
+object ModelCheckerParams {
+
+  /**
+    * The invariant checking mode. See tuning.md.
+    */
+  object InvariantMode extends Enumeration {
+    type InvariantMode = Value
+    val BeforeJoin, AfterJoin = Value
+  }
+
+  import InvariantMode._
+}
 
 /**
   * A collection of model checker parameters that come from the user configuration.
@@ -18,10 +31,18 @@ class ModelCheckerParams(checkerInput: CheckerInput,
     * If pruneDisabled is set to false, there will be no check of whether a transition is enabled.
     */
   var pruneDisabled: Boolean = true
+
   /**
     * If checkForDeadlocks is true, then the model checker should find deadlocks.
     */
   var checkForDeadlocks: Boolean = true
+
+  /**
+    * The invariant checking mode. When it is equal to AfterJoin, the invariant is checked after joining all transitions
+    * per step. When it is equal to BeforeJoin, the invariant is checked before joining all transitions.
+    */
+  var invariantMode: InvariantMode =
+    if ("after" == tuningOptions.getOrElse("search.invariant.mode", "before")) AfterJoin else BeforeJoin
 
   /**
     * The set of CONSTANTS, which are special (rigid) variables, as they do not change in the course of execution.
@@ -73,7 +94,7 @@ class ModelCheckerParams(checkerInput: CheckerInput,
 
   // does the transition number satisfy the given filter at the given step?
   def stepMatchesFilter(stepNo: Int, transitionNo: Int): Boolean = {
-    if (transitionFilter.size <= stepNo) {
+    if (transitionFilter.length <= stepNo) {
       true // no filter applied
     } else {
       transitionNo.toString.matches("^%s$".format(transitionFilter(stepNo)))

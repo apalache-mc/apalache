@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt
 import java.io.File
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
+import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode
 import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
 import at.forsyte.apalache.tla.bmcmt.trex.{FilteredTransitionExecutor, IncrementalExecutionContext, TransitionExecutorImpl}
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
@@ -142,7 +143,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     assert(Checker.Outcome.NoError == outcome)
   }
 
-  test("Init + Next x 10 + Inv => ERR") {
+  test("Init + Next x 10 + Inv (before + no-all-enabled) => ERR") {
     // x' <- 2 \/ x' <- 1
     val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
     // x' <- x + 1
@@ -151,6 +152,65 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val inv = tla.lt(tla.name("x"), tla.int(5))
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, tla.not(inv))))
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    params.pruneDisabled = true
+    params.invariantMode = InvariantMode.BeforeJoin
+    // initialize the model checker
+    val ctx = new IncrementalExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
+    val checker = new SeqModelChecker(params, checkerInput, trex)
+    val outcome = checker.run()
+    assert(Checker.Outcome.Error == outcome)
+  }
+
+  test("Init + Next x 10 + Inv (before + all-enabled) => ERR") {
+    // x' <- 2 \/ x' <- 1
+    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    // x' <- x + 1
+    val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
+    // x < 5
+    val inv = tla.lt(tla.name("x"), tla.int(5))
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, tla.not(inv))))
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    params.pruneDisabled = false
+    params.invariantMode = InvariantMode.BeforeJoin
+    // initialize the model checker
+    val ctx = new IncrementalExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
+    val checker = new SeqModelChecker(params, checkerInput, trex)
+    val outcome = checker.run()
+    assert(Checker.Outcome.Error == outcome)
+  }
+
+  test("Init + Next x 10 + Inv (after + all-enabled) => ERR") {
+    // x' <- 2 \/ x' <- 1
+    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    // x' <- x + 1
+    val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
+    // x < 5
+    val inv = tla.lt(tla.name("x"), tla.int(5))
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, tla.not(inv))))
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    params.pruneDisabled = false
+    params.invariantMode = InvariantMode.AfterJoin
+    // initialize the model checker
+    val ctx = new IncrementalExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
+    val checker = new SeqModelChecker(params, checkerInput, trex)
+    val outcome = checker.run()
+    assert(Checker.Outcome.Error == outcome)
+  }
+
+  test("Init + Next x 10 + Inv (after + no-all-enabled) => ERR") {
+    // x' <- 2 \/ x' <- 1
+    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    // x' <- x + 1
+    val nextTrans = List(mkAssign("x", tla.plus(tla.name("x"), tla.int(1))))
+    // x < 5
+    val inv = tla.lt(tla.name("x"), tla.int(5))
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, tla.not(inv))))
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    params.pruneDisabled = true
+    params.invariantMode = InvariantMode.AfterJoin
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
