@@ -31,5 +31,4 @@ jobs:
           git config --global user.email "github@actions.ci"
       - name: Prepare release
         run: |
-          # FIXME
-          POST_BODY=false ./script/release-prepare.sh
+          ./script/release-prepare.sh
