@@ -3,7 +3,7 @@ set -euo pipefail
 
 set -o xtrace
 
-# Perpare a release on the current branch.
+# Prepare a release on the current branch.
 #
 # NOTE: You must have a release commit checked out to run thie script
 # successfully.
@@ -44,7 +44,7 @@ fi
 # Prepare the release on a new branch
 git checkout -b "release/${RELEASE_VERSION}"
 
-# Generatre the release notes
+# Generate the release notes
 RELEASE_VERSION=$RELEASE_VERSION "$DIR"/release-notes.sh
 
 # Make the release commit

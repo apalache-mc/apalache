@@ -5,7 +5,7 @@ set -o xtrace
 
 # Package a release and tag the commit
 #
-# NOTE: While this script can be run locally, is mainly desgined for use in our
+# NOTE: While this script can be run locally, is mainly designed for use in our
 # `release` CI workflow.
 
 # The directory of this file
