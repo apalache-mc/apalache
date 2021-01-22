@@ -314,11 +314,11 @@ Apalache in docker while sharing the working directory:</p>
 <pre><code class="language-bash">
 ###### using the latest stable
 
-$ alias apalache=&quot;docker run --rm -v $(pwd):/var/apalache apalache/mc&quot;
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache apalache/mc'
 
 ###### using the latest unstable
 
-$ alias apalache=&quot;docker run --rm -v $(pwd):/var/apalache apalache/mc:unstable&quot;
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache apalache/mc:unstable'
 </code></pre>
 <h2><a class="header" href="#using-the-unstable-version-of-apalache" id="using-the-unstable-version-of-apalache">Using the unstable version of Apalache</a></h2>
 <p>The development of Apalache proceeds at a high pace, and we introduce a
@@ -338,7 +338,7 @@ everywhere.</p>
 <pre><code class="language-bash">$ docker run --rm -v &lt;your-spec-directory&gt;:/var/apalache apalache/mc:unstable &lt;args&gt;
 </code></pre>
 <p>To create an alias pointing to the <code>unstable</code> version:</p>
-<pre><code class="language-bash">$ alias apalache=&quot;docker run --rm -v $(pwd):/var/apalache apalache/mc:unstable&quot;
+<pre><code class="language-bash">$ alias apalache='docker run --rm -v $(pwd):/var/apalache apalache/mc:unstable'
 </code></pre>
 <h2><a class="header" href="#building-an-image" id="building-an-image">Building an image</a></h2>
 <p>For an end user there is no need to build an Apalache image. If you like to
