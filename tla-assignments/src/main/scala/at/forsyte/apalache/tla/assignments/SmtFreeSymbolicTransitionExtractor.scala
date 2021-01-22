@@ -70,7 +70,9 @@ class SmtFreeSymbolicTransitionExtractor(
       throw new AssignmentException( problems.mkString("\n") )
     }
     // Assuming all branches assign the same variables, works correctly if args.isEmpty (for whatever reason)
-    val unifiedStrat = (childStates map { _.partialStrat }).foldLeft( s.partialStrat ) { _ ++ _ }
+    val unifiedStrat = (childStates map { _.partialStrat }).foldLeft( s.partialStrat ) {
+      case (a,b) => a ++ b.filterNot( a.contains )
+    }
     PartialState( unassignedEverywhere, unifiedStrat )
   }
 
