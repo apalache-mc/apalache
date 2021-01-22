@@ -3,12 +3,23 @@ set -euo pipefail
 
 set -o xtrace
 
-# Perpare a release on the current branch
+# Prepare a release on the current branch.
+#
+# NOTE: You must have a release commit checked out to run thie script
+# successfully.
+#
+# NOTE: While this script can be run locally, is mainly desgined for use in our
+# `prepare-release` CI workflow.
+
+# Set to false to prevent posting release notes in pull request
+POST_BODY=${POST_BODY:-'true'}
 
 # The directory of this file
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # shellcheck source=./shared.sh
 . "$DIR"/shared.sh
+
+cd "$PROJ_ROOT"
 
 # make sure that we do not release uncommited files
 if ! (git diff --exit-code && git diff --cached --exit-code) >/dev/null
@@ -19,6 +30,7 @@ fi
 
 RELEASE_VERSION=${RELEASE_VERSION:-''}
 
+# Set the new version in the source code
 if [ -n "$RELEASE_VERSION" ]
 then
     # Explicitly set the release version
@@ -29,7 +41,10 @@ else
     RELEASE_VERSION=$("$DIR"/get-version.sh)
 fi
 
+# Prepare the release on a new branch
 git checkout -b "release/${RELEASE_VERSION}"
+
+# Generate the release notes
 RELEASE_VERSION=$RELEASE_VERSION "$DIR"/release-notes.sh
 
 # Make the release commit
@@ -38,6 +53,13 @@ git add --update
 git add "$RELEASE_NOTES"
 git commit -m "$commit_msg"
 
+if [[ "$POST_BODY" == true ]]
+then
+    body=$(cat "$RELEASE_NOTES")
+else
+    body=''
+fi
+
 body=$(cat "$RELEASE_NOTES")
 
 # Bump the version
@@ -45,4 +67,7 @@ body=$(cat "$RELEASE_NOTES")
 
 # Open a pull request for the release
 # See https://hub.github.com/hub-pull-request.1.html
-hub pull-request --push --message="$commit_msg" --message="$body" --base="unstable"
+hub pull-request \
+    --push \
+    --message="$commit_msg" --message="$body" \
+    --base="unstable"

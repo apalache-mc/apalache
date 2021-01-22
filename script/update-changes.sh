@@ -2,6 +2,9 @@
 
 # Run this script to update the CHANGES.md with the RELEASE-NOTES.md used in
 # the last release.
+#
+# NOTE: While this script can be run locally, is mainly desgined for use in our
+# `prepare-release` CI workflow.
 
 set -euo pipefail
 
