@@ -46,10 +46,21 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
 
       case OperEx(TlaActionOper.unchanged, args @ _*) =>
         // flatten all tuples, e.g., convert <<x, <<y, z>> >> to [x, y, z]
-        val flatArgs = flattenTuples(tla.tuple(args.map(transform) :_*))
-        // and map every x to x' = x
+        val flatArgs = flattenTuplesInUnchanged(tla.tuple(args.map(transform) :_*))
+        // map every x to x' = x
         val eqs = flatArgs map { x => tla.eql(tla.prime(x), x) }
-        tla.and(eqs :_*)
+        // x' = x /\ y' = y /\ z' = z
+        eqs match {
+          case Seq() =>
+            // yes, this happens when someone write UNCHANGED <<>>, UNCHANGED << << >> >>, etc.
+            tla.bool(true)
+
+          case Seq(one) =>
+            one
+
+          case _ =>
+            tla.and(eqs: _*)
+        }
 
       case OperEx(TlaSetOper.filter, boundEx, setEx, predEx) =>
         // rewrite { <<x, <<y, z>> >> \in XYZ: P(x, y, z) }
@@ -96,15 +107,21 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
         LetInEx( transform( body ), defs map { d => d.copy( body = transform( d.body ) ) } : _* )
   }
 
-  private def flattenTuples(ex: TlaEx): Seq[TlaEx] = ex match {
+  private def flattenTuplesInUnchanged(ex: TlaEx): Seq[TlaEx] = ex match {
     case OperEx(TlaFunOper.tuple, args @ _*) =>
-      args.map(flattenTuples).reduce(_ ++ _)
+      if (args.isEmpty) {
+        // Surprisingly, somebody has written UNCHANGED << >>, see issue #475.
+        Seq()
+      } else {
+        args.map(flattenTuplesInUnchanged).reduce(_ ++ _)
+      }
 
-    case NameEx(_) =>
-      Seq(ex)
+    case ValEx(_) =>
+      Seq()   // no point in priming literals
 
     case _ =>
-      throw new IllegalArgumentException("Expected a variable or a tuple of variables, found: " + ex)
+      // in general, UNCHANGED e becomes e' = e
+      Seq(ex)
   }
 
   private def expandExcept(topFun: TlaEx, accessors: Seq[TlaEx], newValues: Seq[TlaEx]): TlaEx = {
