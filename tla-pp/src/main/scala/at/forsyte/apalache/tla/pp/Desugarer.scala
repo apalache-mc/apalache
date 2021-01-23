@@ -2,9 +2,10 @@ package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaFunOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.transformations.standard.FlatLanguagePred
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
+
 import javax.inject.Singleton
 
 /**
@@ -51,9 +52,23 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
         tla.and(eqs :_*)
 
       case OperEx(TlaSetOper.filter, boundEx, setEx, predEx) =>
+        // rewrite { <<x, <<y, z>> >> \in XYZ: P(x, y, z) }
+        // to { x_y_z \in XYZ: P(x_y_z[1], x_y_z[1][1], x_y_z[1][2]) }
         OperEx(TlaSetOper.filter, collapseTuplesInFilter(transform(boundEx), transform(setEx), transform(predEx)) :_*)
 
+      case OperEx(TlaBoolOper.exists, boundEx, setEx, predEx) =>
+        // rewrite \E <<x, <<y, z>> >> \in XYZ: P(x, y, z)
+        // to \E x_y_z \in XYZ: P(x_y_z[1], x_y_z[1][1], x_y_z[1][2])
+        OperEx(TlaBoolOper.exists, collapseTuplesInFilter(transform(boundEx), transform(setEx), transform(predEx)) :_*)
+
+      case OperEx(TlaBoolOper.forall, boundEx, setEx, predEx) =>
+        // rewrite \A <<x, <<y, z>> >> \in XYZ: P(x, y, z)
+        // to \A x_y_z \in XYZ: P(x_y_z[1], x_y_z[1][1], x_y_z[1][2])
+        OperEx(TlaBoolOper.forall, collapseTuplesInFilter(transform(boundEx), transform(setEx), transform(predEx)) :_*)
+
       case OperEx(TlaSetOper.map, args @ _*) =>
+        // rewrite { <<x, <<y, z>> >> \in XYZ |-> e(x, y, z) }
+        // to { x_y_z \in XYZ |-> e(x_y_z[1], x_y_z[1][1], x_y_z[1][2])
         val trArgs = args map transform
         OperEx(TlaSetOper.map, collapseTuplesInMap(trArgs.head, trArgs.tail) :_*)
 
