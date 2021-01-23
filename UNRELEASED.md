@@ -13,6 +13,7 @@
 ### Bug fixes
 
  * handling big integers, #450
+ * expanding tuples in quantifiers, #476
 
 ### Features
 
