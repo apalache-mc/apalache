@@ -26,7 +26,7 @@ class SkolemizationMarker @Inject()(tracker: TransformationTracker)
 
   override def apply(e: TlaEx): TlaEx = { transform(e) }
 
-  def transform: TlaExTransformation = tracker.track {
+  def transform: TlaExTransformation = tracker.trackEx {
     case OperEx(TlaBoolOper.exists, name, set, pred) =>
       OperEx(BmcOper.skolem, tla.exists(name, set, transform(pred)))
 
