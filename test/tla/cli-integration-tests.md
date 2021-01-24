@@ -113,7 +113,7 @@ EXITCODE: OK
 ### check UnchangedExpr471.tla reports no error: regression for issue 471
 
 ```sh
-$ apalache-mc check --cinit=ConstInt --length=1 UnchangedExpr471.tla | sed 's/I@.*//'
+$ apalache-mc check --cinit=ConstInit --length=1 UnchangedExpr471.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
