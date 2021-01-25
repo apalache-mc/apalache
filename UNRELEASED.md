@@ -13,6 +13,7 @@
 ### Bug fixes
 
  * handling big integers, #450
+ * better parsing of SPECIFICATION in TLC configs, #468
 
 ### Features
 
