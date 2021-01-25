@@ -29,7 +29,7 @@ class ExpansionMarker @Inject()(tracker: TransformationTracker) extends TlaExTra
 
   // By default, the expressions are not wrapped with 'Expand'. Once the function crosses the border of an expression
   // that requires an expanded set, e.g., S \\union (SUBSET T), the parameter shallExpand changes to true.
-  def transform(shallExpand: Boolean): TlaExTransformation = tracker.track {
+  def transform(shallExpand: Boolean): TlaExTransformation = tracker.trackEx {
     case ex @ OperEx(op @ TlaSetOper.powerset, underlyingSet) =>
       if (shallExpand) {
         // Expand the set as well as the underlying set!

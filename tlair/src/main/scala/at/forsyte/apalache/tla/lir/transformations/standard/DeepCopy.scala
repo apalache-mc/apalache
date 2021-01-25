@@ -23,7 +23,6 @@ class DeepCopy( tracker : TransformationTracker ) {
     case TlaConstDecl( name ) => TlaConstDecl( name )
   }
 
-
   def deepCopyEx[T <: TlaEx]( ex : T ) : T = deepCopyExInternal( ex ).asInstanceOf[T]
 
   private def deepCopyExInternal : TlaExTransformation = tracker.track {
@@ -37,7 +36,6 @@ class DeepCopy( tracker : TransformationTracker ) {
   }
 
   def deepCopyModule( module: TlaModule ) = new TlaModule( module.name, module.declarations map deepCopyDecl )
-
 }
 
 object DeepCopy {

@@ -23,7 +23,7 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
 
   def transform: TlaExTransformation = nnf(neg = false)
 
-  private def nnf(neg: Boolean): TlaExTransformation = tracker.track {
+  private def nnf(neg: Boolean): TlaExTransformation = tracker.trackEx {
     case ValEx(TlaBool(b)) =>
       tla.bool(b ^ neg)
 

@@ -16,7 +16,7 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
   */
 class Reordering[T]( ord : Ordering[T], rankingFn : TlaEx => T, tracker : TransformationTracker ) {
 
-  def reorder : TlaExTransformation = tracker.track {
+  def reorder : TlaExTransformation = tracker.trackEx {
     // For now, both /\ and \/ are reordered
     case ex@OperEx( op@( TlaBoolOper.and | TlaBoolOper.or ), args@_* ) =>
       val reorderedArgs = args.sortBy( rankingFn )( ord ) map reorder

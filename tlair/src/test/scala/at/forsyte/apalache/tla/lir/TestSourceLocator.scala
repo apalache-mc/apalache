@@ -98,6 +98,10 @@ class TestSourceLocator extends FunSuite with TestingPredefs {
       exMap.update( originalEx.ID, originalEx )
       exMap.update( newEx.ID, newEx )
     }
+
+    override def onDeclTransformation(originalDecl: TlaDecl, newDecl: TlaDecl): Unit = {
+      // nothing added here, as onDeclTransformation is a new method
+    }
   }
 
   val changeListener = new ChangeListener()
@@ -152,7 +156,7 @@ class TestSourceLocator extends FunSuite with TestingPredefs {
   }
 
   test( "Test NoOp" ) {
-    val transformation = tracker.track {
+    val transformation = tracker.trackEx {
       identity
     }
 
