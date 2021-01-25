@@ -98,6 +98,10 @@ class TrivialTypeFinder extends TypeFinder[CellT]
     }
   }
 
+  override def onDeclTransformation(originalDecl: TlaDecl, newDecl: TlaDecl): Unit = {
+    // ignore transformations of declarations
+  }
+
   /**
     * Given a TLA+ expression, reconstruct the types and store them in an internal storage.
     * If the expression is not well-typed, diagnostic messages can be accessed with getTypeErrors.
