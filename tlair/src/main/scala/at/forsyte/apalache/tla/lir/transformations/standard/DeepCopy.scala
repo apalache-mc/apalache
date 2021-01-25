@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.{TlaDeclTransformation, TlaExTransformation, TransformationTracker}
 
 /**
   * DeepCopy constructs a structurally identical copy of a given TlaEx or TlaDecl, with fresh unique IDs.
@@ -9,8 +9,7 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
 class DeepCopy( tracker : TransformationTracker ) {
   def deepCopyDecl[T <: TlaDecl]( decl : T ) : T = deepCopyDeclInternal( decl ).asInstanceOf[T]
 
-  // TODO: Convert to DeclTransform once #444 is merged.
-  private def deepCopyDeclInternal( decl : TlaDecl ) : TlaDecl = decl match {
+  private def deepCopyDeclInternal: TlaDeclTransformation = tracker.trackDecl {
     case TlaAssumeDecl( bodyEx ) => TlaAssumeDecl( deepCopyEx( bodyEx ) )
     case TlaRecFunDecl( name, arg, argDom, defBody ) =>
       TlaRecFunDecl( name, arg, deepCopyEx( argDom ), deepCopyEx( defBody ) )
@@ -25,7 +24,7 @@ class DeepCopy( tracker : TransformationTracker ) {
 
   def deepCopyEx[T <: TlaEx]( ex : T ) : T = deepCopyExInternal( ex ).asInstanceOf[T]
 
-  private def deepCopyExInternal : TlaExTransformation = tracker.track {
+  private def deepCopyExInternal : TlaExTransformation = tracker.trackEx {
     case NullEx => NullEx
     case ValEx( v ) => ValEx( v )
     case NameEx( n ) => NameEx( n )
