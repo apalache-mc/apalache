@@ -21,9 +21,9 @@ Construct  | Supported? | Milestone | Comment
 ``F(x1, ..., x_n) == exp`` | ✔ / ✖ | - | Every application of `F` is replaced with its body. Recursive operators need [unrolling annotations](./principles.md#recursive-operators).
 ``f[x ∈ S] == exp`` | ✔ / ✖ | - | Only recursive functions that return integers or Booleans are supported.
 ``INSTANCE M WITH ...`` | ✔ / ✖ | - | No special treatment for ``~>``, ``\cdot``, ``ENABLED``
-``N(x1, ..., x_n) == INSTANCE M WITH...`` | ✔ / ✖ | - | Parameterized instances are not supported yet, LOCAL operator definitions inside instances may fail to work
+``N(x1, ..., x_n) == INSTANCE M WITH...`` | ✔ / ✖ | - | Parameterized instances are not supported
 ``THEOREM P`` | ✔ / ✖ | - | Parsed but not used
-``LOCAL def`` | ✔ | - | Handled by SANY
+``LOCAL def`` | ✔ | - | Replaced with local LET-IN definitions
 
 ### The constant operators
 
@@ -61,7 +61,7 @@ Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 `f[e]` | ✔ | - |
 `DOMAIN f` | ✔ | - |
-`[ x \in S ↦ e]` | ✔ / ✖ | - |  
+`[ x \in S ↦ e]` | ✔ | - |  
 `[ S -> T ]` | ✔ | - | Sometimes, the functions sets are expanded
 `[ f EXCEPT ![e1] = e2 ]` | ✔ | - |
 
@@ -97,7 +97,7 @@ Construct  | Supported? | Milestone | Comment
 `"c1...c_n"` | ✔ | - | A string is always mapped to a unique uninterpreted constant
 `STRING` | ✖ | - | It is an infinite set. We cannot handle infinite sets.
 `d1...d_n` | ✔ | - | As long as the SMT solver (Z3) accepts that large number
-`d1...d_n.d_n+1...d_m` | ✖ | - | Technical issue. We will implemented upon a user request.
+`d1...d_n.d_n+1...d_m` | ✖ | - | Technical issue. We will implement it upon a user request.
 
 #### Miscellaneous Constructs
 
@@ -106,14 +106,14 @@ Construct  | Supported? | Milestone | Comment
 `IF p THEN e1 ELSE e2` | ✔ | - | Provided that both e1 and e2 have the same type
 `CASE p1 -> e1 [] ... [] p_n -> e_n [] OTHER -> e` | ✔ | - | See the comment above
 `CASE p1 -> e1 [] ... [] p_n -> e_n` | ✖ | - | Introduce the default arm with `OTHER`.
-``LET d1 == e1 ... d_n == e_n IN e`` | ✔ / ✖ | `0.7-dev-calls` | All applications of `d1`, ..., `d_n` are replaced with the expressions `e1`, ... `e_n` respectively. LET-definitions without arguments are kept in place.
+``LET d1 == e1 ... d_n == e_n IN e`` | ✔ |  | All applications of `d1`, ..., `d_n` are replaced with the expressions `e1`, ... `e_n` respectively. LET-definitions without arguments are kept in place.
 multi-line `/\` and `\/` | ✔ | - |
 
 ### The Action Operators
 
 Construct  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
-``e'`` | ✔ / ✖ | - | Provided that e is a variable
+``e'`` | ✔ | - |
 ``[A]_e`` | ✖ | - | It does not matter for safety
 ``< A >_e`` | ✖ | - |
 ``ENABLED A`` | ✖ | - |
@@ -149,8 +149,8 @@ Operator  | Supported? | Milestone | Comment
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 ``<<...>>``, ``Head``, ``Tail``, ``Len``, ``SubSeq``, `Append`, `\o`, `f[e]` | ✔ | - | The sequence constructor ``<<...>>`` needs a [type annotation](types-and-annotations.md).
-``EXCEPT`` | ✖ | `0.9` | this operator do not seem to be often used
-``Seq(S)`` | ✖ | - | We need an upper bound on the length of the sequences.
+``EXCEPT`` | ✖ |   | If you need it, let us know, issue #324
+``Seq(S)`` | ✖ | - | If you need it, let us know, issue #314
 ``SelectSeq`` | ✖ | - | will not be supported in the near future
 
 ### FiniteSets
