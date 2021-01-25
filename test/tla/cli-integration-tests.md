@@ -110,6 +110,24 @@ EXITCODE: OK
 ## running the check command
 
 
+### check UnchangedExpr471.tla reports no error: regression for issue 471
+
+```sh
+$ apalache-mc check --cinit=ConstInit --length=1 UnchangedExpr471.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
+### check ExistTuple476.tla reports no error: regression for issue 476
+
+```sh
+$ apalache-mc check --length=1 ExistTuple476.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
 ### check InvSub for SafeMath reports no error: regression for issue 450
 
 ```sh
