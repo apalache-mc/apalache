@@ -58,11 +58,11 @@ Apalache in docker while sharing the working directory:
 
 ###### using the latest stable
 
-$ alias apalache="docker run --rm -v $(pwd):/var/apalache apalache/mc"
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache apalache/mc'
 
 ###### using the latest unstable
 
-$ alias apalache="docker run --rm -v $(pwd):/var/apalache apalache/mc:unstable"
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache apalache/mc:unstable'
 ```
 
 ## Using the unstable version of Apalache
@@ -93,7 +93,7 @@ $ docker run --rm -v <your-spec-directory>:/var/apalache apalache/mc:unstable <a
 To create an alias pointing to the `unstable` version:
 
 ```bash
-$ alias apalache="docker run --rm -v $(pwd):/var/apalache apalache/mc:unstable"
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache apalache/mc:unstable'
 ```
 
 ## Building an image

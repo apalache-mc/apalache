@@ -6,9 +6,31 @@
         <format>jar</format>
     </formats>
     <includeBaseDirectory>false</includeBaseDirectory>
+
+    <!-- including some files from the project directory -->
+    <fileSets>
+        <fileSet>
+            <directory>${project.parent.basedir}</directory>
+            <outputDirectory></outputDirectory>
+            <includes>
+                <include>README.md</include>
+                <include>LICENSE</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <!-- this is where SANY is looking for modules by default -->
+            <directory>${project.parent.basedir}/src/tla</directory>
+            <outputDirectory>tla2sany/StandardModules/</outputDirectory>
+            <includes>
+                <include>Apalache.tla</include>
+                <include>Typing.tla</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+
+    <!-- including the modules -->
     <moduleSets>
         <moduleSet>
-
             <!-- enable access to all projects in the current multimodule build! -->
             <useAllReactorProjects>true</useAllReactorProjects>
 
@@ -19,9 +41,10 @@
                 <include>at.forsyte.apalache:tla-assignments</include>
                 <include>at.forsyte.apalache:tla-bmcmt</include>
                 <include>at.forsyte.apalache:tool</include>
+                <include>at.forsyte.apalache</include>
             </includes>
             <binaries>
-                <outputDirectory>/</outputDirectory>
+                <outputDirectory></outputDirectory>
                 <unpack>true</unpack> <!-- unpack the jars in order to add them into the distribution jar -->
             </binaries>
         </moduleSet>
