@@ -10,10 +10,3 @@
          * Another change description, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
-### Bug fixes
-
- * handling big integers, #450
-
-### Features
-
- * constant simplification over strings, #197
