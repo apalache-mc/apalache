@@ -1648,6 +1648,12 @@ a sequence of type <code>Seq[T]</code> is no different from a function of type <
 In practice, we use different encodings for the general functions and sequences.</li>
 </ol>
 <p>Here is the list of the TLA+ language features that are currently supported by Apalache, following the <a href="https://lamport.azurewebsites.net/tla/summary.pdf">Summary of TLA+</a>.</p>
+<h2><a class="header" href="#safety-vs-liveness" id="safety-vs-liveness">Safety vs. Liveness</a></h2>
+<p>At the moment, Apalache is able to check invariants and inductive invariants.
+It means that you can only check safety with Apalache, unless you employ
+<a href="https://www.sciencedirect.com/science/article/pii/S1571066104804109?via%3Dihub">liveness-to-safety</a> transformation in your spec. It does not support
+liveness properties.  If you really like to see liveness implemented, upvote
+the <a href="https://github.com/informalsystems/apalache/issues/488">liveness feature</a>.</p>
 <h2><a class="header" href="#language" id="language">Language</a></h2>
 <h3><a class="header" href="#module-level-constructs" id="module-level-constructs">Module-Level constructs</a></h3>
 <table><thead><tr><th>Construct</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
