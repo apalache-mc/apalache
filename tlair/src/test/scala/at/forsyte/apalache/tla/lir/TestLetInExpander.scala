@@ -16,7 +16,7 @@ class TestLetInExpander extends FunSuite with TestingPredefs {
 
   object Trackers {
     val NoTracker : TransformationTracker = new TransformationTracker {
-      override def track( t : TlaExTransformation ) : TlaExTransformation = t
+      override def trackEx( t : TlaExTransformation ) : TlaExTransformation = t
     }
   }
 

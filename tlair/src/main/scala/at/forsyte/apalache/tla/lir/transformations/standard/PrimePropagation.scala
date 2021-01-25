@@ -13,7 +13,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 class PrimePropagation(tracker: TransformationTracker) extends TlaExTransformation {
   override def apply(e: TlaEx): TlaEx = transform(primed = false)(e)
 
-  private def transform(primed: Boolean): TlaEx => TlaEx = tracker.track {
+  private def transform(primed: Boolean): TlaEx => TlaEx = tracker.trackEx {
     case OperEx(TlaActionOper.prime, e) =>
       transform(primed)(e)
 

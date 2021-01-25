@@ -149,7 +149,7 @@ class IncrementalRenaming @Inject()(tracker : TransformationTracker) extends Tla
     */
   private def getNextUniqueFromBase( name: String ) = getNextUnique( getBase( name ) )
 
-  private def rename( alreadyRenamed: Map[String,String] ): TlaExTransformation = tracker.track {
+  private def rename( alreadyRenamed: Map[String,String] ): TlaExTransformation = tracker.trackEx {
     case ex @ NameEx(name) =>
       // If a name has been marked for replacement (i.e. is an entry in alreadyRenamed)
       // we simply substitute in the pre-computed new name
@@ -249,7 +249,7 @@ class IncrementalRenaming @Inject()(tracker : TransformationTracker) extends Tla
   /**
     * Reduces all variable counters by the amount specified in offsets.
     */
-  private[lir] def shiftCounters( offsets: counterMapType ): TlaExTransformation = tracker.track {
+  private[lir] def shiftCounters( offsets: counterMapType ): TlaExTransformation = tracker.trackEx {
     case ex @ NameEx(name) =>
       val newName = offsetName( offsets )( name )
       if ( newName == name ) ex

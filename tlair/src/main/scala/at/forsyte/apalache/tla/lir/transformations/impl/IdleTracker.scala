@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
   * This class may be useful when no tracking is needed.
   */
 class IdleTracker extends TransformationTracker {
-  override def track(transformation: TlaExTransformation): TlaExTransformation = {
+  override def trackEx( transformation: TlaExTransformation): TlaExTransformation = {
     transformation
   }
 }
