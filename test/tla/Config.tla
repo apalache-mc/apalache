@@ -34,6 +34,12 @@ Spec ==
 Spec2 ==
     Init2 /\ [][Next2]_x
 
+Spec4 ==
+    (Init2 /\ [][Next2]_x) /\ WF_x(Next2)
+
+Spec5 ==
+    Init2 /\ ([][Next2]_x /\ SF_x(Next2))
+
 \* the default invariant
 Inv ==
     x < 1

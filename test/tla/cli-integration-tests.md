@@ -694,6 +694,40 @@ The outcome is: NoError
 ...
 ```
 
+### configure via TLC config with SPECIFICATION and fairness
+
+```sh
+$ apalache-mc check --config=Config4.cfg Config.tla | sed 's/[IEW]@.*//'
+...
+  > Config4.cfg: Loading TLC configuration
+...
+  > Config4.cfg: Using SPECIFICATION Spec4
+...
+  > Set the initialization predicate to Init2
+  > Set the transition predicate to Next2
+  > Set an invariant to Inv2
+...
+The outcome is: NoError
+...
+```
+
+### configure via TLC config with SPECIFICATION and fairness
+
+```sh
+$ apalache-mc check --config=Config5.cfg Config.tla | sed 's/[IEW]@.*//'
+...
+  > Config5.cfg: Loading TLC configuration
+...
+  > Config5.cfg: Using SPECIFICATION Spec5
+...
+  > Set the initialization predicate to Init2
+  > Set the transition predicate to Next2
+  > Set an invariant to Inv2
+...
+The outcome is: NoError
+...
+```
+
 ### configure complains about circular dependencies
 
 ```sh
