@@ -52,7 +52,7 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
         // x' = x /\ y' = y /\ z' = z
         eqs match {
           case Seq() =>
-            // yes, this happens when someone write UNCHANGED <<>>, UNCHANGED << << >> >>, etc.
+            // results from UNCHANGED <<>>, UNCHANGED << << >> >>, etc.
             tla.bool(true)
 
           case Seq(one) =>
