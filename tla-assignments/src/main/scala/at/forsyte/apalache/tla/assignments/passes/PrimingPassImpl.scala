@@ -61,19 +61,21 @@ class PrimingPassImpl @Inject()(options: PassOptions,
           val primeTransformer = Prime(constSet, tracker) // add primes to constants
           val cinitPrimedName = name + "Primed"
           logger.info(s"  > Introducing $cinitPrimedName for $name'")
-          val newBody = trSeq( baseTransformationSequence :+ primeTransformer)(deepCopy(operatorBody))
+          val newBody = trSeq( baseTransformationSequence :+ primeTransformer)(deepCopy.deepCopyEx(operatorBody))
           Some( TlaOperDecl( cinitPrimedName, List(), newBody ) )
 
         case _ =>
           None
       }
 
-    val initName = options.getOrElse("checker", "init", "Init").asInstanceOf[String]
+    val initName = options.getOrElse("checker", "init", "Init")
     val primeTransformer = Prime(varSet, tracker)
     val initPrimedName = initName + "Primed"
     logger.info(s"  > Introducing $initPrimedName for $initName'")
     // add primes to variables
-    val newBody = trSeq( baseTransformationSequence :+ primeTransformer )( deepCopy( bodyMap( initName ).body ) )
+    val newBody = trSeq( baseTransformationSequence :+ primeTransformer )(
+      deepCopy.deepCopyEx( bodyMap( initName ).body )
+    )
     val initPrimed = Some( TlaOperDecl( initPrimedName, List(), newBody ) )
 
     val newDeclarations: Seq[TlaDecl] = declarations ++ Seq(cinitPrimed, initPrimed).flatten
