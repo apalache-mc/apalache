@@ -350,23 +350,44 @@ class ConfigurationPassImpl @Inject() (
               case OperEx(TlaTempOper.strongFairness, _*) => false
               case _                                      => true
             }
-nonFairness match {
-  case Seq(
-    OperEx(TlaOper.apply, NameEx(init)), // Init
-    OperEx(TlaTempOper.box, OperEx(TlaActionOper.stutter, OperEx(TlaOper.apply, NameEx(next)), _*)) // [][Next]_vars
-  ) |
-      Seq(
-        OperEx(TlaTempOper.box, OperEx(TlaActionOper.stutter, OperEx(TlaOper.apply, NameEx(next)), _*)),
-        OperEx(TlaOper.apply, NameEx(init)) // Init
-      ) =>
-    if (fairness.nonEmpty) {
-      val es = fairness.mkString(" /\\ ")
-      val msg = s"Fairness constraints are ignored by Apalache: $es"
-      logger.warn(msg)
-    }
-    (init, next)
-  case _ => throwError(decl)
-}
+            val (init, next) =
+              nonFairness match {
+                case Seq(
+                      OperEx(TlaOper.apply, NameEx(init)), // Init
+                      OperEx(
+                        TlaTempOper.box,
+                        OperEx(
+                          TlaActionOper.stutter,
+                          OperEx(TlaOper.apply, NameEx(next)),
+                          _*
+                        )
+                      ) // [][Next]_vars
+                    ) =>
+                  (init, next)
+
+                case Seq(
+                      OperEx(
+                        TlaTempOper.box,
+                        OperEx(
+                          TlaActionOper.stutter,
+                          OperEx(TlaOper.apply, NameEx(next)),
+                          _*
+                        )
+                      ),
+                      OperEx(TlaOper.apply, NameEx(init)) // Init
+                    ) =>
+                  (init, next)
+
+                case _ => throwError(decl)
+              }
+
+            if (fairness.nonEmpty) {
+              val es = fairness.mkString(" /\\ ")
+              val msg = s"Fairness constraints are ignored by Apalache: $es"
+              logger.warn(msg)
+            }
+
+            (init, next)
         }
 
       case Some(d) =>
