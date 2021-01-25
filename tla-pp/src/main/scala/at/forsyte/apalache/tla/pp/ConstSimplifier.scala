@@ -23,7 +23,7 @@ class ConstSimplifier(tracker: TransformationTracker) extends ConstSimplifierBas
     rewriteDeep(rootExpr)
   }
 
-  private def rewriteDeep: TlaExTransformation = tracker.track {
+  private def rewriteDeep: TlaExTransformation = tracker.trackEx {
     case ex @ ValEx(_) => ex
 
     case ex @ NameEx(_) => ex

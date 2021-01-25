@@ -17,16 +17,14 @@ import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean) extends TlaExTransformation {
   override def apply(ex: TlaEx): TlaEx = transform(ex)
 
-  def transform: TlaExTransformation = tracker.track {
+  def transform: TlaExTransformation = tracker.trackEx {
     // interesting case
     case LetInEx(body, defs @ _*) =>
       /** LET-IN may be nested in the body ... */
       val expandedBody = transform(body)
 
       /** .. or another operator */
-      val expandedDefs = defs map { d =>
-        d.copy(body = transform(d.body))
-      }
+      val expandedDefs = defs map tracker.trackOperDecl { d => d.copy(body = transform(d.body)) }
 
       def needsExpansion(d: TlaOperDecl): Boolean = {
         // Expand only the definitions that:
