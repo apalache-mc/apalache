@@ -44,12 +44,19 @@ To try the latest cool features, check out the [unstable branch].
 - Consult the (WIP) [Idioms for writing better TLA+][idioms].
 - Consult the (WIP) [TLA+ language manual for engineers][language-manual].
 
+## Website
+
+[apalache.informal.systems][] is the main website of the project.
+
 ## Community
 
 - Join the chat in the [Apalache zulip stream].
 - [Contribute](./CONTRIBUTING.md) to the development of Apalache.
 
 ## Industrial examples
+
+- Check [Light client specs] and [Model-based testing] of the Tendermint
+  light client.
 
 - Check [Tendermint specs] to see how we use TLA+ and Apalache at Informal to
   design and specify protocols for the [Tendermint blockchain].
@@ -126,3 +133,6 @@ Our old website is still available at https://forsyte.at/research/apalache/ .
 [user-manual-docker]: https://apalache.informal.systems/docs/apalache/installation/docker.html
 [language-manual]: https://apalache.informal.systems/docs/lang/index.html
 [idioms]: https://apalache.informal.systems//docs/idiomatic/index.html
+[Light client specs]: https://github.com/tendermint/spec/tree/master/rust-spec/lightclient/verification
+[Model-based testing]: https://github.com/informalsystems/tendermint-rs/tree/master/light-client/tests/support/model_based#light-client-model-based-testing-guide
+[apalache.informal.systems]: https://apalache.informal.systems
