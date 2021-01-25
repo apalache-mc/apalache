@@ -350,47 +350,23 @@ class ConfigurationPassImpl @Inject() (
               case OperEx(TlaTempOper.strongFairness, _*) => false
               case _                                      => true
             }
-            if (nonFairness.length != 2) {
-              throwError(decl)
-            } else {
-              if (fairness.nonEmpty) {
-                val es = fairness.mkString(" /\\ ")
-                val msg = s"Fairness constraints are ignored by Apalache: $es"
-                logger.warn(msg)
-              }
-              nonFairness match {
-                case Seq(
-                      // Init
-                      OperEx(TlaOper.apply, NameEx(init)),
-                      // [][Next]_vars
-                      OperEx(
-                        TlaTempOper.box,
-                        OperEx(
-                          TlaActionOper.stutter,
-                          OperEx(TlaOper.apply, NameEx(next)),
-                          _*
-                        )
-                      )
-                    ) =>
-                  (init, next)
-
-                case Seq(
-                      // [][Next]_vars
-                      OperEx(
-                        TlaTempOper.box,
-                        OperEx(
-                          TlaActionOper.stutter,
-                          OperEx(TlaOper.apply, NameEx(next)),
-                          _*
-                        )
-                      ),
-                      // Init
-                      OperEx(TlaOper.apply, NameEx(init))
-                    )
-                    =>
-                  (init, next)
-              }
-            }
+nonFairness match {
+  case Seq(
+    OperEx(TlaOper.apply, NameEx(init)), // Init
+    OperEx(TlaTempOper.box, OperEx(TlaActionOper.stutter, OperEx(TlaOper.apply, NameEx(next)), _*)) // [][Next]_vars
+  ) |
+      Seq(
+        OperEx(TlaTempOper.box, OperEx(TlaActionOper.stutter, OperEx(TlaOper.apply, NameEx(next)), _*)),
+        OperEx(TlaOper.apply, NameEx(init)) // Init
+      ) =>
+    if (fairness.nonEmpty) {
+      val es = fairness.mkString(" /\\ ")
+      val msg = s"Fairness constraints are ignored by Apalache: $es"
+      logger.warn(msg)
+    }
+    (init, next)
+  case _ => throwError(decl)
+}
         }
 
       case Some(d) =>
