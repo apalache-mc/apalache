@@ -25,12 +25,15 @@ course].
 
 ## Releases
 
-Check the [releases page].
+Check the [releases page][].
 
-We recommend that you run the latest stable docker image `apalache/mc:latest`,
-or checkout the source code from [master], which accumulates bugfixes over the
-latest release. For more information, see [the manual][manual-docker].
-To try the latest cool features, check out the [unstable branch].
+For a stable release, we recommend that you run the latest docker image
+`apalache/mc:latest` or checkout the source code from our latest release tag.
+
+To try the latest cool features, check out the [unstable branch][].
+
+For more information on installation options, see [the
+manual][user-manual-installation].
 
 ## Getting started
 
@@ -60,7 +63,7 @@ To try the latest cool features, check out the [unstable branch].
 ## Talks
 
 - [How TLA+ and Apalache Helped Us to Design the Tendermint Light Client](https://www.crowdcast.io/e/interchain-conversations-II/38).
-    Interchain Conversations 2020 (December 2020).
+  Interchain Conversations 2020 (December 2020).
 
 - [Model-based testing with TLA+ and Apalache](https://youtu.be/aveoIMphzW8).
   TLA+ Community Event 2020 (October 2020).
@@ -82,7 +85,7 @@ To try the latest cool features, check out the [unstable branch].
 
 ## Performance
 
-We are collecting [apalache benchmarks].  See the Apalache performance when
+We are collecting [apalache benchmarks]. See the Apalache performance when
 [checking inductive invariants] and running [bounded model checking]. Versions
 0.6.0 and 0.7.2 are a major improvement over version 0.5.2 (the version
 [reported at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549)).
@@ -107,26 +110,27 @@ the [CI configuration](./.github/workflows/deploy.yml).
 
 Our old website is still available at https://forsyte.at/research/apalache/ .
 
-[TLA+]: http://lamport.azurewebsites.net/tla/tla.html
-[Microsoft Z3]: https://github.com/Z3Prover/z3
+[tla+]: http://lamport.azurewebsites.net/tla/tla.html
+[microsoft z3]: https://github.com/Z3Prover/z3
 [supported features]: ./docs/features.md
-[TLC]: http://lamport.azurewebsites.net/tla/tools.html
-[Leslie Lamport's page on TLA+]: http://lamport.azurewebsites.net/tla/tla.html
-[Video course]: http://lamport.azurewebsites.net/video/videos.html
+[tlc]: http://lamport.azurewebsites.net/tla/tools.html
+[leslie lamport's page on tla+]: http://lamport.azurewebsites.net/tla/tla.html
+[video course]: http://lamport.azurewebsites.net/video/videos.html
 [releases page]: https://github.com/informalsystems/apalache/releases
 [master]: https://github.com/informalsystems/apalache/tree/master
 [unstable branch]: https://github.com/informalsystems/apalache/tree/unstable
-[Apalache zulip stream]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache
-[Tendermint specs]: https://github.com/tendermint/spec/tree/master/rust-spec
-[Tendermint blockchain]: https://github.com/tendermint
-[standard repository of TLA+ examples]: https://github.com/tlaplus/Examples
+[apalache zulip stream]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache
+[tendermint specs]: https://github.com/tendermint/spec/tree/master/rust-spec
+[tendermint blockchain]: https://github.com/tendermint
+[standard repository of tla+ examples]: https://github.com/tlaplus/Examples
 [apalache benchmarks]: https://github.com/informalsystems/apalache-tests
 [checking inductive invariants]: https://github.com/informalsystems/apalache-tests/blob/master/results/001indinv-report.md
 [bounded model checking]: https://github.com/informalsystems/apalache-tests/blob/master/results/002bmc-report.md
 [user-manual]: http://informalsystems.github.io/apalache/docs/index.html
 [user-manual-docker]: https://apalache.informal.systems/docs/apalache/installation/docker.html
+[user-manual-installation]: https://apalache.informal.systems/docs/apalache/installation/index.html
 [language-manual]: https://apalache.informal.systems/docs/lang/index.html
 [idioms]: https://apalache.informal.systems//docs/idiomatic/index.html
-[Light client specs]: https://github.com/tendermint/spec/tree/master/rust-spec/lightclient/verification
-[Model-based testing]: https://github.com/informalsystems/tendermint-rs/tree/master/light-client/tests/support/model_based#light-client-model-based-testing-guide
+[light client specs]: https://github.com/tendermint/spec/tree/master/rust-spec/lightclient/verification
+[model-based testing]: https://github.com/informalsystems/tendermint-rs/tree/master/light-client/tests/support/model_based#light-client-model-based-testing-guide
 [apalache.informal.systems]: https://apalache.informal.systems
