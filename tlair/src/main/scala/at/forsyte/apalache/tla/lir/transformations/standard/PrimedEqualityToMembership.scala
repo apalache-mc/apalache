@@ -15,7 +15,7 @@ class PrimedEqualityToMembership(tracker: TransformationTracker) extends TlaExTr
     transform(ex)
   }
 
-  def transform: TlaExTransformation = tracker.track {
+  def transform: TlaExTransformation = tracker.trackEx {
     // interesting case
     case OperEx(TlaOper.eq, lhs@OperEx(TlaActionOper.prime, NameEx(name)), rhs) =>
       OperEx(TlaSetOper.in, lhs, OperEx(TlaSetOper.enumSet, rhs))

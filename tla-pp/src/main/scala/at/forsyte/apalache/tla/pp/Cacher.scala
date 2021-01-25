@@ -37,7 +37,7 @@ class Cacher( nameGenerator: UniqueNameGenerator, tracker : TransformationTracke
                                       operNames: Set[String],
                                       appMap: Map[TlaEx, String],
                                       letInDecisionFn: TlaOperDecl => Boolean
-                                    ) : TlaExTransformation = tracker.track {
+                                    ) : TlaExTransformation = tracker.trackEx {
     case ex@OperEx( TlaOper.apply, opName@NameEx( operName ), args@_* ) if operNames.contains(operName) =>
       // Assume ex is in the domain of appMap
       appMap.get( ex ).map(

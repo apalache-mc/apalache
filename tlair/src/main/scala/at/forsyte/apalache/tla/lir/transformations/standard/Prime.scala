@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaOperDecl}
 
 object Prime {
   private def primeLeaf( vars : Set[String], tracker : TransformationTracker ) : TlaExTransformation =
-    tracker.track {
+    tracker.trackEx {
       case ex@NameEx( name ) if vars.contains( name ) =>
         tla.prime( ex )
 
@@ -21,7 +21,7 @@ object Prime {
     *
     * a' + b > 0 --> a' + b' > 0
     */
-  def apply( vars : Set[String], tracker : TransformationTracker ) : TlaExTransformation = tracker.track { ex =>
+  def apply( vars : Set[String], tracker : TransformationTracker ) : TlaExTransformation = tracker.trackEx { ex =>
     val tr = primeLeaf( vars, tracker )
     lazy val self = apply(vars, tracker)
     ex match {

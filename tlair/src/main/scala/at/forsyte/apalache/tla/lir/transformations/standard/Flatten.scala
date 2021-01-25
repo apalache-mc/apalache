@@ -11,7 +11,7 @@ object Flatten {
   }
 
   private def flattenOne( tracker : TransformationTracker ) : TlaExTransformation =
-    tracker.track {
+    tracker.trackEx {
       case ex@OperEx( TlaBoolOper.and | TlaBoolOper.or, args@_* ) =>
         val hasSameOper = sameOp( ex.oper )(_)
         // We're looking for cases of OperEx( op1, ..., OperEx( op2, ...),... ) where op1 == op2
@@ -44,7 +44,7 @@ object Flatten {
     * Example:
     * ( a /\ b) /\ c [/\(/\(a,b),c)] -> a /\ b /\ c [/\(a,b,c)]
     */
-  def apply( tracker : TransformationTracker ) : TlaExTransformation = tracker.track { ex =>
+  def apply( tracker : TransformationTracker ) : TlaExTransformation = tracker.trackEx { ex =>
     val tr = flattenOne( tracker )
     lazy val self = apply( tracker )
     ex match {

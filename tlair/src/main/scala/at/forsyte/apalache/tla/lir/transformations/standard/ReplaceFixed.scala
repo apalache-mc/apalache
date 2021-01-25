@@ -8,7 +8,7 @@ object ReplaceFixed {
                   replacedEx : TlaEx,
                   newEx : => TlaEx, // takes a [=> TlaEx] to allow for the creation of new instances (with distinct UIDs)
                   tracker : TransformationTracker
-                ) : TlaExTransformation = tracker.track {
+                ) : TlaExTransformation = tracker.trackEx {
     ex => if ( ex == replacedEx ) newEx else ex
   }
 
@@ -20,7 +20,7 @@ object ReplaceFixed {
              replacedEx : TlaEx,
              newEx : => TlaEx, // takes a [=> TlaEx] to allow for the creation of new instances (with distinct UIDs)
              tracker : TransformationTracker
-           ) : TlaExTransformation = tracker.track { ex =>
+           ) : TlaExTransformation = tracker.trackEx { ex =>
     val tr = replaceOne( replacedEx, newEx, tracker )
     lazy val self = apply( replacedEx, newEx, tracker )
     ex match {

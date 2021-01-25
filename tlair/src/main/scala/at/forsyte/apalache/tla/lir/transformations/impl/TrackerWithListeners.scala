@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.lir.transformations._
   */
 sealed case class TrackerWithListeners(listeners: TransformationListener*)
     extends TransformationTracker {
-  override def track(
+  override def trackEx(
       transformation: TlaExTransformation
   ): TlaExTransformation = { ex =>
     val newEx = transformation(ex)

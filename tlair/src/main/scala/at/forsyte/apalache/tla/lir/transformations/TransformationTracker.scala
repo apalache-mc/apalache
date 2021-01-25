@@ -16,7 +16,7 @@ trait TransformationTracker {
     * @param tr an expression transformation
     * @return a new transformation that applies tr and tracks the changes
     */
-  def track(tr: TlaExTransformation): TlaExTransformation
+  def trackEx(tr: TlaExTransformation): TlaExTransformation
 
   /**
     * Decorate a declaration transformation with a tracker.
@@ -47,7 +47,7 @@ trait TransformationTracker {
     */
   def hold(from: TlaEx, to: TlaEx): TlaEx = {
     def tr(f: TlaEx): TlaEx = to
-    track(tr)(from)
+    trackEx(tr)(from)
   }
 
   /**

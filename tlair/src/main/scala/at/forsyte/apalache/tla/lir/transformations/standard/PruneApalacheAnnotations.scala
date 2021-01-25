@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir.transformations._
 
 object PruneApalacheAnnotations {
   private def pruneOne( tracker : TransformationTracker ) : TlaExTransformation =
-    tracker.track {
+    tracker.trackEx {
       case OperEx( BmcOper.withType, arg, typeAnnotation ) => arg
       case e => e
     }
@@ -17,7 +17,7 @@ object PruneApalacheAnnotations {
     * Example:
     * S <: {Int} -> S
     */
-  def apply( tracker : TransformationTracker ) : TlaExTransformation = tracker.track { ex =>
+  def apply( tracker : TransformationTracker ) : TlaExTransformation = tracker.trackEx { ex =>
     val tr = pruneOne( tracker )
     lazy val self = apply( tracker )
     ex match {

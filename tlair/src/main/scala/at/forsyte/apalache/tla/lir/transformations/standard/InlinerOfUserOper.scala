@@ -30,7 +30,7 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker)
     else if (k == 0) Predef.identity
     else transform( stepLimitOpt = Some( kStepParameters( k, post ) ) )
 
-  def transform(stepLimitOpt: Option[kStepParameters]): TlaExTransformation = tracker.track {
+  def transform(stepLimitOpt: Option[kStepParameters]): TlaExTransformation = tracker.trackEx {
     // interesting case: applying a user-defined operator
     case ex @ OperEx(TlaOper.apply, NameEx(name), args @ _*) =>
       // Jure, 5.7.19: Can 0-arity operators ever appear as standalone NameEx, without

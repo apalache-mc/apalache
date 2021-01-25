@@ -156,7 +156,7 @@ class TestSourceLocator extends FunSuite with TestingPredefs {
   }
 
   test( "Test NoOp" ) {
-    val transformation = tracker.track {
+    val transformation = tracker.trackEx {
       identity
     }
 
