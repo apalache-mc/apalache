@@ -26,14 +26,7 @@ object ReplaceFixed {
     ex match {
       case LetInEx( body, defs@_* ) =>
         // Transform bodies of all op.defs
-        def xform: TlaOperDecl => TlaOperDecl =
-          tracker.trackOperDecl { d: TlaOperDecl =>
-            d.copy(
-              body = self(d.body)
-            )
-          }
-
-        val newDefs = defs map xform
+        val newDefs = defs map tracker.trackOperDecl { d => d.copy(body = self(d.body)) }
         val newBody = self( body )
         val retEx = if ( defs == newDefs && body == newBody ) ex else LetInEx( newBody, newDefs : _* )
         tr( retEx )

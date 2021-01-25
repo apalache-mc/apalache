@@ -131,7 +131,7 @@ class SourceStore extends TransformationListener with LazyLogging {
     * @param id an expression identifier
     * @return Some(location), when the expression has source information, and None otherwise
     */
-  def findOrLog(id: UID): Option[SourceLocation] = {
+  def findOrWarn(id: UID): Option[SourceLocation] = {
     find(id) match {
       case some @ Some(_) => some
       case None =>

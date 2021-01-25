@@ -25,10 +25,7 @@ package object transformations {
       transformation: TlaExTransformation
   ): TlaDeclTransformation = tracker.trackDecl {
     case d @ TlaOperDecl(_, _, b) =>
-      val copy = d.copy(body = transformation(b))
-      // see issue #345
-      copy.isRecursive = d.isRecursive
-      copy
+      d.copy(body = transformation(b))
 
     case d => d
   }

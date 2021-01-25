@@ -57,7 +57,7 @@ object Flatten {
             )
           }
 
-        val newDefs = defs map xform
+        val newDefs = defs map tracker.trackOperDecl { d => d.copy(body = self(d.body)) }
         val newBody = self( body )
         val retEx = if ( defs == newDefs && body == newBody ) ex else LetInEx( newBody, newDefs : _* )
         tr( retEx )

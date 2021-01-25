@@ -21,7 +21,7 @@ class SaveToStoreTracker(sourceStore: SourceStore) extends TransformationTracker
     input: TlaEx =>
       val output = tr(input)
       if (output.ID != input.ID) {
-        sourceStore.findOrLog(input.ID).foreach { loc => sourceStore.add(output.ID, loc) }
+        sourceStore.findOrWarn(input.ID).foreach { loc => sourceStore.add(output.ID, loc) }
       }
       output
   }
@@ -36,7 +36,7 @@ class SaveToStoreTracker(sourceStore: SourceStore) extends TransformationTracker
     input: TlaDecl =>
       val output = tr(input)
       if (output.ID != input.ID) {
-        sourceStore.findOrLog(input.ID).foreach { loc => sourceStore.add(output.ID, loc) }
+        sourceStore.findOrWarn(input.ID).foreach { loc => sourceStore.add(output.ID, loc) }
       }
       output
   }
@@ -51,7 +51,7 @@ class SaveToStoreTracker(sourceStore: SourceStore) extends TransformationTracker
     input: TlaOperDecl =>
       val output = tr(input)
       if (output.ID != input.ID) {
-        sourceStore.findOrLog(input.ID).foreach { loc => sourceStore.add(output.ID, loc) }
+        sourceStore.findOrWarn(input.ID).foreach { loc => sourceStore.add(output.ID, loc) }
       }
       output
   }

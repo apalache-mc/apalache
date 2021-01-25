@@ -27,7 +27,8 @@ trait TransformationTracker {
   def trackDecl(tr: TlaDeclTransformation): TlaDeclTransformation
 
   /**
-    * A specialized version of trackDecl, which is tuned to TlaOperDecl.
+    * A specialized version of trackDecl, which is tuned to TlaOperDecl. Most transformation apply only to
+    * user-defined operators. That is why we have added a specialized method for it.
     *
     * @param tr a declaration transformation
     * @return a new declaration transformation that applies tr and tracks the changes
