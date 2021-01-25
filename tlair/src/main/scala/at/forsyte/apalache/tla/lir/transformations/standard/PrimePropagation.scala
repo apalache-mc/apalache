@@ -16,6 +16,7 @@ import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx}
   */
 class PrimePropagation(tracker: TransformationTracker, stateVars: Set[String])
     extends TlaExTransformation {
+
   /**
     * Propagate primes in the expression to the state variables.
     * All names that are different from state variables should subsume prime.
@@ -43,12 +44,9 @@ class PrimePropagation(tracker: TransformationTracker, stateVars: Set[String])
           }
 
         case ex @ LetInEx(body, defs @ _*) =>
-          // TODO: fix as soon as PR #444 is merged
-          val newDefs = defs.map { x =>
-            x.copy(
-              body = transform(primeToAdd)(x.body)
-            )
-          }
+          val newDefs = defs.map(tracker.trackOperDecl { x =>
+            x.copy(body = transform(primeToAdd)(x.body))
+          })
           val newBody = transform(primeToAdd)(body)
           if (defs == newDefs && body == newBody) ex
           else LetInEx(newBody, newDefs: _*)
