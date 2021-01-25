@@ -181,9 +181,9 @@
 <tr><td><code>F(x1, ..., x_n) == exp</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Every application of <code>F</code> is replaced with its body. Recursive operators need <a href="./principles.html#recursive-operators">unrolling annotations</a>.</td></tr>
 <tr><td><code>f[x ∈ S] == exp</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Only recursive functions that return integers or Booleans are supported.</td></tr>
 <tr><td><code>INSTANCE M WITH ...</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>No special treatment for <code>~&gt;</code>, <code>\cdot</code>, <code>ENABLED</code></td></tr>
-<tr><td><code>N(x1, ..., x_n) == INSTANCE M WITH...</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Parameterized instances are not supported yet, LOCAL operator definitions inside instances may fail to work</td></tr>
+<tr><td><code>N(x1, ..., x_n) == INSTANCE M WITH...</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Parameterized instances are not supported</td></tr>
 <tr><td><code>THEOREM P</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Parsed but not used</td></tr>
-<tr><td><code>LOCAL def</code></td><td align="center">✔</td><td align="center">-</td><td>Handled by SANY</td></tr>
+<tr><td><code>LOCAL def</code></td><td align="center">✔</td><td align="center">-</td><td>Replaced with local LET-IN definitions</td></tr>
 </tbody></table>
 <h3><a class="header" href="#the-constant-operators" id="the-constant-operators">The constant operators</a></h3>
 <h4><a class="header" href="#logic" id="logic">Logic</a></h4>
@@ -212,7 +212,7 @@ replaced with a constant.</p>
 <table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
 <tr><td><code>f[e]</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>DOMAIN f</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
-<tr><td><code>[ x \in S ↦ e]</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td></td></tr>
+<tr><td><code>[ x \in S ↦ e]</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>[ S -&gt; T ]</code></td><td align="center">✔</td><td align="center">-</td><td>Sometimes, the functions sets are expanded</td></tr>
 <tr><td><code>[ f EXCEPT ![e1] = e2 ]</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 </tbody></table>
@@ -240,19 +240,19 @@ Note that our type system distinguishes tuples from general functions.</p>
 <tr><td><code>&quot;c1...c_n&quot;</code></td><td align="center">✔</td><td align="center">-</td><td>A string is always mapped to a unique uninterpreted constant</td></tr>
 <tr><td><code>STRING</code></td><td align="center">✖</td><td align="center">-</td><td>It is an infinite set. We cannot handle infinite sets.</td></tr>
 <tr><td><code>d1...d_n</code></td><td align="center">✔</td><td align="center">-</td><td>As long as the SMT solver (Z3) accepts that large number</td></tr>
-<tr><td><code>d1...d_n.d_n+1...d_m</code></td><td align="center">✖</td><td align="center">-</td><td>Technical issue. We will implemented upon a user request.</td></tr>
+<tr><td><code>d1...d_n.d_n+1...d_m</code></td><td align="center">✖</td><td align="center">-</td><td>Technical issue. We will implement it upon a user request.</td></tr>
 </tbody></table>
 <h4><a class="header" href="#miscellaneous-constructs" id="miscellaneous-constructs">Miscellaneous Constructs</a></h4>
 <table><thead><tr><th>Construct</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
 <tr><td><code>IF p THEN e1 ELSE e2</code></td><td align="center">✔</td><td align="center">-</td><td>Provided that both e1 and e2 have the same type</td></tr>
 <tr><td><code>CASE p1 -&gt; e1 [] ... [] p_n -&gt; e_n [] OTHER -&gt; e</code></td><td align="center">✔</td><td align="center">-</td><td>See the comment above</td></tr>
 <tr><td><code>CASE p1 -&gt; e1 [] ... [] p_n -&gt; e_n</code></td><td align="center">✖</td><td align="center">-</td><td>Introduce the default arm with <code>OTHER</code>.</td></tr>
-<tr><td><code>LET d1 == e1 ... d_n == e_n IN e</code></td><td align="center">✔ / ✖</td><td align="center"><code>0.7-dev-calls</code></td><td>All applications of <code>d1</code>, ..., <code>d_n</code> are replaced with the expressions <code>e1</code>, ... <code>e_n</code> respectively. LET-definitions without arguments are kept in place.</td></tr>
+<tr><td><code>LET d1 == e1 ... d_n == e_n IN e</code></td><td align="center">✔</td><td align="center"></td><td>All applications of <code>d1</code>, ..., <code>d_n</code> are replaced with the expressions <code>e1</code>, ... <code>e_n</code> respectively. LET-definitions without arguments are kept in place.</td></tr>
 <tr><td>multi-line <code>/\</code> and <code>\/</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 </tbody></table>
 <h3><a class="header" href="#the-action-operators" id="the-action-operators">The Action Operators</a></h3>
 <table><thead><tr><th>Construct</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
-<tr><td><code>e'</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Provided that e is a variable</td></tr>
+<tr><td><code>e'</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>[A]_e</code></td><td align="center">✖</td><td align="center">-</td><td>It does not matter for safety</td></tr>
 <tr><td><code>&lt; A &gt;_e</code></td><td align="center">✖</td><td align="center">-</td><td></td></tr>
 <tr><td><code>ENABLED A</code></td><td align="center">✖</td><td align="center">-</td><td></td></tr>
@@ -278,8 +278,8 @@ argument.</p>
 <h3><a class="header" href="#sequences" id="sequences">Sequences</a></h3>
 <table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
 <tr><td><code>&lt;&lt;...&gt;&gt;</code>, <code>Head</code>, <code>Tail</code>, <code>Len</code>, <code>SubSeq</code>, <code>Append</code>, <code>\o</code>, <code>f[e]</code></td><td align="center">✔</td><td align="center">-</td><td>The sequence constructor <code>&lt;&lt;...&gt;&gt;</code> needs a <a href="types-and-annotations.html">type annotation</a>.</td></tr>
-<tr><td><code>EXCEPT</code></td><td align="center">✖</td><td align="center"><code>0.9</code></td><td>this operator do not seem to be often used</td></tr>
-<tr><td><code>Seq(S)</code></td><td align="center">✖</td><td align="center">-</td><td>We need an upper bound on the length of the sequences.</td></tr>
+<tr><td><code>EXCEPT</code></td><td align="center">✖</td><td align="center"></td><td>If you need it, let us know, issue #324</td></tr>
+<tr><td><code>Seq(S)</code></td><td align="center">✖</td><td align="center">-</td><td>If you need it, let us know, issue #314</td></tr>
 <tr><td><code>SelectSeq</code></td><td align="center">✖</td><td align="center">-</td><td>will not be supported in the near future</td></tr>
 </tbody></table>
 <h3><a class="header" href="#finitesets" id="finitesets">FiniteSets</a></h3>
