@@ -1,8 +1,7 @@
 package at.forsyte.apalache.tla.lir.storage
 
-
 import at.forsyte.apalache.tla.lir.transformations.TransformationListener
-import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaEx, UID}
+import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaDecl, TlaEx, UID}
 import com.google.inject.Singleton
 
 import scala.collection.mutable
@@ -28,40 +27,50 @@ class ChangeListener extends TransformationListener {
 
   private def conditionalInsert(ex: TlaEx, uid: UID): Unit =
     if (!map.contains(ex.ID) && ex.ID != uid)
-      map.update( ex.ID, uid )
+      map.update(ex.ID, uid)
 
   // Sometimes, a transformation will create a complex expression from a simple one,
   // e.g. UNCHANGED x -> x' \in {x}
   // In these cases, we treat every subexpression of the resulting complex expression
   // as if it were produced by an anonymous transformation from the original
-  private def inheritUID(ex: TlaEx, uid: UID) : Unit = {
+  private def inheritUID(ex: TlaEx, uid: UID): Unit = {
     ex match {
-      case LetInEx( body, defs@_* ) =>
+      case LetInEx(body, defs @ _*) =>
         defs map {
           _.body
         } foreach {
-          inheritUID( _, uid )
+          inheritUID(_, uid)
         }
-        inheritUID( body, uid )
+        inheritUID(body, uid)
 
-      case OperEx( _, args@_* ) =>
+      case OperEx(_, args @ _*) =>
         args foreach {
-          inheritUID( _, uid )
+          inheritUID(_, uid)
         }
       case _ => // noop
     }
-    conditionalInsert( ex, uid )
+    conditionalInsert(ex, uid)
   }
 
-  override def onTransformation( originEx : TlaEx, newEx : TlaEx ) : Unit = {
-    if ( originEx.ID != newEx.ID ) {
-      map.update( newEx.ID, originEx.ID )
-      inheritUID( newEx, originEx.ID )
+  override def onTransformation(originEx: TlaEx, newEx: TlaEx): Unit = {
+    if (originEx.ID != newEx.ID) {
+      map.update(newEx.ID, originEx.ID)
+      inheritUID(newEx, originEx.ID)
+    }
+  }
+
+  override def onDeclTransformation(
+      originalDecl: TlaDecl,
+      newDecl: TlaDecl
+  ): Unit = {
+    if (originalDecl.ID != newDecl.ID) {
+      map.update(newDecl.ID, originalDecl.ID)
     }
   }
 
   /**
     * Is identifier p_id registered as a result of translation?
+    *
     * @param p_id expression identifier
     * @return true, if p_id has been registered
     */
@@ -69,8 +78,9 @@ class ChangeListener extends TransformationListener {
     map.isDefinedAt(p_id)
   }
 
-  def traceBack( p_id : UID ) : UID = map.get( p_id ) match {
-    case Some( id ) => traceBack( id )
-    case _ => p_id
-  }
+  def traceBack(p_id: UID): UID =
+    map.get(p_id) match {
+      case Some(id) => traceBack(id)
+      case _        => p_id
+    }
 }
