@@ -58,6 +58,15 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     assert(expected == sugarFree)
   }
 
+  test("""rewrite UNCHANGED x to x' = x""") {
+    // input: x
+    val unchanged = tla.unchanged(tla.name("x"))
+    val sugarFree = desugarer.transform(unchanged)
+    // output: x' = x
+    val expected = tla.eql(tla.prime(tla.name("x")), tla.name("x"))
+    assert(expected == sugarFree)
+  }
+
   test("""rewrite UNCHANGED <<x, y>> >> to x' = x /\ y' = y""") {
     // input: <<x, <<y>> >>
     val unchanged = tla.unchangedTup(tla.name("x"), tla.tuple(tla.name("y")))
@@ -74,7 +83,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
   test("unfold UNCHANGED <<x, <<y, z>> >> to UNCHANGED <<x, y, z>>") {
     // This is an idiom that was probably introduced by Diego Ongaro in Raft.
     // There is no added value in this construct, so it is just sugar.
-    // So, we do the transformation right here.
+    // We do the transformation right here.
     val unchanged = tla.unchangedTup(tla.name("x"), tla.tuple(tla.name("y"), tla.name("z")))
     val sugarFree = desugarer.transform(unchanged)
     val expected =
@@ -83,6 +92,36 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
         tla.eql(tla.prime(tla.name("y")), tla.name("y")),
         tla.eql(tla.prime(tla.name("z")), tla.name("z"))
       ) ///
+    assert(expected == sugarFree)
+  }
+
+  test("""rewrite UNCHANGED <<>> to TRUE""") {
+    // this is a regression for issue #375
+    // input: << >>
+    val unchanged = tla.unchangedTup()
+    val sugarFree = desugarer.transform(unchanged)
+    // output: TRUE
+    val expected = tla.bool(true)
+    assert(expected == sugarFree)
+  }
+
+  test("""rewrite UNCHANGED << <<>>, <<>> >> to TRUE""") {
+    // this is a regression for issue #375
+    // input: << <<>>, <<>> >>
+    val unchanged = tla.unchangedTup(tla.unchangedTup(), tla.unchangedTup())
+    val sugarFree = desugarer.transform(unchanged)
+    // output: TRUE
+    val expected = tla.bool(true)
+    assert(expected == sugarFree)
+  }
+
+  test("""rewrite UNCHANGED f[i] to (f[i])' = f[i]""") {
+    // this is a regression for issue #471
+    // input: UNCHANGED f[i]
+    val app = tla.appFun(tla.name("f"), tla.name("i"))
+    val sugarFree = desugarer.transform(tla.unchangedTup(app))
+    // output: (f[i])' = f[i]
+    val expected = tla.eql(tla.prime(app), app)
     assert(expected == sugarFree)
   }
 
@@ -129,6 +168,54 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
         tla.name("x_y_z"),
         tla.name("XYZ")
       ) ////
+    assert(expected == sugarFree)
+  }
+
+  test("simplify tuples in existentials") {
+    // TLA+ allows the user to write tuples in expanded form. We introduce tuples instead.
+    // input: \E <<x, <<y, z>> >> \in XYZ: x = 3 /\ y = 4 }
+    val filter =
+    tla.exists(
+      tla.tuple(tla.name("x"), tla.tuple(tla.name("y"), tla.name("z"))),
+      tla.name("XYZ"),
+      tla.and(tla.eql(tla.name("x"), tla.int(3)),
+        tla.eql(tla.name("y"), tla.int(4))))
+    val sugarFree = desugarer.transform(filter)
+    // output: \E x_y_z \in XYZ: x_y_z[1] = 3 /\ x_y_z[2][1] = 4 }
+    val expected =
+      tla.exists(
+        tla.name("x_y_z"),
+        tla.name("XYZ"),
+        tla.and(
+          tla.eql(tla.appFun(tla.name("x_y_z"), tla.int(1)), tla.int(3)),
+          tla.eql(tla.appFun(tla.appFun(tla.name("x_y_z"), tla.int(2)),
+            tla.int(1)),
+            tla.int(4))
+        )) ////
+    assert(expected == sugarFree)
+  }
+
+  test("simplify tuples in universals") {
+    // TLA+ allows the user to write tuples in expanded form. We introduce tuples instead.
+    // input: \A <<x, <<y, z>> >> \in XYZ: x = 3 /\ y = 4 }
+    val filter =
+    tla.forall(
+      tla.tuple(tla.name("x"), tla.tuple(tla.name("y"), tla.name("z"))),
+      tla.name("XYZ"),
+      tla.and(tla.eql(tla.name("x"), tla.int(3)),
+        tla.eql(tla.name("y"), tla.int(4))))
+    val sugarFree = desugarer.transform(filter)
+    // output: \A x_y_z \in XYZ: x_y_z[1] = 3 /\ x_y_z[2][1] = 4 }
+    val expected =
+      tla.forall(
+        tla.name("x_y_z"),
+        tla.name("XYZ"),
+        tla.and(
+          tla.eql(tla.appFun(tla.name("x_y_z"), tla.int(1)), tla.int(3)),
+          tla.eql(tla.appFun(tla.appFun(tla.name("x_y_z"), tla.int(2)),
+            tla.int(1)),
+            tla.int(4))
+        )) ////
     assert(expected == sugarFree)
   }
 
