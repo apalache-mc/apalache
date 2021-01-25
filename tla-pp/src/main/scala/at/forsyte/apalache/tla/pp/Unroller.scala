@@ -50,7 +50,7 @@ class Unroller( nameGenerator : UniqueNameGenerator, tracker : TransformationTra
   // unrollLetIn performs unrolling on all recursive LET-IN defined operators in the expression
   private def unrollLetIn(
                            bodyMap : BodyMap
-                         ) : TlaExTransformation = tracker.track {
+                         ) : TlaExTransformation = tracker.trackEx {
     case ex@LetInEx( body, defs@_* ) =>
       val newMap = BodyMapFactory.makeFromDecls( defs, bodyMap )
       val defaultsMap = getDefaults( newMap ).getOrThrow
@@ -78,7 +78,7 @@ class Unroller( nameGenerator : UniqueNameGenerator, tracker : TransformationTra
     * Replaces all instances of operator application, for which a default body exists in `defaultsMap`
     * with the default value.
     */
-  private def replaceWithDefaults( defaultsMap : Map[String, TlaEx] ) : TlaExTransformation = tracker.track {
+  private def replaceWithDefaults( defaultsMap : Map[String, TlaEx] ) : TlaExTransformation = tracker.trackEx {
     case ex@OperEx( TlaOper.apply, NameEx( name ), _* ) if defaultsMap.contains( name ) =>
       // Get the default body, ignore the args
       defaultsMap(name)

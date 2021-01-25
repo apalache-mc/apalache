@@ -5,7 +5,7 @@ package lir {
   import at.forsyte.apalache.tla.lir.io.UTFPrinter
   import at.forsyte.apalache.tla.lir.oper._
 
-  /** the base class for the universe of objects used in TLA+ */
+  /** the base class for the universe of values (integers, Booleans, strings) used in TLA+ */
   abstract class TlaValue
 
   /**
@@ -13,15 +13,12 @@ package lir {
     * Technically, this class should be called TlaDef, as we are dealing with
     * TLA+ definitions, see Specifying Systems, Ch. 17.3. Unfortunately, there are
     * variable declarations and operator definitions...
-    *
-    * TODO: rename to TlaDef.
     */
-  abstract class TlaDecl extends Serializable {
+  abstract class TlaDecl extends Identifiable with Serializable {
     def name: String
+    @deprecated("Marked for removal. Use the DeepCopy transformation.")
     def deepCopy(): TlaDecl
   }
-
-  // TODO: add TlaTheoremDecl?
 
   /**
     * A module as a basic unit that contains declarations.
@@ -66,20 +63,13 @@ package lir {
     override def deepCopy(): TlaAssumeDecl = TlaAssumeDecl(body.deepCopy())
   }
 
-  ///////////////// DISCUSSION
-
   /**
     * A spec, given by a list of declarations and a list of expressions.
-    *
-    * FIXME: a candidate for removal. Just use TlaModule?
     */
+  @deprecated("Marked for removal. Use TlaModule")
   case class TlaSpec( name: String, declarations: List[TlaDecl] ) extends Serializable {
     def deepCopy() : TlaSpec = TlaSpec( name, declarations.map( _.deepCopy() ) )
-
   }
-
-  ///////////////// END of DISCUSSION
-
 
   /**
   A formal parameter of an operator.
@@ -107,6 +97,7 @@ package lir {
 
     def toSimpleString: String = ""
 
+    @deprecated("Marked for removal. Use the DeepCopy transformation.")
     def deepCopy() : TlaEx
   }
 

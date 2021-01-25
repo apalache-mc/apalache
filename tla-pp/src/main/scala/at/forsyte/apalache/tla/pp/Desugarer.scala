@@ -27,7 +27,7 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
     transform(expr)
   }
 
-  def transform: TlaExTransformation = tracker.track {
+  def transform: TlaExTransformation = tracker.trackEx {
       case ex @ NameEx(_) => ex
       case ex @ ValEx(_) => ex
       case ex @ NullEx => ex

@@ -30,7 +30,7 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker)
     else if (k == 0) Predef.identity
     else transform( stepLimitOpt = Some( kStepParameters( k, post ) ) )
 
-  def transform(stepLimitOpt: Option[kStepParameters]): TlaExTransformation = tracker.track {
+  def transform(stepLimitOpt: Option[kStepParameters]): TlaExTransformation = tracker.trackEx {
     // interesting case: applying a user-defined operator
     case ex @ OperEx(TlaOper.apply, NameEx(name), args @ _*) =>
       // Jure, 5.7.19: Can 0-arity operators ever appear as standalone NameEx, without
@@ -49,9 +49,7 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker)
     // recursive processing of composite operators and let-in definitions
     case ex @ LetInEx(body, defs@_*) =>
       // transform bodies of all op.defs
-      val newDefs = defs.map { x =>
-        x.copy(body = transform(stepLimitOpt)(x.body))
-      }
+      val newDefs = defs map tracker.trackOperDecl { d => d.copy(body = transform(stepLimitOpt)(d.body)) }
       val newBody = transform(stepLimitOpt)(body)
       if (defs == newDefs && body == newBody) {
         ex

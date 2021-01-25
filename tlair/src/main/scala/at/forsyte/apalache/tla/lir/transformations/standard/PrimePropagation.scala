@@ -25,7 +25,7 @@ class PrimePropagation(tracker: TransformationTracker, stateVars: Set[String])
     */
   override def apply(expr: TlaEx): TlaEx = {
     def transform(primeToAdd: Boolean): TlaEx => TlaEx =
-      tracker.track {
+      tracker.trackEx {
         case OperEx(TlaActionOper.prime, e) =>
           transform(true)(e)
 
