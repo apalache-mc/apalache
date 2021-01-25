@@ -17,7 +17,7 @@ class SaveToStoreTracker(sourceStore: SourceStore) extends TransformationTracker
     * @param tr an expression transformation
     * @return a new transformation that applies tr and tracks the changes
     */
-  override def track(tr: TlaExTransformation): TlaExTransformation = {
+  override def trackEx( tr: TlaExTransformation): TlaExTransformation = {
     input: TlaEx =>
       val output = tr(input)
       if (output.ID != input.ID) {

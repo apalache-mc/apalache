@@ -18,7 +18,7 @@ class AssignmentOperatorIntroduction(
     transform(expr)
   }
 
-  def transform: TlaExTransformation = tracker.track {
+  def transform: TlaExTransformation = tracker.trackEx {
     case ex@OperEx( TlaOper.eq, prime@OperEx( TlaActionOper.prime, _ : NameEx ), asgnVal ) if isAssignment( ex.ID ) =>
       val ret = OperEx( BmcOper.assign, prime, asgnVal )
       uidReplacementMap += ex.ID -> ret.ID

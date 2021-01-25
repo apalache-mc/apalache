@@ -11,7 +11,7 @@ class DeepCopy(tracker: TransformationTracker) extends TlaExTransformation {
   /**
     * Calls deep copy in a way that sets up tracking between every replacement (not just top-level)
     */
-  def transform: TlaExTransformation = tracker.track {
+  def transform: TlaExTransformation = tracker.trackEx {
     // LetInEx and OperEx are composite expressions
     case LetInEx(body, defs@_*) =>
       // Transform bodies of all op.defs
