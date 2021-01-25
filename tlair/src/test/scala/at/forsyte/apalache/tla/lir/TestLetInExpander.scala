@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSeqOper}
+import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.TlaInt
@@ -13,15 +14,8 @@ import org.scalatest.junit.JUnitRunner
 class TestLetInExpander extends FunSuite with TestingPredefs {
   import Builder._
 
-
-  object Trackers {
-    val NoTracker : TransformationTracker = new TransformationTracker {
-      override def trackEx( t : TlaExTransformation ) : TlaExTransformation = t
-    }
-  }
-
   test( "Test LetInExpander, skip0Arity = false" ) {
-    val transformation = LetInExpander( Trackers.NoTracker, keepNullary = false )
+    val transformation = LetInExpander( new IdleTracker(), keepNullary = false )
 
     val ex1 = n_x
     val ex2 = letIn( appOp( n_A ), declOp( "A", n_x ) )
@@ -58,7 +52,7 @@ class TestLetInExpander extends FunSuite with TestingPredefs {
   }
 
   test( "Test LetInExpander, skip0Arity = true" ) {
-    val transformation = LetInExpander( Trackers.NoTracker, keepNullary = true )
+    val transformation = LetInExpander( new IdleTracker(), keepNullary = true )
 
     val ex1 = n_x
     val ex2 = letIn( appOp( n_A ), declOp( "A", n_x ) )
@@ -98,7 +92,7 @@ class TestLetInExpander extends FunSuite with TestingPredefs {
   }
 
   test( "Test LetInExpander and LAMBDA" ) {
-    val transformation = LetInExpander(Trackers.NoTracker, keepNullary = false)
+    val transformation = LetInExpander(new IdleTracker(), keepNullary = false)
     // this is how we represent LAMBDA in IR
     val lambdaAsLetIn = tla.letIn(tla.name("LAMBDA"),
       tla.declOp("LAMBDA", tla.eql(tla.name("x"), tla.name("e")), SimpleFormalParam("x")))
@@ -109,7 +103,7 @@ class TestLetInExpander extends FunSuite with TestingPredefs {
   }
 
   test( "Do not expand LAMBDA" ) {
-    val transformation = LetInExpander(Trackers.NoTracker, keepNullary = false)
+    val transformation = LetInExpander(new IdleTracker(), keepNullary = false)
     // this is how we represent LAMBDA in IR
     val lambdaAsLetIn = tla.letIn(tla.name("LAMBDA"),
       tla.declOp("LAMBDA", tla.eql(tla.name("x"), tla.name("e")), SimpleFormalParam("x")))
@@ -121,7 +115,7 @@ class TestLetInExpander extends FunSuite with TestingPredefs {
   }
 
   test( "Expand LAMBDA when it is applied to an argument" ) {
-    val transformation = LetInExpander(Trackers.NoTracker, keepNullary = false)
+    val transformation = LetInExpander(new IdleTracker(), keepNullary = false)
     // this is how we represent LAMBDA in IR
     val lambdaAsLetIn = tla.letIn(tla.name("LAMBDA"),
       tla.declOp("LAMBDA", tla.eql(tla.name("x"), tla.name("e")), SimpleFormalParam("x")))
