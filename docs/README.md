@@ -3,18 +3,20 @@
 The Apalache documentation is written in markdown files in the [./src](./src)
 directory and compiled using [mdbook](https://github.com/rust-lang/mdBook).
 
+To view the documentation, visit https://apalache.informal.systems/docs/ .
+
 ## Building and previewing the documentation
 
 To build the documentation into [../target/docs](../target/docs), run
 
-``` sh
+```sh
 mdbook build
 ```
 
 To start a server that will present a live updated view of the book while you
 edit, run
 
-``` sh
+```sh
 mdbook serve
 ```
 
