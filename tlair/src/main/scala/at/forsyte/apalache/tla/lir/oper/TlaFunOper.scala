@@ -17,9 +17,10 @@ object TlaFunOper {
     * Note that in case of records, k_1, ..., k_n are strings, that is, ValEx(TlaStr(...)), not NameEx.
     */
   object enum extends TlaFunOper {
-    override def arity: OperArity = new OperArity( k => k >= 2 && k % 2 == 0 )
+    override def arity: OperArity = new OperArity(k => k >= 2 && k % 2 == 0)
     override val name: String = "fun-enum"
-    override val precedence: (Int, Int) = (16, 16) // as the function application
+    override val precedence
+        : (Int, Int) = (16, 16) // as the function application
   }
 
   /**
@@ -29,7 +30,8 @@ object TlaFunOper {
   object tuple extends TlaFunOper {
     override val arity = AnyArity()
     override val name = "<<...>>"
-    override val precedence: (Int, Int) = (16, 16) // as the function application
+    override val precedence
+        : (Int, Int) = (16, 16) // as the function application
   }
 
   /**
@@ -71,9 +73,10 @@ object TlaFunOper {
     * of the following structure: body, x_1, S_1, ..., x_k, S_k.
     */
   object funDef extends TlaFunOper {
-    override def arity: OperArity = new OperArity( k => k >= 3 && k % 2 == 1 )
+    override def arity: OperArity = new OperArity(k => k >= 3 && k % 2 == 1)
     override val name: String = "fun-def"
-    override val precedence: (Int, Int) = (16, 16) // as the function application
+    override val precedence
+        : (Int, Int) = (16, 16) // as the function application
   }
 
   /**
@@ -128,7 +131,8 @@ object TlaFunOper {
   object recFunDef extends TlaFunOper {
     override def arity: OperArity = new OperArity(_ >= 3)
     override def name: String = "rec-fun-def"
-    override def precedence: (Int, Int) = (100, 100) // as the operator declaration
+    override def precedence: (Int, Int) =
+      (100, 100) // as the operator declaration
   }
 
   /**
@@ -137,6 +141,7 @@ object TlaFunOper {
     * @see TlaFunOper.recFunDef
     */
   object recFunRef extends TlaFunOper {
+
     /**
       * A unique name that can be used to refer to a recursive function inside its body.
       */
@@ -158,9 +163,10 @@ object TlaFunOper {
     * </p>
     */
   object except extends TlaFunOper {
-    override def arity: OperArity = new OperArity( k => k >= 3 && k % 2 == 1 )
+    override def arity: OperArity = new OperArity(k => k >= 3 && k % 2 == 1)
     override val name: String = "EXCEPT"
-    override val precedence: (Int, Int) = (16, 16) // as the function application
+    override val precedence
+        : (Int, Int) = (16, 16) // as the function application
 
     /**
       * SANY always packs an EXCEPT accessor in a tuple, even if the index is one-dimensional.
@@ -168,7 +174,7 @@ object TlaFunOper {
       */
     def unpackIndex: TlaEx => TlaEx = {
       case OperEx(TlaFunOper.tuple, one) => one
-      case e => e
+      case e                             => e
     }
   }
 }

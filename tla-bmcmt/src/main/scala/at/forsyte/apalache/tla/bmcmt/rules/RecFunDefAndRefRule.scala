@@ -22,8 +22,8 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaFunOper.recFunDef, _*) => true
-      case OperEx(TlaFunOper.recFunRef) => true
-      case _ => false
+      case OperEx(TlaFunOper.recFunRef)     => true
+      case _                                => false
     }
   }
 
@@ -38,28 +38,43 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
         if (state.binding.contains(name)) {
           state.setRex(state.binding(name))
         } else {
-          throw new RewriterException("Referencing a recursive function that is undefined", state.ex)
+          throw new RewriterException(
+            "Referencing a recursive function that is undefined",
+            state.ex
+          )
         }
 
       case _ =>
-        throw new RewriterException("%s is not applicable to %s"
-          .format(getClass.getSimpleName, state.ex), state.ex)
+        throw new RewriterException(
+          "%s is not applicable to %s"
+            .format(getClass.getSimpleName, state.ex),
+          state.ex
+        )
     }
   }
 
-  private def rewriteFunCtor(state: SymbState, mapEx: TlaEx, varName: String, setEx: TlaEx) = {
+  private def rewriteFunCtor(
+      state: SymbState,
+      mapEx: TlaEx,
+      varName: String,
+      setEx: TlaEx
+  ) = {
     // rewrite the set expression into a memory cell
     var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
     val domainCell = nextState.asCell
     val elemT = domainCell.cellType match {
       case FinSetT(et) => et
-      case t@_ => throw new RewriterException("Expected a finite set, found: " + t, state.ex)
+      case t @ _ =>
+        throw new RewriterException(
+          "Expected a finite set, found: " + t,
+          state.ex
+        )
     }
     // find the type of the target expression and of the target set
     val resultT = rewriter.typeFinder.computeRec(mapEx)
     val codomain =
       resultT match {
-        case IntT() => ValEx(TlaIntSet)
+        case IntT()  => ValEx(TlaIntSet)
         case BoolT() => tla.booleanSet()
         case _ =>
           val msg = "A result of a recursive function must belong to Int or BOOLEAN. Found: " + resultT
@@ -72,23 +87,33 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
         .asInstanceOf[FunT]
 
     // produce a cell for the function set (no expansion happens there)
-    nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.funSet(domainCell, codomain)))
+    nextState = rewriter.rewriteUntilDone(
+      nextState.setRex(tla.funSet(domainCell, codomain))
+    )
     val funSetCell = nextState.asCell
     // pick a function from the function set
     nextState = pick.pickFunFromFunSet(funT, funSetCell, nextState)
     val funCell = nextState.asCell
-    nextState = nextState.setBinding(new Binding(nextState.binding.toMap + (TlaFunOper.recFunRef.uniqueName -> funCell)))
+    nextState = nextState.setBinding(
+      new Binding(
+        nextState.binding.toMap + (TlaFunOper.recFunRef.uniqueName -> funCell)
+      )
+    )
     // for every element of the domain, add the constraint imposed by the definition
     val domainCells = nextState.arena.getHas(domainCell)
     for (elem <- domainCells) {
       val oldBinding = nextState.binding
       // compute the right-hand side of the constraint by the recursive function
-      nextState = rewriter.rewriteUntilDone(nextState.setRex(mapEx)
-        .setBinding(new Binding(oldBinding.toMap + (varName -> elem))))
+      nextState = rewriter.rewriteUntilDone(
+        nextState
+          .setRex(mapEx)
+          .setBinding(new Binding(oldBinding.toMap + (varName -> elem)))
+      )
       val rhs = nextState.asCell
       // Compute the left-hand side of the constraint, that is, f[elem].
       nextState = nextState.setBinding(oldBinding)
-      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.appFun(funCell, elem)))
+      nextState =
+        rewriter.rewriteUntilDone(nextState.setRex(tla.appFun(funCell, elem)))
       val lhs = nextState.asCell
       // either elem is outside of DOMAIN, or lhs equals rhs
       val pred = tla.or(tla.not(tla.in(elem, domainCell)), tla.eql(lhs, rhs))
@@ -96,7 +121,10 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
 
     // that's it
-    nextState.setRex(funCell.toNameEx)
-      .setBinding(new Binding(nextState.binding.toMap - TlaFunOper.recFunRef.uniqueName))
+    nextState
+      .setRex(funCell.toNameEx)
+      .setBinding(
+        new Binding(nextState.binding.toMap - TlaFunOper.recFunRef.uniqueName)
+      )
   }
 }

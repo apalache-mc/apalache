@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.assignments
 
-
 /**
   * An exception thrown to indicate a problem with assignments
   *

@@ -6,7 +6,7 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
-@RunWith( classOf[JUnitRunner] )
+@RunWith(classOf[JUnitRunner])
 class TestPrinter extends FunSuite with TestingPredefs {
   val bd = Builder
 
@@ -64,7 +64,6 @@ class TestPrinter extends FunSuite with TestingPredefs {
     val chooseEx3: String = bd.choose(n_x, bd.and(n_p, n_q))
     val chooseEx4: String = bd.choose(n_x, bd.times(n_S, n_T), bd.and(n_p, n_q))
 
-
     if (ALSO_PRINT) {
       printsep()
       printlns(chooseEx1, chooseEx2, chooseEx3, chooseEx4)
@@ -73,7 +72,10 @@ class TestPrinter extends FunSuite with TestingPredefs {
     assert(chooseEx1 == "CHOOSE x : p")
     assert(chooseEx2 == "CHOOSE x %s S : p".format(up.m_in))
     assert(chooseEx3 == "CHOOSE x : (p %s q)".format(up.m_and))
-    assert(chooseEx4 == "CHOOSE x %s (S %s T) : (p %s q)".format(up.m_in, up.m_times, up.m_and))
+    assert(
+      chooseEx4 == "CHOOSE x %s (S %s T) : (p %s q)"
+        .format(up.m_in, up.m_times, up.m_and)
+    )
 
   }
 
@@ -134,7 +136,9 @@ class TestPrinter extends FunSuite with TestingPredefs {
     }
 
     assert(implEx1 == "p %s q".format(up.m_impl))
-    assert(implEx2 == "(p %s q) %s (a %s b)".format(up.m_and, up.m_impl, up.m_or))
+    assert(
+      implEx2 == "(p %s q) %s (a %s b)".format(up.m_and, up.m_impl, up.m_or)
+    )
     assert(implEx3 == "p %s q".format(up.m_impl))
 
     val equivEx1: String = bd.equiv(n_p, n_q)
@@ -147,13 +151,16 @@ class TestPrinter extends FunSuite with TestingPredefs {
     }
 
     assert(equivEx1 == "p %s q".format(up.m_equiv))
-    assert(equivEx2 == "(p %s q) %s (a %s b)".format(up.m_and, up.m_equiv, up.m_or))
+    assert(
+      equivEx2 == "(p %s q) %s (a %s b)".format(up.m_and, up.m_equiv, up.m_or)
+    )
     assert(equivEx3 == "p %s q".format(up.m_equiv))
 
     val forallEx1: String = bd.forall(n_a, n_b)
     val forallEx2: String = bd.forall(n_a, bd.or(seq(2, 1): _*))
     val forallEx3: String = bd.forall(n_a, n_b, n_c)
-    val forallEx4: String = bd.forall(n_a, bd.times(seq(2, 1): _*), bd.and(seq(2, 3): _*))
+    val forallEx4: String =
+      bd.forall(n_a, bd.times(seq(2, 1): _*), bd.and(seq(2, 3): _*))
 
     if (ALSO_PRINT) {
       printsep()
@@ -163,13 +170,16 @@ class TestPrinter extends FunSuite with TestingPredefs {
     assert(forallEx1 == "%sa: b".format(up.m_forall))
     assert(forallEx2 == "%sa: (b %s c)".format(up.m_forall, up.m_or))
     assert(forallEx3 == "%sa %s b: c".format(up.m_forall, up.m_in))
-    assert(forallEx4 == "%sa %s (b %s c): (d %s e)".format(up.m_forall, up.m_in, up.m_times, up.m_and))
-
+    assert(
+      forallEx4 == "%sa %s (b %s c): (d %s e)"
+        .format(up.m_forall, up.m_in, up.m_times, up.m_and)
+    )
 
     val existsEx1: String = bd.exists(n_a, n_b)
     val existsEx2: String = bd.exists(n_a, bd.or(seq(2, 1): _*))
     val existsEx3: String = bd.exists(n_a, n_b, n_c)
-    val existsEx4: String = bd.exists(n_a, bd.times(seq(2, 1): _*), bd.and(seq(2, 3): _*))
+    val existsEx4: String =
+      bd.exists(n_a, bd.times(seq(2, 1): _*), bd.and(seq(2, 3): _*))
 
     if (ALSO_PRINT) {
       printsep()
@@ -179,15 +189,14 @@ class TestPrinter extends FunSuite with TestingPredefs {
     assert(existsEx1 == "%sa: b".format(up.m_exists))
     assert(existsEx2 == "%sa: (b %s c)".format(up.m_exists, up.m_or))
     assert(existsEx3 == "%sa %s b: c".format(up.m_exists, up.m_in))
-    assert(existsEx4 == "%sa %s (b %s c): (d %s e)".format(up.m_exists, up.m_in, up.m_times, up.m_and))
-
-
-  }
-
-  test("Test UTF8: TlaArithOper") {
-
+    assert(
+      existsEx4 == "%sa %s (b %s c): (d %s e)"
+        .format(up.m_exists, up.m_in, up.m_times, up.m_and)
+    )
 
   }
+
+  test("Test UTF8: TlaArithOper") {}
 
   test("Test UTF8: TlaSetOper") {
     val inEx1: String = bd.in(n_a, n_b)
@@ -201,7 +210,8 @@ class TestPrinter extends FunSuite with TestingPredefs {
 
   // regression
   test("Test UTF8: OperFormalParam") {
-    val d = TlaOperDecl("Foo", List(OperFormalParam("Bar", 1)), ValEx(TlaInt(1)))
+    val d =
+      TlaOperDecl("Foo", List(OperFormalParam("Bar", 1)), ValEx(TlaInt(1)))
     assert("Foo(Bar(_)) ≜ 1" == UTFPrinter(d))
   }
 }

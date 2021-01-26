@@ -38,6 +38,7 @@ trait TlaOper extends Serializable {
 }
 
 object TlaOper {
+
   /**
     * Group a list of arguments into two lists: even and odd. The indices are starting with 0.
     * @param args a list of expressions
@@ -46,10 +47,14 @@ object TlaOper {
   def deinterleave(args: Seq[TlaEx]): (Seq[TlaEx], Seq[TlaEx]) = {
     assert(args.length % 2 == 0)
     @tailrec
-    def consume(even: Seq[TlaEx], odd: Seq[TlaEx], list: Seq[TlaEx]): (Seq[TlaEx], Seq[TlaEx]) = {
+    def consume(
+        even: Seq[TlaEx],
+        odd: Seq[TlaEx],
+        list: Seq[TlaEx]
+    ): (Seq[TlaEx], Seq[TlaEx]) = {
       list match {
-        case Seq(a, b, tl@_*) => consume(even :+ a, odd :+ b, tl)
-        case Seq() => (even, odd)
+        case Seq(a, b, tl @ _*) => consume(even :+ a, odd :+ b, tl)
+        case Seq()              => (even, odd)
       }
     }
 
@@ -124,7 +129,8 @@ object TlaOper {
   object apply extends TlaOper {
     override def arity: OperArity = AnyPositiveArity()
 
-    override def interpretation: Interpretation.Value = Interpretation.Predefined
+    override def interpretation: Interpretation.Value =
+      Interpretation.Predefined
     override val name: String = "_()"
     override val precedence: (Int, Int) = (16, 16)
   }
@@ -139,9 +145,11 @@ object TlaOper {
 
     override def arity: OperArity = FixedArity(3)
 
-    override def interpretation: Interpretation.Value = Interpretation.Predefined
+    override def interpretation: Interpretation.Value =
+      Interpretation.Predefined
 
-    override val precedence: (Int, Int) = (0, 0) // see Section 15.2.1 in Lamport's book
+    override val precedence
+        : (Int, Int) = (0, 0) // see Section 15.2.1 in Lamport's book
   }
 
   /**
@@ -154,14 +162,16 @@ object TlaOper {
 
     override def arity: OperArity = FixedArity(2)
 
-    override def interpretation: Interpretation.Value = Interpretation.Predefined
+    override def interpretation: Interpretation.Value =
+      Interpretation.Predefined
 
-    override val precedence: (Int, Int) = (0, 0) // see Section 15.2.1 in Lamport's book
+    override val precedence
+        : (Int, Int) = (0, 0) // see Section 15.2.1 in Lamport's book
   }
 
   /**
     * The CHOOSE idiom: CHOOSE x : x \notin S.
-    * 
+    *
     * Igor (28.08.2020): having this operator in the IR is a hack. We should just remove it.
     */
   object chooseIdiom extends TlaOper {
@@ -170,7 +180,8 @@ object TlaOper {
 
     override def arity: OperArity = FixedArity(1)
 
-    override def interpretation: Interpretation.Value = Interpretation.Predefined
+    override def interpretation: Interpretation.Value =
+      Interpretation.Predefined
 
     override val precedence: (Int, Int) = (0, 0) // Section 15.2.1
   }
@@ -194,9 +205,11 @@ object TlaOper {
 
     override def arity: OperArity = MinimalArity(2)
 
-    override val interpretation: Interpretation.Value = Interpretation.Predefined
+    override val interpretation: Interpretation.Value =
+      Interpretation.Predefined
 
-    override val precedence: (Int, Int) = (16, 16) // similar to function application
+    override val precedence
+        : (Int, Int) = (16, 16) // similar to function application
 
     /**
       * Do the operator arguments satisfy the operator invariant?
@@ -206,7 +219,9 @@ object TlaOper {
       * @return true, if the invariant is satisfied
       */
     override def permitsArgs(args: Seq[TlaEx]): Boolean = {
-      val isNameEx: PartialFunction[TlaEx, Boolean] = { case ValEx(TlaStr(_)) => true }
+      val isNameEx: PartialFunction[TlaEx, Boolean] = {
+        case ValEx(TlaStr(_)) => true
+      }
       args.tail.forall(isNameEx.isDefinedAt)
     }
   }

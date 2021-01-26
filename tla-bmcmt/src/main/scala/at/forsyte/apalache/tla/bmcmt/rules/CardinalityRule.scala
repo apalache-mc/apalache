@@ -7,7 +7,6 @@ import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFiniteSetOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
-
 /**
   * Implements the Cardinality operator.
   *
@@ -33,21 +32,35 @@ class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
         makeCardEquations(nextState, setCell, elems)
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
+        throw new RewriterException(
+          "%s is not applicable".format(getClass.getSimpleName),
+          state.ex
+        )
     }
   }
 
-  private def makeCardEquations(state: SymbState, set: ArenaCell, cells: Seq[ArenaCell]): SymbState = {
+  private def makeCardEquations(
+      state: SymbState,
+      set: ArenaCell,
+      cells: Seq[ArenaCell]
+  ): SymbState = {
     var arena = state.arena // WARNING: it is updated in many places in this function
 
     def solverAssert = rewriter.solverContext.assertGroundExpr(_)
 
     def eqToOther(thisCell: ArenaCell, otherCell: ArenaCell): TlaEx = {
-      tla.and(tla.in(otherCell, set), rewriter.lazyEq.safeEq(thisCell, otherCell))
+      tla.and(
+        tla.in(otherCell, set),
+        rewriter.lazyEq.safeEq(thisCell, otherCell)
+      )
     }
 
     // Generate a series of equations for cardinalities. Again, there are O(N^2) constraints. Cardinalities are hard!
-    def mkEq(counted: Seq[ArenaCell], counter: ArenaCell, notCounted: Seq[ArenaCell]): ArenaCell = {
+    def mkEq(
+        counted: Seq[ArenaCell],
+        counter: ArenaCell,
+        notCounted: Seq[ArenaCell]
+    ): ArenaCell = {
       notCounted match {
         case Nil => counter // all counted!
 
@@ -57,11 +70,18 @@ class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
           // newCounter = counter if hd \notin set \/ \E c \in counted: hd = c /\ c \in set
           arena = arena.appendCell(BoolT())
           val beforePred = arena.topCell
-          val beforeEx = tla.or(tla.notin(hd, set), tla.or(counted.map(eqToOther(hd, _)) :_*))
+          val beforeEx = tla.or(
+            tla.notin(hd, set),
+            tla.or(counted.map(eqToOther(hd, _)): _*)
+          )
           solverAssert(tla.eql(beforePred, beforeEx))
           // newCounter = counter + 1 otherwise
-          solverAssert(tla.eql(newCounter,
-            tla.ite(beforePred, counter, tla.plus(tla.int(1), counter))))
+          solverAssert(
+            tla.eql(
+              newCounter,
+              tla.ite(beforePred, counter, tla.plus(tla.int(1), counter))
+            )
+          )
           mkEq(hd +: counted, newCounter, tl)
       }
     }

@@ -9,10 +9,12 @@ import org.scalatest.{BeforeAndAfterEach, FunSuite}
 
 @RunWith(classOf[JUnitRunner])
 class TestExprOptimizer extends FunSuite with BeforeAndAfterEach {
-  private var optimizer = new ExprOptimizer(new UniqueNameGenerator(), TrackerWithListeners())
+  private var optimizer =
+    new ExprOptimizer(new UniqueNameGenerator(), TrackerWithListeners())
 
   override def beforeEach(): Unit = {
-    optimizer = new ExprOptimizer(new UniqueNameGenerator(), TrackerWithListeners())
+    optimizer =
+      new ExprOptimizer(new UniqueNameGenerator(), TrackerWithListeners())
   }
 
   // an optimization for integer ranges
@@ -37,30 +39,30 @@ class TestExprOptimizer extends FunSuite with BeforeAndAfterEach {
   }
 
   // an optimization for set comprehensions (maps)
-  test("""\E x \in {foo[y]: y \in {1, 2}}: z = x ~~> \E y \in {1, 2}: LET t_1 == foo[y] IN z = t_1""") {
+  test(
+    """\E x \in {foo[y]: y \in {1, 2}}: z = x ~~> \E y \in {1, 2}: LET t_1 == foo[y] IN z = t_1"""
+  ) {
     val set12 = tla.enumSet(tla.int(1), tla.int(2))
-    val map = tla.map(tla.appFun(tla.name("foo"), tla.name("y")),
-      tla.name("y"),
-      set12)
+    val map =
+      tla.map(tla.appFun(tla.name("foo"), tla.name("y")), tla.name("y"), set12)
     val input =
       tla.exists(tla.name("x"), map, tla.eql(tla.name("z"), tla.name("x")))
     val output = optimizer.apply(input)
     val let = tla.letIn(
       tla.eql(tla.name("z"), tla.appOp(tla.name("t_1"))),
-      TlaOperDecl("t_1", List(),
-        tla.appFun(tla.name("foo"), tla.name("y")))
+      TlaOperDecl("t_1", List(), tla.appFun(tla.name("foo"), tla.name("y")))
     ) //
     val expected = tla.exists(tla.name("y"), set12, let)
     assert(expected == output)
   }
 
   // an optimization for set comprehensions (filters)
-  test("""\E x \in {y \in {1, 2}: y = 1}: z = x ~~> \E y \in {1, 2}: z = y /\ y = 1""") {
+  test(
+    """\E x \in {y \in {1, 2}: y = 1}: z = x ~~> \E y \in {1, 2}: z = y /\ y = 1"""
+  ) {
     val set12 = tla.enumSet(tla.int(1), tla.int(2))
-    val filter = tla.filter(
-      tla.name("y"),
-      set12,
-      tla.eql(tla.name("y"), tla.int(1)))
+    val filter =
+      tla.filter(tla.name("y"), set12, tla.eql(tla.name("y"), tla.int(1)))
     val input =
       tla.exists(tla.name("x"), filter, tla.eql(tla.name("z"), tla.name("x")))
     val output = optimizer.apply(input)
@@ -68,8 +70,11 @@ class TestExprOptimizer extends FunSuite with BeforeAndAfterEach {
       tla.exists(
         tla.name("y"),
         set12,
-        tla.and(tla.eql(tla.name("y"), tla.int(1)),
-          tla.eql(tla.name("z"), tla.name("y"))))
+        tla.and(
+          tla.eql(tla.name("y"), tla.int(1)),
+          tla.eql(tla.name("z"), tla.name("y"))
+        )
+      )
 
     assert(expected == output)
   }
@@ -104,68 +109,133 @@ class TestExprOptimizer extends FunSuite with BeforeAndAfterEach {
     assert(expected == output)
   }
 
-  test("""Cardinality(S) >= 2 becomes LET t_3 == S IN \E t_1 \in t_3: \E t_1 \in t_3: t_1 /= t_2""") {
+  test(
+    """Cardinality(S) >= 2 becomes LET t_3 == S IN \E t_1 \in t_3: \E t_1 \in t_3: t_1 /= t_2"""
+  ) {
     val input = tla.ge(tla.card(tla.name("S")), tla.int(2))
     val output = optimizer.apply(input)
     val letApp = tla.appOp(tla.name("t_3"))
     val letBody =
-      tla.exists(tla.name("t_1"), letApp,
-        tla.exists(tla.name("t_2"), letApp,
-          tla.not(tla.eql(tla.name("t_1"), tla.name("t_2")))))
+      tla.exists(
+        tla.name("t_1"),
+        letApp,
+        tla.exists(
+          tla.name("t_2"),
+          letApp,
+          tla.not(tla.eql(tla.name("t_1"), tla.name("t_2")))
+        )
+      )
     val expected = tla.letIn(letBody, TlaOperDecl("t_3", List(), tla.name("S")))
     assert(expected == output)
   }
 
-  test("""Cardinality(S) > 1 becomes LET t_3 == S IN \E t_1 \in t_3: \E t_1 \in t_3: t_1 /= t_2""") {
+  test(
+    """Cardinality(S) > 1 becomes LET t_3 == S IN \E t_1 \in t_3: \E t_1 \in t_3: t_1 /= t_2"""
+  ) {
     val input = tla.gt(tla.card(tla.name("S")), tla.int(1))
     val output = optimizer.apply(input)
     val letApp = tla.appOp(tla.name("t_3"))
     val letBody =
-      tla.exists(tla.name("t_1"), letApp,
-        tla.exists(tla.name("t_2"), letApp,
-          tla.not(tla.eql(tla.name("t_1"), tla.name("t_2")))))
+      tla.exists(
+        tla.name("t_1"),
+        letApp,
+        tla.exists(
+          tla.name("t_2"),
+          letApp,
+          tla.not(tla.eql(tla.name("t_1"), tla.name("t_2")))
+        )
+      )
     val expected = tla.letIn(letBody, TlaOperDecl("t_3", List(), tla.name("S")))
     assert(expected == output)
   }
 
   // these optimizations have been subsumed by CardinalityConstRule
-  ignore("""Cardinality(S) >= k becomes LET t_k+3 == S IN \E t_1, ..., t_k \in t_k+3: \A t_k+1, t_k+2 \in {t_1, ..., t_k}: t_k+1 /= t_k+2""") {
+  ignore(
+    """Cardinality(S) >= k becomes LET t_k+3 == S IN \E t_1, ..., t_k \in t_k+3: \A t_k+1, t_k+2 \in {t_1, ..., t_k}: t_k+1 /= t_k+2"""
+  ) {
     val input = tla.ge(tla.card(tla.name("S")), tla.int(4))
     val output = optimizer.apply(input)
     val letApp = tla.appOp(tla.name("t_8"))
-    val newSet = tla.enumSet(tla.name("t_1"), tla.name("t_2"), tla.name("t_3"), tla.name("t_4"))
+    val newSet = tla.enumSet(
+      tla.name("t_1"),
+      tla.name("t_2"),
+      tla.name("t_3"),
+      tla.name("t_4")
+    )
     val letBody =
-      tla.exists(tla.name("t_1"), letApp,
-        tla.exists(tla.name("t_2"), letApp,
-          tla.exists(tla.name("t_3"), letApp,
-            tla.exists(tla.name("t_4"), letApp,
+      tla.exists(
+        tla.name("t_1"),
+        letApp,
+        tla.exists(
+          tla.name("t_2"),
+          letApp,
+          tla.exists(
+            tla.name("t_3"),
+            letApp,
+            tla.exists(
+              tla.name("t_4"),
+              letApp,
               tla.letIn(
-                tla.forall(tla.name("t_6"), tla.appOp(tla.name("t_5")),
-                  tla.forall(tla.name("t_7"), tla.appOp(tla.name("t_5")),
-                    tla.not(tla.eql(tla.name("t_6"), tla.name("t_7"))))),
+                tla.forall(
+                  tla.name("t_6"),
+                  tla.appOp(tla.name("t_5")),
+                  tla.forall(
+                    tla.name("t_7"),
+                    tla.appOp(tla.name("t_5")),
+                    tla.not(tla.eql(tla.name("t_6"), tla.name("t_7")))
+                  )
+                ),
                 TlaOperDecl("t_5", List(), newSet)
               )
-            ))))
+            )
+          )
+        )
+      )
     val expected = tla.letIn(letBody, TlaOperDecl("t_8", List(), tla.name("S")))
     assert(expected == output)
   }
 
-  ignore("""Cardinality(S) < k becomes LET t_k+3 == S IN \A t_1, ..., t_k \in t_k+3: \E t_k+1, t_k+2 \in {t_1, ..., t_k}: t_k+1 = t_k+2""") {
+  ignore(
+    """Cardinality(S) < k becomes LET t_k+3 == S IN \A t_1, ..., t_k \in t_k+3: \E t_k+1, t_k+2 \in {t_1, ..., t_k}: t_k+1 = t_k+2"""
+  ) {
     val input = tla.lt(tla.card(tla.name("S")), tla.int(4))
     val output = optimizer.apply(input)
     val letApp = tla.appOp(tla.name("t_8"))
-    val newSet = tla.enumSet(tla.name("t_1"), tla.name("t_2"), tla.name("t_3"), tla.name("t_4"))
+    val newSet = tla.enumSet(
+      tla.name("t_1"),
+      tla.name("t_2"),
+      tla.name("t_3"),
+      tla.name("t_4")
+    )
     val letBody =
-      tla.forall(tla.name("t_1"), letApp,
-        tla.forall(tla.name("t_2"), letApp,
-          tla.forall(tla.name("t_3"), letApp,
-            tla.forall(tla.name("t_4"), letApp,
+      tla.forall(
+        tla.name("t_1"),
+        letApp,
+        tla.forall(
+          tla.name("t_2"),
+          letApp,
+          tla.forall(
+            tla.name("t_3"),
+            letApp,
+            tla.forall(
+              tla.name("t_4"),
+              letApp,
               tla.letIn(
-                tla.exists(tla.name("t_6"), tla.appOp(tla.name("t_5")),
-                  tla.exists(tla.name("t_7"), tla.appOp(tla.name("t_5")),
-                    tla.eql(tla.name("t_6"), tla.name("t_7")))),
+                tla.exists(
+                  tla.name("t_6"),
+                  tla.appOp(tla.name("t_5")),
+                  tla.exists(
+                    tla.name("t_7"),
+                    tla.appOp(tla.name("t_5")),
+                    tla.eql(tla.name("t_6"), tla.name("t_7"))
+                  )
+                ),
                 TlaOperDecl("t_5", List(), newSet)
-              )))))
+              )
+            )
+          )
+        )
+      )
 
     val expected = tla.letIn(letBody, TlaOperDecl("t_8", List(), tla.name("S")))
     assert(expected == output)

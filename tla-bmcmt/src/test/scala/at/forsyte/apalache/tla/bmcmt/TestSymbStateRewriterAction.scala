@@ -12,7 +12,11 @@ class TestSymbStateRewriterAction extends RewriterBase {
   test("""SE-PRIME: x' ~~> NameEx(x')""") {
     val rewriter = create()
     arena.appendCell(IntT()) // the type finder is strict about unassigned types, so let's create a cell for x'
-    val state = new SymbState(tla.prime(NameEx("x")), arena, Binding("x'" -> arena.topCell))
+    val state = new SymbState(
+      tla.prime(NameEx("x")),
+      arena,
+      Binding("x'" -> arena.topCell)
+    )
     rewriter.rewriteOnce(state) match {
       case Continue(next) =>
         assert(next.ex == NameEx("x'"))

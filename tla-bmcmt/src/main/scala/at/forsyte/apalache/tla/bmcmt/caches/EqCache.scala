@@ -25,7 +25,11 @@ object EqCache {
   *
   * @author Igor Konnov
   */
-class EqCache() extends StackableContext with Serializable with Recoverable[EqCacheSnapshot] {
+class EqCache()
+    extends StackableContext
+    with Serializable
+    with Recoverable[EqCacheSnapshot] {
+
   /**
     * The current context level, see StackableContext.
     */
@@ -39,7 +43,6 @@ class EqCache() extends StackableContext with Serializable with Recoverable[EqCa
     */
   private var eqCache: mutable.Map[(ArenaCell, ArenaCell), (CacheEntry, Int)] =
     new mutable.HashMap[(ArenaCell, ArenaCell), (CacheEntry, Int)]()
-
 
   def put(left: ArenaCell, right: ArenaCell, entry: CacheEntry): Unit = {
     if (left.id <= right.id) {
@@ -86,7 +89,9 @@ class EqCache() extends StackableContext with Serializable with Recoverable[EqCa
     * @return the snapshot
     */
   override def snapshot(): EqCacheSnapshot = {
-    val squashedCache = eqCache.map { case (key, (value, _)) => (key, (value, 0)) }
+    val squashedCache = eqCache.map {
+      case (key, (value, _)) => (key, (value, 0))
+    }
     new EqCacheSnapshot(squashedCache)
   }
 

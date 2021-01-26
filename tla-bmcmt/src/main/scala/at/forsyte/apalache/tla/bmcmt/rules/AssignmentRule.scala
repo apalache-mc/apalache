@@ -24,7 +24,11 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
         && !state.binding.contains(name + "'"))
 
     state.ex match {
-      case OperEx(BmcOper.assign, OperEx(TlaActionOper.prime, NameEx(name)), _) =>
+      case OperEx(
+          BmcOper.assign,
+          OperEx(TlaActionOper.prime, NameEx(name)),
+          _
+          ) =>
         isUnbound(name)
 
       case _ =>
@@ -35,15 +39,24 @@ class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       // general case
-      case OperEx(BmcOper.assign, OperEx(TlaActionOper.prime, NameEx(name)), rhs) =>
+      case OperEx(
+          BmcOper.assign,
+          OperEx(TlaActionOper.prime, NameEx(name)),
+          rhs
+          ) =>
         val nextState = rewriter.rewriteUntilDone(state.setRex(rhs))
         val rhsCell = nextState.arena.findCellByNameEx(nextState.ex)
         nextState
           .setRex(state.arena.cellTrue().toNameEx) // just return TRUE
-          .setBinding(Binding(nextState.binding.toMap + (name + "'" -> rhsCell))) // bind the cell to the name
+          .setBinding(
+            Binding(nextState.binding.toMap + (name + "'" -> rhsCell))
+          ) // bind the cell to the name
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
+        throw new RewriterException(
+          "%s is not applicable".format(getClass.getSimpleName),
+          state.ex
+        )
     }
   }
 }

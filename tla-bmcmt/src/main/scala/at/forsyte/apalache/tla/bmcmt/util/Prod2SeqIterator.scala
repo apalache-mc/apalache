@@ -7,7 +7,8 @@ package at.forsyte.apalache.tla.bmcmt.util
   * @tparam T1 the type of the first element
   * @tparam T2 the type of the second element
   */
-class Prod2SeqIterator[T1, T2](seq1: Seq[T1], seq2: Seq[T2]) extends Iterator[(T1, T2)] {
+class Prod2SeqIterator[T1, T2](seq1: Seq[T1], seq2: Seq[T2])
+    extends Iterator[(T1, T2)] {
   private val intIter = new IntTupleIterator(Seq(seq1.size - 1, seq2.size - 1))
 
   override def hasNext: Boolean = {

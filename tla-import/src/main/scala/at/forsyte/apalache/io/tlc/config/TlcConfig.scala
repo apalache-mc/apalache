@@ -36,6 +36,7 @@ case class NullSpec() extends BehaviorSpec
   * A constant expression that can be written in the right-hand side of an assignment.
   */
 abstract sealed class ConfigConstExpr {
+
   /**
     * Convert the expression to the intermediate representation.
     * @return the TLA IR expression that represents the parsed constant expression
@@ -44,6 +45,7 @@ abstract sealed class ConfigConstExpr {
 }
 
 object ConfigModelValue {
+
   /**
     * Every model value is prefixed with this string when converted to a string.
     */
@@ -80,7 +82,8 @@ case class ConfigStrValue(str: String) extends ConfigConstExpr {
   * @param elems the set elements, which are constant expression themselves.
   */
 case class ConfigSetValue(elems: ConfigConstExpr*) extends ConfigConstExpr {
-  override def toTlaEx: TlaEx = OperEx(TlaSetOper.enumSet, elems.map(_.toTlaEx) :_*)
+  override def toTlaEx: TlaEx =
+    OperEx(TlaSetOper.enumSet, elems.map(_.toTlaEx): _*)
 }
 
 /**
@@ -101,19 +104,25 @@ case class ConfigSetValue(elems: ConfigConstExpr*) extends ConfigConstExpr {
   *
   * @author Igor Konnov
   */
-case class TlcConfig(constAssignments: Map[String, ConfigConstExpr],
-                     constReplacements: Map[String, String],
-                     stateConstraints: List[String],
-                     actionConstraints: List[String],
-                     invariants: List[String],
-                     temporalProps: List[String],
-                     behaviorSpec: BehaviorSpec) {
+case class TlcConfig(
+    constAssignments: Map[String, ConfigConstExpr],
+    constReplacements: Map[String, String],
+    stateConstraints: List[String],
+    actionConstraints: List[String],
+    invariants: List[String],
+    temporalProps: List[String],
+    behaviorSpec: BehaviorSpec
+) {
 
-  def addConstAssignments(moreConstAssignments: Map[String, ConfigConstExpr]): TlcConfig = {
+  def addConstAssignments(
+      moreConstAssignments: Map[String, ConfigConstExpr]
+  ): TlcConfig = {
     this.copy(constAssignments = constAssignments ++ moreConstAssignments)
   }
 
-  def addConstReplacements(moreConstReplacements: Map[String, String]): TlcConfig = {
+  def addConstReplacements(
+      moreConstReplacements: Map[String, String]
+  ): TlcConfig = {
     this.copy(constReplacements = constReplacements ++ moreConstReplacements)
   }
 
@@ -135,8 +144,11 @@ case class TlcConfig(constAssignments: Map[String, ConfigConstExpr],
 
   def setBehaviorSpecUnlessNull(newSpec: BehaviorSpec): TlcConfig = {
     if (behaviorSpec != NullSpec() && newSpec != NullSpec()) {
-      throw new TlcConfigParseError("Found several behavior specifications: %s and %s"
-        .format(behaviorSpec, newSpec), NoPosition)
+      throw new TlcConfigParseError(
+        "Found several behavior specifications: %s and %s"
+          .format(behaviorSpec, newSpec),
+        NoPosition
+      )
     }
 
     if (newSpec != NullSpec()) {
@@ -160,11 +172,13 @@ case class TlcConfig(constAssignments: Map[String, ConfigConstExpr],
 
 object TlcConfig {
   val empty: TlcConfig =
-    TlcConfig(constAssignments = Map(),
-              constReplacements = Map(),
-              stateConstraints = List.empty,
-              actionConstraints = List.empty,
-              invariants = List.empty,
-              temporalProps = List.empty,
-              behaviorSpec = NullSpec())
+    TlcConfig(
+      constAssignments = Map(),
+      constReplacements = Map(),
+      stateConstraints = List.empty,
+      actionConstraints = List.empty,
+      invariants = List.empty,
+      temporalProps = List.empty,
+      behaviorSpec = NullSpec()
+    )
 }

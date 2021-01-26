@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt.analyses
 
-
 /**
   * Similar to TLA+ level, we define grades, which are useful for caching model checking results:
   * <ol>
@@ -20,18 +19,19 @@ package at.forsyte.apalache.tla.bmcmt.analyses
   * @author Igor Konnov
   */
 object ExprGrade extends Enumeration {
-  val Constant, StateFree, StateBound, ActionFree, ActionBound, Higher, NonCacheable = Value
+  val Constant, StateFree, StateBound, ActionFree, ActionBound, Higher,
+      NonCacheable = Value
 
   def join(left: Value, right: Value): Value = {
     (left, right) match {
-      case (NonCacheable, _) | (_, NonCacheable) => NonCacheable
-      case (Higher, _) | (_, Higher) => Higher
-      case (ActionBound, _) | (_, ActionBound) => ActionBound
+      case (NonCacheable, _) | (_, NonCacheable)               => NonCacheable
+      case (Higher, _) | (_, Higher)                           => Higher
+      case (ActionBound, _) | (_, ActionBound)                 => ActionBound
       case (ActionFree, StateBound) | (StateBound, ActionFree) => ActionBound
-      case (ActionFree, _) | (_, ActionFree) => ActionFree
-      case (StateBound, _) | (_, StateBound) => StateBound
-      case (StateFree, _) | (_, StateFree) => StateFree
-      case _ => Constant
+      case (ActionFree, _) | (_, ActionFree)                   => ActionFree
+      case (StateBound, _) | (_, StateBound)                   => StateBound
+      case (StateFree, _) | (_, StateFree)                     => StateFree
+      case _                                                   => Constant
     }
   }
 }

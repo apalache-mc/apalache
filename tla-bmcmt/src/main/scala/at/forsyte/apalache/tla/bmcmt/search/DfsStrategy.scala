@@ -1,12 +1,18 @@
 package at.forsyte.apalache.tla.bmcmt.search
 
 import at.forsyte.apalache.tla.bmcmt.CheckerInput
-import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy.{BacktrackOnce, Command, Finish}
+import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy.{
+  BacktrackOnce,
+  Command,
+  Finish
+}
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.util.Random
 
-class DfsStrategy(input: CheckerInput, stepsBound: Int, randomize: Boolean) extends SearchStrategy with LazyLogging {
+class DfsStrategy(input: CheckerInput, stepsBound: Int, randomize: Boolean)
+    extends SearchStrategy
+    with LazyLogging {
   var stepNo = 0
   var terminate = false
   var unexploredIndices: Seq[Seq[Int]] = Seq()
@@ -32,7 +38,8 @@ class DfsStrategy(input: CheckerInput, stepsBound: Int, randomize: Boolean) exte
           // all transitions at level 0 were enumerated, which means that all bounded paths were enumerated
           Finish()
         } else {
-          val (hd, tl) = (unexploredIndices.head.head, unexploredIndices.head.tail)
+          val (hd, tl) =
+            (unexploredIndices.head.head, unexploredIndices.head.tail)
           unexploredIndices = Seq(tl)
           // explore the next transition
           logger.debug(s"DFS: step $stepNo, transition $hd")
