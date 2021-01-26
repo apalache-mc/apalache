@@ -32,15 +32,6 @@ Each chapter must link a file: internal links to anchors within files do not
 work. There is an [open issue](https://github.com/rust-lang/mdBook/issues/167)
 to fix this behavior.
 
-### Referring to `README.md` pages
-
-Within the book, any `README.md` page gets converted to an `index.md` page
-during compilation. You can link to `README.md` pages in the `SUMMARY.md`, but
-everywhere else you must write the link pointed towards `index.md`.
-
-There is an [open issue](https://github.com/rust-lang/mdBook/issues/1268) to fix
-this behavior.
-
 ## Internal documentation
 
 Design notes and memos that are part of the documentation of our design process
