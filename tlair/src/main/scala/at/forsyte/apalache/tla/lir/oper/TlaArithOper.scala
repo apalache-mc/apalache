@@ -5,7 +5,6 @@ package at.forsyte.apalache.tla.lir.oper
   *
   * @author jkukovec
   */
-
 abstract class TlaArithOper extends TlaOper {
   override def interpretation: Interpretation.Value = Interpretation.StandardLib
 }
@@ -25,6 +24,7 @@ abstract class TlaArithOper extends TlaOper {
   * @author jkukovec, konnov
   */
 object TlaArithOper {
+
   /**
     * An n-ary sum, that is, Sum(x_1, ..., x_n) = x_1 + ... + x_n.
     */

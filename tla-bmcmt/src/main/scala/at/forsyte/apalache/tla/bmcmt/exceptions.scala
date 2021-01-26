@@ -9,7 +9,8 @@ import at.forsyte.apalache.tla.lir.{NullEx, TlaEx}
   * @param message error message
   * @param causeExpr the problematic TLA+ expression, may be NullEx
   */
-class CheckerException(message: String, val causeExpr: TlaEx) extends Exception(message)
+class CheckerException(message: String, val causeExpr: TlaEx)
+    extends Exception(message)
 
 /**
   * This exception is thrown when no rewriting rule applies to the current state.
@@ -17,7 +18,8 @@ class CheckerException(message: String, val causeExpr: TlaEx) extends Exception(
   * @param message error message
   * @param causeExpr the problematic TLA+ expression, may be NullEx
   */
-class RewriterException(message: String, causeExpr: TlaEx) extends CheckerException(message, causeExpr)
+class RewriterException(message: String, causeExpr: TlaEx)
+    extends CheckerException(message, causeExpr)
 
 /**
   * An exception related to a type error.
@@ -25,17 +27,19 @@ class RewriterException(message: String, causeExpr: TlaEx) extends CheckerExcept
   * @param message error message
   * @param causeExpr the problematic TLA+ expression, may be NullEx
   */
-class TypeException(message: String, causeExpr: TlaEx) extends CheckerException(message, causeExpr)
-
+class TypeException(message: String, causeExpr: TlaEx)
+    extends CheckerException(message, causeExpr)
 
 /**
   * An exception that is thrown when at least one type inference error was found.
   * @param errors the list of type inference errors
   */
 class TypeInferenceException(val errors: Seq[TypeInferenceError])
-  extends CheckerException("Type inference failed, first error: %s"
-      .format(if (errors.nonEmpty) errors.head.explanation else "unknown"),
-    if (errors.nonEmpty) errors.head.origin else NullEx)
+    extends CheckerException(
+      "Type inference failed, first error: %s"
+        .format(if (errors.nonEmpty) errors.head.explanation else "unknown"),
+      if (errors.nonEmpty) errors.head.origin else NullEx
+    )
 
 /**
   * This exception is thrown when QStateRewrite cannot find an applicable rule.
@@ -43,7 +47,8 @@ class TypeInferenceException(val errors: Seq[TypeInferenceError])
   * @param message error message
   * @param causeExpr the problematic TLA+ expression, may be NullEx
   */
-class NoRuleException(message: String, causeExpr: TlaEx) extends RewriterException(message, causeExpr)
+class NoRuleException(message: String, causeExpr: TlaEx)
+    extends RewriterException(message, causeExpr)
 
 /**
   * This exception is thrown in case of problems with SMT encoding.
@@ -51,7 +56,8 @@ class NoRuleException(message: String, causeExpr: TlaEx) extends RewriterExcepti
   * @param message error message
   * @param causeExpr the problematic TLA+ expression, may be NullEx
   */
-class SmtEncodingException(message: String, causeExpr: TlaEx) extends CheckerException(message, causeExpr)
+class SmtEncodingException(message: String, causeExpr: TlaEx)
+    extends CheckerException(message, causeExpr)
 
 /**
   * This exception is thrown when the structure of a TLA+ expression is unexpected.
@@ -59,7 +65,8 @@ class SmtEncodingException(message: String, causeExpr: TlaEx) extends CheckerExc
   * @param message error message
   * @param causeExpr the problematic TLA+ expression, may be NullEx
   */
-class InvalidTlaExException(message: String, causeExpr: TlaEx) extends CheckerException(message, causeExpr)
+class InvalidTlaExException(message: String, causeExpr: TlaEx)
+    extends CheckerException(message, causeExpr)
 
 /**
   * An internal error that was triggered by the consistency checking code.
@@ -68,4 +75,5 @@ class InvalidTlaExException(message: String, causeExpr: TlaEx) extends CheckerEx
   * @param message error message
   * @param causeExpr the problematic TLA+ expression, may be NullEx
   */
-class InternalCheckerError(message: String, causeExpr: TlaEx) extends CheckerException(message, causeExpr)
+class InternalCheckerError(message: String, causeExpr: TlaEx)
+    extends CheckerException(message, causeExpr)

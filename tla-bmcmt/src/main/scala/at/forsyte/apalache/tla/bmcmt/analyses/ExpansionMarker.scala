@@ -3,7 +3,11 @@ package at.forsyte.apalache.tla.bmcmt.analyses
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.KeraLanguagePred
-import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.{
+  LanguageWatchdog,
+  TlaExTransformation,
+  TransformationTracker
+}
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
@@ -20,7 +24,9 @@ import com.typesafe.scalalogging.LazyLogging
   *
   * @author Igor Konnov
   */
-class ExpansionMarker @Inject()(tracker: TransformationTracker) extends TlaExTransformation with LazyLogging {
+class ExpansionMarker @Inject()(tracker: TransformationTracker)
+    extends TlaExTransformation
+    with LazyLogging {
 
   override def apply(e: TlaEx): TlaEx = {
     LanguageWatchdog(KeraLanguagePred()).check(e)
@@ -33,7 +39,9 @@ class ExpansionMarker @Inject()(tracker: TransformationTracker) extends TlaExTra
     case ex @ OperEx(op @ TlaSetOper.powerset, underlyingSet) =>
       if (shallExpand) {
         // Expand the set as well as the underlying set!
-        logger.warn(s"The set $ex will be expanded. This will blow up the solver.")
+        logger.warn(
+          s"The set $ex will be expanded. This will blow up the solver."
+        )
         OperEx(BmcOper.expand, OperEx(op, transform(true)(underlyingSet)))
       } else {
         // Do not expand the set itself, but expand the underlying set!
@@ -43,8 +51,13 @@ class ExpansionMarker @Inject()(tracker: TransformationTracker) extends TlaExTra
     case ex @ OperEx(op @ TlaSetOper.funSet, dom, cdm) =>
       if (shallExpand) {
         // Expand everything, including the function set.
-        logger.warn(s"The set $ex will be expanded. This will blow up the solver.")
-        OperEx(BmcOper.expand, OperEx(op, transform(true)(dom), transform(true)(cdm)))
+        logger.warn(
+          s"The set $ex will be expanded. This will blow up the solver."
+        )
+        OperEx(
+          BmcOper.expand,
+          OperEx(op, transform(true)(dom), transform(true)(cdm))
+        )
       } else {
         // Only expand the domain, but keep the co-domain unexpanded,
         // e.g., in [SUBSET S -> SUBSET T], while SUBSET S is expanded, the co-domain SUBSET T can be left as is
@@ -52,16 +65,27 @@ class ExpansionMarker @Inject()(tracker: TransformationTracker) extends TlaExTra
       }
 
     // simple propagation analysis that tells us what to expand
-    case OperEx(op @ BmcOper.`skolem`, OperEx(TlaBoolOper.exists, name, set, pred)) =>
+    case OperEx(
+        op @ BmcOper.`skolem`,
+        OperEx(TlaBoolOper.exists, name, set, pred)
+        ) =>
       // a skolemizable existential is allowed to keep its set unexpanded
-      OperEx(op,
-        OperEx(TlaBoolOper.exists, name, transform(false)(set), transform(false)(pred)))
+      OperEx(
+        op,
+        OperEx(
+          TlaBoolOper.exists,
+          name,
+          transform(false)(set),
+          transform(false)(pred)
+        )
+      )
 
     case OperEx(op @ TlaOper.chooseBounded, name, set, pred) =>
       // CHOOSE is essentially a skolemizable existential with the constraint of uniqueness
       OperEx(op, name, transform(false)(set), transform(false)(pred))
 
-    case OperEx(op, name, set, pred) if op == TlaBoolOper.exists || op == TlaBoolOper.forall =>
+    case OperEx(op, name, set, pred)
+        if op == TlaBoolOper.exists || op == TlaBoolOper.forall =>
       // non-skolemizable quantifiers require their sets to be expanded
       OperEx(op, name, transform(true)(set), transform(false)(pred))
 
@@ -69,7 +93,8 @@ class ExpansionMarker @Inject()(tracker: TransformationTracker) extends TlaExTra
       // when checking e \in S, we can keep S unexpanded, but e should be expanded
       OperEx(op, transform(true)(elem), transform(false)(set))
 
-    case OperEx(op, args @ _*) if op == TlaSetOper.cup || op == TlaSetOper.union =>
+    case OperEx(op, args @ _*)
+        if op == TlaSetOper.cup || op == TlaSetOper.union =>
       // binary union and UNION require arena cells, hence, expand
       OperEx(op, args map transform(true): _*)
 
@@ -83,7 +108,7 @@ class ExpansionMarker @Inject()(tracker: TransformationTracker) extends TlaExTra
       val targs = args map transform(true)
       OperEx(op, tbody +: targs: _*)
 
-    case LetInEx(body, defs@_*) =>
+    case LetInEx(body, defs @ _*) =>
       // at this point, we only have nullary let-in definitions
       def mapDef(df: TlaOperDecl) = {
         TlaOperDecl(df.name, df.formalParams, transform(shallExpand)(df.body))
@@ -95,7 +120,7 @@ class ExpansionMarker @Inject()(tracker: TransformationTracker) extends TlaExTra
       // transform the expression, but not the annotation! See https://github.com/informalsystems/apalache/issues/292
       OperEx(BmcOper.withType, transform(shallExpand)(expr), annot)
 
-    case OperEx(oper, args@_*) =>
+    case OperEx(oper, args @ _*) =>
       // try to descend in the children, which may contain Boolean operations, e.g., { \E x \in S: P }
       OperEx(oper, args map transform(shallExpand): _*)
 

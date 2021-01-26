@@ -5,8 +5,6 @@ import at.forsyte.apalache.tla.lir.src.SourceRegion
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-
-
 @RunWith(classOf[JUnitRunner])
 class TestSourceStore extends FunSuite {
   test("basic add and find") {

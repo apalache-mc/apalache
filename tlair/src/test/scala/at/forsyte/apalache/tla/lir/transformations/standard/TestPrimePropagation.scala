@@ -61,7 +61,8 @@ class TestPrimePropagation extends FunSuite with BeforeAndAfter {
     val letIn = LetInEx(appOp("Foo"), fooDecl)
     val input = prime(letIn)
     val output = transformer(input)
-    val expectedDecl = TlaOperDecl("Foo", List.empty, appFun(prime(name("x")), prime(name("y"))))
+    val expectedDecl =
+      TlaOperDecl("Foo", List.empty, appFun(prime(name("x")), prime(name("y"))))
     val expectedLetIn = LetInEx(appOp("Foo"), expectedDecl)
     assert(expectedLetIn == output)
   }

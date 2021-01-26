@@ -11,23 +11,22 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
   * Implements the rules for TLC operators.
   *
   * @author Igor Konnov
-   */
+  */
 class TlcRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
-      case OperEx(TlcOper.print, _, _) => true
-      case OperEx(TlcOper.printT, _) => true
-      case OperEx(TlcOper.assert, _, _) => true
+      case OperEx(TlcOper.print, _, _)        => true
+      case OperEx(TlcOper.printT, _)          => true
+      case OperEx(TlcOper.assert, _, _)       => true
       case OperEx(TlcOper.colonGreater, _, _) => true
-      case OperEx(TlcOper.atat, _, _) => true
-      case _ => false
+      case OperEx(TlcOper.atat, _, _)         => true
+      case _                                  => false
     }
   }
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case OperEx(TlcOper.print, _, _)
-           | OperEx(TlcOper.printT, _) =>
+      case OperEx(TlcOper.print, _, _) | OperEx(TlcOper.printT, _) =>
         state.setRex(state.arena.cellTrue().toNameEx)
 
       case OperEx(TlcOper.assert, value, ValEx(TlaStr(message))) =>
@@ -41,11 +40,18 @@ class TlcRule(rewriter: SymbStateRewriter) extends RewritingRule {
         extendFun(state, funEx, pairEx)
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
+        throw new RewriterException(
+          "%s is not applicable".format(getClass.getSimpleName),
+          state.ex
+        )
     }
   }
 
-  private def extendFun(state: SymbState, funEx: TlaEx, pairEx: TlaEx): SymbState = {
+  private def extendFun(
+      state: SymbState,
+      funEx: TlaEx,
+      pairEx: TlaEx
+  ): SymbState = {
     def solverAssert = rewriter.solverContext.assertGroundExpr _
     var nextState = rewriter.rewriteUntilDone(state.setRex(funEx))
     val funCell = nextState.asCell
@@ -57,8 +63,11 @@ class TlcRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val newFunCell = nextState.arena.topCell
     nextState = nextState.updateArena(_.appendCell(relation.cellType))
     val newRelation = nextState.arena.topCell
-    nextState = nextState.setArena(nextState.arena.setCdm(newFunCell, newRelation)
-      .appendHas(newRelation, newPair +: relationCells: _*))
+    nextState = nextState.setArena(
+      nextState.arena
+        .setCdm(newFunCell, newRelation)
+        .appendHas(newRelation, newPair +: relationCells: _*)
+    )
     // the new pair unconditionally belongs to the new cell
     solverAssert(tla.in(newPair.toNameEx, newRelation.toNameEx))
     for (oldPair <- relationCells) {
@@ -81,7 +90,8 @@ class TlcRule(rewriter: SymbStateRewriter) extends RewritingRule {
     rewriter.solverContext.assertGroundExpr(constraint)
     // return isReachable. If there is a model M s.t. M |= isReachable, then M |= failPred allows us
     // to check, whether the assertion is violated or not
-    valueState.setArena(arena)
+    valueState
+      .setArena(arena)
       .setRex(state.arena.cellTrue().toNameEx) // if you need a value of a type different from bool, use TypedAssert
   }
 }

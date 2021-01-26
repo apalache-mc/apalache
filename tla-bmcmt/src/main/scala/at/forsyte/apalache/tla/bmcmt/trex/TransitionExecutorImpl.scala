@@ -1,7 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, MockOracle, Oracle, SparseOracle}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{
+  CherryPick,
+  MockOracle,
+  Oracle,
+  SparseOracle
+}
 import at.forsyte.apalache.tla.bmcmt.util.TlaExUtil
 import at.forsyte.apalache.tla.lir.TlaEx
 import com.typesafe.scalalogging.LazyLogging
@@ -13,8 +18,12 @@ import com.typesafe.scalalogging.LazyLogging
   *
   * @author Igor Konnov
   */
-class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], ctx: ExecutionContext[ExecCtxT])
-  extends TransitionExecutor[ExecCtxT] with LazyLogging {
+class TransitionExecutorImpl[ExecCtxT](
+    consts: Set[String],
+    vars: Set[String],
+    ctx: ExecutionContext[ExecCtxT]
+) extends TransitionExecutor[ExecCtxT]
+    with LazyLogging {
 
   /**
     * When debug is true, the executor runs additional consistency checks.
@@ -28,12 +37,16 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
 
   private val initialArena = Arena.create(ctx.rewriter.solverContext)
   // the latest symbolic state that is produced by the rewriter
-  var lastState = new SymbState(initialArena.cellTrue().toNameEx, initialArena, Binding())
+  var lastState =
+    new SymbState(initialArena.cellTrue().toNameEx, initialArena, Binding())
   // the stack of the variable bindings, one per state, in reverse order, excluding the binding in topState
-  private var revStack: List[(Binding, Oracle)] = List((Binding(), new MockOracle(0)))
+  private var revStack: List[(Binding, Oracle)] = List(
+    (Binding(), new MockOracle(0))
+  )
 
   // the transitions that are translated with prepareTransition in the current step
-  private var preparedTransitions: Map[Int, EncodedTransition] = Map[Int, EncodedTransition]()
+  private var preparedTransitions: Map[Int, EncodedTransition] =
+    Map[Int, EncodedTransition]()
 
   /**
     * The step that is currently encoded.
@@ -44,7 +57,8 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     * Retrieve the translated symbolic execution
     * @return the accumulated execution
     */
-  override def execution: EncodedExecution = EncodedExecution(lastState.arena, revStack.reverse)
+  override def execution: EncodedExecution =
+    EncodedExecution(lastState.arena, revStack.reverse)
 
   /**
     * Initialize CONSTANTS by applying assignments within a given expression.
@@ -54,7 +68,9 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
   override def initializeConstants(constInit: TlaEx): Unit = {
     assert(controlState == Preparing())
     if (_stepNo > 0 || preparedTransitions.nonEmpty) {
-      throw new IllegalStateException(s"initializeConstants should be called only against the initial state")
+      throw new IllegalStateException(
+        s"initializeConstants should be called only against the initial state"
+      )
     }
     logger.debug("Initializing CONSTANTS")
     inferTypes(constInit)
@@ -63,7 +79,9 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     val shiftedBinding = lastState.binding.shiftBinding(Set.empty)
     if (shiftedBinding.toMap.keySet != consts) {
       val diff = consts -- shiftedBinding.toMap.keySet
-      throw new IllegalStateException("CONSTANTS are not initialized: " + diff.mkString(", "))
+      throw new IllegalStateException(
+        "CONSTANTS are not initialized: " + diff.mkString(", ")
+      )
     }
 
     shiftTypes(Set.empty) // treat constants as variables
@@ -85,19 +103,29 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     * @return true, if the transition has been successfully translated;
     *         false, if the translation has found that the transition is disabled
     */
-  override def prepareTransition(transitionNo: Int, transitionEx: TlaEx): Boolean = {
+  override def prepareTransition(
+      transitionNo: Int,
+      transitionEx: TlaEx
+  ): Boolean = {
     assert(controlState == Preparing())
     if (preparedTransitions.contains(transitionNo)) {
-      throw new IllegalStateException(s"prepareTransition is called for $transitionNo two times")
+      throw new IllegalStateException(
+        s"prepareTransition is called for $transitionNo two times"
+      )
     }
-    logger.debug("Step #%d, transition #%d, SMT context level %d"
-      .format(stepNo, transitionNo, ctx.rewriter.contextLevel))
+    logger.debug(
+      "Step #%d, transition #%d, SMT context level %d"
+        .format(stepNo, transitionNo, ctx.rewriter.contextLevel)
+    )
     inferTypes(transitionEx)
-    ctx.rewriter.solverContext.log("; ------- STEP: %d, STACK LEVEL: %d TRANSITION: %d {"
-      .format(stepNo, ctx.rewriter.contextLevel, transitionNo))
+    ctx.rewriter.solverContext.log(
+      "; ------- STEP: %d, STACK LEVEL: %d TRANSITION: %d {"
+        .format(stepNo, ctx.rewriter.contextLevel, transitionNo)
+    )
     logger.debug("Translating to SMT...")
     val erased = lastState.setBinding(lastState.binding.forgetPrimed) // forget the previous assignments
-    ctx.rewriter.exprCache.disposeActionLevel() // forget the previous action caches
+    ctx.rewriter.exprCache
+      .disposeActionLevel() // forget the previous action caches
     // translate the transition to SMT
     lastState = ctx.rewriter.rewriteUntilDone(erased.setRex(transitionEx))
     ctx.rewriter.flushStatistics()
@@ -110,21 +138,30 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
       } else {
         // this is a clear sign of a bug in one of the translation rules
         logger.debug("Transition constraints are inconsistent")
-        throw new CheckerException("A contradiction introduced in rewriting. Report a bug.", lastState.ex)
+        throw new CheckerException(
+          "A contradiction introduced in rewriting. Report a bug.",
+          lastState.ex
+        )
       }
     }
 
     // check, whether all variables have been assigned
     val newBinding = lastState.binding
     lastState = lastState.setBinding(lastState.binding.forgetPrimed) // forget the assignments
-    val assignedVars = newBinding.toMap.
-      collect { case (name, _) if name.endsWith("'") => name.substring(0, name.length - 1) }
+    val assignedVars = newBinding.toMap.collect {
+      case (name, _) if name.endsWith("'") => name.substring(0, name.length - 1)
+    }
     if (assignedVars.toSet == vars) {
       // the transition can be accessed
-      preparedTransitions += transitionNo -> EncodedTransition(lastState.asCell, newBinding)
+      preparedTransitions += transitionNo -> EncodedTransition(
+        lastState.asCell,
+        newBinding
+      )
       true // the transition is probably enabled
     } else {
-      logger.debug(s"Transition $transitionNo produces partial assignment. Disabled.")
+      logger.debug(
+        s"Transition $transitionNo produces partial assignment. Disabled."
+      )
       false // the transition is disabled
     }
   }
@@ -140,7 +177,9 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     assert(controlState == Preparing())
     // assert that the concerned transition has been prepared
     if (!preparedTransitions.contains(transitionNo)) {
-      throw new IllegalStateException(s"Use prepareTransition before calling assumeTransition for $transitionNo")
+      throw new IllegalStateException(
+        s"Use prepareTransition before calling assumeTransition for $transitionNo"
+      )
     } else {
       val transition = preparedTransitions(transitionNo)
       ctx.rewriter.solverContext.assertGroundExpr(transition.trigger.toNameEx)
@@ -160,7 +199,10 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     * @param assertion    a state expression
     * @return true, if the transition may affect satisfiability of the assertion
     */
-  override def mayChangeAssertion(transitionNo: Int, assertion: TlaEx): Boolean = {
+  override def mayChangeAssertion(
+      transitionNo: Int,
+      assertion: TlaEx
+  ): Boolean = {
     val trans = preparedTransitions(transitionNo)
     val binding = trans.binding
 
@@ -178,7 +220,8 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
       }
     }
 
-    val changedPrimes = binding.toMap.keySet.foldLeft(Set[String]())(addOrSkipVar)
+    val changedPrimes =
+      binding.toMap.keySet.foldLeft(Set[String]())(addOrSkipVar)
     val used = TlaExUtil.findUsedNames(assertion).map(_ + "'")
     // Either the assertion is referring to changed variables,
     // or we are at the initial step, so it's satisfiability may have changed, see #108
@@ -206,17 +249,22 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
   override def pickTransition(): Oracle = {
     assert(controlState == Preparing())
     // assert that there is at least one prepared transition
-    logger.info("Step %d, level %d: picking a transition out of %d transition(s)"
-      .format(stepNo, ctx.rewriter.contextLevel, preparedTransitions.size))
+    logger.info(
+      "Step %d, level %d: picking a transition out of %d transition(s)"
+        .format(stepNo, ctx.rewriter.contextLevel, preparedTransitions.size)
+    )
     assert(preparedTransitions.nonEmpty)
     val sortedTransitions = preparedTransitions.toSeq.sortBy(_._1)
 
     // pick an index j \in { 0..k } of the fired transition
     val picker = new CherryPick(ctx.rewriter)
-    val (oracleState, oracle) = picker.oracleFactory.newDefaultOracle(lastState, sortedTransitions.length)
+    val (oracleState, oracle) =
+      picker.oracleFactory.newDefaultOracle(lastState, sortedTransitions.length)
 
     if (sortedTransitions.isEmpty) {
-      throw new IllegalArgumentException("unable to pick transitions from empty set")
+      throw new IllegalArgumentException(
+        "unable to pick transitions from empty set"
+      )
     } else if (sortedTransitions.lengthCompare(1) == 0) {
       ctx.solver.assertGroundExpr(sortedTransitions.head._2.trigger.toNameEx)
       lastState = oracleState.setBinding(sortedTransitions.head._2.binding)
@@ -226,7 +274,12 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
       pushLastState(mockOracle)
     } else {
       // if oracle = i, then the ith transition is enabled
-      ctx.solver.assertGroundExpr(oracle.caseAssertions(oracleState, sortedTransitions.map(_._2.trigger.toNameEx)))
+      ctx.solver.assertGroundExpr(
+        oracle.caseAssertions(
+          oracleState,
+          sortedTransitions.map(_._2.trigger.toNameEx)
+        )
+      )
 
       // glue the computed states S_0, ..., S_k together:
       // for every variable x', pick c_x from { S_1[x'], ..., S_k[x'] }
@@ -236,22 +289,34 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
 
       def pickVar(x: String): ArenaCell = {
         val toPickFrom = sortedTransitions map (p => p._2.binding(x))
-        nextState = picker.pickByOracle(nextState,
-          oracle, toPickFrom, nextState.arena.cellFalse().toNameEx) // no else case
+        nextState = picker.pickByOracle(
+          nextState,
+          oracle,
+          toPickFrom,
+          nextState.arena.cellFalse().toNameEx
+        ) // no else case
         nextState.asCell
       }
 
-      def getAssignedVars(binding: Binding) = binding.forgetNonPrimed(Set()).toMap.keySet
+      def getAssignedVars(binding: Binding) =
+        binding.forgetNonPrimed(Set()).toMap.keySet
       val primedVars = getAssignedVars(sortedTransitions.head._2.binding) // only VARIABLES, not CONSTANTS
 
-      val finalVarBinding = Binding(primedVars.toSeq map (n => (n, pickVar(n))): _*) // variables only
-      val constBinding = Binding(oracleState.binding.toMap.filter(p => consts.contains(p._1)))
+      val finalVarBinding = Binding(
+        primedVars.toSeq map (n => (n, pickVar(n))): _*
+      ) // variables only
+      val constBinding = Binding(
+        oracleState.binding.toMap.filter(p => consts.contains(p._1))
+      )
       lastState = nextState.setBinding(finalVarBinding ++ constBinding)
       // the sparse oracle is mapping the oracle values to the transition numbers
       val sparseOracle = new SparseOracle(oracle, preparedTransitions.keySet)
       pushLastState(sparseOracle)
       if (debug && !ctx.solver.sat()) {
-        throw new InternalCheckerError(s"Error picking next variables (step $stepNo). Report a bug.", lastState.ex)
+        throw new InternalCheckerError(
+          s"Error picking next variables (step $stepNo). Report a bug.",
+          lastState.ex
+        )
       }
     }
 
@@ -280,7 +345,8 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
       .setRex(lastState.arena.cellTrue().toNameEx)
     // save the types of the cells that are bound to the previous variables types,
     // so the transition executor can process assertions over state variables of the whole execution
-    vars.map(name => lastState.binding(name))
+    vars
+      .map(name => lastState.binding(name))
       .foreach(cell => ctx.typeFinder.extendWithCellType(cell))
     // that is the result of this step
     shiftTypes(consts)
@@ -308,9 +374,13 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
   override def decodedExecution(): DecodedExecution = {
     val decoder = new SymbStateDecoder(ctx.solver, ctx.rewriter)
 
-    def decodePair(binding: Binding, oracle: Oracle): (Map[String, TlaEx], Int) = {
+    def decodePair(
+        binding: Binding,
+        oracle: Oracle
+    ): (Map[String, TlaEx], Int) = {
       val transitionNo = oracle.evalPosition(ctx.solver, lastState)
-      val decodedState = decoder.decodeStateVariables(lastState.setBinding(binding))
+      val decodedState =
+        decoder.decodeStateVariables(lastState.setBinding(binding))
       (decodedState, transitionNo)
     }
 
@@ -324,8 +394,16 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     * @return a snapshot
     */
   def snapshot(): ExecutionSnapshot[ExecCtxT] = {
-    val exe = new EncodedExecution(lastState.arena, ((lastState.binding, new MockOracle(0)) :: revStack).reverse)
-    new ExecutionSnapshot[ExecCtxT](controlState, exe, preparedTransitions, ctx.snapshot())
+    val exe = new EncodedExecution(
+      lastState.arena,
+      ((lastState.binding, new MockOracle(0)) :: revStack).reverse
+    )
+    new ExecutionSnapshot[ExecCtxT](
+      controlState,
+      exe,
+      preparedTransitions,
+      ctx.snapshot()
+    )
   }
 
   /**
@@ -363,7 +441,6 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     revStack = (lastState.binding.shiftBinding(consts), oracle) :: revStack
   }
 
-
   // infer the types and throw an exception if type inference has failed
   private def inferTypes(expr: TlaEx): Unit = {
 //    logger.debug("Inferring types...")
@@ -382,10 +459,13 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     val types = ctx.typeFinder.varTypes
     // keep the types of prime variables, cells, and constants
     def keep(name: String): Boolean = {
-      name.endsWith("'") || ArenaCell.isValidName(name) || constants.contains(name)
+      name.endsWith("'") || ArenaCell.isValidName(name) || constants.contains(
+        name
+      )
     }
     val nextTypes =
-      types.filter(p => keep(p._1))
+      types
+        .filter(p => keep(p._1))
         .map(p => (p._1.stripSuffix("'"), p._2))
     ctx.typeFinder.reset(nextTypes)
   }

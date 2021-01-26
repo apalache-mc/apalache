@@ -17,7 +17,7 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaFunOper.funDef, _*) => true
-      case _ => false
+      case _                             => false
     }
   }
 
@@ -28,18 +28,30 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriteFunCtor(state, mapEx, varName, setEx)
 
       case _ =>
-        throw new RewriterException("%s is not applicable to %s"
-          .format(getClass.getSimpleName, state.ex), state.ex)
+        throw new RewriterException(
+          "%s is not applicable to %s"
+            .format(getClass.getSimpleName, state.ex),
+          state.ex
+        )
     }
   }
 
-  private def rewriteFunCtor(state: SymbState, mapEx: TlaEx, varName: String, setEx: TlaEx) = {
+  private def rewriteFunCtor(
+      state: SymbState,
+      mapEx: TlaEx,
+      varName: String,
+      setEx: TlaEx
+  ) = {
     // rewrite the set expression into a memory cell
     var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
     val domainCell = nextState.asCell
     val elemT = domainCell.cellType match {
       case FinSetT(et) => et
-      case t@_ => throw new RewriterException("Expected a finite set, found: " + t, state.ex)
+      case t @ _ =>
+        throw new RewriterException(
+          "Expected a finite set, found: " + t,
+          state.ex
+        )
     }
     val domainCells = nextState.arena.getHas(domainCell)
     // find the type of the target expression and of the target set
@@ -59,7 +71,8 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // Add the cell for the set that stores the relation <<x, f[x]>>.
     nextState = nextState.updateArena(_.appendCell(funT))
     val funCell = nextState.arena.topCell
-    nextState = nextState.updateArena(_.appendCell(FinSetT(TupleT(Seq(elemT, resultT)))))
+    nextState =
+      nextState.updateArena(_.appendCell(FinSetT(TupleT(Seq(elemT, resultT)))))
     val relation = nextState.arena.topCell
     val newArena = nextState.arena.appendHas(relation, relationCells: _*)
     // we do not store the function domain anymore, as it is easy to get the domain and the relation out of sync
@@ -84,7 +97,13 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     nextState.setRex(funCell.toNameEx)
   }
 
-  private def mapCells(state: SymbState, mapEx: TlaEx, varName: String, setEx: TlaEx, oldCells: Seq[ArenaCell]) = {
+  private def mapCells(
+      state: SymbState,
+      mapEx: TlaEx,
+      varName: String,
+      setEx: TlaEx,
+      oldCells: Seq[ArenaCell]
+  ) = {
     // similar to SymbStateRewriter.rewriteSeqUntilDone and SetFilterRule
     def process(st: SymbState, seq: Seq[ArenaCell]): (SymbState, Seq[TlaEx]) = {
       seq match {

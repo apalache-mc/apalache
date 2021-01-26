@@ -15,7 +15,7 @@ class TypeAnnotationRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(BmcOper.withType, _, _) => true
-      case _ => false
+      case _                              => false
     }
   }
 
@@ -25,7 +25,10 @@ class TypeAnnotationRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.rewriteUntilDone(state.setRex(ex))
 
       case e @ _ =>
-        throw new RewriterException("%s is not applicable to %s".format(getClass.getSimpleName, e), state.ex)
+        throw new RewriterException(
+          "%s is not applicable to %s".format(getClass.getSimpleName, e),
+          state.ex
+        )
     }
   }
 }

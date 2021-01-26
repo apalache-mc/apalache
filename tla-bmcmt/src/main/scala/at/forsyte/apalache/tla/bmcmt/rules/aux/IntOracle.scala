@@ -17,6 +17,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
   * @param nvalues the of values to accommodate
   */
 class IntOracle(val intCell: ArenaCell, nvalues: Int) extends Oracle {
+
   /**
     * Produce an expression that states that the oracle values equals to the given integer position.
     * The actual implementation may be different from an integer comparison.
@@ -35,16 +36,21 @@ class IntOracle(val intCell: ArenaCell, nvalues: Int) extends Oracle {
     * @param assertions a sequence of assertions, one per oracle value
     * @return an expression ite(oracle = 0, ite(oracle = 1, ...))
     */
-  override def caseAssertions(state: SymbState, assertions: Seq[TlaEx]): TlaEx = {
+  override def caseAssertions(
+      state: SymbState,
+      assertions: Seq[TlaEx]
+  ): TlaEx = {
     nvalues match {
       case 0 => state.arena.cellTrue().toNameEx
 
       case 1 => assertions.head
 
       case _ =>
-        val es = assertions.slice(0, nvalues).zipWithIndex
+        val es = assertions
+          .slice(0, nvalues)
+          .zipWithIndex
           .map { case (e, i) => tla.or(e, tla.not(whenEqualTo(state, i))) }
-        tla.and(es :_*)
+        tla.and(es: _*)
     }
   }
 
@@ -56,13 +62,20 @@ class IntOracle(val intCell: ArenaCell, nvalues: Int) extends Oracle {
     * @param state         a symbolic state
     * @return an integer value of the oracle
     */
-  override def evalPosition(solverContext: SolverContext, state: SymbState): Int = {
+  override def evalPosition(
+      solverContext: SolverContext,
+      state: SymbState
+  ): Int = {
     solverContext.evalGroundExpr(intCell.toNameEx).asInstanceOf[Int]
   }
 }
 
 object IntOracle {
-  def create(rewriter: SymbStateRewriter, state: SymbState, nvalues: Int): (SymbState, IntOracle) = {
+  def create(
+      rewriter: SymbStateRewriter,
+      state: SymbState,
+      nvalues: Int
+  ): (SymbState, IntOracle) = {
     val nextState = state.setArena(state.arena.appendCell(IntT()))
     val oracleCell = nextState.arena.topCell
     val oracle = new IntOracle(oracleCell, nvalues)

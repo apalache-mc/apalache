@@ -13,11 +13,12 @@ import at.forsyte.apalache.tla.bmcmt.implicitConversions._
   *
   * @author Igor Konnov
   */
-class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) extends RewritingRule {
+class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache)
+    extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaFunOper.domain, _) => true
-      case _ => false
+      case _                            => false
     }
   }
 
@@ -42,18 +43,27 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
           case FunT(_, _) =>
             mkFunDomain(funState, funCell)
 
-            case _ =>
-              throw new RewriterException("DOMAIN x where type(x) = %s is not implemented".format(funCell.cellType), state.ex)
-          }
+          case _ =>
+            throw new RewriterException(
+              "DOMAIN x where type(x) = %s is not implemented".format(
+                funCell.cellType
+              ),
+              state.ex
+            )
+        }
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
+        throw new RewriterException(
+          "%s is not applicable".format(getClass.getSimpleName),
+          state.ex
+        )
     }
   }
 
   private def mkTupleDomain(state: SymbState, funCell: ArenaCell): SymbState = {
     val tupleT = funCell.cellType.asInstanceOf[TupleT]
-    val (newArena, dom) = intRangeCache.create(state.arena, (1, tupleT.args.size))
+    val (newArena, dom) =
+      intRangeCache.create(state.arena, (1, tupleT.args.size))
     state.setArena(newArena).setRex(dom)
   }
 
@@ -61,7 +71,8 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
     // as we do not know the domain precisely, we create the set 1..N and include only its elements between start and end
     val seqT = seqCell.cellType.asInstanceOf[SeqT]
     val start :: end +: elems = state.arena.getHas(seqCell)
-    val (newArena, staticDom) = intRangeCache.create(state.arena, (1, elems.size))
+    val (newArena, staticDom) =
+      intRangeCache.create(state.arena, (1, elems.size))
     // we cannot use staticDom directly, as its in-relation is restricted, create a copy
     var arena = newArena.appendCell(staticDom.cellType)
     val dom = arena.topCell
@@ -79,15 +90,17 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
   private def mkFunDomain(state: SymbState, funCell: ArenaCell): SymbState = {
     // the expression cache should help us here
     val relation = state.arena.getCdm(funCell)
-    var nextState = state.updateArena(_.appendCell(FinSetT(funCell.cellType.asInstanceOf[FunT].argType)))
+    var nextState = state.updateArena(
+      _.appendCell(FinSetT(funCell.cellType.asInstanceOf[FunT].argType))
+    )
     val domCell = nextState.arena.topCell
     def getArg(c: ArenaCell): ArenaCell = nextState.arena.getHas(c).head
     val domCells = nextState.arena.getHas(relation) map getArg
-    nextState = nextState.setArena(nextState.arena.appendHas(domCell, domCells: _*))
+    nextState =
+      nextState.setArena(nextState.arena.appendHas(domCell, domCells: _*))
     for (pair <- state.arena.getHas(relation)) {
       val arg = getArg(pair)
-      val iff = tla.equiv(tla.in(arg, domCell),
-                          tla.in(pair, relation))
+      val iff = tla.equiv(tla.in(arg, domCell), tla.in(pair, relation))
       rewriter.solverContext.assertGroundExpr(iff)
     }
 

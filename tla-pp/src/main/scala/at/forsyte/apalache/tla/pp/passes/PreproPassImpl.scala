@@ -29,7 +29,7 @@ import com.typesafe.scalalogging.LazyLogging
   * @param tracker transformation tracker
   * @param nextPass next pass to call
   */
-class PreproPassImpl @Inject() (
+class PreproPassImpl @Inject()(
     val options: PassOptions,
     gen: UniqueNameGenerator,
     renaming: IncrementalRenaming,
@@ -62,7 +62,10 @@ class PreproPassImpl @Inject() (
     val transformationSequence: List[(String, TlaModuleTransformation)] =
       List(
         ("Desugarer", ModuleByExTransformer(Desugarer(tracker))),
-        ("PrimePropagation", createModuleTransformerForPrimePropagation(varSet)),
+        (
+          "PrimePropagation",
+          createModuleTransformerForPrimePropagation(varSet)
+        ),
         ("UniqueRenamer", renaming.renameInModule),
         ("Normalizer", ModuleByExTransformer(Normalizer(tracker))),
         ("Keramelizer", ModuleByExTransformer(Keramelizer(gen, tracker)))
@@ -100,14 +103,18 @@ class PreproPassImpl @Inject() (
     true
   }
 
-  private def createModuleTransformerForPrimePropagation(varSet: Set[String])
-      : ModuleByExTransformer = {
+  private def createModuleTransformerForPrimePropagation(
+      varSet: Set[String]
+  ): ModuleByExTransformer = {
     val cinitName = options.getOrElse("checker", "cinit", "CInit") + "Primed"
     val includeAllButConstInit: TlaDecl => Boolean = {
       case TlaOperDecl(name, _, _) => cinitName != name
       case _                       => true
     }
-    ModuleByExTransformer(new PrimePropagation(tracker, varSet), includeAllButConstInit)
+    ModuleByExTransformer(
+      new PrimePropagation(tracker, varSet),
+      includeAllButConstInit
+    )
   }
 
   /**
