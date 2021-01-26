@@ -108,7 +108,7 @@ Related reports and publications can be found at the
 
 [tla+]: http://lamport.azurewebsites.net/tla/tla.html
 [microsoft z3]: https://github.com/Z3Prover/z3
-[supported features]: ./docs/features.md
+[supported features]: https://apalache.informal.systems/docs/apalache/features.html
 [tlc]: http://lamport.azurewebsites.net/tla/tools.html
 [leslie lamport's page on tla+]: http://lamport.azurewebsites.net/tla/tla.html
 [video course]: http://lamport.azurewebsites.net/video/videos.html
