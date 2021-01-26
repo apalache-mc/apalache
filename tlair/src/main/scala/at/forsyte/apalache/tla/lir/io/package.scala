@@ -6,4 +6,3 @@ package object io {
   type Transition = String
   type NextState = (Transition, State)
 }
-

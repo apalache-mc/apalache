@@ -7,6 +7,7 @@ package at.forsyte.apalache.tla.bmcmt
   * @author Igor Konnov
   */
 trait StackableContext {
+
   /**
     * Get the current context level, that is the difference between the number of pushes and pops made so far.
     *

@@ -20,13 +20,14 @@ import com.typesafe.scalalogging.LazyLogging
   * @param tracker transformation tracker
   * @param nextPass next pass to call
   */
-class UnrollPassImpl @Inject()( val options : PassOptions,
-                                nameGenerator : UniqueNameGenerator,
-                                tracker : TransformationTracker,
-                                renaming: IncrementalRenaming,
-                                @Named( "AfterUnroll" ) nextPass : Pass with TlaModuleMixin
-                              )
-  extends UnrollPass with LazyLogging {
+class UnrollPassImpl @Inject()(
+    val options: PassOptions,
+    nameGenerator: UniqueNameGenerator,
+    tracker: TransformationTracker,
+    renaming: IncrementalRenaming,
+    @Named("AfterUnroll") nextPass: Pass with TlaModuleMixin
+) extends UnrollPass
+    with LazyLogging {
 
   private var outputTlaModule: Option[TlaModule] = None
 
@@ -57,11 +58,11 @@ class UnrollPassImpl @Inject()( val options : PassOptions,
     //
     val renamedModule = renaming.renameInModule(module)
 
-    val unroller = Unroller( nameGenerator, tracker, renaming )
+    val unroller = Unroller(nameGenerator, tracker, renaming)
     logger.info("  > %s".format(unroller.getClass.getSimpleName))
 
     // TODO: re-enable cacher once caching is reworked (see #276 for context)
-    val newModule = unroller( renamedModule )
+    val newModule = unroller(renamedModule)
 
     // dump the result of preprocessing
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
@@ -79,7 +80,7 @@ class UnrollPassImpl @Inject()( val options : PassOptions,
     */
   override def next(): Option[Pass] = {
     outputTlaModule map { m =>
-      nextPass.setModule( m )
+      nextPass.setModule(m)
       nextPass
     }
   }

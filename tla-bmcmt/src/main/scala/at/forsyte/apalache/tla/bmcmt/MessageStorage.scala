@@ -7,6 +7,7 @@ package at.forsyte.apalache.tla.bmcmt
   * @author Igor Konnov
   */
 trait MessageStorage {
+
   /**
     * Add a text message to the storage.
     * @param id an id of the object, e.g., ArenaCell.id

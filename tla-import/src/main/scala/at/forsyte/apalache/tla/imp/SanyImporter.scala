@@ -17,7 +17,8 @@ import scala.io.Source
   *
   * @author konnov
   */
-class SanyImporter( sourceStore: SourceStore) {
+class SanyImporter(sourceStore: SourceStore) {
+
   /**
     * Load a TLA+ specification from a file by calling SANY.
     *
@@ -28,16 +29,22 @@ class SanyImporter( sourceStore: SourceStore) {
     // create a string buffer to write SANY's error messages
     val errBuf = new StringWriter()
     // use.toString() to retrieve the error messages
-    val specObj = new SpecObj(file.getAbsolutePath, new SimpleFilenameToStream())
+    val specObj =
+      new SpecObj(file.getAbsolutePath, new SimpleFilenameToStream())
     // call SANY
-    SANY.frontEndMain(specObj, file.getAbsolutePath, new PrintStream(new WriterOutputStream(errBuf, "UTF8")))
+    SANY.frontEndMain(
+      specObj,
+      file.getAbsolutePath,
+      new PrintStream(new WriterOutputStream(errBuf, "UTF8"))
+    )
     // abort on errors
     throwOnError(specObj)
     // do the translation
-    val modmap = specObj.getExternalModuleTable.getModuleNodes.foldLeft(Map[String, TlaModule]()) {
-      (map, node) => map + (node.getName.toString ->
-        ModuleTranslator(sourceStore).translate(node))
-    }
+    val modmap = specObj.getExternalModuleTable.getModuleNodes
+      .foldLeft(Map[String, TlaModule]()) { (map, node) =>
+        map + (node.getName.toString ->
+          ModuleTranslator(sourceStore).translate(node))
+      }
 
     (specObj.getName, modmap)
   }
@@ -50,7 +57,10 @@ class SanyImporter( sourceStore: SourceStore) {
     * @param source     the text source
     * @return the pair (the root module name, a map of modules)
     */
-  def loadFromSource(moduleName: String, source: Source): (String, Map[String, TlaModule]) = {
+  def loadFromSource(
+      moduleName: String,
+      source: Source
+  ): (String, Map[String, TlaModule]) = {
     val tempDir = Files.createTempDirectory("sanyimp").toFile
     val temp = new File(tempDir, moduleName + ".tla")
     try {
@@ -87,7 +97,9 @@ class SanyImporter( sourceStore: SourceStore) {
     }
     // the error level is above zero, so SANY failed for an unknown reason
     if (specObj.getErrorLevel > 0) {
-      throw new SanyException("Unknown SANY error (error level=%d)".format(specObj.getErrorLevel))
+      throw new SanyException(
+        "Unknown SANY error (error level=%d)".format(specObj.getErrorLevel)
+      )
     }
   }
 }

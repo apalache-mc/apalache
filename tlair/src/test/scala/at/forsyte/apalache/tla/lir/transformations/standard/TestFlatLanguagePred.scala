@@ -19,30 +19,30 @@ class TestFlatLanguagePred extends LanguagePredTestSuite {
 
   test("a non-nullary let-in ") {
     val app = tla.appOp(tla.name("UserOp"), tla.int(3))
-    val letIn = tla.letIn(app,
-      tla.declOp("UserOp",
+    val letIn = tla.letIn(
+      app,
+      tla.declOp(
+        "UserOp",
         tla.plus(tla.int(1), tla.name("x")),
-        SimpleFormalParam("x")))
+        SimpleFormalParam("x")
+      )
+    )
     expectFail(pred.isExprOk(app))
   }
 
   test("a nullary let-in ") {
     val app = tla.appOp(tla.name("UserOp"))
-    val letIn = tla.letIn(app,
-      tla.declOp("UserOp",
-        tla.plus(tla.int(1), tla.int(2))))
+    val letIn =
+      tla.letIn(app, tla.declOp("UserOp", tla.plus(tla.int(1), tla.int(2))))
     expectOk(pred.isExprOk(letIn))
   }
 
   test("nested nullary let-in ") {
     val app = tla.plus(tla.appOp(tla.name("A")), tla.appOp(tla.name("B")))
-    val letIn = tla.letIn(app,
-      tla.declOp("A",
-        tla.plus(tla.int(1), tla.int(2))))
+    val letIn =
+      tla.letIn(app, tla.declOp("A", tla.plus(tla.int(1), tla.int(2))))
     val outerLetIn =
-      tla.letIn(letIn,
-        tla.declOp("B",
-          tla.int(3)))
+      tla.letIn(letIn, tla.declOp("B", tla.int(3)))
     expectOk(pred.isExprOk(outerLetIn))
   }
 

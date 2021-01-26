@@ -12,10 +12,10 @@ import com.typesafe.scalalogging.LazyLogging
   * @param initialPass the first pass to run
   * @author Igor Konnov
   */
-
-class PassChainExecutor @Inject()(val options: WriteablePassOptions,
-                                  @Named("InitialPass") val initialPass: Pass)
-  extends LazyLogging {
+class PassChainExecutor @Inject()(
+    val options: WriteablePassOptions,
+    @Named("InitialPass") val initialPass: Pass
+) extends LazyLogging {
 
   def run(): Option[Pass] = {
     def exec(seqNo: Int, passToRun: Pass): Option[Pass] = {

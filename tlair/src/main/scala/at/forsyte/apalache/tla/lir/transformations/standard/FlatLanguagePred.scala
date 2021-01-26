@@ -2,7 +2,12 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, PredResult, PredResultFail, PredResultOk}
+import at.forsyte.apalache.tla.lir.transformations.{
+  LanguagePred,
+  PredResult,
+  PredResultFail,
+  PredResultOk
+}
 
 /**
   * <p>Test whether the expressions fit into the flat fragment: all calls to user operators are inlined,
@@ -26,7 +31,7 @@ class FlatLanguagePred extends LanguagePred {
 
   private def isOkInContext(letDefs: Set[String], expr: TlaEx): PredResult = {
     expr match {
-      case LetInEx(body, defs@_*) =>
+      case LetInEx(body, defs @ _*) =>
         // go inside the let definitions
         def eachDefRec(ctx: Set[String], ds: List[TlaOperDecl]): PredResult = {
           ds match {
@@ -46,7 +51,7 @@ class FlatLanguagePred extends LanguagePred {
         defsResult
           .and(isOkInContext(letDefs ++ newLetDefs, body))
 
-      case e @ OperEx(TlaOper.apply, NameEx(opName), args@_*) =>
+      case e @ OperEx(TlaOper.apply, NameEx(opName), args @ _*) =>
         // the only allowed case is calling a nullary operator that was declared with let-in
         if (!letDefs.contains(opName)) {
           PredResultFail(List((e.ID, s"undeclared operator $opName")))

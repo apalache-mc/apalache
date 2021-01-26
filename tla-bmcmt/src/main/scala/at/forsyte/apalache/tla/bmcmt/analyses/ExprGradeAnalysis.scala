@@ -1,7 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt.analyses
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaActionOper, TlaBoolOper, TlaTempOper}
+import at.forsyte.apalache.tla.lir.oper.{
+  BmcOper,
+  TlaActionOper,
+  TlaBoolOper,
+  TlaTempOper
+}
 import com.google.inject.Inject
 
 /**
@@ -24,7 +29,11 @@ class ExprGradeAnalysis @Inject()(val store: ExprGradeStoreImpl) {
     * @param vars   names that are treated as TLA+ variables
     * @param expr   an expression to label
     */
-  def labelExpr(consts: Set[String], vars: Set[String], expr: TlaEx): ExprGrade.Value = {
+  def labelExpr(
+      consts: Set[String],
+      vars: Set[String],
+      expr: TlaEx
+  ): ExprGrade.Value = {
     def eachExpr(e: TlaEx): ExprGrade.Value = e match {
       case ValEx(_) =>
         update(e, ExprGrade.Constant)
@@ -48,18 +57,18 @@ class ExprGradeAnalysis @Inject()(val store: ExprGradeStoreImpl) {
         // e.g., x'
         update(e, ExprGrade.join(ExprGrade.ActionFree, eachExpr(arg)))
 
-      case OperEx(TlaTempOper.AA, _*) | OperEx(TlaTempOper.EE, _*)
-           | OperEx(TlaTempOper.box, _*) | OperEx(TlaTempOper.diamond, _*)
-           | OperEx(TlaTempOper.guarantees, _*) | OperEx(TlaTempOper.leadsTo, _*)
-           | OperEx(TlaTempOper.strongFairness, _*)
-           | OperEx(TlaTempOper.weakFairness, _*) =>
+      case OperEx(TlaTempOper.AA, _*) | OperEx(TlaTempOper.EE, _*) |
+          OperEx(TlaTempOper.box, _*) | OperEx(TlaTempOper.diamond, _*) |
+          OperEx(TlaTempOper.guarantees, _*) | OperEx(TlaTempOper.leadsTo, _*) |
+          OperEx(TlaTempOper.strongFairness, _*) |
+          OperEx(TlaTempOper.weakFairness, _*) =>
         e.asInstanceOf[OperEx].args.foreach(eachExpr)
         update(e, ExprGrade.Higher)
 
       case OperEx(_) =>
         update(e, ExprGrade.Constant)
 
-      case OperEx(_, args@_*) =>
+      case OperEx(_, args @ _*) =>
         val grades = args map eachExpr
         update(e, grades reduce ExprGrade.join)
 
@@ -80,7 +89,8 @@ class ExprGradeAnalysis @Inject()(val store: ExprGradeStoreImpl) {
       case OperEx(TlaBoolOper.or, args @ _*) =>
         val newArgs = args map refineOrInExpr
         store.get(expr.ID) match {
-          case Some(ExprGrade.Constant) | Some(ExprGrade.StateFree) | Some(ExprGrade.StateBound) =>
+          case Some(ExprGrade.Constant) | Some(ExprGrade.StateFree) |
+              Some(ExprGrade.StateBound) =>
             expr // keep it
 
           case _ =>
@@ -88,7 +98,7 @@ class ExprGradeAnalysis @Inject()(val store: ExprGradeStoreImpl) {
         }
 
       case OperEx(oper, args @ _*) =>
-        OperEx(oper, args map refineOrInExpr :_*)
+        OperEx(oper, args map refineOrInExpr: _*)
 
       case _ =>
         expr

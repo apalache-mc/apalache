@@ -7,7 +7,6 @@ import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFiniteSetOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
-
 /**
   * Implements the IsFiniteSet operator. It is trivial in our case.
   *
@@ -31,7 +30,10 @@ class IsFiniteSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
         state.setRex(state.arena.cellTrue())
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
+        throw new RewriterException(
+          "%s is not applicable".format(getClass.getSimpleName),
+          state.ex
+        )
     }
   }
 }

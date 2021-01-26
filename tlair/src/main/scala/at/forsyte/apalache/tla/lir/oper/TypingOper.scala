@@ -4,12 +4,13 @@ package at.forsyte.apalache.tla.lir.oper
   * The operators defined in the module Typing.tla.
   *
   * @author Igor Konnov
- */
+  */
 abstract class TypingOper extends TlaOper {
   override def interpretation: Interpretation.Value = Interpretation.StandardLib
 }
 
 object TypingOper {
+
   /**
     * Assume that a constant or a state variable has the type type_str.
     * This operator should be used in the top-level operator TypeAssumptions.
@@ -57,6 +58,3 @@ object TypingOper {
     override def precedence: (Int, Int) = (100, 100)
   }
 }
-
-
-

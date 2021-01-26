@@ -36,7 +36,7 @@ import org.apache.commons.io.FilenameUtils
   * @param options pass options
   * @param nextPass next pass to call
   */
-class ConfigurationPassImpl @Inject() (
+class ConfigurationPassImpl @Inject()(
     val options: WriteablePassOptions,
     tracker: TransformationTracker,
     @Named("AfterConfiguration") nextPass: Pass with TlaModuleMixin
@@ -225,8 +225,8 @@ class ConfigurationPassImpl @Inject() (
       val namesOfOverrides =
         (config.constAssignments.keySet ++ config.constReplacements.keySet)
           .map(ConstAndDefRewriter.OVERRIDE_PREFIX + _)
-      configuredModule.declarations.filter(d =>
-        namesOfOverrides.contains(d.name)
+      configuredModule.declarations.filter(
+        d => namesOfOverrides.contains(d.name)
       )
     } catch {
       case _: FileNotFoundException =>
@@ -353,28 +353,28 @@ class ConfigurationPassImpl @Inject() (
             val (init, next) =
               nonFairness match {
                 case Seq(
-                      OperEx(TlaOper.apply, NameEx(init)), // Init
+                    OperEx(TlaOper.apply, NameEx(init)), // Init
+                    OperEx(
+                      TlaTempOper.box,
                       OperEx(
-                        TlaTempOper.box,
-                        OperEx(
-                          TlaActionOper.stutter,
-                          OperEx(TlaOper.apply, NameEx(next)),
-                          _*
-                        )
-                      ) // [][Next]_vars
+                        TlaActionOper.stutter,
+                        OperEx(TlaOper.apply, NameEx(next)),
+                        _*
+                      )
+                    ) // [][Next]_vars
                     ) =>
                   (init, next)
 
                 case Seq(
+                    OperEx(
+                      TlaTempOper.box,
                       OperEx(
-                        TlaTempOper.box,
-                        OperEx(
-                          TlaActionOper.stutter,
-                          OperEx(TlaOper.apply, NameEx(next)),
-                          _*
-                        )
-                      ),
-                      OperEx(TlaOper.apply, NameEx(init)) // Init
+                        TlaActionOper.stutter,
+                        OperEx(TlaOper.apply, NameEx(next)),
+                        _*
+                      )
+                    ),
+                    OperEx(TlaOper.apply, NameEx(init)) // Init
                     ) =>
                   (init, next)
 

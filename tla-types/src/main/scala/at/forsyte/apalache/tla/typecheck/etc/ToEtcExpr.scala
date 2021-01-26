@@ -4,7 +4,10 @@ import at.forsyte.apalache.tla.lir.{ValEx, _}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.typecheck._
-import at.forsyte.apalache.tla.typecheck.parser.{DefaultType1Parser, Type1ParseError}
+import at.forsyte.apalache.tla.typecheck.parser.{
+  DefaultType1Parser,
+  Type1ParseError
+}
 
 /**
   * ToEtcExpr takes a TLA+ expression and produces an EtcExpr.
@@ -72,7 +75,11 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
       case OperEx(TlaBoolOper.and, args @ _*) =>
         val annotations =
           args.map {
-            case OperEx(TypingOper.assumeType, NameEx(name), ValEx(TlaStr(typeText))) =>
+            case OperEx(
+                TypingOper.assumeType,
+                NameEx(name),
+                ValEx(TlaStr(typeText))
+                ) =>
               (name, typeText)
             case invalidEx =>
               throw new TypingInputException(
@@ -117,16 +124,20 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
   }
 
   // Valid when the input seq has two items, the first of which is a VlaEx(TlaStr(_))
-  val validateRecordPair : Seq[TlaEx] => (String, TlaEx) = {
+  val validateRecordPair: Seq[TlaEx] => (String, TlaEx) = {
     // Only pairs coordinating pairs and sets are valid. See TlaSetOper.recSet
     case Seq(ValEx(TlaStr(name)), set) =>
       (name, set)
 
     case Seq(invalid, _) =>
-      throw new IllegalArgumentException(s"Expected ValEx(TlaStr(_)) as a field name, found ${invalid}")
+      throw new IllegalArgumentException(
+        s"Expected ValEx(TlaStr(_)) as a field name, found ${invalid}"
+      )
 
     case Seq(orphan) =>
-      throw new IllegalArgumentException(s"Expected key-set pair, found ${orphan}")
+      throw new IllegalArgumentException(
+        s"Expected key-set pair, found ${orphan}"
+      )
 
     // since we group by 2 below, this case should be unreachable
     case moreThanTwo =>
@@ -136,7 +147,7 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
   }
 
   /**
-   * Translate an expression.
+    * Translate an expression.
     *
     * @param ex a TLA expression
     * @return an expression in the simply typed lambda calculus varient Etc
@@ -197,10 +208,10 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
         )
 
       case OperEx(
-            TlaOper.chooseBounded,
-            NameEx(bindingVar),
-            bindingSet,
-            pred
+          TlaOper.chooseBounded,
+          NameEx(bindingVar),
+          bindingSet,
+          pred
           ) =>
         // CHOOSE x \in S: P
         // the principal type of CHOOSE is (a => Bool) => a
@@ -238,13 +249,13 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
 
       //******************************************** BOOLEANS **************************************************
       case OperEx(op, a, b)
-        if op == TlaBoolOper.equiv || op == TlaBoolOper.implies =>
+          if op == TlaBoolOper.equiv || op == TlaBoolOper.implies =>
         // A <=> B, A => B
         val args = Seq(a, b)
         mkExRefApp(typeOfBoolOperArgs(args), args)
 
       case OperEx(op, args @ _*)
-          if op == TlaBoolOper.and || op == TlaBoolOper.or  =>
+          if op == TlaBoolOper.and || op == TlaBoolOper.or =>
         // A /\ B /\ ... /\ C, A \/ B \/ ... \/ C
         mkExRefApp(typeOfBoolOperArgs(args), args)
 
@@ -464,10 +475,16 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
         // or, [ <<x, y>> \in S, z \in T |-> e ]
         val bindings =
           translateBindings(
-            args.grouped(2).map {
-              case Seq(varEx, setEx) => (varEx, setEx)
-              case orphan => throw new TypingException( s"Invalid bound variables and sets ${orphan} in: ${ex}" )
-            }.toSeq :_*
+            args
+              .grouped(2)
+              .map {
+                case Seq(varEx, setEx) => (varEx, setEx)
+                case orphan =>
+                  throw new TypingException(
+                    s"Invalid bound variables and sets ${orphan} in: ${ex}"
+                  )
+              }
+              .toSeq: _*
           )
 
         val a = varPool.fresh
@@ -491,10 +508,16 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
       case OperEx(TlaFunOper.except, fun, args @ _*) =>
         // the hardest expression: [f EXCEPT ![e1] = e2, ![e3] = e4, ...]
         val accessorsWithNewValues =
-          args.grouped(2).map {
-            case Seq(a, b) => (TlaFunOper.except.unpackIndex(a), b)
-            case orphan => throw new TypingException( s"Orphan ${orphan} in except expression: ${ex}" )
-          }.toSeq
+          args
+            .grouped(2)
+            .map {
+              case Seq(a, b) => (TlaFunOper.except.unpackIndex(a), b)
+              case orphan =>
+                throw new TypingException(
+                  s"Orphan ${orphan} in except expression: ${ex}"
+                )
+            }
+            .toSeq
 
         val accessors = accessorsWithNewValues.map(_._1)
 
@@ -537,12 +560,12 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
           OperT1(SeqT1(a1) +: intAndAs, SeqT1(a1))
         }
 
-        val isTlaStr : TlaEx => Boolean = {
+        val isTlaStr: TlaEx => Boolean = {
           case ValEx(TlaStr(_)) => true
           case _                => false
         }
 
-        val isTlaInt : TlaEx => Boolean = {
+        val isTlaInt: TlaEx => Boolean = {
           case ValEx(TlaInt(_)) => true
           case _                => false
         }
@@ -630,7 +653,8 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
         val opsig = OperT1(Seq(a), a) // a => a
         mkExRefApp(opsig, Seq(inner))
 
-      case OperEx(op, args @ _*) if op == TlaActionOper.stutter || op == TlaActionOper.nostutter =>
+      case OperEx(op, args @ _*)
+          if op == TlaActionOper.stutter || op == TlaActionOper.nostutter =>
         // Bool, a, b, c => Bool
         val opsig = OperT1(BoolT1() +: varPool.fresh(args.length - 1), BoolT1())
         mkExRefApp(opsig, args)

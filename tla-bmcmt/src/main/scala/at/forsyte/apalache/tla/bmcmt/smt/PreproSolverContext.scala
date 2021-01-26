@@ -4,7 +4,11 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.caches.SimpleCache
 import at.forsyte.apalache.tla.bmcmt.profiler.SmtListener
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
-import at.forsyte.apalache.tla.bmcmt.smt.PreproSolverContext.{PreproEqEntry, PreproInEntry, PreproCacheEntry}
+import at.forsyte.apalache.tla.bmcmt.smt.PreproSolverContext.{
+  PreproEqEntry,
+  PreproInEntry,
+  PreproCacheEntry
+}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
@@ -15,10 +19,12 @@ object PreproSolverContext {
   }
 
   case class PreproEqEntry(isEq: Boolean) extends PreproCacheEntry {
-    override def asTlaEx(negate: Boolean): TlaEx = tla.bool(if (negate) !isEq else isEq)
+    override def asTlaEx(negate: Boolean): TlaEx =
+      tla.bool(if (negate) !isEq else isEq)
   }
   case class PreproInEntry(isIn: Boolean) extends PreproCacheEntry {
-    override def asTlaEx(negate: Boolean): TlaEx = tla.bool(if (negate) !isIn else isIn)
+    override def asTlaEx(negate: Boolean): TlaEx =
+      tla.bool(if (negate) !isIn else isIn)
   }
 }
 
@@ -40,7 +46,8 @@ object PreproSolverContext {
 class PreproSolverContext(context: SolverContext) extends SolverContext {
   private val simplifier = new ConstSimplifierForSmt()
   // FIXME: it would be much better to use cells here, but we do not have access to the arena
-  private val cache: SimpleCache[(String, String), PreproCacheEntry] = new SimpleCache()
+  private val cache: SimpleCache[(String, String), PreproCacheEntry] =
+    new SimpleCache()
 
   /**
     * Configuration parameters.
@@ -54,12 +61,14 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
     */
   override def assertGroundExpr(ex: TlaEx): Unit = {
     // there are plenty of top-level constraints like (= c1 c2) or tla.in(c1, c2)
-    val ppex = simplifier.simplifyShallow(preprocess(simplifier.simplifyShallow(ex)))
+    val ppex =
+      simplifier.simplifyShallow(preprocess(simplifier.simplifyShallow(ex)))
     ppex match {
       case OperEx(TlaOper.eq, NameEx(left), NameEx(right)) =>
         // eq and not(ne), the latter is transformed by simplifier
         if (ArenaCell.isValidName(left) && ArenaCell.isValidName(right)) {
-          val pair = if (left.compareTo(right) <= 0) (left, right) else (right, left)
+          val pair =
+            if (left.compareTo(right) <= 0) (left, right) else (right, left)
           cache.put(pair, PreproEqEntry(true))
           context.log(";;    -> pp eq cached as true ")
         }
@@ -67,7 +76,8 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
       case OperEx(TlaOper.ne, NameEx(left), NameEx(right)) =>
         // ne and not(eq), the latter is transformed by simplifier
         if (ArenaCell.isValidName(left) && ArenaCell.isValidName(right)) {
-          val pair = if (left.compareTo(right) <= 0) (left, right) else (right, left)
+          val pair =
+            if (left.compareTo(right) <= 0) (left, right) else (right, left)
           cache.put(pair, PreproEqEntry(false))
           context.log(";;    -> pp eq cached as false ")
         }
@@ -107,29 +117,31 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
   private def preprocess(ex: TlaEx): TlaEx = {
     ex match {
       case OperEx(TlaOper.eq, NameEx(left), NameEx(right)) =>
-        val pair = if (left.compareTo(right) <= 0) (left, right) else (right, left)
+        val pair =
+          if (left.compareTo(right) <= 0) (left, right) else (right, left)
         cache.get(pair) match {
           case Some(cached) => cached.asTlaEx(negate = false)
-          case None => ex
+          case None         => ex
         }
 
       case OperEx(TlaOper.ne, NameEx(left), NameEx(right)) =>
-        val pair = if (left.compareTo(right) <= 0) (left, right) else (right, left)
+        val pair =
+          if (left.compareTo(right) <= 0) (left, right) else (right, left)
         cache.get(pair) match {
           case Some(cached) => cached.asTlaEx(negate = true)
-          case None => ex
+          case None         => ex
         }
 
       case OperEx(TlaSetOper.in, NameEx(left), NameEx(right)) =>
         cache.get((left, right)) match {
           case Some(cached) => cached.asTlaEx(negate = false)
-          case None => ex
+          case None         => ex
         }
 
       case OperEx(TlaSetOper.notin, NameEx(left), NameEx(right)) =>
         cache.get((left, right)) match {
           case Some(cached) => cached.asTlaEx(negate = true)
-          case None => ex
+          case None         => ex
         }
 
       case OperEx(TlaSetOper.in, _*) | OperEx(TlaSetOper.notin, _*) =>
@@ -142,16 +154,13 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
         OperEx(TlaFunOper.app, fun, preprocess(elem))
 
       case OperEx(oper, args @ _*) =>
-        OperEx(oper, args map preprocess :_*)
+        OperEx(oper, args map preprocess: _*)
 
       case _ => ex
     }
   }
 
-
   ////////////////// the rest is just delegation to context
-
-
 
   /**
     * Declare a constant for an arena cell.
@@ -166,14 +175,16 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
     * @param set the containing set
     * @param elem a set element
     */
-  def declareInPredIfNeeded(set: ArenaCell, elem: ArenaCell): Unit = context.declareInPredIfNeeded(set, elem)
+  def declareInPredIfNeeded(set: ArenaCell, elem: ArenaCell): Unit =
+    context.declareInPredIfNeeded(set, elem)
 
   /**
     * Check whether the current view of the SMT solver is consistent with arena.
     *
     * @param arena an arena
     */
-  override def checkConsistency(arena: Arena): Unit = context.checkConsistency(arena)
+  override def checkConsistency(arena: Arena): Unit =
+    context.checkConsistency(arena)
 
   /**
     * Write a message to the log file. This is helpful to debug the SMT encoding.
@@ -189,21 +200,22 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
     */
   override def sat(): Boolean = context.sat()
 
-
   /**
     * Check satisfiability of the context with a timeout
     *
     * @param timeoutSec the timeout in seconds. If timeout <= 0, it is not effective
     * @return Some(result), if no timeout happened; otherwise, None
     */
-  override def satOrTimeout(timeoutSec: Long): Option[Boolean] = context.satOrTimeout(timeoutSec)
+  override def satOrTimeout(timeoutSec: Long): Option[Boolean] =
+    context.satOrTimeout(timeoutSec)
 
   /**
     * Register an SMT listener
     *
     * @param listener register a listener, overrides the previous listener, if it was set before
     */
-  override def setSmtListener(listener: SmtListener): Unit = context.setSmtListener(listener)
+  override def setSmtListener(listener: SmtListener): Unit =
+    context.setSmtListener(listener)
 
   /**
     * Get the current context level, that is the difference between the number of pushes and pops made so far.
@@ -211,7 +223,6 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
     * @return the current level, always non-negative.
     */
   override def contextLevel: Int = context.contextLevel
-
 
   /**
     * Get the current metrics in the solver context. The metrics may change when the other methods are called.

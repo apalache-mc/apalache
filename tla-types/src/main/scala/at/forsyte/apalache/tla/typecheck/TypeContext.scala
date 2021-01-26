@@ -17,6 +17,6 @@ object TypeContext {
   val empty: TypeContext = new TypeContext(Map.empty)
 
   def apply(namedTypes: (String, TlaType1)*): TypeContext = {
-    new TypeContext(SortedMap(namedTypes :_*))
+    new TypeContext(SortedMap(namedTypes: _*))
   }
 }

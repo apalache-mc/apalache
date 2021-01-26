@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.typecheck.etc.{EtcRef, ExactRef}
   * @author Igor Konnov
   */
 class DefaultTypeCheckerListener extends TypeCheckerListener {
+
   /**
     * This method is called when the type checker finds the type of an expression.
     *

@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.lir.TlaEx
 import com.typesafe.scalalogging.LazyLogging
 
 object RecordingSolverContext {
+
   /**
     * A factory method to create a recording context on top of a Z3 solver context.
     * The entries in the parent log are replayed right after the start.
@@ -17,7 +18,8 @@ object RecordingSolverContext {
       parentLog: Option[SmtLog],
       config: SolverConfig
   ): RecordingSolverContext = {
-    val context = new RecordingSolverContext(parentLog, config, new Z3SolverContext(config))
+    val context =
+      new RecordingSolverContext(parentLog, config, new Z3SolverContext(config))
     parentLog.foreach(_.replay(context.solverImpl))
     context
   }
@@ -33,7 +35,7 @@ object RecordingSolverContext {
   * @author Igor Konnov
   */
 @SerialVersionUID(700L)
-class RecordingSolverContext private(
+class RecordingSolverContext private (
     parentLog: Option[SmtLog],
     val config: SolverConfig,
     val solverImpl: SolverContext

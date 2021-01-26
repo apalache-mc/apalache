@@ -17,7 +17,7 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaSetOper.cup, _*) => true
-      case _ => false
+      case _                          => false
     }
   }
 
@@ -32,20 +32,24 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val leftElems = nextState.arena.getHas(leftSetCell)
         val rightElems = nextState.arena.getHas(rightSetCell)
 
-        val common = Set(leftElems :_*).intersect(Set(rightElems :_*))
-        val onlyLeft = Set(leftElems :_*).diff(common)
-        val onlyRight = Set(rightElems :_*).diff(common)
+        val common = Set(leftElems: _*).intersect(Set(rightElems: _*))
+        val onlyLeft = Set(leftElems: _*).diff(common)
+        val onlyRight = Set(rightElems: _*).diff(common)
 
         // introduce a new set
         val newType = types.unify(leftSetCell.cellType, rightSetCell.cellType)
         if (newType.isEmpty) {
-          throw new TypeException(s"Failed to unify types ${leftSetCell.cellType}"
-            + " and ${rightSetCell.cellType} when rewriting ${state.ex}", state.ex)
+          throw new TypeException(
+            s"Failed to unify types ${leftSetCell.cellType}"
+              + " and ${rightSetCell.cellType} when rewriting ${state.ex}",
+            state.ex
+          )
         }
         nextState = nextState.updateArena(_.appendCell(newType.get))
         val newSetCell = nextState.arena.topCell
         val allDistinct = common.toSeq ++ onlyLeft.toSeq ++ onlyRight.toSeq
-        nextState = nextState.updateArena(_.appendHas(newSetCell, allDistinct: _*))
+        nextState =
+          nextState.updateArena(_.appendHas(newSetCell, allDistinct: _*))
 
         // require each cell to be in in the union iff it is exactly in its origin set
         def addOnlyCellCons(thisSet: ArenaCell, thisElem: ArenaCell): Unit = {
@@ -58,7 +62,9 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
           val inThis = tla.in(thisElem.toNameEx, leftSetCell.toNameEx)
           val inOther = tla.in(thisElem.toNameEx, rightSetCell.toNameEx)
           val inCup = tla.in(thisElem.toNameEx, newSetCell.toNameEx)
-          rewriter.solverContext.assertGroundExpr(tla.equiv(inCup, tla.or(inThis, inOther)))
+          rewriter.solverContext.assertGroundExpr(
+            tla.equiv(inCup, tla.or(inThis, inOther))
+          )
         }
 
         // new implementation: as we are not using uninterpreted functions anymore, we do not have to care about
@@ -77,7 +83,10 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
         nextState.setRex(newSetCell.toNameEx)
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
+        throw new RewriterException(
+          "%s is not applicable".format(getClass.getSimpleName),
+          state.ex
+        )
     }
   }
 }

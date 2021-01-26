@@ -6,7 +6,6 @@ import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
-
 /**
   * Rewrites subset inclusion X \subseteq Y.
   *
@@ -38,26 +37,41 @@ class SetInclusionRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
           case (FinSetT(FinSetT(t1)), PowSetT(FinSetT(t2))) =>
             if (t1 != t2) {
-              throw new RewriterException("Unexpected set types: %s and %s in %s"
-                .format(t1, t2, state.ex), state.ex)
+              throw new RewriterException(
+                "Unexpected set types: %s and %s in %s"
+                  .format(t1, t2, state.ex),
+                state.ex
+              )
             } else {
               subsetInPowset(rightState, leftCell, rightCell)
             }
 
-          case _ => throw new RewriterException("Unexpected set types: %s and %s in %s"
-            .format(leftCell.cellType, rightCell.cellType, state.ex), state.ex)
+          case _ =>
+            throw new RewriterException(
+              "Unexpected set types: %s and %s in %s"
+                .format(leftCell.cellType, rightCell.cellType, state.ex),
+              state.ex
+            )
         }
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
+        throw new RewriterException(
+          "%s is not applicable".format(getClass.getSimpleName),
+          state.ex
+        )
     }
   }
 
-  private def subsetInPowset(startState: SymbState, leftCell: ArenaCell, rightCell: ArenaCell): SymbState = {
+  private def subsetInPowset(
+      startState: SymbState,
+      leftCell: ArenaCell,
+      rightCell: ArenaCell
+  ): SymbState = {
     val powDom = startState.arena.getDom(rightCell)
     def eachElem(state: SymbState, elem: ArenaCell): SymbState = {
       val newState = rewriter.lazyEq.subsetEq(state, elem, powDom)
-      val outOrSubsetEq = tla.or(tla.not(tla.in(elem.toNameEx, leftCell.toNameEx)), newState.ex)
+      val outOrSubsetEq =
+        tla.or(tla.not(tla.in(elem.toNameEx, leftCell.toNameEx)), newState.ex)
       newState.setRex(outOrSubsetEq)
     }
 
