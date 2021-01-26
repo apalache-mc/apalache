@@ -120,7 +120,7 @@ class TestSourceLocator extends FunSuite with TestingPredefs {
   }
 
   test( "Test DeepCopy" ) {
-    val transformation = DeepCopy( tracker )
+    val transformation = DeepCopy( tracker ).deepCopyEx[TlaEx] _
 
     testTransformation( transformation )
   }

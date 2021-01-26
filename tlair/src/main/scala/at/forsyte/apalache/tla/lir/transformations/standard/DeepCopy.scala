@@ -1,37 +1,44 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
-import at.forsyte.apalache.tla.lir.transformations.{
-  TlaExTransformation,
-  TransformationTracker
-}
-import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaEx, TlaOperDecl}
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.transformations.{TlaDeclTransformation, TlaExTransformation, TransformationTracker}
 
-class DeepCopy(tracker: TransformationTracker) extends TlaExTransformation {
-  override def apply(expr: TlaEx): TlaEx = {
-    transform(expr)
+/**
+  * DeepCopy constructs a structurally identical copy of a given TlaEx or TlaDecl, with fresh unique IDs.
+  */
+class DeepCopy( tracker : TransformationTracker ) {
+  def deepCopyDecl[T <: TlaDecl]( decl : T ) : T = deepCopyDeclInternal( decl ).asInstanceOf[T]
+
+  private def deepCopyDeclInternal: TlaDeclTransformation = tracker.trackDecl {
+    case TlaAssumeDecl( bodyEx ) => TlaAssumeDecl( deepCopyEx( bodyEx ) )
+    case TlaRecFunDecl( name, arg, argDom, defBody ) =>
+      TlaRecFunDecl( name, arg, deepCopyEx( argDom ), deepCopyEx( defBody ) )
+    case TlaTheoremDecl(name, body) => TlaTheoremDecl(name, deepCopyEx( body ) )
+    case TlaVarDecl( name ) => TlaVarDecl( name )
+    case d@TlaOperDecl( name, formalParams, body) =>
+      val decl = TlaOperDecl( name, formalParams, deepCopyEx( body ) )
+      decl.isRecursive = d.isRecursive
+      decl
+    case TlaConstDecl( name ) => TlaConstDecl( name )
   }
 
-  /**
-    * Calls deep copy in a way that sets up tracking between every replacement (not just top-level)
-    */
-  def transform: TlaExTransformation =
-    tracker.trackEx {
-      // LetInEx and OperEx are composite expressions
-      case LetInEx(body, defs @ _*) =>
-        // Transform bodies of all op.defs
-        val newDefs = defs map tracker.trackOperDecl { d => d.copy(body = transform(d.body)) }
-        LetInEx(transform(body), newDefs: _*)
+  def deepCopyEx[T <: TlaEx]( ex : T ) : T = deepCopyExInternal( ex ).asInstanceOf[T]
 
-      case OperEx(op, args @ _*) =>
-        OperEx(op, args map transform: _*)
+  private def deepCopyExInternal : TlaExTransformation = tracker.trackEx {
+    case NullEx => NullEx
+    case ValEx( v ) => ValEx( v )
+    case NameEx( n ) => NameEx( n )
+    case LetInEx( body, decls@_* ) =>
+      LetInEx( deepCopyEx( body ), decls map deepCopyDecl : _* )
+    case OperEx( oper, args@_* ) =>
+      OperEx( oper, args map deepCopyEx : _* )
+  }
 
-      // terminal expressions, just copy
-      case ex => ex.deepCopy()
-    }
+  def deepCopyModule( module: TlaModule ) = new TlaModule( module.name, module.declarations map deepCopyDecl )
 }
 
 object DeepCopy {
-  def apply(tracker: TransformationTracker): DeepCopy = {
-    new DeepCopy(tracker)
+  def apply( tracker : TransformationTracker ) : DeepCopy = {
+    new DeepCopy( tracker )
   }
 }

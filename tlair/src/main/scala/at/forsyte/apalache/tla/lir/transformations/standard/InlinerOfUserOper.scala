@@ -69,7 +69,7 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker)
 
     val postTr = stepLimitOpt map { _.postTransform } getOrElse { Predef.identity[TlaEx] _ }
     // deep copy the body, to ensure uniqueness of the UIDs
-    val bodyCopy = postTr( DeepCopy( tracker )( decl.body ) )
+    val bodyCopy = postTr( DeepCopy( tracker ).deepCopyEx( decl.body ) )
 
     val newBody = decl.formalParams.zip( args ).foldLeft( bodyCopy ) {
       case (b, (fParam, arg)) =>
