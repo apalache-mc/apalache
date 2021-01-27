@@ -107,6 +107,7 @@ class ExprOrOpArgNodeTranslator(
       node match {
         case opdef: OpDefNode =>
           val decl = OpDefTranslator(sourceStore, letInContext).translate(opdef)
+          sourceStore.add(decl.ID, SourceLocation(opdef.getLocation))
           letInDeclarations = letInDeclarations :+ decl
           letInContext = letInContext.push(DeclUnit(decl))
 
@@ -132,6 +133,7 @@ class ExprOrOpArgNodeTranslator(
       // a lambda-definition is passed as an argument
       case defNode: OpDefNode if name == "LAMBDA" =>
         val decl = OpDefTranslator(sourceStore, context).translate(defNode)
+        sourceStore.add(decl.ID, SourceLocation(defNode.getLocation))
         // e.g., LET Foo(x) == e1 in Foo
         LetInEx(NameEx(name), decl)
 
