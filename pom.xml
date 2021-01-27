@@ -111,6 +111,12 @@
                 <version>3.0.1</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>org.scalacheck</groupId>
+                <artifactId>scalacheck_${scalaBinaryVersion}</artifactId>
+                <version>1.14.1</version>
+                <scope>test</scope>
+            </dependency>
             <!--
              check this page: http://www.scalatest.org/user_guide/testing_with_mock_objects#jMock
             -->
