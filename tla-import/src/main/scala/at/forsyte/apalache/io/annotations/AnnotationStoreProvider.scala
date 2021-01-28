@@ -11,7 +11,9 @@ import at.forsyte.apalache.io.annotations.store._
   */
 @Singleton
 class AnnotationStoreProvider extends Provider[AnnotationStore] {
+  private val store: AnnotationStore = createAnnotationStore()
+
   override def get(): AnnotationStore = {
-    createAnnotationStore()
+    store
   }
 }
