@@ -8,7 +8,11 @@ import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
-import at.forsyte.apalache.tla.pp.{ConstSimplifier, ExprOptimizer, UniqueNameGenerator}
+import at.forsyte.apalache.tla.pp.{
+  ConstSimplifier,
+  ExprOptimizer,
+  UniqueNameGenerator
+}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -20,12 +24,14 @@ import com.typesafe.scalalogging.LazyLogging
   * @param tracker transformation tracker
   * @param nextPass next pass to call
   */
-class OptPassImpl @Inject()(val options: PassOptions,
-                            gen: UniqueNameGenerator,
-                            renaming: IncrementalRenaming,
-                            tracker: TransformationTracker,
-                            @Named("AfterOpt") nextPass: Pass with TlaModuleMixin)
-    extends OptPass with LazyLogging {
+class OptPassImpl @Inject()(
+    val options: PassOptions,
+    gen: UniqueNameGenerator,
+    renaming: IncrementalRenaming,
+    tracker: TransformationTracker,
+    @Named("AfterOpt") nextPass: Pass with TlaModuleMixin
+) extends OptPass
+    with LazyLogging {
 
   private var outputTlaModule: Option[TlaModule] = None
 
@@ -74,7 +80,7 @@ class OptPassImpl @Inject()(val options: PassOptions,
     */
   override def next(): Option[Pass] = {
     outputTlaModule map { m =>
-      nextPass.setModule( m )
+      nextPass.setModule(m)
       nextPass
     }
   }

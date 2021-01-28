@@ -11,6 +11,7 @@ import scala.collection.immutable.{Map, SortedMap}
   *
   * @author Igor Konnov
   */
-class TrivialTypeSnapshot(val typeAnnotations: Map[UID, CellT], val varTypes: SortedMap[String, CellT]) {
-
-}
+class TrivialTypeSnapshot(
+    val typeAnnotations: Map[UID, CellT],
+    val varTypes: SortedMap[String, CellT]
+) {}

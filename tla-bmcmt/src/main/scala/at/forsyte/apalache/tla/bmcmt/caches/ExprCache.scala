@@ -8,11 +8,13 @@ import at.forsyte.apalache.tla.lir.TlaEx
   *
   * @author Igor Konnov
   */
-class ExprCache(val store: ExprGradeStore) extends SimpleCache[TlaEx, (TlaEx, ExprGrade.Value)] with Serializable {
+class ExprCache(val store: ExprGradeStore)
+    extends SimpleCache[TlaEx, (TlaEx, ExprGrade.Value)]
+    with Serializable {
   def put(key: TlaEx, value: TlaEx): Unit = {
     store.get(key.ID) match {
       case Some(g) => put(key, (value, g))
-      case None => ()
+      case None    => ()
     }
   }
 
@@ -22,7 +24,10 @@ class ExprCache(val store: ExprGradeStore) extends SimpleCache[TlaEx, (TlaEx, Ex
     * @param key   a key
     * @param valueAndGrade a value and a grade, which is ignored
     */
-  override def put(key: TlaEx, valueAndGrade: (TlaEx, ExprGrade.Value)): Unit = {
+  override def put(
+      key: TlaEx,
+      valueAndGrade: (TlaEx, ExprGrade.Value)
+  ): Unit = {
     valueAndGrade._2 match {
       case ExprGrade.Constant | ExprGrade.StateFree | ExprGrade.ActionFree =>
         super.put(key, valueAndGrade)

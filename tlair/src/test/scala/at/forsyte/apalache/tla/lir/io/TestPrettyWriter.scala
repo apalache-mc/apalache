@@ -16,7 +16,6 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   private var stringWriter = new StringWriter()
   private var printWriter = new PrintWriter(stringWriter)
 
-
   override protected def beforeEach(): Unit = {
     stringWriter = new StringWriter()
     printWriter = new PrintWriter(stringWriter)
@@ -369,9 +368,12 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   test("a one-line record") {
     val writer = new PrettyWriter(printWriter, 40)
     val expr = enumFun(
-      str("x1"), "x2",
-      str("x3"), "x4",
-      str("x5"), "x6"
+      str("x1"),
+      "x2",
+      str("x3"),
+      "x4",
+      str("x5"),
+      "x6"
     ) ////
     writer.write(expr)
     printWriter.flush()
@@ -383,9 +385,12 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   test("a multi-line record") {
     val writer = new PrettyWriter(printWriter, 40)
     val expr = enumFun(
-      str("verylong1"), "verylong2",
-      str("verylong3"), "verylong4",
-      str("verylong5"), "verylong6"
+      str("verylong1"),
+      "verylong2",
+      str("verylong3"),
+      "verylong4",
+      str("verylong5"),
+      "verylong6"
     ) ////
     writer.write(expr)
     printWriter.flush()
@@ -399,9 +404,12 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   test("a narrow multi-line record") {
     val writer = new PrettyWriter(printWriter, 20)
     val expr = enumFun(
-      str("verylong1"), "verylong2",
-      str("verylong3"), "verylong4",
-      str("verylong5"), "verylong6"
+      str("verylong1"),
+      "verylong2",
+      str("verylong3"),
+      "verylong4",
+      str("verylong5"),
+      "verylong6"
     ) ////
     writer.write(expr)
     printWriter.flush()
@@ -427,9 +435,12 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   test("a one-line set of records") {
     val writer = new PrettyWriter(printWriter, 40)
     val expr = recSet(
-      str("x1"), "x2",
-      str("x3"), "x4",
-      str("x5"), "x6"
+      str("x1"),
+      "x2",
+      str("x3"),
+      "x4",
+      str("x5"),
+      "x6"
     ) ////
     writer.write(expr)
     printWriter.flush()
@@ -441,9 +452,12 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   test("a multi-line set of records") {
     val writer = new PrettyWriter(printWriter, 40)
     val expr = recSet(
-      str("verylong1"), "verylong2",
-      str("verylong3"), "verylong4",
-      str("verylong5"), "verylong6"
+      str("verylong1"),
+      "verylong2",
+      str("verylong3"),
+      "verylong4",
+      str("verylong5"),
+      "verylong6"
     ) ////
     writer.write(expr)
     printWriter.flush()
@@ -456,8 +470,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a one-line function") {
     val writer = new PrettyWriter(printWriter, 80)
-    val expr = funDef(plus("x", "y"),
-      "x", "S", "y", "T")
+    val expr = funDef(plus("x", "y"), "x", "S", "y", "T")
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -467,9 +480,13 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a multi-line function") {
     val writer = new PrettyWriter(printWriter, 30)
-    val expr = funDef(plus("verylong1", "verylong2"),
-      "verylong1", "verylong3",
-      "verylong2", "verylong4")
+    val expr = funDef(
+      plus("verylong1", "verylong2"),
+      "verylong1",
+      "verylong3",
+      "verylong2",
+      "verylong4"
+    )
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -483,8 +500,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a one-line map") {
     val writer = new PrettyWriter(printWriter, 80)
-    val expr = map(plus("x", "y"),
-      "x", "S", "y", "T")
+    val expr = map(plus("x", "y"), "x", "S", "y", "T")
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -494,9 +510,13 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a multi-line map") {
     val writer = new PrettyWriter(printWriter, 30)
-    val expr = map(plus("verylong1", "verylong2"),
-      "verylong1", "verylong3",
-      "verylong2", "verylong4")
+    val expr = map(
+      plus("verylong1", "verylong2"),
+      "verylong1",
+      "verylong3",
+      "verylong2",
+      "verylong4"
+    )
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -530,10 +550,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a multi-line filter") {
     val writer = new PrettyWriter(printWriter, 40)
-    val expr = filter(
-      "verylongname1",
-      "verylongname2",
-      "verylongname3")
+    val expr = filter("verylongname1", "verylongname2", "verylongname3")
 
     writer.write(expr)
     printWriter.flush()
@@ -577,9 +594,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a multi-line IF-THEN-ELSE") {
     val writer = new PrettyWriter(printWriter, 20)
-    val expr = ite("verylongname1",
-      "verylongname2",
-      "verylongname3")
+    val expr = ite("verylongname1", "verylongname2", "verylongname3")
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -690,7 +705,8 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a multi-line CASE with OTHER") {
     val writer = new PrettyWriter(printWriter, 40)
-    val expr = caseOther("otherAction", "guard1", "action1", "guard2", "action2")
+    val expr =
+      caseOther("otherAction", "guard1", "action1", "guard2", "action2")
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -714,9 +730,11 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   test("a multi-line LET-IN") {
     val writer = new PrettyWriter(printWriter, 40)
     val decl =
-      TlaOperDecl("AVeryLongName",
+      TlaOperDecl(
+        "AVeryLongName",
         List(SimpleFormalParam("param1"), SimpleFormalParam("param2")),
-        plus("param1", "param2"))
+        plus("param1", "param2")
+      )
     val expr = letIn(appDecl(decl, int(1), int(2)), decl)
     writer.write(expr)
     printWriter.flush()
@@ -731,17 +749,22 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   test("multiple definitions in LET-IN") {
     val writer = new PrettyWriter(printWriter, 40)
     val decl1 =
-      TlaOperDecl("AVeryLongName",
+      TlaOperDecl(
+        "AVeryLongName",
         List(SimpleFormalParam("param1"), SimpleFormalParam("param2")),
-        plus("param1", "param2"))
+        plus("param1", "param2")
+      )
     val decl2 =
-      TlaOperDecl("BVeryLongName",
+      TlaOperDecl(
+        "BVeryLongName",
         List(SimpleFormalParam("param1"), SimpleFormalParam("param2")),
-        plus("param1", "param2"))
+        plus("param1", "param2")
+      )
     val expr = letIn(
-      mult(appDecl(decl1, int(1), int(2)),
-        appDecl(decl2, int(3), int(4))),
-      decl1, decl2)
+      mult(appDecl(decl1, int(1), int(2)), appDecl(decl2, int(3), int(4))),
+      decl1,
+      decl2
+    )
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -777,7 +800,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     val innerA = tla.appOp(tla.name("A"), innerLambda, tla.name("x"))
     // A(LAMBDA x: A(LAMBDA y: y + 1, x), z)
     val outerDecl =
-        TlaOperDecl("LAMBDA", List(SimpleFormalParam("x")), innerA)
+      TlaOperDecl("LAMBDA", List(SimpleFormalParam("x")), innerA)
     val outerLambda = letIn(NameEx("LAMBDA"), outerDecl)
     val outerA = tla.appOp(tla.name("A"), outerLambda, tla.name("z"))
     writer.write(outerA)
@@ -807,8 +830,11 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   test("a recursive operator declaration") {
     val writer = new PrettyWriter(printWriter, 40)
     val body =
-      OperEx(TlaArithOper.plus,
-          ValEx(TlaInt(1)), OperEx(TlaOper.apply, NameEx("A"), NameEx("x")))
+      OperEx(
+        TlaArithOper.plus,
+        ValEx(TlaInt(1)),
+        OperEx(TlaOper.apply, NameEx("A"), NameEx("x"))
+      )
 
     val fDecl = TlaOperDecl(
       "A",
@@ -828,8 +854,11 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   test("a recursive operator declaration in LET-IN") {
     val writer = new PrettyWriter(printWriter, 40)
     val body =
-      OperEx(TlaArithOper.plus,
-          ValEx(TlaInt(1)), OperEx(TlaOper.apply, NameEx("A"), NameEx("x")))
+      OperEx(
+        TlaArithOper.plus,
+        ValEx(TlaInt(1)),
+        OperEx(TlaOper.apply, NameEx("A"), NameEx("x"))
+      )
 
     val fDecl = TlaOperDecl(
       "A",
@@ -838,7 +867,8 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     ) ///
     fDecl.isRecursive = true
 
-    val letInEx = letIn(OperEx(TlaOper.apply, NameEx("A"), ValEx(TlaInt(1))), fDecl)
+    val letInEx =
+      letIn(OperEx(TlaOper.apply, NameEx("A"), ValEx(TlaInt(1))), fDecl)
 
     writer.write(letInEx)
     printWriter.flush()
@@ -858,9 +888,11 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
         OperEx(
           TlaArithOper.plus,
           ValEx(TlaInt(1)),
-          OperEx(TlaFunOper.app, OperEx(TlaFunOper.recFunRef), NameEx("x"))),
+          OperEx(TlaFunOper.app, OperEx(TlaFunOper.recFunRef), NameEx("x"))
+        ),
         NameEx("x"),
-        NameEx("S"))
+        NameEx("S")
+      )
     val fDecl = TlaOperDecl(
       "f",
       List(),
@@ -882,9 +914,11 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
         OperEx(
           TlaArithOper.plus,
           ValEx(TlaInt(1)),
-          OperEx(TlaFunOper.app, OperEx(TlaFunOper.recFunRef), NameEx("x"))),
+          OperEx(TlaFunOper.app, OperEx(TlaFunOper.recFunRef), NameEx("x"))
+        ),
         NameEx("x"),
-        NameEx("S"))
+        NameEx("S")
+      )
     val fDecl = TlaOperDecl(
       "f",
       List(),
@@ -899,9 +933,16 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("declaration of a recursive function of two arguments") {
     val writer = new PrettyWriter(printWriter, 40)
-    val body = tla.appFun(tla.recFunRef(), tla.tuple(tla.name("y"), tla.name("x")))
+    val body =
+      tla.appFun(tla.recFunRef(), tla.tuple(tla.name("y"), tla.name("x")))
     val recFun =
-      tla.recFunDef(body, tla.name("x"), tla.name("S"), tla.name("y"), tla.name("S"))
+      tla.recFunDef(
+        body,
+        tla.name("x"),
+        tla.name("S"),
+        tla.name("y"),
+        tla.name("S")
+      )
 
     val fDecl = TlaOperDecl("f", List(), recFun)
     writer.write(fDecl)
@@ -912,4 +953,3 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   }
 
 }
-

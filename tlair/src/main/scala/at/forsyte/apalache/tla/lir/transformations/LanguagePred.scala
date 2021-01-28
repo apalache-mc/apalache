@@ -6,16 +6,18 @@ import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule, UID}
   * The type of the output that the predicate returns
   */
 trait PredResult {
+
   /**
     * Combine the result with another one, similar to Boolean "and".
     * @param other the result to combine with
     */
   def and(other: PredResult): PredResult = {
     (this, other) match {
-      case (PredResultOk(), PredResultOk()) => PredResultOk()
+      case (PredResultOk(), PredResultOk())        => PredResultOk()
       case (PredResultOk(), f @ PredResultFail(_)) => f
       case (f @ PredResultFail(_), PredResultOk()) => f
-      case (PredResultFail(errs1), PredResultFail(errs2)) => PredResultFail(errs1 ++ errs2)
+      case (PredResultFail(errs1), PredResultFail(errs2)) =>
+        PredResultFail(errs1 ++ errs2)
     }
   }
 }
@@ -29,7 +31,8 @@ sealed case class PredResultOk() extends PredResult
   * This type of result is returned when the predicate fails with an error.
   * @param failedIds the identifiers of the expressions that raised the error along with the explanations
   */
-sealed case class PredResultFail(failedIds: Seq[(UID, String)]) extends PredResult
+sealed case class PredResultFail(failedIds: Seq[(UID, String)])
+    extends PredResult
 
 /**
   * <p>A class that implements LanguagePred checks, whether a TLA+ expression, or a whole module,

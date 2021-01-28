@@ -19,9 +19,9 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
-      case OperEx(TlaSetOper.cap, _*) => true
+      case OperEx(TlaSetOper.cap, _*)      => true
       case OperEx(TlaSetOper.setminus, _*) => true
-      case _ => false
+      case _                               => false
     }
   }
 
@@ -34,11 +34,19 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
         intersectOrDiff(OpEnum.MINUS, state, leftSet, rightSet)
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
+        throw new RewriterException(
+          "%s is not applicable".format(getClass.getSimpleName),
+          state.ex
+        )
     }
   }
 
-  private def intersectOrDiff(op: OpEnum.Value, state: SymbState, leftSet: TlaEx, rightSet: TlaEx): SymbState = {
+  private def intersectOrDiff(
+      op: OpEnum.Value,
+      state: SymbState,
+      leftSet: TlaEx,
+      rightSet: TlaEx
+  ): SymbState = {
     var newState = rewriter.rewriteUntilDone(state.setRex(leftSet))
     val leftSetCell = newState.asCell
     newState = rewriter.rewriteUntilDone(newState.setRex(rightSet))
@@ -48,7 +56,10 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // introduce a new set
     val newType = types.unify(leftSetCell.cellType, rightSetCell.cellType)
     if (newType.isEmpty) {
-      throw new TypeException(s"Failed to unify types ${leftSetCell.cellType} and ${rightSetCell.cellType} when rewriting ${state.ex}", state.ex)
+      throw new TypeException(
+        s"Failed to unify types ${leftSetCell.cellType} and ${rightSetCell.cellType} when rewriting ${state.ex}",
+        state.ex
+      )
     }
     newState = newState.setArena(newState.arena.appendCell(newType.get))
     val resultSetCell = newState.arena.topCell
@@ -60,7 +71,8 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
           if (leftElemCells.isEmpty && rightElemCells.isEmpty) {
             newState.arena // don't add anything, the intersection is empty
           } else {
-            newState.arena.appendHas(resultSetCell, leftElemCells ++ rightElemCells: _*)
+            newState.arena
+              .appendHas(resultSetCell, leftElemCells ++ rightElemCells: _*)
           }
 
         case OpEnum.MINUS =>
@@ -70,38 +82,59 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
     newState = newState.setArena(newArena)
 
     // add SMT constraints
-    newState =
-      if (leftElemCells.nonEmpty) {
-        def mkConsFun = if (op == OpEnum.CAP) overlap _ else noOverlap _
+    newState = if (leftElemCells.nonEmpty) {
+      def mkConsFun = if (op == OpEnum.CAP) overlap _ else noOverlap _
 
-        def overlapOrNot(st: SymbState, elem: ArenaCell): SymbState = {
-          if (op == OpEnum.CAP)
-            overlap(st, resultSetCell, leftSetCell, elem, rightSetCell, rightElemCells)
-          else
-            noOverlap(st, resultSetCell, leftSetCell, elem, rightSetCell, rightElemCells)
-        }
-
-        // for every element in the left set, there must be an element in the right set (or no element in case of diff)
-        val afterLeft = leftElemCells.foldLeft(newState) (overlapOrNot)
-
-        if (op == OpEnum.CAP && rightElemCells.nonEmpty) {
-          def over(st: SymbState, elem: ArenaCell): SymbState = {
-            overlap(st, resultSetCell, rightSetCell, elem, leftSetCell, leftElemCells)
-          }
-          // for every element in the right set, there must be an element in the left set
-          rightElemCells.foldLeft(afterLeft) (over)
-        } else {
-          afterLeft
-        }
-      } else {
-        newState
+      def overlapOrNot(st: SymbState, elem: ArenaCell): SymbState = {
+        if (op == OpEnum.CAP)
+          overlap(
+            st,
+            resultSetCell,
+            leftSetCell,
+            elem,
+            rightSetCell,
+            rightElemCells
+          )
+        else
+          noOverlap(
+            st,
+            resultSetCell,
+            leftSetCell,
+            elem,
+            rightSetCell,
+            rightElemCells
+          )
       }
+
+      // for every element in the left set, there must be an element in the right set (or no element in case of diff)
+      val afterLeft = leftElemCells.foldLeft(newState)(overlapOrNot)
+
+      if (op == OpEnum.CAP && rightElemCells.nonEmpty) {
+        def over(st: SymbState, elem: ArenaCell): SymbState = {
+          overlap(
+            st,
+            resultSetCell,
+            rightSetCell,
+            elem,
+            leftSetCell,
+            leftElemCells
+          )
+        }
+        // for every element in the right set, there must be an element in the left set
+        rightElemCells.foldLeft(afterLeft)(over)
+      } else {
+        afterLeft
+      }
+    } else {
+      newState
+    }
 
     // that's it
     newState.setRex(resultSetCell.toNameEx)
   }
 
-  private def in(e: ArenaCell, s: ArenaCell) = OperEx(TlaSetOper.in, e.toNameEx, s.toNameEx)
+  private def in(e: ArenaCell, s: ArenaCell) =
+    OperEx(TlaSetOper.in, e.toNameEx, s.toNameEx)
 
   private def and(es: TlaEx*) = OperEx(TlaBoolOper.and, es: _*)
 
@@ -110,36 +143,57 @@ class SetCapAndMinusRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private def not(e: TlaEx) = OperEx(TlaBoolOper.not, e)
 
   // see SE-SET-CAP1 for a description
-  private def overlap(state: SymbState, capSet: ArenaCell, set: ArenaCell, elem: ArenaCell,
-                      otherSet: ArenaCell, otherElems: List[ArenaCell]): SymbState = {
+  private def overlap(
+      state: SymbState,
+      capSet: ArenaCell,
+      set: ArenaCell,
+      elem: ArenaCell,
+      otherSet: ArenaCell,
+      otherElems: List[ArenaCell]
+  ): SymbState = {
     // produce equality constraints first
-    val eqState = rewriter.lazyEq.cacheEqConstraints(state, otherElems.map(e => (e, elem)))
+    val eqState =
+      rewriter.lazyEq.cacheEqConstraints(state, otherElems.map(e => (e, elem)))
 
     // now we can use SMT equality
     def existsOther(otherElem: ArenaCell) =
       and(in(otherElem, otherSet), rewriter.lazyEq.safeEq(otherElem, elem))
 
     val cons =
-      tla.equiv(in(elem, capSet),
-        and(in(elem, set), or(otherElems.map(existsOther): _*)))
+      tla.equiv(
+        in(elem, capSet),
+        and(in(elem, set), or(otherElems.map(existsOther): _*))
+      )
 
     rewriter.solverContext.assertGroundExpr(cons)
     eqState
   }
 
   // see SE-SET-DIFF for a description
-  private def noOverlap(state: SymbState, diffSet: ArenaCell, set: ArenaCell, elem: ArenaCell,
-                        otherSet: ArenaCell, otherElems: List[ArenaCell]): SymbState = {
+  private def noOverlap(
+      state: SymbState,
+      diffSet: ArenaCell,
+      set: ArenaCell,
+      elem: ArenaCell,
+      otherSet: ArenaCell,
+      otherElems: List[ArenaCell]
+  ): SymbState = {
     // produce equality constraints first
-    val eqState = rewriter.lazyEq.cacheEqConstraints(state, otherElems.map(e => (e, elem)))
+    val eqState =
+      rewriter.lazyEq.cacheEqConstraints(state, otherElems.map(e => (e, elem)))
 
     // now we can use SMT equality
     def noOther(otherElem: ArenaCell) =
-      or(not(in(otherElem, otherSet)), not(rewriter.lazyEq.safeEq(otherElem, elem)))
+      or(
+        not(in(otherElem, otherSet)),
+        not(rewriter.lazyEq.safeEq(otherElem, elem))
+      )
 
     val cons =
-      tla.equiv(in(elem, diffSet),
-        and(in(elem, set), and(otherElems.map(noOther): _*)))
+      tla.equiv(
+        in(elem, diffSet),
+        and(in(elem, set), and(otherElems.map(noOther): _*))
+      )
 
     rewriter.solverContext.assertGroundExpr(cons)
     eqState

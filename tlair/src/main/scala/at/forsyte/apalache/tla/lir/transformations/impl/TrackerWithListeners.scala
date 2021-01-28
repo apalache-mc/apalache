@@ -8,15 +8,16 @@ import at.forsyte.apalache.tla.lir.transformations._
   *
   * For any input x, track(t)(x) and t(x) are equal.
   */
-sealed case class TrackerWithListeners( listeners : TransformationListener* )
-  extends TransformationTracker {
-  override def track( transformation : TlaExTransformation ) : TlaExTransformation = {
-    ex =>
-      val newEx = transformation( ex )
-      listeners foreach {
-        _.onTransformation( ex, newEx )
-      }
-      newEx
+sealed case class TrackerWithListeners(listeners: TransformationListener*)
+    extends TransformationTracker {
+  override def track(
+      transformation: TlaExTransformation
+  ): TlaExTransformation = { ex =>
+    val newEx = transformation(ex)
+    listeners foreach {
+      _.onTransformation(ex, newEx)
+    }
+    newEx
   }
 
 }

@@ -1,9 +1,21 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.RewritingResult
-import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore}
-import at.forsyte.apalache.tla.bmcmt.caches.{ExprCache, IntValueCache, RecordDomainCache, StrValueCache}
-import at.forsyte.apalache.tla.bmcmt.rewriter.{Recoverable, RewriterConfig, SymbStateRewriterSnapshot}
+import at.forsyte.apalache.tla.bmcmt.analyses.{
+  ExprGradeStore,
+  FormulaHintsStore
+}
+import at.forsyte.apalache.tla.bmcmt.caches.{
+  ExprCache,
+  IntValueCache,
+  RecordDomainCache,
+  StrValueCache
+}
+import at.forsyte.apalache.tla.bmcmt.rewriter.{
+  Recoverable,
+  RewriterConfig,
+  SymbStateRewriterSnapshot
+}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.lir.TlaEx
@@ -23,7 +35,11 @@ import at.forsyte.apalache.tla.lir.TlaEx
   *
   * @author Igor Konnov
   */
-trait SymbStateRewriter extends StackableContext with MessageStorage with Recoverable[SymbStateRewriterSnapshot] {
+trait SymbStateRewriter
+    extends StackableContext
+    with MessageStorage
+    with Recoverable[SymbStateRewriterSnapshot] {
+
   /**
     * A solver context that is populated by the rewriter.
     */
@@ -117,7 +133,10 @@ trait SymbStateRewriter extends StackableContext with MessageStorage with Recove
     * @param es    a sequence of expressions to rewrite
     * @return a pair (the new state with the original expression, the rewritten expressions)
     */
-  def rewriteSeqUntilDone(state: SymbState, es: Seq[TlaEx]): (SymbState, Seq[TlaEx])
+  def rewriteSeqUntilDone(
+      state: SymbState,
+      es: Seq[TlaEx]
+  ): (SymbState, Seq[TlaEx])
 
   /**
     * An extended version of rewriteSeqUntilDone, where expressions are accompanied with bindings.
@@ -126,7 +145,10 @@ trait SymbStateRewriter extends StackableContext with MessageStorage with Recove
     * @param es    a sequence of expressions to rewrite accompanied with bindings
     * @return a pair (the old state in a new context, the rewritten expressions)
     */
-  def rewriteBoundSeqUntilDone(state: SymbState, es: Seq[(Binding, TlaEx)]): (SymbState, Seq[TlaEx])
+  def rewriteBoundSeqUntilDone(
+      state: SymbState,
+      es: Seq[(Binding, TlaEx)]
+  ): (SymbState, Seq[TlaEx])
 
   /**
     * Flush collected statistics.
@@ -142,7 +164,6 @@ trait SymbStateRewriter extends StackableContext with MessageStorage with Recove
     */
   def getRewritingStack(): Seq[TlaEx]
 }
-
 
 object SymbStateRewriter {
 

@@ -9,6 +9,7 @@ import at.forsyte.apalache.tla.lir.TlaEx
   * @author Igor Konnov
   */
 trait TransformationTracker {
+
   /**
     * Decorate a transformation with a tracker.
     * @param tr an expression transformation
@@ -27,7 +28,7 @@ trait TransformationTracker {
     * @return the new expression
     */
   def hold(from: TlaEx, to: TlaEx): TlaEx = {
-    def tr(f : TlaEx): TlaEx = to
+    def tr(f: TlaEx): TlaEx = to
     track(tr)(from)
   }
 }

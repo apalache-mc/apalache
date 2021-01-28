@@ -4,6 +4,7 @@ package at.forsyte.apalache.infra.passes
   * This pass does nothing but it can be used to collect the output of the final pass.
   */
 class TerminalPass extends Pass {
+
   /**
     * The pass name.
     *

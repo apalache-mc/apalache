@@ -3,7 +3,10 @@ package at.forsyte.apalache.tla.pp
 import at.forsyte.apalache.io.tlc.config._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.{
+  TlaModuleTransformation,
+  TransformationTracker
+}
 import com.typesafe.scalalogging.LazyLogging
 
 /**
@@ -14,38 +17,68 @@ import com.typesafe.scalalogging.LazyLogging
   *
   * @author Andrey Kuprianov
   */
-class TlcConfigImporter(config: TlcConfig, tracker: TransformationTracker) extends TlaModuleTransformation with LazyLogging {
+class TlcConfigImporter(config: TlcConfig, tracker: TransformationTracker)
+    extends TlaModuleTransformation
+    with LazyLogging {
   override def apply(mod: TlaModule): TlaModule = {
 
-    val assignments = config.constAssignments.map{
+    val assignments = config.constAssignments.map {
       case (param, value) =>
-        TlaOperDecl(ConstAndDefRewriter.OVERRIDE_PREFIX + param, List(), value.toTlaEx)
+        TlaOperDecl(
+          ConstAndDefRewriter.OVERRIDE_PREFIX + param,
+          List(),
+          value.toTlaEx
+        )
     }
     val operators = Set(mod.declarations.collect {
       case TlaOperDecl(name, _, _) => name
-    }:_*)
+    }: _*)
     val replacements = config.constReplacements.map {
       case (param, value) =>
-        if(operators.contains(value))
-          TlaOperDecl(ConstAndDefRewriter.OVERRIDE_PREFIX + param, List(), OperEx(TlaOper.apply, NameEx(value)))
+        if (operators.contains(value))
+          TlaOperDecl(
+            ConstAndDefRewriter.OVERRIDE_PREFIX + param,
+            List(),
+            OperEx(TlaOper.apply, NameEx(value))
+          )
         else
-          TlaOperDecl(ConstAndDefRewriter.OVERRIDE_PREFIX + param, List(), NameEx(value))
+          TlaOperDecl(
+            ConstAndDefRewriter.OVERRIDE_PREFIX + param,
+            List(),
+            NameEx(value)
+          )
     }
-    val stateConstraints = config.stateConstraints.zipWithIndex.map{
+    val stateConstraints = config.stateConstraints.zipWithIndex.map {
       case (value, index) =>
-        TlaOperDecl(TlcConfigImporter.STATE_PREFIX + index, List(), NameEx(value))
+        TlaOperDecl(
+          TlcConfigImporter.STATE_PREFIX + index,
+          List(),
+          NameEx(value)
+        )
     }
-    val actionConstraints = config.actionConstraints.zipWithIndex.map{
+    val actionConstraints = config.actionConstraints.zipWithIndex.map {
       case (value, index) =>
-        TlaOperDecl(TlcConfigImporter.ACTION_PREFIX + index, List(), NameEx(value))
+        TlaOperDecl(
+          TlcConfigImporter.ACTION_PREFIX + index,
+          List(),
+          NameEx(value)
+        )
     }
-    val invariants = config.invariants.zipWithIndex.map{
+    val invariants = config.invariants.zipWithIndex.map {
       case (value, index) =>
-        TlaOperDecl(TlcConfigImporter.INVARIANT_PREFIX + index, List(), NameEx(value))
+        TlaOperDecl(
+          TlcConfigImporter.INVARIANT_PREFIX + index,
+          List(),
+          NameEx(value)
+        )
     }
-    val temporalProps = config.temporalProps.zipWithIndex.map{
+    val temporalProps = config.temporalProps.zipWithIndex.map {
       case (value, index) =>
-        TlaOperDecl(TlcConfigImporter.TEMPORAL_PREFIX + index, List(), NameEx(value))
+        TlaOperDecl(
+          TlcConfigImporter.TEMPORAL_PREFIX + index,
+          List(),
+          NameEx(value)
+        )
     }
     val behaviorSpec = config.behaviorSpec match {
       case InitNextSpec(init, next) =>
@@ -60,11 +93,15 @@ class TlcConfigImporter(config: TlcConfig, tracker: TransformationTracker) exten
         )
 
       case NullSpec() =>
-        throw new TLCConfigurationError("Neither INIT and NEXT, nor SPECIFICATION found in the TLC configuration file")
+        throw new TLCConfigurationError(
+          "Neither INIT and NEXT, nor SPECIFICATION found in the TLC configuration file"
+        )
     }
-    new TlaModule(mod.name, mod.declarations
-      ++ assignments ++ replacements ++ stateConstraints ++ actionConstraints
-      ++ invariants ++ temporalProps ++ behaviorSpec
+    new TlaModule(
+      mod.name,
+      mod.declarations
+        ++ assignments ++ replacements ++ stateConstraints ++ actionConstraints
+        ++ invariants ++ temporalProps ++ behaviorSpec
     )
   }
 }

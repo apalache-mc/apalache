@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.bmcmt.analyses
 import at.forsyte.apalache.tla.bmcmt.analyses.FormulaHintsStore.FormulaHint
 import at.forsyte.apalache.tla.lir.UID
 
-
 /**
   * A store for formula hints.
   */

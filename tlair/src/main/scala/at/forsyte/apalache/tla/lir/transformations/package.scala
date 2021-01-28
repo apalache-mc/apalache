@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.lir
 
 package object transformations {
+
   /**
     * A general expression transformation.
     */

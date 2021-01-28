@@ -36,13 +36,18 @@ class EqRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val eqPred = newState.arena.topCell
 
       // produce equality constraints, so that we can use SMT equality
-      newState = rewriter.lazyEq.cacheOneEqConstraint(newState, leftCell, rightCell)
+      newState =
+        rewriter.lazyEq.cacheOneEqConstraint(newState, leftCell, rightCell)
       // and now we can use the SMT equality
-      val eqCons = tla.equiv(eqPred.toNameEx, rewriter.lazyEq.cachedEq(leftCell, rightCell))
+      val eqCons = tla
+        .equiv(eqPred.toNameEx, rewriter.lazyEq.cachedEq(leftCell, rightCell))
       rewriter.solverContext.assertGroundExpr(eqCons)
       newState.setRex(eqPred.toNameEx)
 
     case _ =>
-      throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
+      throw new RewriterException(
+        "%s is not applicable".format(getClass.getSimpleName),
+        state.ex
+      )
   }
 }

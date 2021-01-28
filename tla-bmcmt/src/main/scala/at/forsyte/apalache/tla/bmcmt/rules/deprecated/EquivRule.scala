@@ -21,7 +21,7 @@ class EquivRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaBoolOper.equiv, _, _) => true
-      case _ => false
+      case _                               => false
     }
   }
 
@@ -32,11 +32,16 @@ class EquivRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val rightState = rewriter.rewriteUntilDone(leftState.setRex(right))
         var nextState = rightState.updateArena(_.appendCell(BoolT()))
         val pred = nextState.arena.topCell
-        rewriter.solverContext.assertGroundExpr(tla.eql(pred.toNameEx, tla.equiv(leftState.ex, rightState.ex)))
+        rewriter.solverContext.assertGroundExpr(
+          tla.eql(pred.toNameEx, tla.equiv(leftState.ex, rightState.ex))
+        )
         nextState.setRex(pred.toNameEx)
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
+        throw new RewriterException(
+          "%s is not applicable".format(getClass.getSimpleName),
+          state.ex
+        )
     }
   }
 }

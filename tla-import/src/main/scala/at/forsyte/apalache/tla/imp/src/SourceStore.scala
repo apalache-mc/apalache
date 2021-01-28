@@ -22,14 +22,17 @@ import scala.collection.mutable
   */
 @Singleton
 class SourceStore extends TransformationListener with LazyLogging {
+
   /**
     * A mapping from a filenames to an index in trees. This map is typically quite small.
     */
   private var filenameToIndex: mutable.Map[String, Int] = mutable.HashMap()
+
   /**
     * An inverse mapping of filenameToIndex.
     */
   private var indexToFilename: mutable.Map[Int, String] = mutable.HashMap()
+
   /**
     * A sequence of region trees, one per filename. The following invariant is maintained: filenames.size == trees.size.
     */
@@ -49,19 +52,19 @@ class SourceStore extends TransformationListener with LazyLogging {
     if (originEx.ID != newEx.ID) {
       find(originEx.ID) match {
         case Some(loc) => addRec(newEx, loc)
-        case None =>
+        case None      =>
         // FIXME: throw this exception as soon as we fix the source tracking
         /*
         throw new IllegalArgumentException("The original expression (UID = %s) does not have source data: %s"
           .format(originEx.ID, originEx))
-         */
+       */
       }
     }
   }
 
   /**
     * Label an expression id with a source location. Unless you are sure about using this method, use addRec instead.
- *
+    *
     * @param id a valid expression identifier
     * @param location a source location
     */
@@ -87,7 +90,7 @@ class SourceStore extends TransformationListener with LazyLogging {
         map += exId -> regionIndex
         ex match {
           case OperEx(_, args @ _*) => args foreach add
-          case _ => ()
+          case _                    => ()
         }
       } // else: this subexpression has been labelled with the region already, skip
     }
@@ -148,7 +151,7 @@ class SourceStore extends TransformationListener with LazyLogging {
   }
 
   def makeSourceMap: SourceMap = {
-    val keys = idToRegion.map( _.keySet).foldLeft( Set.empty[UID] ){ _ ++ _ }
+    val keys = idToRegion.map(_.keySet).foldLeft(Set.empty[UID]) { _ ++ _ }
     val pairs = keys map { k =>
       k -> find(k).get
     }

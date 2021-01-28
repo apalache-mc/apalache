@@ -7,6 +7,7 @@ import scala.collection.immutable.SortedMap
   * <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/adr/002adr-types.md">ADR-002</a>.
   */
 sealed trait TlaType1 {
+
   /**
     * Compute the set of the names used in the type. These are names declared with VarT1.
     * @return the set of variable names (actually, integers) that are used in the type.
@@ -33,7 +34,6 @@ case class RealT1() extends TlaType1 {
   override def usedNames: Set[Int] = Set.empty
 
 }
-
 
 /**
   * A Boolean type.
@@ -90,8 +90,33 @@ case class VarT1(no: Int) extends TlaType1 {
 object VarT1 {
   // human-friendly names of the first 26 variables
   protected val QNAMES: Vector[String] = Vector(
-    "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
-    "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z")
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "j",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "q",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "w",
+    "x",
+    "y",
+    "z"
+  )
 
   /**
     * Construct a variable from the human-readable form like 'b' or 'a100'.
@@ -103,13 +128,17 @@ object VarT1 {
   def apply(name: String): VarT1 = {
     val len = name.length
     if (len < 1) {
-      throw new IllegalArgumentException("Expected either a lower-case letter or a[0-9]+, found: " + name)
+      throw new IllegalArgumentException(
+        "Expected either a lower-case letter or a[0-9]+, found: " + name
+      )
     } else if (len == 1) {
       val index = QNAMES.indexOf(name)
       if (index >= 0) {
         VarT1(index)
       } else {
-        throw new IllegalArgumentException("Expected a lower-case letter or a[0-9]+, found: " + name)
+        throw new IllegalArgumentException(
+          "Expected a lower-case letter or a[0-9]+, found: " + name
+        )
       }
     } else {
       try {
@@ -117,7 +146,9 @@ object VarT1 {
         VarT1(no)
       } catch {
         case _: NumberFormatException =>
-          throw new IllegalArgumentException("Expected either a lower-case letter or a[0-9]+, found: " + name)
+          throw new IllegalArgumentException(
+            "Expected either a lower-case letter or a[0-9]+, found: " + name
+          )
       }
     }
   }
@@ -172,7 +203,9 @@ case class TupT1(elems: TlaType1*) extends TlaType1 {
     "<<%s>>".format(elemStrs.mkString(", "))
   }
 
-  override def usedNames: Set[Int] = elems.foldLeft(Set[Int]()) { (s, t) => s ++ t.usedNames }
+  override def usedNames: Set[Int] = elems.foldLeft(Set[Int]()) { (s, t) =>
+    s ++ t.usedNames
+  }
 }
 
 /**
@@ -186,13 +219,16 @@ case class SparseTupT1(fieldTypes: SortedMap[Int, TlaType1]) extends TlaType1 {
     "{%s}".format(keyTypeStrs.mkString(", "))
   }
 
-  override def usedNames: Set[Int] = fieldTypes.values.foldLeft(Set[Int]()) { (s, t) => s ++ t.usedNames }
+  override def usedNames: Set[Int] = fieldTypes.values.foldLeft(Set[Int]()) {
+    (s, t) =>
+      s ++ t.usedNames
+  }
 
 }
 
 object SparseTupT1 {
   def apply(keysAndTypes: (Int, TlaType1)*): SparseTupT1 = {
-    SparseTupT1(SortedMap(keysAndTypes :_*))
+    SparseTupT1(SortedMap(keysAndTypes: _*))
   }
 }
 
@@ -207,13 +243,16 @@ case class RecT1(fieldTypes: SortedMap[String, TlaType1]) extends TlaType1 {
     "[%s]".format(keyTypeStrs.mkString(", "))
   }
 
-  override def usedNames: Set[Int] = fieldTypes.values.foldLeft(Set[Int]()) { (s, t) => s ++ t.usedNames }
+  override def usedNames: Set[Int] = fieldTypes.values.foldLeft(Set[Int]()) {
+    (s, t) =>
+      s ++ t.usedNames
+  }
 
 }
 
 object RecT1 {
   def apply(keysAndTypes: (String, TlaType1)*): RecT1 = {
-    RecT1(SortedMap(keysAndTypes :_*))
+    RecT1(SortedMap(keysAndTypes: _*))
   }
 }
 
@@ -229,6 +268,9 @@ case class OperT1(args: Seq[TlaType1], res: TlaType1) extends TlaType1 {
     "(%s) => %s".format(argStrs.mkString(", "), res.toString)
   }
 
-  override def usedNames: Set[Int] = res.usedNames ++ args.foldLeft(Set[Int]()) { (s, t) => s ++ t.usedNames }
+  override def usedNames: Set[Int] =
+    res.usedNames ++ args.foldLeft(Set[Int]()) { (s, t) =>
+      s ++ t.usedNames
+    }
 
 }

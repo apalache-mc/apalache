@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx, TlaOperDecl}
 
 object TlaExUtil {
+
   /**
     * Find the names that are used in an expression.
     * @param expr an expression
@@ -20,16 +21,17 @@ object TlaExUtil {
       case OperEx(TlaActionOper.prime, NameEx(name)) =>
         used = used + (name + "'")
 
-      case OperEx(_, args @_*) =>
+      case OperEx(_, args @ _*) =>
         args foreach findRec
 
-      case ex @ LetInEx(body, defs@_*) =>
+      case ex @ LetInEx(body, defs @ _*) =>
         def findInDef: TlaOperDecl => Unit = {
           case TlaOperDecl(_, List(), body) =>
             findRec(body)
 
           case TlaOperDecl(name, params, _) =>
-            val msg = "Operator %s: expected 0 parameters, found %d parameters".format(name, params.length)
+            val msg = "Operator %s: expected 0 parameters, found %d parameters"
+              .format(name, params.length)
             throw new InvalidTlaExException(msg, ex)
         }
         defs.foreach(findInDef)

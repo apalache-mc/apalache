@@ -2,7 +2,11 @@ package at.forsyte.apalache.tla.bmcmt.search
 
 import java.io.File
 import at.forsyte.apalache.tla.bmcmt.CheckerInput
-import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode.{AfterJoin, BeforeJoin, InvariantMode}
+import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode.{
+  AfterJoin,
+  BeforeJoin,
+  InvariantMode
+}
 
 object ModelCheckerParams {
 
@@ -22,11 +26,14 @@ object ModelCheckerParams {
   *
   * @author Igor Konnov
   */
-class ModelCheckerParams(checkerInput: CheckerInput,
-                         val stepsBound: Int,
-                         val saveDirectory: File,
-                         tuningOptions: Map[String, String] = Map(),
-                         val debug: Boolean) {
+class ModelCheckerParams(
+    checkerInput: CheckerInput,
+    val stepsBound: Int,
+    val saveDirectory: File,
+    tuningOptions: Map[String, String] = Map(),
+    val debug: Boolean
+) {
+
   /**
     * If pruneDisabled is set to false, there will be no check of whether a transition is enabled.
     */
@@ -42,7 +49,9 @@ class ModelCheckerParams(checkerInput: CheckerInput,
     * per step. When it is equal to BeforeJoin, the invariant is checked before joining all transitions.
     */
   var invariantMode: InvariantMode =
-    if ("after" == tuningOptions.getOrElse("search.invariant.mode", "before")) AfterJoin else BeforeJoin
+    if ("after" == tuningOptions.getOrElse("search.invariant.mode", "before"))
+      AfterJoin
+    else BeforeJoin
 
   /**
     * The set of CONSTANTS, which are special (rigid) variables, as they do not change in the course of execution.
@@ -70,9 +79,9 @@ class ModelCheckerParams(checkerInput: CheckerInput,
     BigInt(tuningOptions.getOrElse("search.split.timeout.minimum", "1800")).toLong
 
   /**
-   * At every step, the jail timeout for the next step is computed as `maxTime * factor / 100`,
+    * At every step, the jail timeout for the next step is computed as `maxTime * factor / 100`,
     * where `maxTime` is the maximum checking time among all enabled or disabled transitions.
-   */
+    */
   val jailTimeoutFactor: Long =
     BigInt(tuningOptions.getOrElse("search.split.timeout.factor", "200")).toInt
 

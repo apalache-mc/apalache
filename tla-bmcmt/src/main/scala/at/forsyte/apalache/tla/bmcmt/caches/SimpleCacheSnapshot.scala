@@ -8,6 +8,6 @@ import scala.collection.immutable.HashMap
   *
   * @author Igor Konnov
   */
-class SimpleCacheSnapshot[KeyT, ValueT](val cache: Map[KeyT, (ValueT, Int)] = HashMap()) {
-
-}
+class SimpleCacheSnapshot[KeyT, ValueT](
+    val cache: Map[KeyT, (ValueT, Int)] = HashMap()
+) {}

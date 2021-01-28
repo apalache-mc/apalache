@@ -12,4 +12,3 @@ import at.forsyte.apalache.tla.lir.TlaEx
 trait TransformationListener {
   def onTransformation(originalEx: TlaEx, newEx: TlaEx): Unit
 }
-
