@@ -4,6 +4,7 @@ import at.forsyte.apalache.io.annotations.TlaAnnotation
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.oper.TlaOper
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfter, FunSuite}
@@ -83,14 +84,13 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
     }
   }
 
-  /*
   test("annotated operator") {
     val text =
       """---- MODULE oper ----
         |EXTENDS Integers
         |(*
-        |@awesome
-        |@type("Int => Int")
+        |   @pure
+        |   @type("Int => Int")
         |*)
         |Inc(x) == x + 1
         |================================
@@ -101,12 +101,155 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
     module.declarations.find(_.name == "Inc") match {
       case Some(d @ TlaOperDecl(_, _, _)) =>
         val annotations = annotationStore(d.ID)
-        val expected = TlaAnnotation("awesome") :: TlaAnnotation("type", mkStr("Int => Int")) :: Nil
+        val expected = TlaAnnotation("pure") :: TlaAnnotation("type", mkStr("Int => Int")) :: Nil
         assert(expected == annotations)
 
       case _ =>
         fail("Expected an operator")
     }
   }
-   */
+
+  test("annotated local operator") {
+    // in contrast to LET-IN and RECURSIVE, the comment annotations for local operators should come before
+    // the keyword LOCAL. Need to figure that with Markus.
+    val text =
+      """---- MODULE oper ----
+        |EXTENDS Integers
+        |
+        |(*
+        |   @pure
+        |   @type("Int => Int")
+        |*)
+        |LOCAL Inc(x) == x + 1
+        |
+        |A(n) == Inc(n)
+        |================================
+      """.stripMargin
+
+    val module = loadModule(text, "oper")
+
+    module.declarations.find(_.name == "A") match {
+        // SanyImporter introduces a let-definition before application of a LOCAL operator
+      case Some(d @ TlaOperDecl(_, _, LetInEx(_, localDef))) =>
+        val annotations = annotationStore(localDef.ID)
+        val expected = TlaAnnotation("pure") :: TlaAnnotation("type", mkStr("Int => Int")) :: Nil
+        assert(expected == annotations)
+
+      case _ =>
+        fail("Expected an operator")
+    }
+  }
+
+  test("annotated LET-IN operator") {
+    // Similar to recursive operators,
+    // it is probably unexpected that the annotation comes after the LET keyword, not before it.
+    // The reason is that you can define multiple operators in a single LET-definition.
+    val text =
+      """---- MODULE oper ----
+        |EXTENDS Integers
+        |
+        |A(n) ==
+        |  LET
+        |  (*
+        |    @pure
+        |    @type("Int => Int")
+        |  *)
+        |  Inc(x) == x + 1 IN
+        |  Inc(n)
+        |================================
+      """.stripMargin
+
+    val module = loadModule(text, "oper")
+
+    module.declarations.find(_.name == "A") match {
+      case Some(d @ TlaOperDecl(_, _, LetInEx(_, incDecl))) =>
+        val annotations = annotationStore(incDecl.ID)
+        val expected = TlaAnnotation("pure") :: TlaAnnotation("type", mkStr("Int => Int")) :: Nil
+        assert(expected == annotations)
+
+      case _ =>
+        fail("Expected an operator")
+    }
+  }
+
+  test("annotated recursive operator") {
+    // recursive operators are tricky: The annotations should be right before the operator definition,
+    // not before the RECURSIVE keyword!
+    val text =
+      """-------- MODULE oper ------------
+        |EXTENDS Integers
+        |
+        |RECURSIVE Fact(_)
+        |(*
+        |   @tailrec
+        |   @type("Int => Int")
+        |*)
+        |Fact(n) ==
+        |  IF n <= 1 THEN 1 ELSE n * Fact(n - 1)
+        |================================
+      """.stripMargin
+
+    val module = loadModule(text, "oper")
+
+    module.declarations.find(_.name == "Fact") match {
+      case Some(d @ TlaOperDecl(_, _, _)) =>
+        val annotations = annotationStore(d.ID)
+        val expected = TlaAnnotation("tailrec") :: TlaAnnotation("type", mkStr("Int => Int")) :: Nil
+        assert(expected == annotations)
+
+      case _ =>
+        fail("Expected an operator")
+    }
+  }
+
+  test("annotated recursive function") {
+    val text =
+      """-------- MODULE fun ------------
+        |EXTENDS Integers
+        |
+        |(*
+        |   @type("Int -> Int")
+        |*)
+        |Fact[n \in Int] ==
+        |  IF n <= 1 THEN 1 ELSE n * Fact[n - 1]
+        |================================
+      """.stripMargin
+
+    val module = loadModule(text, "fun")
+
+    module.declarations.find(_.name == "Fact") match {
+      case Some(d @ TlaOperDecl(_, _, _)) =>
+        val annotations = annotationStore(d.ID)
+        val expected = TlaAnnotation("type", mkStr("Int -> Int")) :: Nil
+        assert(expected == annotations)
+
+      case _ =>
+        fail("Expected an operator")
+    }
+  }
+
+  test("annotated non-recursive function") {
+    val text =
+      """-------- MODULE fun ------------
+        |EXTENDS Integers
+        |
+        |(*
+        |   @type("Int -> Int")
+        |*)
+        |Inc[n \in Int] == n + 1
+        |================================
+      """.stripMargin
+
+    val module = loadModule(text, "fun")
+
+    module.declarations.find(_.name == "Inc") match {
+      case Some(d @ TlaOperDecl(_, _, _)) =>
+        val annotations = annotationStore(d.ID)
+        val expected = TlaAnnotation("type", mkStr("Int -> Int")) :: Nil
+        assert(expected == annotations)
+
+      case _ =>
+        fail("Expected an operator")
+    }
+  }
 }

@@ -62,8 +62,9 @@ class ModuleTranslator(sourceStore: SourceStore, annotationStore: TlaAnnotationS
           val lookupPrefix = opDef.getName.toString.split("!").dropRight(1) // find the instance names
           // the expression translator should lookup using the lookupPrefix
           val adjustedContext = context.setLookupPrefix(lookupPrefix.toList)
-          val defTranslator = OpDefTranslator(sourceStore, adjustedContext)
+          val defTranslator = OpDefTranslator(sourceStore, annotationStore, adjustedContext)
           val updatedDecl = defTranslator.translate(opDef)
+          // copy the structures from the updated definition
           decl.isRecursive = updatedDecl.isRecursive
           decl.body = updatedDecl.body
           sourceStore.find(updatedDecl.ID) match {
@@ -72,6 +73,9 @@ class ModuleTranslator(sourceStore: SourceStore, annotationStore: TlaAnnotationS
               throw new SanyImporterException("No source location for: " + updatedDecl.name)
             case Some(loc) =>
               sourceStore.add(decl.ID, loc)
+          }
+          annotationStore.get(updatedDecl.ID).foreach { annotations =>
+            annotationStore += decl.ID -> annotations
           }
 
           // TODO(igor) temporary bugfix for the issue #130. Remove as soon as it is fixed in tla2tools.
@@ -84,7 +88,7 @@ class ModuleTranslator(sourceStore: SourceStore, annotationStore: TlaAnnotationS
 
     // translate assumptions after the operator definitions, as the assumptions may use the operators
     context = node.getAssumptions.toList.foldLeft(context) { (ctx, node) =>
-      val decl = AssumeTranslator(sourceStore, ctx).translate(node)
+      val decl = AssumeTranslator(sourceStore, annotationStore, ctx).translate(node)
       sourceStore.add(decl.ID, SourceLocation(node.getLocation))
       ctx.push(DeclUnit(decl))
     }

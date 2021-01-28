@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.{TlaDecimal, TlaInt, TlaStr}
+import at.forsyte.apalache.io.annotations.store._
 import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic._
 
@@ -16,6 +17,7 @@ import scala.collection.JavaConverters._
   */
 class ExprOrOpArgNodeTranslator(
     sourceStore: SourceStore,
+    annotationStore: TlaAnnotationStore,
     context: Context,
     recStatus: RecursionStatus
 ) extends LazyLogging {
@@ -37,7 +39,7 @@ class ExprOrOpArgNodeTranslator(
 
         case opApp: OpApplNode =>
           // application of an operator, e.g., F(x)
-          OpApplTranslator(sourceStore, context, recStatus).translate(opApp)
+          OpApplTranslator(sourceStore, annotationStore, context, recStatus).translate(opApp)
 
         case opArg: OpArgNode =>
           // An operator definition that is used as an expression, e.g., LAMBDA x: x = 1.
@@ -106,8 +108,7 @@ class ExprOrOpArgNodeTranslator(
     for (node <- letIn.context.getOpDefs.elements.asScala.toList.reverse) {
       node match {
         case opdef: OpDefNode =>
-          val decl = OpDefTranslator(sourceStore, letInContext).translate(opdef)
-          sourceStore.add(decl.ID, SourceLocation(opdef.getLocation))
+          val decl = OpDefTranslator(sourceStore, annotationStore, letInContext).translate(opdef)
           letInDeclarations = letInDeclarations :+ decl
           letInContext = letInContext.push(DeclUnit(decl))
 
@@ -116,7 +117,7 @@ class ExprOrOpArgNodeTranslator(
       }
     }
 
-    val body = ExprOrOpArgNodeTranslator(sourceStore, letInContext, recStatus)
+    val body = ExprOrOpArgNodeTranslator(sourceStore, annotationStore, letInContext, recStatus)
       .translate(letIn.getBody)
     LetInEx(body, letInDeclarations: _*)
   }
@@ -132,8 +133,7 @@ class ExprOrOpArgNodeTranslator(
     opArgNode.getOp match {
       // a lambda-definition is passed as an argument
       case defNode: OpDefNode if name == "LAMBDA" =>
-        val decl = OpDefTranslator(sourceStore, context).translate(defNode)
-        sourceStore.add(decl.ID, SourceLocation(defNode.getLocation))
+        val decl = OpDefTranslator(sourceStore, annotationStore, context).translate(defNode)
         // e.g., LET Foo(x) == e1 in Foo
         LetInEx(NameEx(name), decl)
 
@@ -151,7 +151,7 @@ class ExprOrOpArgNodeTranslator(
 
   // substitute an expression with the declarations that come from INSTANCE M WITH ...
   private def translateSubstIn(substIn: SubstInNode): TlaEx = {
-    SubstTranslator(sourceStore, context)
+    SubstTranslator(sourceStore, annotationStore, context)
       .translate(substIn, translate(substIn.getBody))
   }
 
@@ -189,9 +189,10 @@ class ExprOrOpArgNodeTranslator(
 object ExprOrOpArgNodeTranslator {
   def apply(
       sourceStore: SourceStore,
+      annotationStore: TlaAnnotationStore,
       context: Context,
       recStatus: RecursionStatus
   ): ExprOrOpArgNodeTranslator = {
-    new ExprOrOpArgNodeTranslator(sourceStore, context, recStatus)
+    new ExprOrOpArgNodeTranslator(sourceStore, annotationStore, context, recStatus)
   }
 }
