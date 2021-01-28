@@ -42,8 +42,9 @@ cd "$PROJ_ROOT"
 make clean
 make apalache
 
-# Location of the jar that get's published in releases
-RELEASE_JAR="${PROJ_ROOT}/mod-distribution/target/apalache-pkg-${VERSION}-full.jar"
+# Relative location of the jar that gets published in releases
+# This must be a relative path. Aboslute paths break the zip archive.
+RELEASE_JAR="mod-distribution/target/apalache-pkg-${VERSION}-full.jar"
 
 # Confirm the jar was produced
 if [ ! -f "$RELEASE_JAR" ]; then
