@@ -8,7 +8,6 @@ abstract class TlaTempOper extends TlaOper {
 }
 
 object TlaTempOper {
-
   /** The LTL box operator */
   object box extends TlaTempOper {
     override val name: String = "[]"
@@ -59,15 +58,13 @@ object TlaTempOper {
   object EE extends TlaTempOper {
     override val name: String = "\\EE"
     override def arity: OperArity = FixedArity(2)
-    override val precedence
-        : (Int, Int) = (0, 0) // Sec 15.2.1, Undelimited Constructs
+    override val precedence: (Int, Int) = (0, 0) // Sec 15.2.1, Undelimited Constructs
   }
 
   /** The temporal universal quantification operator */
   object AA extends TlaTempOper {
     override val name: String = "\\AA"
     override def arity: OperArity = FixedArity(2)
-    override val precedence
-        : (Int, Int) = (0, 0) // Sec 15.2.1, Undelimited Constructs
+    override val precedence: (Int, Int) = (0, 0) // Sec 15.2.1, Undelimited Constructs
   }
 }

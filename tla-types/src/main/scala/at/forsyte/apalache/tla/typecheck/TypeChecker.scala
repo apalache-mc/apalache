@@ -8,7 +8,6 @@ import at.forsyte.apalache.tla.typecheck.etc.EtcExpr
   * @author Igor Konnov
   */
 trait TypeChecker {
-
   /**
     * Compute the expression type in a type context. If the expression is not well-typed, return None.
     * As a side effect, call the listener, when discovering new types or errors.
@@ -18,9 +17,5 @@ trait TypeChecker {
     * @param ex an expression
     * @return Some(type), if the expression is well-typed; and None otherwise.
     */
-  def compute(
-      listener: TypeCheckerListener,
-      ctx: TypeContext,
-      ex: EtcExpr
-  ): Option[TlaType1]
+  def compute(listener: TypeCheckerListener, ctx: TypeContext, ex: EtcExpr): Option[TlaType1]
 }

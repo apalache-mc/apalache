@@ -11,9 +11,7 @@ import scala.collection.immutable.HashMap
   * @author Igor Konnov
   */
 abstract class AbstractCache[ContextT, SourceT, TargetT]
-    extends StackableContext
-    with Serializable
-    with Recoverable[AbstractCacheSnapshot[ContextT, SourceT, TargetT]] {
+    extends StackableContext with Serializable with Recoverable[AbstractCacheSnapshot[ContextT, SourceT, TargetT]] {
 
   /**
     * A context level, see StackableContext
@@ -36,10 +34,7 @@ abstract class AbstractCache[ContextT, SourceT, TargetT]
     * @param srcValue a source value
     * @return a target value that is going to be cached and the new context
     */
-  protected def create(
-      context: ContextT,
-      srcValue: SourceT
-  ): (ContextT, TargetT)
+  protected def create(context: ContextT, srcValue: SourceT): (ContextT, TargetT)
 
   /**
     * Get a previously cached value for a given source value, or return the previously cached one.
@@ -68,7 +63,7 @@ abstract class AbstractCache[ContextT, SourceT, TargetT]
   def get(srcValue: SourceT): Option[TargetT] = {
     cache.get(srcValue) match {
       case Some((target, _)) => Some(target)
-      case None              => None
+      case None => None
     }
   }
 
@@ -80,7 +75,7 @@ abstract class AbstractCache[ContextT, SourceT, TargetT]
   def findKey(value: TargetT): Option[SourceT] = {
     reverseCache.get(value) match {
       case Some((key, _)) => Some(key)
-      case None           => None
+      case None => None
     }
   }
 
@@ -90,12 +85,8 @@ abstract class AbstractCache[ContextT, SourceT, TargetT]
     * @return the snapshot
     */
   override def snapshot(): AbstractCacheSnapshot[ContextT, SourceT, TargetT] = {
-    val squashedCache = cache.map {
-      case (source, (target, _)) => (source, (target, 0))
-    }
-    val squashedRevCache = reverseCache.map {
-      case (target, (source, _)) => (target, (source, 0))
-    }
+    val squashedCache = cache.map { case (source, (target, _)) => (source, (target, 0)) }
+    val squashedRevCache = reverseCache.map { case (target, (source, _)) => (target, (source, 0)) }
     new AbstractCacheSnapshot(squashedCache, squashedRevCache)
   }
 
@@ -104,9 +95,7 @@ abstract class AbstractCache[ContextT, SourceT, TargetT]
     *
     * @param shot a snapshot
     */
-  override def recover(
-      shot: AbstractCacheSnapshot[ContextT, SourceT, TargetT]
-  ): Unit = {
+  override def recover(shot: AbstractCacheSnapshot[ContextT, SourceT, TargetT]): Unit = {
     cache = shot.cache
     reverseCache = shot.reverseCache
   }

@@ -9,13 +9,8 @@ import org.backuity.clist.{Command, _}
   *
   * @author Igor Konnov
   */
-class TypeCheckCmd
-    extends Command(
-      name = "typecheck",
-      description = "Check types in a TLA+ specification"
-    )
-    with General {
+class TypeCheckCmd extends Command(name = "typecheck",
+  description = "Check types in a TLA+ specification") with General {
 
-  var file: File =
-    arg[File](description = "a TLA+ specification (.tla or .json)")
+  var file: File = arg[File](description = "a TLA+ specification (.tla or .json)")
 }

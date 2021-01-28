@@ -14,24 +14,24 @@ import at.forsyte.apalache.tla.lir._
   * or assignment finding will fail.
   *
   * Any variable, for which no manual assignemt exists, is handled in the standard way.
-  *
-  * @author Jure Kukovec
-  */
+*
+* @author Jure Kukovec
+*/ 
 object ManualAssignments {
   type varnameT = String
 
   /**
     * List all variables with at least one manual assignment site
     */
-  def findAll(ex: TlaEx): Set[varnameT] = ex match {
-    case OperEx(BmcOper.assign, OperEx(TlaActionOper.prime, NameEx(n)), _) =>
+  def findAll( ex: TlaEx ): Set[varnameT] = ex match {
+    case OperEx( BmcOper.assign,  OperEx( TlaActionOper.prime, NameEx( n ) ), _ ) =>
       Set(n)
-    case OperEx(_, args @ _*) =>
-      args.map(findAll).foldLeft(Set.empty[varnameT]) {
+    case OperEx( _, args@_* ) =>
+      args.map( findAll ).foldLeft(Set.empty[varnameT]) {
         _ ++ _
       }
-    case LetInEx(body, defs @ _*) =>
-      defs.map(d => findAll(d.body)).foldLeft(findAll(body)) {
+    case LetInEx( body, defs@_* ) =>
+      defs.map( d => findAll( d.body ) ).foldLeft( findAll( body ) ) {
         _ ++ _
       }
     case _ => Set.empty

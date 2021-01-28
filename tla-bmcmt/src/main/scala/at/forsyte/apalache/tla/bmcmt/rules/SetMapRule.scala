@@ -16,24 +16,19 @@ class SetMapRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaSetOper.map, _*) => true
-      case _                          => false
+      case _ => false
     }
   }
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case OperEx(TlaSetOper.map, mapEx, varsAndSets @ _*) =>
-        val varNames = varsAndSets.zipWithIndex.filter(_._2 % 2 == 0).collect {
-          case (NameEx(n), _) => n
-        }
+      case OperEx(TlaSetOper.map, mapEx, varsAndSets@_*) =>
+        val varNames = varsAndSets.zipWithIndex.filter(_._2 % 2 == 0).collect { case (NameEx(n), _) => n }
         val sets = varsAndSets.zipWithIndex.filter(_._2 % 2 == 1).map(_._1)
         mapbase.rewriteSetMapManyArgs(state, mapEx, varNames, sets)
 
       case _ =>
-        throw new RewriterException(
-          "%s is not applicable to %s".format(getClass.getSimpleName, state.ex),
-          state.ex
-        )
+        throw new RewriterException("%s is not applicable to %s".format(getClass.getSimpleName, state.ex), state.ex)
     }
   }
 }

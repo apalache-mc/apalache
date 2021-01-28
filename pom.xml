@@ -262,6 +262,8 @@
                     <artifactId>spotless-maven-plugin</artifactId>
                     <version>${spotless.version}</version>
                     <configuration>
+                        <!-- Only apply checks and fixes to files changed from unstable -->
+                        <ratchetFrom>origin/unstable</ratchetFrom>
                         <formats>
                             <!-- you can define as many formats as you want, each is independent -->
                             <format>

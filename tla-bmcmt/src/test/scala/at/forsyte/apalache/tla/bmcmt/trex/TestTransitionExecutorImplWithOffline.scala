@@ -14,16 +14,11 @@ import org.scalatest.junit.JUnitRunner
   * @author Igor Konnov
   */
 @RunWith(classOf[JUnitRunner])
-class TestTransitionExecutorImplWithOffline
-    extends AbstractTestTransitionExecutorImpl[OfflineExecutionContextSnapshot] {
+class TestTransitionExecutorImplWithOffline extends AbstractTestTransitionExecutorImpl[OfflineExecutionContextSnapshot] {
   override protected def withFixture(test: OneArgTest): Outcome = {
     val typeFinder = new TrivialTypeFinder()
-    val solver = RecordingSolverContext.createZ3(
-      None,
-      SolverConfig(debug = false, profile = false, randomSeed = 0)
-    )
-    val rewriter =
-      new SymbStateRewriterImpl(solver, typeFinder, new ExprGradeStoreImpl())
+    val solver = RecordingSolverContext.createZ3(None, SolverConfig(debug = false, profile = false, randomSeed = 0))
+    val rewriter = new SymbStateRewriterImpl(solver, typeFinder, new ExprGradeStoreImpl())
     val exeCtx = new OfflineExecutionContext(rewriter)
     try {
       test(exeCtx)

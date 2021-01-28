@@ -16,8 +16,7 @@ import at.forsyte.apalache.tla.lir.TlaEx
   *
   * @author Igor Konnov
   */
-trait TransitionExecutor[ExecutorContextT]
-    extends Recoverable[ExecutionSnapshot[ExecutorContextT]] {
+trait TransitionExecutor[ExecutorContextT] extends Recoverable[ExecutionSnapshot[ExecutorContextT]] {
 
   /**
     * The step that is currently encoded. Step 0 is reserved for CONSTANTS and the Init predicate.

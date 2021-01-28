@@ -9,12 +9,7 @@ import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.{TlaModule, TlaOperDecl}
-import at.forsyte.apalache.tla.pp.{
-  OperAppToLetInDef,
-  NormalizedNames,
-  ParameterNormalizer,
-  UniqueNameGenerator
-}
+import at.forsyte.apalache.tla.pp.{OperAppToLetInDef, NormalizedNames, ParameterNormalizer, UniqueNameGenerator}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -27,14 +22,12 @@ import com.typesafe.scalalogging.LazyLogging
   * @param tracker transformation tracker
   * @param nextPass next pass to call
   */
-class InlinePassImpl @Inject()(
-    val options: PassOptions,
-    gen: UniqueNameGenerator,
-    renaming: IncrementalRenaming,
-    tracker: TransformationTracker,
-    @Named("AfterInline") nextPass: Pass with TlaModuleMixin
-) extends InlinePass
-    with LazyLogging {
+class InlinePassImpl @Inject()(val options: PassOptions,
+                               gen: UniqueNameGenerator,
+                               renaming: IncrementalRenaming,
+                               tracker: TransformationTracker,
+                               @Named("AfterInline") nextPass: Pass with TlaModuleMixin)
+    extends InlinePass with LazyLogging {
 
   private var outputTlaModule: Option[TlaModule] = None
 
@@ -53,9 +46,9 @@ class InlinePassImpl @Inject()(
   override def execute(): Boolean = {
     val baseModule = tlaModule.get
 
-    val appWrap = OperAppToLetInDef(gen, tracker)
-    val operNames = (baseModule.operDeclarations map { _.name }).toSet
-    val module = appWrap.moduleTransform(operNames)(baseModule)
+    val appWrap = OperAppToLetInDef( gen, tracker )
+    val operNames = (baseModule.operDeclarations map {_.name}).toSet
+    val module = appWrap.moduleTransform( operNames )( baseModule )
 
     val defBodyMap = BodyMapFactory.makeFromDecls(module.operDeclarations)
 
@@ -67,17 +60,16 @@ class InlinePassImpl @Inject()(
         InlinerOfUserOper(defBodyMap, tracker)
       ) ///
 
-    val inlined = transformationSequence.foldLeft(module) {
+    val inlined = transformationSequence.foldLeft(module){
       case (m, tr) =>
         logger.info("  > %s".format(tr.getClass.getSimpleName))
-        ModuleByExTransformer(tr)(m)
+        ModuleByExTransformer(tr) (m)
     }
 
     // Fixing issue 283: https://github.com/informalsystems/apalache/issues/283
     // Remove the operators that are not needed,
     // as some of them may contain higher-order operators that cannot be substituted
-    val relevantOperators =
-      NormalizedNames.userOperatorNamesFromOptions(options).toSet
+    val relevantOperators = NormalizedNames.userOperatorNamesFromOptions(options).toSet
 
     // Since PrimingPass now happens before inlining, we have to add InitPrime and CInitPrime as well
     val initName = options.getOrElse("checker", "init", "Init")
@@ -85,10 +77,7 @@ class InlinePassImpl @Inject()(
     val initPrimedName = initName + "Primed"
     val cinitPrimedName = cinitName + "Primed"
     val relevantOperatorsAndInitCInitPrimed = relevantOperators + initPrimedName + cinitPrimedName
-    logger.info(
-      "Leaving only relevant operators: " + relevantOperatorsAndInitCInitPrimed.toList.sorted
-        .mkString(", ")
-    )
+    logger.info("Leaving only relevant operators: " + relevantOperatorsAndInitCInitPrimed.toList.sorted.mkString(", "))
     val filteredDefs = inlined.declarations.filter {
       case TlaOperDecl(name, _, _) =>
         relevantOperatorsAndInitCInitPrimed.contains(name)
@@ -113,7 +102,7 @@ class InlinePassImpl @Inject()(
     */
   override def next(): Option[Pass] = {
     outputTlaModule map { m =>
-      nextPass.setModule(m)
+      nextPass.setModule( m )
       nextPass
     }
   }

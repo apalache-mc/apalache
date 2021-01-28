@@ -8,14 +8,9 @@ package at.forsyte.apalache.tla.lir.src
   * @author Igor Konnov
   */
 class RegionTree {
-  private class Node(
-      val index: Int,
-      val region: SourceRegion,
-      val children: Seq[Node]
-  )
+  private class Node(val index: Int, val region: SourceRegion, val children: Seq[Node])
 
-  private val rootRegion =
-    SourceRegion(SourcePosition(0), SourcePosition(Int.MaxValue))
+  private val rootRegion = SourceRegion(SourcePosition(0), SourcePosition(Int.MaxValue))
   private var root: Node = new Node(0, rootRegion, Seq())
   private var regions: Seq[SourceRegion] = Seq(rootRegion)
 
@@ -34,29 +29,17 @@ class RegionTree {
         if (node.children.exists(_.region.contains(region))) {
           // add the region as a child of one of the children
           new Node(node.index, node.region, node.children map locateAndAdd)
-        } else if (node.children.exists(
-                     n =>
-                       n.region.isIntersecting(region) && !n.region
-                         .isInside(region)
-                   )) {
+        } else if (node.children.exists(n => n.region.isIntersecting(region) && !n.region.isInside(region))) {
           // this is a problem
           val conflict = node.children.find(_.region.isIntersecting(region)).get
-          throw new IllegalArgumentException(
-            "The argument region %s intersects with %s"
-              .format(region, conflict.region)
-          )
+          throw new IllegalArgumentException("The argument region %s intersects with %s".format(region, conflict.region))
         } else {
           if (region != node.region) {
             newIndex = regions.size // assign a new index
-            regions :+= region // add to the tail
+            regions :+= region      // add to the tail
             // the new region may cover the previously added children
-            val (childsChildren, parentsChildren) =
-              node.children.partition(_.region.isInside(region))
-            new Node(
-              node.index,
-              node.region,
-              new Node(newIndex, region, childsChildren) +: parentsChildren
-            )
+            val (childsChildren, parentsChildren) = node.children.partition(_.region.isInside(region))
+            new Node(node.index, node.region, new Node(newIndex, region, childsChildren) +: parentsChildren)
           } else {
             newIndex = node.index
             node
@@ -64,10 +47,7 @@ class RegionTree {
         }
       } else if (region.isIntersecting(node.region)) {
         // this should not be possible due to the check above
-        throw new IllegalArgumentException(
-          "The argument region %s intersects with %s"
-            .format(region, node.region)
-        )
+        throw new IllegalArgumentException("The argument region %s intersects with %s".format(region, node.region))
       } else {
         // do nothing
         node

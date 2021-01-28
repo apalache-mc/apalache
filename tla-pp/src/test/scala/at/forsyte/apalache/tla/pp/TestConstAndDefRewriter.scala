@@ -30,8 +30,7 @@ class TestConstAndDefRewriter extends FunSuite with BeforeAndAfterEach {
     assert(rewritten.operDeclarations.size == 2)
     val expected_n = TlaOperDecl("n", List(), tla.int(10))
     assert(expected_n == rewritten.operDeclarations.head)
-    val expected_A =
-      TlaOperDecl("A", List(), tla.enumSet(tla.appOp(tla.name("n"))))
+    val expected_A = TlaOperDecl("A", List(), tla.enumSet(tla.appOp(tla.name("n"))))
     assert(expected_A == rewritten.operDeclarations(1))
   }
 
@@ -49,9 +48,7 @@ class TestConstAndDefRewriter extends FunSuite with BeforeAndAfterEach {
     val (rootName, modules) = new SanyImporter(new SourceStore)
       .loadFromSource("const", Source.fromString(text))
     val root = modules(rootName)
-    assertThrows[OverridingError](
-      new ConstAndDefRewriter(new IdleTracker())(root)
-    )
+    assertThrows[OverridingError](new ConstAndDefRewriter(new IdleTracker())(root))
   }
 
   test("overriding a variable with an operator => error") {
@@ -66,9 +63,7 @@ class TestConstAndDefRewriter extends FunSuite with BeforeAndAfterEach {
     val (rootName, modules) = new SanyImporter(new SourceStore)
       .loadFromSource("const", Source.fromString(text))
     val root = modules(rootName)
-    assertThrows[OverridingError](
-      new ConstAndDefRewriter(new IdleTracker())(root)
-    )
+    assertThrows[OverridingError](new ConstAndDefRewriter(new IdleTracker())(root))
   }
 
   test("override an operator") {
@@ -85,11 +80,8 @@ class TestConstAndDefRewriter extends FunSuite with BeforeAndAfterEach {
     val rewritten = new ConstAndDefRewriter(new IdleTracker())(root)
     assert(rewritten.constDeclarations.isEmpty)
     assert(rewritten.operDeclarations.size == 1)
-    val expected = TlaOperDecl(
-      "BoolMin",
-      List(SimpleFormalParam("S")),
-      tla.choose(tla.name("x"), tla.name("S"), tla.bool(true))
-    )
+    val expected = TlaOperDecl("BoolMin", List(SimpleFormalParam("S")),
+      tla.choose(tla.name("x"), tla.name("S"), tla.bool(true)))
     assert(expected == rewritten.operDeclarations.head)
   }
 
@@ -104,8 +96,6 @@ class TestConstAndDefRewriter extends FunSuite with BeforeAndAfterEach {
     val (rootName, modules) = new SanyImporter(new SourceStore)
       .loadFromSource("op", Source.fromString(text))
     val root = modules(rootName)
-    assertThrows[OverridingError](
-      new ConstAndDefRewriter(new IdleTracker())(root)
-    )
+    assertThrows[OverridingError](new ConstAndDefRewriter(new IdleTracker())(root))
   }
 }

@@ -9,8 +9,8 @@ import org.scalatest.FunSuite
 import at.forsyte.apalache.tla.lir.values._
 
 /**
-  * <p>Geeneric set of tests for conversion between TLA and JSON.</p>
-  * @author Andrey Kuprianov
+ * <p>Geeneric set of tests for conversion between TLA and JSON.</p>
+ * @author Andrey Kuprianov
  **/
 
 @RunWith(classOf[JUnitRunner])
@@ -220,12 +220,9 @@ abstract class TestJson extends FunSuite {
     // [ k_1 |-> v_1, ..., k_n |-> v_n ]
     compare(
       enumFun(
-        str("x1"),
-        "y1",
-        str("x2"),
-        "y2",
-        str("x3"),
-        "y3"
+        str("x1"), "y1",
+        str("x2"), "y2",
+        str("x3"), "y3"
       ),
       """{"record":[{"key":{"str":"x1"},"value":"y1"},{"key":{"str":"x2"},"value":"y2"},{"key":{"str":"x3"},"value":"y3"}]}"""
     )
@@ -243,12 +240,9 @@ abstract class TestJson extends FunSuite {
     // [x: S -> T]
     compare(
       recSet(
-        str("x"),
-        "S",
-        str("y"),
-        "T",
-        str("z"),
-        "U"
+        str("x"), "S",
+        str("y"), "T",
+        str("z"), "U"
       ),
       """{"recSet":[{"key":{"str":"x"},"value":"S"},{"key":{"str":"y"},"value":"T"},{"key":{"str":"z"},"value":"U"}]}"""
     )
@@ -306,7 +300,7 @@ abstract class TestJson extends FunSuite {
   test("choose bounded") {
     // CHOOSE x \in S : x > 3
     compare(
-      choose("x", "S", gt("x", 3)),
+      choose("x", "S", gt("x",3)),
       """{"chooseBounded":{"key":"x","value":"S"},"that":{"gt":"x","arg":3}}"""
     )
   }
@@ -314,7 +308,7 @@ abstract class TestJson extends FunSuite {
   test("choose unbounded") {
     // CHOOSE <<x, y>> : x + y <= 5
     compareMultiLine(
-      choose(tuple("x", "y"), le(plus("x", "y"), 5)),
+      choose(tuple("x", "y"), le(plus("x","y"),5)),
       """{
         |  "choose": {
         |    "tuple": [
@@ -404,7 +398,7 @@ abstract class TestJson extends FunSuite {
 
   test("L2(a, b) :: f(x+y)>2") {
     compare(
-      label(appFun("f", gt(plus("x", "y"), 2)), "L2", "a", "b"),
+      label(appFun("f", gt(plus("x","y"),2)), "L2", "a", "b"),
       """{"applyFun":"f","arg":{"gt":{"plus":"x","arg":"y"},"arg":2},"label":{"name":"L2","args":["a","b"]}}"""
     )
   }
@@ -419,11 +413,9 @@ abstract class TestJson extends FunSuite {
 
   test("LET A(x, y) == x + y IN A(1,2)") {
     // <A>_vars
-    val decl = TlaOperDecl(
-      "A",
+    val decl = TlaOperDecl("A",
       List(SimpleFormalParam("x"), SimpleFormalParam("y")),
-      plus("x", "y")
-    )
+      plus("x", "y"))
     compare(
       letIn(appDecl(decl, int(1), int(2)), decl),
       """{"let":[{"operator":"A","body":{"plus":"x","arg":"y"},"params":[{"name":"x","arity":0},{"name":"y","arity":0}]}],"body":{"applyOp":"A","args":[1,2]}}"""
@@ -432,22 +424,18 @@ abstract class TestJson extends FunSuite {
 
   test("LET A(x, y) == x + 1 IN B(x, y) == x - y IN A(1, 2) * B(3, 4)") {
     // <A>_vars
-    val decl1 = TlaOperDecl(
-      "A",
+    val decl1 = TlaOperDecl("A",
       List(SimpleFormalParam("x"), SimpleFormalParam("y")),
-      plus("x", "y")
-    )
-    val decl2 = TlaOperDecl(
-      "B",
+      plus("x", "y"))
+    val decl2 = TlaOperDecl("B",
       List(SimpleFormalParam("x"), SimpleFormalParam("y")),
-      minus("x", "y")
-    )
+      minus("x", "y"))
     compareMultiLine(
       letIn(
-        mult(appDecl(decl1, int(1), int(2)), appDecl(decl2, int(3), int(4))),
-        decl1,
-        decl2
-      ),
+        mult(
+          appDecl(decl1, int(1), int(2)),
+          appDecl(decl2, int(3), int(4))),
+        decl1, decl2),
       """{
         |  "let": [
         |    {
@@ -516,12 +504,9 @@ abstract class TestJson extends FunSuite {
   test("module trivial") {
     // awesome
     compareModule(
-      new TlaModule(
-        "trivial",
-        List(
-          TlaOperDecl("A", List(), int(42))
-        )
-      ),
+      new TlaModule("trivial", List(
+        TlaOperDecl("A", List(), int(42))
+      )),
       """{"module":"trivial","declarations":[{"operator":"A","body":42,"params":[]}]}"""
     )
   }
@@ -529,16 +514,9 @@ abstract class TestJson extends FunSuite {
   test("module simpleOperator") {
     // awesome
     compareModuleMultiLine(
-      new TlaModule(
-        "simpleOperator",
-        List(
-          TlaOperDecl(
-            "A",
-            List(SimpleFormalParam("age")),
-            gt(name("age"), int(42))
-          )
-        )
-      ),
+      new TlaModule("simpleOperator", List(
+        TlaOperDecl("A", List(SimpleFormalParam("age")), gt(name("age"),int(42)))
+      )),
       """{
         |  "module": "simpleOperator",
         |  "declarations": [
@@ -562,33 +540,18 @@ abstract class TestJson extends FunSuite {
 
   test("module level2Operators") {
     // awesome
-    val aDecl = TlaOperDecl(
-      "A",
-      List(
-        SimpleFormalParam("i"),
-        SimpleFormalParam("j"),
-        OperFormalParam("f", 1)
-      ),
-      OperEx(
-        TlaOper.apply,
-        NameEx("f"),
-        OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j"))
-      )
-    )
+    val aDecl = TlaOperDecl("A",
+      List(SimpleFormalParam("i"), SimpleFormalParam("j"), OperFormalParam("f", 1)),
+      OperEx(TlaOper.apply, NameEx("f"),
+        OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j"))))
     val bDecl = TlaOperDecl("B", List(SimpleFormalParam("y")), NameEx("y"))
     compareModuleMultiLine(
-      new TlaModule(
-        "level2Operators",
-        List(
-          aDecl,
-          bDecl,
-          TlaOperDecl(
-            "C",
-            List(SimpleFormalParam("z")),
-            appDecl(aDecl, int(0), NameEx("z"), appDecl(bDecl, int(1)))
-          )
-        )
-      ),
+      new TlaModule("level2Operators", List(
+        aDecl,
+        bDecl,
+        TlaOperDecl("C", List(SimpleFormalParam("z")),
+          appDecl( aDecl, int(0), NameEx("z"), appDecl(bDecl, int(1))))
+      )),
       """{
         |  "module": "level2Operators",
         |  "declarations": [

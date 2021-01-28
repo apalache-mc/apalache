@@ -12,14 +12,9 @@ import at.forsyte.apalache.tla.lir.convenience.tla
   *
   * @author Igor Konnov
   */
-class StrValueCache(solverContext: SolverContext)
-    extends AbstractCache[Arena, String, ArenaCell]
-    with Serializable {
+class StrValueCache(solverContext: SolverContext) extends AbstractCache[Arena, String, ArenaCell] with Serializable {
 
-  override protected def create(
-      arena: Arena,
-      strValue: String
-  ): (Arena, ArenaCell) = {
+  override protected def create(arena: Arena, strValue: String): (Arena, ArenaCell) = {
     // introduce a new cell
     val newArena = arena.appendCell(ConstT())
     val newCell = newArena.topCell

@@ -6,7 +6,6 @@ package at.forsyte.apalache.tla.bmcmt
   * <p>TODO: move to RewriterConfig?</p>
   */
 object Limits {
-
   /**
     * The upper bound on the size of the Cartesian product
     */

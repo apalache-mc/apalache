@@ -65,11 +65,7 @@ class TestVCGenerator extends FunSuite {
     assertDecl(newMod, "VCNotInv$1", """¬(∀z ∈ S: (∀y ∈ S: (y < 10)))""")
   }
 
-  private def assertDecl(
-      mod: TlaModule,
-      name: String,
-      expectedBodyText: String
-  ): Unit = {
+  private def assertDecl(mod: TlaModule, name: String, expectedBodyText: String): Unit = {
     val vc = mod.declarations.find(_.name == name)
     assert(vc.nonEmpty, s"(VC $name not found)")
     assert(vc.get.isInstanceOf[TlaOperDecl])

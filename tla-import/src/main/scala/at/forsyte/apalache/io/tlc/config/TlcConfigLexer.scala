@@ -12,11 +12,10 @@ import scala.util.parsing.combinator.RegexParsers
   * <a href="http://nielssp.dk/2015/07/creating-a-scanner-using-parser-combinators-in-scala">tutorial on scanners</a>.</p>
   *
   * @author Igor Konnov
-  */
+ */
 object TlcConfigLexer extends RegexParsers {
   override def skipWhitespace: Boolean = true
-  override val whiteSpace
-      : Regex = "[ \t\r\f]+".r // process linefeed separately, in order to parse one-line comments
+  override val whiteSpace: Regex = "[ \t\r\f]+".r // process linefeed separately, in order to parse one-line comments
 
   /**
     * Parse the input stream and return the list of tokens. Although collecting the list of all tokens in memory is
@@ -26,11 +25,10 @@ object TlcConfigLexer extends RegexParsers {
     * @return the list of parsed tokens
     * @throws TlcConfigParseError when the lexer finds an error
     */
-  def apply(reader: Reader): List[TlcConfigToken] =
-    parseAll(program, reader) match {
-      case Success(result, _)   => result
-      case NoSuccess(msg, next) => throw new TlcConfigParseError(msg, next.pos)
-    }
+  def apply(reader: Reader): List[TlcConfigToken] = parseAll(program, reader) match {
+    case Success(result, _) => result
+    case NoSuccess(msg, next) => throw new TlcConfigParseError(msg, next.pos)
+  }
 
   def program: Parser[List[TlcConfigToken]] = skip ~> rep(token <~ skip) <~ eof
 
@@ -44,50 +42,40 @@ object TlcConfigLexer extends RegexParsers {
     ) ///
 
   // it is important that linefeed is not a whiteSpace, as otherwise singleComment consumes the whole input!
-  def skip: Parser[Unit] =
-    rep(whiteSpace | singleComment | multiComment | linefeed) ^^^ Unit
+  def skip: Parser[Unit] = rep(whiteSpace | singleComment | multiComment | linefeed) ^^^ Unit
 
   def linefeed: Parser[Unit] = "\n" ^^^ Unit
 
   def singleComment: Parser[Unit] = "\\*" ~ rep(not("\n") ~ ".".r) ^^^ Unit
 
-  def multiComment: Parser[Unit] =
-    "(*" ~ rep(not("*)") ~ "(?s).".r) ~ "*)" ^^^ Unit
+  def multiComment: Parser[Unit] = "(*" ~ rep(not("*)") ~ "(?s).".r) ~ "*)" ^^^ Unit
 
   private def identifier: Parser[IDENT] = {
-    "[a-zA-Z_][a-zA-Z0-9_]*".r ^^ { name =>
-      IDENT(name)
-    }
+    "[a-zA-Z_][a-zA-Z0-9_]*".r ^^ { name => IDENT(name) }
   }
 
   private def string: Parser[STRING] = {
-    """"[a-zA-Z0-9_~!@#\\$%^&*-+=|(){}\[\],:;`'<>.?/ ]*"""".r ^^ { name =>
-      STRING(name.substring(1, name.length - 1))
-    }
+    """"[a-zA-Z0-9_~!@#\\$%^&*-+=|(){}\[\],:;`'<>.?/ ]*"""".r ^^ { name => STRING(name.substring(1, name.length - 1)) }
   }
 
   private def number: Parser[NUMBER] = {
-    "(|-)[0-9][0-9]*".r ^^ { value =>
-      NUMBER(value)
-    }
+    "(|-)[0-9][0-9]*".r ^^ { value => NUMBER(value) }
   }
 
   private def boolean: Parser[BOOLEAN] = {
-    "(FALSE|TRUE)".r ^^ { value =>
-      BOOLEAN(value)
-    }
+    "(FALSE|TRUE)".r ^^ { value => BOOLEAN(value) }
   }
 
   private def constant: Parser[CONST] = {
-    "CONSTANT(S|)".r ^^ (_ => CONST())
+    "CONSTANT(S|)".r  ^^ (_ => CONST())
   }
 
   private def init: Parser[INIT] = {
-    "INIT" ^^ (_ => INIT())
+    "INIT"  ^^ (_ => INIT())
   }
 
   private def next: Parser[NEXT] = {
-    "NEXT" ^^ (_ => NEXT())
+    "NEXT"  ^^ (_ => NEXT())
   }
 
   private def specification: Parser[SPECIFICATION] = {

@@ -24,8 +24,7 @@ package lir {
     * @param name the module name
     * @param declarations all kinds of declarations
     */
-  class TlaModule(val name: String, val declarations: Seq[TlaDecl])
-      extends Serializable {
+  class TlaModule(val name: String, val declarations: Seq[TlaDecl]) extends Serializable {
     def constDeclarations: Seq[TlaConstDecl] = {
       declarations.collect { case d: TlaConstDecl => d }
     }
@@ -35,11 +34,11 @@ package lir {
     }
 
     def operDeclarations: Seq[TlaOperDecl] = {
-      declarations.collect { case d: TlaOperDecl => d }
+      declarations.collect { case d: TlaOperDecl => d}
     }
 
     def assumeDeclarations: Seq[TlaAssumeDecl] = {
-      declarations.collect { case d: TlaAssumeDecl => d }
+      declarations.collect { case d: TlaAssumeDecl => d}
     }
   }
 
@@ -60,8 +59,7 @@ package lir {
   /**
     * A spec, given by a list of declarations and a list of expressions.
     */
-  case class TlaSpec(name: String, declarations: List[TlaDecl])
-      extends Serializable
+  case class TlaSpec( name: String, declarations: List[TlaDecl] ) extends Serializable
 
   /**
   A formal parameter of an operator.
@@ -74,21 +72,18 @@ package lir {
   }
 
   /** An ordinary formal parameter, e.g., x used in A(x) == ... */
-  case class SimpleFormalParam(name: String)
-      extends FormalParam
-      with Serializable {
+  case class SimpleFormalParam(name: String) extends FormalParam with Serializable {
     override def arity: Int = 0
   }
 
   /** A function signature, e.g., f(_, _) used in A(f(_, _), x, y) */
-  case class OperFormalParam(name: String, arity: Int)
-      extends FormalParam
-      with Serializable {}
+  case class OperFormalParam(name: String, arity: Int) extends FormalParam with Serializable {
+  }
 
   /** An abstract TLA+ expression. Note that the class is sealed, so we allow only a limited set of values. */
   sealed abstract class TlaEx extends Identifiable with Serializable {
     // TODO: there must be a nice way of defining default printers in scala, so we do not have to make a choice here
-    override def toString: String = UTFPrinter(this)
+    override def toString: String =  UTFPrinter( this )
 
     def toSimpleString: String = ""
   }
@@ -114,41 +109,28 @@ package lir {
   }
 
   // Introducing a LET-IN expression
-  case class LetInEx(body: TlaEx, decls: TlaOperDecl*)
-      extends TlaEx
-      with Serializable {
+  case class LetInEx( body: TlaEx, decls: TlaOperDecl* ) extends TlaEx with Serializable {
     override def toSimpleString: String = s"LET ${decls.mkString(" ")} IN $body"
   }
 
   // applying an operator, including the one defined by OperFormalParam
-  case class OperEx(oper: TlaOper, args: TlaEx*)
-      extends TlaEx
-      with Serializable {
-    require(
-      oper.isCorrectArity(args.size),
-      "unexpected arity %d in %s applied to %s"
-        .format(args.size, oper.name, args.map(_.toString) mkString ", ")
-    )
+  case class OperEx(oper: TlaOper, args: TlaEx*) extends TlaEx with Serializable {
+    require(oper.isCorrectArity(args.size),
+      "unexpected arity %d in %s applied to %s".format(args.size, oper.name, args.map(_.toString) mkString ", "))
 
-    require(
-      oper.permitsArgs(args),
-      "The invariant of %s is violated by the arguments: %s"
-        .format(oper.name, args.map(_.toString) mkString ", ")
-    )
+    require(oper.permitsArgs(args),
+      "The invariant of %s is violated by the arguments: %s".format(oper.name, args.map(_.toString) mkString ", "))
 
     override def toSimpleString: String = {
-      oper.arity match {
+      oper.arity match{
         case FixedArity(n) => {
           n match {
             case 1 => args.head.toSimpleString + oper.name
-            case 2 =>
-              args.head.toSimpleString + " " + oper.name + " " + args.tail.head.toSimpleString
-            case _ =>
-              oper.name + "(" + args.map(_.toSimpleString).mkString(", ") + ")"
+            case 2 => args.head.toSimpleString + " " + oper.name + " " + args.tail.head.toSimpleString
+            case _ => oper.name +"(" + args.map( _.toSimpleString ).mkString(", ") + ")"
           }
         }
-        case _ =>
-          oper.name + "(" + args.map(_.toSimpleString).mkString(", ") + ")"
+        case _ => oper.name +"(" + args.map( _.toSimpleString ).mkString(", ") + ")"
 
       }
     }
@@ -168,12 +150,8 @@ package lir {
     * @param formalParams formal parameters
     * @param body operator definition, that is a TLA+ expression that captures the operator definition
     */
-  case class TlaOperDecl(
-      name: String,
-      formalParams: List[FormalParam],
-      var body: TlaEx
-  ) extends TlaDecl
-      with Serializable {
+  case class TlaOperDecl( name: String, formalParams: List[FormalParam], var body: TlaEx )
+    extends TlaDecl with Serializable {
     // this is no longer required, as module instantiation uses null bodies
     //    require( !body.isNull )
 
@@ -184,11 +162,11 @@ package lir {
 
     // Temporary solution, until #345 is resolved
     def copy(
-        name: String = this.name,
-        formalParams: List[FormalParam] = this.formalParams,
-        body: TlaEx = this.body
-    ): TlaOperDecl = {
-      val ret = TlaOperDecl(name, formalParams, body)
+              name : String = this.name,
+              formalParams : List[FormalParam] = this.formalParams,
+              body : TlaEx = this.body
+            ) : TlaOperDecl = {
+      val ret = TlaOperDecl( name, formalParams, body )
       ret.isRecursive = this.isRecursive
       ret
     }
@@ -205,12 +183,7 @@ package lir {
     * @param argDom the expression that describes the variable bound, e.g., Nat
     * @param defBody the definition body
     */
-  case class TlaRecFunDecl(
-      name: String,
-      arg: String,
-      argDom: TlaEx,
-      defBody: TlaEx
-  ) extends TlaDecl
+  case class TlaRecFunDecl(name: String, arg: String, argDom: TlaEx, defBody: TlaEx) extends TlaDecl
 
   /**
     * <p>A THEOREM declaration. Currently, we do not support operators that are typically used in the proofs.</p>
@@ -219,3 +192,5 @@ package lir {
     */
   case class TlaTheoremDecl(name: String, body: TlaEx) extends TlaDecl
 }
+
+

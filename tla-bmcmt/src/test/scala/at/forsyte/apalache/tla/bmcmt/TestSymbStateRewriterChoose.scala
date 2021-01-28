@@ -9,19 +9,15 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterChoose extends RewriterBase with TestingPredefs {
   test("""CHOOSE x \in {1, 2, 3}: x > 1""") {
-    val ex = tla.choose(
-      tla.name("x"),
+    val ex = tla.choose(tla.name("x"),
       tla.enumSet(tla.int(1), tla.int(2), tla.int(3)),
-      tla.gt(tla.name("x"), tla.int(1))
-    )
+      tla.gt(tla.name("x"), tla.int(1)))
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     def assertEq(i: Int): SymbState = {
-      val ns = rewriter.rewriteUntilDone(
-        nextState.setRex(tla.eql(nextState.ex, tla.int(i)))
-      )
+      val ns = rewriter.rewriteUntilDone(nextState.setRex(tla.eql(nextState.ex, tla.int(i))))
       solverContext.assertGroundExpr(ns.ex)
       ns
     }
@@ -40,11 +36,9 @@ class TestSymbStateRewriterChoose extends RewriterBase with TestingPredefs {
   }
 
   test("""CHOOSE x \in {1}: x > 1""") {
-    val ex = tla.choose(
-      tla.name("x"),
+    val ex = tla.choose(tla.name("x"),
       tla.enumSet(tla.int(1)),
-      tla.gt(tla.name("x"), tla.int(1))
-    )
+      tla.gt(tla.name("x"), tla.int(1)))
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -56,20 +50,16 @@ class TestSymbStateRewriterChoose extends RewriterBase with TestingPredefs {
   }
 
   test("""CHOOSE x \in {}: x > 1""") {
-    val ex = tla.choose(
-      tla.name("x"),
+    val ex = tla.choose(tla.name("x"),
       tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(IntT()))),
-      tla.gt(tla.name("x"), tla.int(1))
-    )
+      tla.gt(tla.name("x"), tla.int(1)))
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     // the buggy implementation of choose fails on a dynamically empty set
     assert(solverContext.sat())
     def assertEq(i: Int): SymbState = {
-      val ns = rewriter.rewriteUntilDone(
-        nextState.setRex(tla.eql(nextState.ex, tla.int(i)))
-      )
+      val ns = rewriter.rewriteUntilDone(nextState.setRex(tla.eql(nextState.ex, tla.int(i))))
       solverContext.assertGroundExpr(ns.ex)
       ns
     }

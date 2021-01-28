@@ -10,3 +10,5 @@ import at.forsyte.apalache.tla.lir.TlaEx
   * @author Igor Konnov
   */
 class DecodedExecution(val path: List[(Map[String, TlaEx], Int)])
+
+

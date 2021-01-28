@@ -6,8 +6,8 @@ import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
 /**
-  * Tests for the low-level intermediate representation.
-  */
+ * Tests for the low-level intermediate representation.
+ */
 @RunWith(classOf[JUnitRunner])
 class TestLirValues extends FunSuite {
   test("create booleans") {
@@ -28,6 +28,7 @@ class TestLirValues extends FunSuite {
     val s = TlaStr("hello")
     assert(s.value == "hello")
   }
+
 
   test("create a constant") {
     val c = new TlaConstDecl("x")

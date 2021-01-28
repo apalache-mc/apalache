@@ -9,7 +9,6 @@ import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter
   */
 class IncrementalExecutionContext(val rewriter: SymbStateRewriter)
     extends ExecutionContext[IncrementalExecutionContextSnapshot] {
-
   /**
     * Create a snapshot of the context. This method is non-destructive, that is,
     * the context may be used after a snapshot has been made.
@@ -38,10 +37,8 @@ class IncrementalExecutionContext(val rewriter: SymbStateRewriter)
   override def recover(snapshot: IncrementalExecutionContextSnapshot): Unit = {
     val nPops = rewriter.contextLevel - snapshot.rewriterLevel
     if (nPops < 0) {
-      throw new IllegalStateException(
-        "Impossible to recover context to level %d from level %d"
-          .format(snapshot.rewriterLevel, rewriter.contextLevel)
-      )
+      throw new IllegalStateException("Impossible to recover context to level %d from level %d"
+        .format(snapshot.rewriterLevel, rewriter.contextLevel))
     }
 
     rewriter.pop(nPops)

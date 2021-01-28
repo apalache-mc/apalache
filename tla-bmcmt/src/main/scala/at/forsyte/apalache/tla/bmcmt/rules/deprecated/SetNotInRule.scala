@@ -15,7 +15,7 @@ class SetNotInRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaSetOper.notin, _, _) => true
-      case _                              => false
+      case _ => false
     }
   }
 
@@ -27,10 +27,7 @@ class SetNotInRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.rewriteUntilDone(notInState)
 
       case _ =>
-        throw new RewriterException(
-          "%s is not applicable".format(getClass.getSimpleName),
-          state.ex
-        )
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 }

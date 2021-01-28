@@ -5,7 +5,6 @@ package at.forsyte.apalache.tla.bmcmt.rewriter
   * a snapshot of the object state. This snapshot can be restored with the method 'recover'.
   */
 trait Recoverable[T] {
-
   /**
     * Take a snapshot and return it
     * @return the snapshot

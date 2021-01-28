@@ -5,7 +5,6 @@ import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
 import scala.collection.immutable.HashMap
 
 package object bmcmt {
-
   /**
     * A theory used to evaluate a TLA+ expression: cells, Booleans, and integers.
     *
@@ -13,7 +12,6 @@ package object bmcmt {
     * See the <a href="https://github.com/informalsystems/apalache/issues/22">issue</a>.
     */
   sealed abstract class Theory {
-
     /**
       * Check whether a constant is named after the theory naming convention.
       *
@@ -30,7 +28,7 @@ package object bmcmt {
     def hasNameEx(tlaEx: TlaEx): Boolean = {
       tlaEx match {
         case NameEx(name) if hasConst(name) => true
-        case _                              => false
+        case _ => false
       }
     }
 
@@ -48,16 +46,12 @@ package object bmcmt {
           name
 
         case _ =>
-          throw new CheckerException(
-            "Expected a cell, found: %s".format(tlaEx),
-            tlaEx
-          )
+          throw new CheckerException("Expected a cell, found: %s".format(tlaEx), tlaEx)
       }
     }
   }
 
   case class CellTheory() extends Theory {
-
     /**
       * The prefix of all cells.
       */

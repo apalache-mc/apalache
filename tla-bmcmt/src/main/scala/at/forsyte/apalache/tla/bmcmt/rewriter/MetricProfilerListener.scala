@@ -16,15 +16,10 @@ import com.typesafe.scalalogging.LazyLogging
   * @param sourceStore the storage of source locations
   * @param changeListener the tracer of expression updates
   */
-class MetricProfilerListener(
-    sourceStore: SourceStore,
-    changeListener: ChangeListener,
-    outFile: File
-) extends SymbStateRewriterListener
-    with LazyLogging {
+class MetricProfilerListener(sourceStore: SourceStore, changeListener: ChangeListener, outFile: File)
+    extends SymbStateRewriterListener with LazyLogging {
   private var _metricsPerId: Map[UID, SolverContextMetrics] = Map()
-  private val sourceLocator =
-    SourceLocator(sourceStore.makeSourceMap, changeListener)
+  private val sourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
   private var syncTimestampSecMillis: Long = System.currentTimeMillis()
 
   /**
@@ -32,10 +27,7 @@ class MetricProfilerListener(
     * @param translatedEx an expression to report
     * @param metricsDelta the SMT metrics that were reported during the translation to SMT
     */
-  override def onRewrite(
-      translatedEx: TlaEx,
-      metricsDelta: SolverContextMetrics
-  ): Unit = {
+  override def onRewrite(translatedEx: TlaEx, metricsDelta: SolverContextMetrics): Unit = {
     val id = translatedEx.ID
     if (changeListener.isDefinedAt(id) || sourceStore.contains(id)) {
       // this expression can be traced back to the source code
@@ -71,9 +63,7 @@ class MetricProfilerListener(
       writer.close()
     }
 
-    logger.info(
-      "%d profile entries to be found in %s".format(sortedEntries.size, outFile)
-    )
+    logger.info("%d profile entries to be found in %s".format(sortedEntries.size, outFile))
   }
 
   private def stringOfEntry(entry: (UID, SolverContextMetrics)): String = {
@@ -81,22 +71,10 @@ class MetricProfilerListener(
     sourceLocator.sourceOf(uid) match {
       case None =>
         // this should not happen, but produce something meaningful
-        "%d,%d,%d,%d,undefinedFor%d".format(
-          metrics.weight,
-          metrics.nCells,
-          metrics.nConsts,
-          metrics.nSmtExprs,
-          uid.id
-        )
+        "%d,%d,%d,%d,undefinedFor%d".format(metrics.weight, metrics.nCells, metrics.nConsts, metrics.nSmtExprs, uid.id)
 
       case Some(loc) =>
-        "%d,%d,%d,%d,%s".format(
-          metrics.weight,
-          metrics.nCells,
-          metrics.nConsts,
-          metrics.nSmtExprs,
-          loc
-        )
+        "%d,%d,%d,%d,%s".format(metrics.weight, metrics.nCells, metrics.nConsts, metrics.nSmtExprs, loc)
     }
   }
 
@@ -106,7 +84,6 @@ class MetricProfilerListener(
 }
 
 object MetricProfilerListener {
-
   /**
     * The minimal weight that is required to print a profile entry
     */
@@ -118,10 +95,7 @@ object MetricProfilerListener {
   val FILE_SYNC_MS = 60000
 
   protected object EntryOrdering extends Ordering[(UID, SolverContextMetrics)] {
-    override def compare(
-        x: (UID, SolverContextMetrics),
-        y: (UID, SolverContextMetrics)
-    ): Int = {
+    override def compare(x: (UID, SolverContextMetrics), y: (UID, SolverContextMetrics)): Int = {
       // use the descending weight order
       y._2.weight.compareTo(x._2.weight)
     }

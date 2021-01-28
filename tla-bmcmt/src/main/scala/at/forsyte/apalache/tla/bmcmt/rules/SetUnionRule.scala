@@ -16,7 +16,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaSetOper.union, set) => true
-      case _                             => false
+      case _ => false
     }
   }
 
@@ -29,17 +29,13 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val elemType =
           topSetCell.cellType match {
             case FinSetT(FinSetT(et)) => et
-            case _ =>
-              throw new TypeException(
-                s"Applying UNION to $topSet of type ${topSetCell.cellType}",
-                state.ex
-              )
+            case _ => throw new TypeException(s"Applying UNION to $topSet of type ${topSetCell.cellType}", state.ex)
           }
 
-        val sets = Set(nextState.arena.getHas(topSetCell): _*).toList // remove duplicates too
-        val elemsOfSets = sets map (s => Set(nextState.arena.getHas(s): _*))
+        val sets = Set(nextState.arena.getHas(topSetCell) :_*).toList // remove duplicates too
+        val elemsOfSets = sets map (s => Set(nextState.arena.getHas(s) :_*))
 
-        val unionOfSets = elemsOfSets.foldLeft(Set[ArenaCell]())(_.union(_))
+        val unionOfSets = elemsOfSets.foldLeft(Set[ArenaCell]()) (_.union(_))
         // introduce a set cell
         nextState = nextState.updateArena(_.appendCell(FinSetT(elemType)))
         val newSetCell = nextState.arena.topCell
@@ -50,9 +46,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
           nextState.setRex(newSetCell)
         } else {
           // add all the elements to the arena
-          nextState = nextState.updateArena(
-            _.appendHas(newSetCell, unionOfSets.toSeq: _*)
-          )
+          nextState = nextState.updateArena(_.appendHas(newSetCell, unionOfSets.toSeq: _*))
 
           // Require each cell to be in one of the sets, e.g., consider UNION { {1} \ {1}, {1} }
           // Importantly, when elemCell is pointed by several sets S_1, .., S_k, we require:
@@ -62,10 +56,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
           // This approach is more expensive at the rewriting phase, but it produces O(n) constraints in SMT,
           // in contrast to the old approach with equalities and uninterpreted functions, which required O(n^2) constraints.
           def addOneElemCons(elemCell: ArenaCell): Unit = {
-            def isPointedBySet(
-                set: ArenaCell,
-                setElems: Set[ArenaCell]
-            ): Boolean = setElems.contains(elemCell)
+            def isPointedBySet(set: ArenaCell, setElems: Set[ArenaCell]): Boolean = setElems.contains(elemCell)
             val pointingSets = (sets.zip(elemsOfSets) filter (isPointedBySet _).tupled) map (_._1)
             def inPointingSet(set: ArenaCell) = {
               // this is sound, because we have generated element equalities
@@ -73,7 +64,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
               tla.and(tla.in(set, topSetCell), tla.in(elemCell, set))
             }
 
-            val existsIncludingSet = tla.or(pointingSets map inPointingSet: _*)
+            val existsIncludingSet = tla.or(pointingSets map inPointingSet :_*)
             val inUnionSet = tla.in(elemCell, newSetCell)
             val iff = OperEx(TlaOper.eq, inUnionSet, existsIncludingSet)
             rewriter.solverContext.assertGroundExpr(iff)
@@ -87,10 +78,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
         }
 
       case _ =>
-        throw new RewriterException(
-          "%s is not applicable".format(getClass.getSimpleName),
-          state.ex
-        )
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 }

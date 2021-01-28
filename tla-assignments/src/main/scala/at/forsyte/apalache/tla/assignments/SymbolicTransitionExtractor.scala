@@ -21,15 +21,14 @@ class SymbolicTransitionExtractor(tracker: TransformationTracker) {
     * @return A collection of symbolic transitions, if they can be extracted; otherwise, return an empty sequence
     *
     */
-  def apply(vars: Seq[String], actionExpr: TlaEx): Seq[SymbTrans] = {
+  def apply(vars: Seq[String], actionExpr: TlaEx) : Seq[SymbTrans] = {
     val strategyEncoder = new AssignmentStrategyEncoder()
 
     /** Generate an smt encoding of the assignment problem to pass to the SMT solver */
     val smtFormula = strategyEncoder.apply(vars.toSet, actionExpr)
 
     /** Get strategy from the solver */
-    val assignmentStrategyOpt =
-      new SMTInterface().apply(smtFormula, strategyEncoder.m_varSym)
+    val assignmentStrategyOpt = new SMTInterface().apply(smtFormula, strategyEncoder.m_varSym)
 
     assignmentStrategyOpt map { assignmentStrategy =>
       /** produce symbolic transitions */

@@ -11,23 +11,13 @@ import at.forsyte.apalache.tla.lir.values.TlaRealInfinity
   * @author Igor Konnov
   */
 object StandardLibrary {
-
   /**
     * The operators in the following modules are overloaded by the importer, so we exclude their
     * operator definitions from the user modules. (Moreover, the standard modules sometimes contain garbage
     * or complex definitions that should not be analyzed by our tool.)
     */
   val standardModules: Set[String] =
-    Set(
-      "Naturals",
-      "Integers",
-      "Sequences",
-      "TLC",
-      "FiniteSets",
-      "Reals",
-      "Apalache",
-      "Typing"
-    )
+    Set("Naturals", "Integers", "Sequences", "TLC", "FiniteSets", "Reals", "Apalache", "Typing")
 
   val libraryValues: Map[Tuple2[String, String], TlaValue] =
     Map(
@@ -35,7 +25,7 @@ object StandardLibrary {
       ("Integers", "Int") -> TlaIntSet,
       ("Reals", "Real") -> TlaRealSet,
       ("Reals", "Infinity") -> TlaRealInfinity
-    ) ////
+    )////
 
   val libraryOperators: Map[Tuple2[String, String], TlaOper] =
     Map(
@@ -86,11 +76,11 @@ object StandardLibrary {
       ("Typing", "##") -> TypingOper.withType,
       ("Typing", "EmptySet") -> TypingOper.emptySet,
       ("Typing", "EmptySeq") -> TypingOper.emptySeq
-    ) ////
+    )////
 
   val globalOperators: Map[String, TlaOper] =
     Map[String, TlaOper](
       // TODO: this operator is deprecated, the user should use Typing, add a warning when the type checker is in place
       "<:" -> BmcOper.withType
-    ) ////
+    )////
 }
