@@ -7,12 +7,7 @@ import at.forsyte.apalache.tla.lir.{TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.values.TlaInt
 
-class UninterpretedConstOracle(
-    valueCells: Seq[ArenaCell],
-    oracleCell: ArenaCell,
-    nvalues: Int
-) extends Oracle {
-
+class UninterpretedConstOracle(valueCells: Seq[ArenaCell], oracleCell: ArenaCell, nvalues: Int) extends Oracle {
   /**
     * Produce an expression that states that the oracle values equals to the given integer position.
     * The actual implementation may be different from an integer comparison.
@@ -31,20 +26,16 @@ class UninterpretedConstOracle(
     * @param assertions a sequence of assertions, one per oracle value, this sequence is always truncated to nvalues
     * @return an expression ite(oracle = 0, ite(oracle = 1, ...))
     */
-  override def caseAssertions(
-      state: SymbState,
-      assertions: Seq[TlaEx]
-  ): TlaEx = {
+  override def caseAssertions(state: SymbState, assertions: Seq[TlaEx]): TlaEx = {
     nvalues match {
       case 0 => state.arena.cellTrue().toNameEx
 
       case 1 => assertions.head
 
       case _ =>
-        val es = assertions.slice(0, nvalues).zipWithIndex.map {
-          case (e, i) => tla.or(tla.not(whenEqualTo(state, i)), e)
-        }
-        tla.and(es: _*)
+        val es = assertions.slice(0, nvalues).zipWithIndex.map
+          { case (e, i) => tla.or(tla.not(whenEqualTo(state, i)), e) }
+        tla.and(es :_*)
     }
   }
 
@@ -56,14 +47,9 @@ class UninterpretedConstOracle(
     * @param state a symbolic state
     * @return an integer value of the oracle, or -1, when the SMT encoding is broken
     */
-  override def evalPosition(
-      solverContext: SolverContext,
-      state: SymbState
-  ): Int = {
+  override def evalPosition(solverContext: SolverContext, state: SymbState): Int = {
     def isEqual(valueCell: ArenaCell): Boolean = {
-      solverContext.evalGroundExpr(
-        tla.eql(valueCell.toNameEx, oracleCell.toNameEx)
-      ) == tla.bool(true)
+      solverContext.evalGroundExpr(tla.eql(valueCell.toNameEx, oracleCell.toNameEx)) == tla.bool(true)
     }
 
     valueCells indexWhere isEqual // the oracle must be equal to one of the cached values
@@ -71,17 +57,12 @@ class UninterpretedConstOracle(
 }
 
 object UninterpretedConstOracle {
-  def create(
-      rewriter: SymbStateRewriter,
-      state: SymbState,
-      nvalues: Int
-  ): (SymbState, UninterpretedConstOracle) = {
+  def create(rewriter: SymbStateRewriter, state: SymbState, nvalues: Int): (SymbState, UninterpretedConstOracle) = {
     val solverAssert = rewriter.solverContext.assertGroundExpr _
     var nextState = state
 
     def introConst(i: Int): ArenaCell = {
-      val (newArena, valueCell) =
-        rewriter.strValueCache.getOrCreate(nextState.arena, i.toString)
+      val (newArena, valueCell) = rewriter.strValueCache.getOrCreate(nextState.arena, i.toString)
       nextState = nextState.setArena(newArena)
       valueCell
     }
@@ -92,7 +73,7 @@ object UninterpretedConstOracle {
     val oracleCell = nextState.arena.topCell
     val oracle = new UninterpretedConstOracle(valueCells, oracleCell, nvalues)
     // the oracle value must be equal to one of the value cells
-    solverAssert(tla.or(nums.map(i => oracle.whenEqualTo(nextState, i)): _*))
+    solverAssert(tla.or(nums.map(i => oracle.whenEqualTo(nextState, i)) :_*))
     (nextState, oracle)
   }
 }

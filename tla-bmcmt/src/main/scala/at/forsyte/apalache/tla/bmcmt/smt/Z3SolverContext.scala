@@ -36,9 +36,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
   // dump the configuration parameters in the log
   // set the global configuration parameters for z3 modules
-  Z3SolverContext.RANDOM_SEED_PARAMS.foreach { p =>
-    Global.setParameter(p, config.randomSeed.toString)
-    logWriter.println(";; %s = %s".format(p, config.randomSeed))
+  Z3SolverContext.RANDOM_SEED_PARAMS.foreach {
+    p =>
+      Global.setParameter(p, config.randomSeed.toString)
+      logWriter.println(";; %s = %s".format(p, config.randomSeed))
 //    the following fails with an exception: java.lang.NoSuchFieldError: value
 //      logWriter.println(";; %s = %s".format(p, Global.getParameter(p)))
   }
@@ -110,9 +111,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     if (maxCellIdPerContext.head >= cell.id) {
       // Checking consistency. When the user accidentally replaces a fresh arena with an older one,
       // we report it immediately. Otherwise, it is very hard to find the cause.
-      val msg =
-        "SMT %d: Declaring cell %d, while cell %d has been already declared. Damaged arena?"
-          .format(id, cell.id, maxCellIdPerContext.head)
+      val msg = "SMT %d: Declaring cell %d, while cell %d has been already declared. Damaged arena?"
+        .format(id, cell.id, maxCellIdPerContext.head)
       flushAndThrow(new InternalCheckerError(msg, NullEx))
     } else {
       maxCellIdPerContext = cell.id +: maxCellIdPerContext.tail
@@ -167,9 +167,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         val elemT = cellCache(elemId)._2
         val name = s"in_${elemT.signature}${elemId}_${setT.signature}$setId"
         logWriter.flush() // flush the SMT log
-        throw new IllegalStateException(
-          s"SMT $id: The Boolean constant $name (set membership) is missing from the SMT context"
-        )
+        throw new IllegalStateException(s"SMT $id: The Boolean constant $name (set membership) is missing from the SMT context")
 
       case Some((const, _)) =>
         const
@@ -186,9 +184,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     if (maxCellIdPerContext.head > topId) {
       // Checking consistency. When the user accidentally replaces a fresh arena with an older one,
       // we report it immediately. Otherwise, it is very hard to find the cause.
-      val msg =
-        "SMT %d: Declaring cell %d, while cell %d has been already declared. Damaged arena?"
-          .format(id, topId, maxCellIdPerContext.head)
+      val msg = "SMT %d: Declaring cell %d, while cell %d has been already declared. Damaged arena?"
+        .format(id, topId, maxCellIdPerContext.head)
       flushAndThrow(new InternalCheckerError(msg, NullEx))
     }
   }
@@ -227,17 +224,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         ValEx(TlaInt(i.getBigInteger))
 
       case _ =>
-        if (z3expr.isConst && z3expr.getSort.getName.toString.startsWith(
-              "Cell_"
-            )) {
+        if (z3expr.isConst && z3expr.getSort.getName.toString.startsWith("Cell_")) {
           NameEx(z3expr.toString)
         } else {
-          flushAndThrow(
-            new SmtEncodingException(
-              s"SMT $id: Expected an integer or Boolean, found: $z3expr",
-              ex
-            )
-          )
+          flushAndThrow(new SmtEncodingException(s"SMT $id: Expected an integer or Boolean, found: $z3expr", ex))
         }
     }
   }
@@ -245,9 +235,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   private def initLog(): PrintWriter = {
     val writer = new PrintWriter(new File(s"log$id.smt"))
     if (!config.debug) {
-      writer.println(
-        "Logging is disabled (Z3SolverContext.debug = false). Activate with --debug."
-      )
+      writer.println("Logging is disabled (Z3SolverContext.debug = false). Activate with --debug.")
       writer.flush()
     }
     writer
@@ -271,17 +259,12 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     * @param resultType a result type
     * @return the name of the new function (declared in SMT)
     */
-  def declareCellFun(
-      cellName: String,
-      argType: CellT,
-      resultType: CellT
-  ): Unit = {
+  def declareCellFun(cellName: String, argType: CellT, resultType: CellT): Unit = {
     val domSig = argType.signature
     val resSig = resultType.signature
     val funName = s"fun$cellName"
     if (funDecls.contains(funName)) {
-      val msg =
-        s"SMT $id: Declaring twice the function associated with cell $cellName"
+      val msg = s"SMT $id: Declaring twice the function associated with cell $cellName"
       flushAndThrow(new SmtEncodingException(msg, NullEx))
     } else {
       val domSort = getOrMkCellSort(argType)
@@ -352,8 +335,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     logWriter.flush() // good time to flush
     if (status == Status.UNKNOWN) {
       // that seems to be the only reasonable behavior
-      val msg =
-        s"SMT $id: z3 reports UNKNOWN. Maybe, your specification is outside the supported logic."
+      val msg = s"SMT $id: z3 reports UNKNOWN. Maybe, your specification is outside the supported logic."
       flushAndThrow(new SmtEncodingException(msg, NullEx))
     }
     status == Status.SATISFIABLE
@@ -376,9 +358,9 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       setTimeout(Int.MaxValue)
       logWriter.flush() // good time to flush
       status match {
-        case Status.SATISFIABLE   => Some(true)
+        case Status.SATISFIABLE => Some(true)
         case Status.UNSATISFIABLE => Some(false)
-        case Status.UNKNOWN       => None
+        case Status.UNKNOWN => None
       }
     }
   }
@@ -395,6 +377,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   def setSmtListener(listener: SmtListener): Unit = {
     smtListener = listener
   }
+
 
   /**
     * Get the current metrics in the solver context. The metrics may change when the other methods are called.
@@ -465,13 +448,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         // convert to an arithmetic expression
         toArithExpr(ex)
 
-      case OperEx(TlaOper.eq, lhs @ NameEx(lname), rhs @ NameEx(rname)) =>
+      case OperEx(TlaOper.eq, lhs@NameEx(lname), rhs@NameEx(rname)) =>
         if (ArenaCell.isValidName(lname) && ArenaCell.isValidName(rname)) {
           // just comparing cells
-          val eq = z3context.mkEq(
-            cellCache(ArenaCell.idFromName(lname))._1,
-            cellCache(ArenaCell.idFromName(rname))._1
-          )
+          val eq = z3context.mkEq(cellCache(ArenaCell.idFromName(lname))._1, cellCache(ArenaCell.idFromName(rname))._1)
           (eq, 1)
         } else {
           // comparing integers and Boolean to cells, Booleans to Booleans, and Integers to Integers
@@ -493,43 +473,36 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
       case OperEx(BmcOper.distinct, args @ _*) =>
         val (es, ns) = (args map toExpr).unzip
-        val distinct = z3context.mkDistinct(es: _*)
-        (distinct, ns.foldLeft(1L) { _ + _ })
+        val distinct = z3context.mkDistinct(es :_*)
+        (distinct, ns.foldLeft(1L){ _ + _ })
 
-      case OperEx(TlaBoolOper.and, args @ _*) =>
+      case OperEx(TlaBoolOper.and, args@_*) =>
         val (es, ns) = (args map toExpr).unzip
-        val and = z3context.mkAnd(es.map(_.asInstanceOf[BoolExpr]): _*)
-        (and, ns.foldLeft(1L) { _ + _ })
+        val and = z3context.mkAnd(es.map(_.asInstanceOf[BoolExpr]) :_*)
+        (and, ns.foldLeft(1L){ _ + _ })
 
       case OperEx(TlaBoolOper.or, args @ _*) =>
         val (es, ns) = (args map toExpr).unzip
-        val or = z3context.mkOr(es.map(_.asInstanceOf[BoolExpr]): _*)
-        (or, ns.foldLeft(1L) { _ + _ })
+        val or = z3context.mkOr(es.map(_.asInstanceOf[BoolExpr]) :_*)
+        (or, ns.foldLeft(1L){ _ + _ })
 
       case OperEx(TlaBoolOper.implies, lhs, rhs) =>
         val (lhsZ3, ln) = toExpr(lhs)
         val (rhsZ3, rn) = toExpr(rhs)
-        val imp = z3context.mkImplies(
-          lhsZ3.asInstanceOf[BoolExpr],
-          rhsZ3.asInstanceOf[BoolExpr]
-        )
+        val imp = z3context.mkImplies(lhsZ3.asInstanceOf[BoolExpr], rhsZ3.asInstanceOf[BoolExpr])
         (imp, 1 + ln + rn)
 
       case OperEx(TlaBoolOper.equiv, lhs, rhs) =>
         val (lhsZ3, ln) = toExpr(lhs)
         val (rhsZ3, rn) = toExpr(rhs)
-        val equiv = z3context.mkEq(
-          lhsZ3.asInstanceOf[BoolExpr],
-          rhsZ3.asInstanceOf[BoolExpr]
-        )
+        val equiv = z3context.mkEq(lhsZ3.asInstanceOf[BoolExpr], rhsZ3.asInstanceOf[BoolExpr])
         (equiv, 1 + ln + rn)
 
       case OperEx(TlaControlOper.ifThenElse, cond, thenExpr, elseExpr) =>
         val (boolCond, cn) = toExpr(cond)
         val (thenZ3, tn) = toExpr(thenExpr)
         val (elseZ3, en) = toExpr(elseExpr)
-        val ite =
-          z3context.mkITE(boolCond.asInstanceOf[BoolExpr], thenZ3, elseZ3)
+        val ite = z3context.mkITE(boolCond.asInstanceOf[BoolExpr], thenZ3, elseZ3)
         (ite, 1 + cn + tn + en)
 
       case OperEx(TlaBoolOper.not, e) =>
@@ -548,28 +521,19 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         (getInPred(setId, elemId), 1)
 
       // the old implementation allowed us to do that, but the new one is encoding edges directly
-      case OperEx(TlaSetOper.in, ValEx(TlaInt(_)), NameEx(_)) |
-          OperEx(TlaSetOper.in, ValEx(TlaBool(_)), NameEx(_)) =>
-        flushAndThrow(
-          new InvalidTlaExException(
-            s"SMT $id: Preprocessing introduced a literal inside tla.in: $ex",
-            ex
-          )
-        )
+    case OperEx(TlaSetOper.in, ValEx(TlaInt(_)), NameEx(_))
+          | OperEx(TlaSetOper.in, ValEx(TlaBool(_)), NameEx(_)) =>
+        flushAndThrow(new InvalidTlaExException(s"SMT $id: Preprocessing introduced a literal inside tla.in: $ex", ex))
 
       case _ =>
-        flushAndThrow(
-          new InvalidTlaExException(
-            s"SMT $id: Unexpected TLA+ expression: $ex",
-            ex
-          )
-        )
+        flushAndThrow(new InvalidTlaExException(s"SMT $id: Unexpected TLA+ expression: $ex", ex))
     }
   }
 
   private def toEqExpr(le: Expr, re: Expr) = {
     (le, re) match {
-      case (_: BoolExpr, _: BoolExpr) | (_: IntExpr, _: IntExpr) =>
+      case (_: BoolExpr, _: BoolExpr)
+           | (_: IntExpr, _: IntExpr) =>
         z3context.mkEq(le, re)
 
       case (_: IntExpr, _: Expr) =>
@@ -585,21 +549,12 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         z3context.mkEq(le, re)
 
       case _ =>
-        flushAndThrow(
-          throw new CheckerException(
-            s"SMT $id: Incomparable expressions",
-            NullEx
-          )
-        )
+        flushAndThrow(throw new CheckerException(s"SMT $id: Incomparable expressions", NullEx))
     }
   }
 
   private def toArithExpr(ex: TlaEx): (Expr, Long) = {
-    def mkBinEx(
-        ctor: (ArithExpr, ArithExpr) => Expr,
-        left: TlaEx,
-        right: TlaEx
-    ): (Expr, Long) = {
+    def mkBinEx(ctor: (ArithExpr, ArithExpr) => Expr, left: TlaEx, right: TlaEx): (Expr, Long) = {
       val (le, ln) = toArithExpr(left)
       val (re, rn) = toArithExpr(right)
       val z3ex = ctor(le.asInstanceOf[ArithExpr], re.asInstanceOf[ArithExpr])
@@ -648,8 +603,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       case OperEx(TlaArithOper.mod, left, right) =>
         val (le, ln) = toArithExpr(left)
         val (re, rn) = toArithExpr(right)
-        val mod =
-          z3context.mkMod(le.asInstanceOf[IntExpr], re.asInstanceOf[IntExpr])
+        val mod = z3context.mkMod(le.asInstanceOf[IntExpr], re.asInstanceOf[IntExpr])
         (mod, 1 + ln + rn)
 
       case OperEx(TlaArithOper.uminus, subex) =>
@@ -661,17 +615,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         val (boolCond, cn) = toExpr(cond)
         val (thenZ3, tn) = toArithExpr(thenExpr)
         val (elseZ3, en) = toArithExpr(elseExpr)
-        val ite =
-          z3context.mkITE(boolCond.asInstanceOf[BoolExpr], thenZ3, elseZ3)
+        val ite = z3context.mkITE(boolCond.asInstanceOf[BoolExpr], thenZ3, elseZ3)
         (ite, 1 + cn + tn + en)
 
       case _ =>
-        flushAndThrow(
-          new InvalidTlaExException(
-            s"SMT $id: Unexpected arithmetic expression: $ex",
-            ex
-          )
-        )
+        flushAndThrow(new InvalidTlaExException(s"SMT $id: Unexpected arithmetic expression: $ex", ex))
     }
   }
 
@@ -698,10 +646,5 @@ object Z3SolverContext {
     * The names of all parameters that are used to set the random seeds in z3.
     */
   val RANDOM_SEED_PARAMS: List[String] =
-    List(
-      "sat.random_seed",
-      "smt.random_seed",
-      "fp.spacer.random_seed",
-      "sls.random_seed"
-    )
+    List("sat.random_seed", "smt.random_seed", "fp.spacer.random_seed", "sls.random_seed")
 }

@@ -13,6 +13,7 @@ import com.google.inject.{Inject, Provider, Singleton}
   * But because all passes (including PreproPass) require trackers, PreproPassImpl must
   * construct its own tracker anyway.
   */
+
 /**
   * A factory that creates a singleton transformation tracker. The reason for having this factory is that we have
   * to pass a list of transformation listeners to the tracker, while the listeners are injected by Guice.
@@ -22,10 +23,8 @@ import com.google.inject.{Inject, Provider, Singleton}
   * @author Igor Konnov
   */
 @Singleton
-class TransformationTrackerProvider @Inject()(
-    changeListener: ChangeListener,
-    trivialTypeFinder: TrivialTypeFinder
-) extends Provider[TransformationTracker] {
+class TransformationTrackerProvider @Inject()(changeListener: ChangeListener, trivialTypeFinder: TrivialTypeFinder)
+    extends Provider[TransformationTracker] {
 
   private val tracker = TrackerWithListeners(changeListener, trivialTypeFinder)
 

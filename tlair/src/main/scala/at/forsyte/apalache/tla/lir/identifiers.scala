@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicLong
   *
   * @param id the value of the identifier.
   */
-class UID protected (val id: Long) extends Serializable {
+class UID protected(val id: Long) extends Serializable {
 
   override def hashCode(): Int = id.hashCode()
 
@@ -16,7 +16,7 @@ class UID protected (val id: Long) extends Serializable {
 
   override def equals(other: Any): Boolean = other match {
     case that: UID =>
-      id == that.id
+        id == that.id
     case _ => false
   }
 
@@ -24,7 +24,6 @@ class UID protected (val id: Long) extends Serializable {
 }
 
 object UID {
-
   /**
     * The value of the id that will be assigned by the next call to unique(). We start with 1, to omit the default value 0.
     * By using AtomicLong, we make sure that unique() is assigning unique identifiers in the concurrent setting.
@@ -43,16 +42,14 @@ object UID {
   def unique: UID = {
     val newId = nextId.getAndAdd(1)
     if (newId == Long.MaxValue) {
-      throw new IllegalStateException(
-        "Too many identifiers, change the underlying representation of UID."
-      )
+      throw new IllegalStateException("Too many identifiers, change the underlying representation of UID.")
     }
     new UID(newId)
   }
 }
 
 trait Identifiable extends Ordered[Identifiable] {
-  val ID: UID = UID.unique
+  val ID : UID = UID.unique
 
   override def compare(that: Identifiable): Int = ID.id.compareTo(that.ID.id)
 }

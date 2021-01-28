@@ -10,7 +10,8 @@ package at.forsyte.apalache.tla.bmcmt.trex
   *
   * @author Igor Konnov
   */
-abstract class ExecutorControlState {}
+abstract class ExecutorControlState {
+}
 
 /**
   * New transitions and assertions may be added to the current state.

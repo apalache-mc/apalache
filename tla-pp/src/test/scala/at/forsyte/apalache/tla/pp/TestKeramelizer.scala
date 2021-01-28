@@ -9,35 +9,30 @@ import at.forsyte.apalache.tla.lir.convenience._
 
 @RunWith(classOf[JUnitRunner])
 class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
-  private var keramelizer =
-    new Keramelizer(new UniqueNameGenerator(), TrackerWithListeners())
+  private var keramelizer = new Keramelizer(new UniqueNameGenerator(), TrackerWithListeners())
 
   override def beforeEach(): Unit = {
-    keramelizer =
-      new Keramelizer(new UniqueNameGenerator(), TrackerWithListeners())
+    keramelizer = new Keramelizer(new UniqueNameGenerator(), TrackerWithListeners())
   }
 
   test("""X \intersect Y""") {
     val input = tla.cap(tla.name("X"), tla.name("Y"))
     val output = keramelizer.apply(input)
-    val expected = tla.filter(
-      tla.name("t_1"),
+    val expected = tla.filter(tla.name("t_1"),
       tla.name("X"),
-      tla.in(tla.name("t_1"), tla.name("Y"))
-    )
+      tla.in(tla.name("t_1"), tla.name("Y")))
     assert(expected == output)
   }
 
   test("intersect under another expression") {
     val input =
-      tla.cup(tla.name("Z"), tla.cap(tla.name("X"), tla.name("Y")))
+      tla.cup(tla.name("Z"),
+        tla.cap(tla.name("X"), tla.name("Y")))
     val output = keramelizer.apply(input)
     val transformed =
-      tla.filter(
-        tla.name("t_1"),
+      tla.filter(tla.name("t_1"),
         tla.name("X"),
-        tla.in(tla.name("t_1"), tla.name("Y"))
-      )
+        tla.in(tla.name("t_1"), tla.name("Y")))
     val expected = tla.cup(tla.name("Z"), transformed)
     assert(expected == output)
   }
@@ -45,11 +40,9 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
   test("""X \ Y""") {
     val input = tla.setminus(tla.name("X"), tla.name("Y"))
     val output = keramelizer.apply(input)
-    val expected = tla.filter(
-      tla.name("t_1"),
+    val expected = tla.filter(tla.name("t_1"),
       tla.name("X"),
-      tla.not(tla.in(tla.name("t_1"), tla.name("Y")))
-    )
+      tla.not(tla.in(tla.name("t_1"), tla.name("Y"))))
     assert(expected == output)
   }
 
@@ -82,22 +75,10 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
   }
 
   test("""[a: A, b: B] ~~> {[a |-> t_1, b |-> t_2]: t_1 \in A, t_2 \in B}""") {
-    val input =
-      tla.recSet(tla.name("a"), tla.name("A"), tla.name("b"), tla.name("B"))
+    val input = tla.recSet(tla.name("a"), tla.name("A"), tla.name("b"), tla.name("B"))
     val output = keramelizer.apply(input)
-    val rec = tla.enumFun(
-      tla.name("a"),
-      tla.name("t_1"),
-      tla.name("b"),
-      tla.name("t_2")
-    )
-    val expected = tla.map(
-      rec,
-      tla.name("t_1"),
-      tla.name("A"),
-      tla.name("t_2"),
-      tla.name("B")
-    )
+    val rec = tla.enumFun(tla.name("a"), tla.name("t_1"), tla.name("b"), tla.name("t_2"))
+    val expected = tla.map(rec, tla.name("t_1"), tla.name("A"), tla.name("t_2"), tla.name("B"))
     assert(expected == output)
   }
 
@@ -105,13 +86,7 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
     val input = tla.times(tla.name("A"), tla.name("B"))
     val output = keramelizer.apply(input)
     val tup = tla.tuple(tla.name("t_1"), tla.name("t_2"))
-    val expected = tla.map(
-      tup,
-      tla.name("t_1"),
-      tla.name("A"),
-      tla.name("t_2"),
-      tla.name("B")
-    )
+    val expected = tla.map(tup, tla.name("t_1"), tla.name("A"), tla.name("t_2"), tla.name("B"))
     assert(expected == output)
   }
 
@@ -145,29 +120,23 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
   }
 
   test("""CASE-OTHER""") {
-    val input = tla.caseOther(
-      tla.name("e_def"),
-      tla.name("p_1"),
-      tla.name("e_1"),
-      tla.name("p_2"),
-      tla.name("e_2")
-    )
+    val input = tla.caseOther(tla.name("e_def"),
+      tla.name("p_1"), tla.name("e_1"),
+      tla.name("p_2"), tla.name("e_2"))
     val output = keramelizer.apply(input)
     val expected =
-      tla.ite(
-        tla.name("p_1"),
-        tla.name("e_1"),
-        tla.ite(tla.name("p_2"), tla.name("e_2"), tla.name("e_def")) ///
-      ) ///
+      tla.ite(tla.name("p_1"), tla.name("e_1"),
+        tla.ite(tla.name("p_2"), tla.name("e_2"),
+          tla.name("e_def")
+        ) ///
+    ) ///
     assert(expected == output)
   }
 
   test("""CASE without OTHER""") {
     val input = tla.caseSplit(
-      tla.name("p_1"),
-      tla.name("e_1"),
-      tla.name("p_2"),
-      tla.name("e_2")
+      tla.name("p_1"), tla.name("e_1"),
+      tla.name("p_2"), tla.name("e_2")
     ) ///
     assertThrows[NotInKeraError](keramelizer.apply(input))
   }

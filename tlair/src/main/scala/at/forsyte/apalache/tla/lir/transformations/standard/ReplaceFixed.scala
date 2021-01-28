@@ -1,18 +1,15 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaEx, TlaOperDecl}
-import at.forsyte.apalache.tla.lir.transformations.{
-  TlaExTransformation,
-  TransformationTracker
-}
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
 object ReplaceFixed {
   def replaceOne(
-      replacedEx: TlaEx,
-      newEx: => TlaEx, // takes a [=> TlaEx] to allow for the creation of new instances (with distinct UIDs)
-      tracker: TransformationTracker
-  ): TlaExTransformation = tracker.trackEx { ex =>
-    if (ex == replacedEx) newEx else ex
+                  replacedEx : TlaEx,
+                  newEx : => TlaEx, // takes a [=> TlaEx] to allow for the creation of new instances (with distinct UIDs)
+                  tracker : TransformationTracker
+                ) : TlaExTransformation = tracker.trackEx {
+    ex => if ( ex == replacedEx ) newEx else ex
   }
 
   /**
@@ -20,30 +17,26 @@ object ReplaceFixed {
     * with an instance of `newEx`
     */
   def apply(
-      replacedEx: TlaEx,
-      newEx: => TlaEx, // takes a [=> TlaEx] to allow for the creation of new instances (with distinct UIDs)
-      tracker: TransformationTracker
-  ): TlaExTransformation = tracker.trackEx { ex =>
-    val tr = replaceOne(replacedEx, newEx, tracker)
-    lazy val self = apply(replacedEx, newEx, tracker)
+             replacedEx : TlaEx,
+             newEx : => TlaEx, // takes a [=> TlaEx] to allow for the creation of new instances (with distinct UIDs)
+             tracker : TransformationTracker
+           ) : TlaExTransformation = tracker.trackEx { ex =>
+    val tr = replaceOne( replacedEx, newEx, tracker )
+    lazy val self = apply( replacedEx, newEx, tracker )
     ex match {
-      case LetInEx(body, defs @ _*) =>
+      case LetInEx( body, defs@_* ) =>
         // Transform bodies of all op.defs
-        val newDefs = defs map tracker.trackOperDecl { d =>
-          d.copy(body = self(d.body))
-        }
-        val newBody = self(body)
-        val retEx =
-          if (defs == newDefs && body == newBody) ex
-          else LetInEx(newBody, newDefs: _*)
-        tr(retEx)
+        val newDefs = defs map tracker.trackOperDecl { d => d.copy(body = self(d.body)) }
+        val newBody = self( body )
+        val retEx = if ( defs == newDefs && body == newBody ) ex else LetInEx( newBody, newDefs : _* )
+        tr( retEx )
 
-      case OperEx(op, args @ _*) =>
+      case OperEx( op, args@_* ) =>
         val newArgs = args map self
-        val retEx = if (args == newArgs) ex else OperEx(op, newArgs: _*)
-        tr(retEx)
+        val retEx = if ( args == newArgs ) ex else OperEx( op, newArgs : _* )
+        tr( retEx )
 
-      case _ => tr(ex)
+      case _ => tr( ex )
     }
   }
 

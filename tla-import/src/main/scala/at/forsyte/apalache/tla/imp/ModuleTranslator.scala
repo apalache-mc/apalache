@@ -15,11 +15,10 @@ import scala.collection.JavaConverters._
 class ModuleTranslator(sourceStore: SourceStore) extends LazyLogging {
   def translate(node: ModuleNode): TlaModule = {
     var context = node.getConstantDecls.toList.foldLeft(Context()) {
-      (ctx, node) =>
-        ctx.push(DeclUnit(TlaConstDecl(node.getName.toString)))
+      (ctx, node) => ctx.push(DeclUnit(TlaConstDecl(node.getName.toString)))
     }
-    context = node.getVariableDecls.toList.foldLeft(context) { (ctx, node) =>
-      ctx.push(DeclUnit(TlaVarDecl(node.getName.toString)))
+    context = node.getVariableDecls.toList.foldLeft(context) {
+      (ctx, node) => ctx.push(DeclUnit(TlaVarDecl(node.getName.toString)))
     }
 
     // Find the definitions that stem from the standard modules and declare them as aliases of the built-in operators
@@ -68,8 +67,8 @@ class ModuleTranslator(sourceStore: SourceStore) extends LazyLogging {
     }
 
     // translate assumptions after the operator definitions, as the assumptions may use the operators
-    context = node.getAssumptions.toList.foldLeft(context) { (ctx, node) =>
-      ctx.push(DeclUnit(AssumeTranslator(sourceStore, ctx).translate(node)))
+    context = node.getAssumptions.toList.foldLeft(context) {
+      (ctx, node) => ctx.push(DeclUnit(AssumeTranslator(sourceStore, ctx).translate(node)))
     }
 
     // filter out the aliases, keep only the user definitions and declarations
@@ -77,18 +76,9 @@ class ModuleTranslator(sourceStore: SourceStore) extends LazyLogging {
     new TlaModule(node.getName.toString, actualDefs)
   }
 
-  private def addAliasesOfBuiltins(
-      ctx: Context,
-      instancePrefix: String,
-      node: ModuleNode
-  ): Context = {
+  private def addAliasesOfBuiltins(ctx: Context, instancePrefix: String, node: ModuleNode): Context = {
     // declare a library definition as an operator alias
-    def subDef(
-        ctx: Context,
-        modName: String,
-        alias: String,
-        opDefNode: OpDefNode
-    ): Context = {
+    def subDef(ctx: Context, modName: String, alias: String, opDefNode: OpDefNode): Context = {
       val opName = opDefNode.getName.toString.intern()
       var newCtx = ctx
       StandardLibrary.libraryOperators.get((modName, opName)).collect {
@@ -111,17 +101,11 @@ class ModuleTranslator(sourceStore: SourceStore) extends LazyLogging {
 
     // add aliases for the definitions inside the module
     val modName = node.getName.toString
-    var newCtx = node.getOpDefs.foldLeft(ctx) { (c, d) =>
-      subDef(c, modName, alias(d), d)
-    }
+    var newCtx = node.getOpDefs.foldLeft(ctx) { (c, d) => subDef(c, modName, alias(d), d) }
 
     // add aliases for the definitions in the modules that this one EXTENDS
-    val extendedModules = node.getExtendedModuleSet.asScala.toList map (_.asInstanceOf[
-      ModuleNode
-    ])
-    newCtx = extendedModules.foldLeft(newCtx) { (c, m) =>
-      addAliasesOfBuiltins(c, instancePrefix, m)
-    }
+    val extendedModules = node.getExtendedModuleSet.asScala.toList map (_.asInstanceOf[ModuleNode])
+    newCtx = extendedModules.foldLeft(newCtx) { (c, m) => addAliasesOfBuiltins(c, instancePrefix, m) }
 
     // add aliases for the definitions that come from the INSTANCE declarations
     def eachInstance(ctx: Context, inst: InstanceNode): Context = {
@@ -129,9 +113,7 @@ class ModuleTranslator(sourceStore: SourceStore) extends LazyLogging {
       // Declare operator aliases for them, which will be substituted with the operators by OpApplTranslator.
       // TODO: we do not process parameterized instances here
       var longPrefix = if (inst.getName == null) "" else inst.getName.toString
-      longPrefix =
-        if (instancePrefix == "") longPrefix
-        else instancePrefix + "!" + longPrefix
+      longPrefix = if (instancePrefix == "") longPrefix else instancePrefix + "!" + longPrefix
       addAliasesOfBuiltins(ctx, longPrefix, inst.getModule)
     }
 
@@ -145,19 +127,14 @@ class ModuleTranslator(sourceStore: SourceStore) extends LazyLogging {
     *
     * @param declared the set of names that have been introduced at higher levels.
     */
-  private def workaroundMarkRecursive(
-      declared: Set[TlaOperDecl],
-      ex: TlaEx
-  ): Unit = {
+  private def workaroundMarkRecursive(declared: Set[TlaOperDecl], ex: TlaEx): Unit = {
     ex match {
       case NameEx(name) =>
         declared.find(_.name == name).foreach {
-          // the operator is used inside its own definition, mark as recursive
+              // the operator is used inside its own definition, mark as recursive
           d =>
             if (!d.isRecursive) {
-              logger.warn(
-                s"WORKAROUND #130: labelling operator $name as recursive, though SANY did not tell us so."
-              )
+              logger.warn(s"WORKAROUND #130: labelling operator $name as recursive, though SANY did not tell us so.")
               d.isRecursive = true
             }
         }

@@ -14,6 +14,7 @@ package at.forsyte.apalache.tla.imp
   */
 class SanyException(message: String) extends Exception(message)
 
+
 /**
   * This exception is thrown when our SanyImporter meets something unexpected.
   *

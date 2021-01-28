@@ -28,11 +28,8 @@ import scala.collection.immutable.{Map, SortedMap}
   *
   * @author Igor Konnov
   */
-class TrivialTypeFinder
-    extends TypeFinder[CellT]
-    with TransformationListener
-    with Serializable
-    with Recoverable[TrivialTypeSnapshot] {
+class TrivialTypeFinder extends TypeFinder[CellT]
+    with TransformationListener with Serializable with Recoverable[TrivialTypeSnapshot] {
   private var _varTypes: SortedMap[String, CellT] = SortedMap()
   private var _typeAnnotations: Map[UID, CellT] = Map()
   private var _typeErrors: Seq[TypeInferenceError] = Seq()
@@ -95,16 +92,13 @@ class TrivialTypeFinder
 
   override def onTransformation(originalEx: TlaEx, newEx: TlaEx): Unit = {
     _typeAnnotations.get(originalEx.ID) match {
-      // propagate type annotations
+        // propagate type annotations
       case Some(tp) => _typeAnnotations += newEx.ID -> tp
-      case _        => ()
+      case _ => ()
     }
   }
 
-  override def onDeclTransformation(
-      originalDecl: TlaDecl,
-      newDecl: TlaDecl
-  ): Unit = {
+  override def onDeclTransformation(originalDecl: TlaDecl, newDecl: TlaDecl): Unit = {
     // ignore transformations of declarations
   }
 
@@ -129,9 +123,7 @@ class TrivialTypeFinder
         def inferDefResultType(d: TlaOperDecl): Unit = {
           if (d.formalParams.nonEmpty) {
             // This is a critical error in our code, which is not a type inference error
-            throw new IllegalStateException(
-              s"Found a non-constant LET-IN definition ${d.name}, which should have been expanded"
-            )
+            throw new IllegalStateException(s"Found a non-constant LET-IN definition ${d.name}, which should have been expanded")
           } else {
             val resT = inferAndSave(d.body)
             // Bind the let name to the computed type of the result.
@@ -145,20 +137,14 @@ class TrivialTypeFinder
 
       // x' = e
       // x' \in S
-      case OperEx(
-          BmcOper.assign,
-          OperEx(TlaActionOper.prime, NameEx(varName)),
-          rhs
-          ) =>
+      case OperEx(BmcOper.assign, OperEx(TlaActionOper.prime, NameEx(varName)), rhs) =>
         def assignTypeAndReturnBool(assignedType: CellT): Option[CellT] = {
           val primedVar = varName + "'"
           if (_varTypes.contains(primedVar)) {
             if (_varTypes(primedVar) != assignedType) {
-              error(
-                expr,
+              error(expr,
                 "Assigning a type %s, while assigned type %s earlier"
-                  .format(assignedType, _varTypes(primedVar))
-              )
+                  .format(assignedType, _varTypes(primedVar)))
             }
           } else {
             _varTypes = _varTypes + (primedVar -> assignedType)
@@ -169,14 +155,14 @@ class TrivialTypeFinder
         inferAndSave(rhs) match {
           case Some(tp) =>
             assignTypeAndReturnBool(tp)
-          case tp @ None =>
+          case tp@None =>
             errorThenNone(rhs, "Expected a type, found: " + tp)
         }
 
       // { x \in S: e }
       case OperEx(TlaSetOper.filter, NameEx(x), set, pred) =>
         inferAndSave(set) match {
-          case Some(setT @ FinSetT(elemT)) =>
+          case Some(setT@FinSetT(elemT)) =>
             assert(!_varTypes.contains(x))
             _varTypes = _varTypes + (x -> elemT)
             val predT = inferAndSave(pred)
@@ -186,31 +172,27 @@ class TrivialTypeFinder
               errorThenNone(pred, "Expected a Boolean, found: " + predT)
             }
 
-          case tp @ _ =>
+          case tp@_ =>
             _varTypes = _varTypes + (x -> UnknownT()) // otherwise, the type rewriter may throw an exception
             errorThenNone(set, "Expected a finite set, found: " + tp)
         }
 
       // {e : x \in S}
-      case OperEx(TlaSetOper.map, mapEx, varsAndSets @ _*) =>
-        val names = varsAndSets.zipWithIndex.collect {
-          case (NameEx(n), i) if i % 2 == 0 => n
-        }
-        val sets = varsAndSets.zipWithIndex.collect {
-          case (e, i) if i % 2 == 1 => e
-        }
+      case OperEx(TlaSetOper.map, mapEx, varsAndSets@_*) =>
+        val names = varsAndSets.zipWithIndex.collect { case (NameEx(n), i) if i % 2 == 0 => n }
+        val sets = varsAndSets.zipWithIndex.collect { case (e, i) if i % 2 == 1 => e }
 
         def bind(name: String, set: TlaEx): Unit = {
           inferAndSave(set) match {
-            case Some(setT @ FinSetT(elemT)) =>
+            case Some(setT@FinSetT(elemT)) =>
               assert(!_varTypes.contains(name))
               _varTypes = _varTypes + (name -> elemT)
 
-            case Some(PowSetT(setT @ FinSetT(_))) =>
+            case Some(PowSetT(setT@FinSetT(_))) =>
               assert(!_varTypes.contains(name))
               _varTypes = _varTypes + (name -> setT)
 
-            case tp @ _ =>
+            case tp@_ =>
               _varTypes = _varTypes + (name -> UnknownT()) // otherwise, the type rewriter may throw an exception
               errorThenNone(set, "Expected a finite set, found: " + tp)
           }
@@ -220,22 +202,17 @@ class TrivialTypeFinder
         Some(FinSetT(inferAndSave(mapEx).getOrElse(UnknownT())))
 
       // [x \in S |-> e]
-      case OperEx(op, funEx, varsAndSets @ _*)
-          if op == TlaFunOper.funDef || op == TlaFunOper.recFunDef =>
-        val names = varsAndSets.zipWithIndex.collect {
-          case (NameEx(n), i) if i % 2 == 0 => n
-        }
-        val sets = varsAndSets.zipWithIndex.collect {
-          case (e, i) if i % 2 == 1 => e
-        }
+      case OperEx(op, funEx, varsAndSets@_*) if op == TlaFunOper.funDef || op == TlaFunOper.recFunDef =>
+        val names = varsAndSets.zipWithIndex.collect { case (NameEx(n), i) if i % 2 == 0 => n }
+        val sets = varsAndSets.zipWithIndex.collect { case (e, i) if i % 2 == 1 => e }
 
         def bind(name: String, set: TlaEx): Unit = {
           inferAndSave(set) match {
-            case Some(setT @ FinSetT(elemT)) =>
+            case Some(setT@FinSetT(elemT)) =>
               assert(!_varTypes.contains(name))
               _varTypes = _varTypes + (name -> elemT)
 
-            case tp @ _ =>
+            case tp@_ =>
               _varTypes = _varTypes + (name -> UnknownT()) // otherwise, the type rewriter throws an exception 10 lines below
               errorThenNone(set, "Expected a finite set, found: " + tp)
           }
@@ -255,7 +232,8 @@ class TrivialTypeFinder
 
       // exists, forall, or CHOOSE
       case OperEx(op, NameEx(x), set, pred)
-          if op == TlaBoolOper.exists || op == TlaBoolOper.forall || op == TlaOper.chooseBounded =>
+        if op == TlaBoolOper.exists || op == TlaBoolOper.forall || op == TlaOper.chooseBounded =>
+
         // infer result by having computed the set type (below)
         def inferResult(elemT: CellT) = {
           assert(!_varTypes.contains(x))
@@ -274,20 +252,19 @@ class TrivialTypeFinder
 
         // first, compute the set type and then the result
         inferAndSave(set) match {
-          case Some(setT @ FinSetT(elemT)) =>
+          case Some(setT@FinSetT(elemT)) =>
             inferResult(elemT)
 
-          case Some(setT @ InfSetT(elemT)) if op == TlaBoolOper.exists =>
+          case Some(setT@InfSetT(elemT)) if op == TlaBoolOper.exists =>
             // pass an infinite set, as it might be replaced with a constant, due to Skolemization
             inferResult(elemT)
 
-          case Some(_ @InfSetT(elemT))
-              if op == TlaOper.chooseBounded || op == TlaBoolOper.forall =>
+          case Some(_@InfSetT(elemT)) if op == TlaOper.chooseBounded || op == TlaBoolOper.forall =>
             // complain right away
             val name = if (op == TlaOper.chooseBounded) "CHOOSE" else "\\A"
             errorThenNone(set, s"$name over an infinite set")
 
-          case tp @ _ =>
+          case tp@_ =>
             _varTypes = _varTypes + (x -> UnknownT()) // otherwise, the type rewriter may throw an exception
             errorThenNone(set, "Expected a finite set, found: " + tp)
         }
@@ -309,10 +286,8 @@ class TrivialTypeFinder
           unifier
         } else {
           val exTStr = if (exT.isDefined) exT.get.toString else None.toString
-          errorThenNone(
-            annot,
-            s"No unifier for type $annotT and type $exTStr (from type annotation $annot and expression $ex)"
-          )
+          errorThenNone(annot,
+            s"No unifier for type $annotT and type $exTStr (from type annotation $annot and expression $ex)")
         }
 
       case OperEx(TlaActionOper.prime, NameEx(name)) =>
@@ -323,11 +298,11 @@ class TrivialTypeFinder
         }
         result
 
-      case ex @ OperEx(TlaActionOper.prime, arg) =>
+      case ex@OperEx(TlaActionOper.prime, arg) =>
         errorThenNone(ex, "Expected a name under ', found: " + arg)
 
       // other operators
-      case OperEx(_, args @ _*) =>
+      case OperEx(_, args@_*) =>
         val argTypes = args.map(inferAndSave)
         if (argTypes.forall(_.isDefined)) {
           Some(compute(expr, argTypes.map(_.get): _*))
@@ -380,7 +355,7 @@ class TrivialTypeFinder
       // compute the type of body, assuming that the types of the bound variables were computed by inferAndSave
       computeRec(body)
 
-    case OperEx(_, args @ _*) =>
+    case OperEx(_, args@_*) =>
       compute(ex, args map computeRec: _*)
 
     case _ =>
@@ -437,38 +412,32 @@ class TrivialTypeFinder
       InfSetT(IntT())
   }
 
-  private def computeBasicOps(
-      argTypes: Seq[CellT]
-  ): PartialFunction[TlaEx, CellT] = {
-    case ne @ NameEx(name) =>
-      _varTypes
-        .get(name)
+  private def computeBasicOps(argTypes: Seq[CellT]): PartialFunction[TlaEx, CellT] = {
+    case ne@NameEx(name) =>
+      _varTypes.get(name)
         .orElse(Some(error(ne, "No type assigned to " + name)))
         .get
 
     case app @ OperEx(TlaOper.apply, NameEx(opName)) =>
-      _varTypes
-        .get(opName.toString) // String.toString ??
+      _varTypes.get(opName.toString) // String.toString ??
         .orElse(Some(error(app, "No type assigned to " + opName)))
         .get
 
     case OperEx(TlaOper.apply, opName, _*) =>
-      throw new IllegalStateException(
-        s"Unexpected operator call to $opName. Report a bug!"
-      )
+        throw new IllegalStateException(s"Unexpected operator call to $opName. Report a bug!")
 
-    case ne @ OperEx(TlaActionOper.prime, NameEx(name)) =>
+    case ne@OperEx(TlaActionOper.prime, NameEx(name)) =>
       val primed = name + "'"
-      _varTypes
-        .get(primed)
+      _varTypes.get(primed)
         .orElse(Some(error(ne, "No type assigned to " + primed)))
         .get
 
-    case ex @ OperEx(op, _, _) if op == TlaOper.eq || op == TlaOper.ne =>
+    case ex@OperEx(op, _, _)
+      if op == TlaOper.eq || op == TlaOper.ne =>
       expectEqualTypes(ex, argTypes: _*)
       BoolT()
 
-    case ex @ OperEx(op @ TlaOper.chooseBounded, x, set, pred) =>
+    case ex@OperEx(op@TlaOper.chooseBounded, x, set, pred) =>
       val xType = argTypes.head
       val setType = argTypes.tail.head
       val predType = argTypes.tail.tail.head
@@ -482,13 +451,13 @@ class TrivialTypeFinder
           errorUnexpected(ex, op.name, argTypes)
       }
 
-    case ex @ OperEx(op @ TlaOper.chooseUnbounded, x, pred) =>
+    case ex@OperEx(op@TlaOper.chooseUnbounded, x, pred) =>
       val xType = argTypes.head
       val predType = argTypes.tail.head
       expectType(BoolT(), pred, predType)
       xType
 
-    case ex @ OperEx(op @ TlaOper.chooseIdiom, _) =>
+    case ex@OperEx(op@TlaOper.chooseIdiom, _) =>
       argTypes match {
         case Seq(FinSetT(elemT)) =>
           elemT
@@ -497,17 +466,15 @@ class TrivialTypeFinder
           errorUnexpected(ex, op.name, argTypes)
       }
 
-    case ex @ OperEx(op @ TlaOper.label, _, _, _*) =>
+    case ex@OperEx(op@TlaOper.label, _, _, _*) =>
       val decoratedExprType = argTypes.head
       val nameAndArgTypes = argTypes.tail
       nameAndArgTypes.foreach(expectType(ConstT(), ex, _))
       decoratedExprType
   }
 
-  private def computeSetCtors(
-      argTypes: Seq[CellT]
-  ): PartialFunction[TlaEx, CellT] = {
-    case ex @ OperEx(TlaSetOper.enumSet, _*) =>
+  private def computeSetCtors(argTypes: Seq[CellT]): PartialFunction[TlaEx, CellT] = {
+    case ex@OperEx(TlaSetOper.enumSet, _*) =>
       if (argTypes.isEmpty) {
         // This case typically causes problems, as any operation with
         // a concrete type would fail. One has to use a type annotation.
@@ -517,7 +484,7 @@ class TrivialTypeFinder
         FinSetT(argTypes.head)
       }
 
-    case ex @ OperEx(op @ TlaSetOper.funSet, _, _) =>
+    case ex@OperEx(op@TlaSetOper.funSet, _, _) =>
       argTypes match {
         case Seq(FinSetT(argT), FinSetT(resT)) =>
           // FinT expects the types of the domain and the result (not of the co-domain!)
@@ -530,22 +497,19 @@ class TrivialTypeFinder
         case _ => errorUnexpected(ex, op.name, argTypes)
       }
 
-    case ex @ OperEx(TlaSetOper.recSet, args @ _*) =>
+    case ex@OperEx(TlaSetOper.recSet, args@_*) =>
       assert(argTypes.nonEmpty)
       val fieldNames = deinterleave(args, 0, 2)
         .collect { case ValEx(TlaStr(a)) => a }
       val _, fieldTypes = deinterleave(argTypes, 1, 2)
       val elemTypes = argTypes.collect { case FinSetT(t) => t }
       if (elemTypes.size < fieldTypes.size) {
-        error(
-          ex,
-          "Only finite sets of records are supported in [a: A, ..., z: Z]"
-        )
+        error(ex, "Only finite sets of records are supported in [a: A, ..., z: Z]")
       }
       assert(fieldNames.length == fieldTypes.length)
       FinSetT(RecordT(SortedMap(fieldNames.zip(elemTypes): _*)))
 
-    case ex @ OperEx(op @ TlaSetOper.powerset, _) =>
+    case ex@OperEx(op@TlaSetOper.powerset, _) =>
       argTypes match {
         case Seq(FinSetT(elemT)) =>
           FinSetT(FinSetT(elemT))
@@ -555,7 +519,7 @@ class TrivialTypeFinder
         case _ => errorUnexpected(ex, op.name, argTypes)
       }
 
-    case ex @ OperEx(TlaSetOper.times, _*) =>
+    case ex@OperEx(TlaSetOper.times, _*) =>
       assert(argTypes.nonEmpty)
       val elemTypes = argTypes.collect({ case FinSetT(t) => t }) // using partial functions
       if (elemTypes.size < argTypes.size) {
@@ -567,10 +531,8 @@ class TrivialTypeFinder
       FinSetT(BoolT())
   }
 
-  private def computeSetOps(
-      argTypes: Seq[CellT]
-  ): PartialFunction[TlaEx, CellT] = {
-    case ex @ OperEx(op @ TlaSetOper.union, _) =>
+  private def computeSetOps(argTypes: Seq[CellT]): PartialFunction[TlaEx, CellT] = {
+    case ex@OperEx(op@TlaSetOper.union, _) =>
       argTypes match {
         case Seq(FinSetT(FinSetT(elemT))) =>
           FinSetT(elemT)
@@ -578,7 +540,7 @@ class TrivialTypeFinder
         case _ => errorUnexpected(ex, op.name, argTypes)
       }
 
-    case ex @ OperEx(op @ TlaSetOper.filter, _, _, _) =>
+    case ex@OperEx(op@TlaSetOper.filter, _, _, _) =>
       argTypes match {
         case Seq(_, FinSetT(elemT), BoolT()) =>
           FinSetT(elemT)
@@ -592,7 +554,7 @@ class TrivialTypeFinder
         case _ => errorUnexpected(ex, op.name, argTypes)
       }
 
-    case ex @ OperEx(op @ TlaSetOper.map, _*) =>
+    case ex@OperEx(op@TlaSetOper.map, _*) =>
       var varType: CellT = UnknownT()
       for ((tp, index) <- argTypes.tail.zipWithIndex) {
         if (index % 2 == 0) {
@@ -602,11 +564,7 @@ class TrivialTypeFinder
           tp match {
             case FinSetT(et) =>
               if (et != varType) {
-                error(
-                  ex,
-                  "Expected Set(%s) at position %d, found: %s"
-                    .format(varType, index / 2, tp)
-                )
+                error(ex, "Expected Set(%s) at position %d, found: %s".format(varType, index / 2, tp))
               }
 
             // what about {f \in [S -> T] |-> ... }?
@@ -617,8 +575,7 @@ class TrivialTypeFinder
       }
       FinSetT(argTypes.head)
 
-    case ex @ OperEx(op, _, _)
-        if op == TlaSetOper.in || op == TlaSetOper.notin =>
+    case ex@OperEx(op, _, _) if op == TlaSetOper.in || op == TlaSetOper.notin =>
       argTypes match {
         case Seq(memT, FinSetT(elemT)) =>
           expectEqualTypes(ex, memT, elemT)
@@ -634,9 +591,9 @@ class TrivialTypeFinder
         case _ => errorUnexpected(ex, op.name, argTypes)
       }
 
-    case ex @ OperEx(op, _, _)
-        if op == TlaSetOper.subsetProper || op == TlaSetOper.subseteq
-          || op == TlaSetOper.supsetProper || op == TlaSetOper.supseteq =>
+    case ex@OperEx(op, _, _)
+      if op == TlaSetOper.subsetProper || op == TlaSetOper.subseteq
+        || op == TlaSetOper.supsetProper || op == TlaSetOper.supseteq =>
       argTypes match {
         case Seq(FinSetT(leftT), FinSetT(rightT)) =>
           expectEqualTypes(ex, leftT, rightT)
@@ -647,8 +604,8 @@ class TrivialTypeFinder
         case _ => errorUnexpected(ex, op.name, argTypes)
       }
 
-    case ex @ OperEx(op, _, _)
-        if op == TlaSetOper.cup || op == TlaSetOper.cap || op == TlaSetOper.setminus =>
+    case ex@OperEx(op, _, _)
+      if op == TlaSetOper.cup || op == TlaSetOper.cap || op == TlaSetOper.setminus =>
       argTypes match {
         case Seq(FinSetT(leftT), FinSetT(rightT)) =>
           expectEqualTypes(ex, leftT, rightT)
@@ -658,23 +615,17 @@ class TrivialTypeFinder
       }
   }
 
-  private def computeFunCtors(
-      argTypes: Seq[CellT]
-  ): PartialFunction[TlaEx, CellT] = {
-    case ex @ OperEx(TlaFunOper.tuple) =>
+  private def computeFunCtors(argTypes: Seq[CellT]): PartialFunction[TlaEx, CellT] = {
+    case ex@OperEx(TlaFunOper.tuple) =>
       SeqT(UnknownT())
 
-    case ex @ OperEx(op @ TlaFunOper.tuple, _*) =>
+    case ex@OperEx(op@TlaFunOper.tuple, _*) =>
       TupleT(argTypes)
 
-    case ex @ OperEx(op @ TlaFunOper.enum, args @ _*) =>
+    case ex@OperEx(op@TlaFunOper.enum, args@_*) =>
       assert(argTypes.nonEmpty)
-      val fieldNames = deinterleave(args, 0, 2) collect {
-        case ValEx(TlaStr(a)) => a
-      }
-      val namesTypes = deinterleave(argTypes, 0, 2) collect {
-        case ConstT() => true
-      }
+      val fieldNames = deinterleave(args, 0, 2) collect { case ValEx(TlaStr(a)) => a }
+      val namesTypes = deinterleave(argTypes, 0, 2) collect { case ConstT() => true }
 
       if (namesTypes.size != fieldNames.size) {
         errorUnexpected(ex, op.name, argTypes)
@@ -684,10 +635,8 @@ class TrivialTypeFinder
       RecordT(SortedMap(fieldNames.zip(fieldTypes): _*))
   }
 
-  private def computeFunApp(
-      argTypes: Seq[CellT]
-  ): PartialFunction[TlaEx, CellT] = {
-    case ex @ OperEx(op @ TlaFunOper.app, fun, arg) =>
+  private def computeFunApp(argTypes: Seq[CellT]): PartialFunction[TlaEx, CellT] = {
+    case ex@OperEx(op@TlaFunOper.app, fun, arg) =>
       val funType = argTypes.head
       val argType = argTypes.tail.head
       funType match {
@@ -707,11 +656,7 @@ class TrivialTypeFinder
                 error(ex, "The tuple argument is out of range: " + i)
               }
 
-            case _ =>
-              error(
-                ex,
-                "Expected an integer constant as the tuple argument, found: " + arg
-              )
+            case _ => error(ex, "Expected an integer constant as the tuple argument, found: " + arg)
           }
 
         case RecordT(fields) if argType == ConstT() =>
@@ -724,11 +669,7 @@ class TrivialTypeFinder
                 error(ex, "Unexpected record field name: " + s)
               }
 
-            case _ =>
-              error(
-                ex,
-                "Expected a string constant as the tuple argument, found: " + arg
-              )
+            case _ => error(ex, "Expected a string constant as the tuple argument, found: " + arg)
           }
 
         case _ =>
@@ -736,11 +677,8 @@ class TrivialTypeFinder
       }
   }
 
-  private def computeFunOps(
-      argTypes: Seq[CellT]
-  ): PartialFunction[TlaEx, CellT] = {
-    case ex @ OperEx(op, e, bindings @ _*)
-        if op == TlaFunOper.funDef || op == TlaFunOper.recFunDef =>
+  private def computeFunOps(argTypes: Seq[CellT]): PartialFunction[TlaEx, CellT] = {
+    case ex@OperEx(op, e, bindings@_*) if op == TlaFunOper.funDef || op == TlaFunOper.recFunDef =>
       val resType = argTypes.head
       val setTypes = deinterleave(argTypes.tail, 1, 2)
       val varTypes = deinterleave(argTypes.tail, 0, 2)
@@ -763,18 +701,15 @@ class TrivialTypeFinder
 
     case ex @ OperEx(TlaFunOper.recFunRef) =>
       // no annotation met, produce an error
-      error(
-        ex,
-        "Reference to a recursive function needs type annotation, see:" +
-          " https://apalache.informal.systems/docs/apalache/principles.html#rec-fun"
-      )
+      error(ex,"Reference to a recursive function needs type annotation, see:" +
+      " https://apalache.informal.systems/docs/apalache/principles.html#rec-fun")
 
-    case ex @ OperEx(op @ TlaFunOper.except, e, bindings @ _*) =>
+    case ex@OperEx(op@TlaFunOper.except, e, bindings@_*) =>
       val funType = argTypes.head
       // In principle, we could just return the function itself.
       // But we also check the argument types to be on a well-typed side.
       val indices = deinterleave(bindings, 0, 2) // the expressions
-      val indexTypes = deinterleave(argTypes.tail, 0, 2)
+    val indexTypes = deinterleave(argTypes.tail, 0, 2)
       val valueTypes = deinterleave(argTypes.tail, 1, 2)
       funType match {
         case FunT(_, _) =>
@@ -782,44 +717,30 @@ class TrivialTypeFinder
             funType match {
               // an argument to EXCEPT is always wrapped into a tuple
               case FunT(FinSetT(elemT), rt) => (TupleT(Seq(elemT)), rt)
-              case _                        => error(ex, "Expected a function type, found: " + funType)
+              case _ => error(ex, "Expected a function type, found: " + funType)
             }
           for (idx <- indexTypes) {
             if (idx != argT) {
-              error(
-                ex,
-                "Expected an index of type TupleT(%s), found: %s"
-                  .format(argT, idx)
-              )
+              error(ex, "Expected an index of type TupleT(%s), found: %s".format(argT, idx))
             }
           }
           for (valT <- valueTypes) {
             if (valT != resT) {
-              error(
-                ex,
-                "Expected a result of type %s, found: %s".format(resT, valT)
-              )
+              error(ex, "Expected a result of type %s, found: %s".format(resT, valT))
             }
           }
 
-        case rec @ RecordT(_) =>
+        case rec@RecordT(_) =>
           for (idx <- indexTypes) {
             if (idx != TupleT(Seq(ConstT()))) {
-              error(
-                ex,
-                "Expected an index of type %s, found: %s".format(ConstT(), idx)
-              )
+              error(ex, "Expected an index of type %s, found: %s".format(ConstT(), idx))
             }
           }
           for ((index, valT) <- indices.zip(valueTypes)) {
             index match {
               case OperEx(TlaFunOper.tuple, ValEx(TlaStr(key))) =>
                 if (valT != rec.fields(key)) {
-                  error(
-                    ex,
-                    "Expected an index of type TupleT(%s), found: %s"
-                      .format(rec.fields(key), valT)
-                  )
+                  error(ex, "Expected an index of type TupleT(%s), found: %s".format(rec.fields(key), valT))
                 }
 
               case _ =>
@@ -828,22 +749,15 @@ class TrivialTypeFinder
 
           }
 
-        case tup @ TupleT(Seq(argTypes @ _*)) =>
+        case tup@TupleT(Seq(argTypes@_*)) =>
           for (idx <- indexTypes) {
             if (idx != TupleT(Seq(IntT()))) {
-              error(
-                ex,
-                "Expected an index of type TupleT(%s), found: %s"
-                  .format(IntT(), idx)
-              )
+              error(ex, "Expected an index of type TupleT(%s), found: %s".format(IntT(), idx))
             }
           }
           for ((argT, valT) <- argTypes.zip(valueTypes)) {
             if (argT != valT) {
-              error(
-                ex,
-                "Expected a value of type %s, found: %s".format(argT, valT)
-              )
+              error(ex, "Expected a value of type %s, found: %s".format(argT, valT))
             }
           }
 
@@ -853,68 +767,64 @@ class TrivialTypeFinder
 
       funType
 
-    case ex @ OperEx(TlaFunOper.domain, fun) =>
+    case ex@OperEx(TlaFunOper.domain, fun) =>
       argTypes.head match {
         case FunT(domT, _) => domT
-        case TupleT(_)     => FinSetT(IntT())
-        case RecordT(_)    => FinSetT(ConstT())
-        case SeqT(_)       => FinSetT(IntT())
-        case _             => error(ex, "Unexpected type of DOMAIN argument: " + ex)
+        case TupleT(_) => FinSetT(IntT())
+        case RecordT(_) => FinSetT(ConstT())
+        case SeqT(_) => FinSetT(IntT())
+        case _ => error(ex, "Unexpected type of DOMAIN argument: " + ex)
       }
   }
 
-  private def computeIntOps(
-      argTypes: Seq[CellT]
-  ): PartialFunction[TlaEx, CellT] = {
-    case ex @ OperEx(op, _) if op == TlaArithOper.uminus =>
+  private def computeIntOps(argTypes: Seq[CellT]): PartialFunction[TlaEx, CellT] = {
+    case ex@OperEx(op, _) if op == TlaArithOper.uminus =>
       assert(argTypes.length == 1)
       expectType(IntT(), ex, argTypes.head)
       IntT()
 
-    case ex @ OperEx(TlaArithOper.dotdot, _, _) =>
+    case ex@OperEx(TlaArithOper.dotdot, _, _) =>
       assert(argTypes.length == 2)
       argTypes.foreach(expectType(IntT(), ex, _))
       FinSetT(IntT())
 
-    case ex @ OperEx(op, _, _)
-        if op == TlaArithOper.plus || op == TlaArithOper.minus
-          || op == TlaArithOper.mult || op == TlaArithOper.div || op == TlaArithOper.mod || op == TlaArithOper.exp =>
+    case ex@OperEx(op, _, _)
+      if op == TlaArithOper.plus || op == TlaArithOper.minus
+        || op == TlaArithOper.mult || op == TlaArithOper.div || op == TlaArithOper.mod || op == TlaArithOper.exp =>
       assert(argTypes.length == 2)
       argTypes.foreach(expectType(IntT(), ex, _))
       IntT()
 
-    case ex @ OperEx(op, _, _)
-        if op == TlaArithOper.lt || op == TlaArithOper.gt || op == TlaArithOper.le || op == TlaArithOper.ge =>
+    case ex@OperEx(op, _, _)
+      if op == TlaArithOper.lt || op == TlaArithOper.gt || op == TlaArithOper.le || op == TlaArithOper.ge =>
       assert(argTypes.length == 2)
       argTypes.foreach(expectType(IntT(), ex, _))
       BoolT()
 
-    case ex @ OperEx(op, _*)
-        if op == TlaArithOper.sum || op == TlaArithOper.prod =>
+    case ex@OperEx(op, _*)
+      if op == TlaArithOper.sum || op == TlaArithOper.prod =>
       argTypes.foreach(expectType(IntT(), ex, _))
       IntT()
   }
 
-  private def computeBoolOps(
-      argTypes: Seq[CellT]
-  ): PartialFunction[TlaEx, CellT] = {
-    case ex @ OperEx(TlaBoolOper.not, _) =>
+  private def computeBoolOps(argTypes: Seq[CellT]): PartialFunction[TlaEx, CellT] = {
+    case ex@OperEx(TlaBoolOper.not, _) =>
       assert(argTypes.length == 1)
       expectType(BoolT(), ex, argTypes.head)
       BoolT()
 
-    case ex @ OperEx(op, _, _)
-        if op == TlaBoolOper.implies || op == TlaBoolOper.equiv =>
+    case ex@OperEx(op, _, _)
+      if op == TlaBoolOper.implies || op == TlaBoolOper.equiv =>
       assert(argTypes.length == 2)
       argTypes.foreach(expectType(BoolT(), ex, _))
       BoolT()
 
-    case ex @ OperEx(op, _*) if op == TlaBoolOper.and || op == TlaBoolOper.or =>
+    case ex@OperEx(op, _*)
+      if op == TlaBoolOper.and || op == TlaBoolOper.or =>
       argTypes.foreach(expectType(BoolT(), ex, _))
       BoolT()
 
-    case ex @ OperEx(op, x, set, pred)
-        if op == TlaBoolOper.forall || op == TlaBoolOper.exists =>
+    case ex@OperEx(op, x, set, pred) if op == TlaBoolOper.forall || op == TlaBoolOper.exists =>
       val xType = argTypes.head
       val setType = argTypes.tail.head
       val predType = argTypes.tail.tail.head
@@ -932,34 +842,24 @@ class TrivialTypeFinder
       BoolT()
   }
 
-  private def computeControlOps(
-      argTypes: Seq[CellT]
-  ): PartialFunction[TlaEx, CellT] = {
-    case ex @ OperEx(TlaControlOper.ifThenElse, predEx, thenEx, elseEx) =>
+  private def computeControlOps(argTypes: Seq[CellT]): PartialFunction[TlaEx, CellT] = {
+    case ex@OperEx(TlaControlOper.ifThenElse, predEx, thenEx, elseEx) =>
       assert(argTypes.length == 3)
       expectType(BoolT(), predEx, argTypes.head)
       val leftType = argTypes.tail.head
       expectEqualTypes(ex, argTypes.tail: _*)
       leftType
 
-    case ex @ OperEx(TlaControlOper.caseNoOther, _*) =>
-      val guards = argTypes.zipWithIndex.collect {
-        case (a, i) if i % 2 == 0 => a
-      }
-      val actions = argTypes.zipWithIndex.collect {
-        case (a, i) if i % 2 == 1 => a
-      }
+    case ex@OperEx(TlaControlOper.caseNoOther, _*) =>
+      val guards = argTypes.zipWithIndex.collect { case (a, i) if i % 2 == 0 => a }
+      val actions = argTypes.zipWithIndex.collect { case (a, i) if i % 2 == 1 => a }
       guards.foreach(expectType(BoolT(), ex, _))
       expectEqualTypes(ex, actions: _*)
       actions.head
 
-    case ex @ OperEx(TlaControlOper.caseWithOther, _*) =>
-      val guards = argTypes.zipWithIndex.collect {
-        case (a, i) if i % 2 == 1 => a
-      }
-      val actions = argTypes.zipWithIndex.collect {
-        case (a, i) if i % 2 == 0 => a
-      }
+    case ex@OperEx(TlaControlOper.caseWithOther, _*) =>
+      val guards = argTypes.zipWithIndex.collect { case (a, i) if i % 2 == 1 => a }
+      val actions = argTypes.zipWithIndex.collect { case (a, i) if i % 2 == 0 => a }
       guards.foreach(expectType(BoolT(), ex, _))
       expectEqualTypes(ex, actions: _*)
       actions.head
@@ -969,11 +869,9 @@ class TrivialTypeFinder
       argTypes.head
   }
 
-  private def computeFiniteSetOps(
-      argTypes: Seq[CellT]
-  ): PartialFunction[TlaEx, CellT] = {
-    case ex @ OperEx(op, _)
-        if op == TlaFiniteSetOper.isFiniteSet || op == TlaFiniteSetOper.cardinality =>
+  private def computeFiniteSetOps(argTypes: Seq[CellT]): PartialFunction[TlaEx, CellT] = {
+    case ex@OperEx(op, _)
+      if op == TlaFiniteSetOper.isFiniteSet || op == TlaFiniteSetOper.cardinality =>
       assert(argTypes.length == 1)
       argTypes.head match {
         case FinSetT(_) =>
@@ -987,11 +885,9 @@ class TrivialTypeFinder
       }
   }
 
-  private def computeSeqOps(
-      argTypes: Seq[CellT]
-  ): PartialFunction[TlaEx, CellT] = {
-    case ex @ OperEx(op, _)
-        if op == TlaSeqOper.head || op == TlaSeqOper.tail || op == TlaSeqOper.len =>
+  private def computeSeqOps(argTypes: Seq[CellT]): PartialFunction[TlaEx, CellT] = {
+    case ex@OperEx(op, _)
+      if op == TlaSeqOper.head || op == TlaSeqOper.tail || op == TlaSeqOper.len =>
       assert(argTypes.length == 1)
       argTypes.head match {
         case SeqT(elemT) =>
@@ -1005,7 +901,7 @@ class TrivialTypeFinder
           errorUnexpected(ex, op.name, argTypes)
       }
 
-    case ex @ OperEx(op @ TlaSeqOper.append, _, argEx) =>
+    case ex@OperEx(op@TlaSeqOper.append, _, argEx) =>
       assert(argTypes.length == 2)
       argTypes.head match {
         case SeqT(elemT) =>
@@ -1016,7 +912,7 @@ class TrivialTypeFinder
           errorUnexpected(ex, op.name, argTypes)
       }
 
-    case ex @ OperEx(op @ TlaSeqOper.concat, lex, rex) =>
+    case ex@OperEx(op@TlaSeqOper.concat, lex, rex) =>
       assert(argTypes.length == 2)
       argTypes.head match {
         case SeqT(elemT) =>
@@ -1027,7 +923,7 @@ class TrivialTypeFinder
           errorUnexpected(ex, op.name, argTypes)
       }
 
-    case ex @ OperEx(op @ TlaSeqOper.subseq, seq, start, end) =>
+    case ex@OperEx(op@TlaSeqOper.subseq, seq, start, end) =>
       assert(argTypes.length == 3)
       argTypes.head match {
         case SeqT(elemT) =>
@@ -1039,60 +935,56 @@ class TrivialTypeFinder
           errorUnexpected(ex, op.name, argTypes)
       }
 
-    case ex @ OperEx(op @ TlaSeqOper.selectseq, seq, pred) =>
+    case ex@OperEx(op@TlaSeqOper.selectseq, seq, pred) =>
       // pred should be a second-level operator. How would we implement it here?
-      throw new NotImplementedError(
-        "Type construction for Sequence.selectseq cannot be implemented."
-      )
+      throw new NotImplementedError("Type construction for Sequence.selectseq cannot be implemented.")
   }
 
-  private def computeMiscOps(
-      argTypes: Seq[CellT]
-  ): PartialFunction[TlaEx, CellT] = {
-    case ex @ OperEx(BmcOper.`skolem`, _) =>
+  private def computeMiscOps(argTypes: Seq[CellT]): PartialFunction[TlaEx, CellT] = {
+    case ex@OperEx(BmcOper.`skolem`, _) =>
       BoolT()
 
-    case ex @ OperEx(BmcOper.`constCard`, _) =>
+    case ex@OperEx(BmcOper.`constCard`, _) =>
       BoolT()
 
-    case ex @ OperEx(BmcOper.expand, _) =>
+    case ex@OperEx(BmcOper.expand, _) =>
       argTypes.head
 
-    case ex @ OperEx(TlaOper.label, args @ _*) =>
+    case ex@OperEx(TlaOper.label, args@_*) =>
       for ((a, t) <- args.tail.zip(argTypes.tail)) expectType(ConstT(), a, t)
       argTypes.head
 
-    case ex @ OperEx(TlcOper.assert, expr, msg) =>
+    case ex@OperEx(TlcOper.assert, expr, msg) =>
       val exprType = argTypes.head
       val msgType = argTypes.tail.head
       expectType(BoolT(), expr, exprType)
       expectType(ConstT(), msg, msgType)
       BoolT()
 
-    case ex @ OperEx(TlcOper.print, _, msg) =>
+    case ex@OperEx(TlcOper.print, _, msg) =>
       // an expression can be of any type
       val msgType = argTypes.tail.head
       expectType(ConstT(), msg, msgType)
       BoolT()
 
-    case ex @ OperEx(TlcOper.printT, msg) =>
+    case ex@OperEx(TlcOper.printT, msg) =>
       val msgType = argTypes.head
       expectType(ConstT(), msg, msgType)
       BoolT()
 
-    case ex @ OperEx(TlcOper.colonGreater, _, _) =>
+    case ex@OperEx(TlcOper.colonGreater, _, _) =>
       TupleT(argTypes) // a :> b is simply <<a, b>> in our type system
 
-    case ex @ OperEx(TlcOper.atat, _, _) =>
+    case ex@OperEx(TlcOper.atat, _, _) =>
       argTypes.head match {
-        case funT @ FunT(FinSetT(argT), resT) =>
+        case funT@FunT(FinSetT(argT), resT) =>
           argTypes.tail.head match {
             case TupleT(Seq(at, rt)) =>
               expectEqualTypes(ex, argT, at)
               expectEqualTypes(ex, resT, rt)
               funT
 
-            case tt @ _ =>
+            case tt@_ =>
               expectType(TupleT(Seq(argT, resT)), ex, tt)
               funT
           }
@@ -1101,17 +993,11 @@ class TrivialTypeFinder
           errorUnexpected(ex, TlcOper.atat.name, argTypes)
       }
 
-    case ex @ OperEx(BmcOper.withType, _*) =>
-      throw new IllegalStateException(
-        "The type annotation must have been saved by inferAndSave: " + ex
-      )
+    case ex@OperEx(BmcOper.withType, _*) =>
+      throw new IllegalStateException("The type annotation must have been saved by inferAndSave: " + ex)
   }
 
-  private def expectType(
-      expectedType: CellT,
-      ex: TlaEx,
-      exType: CellT
-  ): Unit = {
+  private def expectType(expectedType: CellT, ex: TlaEx, exType: CellT): Unit = {
     if (exType != expectedType) {
       error(ex, "Expected type %s, found %s".format(expectedType, exType))
     }
@@ -1127,15 +1013,8 @@ class TrivialTypeFinder
     }
   }
 
-  private def errorUnexpected(
-      ex: TlaEx,
-      opname: String,
-      argTypes: Seq[CellT]
-  ): CellT = {
-    error(
-      ex,
-      "Unexpected types for %s: %s".format(opname, argTypes.mkString(", "))
-    )
+  private def errorUnexpected(ex: TlaEx, opname: String, argTypes: Seq[CellT]): CellT = {
+    error(ex, "Unexpected types for %s: %s".format(opname, argTypes.mkString(", ")))
   }
 
   private def error(ex: TlaEx, message: String): CellT = {
@@ -1149,10 +1028,7 @@ class TrivialTypeFinder
   }
 
   private def notImplemented: PartialFunction[TlaEx, CellT] = {
-    case ex =>
-      throw new NotImplementedError(
-        "Type construction for %s is not implemented. Report a bug!".format(ex)
-      )
+    case ex => throw new NotImplementedError("Type construction for %s is not implemented. Report a bug!".format(ex))
   }
 
   /**

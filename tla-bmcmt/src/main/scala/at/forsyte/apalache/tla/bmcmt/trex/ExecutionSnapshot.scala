@@ -9,9 +9,7 @@ package at.forsyte.apalache.tla.bmcmt.trex
   * @param contextSnapshot a snapshot of the executor's context
   * @tparam ExecutorContextSnapshotT the type of the context snapshot
   */
-class ExecutionSnapshot[ExecutorContextSnapshotT](
-    val controlState: ExecutorControlState,
-    val execution: EncodedExecution,
-    val preparedTransitions: Map[Int, EncodedTransition],
-    val contextSnapshot: ExecutorContextSnapshotT
-)
+class ExecutionSnapshot[ExecutorContextSnapshotT](val controlState: ExecutorControlState,
+                                                  val execution: EncodedExecution,
+                                                  val preparedTransitions: Map[Int, EncodedTransition],
+                                                  val contextSnapshot: ExecutorContextSnapshotT)

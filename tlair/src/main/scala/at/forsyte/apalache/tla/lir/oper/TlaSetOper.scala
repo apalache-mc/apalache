@@ -1,14 +1,13 @@
 package at.forsyte.apalache.tla.lir.oper
 
 /**
-  * Set operators.
-  */
+ * Set operators.
+ */
 abstract class TlaSetOper extends TlaOper {
   override def interpretation: Interpretation.Value = Interpretation.Predefined
 }
 
 object TlaSetOper {
-
   /**
   Define a set by enumerating its elements, i.e., {e_1, ..., e_k}
     Note that we explicitly forbid to construct an empty set using this operator.
@@ -17,8 +16,7 @@ object TlaSetOper {
   object enumSet extends TlaSetOper {
     override val arity = AnyArity() // FIX: we allow zero arguments as well
     override val name = "{...}"
-    override val precedence
-        : (Int, Int) = (16, 16) // as the function application
+    override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   /**
@@ -27,8 +25,7 @@ object TlaSetOper {
   object funSet extends TlaSetOper {
     override def arity: OperArity = FixedArity(2)
     override val name: String = "[S -> T]"
-    override val precedence
-        : (Int, Int) = (16, 16) // as the function application
+    override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   /**
@@ -40,8 +37,7 @@ object TlaSetOper {
   object recSet extends TlaSetOper {
     override def arity: OperArity = AnyEvenArity()
     override val name: String = "$SetOfRcds"
-    override val precedence
-        : (Int, Int) = (16, 16) // as the function application
+    override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   /**
@@ -50,8 +46,7 @@ object TlaSetOper {
   object seqSet extends TlaSetOper {
     override def arity: OperArity = FixedArity(1)
     override val name: String = "Seq"
-    override val precedence
-        : (Int, Int) = (16, 16) // as the function application
+    override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   object in extends TlaSetOper {
@@ -137,7 +132,7 @@ object TlaSetOper {
     * The argument order is: (e, x_1, S_1, ..., x_k, S_k)
     */
   object map extends TlaSetOper {
-    override val arity = new OperArity(k => k >= 3 && k % 2 == 1)
+    override val arity = new OperArity( k => k >= 3 && k % 2 == 1 )
     override val name = "map"
     override val precedence: (Int, Int) = (16, 16)
   }

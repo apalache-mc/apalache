@@ -7,12 +7,10 @@ import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
-class EtcTypeCheckerPassImpl @Inject()(
-    val options: PassOptions,
-    val sourceStore: SourceStore,
-    @Named("AfterTypeChecker") val nextPass: Pass with TlaModuleMixin
-) extends EtcTypeCheckerPass
-    with LazyLogging {
+class EtcTypeCheckerPassImpl @Inject()(val options: PassOptions,
+                                       val sourceStore: SourceStore,
+                                       @Named("AfterTypeChecker") val nextPass: Pass with TlaModuleMixin)
+    extends EtcTypeCheckerPass with LazyLogging {
 
   /**
     * The name of the pass
@@ -30,8 +28,7 @@ class EtcTypeCheckerPassImpl @Inject()(
     if (tlaModule.isDefined) {
       logger.info(" > running ETC: Embarrassingly simple Type Checker")
       logger.info("   ^_^")
-      val isWellDefined = new TypeCheckerTool()
-        .check(new LoggingTypeCheckerListener(sourceStore), tlaModule.get)
+      val isWellDefined = new TypeCheckerTool().check(new LoggingTypeCheckerListener(sourceStore), tlaModule.get)
       // all new software needs emojis
       logger.info(if (isWellDefined) "  =^_^=" else "  :-|")
       isWellDefined
@@ -40,7 +37,6 @@ class EtcTypeCheckerPassImpl @Inject()(
       false
     }
   }
-
   /**
     * Get the next pass in the chain. What is the next pass is up
     * to the module configuration and the pass outcome.
@@ -48,7 +44,5 @@ class EtcTypeCheckerPassImpl @Inject()(
     * @return the next pass, if exists, or None otherwise
     */
   override def next(): Option[Pass] =
-    tlaModule map { _ =>
-      nextPass
-    }
+    tlaModule map {_ => nextPass}
 }

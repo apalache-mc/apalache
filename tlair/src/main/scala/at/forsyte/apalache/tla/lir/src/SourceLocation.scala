@@ -10,6 +10,7 @@ package at.forsyte.apalache.tla.lir.src
 class SourceLocation(val filename: String, val region: SourceRegion) {
   override def toString: String = filename + ".tla:" + region
 
+
   def canEqual(other: Any): Boolean = other.isInstanceOf[SourceLocation]
 
   override def equals(other: Any): Boolean = other match {

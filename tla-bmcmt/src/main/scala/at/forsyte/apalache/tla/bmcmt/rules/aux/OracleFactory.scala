@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 import at.forsyte.apalache.tla.bmcmt.{SymbState, SymbStateRewriter}
 
 class OracleFactory(rewriter: SymbStateRewriter) {
-
   /**
     * Create a new oracle that can have a value in the range [0, nvalues).
     * This oracle is created using the most efficient oracle implementation.
@@ -23,10 +22,7 @@ class OracleFactory(rewriter: SymbStateRewriter) {
     * @param nvalues the number of values to hold
     * @return a new symbolic state and the oracle, the state.rex equals to state.rex
     */
-  def newConstOracle(
-      state: SymbState,
-      nvalues: Int
-  ): (SymbState, UninterpretedConstOracle) = {
+  def newConstOracle(state: SymbState, nvalues: Int): (SymbState, UninterpretedConstOracle) = {
     UninterpretedConstOracle.create(rewriter, state, nvalues)
   }
 
@@ -39,10 +35,7 @@ class OracleFactory(rewriter: SymbStateRewriter) {
     * @param nvalues the number of values to hold
     * @return a new symbolic state and the oracle, the state.rex equals to state.rex
     */
-  def newPropositionalOracle(
-      state: SymbState,
-      nvalues: Int
-  ): (SymbState, PropositionalOracle) = {
+  def newPropositionalOracle(state: SymbState, nvalues: Int): (SymbState, PropositionalOracle) = {
     PropositionalOracle.create(rewriter, state, nvalues)
   }
 

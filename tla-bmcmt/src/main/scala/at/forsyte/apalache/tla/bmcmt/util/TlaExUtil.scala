@@ -5,7 +5,6 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
 // TODO: this should probably go to tlair
 object TlaExUtil {
-
   /**
     * Find the names that are used in an expression.
     * @param expr an expression
@@ -16,10 +15,9 @@ object TlaExUtil {
 
     def rec: TlaEx => Unit = {
       case NameEx(name) => used = used + name
-      case OperEx(TlaActionOper.prime, NameEx(name)) =>
-        used = used + (name + "'")
-      case OperEx(_, args @ _*) => args foreach rec
-      case _                    => ()
+      case OperEx(TlaActionOper.prime, NameEx(name)) => used = used + (name + "'")
+      case OperEx(_, args @_*) => args foreach rec
+      case _ => ()
     }
 
     rec(expr)

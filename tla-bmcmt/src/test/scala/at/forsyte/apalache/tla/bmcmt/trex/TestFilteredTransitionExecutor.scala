@@ -23,11 +23,8 @@ class TestFilteredTransitionExecutor extends fixture.FunSuite {
 
   override protected def withFixture(test: OneArgTest): Outcome = {
     val typeFinder = new TrivialTypeFinder()
-    val solver = new Z3SolverContext(
-      SolverConfig(debug = false, profile = false, randomSeed = 0)
-    )
-    val rewriter =
-      new SymbStateRewriterImpl(solver, typeFinder, new ExprGradeStoreImpl())
+    val solver = new Z3SolverContext(SolverConfig(debug = false, profile = false, randomSeed = 0))
+    val rewriter = new SymbStateRewriterImpl(solver, typeFinder, new ExprGradeStoreImpl())
     val exeCtx = new IncrementalExecutionContext(rewriter)
     try {
       test(exeCtx)
@@ -42,8 +39,7 @@ class TestFilteredTransitionExecutor extends fixture.FunSuite {
     // x' <- x /\ y' <- x + y
     val next1 = tla.and(
       mkAssign("x", tla.name("x")),
-      mkAssign("y", tla.plus(tla.name("x"), tla.name("y")))
-    )
+      mkAssign("y", tla.plus(tla.name("x"), tla.name("y"))))
     val next2 = tla.and(
       mkAssign("x", tla.name("y")),
       mkAssign("y", tla.name("x"))
@@ -53,8 +49,7 @@ class TestFilteredTransitionExecutor extends fixture.FunSuite {
     impl.debug = true
     val transFilter = "(0->.*|1->2|2->1)"
     val invFilter = ""
-    val trex =
-      new FilteredTransitionExecutor[SnapshotT](transFilter, invFilter, impl)
+    val trex = new FilteredTransitionExecutor[SnapshotT](transFilter, invFilter, impl)
     // Init
     val isTranslated0 = trex.prepareTransition(3, init)
     assert(isTranslated0)
@@ -80,15 +75,13 @@ class TestFilteredTransitionExecutor extends fixture.FunSuite {
     // x' <- x /\ y' <- x + y
     val nextTrans = tla.and(
       mkAssign("x", tla.name("x")),
-      mkAssign("y", tla.plus(tla.name("x"), tla.name("y")))
-    )
+      mkAssign("y", tla.plus(tla.name("x"), tla.name("y"))))
     // push Init
     val impl = new TransitionExecutorImpl(Set.empty, Set("x", "y"), exeCtx)
     impl.debug = true
     val transFilter = ""
     val invFilter = "(0|2)"
-    val trex =
-      new FilteredTransitionExecutor[SnapshotT](transFilter, invFilter, impl)
+    val trex = new FilteredTransitionExecutor[SnapshotT](transFilter, invFilter, impl)
     trex.prepareTransition(1, init)
     trex.pickTransition()
     trex.nextState()
@@ -148,10 +141,7 @@ class TestFilteredTransitionExecutor extends fixture.FunSuite {
   private def mkAssign(name: String, rhs: TlaEx) =
     tla.assignPrime(tla.name(name), rhs)
 
-  protected def assertValid(
-      trex: TransitionExecutorImpl[SnapshotT],
-      assertion: TlaEx
-  ): Unit = {
+  protected def assertValid(trex: TransitionExecutorImpl[SnapshotT], assertion: TlaEx): Unit = {
     var snapshot = trex.snapshot()
     trex.assertState(assertion)
     assert(trex.sat(0).contains(true))

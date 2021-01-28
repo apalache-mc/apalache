@@ -6,10 +6,11 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
+
+
 @RunWith(classOf[JUnitRunner])
 class TestRecordingSolverContext extends FunSuite {
-  private val defaultSolverConfig =
-    SolverConfig(debug = false, profile = false, randomSeed = 0)
+  private val defaultSolverConfig = SolverConfig(debug = false, profile = false, randomSeed = 0)
 
   test("operations proxied") {
     val solver = RecordingSolverContext.createZ3(None, defaultSolverConfig)
@@ -33,8 +34,7 @@ class TestRecordingSolverContext extends FunSuite {
     solver.assertGroundExpr(tla.gt(x.toNameEx, tla.int(1000)))
     assert(!solver.sat())
     // restore the context
-    val restoredSolver =
-      RecordingSolverContext.createZ3(Some(log), defaultSolverConfig)
+    val restoredSolver = RecordingSolverContext.createZ3(Some(log), defaultSolverConfig)
     // the restored context should be satisfiable
     assert(restoredSolver.sat())
     assert(restoredSolver.evalGroundExpr(x.toNameEx) == tla.int(42))

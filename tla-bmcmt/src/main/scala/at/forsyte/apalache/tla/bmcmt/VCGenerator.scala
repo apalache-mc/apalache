@@ -27,56 +27,35 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
   def gen(module: TlaModule, invName: String): TlaModule = {
     module.declarations.find(_.name == invName) match {
       case Some(inv: TlaOperDecl) if inv.formalParams.isEmpty =>
-        new TlaModule(
-          module.name,
-          module.declarations ++ introConditions(inv.body)
-        )
+        new TlaModule(module.name, module.declarations ++ introConditions(inv.body))
 
       case Some(decl: TlaOperDecl) =>
-        val message =
-          s"Expected a nullary operator $invName, found ${decl.formalParams.length} arguments"
+        val message = s"Expected a nullary operator $invName, found ${decl.formalParams.length} arguments"
         throw new MalformedTlaError(message, decl.body)
 
       case Some(decl) =>
-        val message =
-          s"Expected a nullary operator $invName, found ${decl.getClass.getSimpleName}"
+        val message = s"Expected a nullary operator $invName, found ${decl.getClass.getSimpleName}"
         throw new MalformedTlaError(message, NullEx)
 
       case None =>
-        throw new MalformedTlaError(
-          s"Invariant candidate $invName not found",
-          NullEx
-        )
+        throw new MalformedTlaError(s"Invariant candidate $invName not found", NullEx)
     }
   }
 
   private def introConditions(inputInv: TlaEx): Seq[TlaOperDecl] = {
     def mapToDecls(smallInv: TlaEx, index: Int): Seq[TlaOperDecl] = {
       val deepCopy = DeepCopy(tracker)
-      val positive = TlaOperDecl(
-        NormalizedNames.VC_INV_PREFIX + index,
-        List(),
-        deepCopy.deepCopyEx(smallInv)
-      )
-      val negative = TlaOperDecl(
-        NormalizedNames.VC_NOT_INV_PREFIX + index,
-        List(),
-        tla.not(deepCopy.deepCopyEx(smallInv))
-      )
+      val positive = TlaOperDecl(NormalizedNames.VC_INV_PREFIX + index, List(), deepCopy.deepCopyEx(smallInv))
+      val negative = TlaOperDecl(NormalizedNames.VC_NOT_INV_PREFIX + index, List(), tla.not(deepCopy.deepCopyEx(smallInv)))
       Seq(positive, negative)
     }
 
     val fragments = splitInv(Seq(), inputInv)
-    logger.info(
-      s"  > VCGen produced ${fragments.length} verification condition(s)"
-    )
+    logger.info(s"  > VCGen produced ${fragments.length} verification condition(s)")
     fragments.zipWithIndex.flatMap { case (e, i) => mapToDecls(e, i) }
   }
 
-  private def splitInv(
-      universalsRev: Seq[(String, TlaEx)],
-      inv: TlaEx
-  ): Seq[TlaEx] = {
+  private def splitInv(universalsRev: Seq[(String, TlaEx)], inv: TlaEx): Seq[TlaEx] = {
     inv match {
       case OperEx(TlaBoolOper.forall, NameEx(varName), set, pred) =>
         // \A x \in S: B /\ C is equivalent to (\A x \in S: B) /\ (\A x \in S: C)
@@ -92,10 +71,7 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
     }
   }
 
-  private def decorateWithUniversals(
-      universalsRev: Seq[(String, TlaEx)],
-      expr: TlaEx
-  ): TlaEx = {
+  private def decorateWithUniversals(universalsRev: Seq[(String, TlaEx)], expr: TlaEx): TlaEx = {
     universalsRev match {
       case Nil =>
         expr

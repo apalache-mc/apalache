@@ -21,7 +21,6 @@ class TypeInferenceError(val origin: TlaEx, val explanation: String)
   * @author Igor Konnov
   */
 trait TypeFinder[T] {
-
   /**
     * Given a TLA+ expression, reconstruct the types and store them in an internal storage.
     * If the expression is not well-typed, this method will not throw TypeInferenceError,
@@ -77,7 +76,7 @@ trait TypeFinder[T] {
     */
   def varTypes_(newVarTypes: SortedMap[String, CellT]): Unit
 
-  /**
+    /**
     * Record the cell name and its type.
     *
     * @param cell an arena cell
