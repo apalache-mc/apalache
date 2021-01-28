@@ -220,7 +220,7 @@ object Tool extends App with LazyLogging {
       if (parts.length != 2 || parts.head.trim == "" || parts(1) == "") {
         throw new PassOptionException(s"Expected key=value in --tune-here=$propsAsString")
       } else {
-        // trim the key, we never have spaces in keys, but let the value to have spaces
+        // trim to remove surrounding whitespace from the key, but allow the value to have white spaces
         (parts.head.trim, parts(1))
       }
     }
