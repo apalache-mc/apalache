@@ -9,6 +9,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.BmcOper
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
+
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfter, FunSuite}
@@ -20,8 +21,8 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
   private var typeFinder: TrivialTypeFinder = new TrivialTypeFinder()
   private var exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl()
   private var hintsStore: FormulaHintsStoreImpl = new FormulaHintsStoreImpl()
-  private var sourceStore: SourceStore = new SourceStore()
   private var changeListener: ChangeListener = new ChangeListener()
+  private var sourceStore: SourceStore = _
 
   before {
     // initialize the model checker
@@ -792,49 +793,6 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     )
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
-  }
-
-  ////////////////////////////////////////////////////////////////////
-  private def importTla(name: String, text: String) = {
-    val (rootName, modules) = new SanyImporter(new SourceStore)
-      .loadFromSource(name, Source.fromString(text))
-    val mod = expectSingleModule(name, rootName, modules)
-    val init = mod.declarations.find(_.name == "Init").get
-    val next = mod.declarations.find(_.name == "Next").get
-    (mod, init, next)
-  }
-
-  private def expectOperatorDeclaration(
-      expectedName: String,
-      idx: Int,
-      mod: TlaModule
-  ): TlaOperDecl = {
-    mod.declarations(idx) match {
-      case decl: TlaOperDecl =>
-        assert(expectedName == decl.name)
-        decl
-
-      case _ =>
-        fail("Expected operator " + expectedName + " at position " + idx)
-    }
-  }
-
-  // copied from TestSanyImporter
-  private def expectSingleModule(
-      expectedRootName: String,
-      rootName: String,
-      modules: Map[String, TlaModule]
-  ): TlaModule = {
-    assert(expectedRootName == rootName)
-    assert(1 <= modules.size)
-    val root = modules.get(rootName)
-    root match {
-      case Some(mod) =>
-        mod
-
-      case None =>
-        fail("Module " + rootName + " not found")
-    }
   }
 
   private def mkAssign(name: String, value: Int) =

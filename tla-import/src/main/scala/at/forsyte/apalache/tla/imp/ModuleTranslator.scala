@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.imp
 
+import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
 import at.forsyte.apalache.tla.lir._
 import com.typesafe.scalalogging.LazyLogging
@@ -12,16 +13,20 @@ import scala.collection.JavaConverters._
  *
  * @author konnov
  */
-class ModuleTranslator(sourceStore: SourceStore) extends LazyLogging {
+class ModuleTranslator(sourceStore: SourceStore, annotationStore: TlaAnnotationStore) extends LazyLogging {
+  private val annotationExtractor = new AnnotationExtractor(annotationStore)
+
   def translate(node: ModuleNode): TlaModule = {
     var context = node.getConstantDecls.toList.foldLeft(Context()) { (ctx, node) =>
       val decl = TlaConstDecl(node.getName.toString)
       sourceStore.add(decl.ID, SourceLocation(node.getLocation))
+      annotationExtractor.parseAndSave(decl.ID, node)
       ctx.push(DeclUnit(decl))
     }
     context = node.getVariableDecls.toList.foldLeft(context) { (ctx, node) =>
       val decl = TlaVarDecl(node.getName.toString)
       sourceStore.add(decl.ID, SourceLocation(node.getLocation))
+      annotationExtractor.parseAndSave(decl.ID, node)
       ctx.push(DeclUnit(decl))
     }
 
@@ -186,7 +191,7 @@ class ModuleTranslator(sourceStore: SourceStore) extends LazyLogging {
 
 object ModuleTranslator {
 
-  def apply(sourceStore: SourceStore): ModuleTranslator = {
-    new ModuleTranslator(sourceStore)
+  def apply(sourceStore: SourceStore, annotationStore: TlaAnnotationStore): ModuleTranslator = {
+    new ModuleTranslator(sourceStore, annotationStore)
   }
 }

@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.typecheck.{
   TypeCheckerListener,
   TypeCheckerTool
 }
+import at.forsyte.apalache.io.annotations.store._
 import org.easymock.EasyMock
 import org.junit.runner.RunWith
 import org.scalatest.easymock.EasyMockSugar
@@ -28,8 +29,15 @@ class TestTypeCheckerTool
     with BeforeAndAfterEach
     with EasyMockSugar {
   var gen: ToEtcExpr = _
+  private var sourceStore: SourceStore = _
+  private var annotationStore: TlaAnnotationStore = _
+  private var sanyImporter: SanyImporter = _
 
-  override protected def beforeEach(): Unit = {}
+  override def beforeEach() {
+    sourceStore = new SourceStore()
+    annotationStore = createAnnotationStore()
+    sanyImporter = new SanyImporter(sourceStore, annotationStore)
+  }
 
   test("the tool runs") {
     val text =
@@ -55,8 +63,7 @@ class TestTypeCheckerTool
       """.stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(locationStore)
-      .loadFromSource("Specb", Source.fromString(text))
+    val (rootName, modules) = sanyImporter.loadFromSource("Specb", Source.fromString(text))
 
     val mod = modules(rootName)
 

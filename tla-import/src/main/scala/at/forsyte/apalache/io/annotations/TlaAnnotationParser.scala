@@ -10,12 +10,12 @@ import java.io.{Reader, StringReader}
  */
 class TlaAnnotationParser extends JavaTokenParsers {
   def expr: Parser[Any] = "@" ~ ident ~ opt("(" ~ repsep(arg, ",") ~ ")") ^^ {
-      case _ ~ name ~ None =>
-        new TlaAnnotation(name)
+    case _ ~ name ~ None =>
+      new TlaAnnotation(name)
 
-      case _ ~ name ~ Some(_ ~ args ~ _) =>
-        val collected = args collect { case a: TlaAnnotationArg => a }
-        new TlaAnnotation(name, collected: _*)
+    case _ ~ name ~ Some(_ ~ args ~ _) =>
+      val collected = args collect { case a: TlaAnnotationArg => a }
+      new TlaAnnotation(name, collected: _*)
   }
 
   def arg: Parser[Any] = stringArg | intArg | boolArg
@@ -30,17 +30,23 @@ class TlaAnnotationParser extends JavaTokenParsers {
   }
 }
 
-object TlaAnnotationParser extends TlaAnnotationParser {
-  def apply(reader: Reader): TlaAnnotation = {
-    parseAll(expr, reader) match {
-      case Success(annotation: TlaAnnotation, _) => annotation
-      case Success(res, _)                       => throw new TlaAnnotationParserError("Expected annotation, found: " + res)
-      case Failure(msg, _)                       => throw new TlaAnnotationParserError(msg)
-      case Error(msg, _)                         => throw new TlaAnnotationParserError(msg)
+object TlaAnnotationParser {
+  abstract class Result
+  case class Success(annotation: TlaAnnotation, length: Int) extends Result
+  case class Failure(message: String) extends Result
+
+  private val parser: TlaAnnotationParser = new TlaAnnotationParser
+
+  def parse(reader: Reader): Result = {
+    parser.parse(parser.expr, reader) match {
+      case parser.Success(annotation: TlaAnnotation, rest) => Success(annotation, rest.offset)
+      case parser.Success(res, _)                          => Failure("Expected annotation, found: " + res)
+      case parser.Failure(msg, _)                          => Failure(msg)
+      case parser.Error(msg, _)                            => Failure(msg)
     }
   }
 
-  def apply(text: String): TlaAnnotation = {
-    this(new StringReader(text))
+  def parse(text: String): Result = {
+    parse(new StringReader(text))
   }
 }

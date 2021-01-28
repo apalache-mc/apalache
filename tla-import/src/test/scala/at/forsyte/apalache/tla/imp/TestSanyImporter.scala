@@ -9,6 +9,7 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.src.{SourcePosition, SourceRegion}
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, ValEx, _}
+import at.forsyte.apalache.io.annotations.store._
 import org.junit.runner.RunWith
 import org.scalactic.source.Position
 import org.scalatest.{BeforeAndAfter, FunSuite}
@@ -25,9 +26,13 @@ import scala.io.Source
 @RunWith(classOf[JUnitRunner])
 class TestSanyImporter extends FunSuite with BeforeAndAfter {
   private var sourceStore: SourceStore = _
+  private var annotationStore: TlaAnnotationStore = _
+  private var sanyImporter: SanyImporter = _
 
   before {
     sourceStore = new SourceStore
+    annotationStore = createAnnotationStore()
+    sanyImporter = new SanyImporter(sourceStore, annotationStore)
   }
 
   // assert that all declarations have source information
@@ -58,7 +63,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     }
   }
 
-  def expectTlaDecl(name: String, params: List[FormalParam], body: TlaEx): (TlaDecl => Unit) = {
+  def expectOperDecl(name: String, params: List[FormalParam], body: TlaEx): (TlaDecl => Unit) = {
     case d: TlaOperDecl =>
       assert(name == d.name)
       assert(params == d.formalParams)
@@ -72,12 +77,12 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
       fail("Expected a TlaOperDecl, found: " + d)
   }
 
-  def findAndExpectTlaDecl(mod: TlaModule, name: String, params: List[FormalParam], body: TlaEx): Unit = {
+  def findAndExpectOperDecl(mod: TlaModule, name: String, params: List[FormalParam], body: TlaEx): Unit = {
     mod.declarations.find {
       _.name == name
     } match {
       case Some(d: TlaOperDecl) =>
-        expectTlaDecl(name, params, body)
+        expectOperDecl(name, params, body)
 
       case _ =>
         fail("Expected a TlaDecl")
@@ -90,7 +95,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(new SourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("justASimpleTest", Source.fromString(text))
     assert("justASimpleTest" == rootName)
   }
@@ -112,7 +117,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
       pw.close()
     }
 
-    val (rootName, modules) = new SanyImporter(new SourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromFile(temp)
     assert("justASimpleTest" == rootName)
   }
@@ -125,8 +130,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
       """.stripMargin
 
     val (rootName, modules) =
-      new SanyImporter(sourceStore)
-        .loadFromSource("onevar", Source.fromString(text))
+      sanyImporter.loadFromSource("onevar", Source.fromString(text))
     val mod = expectSingleModule("onevar", rootName, modules)
     assert(1 == mod.declarations.size)
     expectSourceInfoInDefs(mod)
@@ -147,7 +151,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("oneconst", Source.fromString(text))
     val mod = expectSingleModule("oneconst", rootName, modules)
     assert(1 == mod.declarations.size)
@@ -166,7 +170,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("constop", Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(1 == mod.declarations.size)
@@ -191,7 +195,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("constop", Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(1 == mod.declarations.size)
@@ -216,7 +220,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("constop", Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(1 == mod.declarations.size)
@@ -241,7 +245,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("constop", Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(1 == mod.declarations.size)
@@ -267,7 +271,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("constop", Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(1 == mod.declarations.size)
@@ -291,7 +295,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("constop", Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(2 == mod.declarations.size)
@@ -318,7 +322,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("constop", Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(2 == mod.declarations.size)
@@ -340,7 +344,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("builtinop", Source.fromString(text))
     val mod = expectSingleModule("builtinop", rootName, modules)
     assert(1 == mod.declarations.size)
@@ -367,7 +371,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("localop", Source.fromString(text))
     val mod = expectSingleModule("localop", rootName, modules)
     assert(1 == mod.declarations.size)
@@ -391,7 +395,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("localop", Source.fromString(text))
     val mod = expectSingleModule("localop", rootName, modules)
     assert(2 == mod.declarations.size)
@@ -414,7 +418,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("emptyset", Source.fromString(text))
     val mod = expectSingleModule("emptyset", rootName, modules)
     assert(1 == mod.declarations.size)
@@ -437,7 +441,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("builtinop", Source.fromString(text))
     val mod = expectSingleModule("builtinop", rootName, modules)
     assert(2 == mod.declarations.size)
@@ -531,14 +535,14 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
       |================================
       |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("builtins", Source.fromString(text))
     val mod = expectSingleModule("builtins", rootName, modules)
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
 
     def expectDecl(name: String, body: TlaEx): Unit =
-      findAndExpectTlaDecl(root, name, List(), body)
+      findAndExpectOperDecl(root, name, List(), body)
 
     val trueOperDecl = mod.declarations(1)
     expectDecl("True", ValEx(TlaBool(true)))
@@ -828,14 +832,14 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
       |================================
       |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("comprehensions", Source.fromString(text))
     val mod = expectSingleModule("comprehensions", rootName, modules)
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
 
     def expectDecl(name: String, body: TlaEx): Unit =
-      findAndExpectTlaDecl(root, name, List(), body)
+      findAndExpectOperDecl(root, name, List(), body)
 
     expectDecl(
         "FilterTuples",
@@ -883,13 +887,13 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
       |================================
       |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("composite", Source.fromString(text))
     val mod = expectSingleModule("composite", rootName, modules)
     expectSourceInfoInDefs(mod)
 
     def expectDecl(name: String, body: TlaEx): (TlaDecl => Unit) =
-      expectTlaDecl(name, List(), body)
+      expectOperDecl(name, List(), body)
 
     expectDecl(
         "Q1",
@@ -983,13 +987,13 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("except", Source.fromString(text))
     val mod = expectSingleModule("except", rootName, modules)
     expectSourceInfoInDefs(mod)
 
     def expectDecl(name: String, params: List[FormalParam], body: TlaEx) =
-      expectTlaDecl(name, params, body)
+      expectOperDecl(name, params, body)
 
     expectDecl(
         "Except",
@@ -1075,13 +1079,13 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("labels", Source.fromString(text))
     val mod = expectSingleModule("labels", rootName, modules)
     expectSourceInfoInDefs(mod)
 
     def expectDecl(n: String, p: List[FormalParam], b: TlaEx) =
-      expectTlaDecl(n, p, b)
+      expectOperDecl(n, p, b)
 
     //    A == {FALSE} \cup (l1 :: {TRUE})
     val expectedABody =
@@ -1125,13 +1129,13 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("args", Source.fromString(text))
     val mod = expectSingleModule("args", rootName, modules)
     expectSourceInfoInDefs(mod)
 
     def expectDecl(n: String, p: List[FormalParam], b: TlaEx) =
-      expectTlaDecl(n, p, b)
+      expectOperDecl(n, p, b)
 
     val expectedABody = OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaInt(2)))
     expectDecl("A", List(), expectedABody)(mod.declarations(4))
@@ -1161,13 +1165,13 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("updates", Source.fromString(text))
     val mod = expectSingleModule("updates", rootName, modules)
     expectSourceInfoInDefs(mod)
 
     def expectDecl(name: String, body: TlaEx): (TlaDecl => Unit) =
-      expectTlaDecl(name, List(), body)
+      expectOperDecl(name, List(), body)
 
     expectDecl(
         "E1",
@@ -1232,13 +1236,13 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("selects", Source.fromString(text))
     val mod = expectSingleModule("selects", rootName, modules)
     expectSourceInfoInDefs(mod)
 
     def expectDecl(name: String, body: TlaEx): (TlaDecl => Unit) =
-      expectTlaDecl(name, List(), body)
+      expectOperDecl(name, List(), body)
 
     expectDecl(
         "S1",
@@ -1274,13 +1278,13 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("funCtor", Source.fromString(text))
     val mod = expectSingleModule("funCtor", rootName, modules)
     expectSourceInfoInDefs(mod)
 
     def expectDecl(name: String, body: TlaEx) =
-      expectTlaDecl(name, List(), body)
+      expectOperDecl(name, List(), body)
 
     expectDecl(
         "C1",
@@ -1356,13 +1360,13 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("weird", Source.fromString(text))
     val mod = expectSingleModule("weird", rootName, modules)
     expectSourceInfoInDefs(mod)
 
     def expectDecl(name: String, body: TlaEx) =
-      expectTlaDecl(name, List(), body)
+      expectOperDecl(name, List(), body)
 
     val filter =
       OperEx(
@@ -1385,12 +1389,12 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("level1Operators", Source.fromString(text))
     val mod = expectSingleModule("level1Operators", rootName, modules)
 
     def expectDecl(n: String, p: List[FormalParam], b: TlaEx) =
-      expectTlaDecl(n, p, b)
+      expectOperDecl(n, p, b)
 
     expectDecl(
         "A",
@@ -1426,13 +1430,13 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("level2Operators", Source.fromString(text))
     val mod = expectSingleModule("level2Operators", rootName, modules)
     expectSourceInfoInDefs(mod)
 
     def expectDecl(n: String, p: List[FormalParam], b: TlaEx) =
-      expectTlaDecl(n, p, b)
+      expectOperDecl(n, p, b)
 
     expectDecl(
         "A",
@@ -1464,7 +1468,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("let", Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
@@ -1516,7 +1520,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("lambda", Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
@@ -1562,7 +1566,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("let", Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
@@ -1618,7 +1622,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("recOpers", Source.fromString(text))
     assert(2 == modules.size)
     // the root module and naturals
@@ -1712,7 +1716,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("globalFuns", Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
@@ -1791,7 +1795,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("inst", Source.fromString(text))
     assert(2 == modules.size) // inst + Naturals
     // the root module and A
@@ -1799,7 +1803,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     expectSourceInfoInDefs(root)
 
     def expectDecl(name: String, body: TlaEx): Unit =
-      findAndExpectTlaDecl(root, name, List(), body)
+      findAndExpectOperDecl(root, name, List(), body)
 
     // the root module contains its own declarations and the declarations by FiniteSets
     root.declarations.find { _.name == "J!F" } match {
@@ -1860,7 +1864,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("imports", Source.fromString(text))
     assert(2 == modules.size)
     // the root module and naturals
@@ -1887,7 +1891,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("imports", Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
@@ -1921,7 +1925,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("Paxos", Source.fromString(text))
     assert(1 == modules.size)
     expectSourceInfoInDefs(modules(rootName))
@@ -1939,7 +1943,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("localInInstance", Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
@@ -1969,7 +1973,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("letInInstance", Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
@@ -2004,7 +2008,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |V == INSTANCE Vot
         |===================================================""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("P", Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
@@ -2046,7 +2050,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |B1 == INSTANCE B WITH y <- z
         |===================================================""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("A", Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
@@ -2083,7 +2087,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("recInInstance", Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
@@ -2122,7 +2126,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("nats", Source.fromString(text))
     assert(2 == modules.size)
     // the root module and naturals
@@ -2130,7 +2134,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     expectSourceInfoInDefs(root)
 
     def expectDecl(name: String, body: TlaEx): Unit =
-      findAndExpectTlaDecl(root, name, List(), body)
+      findAndExpectOperDecl(root, name, List(), body)
 
     // the root module contains its own declarations and the declarations by Naturals
     expectDecl("NatSet", ValEx(TlaNatSet))
@@ -2219,14 +2223,14 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("ints", Source.fromString(text))
     assert(3 == modules.size) // Integers extends Naturals
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
 
     def expectDecl(name: String, body: TlaEx) =
-      findAndExpectTlaDecl(root, name, List(), body)
+      findAndExpectOperDecl(root, name, List(), body)
 
     // the definitions of the standard operators are filtered out
     assert(13 == root.declarations.size)
@@ -2303,7 +2307,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("reals", Source.fromString(text))
     assert(4 == modules.size) // Reals include Integers that include Naturals
     val root = modules(rootName)
@@ -2312,7 +2316,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     expectSourceInfoInDefs(root)
 
     def expectDecl(name: String, body: TlaEx) =
-      findAndExpectTlaDecl(root, name, List(), body)
+      findAndExpectOperDecl(root, name, List(), body)
 
     expectDecl("RealSet", ValEx(TlaRealSet))
     expectDecl("Inf", ValEx(TlaRealInfinity))
@@ -2387,7 +2391,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("sequences", Source.fromString(text))
     assert(3 == modules.size) // Naturals, Sequences, and our module
     // the root module and naturals
@@ -2395,7 +2399,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     expectSourceInfoInDefs(root)
 
     def expectDecl(name: String, body: TlaEx) =
-      findAndExpectTlaDecl(root, name, List(), body)
+      findAndExpectOperDecl(root, name, List(), body)
 
     // the definitions of the standard operators are filtered out
     assert(11 == root.declarations.size)
@@ -2430,14 +2434,14 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("finitesets", Source.fromString(text))
     assert(4 == modules.size) // Naturals, Sequences, FiniteSets, and our module
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
 
     def expectDecl(name: String, body: TlaEx) =
-      findAndExpectTlaDecl(root, name, List(), body)
+      findAndExpectOperDecl(root, name, List(), body)
 
     // the definitions of the standard operators are filtered out
     assert(2 == root.declarations.size)
@@ -2476,7 +2480,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("tlc", Source.fromString(text))
     assert(5 == modules.size) // our module + 4 LOCAL modules
     // the root module and naturals
@@ -2484,7 +2488,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     expectSourceInfoInDefs(root)
 
     def expectDecl(name: String, body: TlaEx) =
-      findAndExpectTlaDecl(root, name, List(), body)
+      findAndExpectOperDecl(root, name, List(), body)
 
     // the definitions of the standard operators are filtered out
     assert(16 == root.declarations.size)
@@ -2545,14 +2549,14 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
       |================================
     """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("types", Source.fromString(text))
     assert(3 == modules.size) // our module + Integers & Naturals
     val root = modules("types")
     expectSourceInfoInDefs(root)
 
     def expectDecl(name: String, body: TlaEx) =
-      findAndExpectTlaDecl(root, name, List(), body)
+      findAndExpectOperDecl(root, name, List(), body)
 
     expectDecl(
         "SetOfInts",
@@ -2641,7 +2645,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("localSum", Source.fromString(text))
     assert(6 == modules.size) // Naturals, Sequences, TLC, FiniteSets, Bags, and our module
 
@@ -2673,7 +2677,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         "TLA-Library = %s".format(System.getProperty("TLA-Library"))
     )
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("root", Source.fromString(text))
     assert(6 == modules.size) // root, Apalache, Integers, FiniteSets, and whatever they import
 
@@ -2682,7 +2686,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     assert(6 == root.declarations.size)
 
     def expectDecl(name: String, body: TlaEx) = {
-      findAndExpectTlaDecl(root, name, List(), body)
+      findAndExpectOperDecl(root, name, List(), body)
     }
 
     expectDecl(
@@ -2744,7 +2748,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         "TLA-Library = %s".format(System.getProperty("TLA-Library"))
     )
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("root", Source.fromString(text))
     assert(2 == modules.size) // root, Typing
 
@@ -2753,7 +2757,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     assert(4 == root.declarations.size)
 
     def expectDecl(name: String, body: TlaEx) = {
-      findAndExpectTlaDecl(root, name, List(), body)
+      findAndExpectOperDecl(root, name, List(), body)
     }
 
     expectDecl(
@@ -2765,7 +2769,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         )
     ) ///
 
-    findAndExpectTlaDecl(root, "Foo", List(SimpleFormalParam("y")),
+    findAndExpectOperDecl(root, "Foo", List(SimpleFormalParam("y")),
         OperEx(
             TypingOper.withType,
             ValEx(TlaStr("(Int) -> Set(Int)")),
@@ -2784,7 +2788,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("assumptions", Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
@@ -2817,7 +2821,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("issue52", Source.fromString(text))
     // the root module and naturals
     val root = modules(rootName)
@@ -2844,7 +2848,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("issue295", Source.fromString(text))
     // the root module and naturals
     val root = modules(rootName)
@@ -2871,7 +2875,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("issue295", Source.fromString(text))
     // the root module and naturals
     val root = modules(rootName)
@@ -2907,7 +2911,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |================================
         |""".stripMargin
 
-    val (rootName, modules) = new SanyImporter(sourceStore)
+    val (rootName, modules) = sanyImporter
       .loadFromSource("theorems", Source.fromString(text))
     assert(1 == modules.size) // Naturals, Sequences, and our module
     // the root module and naturals

@@ -1,10 +1,8 @@
 package at.forsyte.apalache.tla.imp.passes
 
-import java.io.File
-import java.nio.file.Path
-
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.imp.SanyImporter
+import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.io.{JsonReader, JsonWriter, PrettyWriter}
@@ -13,15 +11,19 @@ import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
+import java.io.File
+import java.nio.file.Path
+
 /**
   * Parsing TLA+ code with SANY.
   *
   * @author Igor Konnov
   */
 class SanyParserPassImpl @Inject()(
-    val options: PassOptions,
-    val sourceStore: SourceStore,
-    @Named("AfterParser") val nextPass: Pass with TlaModuleMixin
+                                    val options: PassOptions,
+                                    val sourceStore: SourceStore,
+                                    val annotationStore: TlaAnnotationStore,
+                                    @Named("AfterParser") val nextPass: Pass with TlaModuleMixin
 ) extends SanyParserPass
     with LazyLogging {
 
@@ -51,7 +53,7 @@ class SanyParserPassImpl @Inject()(
       }
     } else {
       val (rootName, modules) =
-        new SanyImporter(sourceStore).loadFromFile(new File(filename))
+        new SanyImporter(sourceStore, annotationStore).loadFromFile(new File(filename))
       rootModule = modules.get(rootName)
     }
     if (rootModule.isEmpty) {

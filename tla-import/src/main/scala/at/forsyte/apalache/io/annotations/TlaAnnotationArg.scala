@@ -5,6 +5,20 @@ package at.forsyte.apalache.io.annotations
  */
 sealed abstract class TlaAnnotationArg {}
 
+object TlaAnnotationArg {
+  def mkStr(text: String): TlaAnnotationArg = {
+    TlaAnnotationString(text)
+  }
+
+  def mkInt(i: Int): TlaAnnotationInt = {
+    TlaAnnotationInt(i)
+  }
+
+  def mkBool(b: Boolean): TlaAnnotationBool = {
+    TlaAnnotationBool(b)
+  }
+}
+
 /**
  * A string argument.
  * @param text the text of the string argument.

@@ -1,28 +1,33 @@
 package at.forsyte.apalache.tla.pp
 
-import java.io.{PrintWriter, StringWriter}
-
-import at.forsyte.apalache.infra.passes.PassOptions
+import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.io.tlc.TlcConfigParserApalache
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.tla.lir.{SimpleFormalParam, TlaModule, TlaOperDecl}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 
+import java.io.{PrintWriter, StringWriter}
 import scala.io.Source
 
 @RunWith(classOf[JUnitRunner])
 class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
+  private var sourceStore: SourceStore = _
+  private var annotationStore: TlaAnnotationStore = _
+  private var sanyImporter: SanyImporter = _
+
+  override def beforeEach() {
+    sourceStore = new SourceStore()
+    annotationStore = createAnnotationStore()
+    sanyImporter = new SanyImporter(sourceStore, annotationStore)
+  }
 
   def configureAndCompare(tla: String, tlc: String, expected: String) = {
     val config = TlcConfigParserApalache(tlc)
-    val (rootName, modules) = new SanyImporter(new SourceStore)
-      .loadFromSource("test", Source.fromString(tla))
+    val (rootName, modules) = sanyImporter.loadFromSource("test", Source.fromString(tla))
     val mod = modules(rootName)
     val mod2 = new TlcConfigImporter(config, new IdleTracker())(mod)
     val stringWriter = new StringWriter()
