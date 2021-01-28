@@ -29,7 +29,9 @@ class WriteablePassOptions extends PassOptions {
     */
   def set(name: String, value: Any): Unit = {
     if (!name.exists(_ == '.')) {
-      throw new PassOptionException("Expected an option of format <pass>.<option, found: " + name)
+      throw new PassOptionException(
+        "Expected an option of format <pass>.<option, found: " + name
+      )
     }
     store += (name -> value)
   }
@@ -46,7 +48,9 @@ class WriteablePassOptions extends PassOptions {
         Some(value)
 
       case Some(value) =>
-        throw new IllegalArgumentException(s"Option $optionName has unexpected type: " + value.getClass)
+        throw new IllegalArgumentException(
+          s"Option $optionName has unexpected type: " + value.getClass
+        )
 
       case None => None
     }
@@ -81,8 +85,10 @@ class WriteablePassOptions extends PassOptions {
     if (value.isDefined) {
       value.get.asInstanceOf[T]
     } else {
-      throw new PassOptionException("The mandatory option %s.%s not found"
-        .format(passName, optionName))
+      throw new PassOptionException(
+        "The mandatory option %s.%s not found"
+          .format(passName, optionName)
+      )
     }
   }
 

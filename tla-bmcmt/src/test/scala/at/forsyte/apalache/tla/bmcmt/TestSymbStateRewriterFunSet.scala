@@ -36,15 +36,22 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
 
   test("""SE-FUNSET2: [{1, 2} -> Expand(SUBSET {FALSE, TRUE})]""") {
     val domain = tla.enumSet(tla.int(1), tla.int(2))
-    val codomain = OperEx(BmcOper.expand,
-      tla.powSet(tla.enumSet(tla.bool(false), tla.bool(true))))
+    val codomain = OperEx(
+      BmcOper.expand,
+      tla.powSet(tla.enumSet(tla.bool(false), tla.bool(true)))
+    )
     val state = new SymbState(tla.funSet(domain, codomain), arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case NameEx(name) =>
         val cell = nextState.arena.findCellByNameEx(nextState.ex)
-        assert(cell.cellType == FinFunSetT(FinSetT(IntT()), FinSetT(FinSetT(BoolT()))))
+        assert(
+          cell.cellType == FinFunSetT(
+            FinSetT(IntT()),
+            FinSetT(FinSetT(BoolT()))
+          )
+        )
         val dom = nextState.arena.getDom(cell)
         assert(dom.cellType == FinSetT(IntT()))
         val domElems = nextState.arena.getHas(dom)
@@ -58,7 +65,9 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
   }
 
   // the existential over a function set should work without expanding the powerset!
-  test("""SE-FUNSET2: Skolem(\E f \in [{1, 2} -> SUBSET {FALSE, TRUE}]: g' <- f)""") {
+  test(
+    """SE-FUNSET2: Skolem(\E f \in [{1, 2} -> SUBSET {FALSE, TRUE}]: g' <- f)"""
+  ) {
     val domain = tla.enumSet(tla.int(1), tla.int(2))
     val codomain = tla.powSet(tla.enumSet(tla.bool(false), tla.bool(true)))
     val pred = tla.assignPrime(tla.name("g"), tla.name("f"))
@@ -75,15 +84,17 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
   }
 
   // the existential over a function set should work without expanding the powerset!
-  test("""SE-FUNSET2: Skolem(\E f \in [{1, 2} -> SUBSET {FALSE}]: f[1] = {TRUE})""") {
+  test(
+    """SE-FUNSET2: Skolem(\E f \in [{1, 2} -> SUBSET {FALSE}]: f[1] = {TRUE})"""
+  ) {
     val domain = tla.enumSet(tla.int(1), tla.int(2))
     val codomain = tla.powSet(tla.enumSet(tla.bool(false)))
-    val pred = tla.eql(tla.appFun(tla.name("f"), tla.int(1)), tla.enumSet(tla.bool(true)))
+    val pred = tla.eql(
+      tla.appFun(tla.name("f"), tla.int(1)),
+      tla.enumSet(tla.bool(true))
+    )
     val exists =
-      tla.exists(
-        tla.name("f"),
-        tla.funSet(domain, codomain),
-        pred)
+      tla.exists(tla.name("f"), tla.funSet(domain, codomain), pred)
     val skolem = OperEx(BmcOper.skolem, exists)
     val state = new SymbState(skolem, arena, Binding())
     val rewriter = create()
@@ -93,7 +104,9 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
   }
 
   // An existential over a function set that returns a function set to a powerset. Does it blow up your mind? :-)
-  test("""SE-FUNSET2: Skolem(\E f \in [{1, 2} -> [{3} -> SUBSET {FALSE, TRUE}]]: g' <- f)""") {
+  test(
+    """SE-FUNSET2: Skolem(\E f \in [{1, 2} -> [{3} -> SUBSET {FALSE, TRUE}]]: g' <- f)"""
+  ) {
     val domain1 = tla.enumSet(tla.int(1), tla.int(2))
     val domain2 = tla.enumSet(tla.int(3))
     val codomain2 = tla.powSet(tla.enumSet(tla.bool(false), tla.bool(true)))
@@ -107,19 +120,25 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     val gprime = nextState.binding("g'")
-    assert(FunT(FinSetT(IntT()), FunT(FinSetT(IntT()), FinSetT(BoolT()))) == gprime.cellType)
+    assert(
+      FunT(FinSetT(IntT()), FunT(FinSetT(IntT()), FinSetT(BoolT()))) == gprime.cellType
+    )
     solverContext.assertGroundExpr(nextState.ex)
     assert(solverContext.sat())
   }
 
   // this should be fixed by implementing #91
-  test("""SE-FUNSET2: [x \in {1, 2} |-> {x = 1}] \in [{1, 2} -> SUBSET {FALSE, TRUE}]""") {
+  test(
+    """SE-FUNSET2: [x \in {1, 2} |-> {x = 1}] \in [{1, 2} -> SUBSET {FALSE, TRUE}]"""
+  ) {
     val domain = tla.enumSet(tla.int(1), tla.int(2))
     val codomain = tla.powSet(tla.enumSet(tla.bool(false), tla.bool(true)))
     val funset = tla.funSet(domain, codomain)
-    val fun = tla.funDef(tla.enumSet(tla.eql(tla.name("x"), tla.int(1))),
-                         tla.name("x"),
-                         domain)
+    val fun = tla.funDef(
+      tla.enumSet(tla.eql(tla.name("x"), tla.int(1))),
+      tla.name("x"),
+      domain
+    )
     val state = new SymbState(tla.in(fun, funset), arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -142,9 +161,7 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
     val domain = tla.enumSet(tla.int(1), tla.int(2))
     val codomain = tla.enumSet(tla.int(3), tla.int(4))
     val funset = tla.funSet(domain, codomain)
-    val fun = tla.funDef(tla.int(3),
-                         tla.name("x"),
-                         domain)
+    val fun = tla.funDef(tla.int(3), tla.name("x"), domain)
     val state = new SymbState(tla.in(fun, funset), arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -156,18 +173,18 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
   test("""SE-FUNSET2: [x \in {0, 1, 2} \ {0} |-> 3] \in [{1, 2} -> {3, 4}]""") {
     // although 0 is in the function domain at the arena level, it does not belong to the set difference
     def setminus(set: TlaEx, intVal: Int): TlaEx = {
-      tla.filter(tla.name("t"),
+      tla.filter(
+        tla.name("t"),
         set,
-        tla.not(tla.eql(tla.name("t"), tla.int(intVal))))
+        tla.not(tla.eql(tla.name("t"), tla.int(intVal)))
+      )
     }
 
     val domain1 = setminus(tla.enumSet(0.to(2).map(tla.int): _*), 0)
     val domain2 = tla.enumSet(1.to(2).map(tla.int): _*)
     val codomain = tla.enumSet(tla.int(3), tla.int(4))
     val funset = tla.funSet(domain2, codomain)
-    val fun = tla.funDef(tla.int(3),
-                         tla.name("x"),
-                         domain1)
+    val fun = tla.funDef(tla.int(3), tla.name("x"), domain1)
     val state = new SymbState(tla.in(fun, funset), arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -176,13 +193,13 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
   }
 
   // this should be fixed by implementing #91
-  test("""SE-FUNSET2: [x \in {1, 2} |-> {TRUE}] \in [{1, 2} -> SUBSET {FALSE}]""") {
+  test(
+    """SE-FUNSET2: [x \in {1, 2} |-> {TRUE}] \in [{1, 2} -> SUBSET {FALSE}]"""
+  ) {
     val domain = tla.enumSet(tla.int(1), tla.int(2))
     val codomain = tla.powSet(tla.enumSet(tla.bool(false)))
     val funset = tla.funSet(domain, codomain)
-    val fun = tla.funDef(tla.enumSet(tla.bool(true)),
-                         tla.name("x"),
-                         domain)
+    val fun = tla.funDef(tla.enumSet(tla.bool(true)), tla.name("x"), domain)
     val state = new SymbState(tla.in(fun, funset), arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -191,13 +208,13 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
   }
 
   // this should be fixed by implementing #91
-  test("""SE-FUNSET with a SUBSET: [x \in {1, 2} |-> {TRUE}] \in [{1, 2} -> SUBSET {FALSE, TRUE}]""") {
+  test(
+    """SE-FUNSET with a SUBSET: [x \in {1, 2} |-> {TRUE}] \in [{1, 2} -> SUBSET {FALSE, TRUE}]"""
+  ) {
     val domain = tla.enumSet(tla.int(1), tla.int(2))
     val codomain = tla.powSet(tla.enumSet(tla.bool(false), tla.bool(true)))
     val funset = tla.funSet(domain, codomain)
-    val fun = tla.funDef(tla.enumSet(tla.bool(true)),
-                         tla.name("x"),
-                         domain)
+    val fun = tla.funDef(tla.enumSet(tla.bool(true)), tla.name("x"), domain)
     val state = new SymbState(tla.in(fun, funset), arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)

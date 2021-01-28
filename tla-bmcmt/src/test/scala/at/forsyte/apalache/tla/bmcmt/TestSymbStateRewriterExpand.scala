@@ -17,11 +17,15 @@ class TestSymbStateRewriterExpand extends RewriterBase {
     var nextState = rewriter.rewriteUntilDone(state)
     val powCell = nextState.asCell
     // check equality
-    val eq = tla.eql(nextState.ex,
-      tla.enumSet(tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(IntT()))),
+    val eq = tla.eql(
+      nextState.ex,
+      tla.enumSet(
+        tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(IntT()))),
         tla.enumSet(tla.int(1)),
         tla.enumSet(tla.int(2)),
-          tla.enumSet(tla.int(1), tla.int(2))))
+        tla.enumSet(tla.int(1), tla.int(2))
+      )
+    )
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
@@ -45,12 +49,20 @@ class TestSymbStateRewriterExpand extends RewriterBase {
     var nextState = rewriter.rewriteUntilDone(state)
     val funSetCell = nextState.asCell
     def mkFun(v1: Boolean, v2: Boolean): TlaEx = {
-      val mapEx = tla.ite(tla.eql(NameEx("x"), tla.int(1)), tla.bool(v1), tla.bool(v2))
+      val mapEx =
+        tla.ite(tla.eql(NameEx("x"), tla.int(1)), tla.bool(v1), tla.bool(v2))
       tla.funDef(mapEx, tla.name("x"), domain)
     }
-    val expected = tla.enumSet(mkFun(false, false), mkFun(false, true),
-                               mkFun(true, false), mkFun(true, true))
-    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(expected, funSetCell.toNameEx)))
+    val expected = tla.enumSet(
+      mkFun(false, false),
+      mkFun(false, true),
+      mkFun(true, false),
+      mkFun(true, true)
+    )
+    assertTlaExAndRestore(
+      rewriter,
+      nextState.setRex(tla.eql(expected, funSetCell.toNameEx))
+    )
   }
 
 }

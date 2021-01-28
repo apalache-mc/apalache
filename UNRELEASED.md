@@ -13,7 +13,7 @@
 ### Features
 
  * handling big integers, #450
- * new sequential model checker that is using TransitionExecutor, see #467 
+ * new sequential model checker that is using TransitionExecutor, see #467
  * new command-line options, see #467 and the manual for details:
    - choose the algorithm: `--algo=(offline|incremental)`
    - fire transitions without filtering the enabled ones: `--all-enabled`

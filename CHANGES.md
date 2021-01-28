@@ -12,18 +12,18 @@
 ### Features
 
  * opt-in for statistics collection (shared with TLC and TLA+ Toolbox), see #288
- 
+
 ### Architecture
- 
+
  * new layer of TransitionExecutor (TRex), see `at.forsyte.apalache.tla.bmcmt.trex.*`
 
 ### Documentation
 
  * Compile the manuals into [a static
   site](http://informalsystems.github.io/apalache/docs/) using
-  [mdBook](https://github.com/rust-lang/mdBook), see #400 
+  [mdBook](https://github.com/rust-lang/mdBook), see #400
  * Description of top-level user operators, see #419
- * ADR003: [Architecture of TransitionExecutor](./docs/internal/adr/003adr-trex.md) 
+ * ADR003: [Architecture of TransitionExecutor](./docs/internal/adr/003adr-trex.md)
 
 ## 0.8.0 [RELEASE]
 
@@ -39,7 +39,7 @@
  * no theories in the model checker due to types, see #22
  * operators and checker caches made Serializable
  * better diagnostics for the recursive operators, see #272
- * verbose output for the config parser, see #266 
+ * verbose output for the config parser, see #266
  * Use a staged docker build, reducing container size ~70%, see #195
  * Use [Z3-TurnKey](https://github.com/tudo-aqua/z3-turnkey) instead of a
    bespoke Z3 build, see #219
@@ -88,7 +88,7 @@
  * A 2-8x speedup for 5 out 16
    [benchmarks](https://github.com/informalsystems/apalache-tests),
    due to the optimizations and maybe switching to z3 4.8.x.
- 
+
  * Distributing the releases with docker as `apalache/mc`
 
  * The results of intermediate passes are printed in TLA+ files

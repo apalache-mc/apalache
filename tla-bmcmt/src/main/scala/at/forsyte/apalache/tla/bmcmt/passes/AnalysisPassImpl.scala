@@ -17,12 +17,15 @@ import com.typesafe.scalalogging.LazyLogging
 /**
   * Find free-standing existential quantifiers, grade expressions, and produce hints about some formulas.
   */
-class AnalysisPassImpl @Inject()(val options: PassOptions,
-                                 hintsStoreImpl: FormulaHintsStoreImpl,
-                                 exprGradeStoreImpl: ExprGradeStoreImpl,
-                                 tracker: TransformationTracker,
-                                 @Named("AfterAnalysis") nextPass: Pass with TlaModuleMixin)
-  extends AnalysisPass with LazyLogging {
+class AnalysisPassImpl @Inject()(
+    val options: PassOptions,
+    hintsStoreImpl: FormulaHintsStoreImpl,
+    exprGradeStoreImpl: ExprGradeStoreImpl,
+    tracker: TransformationTracker,
+    @Named("AfterAnalysis") nextPass: Pass with TlaModuleMixin
+) extends AnalysisPass
+    with LazyLogging {
+
   /**
     * The pass name.
     *
@@ -31,7 +34,8 @@ class AnalysisPassImpl @Inject()(val options: PassOptions,
   override def name: String = "AnalysisPass"
 
   object StringOrdering extends Ordering[Object] {
-    override def compare(x: Object, y: Object): Int = x.toString compare y.toString
+    override def compare(x: Object, y: Object): Int =
+      x.toString compare y.toString
   }
 
   /**
@@ -41,7 +45,10 @@ class AnalysisPassImpl @Inject()(val options: PassOptions,
     */
   override def execute(): Boolean = {
     if (tlaModule.isEmpty) {
-      throw new CheckerException(s"The input of $name pass is not initialized", NullEx)
+      throw new CheckerException(
+        s"The input of $name pass is not initialized",
+        NullEx
+      )
     }
 
     val transformationSequence =
@@ -50,7 +57,9 @@ class AnalysisPassImpl @Inject()(val options: PassOptions,
         new ExpansionMarker(tracker)
       ) ///
 
-    logger.info(" > Marking skolemizable existentials and sets to be expanded...")
+    logger.info(
+      " > Marking skolemizable existentials and sets to be expanded..."
+    )
     val marked = transformationSequence.foldLeft(tlaModule.get) {
       case (m, tr) =>
         logger.info("  > %s".format(tr.getClass.getSimpleName))
@@ -71,9 +80,9 @@ class AnalysisPassImpl @Inject()(val options: PassOptions,
     }
 
     marked.declarations.foreach {
-      case d: TlaOperDecl => analyzeExpr(d.body)
+      case d: TlaOperDecl   => analyzeExpr(d.body)
       case a: TlaAssumeDecl => analyzeExpr(a.body)
-      case _ => ()
+      case _                => ()
     }
 
     nextPass.setModule(marked)
@@ -82,7 +91,9 @@ class AnalysisPassImpl @Inject()(val options: PassOptions,
     PrettyWriter.write(marked, new File(outdir.toFile, "out-analysis.tla"))
 
     logger.info("  > Introduced expression grades")
-    logger.info("  > Introduced %d formula hints".format(hintsStoreImpl.store.size))
+    logger.info(
+      "  > Introduced %d formula hints".format(hintsStoreImpl.store.size)
+    )
 
     true
   }

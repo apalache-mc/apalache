@@ -5,10 +5,10 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations._
 
 object PruneApalacheAnnotations {
-  private def pruneOne( tracker : TransformationTracker ) : TlaExTransformation =
+  private def pruneOne(tracker: TransformationTracker): TlaExTransformation =
     tracker.track {
-      case OperEx( BmcOper.withType, arg, typeAnnotation ) => arg
-      case e => e
+      case OperEx(BmcOper.withType, arg, typeAnnotation) => arg
+      case e                                             => e
     }
 
   /**
@@ -17,27 +17,30 @@ object PruneApalacheAnnotations {
     * Example:
     * S <: {Int} -> S
     */
-  def apply( tracker : TransformationTracker ) : TlaExTransformation = tracker.track { ex =>
-    val tr = pruneOne( tracker )
-    lazy val self = apply( tracker )
-    ex match {
-      case LetInEx( body, defs@_* ) =>
-        // Transform bodies of all op.defs
-        val newDefs = defs.map { x =>
-          x.copy(
-            body = self( x.body )
-          )
-        }
-        val newBody = self( body )
-        val retEx = if ( defs == newDefs && body == newBody ) ex else LetInEx( newBody, newDefs : _* )
-        tr( retEx )
+  def apply(tracker: TransformationTracker): TlaExTransformation =
+    tracker.track { ex =>
+      val tr = pruneOne(tracker)
+      lazy val self = apply(tracker)
+      ex match {
+        case LetInEx(body, defs @ _*) =>
+          // Transform bodies of all op.defs
+          val newDefs = defs.map { x =>
+            x.copy(
+              body = self(x.body)
+            )
+          }
+          val newBody = self(body)
+          val retEx =
+            if (defs == newDefs && body == newBody) ex
+            else LetInEx(newBody, newDefs: _*)
+          tr(retEx)
 
-      case OperEx( op, args@_* ) =>
-        val newArgs = args map self
-        val newEx = if ( args == newArgs ) ex else OperEx( op, newArgs : _* )
-        tr( newEx )
+        case OperEx(op, args @ _*) =>
+          val newArgs = args map self
+          val newEx = if (args == newArgs) ex else OperEx(op, newArgs: _*)
+          tr(newEx)
 
-      case _ => tr( ex )
+        case _ => tr(ex)
+      }
     }
-  }
 }

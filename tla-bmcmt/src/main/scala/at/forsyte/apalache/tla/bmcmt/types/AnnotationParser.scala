@@ -15,6 +15,7 @@ import scala.collection.immutable.SortedMap
   * @author Igor Konnov
   */
 object AnnotationParser {
+
   /**
     * Parse a TLA+ expression that encodes a type.
     * @param annot a type annotation that is a TLA+ expression.
@@ -41,18 +42,22 @@ object AnnotationParser {
             FinSetT(elemType)
         }
 
-      case OperEx(TlaFunOper.enum, kv@_*) =>
+      case OperEx(TlaFunOper.enum, kv @ _*) =>
         val keys = kv.zipWithIndex.filter(_._2 % 2 == 0).map(_._1) // pick the even indices (starting with 0)
-      def toStr(key: TlaEx) = key match {
-        case ValEx(TlaStr(s)) => s
-        case _ => throw new TypeException("Expected a string, found: %s".format(key), annot)
-      }
+        def toStr(key: TlaEx) = key match {
+          case ValEx(TlaStr(s)) => s
+          case _ =>
+            throw new TypeException(
+              "Expected a string, found: %s".format(key),
+              annot
+            )
+        }
 
         val vals = kv.zipWithIndex.filter(_._2 % 2 == 1).map(_._1) // pick the odd indices (starting with 0)
         val types = vals map fromTla
         RecordT(SortedMap(keys.map(toStr).zip(types): _*))
 
-      case OperEx(TlaFunOper.tuple, args@_*) =>
+      case OperEx(TlaFunOper.tuple, args @ _*) =>
         val types = args map fromTla
         TupleT(types)
 
@@ -65,20 +70,30 @@ object AnnotationParser {
         val resType = fromTla(resAnnot)
         FunT(FinSetT(argType), resType)
 
-      case OperEx(TlaSetOper.recSet, args@_* ) =>
+      case OperEx(TlaSetOper.recSet, args @ _*) =>
         // We know |args| = 0 (mod 2)
-        val argPairs = args.grouped( 2 ).toSeq map {
-          case Seq( ValEx( TlaStr( s ) ), value ) =>
-            (s, fromTla( value ))
-          case e => throw new TypeException("Expected a Seq(string, _) found: %s".format(e), annot)
+        val argPairs = args.grouped(2).toSeq map {
+          case Seq(ValEx(TlaStr(s)), value) =>
+            (s, fromTla(value))
+          case e =>
+            throw new TypeException(
+              "Expected a Seq(string, _) found: %s".format(e),
+              annot
+            )
         }
-        RecordT( SortedMap( argPairs : _* ) )
+        RecordT(SortedMap(argPairs: _*))
 
       case OperEx(BmcOper.withType, _, otherAnnot) =>
-        throw new TypeException(s"Found another annotation ${otherAnnot} inside the annotation: $annot", annot)
+        throw new TypeException(
+          s"Found another annotation ${otherAnnot} inside the annotation: $annot",
+          annot
+        )
 
       case e =>
-        throw new TypeException("Unexpected type annotation: %s".format(annot), annot)
+        throw new TypeException(
+          "Unexpected type annotation: %s".format(annot),
+          annot
+        )
     }
   }
 
@@ -89,14 +104,15 @@ object AnnotationParser {
     */
   def toTla(tp: CellT): TlaEx = {
     tp match {
-      case BoolT() => ValEx(TlaBoolSet)
-      case IntT() => ValEx(TlaIntSet)
-      case ConstT() => ValEx(TlaStrSet)
-      case FinSetT(elemT) => tla.enumSet(toTla(elemT))
-      case PowSetT(domT) => tla.enumSet(toTla(domT))
+      case BoolT()          => ValEx(TlaBoolSet)
+      case IntT()           => ValEx(TlaIntSet)
+      case ConstT()         => ValEx(TlaStrSet)
+      case FinSetT(elemT)   => tla.enumSet(toTla(elemT))
+      case PowSetT(domT)    => tla.enumSet(toTla(domT))
       case FunT(domT, resT) => tla.funSet(toTla(domT), tla.enumSet(toTla(resT)))
-      case FinFunSetT(domT, cdmType) => tla.enumSet(tla.funSet(toTla(domT), toTla(cdmType)))
-      case TupleT(es) => tla.tuple(es map toTla: _*)
+      case FinFunSetT(domT, cdmType) =>
+        tla.enumSet(tla.funSet(toTla(domT), toTla(cdmType)))
+      case TupleT(es)  => tla.tuple(es map toTla: _*)
       case SeqT(elemT) => tla.seqSet(toTla(elemT))
       case RecordT(fields) =>
         val keys = fields.keys.toSeq
@@ -105,10 +121,13 @@ object AnnotationParser {
           if (i % 2 == 0) tla.str(k) else toTla(fields(k))
         }
         val args = 0.until(2 * fields.size) map fieldOrVal
-        OperEx(TlaFunOper.enum, args :_*)
+        OperEx(TlaFunOper.enum, args: _*)
 
       case _ =>
-        throw new TypeException("No translation of type %s to a TLA+ expression".format(tp), NullEx)
+        throw new TypeException(
+          "No translation of type %s to a TLA+ expression".format(tp),
+          NullEx
+        )
     }
   }
 }

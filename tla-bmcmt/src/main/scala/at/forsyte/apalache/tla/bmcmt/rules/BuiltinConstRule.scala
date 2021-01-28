@@ -9,12 +9,13 @@ import at.forsyte.apalache.tla.lir.{NameEx, ValEx}
   * Rewriting BOOLEAN, Int, and Nat into predefined cells.
   *
   * @author Igor Konnov
-   */
+  */
 class BuiltinConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
-      case ValEx(TlaBool(false)) | ValEx(TlaBool(true))
-           | ValEx(TlaBoolSet) | ValEx(TlaNatSet) | ValEx(TlaIntSet) => true
+      case ValEx(TlaBool(false)) | ValEx(TlaBool(true)) | ValEx(TlaBoolSet) |
+          ValEx(TlaNatSet) | ValEx(TlaIntSet) =>
+        true
       case _ => false
     }
   }
@@ -37,7 +38,10 @@ class BuiltinConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
         state.setRex(NameEx(state.arena.cellIntSet().toString))
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
+        throw new RewriterException(
+          "%s is not applicable".format(getClass.getSimpleName),
+          state.ex
+        )
     }
   }
 }

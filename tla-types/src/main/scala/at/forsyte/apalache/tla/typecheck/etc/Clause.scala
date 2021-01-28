@@ -8,10 +8,12 @@ import at.forsyte.apalache.tla.typecheck.{TlaType1, VarT1}
   * Thus, our constraints admit disjunctions.
   */
 sealed abstract class Clause {
+
   /**
     * A callback for registering the type when it is known precisely
     */
   var onTypeFound: TlaType1 => Unit = (_ => ())
+
   /**
     * A callback for registering a type error when it occurs
     */

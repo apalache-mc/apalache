@@ -27,15 +27,22 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
       val subsetCell = arena.topCell
       arena = arena.appendHas(subsetCell, filtered: _*)
       for (e <- filtered) {
-        rewriter.solverContext.assertGroundExpr(tla.equiv(tla.in(e, subsetCell), tla.in(e, set)))
+        rewriter.solverContext.assertGroundExpr(
+          tla.equiv(tla.in(e, subsetCell), tla.in(e, set))
+        )
       }
       subsetCell
     }
 
-    rewriter.solverContext.log("; %s(%s) {".format(getClass.getSimpleName, state.ex))
+    rewriter.solverContext.log(
+      "; %s(%s) {".format(getClass.getSimpleName, state.ex)
+    )
     val powSetSize = BigInt(1) << elems.size
     if (powSetSize >= Limits.POWSET_MAX_SIZE) {
-      throw new RewriterException(s"Attempted to expand a powerset of size 2^${elems.size}", state.ex)
+      throw new RewriterException(
+        s"Attempted to expand a powerset of size 2^${elems.size}",
+        state.ex
+      )
     }
     val subsets =
       if (elems.nonEmpty) {
@@ -55,8 +62,10 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
     }
 
     // that's it!
-    rewriter.solverContext.log("; } %s returns %s [%d arena cells])"
-      .format(getClass.getSimpleName, state.ex, state.arena.cellCount))
+    rewriter.solverContext.log(
+      "; } %s returns %s [%d arena cells])"
+        .format(getClass.getSimpleName, state.ex, state.arena.cellCount)
+    )
 
     state.setArena(arena).setRex(powsetCell)
   }

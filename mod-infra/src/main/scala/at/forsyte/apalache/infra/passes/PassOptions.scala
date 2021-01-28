@@ -11,6 +11,7 @@ package at.forsyte.apalache.infra.passes
   * @author Igor Konnov
   */
 trait PassOptions {
+
   /**
     * Get a pass option.
     *

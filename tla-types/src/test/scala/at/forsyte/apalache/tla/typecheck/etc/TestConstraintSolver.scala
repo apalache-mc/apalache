@@ -8,16 +8,22 @@ import org.scalatest.easymock.EasyMockSugar
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestConstraintSolver  extends FunSuite with EasyMockSugar with EtcBuilder {
+class TestConstraintSolver extends FunSuite with EasyMockSugar with EtcBuilder {
   private val parser: Type1Parser = DefaultType1Parser
 
   test("unique solution") {
     val solver = new ConstraintSolver
     // a disjunctive constraint that comes from a tuple constructor
     // either a == (b, c) => <<b, c>>
-    val option1 = EqClause(VarT1("a"), OperT1(Seq(VarT1("b"), VarT1("c")), parser("<<b, c>>")))
+    val option1 = EqClause(
+      VarT1("a"),
+      OperT1(Seq(VarT1("b"), VarT1("c")), parser("<<b, c>>"))
+    )
     // or a == (d, d) => Seq(d)
-    val option2 = EqClause(VarT1("a"), OperT1(Seq(VarT1("d"), VarT1("d")), parser("Seq(d)")))
+    val option2 = EqClause(
+      VarT1("a"),
+      OperT1(Seq(VarT1("d"), VarT1("d")), parser("Seq(d)"))
+    )
     solver.addConstraint(OrClause(option1, option2))
     // an equation that comes from the operator application
     // a1 == (Int, Str) => e
@@ -33,9 +39,15 @@ class TestConstraintSolver  extends FunSuite with EasyMockSugar with EtcBuilder 
     val solver = new ConstraintSolver
     // a disjunctive constraint that comes from a tuple constructor
     // either a == (b, c) => <<b, c>>
-    val option1 = EqClause(VarT1("a"), OperT1(Seq(VarT1("b"), VarT1("c")), parser("<<b, c>>")))
+    val option1 = EqClause(
+      VarT1("a"),
+      OperT1(Seq(VarT1("b"), VarT1("c")), parser("<<b, c>>"))
+    )
     // or a == (d, d) => Seq(d)
-    val option2 = EqClause(VarT1("a"), OperT1(Seq(VarT1("d"), VarT1("d")), parser("Seq(d)")))
+    val option2 = EqClause(
+      VarT1("a"),
+      OperT1(Seq(VarT1("d"), VarT1("d")), parser("Seq(d)"))
+    )
     solver.addConstraint(OrClause(option1, option2))
     // an equation that comes from the operator application
     // a1 == (Int, Str) => e

@@ -8,6 +8,7 @@ package at.forsyte.apalache.tla.bmcmt.profiler
   * @author Igor Konnov
   */
 class RuleStat(val ruleName: String) {
+
   /**
     * The number of times the rewriting rule is called by SymbStateRewriterImpl.
     */
@@ -38,5 +39,6 @@ class RuleStat(val ruleName: String) {
     * The average size of smt assertions
     * @return the average size
     */
-  def smtAssertsSizeAvg: Long = if (nSmtAssertsSelf > 0) smtAssertsSizeTotal / nSmtAssertsSelf else 0
+  def smtAssertsSizeAvg: Long =
+    if (nSmtAssertsSelf > 0) smtAssertsSizeTotal / nSmtAssertsSelf else 0
 }

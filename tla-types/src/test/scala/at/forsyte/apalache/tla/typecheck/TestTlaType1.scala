@@ -7,7 +7,7 @@ import org.scalatest.junit.JUnitRunner
 import scala.collection.immutable.SortedMap
 
 @RunWith(classOf[JUnitRunner])
-class TestTlaType1  extends FunSuite {
+class TestTlaType1 extends FunSuite {
   test("TlaType1.toString") {
     assert("Int" == IntT1().toString)
     assert("Real" == RealT1().toString)
@@ -24,7 +24,8 @@ class TestTlaType1  extends FunSuite {
     assert("Seq(Int)" == SeqT1(IntT1()).toString)
     assert("(Int -> Bool)" == FunT1(IntT1(), BoolT1()).toString)
     assert("<<Int, Bool, Str>>" == TupT1(IntT1(), BoolT1(), StrT1()).toString)
-    val recType = RecT1(SortedMap("f1" -> IntT1(), "f2" -> BoolT1(), "f3" -> StrT1()))
+    val recType =
+      RecT1(SortedMap("f1" -> IntT1(), "f2" -> BoolT1(), "f3" -> StrT1()))
     assert("[f1: Int, f2: Bool, f3: Str]" == recType.toString)
     val operType = OperT1(List(BoolT1(), StrT1()), IntT1())
     assert("(Bool, Str) => Int" == operType.toString)

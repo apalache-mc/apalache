@@ -8,6 +8,7 @@ import at.forsyte.apalache.infra.passes.{Pass, TlaModuleMixin}
   * @author Igor Konnov
   */
 trait BoundedCheckerPass extends Pass with TlaModuleMixin {
+
   /**
     * For how long the main thread is waiting for the workers to join in case of shutdown.
     */

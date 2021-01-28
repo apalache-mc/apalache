@@ -5,7 +5,10 @@ import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
 import at.forsyte.apalache.tla.bmcmt.Checker.Outcome
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore}
+import at.forsyte.apalache.tla.bmcmt.analyses.{
+  ExprGradeStore,
+  FormulaHintsStore
+}
 import at.forsyte.apalache.tla.bmcmt.rewriter.RewriterConfig
 import at.forsyte.apalache.tla.bmcmt.search._
 import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
@@ -24,11 +27,13 @@ import com.typesafe.scalalogging.LazyLogging
   *
   * @author Igor Konnov
   */
-class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
-                                        hintsStore: FormulaHintsStore,
-                                        exprGradeStore: ExprGradeStore,
-                                        @Named("AfterChecker") nextPass: Pass)
-      extends BoundedCheckerPass with LazyLogging {
+class BoundedCheckerPassImpl @Inject()(
+    val options: PassOptions,
+    hintsStore: FormulaHintsStore,
+    exprGradeStore: ExprGradeStore,
+    @Named("AfterChecker") nextPass: Pass
+) extends BoundedCheckerPass
+    with LazyLogging {
 
   /**
     * The pass name.
@@ -44,7 +49,10 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
     */
   override def execute(): Boolean = {
     if (tlaModule.isEmpty) {
-      throw new CheckerException(s"The input of $name pass is not initialized", NullEx)
+      throw new CheckerException(
+        s"The input of $name pass is not initialized",
+        NullEx
+      )
     }
     val module = tlaModule.get
 
@@ -52,62 +60,92 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
       LanguageWatchdog(KeraLanguagePred()).check(decl.body)
     }
 
-    val initTrans = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.INIT_PREFIX)
-    val nextTrans = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.NEXT_PREFIX)
-    val cinitP = ModuleAdapter.getOperatorOption(module, NormalizedNames.CONST_INIT)
-    val vcInvs = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.VC_INV_PREFIX)
-    val vcNotInvs = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.VC_NOT_INV_PREFIX)
+    val initTrans =
+      ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.INIT_PREFIX)
+    val nextTrans =
+      ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.NEXT_PREFIX)
+    val cinitP =
+      ModuleAdapter.getOperatorOption(module, NormalizedNames.CONST_INIT)
+    val vcInvs = ModuleAdapter.getTransitionsFromSpec(
+      module,
+      NormalizedNames.VC_INV_PREFIX
+    )
+    val vcNotInvs = ModuleAdapter.getTransitionsFromSpec(
+      module,
+      NormalizedNames.VC_NOT_INV_PREFIX
+    )
     val invariantsAndNegations = vcInvs.zip(vcNotInvs)
 
-    val input = new CheckerInput(module, initTrans.toList, nextTrans.toList, cinitP, invariantsAndNegations.toList)
-/*
+    val input = new CheckerInput(
+      module,
+      initTrans.toList,
+      nextTrans.toList,
+      cinitP,
+      invariantsAndNegations.toList
+    )
+    /*
         TODO: uncomment when the parallel checker is transferred from ik/multicore
     val nworkers = options.getOrElse("checker", "nworkers", 1)
-*/
+     */
     val stepsBound = options.getOrElse("checker", "length", 10)
     val tuning = options.getOrElse("general", "tuning", Map[String, String]())
     val debug = options.getOrElse("general", "debug", false)
     val saveDir = options.getOrError("io", "outdir").asInstanceOf[Path].toFile
 
-    val params = new ModelCheckerParams(input, stepsBound, saveDir, tuning, debug)
+    val params =
+      new ModelCheckerParams(input, stepsBound, saveDir, tuning, debug)
     params.pruneDisabled = !options.getOrElse("checker", "allEnabled", false)
-    params.checkForDeadlocks = !options.getOrElse("checker", "noDeadlocks", false)
+    params.checkForDeadlocks =
+      !options.getOrElse("checker", "noDeadlocks", false)
 
     val smtProfile = options.getOrElse("smt", "prof", false)
     val smtRandomSeed = tuning.getOrElse("smt.randomSeed", "0").toInt
     val solverConfig = SolverConfig(debug, smtProfile, smtRandomSeed)
 
     options.getOrElse("checker", "algo", "incremental") match {
-        /*
+      /*
         TODO: uncomment when the parallel checker is transferred from ik/multicore
       case "parallel" => runParallelChecker(params, input, tuning, nworkers)
-         */
-      case "incremental" => runIncrementalChecker(params, input, tuning, solverConfig)
+       */
+      case "incremental" =>
+        runIncrementalChecker(params, input, tuning, solverConfig)
       case "offline" => runOfflineChecker(params, input, tuning, solverConfig)
-      case algo => throw new IllegalArgumentException(s"Unexpected checker.algo=$algo")
+      case algo =>
+        throw new IllegalArgumentException(s"Unexpected checker.algo=$algo")
     }
 
   }
 
-  private def runIncrementalChecker(params: ModelCheckerParams,
-                                    input: CheckerInput,
-                                    tuning: Map[String, String],
-                                    solverConfig: SolverConfig
-                                   ): Boolean = {
+  private def runIncrementalChecker(
+      params: ModelCheckerParams,
+      input: CheckerInput,
+      tuning: Map[String, String],
+      solverConfig: SolverConfig
+  ): Boolean = {
     val profile = options.getOrElse("smt", "prof", false)
-    val solverContext: RecordingSolverContext = RecordingSolverContext.createZ3(None, solverConfig)
+    val solverContext: RecordingSolverContext =
+      RecordingSolverContext.createZ3(None, solverConfig)
 
     val typeFinder = new TrivialTypeFinder
-    val rewriter: SymbStateRewriterImpl = new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
+    val rewriter: SymbStateRewriterImpl =
+      new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
     rewriter.formulaHintsStore = hintsStore
     rewriter.config = RewriterConfig(tuning)
 
     type SnapshotT = IncrementalExecutionContextSnapshot
     val executorContext = new IncrementalExecutionContext(rewriter)
     val trex =
-      new TransitionExecutorImpl[SnapshotT](params.consts, params.vars, executorContext)
+      new TransitionExecutorImpl[SnapshotT](
+        params.consts,
+        params.vars,
+        executorContext
+      )
     val filteredTrex =
-      new FilteredTransitionExecutor[SnapshotT](params.transitionFilter, params.invFilter, trex)
+      new FilteredTransitionExecutor[SnapshotT](
+        params.transitionFilter,
+        params.invFilter,
+        trex
+      )
 
     val checker = new SeqModelChecker[SnapshotT](params, input, filteredTrex)
     val outcome = checker.run()
@@ -115,23 +153,34 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
     outcome == Outcome.NoError
   }
 
-  private def runOfflineChecker(params: ModelCheckerParams,
-                                input: CheckerInput,
-                                tuning: Map[String, String],
-                                solverConfig: SolverConfig
-                               ): Boolean = {
+  private def runOfflineChecker(
+      params: ModelCheckerParams,
+      input: CheckerInput,
+      tuning: Map[String, String],
+      solverConfig: SolverConfig
+  ): Boolean = {
     val profile = options.getOrElse("smt", "prof", false)
-    val solverContext: RecordingSolverContext = RecordingSolverContext.createZ3(None, solverConfig)
+    val solverContext: RecordingSolverContext =
+      RecordingSolverContext.createZ3(None, solverConfig)
 
     val typeFinder = new TrivialTypeFinder
-    val rewriter: SymbStateRewriterImpl = new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
+    val rewriter: SymbStateRewriterImpl =
+      new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
     rewriter.formulaHintsStore = hintsStore
     rewriter.config = RewriterConfig(tuning)
 
     type SnapshotT = OfflineExecutionContextSnapshot
     val executorContext = new OfflineExecutionContext(rewriter)
-    val trex = new TransitionExecutorImpl[SnapshotT](params.consts, params.vars, executorContext)
-    val filteredTrex = new FilteredTransitionExecutor[SnapshotT](params.transitionFilter, params.invFilter, trex)
+    val trex = new TransitionExecutorImpl[SnapshotT](
+      params.consts,
+      params.vars,
+      executorContext
+    )
+    val filteredTrex = new FilteredTransitionExecutor[SnapshotT](
+      params.transitionFilter,
+      params.invFilter,
+      trex
+    )
 
     val checker = new SeqModelChecker[SnapshotT](params, input, filteredTrex)
     val outcome = checker.run()
@@ -222,5 +271,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
     * @return the next pass, if exists, or None otherwise
     */
   override def next(): Option[Pass] =
-    tlaModule map {_ => nextPass}
+    tlaModule map { _ =>
+      nextPass
+    }
 }

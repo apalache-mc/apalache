@@ -40,6 +40,9 @@ class TestArena extends FunSuite with BeforeAndAfterEach {
   test("BOOLEAN has FALSE and TRUE") {
     val arena = Arena.create(solver)
     val boolean = arena.cellBooleanSet()
-    assert(List(arena.cellFalse(), arena.cellTrue()) == arena.getHas(arena.cellBooleanSet()))
+    assert(
+      List(arena.cellFalse(), arena.cellTrue()) == arena
+        .getHas(arena.cellBooleanSet())
+    )
   }
 }

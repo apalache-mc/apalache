@@ -1,8 +1,16 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.analyses._
-import at.forsyte.apalache.tla.bmcmt.caches.{ExprCache, IntValueCache, RecordDomainCache, StrValueCache}
-import at.forsyte.apalache.tla.bmcmt.rewriter.{RewriterConfig, SymbStateRewriterSnapshot}
+import at.forsyte.apalache.tla.bmcmt.caches.{
+  ExprCache,
+  IntValueCache,
+  RecordDomainCache,
+  StrValueCache
+}
+import at.forsyte.apalache.tla.bmcmt.rewriter.{
+  RewriterConfig,
+  SymbStateRewriterSnapshot
+}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
@@ -17,11 +25,14 @@ import at.forsyte.apalache.tla.lir.TlaEx
   *
   * @author Igor Konnov
   */
-class SymbStateRewriterAuto(private var _solverContext: SolverContext) extends SymbStateRewriter {
+class SymbStateRewriterAuto(private var _solverContext: SolverContext)
+    extends SymbStateRewriter {
+
   /**
     * The names that are treated as constants.
     */
   var consts: Set[String] = Set()
+
   /**
     * The names that are treated as (free) variables.
     */
@@ -30,7 +41,6 @@ class SymbStateRewriterAuto(private var _solverContext: SolverContext) extends S
   var config: RewriterConfig = new RewriterConfig
 
   val typeFinder = new TrivialTypeFinder()
-
 
   /**
     * A solver context that is populated by the rewriter.
@@ -49,7 +59,8 @@ class SymbStateRewriterAuto(private var _solverContext: SolverContext) extends S
 
   private val exprGradeStoreImpl = new ExprGradeStoreImpl()
   private val exprGradeAnalysis = new ExprGradeAnalysis(exprGradeStoreImpl)
-  private val impl = new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
+  private val impl =
+    new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
 
   override def contextLevel: Int = impl.contextLevel
 
@@ -68,10 +79,12 @@ class SymbStateRewriterAuto(private var _solverContext: SolverContext) extends S
   override def exprGradeStore: ExprGradeStore = exprGradeStoreImpl
 
   private def reset(arena: Arena, binding: Binding): Unit = {
-    def add(m: Map[String, CellT], c: ArenaCell) = m + (c.toString -> c.cellType)
-    val cellTypes = arena.cellMap.values.foldLeft(Map[String, CellT]()) (add)
-    def addName(m: Map[String, CellT], p: (String, ArenaCell)) = m + (p._1 -> p._2.cellType)
-    val cellAndBindingTypes = binding.toMap.foldLeft(cellTypes) (addName)
+    def add(m: Map[String, CellT], c: ArenaCell) =
+      m + (c.toString -> c.cellType)
+    val cellTypes = arena.cellMap.values.foldLeft(Map[String, CellT]())(add)
+    def addName(m: Map[String, CellT], p: (String, ArenaCell)) =
+      m + (p._1 -> p._2.cellType)
+    val cellAndBindingTypes = binding.toMap.foldLeft(cellTypes)(addName)
     // propagate cell types and bindings to the type inference engine
     typeFinder.reset(cellAndBindingTypes)
   }
@@ -84,7 +97,9 @@ class SymbStateRewriterAuto(private var _solverContext: SolverContext) extends S
     }
   }
 
-  override def rewriteOnce(state: SymbState): SymbStateRewriter.RewritingResult = {
+  override def rewriteOnce(
+      state: SymbState
+  ): SymbStateRewriter.RewritingResult = {
     reset(state.arena, state.binding)
     preprocess(state.ex)
     impl.rewriteOnce(state)
@@ -98,7 +113,10 @@ class SymbStateRewriterAuto(private var _solverContext: SolverContext) extends S
   }
 
   // TODO: rename to rewriteSeq
-  override def rewriteSeqUntilDone(state: SymbState, es: Seq[TlaEx]): (SymbState, Seq[TlaEx]) = {
+  override def rewriteSeqUntilDone(
+      state: SymbState,
+      es: Seq[TlaEx]
+  ): (SymbState, Seq[TlaEx]) = {
     reset(state.arena, state.binding)
     preprocess(state.ex)
     es foreach preprocess
@@ -106,7 +124,10 @@ class SymbStateRewriterAuto(private var _solverContext: SolverContext) extends S
   }
 
   // TODO: rename to rewriteSeqWithBindings
-  override def rewriteBoundSeqUntilDone(state: SymbState, es: Seq[(Binding, TlaEx)]): (SymbState, Seq[TlaEx]) = {
+  override def rewriteBoundSeqUntilDone(
+      state: SymbState,
+      es: Seq[(Binding, TlaEx)]
+  ): (SymbState, Seq[TlaEx]) = {
     reset(state.arena, state.binding)
     preprocess(state.ex)
     es.map(_._2).foreach(preprocess)
@@ -120,7 +141,6 @@ class SymbStateRewriterAuto(private var _solverContext: SolverContext) extends S
   override def findMessage(id: Int): String = {
     impl.findMessage(id)
   }
-
 
   /**
     * Take a snapshot and return it

@@ -19,16 +19,16 @@ class ConstSimplifierForSmt extends ConstSimplifierBase {
   def isFalseConst(ex: TlaEx): Boolean = {
     ex match {
       case ValEx(TlaBool(false)) => true
-      case NameEx(name) => name == Arena.falseName
-      case _ => false
+      case NameEx(name)          => name == Arena.falseName
+      case _                     => false
     }
   }
 
   def isTrueConst(ex: TlaEx): Boolean = {
     ex match {
       case ValEx(TlaBool(true)) => true
-      case NameEx(name) => name == Arena.trueName
-      case _ => false
+      case NameEx(name)         => name == Arena.trueName
+      case _                    => false
     }
   }
 
@@ -38,7 +38,7 @@ class ConstSimplifierForSmt extends ConstSimplifierBase {
     * A shallow simplification that does not recurse into the expression structure.
     */
   override def simplifyShallow: TlaEx => TlaEx = {
-      // Here we only do SMT-specific simplifications. The general simplifications are done in the parent.
+    // Here we only do SMT-specific simplifications. The general simplifications are done in the parent.
 
     case ex @ (NameEx(_) | ValEx(_)) =>
       if (isFalseConst(ex)) {
@@ -50,15 +50,18 @@ class ConstSimplifierForSmt extends ConstSimplifierBase {
       }
 
     // do not go in tla.in and tla.notin, as it breaks down our SMT encoding
-    case ex @ (OperEx(TlaSetOper.in, _*) | OperEx(TlaSetOper.notin, _*) | OperEx(BmcOper.withType, _*)) =>
+    case ex @ (OperEx(TlaSetOper.in, _*) | OperEx(TlaSetOper.notin, _*) |
+        OperEx(BmcOper.withType, _*)) =>
       ex
 
     // using isTrueConst and isFalseConst that are more precise than those of ConstSimplifierBase
 
-    case OperEx(TlaControlOper.ifThenElse, pred, thenEx, _) if isTrueConst(pred) =>
+    case OperEx(TlaControlOper.ifThenElse, pred, thenEx, _)
+        if isTrueConst(pred) =>
       thenEx
 
-    case OperEx(TlaControlOper.ifThenElse, pred, _, elseEx) if isFalseConst(pred) =>
+    case OperEx(TlaControlOper.ifThenElse, pred, _, elseEx)
+        if isFalseConst(pred) =>
       elseEx
 
     // default

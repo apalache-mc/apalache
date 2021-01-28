@@ -1,7 +1,12 @@
 package at.forsyte.apalache.tla.imp.passes
 
 import at.forsyte.apalache.infra.ExceptionAdapter
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TerminalPassWithTlaModule, WriteablePassOptions}
+import at.forsyte.apalache.infra.passes.{
+  Pass,
+  PassOptions,
+  TerminalPassWithTlaModule,
+  WriteablePassOptions
+}
 import at.forsyte.apalache.tla.imp.ParserExceptionAdapter
 import com.google.inject.AbstractModule
 import com.google.inject.name.Names

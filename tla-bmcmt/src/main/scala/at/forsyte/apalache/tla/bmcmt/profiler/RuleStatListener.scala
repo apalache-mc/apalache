@@ -42,7 +42,7 @@ class RuleStatListener extends SmtListener {
   private def exprSize(e: TlaEx): Int = {
     e match {
       case OperEx(_, args @ _*) => 1 + (args map exprSize).sum
-      case _ => 1
+      case _                    => 1
     }
   }
 }

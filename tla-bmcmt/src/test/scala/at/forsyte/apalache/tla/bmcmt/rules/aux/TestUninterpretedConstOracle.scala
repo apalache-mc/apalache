@@ -13,7 +13,8 @@ class TestUninterpretedConstOracle extends RewriterBase with TestingPredefs {
     val rewriter = create()
     var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
-    val (nextState, oracle) = UninterpretedConstOracle.create(rewriter, state, 6)
+    val (nextState, oracle) =
+      UninterpretedConstOracle.create(rewriter, state, 6)
     assert(solverContext.sat())
   }
 
@@ -21,7 +22,8 @@ class TestUninterpretedConstOracle extends RewriterBase with TestingPredefs {
     val rewriter = create()
     var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
-    val (nextState, oracle) = UninterpretedConstOracle.create(rewriter, state, 6)
+    val (nextState, oracle) =
+      UninterpretedConstOracle.create(rewriter, state, 6)
     assert(solverContext.sat())
     rewriter.solverContext.assertGroundExpr(oracle.whenEqualTo(nextState, 3))
     assert(solverContext.sat())
@@ -33,7 +35,8 @@ class TestUninterpretedConstOracle extends RewriterBase with TestingPredefs {
     val rewriter = create()
     var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
-    val (nextState, oracle) = UninterpretedConstOracle.create(rewriter, state, 6)
+    val (nextState, oracle) =
+      UninterpretedConstOracle.create(rewriter, state, 6)
     assert(solverContext.sat())
     rewriter.solverContext.assertGroundExpr(oracle.whenEqualTo(nextState, 3))
     assert(solverContext.sat())
@@ -47,9 +50,13 @@ class TestUninterpretedConstOracle extends RewriterBase with TestingPredefs {
     state = state.updateArena(_.appendCell(BoolT()))
     val flag = state.arena.topCell
     // introduce an oracle
-    val (nextState, oracle) = UninterpretedConstOracle.create(rewriter, state, 2)
+    val (nextState, oracle) =
+      UninterpretedConstOracle.create(rewriter, state, 2)
     // assert flag == true iff oracle = 0
-    rewriter.solverContext.assertGroundExpr(oracle.caseAssertions(nextState, Seq(flag.toNameEx, tla.not(flag.toNameEx))))
+    rewriter.solverContext.assertGroundExpr(
+      oracle
+        .caseAssertions(nextState, Seq(flag.toNameEx, tla.not(flag.toNameEx)))
+    )
     // assert oracle = 1
     rewriter.push()
     rewriter.solverContext.assertGroundExpr(oracle.whenEqualTo(nextState, 1))

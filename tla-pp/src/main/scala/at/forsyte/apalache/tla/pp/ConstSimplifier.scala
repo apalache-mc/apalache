@@ -3,7 +3,11 @@ package at.forsyte.apalache.tla.pp
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.FlatLanguagePred
-import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.{
+  LanguageWatchdog,
+  TlaExTransformation,
+  TransformationTracker
+}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
 
 import scala.annotation.tailrec
@@ -13,7 +17,9 @@ import scala.annotation.tailrec
   *
   * @author Igor Konnov
   */
-class ConstSimplifier(tracker: TransformationTracker) extends ConstSimplifierBase with TlaExTransformation {
+class ConstSimplifier(tracker: TransformationTracker)
+    extends ConstSimplifierBase
+    with TlaExTransformation {
   override def apply(expr: TlaEx): TlaEx = {
     LanguageWatchdog(FlatLanguagePred()).check(expr)
     simplify(expr)
@@ -29,13 +35,13 @@ class ConstSimplifier(tracker: TransformationTracker) extends ConstSimplifierBas
     case ex @ NameEx(_) => ex
 
     case OperEx(oper, args @ _*) =>
-      simplifyShallow(OperEx(oper, args map rewriteDeep :_*))
+      simplifyShallow(OperEx(oper, args map rewriteDeep: _*))
 
     case LetInEx(body, defs @ _*) =>
-      val newDefs = defs.map {
-        d => TlaOperDecl(d.name, d.formalParams, simplify(d.body))
+      val newDefs = defs.map { d =>
+        TlaOperDecl(d.name, d.formalParams, simplify(d.body))
       }
-      LetInEx(simplify(body), newDefs :_*)
+      LetInEx(simplify(body), newDefs: _*)
 
     case ex => ex
   }
@@ -53,5 +59,6 @@ class ConstSimplifier(tracker: TransformationTracker) extends ConstSimplifierBas
 }
 
 object ConstSimplifier {
-  def apply(tracker: TransformationTracker): ConstSimplifier = new ConstSimplifier(tracker)
+  def apply(tracker: TransformationTracker): ConstSimplifier =
+    new ConstSimplifier(tracker)
 }

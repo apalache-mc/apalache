@@ -8,7 +8,10 @@ import scala.collection.mutable
   *
   * @author Igor Konnov
   */
-class CachingType1Parser(impl: Type1Parser, maxCacheSize: Int = CachingType1Parser.MAX_CACHE_SIZE) extends Type1Parser {
+class CachingType1Parser(
+    impl: Type1Parser,
+    maxCacheSize: Int = CachingType1Parser.MAX_CACHE_SIZE
+) extends Type1Parser {
   private val cache: mutable.HashMap[String, TlaType1] = new mutable.HashMap()
 
   /**
@@ -34,6 +37,7 @@ class CachingType1Parser(impl: Type1Parser, maxCacheSize: Int = CachingType1Pars
 }
 
 object CachingType1Parser {
+
   /**
     * Default maximum cache size.
     */

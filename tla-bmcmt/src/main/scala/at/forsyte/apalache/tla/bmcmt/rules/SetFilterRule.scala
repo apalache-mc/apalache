@@ -14,7 +14,7 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaSetOper.filter, _*) => true
-      case _ => false
+      case _                             => false
     }
   }
 
@@ -25,7 +25,10 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         var newState = rewriter.rewriteUntilDone(state.setRex(setEx))
         newState = newState.asCell.cellType match {
           case FinSetT(_) => newState
-          case tp @ _ => throw new NotImplementedError("A set filter over %s is not implemented".format(tp))
+          case tp @ _ =>
+            throw new NotImplementedError(
+              "A set filter over %s is not implemented".format(tp)
+            )
         }
         val setCell = newState.asCell
 
@@ -35,7 +38,9 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         def eachElem(potentialCell: ArenaCell): TlaEx = {
           // add [cell/x]
-          val newBinding = Binding(newState.binding.toMap + (varName -> potentialCell))
+          val newBinding = Binding(
+            newState.binding.toMap + (varName -> potentialCell)
+          )
           val cellState = new SymbState(predEx, newState.arena, newBinding)
           val ns = rewriter.rewriteUntilDone(cellState)
           newState = ns.setBinding(Binding(ns.binding.toMap - varName)) // reset binding
@@ -47,17 +52,24 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val filteredCellsAndPreds = (potentialCells zip computedPreds) filter (_._2 != NullEx)
 
         // get the result type from the type finder
-        val resultType = rewriter.typeFinder.compute(state.ex, ConstT(), setCell.cellType, BoolT())
+        val resultType = rewriter.typeFinder.compute(
+          state.ex,
+          ConstT(),
+          setCell.cellType,
+          BoolT()
+        )
         assert(PartialFunction.cond(resultType) { case FinSetT(_) => true })
 
         // introduce a new set
         val arena = newState.arena.appendCell(resultType)
         val newSetCell = arena.topCell
-        val newArena = arena.appendHas(newSetCell, filteredCellsAndPreds.map(_._1): _*)
+        val newArena =
+          arena.appendHas(newSetCell, filteredCellsAndPreds.map(_._1): _*)
 
         // require each cell to satisfy the predicate
         def addCellCons(cell: ArenaCell, pred: TlaEx): Unit = {
-          val inNewSet = OperEx(TlaSetOper.in, cell.toNameEx, newSetCell.toNameEx)
+          val inNewSet =
+            OperEx(TlaSetOper.in, cell.toNameEx, newSetCell.toNameEx)
           val inOldSet = OperEx(TlaSetOper.in, cell.toNameEx, setCell.toNameEx)
           val inOldSetAndPred = OperEx(TlaBoolOper.and, pred, inOldSet)
           val ifAndOnlyIf = OperEx(TlaOper.eq, inNewSet, inOldSetAndPred)
@@ -71,7 +83,10 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         newState.setArena(newArena).setRex(newSetCell.toNameEx)
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
+        throw new RewriterException(
+          "%s is not applicable".format(getClass.getSimpleName),
+          state.ex
+        )
     }
   }
 }
