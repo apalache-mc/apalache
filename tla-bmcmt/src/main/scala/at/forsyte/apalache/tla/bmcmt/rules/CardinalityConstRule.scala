@@ -5,10 +5,13 @@ import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
 import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaArithOper, TlaFiniteSetOper}
+import at.forsyte.apalache.tla.lir.oper.{
+  BmcOper,
+  TlaArithOper,
+  TlaFiniteSetOper
+}
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir.{OperEx, ValEx}
-
 
 /**
   * Optimization for Cardinality(S) >= k, where k is constant. See [docs/smt/Cardinality.md].
@@ -20,8 +23,14 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def isApplicable(state: SymbState): Boolean = {
     state.ex match {
-      case OperEx(BmcOper.constCard,
-      OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, _), ValEx(TlaInt(_)))) =>
+      case OperEx(
+          BmcOper.constCard,
+          OperEx(
+            TlaArithOper.ge,
+            OperEx(TlaFiniteSetOper.cardinality, _),
+            ValEx(TlaInt(_))
+          )
+          ) =>
         true
 
       case _ =>
@@ -31,8 +40,14 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case OperEx(BmcOper.constCard,
-      OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, setEx), ValEx(TlaInt(thresholdBigInt)))) =>
+      case OperEx(
+          BmcOper.constCard,
+          OperEx(
+            TlaArithOper.ge,
+            OperEx(TlaFiniteSetOper.cardinality, setEx),
+            ValEx(TlaInt(thresholdBigInt))
+          )
+          ) =>
         val threshold = thresholdBigInt.toInt
         var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
         val setCell = nextState.asCell
@@ -46,17 +61,30 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
         }
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
+        throw new RewriterException(
+          "%s is not applicable".format(getClass.getSimpleName),
+          state.ex
+        )
     }
   }
 
-  private def mkWitnesses(state: SymbState, set: ArenaCell, elems: Seq[ArenaCell], threshold: Int): SymbState = {
+  private def mkWitnesses(
+      state: SymbState,
+      set: ArenaCell,
+      elems: Seq[ArenaCell],
+      threshold: Int
+  ): SymbState = {
     def solverAssert = rewriter.solverContext.assertGroundExpr(_)
 
     var nextState = state
     nextState = nextState.updateArena(_.appendCell(BoolT()))
     val emptyPred = nextState.arena.topCell
-    solverAssert(tla.eql(emptyPred, tla.and(elems.map(e => tla.not(tla.in(e.toNameEx, set.toNameEx))) :_*)))
+    solverAssert(
+      tla.eql(
+        emptyPred,
+        tla.and(elems.map(e => tla.not(tla.in(e.toNameEx, set.toNameEx))): _*)
+      )
+    )
 
     // pick `threshold` cells that will act as witnesses
     def pick(i: Int): ArenaCell = {
@@ -66,18 +94,21 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     // create an inequality constraint
     def cacheEq(pair: (ArenaCell, ArenaCell)): Unit = {
-      nextState = rewriter.lazyEq.cacheOneEqConstraint(nextState, pair._1, pair._2)
+      nextState =
+        rewriter.lazyEq.cacheOneEqConstraint(nextState, pair._1, pair._2)
     }
 
     // create the inequality predicate
     val witnesses = 1.to(threshold).map(pick).toList
     (witnesses cross witnesses).filter(p => p._1.id < p._2.id).foreach(cacheEq)
-    val witnessesNotEq = OperEx(BmcOper.distinct, witnesses.map(_.toNameEx) :_*)
+    val witnessesNotEq = OperEx(BmcOper.distinct, witnesses.map(_.toNameEx): _*)
     nextState = nextState.updateArena(_.appendCell(BoolT()))
     val pred = nextState.arena.topCell
     // either the set is empty and threshold <= 0, or all witnesses are not equal to each other
     val nonEmptyOrBelow = tla.or(tla.not(emptyPred), tla.bool(threshold <= 0))
-    solverAssert(tla.eql(pred, tla.and(nonEmptyOrBelow, tla.or(emptyPred, witnessesNotEq))))
+    solverAssert(
+      tla.eql(pred, tla.and(nonEmptyOrBelow, tla.or(emptyPred, witnessesNotEq)))
+    )
 
     // generate constraints
     nextState.setRex(pred)

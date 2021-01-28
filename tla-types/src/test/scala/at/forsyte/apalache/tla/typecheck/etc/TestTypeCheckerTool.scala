@@ -2,7 +2,11 @@ package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.typecheck.{TlaType1, TypeCheckerListener, TypeCheckerTool}
+import at.forsyte.apalache.tla.typecheck.{
+  TlaType1,
+  TypeCheckerListener,
+  TypeCheckerTool
+}
 import org.easymock.EasyMock
 import org.junit.runner.RunWith
 import org.scalatest.easymock.EasyMockSugar
@@ -19,11 +23,13 @@ import scala.io.Source
   * @author Igor Konnov
   */
 @RunWith(classOf[JUnitRunner])
-class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMockSugar {
+class TestTypeCheckerTool
+    extends FunSuite
+    with BeforeAndAfterEach
+    with EasyMockSugar {
   var gen: ToEtcExpr = _
 
-  override protected def beforeEach(): Unit = {
-  }
+  override protected def beforeEach(): Unit = {}
 
   test("the tool runs") {
     val text =
@@ -58,7 +64,9 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
 
     expecting {
       // lots of types found
-      listener.onTypeFound(EasyMock.anyObject[ExactRef], EasyMock.anyObject[TlaType1]).anyTimes()
+      listener
+        .onTypeFound(EasyMock.anyObject[ExactRef], EasyMock.anyObject[TlaType1])
+        .anyTimes()
       // but no type errors
     }
     whenExecuting(listener) {

@@ -1,15 +1,16 @@
 package at.forsyte.apalache.tla.lir.oper
 
 /**
- * The operators defined in the TLC module. Many user modules import TLC, so it is a good idea to have a stub for TLC.
+  * The operators defined in the TLC module. Many user modules import TLC, so it is a good idea to have a stub for TLC.
   *
   * @author konnov
- */
+  */
 abstract class TlcOper extends TlaOper {
   override def interpretation: Interpretation.Value = Interpretation.StandardLib
 }
 
 object TlcOper {
+
   /**
     * Print(out, val) from TLC.
     */
@@ -136,5 +137,3 @@ object TlcOper {
     override val precedence: (Int, Int) = (16, 16)
   }
 }
-
-

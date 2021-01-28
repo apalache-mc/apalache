@@ -49,7 +49,10 @@ class TestPropositionalOracle extends RewriterBase with TestingPredefs {
     // introduce an oracle
     val (nextState, oracle) = PropositionalOracle.create(rewriter, state, 2)
     // assert flag == true iff oracle = 0
-    rewriter.solverContext.assertGroundExpr(oracle.caseAssertions(nextState, Seq(flag.toNameEx, tla.not(flag.toNameEx))))
+    rewriter.solverContext.assertGroundExpr(
+      oracle
+        .caseAssertions(nextState, Seq(flag.toNameEx, tla.not(flag.toNameEx)))
+    )
     // assert oracle = 1
     rewriter.push()
     rewriter.solverContext.assertGroundExpr(oracle.whenEqualTo(nextState, 1))

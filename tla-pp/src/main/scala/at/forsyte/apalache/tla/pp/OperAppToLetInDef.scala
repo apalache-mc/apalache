@@ -3,7 +3,11 @@ package at.forsyte.apalache.tla.pp
 import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaOper}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.{
+  TlaExTransformation,
+  TlaModuleTransformation,
+  TransformationTracker
+}
 
 /** Replaces instances of user-defined operator applications with a LET-IN wrapper.
   *
@@ -13,67 +17,69 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModu
   * Operator constants and formal parameters are ignored.
   */
 class OperAppToLetInDef(
-               nameGenerator : UniqueNameGenerator,
-               tracker : TransformationTracker
-             ) {
+    nameGenerator: UniqueNameGenerator,
+    tracker: TransformationTracker
+) {
 
   import OperAppToLetInDef.NAME_PREFIX
 
-  private def setTracking( oldEx : => TlaEx, newEx : => TlaEx ) : TlaEx = {
-    val tr = tracker.trackEx {
-      _ => newEx
+  private def setTracking(oldEx: => TlaEx, newEx: => TlaEx): TlaEx = {
+    val tr = tracker.trackEx { _ =>
+      newEx
     }
-    tr( oldEx )
+    tr(oldEx)
   }
 
-  def wrap( wrappableNames : Set[String] ) : TlaExTransformation = tracker.trackEx {
-    case ex@OperEx( TlaOper.apply, NameEx( opName ), args@_* ) if wrappableNames.contains( opName ) && args.nonEmpty =>
-      val newArgs = args map wrap( wrappableNames )
+  def wrap(wrappableNames: Set[String]): TlaExTransformation = tracker.trackEx {
+    case ex @ OperEx(TlaOper.apply, NameEx(opName), args @ _*)
+        if wrappableNames.contains(opName) && args.nonEmpty =>
+      val newArgs = args map wrap(wrappableNames)
       val newEx =
-        if ( args == newArgs ) ex
-        else setTracking( ex, Builder.appOp( NameEx( opName ), newArgs : _* ) )
+        if (args == newArgs) ex
+        else setTracking(ex, Builder.appOp(NameEx(opName), newArgs: _*))
 
-      val baseName = IncrementalRenaming.getBase( opName )
+      val baseName = IncrementalRenaming.getBase(opName)
       val newName = s"${NAME_PREFIX}_${baseName}_${nameGenerator.newName()}"
-      val newDecl = TlaOperDecl( newName, List.empty, newEx )
-      LetInEx( Builder.appDecl( newDecl ), newDecl )
-      // On type annot. ignore the RHS
-    case ex@OperEx( BmcOper.withType, argEx, typeEx ) =>
-      val newArg = wrap( wrappableNames )(argEx)
-      if ( argEx == newArg )
+      val newDecl = TlaOperDecl(newName, List.empty, newEx)
+      LetInEx(Builder.appDecl(newDecl), newDecl)
+    // On type annot. ignore the RHS
+    case ex @ OperEx(BmcOper.withType, argEx, typeEx) =>
+      val newArg = wrap(wrappableNames)(argEx)
+      if (argEx == newArg)
         ex
       else
-        OperEx( BmcOper.withType, newArg, typeEx )
-    case ex@OperEx( oper, args@_* ) =>
-      val newArgs = args map wrap( wrappableNames )
-      if ( args == newArgs )
+        OperEx(BmcOper.withType, newArg, typeEx)
+    case ex @ OperEx(oper, args @ _*) =>
+      val newArgs = args map wrap(wrappableNames)
+      if (args == newArgs)
         ex
       else
-        OperEx( oper, newArgs : _* )
-    case ex@LetInEx( body, defs@_* ) =>
+        OperEx(oper, newArgs: _*)
+    case ex @ LetInEx(body, defs @ _*) =>
       // Assumption: let-in defined operators are defined in dependency order
-      val (newWrappable, newDefs) = defs.foldLeft( (wrappableNames, Seq.empty[TlaOperDecl]) ) {
-        case ((partialSet, partialDecls), decl) =>
-          val newDecl = decl.copy( body = wrap( partialSet )( decl.body ) )
-          newDecl.isRecursive = decl.isRecursive
-          (partialSet + decl.name, partialDecls :+ newDecl)
-      }
-      val newBody = wrap( newWrappable )( body )
-      if ( body == newBody && defs == newDefs )
+      val (newWrappable, newDefs) =
+        defs.foldLeft((wrappableNames, Seq.empty[TlaOperDecl])) {
+          case ((partialSet, partialDecls), decl) =>
+            val newDecl = decl.copy(body = wrap(partialSet)(decl.body))
+            newDecl.isRecursive = decl.isRecursive
+            (partialSet + decl.name, partialDecls :+ newDecl)
+        }
+      val newBody = wrap(newWrappable)(body)
+      if (body == newBody && defs == newDefs)
         ex
       else
-        LetInEx( newBody, newDefs : _* )
+        LetInEx(newBody, newDefs: _*)
     case ex => ex
   }
 
-  def moduleTransform( wrappableNames : Set[String] ): TlaModuleTransformation = { m =>
-
-    val newDecls = m.declarations map {
-      case TlaOperDecl( name, params, body ) =>
-        TlaOperDecl( name, params, wrap( wrappableNames )(body) )
-      case d => d
-    }
-    new TlaModule( m.name, newDecls )
+  def moduleTransform(wrappableNames: Set[String]): TlaModuleTransformation = {
+    m =>
+      val newDecls = m.declarations map {
+        case TlaOperDecl(name, params, body) =>
+          TlaOperDecl(name, params, wrap(wrappableNames)(body))
+        case d => d
+      }
+      new TlaModule(m.name, newDecls)
   }
 }
 
@@ -81,7 +87,7 @@ object OperAppToLetInDef {
   val NAME_PREFIX = "CALL"
 
   def apply(
-             nameGenerator : UniqueNameGenerator,
-             tracker : TransformationTracker
-           ) = new OperAppToLetInDef( nameGenerator, tracker )
+      nameGenerator: UniqueNameGenerator,
+      tracker: TransformationTracker
+  ) = new OperAppToLetInDef(nameGenerator, tracker)
 }

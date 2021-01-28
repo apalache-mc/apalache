@@ -1,6 +1,14 @@
 package at.forsyte.apalache.io.tlc
 
-import at.forsyte.apalache.io.tlc.config.{ConfigIntValue, ConfigModelValue, ConfigSetValue, ConfigStrValue, InitNextSpec, TemporalSpec, TlcConfigParseError}
+import at.forsyte.apalache.io.tlc.config.{
+  ConfigIntValue,
+  ConfigModelValue,
+  ConfigSetValue,
+  ConfigStrValue,
+  InitNextSpec,
+  TemporalSpec,
+  TlcConfigParseError
+}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -66,7 +74,12 @@ class TestTlcConfigParserApalache extends FunSuite {
       """.stripMargin
 
     val config = TlcConfigParserApalache(text)
-    assert(config.constAssignments == Map("N" -> ConfigModelValue("M"), "K" -> ConfigModelValue("L")))
+    assert(
+      config.constAssignments == Map(
+        "N" -> ConfigModelValue("M"),
+        "K" -> ConfigModelValue("L")
+      )
+    )
     assert(config.constReplacements.isEmpty)
   }
 
@@ -81,7 +94,12 @@ class TestTlcConfigParserApalache extends FunSuite {
       """.stripMargin
 
     val config = TlcConfigParserApalache(text)
-    assert(config.constAssignments == Map("N" -> ConfigIntValue(10), "K" -> ConfigIntValue(-20)))
+    assert(
+      config.constAssignments == Map(
+        "N" -> ConfigIntValue(10),
+        "K" -> ConfigIntValue(-20)
+      )
+    )
     assert(config.constReplacements.isEmpty)
   }
 
@@ -96,7 +114,12 @@ class TestTlcConfigParserApalache extends FunSuite {
       """.stripMargin
 
     val config = TlcConfigParserApalache(text)
-    assert(config.constAssignments == Map("N" -> ConfigStrValue("foo"), "K" -> ConfigStrValue("bar")))
+    assert(
+      config.constAssignments == Map(
+        "N" -> ConfigStrValue("foo"),
+        "K" -> ConfigStrValue("bar")
+      )
+    )
     assert(config.constReplacements.isEmpty)
   }
 
@@ -110,8 +133,15 @@ class TestTlcConfigParserApalache extends FunSuite {
       """.stripMargin
 
     val config = TlcConfigParserApalache(text)
-    assert(config.constAssignments ==
-      Map("N" -> ConfigSetValue(ConfigStrValue("foo"), ConfigSetValue(ConfigIntValue(1), ConfigModelValue("Moo")))))
+    assert(
+      config.constAssignments ==
+        Map(
+          "N" -> ConfigSetValue(
+            ConfigStrValue("foo"),
+            ConfigSetValue(ConfigIntValue(1), ConfigModelValue("Moo"))
+          )
+        )
+    )
     assert(config.constReplacements.isEmpty)
   }
 
@@ -128,7 +158,12 @@ class TestTlcConfigParserApalache extends FunSuite {
       """.stripMargin
 
     val config = TlcConfigParserApalache(text)
-    assert(config.constAssignments == Map("N" -> ConfigModelValue("M"), "K" -> ConfigModelValue("L")))
+    assert(
+      config.constAssignments == Map(
+        "N" -> ConfigModelValue("M"),
+        "K" -> ConfigModelValue("L")
+      )
+    )
     assert(config.constReplacements.isEmpty)
   }
 
@@ -145,7 +180,12 @@ class TestTlcConfigParserApalache extends FunSuite {
       """.stripMargin
 
     val config = TlcConfigParserApalache(text)
-    assert(config.constAssignments == Map("N" -> ConfigModelValue("M"), "K" -> ConfigModelValue("L")))
+    assert(
+      config.constAssignments == Map(
+        "N" -> ConfigModelValue("M"),
+        "K" -> ConfigModelValue("L")
+      )
+    )
     assert(config.constReplacements.isEmpty)
   }
 
@@ -177,7 +217,12 @@ class TestTlcConfigParserApalache extends FunSuite {
       """.stripMargin
 
     val config = TlcConfigParserApalache(text)
-    assert(config.constAssignments == Map("N" -> ConfigModelValue("M"), "K" -> ConfigModelValue("L")))
+    assert(
+      config.constAssignments == Map(
+        "N" -> ConfigModelValue("M"),
+        "K" -> ConfigModelValue("L")
+      )
+    )
     assert(config.constReplacements == Map("A" -> "B", "C" -> "D"))
   }
 

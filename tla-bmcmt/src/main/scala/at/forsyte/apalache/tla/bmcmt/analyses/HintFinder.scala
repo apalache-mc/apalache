@@ -15,7 +15,8 @@ import com.typesafe.scalalogging.LazyLogging
   *
   * @author Igor Konnov
   */
-class HintFinder @Inject()(val hintsStore: FormulaHintsStoreImpl) extends LazyLogging {
+class HintFinder @Inject()(val hintsStore: FormulaHintsStoreImpl)
+    extends LazyLogging {
   def introHints(ex: TlaEx): Unit = ex match {
     case OperEx(TlaBoolOper.exists, _, _, quantifiedEx) =>
       introHints(quantifiedEx)
@@ -23,7 +24,7 @@ class HintFinder @Inject()(val hintsStore: FormulaHintsStoreImpl) extends LazyLo
     case OperEx(TlaBoolOper.forall, _, _, quantifiedEx) =>
       introHints(quantifiedEx)
 
-    case OperEx(TlaBoolOper.and, args@_*) =>
+    case OperEx(TlaBoolOper.and, args @ _*) =>
       hintsStore.store.put(ex.ID, FormulaHintsStore.HighAnd())
       args foreach introHints
 

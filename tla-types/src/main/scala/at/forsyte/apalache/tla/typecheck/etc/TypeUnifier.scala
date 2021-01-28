@@ -23,7 +23,11 @@ class TypeUnifier {
     * successfully unifying lhs and rhs using mgu. Note that apart from variable substitution, our unification
     * also involves merging record types. When there is no unifier, it returns None.
     */
-  def unify(substitution: Substitution, lhs: TlaType1, rhs: TlaType1): Option[(Substitution, TlaType1)] = {
+  def unify(
+      substitution: Substitution,
+      lhs: TlaType1,
+      rhs: TlaType1
+  ): Option[(Substitution, TlaType1)] = {
     // start with the substitution
     solution = substitution.context
     // try to unify
@@ -46,9 +50,13 @@ class TypeUnifier {
   }
 
   // Compute the unification of the value corresponding to the key in the two maps of fields
-  private def computeFields[K](key: K, lhsFields: SortedMap[K, TlaType1], rhsFields: SortedMap[K, TlaType1]): Option[TlaType1]= {
+  private def computeFields[K](
+      key: K,
+      lhsFields: SortedMap[K, TlaType1],
+      rhsFields: SortedMap[K, TlaType1]
+  ): Option[TlaType1] = {
     (lhsFields.get(key), rhsFields.get(key)) match {
-      case (None, None) => None
+      case (None, None)       => None
       case (Some(l), Some(r)) => compute(l, r)
       // Unifying a present field with an absent one is solved by the present one, as per
       // the typing rules on records that allows records with non-overlapping fields to
@@ -104,12 +112,13 @@ class TypeUnifier {
       case (FunT1(larg, lres), FunT1(rarg, rres)) =>
         (compute(larg, rarg), compute(lres, rres)) match {
           case (Some(uarg), Some(ures)) => Some(FunT1(uarg, ures))
-          case _ => None // no common unifier
+          case _                        => None // no common unifier
         }
 
       // operators should unify component-wise
       case (OperT1(largs, lres), OperT1(rargs, rres)) =>
-        unifySeqs(lres +: largs, rres +: rargs).map(unified => OperT1(unified.tail, unified.head))
+        unifySeqs(lres +: largs, rres +: rargs)
+          .map(unified => OperT1(unified.tail, unified.head))
 
       // sets unify on their elements
       case (SetT1(lelem), SetT1(relem)) =>
@@ -121,16 +130,19 @@ class TypeUnifier {
 
       // tuples unify component-wise
       case (TupT1(lelems @ _*), TupT1(relems @ _*)) =>
-        unifySeqs(lelems, relems).map(unified => TupT1(unified :_*))
+        unifySeqs(lelems, relems).map(unified => TupT1(unified: _*))
 
       // sparse tuples join their keys, but the values for the intersecting keys should unify
       case (SparseTupT1(lfields), SparseTupT1(rfields)) =>
         val jointKeys = (lfields.keySet ++ rfields.keySet).toSeq
-        val pairs = jointKeys.map(key => (key, computeFields(key, lfields, rfields)))
+        val pairs =
+          jointKeys.map(key => (key, computeFields(key, lfields, rfields)))
         if (pairs.exists(_._2.isEmpty)) {
           None
         } else {
-          val unifiedTuple = SparseTupT1(SortedMap(pairs.map(p => (p._1, p._2.get)) :_*))
+          val unifiedTuple = SparseTupT1(
+            SortedMap(pairs.map(p => (p._1, p._2.get)): _*)
+          )
           Some(unifiedTuple)
         }
 
@@ -142,7 +154,12 @@ class TypeUnifier {
           None
         } else {
           // remember that tuples indices are starting with 1, not 0
-          compute(l, SparseTupT1(SortedMap(relems.zipWithIndex.map(p => (1 + p._2, p._1)): _*))) match {
+          compute(
+            l,
+            SparseTupT1(
+              SortedMap(relems.zipWithIndex.map(p => (1 + p._2, p._1)): _*)
+            )
+          ) match {
             case Some(SparseTupT1(fieldTypes)) =>
               // turn the total sparse tuple into a tuple
               Some(TupT1(1.to(relems.length).map(fieldTypes): _*))
@@ -152,17 +169,20 @@ class TypeUnifier {
         }
 
       // a sparse tuple is consumed by a tuple
-      case (l @ TupT1(_ @ _*), r @ SparseTupT1(_)) =>
+      case (l @ TupT1(_ @_*), r @ SparseTupT1(_)) =>
         compute(r, l)
 
       // records join their keys, but the values for the intersecting keys should unify
       case (RecT1(lfields), RecT1(rfields)) =>
         val jointKeys = (lfields.keySet ++ rfields.keySet).toSeq
-        val pairs = jointKeys.map(key => (key, computeFields(key, lfields, rfields)))
+        val pairs =
+          jointKeys.map(key => (key, computeFields(key, lfields, rfields)))
         if (pairs.exists(_._2.isEmpty)) {
           None
         } else {
-          val unifiedTuple = RecT1(SortedMap(pairs.map(p => (p._1, p._2.get)) :_*))
+          val unifiedTuple = RecT1(
+            SortedMap(pairs.map(p => (p._1, p._2.get)): _*)
+          )
           Some(unifiedTuple)
         }
 
@@ -173,16 +193,19 @@ class TypeUnifier {
   }
 
   // unify two sequences
-  private def unifySeqs(ls: Seq[TlaType1], rs: Seq[TlaType1]): Option[Seq[TlaType1]] = {
+  private def unifySeqs(
+      ls: Seq[TlaType1],
+      rs: Seq[TlaType1]
+  ): Option[Seq[TlaType1]] = {
     val len = ls.length
     if (len != rs.length) {
-      None        // different number of arguments
+      None // different number of arguments
     } else {
       val unified = ls.zip(rs).map { case (l, r) => compute(l, r) }
       if (unified.exists(_.isEmpty)) {
-        None      // no unifier for at least one pair
+        None // no unifier for at least one pair
       } else {
-        Some(unified.map(_.get))    // all pairs unified
+        Some(unified.map(_.get)) // all pairs unified
       }
     }
   }
@@ -232,7 +255,9 @@ class TypeUnifier {
     // compute the greatest fixpoint under the successor function
     while (prev != next) {
       prev = next
-      next = next.foldLeft(Set[Int]()) { case (s, i) => s ++ succ.getOrElse(i, Set.empty) }
+      next = next.foldLeft(Set[Int]()) {
+        case (s, i) => s ++ succ.getOrElse(i, Set.empty)
+      }
     }
 
     // if the fix-point is empty, there is no cycle

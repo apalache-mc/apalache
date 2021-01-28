@@ -10,22 +10,33 @@ import org.scalatest.FunSuite
 @RunWith(classOf[JUnitRunner])
 class TestCounterexampleWriter extends FunSuite {
 
-
-  def compare(kind: String, rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState], expected: String): Unit = {
+  def compare(
+      kind: String,
+      rootModule: TlaModule,
+      notInvariant: NotInvariant,
+      states: List[NextState],
+      expected: String
+  ): Unit = {
     val stringWriter = new StringWriter()
     val printWriter = new PrintWriter(stringWriter)
     val writer = CounterexampleWriter(kind, printWriter)
     writer.write(rootModule, notInvariant, states)
     printWriter.flush()
-    assert(stringWriter.toString.replaceFirst("Created by Apalache on .*\n", "Created by Apalache on DATETIME\n") == expected)
+    assert(
+      stringWriter.toString.replaceFirst(
+        "Created by Apalache on .*\n",
+        "Created by Apalache on DATETIME\n"
+      ) == expected
+    )
   }
 
   test("single state") {
-    compare("tla",
-      new TlaModule("test",List()),
+    compare(
+      "tla",
+      new TlaModule("test", List()),
       gt(name("x"), int(1)),
       List(
-        ("",Map("x" -> int(2)))
+        ("", Map("x" -> int(2)))
       ),
       """------------------------- MODULE counterexample -------------------------
         |
@@ -47,16 +58,17 @@ class TestCounterexampleWriter extends FunSuite {
     )
   }
 
-    test("two steps") {
-      compare("tla",
-        new TlaModule("test",List()),
-        gt(name("x"), int(1)),
-        List(
-          ("", Map("x" -> int(0))),
-          ("Trans1", Map("x" -> int(1))),
-          ("Trans2", Map("x" -> int(2)))
-        ),
-        """------------------------- MODULE counterexample -------------------------
+  test("two steps") {
+    compare(
+      "tla",
+      new TlaModule("test", List()),
+      gt(name("x"), int(1)),
+      List(
+        ("", Map("x" -> int(0))),
+        ("Trans1", Map("x" -> int(1))),
+        ("Trans2", Map("x" -> int(2)))
+      ),
+      """------------------------- MODULE counterexample -------------------------
           |
           |EXTENDS test
           |
@@ -83,15 +95,16 @@ class TestCounterexampleWriter extends FunSuite {
           |\* Created by Apalache on DATETIME
           |\* https://github.com/informalsystems/apalache
           |""".stripMargin
-      )
-    }
+    )
+  }
 
   test("two steps with conjunction") {
-    compare("tla",
-      new TlaModule("test",List()),
+    compare(
+      "tla",
+      new TlaModule("test", List()),
       and(gt(name("x"), int(1)), eql(name("y"), int(10))),
       List(
-        ("",Map("x" -> int(0), "y" -> int(8))),
+        ("", Map("x" -> int(0), "y" -> int(8))),
         ("Trans1", Map("x" -> int(1), "y" -> int(9))),
         ("Trans2", Map("x" -> int(2), "y" -> int(10)))
       ),
@@ -129,11 +142,12 @@ class TestCounterexampleWriter extends FunSuite {
   }
 
   test("TLC single state") {
-    compare("tlc",
-      new TlaModule("test",List()),
+    compare(
+      "tlc",
+      new TlaModule("test", List()),
       gt(name("x"), int(1)),
       List(
-        ("",Map("x" -> int(2)))
+        ("", Map("x" -> int(2)))
       ),
       """@!@!@STARTMSG 2262:0 @!@!@
         |Created by Apalache on DATETIME
@@ -154,8 +168,9 @@ class TestCounterexampleWriter extends FunSuite {
   }
 
   test("TLC two steps") {
-    compare("tlc",
-      new TlaModule("test",List()),
+    compare(
+      "tlc",
+      new TlaModule("test", List()),
       gt(name("x"), int(1)),
       List(
         ("", Map("x" -> int(0))),
@@ -191,8 +206,9 @@ class TestCounterexampleWriter extends FunSuite {
   }
 
   test("TLC two steps with conjunction") {
-    compare("tlc",
-      new TlaModule("test",List()),
+    compare(
+      "tlc",
+      new TlaModule("test", List()),
       and(gt(name("x"), int(1)), eql(name("y"), int(10))),
       List(
         ("", Map("x" -> int(0), "y" -> int(8))),
@@ -231,11 +247,12 @@ class TestCounterexampleWriter extends FunSuite {
   }
 
   test("JSON single state") {
-    compare("json",
-      new TlaModule("test",List()),
+    compare(
+      "json",
+      new TlaModule("test", List()),
       gt(name("x"), int(1)),
       List(
-        ("",Map("x" -> int(2)))
+        ("", Map("x" -> int(2)))
       ),
       """{
         |  "module": "counterexample",
@@ -270,8 +287,9 @@ class TestCounterexampleWriter extends FunSuite {
   }
 
   test("JSON two steps") {
-    compare("json",
-      new TlaModule("test",List()),
+    compare(
+      "json",
+      new TlaModule("test", List()),
       gt(name("x"), int(1)),
       List(
         ("", Map("x" -> int(0))),
@@ -339,11 +357,12 @@ class TestCounterexampleWriter extends FunSuite {
   }
 
   test("JSON two steps with conjunction") {
-    compare("json",
-      new TlaModule("test",List()),
+    compare(
+      "json",
+      new TlaModule("test", List()),
       and(gt(name("x"), int(1)), eql(name("y"), int(10))),
       List(
-        ("",Map("x" -> int(0), "y" -> int(8))),
+        ("", Map("x" -> int(0), "y" -> int(8))),
         ("Trans1", Map("x" -> int(1), "y" -> int(9))),
         ("Trans2", Map("x" -> int(2), "y" -> int(10)))
       ),

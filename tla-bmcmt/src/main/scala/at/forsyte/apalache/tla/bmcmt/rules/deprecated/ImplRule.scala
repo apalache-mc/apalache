@@ -20,7 +20,7 @@ class ImplRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaBoolOper.implies, _, _) => true
-      case _ => false
+      case _                                 => false
     }
   }
 
@@ -30,7 +30,10 @@ class ImplRule(rewriter: SymbStateRewriter) extends RewritingRule {
         state.setRex(simplifier.simplifyShallow(tla.or(tla.not(left), right)))
 
       case _ =>
-        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
+        throw new RewriterException(
+          "%s is not applicable".format(getClass.getSimpleName),
+          state.ex
+        )
     }
   }
 }

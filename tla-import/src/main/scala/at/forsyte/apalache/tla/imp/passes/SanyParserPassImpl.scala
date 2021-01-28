@@ -18,11 +18,12 @@ import com.typesafe.scalalogging.LazyLogging
   *
   * @author Igor Konnov
   */
-
-class SanyParserPassImpl @Inject()(val options: PassOptions,
-                                   val sourceStore: SourceStore,
-                                   @Named("AfterParser") val nextPass: Pass with TlaModuleMixin)
-  extends SanyParserPass with LazyLogging {
+class SanyParserPassImpl @Inject()(
+    val options: PassOptions,
+    val sourceStore: SourceStore,
+    @Named("AfterParser") val nextPass: Pass with TlaModuleMixin
+) extends SanyParserPass
+    with LazyLogging {
 
   private var rootModule: Option[TlaModule] = None
 
@@ -43,23 +44,28 @@ class SanyParserPassImpl @Inject()(val options: PassOptions,
     if (filename.endsWith(".json")) {
       try {
         rootModule = Some(JsonReader.readModule(new File(filename)))
-      }
-      catch {
+      } catch {
         case e: Exception =>
           logger.error("  > " + e.getMessage)
           rootModule = None
       }
-    }
-    else {
-      val (rootName, modules) = new SanyImporter(sourceStore).loadFromFile(new File(filename))
+    } else {
+      val (rootName, modules) =
+        new SanyImporter(sourceStore).loadFromFile(new File(filename))
       rootModule = modules.get(rootName)
     }
     if (rootModule.isEmpty) {
       logger.error("  > Error parsing file " + filename)
     } else {
       val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-      PrettyWriter.write(rootModule.get, new File(outdir.toFile, "out-parser.tla"))
-      JsonWriter.write(rootModule.get, new File(outdir.toFile, "out-parser.json"))
+      PrettyWriter.write(
+        rootModule.get,
+        new File(outdir.toFile, "out-parser.tla")
+      )
+      JsonWriter.write(
+        rootModule.get,
+        new File(outdir.toFile, "out-parser.json")
+      )
 
       // write parser output to specified destination, if requested
       val output = options.getOrElse("parser", "output", "")
@@ -69,20 +75,25 @@ class SanyParserPassImpl @Inject()(val options: PassOptions,
         else if (output.contains(".json"))
           JsonWriter.write(rootModule.get, new File(output))
         else
-          logger.error("  > Error writing output: please give either .tla or .json filename")
+          logger.error(
+            "  > Error writing output: please give either .tla or .json filename"
+          )
 
         if (options.getOrElse("general", "debug", false)) {
-          val sourceLocator = SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
+          val sourceLocator =
+            SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
           rootModule.get.operDeclarations foreach sourceLocator.checkConsistency
         }
         if (options.getOrElse("general", "debug", false)) {
-          val sourceLocator = SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
+          val sourceLocator =
+            SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
           rootModule.get.operDeclarations foreach sourceLocator.checkConsistency
         }
       }
     }
     rootModule.isDefined
   }
+
   /**
     * Get the next pass in the chain. What is the next pass is up
     * to the module configuration and the pass outcome.

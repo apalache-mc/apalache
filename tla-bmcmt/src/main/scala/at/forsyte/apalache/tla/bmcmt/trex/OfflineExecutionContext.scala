@@ -10,7 +10,8 @@ import com.typesafe.scalalogging.LazyLogging
   * @param rewriter an expression rewriter
   */
 class OfflineExecutionContext(var rewriter: SymbStateRewriter)
-    extends ExecutionContext[OfflineExecutionContextSnapshot] with LazyLogging {
+    extends ExecutionContext[OfflineExecutionContextSnapshot]
+    with LazyLogging {
 
   /**
     * Create a snapshot of the context. This method is non-destructive, that is,
@@ -20,9 +21,15 @@ class OfflineExecutionContext(var rewriter: SymbStateRewriter)
     */
   override def snapshot(): OfflineExecutionContextSnapshot = {
     val rs = rewriter.snapshot()
-    val smtLog = rewriter.solverContext.asInstanceOf[RecordingSolverContext].extractLog()
+    val smtLog =
+      rewriter.solverContext.asInstanceOf[RecordingSolverContext].extractLog()
     logger.debug("Offline snapshot has %d entries".format(smtLog.lengthRec))
-    new OfflineExecutionContextSnapshot(rewriter.solverContext.config, rs, smtLog, typeFinder.varTypes)
+    new OfflineExecutionContextSnapshot(
+      rewriter.solverContext.config,
+      rs,
+      smtLog,
+      typeFinder.varTypes
+    )
   }
 
   /**
@@ -39,9 +46,13 @@ class OfflineExecutionContext(var rewriter: SymbStateRewriter)
     * @throws IllegalStateException when recovery is impossible
     */
   override def recover(snapshot: OfflineExecutionContextSnapshot): Unit = {
-    val solver = RecordingSolverContext.createZ3(Some(snapshot.smtLog), snapshot.solverConfig)
+    val solver = RecordingSolverContext.createZ3(
+      Some(snapshot.smtLog),
+      snapshot.solverConfig
+    )
     // TODO: issue #105, remove references to SolverContext, so recovery becomes less of a hack
-    val newRewriter = new SymbStateRewriterImpl(solver, typeFinder, rewriter.exprGradeStore)
+    val newRewriter =
+      new SymbStateRewriterImpl(solver, typeFinder, rewriter.exprGradeStore)
     newRewriter.formulaHintsStore = rewriter.formulaHintsStore
     newRewriter.config = rewriter.config
     newRewriter.recover(snapshot.rewriterSnapshot)

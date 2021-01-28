@@ -13,8 +13,15 @@ import scala.collection.immutable.SortedSet
   *
   * @author Igor Konnov
   */
-class RecordDomainCache(solverContext: SolverContext, strValueCache: StrValueCache)
-  extends AbstractCache[Arena, (SortedSet[String], SortedSet[String]), ArenaCell] with Serializable {
+class RecordDomainCache(
+    solverContext: SolverContext,
+    strValueCache: StrValueCache
+) extends AbstractCache[
+      Arena,
+      (SortedSet[String], SortedSet[String]),
+      ArenaCell
+    ]
+    with Serializable {
 
   /**
     * Create a set for a sorted set of record keys.
@@ -23,7 +30,10 @@ class RecordDomainCache(solverContext: SolverContext, strValueCache: StrValueCac
     * @param usedAndUnusedKeys two sets: the keys in the domain and the keys outside of the domain
     * @return a target value that is going to be cached and the new context
     */
-  override def create(context: Arena, usedAndUnusedKeys: (SortedSet[String], SortedSet[String])): (Arena, ArenaCell) = {
+  override def create(
+      context: Arena,
+      usedAndUnusedKeys: (SortedSet[String], SortedSet[String])
+  ): (Arena, ArenaCell) = {
     val usedKeys = usedAndUnusedKeys._1
     val unusedKeys = usedAndUnusedKeys._2
     val allKeys: SortedSet[String] = usedKeys.union(unusedKeys)

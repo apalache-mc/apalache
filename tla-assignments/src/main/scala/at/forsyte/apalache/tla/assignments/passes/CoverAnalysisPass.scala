@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.assignments.passes
 
-
 import at.forsyte.apalache.infra.passes.{Pass, TlaModuleMixin}
 
 /**

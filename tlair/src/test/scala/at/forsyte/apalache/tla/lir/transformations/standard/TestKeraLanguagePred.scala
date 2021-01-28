@@ -64,10 +64,16 @@ class TestKeraLanguagePred extends LanguagePredTestSuite {
   }
 
   test("KerA TLC") {
-    expectOk(pred.isExprOk(OperEx(TlcOper.print, tla.bool(true), tla.str("msg"))))
+    expectOk(
+      pred.isExprOk(OperEx(TlcOper.print, tla.bool(true), tla.str("msg")))
+    )
     expectOk(pred.isExprOk(OperEx(TlcOper.printT, tla.str("msg"))))
-    expectOk(pred.isExprOk(OperEx(TlcOper.assert, tla.bool(true), tla.str("msg"))))
-    expectOk(pred.isExprOk(OperEx(TlcOper.colonGreater, tla.int(1), tla.int(2))))
+    expectOk(
+      pred.isExprOk(OperEx(TlcOper.assert, tla.bool(true), tla.str("msg")))
+    )
+    expectOk(
+      pred.isExprOk(OperEx(TlcOper.colonGreater, tla.int(1), tla.int(2)))
+    )
     expectOk(pred.isExprOk(OperEx(TlcOper.atat, NameEx("fun"), NameEx("pair"))))
   }
 
@@ -123,7 +129,6 @@ class TestKeraLanguagePred extends LanguagePredTestSuite {
   }
 
   /****************************** the tests from TestFlatLanguagePred *********************************************/
-
   test("a call to a user operator") {
     val expr = enumSet(int(1), str("abc"), bool(false))
     val app = appOp(name("UserOp"), expr)
@@ -132,30 +137,24 @@ class TestKeraLanguagePred extends LanguagePredTestSuite {
 
   test("a non-nullary let-in ") {
     val app = appOp(name("UserOp"), int(3))
-    val letInDef = letIn(app,
-      declOp("UserOp",
-        plus(int(1), name("x")),
-        SimpleFormalParam("x")))
+    val letInDef = letIn(
+      app,
+      declOp("UserOp", plus(int(1), name("x")), SimpleFormalParam("x"))
+    )
     expectFail(pred.isExprOk(letInDef))
   }
 
   test("a nullary let-in ") {
     val app = appOp(name("UserOp"))
-    val letInDef = letIn(app,
-      declOp("UserOp",
-        plus(int(1), int(2))))
+    val letInDef = letIn(app, declOp("UserOp", plus(int(1), int(2))))
     expectOk(pred.isExprOk(letInDef))
   }
 
   test("nested nullary let-in ") {
     val app = plus(appOp(name("A")), appOp(name("B")))
-    val letInDef = letIn(app,
-      declOp("A",
-        plus(int(1), int(2))))
+    val letInDef = letIn(app, declOp("A", plus(int(1), int(2))))
     val outerLetIn =
-      letIn(letInDef,
-        declOp("B",
-          int(3)))
+      letIn(letInDef, declOp("B", int(3)))
     expectOk(pred.isExprOk(outerLetIn))
   }
 

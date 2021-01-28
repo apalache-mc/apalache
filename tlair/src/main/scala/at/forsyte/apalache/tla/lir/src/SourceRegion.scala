@@ -28,7 +28,6 @@ class SourceRegion(val start: SourcePosition, val end: SourcePosition) {
     start + "-" + end
   }
 
-
   def canEqual(other: Any): Boolean = other.isInstanceOf[SourceRegion]
 
   override def equals(other: Any): Boolean = other match {
@@ -50,7 +49,15 @@ object SourceRegion {
     new SourceRegion(start, end)
   }
 
-  def apply(lineStart: Int, columnStart: Int, lineEnd: Int, columnEnd: Int): SourceRegion = {
-    new SourceRegion(SourcePosition(lineStart, columnStart), SourcePosition(lineEnd, columnEnd))
+  def apply(
+      lineStart: Int,
+      columnStart: Int,
+      lineEnd: Int,
+      columnEnd: Int
+  ): SourceRegion = {
+    new SourceRegion(
+      SourcePosition(lineStart, columnStart),
+      SourcePosition(lineEnd, columnEnd)
+    )
   }
 }

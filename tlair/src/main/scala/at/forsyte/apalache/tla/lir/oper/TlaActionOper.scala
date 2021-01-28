@@ -8,6 +8,7 @@ abstract class TlaActionOper extends TlaOper {
 }
 
 object TlaActionOper {
+
   /**
     * The prime operator. By the TLA+ restrictions, we cannot apply it twice, e.g., (x')' is illegal.
     */
