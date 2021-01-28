@@ -2,6 +2,12 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.8.3
+
+## Bug fixes
+
+ * Fixed path of jar in ZIP distribution, reported in #500, see #506
+
 ## 0.8.2
 
 ### Bug fixes
