@@ -9,7 +9,7 @@ package at.forsyte.apalache.io.annotations
  *   Plus(x, y) == x + y
  * </pre>
  */
-class TlaAnnotation(val name: String, val args: TlaAnnotationArg*) {
+class Annotation(val name: String, val args: TlaAnnotationArg*) {
 
   /**
    * <p>A string representation of the annotation. There are two cases:</p>
@@ -31,10 +31,10 @@ class TlaAnnotation(val name: String, val args: TlaAnnotationArg*) {
     }
   }
 
-  def canEqual(other: Any): Boolean = other.isInstanceOf[TlaAnnotation]
+  def canEqual(other: Any): Boolean = other.isInstanceOf[Annotation]
 
   override def equals(other: Any): Boolean = other match {
-    case that: TlaAnnotation =>
+    case that: Annotation =>
       (that canEqual this) &&
         name == that.name &&
         args == that.args
@@ -47,7 +47,7 @@ class TlaAnnotation(val name: String, val args: TlaAnnotationArg*) {
   }
 }
 
-object TlaAnnotation {
+object Annotation {
 
   /**
    * A convenient constructor for TLA+ annotations.
@@ -55,7 +55,7 @@ object TlaAnnotation {
    * @param args a list of arguments
    * @return a new annotation
    */
-  def apply(name: String, args: TlaAnnotationArg*): TlaAnnotation = {
-    new TlaAnnotation(name, args: _*)
+  def apply(name: String, args: TlaAnnotationArg*): Annotation = {
+    new Annotation(name, args: _*)
   }
 }

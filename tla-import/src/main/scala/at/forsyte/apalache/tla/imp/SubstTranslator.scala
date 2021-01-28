@@ -13,7 +13,7 @@ import tla2sany.semantic._
   *
   * @author konnov
   */
-class SubstTranslator(sourceStore: SourceStore, annotationStore: TlaAnnotationStore, context: Context)
+class SubstTranslator(sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context)
     extends LazyLogging {
 
   def translate(substInNode: SubstInNode, body: TlaEx): TlaEx = {
@@ -115,7 +115,7 @@ class SubstTranslator(sourceStore: SourceStore, annotationStore: TlaAnnotationSt
 }
 
 object SubstTranslator {
-  def apply(sourceStore: SourceStore, annotationStore: TlaAnnotationStore, context: Context): SubstTranslator = {
+  def apply(sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context): SubstTranslator = {
     new SubstTranslator(sourceStore, annotationStore, context)
   }
 }

@@ -17,13 +17,13 @@ package object store {
    * A mapping from unique identifiers to annotations, e.g., from operator identifiers to annotations.
    * This mapping is mutable.
    */
-  type TlaAnnotationStore = mutable.Map[UID, List[TlaAnnotation]]
+  type AnnotationStore = mutable.Map[UID, List[Annotation]]
 
   /**
    * Create an empty store. Normally, you should not use this method, except in tests.
    * @return a new store
    */
-  def createAnnotationStore(): TlaAnnotationStore = {
-    new mutable.HashMap[UID, List[TlaAnnotation]]()
+  def createAnnotationStore(): AnnotationStore = {
+    new mutable.HashMap[UID, List[Annotation]]()
   }
 }

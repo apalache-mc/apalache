@@ -16,10 +16,10 @@ import scala.collection.JavaConverters._
   * @author konnov
   */
 class ExprOrOpArgNodeTranslator(
-    sourceStore: SourceStore,
-    annotationStore: TlaAnnotationStore,
-    context: Context,
-    recStatus: RecursionStatus
+                                 sourceStore: SourceStore,
+                                 annotationStore: AnnotationStore,
+                                 context: Context,
+                                 recStatus: RecursionStatus
 ) extends LazyLogging {
   def translate(node: ExprOrOpArgNode): TlaEx = {
     val result =
@@ -188,10 +188,10 @@ class ExprOrOpArgNodeTranslator(
 
 object ExprOrOpArgNodeTranslator {
   def apply(
-      sourceStore: SourceStore,
-      annotationStore: TlaAnnotationStore,
-      context: Context,
-      recStatus: RecursionStatus
+             sourceStore: SourceStore,
+             annotationStore: AnnotationStore,
+             context: Context,
+             recStatus: RecursionStatus
   ): ExprOrOpArgNodeTranslator = {
     new ExprOrOpArgNodeTranslator(sourceStore, annotationStore, context, recStatus)
   }

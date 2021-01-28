@@ -12,7 +12,7 @@ import tla2sany.semantic.{OpApplNode, OpDefNode}
  *
  * @author konnov
  */
-class OpDefTranslator(sourceStore: SourceStore, annotationStore: TlaAnnotationStore, context: Context) {
+class OpDefTranslator(sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context) {
   private val annotationExtractor: AnnotationExtractor = new AnnotationExtractor(annotationStore)
 
   def translate(node: OpDefNode): TlaOperDecl = {
@@ -75,7 +75,7 @@ class OpDefTranslator(sourceStore: SourceStore, annotationStore: TlaAnnotationSt
 }
 
 object OpDefTranslator {
-  def apply(sourceStore: SourceStore, annotationStore: TlaAnnotationStore, context: Context): OpDefTranslator = {
+  def apply(sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context): OpDefTranslator = {
     new OpDefTranslator(sourceStore, annotationStore, context)
   }
 }

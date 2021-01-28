@@ -10,8 +10,8 @@ import at.forsyte.apalache.io.annotations.store._
   * @author Igor Konnov
   */
 @Singleton
-class TlaAnnotationStoreProvider extends Provider[TlaAnnotationStore] {
-  override def get(): TlaAnnotationStore = {
+class AnnotationStoreProvider extends Provider[AnnotationStore] {
+  override def get(): AnnotationStore = {
     createAnnotationStore()
   }
 }

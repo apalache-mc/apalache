@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.io.annotations.TlaAnnotationParser.{Failure, Success}
-import at.forsyte.apalache.io.annotations.{TlaAnnotation, TlaAnnotationParser}
+import at.forsyte.apalache.io.annotations.AnnotationParser.{Failure, Success}
+import at.forsyte.apalache.io.annotations.{Annotation, AnnotationParser}
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.src.SourceLocation
 import at.forsyte.apalache.tla.lir.UID
@@ -12,9 +12,9 @@ import tla2sany.semantic.OpDefOrDeclNode
   *
   * @author Igor Konnov
   */
-class AnnotationExtractor(annotationStore: TlaAnnotationStore) {
+class AnnotationExtractor(annotationStore: AnnotationStore) {
   def parseAndSave(uid: UID, node: OpDefOrDeclNode): Unit = {
-    var annotations = List[TlaAnnotation]()
+    var annotations = List[Annotation]()
     var comments = node.getComment
     var index = 0
     while (index != -1) {
@@ -22,7 +22,7 @@ class AnnotationExtractor(annotationStore: TlaAnnotationStore) {
       if (index != -1) {
         // we have found the starting position of an annotation
         comments = comments.substring(index)
-        TlaAnnotationParser.parse(comments) match {
+        AnnotationParser.parse(comments) match {
           case Success(annotation, length) =>
             annotations +:= annotation
             assert(length > 0)

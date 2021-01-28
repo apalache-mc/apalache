@@ -17,7 +17,7 @@ import scala.io.Source
  *
  * @author konnov
  */
-class SanyImporter(sourceStore: SourceStore, annotationStore: TlaAnnotationStore) {
+class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) {
 
   /**
    * Load a TLA+ specification from a file by calling SANY.

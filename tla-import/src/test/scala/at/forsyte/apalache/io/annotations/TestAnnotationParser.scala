@@ -1,6 +1,6 @@
 package at.forsyte.apalache.io.annotations
 
-import at.forsyte.apalache.io.annotations.TlaAnnotationParser.{Failure, Success}
+import at.forsyte.apalache.io.annotations.AnnotationParser.{Failure, Success}
 import org.junit.runner.RunWith
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen.{alphaNumStr, alphaStr, identifier, listOf, oneOf}
@@ -10,7 +10,7 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.prop.Checkers
 
 @RunWith(classOf[JUnitRunner])
-class TestTlaAnnotationParser extends FunSuite with Checkers {
+class TestAnnotationParser extends FunSuite with Checkers {
   // generators for the case classes
   private val genStr = for {
     // I would like to check a string that contains ASCII characters, but not the quotes (").
@@ -29,30 +29,30 @@ class TestTlaAnnotationParser extends FunSuite with Checkers {
 
 
   test("test on empty input") {
-    TlaAnnotationParser.parse("") match {
-      case TlaAnnotationParser.Failure(_) =>
+    AnnotationParser.parse("") match {
+      case AnnotationParser.Failure(_) =>
         ()
     }
   }
 
   test("test on one-line input") {
     val expected =
-      new TlaAnnotation("greet", TlaAnnotationString("hello"), TlaAnnotationInt(2021), TlaAnnotationBool(true))
-    TlaAnnotationParser.parse("""  @greet("hello", 2021, true)   """) match {
-      case TlaAnnotationParser.Success(parsed, _) =>
+      new Annotation("greet", TlaAnnotationString("hello"), TlaAnnotationInt(2021), TlaAnnotationBool(true))
+    AnnotationParser.parse("""  @greet("hello", 2021, true)   """) match {
+      case AnnotationParser.Success(parsed, _) =>
         assert(expected == parsed)
     }
   }
 
   test("test on multiline input") {
     val expected =
-      new TlaAnnotation("greet", TlaAnnotationString("hello"), TlaAnnotationInt(2021), TlaAnnotationBool(true))
+      new Annotation("greet", TlaAnnotationString("hello"), TlaAnnotationInt(2021), TlaAnnotationBool(true))
     val text =
       """  @greet("hello",
         |         2021,
         |         true)     """.stripMargin
-    TlaAnnotationParser.parse(text) match {
-      case TlaAnnotationParser.Success(parsed, _) =>
+    AnnotationParser.parse(text) match {
+      case AnnotationParser.Success(parsed, _) =>
         assert(expected == parsed)
     }
   }
@@ -66,12 +66,12 @@ class TestTlaAnnotationParser extends FunSuite with Checkers {
     check({
       forAll(identifier) { name =>
         forAll(listOf(oneOf(genStr, genInt, genBool))) { args =>
-          val annotation = new TlaAnnotation(name, args: _*)
-          TlaAnnotationParser.parse(annotation.toString) match {
-            case TlaAnnotationParser.Success(parsed, _) =>
+          val annotation = new Annotation(name, args: _*)
+          AnnotationParser.parse(annotation.toString) match {
+            case AnnotationParser.Success(parsed, _) =>
               annotation ?= parsed
 
-            case TlaAnnotationParser.Failure(_) =>
+            case AnnotationParser.Failure(_) =>
               falsified
           }
         }
@@ -82,7 +82,7 @@ class TestTlaAnnotationParser extends FunSuite with Checkers {
   test("parse error on random bad inputs") {
     check({
       forAll(alphaStr) { str =>
-          TlaAnnotationParser.parse(str) match {
+          AnnotationParser.parse(str) match {
             // Pass the test on successful parse.
             // To see how testing is different from verification,
             // replace 'passed' with 'falsified' and observe that no error will be found ;-)

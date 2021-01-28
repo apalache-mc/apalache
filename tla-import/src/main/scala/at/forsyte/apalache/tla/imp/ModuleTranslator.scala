@@ -13,7 +13,7 @@ import scala.collection.JavaConverters._
  *
  * @author konnov
  */
-class ModuleTranslator(sourceStore: SourceStore, annotationStore: TlaAnnotationStore) extends LazyLogging {
+class ModuleTranslator(sourceStore: SourceStore, annotationStore: AnnotationStore) extends LazyLogging {
   private val annotationExtractor = new AnnotationExtractor(annotationStore)
 
   def translate(node: ModuleNode): TlaModule = {
@@ -195,7 +195,7 @@ class ModuleTranslator(sourceStore: SourceStore, annotationStore: TlaAnnotationS
 
 object ModuleTranslator {
 
-  def apply(sourceStore: SourceStore, annotationStore: TlaAnnotationStore): ModuleTranslator = {
+  def apply(sourceStore: SourceStore, annotationStore: AnnotationStore): ModuleTranslator = {
     new ModuleTranslator(sourceStore, annotationStore)
   }
 }

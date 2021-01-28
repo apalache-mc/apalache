@@ -8,14 +8,14 @@ import java.io.{Reader, StringReader}
  *
  * @author Igor Konnov
  */
-class TlaAnnotationParser extends JavaTokenParsers {
+class AnnotationParser extends JavaTokenParsers {
   def expr: Parser[Any] = "@" ~ ident ~ opt("(" ~ repsep(arg, ",") ~ ")") ^^ {
     case _ ~ name ~ None =>
-      new TlaAnnotation(name)
+      new Annotation(name)
 
     case _ ~ name ~ Some(_ ~ args ~ _) =>
       val collected = args collect { case a: TlaAnnotationArg => a }
-      new TlaAnnotation(name, collected: _*)
+      new Annotation(name, collected: _*)
   }
 
   def arg: Parser[Any] = stringArg | intArg | boolArg
@@ -30,16 +30,16 @@ class TlaAnnotationParser extends JavaTokenParsers {
   }
 }
 
-object TlaAnnotationParser {
+object AnnotationParser {
   abstract class Result
-  case class Success(annotation: TlaAnnotation, length: Int) extends Result
+  case class Success(annotation: Annotation, length: Int) extends Result
   case class Failure(message: String) extends Result
 
-  private val parser: TlaAnnotationParser = new TlaAnnotationParser
+  private val parser: AnnotationParser = new AnnotationParser
 
   def parse(reader: Reader): Result = {
     parser.parse(parser.expr, reader) match {
-      case parser.Success(annotation: TlaAnnotation, rest) => Success(annotation, rest.offset)
+      case parser.Success(annotation: Annotation, rest) => Success(annotation, rest.offset)
       case parser.Success(res, _)                          => Failure("Expected annotation, found: " + res)
       case parser.Failure(msg, _)                          => Failure(msg)
       case parser.Error(msg, _)                            => Failure(msg)

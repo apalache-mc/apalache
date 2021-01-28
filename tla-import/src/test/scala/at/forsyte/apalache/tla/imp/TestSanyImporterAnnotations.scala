@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.io.annotations.TlaAnnotation
+import at.forsyte.apalache.io.annotations.Annotation
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
@@ -19,7 +19,7 @@ import scala.io.Source
 @RunWith(classOf[JUnitRunner])
 class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
   private var sourceStore: SourceStore = _
-  private var annotationStore: TlaAnnotationStore = _
+  private var annotationStore: AnnotationStore = _
   private var sanyImporter: SanyImporter = _
 
   import at.forsyte.apalache.io.annotations.TlaAnnotationArg._
@@ -53,7 +53,7 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
     module.declarations.find(_.name == "S") match {
       case Some(d @ TlaConstDecl(_)) =>
         val annotations = annotationStore(d.ID)
-        val expected = TlaAnnotation("awesome") :: TlaAnnotation("type", mkStr("  Set(Int)  ")) :: Nil
+        val expected = Annotation("awesome") :: Annotation("type", mkStr("  Set(Int)  ")) :: Nil
         assert(expected == annotations)
 
       case _ =>
@@ -76,7 +76,7 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
     module.declarations.find(_.name == "S") match {
       case Some(d @ TlaVarDecl(_)) =>
         val annotations = annotationStore(d.ID)
-        val expected = TlaAnnotation("amazing") :: TlaAnnotation("type", mkStr(" Set(Int) ")) :: Nil
+        val expected = Annotation("amazing") :: Annotation("type", mkStr(" Set(Int) ")) :: Nil
         assert(expected == annotations)
 
       case _ =>
@@ -101,7 +101,7 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
     module.declarations.find(_.name == "Inc") match {
       case Some(d @ TlaOperDecl(_, _, _)) =>
         val annotations = annotationStore(d.ID)
-        val expected = TlaAnnotation("pure") :: TlaAnnotation("type", mkStr("Int => Int")) :: Nil
+        val expected = Annotation("pure") :: Annotation("type", mkStr("Int => Int")) :: Nil
         assert(expected == annotations)
 
       case _ =>
@@ -132,7 +132,7 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
         // SanyImporter introduces a let-definition before application of a LOCAL operator
       case Some(d @ TlaOperDecl(_, _, LetInEx(_, localDef))) =>
         val annotations = annotationStore(localDef.ID)
-        val expected = TlaAnnotation("pure") :: TlaAnnotation("type", mkStr("Int => Int")) :: Nil
+        val expected = Annotation("pure") :: Annotation("type", mkStr("Int => Int")) :: Nil
         assert(expected == annotations)
 
       case _ =>
@@ -164,7 +164,7 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
     module.declarations.find(_.name == "A") match {
       case Some(d @ TlaOperDecl(_, _, LetInEx(_, incDecl))) =>
         val annotations = annotationStore(incDecl.ID)
-        val expected = TlaAnnotation("pure") :: TlaAnnotation("type", mkStr("Int => Int")) :: Nil
+        val expected = Annotation("pure") :: Annotation("type", mkStr("Int => Int")) :: Nil
         assert(expected == annotations)
 
       case _ =>
@@ -194,7 +194,7 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
     module.declarations.find(_.name == "Fact") match {
       case Some(d @ TlaOperDecl(_, _, _)) =>
         val annotations = annotationStore(d.ID)
-        val expected = TlaAnnotation("tailrec") :: TlaAnnotation("type", mkStr("Int => Int")) :: Nil
+        val expected = Annotation("tailrec") :: Annotation("type", mkStr("Int => Int")) :: Nil
         assert(expected == annotations)
 
       case _ =>
@@ -220,7 +220,7 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
     module.declarations.find(_.name == "Fact") match {
       case Some(d @ TlaOperDecl(_, _, _)) =>
         val annotations = annotationStore(d.ID)
-        val expected = TlaAnnotation("type", mkStr("Int -> Int")) :: Nil
+        val expected = Annotation("type", mkStr("Int -> Int")) :: Nil
         assert(expected == annotations)
 
       case _ =>
@@ -245,7 +245,7 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
     module.declarations.find(_.name == "Inc") match {
       case Some(d @ TlaOperDecl(_, _, _)) =>
         val annotations = annotationStore(d.ID)
-        val expected = TlaAnnotation("type", mkStr("Int -> Int")) :: Nil
+        val expected = Annotation("type", mkStr("Int -> Int")) :: Nil
         assert(expected == annotations)
 
       case _ =>

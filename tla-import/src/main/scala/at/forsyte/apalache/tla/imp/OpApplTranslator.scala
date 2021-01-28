@@ -14,10 +14,10 @@ import tla2sany.semantic._
   * @author konnov
   */
 class OpApplTranslator(
-    sourceStore: SourceStore,
-    annotationStore: TlaAnnotationStore,
-    val context: Context,
-    val recStatus: RecursionStatus
+                        sourceStore: SourceStore,
+                        annotationStore: AnnotationStore,
+                        val context: Context,
+                        val recStatus: RecursionStatus
 ) {
 
   // we use the following case classes to represent the bound variables with a range in many quantified expressions
@@ -550,10 +550,10 @@ class OpApplTranslator(
 
 object OpApplTranslator {
   def apply(
-      sourceSource: SourceStore,
-      annotationStore: TlaAnnotationStore,
-      context: Context,
-      recStatus: RecursionStatus
+             sourceSource: SourceStore,
+             annotationStore: AnnotationStore,
+             context: Context,
+             recStatus: RecursionStatus
   ): OpApplTranslator = {
     new OpApplTranslator(sourceSource, annotationStore, context, recStatus)
   }

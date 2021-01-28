@@ -26,7 +26,7 @@ import scala.io.Source
 @RunWith(classOf[JUnitRunner])
 class TestSanyImporter extends FunSuite with BeforeAndAfter {
   private var sourceStore: SourceStore = _
-  private var annotationStore: TlaAnnotationStore = _
+  private var annotationStore: AnnotationStore = _
   private var sanyImporter: SanyImporter = _
 
   before {

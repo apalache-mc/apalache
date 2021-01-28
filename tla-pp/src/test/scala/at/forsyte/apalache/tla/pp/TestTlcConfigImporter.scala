@@ -16,7 +16,7 @@ import scala.io.Source
 @RunWith(classOf[JUnitRunner])
 class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
   private var sourceStore: SourceStore = _
-  private var annotationStore: TlaAnnotationStore = _
+  private var annotationStore: AnnotationStore = _
   private var sanyImporter: SanyImporter = _
 
   override def beforeEach() {

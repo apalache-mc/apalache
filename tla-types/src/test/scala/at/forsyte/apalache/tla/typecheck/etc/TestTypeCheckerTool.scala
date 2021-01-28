@@ -30,7 +30,7 @@ class TestTypeCheckerTool
     with EasyMockSugar {
   var gen: ToEtcExpr = _
   private var sourceStore: SourceStore = _
-  private var annotationStore: TlaAnnotationStore = _
+  private var annotationStore: AnnotationStore = _
   private var sanyImporter: SanyImporter = _
 
   override def beforeEach() {

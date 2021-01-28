@@ -22,7 +22,7 @@ import java.nio.file.Path
 class SanyParserPassImpl @Inject()(
                                     val options: PassOptions,
                                     val sourceStore: SourceStore,
-                                    val annotationStore: TlaAnnotationStore,
+                                    val annotationStore: AnnotationStore,
                                     @Named("AfterParser") val nextPass: Pass with TlaModuleMixin
 ) extends SanyParserPass
     with LazyLogging {
