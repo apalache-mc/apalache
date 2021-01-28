@@ -53,9 +53,7 @@ class SeqModelChecker[ExecutorContextT](
   }
 
   private def makeStep(transitions: Seq[TlaEx]): Outcome.Value = {
-    val (outcome, maybeInvariantNos) = prepareTransitionsAndCheckInvariants(
-      transitions
-    )
+    val (outcome, maybeInvariantNos) = prepareTransitionsAndCheckInvariants(transitions)
     if (outcome != Outcome.NoError) {
       return outcome
     }
@@ -153,8 +151,7 @@ class SeqModelChecker[ExecutorContextT](
         } else {
           val transitionInvs = addMaybeInvariants(no)
           if (params.invariantMode == InvariantMode.BeforeJoin) {
-            val outcome =
-              checkInvariantsForPreparedTransition(no, transitionInvs)
+            val outcome = checkInvariantsForPreparedTransition(no, transitionInvs)
             if (outcome != Outcome.NoError) {
               // an invariant is violated, return right away
               return (outcome, Set.empty)
@@ -204,12 +201,12 @@ class SeqModelChecker[ExecutorContextT](
   ): Checker.Outcome.Value = {
     // check the invariants
     if (maybeInvariantNos.nonEmpty) {
-      logger.info(
-        s"State $stateNo: Checking ${maybeInvariantNos.size} invariants"
-      )
+      logger.info(s"State $stateNo: Checking ${maybeInvariantNos.size} invariants")
     }
 
-    for (((_, notInv), invNo) <- checkerInput.invariantsAndNegations.zipWithIndex) {
+    for (
+      ((_, notInv), invNo) <- checkerInput.invariantsAndNegations.zipWithIndex
+    ) {
       if (maybeInvariantNos.contains(invNo)) {
         logger.debug(s"State $stateNo: Checking invariant $invNo")
         // save the context

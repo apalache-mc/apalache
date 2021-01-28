@@ -16,12 +16,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
   */
 @deprecated("We do not have clean semantics for assert")
 class TypedAssert(rewriter: SymbStateRewriter) {
-  def typedAssert(
-      state: SymbState,
-      targetType: CellT,
-      arg: TlaEx,
-      message: String
-  ): SymbState = {
+  def typedAssert(state: SymbState, targetType: CellT, arg: TlaEx, message: String): SymbState = {
     val valueState = rewriter.rewriteUntilDone(state.setRex(arg))
     // introduce an unknown value for the outcome of assert, since this value may be unified in IF-THEN-ELSE
     var arena = valueState.arena.appendCell(targetType)

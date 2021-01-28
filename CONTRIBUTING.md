@@ -256,7 +256,7 @@ The process proceeds in two steps:
    - publish it as a GitHub release
    - announce the release in our internal `#releases` slack channel
 
-[./.github/workflows/prepare-release.yml]: ./.github/workflows/prepare-release.yml
+[./.github/workflows/prepare-release.yml]: ./.github/workflows/prepare-release.yml 
 [./.github/workflows/release.yml]: ./.github/workflows/prepare-release.yml
 [github-ui]: https://github.com/informalsystems/apalache/actions?query=workflow%3A%22Prepare+Release%22
 

@@ -18,14 +18,14 @@ class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaBoolOper.or, _*) => true
-      case _                          => false
+      case _ => false
     }
   }
 
   override def apply(state: SymbState): SymbState = {
     val simplfier = new ConstSimplifierForSmt()
     simplfier.simplifyShallow(state.ex) match {
-      case OperEx(TlaBoolOper.or, args @ _*) =>
+      case OperEx(TlaBoolOper.or, args@_*) =>
         if (args.isEmpty) {
           // empty disjunction is always false
           state.setRex(state.arena.cellFalse().toNameEx)
@@ -34,8 +34,7 @@ class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
           def toIte(es: Seq[TlaEx]): TlaEx = {
             es match {
               case Seq(last) => last
-              case hd +: tail =>
-                tla.ite(hd, state.arena.cellTrue().toNameEx, toIte(tail))
+              case hd +: tail => tla.ite(hd, state.arena.cellTrue().toNameEx, toIte(tail))
             }
           }
 
@@ -54,24 +53,19 @@ class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
               }
 
               val rewrittenArgs = args map mapArg
-              rewriter.solverContext.assertGroundExpr(
-                tla.eql(pred, tla.or(rewrittenArgs: _*))
-              )
+              rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.or(rewrittenArgs: _*)))
               nextState.setRex(pred)
             }
 
           rewriter.rewriteUntilDone(newState)
         }
 
-      case e @ ValEx(_) =>
+      case e@ValEx(_) =>
         // the simplifier has rewritten the disjunction to TRUE or FALSE
         rewriter.rewriteUntilDone(state.setRex(e))
 
-      case e @ _ =>
-        throw new RewriterException(
-          "%s is not applicable to %s".format(getClass.getSimpleName, e),
-          state.ex
-        )
+      case e@_ =>
+        throw new RewriterException("%s is not applicable to %s".format(getClass.getSimpleName, e), state.ex)
     }
   }
 }

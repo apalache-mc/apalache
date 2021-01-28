@@ -10,17 +10,14 @@ abstract class TlaControlOper extends TlaOper {
 }
 
 object TlaControlOper {
-
   /**
     * A case operator without the OTHER option. The arguments are always an even-length list
     * of the following structure: guard_1, eff_1, guard_2, eff_2, ..., guard_k, eff_k.
     */
   object caseNoOther extends TlaControlOper {
     override val name: String = "CASE"
-    override val arity
-        : OperArity = MinimalArity(2) && AnyEvenArity() //new OperArity( k => k >= 2 && k % 2 == 0 )
-    override val interpretation: Interpretation.Value =
-      Interpretation.Predefined
+    override val arity: OperArity = MinimalArity(2) && AnyEvenArity()  //new OperArity( k => k >= 2 && k % 2 == 0 )
+    override val interpretation: Interpretation.Value = Interpretation.Predefined
     override val precedence: (Int, Int) = (0, 0)
   }
 
@@ -32,10 +29,8 @@ object TlaControlOper {
     */
   object caseWithOther extends TlaControlOper {
     override val name: String = "CASE-OTHER"
-    override val arity
-        : OperArity = MinimalArity(3) && AnyOddArity() //new OperArity( k => k >= 3 && k % 2 == 1 )
-    override val interpretation: Interpretation.Value =
-      Interpretation.Predefined
+    override val arity: OperArity = MinimalArity(3) && AnyOddArity() //new OperArity( k => k >= 3 && k % 2 == 1 )
+    override val interpretation: Interpretation.Value = Interpretation.Predefined
     override val precedence: (Int, Int) = (0, 0)
   }
 
@@ -45,8 +40,7 @@ object TlaControlOper {
   object ifThenElse extends TlaControlOper {
     override val name: String = "IF-THEN-ELSE"
     override val arity: OperArity = FixedArity(3)
-    override val interpretation: Interpretation.Value =
-      Interpretation.Predefined
+    override val interpretation: Interpretation.Value = Interpretation.Predefined
     override val precedence: (Int, Int) = (0, 0)
   }
 }

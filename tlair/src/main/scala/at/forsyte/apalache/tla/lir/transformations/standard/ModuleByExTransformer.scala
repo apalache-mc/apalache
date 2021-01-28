@@ -1,18 +1,14 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.transformations.{
-  TlaExTransformation,
-  TlaModuleTransformation
-}
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation}
 
 /**
   * This transformer uses a TlaExTransformer to modify all expressions inside a module.
   *
   * @author Igor Konnov
   */
-class ModuleByExTransformer(exTrans: TlaExTransformation)
-    extends TlaModuleTransformation {
+class ModuleByExTransformer(exTrans: TlaExTransformation) extends TlaModuleTransformation {
   override def apply(mod: TlaModule): TlaModule = {
     def mapOneDeclaration: TlaDecl => TlaDecl = {
       case TlaOperDecl(name, params, body) =>
@@ -29,6 +25,5 @@ class ModuleByExTransformer(exTrans: TlaExTransformation)
 }
 
 object ModuleByExTransformer {
-  def apply(exTrans: TlaExTransformation): ModuleByExTransformer =
-    new ModuleByExTransformer(exTrans)
+  def apply(exTrans: TlaExTransformation): ModuleByExTransformer = new ModuleByExTransformer(exTrans)
 }

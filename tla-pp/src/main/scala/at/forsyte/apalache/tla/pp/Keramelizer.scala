@@ -2,11 +2,7 @@ package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.transformations.{
-  LanguageWatchdog,
-  TlaExTransformation,
-  TransformationTracker
-}
+import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.standard.FlatLanguagePred
 import javax.inject.Singleton
@@ -21,18 +17,11 @@ import javax.inject.Singleton
   */
 @Singleton
 class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
-    extends AbstractTransformer(tracker)
-    with TlaExTransformation {
+    extends AbstractTransformer(tracker) with TlaExTransformation {
 
   override val partialTransformers =
-    List(
-      transformLogic,
-      transformSets,
-      transformTuples,
-      transformRecords,
-      transformControl,
-      transformAssignments
-    )
+    List(transformLogic, transformSets, transformTuples, transformRecords, transformControl, transformAssignments)
+
 
   override def apply(expr: TlaEx): TlaEx = {
     LanguageWatchdog(FlatLanguagePred()).check(expr)
@@ -82,20 +71,12 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
       val vars = varsAndSets.zipWithIndex.filter(_._2 % 2 == 0).map(_._1)
       val sets = varsAndSets.zipWithIndex.filter(_._2 % 2 == 1).map(_._1)
       val boundVars: Seq[TlaEx] = vars.map(_ => NameEx(gen.newName()))
-      val mapEx = OperEx(
-        TlaFunOper.enum,
-        vars.zip(boundVars).flatMap(x => List(x._1, x._2)): _*
-      )
-      OperEx(
-        TlaSetOper.map,
-        mapEx +: boundVars.zip(sets).flatMap(x => List(x._1, x._2)): _*
-      )
+      val mapEx = OperEx(TlaFunOper.enum, vars.zip(boundVars).flatMap(x => List(x._1, x._2)): _*)
+      OperEx(TlaSetOper.map, mapEx +: boundVars.zip(sets).flatMap(x => List(x._1, x._2)): _*)
 
-    case OperEx(
-        BmcOper.withType,
-        OperEx(TlaSetOper.map, mapEx, varsAndSets @ _*),
-        OperEx(TlaSetOper.enumSet, recordAnnotation)
-        ) =>
+    case OperEx(BmcOper.withType,
+                OperEx(TlaSetOper.map, mapEx, varsAndSets @ _*),
+                OperEx(TlaSetOper.enumSet, recordAnnotation)) =>
       // It is quite common to add a type annotation, e.g., [a: A, b: B] <: {[a |-> Int, b |-> STRING]}.
       // Propagate the annotation in the map expression
       val annotMapEx = tla.withType(mapEx, recordAnnotation)
@@ -111,10 +92,7 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
     case OperEx(TlaSetOper.times, sets @ _*) =>
       val boundVars: Seq[TlaEx] = sets.map(_ => NameEx(gen.newName()))
       val mapEx = OperEx(TlaFunOper.tuple, boundVars: _*)
-      OperEx(
-        TlaSetOper.map,
-        mapEx +: boundVars.zip(sets).flatMap(x => List(x._1, x._2)): _*
-      )
+      OperEx(TlaSetOper.map, mapEx +: boundVars.zip(sets).flatMap(x => List(x._1, x._2)): _*)
   }
 
   /**
@@ -139,11 +117,7 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
     * @return a transformed expression
     */
   private def transformAssignments: PartialFunction[TlaEx, TlaEx] = {
-    case OperEx(
-        TlaSetOper.in,
-        prime @ OperEx(TlaActionOper.prime, NameEx(x)),
-        set
-        ) =>
+    case OperEx(TlaSetOper.in, prime @ OperEx(TlaActionOper.prime, NameEx(x)), set) =>
       val temp = gen.newName()
       tla.exists(tla.name(temp), set, tla.eql(prime, tla.name(temp)))
   }
@@ -163,11 +137,8 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
       revGuardsAndActions.foldLeft(otherEx)(decorateWithIf)
 
     case expr @ OperEx(TlaControlOper.caseNoOther, _*) =>
-      throw new NotInKeraError(
-        "CASE without other, see: " +
-          "[docs/preprocessing.md]",
-        expr
-      )
+      throw new NotInKeraError("CASE without other, see: " +
+        "[docs/preprocessing.md]", expr)
   }
 
   private def mkGuardsAndActions(args: Seq[TlaEx]): Seq[(TlaEx, TlaEx)] = {
@@ -180,10 +151,7 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
 }
 
 object Keramelizer {
-  def apply(
-      gen: UniqueNameGenerator,
-      tracker: TransformationTracker
-  ): Keramelizer = {
+  def apply(gen: UniqueNameGenerator, tracker: TransformationTracker): Keramelizer = {
     new Keramelizer(gen, tracker)
   }
 }

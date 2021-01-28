@@ -15,8 +15,7 @@ import org.slf4j.LoggerFactory
   */
 class LogbackConfigurator extends ContextAwareBase with Configurator {
   def configureDefaultContext(): Unit = {
-    val loggerContext =
-      LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]
+    val loggerContext = LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]
     setContext(loggerContext)
     configure(loggerContext)
   }
@@ -35,9 +34,7 @@ class LogbackConfigurator extends ContextAwareBase with Configurator {
     apalacheLogger.setLevel(Level.DEBUG)
   }
 
-  private def mkConsoleAppender(
-      loggerContext: LoggerContext
-  ): ConsoleAppender[ILoggingEvent] = {
+  private def mkConsoleAppender(loggerContext: LoggerContext): ConsoleAppender[ILoggingEvent] = {
     // set up ConsoleAppender
     val app = new ConsoleAppender[ILoggingEvent]()
     app.setContext(loggerContext)
@@ -59,9 +56,7 @@ class LogbackConfigurator extends ContextAwareBase with Configurator {
     app
   }
 
-  private def mkFileAppender(
-      loggerContext: LoggerContext
-  ): FileAppender[ILoggingEvent] = {
+  private def mkFileAppender(loggerContext: LoggerContext): FileAppender[ILoggingEvent] = {
     // set up FileAppender
     val app = new FileAppender[ILoggingEvent]()
     app.setContext(loggerContext)
@@ -70,9 +65,7 @@ class LogbackConfigurator extends ContextAwareBase with Configurator {
     val encoder = new LayoutWrappingEncoder[ILoggingEvent]()
     encoder.setContext(loggerContext)
     val layout = new PatternLayout()
-    layout.setPattern(
-      "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{12} - %msg%n"
-    )
+    layout.setPattern("%d{HH:mm:ss.SSS} [%thread] %-5level %logger{12} - %msg%n")
     layout.setContext(loggerContext)
     layout.start()
     encoder.setLayout(layout)

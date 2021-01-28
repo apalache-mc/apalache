@@ -1,11 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.bmcmt.{
-  SymbState,
-  SymbStateDecoder,
-  SymbStateRewriter
-}
+import at.forsyte.apalache.tla.bmcmt.{SymbState, SymbStateDecoder, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.TlaEx
 
 /**
@@ -14,7 +10,6 @@ import at.forsyte.apalache.tla.lir.TlaEx
   * @author Igor Konnov
   */
 trait Oracle extends Serializable {
-
   /**
     * Produce an expression that states that the oracle values equals to the given integer position.
     * The actual implementation may be different from an integer comparison.

@@ -24,9 +24,7 @@ object ArenaCell {
   *
   * @author Igor Konnov
   */
-class ArenaCell(val id: Int, val cellType: CellT)
-    extends Comparable[ArenaCell]
-    with Serializable {
+class ArenaCell(val id: Int, val cellType: CellT) extends Comparable[ArenaCell] with Serializable {
   override def toString: String = {
     Arena.namePrefix + id
   }
@@ -36,7 +34,7 @@ class ArenaCell(val id: Int, val cellType: CellT)
   }
 
   def mkTlaEq(rhs: ArenaCell): TlaEx = {
-    OperEx(TlaOper.eq, this.toNameEx, rhs.toNameEx)
+      OperEx(TlaOper.eq, this.toNameEx, rhs.toNameEx)
   }
 
   override def compareTo(t: ArenaCell): Int = {

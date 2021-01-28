@@ -11,7 +11,6 @@ import at.forsyte.apalache.tla.lir.convenience.tla
   * @author Igor Konnov
   */
 object OracleHelper {
-
   /**
     * <p>Add the following constraints:</p>
     *
@@ -27,21 +26,11 @@ object OracleHelper {
     * @param set a set cell
     * @param setElems the cells pointed by the set
     */
-  def assertOraclePicksSetMembers(
-      rewriter: SymbStateRewriter,
-      state: SymbState,
-      oracle: Oracle,
-      set: ArenaCell,
-      setElems: Seq[ArenaCell]
-  ): Unit = {
-    val elemsIn = setElems map { e =>
-      tla.in(e.toNameEx, set.toNameEx)
-    }
-    val allNotIn =
-      tla.and(setElems map (e => tla.not(tla.in(e.toNameEx, set.toNameEx))): _*)
-    rewriter.solverContext.assertGroundExpr(
-      oracle.caseAssertions(state, elemsIn :+ allNotIn)
-    )
+  def assertOraclePicksSetMembers(rewriter: SymbStateRewriter, state: SymbState,
+                                  oracle: Oracle, set: ArenaCell, setElems: Seq[ArenaCell]): Unit = {
+    val elemsIn = setElems map { e => tla.in(e.toNameEx, set.toNameEx) }
+    val allNotIn = tla.and(setElems map (e => tla.not(tla.in(e.toNameEx, set.toNameEx))) :_*)
+    rewriter.solverContext.assertGroundExpr(oracle.caseAssertions(state, elemsIn :+ allNotIn))
   }
 
 }

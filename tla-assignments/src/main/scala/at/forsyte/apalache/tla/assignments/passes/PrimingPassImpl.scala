@@ -7,10 +7,7 @@ import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
-import at.forsyte.apalache.tla.lir.transformations.{
-  TlaExTransformation,
-  TransformationTracker
-}
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import com.google.inject.Inject
 import com.google.inject.name.Named
@@ -19,13 +16,10 @@ import com.typesafe.scalalogging.LazyLogging
 /**
   * PrimingPass adds primes to the variables in state initializers and constant initializers.
   */
-class PrimingPassImpl @Inject()(
-    options: PassOptions,
-    tracker: TransformationTracker,
-    @Named("AfterPriming") nextPass: Pass with TlaModuleMixin
-) extends PrimingPass
-    with LazyLogging {
-
+class PrimingPassImpl @Inject()(options: PassOptions,
+                                tracker: TransformationTracker,
+                                @Named("AfterPriming") nextPass: Pass with TlaModuleMixin )
+  extends PrimingPass with LazyLogging {
   /**
     * The name of the pass
     *
@@ -33,9 +27,8 @@ class PrimingPassImpl @Inject()(
     */
   override def name: String = "PrimingPass"
 
-  private def trSeq(seq: Seq[TlaExTransformation]): TlaExTransformation = {
-    ex =>
-      seq.foldLeft(ex) { case (partial, tr) => tr(partial) }
+  private def trSeq( seq: Seq[TlaExTransformation] ) : TlaExTransformation = {
+    ex => seq.foldLeft( ex ) { case (partial,tr) => tr(partial) }
   }
 
   /**
@@ -68,30 +61,22 @@ class PrimingPassImpl @Inject()(
           val primeTransformer = Prime(constSet, tracker) // add primes to constants
           val cinitPrimedName = name + "Primed"
           logger.info(s"  > Introducing $cinitPrimedName for $name'")
-          val newBody = trSeq(baseTransformationSequence :+ primeTransformer)(
-            deepCopy(operatorBody)
-          )
-          Some(TlaOperDecl(cinitPrimedName, List(), newBody))
+          val newBody = trSeq( baseTransformationSequence :+ primeTransformer)(deepCopy(operatorBody))
+          Some( TlaOperDecl( cinitPrimedName, List(), newBody ) )
 
         case _ =>
           None
       }
 
-    val initName =
-      options.getOrElse("checker", "init", "Init").asInstanceOf[String]
+    val initName = options.getOrElse("checker", "init", "Init").asInstanceOf[String]
     val primeTransformer = Prime(varSet, tracker)
     val initPrimedName = initName + "Primed"
     logger.info(s"  > Introducing $initPrimedName for $initName'")
     // add primes to variables
-    val newBody = trSeq(baseTransformationSequence :+ primeTransformer)(
-      deepCopy(bodyMap(initName).body)
-    )
-    val initPrimed = Some(TlaOperDecl(initPrimedName, List(), newBody))
+    val newBody = trSeq( baseTransformationSequence :+ primeTransformer )( deepCopy( bodyMap( initName ).body ) )
+    val initPrimed = Some( TlaOperDecl( initPrimedName, List(), newBody ) )
 
-    val newDeclarations: Seq[TlaDecl] = declarations ++ Seq(
-      cinitPrimed,
-      initPrimed
-    ).flatten
+    val newDeclarations: Seq[TlaDecl] = declarations ++ Seq(cinitPrimed, initPrimed).flatten
     val newModule = new TlaModule(tlaModule.get.name, newDeclarations)
 
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]

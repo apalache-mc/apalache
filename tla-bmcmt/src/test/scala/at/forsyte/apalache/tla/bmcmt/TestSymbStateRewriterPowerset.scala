@@ -1,12 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.rules.aux.PowSetCtor
-import at.forsyte.apalache.tla.bmcmt.types.{
-  AnnotationParser,
-  FinSetT,
-  IntT,
-  PowSetT
-}
+import at.forsyte.apalache.tla.bmcmt.types.{AnnotationParser, FinSetT, IntT, PowSetT}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.BmcOper
@@ -54,8 +49,7 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
 
   test("""SE-SUBSET1: {} \in SUBSET {1, 2, 3}""") {
     // an empty set requires a type annotation
-    val set12 =
-      tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(IntT())))
+    val set12 = tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(IntT())))
     val powset = tla.powSet(tla.enumSet(tla.int(1), tla.int(2), tla.int(3)))
     val in = tla.in(set12, powset)
     val state = new SymbState(in, arena, Binding())
@@ -139,15 +133,13 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     // a regression test that failed in the previous versions
     val set = tla.enumSet(tla.int(1), tla.int(2))
     val ex =
-      OperEx(
-        BmcOper.skolem,
-        tla.exists(tla.name("X"), tla.powSet(set), tla.bool(true))
-      )
+      OperEx(BmcOper.skolem,
+        tla.exists(tla.name("X"), tla.powSet(set), tla.bool(true)))
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case predEx @ NameEx(name) =>
+      case predEx@NameEx(name) =>
         rewriter.push()
         solverContext.assertGroundExpr(predEx)
         assert(solverContext.sat())
@@ -161,16 +153,14 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     // a regression test that failed in the previous versions
     val set = tla.enumSet(tla.int(1), tla.int(2))
     val ex =
-      OperEx(
-        BmcOper.skolem,
-        tla.exists(tla.name("X"), tla.powSet(set), tla.bool(false))
-      )
+      OperEx(BmcOper.skolem,
+        tla.exists(tla.name("X"), tla.powSet(set), tla.bool(false)))
 
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case predEx @ NameEx(name) =>
+      case predEx@NameEx(name) =>
         rewriter.push()
         solverContext.assertGroundExpr(predEx)
         assertUnsatOrExplain(rewriter, nextState)
@@ -189,19 +179,13 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     nextState = new PowSetCtor(rewriter).confringo(nextState, baseCell)
     val powCell = nextState.asCell
     // give the cell type to type finder
-    rewriter.typeFinder.reset(
-      rewriter.typeFinder.varTypes + (powCell.toString -> powCell.cellType)
-    )
+    rewriter.typeFinder.reset(rewriter.typeFinder.varTypes + (powCell.toString -> powCell.cellType))
     // check equality
-    val eq = tla.eql(
-      nextState.ex,
-      tla.enumSet(
-        tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(IntT()))),
+    val eq = tla.eql(nextState.ex,
+      tla.enumSet(tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(IntT()))),
         tla.enumSet(tla.int(1)),
         tla.enumSet(tla.int(2)),
-        tla.enumSet(tla.int(1), tla.int(2))
-      )
-    )
+          tla.enumSet(tla.int(1), tla.int(2))))
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 

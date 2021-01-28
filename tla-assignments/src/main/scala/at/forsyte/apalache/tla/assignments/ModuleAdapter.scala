@@ -14,50 +14,29 @@ object ModuleAdapter {
     TlaOperDecl(name, List(), expr)
   }
 
-  def exprsToOperDefs(
-      operPrefix: String,
-      transitions: Seq[TlaEx]
-  ): Seq[TlaOperDecl] =
-    transitions.zipWithIndex map {
-      case (transExpr, index) =>
-        // Name + $ + index is guaranteed to not clash with existing names, as
-        // $ is not an allowed symbol in TLA
-        exprToOperDef(operPrefix + index, transExpr)
+  def exprsToOperDefs(operPrefix: String, transitions: Seq[TlaEx]): Seq[TlaOperDecl] =
+    transitions.zipWithIndex map { case (transExpr, index) =>
+      // Name + $ + index is guaranteed to not clash with existing names, as
+      // $ is not an allowed symbol in TLA
+      exprToOperDef(operPrefix + index, transExpr)
     }
 
-  def declsFromTransitions(
-      transitionOperName: String,
-      transitions: Seq[SymbTrans]
-  ): Seq[TlaOperDecl] =
-    // drop selections because of lacking implementation further on
+  def declsFromTransitions(transitionOperName: String, transitions: Seq[SymbTrans]): Seq[TlaOperDecl] =
+  // drop selections because of lacking implementation further on
     exprsToOperDefs(transitionOperName, transitions map {
       _._2
     })
 
-  def optionalOperDecl(
-      newOperName: String,
-      optionalBody: Option[TlaEx]
-  ): Option[TlaOperDecl] =
+  def optionalOperDecl(newOperName: String, optionalBody: Option[TlaEx]): Option[TlaOperDecl] =
     optionalBody map { b =>
       TlaOperDecl(newOperName, List.empty[FormalParam], b)
     }
 
-  def insertTransitions(
-      module: TlaModule,
-      transitionOperName: String,
-      transitions: Seq[SymbTrans]
-  ): TlaModule = {
-    new TlaModule(
-      module.name,
-      declsFromTransitions(transitionOperName, transitions) ++ module.declarations
-    )
+  def insertTransitions(module: TlaModule, transitionOperName: String, transitions: Seq[SymbTrans]): TlaModule = {
+    new TlaModule(module.name, declsFromTransitions(transitionOperName, transitions) ++ module.declarations)
   }
 
-  def optionalInsertOperator(
-      module: TlaModule,
-      newOperName: String,
-      optionalBody: Option[TlaEx]
-  ): TlaModule =
+  def optionalInsertOperator(module: TlaModule, newOperName: String, optionalBody: Option[TlaEx]): TlaModule =
     optionalOperDecl(newOperName, optionalBody) map { d =>
       new TlaModule(module.name, d +: module.declarations)
     } getOrElse module

@@ -1,10 +1,6 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.infra.{
-  ErrorMessage,
-  ExceptionAdapter,
-  NormalErrorMessage
-}
+import at.forsyte.apalache.infra.{ErrorMessage, ExceptionAdapter, NormalErrorMessage}
 import javax.inject.{Inject, Singleton}
 
 /**

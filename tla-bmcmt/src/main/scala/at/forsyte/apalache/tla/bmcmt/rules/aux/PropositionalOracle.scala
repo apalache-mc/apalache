@@ -6,9 +6,8 @@ import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 
-class PropositionalOracle(bitCells: Seq[ArenaCell], nvalues: Int)
-    extends Oracle {
 
+class PropositionalOracle(bitCells: Seq[ArenaCell], nvalues: Int) extends Oracle {
   /**
     * Produce an expression that states that the oracle values equals to the given integer position.
     * The actual implementation may be different from an integer comparison.
@@ -45,21 +44,16 @@ class PropositionalOracle(bitCells: Seq[ArenaCell], nvalues: Int)
     * @param assertions a sequence of assertions, one per oracle value
     * @return an expression ite(oracle = 0, ite(oracle = 1, ...))
     */
-  override def caseAssertions(
-      state: SymbState,
-      assertions: Seq[TlaEx]
-  ): TlaEx = {
+  override def caseAssertions(state: SymbState, assertions: Seq[TlaEx]): TlaEx = {
     nvalues match {
       case 0 => state.arena.cellTrue().toNameEx
 
       case 1 => assertions.head
 
       case _ =>
-        val es = assertions
-          .slice(0, nvalues)
-          .zipWithIndex
+        val es = assertions.slice(0, nvalues).zipWithIndex
           .map { case (e, i) => tla.or(e, tla.not(whenEqualTo(state, i))) }
-        tla.and(es: _*)
+        tla.and(es :_*)
     }
   }
 
@@ -71,19 +65,14 @@ class PropositionalOracle(bitCells: Seq[ArenaCell], nvalues: Int)
     * @param state         a symbolic state
     * @return an integer value of the oracle
     */
-  override def evalPosition(
-      solverContext: SolverContext,
-      state: SymbState
-  ): Int = {
+  override def evalPosition(solverContext: SolverContext, state: SymbState): Int = {
     def cellsToInt(bits: Seq[ArenaCell]): Int = {
       bits match {
         case Nil => 0
 
         case lsbCell :: otherBitCells =>
           // find the value of the bit, which is the least significant
-          val isOn = solverContext.evalGroundExpr(lsbCell.toNameEx) == tla.bool(
-            true
-          )
+          val isOn = solverContext.evalGroundExpr(lsbCell.toNameEx) == tla.bool(true)
           val lsb = if (isOn) 1 else 0
           // find the unsigned integer value
           lsb + 2 * cellsToInt(otherBitCells) // the bits to the right are more significant
@@ -95,11 +84,7 @@ class PropositionalOracle(bitCells: Seq[ArenaCell], nvalues: Int)
 }
 
 object PropositionalOracle {
-  def create(
-      rewriter: SymbStateRewriter,
-      state: SymbState,
-      nvalues: Int
-  ): (SymbState, PropositionalOracle) = {
+  def create(rewriter: SymbStateRewriter, state: SymbState, nvalues: Int): (SymbState, PropositionalOracle) = {
     val solverAssert = rewriter.solverContext.assertGroundExpr _
 
     // how many bits do we need to fit n values
@@ -113,8 +98,7 @@ object PropositionalOracle {
 
     val nbits = findNBits(1)
     // create nbits cells to hold the propositional variables
-    val (newArena, newCells) =
-      state.arena.appendCellSeq(0 until nbits map (_ => BoolT()): _*)
+    val (newArena, newCells) = state.arena.appendCellSeq(0 until nbits map (_ => BoolT()) :_*)
     val oracle = new PropositionalOracle(newCells, nvalues)
     var nextState = state.setArena(newArena)
 

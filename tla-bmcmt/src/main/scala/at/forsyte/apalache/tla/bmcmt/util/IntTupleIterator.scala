@@ -12,8 +12,7 @@ import at.forsyte.apalache.tla.lir.NullEx
 class IntTupleIterator(limits: Seq[Int]) extends Iterator[Seq[Int]] {
   private var vec: Array[Int] = (-1) +: Array.fill(limits.size - 1)(0)
   // we have to enumerate that many elements
-  private var toEnumerate
-      : BigInt = limits.map(BigInt(_) + 1).product // bugfix: use BigInt to avoid overflow
+  private var toEnumerate: BigInt = limits.map(BigInt(_) + 1).product // bugfix: use BigInt to avoid overflow
 
   override def hasNext: Boolean = {
     toEnumerate > 0
@@ -24,10 +23,7 @@ class IntTupleIterator(limits: Seq[Int]) extends Iterator[Seq[Int]] {
       throw new NoSuchElementException("All elements have been enumerated")
     }
     if (toEnumerate > Limits.MAX_PRODUCT_SIZE) {
-      throw new RewriterException(
-        "Too many elements to enumerate: " + toEnumerate,
-        NullEx
-      )
+      throw new RewriterException("Too many elements to enumerate: " + toEnumerate, NullEx)
     }
 
     toEnumerate -= 1
@@ -37,7 +33,7 @@ class IntTupleIterator(limits: Seq[Int]) extends Iterator[Seq[Int]] {
     // all the preceding elements shift over from their limit to zero
     0.until(index).foreach(vec.update(_, 0))
     // the element at index is increased
-    vec.update(index, 1 + vec(index))
+    vec.update(index, 1+ vec(index))
     vec.toSeq
   }
 }

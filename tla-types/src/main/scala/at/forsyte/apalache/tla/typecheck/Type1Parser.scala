@@ -15,7 +15,6 @@ package at.forsyte.apalache.tla.typecheck
   * @author Igor Konnov, 2020
   */
 trait Type1Parser {
-
   /**
     * Parse a type from a string.
     *

@@ -16,17 +16,11 @@ import org.scalatest.{Outcome, fixture}
   * @author Igor Konnov
   */
 @RunWith(classOf[JUnitRunner])
-class TestTransitionExecutorImplWithIncremental
-    extends AbstractTestTransitionExecutorImpl[
-      IncrementalExecutionContextSnapshot
-    ] {
+class TestTransitionExecutorImplWithIncremental extends AbstractTestTransitionExecutorImpl[IncrementalExecutionContextSnapshot] {
   override protected def withFixture(test: OneArgTest): Outcome = {
     val typeFinder = new TrivialTypeFinder()
-    val solver = new Z3SolverContext(
-      SolverConfig(debug = false, profile = false, randomSeed = 0)
-    )
-    val rewriter =
-      new SymbStateRewriterImpl(solver, typeFinder, new ExprGradeStoreImpl())
+    val solver = new Z3SolverContext(SolverConfig(debug = false, profile = false, randomSeed = 0))
+    val rewriter = new SymbStateRewriterImpl(solver, typeFinder, new ExprGradeStoreImpl())
     val exeCtx = new IncrementalExecutionContext(rewriter)
     try {
       test(exeCtx)

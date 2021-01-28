@@ -1,10 +1,7 @@
 package at.forsyte.apalache.tla.imp.src
 
 import at.forsyte.apalache.tla.lir.TlaEx
-import at.forsyte.apalache.tla.lir.transformations.{
-  TlaExTransformation,
-  TransformationTracker
-}
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
 /**
   * This is a special form of transformation tracker that records the changes directly in the source store.
@@ -13,9 +10,7 @@ import at.forsyte.apalache.tla.lir.transformations.{
   *
   * @author Igor Konnov
   */
-class SaveToStoreTracker(sourceStore: SourceStore)
-    extends TransformationTracker {
-
+class SaveToStoreTracker(sourceStore: SourceStore) extends TransformationTracker {
   /**
     * Decorate a transformation with a tracker.
     *
@@ -26,9 +21,7 @@ class SaveToStoreTracker(sourceStore: SourceStore)
     input: TlaEx =>
       val output = tr(input)
       if (output.ID != input.ID) {
-        sourceStore.findOrLog(input.ID).foreach { loc =>
-          sourceStore.add(output.ID, loc)
-        }
+        sourceStore.findOrLog(input.ID).foreach { loc => sourceStore.add(output.ID, loc) }
       }
       output
   }

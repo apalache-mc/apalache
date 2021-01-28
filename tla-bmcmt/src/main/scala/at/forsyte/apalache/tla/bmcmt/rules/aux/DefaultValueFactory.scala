@@ -1,11 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.{
-  ArenaCell,
-  RewriterException,
-  SymbState,
-  SymbStateRewriter
-}
+import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.{NullEx, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -73,8 +68,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         state.setArena(arena).setRex(set.toNameEx).setArena(arena)
 
       case tp @ FunT(domT, cdmT) => // [x \in {} |-> {}]
-        val relState =
-          makeUpValue(state, FinSetT(TupleT(Seq(tp.argType, tp.resultType))))
+        val relState = makeUpValue(state, FinSetT(TupleT(Seq(tp.argType, tp.resultType))))
         var arena = relState.arena.appendCell(tp)
         val funCell = arena.topCell
         arena = arena.setCdm(funCell, relState.asCell)
@@ -90,17 +84,12 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         val end = arena.topCell
         arena = arena.appendHasNoSmt(seq, start, end)
         for (cell <- Seq(start, end)) {
-          rewriter.solverContext.assertGroundExpr(
-            tla.eql(cell.toNameEx, tla.int(0))
-          )
+          rewriter.solverContext.assertGroundExpr(tla.eql(cell.toNameEx, tla.int(0)))
         }
         relState.setArena(arena).setRex(seq.toNameEx)
 
       case tp @ _ =>
-        throw new RewriterException(
-          s"I do not know how to generate a default value for the type $tp",
-          state.ex
-        )
+        throw new RewriterException(s"I do not know how to generate a default value for the type $tp", state.ex)
     }
   }
 

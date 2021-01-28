@@ -4,20 +4,19 @@ import at.forsyte.apalache.tla.lir.{MalformedTlaError, TlaEx}
 
 // All exceptions related to the intermediate language should go here
 
+
 /**
   * An exception that should be thrown when a TLA+ expression (or a module) does not fit into the expected fragment.
   * @param message the error message
   */
-class NotInKeraError(message: String, cause: TlaEx)
-    extends MalformedTlaError(message, cause)
+class NotInKeraError(message: String, cause: TlaEx) extends MalformedTlaError(message, cause)
 
 /**
   * This exception is thrown when operator overriding fails.
   * @param message the error message
   * @param cause the problematic expression
   */
-class OverridingError(message: String, cause: TlaEx)
-    extends MalformedTlaError(message, cause)
+class OverridingError(message: String, cause: TlaEx) extends MalformedTlaError(message, cause)
 
 /**
   * An exception that should be thrown when preprocessing steps resulted in an irrecoverable error.
@@ -25,8 +24,7 @@ class OverridingError(message: String, cause: TlaEx)
   *
   * @param message the error message
   */
-class IrrecoverablePreprocessingError(message: String)
-    extends Exception(message)
+class IrrecoverablePreprocessingError(message: String) extends Exception(message)
 
 /**
   * An exception that should be thrown when something is wrong with the tool configuration, input parameters, etc.
@@ -46,7 +44,7 @@ class ConfigurationError(message: String) extends Exception(message)
 class TlaInputError(message: String) extends Exception(message)
 
 /**
-  * An exception that should be thrown when a TLC configuration is wrong/not-found
-  * @param message the error message
-  */
+ * An exception that should be thrown when a TLC configuration is wrong/not-found
+ * @param message the error message
+ */
 class TLCConfigurationError(message: String) extends ConfigurationError(message)

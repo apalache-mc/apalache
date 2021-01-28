@@ -11,14 +11,14 @@ import at.forsyte.apalache.tla.lir.TlaEx
   * @param trex an implementation to delegate to
   * @tparam SnapshotT a snapshot type
   */
-class FilteredTransitionExecutor[SnapshotT](
-    stepFilter: String,
-    invFilter: String,
-    trex: TransitionExecutor[SnapshotT]
-) extends TransitionExecutor[SnapshotT] {
+class FilteredTransitionExecutor[SnapshotT](stepFilter: String,
+                                            invFilter: String,
+                                            trex: TransitionExecutor[SnapshotT])
+  extends TransitionExecutor[SnapshotT] {
 
   private val stepRe = stepFilter.r()
   private val invRe = invFilter.r()
+
 
   /**
     * Translate a transition into SMT and save it under the given number. This method returns false,
@@ -31,10 +31,7 @@ class FilteredTransitionExecutor[SnapshotT](
     * @return true, if the transition has been successfully translated;
     *         false, if the translation has found that the transition is disabled
     */
-  override def prepareTransition(
-      transitionNo: Int,
-      transitionEx: TlaEx
-  ): Boolean = {
+  override def prepareTransition(transitionNo: Int, transitionEx: TlaEx): Boolean = {
     val word = s"$stepNo->$transitionNo"
     if (stepFilter.isEmpty || stepRe.pattern.matcher(word).matches) {
       trex.prepareTransition(transitionNo, transitionEx)
@@ -51,16 +48,9 @@ class FilteredTransitionExecutor[SnapshotT](
     * @param assertion    a state expression
     * @return true, if the transition may affect satisfiability of the assertion
     */
-  override def mayChangeAssertion(
-      transitionNo: Int,
-      assertion: TlaEx
-  ): Boolean = {
-    val prevExcluded = (stepNo > 0) && invFilter.nonEmpty && !invRe.pattern
-      .matcher("%d".format(stepNo - 1))
-      .matches
-    val thisExcluded = invFilter.nonEmpty && !invRe.pattern
-      .matcher(s"$stepNo")
-      .matches
+  override def mayChangeAssertion(transitionNo: Int, assertion: TlaEx): Boolean = {
+    val prevExcluded = (stepNo > 0) && invFilter.nonEmpty && !invRe.pattern.matcher("%d".format(stepNo - 1)).matches
+    val thisExcluded = invFilter.nonEmpty && !invRe.pattern.matcher(s"$stepNo").matches
     val mayChange = trex.mayChangeAssertion(transitionNo, assertion)
     // One of the options is allowed, unless it is excluded at the current step:
     // 1. The assertion was excluded at the previous step, or
@@ -90,8 +80,7 @@ class FilteredTransitionExecutor[SnapshotT](
     *
     * @param transitionNo the index of a previously prepared transition
     */
-  override def assumeTransition(transitionNo: Int): Unit =
-    trex.assumeTransition(transitionNo)
+  override def assumeTransition(transitionNo: Int): Unit = trex.assumeTransition(transitionNo)
 
   /**
     * Push an assertion about the current controlState.
@@ -154,8 +143,7 @@ class FilteredTransitionExecutor[SnapshotT](
     *
     * @param shot a snapshot
     */
-  override def recover(shot: ExecutionSnapshot[SnapshotT]): Unit =
-    trex.recover(shot)
+  override def recover(shot: ExecutionSnapshot[SnapshotT]): Unit = trex.recover(shot)
 
   /**
     * Decode the current symbolic execution

@@ -9,8 +9,7 @@ import at.forsyte.apalache.tla.lir.TlaEx
   *
   * @author Igor Konnov
   */
-class SymbState(val ex: TlaEx, val arena: Arena, val binding: Binding)
-    extends Serializable {
+class SymbState(val ex: TlaEx, val arena: Arena, val binding: Binding) extends Serializable {
 
   def setRex(nex: TlaEx): SymbState = {
     new SymbState(nex, arena, binding)
@@ -26,7 +25,7 @@ class SymbState(val ex: TlaEx, val arena: Arena, val binding: Binding)
 
   /**
     * A convenience function to get the state expression as a cell, if it is actually a cell
-    */
+   */
   def asCell: ArenaCell = {
     arena.findCellByNameEx(ex)
   }

@@ -34,8 +34,7 @@ class TestExpansionMarker extends FunSuite with BeforeAndAfterEach {
     val expected =
       tla.cup(
         tla.enumSet(tla.int(1)),
-        OperEx(BmcOper.expand, tla.powSet(tla.name("S")))
-      )
+        OperEx(BmcOper.expand, tla.powSet(tla.name("S"))))
 
     assert(expected == output)
   }
@@ -44,16 +43,14 @@ class TestExpansionMarker extends FunSuite with BeforeAndAfterEach {
   test("""marked: {} \cup [S -> T]""") {
     val input = tla.in(
       tla.name("x"),
-      tla.cup(tla.emptySet(), tla.funSet(tla.name("S"), tla.name("T")))
-    )
+      tla.cup(tla.emptySet(),
+        tla.funSet(tla.name("S"), tla.name("T"))))
     val output = marker.apply(input)
     val expected = tla.in(
       tla.name("x"),
-      tla.cup(
-        tla.emptySet(),
-        OperEx(BmcOper.expand, tla.funSet(tla.name("S"), tla.name("T")))
-      )
-    )
+      tla.cup(tla.emptySet(),
+        OperEx(BmcOper.expand,
+          tla.funSet(tla.name("S"), tla.name("T")))))
 
     assert(expected == output)
   }
@@ -94,14 +91,12 @@ class TestExpansionMarker extends FunSuite with BeforeAndAfterEach {
 
   test("""not marked: Skolem(\E x \in SUBSET S: P)""") {
     val input =
-      OperEx(
-        BmcOper.skolem,
+      OperEx(BmcOper.skolem,
         tla.exists(
           tla.name("x"),
           tla.powSet(tla.name("S")),
           tla.name("P")
-        )
-      ) ///
+        )) ///
 
     val output = marker.apply(input)
 
@@ -112,8 +107,7 @@ class TestExpansionMarker extends FunSuite with BeforeAndAfterEach {
     val input =
       tla.exists(
         tla.name("x"),
-        OperEx(
-          BmcOper.withType,
+        OperEx(BmcOper.withType,
           tla.enumSet(),
           tla.enumSet(tla.funSet(tla.intSet(), tla.intSet()))
         ),
@@ -127,11 +121,11 @@ class TestExpansionMarker extends FunSuite with BeforeAndAfterEach {
 
   test("""not marked: \CHOOSE x \in SUBSET S: P""") {
     val input =
-      tla.choose(
-        tla.name("x"),
-        tla.powSet(tla.name("S")),
-        tla.name("P")
-      ) ///
+        tla.choose(
+          tla.name("x"),
+          tla.powSet(tla.name("S")),
+          tla.name("P")
+        ) ///
 
     val output = marker.apply(input)
 

@@ -25,29 +25,23 @@ import scala.io.Source
 @RunWith(classOf[JUnitRunner])
 class TestSanyImporter extends FunSuite {
 
-  def expectTlaDecl(
-      sourceStore: SourceStore,
-      name: String,
-      params: List[FormalParam],
-      body: TlaEx
-  ): (TlaDecl => Unit) = {
+  def expectTlaDecl(sourceStore: SourceStore, name: String, params: List[FormalParam],
+                    body: TlaEx): (TlaDecl => Unit) = {
     case d: TlaOperDecl =>
       assert(name == d.name)
       assert(params == d.formalParams)
       assert(body == d.body)
       assert(sourceStore.contains(d.body.ID)) // and source file information has been saved
 
-    case d @ _ =>
+    case d@_ =>
       fail("Expected a TlaOperDecl, found: " + d)
   }
 
-  def findAndExpectTlaDecl(
-      sourceStore: SourceStore,
-      mod: TlaModule,
-      name: String,
-      params: List[FormalParam],
-      body: TlaEx
-  ): Unit = {
+  def findAndExpectTlaDecl(sourceStore: SourceStore,
+                           mod: TlaModule,
+                           name: String,
+                           params: List[FormalParam],
+                           body: TlaEx): Unit = {
     mod.declarations.find {
       _.name == name
     } match {
@@ -151,10 +145,8 @@ class TestSanyImporter extends FunSuite {
         assert(0 == actionDecl.formalParams.length)
         assert(ValEx(TlaInt(1)) == actionDecl.body)
         assert(locationStore.contains(actionDecl.body.ID)) // and source file information has been saved
-        val loc = locationStore.find(actionDecl.body.ID).get
-        assert(
-          SourceRegion(SourcePosition(2, 9), SourcePosition(2, 9)) == loc.region
-        )
+      val loc = locationStore.find(actionDecl.body.ID).get
+        assert(SourceRegion(SourcePosition(2, 9), SourcePosition(2, 9)) == loc.region)
     }
   }
 
@@ -177,10 +169,8 @@ class TestSanyImporter extends FunSuite {
         assert(0 == actionDecl.formalParams.length)
         assert(ValEx(TlaDecimal(BigDecimal("123.456"))) == actionDecl.body)
         assert(locationStore.contains(actionDecl.body.ID)) // and source file information has been saved
-        val loc = locationStore.find(actionDecl.body.ID).get
-        assert(
-          SourceRegion(SourcePosition(2, 9), SourcePosition(2, 15)) == loc.region
-        )
+      val loc = locationStore.find(actionDecl.body.ID).get
+        assert(SourceRegion(SourcePosition(2, 9), SourcePosition(2, 15)) == loc.region)
     }
   }
 
@@ -203,10 +193,8 @@ class TestSanyImporter extends FunSuite {
         assert(0 == actionDecl.formalParams.length)
         assert(ValEx(TlaStr("Hello")) == actionDecl.body)
         assert(locationStore.contains(actionDecl.body.ID)) // and source file information has been saved
-        val loc = locationStore.find(actionDecl.body.ID).get
-        assert(
-          SourceRegion(SourcePosition(2, 9), SourcePosition(2, 15)) == loc.region
-        )
+      val loc = locationStore.find(actionDecl.body.ID).get
+        assert(SourceRegion(SourcePosition(2, 9), SourcePosition(2, 15)) == loc.region)
     }
   }
 
@@ -229,11 +217,9 @@ class TestSanyImporter extends FunSuite {
         assert(0 == actionDecl.formalParams.length)
         assert(ValEx(TlaBool(false)) == actionDecl.body)
         assert(locationStore.contains(actionDecl.body.ID)) // and source file information has been saved
-        val loc = locationStore.find(actionDecl.body.ID).get
+      val loc = locationStore.find(actionDecl.body.ID).get
         assert("constop" == loc.filename)
-        assert(
-          SourceRegion(SourcePosition(2, 9), SourcePosition(2, 13)) == loc.region
-        )
+        assert(SourceRegion(SourcePosition(2, 9), SourcePosition(2, 13)) == loc.region)
     }
   }
 
@@ -280,10 +266,8 @@ class TestSanyImporter extends FunSuite {
         assert(0 == actionDecl.formalParams.length)
         assert(NameEx("x") == actionDecl.body)
         assert(locationStore.contains(actionDecl.body.ID)) // and source file information has been saved
-        val loc = locationStore.find(actionDecl.body.ID).get
-        assert(
-          SourceRegion(SourcePosition(4, 9), SourcePosition(4, 9)) == loc.region
-        )
+      val loc = locationStore.find(actionDecl.body.ID).get
+        assert(SourceRegion(SourcePosition(4, 9), SourcePosition(4, 9)) == loc.region)
     }
   }
 
@@ -328,14 +312,10 @@ class TestSanyImporter extends FunSuite {
       case actionDecl: TlaOperDecl =>
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
-        assert(
-          OperEx(TlaBoolOper.or, ValEx(TlaBool(false)), ValEx(TlaBool(true))) == actionDecl.body
-        )
+        assert(OperEx(TlaBoolOper.or, ValEx(TlaBool(false)), ValEx(TlaBool(true))) == actionDecl.body)
         assert(locationStore.contains(actionDecl.body.ID)) // and source file information has been saved
-        val loc = locationStore.find(actionDecl.body.ID).get
-        assert(
-          SourceRegion(SourcePosition(2, 9), SourcePosition(2, 21)) == loc.region
-        )
+      val loc = locationStore.find(actionDecl.body.ID).get
+        assert(SourceRegion(SourcePosition(2, 9), SourcePosition(2, 21)) == loc.region)
     }
   }
 
@@ -408,6 +388,7 @@ class TestSanyImporter extends FunSuite {
     }
   }
 
+
   test("constant operator (a builtin op and variables)") {
     val text =
       """---- MODULE builtinop ----
@@ -426,9 +407,7 @@ class TestSanyImporter extends FunSuite {
       case actionDecl: TlaOperDecl =>
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
-        assert(
-          OperEx(TlaBoolOper.and, NameEx("x"), ValEx(TlaBool(true))) == actionDecl.body
-        )
+        assert(OperEx(TlaBoolOper.and, NameEx("x"), ValEx(TlaBool(true))) == actionDecl.body)
         assert(locationStore.contains(actionDecl.body.ID)) // and source file information has been saved
     }
   }
@@ -438,7 +417,7 @@ class TestSanyImporter extends FunSuite {
     // Here we test the very basic application of every operator.
     // For more advanced expressions, see the individual tests for each operator.
     val text =
-      """---- MODULE builtins ----
+    """---- MODULE builtins ----
       |VARIABLES x
       |True == TRUE
       |
@@ -531,276 +510,115 @@ class TestSanyImporter extends FunSuite {
     val trueOperDecl = mod.declarations(1)
     expectDecl("True", ValEx(TlaBool(true)))
 
-    val trueOperEx = OperEx(TlaOper.apply, NameEx("True"))
+    val trueOperEx = OperEx( TlaOper.apply, NameEx("True") )
 
-    expectDecl(
-      "Eq",
-      OperEx(TlaOper.eq, ValEx(TlaBool(false)), ValEx(TlaBool(true)))
-    )
-    expectDecl(
-      "Ne",
-      OperEx(TlaOper.ne, ValEx(TlaBool(false)), ValEx(TlaBool(true)))
-    )
+    expectDecl("Eq", OperEx(TlaOper.eq, ValEx(TlaBool(false)), ValEx(TlaBool(true))))
+    expectDecl("Ne", OperEx(TlaOper.ne, ValEx(TlaBool(false)), ValEx(TlaBool(true))))
     expectDecl("Prime", OperEx(TlaActionOper.prime, NameEx("x")))
     expectDecl("Not", OperEx(TlaBoolOper.not, NameEx("x")))
-    expectDecl(
-      "Or",
-      OperEx(TlaBoolOper.or, ValEx(TlaBool(false)), ValEx(TlaBool(true)))
-    )
-    expectDecl(
-      "And",
-      OperEx(TlaBoolOper.and, ValEx(TlaBool(false)), ValEx(TlaBool(true)))
-    )
-    expectDecl(
-      "Equiv",
-      OperEx(TlaBoolOper.equiv, ValEx(TlaBool(false)), ValEx(TlaBool(true)))
-    )
-    expectDecl(
-      "Implies",
-      OperEx(TlaBoolOper.implies, ValEx(TlaBool(false)), ValEx(TlaBool(true)))
-    )
+    expectDecl("Or", OperEx(TlaBoolOper.or, ValEx(TlaBool(false)), ValEx(TlaBool(true))))
+    expectDecl("And", OperEx(TlaBoolOper.and, ValEx(TlaBool(false)), ValEx(TlaBool(true))))
+    expectDecl("Equiv", OperEx(TlaBoolOper.equiv, ValEx(TlaBool(false)), ValEx(TlaBool(true))))
+    expectDecl("Implies", OperEx(TlaBoolOper.implies, ValEx(TlaBool(false)), ValEx(TlaBool(true))))
     expectDecl("Subset", OperEx(TlaSetOper.SUBSET, NameEx("x")))
     expectDecl("Union", OperEx(TlaSetOper.union, NameEx("x")))
     expectDecl("Domain", OperEx(TlaFunOper.domain, NameEx("x")))
-    expectDecl(
-      "Subseteq",
-      OperEx(TlaSetOper.subseteq, NameEx("x"), NameEx("x"))
-    )
+    expectDecl("Subseteq", OperEx(TlaSetOper.subseteq, NameEx("x"), NameEx("x")))
     expectDecl("In", OperEx(TlaSetOper.in, NameEx("x"), NameEx("x")))
     expectDecl("Notin", OperEx(TlaSetOper.notin, NameEx("x"), NameEx("x")))
-    expectDecl(
-      "Setminus",
-      OperEx(TlaSetOper.setminus, NameEx("x"), NameEx("x"))
-    )
+    expectDecl("Setminus", OperEx(TlaSetOper.setminus, NameEx("x"), NameEx("x")))
     expectDecl("Cap", OperEx(TlaSetOper.cap, NameEx("x"), NameEx("x")))
     expectDecl("Cup", OperEx(TlaSetOper.cup, NameEx("x"), NameEx("x")))
     expectDecl("Times", OperEx(TlaSetOper.times, NameEx("x"), NameEx("x")))
-    expectDecl(
-      "LeadsTo",
-      OperEx(TlaTempOper.leadsTo, ValEx(TlaBool(true)), ValEx(TlaBool(true)))
-    )
+    expectDecl("LeadsTo", OperEx(TlaTempOper.leadsTo, ValEx(TlaBool(true)), ValEx(TlaBool(true))))
     expectDecl("Box", OperEx(TlaTempOper.box, ValEx(TlaBool(true))))
     expectDecl("Diamond", OperEx(TlaTempOper.diamond, ValEx(TlaBool(true))))
     expectDecl("Enabled", OperEx(TlaActionOper.enabled, NameEx("x")))
     expectDecl("Unchanged", OperEx(TlaActionOper.unchanged, NameEx("x")))
-    expectDecl(
-      "Cdot",
-      OperEx(TlaActionOper.composition, trueOperEx, trueOperEx)
-    )
-    expectDecl(
-      "Guarantees",
-      OperEx(TlaTempOper.guarantees, trueOperEx, trueOperEx)
-    )
-    expectDecl(
-      "Angleact",
-      OperEx(TlaActionOper.nostutter, trueOperEx, NameEx("x"))
-    )
-    expectDecl(
-      "BoundedChoose",
-      OperEx(
-        TlaOper.chooseBounded,
-        NameEx("y"),
-        NameEx("x"),
-        ValEx(TlaBool(true))
-      )
-    )
-    expectDecl(
-      "BoundedExists",
-      OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("x"), ValEx(TlaBool(true)))
-    )
-    expectDecl(
-      "BoundedForall",
-      OperEx(TlaBoolOper.forall, NameEx("y"), NameEx("x"), ValEx(TlaBool(true)))
-    )
-    expectDecl(
-      "CartesianProd",
-      OperEx(TlaSetOper.times, NameEx("x"), NameEx("x"), NameEx("x"))
-    )
-    expectDecl(
-      "Pair",
-      OperEx(TlaFunOper.tuple, ValEx(TlaInt(1)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Tuple",
-      OperEx(
-        TlaFunOper.tuple,
-        ValEx(TlaInt(1)),
-        ValEx(TlaInt(2)),
-        ValEx(TlaInt(3))
-      )
-    )
-    expectDecl(
-      "Case",
-      OperEx(TlaControlOper.caseNoOther, 1.to(6).map(i => ValEx(TlaInt(i))): _*)
-    )
-    expectDecl(
-      "CaseOther",
-      OperEx(
-        TlaControlOper.caseWithOther,
-        (7 +: 1.to(6)).map(i => ValEx(TlaInt(i))): _*
-      )
-    )
-    expectDecl(
-      "ConjList",
-      OperEx(
-        TlaBoolOper.and,
-        List(TlaBool(false), TlaBool(true), TlaBool(false))
-          .map(b => ValEx(b)): _*
-      )
-    )
-    expectDecl(
-      "DisjList",
-      OperEx(
-        TlaBoolOper.or,
-        List(TlaBool(false), TlaBool(true), TlaBool(false))
-          .map(b => ValEx(b)): _*
-      )
-    )
-    expectDecl(
-      "Except",
-      OperEx(
-        TlaFunOper.except,
+    expectDecl("Cdot", OperEx(TlaActionOper.composition, trueOperEx, trueOperEx))
+    expectDecl("Guarantees",
+      OperEx(TlaTempOper.guarantees, trueOperEx, trueOperEx))
+    expectDecl("Angleact",
+      OperEx(TlaActionOper.nostutter, trueOperEx, NameEx("x")))
+    expectDecl("BoundedChoose",
+      OperEx(TlaOper.chooseBounded, NameEx("y"), NameEx("x"), ValEx(TlaBool(true))))
+    expectDecl("BoundedExists",
+      OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("x"), ValEx(TlaBool(true))))
+    expectDecl("BoundedForall",
+      OperEx(TlaBoolOper.forall, NameEx("y"), NameEx("x"), ValEx(TlaBool(true))))
+    expectDecl("CartesianProd",
+      OperEx(TlaSetOper.times, NameEx("x"), NameEx("x"), NameEx("x")))
+    expectDecl("Pair", OperEx(TlaFunOper.tuple, ValEx(TlaInt(1)), ValEx(TlaInt(2))))
+    expectDecl("Tuple",
+      OperEx(TlaFunOper.tuple, ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaInt(3))))
+    expectDecl("Case",
+      OperEx(TlaControlOper.caseNoOther, 1.to(6).map(i => ValEx(TlaInt(i))): _*))
+    expectDecl("CaseOther",
+      OperEx(TlaControlOper.caseWithOther, (7 +: 1.to(6)).map(i => ValEx(TlaInt(i))): _*))
+    expectDecl("ConjList",
+      OperEx(TlaBoolOper.and, List(TlaBool(false), TlaBool(true), TlaBool(false)).map(b => ValEx(b)): _*))
+    expectDecl("DisjList",
+      OperEx(TlaBoolOper.or, List(TlaBool(false), TlaBool(true), TlaBool(false)).map(b => ValEx(b)): _*))
+    expectDecl("Except",
+      OperEx(TlaFunOper.except,
+        NameEx("x"), TlaFunOper.mkTuple(ValEx(TlaInt(0))), ValEx(TlaInt(1))
+      ))
+    expectDecl("ExceptAt",
+      OperEx(TlaFunOper.except,
         NameEx("x"),
         TlaFunOper.mkTuple(ValEx(TlaInt(0))),
-        ValEx(TlaInt(1))
-      )
-    )
-    expectDecl(
-      "ExceptAt",
-      OperEx(
-        TlaFunOper.except,
-        NameEx("x"),
-        TlaFunOper.mkTuple(ValEx(TlaInt(0))),
-        OperEx(
-          TlaBoolOper.and,
+        OperEx(TlaBoolOper.and,
           OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(0))),
-          ValEx(TlaBool(true))
-        )
-      )
-    )
-    expectDecl(
-      "FcnApply",
-      OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(1)))
-    )
+          ValEx(TlaBool(true)))
+      ))
+    expectDecl("FcnApply", OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(1))))
     val cup = OperEx(TlaSetOper.cup, NameEx("y"), NameEx("y"))
-    expectDecl(
-      "FcnCtor",
-      OperEx(TlaFunOper.funDef, cup, NameEx("y"), NameEx("x"))
-    )
-    expectDecl(
-      "FcnCtor2",
-      OperEx(
-        TlaFunOper.funDef,
-        OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")),
-        NameEx("a"),
-        NameEx("x"),
-        NameEx("b"),
-        ValEx(TlaBoolSet)
-      )
-    )
-    expectDecl(
-      "FcnCtor3",
-      OperEx(
-        TlaFunOper.funDef,
-        OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")),
-        OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")),
-        OperEx(TlaSetOper.times, NameEx("x"), ValEx(TlaBoolSet))
-      )
-    )
-    expectDecl(
-      "IfThenElse",
-      OperEx(
-        TlaControlOper.ifThenElse,
-        ValEx(TlaBool(true)),
-        ValEx(TlaBool(false)),
-        ValEx(TlaBool(true))
-      )
-    )
-    expectDecl(
-      "RcdCtor",
-      OperEx(
-        TlaFunOper.enum,
-        ValEx(TlaStr("a")),
-        ValEx(TlaInt(1)),
-        ValEx(TlaStr("b")),
-        ValEx(TlaInt(2))
-      )
-    )
-    expectDecl(
-      "RcdSelect",
-      OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaStr("foo")))
-    )
-    expectDecl(
-      "SetEnumerate",
-      OperEx(
-        TlaSetOper.enumSet,
-        ValEx(TlaInt(1)),
-        ValEx(TlaInt(2)),
-        ValEx(TlaInt(3))
-      )
-    )
+    expectDecl("FcnCtor",
+      OperEx(TlaFunOper.funDef, cup, NameEx("y"), NameEx("x")))
+    expectDecl("FcnCtor2",
+      OperEx(TlaFunOper.funDef, OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")),
+        NameEx("a"), NameEx("x"), NameEx("b"), ValEx(TlaBoolSet)))
+    expectDecl("FcnCtor3",
+      OperEx(TlaFunOper.funDef, OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")),
+        OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")), OperEx(TlaSetOper.times, NameEx("x"), ValEx(TlaBoolSet))))
+    expectDecl("IfThenElse",
+      OperEx(TlaControlOper.ifThenElse, ValEx(TlaBool(true)), ValEx(TlaBool(false)), ValEx(TlaBool(true))))
+    expectDecl("RcdCtor",
+      OperEx(TlaFunOper.enum,
+        ValEx(TlaStr("a")), ValEx(TlaInt(1)), ValEx(TlaStr("b")), ValEx(TlaInt(2))))
+    expectDecl("RcdSelect",
+      OperEx(TlaFunOper.app,
+        NameEx("x"), ValEx(TlaStr("foo"))))
+    expectDecl("SetEnumerate",
+      OperEx(TlaSetOper.enumSet, ValEx(TlaInt(1)), ValEx(TlaInt(2)), ValEx(TlaInt(3))))
     expectDecl("SetOfFcns", OperEx(TlaSetOper.funSet, NameEx("x"), NameEx("x")))
-    expectDecl(
-      "SetOfRcds",
-      OperEx(
-        TlaSetOper.recSet,
-        ValEx(TlaStr("a")),
-        NameEx("x"),
-        ValEx(TlaStr("b")),
-        NameEx("x")
-      )
-    )
-    expectDecl(
-      "StrongFairness",
-      OperEx(TlaTempOper.strongFairness, NameEx("x"), trueOperEx)
-    )
-    expectDecl(
-      "WeakFairness",
-      OperEx(TlaTempOper.weakFairness, NameEx("x"), trueOperEx)
-    )
-    expectDecl(
-      "SquareAct",
-      OperEx(TlaActionOper.stutter, trueOperEx, NameEx("x"))
-    )
-    expectDecl(
-      "TemporalExists",
-      OperEx(TlaTempOper.EE, NameEx("y"), trueOperEx)
-    )
-    expectDecl(
-      "TemporalForall",
-      OperEx(TlaTempOper.AA, NameEx("y"), trueOperEx)
-    )
-    expectDecl(
-      "UnboundedChoose",
-      OperEx(TlaOper.chooseUnbounded, NameEx("y"), ValEx(TlaBool(true)))
-    )
-    expectDecl(
-      "UnboundedExists",
-      OperEx(TlaBoolOper.existsUnbounded, NameEx("y"), ValEx(TlaBool(true)))
-    )
-    expectDecl(
-      "UnboundedForall",
-      OperEx(TlaBoolOper.forallUnbounded, NameEx("y"), ValEx(TlaBool(true)))
-    )
-    expectDecl(
-      "SetOfAll",
-      OperEx(TlaSetOper.map, ValEx(TlaInt(1)), NameEx("y"), NameEx("x"))
-    )
-    expectDecl(
-      "SetOfTuples",
-      OperEx(
-        TlaSetOper.map,
+    expectDecl("SetOfRcds",
+      OperEx(TlaSetOper.recSet,
+        ValEx(TlaStr("a")), NameEx("x"), ValEx(TlaStr("b")), NameEx("x")))
+    expectDecl("StrongFairness",
+      OperEx(TlaTempOper.strongFairness, NameEx("x"), trueOperEx))
+    expectDecl("WeakFairness",
+      OperEx(TlaTempOper.weakFairness, NameEx("x"), trueOperEx))
+    expectDecl("SquareAct",
+      OperEx(TlaActionOper.stutter, trueOperEx, NameEx("x")))
+    expectDecl("TemporalExists",
+      OperEx(TlaTempOper.EE, NameEx("y"), trueOperEx))
+    expectDecl("TemporalForall",
+      OperEx(TlaTempOper.AA, NameEx("y"), trueOperEx))
+    expectDecl("UnboundedChoose",
+      OperEx(TlaOper.chooseUnbounded, NameEx("y"), ValEx(TlaBool(true))))
+    expectDecl("UnboundedExists",
+      OperEx(TlaBoolOper.existsUnbounded, NameEx("y"), ValEx(TlaBool(true))))
+    expectDecl("UnboundedForall",
+      OperEx(TlaBoolOper.forallUnbounded, NameEx("y"), ValEx(TlaBool(true))))
+    expectDecl("SetOfAll",
+      OperEx(TlaSetOper.map, ValEx(TlaInt(1)), NameEx("y"), NameEx("x")))
+    expectDecl("SetOfTuples",
+      OperEx(TlaSetOper.map,
         OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")),
-        NameEx("a"),
-        NameEx("x"),
-        NameEx("b"),
-        NameEx("x")
-      )
-    )
-    expectDecl(
-      "SubsetOf",
-      OperEx(TlaSetOper.filter, NameEx("y"), NameEx("x"), ValEx(TlaBool(true)))
-    )
+          NameEx("a"), NameEx("x"), NameEx("b"), NameEx("x")))
+    expectDecl("SubsetOf",
+      OperEx(TlaSetOper.filter, NameEx("y"), NameEx("x"), ValEx(TlaBool(true))))
     expectDecl("Boolean", ValEx(TlaBoolSet))
     expectDecl("String", ValEx(TlaStrSet))
   }
@@ -808,7 +626,7 @@ class TestSanyImporter extends FunSuite {
   test("comprehensions with tuples") {
     // TLA+ allows the user to use some form of pattern matching with tuples
     val text =
-      """---- MODULE comprehensions ----
+    """---- MODULE comprehensions ----
       |VARIABLE XY, X, Y
       |FilterTuples == { <<x, y>> \in XY :  x = 1}
       |MapTuples == { x = 1 : <<x, y>> \in XY}
@@ -825,35 +643,26 @@ class TestSanyImporter extends FunSuite {
     def expectDecl(name: String, body: TlaEx): Unit =
       findAndExpectTlaDecl(locationStore, root, name, List(), body)
 
-    expectDecl(
-      "FilterTuples",
-      OperEx(
-        TlaSetOper.filter,
+    expectDecl("FilterTuples",
+      OperEx(TlaSetOper.filter,
         OperEx(TlaFunOper.tuple, NameEx("x"), NameEx("y")),
         NameEx("XY"),
         OperEx(TlaOper.eq, NameEx("x"), ValEx(TlaInt(1)))
-      )
-    ) ////
-    expectDecl(
-      "MapTuples",
-      OperEx(
-        TlaSetOper.map,
+      ))////
+    expectDecl("MapTuples",
+      OperEx(TlaSetOper.map,
         OperEx(TlaOper.eq, NameEx("x"), ValEx(TlaInt(1))),
         OperEx(TlaFunOper.tuple, NameEx("x"), NameEx("y")),
         NameEx("XY")
-      )
-    ) ////
-    expectDecl(
-      "MapTuples2",
-      OperEx(
-        TlaSetOper.map,
+      ))////
+    expectDecl("MapTuples2",
+      OperEx(TlaSetOper.map,
         OperEx(TlaOper.eq, NameEx("x"), ValEx(TlaInt(1))),
         NameEx("x"),
         NameEx("XY"),
         NameEx("y"),
         NameEx("XY")
-      )
-    ) ////
+      ))////
   }
 
   test("funCtor quantifiers") {
@@ -861,7 +670,7 @@ class TestSanyImporter extends FunSuite {
     // We translate all of them uniformly:
     //   every quantified expression has exactly one bound variable or a tuple of variables.
     val text =
-      """---- MODULE composite ----
+    """---- MODULE composite ----
       |VARIABLE X, Z
       |Q1 == \E x \in X: \E y \in X: TRUE
       |Q2 == \E x, y \in X: TRUE
@@ -879,85 +688,26 @@ class TestSanyImporter extends FunSuite {
     def expectDecl(name: String, body: TlaEx): (TlaDecl => Unit) =
       expectTlaDecl(locationStore, name, List(), body)
 
-    expectDecl(
-      "Q1",
-      OperEx(
-        TlaBoolOper.exists,
-        NameEx("x"),
-        NameEx("X"),
-        OperEx(
-          TlaBoolOper.exists,
-          NameEx("y"),
-          NameEx("X"),
-          ValEx(TlaBool(true))
-        )
-      )
-    )(mod.declarations(2))
-    expectDecl(
-      "Q2",
-      OperEx(
-        TlaBoolOper.exists,
-        NameEx("x"),
-        NameEx("X"),
-        OperEx(
-          TlaBoolOper.exists,
-          NameEx("y"),
-          NameEx("X"),
-          ValEx(TlaBool(true))
-        )
-      )
-    )(mod.declarations(3))
-    expectDecl(
-      "Q3",
-      OperEx(
-        TlaBoolOper.exists,
-        NameEx("x"),
-        NameEx("X"),
-        OperEx(
-          TlaBoolOper.exists,
-          NameEx("y"),
-          NameEx("X"),
-          OperEx(
-            TlaBoolOper.exists,
-            NameEx("z"),
-            NameEx("Z"),
-            ValEx(TlaBool(true))
-          )
-        )
-      )
-    )(mod.declarations(4))
-    expectDecl(
-      "Q4",
-      OperEx(
-        TlaBoolOper.exists,
-        NameEx("x"),
-        NameEx("X"),
-        OperEx(
-          TlaBoolOper.exists,
-          NameEx("y"),
-          NameEx("X"),
-          OperEx(
-            TlaBoolOper.exists,
-            OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")),
-            NameEx("Z"),
-            OperEx(
-              TlaBoolOper.exists,
-              NameEx("z"),
-              NameEx("Z"),
-              ValEx(TlaBool(true))
-            )
-          )
-        )
-      )
-    )(mod.declarations(5))
-    expectDecl(
-      "Q5",
-      OperEx(
-        TlaBoolOper.existsUnbounded,
-        NameEx("x"),
-        OperEx(TlaBoolOper.existsUnbounded, NameEx("y"), ValEx(TlaBool(true)))
-      )
-    )(mod.declarations(6))
+    expectDecl("Q1",
+      OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("X"),
+        OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("X"), ValEx(TlaBool(true)))))(mod.declarations(2))
+    expectDecl("Q2",
+      OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("X"),
+        OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("X"), ValEx(TlaBool(true)))))(mod.declarations(3))
+    expectDecl("Q3",
+      OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("X"),
+        OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("X"),
+          OperEx(TlaBoolOper.exists, NameEx("z"), NameEx("Z"),
+            ValEx(TlaBool(true))))))(mod.declarations(4))
+    expectDecl("Q4",
+      OperEx(TlaBoolOper.exists, NameEx("x"), NameEx("X"),
+        OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("X"),
+          OperEx(TlaBoolOper.exists, OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")), NameEx("Z"),
+            OperEx(TlaBoolOper.exists, NameEx("z"), NameEx("Z"),
+              ValEx(TlaBool(true)))))))(mod.declarations(5))
+    expectDecl("Q5",
+      OperEx(TlaBoolOper.existsUnbounded, NameEx("x"),
+        OperEx(TlaBoolOper.existsUnbounded, NameEx("y"), ValEx(TlaBool(true)))))(mod.declarations(6))
   }
 
   test("function updates") {
@@ -976,64 +726,47 @@ class TestSanyImporter extends FunSuite {
       .loadFromSource("except", Source.fromString(text))
     val mod = expectSingleModule("except", rootName, modules)
 
-    def expectDecl(name: String, params: List[FormalParam], body: TlaEx) =
-      expectTlaDecl(locationStore, name, params, body)
+    def expectDecl(name: String, params: List[FormalParam], body: TlaEx) = expectTlaDecl(locationStore, name, params, body)
 
-    expectDecl(
-      "Except",
+    expectDecl("Except",
       List(),
-      OperEx(
-        TlaFunOper.except,
+      OperEx(TlaFunOper.except,
+        NameEx("x"), TlaFunOper.mkTuple(ValEx(TlaInt(0))), ValEx(TlaInt(1))
+      ))(mod.declarations(1))
+
+    expectDecl("ExceptAt",
+      List(),
+      OperEx(TlaFunOper.except,
         NameEx("x"),
         TlaFunOper.mkTuple(ValEx(TlaInt(0))),
-        ValEx(TlaInt(1))
-      )
-    )(mod.declarations(1))
-
-    expectDecl(
-      "ExceptAt",
-      List(),
-      OperEx(
-        TlaFunOper.except,
-        NameEx("x"),
-        TlaFunOper.mkTuple(ValEx(TlaInt(0))),
-        OperEx(
-          TlaBoolOper.and,
+        OperEx(TlaBoolOper.and,
           OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(0))),
-          ValEx(TlaBool(true))
-        )
-      )
-    )(mod.declarations(2))
+          ValEx(TlaBool(true)))
+      ))(mod.declarations(2))
 
-    expectDecl(
-      "ExceptTuple",
+    expectDecl("ExceptTuple",
       List(),
-      OperEx(
-        TlaFunOper.except,
-        NameEx("x"),
-        TlaFunOper.mkTuple(TlaFunOper.mkTuple(ValEx(TlaInt(0)))),
-        ValEx(TlaInt(1))
-      )
-    )(mod.declarations(3))
+      OperEx(TlaFunOper.except,
+        NameEx("x"), TlaFunOper.mkTuple(TlaFunOper.mkTuple(ValEx(TlaInt(0)))), ValEx(TlaInt(1))
+      ))(mod.declarations(3))
+
 
     // 1. The importer automatically substitutes @ with the corresponding function application
     // 2. The importer no longer unfolds ![1][2] to a chain of EXCEPTS. This is done by Desugarer in a separate pass.
 
-    expectDecl(
-      "ExceptManyAt",
+    expectDecl("ExceptManyAt",
       List(),
-      OperEx(
-        TlaFunOper.except,
+      OperEx(TlaFunOper.except,
         name("x"),
         tuple(int(1), int(2)),
         and(
-          appFun(appFun(name("x"), int(1)), int(2)),
+          appFun(
+            appFun(name("x"), int(1)),
+            int(2)),
           bool(true)
-        )
-      )
-    )(mod.declarations(4))
+        ))) (mod.declarations(4))
 
-    /*  // the old test when Desugarer was part of SanyImporter
+/*  // the old test when Desugarer was part of SanyImporter
     expectDecl("ExceptManyAt",
       List(),
       OperEx(TlaFunOper.except,
@@ -1052,7 +785,7 @@ class TestSanyImporter extends FunSuite {
             ), ///
             ValEx(TlaBool(true)))
         )))(mod.declarations(4))
-   */
+*/
   }
 
   test("expression labels") {
@@ -1068,35 +801,26 @@ class TestSanyImporter extends FunSuite {
       .loadFromSource("labels", Source.fromString(text))
     val mod = expectSingleModule("labels", rootName, modules)
 
-    def expectDecl(n: String, p: List[FormalParam], b: TlaEx) =
-      expectTlaDecl(locationStore, n, p, b)
+    def expectDecl(n: String, p: List[FormalParam], b: TlaEx) = expectTlaDecl(locationStore, n, p, b)
 
     //    A == {FALSE} \cup (l1 :: {TRUE})
     val expectedABody =
-      OperEx(
-        TlaSetOper.cup,
+      OperEx(TlaSetOper.cup,
         OperEx(TlaSetOper.enumSet, ValEx(TlaBool(false))),
-        OperEx(
-          TlaOper.label,
+        OperEx(TlaOper.label,
           OperEx(TlaSetOper.enumSet, ValEx(TlaBool(true))),
-          ValEx(TlaStr("l1"))
-        )
-      ) ////
+          ValEx(TlaStr("l1")))) ////
     expectDecl("A", List(), expectedABody)(mod.declarations.head)
 
     //    B == \E x \in BOOLEAN: l2(x) :: x /= FALSE
     // since we cannot access formal parameters, we ignore them
     val expectedBBody =
-      OperEx(
-        TlaBoolOper.exists,
-        NameEx("x"),
-        ValEx(TlaBoolSet),
-        OperEx(
-          TlaOper.label,
-          OperEx(TlaOper.ne, NameEx("x"), ValEx(TlaBool(false))),
-          ValEx(TlaStr("l2"))
-        )
-      ) ////
+    OperEx(TlaBoolOper.exists,
+      NameEx("x"),
+      ValEx(TlaBoolSet),
+      OperEx(TlaOper.label,
+        OperEx(TlaOper.ne, NameEx("x"), ValEx(TlaBool(false))),
+        ValEx(TlaStr("l2")))) ////
     expectDecl("B", List(), expectedBBody)(mod.declarations.tail.head)
   }
 
@@ -1118,22 +842,18 @@ class TestSanyImporter extends FunSuite {
       .loadFromSource("args", Source.fromString(text))
     val mod = expectSingleModule("args", rootName, modules)
 
-    def expectDecl(n: String, p: List[FormalParam], b: TlaEx) =
-      expectTlaDecl(locationStore, n, p, b)
+    def expectDecl(n: String, p: List[FormalParam], b: TlaEx) = expectTlaDecl(locationStore, n, p, b)
 
     val expectedABody = OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaInt(2)))
     expectDecl("A", List(), expectedABody)(mod.declarations(4))
 
-    val expectedBBody =
-      OperEx(TlaFunOper.app, NameEx("g"), ValEx(TlaStr("green")))
+    val expectedBBody = OperEx(TlaFunOper.app, NameEx("g"), ValEx(TlaStr("green")))
     expectDecl("B", List(), expectedBBody)(mod.declarations(5))
 
-    val expectedCBody =
-      OperEx(TlaFunOper.app, NameEx("e"), ValEx(TlaBool(false)))
+    val expectedCBody = OperEx(TlaFunOper.app, NameEx("e"), ValEx(TlaBool(false)))
     expectDecl("C", List(), expectedCBody)(mod.declarations(6))
 
-    val expectedDBody =
-      OperEx(TlaFunOper.app, NameEx("h"), OperEx(TlaSetOper.enumSet))
+    val expectedDBody = OperEx(TlaFunOper.app, NameEx("h"), OperEx(TlaSetOper.enumSet))
     expectDecl("D", List(), expectedDBody)(mod.declarations(7))
   }
 
@@ -1157,57 +877,41 @@ class TestSanyImporter extends FunSuite {
     def expectDecl(name: String, body: TlaEx): (TlaDecl => Unit) =
       expectTlaDecl(locationStore, name, List(), body)
 
-    expectDecl(
-      "E1",
-      OperEx(
-        TlaFunOper.except,
+    expectDecl("E1",
+      OperEx(TlaFunOper.except,
         NameEx("f"),
-        TlaFunOper.mkTuple(ValEx(TlaInt(0))),
-        ValEx(TlaInt(1)),
-        TlaFunOper.mkTuple(ValEx(TlaInt(2))),
-        ValEx(TlaInt(3))
-      )
-    )(mod.declarations(1))
+        TlaFunOper.mkTuple(ValEx(TlaInt(0))), ValEx(TlaInt(1)),
+        TlaFunOper.mkTuple(ValEx(TlaInt(2))), ValEx(TlaInt(3))
+      ))(mod.declarations(1))
+
 
     // SanyImporter no longer unfolds a multi-argument EXCEPT into a chain.
     // This is done by Desugarer in a separate phase.
-    expectDecl(
-      "E2",
+    expectDecl("E2",
       except(
         name("f"),
         tuple(int(0), int(1), int(2)),
         int(3)
       )
-    )(mod.declarations(2))
+    ) (mod.declarations(2))
 
-    expectDecl(
-      "E3",
-      OperEx(
-        TlaFunOper.except,
+    expectDecl("E3",
+      OperEx(TlaFunOper.except,
         NameEx("f"),
-        TlaFunOper.mkTuple(
-          TlaFunOper
-            .mkTuple(ValEx(TlaInt(0)), ValEx(TlaInt(1)), ValEx(TlaInt(2)))
-        ),
+        TlaFunOper.mkTuple(TlaFunOper.mkTuple(ValEx(TlaInt(0)), ValEx(TlaInt(1)), ValEx(TlaInt(2)))),
         ValEx(TlaInt(3))
-      )
-    )(mod.declarations(3))
+      ))(mod.declarations(3))
 
     // using @ in EXCEPT: https://github.com/informalsystems/apalache/issues/286
-    expectDecl(
-      "E4",
-      OperEx(
-        TlaFunOper.except,
+    expectDecl("E4",
+      OperEx(TlaFunOper.except,
         NameEx("f"),
         TlaFunOper.mkTuple(ValEx(TlaInt(0))),
-        OperEx(
-          TlaFunOper.except,
+        OperEx(TlaFunOper.except,
           OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaInt(0))), // this is the equivalent of @
           TlaFunOper.mkTuple(ValEx(TlaStr("state"))),
-          ValEx(TlaInt(4))
-        )
-      )
-    )(mod.declarations(4))
+          ValEx(TlaInt(4)))
+      ))(mod.declarations(4))
   }
 
   test("complex record selects") {
@@ -1228,25 +932,21 @@ class TestSanyImporter extends FunSuite {
     def expectDecl(name: String, body: TlaEx): (TlaDecl => Unit) =
       expectTlaDecl(locationStore, name, List(), body)
 
-    expectDecl(
-      "S1",
-      OperEx(
-        TlaFunOper.app,
-        OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaStr("a"))),
-        ValEx(TlaStr("b"))
-      )
+    expectDecl("S1",
+      OperEx(TlaFunOper.app,
+        OperEx(TlaFunOper.app,
+          NameEx("f"),
+          ValEx(TlaStr("a"))),
+        ValEx(TlaStr("b")))
     )(mod.declarations(1))
-    expectDecl(
-      "S2",
-      OperEx(
-        TlaFunOper.app,
-        OperEx(
-          TlaFunOper.app,
-          OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaStr("a"))),
-          ValEx(TlaStr("b"))
-        ),
-        ValEx(TlaStr("c"))
-      )
+    expectDecl("S2",
+      OperEx(TlaFunOper.app,
+        OperEx(TlaFunOper.app,
+          OperEx(TlaFunOper.app,
+            NameEx("f"),
+            ValEx(TlaStr("a"))),
+          ValEx(TlaStr("b"))),
+        ValEx(TlaStr("c")))
     )(mod.declarations(2))
   }
 
@@ -1267,44 +967,25 @@ class TestSanyImporter extends FunSuite {
       .loadFromSource("funCtor", Source.fromString(text))
     val mod = expectSingleModule("funCtor", rootName, modules)
 
-    def expectDecl(name: String, body: TlaEx) =
-      expectTlaDecl(locationStore, name, List(), body)
+    def expectDecl(name: String, body: TlaEx) = expectTlaDecl(locationStore, name, List(), body)
 
-    expectDecl(
-      "C1",
-      OperEx(
-        TlaFunOper.funDef,
+    expectDecl("C1",
+      OperEx(TlaFunOper.funDef,
         ValEx(TlaBool(true)),
-        NameEx("x"),
-        NameEx("X"),
-        NameEx("y"),
-        NameEx("X")
-      )
-    )(mod.declarations(2))
-    expectDecl(
-      "C2",
-      OperEx(
-        TlaFunOper.funDef,
+        NameEx("x"), NameEx("X"),
+        NameEx("y"), NameEx("X")))(mod.declarations(2))
+    expectDecl("C2",
+      OperEx(TlaFunOper.funDef,
         ValEx(TlaBool(true)),
-        NameEx("x"),
-        NameEx("X"),
-        NameEx("y"),
-        NameEx("X")
-      )
-    )(mod.declarations(3))
-    expectDecl(
-      "C3",
-      OperEx(
-        TlaFunOper.funDef,
+        NameEx("x"), NameEx("X"),
+        NameEx("y"), NameEx("X")))(mod.declarations(3))
+    expectDecl("C3",
+      OperEx(TlaFunOper.funDef,
         ValEx(TlaBool(true)),
-        NameEx("x"),
-        NameEx("X"),
-        NameEx("y"),
-        NameEx("X"),
-        NameEx("z"),
-        NameEx("Z")
-      )
-    )(mod.declarations(4))
+        NameEx("x"), NameEx("X"),
+        NameEx("y"), NameEx("X"),
+        NameEx("z"), NameEx("Z")
+      ))(mod.declarations(4))
 
     // the tuple <<a, b>> is no longer collapsed to a_b by SanyImporter.
     // This is done by Desugarer in a separate phase.
@@ -1321,7 +1002,7 @@ class TestSanyImporter extends FunSuite {
         name("z"),
         name("Z")
       )
-    )(mod.declarations(5))
+    ) (mod.declarations(5))
 
     // the old test when Desugarer was part of SanyImporter
     /*
@@ -1333,7 +1014,7 @@ class TestSanyImporter extends FunSuite {
         NameEx("a_b"), NameEx("Z"), // the tuple <<a, b>> is collapsed to a_b by Desugarer
         NameEx("z"), NameEx("Z")
       ))(mod.declarations(5))
-   */
+      */
   }
 
   test("weird set comprehension") {
@@ -1349,17 +1030,12 @@ class TestSanyImporter extends FunSuite {
       .loadFromSource("weird", Source.fromString(text))
     val mod = expectSingleModule("weird", rootName, modules)
 
-    def expectDecl(name: String, body: TlaEx) =
-      expectTlaDecl(locationStore, name, List(), body)
+    def expectDecl(name: String, body: TlaEx) = expectTlaDecl(locationStore, name, List(), body)
 
     val filter =
-      OperEx(
-        TlaSetOper.filter,
-        NameEx("x"),
-        NameEx("S"),
-        OperEx(TlaSetOper.in, NameEx("x"), NameEx("S"))
-      )
-    expectDecl("Op", filter)(mod.declarations(1))
+      OperEx(TlaSetOper.filter, NameEx("x"), NameEx("S"),
+        OperEx(TlaSetOper.in, NameEx("x"), NameEx("S")))
+    expectDecl("Op", filter) (mod.declarations(1))
   }
 
   test("level-1 operators") {
@@ -1378,30 +1054,15 @@ class TestSanyImporter extends FunSuite {
       .loadFromSource("level1Operators", Source.fromString(text))
     val mod = expectSingleModule("level1Operators", rootName, modules)
 
-    def expectDecl(n: String, p: List[FormalParam], b: TlaEx) =
-      expectTlaDecl(locationStore, n, p, b)
+    def expectDecl(n: String, p: List[FormalParam], b: TlaEx) = expectTlaDecl(locationStore, n, p, b)
 
-    expectDecl(
-      "A",
-      List(SimpleFormalParam("i"), SimpleFormalParam("j")),
-      OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j"))
-    )(mod.declarations(2))
-    expectDecl(
-      "**",
-      List(SimpleFormalParam("i"), SimpleFormalParam("j")),
-      OperEx(TlaSetOper.cap, NameEx("i"), NameEx("j"))
-    )(mod.declarations(3))
+    expectDecl("A", List(SimpleFormalParam("i"), SimpleFormalParam("j")),
+      OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j")))(mod.declarations(2))
+    expectDecl("**", List(SimpleFormalParam("i"), SimpleFormalParam("j")),
+      OperEx(TlaSetOper.cap, NameEx("i"), NameEx("j")))(mod.declarations(3))
     val aDecl = mod.declarations(2).asInstanceOf[TlaOperDecl]
-    expectDecl(
-      "C",
-      List(),
-      OperEx(
-        TlaOper.apply,
-        NameEx(aDecl.name),
-        ValEx(TlaInt(1)),
-        ValEx(TlaInt(2))
-      )
-    )(mod.declarations(4))
+    expectDecl("C", List(),
+      OperEx(TlaOper.apply, NameEx( aDecl.name ), ValEx(TlaInt(1)), ValEx(TlaInt(2))))(mod.declarations(4))
   }
 
   test("level-2 operators") {
@@ -1420,26 +1081,15 @@ class TestSanyImporter extends FunSuite {
       .loadFromSource("level2Operators", Source.fromString(text))
     val mod = expectSingleModule("level2Operators", rootName, modules)
 
-    def expectDecl(n: String, p: List[FormalParam], b: TlaEx) =
-      expectTlaDecl(locationStore, n, p, b)
+    def expectDecl(n: String, p: List[FormalParam], b: TlaEx) = expectTlaDecl(locationStore, n, p, b)
 
-    expectDecl(
-      "A",
-      List(
-        SimpleFormalParam("i"),
-        SimpleFormalParam("j"),
-        OperFormalParam("f", 1)
-      ),
-      OperEx(
-        TlaOper.apply,
-        NameEx("f"),
-        OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j"))
-      )
-    )(mod.declarations(2))
+    expectDecl("A",
+      List(SimpleFormalParam("i"), SimpleFormalParam("j"), OperFormalParam("f", 1)),
+      OperEx(TlaOper.apply, NameEx("f"),
+        OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j"))))(mod.declarations(2))
     val aDecl = mod.declarations(2).asInstanceOf[TlaOperDecl]
-    expectDecl("C", List(), appDecl(aDecl, int(0), int(1), name("B")))(
-      mod.declarations(4)
-    )
+    expectDecl("C", List(),
+      appDecl( aDecl, int(0), int(1), name("B") ))(mod.declarations(4))
   }
 
   test("let-in") {
@@ -1461,40 +1111,32 @@ class TestSanyImporter extends FunSuite {
     val root = modules(rootName)
 
     // the root module contains its own declarations and the declarations by FiniteSets
-    root.declarations
-      .find {
-        _.name == "A"
-      }
-      .collect {
-        case TlaOperDecl(_, _, LetInEx(body, defs @ _*)) =>
-          assert(locationStore.contains(body.ID))
-          assert(3 == defs.length)
-          val xDecl = defs.head
-          assert("X" == xDecl.name)
-          val yDecl = defs(1)
-          assert(
-            TlaOperDecl("Y", List(SimpleFormalParam("a")), NameEx("a")) == yDecl
-          )
-          assert(locationStore.contains(yDecl.body.ID)) // and source file information has been saved
+    root.declarations.find {
+      _.name == "A"
+    }.collect {
+      case TlaOperDecl(_, _, LetInEx(body, defs@_*)) =>
+        assert(locationStore.contains(body.ID))
+        assert(3 == defs.length)
+        val xDecl = defs.head
+        assert("X" == xDecl.name)
+        val yDecl = defs(1)
+        assert(TlaOperDecl("Y",
+          List(SimpleFormalParam("a")),
+          NameEx("a")) == yDecl)
+        assert(locationStore.contains(yDecl.body.ID)) // and source file information has been saved
 
-          val zDecl = defs(2)
-          zDecl match {
-            case TlaOperDecl(
-                "Z",
-                List(OperFormalParam("f", 1), SimpleFormalParam("a")),
-                _
-                ) =>
-              assert(
-                OperEx(TlaOper.apply, NameEx("f"), NameEx("a")) == zDecl.body
-              )
-          }
-          assert(locationStore.contains(zDecl.body.ID)) // and source file information has been saved
-          assert(0 == xDecl.formalParams.length)
-          assert(int(1) == xDecl.body)
-          // although "X" might seem to be a variable, it is actually an operator without any arguments
-          assert(appDecl(xDecl) == body)
-          assert(locationStore.contains(xDecl.body.ID)) // and source file information has been saved
-      }
+        val zDecl = defs(2)
+        zDecl match {
+          case TlaOperDecl("Z", List(OperFormalParam("f", 1), SimpleFormalParam("a")), _) =>
+            assert(OperEx(TlaOper.apply, NameEx("f"), NameEx("a")) == zDecl.body)
+        }
+        assert(locationStore.contains(zDecl.body.ID)) // and source file information has been saved
+        assert(0 == xDecl.formalParams.length)
+        assert(int(1) == xDecl.body)
+        // although "X" might seem to be a variable, it is actually an operator without any arguments
+        assert(appDecl(xDecl) == body)
+        assert(locationStore.contains(xDecl.body.ID)) // and source file information has been saved
+    }
   }
 
   test("LAMBDA") {
@@ -1516,29 +1158,19 @@ class TestSanyImporter extends FunSuite {
     root.declarations.find {
       _.name == "B"
     } collect {
-      case TlaOperDecl(
-          _,
-          _,
-          OperEx(TlaOper.apply, NameEx("A"), lambda, ValEx(TlaInt(i)))
-          ) =>
+      case TlaOperDecl(_, _, OperEx(TlaOper.apply, NameEx("A"), lambda, ValEx(TlaInt(i)))) =>
         lambda match {
-          case LetInEx(
-              NameEx("LAMBDA"),
-              TlaOperDecl(
-                "LAMBDA",
-                List(SimpleFormalParam("x")),
-                OperEx(TlaOper.eq, NameEx("x"), ValEx(TlaInt(_)))
-              )
-              ) =>
-          // ok
+          case LetInEx(NameEx("LAMBDA"),
+              TlaOperDecl("LAMBDA", List(SimpleFormalParam("x")),
+                OperEx(TlaOper.eq, NameEx("x"), ValEx(TlaInt(_))))) =>
+            // ok
 
-          case _ =>
-            fail("expected a LET-IN definition of LAMBDA and its usage by name")
+          case _ => fail("expected a LET-IN definition of LAMBDA and its usage by name")
         }
 
       case _ => fail("expected A")
     }
-  }
+   }
 
   // LET-IN with recursive operators
   test("let-in-rec") {
@@ -1563,14 +1195,15 @@ class TestSanyImporter extends FunSuite {
     root.declarations.find {
       _.name == "A"
     } collect {
-      case TlaOperDecl(_, _, LetInEx(body, defs @ _*)) =>
+      case TlaOperDecl(_, _, LetInEx(body, defs@_*)) =>
         assert(2 == defs.length)
         val fDecl = defs.head
         assert("f" == fDecl.name)
         val expectedBody =
-          OperEx(
-            TlaFunOper.recFunDef,
-            OperEx(TlaFunOper.app, OperEx(TlaFunOper.recFunRef), NameEx("x")),
+          OperEx(TlaFunOper.recFunDef,
+            OperEx(TlaFunOper.app,
+              OperEx(TlaFunOper.recFunRef),
+              NameEx("x")),
             NameEx("x"),
             ValEx(TlaBoolSet)
           )
@@ -1580,7 +1213,7 @@ class TestSanyImporter extends FunSuite {
 
         val xDecl = defs(1)
         assert("X" == xDecl.name)
-        assert(appOp(name("X")) == xDecl.body)
+        assert(appOp( name("X") ) == xDecl.body)
         assert(appDecl(xDecl) == body)
         assert(locationStore.contains(xDecl.body.ID)) // and source file information has been saved
     }
@@ -1635,26 +1268,28 @@ class TestSanyImporter extends FunSuite {
     }
 
     // in the recursive sections, the calls to recursive operators should be replaced with (apply ...)
-    assertRec("R", 1, OperEx(TlaOper.apply, NameEx("R"), NameEx("n")))
+    assertRec("R", 1,
+      OperEx(TlaOper.apply, NameEx("R"), NameEx("n")))
 
-    assertRec("A", 1, OperEx(TlaOper.apply, NameEx("B"), NameEx("n")))
-    assertRec("B", 1, OperEx(TlaOper.apply, NameEx("C"), NameEx("n")))
-    assertRec("C", 1, OperEx(TlaOper.apply, NameEx("A"), NameEx("n")))
+    assertRec("A", 1,
+      OperEx(TlaOper.apply, NameEx("B"), NameEx("n")))
+    assertRec("B", 1,
+      OperEx(TlaOper.apply, NameEx("C"), NameEx("n")))
+    assertRec("C", 1,
+      OperEx(TlaOper.apply, NameEx("A"), NameEx("n")))
 
-    assertRec("X", 0, OperEx(TlaOper.apply, NameEx("X")))
+    assertRec("X", 0,
+      OperEx(TlaOper.apply, NameEx("X")))
 
     // however, in non-recursive sections, the calls to recursive operators are just normal OperEx(operator, ...)
     root.declarations.find {
       _.name == "D"
     } match {
       case Some(d: TlaOperDecl) =>
-        val A = root.declarations
-          .find {
-            _.name == "A"
-          }
-          .get
-          .asInstanceOf[TlaOperDecl]
-        assert(appDecl(A, name("n")) == d.body)
+        val A = root.declarations.find {
+          _.name == "A"
+        }.get.asInstanceOf[TlaOperDecl]
+        assert(appDecl( A, name("n") ) == d.body)
         assert(locationStore.contains(d.body.ID)) // and source file information has been saved
 
       case _ =>
@@ -1671,19 +1306,11 @@ class TestSanyImporter extends FunSuite {
         // but it is accessible via the field recParam.
         assert(d.isRecursive)
         val recParam = OperFormalParam("F", 1)
-        val ite = OperEx(
-          TlaControlOper.ifThenElse,
+        val ite = OperEx(TlaControlOper.ifThenElse,
           OperEx(TlaOper.eq, NameEx("n"), ValEx(TlaInt(0))),
           ValEx(TlaInt(1)),
-          OperEx(
-            TlaArithOper.mult,
-            NameEx("n"),
-            OperEx(
-              TlaOper.apply,
-              NameEx("F"),
-              OperEx(TlaArithOper.minus, NameEx("n"), ValEx(TlaInt(1)))
-            )
-          )
+          OperEx(TlaArithOper.mult, NameEx("n"),
+            OperEx(TlaOper.apply, NameEx("F"), OperEx(TlaArithOper.minus, NameEx("n"), ValEx(TlaInt(1)))))
         )
         assert(d.body == ite)
         assert(locationStore.contains(d.body.ID)) // and source file information has been saved
@@ -1725,37 +1352,25 @@ class TestSanyImporter extends FunSuite {
       }
     }
 
-    assertTlaRecFunDecl(
-      "nonRecFun",
-      OperEx(TlaFunOper.funDef, NameEx("x"), NameEx("x"), NameEx("S"))
-    )
-
-    assertTlaRecFunDecl(
-      "recFun",
-      OperEx(
-        TlaFunOper.recFunDef,
-        OperEx(TlaFunOper.app, OperEx(TlaFunOper.recFunRef), NameEx("x")),
+    assertTlaRecFunDecl("nonRecFun",
+      OperEx(TlaFunOper.funDef,
         NameEx("x"),
-        NameEx("S")
-      )
-    )
+        NameEx("x"),
+        NameEx("S")))
 
-    val bodyOfFun2 = OperEx(
-      TlaFunOper.app,
+    assertTlaRecFunDecl("recFun",
+      OperEx(TlaFunOper.recFunDef,
+        OperEx(TlaFunOper.app,
+          OperEx(TlaFunOper.recFunRef),
+          NameEx("x")),
+          NameEx("x"),
+          NameEx("S")))
+
+    val bodyOfFun2 = OperEx(TlaFunOper.app,
       OperEx(TlaFunOper.recFunRef),
-      OperEx(TlaFunOper.tuple, NameEx("y"), NameEx("x"))
-    )
-    assertTlaRecFunDecl(
-      "recFun2",
-      OperEx(
-        TlaFunOper.recFunDef,
-        bodyOfFun2,
-        NameEx("x"),
-        NameEx("S"),
-        NameEx("y"),
-        NameEx("S")
-      )
-    )
+      OperEx(TlaFunOper.tuple, NameEx("y"), NameEx("x")))
+    assertTlaRecFunDecl("recFun2",
+      OperEx(TlaFunOper.recFunDef, bodyOfFun2, NameEx("x"), NameEx("S"), NameEx("y"), NameEx("S")))
   }
 
   test("instances") {
@@ -1794,13 +1409,8 @@ class TestSanyImporter extends FunSuite {
 
     // the root module contains its own declarations and the declarations by FiniteSets
     root.declarations.find { _.name == "J!F" } match {
-      case Some(
-          TlaOperDecl(
-            _,
-            params,
-            OperEx(TlaArithOper.plus, NameEx("x"), NameEx("M"))
-          )
-          ) =>
+      case Some(TlaOperDecl(_, params,
+          OperEx(TlaArithOper.plus, NameEx("x"), NameEx("M")))) =>
         assert(params.length == 1)
         assert(params.head.isInstanceOf[SimpleFormalParam])
         assert("x" == params.head.asInstanceOf[SimpleFormalParam].name)
@@ -1812,7 +1422,7 @@ class TestSanyImporter extends FunSuite {
     root.declarations.find { _.name == "J!G" } match {
       case Some(TlaOperDecl(_, params, body)) =>
         assert(params.isEmpty)
-        val expected = appDecl(fDecl.asInstanceOf[TlaOperDecl], int(3))
+        val expected = appDecl( fDecl.asInstanceOf[TlaOperDecl], int(3) )
         assert(body == expected)
 
       case _ =>
@@ -1831,7 +1441,7 @@ class TestSanyImporter extends FunSuite {
       case _ =>
         fail("expected the body for I!F")
     }
-     */
+    */
     // two instances
     root.declarations.find { _.name == "B2!C2!H" } match {
       case Some(TlaOperDecl(_, params, NameEx("x"))) =>
@@ -1886,12 +1496,7 @@ class TestSanyImporter extends FunSuite {
     assert(4 == root.declarations.size)
     val aOfM = root.declarations.head
     // check that the root module has indeed the definition a(self) == {self}, not a == {}
-    assert(
-      aOfM.isInstanceOf[TlaOperDecl] && aOfM
-        .asInstanceOf[TlaOperDecl]
-        .formalParams
-        .size == 1
-    )
+    assert(aOfM.isInstanceOf[TlaOperDecl] && aOfM.asInstanceOf[TlaOperDecl].formalParams.size == 1)
   }
 
   test("substitution in INSTANCE") {
@@ -1999,16 +1604,13 @@ class TestSanyImporter extends FunSuite {
     val root = modules(rootName)
     // expect V!chosen, V!C!Init and V!C!Next
     assert(3 == root.declarations.size)
-    val next = root.declarations
-      .find(_.name == "V!C!Next")
+    val next = root.declarations.find(_.name == "V!C!Next")
       .getOrElse(fail("V!C!Next not found"))
     assert("V!C!Next" == next.name)
     next.asInstanceOf[TlaOperDecl].body match {
-      case body @ OperEx(
-            TlaOper.eq,
-            OperEx(TlaOper.apply, NameEx("V!chosen")),
-            OperEx(TlaSetOper.enumSet, ValEx(TlaInt(i)))
-          ) =>
+      case body @ OperEx(TlaOper.eq,
+                         OperEx(TlaOper.apply, NameEx("V!chosen")),
+                         OperEx(TlaSetOper.enumSet, ValEx(TlaInt(i)))) =>
         assert(i == 2)
         assert(sourceStore.contains(body.ID))
 
@@ -2041,8 +1643,7 @@ class TestSanyImporter extends FunSuite {
     val root = modules(rootName)
     // expect B1!C1!magic and z
     assert(2 == root.declarations.size)
-    val magic = root.declarations
-      .find(_.name == "B1!C1!magic")
+    val magic = root.declarations.find(_.name == "B1!C1!magic")
       .getOrElse(fail("B1!C1!magic not found"))
     assert("B1!C1!magic" == magic.name)
     magic.asInstanceOf[TlaOperDecl].body match {
@@ -2120,64 +1721,26 @@ class TestSanyImporter extends FunSuite {
 
     // the root module contains its own declarations and the declarations by Naturals
     expectDecl("NatSet", ValEx(TlaNatSet))
-    expectDecl(
-      "Plus",
-      OperEx(TlaArithOper.plus, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Minus",
-      OperEx(TlaArithOper.minus, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Mult",
-      OperEx(TlaArithOper.mult, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Power",
-      OperEx(TlaArithOper.exp, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Less",
-      OperEx(TlaArithOper.lt, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Greater",
-      OperEx(TlaArithOper.gt, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Leq",
-      OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Leq2",
-      OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Geq",
-      OperEx(TlaArithOper.ge, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Mod",
-      OperEx(TlaArithOper.mod, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Div",
-      OperEx(TlaArithOper.div, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Range",
-      OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(3)))
-    )
+    expectDecl("Plus", OperEx(TlaArithOper.plus, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Minus", OperEx(TlaArithOper.minus, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Mult", OperEx(TlaArithOper.mult, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Power", OperEx(TlaArithOper.exp, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Less", OperEx(TlaArithOper.lt, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Greater", OperEx(TlaArithOper.gt, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Leq", OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Leq2", OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Geq", OperEx(TlaArithOper.ge, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Mod", OperEx(TlaArithOper.mod, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Div", OperEx(TlaArithOper.div, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Range", OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(3))))
 
     // check the source info
     val plus = root.declarations.find {
       _.name == "Plus"
     } match {
-      case Some(TlaOperDecl(_, _, oe @ OperEx(oper, _*))) =>
+      case Some(TlaOperDecl(_, _, oe@OperEx(oper, _*))) =>
         val loc = locationStore.find(oe.ID).get
-        assert(
-          SourceRegion(SourcePosition(4, 9), SourcePosition(4, 13)) == loc.region
-        )
+        assert(SourceRegion(SourcePosition(4, 9), SourcePosition(4, 13)) == loc.region)
 
       case _ => fail()
     }
@@ -2219,50 +1782,17 @@ class TestSanyImporter extends FunSuite {
 
     // the root module contains its own declarations and the declarations by Integers
     expectDecl("IntSet", ValEx(TlaIntSet))
-    expectDecl(
-      "Plus",
-      OperEx(TlaArithOper.plus, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Minus",
-      OperEx(TlaArithOper.minus, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Mult",
-      OperEx(TlaArithOper.mult, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Power",
-      OperEx(TlaArithOper.exp, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Less",
-      OperEx(TlaArithOper.lt, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Greater",
-      OperEx(TlaArithOper.gt, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Leq",
-      OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Geq",
-      OperEx(TlaArithOper.ge, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Mod",
-      OperEx(TlaArithOper.mod, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Div",
-      OperEx(TlaArithOper.div, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Range",
-      OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(3)))
-    )
+    expectDecl("Plus", OperEx(TlaArithOper.plus, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Minus", OperEx(TlaArithOper.minus, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Mult", OperEx(TlaArithOper.mult, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Power", OperEx(TlaArithOper.exp, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Less", OperEx(TlaArithOper.lt, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Greater", OperEx(TlaArithOper.gt, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Leq", OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Geq", OperEx(TlaArithOper.ge, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Mod", OperEx(TlaArithOper.mod, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Div", OperEx(TlaArithOper.div, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Range", OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(3))))
     expectDecl("UnaryMinus", OperEx(TlaArithOper.uminus, ValEx(TlaInt(2))))
   }
 
@@ -2302,55 +1832,19 @@ class TestSanyImporter extends FunSuite {
 
     expectDecl("RealSet", ValEx(TlaRealSet))
     expectDecl("Inf", ValEx(TlaRealInfinity))
-    expectDecl(
-      "Plus",
-      OperEx(TlaArithOper.plus, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Minus",
-      OperEx(TlaArithOper.minus, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Mult",
-      OperEx(TlaArithOper.mult, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Power",
-      OperEx(TlaArithOper.exp, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Less",
-      OperEx(TlaArithOper.lt, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Greater",
-      OperEx(TlaArithOper.gt, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Leq",
-      OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Geq",
-      OperEx(TlaArithOper.ge, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Mod",
-      OperEx(TlaArithOper.mod, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Div",
-      OperEx(TlaArithOper.div, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
-    expectDecl(
-      "Range",
-      OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(3)))
-    )
+    expectDecl("Plus", OperEx(TlaArithOper.plus, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Minus", OperEx(TlaArithOper.minus, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Mult", OperEx(TlaArithOper.mult, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Power", OperEx(TlaArithOper.exp, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Less", OperEx(TlaArithOper.lt, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Greater", OperEx(TlaArithOper.gt, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Leq", OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Geq", OperEx(TlaArithOper.ge, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Mod", OperEx(TlaArithOper.mod, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Div", OperEx(TlaArithOper.div, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
+    expectDecl("Range", OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(3))))
     expectDecl("UnaryMinus", OperEx(TlaArithOper.uminus, ValEx(TlaInt(2))))
-    expectDecl(
-      "RealDiv",
-      OperEx(TlaArithOper.realDiv, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
-    )
+    expectDecl("RealDiv", OperEx(TlaArithOper.realDiv, ValEx(TlaInt(3)), ValEx(TlaInt(2))))
   }
 
   test("module seqs") {
@@ -2390,18 +1884,20 @@ class TestSanyImporter extends FunSuite {
     expectDecl("Three", tuple(int(1), int(2), int(3)))
     expectDecl("ASeq", seqSet(enumSet(int(1), int(2))))
     expectDecl("ALen", len(tuple(int(1), int(2), int(3))))
-    expectDecl("AConcat", concat(tuple(int(1), int(2)), tuple(int(3))))
-    expectDecl("AAppend", append(tuple(int(1), int(2)), int(3)))
+    expectDecl("AConcat",
+      concat(tuple(int(1), int(2)),
+        tuple(int(3))))
+    expectDecl("AAppend",
+      append(tuple(int(1), int(2)),
+        int(3)))
     expectDecl("AHead", head(tuple(int(1), int(2), int(3))))
     expectDecl("ATail", tail(tuple(int(1), int(2), int(3))))
-    expectDecl(
-      "ASubSeq",
-      subseq(tuple(int(1), int(2), int(3), int(4)), int(2), int(3))
-    )
-    expectDecl(
-      "ASelectSeq",
-      selectseq(tuple(int(1), int(2), int(3), int(4)), name("Test"))
-    )
+    expectDecl("ASubSeq",
+      subseq(tuple(int(1), int(2), int(3), int(4)),
+        int(2), int(3)))
+    expectDecl("ASelectSeq",
+      selectseq(tuple(int(1), int(2), int(3), int(4)),
+        name("Test")))
   }
 
   // FiniteSets
@@ -2429,11 +1925,10 @@ class TestSanyImporter extends FunSuite {
     assert(2 == root.declarations.size)
 
     // the root module contains its own declarations and the declarations by FiniteSets
-    expectDecl(
-      "IsFinSet",
-      OperEx(TlaFiniteSetOper.isFiniteSet, ValEx(TlaBoolSet))
-    )
-    expectDecl("Card", OperEx(TlaFiniteSetOper.cardinality, ValEx(TlaBoolSet)))
+    expectDecl("IsFinSet",
+      OperEx(TlaFiniteSetOper.isFiniteSet, ValEx(TlaBoolSet)))
+    expectDecl("Card",
+      OperEx(TlaFiniteSetOper.cardinality, ValEx(TlaBoolSet)))
   }
 
   test("module TLC") {
@@ -2475,31 +1970,32 @@ class TestSanyImporter extends FunSuite {
     // the definitions of the standard operators are filtered out
     assert(16 == root.declarations.size)
 
-    expectDecl("APrint", OperEx(TlcOper.print, str("TLC Print"), bool(true)))
-    expectDecl("APrintT", OperEx(TlcOper.printT, str("TLC PrintT")))
-    expectDecl("AAssert", OperEx(TlcOper.assert, str("TLC Assert"), bool(true)))
+    expectDecl("APrint",
+      OperEx(TlcOper.print, str("TLC Print"), bool(true)))
+    expectDecl("APrintT",
+      OperEx(TlcOper.printT, str("TLC PrintT")))
+    expectDecl("AAssert",
+      OperEx(TlcOper.assert, str("TLC Assert"), bool(true)))
     expectDecl("AJavaTime", OperEx(TlcOper.javaTime))
-    expectDecl("ATLCGet", OperEx(TlcOper.tlcGet, name("i")))
-    expectDecl("ATLCSet", OperEx(TlcOper.tlcSet, name("i"), int(3)))
-    expectDecl(
-      "AColonGreater",
-      OperEx(TlcOper.colonGreater, enumSet(int(1), int(2)), int(3))
-    )
+    expectDecl("ATLCGet",
+      OperEx(TlcOper.tlcGet, name("i")))
+    expectDecl("ATLCSet",
+      OperEx(TlcOper.tlcSet, name("i"), int(3)))
+    expectDecl("AColonGreater",
+      OperEx(TlcOper.colonGreater, enumSet(int(1), int(2)), int(3)))
     val fun12 = funDef(name("j"), name("j"), enumSet(int(1), int(2)))
     val fun34 = funDef(name("k"), name("k"), enumSet(int(3), int(4)))
-    expectDecl("AtAt", OperEx(TlcOper.atat, fun12, fun34))
-    expectDecl(
-      "APermutations",
-      OperEx(TlcOper.permutations, tuple(int(1), int(2)))
-    )
-    expectDecl(
-      "ASortSeq",
-      OperEx(TlcOper.sortSeq, tuple(int(2), int(1)), name("FakeSort"))
-    )
-    expectDecl(
-      "ARandomElement",
-      OperEx(TlcOper.randomElement, enumSet(int(1), int(2)))
-    )
+    expectDecl("AtAt",
+      OperEx(TlcOper.atat, fun12, fun34))
+    expectDecl("APermutations",
+      OperEx(TlcOper.permutations, tuple(int(1), int(2))))
+    expectDecl("ASortSeq",
+      OperEx(TlcOper.sortSeq,
+        tuple(int(2), int(1)),
+        name("FakeSort")
+      ))
+    expectDecl("ARandomElement",
+      OperEx(TlcOper.randomElement, enumSet(int(1), int(2))))
     expectDecl("AAny", OperEx(TlcOper.any))
     expectDecl("ATLCEval", OperEx(TlcOper.tlcEval, int(42)))
     expectDecl("AToString", OperEx(TlcOper.tlcToString, int(42)))
@@ -2511,7 +2007,7 @@ class TestSanyImporter extends FunSuite {
     // It may look strange that we use sets (Int, BOOLEAN, Int, [A -> B]) to denote types,
     // but this solution is quite convenient and natural for TLA+.
     val text =
-      """---- MODULE types ----
+    """---- MODULE types ----
       |EXTENDS Integers
       |VARIABLE x, f
       |a <: b == a
@@ -2540,83 +2036,48 @@ class TestSanyImporter extends FunSuite {
     def expectDecl(name: String, body: TlaEx) =
       findAndExpectTlaDecl(locationStore, rootMod, name, List(), body)
 
-    expectDecl(
-      "SetOfInts",
-      OperEx(BmcOper.withType, enumSet(), enumSet(ValEx(TlaIntSet)))
-    )
+    expectDecl("SetOfInts",
+      OperEx(BmcOper.withType, enumSet(), enumSet(ValEx(TlaIntSet))))
 
-    expectDecl(
-      "SetOfBools",
-      OperEx(BmcOper.withType, enumSet(), enumSet(ValEx(TlaBoolSet)))
-    )
+    expectDecl("SetOfBools",
+      OperEx(BmcOper.withType, enumSet(), enumSet(ValEx(TlaBoolSet))))
 
-    expectDecl(
-      "SetOfStrings",
-      OperEx(BmcOper.withType, enumSet(), enumSet(ValEx(TlaStrSet)))
-    )
+    expectDecl("SetOfStrings",
+      OperEx(BmcOper.withType, enumSet(), enumSet(ValEx(TlaStrSet))))
 
-    expectDecl(
-      "SetOfInts",
-      OperEx(BmcOper.withType, enumSet(), enumSet(ValEx(TlaIntSet)))
-    )
+    expectDecl("SetOfInts",
+      OperEx(BmcOper.withType, enumSet(), enumSet(ValEx(TlaIntSet))))
 
-    expectDecl(
-      "SetOfSetsOfInts",
-      OperEx(BmcOper.withType, enumSet(), enumSet(enumSet(ValEx(TlaIntSet))))
-    )
+    expectDecl("SetOfSetsOfInts",
+      OperEx(BmcOper.withType, enumSet(), enumSet(enumSet(ValEx(TlaIntSet)))))
 
-    expectDecl("Integer", OperEx(BmcOper.withType, int(1), ValEx(TlaIntSet)))
+    expectDecl("Integer",
+      OperEx(BmcOper.withType, int(1), ValEx(TlaIntSet)))
 
-    expectDecl("Bool", OperEx(BmcOper.withType, bool(false), ValEx(TlaBoolSet)))
+    expectDecl("Bool",
+      OperEx(BmcOper.withType, bool(false), ValEx(TlaBoolSet)))
 
-    expectDecl("Str", OperEx(BmcOper.withType, str("a"), ValEx(TlaStrSet)))
+    expectDecl("Str",
+      OperEx(BmcOper.withType, str("a"), ValEx(TlaStrSet)))
 
-    expectDecl(
-      "Fun",
-      OperEx(
-        BmcOper.withType,
-        NameEx("f"),
-        funSet(ValEx(TlaIntSet), ValEx(TlaIntSet))
-      )
-    )
+    expectDecl("Fun",
+      OperEx(BmcOper.withType, NameEx("f"), funSet(ValEx(TlaIntSet), ValEx(TlaIntSet))))
 
-    expectDecl(
-      "Rec",
-      OperEx(
-        BmcOper.withType,
-        NameEx("f"),
-        enumFun(str("a"), ValEx(TlaIntSet), str("b"), ValEx(TlaBoolSet))
-      )
-    )
+    expectDecl("Rec",
+      OperEx(BmcOper.withType, NameEx("f"),
+        enumFun(str("a"), ValEx(TlaIntSet), str("b"), ValEx(TlaBoolSet))))
 
-    expectDecl(
-      "SetOfRecs",
-      OperEx(
-        BmcOper.withType,
-        enumSet(),
-        enumSet(
-          enumFun(str("a"), ValEx(TlaIntSet), str("b"), ValEx(TlaBoolSet))
-        )
-      )
-    )
+    expectDecl("SetOfRecs",
+      OperEx(BmcOper.withType, enumSet(),
+        enumSet(enumFun(str("a"), ValEx(TlaIntSet), str("b"), ValEx(TlaBoolSet)))))
 
-    expectDecl(
-      "Tup",
-      OperEx(
-        BmcOper.withType,
-        NameEx("f"),
-        tuple(ValEx(TlaIntSet), ValEx(TlaBoolSet))
-      )
-    )
+    expectDecl("Tup",
+      OperEx(BmcOper.withType, NameEx("f"),
+        tuple(ValEx(TlaIntSet), ValEx(TlaBoolSet))))
 
-    expectDecl(
-      "SetOfTuples",
-      OperEx(
-        BmcOper.withType,
-        enumSet(),
-        enumSet(tuple(ValEx(TlaIntSet), ValEx(TlaBoolSet)))
-      )
-    )
+    expectDecl("SetOfTuples",
+      OperEx(BmcOper.withType, enumSet(),
+        enumSet(tuple(ValEx(TlaIntSet), ValEx(TlaBoolSet)))))
   }
 
   test("EXTENDS Bags") {
@@ -2655,9 +2116,7 @@ class TestSanyImporter extends FunSuite {
     // (don't forget to replace <APALACHE_HOME> with the directory where you checked out the project):
     //
     // -DTLA-Library=<APALACHE_HOME>/src/tla
-    System.out.println(
-      "TLA-Library = %s".format(System.getProperty("TLA-Library"))
-    )
+    System.out.println("TLA-Library = %s".format(System.getProperty("TLA-Library")))
 
     val locationStore = new SourceStore
     val (rootName, modules) = new SanyImporter(locationStore)
@@ -2671,41 +2130,19 @@ class TestSanyImporter extends FunSuite {
       findAndExpectTlaDecl(locationStore, root, name, List(), body)
     }
 
-    expectDecl(
-      "Assn",
-      OperEx(
-        BmcOper.assign,
-        OperEx(TlaActionOper.prime, NameEx("x")),
-        ValEx(TlaInt(1))
-      )
-    )
-    expectDecl(
-      "Sklm",
-      OperEx(
-        BmcOper.skolem,
-        OperEx(
-          TlaBoolOper.exists,
-          NameEx("y"),
-          NameEx("S"),
-          ValEx(TlaBool(true))
-        )
-      )
-    )
-    expectDecl(
-      "Expnd",
-      OperEx(BmcOper.expand, OperEx(TlaSetOper.powerset, NameEx("S")))
-    )
-    expectDecl(
-      "CC",
-      OperEx(
-        BmcOper.constCard,
-        OperEx(
-          TlaArithOper.ge,
+    expectDecl("Assn",
+      OperEx(BmcOper.assign, OperEx(TlaActionOper.prime, NameEx("x")), ValEx(TlaInt(1))))
+    expectDecl("Sklm",
+      OperEx(BmcOper.skolem,
+        OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("S"), ValEx(TlaBool(true)))))
+    expectDecl("Expnd",
+      OperEx(BmcOper.expand,
+        OperEx(TlaSetOper.powerset, NameEx("S"))))
+    expectDecl("CC",
+      OperEx(BmcOper.constCard,
+        OperEx(TlaArithOper.ge,
           OperEx(TlaFiniteSetOper.cardinality, NameEx("S")),
-          ValEx(TlaInt(2))
-        )
-      )
-    )
+          ValEx(TlaInt(2)))))
   }
 
   test("EXTENDS Typing") {
@@ -2726,9 +2163,7 @@ class TestSanyImporter extends FunSuite {
     // (don't forget to replace <APALACHE_HOME> with the directory where you checked out the project):
     //
     // -DTLA-Library=<APALACHE_HOME>/src/tla
-    System.out.println(
-      "TLA-Library = %s".format(System.getProperty("TLA-Library"))
-    )
+    System.out.println("TLA-Library = %s".format(System.getProperty("TLA-Library")))
 
     val locationStore = new SourceStore
     val (rootName, modules) = new SanyImporter(locationStore)
@@ -2742,22 +2177,15 @@ class TestSanyImporter extends FunSuite {
       findAndExpectTlaDecl(locationStore, root, name, List(), body)
     }
 
-    expectDecl(
-      "TypeAssumptions",
-      OperEx(
-        TlaBoolOper.and,
+    expectDecl("TypeAssumptions",
+      OperEx(TlaBoolOper.and,
         OperEx(TypingOper.assumeType, NameEx("x"), ValEx(TlaStr("Int"))),
         OperEx(TypingOper.assumeType, NameEx("S"), ValEx(TlaStr("Set(Int)")))
       )
     ) ///
 
-    findAndExpectTlaDecl(
-      locationStore,
-      root,
-      "Foo",
-      List(SimpleFormalParam("y")),
-      OperEx(
-        TypingOper.withType,
+    findAndExpectTlaDecl(locationStore, root, "Foo", List(SimpleFormalParam("y")),
+      OperEx(TypingOper.withType,
         ValEx(TlaStr("(Int) -> Set(Int)")),
         OperEx(TlaSetOper.enumSet, NameEx("y"))
       )
@@ -2784,17 +2212,17 @@ class TestSanyImporter extends FunSuite {
     modules(rootName).declarations(1) match {
       case TlaAssumeDecl(e) => assert(eql("N", 4) == e)
 
-      case e @ _ => fail("expected an assumption, found: " + e)
+      case e@_ => fail("expected an assumption, found: " + e)
     }
 
     modules(rootName).declarations(2) match {
       case TlaAssumeDecl(e) => assert(neql("N", 10) == e)
 
-      case e @ _ => fail("expected an assumption, found: " + e)
+      case e@_ => fail("expected an assumption, found: " + e)
     }
 
     // regression test for issue #25
-    val names = HashSet(modules(rootName).assumeDeclarations.map(_.name): _*)
+    val names = HashSet(modules(rootName).assumeDeclarations.map(_.name) :_*)
     assert(2 == names.size) // all assumptions must have unique names
   }
 
@@ -2876,6 +2304,7 @@ class TestSanyImporter extends FunSuite {
     }
   }
 
+
   test("ignore theorems") {
     // this proof is a garbage, just to check, whether the translator works
     val text =
@@ -2905,11 +2334,7 @@ class TestSanyImporter extends FunSuite {
   }
 
   ////////////////////////////////////////////////////////////////////
-  private def expectSingleModule(
-      expectedRootName: String,
-      rootName: String,
-      modules: Map[String, TlaModule]
-  ): TlaModule = {
+  private def expectSingleModule(expectedRootName: String, rootName: String, modules: Map[String, TlaModule]): TlaModule = {
     assert(expectedRootName == rootName)
     assert(1 == modules.size)
     val root = modules.get(rootName)

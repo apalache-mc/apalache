@@ -1,10 +1,7 @@
 package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.transformations.{
-  TlaExTransformation,
-  TransformationTracker
-}
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
 /**
   * <p>An abstract transformer that calls partial functions.<p>
@@ -13,9 +10,7 @@ import at.forsyte.apalache.tla.lir.transformations.{
   *
   * @author Igor Konnov
   */
-abstract class AbstractTransformer(tracker: TransformationTracker)
-    extends TlaExTransformation {
-
+abstract class AbstractTransformer(tracker: TransformationTracker) extends TlaExTransformation {
   /**
     * The sequence of partial transformers
     */
@@ -44,7 +39,7 @@ abstract class AbstractTransformer(tracker: TransformationTracker)
         TlaOperDecl(d.name, d.formalParams, transform(d.body))
       }
 
-      LetInEx(transform(body), defs.map(mapDecl): _*)
+      LetInEx(transform(body), defs.map(mapDecl) :_*)
 
     case ex =>
       transformOneLevel(ex)
@@ -62,3 +57,5 @@ abstract class AbstractTransformer(tracker: TransformationTracker)
   private val identity: PartialFunction[TlaEx, TlaEx] = { case e => e }
   private lazy val allTransformers = partialTransformers :+ identity
 }
+
+

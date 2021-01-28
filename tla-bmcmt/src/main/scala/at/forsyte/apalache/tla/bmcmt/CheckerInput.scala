@@ -17,10 +17,9 @@ import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule}
   * @param invariantsAndNegations pairs of invariants and their negations (we decouple them for optimization).
   * @author Igor Konnov
   */
-class CheckerInput(
-    val rootModule: TlaModule,
-    val initTransitions: List[TlaEx],
-    val nextTransitions: List[TlaEx],
-    val constInitPrimed: Option[TlaEx],
-    val invariantsAndNegations: List[(TlaEx, TlaEx)]
-) {}
+class CheckerInput(val rootModule: TlaModule,
+                   val initTransitions: List[TlaEx],
+                   val nextTransitions: List[TlaEx],
+                   val constInitPrimed: Option[TlaEx],
+                   val invariantsAndNegations: List[(TlaEx, TlaEx)]) {
+}

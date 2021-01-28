@@ -14,11 +14,8 @@ import scala.collection.JavaConverters._
   *
   * @author konnov
   */
-class ExprOrOpArgNodeTranslator(
-    sourceStore: SourceStore,
-    context: Context,
-    recStatus: RecursionStatus
-) extends LazyLogging {
+class ExprOrOpArgNodeTranslator(sourceStore: SourceStore,
+                                context: Context, recStatus: RecursionStatus) extends LazyLogging {
   def translate(node: ExprOrOpArgNode): TlaEx = {
     val result =
       node match {
@@ -64,9 +61,7 @@ class ExprOrOpArgNodeTranslator(
           translateLabel(label)
 
         case n =>
-          throw new SanyImporterException(
-            "Unexpected subclass of tla2sany.ExprOrOpArgNode: " + n.getClass
-          )
+          throw new SanyImporterException("Unexpected subclass of tla2sany.ExprOrOpArgNode: " + n.getClass)
       }
 
     sourceStore.addRec(result, SourceLocation(node.getLocation))
@@ -81,7 +76,7 @@ class ExprOrOpArgNodeTranslator(
   }
 
   private def translateString(str: StringNode) =
-    // internalize the string, so several occurences of the same string are kept as the same object
+  // internalize the string, so several occurences of the same string are kept as the same object
     ValEx(TlaStr(str.getRep.toString.intern()))
 
   private def translateDecimal(dec: DecimalNode) =
@@ -117,13 +112,11 @@ class ExprOrOpArgNodeTranslator(
 
     val body = ExprOrOpArgNodeTranslator(sourceStore, letInContext, recStatus)
       .translate(letIn.getBody)
-    LetInEx(body, letInDeclarations: _*)
+    LetInEx( body, letInDeclarations : _* )
   }
 
   // translate an operator definition that is used as an expression, that is, LAMBDA
-  private def translateLambdaOrOperatorAsArgument(
-      opArgNode: OpArgNode
-  ): TlaEx = {
+  private def translateLambdaOrOperatorAsArgument(opArgNode: OpArgNode): TlaEx = {
     // Instead of extending the IR with a new expression type, we simply introduce a local LET-IN definition.
     // Although this is a well-defined expression in the IR, it does not correspond to a well-defined TLA+ expression.
     // Hence, one has to take care of this, when printing the output to the user.
@@ -141,9 +134,7 @@ class ExprOrOpArgNodeTranslator(
         NameEx(name)
 
       case e =>
-        throw new SanyImporterException(
-          "Expected an operator definition as an argument, found: " + e
-        )
+        throw new SanyImporterException("Expected an operator definition as an argument, found: " + e)
     }
   }
 
@@ -162,17 +153,15 @@ class ExprOrOpArgNodeTranslator(
     // BUGFIX: the indices in EXCEPT are packed as tuples.
     // Unpack them into multiple function applications when rewriting @, e.g., (((f[1])[2])[3]).
     translate(node.getAtModifier) match {
-      case OperEx(TlaFunOper.tuple, indices @ _*) =>
+      case OperEx(TlaFunOper.tuple, indices@_*) =>
         def applyOne(base: TlaEx, index: TlaEx): TlaEx = {
           OperEx(TlaFunOper.app, base, index)
         }
 
         indices.foldLeft(base)(applyOne)
 
-      case e @ _ =>
-        throw new SanyImporterException(
-          "Unexpected index expression in EXCEPT: " + e
-        )
+      case e@_ =>
+        throw new SanyImporterException("Unexpected index expression in EXCEPT: " + e)
     }
   }
 
@@ -185,11 +174,7 @@ class ExprOrOpArgNodeTranslator(
 }
 
 object ExprOrOpArgNodeTranslator {
-  def apply(
-      sourceStore: SourceStore,
-      context: Context,
-      recStatus: RecursionStatus
-  ): ExprOrOpArgNodeTranslator = {
+  def apply(sourceStore: SourceStore, context: Context, recStatus: RecursionStatus) : ExprOrOpArgNodeTranslator = {
     new ExprOrOpArgNodeTranslator(sourceStore, context, recStatus)
   }
 }

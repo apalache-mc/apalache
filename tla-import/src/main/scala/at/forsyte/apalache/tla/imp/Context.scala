@@ -37,8 +37,7 @@ case class OperAliasUnit(alias: String, oper: TlaOper) extends ContextUnit {
   * @param alias the alias
   * @param tlaValue a TLA+ value to associate with the alias
   */
-case class ValueAliasUnit(alias: String, tlaValue: TlaValue)
-    extends ContextUnit {
+case class ValueAliasUnit(alias: String, tlaValue: TlaValue) extends ContextUnit {
   override def name: String = alias
 }
 
@@ -48,6 +47,7 @@ case class ValueAliasUnit(alias: String, tlaValue: TlaValue)
 case class NoneUnit() extends ContextUnit {
   override val name: String = ""
 }
+
 
 /**
   * A translation context that contains the definitions of:
@@ -96,36 +96,25 @@ trait Context {
 }
 
 object Context {
-
   /**
     * Create a new context, i.e., use Context().
-    */
+   */
   def apply(): Context = {
     new ContextImpl(List(), List(), Map())
   }
 
   def apply(mod: TlaModule): Context = {
-    var context = mod.constDeclarations.foldLeft(Context()) { (c, d) =>
-      c.push(DeclUnit(d))
-    }
-    context = mod.varDeclarations.foldLeft(context) { (c, d) =>
-      c.push(DeclUnit(d))
-    }
-    context = mod.operDeclarations.foldLeft(context) { (c, d) =>
-      c.push(DeclUnit(d))
-    }
-    context = mod.assumeDeclarations.foldLeft(context) { (c, d) =>
-      c.push(DeclUnit(d))
-    }
+    var context = mod.constDeclarations.foldLeft(Context()) { (c, d) => c.push(DeclUnit(d)) }
+    context = mod.varDeclarations.foldLeft(context) { (c, d) => c.push(DeclUnit(d)) }
+    context = mod.operDeclarations.foldLeft(context) { (c, d) => c.push(DeclUnit(d)) }
+    context = mod.assumeDeclarations.foldLeft(context) { (c, d) => c.push(DeclUnit(d)) }
     context
   }
 
   // the actual implementation that otherwise would have disclosed the implementation details via its constructor.
-  private class ContextImpl(
-      val lookupPrefix: List[String],
-      val revList: List[ContextUnit],
-      val unitMap: Map[String, ContextUnit]
-  ) extends Context {
+  private class ContextImpl(val lookupPrefix: List[String],
+                            val revList: List[ContextUnit],
+                            val unitMap: Map[String, ContextUnit]) extends Context {
     // fwdList lazily stores values in the (expected) forward order, whereas revList stores the values
     // in the reverse order, which is optimized for push.
     private var fwdList: Option[List[ContextUnit]] = None
@@ -134,8 +123,7 @@ object Context {
       unitMap.get(decl.name).collect {
         case dup if dup != decl =>
           throw new IllegalStateException(
-            s"Found two different declarations with the same name ${decl.name}: $dup and $decl"
-          )
+              s"Found two different declarations with the same name ${decl.name}: $dup and $decl")
       }
 
       val newList = decl :: revList
@@ -156,7 +144,7 @@ object Context {
 
           case None =>
             val index = qname.indexOf("!")
-            if (index < 0) {
+            if (index < 0 ) {
               NoneUnit()
             } else {
               findRec(qname.substring(index + 1))
@@ -204,17 +192,13 @@ object Context {
     override def disjointUnion(other: Context): Context = {
       other match {
         case that: ContextImpl =>
-          new ContextImpl(
-            lookupPrefix,
-            revList ++ that.revList,
-            unitMap ++ that.unitMap
-          )
+          new ContextImpl(lookupPrefix,
+                          revList ++ that.revList,
+                          unitMap ++ that.unitMap)
 
         case _ =>
           // we could have implemented it, but there is only one implementation of Context.
-          throw new RuntimeException(
-            "Merging two different implementations of Context..."
-          )
+          throw new RuntimeException("Merging two different implementations of Context...")
       }
     }
   }

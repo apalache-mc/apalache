@@ -17,12 +17,10 @@ import com.typesafe.scalalogging.LazyLogging
   *
   * @author Igor Konnov
   */
-class VCGenPassImpl @Inject()(
-    options: PassOptions,
-    tracker: TransformationTracker,
-    @Named("AfterVCGen") nextPass: Pass with TlaModuleMixin
-) extends VCGenPass
-    with LazyLogging {
+class VCGenPassImpl @Inject()(options: PassOptions,
+                              tracker: TransformationTracker,
+                              @Named("AfterVCGen") nextPass: Pass with TlaModuleMixin)
+  extends VCGenPass with LazyLogging {
 
   /**
     * The pass name.
@@ -38,19 +36,14 @@ class VCGenPassImpl @Inject()(
     */
   override def execute(): Boolean = {
     if (tlaModule.isEmpty) {
-      throw new CheckerException(
-        s"The input of $name pass is not initialized",
-        NullEx
-      )
+      throw new CheckerException(s"The input of $name pass is not initialized", NullEx)
     }
 
     val newModule =
       options.get[List[String]]("checker", "inv") match {
         case Some(invariants) =>
-          invariants.foldLeft(tlaModule.get) { (mod, invName) =>
-            logger.info(
-              s"  > Producing verification conditions from the invariant $invName"
-            )
+          invariants.foldLeft(tlaModule.get){ (mod, invName) =>
+            logger.info(s"  > Producing verification conditions from the invariant $invName")
             new VCGenerator(tracker).gen(mod, invName)
           }
         case None =>

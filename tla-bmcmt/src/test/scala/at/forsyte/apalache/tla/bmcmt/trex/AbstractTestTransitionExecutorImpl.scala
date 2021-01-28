@@ -12,8 +12,7 @@ import org.scalatest.fixture
   *
   * @tparam SnapshotT the snapshot type
   */
-abstract class AbstractTestTransitionExecutorImpl[SnapshotT]
-    extends fixture.FunSuite {
+abstract class AbstractTestTransitionExecutorImpl[SnapshotT] extends fixture.FunSuite {
   type ExecutorContextT = ExecutionContext[SnapshotT]
   type FixtureParam = ExecutorContextT
 
@@ -62,8 +61,7 @@ abstract class AbstractTestTransitionExecutorImpl[SnapshotT]
     val init = tla.and(
       mkAssign("y", 1),
       tla.eql(tla.prime(tla.name("y")), tla.int(2)),
-      mkAssign("x", 3)
-    )
+      mkAssign("x", 3))
     val trex = new TransitionExecutorImpl(Set.empty, Set("x", "y"), exeCtx)
     trex.debug = true
     assert(trex.stepNo == 0)
@@ -89,8 +87,7 @@ abstract class AbstractTestTransitionExecutorImpl[SnapshotT]
     // create a snapshot for a later rollback
     val snapshot = trex.snapshot()
     // assert invariant violation and check it
-    val notInv =
-      tla.not(tla.eql(tla.prime(tla.name("y")), tla.prime(tla.name("x"))))
+    val notInv = tla.not(tla.eql(tla.prime(tla.name("y")), tla.prime(tla.name("x"))))
     trex.assertState(notInv)
     assert(trex.sat(60).contains(false))
     // rollback the snapshot
@@ -105,10 +102,10 @@ abstract class AbstractTestTransitionExecutorImpl[SnapshotT]
     // x' <- y /\ y' <- x + y
     val trans1 = tla.and(
       mkAssign("x", tla.name("y")),
-      mkAssign("y", tla.plus(tla.name("x"), tla.name("y")))
-    )
-    val trans2 =
-      tla.and(mkAssign("x", tla.name("x")), mkAssign("y", tla.name("y")))
+      mkAssign("y", tla.plus(tla.name("x"), tla.name("y"))))
+    val trans2 = tla.and(
+      mkAssign("x", tla.name("x")),
+      mkAssign("y", tla.name("y")))
     val trex = new TransitionExecutorImpl(Set.empty, Set("x", "y"), exeCtx)
     trex.prepareTransition(1, init)
     trex.pickTransition()
@@ -145,8 +142,7 @@ abstract class AbstractTestTransitionExecutorImpl[SnapshotT]
     assert(1 == decPath(4)._2 || 2 == decPath(4)._2)
     assert(
       Map("x" -> tla.int(2), "y" -> tla.int(3)) == decPath(4)._1
-        || Map("x" -> tla.int(3), "y" -> tla.int(5)) == decPath(4)._1
-    )
+        || Map("x" -> tla.int(3), "y" -> tla.int(5)) == decPath(4)._1)
 
     // test the symbolic execution
     val exe = trex.execution
@@ -171,20 +167,14 @@ abstract class AbstractTestTransitionExecutorImpl[SnapshotT]
 
     // state 4 is the state Next(Next(Next(Init(state0)))
     val state4 = exe.path(4)._1
-    assertValid(
-      trex,
+    assertValid(trex,
       tla.or(
         tla.eql(state4("x").toNameEx, tla.int(2)),
-        tla.eql(state4("x").toNameEx, tla.int(3))
-      )
-    )
-    assertValid(
-      trex,
+        tla.eql(state4("x").toNameEx, tla.int(3))))
+    assertValid(trex,
       tla.or(
         tla.eql(state4("y").toNameEx, tla.int(3)),
-        tla.eql(state4("y").toNameEx, tla.int(5))
-      )
-    )
+        tla.eql(state4("y").toNameEx, tla.int(5))))
 
     // regression in multi-core
     val snapshot = trex.snapshot()
@@ -204,8 +194,7 @@ abstract class AbstractTestTransitionExecutorImpl[SnapshotT]
     // x' <- x /\ y' <- x + y
     val nextTrans = tla.and(
       mkAssign("x", tla.name("x")),
-      mkAssign("y", tla.plus(tla.name("x"), tla.name("y")))
-    )
+      mkAssign("y", tla.plus(tla.name("x"), tla.name("y"))))
     // push Init
     val trex = new TransitionExecutorImpl(Set.empty, Set("x", "y"), exeCtx)
     trex.prepareTransition(1, init)
@@ -250,10 +239,7 @@ abstract class AbstractTestTransitionExecutorImpl[SnapshotT]
   private def mkAssign(name: String, rhs: TlaEx) =
     tla.assignPrime(tla.name(name), rhs)
 
-  protected def assertValid(
-      trex: TransitionExecutorImpl[SnapshotT],
-      assertion: TlaEx
-  ): Unit = {
+  protected def assertValid(trex: TransitionExecutorImpl[SnapshotT], assertion: TlaEx): Unit = {
     var snapshot = trex.snapshot()
     trex.assertState(assertion)
     assert(trex.sat(0).contains(true))

@@ -9,34 +9,19 @@ package at.forsyte.apalache.tla.bmcmt.smt
   *
   * @author Igor Konnov
   */
-class SolverContextMetrics(
-    val nCells: Long,
-    val nConsts: Long,
-    val nSmtExprs: Long
-) {
-
+class SolverContextMetrics(val nCells: Long, val nConsts: Long, val nSmtExprs: Long) {
   /**
     * Compute the weight based on metrics. Currently, the metric equals to nCells + nConsts + sqrt(nSmtExprs).
     * If we find a better metric, we will change it.
     */
-  lazy val weight: Long = nCells + nConsts + Math
-    .sqrt(Math.max(0, nSmtExprs))
-    .toLong
+  lazy val weight: Long = nCells + nConsts + Math.sqrt(Math.max(0, nSmtExprs)).toLong
 
   def delta(earlier: SolverContextMetrics): SolverContextMetrics = {
-    new SolverContextMetrics(
-      nCells - earlier.nCells,
-      nConsts - earlier.nConsts,
-      nSmtExprs - earlier.nSmtExprs
-    )
+    new SolverContextMetrics(nCells - earlier.nCells, nConsts - earlier.nConsts, nSmtExprs - earlier.nSmtExprs)
   }
 
   def add(delta: SolverContextMetrics): SolverContextMetrics = {
-    new SolverContextMetrics(
-      nCells + delta.nCells,
-      nConsts + delta.nCells,
-      nSmtExprs + delta.nSmtExprs
-    )
+    new SolverContextMetrics(nCells + delta.nCells, nConsts + delta.nCells, nSmtExprs + delta.nSmtExprs)
   }
 
   def addNCells(num: Long): SolverContextMetrics = {

@@ -1,11 +1,7 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaEx}
-import at.forsyte.apalache.tla.lir.transformations.{
-  LanguageWatchdog,
-  TlaExTransformation,
-  TransformationTracker
-}
+import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 
 class DeepCopy(tracker: TransformationTracker) extends TlaExTransformation {
   override def apply(expr: TlaEx): TlaEx = {
@@ -17,7 +13,7 @@ class DeepCopy(tracker: TransformationTracker) extends TlaExTransformation {
     */
   def transform: TlaExTransformation = tracker.track {
     // LetInEx and OperEx are composite expressions
-    case LetInEx(body, defs @ _*) =>
+    case LetInEx(body, defs@_*) =>
       // Transform bodies of all op.defs
       val newDefs = defs.map { x =>
         x.copy(
@@ -26,7 +22,7 @@ class DeepCopy(tracker: TransformationTracker) extends TlaExTransformation {
       }
       LetInEx(transform(body), newDefs: _*)
 
-    case OperEx(op, args @ _*) =>
+    case OperEx(op, args@_*) =>
       OperEx(op, args map transform: _*)
 
     // terminal expressions, just copy

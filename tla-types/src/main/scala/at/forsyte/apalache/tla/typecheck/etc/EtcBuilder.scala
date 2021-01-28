@@ -13,7 +13,7 @@ import at.forsyte.apalache.tla.typecheck._
   */
 trait EtcBuilder {
   protected def mkConst(sourceRef: EtcRef, tt: TlaType1): EtcConst = {
-    EtcConst(tt)(sourceRef)
+    EtcConst(tt) (sourceRef)
   }
 
   protected def mkUniqConst(tt: TlaType1): EtcConst = {
@@ -25,7 +25,7 @@ trait EtcBuilder {
   }
 
   protected def mkName(sourceRef: EtcRef, name: String): EtcName = {
-    EtcName(name)(sourceRef)
+    EtcName(name) (sourceRef)
   }
 
   protected def mkUniqName(name: String): EtcName = {
@@ -36,107 +36,63 @@ trait EtcBuilder {
     mkName(BlameRef(UID.unique), name)
   }
 
-  protected def mkAbs(
-      sourceRef: EtcRef,
-      body: EtcExpr,
-      paramsAndDoms: (String, EtcExpr)*
-  ): EtcAbs = {
-    EtcAbs(body, paramsAndDoms: _*)(sourceRef)
+  protected def mkAbs(sourceRef: EtcRef, body: EtcExpr, paramsAndDoms: (String, EtcExpr)*): EtcAbs = {
+    EtcAbs(body, paramsAndDoms :_*) (sourceRef)
   }
 
-  protected def mkUniqAbs(
-      body: EtcExpr,
-      paramsAndDoms: (String, EtcExpr)*
-  ): EtcAbs = {
-    mkAbs(ExactRef(UID.unique), body, paramsAndDoms: _*)
+  protected def mkUniqAbs(body: EtcExpr, paramsAndDoms: (String, EtcExpr)*): EtcAbs = {
+    mkAbs(ExactRef(UID.unique), body, paramsAndDoms :_*)
   }
 
-  protected def mkBlameAbs(
-      body: EtcExpr,
-      paramsAndDoms: (String, EtcExpr)*
-  ): EtcAbs = {
-    mkAbs(BlameRef(UID.unique), body, paramsAndDoms: _*)
+  protected def mkBlameAbs(body: EtcExpr, paramsAndDoms: (String, EtcExpr)*): EtcAbs = {
+    mkAbs(BlameRef(UID.unique), body, paramsAndDoms :_*)
   }
 
-  protected def mkApp(
-      sourceRef: EtcRef,
-      operTypes: Seq[TlaType1],
-      args: EtcExpr*
-  ): EtcApp = {
-    EtcApp(operTypes, args: _*)(sourceRef)
+  protected def mkApp(sourceRef: EtcRef, operTypes: Seq[TlaType1], args: EtcExpr*): EtcApp = {
+    EtcApp(operTypes, args :_*) (sourceRef)
   }
 
   protected def mkUniqApp(operTypes: Seq[TlaType1], args: EtcExpr*): EtcApp = {
-    mkApp(ExactRef(UID.unique), operTypes, args: _*)
+    mkApp(ExactRef(UID.unique), operTypes, args :_*)
   }
 
   protected def mkBlameApp(operTypes: Seq[TlaType1], args: EtcExpr*): EtcApp = {
-    mkApp(BlameRef(UID.unique), operTypes, args: _*)
+    mkApp(BlameRef(UID.unique), operTypes, args :_*)
   }
 
-  protected def mkAppByName(
-      sourceRef: EtcRef,
-      name: String,
-      args: EtcExpr*
-  ): EtcAppByName = {
-    EtcAppByName(name, args: _*)(sourceRef)
+  protected def mkAppByName(sourceRef: EtcRef, name: String, args: EtcExpr*): EtcAppByName = {
+    EtcAppByName(name, args :_*) (sourceRef)
   }
 
   protected def mkUniqAppByName(name: String, args: EtcExpr*): EtcAppByName = {
-    mkAppByName(ExactRef(UID.unique), name, args: _*)
+    mkAppByName(ExactRef(UID.unique), name, args :_*)
   }
 
   protected def mkBlameAppByName(name: String, args: EtcExpr*): EtcAppByName = {
-    mkAppByName(BlameRef(UID.unique), name, args: _*)
+    mkAppByName(BlameRef(UID.unique), name, args :_*)
   }
 
-  protected def mkLet(
-      sourceRef: EtcRef,
-      name: String,
-      bound: EtcExpr,
-      body: EtcExpr
-  ): EtcLet = {
-    EtcLet(name, bound, body)(sourceRef)
+  protected def mkLet(sourceRef: EtcRef, name: String, bound: EtcExpr, body: EtcExpr): EtcLet = {
+    EtcLet(name, bound, body) (sourceRef)
   }
 
-  protected def mkUniqLet(
-      name: String,
-      bound: EtcExpr,
-      body: EtcExpr
-  ): EtcLet = {
+  protected def mkUniqLet(name: String, bound: EtcExpr, body: EtcExpr): EtcLet = {
     mkLet(ExactRef(UID.unique), name, bound, body)
   }
 
-  protected def mkBlameLet(
-      name: String,
-      bound: EtcExpr,
-      body: EtcExpr
-  ): EtcLet = {
+  protected def mkBlameLet(name: String, bound: EtcExpr, body: EtcExpr): EtcLet = {
     mkLet(BlameRef(UID.unique), name, bound, body)
   }
 
-  protected def mkTypeDecl(
-      sourceRef: EtcRef,
-      name: String,
-      declaredType: TlaType1,
-      scopedEx: EtcExpr
-  ): EtcTypeDecl = {
-    EtcTypeDecl(name, declaredType, scopedEx)(sourceRef)
+  protected def mkTypeDecl(sourceRef: EtcRef, name: String, declaredType: TlaType1, scopedEx: EtcExpr): EtcTypeDecl = {
+    EtcTypeDecl(name, declaredType, scopedEx) (sourceRef)
   }
 
-  protected def mkUniqTypeDecl(
-      name: String,
-      declaredType: TlaType1,
-      scopedEx: EtcExpr
-  ): EtcTypeDecl = {
+  protected def mkUniqTypeDecl(name: String, declaredType: TlaType1, scopedEx: EtcExpr): EtcTypeDecl = {
     mkTypeDecl(ExactRef(UID.unique), name, declaredType, scopedEx)
   }
 
-  protected def mkBlameTypeDecl(
-      name: String,
-      declaredType: TlaType1,
-      scopedEx: EtcExpr
-  ): EtcTypeDecl = {
+  protected def mkBlameTypeDecl(name: String, declaredType: TlaType1, scopedEx: EtcExpr): EtcTypeDecl = {
     mkTypeDecl(BlameRef(UID.unique), name, declaredType, scopedEx)
   }
 }

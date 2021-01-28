@@ -8,7 +8,6 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 import scala.collection.immutable.HashMap
 
 object Arena {
-
   /**
     * The prefix of all cells.
     */
@@ -21,9 +20,7 @@ object Arena {
   val intSetName: String = namePrefix + "4"
 
   def create(solverContext: SolverContext): Arena = {
-    var arena = new Arena(
-      solverContext,
-      0,
+    var arena = new Arena(solverContext, 0,
       new ArenaCell(-1, UnknownT()),
       HashMap(),
       new HashMap(),
@@ -32,8 +29,7 @@ object Arena {
     ) /////
     // by convention, the first cells have the following semantics:
     //  0 stores FALSE, 1 stores TRUE, 2 stores BOOLEAN, 3 stores Nat, 4 stores Int
-    arena = arena
-      .appendCellWithoutDeclaration(BoolT())
+    arena = arena.appendCellWithoutDeclaration(BoolT())
       .appendCellWithoutDeclaration(BoolT())
       .appendCellWithoutDeclaration(FinSetT(BoolT()))
       .appendCellWithoutDeclaration(InfSetT(IntT()))
@@ -52,15 +48,10 @@ object Arena {
     solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, cellFalse.toNameEx))
     solverContext.assertGroundExpr(cellTrue.toNameEx)
     // link c_BOOLEAN to c_FALSE and c_TRUE
-    arena =
-      arena.appendHas(cellBoolean, cellFalse).appendHas(cellBoolean, cellTrue)
+    arena = arena.appendHas(cellBoolean, cellFalse).appendHas(cellBoolean, cellTrue)
     // assert in(c_FALSE, c_BOOLEAN) and in(c_TRUE, c_BOOLEAN)
-    solverContext.assertGroundExpr(
-      OperEx(TlaSetOper.in, cellFalse.toNameEx, cellBoolean.toNameEx)
-    )
-    solverContext.assertGroundExpr(
-      OperEx(TlaSetOper.in, cellTrue.toNameEx, cellBoolean.toNameEx)
-    )
+    solverContext.assertGroundExpr(OperEx(TlaSetOper.in, cellFalse.toNameEx, cellBoolean.toNameEx))
+    solverContext.assertGroundExpr(OperEx(TlaSetOper.in, cellTrue.toNameEx, cellBoolean.toNameEx))
     arena
   }
 }
@@ -74,27 +65,17 @@ object Arena {
   *
   * @author Igor Konnov
   */
-class Arena private (
-    val solverContext: SolverContext,
-    val cellCount: Int,
-    val topCell: ArenaCell,
-    val cellMap: Map[String, ArenaCell],
-    private val hasEdges: Map[ArenaCell, List[ArenaCell]],
-    private val domEdges: Map[ArenaCell, ArenaCell],
-    private val cdmEdges: Map[ArenaCell, ArenaCell]
-) extends Serializable {
+class Arena private(val solverContext: SolverContext,
+                    val cellCount: Int,
+                    val topCell: ArenaCell,
+                    val cellMap: Map[String, ArenaCell],
+                    private val hasEdges: Map[ArenaCell, List[ArenaCell]],
+                    private val domEdges: Map[ArenaCell, ArenaCell],
+                    private val cdmEdges: Map[ArenaCell, ArenaCell]) extends Serializable {
   // TODO: remove solverContext from Arena, see issue #105
   def setSolver(newSolverContext: SolverContext): Arena = {
     // this is a temporary solution
-    new Arena(
-      newSolverContext,
-      cellCount,
-      topCell,
-      cellMap,
-      hasEdges,
-      domEdges,
-      cdmEdges
-    )
+    new Arena(newSolverContext, cellCount, topCell, cellMap, hasEdges, domEdges, cdmEdges)
   }
 
   /**
@@ -162,10 +143,7 @@ class Arena private (
         cellMap(name)
 
       case _ =>
-        throw new CheckerException(
-          "Expected NameEx with a cell name, found: %s".format(nameEx),
-          nameEx
-        )
+        throw new CheckerException("Expected NameEx with a cell name, found: %s".format(nameEx), nameEx)
     }
 
   }
@@ -209,15 +187,8 @@ class Arena private (
   protected def appendCellWithoutDeclaration(cellType: CellT): Arena = {
     val newCell = new ArenaCell(cellCount, cellType)
     assert(!cellMap.contains(newCell.toString)) // this might happen, if we messed up arenas
-    new Arena(
-      solverContext,
-      cellCount + 1,
-      newCell,
-      cellMap + (newCell.toString -> newCell),
-      hasEdges,
-      domEdges,
-      cdmEdges
-    )
+    new Arena(solverContext, cellCount + 1, newCell,
+      cellMap + (newCell.toString -> newCell), hasEdges, domEdges, cdmEdges)
   }
 
   /**
@@ -230,9 +201,7 @@ class Arena private (
     * @return the updated arena
     */
   def appendHas(parentCell: ArenaCell, childrenCells: ArenaCell*): Arena = {
-    childrenCells.foldLeft(this) { (a, c) =>
-      a.appendOneHasEdge(addInPred = true, parentCell, c)
-    }
+    childrenCells.foldLeft(this) { (a, c) => a.appendOneHasEdge(addInPred = true, parentCell, c) }
   }
 
   /**
@@ -243,13 +212,8 @@ class Arena private (
     * @param childrenCells the cells that are pointed by the parent cell
     * @return the updated arena
     */
-  def appendHasNoSmt(
-      parentCell: ArenaCell,
-      childrenCells: ArenaCell*
-  ): Arena = {
-    childrenCells.foldLeft(this) { (a, c) =>
-      a.appendOneHasEdge(addInPred = false, parentCell, c)
-    }
+  def appendHasNoSmt(parentCell: ArenaCell, childrenCells: ArenaCell*): Arena = {
+    childrenCells.foldLeft(this) { (a, c) => a.appendOneHasEdge(addInPred = false, parentCell, c) }
   }
 
   /**
@@ -260,11 +224,7 @@ class Arena private (
     * @param addInPred indicates whether the in_X_Y constant should be added in SMT.
     * @return a new arena
     */
-  private def appendOneHasEdge(
-      addInPred: Boolean,
-      setCell: ArenaCell,
-      elemCell: ArenaCell
-  ): Arena = {
+  private def appendOneHasEdge(addInPred: Boolean, setCell: ArenaCell, elemCell: ArenaCell): Arena = {
     if (addInPred) {
       solverContext.declareInPredIfNeeded(setCell, elemCell)
     }
@@ -277,15 +237,7 @@ class Arena private (
           List(elemCell)
       }
 
-    new Arena(
-      solverContext,
-      cellCount,
-      topCell,
-      cellMap,
-      hasEdges + (setCell -> es),
-      domEdges,
-      cdmEdges
-    )
+    new Arena(solverContext, cellCount, topCell, cellMap, hasEdges + (setCell -> es), domEdges, cdmEdges)
   }
 
   /**
@@ -297,7 +249,7 @@ class Arena private (
   def getHas(setCell: ArenaCell): List[ArenaCell] = {
     hasEdges.get(setCell) match {
       case Some(list) => list
-      case None       => List()
+      case None => List()
     }
   }
 
@@ -310,19 +262,10 @@ class Arena private (
     */
   def setDom(funCell: ArenaCell, domCell: ArenaCell): Arena = {
     if (domEdges.contains(funCell))
-      throw new IllegalStateException(
-        "Trying to set function domain, whereas one is already set"
-      )
+      throw new IllegalStateException("Trying to set function domain, whereas one is already set")
 
-    new Arena(
-      solverContext,
-      cellCount,
-      topCell,
-      cellMap,
-      hasEdges,
-      domEdges + (funCell -> domCell),
-      cdmEdges
-    )
+    new Arena(solverContext,
+      cellCount, topCell, cellMap, hasEdges, domEdges + (funCell -> domCell), cdmEdges)
   }
 
   /**
@@ -334,19 +277,10 @@ class Arena private (
     */
   def setCdm(funCell: ArenaCell, cdmCell: ArenaCell): Arena = {
     if (cdmEdges.contains(funCell))
-      throw new IllegalStateException(
-        "Trying to set function co-domain, whereas one is already set"
-      )
+      throw new IllegalStateException("Trying to set function co-domain, whereas one is already set")
 
-    new Arena(
-      solverContext,
-      cellCount,
-      topCell,
-      cellMap,
-      hasEdges,
-      domEdges,
-      cdmEdges + (funCell -> cdmCell)
-    )
+    new Arena(solverContext,
+      cellCount, topCell, cellMap, hasEdges, domEdges, cdmEdges + (funCell -> cdmCell))
   }
 
   /**

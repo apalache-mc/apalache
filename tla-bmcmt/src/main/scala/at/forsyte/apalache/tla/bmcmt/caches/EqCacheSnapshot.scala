@@ -11,6 +11,5 @@ import scala.collection.mutable
   *
   * @author Igor Konnov
   */
-class EqCacheSnapshot(
-    val cache: mutable.Map[(ArenaCell, ArenaCell), (CacheEntry, Int)]
-) {}
+class EqCacheSnapshot(val cache: mutable.Map[(ArenaCell, ArenaCell), (CacheEntry, Int)]) {
+}

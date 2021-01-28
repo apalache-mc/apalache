@@ -8,17 +8,9 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
-import at.forsyte.apalache.tla.lir.transformations.{
-  TlaModuleTransformation,
-  TransformationTracker
-}
+import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.transformations.standard._
-import at.forsyte.apalache.tla.pp.{
-  Desugarer,
-  Keramelizer,
-  Normalizer,
-  UniqueNameGenerator
-}
+import at.forsyte.apalache.tla.pp.{Desugarer, Keramelizer, Normalizer, UniqueNameGenerator}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -30,16 +22,14 @@ import com.typesafe.scalalogging.LazyLogging
   * @param tracker transformation tracker
   * @param nextPass next pass to call
   */
-class PreproPassImpl @Inject()(
-    val options: PassOptions,
-    gen: UniqueNameGenerator,
-    renaming: IncrementalRenaming,
-    tracker: TransformationTracker,
-    sourceStore: SourceStore,
-    changeListener: ChangeListener,
-    @Named("AfterPrepro") nextPass: Pass with TlaModuleMixin
-) extends PreproPass
-    with LazyLogging {
+class PreproPassImpl @Inject()( val options: PassOptions,
+                                gen: UniqueNameGenerator,
+                                renaming: IncrementalRenaming,
+                                tracker: TransformationTracker,
+                                sourceStore: SourceStore,
+                                changeListener: ChangeListener,
+                                @Named("AfterPrepro") nextPass: Pass with TlaModuleMixin)
+    extends PreproPass with LazyLogging {
 
   private var outputTlaModule: Option[TlaModule] = None
 
@@ -75,10 +65,7 @@ class PreproPassImpl @Inject()(
         logger.info(s"  > $name")
         val transfomed = xformer(m)
         // dump the result of preprocessing after every transformation, in case the next one fails
-        PrettyWriter.write(
-          transfomed,
-          new File(outdir.toFile, s"out-prepro-$name.tla")
-        )
+        PrettyWriter.write(transfomed, new File(outdir.toFile, s"out-prepro-$name.tla"))
         transfomed
     }
 
@@ -91,8 +78,7 @@ class PreproPassImpl @Inject()(
     outputTlaModule = Some(afterModule)
 
     if (options.getOrElse("general", "debug", false)) {
-      val sourceLocator =
-        SourceLocator(sourceStore.makeSourceMap, changeListener)
+      val sourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
       outputTlaModule.get.operDeclarations foreach sourceLocator.checkConsistency
     }
 
@@ -107,7 +93,7 @@ class PreproPassImpl @Inject()(
     */
   override def next(): Option[Pass] = {
     outputTlaModule map { m =>
-      nextPass.setModule(m)
+      nextPass.setModule( m )
       nextPass
     }
   }

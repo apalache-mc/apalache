@@ -1,20 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.{
-  Continue,
-  Done,
-  NoRule,
-  RewritingResult
-}
+import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.{Continue, Done, NoRule, RewritingResult}
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.caches._
 import at.forsyte.apalache.tla.bmcmt.profiler.RuleStatListener
-import at.forsyte.apalache.tla.bmcmt.rewriter.{
-  MetricProfilerListener,
-  Recoverable,
-  RewriterConfig,
-  SymbStateRewriterSnapshot
-}
+import at.forsyte.apalache.tla.bmcmt.rewriter.{MetricProfilerListener, Recoverable, RewriterConfig, SymbStateRewriterSnapshot}
 import at.forsyte.apalache.tla.bmcmt.rules._
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
@@ -44,14 +34,13 @@ import scala.collection.mutable
   *
   * @author Igor Konnov
   */
-class SymbStateRewriterImpl(
-    private var _solverContext: SolverContext,
-    var typeFinder: TypeFinder[CellT],
-    val exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl(),
-    val profilerListener: Option[MetricProfilerListener] = None
-) extends SymbStateRewriter
-    with Serializable
-    with Recoverable[SymbStateRewriterSnapshot] {
+class SymbStateRewriterImpl(private var _solverContext: SolverContext,
+                            var typeFinder: TypeFinder[CellT],
+                            val exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl(),
+                            val profilerListener: Option[MetricProfilerListener] = None
+                           )
+    extends SymbStateRewriter with Serializable with Recoverable[SymbStateRewriterSnapshot] {
+
 
   /**
     * <p>A solver context that is populated by the rewriter.</p>
@@ -155,164 +144,168 @@ class SymbStateRewriterImpl(
   // We use simple expressions to generate the keys.
   // For each key, there is a short list of rules that may be applicable.
   @transient
-  lazy val ruleLookupTable: Map[String, List[RewritingRule]] = {
-    Map(
-      // the order is only important to improve readability
+  lazy val ruleLookupTable: Map[String, List[RewritingRule]] = { Map(
+    // the order is only important to improve readability
 
-      // substitution
-      key(NameEx("x"))
-        -> List(substRule),
-      key(tla.prime(NameEx("x")))
-        -> List(new PrimeRule(this)),
-      // assignment
-      key(OperEx(BmcOper.assign, tla.name("x"), tla.name("y")))
-        -> List(new AssignmentRule(this)),
-      // constants
-      key(ValEx(TlaBool(true)))
-        -> List(new BuiltinConstRule(this)),
-      key(ValEx(TlaBoolSet))
-        -> List(new BuiltinConstRule(this)),
-      key(ValEx(TlaIntSet))
-        -> List(new BuiltinConstRule(this)),
-      key(ValEx(TlaNatSet))
-        -> List(new BuiltinConstRule(this)),
-      key(ValEx(TlaInt(1)))
-        -> List(new IntConstRule(this)),
-      key(ValEx(TlaStr("red")))
-        -> List(new StrConstRule(this)),
-      // logic
-      key(tla.eql(tla.name("x"), tla.name("y")))
-        -> List(new EqRule(this)),
-      key(tla.or(tla.name("x"), tla.name("y")))
-        -> List(new OrRule(this)),
-      key(tla.and(tla.name("x"), tla.name("y")))
-        -> List(new AndRule(this)),
-      key(tla.not(tla.name("x")))
-        -> List(new NegRule(this)),
-      key(
-        OperEx(
-          BmcOper.skolem,
-          tla.exists(tla.name("x"), tla.name("S"), tla.name("p"))
-        )
-      )
-        -> List(new QuantRule(this)),
-      key(tla.exists(tla.name("x"), tla.name("S"), tla.name("p")))
-        -> List(new QuantRule(this)),
-      key(tla.forall(tla.name("x"), tla.name("S"), tla.name("p")))
-        -> List(new QuantRule(this)),
-      key(tla.choose(tla.name("x"), tla.name("S"), tla.name("p")))
-        -> List(new ChooseRule(this)),
-      // control flow
-      key(tla.ite(tla.name("cond"), tla.name("then"), tla.name("else")))
-        -> List(new IfThenElseRule(this)),
-      key(tla.letIn(tla.int(1), TlaOperDecl("A", List(), tla.int(2))))
-        -> List(new LetInRule(this)),
+    // substitution
+    key(NameEx("x"))
+      -> List(substRule),
+    key(tla.prime(NameEx("x")))
+      -> List(new PrimeRule(this)),
+
+    // assignment
+    key( OperEx( BmcOper.assign, tla.name("x"), tla.name("y") ) )
+      -> List( new AssignmentRule(this) ),
+
+    // constants
+    key(ValEx(TlaBool(true)))
+      -> List(new BuiltinConstRule(this)),
+    key(ValEx(TlaBoolSet))
+      -> List(new BuiltinConstRule(this)),
+    key(ValEx(TlaIntSet))
+      -> List(new BuiltinConstRule(this)),
+    key(ValEx(TlaNatSet))
+      -> List(new BuiltinConstRule(this)),
+    key(ValEx(TlaInt(1)))
+      -> List(new IntConstRule(this)),
+    key(ValEx(TlaStr("red")))
+      -> List(new StrConstRule(this)),
+
+    // logic
+    key(tla.eql(tla.name("x"), tla.name("y")))
+      -> List(new EqRule(this)),
+    key(tla.or(tla.name("x"), tla.name("y")))
+      -> List(new OrRule(this)),
+    key(tla.and(tla.name("x"), tla.name("y")))
+      -> List(new AndRule(this)),
+    key(tla.not(tla.name("x")))
+      -> List(new NegRule(this)),
+    key(OperEx(BmcOper.skolem, tla.exists(tla.name("x"),
+               tla.name("S"), tla.name("p"))))
+      -> List(new QuantRule(this)),
+    key(tla.exists(tla.name("x"), tla.name("S"), tla.name("p")))
+      -> List(new QuantRule(this)),
+    key(tla.forall(tla.name("x"), tla.name("S"), tla.name("p")))
+      -> List(new QuantRule(this)),
+    key(tla.choose(tla.name("x"), tla.name("S"), tla.name("p")))
+      -> List(new ChooseRule(this)),
+
+    // control flow
+    key(tla.ite(tla.name("cond"), tla.name("then"), tla.name("else")))
+      -> List(new IfThenElseRule(this)),
+    key(tla.letIn(tla.int(1), TlaOperDecl("A", List(), tla.int(2))))
+      -> List(new LetInRule(this)),
       // TODO, rethink TlaOper.apply rule
-      key(tla.appDecl(TlaOperDecl("userOp", List(), tla.int(3)))) ->
-        List(new UserOperRule(this)),
-      // sets
-      key(tla.in(tla.name("x"), tla.name("S")))
-        -> List(new SetInRule(this)),
-      key(tla.enumSet(tla.name("x"))) ->
-        List(new SetCtorRule(this)),
-      key(tla.subseteq(tla.name("x"), tla.name("S")))
-        -> List(new SetInclusionRule(this)),
-      key(tla.cup(tla.name("X"), tla.name("Y")))
-        -> List(new SetCupRule(this)),
-      key(tla.filter(tla.name("x"), tla.name("S"), tla.name("p")))
-        -> List(new SetFilterRule(this)),
-      key(tla.map(tla.name("e"), tla.name("x"), tla.name("S")))
-        -> List(new SetMapRule(this)),
-      key(OperEx(BmcOper.expand, tla.name("X")))
-        -> List(new SetExpandRule(this)),
-      key(tla.powSet(tla.name("X")))
-        -> List(new PowSetCtorRule(this)),
-      key(tla.union(tla.enumSet()))
-        -> List(new SetUnionRule(this)),
-      key(tla.dotdot(tla.int(1), tla.int(10)))
-        -> List(new IntDotDotRule(this, intRangeCache)),
-      // integers
-      key(tla.lt(tla.int(1), tla.int(2)))
-        -> List(new IntCmpRule(this)),
-      key(tla.le(tla.int(1), tla.int(2)))
-        -> List(new IntCmpRule(this)),
-      key(tla.gt(tla.int(1), tla.int(2)))
-        -> List(new IntCmpRule(this)),
-      key(tla.ge(tla.int(1), tla.int(2)))
-        -> List(new IntCmpRule(this)),
-      key(tla.plus(tla.int(1), tla.int(2)))
-        -> List(new IntArithRule(this)),
-      key(tla.minus(tla.int(1), tla.int(2)))
-        -> List(new IntArithRule(this)),
-      key(tla.mult(tla.int(1), tla.int(2)))
-        -> List(new IntArithRule(this)),
-      key(tla.div(tla.int(1), tla.int(2)))
-        -> List(new IntArithRule(this)),
-      key(tla.mod(tla.int(1), tla.int(2)))
-        -> List(new IntArithRule(this)),
-      key(tla.exp(tla.int(2), tla.int(3)))
-        -> List(new IntArithRule(this)),
-      key(tla.uminus(tla.int(1)))
-        -> List(new IntArithRule(this)),
-      // functions
-      key(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S")))
-        -> List(new FunCtorRule(this)),
-      key(tla.appFun(tla.name("f"), tla.name("x")))
-        -> List(new FunAppRule(this)),
-      key(tla.except(tla.name("f"), tla.int(1), tla.int(42)))
-        -> List(new FunExceptRule(this)),
-      key(tla.funSet(tla.name("X"), tla.name("Y")))
-        -> List(new FunSetCtorRule(this)),
-      key(tla.dom(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S"))))
-        -> List(new DomainRule(this, intRangeCache)), // also works for records
-      key(tla.recFunDef(tla.name("e"), tla.name("x"), tla.name("S")))
-        -> List(new RecFunDefAndRefRule(this)),
-      key(tla.recFunRef())
-        -> List(new RecFunDefAndRefRule(this)),
-      // tuples, records, and sequences
-      key(tla.tuple(tla.name("x"), tla.int(2)))
-        -> List(new TupleOrSeqCtorRule(this)),
-      key(tla.enumFun(tla.str("a"), tla.int(2)))
-        -> List(new RecCtorRule(this)),
-      key(tla.head(tla.tuple(tla.name("x"))))
-        -> List(new SeqOpsRule(this)),
-      key(tla.tail(tla.tuple(tla.name("x"))))
-        -> List(new SeqOpsRule(this)),
-      key(tla.subseq(tla.tuple(tla.name("x")), tla.int(2), tla.int(4)))
-        -> List(new SeqOpsRule(this)),
-      key(tla.len(tla.tuple(tla.name("x"))))
-        -> List(new SeqOpsRule(this)),
-      key(tla.append(tla.tuple(tla.name("x")), tla.int(10)))
-        -> List(new SeqOpsRule(this)),
-      key(tla.concat(tla.name("Seq1"), tla.name("Seq2")))
-        -> List(new SeqOpsRule(this)),
-      // FiniteSets
-      key(
-        OperEx(BmcOper.constCard, tla.ge(tla.card(tla.name("S")), tla.int(3)))
-      )
-        -> List(new CardinalityConstRule(this)),
-      key(OperEx(TlaFiniteSetOper.cardinality, tla.name("S")))
-        -> List(new CardinalityRule(this)),
-      key(OperEx(TlaFiniteSetOper.isFiniteSet, tla.name("S")))
-        -> List(new IsFiniteSetRule(this)),
-      // misc
-      key(OperEx(TlaOper.label, tla.str("lab"), tla.str("x")))
-        -> List(new LabelRule(this)),
-      key(OperEx(BmcOper.withType, tla.int(1), ValEx(TlaIntSet)))
-        -> List(new TypeAnnotationRule(this)),
-      // TLC
-      key(OperEx(TlcOper.print, tla.bool(true), tla.str("msg")))
-        -> List(new TlcRule(this)),
-      key(OperEx(TlcOper.printT, tla.str("msg")))
-        -> List(new TlcRule(this)),
-      key(OperEx(TlcOper.assert, tla.bool(true), tla.str("msg")))
-        -> List(new TlcRule(this)),
-      key(OperEx(TlcOper.colonGreater, tla.int(1), tla.int(2))) // :>
-        -> List(new TlcRule(this)),
-      key(OperEx(TlcOper.atat, NameEx("fun"), NameEx("pair"))) // @@
-        -> List(new TlcRule(this))
-    )
-  } ///// ADD YOUR RULES ABOVE
+    key(tla.appDecl( TlaOperDecl("userOp", List(), tla.int(3)) ) ) ->
+      List(new UserOperRule(this)),
+
+    // sets
+    key(tla.in(tla.name("x"), tla.name("S")))
+      -> List( new SetInRule(this) ),
+    key(tla.enumSet(tla.name("x"))) ->
+      List(new SetCtorRule(this)),
+    key(tla.subseteq(tla.name("x"), tla.name("S")))
+      -> List(new SetInclusionRule(this)),
+    key(tla.cup(tla.name("X"), tla.name("Y")))
+      -> List(new SetCupRule(this)),
+    key(tla.filter(tla.name("x"), tla.name("S"), tla.name("p")))
+      -> List(new SetFilterRule(this)),
+    key(tla.map(tla.name("e"), tla.name("x"), tla.name("S")))
+      -> List(new SetMapRule(this)),
+    key(OperEx(BmcOper.expand, tla.name("X")))
+      -> List(new SetExpandRule(this)),
+    key(tla.powSet(tla.name("X")))
+      -> List(new PowSetCtorRule(this)),
+    key(tla.union(tla.enumSet()))
+      -> List(new SetUnionRule(this)),
+    key(tla.dotdot(tla.int(1), tla.int(10)))
+      -> List(new IntDotDotRule(this, intRangeCache)),
+
+    // integers
+    key(tla.lt(tla.int(1), tla.int(2)))
+      -> List(new IntCmpRule(this)),
+    key(tla.le(tla.int(1), tla.int(2)))
+      -> List(new IntCmpRule(this)),
+    key(tla.gt(tla.int(1), tla.int(2)))
+      -> List(new IntCmpRule(this)),
+    key(tla.ge(tla.int(1), tla.int(2)))
+      -> List(new IntCmpRule(this)),
+    key(tla.plus(tla.int(1), tla.int(2)))
+      -> List(new IntArithRule(this)),
+    key(tla.minus(tla.int(1), tla.int(2)))
+      -> List(new IntArithRule(this)),
+    key(tla.mult(tla.int(1), tla.int(2)))
+      -> List(new IntArithRule(this)),
+    key(tla.div(tla.int(1), tla.int(2)))
+      -> List(new IntArithRule(this)),
+    key(tla.mod(tla.int(1), tla.int(2)))
+      -> List(new IntArithRule(this)),
+    key(tla.exp(tla.int(2), tla.int(3)))
+      -> List(new IntArithRule(this)),
+    key(tla.uminus(tla.int(1)))
+      -> List(new IntArithRule(this)),
+
+    // functions
+    key(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S")))
+      -> List(new FunCtorRule(this)),
+    key(tla.appFun(tla.name("f"), tla.name("x")))
+      -> List(new FunAppRule(this)),
+    key(tla.except(tla.name("f"), tla.int(1), tla.int(42)))
+      -> List(new FunExceptRule(this)),
+    key(tla.funSet(tla.name("X"), tla.name("Y")))
+      -> List(new FunSetCtorRule(this)),
+    key(tla.dom(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S"))))
+      -> List(new DomainRule(this, intRangeCache)), // also works for records
+    key(tla.recFunDef(tla.name("e"), tla.name("x"), tla.name("S")))
+      -> List(new RecFunDefAndRefRule(this)),
+    key(tla.recFunRef())
+      -> List(new RecFunDefAndRefRule(this)),
+
+    // tuples, records, and sequences
+    key(tla.tuple(tla.name("x"), tla.int(2)))
+      -> List(new TupleOrSeqCtorRule(this)),
+    key(tla.enumFun(tla.str("a"), tla.int(2)))
+      -> List(new RecCtorRule(this)),
+    key(tla.head(tla.tuple(tla.name("x"))))
+      -> List(new SeqOpsRule(this)),
+    key(tla.tail(tla.tuple(tla.name("x"))))
+      -> List(new SeqOpsRule(this)),
+    key(tla.subseq(tla.tuple(tla.name("x")), tla.int(2), tla.int(4)))
+      -> List(new SeqOpsRule(this)),
+    key(tla.len(tla.tuple(tla.name("x"))))
+      -> List(new SeqOpsRule(this)),
+    key(tla.append(tla.tuple(tla.name("x")), tla.int(10)))
+      -> List(new SeqOpsRule(this)),
+    key(tla.concat(tla.name("Seq1"), tla.name("Seq2")))
+      -> List(new SeqOpsRule(this)),
+
+   // FiniteSets
+    key(OperEx(BmcOper.constCard, tla.ge(tla.card(tla.name("S")), tla.int(3))))
+      -> List(new CardinalityConstRule(this)),
+    key(OperEx(TlaFiniteSetOper.cardinality, tla.name("S")))
+      -> List(new CardinalityRule(this)),
+    key(OperEx(TlaFiniteSetOper.isFiniteSet, tla.name("S")))
+      -> List(new IsFiniteSetRule(this)),
+
+    // misc
+    key(OperEx(TlaOper.label, tla.str("lab"), tla.str("x")))
+      -> List(new LabelRule(this)),
+    key(OperEx(BmcOper.withType, tla.int(1), ValEx(TlaIntSet)))
+      -> List(new TypeAnnotationRule(this)),
+
+    // TLC
+    key(OperEx(TlcOper.print, tla.bool(true), tla.str("msg")))
+      -> List(new TlcRule(this)),
+    key(OperEx(TlcOper.printT, tla.str("msg")))
+      -> List(new TlcRule(this)),
+    key(OperEx(TlcOper.assert, tla.bool(true), tla.str("msg")))
+      -> List(new TlcRule(this)),
+    key(OperEx(TlcOper.colonGreater, tla.int(1), tla.int(2))) // :>
+      -> List(new TlcRule(this)),
+    key(OperEx(TlcOper.atat, NameEx("fun"), NameEx("pair")))  // @@
+      -> List(new TlcRule(this))
+  ) } ///// ADD YOUR RULES ABOVE
+
 
   /**
     * Rewrite a symbolic expression by applying at most one rewriting rule.
@@ -329,15 +322,11 @@ class SymbStateRewriterImpl(
         if (substRule.isApplicable(state)) {
           statListener.enterRule(substRule.getClass.getSimpleName)
           // a variable that can be substituted with a cell
-          var nextState =
-            substRule.apply(substRule.logOnEntry(solverContext, state))
+          var nextState = substRule.apply(substRule.logOnEntry(solverContext, state))
           nextState = substRule.logOnReturn(solverContext, nextState)
           if (nextState.arena.cellCount < state.arena.cellCount) {
-            throw new RewriterException(
-              "Implementation error: the number of cells decreased from %d to %d"
-                .format(state.arena.cellCount, nextState.arena.cellCount),
-              state.ex
-            )
+            throw new RewriterException("Implementation error: the number of cells decreased from %d to %d"
+              .format(state.arena.cellCount, nextState.arena.cellCount), state.ex)
           }
           statListener.exitRule()
           Done(nextState)
@@ -353,20 +342,10 @@ class SymbStateRewriterImpl(
         potentialRules.find(r => r.isApplicable(state)) match {
           case Some(r) =>
             statListener.enterRule(r.getClass.getSimpleName)
-            val nextState = r.logOnReturn(
-              solverContext,
-              r.apply(r.logOnEntry(solverContext, state))
-            )
+            val nextState = r.logOnReturn(solverContext, r.apply(r.logOnEntry(solverContext, state)))
             if (nextState.arena.cellCount < state.arena.cellCount) {
-              throw new RewriterException(
-                "Implementation error in rule %s: the number of cells decreased from %d to %d"
-                  .format(
-                    r.getClass.getSimpleName,
-                    state.arena.cellCount,
-                    nextState.arena.cellCount
-                  ),
-                state.ex
-              )
+              throw new RewriterException("Implementation error in rule %s: the number of cells decreased from %d to %d"
+                .format(r.getClass.getSimpleName, state.arena.cellCount, nextState.arena.cellCount), state.ex)
             }
             statListener.exitRule()
             Continue(nextState)
@@ -388,11 +367,8 @@ class SymbStateRewriterImpl(
     // the main reason for using a recursive function here instead of a loop is that it is easier to debug
     def doRecursive(ncalls: Int, st: SymbState): SymbState = {
       if (ncalls >= Limits.RECURSION_LIMIT) {
-        throw new RewriterException(
-          "Recursion limit of %d steps is reached. A cycle in the rewriting system?"
-            .format(Limits.RECURSION_LIMIT),
-          state.ex
-        )
+        throw new RewriterException("Recursion limit of %d steps is reached. A cycle in the rewriting system?"
+          .format(Limits.RECURSION_LIMIT), state.ex)
       } else {
         rewritingStack +:= state.ex // push the expression on the stack
         rewriteOnce(st) match {
@@ -410,10 +386,7 @@ class SymbStateRewriterImpl(
 
           case NoRule() =>
             // no rule applies, a problem in the tool?
-            throw new RewriterException(
-              "No rewriting rule applies to expression: " + st.ex,
-              st.ex
-            )
+            throw new RewriterException("No rewriting rule applies to expression: " + st.ex, st.ex)
         }
       }
     }
@@ -421,9 +394,7 @@ class SymbStateRewriterImpl(
     // use cache or compute a new expression
     exprCache.get(state.ex) match {
       case Some(eg: (TlaEx, ExprGrade.Value)) =>
-        solverContext.log(
-          s"; Using cached value ${eg._1} for expression ${state.ex}"
-        )
+        solverContext.log(s"; Using cached value ${eg._1} for expression ${state.ex}")
         state.setRex(eg._1)
 
       case None =>
@@ -432,9 +403,7 @@ class SymbStateRewriterImpl(
         // as the new expressions there will not have source information.
         val smtWatermark = solverContext.metrics()
         val nextState = doRecursive(0, state)
-        profilerListener.foreach {
-          _.onRewrite(state.ex, solverContext.metrics().delta(smtWatermark))
-        }
+        profilerListener.foreach{ _.onRewrite(state.ex, solverContext.metrics().delta(smtWatermark)) }
         exprCache.put(state.ex, nextState.ex) // the grade is not important
         nextState
     }
@@ -447,16 +416,11 @@ class SymbStateRewriterImpl(
     * @param es    a sequence of expressions to rewrite
     * @return a pair (the new state with the original expression, the rewritten expressions)
     */
-  def rewriteSeqUntilDone(
-      state: SymbState,
-      es: Seq[TlaEx]
-  ): (SymbState, Seq[TlaEx]) = {
+  def rewriteSeqUntilDone(state: SymbState, es: Seq[TlaEx]): (SymbState, Seq[TlaEx]) = {
     var newState = state // it is easier to write this code with a side effect on the state
     // we should be very careful about propagating arenas here
     def eachExpr(e: TlaEx): TlaEx = {
-      val ns = rewriteUntilDone(
-        new SymbState(e, newState.arena, newState.binding)
-      )
+      val ns = rewriteUntilDone(new SymbState(e, newState.arena, newState.binding))
       assert(ns.arena.cellCount >= newState.arena.cellCount)
       newState = ns
       ns.ex
@@ -473,10 +437,7 @@ class SymbStateRewriterImpl(
     * @param es    a sequence of expressions to rewrite accompanied with bindings
     * @return a pair (the old state in a new context, the rewritten expressions)
     */
-  def rewriteBoundSeqUntilDone(
-      state: SymbState,
-      es: Seq[(Binding, TlaEx)]
-  ): (SymbState, Seq[TlaEx]) = {
+  def rewriteBoundSeqUntilDone(state: SymbState, es: Seq[(Binding, TlaEx)]): (SymbState, Seq[TlaEx]) = {
     var newState = state // it is easier to write this code with a side effect on the state
     // we should be very careful about propagating arenas here
     def eachExpr(be: (Binding, TlaEx)): TlaEx = {
@@ -492,20 +453,16 @@ class SymbStateRewriterImpl(
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
   /**
     * Take a snapshot and return it
     *
     * @return the snapshot
     */
   override def snapshot(): SymbStateRewriterSnapshot = {
-    new SymbStateRewriterSnapshot(
-      typeFinder.asInstanceOf[TrivialTypeFinder].snapshot(),
+    new SymbStateRewriterSnapshot(typeFinder.asInstanceOf[TrivialTypeFinder].snapshot(),
       intValueCache.snapshot(),
-      intRangeCache.snapshot(),
-      strValueCache.snapshot(),
-      recordDomainCache.snapshot(),
-      exprCache.snapshot()
-    )
+      intRangeCache.snapshot(), strValueCache.snapshot(), recordDomainCache.snapshot(), exprCache.snapshot())
   }
 
   /**
@@ -522,8 +479,7 @@ class SymbStateRewriterImpl(
     recordDomainCache.recover(shot.recordDomainCache)
     exprCache.recover(shot.exprCacheSnapshot)
   }
-
-  /**
+/**
     * Save the current context and push it on the stack for a later recovery with pop.
     */
   override def push(): Unit = {
@@ -589,6 +545,7 @@ class SymbStateRewriterImpl(
     profilerListener.foreach { _.dispose() }
   }
 
+
   /**
     * Add a text message to the storage.
     *
@@ -609,6 +566,7 @@ class SymbStateRewriterImpl(
   override def findMessage(id: Int): String = {
     messages(id)
   }
+
 
   /**
     * Get the stack of expressions that is generated by the methods rewrite(.*)UntilDone.

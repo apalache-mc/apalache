@@ -8,15 +8,14 @@ import com.typesafe.scalalogging.LazyLogging
   * SourceLocator is used to identify locations in the original .tla specification,
   * from which a given expression, possibly derived from a transformation, originates.
   */
-sealed case class SourceLocator(
-    sourceMap: SourceMap,
-    changeListener: ChangeListener
-) extends LazyLogging {
-  def sourceOf(id: UID): Option[SourceLocation] =
-    sourceMap.get(changeListener.traceBack(id))
+sealed case class SourceLocator(sourceMap : SourceMap,
+                                changeListener : ChangeListener) extends LazyLogging {
+  def sourceOf( id : UID ) : Option[SourceLocation] =
+    sourceMap.get( changeListener.traceBack( id ) )
 
-  def sourceOf(ex: TlaEx): Option[SourceLocation] =
-    sourceOf(ex.ID)
+  def sourceOf( ex : TlaEx ) : Option[SourceLocation] =
+    sourceOf( ex.ID )
+
 
   /**
     * A debugging method that recursively checks whether all subexpressions of the operator body have source information.
