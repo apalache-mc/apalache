@@ -1,14 +1,14 @@
 # Summary
 
-[Overview](./README.md)
+[Overview](./index.md)
 
 # Apalache User Manual
 
-- [Introduction](./apalache/README.md)
+- [Introduction](./apalache/index.md)
 - [Getting Started](./apalache/getting-started.md)
     - [Shall I use Apalache or TLC?](./apalache/apalache-or-tlc.md)
     - [System Requirements](./apalache/system-reqs.md)
-    - [Installation](./apalache/installation/README.md)
+    - [Installation](./apalache/installation/index.md)
         - [Prebuilt Packages](./apalache/installation/jvm.md)
         - [Docker](./apalache/installation/docker.md)
         - [Source](./apalache/installation/source.md)
@@ -29,7 +29,7 @@
 
 # TLA+ Language Manual for Engineers
 
-- [Introduction](./lang/README.md)
+- [Introduction](./lang/index.md)
 - [The standard operators of TLA+](./lang/standard-operators.md)
     - [Booleans](./lang/booleans.md)
     - [Control And Nondeterminism](./lang/control-and-nondeterminism.md)
@@ -54,7 +54,7 @@
 
 # Idiomatic TLA+
 
-- [Introduction](./idiomatic/README.md)
+- [Introduction](./idiomatic/index.md)
 - [Keep state variables to the minimum](idiomatic/000keep-minimum-state-variables.md)
 - [Update state variables with assignments](idiomatic/001assignments.md)
 - [Apply primes only to state variables](idiomatic/002primes.md)
