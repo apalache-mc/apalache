@@ -1,0 +1,136 @@
+# ADR-004: Syntax for Java-like annotations in comments
+
+**author:** Igor Konnov
+
+This ADR documents our decision on using Java-like annotations in comments.
+Our main motivation to have annotations is to simplify type annotations, as
+presented in [ADR-002][]. Hence, in the following text, we are using
+examples for type annotations. However, the annotations framework is not
+restricted to types. Similar to Java and Scala, we can use annotations
+to decorate operators with hints, which may aid the model checker.
+
+## 1. What can be annotated
+
+Annotations should be written in comments that are written in front of a
+declaration. The following declarations are supported:
+ 
+ 1. Constant declarations, e.g., `CONSTANT N`.
+ 1. Variable declarations, e.g., `VARIABLE x`.
+ 1. Top-level operator declarations, e.g., `Foo(x) == e`.
+ 1. LET-IN operator declarations, e.g., `Foo(x) == LET Inner(y) == e IN f`.
+ 1. Recursive functions, e.g., `foo[i \in Int] == e`.
+ 1. Recursive operators, that are declared either at the top-level or by using
+    LET-IN.
+
+For an example, see Section 3.
+
+
+## 2. Annotations syntax
+
+An annotation is a string that follows the grammar (question mark denotes
+optional rules):
+
+```
+Annotation  ::= '@' javaIdentifier ( '(' ArgList? ')' )?
+ArgList     ::= (Arg) ( ',' Arg )*
+Arg         ::= (string | integer | boolean)
+string      ::= '"' <char sequence> '"'
+integer     ::= '-'? [0-9]+
+boolean     ::= ('false' | 'true')
+```
+
+Java Language Specification defines how a [Java identifier] looks like.
+The sequence `<char sequence>` is a sequence admitted by [JavaTokenParsers]:
+  
+  - Any character except double quotes, control characters or backslash `\`
+  - A backslash followed by another backslash, a single or double quote,
+    or one of the letters `b`, `f`, `n`, `r` or `t`
+  - `\` followed by u followed by four hexadecimal digits
+  
+**Examples.** The following strings are examples of syntactically correct
+annotations:
+
+ - `@tailrec`
+ - `@type("(Int, Int) => Int")`
+ - `@random(true)`
+ - `@deprecated("Use operator Foo instead")`
+ - `@range(0, 100)`
+
+The above examples are just syntactically correct. They meaning, if there is
+any, is defined by the tool that is reading these annotations.
+
+## 3. An annotated specification
+
+The following specification shows how to write annotations, so they can be
+correctly parsed by the SANY parser and Apalache. Note the location of comments
+in front of: local operators, LET-definitions, and recursive operators.
+Although these locations may seem to be suboptimal, this is how the SANY
+parser locates comments that precede declarations.
+
+```tla
+-------- MODULE Annotations ----------
+EXTENDS Integers
+
+CONSTANT
+  \* @type(" Int ")
+  N
+
+VARIABLE
+  \* @type(" Set(Int) ")
+  set
+
+\* @pure
+\* @type(" Int => Int ")
+Inc(n) == n + 1
+
+\* @type(" Int => Int ")
+LOCAL LocalInc(x) == x + 1
+
+A(n) ==
+  LET \* @pure
+      \* @type(" Int => Int ")
+      Dec(x) == x + 1
+  IN
+  Dec(n)
+
+RECURSIVE Fact(_)
+\* @tailrec
+\* @type(" Int => Int ")
+Fact(n) ==
+  IF n <= 1 THEN 1 ELSE n * Fact(n - 1)
+
+\* @tailrec
+\* @type(" Int -> Int ")
+FactFun[n \in Int] ==
+  IF n <= 1 THEN 1 ELSE n * FactFun[n - 1]
+
+======================================
+```
+
+## 4. Implementation
+
+The implementation of the annotation parser can be found in the class
+`at.forsyte.apalache.io.annotations.AnnotationParser` of the module
+`tla-import`. (TODO: place a link when the PR is merged).
+
+## 5. Discussion
+
+Most likely, this topic does not deserve much discussion, as we are using
+the pretty standard syntax of Java annotations. So we are following the
+principle of the least surprise.
+
+A more concise syntax for type annotations could be as follows:
+
+```tla
+\* @type: Int => Int
+Inc(n) == n + 1
+```
+
+However, this concise syntax is technically harder to parse (SANY is prunning
+`'\n'`). Moreover, it would require additional syntax for multiline annotations.
+
+
+[ADR-002]: https://apalache.informal.systems/docs/adr/002adr-types.html
+[JavaTokenParsers]: https://www.scala-lang.org/api/2.12.2/scala-parser-combinators/scala/util/parsing/combinator/JavaTokenParsers.html
+[Java identifier]: https://docs.oracle.com/javase/specs/jls/se7/html/jls-3.html#jls-3.8
+
