@@ -4,7 +4,7 @@
     <groupId>at.forsyte.apalache</groupId>
     <artifactId>apalache</artifactId>
     <packaging>pom</packaging>
-    <version>0.8.3</version>
+    <version>0.8.4-SNAPSHOT</version>
 
     <name>APALACHE project</name>
     <url>https://github.com/informalsystems/apalache</url>
@@ -270,8 +270,8 @@
                                     <include>*.md</include>
                                 </includes>
                                 <!-- define the steps to apply to those files -->
-                                <trimTrailingWhitespace/>
-                                <endWithNewline/>
+                                <trimTrailingWhitespace />
+                                <endWithNewline />
                                 <indent>
                                     <spaces>true</spaces>
                                     <spacesPerTab>4</spacesPerTab>
