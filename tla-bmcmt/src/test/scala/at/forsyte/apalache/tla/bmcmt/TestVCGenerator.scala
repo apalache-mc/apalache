@@ -68,7 +68,9 @@ class TestVCGenerator extends FunSuite {
   }
 
   private def assertDecl(
-      mod: TlaModule, name: String, expectedBodyText: String
+      mod: TlaModule,
+      name: String,
+      expectedBodyText: String
   ): Unit = {
     val vc = mod.declarations.find(_.name == name)
     assert(vc.nonEmpty, s"(VC $name not found)")
@@ -78,8 +80,9 @@ class TestVCGenerator extends FunSuite {
 
   private def loadFromText(moduleName: String, text: String): TlaModule = {
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(locationStore, createAnnotationStore())
-      .loadFromSource(moduleName, Source.fromString(text))
+    val (rootName, modules) =
+      new SanyImporter(locationStore, createAnnotationStore())
+        .loadFromSource(moduleName, Source.fromString(text))
     modules(moduleName)
   }
 }

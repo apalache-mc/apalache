@@ -13,8 +13,11 @@ import tla2sany.semantic._
   *
   * @author konnov
   */
-class SubstTranslator(sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context)
-    extends LazyLogging {
+class SubstTranslator(
+    sourceStore: SourceStore,
+    annotationStore: AnnotationStore,
+    context: Context
+) extends LazyLogging {
 
   def translate(substInNode: SubstInNode, body: TlaEx): TlaEx = {
     subExpr(mkRenaming(substInNode), body)
@@ -94,7 +97,12 @@ class SubstTranslator(sourceStore: SourceStore, annotationStore: AnnotationStore
     val upperLookupPrefix = context.lookupPrefix.dropRight(1)
     val upperContext = context.setLookupPrefix(upperLookupPrefix)
     val exprTranslator =
-      ExprOrOpArgNodeTranslator(sourceStore, annotationStore, upperContext, OutsideRecursion())
+      ExprOrOpArgNodeTranslator(
+        sourceStore,
+        annotationStore,
+        upperContext,
+        OutsideRecursion()
+      )
 
     def eachSubst(s: Subst): (String, TlaEx) = {
       val replacement = exprTranslator.translate(s.getExpr)
@@ -115,7 +123,11 @@ class SubstTranslator(sourceStore: SourceStore, annotationStore: AnnotationStore
 }
 
 object SubstTranslator {
-  def apply(sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context): SubstTranslator = {
+  def apply(
+      sourceStore: SourceStore,
+      annotationStore: AnnotationStore,
+      context: Context
+  ): SubstTranslator = {
     new SubstTranslator(sourceStore, annotationStore, context)
   }
 }

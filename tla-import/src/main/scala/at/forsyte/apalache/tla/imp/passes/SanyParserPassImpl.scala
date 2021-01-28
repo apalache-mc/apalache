@@ -20,10 +20,10 @@ import java.nio.file.Path
   * @author Igor Konnov
   */
 class SanyParserPassImpl @Inject()(
-                                    val options: PassOptions,
-                                    val sourceStore: SourceStore,
-                                    val annotationStore: AnnotationStore,
-                                    @Named("AfterParser") val nextPass: Pass with TlaModuleMixin
+    val options: PassOptions,
+    val sourceStore: SourceStore,
+    val annotationStore: AnnotationStore,
+    @Named("AfterParser") val nextPass: Pass with TlaModuleMixin
 ) extends SanyParserPass
     with LazyLogging {
 
@@ -53,7 +53,8 @@ class SanyParserPassImpl @Inject()(
       }
     } else {
       val (rootName, modules) =
-        new SanyImporter(sourceStore, annotationStore).loadFromFile(new File(filename))
+        new SanyImporter(sourceStore, annotationStore)
+          .loadFromFile(new File(filename))
       rootModule = modules.get(rootName)
     }
     if (rootModule.isEmpty) {

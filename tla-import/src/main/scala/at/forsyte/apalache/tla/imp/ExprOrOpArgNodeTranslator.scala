@@ -16,10 +16,10 @@ import scala.collection.JavaConverters._
   * @author konnov
   */
 class ExprOrOpArgNodeTranslator(
-                                 sourceStore: SourceStore,
-                                 annotationStore: AnnotationStore,
-                                 context: Context,
-                                 recStatus: RecursionStatus
+    sourceStore: SourceStore,
+    annotationStore: AnnotationStore,
+    context: Context,
+    recStatus: RecursionStatus
 ) extends LazyLogging {
   def translate(node: ExprOrOpArgNode): TlaEx = {
     val result =
@@ -39,7 +39,8 @@ class ExprOrOpArgNodeTranslator(
 
         case opApp: OpApplNode =>
           // application of an operator, e.g., F(x)
-          OpApplTranslator(sourceStore, annotationStore, context, recStatus).translate(opApp)
+          OpApplTranslator(sourceStore, annotationStore, context, recStatus)
+            .translate(opApp)
 
         case opArg: OpArgNode =>
           // An operator definition that is used as an expression, e.g., LAMBDA x: x = 1.
@@ -108,7 +109,8 @@ class ExprOrOpArgNodeTranslator(
     for (node <- letIn.context.getOpDefs.elements.asScala.toList.reverse) {
       node match {
         case opdef: OpDefNode =>
-          val decl = OpDefTranslator(sourceStore, annotationStore, letInContext).translate(opdef)
+          val decl = OpDefTranslator(sourceStore, annotationStore, letInContext)
+            .translate(opdef)
           letInDeclarations = letInDeclarations :+ decl
           letInContext = letInContext.push(DeclUnit(decl))
 
@@ -117,8 +119,12 @@ class ExprOrOpArgNodeTranslator(
       }
     }
 
-    val body = ExprOrOpArgNodeTranslator(sourceStore, annotationStore, letInContext, recStatus)
-      .translate(letIn.getBody)
+    val body = ExprOrOpArgNodeTranslator(
+      sourceStore,
+      annotationStore,
+      letInContext,
+      recStatus
+    ).translate(letIn.getBody)
     LetInEx(body, letInDeclarations: _*)
   }
 
@@ -133,7 +139,8 @@ class ExprOrOpArgNodeTranslator(
     opArgNode.getOp match {
       // a lambda-definition is passed as an argument
       case defNode: OpDefNode if name == "LAMBDA" =>
-        val decl = OpDefTranslator(sourceStore, annotationStore, context).translate(defNode)
+        val decl = OpDefTranslator(sourceStore, annotationStore, context)
+          .translate(defNode)
         // e.g., LET Foo(x) == e1 in Foo
         LetInEx(NameEx(name), decl)
 
@@ -188,11 +195,16 @@ class ExprOrOpArgNodeTranslator(
 
 object ExprOrOpArgNodeTranslator {
   def apply(
-             sourceStore: SourceStore,
-             annotationStore: AnnotationStore,
-             context: Context,
-             recStatus: RecursionStatus
+      sourceStore: SourceStore,
+      annotationStore: AnnotationStore,
+      context: Context,
+      recStatus: RecursionStatus
   ): ExprOrOpArgNodeTranslator = {
-    new ExprOrOpArgNodeTranslator(sourceStore, annotationStore, context, recStatus)
+    new ExprOrOpArgNodeTranslator(
+      sourceStore,
+      annotationStore,
+      context,
+      recStatus
+    )
   }
 }

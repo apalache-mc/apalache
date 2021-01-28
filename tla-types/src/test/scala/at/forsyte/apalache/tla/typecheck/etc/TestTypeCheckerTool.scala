@@ -63,7 +63,8 @@ class TestTypeCheckerTool
       """.stripMargin
 
     val locationStore = new SourceStore
-    val (rootName, modules) = sanyImporter.loadFromSource("Specb", Source.fromString(text))
+    val (rootName, modules) =
+      sanyImporter.loadFromSource("Specb", Source.fromString(text))
 
     val mod = modules(rootName)
 

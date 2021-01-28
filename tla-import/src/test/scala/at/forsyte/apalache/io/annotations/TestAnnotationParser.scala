@@ -27,7 +27,6 @@ class TestAnnotationParser extends FunSuite with Checkers {
     b <- arbitrary[Boolean]
   } yield TlaAnnotationBool(b)
 
-
   test("test on empty input") {
     AnnotationParser.parse("") match {
       case AnnotationParser.Failure(_) =>
@@ -37,7 +36,12 @@ class TestAnnotationParser extends FunSuite with Checkers {
 
   test("test on one-line input") {
     val expected =
-      new Annotation("greet", TlaAnnotationString("hello"), TlaAnnotationInt(2021), TlaAnnotationBool(true))
+      new Annotation(
+        "greet",
+        TlaAnnotationString("hello"),
+        TlaAnnotationInt(2021),
+        TlaAnnotationBool(true)
+      )
     AnnotationParser.parse("""  @greet("hello", 2021, true)   """) match {
       case AnnotationParser.Success(parsed, _) =>
         assert(expected == parsed)
@@ -46,7 +50,12 @@ class TestAnnotationParser extends FunSuite with Checkers {
 
   test("test on multiline input") {
     val expected =
-      new Annotation("greet", TlaAnnotationString("hello"), TlaAnnotationInt(2021), TlaAnnotationBool(true))
+      new Annotation(
+        "greet",
+        TlaAnnotationString("hello"),
+        TlaAnnotationInt(2021),
+        TlaAnnotationBool(true)
+      )
     val text =
       """  @greet("hello",
         |         2021,
@@ -63,35 +72,43 @@ class TestAnnotationParser extends FunSuite with Checkers {
   import org.scalacheck.Shrink.shrinkAny
 
   test("parse OK on random good inputs @foo(arg1, ..., argN)") {
-    check({
-      forAll(identifier) { name =>
-        forAll(listOf(oneOf(genStr, genInt, genBool))) { args =>
-          val annotation = new Annotation(name, args: _*)
-          AnnotationParser.parse(annotation.toString) match {
-            case AnnotationParser.Success(parsed, _) =>
-              annotation ?= parsed
+    check(
+      {
+        forAll(identifier) {
+          name =>
+            forAll(listOf(oneOf(genStr, genInt, genBool))) { args =>
+              val annotation = new Annotation(name, args: _*)
+              AnnotationParser.parse(annotation.toString) match {
+                case AnnotationParser.Success(parsed, _) =>
+                  annotation ?= parsed
 
-            case AnnotationParser.Failure(_) =>
-              falsified
-          }
+                case AnnotationParser.Failure(_) =>
+                  falsified
+              }
+            }
         }
-      }
-    }, minSuccessful(200))
+      },
+      minSuccessful(200)
+    )
   }
 
   test("parse error on random bad inputs") {
-    check({
-      forAll(alphaStr) { str =>
-          AnnotationParser.parse(str) match {
-            // Pass the test on successful parse.
-            // To see how testing is different from verification,
-            // replace 'passed' with 'falsified' and observe that no error will be found ;-)
-            case Success(_, _) => passed
+    check(
+      {
+        forAll(alphaStr) {
+          str =>
+            AnnotationParser.parse(str) match {
+              // Pass the test on successful parse.
+              // To see how testing is different from verification,
+              // replace 'passed' with 'falsified' and observe that no error will be found ;-)
+              case Success(_, _) => passed
 
-            case Failure(_) => passed
-          }
+              case Failure(_) => passed
+            }
           // no exceptions
-      }
-    }, minSuccessful(300))
+        }
+      },
+      minSuccessful(300)
+    )
   }
 }

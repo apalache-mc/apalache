@@ -5,17 +5,29 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.TlaAssumeDecl
 import tla2sany.semantic.AssumeNode
 
-class AssumeTranslator(sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context) {
+class AssumeTranslator(
+    sourceStore: SourceStore,
+    annotationStore: AnnotationStore,
+    context: Context
+) {
   def translate(node: AssumeNode): TlaAssumeDecl = {
     val body =
-      ExprOrOpArgNodeTranslator(sourceStore, annotationStore, context, OutsideRecursion())
-        .translate(node.getAssume)
+      ExprOrOpArgNodeTranslator(
+        sourceStore,
+        annotationStore,
+        context,
+        OutsideRecursion()
+      ).translate(node.getAssume)
     TlaAssumeDecl(body)
   }
 }
 
 object AssumeTranslator {
-  def apply(ls: SourceStore, as: AnnotationStore, ctx: Context): AssumeTranslator = {
+  def apply(
+      ls: SourceStore,
+      as: AnnotationStore,
+      ctx: Context
+  ): AssumeTranslator = {
     new AssumeTranslator(ls, as, ctx)
   }
 }

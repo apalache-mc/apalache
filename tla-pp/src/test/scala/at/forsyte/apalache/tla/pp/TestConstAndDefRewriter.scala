@@ -33,7 +33,8 @@ class TestConstAndDefRewriter extends FunSuite with BeforeAndAfterEach {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = sanyImporter.loadFromSource("const", Source.fromString(text))
+    val (rootName, modules) =
+      sanyImporter.loadFromSource("const", Source.fromString(text))
     val root = modules(rootName)
     val rewritten = new ConstAndDefRewriter(new IdleTracker())(root)
     assert(rewritten.constDeclarations.isEmpty) // no constants anymore
@@ -56,10 +57,11 @@ class TestConstAndDefRewriter extends FunSuite with BeforeAndAfterEach {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = sanyImporter.loadFromSource("const", Source.fromString(text))
+    val (rootName, modules) =
+      sanyImporter.loadFromSource("const", Source.fromString(text))
     val root = modules(rootName)
     assertThrows[OverridingError](
-        new ConstAndDefRewriter(new IdleTracker())(root)
+      new ConstAndDefRewriter(new IdleTracker())(root)
     )
   }
 
@@ -72,10 +74,11 @@ class TestConstAndDefRewriter extends FunSuite with BeforeAndAfterEach {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = sanyImporter.loadFromSource("const", Source.fromString(text))
+    val (rootName, modules) =
+      sanyImporter.loadFromSource("const", Source.fromString(text))
     val root = modules(rootName)
     assertThrows[OverridingError](
-        new ConstAndDefRewriter(new IdleTracker())(root)
+      new ConstAndDefRewriter(new IdleTracker())(root)
     )
   }
 
@@ -87,15 +90,16 @@ class TestConstAndDefRewriter extends FunSuite with BeforeAndAfterEach {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = sanyImporter.loadFromSource("op", Source.fromString(text))
+    val (rootName, modules) =
+      sanyImporter.loadFromSource("op", Source.fromString(text))
     val root = modules(rootName)
     val rewritten = new ConstAndDefRewriter(new IdleTracker())(root)
     assert(rewritten.constDeclarations.isEmpty)
     assert(rewritten.operDeclarations.size == 1)
     val expected = TlaOperDecl(
-        "BoolMin",
-        List(SimpleFormalParam("S")),
-        tla.choose(tla.name("x"), tla.name("S"), tla.bool(true))
+      "BoolMin",
+      List(SimpleFormalParam("S")),
+      tla.choose(tla.name("x"), tla.name("S"), tla.bool(true))
     )
     assert(expected == rewritten.operDeclarations.head)
   }
@@ -108,10 +112,11 @@ class TestConstAndDefRewriter extends FunSuite with BeforeAndAfterEach {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = sanyImporter.loadFromSource("op", Source.fromString(text))
+    val (rootName, modules) =
+      sanyImporter.loadFromSource("op", Source.fromString(text))
     val root = modules(rootName)
     assertThrows[OverridingError](
-        new ConstAndDefRewriter(new IdleTracker())(root)
+      new ConstAndDefRewriter(new IdleTracker())(root)
     )
   }
 }

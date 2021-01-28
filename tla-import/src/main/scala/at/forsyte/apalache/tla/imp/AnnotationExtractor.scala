@@ -30,7 +30,9 @@ class AnnotationExtractor(annotationStore: AnnotationStore) {
 
           case Failure(message) =>
             val loc = SourceLocation(node.getLocation)
-            throw new SanyImporterException("%s: Annotation error: %s".format(loc, message))
+            throw new SanyImporterException(
+              "%s: Annotation error: %s".format(loc, message)
+            )
         }
       }
     }

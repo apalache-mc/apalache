@@ -27,7 +27,8 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
 
   def configureAndCompare(tla: String, tlc: String, expected: String) = {
     val config = TlcConfigParserApalache(tlc)
-    val (rootName, modules) = sanyImporter.loadFromSource("test", Source.fromString(tla))
+    val (rootName, modules) =
+      sanyImporter.loadFromSource("test", Source.fromString(tla))
     val mod = modules(rootName)
     val mod2 = new TlcConfigImporter(config, new IdleTracker())(mod)
     val stringWriter = new StringWriter()

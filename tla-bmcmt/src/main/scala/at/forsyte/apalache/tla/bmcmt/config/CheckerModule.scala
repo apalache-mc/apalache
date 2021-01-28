@@ -11,7 +11,10 @@ import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
-import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.{
+  TransformationListener,
+  TransformationTracker
+}
 import at.forsyte.apalache.tla.pp.passes._
 import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, TypeLiteral}
@@ -34,7 +37,7 @@ class CheckerModule extends AbstractModule {
     // stores
     // Create an annotation store with the custom provider.
     // We have to use TypeLiteral, as otherwise Guice is getting confused by type erasure.
-    bind(new TypeLiteral[AnnotationStore]() {} )
+    bind(new TypeLiteral[AnnotationStore]() {})
       .toProvider(classOf[AnnotationStoreProvider])
     bind(classOf[FormulaHintsStore])
       .to(classOf[FormulaHintsStoreImpl])

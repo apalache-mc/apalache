@@ -14,10 +14,10 @@ import tla2sany.semantic._
   * @author konnov
   */
 class OpApplTranslator(
-                        sourceStore: SourceStore,
-                        annotationStore: AnnotationStore,
-                        val context: Context,
-                        val recStatus: RecursionStatus
+    sourceStore: SourceStore,
+    annotationStore: AnnotationStore,
+    val context: Context,
+    val recStatus: RecursionStatus
 ) {
 
   // we use the following case classes to represent the bound variables with a range in many quantified expressions
@@ -113,7 +113,12 @@ class OpApplTranslator(
           // a library operator
           tlaOper =>
             val exTran =
-              ExprOrOpArgNodeTranslator(sourceStore, annotationStore, context, recStatus)
+              ExprOrOpArgNodeTranslator(
+                sourceStore,
+                annotationStore,
+                context,
+                recStatus
+              )
             val args = applyNode.getArgs.toList.map { p =>
               exTran.translate(p)
             }
@@ -134,9 +139,15 @@ class OpApplTranslator(
     // Since we do not know the original location of the local operator,
     // we can only re-define it with a LET-IN expression
     // translate the declaration of the LOCAL operator
-    val decl = OpDefTranslator(sourceStore, annotationStore, context).translate(opdef)
+    val decl =
+      OpDefTranslator(sourceStore, annotationStore, context).translate(opdef)
     // translate its arguments
-    val exTran = ExprOrOpArgNodeTranslator(sourceStore, annotationStore, context, recStatus)
+    val exTran = ExprOrOpArgNodeTranslator(
+      sourceStore,
+      annotationStore,
+      context,
+      recStatus
+    )
     val args = node.getArgs.toList.map { p =>
       exTran.translate(p)
     }
@@ -152,7 +163,12 @@ class OpApplTranslator(
   // call a user-defined operator that is not defined with LOCAL
   private def translateNonLocalUserOperator(node: OpApplNode) = {
     val opcode = node.getOperator.getName.toString
-    val exTran = ExprOrOpArgNodeTranslator(sourceStore, annotationStore, context, recStatus)
+    val exTran = ExprOrOpArgNodeTranslator(
+      sourceStore,
+      annotationStore,
+      context,
+      recStatus
+    )
 
     def translateNonRec(): TlaEx = {
       context.lookup(opcode) match {
@@ -214,7 +230,12 @@ class OpApplTranslator(
     // FIXME: should we extract the parameter from the context???
     val formalParam =
       FormalParamTranslator().translate(oper).asInstanceOf[OperFormalParam]
-    val exTran = ExprOrOpArgNodeTranslator(sourceStore, annotationStore, context, recStatus)
+    val exTran = ExprOrOpArgNodeTranslator(
+      sourceStore,
+      annotationStore,
+      context,
+      recStatus
+    )
     val args = node.getArgs.toList.map { p =>
       exTran.translate(p)
     }
@@ -266,7 +287,12 @@ class OpApplTranslator(
         // if the arities do not match, there must be a problem:
         // either in the definition of the IR operator, or in the map opcodeToIrOp
         assert(op.isCorrectArity(node.getArgs.length))
-        val exTran = ExprOrOpArgNodeTranslator(sourceStore, annotationStore, context, recStatus)
+        val exTran = ExprOrOpArgNodeTranslator(
+          sourceStore,
+          annotationStore,
+          context,
+          recStatus
+        )
         val args = node.getArgs.toList.map(exTran.translate)
         OperEx(op, args: _*)
 
@@ -274,14 +300,24 @@ class OpApplTranslator(
         opcode match {
           case "$BoundedChoose" | "$BoundedExists" | "$BoundedForall" =>
             val exTran =
-              ExprOrOpArgNodeTranslator(sourceStore, annotationStore, context, recStatus)
+              ExprOrOpArgNodeTranslator(
+                sourceStore,
+                annotationStore,
+                context,
+                recStatus
+              )
             val args = node.getArgs.toList.map(exTran.translate)
             mkBoundedQuantifiedBuiltin(node, opcode, args)
 
           case "$TemporalExists" | "$TemporalForall" | "$UnboundedChoose" |
               "$UnboundedExists" | "$UnboundedForall" =>
             val exTran =
-              ExprOrOpArgNodeTranslator(sourceStore, annotationStore, context, recStatus)
+              ExprOrOpArgNodeTranslator(
+                sourceStore,
+                annotationStore,
+                context,
+                recStatus
+              )
             val args = node.getArgs.toList.map(exTran.translate)
             mkUnboundedQuantifiedBuiltin(node, opcode, args)
 
@@ -375,7 +411,12 @@ class OpApplTranslator(
 
     // recursively construct a chain of expressions, e.g., \E x \in S: (\E y \in S: P)
     val oper = OpApplTranslator.quantOpcodeToTlaOper(opcode)
-    val exTran = ExprOrOpArgNodeTranslator(sourceStore, annotationStore, context, recStatus)
+    val exTran = ExprOrOpArgNodeTranslator(
+      sourceStore,
+      annotationStore,
+      context,
+      recStatus
+    )
 
     def toExpr(xs: List[BExp]): TlaEx =
       xs match {
@@ -450,7 +491,12 @@ class OpApplTranslator(
   // translate an expression for a function constructor, e.g., [ x \in X |-> e ] or a set comprehension { e : x \in X }
   private def mkBoundCtorBuiltin(oper: TlaOper, node: OpApplNode): TlaEx = {
     val qexps = extractBoundedQuantifiedVariables(node)
-    val exTran = ExprOrOpArgNodeTranslator(sourceStore, annotationStore, context, recStatus)
+    val exTran = ExprOrOpArgNodeTranslator(
+      sourceStore,
+      annotationStore,
+      context,
+      recStatus
+    )
     val body = exTran.translate(node.getArgs.head)
     // e.g., e in the example above
     val boundVars = qexps
@@ -503,14 +549,24 @@ class OpApplTranslator(
     * </ul>
     */
   private def mkPairsCtorBuiltin(oper: TlaOper, node: OpApplNode): TlaEx = {
-    val exTran = ExprOrOpArgNodeTranslator(sourceStore, annotationStore, context, recStatus)
+    val exTran = ExprOrOpArgNodeTranslator(
+      sourceStore,
+      annotationStore,
+      context,
+      recStatus
+    )
     val interleaved = unpackPairs(exTran)(node.getArgs.toList)
     OperEx(oper, interleaved: _*)
   }
 
   // create a CASE operator
   private def mkCaseBuiltin(node: OpApplNode): TlaEx = {
-    val exTran = ExprOrOpArgNodeTranslator(sourceStore, annotationStore, context, recStatus)
+    val exTran = ExprOrOpArgNodeTranslator(
+      sourceStore,
+      annotationStore,
+      context,
+      recStatus
+    )
     val (others, options) = node.getArgs.toList.partition {
       case n: OpApplNode => n.getArgs.head == null
       case _             => false
@@ -529,7 +585,12 @@ class OpApplTranslator(
   }
 
   private def mkExceptBuiltin(node: OpApplNode): TlaEx = {
-    val exTran = ExprOrOpArgNodeTranslator(sourceStore, annotationStore, context, recStatus)
+    val exTran = ExprOrOpArgNodeTranslator(
+      sourceStore,
+      annotationStore,
+      context,
+      recStatus
+    )
     node.getArgs.toList match {
       case (fnode: ExprNode) :: pairNodes =>
         // For instance, [f EXCEPT ![e1] = e2, ![e3] = e4] or [@ EXCEPT ![e1] = e2, ![e3] = e4]
@@ -550,10 +611,10 @@ class OpApplTranslator(
 
 object OpApplTranslator {
   def apply(
-             sourceSource: SourceStore,
-             annotationStore: AnnotationStore,
-             context: Context,
-             recStatus: RecursionStatus
+      sourceSource: SourceStore,
+      annotationStore: AnnotationStore,
+      context: Context,
+      recStatus: RecursionStatus
   ): OpApplTranslator = {
     new OpApplTranslator(sourceSource, annotationStore, context, recStatus)
   }
