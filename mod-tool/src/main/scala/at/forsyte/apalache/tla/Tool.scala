@@ -25,22 +25,22 @@ import scala.collection.JavaConverters._
 import scala.util.Random
 
 /**
-  * Command line access to the APALACHE tools.
-  *
-  * @author Igor Konnov
-  */
+ * Command line access to the APALACHE tools.
+ *
+ * @author Igor Konnov
+ */
 object Tool extends App with LazyLogging {
   lazy val ISSUES_LINK: String = "[https://github.com/informalsystems/apalache/issues]"
   lazy val ERROR_EXIT_CODE = 99
   lazy val OK_EXIT_CODE = 0
 
   /**
-    * Run the tool in the standalone mode with the provided arguments.
-    * This method calls System.exit with the computed exit code.
-    * If you like to call the tool without System.exit, use the the Tool#run.
-    *
-    * @param args the command line arguments
-    */
+   * Run the tool in the standalone mode with the provided arguments.
+   * This method calls System.exit with the computed exit code.
+   * If you like to call the tool without System.exit, use the the Tool#run.
+   *
+   * @param args the command line arguments
+   */
   override def main(args: Array[String]): Unit = {
     val exitcode = run(args)
     if (exitcode == OK_EXIT_CODE) {
@@ -52,11 +52,11 @@ object Tool extends App with LazyLogging {
   }
 
   /**
-    * Run the tool in a library mode, that is, with a call to System.exit.
-    *
-    * @param args the command line arguments
-    * @return the exit code; as usual, 0 means success.
-    */
+   * Run the tool in a library mode, that is, with a call to System.exit.
+   *
+   * @param args the command line arguments
+   * @return the exit code; as usual, 0 means success.
+   */
   def run(args: Array[String]): Int = {
     printHeaderAndStatsConfig()
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably
@@ -64,10 +64,11 @@ object Tool extends App with LazyLogging {
 
     // first, call the arguments parser, which can also handle the standard commands such as version
     val command =
-      Cli.parse(args)
-      .withProgramName("apalache-mc")
-      .version("%s build %s".format(Version.version, Version.build), "version")
-      .withCommands(new ParseCmd, new CheckCmd, new TypeCheckCmd, new ConfigCmd)
+      Cli
+        .parse(args)
+        .withProgramName("apalache-mc")
+        .version("%s build %s".format(Version.version, Version.build), "version")
+        .withCommands(new ParseCmd, new CheckCmd, new TypeCheckCmd, new ConfigCmd)
 
     if (!command.isInstanceOf[Some[General]]) {
       // A standard option, e.g., --version or --help. No header, no timer.
@@ -85,8 +86,9 @@ object Tool extends App with LazyLogging {
             handleExceptions(injector, runParse(injector, parse, _))
 
           case Some(check: CheckCmd) =>
-            logger.info("Checker options: filename=%s, init=%s, next=%s, inv=%s"
-              .format(check.file, check.init, check.next, check.inv))
+            logger.info(
+                "Checker options: filename=%s, init=%s, next=%s, inv=%s"
+                  .format(check.file, check.init, check.next, check.inv))
             // TODO: update workers when the multicore branch is integrated
             submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> "check", "workers" -> "1"))
             val injector = injectorFactory(check)
@@ -114,14 +116,13 @@ object Tool extends App with LazyLogging {
 
   private def printTimeDiff(startTime: LocalDateTime): Unit = {
     val endTime = LocalDateTime.now()
-    logger.info("It took me %d days %2d hours %2d min %2d sec"
-      .format(ChronoUnit.DAYS.between(startTime, endTime),
-        ChronoUnit.HOURS.between(startTime, endTime) % 23,
-        ChronoUnit.MINUTES.between(startTime, endTime) % 60,
-        ChronoUnit.SECONDS.between(startTime, endTime) % 60))
-    logger.info("Total time: %d.%d sec"
-      .format(ChronoUnit.SECONDS.between(startTime, endTime),
-        ChronoUnit.MILLIS.between(startTime, endTime) % 1000))
+    logger.info(
+        "It took me %d days %2d hours %2d min %2d sec"
+          .format(ChronoUnit.DAYS.between(startTime, endTime), ChronoUnit.HOURS.between(startTime, endTime) % 23,
+              ChronoUnit.MINUTES.between(startTime, endTime) % 60, ChronoUnit.SECONDS.between(startTime, endTime) % 60))
+    logger.info(
+        "Total time: %d.%d sec"
+          .format(ChronoUnit.SECONDS.between(startTime, endTime), ChronoUnit.MILLIS.between(startTime, endTime) % 1000))
   }
 
   private def runParse(injector: Injector, parse: ParseCmd, u: Unit): Unit = {
@@ -135,8 +136,7 @@ object Tool extends App with LazyLogging {
     if (result.isDefined) {
       logger.info("Parsed successfully")
       val tlaModule = result.get.asInstanceOf[TlaModuleMixin].unsafeGetModule
-      logger.info("Root module: %s with %d declarations".format(tlaModule.name,
-        tlaModule.declarations.length))
+      logger.info("Root module: %s with %d declarations".format(tlaModule.name, tlaModule.declarations.length))
     } else {
       logger.info("Parser has failed")
     }
@@ -185,7 +185,7 @@ object Tool extends App with LazyLogging {
     executor.options.set("parser.filename", parse.file.getAbsolutePath)
 
     executor.run() match {
-      case None => logger.info("Type checker [FAILED]")
+      case None    => logger.info("Type checker [FAILED]")
       case Some(_) => logger.info("Type checker [OK]")
     }
   }
@@ -243,10 +243,10 @@ object Tool extends App with LazyLogging {
 
   private def injectorFactory(cmd: Command): Injector = {
     cmd match {
-      case _: ParseCmd => Guice.createInjector(new ParserModule)
-      case _: CheckCmd => Guice.createInjector(new CheckerModule)
+      case _: ParseCmd     => Guice.createInjector(new ParserModule)
+      case _: CheckCmd     => Guice.createInjector(new CheckerModule)
       case _: TypeCheckCmd => Guice.createInjector(new TypeCheckerModule)
-      case _ => throw new RuntimeException("Unexpected command: " + cmd)
+      case _               => throw new RuntimeException("Unexpected command: " + cmd)
     }
   }
 
@@ -289,7 +289,8 @@ object Tool extends App with LazyLogging {
     if (ExecutionStatisticsCollector.promptUser()) {
       // Statistics collection is not enabled. Cry for help.
       Console.println("# Usage statistics is OFF. We care about your privacy.")
-      Console.println("# If you want to help our project, consider enabling statistics with config --enable-stats=true.")
+      Console.println(
+          "# If you want to help our project, consider enabling statistics with config --enable-stats=true.")
     } else {
       // Statistic collection is enabled. Thank the user
       Console.println("# Usage statistics is ON. Thank you!")

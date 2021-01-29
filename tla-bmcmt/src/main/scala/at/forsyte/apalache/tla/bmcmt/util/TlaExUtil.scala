@@ -5,11 +5,12 @@ import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx, TlaOperDecl}
 
 object TlaExUtil {
+
   /**
-    * Find the names that are used in an expression.
-    * @param expr an expression
-    * @return the set of used names
-    */
+   * Find the names that are used in an expression.
+   * @param expr an expression
+   * @return the set of used names
+   */
   def findUsedNames(expr: TlaEx): Set[String] = {
     var used = Set[String]()
 
@@ -20,10 +21,10 @@ object TlaExUtil {
       case OperEx(TlaActionOper.prime, NameEx(name)) =>
         used = used + (name + "'")
 
-      case OperEx(_, args @_*) =>
+      case OperEx(_, args @ _*) =>
         args foreach findRec
 
-      case ex @ LetInEx(body, defs@_*) =>
+      case ex @ LetInEx(body, defs @ _*) =>
         def findInDef: TlaOperDecl => Unit = {
           case TlaOperDecl(_, List(), body) =>
             findRec(body)

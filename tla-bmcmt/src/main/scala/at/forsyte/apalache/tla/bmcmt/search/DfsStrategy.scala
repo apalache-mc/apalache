@@ -17,7 +17,8 @@ class DfsStrategy(input: CheckerInput, stepsBound: Int, randomize: Boolean) exte
       SearchStrategy.Finish()
     } else if (stepNo > stepsBound) {
       logger.debug(s"DFS: backtrack, bound reached")
-      unexploredIndices = Seq() +: unexploredIndices // add an empty sequence for the response handler to pop of the stack
+      unexploredIndices =
+        Seq() +: unexploredIndices // add an empty sequence for the response handler to pop of the stack
       BacktrackOnce()
     } else if (stepNo == 0) {
       if (unexploredIndices.isEmpty) {

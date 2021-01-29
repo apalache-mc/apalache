@@ -6,16 +6,16 @@ import java.time.{Duration, LocalDateTime}
 import at.forsyte.apalache.tla.bmcmt.search.SearchStrategy.{Finish, FinishOnDeadlock, NextStep}
 
 /**
-  * A decorator of a search strategy that measures the wall-clock time and records it in a CSV file.
-  * This decorator is useful for plotting the time it takes BfsStrategy to explore the computations up to given length.
-  *
-  * The CSV contains the following fields: the step number, the total number of seconds elapsed since the start
-  * till the end of the step, the additional nanoseconds till the end of the step. That is, if step 0 starts at time
-  * instant A and step i ends at time instant B, then the first field contains i,
-  * the second field contains seconds(B - A) and the third field contains nanoseconds(B - A) - seconds(B - A) * pow(10, 9).
-  *
-  * @author Igor Konnov
-  */
+ * A decorator of a search strategy that measures the wall-clock time and records it in a CSV file.
+ * This decorator is useful for plotting the time it takes BfsStrategy to explore the computations up to given length.
+ *
+ * The CSV contains the following fields: the step number, the total number of seconds elapsed since the start
+ * till the end of the step, the additional nanoseconds till the end of the step. That is, if step 0 starts at time
+ * instant A and step i ends at time instant B, then the first field contains i,
+ * the second field contains seconds(B - A) and the third field contains nanoseconds(B - A) - seconds(B - A) * pow(10, 9).
+ *
+ * @author Igor Konnov
+ */
 @deprecated
 class BfsStrategyStopWatchDecorator(strategy: SearchStrategy, filename: String) extends SearchStrategy {
   private var currentStep: Int = 0

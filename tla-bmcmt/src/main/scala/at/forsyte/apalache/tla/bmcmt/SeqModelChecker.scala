@@ -3,27 +3,21 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.Checker.Outcome
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode
-import at.forsyte.apalache.tla.bmcmt.trex.{
-  ExecutionSnapshot,
-  TransitionExecutor
-}
+import at.forsyte.apalache.tla.bmcmt.trex.{ExecutionSnapshot, TransitionExecutor}
 import at.forsyte.apalache.tla.lir.io.CounterexampleWriter
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.lir.{TlaEx, ValEx}
 import com.typesafe.scalalogging.LazyLogging
 
 /**
-  * A new version of the sequential model checker. This version is using TransitionExecutor, which allows us to
-  * freely switch between the online and offline SMT solving.
-  *
-  * @author Igor Konnov
-  */
+ * A new version of the sequential model checker. This version is using TransitionExecutor, which allows us to
+ * freely switch between the online and offline SMT solving.
+ *
+ * @author Igor Konnov
+ */
 class SeqModelChecker[ExecutorContextT](
-    val params: ModelCheckerParams,
-    val checkerInput: CheckerInput,
-    val trex: TransitionExecutor[ExecutorContextT]
-) extends Checker
-    with LazyLogging {
+    val params: ModelCheckerParams, val checkerInput: CheckerInput, val trex: TransitionExecutor[ExecutorContextT]
+) extends Checker with LazyLogging {
 
   type SnapshotT = ExecutionSnapshot[ExecutorContextT]
 
@@ -69,7 +63,7 @@ class SeqModelChecker[ExecutorContextT](
           if (trex.sat(0).contains(true)) {
             val filenames = dumpCounterexample(ValEx(TlaBool(true)))
             logger.error(
-              s"Found a deadlock. Check the counterexample in: ${filenames.mkString(", ")}"
+                s"Found a deadlock. Check the counterexample in: ${filenames.mkString(", ")}"
             )
           } else {
             logger.error(s"Found a deadlock. No SMT model.")
@@ -165,7 +159,7 @@ class SeqModelChecker[ExecutorContextT](
       if (trex.sat(0).contains(true)) {
         val filenames = dumpCounterexample(ValEx(TlaBool(true)))
         logger.error(
-          s"Found a deadlock. Check the counterexample in: ${filenames.mkString(", ")}"
+            s"Found a deadlock. Check the counterexample in: ${filenames.mkString(", ")}"
         )
       } else {
         logger.error(s"Found a deadlock. No SMT model.")
@@ -181,8 +175,7 @@ class SeqModelChecker[ExecutorContextT](
   // This is a special case of --all-enabled and search.invariant.mode=before.
   // A transition has been prepared but not assumed.
   private def checkInvariantsForPreparedTransition(
-      transitionNo: Int,
-      maybeInvariantNos: Set[Int]
+      transitionNo: Int, maybeInvariantNos: Set[Int]
   ): Checker.Outcome.Value = {
     val snapshot = trex.snapshot()
     // fast track the transition to check the invariants
@@ -196,17 +189,14 @@ class SeqModelChecker[ExecutorContextT](
 
   // check the invariant from a given set
   private def checkInvariants(
-      stateNo: Int,
-      maybeInvariantNos: Set[Int]
+      stateNo: Int, maybeInvariantNos: Set[Int]
   ): Checker.Outcome.Value = {
     // check the invariants
     if (maybeInvariantNos.nonEmpty) {
       logger.info(s"State $stateNo: Checking ${maybeInvariantNos.size} invariants")
     }
 
-    for (
-      ((_, notInv), invNo) <- checkerInput.invariantsAndNegations.zipWithIndex
-    ) {
+    for (((_, notInv), invNo) <- checkerInput.invariantsAndNegations.zipWithIndex) {
       if (maybeInvariantNos.contains(invNo)) {
         logger.debug(s"State $stateNo: Checking invariant $invNo")
         // save the context
@@ -219,8 +209,8 @@ class SeqModelChecker[ExecutorContextT](
           case Some(true) =>
             val filenames = dumpCounterexample(notInv)
             logger.error(
-              s"State ${stateNo}: Invariant %s violated. Check the counterexample in: %s"
-                .format(invNo, filenames.mkString(", "))
+                s"State ${stateNo}: Invariant %s violated. Check the counterexample in: %s"
+                  .format(invNo, filenames.mkString(", "))
             )
             return Outcome.Error // the invariant violated
 
@@ -243,9 +233,9 @@ class SeqModelChecker[ExecutorContextT](
     val exec = trex.decodedExecution()
     val states = exec.path.map(p => (p._2.toString, p._1))
     CounterexampleWriter.writeAllFormats(
-      checkerInput.rootModule,
-      notInv,
-      states
+        checkerInput.rootModule,
+        notInv,
+        states
     )
   }
 }

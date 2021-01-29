@@ -22,9 +22,9 @@ class BfsStrategy(input: CheckerInput, stepsBound: Int) extends SearchStrategy {
 
   override def registerResponse(response: SearchStrategy.Response): Unit = {
     response match {
-      case SearchStrategy.NextStepFired() => stepNo += 1
+      case SearchStrategy.NextStepFired()    => stepNo += 1
       case SearchStrategy.NextStepDisabled() => deadlock = true
-      case SearchStrategy.Backtracked() => () // nothing to do
+      case SearchStrategy.Backtracked()      => () // nothing to do
     }
   }
 }

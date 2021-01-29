@@ -20,28 +20,26 @@ import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
 /**
-  * The implementation of a bounded model checker with SMT.
-  *
-  * @author Igor Konnov
-  */
-class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
-                                        hintsStore: FormulaHintsStore,
-                                        exprGradeStore: ExprGradeStore,
-                                        @Named("AfterChecker") nextPass: Pass)
-      extends BoundedCheckerPass with LazyLogging {
+ * The implementation of a bounded model checker with SMT.
+ *
+ * @author Igor Konnov
+ */
+class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: FormulaHintsStore,
+    exprGradeStore: ExprGradeStore, @Named("AfterChecker") nextPass: Pass)
+    extends BoundedCheckerPass with LazyLogging {
 
   /**
-    * The pass name.
-    *
-    * @return the name associated with the pass
-    */
+   * The pass name.
+   *
+   * @return the name associated with the pass
+   */
   override def name: String = "BoundedChecker"
 
   /**
-    * Run the pass.
-    *
-    * @return true, if the pass was successful
-    */
+   * Run the pass.
+   *
+   * @return true, if the pass was successful
+   */
   override def execute(): Boolean = {
     if (tlaModule.isEmpty) {
       throw new CheckerException(s"The input of $name pass is not initialized", NullEx)
@@ -60,10 +58,10 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
     val invariantsAndNegations = vcInvs.zip(vcNotInvs)
 
     val input = new CheckerInput(module, initTrans.toList, nextTrans.toList, cinitP, invariantsAndNegations.toList)
-/*
+    /*
         TODO: uncomment when the parallel checker is transferred from ik/multicore
     val nworkers = options.getOrElse("checker", "nworkers", 1)
-*/
+     */
     val stepsBound = options.getOrElse("checker", "length", 10)
     val tuning = options.getOrElse("general", "tuning", Map[String, String]())
     val debug = options.getOrElse("general", "debug", false)
@@ -78,22 +76,19 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
     val solverConfig = SolverConfig(debug, smtProfile, smtRandomSeed)
 
     options.getOrElse("checker", "algo", "incremental") match {
-        /*
+      /*
         TODO: uncomment when the parallel checker is transferred from ik/multicore
       case "parallel" => runParallelChecker(params, input, tuning, nworkers)
-         */
+       */
       case "incremental" => runIncrementalChecker(params, input, tuning, solverConfig)
-      case "offline" => runOfflineChecker(params, input, tuning, solverConfig)
-      case algo => throw new IllegalArgumentException(s"Unexpected checker.algo=$algo")
+      case "offline"     => runOfflineChecker(params, input, tuning, solverConfig)
+      case algo          => throw new IllegalArgumentException(s"Unexpected checker.algo=$algo")
     }
 
   }
 
-  private def runIncrementalChecker(params: ModelCheckerParams,
-                                    input: CheckerInput,
-                                    tuning: Map[String, String],
-                                    solverConfig: SolverConfig
-                                   ): Boolean = {
+  private def runIncrementalChecker(params: ModelCheckerParams, input: CheckerInput, tuning: Map[String, String],
+      solverConfig: SolverConfig): Boolean = {
     val profile = options.getOrElse("smt", "prof", false)
     val solverContext: RecordingSolverContext = RecordingSolverContext.createZ3(None, solverConfig)
 
@@ -115,11 +110,8 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
     outcome == Outcome.NoError
   }
 
-  private def runOfflineChecker(params: ModelCheckerParams,
-                                input: CheckerInput,
-                                tuning: Map[String, String],
-                                solverConfig: SolverConfig
-                               ): Boolean = {
+  private def runOfflineChecker(params: ModelCheckerParams, input: CheckerInput, tuning: Map[String, String],
+      solverConfig: SolverConfig): Boolean = {
     val profile = options.getOrElse("smt", "prof", false)
     val solverContext: RecordingSolverContext = RecordingSolverContext.createZ3(None, solverConfig)
 
@@ -216,11 +208,11 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
    */
 
   /**
-    * Get the next pass in the chain. What is the next pass is up
-    * to the module configuration and the pass outcome.
-    *
-    * @return the next pass, if exists, or None otherwise
-    */
+   * Get the next pass in the chain. What is the next pass is up
+   * to the module configuration and the pass outcome.
+   *
+   * @return the next pass, if exists, or None otherwise
+   */
   override def next(): Option[Pass] =
-    tlaModule map {_ => nextPass}
+    tlaModule map { _ => nextPass }
 }
