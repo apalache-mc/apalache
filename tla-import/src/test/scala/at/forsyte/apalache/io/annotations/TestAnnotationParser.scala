@@ -17,7 +17,7 @@ class TestAnnotationParser extends FunSuite with Checkers {
     // Unfortunately, suchThat is too imprecise for that as scalacheck is giving up too quickly.
     // Hence, check only alpha-numeric strings.
     text <- alphaNumStr
-  } yield AnnotationString(text)
+  } yield AnnotationStr(text)
 
   private val genInt = for {
     i <- arbitrary[Int]
@@ -36,9 +36,9 @@ class TestAnnotationParser extends FunSuite with Checkers {
 
   test("test on one-line input") {
     val expected =
-      new Annotation(
+      Annotation(
           "greet",
-          AnnotationString("hello"),
+          AnnotationStr("hello"),
           AnnotationInt(2021),
           AnnotationBool(true)
       )
@@ -50,9 +50,9 @@ class TestAnnotationParser extends FunSuite with Checkers {
 
   test("test the special form of a one-argument annotation") {
     val expected =
-      new Annotation(
+      Annotation(
           "type",
-          AnnotationString("(Int, Int) -> Set(Int) ")
+          AnnotationStr("(Int, Int) -> Set(Int) ")
       )
     AnnotationParser.parse("""  @type: (Int, Int) -> Set(Int) ;""") match {
       case AnnotationParser.Success(parsed, _) =>
@@ -62,9 +62,9 @@ class TestAnnotationParser extends FunSuite with Checkers {
 
   test("test on multiline input") {
     val expected =
-      new Annotation(
+      Annotation(
           "greet",
-          AnnotationString("hello"),
+          AnnotationStr("hello"),
           AnnotationInt(2021),
           AnnotationBool(true)
       )
@@ -88,7 +88,7 @@ class TestAnnotationParser extends FunSuite with Checkers {
         {
           forAll(identifier) { name =>
             forAll(listOf(oneOf(genStr, genInt, genBool))) { args =>
-              val annotation = new Annotation(name, args: _*)
+              val annotation = Annotation(name, args: _*)
               AnnotationParser.parse(annotation.toString) match {
                 case AnnotationParser.Success(parsed, _) =>
                   annotation ?= parsed

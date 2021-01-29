@@ -11,10 +11,10 @@ import java.io.{Reader, StringReader}
 class AnnotationParser extends JavaTokenParsers {
   def expr: Parser[Any] = "@" ~ ident ~ opt(argsInParentheses | argAfterColon) ^^ {
     case _ ~ name ~ None =>
-      new Annotation(name)
+      Annotation(name)
 
     case _ ~ name ~ Some(args) =>
-      new Annotation(name, args: _*)
+      Annotation(name, args: _*)
   }
 
   def argsInParentheses: Parser[List[AnnotationArg]] = "(" ~ repsep(arg, ",") ~ ")" ^^ { case _ ~ args ~ _ =>
@@ -22,13 +22,13 @@ class AnnotationParser extends JavaTokenParsers {
   }
 
   def argAfterColon: Parser[List[AnnotationArg]] = ":" ~ nonSemiString ~ ";" ^^ { case _ ~ str ~ _ =>
-    List(AnnotationString(str))
+    List(AnnotationStr(str))
   }
 
   def arg: Parser[AnnotationArg] = stringArg | intArg | boolArg
 
-  def stringArg: Parser[AnnotationString] = stringLiteral ^^ { str =>
-    AnnotationString(str.slice(1, str.length - 1))
+  def stringArg: Parser[AnnotationStr] = stringLiteral ^^ { str =>
+    AnnotationStr(str.slice(1, str.length - 1))
   }
 
   def intArg: Parser[AnnotationInt] = wholeNumber ^^ { str =>

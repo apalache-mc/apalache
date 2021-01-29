@@ -8,8 +8,10 @@ package at.forsyte.apalache.io.annotations
  * \* @type("(Int, Int) => Int")
  * Plus(x, y) == x + y
  * </pre>
+ *
+ * <p>We declare this class to be case class to make pattern matching possible.</p>
  */
-class Annotation(val name: String, val args: AnnotationArg*) {
+case class Annotation(name: String, args: AnnotationArg*) {
 
   /**
    * <p>A string representation of the annotation. There are two cases:</p>
@@ -42,34 +44,5 @@ class Annotation(val name: String, val args: AnnotationArg*) {
     } else {
       "@%s: %s;".format(name, args.head)
     }
-  }
-
-  def canEqual(other: Any): Boolean = other.isInstanceOf[Annotation]
-
-  override def equals(other: Any): Boolean = other match {
-    case that: Annotation =>
-      (that canEqual this) &&
-        name == that.name &&
-        args == that.args
-    case _ => false
-  }
-
-  override def hashCode(): Int = {
-    val state = Seq(name, args)
-    state.map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
-  }
-}
-
-object Annotation {
-
-  /**
-   * A convenient constructor for TLA+ annotations.
-   *
-   * @param name annotation name, a valid Java identifier
-   * @param args a list of arguments
-   * @return a new annotation
-   */
-  def apply(name: String, args: AnnotationArg*): Annotation = {
-    new Annotation(name, args: _*)
   }
 }
