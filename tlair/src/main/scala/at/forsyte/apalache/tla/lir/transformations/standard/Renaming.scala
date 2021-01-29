@@ -10,8 +10,6 @@ import scala.collection.immutable.HashMap
   * This class contains methods that are related to renaming.
   *
   * @author Igor Konnov
-  *
-  * TODO: shall we move this class to *.lir.transformations.standard?
   */
 class Renaming (tracker: TransformationTracker) extends TlaExTransformation {
   /**
@@ -51,7 +49,7 @@ class Renaming (tracker: TransformationTracker) extends TlaExTransformation {
     s"${name}_$newVersion" // assign a unique name, e.g., x1, x2, x3, etc.
   }
 
-  private def rename(map: Map[String, String]): TlaExTransformation = tracker.track {
+  private def rename(map: Map[String, String]): TlaExTransformation = tracker.trackEx {
     case ex @ NameEx(name) =>
       if (map.contains(name)) {
         val newEx = NameEx(map(name))

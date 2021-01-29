@@ -21,7 +21,7 @@ abstract class AbstractTransformer(tracker: TransformationTracker) extends TlaEx
     *
     * @return a new expression
     */
-  def transform: TlaExTransformation = tracker.track {
+  def transform: TlaExTransformation = tracker.trackEx {
     case oper @ OperEx(op, args @ _*) =>
       val newArgs = args map transform
       val newOper =
@@ -51,7 +51,7 @@ abstract class AbstractTransformer(tracker: TransformationTracker) extends TlaEx
     */
   private def transformOneLevel: TlaExTransformation = {
     // chain partial functions to handle different types of operators with different functions
-    tracker.track(allTransformers reduceLeft (_ orElse _))
+    tracker.trackEx(allTransformers reduceLeft (_ orElse _))
   }
 
   private val identity: PartialFunction[TlaEx, TlaEx] = { case e => e }

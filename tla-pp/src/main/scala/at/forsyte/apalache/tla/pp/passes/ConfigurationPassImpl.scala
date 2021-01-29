@@ -3,12 +3,22 @@ package at.forsyte.apalache.tla.pp.passes
 import java.io.{File, FileNotFoundException, FileReader}
 import java.nio.file.Path
 
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin, WriteablePassOptions}
+import at.forsyte.apalache.infra.passes.{
+  Pass,
+  PassOptions,
+  TlaModuleMixin,
+  WriteablePassOptions
+}
 import at.forsyte.apalache.io.tlc.TlcConfigParserApalache
 import at.forsyte.apalache.io.tlc.config._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
-import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaOper, TlaTempOper}
+import at.forsyte.apalache.tla.lir.oper.{
+  TlaActionOper,
+  TlaBoolOper,
+  TlaOper,
+  TlaTempOper
+}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.pp._
@@ -26,10 +36,12 @@ import org.apache.commons.io.FilenameUtils
   * @param options pass options
   * @param nextPass next pass to call
   */
-class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
-                                      tracker: TransformationTracker,
-                                      @Named("AfterConfiguration") nextPass: Pass with TlaModuleMixin)
-    extends ConfigurationPass with LazyLogging {
+class ConfigurationPassImpl @Inject() (
+    val options: WriteablePassOptions,
+    tracker: TransformationTracker,
+    @Named("AfterConfiguration") nextPass: Pass with TlaModuleMixin
+) extends ConfigurationPass
+    with LazyLogging {
 
   private var outputTlaModule: Option[TlaModule] = None
 
@@ -52,7 +64,8 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
     copyRelevantOptions(options, relevantOptions)
     // try to read from the TLC configuration file and produce constant overrides
     val overrides = loadOptionsFromTlcConfig(currentModule, relevantOptions)
-    val currentAndOverrides = new TlaModule(currentModule.name, currentModule.declarations ++ overrides)
+    val currentAndOverrides =
+      new TlaModule(currentModule.name, currentModule.declarations ++ overrides)
     setFallbackOptions(relevantOptions)
 
     // make sure that the required operators are defined
@@ -68,14 +81,19 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
 
     // dump the configuration result
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    PrettyWriter.write(configuredModule, new File(outdir.toFile, "out-config.tla"))
+    PrettyWriter.write(
+      configuredModule,
+      new File(outdir.toFile, "out-config.tla")
+    )
 
     outputTlaModule = Some(configuredModule)
     true
   }
 
   // if checker.init and checker.next are not set, set them to Init and Next, respectively
-  private def setFallbackOptions(relevantOptions: WriteablePassOptions): Unit = {
+  private def setFallbackOptions(
+      relevantOptions: WriteablePassOptions
+  ): Unit = {
     if (relevantOptions.get("checker", "init").isEmpty) {
       logger.info("  > Command line option --init is not set. Using Init")
       relevantOptions.set("checker.init", "Init")
@@ -87,9 +105,13 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
   }
 
   // copy the relevant options
-  private def copyRelevantOptions(from: PassOptions, to: WriteablePassOptions): Unit = {
+  private def copyRelevantOptions(
+      from: PassOptions,
+      to: WriteablePassOptions
+  ): Unit = {
     for (name <- NormalizedNames.STANDARD_OPTION_NAMES) {
-      from.get[Any]("checker", name)
+      from
+        .get[Any]("checker", name)
         .collect { case value => to.set("checker." + name, value) }
     }
   }
@@ -99,14 +121,19 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
     * @param module the input module
     * @param outOptions the pass options to update from the configuration file
     * @return additional declarations, which originate from assignments and replacements
-   */
-  private def loadOptionsFromTlcConfig(module: TlaModule, outOptions: WriteablePassOptions): Seq[TlaDecl] = {
+    */
+  private def loadOptionsFromTlcConfig(
+      module: TlaModule,
+      outOptions: WriteablePassOptions
+  ): Seq[TlaDecl] = {
     var configuredModule = module
     // read TLC config if present
-    val configFilename = options.getOrElse("checker","config","")
+    val configFilename = options.getOrElse("checker", "config", "")
     val filename =
-      if(configFilename.isEmpty) {
-        options.getOrError("parser", "filename").asInstanceOf[String]
+      if (configFilename.isEmpty) {
+        options
+          .getOrError("parser", "filename")
+          .asInstanceOf[String]
           .replaceFirst("\\.(tla|json)$", "\\.cfg")
       } else {
         configFilename
@@ -115,13 +142,15 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
     logger.info(s"  > $basename: Loading TLC configuration")
 
     def setInit(init: String): Unit = {
-      outOptions.get[String]("checker","init") match {
+      outOptions.get[String]("checker", "init") match {
         case None =>
           logger.info(s"  > Using the init predicate $init from the TLC config")
           outOptions.set("checker.init", init)
 
         case Some(cmdInit) =>
-          logger.warn(s"  > $basename: Init operator is set in TLC config but overridden via --init command line option; using $cmdInit")
+          logger.warn(
+            s"  > $basename: Init operator is set in TLC config but overridden via --init command line option; using $cmdInit"
+          )
           outOptions.set("checker.init", cmdInit)
       }
     }
@@ -133,7 +162,8 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
           outOptions.set("checker.next", next)
 
         case Some(cmdNext) =>
-          val msg = s"  > $basename: Next operator is set in TLC config but overridden via --next command line option; using $cmdNext"
+          val msg =
+            s"  > $basename: Next operator is set in TLC config but overridden via --next command line option; using $cmdNext"
           logger.warn(msg)
           outOptions.set("checker.next", cmdNext)
       }
@@ -141,7 +171,9 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
 
     try {
       val config = TlcConfigParserApalache.apply(new FileReader(filename))
-      configuredModule = new TlcConfigImporter(config, new IdleTracker())(module)
+      configuredModule = new TlcConfigImporter(config, new IdleTracker())(
+        module
+      )
       config.behaviorSpec match {
         case InitNextSpec(init, next) =>
           setInit(init)
@@ -157,7 +189,12 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
           () // do nothing
       }
       if (config.invariants.nonEmpty) {
-        logger.info(s"  > $basename: found INVARIANTS: " + String.join(", ", config.invariants :_*))
+        logger.info(
+          s"  > $basename: found INVARIANTS: " + String.join(
+            ", ",
+            config.invariants: _*
+          )
+        )
 
         outOptions.get[List[String]]("checker", "inv") match {
           case None =>
@@ -165,7 +202,12 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
 
           case Some(cmdInvariants) =>
             val cmdInvariantsStr = cmdInvariants.map(s => "--inv " + s)
-            logger.warn(s"  > Overriding with command line arguments: " + String.join(" ", cmdInvariantsStr :_*))
+            logger.warn(
+              s"  > Overriding with command line arguments: " + String.join(
+                " ",
+                cmdInvariantsStr: _*
+              )
+            )
             outOptions.set("checker.inv", cmdInvariants)
         }
       }
@@ -174,34 +216,47 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
         // set the temporal properties, but warn the user that they are not used
         outOptions.set("checker.temporalProps", config.temporalProps)
         for (prop <- config.temporalProps) {
-          logger.warn(s"  > $basename: PROPERTY $prop is ignored. Only INVARIANTS are supported.")
+          logger.warn(
+            s"  > $basename: PROPERTY $prop is ignored. Only INVARIANTS are supported."
+          )
         }
       }
 
       val namesOfOverrides =
         (config.constAssignments.keySet ++ config.constReplacements.keySet)
           .map(ConstAndDefRewriter.OVERRIDE_PREFIX + _)
-      configuredModule.declarations.filter(d => namesOfOverrides.contains(d.name))
+      configuredModule.declarations.filter(d =>
+        namesOfOverrides.contains(d.name)
+      )
     } catch {
       case _: FileNotFoundException =>
-        if(configFilename.isEmpty) {
+        if (configFilename.isEmpty) {
           logger.info("  > No TLC configuration found. Skipping.")
           List()
         } else {
-          throw new TLCConfigurationError(s"  > $basename: TLC config is provided with --config, but not found")
+          throw new TLCConfigurationError(
+            s"  > $basename: TLC config is provided with --config, but not found"
+          )
         }
 
       case e: TlcConfigParseError =>
-        throw new TLCConfigurationError(s"  > $basename:${e.pos}:  Error parsing the TLC config file: " + e.msg)
+        throw new TLCConfigurationError(
+          s"  > $basename:${e.pos}:  Error parsing the TLC config file: " + e.msg
+        )
     }
   }
 
   // Make sure that all operators passed via --init, --cinit, --next, --inv are present.
-  private def ensureDeclarationsArePresent(mod: TlaModule, configOptions: PassOptions): Unit = {
+  private def ensureDeclarationsArePresent(
+      mod: TlaModule,
+      configOptions: PassOptions
+  ): Unit = {
     def assertDecl(role: String, name: String): Unit = {
       logger.info(s"  > Set $role to $name")
       if (mod.operDeclarations.forall(_.name != name)) {
-        throw new ConfigurationError(s"Operator $name not found (used as $role)")
+        throw new ConfigurationError(
+          s"Operator $name not found (used as $role)"
+        )
       }
     }
 
@@ -214,7 +269,8 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
     }
 
     configOptions.get[String]("checker", "cinit") match {
-      case Some(cinit) => assertDecl("the constant initialization predicate", cinit)
+      case Some(cinit) =>
+        assertDecl("the constant initialization predicate", cinit)
 
       case None => () // cinit is optional
     }
@@ -249,32 +305,93 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
     * @param specName the name of the specification definition
     * @return the pair (Init, Next)
     */
-  private def extractFromSpec(module: TlaModule, contextName: String, specName: String): (String, String) = {
+  private def extractFromSpec(
+      module: TlaModule,
+      contextName: String,
+      specName: String
+  ): (String, String) = {
+    // flatten nested conjunctions into a single one
+    def flattenAnds: TlaEx => TlaEx = {
+      case OperEx(TlaBoolOper.and, args @ _*) =>
+        val flattenedArgs = args map flattenAnds
+        val (ands, nonAnds) = flattenedArgs.partition {
+          case OperEx(TlaBoolOper.and, _*) => true
+          case _                           => false
+        }
+        val propagated = ands.collect {
+          case OperEx(TlaBoolOper.and, as @ _*) => as
+        }.flatten
+        OperEx(TlaBoolOper.and, propagated ++ nonAnds: _*)
+
+      case ex @ _ => ex
+    }
+
+    def throwError(d: TlaOperDecl): Nothing = {
+      logger.error(
+        s"Operator $specName of ${d.formalParams.length} arguments is defined as: " + d.body
+      )
+      val msg =
+        s"$contextName: Expected $specName to be in the canonical form Init /\\ [][Next]_vars /\\ ..."
+      throw new ConfigurationError(msg)
+    }
+
     module.operDeclarations.find(_.name == specName) match {
       case None =>
-        throw new ConfigurationError(s"$contextName: Operator $specName not found (used as SPECIFICATION)")
+        throw new ConfigurationError(
+          s"$contextName: Operator $specName not found (used as SPECIFICATION)"
+        )
 
-        // the canonical form: Init /\ [][Next]_vars /\ ...
-      case Some(TlaOperDecl(_, List(),
-        OperEx(TlaBoolOper.and,
-          // Init
-          OperEx(TlaOper.apply, NameEx(init)),
-          // [][Next]_vars
-          OperEx(TlaTempOper.box,
-            // [Next]_vars
-            OperEx(TlaActionOper.stutter,
-              // Next
-              OperEx(TlaOper.apply, NameEx(next)),
-              // vars
-            _*
-          )), ///
-          _*))) =>
-        (init, next)
+      // the canonical form: Init /\ [][Next]_vars /\ ...
+      case Some(decl @ TlaOperDecl(_, List(), spec)) =>
+        flattenAnds(spec) match {
+          case OperEx(TlaBoolOper.and, args @ _*) =>
+            val (nonFairness, fairness) = args.partition {
+              case OperEx(TlaTempOper.weakFairness, _*)   => false
+              case OperEx(TlaTempOper.strongFairness, _*) => false
+              case _                                      => true
+            }
+            val (init, next) =
+              nonFairness match {
+                case Seq(
+                      OperEx(TlaOper.apply, NameEx(init)), // Init
+                      OperEx(
+                        TlaTempOper.box,
+                        OperEx(
+                          TlaActionOper.stutter,
+                          OperEx(TlaOper.apply, NameEx(next)),
+                          _*
+                        )
+                      ) // [][Next]_vars
+                    ) =>
+                  (init, next)
+
+                case Seq(
+                      OperEx(
+                        TlaTempOper.box,
+                        OperEx(
+                          TlaActionOper.stutter,
+                          OperEx(TlaOper.apply, NameEx(next)),
+                          _*
+                        )
+                      ),
+                      OperEx(TlaOper.apply, NameEx(init)) // Init
+                    ) =>
+                  (init, next)
+
+                case _ => throwError(decl)
+              }
+
+            if (fairness.nonEmpty) {
+              val es = fairness.mkString(" /\\ ")
+              val msg = s"Fairness constraints are ignored by Apalache: $es"
+              logger.warn(msg)
+            }
+
+            (init, next)
+        }
 
       case Some(d) =>
-        logger.error(s"Operator $specName of ${d.formalParams.length} arguments is defined as: " + d.body)
-        val msg = s"$contextName: Expected $specName to be in the canonical form Init /\\ [][Next]_vars /\\ ..."
-        throw new ConfigurationError(msg)
+        throwError(d)
     }
   }
 
@@ -286,7 +403,7 @@ class ConfigurationPassImpl @Inject()(val options: WriteablePassOptions,
     */
   override def next(): Option[Pass] = {
     outputTlaModule map { m =>
-      nextPass.setModule( m )
+      nextPass.setModule(m)
       nextPass
     }
   }

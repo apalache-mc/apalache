@@ -1,4 +1,4 @@
-name: Prepare Release
+name: prepare-release
 
 on:
   workflow_dispatch:
@@ -12,13 +12,17 @@ on:
   schedule:
     # * is a special character in YAML so you have to quote this string
     # Automatically prepare a minor version release every Monday
-    - cron: "* * * * 1"
+    # See https://crontab.guru/#0_0_*_*_1
+    - cron: "0 0 * * 1"
 
 jobs:
   prepare-release:
     env:
       RELEASE_VERSION: ${{ github.event.inputs.release_version }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # NOTE: We must not use the default GITHUB_TOKEN for auth here,
+      # or else CI won't run on the resulting PR.
+      # See https://github.com/peter-evans/create-pull-request/blob/master/docs/concepts-guidelines.md#workarounds-to-trigger-further-workflow-runs
+      GITHUB_TOKEN: ${{ secrets.APALACHE_BOT_TOKEN }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -29,6 +33,6 @@ jobs:
         run: |
           git config --global user.name "$GITHUB_ACTOR"
           git config --global user.email "github@actions.ci"
-      - name: Prepare Release
+      - name: Prepare release
         run: |
           ./script/release-prepare.sh

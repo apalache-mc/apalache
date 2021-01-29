@@ -2,10 +2,9 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.transformations.impl.Lift
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation, TransformationTracker}
-import javax.inject.{Inject, Singleton}
+import at.forsyte.apalache.tla.lir.transformations.{TlaDeclTransformation, TlaExTransformation, TlaModuleTransformation, TransformationTracker}
 
+import javax.inject.{Inject, Singleton}
 import scala.collection.immutable.HashMap
 
 // Igor @ 07.11.2019: refactoring needed
@@ -149,7 +148,7 @@ class IncrementalRenaming @Inject()(tracker : TransformationTracker) extends Tla
     */
   private def getNextUniqueFromBase( name: String ) = getNextUnique( getBase( name ) )
 
-  private def rename( alreadyRenamed: Map[String,String] ): TlaExTransformation = tracker.track {
+  private def rename( alreadyRenamed: Map[String,String] ): TlaExTransformation = tracker.trackEx {
     case ex @ NameEx(name) =>
       // If a name has been marked for replacement (i.e. is an entry in alreadyRenamed)
       // we simply substitute in the pre-computed new name
@@ -218,19 +217,23 @@ class IncrementalRenaming @Inject()(tracker : TransformationTracker) extends Tla
       val newRenaming = rename( newRenamed )
 
       // Having computed the new names, we have to change the declarations and use the precomputed new names
-      val newDefs = defs map {
-        case TlaOperDecl( n, ps, b ) =>
-          TlaOperDecl(
-            opersAndFParamsNameMap( n ),
-            ps map {
-              case SimpleFormalParam( p ) => SimpleFormalParam( opersAndFParamsNameMap( p ) )
-              case OperFormalParam( p, a ) => OperFormalParam( opersAndFParamsNameMap( p ), a )
-            },
-            // We recurse over operator bodies, because newRenamed contains parameter
-            // and operator renamings
-            newRenaming( b )
-          )
-      }
+      def xform: TlaOperDecl => TlaOperDecl =
+        tracker.trackOperDecl {
+          case TlaOperDecl( n, ps, b ) =>
+            TlaOperDecl(
+              opersAndFParamsNameMap( n ),
+              ps map {
+                case SimpleFormalParam( p ) => SimpleFormalParam( opersAndFParamsNameMap( p ) )
+                case OperFormalParam( p, a ) => OperFormalParam( opersAndFParamsNameMap( p ), a )
+              },
+              // We recurse over operator bodies, because newRenamed contains parameter
+              // and operator renamings
+              newRenaming( b )
+            )
+        }
+
+      val newDefs = defs map xform
+
       // Finally, we recurse on the body
       val newBody = newRenaming( body )
       LetInEx( newBody, newDefs : _* )
@@ -243,13 +246,11 @@ class IncrementalRenaming @Inject()(tracker : TransformationTracker) extends Tla
     * Calls rename, with the initial renaming map (= empty)
     */
   override def apply( ex : TlaEx ) : TlaEx = rename( alreadyRenamed = Map.empty )( ex )
-  def applyToDecl : TlaDecl => TlaDecl = Lift.exToDecl( apply )
-  def applyToDecls : Traversable[TlaDecl] => Traversable[TlaDecl] = Lift.declToDecls( applyToDecl )
 
   /**
     * Reduces all variable counters by the amount specified in offsets.
     */
-  private[lir] def shiftCounters( offsets: counterMapType ): TlaExTransformation = tracker.track {
+  private[lir] def shiftCounters( offsets: counterMapType ): TlaExTransformation = tracker.trackEx {
     case ex @ NameEx(name) =>
       val newName = offsetName( offsets )( name )
       if ( newName == name ) ex
@@ -263,18 +264,21 @@ class IncrementalRenaming @Inject()(tracker : TransformationTracker) extends Tla
     case ex@LetInEx( body, defs@_* ) =>
       val offsetFn : String => String = offsetName( offsets )
       val self = shiftCounters( offsets )
-      val newDefs = defs map {
-        case TlaOperDecl( n, params, b ) =>
-          TlaOperDecl(
-            offsetFn( n ),
-            params map {
-              case SimpleFormalParam( p ) => SimpleFormalParam( offsetFn( p ) )
-              case OperFormalParam( p, a ) => OperFormalParam( offsetFn( p ), a )
-            },
-            self( b )
-          )
-      }
 
+      def xform: TlaOperDecl => TlaOperDecl =
+        tracker.trackOperDecl {
+          case TlaOperDecl( n, params, b ) =>
+            TlaOperDecl(
+              offsetFn( n ),
+              params map {
+                case SimpleFormalParam( p ) => SimpleFormalParam( offsetFn( p ) )
+                case OperFormalParam( p, a ) => OperFormalParam( offsetFn( p ), a )
+              },
+              self( b )
+            )
+        }
+
+      val newDefs = defs map xform
       val newBody = self( body )
       if ( newBody == body && newDefs == defs ) ex
       else LetInEx( newBody, newDefs : _* )
@@ -283,12 +287,14 @@ class IncrementalRenaming @Inject()(tracker : TransformationTracker) extends Tla
   }
 
   // Lifted to decl
-  private def shiftCountersD( offsets : counterMapType ) : TlaDecl => TlaDecl =
-    Lift.exToDecl( shiftCounters( offsets ) )
+  private def shiftCountersD( offsets : counterMapType ) : TlaDeclTransformation = {
+    tracker.fromExToDeclTransformation(shiftCounters(offsets))
+  }
 
   // lifted to decls
-  private def shiftCountersDs( offsets : counterMapType ) : Traversable[TlaDecl] => Traversable[TlaDecl] =
-    Lift.declToDecls( shiftCountersD( offsets ) )
+  private def shiftCountersDs( offsets : counterMapType ) : Traversable[TlaDecl] => Traversable[TlaDecl] = {
+    _.map(shiftCountersD(offsets))
+  }
 
   /**
     * This method "normalizes" a previously renamed expression, so that the variable counter for each variable
@@ -316,8 +322,9 @@ class IncrementalRenaming @Inject()(tracker : TransformationTracker) extends Tla
   }
 
   // Lifted to decl
-  def normalizeD : TlaDecl => TlaDecl =
-    Lift.exToDecl( normalize )
+  def normalizeD : TlaDeclTransformation = {
+    tracker.fromExToDeclTransformation(normalize)
+  }
 
   // lifted to decls
   def normalizeDs( decls : Traversable[TlaDecl] ) : Traversable[TlaDecl] = {
@@ -364,13 +371,13 @@ class IncrementalRenaming @Inject()(tracker : TransformationTracker) extends Tla
   // Lifted to decl
   def syncAndNormalizeD( d: TlaDecl) : TlaDecl = {
     syncFromD( d )
-    normalizeD( applyToDecl( d ) )
+    normalizeD( tracker.fromExToDeclTransformation(this)(d) )
   }
 
   // Lifted to decls
   def syncAndNormalizeDs( ds: Traversable[TlaDecl]) : Traversable[TlaDecl] = {
     syncFromDs( ds )
-    normalizeDs( applyToDecls( ds ) )
+    normalizeDs( ds.map(d => tracker.fromExToDeclTransformation(this)(d)) )
   }
 
 }
