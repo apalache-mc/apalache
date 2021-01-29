@@ -171,25 +171,49 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#parameters-for-fine-tuning" id="parameters-for-fine-tuning">Parameters for fine tuning</a></h1>
-<p>The parameters for fine tuning can be passed to the checker in a properties file.
-Its name is given with the command-line option <code>--tuning=my.properties.</code> This file
-supports variable substitution, e.g., <code>${x}</code> is replaced with the value of <code>x</code>, if it was
-previously declared.</p>
+<p>The parameters for fine tuning can be passed to the checker in a properties
+file.  Its name is given with the command-line option <code>--tuning=my.properties.</code>
+This file supports variable substitution, e.g., <code>${x}</code> is replaced with the
+value of <code>x</code>, if it was previously declared.</p>
+<p>Alternatively, you can pass the tuning options right in the command-line by
+passing the option <code>--tune-here</code> that has the following format:</p>
+<pre><code>```
+--tune-here=key1=val1
+--tune-here=key1=val1:key2=val2
+...
+```
+</code></pre>
 <ol>
 <li>
-<p><strong>Randomization</strong>: <code>smt.randomSeed=&lt;int&gt;</code> passes the random seed to <code>z3</code> (via
-<code>z3</code>'s parameters <code>sat.random_seed</code> and <code>smt.random_seed</code>). </p>
+<p><strong>Randomization</strong>: <code>smt.randomSeed=&lt;int&gt;</code> passes the random seed to <code>z3</code>
+(via <code>z3</code>'s parameters <code>sat.random_seed</code> and <code>smt.random_seed</code>). </p>
 </li>
 <li>
-<p><strong>Timeouts</strong>: <code>search.transition.timeout=&lt;seconds&gt;</code> and <code>search.invariant.timeout=&lt;seconds&gt;</code> set timeouts
-in seconds for checking whether a transition is enabled and whether the invariant holds, respectively.
-When a timeout occurs, while transition is checked, the transition is considered disabled
-and the search continues. When a timeout occurs, while the invariant is checked, the invariant
-is considered satisfied. Obviously, one can miss a bug by setting small timeouts.</p>
+<p><strong>Timeouts</strong>: <code>search.smt.timeout=&lt;seconds&gt;</code> defines the timeout to the
+SMT solver in seconds. The default value is <code>0</code>, which stands for the unbounded
+timeout.  For instance, the timeout is used in the following cases: checking if
+a transition is enabled, checking an invariant, checking for deadlocks.  If the
+solver times out, it reports 'UNKNOWN', and the model checker reports a runtime
+error.</p>
 </li>
 <li>
-<p><strong>Guided search</strong>: <code>search.transitionFilter=&lt;sequence&gt;</code>. Restrict the choice of symbolic
-transitions at every step with a regular expression. For instance, <code>search.filter=0,5,2|3</code>
+<p><strong>Invariant mode</strong>: <code>search.invariant.mode=(before|after)</code> defines the
+moment when the invariant is checked. In the <code>after</code> mode, all transitions are
+first translated, one of them is picked non-deterministically and then the
+invariant is checked. Although this mode reduces the number of SMT queries, it
+usually requires more memory than the <code>before</code> mode. In the <code>before</code> mode, the
+invariant is checked for every enabled transition independently. The <code>before</code>
+mode may drastically reduce memory consumption, but it may take longer than the
+<code>after</code> mode, provided that Apalache has enough memory. The default mode is
+<code>before</code>.</p>
+</li>
+<li>
+<p><strong>Guided search</strong>: <code>search.transitionFilter=&lt;regex&gt;</code>.
+Restrict the choice of symbolic transitions at every step with a regular expression.
+The regular expression should recognize words over of the form 's-&gt;t', where <code>s</code>
+is a regular expression over step numbers and <code>t</code> is a regular expression over
+transition numbers. For instance,
+<code>search.transitionFilter=(0-&gt;0|1-&gt;5|2-&gt;2|3-&gt;3|[4-9]-&gt;.*|[1-9][0-9]+-&gt;.*)</code>
 requires to start with the 0th transition, continue with the 5th transition,
 then execute either the 2nd or the 3rd transition and after that execute
 arbitrary transitions until the <code>length.</code> Note that there is no direct correspondence
@@ -205,22 +229,6 @@ to the initialization with <code>Init</code>, step 1 is the first step with <cod
 This option is useful for checking consensus algorithms, where the decision
 cannot be revoked. So instead of checking the invariant after each step, we can
 do that after the algorithm has made a good number of steps. </p>
-</li>
-<li>
-<p><strong>Invariant checking by splitting</strong>: <code>search.invariant.split=(false|true)</code>. If the option
-is set to true, the invariant is checked individually for every enabled transition. Otherwise,
-the invariant is checked once after all enabled transitions have been added into the SMT context.
-By default, <code>search.invariant.split=true</code></p>
-</li>
-<li>
-<p><strong>Learning from invariants</strong>: <code>search.invariant.learnFromUnsat=(false|true)</code>. If the option
-is set to true, once the checked found that <code>~Inv</code> does not hold for some depth, it adds the
-assumption <code>Inv</code> in the SMT context. </p>
-</li>
-<li>
-<p><strong>Randomized search</strong>: <code>search.randomDfs=(false|true)</code>. When the symbolic transitions
-are enumerated in the depth-first order, that is, <code>search=dfs</code>, choose the next transition
-randomly.</p>
 </li>
 <li>
 <p><strong>Translation to SMT</strong>:</p>

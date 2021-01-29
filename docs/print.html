@@ -375,62 +375,77 @@ Java, otherwise Scala will not compile!</strong> See the <a href="https://docs.s
 </li>
 </ol>
 <h1><a class="header" href="#running-the-tool" id="running-the-tool">Running the Tool</a></h1>
-<p><strong>Opt-in statistics programme</strong>: if you opt-in for statistics collection (off
-by default), then every run of Apalache will submit anonymized statistics to
-<code>tlapl.us</code>.  See the details in <a href="apalache/./statistics.html">TLA+ Anonymized Execution
-Statistics</a>.</p>
+<p><strong>Opt-in statistics programme</strong>: if you opt-in for statistics collection (off by default), then every run of Apalache
+will submit anonymized statistics to
+<code>tlapl.us</code>. See the details in <a href="apalache/./statistics.html">TLA+ Anonymized Execution Statistics</a>.</p>
 <h2><a class="header" href="#model-checker-command-line-parameters" id="model-checker-command-line-parameters">Model checker command-line parameters</a></h2>
 <p>The model checker can be run as follows:</p>
 <pre><code class="language-bash">$ apalache check [--config=filename] [--init=Init] [--cinit=ConstInit] \
-    [--next=Next] [--inv=Inv] [--length=10] [--tuning=filename] &lt;myspec&gt;.tla
+    [--next=Next] [--inv=Inv] [--length=10] [--algo=(incremental|offline)] \
+    [--discard-disabled] [--no-deadlock] [--tuning=filename] [--tune-here=options] \
+    &lt;myspec&gt;.tla
 </code></pre>
 <p>The arguments are as follows:</p>
 <ul>
-<li><code>--config</code> specifies the <a href="apalache/./tlc-config.html">TLC configuration file</a>,
-the default name is <code>&lt;myspec&gt;.cfg</code></li>
-<li><code>--init</code> specifies the initialization predicate, the default name is <code>Init</code></li>
-<li><code>--next</code> specifies the transition predicate, the default name is <code>Next</code></li>
-<li><code>--cinit</code> specifies the constant initialization predicate, optional</li>
-<li><code>--inv</code> specifies the invariant to check, optional</li>
-<li><code>--length</code> specifies the upper bound on the length of the finite executions to explore</li>
+<li>
+<p>General parameters:</p>
+<ul>
+<li><code>--config</code> specifies the <a href="apalache/./tlc-config.html">TLC configuration file</a>, the default name is <code>&lt;myspec&gt;.cfg</code></li>
+<li><code>--init</code> specifies the initialization predicate, <em><code>Init</code> by default</em></li>
+<li><code>--next</code> specifies the transition predicate, <em><code>Next</code> by default</em></li>
+<li><code>--cinit</code> specifies the constant initialization predicate, <em>optional</em></li>
+<li><code>--inv</code> specifies the invariant to check, <em>optional</em></li>
+<li><code>--length</code> specifies the maximal number of <code>Next</code> steps, <em>10 by default</em></li>
+</ul>
+</li>
+<li>
+<p>Advanced parameters:</p>
+<ul>
+<li><code>--algo</code> lets you to choose the search algorithm: <code>incremental</code> is using the incremental SMT solver, <code>offline</code> is
+using the non-incremental
+(offline) SMT solver</li>
+<li><code>--discard-disabled</code> does a pre-check on transitions and discard the disabled ones at every step. If you know that
+many transitions are always enabled, set it to false. Sometimes, this pre-check may be slower than checking the
+invariant. Default: true.</li>
+<li><code>--no-deadlock</code> disables deadlock-checking, when <code>--discard-disabled=false</code> is on. When <code>--discard-disabled=true</code>,
+deadlocks are found in any case.</li>
 <li><code>--tuning</code> specifies the properties file that stores the options for
 <a href="apalache/tuning.html">fine tuning</a></li>
+<li><code>--tuning-options=key1=val1:key2=val2:...</code> pass the tuning options right in the command line as a single string.
+The options that are passed with the option <code>--tuning-options</code>
+have priority over the options that are passed with the option <code>--tuning</code>.</li>
 </ul>
-<p>If an initialization predicate, transition predicate, or invariant is specified both in the configuration file,
-and on the command line, the command line parameters take precedence over those in the configuration file.</p>
+</li>
+</ul>
+<p>If an initialization predicate, transition predicate, or invariant is specified both in the configuration file, and on
+the command line, the command line parameters take precedence over those in the configuration file.</p>
 <h3><a class="header" href="#bounded-model-checking" id="bounded-model-checking">Bounded model checking</a></h3>
-<p>By default, Apalache performs <em>bounded model checking</em>, that is,
-it encodes a symbolic execution of length <code>k</code> and an invariant violation
-in SMT:</p>
+<p>By default, Apalache performs <em>bounded model checking</em>, that is, it encodes a symbolic execution of length <code>k</code> and an
+invariant violation in SMT:</p>
 <pre><code class="language-tla">/\ Init[v_0/v]
 /\ Next[v_0/v, v_1/v'] /\ Next[v_1/v, v_2/v'] /\ ... /\ Next[v_{k-1}/v, v_k/v']
 /\ ~Inv[v_0/v] \/ ~Inv[v_1/v] \/ ... \/ ~Inv[v_k/v]
 </code></pre>
-<p>Here an expression <code>Inv[v_i/v]</code> means that the state variables <code>v</code> are replaced
-with their copies <code>v_i</code> for the state <code>i</code>.  Likewise, <code>Next[v_i/v,v_{i+1}/v']</code>
-means that the state variables <code>v</code> are replaced with their copies <code>v_i</code> for the
-state <code>i</code>, whereas the state variables <code>v'</code> are replaced with their copies
+<p>Here an expression <code>Inv[v_i/v]</code> means that the state variables <code>v</code> are replaced with their copies <code>v_i</code> for the
+state <code>i</code>. Likewise, <code>Next[v_i/v,v_{i+1}/v']</code>
+means that the state variables <code>v</code> are replaced with their copies <code>v_i</code> for the state <code>i</code>, whereas the state
+variables <code>v'</code> are replaced with their copies
 <code>v_{i+1}</code> for the state <code>i+1</code>.</p>
 <h4><a class="header" href="#bounded-model-checking-is-an-incomplete-technique" id="bounded-model-checking-is-an-incomplete-technique">Bounded model checking is an incomplete technique</a></h4>
-<p>If Apalache finds a bug in this symbolic execution (by querying z3), then it
-reports a counterexample. Otherwise, it reports that no bug was found up to the
-given length. If a bug needs a long execution to get revealed, bounded model
+<p>If Apalache finds a bug in this symbolic execution (by querying z3), then it reports a counterexample. Otherwise, it
+reports that no bug was found up to the given length. If a bug needs a long execution to get revealed, bounded model
 checking may miss it!</p>
 <h3><a class="header" href="#checking-an-inductive-invariant" id="checking-an-inductive-invariant">Checking an inductive invariant</a></h3>
-<p>To check executions of arbitrary lengths, one usually finds a formula that
-satisfies the two following properties:</p>
+<p>To check executions of arbitrary lengths, one usually finds a formula that satisfies the two following properties:</p>
 <pre><code class="language-tla">/\ Init =&gt; TypeOK /\ IndInv
 /\ TypeOK /\ IndInv /\ Next =&gt; TypeOK' /\ IndInv'
 </code></pre>
-<p>In normal words: (1) The initial states satisfy the constraint <code>TypeOK /\ IndInv</code>, and (2) whenever the specification makes a step when starting in a
-state that satisfies <code>TypeOK /\ IndInv</code>, it ends up in a state that again
-satisfies <code>TypeOK /\ IndInv</code>.</p>
-<p>Note that we usually check <code>IndInv</code> in conjunction with <code>TypeOK</code>, as we
-have to constrain the variable values. In the <code>y2k</code> example, our inductive
-invariant is actually constraing the variables. In fact, such an inductive
-invariant is usually called <code>TypeOK</code>.</p>
-<p>To check an inductive invariant <code>IndInv</code> in Apalache, you run two commands
-that check the above two formulas:</p>
+<p>In normal words: (1) The initial states satisfy the constraint <code>TypeOK /\ IndInv</code>, and (2) whenever the specification makes a step when starting in a state that satisfies <code>TypeOK /\ IndInv</code>, it
+ends up in a state that again satisfies <code>TypeOK /\ IndInv</code>.</p>
+<p>Note that we usually check <code>IndInv</code> in conjunction with <code>TypeOK</code>, as we have to constrain the variable values. In
+the <code>y2k</code> example, our inductive invariant is actually constraing the variables. In fact, such an inductive invariant is
+usually called <code>TypeOK</code>.</p>
+<p>To check an inductive invariant <code>IndInv</code> in Apalache, you run two commands that check the above two formulas:</p>
 <pre><code class="language-bash">$ apalache check --init=Init --inv=IndInv --length=0 &lt;myspec&gt;.tla
 </code></pre>
 <p>and</p>
@@ -441,33 +456,28 @@ that check the above two formulas:</p>
 <pre><code class="language-bash">$ cd test/tla
 $ apalache check --length=20 --inv=Safety y2k_override.tla
 </code></pre>
-<p>This command checks, whether <code>Safety</code> can be violated in 20 specification
-steps. If <code>Safety</code> is not violated, your spec might still have a bug that
-requires a computation longer than 20 steps to manifest.</p>
+<p>This command checks, whether <code>Safety</code> can be violated in 20 specification steps. If <code>Safety</code> is not violated, your spec
+might still have a bug that requires a computation longer than 20 steps to manifest.</p>
 <h3><a class="header" href="#checking-an-inductive-invariant-1" id="checking-an-inductive-invariant-1">Checking an inductive invariant:</a></h3>
 <pre><code class="language-bash">$ cd test/tla
 $ apalache check --length=0 --init=Init --inv=Inv y2k_override.tla
 $ apalache check --length=1 --init=Inv  --inv=Inv y2k_override.tla
 </code></pre>
-<p>The first call to apalache checks, whether the initial states
-satisfy the invariant. The second call to apalache checks, whether
-a single specification step satisfies the invariant, when starting
-in a state that satisfies the invariant. (That is why these
-invariants are called inductive.)</p>
+<p>The first call to apalache checks, whether the initial states satisfy the invariant. The second call to apalache checks,
+whether a single specification step satisfies the invariant, when starting in a state that satisfies the invariant. (
+That is why these invariants are called inductive.)</p>
 <h3><a class="header" href="#using-a-constant-initializer" id="using-a-constant-initializer">Using a constant initializer:</a></h3>
 <pre><code class="language-bash">$ cd test/tla
 apalache check --cinit=ConstInit --length=20 --inv=Safety y2k_cinit.tla
 </code></pre>
-<p>This command checks, whether <code>Safety</code> can be violated in 20
-specification steps. The constants are initialized with the predicate
+<p>This command checks, whether <code>Safety</code> can be violated in 20 specification steps. The constants are initialized with the
+predicate
 <code>ConstInit</code>, defined in <code>y2k_cinit.tla</code> as:</p>
 <pre><code class="language-tla">ConstInit == BIRTH_YEAR \in 0..99 /\ LICENSE_AGE \in 10..99
 </code></pre>
 <p>In this case, Apalache finds a safety violation, e.g., for
-<code>BIRTH_YEAR=89</code> and <code>LICENSE_AGE=10</code>. A complete counterexample
-is printed in <code>counterexample.tla</code>.</p>
-<p>The final lines in the file clearly indicate the state that violates the
-invariant:</p>
+<code>BIRTH_YEAR=89</code> and <code>LICENSE_AGE=10</code>. A complete counterexample is printed in <code>counterexample.tla</code>.</p>
+<p>The final lines in the file clearly indicate the state that violates the invariant:</p>
 <pre><code class="language-tla">State14 ==
 /\ BIRTH_YEAR = 89
 /\ LICENSE_AGE = 10
@@ -480,16 +490,14 @@ InvariantViolation == hasLicense /\ year - BIRTH_YEAR &lt; LICENSE_AGE
 </code></pre>
 <p><a name="lookup"></a></p>
 <h2><a class="header" href="#module-lookup" id="module-lookup">Module lookup</a></h2>
-<p>Apalache uses <a href="https://lamport.azurewebsites.net/tla/tools.html">the SANY
-parser</a>, which is the
-standard parser of TLC and TLA+ Toolbox. By default, SANY is looking for the
-modules in the current working directory and in the Java package
-<code>tla2sany.StandardModules</code>, which is usually provided by the <code>tla2tools.jar</code> that is
-included in the Java classpath.</p>
+<p>Apalache uses <a href="https://lamport.azurewebsites.net/tla/tools.html">the SANY parser</a>, which is the standard parser of TLC
+and TLA+ Toolbox. By default, SANY is looking for the modules in the current working directory and in the Java package
+<code>tla2sany.StandardModules</code>, which is usually provided by the <code>tla2tools.jar</code> that is included in the Java classpath.</p>
 <p>In addition to the modules in the current working directory, Appalache provides</p>
 <ul>
 <li>a small standard library (located in <code>$APALACHE_HOME/src/tla</code>), and</li>
-<li>support for additional source directories specified in the environment variable <code>TLA_PATH</code>. <code>TLA_PATH</code> should be a list of paths to directories separated by <code>:</code>. </li>
+<li>support for additional source directories specified in the environment variable <code>TLA_PATH</code>. <code>TLA_PATH</code> should be a
+list of paths to directories separated by <code>:</code>.</li>
 </ul>
 <p>(Directories in the <code>TLA_PATH</code> are provided to SANY via the <code>TLA-Library</code> Java system variable.)</p>
 <p>So the module lookup order in Apalache is as follows:</p>
@@ -500,40 +508,34 @@ included in the Java classpath.</p>
 <li>The Java package <code>tla2sany.StandardModules</code>.</li>
 </ol>
 <p><strong>Note:</strong> To let TLA+ Toolbox and TLC know about the Apalache modules, include
-<code>$APALACHE_HOME/src/tla</code> in the lookup directories, as explained by Markus
-Kuppe for the <a href="https://github.com/tlaplus/CommunityModules">TLA+ Community
-Modules</a>.</p>
+<code>$APALACHE_HOME/src/tla</code> in the lookup directories, as explained by Markus Kuppe for
+the <a href="https://github.com/tlaplus/CommunityModules">TLA+ Community Modules</a>.</p>
 <p><a name="detailed"></a></p>
 <h2><a class="header" href="#detailed-output" id="detailed-output">Detailed output</a></h2>
-<p>The tool will display only important messages on stdout, but a detailed log can
-be found in <code>detailed.log</code>.</p>
-<p>Additionally, each pass of the model checker produces an intermediate TLA+ file in
-the run-specific directory <code>x/hh.mm-DD.MM.YYYY-&lt;id&gt;</code>:</p>
+<p>The tool will display only important messages on stdout, but a detailed log can be found in <code>detailed.log</code>.</p>
+<p>Additionally, each pass of the model checker produces an intermediate TLA+ file in the run-specific
+directory <code>x/hh.mm-DD.MM.YYYY-&lt;id&gt;</code>:</p>
 <ul>
-<li>File <code>out-parser.tla</code> is produced as a result of parsing and importing
-into the intermediate representation, Apalache TLA IR.</li>
-<li>File <code>out-parser.json</code> is produced as a result of converting the
-Apalache TLA IR representation of the input into JSON format.</li>
-<li>File <code>out-config.tla</code> is produced as a result of substituting CONSTANTS,
-as described in <a href="apalache/./parameters.html">Setting up specification parameters</a>.</li>
-<li>File <code>out-inline.tla</code> is produced as a result of inlining operator
-definitions and <code>LET-IN</code> definitions.</li>
-<li>File <code>out-priming.tla</code> is produced as a result of replacing constants and
-variables in <code>ConstInit</code> and <code>Init</code> with their primed versions.</li>
-<li>File <code>out-vcgen.tla</code> is produced as a result of extracting verification
-conditions, e.g., invariants to check.</li>
-<li>File <code>out-prepro.tla</code> is produced as a result of running all preprocessing
-steps.</li>
-<li>File <code>out-transition.tla</code> is produced as a result of finding assignments
-and symbolic transitions.</li>
+<li>File <code>out-parser.tla</code> is produced as a result of parsing and importing into the intermediate representation, Apalache
+TLA IR.</li>
+<li>File <code>out-parser.json</code> is produced as a result of converting the Apalache TLA IR representation of the input into JSON
+format.</li>
+<li>File <code>out-config.tla</code> is produced as a result of substituting CONSTANTS, as described
+in <a href="apalache/./parameters.html">Setting up specification parameters</a>.</li>
+<li>File <code>out-inline.tla</code> is produced as a result of inlining operator definitions and <code>LET-IN</code> definitions.</li>
+<li>File <code>out-priming.tla</code> is produced as a result of replacing constants and variables in <code>ConstInit</code> and <code>Init</code> with
+their primed versions.</li>
+<li>File <code>out-vcgen.tla</code> is produced as a result of extracting verification conditions, e.g., invariants to check.</li>
+<li>File <code>out-prepro.tla</code> is produced as a result of running all preprocessing steps.</li>
+<li>File <code>out-transition.tla</code> is produced as a result of finding assignments and symbolic transitions.</li>
 <li>File <code>out-opt.tla</code> is produced as a result of expression optimizations.</li>
-<li>File <code>out-analysis.tla</code> is produced as a result of analysis, e.g.,
-marking Skolemizable expressions and expressions to be expanded.</li>
+<li>File <code>out-analysis.tla</code> is produced as a result of analysis, e.g., marking Skolemizable expressions and expressions to
+be expanded.</li>
 </ul>
 <p><a name="parsing"></a></p>
 <h2><a class="header" href="#parsing-and-pretty-printing" id="parsing-and-pretty-printing">Parsing and pretty-printing</a></h2>
-<p>If you'd like to check that your TLA+ specification is syntactically correct,
-without running the model checker, you can run the following command:</p>
+<p>If you'd like to check that your TLA+ specification is syntactically correct, without running the model checker, you can
+run the following command:</p>
 <pre><code class="language-bash">$ apalache parse &lt;myspec&gt;.tla
 </code></pre>
 <p>In this case, Apalache performs the following steps:</p>
@@ -542,7 +544,9 @@ without running the model checker, you can run the following command:</p>
 <p>It parses the specification with <a href="https://lamport.azurewebsites.net/tla/tools.html">SANY</a>.</p>
 </li>
 <li>
-<p>It translates SANY semantic nodes into <a href="https://github.com/informalsystems/apalache/blob/master/tlair/src/main/scala/at/forsyte/apalache/tla/lir/package.scala">Apalache IR</a>.</p>
+<p>It translates SANY semantic nodes
+into <a href="https://github.com/informalsystems/apalache/blob/master/tlair/src/main/scala/at/forsyte/apalache/tla/lir/package.scala">Apalache IR</a>
+.</p>
 </li>
 <li>
 <p>It pretty-prints the IR into <code>out-parser.tla</code>, see <a href="apalache/running.html#detailed">Detailed output</a>.</p>
@@ -1860,25 +1864,49 @@ one can also rewrite the (presumably impossible) default case using the <code>CH
 Addison-Wesley Professional, 2004. <a name="spec2004"></a></li>
 </ul>
 <h1><a class="header" href="#parameters-for-fine-tuning" id="parameters-for-fine-tuning">Parameters for fine tuning</a></h1>
-<p>The parameters for fine tuning can be passed to the checker in a properties file.
-Its name is given with the command-line option <code>--tuning=my.properties.</code> This file
-supports variable substitution, e.g., <code>${x}</code> is replaced with the value of <code>x</code>, if it was
-previously declared.</p>
+<p>The parameters for fine tuning can be passed to the checker in a properties
+file.  Its name is given with the command-line option <code>--tuning=my.properties.</code>
+This file supports variable substitution, e.g., <code>${x}</code> is replaced with the
+value of <code>x</code>, if it was previously declared.</p>
+<p>Alternatively, you can pass the tuning options right in the command-line by
+passing the option <code>--tune-here</code> that has the following format:</p>
+<pre><code>```
+--tune-here=key1=val1
+--tune-here=key1=val1:key2=val2
+...
+```
+</code></pre>
 <ol>
 <li>
-<p><strong>Randomization</strong>: <code>smt.randomSeed=&lt;int&gt;</code> passes the random seed to <code>z3</code> (via
-<code>z3</code>'s parameters <code>sat.random_seed</code> and <code>smt.random_seed</code>). </p>
+<p><strong>Randomization</strong>: <code>smt.randomSeed=&lt;int&gt;</code> passes the random seed to <code>z3</code>
+(via <code>z3</code>'s parameters <code>sat.random_seed</code> and <code>smt.random_seed</code>). </p>
 </li>
 <li>
-<p><strong>Timeouts</strong>: <code>search.transition.timeout=&lt;seconds&gt;</code> and <code>search.invariant.timeout=&lt;seconds&gt;</code> set timeouts
-in seconds for checking whether a transition is enabled and whether the invariant holds, respectively.
-When a timeout occurs, while transition is checked, the transition is considered disabled
-and the search continues. When a timeout occurs, while the invariant is checked, the invariant
-is considered satisfied. Obviously, one can miss a bug by setting small timeouts.</p>
+<p><strong>Timeouts</strong>: <code>search.smt.timeout=&lt;seconds&gt;</code> defines the timeout to the
+SMT solver in seconds. The default value is <code>0</code>, which stands for the unbounded
+timeout.  For instance, the timeout is used in the following cases: checking if
+a transition is enabled, checking an invariant, checking for deadlocks.  If the
+solver times out, it reports 'UNKNOWN', and the model checker reports a runtime
+error.</p>
 </li>
 <li>
-<p><strong>Guided search</strong>: <code>search.transitionFilter=&lt;sequence&gt;</code>. Restrict the choice of symbolic
-transitions at every step with a regular expression. For instance, <code>search.filter=0,5,2|3</code>
+<p><strong>Invariant mode</strong>: <code>search.invariant.mode=(before|after)</code> defines the
+moment when the invariant is checked. In the <code>after</code> mode, all transitions are
+first translated, one of them is picked non-deterministically and then the
+invariant is checked. Although this mode reduces the number of SMT queries, it
+usually requires more memory than the <code>before</code> mode. In the <code>before</code> mode, the
+invariant is checked for every enabled transition independently. The <code>before</code>
+mode may drastically reduce memory consumption, but it may take longer than the
+<code>after</code> mode, provided that Apalache has enough memory. The default mode is
+<code>before</code>.</p>
+</li>
+<li>
+<p><strong>Guided search</strong>: <code>search.transitionFilter=&lt;regex&gt;</code>.
+Restrict the choice of symbolic transitions at every step with a regular expression.
+The regular expression should recognize words over of the form 's-&gt;t', where <code>s</code>
+is a regular expression over step numbers and <code>t</code> is a regular expression over
+transition numbers. For instance,
+<code>search.transitionFilter=(0-&gt;0|1-&gt;5|2-&gt;2|3-&gt;3|[4-9]-&gt;.*|[1-9][0-9]+-&gt;.*)</code>
 requires to start with the 0th transition, continue with the 5th transition,
 then execute either the 2nd or the 3rd transition and after that execute
 arbitrary transitions until the <code>length.</code> Note that there is no direct correspondence
@@ -1894,22 +1922,6 @@ to the initialization with <code>Init</code>, step 1 is the first step with <cod
 This option is useful for checking consensus algorithms, where the decision
 cannot be revoked. So instead of checking the invariant after each step, we can
 do that after the algorithm has made a good number of steps. </p>
-</li>
-<li>
-<p><strong>Invariant checking by splitting</strong>: <code>search.invariant.split=(false|true)</code>. If the option
-is set to true, the invariant is checked individually for every enabled transition. Otherwise,
-the invariant is checked once after all enabled transitions have been added into the SMT context.
-By default, <code>search.invariant.split=true</code></p>
-</li>
-<li>
-<p><strong>Learning from invariants</strong>: <code>search.invariant.learnFromUnsat=(false|true)</code>. If the option
-is set to true, once the checked found that <code>~Inv</code> does not hold for some depth, it adds the
-assumption <code>Inv</code> in the SMT context. </p>
-</li>
-<li>
-<p><strong>Randomized search</strong>: <code>search.randomDfs=(false|true)</code>. When the symbolic transitions
-are enumerated in the depth-first order, that is, <code>search=dfs</code>, choose the next transition
-randomly.</p>
 </li>
 <li>
 <p><strong>Translation to SMT</strong>:</p>
