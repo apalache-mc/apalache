@@ -110,6 +110,42 @@ EXITCODE: OK
 ## running the check command
 
 
+### check UnchangedExpr471.tla reports no error: regression for issue 471
+
+```sh
+$ apalache-mc check --cinit=ConstInit --length=1 UnchangedExpr471.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
+### check ExistTuple476.tla reports no error: regression for issue 476
+
+```sh
+$ apalache-mc check --length=1 ExistTuple476.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
+### check InvSub for SafeMath reports no error: regression for issue 450
+
+```sh
+$ apalache-mc check --length=1 --inv=InvSub SafeMath.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
+### check InvAdd for SafeMath reports no error: regression for issue 450
+
+```sh
+$ apalache-mc check --length=1 --inv=InvAdd SafeMath.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
 ### check Fix365_ExistsSubset succeeds: regression for issue 365
 
 ```sh
@@ -539,6 +575,15 @@ EXITCODE: ERROR (99)
 [99]
 ```
 
+### check NonNullaryLet succeeds: regression for issue 429
+
+```sh
+$ apalache-mc check NonNullaryLet.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
 ### check Callback.tla succeeds
 
 `Callback.tla` demonstrates that one can implement non-determinism with
@@ -658,6 +703,40 @@ $ apalache-mc check --config=Config2.cfg Config.tla | sed 's/[IEW]@.*//'
   > Config2.cfg: Loading TLC configuration
 ...
   > Config2.cfg: Using SPECIFICATION Spec2
+...
+  > Set the initialization predicate to Init2
+  > Set the transition predicate to Next2
+  > Set an invariant to Inv2
+...
+The outcome is: NoError
+...
+```
+
+### configure via TLC config with SPECIFICATION and fairness
+
+```sh
+$ apalache-mc check --config=Config4.cfg Config.tla | sed 's/[IEW]@.*//'
+...
+  > Config4.cfg: Loading TLC configuration
+...
+  > Config4.cfg: Using SPECIFICATION Spec4
+...
+  > Set the initialization predicate to Init2
+  > Set the transition predicate to Next2
+  > Set an invariant to Inv2
+...
+The outcome is: NoError
+...
+```
+
+### configure via TLC config with SPECIFICATION and fairness
+
+```sh
+$ apalache-mc check --config=Config5.cfg Config.tla | sed 's/[IEW]@.*//'
+...
+  > Config5.cfg: Loading TLC configuration
+...
+  > Config5.cfg: Using SPECIFICATION Spec5
 ...
   > Set the initialization predicate to Init2
   > Set the transition predicate to Next2

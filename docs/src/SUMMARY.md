@@ -1,14 +1,14 @@
 # Summary
 
-[Overview](./README.md)
+[Overview](./index.md)
 
 # Apalache User Manual
 
-- [Introduction](./apalache/README.md)
+- [Introduction](./apalache/index.md)
 - [Getting Started](./apalache/getting-started.md)
     - [Shall I use Apalache or TLC?](./apalache/apalache-or-tlc.md)
     - [System Requirements](./apalache/system-reqs.md)
-    - [Installation](./apalache/installation/README.md)
+    - [Installation](./apalache/installation/index.md)
         - [Prebuilt Packages](./apalache/installation/jvm.md)
         - [Docker](./apalache/installation/docker.md)
         - [Source](./apalache/installation/source.md)
@@ -30,7 +30,7 @@
 
 # TLA+ Language Manual for Engineers
 
-- [Introduction](./lang/README.md)
+- [Introduction](./lang/index.md)
 - [The standard operators of TLA+](./lang/standard-operators.md)
     - [Booleans](./lang/booleans.md)
     - [Control And Nondeterminism](./lang/control-and-nondeterminism.md)
@@ -44,11 +44,18 @@
     - [Sequences](./lang/sequences.md)
     - [Bags]()
 - [User-defined operators](./lang/user-operators.md)
+    - [Top-level operator definitions](./lang/user/top-level-operators.md)
+    - [LET-IN definitions](./lang/user/let-in.md)
+    - [Higher-order operators definitions](./lang/user/higher-order-operators.md)
+    - [Anonymous operator definitions](./lang/user/lambdas.md)
+    - [Recursive operator definitions](./lang/user/recursive-operators.md)
+    - [Local operator definitions](./lang/user/local-operators.md)
+    - [Recursive functions](./lang/user/recursive-functions.md)
 - [Modules, Extends, and Instances]()
 
 # Idiomatic TLA+
 
-- [Introduction](./idiomatic/README.md)
+- [Introduction](./idiomatic/index.md)
 - [Keep state variables to the minimum](idiomatic/000keep-minimum-state-variables.md)
 - [Update state variables with assignments](idiomatic/001assignments.md)
 - [Apply primes only to state variables](idiomatic/002primes.md)

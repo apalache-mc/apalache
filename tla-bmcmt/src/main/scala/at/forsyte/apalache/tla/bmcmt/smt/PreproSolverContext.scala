@@ -43,13 +43,18 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
   private val cache: SimpleCache[(String, String), PreproCacheEntry] = new SimpleCache()
 
   /**
+    * Configuration parameters.
+    */
+  override val config: SolverConfig = context.config
+
+  /**
     * Assert that a Boolean TLA+ expression holds true.
     *
     * @param ex a simplified TLA+ expression over cells
     */
   override def assertGroundExpr(ex: TlaEx): Unit = {
     // there are plenty of top-level constraints like (= c1 c2) or tla.in(c1, c2)
-    val ppex = simplifier.simplifyDeep(preprocess(simplifier.simplifyDeep(ex)))
+    val ppex = simplifier.simplifyShallow(preprocess(simplifier.simplifyShallow(ex)))
     ppex match {
       case OperEx(TlaOper.eq, NameEx(left), NameEx(right)) =>
         // eq and not(ne), the latter is transformed by simplifier

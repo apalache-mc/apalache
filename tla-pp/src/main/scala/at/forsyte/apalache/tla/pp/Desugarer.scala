@@ -2,9 +2,10 @@ package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaFunOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.transformations.standard.FlatLanguagePred
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
+
 import javax.inject.Singleton
 
 /**
@@ -26,7 +27,7 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
     transform(expr)
   }
 
-  def transform: TlaExTransformation = tracker.track {
+  def transform: TlaExTransformation = tracker.trackEx {
       case ex @ NameEx(_) => ex
       case ex @ ValEx(_) => ex
       case ex @ NullEx => ex
@@ -45,15 +46,40 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
 
       case OperEx(TlaActionOper.unchanged, args @ _*) =>
         // flatten all tuples, e.g., convert <<x, <<y, z>> >> to [x, y, z]
-        val flatArgs = flattenTuples(tla.tuple(args.map(transform) :_*))
-        // and map every x to x' = x
+        val flatArgs = flattenTuplesInUnchanged(tla.tuple(args.map(transform) :_*))
+        // map every x to x' = x
         val eqs = flatArgs map { x => tla.eql(tla.prime(x), x) }
-        tla.and(eqs :_*)
+        // x' = x /\ y' = y /\ z' = z
+        eqs match {
+          case Seq() =>
+            // results from UNCHANGED <<>>, UNCHANGED << << >> >>, etc.
+            tla.bool(true)
+
+          case Seq(one) =>
+            one
+
+          case _ =>
+            tla.and(eqs: _*)
+        }
 
       case OperEx(TlaSetOper.filter, boundEx, setEx, predEx) =>
+        // rewrite { <<x, <<y, z>> >> \in XYZ: P(x, y, z) }
+        // to { x_y_z \in XYZ: P(x_y_z[1], x_y_z[1][1], x_y_z[1][2]) }
         OperEx(TlaSetOper.filter, collapseTuplesInFilter(transform(boundEx), transform(setEx), transform(predEx)) :_*)
 
+      case OperEx(TlaBoolOper.exists, boundEx, setEx, predEx) =>
+        // rewrite \E <<x, <<y, z>> >> \in XYZ: P(x, y, z)
+        // to \E x_y_z \in XYZ: P(x_y_z[1], x_y_z[1][1], x_y_z[1][2])
+        OperEx(TlaBoolOper.exists, collapseTuplesInFilter(transform(boundEx), transform(setEx), transform(predEx)) :_*)
+
+      case OperEx(TlaBoolOper.forall, boundEx, setEx, predEx) =>
+        // rewrite \A <<x, <<y, z>> >> \in XYZ: P(x, y, z)
+        // to \A x_y_z \in XYZ: P(x_y_z[1], x_y_z[1][1], x_y_z[1][2])
+        OperEx(TlaBoolOper.forall, collapseTuplesInFilter(transform(boundEx), transform(setEx), transform(predEx)) :_*)
+
       case OperEx(TlaSetOper.map, args @ _*) =>
+        // rewrite { <<x, <<y, z>> >> \in XYZ |-> e(x, y, z) }
+        // to { x_y_z \in XYZ |-> e(x_y_z[1], x_y_z[1][1], x_y_z[1][2])
         val trArgs = args map transform
         OperEx(TlaSetOper.map, collapseTuplesInMap(trArgs.head, trArgs.tail) :_*)
 
@@ -81,15 +107,21 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
         LetInEx( transform( body ), defs map { d => d.copy( body = transform( d.body ) ) } : _* )
   }
 
-  private def flattenTuples(ex: TlaEx): Seq[TlaEx] = ex match {
+  private def flattenTuplesInUnchanged(ex: TlaEx): Seq[TlaEx] = ex match {
     case OperEx(TlaFunOper.tuple, args @ _*) =>
-      args.map(flattenTuples).reduce(_ ++ _)
+      if (args.isEmpty) {
+        // Surprisingly, somebody has written UNCHANGED << >>, see issue #475.
+        Seq()
+      } else {
+        args.map(flattenTuplesInUnchanged).reduce(_ ++ _)
+      }
 
-    case NameEx(_) =>
-      Seq(ex)
+    case ValEx(_) =>
+      Seq()   // no point in priming literals
 
     case _ =>
-      throw new IllegalArgumentException("Expected a variable or a tuple of variables, found: " + ex)
+      // in general, UNCHANGED e becomes e' = e
+      Seq(ex)
   }
 
   private def expandExcept(topFun: TlaEx, accessors: Seq[TlaEx], newValues: Seq[TlaEx]): TlaEx = {

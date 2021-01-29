@@ -42,11 +42,14 @@ Apalache:
             - [Running the tests](#running-the-tests)
         - [Continuous Integration](#continuous-integration)
     - [Changelog](#changelog)
+        - [Structure](#structure)
+        - [Recording changes](#recording-changes)
     - [Releases](#releases)
-        - [Prepare the release](#prepare-the-release)
-        - [Cut the release](#cut-the-release)
-        - [Advance the version on unstable](#advance-the-version-on-unstable)
-        - [Announce the relesae](#announce-the-relesae)
+        - [Via GitHub](#via-github)
+        - [Manually](#manually)
+            - [Requirements](#requirements)
+            - [Prepare the release](#prepare-the-release)
+            - [Cut the release](#cut-the-release)
 
 <!-- markdown-toc end -->
 
@@ -116,19 +119,33 @@ The necessary shell environment is specified in [.envrc](./.envrc). You can:
 If you use a different development environment or editor set up, please document
 it here!
 
-### IntelliJ IDEA
+### Formatting
+
+We use [scalafmt](https://scalameta.org/scalafmt/) to standardize formatting
+across the codebase. It is integrated into our maven build configuration, and
+formatting fixes will be applied on build, or via the make target `make fmt-fix`.
+
+However, for a smoother development experience you should ensure your editor
+automatically runs formatting. The scalafmt site documents installation for all
+common editors.
+
+Our scalafmt configuration is specified in [./.scalafmt.conf](./.scalafmt.conf).
+
+### Editors
+
+#### IntelliJ IDEA
 
 Download the community edition of [IntelliJ IDEA](https://www.jetbrains.com/idea/)
 and set up a new project.
 
-### Emacs
+#### Emacs
 
 You can use the [metals][] Scala language server together with [lsp-mode][] for
 a nice IDE experience in the world's best lisp driven operating system.
 
-#### Install `metals-emacs`
+##### Install `metals-emacs`
 
-##### Arch
+###### Arch
 
 Using yay to install from AUR:
 
@@ -136,7 +153,7 @@ Using yay to install from AUR:
 yay -Syu metals
 ```
 
-#### Doom Emacs
+##### Doom Emacs
 
 [Doom Emacs][doom-emacs] streamlines configuration and installation:
 
@@ -158,7 +175,7 @@ writeup][writeup]
 [lsp-mode]: https://github.com/emacs-lsp/lsp-mode
 [writeup]: https://siawyoung.com/blog/code/2020-02-06-installing-metals-emacs-doom
 
-#### Vanilla Emacs
+##### Vanilla Emacs
 
 For installation and configuration in vanilla emacs, see
 https://scalameta.org/metals/docs/editors/emacs.html
@@ -209,49 +226,99 @@ The CI configuration is located in
 
 ## Changelog
 
-Every non-trivial PR must update the [change log](./CHANGES.md).
+### Structure
 
-Changes for a given release should be split between the four sections: Breaking
-Changes, Features, Improvements, Bug Fixes.
+[./UNRELEASED.md](./UNRELEASED.md)
+: A living record of the changes not yet released.
+
+[./RELEASE-NOTES.md](./RELEASE-NOTES.md)
+: A frozen record documenting the changes added since the last release, only
+  present in release-commits.
+
+[./CHANGES.md](./CHANGES.md)
+: The accumulated history of all the changes, across all versions.
+
+### Recording changes
+
+Every non-trivial PR must update the [unreleased changes log](./UNRELEASED.md).
+
+Changes for a given release should be split between the five sections:
+
+1. Breaking Changes
+2. Features
+3. Improvements
+4. Bug Fixes
+5. Documentation
 
 ## Releases
 
-You must have release-me installed and configured with a token. See
-https://pypi.org/project/release-me/
+### Via GitHub
 
-Assuming the version to be released is `l.m.n`, as per semantic versioning, the
-current release process is as follows:
+We have configured our GitHub CI to automate the release process. The workflows
+are configured in [./.github/workflows/prepare-release.yml][] and
+[./.github/workflows/release.yml][].
 
-### Prepare the release
+The process proceeds in two steps:
 
-- [ ] Create a new feature branch, `release-l.m.n` and check it out
-- [ ] Update [CHANGES.md](./CHANGES.md), adding the heading `## l.m.n` over the
-      unreleased changes.
-- [ ] Copy this section into a new file named `./script/release-l.m.n.txt`
-- [ ] Mark the version as RELEASE via `mvn versions:set -DnewVersion=l.m.n-RELEASE`
-- [ ] Commit the changes: `git add . && git commit -m "Prepare for release l.m.n"`
-- [ ] Open a PR merging the feature branch into `develop`. Get it merged.
-- [ ] Open a PR to merge `unstable` into `master`, titling it `Release l.m.n`
+1. CI prepares a release, and opens a PR with the version changes and release
+   notes. These are triggered every Monday by a cron job or [manually via the
+   GitHub UI][github-ui].
+   - The scheduled releases increment the patch number.
+   - Use the _Version_ input field to manually specify the version to release.
 
-### Cut the release
+   <img src="./trigger-release.png" alt="How to trigger a release" width="700px">
+2. A human reviews the PR, approves it, and **merges** (_DO NOT SQUASH OR
+   REBASE_) into the trunk, at which point CI kicks in to:
+   - tag the commit
+   - package the artifact
+   - publish it as a GitHub release
+   - announce the release in our internal `#releases` slack channel
 
-When the PR is merged into `master`:
+[./.github/workflows/prepare-release.yml]: ./.github/workflows/prepare-release.yml
+[./.github/workflows/release.yml]: ./.github/workflows/prepare-release.yml
+[github-ui]: https://github.com/informalsystems/apalache/actions?query=workflow%3A%22Prepare+Release%22
 
-- [ ] Checkout `master`
-- [ ] Sync with upstream via`git pull origin master`
-- [ ] Build the artifact with `make`
-- [ ] Post the release with `./script/release vl.m.n ./scripts/release-l.m.n.txt`
+### Manually
+
+#### Requirements
+
+- [hub](https://github.com/github/hub) installed
+  - With a `GITHUB_TOKEN` variable in your shell environment holding an access
+    token with repo permissions (you can use the same token as for
+    `release-me`).
+
+#### Prepare the release
+
+Assuming the current version recorded in the project's `pom.xml` files is
+`l.m.n-SNAPSHOT`, the manual release process is as follows:
+
+- [ ] `git checkout unstable && git pull`
+- [ ] Run `./script/release-prepare.sh` to
+  - create and checkout a branch `release/l.m.n`.
+  - prepare and add a release commit `[release] l.m.n`
+  - update the changelog
+  - bump the version number
+  - commit the changes
+  - opens a pr into `unstable` with the title `[release] l.m.n`.
+- [ ] Get the PR reviewed and merged and **DO NOT SQUASH THE CHANGES** on merge.
+
+If you need to set a specific version (e.g., to increment to a major version),
+override the `RELEASE_VERSION` when preparing the release:
+
+```sh
+RELEASE_VERSION=l.m.n ./script/release-prepare.sh
+```
+
+#### Cut the release
+
+When the PR is merged into `unstable`:
+
+- [ ] Checkout the `[release] l.m.n` commit from the latest `unstable`
+- [ ] Run `./script/release-publish.sh` to
+  - tag the release commit
+  - package the
+  - create the release on github
 - [ ] Update the download links at https://github.com/informalsystems/apalache/blob/gh-pages/_config.yml#L7
-
-### Advance the version on unstable
-
-- [ ] Checkout `unstable`
-- [ ] Run `mvn --batch-mode release:update-versions -DautoVersionSubmodules=true -DdevelopmentVersion=l.m.(n+1)-SNAPSHOT`
-- [ ] Commit the chnages `git add . && git commit -m "Bump version to l.m.(n+1)-SNAPSHOT" && git push`
-
-### Announce the relesae
-
-- [ ] Post a notification to the (internal) `#releases` slack channel.
 
 [Github Issue]: https://github.com/informalsystems/apalache/issues
 [rfc]: https://en.wikipedia.org/wiki/Request_for_Comments

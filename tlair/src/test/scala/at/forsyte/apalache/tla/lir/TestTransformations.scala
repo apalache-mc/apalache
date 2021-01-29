@@ -1,11 +1,8 @@
 package at.forsyte.apalache.tla.lir
 
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSeqOper}
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
-import at.forsyte.apalache.tla.lir.values.TlaInt
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -20,14 +17,8 @@ class TestTransformations extends FunSuite with TestingPredefs {
     case _ => 1
   }
 
-  object Trackers {
-    val NoTracker : TransformationTracker = new TransformationTracker {
-      override def track( t : TlaExTransformation ) : TlaExTransformation = t
-    }
-  }
-
   test( "Test ReplaceFixed" ) {
-    val transformation = ReplaceFixed( n_x, NameEx( "y" ), Trackers.NoTracker )
+    val transformation = ReplaceFixed( n_x, NameEx( "y" ), new IdleTracker() )
 
     val pa1 = n_x -> n_y
     val pa2 = n_z -> n_z
@@ -63,7 +54,7 @@ class TestTransformations extends FunSuite with TestingPredefs {
   }
 
   test( "Test EqualityAsContainment" ) {
-    val transformation = PrimedEqualityToMembership( Trackers.NoTracker )
+    val transformation = PrimedEqualityToMembership( new IdleTracker() )
 
     val ex1 = primeEq( n_x, n_y )
     val ex2 = or( primeEq( n_x, n_y ), ge( prime( n_x ), int( 0 ) ) )
@@ -101,7 +92,7 @@ class TestTransformations extends FunSuite with TestingPredefs {
 
     val bodies = BodyMapFactory.makeFromDecls( operDecls )
 
-    val transformation = InlinerOfUserOper( bodies, Trackers.NoTracker )
+    val transformation = InlinerOfUserOper( bodies, new IdleTracker() )
 
     val ex1 = n_B
     val ex2 = appOp( n_B )
@@ -144,7 +135,7 @@ class TestTransformations extends FunSuite with TestingPredefs {
     val vars : Set[String] = Set(
       "x", "a"
     )
-    val transformation = Prime( vars, Trackers.NoTracker )
+    val transformation = Prime( vars, new IdleTracker() )
 
     val pa1 = n_x -> prime( n_x )
     val pa2 = n_y -> n_y
@@ -163,7 +154,7 @@ class TestTransformations extends FunSuite with TestingPredefs {
   }
 
   test( "Test Flatten" ) {
-    val transformation = Flatten( Trackers.NoTracker )
+    val transformation = Flatten( new IdleTracker() )
 
     val pa1 = n_x -> n_x
     val pa2 = and( n_x, and( n_y, n_z ) ) -> and( n_x, n_y, n_z )

@@ -48,6 +48,15 @@ promote: $(TEST_MD_FILES)
 test/tla/%.md: target/test/tla/%.md.corrected
 	cp -f $< $@
 
+fmt-check:
+	git fetch origin
+	mvn --batch-mode spotless:check || \
+		( echo "TO FIX: run 'make fmt-fix' and commit the changes" ; \
+		  exit 1 )
+
+fmt-fix:
+	mvn --batch-mode spotless:apply
+
 clean:
 	mvn clean
 	rm -rf target/

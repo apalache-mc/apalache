@@ -74,8 +74,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   private def applyTuple(state: SymbState, tupleCell: ArenaCell, funEx: TlaEx, argEx: TlaEx): SymbState = {
-    val simpleArg = simplifier.simplifyDeep(argEx)
-    val index = simpleArg match {
+    val index = argEx match {
       case ValEx(TlaInt(i)) => i.toInt - 1
 
       case _ =>

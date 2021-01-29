@@ -48,7 +48,7 @@ class SubstTranslator(sourceStore: SourceStore, context: Context) extends LazyLo
         }
 
       // copy the source info
-      sourceStore.findOrLog(ex.ID).foreach { loc => sourceStore.add(newEx.ID, loc) }
+      sourceStore.findOrWarn(ex.ID).foreach { loc => sourceStore.add(newEx.ID, loc) }
       // return
       newEx
     }

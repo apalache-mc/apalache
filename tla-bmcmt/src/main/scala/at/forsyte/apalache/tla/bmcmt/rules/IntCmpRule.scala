@@ -30,11 +30,11 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   override def apply(state: SymbState): SymbState = state.ex match {
-    case OperEx(oper: TlaArithOper, left, right)
+    case OperEx(oper: TlaArithOper, _, _)
       if (oper == TlaArithOper.lt || oper == TlaArithOper.le
         || oper == TlaArithOper.gt || oper == TlaArithOper.ge)
     =>
-      rewriteGeneral(state, simplifier.simplifyDeep(state.ex))
+      rewriteGeneral(state, state.ex)
 
     case _ =>
       throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
