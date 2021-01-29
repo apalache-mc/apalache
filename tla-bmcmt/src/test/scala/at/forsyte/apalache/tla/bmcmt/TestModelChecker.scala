@@ -44,16 +44,16 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
       new CheckerInput(dummyModule, initTrans, nextTrans, None, List.empty)
     val strategy = new BfsStrategy(checkerInput, stepsBound = 0)
     val checker = new ModelChecker(
-      typeFinder,
-      hintsStore,
-      changeListener,
-      exprGradeStore,
-      sourceStore,
-      checkerInput,
-      strategy,
-      Map(),
-      debug = false,
-      profile = false
+        typeFinder,
+        hintsStore,
+        changeListener,
+        exprGradeStore,
+        sourceStore,
+        checkerInput,
+        strategy,
+        Map(),
+        debug = false,
+        profile = false
     )
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
@@ -69,16 +69,16 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 0)
     val checker = new ModelChecker(
-      typeFinder,
-      hintsStore,
-      changeListener,
-      exprGradeStore,
-      sourceStore,
-      checkerInput,
-      strategy,
-      Map(),
-      debug = false,
-      profile = false
+        typeFinder,
+        hintsStore,
+        changeListener,
+        exprGradeStore,
+        sourceStore,
+        checkerInput,
+        strategy,
+        Map(),
+        debug = false,
+        profile = false
     )
     val outcome = checker.run()
     assert(Checker.Outcome.Deadlock == outcome)
@@ -94,16 +94,16 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 0)
     val checker = new ModelChecker(
-      typeFinder,
-      hintsStore,
-      changeListener,
-      exprGradeStore,
-      sourceStore,
-      checkerInput,
-      strategy,
-      Map(),
-      debug = false,
-      profile = false
+        typeFinder,
+        hintsStore,
+        changeListener,
+        exprGradeStore,
+        sourceStore,
+        checkerInput,
+        strategy,
+        Map(),
+        debug = false,
+        profile = false
     )
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
@@ -120,16 +120,16 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 1)
     val checker = new ModelChecker(
-      typeFinder,
-      hintsStore,
-      changeListener,
-      exprGradeStore,
-      sourceStore,
-      checkerInput,
-      strategy,
-      Map(),
-      debug = false,
-      profile = false
+        typeFinder,
+        hintsStore,
+        changeListener,
+        exprGradeStore,
+        sourceStore,
+        checkerInput,
+        strategy,
+        Map(),
+        debug = false,
+        profile = false
     )
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
@@ -141,10 +141,10 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     // x < 10 /\ x' \in {x + 1}
     val nextTrans =
       List(
-        tla.and(
-          tla.lt(tla.name("x"), tla.int(10)),
-          mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
-        )
+          tla.and(
+              tla.lt(tla.name("x"), tla.int(10)),
+              mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
+          )
       )
     ///
     val dummyModule = new TlaModule("root", List())
@@ -157,16 +157,16 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 1)
     val checker = new ModelChecker(
-      typeFinder,
-      hintsStore,
-      changeListener,
-      exprGradeStore,
-      sourceStore,
-      checkerInput,
-      strategy,
-      Map(),
-      debug = false,
-      profile = false
+        typeFinder,
+        hintsStore,
+        changeListener,
+        exprGradeStore,
+        sourceStore,
+        checkerInput,
+        strategy,
+        Map(),
+        debug = false,
+        profile = false
     )
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
@@ -177,38 +177,38 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val initTrans = List(tla.and(mkAssign("y", 1), mkAssign("x", 1)))
     // y' \in {y + 1} /\ x' \in {x + 1}
     val nextTrans = List(
-      tla.and(
-        mkAssign("y", tla.plus(tla.name("y"), tla.int(1))),
-        mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
-      )
+        tla.and(
+            mkAssign("y", tla.plus(tla.name("y"), tla.int(1))),
+            mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
+        )
     )
     ///
     val dummyModule = new TlaModule("root", List())
     val inv = tla.eql(
-      tla.eql(tla.int(3), tla.name("x")),
-      tla.eql(tla.int(3), tla.name("y"))
+        tla.eql(tla.int(3), tla.name("x")),
+        tla.eql(tla.int(3), tla.name("y"))
     ) ////
 
     val checkerInput = new CheckerInput(
-      dummyModule,
-      initTrans,
-      nextTrans,
-      None,
-      List((inv, tla.not(inv)))
+        dummyModule,
+        initTrans,
+        nextTrans,
+        None,
+        List((inv, tla.not(inv)))
     )
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 2)
     val checker = new ModelChecker(
-      typeFinder,
-      hintsStore,
-      changeListener,
-      exprGradeStore,
-      sourceStore,
-      checkerInput,
-      strategy,
-      Map(),
-      debug = false,
-      profile = false
+        typeFinder,
+        hintsStore,
+        changeListener,
+        exprGradeStore,
+        sourceStore,
+        checkerInput,
+        strategy,
+        Map(),
+        debug = false,
+        profile = false
     )
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
@@ -228,25 +228,25 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val inv = tla.not(tla.eql(tla.int(4), tla.name("x")))
 
     val checkerInput = new CheckerInput(
-      dummyModule,
-      initTrans,
-      nextTrans,
-      None,
-      List((inv, tla.not(inv)))
+        dummyModule,
+        initTrans,
+        nextTrans,
+        None,
+        List((inv, tla.not(inv)))
     )
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 2)
     val checker = new ModelChecker(
-      typeFinder,
-      hintsStore,
-      changeListener,
-      exprGradeStore,
-      sourceStore,
-      checkerInput,
-      strategy,
-      Map(),
-      debug = false,
-      profile = false
+        typeFinder,
+        hintsStore,
+        changeListener,
+        exprGradeStore,
+        sourceStore,
+        checkerInput,
+        strategy,
+        Map(),
+        debug = false,
+        profile = false
     )
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
@@ -257,10 +257,10 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
     // x > 3 /\ x' \in {x + 1}
     val nextTrans = List(
-      tla.and(
-        tla.gt(tla.name("x"), tla.int(3)),
-        mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
-      )
+        tla.and(
+            tla.gt(tla.name("x"), tla.int(3)),
+            mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
+        )
     )
     val dummyModule = new TlaModule("root", List())
     val checkerInput =
@@ -268,16 +268,16 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 1)
     val checker = new ModelChecker(
-      typeFinder,
-      hintsStore,
-      changeListener,
-      exprGradeStore,
-      sourceStore,
-      checkerInput,
-      strategy,
-      Map(),
-      debug = false,
-      profile = false
+        typeFinder,
+        hintsStore,
+        changeListener,
+        exprGradeStore,
+        sourceStore,
+        checkerInput,
+        strategy,
+        Map(),
+        debug = false,
+        profile = false
     )
     val outcome = checker.run()
     assert(Checker.Outcome.Deadlock == outcome)
@@ -294,16 +294,16 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 10)
     val checker = new ModelChecker(
-      typeFinder,
-      hintsStore,
-      changeListener,
-      exprGradeStore,
-      sourceStore,
-      checkerInput,
-      strategy,
-      Map(),
-      debug = false,
-      profile = false
+        typeFinder,
+        hintsStore,
+        changeListener,
+        exprGradeStore,
+        sourceStore,
+        checkerInput,
+        strategy,
+        Map(),
+        debug = false,
+        profile = false
     )
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
@@ -314,10 +314,10 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
     // x < 10 /\ x' \in {x + 1}
     val nextTrans = List(
-      tla.and(
-        tla.lt(tla.name("x"), tla.int(10)),
-        mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
-      )
+        tla.and(
+            tla.lt(tla.name("x"), tla.int(10)),
+            mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
+        )
     )
     val dummyModule = new TlaModule("root", List())
     val checkerInput =
@@ -325,16 +325,16 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 10)
     val checker = new ModelChecker(
-      typeFinder,
-      hintsStore,
-      changeListener,
-      exprGradeStore,
-      sourceStore,
-      checkerInput,
-      strategy,
-      Map(),
-      debug = false,
-      profile = false
+        typeFinder,
+        hintsStore,
+        changeListener,
+        exprGradeStore,
+        sourceStore,
+        checkerInput,
+        strategy,
+        Map(),
+        debug = false,
+        profile = false
     )
     val outcome = checker.run()
     assert(Checker.Outcome.Deadlock == outcome)
@@ -349,25 +349,25 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val inv = tla.lt(tla.name("x"), tla.int(100))
     val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(
-      dummyModule,
-      initTrans,
-      nextTrans,
-      None,
-      List((inv, tla.not(inv)))
+        dummyModule,
+        initTrans,
+        nextTrans,
+        None,
+        List((inv, tla.not(inv)))
     )
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 10)
     val checker = new ModelChecker(
-      typeFinder,
-      hintsStore,
-      changeListener,
-      exprGradeStore,
-      sourceStore,
-      checkerInput,
-      strategy,
-      Map(),
-      debug = false,
-      profile = false
+        typeFinder,
+        hintsStore,
+        changeListener,
+        exprGradeStore,
+        sourceStore,
+        checkerInput,
+        strategy,
+        Map(),
+        debug = false,
+        profile = false
     )
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
@@ -382,26 +382,26 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val inv = tla.lt(tla.name("x"), tla.int(100))
     val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(
-      dummyModule,
-      initTrans,
-      nextTrans,
-      None,
-      List((inv, tla.not(inv)))
+        dummyModule,
+        initTrans,
+        nextTrans,
+        None,
+        List((inv, tla.not(inv)))
     )
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 10)
     val tuning = Map("search.invariant.learnFromUnsat" -> "true")
     val checker = new ModelChecker(
-      typeFinder,
-      hintsStore,
-      changeListener,
-      exprGradeStore,
-      sourceStore,
-      checkerInput,
-      strategy,
-      tuning,
-      debug = false,
-      profile = false
+        typeFinder,
+        hintsStore,
+        changeListener,
+        exprGradeStore,
+        sourceStore,
+        checkerInput,
+        strategy,
+        tuning,
+        debug = false,
+        profile = false
     )
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
@@ -416,26 +416,26 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val inv = tla.lt(tla.name("x"), tla.int(100))
     val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(
-      dummyModule,
-      initTrans,
-      nextTrans,
-      None,
-      List((inv, tla.not(inv)))
+        dummyModule,
+        initTrans,
+        nextTrans,
+        None,
+        List((inv, tla.not(inv)))
     )
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 10)
     val tuning = Map("search.invariant.split" -> "false")
     val checker = new ModelChecker(
-      typeFinder,
-      hintsStore,
-      changeListener,
-      exprGradeStore,
-      sourceStore,
-      checkerInput,
-      strategy,
-      tuning,
-      debug = false,
-      profile = false
+        typeFinder,
+        hintsStore,
+        changeListener,
+        exprGradeStore,
+        sourceStore,
+        checkerInput,
+        strategy,
+        tuning,
+        debug = false,
+        profile = false
     )
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
@@ -450,25 +450,25 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val inv = tla.lt(tla.name("x"), tla.int(5))
     val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(
-      dummyModule,
-      initTrans,
-      nextTrans,
-      None,
-      List((inv, tla.not(inv)))
+        dummyModule,
+        initTrans,
+        nextTrans,
+        None,
+        List((inv, tla.not(inv)))
     )
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 10)
     val checker = new ModelChecker(
-      typeFinder,
-      hintsStore,
-      changeListener,
-      exprGradeStore,
-      sourceStore,
-      checkerInput,
-      strategy,
-      Map(),
-      debug = false,
-      profile = false
+        typeFinder,
+        hintsStore,
+        changeListener,
+        exprGradeStore,
+        sourceStore,
+        checkerInput,
+        strategy,
+        Map(),
+        debug = false,
+        profile = false
     )
     val outcome = checker.run()
     assert(Checker.Outcome.Error == outcome)
@@ -485,25 +485,25 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val inv = tla.not(tla.eql(tla.name("x"), tla.int(3)))
     val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(
-      dummyModule,
-      initTrans,
-      nextTrans,
-      None,
-      List((inv, tla.not(inv)))
+        dummyModule,
+        initTrans,
+        nextTrans,
+        None,
+        List((inv, tla.not(inv)))
     )
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 3)
     val checker = new ModelChecker(
-      typeFinder,
-      hintsStore,
-      changeListener,
-      exprGradeStore,
-      sourceStore,
-      checkerInput,
-      strategy,
-      Map(),
-      debug = false,
-      profile = false
+        typeFinder,
+        hintsStore,
+        changeListener,
+        exprGradeStore,
+        sourceStore,
+        checkerInput,
+        strategy,
+        Map(),
+        debug = false,
+        profile = false
     )
     val outcome = checker.run()
     assert(Checker.Outcome.Error == outcome)
@@ -520,25 +520,25 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val inv = tla.not(tla.eql(tla.name("x"), tla.int(3)))
     val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(
-      dummyModule,
-      initTrans,
-      nextTrans,
-      None,
-      List((inv, tla.not(inv)))
+        dummyModule,
+        initTrans,
+        nextTrans,
+        None,
+        List((inv, tla.not(inv)))
     )
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 2)
     val checker = new ModelChecker(
-      typeFinder,
-      hintsStore,
-      changeListener,
-      exprGradeStore,
-      sourceStore,
-      checkerInput,
-      strategy,
-      Map(),
-      debug = false,
-      profile = false
+        typeFinder,
+        hintsStore,
+        changeListener,
+        exprGradeStore,
+        sourceStore,
+        checkerInput,
+        strategy,
+        Map(),
+        debug = false,
+        profile = false
     )
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
@@ -553,27 +553,27 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val inv = tla.lt(tla.name("x"), tla.int(5))
     val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(
-      dummyModule,
-      initTrans,
-      nextTrans,
-      None,
-      List((inv, tla.not(inv)))
+        dummyModule,
+        initTrans,
+        nextTrans,
+        None,
+        List((inv, tla.not(inv)))
     )
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 10)
     // We require the invariant to be checked only after the second step. So we will miss invariant violation.
     val tuning = Map("search.invariantFilter" -> "2")
     val checker = new ModelChecker(
-      typeFinder,
-      hintsStore,
-      changeListener,
-      exprGradeStore,
-      sourceStore,
-      checkerInput,
-      strategy,
-      tuning,
-      debug = false,
-      profile = false
+        typeFinder,
+        hintsStore,
+        changeListener,
+        exprGradeStore,
+        sourceStore,
+        checkerInput,
+        strategy,
+        tuning,
+        debug = false,
+        profile = false
     )
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
@@ -593,16 +593,16 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 3)
     val checker = new ModelChecker(
-      typeFinder,
-      hintsStore,
-      changeListener,
-      exprGradeStore,
-      sourceStore,
-      checkerInput,
-      strategy,
-      Map(),
-      debug = false,
-      profile = false
+        typeFinder,
+        hintsStore,
+        changeListener,
+        exprGradeStore,
+        sourceStore,
+        checkerInput,
+        strategy,
+        Map(),
+        debug = false,
+        profile = false
     )
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
@@ -617,16 +617,16 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
 
     // Init == x' = {2} /\ y = {10}
     val init = tla.and(
-      mkAssign("x", tla.enumSet(tla.int(2))),
-      mkAssign("y", tla.enumSet(tla.int(10)))
+        mkAssign("x", tla.enumSet(tla.int(2))),
+        mkAssign("y", tla.enumSet(tla.int(10)))
     )
 
     // as KerA+ does not have setminus, we use a filter here
     def setminus(setName: String, boundName: String, intVal: Int): TlaEx = {
       tla.filter(
-        tla.name(boundName),
-        tla.name(setName),
-        tla.not(tla.eql(tla.name(boundName), tla.int(intVal)))
+          tla.name(boundName),
+          tla.name(setName),
+          tla.not(tla.eql(tla.name(boundName), tla.int(intVal)))
       )
     }
 
@@ -634,44 +634,44 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     //         \/ x' = x \setminus {2} /\ y' = y \cup {11}
     val next1 =
       tla.and(
-        mkAssign("x", tla.cup(tla.name("x"), tla.enumSet(tla.int(2)))),
-        mkAssign("y", setminus("y", "t1", 11))
+          mkAssign("x", tla.cup(tla.name("x"), tla.enumSet(tla.int(2)))),
+          mkAssign("y", setminus("y", "t1", 11))
       )
     ///
     ///
     val next2 =
       tla.and(
-        mkAssign("x", setminus("x", "t2", 2)),
-        mkAssign("y", tla.cup(tla.name("y"), tla.enumSet(tla.int(11))))
+          mkAssign("x", setminus("x", "t2", 2)),
+          mkAssign("y", tla.cup(tla.name("y"), tla.enumSet(tla.int(11))))
       ) ///
 
     // Inv ==  11 \in y <=> 2 \notin x
     val inv = tla.eql(
-      tla.in(tla.int(11), tla.name("y")),
-      tla.not(tla.in(tla.int(2), tla.name("x")))
+        tla.in(tla.int(11), tla.name("y")),
+        tla.not(tla.in(tla.int(2), tla.name("x")))
     ) ////
 
     val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(
-      dummyModule,
-      List(init),
-      List(next1, next2),
-      None,
-      List((inv, tla.not(inv)))
+        dummyModule,
+        List(init),
+        List(next1, next2),
+        None,
+        List((inv, tla.not(inv)))
     )
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 2)
     val checker = new ModelChecker(
-      typeFinder,
-      hintsStore,
-      changeListener,
-      exprGradeStore,
-      sourceStore,
-      checkerInput,
-      strategy,
-      Map(),
-      debug = false,
-      profile = false
+        typeFinder,
+        hintsStore,
+        changeListener,
+        exprGradeStore,
+        sourceStore,
+        checkerInput,
+        strategy,
+        Map(),
+        debug = false,
+        profile = false
     )
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
@@ -688,25 +688,25 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val notInv = tla.gt(tla.prime(tla.name("x")), tla.int(10)) // ~(x <= 10)
     val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(
-      dummyModule,
-      initTrans,
-      nextTrans,
-      None,
-      List((tla.not(notInv), notInv))
+        dummyModule,
+        initTrans,
+        nextTrans,
+        None,
+        List((tla.not(notInv), notInv))
     )
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 10)
     val checker = new ModelChecker(
-      typeFinder,
-      hintsStore,
-      changeListener,
-      exprGradeStore,
-      sourceStore,
-      checkerInput,
-      strategy,
-      Map(),
-      debug = false,
-      profile = false
+        typeFinder,
+        hintsStore,
+        changeListener,
+        exprGradeStore,
+        sourceStore,
+        checkerInput,
+        strategy,
+        Map(),
+        debug = false,
+        profile = false
     )
     val outcome = checker.run()
     assert(Checker.Outcome.Error == outcome)
@@ -723,37 +723,37 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     // a constant initializer: \E t \in { 20, 10 }: N' \in {t}
     val cInit =
       OperEx(
-        BmcOper.skolem,
-        tla.exists(
-          tla.name("t"),
-          tla.enumSet(tla.int(20), tla.int(10)),
-          tla.in(tla.prime(tla.name("N")), tla.enumSet(tla.name("t")))
-        )
+          BmcOper.skolem,
+          tla.exists(
+              tla.name("t"),
+              tla.enumSet(tla.int(20), tla.int(10)),
+              tla.in(tla.prime(tla.name("N")), tla.enumSet(tla.name("t")))
+          )
       ) ////
 
     val notInv = tla.gt(tla.prime(tla.name("x")), tla.name("N")) // ~(x <= N)
     val dummyModule =
       new TlaModule("root", List(TlaConstDecl("N"), TlaVarDecl("x")))
     val checkerInput = new CheckerInput(
-      dummyModule,
-      initTrans,
-      nextTrans,
-      Some(cInit),
-      List((tla.not(notInv), notInv))
+        dummyModule,
+        initTrans,
+        nextTrans,
+        Some(cInit),
+        List((tla.not(notInv), notInv))
     )
     // initialize the model checker
     val strategy = new BfsStrategy(checkerInput, stepsBound = 10)
     val checker = new ModelChecker(
-      typeFinder,
-      hintsStore,
-      changeListener,
-      exprGradeStore,
-      sourceStore,
-      checkerInput,
-      strategy,
-      Map(),
-      debug = false,
-      profile = false
+        typeFinder,
+        hintsStore,
+        changeListener,
+        exprGradeStore,
+        sourceStore,
+        checkerInput,
+        strategy,
+        Map(),
+        debug = false,
+        profile = false
     )
     val outcome = checker.run()
     assert(Checker.Outcome.Error == outcome)
@@ -769,27 +769,27 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val notInv = tla.gt(tla.name("x"), tla.int(11)) // ~(x <= 11)
     val dummyModule = new TlaModule("root", List())
     val checkerInput = new CheckerInput(
-      dummyModule,
-      initTrans,
-      nextTrans,
-      None,
-      List((tla.not(notInv), notInv))
+        dummyModule,
+        initTrans,
+        nextTrans,
+        None,
+        List((tla.not(notInv), notInv))
     )
     // initialize the model checker
     val filter = "0,0,0,0,0,0,0,0,0,0,0" // execute initTrans once and onlytrans1 10 times
     val tuning = Map("search.transitionFilter" -> filter)
     val strategy = new BfsStrategy(checkerInput, stepsBound = 10)
     val checker = new ModelChecker(
-      typeFinder,
-      hintsStore,
-      changeListener,
-      exprGradeStore,
-      sourceStore,
-      checkerInput,
-      strategy,
-      tuning,
-      debug = false,
-      profile = false
+        typeFinder,
+        hintsStore,
+        changeListener,
+        exprGradeStore,
+        sourceStore,
+        checkerInput,
+        strategy,
+        tuning,
+        debug = false,
+        profile = false
     )
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)

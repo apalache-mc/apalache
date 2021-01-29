@@ -17,11 +17,11 @@ import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, TypeLiteral}
 
 /**
-  * A configuration that binds all the passes from the parser to the checker.
-  * If you are not sure how the binding works, check the tutorial on Google Guice.
-  *
-  * @author Igor Konnov
-  */
+ * A configuration that binds all the passes from the parser to the checker.
+ * If you are not sure how the binding works, check the tutorial on Google Guice.
+ *
+ * @author Igor Konnov
+ */
 class CheckerModule extends AbstractModule {
   override def configure(): Unit = {
     // the options singleton
@@ -41,7 +41,7 @@ class CheckerModule extends AbstractModule {
     bind(classOf[ExprGradeStore])
       .to(classOf[ExprGradeStoreImpl])
     bind(new TypeLiteral[TypeFinder[CellT]] {})
-      .to(classOf[TrivialTypeFinder])   // using a trivial type finder
+      .to(classOf[TrivialTypeFinder]) // using a trivial type finder
 
     // transformation tracking
     // TODO: the binding of TransformationListener should disappear in the future
@@ -49,7 +49,7 @@ class CheckerModule extends AbstractModule {
       .to(classOf[ChangeListener])
     // check TransformationTrackerProvider to find out which listeners the tracker is using
     bind(classOf[TransformationTracker])
-        .toProvider(classOf[TransformationTrackerProvider])
+      .toProvider(classOf[TransformationTrackerProvider])
 
     // SanyParserPassImpl is the default implementation of SanyParserPass
     bind(classOf[SanyParserPass])

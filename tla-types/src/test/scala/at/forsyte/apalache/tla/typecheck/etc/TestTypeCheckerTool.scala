@@ -2,11 +2,7 @@ package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.typecheck.{
-  TlaType1,
-  TypeCheckerListener,
-  TypeCheckerTool
-}
+import at.forsyte.apalache.tla.typecheck.{TlaType1, TypeCheckerListener, TypeCheckerTool}
 import at.forsyte.apalache.io.annotations.store._
 import org.easymock.EasyMock
 import org.junit.runner.RunWith
@@ -17,17 +13,14 @@ import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import scala.io.Source
 
 /**
-  * Unit tests for the type checker as a whole.
-  *
-  * Remember to pass the JVM option: -DTLA-Library=$APALACHE_HOME/src/tla/
-  *
-  * @author Igor Konnov
-  */
+ * Unit tests for the type checker as a whole.
+ *
+ * Remember to pass the JVM option: -DTLA-Library=$APALACHE_HOME/src/tla/
+ *
+ * @author Igor Konnov
+ */
 @RunWith(classOf[JUnitRunner])
-class TestTypeCheckerTool
-    extends FunSuite
-    with BeforeAndAfterEach
-    with EasyMockSugar {
+class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMockSugar {
   var gen: ToEtcExpr = _
   private var sourceStore: SourceStore = _
   private var annotationStore: AnnotationStore = _

@@ -91,8 +91,8 @@ class TestConstAndDefRewriter extends FunSuite with BeforeAndAfterEach {
     val rewritten = new ConstAndDefRewriter(new IdleTracker())(root)
     assert(rewritten.constDeclarations.isEmpty)
     assert(rewritten.operDeclarations.size == 1)
-    val expected = TlaOperDecl("BoolMin", List(SimpleFormalParam("S")),
-      tla.choose(tla.name("x"), tla.name("S"), tla.bool(true)))
+    val expected =
+      TlaOperDecl("BoolMin", List(SimpleFormalParam("S")), tla.choose(tla.name("x"), tla.name("S"), tla.bool(true)))
     assert(expected == rewritten.operDeclarations.head)
   }
 

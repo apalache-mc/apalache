@@ -12,10 +12,10 @@ import org.scalatest.{BeforeAndAfter, FunSuite}
 import scala.io.Source
 
 /**
-  * Tests on parsing annotations with the SANY importer.
-  *
-  * @author Igor Konnov
-  */
+ * Tests on parsing annotations with the SANY importer.
+ *
+ * @author Igor Konnov
+ */
 @RunWith(classOf[JUnitRunner])
 class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
   private var sourceStore: SourceStore = _
@@ -54,8 +54,8 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
       case Some(d @ TlaConstDecl(_)) =>
         val annotations = annotationStore(d.ID)
         val expected = Annotation("awesome") :: Annotation(
-          "type",
-          mkStr("  Set(Int)  ")
+            "type",
+            mkStr("  Set(Int)  ")
         ) :: Nil
         assert(expected == annotations)
 
@@ -80,8 +80,8 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
       case Some(d @ TlaVarDecl(_)) =>
         val annotations = annotationStore(d.ID)
         val expected = Annotation("amazing") :: Annotation(
-          "type",
-          mkStr(" Set(Int) ")
+            "type",
+            mkStr(" Set(Int) ")
         ) :: Nil
         assert(expected == annotations)
 
@@ -108,8 +108,8 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
       case Some(d @ TlaOperDecl(_, _, _)) =>
         val annotations = annotationStore(d.ID)
         val expected = Annotation("pure") :: Annotation(
-          "type",
-          mkStr("Int => Int")
+            "type",
+            mkStr("Int => Int")
         ) :: Nil
         assert(expected == annotations)
 
@@ -142,8 +142,8 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
       case Some(d @ TlaOperDecl(_, _, LetInEx(_, localDef))) =>
         val annotations = annotationStore(localDef.ID)
         val expected = Annotation("pure") :: Annotation(
-          "type",
-          mkStr("Int => Int")
+            "type",
+            mkStr("Int => Int")
         ) :: Nil
         assert(expected == annotations)
 
@@ -177,8 +177,8 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
       case Some(d @ TlaOperDecl(_, _, LetInEx(_, incDecl))) =>
         val annotations = annotationStore(incDecl.ID)
         val expected = Annotation("pure") :: Annotation(
-          "type",
-          mkStr("Int => Int")
+            "type",
+            mkStr("Int => Int")
         ) :: Nil
         assert(expected == annotations)
 
@@ -210,8 +210,8 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
       case Some(d @ TlaOperDecl(_, _, _)) =>
         val annotations = annotationStore(d.ID)
         val expected = Annotation("tailrec") :: Annotation(
-          "type",
-          mkStr("Int => Int")
+            "type",
+            mkStr("Int => Int")
         ) :: Nil
         assert(expected == annotations)
 

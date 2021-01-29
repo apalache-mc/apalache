@@ -6,17 +6,15 @@ import at.forsyte.apalache.tla.lir.TlaAssumeDecl
 import tla2sany.semantic.AssumeNode
 
 class AssumeTranslator(
-    sourceStore: SourceStore,
-    annotationStore: AnnotationStore,
-    context: Context
+    sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context
 ) {
   def translate(node: AssumeNode): TlaAssumeDecl = {
     val body =
       ExprOrOpArgNodeTranslator(
-        sourceStore,
-        annotationStore,
-        context,
-        OutsideRecursion()
+          sourceStore,
+          annotationStore,
+          context,
+          OutsideRecursion()
       ).translate(node.getAssume)
     TlaAssumeDecl(body)
   }
@@ -24,9 +22,7 @@ class AssumeTranslator(
 
 object AssumeTranslator {
   def apply(
-      ls: SourceStore,
-      as: AnnotationStore,
-      ctx: Context
+      ls: SourceStore, as: AnnotationStore, ctx: Context
   ): AssumeTranslator = {
     new AssumeTranslator(ls, as, ctx)
   }

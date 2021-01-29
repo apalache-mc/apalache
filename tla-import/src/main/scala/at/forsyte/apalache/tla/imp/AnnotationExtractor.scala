@@ -8,10 +8,10 @@ import at.forsyte.apalache.tla.lir.UID
 import tla2sany.semantic.OpDefOrDeclNode
 
 /**
-  * This class extracts annotations from the strings that are attached to a SemanticNode.
-  *
-  * @author Igor Konnov
-  */
+ * This class extracts annotations from the strings that are attached to a SemanticNode.
+ *
+ * @author Igor Konnov
+ */
 class AnnotationExtractor(annotationStore: AnnotationStore) {
   def parseAndSave(uid: UID, node: OpDefOrDeclNode): Unit = {
     var annotations = List[Annotation]()
@@ -31,7 +31,7 @@ class AnnotationExtractor(annotationStore: AnnotationStore) {
           case Failure(message) =>
             val loc = SourceLocation(node.getLocation)
             throw new SanyImporterException(
-              "%s: Annotation error: %s".format(loc, message)
+                "%s: Annotation error: %s".format(loc, message)
             )
         }
       }

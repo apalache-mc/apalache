@@ -9,23 +9,21 @@ import tla2sany.semantic.{InstanceNode, ModuleNode, OpDefNode}
 import scala.collection.JavaConverters._
 
 /**
-  * Translate a tla2tools ModuleNode to a TlaModule.
-  *
-  * @author konnov
-  */
+ * Translate a tla2tools ModuleNode to a TlaModule.
+ *
+ * @author konnov
+ */
 class ModuleTranslator(
-    sourceStore: SourceStore,
-    annotationStore: AnnotationStore
+    sourceStore: SourceStore, annotationStore: AnnotationStore
 ) extends LazyLogging {
   private val annotationExtractor = new AnnotationExtractor(annotationStore)
 
   def translate(node: ModuleNode): TlaModule = {
-    var context = node.getConstantDecls.toList.foldLeft(Context()) {
-      (ctx, node) =>
-        val decl = TlaConstDecl(node.getName.toString)
-        sourceStore.add(decl.ID, SourceLocation(node.getLocation))
-        annotationExtractor.parseAndSave(decl.ID, node)
-        ctx.push(DeclUnit(decl))
+    var context = node.getConstantDecls.toList.foldLeft(Context()) { (ctx, node) =>
+      val decl = TlaConstDecl(node.getName.toString)
+      sourceStore.add(decl.ID, SourceLocation(node.getLocation))
+      annotationExtractor.parseAndSave(decl.ID, node)
+      ctx.push(DeclUnit(decl))
     }
     context = node.getVariableDecls.toList.foldLeft(context) { (ctx, node) =>
       val decl = TlaVarDecl(node.getName.toString)
@@ -76,7 +74,7 @@ class ModuleTranslator(
             case None =>
               // to guarantee that we do not forget the source location, fail fast
               throw new SanyImporterException(
-                "No source location for: " + updatedDecl.name
+                  "No source location for: " + updatedDecl.name
               )
             case Some(loc) =>
               sourceStore.add(decl.ID, loc)
@@ -107,30 +105,22 @@ class ModuleTranslator(
   }
 
   private def addAliasesOfBuiltins(
-      ctx: Context,
-      instancePrefix: String,
-      node: ModuleNode
+      ctx: Context, instancePrefix: String, node: ModuleNode
   ): Context = {
     // declare a library definition as an operator alias
     def subDef(
-        ctx: Context,
-        modName: String,
-        alias: String,
-        opDefNode: OpDefNode
+        ctx: Context, modName: String, alias: String, opDefNode: OpDefNode
     ): Context = {
       val opName = opDefNode.getName.toString.intern()
       var newCtx = ctx
-      StandardLibrary.libraryOperators.get((modName, opName)).collect {
-        case oper =>
-          newCtx = newCtx.push(OperAliasUnit(alias, oper))
+      StandardLibrary.libraryOperators.get((modName, opName)).collect { case oper =>
+        newCtx = newCtx.push(OperAliasUnit(alias, oper))
       }
-      StandardLibrary.globalOperators.get(opName).collect {
-        case oper =>
-          newCtx = newCtx.push(OperAliasUnit(alias, oper))
+      StandardLibrary.globalOperators.get(opName).collect { case oper =>
+        newCtx = newCtx.push(OperAliasUnit(alias, oper))
       }
-      StandardLibrary.libraryValues.get((modName, opName)).collect {
-        case value =>
-          newCtx = newCtx.push(ValueAliasUnit(alias, value))
+      StandardLibrary.libraryValues.get((modName, opName)).collect { case value =>
+        newCtx = newCtx.push(ValueAliasUnit(alias, value))
       }
       newCtx
     }
@@ -169,15 +159,14 @@ class ModuleTranslator(
   }
 
   /**
-    * This is a temporary bugfix for the issue 130: https://github.com/informalsystems/apalache/issues/130
-    * TODO(igor) Once it is fixed in SANY, remove this method. This method does not detect mutually recursive operators,
-    * but I have never seen mutual recursion in TLA+.
-    *
-    * @param declared the set of names that have been introduced at higher levels.
-    */
+   * This is a temporary bugfix for the issue 130: https://github.com/informalsystems/apalache/issues/130
+   * TODO(igor) Once it is fixed in SANY, remove this method. This method does not detect mutually recursive operators,
+   * but I have never seen mutual recursion in TLA+.
+   *
+   * @param declared the set of names that have been introduced at higher levels.
+   */
   private def workaroundMarkRecursive(
-      declared: Set[TlaOperDecl],
-      ex: TlaEx
+      declared: Set[TlaOperDecl], ex: TlaEx
   ): Unit = {
     ex match {
       case NameEx(name) =>
@@ -186,7 +175,7 @@ class ModuleTranslator(
           d =>
             if (!d.isRecursive) {
               logger.warn(
-                s"WORKAROUND #130: labelling operator $name as recursive, though SANY did not tell us so."
+                  s"WORKAROUND #130: labelling operator $name as recursive, though SANY did not tell us so."
               )
               d.isRecursive = true
             }
@@ -213,8 +202,7 @@ class ModuleTranslator(
 object ModuleTranslator {
 
   def apply(
-      sourceStore: SourceStore,
-      annotationStore: AnnotationStore
+      sourceStore: SourceStore, annotationStore: AnnotationStore
   ): ModuleTranslator = {
     new ModuleTranslator(sourceStore, annotationStore)
   }

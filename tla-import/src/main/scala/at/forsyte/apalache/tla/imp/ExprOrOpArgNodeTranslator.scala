@@ -11,15 +11,12 @@ import tla2sany.semantic._
 import scala.collection.JavaConverters._
 
 /**
-  * Translate a TLA+ expression.
-  *
-  * @author konnov
-  */
+ * Translate a TLA+ expression.
+ *
+ * @author konnov
+ */
 class ExprOrOpArgNodeTranslator(
-    sourceStore: SourceStore,
-    annotationStore: AnnotationStore,
-    context: Context,
-    recStatus: RecursionStatus
+    sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context, recStatus: RecursionStatus
 ) extends LazyLogging {
   def translate(node: ExprOrOpArgNode): TlaEx = {
     val result =
@@ -68,7 +65,7 @@ class ExprOrOpArgNodeTranslator(
 
         case n =>
           throw new SanyImporterException(
-            "Unexpected subclass of tla2sany.ExprOrOpArgNode: " + n.getClass
+              "Unexpected subclass of tla2sany.ExprOrOpArgNode: " + n.getClass
           )
       }
 
@@ -120,10 +117,10 @@ class ExprOrOpArgNodeTranslator(
     }
 
     val body = ExprOrOpArgNodeTranslator(
-      sourceStore,
-      annotationStore,
-      letInContext,
-      recStatus
+        sourceStore,
+        annotationStore,
+        letInContext,
+        recStatus
     ).translate(letIn.getBody)
     LetInEx(body, letInDeclarations: _*)
   }
@@ -151,7 +148,7 @@ class ExprOrOpArgNodeTranslator(
 
       case e =>
         throw new SanyImporterException(
-          "Expected an operator definition as an argument, found: " + e
+            "Expected an operator definition as an argument, found: " + e
         )
     }
   }
@@ -180,7 +177,7 @@ class ExprOrOpArgNodeTranslator(
 
       case e @ _ =>
         throw new SanyImporterException(
-          "Unexpected index expression in EXCEPT: " + e
+            "Unexpected index expression in EXCEPT: " + e
         )
     }
   }
@@ -195,16 +192,13 @@ class ExprOrOpArgNodeTranslator(
 
 object ExprOrOpArgNodeTranslator {
   def apply(
-      sourceStore: SourceStore,
-      annotationStore: AnnotationStore,
-      context: Context,
-      recStatus: RecursionStatus
+      sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context, recStatus: RecursionStatus
   ): ExprOrOpArgNodeTranslator = {
     new ExprOrOpArgNodeTranslator(
-      sourceStore,
-      annotationStore,
-      context,
-      recStatus
+        sourceStore,
+        annotationStore,
+        context,
+        recStatus
     )
   }
 }

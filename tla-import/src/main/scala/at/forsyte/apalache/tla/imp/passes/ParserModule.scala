@@ -1,12 +1,7 @@
 package at.forsyte.apalache.tla.imp.passes
 
 import at.forsyte.apalache.infra.ExceptionAdapter
-import at.forsyte.apalache.infra.passes.{
-  Pass,
-  PassOptions,
-  TerminalPassWithTlaModule,
-  WriteablePassOptions
-}
+import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TerminalPassWithTlaModule, WriteablePassOptions}
 import at.forsyte.apalache.io.annotations.AnnotationStoreProvider
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.ParserExceptionAdapter
@@ -14,10 +9,10 @@ import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, TypeLiteral}
 
 /**
-  * A module that consists only of the parsing pass.
-  *
-  * @author Igor Konnov
-  */
+ * A module that consists only of the parsing pass.
+ *
+ * @author Igor Konnov
+ */
 class ParserModule extends AbstractModule {
   override def configure(): Unit = {
     // the options singleton

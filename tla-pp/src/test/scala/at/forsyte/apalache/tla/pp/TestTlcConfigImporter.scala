@@ -41,14 +41,14 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
 
   test("INIT-NEXT") {
     configureAndCompare(
-      """---- MODULE test ----
+        """---- MODULE test ----
         |================================
       """.stripMargin,
-      """
+        """
         |INIT Init
         |NEXT Next
       """.stripMargin,
-      """----- MODULE test -----
+        """----- MODULE test -----
         |
         |INIT == Init
         |
@@ -60,13 +60,13 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
 
   test("SPECIFICATION") {
     configureAndCompare(
-      """---- MODULE test ----
+        """---- MODULE test ----
         |================================
       """.stripMargin,
-      """
+        """
         |SPECIFICATION Spec
       """.stripMargin,
-      """----- MODULE test -----
+        """----- MODULE test -----
         |
         |SPECIFICATION == Spec
         |===============
@@ -76,17 +76,17 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
 
   test("CONSTANT assignments") {
     configureAndCompare(
-      """---- MODULE test ----
+        """---- MODULE test ----
         |================================
       """.stripMargin,
-      """
+        """
         |CONSTANT
         |N = M
         |K = L
         |INIT Init
         |NEXT Next
       """.stripMargin,
-      """----- MODULE test -----
+        """----- MODULE test -----
         |
         |OVERRIDE_N == "ModelValue_M"
         |
@@ -102,10 +102,10 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
 
   test("CONSTANT assignments and SYMMETRY") {
     configureAndCompare(
-      """---- MODULE test ----
+        """---- MODULE test ----
         |================================
       """.stripMargin,
-      """
+        """
         |CONSTANT
         |N = M
         |\* symmetry definitions are skipped by our parser
@@ -114,7 +114,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |INIT Init
         |NEXT Next
       """.stripMargin,
-      """----- MODULE test -----
+        """----- MODULE test -----
         |
         |OVERRIDE_N == "ModelValue_M"
         |
@@ -130,17 +130,17 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
 
   test("CONSTANT replacements") {
     configureAndCompare(
-      """---- MODULE test ----
+        """---- MODULE test ----
         |================================
       """.stripMargin,
-      """
+        """
         |CONSTANT
         |A <- B
         |C <- D
         |INIT Init
         |NEXT Next
       """.stripMargin,
-      """----- MODULE test -----
+        """----- MODULE test -----
         |
         |OVERRIDE_A == B
         |
@@ -156,10 +156,10 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
 
   test("CONSTANT assignments and replacements") {
     configureAndCompare(
-      """---- MODULE test ----
+        """---- MODULE test ----
         |================================
       """.stripMargin,
-      """
+        """
         |CONSTANTS
         |N = M
         |A <- B
@@ -168,7 +168,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |INIT Init
         |NEXT Next
       """.stripMargin,
-      """----- MODULE test -----
+        """----- MODULE test -----
         |
         |OVERRIDE_N == "ModelValue_M"
         |
@@ -188,16 +188,16 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
 
   test("INIT-NEXT and INVARIANTS") {
     configureAndCompare(
-      """---- MODULE test ----
+        """---- MODULE test ----
         |================================
       """.stripMargin,
-      """
+        """
         |INIT Init
         |NEXT Next
         |INVARIANT Inv1
         |INVARIANTS Inv2
       """.stripMargin,
-      """----- MODULE test -----
+        """----- MODULE test -----
         |
         |INVARIANT_$0 == Inv1
         |
@@ -213,16 +213,16 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
 
   test("INIT-NEXT and PROPERTIES") {
     configureAndCompare(
-      """---- MODULE test ----
+        """---- MODULE test ----
         |================================
       """.stripMargin,
-      """
+        """
         |INIT Init
         |NEXT Next
         |PROPERTY Prop1
         |PROPERTIES Prop2
       """.stripMargin,
-      """----- MODULE test -----
+        """----- MODULE test -----
         |
         |PROPERTY_$0 == Prop1
         |
@@ -238,16 +238,16 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
 
   test("INIT-NEXT and CONSTRAINTS") {
     configureAndCompare(
-      """---- MODULE test ----
+        """---- MODULE test ----
         |================================
       """.stripMargin,
-      """
+        """
         |CONSTRAINTS Cons1
         |Cons2
         |INIT Init
         |NEXT Next
       """.stripMargin,
-      """----- MODULE test -----
+        """----- MODULE test -----
         |
         |CONSTRAINT_$0 == Cons1
         |
@@ -263,16 +263,16 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
 
   test("INIT-NEXT and ACTION_CONSTRAINTS") {
     configureAndCompare(
-      """---- MODULE test ----
+        """---- MODULE test ----
         |================================
       """.stripMargin,
-      """
+        """
         |ACTION_CONSTRAINTS Cons1
         |Cons2
         |INIT Init
         |NEXT Next
       """.stripMargin,
-      """----- MODULE test -----
+        """----- MODULE test -----
         |
         |ACTION_CONSTRAINT_$0 == Cons1
         |
@@ -288,10 +288,10 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
 
   test("all features") {
     configureAndCompare(
-      """---- MODULE test ----
+        """---- MODULE test ----
         |================================
       """.stripMargin,
-      """
+        """
         |CONSTANTS
         |N = M
         |A <- B
@@ -306,7 +306,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |PROPERTY
         |Prop
       """.stripMargin,
-      """----- MODULE test -----
+        """----- MODULE test -----
         |
         |OVERRIDE_N == "ModelValue_M"
         |

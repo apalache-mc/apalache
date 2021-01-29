@@ -8,15 +8,13 @@ import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic._
 
 /**
-  * Translate a substitution, that is the part that goes after WITH in INSTANCE Foo WITH x <- e1, y <- e2.
-  * The module instantiation rules are quite sophisticated, see Specifying Systems [Ch. 17].
-  *
-  * @author konnov
-  */
+ * Translate a substitution, that is the part that goes after WITH in INSTANCE Foo WITH x <- e1, y <- e2.
+ * The module instantiation rules are quite sophisticated, see Specifying Systems [Ch. 17].
+ *
+ * @author konnov
+ */
 class SubstTranslator(
-    sourceStore: SourceStore,
-    annotationStore: AnnotationStore,
-    context: Context
+    sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context
 ) extends LazyLogging {
 
   def translate(substInNode: SubstInNode, body: TlaEx): TlaEx = {
@@ -46,16 +44,18 @@ class SubstTranslator(
             newLetIn
 
           case OperEx(op, args @ _*) =>
-            if (renaming.nonEmpty
+            if (
+                renaming.nonEmpty
                 && Seq(
-                  TlaActionOper.enabled,
-                  TlaActionOper.composition,
-                  TlaTempOper.leadsTo
-                ).exists(_.name == op.name)) {
+                    TlaActionOper.enabled,
+                    TlaActionOper.composition,
+                    TlaTempOper.leadsTo
+                ).exists(_.name == op.name)
+            ) {
               // TODO: find out how to deal with ENABLED and other tricky operators
               logger.warn(
-                "Substitution of %s needs care. The current implementation may fail to work."
-                  .format(op.name)
+                  "Substitution of %s needs care. The current implementation may fail to work."
+                    .format(op.name)
               )
             }
             OperEx(op, args map subRec: _*)
@@ -98,10 +98,10 @@ class SubstTranslator(
     val upperContext = context.setLookupPrefix(upperLookupPrefix)
     val exprTranslator =
       ExprOrOpArgNodeTranslator(
-        sourceStore,
-        annotationStore,
-        upperContext,
-        OutsideRecursion()
+          sourceStore,
+          annotationStore,
+          upperContext,
+          OutsideRecursion()
       )
 
     def eachSubst(s: Subst): (String, TlaEx) = {
@@ -109,8 +109,8 @@ class SubstTranslator(
       // only constants and variables are allowed in the left-hand side of operator substitutions
       if (s.getOp.getKind != ASTConstants.ConstantDeclKind && s.getOp.getKind != ASTConstants.VariableDeclKind) {
         throw new SanyImporterException(
-          "Expected a substituted name %s to be a CONSTANT or a VARIABLE, found kind %d"
-            .format(s.getOp.getName, s.getOp.getKind)
+            "Expected a substituted name %s to be a CONSTANT or a VARIABLE, found kind %d"
+              .format(s.getOp.getName, s.getOp.getKind)
         )
       }
       // As all declarations have unique names, it should be sufficient to map the name to the expression.
@@ -124,9 +124,7 @@ class SubstTranslator(
 
 object SubstTranslator {
   def apply(
-      sourceStore: SourceStore,
-      annotationStore: AnnotationStore,
-      context: Context
+      sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context
   ): SubstTranslator = {
     new SubstTranslator(sourceStore, annotationStore, context)
   }

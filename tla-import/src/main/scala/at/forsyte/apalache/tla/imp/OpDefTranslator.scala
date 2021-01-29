@@ -1,10 +1,6 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.tla.imp.src.{
-  SaveToStoreTracker,
-  SourceLocation,
-  SourceStore
-}
+import at.forsyte.apalache.tla.imp.src.{SaveToStoreTracker, SourceLocation, SourceStore}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
@@ -12,14 +8,12 @@ import at.forsyte.apalache.io.annotations.store._
 import tla2sany.semantic.{OpApplNode, OpDefNode}
 
 /**
-  * Translate an operator definition to a TlaOper.
-  *
-  * @author konnov
-  */
+ * Translate an operator definition to a TlaOper.
+ *
+ * @author konnov
+ */
 class OpDefTranslator(
-    sourceStore: SourceStore,
-    annotationStore: AnnotationStore,
-    context: Context
+    sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context
 ) {
   private val annotationExtractor: AnnotationExtractor =
     new AnnotationExtractor(annotationStore)
@@ -31,27 +25,26 @@ class OpDefTranslator(
 
     if (!isRecursive) {
       node.getBody match {
-        case app: OpApplNode
-            if "$RecursiveFcnSpec" == app.getOperator.getName.toString =>
+        case app: OpApplNode if "$RecursiveFcnSpec" == app.getOperator.getName.toString =>
           // this is a definition of a recursive function, translate to recFunDef
           val body =
             ExprOrOpArgNodeTranslator(
-              sourceStore,
-              annotationStore,
-              context,
-              OutsideRecursion()
+                sourceStore,
+                annotationStore,
+                context,
+                OutsideRecursion()
             ).translate(node.getBody)
           val recFunRef = OperEx(TlaFunOper.recFunRef)
           // save the source location of the call to the recursive function, point to the definition
           sourceStore.addRec(
-            recFunRef,
-            SourceLocation(node.getBody.getLocation)
+              recFunRef,
+              SourceLocation(node.getBody.getLocation)
           )
           // the body still can refer to the function by its name, replace it with recFunRef
           val replaced = ReplaceFixed(
-            NameEx(nodeName),
-            recFunRef,
-            new SaveToStoreTracker(sourceStore)
+              NameEx(nodeName),
+              recFunRef,
+              new SaveToStoreTracker(sourceStore)
           )(body)
           // store the source location
           sourceStore.addRec(replaced, SourceLocation(node.getBody.getLocation))
@@ -65,14 +58,14 @@ class OpDefTranslator(
         case _ =>
           // non-recursive declarations are easy
           val decl = TlaOperDecl(
-            nodeName,
-            params,
-            ExprOrOpArgNodeTranslator(
-              sourceStore,
-              annotationStore,
-              context,
-              OutsideRecursion()
-            ).translate(node.getBody)
+              nodeName,
+              params,
+              ExprOrOpArgNodeTranslator(
+                  sourceStore,
+                  annotationStore,
+                  context,
+                  OutsideRecursion()
+              ).translate(node.getBody)
           )
           sourceStore.add(decl.ID, SourceLocation(node.getLocation))
           annotationExtractor.parseAndSave(decl.ID, node)
@@ -82,10 +75,10 @@ class OpDefTranslator(
       // in recursive declarations, the applications of recursive operators are replaced by calls to formal parameters
       val body =
         ExprOrOpArgNodeTranslator(
-          sourceStore,
-          annotationStore,
-          context,
-          InsideRecursion()
+            sourceStore,
+            annotationStore,
+            context,
+            InsideRecursion()
         ).translate(node.getBody)
       val decl = TlaOperDecl(nodeName, params, body)
       decl.isRecursive = true
@@ -98,9 +91,7 @@ class OpDefTranslator(
 
 object OpDefTranslator {
   def apply(
-      sourceStore: SourceStore,
-      annotationStore: AnnotationStore,
-      context: Context
+      sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context
   ): OpDefTranslator = {
     new OpDefTranslator(sourceStore, annotationStore, context)
   }

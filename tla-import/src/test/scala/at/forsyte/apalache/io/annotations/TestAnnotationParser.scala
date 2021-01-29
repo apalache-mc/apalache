@@ -37,10 +37,10 @@ class TestAnnotationParser extends FunSuite with Checkers {
   test("test on one-line input") {
     val expected =
       new Annotation(
-        "greet",
-        TlaAnnotationString("hello"),
-        TlaAnnotationInt(2021),
-        TlaAnnotationBool(true)
+          "greet",
+          TlaAnnotationString("hello"),
+          TlaAnnotationInt(2021),
+          TlaAnnotationBool(true)
       )
     AnnotationParser.parse("""  @greet("hello", 2021, true)   """) match {
       case AnnotationParser.Success(parsed, _) =>
@@ -51,8 +51,8 @@ class TestAnnotationParser extends FunSuite with Checkers {
   test("test the special form of a one-argument annotation") {
     val expected =
       new Annotation(
-        "type",
-        TlaAnnotationString("(Int, Int) -> Set(Int) "),
+          "type",
+          TlaAnnotationString("(Int, Int) -> Set(Int) ")
       )
     AnnotationParser.parse("""  @type: (Int, Int) -> Set(Int) ;""") match {
       case AnnotationParser.Success(parsed, _) =>
@@ -63,10 +63,10 @@ class TestAnnotationParser extends FunSuite with Checkers {
   test("test on multiline input") {
     val expected =
       new Annotation(
-        "greet",
-        TlaAnnotationString("hello"),
-        TlaAnnotationInt(2021),
-        TlaAnnotationBool(true)
+          "greet",
+          TlaAnnotationString("hello"),
+          TlaAnnotationInt(2021),
+          TlaAnnotationBool(true)
       )
     val text =
       """  @greet("hello",
@@ -85,9 +85,8 @@ class TestAnnotationParser extends FunSuite with Checkers {
 
   test("parse OK on random good inputs @foo(arg1, ..., argN)") {
     check(
-      {
-        forAll(identifier) {
-          name =>
+        {
+          forAll(identifier) { name =>
             forAll(listOf(oneOf(genStr, genInt, genBool))) { args =>
               val annotation = new Annotation(name, args: _*)
               AnnotationParser.parse(annotation.toString) match {
@@ -98,17 +97,16 @@ class TestAnnotationParser extends FunSuite with Checkers {
                   falsified
               }
             }
-        }
-      },
-      minSuccessful(200)
+          }
+        },
+        minSuccessful(200)
     )
   }
 
   test("parse error on random bad inputs") {
     check(
-      {
-        forAll(alphaStr) {
-          str =>
+        {
+          forAll(alphaStr) { str =>
             AnnotationParser.parse(str) match {
               // Pass the test on successful parse.
               // To see how testing is different from verification,
@@ -118,9 +116,9 @@ class TestAnnotationParser extends FunSuite with Checkers {
               case Failure(_) => passed
             }
           // no exceptions
-        }
-      },
-      minSuccessful(300)
+          }
+        },
+        minSuccessful(300)
     )
   }
 }

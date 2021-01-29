@@ -310,12 +310,11 @@
                                 <include>tla-types/**/*.sc</include>
                                 <include>tla-types/**/*.scala</include>
                             </includes>
-                            <scalafmt /> <!-- has its own section below -->
+                            <scalafmt>
+                                <version>2.7.5</version>
+                                <file>${maven.multiModuleProjectDirectory}/.scalafmt.conf</file>
+                            </scalafmt>
                         </scala>
-
-                        <scalafmt>
-                            <version>2.7.5</version>
-                        </scalafmt>
 
                         <executions>
                             <execution>

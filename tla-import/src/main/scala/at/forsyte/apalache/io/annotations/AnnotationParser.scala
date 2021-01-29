@@ -4,10 +4,10 @@ import scala.util.parsing.combinator.JavaTokenParsers
 import java.io.{Reader, StringReader}
 
 /**
-  * A parser for TLA+ annotations. Use the object TlaAnnotationParser to parser the input.
-  *
-  * @author Igor Konnov
-  */
+ * A parser for TLA+ annotations. Use the object TlaAnnotationParser to parser the input.
+ *
+ * @author Igor Konnov
+ */
 class AnnotationParser extends JavaTokenParsers {
   def expr: Parser[Any] = "@" ~ ident ~ opt(argsInParentheses | argAfterColon) ^^ {
     case _ ~ name ~ None =>
@@ -17,14 +17,12 @@ class AnnotationParser extends JavaTokenParsers {
       new Annotation(name, args: _*)
   }
 
-  def argsInParentheses: Parser[List[TlaAnnotationArg]] = "(" ~ repsep(arg, ",") ~ ")" ^^ {
-    case _ ~ args ~ _ =>
-      args
+  def argsInParentheses: Parser[List[TlaAnnotationArg]] = "(" ~ repsep(arg, ",") ~ ")" ^^ { case _ ~ args ~ _ =>
+    args
   }
 
-  def argAfterColon: Parser[List[TlaAnnotationArg]] = ":" ~ nonSemiString ~ ";" ^^ {
-    case _ ~ str ~ _ =>
-      List(TlaAnnotationString(str))
+  def argAfterColon: Parser[List[TlaAnnotationArg]] = ":" ~ nonSemiString ~ ";" ^^ { case _ ~ str ~ _ =>
+    List(TlaAnnotationString(str))
   }
 
   def arg: Parser[TlaAnnotationArg] = stringArg | intArg | boolArg

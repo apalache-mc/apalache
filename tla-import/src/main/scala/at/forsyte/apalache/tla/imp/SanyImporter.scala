@@ -13,18 +13,18 @@ import java.nio.file.Files
 import scala.io.Source
 
 /**
-  * This is the entry point for parsing TLA+ code with SANY and constructing an intermediate representation.
-  *
-  * @author konnov
-  */
+ * This is the entry point for parsing TLA+ code with SANY and constructing an intermediate representation.
+ *
+ * @author konnov
+ */
 class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) {
 
   /**
-    * Load a TLA+ specification from a file by calling SANY.
-    *
-    * @param file an input file
-    * @return the pair (the root module name, a map of modules)
-    */
+   * Load a TLA+ specification from a file by calling SANY.
+   *
+   * @param file an input file
+   * @return the pair (the root module name, a map of modules)
+   */
   def loadFromFile(file: File): (String, Map[String, TlaModule]) = {
     // create a string buffer to write SANY's error messages
     val errBuf = new StringWriter()
@@ -33,9 +33,9 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) {
       new SpecObj(file.getAbsolutePath, new SimpleFilenameToStream())
     // call SANY
     SANY.frontEndMain(
-      specObj,
-      file.getAbsolutePath,
-      new PrintStream(new WriterOutputStream(errBuf, "UTF8"))
+        specObj,
+        file.getAbsolutePath,
+        new PrintStream(new WriterOutputStream(errBuf, "UTF8"))
     )
     // abort on errors
     throwOnError(specObj)
@@ -50,16 +50,15 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) {
   }
 
   /**
-    * Load a TLA+ specification from a text source. This method creates a temporary file and saves the source's contents
-    * into it, in order to call SANY.
-    *
-    * @param moduleName the name of the root module (SANY compares it against the filename, so we have to know it)
-    * @param source     the text source
-    * @return the pair (the root module name, a map of modules)
-    */
+   * Load a TLA+ specification from a text source. This method creates a temporary file and saves the source's contents
+   * into it, in order to call SANY.
+   *
+   * @param moduleName the name of the root module (SANY compares it against the filename, so we have to know it)
+   * @param source     the text source
+   * @return the pair (the root module name, a map of modules)
+   */
   def loadFromSource(
-      moduleName: String,
-      source: Source
+      moduleName: String, source: Source
   ): (String, Map[String, TlaModule]) = {
     val tempDir = Files.createTempDirectory("sanyimp").toFile
     val temp = new File(tempDir, moduleName + ".tla")
@@ -98,7 +97,7 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) {
     // the error level is above zero, so SANY failed for an unknown reason
     if (specObj.getErrorLevel > 0) {
       throw new SanyException(
-        "Unknown SANY error (error level=%d)".format(specObj.getErrorLevel)
+          "Unknown SANY error (error level=%d)".format(specObj.getErrorLevel)
       )
     }
   }
