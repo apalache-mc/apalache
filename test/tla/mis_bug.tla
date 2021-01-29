@@ -9,10 +9,7 @@ a <: b == a \* type annotations
 
 VARIABLES Nb, round, val, awake, rem_nbrs, status, msgs
 
-Pred(n) == IF n > 1 THEN n - 1 ELSE N
-Succ(n) == IF n < N THEN n + 1 ELSE 1
-
-Init == \*/\ Nb = [ n \in Nodes |-> {Pred(n), Succ(n)} ]
+Init ==
         /\ Nb \in SUBSET(Nodes \X Nodes)
         /\ \A e \in Nb: <<e[2], e[1]>> \in Nb \* the graph is undirected
         /\ round = 1
