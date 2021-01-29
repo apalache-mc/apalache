@@ -20,13 +20,13 @@ object ArenaCell {
 }
 
 /**
-  * A symbolic memory cell. Each cell has an identifier (similar to a memory address in a physical computer).
-  *
-  * @author Igor Konnov
-  */
+ * A symbolic memory cell. Each cell has an identifier (similar to a memory address in a physical computer).
+ *
+ * @author Igor Konnov
+ */
 class ArenaCell(val id: Int, val cellType: CellT) extends Comparable[ArenaCell] with Serializable {
   override def toString: String = {
-    "%s%d".format(Arena.namePrefix, id)
+    Arena.namePrefix + id
   }
 
   def toNameEx: NameEx = {
@@ -34,7 +34,7 @@ class ArenaCell(val id: Int, val cellType: CellT) extends Comparable[ArenaCell] 
   }
 
   def mkTlaEq(rhs: ArenaCell): TlaEx = {
-      OperEx(TlaOper.eq, this.toNameEx, rhs.toNameEx)
+    OperEx(TlaOper.eq, this.toNameEx, rhs.toNameEx)
   }
 
   override def compareTo(t: ArenaCell): Int = {
