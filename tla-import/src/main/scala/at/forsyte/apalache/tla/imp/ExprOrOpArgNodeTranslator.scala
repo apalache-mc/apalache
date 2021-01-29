@@ -4,18 +4,20 @@ import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.{TlaDecimal, TlaInt, TlaStr}
+import at.forsyte.apalache.io.annotations.store._
 import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic._
 
 import scala.collection.JavaConverters._
 
 /**
-  * Translate a TLA+ expression.
-  *
-  * @author konnov
-  */
-class ExprOrOpArgNodeTranslator(sourceStore: SourceStore,
-                                context: Context, recStatus: RecursionStatus) extends LazyLogging {
+ * Translate a TLA+ expression.
+ *
+ * @author konnov
+ */
+class ExprOrOpArgNodeTranslator(
+    sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context, recStatus: RecursionStatus
+) extends LazyLogging {
   def translate(node: ExprOrOpArgNode): TlaEx = {
     val result =
       node match {
@@ -34,7 +36,8 @@ class ExprOrOpArgNodeTranslator(sourceStore: SourceStore,
 
         case opApp: OpApplNode =>
           // application of an operator, e.g., F(x)
-          OpApplTranslator(sourceStore, context, recStatus).translate(opApp)
+          OpApplTranslator(sourceStore, annotationStore, context, recStatus)
+            .translate(opApp)
 
         case opArg: OpArgNode =>
           // An operator definition that is used as an expression, e.g., LAMBDA x: x = 1.
@@ -61,7 +64,9 @@ class ExprOrOpArgNodeTranslator(sourceStore: SourceStore,
           translateLabel(label)
 
         case n =>
-          throw new SanyImporterException("Unexpected subclass of tla2sany.ExprOrOpArgNode: " + n.getClass)
+          throw new SanyImporterException(
+              "Unexpected subclass of tla2sany.ExprOrOpArgNode: " + n.getClass
+          )
       }
 
     sourceStore.addRec(result, SourceLocation(node.getLocation))
@@ -76,7 +81,7 @@ class ExprOrOpArgNodeTranslator(sourceStore: SourceStore,
   }
 
   private def translateString(str: StringNode) =
-  // internalize the string, so several occurences of the same string are kept as the same object
+    // internalize the string, so several occurences of the same string are kept as the same object
     ValEx(TlaStr(str.getRep.toString.intern()))
 
   private def translateDecimal(dec: DecimalNode) =
@@ -101,7 +106,8 @@ class ExprOrOpArgNodeTranslator(sourceStore: SourceStore,
     for (node <- letIn.context.getOpDefs.elements.asScala.toList.reverse) {
       node match {
         case opdef: OpDefNode =>
-          val decl = OpDefTranslator(sourceStore, letInContext).translate(opdef)
+          val decl = OpDefTranslator(sourceStore, annotationStore, letInContext)
+            .translate(opdef)
           letInDeclarations = letInDeclarations :+ decl
           letInContext = letInContext.push(DeclUnit(decl))
 
@@ -110,13 +116,19 @@ class ExprOrOpArgNodeTranslator(sourceStore: SourceStore,
       }
     }
 
-    val body = ExprOrOpArgNodeTranslator(sourceStore, letInContext, recStatus)
-      .translate(letIn.getBody)
-    LetInEx( body, letInDeclarations : _* )
+    val body = ExprOrOpArgNodeTranslator(
+        sourceStore,
+        annotationStore,
+        letInContext,
+        recStatus
+    ).translate(letIn.getBody)
+    LetInEx(body, letInDeclarations: _*)
   }
 
   // translate an operator definition that is used as an expression, that is, LAMBDA
-  private def translateLambdaOrOperatorAsArgument(opArgNode: OpArgNode): TlaEx = {
+  private def translateLambdaOrOperatorAsArgument(
+      opArgNode: OpArgNode
+  ): TlaEx = {
     // Instead of extending the IR with a new expression type, we simply introduce a local LET-IN definition.
     // Although this is a well-defined expression in the IR, it does not correspond to a well-defined TLA+ expression.
     // Hence, one has to take care of this, when printing the output to the user.
@@ -124,7 +136,8 @@ class ExprOrOpArgNodeTranslator(sourceStore: SourceStore,
     opArgNode.getOp match {
       // a lambda-definition is passed as an argument
       case defNode: OpDefNode if name == "LAMBDA" =>
-        val decl = OpDefTranslator(sourceStore, context).translate(defNode)
+        val decl = OpDefTranslator(sourceStore, annotationStore, context)
+          .translate(defNode)
         // e.g., LET Foo(x) == e1 in Foo
         LetInEx(NameEx(name), decl)
 
@@ -134,13 +147,15 @@ class ExprOrOpArgNodeTranslator(sourceStore: SourceStore,
         NameEx(name)
 
       case e =>
-        throw new SanyImporterException("Expected an operator definition as an argument, found: " + e)
+        throw new SanyImporterException(
+            "Expected an operator definition as an argument, found: " + e
+        )
     }
   }
 
   // substitute an expression with the declarations that come from INSTANCE M WITH ...
   private def translateSubstIn(substIn: SubstInNode): TlaEx = {
-    SubstTranslator(sourceStore, context)
+    SubstTranslator(sourceStore, annotationStore, context)
       .translate(substIn, translate(substIn.getBody))
   }
 
@@ -153,15 +168,17 @@ class ExprOrOpArgNodeTranslator(sourceStore: SourceStore,
     // BUGFIX: the indices in EXCEPT are packed as tuples.
     // Unpack them into multiple function applications when rewriting @, e.g., (((f[1])[2])[3]).
     translate(node.getAtModifier) match {
-      case OperEx(TlaFunOper.tuple, indices@_*) =>
+      case OperEx(TlaFunOper.tuple, indices @ _*) =>
         def applyOne(base: TlaEx, index: TlaEx): TlaEx = {
           OperEx(TlaFunOper.app, base, index)
         }
 
         indices.foldLeft(base)(applyOne)
 
-      case e@_ =>
-        throw new SanyImporterException("Unexpected index expression in EXCEPT: " + e)
+      case e @ _ =>
+        throw new SanyImporterException(
+            "Unexpected index expression in EXCEPT: " + e
+        )
     }
   }
 
@@ -174,7 +191,14 @@ class ExprOrOpArgNodeTranslator(sourceStore: SourceStore,
 }
 
 object ExprOrOpArgNodeTranslator {
-  def apply(sourceStore: SourceStore, context: Context, recStatus: RecursionStatus) : ExprOrOpArgNodeTranslator = {
-    new ExprOrOpArgNodeTranslator(sourceStore, context, recStatus)
+  def apply(
+      sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context, recStatus: RecursionStatus
+  ): ExprOrOpArgNodeTranslator = {
+    new ExprOrOpArgNodeTranslator(
+        sourceStore,
+        annotationStore,
+        context,
+        recStatus
+    )
   }
 }
