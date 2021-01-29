@@ -16,11 +16,13 @@ declaration. The following declarations are supported:
  
  1. Constant declarations, e.g., `CONSTANT N`.
  1. Variable declarations, e.g., `VARIABLE x`.
- 1. Top-level operator declarations, e.g., `Foo(x) == e`.
- 1. LET-IN operator declarations, e.g., `Foo(x) == LET Inner(y) == e IN f`.
- 1. Recursive functions, e.g., `foo[i \in Int] == e`.
- 1. Recursive operators, that are declared either at the top-level or by using
-    LET-IN.
+ 1. Operator declarations, including:
+   1. Top-level operator declarations, e.g., `Foo(x) == e`.
+   1. Operators defined via LET-IN, e.g., `Foo(x) == LET Inner(y) == e IN f`.
+   1. Recursive operators, e.g., `RECURSIVE Fact(_) Fact(n) == ...`
+ 1. Recursive and non-recursive functions including:
+   1. Top-level functions, e.g., `foo[i \in Int] == e`.
+   2. Functions defined via LET-IN, e.g.,`Foo == LET foo[i \in Int] == e IN f`
 
 For an example, see Section 3.
 
