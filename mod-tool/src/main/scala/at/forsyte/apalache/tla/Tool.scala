@@ -58,11 +58,7 @@ object Tool extends App with LazyLogging {
     * @return the exit code; as usual, 0 means success.
     */
   def run(args: Array[String]): Int = {
-    Console.println("# APALACHE version %s build %s".format(Version.version, Version.build))
-    Console.println("#")
-    Console.println("# WARNING: This tool is in the experimental stage.")
-    Console.println("#          Please report bugs at: " + ISSUES_LINK)
-    Console.println("")
+    printHeaderAndStatsConfig()
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably
     new LogbackConfigurator().configureDefaultContext()
 
@@ -78,7 +74,6 @@ object Tool extends App with LazyLogging {
       OK_EXIT_CODE
     } else {
       // One of our commands. Print the header and measure time
-      printHeaderAndConfig()
       val startTime = LocalDateTime.now()
 
       try {
@@ -284,7 +279,7 @@ object Tool extends App with LazyLogging {
     }
   }
 
-  private def printHeaderAndConfig(): Unit = {
+  private def printHeaderAndStatsConfig(): Unit = {
     Console.println("# APALACHE version %s build %s".format(Version.version, Version.build))
     Console.println("#")
     Console.println("# WARNING: This tool is in the experimental stage.")
