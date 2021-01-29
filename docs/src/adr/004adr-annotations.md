@@ -1,6 +1,8 @@
-# ADR-004: Syntax for Java-like annotations in comments
+# ADR-004: Syntax for Java-like annotations in TLA+ comments
 
-**author:** Igor Konnov
+| author      | revision |
+| ----------- | --------:|
+| Igor Konnov |        2 | 
 
 This ADR documents our decision on using Java-like annotations in comments.
 Our main motivation to have annotations is to simplify type annotations, as
@@ -33,9 +35,10 @@ An annotation is a string that follows the grammar (question mark denotes
 optional rules):
 
 ```
-Annotation  ::= '@' javaIdentifier ( '(' ArgList? ')' )?
+Annotation  ::= '@' javaIdentifier ( '(' ArgList? ')' | ':' inlineArg ';' )?
 ArgList     ::= (Arg) ( ',' Arg )*
 Arg         ::= (string | integer | boolean)
+inlineArg   ::= <char sequence excluding ';'>
 string      ::= '"' <char sequence> '"'
 integer     ::= '-'? [0-9]+
 boolean     ::= ('false' | 'true')
@@ -52,14 +55,19 @@ The sequence `<char sequence>` is a sequence admitted by [JavaTokenParsers]:
 **Examples.** The following strings are examples of syntactically correct
 annotations:
 
- - `@tailrec`
- - `@type("(Int, Int) => Int")`
- - `@random(true)`
- - `@deprecated("Use operator Foo instead")`
- - `@range(0, 100)`
+ 1. `@tailrec`
+ 1. `@type("(Int, Int) => Int")`
+ 1. `@type: (Int, Int) => Int ;`
+ 1. `@random(true)`
+ 1. `@deprecated("Use operator Foo instead")`
+ 1. `@range(0, 100)`
 
-The above examples are just syntactically correct. They meaning, if there is
-any, is defined by the tool that is reading these annotations.
+The above examples are just syntactically correct. Their meaning, if there is
+any, is defined by the tool that is reading these annotations. Note that the
+example 3 is not following the syntax of Java annotations. We have introduced
+this format for one-argument annotations, especially, for type annotations.
+Its purpose is to reduce the visual clutter in annotations that accept a string
+as their only argument.
 
 ## 3. An annotated specification
 
@@ -70,43 +78,45 @@ Although these locations may seem to be suboptimal, this is how the SANY
 parser locates comments that precede declarations.
 
 ```tla
--------- MODULE Annotations ----------
+-------------------------- MODULE Annotations ---------------------------------
 EXTENDS Integers
 
 CONSTANT
-  \* @type(" Int ")
+  \* @type: Int;
   N
 
 VARIABLE
-  \* @type(" Set(Int) ")
+  \* the single-argument annotation
+  \* @type: Set(Int);
   set
 
 \* @pure
+\* using the Java annotations, a bit verbose:
 \* @type(" Int => Int ")
 Inc(n) == n + 1
 
-\* @type(" Int => Int ")
+\* @type: Int => Int;
 LOCAL LocalInc(x) == x + 1
 
 A(n) ==
   LET \* @pure
-      \* @type(" Int => Int ")
+      \* @type: Int => Int;
       Dec(x) == x + 1
   IN
   Dec(n)
 
 RECURSIVE Fact(_)
 \* @tailrec
-\* @type(" Int => Int ")
+\* @type: Int => Int;
 Fact(n) ==
   IF n <= 1 THEN 1 ELSE n * Fact(n - 1)
 
 \* @tailrec
-\* @type(" Int -> Int ")
+\* @type: Int -> Int;
 FactFun[n \in Int] ==
   IF n <= 1 THEN 1 ELSE n * FactFun[n - 1]
 
-======================================
+===============================================================================
 ```
 
 ## 4. Implementation
@@ -121,15 +131,10 @@ Most likely, this topic does not deserve much discussion, as we are using
 the pretty standard syntax of Java annotations. So we are following the
 principle of the least surprise.
 
-A more concise syntax for type annotations could be as follows:
-
-```tla
-\* @type: Int => Int
-Inc(n) == n + 1
-```
-
-However, this concise syntax is technically harder to parse (SANY is prunning
-`'\n'`). Moreover, it would require additional syntax for multiline annotations.
+We also support the concise syntax for the annotations that accept a string as
+a simple argument. For these annotations, we had to add the end marker ';'.
+This is done because the SANY parser is pruning the linefeed character `\n`,
+so it would be otherwise impossible to find the end of an annotation.
 
 
 [ADR-002]: https://apalache.informal.systems/docs/adr/002adr-types.html
