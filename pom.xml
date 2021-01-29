@@ -315,7 +315,6 @@
                                 <file>${maven.multiModuleProjectDirectory}/.scalafmt.conf</file>
                             </scalafmt>
                         </scala>
-
                         <executions>
                             <execution>
                                 <goals>
