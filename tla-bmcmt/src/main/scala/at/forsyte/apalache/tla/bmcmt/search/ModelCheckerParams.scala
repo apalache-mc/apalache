@@ -30,7 +30,7 @@ class ModelCheckerParams(checkerInput: CheckerInput,
   /**
     * If pruneDisabled is set to false, there will be no check of whether a transition is enabled.
     */
-  var pruneDisabled: Boolean = true
+  var discardDisabled: Boolean = true
 
   /**
     * If checkForDeadlocks is true, then the model checker should find deadlocks.

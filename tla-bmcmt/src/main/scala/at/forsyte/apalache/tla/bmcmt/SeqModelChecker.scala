@@ -58,7 +58,7 @@ class SeqModelChecker[ExecutorContextT](
       return outcome
     }
 
-    if (!params.pruneDisabled && params.checkForDeadlocks) {
+    if (!params.discardDisabled && params.checkForDeadlocks) {
       // We do this check only if all transitions are unconditionally enabled.
       // Otherwise, we should have found it already.
       logger.info(s"Step %d: checking for deadlocks".format(trex.stepNo))
@@ -110,13 +110,13 @@ class SeqModelChecker[ExecutorContextT](
 
     for ((tr, no) <- transitions.zipWithIndex) {
       var snapshot: Option[SnapshotT] = None
-      if (params.pruneDisabled) {
+      if (params.discardDisabled) {
         // save the context, unless the transitions are not checked
         snapshot = Some(trex.snapshot())
       }
       val translatedOk = trex.prepareTransition(no, tr)
       if (translatedOk) {
-        if (params.pruneDisabled) {
+        if (params.discardDisabled) {
           // check, whether the transition is enabled in SMT
           val assumeSnapshot = trex.snapshot()
           // assume that the transition is fired and check, whether the constraints are satisfiable

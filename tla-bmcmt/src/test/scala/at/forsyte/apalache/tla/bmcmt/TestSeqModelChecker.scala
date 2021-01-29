@@ -152,7 +152,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val inv = tla.lt(tla.name("x"), tla.int(5))
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, tla.not(inv))))
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
-    params.pruneDisabled = true
+    params.discardDisabled = true
     params.invariantMode = InvariantMode.BeforeJoin
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
@@ -171,7 +171,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val inv = tla.lt(tla.name("x"), tla.int(5))
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, tla.not(inv))))
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
-    params.pruneDisabled = false
+    params.discardDisabled = false
     params.invariantMode = InvariantMode.BeforeJoin
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
@@ -190,7 +190,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val inv = tla.lt(tla.name("x"), tla.int(5))
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, tla.not(inv))))
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
-    params.pruneDisabled = false
+    params.discardDisabled = false
     params.invariantMode = InvariantMode.AfterJoin
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
@@ -209,7 +209,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val inv = tla.lt(tla.name("x"), tla.int(5))
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, tla.not(inv))))
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
-    params.pruneDisabled = true
+    params.discardDisabled = true
     params.invariantMode = InvariantMode.AfterJoin
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)

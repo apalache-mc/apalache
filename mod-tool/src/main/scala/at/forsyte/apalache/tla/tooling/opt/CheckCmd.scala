@@ -43,12 +43,12 @@ class CheckCmd extends Command(name = "check",
   var tuning: String =
     opt[String](name="tuning", default = "",
       description = "filename of the tuning options, see docs/tuning.md")
-  var tuneHere: String =
-    opt[String](name = "tune-here", default = "",
+  var tuningOptions: String =
+    opt[String](name = "tuning-options", default = "",
       description = "tuning options as arguments in the format key1=val1:key2=val2:key3=val3 (priority over --tuning)")
-  var enabled: Boolean = opt[Boolean](
-    name = "all-enabled", default = false,
-    description = "treat all transitions as enabled, to save on SMT queries, default: false")
+  var discardDisabled: Boolean = opt[Boolean](
+    name = "discard-disabled", default = true,
+    description = "pre-check, whether a transition is disabled, and discard it, to make SMT queries smaller, default: true")
   var noDeadlocks: Boolean = opt[Boolean](
     name = "no-deadlock", default = true,
     description = "do not check for deadlocks, default: true")

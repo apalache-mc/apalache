@@ -152,7 +152,7 @@ object Tool extends App with LazyLogging {
     executor.options.set("io.outdir", createOutputDir())
     var tuning =
       if (check.tuning != "") loadProperties(check.tuning) else Map[String, String]()
-    tuning = overrideProperties(tuning, check.tuneHere)
+    tuning = overrideProperties(tuning, check.tuningOptions)
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
     executor.options.set("general.tuning", tuning)
@@ -171,7 +171,7 @@ object Tool extends App with LazyLogging {
       executor.options.set("checker.cinit", check.cinit)
     executor.options.set("checker.nworkers", check.nworkers)
     executor.options.set("checker.length", check.length)
-    executor.options.set("checker.allEnabled", check.enabled)
+    executor.options.set("checker.discardDisabled", check.discardDisabled)
     executor.options.set("checker.noDeadlocks", check.noDeadlocks)
     executor.options.set("checker.algo", check.algo)
 

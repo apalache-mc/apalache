@@ -70,7 +70,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
     val saveDir = options.getOrError("io", "outdir").asInstanceOf[Path].toFile
 
     val params = new ModelCheckerParams(input, stepsBound, saveDir, tuning, debug)
-    params.pruneDisabled = !options.getOrElse("checker", "allEnabled", false)
+    params.discardDisabled = options.getOrElse("checker", "discardDisabled", true)
     params.checkForDeadlocks = !options.getOrElse("checker", "noDeadlocks", false)
 
     val smtProfile = options.getOrElse("smt", "prof", false)
