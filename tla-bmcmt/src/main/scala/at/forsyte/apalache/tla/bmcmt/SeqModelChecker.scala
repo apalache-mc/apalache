@@ -68,7 +68,7 @@ class SeqModelChecker[ExecutorContextT](
           } else {
             logger.error(s"Found a deadlock. No SMT model.")
           }
-          return Outcome.Deadlock 
+          return Outcome.Deadlock
 
         case None =>
           return Outcome.RuntimeError // UNKNOWN or timeout
