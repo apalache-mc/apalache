@@ -5,7 +5,6 @@ import java.nio.file.{Files, Path, Paths}
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-
 import at.forsyte.apalache.infra.log.LogbackConfigurator
 import at.forsyte.apalache.infra.passes.{PassChainExecutor, TlaModuleMixin}
 import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorMessage, PassOptionException}
@@ -26,22 +25,22 @@ import scala.collection.JavaConverters._
 import scala.util.Random
 
 /**
-  * Command line access to the APALACHE tools.
-  *
-  * @author Igor Konnov
-  */
+ * Command line access to the APALACHE tools.
+ *
+ * @author Igor Konnov
+ */
 object Tool extends App with LazyLogging {
   lazy val ISSUES_LINK: String = "[https://github.com/informalsystems/apalache/issues]"
   lazy val ERROR_EXIT_CODE = 99
   lazy val OK_EXIT_CODE = 0
 
   /**
-    * Run the tool in the standalone mode with the provided arguments.
-    * This method calls System.exit with the computed exit code.
-    * If you like to call the tool without System.exit, use the the Tool#run.
-    *
-    * @param args the command line arguments
-    */
+   * Run the tool in the standalone mode with the provided arguments.
+   * This method calls System.exit with the computed exit code.
+   * If you like to call the tool without System.exit, use the the Tool#run.
+   *
+   * @param args the command line arguments
+   */
   override def main(args: Array[String]): Unit = {
     val exitcode = run(args)
     if (exitcode == OK_EXIT_CODE) {
@@ -53,28 +52,29 @@ object Tool extends App with LazyLogging {
   }
 
   /**
-    * Run the tool in a library mode, that is, with a call to System.exit.
-    *
-    * @param args the command line arguments
-    * @return the exit code; as usual, 0 means success.
-    */
+   * Run the tool in a library mode, that is, with a call to System.exit.
+   *
+   * @param args the command line arguments
+   * @return the exit code; as usual, 0 means success.
+   */
   def run(args: Array[String]): Int = {
+    printHeaderAndStatsConfig()
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably
     new LogbackConfigurator().configureDefaultContext()
 
     // first, call the arguments parser, which can also handle the standard commands such as version
     val command =
-      Cli.parse(args)
-      .withProgramName("apalache-mc")
-      .version("%s build %s".format(Version.version, Version.build), "version")
-      .withCommands(new ParseCmd, new CheckCmd, new TypeCheckCmd, new ConfigCmd)
+      Cli
+        .parse(args)
+        .withProgramName("apalache-mc")
+        .version("%s build %s".format(Version.version, Version.build), "version")
+        .withCommands(new ParseCmd, new CheckCmd, new TypeCheckCmd, new ConfigCmd)
 
     if (!command.isInstanceOf[Some[General]]) {
       // A standard option, e.g., --version or --help. No header, no timer.
       OK_EXIT_CODE
     } else {
       // One of our commands. Print the header and measure time
-      printHeaderAndConfig()
       val startTime = LocalDateTime.now()
 
       try {
@@ -86,8 +86,9 @@ object Tool extends App with LazyLogging {
             handleExceptions(injector, runParse(injector, parse, _))
 
           case Some(check: CheckCmd) =>
-            logger.info("Checker options: filename=%s, init=%s, next=%s, inv=%s"
-              .format(check.file, check.init, check.next, check.inv))
+            logger.info(
+                "Checker options: filename=%s, init=%s, next=%s, inv=%s"
+                  .format(check.file, check.init, check.next, check.inv))
             // TODO: update workers when the multicore branch is integrated
             submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> "check", "workers" -> "1"))
             val injector = injectorFactory(check)
@@ -115,14 +116,13 @@ object Tool extends App with LazyLogging {
 
   private def printTimeDiff(startTime: LocalDateTime): Unit = {
     val endTime = LocalDateTime.now()
-    logger.info("It took me %d days %2d hours %2d min %2d sec"
-      .format(ChronoUnit.DAYS.between(startTime, endTime),
-        ChronoUnit.HOURS.between(startTime, endTime) % 23,
-        ChronoUnit.MINUTES.between(startTime, endTime) % 60,
-        ChronoUnit.SECONDS.between(startTime, endTime) % 60))
-    logger.info("Total time: %d.%d sec"
-      .format(ChronoUnit.SECONDS.between(startTime, endTime),
-        ChronoUnit.MILLIS.between(startTime, endTime) % 1000))
+    logger.info(
+        "It took me %d days %2d hours %2d min %2d sec"
+          .format(ChronoUnit.DAYS.between(startTime, endTime), ChronoUnit.HOURS.between(startTime, endTime) % 24,
+              ChronoUnit.MINUTES.between(startTime, endTime) % 60, ChronoUnit.SECONDS.between(startTime, endTime) % 60))
+    logger.info(
+        "Total time: %d.%d sec"
+          .format(ChronoUnit.SECONDS.between(startTime, endTime), ChronoUnit.MILLIS.between(startTime, endTime) % 1000))
   }
 
   private def runParse(injector: Injector, parse: ParseCmd, u: Unit): Unit = {
@@ -136,8 +136,7 @@ object Tool extends App with LazyLogging {
     if (result.isDefined) {
       logger.info("Parsed successfully")
       val tlaModule = result.get.asInstanceOf[TlaModuleMixin].unsafeGetModule
-      logger.info("Root module: %s with %d declarations".format(tlaModule.name,
-        tlaModule.declarations.length))
+      logger.info("Root module: %s with %d declarations".format(tlaModule.name, tlaModule.declarations.length))
     } else {
       logger.info("Parser has failed")
     }
@@ -146,12 +145,11 @@ object Tool extends App with LazyLogging {
   private def runCheck(injector: Injector, check: CheckCmd, u: Unit): Unit = {
     val executor = injector.getInstance(classOf[PassChainExecutor])
     executor.options.set("io.outdir", createOutputDir())
-    val tuning =
-      if (check.tuning != "") {
-        loadProperties(check.tuning)
-      } else {
-        Map[String, String]()
-      }
+    var tuning =
+      if (check.tuning != "") loadProperties(check.tuning) else Map[String, String]()
+    tuning = overrideProperties(tuning, check.tuningOptions)
+    logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
+
     executor.options.set("general.tuning", tuning)
     executor.options.set("general.debug", check.debug)
     executor.options.set("smt.prof", check.smtprof)
@@ -166,8 +164,11 @@ object Tool extends App with LazyLogging {
       executor.options.set("checker.inv", List(check.inv))
     if (check.cinit != "")
       executor.options.set("checker.cinit", check.cinit)
+    executor.options.set("checker.nworkers", check.nworkers)
     executor.options.set("checker.length", check.length)
-    executor.options.set("checker.search", check.search)
+    executor.options.set("checker.discardDisabled", check.discardDisabled)
+    executor.options.set("checker.noDeadlocks", check.noDeadlocks)
+    executor.options.set("checker.algo", check.algo)
 
     val result = executor.run()
     if (result.isDefined) {
@@ -184,7 +185,7 @@ object Tool extends App with LazyLogging {
     executor.options.set("parser.filename", parse.file.getAbsolutePath)
 
     executor.run() match {
-      case None => logger.info("Type checker [FAILED]")
+      case None    => logger.info("Type checker [FAILED]")
       case Some(_) => logger.info("Type checker [OK]")
     }
   }
@@ -208,6 +209,28 @@ object Tool extends App with LazyLogging {
     }
   }
 
+  private def overrideProperties(props: Map[String, String], propsAsString: String): Map[String, String] = {
+    def parseKeyValue(text: String): (String, String) = {
+      val parts = text.split('=')
+      if (parts.length != 2 || parts.head.trim == "" || parts(1) == "") {
+        throw new PassOptionException(s"Expected key=value in --tune-here=$propsAsString")
+      } else {
+        // trim to remove surrounding whitespace from the key, but allow the value to have white spaces
+        (parts.head.trim, parts(1))
+      }
+    }
+
+    val hereProps = {
+      if (propsAsString.trim.nonEmpty) {
+        propsAsString.split(':').map(parseKeyValue).toMap
+      } else {
+        Map.empty
+      }
+    }
+    // hereProps may override the values in props
+    props ++ hereProps
+  }
+
   private def createOutputDir(): Path = {
     // here we use the order 'hours-minutes and then the date', as it is much easier to use with completion
     val nicetime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH.mm-dd.MM.uuuu-"))
@@ -220,10 +243,10 @@ object Tool extends App with LazyLogging {
 
   private def injectorFactory(cmd: Command): Injector = {
     cmd match {
-      case _: ParseCmd => Guice.createInjector(new ParserModule)
-      case _: CheckCmd => Guice.createInjector(new CheckerModule)
+      case _: ParseCmd     => Guice.createInjector(new ParserModule)
+      case _: CheckCmd     => Guice.createInjector(new CheckerModule)
       case _: TypeCheckCmd => Guice.createInjector(new TypeCheckerModule)
-      case _ => throw new RuntimeException("Unexpected command: " + cmd)
+      case _               => throw new RuntimeException("Unexpected command: " + cmd)
     }
   }
 
@@ -256,7 +279,7 @@ object Tool extends App with LazyLogging {
     }
   }
 
-  private def printHeaderAndConfig(): Unit = {
+  private def printHeaderAndStatsConfig(): Unit = {
     Console.println("# APALACHE version %s build %s".format(Version.version, Version.build))
     Console.println("#")
     Console.println("# WARNING: This tool is in the experimental stage.")
@@ -266,7 +289,8 @@ object Tool extends App with LazyLogging {
     if (ExecutionStatisticsCollector.promptUser()) {
       // Statistics collection is not enabled. Cry for help.
       Console.println("# Usage statistics is OFF. We care about your privacy.")
-      Console.println("# If you want to help our project, consider enabling statistics with config --enable-stats=true.")
+      Console.println(
+          "# If you want to help our project, consider enabling statistics with config --enable-stats=true.")
     } else {
       // Statistic collection is enabled. Thank the user
       Console.println("# Usage statistics is ON. Thank you!")
