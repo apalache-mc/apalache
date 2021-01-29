@@ -118,7 +118,7 @@ object Tool extends App with LazyLogging {
     val endTime = LocalDateTime.now()
     logger.info(
         "It took me %d days %2d hours %2d min %2d sec"
-          .format(ChronoUnit.DAYS.between(startTime, endTime), ChronoUnit.HOURS.between(startTime, endTime) % 23,
+          .format(ChronoUnit.DAYS.between(startTime, endTime), ChronoUnit.HOURS.between(startTime, endTime) % 24,
               ChronoUnit.MINUTES.between(startTime, endTime) % 60, ChronoUnit.SECONDS.between(startTime, endTime) % 60))
     logger.info(
         "Total time: %d.%d sec"
