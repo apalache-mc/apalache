@@ -31,6 +31,19 @@ class Annotation(val name: String, val args: TlaAnnotationArg*) {
     }
   }
 
+  /**
+    * A pretty string representation. When the number of arguments is different from one, it behaves as #toString.
+    * When there is one argument, it prints an annotation in the format: `@name: arg ;`
+    * @return
+    */
+  def toPrettyString: String = {
+    if (args.length != 1) {
+      this.toString
+    } else {
+      "@%s: %s;".format(name, args.head)
+    }
+  }
+
   def canEqual(other: Any): Boolean = other.isInstanceOf[Annotation]
 
   override def equals(other: Any): Boolean = other match {

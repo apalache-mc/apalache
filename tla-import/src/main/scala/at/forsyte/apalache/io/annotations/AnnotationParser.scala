@@ -9,29 +9,40 @@ import java.io.{Reader, StringReader}
   * @author Igor Konnov
   */
 class AnnotationParser extends JavaTokenParsers {
-  def expr: Parser[Any] = "@" ~ ident ~ opt("(" ~ repsep(arg, ",") ~ ")") ^^ {
+  def expr: Parser[Any] = "@" ~ ident ~ opt(argsInParentheses | argAfterColon) ^^ {
     case _ ~ name ~ None =>
       new Annotation(name)
 
-    case _ ~ name ~ Some(_ ~ args ~ _) =>
-      val collected = args collect { case a: TlaAnnotationArg => a }
-      new Annotation(name, collected: _*)
+    case _ ~ name ~ Some(args) =>
+      new Annotation(name, args: _*)
   }
 
-  def arg: Parser[Any] = stringArg | intArg | boolArg
+  def argsInParentheses: Parser[List[TlaAnnotationArg]] = "(" ~ repsep(arg, ",") ~ ")" ^^ {
+    case _ ~ args ~ _ =>
+      args
+  }
 
-  def stringArg: Parser[Any] = stringLiteral ^^ { str =>
+  def argAfterColon: Parser[List[TlaAnnotationArg]] = ":" ~ nonSemiString ~ ";" ^^ {
+    case _ ~ str ~ _ =>
+      List(TlaAnnotationString(str))
+  }
+
+  def arg: Parser[TlaAnnotationArg] = stringArg | intArg | boolArg
+
+  def stringArg: Parser[TlaAnnotationString] = stringLiteral ^^ { str =>
     TlaAnnotationString(str.slice(1, str.length - 1))
   }
 
-  def intArg: Parser[Any] = wholeNumber ^^ { str =>
+  def intArg: Parser[TlaAnnotationInt] = wholeNumber ^^ { str =>
     TlaAnnotationInt(str.toInt)
   }
 
-  def boolArg: Parser[Any] = ident ^^ {
+  def boolArg: Parser[TlaAnnotationBool] = ident ^^ {
     case "true"  => TlaAnnotationBool(true)
     case "false" => TlaAnnotationBool(false)
   }
+
+  def nonSemiString: Parser[String] = """[^;]*""".r
 }
 
 object AnnotationParser {

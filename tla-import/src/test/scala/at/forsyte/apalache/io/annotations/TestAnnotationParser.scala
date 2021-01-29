@@ -48,6 +48,18 @@ class TestAnnotationParser extends FunSuite with Checkers {
     }
   }
 
+  test("test the special form of a one-argument annotation") {
+    val expected =
+      new Annotation(
+        "type",
+        TlaAnnotationString("(Int, Int) -> Set(Int) "),
+      )
+    AnnotationParser.parse("""  @type: (Int, Int) -> Set(Int) ;""") match {
+      case AnnotationParser.Success(parsed, _) =>
+        assert(expected.toPrettyString == parsed.toPrettyString)
+    }
+  }
+
   test("test on multiline input") {
     val expected =
       new Annotation(
