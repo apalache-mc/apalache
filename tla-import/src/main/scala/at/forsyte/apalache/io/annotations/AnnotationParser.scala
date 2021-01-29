@@ -17,27 +17,27 @@ class AnnotationParser extends JavaTokenParsers {
       new Annotation(name, args: _*)
   }
 
-  def argsInParentheses: Parser[List[TlaAnnotationArg]] = "(" ~ repsep(arg, ",") ~ ")" ^^ { case _ ~ args ~ _ =>
+  def argsInParentheses: Parser[List[AnnotationArg]] = "(" ~ repsep(arg, ",") ~ ")" ^^ { case _ ~ args ~ _ =>
     args
   }
 
-  def argAfterColon: Parser[List[TlaAnnotationArg]] = ":" ~ nonSemiString ~ ";" ^^ { case _ ~ str ~ _ =>
-    List(TlaAnnotationString(str))
+  def argAfterColon: Parser[List[AnnotationArg]] = ":" ~ nonSemiString ~ ";" ^^ { case _ ~ str ~ _ =>
+    List(AnnotationString(str))
   }
 
-  def arg: Parser[TlaAnnotationArg] = stringArg | intArg | boolArg
+  def arg: Parser[AnnotationArg] = stringArg | intArg | boolArg
 
-  def stringArg: Parser[TlaAnnotationString] = stringLiteral ^^ { str =>
-    TlaAnnotationString(str.slice(1, str.length - 1))
+  def stringArg: Parser[AnnotationString] = stringLiteral ^^ { str =>
+    AnnotationString(str.slice(1, str.length - 1))
   }
 
-  def intArg: Parser[TlaAnnotationInt] = wholeNumber ^^ { str =>
-    TlaAnnotationInt(str.toInt)
+  def intArg: Parser[AnnotationInt] = wholeNumber ^^ { str =>
+    AnnotationInt(str.toInt)
   }
 
-  def boolArg: Parser[TlaAnnotationBool] = ident ^^ {
-    case "true"  => TlaAnnotationBool(true)
-    case "false" => TlaAnnotationBool(false)
+  def boolArg: Parser[AnnotationBool] = ident ^^ {
+    case "true"  => AnnotationBool(true)
+    case "false" => AnnotationBool(false)
   }
 
   def nonSemiString: Parser[String] = """[^;]*""".r

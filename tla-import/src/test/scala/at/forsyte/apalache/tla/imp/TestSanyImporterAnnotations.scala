@@ -22,7 +22,7 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
   private var annotationStore: AnnotationStore = _
   private var sanyImporter: SanyImporter = _
 
-  import at.forsyte.apalache.io.annotations.TlaAnnotationArg._
+  import at.forsyte.apalache.io.annotations.AnnotationArg._
 
   before {
     sourceStore = new SourceStore

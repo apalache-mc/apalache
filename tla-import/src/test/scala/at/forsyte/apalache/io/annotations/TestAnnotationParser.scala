@@ -17,15 +17,15 @@ class TestAnnotationParser extends FunSuite with Checkers {
     // Unfortunately, suchThat is too imprecise for that as scalacheck is giving up too quickly.
     // Hence, check only alpha-numeric strings.
     text <- alphaNumStr
-  } yield TlaAnnotationString(text)
+  } yield AnnotationString(text)
 
   private val genInt = for {
     i <- arbitrary[Int]
-  } yield TlaAnnotationInt(i)
+  } yield AnnotationInt(i)
 
   private val genBool = for {
     b <- arbitrary[Boolean]
-  } yield TlaAnnotationBool(b)
+  } yield AnnotationBool(b)
 
   test("test on empty input") {
     AnnotationParser.parse("") match {
@@ -38,9 +38,9 @@ class TestAnnotationParser extends FunSuite with Checkers {
     val expected =
       new Annotation(
           "greet",
-          TlaAnnotationString("hello"),
-          TlaAnnotationInt(2021),
-          TlaAnnotationBool(true)
+          AnnotationString("hello"),
+          AnnotationInt(2021),
+          AnnotationBool(true)
       )
     AnnotationParser.parse("""  @greet("hello", 2021, true)   """) match {
       case AnnotationParser.Success(parsed, _) =>
@@ -52,7 +52,7 @@ class TestAnnotationParser extends FunSuite with Checkers {
     val expected =
       new Annotation(
           "type",
-          TlaAnnotationString("(Int, Int) -> Set(Int) ")
+          AnnotationString("(Int, Int) -> Set(Int) ")
       )
     AnnotationParser.parse("""  @type: (Int, Int) -> Set(Int) ;""") match {
       case AnnotationParser.Success(parsed, _) =>
@@ -64,9 +64,9 @@ class TestAnnotationParser extends FunSuite with Checkers {
     val expected =
       new Annotation(
           "greet",
-          TlaAnnotationString("hello"),
-          TlaAnnotationInt(2021),
-          TlaAnnotationBool(true)
+          AnnotationString("hello"),
+          AnnotationInt(2021),
+          AnnotationBool(true)
       )
     val text =
       """  @greet("hello",

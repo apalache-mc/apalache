@@ -3,42 +3,45 @@ package at.forsyte.apalache.io.annotations
 /**
  * An argument to an annotation.
  */
-sealed abstract class TlaAnnotationArg {}
+sealed abstract class AnnotationArg {}
 
-object TlaAnnotationArg {
-  def mkStr(text: String): TlaAnnotationArg = {
-    TlaAnnotationString(text)
+object AnnotationArg {
+  def mkStr(text: String): AnnotationArg = {
+    AnnotationString(text)
   }
 
-  def mkInt(i: Int): TlaAnnotationInt = {
-    TlaAnnotationInt(i)
+  def mkInt(i: Int): AnnotationInt = {
+    AnnotationInt(i)
   }
 
-  def mkBool(b: Boolean): TlaAnnotationBool = {
-    TlaAnnotationBool(b)
+  def mkBool(b: Boolean): AnnotationBool = {
+    AnnotationBool(b)
   }
 }
 
 /**
  * A string argument.
+ *
  * @param text the text of the string argument.
  */
-case class TlaAnnotationString(text: String) extends TlaAnnotationArg {
+case class AnnotationString(text: String) extends AnnotationArg {
   override def toString: String = '"' + text + '"'
 }
 
 /**
  * An integer argument.
+ *
  * @param num the value of the argument.
  */
-case class TlaAnnotationInt(num: Int) extends TlaAnnotationArg {
+case class AnnotationInt(num: Int) extends AnnotationArg {
   override def toString: String = num.toString
 }
 
 /**
  * A Boolean argument
+ *
  * @param b the Boolean value of the argument.
  */
-case class TlaAnnotationBool(b: Boolean) extends TlaAnnotationArg {
+case class AnnotationBool(b: Boolean) extends AnnotationArg {
   override def toString: String = b.toString
 }
