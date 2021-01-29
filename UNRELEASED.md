@@ -16,7 +16,7 @@
  * new sequential model checker that is using TransitionExecutor, see #467 
  * new command-line options, see #467 and the manual for details:
    - choose the algorithm: `--algo=(offline|incremental)`
-   - fire transitions without filtering the enabled ones: `--all-enabled`
+   - pre-check, whether a transition disabled, discard the disabled transitions: `--discard-disabled`
    - do not check for deadlocks: `--no-deadlock`
    - pass tuning parameters in CLI: `--tune-here`
  * constant simplification over strings, #197
@@ -24,4 +24,4 @@
 ### Bugfixes
 
  * the new sequential model checker has uncovered a bug that was not found
-   by the old model checker
+   by the old model checker, , see #467
