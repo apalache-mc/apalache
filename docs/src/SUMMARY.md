@@ -63,3 +63,4 @@
 # Design Documents
 
 - [ADR-002: types and type annotations](./adr/002adr-types.md)
+- [ADR-004: code annotations](./adr/004adr-annotations.md)

@@ -107,6 +107,15 @@ EXITCODE: OK
 ...
 ```
 
+### parse Annotations succeeds
+
+```sh
+$ apalache-mc parse Annotations.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+...
+```
+
 ## running the check command
 
 

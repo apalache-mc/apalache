@@ -10,3 +10,11 @@
          * Another change description, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+### SANY importer
+
+  * parsing in-comment Java-like annotations, see #226
+  * tracking the source of variable/constant declarations and operator definitions, see #262
+
+### Documentation
+
+  * ADR004: In-comment annotations for declarations (of constants, variables, operators)
