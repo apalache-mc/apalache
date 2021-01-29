@@ -13,7 +13,7 @@ class PrimeRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaActionOper.prime, _) => true
-      case _                              => false
+      case _ => false
     }
   }
 
@@ -23,10 +23,7 @@ class PrimeRule(rewriter: SymbStateRewriter) extends RewritingRule {
         state.setRex(NameEx(name + "'"))
 
       case _ =>
-        throw new RewriterException(
-          "Prime operator is only implemented for variables",
-          state.ex
-        )
+        throw new RewriterException("Prime operator is only implemented for variables", state.ex)
     }
   }
 }

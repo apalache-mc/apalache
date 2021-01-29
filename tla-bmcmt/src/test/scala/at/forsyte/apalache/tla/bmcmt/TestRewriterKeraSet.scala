@@ -13,8 +13,7 @@ import at.forsyte.apalache.tla.pp.{Keramelizer, UniqueNameGenerator}
   * @author Igor Konnov
   */
 class TestRewriterKeraSet extends RewriterBase with TestingPredefs {
-  private var keramelizer =
-    new Keramelizer(new UniqueNameGenerator, TrackerWithListeners())
+  private var keramelizer = new Keramelizer(new UniqueNameGenerator, TrackerWithListeners())
 
   test("""SE-SET-CAP[1-2]: {1, 3} \cap {3, 4} = {3}""") {
     def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
@@ -43,6 +42,7 @@ class TestRewriterKeraSet extends RewriterBase with TestingPredefs {
     val rewriter = create()
     assertTlaExAndRestore(rewriter, state)
   }
+
 
   test("""SE-SET-CUP: regression""") {
     // 2019-01-18, Igor: this bug originally appeared in TwoPhase.tla, the MWE can be found in Bug20190118.tla

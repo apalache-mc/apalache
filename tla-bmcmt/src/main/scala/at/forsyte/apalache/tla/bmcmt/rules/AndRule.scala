@@ -22,13 +22,13 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaBoolOper.and, _*) => true
-      case _                           => false
+      case _ => false
     }
   }
 
   override def apply(state: SymbState): SymbState = {
     simplifier.simplifyShallow(state.ex) match {
-      case OperEx(TlaBoolOper.and, args @ _*) =>
+      case OperEx(TlaBoolOper.and, args@_*) =>
         val finalState =
           if (args.isEmpty) {
             // empty conjunction is always true
@@ -38,15 +38,12 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
             def toIte(es: Seq[TlaEx]): TlaEx = {
               es match {
                 case Seq(last) => last
-                case hd +: tail =>
-                  tla.ite(hd, toIte(tail), state.arena.cellFalse().toNameEx)
+                case hd +: tail => tla.ite(hd, toIte(tail), state.arena.cellFalse().toNameEx)
               }
             }
 
             if (rewriter.config.lazyCircuit &&
-                rewriter.formulaHintsStore
-                  .getHint(state.ex.ID)
-                  .contains(FormulaHintsStore.HighAnd())) {
+                rewriter.formulaHintsStore.getHint(state.ex.ID).contains(FormulaHintsStore.HighAnd())) {
               // lazy short-circuiting: evaluate the conditions and prune them in runtime
               val level = rewriter.contextLevel
               rewriter.push()
@@ -72,15 +69,12 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
                   var nextState = state.updateArena(_.appendCell(BoolT()))
                   val pred = nextState.arena.topCell.toNameEx
                   def mapArg(argEx: TlaEx): TlaEx = {
-                    nextState =
-                      rewriter.rewriteUntilDone(nextState.setRex(argEx))
+                    nextState = rewriter.rewriteUntilDone(nextState.setRex(argEx))
                     nextState.ex
                   }
 
                   val rewrittenArgs = args map mapArg
-                  rewriter.solverContext.assertGroundExpr(
-                    tla.eql(pred, tla.and(rewrittenArgs: _*))
-                  )
+                  rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.and(rewrittenArgs :_*)))
                   nextState.setRex(pred)
                 }
               rewriter.rewriteUntilDone(newState)
@@ -89,15 +83,12 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         finalState
 
-      case e @ ValEx(_) =>
+      case e@ValEx(_) =>
         // the simplifier has rewritten the disjunction to TRUE or FALSE
         rewriter.rewriteUntilDone(state.setRex(e))
 
-      case e @ _ =>
-        throw new RewriterException(
-          "%s is not applicable to %s".format(getClass.getSimpleName, e),
-          e
-        )
+      case e@_ =>
+        throw new RewriterException("%s is not applicable to %s".format(getClass.getSimpleName, e), e)
     }
   }
 
@@ -125,9 +116,7 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
           // propagate
           var nextState = tailState.updateArena(_.appendCell(BoolT()))
           val pred = nextState.asCell.toNameEx
-          rewriter.solverContext.assertGroundExpr(
-            tla.equiv(pred, tla.and(headCell.toNameEx, tailState.ex))
-          )
+          rewriter.solverContext.assertGroundExpr(tla.equiv(pred, tla.and(headCell.toNameEx, tailState.ex)))
           nextState.setRex(pred)
         }
       }

@@ -1,9 +1,6 @@
 package at.forsyte.apalache.tla.typecheck
 
-import at.forsyte.apalache.tla.typecheck.parser.{
-  Type1ParseError,
-  DefaultType1Parser
-}
+import at.forsyte.apalache.tla.typecheck.parser.{Type1ParseError, DefaultType1Parser}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -11,7 +8,7 @@ import org.scalatest.junit.JUnitRunner
 import scala.collection.immutable.SortedMap
 
 @RunWith(classOf[JUnitRunner])
-class TestDefaultType1Parser extends FunSuite {
+class TestDefaultType1Parser  extends FunSuite {
   test("non-sense") {
     assertThrows[Type1ParseError](DefaultType1Parser("non-sense"))
   }
@@ -117,9 +114,7 @@ class TestDefaultType1Parser extends FunSuite {
 
   test("(Set(Int) => Bool) => Str") {
     val result = DefaultType1Parser("(Set(Int) => Bool) => Str")
-    assert(
-      OperT1(List(OperT1(List(SetT1(IntT1())), BoolT1())), StrT1()) == result
-    )
+    assert(OperT1(List(OperT1(List(SetT1(IntT1())), BoolT1())), StrT1()) == result)
   }
 
   test("(Set(Int) -> Bool) => Str") {

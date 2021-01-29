@@ -8,7 +8,7 @@ import scala.collection.immutable.HashMap
   *
   * @author Igor Konnov
   */
-class AbstractCacheSnapshot[ContextT, SourceT, TargetT](
-    val cache: Map[SourceT, (TargetT, Int)] = HashMap(),
-    val reverseCache: Map[TargetT, (SourceT, Int)]
-) {}
+class AbstractCacheSnapshot[ContextT, SourceT, TargetT](val cache: Map[SourceT, (TargetT, Int)] = HashMap(),
+                                                        val reverseCache: Map[TargetT, (SourceT, Int)]) {
+
+}

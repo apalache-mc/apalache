@@ -10,10 +10,7 @@ import scala.collection.immutable.HashMap
   *
   * @author Igor Konnov
   */
-class SimpleCache[KeyT, ValueT]
-    extends StackableContext
-    with Recoverable[SimpleCacheSnapshot[KeyT, ValueT]] {
-
+class SimpleCache[KeyT, ValueT] extends StackableContext with Recoverable[SimpleCacheSnapshot[KeyT, ValueT]] {
   /**
     * A context level, see StackableContext
     */
@@ -45,7 +42,7 @@ class SimpleCache[KeyT, ValueT]
   def get(key: KeyT): Option[ValueT] = {
     cache.get(key) match {
       case Some((target, _)) => Some(target)
-      case None              => None
+      case None => None
     }
   }
 
@@ -55,9 +52,7 @@ class SimpleCache[KeyT, ValueT]
     * @return the snapshot
     */
   override def snapshot(): SimpleCacheSnapshot[KeyT, ValueT] = {
-    val squashedCache = cache.map {
-      case (key, (value, _)) => (key, (value, 0))
-    }
+    val squashedCache = cache.map { case (key, (value, _)) => (key, (value, 0)) }
     new SimpleCacheSnapshot(squashedCache)
   }
 

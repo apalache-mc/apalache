@@ -115,13 +115,11 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
       case res @ NameEx(name) =>
         assert(solverContext.sat())
         rewriter.push()
-        val eqState =
-          rewriter.rewriteUntilDone(nextState.setRex(tla.eql(res, e2)))
+        val eqState = rewriter.rewriteUntilDone(nextState.setRex(tla.eql(res, e2)))
         solverContext.assertGroundExpr(eqState.ex)
         assert(solverContext.sat())
         rewriter.pop()
-        val neqState =
-          rewriter.rewriteUntilDone(nextState.setRex(tla.eql(res, e1)))
+        val neqState = rewriter.rewriteUntilDone(nextState.setRex(tla.eql(res, e1)))
         solverContext.assertGroundExpr(neqState.ex)
         assert(!solverContext.sat())
 
@@ -129,6 +127,7 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
         fail("Unexpected rewriting result")
     }
   }
+
 
   test("""SE-ITE[5]: IF 1 = 1 THEN {2} ELSE {1} ] ~~> $C$k""") {
     def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
@@ -140,7 +139,7 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case membershipEx @ NameEx(name) =>
+      case membershipEx@NameEx(name) =>
         assert(solverContext.sat())
         solverContext.push()
         solverContext.assertGroundExpr(tla.not(nextState.ex))
@@ -151,10 +150,12 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
         assert(solverContext.sat())
         solverContext.pop()
 
+
       case _ =>
         fail("Unexpected rewriting result")
     }
   }
+
 
   test("""SE-ITE[5]: IF 2 < 3 THEN {1, 2} ELSE {2, 3} ~~> {1, 2}""") {
     val pred = tla.lt(tla.int(2), tla.int(3))
@@ -169,13 +170,11 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
       case res @ NameEx(name) =>
         assert(solverContext.sat())
         rewriter.push()
-        val eqState =
-          rewriter.rewriteUntilDone(nextState.setRex(tla.eql(res, e1)))
+        val eqState = rewriter.rewriteUntilDone(nextState.setRex(tla.eql(res, e1)))
         solverContext.assertGroundExpr(eqState.ex)
         assert(solverContext.sat())
         rewriter.pop()
-        val neqState =
-          rewriter.rewriteUntilDone(nextState.setRex(tla.eql(res, e2)))
+        val neqState = rewriter.rewriteUntilDone(nextState.setRex(tla.eql(res, e2)))
         solverContext.assertGroundExpr(neqState.ex)
         assert(!solverContext.sat())
 
@@ -214,10 +213,7 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
     val state = new SymbState(letIn, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
-    assertTlaExAndRestore(
-      rewriter,
-      nextState.setRex(tla.eql(nextState.ex, tla.int(4)))
-    )
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(nextState.ex, tla.int(4))))
   }
 
   // handled by Keramelizer
@@ -240,16 +236,14 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
       val rewriter = create()
       val nextState = rewriter.rewriteUntilDone(state)
       nextState.ex match {
-        case res @ NameEx(name) =>
+        case res@NameEx(name) =>
           rewriter.push()
           solverContext.assertGroundExpr(tla.eql(icell.toNameEx, i))
           solverContext.assertGroundExpr(tla.eql(1 + (i % 3), res))
           assert(solverContext.sat())
           rewriter.pop()
           rewriter.push()
-          val failureOccurs = tla.or(
-            nextState.arena.findCellsByType(FailPredT()).map(_.toNameEx): _*
-          )
+          val failureOccurs = tla.or(nextState.arena.findCellsByType(FailPredT()).map(_.toNameEx): _*)
           solverContext.assertGroundExpr(failureOccurs)
           assert(solverContext.sat()) // this possible since there is no OTHER case and the constraints do not restrict us
           rewriter.pop()
@@ -270,9 +264,7 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
 
   // handled by Keramelizer
   // CASE i = 1 -> 2 [] i = 2 -> 3 [] i = 3 -> 1 [] OTHER -> 4]
-  ignore(
-    """SE-CASE1: CASE i = 1 -> 2 [] i = 2 -> 3 [] i = 3 -> 1 [] OTHER -> 4]"""
-  ) {
+  ignore("""SE-CASE1: CASE i = 1 -> 2 [] i = 2 -> 3 [] i = 3 -> 1 [] OTHER -> 4]""") {
     def guard(arg: Int) = tla.eql("i", arg)
     val caseEx = tla.caseOther(4, guard(1), 2, guard(2), 3, guard(3), 1)
     def caseExEqConst(i: Int) = tla.eql(i, caseEx)
@@ -296,9 +288,7 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
           assert(solverContext.sat())
           rewriter.pop()
           rewriter.push()
-          val failureOccurs = tla.or(
-            nextState.arena.findCellsByType(FailPredT()).map(_.toNameEx): _*
-          )
+          val failureOccurs = tla.or(nextState.arena.findCellsByType(FailPredT()).map(_.toNameEx): _*)
           solverContext.assertGroundExpr(failureOccurs)
           assert(!solverContext.sat()) // no failure should occur, as there is the OTHER case
           rewriter.pop()

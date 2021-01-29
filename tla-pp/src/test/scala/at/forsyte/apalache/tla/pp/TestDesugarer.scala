@@ -17,11 +17,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
   test("chain 2 excepts") {
     // input: [f EXCEPT ![i][j] = e]
     val highCalories =
-      tla.except(
-        tla.name("f"),
-        tla.tuple(tla.name("i"), tla.name("j")),
-        tla.name("e")
-      )
+      tla.except(tla.name("f"), tla.tuple(tla.name("i"), tla.name("j")), tla.name("e"))
     val sugarFree = desugarer.transform(highCalories)
     // output [ f EXCEPT ![i] = [f[i] EXCEPT ![j] = e] ]
     val expected =
@@ -31,9 +27,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
         tla.except(
           tla.appFun(tla.name("f"), tla.name("i")),
           tla.tuple(tla.name("j")),
-          tla.name("e")
-        )
-      )
+          tla.name("e")))
 
     assert(expected == sugarFree)
   }
@@ -44,8 +38,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
       tla.except(
         tla.name("f"),
         tla.tuple(tla.name("i"), tla.name("j"), tla.name("k")),
-        tla.name("e")
-      )
+        tla.name("e"))
     val sugarFree = desugarer.transform(highCalories)
     // output: [ f EXCEPT ![i] = [f[i] EXCEPT ![j] = [f[i][j] EXCEPT ![k] = e] ] ]
     val expected = tla.except(
@@ -55,12 +48,12 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
         tla.appFun(tla.name("f"), tla.name("i")),
         tla.tuple(tla.name("j")),
         tla.except(
-          tla.appFun(tla.appFun(tla.name("f"), tla.name("i")), tla.name("j")),
+          tla.appFun(
+            tla.appFun(tla.name("f"),
+              tla.name("i")),
+            tla.name("j")),
           tla.tuple(tla.name("k")),
-          tla.name("e")
-        )
-      )
-    )
+          tla.name("e"))))
 
     assert(expected == sugarFree)
   }
@@ -91,8 +84,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     // This is an idiom that was probably introduced by Diego Ongaro in Raft.
     // There is no added value in this construct, so it is just sugar.
     // We do the transformation right here.
-    val unchanged =
-      tla.unchangedTup(tla.name("x"), tla.tuple(tla.name("y"), tla.name("z")))
+    val unchanged = tla.unchangedTup(tla.name("x"), tla.tuple(tla.name("y"), tla.name("z")))
     val sugarFree = desugarer.transform(unchanged)
     val expected =
       tla.and(
@@ -137,14 +129,11 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     // TLA+ allows the user to write tuples in expanded form. We introduce tuples instead.
     // input: { <<x, <<y, z>> >> \in XYZ: x = 3 /\ y = 4 }
     val filter =
-      tla.filter(
-        tla.tuple(tla.name("x"), tla.tuple(tla.name("y"), tla.name("z"))),
-        tla.name("XYZ"),
-        tla.and(
-          tla.eql(tla.name("x"), tla.int(3)),
-          tla.eql(tla.name("y"), tla.int(4))
-        )
-      )
+    tla.filter(
+      tla.tuple(tla.name("x"), tla.tuple(tla.name("y"), tla.name("z"))),
+      tla.name("XYZ"),
+      tla.and(tla.eql(tla.name("x"), tla.int(3)),
+        tla.eql(tla.name("y"), tla.int(4))))
     val sugarFree = desugarer.transform(filter)
     // output: { x_y_z \in XYZ: x_y_z[1] = 3 /\ x_y_z[2][1] = 4 }
     val expected =
@@ -153,12 +142,10 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
         tla.name("XYZ"),
         tla.and(
           tla.eql(tla.appFun(tla.name("x_y_z"), tla.int(1)), tla.int(3)),
-          tla.eql(
-            tla.appFun(tla.appFun(tla.name("x_y_z"), tla.int(2)), tla.int(1)),
-            tla.int(4)
-          )
-        )
-      ) ////
+          tla.eql(tla.appFun(tla.appFun(tla.name("x_y_z"), tla.int(2)),
+            tla.int(1)),
+            tla.int(4))
+        )) ////
     assert(expected == sugarFree)
   }
 
@@ -166,19 +153,18 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     // TLA+ allows the user to write tuples in expanded form. We introduce tuples instead.
     // input: { <<x, <<y, z>> >> \in XYZ |-> x + y }
     val map =
-      tla.map(
-        tla.plus(tla.name("x"), tla.name("y")),
-        tla.tuple(tla.name("x"), tla.tuple(tla.name("y"), tla.name("z"))),
-        tla.name("XYZ")
-      )
+    tla.map(
+      tla.plus(tla.name("x"), tla.name("y")),
+      tla.tuple(tla.name("x"), tla.tuple(tla.name("y"), tla.name("z"))),
+      tla.name("XYZ"))
     val sugarFree = desugarer.transform(map)
     // output: { x_y_z \in XYZ: x_y_z[1] + x_y_z[2][1] }
     val expected =
       tla.map(
-        tla.plus(
-          tla.appFun(tla.name("x_y_z"), tla.int(1)),
-          tla.appFun(tla.appFun(tla.name("x_y_z"), tla.int(2)), tla.int(1))
-        ),
+        tla.plus(tla.appFun(tla.name("x_y_z"), tla.int(1)),
+          tla.appFun(tla.appFun(tla.name("x_y_z"),
+            tla.int(2)),
+            tla.int(1))),
         tla.name("x_y_z"),
         tla.name("XYZ")
       ) ////
@@ -189,14 +175,11 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     // TLA+ allows the user to write tuples in expanded form. We introduce tuples instead.
     // input: \E <<x, <<y, z>> >> \in XYZ: x = 3 /\ y = 4 }
     val filter =
-      tla.exists(
-        tla.tuple(tla.name("x"), tla.tuple(tla.name("y"), tla.name("z"))),
-        tla.name("XYZ"),
-        tla.and(
-          tla.eql(tla.name("x"), tla.int(3)),
-          tla.eql(tla.name("y"), tla.int(4))
-        )
-      )
+    tla.exists(
+      tla.tuple(tla.name("x"), tla.tuple(tla.name("y"), tla.name("z"))),
+      tla.name("XYZ"),
+      tla.and(tla.eql(tla.name("x"), tla.int(3)),
+        tla.eql(tla.name("y"), tla.int(4))))
     val sugarFree = desugarer.transform(filter)
     // output: \E x_y_z \in XYZ: x_y_z[1] = 3 /\ x_y_z[2][1] = 4 }
     val expected =
@@ -205,12 +188,10 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
         tla.name("XYZ"),
         tla.and(
           tla.eql(tla.appFun(tla.name("x_y_z"), tla.int(1)), tla.int(3)),
-          tla.eql(
-            tla.appFun(tla.appFun(tla.name("x_y_z"), tla.int(2)), tla.int(1)),
-            tla.int(4)
-          )
-        )
-      ) ////
+          tla.eql(tla.appFun(tla.appFun(tla.name("x_y_z"), tla.int(2)),
+            tla.int(1)),
+            tla.int(4))
+        )) ////
     assert(expected == sugarFree)
   }
 
@@ -218,14 +199,11 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     // TLA+ allows the user to write tuples in expanded form. We introduce tuples instead.
     // input: \A <<x, <<y, z>> >> \in XYZ: x = 3 /\ y = 4 }
     val filter =
-      tla.forall(
-        tla.tuple(tla.name("x"), tla.tuple(tla.name("y"), tla.name("z"))),
-        tla.name("XYZ"),
-        tla.and(
-          tla.eql(tla.name("x"), tla.int(3)),
-          tla.eql(tla.name("y"), tla.int(4))
-        )
-      )
+    tla.forall(
+      tla.tuple(tla.name("x"), tla.tuple(tla.name("y"), tla.name("z"))),
+      tla.name("XYZ"),
+      tla.and(tla.eql(tla.name("x"), tla.int(3)),
+        tla.eql(tla.name("y"), tla.int(4))))
     val sugarFree = desugarer.transform(filter)
     // output: \A x_y_z \in XYZ: x_y_z[1] = 3 /\ x_y_z[2][1] = 4 }
     val expected =
@@ -234,12 +212,10 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
         tla.name("XYZ"),
         tla.and(
           tla.eql(tla.appFun(tla.name("x_y_z"), tla.int(1)), tla.int(3)),
-          tla.eql(
-            tla.appFun(tla.appFun(tla.name("x_y_z"), tla.int(2)), tla.int(1)),
-            tla.int(4)
-          )
-        )
-      ) ////
+          tla.eql(tla.appFun(tla.appFun(tla.name("x_y_z"), tla.int(2)),
+            tla.int(1)),
+            tla.int(4))
+        )) ////
     assert(expected == sugarFree)
   }
 
@@ -247,19 +223,18 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     // TLA+ allows the user to write tuples in expanded form. We introduce tuples instead.
     // input: [<<x, <<y, z>> >> \in XYZ |-> x + y]
     val map =
-      tla.funDef(
-        tla.plus(tla.name("x"), tla.name("y")),
-        tla.tuple(tla.name("x"), tla.tuple(tla.name("y"), tla.name("z"))),
-        tla.name("XYZ")
-      )
+    tla.funDef(
+      tla.plus(tla.name("x"), tla.name("y")),
+      tla.tuple(tla.name("x"), tla.tuple(tla.name("y"), tla.name("z"))),
+      tla.name("XYZ"))
     val sugarFree = desugarer.transform(map)
     // output: [ x_y_z \in XYZ |-> x_y_z[1] + x_y_z[2][1] ]
     val expected =
       tla.funDef(
-        tla.plus(
-          tla.appFun(tla.name("x_y_z"), tla.int(1)),
-          tla.appFun(tla.appFun(tla.name("x_y_z"), tla.int(2)), tla.int(1))
-        ),
+        tla.plus(tla.appFun(tla.name("x_y_z"), tla.int(1)),
+          tla.appFun(tla.appFun(tla.name("x_y_z"),
+            tla.int(2)),
+            tla.int(1))),
         tla.name("x_y_z"),
         tla.name("XYZ")
       ) ////
@@ -270,7 +245,10 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     // make sure that a function of a single argument does not get modified, e.g., no tuples added
     // input: [x \in X |-> {x}]
     val fundef =
-      tla.funDef(tla.enumSet(tla.name("x")), tla.name("x"), tla.name("X"))
+    tla.funDef(
+      tla.enumSet(tla.name("x")),
+      tla.name("x"),
+      tla.name("X"))
     val sugarFree = desugarer.transform(fundef)
     assert(fundef == sugarFree)
   }
@@ -279,21 +257,16 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     // The user may write multi-argument functions, which we collapse into tuples
     // input: [ x \in X, y \in Y |-> x + y ]
     val map =
-      tla.funDef(
-        tla.plus(tla.name("x"), tla.name("y")),
-        tla.name("x"),
-        tla.name("X"),
-        tla.name("y"),
-        tla.name("Y")
-      )
+    tla.funDef(
+      tla.plus(tla.name("x"), tla.name("y")),
+      tla.name("x"), tla.name("X"),
+      tla.name("y"), tla.name("Y"))
     val sugarFree = desugarer.transform(map)
     // output: [ x_y \in X \X Y |-> x_y[1] + x_y[2] ]
     val expected =
       tla.funDef(
-        tla.plus(
-          tla.appFun(tla.name("x_y"), tla.int(1)),
-          tla.appFun(tla.name("x_y"), tla.int(2))
-        ),
+        tla.plus(tla.appFun(tla.name("x_y"), tla.int(1)),
+          tla.appFun(tla.name("x_y"), tla.int(2))),
         tla.name("x_y"),
         tla.times(tla.name("X"), tla.name("Y"))
       ) ////
@@ -304,21 +277,16 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     // TLA+ allows the user to write tuples in expanded form. We introduce tuples instead.
     // input: f[x \in S, y \in T] == x + y
     val map =
-      tla.recFunDef(
-        tla.plus(tla.name("x"), tla.name("y")),
-        tla.name("x"),
-        tla.name("S"),
-        tla.name("y"),
-        tla.name("T")
-      )
+    tla.recFunDef(
+      tla.plus(tla.name("x"), tla.name("y")),
+      tla.name("x"), tla.name("S"),
+      tla.name("y"), tla.name("T"))
     val sugarFree = desugarer.transform(map)
     // output: f[x_y \in S \X T] == x_y[1] + x_y[2]
     val expected =
       tla.recFunDef(
-        tla.plus(
-          tla.appFun(tla.name("x_y"), tla.int(1)),
-          tla.appFun(tla.name("x_y"), tla.int(2))
-        ),
+        tla.plus(tla.appFun(tla.name("x_y"), tla.int(1)),
+          tla.appFun(tla.name("x_y"), tla.int(2))),
         tla.name("x_y"),
         tla.times(tla.name("S"), tla.name("T"))
       ) ////
@@ -329,7 +297,10 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     // make sure that a function of a single argument does not get modified, e.g., no tuples added
     // input: [x \in X |-> {x}]
     val recFun =
-      tla.recFunDef(tla.enumSet(tla.name("x")), tla.name("x"), tla.name("X"))
+      tla.recFunDef(
+        tla.enumSet(tla.name("x")),
+        tla.name("x"),
+        tla.name("X"))
     val sugarFree = desugarer.transform(recFun)
     assert(recFun == sugarFree)
   }

@@ -7,13 +7,12 @@ package at.forsyte.apalache.tla.lir.oper
   * TODO: rename this class to ApalacheOper, once ik/multicore is merged into unstable.
   *
   * @author konnov
-  */
+ */
 abstract class BmcOper extends TlaOper {
   override def interpretation: Interpretation.Value = Interpretation.StandardLib
 }
 
 object BmcOper {
-
   /**
     * A type annotation of an expression with another expression that encodes a type.
     */
@@ -76,3 +75,4 @@ object BmcOper {
     override def precedence: (Int, Int) = (5, 5)
   }
 }
+

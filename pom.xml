@@ -4,7 +4,7 @@
     <groupId>at.forsyte.apalache</groupId>
     <artifactId>apalache</artifactId>
     <packaging>pom</packaging>
-    <version>0.8.3-SNAPSHOT</version>
+    <version>0.8.4-SNAPSHOT</version>
 
     <name>APALACHE project</name>
     <url>https://github.com/informalsystems/apalache</url>
@@ -268,6 +268,8 @@
                     <artifactId>spotless-maven-plugin</artifactId>
                     <version>${spotless.version}</version>
                     <configuration>
+                        <!-- Only apply checks and fixes to files changed from unstable -->
+                        <ratchetFrom>origin/unstable</ratchetFrom>
                         <formats>
                             <!-- you can define as many formats as you want, each is independent -->
                             <format>
@@ -276,8 +278,8 @@
                                     <include>*.md</include>
                                 </includes>
                                 <!-- define the steps to apply to those files -->
-                                <trimTrailingWhitespace/>
-                                <endWithNewline/>
+                                <trimTrailingWhitespace />
+                                <endWithNewline />
                                 <indent>
                                     <spaces>true</spaces>
                                     <spacesPerTab>4</spacesPerTab>

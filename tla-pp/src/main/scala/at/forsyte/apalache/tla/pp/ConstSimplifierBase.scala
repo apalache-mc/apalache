@@ -14,7 +14,6 @@ import scala.math.BigInt
   * @author Igor Konnov
   */
 abstract class ConstSimplifierBase {
-
   /**
     * A shallow simplification that does not recurse into the expression structure.
     */
@@ -35,11 +34,7 @@ abstract class ConstSimplifierBase {
         ValEx(TlaInt(left + right))
       }
 
-    case OperEx(
-        TlaArithOper.minus,
-        ValEx(TlaInt(left)),
-        ValEx(TlaInt(right))
-        ) =>
+    case OperEx(TlaArithOper.minus, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
       ValEx(TlaInt(left - right))
 
     case ex @ OperEx(TlaArithOper.minus, NameEx(left), NameEx(right)) =>
@@ -68,8 +63,7 @@ abstract class ConstSimplifierBase {
       } else {
         // the power does not fit into an integer. That is a lot. Use doubles.
         val pow = Math.pow(base.toDouble, power.toDouble)
-        val powAsBigInt =
-          BigDecimal(pow).setScale(0, BigDecimal.RoundingMode.DOWN).toBigInt()
+        val powAsBigInt = BigDecimal(pow).setScale(0, BigDecimal.RoundingMode.DOWN).toBigInt()
         ValEx(TlaInt(powAsBigInt))
       }
 
@@ -109,43 +103,36 @@ abstract class ConstSimplifierBase {
       if (left == right) ValEx(TlaBool(false)) else ex
 
     // boolean operations
-    case OperEx(TlaBoolOper.and, args @ _*) =>
+    case OperEx(TlaBoolOper.and, args @ _*)  =>
       val simpArgs = args.filterNot { _ == ValEx(TlaBool(true)) }
       if (simpArgs.isEmpty) {
         ValEx(TlaBool(true)) // an empty conjunction is true
       } else if (simpArgs.contains(ValEx(TlaBool(false)))) {
         ValEx(TlaBool(false)) // one false make conjunction false
       } else {
-        OperEx(TlaBoolOper.and, simpArgs: _*)
+        OperEx(TlaBoolOper.and, simpArgs :_*)
       }
 
-    case OperEx(TlaBoolOper.or, args @ _*) =>
+    case OperEx(TlaBoolOper.or, args @ _*)  =>
       val simpArgs = args.filterNot { _ == ValEx(TlaBool(false)) }
       if (simpArgs.isEmpty) {
         ValEx(TlaBool(false)) // an empty disjunction is true
       } else if (simpArgs.contains(ValEx(TlaBool(true)))) {
         ValEx(TlaBool(true)) // one true make disjunction true
       } else {
-        OperEx(TlaBoolOper.or, simpArgs: _*)
+        OperEx(TlaBoolOper.or, simpArgs :_*)
       }
 
     case OperEx(TlaBoolOper.not, ValEx(TlaBool(b))) =>
       ValEx(TlaBool(!b))
 
-    case OperEx(
-        TlaBoolOper.not,
-        OperEx(TlaBoolOper.not, underDoubleNegation)
-        ) =>
+    case OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.not, underDoubleNegation)) =>
       underDoubleNegation
 
     case OperEx(TlaBoolOper.not, OperEx(TlaOper.ne, lhs, rhs)) =>
       OperEx(TlaOper.eq, lhs, rhs)
 
-    case OperEx(
-        TlaBoolOper.implies,
-        ValEx(TlaBool(left)),
-        ValEx(TlaBool(right))
-        ) =>
+    case OperEx(TlaBoolOper.implies, ValEx(TlaBool(left)), ValEx(TlaBool(right))) =>
       ValEx(TlaBool(!left || right))
 
     case OperEx(TlaBoolOper.implies, ValEx(TlaBool(false)), _) =>
@@ -160,11 +147,7 @@ abstract class ConstSimplifierBase {
     case OperEx(TlaBoolOper.implies, lhs, ValEx(TlaBool(false))) =>
       simplifyShallow(OperEx(TlaBoolOper.not, lhs))
 
-    case OperEx(
-        TlaBoolOper.equiv,
-        ValEx(TlaBool(left)),
-        ValEx(TlaBool(right))
-        ) =>
+    case OperEx(TlaBoolOper.equiv, ValEx(TlaBool(left)), ValEx(TlaBool(right))) =>
       ValEx(TlaBool(left == right))
 
     case OperEx(TlaBoolOper.equiv, ValEx(TlaBool(left)), right) =>
@@ -188,28 +171,13 @@ abstract class ConstSimplifierBase {
     case OperEx(TlaControlOper.ifThenElse, ValEx(TlaBool(false)), _, elseEx) =>
       elseEx
 
-    case OperEx(
-        TlaControlOper.ifThenElse,
-        pred,
-        ValEx(TlaBool(false)),
-        elseEx
-        ) =>
+    case OperEx(TlaControlOper.ifThenElse, pred, ValEx(TlaBool(false)), elseEx) =>
       OperEx(TlaBoolOper.and, OperEx(TlaBoolOper.not, pred), elseEx)
 
-    case OperEx(
-        TlaControlOper.ifThenElse,
-        pred,
-        ValEx(TlaBool(true)),
-        ValEx(TlaBool(false))
-        ) =>
+    case OperEx(TlaControlOper.ifThenElse, pred, ValEx(TlaBool(true)), ValEx(TlaBool(false))) =>
       pred
 
-    case OperEx(
-        TlaControlOper.ifThenElse,
-        pred,
-        ValEx(TlaBool(false)),
-        ValEx(TlaBool(true))
-        ) =>
+    case OperEx(TlaControlOper.ifThenElse, pred, ValEx(TlaBool(false)), ValEx(TlaBool(true))) =>
       OperEx(TlaBoolOper.not, pred)
 
     case ite @ OperEx(TlaControlOper.ifThenElse, _, thenEx, elseEx) =>

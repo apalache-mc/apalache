@@ -20,16 +20,13 @@ import com.typesafe.scalalogging.LazyLogging
 /**
   * This pass finds symbolic transitions in Init and Next.
   */
-class TransitionPassImpl @Inject()(
-    options: PassOptions,
-    sourceStore: SourceStore,
-    tracker: TransformationTracker,
-    changeListener: ChangeListener,
-    incrementalRenaming: IncrementalRenaming,
-    @Named("AfterTransitionFinder") nextPass: Pass with TlaModuleMixin
-) extends TransitionPass
-    with LazyLogging {
-
+class TransitionPassImpl @Inject()(options: PassOptions,
+                                   sourceStore: SourceStore,
+                                   tracker: TransformationTracker,
+                                   changeListener: ChangeListener,
+                                   incrementalRenaming: IncrementalRenaming,
+                                   @Named("AfterTransitionFinder") nextPass: Pass with TlaModuleMixin)
+  extends TransitionPass with LazyLogging {
   /**
     * The name of the pass
     *
@@ -48,17 +45,12 @@ class TransitionPassImpl @Inject()(
     // extract transitions from InitPrimed
     val initOperName = options.getOrElse("checker", "init", "Init")
     val initOperNamePrimed = initOperName + "Primed"
-    val initDeclarations = extractTransitions(
-      inModule,
-      initOperNamePrimed,
-      NormalizedNames.INIT_PREFIX
-    )
+    val initDeclarations = extractTransitions(inModule, initOperNamePrimed, NormalizedNames.INIT_PREFIX)
     logger.info(s"  > Found ${initDeclarations.size} initializing transitions")
 
     // extract transitions from Next
     val nextOperName = options.getOrElse("checker", "next", "Next")
-    val nextDeclarations =
-      extractTransitions(inModule, nextOperName, NormalizedNames.NEXT_PREFIX)
+    val nextDeclarations = extractTransitions(inModule, nextOperName, NormalizedNames.NEXT_PREFIX)
     logger.info(s"  > Found ${nextDeclarations.size} transitions")
 
     // convert an optional CInit operator
@@ -70,13 +62,10 @@ class TransitionPassImpl @Inject()(
 
         case Some(cinitName) =>
           logger.info(s"  > Found constant initializer $cinitName")
-          val cinitEx =
-            findBodyOf(cinitName + "Primed", inModule.operDeclarations: _*)
+          val cinitEx = findBodyOf(cinitName + "Primed", inModule.operDeclarations :_*)
           // We don't perform the standard assignment-search on cinit,
           // we just replace EVERY x' = e with x' <- e
-          val tr = AssignmentOperatorIntroduction({ _ =>
-            true
-          }, tracker)
+          val tr = AssignmentOperatorIntroduction( { _ => true }, tracker )
           val newEx = tr(cinitEx)
           Seq(ModuleAdapter.exprToOperDef(NormalizedNames.CONST_INIT, newEx))
       }
@@ -87,8 +76,7 @@ class TransitionPassImpl @Inject()(
       cinitDeclarations ++ initDeclarations ++ nextDeclarations ++ vcDeclarations
 
     logger.info(s"  > Applying unique renaming")
-    val outModule =
-      incrementalRenaming.renameInModule(new TlaModule(inModule.name, newDecls))
+    val outModule = incrementalRenaming.renameInModule(new TlaModule(inModule.name, newDecls))
 
     // print the resulting module
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
@@ -98,27 +86,18 @@ class TransitionPassImpl @Inject()(
     true
   }
 
-  private def extractTransitions(
-      module: TlaModule,
-      inOperName: String,
-      outOperName: String
-  ): Seq[TlaOperDecl] = {
+  private def extractTransitions(module: TlaModule, inOperName: String, outOperName: String): Seq[TlaOperDecl] = {
     val primedName = findBodyOf(inOperName, module.declarations: _*)
     val vars = module.varDeclarations.map(_.name)
 
     val sourceLoc = SourceLocator(sourceStore.makeSourceMap, changeListener)
 
-    val transitionPairs = SmtFreeSymbolicTransitionExtractor(
-      tracker,
-      sourceLoc
-    )(vars.toSet, primedName)
+    val transitionPairs = SmtFreeSymbolicTransitionExtractor(tracker, sourceLoc)(vars.toSet, primedName)
     // sort the transitions by their occurrence in the source code
-    val sorter = new TransitionOrder(sourceLoc)
+    val sorter = new TransitionOrder( sourceLoc )
     val sortedPairs = sorter.sortBySource(transitionPairs)
     if (sortedPairs.isEmpty) {
-      throw new AssignmentException(
-        "Failed to find assignments and symbolic transitions in " + inOperName
-      )
+      throw new AssignmentException("Failed to find assignments and symbolic transitions in " + inOperName)
     }
     // transform the transitions into declarations
     ModuleAdapter.exprsToOperDefs(outOperName, sortedPairs.map(_._2))

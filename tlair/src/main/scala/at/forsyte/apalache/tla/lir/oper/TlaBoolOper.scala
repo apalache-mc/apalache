@@ -10,7 +10,6 @@ abstract class TlaBoolOper extends TlaOper {
 }
 
 object TlaBoolOper {
-
   /**
     * A conjunction over an arbitrary number of arguments.
     * By convention, it should be evaluated to TRUE, when the argument list is empty.

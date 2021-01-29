@@ -15,8 +15,7 @@ object NormalizedNames {
   val VC_TEMPORAL_PROP_PREFIX = "VCTemporal$"
 
   // the names of the options that capture the critical specification pieces
-  val STANDARD_OPTION_NAMES =
-    Seq("init", "cinit", "next", "inv", "temporalProps")
+  val STANDARD_OPTION_NAMES = Seq("init", "cinit", "next", "inv", "temporalProps")
 
   /**
     * Extract operator names from the standard option names.
@@ -25,12 +24,12 @@ object NormalizedNames {
     */
   def userOperatorNamesFromOptions(options: PassOptions): List[String] = {
     // first, get the operators whose names are passed as single strings
-    val single: List[String] =
-      List("init", "cinit", "next").flatMap(options.get[String]("checker", _))
+    val single: List[String] = List("init", "cinit", "next").
+      flatMap(options.get[String]("checker", _))
     // second, get the operators whose names are passed as lists of strings
-    val multiple: List[String] = List("inv", "temporalProps")
-      .flatMap(options.get[List[String]]("checker", _))
-      .flatten
+    val multiple: List[String] = List("inv", "temporalProps").
+      flatMap(options.get[List[String]]("checker", _)).
+      flatten
     single ++ multiple
   }
 
@@ -41,10 +40,8 @@ object NormalizedNames {
     */
   def isVC(decl: TlaDecl): Boolean = {
     decl.isInstanceOf[TlaOperDecl] &&
-    decl.asInstanceOf[TlaOperDecl].formalParams.isEmpty &&
-    (decl.name.startsWith(VC_INV_PREFIX) || decl.name.startsWith(
-      VC_NOT_INV_PREFIX
-    ))
+      decl.asInstanceOf[TlaOperDecl].formalParams.isEmpty &&
+      (decl.name.startsWith(VC_INV_PREFIX) || decl.name.startsWith(VC_NOT_INV_PREFIX))
   }
 
   /**
@@ -56,8 +53,8 @@ object NormalizedNames {
     */
   def isTemporalVC(decl: TlaDecl): Boolean = {
     decl.isInstanceOf[TlaOperDecl] &&
-    decl.asInstanceOf[TlaOperDecl].formalParams.isEmpty &&
-    decl.name.startsWith(VC_TEMPORAL_PROP_PREFIX)
+      decl.asInstanceOf[TlaOperDecl].formalParams.isEmpty &&
+      decl.name.startsWith(VC_TEMPORAL_PROP_PREFIX)
   }
 
   /**
@@ -68,8 +65,8 @@ object NormalizedNames {
     */
   def isConstInit(decl: TlaDecl): Boolean = {
     decl.isInstanceOf[TlaOperDecl] &&
-    decl.asInstanceOf[TlaOperDecl].formalParams.isEmpty &&
-    decl.name == CONST_INIT
+      decl.asInstanceOf[TlaOperDecl].formalParams.isEmpty &&
+      decl.name == CONST_INIT
   }
 
   /**
@@ -80,8 +77,8 @@ object NormalizedNames {
     */
   def isInit(decl: TlaDecl): Boolean = {
     decl.isInstanceOf[TlaOperDecl] &&
-    decl.asInstanceOf[TlaOperDecl].formalParams.isEmpty &&
-    decl.name.startsWith(INIT_PREFIX)
+      decl.asInstanceOf[TlaOperDecl].formalParams.isEmpty &&
+      decl.name.startsWith(INIT_PREFIX)
   }
 
   /**
@@ -92,7 +89,7 @@ object NormalizedNames {
     */
   def isNext(decl: TlaOperDecl): Boolean = {
     decl.isInstanceOf[TlaOperDecl] &&
-    decl.asInstanceOf[TlaOperDecl].formalParams.isEmpty &&
-    decl.name.startsWith(NEXT_PREFIX)
+      decl.asInstanceOf[TlaOperDecl].formalParams.isEmpty &&
+      decl.name.startsWith(NEXT_PREFIX)
   }
 }

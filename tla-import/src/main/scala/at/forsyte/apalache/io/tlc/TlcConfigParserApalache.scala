@@ -8,6 +8,7 @@ import com.typesafe.scalalogging.LazyLogging
 import scala.util.parsing.combinator.Parsers
 import scala.util.parsing.input.NoPosition
 
+
 /**
   * <p>A parser for the TLC configuration files. For the syntax, see ./docs/tlc-config.md.
   *
@@ -16,17 +17,12 @@ import scala.util.parsing.input.NoPosition
   *
   * @author Igor Konnov
   */
-object TlcConfigParserApalache
-    extends Parsers
-    with TlcConfigParser
-    with LazyLogging {
+object TlcConfigParserApalache extends Parsers with TlcConfigParser with LazyLogging {
   override type Elem = TlcConfigToken
 
   private abstract class ConstBinding
-  private case class ConstAssignment(name: String, assignment: ConfigConstExpr)
-      extends ConstBinding
-  private case class ConstReplacement(name: String, replacement: String)
-      extends ConstBinding
+  private case class ConstAssignment(name: String, assignment: ConfigConstExpr) extends ConstBinding
+  private case class ConstReplacement(name: String, replacement: String) extends ConstBinding
 
   /**
     * Parse a configuration file from a reader.
@@ -36,10 +32,9 @@ object TlcConfigParserApalache
   def apply(reader: Reader): TlcConfig = {
     config(new TlcConfigTokenReader(TlcConfigLexer(reader))) match {
       case Success(config: TlcConfig, _) => config
-      case Success(_, _) =>
-        throw new TlcConfigParseError("Unexpected parse result", NoPosition)
+      case Success(_, _) => throw new TlcConfigParseError("Unexpected parse result", NoPosition)
       case Failure(msg, next) => throw new TlcConfigParseError(msg, next.pos)
-      case Error(msg, next)   => throw new TlcConfigParseError(msg, next.pos)
+      case Error(msg, next) => throw new TlcConfigParseError(msg, next.pos)
     }
   }
 
@@ -53,32 +48,24 @@ object TlcConfigParserApalache
   }
 
   private def config: Parser[TlcConfig] = {
-    phrase(rep1(option)) ^^ { cfgs =>
-      cfgs.foldLeft(TlcConfig.empty) { (other, cfg) =>
-        other.join(cfg)
-      }
+    phrase(rep1(option)) ^^ {
+      cfgs => cfgs.foldLeft(TlcConfig.empty) { (other, cfg) => other.join(cfg) }
     }
   }
 
   private def option: Parser[TlcConfig] = {
     (constList | constraintList | actionConstraintList
       | initNextSection | specSection | invariantList | propertyList | symmetry | view
-      | alias | postcondition | checkDeadlock) ^^ { opt =>
-      opt
-    }
+      | alias | postcondition | checkDeadlock) ^^ { opt => opt }
   }
 
   private def constList: Parser[TlcConfig] = {
     CONST() ~ rep1(assign | replace) ^^ {
       case _ ~ bindingList =>
-        val assignments = bindingList.collect {
-          case ConstAssignment(nm, asgn) => nm -> asgn
-        }
-        val replacements = bindingList.collect {
-          case ConstReplacement(nm, repl) => nm -> repl
-        }
+        val assignments = bindingList.collect { case ConstAssignment(nm, asgn) => nm -> asgn }
+        val replacements = bindingList.collect { case ConstReplacement(nm, repl) => nm -> repl }
         TlcConfig.empty
-          .addConstAssignments(Map(assignments: _*))
+          .addConstAssignments(Map(assignments :_*))
           .addConstReplacements(Map(replacements: _*))
     }
   }
@@ -87,9 +74,7 @@ object TlcConfigParserApalache
   private def symmetry: Parser[TlcConfig] = {
     SYMMETRY() ~ ident ^^ {
       case _ ~ name =>
-        logger.warn(
-          "TLC config option SYMMETRY %s will be ignored".format(name)
-        )
+        logger.warn("TLC config option SYMMETRY %s will be ignored".format(name))
         TlcConfig.empty
     }
   }
@@ -116,9 +101,7 @@ object TlcConfigParserApalache
   private def postcondition: Parser[TlcConfig] = {
     POSTCONDITION() ~ ident ^^ {
       case _ ~ name =>
-        logger.warn(
-          "TLC config option POSTCONDITION %s will be ignored".format(name)
-        )
+        logger.warn("TLC config option POSTCONDITION %s will be ignored".format(name))
         TlcConfig.empty
     }
   }
@@ -127,9 +110,7 @@ object TlcConfigParserApalache
   private def checkDeadlock: Parser[TlcConfig] = {
     CHECK_DEADLOCK() ~ boolean ^^ {
       case _ ~ flag =>
-        logger.warn(
-          "TLC config option CHECK_DEADLOCK %b will be ignored".format(flag)
-        )
+        logger.warn("TLC config option CHECK_DEADLOCK %b will be ignored".format(flag))
         TlcConfig.empty
     }
   }
@@ -143,11 +124,11 @@ object TlcConfigParserApalache
   // constant expressions
   private def constExpr: Parser[ConfigConstExpr] = {
     (ident | number | string | (LEFT_BRACE() ~ constExprList ~ RIGHT_BRACE())) ^^ {
-      case IDENT(name)  => ConfigModelValue(name)
+      case IDENT(name) => ConfigModelValue(name)
       case NUMBER(text) => ConfigIntValue(BigInt(text))
       case STRING(text) => ConfigStrValue(text)
       case _ ~ list ~ _ =>
-        ConfigSetValue(list.asInstanceOf[List[ConfigConstExpr]]: _*)
+        ConfigSetValue(list.asInstanceOf[List[ConfigConstExpr]] :_*)
     }
   }
 
@@ -179,16 +160,12 @@ object TlcConfigParserApalache
   }
 
   private def initNextSection: Parser[TlcConfig] = {
-    (INIT() ~ ident ~ NEXT() ~ ident | NEXT() ~ ident ~ INIT() ~ ident) ^^ {
+    (INIT() ~ ident ~ NEXT() ~ ident | NEXT() ~ ident ~ INIT() ~ ident)  ^^ {
       case INIT() ~ IDENT(initName) ~ _ ~ IDENT(nextName) =>
-        TlcConfig.empty.setBehaviorSpecUnlessNull(
-          InitNextSpec(initName, nextName)
-        )
+        TlcConfig.empty.setBehaviorSpecUnlessNull(InitNextSpec(initName, nextName))
 
       case NEXT() ~ IDENT(nextName) ~ _ ~ IDENT(initName) =>
-        TlcConfig.empty.setBehaviorSpecUnlessNull(
-          InitNextSpec(initName, nextName)
-        )
+        TlcConfig.empty.setBehaviorSpecUnlessNull(InitNextSpec(initName, nextName))
     }
   }
 

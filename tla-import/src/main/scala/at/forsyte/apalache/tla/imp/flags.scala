@@ -1,7 +1,9 @@
 /**
   * Here we group auxiliary classes that we use as flags in the translation process.
   */
+
 package at.forsyte.apalache.tla.imp
+
 
 /**
   * A type of the operator definition.

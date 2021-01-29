@@ -2,12 +2,7 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSeqOper, _}
-import at.forsyte.apalache.tla.lir.transformations.{
-  LanguagePred,
-  PredResult,
-  PredResultFail,
-  PredResultOk
-}
+import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, PredResult, PredResultFail, PredResultOk}
 import at.forsyte.apalache.tla.lir.values._
 
 import scala.collection.immutable.HashSet
@@ -50,30 +45,28 @@ class KeraLanguagePred extends LanguagePred {
         // do not recurse in the type annotation, as it is using special syntax
         isOkInContext(letDefs, lhs)
 
-      case OperEx(oper, lhs, rhs)
-          if KeraLanguagePred.binaryOps.contains(oper) =>
+      case OperEx(oper, lhs, rhs) if KeraLanguagePred.binaryOps.contains(oper) =>
         isOkInContext(letDefs, lhs)
           .and(isOkInContext(letDefs, rhs))
 
-      case OperEx(oper, args @ _*) if KeraLanguagePred.naryOps.contains(oper) =>
+      case OperEx(oper, args@_*) if KeraLanguagePred.naryOps.contains(oper) =>
         args.foldLeft[PredResult](PredResultOk()) {
           case (r, arg) => r.and(isOkInContext(letDefs, arg))
         }
 
       case OperEx(oper, NameEx(_), set, pred)
           if KeraLanguagePred.bindingOps.contains(oper) =>
-        isOkInContext(letDefs, set).and(isOkInContext(letDefs, pred))
+        isOkInContext(letDefs, set).
+          and(isOkInContext(letDefs, pred))
 
       case OperEx(TlaControlOper.ifThenElse, pred, thenEx, elseEx) =>
         isOkInContext(letDefs, pred)
           .and(isOkInContext(letDefs, thenEx))
           .and(isOkInContext(letDefs, elseEx))
 
-      case OperEx(oper, args @ _*)
-          if oper == TlaSetOper.map || oper == TlaFunOper.funDef || oper == TlaFunOper.recFunDef =>
-        val evenArgs = args.zipWithIndex.filter { p =>
-          p._2 % 2 == 0
-        } map { _._1 }
+      case OperEx(oper, args@_*)
+        if oper == TlaSetOper.map || oper == TlaFunOper.funDef || oper == TlaFunOper.recFunDef =>
+        val evenArgs = args.zipWithIndex.filter { p => p._2 % 2 == 0 } map { _._1 }
         evenArgs.foldLeft[PredResult](PredResultOk()) {
           case (r, arg) => r.and(isOkInContext(letDefs, arg))
         }
@@ -81,7 +74,7 @@ class KeraLanguagePred extends LanguagePred {
       case OperEx(TlaFunOper.recFunRef) =>
         PredResultOk()
 
-      case LetInEx(body, defs @ _*) =>
+      case LetInEx(body, defs@_*) =>
         // go inside the let definitions (similar to FlatLanguagePred)
         def eachDefRec(ctx: Set[String], ds: List[TlaOperDecl]): PredResult = {
           ds match {
@@ -101,7 +94,7 @@ class KeraLanguagePred extends LanguagePred {
         defsResult
           .and(isOkInContext(letDefs ++ newLetDefs, body))
 
-      case e @ OperEx(TlaOper.apply, NameEx(opName), args @ _*) =>
+      case e @ OperEx(TlaOper.apply, NameEx(opName), args@_*) =>
         // the only allowed case is calling a nullary operator that was declared with let-in
         if (!letDefs.contains(opName)) {
           PredResultFail(List((e.ID, s"undeclared operator $opName")))
@@ -179,6 +172,7 @@ object KeraLanguagePred {
       //      TlaTempOper.guarantees,
     ) ////
 
+
   protected val naryOps: HashSet[TlaOper] =
     HashSet(
       TlaBoolOper.and,
@@ -198,6 +192,7 @@ object KeraLanguagePred {
       TlaOper.chooseBounded,
       TlaSetOper.filter
     ) /////
+
 
   def apply(): KeraLanguagePred = singleton
 }

@@ -12,8 +12,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
   * @author Igor Konnov
   */
 class IntRangeCache(solverContext: SolverContext, intValueCache: IntValueCache)
-    extends AbstractCache[Arena, (Int, Int), ArenaCell]
-    with Serializable {
+  extends AbstractCache[Arena, (Int, Int), ArenaCell] with Serializable {
 
   /**
     * Create a set a..b.
@@ -36,7 +35,7 @@ class IntRangeCache(solverContext: SolverContext, intValueCache: IntValueCache)
     val set = arena.topCell
     arena = arena.appendHas(set, cells: _*)
     // force that every element is in the set
-    solverContext.assertGroundExpr(tla.and(cells.map(tla.in(_, set)): _*))
+    solverContext.assertGroundExpr(tla.and(cells.map(tla.in(_, set)) :_*))
     (arena, set)
   }
 }

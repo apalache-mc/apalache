@@ -17,11 +17,13 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
-      case OperEx(TlaArithOper.lt, _, _) | OperEx(TlaArithOper.le, _, _) |
-          OperEx(TlaArithOper.gt, _, _) | OperEx(TlaArithOper.ge, _, _) =>
-        true
+      case OperEx(TlaArithOper.lt, _, _)
+           | OperEx(TlaArithOper.le, _, _)
+           | OperEx(TlaArithOper.gt, _, _)
+           | OperEx(TlaArithOper.ge, _, _)
+      => true
 
-      // Note that there is no equality, as it is handled by EqRule. Inequality is rewritten by Keramelizer.
+        // Note that there is no equality, as it is handled by EqRule. Inequality is rewritten by Keramelizer.
 
       case _ => false
     }
@@ -29,15 +31,13 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = state.ex match {
     case OperEx(oper: TlaArithOper, _, _)
-        if (oper == TlaArithOper.lt || oper == TlaArithOper.le
-          || oper == TlaArithOper.gt || oper == TlaArithOper.ge) =>
+      if (oper == TlaArithOper.lt || oper == TlaArithOper.le
+        || oper == TlaArithOper.gt || oper == TlaArithOper.ge)
+    =>
       rewriteGeneral(state, state.ex)
 
     case _ =>
-      throw new RewriterException(
-        "%s is not applicable".format(getClass.getSimpleName),
-        state.ex
-      )
+      throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
   }
 
   private def rewriteGeneral(state: SymbState, ex: TlaEx) = ex match {
@@ -52,11 +52,9 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
       var arena = rightState.arena.appendCell(BoolT())
       val eqPred = arena.topCell
       val cons =
-        OperEx(
-          TlaOper.eq,
+        OperEx(TlaOper.eq,
           eqPred.toNameEx,
-          OperEx(oper, leftState.ex, rightState.ex)
-        )
+          OperEx(oper, leftState.ex, rightState.ex))
       rewriter.solverContext.assertGroundExpr(cons)
       rightState.setArena(arena).setRex(eqPred.toNameEx)
 

@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.NameEx
   * as well as bound variables declared with \A, \E, set operations, etc.
   *
   * @author Igor Konnov
-  */
+   */
 class SubstRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(state: SymbState): Boolean = {
     state.ex match {
@@ -27,17 +27,11 @@ class SubstRule(rewriter: SymbStateRewriter) extends RewritingRule {
           val cell = state.binding(x)
           state.setRex(NameEx(cell.toString))
         } else {
-          throw new RewriterException(
-            s"${getClass.getSimpleName}: Variable $x is not assigned a value",
-            state.ex
-          )
+          throw new RewriterException(s"${getClass.getSimpleName}: Variable $x is not assigned a value", state.ex)
         }
 
       case _ =>
-        throw new RewriterException(
-          "%s is not applicable".format(getClass.getSimpleName),
-          state.ex
-        )
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 }

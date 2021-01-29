@@ -10,17 +10,14 @@ package at.forsyte.apalache.tla.bmcmt.smt
   *
   * @author Igor Konnov
   */
-sealed case class SolverConfig(
-    debug: Boolean,
-    profile: Boolean,
-    randomSeed: Int
-) {}
+sealed case class SolverConfig(debug: Boolean,
+                               profile: Boolean,
+                               randomSeed: Int) {
+}
 
 object SolverConfig {
-
   /**
     * Get the default configuration.
     */
-  val default: SolverConfig =
-    new SolverConfig(debug = false, profile = false, randomSeed = 0)
+  val default: SolverConfig = new SolverConfig(debug = false, profile = false, randomSeed = 0)
 }

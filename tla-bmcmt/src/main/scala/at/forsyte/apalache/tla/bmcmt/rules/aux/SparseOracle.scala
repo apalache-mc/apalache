@@ -15,7 +15,7 @@ import at.forsyte.apalache.tla.lir.TlaEx
 class SparseOracle(oracle: Oracle, val values: Set[Int]) extends Oracle {
   // a reverse mapping from elements to their indices in the sorted sequence of the elements of S
   private val sortedValues: Seq[Int] = values.toSeq.sorted
-  private val indexMap: Map[Int, Int] = Map(sortedValues.zipWithIndex: _*)
+  private val indexMap: Map[Int, Int] = Map(sortedValues.zipWithIndex :_*)
 
   /**
     * Produce an expression that states that the oracle value is equal to the given integer position.
@@ -36,10 +36,7 @@ class SparseOracle(oracle: Oracle, val values: Set[Int]) extends Oracle {
     * @param assertions a sequence of assertions, one per oracle value
     * @return an expression ite(oracle = 0, ite(oracle = 1, ...))
     */
-  override def caseAssertions(
-      state: SymbState,
-      assertions: Seq[TlaEx]
-  ): TlaEx = {
+  override def caseAssertions(state: SymbState, assertions: Seq[TlaEx]): TlaEx = {
     oracle.caseAssertions(state, assertions)
   }
 
@@ -51,10 +48,7 @@ class SparseOracle(oracle: Oracle, val values: Set[Int]) extends Oracle {
     * @param state         a symbolic state
     * @return an integer value of the oracle
     */
-  override def evalPosition(
-      solverContext: SolverContext,
-      state: SymbState
-  ): Int = {
+  override def evalPosition(solverContext: SolverContext, state: SymbState): Int = {
     val rawPos = oracle.evalPosition(solverContext, state)
     assert(sortedValues.isDefinedAt(rawPos))
     sortedValues(rawPos)

@@ -30,7 +30,7 @@ class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
             typesToReport :+= (cons, solution(typ))
           case None =>
             cons match {
-              case OrClause(_ @_*) =>
+              case OrClause(_@_*) =>
                 // no solution for a disjunctive constraint:
                 // try to resolve the unit constraints and postpone the disjunctive one for later
                 postponed = postponed :+ cons
@@ -67,9 +67,7 @@ class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
     } else {
       constraints.foreach {
         case c @ OrClause(clauses @ _*) =>
-          val partialSignatures = clauses.map { c =>
-            solution(c.term)
-          }
+          val partialSignatures = clauses.map { c => solution(c.term) }
           c.onTypeError(partialSignatures)
 
         case c @ EqClause(_, term) =>
@@ -79,10 +77,7 @@ class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
     }
   }
 
-  private def solveOne(
-      solution: Substitution,
-      constraint: Clause
-  ): Option[(Substitution, TlaType1)] = {
+  private def solveOne(solution: Substitution, constraint: Clause): Option[(Substitution, TlaType1)] = {
     constraint match {
       case EqClause(unknown, term) =>
         // If there is a solution, we return it. We ignore the type, as it should be bound to `unknown`.
@@ -92,7 +87,7 @@ class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
         // try to solve a disjunctive clause
         eqs.flatMap(solveOne(solution, _)) match {
           case Seq(uniqueSolution) => Some(uniqueSolution)
-          case _noneOrAmbiguous    => None
+          case _noneOrAmbiguous => None
         }
     }
   }

@@ -3,15 +3,8 @@ package at.forsyte.apalache.tla.bmcmt.passes
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.analyses.{
-  ExprGradeStore,
-  FormulaHintsStore
-}
-import at.forsyte.apalache.tla.bmcmt.search.{
-  BfsStrategy,
-  BfsStrategyStopWatchDecorator,
-  DfsStrategy
-}
+import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore}
+import at.forsyte.apalache.tla.bmcmt.search.{BfsStrategy, BfsStrategyStopWatchDecorator, DfsStrategy}
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.NullEx
@@ -28,16 +21,14 @@ import com.typesafe.scalalogging.LazyLogging
   *
   * @author Igor Konnov
   */
-class BoundedCheckerPassImpl @Inject()(
-    val options: PassOptions,
-    typeFinder: TypeFinder[CellT],
-    hintsStore: FormulaHintsStore,
-    exprGradeStore: ExprGradeStore,
-    sourceStore: SourceStore,
-    changeListener: ChangeListener,
-    @Named("AfterChecker") nextPass: Pass
-) extends BoundedCheckerPass
-    with LazyLogging {
+class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
+                                        typeFinder: TypeFinder[CellT],
+                                        hintsStore: FormulaHintsStore,
+                                        exprGradeStore: ExprGradeStore,
+                                        sourceStore: SourceStore,
+                                        changeListener: ChangeListener,
+                                        @Named("AfterChecker") nextPass: Pass)
+      extends BoundedCheckerPass with LazyLogging {
 
   /**
     * The pass name.
@@ -53,10 +44,7 @@ class BoundedCheckerPassImpl @Inject()(
     */
   override def execute(): Boolean = {
     if (tlaModule.isEmpty) {
-      throw new CheckerException(
-        s"The input of $name pass is not initialized",
-        NullEx
-      )
+      throw new CheckerException(s"The input of $name pass is not initialized", NullEx)
     }
     val module = tlaModule.get
 
@@ -64,29 +52,14 @@ class BoundedCheckerPassImpl @Inject()(
       LanguageWatchdog(KeraLanguagePred()).check(decl.body)
     }
 
-    val initTrans =
-      ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.INIT_PREFIX)
-    val nextTrans =
-      ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.NEXT_PREFIX)
-    val cinitP =
-      ModuleAdapter.getOperatorOption(module, NormalizedNames.CONST_INIT)
-    val vcInvs = ModuleAdapter.getTransitionsFromSpec(
-      module,
-      NormalizedNames.VC_INV_PREFIX
-    )
-    val vcNotInvs = ModuleAdapter.getTransitionsFromSpec(
-      module,
-      NormalizedNames.VC_NOT_INV_PREFIX
-    )
+    val initTrans = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.INIT_PREFIX)
+    val nextTrans = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.NEXT_PREFIX)
+    val cinitP = ModuleAdapter.getOperatorOption(module, NormalizedNames.CONST_INIT)
+    val vcInvs = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.VC_INV_PREFIX)
+    val vcNotInvs = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.VC_NOT_INV_PREFIX)
     val invariantsAndNegations = vcInvs.zip(vcNotInvs)
 
-    val input = new CheckerInput(
-      module,
-      initTrans.toList,
-      nextTrans.toList,
-      cinitP,
-      invariantsAndNegations.toList
-    )
+    val input = new CheckerInput(module, initTrans.toList, nextTrans.toList, cinitP, invariantsAndNegations.toList)
     val stepsBound = options.getOrElse("checker", "length", 10)
     val debug = options.getOrElse("general", "debug", false)
     val profile = options.getOrElse("smt", "prof", false)
@@ -95,29 +68,15 @@ class BoundedCheckerPassImpl @Inject()(
     val checkRuntime = false // deprecated, will be removed in 0.7.0
     val strategy =
       if (search == "bfs") {
-        new BfsStrategyStopWatchDecorator(
-          new BfsStrategy(input, stepsBound),
-          filename = "bfs.csv"
-        )
+        new BfsStrategyStopWatchDecorator(new BfsStrategy(input, stepsBound), filename="bfs.csv")
       } else {
         val random = tuning.getOrElse("search.randomDfs", "")
         new DfsStrategy(input, stepsBound, random.toLowerCase.equals("true"))
       }
 
     val checker: Checker =
-      new ModelChecker(
-        typeFinder,
-        hintsStore,
-        changeListener,
-        exprGradeStore,
-        sourceStore,
-        input,
-        strategy,
-        tuning,
-        debug,
-        profile,
-        checkRuntime
-      )
+        new ModelChecker(typeFinder, hintsStore, changeListener, exprGradeStore, sourceStore,
+          input, strategy, tuning, debug, profile, checkRuntime)
 
     val outcome = checker.run()
     logger.info("The outcome is: " + outcome)
@@ -131,7 +90,5 @@ class BoundedCheckerPassImpl @Inject()(
     * @return the next pass, if exists, or None otherwise
     */
   override def next(): Option[Pass] =
-    tlaModule map { _ =>
-      nextPass
-    }
+    tlaModule map {_ => nextPass}
 }

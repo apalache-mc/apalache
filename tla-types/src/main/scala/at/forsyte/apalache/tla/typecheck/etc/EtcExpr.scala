@@ -11,7 +11,6 @@ import at.forsyte.apalache.tla.typecheck.TlaType1
   * @author Igor Konnov
   */
 sealed trait EtcExpr {
-
   /**
     * The reference to the source.
     * This identifier is not taken into account in equals and hash.
@@ -51,9 +50,7 @@ case class EtcName(name: String)(val sourceRef: EtcRef) extends EtcExpr {
   * @param paramsAndDoms parameter names and type expressions that encode sets of values
   * @param sourceRef     the identifier of the TLA+ expression that resulted in this EtcExpr (ignored in equals).
   */
-case class EtcAbs(body: EtcExpr, paramsAndDoms: (String, EtcExpr)*)(
-    val sourceRef: EtcRef
-) extends EtcExpr {
+case class EtcAbs(body: EtcExpr, paramsAndDoms: (String, EtcExpr)*)(val sourceRef: EtcRef) extends EtcExpr {
   override def toString: String = {
     val bindings = paramsAndDoms.map(p => "%s ∈ %s".format(p._1, p._2))
     "%s@λ %s. %s".format(sourceRef, String.join(", ", bindings: _*), body)
@@ -67,15 +64,10 @@ case class EtcAbs(body: EtcExpr, paramsAndDoms: (String, EtcExpr)*)(
   * @param args  operator arguments
   * @param sourceRef the identifier of the TLA+ expression that resulted in this EtcExpr (ignored in equals).
   */
-case class EtcApp(operTypes: Seq[TlaType1], args: EtcExpr*)(
-    val sourceRef: EtcRef
-) extends EtcExpr {
+case class EtcApp(operTypes: Seq[TlaType1], args: EtcExpr*)(val sourceRef: EtcRef) extends EtcExpr {
   override def toString: String = {
-    "%s@((%s) %s)".format(
-      sourceRef,
-      String.join(" | ", operTypes.map(_.toString): _*),
-      String.join(" ", args.map(_.toString): _*)
-    )
+    "%s@((%s) %s)".format(sourceRef, String.join(" | ", operTypes.map(_.toString): _*),
+      String.join(" ", args.map(_.toString): _*))
   }
 }
 
@@ -87,14 +79,9 @@ case class EtcApp(operTypes: Seq[TlaType1], args: EtcExpr*)(
   * @param args operator arguments
   * @param sourceRef identifier of the TLA+ expression that resulted in this EtcExpr (ignored in equals).
   */
-case class EtcAppByName(name: String, args: EtcExpr*)(val sourceRef: EtcRef)
-    extends EtcExpr {
+case class EtcAppByName(name: String, args: EtcExpr*)(val sourceRef: EtcRef) extends EtcExpr {
   override def toString: String = {
-    "%s@(%s %s)".format(
-      sourceRef,
-      name,
-      String.join(" ", args.map(_.toString): _*)
-    )
+    "%s@(%s %s)".format(sourceRef, name, String.join(" ", args.map(_.toString): _*))
   }
 }
 
@@ -107,9 +94,7 @@ case class EtcAppByName(name: String, args: EtcExpr*)(val sourceRef: EtcRef)
   * @param body  the expression the binding applies to
   * @param sourceRef the identifier of the TLA+ expression that resulted in this EtcExpr (ignored in equals).
   */
-case class EtcLet(name: String, bound: EtcExpr, body: EtcExpr)(
-    val sourceRef: EtcRef
-) extends EtcExpr {
+case class EtcLet(name: String, bound: EtcExpr, body: EtcExpr)(val sourceRef: EtcRef) extends EtcExpr {
   override def toString: String = {
     "%s@let %s = %s in %s".format(sourceRef, name, bound, body)
   }
@@ -126,9 +111,7 @@ case class EtcLet(name: String, bound: EtcExpr, body: EtcExpr)(
   * @param scopedEx the expression in the scope of the type declaration
   * @param sourceRef a reference to the original expression
   */
-case class EtcTypeDecl(name: String, declaredType: TlaType1, scopedEx: EtcExpr)(
-    val sourceRef: EtcRef
-) extends EtcExpr {
+case class EtcTypeDecl(name: String, declaredType: TlaType1, scopedEx: EtcExpr)(val sourceRef: EtcRef) extends EtcExpr {
   override def toString: String = {
     "%s@%s: %s in %s".format(sourceRef, name, declaredType, scopedEx)
   }

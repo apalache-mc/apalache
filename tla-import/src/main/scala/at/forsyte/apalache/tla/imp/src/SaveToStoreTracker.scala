@@ -1,11 +1,7 @@
 package at.forsyte.apalache.tla.imp.src
 
 import at.forsyte.apalache.tla.lir.{TlaDecl, TlaEx, TlaOperDecl}
-import at.forsyte.apalache.tla.lir.transformations.{
-  TlaDeclTransformation,
-  TlaExTransformation,
-  TransformationTracker
-}
+import at.forsyte.apalache.tla.lir.transformations.{TlaDeclTransformation, TlaExTransformation, TransformationTracker}
 
 /**
   * This is a special form of transformation tracker that records the changes directly in the source store.
@@ -14,22 +10,18 @@ import at.forsyte.apalache.tla.lir.transformations.{
   *
   * @author Igor Konnov
   */
-class SaveToStoreTracker(sourceStore: SourceStore)
-    extends TransformationTracker {
-
+class SaveToStoreTracker(sourceStore: SourceStore) extends TransformationTracker {
   /**
     * Decorate a transformation with a tracker.
     *
     * @param tr an expression transformation
     * @return a new transformation that applies tr and tracks the changes
     */
-  override def trackEx(tr: TlaExTransformation): TlaExTransformation = {
+  override def trackEx( tr: TlaExTransformation): TlaExTransformation = {
     input: TlaEx =>
       val output = tr(input)
       if (output.ID != input.ID) {
-        sourceStore.findOrWarn(input.ID).foreach { loc =>
-          sourceStore.add(output.ID, loc)
-        }
+        sourceStore.findOrWarn(input.ID).foreach { loc => sourceStore.add(output.ID, loc) }
       }
       output
   }
@@ -44,9 +36,7 @@ class SaveToStoreTracker(sourceStore: SourceStore)
     input: TlaDecl =>
       val output = tr(input)
       if (output.ID != input.ID) {
-        sourceStore.findOrWarn(input.ID).foreach { loc =>
-          sourceStore.add(output.ID, loc)
-        }
+        sourceStore.findOrWarn(input.ID).foreach { loc => sourceStore.add(output.ID, loc) }
       }
       output
   }
@@ -57,15 +47,12 @@ class SaveToStoreTracker(sourceStore: SourceStore)
     * @param tr a declaration transformation
     * @return a new declaration transformation that applies tr and tracks the changes
     */
-  override def trackOperDecl(
-      tr: TlaOperDecl => TlaOperDecl
-  ): TlaOperDecl => TlaOperDecl = { input: TlaOperDecl =>
-    val output = tr(input)
-    if (output.ID != input.ID) {
-      sourceStore.findOrWarn(input.ID).foreach { loc =>
-        sourceStore.add(output.ID, loc)
+  override def trackOperDecl(tr: TlaOperDecl => TlaOperDecl): TlaOperDecl => TlaOperDecl = {
+    input: TlaOperDecl =>
+      val output = tr(input)
+      if (output.ID != input.ID) {
+        sourceStore.findOrWarn(input.ID).foreach { loc => sourceStore.add(output.ID, loc) }
       }
-    }
-    output
+      output
   }
 }

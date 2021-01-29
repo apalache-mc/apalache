@@ -10,12 +10,12 @@ import at.forsyte.apalache.tla.lir.oper.TlaSetOper
   * this cell is just pointing to S as its domain and to T as its co-domain.
   *
   * @author Igor Konnov
-  */
+   */
 class FunSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaSetOper.funSet, _, _) => true
-      case _                               => false
+      case _ => false
     }
   }
 
@@ -27,8 +27,7 @@ class FunSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val dom = nextState.asCell
         nextState = rewriter.rewriteUntilDone(nextState.setRex(cdmEx))
         val cdm = nextState.asCell
-        val arena =
-          nextState.arena.appendCell(FinFunSetT(dom.cellType, cdm.cellType))
+        val arena = nextState.arena.appendCell(FinFunSetT(dom.cellType, cdm.cellType))
         val newCell = arena.topCell
         val newArena = arena
           .setDom(newCell, dom)
@@ -36,10 +35,7 @@ class FunSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         state.setArena(newArena).setRex(newCell.toNameEx)
 
       case _ =>
-        throw new RewriterException(
-          "%s is not applicable".format(getClass.getSimpleName),
-          state.ex
-        )
+        throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
     }
   }
 }
