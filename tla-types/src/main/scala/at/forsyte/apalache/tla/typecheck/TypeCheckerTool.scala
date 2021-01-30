@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.typecheck.etc._
  *
  * @author Igor Konnov
  */
-class TypeCheckerTool(annotationStore: AnnotationStore) {
+class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) {
   def check(listener: TypeCheckerListener, module: TlaModule): Boolean = {
     val varPool = new TypeVarPool()
     val toEtc = new ToEtcExpr(annotationStore, varPool)
@@ -24,7 +24,7 @@ class TypeCheckerTool(annotationStore: AnnotationStore) {
       }
 
     // run the type checker
-    val result = new EtcTypeChecker(varPool).compute(listener, TypeContext.empty, rootExpr)
+    val result = new EtcTypeChecker(varPool, inferPolytypes = inferPoly).compute(listener, TypeContext.empty, rootExpr)
     result.isDefined
   }
 }

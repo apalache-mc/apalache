@@ -4,22 +4,24 @@ import at.forsyte.apalache.tla.typecheck._
 import at.forsyte.apalache.tla.typecheck.etc.EtcTypeChecker.UnwindException
 
 /**
-  * ETC: Embarrassingly simple Type Checker.
-  *
-  * @author Igor Konnov
-  */
-class EtcTypeChecker(varPool: TypeVarPool) extends TypeChecker with EtcBuilder {
+ * ETC: Embarrassingly simple Type Checker.
+ *
+ * @param varPool        a pool of fresh variables
+ * @param inferPolytypes whether the type checker is allowed to compute polymorphic types of user-defined operators.
+ * @author Igor Konnov
+ */
+class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) extends TypeChecker with EtcBuilder {
   private var listener: TypeCheckerListener = new DefaultTypeCheckerListener()
 
   /**
-    * Compute the expression type in a type context. If the expression is not well-typed, return None.
-    * As a side effect, call the listener, when discovering new types or errors.
-    *
-    * @param typeListener a listener that will receive the type error or type info
-    * @param rootCtx      a typing context
-    * @param rootEx       an expression
-    * @return Some(type), if the expression is well-typed; and None otherwise.
-    */
+   * Compute the expression type in a type context. If the expression is not well-typed, return None.
+   * As a side effect, call the listener, when discovering new types or errors.
+   *
+   * @param typeListener a listener that will receive the type error or type info
+   * @param rootCtx      a typing context
+   * @param rootEx       an expression
+   * @return Some(type), if the expression is well-typed; and None otherwise.
+   */
   override def compute(typeListener: TypeCheckerListener, rootCtx: TypeContext, rootEx: EtcExpr): Option[TlaType1] = {
     listener = typeListener // set the type listener, so we do not have to pass it around
 
@@ -35,9 +37,9 @@ class EtcTypeChecker(varPool: TypeVarPool) extends TypeChecker with EtcBuilder {
 
         case Some(sub) =>
           val exactType = sub(rootType)
-          if (exactType.usedNames.nonEmpty) {
+          if (!inferPolytypes && exactType.usedNames.nonEmpty) {
             onTypeError(rootEx.sourceRef,
-              s"Expected the top expression to have a concrete type, found polymorphic type: " + exactType)
+                s"Expected the top expression to have a concrete type, found polymorphic type: " + exactType)
             None
           } else {
             onTypeFound(rootEx.sourceRef, exactType)
@@ -59,8 +61,8 @@ class EtcTypeChecker(varPool: TypeVarPool) extends TypeChecker with EtcBuilder {
         // add the constraint: x = polytype, for a fresh x
         val fresh = varPool.fresh
         val clause = EqClause(fresh, polytype)
-            .setOnTypeFound(onTypeFound(ex.sourceRef, _))
-            .setOnTypeError(_ => onTypeError(ex.sourceRef, "Unresolved type"))
+          .setOnTypeFound(onTypeFound(ex.sourceRef, _))
+          .setOnTypeError(_ => onTypeError(ex.sourceRef, "Unresolved type"))
         solver.addConstraint(clause)
         fresh
 
@@ -81,7 +83,7 @@ class EtcTypeChecker(varPool: TypeVarPool) extends TypeChecker with EtcBuilder {
         }
 
       // the most interesting part: the operator application
-      case appEx@EtcApp(operTypes, args@_*) =>
+      case appEx @ EtcApp(operTypes, args @ _*) =>
         val argTypes = args.map(arg => computeRec(ctx, solver, arg))
         val resVar = varPool.fresh
         val operVar = varPool.fresh
@@ -95,12 +97,12 @@ class EtcTypeChecker(varPool: TypeVarPool) extends TypeChecker with EtcBuilder {
             throw new TypingException("Expected an operator type, found: " + tt)
         }
         def onError(types: Seq[TlaType1]): Unit = {
-          val sepSigs = String.join(" and ", types.map(_.toString()) :_*)
+          val sepSigs = String.join(" and ", types.map(_.toString()): _*)
           if (types.isEmpty) {
             onTypeError(appEx.sourceRef, s"No matching signature for ${argTypes.length} argument(s)")
           } else if (types.length > 1) {
             onTypeError(appEx.sourceRef,
-              s"Need annotation. Arguments match ${types.length} operator signatures: $sepSigs")
+                s"Need annotation. Arguments match ${types.length} operator signatures: $sepSigs")
           } else {
             onTypeError(appEx.sourceRef, s"Mismatch in argument types. Expected: $sepSigs")
           }
@@ -108,17 +110,18 @@ class EtcTypeChecker(varPool: TypeVarPool) extends TypeChecker with EtcBuilder {
 
         // operVar = (arg_1, ..., arg_k) => resVar
         solver.addConstraint(EqClause(operVar, OperT1(argTypes, resVar))
-          .setOnTypeFound(onFound)
-          .setOnTypeError(onError))
+              .setOnTypeFound(onFound)
+              .setOnTypeError(onError))
         // operVar = operType_1 \/ ... \/ operVar = operType_n
-        solver.addConstraint(OrClause(operTypes.map(EqClause(operVar, _)) :_*)
-          .setOnTypeError(onError).asInstanceOf[OrClause])
+        solver.addConstraint(OrClause(operTypes.map(EqClause(operVar, _)): _*)
+              .setOnTypeError(onError)
+              .asInstanceOf[OrClause])
 
-          // the expected result is stored in resVar
+        // the expected result is stored in resVar
         resVar
 
       // Operator application by name. Resolve the name and pass the resolved expression to the application case.
-      case EtcAppByName(name, args@_*) =>
+      case EtcAppByName(name, args @ _*) =>
         if (ctx.types.contains(name)) {
           computeRec(ctx, solver, mkApp(ex.sourceRef, Seq(ctx.types(name)), args: _*))
         } else {
@@ -127,7 +130,7 @@ class EtcTypeChecker(varPool: TypeVarPool) extends TypeChecker with EtcBuilder {
         }
 
       // lambda x \in e1, y \in e2, ...: scopedEx
-      case EtcAbs(scopedEx, binders@_*) =>
+      case EtcAbs(scopedEx, binders @ _*) =>
         val extCtx = translateBinders(ctx, solver, binders)
         // compute the expression in the scope
         val underlyingType = computeRec(extCtx, solver, scopedEx)
@@ -137,14 +140,13 @@ class EtcTypeChecker(varPool: TypeVarPool) extends TypeChecker with EtcBuilder {
         val operType = OperT1(varNames, underlyingType)
         // lambdaTypeVar = (a_1, ..., a_k) => resType
         val lambdaClause = EqClause(lambdaTypeVar, operType)
-            .setOnTypeFound(tt => onTypeFound(ex.sourceRef, tt))
-            .setOnTypeError(ts => onTypeError(ex.sourceRef.asInstanceOf[ExactRef],
-              "Type error in lambda: " + ts.head))
+          .setOnTypeFound(tt => onTypeFound(ex.sourceRef, tt))
+          .setOnTypeError(ts => onTypeError(ex.sourceRef.asInstanceOf[ExactRef], "Type error in lambda: " + ts.head))
         solver.addConstraint(lambdaClause)
         operType
 
       // let name = lambda x \in X, y \in Y, ...: boundEx in scopedEx
-      case EtcLet(name, defEx@EtcAbs(defBody, binders@_*), scopedEx) =>
+      case EtcLet(name, defEx @ EtcAbs(defBody, binders @ _*), scopedEx) =>
         // Before analyzing the operator definition, try to partially solve the equations in the current context.
         // If it is successful, use the partial solution to refine the types in the type context.
         val approxSolution = solver.solvePartially().getOrElse(throw new UnwindException)
@@ -153,18 +155,18 @@ class EtcTypeChecker(varPool: TypeVarPool) extends TypeChecker with EtcBuilder {
         val letInSolver = new ConstraintSolver()
         val operSig =
           ctx.types.get(name) match {
-          case Some(declaredType @ OperT1(_, _)) =>
-            declaredType
+            case Some(declaredType @ OperT1(_, _)) =>
+              declaredType
 
-          case Some(someType: TlaType1) =>
-            // The definition has a type annotation which is not an operator. Assume it is a nullary operator.
-            // Strictly speaking, this is a hack. However, it is quite common to declare a constant with LET.
-            OperT1(Seq(), someType)
+            case Some(someType: TlaType1) =>
+              // The definition has a type annotation which is not an operator. Assume it is a nullary operator.
+              // Strictly speaking, this is a hack. However, it is quite common to declare a constant with LET.
+              OperT1(Seq(), someType)
 
-          case None =>
-            // Let the solver compute the type. If it fails, the user has to annotate the definition
-            OperT1(1.to(binders.length).map(_ => varPool.fresh), varPool.fresh)
-        }
+            case None =>
+              // Let the solver compute the type. If it fails, the user has to annotate the definition
+              OperT1(1.to(binders.length).map(_ => varPool.fresh), varPool.fresh)
+          }
 
         // translate the binders in the lambda expression, so we can quickly propagate the types of the parameters
         val preCtx = new TypeContext((ctx.types + (name -> operSig)).mapValues(approxSolution(_)))
@@ -179,7 +181,7 @@ class EtcTypeChecker(varPool: TypeVarPool) extends TypeChecker with EtcBuilder {
 
         // produce constraints for the operator signature
         def onError(ts: Seq[TlaType1]): Unit = {
-          val sepSigs = String.join(" and ", ts.map(_.toString()) :_*)
+          val sepSigs = String.join(" and ", ts.map(_.toString()): _*)
           onTypeError(defEx.sourceRef, s"Expected $operSig in $name. Found: $sepSigs")
         }
 
@@ -195,8 +197,8 @@ class EtcTypeChecker(varPool: TypeVarPool) extends TypeChecker with EtcBuilder {
         val defType = OperT1(paramTypes, defBodyType)
         // add the constraint from the annotation
         val defClause = EqClause(operVar, defType)
-            .setOnTypeFound(onTypeFound(defEx.sourceRef, _))
-            .setOnTypeError(onError)
+          .setOnTypeFound(onTypeFound(defEx.sourceRef, _))
+          .setOnTypeError(onError)
 
         letInSolver.addConstraint(defClause)
 
@@ -210,9 +212,9 @@ class EtcTypeChecker(varPool: TypeVarPool) extends TypeChecker with EtcBuilder {
               sub(defType)
           }
 
-        if (preciseDefType.usedNames.nonEmpty) {
+        if (!inferPolytypes && preciseDefType.usedNames.nonEmpty) {
           onTypeError(ex.sourceRef,
-            s"Expected a concrete type of operator $name, found polymorphic type: " + preciseDefType)
+              s"Expected a concrete type of operator $name, found polymorphic type: " + preciseDefType)
           throw new UnwindException
         }
 
@@ -229,9 +231,8 @@ class EtcTypeChecker(varPool: TypeVarPool) extends TypeChecker with EtcBuilder {
   }
 
   // produce constraints for the binders that are used in a lambda expression
-  private def translateBinders(ctx: TypeContext,
-                               solver: ConstraintSolver,
-                               binders: Seq[(String, EtcExpr)]): TypeContext = {
+  private def translateBinders(ctx: TypeContext, solver: ConstraintSolver,
+      binders: Seq[(String, EtcExpr)]): TypeContext = {
     val setTypes = binders.map(binder => computeRec(ctx, solver, binder._2))
     // introduce type variables b_1, ..., b_k for the binding sets
     val setVars = 1.to(binders.size).map(_ => varPool.fresh)
@@ -271,7 +272,7 @@ class EtcTypeChecker(varPool: TypeVarPool) extends TypeChecker with EtcBuilder {
 object EtcTypeChecker {
 
   /**
-    * We use this exception to quickly unwind the search stack
-    */
+   * We use this exception to quickly unwind the search stack
+   */
   protected class UnwindException extends RuntimeException
 }

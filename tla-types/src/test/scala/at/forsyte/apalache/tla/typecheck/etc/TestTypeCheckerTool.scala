@@ -70,7 +70,8 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
       // but no type errors
     }
     whenExecuting(listener) {
-      val isWellTyped = new TypeCheckerTool(annotationStore).check(listener, mod)
+      val typechecker = new TypeCheckerTool(annotationStore, false)
+      val isWellTyped = typechecker.check(listener, mod)
       assert(isWellTyped)
     }
   }
