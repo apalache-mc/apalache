@@ -32,7 +32,8 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
       case d: TlaAssumeDecl =>
         // ASSUME(...)
         // Translate assume to let in. The only purpose of this let-in definition is to get checked later.
-        mkUniqLet("__Assume_" + d.ID, this(d.body), inScopeEx)
+        // We have to introduce a lambda abstraction, as the type checker is expecting this form.
+        mkUniqLet("__Assume_" + d.ID, mkUniqAbs(this(d.body)), inScopeEx)
 
       case d: TlaOperDecl =>
         // Foo(x) == ...
