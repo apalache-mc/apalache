@@ -21,14 +21,29 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
 
   def apply(decl: TlaDecl, inScopeEx: EtcExpr): EtcExpr = {
     decl match {
-      case d: TlaConstDecl => varOrConstDeclToExpr(d.ID, d.name, inScopeEx)
-      case d: TlaVarDecl   => varOrConstDeclToExpr(d.ID, d.name, inScopeEx)
-      case d: TlaOperDecl  => operDefToDecl(d, inScopeEx)
+      case d: TlaConstDecl =>
+        // CONSTANT N
+        varOrConstDeclToExpr(d.ID, d.name, inScopeEx)
+
+      case d: TlaVarDecl =>
+        // VARIABLE x
+        varOrConstDeclToExpr(d.ID, d.name, inScopeEx)
+
+      case d: TlaAssumeDecl =>
+        // ASSUME(...)
+        // Translate assume to let in. The only purpose of this let-in definition is to get checked later.
+        mkUniqLet("__Assume_" + d.ID, this(d.body), inScopeEx)
+
+      case d: TlaOperDecl =>
+        // Foo(x) == ...
+        operDefToDecl(d, inScopeEx)
+
       case _ =>
         throw new TypingInputException(s"Unexpected declaration: $decl")
     }
   }
 
+  // translate CONSTANT N or VARIABLE x
   private def varOrConstDeclToExpr(uid: UID, name: String, inScopeEx: EtcExpr): EtcExpr = {
     findAnnotation(annotationStore, uid, StandardAnnotations.TYPE) match {
       case None =>

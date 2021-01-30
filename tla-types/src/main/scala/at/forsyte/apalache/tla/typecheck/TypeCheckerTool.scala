@@ -11,8 +11,6 @@ import at.forsyte.apalache.tla.typecheck.etc._
  */
 class TypeCheckerTool(annotationStore: AnnotationStore) {
   def check(listener: TypeCheckerListener, module: TlaModule): Boolean = {
-    // TODO: remember to type check the assumptions!
-
     val varPool = new TypeVarPool()
     val toEtc = new ToEtcExpr(annotationStore, varPool)
 
@@ -21,7 +19,7 @@ class TypeCheckerTool(annotationStore: AnnotationStore) {
 
     // translate the whole TLA+ module into a long EtcExpr. Is not that cool?
     val rootExpr =
-      module.operDeclarations.foldRight(terminalExpr) { case (decl, inScopeEx) =>
+      module.declarations.foldRight(terminalExpr) { case (decl, inScopeEx) =>
         toEtc(decl, inScopeEx)
       }
 
