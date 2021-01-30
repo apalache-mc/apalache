@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
+import at.forsyte.apalache.io.annotations.{Annotation, AnnotationStr, StandardAnnotations}
+import at.forsyte.apalache.io.annotations.store.{AnnotationStore, findAnnotation}
 import at.forsyte.apalache.tla.lir.{ValEx, _}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
@@ -7,66 +9,103 @@ import at.forsyte.apalache.tla.typecheck._
 import at.forsyte.apalache.tla.typecheck.parser.{DefaultType1Parser, Type1ParseError}
 
 /**
-  * ToEtcExpr takes a TLA+ expression and produces an EtcExpr.
-  * The most interesting part of this translation is dealing with the built-in operators.
-  * This translator is an extension of the ideas that appear in SignatureGenerator by Jure Kukovec.
-  *
-  * @see at.forsyte.apalache.tla.types.SignatureGenerator
-  *
-  * @author Igor Konnov
-  */
-class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
+ * ToEtcExpr takes a TLA+ expression and produces an EtcExpr.
+ * The most interesting part of this translation is dealing with the built-in operators.
+ * This translator is an extension of the ideas that appear in SignatureGenerator by Jure Kukovec.
+ *
+ * @see at.forsyte.apalache.tla.types.SignatureGenerator
+ * @author Igor Konnov
+ */
+class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends EtcBuilder {
   private val type1Parser = DefaultType1Parser
 
+  def apply(decl: TlaDecl, inScopeEx: EtcExpr): EtcExpr = {
+    decl match {
+      case d: TlaConstDecl => varOrConstDeclToExpr(d.ID, d.name, inScopeEx)
+      case d: TlaVarDecl   => varOrConstDeclToExpr(d.ID, d.name, inScopeEx)
+      case d: TlaOperDecl  => operDefToDecl(d, inScopeEx)
+      case _ =>
+        throw new TypingInputException(s"Unexpected declaration: $decl")
+    }
+  }
+
+  private def varOrConstDeclToExpr(uid: UID, name: String, inScopeEx: EtcExpr): EtcExpr = {
+    findAnnotation(annotationStore, uid, StandardAnnotations.TYPE) match {
+      case None =>
+        // no type annotation
+        inScopeEx
+
+      case Some(Annotation(StandardAnnotations.TYPE, AnnotationStr(annotationText))) =>
+        val parsedType = parseType(name, annotationText)
+        mkTypeDecl(ExactRef(uid), name, parsedType, inScopeEx)
+
+      case Some(a) => throw new TypingInputException(s"Unexpected annotation of $name: $a")
+    }
+  }
+
   /**
-    * Translate an operator declaration.
-    *
-    * @param decl an operator declaration
-    * @param inScopeEx an expression to chain in the bottom of let-definition, it should have been translated
-    * @return the translated let-in expression with inScopeEx attached
-    */
-  def apply(decl: TlaOperDecl, inScopeEx: EtcExpr): EtcExpr = {
+   * Translate an operator declaration.
+   *
+   * @param decl      an operator declaration
+   * @param inScopeEx an expression to chain in the bottom of let-definition, it should have been translated
+   * @return the translated let-in expression with inScopeEx attached
+   */
+  private def operDefToDecl(decl: TlaOperDecl, inScopeEx: EtcExpr): EtcExpr = {
     if (decl.name.startsWith("TypeAssumptions")) {
       // the special form for type annotations over state variables and constants
       parseTypeAssumptions(decl, inScopeEx)
     } else {
       // The type of the lambda is what we want to see as the type of the declaration.
       // There are two cases: (1) the definition body contains a type annotation, and (2) no type annotation
-      val paramsAndDoms = formalParamsToTypeVars(decl.formalParams).map {
-        case (paramName, paramType) =>
-          (paramName, mkConst(BlameRef(decl.body.ID), SetT1(paramType)))
+      val paramsAndDoms = formalParamsToTypeVars(decl.formalParams).map { case (paramName, paramType) =>
+        (paramName, mkConst(BlameRef(decl.body.ID), SetT1(paramType)))
       }
 
-      decl.body match {
-        case OperEx(TypingOper.withType, ValEx(TlaStr(typeText)), body) =>
-          // case 1: the definition body contains a type annotation
-          val parsedType =
-            try {
-              renameVars(type1Parser(typeText))
-            } catch {
-              case e: Type1ParseError =>
-                throw new TypingInputException(
-                  s"Parser error in type annotation of ${decl.name}: ${e.msg}"
-                )
-            }
-
-          val lambda = mkAbs(ExactRef(body.ID), this(body), paramsAndDoms: _*)
-          val letIn = mkLet(BlameRef(body.ID), decl.name, lambda, inScopeEx)
-          mkTypeDecl(ExactRef(decl.body.ID), decl.name, parsedType, letIn)
-
-        case _ =>
-          // case 2: no type annotation
-          val lambda =
-            mkAbs(ExactRef(decl.body.ID), this(decl.body), paramsAndDoms: _*)
-          mkLet(BlameRef(decl.body.ID), decl.name, lambda, inScopeEx)
+      def mkLetAbs(id: UID, expr: EtcExpr, paramsAndDoms: (String, EtcConst)*) = {
+        val lambda = mkAbs(ExactRef(id), expr, paramsAndDoms: _*)
+        mkLet(BlameRef(id), decl.name, lambda, inScopeEx)
       }
+
+      findAnnotation(annotationStore, decl.ID, StandardAnnotations.TYPE) match {
+        case Some(Annotation(StandardAnnotations.TYPE, AnnotationStr(annotationText))) =>
+          // case 1: the definition is annotated with a java-like annotation in a comment
+          val parsedType = parseType(decl.name, annotationText)
+          val letAbs = mkLetAbs(decl.body.ID, this(decl.body), paramsAndDoms: _*)
+          mkTypeDecl(ExactRef(decl.body.ID), decl.name, parsedType, letAbs)
+
+        case Some(a) => throw new TypingInputException(s"Unexpected annotation of ${decl.name}: $a")
+
+        case None =>
+          decl.body match {
+            case OperEx(TypingOper.withType, ValEx(TlaStr(typeText)), body) =>
+              // case 2: the definition body contains the expression 'Typing!##'
+              val parsedType = parseType(decl.name, typeText)
+              val letAbs = mkLetAbs(body.ID, this(body), paramsAndDoms: _*)
+              mkTypeDecl(ExactRef(decl.body.ID), decl.name, parsedType, letAbs)
+
+            case _ =>
+              // case 3: no type annotation
+              mkLetAbs(decl.body.ID, this(decl.body), paramsAndDoms: _*)
+          }
+      }
+    }
+  }
+
+  // parse type from its text representation
+  private def parseType(where: String, text: String): TlaType1 = {
+    try {
+      renameVars(type1Parser(text))
+    } catch {
+      case e: Type1ParseError =>
+        throw new TypingInputException(
+            s"Parser error in type annotation of $where: ${e.msg}"
+        )
     }
   }
 
   // parse the type annotations inside TypeAssumptions
   private def parseTypeAssumptions(
-      decl: TlaOperDecl,
-      inScopeEx: EtcExpr
+      decl: TlaOperDecl, inScopeEx: EtcExpr
   ): EtcExpr = {
     decl.body match {
       case OperEx(TlaBoolOper.and, args @ _*) =>
@@ -76,25 +115,24 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
               (name, typeText)
             case invalidEx =>
               throw new TypingInputException(
-                s"""Error in ${decl.name}: Expected AssumeType(varName, "typeString") found ${invalidEx}"""
+                  s"""Error in ${decl.name}: Expected AssumeType(varName, "typeString") found ${invalidEx}"""
               )
           }
-        annotations.foldRight(inScopeEx) {
-          case ((name, typeText), terminal) =>
-            try {
-              val tt = renameVars(type1Parser(typeText))
-              mkTypeDecl(ExactRef(decl.body.ID), name, tt, terminal)
-            } catch {
-              case e: Type1ParseError =>
-                throw new TypingInputException(
+        annotations.foldRight(inScopeEx) { case ((name, typeText), terminal) =>
+          try {
+            val tt = renameVars(type1Parser(typeText))
+            mkTypeDecl(ExactRef(decl.body.ID), name, tt, terminal)
+          } catch {
+            case e: Type1ParseError =>
+              throw new TypingInputException(
                   s"Parser error in type annotation of $name: ${e.msg}"
-                )
-            }
+              )
+          }
         }
 
       case _ =>
         throw new TypingInputException(
-          s"""Error in ${decl.name}: Expected /\ AssumeType(varName, "typeString") /\ ..."""
+            s"""Error in ${decl.name}: Expected /\ AssumeType(varName, "typeString") /\ ..."""
         )
     }
   }
@@ -117,7 +155,7 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
   }
 
   // Valid when the input seq has two items, the first of which is a VlaEx(TlaStr(_))
-  val validateRecordPair : Seq[TlaEx] => (String, TlaEx) = {
+  private val validateRecordPair: Seq[TlaEx] => (String, TlaEx) = {
     // Only pairs coordinating pairs and sets are valid. See TlaSetOper.recSet
     case Seq(ValEx(TlaStr(name)), set) =>
       (name, set)
@@ -131,16 +169,16 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
     // since we group by 2 below, this case should be unreachable
     case moreThanTwo =>
       throw new IllegalArgumentException(
-        s"Reached impossible state in validateRecSetPair: ${moreThanTwo}"
+          s"Reached impossible state in validateRecSetPair: ${moreThanTwo}"
       )
   }
 
   /**
    * Translate an expression.
-    *
-    * @param ex a TLA expression
-    * @return an expression in the simply typed lambda calculus varient Etc
-    */
+   *
+   * @param ex a TLA expression
+   * @return an expression in the simply typed lambda calculus varient Etc
+   */
   def apply(ex: TlaEx): EtcExpr = {
 
     val ref = ExactRef(ex.ID)
@@ -165,7 +203,7 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
         } catch {
           case e: Type1ParseError =>
             throw new TypingInputException(
-              s"Parser error in Typing!EmptySet($elemTypeText): ${e.msg}"
+                s"Parser error in Typing!EmptySet($elemTypeText): ${e.msg}"
             )
         }
 
@@ -176,7 +214,7 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
         } catch {
           case e: Type1ParseError =>
             throw new TypingInputException(
-              s"Parser error in Typing!EmptySeq($elemTypeText): ${e.msg}"
+                s"Parser error in Typing!EmptySeq($elemTypeText): ${e.msg}"
             )
         }
 
@@ -193,14 +231,14 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
 
       case OperEx(TlaOper.apply, opName, args @ _*) =>
         throw new TypingException(
-          "Bug in ToEtcExpr. Expected an operator name, found: " + opName
+            "Bug in ToEtcExpr. Expected an operator name, found: " + opName
         )
 
       case OperEx(
-            TlaOper.chooseBounded,
-            NameEx(bindingVar),
-            bindingSet,
-            pred
+              TlaOper.chooseBounded,
+              NameEx(bindingVar),
+              bindingSet,
+              pred
           ) =>
         // CHOOSE x \in S: P
         // the principal type of CHOOSE is (a => Bool) => a
@@ -223,28 +261,26 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
         // unbounded CHOOSE implicitly introduces a lambda abstraction: λ x ∈ Set(b). P
         val b = varPool.fresh
         val chooseLambda = mkAbs(
-          BlameRef(ex.ID),
-          this(pred),
-          (bindingVar, mkConst(BlameRef(ex.ID), SetT1(b)))
+            BlameRef(ex.ID),
+            this(pred),
+            (bindingVar, mkConst(BlameRef(ex.ID), SetT1(b)))
         )
         // the resulting expression is (((a => Bool) => a) (λ x ∈ Set(b). P))
         mkApp(ref, Seq(chooseType), chooseLambda)
 
       //******************************************** LET-IN ****************************************************
       case LetInEx(body, declarations @ _*) =>
-        declarations.foldRight(this(body)) {
-          case (decl, term) => this(decl, term)
+        declarations.foldRight(this(body)) { case (decl, term) =>
+          this(decl, term)
         }
 
       //******************************************** BOOLEANS **************************************************
-      case OperEx(op, a, b)
-        if op == TlaBoolOper.equiv || op == TlaBoolOper.implies =>
+      case OperEx(op, a, b) if op == TlaBoolOper.equiv || op == TlaBoolOper.implies =>
         // A <=> B, A => B
         val args = Seq(a, b)
         mkExRefApp(typeOfBoolOperArgs(args), args)
 
-      case OperEx(op, args @ _*)
-          if op == TlaBoolOper.and || op == TlaBoolOper.or  =>
+      case OperEx(op, args @ _*) if op == TlaBoolOper.and || op == TlaBoolOper.or =>
         // A /\ B /\ ... /\ C, A \/ B \/ ... \/ C
         mkExRefApp(typeOfBoolOperArgs(args), args)
 
@@ -252,8 +288,7 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
         // ~A
         mkExRefApp(OperT1(Seq(BoolT1()), BoolT1()), Seq(arg))
 
-      case OperEx(op, NameEx(bindingVar), bindingSet, pred)
-          if op == TlaBoolOper.exists || op == TlaBoolOper.forall =>
+      case OperEx(op, NameEx(bindingVar), bindingSet, pred) if op == TlaBoolOper.exists || op == TlaBoolOper.forall =>
         // \E x \in S: P, \A x \in S: P
         // the principal type of \A and \E is (a => Bool) => Bool
         val a = varPool.fresh
@@ -301,8 +336,7 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
         val sig = OperT1(Seq(SetT1(a)), SeqT1(a))
         mkExRefApp(sig, Seq(arg))
 
-      case OperEx(op, args @ _*)
-          if op == TlaSetOper.in || op == TlaSetOper.notin =>
+      case OperEx(op, args @ _*) if op == TlaSetOper.in || op == TlaSetOper.notin =>
         // x \in S, x \notin S
         val a = varPool.fresh
         val opsig = OperT1(List(a, SetT1(a)), BoolT1())
@@ -328,8 +362,7 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
         val opsig = OperT1(List(SetT1(SetT1(a))), SetT1(a))
         mkExRefApp(opsig, args)
 
-      case OperEx(op, args @ _*)
-          if op == TlaSetOper.cap || op == TlaSetOper.cup || op == TlaSetOper.setminus =>
+      case OperEx(op, args @ _*) if op == TlaSetOper.cap || op == TlaSetOper.cup || op == TlaSetOper.setminus =>
         // S \\intersect T, S \\union T, S \\ T
         val a = varPool.fresh
         val opsig = OperT1(List(SetT1(a), SetT1(a)), SetT1(a))
@@ -368,7 +401,7 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
         val a = varPool.fresh
         val otherTypeVars =
           varPool.fresh(
-            bindings.length
+              bindings.length
           ) // start with "b", as "a" goes to the result
         // the principal type of is ((b, c) => a) => Set(a)
         val principal = OperT1(Seq(OperT1(otherTypeVars, a)), SetT1(a))
@@ -408,14 +441,14 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
         val seqType = OperT1(Seq(SeqT1(a), IntT1()), a) // (Seq(a), Int) => a
         val tupType =
           OperT1(
-            Seq(SparseTupT1(fieldNo.toInt -> a), IntT1()),
-            a
+              Seq(SparseTupT1(fieldNo.toInt -> a), IntT1()),
+              a
           ) // ({ 3: a }, Int) => a
         mkApp(
-          ref,
-          Seq(funType, seqType, tupType),
-          this(fun),
-          mkConst(ExactRef(arg.ID), IntT1())
+            ref,
+            Seq(funType, seqType, tupType),
+            this(fun),
+            mkConst(ExactRef(arg.ID), IntT1())
         )
 
       case OperEx(TlaFunOper.app, fun, arg @ ValEx(TlaStr(fieldName))) =>
@@ -425,14 +458,14 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
           OperT1(Seq(FunT1(StrT1(), a), StrT1()), a) // ((Str -> a), Str) => a
         val recType =
           OperT1(
-            Seq(RecT1(fieldName -> a), StrT1()),
-            a
+              Seq(RecT1(fieldName -> a), StrT1()),
+              a
           ) // ({ foo: a }, Str) => a
         mkApp(
-          ref,
-          Seq(funType, recType),
-          this(fun),
-          mkConst(ExactRef(arg.ID), StrT1())
+            ref,
+            Seq(funType, recType),
+            this(fun),
+            mkConst(ExactRef(arg.ID), StrT1())
         )
 
       case OperEx(TlaFunOper.app, fun, arg) =>
@@ -454,9 +487,9 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
         val tupType =
           OperT1(Seq(SparseTupT1()), SetT1(IntT1())) // {} => Set(Int)
         mkApp(
-          ref,
-          Seq(funType, seqType, recType, tupType),
-          this(fun)
+            ref,
+            Seq(funType, seqType, recType, tupType),
+            this(fun)
         )
 
       case OperEx(TlaFunOper.funDef, mapExpr, args @ _*) =>
@@ -464,10 +497,13 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
         // or, [ <<x, y>> \in S, z \in T |-> e ]
         val bindings =
           translateBindings(
-            args.grouped(2).map {
-              case Seq(varEx, setEx) => (varEx, setEx)
-              case orphan => throw new TypingException( s"Invalid bound variables and sets ${orphan} in: ${ex}" )
-            }.toSeq :_*
+              args
+                .grouped(2)
+                .map {
+                  case Seq(varEx, setEx) => (varEx, setEx)
+                  case orphan            => throw new TypingException(s"Invalid bound variables and sets ${orphan} in: ${ex}")
+                }
+                .toSeq: _*
           )
 
         val a = varPool.fresh
@@ -491,10 +527,13 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
       case OperEx(TlaFunOper.except, fun, args @ _*) =>
         // the hardest expression: [f EXCEPT ![e1] = e2, ![e3] = e4, ...]
         val accessorsWithNewValues =
-          args.grouped(2).map {
-            case Seq(a, b) => (TlaFunOper.except.unpackIndex(a), b)
-            case orphan => throw new TypingException( s"Orphan ${orphan} in except expression: ${ex}" )
-          }.toSeq
+          args
+            .grouped(2)
+            .map {
+              case Seq(a, b) => (TlaFunOper.except.unpackIndex(a), b)
+              case orphan    => throw new TypingException(s"Orphan ${orphan} in except expression: ${ex}")
+            }
+            .toSeq
 
         val accessors = accessorsWithNewValues.map(_._1)
 
@@ -513,8 +552,8 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
 
         lazy val recType = {
           // a record: ([foo: a, bar: b, ...], Str, a, Str, b, ...) => [foo: a, bar: b, ...]
-          val recFields = accessorsWithTypeVars.collect {
-            case (ValEx(TlaStr(fieldName)), tv) => (fieldName, tv)
+          val recFields = accessorsWithTypeVars.collect { case (ValEx(TlaStr(fieldName)), tv) =>
+            (fieldName, tv)
           }
           val rec = RecT1(recFields: _*)
           val strAndVars = typeVars.flatMap(v => List(StrT1(), v))
@@ -523,8 +562,8 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
 
         lazy val tupType = {
           // a tuple: ({3: a, 5: b, ...}, Int, a, Int, b, ...) => {3: a, 5: b, ...}
-          val tupFields = accessorsWithTypeVars.collect {
-            case (ValEx(TlaInt(fieldNo)), tv) => (fieldNo.toInt, tv)
+          val tupFields = accessorsWithTypeVars.collect { case (ValEx(TlaInt(fieldNo)), tv) =>
+            (fieldNo.toInt, tv)
           }
           val tup = SparseTupT1(tupFields: _*)
           val intAndVars = typeVars.flatMap(v => List(IntT1(), v))
@@ -537,12 +576,12 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
           OperT1(SeqT1(a1) +: intAndAs, SeqT1(a1))
         }
 
-        val isTlaStr : TlaEx => Boolean = {
+        val isTlaStr: TlaEx => Boolean = {
           case ValEx(TlaStr(_)) => true
           case _                => false
         }
 
-        val isTlaInt : TlaEx => Boolean = {
+        val isTlaInt: TlaEx => Boolean = {
           case ValEx(TlaInt(_)) => true
           case _                => false
         }
@@ -577,12 +616,12 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
         val c = varPool.fresh
         val d = varPool.fresh
         val outerLambda = mkAbs(
-          BlameRef(ex.ID),
-          innerLambda,
-          (
-            TlaFunOper.recFunRef.uniqueName,
-            mkConst(BlameRef(ex.ID), SetT1(FunT1(c, d)))
-          )
+            BlameRef(ex.ID),
+            innerLambda,
+            (
+                TlaFunOper.recFunRef.uniqueName,
+                mkConst(BlameRef(ex.ID), SetT1(FunT1(c, d)))
+            )
         )
         mkApp(ref, Seq(principal), outerLambda)
 
@@ -598,8 +637,7 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
         val opsig = OperT1(List(BoolT1(), a, a), a)
         mkExRefApp(opsig, Seq(predEx, thenEx, elseEx))
 
-      case OperEx(op, args @ _*)
-          if op == TlaControlOper.caseNoOther || op == TlaControlOper.caseWithOther =>
+      case OperEx(op, args @ _*) if op == TlaControlOper.caseNoOther || op == TlaControlOper.caseWithOther =>
         // CASE p1 -> e1 [] p2 -> e2
         // CASE p1 -> e1 [] p2 -> e2 OTHER e3
         val nargs = args.length
@@ -680,8 +718,8 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
         val a = varPool.fresh
         val opsig =
           OperT1(
-            Seq(SeqT1(a), IntT1(), IntT1()),
-            SeqT1(a)
+              Seq(SeqT1(a), IntT1(), IntT1()),
+              SeqT1(a)
           ) // Seq(a), Int, Int => Seq(a)
         mkExRefApp(opsig, args)
 
@@ -690,8 +728,8 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
         val filter = OperT1(Seq(a), BoolT1())
         val opsig =
           OperT1(
-            Seq(SeqT1(a), filter),
-            SeqT1(a)
+              Seq(SeqT1(a), filter),
+              SeqT1(a)
           ) // Seq(a), (a => Bool) => Seq(a)
         mkExRefApp(opsig, args)
 
@@ -714,8 +752,7 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
         val opsig = OperT1(List(IntT1(), IntT1()), BoolT1())
         mkExRefApp(opsig, args)
 
-      case OperEx(op, args @ _*)
-          if op == TlaArithOper.sum || op == TlaArithOper.prod =>
+      case OperEx(op, args @ _*) if op == TlaArithOper.sum || op == TlaArithOper.prod =>
         // SUM(e_1, ..., e_n) or PROD(e_1, ..., e_n)
         val nInts = List.fill(args.length)(IntT1())
         val opsig = OperT1(nInts, IntT1())
@@ -732,25 +769,21 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
         mkExRefApp(opsig, args)
 
       //***************************************** TEMPORAL *************************************************
-      case OperEx(op, inner)
-          if op == TlaTempOper.box || op == TlaTempOper.diamond =>
+      case OperEx(op, inner) if op == TlaTempOper.box || op == TlaTempOper.diamond =>
         val opsig = OperT1(Seq(BoolT1()), BoolT1()) // Bool => Bool
         mkExRefApp(opsig, Seq(inner))
 
-      case OperEx(op, lhs, rhs)
-          if op == TlaTempOper.guarantees || op == TlaTempOper.leadsTo =>
+      case OperEx(op, lhs, rhs) if op == TlaTempOper.guarantees || op == TlaTempOper.leadsTo =>
         val opsig =
           OperT1(Seq(BoolT1(), BoolT1()), BoolT1()) // (Bool, Bool) => Bool
         mkExRefApp(opsig, Seq(lhs, rhs))
 
-      case OperEx(op, sub, act)
-          if op == TlaTempOper.weakFairness || op == TlaTempOper.strongFairness =>
+      case OperEx(op, sub, act) if op == TlaTempOper.weakFairness || op == TlaTempOper.strongFairness =>
         val a = varPool.fresh
         val opsig = OperT1(Seq(a, BoolT1()), BoolT1()) // (a, Bool) => Bool
         mkExRefApp(opsig, Seq(sub, act))
 
-      case OperEx(op, varName, act)
-          if op == TlaTempOper.AA || op == TlaTempOper.EE =>
+      case OperEx(op, varName, act) if op == TlaTempOper.AA || op == TlaTempOper.EE =>
         val a = varPool.fresh
         val opsig = OperT1(Seq(a, BoolT1()), BoolT1()) // (a, Bool) => Bool
         mkExRefApp(opsig, Seq(varName, act))
@@ -758,7 +791,7 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
       //******************************************** MISC **************************************************
       case wte @ OperEx(TypingOper.withType, _*) =>
         throw new TypingInputException(
-          "Found a type annotation in an unexpected place: " + wte
+            "Found a type annotation in an unexpected place: " + wte
         )
 
       // This should be unreachable
@@ -768,13 +801,13 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
   }
 
   /**
-    * Usually, one uses bindings like x \in S, y \in T in set comprehensions and function definitions.
-    * However, TLA+ allows for advanced syntax in bindings, e.g., << x, y >> \in S, << u, << v, w >> >> \in T.
-    * This method does a general translation for variable bindings
-    *
-    * @param bindings pairs of expressions, e.g., (NameEx("x"), NameEx("S"))
-    * @return translated bindings, where all tuples have been unpacked
-    */
+   * Usually, one uses bindings like x \in S, y \in T in set comprehensions and function definitions.
+   * However, TLA+ allows for advanced syntax in bindings, e.g., << x, y >> \in S, << u, << v, w >> >> \in T.
+   * This method does a general translation for variable bindings
+   *
+   * @param bindings pairs of expressions, e.g., (NameEx("x"), NameEx("S"))
+   * @return translated bindings, where all tuples have been unpacked
+   */
   private def translateBindings(
       bindings: (TlaEx, TlaEx)*
   ): Seq[(String, EtcExpr)] = {
@@ -789,9 +822,7 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
     }
 
     def unpackOne(
-        id: UID,
-        target: TlaEx,
-        set: EtcExpr
+        id: UID, target: TlaEx, set: EtcExpr
     ): Seq[(String, EtcExpr)] = {
       target match {
         // simplest case: name is bound to set
@@ -800,21 +831,21 @@ class ToEtcExpr(varPool: TypeVarPool) extends EtcBuilder {
 
         // advanced case: <<x, y, ..., z>> is bound to set
         case OperEx(TlaFunOper.tuple, args @ _*) =>
-          args.zipWithIndex.flatMap {
-            case (a, i) => unpackOne(id, a, project(id, set, args.length, i))
+          args.zipWithIndex.flatMap { case (a, i) =>
+            unpackOne(id, a, project(id, set, args.length, i))
           }
 
         case _ =>
           throw new TypingInputException(
-            s"Unexpected binding $target \\in $set"
+              s"Unexpected binding $target \\in $set"
           )
       }
 
     }
 
     // unpack x \in S, <<y, z>> \in T into x \in S, y \in project(T, 1), z \in project(T, 2)
-    bindings.flatMap {
-      case (target, set) => unpackOne(set.ID, target, this(set))
+    bindings.flatMap { case (target, set) =>
+      unpackOne(set.ID, target, this(set))
     }
   }
 

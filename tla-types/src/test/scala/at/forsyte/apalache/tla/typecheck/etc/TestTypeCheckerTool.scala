@@ -55,7 +55,6 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
         |================================
       """.stripMargin
 
-    val locationStore = new SourceStore
     val (rootName, modules) =
       sanyImporter.loadFromSource("Specb", Source.fromString(text))
 
@@ -71,7 +70,7 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
       // but no type errors
     }
     whenExecuting(listener) {
-      val isWellTyped = new TypeCheckerTool().check(listener, mod)
+      val isWellTyped = new TypeCheckerTool(annotationStore).check(listener, mod)
       assert(isWellTyped)
     }
   }
