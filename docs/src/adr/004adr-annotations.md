@@ -123,7 +123,7 @@ FactFun[n \in Int] ==
 
 The implementation of the annotation parser can be found in the class
 `at.forsyte.apalache.io.annotations.AnnotationParser` of the module
-`tla-import`. (TODO: place a link when the PR is merged).
+`tla-import`, see [AnnotationParser][].
 
 ## 5. Discussion
 
@@ -139,5 +139,8 @@ so it would be otherwise impossible to find the end of an annotation.
 
 [ADR-002]: https://apalache.informal.systems/docs/adr/002adr-types.html
 [JavaTokenParsers]: https://www.scala-lang.org/api/2.12.2/scala-parser-combinators/scala/util/parsing/combinator/JavaTokenParsers.html
+
 [Java identifier]: https://docs.oracle.com/javase/specs/jls/se7/html/jls-3.html#jls-3.8
+
+[AnnotationParser]: https://github.com/informalsystems/apalache/blob/unstable/tla-import/src/main/scala/at/forsyte/apalache/io/annotations/AnnotationParser.scala
 
