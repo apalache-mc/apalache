@@ -1,23 +1,26 @@
 # ADR-002: types and type annotations
 
+| authors                                | revision |
+| -------------------------------------- | --------:|
+| Shon Feder, Igor Konnov, Jure Kukovec  |        2 | 
+
 This is a follow up of
-[RFC-001](https://github.com/informalsystems/apalache/blob/unstable/docs/internal/rfc/001rfc-types.md),
-which discusses plenty of alternative solutions. In this __ADR-002__, we fix one
-solution that seems to be most suitable. The interchange format for the type
-inference tools will be discussed in a separate ADR.
+[RFC-001](https://github.com/informalsystems/apalache/blob/unstable/docs/internal/rfc/001rfc-types.md), which discusses
+plenty of alternative solutions. In this __ADR-002__, we fix one solution that seems to be most suitable. The
+interchange format for the type inference tools will be discussed in a separate ADR.
 
 1. How to write types in TLA+ (Type System 1).
 1. How to write type annotations (as a user).
 
-This document assumes that one can write a simple type checker that computes the
-types of all expressions based on the annotations provided by the user.
-Although there is no such a type checker yet, we are going to write one.  In
-contrast, the [type inference
-algorithm](https://github.com/informalsystems/apalache/tree/types) by @Kukovec
-is fully automatic and thus it eliminates the need for type annotations.
-(Jure's algorithm is using Type System 1 too.) However, system engineers
-often want to write type annotations and quickly check types when writing
-TLA+ specifications. This document is filling this gap.
+This document assumes that one can write a simple type checker that computes the types of all expressions based on the
+annotations provided by the user. Our work-in-progress type checker is using these type annotations. The new type
+checker can be called with `apalache typecheck` command. Note that the new type checker has not been integrated with the
+model checker yet.
+
+In contrast, the [type inference algorithm](https://github.com/informalsystems/apalache/tree/types) by @Kukovec is fully
+automatic and thus it eliminates the need for type annotations.
+(Jure's algorithm is using Type System 1 too.) However, system engineers often want to write type annotations and
+quickly check types when writing TLA+ specifications. This document is filling this gap.
 
 ## 1. How to write types in TLA+
 
@@ -91,21 +94,35 @@ probably not what you expected, but it is the best type we can actually compute
 without having algebraic datatypes in TLA+. It also reminds the user that one
 better tests the field `type` carefully.
 
-Type System 1 is also very much in line with the [type system by Stephan Merz
-and Hernan
-Vanzetto](https://dblp.org/search?q=Automatic+Verification+of+%7BTLA%7D+%2B+Proof+Obligations+with+%7BSMT%7D+Solvers),
-which is used internally by
-[TLAPS](https://tla.msr-inria.inria.fr/tlaps/content/Home.html) when translating
-proof obligations in SMT.  We introduce types for user-defined operators, on top
-of their types for TLA+ expressions that do not contain user-defined operators.
+Type System 1 is also very much in line with the [type system by Stephan Merz and Hernan Vanzetto](https://dblp.org/search?q=Automatic+Verification+of+%7BTLA%7D+%2B+Proof+Obligations+with+%7BSMT%7D+Solvers)
+, which is used internally by
+[TLAPS](https://tla.msr-inria.inria.fr/tlaps/content/Home.html) when translating proof obligations in SMT. We introduce
+types for user-defined operators, on top of their types for TLA+ expressions that do not contain user-defined operators.
 
-We expect that this type system will evolve in the future. That is why we call
-it __Type System 1__. Feel free to suggest __Type System 2__ :-)
+We expect that this type system will evolve in the future. That is why we call it __Type System 1__. Feel free to
+suggest __Type System 2__ :-)
+
+**Note:** For the above example of a set of records, we are considering to introduce union types. So the type of the set
+
+```tla
+{[type |-> "1a", bal |-> 1],
+ [type |-> "2a", bal |-> 2, val |-> 3]}
+```
+
+would be something like:
+
+```tla
+Set([type |-> "1a"], bal |-> 1]
+  + [type |-> "2a", bal |-> 2, val |-> 3])
+```
+
+The value of the field `type` would serve as a type tag. However, we would have to fix a set of patterns that turn a
+union type into a precise record type. One such pattern is a set comprehension, e.g., `{ r \in S: r.type = "1a" }`. If
+you have ideas, please let us know.
 
 ## 2. How to write type annotations (as a user)
 
-We define the Apalache module `Typing.tla` that contains definitions of two
-operators:
+We define the Apalache module `Typing.tla` that contains definitions of two operators:
 
 ```tla
 ---- MODULE Typing ----
