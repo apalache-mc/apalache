@@ -7,34 +7,25 @@
 
  This specification is annotated with the new Apalache types.
  *)
-EXTENDS Integers, FiniteSets, Typing
+EXTENDS Integers, FiniteSets
 
 CONSTANT
-    \* type: RM
+    \* @type: Set(RM);
     RM \* The set of resource managers
 
 VARIABLES
-  \* type: RM -> Str
+  \* @type: RM -> Str;
   rmState,       \* $rmState[rm]$ is the state of resource manager RM.
-  \* type: Str
+  \* @type: Str;
   tmState,       \* The state of the transaction manager.
-  \* type: Set(RM)
+  \* @type: Set(RM);
   tmPrepared,    \* The set of RMs from which the TM has received $"Prepared"$
                  \* messages.
-  \* type: Set([type: Str, rm: RM])
+  \* @type: Set([type: Str, rm: RM]);
   msgs           
 
-\* We should have at most one such axiom per spec, to avoid collisions.
-\* This axiom is similar to TypeOK. It should always be a conjunction 
-TypeAssumptions ==
-  \* RMT is a global type name, as it is in CamelCase
-  /\ AssumeType(RM, "Set(RM)")
-  /\ AssumeType(rmState, "RM -> Str")
-  /\ AssumeType(tmState, "Str")
-  /\ AssumeType(tmPrepared, "Set(RM)")
-  /\ AssumeType(msgs, "Set([type: Str, rm: RM])")
-
-Message == "Set([type: Str, rm: RM])" ##
+\* @type: Set([type: Str, rm: RM]);
+Message ==
   ({[type |-> t, rm |-> r]: t \in {"Prepared"}, r \in RM }
    \cup
    {[type |-> t] : t \in {"Commit", "Abort"}})
@@ -62,7 +53,8 @@ Init ==
 (* We now define the actions that may be performed by the processes, first *)
 (* the TM's actions, then the RMs' actions.                                *)
 (***************************************************************************)
-TMRcvPrepared(rm) == "(RM) => Bool" ##
+\* @type: (RM) => Bool;
+TMRcvPrepared(rm) ==
   (*************************************************************************)
   (* The TM receives a $"Prepared"$ message from resource manager $rm$.    *)
   (*************************************************************************)
@@ -91,7 +83,8 @@ TMAbort ==
   /\ msgs' = msgs \cup {[type |-> "Abort"]}
   /\ UNCHANGED <<rmState, tmPrepared>>
 
-RMPrepare(rm) == "(RM) => Bool" ##
+\* @type: (RM) => Bool;
+RMPrepare(rm) ==
   (*************************************************************************)
   (* Resource manager $rm$ prepares.                                       *)
   (*************************************************************************)
@@ -100,7 +93,8 @@ RMPrepare(rm) == "(RM) => Bool" ##
   /\ msgs' = msgs \cup {[type |-> "Prepared", rm |-> rm]}
   /\ UNCHANGED <<tmState, tmPrepared>>
   
-RMChooseToAbort(rm) == "(RM) => Bool" ##
+\* @type: (RM) => Bool;
+RMChooseToAbort(rm) ==
   (*************************************************************************)
   (* Resource manager $rm$ spontaneously decides to abort.  As noted       *)
   (* above, $rm$ does not send any message in our simplified spec.         *)
@@ -109,7 +103,8 @@ RMChooseToAbort(rm) == "(RM) => Bool" ##
   /\ rmState' = [rmState EXCEPT ![rm] = "aborted"]
   /\ UNCHANGED <<tmState, tmPrepared, msgs>>
 
-RMRcvCommitMsg(rm) == "(RM) => Bool" ##
+\* @type: (RM) => Bool;
+RMRcvCommitMsg(rm) ==
   (*************************************************************************)
   (* Resource manager $rm$ is told by the TM to commit.                    *)
   (*************************************************************************)
@@ -117,7 +112,8 @@ RMRcvCommitMsg(rm) == "(RM) => Bool" ##
   /\ rmState' = [rmState EXCEPT ![rm] = "committed"]
   /\ UNCHANGED <<tmState, tmPrepared, msgs>>
 
-RMRcvAbortMsg(rm) == "(RM) => Bool" ##
+\* @type: (RM) => Bool;
+RMRcvAbortMsg(rm) ==
   (*************************************************************************)
   (* Resource manager $rm$ is told by the TM to abort.                     *)
   (*************************************************************************)

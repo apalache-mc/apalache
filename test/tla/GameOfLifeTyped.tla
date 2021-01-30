@@ -3,26 +3,29 @@
 \* The original is avaiable at: 
 \* https://github.com/tlaplus/Examples/tree/master/specifications/GameOfLife
 \*
-EXTENDS Integers, Typing
+EXTENDS Integers
 
-CONSTANT N
-VARIABLE grid
+CONSTANT
+    \* @type: Int;
+    N
+VARIABLE
+    \* @type: <<Int, Int>> -> Bool;
+    grid
 
 ASSUME N \in Nat
-
-TypeAssumptions ==
-  /\ AssumeType(N, "Int")
-  /\ AssumeType(grid, "<<Int, Int>> -> Bool")
 
 vars == grid
 
 RECURSIVE Sum(_, _)
-Sum(f, S) == \*"(<<Int, Int>> -> Int, Set(<<Int, Int>>)) => Int" ##
+\* @type: (<<Int, Int>> -> Int, Set(<<Int, Int>>)) => Int;
+Sum(f, S) ==
     IF S = {} THEN 0
-    ELSE LET x == "<<Int, Int>>" ## CHOOSE x \in S : TRUE
+    ELSE LET (* @type: <<Int, Int>>; *)
+             x == CHOOSE x \in S : TRUE
          IN  f[x] + Sum(f, S \ {x})
 
-Pos == "Set(<<Int, Int>>)" ##
+\* @type: Set(<<Int, Int>>);
+Pos ==
     {<<x, y>>: x, y \in 1..N}
 
 TypeOK == grid \in [Pos -> BOOLEAN]
@@ -33,10 +36,11 @@ sc[<<x, y>> \in (0 .. N + 1) \X
                                       \/ ~grid[<<x, y>>] -> 0
                                    [] OTHER -> 1
 
-score(p) == "<<Int, Int>> => Int" ##
-            LET nbrs == {x \in {-1, 0, 1} \X
+\* @type: <<Int, Int>> => Int;
+score(p) == LET nbrs == {x \in {-1, 0, 1} \X
                                {-1, 0, 1} : x /= <<0, 0>>}
-                points == "Set(<<Int, Int>>)" ##
+                \* @type: Set(<<Int, Int>>);
+                points ==
                     {<<p[1] + x, p[2] + y>> : <<x, y>> \in nbrs}
             IN Sum(sc, points)
                    

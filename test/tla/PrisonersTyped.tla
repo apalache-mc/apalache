@@ -28,23 +28,21 @@
 (*                                                                         *)
 (* The solution presented by the Car Guys is specified below.              *)
 (***************************************************************************)
-EXTENDS Naturals, FiniteSets, Typing
+EXTENDS Naturals, FiniteSets
 
 CONSTANTS 
+  \* @type: Set(PRISONER);
   Prisoner,
     (***********************************************************************)
     (* The set of all prisoners.                                           *)
     (***********************************************************************)
 
+  \* @type: PRISONER;
   Counter  
     (***********************************************************************)
     (* This is an arbitrarily chosen prisoner, who will do the necessary   *)
     (* counting.                                                           *)
     (***********************************************************************)
-
-TypeAssumptions1 ==
-    /\ AssumeType(Prisoner, "Set(PRISONER)")
-    /\ AssumeType(Counter, "PRISONER")
 
 ASSUME 
   (*************************************************************************)
@@ -61,12 +59,16 @@ OtherPrisoner == Prisoner \ {Counter}
   (*************************************************************************)
   
 VARIABLES 
-  switchAUp, switchBUp,    
+  \* @type: Bool;
+  switchAUp,
+  \* @type: Bool;
+  switchBUp,    
     (***********************************************************************)
     (* The states of the two switches, represented by boolean-valued       *)
     (* variables.                                                          *)
     (***********************************************************************)
     
+  \* @type: PRISONER -> Int;
   timesSwitched,
     (***********************************************************************)
     (* For ever prisoner except the counter, timesSwitched[p] is the       *)
@@ -74,16 +76,11 @@ VARIABLES
     (* 0 and will equal at most 2.                                         *)
     (***********************************************************************)
 
+  \* @type: Int;
   count
     (***********************************************************************)
     (* The number of times the Counter has switched switch A down.         *)
     (***********************************************************************)
-
-TypeAssumptions2 ==
-    /\ AssumeType(switchAUp, "Bool")
-    /\ AssumeType(switchBUp, "Bool")
-    /\ AssumeType(timesSwitched, "PRISONER -> Int")
-    /\ AssumeType(count, "Int")
 
 vars == <<switchAUp, switchBUp, timesSwitched, count>>    
   (*************************************************************************)
