@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.typecheck._
 import at.forsyte.apalache.tla.typecheck.parser.{DefaultType1Parser, Type1ParseError}
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * ToEtcExpr takes a TLA+ expression and produces an EtcExpr.
@@ -16,7 +17,7 @@ import at.forsyte.apalache.tla.typecheck.parser.{DefaultType1Parser, Type1ParseE
  * @see at.forsyte.apalache.tla.types.SignatureGenerator
  * @author Igor Konnov
  */
-class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends EtcBuilder {
+class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends EtcBuilder with LazyLogging {
   private val type1Parser = DefaultType1Parser
 
   def apply(decl: TlaDecl, inScopeEx: EtcExpr): EtcExpr = {
@@ -809,6 +810,12 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         throw new TypingInputException(
             "Found a type annotation in an unexpected place: " + wte
         )
+
+      case OperEx(BmcOper.withType, lhs, _) =>
+        // Met an old type annotation. Warn the user and ignore the annotation.
+        logger.warn("Met an old type annotation. Ignored: " + ex)
+        logger.warn("See: https://apalache.informal.systems/docs/apalache/typechecker-snowcat.html")
+        this(lhs)
 
       // This should be unreachable
       case expr =>
