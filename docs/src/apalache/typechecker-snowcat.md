@@ -1,7 +1,8 @@
 ## The new type checker Snowcat
 
-**WARNING:** Snowcat has not been integrated with the model checker yet. The integration is coming soon. The model
-checker is still expecting the [old type annotations](./types-and-annotations.md).
+**WARNING:** Snowcat has not been integrated with the model checker yet. The
+integration is coming soon. The model checker is still expecting the [old type
+annotations](./types-and-annotations.md).
 
 For the moment, you can use Snowcat as a standalone tool. New type annotations are written in comments, so they are
 ignored by the model checker (until the integration happens). Hence, you can start writing new type annotations and

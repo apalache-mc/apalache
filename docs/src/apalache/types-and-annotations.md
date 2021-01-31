@@ -1,6 +1,7 @@
 ## Simple type inference and type annotations
 
 **WARNING:** We have recently implemented a new type checker called Snowcat.
+See the [chapter in the manual](./typechecker-snowcat.md).
 Snowcat is user-friendly and much smarter than the current trivial type
 checker.  To get the idea about the new type checker, see [the talk at TLA+
 Community Meeting 2020](https://youtu.be/hnp25hmCMN8). We are preparing a
