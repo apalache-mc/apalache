@@ -993,3 +993,18 @@ Type checker [OK]
 EXITCODE: OK
 ```
 
+### typecheck FunctionsTyped.tla
+
+```sh
+$ apalache-mc typecheck FunctionsTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > running ETC: Embarrassingly simple Type Checker
+   ^_^
+  =^_^=
+PASS #2: Terminal
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
