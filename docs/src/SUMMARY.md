@@ -22,6 +22,7 @@
     - [Five minutes of theory](./apalache/theory.md)
 - [TLC Configuration Files](./apalache/tlc-config.md)
 - [Types and Annotations](./apalache/types-and-annotations.md)
+- [Snowcat: the New Type Checker](./typechecker-snowcat.md)
 - [Supported Features](./apalache/features.md)
 - [TLA+ Preprocessing](./apalache/preprocessing.md)
 - [Fine Tuning](./apalache/tuning.md)
