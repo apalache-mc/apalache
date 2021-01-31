@@ -138,7 +138,7 @@ Notice that specification `coord` describes one infinite computation (and
 infinitely many finite computations that are prefixes of the infinite
 computation).  Specification `coord2` describes three infinite computations.
 Specification `coord3` describes infinitely many infinite computations: At
-every step, `Next` may choose between `y' = x` or `y' = x+1`.
+every step, `Next` may choose between `y' = x` or `y' = x + 1`.
 
 Why are these specifications so different? The answer lies in non-determinism.
 Specification `coord` is completely deterministic: There is just one state that
@@ -162,7 +162,7 @@ In fact, many model checkers support non-determinism in their input languages.
 For instance, see [Boogie][] and [Spin][].
 Of course, this comes with constraints on the structure of the specifications.
 After all, people are much better at solving certain logical puzzles than
-computers, though people get bored much faster than computers. 
+computers, though people get bored much faster than computers.
 
 To understand how TLC enumerates states, check Chapter 14 of [Specifying
 Systems][]. In the rest of this document, we focus on treatment of
@@ -190,7 +190,7 @@ which was given above.  By starting with the empty binding `()`, we can see how
 to automatically evaluate the body of the operator `Init`:
 
 ```tla
-x = 0 /\ y = 0 
+x = 0 /\ y = 0
 ```
 
 By following [semantics of conjunction](./booleans.md), we see that `/\` is
@@ -208,7 +208,7 @@ Let's see how to evaluate the body of the operator `Next`:
 x' = x + 1 /\ y' = y + 1
 ```
 
-As we have seen, `Next` describes pairs of states. Thus, we will use produce
+As we have seen, `Next` describes pairs of states. Thus, we will produce
 bindings over non-primed and primed variables, that is, over `x, x', y, y'`.
 Non-primed variables represent the state before a transition fires, whereas
 primed variables represent the state after the transition has been fired.
@@ -345,7 +345,7 @@ evaluated. There are three possible outcomes:
  Well, that was a wrong guess. According to our semantics, the evaluation
  halts. See the above discussion on "halting".
  1. The set `S` is empty, and `GUESS S` halts.  See the above discussion on
- "halting". 
+ "halting".
 
 **Example.** Consider the following specification:
 
@@ -385,7 +385,7 @@ Consider a disjunction that comprises `n` clauses:
 
 Assume that we evaluate the disjunction against a binding `s`. Further,
 let us say that `Unassigned(s)` is the set of variables that are not
-defined in `s`. For every `P_i` we construct the set of state variables 
+defined in `s`. For every `P_i` we construct the set of state variables
 `Use_i` that contains every variable `x'` that is mentioned in `P_i`.
 There are three cases to consider:
 
@@ -477,8 +477,8 @@ conditional](./conditionals.md).
 In this case, `IF-THEN-ELSE` can be evaluated as the equivalent expression:
 
 ```tla
-  \/  P /\ B
-  \/ ~P /\ C
+  \/  A /\ B
+  \/ ~A /\ C
 ```
 
 _We do not recommend you to use IF-THEN-ELSE with non-determinism. The structure
@@ -496,7 +496,7 @@ value.
 For the deterministic use of `CASE`,
     see [Deterministic conditionals](./conditionals.md).
 
-**CASE without OTHER.**    
+**CASE without OTHER.**
 Consider a `CASE` expression:
 
 ```tla
