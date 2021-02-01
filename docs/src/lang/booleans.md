@@ -35,7 +35,7 @@ We discuss this effect [Control Flow and Non-determinism].
 **Arguments:** Two or more arbitrary expressions.
 
 **Effect:** The binary case `F /\ G` evaluates to:
-    
+
  - `TRUE`, if both `F` and `G` evaluate to `TRUE`.
 
  - `FALSE`, if `F` evaluates to `FALSE`,
@@ -73,6 +73,7 @@ True  and False # False
 False and False # False
 False and 1 # False, because 1 is cast to True
 1 and False # False, because 1 is cast to True
+```
 
 **Special syntax form:** To minimize the number of parentheses, conjunction can
 be written in the indented form:
@@ -92,7 +93,7 @@ to the number of spaces in front of `/\`. The formula in the above example
 is equivalent to:
 
 ```tla
-  (F_1) /\ ((G_1) /\ ... /\ (G_k)) /\ (F_2) /\ ... /\ (F_n)
+  F_1 /\ (G_1 /\ ... /\ G_k) /\ F_2 /\ ... /\ F_n
 ```
 
 ----------------------------------------------------------------------------
@@ -109,7 +110,7 @@ is equivalent to:
 **Effect:**
 
 The binary case `F \/ G` evaluates to:
-    
+
  - `FALSE`, if both `F` and `G` evaluate to `FALSE`.
 
  - `TRUE`, if `F` evaluates to `TRUE`,
@@ -165,7 +166,7 @@ to the number of spaces in front of `\/`. The formula in the above example
 is equivalent to:
 
 ```tla
-  (F_1) \/ ((G_1) \/ ... \/ (G_k)) \/ (F_2) \/ ... \/ (F_n)
+  F_1 \/ (G_1 \/ ... \/ G_k) \/ F_2 \/ ... \/ F_n
 ```
 
 The indented form allows you to combine conjunctions and disjunctions:
@@ -195,7 +196,7 @@ The above formula is equivalent to:
 **Arguments:** One argument that should evaluate to a Boolean value.
 
 **Effect:**
- 
+
   The value of `~F` is computed as follows:
 
   - if `F` is evaluated to `FALSE`, then `~F` is evaluated to `TRUE`,
