@@ -4,7 +4,7 @@
 \* https://github.com/tlaplus/Examples/tree/master/specifications/N-Queens
 
 
-EXTENDS Naturals, Sequences, Typing
+EXTENDS Naturals, Sequences
 (***************************************************************************)
 (* Formulation of the N-queens problem and an iterative algorithm to solve *)
 (* the problem in TLA+. Since there must be exactly one queen in every row *)
@@ -16,22 +16,23 @@ EXTENDS Naturals, Sequences, Typing
 (* of length \leq N.                                                       *)
 (***************************************************************************)
 
-CONSTANT N              \** number of queens and size of the board
+CONSTANT
+    \* @type: Int;
+    N              \** number of queens and size of the board
 ASSUME N \in Nat \ {0}
-
-TypeAssumptions ==
-    /\ AssumeType(N, "Int")
 
 (* The following predicate determines if queens i and j attack each other
    in a placement of queens (represented by a sequence as above). *)
-Attacks(queens,i,j) == "(Seq(Int), Int, Int) => Bool" ##
+\* @type: (Seq(Int), Int, Int) => Bool;
+Attacks(queens,i,j) ==
   \/ queens[i] = queens[j]                 \** same column
   \/ queens[i] - queens[j] = i - j         \** first diagonal
   \/ queens[j] - queens[i] = i - j         \** second diagonal
 
 (* A placement represents a (partial) solution if no two different queens
    attack each other in it. *)
-IsSolution(queens) == \*"Seq(Int) => Bool" ##
+\* @type: Seq(Int) => Bool;
+IsSolution(queens) ==
   \A i \in 1 .. Len(queens)-1 : \A j \in i+1 .. Len(queens) : 
        ~ Attacks(queens,i,j) 
 

@@ -1,23 +1,26 @@
 # ADR-002: types and type annotations
 
+| authors                                | revision |
+| -------------------------------------- | --------:|
+| Shon Feder, Igor Konnov, Jure Kukovec  |        2 | 
+
 This is a follow up of
-[RFC-001](https://github.com/informalsystems/apalache/blob/unstable/docs/internal/rfc/001rfc-types.md),
-which discusses plenty of alternative solutions. In this __ADR-002__, we fix one
-solution that seems to be most suitable. The interchange format for the type
-inference tools will be discussed in a separate ADR.
+[RFC-001](https://github.com/informalsystems/apalache/blob/unstable/docs/internal/rfc/001rfc-types.md), which discusses
+plenty of alternative solutions. In this __ADR-002__, we fix one solution that seems to be most suitable. The
+interchange format for the type inference tools will be discussed in a separate ADR.
 
 1. How to write types in TLA+ (Type System 1).
 1. How to write type annotations (as a user).
 
-This document assumes that one can write a simple type checker that computes the
-types of all expressions based on the annotations provided by the user.
-Although there is no such a type checker yet, we are going to write one.  In
-contrast, the [type inference
-algorithm](https://github.com/informalsystems/apalache/tree/types) by @Kukovec
-is fully automatic and thus it eliminates the need for type annotations.
-(Jure's algorithm is using Type System 1 too.) However, system engineers
-often want to write type annotations and quickly check types when writing
-TLA+ specifications. This document is filling this gap.
+This document assumes that one can write a simple type checker that computes the types of all expressions based on the
+annotations provided by the user. Our work-in-progress type checker is using these type annotations. The new type
+checker can be called with `apalache typecheck` command. Note that the new type checker has not been integrated with the
+model checker yet.
+
+In contrast, the [type inference algorithm](https://github.com/informalsystems/apalache/tree/types) by @Kukovec is fully
+automatic and thus it eliminates the need for type annotations.
+(Jure's algorithm is using Type System 1 too.) However, system engineers often want to write type annotations and
+quickly check types when writing TLA+ specifications. This document is filling this gap.
 
 ## 1. How to write types in TLA+
 
@@ -91,64 +94,57 @@ probably not what you expected, but it is the best type we can actually compute
 without having algebraic datatypes in TLA+. It also reminds the user that one
 better tests the field `type` carefully.
 
-Type System 1 is also very much in line with the [type system by Stephan Merz
-and Hernan
-Vanzetto](https://dblp.org/search?q=Automatic+Verification+of+%7BTLA%7D+%2B+Proof+Obligations+with+%7BSMT%7D+Solvers),
-which is used internally by
-[TLAPS](https://tla.msr-inria.inria.fr/tlaps/content/Home.html) when translating
-proof obligations in SMT.  We introduce types for user-defined operators, on top
-of their types for TLA+ expressions that do not contain user-defined operators.
+Type System 1 is also very much in line with the [type system by Stephan Merz and Hernan Vanzetto](https://dblp.org/search?q=Automatic+Verification+of+%7BTLA%7D+%2B+Proof+Obligations+with+%7BSMT%7D+Solvers)
+, which is used internally by
+[TLAPS](https://tla.msr-inria.inria.fr/tlaps/content/Home.html) when translating proof obligations in SMT. We introduce
+types for user-defined operators, on top of their types for TLA+ expressions that do not contain user-defined operators.
 
-We expect that this type system will evolve in the future. That is why we call
-it __Type System 1__. Feel free to suggest __Type System 2__ :-)
+We expect that this type system will evolve in the future. That is why we call it __Type System 1__. Feel free to
+suggest __Type System 2__ :-)
+
+**Note:** For the above example of a set of records, we are considering to introduce union types. So the type of the set
+
+```tla
+{[type |-> "1a", bal |-> 1],
+ [type |-> "2a", bal |-> 2, val |-> 3]}
+```
+
+would be something like:
+
+```tla
+Set([type |-> "1a"], bal |-> 1]
+  + [type |-> "2a", bal |-> 2, val |-> 3])
+```
+
+The value of the field `type` would serve as a type tag. However, we would have to fix a set of patterns that turn a
+union type into a precise record type. One such pattern is a set comprehension, e.g., `{ r \in S: r.type = "1a" }`. If
+you have suggestions on this line of thought, please let us know.
 
 ## 2. How to write type annotations (as a user)
 
-We define the Apalache module `Typing.tla` that contains definitions of two
-operators:
+In the following, we discuss how to annotate different TLA+ declarations.
 
-```tla
----- MODULE Typing ----
-AssumeType(ex, tp) == TRUE
-tp ## ex == ex
-=======================
-```
-
-The operator `AssumeType(ex, tp)` is a type assumption. It states that `ex`
-should have the type whose supertype is `tp` (the records in `tp` may contain
-additional fields).  This operator always returns `TRUE`.  The operator `tp ##
-ex` annotates an expression `ex` with a type `tp`. This operator returns `ex`
-itself, that is, it performs type erasure (for compatibility with other TLA+
-tools).
-
-In the following, we discuss how to annotate different TLA+ names.  The
-operator `AssumeType` is designated for annotating constants and state
-variables, whereas the operator `##` is designated for annotating user-defined
-operators.
+*In the previous version of this document, we defined two operators:
+`AssumeType(_, _)` and `_ ## _`. They are no longer needed as we have introduced [Code annotations][].*
 
 ### 2.1. Annotating CONSTANTS and VARIABLES
 
-Ideally, we would like to use `ASSUME(...)` to annotate the types of state
-variables and constants. However, `ASSUME` only allows for constant
-expressions.  Hence, we require the annotations of variables and constants to
-be defined once per specification with an operator called `TypeAssumptions`.
-See the following example:
+Simply write an annotation `@type: <your type>;` in a comment that precedes the declaration of a constant declaration or
+a variable. See the following example:
 
 ```tla
-EXTENDS Typing
-CONSTANT N, Base
-VARIABLE x, S
+CONSTANT
+  \* @type: Int;
+  N,
+  \* @type: Set(ID);
+  Base
 
-TypeAssumptions ==
-  /\ AssumeType(N, "Int")
-  /\ AssumeType(Base, "Set(ID)")
-  /\ AssumeType(x, "ID")
-  /\ AssumeType(S, "Set(ID)")
+VARIABLE
+  \* @type: ID;
+  x,
+  \* @type: Set(ID);
+  S
 ```
-
-`TypeAssumptions` must be a conjunction of expressions of the form
-`AssumeType(nm, tp)`, where `nm` is the name of a VARIABLE or a CONSTANT, and
-`tp` is a string in the grammar TS1. No other syntactic forms are allowed.
 
 __Why don't we use THEOREMs?__ It is tempting to declare the types of variables
 as theorems. For example:
@@ -165,20 +161,19 @@ expressions.
 
 ### 2.2. Annotating Operators
 
-The operators in TLA+ are not values, but are similar to macros. Hence, we
-cannot refer to an operator by its name, without applying this operator.  To
-annotate an operator, we prepend its body with `##` (as proposed by
-@shonfeder). For example:
+Again, write a type annotation `@type: <your type>;` in a comment that precedes the operator declaration. For example:
 
 ```tla
-Mem(e, es) == "(a, Seq(a)) => Bool" ##
+\* @type: (a, Seq(a)) => Bool;
+Mem(e, es) ==
     (e \in {es[i]: i \in DOMAIN es})
 ```
 
 Higher-order operators are also easy to annotate:
 
 ```tla
-Find(Pred(_), es) == "((a) => Bool, Seq(a)) => Int" ##
+\* @type: ((a) => Bool, Seq(a)) => Int;
+Find(Pred(_), es) ==
     IF \E i \in DOMAIN es: Pred(es[i])
     THEN CHOOSE i \in DOMAIN es: Pred(es[i])
     ELSE -1
@@ -189,23 +184,24 @@ operator. However, the annotation syntax is quite similar to that of the
 operators (note though that we are using `->` instead of `=>`):
 
 ```tla
-Card[S \in T] == "Set(a) -> Int" ##
+\* @type: Set(a) -> Int;
+Card[S \in T] ==
     IF S = {}
     THEN 0
-    ELSE LET one_elem == "() => a" ##
-            (CHOOSE x \in S: TRUE)
+    ELSE LET \* @type: a;
+             \* we could also write: "() => a" instead of just "a"
+             one_elem == (CHOOSE x \in S: TRUE)
          IN
          1 + Card[S \ {one_elem}]
 ```
 
-In the definition of `Card`, we annotated the let-definition
-`one_elem` with its type, though any type checker should be able to compute
-the type of `one_elem` from its context. So the type of `one_elem` is there for
-clarification. Note that `one_elem` has the type `() => Int`, as `LET-IN`
-defines an operator. Although TLA+ blends in nullary operators with other names,
-we feel that it is important to keep this distinction, since we go for a typing
-discipline.
-
+In the definition of `Card`, we annotated the let-definition `one_elem` with its type, though any type checker should be
+able to compute the type of
+`one_elem` from its context. So the type of `one_elem` is there for clarification. According to our type grammar, the
+type of `one_elem` should be
+`() => a`, as `one_elem` is an operator. It is not obvious from the syntax:
+TLA+ blends in nullary operators with other names. We have found that LET-definitions without arguments are so common,
+so it is more convenient to write the shorter type annotation, that is, just `a`.
 
 ### 2.3. Dealing with bound variables
 
@@ -220,14 +216,10 @@ operators here (we omit the unbounded quantifiers and temporal quantifiers):
  * `{e: x \in S}`
  * `[x \in S |-> e}`
 
-We do not introduce any special annotation to support these operators.
-Indeed, they are all introducing bound variables that range over sets.
-In most cases, a type checker should be able to extract the element type
-from a set expression.
+We do not introduce any special annotation to support these operators. Indeed, they are all introducing bound variables
+that range over sets. In most cases, the type checker should be able to extract the element type from a set expression.
 
-
-However, there are a few pathological cases arising from empty collections. For
-example:
+However, there are a few pathological cases arising from empty collections. For example:
 
 ```tla
 /\ \E x \in {}: x > 1
@@ -235,23 +227,26 @@ example:
 /\ z \in DOMAIN << >>
 ```
 
-In these rare cases, use the auxiliary operators in the module `Typing` for
-specifying the type of the empty collection:
+Similar typing issues occur in programming languages, e.g., Scala and Java. In these rare cases, you can write an
+auxiliary LET-definition to specify the type of the empty collection:
 
 ```tla
-EXTENDS Typing
-...
-
-/\ \E x \in EmptySet("Int"): x > 1
-/\ f = [x \in EmptySet("Str") |-> 2]
-/\ z \in DOMAIN EmptySeq("Int")
+/\ LET \* @type: Set(Int);
+       EmptyInts == {}
+   IN
+   \E x \in EmptyInts: x > 1
+/\ LET \* @type: Set(Str);
+       EmptyStrings == {}
+   IN 
+   f = [x \in EmptyStrings |-> 2]
+/\ LET \* @type: Seq(Int);
+       EmptyIntSeq == {}
+   IN
+   z \in DOMAIN EmptyIntSeq
 ```
 
 The type checker uses the type annotation to refine the type of an empty set
-(or, of an empty sequence). To keep compatibility with TLC and other tools,
-the module `Typing` defines the operators `EmptySet(...)` and `EmptySeq(...)`
-as `{}` and `<<>>`, respectively. However, the type checker overrides these
-definitions with the refined types.
+(or, of an empty sequence).
 
 ## 3. Example
 
@@ -265,8 +260,8 @@ the specification. For detailed comments, check [the original
 specification](https://github.com/tlaplus/Examples/blob/master/specifications/CigaretteSmokers/CigaretteSmokers.tla).
 
 ```tla
--------------------------- MODULE CigaretteSmokers --------------------------
-(***************************************************************************)
+---------------------- MODULE CigaretteSmokersTyped --------------------------
+(***************************************************************************)   
 (* A specification of the cigarette smokers problem, originally            *)
 (* described in 1971 by Suhas Patil.                                       *)
 (* https://en.wikipedia.org/wiki/Cigarette_smokers_problem                 *)
@@ -274,17 +269,30 @@ specification](https://github.com/tlaplus/Examples/blob/master/specifications/Ci
 (* This specification has been extended with type annotations for the      *)
 (* demonstration purposes. Some parts of the original specification are    *)
 (* omitted for brevity.                                                    *)
+(*                                                                         *)
+(* The original specification by @mryndzionek can be found here:           *)
+(* https://github.com/tlaplus/Examples/blob/master/specifications/CigaretteSmokers/CigaretteSmokers.tla *)
 (***************************************************************************)
+
 EXTENDS Integers, FiniteSets
 
-EXTENDS Typing \* using the Apalache module for types
+CONSTANT
+  \* @type: Set(INGREDIENT);
+  Ingredients,
+  \* @type: Set(Set(INGREDIENT));
+  Offers
 
-CONSTANT Ingredients, Offers
-VARIABLE smokers, dealer
+VARIABLE
+  \* @type: INGREDIENT -> [smoking: Bool];
+  smokers,
+  \* @type: Set(INGREDIENT);
+  dealer
 
 (* try to guess the types in the code below *)
 ASSUME /\ Offers \subseteq (SUBSET Ingredients)
        /\ \A n \in Offers : Cardinality(n) = Cardinality(Ingredients) - 1
+
+vars == <<smokers, dealer>>       
 
 (***************************************************************************)
 (* 'smokers' is a function from the ingredient the smoker has              *)
@@ -295,30 +303,21 @@ ASSUME /\ Offers \subseteq (SUBSET Ingredients)
 TypeOK == /\ smokers \in [Ingredients -> [smoking: BOOLEAN]]
           /\ dealer  \in Offers \/ dealer = {}
 
-(* are not TypeAssumptions easier? *)
-TypeAssumptions ==
-    /\ AssumeType(Ingredients, "Set(INGREDIENT)")
-    /\ AssumeType(Offers, "Set(Set(INGREDIENT))")
-    /\ AssumeType(smokers, "INGREDIENT -> [smoking: Bool]")
-    /\ AssumeType(dealer, "Set(INGREDIENT)")
+\* @type: (Set(INGREDIENT), (INGREDIENT) => Bool) => INGREDIENT;
+ChooseOne(S, P(_)) ==
+    (CHOOSE x \in S : P(x) /\ \A y \in S : P(y) => y = x)
 
-(* this operator has a parametric signature *)
-ChooseOne(S, P(_)) == "(Set(a), (a) => Bool) => a" ##
-    CHOOSE x \in S : P(x) /\ \A y \in S : P(y) => y = x
-
-(* the types of the actions are fairly obvious *)
-
-Init == "() => Bool" ##
+Init ==
     /\ smokers = [r \in Ingredients |-> [smoking |-> FALSE]]
     /\ dealer \in Offers
 
-startSmoking == "() => Bool" ##
+startSmoking ==
     /\ dealer /= {}
     /\ smokers' = [r \in Ingredients |->
                     [smoking |-> {r} \cup dealer = Ingredients]]
     /\ dealer' = {}
 
-stopSmoking == "() => Bool" ##
+stopSmoking ==
     /\ dealer = {}
         (* the type of LAMBDA should be inferred from the types
            of ChooseOne and Ingredients *)
@@ -326,15 +325,17 @@ stopSmoking == "() => Bool" ##
        IN smokers' = [smokers EXCEPT ![r].smoking = FALSE] 
     /\ dealer' \in Offers
 
-Next == "() => Bool" ##
+Next ==
     startSmoking \/ stopSmoking
 
-Spec == "() => Bool" ##
+Spec ==
     Init /\ [][Next]_vars
 
-FairSpec == "() => Bool" ##
+FairSpec ==
     Spec /\ WF_vars(Next)    
 
-AtMostOne == "() => Bool" ##
+AtMostOne ==
     Cardinality({r \in Ingredients : smokers[r].smoking}) <= 1
-```
+=============================================================================```
+
+[Code annotations]: https://apalache.informal.systems/docs/adr/004adr-annotations.html

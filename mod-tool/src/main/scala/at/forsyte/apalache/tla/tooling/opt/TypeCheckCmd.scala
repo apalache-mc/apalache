@@ -5,12 +5,17 @@ import java.io.File
 import org.backuity.clist.{Command, _}
 
 /**
-  * This command initiates the 'typecheck' command line.
-  *
-  * @author Igor Konnov
-  */
-class TypeCheckCmd extends Command(name = "typecheck",
-  description = "Check types in a TLA+ specification") with General {
+ * This command initiates the 'typecheck' command line.
+ *
+ * @author Igor Konnov
+ */
+class TypeCheckCmd
+    extends Command(name = "typecheck",
+        description = "Check types in a TLA+ specification\n" +
+          "  (the new type checker Snowcat, TO BE INTEGRATED with the model checker)") with General {
 
   var file: File = arg[File](description = "a TLA+ specification (.tla or .json)")
+  var inferPoly: Boolean = opt[Boolean](name = "infer-poly", default = true,
+      description = "allow the type checker to infer polymorphic types, default: true")
+
 }

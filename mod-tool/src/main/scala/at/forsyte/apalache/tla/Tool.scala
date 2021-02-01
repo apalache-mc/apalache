@@ -178,11 +178,12 @@ object Tool extends App with LazyLogging {
     }
   }
 
-  private def runTypeCheck(injector: Injector, parse: TypeCheckCmd, u: Unit): Unit = {
+  private def runTypeCheck(injector: Injector, typecheck: TypeCheckCmd, u: Unit): Unit = {
     // type checker
     val executor = injector.getInstance(classOf[PassChainExecutor])
     executor.options.set("io.outdir", createOutputDir())
-    executor.options.set("parser.filename", parse.file.getAbsolutePath)
+    executor.options.set("parser.filename", typecheck.file.getAbsolutePath)
+    executor.options.set("typechecker.inferPoly", typecheck.inferPoly)
 
     executor.run() match {
       case None    => logger.info("Type checker [FAILED]")

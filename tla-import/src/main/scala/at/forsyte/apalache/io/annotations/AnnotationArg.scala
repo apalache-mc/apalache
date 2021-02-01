@@ -7,7 +7,7 @@ sealed abstract class AnnotationArg {}
 
 object AnnotationArg {
   def mkStr(text: String): AnnotationArg = {
-    AnnotationString(text)
+    AnnotationStr(text)
   }
 
   def mkInt(i: Int): AnnotationInt = {
@@ -24,7 +24,7 @@ object AnnotationArg {
  *
  * @param text the text of the string argument.
  */
-case class AnnotationString(text: String) extends AnnotationArg {
+case class AnnotationStr(text: String) extends AnnotationArg {
   override def toString: String = '"' + text + '"'
 }
 

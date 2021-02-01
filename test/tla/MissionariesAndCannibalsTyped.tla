@@ -25,12 +25,16 @@
 (* operator, where Cardinality(S) is the number of elements in S if S is a *)
 (* finite set.                                                             *)
 (***************************************************************************)
-EXTENDS Integers, FiniteSets, Typing
+EXTENDS Integers, FiniteSets
 
 (***************************************************************************)
 (* Next comes the declaration of the sets of missionaries and cannibals.   *)
 (***************************************************************************)
-CONSTANTS Missionaries, Cannibals 
+CONSTANTS
+    \* @type: Set(PERSON);
+    Missionaries,
+    \* @type: Set(PERSON);
+    Cannibals 
 
 (***************************************************************************)
 (* In TLA+, an execution of a system is described as a sequence of states, *)
@@ -68,13 +72,11 @@ CONSTANTS Missionaries, Cannibals
 (* (for east bank) and "W" (for west bank), so {"E","W"} is the set of     *)
 (* riverbanks.                                                             *)
 (***************************************************************************)
-VARIABLES bank_of_boat, who_is_on_bank 
-
-TypeAssumptions ==
-    /\ AssumeType(Missionaries, "Set(PERSON)")
-    /\ AssumeType(Cannibals, "Set(PERSON)")
-    /\ AssumeType(bank_of_boat, "Str")
-    /\ AssumeType(who_is_on_bank, "Str -> Set(PERSON)")
+VARIABLES
+    \* @type: Str;
+    bank_of_boat,
+    \* @type: Str -> Set(PERSON);
+    who_is_on_bank 
 
 (***************************************************************************)
 (* Although not needed to specify the system, it's a good idea to tell the *)
@@ -172,7 +174,8 @@ OtherBank(b) == IF b = "E" THEN "W" ELSE "E"
 (* of the two variables (their values in state t) in terms of their old    *)
 (* values (their values in state s).                                       *)
 (***************************************************************************)
-Move(S,b) == "(Set(PERSON), Str) => Bool" ##
+\* @type: (Set(PERSON), Str) => Bool;
+Move(S,b) ==
              /\ Cardinality(S) \in {1,2}
              /\ LET newThisBank  == who_is_on_bank[b] \ S
                     newOtherBank == who_is_on_bank[OtherBank(b)] \cup S

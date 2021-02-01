@@ -1,11 +1,20 @@
 ## Simple type inference and type annotations
 
-**WARNING:** We have recently implemented a better type checker, see [the
-talk](https://youtu.be/hnp25hmCMN8). The type annotations will be replaced with
-the new annotations as documented in [ADR002](../adr/002adr-types.md).  The new
-annotations will be implemented in the upcoming release.
+**WARNING:** We have recently implemented a new type checker called Snowcat.
+See the [chapter in the manual](./typechecker-snowcat.md).
+Snowcat is user-friendly and much smarter than the current trivial type
+checker.  To get the idea about the new type checker, see [the talk at TLA+
+Community Meeting 2020](https://youtu.be/hnp25hmCMN8). We are preparing a
+tutorial on the new typechecker. The old type annotations will be replaced with
+the new annotations as documented in [ADR002](../adr/002adr-types.md)
+and [ADR004](../adr/004adr-annotations.md).
 
-------------------------------------------------------------------------------------
+You can try Snowcat and the new type annotations in the [unstable
+branch](https://github.com/informalsystems/apalache).  Be warned though that
+the model checker is still expecting the old type annotations, which are
+explained below.
+
+---------------------------------------------------------------------------------
 
 Our model checker assigns types to variables, in order to encode TLA+ expressions
 in [Z3](https://github.com/Z3Prover/z3). Hence, the expressions that are ill-typed
@@ -19,11 +28,11 @@ expanded before the type inference is run.
 
 ### 1. Type inference
 
-The version ``0.4.0`` of our model checker runs the naive type inference
-algorithm for every computation step:
+Starting with the version ``0.4.0``, our model checker runs the naive type
+inference algorithm for every computation step:
 
  1. It assumes that all operator definitions have been replaced with their
-bodies. (Hence, recursive operators are not supported.)
+bodies. (This is done automatically by Apalache.)
 
  1. It assumes that non-primed variables have been assigned types already.
  As expected, the non-primed variables get their initial types by running

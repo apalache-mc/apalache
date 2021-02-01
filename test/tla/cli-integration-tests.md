@@ -872,9 +872,8 @@ The outcome is: Error
 $ apalache-mc typecheck CarTalkPuzzleTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeChecker
- > running ETC: Embarrassingly simple Type Checker
-   ^_^
-  =^_^=
+ > Running Snowcat .::.
+ > Your types are great!
 PASS #2: Terminal
 Type checker [OK]
 ...
@@ -887,9 +886,8 @@ EXITCODE: OK
 $ apalache-mc typecheck CigaretteSmokersTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeChecker
- > running ETC: Embarrassingly simple Type Checker
-   ^_^
-  =^_^=
+ > Running Snowcat .::.
+ > Your types are great!
 PASS #2: Terminal
 Type checker [OK]
 ...
@@ -902,9 +900,8 @@ EXITCODE: OK
 $ apalache-mc typecheck GameOfLifeTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeChecker
- > running ETC: Embarrassingly simple Type Checker
-   ^_^
-  =^_^=
+ > Running Snowcat .::.
+ > Your types are great!
 PASS #2: Terminal
 Type checker [OK]
 ...
@@ -917,9 +914,8 @@ EXITCODE: OK
 $ apalache-mc typecheck MissionariesAndCannibalsTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeChecker
- > running ETC: Embarrassingly simple Type Checker
-   ^_^
-  =^_^=
+ > Running Snowcat .::.
+ > Your types are great!
 PASS #2: Terminal
 Type checker [OK]
 ...
@@ -932,9 +928,8 @@ EXITCODE: OK
 $ apalache-mc typecheck PrisonersTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeChecker
- > running ETC: Embarrassingly simple Type Checker
-   ^_^
-  =^_^=
+ > Running Snowcat .::.
+ > Your types are great!
 PASS #2: Terminal
 Type checker [OK]
 ...
@@ -953,11 +948,10 @@ once the desired  functionality and added.
 $ apalache-mc typecheck QueensTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeChecker
- > running ETC: Embarrassingly simple Type Checker
-   ^_^
-[QueensTyped.tla:41:44-41:61]: Mismatch in argument types. Expected: (Seq(Int)) => Bool
-[QueensTyped.tla:41:14-41:63]: Error when computing the type of Solutions
-  :-|
+ > Running Snowcat .::.
+[QueensTyped.tla:42:44-42:61]: Mismatch in argument types. Expected: (Seq(Int)) => Bool
+[QueensTyped.tla:42:14-42:63]: Error when computing the type of Solutions
+ > Snowcat asks you to fix the types. Meow.
 Type checker [FAILED]
 ...
 EXITCODE: OK
@@ -969,9 +963,8 @@ EXITCODE: OK
 $ apalache-mc typecheck SlidingPuzzlesTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeChecker
- > running ETC: Embarrassingly simple Type Checker
-   ^_^
-  =^_^=
+ > Running Snowcat .::.
+ > Your types are great!
 PASS #2: Terminal
 Type checker [OK]
 ...
@@ -984,140 +977,25 @@ EXITCODE: OK
 $ apalache-mc typecheck TwoPhaseTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeChecker
- > running ETC: Embarrassingly simple Type Checker
-   ^_^
-  =^_^=
+ > Running Snowcat .::.
+ > Your types are great!
 PASS #2: Terminal
 Type checker [OK]
 ...
 EXITCODE: OK
 ```
 
-## running the typecheck command
-
-### typecheck CarTalkPuzzleTyped.tla
+### typecheck FunctionsTyped.tla
 
 ```sh
-$ apalache-mc typecheck CarTalkPuzzleTyped.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck FunctionsTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeChecker
- > running ETC: Embarrassingly simple Type Checker
-   ^_^
-  =^_^=
+ > Running Snowcat .::.
+ > Your types are great!
 PASS #2: Terminal
 Type checker [OK]
 ...
 EXITCODE: OK
 ```
 
-### typecheck CigaretteSmokersTyped.tla
-
-```sh
-$ apalache-mc typecheck CigaretteSmokersTyped.tla | sed 's/[IEW]@.*//'
-...
-PASS #1: TypeChecker
- > running ETC: Embarrassingly simple Type Checker
-   ^_^
-  =^_^=
-PASS #2: Terminal
-Type checker [OK]
-...
-EXITCODE: OK
-```
-
-### typecheck GameOfLifeTyped.tla
-
-```sh
-$ apalache-mc typecheck GameOfLifeTyped.tla | sed 's/[IEW]@.*//'
-...
-PASS #1: TypeChecker
- > running ETC: Embarrassingly simple Type Checker
-   ^_^
-  =^_^=
-PASS #2: Terminal
-Type checker [OK]
-...
-EXITCODE: OK
-```
-
-### typecheck MissionariesAndCannibalsTyped.tla
-
-```sh
-$ apalache-mc typecheck MissionariesAndCannibalsTyped.tla | sed 's/[IEW]@.*//'
-...
-PASS #1: TypeChecker
- > running ETC: Embarrassingly simple Type Checker
-   ^_^
-  =^_^=
-PASS #2: Terminal
-Type checker [OK]
-...
-EXITCODE: OK
-```
-
-### typecheck PrisonersTyped.tla
-
-```sh
-$ apalache-mc typecheck PrisonersTyped.tla | sed 's/[IEW]@.*//'
-...
-PASS #1: TypeChecker
- > running ETC: Embarrassingly simple Type Checker
-   ^_^
-  =^_^=
-PASS #2: Terminal
-Type checker [OK]
-...
-EXITCODE: OK
-```
-
-### typecheck QueensTyped.tla fails
-
-We are not currently able to typecheck this spec, since we need a way of
-coercing functions on integers into sequences, or a way to recognize the former
-as subtypes of the latter. This failing test is added to document the current limitation
-of the Etc type checkers, and we expect it will be changed into a passing test
-once the desired  functionality and added.
-
-```sh
-$ apalache-mc typecheck QueensTyped.tla | sed 's/[IEW]@.*//'
-...
-PASS #1: TypeChecker
- > running ETC: Embarrassingly simple Type Checker
-   ^_^
-[QueensTyped.tla:41:44-41:61]: Mismatch in argument types. Expected: (Seq(Int)) => Bool
-[QueensTyped.tla:41:14-41:63]: Error when computing the type of Solutions
-  :-|
-Type checker [FAILED]
-...
-EXITCODE: OK
-```
-
-### typecheck SlidingPuzzlesTyped.tla
-
-```sh
-$ apalache-mc typecheck SlidingPuzzlesTyped.tla | sed 's/[IEW]@.*//'
-...
-PASS #1: TypeChecker
- > running ETC: Embarrassingly simple Type Checker
-   ^_^
-  =^_^=
-PASS #2: Terminal
-Type checker [OK]
-...
-EXITCODE: OK
-```
-
-### typecheck TwoPhaseTyped.tla
-
-```sh
-$ apalache-mc typecheck TwoPhaseTyped.tla | sed 's/[IEW]@.*//'
-...
-PASS #1: TypeChecker
- > running ETC: Embarrassingly simple Type Checker
-   ^_^
-  =^_^=
-PASS #2: Terminal
-Type checker [OK]
-...
-EXITCODE: OK
-```

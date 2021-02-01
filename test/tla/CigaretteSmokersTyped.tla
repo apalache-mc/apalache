@@ -12,21 +12,23 @@
 (* https://github.com/tlaplus/Examples/blob/master/specifications/CigaretteSmokers/CigaretteSmokers.tla *)
 (***************************************************************************)
 
-EXTENDS Integers, FiniteSets, Typing
+EXTENDS Integers, FiniteSets
 
-CONSTANT Ingredients, Offers
-VARIABLE smokers, dealer
+CONSTANT
+  \* @type: Set(INGREDIENT);
+  Ingredients,
+  \* @type: Set(Set(INGREDIENT));
+  Offers
+
+VARIABLE
+  \* @type: INGREDIENT -> [smoking: Bool];
+  smokers,
+  \* @type: Set(INGREDIENT);
+  dealer
 
 (* try to guess the types in the code below *)
 ASSUME /\ Offers \subseteq (SUBSET Ingredients)
        /\ \A n \in Offers : Cardinality(n) = Cardinality(Ingredients) - 1
-
-(* type assumptions for the type checker *)
-TypeAssumptions ==
-    /\ AssumeType(Ingredients, "Set(INGREDIENT)")
-    /\ AssumeType(Offers, "Set(Set(INGREDIENT))")
-    /\ AssumeType(smokers, "INGREDIENT -> [smoking: Bool]")
-    /\ AssumeType(dealer, "Set(INGREDIENT)")
 
 vars == <<smokers, dealer>>       
 
@@ -39,9 +41,8 @@ vars == <<smokers, dealer>>
 TypeOK == /\ smokers \in [Ingredients -> [smoking: BOOLEAN]]
           /\ dealer  \in Offers \/ dealer = {}
 
-(* this operator has a parametric signature *)
+\* @type: (Set(INGREDIENT), (INGREDIENT) => Bool) => INGREDIENT;
 ChooseOne(S, P(_)) ==
-    "(Set(INGREDIENT), (INGREDIENT) => Bool) => INGREDIENT" ##
     (CHOOSE x \in S : P(x) /\ \A y \in S : P(y) => y = x)
 
 Init ==

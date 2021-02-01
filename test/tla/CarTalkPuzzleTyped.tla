@@ -25,19 +25,18 @@
 (* such as + and =< (less than or equals).  It also defines the operator   *)
 (* ..  so that i..j is the set of all integers k with i =< k =< j.         *)
 (***************************************************************************)
-EXTENDS Integers, Typing
+EXTENDS Integers
 
 (***************************************************************************)
 (* For generality, I solve the problem of breaking an N pound stone into P *)
 (* pieces.  The following statement declares N and P to be unspecified     *)
 (* constant values.                                                        *)
 (***************************************************************************)
-CONSTANTS N, P
-
-\* this is a type assumption for the ETC type checker in Apalache
-TypeAssumptions ==
-    /\ AssumeType(N, "Int")
-    /\ AssumeType(P, "Int")
+CONSTANTS
+    \* @type: Int;
+    N,
+    \* @type: Int;
+    P
 
 (***************************************************************************)
 (* I define the operator Sum so that if f is any integer-valued function,  *)
@@ -51,7 +50,8 @@ TypeAssumptions ==
 (* such that P(v) is true, if such a value exists.                         *)
 (***************************************************************************)
 RECURSIVE Sum(_,_)
-Sum(f,S) == "(Int -> Int, Set(Int)) => Int" ##
+\* @type: (Int -> Int, Set(Int)) => Int;
+Sum(f,S) ==
     IF S = {} THEN 0
     ELSE LET x == CHOOSE x \in S : TRUE
     IN  f[x] + Sum(f, S \ {x})
@@ -168,8 +168,8 @@ AllSolutions ==
 ExpandSolutions ==
   LET PiecesFor(w, B) == CHOOSE ST \in (SUBSET (1..P)) \X (SUBSET (1..P)) :
                            IsRepresentation(w, B, ST[1], ST[2])
-      Image(S, B) == "(Set(Int), Int -> Int) => Set(Int)" ##
-        {B[x] : x \in S}
+      \* @type: (Set(Int), Int -> Int) => Set(Int);
+      Image(S, B) == {B[x] : x \in S}
       SolutionFor(w, B) ==
                             << w, 
                               Image(PiecesFor(w, B)[1], B), 
