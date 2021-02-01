@@ -2419,12 +2419,10 @@ True  and False # False
 False and False # False
 False and 1 # False, because 1 is cast to True
 1 and False # False, because 1 is cast to True
-
-**Special syntax form:** To minimize the number of parentheses, conjunction can
-be written in the indented form:
-
-```tla
-  /\ F_1
+</code></pre>
+<p><strong>Special syntax form:</strong> To minimize the number of parentheses, conjunction can
+be written in the indented form:</p>
+<pre><code class="language-tla">  /\ F_1
     /\ G_1
     ...
     /\ G_k
@@ -2435,7 +2433,7 @@ be written in the indented form:
 <p>Similar to scopes in Python, the TLA+ parser groups the expressions according
 to the number of spaces in front of <code>/\</code>. The formula in the above example
 is equivalent to:</p>
-<pre><code class="language-tla">  (F_1) /\ ((G_1) /\ ... /\ (G_k)) /\ (F_2) /\ ... /\ (F_n)
+<pre><code class="language-tla">  F_1 /\ (G_1 /\ ... /\ G_k) /\ F_2 /\ ... /\ F_n
 </code></pre>
 <hr />
 <p><a name="or"></a></p>
@@ -2490,7 +2488,7 @@ be written in the indented form:</p>
 <p>Similar to scopes in Python, the TLA+ parser groups the expressions according
 to the number of spaces in front of <code>\/</code>. The formula in the above example
 is equivalent to:</p>
-<pre><code class="language-tla">  (F_1) \/ ((G_1) \/ ... \/ (G_k)) \/ (F_2) \/ ... \/ (F_n)
+<pre><code class="language-tla">  F_1 \/ (G_1 \/ ... \/ G_k) \/ F_2 \/ ... \/ F_n
 </code></pre>
 <p>The indented form allows you to combine conjunctions and disjunctions:</p>
 <pre><code class="language-tla">  \/ /\ F
@@ -2712,7 +2710,7 @@ of the specification <code>coord3</code>:</p>
 infinitely many finite computations that are prefixes of the infinite
 computation).  Specification <code>coord2</code> describes three infinite computations.
 Specification <code>coord3</code> describes infinitely many infinite computations: At
-every step, <code>Next</code> may choose between <code>y' = x</code> or <code>y' = x+1</code>.</p>
+every step, <code>Next</code> may choose between <code>y' = x</code> or <code>y' = x + 1</code>.</p>
 <p>Why are these specifications so different? The answer lies in non-determinism.
 Specification <code>coord</code> is completely deterministic: There is just one state that
 evaluates <code>Init</code> to <code>TRUE</code>, and every state is the first component of exactly
@@ -2732,7 +2730,7 @@ In fact, many model checkers support non-determinism in their input languages.
 For instance, see <a href="https://github.com/boogie-org/boogie">Boogie</a> and <a href="http://spinroot.com/spin/whatispin.html">Spin</a>.
 Of course, this comes with constraints on the structure of the specifications.
 After all, people are much better at solving certain logical puzzles than
-computers, though people get bored much faster than computers. </p>
+computers, though people get bored much faster than computers.</p>
 <p>To understand how TLC enumerates states, check Chapter 14 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying
 Systems</a>. In the rest of this document, we focus on treatment of
 non-determinism that is close to the approach in Apalache.</p>
@@ -2752,7 +2750,7 @@ to define bindings. For instance, <code>(x -&gt; 1, x' -&gt; 3)</code> is a bind
 <p><strong>Evaluating deterministic expressions.</strong> Consider the specification <code>coord</code>,
 which was given above.  By starting with the empty binding <code>()</code>, we can see how
 to automatically evaluate the body of the operator <code>Init</code>:</p>
-<pre><code class="language-tla">x = 0 /\ y = 0 
+<pre><code class="language-tla">x = 0 /\ y = 0
 </code></pre>
 <p>By following <a href="lang/./booleans.html">semantics of conjunction</a>, we see that <code>/\</code> is
 evaluated from left-to-right. The left-hand side equality <code>x = 0</code> is treated as
@@ -2765,7 +2763,7 @@ all state variables, so it gives us the only initial state <code>[x |-&gt; 0, y 
 <p>Let's see how to evaluate the body of the operator <code>Next</code>:</p>
 <pre><code class="language-tla">x' = x + 1 /\ y' = y + 1
 </code></pre>
-<p>As we have seen, <code>Next</code> describes pairs of states. Thus, we will use produce
+<p>As we have seen, <code>Next</code> describes pairs of states. Thus, we will produce
 bindings over non-primed and primed variables, that is, over <code>x, x', y, y'</code>.
 Non-primed variables represent the state before a transition fires, whereas
 primed variables represent the state after the transition has been fired.</p>
@@ -2884,7 +2882,7 @@ The evaluation may continue.</li>
 Well, that was a wrong guess. According to our semantics, the evaluation
 halts. See the above discussion on &quot;halting&quot;.</li>
 <li>The set <code>S</code> is empty, and <code>GUESS S</code> halts.  See the above discussion on
-&quot;halting&quot;. </li>
+&quot;halting&quot;.</li>
 </ol>
 <p><strong>Example.</strong> Consider the following specification:</p>
 <pre><code class="language-tla">VARIABLE x
@@ -2914,7 +2912,7 @@ works:</p>
 </code></pre>
 <p>Assume that we evaluate the disjunction against a binding <code>s</code>. Further,
 let us say that <code>Unassigned(s)</code> is the set of variables that are not
-defined in <code>s</code>. For every <code>P_i</code> we construct the set of state variables 
+defined in <code>s</code>. For every <code>P_i</code> we construct the set of state variables
 <code>Use_i</code> that contains every variable <code>x'</code> that is mentioned in <code>P_i</code>.
 There are three cases to consider:</p>
 <ol>
@@ -2980,8 +2978,8 @@ refer to at least one primed variable <code>y'</code> that is undefined in <code
 expression can be evaluated as a <a href="lang/./conditionals.html">deterministic
 conditional</a>.</p>
 <p>In this case, <code>IF-THEN-ELSE</code> can be evaluated as the equivalent expression:</p>
-<pre><code class="language-tla">  \/  P /\ B
-  \/ ~P /\ C
+<pre><code class="language-tla">  \/  A /\ B
+  \/ ~A /\ C
 </code></pre>
 <p><em>We do not recommend you to use IF-THEN-ELSE with non-determinism. The structure
 of the disjunction provides a clear indication that the expression may
@@ -2994,7 +2992,7 @@ value.</p>
 <h3><a class="header" href="#non-determinism-in-boolean-case" id="non-determinism-in-boolean-case">Non-determinism in Boolean <code>CASE</code></a></h3>
 <p>For the deterministic use of <code>CASE</code>,
 see <a href="lang/./conditionals.html">Deterministic conditionals</a>.</p>
-<p><strong>CASE without OTHER.</strong><br />
+<p><strong>CASE without OTHER.</strong>
 Consider a <code>CASE</code> expression:</p>
 <pre><code class="language-tla">CASE P_1 -&gt; e_1
   [] P_2 -&gt; e_2

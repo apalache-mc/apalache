@@ -227,12 +227,10 @@ True  and False # False
 False and False # False
 False and 1 # False, because 1 is cast to True
 1 and False # False, because 1 is cast to True
-
-**Special syntax form:** To minimize the number of parentheses, conjunction can
-be written in the indented form:
-
-```tla
-  /\ F_1
+</code></pre>
+<p><strong>Special syntax form:</strong> To minimize the number of parentheses, conjunction can
+be written in the indented form:</p>
+<pre><code class="language-tla">  /\ F_1
     /\ G_1
     ...
     /\ G_k
@@ -243,7 +241,7 @@ be written in the indented form:
 <p>Similar to scopes in Python, the TLA+ parser groups the expressions according
 to the number of spaces in front of <code>/\</code>. The formula in the above example
 is equivalent to:</p>
-<pre><code class="language-tla">  (F_1) /\ ((G_1) /\ ... /\ (G_k)) /\ (F_2) /\ ... /\ (F_n)
+<pre><code class="language-tla">  F_1 /\ (G_1 /\ ... /\ G_k) /\ F_2 /\ ... /\ F_n
 </code></pre>
 <hr />
 <p><a name="or"></a></p>
@@ -298,7 +296,7 @@ be written in the indented form:</p>
 <p>Similar to scopes in Python, the TLA+ parser groups the expressions according
 to the number of spaces in front of <code>\/</code>. The formula in the above example
 is equivalent to:</p>
-<pre><code class="language-tla">  (F_1) \/ ((G_1) \/ ... \/ (G_k)) \/ (F_2) \/ ... \/ (F_n)
+<pre><code class="language-tla">  F_1 \/ (G_1 \/ ... \/ G_k) \/ F_2 \/ ... \/ F_n
 </code></pre>
 <p>The indented form allows you to combine conjunctions and disjunctions:</p>
 <pre><code class="language-tla">  \/ /\ F
