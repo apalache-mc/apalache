@@ -10,3 +10,7 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+
+### Bugfixes
+
+ * Boolean values are now supported in TLC config files, see #512
