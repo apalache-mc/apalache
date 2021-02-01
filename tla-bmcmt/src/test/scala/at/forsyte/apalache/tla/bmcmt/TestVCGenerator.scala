@@ -4,6 +4,8 @@ import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.{TlaModule, TlaOperDecl}
+import at.forsyte.apalache.io.annotations.store._
+
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -74,8 +76,9 @@ class TestVCGenerator extends FunSuite {
 
   private def loadFromText(moduleName: String, text: String): TlaModule = {
     val locationStore = new SourceStore
-    val (rootName, modules) = new SanyImporter(locationStore)
-      .loadFromSource(moduleName, Source.fromString(text))
+    val (rootName, modules) =
+      new SanyImporter(locationStore, createAnnotationStore())
+        .loadFromSource(moduleName, Source.fromString(text))
     modules(moduleName)
   }
 }

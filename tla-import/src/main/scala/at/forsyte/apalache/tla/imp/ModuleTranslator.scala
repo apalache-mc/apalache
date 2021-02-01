@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.io.annotations.store._
+import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
 import at.forsyte.apalache.tla.lir._
 import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic.{InstanceNode, ModuleNode, OpDefNode}
@@ -8,17 +9,27 @@ import tla2sany.semantic.{InstanceNode, ModuleNode, OpDefNode}
 import scala.collection.JavaConverters._
 
 /**
-  * Translate a tla2tools ModuleNode to a TlaModule.
-  *
-  * @author konnov
-  */
-class ModuleTranslator(sourceStore: SourceStore) extends LazyLogging {
+ * Translate a tla2tools ModuleNode to a TlaModule.
+ *
+ * @author konnov
+ */
+class ModuleTranslator(
+    sourceStore: SourceStore, annotationStore: AnnotationStore
+) extends LazyLogging {
+  private val annotationExtractor = new AnnotationExtractor(annotationStore)
+
   def translate(node: ModuleNode): TlaModule = {
-    var context = node.getConstantDecls.toList.foldLeft(Context()) {
-      (ctx, node) => ctx.push(DeclUnit(TlaConstDecl(node.getName.toString)))
+    var context = node.getConstantDecls.toList.foldLeft(Context()) { (ctx, node) =>
+      val decl = TlaConstDecl(node.getName.toString)
+      sourceStore.add(decl.ID, SourceLocation(node.getLocation))
+      annotationExtractor.parseAndSave(decl.ID, node)
+      ctx.push(DeclUnit(decl))
     }
-    context = node.getVariableDecls.toList.foldLeft(context) {
-      (ctx, node) => ctx.push(DeclUnit(TlaVarDecl(node.getName.toString)))
+    context = node.getVariableDecls.toList.foldLeft(context) { (ctx, node) =>
+      val decl = TlaVarDecl(node.getName.toString)
+      sourceStore.add(decl.ID, SourceLocation(node.getLocation))
+      annotationExtractor.parseAndSave(decl.ID, node)
+      ctx.push(DeclUnit(decl))
     }
 
     // Find the definitions that stem from the standard modules and declare them as aliases of the built-in operators
@@ -53,10 +64,24 @@ class ModuleTranslator(sourceStore: SourceStore) extends LazyLogging {
           val lookupPrefix = opDef.getName.toString.split("!").dropRight(1) // find the instance names
           // the expression translator should lookup using the lookupPrefix
           val adjustedContext = context.setLookupPrefix(lookupPrefix.toList)
-          val defTranslator = OpDefTranslator(sourceStore, adjustedContext)
+          val defTranslator =
+            OpDefTranslator(sourceStore, annotationStore, adjustedContext)
           val updatedDecl = defTranslator.translate(opDef)
+          // copy the structures from the updated definition
           decl.isRecursive = updatedDecl.isRecursive
           decl.body = updatedDecl.body
+          sourceStore.find(updatedDecl.ID) match {
+            case None =>
+              // to guarantee that we do not forget the source location, fail fast
+              throw new SanyImporterException(
+                  "No source location for: " + updatedDecl.name
+              )
+            case Some(loc) =>
+              sourceStore.add(decl.ID, loc)
+          }
+          annotationStore.get(updatedDecl.ID).foreach { annotations =>
+            annotationStore += decl.ID -> annotations
+          }
 
           // TODO(igor) temporary bugfix for the issue #130. Remove as soon as it is fixed in tla2tools.
           // https://github.com/informalsystems/apalache/issues/130
@@ -67,8 +92,11 @@ class ModuleTranslator(sourceStore: SourceStore) extends LazyLogging {
     }
 
     // translate assumptions after the operator definitions, as the assumptions may use the operators
-    context = node.getAssumptions.toList.foldLeft(context) {
-      (ctx, node) => ctx.push(DeclUnit(AssumeTranslator(sourceStore, ctx).translate(node)))
+    context = node.getAssumptions.toList.foldLeft(context) { (ctx, node) =>
+      val decl =
+        AssumeTranslator(sourceStore, annotationStore, ctx).translate(node)
+      sourceStore.add(decl.ID, SourceLocation(node.getLocation))
+      ctx.push(DeclUnit(decl))
     }
 
     // filter out the aliases, keep only the user definitions and declarations
@@ -76,19 +104,23 @@ class ModuleTranslator(sourceStore: SourceStore) extends LazyLogging {
     new TlaModule(node.getName.toString, actualDefs)
   }
 
-  private def addAliasesOfBuiltins(ctx: Context, instancePrefix: String, node: ModuleNode): Context = {
+  private def addAliasesOfBuiltins(
+      ctx: Context, instancePrefix: String, node: ModuleNode
+  ): Context = {
     // declare a library definition as an operator alias
-    def subDef(ctx: Context, modName: String, alias: String, opDefNode: OpDefNode): Context = {
+    def subDef(
+        ctx: Context, modName: String, alias: String, opDefNode: OpDefNode
+    ): Context = {
       val opName = opDefNode.getName.toString.intern()
       var newCtx = ctx
-      StandardLibrary.libraryOperators.get((modName, opName)).collect {
-        case oper => newCtx = newCtx.push(OperAliasUnit(alias, oper))
+      StandardLibrary.libraryOperators.get((modName, opName)).collect { case oper =>
+        newCtx = newCtx.push(OperAliasUnit(alias, oper))
       }
-      StandardLibrary.globalOperators.get(opName).collect {
-        case oper => newCtx = newCtx.push(OperAliasUnit(alias, oper))
+      StandardLibrary.globalOperators.get(opName).collect { case oper =>
+        newCtx = newCtx.push(OperAliasUnit(alias, oper))
       }
-      StandardLibrary.libraryValues.get((modName, opName)).collect {
-        case value => newCtx = newCtx.push(ValueAliasUnit(alias, value))
+      StandardLibrary.libraryValues.get((modName, opName)).collect { case value =>
+        newCtx = newCtx.push(ValueAliasUnit(alias, value))
       }
       newCtx
     }
@@ -101,11 +133,15 @@ class ModuleTranslator(sourceStore: SourceStore) extends LazyLogging {
 
     // add aliases for the definitions inside the module
     val modName = node.getName.toString
-    var newCtx = node.getOpDefs.foldLeft(ctx) { (c, d) => subDef(c, modName, alias(d), d) }
+    var newCtx = node.getOpDefs.foldLeft(ctx) { (c, d) =>
+      subDef(c, modName, alias(d), d)
+    }
 
     // add aliases for the definitions in the modules that this one EXTENDS
-    val extendedModules = node.getExtendedModuleSet.asScala.toList map (_.asInstanceOf[ModuleNode])
-    newCtx = extendedModules.foldLeft(newCtx) { (c, m) => addAliasesOfBuiltins(c, instancePrefix, m) }
+    val extendedModules = node.getExtendedModuleSet.asScala.toList
+    newCtx = extendedModules.foldLeft(newCtx) { (c, m) =>
+      addAliasesOfBuiltins(c, instancePrefix, m)
+    }
 
     // add aliases for the definitions that come from the INSTANCE declarations
     def eachInstance(ctx: Context, inst: InstanceNode): Context = {
@@ -113,7 +149,9 @@ class ModuleTranslator(sourceStore: SourceStore) extends LazyLogging {
       // Declare operator aliases for them, which will be substituted with the operators by OpApplTranslator.
       // TODO: we do not process parameterized instances here
       var longPrefix = if (inst.getName == null) "" else inst.getName.toString
-      longPrefix = if (instancePrefix == "") longPrefix else instancePrefix + "!" + longPrefix
+      longPrefix =
+        if (instancePrefix == "") longPrefix
+        else instancePrefix + "!" + longPrefix
       addAliasesOfBuiltins(ctx, longPrefix, inst.getModule)
     }
 
@@ -121,20 +159,24 @@ class ModuleTranslator(sourceStore: SourceStore) extends LazyLogging {
   }
 
   /**
-    * This is a temporary bugfix for the issue 130: https://github.com/informalsystems/apalache/issues/130
-    * TODO(igor) Once it is fixed in SANY, remove this method. This method does not detect mutually recursive operators,
-    * but I have never seen mutual recursion in TLA+.
-    *
-    * @param declared the set of names that have been introduced at higher levels.
-    */
-  private def workaroundMarkRecursive(declared: Set[TlaOperDecl], ex: TlaEx): Unit = {
+   * This is a temporary bugfix for the issue 130: https://github.com/informalsystems/apalache/issues/130
+   * TODO(igor) Once it is fixed in SANY, remove this method. This method does not detect mutually recursive operators,
+   * but I have never seen mutual recursion in TLA+.
+   *
+   * @param declared the set of names that have been introduced at higher levels.
+   */
+  private def workaroundMarkRecursive(
+      declared: Set[TlaOperDecl], ex: TlaEx
+  ): Unit = {
     ex match {
       case NameEx(name) =>
         declared.find(_.name == name).foreach {
-              // the operator is used inside its own definition, mark as recursive
+          // the operator is used inside its own definition, mark as recursive
           d =>
             if (!d.isRecursive) {
-              logger.warn(s"WORKAROUND #130: labelling operator $name as recursive, though SANY did not tell us so.")
+              logger.warn(
+                  s"WORKAROUND #130: labelling operator $name as recursive, though SANY did not tell us so."
+              )
               d.isRecursive = true
             }
         }
@@ -159,7 +201,9 @@ class ModuleTranslator(sourceStore: SourceStore) extends LazyLogging {
 
 object ModuleTranslator {
 
-  def apply(sourceStore: SourceStore): ModuleTranslator = {
-    new ModuleTranslator(sourceStore)
+  def apply(
+      sourceStore: SourceStore, annotationStore: AnnotationStore
+  ): ModuleTranslator = {
+    new ModuleTranslator(sourceStore, annotationStore)
   }
 }

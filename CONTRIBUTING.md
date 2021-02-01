@@ -119,19 +119,33 @@ The necessary shell environment is specified in [.envrc](./.envrc). You can:
 If you use a different development environment or editor set up, please document
 it here!
 
-### IntelliJ IDEA
+### Formatting
+
+We use [scalafmt](https://scalameta.org/scalafmt/) to standardize formatting
+across the codebase. It is integrated into our maven build configuration, and
+formatting fixes will be applied on build, or via the make target `make fmt-fix`.
+
+However, for a smoother development experience you should ensure your editor
+automatically runs formatting. The scalafmt site documents installation for all
+common editors.
+
+Our scalafmt configuration is specified in [./.scalafmt.conf](./.scalafmt.conf).
+
+### Editors
+
+#### IntelliJ IDEA
 
 Download the community edition of [IntelliJ IDEA](https://www.jetbrains.com/idea/)
 and set up a new project.
 
-### Emacs
+#### Emacs
 
 You can use the [metals][] Scala language server together with [lsp-mode][] for
 a nice IDE experience in the world's best lisp driven operating system.
 
-#### Install `metals-emacs`
+##### Install `metals-emacs`
 
-##### Arch
+###### Arch
 
 Using yay to install from AUR:
 
@@ -139,7 +153,7 @@ Using yay to install from AUR:
 yay -Syu metals
 ```
 
-#### Doom Emacs
+##### Doom Emacs
 
 [Doom Emacs][doom-emacs] streamlines configuration and installation:
 
@@ -161,7 +175,7 @@ writeup][writeup]
 [lsp-mode]: https://github.com/emacs-lsp/lsp-mode
 [writeup]: https://siawyoung.com/blog/code/2020-02-06-installing-metals-emacs-doom
 
-#### Vanilla Emacs
+##### Vanilla Emacs
 
 For installation and configuration in vanilla emacs, see
 https://scalameta.org/metals/docs/editors/emacs.html
@@ -249,14 +263,18 @@ The process proceeds in two steps:
 1. CI prepares a release, and opens a PR with the version changes and release
    notes. These are triggered every Monday by a cron job or [manually via the
    GitHub UI][github-ui].
-2. A human reviews the PR, approves it, and merges into the trunk, at which
-   point CI kicks in to:
+   - The scheduled releases increment the patch number.
+   - Use the _Version_ input field to manually specify the version to release.
+
+   <img src="./trigger-release.png" alt="How to trigger a release" width="700px">
+2. A human reviews the PR, approves it, and **merges** (_DO NOT SQUASH OR
+   REBASE_) into the trunk, at which point CI kicks in to:
    - tag the commit
    - package the artifact
    - publish it as a GitHub release
    - announce the release in our internal `#releases` slack channel
 
-[./.github/workflows/prepare-release.yml]: ./.github/workflows/prepare-release.yml 
+[./.github/workflows/prepare-release.yml]: ./.github/workflows/prepare-release.yml
 [./.github/workflows/release.yml]: ./.github/workflows/prepare-release.yml
 [github-ui]: https://github.com/informalsystems/apalache/actions?query=workflow%3A%22Prepare+Release%22
 

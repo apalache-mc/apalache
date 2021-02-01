@@ -1,10 +1,11 @@
 package at.forsyte.apalache.tla.pp
 
+import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.{SimpleFormalParam, TlaOperDecl}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
+import at.forsyte.apalache.tla.lir.{SimpleFormalParam, TlaOperDecl}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
@@ -13,6 +14,16 @@ import scala.io.Source
 
 @RunWith(classOf[JUnitRunner])
 class TestConstAndDefRewriter extends FunSuite with BeforeAndAfterEach {
+  private var sourceStore: SourceStore = _
+  private var annotationStore: AnnotationStore = _
+  private var sanyImporter: SanyImporter = _
+
+  override def beforeEach() {
+    sourceStore = new SourceStore()
+    annotationStore = createAnnotationStore()
+    sanyImporter = new SanyImporter(sourceStore, annotationStore)
+  }
+
   test("override a constant") {
     val text =
       """---- MODULE const ----
@@ -22,8 +33,8 @@ class TestConstAndDefRewriter extends FunSuite with BeforeAndAfterEach {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(new SourceStore)
-      .loadFromSource("const", Source.fromString(text))
+    val (rootName, modules) =
+      sanyImporter.loadFromSource("const", Source.fromString(text))
     val root = modules(rootName)
     val rewritten = new ConstAndDefRewriter(new IdleTracker())(root)
     assert(rewritten.constDeclarations.isEmpty) // no constants anymore
@@ -45,8 +56,8 @@ class TestConstAndDefRewriter extends FunSuite with BeforeAndAfterEach {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(new SourceStore)
-      .loadFromSource("const", Source.fromString(text))
+    val (rootName, modules) =
+      sanyImporter.loadFromSource("const", Source.fromString(text))
     val root = modules(rootName)
     assertThrows[OverridingError](new ConstAndDefRewriter(new IdleTracker())(root))
   }
@@ -60,8 +71,8 @@ class TestConstAndDefRewriter extends FunSuite with BeforeAndAfterEach {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(new SourceStore)
-      .loadFromSource("const", Source.fromString(text))
+    val (rootName, modules) =
+      sanyImporter.loadFromSource("const", Source.fromString(text))
     val root = modules(rootName)
     assertThrows[OverridingError](new ConstAndDefRewriter(new IdleTracker())(root))
   }
@@ -74,14 +85,14 @@ class TestConstAndDefRewriter extends FunSuite with BeforeAndAfterEach {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(new SourceStore)
-      .loadFromSource("op", Source.fromString(text))
+    val (rootName, modules) =
+      sanyImporter.loadFromSource("op", Source.fromString(text))
     val root = modules(rootName)
     val rewritten = new ConstAndDefRewriter(new IdleTracker())(root)
     assert(rewritten.constDeclarations.isEmpty)
     assert(rewritten.operDeclarations.size == 1)
-    val expected = TlaOperDecl("BoolMin", List(SimpleFormalParam("S")),
-      tla.choose(tla.name("x"), tla.name("S"), tla.bool(true)))
+    val expected =
+      TlaOperDecl("BoolMin", List(SimpleFormalParam("S")), tla.choose(tla.name("x"), tla.name("S"), tla.bool(true)))
     assert(expected == rewritten.operDeclarations.head)
   }
 
@@ -93,8 +104,8 @@ class TestConstAndDefRewriter extends FunSuite with BeforeAndAfterEach {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = new SanyImporter(new SourceStore)
-      .loadFromSource("op", Source.fromString(text))
+    val (rootName, modules) =
+      sanyImporter.loadFromSource("op", Source.fromString(text))
     val root = modules(rootName)
     assertThrows[OverridingError](new ConstAndDefRewriter(new IdleTracker())(root))
   }

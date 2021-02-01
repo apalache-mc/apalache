@@ -34,7 +34,7 @@ class ParameterNormalizer(
   }
 
   /** Expression-level LET-IN transformation, applies `mkParamNormalForm` to all LET-IN declarations */
-  private def normalizeInternalLetIn : TlaExTransformation = tracker.track {
+  private def normalizeInternalLetIn : TlaExTransformation = tracker.trackEx {
     case ex@LetInEx( body, defs@_* ) =>
       val newDefs = defs map { d => normalizeDeclaration( d ) }
       val newBody = normalizeInternalLetIn( body )
@@ -51,7 +51,7 @@ class ParameterNormalizer(
   }
 
   /** Iteratively introduces a new operator for each formal parameter */
-  private def normalizeParametersInEx( paramNames : List[FormalParam] ) : TlaExTransformation = tracker.track { ex =>
+  private def normalizeParametersInEx( paramNames : List[FormalParam] ) : TlaExTransformation = tracker.trackEx { ex =>
     paramNames.foldLeft( ex ) {
       case (partialEx, fParam) =>
         val paramOperName = nameGenerator.newName()

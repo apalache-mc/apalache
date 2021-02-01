@@ -2,17 +2,20 @@ package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaTempOper}
 import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic._
 
 /**
-  * Translate a substitution, that is the part that goes after WITH in INSTANCE Foo WITH x <- e1, y <- e2.
-  * The module instantiation rules are quite sophisticated, see Specifying Systems [Ch. 17].
-  *
-  * @author konnov
-  */
-class SubstTranslator(sourceStore: SourceStore, context: Context) extends LazyLogging {
+ * Translate a substitution, that is the part that goes after WITH in INSTANCE Foo WITH x <- e1, y <- e2.
+ * The module instantiation rules are quite sophisticated, see Specifying Systems [Ch. 17].
+ *
+ * @author konnov
+ */
+class SubstTranslator(
+    sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context
+) extends LazyLogging {
 
   def translate(substInNode: SubstInNode, body: TlaEx): TlaEx = {
     subExpr(mkRenaming(substInNode), body)
@@ -25,22 +28,35 @@ class SubstTranslator(sourceStore: SourceStore, context: Context) extends LazyLo
           case NameEx(name) =>
             renaming.getOrElse(name, NameEx(name))
 
-          case letIn @ LetInEx(body, defs@_*) =>
+          case letIn @ LetInEx(body, defs @ _*) =>
             def subDecl(d: TlaOperDecl) = {
               val copy = d.copy(body = subRec(d.body))
-              sourceStore.find(d.body.ID).foreach { id => sourceStore.add(copy.body.ID, id) }
+              sourceStore.find(d.body.ID).foreach { id =>
+                sourceStore.add(copy.body.ID, id)
+              }
               copy
             }
 
             val newLetIn = LetInEx(subRec(body), defs map subDecl: _*)
-            sourceStore.find(letIn.ID).foreach { id => sourceStore.add(newLetIn.ID, id) }
+            sourceStore.find(letIn.ID).foreach { id =>
+              sourceStore.add(newLetIn.ID, id)
+            }
             newLetIn
 
-          case OperEx(op, args@_*) =>
-            if (renaming.nonEmpty
-              && Seq(TlaActionOper.enabled, TlaActionOper.composition, TlaTempOper.leadsTo).exists(_.name == op.name)) {
+          case OperEx(op, args @ _*) =>
+            if (
+                renaming.nonEmpty
+                && Seq(
+                    TlaActionOper.enabled,
+                    TlaActionOper.composition,
+                    TlaTempOper.leadsTo
+                ).exists(_.name == op.name)
+            ) {
               // TODO: find out how to deal with ENABLED and other tricky operators
-              logger.warn("Substitution of %s needs care. The current implementation may fail to work.".format(op.name))
+              logger.warn(
+                  "Substitution of %s needs care. The current implementation may fail to work."
+                    .format(op.name)
+              )
             }
             OperEx(op, args map subRec: _*)
 
@@ -48,7 +64,9 @@ class SubstTranslator(sourceStore: SourceStore, context: Context) extends LazyLo
         }
 
       // copy the source info
-      sourceStore.findOrLog(ex.ID).foreach { loc => sourceStore.add(newEx.ID, loc) }
+      sourceStore.findOrWarn(ex.ID).foreach { loc =>
+        sourceStore.add(newEx.ID, loc)
+      }
       // return
       newEx
     }
@@ -78,14 +96,22 @@ class SubstTranslator(sourceStore: SourceStore, context: Context) extends LazyLo
     // See issue #143: https://github.com/informalsystems/apalache/issues/143
     val upperLookupPrefix = context.lookupPrefix.dropRight(1)
     val upperContext = context.setLookupPrefix(upperLookupPrefix)
-    val exprTranslator = ExprOrOpArgNodeTranslator(sourceStore, upperContext, OutsideRecursion())
+    val exprTranslator =
+      ExprOrOpArgNodeTranslator(
+          sourceStore,
+          annotationStore,
+          upperContext,
+          OutsideRecursion()
+      )
 
     def eachSubst(s: Subst): (String, TlaEx) = {
       val replacement = exprTranslator.translate(s.getExpr)
       // only constants and variables are allowed in the left-hand side of operator substitutions
       if (s.getOp.getKind != ASTConstants.ConstantDeclKind && s.getOp.getKind != ASTConstants.VariableDeclKind) {
-        throw new SanyImporterException("Expected a substituted name %s to be a CONSTANT or a VARIABLE, found kind %d"
-          .format(s.getOp.getName, s.getOp.getKind))
+        throw new SanyImporterException(
+            "Expected a substituted name %s to be a CONSTANT or a VARIABLE, found kind %d"
+              .format(s.getOp.getName, s.getOp.getKind)
+        )
       }
       // As all declarations have unique names, it should be sufficient to map the name to the expression.
       // SANY should have checked the syntactic and semantic rules for the substitution.
@@ -97,7 +123,9 @@ class SubstTranslator(sourceStore: SourceStore, context: Context) extends LazyLo
 }
 
 object SubstTranslator {
-  def apply(sourceStore: SourceStore, context: Context): SubstTranslator = {
-    new SubstTranslator(sourceStore, context)
+  def apply(
+      sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context
+  ): SubstTranslator = {
+    new SubstTranslator(sourceStore, annotationStore, context)
   }
 }

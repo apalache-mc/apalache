@@ -3,18 +3,20 @@
 The Apalache documentation is written in markdown files in the [./src](./src)
 directory and compiled using [mdbook](https://github.com/rust-lang/mdBook).
 
+To view the documentation, visit https://apalache.informal.systems/docs/ .
+
 ## Building and previewing the documentation
 
 To build the documentation into [../target/docs](../target/docs), run
 
-``` sh
+```sh
 mdbook build
 ```
 
 To start a server that will present a live updated view of the book while you
 edit, run
 
-``` sh
+```sh
 mdbook serve
 ```
 
@@ -29,15 +31,6 @@ there.
 Each chapter must link a file: internal links to anchors within files do not
 work. There is an [open issue](https://github.com/rust-lang/mdBook/issues/167)
 to fix this behavior.
-
-### Referring to `README.md` pages
-
-Within the book, any `README.md` page gets converted to an `index.md` page
-during compilation. You can link to `README.md` pages in the `SUMMARY.md`, but
-everywhere else you must write the link pointed towards `index.md`.
-
-There is an [open issue](https://github.com/rust-lang/mdBook/issues/1268) to fix
-this behavior.
 
 ## Internal documentation
 

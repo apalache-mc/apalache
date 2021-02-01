@@ -20,13 +20,13 @@ class OperAppToLetInDef(
   import OperAppToLetInDef.NAME_PREFIX
 
   private def setTracking( oldEx : => TlaEx, newEx : => TlaEx ) : TlaEx = {
-    val tr = tracker.track {
+    val tr = tracker.trackEx {
       _ => newEx
     }
     tr( oldEx )
   }
 
-  def wrap( wrappableNames : Set[String] ) : TlaExTransformation = tracker.track {
+  def wrap( wrappableNames : Set[String] ) : TlaExTransformation = tracker.trackEx {
     case ex@OperEx( TlaOper.apply, NameEx( opName ), args@_* ) if wrappableNames.contains( opName ) && args.nonEmpty =>
       val newArgs = args map wrap( wrappableNames )
       val newEx =

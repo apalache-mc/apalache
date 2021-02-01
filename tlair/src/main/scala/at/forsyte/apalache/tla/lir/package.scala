@@ -5,7 +5,7 @@ package lir {
   import at.forsyte.apalache.tla.lir.io.UTFPrinter
   import at.forsyte.apalache.tla.lir.oper._
 
-  /** the base class for the universe of objects used in TLA+ */
+  /** the base class for the universe of values (integers, Booleans, strings) used in TLA+ */
   abstract class TlaValue
 
   /**
@@ -13,15 +13,10 @@ package lir {
     * Technically, this class should be called TlaDef, as we are dealing with
     * TLA+ definitions, see Specifying Systems, Ch. 17.3. Unfortunately, there are
     * variable declarations and operator definitions...
-    *
-    * TODO: rename to TlaDef.
     */
-  abstract class TlaDecl extends Serializable {
+  abstract class TlaDecl extends Identifiable with Serializable {
     def name: String
-    def deepCopy(): TlaDecl
   }
-
-  // TODO: add TlaTheoremDecl?
 
   /**
     * A module as a basic unit that contains declarations.
@@ -48,14 +43,10 @@ package lir {
   }
 
   /** a constant as defined by CONSTANT */
-  case class TlaConstDecl(name: String) extends TlaDecl with Serializable {
-    override def deepCopy( ): TlaConstDecl =  TlaConstDecl( name )
-  }
+  case class TlaConstDecl(name: String) extends TlaDecl with Serializable
 
   /** a variable as defined by VARIABLE */
-  case class TlaVarDecl(name: String) extends TlaDecl with Serializable {
-    override def deepCopy( ): TlaVarDecl =  TlaVarDecl( name )
-  }
+  case class TlaVarDecl(name: String) extends TlaDecl with Serializable
 
   /**
     * An assumption defined by ASSUME(...)
@@ -63,23 +54,12 @@ package lir {
     */
   case class TlaAssumeDecl(body: TlaEx) extends TlaDecl with Serializable {
     val name: String = "ASSUME" + body.ID
-    override def deepCopy(): TlaAssumeDecl = TlaAssumeDecl(body.deepCopy())
   }
-
-  ///////////////// DISCUSSION
 
   /**
     * A spec, given by a list of declarations and a list of expressions.
-    *
-    * FIXME: a candidate for removal. Just use TlaModule?
     */
-  case class TlaSpec( name: String, declarations: List[TlaDecl] ) extends Serializable {
-    def deepCopy() : TlaSpec = TlaSpec( name, declarations.map( _.deepCopy() ) )
-
-  }
-
-  ///////////////// END of DISCUSSION
-
+  case class TlaSpec( name: String, declarations: List[TlaDecl] ) extends Serializable
 
   /**
   A formal parameter of an operator.
@@ -106,8 +86,6 @@ package lir {
     override def toString: String =  UTFPrinter( this )
 
     def toSimpleString: String = ""
-
-    def deepCopy() : TlaEx
   }
 
   /**
@@ -117,25 +95,21 @@ package lir {
     * We could use Option[TlaEx], but that would introduce unnecessary many pattern matches, as NoneEx will be rare.
     */
   object NullEx extends TlaEx with Serializable {
-    override def deepCopy() : TlaEx = NullEx
     override def toSimpleString: String = toString
   }
 
   /** just using a TLA+ value */
   case class ValEx(value: TlaValue) extends TlaEx with Serializable {
     override def toSimpleString: String = value.toString
-    override def deepCopy() : ValEx = ValEx( value )
   }
 
   /** referring to a variable, constant, operator, etc. by a name. */
   case class NameEx(name: String) extends TlaEx with Serializable {
     override def toSimpleString: String = name
-    override def deepCopy() : NameEx = NameEx(name)
   }
 
   // Introducing a LET-IN expression
   case class LetInEx( body: TlaEx, decls: TlaOperDecl* ) extends TlaEx with Serializable {
-    override def deepCopy( ) = LetInEx( body.deepCopy(), decls map { _.deepCopy() } :_*)
     override def toSimpleString: String = s"LET ${decls.mkString(" ")} IN $body"
   }
 
@@ -161,7 +135,6 @@ package lir {
       }
     }
 
-    override def deepCopy() : OperEx =  OperEx( oper, args.map( _.deepCopy() ) : _* )
   }
 
   /**
@@ -198,7 +171,6 @@ package lir {
       ret
     }
 
-    override def deepCopy( ): TlaOperDecl =  TlaOperDecl( name, formalParams, body.deepCopy() )
   }
 
   /**
@@ -211,22 +183,14 @@ package lir {
     * @param argDom the expression that describes the variable bound, e.g., Nat
     * @param defBody the definition body
     */
-  case class TlaRecFunDecl(name: String, arg: String, argDom: TlaEx, defBody: TlaEx) extends TlaDecl {
-    override def deepCopy(): TlaDecl = {
-      TlaRecFunDecl(name, arg, argDom, defBody)
-    }
-  }
+  case class TlaRecFunDecl(name: String, arg: String, argDom: TlaEx, defBody: TlaEx) extends TlaDecl
 
   /**
     * <p>A THEOREM declaration. Currently, we do not support operators that are typically used in the proofs.</p>
     * @param name theorem name
     * @param body theorem statement
     */
-  case class TlaTheoremDecl(name: String, body: TlaEx) extends TlaDecl {
-    override def deepCopy(): TlaDecl = {
-      TlaTheoremDecl(name, body)
-    }
-  }
+  case class TlaTheoremDecl(name: String, body: TlaEx) extends TlaDecl
 }
 
 
