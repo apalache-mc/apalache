@@ -112,7 +112,7 @@ semantics only for a single variable:
  = {}`, the expression `\E x \ in S: P` evaluates to `FALSE`._
 
  As you probably have noticed, `\E x \in S: P` is equivalent to `~(\A x \in S:
- P)`, and `\A x \in S: P` is equivalent to `~(\E x \in S: P)`. This is called
+ ~P)`, and `\A x \in S: P` is equivalent to `~(\E x \in S: ~P)`. This is called
  _duality_ in logic. But take care!  If `\E x \in S: P` may act as a
  non-deterministic assignment, duality does not work anymore!  See [Control
  Flow and Non-determinism].

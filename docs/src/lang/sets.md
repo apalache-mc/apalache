@@ -502,9 +502,9 @@ either not sets, or sets of incompatible types.
 **Example in TLA+:**
 
 ```tla
-  { 0, 1, 2 } \ { 1, 2, 3 }     \* { }
+  { 0, 1, 2 } \ { 1, 2, 3 }     \* { 0 }
           { } \ { 1, 2, 3 }     \* { }
-  { 1, 2, 3 } \ { }             \* { }
+  { 1, 2, 3 } \ { }             \* { 1, 2, 3 }
       { {1} } \ { 1, 2 }        \* { {1} }, model checking error in TLC
                                 \* static type error in Apalache
 ```
@@ -561,7 +561,7 @@ element `e` of `S`, the variable `x` is bound to `e[1]` and `y` is bound to
   { x \in {1, 2, 3, 4}: x > 2 }             \* { 3, 4 }
   { x \in {1, 2, 3, 4}: x > 10 }            \* { }
   \* check the section on tuples to understand the following syntax
-  { <<x, y>> \in 1..4 \X 1..4: y = 3 } \* {<<1, 3>>, <<2, 3>>, <<3, 3>>, <<4, 3>>}
+  { <<x, y>> \in (1..4) \X (1..4): y = 3 }  \* {<<1, 3>>, <<2, 3>>, <<3, 3>>, <<4, 3>>}
 ```
 
 **Example in Python:** Python conveniently offers us the set comprehension
@@ -617,12 +617,10 @@ under this binding.
 **Example in TLA+:**
 
 ```tla
-  { 2 * x: x \in { 1, 2, 3, 4 } }      \* { 2, 4, 6, 8 }
+  { 2 * x: x \in { 1, 2, 3, 4 } }          \* { 2, 4, 6, 8 }
+  { x + y: x \in 1..2, y \in 1..2 }        \* { 2, 3, 4 }
   \* check the section on tuples to understand the following syntax
-  { x + y: x \in 1..2, y \in 1..2 }
-    \* { 2, 3, 4 }
-  { x + y: <<x, y>> \in 1..2 \X 1..2 }
-    \* { 2, 3, 4 }
+  { x + y: <<x, y>> \in (1..2) \X (1..2) } \* { 2, 3, 4 }
 ```
 
 **Example in Python:** Python conveniently offers us the set comprehension
