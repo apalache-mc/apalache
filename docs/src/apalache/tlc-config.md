@@ -72,6 +72,7 @@ constExpr ::=
     modelValue
   | integer
   | string
+  | boolean
   | "{" "}"
   | "{" constExpr ("," constExpr)* "}"
 
@@ -92,6 +93,9 @@ integer ::=
 // a restricted set of characters is allowed (pre-UTF8 era, Paxon scripts?)
 string ::=
     '"' <string matching regex [a-zA-Z0-9_~!@#\$%^&*-+=|(){}[\],:;`'<>.?/ ]*> '"'
+
+// A Boolean literal
+boolean ::= "FALSE" | "TRUE"
 
 // Set an invariant (over unprimed variables) to be checked against
 // every reachable state.
