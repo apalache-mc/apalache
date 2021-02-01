@@ -19,13 +19,13 @@ RELEASE_VERSION=${RELEASE_VERSION:-''}
 PREAMBLE="<!-- NOTE:
      Release notes for unreleased changes go here, following this format:
 
-        ### Feature Category 1
+        ### Features
 
          * Change description, see #123
 
-        ### Feature Category 2
+        ### Bug fixes
 
-         * Another change description, see #124
+         * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->"
 
