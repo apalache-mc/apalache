@@ -1458,6 +1458,7 @@ constExpr ::=
     modelValue
   | integer
   | string
+  | boolean
   | &quot;{&quot; &quot;}&quot;
   | &quot;{&quot; constExpr (&quot;,&quot; constExpr)* &quot;}&quot;
 
@@ -1478,6 +1479,9 @@ integer ::=
 // a restricted set of characters is allowed (pre-UTF8 era, Paxon scripts?)
 string ::=
     '&quot;' &lt;string matching regex [a-zA-Z0-9_~!@#\$%^&amp;*-+=|(){}[\],:;`'&lt;&gt;.?/ ]*&gt; '&quot;'
+
+// A Boolean literal
+boolean ::= &quot;FALSE&quot; | &quot;TRUE&quot;
 
 // Set an invariant (over unprimed variables) to be checked against
 // every reachable state.
