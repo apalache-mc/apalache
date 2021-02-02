@@ -142,7 +142,7 @@ Let us introduce the following grammar for types:
 ```
 T ::= var | Bool | Int | Str | T -> T | Set(T) | Seq(T) |
       <<T, ..., T>> | [h_1 |-> T, ..., h_k |-> T] | (T, ..., T) => T
-```      
+```
 
 In this grammar, `var` stands for a type variable, which can be instantiated with
 concrete variable names such as `a`, `b`, `c`, etc., whereas `h_1`,...,`h_k` are
@@ -224,7 +224,7 @@ once in a special module `Types` or `Apalache`.
 
 One can use TLA+ syntax to write assumptions and assertions about the types.
 We are talking only about type assumptions here.
-The similar approach can be used to write theorems about types. 
+The similar approach can be used to write theorems about types.
 Consider the following specification:
 
 ```tla
@@ -283,7 +283,7 @@ __Cons__:
  * __One cannot write assumptions about state variables.__
 
 ### 2.3. Type annotations in comments
- 
+
 This solution basically gives up on TLA+ syntax and introduces a special
 syntax à la javadoc for type annotations:
 

@@ -75,7 +75,7 @@ is a tuple, as Apalache does not allow sequences to carry elements of different
 types. However, there is no way to say, whether `<<1, 2, 3>>` should be treated
 as a tuple or a sequence. This needs a [type annotation].
 
-_The current SMT encoding of sequences in Apalache is not optimized, 
+_The current SMT encoding of sequences in Apalache is not optimized,
 so operations on sequences are often significantly slower than operations
 on sets._
 
@@ -87,7 +87,7 @@ on sets._
 <a name="seqCtor"></a>
 ### Tuple/Sequence constructor
 
-**Notation:** `<<e_1, ..., e_n>>` 
+**Notation:** `<<e_1, ..., e_n>>`
 
 **LaTeX notation:** ![tuple](./img/tuple.png)
 
@@ -136,7 +136,7 @@ second one is an arbitrary expression.
 
 **Effect:** The operator `Append(seq, e)`
 constructs a new sequence `newSeq` as follows:
- 
+
  - set `DOMAIN newSeq` to be `(DOMAIN seq) \union { Len(seq) + 1 }`.
  - set `newSeq[i]` to `seq[i]` for `i \in 1..Len(seq)`.
  - set `newSeq[Len(seq) + 1]` to `e`.
@@ -160,7 +160,7 @@ the type of the sequence elements.
 **Example in Python:** TLA+ functions are immutable, so we are using [frozendict]:
 
 ```python
-  # the pythonic way: a list (indexed with 0, 1, ...)  
+  # the pythonic way: a list (indexed with 0, 1, ...)
   l = [ 1, 2 ]
   l.append(5)
   # the TLA+ way
@@ -229,11 +229,11 @@ error.
 
 **Effect:** The operator `Tail(seq)` constructs a new sequence `newSeq` as
 follows:
- 
+
  - set `DOMAIN newSeq` to be `(DOMAIN seq) \ { Len(seq) }`.
  - set `newSeq[i]` to `seq[i + 1]` for `i \in 1..(Len(seq) - 1)`.
 
-If `seq` is an empty sequence, the result is undefined. 
+If `seq` is an empty sequence, the result is undefined.
 
 Apalache encodes a sequences as a triple `<<fun, start, end>>`, where
 `start` and `end` define a slice of the function `fun`. As a result,
@@ -320,7 +320,7 @@ error.
 
 **Effect:** The operator `s \o t`
 constructs a new sequence `newSeq` as follows:
- 
+
  - set `DOMAIN newSeq` to be `1..(Len(s) + Len(t))`.
  - set `newSeq[i]` to `s[i]` for `i \in 1..Len(s)`.
  - set `newSeq[Len(s) + i]` to `t[i]` for `i \in 1..Len(t)`.
@@ -345,7 +345,7 @@ incompatible.
 **Example in Python:** TLA+ functions are immutable, so we are using [frozendict]:
 
 ```python
-  # the pythonic way: a list (indexed with 0, 1, ...)  
+  # the pythonic way: a list (indexed with 0, 1, ...)
   l1 = [ 3, 5 ]
   l2 = [ 7, 9 ]
   l1 + l2
@@ -369,7 +369,7 @@ incompatible.
 
 **Effect:** The operator `SubSeq(seq, m, n)`
 constructs a new sequence `newSeq` as follows:
- 
+
  - set `DOMAIN newSeq` to be `1..(n - m)`.
  - set `newSeq[i]` to `s[m + i - 1]` for `i \in 1..(n - m + 1)`.
 
@@ -393,7 +393,7 @@ error. Apalache flags a static type error.
 **Example in Python:** TLA+ functions are immutable, so we are using [frozendict]:
 
 ```python
-  # the pythonic way: a list (indexed with 0, 1, ...)  
+  # the pythonic way: a list (indexed with 0, 1, ...)
   l = [ 3, 5, 9, 10 ]
   l[1:3]
   # the TLA+ way
@@ -447,7 +447,7 @@ result is undefined in pure TLA+. TLC raises a model checking error.
 **Example in Python:** TLA+ functions are immutable, so we are using [frozendict]:
 
 ```python
-  # the pythonic way: a list (indexed with 0, 1, ...)  
+  # the pythonic way: a list (indexed with 0, 1, ...)
   def test(x):
     return x % 2 == 0
 

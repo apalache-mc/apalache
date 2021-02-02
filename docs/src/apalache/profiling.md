@@ -38,10 +38,10 @@ apalache check --smtprof powerset.tla
 The profiling data is written in the file `profiler.csv`:
 
 ```
-# weight,nCells,nConsts,nSmtExprs,location                                      
+# weight,nCells,nConsts,nSmtExprs,location
 4424,2180,2076,28460,powerset.tla:11:5-13:18
 4098,2020,1969,12000,powerset.tla:12:9-12:20
-4098,2020,1969,12000,powerset.tla:12:14-12:20 
+4098,2020,1969,12000,powerset.tla:12:14-12:20
 ...
 ```
 

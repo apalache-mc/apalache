@@ -24,7 +24,7 @@ so the model checker will ask the user to provide the tool with a type annotatio
 To get an idea of our type system, check Section 2. In a nutshell,
 if a TLA+ expression cannot be decorated with a type annotation,
 it is not supported _yet_. Exception is made for non-recursive TLA+ operators, as they are
-expanded before the type inference is run. 
+expanded before the type inference is run.
 
 ### 1. Type inference
 
@@ -40,7 +40,7 @@ bodies. (This is done automatically by Apalache.)
 
  1. It recursively computes the types of subexpressions in a TLA+ expression in
  a bottom-up way as follows:
- 
+
     1. A literal is assigned the respective basic type. That is, an integer,
      a Boolean, or a string gets assigned the integer, Boolean, or the constant
      type respectively.
@@ -55,7 +55,7 @@ bodies. (This is done automatically by Apalache.)
     are treated as usual: first, the type of ``S`` is computed and ``x`` is assigned
     the element type, and then the type of ``e`` is computed, which immediately
     gives us the type of the set expression.
-    
+
 This approach manages to automatically compute types of many TLA+ expressions.
 However, there a few problematic cases that require type annotations:
 
@@ -76,7 +76,7 @@ However, there a few problematic cases that require type annotations:
    where ``MT`` is defined as ``[type |-> STRING, bal |-> Int, val |-> Int]``.
   The type checker requires that the fields with the same name are assigned
   the same type.
-  
+
 ### 2. Type annotations
 
 As there is no standard way of specifying types in TLA+ (hey, it is untyped by design),
@@ -128,4 +128,4 @@ The syntax of type annotations is as follows:
   There are no restrictions on the sequence length, except finiteness. In theory,
   a sequence of type ``Seq[T]`` is no different from a function of type ``[Int -> T]``.
   In practice, we use different encodings for the general functions and sequences.
-  
+

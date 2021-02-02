@@ -98,7 +98,7 @@ classes of the cells `c_1`, ..., `c_n`. (It is possible that some constant `z_i`
 represents the empty equivalence class.)
 
 To this end, we introduce two uninterpreted functions:
- 
+
  - The function `class \in [Sort_C -> Sort_Z]` that maps the cells of the sort
    `C`, which includes the constants `c_1`, ..., `c_n` on the constants of the
    sort `Z`, that is `z_1`, ..., `z_n`.

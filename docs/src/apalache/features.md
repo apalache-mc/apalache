@@ -61,7 +61,7 @@ Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 `f[e]` | ✔ | - |
 `DOMAIN f` | ✔ | - |
-`[ x \in S ↦ e]` | ✔ | - |  
+`[ x \in S ↦ e]` | ✔ | - |
 `[ S -> T ]` | ✔ | - | Sometimes, the functions sets are expanded
 `[ f EXCEPT ![e1] = e2 ]` | ✔ | - |
 

@@ -78,7 +78,7 @@ immutable dictionary.
 <a name="tuple"></a>
 ### Tuple/Sequence constructor
 
-**Notation:** `<<e_1, ..., e_n>>` 
+**Notation:** `<<e_1, ..., e_n>>`
 
 **LaTeX notation:** ![tuple](./img/tuple.png)
 
@@ -153,7 +153,7 @@ is picked with `\E t \in S_1 \X S_2`.
 **Example in Python:** TLA+ functions are immutable, so we are using [frozendict]:
 
 ```python
-  # the pythonic way: a set of python tuples (indexed with 0, 1, ...)  
+  # the pythonic way: a set of python tuples (indexed with 0, 1, ...)
   frozenset({ (n, p)
                 for n in { "A", "B", "C" } for p in range(1, 65535 + 1) })
   # the TLA+ way

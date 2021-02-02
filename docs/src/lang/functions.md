@@ -107,7 +107,7 @@ equivalent to `rmState`:
   [ rmState EXCEPT !["process10"] = "working" ]
 ```
 
-**Types.** In pure TLA+, functions are free to mix values of different types in their domains. 
+**Types.** In pure TLA+, functions are free to mix values of different types in their domains.
 See the example below:
 
 ```tla
@@ -139,7 +139,7 @@ However, functions in TLC are free to return different kinds of values:
 
 ```tla
   [ x \in { 1, 2 } |->
-                        IF x = 1 THEN FALSE ELSE 3 ]  
+                        IF x = 1 THEN FALSE ELSE 3 ]
 ```
 
 This is why, in pure TLA+ and TLC, records, tuples, and sequences are just
@@ -180,7 +180,7 @@ variable and one set, you can use multiple variables and multiple sets.
 **Effect:** We give the semantics for one argument.  We write a sequence of
 steps to ease the understanding.  This operator constructs a function `f` over
 the domain `S` as follows.  For every element `elem` of `S`, do the following:
- 
+
  1. Bind the element `elem` to variable `x`,
  2. Compute the value of `e` under the binding `[x |-> elem]` and store it
     in a temporary variable called `result`.
@@ -513,7 +513,7 @@ error.
   \* { 1, 2, 3 }
 ```
 
-**Example in Python:** 
+**Example in Python:**
 
 ```python
   X = frozenset({ 1, 2, 3 })

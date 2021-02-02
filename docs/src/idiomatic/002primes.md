@@ -85,7 +85,7 @@ replacing an abstract specification with a more detailed one. Concretely, this
 idea is implemented by module instances in TLA+. It often happens that
 refinement requires us to replace a state variable of the abstract
 specification with an operator of the detailed specification.  Voilà. You have
-to apply prime to an expression. For the details, 
+to apply prime to an expression. For the details,
 see Chapter 5 and pages 312-313 of [Specifying Systems].
 
 ## Advantages

@@ -52,7 +52,7 @@ a set may mix integers, Booleans, and other sets:
 TLC restricts set elements to comparable values. See Section 14.7.2 of
 [Specifying Systems]. In a nutshell, if you do not mix the following five
 kinds of values in a single set, TLC would not complain about your sets:
-    
+
  1. Booleans,
  1. integers,
  1. strings,
@@ -129,7 +129,7 @@ is undefined.
     of `e`; and
   - `FALSE`, if `S` is a set and all of its elements are not equal to the
     value of `e`.
-    
+
 *Warning:* If you are using the special form `x' \in S`, this operator may
 assign a value to `x'` as a side effect. See [Control Flow and Non-determinism].
 
@@ -177,7 +177,7 @@ is undefined.
     of `e`; and
   - `TRUE`, if `S` is a set and all of its elements are not equal to the
     value of `e`.
-    
+
 *Warning:* In contrast to `x' \in S`, the expression `x' \notin T`,
 which is equivalent to `~(x' \in T)` is never
 treated as an assignment in Apalache and TLC.
@@ -405,7 +405,7 @@ either not sets, or sets of incompatible types.
 **Arguments:** Two arguments.  If both arguments are not sets, the result
 is undefined.
 
-**Effect:** This operator evaluates to the set that contains the elements 
+**Effect:** This operator evaluates to the set that contains the elements
 of `S` **as well** as the elements of `T`, and no other values.
 
 **Determinism:** Deterministic.
@@ -502,9 +502,9 @@ either not sets, or sets of incompatible types.
 **Example in TLA+:**
 
 ```tla
-  { 0, 1, 2 } \ { 1, 2, 3 }     \* { }
+  { 0, 1, 2 } \ { 1, 2, 3 }     \* { 0 }
           { } \ { 1, 2, 3 }     \* { }
-  { 1, 2, 3 } \ { }             \* { }
+  { 1, 2, 3 } \ { }             \* { 1, 2, 3 }
       { {1} } \ { 1, 2 }        \* { {1} }, model checking error in TLC
                                 \* static type error in Apalache
 ```
@@ -535,12 +535,12 @@ either not sets, or sets of incompatible types.
 **Effect:** This operator constructs a new set `F` as follows.  For every
 element `e` of `S`, do the following (we give a sequence of steps to ease
 the understanding):
- 
+
  1. Bind the element `e` to variable `x`,
  2. Evaluate the predicate `P`,
  3. If `P` evaluates to `TRUE` under the binding `[x |-> e]`,
     then insert the element of `e` into set `F`.
-   
+
 **Determinism:** Deterministic.
 
 **Errors:** Pure TLA+ does not restrict the operator arguments.  TLC flags a
@@ -561,7 +561,7 @@ element `e` of `S`, the variable `x` is bound to `e[1]` and `y` is bound to
   { x \in {1, 2, 3, 4}: x > 2 }             \* { 3, 4 }
   { x \in {1, 2, 3, 4}: x > 10 }            \* { }
   \* check the section on tuples to understand the following syntax
-  { <<x, y>> \in 1..4 \X 1..4: y = 3 } \* {<<1, 3>>, <<2, 3>>, <<3, 3>>, <<4, 3>>}
+  { <<x, y>> \in (1..4) \X (1..4): y = 3 }  \* {<<1, 3>>, <<2, 3>>, <<3, 3>>, <<4, 3>>}
 ```
 
 **Example in Python:** Python conveniently offers us the set comprehension
@@ -581,7 +581,7 @@ syntax:
 <a name="map"></a>
 ### Set map
 
-**Notation:** `{ e: x \in S }` or `{ e: x \in S, y \in T }`, or more arguments 
+**Notation:** `{ e: x \in S }` or `{ e: x \in S, y \in T }`, or more arguments
 
 **LaTeX notation:** ![map](./img/map.png)
 
@@ -594,12 +594,12 @@ syntax:
 We write it as a sequence of steps to ease understanding.
 This operator constructs a new set `M` as follows.
 For every element `e_1` of `S` and every element `e_2` of `T`:
- 
+
  1. Bind the element `e_1` to variable `x`,
  2. Bind the element `e_2` to variable `y`,
  2. Compute the value of `e` under the binding `[x |-> e_1, y |-> e_2]`,
  3. Insert the value `e` into the set `M`.
-   
+
 **Determinism:** Deterministic.
 
 **Errors:** Pure TLA+ does not restrict the operator arguments.  TLC flags a
@@ -617,12 +617,10 @@ under this binding.
 **Example in TLA+:**
 
 ```tla
-  { 2 * x: x \in { 1, 2, 3, 4 } }      \* { 2, 4, 6, 8 }
+  { 2 * x: x \in { 1, 2, 3, 4 } }          \* { 2, 4, 6, 8 }
+  { x + y: x \in 1..2, y \in 1..2 }        \* { 2, 3, 4 }
   \* check the section on tuples to understand the following syntax
-  { x + y: x \in 1..2, y \in 1..2 }
-    \* { 2, 3, 4 }
-  { x + y: <<x, y>> \in 1..2 \X 1..2 }
-    \* { 2, 3, 4 }
+  { x + y: <<x, y>> \in (1..2) \X (1..2) } \* { 2, 3, 4 }
 ```
 
 **Example in Python:** Python conveniently offers us the set comprehension

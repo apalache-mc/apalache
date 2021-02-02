@@ -21,19 +21,19 @@ An implementation of ``TI`` _must_ support two main phases of operation:
   at its input, typically the body of ``Init`` or ``Next``, and it tries to find a type
   assignment to the variables, operator definitions, and operator usages. The challenges of
   this analysis are as follows:
-   
+
    1. Resolving operator overloading, e.g., the expressions ``<<1, 2>>`` and ``f[e]``
     can be treated as expressions either over tuples, or sequences.
-   
+
    1. Finding signatures for operator definitions, e.g., ``F(x) == x + 1`` should have
     the signature ``Int => Int``.
-    
+
    If successful, the results of this analysis should be stored somewhere for the subsequent use
    in the _Type computation_ mode. Note that it is not necessary to store the types of all the intermediate
    subexpressions -- that would be wasteful. This analysis should store only the results that cannot
    be deterministically computed in the next phase such as resolved operator signatures and types of the variables.
    ``TIE`` _may_ use expression identifiers to save the type information in some storage.
-  
+
 1. **Type computation**. In this phase, the client queries ``TIE`` by giving a ``TLA+`` expression
     and the types of its arguments. ``TIE`` computes and returns the resulting type of the expression.
     For instance, given the expression ``F(e)`` and the type ``Int`` of ``e``, ``TIE`` finds the signature
@@ -46,8 +46,8 @@ An implementation of ``TI`` _must_ support two main phases of operation:
     used by the client. In this case, ``TIE`` _must_ try to compute the resulting type. Only if the resulting type
     cannot be deterministically computed (e.g., there is not relevant type information in the storage),
     should ``TIE`` fail.
-    
-    
+
+
 ## TIE Interface
 
 ```scala
@@ -90,11 +90,11 @@ trait TypeFinder[T] {
     */
   def compute(e: TlaEx, argTypes: Seq[T]): T
 }
-```    
-    
-    
-    
-    
-    
-    
-    
+```
+
+
+
+
+
+
+
