@@ -27,6 +27,6 @@ class TestTlaType1 extends FunSuite {
     val recType = RecT1(SortedMap("f1" -> IntT1(), "f2" -> BoolT1(), "f3" -> StrT1()))
     assert("[f1: Int, f2: Bool, f3: Str]" == recType.toString)
     val operType = OperT1(List(BoolT1(), StrT1()), IntT1())
-    assert("(Bool, Str) => Int" == operType.toString)
+    assert("((Bool, Str) => Int)" == operType.toString)
   }
 }
