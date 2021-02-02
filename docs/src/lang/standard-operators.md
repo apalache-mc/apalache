@@ -114,7 +114,7 @@ _Like frozen sets in Python, but cooler_ [Learn more...](./sets.md)
         [`S \subseteq T`](./sets.md#subseteq),
         [`S \supset T`](./sets.md#supset),
         [`S \supseteq T`](./sets.md#supseteq)
-    - Finiteness: [`IsFinite`](./sets.md#finite)    
+    - Finiteness: [`IsFinite`](./sets.md#finite)
  - Cardinality of a finite set: [`Cardinality`](./sets.md#card)
 
 ### Logic :octopus:
@@ -206,7 +206,7 @@ _Functions that pretend to be lists, indexed with 1, 2, 3,..._
 ### Temporal operators :soon:
 
  _Talking about computations, finite and infinite_
- 
+
  - Always: `[]F`
  - Eventually: `<>F`
  - Weak fairness: `WF_e(A)`

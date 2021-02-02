@@ -389,7 +389,7 @@ defines binary minus, which can easily drive a variable outside of `Nat`. For
 instance, see the following example:
 
 ```tla
------------------------------ MODULE NatCounter ------------------------        
+----------------------------- MODULE NatCounter ------------------------
 EXTENDS Naturals
 
 VARIABLE x

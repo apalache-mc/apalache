@@ -7,7 +7,7 @@ This file presents the syntax of
 in [EBNF](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form) and
 comments on the treatment of its sections in
 [Apalache](https://github.com/informalsystems/apalache). A detailed discussion
-on using the config files with TLC can be found in Leslie Lamport's 
+on using the config files with TLC can be found in Leslie Lamport's
 [Specifying Systems],
 Chapter 14 and in
 [Current Versions of the TLA+ Tools](https://lamport.azurewebsites.net/tla/current-tools.pdf).

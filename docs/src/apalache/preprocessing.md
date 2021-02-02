@@ -2,7 +2,7 @@
 
 Before translating a specification into SMT, `apalache` performs a number of
 preprocessing steps:
- 
+
  * `InlinerOfUserOper`: replaces every call to a user-defined operator with the operator's body.
  * `LetInExpander`: replaces every call to a let-in defined operator of arity at least 1 with the operator's body
  * `PrimingPass`: adds primes to variables in `Init` and `ConstInit` (required by `TransitionPass`)
@@ -13,27 +13,27 @@ preprocessing steps:
  * `PrimedEqualityToMembership`: replaces `x = e` with `x \in {e}` (required by `TransitionPass`)
  * `ExprOptimizer`: statically computes select expressions (e.g. record field access from a known record)
  * `ConstSimplifier`: propagates constants
- 
+
  ## Keramelizer
- 
+
  Keramelizer rewrites TLA+ expressions into [KerA](./kera.md). For many TLA+ expressions
  this translation is clear, however, some expressions cannot be easily translated. Below
  we discuss such expressions and the decisions that we have made.
- 
+
  ### CASE <a name="kera-case"></a>
- 
+
  TLA+ supports two kinds of CASE expressions:
- 
+
    * `CASE`. These are expressions without a default value:
-   
+
 ```tla
     CASE
          p_1 -> e_1
       [] p_2 -> e_2
          ...
       [] p_n -> e_n
-```   
-   
+```
+
    * `CASE-OTHER`. These are expressions with a default value:
 
 ```tla
@@ -43,7 +43,7 @@ preprocessing steps:
         ...
      [] p_n -> e_n
      [] OTHER -> e_def
-```   
+```
 
 Keramelizer supports only `CASE-OTHER` and asks the user to translate `CASE` expressions
 into `CASE-OTHER`. One could imagine that `CASE` could be expressed as
@@ -57,11 +57,11 @@ Hence, Leslie Lamport defines semantics of case in [Specifying Systems, p. 298](
 ```
 
 Similarly, `CASE-OTHER` is defined  as:
- 
+
  ```tla
   CHOOSE v: (p_1 /\ (v = e_1) \/ ... \/ (p_n /\ (v = e_n)) \/ (~p_1 /\ ... ~p_n /\ (v = e_ def)))
  ```
- 
+
 As a result, if there are several conditions among `p_1, ..., p_n` that hold true,
 then `CHOOSE` always selects the same condition ```p_i``` for equivalent formulas.
 _It is hard to enforce these general semantics in a model checker_. Thus, we have decided to select
@@ -93,10 +93,10 @@ one can also rewrite the (presumably impossible) default case using the `CHOOSE`
         ...
      [] p_n -> e_n
      [] OTHER -> CHOOSE x \in {}: FALSE
-```   
+```
 
 
-  
+
 
 # References
 

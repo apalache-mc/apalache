@@ -24,7 +24,7 @@ section, we only consider the deterministic use of the existential quantifier.
 **Arguments:** At least three arguments: a variable name, a set, and an
 expression. As usual in TLA+, if the second argument is not a set, the result is
 undefined. You can also use multiple variables and tuples, see **Advanced
-syntax**. 
+syntax**.
 
 **Effect:** This operator evaluates to a Boolean value. We explain
 semantics only for a single variable:
@@ -38,7 +38,7 @@ semantics only for a single variable:
  _Importantly, when `S = {}`, the expression `\A x \in S: P` evaluates to
  `TRUE`, independently of what is written in `P`. Likewise, when `{x \in S: P}
  = {}`, the expression `\A x \in S: P` evaluates to `TRUE`._
-   
+
 **Determinism:** Deterministic.
 
 **Errors:** Pure TLA+ does not restrict the operator arguments.  TLC flags a
@@ -63,7 +63,7 @@ simply syntax sugar for the form with nested quantifiers: `\A x \in S: \A y
 ```tla
   \A x \in {1, 2, 3, 4}:
     x > 0
-  \* TRUE 
+  \* TRUE
   \A x \in {1, 2, 3, 4}:
     x > 2
   \* FALSE
@@ -95,7 +95,7 @@ simply syntax sugar for the form with nested quantifiers: `\A x \in S: \A y
 **Arguments:** At least three arguments: a variable name, a set, and an
 expression. As usual in TLA+, if the second argument is not a set, the result is
 undefined.You can also use multiple variables and tuples, see **Advanced
-syntax**. 
+syntax**.
 
 **Effect:** This operator evaluates to a Boolean value. We explain
 semantics only for a single variable:
@@ -112,11 +112,11 @@ semantics only for a single variable:
  = {}`, the expression `\E x \ in S: P` evaluates to `FALSE`._
 
  As you probably have noticed, `\E x \in S: P` is equivalent to `~(\A x \in S:
- P)`, and `\A x \in S: P` is equivalent to `~(\E x \in S: P)`. This is called
+ ~P)`, and `\A x \in S: P` is equivalent to `~(\E x \in S: ~P)`. This is called
  _duality_ in logic. But take care!  If `\E x \in S: P` may act as a
  non-deterministic assignment, duality does not work anymore!  See [Control
  Flow and Non-determinism].
-   
+
 **Determinism:** Deterministic when `P` contains no action operators (including
 the prime operator `'`).  For the non-deterministic case, see [Control Flow and
 Non-determinism].
@@ -143,7 +143,7 @@ S: P`.
 ```tla
   \E x \in {1, 2, 3, 4}:
     x > 0
-  \* TRUE 
+  \* TRUE
   \E x \in {1, 2, 3, 4}:
     x > 2
   \* TRUE
@@ -207,7 +207,7 @@ values of `e_1` and `e_2`. Let `e_1` and `e_2` evaluate to the values
 
  - In other cases, `e_1 = e_2` evaluates to `FALSE` if the values have comparable types.
  - TLC and Apalache report an error, if the values have incomparable types.
-   
+
 **Determinism:** Deterministic, unless `e_1` has the form `x'`, which can be
 interpreted as an assignment to the variable `x'`.  For the non-deterministic
 case, see [Control Flow and Non-determinism].
@@ -268,7 +268,7 @@ match.
   { "a": 1, "b": 3 } == { "a": 1, "b": 3 }
   { "a": 1, "b": 3 } == { "a": 1 }
   { x: (x + x) for x in { 2 } } == { x: (x * x) for x in { 2 } }
-  { x: (x + x) for x in { 2, 3 } } == { x: 2 * x for x in { 2, 3 } } 
+  { x: (x + x) for x in { 2, 3 } } == { x: 2 * x for x in { 2, 3 } }
 ```
 
 ----------------------------------------------------------------------------
@@ -333,7 +333,7 @@ There are two common use cases, where the use of `CHOOSE` is well justified:
 In other cases, we believe that `CHOOSE` is bound to do [Program synthesis].
 So TLC does some form of synthesis by brute force when it has to evaluate
 `CHOOSE`.
-   
+
 **Determinism:** Deterministic. Very much deterministic. Don't try to model
 non-determinism with `CHOOSE`. For non-determinism, see:
 [Control Flow and Non-determinism].
@@ -370,7 +370,7 @@ way of implementing CHOOSE, see [choose.py](./examples/choose.py):
 
 ```python
 # A fixed implementation of CHOOSE x \in S: TRUE
-# that sorts the set by the string representation and picks the head 
+# that sorts the set by the string representation and picks the head
 def choose(s):
     lst = sorted([(str(e), e) for e in s], key=(lambda pair: pair[0]))
     (_, e) = lst[0]
@@ -378,7 +378,7 @@ def choose(s):
 
 
 if __name__ == "__main__":
-    s = frozenset({ 1, 2, 3}) 
+    s = frozenset({ 1, 2, 3})
     print("CHOOSE {} = {}".format(s, choose(s)))
     s2 = frozenset({ frozenset({1}), frozenset({2}), frozenset({3})})
     print("CHOOSE {} = {}".format(s2, choose(s2)))
@@ -394,7 +394,7 @@ if __name__ == "__main__":
 **LaTeX notation:** ![forall](./img/forall.png)
 
 **Arguments:** At least two arguments: a variable name and an
-expression. 
+expression.
 
 **Effect:** This operator evaluates to a Boolean value. It evaluates to `TRUE`,
 when every element in the logical universe makes the expression `P` evaluate to
@@ -416,7 +416,7 @@ when writing proofs with [TLAPS].
 **LaTeX notation:** ![exists](./img/exists.png)
 
 **Arguments:** At least two arguments: a variable name and an
-expression. 
+expression.
 
 **Effect:** This operator evaluates to a Boolean value. It evaluates to `TRUE`,
 when at least one element in the logical universe makes the expression `P`
@@ -438,7 +438,7 @@ when writing proofs with [TLAPS].
 **LaTeX notation:** CHOOSE x: P
 
 **Arguments:** At least two arguments: a variable name and an
-expression. 
+expression.
 
 **Effect:** This operator evaluates to some value `v` in the logical universe
 that evaluates `P` to `TRUE` against the binding `[x |-> v]`.
