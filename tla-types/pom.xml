@@ -58,6 +58,11 @@
             <artifactId>easymock</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.scalacheck</groupId>
+            <artifactId>scalacheck_${scalaBinaryVersion}</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

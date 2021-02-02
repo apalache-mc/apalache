@@ -10,7 +10,6 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
-
 ### Features
 
 * integration with Java-like annotations in comments, see #504
@@ -22,3 +21,4 @@
 ### Bugfixes
 
 * Boolean values are now supported in TLC config files, see #512
+* Proper error on invalid type annotations, the parser is strengthened with Scalacheck, see #332

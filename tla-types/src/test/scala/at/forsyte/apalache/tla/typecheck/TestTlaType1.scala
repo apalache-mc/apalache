@@ -7,7 +7,7 @@ import org.scalatest.junit.JUnitRunner
 import scala.collection.immutable.SortedMap
 
 @RunWith(classOf[JUnitRunner])
-class TestTlaType1  extends FunSuite {
+class TestTlaType1 extends FunSuite {
   test("TlaType1.toString") {
     assert("Int" == IntT1().toString)
     assert("Real" == RealT1().toString)
