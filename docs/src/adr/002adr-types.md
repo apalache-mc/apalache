@@ -2,7 +2,7 @@
 
 | authors                                | revision |
 | -------------------------------------- | --------:|
-| Shon Feder, Igor Konnov, Jure Kukovec  |        2 | 
+| Shon Feder, Igor Konnov, Jure Kukovec  |        2 |
 
 This is a follow up of
 [RFC-001](https://github.com/informalsystems/apalache/blob/unstable/docs/internal/rfc/001rfc-types.md), which discusses
@@ -33,7 +33,7 @@ T ::= typeConst | typeVar | Bool | Int | Str | T -> T | Set(T) | Seq(T) |
       <<T, ..., T>> | [h_1: T, ..., h_k: T] | (T, ..., T) => T | (T)
 typeConst ::= <an identifier that matches [A-Z_][A-Z0-9_]*>
 typeVar ::= <a single letter from [a-z]>
-```      
+```
 
 In this grammar, `h_1`,...,`h_k` are field names. The rule `T -> T` defines a
 function, while the rule `(T, ..., T) => T` defines an operator.  Importantly, a
@@ -43,7 +43,7 @@ whereas a single-argument function receives the type of its argument, e.g., `Int
 e.g., `(Int, Bool) => Int` and `() => Bool`. The arrow `->` is right-associative,
 e.g., `A -> B -> C` is understood as `A -> (B -> C)`, which is consistent with
 programming languages. If you like to change the priority of `->`, use parentheses, as usual.
-For example, you may write `(A -> B) -> C`. 
+For example, you may write `(A -> B) -> C`.
 
 If a type `T` contains a type variable, e.g., `a`, then `T` is a
 polymorphic type, in which `a` can be instantiated with a monotype (a
@@ -80,7 +80,7 @@ The following examples demonstrate the use of the type grammar:
 * `Proc` and `Faulty` are sets of the same type:
     `Proc <: "Set(PID)"` and `Faulty <: "Set(PID)"`.
 
-### 1.2. Discussion    
+### 1.2. Discussion
 
 Our type grammar presents a minimal type system that, in our understanding,
 captures all interesting cases that occur in practice. Obviously, this type
@@ -177,7 +177,7 @@ Find(Pred(_), es) ==
     IF \E i \in DOMAIN es: Pred(es[i])
     THEN CHOOSE i \in DOMAIN es: Pred(es[i])
     ELSE -1
-```    
+```
 
 The following definition declares a (global) recursive function, not an
 operator. However, the annotation syntax is quite similar to that of the
@@ -237,7 +237,7 @@ auxiliary LET-definition to specify the type of the empty collection:
    \E x \in EmptyInts: x > 1
 /\ LET \* @type: Set(Str);
        EmptyStrings == {}
-   IN 
+   IN
    f = [x \in EmptyStrings |-> 2]
 /\ LET \* @type: Seq(Int);
        EmptyIntSeq == {}
@@ -261,7 +261,7 @@ specification](https://github.com/tlaplus/Examples/blob/master/specifications/Ci
 
 ```tla
 ---------------------- MODULE CigaretteSmokersTyped --------------------------
-(***************************************************************************)   
+(***************************************************************************)
 (* A specification of the cigarette smokers problem, originally            *)
 (* described in 1971 by Suhas Patil.                                       *)
 (* https://en.wikipedia.org/wiki/Cigarette_smokers_problem                 *)
@@ -292,7 +292,7 @@ VARIABLE
 ASSUME /\ Offers \subseteq (SUBSET Ingredients)
        /\ \A n \in Offers : Cardinality(n) = Cardinality(Ingredients) - 1
 
-vars == <<smokers, dealer>>       
+vars == <<smokers, dealer>>
 
 (***************************************************************************)
 (* 'smokers' is a function from the ingredient the smoker has              *)
@@ -322,7 +322,7 @@ stopSmoking ==
         (* the type of LAMBDA should be inferred from the types
            of ChooseOne and Ingredients *)
     /\ LET r == ChooseOne(Ingredients, LAMBDA x : smokers[x].smoking)
-       IN smokers' = [smokers EXCEPT ![r].smoking = FALSE] 
+       IN smokers' = [smokers EXCEPT ![r].smoking = FALSE]
     /\ dealer' \in Offers
 
 Next ==
@@ -332,7 +332,7 @@ Spec ==
     Init /\ [][Next]_vars
 
 FairSpec ==
-    Spec /\ WF_vars(Next)    
+    Spec /\ WF_vars(Next)
 
 AtMostOne ==
     Cardinality({r \in Ingredients : smokers[r].smoking}) <= 1

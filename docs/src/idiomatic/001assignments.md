@@ -60,7 +60,7 @@ operator `:=` in the module `Apalache.tla` for that purpose:
 
 Hence, it would be obvious in our motivating example that the author made a typo:
 
-```tla  
+```tla
   x' := x + 1
     => x' := 3
 ```
@@ -120,7 +120,7 @@ It can be written as:
    This is in contrast to the negated form such as: `~(x' = 10)`.
 
  - TLC treats the expressions of the form `x' = e` and `x' \in S` as assignments,
-   as long as `x'` is not bound to a value. 
+   as long as `x'` is not bound to a value.
 
  - Apalache uses assignments to decompose the specification into smaller pieces.
    Although Apalache tries to find assignments automatically, it often has to choose

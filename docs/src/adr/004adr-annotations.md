@@ -2,7 +2,7 @@
 
 | author      | revision |
 | ----------- | --------:|
-| Igor Konnov |        2 | 
+| Igor Konnov |        2 |
 
 This ADR documents our decision on using Java-like annotations in comments.
 Our main motivation to have annotations is to simplify type annotations, as
@@ -15,7 +15,7 @@ to decorate operators with hints, which may aid the model checker.
 
 Annotations should be written in comments that are written in front of a
 declaration. The following declarations are supported:
- 
+
  1. Constant declarations, e.g., `CONSTANT N`.
  1. Variable declarations, e.g., `VARIABLE x`.
  1. Operator declarations, including:
@@ -46,12 +46,12 @@ boolean     ::= ('false' | 'true')
 
 Java Language Specification defines how a [Java identifier] looks like.
 The sequence `<char sequence>` is a sequence admitted by [JavaTokenParsers]:
-  
+
   - Any character except double quotes, control characters or backslash `\`
   - A backslash followed by another backslash, a single or double quote,
     or one of the letters `b`, `f`, `n`, `r` or `t`
   - `\` followed by u followed by four hexadecimal digits
-  
+
 **Examples.** The following strings are examples of syntactically correct
 annotations:
 

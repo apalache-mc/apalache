@@ -1,6 +1,6 @@
 # Idiom 0: Keep state variables to the minimum
 
-In imperative programming, it is common to use mutable variable assignments liberally, but to exercise caution whenever mutable variables have a global scope. In TLA+, mutable variables are always global, so it is important to use them carefully and in a way that accurately reflects the global state of the system you are specifying.  
+In imperative programming, it is common to use mutable variable assignments liberally, but to exercise caution whenever mutable variables have a global scope. In TLA+, mutable variables are always global, so it is important to use them carefully and in a way that accurately reflects the global state of the system you are specifying.
 
 ## Description
 
@@ -15,7 +15,7 @@ intermediate result of a complex computation.
 In programming languages, we introduce temporary variables for several reasons:
 
   1. To avoid repetitive computations of the same expression,
-  1. To break down a large expression into a series of smaller expressions, 
+  1. To break down a large expression into a series of smaller expressions,
   1. To make the code concise.
 
 Point 1 is a non-issue in TLA+, as it is mostly executed in the reader's brain,

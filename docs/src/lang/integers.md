@@ -117,7 +117,7 @@ type error, whereas TLC reports a runtime error.
   -x      \* negated value of x
 ```
 
-**Example in Python:** 
+**Example in Python:**
 
 ```python
   -(5)
@@ -151,7 +151,7 @@ statically reports a type error, whereas TLC reports a runtime error.
   (-5) + 3  \* -2
 ```
 
-**Example in Python:** 
+**Example in Python:**
 
 ```python
   5 + 3
@@ -186,7 +186,7 @@ statically reports a type error, whereas TLC reports a runtime error.
   (-5) - (-3)   \* -2
 ```
 
-**Example in Python:** 
+**Example in Python:**
 
 ```python
   5 - 3
@@ -221,7 +221,7 @@ statically reports a type error, whereas TLC reports a runtime error.
   (-5) * 3  \* -15
 ```
 
-**Example in Python:** 
+**Example in Python:**
 
 ```python
   5 * 3
@@ -357,7 +357,7 @@ to produce the same results as in TLA+:
 **Arguments:** Two arguments. The result is only defined when both arguments
 are evaluated to integer values, and these values fall into one of the several
 cases:
-  
+
  1. `b > 0`,
  1. `b = 0` and `a /= 0`.
 
@@ -390,7 +390,7 @@ statically reports a type error, whereas TLC reports a runtime error.
   5^(-3)    \* undefined on integers, TLC reports a runtime error
 ```
 
-**Example in Python:** 
+**Example in Python:**
 
 ```python
   5 ** 3
@@ -417,7 +417,7 @@ are evaluated to integer values.
 **Effect:** `a < b` evaluates to:
 
   - `TRUE`, if `a` is less than `b`,
-  - `FALSE`, otherwise. 
+  - `FALSE`, otherwise.
 
 **Determinism:** Deterministic.
 
@@ -433,7 +433,7 @@ statically reports a type error, whereas TLC reports a runtime error.
   5 < 1     \* FALSE
 ```
 
-**Example in Python:** 
+**Example in Python:**
 
 ```python
   1 < 5
@@ -456,7 +456,7 @@ are evaluated to integer values.
 **Effect:** `a <= b` evaluates to:
 
   - `TRUE`, if `a < b` or `a = b`.
-  - `FALSE`, otherwise. 
+  - `FALSE`, otherwise.
 
 **Determinism:** Deterministic.
 
@@ -472,7 +472,7 @@ statically reports a type error, whereas TLC reports a runtime error.
   5 <= 1     \* FALSE
 ```
 
-**Example in Python:** 
+**Example in Python:**
 
 ```python
   1 <= 5
@@ -495,7 +495,7 @@ are evaluated to integer values.
 **Effect:** `a > b` evaluates to:
 
   - `TRUE`, if `a` is greater than `b`,
-  - `FALSE`, otherwise. 
+  - `FALSE`, otherwise.
 
 **Determinism:** Deterministic.
 
@@ -511,7 +511,7 @@ statically reports a type error, whereas TLC reports a runtime error.
   5 > 1     \* TRUE
 ```
 
-**Example in Python:** 
+**Example in Python:**
 
 ```python
   1 > 5
@@ -534,7 +534,7 @@ are evaluated to integer values.
 **Effect:** `a >= b` evaluates to:
 
   - `TRUE`, if `a > b` or `a = b`.
-  - `FALSE`, otherwise. 
+  - `FALSE`, otherwise.
 
 **Determinism:** Deterministic.
 
@@ -550,7 +550,7 @@ statically reports a type error, whereas TLC reports a runtime error.
   5 >= 1     \* TRUE
 ```
 
-**Example in Python:** 
+**Example in Python:**
 
 ```python
   1 >= 5

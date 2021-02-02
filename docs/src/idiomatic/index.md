@@ -18,7 +18,7 @@ If you believe, that the above points are contradictory when put together, it is
 to some extent true. TLA+ is an extremely general specification language. As a
 result, it is easy to write a short specification that leaves a human reader
 puzzled . It is even easier to write a (syntactically correct) specification that
-turns any program trying to reason about TLA+ to dust. 
+turns any program trying to reason about TLA+ to dust.
 
 Nevertheless, we find TLA+ quite useful when writing concise specifications of
 distributed protocols at [Informal Systems]. Other specification languages --
