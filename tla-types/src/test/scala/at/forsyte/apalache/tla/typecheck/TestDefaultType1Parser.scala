@@ -142,7 +142,7 @@ class TestDefaultType1Parser extends FunSuite with Checkers with TlaType1Gen {
     assertThrows[Type1ParseError](DefaultType1Parser("vc"))
   }
 
-  test("arbitrary inputs") {
+  test("no crashes: either parse, or raise an error") {
     check({
       forAll(alphaStr) { str =>
         try {

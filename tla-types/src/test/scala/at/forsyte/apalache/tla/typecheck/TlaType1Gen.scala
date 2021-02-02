@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.typecheck
 
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
-import org.scalacheck.Gen.{choose, const, identifier, listOfN, lzy, oneOf, resize, sized}
+import org.scalacheck.Gen.{choose, const, identifier, listOfN, lzy, oneOf, posNum, resize, sized}
 
 // Generators for the case classes of TlaType1
 trait TlaType1Gen {
@@ -13,9 +13,9 @@ trait TlaType1Gen {
 
   def genVar: Gen[TlaType1] =
     for {
-      i <- arbitrary[Int]
+      i <- posNum[Int]
       // produce an absolute value. Note that Math.abs(Integer.MIN_VALUE) = Integer.MIN_VALUE, so use max(0, abs(i)).
-    } yield VarT1(Math.max(0, Math.abs(i)))
+    } yield VarT1(i)
 
   def genPrimitive: Gen[TlaType1] =
     oneOf(const(BoolT1()), const(IntT1()), const(StrT1()), const(RealT1()), genConst, genVar)
