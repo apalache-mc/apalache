@@ -700,7 +700,7 @@ The outcome is: Error
 ...
 ```
 
-### configure missing property in TLC config 
+### configure missing property in TLC config
 
 ```sh
 $ apalache-mc check --config=Config3.cfg Config.tla | sed 's/[IE]@.*//'

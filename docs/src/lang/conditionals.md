@@ -18,7 +18,7 @@ compute predicate-dependent values, not to structure code.
 
 **Warning 2:** `CASE` is considered deterministic in this
 section, as it is defined with the `CHOOSE` operator in
-[Specifying Systems], Section 16.1.4. 
+[Specifying Systems], Section 16.1.4.
 For this reason, `CASE` should only be used when all of its guards are mutually exclusive.
 Given all the intricacies of `CASE`,
 we recommend using nested `IF-THEN-ELSE` instead.
@@ -91,7 +91,7 @@ e_n`.
     The set `I` includes the index `j \in 1..n` if
     and only if `p_j` evaluates to `TRUE` in the state `s`.
 Then the above `CASE` expression evaluates to:
-  
+
   - the value of the expression `e_i` for some `i \in I`, if `I` is not empty; or
   - an undefined value, if the set `I` is empty.
 
@@ -129,7 +129,7 @@ inside.  For the non-deterministic version, see [[Control Flow and
 Non-determinism]](control-and-nondeterminism.md).  When the predicates are
 mutually exclusive, the evaluation result is clearly specified. When the predicates are
 not mutually exclusive, the operator is still deterministic, but only one of
-the simultaneously enabled branches is evaluated. 
+the simultaneously enabled branches is evaluated.
 Which branch is evaluated depends on the `CHOOSE` operator, see [[Logic]](./logic.md).
 
 **Errors:** If one of `p_1, ..., p_n` evaluates to a non-Boolean value, the
