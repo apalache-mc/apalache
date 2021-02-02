@@ -188,7 +188,7 @@ section, we only consider the deterministic use of the existential quantifier.</
 <p><strong>Arguments:</strong> At least three arguments: a variable name, a set, and an
 expression. As usual in TLA+, if the second argument is not a set, the result is
 undefined. You can also use multiple variables and tuples, see <strong>Advanced
-syntax</strong>. </p>
+syntax</strong>.</p>
 <p><strong>Effect:</strong> This operator evaluates to a Boolean value. We explain
 semantics only for a single variable:</p>
 <ul>
@@ -217,7 +217,7 @@ simply syntax sugar for the form with nested quantifiers: <code>\A x \in S: \A y
 <p><strong>Example in TLA+:</strong></p>
 <pre><code class="language-tla">  \A x \in {1, 2, 3, 4}:
     x &gt; 0
-  \* TRUE 
+  \* TRUE
   \A x \in {1, 2, 3, 4}:
     x &gt; 2
   \* FALSE
@@ -241,7 +241,7 @@ simply syntax sugar for the form with nested quantifiers: <code>\A x \in S: \A y
 <p><strong>Arguments:</strong> At least three arguments: a variable name, a set, and an
 expression. As usual in TLA+, if the second argument is not a set, the result is
 undefined.You can also use multiple variables and tuples, see <strong>Advanced
-syntax</strong>. </p>
+syntax</strong>.</p>
 <p><strong>Effect:</strong> This operator evaluates to a Boolean value. We explain
 semantics only for a single variable:</p>
 <ul>
@@ -254,7 +254,7 @@ binding <code>[x |-&gt; e]</code>.</li>
 </ul>
 <p><em>Importantly, when <code>S = {}</code>, the expression <code>\E x \ in S: P</code> evaluates to
 <code>FALSE</code>, independently of what is written in <code>P</code>. Likewise, when <code>{x \in S: P} = {}</code>, the expression <code>\E x \ in S: P</code> evaluates to <code>FALSE</code>.</em></p>
-<p>As you probably have noticed, <code>\E x \in S: P</code> is equivalent to <code>~(\A x \in S: P)</code>, and <code>\A x \in S: P</code> is equivalent to <code>~(\E x \in S: P)</code>. This is called
+<p>As you probably have noticed, <code>\E x \in S: P</code> is equivalent to <code>~(\A x \in S: ~P)</code>, and <code>\A x \in S: P</code> is equivalent to <code>~(\E x \in S: ~P)</code>. This is called
 <em>duality</em> in logic. But take care!  If <code>\E x \in S: P</code> may act as a
 non-deterministic assignment, duality does not work anymore!  See <a href="./control-and-nondeterminism.html">Control
 Flow and Non-determinism</a>.</p>
@@ -276,7 +276,7 @@ simply syntax sugar for the form with nested quantifiers: <code>\E x \in S: \E y
 <p><strong>Example in TLA+:</strong></p>
 <pre><code class="language-tla">  \E x \in {1, 2, 3, 4}:
     x &gt; 0
-  \* TRUE 
+  \* TRUE
   \E x \in {1, 2, 3, 4}:
     x &gt; 2
   \* TRUE
@@ -388,7 +388,7 @@ use <code>==</code> instead of <code>=</code>:</p>
   { &quot;a&quot;: 1, &quot;b&quot;: 3 } == { &quot;a&quot;: 1, &quot;b&quot;: 3 }
   { &quot;a&quot;: 1, &quot;b&quot;: 3 } == { &quot;a&quot;: 1 }
   { x: (x + x) for x in { 2 } } == { x: (x * x) for x in { 2 } }
-  { x: (x + x) for x in { 2, 3 } } == { x: 2 * x for x in { 2, 3 } } 
+  { x: (x + x) for x in { 2, 3 } } == { x: 2 * x for x in { 2, 3 } }
 </code></pre>
 <hr />
 <p><a name="neq"></a></p>
@@ -464,7 +464,7 @@ The closest possible solution is to sort the filtered set by the string values
 and pick the first one (or the last one). So we have introduced a particular
 way of implementing CHOOSE, see <a href="./examples/choose.py">choose.py</a>:</p>
 <pre><code class="language-python"># A fixed implementation of CHOOSE x \in S: TRUE
-# that sorts the set by the string representation and picks the head 
+# that sorts the set by the string representation and picks the head
 def choose(s):
     lst = sorted([(str(e), e) for e in s], key=(lambda pair: pair[0]))
     (_, e) = lst[0]
@@ -472,7 +472,7 @@ def choose(s):
 
 
 if __name__ == &quot;__main__&quot;:
-    s = frozenset({ 1, 2, 3}) 
+    s = frozenset({ 1, 2, 3})
     print(&quot;CHOOSE {} = {}&quot;.format(s, choose(s)))
     s2 = frozenset({ frozenset({1}), frozenset({2}), frozenset({3})})
     print(&quot;CHOOSE {} = {}&quot;.format(s2, choose(s2)))
@@ -483,7 +483,7 @@ if __name__ == &quot;__main__&quot;:
 <p><strong>Notation:</strong> <code>\A x: P</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/forall.png" alt="forall" /></p>
 <p><strong>Arguments:</strong> At least two arguments: a variable name and an
-expression. </p>
+expression.</p>
 <p><strong>Effect:</strong> This operator evaluates to a Boolean value. It evaluates to <code>TRUE</code>,
 when every element in the logical universe makes the expression <code>P</code> evaluate to
 <code>TRUE</code> against the binding <code>[x |-&gt; e]</code>. More precisely, we have to consider
@@ -498,7 +498,7 @@ when writing proofs with <a href="https://tla.msr-inria.inria.fr/tlaps/content/H
 <p><strong>Notation:</strong> <code>\E x: P</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/exists.png" alt="exists" /></p>
 <p><strong>Arguments:</strong> At least two arguments: a variable name and an
-expression. </p>
+expression.</p>
 <p><strong>Effect:</strong> This operator evaluates to a Boolean value. It evaluates to <code>TRUE</code>,
 when at least one element in the logical universe makes the expression <code>P</code>
 evaluate to <code>TRUE</code> against the binding <code>[x |-&gt; e]</code>. More precisely, we have to
@@ -513,7 +513,7 @@ when writing proofs with <a href="https://tla.msr-inria.inria.fr/tlaps/content/H
 <p><strong>Notation:</strong> <code>CHOOSE x: P</code></p>
 <p><strong>LaTeX notation:</strong> CHOOSE x: P</p>
 <p><strong>Arguments:</strong> At least two arguments: a variable name and an
-expression. </p>
+expression.</p>
 <p><strong>Effect:</strong> This operator evaluates to some value <code>v</code> in the logical universe
 that evaluates <code>P</code> to <code>TRUE</code> against the binding <code>[x |-&gt; v]</code>.</p>
 <p>Neither TLC, nor Apalache support this operator. It is impossible to give

@@ -1098,7 +1098,7 @@ a subset of the integers, and the integers are a subset of the reals.  Classical
 would not define subtraction for naturals. However, the module <code>Naturals</code>
 defines binary minus, which can easily drive a variable outside of <code>Nat</code>. For
 instance, see the following example:</p>
-<pre><code class="language-tla">----------------------------- MODULE NatCounter ------------------------        
+<pre><code class="language-tla">----------------------------- MODULE NatCounter ------------------------
 EXTENDS Naturals
 
 VARIABLE x
@@ -1320,10 +1320,10 @@ parts of your specification. To activate this profiling mode, use the option
 <pre><code class="language-sh">apalache check --smtprof powerset.tla
 </code></pre>
 <p>The profiling data is written in the file <code>profiler.csv</code>:</p>
-<pre><code># weight,nCells,nConsts,nSmtExprs,location                                      
+<pre><code># weight,nCells,nConsts,nSmtExprs,location
 4424,2180,2076,28460,powerset.tla:11:5-13:18
 4098,2020,1969,12000,powerset.tla:12:9-12:20
-4098,2020,1969,12000,powerset.tla:12:14-12:20 
+4098,2020,1969,12000,powerset.tla:12:14-12:20
 ...
 </code></pre>
 <p>The meaning of the columns is as follows:</p>
@@ -1395,7 +1395,7 @@ delivered at OOPSLA19</a>.</p>
 in <a href="https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form">EBNF</a> and
 comments on the treatment of its sections in
 <a href="https://github.com/informalsystems/apalache">Apalache</a>. A detailed discussion
-on using the config files with TLC can be found in Leslie Lamport's 
+on using the config files with TLC can be found in Leslie Lamport's
 <a href="http://lamport.azurewebsites.net/tla/book.html">Specifying Systems</a>,
 Chapter 14 and in
 <a href="https://lamport.azurewebsites.net/tla/current-tools.pdf">Current Versions of the TLA+ Tools</a>.
@@ -1564,7 +1564,7 @@ so the model checker will ask the user to provide the tool with a type annotatio
 To get an idea of our type system, check Section 2. In a nutshell,
 if a TLA+ expression cannot be decorated with a type annotation,
 it is not supported <em>yet</em>. Exception is made for non-recursive TLA+ operators, as they are
-expanded before the type inference is run. </p>
+expanded before the type inference is run.</p>
 <h3><a class="header" href="#1-type-inference" id="1-type-inference">1. Type inference</a></h3>
 <p>Starting with the version <code>0.4.0</code>, our model checker runs the naive type
 inference algorithm for every computation step:</p>
@@ -1581,23 +1581,24 @@ type inference on <code>Init</code>.</p>
 <li>
 <p>It recursively computes the types of subexpressions in a TLA+ expression in
 a bottom-up way as follows:</p>
+<ol>
+<li>A literal is assigned the respective basic type. That is, an integer,
+a Boolean, or a string gets assigned the integer, Boolean, or the constant
+type respectively.</li>
+<li>An assignment-like expression <code>x' = e</code> or <code>x' \in S</code> assigns to <code>x'</code>
+the type of <code>e</code> and the type of <code>S</code> elements respectively. The type
+checker requires that <code>x'</code> is assigned the same type across all formula
+branches. However, variables <em>may</em> have different types at different steps.
+For instance, the definitions <code>Init == x = 1</code> and <code>Next == x' = {x}</code>
+will be processed perfectly fine: <code>x</code> is assigned the type <code>Int</code> in the initial
+states, and the type <code>Set(...(Set(Int)))</code> of <em>n</em> nested sets at the <em>n</em>-th step, <code>n &gt;= 0</code>.</li>
+<li>The expressions that introduce bound variables, e.g., <code>{e: x \in S}</code>,
+are treated as usual: first, the type of <code>S</code> is computed and <code>x</code> is assigned
+the element type, and then the type of <code>e</code> is computed, which immediately
+gives us the type of the set expression.</li>
+</ol>
 </li>
 </ol>
-<pre><code>1. A literal is assigned the respective basic type. That is, an integer,
- a Boolean, or a string gets assigned the integer, Boolean, or the constant
- type respectively.
-1. An assignment-like expression ``x' = e`` or ``x' \in S`` assigns to ``x'``
- the type of ``e`` and the type of ``S`` elements respectively. The type
- checker requires that ``x'`` is assigned the same type across all formula
- branches. However, variables _may_ have different types at different steps.
- For instance, the definitions ``Init == x = 1`` and ``Next == x' = {x}``
- will be processed perfectly fine: ``x`` is assigned the type ``Int`` in the initial
- states, and the type ``Set(...(Set(Int)))`` of _n_ nested sets at the _n_-th step, ``n &gt;= 0``.
-1. The expressions that introduce bound variables, e.g., ``{e: x \in S}``,
-are treated as usual: first, the type of ``S`` is computed and ``x`` is assigned
-the element type, and then the type of ``e`` is computed, which immediately
-gives us the type of the set expression.
-</code></pre>
 <p>This approach manages to automatically compute types of many TLA+ expressions.
 However, there a few problematic cases that require type annotations:</p>
 <ol>
@@ -1932,7 +1933,7 @@ passing the option <code>--tune-here</code> that has the following format:</p>
 <ol>
 <li>
 <p><strong>Randomization</strong>: <code>smt.randomSeed=&lt;int&gt;</code> passes the random seed to <code>z3</code>
-(via <code>z3</code>'s parameters <code>sat.random_seed</code> and <code>smt.random_seed</code>). </p>
+(via <code>z3</code>'s parameters <code>sat.random_seed</code> and <code>smt.random_seed</code>).</p>
 </li>
 <li>
 <p><strong>Timeouts</strong>: <code>search.smt.timeout=&lt;seconds&gt;</code> defines the timeout to the
@@ -1963,7 +1964,7 @@ transition numbers. For instance,
 requires to start with the 0th transition, continue with the 5th transition,
 then execute either the 2nd or the 3rd transition and after that execute
 arbitrary transitions until the <code>length.</code> Note that there is no direct correspondence
-between the transition numbers and the actions in the TLA+ spec. Check the 
+between the transition numbers and the actions in the TLA+ spec. Check the
 transition numbers in <code>./x/**/out-transition.tla</code>: 0th transition is called <code>Next$0</code>, 1st transition is called <code>Next$1</code>, etc.</p>
 </li>
 <li>
@@ -1974,7 +1975,7 @@ check the invariant only <em>after</em> exactly 10, 15, or 20 step were made. St
 to the initialization with <code>Init</code>, step 1 is the first step with <code>Next</code>, etc.
 This option is useful for checking consensus algorithms, where the decision
 cannot be revoked. So instead of checking the invariant after each step, we can
-do that after the algorithm has made a good number of steps. </p>
+do that after the algorithm has made a good number of steps.</p>
 </li>
 <li>
 <p><strong>Translation to SMT</strong>:</p>
@@ -2009,8 +2010,8 @@ Consider this slight modification of the above example:</p>
 
 Next == x' = x + 1
 </code></pre>
-<p>Just as in the first example, the expression <code>x' = x + 1</code> is, by definition, an action. 
-However, since the second example defines a state variable <code>y</code>, this action is 
+<p>Just as in the first example, the expression <code>x' = x + 1</code> is, by definition, an action.
+However, since the second example defines a state variable <code>y</code>, this action is
 no longer a sufficient description of a relation between a current state and a successor state; it does not determine a successor value <code>y'</code>.
 This brings us to the second requirement: <em>the transition operator must allow Apalache to directly encode the relation between two successive states.</em>
 This captures two sub-requirements: firstly, we disallow transition operators which fail to specify the value of one or more variables in the successor states, like the one in the example above. Secondly, we also disallow transition operators where the value of a successor state variable is determined only by implicit equations. Consider the following two cases:</p>
@@ -2018,15 +2019,15 @@ This captures two sub-requirements: firstly, we disallow transition operators wh
 ...
 
 A == y' = 1
-B == y' * y' - 2 * y' + 1 = 0 
+B == y' * y' - 2 * y' + 1 = 0
 </code></pre>
-<p>Using some basic math, we see that action <code>B</code> can be equivalently written as <code>(y' - 1)*(y' - 1) = 0</code>, so it describes the exact same successor state, in which the new value of <code>y</code> is <code>1</code>. 
-What makes it different from action <code>A</code> is the fact that this is far from immediately obvious from the syntax. 
-The fact that there happened to be a closed-form solution for which gave us an integer value for <code>y'</code>, is a lucky coincidence, as <code>B</code> could have been, for example, <code>y' * y' + 1 = 0</code>, with no real roots. 
+<p>Using some basic math, we see that action <code>B</code> can be equivalently written as <code>(y' - 1)*(y' - 1) = 0</code>, so it describes the exact same successor state, in which the new value of <code>y</code> is <code>1</code>.
+What makes it different from action <code>A</code> is the fact that this is far from immediately obvious from the syntax.
+The fact that there happened to be a closed-form solution for which gave us an integer value for <code>y'</code>, is a lucky coincidence, as <code>B</code> could have been, for example, <code>y' * y' + 1 = 0</code>, with no real roots.
 To avoid cases like this, we require that transition operators explicitly declare the values of state variables in successor states.</p>
 <p>We call syntactic forms, which explicitly represent successor state values, <em>assignment candidates</em>. An assignment candidate for <code>x</code> is a TLA+ expression that has one of the following forms:</p>
 <ul>
-<li><code>x' = e</code>, </li>
+<li><code>x' = e</code>,</li>
 <li><code>x' \in S</code>,</li>
 <li><code>UNCHANGED x</code>, or</li>
 <li><code>x' := e</code> (note that <code>:=</code> is the operator defined in <a href="https://github.com/informalsystems/apalache/blob/unstable/src/tla/Apalache.tla">Apalache.tla</a>)</li>
@@ -2066,13 +2067,13 @@ This allows us to write transition operators in the following equivalent way:</p
 <p>Where each <code>Slice[i]</code> is a minimal action.</p>
 <p>The details of slicing are nuanced and depend on operators other than or (<code>\/</code>) and if-then-else, but we give two examples here:</p>
 <p>If a formula <code>A</code> has the shape <code>A1 \/ ... \/ An</code> (where <code>A1</code>, ... <code>An</code> are actions), then a slice of A has the shape <code>Si</code>, where <code>Si</code> is a slice of some <code>Ai</code>.</p>
-<p>If a formula <code>A</code> has the shape <code>IF p THEN A1 ELSE A2</code> (where <code>A1</code>, <code>A2</code> are actions), then a slice of A has the shape 
+<p>If a formula <code>A</code> has the shape <code>IF p THEN A1 ELSE A2</code> (where <code>A1</code>, <code>A2</code> are actions), then a slice of A has the shape
 <code>p /\ S1</code> or <code>\neg p /\ S2</code>, where <code>S1</code> is a slice of <code>A1</code> and <code>S2</code> is a slice of <code>S2</code>.</p>
 <p>Slices allow us to formulate the final requirement: the transition operator must be such, that we can select one assignment candidate for each variable in each of its slices (minimal actions) as an <em>assignment</em>. The process and conditions of selecting assignments from assignment candidates is described in the next section.</p>
 <h2><a class="header" href="#a-idasgn--assignments-and-assignment-candidates" id="a-idasgn--assignments-and-assignment-candidates"><a id='asgn' /> Assignments and Assignment Candidates</a></h2>
 <p>Recall, an <em>assignment candidate</em> for <code>x</code> is a TLA+ expression that has one of the following forms:</p>
 <ul>
-<li><code>x' = e</code>, </li>
+<li><code>x' = e</code>,</li>
 <li><code>x' \in S</code>,</li>
 <li><code>UNCHANGED x</code>, or</li>
 <li><code>x' := e</code> (note that <code>:=</code> is the operator defined in <code>Apalache.tla</code>)</li>
@@ -2081,12 +2082,12 @@ This allows us to write transition operators in the following equivalent way:</p
 <h3><a class="header" href="#minimality" id="minimality">Minimality</a></h3>
 <p>Assignments aren't spurious; each variable must have at least one assignment per transition operator, but no more than necessary to satisfy all of the additional constraints below (i.e. no more than one assignment per slice).</p>
 <p>If all possible slices fail to assign one or more variables, an error, like the one below, is reported:</p>
-<pre><code>Assignment error: No assignments found for: x, z 
+<pre><code>Assignment error: No assignments found for: x, z
 </code></pre>
-<p>Such errors are usually the result of adding a <code>VARIABLE</code> without any accompanying TLA+ code relating to it. 
+<p>Such errors are usually the result of adding a <code>VARIABLE</code> without any accompanying TLA+ code relating to it.
 The case where at least one transition, but not all of them, fails to assign a variable is shown below.</p>
 <h3><a class="header" href="#syntax-order" id="syntax-order">Syntax Order</a></h3>
-<p>For the purpose of evaluating assignments, Apalache considers the left-to-right syntax order of and-operator (<code>/\</code>) arguments. 
+<p>For the purpose of evaluating assignments, Apalache considers the left-to-right syntax order of and-operator (<code>/\</code>) arguments.
 Therefore, as many assignments as possible are selected from the first (w.r.t. syntax order) argument of and (<code>/\</code>), then from the second, and so on.</p>
 <p>Example:</p>
 <pre><code class="language-tla">Next == x' = 1 /\ x' = 2
@@ -2100,7 +2101,7 @@ Therefore, as many assignments as possible are selected from the first (w.r.t. s
 <pre><code class="language-tla">A == x' &gt; 0 /\ x' = 1
 B == y' = x' + 2 /\ x' = 1
 </code></pre>
-<p>In <code>A</code>, the expression <code>x' &gt; 0</code> precedes any assignment to <code>x</code> and in <code>B</code>, while <code>y' = x' + 2</code> is an assignment candidate for <code>y</code>, it precedes any assignment to <code>x</code>, so both expressions are inadmissible (and would trigger exceptions). </p>
+<p>In <code>A</code>, the expression <code>x' &gt; 0</code> precedes any assignment to <code>x</code> and in <code>B</code>, while <code>y' = x' + 2</code> is an assignment candidate for <code>y</code>, it precedes any assignment to <code>x</code>, so both expressions are inadmissible (and would trigger exceptions).</p>
 <p>Note that this only holds true if <code>A</code> (resp. <code>B</code>) is chosen as the transition operator. If <code>A</code> is called inside another transition operator, for example in <code>Next == x' = 1 /\ A</code>, no error is reported.</p>
 <h3><a class="header" href="#balance" id="balance">Balance</a></h3>
 <p>In cases of the or-operator (<code>\/</code>), all arguments must have assignments for the same set of variables. In particular, if one argument contains an assignment candidate and another does not, such as in this example:</p>
@@ -2110,7 +2111,7 @@ B == y' = x' + 2 /\ x' = 1
 <p>the assignment finder will report an error, like the one below:</p>
 <pre><code>Assignment error: test.tla:10:15-10:19: Missing assignments to: y
 </code></pre>
-<p>notifying the user of any variables for which assignments exist in some, but not all, arguments to <code>\/</code>. 
+<p>notifying the user of any variables for which assignments exist in some, but not all, arguments to <code>\/</code>.
 Note that if we correct and extend the above example to</p>
 <pre><code class="language-tla">/\ \/ y' = 1
    \/ y' = 2
@@ -2125,7 +2126,7 @@ On the other hand, if we change the example to</p>
 <p>the only assignment has to be <code>y' = 3</code>. While one of the disjuncts is an assignment candidate and the other is not, the balance requirement is not violated here, since neither disjunct is chosen as an assignment.</p>
 <p>Similar rules apply to if-then-else: both the <code>THEN _</code> and <code>ELSE _</code> branch must assign the same variables, however, the <code>IF _</code> condition is ignored when determining assignments.</p>
 <h3><a class="header" href="#assignment-free-expressions" id="assignment-free-expressions">Assignment-free Expressions</a></h3>
-<p>Not all expressions may contain assignments. 
+<p>Not all expressions may contain assignments.
 While Apalache permits the use of all assignment candidates, except ones defined with <code>:=</code>(details <a href="apalache/assignments.html#manual">here</a>), inside other expressions, some of these candidates will never be chosen as assignments, based on the syntactic restrictions outlined below:</p>
 <p>Given a transition operator <code>A</code>, based on the shape of <code>A</code>, the following holds:</p>
 <ul>
@@ -2146,7 +2147,7 @@ While Apalache permits the use of all assignment candidates, except ones defined
 <li>In any other case, <code>A</code> may not contain assignments, however, any assignment candidates in <code>A</code> are subject to the assignment-before-use rule.</li>
 </ul>
 <p>Examples:</p>
-<pre><code class="language-tla">A == /\ x' = 2 
+<pre><code class="language-tla">A == /\ x' = 2
      /\ \E s \in { t \in 1..10 : x' &gt; t }: y' = s
 </code></pre>
 <p>Operator <code>A</code> contains assignments to both <code>x</code> and <code>y</code>; while <code>x' &gt; t</code> uses <code>x'</code>, it does not violate the assignment-before-use rule, since the assignment to <code>x</code> precedes the expression, w.r.t. syntax order.</p>
@@ -2154,20 +2155,20 @@ While Apalache permits the use of all assignment candidates, except ones defined
 B == \E s \in { t \in 1..10 : x' &gt; t }: y' = s
 </code></pre>
 <p>In operator <code>B</code>, the assignment to <code>x</code> is missing, therefore <code>x' &gt; t</code> produces an error, as it violates assignment-before-use.</p>
-<pre><code class="language-tla">C == /\ x' = 1 
+<pre><code class="language-tla">C == /\ x' = 1
      /\ IF x' = 0 /\ 2 \in {x', x' + 2, 0}
-        THEN y' = 1 
+        THEN y' = 1
         ELSE y' = 2
 </code></pre>
 <p>The case in <code>C</code> is similar to <code>A</code>; conditions of the if-then-else operator may not contain assignments to <code>x</code>, so <code>x' = 0</code> can never be one, but they may use <code>x'</code>, since a preceding expression (<code>x' = 1</code>) qualifies as an assignment.</p>
 <pre><code class="language-tla">(* INVALID *)
-D == IF x' = 0 
-     THEN y' = 1 
+D == IF x' = 0
+     THEN y' = 1
      ELSE y' = 2
 </code></pre>
 <p>The operator <code>D</code> produces an error, for the same reason as <code>B</code>; even though <code>x' = 0</code> is an assignment candidate, if-conditions are assignment-free, so <code>x' = 0</code> cannot be chosen as an assignment to <code>x</code>.</p>
 <pre><code class="language-tla">(* INVALID *)
-E == /\ x' = 2 
+E == /\ x' = 2
      /\ \A s \in { t \in 1..10 : x' &gt; t }: y' = s
 </code></pre>
 <p>Lastly, while <code>E</code> looks almost identical to <code>A</code>, the key difference is that expressions under universal quantifiers may not contain assignments. Therefore, <code>y' = s</code> is <em>not</em> an assignment to <code>y</code> and thus violates assignment-before-use.</p>
@@ -2177,10 +2178,10 @@ While the use of this operator does not change Apalache's internal search for as
 <p>Unlike other shapes of assignment candidates, whenever a manual assignment is used in a position where the assignment candidate would not be chosen as an assignment (either within assignment-free expressions or in violation of, for example, the syntax order rule) an error, like one of the two below, is reported:</p>
 <pre><code>Assignment error: test.tla:10:12-10:18: Manual assignment is spurious, x is already assigned!
 </code></pre>
-<p>or </p>
+<p>or</p>
 <pre><code>Assignment error: test.tla:10:15-10:21: Illegal assignment inside an assignment-free expression.
 </code></pre>
-<p>The benefit of using manual assignments, we believe, lies in synchronizing the user's and the tool's understanding of where assignments happen. 
+<p>The benefit of using manual assignments, we believe, lies in synchronizing the user's and the tool's understanding of where assignments happen.
 This helps prevent unexpected results, where the user's expectations or intuition regarding assignment positions are incorrect.</p>
 <p>Note: To use manual assignments where the assignment candidate has the shape of <code>x' \in S</code> use <code>\E s \in S: x' := s</code>.</p>
 <h1><a class="header" href="#tla-language-reference-manual-green_book" id="tla-language-reference-manual-green_book">TLA+ Language Reference Manual :green_book:</a></h1>
@@ -3097,7 +3098,7 @@ TLA+ code than in programming languages.  We recommend using <code>IF-THEN-ELSE<
 compute predicate-dependent values, not to structure code.</p>
 <p><strong>Warning 2:</strong> <code>CASE</code> is considered deterministic in this
 section, as it is defined with the <code>CHOOSE</code> operator in
-<a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>, Section 16.1.4. 
+<a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>, Section 16.1.4.
 For this reason, <code>CASE</code> should only be used when all of its guards are mutually exclusive.
 Given all the intricacies of <code>CASE</code>,
 we recommend using nested <code>IF-THEN-ELSE</code> instead.</p>
@@ -3176,7 +3177,7 @@ inside.  For the non-deterministic version, see <a href="lang/control-and-nondet
 Non-determinism]</a>.  When the predicates are
 mutually exclusive, the evaluation result is clearly specified. When the predicates are
 not mutually exclusive, the operator is still deterministic, but only one of
-the simultaneously enabled branches is evaluated. 
+the simultaneously enabled branches is evaluated.
 Which branch is evaluated depends on the <code>CHOOSE</code> operator, see <a href="lang/./logic.html">[Logic]</a>.</p>
 <p><strong>Errors:</strong> If one of <code>p_1, ..., p_n</code> evaluates to a non-Boolean value, the
 result is undefined.  TLC raises an error during model checking. Apalache
@@ -3339,7 +3340,7 @@ type error, whereas TLC reports a runtime error.</p>
   -(-5)   \* 5
   -x      \* negated value of x
 </code></pre>
-<p><strong>Example in Python:</strong> </p>
+<p><strong>Example in Python:</strong></p>
 <pre><code class="language-python">  -(5)
   -(-5)
 </code></pre>
@@ -3359,7 +3360,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 <pre><code class="language-tla">  5 + 3     \* 8
   (-5) + 3  \* -2
 </code></pre>
-<p><strong>Example in Python:</strong> </p>
+<p><strong>Example in Python:</strong></p>
 <pre><code class="language-python">  5 + 3
   (-5) + 3
 </code></pre>
@@ -3380,7 +3381,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   (-5) - 3      \* -8
   (-5) - (-3)   \* -2
 </code></pre>
-<p><strong>Example in Python:</strong> </p>
+<p><strong>Example in Python:</strong></p>
 <pre><code class="language-python">  5 - 3
   (-5) - 3
   (-5) - (-3)
@@ -3401,7 +3402,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 <pre><code class="language-tla">  5 * 3     \* 15
   (-5) * 3  \* -15
 </code></pre>
-<p><strong>Example in Python:</strong> </p>
+<p><strong>Example in Python:</strong></p>
 <pre><code class="language-python">  5 * 3
   (-5) * 3
 </code></pre>
@@ -3523,7 +3524,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   0^0       \* undefined on integers, TLC reports a runtime error
   5^(-3)    \* undefined on integers, TLC reports a runtime error
 </code></pre>
-<p><strong>Example in Python:</strong> </p>
+<p><strong>Example in Python:</strong></p>
 <pre><code class="language-python">  5 ** 3
   (-5) ** 3
   0 ** 3
@@ -3542,7 +3543,7 @@ are evaluated to integer values.</p>
 <p><strong>Effect:</strong> <code>a &lt; b</code> evaluates to:</p>
 <ul>
 <li><code>TRUE</code>, if <code>a</code> is less than <code>b</code>,</li>
-<li><code>FALSE</code>, otherwise. </li>
+<li><code>FALSE</code>, otherwise.</li>
 </ul>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> In pure TLA+, the result is undefined, if
@@ -3553,7 +3554,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   5 &lt; 5     \* FALSE
   5 &lt; 1     \* FALSE
 </code></pre>
-<p><strong>Example in Python:</strong> </p>
+<p><strong>Example in Python:</strong></p>
 <pre><code class="language-python">  1 &lt; 5
   5 &lt; 5
   5 &lt; 1
@@ -3568,7 +3569,7 @@ are evaluated to integer values.</p>
 <p><strong>Effect:</strong> <code>a &lt;= b</code> evaluates to:</p>
 <ul>
 <li><code>TRUE</code>, if <code>a &lt; b</code> or <code>a = b</code>.</li>
-<li><code>FALSE</code>, otherwise. </li>
+<li><code>FALSE</code>, otherwise.</li>
 </ul>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
@@ -3579,7 +3580,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   5 &lt;= 5     \* TRUE
   5 &lt;= 1     \* FALSE
 </code></pre>
-<p><strong>Example in Python:</strong> </p>
+<p><strong>Example in Python:</strong></p>
 <pre><code class="language-python">  1 &lt;= 5
   5 &lt;= 5
   5 &lt;= 1
@@ -3594,7 +3595,7 @@ are evaluated to integer values.</p>
 <p><strong>Effect:</strong> <code>a &gt; b</code> evaluates to:</p>
 <ul>
 <li><code>TRUE</code>, if <code>a</code> is greater than <code>b</code>,</li>
-<li><code>FALSE</code>, otherwise. </li>
+<li><code>FALSE</code>, otherwise.</li>
 </ul>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
@@ -3605,7 +3606,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   5 &lt; 5     \* FALSE
   5 &gt; 1     \* TRUE
 </code></pre>
-<p><strong>Example in Python:</strong> </p>
+<p><strong>Example in Python:</strong></p>
 <pre><code class="language-python">  1 &gt; 5
   5 &gt; 5
   5 &gt; 1
@@ -3620,7 +3621,7 @@ are evaluated to integer values.</p>
 <p><strong>Effect:</strong> <code>a &gt;= b</code> evaluates to:</p>
 <ul>
 <li><code>TRUE</code>, if <code>a &gt; b</code> or <code>a = b</code>.</li>
-<li><code>FALSE</code>, otherwise. </li>
+<li><code>FALSE</code>, otherwise.</li>
 </ul>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
@@ -3631,7 +3632,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   5 &gt;= 5     \* TRUE
   5 &gt;= 1     \* TRUE
 </code></pre>
-<p><strong>Example in Python:</strong> </p>
+<p><strong>Example in Python:</strong></p>
 <pre><code class="language-python">  1 &gt;= 5
   5 &gt;= 5
   5 &gt;= 1
@@ -3920,7 +3921,7 @@ either not sets, or sets of incompatible types.</p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/cup.png" alt="cup" /></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
 is undefined.</p>
-<p><strong>Effect:</strong> This operator evaluates to the set that contains the elements 
+<p><strong>Effect:</strong> This operator evaluates to the set that contains the elements
 of <code>S</code> <strong>as well</strong> as the elements of <code>T</code>, and no other values.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
@@ -3984,9 +3985,9 @@ model checking error, when it discovers that elements of <code>S</code> cannot b
 to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
 either not sets, or sets of incompatible types.</p>
 <p><strong>Example in TLA+:</strong></p>
-<pre><code class="language-tla">  { 0, 1, 2 } \ { 1, 2, 3 }     \* { }
+<pre><code class="language-tla">  { 0, 1, 2 } \ { 1, 2, 3 }     \* { 0 }
           { } \ { 1, 2, 3 }     \* { }
-  { 1, 2, 3 } \ { }             \* { }
+  { 1, 2, 3 } \ { }             \* { 1, 2, 3 }
       { {1} } \ { 1, 2 }        \* { {1} }, model checking error in TLC
                                 \* static type error in Apalache
 </code></pre>
@@ -4028,7 +4029,7 @@ element <code>e</code> of <code>S</code>, the variable <code>x</code> is bound t
 <pre><code class="language-tla">  { x \in {1, 2, 3, 4}: x &gt; 2 }             \* { 3, 4 }
   { x \in {1, 2, 3, 4}: x &gt; 10 }            \* { }
   \* check the section on tuples to understand the following syntax
-  { &lt;&lt;x, y&gt;&gt; \in 1..4 \X 1..4: y = 3 } \* {&lt;&lt;1, 3&gt;&gt;, &lt;&lt;2, 3&gt;&gt;, &lt;&lt;3, 3&gt;&gt;, &lt;&lt;4, 3&gt;&gt;}
+  { &lt;&lt;x, y&gt;&gt; \in (1..4) \X (1..4): y = 3 }  \* {&lt;&lt;1, 3&gt;&gt;, &lt;&lt;2, 3&gt;&gt;, &lt;&lt;3, 3&gt;&gt;, &lt;&lt;4, 3&gt;&gt;}
 </code></pre>
 <p><strong>Example in Python:</strong> Python conveniently offers us the set comprehension
 syntax:</p>
@@ -4042,7 +4043,7 @@ syntax:</p>
 <hr />
 <p><a name="map"></a></p>
 <h3><a class="header" href="#set-map" id="set-map">Set map</a></h3>
-<p><strong>Notation:</strong> <code>{ e: x \in S }</code> or <code>{ e: x \in S, y \in T }</code>, or more arguments </p>
+<p><strong>Notation:</strong> <code>{ e: x \in S }</code> or <code>{ e: x \in S, y \in T }</code>, or more arguments</p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/map.png" alt="map" /></p>
 <p><strong>Arguments:</strong> At least three arguments: a mapping expression,
 a variable name (or a tuple of names, see <strong>Advanced syntax</strong>),
@@ -4069,12 +4070,10 @@ element <code>e</code> of <code>S</code>, the variable <code>x</code> is bound t
 <code>e[2]</code>. The map expression constructs the set of expressions that are computed
 under this binding.</p>
 <p><strong>Example in TLA+:</strong></p>
-<pre><code class="language-tla">  { 2 * x: x \in { 1, 2, 3, 4 } }      \* { 2, 4, 6, 8 }
+<pre><code class="language-tla">  { 2 * x: x \in { 1, 2, 3, 4 } }          \* { 2, 4, 6, 8 }
+  { x + y: x \in 1..2, y \in 1..2 }        \* { 2, 3, 4 }
   \* check the section on tuples to understand the following syntax
-  { x + y: x \in 1..2, y \in 1..2 }
-    \* { 2, 3, 4 }
-  { x + y: &lt;&lt;x, y&gt;&gt; \in 1..2 \X 1..2 }
-    \* { 2, 3, 4 }
+  { x + y: &lt;&lt;x, y&gt;&gt; \in (1..2) \X (1..2) } \* { 2, 3, 4 }
 </code></pre>
 <p><strong>Example in Python:</strong> Python conveniently offers us the set comprehension
 syntax:</p>
@@ -4210,7 +4209,7 @@ section, we only consider the deterministic use of the existential quantifier.</
 <p><strong>Arguments:</strong> At least three arguments: a variable name, a set, and an
 expression. As usual in TLA+, if the second argument is not a set, the result is
 undefined. You can also use multiple variables and tuples, see <strong>Advanced
-syntax</strong>. </p>
+syntax</strong>.</p>
 <p><strong>Effect:</strong> This operator evaluates to a Boolean value. We explain
 semantics only for a single variable:</p>
 <ul>
@@ -4239,7 +4238,7 @@ simply syntax sugar for the form with nested quantifiers: <code>\A x \in S: \A y
 <p><strong>Example in TLA+:</strong></p>
 <pre><code class="language-tla">  \A x \in {1, 2, 3, 4}:
     x &gt; 0
-  \* TRUE 
+  \* TRUE
   \A x \in {1, 2, 3, 4}:
     x &gt; 2
   \* FALSE
@@ -4263,7 +4262,7 @@ simply syntax sugar for the form with nested quantifiers: <code>\A x \in S: \A y
 <p><strong>Arguments:</strong> At least three arguments: a variable name, a set, and an
 expression. As usual in TLA+, if the second argument is not a set, the result is
 undefined.You can also use multiple variables and tuples, see <strong>Advanced
-syntax</strong>. </p>
+syntax</strong>.</p>
 <p><strong>Effect:</strong> This operator evaluates to a Boolean value. We explain
 semantics only for a single variable:</p>
 <ul>
@@ -4276,7 +4275,7 @@ binding <code>[x |-&gt; e]</code>.</li>
 </ul>
 <p><em>Importantly, when <code>S = {}</code>, the expression <code>\E x \ in S: P</code> evaluates to
 <code>FALSE</code>, independently of what is written in <code>P</code>. Likewise, when <code>{x \in S: P} = {}</code>, the expression <code>\E x \ in S: P</code> evaluates to <code>FALSE</code>.</em></p>
-<p>As you probably have noticed, <code>\E x \in S: P</code> is equivalent to <code>~(\A x \in S: P)</code>, and <code>\A x \in S: P</code> is equivalent to <code>~(\E x \in S: P)</code>. This is called
+<p>As you probably have noticed, <code>\E x \in S: P</code> is equivalent to <code>~(\A x \in S: ~P)</code>, and <code>\A x \in S: P</code> is equivalent to <code>~(\E x \in S: ~P)</code>. This is called
 <em>duality</em> in logic. But take care!  If <code>\E x \in S: P</code> may act as a
 non-deterministic assignment, duality does not work anymore!  See <a href="lang/./control-and-nondeterminism.html">Control
 Flow and Non-determinism</a>.</p>
@@ -4298,7 +4297,7 @@ simply syntax sugar for the form with nested quantifiers: <code>\E x \in S: \E y
 <p><strong>Example in TLA+:</strong></p>
 <pre><code class="language-tla">  \E x \in {1, 2, 3, 4}:
     x &gt; 0
-  \* TRUE 
+  \* TRUE
   \E x \in {1, 2, 3, 4}:
     x &gt; 2
   \* TRUE
@@ -4410,7 +4409,7 @@ use <code>==</code> instead of <code>=</code>:</p>
   { &quot;a&quot;: 1, &quot;b&quot;: 3 } == { &quot;a&quot;: 1, &quot;b&quot;: 3 }
   { &quot;a&quot;: 1, &quot;b&quot;: 3 } == { &quot;a&quot;: 1 }
   { x: (x + x) for x in { 2 } } == { x: (x * x) for x in { 2 } }
-  { x: (x + x) for x in { 2, 3 } } == { x: 2 * x for x in { 2, 3 } } 
+  { x: (x + x) for x in { 2, 3 } } == { x: 2 * x for x in { 2, 3 } }
 </code></pre>
 <hr />
 <p><a name="neq"></a></p>
@@ -4486,7 +4485,7 @@ The closest possible solution is to sort the filtered set by the string values
 and pick the first one (or the last one). So we have introduced a particular
 way of implementing CHOOSE, see <a href="lang/./examples/choose.py">choose.py</a>:</p>
 <pre><code class="language-python"># A fixed implementation of CHOOSE x \in S: TRUE
-# that sorts the set by the string representation and picks the head 
+# that sorts the set by the string representation and picks the head
 def choose(s):
     lst = sorted([(str(e), e) for e in s], key=(lambda pair: pair[0]))
     (_, e) = lst[0]
@@ -4494,7 +4493,7 @@ def choose(s):
 
 
 if __name__ == &quot;__main__&quot;:
-    s = frozenset({ 1, 2, 3}) 
+    s = frozenset({ 1, 2, 3})
     print(&quot;CHOOSE {} = {}&quot;.format(s, choose(s)))
     s2 = frozenset({ frozenset({1}), frozenset({2}), frozenset({3})})
     print(&quot;CHOOSE {} = {}&quot;.format(s2, choose(s2)))
@@ -4505,7 +4504,7 @@ if __name__ == &quot;__main__&quot;:
 <p><strong>Notation:</strong> <code>\A x: P</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/forall.png" alt="forall" /></p>
 <p><strong>Arguments:</strong> At least two arguments: a variable name and an
-expression. </p>
+expression.</p>
 <p><strong>Effect:</strong> This operator evaluates to a Boolean value. It evaluates to <code>TRUE</code>,
 when every element in the logical universe makes the expression <code>P</code> evaluate to
 <code>TRUE</code> against the binding <code>[x |-&gt; e]</code>. More precisely, we have to consider
@@ -4520,7 +4519,7 @@ when writing proofs with <a href="https://tla.msr-inria.inria.fr/tlaps/content/H
 <p><strong>Notation:</strong> <code>\E x: P</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/exists.png" alt="exists" /></p>
 <p><strong>Arguments:</strong> At least two arguments: a variable name and an
-expression. </p>
+expression.</p>
 <p><strong>Effect:</strong> This operator evaluates to a Boolean value. It evaluates to <code>TRUE</code>,
 when at least one element in the logical universe makes the expression <code>P</code>
 evaluate to <code>TRUE</code> against the binding <code>[x |-&gt; e]</code>. More precisely, we have to
@@ -4535,7 +4534,7 @@ when writing proofs with <a href="https://tla.msr-inria.inria.fr/tlaps/content/H
 <p><strong>Notation:</strong> <code>CHOOSE x: P</code></p>
 <p><strong>LaTeX notation:</strong> CHOOSE x: P</p>
 <p><strong>Arguments:</strong> At least two arguments: a variable name and an
-expression. </p>
+expression.</p>
 <p><strong>Effect:</strong> This operator evaluates to some value <code>v</code> in the logical universe
 that evaluates <code>P</code> to <code>TRUE</code> against the binding <code>[x |-&gt; v]</code>.</p>
 <p>Neither TLC, nor Apalache support this operator. It is impossible to give
@@ -4622,7 +4621,7 @@ For instance, the following expression produces the function that is
 equivalent to <code>rmState</code>:</p>
 <pre><code class="language-tla">  [ rmState EXCEPT ![&quot;process10&quot;] = &quot;working&quot; ]
 </code></pre>
-<p><strong>Types.</strong> In pure TLA+, functions are free to mix values of different types in their domains. 
+<p><strong>Types.</strong> In pure TLA+, functions are free to mix values of different types in their domains.
 See the example below:</p>
 <pre><code class="language-tla">  [ x \in { 0, &quot;FALSE&quot;, FALSE, 1, &quot;TRUE&quot;, TRUE } |-&gt;
         IF x \in { 1, &quot;TRUE&quot;, TRUE}
@@ -4645,7 +4644,7 @@ values. See Section 14.7.2 of <a href="http://lamport.azurewebsites.net/tla/book
 examples that are given above.</p>
 <p>However, functions in TLC are free to return different kinds of values:</p>
 <pre><code class="language-tla">  [ x \in { 1, 2 } |-&gt;
-                        IF x = 1 THEN FALSE ELSE 3 ]  
+                        IF x = 1 THEN FALSE ELSE 3 ]
 </code></pre>
 <p>This is why, in pure TLA+ and TLC, records, tuples, and sequences are just
 functions over particular domains (finite sets of strings and finite sets
@@ -4924,7 +4923,7 @@ error.</p>
 <pre><code class="language-tla">  DOMAIN [ x \in 1..3 |-&gt; 2 * x ]
   \* { 1, 2, 3 }
 </code></pre>
-<p><strong>Example in Python:</strong> </p>
+<p><strong>Example in Python:</strong></p>
 <pre><code class="language-python">  X = frozenset({ 1, 2, 3 })
   f = frozendict({ x: 2 * x for x in X })
   frozenset(f.keys())
@@ -5116,7 +5115,7 @@ immutable dictionary.</p>
 <hr />
 <p><a name="tuple"></a></p>
 <h3><a class="header" href="#tuplesequence-constructor" id="tuplesequence-constructor">Tuple/Sequence constructor</a></h3>
-<p><strong>Notation:</strong> <code>&lt;&lt;e_1, ..., e_n&gt;&gt;</code> </p>
+<p><strong>Notation:</strong> <code>&lt;&lt;e_1, ..., e_n&gt;&gt;</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/tuple.png" alt="tuple" /></p>
 <p><strong>Arguments:</strong> An arbitrary number of arguments.</p>
 <p><strong>Effect:</strong> The tuple constructor returns a function <code>t</code> that is constructed
@@ -5163,7 +5162,7 @@ is picked with <code>\E t \in S_1 \X S_2</code>.</p>
     \*   - field 2 has the value from the set 1..65535.
 </code></pre>
 <p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
-<pre><code class="language-python">  # the pythonic way: a set of python tuples (indexed with 0, 1, ...)  
+<pre><code class="language-python">  # the pythonic way: a set of python tuples (indexed with 0, 1, ...)
   frozenset({ (n, p)
                 for n in { &quot;A&quot;, &quot;B&quot;, &quot;C&quot; } for p in range(1, 65535 + 1) })
   # the TLA+ way
@@ -5235,14 +5234,14 @@ type checker. For instance, it can immediately figure out that <code>&lt;&lt;1, 
 is a tuple, as Apalache does not allow sequences to carry elements of different
 types. However, there is no way to say, whether <code>&lt;&lt;1, 2, 3&gt;&gt;</code> should be treated
 as a tuple or a sequence. This needs a <a href="lang/../apalache/types-and-annotations.html">type annotation</a>.</p>
-<p><em>The current SMT encoding of sequences in Apalache is not optimized, 
+<p><em>The current SMT encoding of sequences in Apalache is not optimized,
 so operations on sequences are often significantly slower than operations
 on sets.</em></p>
 <hr />
 <h2><a class="header" href="#operators-6" id="operators-6">Operators</a></h2>
 <p><a name="seqCtor"></a></p>
 <h3><a class="header" href="#tuplesequence-constructor-1" id="tuplesequence-constructor-1">Tuple/Sequence constructor</a></h3>
-<p><strong>Notation:</strong> <code>&lt;&lt;e_1, ..., e_n&gt;&gt;</code> </p>
+<p><strong>Notation:</strong> <code>&lt;&lt;e_1, ..., e_n&gt;&gt;</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/tuple.png" alt="tuple" /></p>
 <p><strong>Arguments:</strong> An arbitrary number of arguments.</p>
 <p><strong>Effect:</strong> The tuple/sequence constructor returns a function <code>t</code> that is
@@ -5290,7 +5289,7 @@ the type of the sequence elements.</p>
     \* The sequence &lt;&lt;1, 2, 5&gt;&gt;
 </code></pre>
 <p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
-<pre><code class="language-python">  # the pythonic way: a list (indexed with 0, 1, ...)  
+<pre><code class="language-python">  # the pythonic way: a list (indexed with 0, 1, ...)
   l = [ 1, 2 ]
   l.append(5)
   # the TLA+ way
@@ -5340,7 +5339,7 @@ follows:</p>
 <li>set <code>DOMAIN newSeq</code> to be <code>(DOMAIN seq) \ { Len(seq) }</code>.</li>
 <li>set <code>newSeq[i]</code> to <code>seq[i + 1]</code> for <code>i \in 1..(Len(seq) - 1)</code>.</li>
 </ul>
-<p>If <code>seq</code> is an empty sequence, the result is undefined. </p>
+<p>If <code>seq</code> is an empty sequence, the result is undefined.</p>
 <p>Apalache encodes a sequences as a triple <code>&lt;&lt;fun, start, end&gt;&gt;</code>, where
 <code>start</code> and <code>end</code> define a slice of the function <code>fun</code>. As a result,
 <code>Tail</code> is a very simple operation that just increments <code>start</code>.</p>
@@ -5414,7 +5413,7 @@ incompatible.</p>
     \* The sequence &lt;&lt;3, 5, 7, 9&gt;&gt;
 </code></pre>
 <p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
-<pre><code class="language-python">  # the pythonic way: a list (indexed with 0, 1, ...)  
+<pre><code class="language-python">  # the pythonic way: a list (indexed with 0, 1, ...)
   l1 = [ 3, 5 ]
   l2 = [ 7, 9 ]
   l1 + l2
@@ -5448,7 +5447,7 @@ error. Apalache flags a static type error.</p>
     \* The sequence &lt;&lt;5, 9&gt;&gt;
 </code></pre>
 <p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
-<pre><code class="language-python">  # the pythonic way: a list (indexed with 0, 1, ...)  
+<pre><code class="language-python">  # the pythonic way: a list (indexed with 0, 1, ...)
   l = [ 3, 5, 9, 10 ]
   l[1:3]
   # the TLA+ way
@@ -5486,7 +5485,7 @@ result is undefined in pure TLA+. TLC raises a model checking error.</p>
     \* The sequence &lt;&lt;4, 10&gt;&gt;
 </code></pre>
 <p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
-<pre><code class="language-python">  # the pythonic way: a list (indexed with 0, 1, ...)  
+<pre><code class="language-python">  # the pythonic way: a list (indexed with 0, 1, ...)
   def test(x):
     return x % 2 == 0
 
@@ -5691,7 +5690,7 @@ UpdateCelcius(t) ==
 Next ==
     /\ fahrenheit' \in -1000..1000
     /\ UpdateCelcius(fahrenheit')
-...    
+...
 ===============================================================================
 </code></pre>
 <p>In the above example, you see examples of four operator applications:</p>
@@ -5839,7 +5838,7 @@ specifications that are:</p>
 to some extent true. TLA+ is an extremely general specification language. As a
 result, it is easy to write a short specification that leaves a human reader
 puzzled . It is even easier to write a (syntactically correct) specification that
-turns any program trying to reason about TLA+ to dust. </p>
+turns any program trying to reason about TLA+ to dust.</p>
 <p>Nevertheless, we find TLA+ quite useful when writing concise specifications of
 distributed protocols at <a href="https://informal.systems">Informal Systems</a>. Other specification languages --
 especially, those designed for software verification -- would require us to
@@ -5891,7 +5890,7 @@ intermediate result of a complex computation.</p>
 <p>In programming languages, we introduce temporary variables for several reasons:</p>
 <ol>
 <li>To avoid repetitive computations of the same expression,</li>
-<li>To break down a large expression into a series of smaller expressions, </li>
+<li>To break down a large expression into a series of smaller expressions,</li>
 <li>To make the code concise.</li>
 </ol>
 <p>Point 1 is a non-issue in TLA+, as it is mostly executed in the reader's brain,
@@ -6088,7 +6087,7 @@ This is in contrast to the negated form such as: <code>~(x' = 10)</code>.</p>
 </li>
 <li>
 <p>TLC treats the expressions of the form <code>x' = e</code> and <code>x' \in S</code> as assignments,
-as long as <code>x'</code> is not bound to a value. </p>
+as long as <code>x'</code> is not bound to a value.</p>
 </li>
 <li>
 <p>Apalache uses assignments to decompose the specification into smaller pieces.
@@ -6224,7 +6223,7 @@ replacing an abstract specification with a more detailed one. Concretely, this
 idea is implemented by module instances in TLA+. It often happens that
 refinement requires us to replace a state variable of the abstract
 specification with an operator of the detailed specification.  Voilà. You have
-to apply prime to an expression. For the details, 
+to apply prime to an expression. For the details,
 see Chapter 5 and pages 312-313 of <a href="http://lamport.azurewebsites.net/tla/book.html">Specifying Systems</a>.</p>
 <h2><a class="header" href="#advantages-2" id="advantages-2">Advantages</a></h2>
 <ul>
@@ -6300,7 +6299,7 @@ whereas a single-argument function receives the type of its argument, e.g., <cod
 e.g., <code>(Int, Bool) =&gt; Int</code> and <code>() =&gt; Bool</code>. The arrow <code>-&gt;</code> is right-associative,
 e.g., <code>A -&gt; B -&gt; C</code> is understood as <code>A -&gt; (B -&gt; C)</code>, which is consistent with
 programming languages. If you like to change the priority of <code>-&gt;</code>, use parentheses, as usual.
-For example, you may write <code>(A -&gt; B) -&gt; C</code>. </p>
+For example, you may write <code>(A -&gt; B) -&gt; C</code>.</p>
 <p>If a type <code>T</code> contains a type variable, e.g., <code>a</code>, then <code>T</code> is a
 polymorphic type, in which <code>a</code> can be instantiated with a monotype (a
 variable-free term). Type variables are useful for describing the types of
@@ -6451,7 +6450,7 @@ auxiliary LET-definition to specify the type of the empty collection:</p>
    \E x \in EmptyInts: x &gt; 1
 /\ LET \* @type: Set(Str);
        EmptyStrings == {}
-   IN 
+   IN
    f = [x \in EmptyStrings |-&gt; 2]
 /\ LET \* @type: Seq(Int);
        EmptyIntSeq == {}
@@ -6470,7 +6469,7 @@ this document, we focus on the type information and give a shorter version of
 the specification. For detailed comments, check <a href="https://github.com/tlaplus/Examples/blob/master/specifications/CigaretteSmokers/CigaretteSmokers.tla">the original
 specification</a>.</p>
 <pre><code class="language-tla">---------------------- MODULE CigaretteSmokersTyped --------------------------
-(***************************************************************************)   
+(***************************************************************************)
 (* A specification of the cigarette smokers problem, originally            *)
 (* described in 1971 by Suhas Patil.                                       *)
 (* https://en.wikipedia.org/wiki/Cigarette_smokers_problem                 *)
@@ -6501,7 +6500,7 @@ VARIABLE
 ASSUME /\ Offers \subseteq (SUBSET Ingredients)
        /\ \A n \in Offers : Cardinality(n) = Cardinality(Ingredients) - 1
 
-vars == &lt;&lt;smokers, dealer&gt;&gt;       
+vars == &lt;&lt;smokers, dealer&gt;&gt;
 
 (***************************************************************************)
 (* 'smokers' is a function from the ingredient the smoker has              *)
@@ -6531,7 +6530,7 @@ stopSmoking ==
         (* the type of LAMBDA should be inferred from the types
            of ChooseOne and Ingredients *)
     /\ LET r == ChooseOne(Ingredients, LAMBDA x : smokers[x].smoking)
-       IN smokers' = [smokers EXCEPT ![r].smoking = FALSE] 
+       IN smokers' = [smokers EXCEPT ![r].smoking = FALSE]
     /\ dealer' \in Offers
 
 Next ==
@@ -6541,7 +6540,7 @@ Spec ==
     Init /\ [][Next]_vars
 
 FairSpec ==
-    Spec /\ WF_vars(Next)    
+    Spec /\ WF_vars(Next)
 
 AtMostOne ==
     Cardinality({r \in Ingredients : smokers[r].smoking}) &lt;= 1

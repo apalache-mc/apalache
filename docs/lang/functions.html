@@ -249,7 +249,7 @@ For instance, the following expression produces the function that is
 equivalent to <code>rmState</code>:</p>
 <pre><code class="language-tla">  [ rmState EXCEPT ![&quot;process10&quot;] = &quot;working&quot; ]
 </code></pre>
-<p><strong>Types.</strong> In pure TLA+, functions are free to mix values of different types in their domains. 
+<p><strong>Types.</strong> In pure TLA+, functions are free to mix values of different types in their domains.
 See the example below:</p>
 <pre><code class="language-tla">  [ x \in { 0, &quot;FALSE&quot;, FALSE, 1, &quot;TRUE&quot;, TRUE } |-&gt;
         IF x \in { 1, &quot;TRUE&quot;, TRUE}
@@ -272,7 +272,7 @@ values. See Section 14.7.2 of <a href="http://lamport.azurewebsites.net/tla/book
 examples that are given above.</p>
 <p>However, functions in TLC are free to return different kinds of values:</p>
 <pre><code class="language-tla">  [ x \in { 1, 2 } |-&gt;
-                        IF x = 1 THEN FALSE ELSE 3 ]  
+                        IF x = 1 THEN FALSE ELSE 3 ]
 </code></pre>
 <p>This is why, in pure TLA+ and TLC, records, tuples, and sequences are just
 functions over particular domains (finite sets of strings and finite sets
@@ -551,7 +551,7 @@ error.</p>
 <pre><code class="language-tla">  DOMAIN [ x \in 1..3 |-&gt; 2 * x ]
   \* { 1, 2, 3 }
 </code></pre>
-<p><strong>Example in Python:</strong> </p>
+<p><strong>Example in Python:</strong></p>
 <pre><code class="language-python">  X = frozenset({ 1, 2, 3 })
   f = frozendict({ x: 2 * x for x in X })
   frozenset(f.keys())

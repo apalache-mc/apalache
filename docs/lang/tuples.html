@@ -226,7 +226,7 @@ immutable dictionary.</p>
 <hr />
 <p><a name="tuple"></a></p>
 <h3><a class="header" href="#tuplesequence-constructor" id="tuplesequence-constructor">Tuple/Sequence constructor</a></h3>
-<p><strong>Notation:</strong> <code>&lt;&lt;e_1, ..., e_n&gt;&gt;</code> </p>
+<p><strong>Notation:</strong> <code>&lt;&lt;e_1, ..., e_n&gt;&gt;</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/tuple.png" alt="tuple" /></p>
 <p><strong>Arguments:</strong> An arbitrary number of arguments.</p>
 <p><strong>Effect:</strong> The tuple constructor returns a function <code>t</code> that is constructed
@@ -273,7 +273,7 @@ is picked with <code>\E t \in S_1 \X S_2</code>.</p>
     \*   - field 2 has the value from the set 1..65535.
 </code></pre>
 <p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
-<pre><code class="language-python">  # the pythonic way: a set of python tuples (indexed with 0, 1, ...)  
+<pre><code class="language-python">  # the pythonic way: a set of python tuples (indexed with 0, 1, ...)
   frozenset({ (n, p)
                 for n in { &quot;A&quot;, &quot;B&quot;, &quot;C&quot; } for p in range(1, 65535 + 1) })
   # the TLA+ way

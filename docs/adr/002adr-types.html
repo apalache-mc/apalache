@@ -205,7 +205,7 @@ whereas a single-argument function receives the type of its argument, e.g., <cod
 e.g., <code>(Int, Bool) =&gt; Int</code> and <code>() =&gt; Bool</code>. The arrow <code>-&gt;</code> is right-associative,
 e.g., <code>A -&gt; B -&gt; C</code> is understood as <code>A -&gt; (B -&gt; C)</code>, which is consistent with
 programming languages. If you like to change the priority of <code>-&gt;</code>, use parentheses, as usual.
-For example, you may write <code>(A -&gt; B) -&gt; C</code>. </p>
+For example, you may write <code>(A -&gt; B) -&gt; C</code>.</p>
 <p>If a type <code>T</code> contains a type variable, e.g., <code>a</code>, then <code>T</code> is a
 polymorphic type, in which <code>a</code> can be instantiated with a monotype (a
 variable-free term). Type variables are useful for describing the types of
@@ -356,7 +356,7 @@ auxiliary LET-definition to specify the type of the empty collection:</p>
    \E x \in EmptyInts: x &gt; 1
 /\ LET \* @type: Set(Str);
        EmptyStrings == {}
-   IN 
+   IN
    f = [x \in EmptyStrings |-&gt; 2]
 /\ LET \* @type: Seq(Int);
        EmptyIntSeq == {}
@@ -375,7 +375,7 @@ this document, we focus on the type information and give a shorter version of
 the specification. For detailed comments, check <a href="https://github.com/tlaplus/Examples/blob/master/specifications/CigaretteSmokers/CigaretteSmokers.tla">the original
 specification</a>.</p>
 <pre><code class="language-tla">---------------------- MODULE CigaretteSmokersTyped --------------------------
-(***************************************************************************)   
+(***************************************************************************)
 (* A specification of the cigarette smokers problem, originally            *)
 (* described in 1971 by Suhas Patil.                                       *)
 (* https://en.wikipedia.org/wiki/Cigarette_smokers_problem                 *)
@@ -406,7 +406,7 @@ VARIABLE
 ASSUME /\ Offers \subseteq (SUBSET Ingredients)
        /\ \A n \in Offers : Cardinality(n) = Cardinality(Ingredients) - 1
 
-vars == &lt;&lt;smokers, dealer&gt;&gt;       
+vars == &lt;&lt;smokers, dealer&gt;&gt;
 
 (***************************************************************************)
 (* 'smokers' is a function from the ingredient the smoker has              *)
@@ -436,7 +436,7 @@ stopSmoking ==
         (* the type of LAMBDA should be inferred from the types
            of ChooseOne and Ingredients *)
     /\ LET r == ChooseOne(Ingredients, LAMBDA x : smokers[x].smoking)
-       IN smokers' = [smokers EXCEPT ![r].smoking = FALSE] 
+       IN smokers' = [smokers EXCEPT ![r].smoking = FALSE]
     /\ dealer' \in Offers
 
 Next ==
@@ -446,7 +446,7 @@ Spec ==
     Init /\ [][Next]_vars
 
 FairSpec ==
-    Spec /\ WF_vars(Next)    
+    Spec /\ WF_vars(Next)
 
 AtMostOne ==
     Cardinality({r \in Ingredients : smokers[r].smoking}) &lt;= 1

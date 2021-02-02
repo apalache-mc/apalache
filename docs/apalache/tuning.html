@@ -186,7 +186,7 @@ passing the option <code>--tune-here</code> that has the following format:</p>
 <ol>
 <li>
 <p><strong>Randomization</strong>: <code>smt.randomSeed=&lt;int&gt;</code> passes the random seed to <code>z3</code>
-(via <code>z3</code>'s parameters <code>sat.random_seed</code> and <code>smt.random_seed</code>). </p>
+(via <code>z3</code>'s parameters <code>sat.random_seed</code> and <code>smt.random_seed</code>).</p>
 </li>
 <li>
 <p><strong>Timeouts</strong>: <code>search.smt.timeout=&lt;seconds&gt;</code> defines the timeout to the
@@ -217,7 +217,7 @@ transition numbers. For instance,
 requires to start with the 0th transition, continue with the 5th transition,
 then execute either the 2nd or the 3rd transition and after that execute
 arbitrary transitions until the <code>length.</code> Note that there is no direct correspondence
-between the transition numbers and the actions in the TLA+ spec. Check the 
+between the transition numbers and the actions in the TLA+ spec. Check the
 transition numbers in <code>./x/**/out-transition.tla</code>: 0th transition is called <code>Next$0</code>, 1st transition is called <code>Next$1</code>, etc.</p>
 </li>
 <li>
@@ -228,7 +228,7 @@ check the invariant only <em>after</em> exactly 10, 15, or 20 step were made. St
 to the initialization with <code>Init</code>, step 1 is the first step with <code>Next</code>, etc.
 This option is useful for checking consensus algorithms, where the decision
 cannot be revoked. So instead of checking the invariant after each step, we can
-do that after the algorithm has made a good number of steps. </p>
+do that after the algorithm has made a good number of steps.</p>
 </li>
 <li>
 <p><strong>Translation to SMT</strong>:</p>

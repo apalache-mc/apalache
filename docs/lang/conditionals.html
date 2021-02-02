@@ -186,7 +186,7 @@ TLA+ code than in programming languages.  We recommend using <code>IF-THEN-ELSE<
 compute predicate-dependent values, not to structure code.</p>
 <p><strong>Warning 2:</strong> <code>CASE</code> is considered deterministic in this
 section, as it is defined with the <code>CHOOSE</code> operator in
-<a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>, Section 16.1.4. 
+<a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>, Section 16.1.4.
 For this reason, <code>CASE</code> should only be used when all of its guards are mutually exclusive.
 Given all the intricacies of <code>CASE</code>,
 we recommend using nested <code>IF-THEN-ELSE</code> instead.</p>
@@ -265,7 +265,7 @@ inside.  For the non-deterministic version, see <a href="control-and-nondetermin
 Non-determinism]</a>.  When the predicates are
 mutually exclusive, the evaluation result is clearly specified. When the predicates are
 not mutually exclusive, the operator is still deterministic, but only one of
-the simultaneously enabled branches is evaluated. 
+the simultaneously enabled branches is evaluated.
 Which branch is evaluated depends on the <code>CHOOSE</code> operator, see <a href="./logic.html">[Logic]</a>.</p>
 <p><strong>Errors:</strong> If one of <code>p_1, ..., p_n</code> evaluates to a non-Boolean value, the
 result is undefined.  TLC raises an error during model checking. Apalache

@@ -253,7 +253,7 @@ type error, whereas TLC reports a runtime error.</p>
   -(-5)   \* 5
   -x      \* negated value of x
 </code></pre>
-<p><strong>Example in Python:</strong> </p>
+<p><strong>Example in Python:</strong></p>
 <pre><code class="language-python">  -(5)
   -(-5)
 </code></pre>
@@ -273,7 +273,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 <pre><code class="language-tla">  5 + 3     \* 8
   (-5) + 3  \* -2
 </code></pre>
-<p><strong>Example in Python:</strong> </p>
+<p><strong>Example in Python:</strong></p>
 <pre><code class="language-python">  5 + 3
   (-5) + 3
 </code></pre>
@@ -294,7 +294,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   (-5) - 3      \* -8
   (-5) - (-3)   \* -2
 </code></pre>
-<p><strong>Example in Python:</strong> </p>
+<p><strong>Example in Python:</strong></p>
 <pre><code class="language-python">  5 - 3
   (-5) - 3
   (-5) - (-3)
@@ -315,7 +315,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 <pre><code class="language-tla">  5 * 3     \* 15
   (-5) * 3  \* -15
 </code></pre>
-<p><strong>Example in Python:</strong> </p>
+<p><strong>Example in Python:</strong></p>
 <pre><code class="language-python">  5 * 3
   (-5) * 3
 </code></pre>
@@ -437,7 +437,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   0^0       \* undefined on integers, TLC reports a runtime error
   5^(-3)    \* undefined on integers, TLC reports a runtime error
 </code></pre>
-<p><strong>Example in Python:</strong> </p>
+<p><strong>Example in Python:</strong></p>
 <pre><code class="language-python">  5 ** 3
   (-5) ** 3
   0 ** 3
@@ -456,7 +456,7 @@ are evaluated to integer values.</p>
 <p><strong>Effect:</strong> <code>a &lt; b</code> evaluates to:</p>
 <ul>
 <li><code>TRUE</code>, if <code>a</code> is less than <code>b</code>,</li>
-<li><code>FALSE</code>, otherwise. </li>
+<li><code>FALSE</code>, otherwise.</li>
 </ul>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> In pure TLA+, the result is undefined, if
@@ -467,7 +467,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   5 &lt; 5     \* FALSE
   5 &lt; 1     \* FALSE
 </code></pre>
-<p><strong>Example in Python:</strong> </p>
+<p><strong>Example in Python:</strong></p>
 <pre><code class="language-python">  1 &lt; 5
   5 &lt; 5
   5 &lt; 1
@@ -482,7 +482,7 @@ are evaluated to integer values.</p>
 <p><strong>Effect:</strong> <code>a &lt;= b</code> evaluates to:</p>
 <ul>
 <li><code>TRUE</code>, if <code>a &lt; b</code> or <code>a = b</code>.</li>
-<li><code>FALSE</code>, otherwise. </li>
+<li><code>FALSE</code>, otherwise.</li>
 </ul>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
@@ -493,7 +493,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   5 &lt;= 5     \* TRUE
   5 &lt;= 1     \* FALSE
 </code></pre>
-<p><strong>Example in Python:</strong> </p>
+<p><strong>Example in Python:</strong></p>
 <pre><code class="language-python">  1 &lt;= 5
   5 &lt;= 5
   5 &lt;= 1
@@ -508,7 +508,7 @@ are evaluated to integer values.</p>
 <p><strong>Effect:</strong> <code>a &gt; b</code> evaluates to:</p>
 <ul>
 <li><code>TRUE</code>, if <code>a</code> is greater than <code>b</code>,</li>
-<li><code>FALSE</code>, otherwise. </li>
+<li><code>FALSE</code>, otherwise.</li>
 </ul>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
@@ -519,7 +519,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   5 &lt; 5     \* FALSE
   5 &gt; 1     \* TRUE
 </code></pre>
-<p><strong>Example in Python:</strong> </p>
+<p><strong>Example in Python:</strong></p>
 <pre><code class="language-python">  1 &gt; 5
   5 &gt; 5
   5 &gt; 1
@@ -534,7 +534,7 @@ are evaluated to integer values.</p>
 <p><strong>Effect:</strong> <code>a &gt;= b</code> evaluates to:</p>
 <ul>
 <li><code>TRUE</code>, if <code>a &gt; b</code> or <code>a = b</code>.</li>
-<li><code>FALSE</code>, otherwise. </li>
+<li><code>FALSE</code>, otherwise.</li>
 </ul>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
@@ -545,7 +545,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   5 &gt;= 5     \* TRUE
   5 &gt;= 1     \* TRUE
 </code></pre>
-<p><strong>Example in Python:</strong> </p>
+<p><strong>Example in Python:</strong></p>
 <pre><code class="language-python">  1 &gt;= 5
   5 &gt;= 5
   5 &gt;= 1

@@ -191,8 +191,8 @@ Consider this slight modification of the above example:</p>
 
 Next == x' = x + 1
 </code></pre>
-<p>Just as in the first example, the expression <code>x' = x + 1</code> is, by definition, an action. 
-However, since the second example defines a state variable <code>y</code>, this action is 
+<p>Just as in the first example, the expression <code>x' = x + 1</code> is, by definition, an action.
+However, since the second example defines a state variable <code>y</code>, this action is
 no longer a sufficient description of a relation between a current state and a successor state; it does not determine a successor value <code>y'</code>.
 This brings us to the second requirement: <em>the transition operator must allow Apalache to directly encode the relation between two successive states.</em>
 This captures two sub-requirements: firstly, we disallow transition operators which fail to specify the value of one or more variables in the successor states, like the one in the example above. Secondly, we also disallow transition operators where the value of a successor state variable is determined only by implicit equations. Consider the following two cases:</p>
@@ -200,15 +200,15 @@ This captures two sub-requirements: firstly, we disallow transition operators wh
 ...
 
 A == y' = 1
-B == y' * y' - 2 * y' + 1 = 0 
+B == y' * y' - 2 * y' + 1 = 0
 </code></pre>
-<p>Using some basic math, we see that action <code>B</code> can be equivalently written as <code>(y' - 1)*(y' - 1) = 0</code>, so it describes the exact same successor state, in which the new value of <code>y</code> is <code>1</code>. 
-What makes it different from action <code>A</code> is the fact that this is far from immediately obvious from the syntax. 
-The fact that there happened to be a closed-form solution for which gave us an integer value for <code>y'</code>, is a lucky coincidence, as <code>B</code> could have been, for example, <code>y' * y' + 1 = 0</code>, with no real roots. 
+<p>Using some basic math, we see that action <code>B</code> can be equivalently written as <code>(y' - 1)*(y' - 1) = 0</code>, so it describes the exact same successor state, in which the new value of <code>y</code> is <code>1</code>.
+What makes it different from action <code>A</code> is the fact that this is far from immediately obvious from the syntax.
+The fact that there happened to be a closed-form solution for which gave us an integer value for <code>y'</code>, is a lucky coincidence, as <code>B</code> could have been, for example, <code>y' * y' + 1 = 0</code>, with no real roots.
 To avoid cases like this, we require that transition operators explicitly declare the values of state variables in successor states.</p>
 <p>We call syntactic forms, which explicitly represent successor state values, <em>assignment candidates</em>. An assignment candidate for <code>x</code> is a TLA+ expression that has one of the following forms:</p>
 <ul>
-<li><code>x' = e</code>, </li>
+<li><code>x' = e</code>,</li>
 <li><code>x' \in S</code>,</li>
 <li><code>UNCHANGED x</code>, or</li>
 <li><code>x' := e</code> (note that <code>:=</code> is the operator defined in <a href="https://github.com/informalsystems/apalache/blob/unstable/src/tla/Apalache.tla">Apalache.tla</a>)</li>
@@ -248,13 +248,13 @@ This allows us to write transition operators in the following equivalent way:</p
 <p>Where each <code>Slice[i]</code> is a minimal action.</p>
 <p>The details of slicing are nuanced and depend on operators other than or (<code>\/</code>) and if-then-else, but we give two examples here:</p>
 <p>If a formula <code>A</code> has the shape <code>A1 \/ ... \/ An</code> (where <code>A1</code>, ... <code>An</code> are actions), then a slice of A has the shape <code>Si</code>, where <code>Si</code> is a slice of some <code>Ai</code>.</p>
-<p>If a formula <code>A</code> has the shape <code>IF p THEN A1 ELSE A2</code> (where <code>A1</code>, <code>A2</code> are actions), then a slice of A has the shape 
+<p>If a formula <code>A</code> has the shape <code>IF p THEN A1 ELSE A2</code> (where <code>A1</code>, <code>A2</code> are actions), then a slice of A has the shape
 <code>p /\ S1</code> or <code>\neg p /\ S2</code>, where <code>S1</code> is a slice of <code>A1</code> and <code>S2</code> is a slice of <code>S2</code>.</p>
 <p>Slices allow us to formulate the final requirement: the transition operator must be such, that we can select one assignment candidate for each variable in each of its slices (minimal actions) as an <em>assignment</em>. The process and conditions of selecting assignments from assignment candidates is described in the next section.</p>
 <h2><a class="header" href="#a-idasgn--assignments-and-assignment-candidates" id="a-idasgn--assignments-and-assignment-candidates"><a id='asgn' /> Assignments and Assignment Candidates</a></h2>
 <p>Recall, an <em>assignment candidate</em> for <code>x</code> is a TLA+ expression that has one of the following forms:</p>
 <ul>
-<li><code>x' = e</code>, </li>
+<li><code>x' = e</code>,</li>
 <li><code>x' \in S</code>,</li>
 <li><code>UNCHANGED x</code>, or</li>
 <li><code>x' := e</code> (note that <code>:=</code> is the operator defined in <code>Apalache.tla</code>)</li>
@@ -263,12 +263,12 @@ This allows us to write transition operators in the following equivalent way:</p
 <h3><a class="header" href="#minimality" id="minimality">Minimality</a></h3>
 <p>Assignments aren't spurious; each variable must have at least one assignment per transition operator, but no more than necessary to satisfy all of the additional constraints below (i.e. no more than one assignment per slice).</p>
 <p>If all possible slices fail to assign one or more variables, an error, like the one below, is reported:</p>
-<pre><code>Assignment error: No assignments found for: x, z 
+<pre><code>Assignment error: No assignments found for: x, z
 </code></pre>
-<p>Such errors are usually the result of adding a <code>VARIABLE</code> without any accompanying TLA+ code relating to it. 
+<p>Such errors are usually the result of adding a <code>VARIABLE</code> without any accompanying TLA+ code relating to it.
 The case where at least one transition, but not all of them, fails to assign a variable is shown below.</p>
 <h3><a class="header" href="#syntax-order" id="syntax-order">Syntax Order</a></h3>
-<p>For the purpose of evaluating assignments, Apalache considers the left-to-right syntax order of and-operator (<code>/\</code>) arguments. 
+<p>For the purpose of evaluating assignments, Apalache considers the left-to-right syntax order of and-operator (<code>/\</code>) arguments.
 Therefore, as many assignments as possible are selected from the first (w.r.t. syntax order) argument of and (<code>/\</code>), then from the second, and so on.</p>
 <p>Example:</p>
 <pre><code class="language-tla">Next == x' = 1 /\ x' = 2
@@ -282,7 +282,7 @@ Therefore, as many assignments as possible are selected from the first (w.r.t. s
 <pre><code class="language-tla">A == x' &gt; 0 /\ x' = 1
 B == y' = x' + 2 /\ x' = 1
 </code></pre>
-<p>In <code>A</code>, the expression <code>x' &gt; 0</code> precedes any assignment to <code>x</code> and in <code>B</code>, while <code>y' = x' + 2</code> is an assignment candidate for <code>y</code>, it precedes any assignment to <code>x</code>, so both expressions are inadmissible (and would trigger exceptions). </p>
+<p>In <code>A</code>, the expression <code>x' &gt; 0</code> precedes any assignment to <code>x</code> and in <code>B</code>, while <code>y' = x' + 2</code> is an assignment candidate for <code>y</code>, it precedes any assignment to <code>x</code>, so both expressions are inadmissible (and would trigger exceptions).</p>
 <p>Note that this only holds true if <code>A</code> (resp. <code>B</code>) is chosen as the transition operator. If <code>A</code> is called inside another transition operator, for example in <code>Next == x' = 1 /\ A</code>, no error is reported.</p>
 <h3><a class="header" href="#balance" id="balance">Balance</a></h3>
 <p>In cases of the or-operator (<code>\/</code>), all arguments must have assignments for the same set of variables. In particular, if one argument contains an assignment candidate and another does not, such as in this example:</p>
@@ -292,7 +292,7 @@ B == y' = x' + 2 /\ x' = 1
 <p>the assignment finder will report an error, like the one below:</p>
 <pre><code>Assignment error: test.tla:10:15-10:19: Missing assignments to: y
 </code></pre>
-<p>notifying the user of any variables for which assignments exist in some, but not all, arguments to <code>\/</code>. 
+<p>notifying the user of any variables for which assignments exist in some, but not all, arguments to <code>\/</code>.
 Note that if we correct and extend the above example to</p>
 <pre><code class="language-tla">/\ \/ y' = 1
    \/ y' = 2
@@ -307,7 +307,7 @@ On the other hand, if we change the example to</p>
 <p>the only assignment has to be <code>y' = 3</code>. While one of the disjuncts is an assignment candidate and the other is not, the balance requirement is not violated here, since neither disjunct is chosen as an assignment.</p>
 <p>Similar rules apply to if-then-else: both the <code>THEN _</code> and <code>ELSE _</code> branch must assign the same variables, however, the <code>IF _</code> condition is ignored when determining assignments.</p>
 <h3><a class="header" href="#assignment-free-expressions" id="assignment-free-expressions">Assignment-free Expressions</a></h3>
-<p>Not all expressions may contain assignments. 
+<p>Not all expressions may contain assignments.
 While Apalache permits the use of all assignment candidates, except ones defined with <code>:=</code>(details <a href="#manual">here</a>), inside other expressions, some of these candidates will never be chosen as assignments, based on the syntactic restrictions outlined below:</p>
 <p>Given a transition operator <code>A</code>, based on the shape of <code>A</code>, the following holds:</p>
 <ul>
@@ -328,7 +328,7 @@ While Apalache permits the use of all assignment candidates, except ones defined
 <li>In any other case, <code>A</code> may not contain assignments, however, any assignment candidates in <code>A</code> are subject to the assignment-before-use rule.</li>
 </ul>
 <p>Examples:</p>
-<pre><code class="language-tla">A == /\ x' = 2 
+<pre><code class="language-tla">A == /\ x' = 2
      /\ \E s \in { t \in 1..10 : x' &gt; t }: y' = s
 </code></pre>
 <p>Operator <code>A</code> contains assignments to both <code>x</code> and <code>y</code>; while <code>x' &gt; t</code> uses <code>x'</code>, it does not violate the assignment-before-use rule, since the assignment to <code>x</code> precedes the expression, w.r.t. syntax order.</p>
@@ -336,20 +336,20 @@ While Apalache permits the use of all assignment candidates, except ones defined
 B == \E s \in { t \in 1..10 : x' &gt; t }: y' = s
 </code></pre>
 <p>In operator <code>B</code>, the assignment to <code>x</code> is missing, therefore <code>x' &gt; t</code> produces an error, as it violates assignment-before-use.</p>
-<pre><code class="language-tla">C == /\ x' = 1 
+<pre><code class="language-tla">C == /\ x' = 1
      /\ IF x' = 0 /\ 2 \in {x', x' + 2, 0}
-        THEN y' = 1 
+        THEN y' = 1
         ELSE y' = 2
 </code></pre>
 <p>The case in <code>C</code> is similar to <code>A</code>; conditions of the if-then-else operator may not contain assignments to <code>x</code>, so <code>x' = 0</code> can never be one, but they may use <code>x'</code>, since a preceding expression (<code>x' = 1</code>) qualifies as an assignment.</p>
 <pre><code class="language-tla">(* INVALID *)
-D == IF x' = 0 
-     THEN y' = 1 
+D == IF x' = 0
+     THEN y' = 1
      ELSE y' = 2
 </code></pre>
 <p>The operator <code>D</code> produces an error, for the same reason as <code>B</code>; even though <code>x' = 0</code> is an assignment candidate, if-conditions are assignment-free, so <code>x' = 0</code> cannot be chosen as an assignment to <code>x</code>.</p>
 <pre><code class="language-tla">(* INVALID *)
-E == /\ x' = 2 
+E == /\ x' = 2
      /\ \A s \in { t \in 1..10 : x' &gt; t }: y' = s
 </code></pre>
 <p>Lastly, while <code>E</code> looks almost identical to <code>A</code>, the key difference is that expressions under universal quantifiers may not contain assignments. Therefore, <code>y' = s</code> is <em>not</em> an assignment to <code>y</code> and thus violates assignment-before-use.</p>
@@ -359,10 +359,10 @@ While the use of this operator does not change Apalache's internal search for as
 <p>Unlike other shapes of assignment candidates, whenever a manual assignment is used in a position where the assignment candidate would not be chosen as an assignment (either within assignment-free expressions or in violation of, for example, the syntax order rule) an error, like one of the two below, is reported:</p>
 <pre><code>Assignment error: test.tla:10:12-10:18: Manual assignment is spurious, x is already assigned!
 </code></pre>
-<p>or </p>
+<p>or</p>
 <pre><code>Assignment error: test.tla:10:15-10:21: Illegal assignment inside an assignment-free expression.
 </code></pre>
-<p>The benefit of using manual assignments, we believe, lies in synchronizing the user's and the tool's understanding of where assignments happen. 
+<p>The benefit of using manual assignments, we believe, lies in synchronizing the user's and the tool's understanding of where assignments happen.
 This helps prevent unexpected results, where the user's expectations or intuition regarding assignment positions are incorrect.</p>
 <p>Note: To use manual assignments where the assignment candidate has the shape of <code>x' \in S</code> use <code>\E s \in S: x' := s</code>.</p>
 

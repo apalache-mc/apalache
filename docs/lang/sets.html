@@ -449,7 +449,7 @@ either not sets, or sets of incompatible types.</p>
 <p><strong>LaTeX notation:</strong> <img src="./img/cup.png" alt="cup" /></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
 is undefined.</p>
-<p><strong>Effect:</strong> This operator evaluates to the set that contains the elements 
+<p><strong>Effect:</strong> This operator evaluates to the set that contains the elements
 of <code>S</code> <strong>as well</strong> as the elements of <code>T</code>, and no other values.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
@@ -513,9 +513,9 @@ model checking error, when it discovers that elements of <code>S</code> cannot b
 to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
 either not sets, or sets of incompatible types.</p>
 <p><strong>Example in TLA+:</strong></p>
-<pre><code class="language-tla">  { 0, 1, 2 } \ { 1, 2, 3 }     \* { }
+<pre><code class="language-tla">  { 0, 1, 2 } \ { 1, 2, 3 }     \* { 0 }
           { } \ { 1, 2, 3 }     \* { }
-  { 1, 2, 3 } \ { }             \* { }
+  { 1, 2, 3 } \ { }             \* { 1, 2, 3 }
       { {1} } \ { 1, 2 }        \* { {1} }, model checking error in TLC
                                 \* static type error in Apalache
 </code></pre>
@@ -557,7 +557,7 @@ element <code>e</code> of <code>S</code>, the variable <code>x</code> is bound t
 <pre><code class="language-tla">  { x \in {1, 2, 3, 4}: x &gt; 2 }             \* { 3, 4 }
   { x \in {1, 2, 3, 4}: x &gt; 10 }            \* { }
   \* check the section on tuples to understand the following syntax
-  { &lt;&lt;x, y&gt;&gt; \in 1..4 \X 1..4: y = 3 } \* {&lt;&lt;1, 3&gt;&gt;, &lt;&lt;2, 3&gt;&gt;, &lt;&lt;3, 3&gt;&gt;, &lt;&lt;4, 3&gt;&gt;}
+  { &lt;&lt;x, y&gt;&gt; \in (1..4) \X (1..4): y = 3 }  \* {&lt;&lt;1, 3&gt;&gt;, &lt;&lt;2, 3&gt;&gt;, &lt;&lt;3, 3&gt;&gt;, &lt;&lt;4, 3&gt;&gt;}
 </code></pre>
 <p><strong>Example in Python:</strong> Python conveniently offers us the set comprehension
 syntax:</p>
@@ -571,7 +571,7 @@ syntax:</p>
 <hr />
 <p><a name="map"></a></p>
 <h3><a class="header" href="#set-map" id="set-map">Set map</a></h3>
-<p><strong>Notation:</strong> <code>{ e: x \in S }</code> or <code>{ e: x \in S, y \in T }</code>, or more arguments </p>
+<p><strong>Notation:</strong> <code>{ e: x \in S }</code> or <code>{ e: x \in S, y \in T }</code>, or more arguments</p>
 <p><strong>LaTeX notation:</strong> <img src="./img/map.png" alt="map" /></p>
 <p><strong>Arguments:</strong> At least three arguments: a mapping expression,
 a variable name (or a tuple of names, see <strong>Advanced syntax</strong>),
@@ -598,12 +598,10 @@ element <code>e</code> of <code>S</code>, the variable <code>x</code> is bound t
 <code>e[2]</code>. The map expression constructs the set of expressions that are computed
 under this binding.</p>
 <p><strong>Example in TLA+:</strong></p>
-<pre><code class="language-tla">  { 2 * x: x \in { 1, 2, 3, 4 } }      \* { 2, 4, 6, 8 }
+<pre><code class="language-tla">  { 2 * x: x \in { 1, 2, 3, 4 } }          \* { 2, 4, 6, 8 }
+  { x + y: x \in 1..2, y \in 1..2 }        \* { 2, 3, 4 }
   \* check the section on tuples to understand the following syntax
-  { x + y: x \in 1..2, y \in 1..2 }
-    \* { 2, 3, 4 }
-  { x + y: &lt;&lt;x, y&gt;&gt; \in 1..2 \X 1..2 }
-    \* { 2, 3, 4 }
+  { x + y: &lt;&lt;x, y&gt;&gt; \in (1..2) \X (1..2) } \* { 2, 3, 4 }
 </code></pre>
 <p><strong>Example in Python:</strong> Python conveniently offers us the set comprehension
 syntax:</p>
