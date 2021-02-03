@@ -658,7 +658,11 @@ ugly really fast.</p>
 <p>Consider the example
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/Rec9.tla">Rec9</a>,
 which computes set cardinality. Here is a fragment of the spec:</p>
-<pre><code class="language-tla">\* the type of the function Card
+<pre><code class="language-tla">a &lt;: b == a
+
+IntSet(S) == S &lt;: {Int}
+
+\* the type of the function Card
 CardT == [{Int} -&gt; Int]
 
 (*
@@ -668,10 +672,6 @@ CardT == [{Int} -&gt; Int]
  for the function Card. This encoding is (at least) double-exponential.
  *)
 Card[S \in SUBSET NUMS] ==
-    IF S = IntSet({})
-    THEN 0
-    ELSE LET i == CHOOSE j \in S: TRUE IN
-        1 + (Card &lt;: CardT)[S \ {i}]
 </code></pre>
 <p>Since we cannot fix the order, in which the set elements are evaluated, we
 define function <code>Card</code> over <code>SUBSET NUMS</code>, that is, all possible subsets of
