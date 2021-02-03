@@ -64,11 +64,17 @@ class CheckerModule extends AbstractModule {
     bind(classOf[Pass])
       .annotatedWith(Names.named("AfterParser"))
       .to(classOf[ConfigurationPass])
+    // the next pass is DesugarerPass
+    bind(classOf[DesugarerPass])
+      .to(classOf[DesugarerPassImpl])
+    bind(classOf[Pass])
+      .annotatedWith(Names.named("AfterConfiguration"))
+      .to(classOf[DesugarerPass])
     // the next pass is UnrollPass
     bind(classOf[UnrollPass])
       .to(classOf[UnrollPassImpl])
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterConfiguration"))
+      .annotatedWith(Names.named("AfterDesugarer"))
       .to(classOf[UnrollPass])
     // the next pass is PrimingPass
     bind(classOf[PrimingPass])
