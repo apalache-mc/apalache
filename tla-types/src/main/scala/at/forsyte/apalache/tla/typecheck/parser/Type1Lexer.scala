@@ -7,22 +7,21 @@ import at.forsyte.apalache.io.tlc.config.TlcConfigParseError
 import scala.util.matching.Regex
 import scala.util.parsing.combinator.RegexParsers
 
-private[parser]
-object Type1Lexer extends RegexParsers {
+private[parser] object Type1Lexer extends RegexParsers {
   override def skipWhitespace: Boolean = true
 
-  override val whiteSpace: Regex = "[ \t\r\f]+".r   // no linefeeds
+  override val whiteSpace: Regex = "[ \t\r\f]+".r // no linefeeds
 
   /**
-    * Parse the input stream and return the list of tokens. Although collecting the list of all tokens in memory is
-    * not optimal, TLC configurations files are tiny, so it should not be a big deal.
-    *
-    * @param reader a Java reader
-    * @return the list of parsed tokens
-    * @throws TlcConfigParseError when the lexer finds an error
-    */
+   * Parse the input stream and return the list of tokens. Although collecting the list of all tokens in memory is
+   * not optimal, TLC configurations files are tiny, so it should not be a big deal.
+   *
+   * @param reader a Java reader
+   * @return the list of parsed tokens
+   * @throws TlcConfigParseError when the lexer finds an error
+   */
   def apply(reader: Reader): List[Type1Token] = parseAll(expr, reader) match {
-    case Success(result, _) => result
+    case Success(result, _)   => result
     case NoSuccess(msg, next) => throw new Type1ParseError(msg, next.pos)
   }
 
@@ -32,20 +31,16 @@ object Type1Lexer extends RegexParsers {
 
   def token: Parser[Type1Token] =
     positioned(
-      int | real | bool | str | set | seq | capsIdentifier | fieldIdentifier | fieldNumber |
-        rightArrow | doubleRightArrow | leftParen | rightParen | leftBracket | rightBracket |
-        leftCurly | rightCurly | doubleLeftAngle | doubleRightAngle | comma | colon
+        int | real | bool | str | set | seq | identifier | fieldNumber |
+          rightArrow | doubleRightArrow | leftParen | rightParen | leftBracket | rightBracket |
+          leftCurly | rightCurly | doubleLeftAngle | doubleRightAngle | comma | colon
     ) ///
 
   // a linefeed is not a white-space
   def skip: Parser[Unit] = rep(whiteSpace) ^^^ Unit
 
-  private def capsIdentifier: Parser[CAPS_IDENT] = {
-    "[A-Z_][A-Z0-9_]*".r ^^ { name => CAPS_IDENT(name) }
-  }
-
-  private def fieldIdentifier: Parser[FIELD_IDENT] = {
-    "[A-Za-z_][A-Za-z0-9_]*".r ^^ { name => FIELD_IDENT(name) }
+  private def identifier: Parser[IDENT] = {
+    "[A-Za-z_][A-Za-z0-9_]*".r ^^ { name => IDENT(name) }
   }
 
   private def fieldNumber: Parser[FIELD_NO] = {
@@ -124,4 +119,3 @@ object Type1Lexer extends RegexParsers {
     ":".r ^^ { _ => COLON() }
   }
 }
-
