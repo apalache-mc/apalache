@@ -866,6 +866,15 @@ The outcome is: Error
 
 ## running the typecheck command
 
+### check ExistTuple476.tla reports no error: regression for issues 476 and 482
+
+```sh
+$ apalache-mc check --length=1 ExistTuple476.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
 ### typecheck CarTalkPuzzleTyped.tla
 
 ```sh
