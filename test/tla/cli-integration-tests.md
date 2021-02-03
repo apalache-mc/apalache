@@ -869,7 +869,7 @@ The outcome is: Error
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
 
 ```sh
-$ apalache-mc typecheck --length=1 ExistTuple476.tla | sed 's/I@.*//'
+$ apalache-mc typecheck ExistTuple476.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
