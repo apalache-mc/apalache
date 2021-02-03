@@ -871,7 +871,7 @@ The outcome is: Error
 ```sh
 $ apalache-mc typecheck ExistTuple476.tla | sed 's/I@.*//'
 ...
-The outcome is: NoError
+Type checker [OK]
 ...
 ```
 
