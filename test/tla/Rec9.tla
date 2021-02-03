@@ -9,7 +9,11 @@ EXTENDS Integers, FiniteSets
 MAX_NUM == 5       \* the maximal number in the set
 NUMS == 1..MAX_NUM  \* the set, from which the numbers are drawn
 
-VARIABLES set, size
+VARIABLES
+    \* @type: Set(Int);
+    set,
+    \* @type: Int;
+    size
 
 \* the syntax for type annotations
 a <: b == a

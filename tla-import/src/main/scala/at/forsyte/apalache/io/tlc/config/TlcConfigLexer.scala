@@ -55,7 +55,7 @@ object TlcConfigLexer extends RegexParsers {
   }
 
   private def string: Parser[STRING] = {
-    """"[a-zA-Z0-9_~!@#\\$%^&*-+=|(){}\[\],:;`'<>.?/ ]*"""".r ^^ { name => STRING(name.substring(1, name.length - 1)) }
+    """"[a-zA-Z0-9_~!@#\\$%^&*\-+=|(){}\[\],:;`'<>.?/ ]*"""".r ^^ { name => STRING(name.substring(1, name.length - 1)) }
   }
 
   private def number: Parser[NUMBER] = {

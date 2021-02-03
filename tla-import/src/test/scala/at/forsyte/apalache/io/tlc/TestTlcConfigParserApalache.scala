@@ -134,6 +134,23 @@ class TestTlcConfigParserApalache extends FunSuite {
     assert(config.constReplacements.isEmpty)
   }
 
+  test("CONSTANTS bug with minus in [...]") {
+    // a regression test
+    val text =
+      """
+        |CONSTANTS
+        |ChainIds = {"Chain-A", "Chain-B"}
+        |INIT Init
+        |NEXT Next
+      """.stripMargin
+
+    val config = TlcConfigParserApalache(text)
+    assert(
+        config.constAssignments ==
+          Map("ChainIds" -> ConfigSetValue(ConfigStrValue("Chain-A"), ConfigStrValue("Chain-B"))))
+    assert(config.constReplacements.isEmpty)
+  }
+
   test("CONSTANT assignments and SYMMETRY") {
     val text =
       """

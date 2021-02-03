@@ -305,16 +305,22 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         // ~A
         mkExRefApp(OperT1(Seq(BoolT1()), BoolT1()), Seq(arg))
 
-      case OperEx(op, NameEx(bindingVar), bindingSet, pred) if op == TlaBoolOper.exists || op == TlaBoolOper.forall =>
+      case OperEx(op, bindingEx, bindingSet, pred) if op == TlaBoolOper.exists || op == TlaBoolOper.forall =>
         // \E x \in S: P, \A x \in S: P
-        // the principal type of \A and \E is (a => Bool) => Bool
-        val a = varPool.fresh
-        val quantType = OperT1(Seq(OperT1(Seq(a), BoolT1())), BoolT1())
-        // \E and \A implicitly introduce a lambda abstraction: λ x ∈ S. P
-        val lambda =
-          mkAbs(BlameRef(ex.ID), this(pred), (bindingVar, this(bindingSet)))
-        // the resulting expression is (((a => Bool) => a) (λ x ∈ S. P))
-        mkApp(ref, Seq(quantType), lambda)
+        // or, \E <<x, ..., z>> \in S: P
+
+        // 1. When there is one argument, a set element has type "a", no tuple is involved.
+        // 2. When there are multiple arguments,
+        //    a set element has type type <<a, b>>, that is, it is a tuple.
+        //    We can also have nested tuples like <<x, <<y, z>> >>, they are expanded.
+        val bindings = translateBindings((bindingEx, bindingSet))
+        val typeVars = varPool.fresh(bindings.length)
+        // the principal type is ((a, b) => Bool) => Bool or just (a => Bool) => Bool
+        val principal = OperT1(Seq(OperT1(typeVars, BoolT1())), BoolT1())
+        // \E and \A implicitly introduce a lambda abstraction: λ x ∈ proj_x, λ x ∈ proj_y. P
+        val lambda = mkAbs(BlameRef(ex.ID), this(pred), bindings: _*)
+        // the resulting expression is (principal lambda)
+        mkApp(ref, Seq(principal), lambda)
 
       //******************************************** SETS **************************************************
       case OperEx(TlaSetOper.enumSet) =>

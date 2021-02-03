@@ -9,7 +9,7 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 
 @RunWith(classOf[JUnitRunner])
-class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfterEach with EtcBuilder {
+class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfterEach with EtcBuilder {
   private val parser: Type1Parser = DefaultType1Parser
   private var checker: TypeChecker = _
 
@@ -25,12 +25,12 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
   // consume the type of the wrapper and auxiliary expressions
   private def consumeWrapperTypes(listener: TypeCheckerListener, wrapper: EtcLet): Unit = {
     for (ex <- Seq(wrapper, wrapper.bound, wrapper.body)) {
-      listener.onTypeFound(EasyMock.eq(ex.sourceRef.asInstanceOf[ExactRef]),
-        EasyMock.anyObject[TlaType1]).anyTimes()
+      listener.onTypeFound(EasyMock.eq(ex.sourceRef.asInstanceOf[ExactRef]), EasyMock.anyObject[TlaType1]).anyTimes()
     }
     // consume this error, as the interesting error should have been reported before
-    listener.onTypeError(wrapper.sourceRef.asInstanceOf[ExactRef],
-      "Error when computing the type of wrapper").anyTimes()
+    listener
+      .onTypeError(wrapper.sourceRef.asInstanceOf[ExactRef], "Error when computing the type of wrapper")
+      .anyTimes()
   }
 
   test("check monotypes") {
@@ -108,7 +108,7 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
     val listener = mock[TypeCheckerListener]
     val wrapper = wrapWithLet(app)
     expecting {
-      listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef], "Mismatch in argument types. Expected: (Int) => Int")
+      listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef], "Mismatch in argument types. Expected: ((Int) => Int)")
       // consume any types for the wrapper and lambda
       consumeWrapperTypes(listener, wrapper)
     }
@@ -129,8 +129,10 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
       listener.onTypeFound(arg.sourceRef.asInstanceOf[ExactRef], parser("a"))
       listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("c"))
       // But an error is reported at the wrapper level, as the resulting expression is parameterized.
-      listener.onTypeError(wrapper.sourceRef,
-        "Expected a concrete type of operator wrapper, found polymorphic type: () => c").atLeastOnce()
+      listener
+        .onTypeError(wrapper.sourceRef,
+            "Expected a concrete type of operator wrapper, found polymorphic type: (() => c)")
+        .atLeastOnce()
 
       // consume any types for the wrapper and lambda
       consumeWrapperTypes(listener, wrapper)
@@ -153,8 +155,10 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
       listener.onTypeFound(arg.sourceRef.asInstanceOf[ExactRef], parser("Int"))
       listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("a"))
       // But an error is reported at the wrapper level, as the resulting expression is parameterized.
-      listener.onTypeError(wrapper.sourceRef,
-        "Expected a concrete type of operator wrapper, found polymorphic type: () => a").atLeastOnce()
+      listener
+        .onTypeError(wrapper.sourceRef,
+            "Expected a concrete type of operator wrapper, found polymorphic type: (() => a)")
+        .atLeastOnce()
 
       // consume any types for the wrapper and lambda
       consumeWrapperTypes(listener, wrapper)
@@ -173,7 +177,7 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
     val wrapper = wrapWithLet(app)
     expecting {
       listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef],
-        "Need annotation. Arguments match 2 operator signatures: (Int) => a and (Int) => Bool")
+          "Need annotation. Arguments match 2 operator signatures: ((Int) => a) and ((Int) => Bool)")
 
       // consume any types for the wrapper and lambda
       consumeWrapperTypes(listener, wrapper)
@@ -211,7 +215,7 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
     val wrapper = wrapWithLet(app)
     expecting {
       listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef],
-        "Need annotation. Arguments match 2 operator signatures: (a) => Int and (a) => Bool")
+          "Need annotation. Arguments match 2 operator signatures: ((a) => Int) and ((a) => Bool)")
       // consume any types for the wrapper and lambda
       consumeWrapperTypes(listener, wrapper)
     }
@@ -248,7 +252,7 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
     val wrapper = wrapWithLet(outerApp)
     expecting {
       listener.onTypeError(innerApp.sourceRef.asInstanceOf[ExactRef],
-        "Mismatch in argument types. Expected: (Int) => Int")
+          "Mismatch in argument types. Expected: ((Int) => Int)")
       // There is no error about outerApp. Otherwise, we would introduce a long string of errors.
       // consume any types for the wrapper and lambda
       consumeWrapperTypes(listener, wrapper)
@@ -264,22 +268,18 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
     val pred = mkUniqConst(parser("Bool"))
     // lambda x \in Set(Int): Bool
     val lambda = mkUniqAbs(
-      pred,           // this is a predicate
-      ("x", xDomain)  // the scope of the variable x, which is used in the predicate
-    )/////
+        pred, // this is a predicate
+        ("x", xDomain) // the scope of the variable x, which is used in the predicate
+    ) /////
     val operType = parser("(a => Bool) => Set(a)")
     val app = mkUniqApp(Seq(operType), lambda)
     val listener = mock[TypeCheckerListener]
     val wrapper = wrapWithLet(app)
     expecting {
-      listener.onTypeFound(pred.sourceRef.asInstanceOf[ExactRef],
-        parser("Bool")).atLeastOnce()
-      listener.onTypeFound(xDomain.sourceRef.asInstanceOf[ExactRef],
-        parser("Set(Int)")).atLeastOnce()
-      listener.onTypeFound(lambda.sourceRef.asInstanceOf[ExactRef],
-        parser("Int => Bool")).atLeastOnce()
-      listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef],
-        parser("Set(Int)")).atLeastOnce()
+      listener.onTypeFound(pred.sourceRef.asInstanceOf[ExactRef], parser("Bool")).atLeastOnce()
+      listener.onTypeFound(xDomain.sourceRef.asInstanceOf[ExactRef], parser("Set(Int)")).atLeastOnce()
+      listener.onTypeFound(lambda.sourceRef.asInstanceOf[ExactRef], parser("Int => Bool")).atLeastOnce()
+      listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("Set(Int)")).atLeastOnce()
       // consume any types for the wrapper and lambda
       consumeWrapperTypes(listener, wrapper)
     }
@@ -295,25 +295,20 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
     val pred = mkUniqConst(parser("Bool"))
     // lambda x \in Set(Int), y \in Set(Str): Bool
     val lambda = mkUniqAbs(
-      pred,            // this is a predicate
-      ("x", xDomain), // the scope of the variable x, which is used in the predicate
-      ("y", yDomain)  // the scope of the variable y, which is used in the predicate
-    )/////
+        pred, // this is a predicate
+        ("x", xDomain), // the scope of the variable x, which is used in the predicate
+        ("y", yDomain) // the scope of the variable y, which is used in the predicate
+    ) /////
     val operType = parser("((a, b) => Bool) => Set(<<a, b>>)")
     val app = mkUniqApp(Seq(operType), lambda)
     val listener = mock[TypeCheckerListener]
     val wrapper = wrapWithLet(app)
     expecting {
-      listener.onTypeFound(pred.sourceRef.asInstanceOf[ExactRef],
-        parser("Bool")).atLeastOnce()
-      listener.onTypeFound(xDomain.sourceRef.asInstanceOf[ExactRef],
-        xDomain.polytype).atLeastOnce()
-      listener.onTypeFound(yDomain.sourceRef.asInstanceOf[ExactRef],
-        yDomain.polytype).atLeastOnce()
-      listener.onTypeFound(lambda.sourceRef.asInstanceOf[ExactRef],
-        parser("(Int, Str) => Bool")).atLeastOnce()
-      listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef],
-        parser("Set(<<Int, Str>>)")).atLeastOnce()
+      listener.onTypeFound(pred.sourceRef.asInstanceOf[ExactRef], parser("Bool")).atLeastOnce()
+      listener.onTypeFound(xDomain.sourceRef.asInstanceOf[ExactRef], xDomain.polytype).atLeastOnce()
+      listener.onTypeFound(yDomain.sourceRef.asInstanceOf[ExactRef], yDomain.polytype).atLeastOnce()
+      listener.onTypeFound(lambda.sourceRef.asInstanceOf[ExactRef], parser("(Int, Str) => Bool")).atLeastOnce()
+      listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("Set(<<Int, Str>>)")).atLeastOnce()
       // consume any types for the wrapper and lambda
       consumeWrapperTypes(listener, wrapper)
     }
@@ -327,9 +322,9 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
     val domain = mkUniqConst(parser("Int"))
     // lambda x \in Int: Bool
     val lambda = mkUniqAbs(
-      mkUniqConst(parser("Bool")),       // this is a predicate
-      ("x", domain)  // the ill-typed scope of the variable x
-    )/////
+        mkUniqConst(parser("Bool")), // this is a predicate
+        ("x", domain) // the ill-typed scope of the variable x
+    ) /////
     val operType = parser("(a => Bool) => Set(a)")
     val app = mkUniqApp(Seq(operType), lambda)
     val wrapper = wrapWithLet(app)
@@ -357,25 +352,19 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
     val listener = mock[TypeCheckerListener]
     expecting {
       // the argument to F has the monotype Int
-      listener.onTypeFound(fArg.sourceRef.asInstanceOf[ExactRef],
-        parser("Int")).atLeastOnce()
+      listener.onTypeFound(fArg.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
       // the result of applying F(Int) is Int
-      listener.onTypeFound(fApp.sourceRef.asInstanceOf[ExactRef],
-        parser("Int")).atLeastOnce()
+      listener.onTypeFound(fApp.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
       // the signature a => a gives us the polymorhic type of x
-      listener.onTypeFound(xInF.sourceRef.asInstanceOf[ExactRef],
-        parser("Int")).atLeastOnce()
+      listener.onTypeFound(xInF.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
       // the signature a => a gives us the polymorphic type of xDomain
-      listener.onTypeFound(xDomain.sourceRef.asInstanceOf[ExactRef],
-        parser("Set(Int)")).atLeastOnce()
+      listener.onTypeFound(xDomain.sourceRef.asInstanceOf[ExactRef], parser("Set(Int)")).atLeastOnce()
       // the signature a => a gives us the polymorphic type for the definition of F
-      listener.onTypeFound(fBody.sourceRef.asInstanceOf[ExactRef],
-        parser("Int => Int")).atLeastOnce()
+      listener.onTypeFound(fBody.sourceRef.asInstanceOf[ExactRef], parser("Int => Int")).atLeastOnce()
       // interestingly, we do not infer the type of F at the application site
 //      listener.onTypeFound(fBody.tlaId, parser("Int => Int")).atLeastOnce()
       // the overall result of LET-IN
-      listener.onTypeFound(letIn.sourceRef.asInstanceOf[ExactRef],
-        parser("Int")).atLeastOnce()
+      listener.onTypeFound(letIn.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
     }
     whenExecuting(listener) {
       // we do not compute principal types here....
@@ -398,25 +387,19 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
     val listener = mock[TypeCheckerListener]
     expecting {
       // the argument to F has the monotype Int
-      listener.onTypeFound(fArg.sourceRef.asInstanceOf[ExactRef],
-        parser("Int")).atLeastOnce()
+      listener.onTypeFound(fArg.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
       // the result of applying F(Int) is Int
-      listener.onTypeFound(fApp.sourceRef.asInstanceOf[ExactRef],
-        parser("Int")).atLeastOnce()
+      listener.onTypeFound(fApp.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
       // xDomain is Set(Int), it is trivial to infer the type
-      listener.onTypeFound(xDomain.sourceRef.asInstanceOf[ExactRef],
-        parser("Set(Int)")).atLeastOnce()
+      listener.onTypeFound(xDomain.sourceRef.asInstanceOf[ExactRef], parser("Set(Int)")).atLeastOnce()
       // we infer x: Int from x \in Set(Int)
-      listener.onTypeFound(xInF.sourceRef.asInstanceOf[ExactRef],
-        parser("Int")).atLeastOnce()
+      listener.onTypeFound(xInF.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
       // in this case, we trivially infer the type of F
-      listener.onTypeFound(fBody.sourceRef.asInstanceOf[ExactRef],
-        parser("Int => Int")).atLeastOnce()
+      listener.onTypeFound(fBody.sourceRef.asInstanceOf[ExactRef], parser("Int => Int")).atLeastOnce()
       // interestingly, we do not infer the type of F at the application site
 //      listener.onTypeFound(fBody.tlaId, parser("Int => Int")).atLeastOnce()
       // the overall result of LET-IN
-      listener.onTypeFound(letIn.sourceRef.asInstanceOf[ExactRef],
-        parser("Int")).atLeastOnce()
+      listener.onTypeFound(letIn.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
     }
     whenExecuting(listener) {
       val computed = checker.compute(listener, TypeContext.empty, letIn)
@@ -440,12 +423,11 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
     val listener = mock[TypeCheckerListener]
     expecting {
       // xDomain is Set(b), the type b propagates
-      listener.onTypeFound(xDomain.sourceRef.asInstanceOf[ExactRef],
-        parser("Set(a)")).atLeastOnce()
+      listener.onTypeFound(xDomain.sourceRef.asInstanceOf[ExactRef], parser("Set(a)")).atLeastOnce()
       listener.onTypeFound(fBody.sourceRef.asInstanceOf[ExactRef], parser("a => a")).atLeastOnce()
       listener.onTypeFound(xInF.sourceRef.asInstanceOf[ExactRef], parser("a"))
       listener.onTypeError(letIn.sourceRef,
-        "Expected a concrete type of operator F, found polymorphic type: (a) => a")
+          "Expected a concrete type of operator F, found polymorphic type: ((a) => a)")
     }
     whenExecuting(listener) {
       val computed = checker.compute(listener, TypeContext.empty, letIn)
@@ -492,7 +474,7 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
     val wrapper = wrapWithLet(app)
     expecting {
       listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef],
-        "Mismatch in argument types. Expected: (Seq(a)) => Set(a)")
+          "Mismatch in argument types. Expected: ((Seq(a)) => Set(a))")
       // consume any types for the wrapper and lambda
       consumeWrapperTypes(listener, wrapper)
     }
@@ -587,11 +569,8 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
   }
 
   test("DOMAIN f") {
-    val operTypes = Seq(
-      parser("(a -> b) => Set(a)"),
-      parser("Seq(a) => Set(Int)"),
-      parser("[] => Set(Str)"),
-      parser("{} => Set(Int)"))
+    val operTypes = Seq(parser("(a -> b) => Set(a)"), parser("Seq(a) => Set(Int)"), parser("[] => Set(Str)"),
+        parser("{} => Set(Int)"))
     val arg1 = mkUniqConst(parser("[foo: Int, bar: Bool]"))
     val app = mkUniqApp(operTypes, arg1)
     val wrapper = wrapWithLet(app)
@@ -626,8 +605,9 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
       listener.onTypeFound(x.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
       listener.onTypeFound(xDom.sourceRef.asInstanceOf[ExactRef], parser("Set(Int)")).atLeastOnce()
       listener.onTypeFound(innerLambda.sourceRef.asInstanceOf[ExactRef], parser("Int => Int")).atLeastOnce()
-      listener.onTypeFound(outerLambda.sourceRef.asInstanceOf[ExactRef],
-        parser("(Int -> Int) => (Int => Int)")).atLeastOnce()
+      listener
+        .onTypeFound(outerLambda.sourceRef.asInstanceOf[ExactRef], parser("(Int -> Int) => (Int => Int)"))
+        .atLeastOnce()
       listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("Int -> Int")).atLeastOnce()
       // consume any types for the wrapper and lambda
       consumeWrapperTypes(listener, wrapper)
@@ -665,7 +645,7 @@ class TestEtcTypeChecker  extends FunSuite with EasyMockSugar with BeforeAndAfte
     val listener = mock[TypeCheckerListener]
     expecting {
       listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef],
-        "Need annotation. Arguments match 2 operator signatures: (Int, Int) => Seq(Int) and (Int, Int) => <<Int, Int>>")
+          "Need annotation. Arguments match 2 operator signatures: ((Int, Int) => Seq(Int)) and ((Int, Int) => <<Int, Int>>)")
       // consume any types for the wrapper and lambda
       consumeWrapperTypes(listener, wrapper)
     }

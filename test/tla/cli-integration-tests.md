@@ -874,6 +874,15 @@ The outcome is: Error
 
 ## running the typecheck command
 
+### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
+
+```sh
+$ apalache-mc typecheck ExistTuple476.tla | sed 's/I@.*//'
+...
+Type checker [OK]
+...
+```
+
 ### typecheck CarTalkPuzzleTyped.tla
 
 ```sh
@@ -957,7 +966,7 @@ $ apalache-mc typecheck QueensTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeChecker
  > Running Snowcat .::.
-[QueensTyped.tla:42:44-42:61]: Mismatch in argument types. Expected: (Seq(Int)) => Bool
+[QueensTyped.tla:42:44-42:61]: Mismatch in argument types. Expected: ((Seq(Int)) => Bool)
 [QueensTyped.tla:42:14-42:63]: Error when computing the type of Solutions
  > Snowcat asks you to fix the types. Meow.
 Type checker [FAILED]
