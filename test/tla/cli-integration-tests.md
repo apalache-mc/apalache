@@ -866,6 +866,15 @@ The outcome is: Error
 
 ## running the typecheck command
 
+### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
+
+```sh
+$ apalache-mc typecheck ExistTuple476.tla | sed 's/I@.*//'
+...
+Type checker [OK]
+...
+```
+
 ### typecheck CarTalkPuzzleTyped.tla
 
 ```sh

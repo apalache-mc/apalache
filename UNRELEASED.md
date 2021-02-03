@@ -22,4 +22,5 @@
 
 * Boolean values are now supported in TLC config files, see #512
 * Proper error on invalid type annotations, the parser is strengthened with Scalacheck, see #332
+* Typechecking quantifiers over tuples, see #482
 * Fixed a parsing bug for strings that contain '-', see #539
