@@ -315,8 +315,6 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         //    We can also have nested tuples like <<x, <<y, z>> >>, they are expanded.
         val bindings = translateBindings((bindingEx, bindingSet))
         val typeVars = varPool.fresh(bindings.length)
-        val funFrom =
-          if (bindings.length == 1) typeVars.head else TupT1(typeVars: _*)
         // the principal type is ((a, b) => Bool) => Bool or just (a => Bool) => Bool
         val principal = OperT1(Seq(OperT1(typeVars, BoolT1())), BoolT1())
         // \E and \A implicitly introduce a lambda abstraction: λ x ∈ proj_x, λ x ∈ proj_y. P
