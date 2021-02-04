@@ -1,9 +1,8 @@
 package at.forsyte.apalache.tla.lir.transformations.impl
 
 import org.junit.runner.RunWith
-import org.scalacheck.Prop.{falsified, forAll, passed}
+import org.scalacheck.Prop.{AnyOperators, falsified, forAll, passed, propBoolean}
 import org.scalacheck.{Arbitrary, Gen, Prop}
-import org.scalacheck.Prop.propBoolean
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.prop.Checkers
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
@@ -58,15 +57,11 @@ class TestStableTopologicalSort extends FunSuite with BeforeAndAfterEach with Ch
   // stability is a bit hard to specify, so we only do it for level 0, that is, the nodes without incoming edges
   def isStableLayer0(edges: Map[Int, Set[Int]], unsorted: Seq[Int], sorted: Seq[Int]): Prop = {
     val layer0 = edges.filter(_._2.isEmpty).keySet
-    // since nodes in layer0 have no dependencies, they have to be sorted according to unsorted
+    // since nodes in layer0 have no dependencies, they have to be sorted according to the order in unsorted
     val unsorted0 = unsorted.filter(layer0.contains)
     val sorted0 = sorted.filter(layer0.contains)
     // pretty cool, right?
-    if (unsorted0 == sorted0) {
-      passed
-    } else {
-      falsified
-    }
+    unsorted0 ?= sorted0
   }
 
   // shrinking does not help us here
