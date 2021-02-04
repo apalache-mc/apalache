@@ -175,14 +175,6 @@ extract the respective field when translating the access expression into SMT.
 
 **Determinism:** Deterministic.
 
-**Errors:** The arguments `S_1, ..., S_n` must be sets. If they are not sets,
-the result is undefined in pure TLA+. TLC raises a model checking error. Apalache
-flags a static type error.
-
-TLC raises a model checking error, whenever one of the sets `S_1, ..., S_n` is
-infinite. Apalache can handle infinite records sets in some cases, when one record
-is picked with `\E r \in [ field_1: S_1, ..., field_n: S_n]`.
-
 **Example in TLA+:**
 
 ```tla

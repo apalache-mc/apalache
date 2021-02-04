@@ -222,7 +222,7 @@ that are computed under such a binding.
   [ x, y \in 1..3 |-> x * y ]
     \* a function that maps <<1, 1>>, <<1, 2>>, <<1, 3>>, ..., <<2, 3>>, <<3, 3>>
     \* to 1, 2, 3, ..., 6, 9
-  [ <<x, y>> \in 1..3 \X 4..6 |-> x + y ]
+  [ <<x, y>> \in (1..3) \X (4..6) |-> x + y ]
     \* a function that maps <<1, 4>>, <<1, 5>>, <<1, 6>>, ..., <<2, 6>>, <<3, 6>>
     \* to 5, 6, 7, ..., 8, 9
   [ n \in 1..3 |->
@@ -277,7 +277,7 @@ Apalache flags a static type error.
 **Example in TLA+:**
 
 ```tla
-  [ 1..3 |-> 1..100 ]
+  [ 1..3 -> 1..100 ]
     \* the set of functions that map 1, 2, 3 to values from 1 to 100
   [ Int -> BOOLEAN ]
     \* The infinite set of functions that map every integer to a Boolean.
