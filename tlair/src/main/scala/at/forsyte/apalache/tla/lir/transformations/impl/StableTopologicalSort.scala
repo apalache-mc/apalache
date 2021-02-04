@@ -13,7 +13,7 @@ class StableTopologicalSort[T]() {
 
   /**
    * Sort the elements of the list `unsorted` according to the dependencies that are stored in the incoming edges.
-   * We are assume that `inEdges` contain values for all elements of `unsorted`.
+   * We are assuming that `inEdges` contain values for all elements of `unsorted`.
    *
    * @param inEdges  a set of incoming edges per every element of unsorted (may be empty)
    * @param unsorted a list of nodes
