@@ -46,6 +46,14 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     mkUniqApp(Seq(opsig), args.map(mkUniqName): _*)
   }
 
+  // produce an expression that projects a set of pairs on the set of its first (or second) components
+  private def mkProjection(fst: String, snd: String, projFirst: Boolean, set: String): EtcExpr = {
+    val axis = if (projFirst) fst else snd
+    // projection: depending on axis, either (Set(<<a, b>>) => Set(a)) or (Set(<<a, b>>) => Set(b))
+    val oper = OperT1(Seq(SetT1(TupT1(VarT1(fst), VarT1(snd)))), SetT1(VarT1(axis)))
+    mkUniqApp(Seq(oper), mkUniqName(set))
+  }
+
   test("integer arithmetic") {
     // integers
     val intToInt = parser("Int => Int")
@@ -186,6 +194,32 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     assert(mkExpected(parser("(b => Bool) => Bool")) == gen(tla.forall(tla.name("x"), tla.name("S"), tla.name("P"))))
   }
 
+  test("existential over tuples: \\E <<x, y>> \\in S: P") {
+    // we have to project a set of tuples onto two sets of their components
+    val proj_x = mkProjection("a", "b", projFirst = true, "S")
+    val proj_y = mkProjection("c", "d", projFirst = false, "S")
+    val quantLambda = mkUniqAbs(mkUniqName("P"), ("x", proj_x), ("y", proj_y))
+
+    // the resulting expression is ((((e, f) => Bool) => Bool) (λ x ∈ proj_x. λ y ∈ proj_y. P))
+    def mkExpected(tt: TlaType1) = mkUniqApp(Seq(tt), quantLambda)
+
+    val exists = tla.exists(tla.tuple(tla.name("x"), tla.name("y")), tla.name("S"), tla.name("P"))
+    assert(mkExpected(parser("((e, f) => Bool) => Bool")) == gen(exists))
+  }
+
+  test("universal over tuples: \\A <<x, y>> \\in S: P") {
+    // we have to project a set of tuples onto two sets of their components
+    val proj_x = mkProjection("a", "b", projFirst = true, "S")
+    val proj_y = mkProjection("c", "d", projFirst = false, "S")
+    val quantLambda = mkUniqAbs(mkUniqName("P"), ("x", proj_x), ("y", proj_y))
+
+    // the resulting expression is ((((e, f) => Bool) => Bool) (λ x ∈ proj_x. λ y ∈ proj_y. P))
+    def mkExpected(tt: TlaType1) = mkUniqApp(Seq(tt), quantLambda)
+
+    val exists = tla.forall(tla.tuple(tla.name("x"), tla.name("y")), tla.name("S"), tla.name("P"))
+    assert(mkExpected(parser("((e, f) => Bool) => Bool")) == gen(exists))
+  }
+
   test("set enumerator") {
     val ternary = parser("(a, a, a) => Set(a)")
     val expected = mkConstAppByType(ternary, parser("Int"), parser("Int"), parser("Int"))
@@ -301,12 +335,11 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     val principal = parser("((e, f) => Bool) => Set(<<e, f>>)")
     // filter implicitly introduce a lambda abstraction: λ x ∈ (...), y ∈ (...). P
     // the binding <<x, y>> \in S gives us two lambda abstractions
-    val proj_x =
-      mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("a"), VarT1("b")))), SetT1(VarT1("a")))), mkUniqName("S"))
-    val proj_y =
-      mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("c"), VarT1("d")))), SetT1(VarT1("d")))), mkUniqName("S"))
+
+    val proj_x = mkProjection("a", "b", projFirst = true, "S")
+    val proj_y = mkProjection("c", "d", projFirst = false, "S")
     val lambda = mkUniqAbs(mkUniqName("P"), ("x", proj_x), ("y", proj_y))
-    // the resulting expression is ((((e, f) => Bool) => Set(<<e, f>>)) (λ x ∈ (...), y ∈ (...). P))
+    // the resulting expression is ((((e, f) => Bool) => Set(<<e, f>>)) (λ x ∈ proj_x, y ∈ proj_y. P))
     val expected = mkUniqApp(Seq(principal), lambda)
     assert(expected == gen(tla.filter(tla.tuple(tla.name("x"), tla.name("y")), tla.name("S"), tla.name("P"))))
   }
@@ -327,8 +360,8 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     // given an operator from (f, g) to e, map it to the set of e: ((f, g) => e) => Set(e)
     val principal = parser("((f, g) => e) => Set(e)")
     // the binding <<x, y>> \in S gives us two lambda abstractions
-    val proj_x = mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("a"), VarT1("b")))), SetT1(VarT1("a")))), mkUniqName("S"))
-    val proj_y = mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("c"), VarT1("d")))), SetT1(VarT1("d")))), mkUniqName("S"))
+    val proj_x = mkProjection("a", "b", projFirst = true, "S")
+    val proj_y = mkProjection("c", "d", projFirst = false, "S")
     val lambda = mkUniqAbs(mkUniqName("e"), ("x", proj_x), ("y", proj_y))
 
     // the resulting expression is (((f, g) => e) => Set(e)) (λ x ∈ (...), y ∈ (...). e)
@@ -425,8 +458,8 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     // the principal type is ((f, g) => e) => (<<f, g>> -> e)
     val principal = parser("((f, g) => e) => (<<f, g>> -> e)")
     // the binding <<x, y>> \in S gives us a lambda of two arguments
-    val proj_x = mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("a"), VarT1("b")))), SetT1(VarT1("a")))), mkUniqName("S"))
-    val proj_y = mkUniqApp(Seq(OperT1(Seq(SetT1(TupT1(VarT1("c"), VarT1("d")))), SetT1(VarT1("d")))), mkUniqName("S"))
+    val proj_x = mkProjection("a", "b", projFirst = true, "S")
+    val proj_y = mkProjection("c", "d", projFirst = false, "S")
     val lambda = mkUniqAbs(mkUniqName("ex"), ("x", proj_x), ("y", proj_y))
     // the resulting expression is (((f, g) => e) => (<<f, g>> -> e)) (λ x ∈ (...), y ∈ (...). ex)
     val expected = mkUniqApp(Seq(principal), lambda)

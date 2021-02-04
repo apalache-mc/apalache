@@ -118,6 +118,14 @@ EXITCODE: OK
 
 ## running the check command
 
+### check Fix531.tla reports no error: regression for issue 531
+
+```sh
+$ apalache-mc check --length=1 Fix531.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
 
 ### check UnchangedExpr471.tla reports no error: regression for issue 471
 
@@ -865,6 +873,15 @@ The outcome is: Error
 ```
 
 ## running the typecheck command
+
+### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
+
+```sh
+$ apalache-mc typecheck ExistTuple476.tla | sed 's/I@.*//'
+...
+Type checker [OK]
+...
+```
 
 ### typecheck CarTalkPuzzleTyped.tla
 

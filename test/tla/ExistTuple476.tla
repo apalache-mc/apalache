@@ -4,7 +4,11 @@
  *)
 EXTENDS Integers
 
-VARIABLES x, y
+VARIABLES
+    \* @type: Int;
+    x,
+    \* @type: Int;
+    y
 
 Init ==
     x = 0 /\ y = 0
