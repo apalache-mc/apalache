@@ -17,10 +17,12 @@
 * new command-line option for `typecheck`:
     - enable inference of polymorphic types: `--infer-poly`
 * updates to ADR002 and the manual
+* support for parallel assignments `<<x', y'>> = <<1, 2>>`, see #531
 
 ### Bugfixes
 
 * Boolean values are now supported in TLC config files, see #512
+* Promoting Desugarer to run as the first preprocessing pass, see #531
 * Proper error on invalid type annotations, the parser is strengthened with Scalacheck, see #332
 * Typechecking quantifiers over tuples, see #482
 * Fixed a parsing bug for strings that contain '-', see #539
