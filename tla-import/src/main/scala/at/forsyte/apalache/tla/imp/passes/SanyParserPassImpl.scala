@@ -1,12 +1,13 @@
 package at.forsyte.apalache.tla.imp.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
-import at.forsyte.apalache.tla.imp.SanyImporter
+import at.forsyte.apalache.tla.imp.{SanyImporter, SanyImporterException}
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.TlaModule
+import at.forsyte.apalache.tla.lir.{CyclicDependencyError, TlaModule}
 import at.forsyte.apalache.tla.lir.io.{JsonReader, JsonWriter, PrettyWriter}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
+import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -54,44 +55,58 @@ class SanyParserPassImpl @Inject() (
           .loadFromFile(new File(filename))
       rootModule = modules.get(rootName)
     }
-    if (rootModule.isEmpty) {
-      logger.error("  > Error parsing file " + filename)
-    } else {
-      val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-      PrettyWriter.write(
-          rootModule.get,
-          new File(outdir.toFile, "out-parser.tla")
-      )
-      JsonWriter.write(
-          rootModule.get,
-          new File(outdir.toFile, "out-parser.json")
-      )
+    rootModule match {
+      case None =>
+        logger.error("  > Error parsing file " + filename)
+        false
 
-      // write parser output to specified destination, if requested
-      val output = options.getOrElse("parser", "output", "")
-      if (output.nonEmpty) {
-        if (output.contains(".tla"))
-          PrettyWriter.write(rootModule.get, new File(output))
-        else if (output.contains(".json"))
-          JsonWriter.write(rootModule.get, new File(output))
-        else
-          logger.error(
-              "  > Error writing output: please give either .tla or .json filename"
-          )
+      case Some(mod) =>
+        // In rare cases, declarations may be out of order, as a result of substitution. Reorder them.
+        rootModule =
+          try {
+            Some(DeclarationSorter.instance(mod))
+          } catch {
+            case e: CyclicDependencyError =>
+              // re-throw the error for the nice error message
+              throw new SanyImporterException(e.getMessage)
+          }
+        // save the output
+        val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
+        PrettyWriter.write(
+            rootModule.get,
+            new File(outdir.toFile, "out-parser.tla")
+        )
+        JsonWriter.write(
+            rootModule.get,
+            new File(outdir.toFile, "out-parser.json")
+        )
 
-        if (options.getOrElse("general", "debug", false)) {
-          val sourceLocator =
-            SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
-          rootModule.get.operDeclarations foreach sourceLocator.checkConsistency
+        // write parser output to specified destination, if requested
+        val output = options.getOrElse("parser", "output", "")
+        if (output.nonEmpty) {
+          if (output.contains(".tla"))
+            PrettyWriter.write(rootModule.get, new File(output))
+          else if (output.contains(".json"))
+            JsonWriter.write(rootModule.get, new File(output))
+          else
+            logger.error(
+                "  > Error writing output: please give either .tla or .json filename"
+            )
+
+          if (options.getOrElse("general", "debug", false)) {
+            val sourceLocator =
+              SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
+            rootModule.get.operDeclarations foreach sourceLocator.checkConsistency
+          }
+          if (options.getOrElse("general", "debug", false)) {
+            val sourceLocator =
+              SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
+            rootModule.get.operDeclarations foreach sourceLocator.checkConsistency
+          }
         }
-        if (options.getOrElse("general", "debug", false)) {
-          val sourceLocator =
-            SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
-          rootModule.get.operDeclarations foreach sourceLocator.checkConsistency
-        }
-      }
+
+        true
     }
-    rootModule.isDefined
   }
 
   /**

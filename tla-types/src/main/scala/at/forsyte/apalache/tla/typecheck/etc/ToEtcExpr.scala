@@ -356,7 +356,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
       case OperEx(TlaSetOper.seqSet, arg) =>
         // Seq(S)
         val a = varPool.fresh
-        val sig = OperT1(Seq(SetT1(a)), SeqT1(a))
+        val sig = OperT1(Seq(SetT1(a)), SetT1(SeqT1(a)))
         mkExRefApp(sig, Seq(arg))
 
       case OperEx(op, args @ _*) if op == TlaSetOper.in || op == TlaSetOper.notin =>
