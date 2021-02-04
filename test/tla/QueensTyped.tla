@@ -53,7 +53,11 @@ Solutions == { queens \in [1..N -> 1..N] : IsSolution(queens) }
 (* to the set todo.                                                        *)
 (***************************************************************************)
 
-VARIABLES todo, sols
+VARIABLES
+    \* @type: Set(Seq(Int));
+    todo,
+    \* @type: Set(Seq(Int));
+    sols
 
 Init == /\ todo = { << >> }   \** << >> is a partial (but not full) solution
         /\ sols = {}          \** no full solution found so far
@@ -72,6 +76,7 @@ PlaceQueen == \E queens \in todo :
       ELSE /\ todo' = (todo \ {queens}) \union exts
            /\ sols' = sols
 
+\* @type: <<Set(Seq(Int)), Set(Seq(Int))>>;
 vars == <<todo,sols>>
 Spec == Init /\ [][PlaceQueen]_vars /\ WF_vars(PlaceQueen)
 

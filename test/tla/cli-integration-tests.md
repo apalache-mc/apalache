@@ -760,7 +760,7 @@ The outcome is: NoError
 ```sh
 $ apalache-mc check ConfigUnsorted.tla | sed 's/[IEW]@.*//'
 ...
-Configuration error (see the manual): Circular definition dependency detected
+Configuration error (see the manual): Found a cyclic dependency among operators: A, B, C
 ...
 EXITCODE: ERROR (99)
 ```
