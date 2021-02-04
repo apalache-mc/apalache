@@ -31,7 +31,7 @@ class DeclarationSorter extends TlaModuleTransformation {
     // sort the ids topologically
     val declarations = input.declarations
     val depsGraph = computeDependenciesGraph(declarations)
-    val result = new StableTopologicalSort[UID].toposort(depsGraph, declarations.map(_.ID))
+    val result = new StableTopologicalSort[UID].sort(depsGraph, declarations.map(_.ID))
     // map the ids back to declarations
     val sortedDeclarations = result match {
       case Left(sorted) =>

@@ -19,7 +19,7 @@ class StableTopologicalSort[T]() {
    * @param unsorted a list of nodes
    * @return either Left(sorted) that contains the sorted nodes, or Right(nodes) that contains a subgraph with a cycle inside.
    */
-  def toposort(inEdges: Edges, unsorted: Seq[T]): Either[List[T], Set[T]] = {
+  def sort(inEdges: Edges, unsorted: Seq[T]): Either[List[T], Set[T]] = {
     require(inEdges.keySet == unsorted.toSet)
 
     // save the unsorted order to guarantee stability
@@ -27,6 +27,10 @@ class StableTopologicalSort[T]() {
 
     // Use Kahn's algorithm to sort the declarations in a topological order:
     // https://en.wikipedia.org/wiki/Topological_sorting
+    //
+    // In this version, we are introducing declarations layer by layer, starting with layer 0 that contains
+    // the declarations that have no incoming edges, then the declarations of layer 1 that have incoming edges
+    // only from layer 1, etc. Within each layer, we maintain the original order of declarations.
 
     // the list of sorted nodes
     var sorted = List.empty[T]
@@ -35,7 +39,7 @@ class StableTopologicalSort[T]() {
     // the list of nodes that do not have incoming edges
     var sinks = List.empty[T]
 
-    def updateSinks(): Unit = {
+    def updateSinksAndEdges(): Unit = {
       val (sinkEdges, otherEdges) = edges.partition(_._2.isEmpty)
       // since the sinks have no incoming edges, we can sort them by the original order
       sinks = sinkEdges.keys.toList.sortWith { (l, r) =>
@@ -45,7 +49,7 @@ class StableTopologicalSort[T]() {
     }
 
     // initialize sinks with the nodes that have no incoming edges
-    updateSinks()
+    updateSinksAndEdges()
     while (sinks.nonEmpty) {
       sorted ++= sinks
       val toRemove = sinks.toSet
@@ -54,7 +58,7 @@ class StableTopologicalSort[T]() {
         callers -- toRemove
       }
       // recompute the sinks and edges
-      updateSinks()
+      updateSinksAndEdges()
     }
 
     if (edges.isEmpty) {

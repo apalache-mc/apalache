@@ -73,7 +73,7 @@ class TestStableTopologicalSort extends FunSuite with BeforeAndAfterEach with Ch
       forAll(genEdges(10)) { edges =>
         val unsorted = edges.map(_._1)
         val edgesMap = edges.toMap
-        val result = new StableTopologicalSort[Int].toposort(edgesMap, unsorted)
+        val result = new StableTopologicalSort[Int].sort(edgesMap, unsorted)
         result match {
           case Left(sorted) =>
             isSorted(edgesMap, sorted) :| ("sorted: " + sorted) &&

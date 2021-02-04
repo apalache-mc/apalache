@@ -17,13 +17,10 @@
 * new command-line option for `typecheck`:
   - enable inference of polymorphic types: `--infer-poly`
 * updates to ADR002 and the manual
+* always sorting declarations with topological sort (changes the order of the operator definitions), see #122
 
 ### Bugfixes
 
 * Boolean values are now supported in TLC config files, see #512
 * Proper error on invalid type annotations, the parser is strengthened with Scalacheck, see #332
 * Fixed a parsing bug for strings that contain '-', see #539
-
-### Refactoring
-
-* refactoring of the topological sort of declarations, see #122
