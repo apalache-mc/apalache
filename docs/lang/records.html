@@ -285,12 +285,6 @@ general function application <code>r[&quot;field&quot;]</code>, the operator <co
 much more efficiently in Apalache. Due to the use of types, Apalache can
 extract the respective field when translating the access expression into SMT.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> The arguments <code>S_1, ..., S_n</code> must be sets. If they are not sets,
-the result is undefined in pure TLA+. TLC raises a model checking error. Apalache
-flags a static type error.</p>
-<p>TLC raises a model checking error, whenever one of the sets <code>S_1, ..., S_n</code> is
-infinite. Apalache can handle infinite records sets in some cases, when one record
-is picked with <code>\E r \in [ field_1: S_1, ..., field_n: S_n]</code>.</p>
 <p><strong>Example in TLA+:</strong></p>
 <pre><code class="language-tla">  LET r == [ name |-&gt; &quot;Printer&quot;, port |-&gt; 631 ] IN
   r.name    \* &quot;Printer&quot;

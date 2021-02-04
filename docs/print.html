@@ -4706,7 +4706,7 @@ that are computed under such a binding.</p>
   [ x, y \in 1..3 |-&gt; x * y ]
     \* a function that maps &lt;&lt;1, 1&gt;&gt;, &lt;&lt;1, 2&gt;&gt;, &lt;&lt;1, 3&gt;&gt;, ..., &lt;&lt;2, 3&gt;&gt;, &lt;&lt;3, 3&gt;&gt;
     \* to 1, 2, 3, ..., 6, 9
-  [ &lt;&lt;x, y&gt;&gt; \in 1..3 \X 4..6 |-&gt; x + y ]
+  [ &lt;&lt;x, y&gt;&gt; \in (1..3) \X (4..6) |-&gt; x + y ]
     \* a function that maps &lt;&lt;1, 4&gt;&gt;, &lt;&lt;1, 5&gt;&gt;, &lt;&lt;1, 6&gt;&gt;, ..., &lt;&lt;2, 6&gt;&gt;, &lt;&lt;3, 6&gt;&gt;
     \* to 5, 6, 7, ..., 8, 9
   [ n \in 1..3 |-&gt;
@@ -4742,7 +4742,7 @@ if <code>S</code> is infinite, but when it does not have to explicitly construct
 is undefined. If either <code>S</code> or <code>T</code> is not a set, TLC flags a model checking error.
 Apalache flags a static type error.</p>
 <p><strong>Example in TLA+:</strong></p>
-<pre><code class="language-tla">  [ 1..3 |-&gt; 1..100 ]
+<pre><code class="language-tla">  [ 1..3 -&gt; 1..100 ]
     \* the set of functions that map 1, 2, 3 to values from 1 to 100
   [ Int -&gt; BOOLEAN ]
     \* The infinite set of functions that map every integer to a Boolean.
@@ -5044,12 +5044,6 @@ general function application <code>r[&quot;field&quot;]</code>, the operator <co
 much more efficiently in Apalache. Due to the use of types, Apalache can
 extract the respective field when translating the access expression into SMT.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> The arguments <code>S_1, ..., S_n</code> must be sets. If they are not sets,
-the result is undefined in pure TLA+. TLC raises a model checking error. Apalache
-flags a static type error.</p>
-<p>TLC raises a model checking error, whenever one of the sets <code>S_1, ..., S_n</code> is
-infinite. Apalache can handle infinite records sets in some cases, when one record
-is picked with <code>\E r \in [ field_1: S_1, ..., field_n: S_n]</code>.</p>
 <p><strong>Example in TLA+:</strong></p>
 <pre><code class="language-tla">  LET r == [ name |-&gt; &quot;Printer&quot;, port |-&gt; 631 ] IN
   r.name    \* &quot;Printer&quot;

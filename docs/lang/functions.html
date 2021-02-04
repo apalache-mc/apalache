@@ -334,7 +334,7 @@ that are computed under such a binding.</p>
   [ x, y \in 1..3 |-&gt; x * y ]
     \* a function that maps &lt;&lt;1, 1&gt;&gt;, &lt;&lt;1, 2&gt;&gt;, &lt;&lt;1, 3&gt;&gt;, ..., &lt;&lt;2, 3&gt;&gt;, &lt;&lt;3, 3&gt;&gt;
     \* to 1, 2, 3, ..., 6, 9
-  [ &lt;&lt;x, y&gt;&gt; \in 1..3 \X 4..6 |-&gt; x + y ]
+  [ &lt;&lt;x, y&gt;&gt; \in (1..3) \X (4..6) |-&gt; x + y ]
     \* a function that maps &lt;&lt;1, 4&gt;&gt;, &lt;&lt;1, 5&gt;&gt;, &lt;&lt;1, 6&gt;&gt;, ..., &lt;&lt;2, 6&gt;&gt;, &lt;&lt;3, 6&gt;&gt;
     \* to 5, 6, 7, ..., 8, 9
   [ n \in 1..3 |-&gt;
@@ -370,7 +370,7 @@ if <code>S</code> is infinite, but when it does not have to explicitly construct
 is undefined. If either <code>S</code> or <code>T</code> is not a set, TLC flags a model checking error.
 Apalache flags a static type error.</p>
 <p><strong>Example in TLA+:</strong></p>
-<pre><code class="language-tla">  [ 1..3 |-&gt; 1..100 ]
+<pre><code class="language-tla">  [ 1..3 -&gt; 1..100 ]
     \* the set of functions that map 1, 2, 3 to values from 1 to 100
   [ Int -&gt; BOOLEAN ]
     \* The infinite set of functions that map every integer to a Boolean.
