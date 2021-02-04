@@ -13,7 +13,7 @@ import scala.collection.immutable.HashMap
  * This class orders the declarations in a module according to the define-before-use principle, if possible.
  * Importantly, the sort is stable: The relative order of the definitions is changed only if required.</p>
  *
- * <p>This implementation make the (unstable) topological sort in ConstAndDefRewriter (by Andrey Kupriyanov) obsolete.
+ * <p>This implementation make the topological sort in ConstAndDefRewriter (by Andrey Kupriyanov) obsolete.
  * Note that this transformation does not require a transformation tracker as a parameter, as it only
  * changes the relative order of the operators, not their contents.</p>
  *

@@ -5,7 +5,7 @@
 
   We annotate the original module with types.
 
-  The orignal license:
+  The original license:
 
 *****************************************************************************
 MIT License

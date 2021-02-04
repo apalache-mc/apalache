@@ -37,7 +37,7 @@ class StableTopologicalSort[T]() {
 
     def updateSinks(): Unit = {
       val (sinkEdges, otherEdges) = edges.partition(_._2.isEmpty)
-      // since the sinks havve to incoming edges, we can sort them by the original order
+      // since the sinks have no incoming edges, we can sort them by the original order
       sinks = sinkEdges.keys.toList.sortWith { (l, r) =>
         originalOrder(l) < originalOrder(r)
       }
