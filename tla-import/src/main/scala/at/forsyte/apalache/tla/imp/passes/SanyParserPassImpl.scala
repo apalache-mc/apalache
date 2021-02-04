@@ -1,10 +1,10 @@
 package at.forsyte.apalache.tla.imp.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
-import at.forsyte.apalache.tla.imp.SanyImporter
+import at.forsyte.apalache.tla.imp.{SanyImporter, SanyImporterException}
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.TlaModule
+import at.forsyte.apalache.tla.lir.{CyclicDependencyError, TlaModule}
 import at.forsyte.apalache.tla.lir.io.{JsonReader, JsonWriter, PrettyWriter}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
@@ -62,7 +62,14 @@ class SanyParserPassImpl @Inject() (
 
       case Some(mod) =>
         // In rare cases, declarations may be out of order, as a result of substitution. Reorder them.
-        rootModule = Some(DeclarationSorter.instance(mod))
+        rootModule =
+          try {
+            Some(DeclarationSorter.instance(mod))
+          } catch {
+            case e: CyclicDependencyError =>
+              // re-throw the error for the nice error message
+              throw new SanyImporterException(e.getMessage)
+          }
         // save the output
         val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
         PrettyWriter.write(

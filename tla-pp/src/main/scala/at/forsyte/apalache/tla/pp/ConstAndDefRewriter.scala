@@ -54,7 +54,14 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
     // substitute the constant definitions and operator definitions with the replacement operators
     val transformed = mod.declarations map transformDef
     val filtered = transformed filter (!_.name.startsWith(ConstAndDefRewriter.OVERRIDE_PREFIX))
-    val sortedModule = new DeclarationSorter()(new TlaModule(mod.name, filtered))
+    val sortedModule =
+      try {
+        new DeclarationSorter()(new TlaModule(mod.name, filtered))
+      } catch {
+        case e: CyclicDependencyError =>
+          // re-throw this exception as a configuration error, so the user would see a nice message
+          throw new ConfigurationError(e.getMessage)
+      }
 
     // Importantly, for every constant c, replace NameEx(c) with OperEx(TlaOper.apply, replacement).
     // This is needed as we distinguish the operator calls from constant and variable use.
