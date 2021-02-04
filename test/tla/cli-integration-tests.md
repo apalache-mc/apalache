@@ -993,7 +993,21 @@ $ apalache-mc typecheck FunctionsTyped.tla | sed 's/[IEW]@.*//'
 PASS #1: TypeChecker
  > Running Snowcat .::.
  > Your types are great!
-PASS #2: Terminal
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck FiniteSetsExtTyped.tla
+
+```sh
+$ apalache-mc typecheck FiniteSetsExtTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > Running Snowcat .::.
+ > Your types are great!
+...
 Type checker [OK]
 ...
 EXITCODE: OK
