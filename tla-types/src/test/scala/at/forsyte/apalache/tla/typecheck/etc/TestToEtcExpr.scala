@@ -237,7 +237,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
   }
 
   test("sequence set") {
-    val setToSeq = parser("Set(a) => Seq(a)")
+    val setToSeq = parser("Set(a) => Set(Seq(a))")
     val expected = mkConstAppByName(setToSeq, "S")
     assert(expected == gen(tla.seqSet(tla.name("S"))))
   }
