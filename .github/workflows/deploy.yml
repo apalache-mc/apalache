@@ -21,7 +21,7 @@ jobs:
           # mdbook-version: 'latest'
 
       - name: Use OCaml 4.11.0
-        uses: avsm/setup-ocaml@v1
+        uses: actions-ml/setup-ocaml@8047ff86bc363ab5a0ba4323ac99e1800daaa622
         with:
           ocaml-version: 4.11.0
 
