@@ -25,7 +25,7 @@ apalache:
 	mvn package
 
 apalache-jar:
-	mvn --batch-mode --no-transfer-progress -DskipTests package
+	mvn --batch-mode --no-transfer-progress package -Dmaven.test.skip=true
 
 # Just compile with quick settings
 compile:

@@ -10,6 +10,7 @@
 4. Clone the git repository: `git clone https://github.com/informalsystems/apalache.git`.
 5. Change into the project directory: `cd apalache`.
 7. Run `make`.
+   - For a slightly faster build, you can run `make apalache-jar`
 6. *Optionally* install [direnv][] and run `direnv allow`
 8. Confirm you can run the executable. It should print the inline CLI help message.
    - If you used `direnv`, then `apalache-mc` will be in your path.
