@@ -20,15 +20,6 @@ jobs:
           mdbook-version: "0.4.5"
           # mdbook-version: 'latest'
 
-      # - name: Use OCaml 4.11.0
-      #   uses: actions-ml/setup-ocaml@8047ff86bc363ab5a0ba4323ac99e1800daaa622
-      #   with:
-      #     ocaml-version: 4.11.0
-
-      # - name: Install emojitsu
-      #   run: |
-      #     opam pin https://github.com/shonfeder/emojitsu.git#0.0.5
-
       - name: Build the mdBook
         run: |
           set -x
@@ -36,7 +27,7 @@ jobs:
           cd docs
 
           # Install emojitsu
-          wget https://github.com/shonfeder/emojitsu/releases/download/0.0.6/gh-actions-emojitsu
+          wget --no-verbose https://github.com/shonfeder/emojitsu/releases/download/0.0.6/gh-actions-emojitsu
           chmod +x gh-actions-emojitsu
 
           # Emojify the markdown
@@ -47,11 +38,11 @@ jobs:
           # jekyll rendering we use for the base site
           rm ../target/docs/.nojekyll
 
-      # - name: Deploy
-      #   uses: peaceiris/actions-gh-pages@v3
-      #   with:
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
-      #     publish_dir: ./target/docs
-      #     destination_dir: docs
-      #     # We use GitHub's builtin jekyll for rendering the main landing page
-      #     enable_jekyll: true
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./target/docs
+          destination_dir: docs
+          # We use GitHub's builtin jekyll for rendering the main landing page
+          enable_jekyll: true
