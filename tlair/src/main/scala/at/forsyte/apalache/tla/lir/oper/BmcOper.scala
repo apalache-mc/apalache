@@ -7,12 +7,13 @@ package at.forsyte.apalache.tla.lir.oper
   * TODO: rename this class to ApalacheOper, once ik/multicore is merged into unstable.
   *
   * @author konnov
- */
+  */
 abstract class BmcOper extends TlaOper {
   override def interpretation: Interpretation.Value = Interpretation.StandardLib
 }
 
 object BmcOper {
+
   /**
     * A type annotation of an expression with another expression that encodes a type.
     */
@@ -74,5 +75,15 @@ object BmcOper {
     override def arity: OperArity = AnyArity()
     override def precedence: (Int, Int) = (5, 5)
   }
-}
 
+  /**
+    * Attempt to dynamically cast an Int -> T function to a Seq(T).
+    * The first argument should be the function expression and the second argument
+    * should be an integer, denoting the maximal length of the sequence.
+    */
+  object funAsSeq extends BmcOper {
+    override def name: String = "BMC!FunAsSeq"
+    override def arity: OperArity = FixedArity(2)
+    override val precedence: (Int, Int) = (100, 100)
+  }
+}
