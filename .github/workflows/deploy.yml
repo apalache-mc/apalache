@@ -6,7 +6,6 @@ on:
       - master
       # TODO Remove once deploying unstable versions separately
       - unstable
-      - shon/emojify-docs # FIXME
 
 jobs:
   deploy:
