@@ -19,8 +19,19 @@ jobs:
           mdbook-version: "0.4.5"
           # mdbook-version: 'latest'
 
-      - run: |
+      - name: Build the mdBook
+        run: |
+          set -x
+
           cd docs
+
+          # Install emojitsu
+          wget --no-verbose https://github.com/shonfeder/emojitsu/releases/download/0.0.6/gh-actions-emojitsu
+          chmod +x gh-actions-emojitsu
+
+          # Emojify the markdown
+          find . -type f -name "*.md" -exec ./gh-actions-emojitsu emojify -i {} \;
+          # Build the book
           mdbook build
           # mdbook generates this file automatically but it breaks the gh-pages
           # jekyll rendering we use for the base site
