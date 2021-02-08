@@ -7,16 +7,17 @@ import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 import scala.math.BigInt
 
 /**
-  * <p>A base class for constant simplification that is shared by more specialized simplifiers.</p>
-  *
-  * <p>Bugfix #450: make sure that the integers are simplified with BigInt.</p>
-  *
-  * @author Igor Konnov
-  */
+ * <p>A base class for constant simplification that is shared by more specialized simplifiers.</p>
+ *
+ * <p>Bugfix #450: make sure that the integers are simplified with BigInt.</p>
+ *
+ * @author Igor Konnov
+ */
 abstract class ConstSimplifierBase {
+
   /**
-    * A shallow simplification that does not recurse into the expression structure.
-    */
+   * A shallow simplification that does not recurse into the expression structure.
+   */
   def simplifyShallow: TlaEx => TlaEx = {
     case OperEx(TlaSetOper.notin, lhs, rhs) =>
       OperEx(TlaBoolOper.not, OperEx(TlaSetOper.in, lhs, rhs))
@@ -103,24 +104,24 @@ abstract class ConstSimplifierBase {
       if (left == right) ValEx(TlaBool(false)) else ex
 
     // boolean operations
-    case OperEx(TlaBoolOper.and, args @ _*)  =>
+    case OperEx(TlaBoolOper.and, args @ _*) =>
       val simpArgs = args.filterNot { _ == ValEx(TlaBool(true)) }
       if (simpArgs.isEmpty) {
         ValEx(TlaBool(true)) // an empty conjunction is true
       } else if (simpArgs.contains(ValEx(TlaBool(false)))) {
         ValEx(TlaBool(false)) // one false make conjunction false
       } else {
-        OperEx(TlaBoolOper.and, simpArgs :_*)
+        OperEx(TlaBoolOper.and, simpArgs: _*)
       }
 
-    case OperEx(TlaBoolOper.or, args @ _*)  =>
+    case OperEx(TlaBoolOper.or, args @ _*) =>
       val simpArgs = args.filterNot { _ == ValEx(TlaBool(false)) }
       if (simpArgs.isEmpty) {
         ValEx(TlaBool(false)) // an empty disjunction is true
       } else if (simpArgs.contains(ValEx(TlaBool(true)))) {
         ValEx(TlaBool(true)) // one true make disjunction true
       } else {
-        OperEx(TlaBoolOper.or, simpArgs :_*)
+        OperEx(TlaBoolOper.or, simpArgs: _*)
       }
 
     case OperEx(TlaBoolOper.not, ValEx(TlaBool(b))) =>

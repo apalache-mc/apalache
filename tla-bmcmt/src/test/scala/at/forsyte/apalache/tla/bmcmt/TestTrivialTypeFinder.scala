@@ -51,31 +51,39 @@ class TestTrivialTypeFinder extends RewriterBase {
     val set1 = tla.name("S")
     val set2 = tla.name("T")
     // good cases
-    assert(BoolT() ==
-      typeFinder.compute(tla.eql(set1, set2), FinSetT(IntT()), FinSetT(IntT())))
-    assert(BoolT() ==
-      typeFinder.compute(tla.neql(set1, set2), FinSetT(IntT()), FinSetT(IntT())))
-    assert(IntT() ==
-      typeFinder.compute(tla.choose(x, set1, p), IntT(), FinSetT(IntT()), BoolT()))
-    assert(IntT() ==
-      typeFinder.compute(tla.choose(x, p), IntT(), BoolT()))
-    assert(IntT() ==
-      typeFinder.compute(OperEx(TlaOper.chooseIdiom, set1), FinSetT(IntT())))
-    assert(FinSetT(IntT())
-      == typeFinder.compute(tla.label(set1, "lab", "a"), FinSetT(IntT()), ConstT(), ConstT()))
+    assert(
+        BoolT() ==
+          typeFinder.compute(tla.eql(set1, set2), FinSetT(IntT()), FinSetT(IntT())))
+    assert(
+        BoolT() ==
+          typeFinder.compute(tla.neql(set1, set2), FinSetT(IntT()), FinSetT(IntT())))
+    assert(
+        IntT() ==
+          typeFinder.compute(tla.choose(x, set1, p), IntT(), FinSetT(IntT()), BoolT()))
+    assert(
+        IntT() ==
+          typeFinder.compute(tla.choose(x, p), IntT(), BoolT()))
+    assert(
+        IntT() ==
+          typeFinder.compute(OperEx(TlaOper.chooseIdiom, set1), FinSetT(IntT())))
+    assert(
+        FinSetT(IntT())
+          == typeFinder.compute(tla.label(set1, "lab", "a"), FinSetT(IntT()), ConstT(), ConstT()))
     // bad cases
     typeFinder.compute(tla.eql(set1, set2), FinSetT(IntT()), FinSetT(BoolT()))
     assert(typeFinder.typeErrors.nonEmpty)
 
     typeFinder.compute(tla.neql(set1, set2), FinSetT(IntT()), FinSetT(BoolT()))
     assert(typeFinder.typeErrors.nonEmpty)
-    assert(IntT() ==
-      typeFinder.compute(tla.choose(x, set1, p), BoolT(), FinSetT(IntT()), BoolT()))
+    assert(
+        IntT() ==
+          typeFinder.compute(tla.choose(x, set1, p), BoolT(), FinSetT(IntT()), BoolT()))
     assert(typeFinder.typeErrors.nonEmpty)
     typeFinder.compute(tla.choose(x, set1, p), IntT(), IntT(), BoolT())
     assert(typeFinder.typeErrors.nonEmpty)
-    assert(IntT() ==
-      typeFinder.compute(tla.choose(x, set1, p), IntT(), FinSetT(IntT()), IntT()))
+    assert(
+        IntT() ==
+          typeFinder.compute(tla.choose(x, set1, p), IntT(), FinSetT(IntT()), IntT()))
     assert(typeFinder.typeErrors.nonEmpty)
     assert(IntT() == typeFinder.compute(tla.choose(x, p), IntT(), IntT()))
     assert(typeFinder.typeErrors.nonEmpty)
@@ -189,14 +197,17 @@ class TestTrivialTypeFinder extends RewriterBase {
     val y = NameEx("y")
     val z = NameEx("z")
     // good cases
-    assert(FinSetT(IntT()) ==
-      typeFinder.compute(tla.ite(p, x, y), BoolT(), FinSetT(IntT()), FinSetT(IntT())))
+    assert(
+        FinSetT(IntT()) ==
+          typeFinder.compute(tla.ite(p, x, y), BoolT(), FinSetT(IntT()), FinSetT(IntT())))
     val caseEx = tla.caseSplit(p, x, q, y)
-    assert(FinSetT(IntT()) ==
-      typeFinder.compute(caseEx, BoolT(), FinSetT(IntT()), BoolT(), FinSetT(IntT())))
+    assert(
+        FinSetT(IntT()) ==
+          typeFinder.compute(caseEx, BoolT(), FinSetT(IntT()), BoolT(), FinSetT(IntT())))
     val caseOtherEx = tla.caseOther(z, p, x, q, y)
-    assert(FinSetT(IntT()) ==
-      typeFinder.compute(caseOtherEx, FinSetT(IntT()), BoolT(), FinSetT(IntT()), BoolT(), FinSetT(IntT())))
+    assert(
+        FinSetT(IntT()) ==
+          typeFinder.compute(caseOtherEx, FinSetT(IntT()), BoolT(), FinSetT(IntT()), BoolT(), FinSetT(IntT())))
 
     val decl = TlaOperDecl("A", List(), tla.plus(tla.int(1), tla.int(2)))
     val letIn = tla.letIn(tla.plus(tla.int(1), tla.appDecl(decl)), decl)
@@ -222,18 +233,24 @@ class TestTrivialTypeFinder extends RewriterBase {
     val set12 = tla.enumSet(tla.int(1), tla.int(2))
     val set123 = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     // good cases
-    assert(BoolT() ==
-      typeFinder.compute(tla.in(int1, set12), IntT(), FinSetT(IntT())))
-    assert(BoolT() ==
-      typeFinder.compute(tla.notin(int1, set12), IntT(), FinSetT(IntT())))
-    assert(BoolT() ==
-      typeFinder.compute(tla.subset(set12, set123), FinSetT(IntT()), FinSetT(IntT())))
-    assert(BoolT() ==
-      typeFinder.compute(tla.subseteq(set12, set123), FinSetT(IntT()), FinSetT(IntT())))
-    assert(BoolT() ==
-      typeFinder.compute(tla.supset(set12, set123), FinSetT(IntT()), FinSetT(IntT())))
-    assert(BoolT() ==
-      typeFinder.compute(tla.supseteq(set12, set123), FinSetT(IntT()), FinSetT(IntT())))
+    assert(
+        BoolT() ==
+          typeFinder.compute(tla.in(int1, set12), IntT(), FinSetT(IntT())))
+    assert(
+        BoolT() ==
+          typeFinder.compute(tla.notin(int1, set12), IntT(), FinSetT(IntT())))
+    assert(
+        BoolT() ==
+          typeFinder.compute(tla.subset(set12, set123), FinSetT(IntT()), FinSetT(IntT())))
+    assert(
+        BoolT() ==
+          typeFinder.compute(tla.subseteq(set12, set123), FinSetT(IntT()), FinSetT(IntT())))
+    assert(
+        BoolT() ==
+          typeFinder.compute(tla.supset(set12, set123), FinSetT(IntT()), FinSetT(IntT())))
+    assert(
+        BoolT() ==
+          typeFinder.compute(tla.supseteq(set12, set123), FinSetT(IntT()), FinSetT(IntT())))
     // bad cases
     typeFinder.compute(tla.in(set12, set12), FinSetT(IntT()), FinSetT(IntT()))
     assert(typeFinder.typeErrors.nonEmpty)
@@ -261,12 +278,15 @@ class TestTrivialTypeFinder extends RewriterBase {
     val set12 = tla.enumSet(tla.int(1), tla.int(2))
     val set123 = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     // good cases
-    assert(FinSetT(IntT()) ==
-      typeFinder.compute(tla.cup(set12, set123), FinSetT(IntT()), FinSetT(IntT())))
-    assert(FinSetT(IntT()) ==
-      typeFinder.compute(tla.cap(set12, set123), FinSetT(IntT()), FinSetT(IntT())))
-    assert(FinSetT(IntT()) ==
-      typeFinder.compute(tla.setminus(set12, set123), FinSetT(IntT()), FinSetT(IntT())))
+    assert(
+        FinSetT(IntT()) ==
+          typeFinder.compute(tla.cup(set12, set123), FinSetT(IntT()), FinSetT(IntT())))
+    assert(
+        FinSetT(IntT()) ==
+          typeFinder.compute(tla.cap(set12, set123), FinSetT(IntT()), FinSetT(IntT())))
+    assert(
+        FinSetT(IntT()) ==
+          typeFinder.compute(tla.setminus(set12, set123), FinSetT(IntT()), FinSetT(IntT())))
     // bad cases
     typeFinder.compute(tla.cup(int1, set123), IntT(), FinSetT(IntT()))
     assert(typeFinder.typeErrors.nonEmpty)
@@ -281,8 +301,9 @@ class TestTrivialTypeFinder extends RewriterBase {
     val int1 = tla.int(1)
     val set12 = tla.enumSet(tla.int(1), tla.int(2))
     // good cases
-    assert(FinSetT(IntT()) ==
-      typeFinder.compute(tla.filter(NameEx("x"), set12, tla.bool(true)), IntT(), FinSetT(IntT()), BoolT()))
+    assert(
+        FinSetT(IntT()) ==
+          typeFinder.compute(tla.filter(NameEx("x"), set12, tla.bool(true)), IntT(), FinSetT(IntT()), BoolT()))
     // bad cases
     typeFinder.compute(tla.filter(NameEx("x"), int1, tla.bool(true)), IntT(), IntT(), BoolT())
     assert(typeFinder.typeErrors.nonEmpty)
@@ -295,14 +316,17 @@ class TestTrivialTypeFinder extends RewriterBase {
     val int1 = tla.int(1)
     val set12 = tla.enumSet(tla.int(1), tla.int(2))
     // good cases
-    assert(FinSetT(BoolT()) ==
-      typeFinder.compute(tla.map(tla.bool(true), NameEx("x"), set12), BoolT(), IntT(), FinSetT(IntT())))
-    assert(FinSetT(IntT()) ==
-      typeFinder.compute(tla.map(tla.bool(true), NameEx("x"), set12), IntT(), BoolT(), FinSetT(BoolT())))
+    assert(
+        FinSetT(BoolT()) ==
+          typeFinder.compute(tla.map(tla.bool(true), NameEx("x"), set12), BoolT(), IntT(), FinSetT(IntT())))
+    assert(
+        FinSetT(IntT()) ==
+          typeFinder.compute(tla.map(tla.bool(true), NameEx("x"), set12), IntT(), BoolT(), FinSetT(BoolT())))
     // bad cases
     typeFinder.compute(tla.map(tla.bool(true), NameEx("x"), int1), BoolT(), IntT(), IntT())
     assert(typeFinder.typeErrors.nonEmpty)
-    typeFinder.compute(tla.map(tla.bool(true), NameEx("x"), set12, NameEx("y"), int1), BoolT(), IntT(), FinSetT(IntT()), IntT(), IntT())
+    typeFinder.compute(tla.map(tla.bool(true), NameEx("x"), set12, NameEx("y"), int1), BoolT(), IntT(), FinSetT(IntT()),
+        IntT(), IntT())
     assert(typeFinder.typeErrors.nonEmpty)
   }
 
@@ -312,8 +336,9 @@ class TestTrivialTypeFinder extends RewriterBase {
     val set12 = tla.enumSet(tla.int(1), tla.int(2))
     val set3 = tla.enumSet(tla.int(3))
     // good cases
-    assert(FinSetT(IntT()) ==
-      typeFinder.compute(tla.union(tla.enumSet(set12, set3)), FinSetT(FinSetT(IntT()))))
+    assert(
+        FinSetT(IntT()) ==
+          typeFinder.compute(tla.union(tla.enumSet(set12, set3)), FinSetT(FinSetT(IntT()))))
     // bad cases
     typeFinder.compute(tla.union(set12), FinSetT(IntT()))
     assert(typeFinder.typeErrors.nonEmpty)
@@ -326,8 +351,9 @@ class TestTrivialTypeFinder extends RewriterBase {
     val set3 = tla.enumSet(tla.int(3))
 
     // good cases
-    assert(FinSetT(FinSetT(IntT())) ==
-      typeFinder.compute(tla.powSet(set12), FinSetT(IntT())))
+    assert(
+        FinSetT(FinSetT(IntT())) ==
+          typeFinder.compute(tla.powSet(set12), FinSetT(IntT())))
     // bad cases
     typeFinder.compute(tla.powSet(int1), IntT())
     assert(typeFinder.typeErrors.nonEmpty)
@@ -341,7 +367,7 @@ class TestTrivialTypeFinder extends RewriterBase {
 
     // good cases
     assert(FinSetT(TupleT(Seq(IntT(), BoolT()))) ==
-      typeFinder.compute(tla.times(set12, set3), FinSetT(IntT()), FinSetT(BoolT())))
+          typeFinder.compute(tla.times(set12, set3), FinSetT(IntT()), FinSetT(BoolT())))
     // bad cases
     typeFinder.compute(tla.times(set12, int1), FinSetT(IntT()), IntT())
     assert(typeFinder.typeErrors.nonEmpty)
@@ -355,7 +381,7 @@ class TestTrivialTypeFinder extends RewriterBase {
 
     // good cases
     assert(FinSetT(FunT(FinSetT(IntT()), BoolT())) ==
-      typeFinder.compute(tla.funSet(set12, boolSet), FinSetT(IntT()), FinSetT(BoolT())))
+          typeFinder.compute(tla.funSet(set12, boolSet), FinSetT(IntT()), FinSetT(BoolT())))
     // bad cases
     typeFinder.compute(tla.funSet(set12, tla.bool(false)), FinSetT(IntT()), BoolT())
     assert(typeFinder.typeErrors.nonEmpty)
@@ -371,9 +397,11 @@ class TestTrivialTypeFinder extends RewriterBase {
 
     // good cases
     assert(FinSetT(RecordT(SortedMap("a" -> IntT(), "b" -> BoolT()))) ==
-      typeFinder.compute(tla.recSet(tla.str("a"), set12, tla.str("b"), boolSet), ConstT(), FinSetT(IntT()), ConstT(), FinSetT(BoolT())))
+          typeFinder.compute(tla.recSet(tla.str("a"), set12, tla.str("b"), boolSet), ConstT(), FinSetT(IntT()),
+              ConstT(), FinSetT(BoolT())))
     // bad cases
-    typeFinder.compute(tla.recSet(tla.str("a"), int1, tla.str("b"), boolSet), ConstT(), IntT(), ConstT(), FinSetT(BoolT()))
+    typeFinder.compute(tla.recSet(tla.str("a"), int1, tla.str("b"), boolSet), ConstT(), IntT(), ConstT(),
+        FinSetT(BoolT()))
     assert(typeFinder.typeErrors.nonEmpty)
   }
 
@@ -399,10 +427,12 @@ class TestTrivialTypeFinder extends RewriterBase {
     val typeFinder = new TrivialTypeFinder()
     val tup = tla.tuple(tla.int(1), tla.bool(false))
     val tupleType = TupleT(Seq(IntT(), BoolT()))
-    assert(IntT() ==
-      typeFinder.compute(tla.appFun(tup, tla.int(1)), tupleType, IntT()))
-    assert(BoolT() ==
-      typeFinder.compute(tla.appFun(tup, tla.int(2)), tupleType, IntT()))
+    assert(
+        IntT() ==
+          typeFinder.compute(tla.appFun(tup, tla.int(1)), tupleType, IntT()))
+    assert(
+        BoolT() ==
+          typeFinder.compute(tla.appFun(tup, tla.int(2)), tupleType, IntT()))
     // out-of-range expressions
     typeFinder.compute(tla.appFun(tup, tla.int(0)), tupleType, IntT())
     assert(typeFinder.typeErrors.nonEmpty)
@@ -418,10 +448,12 @@ class TestTrivialTypeFinder extends RewriterBase {
     val rec = tla.enumFun(tla.str("a"), tla.int(1), tla.str("b"), tla.bool(false))
     val recType = RecordT(SortedMap("a" -> IntT(), "b" -> BoolT()))
 
-    assert(IntT() ==
-      typeFinder.compute(tla.appFun(rec, tla.str("a")), recType, ConstT()))
-    assert(BoolT() ==
-      typeFinder.compute(tla.appFun(rec, tla.str("b")), recType, ConstT()))
+    assert(
+        IntT() ==
+          typeFinder.compute(tla.appFun(rec, tla.str("a")), recType, ConstT()))
+    assert(
+        BoolT() ==
+          typeFinder.compute(tla.appFun(rec, tla.str("b")), recType, ConstT()))
     // out-of-range expressions
     typeFinder.compute(tla.appFun(rec, tla.str("c")), recType, ConstT())
     assert(typeFinder.typeErrors.nonEmpty)
@@ -435,8 +467,9 @@ class TestTrivialTypeFinder extends RewriterBase {
     val fun = tla.name("f") // we know just the name
     val funType = FunT(FinSetT(IntT()), BoolT())
 
-    assert(BoolT() ==
-      typeFinder.compute(tla.appFun(fun, tla.int(1)), funType, IntT()))
+    assert(
+        BoolT() ==
+          typeFinder.compute(tla.appFun(fun, tla.int(1)), funType, IntT()))
     // wrong argument type
     typeFinder.compute(tla.appFun(fun, tla.str("c")), funType, ConstT())
     assert(typeFinder.typeErrors.nonEmpty)
@@ -484,9 +517,9 @@ class TestTrivialTypeFinder extends RewriterBase {
     val e = tla.name("e")
     // good cases
     assert(FunT(FinSetT(IntT()), BoolT()) ==
-      typeFinder.compute(tla.funDef(e, x, S), BoolT(), IntT(), FinSetT(IntT())))
+          typeFinder.compute(tla.funDef(e, x, S), BoolT(), IntT(), FinSetT(IntT())))
     assert(FunT(FinSetT(TupleT(Seq(IntT(), ConstT()))), BoolT()) ==
-      typeFinder.compute(tla.funDef(e, x, S, y, T), BoolT(), IntT(), FinSetT(IntT()), ConstT(), FinSetT(ConstT())))
+          typeFinder.compute(tla.funDef(e, x, S, y, T), BoolT(), IntT(), FinSetT(IntT()), ConstT(), FinSetT(ConstT())))
     // bad cases
     assertThrows[TypeException] {
       typeFinder.compute(tla.funDef(e, x, S), BoolT(), ConstT(), IntT())
@@ -501,11 +534,13 @@ class TestTrivialTypeFinder extends RewriterBase {
     // good cases
     val funT = FunT(FinSetT(IntT()), BoolT())
     // TlaFunOper.except expects an index (single-dimensional as well as multi-dimensional) wrapped into a tuple
-    assert(funT ==
-      typeFinder.compute(tla.except(f, e, g), funT, TupleT(Seq(IntT())), BoolT()))
+    assert(
+        funT ==
+          typeFinder.compute(tla.except(f, e, g), funT, TupleT(Seq(IntT())), BoolT()))
     val fun2T = FunT(FinSetT(TupleT(Seq(IntT(), ConstT()))), BoolT())
-    assert(fun2T ==
-      typeFinder.compute(tla.except(f, e, g), fun2T, TupleT(Seq(TupleT(Seq(IntT(), ConstT())))), BoolT()))
+    assert(
+        fun2T ==
+          typeFinder.compute(tla.except(f, e, g), fun2T, TupleT(Seq(TupleT(Seq(IntT(), ConstT())))), BoolT()))
     // bad cases
     typeFinder.compute(tla.except(f, e, g), funT, IntT(), BoolT())
     assert(typeFinder.typeErrors.nonEmpty)
@@ -602,8 +637,8 @@ class TestTrivialTypeFinder extends RewriterBase {
     // double assignment is fine as soon as the types are preserved
     val assign =
       tla.or(
-        tla.assignPrime(x, tla.int(1)),
-        tla.assignPrime(x, tla.int(3))
+          tla.assignPrime(x, tla.int(1)),
+          tla.assignPrime(x, tla.int(3))
       )
     assert(typeFinder.inferAndSave(assign).contains(BoolT()))
     assert(IntT() == typeFinder.varTypes("x'"))
@@ -730,108 +765,117 @@ class TestTrivialTypeFinder extends RewriterBase {
   test("inferAndSave from the wild") {
     import IncrementalRenaming.makeName
     val init = tla.declOp(makeName("RenamedInit", 0),
-      tla.and(
-        tla.assignPrime(
-          tla.name("recOne"),
-          tla.withType(
-            tla.enumFun(
-              tla.str("x"),
-              tla.str("y")
+        tla.and(
+            tla.assignPrime(
+                tla.name("recOne"),
+                tla.withType(
+                    tla.enumFun(
+                        tla.str("x"),
+                        tla.str("y")
+                    ),
+                    tla.enumFun(
+                        tla.str("x"),
+                        ValEx(TlaStrSet),
+                        tla.str("y"),
+                        ValEx(TlaIntSet)
+                    )
+                )
             ),
-            tla.enumFun(
-              tla.str("x"), ValEx(TlaStrSet),
-              tla.str("y"), ValEx(TlaIntSet)
+            tla.assignPrime(
+                tla.name("recTwo"),
+                tla.withType(
+                    tla.enumFun(
+                        tla.str("x"),
+                        tla.str("x")
+                    ),
+                    tla.enumFun(
+                        tla.str("x"),
+                        ValEx(TlaStrSet),
+                        tla.str("z"),
+                        tla.enumSet(ValEx(TlaIntSet))
+                    )
+                )
             )
-          )
-        ),
-        tla.assignPrime(
-          tla.name("recTwo"),
-          tla.withType(
-            tla.enumFun(
-              tla.str("x"),
-              tla.str("x")
-            ),
-            tla.enumFun(
-              tla.str("x"), ValEx(TlaStrSet),
-              tla.str("z"), tla.enumSet(ValEx(TlaIntSet))
-            )
-          )
-        )
-      )
-    )
+        ))
 
     val next1 = tla.declOp(makeName("RenamedNext", 0),
-      tla.and(
-        tla.assignPrime(
-          tla.name("recOne"),
-          tla.withType(
-            tla.enumFun(
-              tla.str("x"),
-              tla.str("x")
+        tla.and(
+            tla.assignPrime(
+                tla.name("recOne"),
+                tla.withType(
+                    tla.enumFun(
+                        tla.str("x"),
+                        tla.str("x")
+                    ),
+                    tla.enumFun(
+                        tla.str("x"),
+                        ValEx(TlaStrSet),
+                        tla.str("y"),
+                        ValEx(TlaIntSet)
+                    )
+                )
             ),
-            tla.enumFun(
-              tla.str("x"), ValEx(TlaStrSet),
-              tla.str("y"), ValEx(TlaIntSet)
+            tla.assignPrime(
+                tla.name("recTwo"),
+                tla.withType(
+                    tla.enumFun(
+                        tla.str("x"),
+                        tla.str("x")
+                    ),
+                    tla.enumFun(
+                        tla.str("x"),
+                        ValEx(TlaStrSet),
+                        tla.str("z"),
+                        tla.enumSet(ValEx(TlaIntSet))
+                    )
+                )
             )
-          )
-        ),
-        tla.assignPrime(
-          tla.name("recTwo"),
-          tla.withType(
-            tla.enumFun(
-              tla.str("x"),
-              tla.str("x")
-            ),
-            tla.enumFun(
-              tla.str("x"), ValEx(TlaStrSet),
-              tla.str("z"), tla.enumSet(ValEx(TlaIntSet))
-            )
-          )
-        )
-      )
-    )
+        ))
 
     val next2 = tla.declOp(makeName("RenamedNext", 1),
-      tla.and(
-        tla.assignPrime(
-          tla.name("recOne"),
-          tla.withType(
-            tla.enumFun(
-              tla.str("x"),
-              tla.str("x")
+        tla.and(
+            tla.assignPrime(
+                tla.name("recOne"),
+                tla.withType(
+                    tla.enumFun(
+                        tla.str("x"),
+                        tla.str("x")
+                    ),
+                    tla.enumFun(
+                        tla.str("x"),
+                        ValEx(TlaStrSet),
+                        tla.str("y"),
+                        ValEx(TlaIntSet)
+                    )
+                )
             ),
-            tla.enumFun(
-              tla.str("x"), ValEx(TlaStrSet),
-              tla.str("y"), ValEx(TlaIntSet)
+            tla.assignPrime(
+                tla.name("recTwo"),
+                tla.withType(
+                    tla.enumFun(
+                        tla.str("x"),
+                        tla.str("z")
+                    ),
+                    tla.enumFun(
+                        tla.str("x"),
+                        ValEx(TlaStrSet),
+                        tla.str("z"),
+                        tla.enumSet(ValEx(TlaIntSet))
+                    )
+                )
             )
-          )
-        ),
-        tla.assignPrime(
-          tla.name("recTwo"),
-          tla.withType(
-            tla.enumFun(
-              tla.str("x"),
-              tla.str("z")
-            ),
-            tla.enumFun(
-              tla.str("x"), ValEx(TlaStrSet),
-              tla.str("z"), tla.enumSet(ValEx(TlaIntSet))
-            )
-          )
-        )
-      )
-    )
+        ))
 
     val decls = Seq(
-      init,
-      next1,
-      next2
+        init,
+        next1,
+        next2
     )
 
     val ttf = new TrivialTypeFinder
 
-    decls foreach {
-      d => ttf.inferAndSave(d.body)
+    decls foreach { d =>
+      ttf.inferAndSave(d.body)
     }
 
     assert(ttf.typeErrors.isEmpty)

@@ -14,34 +14,31 @@ import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
 /**
-  * An unrolling pass that
-  *
-  * @param options pass options
-  * @param tracker transformation tracker
-  * @param nextPass next pass to call
-  */
-class UnrollPassImpl @Inject()( val options : PassOptions,
-                                nameGenerator : UniqueNameGenerator,
-                                tracker : TransformationTracker,
-                                renaming: IncrementalRenaming,
-                                @Named( "AfterUnroll" ) nextPass : Pass with TlaModuleMixin
-                              )
-  extends UnrollPass with LazyLogging {
+ * An unrolling pass that
+ *
+ * @param options pass options
+ * @param tracker transformation tracker
+ * @param nextPass next pass to call
+ */
+class UnrollPassImpl @Inject() (val options: PassOptions, nameGenerator: UniqueNameGenerator,
+    tracker: TransformationTracker, renaming: IncrementalRenaming,
+    @Named("AfterUnroll") nextPass: Pass with TlaModuleMixin)
+    extends UnrollPass with LazyLogging {
 
   private var outputTlaModule: Option[TlaModule] = None
 
   /**
-    * The pass name.
-    *
-    * @return the name associated with the pass
-    */
+   * The pass name.
+   *
+   * @return the name associated with the pass
+   */
   override def name: String = "UnrollPass"
 
   /**
-    * Run the pass.
-    *
-    * @return true, if the pass was successful
-    */
+   * Run the pass.
+   *
+   * @return true, if the pass was successful
+   */
   override def execute(): Boolean = {
     val module = tlaModule.get
 
@@ -57,11 +54,11 @@ class UnrollPassImpl @Inject()( val options : PassOptions,
     //
     val renamedModule = renaming.renameInModule(module)
 
-    val unroller = Unroller( nameGenerator, tracker, renaming )
+    val unroller = Unroller(nameGenerator, tracker, renaming)
     logger.info("  > %s".format(unroller.getClass.getSimpleName))
 
     // TODO: re-enable cacher once caching is reworked (see #276 for context)
-    val newModule = unroller( renamedModule )
+    val newModule = unroller(renamedModule)
 
     // dump the result of preprocessing
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
@@ -72,14 +69,14 @@ class UnrollPassImpl @Inject()( val options : PassOptions,
   }
 
   /**
-    * Get the next pass in the chain. What is the next pass is up
-    * to the module configuration and the pass outcome.
-    *
-    * @return the next pass, if exists, or None otherwise
-    */
+   * Get the next pass in the chain. What is the next pass is up
+   * to the module configuration and the pass outcome.
+   *
+   * @return the next pass, if exists, or None otherwise
+   */
   override def next(): Option[Pass] = {
     outputTlaModule map { m =>
-      nextPass.setModule( m )
+      nextPass.setModule(m)
       nextPass
     }
   }

@@ -8,4 +8,3 @@ class Type1ParseError(val msg: String, val pos: Position) extends Exception(msg)
     "Type parse error at col %s: %s".format(pos.column, msg)
   }
 }
-

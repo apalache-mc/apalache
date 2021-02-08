@@ -3,16 +3,16 @@ package at.forsyte.apalache.tla.typecheck.etc
 import at.forsyte.apalache.tla.typecheck._
 
 /**
-  * A substitution from type variables to types.
-  * @param context a mapping from variable names to types.
-  */
+ * A substitution from type variables to types.
+ * @param context a mapping from variable names to types.
+ */
 class Substitution(val context: Map[Int, TlaType1]) {
   def apply(tp: TlaType1): TlaType1 = {
     Substitution.mk(context)(tp)
   }
 
   override def toString: String = {
-    "Sub{%s}".format(String.join(", ", context.toSeq.map(p => "%s -> %s".format(VarT1(p._1), p._2)) :_*))
+    "Sub{%s}".format(String.join(", ", context.toSeq.map(p => "%s -> %s".format(VarT1(p._1), p._2)): _*))
   }
 
   def canEqual(other: Any): Boolean = other.isInstanceOf[Substitution]
@@ -60,7 +60,7 @@ object Substitution {
         case SeqT1(elem) =>
           SeqT1(recFun(elem))
 
-        case TupT1(elems@_*) =>
+        case TupT1(elems @ _*) =>
           TupT1(elems.map(recFun): _*)
 
         case SparseTupT1(fieldTypes) =>

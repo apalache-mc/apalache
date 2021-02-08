@@ -4,11 +4,11 @@ import at.forsyte.apalache.tla.bmcmt.{Limits, RewriterException}
 import at.forsyte.apalache.tla.lir.NullEx
 
 /**
-  * Iterate over all k-tuples from (0,...,0) up to (n_1, ..., n_k), including the tuple (n_1, ..., n_k).
-  * This iterator is useful to construct Cartesian products that are needed by multiple argument operators.
-  *
-  * @author Igor Konnov
-  */
+ * Iterate over all k-tuples from (0,...,0) up to (n_1, ..., n_k), including the tuple (n_1, ..., n_k).
+ * This iterator is useful to construct Cartesian products that are needed by multiple argument operators.
+ *
+ * @author Igor Konnov
+ */
 class IntTupleIterator(limits: Seq[Int]) extends Iterator[Seq[Int]] {
   private var vec: Array[Int] = (-1) +: Array.fill(limits.size - 1)(0)
   // we have to enumerate that many elements
@@ -33,7 +33,7 @@ class IntTupleIterator(limits: Seq[Int]) extends Iterator[Seq[Int]] {
     // all the preceding elements shift over from their limit to zero
     0.until(index).foreach(vec.update(_, 0))
     // the element at index is increased
-    vec.update(index, 1+ vec(index))
+    vec.update(index, 1 + vec(index))
     vec.toSeq
   }
 }

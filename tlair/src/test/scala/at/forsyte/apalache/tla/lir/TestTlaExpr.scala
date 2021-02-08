@@ -7,8 +7,8 @@ import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
 /**
-  * Tests for the TLA+ expressions that we can construct.
-  */
+ * Tests for the TLA+ expressions that we can construct.
+ */
 @RunWith(classOf[JUnitRunner])
 class TestTlaExpr extends FunSuite {
   test("create a conjunction") {
@@ -102,34 +102,24 @@ class TestTlaExpr extends FunSuite {
     OperEx(TlaSetOper.enumSet)
 
     // an intersection with another set
-    OperEx(TlaSetOper.cap,
-      OperEx(TlaSetOper.enumSet),
-      OperEx(TlaSetOper.enumSet, ValEx(TlaInt(1)))
-    )
+    OperEx(TlaSetOper.cap, OperEx(TlaSetOper.enumSet), OperEx(TlaSetOper.enumSet, ValEx(TlaInt(1))))
   }
 
   test("strange set operations") {
     // We can write something like 2 \cup {4}. TLA Toolbox would not complain.
-    OperEx(TlaSetOper.cup,
-      ValEx(TlaInt(2)),
-      OperEx(TlaSetOper.enumSet, ValEx(TlaInt(4))))
+    OperEx(TlaSetOper.cup, ValEx(TlaInt(2)), OperEx(TlaSetOper.enumSet, ValEx(TlaInt(4))))
   }
 
   test("declaring an order 0 operator") {
     // A == x' /\ y
-    val odef = TlaOperDecl("A", List(),
-      OperEx(TlaBoolOper.and,
-        OperEx(TlaActionOper.prime, NameEx("x")),
-        NameEx("y")
-      )
-    )
+    val odef = TlaOperDecl("A", List(), OperEx(TlaBoolOper.and, OperEx(TlaActionOper.prime, NameEx("x")), NameEx("y")))
 
     // this is the way to use a user-defined operator
-    Builder.appDecl( odef )
+    Builder.appDecl(odef)
 
     // we should get an exception when the number of arguments is incorrect
     try {
-      Builder.appDecl( odef, NameEx("a") )
+      Builder.appDecl(odef, NameEx("a"))
       fail("Expected an IllegalArgumentException")
     } catch {
       case _: IllegalArgumentException => () // OK
@@ -139,18 +129,14 @@ class TestTlaExpr extends FunSuite {
   test("declaring an order 1 operator") {
     // A(x, y) == x' /\ y
     val odef = TlaOperDecl("A", List(SimpleFormalParam("x"), SimpleFormalParam("y")),
-      OperEx(TlaBoolOper.and,
-        OperEx(TlaActionOper.prime, NameEx("x")),
-        NameEx("y")
-      )
-    )
+        OperEx(TlaBoolOper.and, OperEx(TlaActionOper.prime, NameEx("x")), NameEx("y")))
 
     // this is the way to use a user-defined operator
-    Builder.appDecl( odef, NameEx("a"), NameEx("b") )
+    Builder.appDecl(odef, NameEx("a"), NameEx("b"))
 
     // we should get an exception when the number of arguments is incorrect
     try {
-      Builder.appDecl( odef, NameEx("a") )
+      Builder.appDecl(odef, NameEx("a"))
       fail("Expected an IllegalArgumentException")
     } catch {
       case _: IllegalArgumentException => () // OK
@@ -162,33 +148,22 @@ class TestTlaExpr extends FunSuite {
     val fOper = OperFormalParam("f", 2)
 
     // A(f(_, _), x, y) == f(x, y)
-    val odef = TlaOperDecl("A",
-      List(fOper, SimpleFormalParam("x"), SimpleFormalParam("y")),
-      OperEx(TlaOper.apply,
-        NameEx("f"),
-        NameEx("x"),
-        NameEx("y")
-      )
-    )
+    val odef = TlaOperDecl("A", List(fOper, SimpleFormalParam("x"), SimpleFormalParam("y")),
+        OperEx(TlaOper.apply, NameEx("f"), NameEx("x"), NameEx("y")))
 
     // this is the way to use a user-defined operator
-    Builder.appDecl( odef, NameEx(TlaSetOper.cup.name), NameEx("a"), NameEx("b") )
+    Builder.appDecl(odef, NameEx(TlaSetOper.cup.name), NameEx("a"), NameEx("b"))
 
     // The following expression does not make a lot of sense, but it is legal to construct it.
     // Later, there will be a plugin to detect inconsistent expressions like this.
-    Builder.appDecl( odef, NameEx("a"), NameEx("b"), NameEx("b") )
+    Builder.appDecl(odef, NameEx("a"), NameEx("b"), NameEx("b"))
   }
-
 
   test("existentials") {
     val ex1 =
-      OperEx(TlaBoolOper.existsUnbounded, NameEx("x"),
-        OperEx(TlaOper.eq, NameEx("x"), NameEx("x"))
-      )
+      OperEx(TlaBoolOper.existsUnbounded, NameEx("x"), OperEx(TlaOper.eq, NameEx("x"), NameEx("x")))
     val ex2 =
-      OperEx(TlaBoolOper.existsUnbounded, NameEx("x"),
-        OperEx(TlaOper.eq, NameEx("x"), NameEx("x"))
-      )
+      OperEx(TlaBoolOper.existsUnbounded, NameEx("x"), OperEx(TlaOper.eq, NameEx("x"), NameEx("x")))
     val conj = OperEx(TlaBoolOper.and, ex1, ex2)
   }
 

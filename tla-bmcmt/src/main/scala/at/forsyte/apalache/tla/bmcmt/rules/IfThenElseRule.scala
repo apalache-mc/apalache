@@ -10,10 +10,10 @@ import at.forsyte.apalache.tla.lir.oper.TlaControlOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 /**
-  * Rewriting rule for IF A THEN B ELSE C.
-  *
-  * @author Igor Konnov
-  */
+ * Rewriting rule for IF A THEN B ELSE C.
+ *
+ * @author Igor Konnov
+ */
 class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val pickFrom = new CherryPick(rewriter)
   private val simplifier = new ConstSimplifierForSmt()
@@ -21,7 +21,7 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaControlOper.ifThenElse, _, _, _) => true
-      case _ => false
+      case _                                          => false
     }
   }
 

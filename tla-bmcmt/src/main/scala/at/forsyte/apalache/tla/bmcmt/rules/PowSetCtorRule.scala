@@ -6,15 +6,15 @@ import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
 /**
-  * Rewrites the powerset SUBSET S for a set S.
-  *
-  * @author Igor Konnov
-  */
+ * Rewrites the powerset SUBSET S for a set S.
+ *
+ * @author Igor Konnov
+ */
 class PowSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaSetOper.powerset, _) => true
-      case _ => false
+      case _                              => false
     }
   }
 
