@@ -6,7 +6,6 @@ import at.forsyte.apalache.tla.lir.values.TlaIntSet
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
-
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterRecFun extends RewriterBase with TestingPredefs {
   test("""recursive fun: f[n \in { 1, 2, 3 }] == IF n <= 1 THEN 2 ELSE 2 * f[n - 1]""") {
@@ -17,9 +16,9 @@ class TestSymbStateRewriterRecFun extends RewriterBase with TestingPredefs {
     val ref = tla.withType(tla.recFunRef(), tla.funSet(ValEx(TlaIntSet), ValEx(TlaIntSet)))
 
     val map = ite(
-      le(tla.name("n"), int(1)),
-      int(2),
-      mult(int(2), appFun(ref, minus(tla.name("n"), int(1))))
+        le(tla.name("n"), int(1)),
+        int(2),
+        mult(int(2), appFun(ref, minus(tla.name("n"), int(1))))
     ) ///
 
     val fun = recFunDef(map, tla.name("n"), set)

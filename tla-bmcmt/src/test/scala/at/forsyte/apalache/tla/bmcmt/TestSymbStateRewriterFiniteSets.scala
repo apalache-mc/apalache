@@ -9,7 +9,7 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterFiniteSets extends RewriterBase {
   test("""Cardinality({1, 2, 3}) = 3""") {
-    val set = tla.enumSet(1.to(3).map(tla.int) :_*)
+    val set = tla.enumSet(1.to(3).map(tla.int): _*)
     val card = tla.card(set)
     val state = new SymbState(card, arena, Binding())
     val rewriter = create()
@@ -19,7 +19,7 @@ class TestSymbStateRewriterFiniteSets extends RewriterBase {
   }
 
   test("""Cardinality({1, 2, 2, 2, 3, 3}) = 3""") {
-    val set = tla.enumSet(Seq(1, 2, 2, 2, 3, 3).map(tla.int) :_*)
+    val set = tla.enumSet(Seq(1, 2, 2, 2, 3, 3).map(tla.int): _*)
     val card = tla.card(set)
     val state = new SymbState(card, arena, Binding())
     val rewriter = create()
@@ -29,7 +29,7 @@ class TestSymbStateRewriterFiniteSets extends RewriterBase {
   }
 
   test("""BMC!ConstCard(Cardinality({1, 2, 3}) >= 3)""") {
-    val set = tla.enumSet(1.to(3).map(tla.int) :_*)
+    val set = tla.enumSet(1.to(3).map(tla.int): _*)
     val cardCmp = OperEx(BmcOper.constCard, tla.ge(tla.card(set), tla.int(3)))
     val state = new SymbState(cardCmp, arena, Binding())
     val rewriter = create()
@@ -40,7 +40,7 @@ class TestSymbStateRewriterFiniteSets extends RewriterBase {
   }
 
   test("""BMC!ConstCard(Cardinality({1, 2, 3}) >= 4)""") {
-    val set = tla.enumSet(1.to(3).map(tla.int) :_*)
+    val set = tla.enumSet(1.to(3).map(tla.int): _*)
     val cardCmp = OperEx(BmcOper.constCard, tla.ge(tla.card(set), tla.int(4)))
     val state = new SymbState(cardCmp, arena, Binding())
     val rewriter = create()
@@ -51,7 +51,7 @@ class TestSymbStateRewriterFiniteSets extends RewriterBase {
   }
 
   test("""BMC!ConstCard(Cardinality({1, 2, 2, 3}) >= 4)""") {
-    val set = tla.enumSet(List(1, 2, 2, 3).map(tla.int) :_*)
+    val set = tla.enumSet(List(1, 2, 2, 3).map(tla.int): _*)
     val cardCmp = OperEx(BmcOper.constCard, tla.ge(tla.card(set), tla.int(4)))
     val state = new SymbState(cardCmp, arena, Binding())
     val rewriter = create()
@@ -62,7 +62,7 @@ class TestSymbStateRewriterFiniteSets extends RewriterBase {
   }
 
   test("""BMC!ConstCard(Cardinality({1, 2, 2, 3, 3}) >= 4)""") {
-    val set = tla.enumSet(List(1, 2, 2, 3).map(tla.int) :_*)
+    val set = tla.enumSet(List(1, 2, 2, 3).map(tla.int): _*)
     val cardCmp = OperEx(BmcOper.constCard, tla.ge(tla.card(set), tla.int(4)))
     val state = new SymbState(cardCmp, arena, Binding())
     val rewriter = create()
@@ -118,12 +118,10 @@ class TestSymbStateRewriterFiniteSets extends RewriterBase {
 
   test("""Cardinality({1, 2, 3} \ {2}) = 2""") {
     def setminus(set: TlaEx, intVal: Int): TlaEx = {
-      tla.filter(tla.name("t"),
-        set,
-        tla.not(tla.eql(tla.name("t"), tla.int(intVal))))
+      tla.filter(tla.name("t"), set, tla.not(tla.eql(tla.name("t"), tla.int(intVal))))
     }
 
-    val set = setminus(tla.enumSet(1.to(3).map(tla.int) :_*), 2)
+    val set = setminus(tla.enumSet(1.to(3).map(tla.int): _*), 2)
     val card = tla.card(set)
     val state = new SymbState(card, arena, Binding())
     val rewriter = create()
@@ -133,7 +131,7 @@ class TestSymbStateRewriterFiniteSets extends RewriterBase {
   }
 
   test("""IsFiniteSet({1, 2, 3}) = TRUE""") {
-    val set = tla.enumSet(1.to(3).map(tla.int) :_*)
+    val set = tla.enumSet(1.to(3).map(tla.int): _*)
     val card = tla.isFin(set)
     val state = new SymbState(card, arena, Binding())
     val rewriter = create()

@@ -7,11 +7,11 @@ import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.pp.{Keramelizer, UniqueNameGenerator}
 
 /**
-  * Tests for the TLA+ operators that are deal with by rewriting into KerA+.
-  * Although they are not needed to test the rewriting rules, we keep them for regression.
-  *
-  * @author Igor Konnov
-  */
+ * Tests for the TLA+ operators that are deal with by rewriting into KerA+.
+ * Although they are not needed to test the rewriting rules, we keep them for regression.
+ *
+ * @author Igor Konnov
+ */
 class TestRewriterKeraSet extends RewriterBase with TestingPredefs {
   private var keramelizer = new Keramelizer(new UniqueNameGenerator, TrackerWithListeners())
 
@@ -42,7 +42,6 @@ class TestRewriterKeraSet extends RewriterBase with TestingPredefs {
     val rewriter = create()
     assertTlaExAndRestore(rewriter, state)
   }
-
 
   test("""SE-SET-CUP: regression""") {
     // 2019-01-18, Igor: this bug originally appeared in TwoPhase.tla, the MWE can be found in Bug20190118.tla

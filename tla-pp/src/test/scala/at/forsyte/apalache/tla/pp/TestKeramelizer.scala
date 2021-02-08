@@ -18,21 +18,16 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
   test("""X \intersect Y""") {
     val input = tla.cap(tla.name("X"), tla.name("Y"))
     val output = keramelizer.apply(input)
-    val expected = tla.filter(tla.name("t_1"),
-      tla.name("X"),
-      tla.in(tla.name("t_1"), tla.name("Y")))
+    val expected = tla.filter(tla.name("t_1"), tla.name("X"), tla.in(tla.name("t_1"), tla.name("Y")))
     assert(expected == output)
   }
 
   test("intersect under another expression") {
     val input =
-      tla.cup(tla.name("Z"),
-        tla.cap(tla.name("X"), tla.name("Y")))
+      tla.cup(tla.name("Z"), tla.cap(tla.name("X"), tla.name("Y")))
     val output = keramelizer.apply(input)
     val transformed =
-      tla.filter(tla.name("t_1"),
-        tla.name("X"),
-        tla.in(tla.name("t_1"), tla.name("Y")))
+      tla.filter(tla.name("t_1"), tla.name("X"), tla.in(tla.name("t_1"), tla.name("Y")))
     val expected = tla.cup(tla.name("Z"), transformed)
     assert(expected == output)
   }
@@ -40,9 +35,7 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
   test("""X \ Y""") {
     val input = tla.setminus(tla.name("X"), tla.name("Y"))
     val output = keramelizer.apply(input)
-    val expected = tla.filter(tla.name("t_1"),
-      tla.name("X"),
-      tla.not(tla.in(tla.name("t_1"), tla.name("Y"))))
+    val expected = tla.filter(tla.name("t_1"), tla.name("X"), tla.not(tla.in(tla.name("t_1"), tla.name("Y"))))
     assert(expected == output)
   }
 
@@ -102,8 +95,8 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
     val output = keramelizer.apply(input)
     val expected =
       tla.and(
-        tla.not(tla.eql(tla.name("X"), tla.name("Y"))),
-        tla.subseteq(tla.name("X"), tla.name("Y"))
+          tla.not(tla.eql(tla.name("X"), tla.name("Y"))),
+          tla.subseteq(tla.name("X"), tla.name("Y"))
       ) ///
     assert(expected == output)
   }
@@ -113,30 +106,27 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
     val output = keramelizer.apply(input)
     val expected =
       tla.and(
-        tla.not(tla.eql(tla.name("X"), tla.name("Y"))),
-        tla.subseteq(tla.name("Y"), tla.name("X"))
+          tla.not(tla.eql(tla.name("X"), tla.name("Y"))),
+          tla.subseteq(tla.name("Y"), tla.name("X"))
       ) ///
     assert(expected == output)
   }
 
   test("""CASE-OTHER""") {
-    val input = tla.caseOther(tla.name("e_def"),
-      tla.name("p_1"), tla.name("e_1"),
-      tla.name("p_2"), tla.name("e_2"))
+    val input = tla.caseOther(tla.name("e_def"), tla.name("p_1"), tla.name("e_1"), tla.name("p_2"), tla.name("e_2"))
     val output = keramelizer.apply(input)
     val expected =
-      tla.ite(tla.name("p_1"), tla.name("e_1"),
-        tla.ite(tla.name("p_2"), tla.name("e_2"),
-          tla.name("e_def")
-        ) ///
-    ) ///
+      tla.ite(tla.name("p_1"), tla.name("e_1"), tla.ite(tla.name("p_2"), tla.name("e_2"), tla.name("e_def")) ///
+      ) ///
     assert(expected == output)
   }
 
   test("""CASE without OTHER""") {
     val input = tla.caseSplit(
-      tla.name("p_1"), tla.name("e_1"),
-      tla.name("p_2"), tla.name("e_2")
+        tla.name("p_1"),
+        tla.name("e_1"),
+        tla.name("p_2"),
+        tla.name("e_2")
     ) ///
     assertThrows[NotInKeraError](keramelizer.apply(input))
   }
@@ -147,9 +137,9 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
     val output = keramelizer.apply(input)
     val expected =
       tla.exists(
-        tla.name("t_1"),
-        tla.name("S"),
-        tla.eql(tla.prime(tla.name("x")), tla.name("t_1"))
+          tla.name("t_1"),
+          tla.name("S"),
+          tla.eql(tla.prime(tla.name("x")), tla.name("t_1"))
       ) ////
     assert(expected == output)
   }
@@ -159,9 +149,9 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
     val output = keramelizer.apply(input)
     val expected =
       tla.exists(
-        tla.name("t_1"),
-        tla.powSet(tla.name("S")),
-        tla.eql(tla.prime(tla.name("x")), tla.name("t_1"))
+          tla.name("t_1"),
+          tla.powSet(tla.name("S")),
+          tla.eql(tla.prime(tla.name("x")), tla.name("t_1"))
       ) ////
     assert(expected == output)
   }
@@ -172,9 +162,9 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
     val output = keramelizer.apply(input)
     val expected =
       tla.exists(
-        tla.name("t_1"),
-        funSet,
-        tla.eql(tla.prime(tla.name("x")), tla.name("t_1"))
+          tla.name("t_1"),
+          funSet,
+          tla.eql(tla.prime(tla.name("x")), tla.name("t_1"))
       ) ////
     assert(expected == output)
   }

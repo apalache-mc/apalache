@@ -36,8 +36,7 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
 
   test("""SE-FUNSET2: [{1, 2} -> Expand(SUBSET {FALSE, TRUE})]""") {
     val domain = tla.enumSet(tla.int(1), tla.int(2))
-    val codomain = OperEx(BmcOper.expand,
-      tla.powSet(tla.enumSet(tla.bool(false), tla.bool(true))))
+    val codomain = OperEx(BmcOper.expand, tla.powSet(tla.enumSet(tla.bool(false), tla.bool(true))))
     val state = new SymbState(tla.funSet(domain, codomain), arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -80,10 +79,7 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
     val codomain = tla.powSet(tla.enumSet(tla.bool(false)))
     val pred = tla.eql(tla.appFun(tla.name("f"), tla.int(1)), tla.enumSet(tla.bool(true)))
     val exists =
-      tla.exists(
-        tla.name("f"),
-        tla.funSet(domain, codomain),
-        pred)
+      tla.exists(tla.name("f"), tla.funSet(domain, codomain), pred)
     val skolem = OperEx(BmcOper.skolem, exists)
     val state = new SymbState(skolem, arena, Binding())
     val rewriter = create()
@@ -117,9 +113,7 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
     val domain = tla.enumSet(tla.int(1), tla.int(2))
     val codomain = tla.powSet(tla.enumSet(tla.bool(false), tla.bool(true)))
     val funset = tla.funSet(domain, codomain)
-    val fun = tla.funDef(tla.enumSet(tla.eql(tla.name("x"), tla.int(1))),
-                         tla.name("x"),
-                         domain)
+    val fun = tla.funDef(tla.enumSet(tla.eql(tla.name("x"), tla.int(1))), tla.name("x"), domain)
     val state = new SymbState(tla.in(fun, funset), arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -142,9 +136,7 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
     val domain = tla.enumSet(tla.int(1), tla.int(2))
     val codomain = tla.enumSet(tla.int(3), tla.int(4))
     val funset = tla.funSet(domain, codomain)
-    val fun = tla.funDef(tla.int(3),
-                         tla.name("x"),
-                         domain)
+    val fun = tla.funDef(tla.int(3), tla.name("x"), domain)
     val state = new SymbState(tla.in(fun, funset), arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -156,18 +148,14 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
   test("""SE-FUNSET2: [x \in {0, 1, 2} \ {0} |-> 3] \in [{1, 2} -> {3, 4}]""") {
     // although 0 is in the function domain at the arena level, it does not belong to the set difference
     def setminus(set: TlaEx, intVal: Int): TlaEx = {
-      tla.filter(tla.name("t"),
-        set,
-        tla.not(tla.eql(tla.name("t"), tla.int(intVal))))
+      tla.filter(tla.name("t"), set, tla.not(tla.eql(tla.name("t"), tla.int(intVal))))
     }
 
     val domain1 = setminus(tla.enumSet(0.to(2).map(tla.int): _*), 0)
     val domain2 = tla.enumSet(1.to(2).map(tla.int): _*)
     val codomain = tla.enumSet(tla.int(3), tla.int(4))
     val funset = tla.funSet(domain2, codomain)
-    val fun = tla.funDef(tla.int(3),
-                         tla.name("x"),
-                         domain1)
+    val fun = tla.funDef(tla.int(3), tla.name("x"), domain1)
     val state = new SymbState(tla.in(fun, funset), arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -180,9 +168,7 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
     val domain = tla.enumSet(tla.int(1), tla.int(2))
     val codomain = tla.powSet(tla.enumSet(tla.bool(false)))
     val funset = tla.funSet(domain, codomain)
-    val fun = tla.funDef(tla.enumSet(tla.bool(true)),
-                         tla.name("x"),
-                         domain)
+    val fun = tla.funDef(tla.enumSet(tla.bool(true)), tla.name("x"), domain)
     val state = new SymbState(tla.in(fun, funset), arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -195,9 +181,7 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
     val domain = tla.enumSet(tla.int(1), tla.int(2))
     val codomain = tla.powSet(tla.enumSet(tla.bool(false), tla.bool(true)))
     val funset = tla.funSet(domain, codomain)
-    val fun = tla.funDef(tla.enumSet(tla.bool(true)),
-                         tla.name("x"),
-                         domain)
+    val fun = tla.funDef(tla.enumSet(tla.bool(true)), tla.name("x"), domain)
     val state = new SymbState(tla.in(fun, funset), arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)

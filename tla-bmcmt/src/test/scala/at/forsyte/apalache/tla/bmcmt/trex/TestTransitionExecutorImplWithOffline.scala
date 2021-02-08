@@ -9,12 +9,13 @@ import org.scalatest.Outcome
 import org.scalatest.junit.JUnitRunner
 
 /**
-  * The tests for TransitionExecutorImpl that are using IncrementalSnapshot.
-  *
-  * @author Igor Konnov
-  */
+ * The tests for TransitionExecutorImpl that are using IncrementalSnapshot.
+ *
+ * @author Igor Konnov
+ */
 @RunWith(classOf[JUnitRunner])
-class TestTransitionExecutorImplWithOffline extends AbstractTestTransitionExecutorImpl[OfflineExecutionContextSnapshot] {
+class TestTransitionExecutorImplWithOffline
+    extends AbstractTestTransitionExecutorImpl[OfflineExecutionContextSnapshot] {
   override protected def withFixture(test: OneArgTest): Outcome = {
     val typeFinder = new TrivialTypeFinder()
     val solver = RecordingSolverContext.createZ3(None, SolverConfig(debug = false, profile = false, randomSeed = 0))

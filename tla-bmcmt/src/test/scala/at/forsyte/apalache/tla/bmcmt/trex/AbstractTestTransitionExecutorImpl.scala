@@ -6,12 +6,12 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import org.scalatest.fixture
 
 /**
-  * An abstract test suite that is parameterized by the snapshot type.
-  *
-  * @author Igor Konnov
-  *
-  * @tparam SnapshotT the snapshot type
-  */
+ * An abstract test suite that is parameterized by the snapshot type.
+ *
+ * @author Igor Konnov
+ *
+ * @tparam SnapshotT the snapshot type
+ */
 abstract class AbstractTestTransitionExecutorImpl[SnapshotT] extends fixture.FunSuite {
   type ExecutorContextT = ExecutionContext[SnapshotT]
   type FixtureParam = ExecutorContextT
@@ -58,10 +58,7 @@ abstract class AbstractTestTransitionExecutorImpl[SnapshotT] extends fixture.Fun
 
   test("check enabled and discard") { exeCtx: ExecutorContextT =>
     // an obviously disabled transition: y' <- 1 /\ y' <- 2
-    val init = tla.and(
-      mkAssign("y", 1),
-      tla.eql(tla.prime(tla.name("y")), tla.int(2)),
-      mkAssign("x", 3))
+    val init = tla.and(mkAssign("y", 1), tla.eql(tla.prime(tla.name("y")), tla.int(2)), mkAssign("x", 3))
     val trex = new TransitionExecutorImpl(Set.empty, Set("x", "y"), exeCtx)
     trex.debug = true
     assert(trex.stepNo == 0)
@@ -100,12 +97,8 @@ abstract class AbstractTestTransitionExecutorImpl[SnapshotT] extends fixture.Fun
     // x' <- 1 /\ y' <- 1
     val init = tla.and(mkAssign("y", 1), mkAssign("x", 1))
     // x' <- y /\ y' <- x + y
-    val trans1 = tla.and(
-      mkAssign("x", tla.name("y")),
-      mkAssign("y", tla.plus(tla.name("x"), tla.name("y"))))
-    val trans2 = tla.and(
-      mkAssign("x", tla.name("x")),
-      mkAssign("y", tla.name("y")))
+    val trans1 = tla.and(mkAssign("x", tla.name("y")), mkAssign("y", tla.plus(tla.name("x"), tla.name("y"))))
+    val trans2 = tla.and(mkAssign("x", tla.name("x")), mkAssign("y", tla.name("y")))
     val trex = new TransitionExecutorImpl(Set.empty, Set("x", "y"), exeCtx)
     trex.prepareTransition(1, init)
     trex.pickTransition()
@@ -140,9 +133,8 @@ abstract class AbstractTestTransitionExecutorImpl[SnapshotT] extends fixture.Fun
     assert(Map("x" -> tla.int(2), "y" -> tla.int(3)) == decPath(3)._1)
     // state 4 is produced either by transition 1, or by transition 2
     assert(1 == decPath(4)._2 || 2 == decPath(4)._2)
-    assert(
-      Map("x" -> tla.int(2), "y" -> tla.int(3)) == decPath(4)._1
-        || Map("x" -> tla.int(3), "y" -> tla.int(5)) == decPath(4)._1)
+    assert(Map("x" -> tla.int(2), "y" -> tla.int(3)) == decPath(4)._1
+          || Map("x" -> tla.int(3), "y" -> tla.int(5)) == decPath(4)._1)
 
     // test the symbolic execution
     val exe = trex.execution
@@ -167,14 +159,8 @@ abstract class AbstractTestTransitionExecutorImpl[SnapshotT] extends fixture.Fun
 
     // state 4 is the state Next(Next(Next(Init(state0)))
     val state4 = exe.path(4)._1
-    assertValid(trex,
-      tla.or(
-        tla.eql(state4("x").toNameEx, tla.int(2)),
-        tla.eql(state4("x").toNameEx, tla.int(3))))
-    assertValid(trex,
-      tla.or(
-        tla.eql(state4("y").toNameEx, tla.int(3)),
-        tla.eql(state4("y").toNameEx, tla.int(5))))
+    assertValid(trex, tla.or(tla.eql(state4("x").toNameEx, tla.int(2)), tla.eql(state4("x").toNameEx, tla.int(3))))
+    assertValid(trex, tla.or(tla.eql(state4("y").toNameEx, tla.int(3)), tla.eql(state4("y").toNameEx, tla.int(5))))
 
     // regression in multi-core
     val snapshot = trex.snapshot()
@@ -192,9 +178,7 @@ abstract class AbstractTestTransitionExecutorImpl[SnapshotT] extends fixture.Fun
     // x' <- 1 /\ y' <- 1
     val init = tla.and(mkAssign("y", 1), mkAssign("x", 1))
     // x' <- x /\ y' <- x + y
-    val nextTrans = tla.and(
-      mkAssign("x", tla.name("x")),
-      mkAssign("y", tla.plus(tla.name("x"), tla.name("y"))))
+    val nextTrans = tla.and(mkAssign("x", tla.name("x")), mkAssign("y", tla.plus(tla.name("x"), tla.name("y"))))
     // push Init
     val trex = new TransitionExecutorImpl(Set.empty, Set("x", "y"), exeCtx)
     trex.prepareTransition(1, init)

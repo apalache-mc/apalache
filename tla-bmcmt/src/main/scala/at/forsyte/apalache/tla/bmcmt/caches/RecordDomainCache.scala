@@ -9,20 +9,20 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import scala.collection.immutable.SortedSet
 
 /**
-  * Since we have to create record domains many times, we cache them here.
-  *
-  * @author Igor Konnov
-  */
+ * Since we have to create record domains many times, we cache them here.
+ *
+ * @author Igor Konnov
+ */
 class RecordDomainCache(solverContext: SolverContext, strValueCache: StrValueCache)
-  extends AbstractCache[Arena, (SortedSet[String], SortedSet[String]), ArenaCell] with Serializable {
+    extends AbstractCache[Arena, (SortedSet[String], SortedSet[String]), ArenaCell] with Serializable {
 
   /**
-    * Create a set for a sorted set of record keys.
-    *
-    * @param context           the context before creating a new value
-    * @param usedAndUnusedKeys two sets: the keys in the domain and the keys outside of the domain
-    * @return a target value that is going to be cached and the new context
-    */
+   * Create a set for a sorted set of record keys.
+   *
+   * @param context           the context before creating a new value
+   * @param usedAndUnusedKeys two sets: the keys in the domain and the keys outside of the domain
+   * @return a target value that is going to be cached and the new context
+   */
   override def create(context: Arena, usedAndUnusedKeys: (SortedSet[String], SortedSet[String])): (Arena, ArenaCell) = {
     val usedKeys = usedAndUnusedKeys._1
     val unusedKeys = usedAndUnusedKeys._2

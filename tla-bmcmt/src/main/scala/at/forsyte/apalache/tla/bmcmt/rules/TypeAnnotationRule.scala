@@ -5,17 +5,17 @@ import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.oper.BmcOper
 
 /**
-  * This rule just ignores a type annotation a <: b.
-  * The actual use of type annotations happens at an earlier
-  * type inference stage, see TrivialTypeFinder.
-  *
-  * @author Igor Konnov
-  */
+ * This rule just ignores a type annotation a <: b.
+ * The actual use of type annotations happens at an earlier
+ * type inference stage, see TrivialTypeFinder.
+ *
+ * @author Igor Konnov
+ */
 class TypeAnnotationRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(BmcOper.withType, _, _) => true
-      case _ => false
+      case _                              => false
     }
   }
 

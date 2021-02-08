@@ -14,10 +14,10 @@ import com.typesafe.scalalogging.LazyLogging
 import scala.collection.immutable.{HashSet, SortedSet}
 
 /**
-  * This class dumps relevant values from an SMT model using an arena.
-  *
-  * @author Igor Konnov
-  */
+ * This class dumps relevant values from an SMT model using an arena.
+ *
+ * @author Igor Konnov
+ */
 class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter) extends LazyLogging {
   // a simple decoder that dumps values into a text file, in the future we need better recovery code
   def dumpArena(state: SymbState, writer: PrintWriter): Unit = {
@@ -105,9 +105,9 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       val relation = arena.getCdm(cell)
       val args =
         decodeCellToTlaEx(arena, relation) match {
-          case OperEx(TlaSetOper.enumSet, elems@_*) =>
+          case OperEx(TlaSetOper.enumSet, elems @ _*) =>
             def untuple(e: TlaEx) = e match {
-              case OperEx(TlaFunOper.tuple, pair@_*) =>
+              case OperEx(TlaFunOper.tuple, pair @ _*) =>
                 pair
 
               case _ => throw new RewriterException("Corrupted function: " + relation, NullEx)
@@ -133,10 +133,10 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         case _ => throw new RewriterException("Corrupted sequence: " + startEndFun, NullEx)
       }
 
-    case r@RecordT(_) =>
+    case r @ RecordT(_) =>
       def exToStr(ex: TlaEx): TlaStr = ex match {
-        case ValEx(s@TlaStr(_)) => s
-        case _ => throw new RewriterException("Expected a string, found: " + ex, ex)
+        case ValEx(s @ TlaStr(_)) => s
+        case _                    => throw new RewriterException("Expected a string, found: " + ex, ex)
       }
 
       // Note that the domain may have fewer fields than the record type is saying.
@@ -160,17 +160,18 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       if (keysAndValues.nonEmpty) {
         OperEx(TlaFunOper.enum, keysAndValues: _*)
       } else {
-        logger.error(s"Decoder: Found an empty record $cell when decoding a counterexample, domain = $domCell. This is a bug.")
+        logger.error(
+            s"Decoder: Found an empty record $cell when decoding a counterexample, domain = $domCell. This is a bug.")
         // for debugging purposes, just return a string
         ValEx(TlaStr(s"Empty record domain $domCell"))
       }
 
-    case t@TupleT(_) =>
+    case t @ TupleT(_) =>
       val tupleElems = arena.getHas(cell)
       val elemAsExprs = tupleElems.map(c => decodeCellToTlaEx(arena, c))
       tla.tuple(elemAsExprs: _*)
 
-    case PowSetT(t@FinSetT(_)) =>
+    case PowSetT(t @ FinSetT(_)) =>
       tla.powSet(decodeCellToTlaEx(arena, arena.getDom(cell)))
 
     case InfSetT(elemT) if cell == arena.cellIntSet() =>
@@ -185,7 +186,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
 
   private def decodeSet(arena: Arena, set: ArenaCell): Seq[TlaEx] = {
     decodeCellToTlaEx(arena, set) match {
-      case OperEx(TlaSetOper.enumSet, elems@_*) =>
+      case OperEx(TlaSetOper.enumSet, elems @ _*) =>
         elems
 
       case _ =>
@@ -206,7 +207,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       case NameEx(name) =>
         if (name != cell.name) ex else NameEx(varName)
 
-      case OperEx(oper, args@_*) =>
+      case OperEx(oper, args @ _*) =>
         OperEx(oper, args map rec: _*)
 
       case _ =>

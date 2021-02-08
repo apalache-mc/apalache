@@ -5,15 +5,15 @@ import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 
 /**
-  * Rename x' to NameEx("x'"). We only consider the case when prime is applied to a variable.
-  *
-  * @author Igor Konnov
-  */
+ * Rename x' to NameEx("x'"). We only consider the case when prime is applied to a variable.
+ *
+ * @author Igor Konnov
+ */
 class PrimeRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaActionOper.prime, _) => true
-      case _ => false
+      case _                              => false
     }
   }
 

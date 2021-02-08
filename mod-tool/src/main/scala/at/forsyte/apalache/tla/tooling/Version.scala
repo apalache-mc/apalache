@@ -24,7 +24,7 @@ object Version {
       }
     } catch {
       case _: IOException => ()
-        // ignore and set defaults, this is not a critical function
+      // ignore and set defaults, this is not a critical function
 
       case e: Throwable => throw e
     }

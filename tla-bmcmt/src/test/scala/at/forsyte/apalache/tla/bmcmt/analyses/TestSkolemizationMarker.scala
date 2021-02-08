@@ -37,8 +37,7 @@ class TestSkolemizationMarker extends FunSuite with BeforeAndAfterEach {
   // see the issue #148
   test("""no mark: x' <- \E y \in S: P""") {
     val input =
-      tla.assignPrime(tla.name("x"),
-        tla.exists(tla.name("y"), tla.name("S"), tla.name("P")))
+      tla.assignPrime(tla.name("x"), tla.exists(tla.name("y"), tla.name("S"), tla.name("P")))
 
     val output = marker(input)
     assert(input == output)

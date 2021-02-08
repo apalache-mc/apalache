@@ -17,29 +17,28 @@ import com.microsoft.z3.enumerations.Z3_lbool
 import scala.collection.mutable
 
 /**
-  * <p>
-  * An implementation of a SolverContext using Z3. Note that this class overrides the global z3 settings
-  * `sat.random_seed`, `smt.random_seed`, `fp.spacer.random_seed`, and `sls.random_seed` with `config.randomSeed`.
-  * Although it is usually not a good idea to override the global settings, we do it to isolate the code
-  * specific to z3 in this class.
-  * </p>
-  *
-  * @author Igor Konnov
-  */
+ * <p>
+ * An implementation of a SolverContext using Z3. Note that this class overrides the global z3 settings
+ * `sat.random_seed`, `smt.random_seed`, `fp.spacer.random_seed`, and `sls.random_seed` with `config.randomSeed`.
+ * Although it is usually not a good idea to override the global settings, we do it to isolate the code
+ * specific to z3 in this class.
+ * </p>
+ *
+ * @author Igor Konnov
+ */
 class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   private val id: Long = Z3SolverContext.createId()
 
   /**
-    * A log writer, for debugging purposes.
-    */
+   * A log writer, for debugging purposes.
+   */
   private val logWriter: PrintWriter = initLog()
 
   // dump the configuration parameters in the log
   // set the global configuration parameters for z3 modules
-  Z3SolverContext.RANDOM_SEED_PARAMS.foreach {
-    p =>
-      Global.setParameter(p, config.randomSeed.toString)
-      logWriter.println(";; %s = %s".format(p, config.randomSeed))
+  Z3SolverContext.RANDOM_SEED_PARAMS.foreach { p =>
+    Global.setParameter(p, config.randomSeed.toString)
+    logWriter.println(";; %s = %s".format(p, config.randomSeed))
 //    the following fails with an exception: java.lang.NoSuchFieldError: value
 //      logWriter.println(";; %s = %s".format(p, Global.getParameter(p)))
   }
@@ -53,44 +52,44 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   private var _metrics: SolverContextMetrics = SolverContextMetrics.empty
 
   /**
-    * Caching one uninterpreted sort for each cell signature. For integers, the integer sort.
-    */
+   * Caching one uninterpreted sort for each cell signature. For integers, the integer sort.
+   */
   private val cellSorts: mutable.Map[String, (Sort, Int)] =
     new mutable.HashMap[String, (Sort, Int)]
 
   /**
-    * Uninterpreted functions C -> C associated with function cells.
-    * Since context operations may clear function declaration,
-    * we carry the context level in the map and clean the function declarations on pop.
-    */
+   * Uninterpreted functions C -> C associated with function cells.
+   * Since context operations may clear function declaration,
+   * we carry the context level in the map and clean the function declarations on pop.
+   */
   private val funDecls: mutable.Map[String, (FuncDecl, Int)] =
     new mutable.HashMap[String, (FuncDecl, Int)]()
 
   /**
-    * The calls to z3context.mkConst consume 20% of the running time, according to VisualVM.
-    * Let's cache the constants, if Z3 cannot do it well.
-    * Again, the cache carries the context level, to support push and pop.
-    */
+   * The calls to z3context.mkConst consume 20% of the running time, according to VisualVM.
+   * Let's cache the constants, if Z3 cannot do it well.
+   * Again, the cache carries the context level, to support push and pop.
+   */
   private val cellCache: mutable.Map[Int, (Expr, CellT, Int)] =
     new mutable.HashMap[Int, (Expr, CellT, Int)]
 
   /**
-    * A cache for the in-relation between a set and its potential element.
-    */
+   * A cache for the in-relation between a set and its potential element.
+   */
   private val inCache: mutable.Map[(Int, Int), (Expr, Int)] =
     new mutable.HashMap[(Int, Int), (Expr, Int)]
 
   /**
-    * Sometimes, we lose a fresh arena in the rewriting rules. As this situation is very hard to debug,
-    * we are tracking here the largest cell id per SMT context. If the user is trying to add a cell
-    * with a smaller id, there is a good chance that a fresher arena was overwritten with an older one.
-    * To find bugs as soon as possible, we crash immediately.
-    */
+   * Sometimes, we lose a fresh arena in the rewriting rules. As this situation is very hard to debug,
+   * we are tracking here the largest cell id per SMT context. If the user is trying to add a cell
+   * with a smaller id, there is a good chance that a fresher arena was overwritten with an older one.
+   * To find bugs as soon as possible, we crash immediately.
+   */
   private var maxCellIdPerContext = List(-1)
 
   /**
-    * Dispose whatever has to be disposed in the end.
-    */
+   * Dispose whatever has to be disposed in the end.
+   */
   override def dispose(): Unit = {
     z3context.close()
     logWriter.close()
@@ -101,10 +100,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   }
 
   /**
-    * Declare a constant for an arena cell.
-    *
-    * @param cell a (previously undeclared) cell
-    */
+   * Declare a constant for an arena cell.
+   *
+   * @param cell a (previously undeclared) cell
+   */
   override def declareCell(cell: ArenaCell): Unit = {
     smtListener.onIntroCell(cell.id)
 
@@ -167,7 +166,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         val elemT = cellCache(elemId)._2
         val name = s"in_${elemT.signature}${elemId}_${setT.signature}$setId"
         logWriter.flush() // flush the SMT log
-        throw new IllegalStateException(s"SMT $id: The Boolean constant $name (set membership) is missing from the SMT context")
+        throw new IllegalStateException(
+            s"SMT $id: The Boolean constant $name (set membership) is missing from the SMT context")
 
       case Some((const, _)) =>
         const
@@ -175,10 +175,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   }
 
   /**
-    * Check whether the current view of the SMT solver is consistent with arena.
-    *
-    * @param arena an arena
-    */
+   * Check whether the current view of the SMT solver is consistent with arena.
+   *
+   * @param arena an arena
+   */
   override def checkConsistency(arena: Arena): Unit = {
     val topId = arena.topCell.id
     if (maxCellIdPerContext.head > topId) {
@@ -191,10 +191,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   }
 
   /**
-    * Assert that a Boolean TLA+ expression holds true.
-    *
-    * @param ex a simplified TLA+ expression over cells
-    */
+   * Assert that a Boolean TLA+ expression holds true.
+   *
+   * @param ex a simplified TLA+ expression over cells
+   */
   def assertGroundExpr(ex: TlaEx): Unit = {
     log(s";; assert ${UTFPrinter.apply(ex)}")
     val (z3expr, size) = toExpr(ex)
@@ -205,13 +205,13 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   }
 
   /**
-    * Evaluate a ground TLA+ expression in the current model, which is available after a call to sat().
-    * This method assumes that the outcome is one of the basic types: a Boolean, integer, or a cell constant.
-    * If not, it throws SmtEncodingException.
-    *
-    * @param ex an expression to evaluate
-    * @return a TLA+ value
-    */
+   * Evaluate a ground TLA+ expression in the current model, which is available after a call to sat().
+   * This method assumes that the outcome is one of the basic types: a Boolean, integer, or a cell constant.
+   * If not, it throws SmtEncodingException.
+   *
+   * @param ex an expression to evaluate
+   * @return a TLA+ value
+   */
   def evalGroundExpr(ex: TlaEx): TlaEx = {
     val (smtEx, _) = toExpr(ex)
     val z3expr = z3solver.getModel.eval(smtEx, true)
@@ -242,10 +242,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   }
 
   /**
-    * Log message to the logging file. This is helpful to debug the SMT encoding.
-    *
-    * @param message message text, called by name, so evaluated only when needed
-    */
+   * Log message to the logging file. This is helpful to debug the SMT encoding.
+   *
+   * @param message message text, called by name, so evaluated only when needed
+   */
   def log(message: => String): Unit = {
     if (config.debug) {
       logWriter.println(message)
@@ -253,12 +253,12 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   }
 
   /**
-    * Introduce an uninterpreted function associated with a cell.
-    *
-    * @param argType    an argument type
-    * @param resultType a result type
-    * @return the name of the new function (declared in SMT)
-    */
+   * Introduce an uninterpreted function associated with a cell.
+   *
+   * @param argType    an argument type
+   * @param resultType a result type
+   * @return the name of the new function (declared in SMT)
+   */
   def declareCellFun(cellName: String, argType: CellT, resultType: CellT): Unit = {
     val domSig = argType.signature
     val resSig = resultType.signature
@@ -278,15 +278,15 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   }
 
   /**
-    * Get the current context level, that is the difference between the number of pushes and pops made so far.
-    *
-    * @return the current level, always non-negative.
-    */
+   * Get the current context level, that is the difference between the number of pushes and pops made so far.
+   *
+   * @return the current level, always non-negative.
+   */
   override def contextLevel: Int = level
 
   /**
-    * Push SMT context
-    */
+   * Push SMT context
+   */
   override def push(): Unit = {
     log("(push) ;; becomes %d".format(level + 1))
     logWriter.flush() // good time to flush
@@ -296,8 +296,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   }
 
   /**
-    * Pop SMT context
-    */
+   * Pop SMT context
+   */
   override def pop(): Unit = {
     if (level > 0) {
       log("(pop) ;; becomes %d".format(level - 1))
@@ -358,18 +358,18 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       setTimeout(Int.MaxValue)
       logWriter.flush() // good time to flush
       status match {
-        case Status.SATISFIABLE => Some(true)
+        case Status.SATISFIABLE   => Some(true)
         case Status.UNSATISFIABLE => Some(false)
-        case Status.UNKNOWN => None
+        case Status.UNKNOWN       => None
       }
     }
   }
 
   /**
-    * Print the collected constraints in the SMTLIB2 format using Z3 API.
-    *
-    * @return a long string of statements in SMTLIB2 format as provided by Z3
-    */
+   * Print the collected constraints in the SMTLIB2 format using Z3 API.
+   *
+   * @return a long string of statements in SMTLIB2 format as provided by Z3
+   */
   def toSmtlib2: String = {
     z3solver.toString
   }
@@ -378,12 +378,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     smtListener = listener
   }
 
-
   /**
-    * Get the current metrics in the solver context. The metrics may change when the other methods are called.
-    *
-    * @return the current metrics
-    */
+   * Get the current metrics in the solver context. The metrics may change when the other methods are called.
+   *
+   * @return the current metrics
+   */
   override def metrics(): SolverContextMetrics = _metrics
 
   private def getOrMkCellSort(cellType: CellT): Sort = {
@@ -448,7 +447,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         // convert to an arithmetic expression
         toArithExpr(ex)
 
-      case OperEx(TlaOper.eq, lhs@NameEx(lname), rhs@NameEx(rname)) =>
+      case OperEx(TlaOper.eq, lhs @ NameEx(lname), rhs @ NameEx(rname)) =>
         if (ArenaCell.isValidName(lname) && ArenaCell.isValidName(rname)) {
           // just comparing cells
           val eq = z3context.mkEq(cellCache(ArenaCell.idFromName(lname))._1, cellCache(ArenaCell.idFromName(rname))._1)
@@ -473,18 +472,18 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
       case OperEx(BmcOper.distinct, args @ _*) =>
         val (es, ns) = (args map toExpr).unzip
-        val distinct = z3context.mkDistinct(es :_*)
-        (distinct, ns.foldLeft(1L){ _ + _ })
+        val distinct = z3context.mkDistinct(es: _*)
+        (distinct, ns.foldLeft(1L) { _ + _ })
 
-      case OperEx(TlaBoolOper.and, args@_*) =>
+      case OperEx(TlaBoolOper.and, args @ _*) =>
         val (es, ns) = (args map toExpr).unzip
-        val and = z3context.mkAnd(es.map(_.asInstanceOf[BoolExpr]) :_*)
-        (and, ns.foldLeft(1L){ _ + _ })
+        val and = z3context.mkAnd(es.map(_.asInstanceOf[BoolExpr]): _*)
+        (and, ns.foldLeft(1L) { _ + _ })
 
       case OperEx(TlaBoolOper.or, args @ _*) =>
         val (es, ns) = (args map toExpr).unzip
-        val or = z3context.mkOr(es.map(_.asInstanceOf[BoolExpr]) :_*)
-        (or, ns.foldLeft(1L){ _ + _ })
+        val or = z3context.mkOr(es.map(_.asInstanceOf[BoolExpr]): _*)
+        (or, ns.foldLeft(1L) { _ + _ })
 
       case OperEx(TlaBoolOper.implies, lhs, rhs) =>
         val (lhsZ3, ln) = toExpr(lhs)
@@ -521,8 +520,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         (getInPred(setId, elemId), 1)
 
       // the old implementation allowed us to do that, but the new one is encoding edges directly
-    case OperEx(TlaSetOper.in, ValEx(TlaInt(_)), NameEx(_))
-          | OperEx(TlaSetOper.in, ValEx(TlaBool(_)), NameEx(_)) =>
+      case OperEx(TlaSetOper.in, ValEx(TlaInt(_)), NameEx(_)) | OperEx(TlaSetOper.in, ValEx(TlaBool(_)), NameEx(_)) =>
         flushAndThrow(new InvalidTlaExException(s"SMT $id: Preprocessing introduced a literal inside tla.in: $ex", ex))
 
       case _ =>
@@ -532,8 +530,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
   private def toEqExpr(le: Expr, re: Expr) = {
     (le, re) match {
-      case (_: BoolExpr, _: BoolExpr)
-           | (_: IntExpr, _: IntExpr) =>
+      case (_: BoolExpr, _: BoolExpr) | (_: IntExpr, _: IntExpr) =>
         z3context.mkEq(le, re)
 
       case (_: IntExpr, _: Expr) =>
@@ -624,11 +621,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   }
 
   /**
-    * Flush the SMT log and throw the provided exception.
-    *
-    * @param e an exception to throw
-    * @return nothing, as an exception is unconditionally thrown
-    */
+   * Flush the SMT log and throw the provided exception.
+   *
+   * @param e an exception to throw
+   * @return nothing, as an exception is unconditionally thrown
+   */
   private def flushAndThrow(e: Exception): Nothing = {
     logWriter.flush() // flush the SMT log
     throw e
@@ -643,8 +640,8 @@ object Z3SolverContext {
   }
 
   /**
-    * The names of all parameters that are used to set the random seeds in z3.
-    */
+   * The names of all parameters that are used to set the random seeds in z3.
+   */
   val RANDOM_SEED_PARAMS: List[String] =
     List("sat.random_seed", "smt.random_seed", "fp.spacer.random_seed", "sls.random_seed")
 }

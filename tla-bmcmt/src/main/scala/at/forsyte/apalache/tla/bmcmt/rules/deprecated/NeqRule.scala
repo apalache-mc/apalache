@@ -6,16 +6,16 @@ import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 
 /**
-  * Implements the rule: SE-NE1.
-  *
-  * @author Igor Konnov
-  */
+ * Implements the rule: SE-NE1.
+ *
+ * @author Igor Konnov
+ */
 @deprecated("It should be handled by Keramelizer")
 class NeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaOper.ne, _, _) => true
-      case _ => false
+      case _                        => false
     }
   }
 

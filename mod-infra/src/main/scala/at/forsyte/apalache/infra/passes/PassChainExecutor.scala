@@ -5,17 +5,16 @@ import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
 /**
-  * This class executes the passes starting with the initial one,
-  * until the final pass returns None.
-  *
-  * @param options     the options that can be used by all the passes
-  * @param initialPass the first pass to run
-  * @author Igor Konnov
-  */
+ * This class executes the passes starting with the initial one,
+ * until the final pass returns None.
+ *
+ * @param options     the options that can be used by all the passes
+ * @param initialPass the first pass to run
+ * @author Igor Konnov
+ */
 
-class PassChainExecutor @Inject()(val options: WriteablePassOptions,
-                                  @Named("InitialPass") val initialPass: Pass)
-  extends LazyLogging {
+class PassChainExecutor @Inject() (val options: WriteablePassOptions, @Named("InitialPass") val initialPass: Pass)
+    extends LazyLogging {
 
   def run(): Option[Pass] = {
     def exec(seqNo: Int, passToRun: Pass): Option[Pass] = {

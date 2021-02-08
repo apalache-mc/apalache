@@ -29,7 +29,6 @@ class TestLirValues extends FunSuite {
     assert(s.value == "hello")
   }
 
-
   test("create a constant") {
     val c = new TlaConstDecl("x")
     assert("x" == c.name)

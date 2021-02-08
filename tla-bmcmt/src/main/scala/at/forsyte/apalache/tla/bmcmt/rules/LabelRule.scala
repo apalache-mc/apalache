@@ -5,15 +5,15 @@ import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 
 /**
-  * Process a labelled expression by simply taking the subexpression.
-  *
-  * @author Igor Konnov
-  */
+ * Process a labelled expression by simply taking the subexpression.
+ *
+ * @author Igor Konnov
+ */
 class LabelRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaOper.label, _*) => true
-      case _ => false
+      case _                         => false
     }
   }
 

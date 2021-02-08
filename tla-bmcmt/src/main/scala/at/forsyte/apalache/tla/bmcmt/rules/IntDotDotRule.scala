@@ -9,18 +9,17 @@ import at.forsyte.apalache.tla.lir.oper.TlaArithOper
 import at.forsyte.apalache.tla.lir.values.TlaInt
 
 /**
-  * Rewrites an integer range a..b.
-  *
-  * @author Igor Konnov
-   */
-class IntDotDotRule(rewriter: SymbStateRewriter,
-                    intRangeCache: IntRangeCache) extends RewritingRule {
+ * Rewrites an integer range a..b.
+ *
+ * @author Igor Konnov
+ */
+class IntDotDotRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) extends RewritingRule {
   private def simplifier = new ConstSimplifierForSmt()
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaArithOper.dotdot, _*) => true
-      case _ => false
+      case _                               => false
     }
   }
 
@@ -48,8 +47,9 @@ class IntDotDotRule(rewriter: SymbStateRewriter,
         (left.toInt, right.toInt)
 
       case _ =>
-        throw new RewriterException("Expected a constant integer range in .., found %s"
-          .format(elems.map(UTFPrinter.apply).mkString("..")), ex)
+        throw new RewriterException(
+            "Expected a constant integer range in .., found %s"
+              .format(elems.map(UTFPrinter.apply).mkString("..")), ex)
     }
   }
 }

@@ -8,15 +8,15 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSetOper}
 
 /**
-  * Implements the rule for a union of all set elements, that is, UNION S for a set S that contains sets as elements.
-  *
-  * @author Igor Konnov
-  */
+ * Implements the rule for a union of all set elements, that is, UNION S for a set S that contains sets as elements.
+ *
+ * @author Igor Konnov
+ */
 class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaSetOper.union, set) => true
-      case _ => false
+      case _                             => false
     }
   }
 
@@ -29,13 +29,13 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val elemType =
           topSetCell.cellType match {
             case FinSetT(FinSetT(et)) => et
-            case _ => throw new TypeException(s"Applying UNION to $topSet of type ${topSetCell.cellType}", state.ex)
+            case _                    => throw new TypeException(s"Applying UNION to $topSet of type ${topSetCell.cellType}", state.ex)
           }
 
-        val sets = Set(nextState.arena.getHas(topSetCell) :_*).toList // remove duplicates too
-        val elemsOfSets = sets map (s => Set(nextState.arena.getHas(s) :_*))
+        val sets = Set(nextState.arena.getHas(topSetCell): _*).toList // remove duplicates too
+        val elemsOfSets = sets map (s => Set(nextState.arena.getHas(s): _*))
 
-        val unionOfSets = elemsOfSets.foldLeft(Set[ArenaCell]()) (_.union(_))
+        val unionOfSets = elemsOfSets.foldLeft(Set[ArenaCell]())(_.union(_))
         // introduce a set cell
         nextState = nextState.updateArena(_.appendCell(FinSetT(elemType)))
         val newSetCell = nextState.arena.topCell
@@ -64,7 +64,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
               tla.and(tla.in(set, topSetCell), tla.in(elemCell, set))
             }
 
-            val existsIncludingSet = tla.or(pointingSets map inPointingSet :_*)
+            val existsIncludingSet = tla.or(pointingSets map inPointingSet: _*)
             val inUnionSet = tla.in(elemCell, newSetCell)
             val iff = OperEx(TlaOper.eq, inUnionSet, existsIncludingSet)
             rewriter.solverContext.assertGroundExpr(iff)

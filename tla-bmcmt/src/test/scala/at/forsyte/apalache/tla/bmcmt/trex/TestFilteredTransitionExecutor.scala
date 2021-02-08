@@ -11,10 +11,10 @@ import org.scalatest.{Outcome, fixture}
 import org.scalatest.junit.JUnitRunner
 
 /**
-  * An abstract test suite that is parameterized by the snapshot type.
-  *
-  * @author Igor Konnov
-  */
+ * An abstract test suite that is parameterized by the snapshot type.
+ *
+ * @author Igor Konnov
+ */
 @RunWith(classOf[JUnitRunner])
 class TestFilteredTransitionExecutor extends fixture.FunSuite {
   type SnapshotT = IncrementalExecutionContextSnapshot
@@ -37,12 +37,10 @@ class TestFilteredTransitionExecutor extends fixture.FunSuite {
     // x' <- 1 /\ y' <- 1
     val init = tla.and(mkAssign("y", 1), mkAssign("x", 1))
     // x' <- x /\ y' <- x + y
-    val next1 = tla.and(
-      mkAssign("x", tla.name("x")),
-      mkAssign("y", tla.plus(tla.name("x"), tla.name("y"))))
+    val next1 = tla.and(mkAssign("x", tla.name("x")), mkAssign("y", tla.plus(tla.name("x"), tla.name("y"))))
     val next2 = tla.and(
-      mkAssign("x", tla.name("y")),
-      mkAssign("y", tla.name("x"))
+        mkAssign("x", tla.name("y")),
+        mkAssign("y", tla.name("x"))
     ) ///
     // check the transitions
     val impl = new TransitionExecutorImpl(Set.empty, Set("x", "y"), exeCtx)
@@ -73,9 +71,7 @@ class TestFilteredTransitionExecutor extends fixture.FunSuite {
     // x' <- 1 /\ y' <- 1
     val init = tla.and(mkAssign("y", 1), mkAssign("x", 1))
     // x' <- x /\ y' <- x + y
-    val nextTrans = tla.and(
-      mkAssign("x", tla.name("x")),
-      mkAssign("y", tla.plus(tla.name("x"), tla.name("y"))))
+    val nextTrans = tla.and(mkAssign("x", tla.name("x")), mkAssign("y", tla.plus(tla.name("x"), tla.name("y"))))
     // push Init
     val impl = new TransitionExecutorImpl(Set.empty, Set("x", "y"), exeCtx)
     impl.debug = true

@@ -6,11 +6,11 @@ import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types.FinSetT
 
 /**
-  * This class constructs the power set of S, that is, SUBSET S. Sometimes, this is just unavoidable, e.g.,
-  * consider { Q \in SUBSET S: 2 * Cardinality(Q) =  }. Obviously, this produces an enormous explosion of constraints.
-  *
-  * @author Igor Konnov
-  */
+ * This class constructs the power set of S, that is, SUBSET S. Sometimes, this is just unavoidable, e.g.,
+ * consider { Q \in SUBSET S: 2 * Cardinality(Q) =  }. Obviously, this produces an enormous explosion of constraints.
+ *
+ * @author Igor Konnov
+ */
 class PowSetCtor(rewriter: SymbStateRewriter) {
   // Confringo is the explosion curse from Harry Potter. To let you know that your SMT solver will probably explode.
   def confringo(state: SymbState, set: ArenaCell): SymbState = {
@@ -55,8 +55,9 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
     }
 
     // that's it!
-    rewriter.solverContext.log("; } %s returns %s [%d arena cells])"
-      .format(getClass.getSimpleName, state.ex, state.arena.cellCount))
+    rewriter.solverContext.log(
+        "; } %s returns %s [%d arena cells])"
+          .format(getClass.getSimpleName, state.ex, state.arena.cellCount))
 
     state.setArena(arena).setRex(powsetCell)
   }

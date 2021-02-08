@@ -3,8 +3,8 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 
 /**
-  * A single rewriting rule that implements operational semantics.
-  */
+ * A single rewriting rule that implements operational semantics.
+ */
 trait RewritingRule {
   def isApplicable(symbState: SymbState): Boolean
 
@@ -16,8 +16,9 @@ trait RewritingRule {
   }
 
   def logOnReturn(solverContext: SolverContext, state: SymbState): SymbState = {
-    solverContext.log("; } %s returns %s [%d arena cells])"
-      .format(getClass.getSimpleName, state.ex, state.arena.cellCount))
+    solverContext.log(
+        "; } %s returns %s [%d arena cells])"
+          .format(getClass.getSimpleName, state.ex, state.arena.cellCount))
     state
   }
 }

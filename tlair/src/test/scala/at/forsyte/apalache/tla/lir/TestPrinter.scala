@@ -6,7 +6,7 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
-@RunWith( classOf[JUnitRunner] )
+@RunWith(classOf[JUnitRunner])
 class TestPrinter extends FunSuite with TestingPredefs {
   val bd = Builder
 
@@ -63,7 +63,6 @@ class TestPrinter extends FunSuite with TestingPredefs {
     val chooseEx2: String = bd.choose(n_x, n_S, n_p)
     val chooseEx3: String = bd.choose(n_x, bd.and(n_p, n_q))
     val chooseEx4: String = bd.choose(n_x, bd.times(n_S, n_T), bd.and(n_p, n_q))
-
 
     if (ALSO_PRINT) {
       printsep()
@@ -165,7 +164,6 @@ class TestPrinter extends FunSuite with TestingPredefs {
     assert(forallEx3 == "%sa %s b: c".format(up.m_forall, up.m_in))
     assert(forallEx4 == "%sa %s (b %s c): (d %s e)".format(up.m_forall, up.m_in, up.m_times, up.m_and))
 
-
     val existsEx1: String = bd.exists(n_a, n_b)
     val existsEx2: String = bd.exists(n_a, bd.or(seq(2, 1): _*))
     val existsEx3: String = bd.exists(n_a, n_b, n_c)
@@ -181,13 +179,9 @@ class TestPrinter extends FunSuite with TestingPredefs {
     assert(existsEx3 == "%sa %s b: c".format(up.m_exists, up.m_in))
     assert(existsEx4 == "%sa %s (b %s c): (d %s e)".format(up.m_exists, up.m_in, up.m_times, up.m_and))
 
-
   }
 
-  test("Test UTF8: TlaArithOper") {
-
-
-  }
+  test("Test UTF8: TlaArithOper") {}
 
   test("Test UTF8: TlaSetOper") {
     val inEx1: String = bd.in(n_a, n_b)

@@ -8,22 +8,20 @@ import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 
 /**
-  * Integer comparisons: <, <=, >, >=. For equality and inequality, check EqRule and NeqRule.
-  *
-  * @author Igor Konnov
-  */
+ * Integer comparisons: <, <=, >, >=. For equality and inequality, check EqRule and NeqRule.
+ *
+ * @author Igor Konnov
+ */
 class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val simplifier = new ConstSimplifierForSmt()
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
-      case OperEx(TlaArithOper.lt, _, _)
-           | OperEx(TlaArithOper.le, _, _)
-           | OperEx(TlaArithOper.gt, _, _)
-           | OperEx(TlaArithOper.ge, _, _)
-      => true
+      case OperEx(TlaArithOper.lt, _, _) | OperEx(TlaArithOper.le, _, _) | OperEx(TlaArithOper.gt, _, _) |
+          OperEx(TlaArithOper.ge, _, _) =>
+        true
 
-        // Note that there is no equality, as it is handled by EqRule. Inequality is rewritten by Keramelizer.
+      // Note that there is no equality, as it is handled by EqRule. Inequality is rewritten by Keramelizer.
 
       case _ => false
     }
@@ -31,9 +29,8 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = state.ex match {
     case OperEx(oper: TlaArithOper, _, _)
-      if (oper == TlaArithOper.lt || oper == TlaArithOper.le
-        || oper == TlaArithOper.gt || oper == TlaArithOper.ge)
-    =>
+        if (oper == TlaArithOper.lt || oper == TlaArithOper.le
+          || oper == TlaArithOper.gt || oper == TlaArithOper.ge) =>
       rewriteGeneral(state, state.ex)
 
     case _ =>
@@ -52,9 +49,7 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
       var arena = rightState.arena.appendCell(BoolT())
       val eqPred = arena.topCell
       val cons =
-        OperEx(TlaOper.eq,
-          eqPred.toNameEx,
-          OperEx(oper, leftState.ex, rightState.ex))
+        OperEx(TlaOper.eq, eqPred.toNameEx, OperEx(oper, leftState.ex, rightState.ex))
       rewriter.solverContext.assertGroundExpr(cons)
       rightState.setArena(arena).setRex(eqPred.toNameEx)
 

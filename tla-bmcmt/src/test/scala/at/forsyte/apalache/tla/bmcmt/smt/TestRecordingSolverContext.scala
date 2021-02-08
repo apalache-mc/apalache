@@ -7,7 +7,6 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
-
 @RunWith(classOf[JUnitRunner])
 class TestRecordingSolverContext extends FunSuite {
   private val defaultSolverConfig = SolverConfig(debug = false, profile = false, randomSeed = 0)

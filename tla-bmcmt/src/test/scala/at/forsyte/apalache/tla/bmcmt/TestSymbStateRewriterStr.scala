@@ -13,7 +13,7 @@ class TestSymbStateRewriterStr extends RewriterBase {
     val rewriter = create()
     val nextStateRed = rewriter.rewriteUntilDone(state)
     nextStateRed.ex match {
-      case predEx@NameEx(name) =>
+      case predEx @ NameEx(name) =>
         assert(solverContext.sat())
         val redEqBlue = tla.eql(tla.str("blue"), tla.str("red"))
         val nextStateEq = rewriter.rewriteUntilDone(nextStateRed.setRex(redEqBlue))
@@ -23,7 +23,6 @@ class TestSymbStateRewriterStr extends RewriterBase {
         rewriter.pop()
         solverContext.assertGroundExpr(tla.not(nextStateEq.ex))
         assert(solverContext.sat())
-
 
       case _ =>
         fail("Unexpected rewriting result")

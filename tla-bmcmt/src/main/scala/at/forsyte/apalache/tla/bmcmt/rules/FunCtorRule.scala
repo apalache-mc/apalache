@@ -8,16 +8,16 @@ import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
 /**
-  * The new implementation of a function constructor that encodes a function f = [x \in S |-> e] the classical way:
-  * f = {(a, b) : a \in S, b = e[a/x]. For efficiency, we are still carrying the domain set in a separate cell.
-  *
-  * @author Igor Konnov
-  */
+ * The new implementation of a function constructor that encodes a function f = [x \in S |-> e] the classical way:
+ * f = {(a, b) : a \in S, b = e[a/x]. For efficiency, we are still carrying the domain set in a separate cell.
+ *
+ * @author Igor Konnov
+ */
 class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaFunOper.funDef, _*) => true
-      case _ => false
+      case _                             => false
     }
   }
 
@@ -28,8 +28,9 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriteFunCtor(state, mapEx, varName, setEx)
 
       case _ =>
-        throw new RewriterException("%s is not applicable to %s"
-          .format(getClass.getSimpleName, state.ex), state.ex)
+        throw new RewriterException(
+            "%s is not applicable to %s"
+              .format(getClass.getSimpleName, state.ex), state.ex)
     }
   }
 
@@ -39,7 +40,7 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val domainCell = nextState.asCell
     val elemT = domainCell.cellType match {
       case FinSetT(et) => et
-      case t@_ => throw new RewriterException("Expected a finite set, found: " + t, state.ex)
+      case t @ _       => throw new RewriterException("Expected a finite set, found: " + t, state.ex)
     }
     val domainCells = nextState.arena.getHas(domainCell)
     // find the type of the target expression and of the target set
