@@ -768,7 +768,7 @@ The outcome is: NoError
 ```sh
 $ apalache-mc check ConfigUnsorted.tla | sed 's/[IEW]@.*//'
 ...
-Configuration error (see the manual): Circular definition dependency detected
+Configuration error (see the manual): Found a cyclic dependency among operators: A, B, C
 ...
 EXITCODE: ERROR (99)
 ```
@@ -1010,7 +1010,21 @@ $ apalache-mc typecheck FunctionsTyped.tla | sed 's/[IEW]@.*//'
 PASS #1: TypeChecker
  > Running Snowcat .::.
  > Your types are great!
-PASS #2: Terminal
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck FiniteSetsExtTyped.tla
+
+```sh
+$ apalache-mc typecheck FiniteSetsExtTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > Running Snowcat .::.
+ > Your types are great!
+...
 Type checker [OK]
 ...
 EXITCODE: OK

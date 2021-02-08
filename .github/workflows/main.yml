@@ -81,7 +81,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
       - name: Build apalache
-        run: make apalache-jar
+        run: make build-quick
       - name: Run integration tests
         run: ./test/run-integration
 

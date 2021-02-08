@@ -2,21 +2,17 @@ package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.transformations.standard.{ModuleByExTransformer, ReplaceFixed}
+import at.forsyte.apalache.tla.lir.transformations.standard.{DeclarationSorter, ModuleByExTransformer, ReplaceFixed}
 import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
 import com.typesafe.scalalogging.LazyLogging
 
-import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
-import scala.collection.mutable.Set
-
 /**
-  * A rewriter of definitions and constants that replaces every definition Foo with the definition seen in OVERRIDE_Foo,
-  * if OVERRIDE_Foo is present.
-  *
-  * @author Igor Konnov
-  * @author Andrey Kuprianov (topological sorting)
-  */
+ * A rewriter of definitions and constants that replaces every definition Foo with the definition seen in OVERRIDE_Foo,
+ * if OVERRIDE_Foo is present.
+ *
+ * @author Igor Konnov
+ * @author Andrey Kuprianov
+ */
 class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTransformation with LazyLogging {
   override def apply(mod: TlaModule): TlaModule = {
     val overrides = findOverrides(mod.operDeclarations)
@@ -35,12 +31,13 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
           TlaOperDecl(name, List(), overridingDef.body)
         }
 
-      case df @ TlaOperDecl(name, dfParams, _) if overrides.contains(name) =>
+      case TlaOperDecl(name, dfParams, _) if overrides.contains(name) =>
         val overridingDef = overrides(name)
         if (overridingDef.formalParams.size != dfParams.size) {
           val odNargs = overridingDef.formalParams.size
           val dfNargs = dfParams.size
-          val msg = s"  > Replacing operator $name ($dfNargs) with an operator ${overridingDef.name} that has $odNargs parameters"
+          val msg =
+            s"  > Replacing operator $name ($dfNargs) with an operator ${overridingDef.name} that has $odNargs parameters"
           throw new OverridingError(msg, overridingDef.body)
         } else {
           logger.info(s"  > Replaced operator $name with OVERRIDE_$name")
@@ -57,7 +54,15 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
     // substitute the constant definitions and operator definitions with the replacement operators
     val transformed = mod.declarations map transformDef
     val filtered = transformed filter (!_.name.startsWith(ConstAndDefRewriter.OVERRIDE_PREFIX))
-    val sorted = toposortDefs(filtered)
+    val sortedModule =
+      try {
+        new DeclarationSorter()(new TlaModule(mod.name, filtered))
+      } catch {
+        case e: CyclicDependencyError =>
+          // re-throw this exception as a configuration error, so the user would see a nice message
+          throw new ConfigurationError(e.getMessage)
+      }
+
     // Importantly, for every constant c, replace NameEx(c) with OperEx(TlaOper.apply, replacement).
     // This is needed as we distinguish the operator calls from constant and variable use.
 
@@ -68,7 +73,7 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
     }
 
     val replacedConsts = mod.declarations.collect { case TlaConstDecl(name) if overrides.contains(name) => name }
-    val replaced = replacedConsts.foldLeft(new TlaModule(mod.name, sorted))(replaceConstWithCall)
+    val replaced = replacedConsts.foldLeft(sortedModule)(replaceConstWithCall)
     replaced
   }
 
@@ -79,113 +84,8 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
           df.name.substring(ConstAndDefRewriter.OVERRIDE_PREFIX.length) -> df
       }
 
-    Map(overrides :_*)
+    Map(overrides: _*)
   }
-
-  private def toposortDefs(defs: Seq[TlaDecl]): Seq[TlaDecl] = {
-    var defsWithDeps = defs.toList.map { d => (d, findDeps(d)) }
-
-    // logger.info(s"  > toposort definitions: ${defsWithDeps.toString}")
-
-    var sorted = ListBuffer[TlaDecl]()
-    var added = mutable.Set[String]()
-    var newAdded = false
-    do {
-      newAdded = false
-      val remain = ListBuffer[(TlaDecl, Set[String])]()
-      defsWithDeps.foreach {
-        case (d, deps) =>
-          val newDeps = deps -- added
-          if(newDeps.isEmpty) {
-            sorted += d
-            added += d.name
-            newAdded = true
-          }
-          else {
-            remain += ((d, deps))
-          }
-          true
-      }
-      defsWithDeps = remain.toList
-    }
-    while(defsWithDeps.nonEmpty && newAdded)
-    if(defsWithDeps.nonEmpty) {
-      val msg = "  > topological sort: can't order these definitions: " + defsWithDepsAsHumanReadable(defsWithDeps)
-      logger.error(msg)
-      throw new ConfigurationError("Circular definition dependency detected" )
-    }
-    sorted
-  }
-
-  // convert the dependencies into a readable form
-  private def defsWithDepsAsHumanReadable(dds: List[(TlaDecl, Set[String])]): String = {
-    def depToString(decl: TlaDecl, uses: Set[String]): String = {
-      "Operator %s uses %s".format(decl.name, uses.toSeq.sorted.mkString(", "))
-    }
-    dds.map(p => depToString(p._1, p._2)).mkString("; ")
-  }
-
-  private def findDeps(decl: TlaDecl): mutable.Set[String] = {
-    decl match {
-      case TlaOperDecl(_, params, body) =>
-        val paramSet = mutable.Set[String](params.collect {
-          case p => p.name
-        }: _*)
-        findDeps(body) -- paramSet -- List(decl.name)
-      case _ =>
-        mutable.Set[String]()
-    }
-  }
-
-  private def findDeps(expr: TlaEx): mutable.Set[String] = {
-    expr match {
-      case NameEx(name) => mutable.Set(name)
-
-      case  OperEx(op, x, s, p)
-        if op == TlaOper.chooseBounded ||  op == TlaBoolOper.exists || op == TlaBoolOper.forall || op == TlaSetOper.filter =>
-        findDeps(s) ++ findDeps(p) -- findDeps(x)
-
-      case  OperEx(op, NameEx(name), p)
-        if op == TlaOper.chooseUnbounded ||  op == TlaBoolOper.existsUnbounded || op == TlaBoolOper.forallUnbounded =>
-        findDeps(p) -- List(name)
-
-      case OperEx(TlaFunOper.app, funEx, argEx) =>
-        findDeps(funEx) ++ findDeps(argEx)
-
-      case OperEx(TlaOper.apply, NameEx(name), args@_*) =>
-        args.foldLeft(mutable.Set[String]()) {
-          case (s, e) => s ++ findDeps(e)
-        } ++ List(name)
-
-      case OperEx(op, body, keysAndValues@_*)
-        if op == TlaFunOper.funDef  || op == TlaFunOper.recFunDef || op == TlaSetOper.map =>
-        val (ks, vs) = keysAndValues.zipWithIndex partition (_._2 % 2 == 0)
-        // Note that at this point keys are not always NameEx, they can be tuples.
-        // Thus, extract the names from the keys by using findDeps.
-        val keys = ks.map(_._1).flatMap(findDeps)
-        val values = vs.map(_._1)
-        findDeps(body) ++ values.foldLeft(mutable.Set[String]()){
-          case (s, x) => s ++ findDeps(x)
-        } -- keys
-
-      case LetInEx(body, decls@_*) =>
-        findDeps(body) ++
-        decls.foldLeft(mutable.Set[String]()) {
-          case (s, d) => s ++ findDeps(d)
-        } --
-        decls.foldLeft(mutable.Set[String]()) {
-          case (s, d) => s ++ List(d.name)
-        }
-
-      case OperEx(_, args@_*) =>
-        args.foldLeft(mutable.Set[String]()) {
-          case (s, e) => s ++ findDeps(e)
-        }
-
-      case _ => mutable.Set[String]()
-    }
-  }
-
 }
 
 object ConstAndDefRewriter {
