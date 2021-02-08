@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.bmcmt.smt.PreproSolverContext.{PreproEqEntry, Pre
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 object PreproSolverContext {
   sealed abstract class PreproCacheEntry {
@@ -27,8 +28,8 @@ object PreproSolverContext {
  * before pushing the constraints to the actual solver:</p>
  *
  * <ul>
- *   <li>Equalities between two cells: tla.eql(c1, c2) and tla.neq(c1, c2)</li>
- *   <li>Set membership assertions between two cells: tla.in(c1, c2) and tla.not(tla.in(c1, c2)).
+ * <li>Equalities between two cells: tla.eql(c1, c2) and tla.neq(c1, c2)</li>
+ * <li>Set membership assertions between two cells: tla.in(c1, c2) and tla.not(tla.in(c1, c2)).
  * </ul>
  *
  * <p>This is helpful as our rewriting rules
@@ -160,7 +161,7 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
   /**
    * Declare an arena edge of type 'has'. This method introduces a Boolean variable for the edge.
    *
-   * @param set the containing set
+   * @param set  the containing set
    * @param elem a set element
    */
   def declareInPredIfNeeded(set: ArenaCell, elem: ArenaCell): Unit = context.declareInPredIfNeeded(set, elem)

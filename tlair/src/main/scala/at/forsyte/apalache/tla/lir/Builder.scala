@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values._
+import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
 
 /**
  * A builder for TLA expressions.
@@ -74,7 +75,8 @@ object Builder {
   /**
    * Decorate a TLA+ expression with a label (a TLA+2 feature), e.g.,
    * lab(a, b) :: e decorates e with the label "lab" whose arguments are "a" and "b".
-   * @param ex a TLA+ expression to decorate
+   *
+   * @param ex   a TLA+ expression to decorate
    * @param name label identifier
    * @param args label arguments (also identifiers)
    * @return OperEx(TlaOper.label, ex, name as ValEx(TlaStr(_)), args as ValEx(TlaStr(_)))
@@ -232,9 +234,10 @@ object Builder {
 
   /**
    * Get a subsequence of S, that is, SubSeq(S, from, to)
-   * @param seq a sequence, e.g., constructed with tla.tuple
+   *
+   * @param seq  a sequence, e.g., constructed with tla.tuple
    * @param from the first index of the subsequene, greater or equal to 1
-   * @param to the last index of the subsequence, not greater than Len(S)
+   * @param to   the last index of the subsequence, not greater than Len(S)
    * @return the expression that corresponds to SubSeq(S, from, to)
    */
   def subseq(seq: TlaEx, from: TlaEx, to: TlaEx): TlaEx =
@@ -242,7 +245,8 @@ object Builder {
 
   /**
    * Get the subsequence of S that consists of the elements matching a predicate.
-   * @param seq a sequence
+   *
+   * @param seq  a sequence
    * @param test a predicate, it should be an action name
    * @return the expression that corresponds to SelectSeq(S, test)
    */
@@ -312,6 +316,7 @@ object Builder {
 
   def assign(lhs: TlaEx, rhs: TlaEx) =
     OperEx(BmcOper.assign, lhs, rhs)
+
   def assignPrime(n: NameEx, rhs: TlaEx): OperEx =
     OperEx(BmcOper.assign, prime(n), rhs)
 

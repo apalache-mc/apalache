@@ -2,16 +2,17 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx, TypeTag}
 
 /**
  * A reference implementation of an expression transformer. It expands the prime operator,
  * that is, when it meets an expression e', it propagates primes inside e.
  *
  * @param stateVars state variables
- * @param tracker a transformation tracker
+ * @param tracker   a transformation tracker
  */
-class PrimePropagation(tracker: TransformationTracker, stateVars: Set[String]) extends TlaExTransformation {
+class PrimePropagation(tracker: TransformationTracker, stateVars: Set[String])(implicit typeTag: TypeTag)
+    extends TlaExTransformation {
 
   /**
    * Propagate primes in the expression to the state variables.

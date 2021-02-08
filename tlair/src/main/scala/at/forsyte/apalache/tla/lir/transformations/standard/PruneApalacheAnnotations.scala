@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
-import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaOperDecl}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations._
+import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TypeTag}
 
 object PruneApalacheAnnotations {
   private def pruneOne(tracker: TransformationTracker): TlaExTransformation =
@@ -17,7 +17,7 @@ object PruneApalacheAnnotations {
    * Example:
    * S <: {Int} -> S
    */
-  def apply(tracker: TransformationTracker): TlaExTransformation = tracker.trackEx { ex =>
+  def apply(tracker: TransformationTracker)(implicit typeTag: TypeTag): TlaExTransformation = tracker.trackEx { ex =>
     val tr = pruneOne(tracker)
     lazy val self = apply(tracker)
     ex match {

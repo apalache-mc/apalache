@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaArithOper, TlaFiniteSetOper}
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir.{OperEx, ValEx}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * Optimization for Cardinality(S) >= k, where k is constant. See [docs/smt/Cardinality.md].

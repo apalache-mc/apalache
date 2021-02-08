@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * Rewriting EXCEPT for functions, tuples, and records.
@@ -121,13 +122,16 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     val updatedKeys = indexEs map indexToStr
     val unchangedKeys = recType.fields.keySet.diff(Set(updatedKeys: _*))
+
     // create a new record
     def mkUnchanged(key: String): (TlaEx, TlaEx) = {
       (tla.str(key), tla.appFun(recCell.toNameEx, tla.str(key)))
     }
+
     def flattenPairs(list: Seq[TlaEx], pair: (TlaEx, TlaEx)): Seq[TlaEx] = {
       pair._1 +: pair._2 +: list
     }
+
     // [ [k1, v1], [k2, v2], ... ]
     val updatedPairs: Seq[(TlaEx, TlaEx)] = indexEs.zip(valueCells.map(_.toNameEx))
     val unchangedPairs: Seq[(TlaEx, TlaEx)] = unchangedKeys.toList.map(mkUnchanged)
@@ -145,6 +149,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     val updatedIndices = indexEs map indexToInt
     val updateMap = Map(updatedIndices.zip(valueCells): _*)
+
     def updateOrKeep(i: Int): TlaEx = {
       if (updateMap.contains(i)) {
         updateMap(i)

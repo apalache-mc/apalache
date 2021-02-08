@@ -10,6 +10,7 @@ import org.scalatest.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaInt
+import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
 
 @RunWith(classOf[JUnitRunner])
 class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {

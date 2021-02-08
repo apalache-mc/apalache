@@ -4,9 +4,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.FlatLanguagePred
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
-
-import scala.annotation.tailrec
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * A simplifier of constant TLA+ expressions, e.g., rewriting 1 + 2 to 3.

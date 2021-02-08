@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.pp
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 import scala.math.BigInt
 
@@ -105,7 +106,9 @@ abstract class ConstSimplifierBase {
 
     // boolean operations
     case OperEx(TlaBoolOper.and, args @ _*) =>
-      val simpArgs = args.filterNot { _ == ValEx(TlaBool(true)) }
+      val simpArgs = args.filterNot {
+        _ == ValEx(TlaBool(true))
+      }
       if (simpArgs.isEmpty) {
         ValEx(TlaBool(true)) // an empty conjunction is true
       } else if (simpArgs.contains(ValEx(TlaBool(false)))) {
@@ -115,7 +118,9 @@ abstract class ConstSimplifierBase {
       }
 
     case OperEx(TlaBoolOper.or, args @ _*) =>
-      val simpArgs = args.filterNot { _ == ValEx(TlaBool(false)) }
+      val simpArgs = args.filterNot {
+        _ == ValEx(TlaBool(false))
+      }
       if (simpArgs.isEmpty) {
         ValEx(TlaBool(false)) // an empty disjunction is true
       } else if (simpArgs.contains(ValEx(TlaBool(true)))) {

@@ -12,6 +12,7 @@ import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.pp.NormalizedNames
 import com.google.inject.Inject
 import com.google.inject.name.Named

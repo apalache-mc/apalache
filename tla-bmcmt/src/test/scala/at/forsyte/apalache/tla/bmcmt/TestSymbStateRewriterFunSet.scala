@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.BmcOper
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 

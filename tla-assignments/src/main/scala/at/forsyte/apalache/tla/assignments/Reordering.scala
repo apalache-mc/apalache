@@ -3,15 +3,17 @@ package at.forsyte.apalache.tla.assignments
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaEx, TlaOperDecl}
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * `Reordering` allows us to change the order of arguments passed to commutative operators (e.g. /\).
  * This helps enforce a notion of, for example, left-to-right processing of arguments (like in TLC), which
  * matters in variable assignments, which should always (syntactically) precede variable use cases.
- * @param ord An ordering over `T`
+ *
+ * @param ord       An ordering over `T`
  * @param rankingFn Assigns a value in `T` to each `TlaEx`. This indirectly defines an ordering on `TlaEx`:
  *                  e1 <= e2 iff ord.le( rankingFn(e1), rankingFn(e2) ) etc.
- * @param tracker A transformation tracker.
+ * @param tracker   A transformation tracker.
  * @tparam T An orderable domain. Default: Option[Int]
  */
 class Reordering[T](ord: Ordering[T], rankingFn: TlaEx => T, tracker: TransformationTracker) {

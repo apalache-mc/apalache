@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaFunOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaStrSet}
 import at.forsyte.apalache.tla.lir.values.TlaStr
 import at.forsyte.apalache.tla.lir.{NullEx, OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 import scala.collection.immutable.SortedMap
 
@@ -18,6 +19,7 @@ object AnnotationParser {
 
   /**
    * Parse a TLA+ expression that encodes a type.
+   *
    * @param annot a type annotation that is a TLA+ expression.
    * @return a cell type
    */
@@ -85,6 +87,7 @@ object AnnotationParser {
 
   /**
    * Convert a cell type into a TLA+ expression that encodes a respective type annotation.
+   *
    * @param tp a cell type
    * @return a TLA+ expression
    */
@@ -101,10 +104,12 @@ object AnnotationParser {
       case SeqT(elemT)               => tla.seqSet(toTla(elemT))
       case RecordT(fields) =>
         val keys = fields.keys.toSeq
+
         def fieldOrVal(i: Int) = {
           val k = keys(i / 2)
           if (i % 2 == 0) tla.str(k) else toTla(fields(k))
         }
+
         val args = 0.until(2 * fields.size) map fieldOrVal
         OperEx(TlaFunOper.enum, args: _*)
 

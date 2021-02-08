@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.DeepCopy
 import at.forsyte.apalache.tla.pp.NormalizedNames
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.typesafe.scalalogging.LazyLogging
 
 /**
@@ -20,7 +21,7 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
   /**
    * Given a module and the name of an invariant candidate, add verification conditions in the module.
    *
-   * @param module an input module
+   * @param module  an input module
    * @param invName the name of an invariant
    * @return a transformed module
    */

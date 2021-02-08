@@ -10,6 +10,7 @@ import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.ModuleByExTransformer
 import at.forsyte.apalache.tla.lir.{NullEx, TlaAssumeDecl, TlaEx, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging

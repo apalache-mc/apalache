@@ -9,6 +9,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.immutable.{HashSet, SortedSet}

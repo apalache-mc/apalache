@@ -14,6 +14,8 @@ import at.forsyte.apalache.tla.lir.transformations.standard._
 
 import scala.collection.mutable
 
+import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
+
 @RunWith(classOf[JUnitRunner])
 class TestSourceLocator extends FunSuite with TestingPredefs {
 

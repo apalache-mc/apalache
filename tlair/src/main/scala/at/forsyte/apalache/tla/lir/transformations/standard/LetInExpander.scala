@@ -14,7 +14,8 @@ import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
  *
  * @author Jure Kukovec
  */
-class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean) extends TlaExTransformation {
+class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean)(implicit typeTag: TypeTag)
+    extends TlaExTransformation {
   override def apply(ex: TlaEx): TlaEx = transform(ex)
 
   def transform: TlaExTransformation = tracker.trackEx {
@@ -47,7 +48,7 @@ class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean) extend
         }
 
       // Inline the operators using the map of definitions
-      InlinerOfUserOper(bodyMap, tracker)(expandedLetIn)
+      InlinerOfUserOper(bodyMap, tracker)(typeTag)(expandedLetIn)
 
     // this is the special form for LAMBDAs
     case OperEx(TlaOper.apply, LetInEx(NameEx("LAMBDA"), TlaOperDecl("LAMBDA", params, lambdaBody)), args @ _*) =>
@@ -57,7 +58,7 @@ class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean) extend
       params.zip(args).foldLeft(lambdaBody) {
         // replace every parameter with the respective argument
         case (expr, (param, arg)) =>
-          ReplaceFixed(NameEx(param.name), arg, tracker)(expr)
+          ReplaceFixed(NameEx(param.name), arg, tracker)(typeTag)(expr)
       }
 
     // recursive processing of composite operators
@@ -70,7 +71,7 @@ class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean) extend
 }
 
 object LetInExpander {
-  def apply(tracker: TransformationTracker, keepNullary: Boolean): LetInExpander = {
+  def apply(tracker: TransformationTracker, keepNullary: Boolean)(implicit typeTag: TypeTag): LetInExpander = {
     new LetInExpander(tracker, keepNullary)
   }
 }

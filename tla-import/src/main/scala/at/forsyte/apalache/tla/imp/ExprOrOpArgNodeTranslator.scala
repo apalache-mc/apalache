@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.{TlaDecimal, TlaInt, TlaStr}
 import at.forsyte.apalache.io.annotations.store._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic._
 

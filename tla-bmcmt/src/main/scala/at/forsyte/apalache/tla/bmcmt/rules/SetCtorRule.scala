@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types.FinSetT
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * Rewrites the set constructor {e_1, ..., e_k}.

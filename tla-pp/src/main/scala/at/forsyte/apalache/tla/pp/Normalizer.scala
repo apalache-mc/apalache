@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.{FlatLanguagePred, ReplaceFixed}
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.TlaBool
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import javax.inject.Singleton
 
 /**
@@ -187,6 +188,7 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
         def transformDef(decl: TlaOperDecl): TlaOperDecl = {
           TlaOperDecl(decl.name, decl.formalParams, transform(decl.body))
         }
+
         LetInEx(transform(body), defs map transformDef: _*)
       }
 

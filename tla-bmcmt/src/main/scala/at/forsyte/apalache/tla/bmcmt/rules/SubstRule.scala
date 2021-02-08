@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.NameEx
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * Substitutes a bound name with a cell. For instance, it substitutes a name that is declared with VARIABLE or CONSTANT,

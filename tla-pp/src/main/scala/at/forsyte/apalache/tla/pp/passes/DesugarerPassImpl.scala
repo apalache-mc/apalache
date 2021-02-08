@@ -1,13 +1,12 @@
 package at.forsyte.apalache.tla.pp.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.TlaModule
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
-import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
+import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
-import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.{TlaDecl, TlaModule, TlaOperDecl}
-import at.forsyte.apalache.tla.pp.{Desugarer, Keramelizer, Normalizer, UniqueNameGenerator}
+import at.forsyte.apalache.tla.pp.Desugarer
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging

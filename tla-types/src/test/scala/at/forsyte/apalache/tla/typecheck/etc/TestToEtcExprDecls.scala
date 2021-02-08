@@ -5,6 +5,7 @@ import at.forsyte.apalache.io.annotations.store.{AnnotationStore, createAnnotati
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TypingOper}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.typecheck._
 import at.forsyte.apalache.tla.typecheck.parser.DefaultType1Parser
 import org.junit.runner.RunWith

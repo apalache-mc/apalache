@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
-import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaEx, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaEx, TlaOperDecl, TypeTag}
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
@@ -10,7 +10,7 @@ object Flatten {
     case _             => false
   }
 
-  private def flattenOne(tracker: TransformationTracker): TlaExTransformation =
+  private def flattenOne(tracker: TransformationTracker)(implicit typeTag: TypeTag): TlaExTransformation =
     tracker.trackEx {
       case ex @ OperEx(TlaBoolOper.and | TlaBoolOper.or, args @ _*) =>
         val hasSameOper = sameOp(ex.oper)(_)
@@ -43,7 +43,7 @@ object Flatten {
    * Example:
    * ( a /\ b) /\ c [/\(/\(a,b),c)] -> a /\ b /\ c [/\(a,b,c)]
    */
-  def apply(tracker: TransformationTracker): TlaExTransformation = tracker.trackEx { ex =>
+  def apply(tracker: TransformationTracker)(implicit typeTag: TypeTag): TlaExTransformation = tracker.trackEx { ex =>
     val tr = flattenOne(tracker)
     lazy val self = apply(tracker)
     ex match {

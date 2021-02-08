@@ -12,10 +12,11 @@ import scala.collection.mutable.ArrayBuffer
 
 /**
  * <p>A formatter of TlaEx and TlaModule to JSON, for interoperability with external tools.</p>
+ *
  * @author Andrey Kuprianov
  */
 
-class JsonWriter(writer: PrintWriter, indent: Int = 2) {
+class JsonWriter(writer: PrintWriter, indent: Int = 2)(implicit typeTag: TypeTag) {
 
   def write(mod: TlaModule): Unit = {
     writer.write(ujson.write(toJson(mod), indent))
@@ -274,10 +275,10 @@ object JsonWriter {
   /**
    * Write a module to a file (without appending).
    *
-   * @param module a TLA module
+   * @param module     a TLA module
    * @param outputFile an output file that will be created or overwritten
    */
-  def write(module: TlaModule, outputFile: File): Unit = {
+  def write(module: TlaModule, outputFile: File)(implicit typeTag: TypeTag): Unit = {
     val writer = new PrintWriter(new FileWriter(outputFile, false))
     try {
       new JsonWriter(writer).write(module)

@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.lir
 
+import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import org.junit.runner.RunWith
@@ -11,6 +12,35 @@ import org.scalatest.junit.JUnitRunner
  */
 @RunWith(classOf[JUnitRunner])
 class TestTlaExpr extends FunSuite {
+  test("no type tag") {
+    // this expression is constructed with the implicit value for typeTag = Untyped().
+    val ex = ValEx(TlaInt(42))
+    // pattern matching should work without worrying about type tags
+    ex match {
+      case matched @ ValEx(TlaInt(i)) =>
+        assert(42 == i)
+        assert(Untyped() == matched.typeTag)
+
+      case _ =>
+        fail("Expected valEx")
+    }
+  }
+
+  test("type tag") {
+    // this expression is annotated with a type tag. For testing purposes, the type tag is just a string.
+    val ex = ValEx(TlaInt(42))(Typed[String]("foo"))
+    // although we have have set a type tag, pattern matching should be oblivious to that
+    ex match {
+      case matched @ ValEx(TlaInt(i)) =>
+        assert(42 == i)
+        // we can extract the type, whenever we want to do it
+        assert(Typed[String]("foo") == matched.typeTag)
+
+      case _ =>
+        fail("Expected ValEx")
+    }
+  }
+
   test("create a conjunction") {
     val x = NameEx("x")
     val y = NameEx("y")

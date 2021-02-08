@@ -33,7 +33,10 @@ object IncrementalRenaming {
   def parseName(name: String): Option[(String, Int)] = {
     name.split(separatorRegex) match {
       // Already renamed before
-      case Array(n, i) if i forall { _.isDigit } => Some((n, i.toInt))
+      case Array(n, i) if i forall {
+            _.isDigit
+          } =>
+        Some((n, i.toInt))
       // Never renamed before
       case Array(n) => None
       // Error
@@ -49,10 +52,10 @@ object IncrementalRenaming {
 
   /**
    * Merges two maps of type `counterMapType`. The new map has the following properties:
-   *   1) \A k \in m1.keys \ m2.keys . mergeNameCounters( b )( m1, m2 )[k] = m1[k]
-   *   2) \A k \in m2.keys \ m1.keys . mergeNameCounters( b )( m1, m2 )[k] = m2[k]
-   *   3) \A k \in m1.keys \cap m2.keys .
-   *       mergeNameCounters( b )( m1, m2 )[k] = IF b THEN max(m1[k],m2[k]) ELSE min(m1[k],m2[k])
+   * 1) \A k \in m1.keys \ m2.keys . mergeNameCounters( b )( m1, m2 )[k] = m1[k]
+   * 2) \A k \in m2.keys \ m1.keys . mergeNameCounters( b )( m1, m2 )[k] = m2[k]
+   * 3) \A k \in m1.keys \cap m2.keys .
+   * mergeNameCounters( b )( m1, m2 )[k] = IF b THEN max(m1[k],m2[k]) ELSE min(m1[k],m2[k])
    */
   def mergeNameCounters(takeMax: Boolean)(m1: counterMapType, m2: counterMapType): counterMapType = {
     val selectorFun: (Int, Int) => Int = if (takeMax) math.max else math.min
@@ -74,7 +77,9 @@ object IncrementalRenaming {
       }
 
     case OperEx(_, args @ _*) =>
-      args.map(nameCounterMapFromEx(takeMax)).foldLeft(Map.empty[String, Int]) { mergeNameCounters(takeMax) }
+      args.map(nameCounterMapFromEx(takeMax)).foldLeft(Map.empty[String, Int]) {
+        mergeNameCounters(takeMax)
+      }
 
     case LetInEx(body, defs @ _*) =>
       defs.map(nameCounterMapFromDecl(takeMax)).foldLeft(nameCounterMapFromEx(takeMax)(body)) {
@@ -100,7 +105,9 @@ object IncrementalRenaming {
    * Computes then merges maps for all declarations.
    */
   def nameCounterMapFromDecls(takeMax: Boolean)(decls: Traversable[TlaDecl]): counterMapType =
-    decls.map(nameCounterMapFromDecl(takeMax)).foldLeft(Map.empty[String, Int]) { mergeNameCounters(takeMax) }
+    decls.map(nameCounterMapFromDecl(takeMax)).foldLeft(Map.empty[String, Int]) {
+      mergeNameCounters(takeMax)
+    }
 
   /**
    * If `name` is of the form makeName( a, b ) and offsets contains a,
@@ -124,7 +131,8 @@ object IncrementalRenaming {
  * Unlike Renaming, IncrementalRenaming is intended to maintain concise names under arbitrary re-application
  */
 @Singleton
-class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends TlaExTransformation {
+class IncrementalRenaming @Inject() (tracker: TransformationTracker)(implicit typeTag: TypeTag)
+    extends TlaExTransformation {
 
   import IncrementalRenaming._
 
@@ -304,7 +312,9 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
    * Importatntly, it is assumed that `ex` has been renamed at least once.
    */
   def normalize(ex: TlaEx): TlaEx = {
-    val offsetMap = nameCounterMapFromEx(takeMax = false)(ex) withFilter { _._2 > 1 } map { case (k, v) =>
+    val offsetMap = nameCounterMapFromEx(takeMax = false)(ex) withFilter {
+      _._2 > 1
+    } map { case (k, v) =>
       (k, v - 1)
     }
     shiftCounters(offsetMap)(ex)
@@ -317,11 +327,15 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
       )
       .foldLeft(Map.empty[String, Int]) {
         mergeNameCounters(takeMax = false)
-      } withFilter { _._2 > 1 } map { case (k, v) =>
+      } withFilter {
+      _._2 > 1
+    } map { case (k, v) =>
       (k, v - 1)
     }
 
-    exs map { shiftCounters(offsetMap) }
+    exs map {
+      shiftCounters(offsetMap)
+    }
   }
 
   // Lifted to decl
@@ -331,7 +345,9 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
 
   // lifted to decls
   def normalizeDs(decls: Traversable[TlaDecl]): Traversable[TlaDecl] = {
-    val offsetMap = nameCounterMapFromDecls(takeMax = false)(decls) withFilter { _._2 > 1 } map { case (k, v) =>
+    val offsetMap = nameCounterMapFromDecls(takeMax = false)(decls) withFilter {
+      _._2 > 1
+    } map { case (k, v) =>
       (k, v - 1)
     }
     shiftCountersDs(offsetMap)(decls)
@@ -368,7 +384,9 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
 
   def syncAndNormalizeExs(exs: Traversable[TlaEx]): Traversable[TlaEx] = {
     exs foreach syncFrom
-    normalizeExs(exs map { apply })
+    normalizeExs(exs map {
+      apply
+    })
   }
 
   // Lifted to decl

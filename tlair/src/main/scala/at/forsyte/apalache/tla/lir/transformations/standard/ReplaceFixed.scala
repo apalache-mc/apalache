@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
-import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaEx, TlaOperDecl}
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaEx, TypeTag}
 
 object ReplaceFixed {
   def replaceOne(
@@ -20,7 +20,7 @@ object ReplaceFixed {
       replacedEx: TlaEx,
       newEx: => TlaEx, // takes a [=> TlaEx] to allow for the creation of new instances (with distinct UIDs)
       tracker: TransformationTracker
-  ): TlaExTransformation = tracker.trackEx { ex =>
+  )(implicit typeTag: TypeTag): TlaExTransformation = tracker.trackEx { ex =>
     val tr = replaceOne(replacedEx, newEx, tracker)
     lazy val self = apply(replacedEx, newEx, tracker)
     ex match {

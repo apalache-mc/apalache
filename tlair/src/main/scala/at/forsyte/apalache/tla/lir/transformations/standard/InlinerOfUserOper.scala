@@ -15,7 +15,8 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
  *
  * @author Jure Kukovec
  */
-class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker) extends TlaExTransformation {
+class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker)(implicit typeTag: TypeTag)
+    extends TlaExTransformation {
 
   override def apply(expr: TlaEx): TlaEx = {
     transform(stepLimitOpt = None)(expr)
@@ -65,19 +66,29 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker) ext
   private def instantiateWithArgs(stepLimitOpt: Option[kStepParameters])(decl: TlaOperDecl, args: Seq[TlaEx]): TlaEx = {
     // Assumption: |decl.formalParams| = |args|
 
-    val postTr = stepLimitOpt map { _.postTransform } getOrElse { Predef.identity[TlaEx] _ }
+    val postTr = stepLimitOpt map {
+      _.postTransform
+    } getOrElse {
+      Predef.identity[TlaEx] _
+    }
     // deep copy the body, to ensure uniqueness of the UIDs
     val bodyCopy = postTr(DeepCopy(tracker).deepCopyEx(decl.body))
 
     val newBody = decl.formalParams.zip(args).foldLeft(bodyCopy) { case (b, (fParam, arg)) =>
-      ReplaceFixed(NameEx(fParam.name), arg, tracker)(b)
+      ReplaceFixed(NameEx(fParam.name), arg, tracker)(typeTag)(b)
     }
 
     // the step limit, if it was defined, decreases by 1
-    val newStepLimit = stepLimitOpt map { _ - 1 }
+    val newStepLimit = stepLimitOpt map {
+      _ - 1
+    }
 
     // if further steps are allowed then recurse otherwise terminate with current result
-    if (newStepLimit forall { _ > 0 }) {
+    if (
+        newStepLimit forall {
+          _ > 0
+        }
+    ) {
       transform(newStepLimit)(newBody)
     } else
       newBody
@@ -88,10 +99,11 @@ object InlinerOfUserOper {
 
   sealed case class kStepParameters(k: BigInt, postTransform: TlaExTransformation) {
     def -(x: BigInt): kStepParameters = kStepParameters(k - x, postTransform)
+
     def >(x: BigInt): Boolean = k > x
   }
 
-  def apply(defBodyMap: BodyMap, tracker: TransformationTracker): InlinerOfUserOper = {
+  def apply(defBodyMap: BodyMap, tracker: TransformationTracker)(implicit typeTag: TypeTag): InlinerOfUserOper = {
     new InlinerOfUserOper(defBodyMap, tracker)
   }
 }
