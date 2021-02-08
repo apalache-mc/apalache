@@ -167,17 +167,13 @@ evaluated with `n = 17`.
 give executable semantics for the fixed evaluation order of the predicates.
 
 ```python
-  def case_example():
+def case_example(n):
     if n < 0:
-      return "negative"
-    elif n == 0 :
-      return "zero"
+        return "negative"
+    elif n == 0:
+        return "zero"
     elif n > 0:
-      return "positive"
-    else:
-      assert(False)
-
-  case_example()
+        return "positive"
 ```
 
 <a name="caseOther"></a>
