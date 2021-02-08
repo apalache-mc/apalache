@@ -131,8 +131,7 @@ object IncrementalRenaming {
  * Unlike Renaming, IncrementalRenaming is intended to maintain concise names under arbitrary re-application
  */
 @Singleton
-class IncrementalRenaming @Inject() (tracker: TransformationTracker)(implicit typeTag: TypeTag)
-    extends TlaExTransformation {
+class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends TlaExTransformation {
 
   import IncrementalRenaming._
 
@@ -165,12 +164,12 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker)(implicit ty
       // If a name has been marked for replacement (i.e. is an entry in alreadyRenamed)
       // we simply substitute in the pre-computed new name
       if (alreadyRenamed.contains(name))
-        tracker.hold(ex, NameEx(alreadyRenamed(name)))
+        tracker.hold(ex, NameEx(alreadyRenamed(name))(ex.typeTag))
       else
         ex
 
     // Certain operators introduce new bound variables
-    case OperEx(op, nex @ NameEx(name), otherArgs @ _*)
+    case opex @ OperEx(op, nex @ NameEx(name), otherArgs @ _*)
         if op == TlaSetOper.filter
           || op == TlaBoolOper.exists || op == TlaBoolOper.forall
           || op == TlaOper.chooseBounded || op == TlaOper.chooseUnbounded
@@ -181,11 +180,11 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker)(implicit ty
       val newName = getNextUniqueFromBase(name)
       val newRenamed = alreadyRenamed + (name -> newName)
       val newArgs = otherArgs.map(rename(newRenamed))
-      val trackedName = tracker.hold(nex, NameEx(newName))
-      OperEx(op, trackedName +: newArgs: _*)
+      val trackedName = tracker.hold(nex, NameEx(newName)(nex.typeTag))
+      OperEx(op, trackedName +: newArgs: _*)(opex.typeTag)
 
     // Certain operators introduce several bound variables at once
-    case OperEx(op, result, varsAndSets @ _*)
+    case opex @ OperEx(op, result, varsAndSets @ _*)
         if op == TlaSetOper.map || op == TlaFunOper.funDef || op == TlaFunOper.recFunDef =>
       // From the syntax we know that evey even-indexed subexpression is a variable name
       val names = varsAndSets.zipWithIndex.collect { case (e: NameEx, i) if i % 2 == 0 => e }
@@ -203,17 +202,17 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker)(implicit ty
         rename(newRenamed)
       }
 
-      OperEx(op, newArgs: _*)
+      OperEx(op, newArgs: _*)(opex.typeTag)
 
     // All other operators don't introduce any variables, so we just recurse
     case ex @ OperEx(op, args @ _*) =>
       val newArgs = args.map(rename(alreadyRenamed))
       if (args == newArgs) ex
-      else OperEx(op, newArgs: _*)
+      else OperEx(op, newArgs: _*)(ex.typeTag)
 
     // LET-IN operators introduce operator names (and potentially parameter names), which
     // we rename the same way as bound variables
-    case LetInEx(body, defs @ _*) =>
+    case letInEx @ LetInEx(body, defs @ _*) =>
       val opersAndFParamsNameMap = (defs flatMap {
         // For each operator the name and all parameters are assigned new names
         case TlaOperDecl(n, params, _) =>
@@ -246,7 +245,7 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker)(implicit ty
 
       // Finally, we recurse on the body
       val newBody = newRenaming(body)
-      LetInEx(newBody, newDefs: _*)
+      LetInEx(newBody, newDefs: _*)(letInEx.typeTag)
 
     // If it's not an operator, a let-in or a name we do nothing
     case ex => ex
@@ -264,12 +263,12 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker)(implicit ty
     case ex @ NameEx(name) =>
       val newName = offsetName(offsets)(name)
       if (newName == name) ex
-      else NameEx(newName)
+      else NameEx(newName)(ex.typeTag)
 
     case ex @ OperEx(op, args @ _*) =>
       val newArgs = args.map(shiftCounters(offsets))
       if (args == newArgs) ex
-      else OperEx(op, newArgs: _*)
+      else OperEx(op, newArgs: _*)(ex.typeTag)
 
     case ex @ LetInEx(body, defs @ _*) =>
       val offsetFn: String => String = offsetName(offsets)
@@ -290,7 +289,7 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker)(implicit ty
       val newDefs = defs map xform
       val newBody = self(body)
       if (newBody == body && newDefs == defs) ex
-      else LetInEx(newBody, newDefs: _*)
+      else LetInEx(newBody, newDefs: _*)(ex.typeTag)
 
     case ex => ex
   }

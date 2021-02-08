@@ -48,7 +48,7 @@ class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean)(implic
         }
 
       // Inline the operators using the map of definitions
-      InlinerOfUserOper(bodyMap, tracker)(typeTag)(expandedLetIn)
+      InlinerOfUserOper(bodyMap, tracker)(implicitly)(expandedLetIn)
 
     // this is the special form for LAMBDAs
     case OperEx(TlaOper.apply, LetInEx(NameEx("LAMBDA"), TlaOperDecl("LAMBDA", params, lambdaBody)), args @ _*) =>
@@ -58,7 +58,7 @@ class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean)(implic
       params.zip(args).foldLeft(lambdaBody) {
         // replace every parameter with the respective argument
         case (expr, (param, arg)) =>
-          ReplaceFixed(NameEx(param.name), arg, tracker)(typeTag)(expr)
+          ReplaceFixed(NameEx(param.name), arg, tracker)(implicitly)(expr)
       }
 
     // recursive processing of composite operators

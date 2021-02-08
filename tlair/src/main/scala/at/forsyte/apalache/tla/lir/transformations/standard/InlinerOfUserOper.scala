@@ -75,7 +75,7 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker)(imp
     val bodyCopy = postTr(DeepCopy(tracker).deepCopyEx(decl.body))
 
     val newBody = decl.formalParams.zip(args).foldLeft(bodyCopy) { case (b, (fParam, arg)) =>
-      ReplaceFixed(NameEx(fParam.name), arg, tracker)(typeTag)(b)
+      ReplaceFixed(NameEx(fParam.name), arg, tracker)(implicitly)(b)
     }
 
     // the step limit, if it was defined, decreases by 1
