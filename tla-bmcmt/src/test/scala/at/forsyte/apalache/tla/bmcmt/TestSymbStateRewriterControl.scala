@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.types.{FailPredT, IntT}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -128,7 +129,6 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
     }
   }
 
-
   test("""SE-ITE[5]: IF 1 = 1 THEN {2} ELSE {1} ] ~~> $C$k""") {
     def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
 
@@ -139,7 +139,7 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case membershipEx@NameEx(name) =>
+      case membershipEx @ NameEx(name) =>
         assert(solverContext.sat())
         solverContext.push()
         solverContext.assertGroundExpr(tla.not(nextState.ex))
@@ -150,12 +150,10 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
         assert(solverContext.sat())
         solverContext.pop()
 
-
       case _ =>
         fail("Unexpected rewriting result")
     }
   }
-
 
   test("""SE-ITE[5]: IF 2 < 3 THEN {1, 2} ELSE {2, 3} ~~> {1, 2}""") {
     val pred = tla.lt(tla.int(2), tla.int(3))
@@ -236,7 +234,7 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
       val rewriter = create()
       val nextState = rewriter.rewriteUntilDone(state)
       nextState.ex match {
-        case res@NameEx(name) =>
+        case res @ NameEx(name) =>
           rewriter.push()
           solverContext.assertGroundExpr(tla.eql(icell.toNameEx, i))
           solverContext.assertGroundExpr(tla.eql(1 + (i % 3), res))
@@ -245,7 +243,8 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
           rewriter.push()
           val failureOccurs = tla.or(nextState.arena.findCellsByType(FailPredT()).map(_.toNameEx): _*)
           solverContext.assertGroundExpr(failureOccurs)
-          assert(solverContext.sat()) // this possible since there is no OTHER case and the constraints do not restrict us
+          assert(
+              solverContext.sat()) // this possible since there is no OTHER case and the constraints do not restrict us
           rewriter.pop()
           rewriter.push()
           solverContext.assertGroundExpr(tla.eql(icell.toNameEx, i))

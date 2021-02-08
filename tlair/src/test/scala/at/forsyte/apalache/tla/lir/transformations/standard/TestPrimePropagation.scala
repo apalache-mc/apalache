@@ -3,11 +3,12 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.{LetInEx, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.scalatest.{BeforeAndAfter, FunSuite}
 
 /**
-  * Tests of PrimePropagation.
-  */
+ * Tests of PrimePropagation.
+ */
 class TestPrimePropagation extends FunSuite with BeforeAndAfter {
   import tla._
 

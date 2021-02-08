@@ -6,13 +6,14 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.{FlatLanguagePred, ReplaceFixed}
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.TlaBool
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import javax.inject.Singleton
 
 /**
-  * This transformation turns subexpressions of a TLA+ expression into negated normal form.
-  *
-  * @author Igor Konnov
-  */
+ * This transformation turns subexpressions of a TLA+ expression into negated normal form.
+ *
+ * @author Igor Konnov
+ */
 @Singleton
 class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
 
@@ -30,22 +31,22 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
     case vex @ ValEx(_) =>
       vex // this may be called when processing a non-Boolean expression
 
-    case ex@NameEx(_) =>
+    case ex @ NameEx(_) =>
       if (neg) tla.not(ex) else ex
 
     case OperEx(TlaBoolOper.not, arg) =>
       nnf(!neg)(arg)
 
-    case ite@OperEx(TlaControlOper.ifThenElse, predEx, thenEx, elseEx) =>
+    case ite @ OperEx(TlaControlOper.ifThenElse, predEx, thenEx, elseEx) =>
       // ~ITE(A, B, C) == ITE(A, ~B, ~C)
       val recNnf = nnf(neg)
       OperEx(TlaControlOper.ifThenElse, predEx, recNnf(thenEx), recNnf(elseEx))
 
-    case OperEx(TlaBoolOper.and, args@_*) =>
+    case OperEx(TlaBoolOper.and, args @ _*) =>
       val oper: TlaBoolOper = if (neg) TlaBoolOper.or else TlaBoolOper.and
       OperEx(oper, args map nnf(neg): _*)
 
-    case OperEx(TlaBoolOper.or, args@_*) =>
+    case OperEx(TlaBoolOper.or, args @ _*) =>
       val oper: TlaBoolOper = if (neg) TlaBoolOper.and else TlaBoolOper.or
       OperEx(oper, args map nnf(neg): _*)
 
@@ -57,7 +58,7 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
         tla.or(nnfNegated(left), nnfNonNegated(right))
       }
 
-    case equiv@OperEx(TlaBoolOper.equiv, left, right) =>
+    case equiv @ OperEx(TlaBoolOper.equiv, left, right) =>
       val nnfNonNegated = nnf(neg = false)
       // we do not negate the arguments but recurse to deal with the negations below the tree
       if (!neg) {
@@ -133,21 +134,21 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
     case OperEx(TlaSetOper.supseteq, left, right) =>
       OperEx(if (neg) TlaSetOper.subsetProper else TlaSetOper.supseteq, transform(left), transform(right))
 
-    case OperEx(TlaOper.label, subex, args@_*) =>
+    case OperEx(TlaOper.label, subex, args @ _*) =>
       OperEx(TlaOper.label, nnf(neg)(subex) +: args: _*)
 
     case ex @ OperEx(TlaTempOper.diamond, args @ _*) =>
       if (!neg) {
         ex
       } else {
-        OperEx(TlaTempOper.box, args map nnf(true) :_*)
+        OperEx(TlaTempOper.box, args map nnf(true): _*)
       }
 
     case ex @ OperEx(TlaTempOper.box, args @ _*) =>
       if (!neg) {
         ex
       } else {
-        OperEx(TlaTempOper.box, args map nnf(true) :_*)
+        OperEx(TlaTempOper.box, args map nnf(true): _*)
       }
 
     case ex @ OperEx(TlaTempOper.leadsTo, _*) =>
@@ -178,7 +179,7 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
         tla.not(ex) // keep ~SF_vars(A) as ~SF_vars(A)
       }
 
-    case LetInEx(body, defs@_*) =>
+    case LetInEx(body, defs @ _*) =>
       if (neg) {
         // a negation of the let body
         nnfLetIn(neg, body, defs)
@@ -187,15 +188,16 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
         def transformDef(decl: TlaOperDecl): TlaOperDecl = {
           TlaOperDecl(decl.name, decl.formalParams, transform(decl.body))
         }
-        LetInEx(transform(body), defs map transformDef :_*)
+
+        LetInEx(transform(body), defs map transformDef: _*)
       }
 
     case OperEx(oper, args @ _*) =>
       // a non-Boolean operator: transform its arguments, which may be Boolean
       if (neg) {
-        tla.not(OperEx(oper, args map transform :_*))
+        tla.not(OperEx(oper, args map transform: _*))
       } else {
-        OperEx(oper, args map transform :_*)
+        OperEx(oper, args map transform: _*)
       }
 
     case expr =>
@@ -207,12 +209,13 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
   }
 
   private def nnfLetIn(neg: Boolean, body: TlaEx, defs: Seq[TlaOperDecl]): TlaEx = {
+
     /**
-      * To handle the case of LET X == ... IN ... ~X ...
-      * we introduce a new let-in operator NegX$, the body of which is the
-      * nnf transformation of the body of X. Then, we replace all calls to ~X in the
-      * LET-IN body with calls to NegX$.
-      */
+     * To handle the case of LET X == ... IN ... ~X ...
+     * we introduce a new let-in operator NegX$, the body of which is the
+     * nnf transformation of the body of X. Then, we replace all calls to ~X in the
+     * LET-IN body with calls to NegX$.
+     */
     def negName(n: String): String = s"Neg$n$$"
 
     val newBody = nnf(neg)(body)
@@ -222,11 +225,11 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
     def negAppearingOpers(tlaEx: TlaEx): Set[String] = tlaEx match {
       case OperEx(TlaBoolOper.not, OperEx(TlaOper.apply, NameEx(name))) =>
         Set(name)
-      case OperEx(op, args@_*) =>
+      case OperEx(op, args @ _*) =>
         args.map(negAppearingOpers).foldLeft(Set.empty[String]) {
           _ ++ _
         }
-      case LetInEx(b, ds@_*) =>
+      case LetInEx(b, ds @ _*) =>
         ds.map(d => negAppearingOpers(d.body)).foldLeft(negAppearingOpers(b)) {
           _ ++ _
         }
@@ -237,9 +240,9 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
 
     val replacements = negOpers map { opName =>
       ReplaceFixed(
-        OperEx(TlaBoolOper.not, OperEx(TlaOper.apply, NameEx(opName))),
-        OperEx(TlaOper.apply, NameEx(negName(opName))),
-        tracker
+          OperEx(TlaBoolOper.not, OperEx(TlaOper.apply, NameEx(opName))),
+          OperEx(TlaOper.apply, NameEx(negName(opName))),
+          tracker
       )
     }
 
@@ -253,7 +256,7 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
 
     val newDefs = defs ++ negDefs
 
-    LetInEx(negReplacedBody, newDefs: _ *)
+    LetInEx(negReplacedBody, newDefs: _*)
   }
 }
 

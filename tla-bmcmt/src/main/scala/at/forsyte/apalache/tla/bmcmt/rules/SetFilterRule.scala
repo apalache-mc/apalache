@@ -4,17 +4,18 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, NullEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
-  * Rewrites a set comprehension { x \in S: P }.
-  *
-  * @author Igor Konnov
-  */
+ * Rewrites a set comprehension { x \in S: P }.
+ *
+ * @author Igor Konnov
+ */
 class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaSetOper.filter, _*) => true
-      case _ => false
+      case _                             => false
     }
   }
 
@@ -25,7 +26,7 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         var newState = rewriter.rewriteUntilDone(state.setRex(setEx))
         newState = newState.asCell.cellType match {
           case FinSetT(_) => newState
-          case tp @ _ => throw new NotImplementedError("A set filter over %s is not implemented".format(tp))
+          case tp @ _     => throw new NotImplementedError("A set filter over %s is not implemented".format(tp))
         }
         val setCell = newState.asCell
 
