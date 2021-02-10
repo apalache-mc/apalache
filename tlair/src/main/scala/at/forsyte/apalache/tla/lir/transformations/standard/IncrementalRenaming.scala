@@ -177,13 +177,15 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
       OperEx(op, trackedName +: newArgs: _*)
 
     // Certain operators introduce several bound variables at once
-    case OperEx(op, result, varsAndSets @ _*)
+    case ex @ OperEx(op, result, varsAndSets @ _*)
         if op == TlaSetOper.map || op == TlaFunOper.funDef || op == TlaFunOper.recFunDef =>
       // From the syntax we know that evey even-indexed subexpression is a variable name
       val names = varsAndSets.zipWithIndex.collect { case (e: NameEx, i) if i % 2 == 0 => e }
 
       // Sanity check
-      assert(2 * names.length == varsAndSets.length)
+      if (2 * names.length != varsAndSets.length) {
+        throw new MalformedTlaError("Expected %d names".format(varsAndSets.length / 2), ex)
+      }
 
       // Just as in the single-variable case, we assign a new name for each bound variable
       val newRenamed = names.map(_.name).foldLeft(alreadyRenamed) { case (m, n) =>
