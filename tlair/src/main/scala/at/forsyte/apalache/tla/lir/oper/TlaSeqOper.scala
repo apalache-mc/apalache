@@ -1,21 +1,21 @@
 package at.forsyte.apalache.tla.lir.oper
 
 /**
-  * Sequence operators
-  *
-  * @author Jure Kukovec
-  *
-  * Created by jkukovec on 11/17/16.
-  */
+ * Sequence operators
+ *
+ * @author Jure Kukovec
+ *
+ * Created by jkukovec on 11/17/16.
+ */
 
 abstract class TlaSeqOper extends TlaOper {
   override def interpretation: Interpretation.Value = Interpretation.StandardLib
 }
 
 /**
-  * The standard module of Sequences. Note that there is no standard constructor for a sequence.
-  * Use the tuples constructor, @see TlaOper.
-  */
+ * The standard module of Sequences. Note that there is no standard constructor for a sequence.
+ * Use the tuples constructor, @see TlaOper.
+ */
 object TlaSeqOper {
 
   object head extends TlaSeqOper {

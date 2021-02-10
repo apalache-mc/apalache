@@ -6,8 +6,8 @@ import at.forsyte.apalache.tla.lir.{LetInEx, TlaOperDecl}
 import org.scalatest.{BeforeAndAfter, FunSuite}
 
 /**
-  * Tests of PrimePropagation.
-  */
+ * Tests of PrimePropagation.
+ */
 class TestPrimePropagation extends FunSuite with BeforeAndAfter {
   import tla._
 

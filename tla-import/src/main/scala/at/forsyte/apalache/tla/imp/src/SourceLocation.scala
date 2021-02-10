@@ -10,6 +10,6 @@ object SourceLocation {
 
   def apply(loc: Location): SourceLocation = {
     new SourceLocation(loc.source().intern(),
-      SourceRegion(loc.beginLine(), loc.beginColumn(), loc.endLine(), loc.endColumn()))
+        SourceRegion(loc.beginLine(), loc.beginColumn(), loc.endLine(), loc.endColumn()))
   }
 }

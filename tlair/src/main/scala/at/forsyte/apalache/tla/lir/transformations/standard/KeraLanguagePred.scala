@@ -8,18 +8,18 @@ import at.forsyte.apalache.tla.lir.values._
 import scala.collection.immutable.HashSet
 
 /**
-  * <p>Test whether the expressions fit into the flat fragment: all calls to user operators are inlined,
-  * except the calls to nullary let-in definitions.</p>
-  *
-  * <p>To get a better idea of the accepted fragment, check TestKeraLanguagePred.</p>
-  *
-  * @see TestKeraLanguagePred
-  * @author Igor Konnov
-  */
+ * <p>Test whether the expressions fit into the flat fragment: all calls to user operators are inlined,
+ * except the calls to nullary let-in definitions.</p>
+ *
+ * <p>To get a better idea of the accepted fragment, check TestKeraLanguagePred.</p>
+ *
+ * @see TestKeraLanguagePred
+ * @author Igor Konnov
+ */
 class KeraLanguagePred extends LanguagePred {
   override def isModuleOk(mod: TlaModule): PredResult = {
-    mod.operDeclarations.foldLeft[PredResult](PredResultOk()) {
-      case (r, d) => r.and(isExprOk(d.body))
+    mod.operDeclarations.foldLeft[PredResult](PredResultOk()) { case (r, d) =>
+      r.and(isExprOk(d.body))
     }
   }
 
@@ -49,32 +49,30 @@ class KeraLanguagePred extends LanguagePred {
         isOkInContext(letDefs, lhs)
           .and(isOkInContext(letDefs, rhs))
 
-      case OperEx(oper, args@_*) if KeraLanguagePred.naryOps.contains(oper) =>
-        args.foldLeft[PredResult](PredResultOk()) {
-          case (r, arg) => r.and(isOkInContext(letDefs, arg))
+      case OperEx(oper, args @ _*) if KeraLanguagePred.naryOps.contains(oper) =>
+        args.foldLeft[PredResult](PredResultOk()) { case (r, arg) =>
+          r.and(isOkInContext(letDefs, arg))
         }
 
-      case OperEx(oper, NameEx(_), set, pred)
-          if KeraLanguagePred.bindingOps.contains(oper) =>
-        isOkInContext(letDefs, set).
-          and(isOkInContext(letDefs, pred))
+      case OperEx(oper, NameEx(_), set, pred) if KeraLanguagePred.bindingOps.contains(oper) =>
+        isOkInContext(letDefs, set).and(isOkInContext(letDefs, pred))
 
       case OperEx(TlaControlOper.ifThenElse, pred, thenEx, elseEx) =>
         isOkInContext(letDefs, pred)
           .and(isOkInContext(letDefs, thenEx))
           .and(isOkInContext(letDefs, elseEx))
 
-      case OperEx(oper, args@_*)
-        if oper == TlaSetOper.map || oper == TlaFunOper.funDef || oper == TlaFunOper.recFunDef =>
+      case OperEx(oper, args @ _*)
+          if oper == TlaSetOper.map || oper == TlaFunOper.funDef || oper == TlaFunOper.recFunDef =>
         val evenArgs = args.zipWithIndex.filter { p => p._2 % 2 == 0 } map { _._1 }
-        evenArgs.foldLeft[PredResult](PredResultOk()) {
-          case (r, arg) => r.and(isOkInContext(letDefs, arg))
+        evenArgs.foldLeft[PredResult](PredResultOk()) { case (r, arg) =>
+          r.and(isOkInContext(letDefs, arg))
         }
 
       case OperEx(TlaFunOper.recFunRef) =>
         PredResultOk()
 
-      case LetInEx(body, defs@_*) =>
+      case LetInEx(body, defs @ _*) =>
         // go inside the let definitions (similar to FlatLanguagePred)
         def eachDefRec(ctx: Set[String], ds: List[TlaOperDecl]): PredResult = {
           ds match {
@@ -94,7 +92,7 @@ class KeraLanguagePred extends LanguagePred {
         defsResult
           .and(isOkInContext(letDefs ++ newLetDefs, body))
 
-      case e @ OperEx(TlaOper.apply, NameEx(opName), args@_*) =>
+      case e @ OperEx(TlaOper.apply, NameEx(opName), args @ _*) =>
         // the only allowed case is calling a nullary operator that was declared with let-in
         if (!letDefs.contains(opName)) {
           PredResultFail(List((e.ID, s"undeclared operator $opName")))
@@ -115,84 +113,82 @@ object KeraLanguagePred {
 
   protected val unaryOps: HashSet[TlaOper] =
     HashSet(
-      TlaActionOper.prime,
-      TlaBoolOper.not,
-      TlaArithOper.uminus,
-      TlaSetOper.union,
-      TlaSetOper.powerset,
-      TlaFunOper.domain,
-      TlaFiniteSetOper.isFiniteSet,
-      TlaFiniteSetOper.cardinality,
-      TlaSeqOper.head,
-      TlaSeqOper.tail,
-      TlaSeqOper.len,
-      TlcOper.printT, // TODO: preprocess into NullEx in Keramelizer
-      BmcOper.skolem,
-      BmcOper.expand,
-      BmcOper.constCard
-      // for the future
-      //    TlaActionOper.enabled,
-      //    TlaActionOper.unchanged,
-      //    TlaTempOper.box,
-      //    TlaTempOper.diamond
+        TlaActionOper.prime,
+        TlaBoolOper.not,
+        TlaArithOper.uminus,
+        TlaSetOper.union,
+        TlaSetOper.powerset,
+        TlaFunOper.domain,
+        TlaFiniteSetOper.isFiniteSet,
+        TlaFiniteSetOper.cardinality,
+        TlaSeqOper.head,
+        TlaSeqOper.tail,
+        TlaSeqOper.len,
+        TlcOper.printT, // TODO: preprocess into NullEx in Keramelizer
+        BmcOper.skolem,
+        BmcOper.expand,
+        BmcOper.constCard
+        // for the future
+        //    TlaActionOper.enabled,
+        //    TlaActionOper.unchanged,
+        //    TlaTempOper.box,
+        //    TlaTempOper.diamond
     ) ////
 
   protected val binaryOps: HashSet[TlaOper] =
     HashSet(
-      TlaOper.eq,
-      TlaFunOper.app,
-      TlaSetOper.funSet,
-      TlaSeqOper.append,
-      TlaArithOper.plus,
-      TlaArithOper.minus,
-      TlaArithOper.mult,
-      TlaArithOper.div,
-      TlaArithOper.mod,
-      TlaArithOper.exp,
-      TlaArithOper.dotdot,
-      TlaArithOper.lt,
-      TlaArithOper.gt,
-      TlaArithOper.le,
-      TlaArithOper.ge,
-      TlaSetOper.in,
-      TlaSetOper.cup,
-      TlaSetOper.subseteq,
-      TlaSeqOper.concat,
-      TlcOper.atat,
-      TlcOper.colonGreater,
-      TlcOper.print, // TODO: preprocess into NullEx in Keramelizer
-      TlcOper.assert,
-      TlcOper.colonGreater,
-      TlcOper.atat,
-      BmcOper.withType,
-      BmcOper.assign
-      // for the future
-      //      TlaActionOper.composition,
-      //      TlaTempOper.leadsTo,
-      //      TlaTempOper.guarantees,
+        TlaOper.eq,
+        TlaFunOper.app,
+        TlaSetOper.funSet,
+        TlaSeqOper.append,
+        TlaArithOper.plus,
+        TlaArithOper.minus,
+        TlaArithOper.mult,
+        TlaArithOper.div,
+        TlaArithOper.mod,
+        TlaArithOper.exp,
+        TlaArithOper.dotdot,
+        TlaArithOper.lt,
+        TlaArithOper.gt,
+        TlaArithOper.le,
+        TlaArithOper.ge,
+        TlaSetOper.in,
+        TlaSetOper.cup,
+        TlaSetOper.subseteq,
+        TlaSeqOper.concat,
+        TlcOper.atat,
+        TlcOper.colonGreater,
+        TlcOper.print, // TODO: preprocess into NullEx in Keramelizer
+        TlcOper.assert,
+        TlcOper.colonGreater,
+        TlcOper.atat,
+        BmcOper.withType,
+        BmcOper.assign
+        // for the future
+        //      TlaActionOper.composition,
+        //      TlaTempOper.leadsTo,
+        //      TlaTempOper.guarantees,
     ) ////
-
 
   protected val naryOps: HashSet[TlaOper] =
     HashSet(
-      TlaBoolOper.and,
-      TlaBoolOper.or,
-      TlaSetOper.enumSet,
-      TlaFunOper.except,
-      TlaFunOper.tuple,
-      TlaFunOper.enum,
-      TlaSeqOper.subseq,
-      TlaOper.label
+        TlaBoolOper.and,
+        TlaBoolOper.or,
+        TlaSetOper.enumSet,
+        TlaFunOper.except,
+        TlaFunOper.tuple,
+        TlaFunOper.enum,
+        TlaSeqOper.subseq,
+        TlaOper.label
     ) /////
 
   protected val bindingOps: HashSet[TlaOper] =
     HashSet(
-      TlaBoolOper.exists,
-      TlaBoolOper.forall,
-      TlaOper.chooseBounded,
-      TlaSetOper.filter
+        TlaBoolOper.exists,
+        TlaBoolOper.forall,
+        TlaOper.chooseBounded,
+        TlaSetOper.filter
     ) /////
-
 
   def apply(): KeraLanguagePred = singleton
 }

@@ -9,10 +9,10 @@ import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
 import scala.annotation.tailrec
 
 /**
-  * A simplifier of constant TLA+ expressions, e.g., rewriting 1 + 2 to 3.
-  *
-  * @author Igor Konnov
-  */
+ * A simplifier of constant TLA+ expressions, e.g., rewriting 1 + 2 to 3.
+ *
+ * @author Igor Konnov
+ */
 class ConstSimplifier(tracker: TransformationTracker) extends ConstSimplifierBase with TlaExTransformation {
   override def apply(expr: TlaEx): TlaEx = {
     LanguageWatchdog(FlatLanguagePred()).check(expr)
@@ -29,13 +29,13 @@ class ConstSimplifier(tracker: TransformationTracker) extends ConstSimplifierBas
     case ex @ NameEx(_) => ex
 
     case OperEx(oper, args @ _*) =>
-      simplifyShallow(OperEx(oper, args map rewriteDeep :_*))
+      simplifyShallow(OperEx(oper, args map rewriteDeep: _*))
 
     case LetInEx(body, defs @ _*) =>
-      val newDefs = defs.map {
-        d => TlaOperDecl(d.name, d.formalParams, simplify(d.body))
+      val newDefs = defs.map { d =>
+        TlaOperDecl(d.name, d.formalParams, simplify(d.body))
       }
-      LetInEx(simplify(body), newDefs :_*)
+      LetInEx(simplify(body), newDefs: _*)
 
     case ex => ex
   }

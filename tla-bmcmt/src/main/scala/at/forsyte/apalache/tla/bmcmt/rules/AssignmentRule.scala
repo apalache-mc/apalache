@@ -6,15 +6,15 @@ import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaActionOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 
 /**
-  * Implements the assignment rule.
-  * Similar to TLC, this is a special form of x' \in S operator that is treated
-  * as an assignment of a value from S to the variable x'.
-  *
-  * Since version 0.6.x, most of the work is delegated to existential quantification, that is,
-  * assignments are treated as \E t \in S: x' = t
-  *
-  * @author Igor Konnov
-  */
+ * Implements the assignment rule.
+ * Similar to TLC, this is a special form of x' \in S operator that is treated
+ * as an assignment of a value from S to the variable x'.
+ *
+ * Since version 0.6.x, most of the work is delegated to existential quantification, that is,
+ * assignments are treated as \E t \in S: x' = t
+ *
+ * @author Igor Konnov
+ */
 class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val pickRule = new CherryPick(rewriter)
 

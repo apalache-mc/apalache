@@ -15,55 +15,51 @@ import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
 /**
-  * A pass that expands operators and let-in definitions.
-  *
-  * @param options pass options
-  * @param gen name generator
-  * @param tracker transformation tracker
-  * @param nextPass next pass to call
-  */
-class InlinePassImpl @Inject()(val options: PassOptions,
-                               gen: UniqueNameGenerator,
-                               renaming: IncrementalRenaming,
-                               tracker: TransformationTracker,
-                               @Named("AfterInline") nextPass: Pass with TlaModuleMixin)
+ * A pass that expands operators and let-in definitions.
+ *
+ * @param options pass options
+ * @param gen name generator
+ * @param tracker transformation tracker
+ * @param nextPass next pass to call
+ */
+class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator, renaming: IncrementalRenaming,
+    tracker: TransformationTracker, @Named("AfterInline") nextPass: Pass with TlaModuleMixin)
     extends InlinePass with LazyLogging {
 
   private var outputTlaModule: Option[TlaModule] = None
 
   /**
-    * The pass name.
-    *
-    * @return the name associated with the pass
-    */
+   * The pass name.
+   *
+   * @return the name associated with the pass
+   */
   override def name: String = "InlinePass"
 
   /**
-    * Run the pass.
-    *
-    * @return true, if the pass was successful
-    */
+   * Run the pass.
+   *
+   * @return true, if the pass was successful
+   */
   override def execute(): Boolean = {
     val baseModule = tlaModule.get
 
-    val appWrap = OperAppToLetInDef( gen, tracker )
-    val operNames = (baseModule.operDeclarations map {_.name}).toSet
-    val module = appWrap.moduleTransform( operNames )( baseModule )
+    val appWrap = OperAppToLetInDef(gen, tracker)
+    val operNames = (baseModule.operDeclarations map { _.name }).toSet
+    val module = appWrap.moduleTransform(operNames)(baseModule)
 
     val defBodyMap = BodyMapFactory.makeFromDecls(module.operDeclarations)
 
     val transformationSequence =
       List(
-        InlinerOfUserOper(defBodyMap, tracker),
-        LetInExpander(tracker, keepNullary = true),
-        // the second pass of Inliner may be needed, when the higher-order operators were inlined by LetInExpander
-        InlinerOfUserOper(defBodyMap, tracker)
+          InlinerOfUserOper(defBodyMap, tracker),
+          LetInExpander(tracker, keepNullary = true),
+          // the second pass of Inliner may be needed, when the higher-order operators were inlined by LetInExpander
+          InlinerOfUserOper(defBodyMap, tracker)
       ) ///
 
-    val inlined = transformationSequence.foldLeft(module){
-      case (m, tr) =>
-        logger.info("  > %s".format(tr.getClass.getSimpleName))
-        ModuleByExTransformer(tr) (m)
+    val inlined = transformationSequence.foldLeft(module) { case (m, tr) =>
+      logger.info("  > %s".format(tr.getClass.getSimpleName))
+      ModuleByExTransformer(tr)(m)
     }
 
     // Fixing issue 283: https://github.com/informalsystems/apalache/issues/283
@@ -95,14 +91,14 @@ class InlinePassImpl @Inject()(val options: PassOptions,
   }
 
   /**
-    * Get the next pass in the chain. What is the next pass is up
-    * to the module configuration and the pass outcome.
-    *
-    * @return the next pass, if exists, or None otherwise
-    */
+   * Get the next pass in the chain. What is the next pass is up
+   * to the module configuration and the pass outcome.
+   *
+   * @return the next pass, if exists, or None otherwise
+   */
   override def next(): Option[Pass] = {
     outputTlaModule map { m =>
-      nextPass.setModule( m )
+      nextPass.setModule(m)
       nextPass
     }
   }

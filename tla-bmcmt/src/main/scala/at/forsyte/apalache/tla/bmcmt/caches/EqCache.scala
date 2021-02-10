@@ -21,25 +21,25 @@ object EqCache {
 }
 
 /**
-  * Equality cache.
-  *
-  * @author Igor Konnov
-  */
+ * Equality cache.
+ *
+ * @author Igor Konnov
+ */
 class EqCache() extends StackableContext with Serializable with Recoverable[EqCacheSnapshot] {
+
   /**
-    * The current context level, see StackableContext.
-    */
+   * The current context level, see StackableContext.
+   */
   private var level: Int = 0
 
   /**
-    * A set of pairs, for which the equality constraints have been generated in SMT.
-    * This set can be partially cleaned up, when the pop method is called.
-    *
-    * The cache invariant key (left, right) is maintained: left.id <= right.id
-    */
+   * A set of pairs, for which the equality constraints have been generated in SMT.
+   * This set can be partially cleaned up, when the pop method is called.
+   *
+   * The cache invariant key (left, right) is maintained: left.id <= right.id
+   */
   private var eqCache: mutable.Map[(ArenaCell, ArenaCell), (CacheEntry, Int)] =
     new mutable.HashMap[(ArenaCell, ArenaCell), (CacheEntry, Int)]()
-
 
   def put(left: ArenaCell, right: ArenaCell, entry: CacheEntry): Unit = {
     if (left.id <= right.id) {
@@ -75,57 +75,57 @@ class EqCache() extends StackableContext with Serializable with Recoverable[EqCa
     }
 
   /**
-    * Get an immutable copy of the map
-    * @return the immutable copy of the cache entries
-    */
+   * Get an immutable copy of the map
+   * @return the immutable copy of the cache entries
+   */
   def getMap: Map[(ArenaCell, ArenaCell), (CacheEntry, Int)] = eqCache.toMap
 
   /**
-    * Take a snapshot and return it
-    *
-    * @return the snapshot
-    */
+   * Take a snapshot and return it
+   *
+   * @return the snapshot
+   */
   override def snapshot(): EqCacheSnapshot = {
     val squashedCache = eqCache.map { case (key, (value, _)) => (key, (value, 0)) }
     new EqCacheSnapshot(squashedCache)
   }
 
   /**
-    * Recover a previously saved snapshot (not necessarily saved by this object).
-    *
-    * @param shot a snapshot
-    */
+   * Recover a previously saved snapshot (not necessarily saved by this object).
+   *
+   * @param shot a snapshot
+   */
   override def recover(shot: EqCacheSnapshot): Unit = {
     eqCache = shot.cache
   }
 
   /**
-    * Get the current context level, that is the difference between the number of pushes and pops made so far.
-    *
-    * @return the current level, always non-negative.
-    */
+   * Get the current context level, that is the difference between the number of pushes and pops made so far.
+   *
+   * @return the current level, always non-negative.
+   */
   override def contextLevel: Int = level
 
   /**
-    * Save the current context and push it on the stack for a later recovery with pop.
-    */
+   * Save the current context and push it on the stack for a later recovery with pop.
+   */
   override def push(): Unit = {
     level += 1
   }
 
   /**
-    * Pop the previously saved context. Importantly, pop may be called multiple times and thus it is not sufficient
-    * to save only the latest context.
-    */
+   * Pop the previously saved context. Importantly, pop may be called multiple times and thus it is not sufficient
+   * to save only the latest context.
+   */
   override def pop(): Unit = {
     pop(1)
   }
 
   /**
-    * Pop the context as many times as needed to reach a given level.
-    *
-    * @param n the number of times to call pop
-    */
+   * Pop the context as many times as needed to reach a given level.
+   *
+   * @param n the number of times to call pop
+   */
   override def pop(n: Int): Unit = {
     assert(level >= n)
     level -= n
@@ -133,8 +133,8 @@ class EqCache() extends StackableContext with Serializable with Recoverable[EqCa
   }
 
   /**
-    * Clean the context.
-    */
+   * Clean the context.
+   */
   override def dispose(): Unit = {
     eqCache.clear()
     level = 0

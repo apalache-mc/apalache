@@ -19,7 +19,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case predEx@NameEx(name) =>
+      case predEx @ NameEx(name) =>
         assert(solverContext.sat())
         solverContext.assertGroundExpr(OperEx(TlaOper.eq, leftCell.toNameEx, ValEx(TlaInt(22))))
         rewriter.push()
@@ -41,7 +41,6 @@ class TestSymbStateRewriterInt extends RewriterBase {
         solverContext.assertGroundExpr(predEx)
         assert(!solverContext.sat())
 
-
       case _ =>
         fail("Unexpected rewriting result")
     }
@@ -56,7 +55,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case predEx@NameEx(name) =>
+      case predEx @ NameEx(name) =>
         assert(solverContext.sat())
         solverContext.assertGroundExpr(OperEx(TlaOper.eq, leftInt, ValEx(TlaInt(22))))
         rewriter.push()
@@ -91,7 +90,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case cmpEx@NameEx(name) =>
+      case cmpEx @ NameEx(name) =>
         assert(solverContext.sat())
         solverContext.assertGroundExpr(cmpEx)
         solverContext.assertGroundExpr(OperEx(TlaOper.eq, leftCell.toNameEx, ValEx(TlaInt(4))))
@@ -120,7 +119,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case cmpEx@NameEx(name) =>
+      case cmpEx @ NameEx(name) =>
         assert(solverContext.sat())
         solverContext.assertGroundExpr(cmpEx)
         solverContext.assertGroundExpr(OperEx(TlaOper.eq, leftCell.toNameEx, ValEx(TlaInt(4))))
@@ -149,7 +148,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case cmpEx@NameEx(name) =>
+      case cmpEx @ NameEx(name) =>
         assert(solverContext.sat())
         solverContext.assertGroundExpr(cmpEx)
         solverContext.assertGroundExpr(OperEx(TlaOper.eq, leftCell.toNameEx, ValEx(TlaInt(4))))
@@ -199,7 +198,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case cmpEx@NameEx(name) =>
+      case cmpEx @ NameEx(name) =>
         assert(solverContext.sat())
         solverContext.assertGroundExpr(cmpEx)
         solverContext.assertGroundExpr(OperEx(TlaOper.eq, leftCell.toNameEx, ValEx(TlaInt(4))))
@@ -228,7 +227,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case predEx@NameEx(name) =>
+      case predEx @ NameEx(name) =>
         assert(solverContext.sat())
         solverContext.assertGroundExpr(OperEx(TlaOper.eq, leftInt, ValEx(TlaInt(22))))
         rewriter.push()

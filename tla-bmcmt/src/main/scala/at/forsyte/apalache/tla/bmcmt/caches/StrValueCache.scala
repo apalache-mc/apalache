@@ -6,12 +6,12 @@ import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.lir.convenience.tla
 
 /**
-  * A cache for string constants that are translated as uninterpreted constants in SMT.
-  * Since two TLA+ strings are equal iff they are literally the same string, we force
-  * inequality between all the respective SMT constants.
-  *
-  * @author Igor Konnov
-  */
+ * A cache for string constants that are translated as uninterpreted constants in SMT.
+ * Since two TLA+ strings are equal iff they are literally the same string, we force
+ * inequality between all the respective SMT constants.
+ *
+ * @author Igor Konnov
+ */
 class StrValueCache(solverContext: SolverContext) extends AbstractCache[Arena, String, ArenaCell] with Serializable {
 
   override protected def create(arena: Arena, strValue: String): (Arena, ArenaCell) = {

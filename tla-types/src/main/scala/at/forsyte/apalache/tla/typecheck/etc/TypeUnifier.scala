@@ -6,49 +6,51 @@ import at.forsyte.apalache.tla.typecheck.etc.TypeUnifier.CycleDetected
 import scala.collection.immutable.SortedMap
 
 /**
-  * <p>A unification solver for the TlaType1 system. Note that our subtyping relation unifies records
-  * and sparse tuples with a different number of fields. It does so by extending the key set, not by shrinking it.</p>
-  *
-  * <p>This class is not designed for concurrency. Use different instances in different threads.</p>
-  *
-  * @author Igor Konnov
-  */
+ * <p>A unification solver for the TlaType1 system. Note that our subtyping relation unifies records
+ * and sparse tuples with a different number of fields. It does so by extending the key set, not by shrinking it.</p>
+ *
+ * <p>This class is not designed for concurrency. Use different instances in different threads.</p>
+ *
+ * @author Igor Konnov
+ */
 class TypeUnifier {
   // a partial solution to the unification problem is stored here during unification
   private var solution: Map[Int, TlaType1] = Map.empty
 
   /**
-    * Try to unify lhs and rhs by starting with the given substitution. If successful, it returns Some(mgu, t),
-    * where mgu is the solution set showing how to unify lhs and rhs and t is the type resulting from
-    * successfully unifying lhs and rhs using mgu. Note that apart from variable substitution, our unification
-    * also involves merging record types. When there is no unifier, it returns None.
-    */
+   * Try to unify lhs and rhs by starting with the given substitution. If successful, it returns Some(mgu, t),
+   * where mgu is the solution set showing how to unify lhs and rhs and t is the type resulting from
+   * successfully unifying lhs and rhs using mgu. Note that apart from variable substitution, our unification
+   * also involves merging record types. When there is no unifier, it returns None.
+   */
   def unify(substitution: Substitution, lhs: TlaType1, rhs: TlaType1): Option[(Substitution, TlaType1)] = {
     // start with the substitution
     solution = substitution.context
     // try to unify
-    val result = try {
-      compute(lhs, rhs) flatMap { unifiedType =>
-        if (isCyclic) {
-          None
-        } else {
-          computeClosureWhenAcyclic()
-          val substitution = new Substitution(solution)
-          Some((substitution, substitution(unifiedType)))
+    val result =
+      try {
+        compute(lhs, rhs) flatMap { unifiedType =>
+          if (isCyclic) {
+            None
+          } else {
+            computeClosureWhenAcyclic()
+            val substitution = new Substitution(solution)
+            Some((substitution, substitution(unifiedType)))
+          }
         }
+      } catch {
+        case _: CycleDetected =>
+          None
       }
-    } catch {
-      case _: CycleDetected =>
-        None
-    }
     solution = Map.empty // let GC collect the solution map later
     result
   }
 
   // Compute the unification of the value corresponding to the key in the two maps of fields
-  private def computeFields[K](key: K, lhsFields: SortedMap[K, TlaType1], rhsFields: SortedMap[K, TlaType1]): Option[TlaType1]= {
+  private def computeFields[K](key: K, lhsFields: SortedMap[K, TlaType1],
+      rhsFields: SortedMap[K, TlaType1]): Option[TlaType1] = {
     (lhsFields.get(key), rhsFields.get(key)) match {
-      case (None, None) => None
+      case (None, None)       => None
       case (Some(l), Some(r)) => compute(l, r)
       // Unifying a present field with an absent one is solved by the present one, as per
       // the typing rules on records that allows records with non-overlapping fields to
@@ -104,7 +106,7 @@ class TypeUnifier {
       case (FunT1(larg, lres), FunT1(rarg, rres)) =>
         (compute(larg, rarg), compute(lres, rres)) match {
           case (Some(uarg), Some(ures)) => Some(FunT1(uarg, ures))
-          case _ => None // no common unifier
+          case _                        => None // no common unifier
         }
 
       // operators should unify component-wise
@@ -121,7 +123,7 @@ class TypeUnifier {
 
       // tuples unify component-wise
       case (TupT1(lelems @ _*), TupT1(relems @ _*)) =>
-        unifySeqs(lelems, relems).map(unified => TupT1(unified :_*))
+        unifySeqs(lelems, relems).map(unified => TupT1(unified: _*))
 
       // sparse tuples join their keys, but the values for the intersecting keys should unify
       case (SparseTupT1(lfields), SparseTupT1(rfields)) =>
@@ -130,7 +132,7 @@ class TypeUnifier {
         if (pairs.exists(_._2.isEmpty)) {
           None
         } else {
-          val unifiedTuple = SparseTupT1(SortedMap(pairs.map(p => (p._1, p._2.get)) :_*))
+          val unifiedTuple = SparseTupT1(SortedMap(pairs.map(p => (p._1, p._2.get)): _*))
           Some(unifiedTuple)
         }
 
@@ -152,7 +154,7 @@ class TypeUnifier {
         }
 
       // a sparse tuple is consumed by a tuple
-      case (l @ TupT1(_ @ _*), r @ SparseTupT1(_)) =>
+      case (l @ TupT1(_ @_*), r @ SparseTupT1(_)) =>
         compute(r, l)
 
       // records join their keys, but the values for the intersecting keys should unify
@@ -162,7 +164,7 @@ class TypeUnifier {
         if (pairs.exists(_._2.isEmpty)) {
           None
         } else {
-          val unifiedTuple = RecT1(SortedMap(pairs.map(p => (p._1, p._2.get)) :_*))
+          val unifiedTuple = RecT1(SortedMap(pairs.map(p => (p._1, p._2.get)): _*))
           Some(unifiedTuple)
         }
 
@@ -176,13 +178,13 @@ class TypeUnifier {
   private def unifySeqs(ls: Seq[TlaType1], rs: Seq[TlaType1]): Option[Seq[TlaType1]] = {
     val len = ls.length
     if (len != rs.length) {
-      None        // different number of arguments
+      None // different number of arguments
     } else {
       val unified = ls.zip(rs).map { case (l, r) => compute(l, r) }
       if (unified.exists(_.isEmpty)) {
-        None      // no unifier for at least one pair
+        None // no unifier for at least one pair
       } else {
-        Some(unified.map(_.get))    // all pairs unified
+        Some(unified.map(_.get)) // all pairs unified
       }
     }
   }

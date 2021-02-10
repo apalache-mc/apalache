@@ -13,16 +13,14 @@ import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
-class CoverAnalysisPassImpl @Inject()(options: PassOptions,
-                                      tracker: TransformationTracker,
-                                      @Named("AfterCoverAnalysis") nextPass: Pass with TlaModuleMixin )
-  extends CoverAnalysisPass with LazyLogging {
+class CoverAnalysisPassImpl @Inject() (options: PassOptions, tracker: TransformationTracker,
+    @Named("AfterCoverAnalysis") nextPass: Pass with TlaModuleMixin)
+    extends CoverAnalysisPass with LazyLogging {
 
   override def name: String = "CoverAnalysisPass"
 
-
   // TODO: disabled for the purposes of pass reordering, re-introduced in #308
-  override def execute( ) : Boolean = true
+  override def execute(): Boolean = true
 
   def execute2(): Boolean = {
     val inModule = tlaModule.get
@@ -37,53 +35,53 @@ class CoverAnalysisPassImpl @Inject()(options: PassOptions,
     val nextName = options.getOrElse("checker", "next", "Next")
 
     // We check for manual assignments in InitPrime and Next
-    val initBody= findBodyOf(initPrimedName, inModule.declarations: _*)
+    val initBody = findBodyOf(initPrimedName, inModule.declarations: _*)
     val nextBody = findBodyOf(nextName, inModule.declarations: _*)
 
     val manualAssignments =
-      ManualAssignments.findAll( initBody ) ++ ManualAssignments.findAll( nextBody )
+      ManualAssignments.findAll(initBody) ++ ManualAssignments.findAll(nextBody)
     val coverChecker = new CoverChecker(varSet, manualAssignments)
 
     logger.info(s"  > Computing assignment cover for $nextName")
-    val coverMap = bodyMap map { case (opName, TlaOperDecl( _, _, body )) =>
+    val coverMap = bodyMap map { case (opName, TlaOperDecl(_, _, body)) =>
       // technically suboptimal, since the same CoverData is computed multiple times,
       // but no need to change it if it doesn't impact runtime
-      opName -> coverChecker.coveredVars( body ).toList.sorted
+      opName -> coverChecker.coveredVars(body).toList.sorted
     }
 
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
     val outFile = new File(outdir.toFile, "out-cover.txt")
 
-    val outStr = coverMap.map {
-      case (opName, coverLst) => s"${opName} covers: ${coverLst.mkString(", ")}" }
+    val outStr = coverMap
+      .map { case (opName, coverLst) =>
+        s"${opName} covers: ${coverLst.mkString(", ")}"
+      }
       .mkString("\n")
 
     val pw = new PrintWriter(new FileWriter(outFile, false))
-    pw.write( outStr )
+    pw.write(outStr)
     pw.close()
-
 
     val notCovered = (varSet -- coverMap(nextName).toSet).toList.sorted
     if (notCovered.nonEmpty)
       throw new CoverData.CoverException(
-        s"Operator $nextName does not cover: ${notCovered.mkString(", ")}. See ${outFile.getAbsolutePath}"
+          s"Operator $nextName does not cover: ${notCovered.mkString(", ")}. See ${outFile.getAbsolutePath}"
       )
 
     true
   }
 
   /**
-    * Get the next pass in the chain. What is the next pass is up
-    * to the module configuration and the pass outcome.
-    *
-    * @return the next pass, if exists, or None otherwise
-    */
+   * Get the next pass in the chain. What is the next pass is up
+   * to the module configuration and the pass outcome.
+   *
+   * @return the next pass, if exists, or None otherwise
+   */
   override def next(): Option[Pass] = {
     tlaModule map { m =>
       nextPass.setModule(m)
       nextPass
     }
   }
-
 
 }

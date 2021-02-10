@@ -6,19 +6,18 @@ import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaControlOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
-
 /**
-  * A rule for case. Similar to TLC, CASE is translated into a chain of IF-THEN-ELSE expressions.
-  *
-  * @author Igor Konnov
-  */
+ * A rule for case. Similar to TLC, CASE is translated into a chain of IF-THEN-ELSE expressions.
+ *
+ * @author Igor Konnov
+ */
 @deprecated("This should be handled by Keramelizer")
 class CaseRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaControlOper.caseWithOther, _*) => true
-      case OperEx(TlaControlOper.caseNoOther, _*) => true
-      case _ => false
+      case OperEx(TlaControlOper.caseNoOther, _*)   => true
+      case _                                        => false
     }
   }
 
@@ -41,11 +40,10 @@ class CaseRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val revGuardsAndActions = mkGuardsAndActions(newArgs)
         val cells = newArgs.map(newState.arena.findCellByNameEx)
         // get the expression type from the type finder (use the original expression as it could have been annotated!)
-        val resultType = rewriter.typeFinder.compute(state.ex, cells.map(_.cellType) :_*)
+        val resultType = rewriter.typeFinder.compute(state.ex, cells.map(_.cellType): _*)
         // place ASSERT(FALSE) instead of other
         val assertState = new TypedAssert(rewriter)
-          .typedAssert(newState, resultType, tla.bool(false),
-            "It may happen that no guard in CASE is applicable")
+          .typedAssert(newState, resultType, tla.bool(false), "It may happen that no guard in CASE is applicable")
         val iteWaterfall = revGuardsAndActions.foldLeft(assertState.ex)(decorateWithIf)
         rewriter.rewriteUntilDone(assertState.setRex(iteWaterfall))
 

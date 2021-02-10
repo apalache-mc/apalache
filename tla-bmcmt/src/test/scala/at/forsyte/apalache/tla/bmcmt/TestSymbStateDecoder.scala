@@ -177,8 +177,7 @@ class TestSymbStateDecoder extends RewriterBase {
 
   test("decode sequence") {
     val seqEx =
-      tla.withType(tla.tuple(tla.int(1), tla.int(2), tla.int(3), tla.int(4)),
-        AnnotationParser.toTla(SeqT(IntT())))
+      tla.withType(tla.tuple(tla.int(1), tla.int(2), tla.int(3), tla.int(4)), AnnotationParser.toTla(SeqT(IntT())))
     val subseqEx = tla.subseq(seqEx, tla.int(2), tla.int(3))
     val state = new SymbState(subseqEx, arena, Binding())
     val rewriter = create()

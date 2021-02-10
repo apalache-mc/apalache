@@ -9,24 +9,20 @@ import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 
 /**
-  * Integer arithmetic operations: +, -, *, div, mod.
-  *
-  * @author Igor Konnov
-  */
+ * Integer arithmetic operations: +, -, *, div, mod.
+ *
+ * @author Igor Konnov
+ */
 class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val intConstRule: IntConstRule = new IntConstRule(rewriter)
   private val simplifier = new ConstSimplifierForSmt()
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
-      case OperEx(TlaArithOper.plus, _, _)
-           | OperEx(TlaArithOper.minus, _, _)
-           | OperEx(TlaArithOper.mult, _, _)
-           | OperEx(TlaArithOper.div, _, _)
-           | OperEx(TlaArithOper.mod, _, _)
-           | OperEx(TlaArithOper.exp, _, _)
-           | OperEx(TlaArithOper.uminus, _)
-      => true
+      case OperEx(TlaArithOper.plus, _, _) | OperEx(TlaArithOper.minus, _, _) | OperEx(TlaArithOper.mult, _, _) |
+          OperEx(TlaArithOper.div, _, _) | OperEx(TlaArithOper.mod, _, _) | OperEx(TlaArithOper.exp, _, _) |
+          OperEx(TlaArithOper.uminus, _) =>
+        true
 
       case _ => false
     }
@@ -34,10 +30,9 @@ class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = state.ex match {
     case OperEx(oper: TlaArithOper, _, _)
-      if (oper == TlaArithOper.plus || oper == TlaArithOper.minus
-        || oper == TlaArithOper.mult || oper == TlaArithOper.div
-        || oper == TlaArithOper.mod || oper == TlaArithOper.exp)
-    =>
+        if (oper == TlaArithOper.plus || oper == TlaArithOper.minus
+          || oper == TlaArithOper.mult || oper == TlaArithOper.div
+          || oper == TlaArithOper.mod || oper == TlaArithOper.exp) =>
       rewriteGeneral(state, state.ex)
 
     case OperEx(TlaArithOper.uminus, _) =>
