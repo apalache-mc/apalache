@@ -1,19 +1,16 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.NoRule
-import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.bmcmt.types.{AnnotationParser, BoolT, FinSetT, IntT}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaBoolOper, TlaOper}
-import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaNatSet}
-import at.forsyte.apalache.tla.lir.values.TlaBool
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaBoolSet, TlaNatSet}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.junit.JUnitRunner
-
-import scala.collection.immutable.HashMap
 
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with BeforeAndAfterEach {

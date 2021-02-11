@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.types.FinSetT
 import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * Implements the rule for a union of all set elements, that is, UNION S for a set S that contains sets as elements.

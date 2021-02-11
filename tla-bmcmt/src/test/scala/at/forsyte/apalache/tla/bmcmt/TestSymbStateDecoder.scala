@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.types.{AnnotationParser, FinSetT, IntT, Seq
 import at.forsyte.apalache.tla.lir.{TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 

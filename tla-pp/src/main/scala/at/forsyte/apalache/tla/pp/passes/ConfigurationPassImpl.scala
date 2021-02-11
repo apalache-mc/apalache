@@ -12,6 +12,7 @@ import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaOper, Tl
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.pp._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -23,7 +24,7 @@ import org.apache.commons.io.FilenameUtils
  * checker.init, checker.next, checker.cinit, checker.inv. In general, passes should not override options.
  * This is a reasonable exception to this rule, as this pass configures the options based on the user input.
  *
- * @param options pass options
+ * @param options  pass options
  * @param nextPass next pass to call
  */
 class ConfigurationPassImpl @Inject() (
@@ -105,7 +106,8 @@ class ConfigurationPassImpl @Inject() (
 
   /**
    * Produce the configuration options from a TLC config, if it is present.
-   * @param module the input module
+   *
+   * @param module     the input module
    * @param outOptions the pass options to update from the configuration file
    * @return additional declarations, which originate from assignments and replacements
    */
@@ -284,7 +286,8 @@ class ConfigurationPassImpl @Inject() (
 
   /**
    * Extract Init and Next from the spec definition that has the canonical form Init /\ [Next]_vars /\ ...
-   * @param module TLA+ module
+   *
+   * @param module   TLA+ module
    * @param specName the name of the specification definition
    * @return the pair (Init, Next)
    */

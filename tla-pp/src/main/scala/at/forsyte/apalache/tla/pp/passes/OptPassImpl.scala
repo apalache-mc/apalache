@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.pp.{ConstSimplifier, ExprOptimizer, UniqueNameGenerator}
 import com.google.inject.Inject
 import com.google.inject.name.Named
@@ -15,9 +16,10 @@ import com.typesafe.scalalogging.LazyLogging
 
 /**
  * A preprocessing pass that simplifies TLA+ expression by running multiple transformation.
- * @param options pass options
- * @param gen name generator
- * @param tracker transformation tracker
+ *
+ * @param options  pass options
+ * @param gen      name generator
+ * @param tracker  transformation tracker
  * @param nextPass next pass to call
  */
 class OptPassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator, renaming: IncrementalRenaming,

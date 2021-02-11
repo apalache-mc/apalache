@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
-import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx, TlaOperDecl}
 import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.transformations._
+import at.forsyte.apalache.tla.lir._
 
 /**
  * Replace every equality x' = e with x' \in {e}. This transformation is needed by the assignment solver,
@@ -10,7 +10,9 @@ import at.forsyte.apalache.tla.lir.transformations._
  *
  * @author Jure Kukovec
  */
-class PrimedEqualityToMembership(tracker: TransformationTracker) extends TlaExTransformation {
+@deprecated("To be removed in #564")
+class PrimedEqualityToMembership(tracker: TransformationTracker)(implicit typeTag: TypeTag)
+    extends TlaExTransformation {
   override def apply(ex: TlaEx): TlaEx = {
     transform(ex)
   }
@@ -36,7 +38,7 @@ class PrimedEqualityToMembership(tracker: TransformationTracker) extends TlaExTr
 }
 
 object PrimedEqualityToMembership {
-  def apply(tracker: TransformationTracker): PrimedEqualityToMembership = {
+  def apply(tracker: TransformationTracker)(implicit typeTag: TypeTag): PrimedEqualityToMembership = {
     new PrimedEqualityToMembership(tracker)
   }
 }

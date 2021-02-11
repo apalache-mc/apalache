@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, NullEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * Rewrites a set comprehension { x \in S: P }.

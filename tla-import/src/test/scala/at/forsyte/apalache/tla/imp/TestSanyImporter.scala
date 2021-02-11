@@ -10,6 +10,7 @@ import at.forsyte.apalache.tla.lir.src.{SourcePosition, SourceRegion}
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, ValEx, _}
 import at.forsyte.apalache.io.annotations.store._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalactic.source.Position
 import org.scalatest.{BeforeAndAfter, FunSuite}

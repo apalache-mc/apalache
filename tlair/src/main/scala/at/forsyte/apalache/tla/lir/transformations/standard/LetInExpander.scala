@@ -19,7 +19,7 @@ class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean) extend
 
   def transform: TlaExTransformation = tracker.trackEx {
     // interesting case
-    case LetInEx(body, defs @ _*) =>
+    case letInEx @ LetInEx(body, defs @ _*) =>
       /** LET-IN may be nested in the body ... */
       val expandedBody = transform(body)
 
@@ -41,7 +41,7 @@ class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean) extend
 
       val expandedLetIn =
         if (defsToKeep.nonEmpty) {
-          LetInEx(expandedBody, defsToKeep: _*) // nullary definitions are still there
+          LetInEx(expandedBody, defsToKeep: _*)(letInEx.typeTag) // nullary definitions are still there
         } else {
           expandedBody // all definitions were expanded
         }
@@ -57,20 +57,20 @@ class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean) extend
       params.zip(args).foldLeft(lambdaBody) {
         // replace every parameter with the respective argument
         case (expr, (param, arg)) =>
-          ReplaceFixed(NameEx(param.name), arg, tracker)(expr)
+          ReplaceFixed(NameEx(param.name)(arg.typeTag), arg, tracker)(expr)
       }
 
     // recursive processing of composite operators
     case ex @ OperEx(op, args @ _*) =>
       val newArgs = args map transform
-      if (args == newArgs) ex else OperEx(op, newArgs: _*)
+      if (args == newArgs) ex else OperEx(op, newArgs: _*)(ex.typeTag)
 
     case ex => ex
   }
 }
 
 object LetInExpander {
-  def apply(tracker: TransformationTracker, keepNullary: Boolean): LetInExpander = {
+  def apply(tracker: TransformationTracker, keepNullary: Boolean)(implicit typeTag: TypeTag): LetInExpander = {
     new LetInExpander(tracker, keepNullary)
   }
 }

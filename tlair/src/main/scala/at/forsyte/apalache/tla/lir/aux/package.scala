@@ -82,7 +82,7 @@ package object aux {
         List(head) +: rec
   }
 
-  def diff(ex1: TlaEx, ex2: TlaEx): TlaEx = (ex1, ex2) match {
+  def diff(ex1: TlaEx, ex2: TlaEx)(implicit typeTag: TypeTag): TlaEx = (ex1, ex2) match {
     case (OperEx(op1, args1 @ _*), OperEx(op2, args2 @ _*)) if op1 == op2 =>
       val argDiff = args1.zipAll(args2, NullEx, NullEx) map { case (x, y) => diff(x, y) }
       OperEx(op1, argDiff: _*)
@@ -116,9 +116,13 @@ package object aux {
     case OperEx(TlaOper.apply, NameEx("Diff"), ex1, ex2) =>
       Seq(ex)
     case OperEx(_, args @ _*) =>
-      args flatMap { allDiffs }
+      args flatMap {
+        allDiffs
+      }
     case LetInEx(body, defs @ _*) =>
-      (body +: (defs map { _.body })) flatMap allDiffs
+      (body +: (defs map {
+        _.body
+      })) flatMap allDiffs
     case _ =>
       Seq.empty
   }

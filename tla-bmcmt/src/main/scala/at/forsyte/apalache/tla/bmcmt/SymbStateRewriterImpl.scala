@@ -16,6 +16,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 import scala.collection.mutable
 
@@ -28,12 +29,11 @@ import scala.collection.mutable
  *
  * <p>TODO: rename this class to RewriterImpl?</p>
  *
- * @param _solverContext  a fresh solver context that will be populated with constraints
- * @param typeFinder     a type finder (assuming that typeFinder.inferAndSave has been called already)
- * @param exprGradeStore a labeling scheme that associated a grade with each expression;
- *                       it is required to distinguish between state-level and action-level expressions.
+ * @param _solverContext   a fresh solver context that will be populated with constraints
+ * @param typeFinder       a type finder (assuming that typeFinder.inferAndSave has been called already)
+ * @param exprGradeStore   a labeling scheme that associated a grade with each expression;
+ *                         it is required to distinguish between state-level and action-level expressions.
  * @param profilerListener optional listener that is used to profile the rewriting rules
- *
  * @author Igor Konnov
  */
 class SymbStateRewriterImpl(private var _solverContext: SolverContext, var typeFinder: TypeFinder[CellT],
@@ -394,7 +394,9 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext, var typeF
         // as the new expressions there will not have source information.
         val smtWatermark = solverContext.metrics()
         val nextState = doRecursive(0, state)
-        profilerListener.foreach { _.onRewrite(state.ex, solverContext.metrics().delta(smtWatermark)) }
+        profilerListener.foreach {
+          _.onRewrite(state.ex, solverContext.metrics().delta(smtWatermark))
+        }
         exprCache.put(state.ex, nextState.ex) // the grade is not important
         nextState
     }

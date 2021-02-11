@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.{TlaDeclTransformation, TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
 
 /**
  * DeepCopy constructs a structurally identical copy of a given TlaEx or TlaDecl, with fresh unique IDs.

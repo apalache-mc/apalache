@@ -1,10 +1,10 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.aux.{ExceptionOrValue, FailWith, SucceedWith}
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.aux.{ExceptionOrValue, FailWith, SucceedWith}
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
-import at.forsyte.apalache.tla.lir.transformations.standard.{IncrementalRenaming, InlinerOfUserOper, ReplaceFixed}
+import at.forsyte.apalache.tla.lir.transformations.standard.{IncrementalRenaming, InlinerOfUserOper}
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.TlaInt
 
@@ -28,18 +28,18 @@ import at.forsyte.apalache.tla.lir.values.TlaInt
  * UNROLL_TIMES_Fact == 1
  * UNROLL_DEFAULT_Fact == 0
  *
- *    |
- *    |
- *    V
+ * |
+ * |
+ * V
  *
  * Unrolled_Fact(n) ==
- *  IF n <= 0
- *  THEN 1
- *  ELSE n * (
- *    IF n-1 <= 0
- *    THEN 1
- *    ELSE (n-1) * 0
- *    )
+ * IF n <= 0
+ * THEN 1
+ * ELSE n * (
+ * IF n-1 <= 0
+ * THEN 1
+ * ELSE (n-1) * 0
+ * )
  *
  * Unrolled_Fact(0) = 1, Unrolled_Fact(1) = 1, but for k > 1 Unrolled_Fact(k) = 0
  */
@@ -47,6 +47,7 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
     extends TlaModuleTransformation {
 
   import Unroller._
+  import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
   // unrollLetIn performs unrolling on all recursive LET-IN defined operators in the expression
   private def unrollLetIn(

@@ -1,13 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaIntSet, TlaNatSet}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -58,6 +57,7 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
 
   test("""SE-SET-IN1: {} \in {} ~~> $B$0""") {
     def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
     val ex = OperEx(TlaSetOper.in, emptySetWithType(IntT()), emptySetWithType(FinSetT(IntT())))
     val state = new SymbState(ex, arena, Binding())
     val nextState = create().rewriteUntilDone(state)
@@ -373,6 +373,7 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
 
   test("""SE-SET-EQ1: {{}} = {} ~~> $B$... (false)""") {
     def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
+
     def intSet() = emptySetWithType(IntT()) // empty sets need types
     def int2Set() = emptySetWithType(FinSetT(IntT())) // empty sets need types
 

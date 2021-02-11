@@ -1,25 +1,26 @@
 package at.forsyte.apalache.tla.pp.passes
 
-import java.io.File
-import java.nio.file.Path
-
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.{TlaModule, TlaOperDecl}
-import at.forsyte.apalache.tla.pp.{OperAppToLetInDef, NormalizedNames, ParameterNormalizer, UniqueNameGenerator}
+import at.forsyte.apalache.tla.pp.{NormalizedNames, OperAppToLetInDef, UniqueNameGenerator}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
+import java.io.File
+import java.nio.file.Path
+
 /**
  * A pass that expands operators and let-in definitions.
  *
- * @param options pass options
- * @param gen name generator
- * @param tracker transformation tracker
+ * @param options  pass options
+ * @param gen      name generator
+ * @param tracker  transformation tracker
  * @param nextPass next pass to call
  */
 class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator, renaming: IncrementalRenaming,
@@ -44,7 +45,9 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
     val baseModule = tlaModule.get
 
     val appWrap = OperAppToLetInDef(gen, tracker)
-    val operNames = (baseModule.operDeclarations map { _.name }).toSet
+    val operNames = (baseModule.operDeclarations map {
+      _.name
+    }).toSet
     val module = appWrap.moduleTransform(operNames)(baseModule)
 
     val defBodyMap = BodyMapFactory.makeFromDecls(module.operDeclarations)

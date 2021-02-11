@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaTempOper}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic._
 

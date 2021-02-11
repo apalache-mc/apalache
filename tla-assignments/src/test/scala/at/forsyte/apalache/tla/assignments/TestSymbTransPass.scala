@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.{Builder => bd, _}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.pp.Desugarer
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -47,11 +48,11 @@ class TestSymbTransPass extends FunSuite with TestingPredefs {
 
     val ret = testFromDecls(decls, p_next)
 
-//    val saveWriter = new PrintWriter( new File( testFolderPath + "SymbNexts" + p_file ) )
+    //    val saveWriter = new PrintWriter( new File( testFolderPath + "SymbNexts" + p_file ) )
 
-//    ret.foreach( x => saveWriter.println( "%s : \n %s\n".format( x._1.map( UniqueDB.get ) , x._2 ) ) )
+    //    ret.foreach( x => saveWriter.println( "%s : \n %s\n".format( x._1.map( UniqueDB.get ) , x._2 ) ) )
 
-//    saveWriter.close()
+    //    saveWriter.close()
 
     ret
   }

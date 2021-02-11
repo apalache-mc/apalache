@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.pp.Desugarer
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -73,6 +74,7 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
 
   def correctRecursiveApplication(exs: Traversable[TlaEx]): Boolean = {
     val trs = (exs map { ex => ex -> AlphaTransform(ex) }).toMap
+
     def argMatch(exargs: Traversable[TlaEx], args: Traversable[AlphaEx]): Boolean =
       (exargs map { arg => trs.getOrElse(arg, AlphaTransform(arg)) }) == args
 

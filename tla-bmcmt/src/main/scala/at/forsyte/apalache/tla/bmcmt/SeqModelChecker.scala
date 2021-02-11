@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.bmcmt.trex.{ExecutionSnapshot, TransitionExecutor
 import at.forsyte.apalache.tla.lir.io.CounterexampleWriter
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.lir.{TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.typesafe.scalalogging.LazyLogging
 
 /**

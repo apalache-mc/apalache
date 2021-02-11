@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 import scala.collection.immutable.HashMap
 
@@ -74,6 +75,7 @@ class Arena private (val solverContext: SolverContext, val cellCount: Int, val t
 
   /**
    * A fixed cell that equals to false in the Boolean theory.
+   *
    * @return the false cell
    */
   def cellFalse(): ArenaCell = {
@@ -82,6 +84,7 @@ class Arena private (val solverContext: SolverContext, val cellCount: Int, val t
 
   /**
    * A fixed cell that equals to true in the Boolean theory
+   *
    * @return the true cell
    */
   def cellTrue(): ArenaCell = {
@@ -90,6 +93,7 @@ class Arena private (val solverContext: SolverContext, val cellCount: Int, val t
 
   /**
    * A fixed cell that stores the set {false, true}, that is, the set BOOLEAN in TLA+.
+   *
    * @return the cell for the BOOLEAN set
    */
   def cellBooleanSet(): ArenaCell = {
@@ -98,6 +102,7 @@ class Arena private (val solverContext: SolverContext, val cellCount: Int, val t
 
   /**
    * A fixed cell that stores the set Nat. As this set is infinite, it is not pointing to any other cells.
+   *
    * @return the cell for the Nat cell
    */
   def cellNatSet(): ArenaCell = {
@@ -106,6 +111,7 @@ class Arena private (val solverContext: SolverContext, val cellCount: Int, val t
 
   /**
    * A fixed cell that stores the set Int. As this set is infinite, it is not pointing to any other cells.
+   *
    * @return the cell for the Int cell
    */
   def cellIntSet(): ArenaCell = {
@@ -160,6 +166,7 @@ class Arena private (val solverContext: SolverContext, val cellCount: Int, val t
    * Append a sequence of cells to arena. This method returns a new arena and a sequence of the freshly
    * created cells (the cells are ordered the same way as the sequence of types). This method provides us with a
    * handy alternative to appendCell, when several cells should be created.
+   *
    * @param types a sequence of cell types
    * @return a pair: the new arena and a sequence of new cells
    */
@@ -190,7 +197,7 @@ class Arena private (val solverContext: SolverContext, val cellCount: Int, val t
    * The previously added edges come first. When this method is called as appendHas(X, Y1, ..., Ym),
    * it adds a Boolean constant in_X_Yi for each i: 1 <= i <= m.
    *
-   * @param parentCell the cell that points to the children cells
+   * @param parentCell    the cell that points to the children cells
    * @param childrenCells the cells that are pointed by the parent cell
    * @return the updated arena
    */
@@ -204,7 +211,7 @@ class Arena private (val solverContext: SolverContext, val cellCount: Int, val t
    * Append 'has' edges that connect the first cell to the other cells, in the given order.
    * The previously added edges come first. In contrast to appendHas, this method does not add any constants in SMT.
    *
-   * @param parentCell the cell that points to the children cells
+   * @param parentCell    the cell that points to the children cells
    * @param childrenCells the cells that are pointed by the parent cell
    * @return the updated arena
    */
@@ -217,8 +224,8 @@ class Arena private (val solverContext: SolverContext, val cellCount: Int, val t
   /**
    * Append a 'has' edge to connect a cell that corresponds to a set with a cell that corresponds to its element.
    *
-   * @param setCell  a set cell
-   * @param elemCell an element cell
+   * @param setCell   a set cell
+   * @param elemCell  an element cell
    * @param addInPred indicates whether the in_X_Y constant should be added in SMT.
    * @return a new arena
    */

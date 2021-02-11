@@ -6,6 +6,7 @@ import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaStrSet}
 import at.forsyte.apalache.tla.lir.values.TlaBool
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import tla2sany.semantic._
 
 /**
@@ -121,7 +122,7 @@ class OpApplTranslator(
         }
         .orElse {
           // a library value
-          StandardLibrary.libraryValues.get((modName, operatorName)).map(ValEx)
+          StandardLibrary.libraryValues.get((modName, operatorName)).map(ValEx(_))
         }
     }
   }

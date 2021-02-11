@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlcOper
 import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
+import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
 
 class TestKeraLanguagePred extends LanguagePredTestSuite {
   private val pred = new KeraLanguagePred

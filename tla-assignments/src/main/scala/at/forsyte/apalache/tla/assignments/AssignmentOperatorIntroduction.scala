@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaActionOper, TlaOper}
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
 /**
@@ -40,6 +41,7 @@ object AssignmentOperatorIntroduction {
 
   def apply(isAssignment: UID => Boolean, tracker: TransformationTracker): AssignmentOperatorIntroduction =
     new AssignmentOperatorIntroduction(isAssignment, tracker)
+
   def apply(assignments: Set[UID], tracker: TransformationTracker): AssignmentOperatorIntroduction =
     new AssignmentOperatorIntroduction(predicateFromSet(assignments), tracker)
 }

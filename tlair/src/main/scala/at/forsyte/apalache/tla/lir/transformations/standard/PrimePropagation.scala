@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx}
  * that is, when it meets an expression e', it propagates primes inside e.
  *
  * @param stateVars state variables
- * @param tracker a transformation tracker
+ * @param tracker   a transformation tracker
  */
 class PrimePropagation(tracker: TransformationTracker, stateVars: Set[String]) extends TlaExTransformation {
 
@@ -26,15 +26,15 @@ class PrimePropagation(tracker: TransformationTracker, stateVars: Set[String]) e
         case OperEx(TlaActionOper.prime, e) =>
           transform(true)(e)
 
-        case OperEx(oper, args @ _*) =>
-          OperEx(oper, args map transform(primeToAdd): _*)
+        case ex @ OperEx(oper, args @ _*) =>
+          OperEx(oper, args map transform(primeToAdd): _*)(ex.typeTag)
 
         // TODO: ENABLED and module instances need a special treatment
 
         case nameEx @ NameEx(name) =>
           if (primeToAdd && stateVars.contains(name)) {
             // add prime to a variable name
-            OperEx(TlaActionOper.prime, nameEx)
+            OperEx(TlaActionOper.prime, nameEx)(nameEx.typeTag)
           } else {
             nameEx
           }
@@ -45,7 +45,7 @@ class PrimePropagation(tracker: TransformationTracker, stateVars: Set[String]) e
           })
           val newBody = transform(primeToAdd)(body)
           if (defs == newDefs && body == newBody) ex
-          else LetInEx(newBody, newDefs: _*)
+          else LetInEx(newBody, newDefs: _*)(ex.typeTag)
 
         case e => e
       }

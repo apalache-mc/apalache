@@ -7,9 +7,11 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
 import at.forsyte.apalache.tla.lir.values._
+import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
 
 /**
  * <p>Geeneric set of tests for conversion between TLA and JSON.</p>
+ *
  * @author Andrey Kuprianov
  */
 
