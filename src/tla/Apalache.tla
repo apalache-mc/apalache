@@ -29,6 +29,14 @@
 x := e == x = e
 
 (*****************************************************************************)
+(* As TLA+ is untyped, one can use function- and sequence-specific operators *)
+(* interchangeably. However, to maintain correctness w.r.t. our type-system, *)
+(* an explicit cast is needed when using functions as sequences.             *)
+(*****************************************************************************)
+LOCAL INSTANCE Sequences
+FunAsSeq(fn, maxSeqLen) == SubSeq(fn, 1, maxSeqLen)
+
+(*****************************************************************************)
 (* Annotating an expression \E x \in S: P as Skolemizable. That is, it can   *)
 (* be replaced with an expression c \in S /\ P(c) for a fresh constant c.    *)
 (* Not every exisential can be replaced with a constant, this should be done *)
