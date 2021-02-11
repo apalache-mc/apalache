@@ -10,7 +10,7 @@ object Flatten {
     case _             => false
   }
 
-  private def flattenOne(tracker: TransformationTracker)(implicit typeTag: TypeTag): TlaExTransformation =
+  private def flattenOne(tracker: TransformationTracker): TlaExTransformation =
     tracker.trackEx {
       case ex @ OperEx(TlaBoolOper.and | TlaBoolOper.or, args @ _*) =>
         val hasSameOper = sameOp(ex.oper)(_)
@@ -32,7 +32,7 @@ object Flatten {
               Seq(x)
           }
           // We know newArgs != args, because similar = true
-          OperEx(ex.oper, newArgs: _*)
+          OperEx(ex.oper, newArgs: _*)(ex.typeTag)
         }
       case e => e
     }

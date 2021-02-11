@@ -116,7 +116,7 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
         } else {
           // ... and must evaluate to a single integer
           ConstSimplifier(tracker)(
-              InlinerOfUserOper(bodyMap, tracker)(implicitly[TypeTag])(unrollLimitDecl.body)
+              InlinerOfUserOper(bodyMap, tracker)(unrollLimitDecl.body)
           ) match {
             case ValEx(TlaInt(n)) =>
               SucceedWith(n)
@@ -143,7 +143,7 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
           FailWith(new TlaInputError(msg))
         } else {
           // ... but may be defined using other operators, so we call transform on it
-          SucceedWith(InlinerOfUserOper(bodyMap, tracker)(implicitly[TypeTag])(defaultDecl.body))
+          SucceedWith(InlinerOfUserOper(bodyMap, tracker)(defaultDecl.body))
         }
 
       case None =>

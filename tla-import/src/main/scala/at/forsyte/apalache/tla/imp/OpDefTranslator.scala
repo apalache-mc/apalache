@@ -46,7 +46,7 @@ class OpDefTranslator(
               NameEx(nodeName),
               recFunRef,
               new SaveToStoreTracker(sourceStore)
-          )(Untyped())(body)
+          )(body)
           // store the source location
           sourceStore.addRec(replaced, SourceLocation(node.getBody.getLocation))
           // return the operator whose body is a recursive function

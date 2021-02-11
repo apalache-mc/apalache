@@ -11,6 +11,7 @@ import scala.collection.immutable.HashMap
  *
  * @author Igor Konnov
  */
+@deprecated("To be removed in #565")
 class Renaming(tracker: TransformationTracker)(implicit typeTag: TypeTag) extends TlaExTransformation {
 
   /**

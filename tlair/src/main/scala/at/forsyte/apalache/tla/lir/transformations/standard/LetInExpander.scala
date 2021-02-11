@@ -14,13 +14,12 @@ import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
  *
  * @author Jure Kukovec
  */
-class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean)(implicit typeTag: TypeTag)
-    extends TlaExTransformation {
+class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean) extends TlaExTransformation {
   override def apply(ex: TlaEx): TlaEx = transform(ex)
 
   def transform: TlaExTransformation = tracker.trackEx {
     // interesting case
-    case LetInEx(body, defs @ _*) =>
+    case letInEx @ LetInEx(body, defs @ _*) =>
       /** LET-IN may be nested in the body ... */
       val expandedBody = transform(body)
 
@@ -42,13 +41,13 @@ class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean)(implic
 
       val expandedLetIn =
         if (defsToKeep.nonEmpty) {
-          LetInEx(expandedBody, defsToKeep: _*) // nullary definitions are still there
+          LetInEx(expandedBody, defsToKeep: _*)(letInEx.typeTag) // nullary definitions are still there
         } else {
           expandedBody // all definitions were expanded
         }
 
       // Inline the operators using the map of definitions
-      InlinerOfUserOper(bodyMap, tracker)(implicitly)(expandedLetIn)
+      InlinerOfUserOper(bodyMap, tracker)(expandedLetIn)
 
     // this is the special form for LAMBDAs
     case OperEx(TlaOper.apply, LetInEx(NameEx("LAMBDA"), TlaOperDecl("LAMBDA", params, lambdaBody)), args @ _*) =>
@@ -58,13 +57,13 @@ class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean)(implic
       params.zip(args).foldLeft(lambdaBody) {
         // replace every parameter with the respective argument
         case (expr, (param, arg)) =>
-          ReplaceFixed(NameEx(param.name), arg, tracker)(implicitly)(expr)
+          ReplaceFixed(NameEx(param.name)(arg.typeTag), arg, tracker)(expr)
       }
 
     // recursive processing of composite operators
     case ex @ OperEx(op, args @ _*) =>
       val newArgs = args map transform
-      if (args == newArgs) ex else OperEx(op, newArgs: _*)
+      if (args == newArgs) ex else OperEx(op, newArgs: _*)(ex.typeTag)
 
     case ex => ex
   }

@@ -10,6 +10,7 @@ import at.forsyte.apalache.tla.lir._
  *
  * @author Jure Kukovec
  */
+@deprecated("To be removed in #564")
 class PrimedEqualityToMembership(tracker: TransformationTracker)(implicit typeTag: TypeTag)
     extends TlaExTransformation {
   override def apply(ex: TlaEx): TlaEx = {

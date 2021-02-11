@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaEx, TypeTag}
+import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaEx}
 
 object ReplaceFixed {
   def replaceOne(
@@ -20,7 +20,7 @@ object ReplaceFixed {
       replacedEx: TlaEx,
       newEx: => TlaEx, // takes a [=> TlaEx] to allow for the creation of new instances (with distinct UIDs)
       tracker: TransformationTracker
-  )(implicit typeTag: TypeTag): TlaExTransformation = tracker.trackEx { ex =>
+  ): TlaExTransformation = tracker.trackEx { ex =>
     val tr = replaceOne(replacedEx, newEx, tracker)
     lazy val self = apply(replacedEx, newEx, tracker)
     ex match {
@@ -28,12 +28,12 @@ object ReplaceFixed {
         // Transform bodies of all op.defs
         val newDefs = defs map tracker.trackOperDecl { d => d.copy(body = self(d.body)) }
         val newBody = self(body)
-        val retEx = if (defs == newDefs && body == newBody) ex else LetInEx(newBody, newDefs: _*)
+        val retEx = if (defs == newDefs && body == newBody) ex else LetInEx(newBody, newDefs: _*)(ex.typeTag)
         tr(retEx)
 
       case OperEx(op, args @ _*) =>
         val newArgs = args map self
-        val retEx = if (args == newArgs) ex else OperEx(op, newArgs: _*)
+        val retEx = if (args == newArgs) ex else OperEx(op, newArgs: _*)(ex.typeTag)
         tr(retEx)
 
       case _ => tr(ex)

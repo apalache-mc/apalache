@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx, TypeTag}
+import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx}
 
 /**
  * A reference implementation of an expression transformer. It expands the prime operator,
@@ -11,8 +11,7 @@ import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx, TypeTag}
  * @param stateVars state variables
  * @param tracker   a transformation tracker
  */
-class PrimePropagation(tracker: TransformationTracker, stateVars: Set[String])(implicit typeTag: TypeTag)
-    extends TlaExTransformation {
+class PrimePropagation(tracker: TransformationTracker, stateVars: Set[String]) extends TlaExTransformation {
 
   /**
    * Propagate primes in the expression to the state variables.
@@ -27,15 +26,15 @@ class PrimePropagation(tracker: TransformationTracker, stateVars: Set[String])(i
         case OperEx(TlaActionOper.prime, e) =>
           transform(true)(e)
 
-        case OperEx(oper, args @ _*) =>
-          OperEx(oper, args map transform(primeToAdd): _*)
+        case ex @ OperEx(oper, args @ _*) =>
+          OperEx(oper, args map transform(primeToAdd): _*)(ex.typeTag)
 
         // TODO: ENABLED and module instances need a special treatment
 
         case nameEx @ NameEx(name) =>
           if (primeToAdd && stateVars.contains(name)) {
             // add prime to a variable name
-            OperEx(TlaActionOper.prime, nameEx)
+            OperEx(TlaActionOper.prime, nameEx)(nameEx.typeTag)
           } else {
             nameEx
           }
@@ -46,7 +45,7 @@ class PrimePropagation(tracker: TransformationTracker, stateVars: Set[String])(i
           })
           val newBody = transform(primeToAdd)(body)
           if (defs == newDefs && body == newBody) ex
-          else LetInEx(newBody, newDefs: _*)
+          else LetInEx(newBody, newDefs: _*)(ex.typeTag)
 
         case e => e
       }

@@ -15,8 +15,7 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
  *
  * @author Jure Kukovec
  */
-class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker)(implicit typeTag: TypeTag)
-    extends TlaExTransformation {
+class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker) extends TlaExTransformation {
 
   override def apply(expr: TlaEx): TlaEx = {
     transform(stepLimitOpt = None)(expr)
@@ -53,12 +52,12 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker)(imp
       if (defs == newDefs && body == newBody) {
         ex
       } else {
-        LetInEx(newBody, newDefs: _*)
+        LetInEx(newBody, newDefs: _*)(ex.typeTag)
       }
 
     case ex @ OperEx(op, args @ _*) =>
       val newArgs = args map transform(stepLimitOpt)
-      if (args == newArgs) ex else OperEx(op, newArgs: _*)
+      if (args == newArgs) ex else OperEx(op, newArgs: _*)(ex.typeTag)
 
     case ex => ex
   }
@@ -75,7 +74,7 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker)(imp
     val bodyCopy = postTr(DeepCopy(tracker).deepCopyEx(decl.body))
 
     val newBody = decl.formalParams.zip(args).foldLeft(bodyCopy) { case (b, (fParam, arg)) =>
-      ReplaceFixed(NameEx(fParam.name), arg, tracker)(implicitly)(b)
+      ReplaceFixed(NameEx(fParam.name)(arg.typeTag), arg, tracker)(b)
     }
 
     // the step limit, if it was defined, decreases by 1
@@ -103,7 +102,7 @@ object InlinerOfUserOper {
     def >(x: BigInt): Boolean = k > x
   }
 
-  def apply(defBodyMap: BodyMap, tracker: TransformationTracker)(implicit typeTag: TypeTag): InlinerOfUserOper = {
+  def apply(defBodyMap: BodyMap, tracker: TransformationTracker): InlinerOfUserOper = {
     new InlinerOfUserOper(defBodyMap, tracker)
   }
 }
