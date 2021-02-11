@@ -1,10 +1,13 @@
 ------------------------ MODULE QueensTyped -------------------------------
-\* THIS IS A TYPED VERSION OF Queens
+\* THIS IS A TYPED VERSION OF Queens.
+\*
+\* This example demonstrates use of the operator FunAsSeq in Apalache.
+\*
 \* The original is avaiable at: 
 \* https://github.com/tlaplus/Examples/tree/master/specifications/N-Queens
 
 
-EXTENDS Naturals, Sequences
+EXTENDS Naturals, Sequences, Apalache
 (***************************************************************************)
 (* Formulation of the N-queens problem and an iterative algorithm to solve *)
 (* the problem in TLA+. Since there must be exactly one queen in every row *)
@@ -38,8 +41,13 @@ IsSolution(queens) ==
 
 (* Compute the set of solutions of the N-queens problem. *)
 \* This is an interesting case, as a function is interpreted as a sequence.
-\* We need a cast operator here.
-Solutions == { queens \in [1..N -> 1..N] : IsSolution(queens) }
+\* We apply Apalache!FunAsSeq to convert a function to a sequence.
+Solutions ==
+    LET Queens == { queens \in [1..N -> 1..N] :
+                    IsSolution(FunAsSeq(queens, N)) } IN
+    \* We have to apply FunAsSeq twice, as queens is used as a sequence twice.
+    \* A better approach would be to refactor the spec, to call FunAsSeq once.
+    { FunAsSeq(queens, N): queens \in Queens }
 
 (***************************************************************************)
 (* We now describe an algorithm that iteratively computes the set of       *)
