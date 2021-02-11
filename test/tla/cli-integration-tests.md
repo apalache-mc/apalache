@@ -1030,3 +1030,31 @@ Type checker [OK]
 EXITCODE: OK
 ```
 
+### typecheck HourClockTyped.tla
+
+```sh
+$ apalache-mc typecheck HourClockTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > Running Snowcat .::.
+ > Your types are great!
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck ChannelTyped.tla
+
+```sh
+$ apalache-mc typecheck ChannelTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > Running Snowcat .::.
+ > Your types are great!
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
