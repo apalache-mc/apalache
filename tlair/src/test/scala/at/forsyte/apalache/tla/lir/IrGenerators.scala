@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import org.scalacheck.Gen.{choose, const, identifier, listOf, listOfN, lzy, oneOf, resize, sized}
