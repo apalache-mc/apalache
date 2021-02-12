@@ -11,9 +11,7 @@ class DeepCopy(tracker: TransformationTracker) {
   def deepCopyDecl[T <: TlaDecl](decl: T): T = deepCopyDeclInternal(decl).asInstanceOf[T]
 
   private def deepCopyDeclInternal: TlaDeclTransformation = tracker.trackDecl {
-    case TlaAssumeDecl(bodyEx) => TlaAssumeDecl(deepCopyEx(bodyEx))
-    case TlaRecFunDecl(name, arg, argDom, defBody) =>
-      TlaRecFunDecl(name, arg, deepCopyEx(argDom), deepCopyEx(defBody))
+    case TlaAssumeDecl(bodyEx)      => TlaAssumeDecl(deepCopyEx(bodyEx))
     case TlaTheoremDecl(name, body) => TlaTheoremDecl(name, deepCopyEx(body))
     case TlaVarDecl(name)           => TlaVarDecl(name)
     case d @ TlaOperDecl(name, formalParams, body) =>
