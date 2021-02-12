@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx, IrGenerators
 import org.scalacheck.Prop
 import org.scalacheck.Prop.{falsified, forAll, passed}
 import org.scalatest.prop.Checkers
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.scalatest.{BeforeAndAfter, FunSuite}
 
 /**

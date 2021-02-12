@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.analyses
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.tla.lir.convenience._
@@ -23,7 +24,9 @@ import at.forsyte.apalache.tla.lir.values.TlaInt
  */
 class SkolemizationMarker @Inject() (tracker: TransformationTracker) extends TlaExTransformation with LazyLogging {
 
-  override def apply(e: TlaEx): TlaEx = { transform(e) }
+  override def apply(e: TlaEx): TlaEx = {
+    transform(e)
+  }
 
   def transform: TlaExTransformation = tracker.trackEx {
     case OperEx(TlaBoolOper.exists, name, set, pred) =>
@@ -59,6 +62,7 @@ class SkolemizationMarker @Inject() (tracker: TransformationTracker) extends Tla
       def mapDef(df: TlaOperDecl) = {
         TlaOperDecl(df.name, df.formalParams, transform(df.body))
       }
+
       LetInEx(transform(body), defs map mapDef: _*)
 
     case ex @ OperEx(oper, args @ _*) =>

@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.analyses
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaActionOper, TlaBoolOper, TlaTempOper}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.google.inject.Inject
 
 /**
@@ -70,6 +71,7 @@ class ExprGradeAnalysis @Inject() (val store: ExprGradeStoreImpl) {
 
   /**
    * Replace disjunctions with orParallel when the expression is action-level or higher.
+   *
    * @param expr a TLA+ expression
    * @return an updated expression, all grades are updated if needed.
    */

@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.pp
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 class Cacher(nameGenerator: UniqueNameGenerator, tracker: TransformationTracker) extends TlaModuleTransformation {
 
@@ -47,7 +48,9 @@ class Cacher(nameGenerator: UniqueNameGenerator, tracker: TransformationTracker)
     case ex @ LetInEx(body, defs @ _*) =>
       // LET-IN introduces new operators which may or may not be added
       val extendedOperNames = operNames ++ defs.withFilter(letInDecisionFn).map(_.name)
-      val modifiedDefs = defs map { cacheApplicaitons(extendedOperNames, letInDecisionFn)(_).asInstanceOf[TlaOperDecl] }
+      val modifiedDefs = defs map {
+        cacheApplicaitons(extendedOperNames, letInDecisionFn)(_).asInstanceOf[TlaOperDecl]
+      }
       val extendedAppMap = prepareAppMap(extendedOperNames, appMap)(body)
       val diffMap = extendedAppMap -- appMap.keySet
       val extendedDefs = diffMap.toSeq map { case (k, v) =>

@@ -11,6 +11,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.io.UTFPrinter
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.microsoft.z3._
 import com.microsoft.z3.enumerations.Z3_lbool
 
@@ -39,8 +40,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   Z3SolverContext.RANDOM_SEED_PARAMS.foreach { p =>
     Global.setParameter(p, config.randomSeed.toString)
     logWriter.println(";; %s = %s".format(p, config.randomSeed))
-//    the following fails with an exception: java.lang.NoSuchFieldError: value
-//      logWriter.println(";; %s = %s".format(p, Global.getParameter(p)))
+  //    the following fails with an exception: java.lang.NoSuchFieldError: value
+  //      logWriter.println(";; %s = %s".format(p, Global.getParameter(p)))
   }
 
   var level: Int = 0
@@ -473,17 +474,26 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       case OperEx(BmcOper.distinct, args @ _*) =>
         val (es, ns) = (args map toExpr).unzip
         val distinct = z3context.mkDistinct(es: _*)
-        (distinct, ns.foldLeft(1L) { _ + _ })
+        (distinct,
+            ns.foldLeft(1L) {
+          _ + _
+        })
 
       case OperEx(TlaBoolOper.and, args @ _*) =>
         val (es, ns) = (args map toExpr).unzip
         val and = z3context.mkAnd(es.map(_.asInstanceOf[BoolExpr]): _*)
-        (and, ns.foldLeft(1L) { _ + _ })
+        (and,
+            ns.foldLeft(1L) {
+          _ + _
+        })
 
       case OperEx(TlaBoolOper.or, args @ _*) =>
         val (es, ns) = (args map toExpr).unzip
         val or = z3context.mkOr(es.map(_.asInstanceOf[BoolExpr]): _*)
-        (or, ns.foldLeft(1L) { _ + _ })
+        (or,
+            ns.foldLeft(1L) {
+          _ + _
+        })
 
       case OperEx(TlaBoolOper.implies, lhs, rhs) =>
         val (lhsZ3, ln) = toExpr(lhs)

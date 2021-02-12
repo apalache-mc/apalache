@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.lir.oper
 
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, TypeTag}
 
 /**
  * Function operators.
@@ -40,7 +40,7 @@ object TlaFunOper {
    * @param elems tuple elements
    * @return a new OperEx(tuple, elems: _*)
    */
-  def mkTuple(elems: TlaEx*): OperEx =
+  def mkTuple(elems: TlaEx*)(implicit typeTag: TypeTag): OperEx =
     OperEx(tuple, elems: _*)
 
   /**
@@ -81,18 +81,18 @@ object TlaFunOper {
    * We introduce an operator that have at least 3 arguments, whose meaning is as follows:</p>
    *
    * <ul>
-   *   <li>function body of type TlaEx that may refer to the function via recFunRef,</li>
-   *   <li>NameEx(variableName1),</li>
-   *   <li>variable1 domain of type TlaEx.</li>
-   *   <li>...</li>
-   *   <li>NameEx(variableName_k),</li>
-   *   <li>variable_k domain of type TlaEx.</li>
+   * <li>function body of type TlaEx that may refer to the function via recFunRef,</li>
+   * <li>NameEx(variableName1),</li>
+   * <li>variable1 domain of type TlaEx.</li>
+   * <li>...</li>
+   * <li>NameEx(variableName_k),</li>
+   * <li>variable_k domain of type TlaEx.</li>
    * </ul>
    *
    * <p>Hence, a declaration of a recursive operator looks like a nullary operator declaration,
-   *    whose body contains the constructor of a recursive function. The body of a recursive function may
-   *    refer to the function itself by using the operator recFunRef (see below).
-   *    Note that the output methods should convert this intermediate representation to the standard TLA+ form.</p>
+   * whose body contains the constructor of a recursive function. The body of a recursive function may
+   * refer to the function itself by using the operator recFunRef (see below).
+   * Note that the output methods should convert this intermediate representation to the standard TLA+ form.</p>
    *
    * <p>There is a reason for defining a recursive function with two operators, rather than by introducing
    * a special case of `TlaDecl`. In TLA+, the operator bodies (as well as function bodies) may refer only to
@@ -107,21 +107,21 @@ object TlaFunOper {
    *
    * <p>
    * `TlaOperDecl("Fact", List(),
-   *   OperEx(recFunDef,
-   *     OperEx(TlaControlOper.ifThenElse,
-   *       (* n <= 1 *),
-   *       (* 1 *),
-   *       OperEx(Tla.ArithOper.mult,
-   *         NameEx("n"),
-   *         OperEx(TlaFunOper.app,
-   *           OperEx(recFunRef),
-   *           OperEx(TlaArithOper.minus, NameEx(n), ValEx(TlaInt(1)))
-   *         )
-   *       )
-   *     ),
-   *     NameEx("n"),
-   *     TlaIntSet
-   *   )
+   * OperEx(recFunDef,
+   * OperEx(TlaControlOper.ifThenElse,
+   * (* n <= 1 *),
+   * (* 1 *),
+   * OperEx(Tla.ArithOper.mult,
+   * NameEx("n"),
+   * OperEx(TlaFunOper.app,
+   * OperEx(recFunRef),
+   * OperEx(TlaArithOper.minus, NameEx(n), ValEx(TlaInt(1)))
+   * )
+   * )
+   * ),
+   * NameEx("n"),
+   * TlaIntSet
+   * )
    * )`
    * </p>
    */

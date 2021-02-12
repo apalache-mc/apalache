@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.lir.values._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
+import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
 
 /**
  * Created by jkukovec on 11/30/16.
@@ -23,10 +24,10 @@ class TestIDAllocation extends FunSuite {
 
   /**
    * SndNewValue(d) == /\ sAck      = sBit
-   *                   /\ sent'     = d
-   *                   /\ sBit'     = 1 - sBit
-   *                   /\ msgQ'     = Append( msgQ, << sBit', d >> )
-   *                   /\ UNCHANGED   << ackQ, sAck, rBit, rcvd >>
+   * /\ sent'     = d
+   * /\ sBit'     = 1 - sBit
+   * /\ msgQ'     = Append( msgQ, << sBit', d >> )
+   * /\ UNCHANGED   << ackQ, sAck, rBit, rcvd >>
    */
   val SndNewValue =
     new TlaOperDecl("SndNewValue", List(SimpleFormalParam("d")),
@@ -117,13 +118,13 @@ class TestIDAllocation extends FunSuite {
     new TlaOperDecl(
         "thrm",
         List(),
-//      OperEx(
-//        TlaBoolOper.and,
-//        OperEx(
-//          TlaOper.eq,
-//          NameEx( "E" ),
-//          NameEx( "Esub" )
-//        ),
+        //      OperEx(
+        //        TlaBoolOper.and,
+        //        OperEx(
+        //          TlaOper.eq,
+        //          NameEx( "E" ),
+        //          NameEx( "Esub" )
+        //        ),
         OperEx(
             TlaOper.eq,
             OperEx(

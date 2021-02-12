@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.junit.JUnitRunner
@@ -145,13 +146,13 @@ class TestIncrementalRenaming extends FunSuite with TestingPredefs with BeforeAn
 
     /**
      * LET X(p1,t99(_,_)) == /\ p1 >= 0
-     *                       /\ x' \in {p1}
-     *             Z1(p8) == p8
-     *  IN LET Y6(p3) == \E s3 \in T1 : s3 + p3 = x
-     *      IN /\ \A s5 \in T1 : /\ Z1(s5)
-     *                           /\ Y6(s5)
-     *         /\ y
-     *         /\ X(0,x)
+     * /\ x' \in {p1}
+     * Z1(p8) == p8
+     * IN LET Y6(p3) == \E s3 \in T1 : s3 + p3 = x
+     * IN /\ \A s5 \in T1 : /\ Z1(s5)
+     * /\ Y6(s5)
+     * /\ y
+     * /\ X(0,x)
      */
     val letInEx =
       letIn(

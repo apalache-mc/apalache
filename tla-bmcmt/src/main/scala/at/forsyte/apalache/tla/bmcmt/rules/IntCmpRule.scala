@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * Integer comparisons: <, <=, >, >=. For equality and inequality, check EqRule and NeqRule.

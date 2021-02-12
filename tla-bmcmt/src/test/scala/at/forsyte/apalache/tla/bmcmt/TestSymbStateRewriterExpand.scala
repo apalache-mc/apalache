@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.BmcOper
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -46,6 +47,7 @@ class TestSymbStateRewriterExpand extends RewriterBase {
       val mapEx = tla.ite(tla.eql(NameEx("x"), tla.int(1)), tla.bool(v1), tla.bool(v2))
       tla.funDef(mapEx, tla.name("x"), domain)
     }
+
     val expected = tla.enumSet(mkFun(false, false), mkFun(false, true), mkFun(true, false), mkFun(true, true))
     assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(expected, funSetCell.toNameEx)))
   }

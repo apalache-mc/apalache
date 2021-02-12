@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
-import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaOperDecl}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations._
+import at.forsyte.apalache.tla.lir.{LetInEx, OperEx}
 
 object PruneApalacheAnnotations {
   private def pruneOne(tracker: TransformationTracker): TlaExTransformation =
@@ -25,12 +25,12 @@ object PruneApalacheAnnotations {
         // Transform bodies of all op.defs
         val newDefs = defs map tracker.trackOperDecl { d => d.copy(body = self(d.body)) }
         val newBody = self(body)
-        val retEx = if (defs == newDefs && body == newBody) ex else LetInEx(newBody, newDefs: _*)
+        val retEx = if (defs == newDefs && body == newBody) ex else LetInEx(newBody, newDefs: _*)(ex.typeTag)
         tr(retEx)
 
       case OperEx(op, args @ _*) =>
         val newArgs = args map self
-        val newEx = if (args == newArgs) ex else OperEx(op, newArgs: _*)
+        val newEx = if (args == newArgs) ex else OperEx(op, newArgs: _*)(ex.typeTag)
         tr(newEx)
 
       case _ => tr(ex)

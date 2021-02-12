@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.bmcmt.{CheckerException, VCGenerator}
 import at.forsyte.apalache.tla.lir.NullEx
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging

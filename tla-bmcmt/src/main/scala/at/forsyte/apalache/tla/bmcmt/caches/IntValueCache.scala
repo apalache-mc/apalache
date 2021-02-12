@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir.{OperEx, ValEx}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * A cache for integer constants that maps an integer to an integer constant in SMT.

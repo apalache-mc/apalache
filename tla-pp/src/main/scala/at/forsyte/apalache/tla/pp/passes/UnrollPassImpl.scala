@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.pp.{UniqueNameGenerator, Unroller}
 import com.google.inject.Inject
 import com.google.inject.name.Named
@@ -16,8 +17,8 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * An unrolling pass that
  *
- * @param options pass options
- * @param tracker transformation tracker
+ * @param options  pass options
+ * @param tracker  transformation tracker
  * @param nextPass next pass to call
  */
 class UnrollPassImpl @Inject() (val options: PassOptions, nameGenerator: UniqueNameGenerator,

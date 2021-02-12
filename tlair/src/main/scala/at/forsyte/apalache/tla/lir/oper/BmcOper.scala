@@ -75,4 +75,15 @@ object BmcOper {
     override def arity: OperArity = AnyArity()
     override def precedence: (Int, Int) = (5, 5)
   }
+
+  /**
+   * Attempt to dynamically cast an Int -> T function to a Seq(T).
+   * The first argument should be the function expression and the second argument
+   * should be an integer, denoting the maximal length of the sequence.
+   */
+  object funAsSeq extends BmcOper {
+    override def name: String = "BMC!FunAsSeq"
+    override def arity: OperArity = FixedArity(2)
+    override val precedence: (Int, Int) = (100, 100)
+  }
 }

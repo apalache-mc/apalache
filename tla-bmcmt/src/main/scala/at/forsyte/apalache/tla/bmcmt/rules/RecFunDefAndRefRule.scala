@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.TlaIntSet
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * This rule translates the definition of a recursive function. It is similar to CHOOSE.

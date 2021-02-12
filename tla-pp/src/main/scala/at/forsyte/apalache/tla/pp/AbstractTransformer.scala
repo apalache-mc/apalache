@@ -10,7 +10,8 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
  *
  * @author Igor Konnov
  */
-abstract class AbstractTransformer(tracker: TransformationTracker) extends TlaExTransformation {
+abstract class AbstractTransformer(tracker: TransformationTracker)(implicit typeTag: TypeTag)
+    extends TlaExTransformation {
 
   /**
    * The sequence of partial transformers
@@ -48,6 +49,7 @@ abstract class AbstractTransformer(tracker: TransformationTracker) extends TlaEx
 
   /**
    * Transform an expression without looking into the arguments.
+   *
    * @return a new expression
    */
   private def transformOneLevel: TlaExTransformation = {

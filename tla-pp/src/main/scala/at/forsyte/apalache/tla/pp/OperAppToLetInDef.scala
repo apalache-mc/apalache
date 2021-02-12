@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaOper}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * Replaces instances of user-defined operator applications with a LET-IN wrapper.

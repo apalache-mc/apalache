@@ -6,6 +6,7 @@ import java.util.Calendar
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
+import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
 
 /**
  * A printer for counterexamples, in various formats: TLA+ , as TLC output, ...
@@ -113,7 +114,7 @@ class TlcCounterexampleWriter(writer: PrintWriter) extends TlaCounterexampleWrit
       val prefix = if (i == 1) s"$i: <Initial predicate>" else s"$i: <Next>"
 
       writer.println(s"""@!@!@STARTMSG 2217:4 @!@!@
-             |$prefix""".stripMargin)
+           |$prefix""".stripMargin)
       printStateFormula(new PrettyWriter(writer), state._2)
       writer.println("""|
              |@!@!@ENDMSG 2217 @!@!@""".stripMargin)

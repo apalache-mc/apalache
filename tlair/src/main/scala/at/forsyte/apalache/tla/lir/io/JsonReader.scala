@@ -7,9 +7,11 @@ import at.forsyte.apalache.tla.lir.values._
 import java.lang.NumberFormatException
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.LinkedHashMap
+import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
 
 /**
  * <p>A reader of TlaEx and TlaModule from JSON, for interoperability with external tools.</p>
+ *
  * @author Andrey Kuprianov
  */
 

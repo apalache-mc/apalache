@@ -4,6 +4,7 @@ import at.forsyte.apalache.io.tlc.config._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.typesafe.scalalogging.LazyLogging
 
 /**

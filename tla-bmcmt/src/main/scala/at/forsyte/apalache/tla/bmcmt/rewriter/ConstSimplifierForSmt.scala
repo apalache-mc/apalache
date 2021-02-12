@@ -1,10 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.rewriter
 
 import at.forsyte.apalache.tla.bmcmt.Arena
-import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
+import at.forsyte.apalache.tla.lir.values.TlaBool
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.pp.ConstSimplifierBase
 
 /**

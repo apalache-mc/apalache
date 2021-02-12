@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.lir.values._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
+import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
 
 @RunWith(classOf[JUnitRunner])
 class TestBuilder extends FunSuite with TestingPredefs {

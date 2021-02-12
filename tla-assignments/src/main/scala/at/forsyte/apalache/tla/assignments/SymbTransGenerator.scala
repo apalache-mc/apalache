@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.TlaBool
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * Constructs symbolic transitions from an assignment strategy.
@@ -47,7 +48,7 @@ class SymbTransGenerator(tracker: TransformationTracker) {
      * { B \cap A | B \in Branches( \psi ) }
      * for all expresisons \psi \in Sub(\phi)
      *
-     * @param ex Top-level expression
+     * @param ex       Top-level expression
      * @param letInMap Auxiliary map, storing the already-computed branch-information for nullary LET-IN
      *                 defined operators.
      * @return A mapping of the form [e.ID |-> { B \cap A | B \in Branches( e ) } | e \in Sub(ex)]
@@ -55,6 +56,7 @@ class SymbTransGenerator(tracker: TransformationTracker) {
     def allSelections(ex: TlaEx, letInMap: letInMapType = Map.empty): SelMapType = ex match {
       /** Base case, assignments */
       case e @ OperEx(BmcOper.assign, _, _) => Map(e.ID -> Set(Set(e.ID)))
+
       /**
        * Branches( /\ \phi_i ) = { Br_1 U ... U Br_s | \forall i . Br_i \in Branches(\phi_i) }
        * { S \cap A | S \in Branches( /\ phi_i ) } =
@@ -64,7 +66,11 @@ class SymbTransGenerator(tracker: TransformationTracker) {
        */
       case OperEx(TlaBoolOper.and, args @ _*) =>
         /** Unify all child maps, keysets are disjoint by construction */
-        val unifiedMap = (args map { allSelections(_, letInMap) }).fold(Map.empty[UID, AssignmentSelections]) { _ ++ _ }
+        val unifiedMap = (args map {
+          allSelections(_, letInMap)
+        }).fold(Map.empty[UID, AssignmentSelections]) {
+          _ ++ _
+        }
 
         val childBranchSets = args.flatMap(x => unifiedMap.get(x.ID))
 
@@ -79,7 +85,11 @@ class SymbTransGenerator(tracker: TransformationTracker) {
        * U { S \cap A | S \in Branches(\phi_i)}
        */
       case OperEx(TlaBoolOper.or, args @ _*) =>
-        val unifiedMap = (args map { allSelections(_, letInMap) }).fold(Map.empty[UID, AssignmentSelections]) { _ ++ _ }
+        val unifiedMap = (args map {
+          allSelections(_, letInMap)
+        }).fold(Map.empty[UID, AssignmentSelections]) {
+          _ ++ _
+        }
 
         val childBranchSets = args.flatMap(x => unifiedMap.get(x.ID))
 
@@ -103,7 +113,9 @@ class SymbTransGenerator(tracker: TransformationTracker) {
        * { S \cap A | S \in Branches( \phi_t ) } U { S \cap A | S \in Branches( \phi_e ) }
        */
       case OperEx(TlaControlOper.ifThenElse, _, thenAndElse @ _*) =>
-        val unifiedMap = (thenAndElse map { allSelections(_, letInMap) }).fold(Map.empty[UID, AssignmentSelections]) {
+        val unifiedMap = (thenAndElse map {
+          allSelections(_, letInMap)
+        }).fold(Map.empty[UID, AssignmentSelections]) {
           _ ++ _
         }
 
@@ -157,17 +169,19 @@ class SymbTransGenerator(tracker: TransformationTracker) {
            * <=>
            * \E y \in selection . y \in \bigcup allSelections( x )
            */
-          labelsAt(x, allSelections) exists { selection.contains }
+          labelsAt(x, allSelections) exists {
+            selection.contains
+          }
         }
 
 //        /**
 //          * If no assignments lie below, take the largest subformula.
 //          * It is guaranteed to belong to the union of branches.
 //          * Otherwise, take the one intersecting branch (recurse, since disjunctions aren't always expanded)
-//          */
-//        assert( newArgs.size < 2 )
+        //          */
+        //        assert( newArgs.size < 2 )
 
-//        newArgs.headOption.map( sliceWith( selection, allSelections) ).getOrElse( ex )
+        //        newArgs.headOption.map( sliceWith( selection, allSelections) ).getOrElse( ex )
         newArgs match {
           case Nil         => ex
           case head +: Nil => sliceWith(selection, allSelections)(head)

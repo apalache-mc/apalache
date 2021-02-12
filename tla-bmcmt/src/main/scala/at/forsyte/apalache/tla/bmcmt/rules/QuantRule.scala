@@ -9,6 +9,7 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 import com.typesafe.scalalogging.LazyLogging
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * Rewrites \A x \in S: P and \E x \in S: P. The existential quantifier is often replaced with a constant (skolemized).

@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.bmcmt.util.IntTupleIterator
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 import scala.collection.mutable
 
@@ -20,14 +21,15 @@ import scala.collection.mutable
 class MapBase(rewriter: SymbStateRewriter) {
 
   /**
-   *   <p>Implement a mapping { e: x_1 ∈ S_1, ..., x_n ∈ S_n }.</p>
+   * <p>Implement a mapping { e: x_1 ∈ S_1, ..., x_n ∈ S_n }.</p>
    *
-   *   <p>This implementation computes the cross product and maps every cell using the map expression.
-   *    It is not truly symbolic, we have to find a better way.</p>
+   * <p>This implementation computes the cross product and maps every cell using the map expression.
+   * It is not truly symbolic, we have to find a better way.</p>
    */
   def rewriteSetMapManyArgs(state: SymbState, mapEx: TlaEx, varNames: Seq[String], setEs: Seq[TlaEx]): SymbState = {
     // first, rewrite the variable domains S_1, ..., S_n
     var (nextState, sets) = rewriter.rewriteSeqUntilDone(state, setEs)
+
     def findSetCellAndElemType(setCell: ArenaCell): (ArenaCell, CellT) = {
       setCell.cellType match {
         case FinSetT(elemType) =>

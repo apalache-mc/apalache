@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.KeraLanguagePred
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
@@ -16,7 +17,7 @@ import com.typesafe.scalalogging.LazyLogging
  * to collecting constraints, rather than eagerly and lazily expanding the sets.</p>
  *
  * <p>It is a simple form of type inference on top of our type system.
- *    Can we integrate this class into the type system?</p>
+ * Can we integrate this class into the type system?</p>
  *
  * @author Igor Konnov
  */
