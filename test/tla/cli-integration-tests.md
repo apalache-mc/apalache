@@ -953,20 +953,19 @@ Type checker [OK]
 EXITCODE: OK
 ```
 
-### typecheck QueensTyped.tla fails
+### typecheck QueensTyped.tla succeeds
 
-We are not currently able to typecheck this spec, since we need a way of
-coercing functions on integers into sequences, or a way to recognize the former
-as subtypes of the latter. This failing test is added to document the current limitation
-of the Etc type checkers, and we expect it will be changed into a passing test
-once the desired  functionality and added.
+We use `FunAsSeq` to convert a function to a sequence.
+This test should now pass.
 
 ```sh
 $ apalache-mc typecheck QueensTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeChecker
  > Running Snowcat .::.
- > Your types are great! 
+ > Your types are great!
+...
+Type checker [OK]
 ...
 EXITCODE: OK
 ```
