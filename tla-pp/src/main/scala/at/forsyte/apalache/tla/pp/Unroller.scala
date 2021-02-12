@@ -172,9 +172,6 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
       val unrolledLetIn = unrollLetIn(bodyMap)(body)
       if (body == unrolledLetIn) d
       else TlaOperDecl(name, fparams, unrolledLetIn)
-    case TlaRecFunDecl(name, arg, dom, body) =>
-      // Ignore for now
-      decl
     case _ => decl
   }
 
