@@ -1,15 +1,20 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.tla.lir.{LetInEx, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx, IrGenerators, TlaOperDecl}
+import org.scalacheck.Prop
+import org.scalacheck.Prop.{falsified, forAll, passed}
+import org.scalatest.prop.Checkers
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.scalatest.{BeforeAndAfter, FunSuite}
 
 /**
  * Tests of PrimePropagation.
  */
-class TestPrimePropagation extends FunSuite with BeforeAndAfter {
+class TestPrimePropagation extends FunSuite with BeforeAndAfter with Checkers {
+
   import tla._
 
   private var transformer: PrimePropagation = _
@@ -65,5 +70,35 @@ class TestPrimePropagation extends FunSuite with BeforeAndAfter {
     val expectedDecl = TlaOperDecl("Foo", List.empty, appFun(prime(name("x")), prime(name("y"))))
     val expectedLetIn = LetInEx(appOp("Foo"), expectedDecl)
     assert(expectedLetIn == output)
+  }
+
+  private def onlyNamesArePrimed: TlaEx => Prop = {
+    case OperEx(TlaActionOper.prime, NameEx(_)) =>
+      passed
+
+    case OperEx(TlaActionOper.prime, _*) =>
+      falsified
+
+    case OperEx(_, args @ _*) =>
+      args.map(onlyNamesArePrimed).foldLeft(passed)(_ && _)
+
+    case LetInEx(body, defs @ _*) =>
+      defs.map(d => onlyNamesArePrimed(d.body)).foldLeft(onlyNamesArePrimed(body))(_ && _)
+
+    case _ => passed
+  }
+
+  test("prime applies only to names after the transformation") {
+    val gens = new IrGenerators {
+      override val maxArgs: Int = 10
+    }
+
+    val prop = {
+      forAll(gens.genTlaEx(gens.simpleOperators ++ gens.arithOperators :+ TlaActionOper.prime)(Seq())) { ex =>
+        onlyNamesArePrimed(transformer(ex))
+      }
+    }
+
+    check(prop, minSuccessful(10000), sizeRange(10))
   }
 }
