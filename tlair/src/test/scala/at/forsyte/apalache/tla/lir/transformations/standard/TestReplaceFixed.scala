@@ -14,7 +14,7 @@ import org.scalatest.junit.JUnitRunner
 class TestReplaceFixed extends FunSuite with TestingPredefs {
 
   def mkTr(replacedEx: TlaEx, newEx: => TlaEx): TlaExTransformation =
-    ReplaceFixed(replacedEx, newEx, new IdleTracker())
+    ReplaceFixed(new IdleTracker())(replacedEx, newEx)
 
   test("Basic replacement") {
     val ex = n_x
