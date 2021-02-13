@@ -52,15 +52,15 @@ object CounterexampleWriter {
 }
 
 class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
-
-  def printStateFormula(pretty: PrettyWriter, state: State) = {
+  def printStateFormula(pretty: PrettyWriter, state: State): Unit = {
     if (state.isEmpty) {
       pretty.write(ValEx(TlaBool(true)))
+      pretty.writeln()
     } else {
       state.toList.sortBy(_._1).foreach { case (name, value) =>
-        writer.print(s"/\\ $name = ")
+        pretty.write(s"/\\ $name = ")
         pretty.write(value)
-        writer.println
+        pretty.writeln()
       }
     }
   }
@@ -68,43 +68,53 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
   override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
     val pretty = new PrettyWriter(writer)
 
-    writer.println("%s MODULE counterexample %s\n".format("-" * 25, "-" * 25))
-    writer.println("EXTENDS %s\n".format(rootModule.name))
+    pretty.prettyWriteDoc(pretty.moduleNameDoc("counterexample", 25))
+    pretty.writeln()
+    pretty.prettyWriteDoc(pretty.moduleExtendsDoc(rootModule.name))
+    pretty.writeln()
 
     states.zipWithIndex.foreach {
       case (state, 0) =>
-        writer.println("(* Constant initialization state *)")
-        writer.println(s"\nStateConst ==")
+        pretty.writeln("(* Constant initialization state *)")
+        pretty.writeln(s"\nConstInit ==")
         printStateFormula(pretty, state._2)
-        writer.println()
+        pretty.writeln()
       case (state, j) =>
-        // start counting from 0, for compatibility with TLC counterexamples
+        // Index 0 is reserved for ConstInit, but users expect State0 to
+        // be the initial state, so we shift indices by 1 for print-output
         val i = j - 1
         if (i == 0) {
-          writer.println("(* Initial state *)")
+          pretty.writeln("(* Initial state *)")
         } else {
-          writer.println(s"(* Transition ${state._1} to State$i *)")
+          pretty.writeln(s"(* Transition ${state._1} to State$i *)")
         }
-        writer.println(s"\nState$i ==")
+        pretty.writeln(s"\nState$i ==")
         printStateFormula(pretty, state._2)
-        writer.println()
+        pretty.writeln()
     }
-    writer.print(s"""(* The following formula holds true in the last state and violates the invariant *)
+    pretty.write(s"""(* The following formula holds true in the last state and violates the invariant *)
                     |
                     |""".stripMargin)
     pretty.write(TlaOperDecl("InvariantViolation", List(), notInvariant))
 
-    writer.println("\n\n%s".format("=" * 80))
-    writer.println("\\* Created by Apalache on %s".format(Calendar.getInstance().getTime))
-    writer.println("\\* https://github.com/informalsystems/apalache")
-    writer.close()
+    pretty.writeln()
+    pretty.writeln()
+    pretty.prettyWriteDoc(pretty.moduleTerminalDoc(80))
+    pretty.writeln("\\* Created by Apalache on %s".format(Calendar.getInstance().getTime))
+    pretty.writeln("\\* https://github.com/informalsystems/apalache")
+    pretty.close()
   }
 }
 
 class TlcCounterexampleWriter(writer: PrintWriter) extends TlaCounterexampleWriter(writer) {
-
   override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
-    writer.print(s"""@!@!@STARTMSG 2262:0 @!@!@
+    // `states` must always contain at least 1 state: the constant initialization
+    // This makes `states.tail` safe, since we have a nonempty sequence
+    assert(states.nonEmpty)
+
+    val pretty = new PrettyWriter(writer)
+
+    pretty.write(s"""@!@!@STARTMSG 2262:0 @!@!@
                     |Created by Apalache on ${Calendar.getInstance().getTime}
                     |@!@!@ENDMSG 2262 @!@!@
                     |@!@!@STARTMSG 2110:1 @!@!@
@@ -115,17 +125,16 @@ class TlcCounterexampleWriter(writer: PrintWriter) extends TlaCounterexampleWrit
                     |@!@!@ENDMSG 2121 @!@!@
                     |""".stripMargin)
 
-    states.zipWithIndex.foreach { case (state, j) =>
-      val i = j + 1 // start counting from 1, for compatibility with TLC counterexamples
+    states.zipWithIndex.tail.foreach { case (state, i) =>
       val prefix = if (i == 1) s"$i: <Initial predicate>" else s"$i: <Next>"
 
-      writer.println(s"""@!@!@STARTMSG 2217:4 @!@!@
+      pretty.writeln(s"""@!@!@STARTMSG 2217:4 @!@!@
                         |$prefix""".stripMargin)
-      printStateFormula(new PrettyWriter(writer), state._2)
-      writer.println("""|
+      printStateFormula(pretty, state._2)
+      pretty.writeln("""|
              |@!@!@ENDMSG 2217 @!@!@""".stripMargin)
     }
-    writer.close()
+    pretty.close()
   }
 }
 
@@ -133,11 +142,15 @@ class JsonCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter
   override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
     val json = new JsonWriter(writer)
 
-    val tlaStates = states.zipWithIndex.collect { case ((tran, vars), i) =>
+    val tlaStates = states.zipWithIndex.collect { case ((_, vars), i) =>
       val state = vars.collect { case (name, value) =>
         OperEx(TlaOper.eq, NameEx(name), value)
       }
-      TlaOperDecl(s"State${i + 1}", List(), OperEx(TlaBoolOper.and, state.toList: _*))
+      val name = i match {
+        case 0 => "ConstInit"
+        case _ => s"State${i - 1}"
+      }
+      TlaOperDecl(name, List(), OperEx(TlaBoolOper.and, state.toList: _*))
 
     }
 
