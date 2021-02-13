@@ -13,7 +13,7 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
  * Example: ReplaceFixed( NameEx("x"), NameEx("t_3"), ... ) applied to x + x
  * returns t_3 + t_3, but both instances of t_3 have distinct UIDs.
  *
- * When using a non-equality predicate the order of testing and recursion is as follows:
+ * The order of testing and recursion is as follows:
  * In the case that both a parent and child node (resp. ancestor/descendant) in the internal representation
  * tree satisfy the testing predicate, the replacement will first transform the child node(s), before
  * testing the predicate on the, now modified, alternate parent node.
