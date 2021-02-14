@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaArithOper
 import at.forsyte.apalache.tla.lir.transformations.TlaExTransformation
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.{FormalParam, NameEx, OperEx, TestingPredefs, TlaEx, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner

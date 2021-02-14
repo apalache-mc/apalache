@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.storage.BodyMap
 import at.forsyte.apalache.tla.lir.transformations.standard.InlinerOfUserOper.kStepParameters
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * <p>Attempts to instantiate the body of the operator named `name` with the provided arguments.
@@ -101,7 +102,7 @@ object InlinerOfUserOper {
 
     def >(x: BigInt): Boolean = k > x
   }
-  
+
   def apply(defBodyMap: BodyMap, tracker: TransformationTracker): InlinerOfUserOper = {
     new InlinerOfUserOper(defBodyMap, tracker)
   }

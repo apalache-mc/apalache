@@ -83,7 +83,7 @@ class ParameterNormalizer(
           // The body is just the operator applied to all the parameters
           val newBody = OperEx(
               TlaOper.apply,
-              name +: inventedParams map NameEx: _*
+              name +: inventedParams map { NameEx(_) }: _*
           )
           val letInDef = TlaOperDecl(paramOperName, inventedParams map SimpleFormalParam, newBody)
           LetInEx(replaced, letInDef)
@@ -108,7 +108,7 @@ object ParameterNormalizer {
   // Two standard options for `decisionFn`
   object DecisionFn {
     def all: TlaOperDecl => Boolean = _ => true
-    
+
     def recursive: TlaOperDecl => Boolean = _.isRecursive
   }
 
