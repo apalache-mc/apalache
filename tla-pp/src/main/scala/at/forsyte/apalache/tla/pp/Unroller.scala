@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.aux.{ExceptionOrValue, FailWith, SucceedWith}
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.aux.{ExceptionOrValue, FailWith, SucceedWith}
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
 import at.forsyte.apalache.tla.lir.transformations.standard.{IncrementalRenaming, InlinerOfUserOper}
@@ -47,6 +47,7 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
     extends TlaModuleTransformation {
 
   import Unroller._
+  import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
   // unrollLetIn performs unrolling on all recursive LET-IN defined operators in the expression
   private def unrollLetIn(
@@ -171,9 +172,6 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
       val unrolledLetIn = unrollLetIn(bodyMap)(body)
       if (body == unrolledLetIn) d
       else TlaOperDecl(name, fparams, unrolledLetIn)
-    case TlaRecFunDecl(name, arg, dom, body) =>
-      // Ignore for now
-      decl
     case _ => decl
   }
 

@@ -4,6 +4,7 @@ import at.forsyte.apalache.io.tlc.config.ConfigModelValue.STR_PREFIX
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 import scala.util.parsing.input.NoPosition
 

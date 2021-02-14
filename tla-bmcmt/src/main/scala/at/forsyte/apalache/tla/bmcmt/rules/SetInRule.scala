@@ -7,12 +7,11 @@ import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
-
 /**
-  * Rewrites set membership tests: x \in S, x \in SUBSET S, and x \in [S -> T].
-  *
-  * @author Igor Konnov
-  */
+ * Rewrites set membership tests: x \in S, x \in SUBSET S, and x \in [S -> T].
+ *
+ * @author Igor Konnov
+ */
 class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(state: SymbState): Boolean = {
     state.ex match {
@@ -58,8 +57,10 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
           case FinFunSetT(_, _) =>
             funSetIn(setState, setCell, elemCell)
 
-          case _ => throw new RewriterException("SetInRule is not implemented for type %s (found in %s)"
-            .format(setCell.cellType, state.ex), state.ex)
+          case _ =>
+            throw new RewriterException(
+                "SetInRule is not implemented for type %s (found in %s)"
+                  .format(setCell.cellType, state.ex), state.ex)
         }
 
       case _ =>
@@ -89,7 +90,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     funCell.cellType match {
       case FunT(FinSetT(_), _) => () // OK
-      case _ => flagTypeError()
+      case _                   => flagTypeError()
     }
     funsetCell.cellType match {
       case FinFunSetT(PowSetT(_), _) | FinFunSetT(FinFunSetT(_, _), _) =>
@@ -122,7 +123,8 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     rewriter.rewriteUntilDone(nextState.setRex(pred))
   }
 
-  private def intOrNatSetIn(state: SymbState, setCell: ArenaCell, elemCell: ArenaCell, elemType: types.CellT): SymbState = {
+  private def intOrNatSetIn(state: SymbState, setCell: ArenaCell, elemCell: ArenaCell,
+      elemType: types.CellT): SymbState = {
     if (setCell == state.arena.cellIntSet()) {
       // Do nothing, it is just true. The type checker should have taken care of that.
       state.setRex(state.arena.cellTrue())
@@ -150,21 +152,21 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // BUGFIX 06.05.2020: in rare combinations of \A and \in,
       // the rule below is not sound
       //if (state.arena.isLinkedViaHas(setCell, elemCell)) {
-        // SE-SET-IN2: the element cell is already in the arena, just check dynamic membership
+      // SE-SET-IN2: the element cell is already in the arena, just check dynamic membership
       //  rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.in(elemCell, state.ex)))
       //  nextState.setTheory(CellTheory()).setRex(pred)
       //} else {
-        // SE-SET-IN3: general case, generate equality constraints, if needed, and use them
-        // cache equality constraints first
-        val eqState = rewriter.lazyEq.cacheEqConstraints(nextState, potentialElems.map((_, elemCell)))
+      // SE-SET-IN3: general case, generate equality constraints, if needed, and use them
+      // cache equality constraints first
+      val eqState = rewriter.lazyEq.cacheEqConstraints(nextState, potentialElems.map((_, elemCell)))
 
-        def inAndEq(elem: ArenaCell) = {
-          tla.and(tla.in(elem, setCell), rewriter.lazyEq.safeEq(elem, elemCell)) // use lazy equality
-        }
+      def inAndEq(elem: ArenaCell) = {
+        tla.and(tla.in(elem, setCell), rewriter.lazyEq.safeEq(elem, elemCell)) // use lazy equality
+      }
 
-        val elemsInAndEq = potentialElems.map(inAndEq)
-        rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.or(elemsInAndEq: _*)))
-        eqState.setRex(pred)
+      val elemsInAndEq = potentialElems.map(inAndEq)
+      rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.or(elemsInAndEq: _*)))
+      eqState.setRex(pred)
       //}
     }
   }

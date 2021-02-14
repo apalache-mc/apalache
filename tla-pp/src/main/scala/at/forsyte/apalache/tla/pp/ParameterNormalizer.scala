@@ -4,13 +4,14 @@ import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * Transforms a declaration A(x,y(_,_)) == e
  * into parameter-normal form, i.e.
  * A(x,y(_,_)) == LET x_new == x
- *               y_new(p1, p2) == y(p1,p2)
- *           IN e[ x_new/x, y_new/y ]
+ *                    y_new(p1, p2) == y(p1,p2)
+ *                IN e[ x_new/x, y_new/y ]
  * This allows us to limit the number of substitutions when inlining A.
  * @param decisionFn Normal-form transformation will only be applied to operator declarations (both top-level and LET-IN),
  *                   for which `decisionFn` evaluates to true. Default: returns true for all recursive operators.
@@ -107,6 +108,7 @@ object ParameterNormalizer {
   // Two standard options for `decisionFn`
   object DecisionFn {
     def all: TlaOperDecl => Boolean = _ => true
+    
     def recursive: TlaOperDecl => Boolean = _.isRecursive
   }
 

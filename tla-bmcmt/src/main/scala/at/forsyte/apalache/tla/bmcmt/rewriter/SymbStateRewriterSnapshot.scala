@@ -9,9 +9,8 @@ import at.forsyte.apalache.tla.lir.TlaEx
 import scala.collection.immutable.SortedSet
 
 class SymbStateRewriterSnapshot(val typeFinderSnapshot: TrivialTypeSnapshot,
-                                val intValueCacheSnapshot: AbstractCacheSnapshot[Arena, BigInt, ArenaCell],
-                                val intRangeCacheSnapshot: AbstractCacheSnapshot[Arena, (Int, Int), ArenaCell],
-                                val strValueCacheSnapshot: AbstractCacheSnapshot[Arena, String, ArenaCell],
-                                val recordDomainCache: AbstractCacheSnapshot[Arena, (SortedSet[String], SortedSet[String]), ArenaCell],
-                                val exprCacheSnapshot: SimpleCacheSnapshot[TlaEx, (TlaEx, ExprGrade.Value)]) {
-}
+    val intValueCacheSnapshot: AbstractCacheSnapshot[Arena, BigInt, ArenaCell],
+    val intRangeCacheSnapshot: AbstractCacheSnapshot[Arena, (Int, Int), ArenaCell],
+    val strValueCacheSnapshot: AbstractCacheSnapshot[Arena, String, ArenaCell],
+    val recordDomainCache: AbstractCacheSnapshot[Arena, (SortedSet[String], SortedSet[String]), ArenaCell],
+    val exprCacheSnapshot: SimpleCacheSnapshot[TlaEx, (TlaEx, ExprGrade.Value)]) {}

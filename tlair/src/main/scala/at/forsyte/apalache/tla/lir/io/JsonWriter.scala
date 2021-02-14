@@ -9,12 +9,14 @@ import ujson._
 
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.ArrayBuffer
+
 /**
  * <p>A formatter of TlaEx and TlaModule to JSON, for interoperability with external tools.</p>
+ *
  * @author Andrey Kuprianov
- **/
+ */
 
-class JsonWriter(writer: PrintWriter, indent: Int = 2) {
+class JsonWriter(writer: PrintWriter, indent: Int = 2)(implicit typeTag: TypeTag) {
 
   def write(mod: TlaModule): Unit = {
     writer.write(ujson.write(toJson(mod), indent))
@@ -27,7 +29,6 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
 
   // various forms of JSON encodings of TLA expressions
 
-
   private def id(name: String): ujson.Value = {
     primitive("id", name)
   }
@@ -37,7 +38,7 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
   }
 
   private def integer(value: BigInt): ujson.Value = {
-    if(value.isValidInt)
+    if (value.isValidInt)
       value.toInt
     else
       primitive("int", value.toString)
@@ -114,7 +115,6 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
     Obj(tla -> toJson(action), "vars" -> toJson(vars))
   }
 
-
   private def decompress(value: ujson.Value): ujson.Value = {
     if (value.isInstanceOf[ujson.Str])
       Obj("id" -> value)
@@ -139,7 +139,7 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
   }
 
   private def letIn(declarations: Seq[TlaDecl], body: TlaEx): ujson.Value = {
-    Obj("let" ->  declarations.map(toJson), "body" -> toJson(body))
+    Obj("let" -> declarations.map(toJson), "body" -> toJson(body))
   }
 
   private def module(name: String, declarations: Seq[TlaDecl]): ujson.Value = {
@@ -186,17 +186,17 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
        * we optimize for that case, and encode TLA+ name references as JSON strings,
        * while TLA+ strings as { "str" = "..." } JSON objects.
        */
-      case NameEx(x) => x
-      case ValEx(TlaStr(str)) => primitive("str", str)
+      case NameEx(x)            => x
+      case ValEx(TlaStr(str))   => primitive("str", str)
       case ValEx(TlaInt(value)) => integer(value)
-      case ValEx(TlaBool(b)) => if (b) True else False
-      case ValEx(TlaBoolSet) => primitive("set", "BOOLEAN")
-      case ValEx(TlaIntSet) => primitive("set", "Int")
-      case ValEx(TlaNatSet) => primitive("set", "Nat")
-      case ValEx(TlaRealSet) => primitive("set", "Real")
-      case ValEx(TlaStrSet) => primitive("set", "STRING")
+      case ValEx(TlaBool(b))    => if (b) True else False
+      case ValEx(TlaBoolSet)    => primitive("set", "BOOLEAN")
+      case ValEx(TlaIntSet)     => primitive("set", "Int")
+      case ValEx(TlaNatSet)     => primitive("set", "Nat")
+      case ValEx(TlaRealSet)    => primitive("set", "Real")
+      case ValEx(TlaStrSet)     => primitive("set", "STRING")
 
-      case OperEx(op@_, fun, keysAndValues@_*) if JsonWriter.functionalOps.contains(op)  =>
+      case OperEx(op @ _, fun, keysAndValues @ _*) if JsonWriter.functionalOps.contains(op) =>
         functionalWhere(JsonWriter.functionalOps(op), fun, keysAndValues)
 
       case OperEx(TlaFunOper.recFunRef) =>
@@ -205,32 +205,32 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
       case OperEx(TlaFunOper.app, funEx, argEx) =>
         applyTo(funEx, argEx)
 
-      case OperEx(op@TlaOper.apply, NameEx(name), args@_*) =>
+      case OperEx(op @ TlaOper.apply, NameEx(name), args @ _*) =>
         applyOpTo(name, args)
 
       case OperEx(TlaControlOper.ifThenElse, pred, thenEx, elseEx) =>
         ifThenElse(pred, thenEx, elseEx)
 
-      case OperEx(op@_, name, set, pred) if JsonWriter.boundedPredOps.contains(op)  =>
+      case OperEx(op @ _, name, set, pred) if JsonWriter.boundedPredOps.contains(op) =>
         boundedPred(JsonWriter.boundedPredOps(op), name, set, pred)
 
-      case OperEx(op@_, name, pred) if JsonWriter.unboundedPredOps.contains(op)  =>
+      case OperEx(op @ _, name, pred) if JsonWriter.unboundedPredOps.contains(op) =>
         unboundedPred(JsonWriter.unboundedPredOps(op), name, pred)
 
-      case OperEx(TlaControlOper.caseNoOther, guardsAndUpdates@_*) =>
+      case OperEx(TlaControlOper.caseNoOther, guardsAndUpdates @ _*) =>
         caseSplit(guardsAndUpdates)
 
-      case OperEx(TlaControlOper.caseWithOther, otherEx, guardsAndUpdates@_*) =>
+      case OperEx(TlaControlOper.caseWithOther, otherEx, guardsAndUpdates @ _*) =>
         caseOther(guardsAndUpdates, otherEx)
 
       //  [A]_vars
       //  <A>_vars
-      case OperEx(op@_, action, vars) if JsonWriter.stutterOps.contains(op)  =>
+      case OperEx(op @ _, action, vars) if JsonWriter.stutterOps.contains(op) =>
         actionVars(JsonWriter.stutterOps(op), action, vars)
 
       //  WF_vars(A)
       //  SF_vars(A)
-      case OperEx(op@_, vars, action) if JsonWriter.fairnessOps.contains(op)  =>
+      case OperEx(op @ _, vars, action) if JsonWriter.fairnessOps.contains(op) =>
         actionVars(JsonWriter.fairnessOps(op), action, vars)
 
       // a labeled expression L3(a, b) :: 42
@@ -238,15 +238,12 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
       case expr @ OperEx(oper @ TlaOper.label, decoratedEx, ValEx(TlaStr(name)), args @ _*) =>
         val argNames = args map {
           case ValEx(TlaStr(str)) => NameEx(str) // for a more natural encoding, we change strings to names
-          case _ => throw new MalformedTlaError("Malformed expression", expr)
+          case _                  => throw new MalformedTlaError("Malformed expression", expr)
         }
         labeled(name, decoratedEx, argNames)
 
-      case LetInEx(body, decls@_*) =>
+      case LetInEx(body, decls @ _*) =>
         letIn(decls, body)
-
-
-
 
       /**
        * General handling of unary, binary, and nary operators
@@ -256,16 +253,16 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2) {
        * Nary: op [x,y,z] => { "op": ["x", "y"," z"] }
        */
 
-      case OperEx(op@_, arg) if JsonWriter.unaryOps.contains(op) =>
+      case OperEx(op @ _, arg) if JsonWriter.unaryOps.contains(op) =>
         unary(JsonWriter.unaryOps(op), arg)
 
-      case OperEx(op@_, arg1, arg2) if JsonWriter.binaryOps.contains(op) =>
+      case OperEx(op @ _, arg1, arg2) if JsonWriter.binaryOps.contains(op) =>
         binary(JsonWriter.binaryOps(op), arg1, arg2)
 
-      case OperEx(op@_, args@_*) if JsonWriter.naryOps.contains(op)  =>
+      case OperEx(op @ _, args @ _*) if JsonWriter.naryOps.contains(op) =>
         nary(JsonWriter.naryOps(op), args)
 
-      case OperEx(op@_, args@_*) if JsonWriter.naryPairOps.contains(op)  =>
+      case OperEx(op @ _, args @ _*) if JsonWriter.naryPairOps.contains(op) =>
         naryPair(JsonWriter.naryPairOps(op), args)
 
       case _ => True
@@ -278,10 +275,10 @@ object JsonWriter {
   /**
    * Write a module to a file (without appending).
    *
-   * @param module a TLA module
+   * @param module     a TLA module
    * @param outputFile an output file that will be created or overwritten
    */
-  def write(module: TlaModule, outputFile: File): Unit = {
+  def write(module: TlaModule, outputFile: File)(implicit typeTag: TypeTag): Unit = {
     val writer = new PrintWriter(new FileWriter(outputFile, false))
     try {
       new JsonWriter(writer).write(module)
@@ -291,98 +288,98 @@ object JsonWriter {
   }
 
   val unaryOps = HashMap(
-    TlaActionOper.prime -> "prime",
-    TlaBoolOper.not -> "not",
-    TlaArithOper.uminus -> "uminus",
-    TlaSetOper.union -> "union",
-    TlaSetOper.powerset -> "powerset",
-    TlaActionOper.enabled -> "enabled",
-    TlaActionOper.unchanged -> "unchanged",
-    TlaFunOper.domain -> "domain",
-    TlaTempOper.box -> "box",
-    TlaTempOper.diamond -> "diamond"
+      TlaActionOper.prime -> "prime",
+      TlaBoolOper.not -> "not",
+      TlaArithOper.uminus -> "uminus",
+      TlaSetOper.union -> "union",
+      TlaSetOper.powerset -> "powerset",
+      TlaActionOper.enabled -> "enabled",
+      TlaActionOper.unchanged -> "unchanged",
+      TlaFunOper.domain -> "domain",
+      TlaTempOper.box -> "box",
+      TlaTempOper.diamond -> "diamond"
   )
 
   val binaryOps: Map[TlaOper, String] = HashMap(
-    TlaOper.eq -> "eq",
-    TlaOper.ne -> "ne",
-    TlaBoolOper.implies -> "implies",
-    TlaBoolOper.equiv -> "equiv",
-    TlaArithOper.plus -> "plus",
-    TlaArithOper.minus -> "minus",
-    TlaArithOper.mult -> "mult",
-    TlaArithOper.div -> "div",
-    TlaArithOper.mod -> "mod",
-    TlaArithOper.realDiv -> "realDiv",
-    TlaArithOper.exp -> "exp",
-    TlaArithOper.dotdot -> "dotdot",
-    TlaArithOper.lt -> "lt",
-    TlaArithOper.gt -> "gt",
-    TlaArithOper.le -> "le",
-    TlaArithOper.ge -> "ge",
-    TlaSetOper.in -> "in",
-    TlaSetOper.notin -> "notin",
-    TlaSetOper.cap -> "cap",
-    TlaSetOper.cup -> "cup",
-    TlaSetOper.setminus -> "setminus",
-    TlaSetOper.subseteq -> "subseteq",
-    TlaSetOper.subsetProper -> "subset",
-    TlaSetOper.supseteq -> "supseteq",
-    TlaSetOper.supsetProper -> "supset",
-    TlaActionOper.composition -> "composition",
-    TlaTempOper.leadsTo -> "leadsTo",
-    TlaTempOper.guarantees -> "guarantees",
-    TlaSeqOper.concat -> "concat",
-    TlcOper.colonGreater -> "colonGreater",
-    BmcOper.assign -> "assign",
-    BmcOper.withType -> "lessColon",
-    TlaSetOper.funSet -> "funSet"
+      TlaOper.eq -> "eq",
+      TlaOper.ne -> "ne",
+      TlaBoolOper.implies -> "implies",
+      TlaBoolOper.equiv -> "equiv",
+      TlaArithOper.plus -> "plus",
+      TlaArithOper.minus -> "minus",
+      TlaArithOper.mult -> "mult",
+      TlaArithOper.div -> "div",
+      TlaArithOper.mod -> "mod",
+      TlaArithOper.realDiv -> "realDiv",
+      TlaArithOper.exp -> "exp",
+      TlaArithOper.dotdot -> "dotdot",
+      TlaArithOper.lt -> "lt",
+      TlaArithOper.gt -> "gt",
+      TlaArithOper.le -> "le",
+      TlaArithOper.ge -> "ge",
+      TlaSetOper.in -> "in",
+      TlaSetOper.notin -> "notin",
+      TlaSetOper.cap -> "cap",
+      TlaSetOper.cup -> "cup",
+      TlaSetOper.setminus -> "setminus",
+      TlaSetOper.subseteq -> "subseteq",
+      TlaSetOper.subsetProper -> "subset",
+      TlaSetOper.supseteq -> "supseteq",
+      TlaSetOper.supsetProper -> "supset",
+      TlaActionOper.composition -> "composition",
+      TlaTempOper.leadsTo -> "leadsTo",
+      TlaTempOper.guarantees -> "guarantees",
+      TlaSeqOper.concat -> "concat",
+      TlcOper.colonGreater -> "colonGreater",
+      BmcOper.assign -> "assign",
+      BmcOper.withType -> "lessColon",
+      TlaSetOper.funSet -> "funSet"
   )
 
   val naryOps: Map[TlaOper, String] = HashMap(
-    TlcOper.atat -> "atat",
-    TlaFunOper.tuple -> "tuple",
-    TlaSetOper.enumSet -> "enumSet",
-    TlaSetOper.times -> "times",
-    TlaBoolOper.and -> "and",
-    TlaBoolOper.or -> "or"
+      TlcOper.atat -> "atat",
+      TlaFunOper.tuple -> "tuple",
+      TlaSetOper.enumSet -> "enumSet",
+      TlaSetOper.times -> "times",
+      TlaBoolOper.and -> "and",
+      TlaBoolOper.or -> "or"
   )
 
   val naryPairOps: Map[TlaOper, String] = HashMap(
-    TlaFunOper.enum -> "record",
-    TlaSetOper.recSet -> "recSet"
+      TlaFunOper.enum -> "record",
+      TlaSetOper.recSet -> "recSet"
   )
 
   val boundedPredOps: Map[TlaOper, String] = HashMap(
-    TlaSetOper.filter -> "filter",
-    TlaBoolOper.exists -> "existsBounded",
-    TlaBoolOper.forall -> "forallBounded",
-    TlaOper.chooseBounded -> "chooseBounded"
+      TlaSetOper.filter -> "filter",
+      TlaBoolOper.exists -> "existsBounded",
+      TlaBoolOper.forall -> "forallBounded",
+      TlaOper.chooseBounded -> "chooseBounded"
   )
 
   val unboundedPredOps: Map[TlaOper, String] = HashMap(
-    TlaBoolOper.existsUnbounded -> "exists",
-    TlaBoolOper.forallUnbounded -> "forall",
-    TlaOper.chooseUnbounded -> "choose",
-    TlaTempOper.EE -> "EE",
-    TlaTempOper.AA -> "AA"
+      TlaBoolOper.existsUnbounded -> "exists",
+      TlaBoolOper.forallUnbounded -> "forall",
+      TlaOper.chooseUnbounded -> "choose",
+      TlaTempOper.EE -> "EE",
+      TlaTempOper.AA -> "AA"
   )
 
   val functionalOps: Map[TlaOper, String] = HashMap(
-    TlaFunOper.funDef -> "funDef",
-    TlaFunOper.recFunDef -> "recFunDef",
-    TlaFunOper.except -> "except",
-    TlaSetOper.map -> "map"
+      TlaFunOper.funDef -> "funDef",
+      TlaFunOper.recFunDef -> "recFunDef",
+      TlaFunOper.except -> "except",
+      TlaSetOper.map -> "map"
   )
 
   val stutterOps: Map[TlaOper, String] = HashMap(
-    TlaActionOper.stutter -> "stutter",
-    TlaActionOper.nostutter -> "nostutter"
+      TlaActionOper.stutter -> "stutter",
+      TlaActionOper.nostutter -> "nostutter"
   )
 
   val fairnessOps: Map[TlaOper, String] = HashMap(
-    TlaTempOper.weakFairness -> "weakFairness",
-    TlaTempOper.strongFairness -> "strongFairness"
+      TlaTempOper.weakFairness -> "weakFairness",
+      TlaTempOper.strongFairness -> "strongFairness"
   )
 
 }

@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.imp.src.{SaveToStoreTracker, SourceLocation, Sour
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.io.annotations.store._
 import tla2sany.semantic.{OpApplNode, OpDefNode}
 

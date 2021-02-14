@@ -7,10 +7,10 @@ import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 
 /**
-  * Implement equality test by delegating the actual test to LazyEquality.
-  *
-  * @author Igor Konnov
-  */
+ * Implement equality test by delegating the actual test to LazyEquality.
+ *
+ * @author Igor Konnov
+ */
 class EqRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {

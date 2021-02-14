@@ -13,13 +13,13 @@ import com.typesafe.scalalogging.LazyLogging
 import javax.inject.{Inject, Singleton}
 
 /**
-  * The adapter for all exceptions that can be produced when running the model checker.
-  *
-  * @author Igor Konnv
-  */
+ * The adapter for all exceptions that can be produced when running the model checker.
+ *
+ * @author Igor Konnv
+ */
 @Singleton
-class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
-                                        changeListener: ChangeListener) extends ExceptionAdapter with LazyLogging {
+class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListener: ChangeListener)
+    extends ExceptionAdapter with LazyLogging {
   private lazy val ISSUES_LINK: String = "[https://github.com/informalsystems/apalache/issues]"
 
   override def toMessage: PartialFunction[Exception, ErrorMessage] = {
@@ -44,8 +44,8 @@ class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
 
     case err: LanguagePredError =>
       // a language predicate failed
-      err.failedIds.foreach {
-        idAndMsg => logger.error("%s: unexpected expression: %s".format(findLoc(idAndMsg._1), idAndMsg._2))
+      err.failedIds.foreach { idAndMsg =>
+        logger.error("%s: unexpected expression: %s".format(findLoc(idAndMsg._1), idAndMsg._2))
       }
       NormalErrorMessage("Unexpected expressions in the specification (see the error messages)")
 
@@ -90,7 +90,9 @@ class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
       FailureMessage(msg)
 
     case err: CoverData.CoverException =>
-      val msg = "Unable to find assignments for all state variables: \n%s\n [see https://apalache.informal.systems/docs/apalache/principles.html#assignments]".format(err.getMessage)
+      val msg =
+        "Unable to find assignments for all state variables: \n%s\n [see https://apalache.informal.systems/docs/apalache/principles.html#assignments]"
+          .format(err.getMessage)
       NormalErrorMessage(msg)
   }
 
@@ -99,7 +101,7 @@ class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
 
     sourceLocator.sourceOf(id) match {
       case Some(loc) => loc.toString
-      case None => "<unknown>"
+      case None      => "<unknown>"
     }
   }
 
@@ -107,7 +109,7 @@ class CheckerExceptionAdapter @Inject()(sourceStore: SourceStore,
     val locInfo = findLoc(e.origin.ID)
     val exStr = e.origin match {
       case OperEx(op, _*) => op.name
-      case ex@_ => ex.toString()
+      case ex @ _         => ex.toString()
     }
     "%s, %s, type error: %s".format(locInfo, exStr, e.explanation)
   }

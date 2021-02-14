@@ -5,10 +5,10 @@ import at.forsyte.apalache.tla.lir.{FormalParam, OperFormalParam, SimpleFormalPa
 import tla2sany.semantic.FormalParamNode
 
 /**
-  * A translator of FormalParamNode.
-  *
-  * @author konnov
-  */
+ * A translator of FormalParamNode.
+ *
+ * @author konnov
+ */
 class FormalParamTranslator {
   def translate(param: FormalParamNode): FormalParam = {
     if (param.getArity == 0) {
@@ -21,7 +21,6 @@ class FormalParamTranslator {
 
 object FormalParamTranslator {
   private val singleton: FormalParamTranslator = new FormalParamTranslator()
-
 
   def apply(): FormalParamTranslator = {
     // as our objects do not have state, we can always return a singleton here

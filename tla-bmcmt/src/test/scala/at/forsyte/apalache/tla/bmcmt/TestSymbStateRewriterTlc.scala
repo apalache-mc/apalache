@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FailPredT}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlcOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -15,7 +16,7 @@ class TestSymbStateRewriterTlc extends RewriterBase {
     val rewriter = create()
     val nextStateRed = rewriter.rewriteUntilDone(state)
     nextStateRed.ex match {
-      case predEx@NameEx(name) =>
+      case predEx @ NameEx(name) =>
         solverContext.assertGroundExpr(nextStateRed.ex)
         assert(solverContext.sat())
         val failPreds = state.arena.findCellsByType(FailPredT())
@@ -33,7 +34,7 @@ class TestSymbStateRewriterTlc extends RewriterBase {
     val rewriter = create()
     val nextStateRed = rewriter.rewriteUntilDone(state)
     nextStateRed.ex match {
-      case predEx@NameEx(name) =>
+      case predEx @ NameEx(name) =>
         solverContext.assertGroundExpr(nextStateRed.ex)
         assert(solverContext.sat())
         val failPreds = state.arena.findCellsByType(FailPredT())
@@ -51,7 +52,7 @@ class TestSymbStateRewriterTlc extends RewriterBase {
     val rewriter = create()
     val nextStateRed = rewriter.rewriteUntilDone(state)
     nextStateRed.ex match {
-      case predEx@NameEx(name) =>
+      case predEx @ NameEx(name) =>
         solverContext.assertGroundExpr(nextStateRed.ex)
         assert(solverContext.sat())
         val failPreds = nextStateRed.arena.findCellsByType(FailPredT())
@@ -69,7 +70,7 @@ class TestSymbStateRewriterTlc extends RewriterBase {
     val rewriter = create()
     val nextStateRed = rewriter.rewriteUntilDone(state)
     nextStateRed.ex match {
-      case predEx@NameEx(name) =>
+      case predEx @ NameEx(name) =>
         solverContext.assertGroundExpr(nextStateRed.ex)
         assert(solverContext.sat())
         val failPreds = nextStateRed.arena.findCellsByType(FailPredT())
@@ -87,14 +88,12 @@ class TestSymbStateRewriterTlc extends RewriterBase {
 
   // the failure predicates should be refactored
   ignore("SE-TLC-ASSERT: IF FALSE THEN Assert(FALSE, _) ELSE TRUE -> TRUE") {
-    val assertEx = tla.ite(tla.bool(false),
-      OperEx(TlcOper.assert, tla.bool(false), tla.str("oops")),
-      tla.bool(true))
+    val assertEx = tla.ite(tla.bool(false), OperEx(TlcOper.assert, tla.bool(false), tla.str("oops")), tla.bool(true))
     val state = new SymbState(assertEx, arena, Binding())
     val rewriter = create()
     val nextStateRed = rewriter.rewriteUntilDone(state)
     nextStateRed.ex match {
-      case predEx@NameEx(name) =>
+      case predEx @ NameEx(name) =>
         solverContext.assertGroundExpr(nextStateRed.ex)
         assert(solverContext.sat())
         val failPreds = nextStateRed.arena.findCellsByType(FailPredT())
@@ -113,13 +112,12 @@ class TestSymbStateRewriterTlc extends RewriterBase {
     // see Specifying Systems, Sec. 14.2.2, p. 231.
     arena = arena.appendCell(BoolT())
     val x = arena.topCell // we use a variable to avoid constant optimizations
-    val assertEx = tla.or(x.toNameEx,
-      OperEx(TlcOper.assert, tla.bool(false), tla.str("oops")))
+    val assertEx = tla.or(x.toNameEx, OperEx(TlcOper.assert, tla.bool(false), tla.str("oops")))
     val rewriter = create()
     val state = new SymbState(assertEx, arena, Binding())
     val nextStateRed = rewriter.rewriteUntilDone(state)
     nextStateRed.ex match {
-      case predEx@NameEx(name) =>
+      case predEx @ NameEx(name) =>
         solverContext.assertGroundExpr(nextStateRed.ex)
         val failPreds = nextStateRed.arena.findCellsByType(FailPredT())
         assert(failPreds.length == 1)

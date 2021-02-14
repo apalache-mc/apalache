@@ -8,20 +8,20 @@ import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaArithOper, TlaFiniteSetOper}
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir.{OperEx, ValEx}
-
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
-  * Optimization for Cardinality(S) >= k, where k is constant. See [docs/smt/Cardinality.md].
-  *
-  * @author Igor Konnov
-  */
+ * Optimization for Cardinality(S) >= k, where k is constant. See [docs/smt/Cardinality.md].
+ *
+ * @author Igor Konnov
+ */
 class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val pickRule = new CherryPick(rewriter)
 
   override def isApplicable(state: SymbState): Boolean = {
     state.ex match {
-      case OperEx(BmcOper.constCard,
-      OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, _), ValEx(TlaInt(_)))) =>
+      case OperEx(BmcOper.constCard, OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, _), ValEx(
+                      TlaInt(_)))) =>
         true
 
       case _ =>
@@ -31,8 +31,8 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case OperEx(BmcOper.constCard,
-      OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, setEx), ValEx(TlaInt(thresholdBigInt)))) =>
+      case OperEx(BmcOper.constCard, OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, setEx), ValEx(
+                      TlaInt(thresholdBigInt)))) =>
         val threshold = thresholdBigInt.toInt
         var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
         val setCell = nextState.asCell
@@ -56,7 +56,7 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
     var nextState = state
     nextState = nextState.updateArena(_.appendCell(BoolT()))
     val emptyPred = nextState.arena.topCell
-    solverAssert(tla.eql(emptyPred, tla.and(elems.map(e => tla.not(tla.in(e.toNameEx, set.toNameEx))) :_*)))
+    solverAssert(tla.eql(emptyPred, tla.and(elems.map(e => tla.not(tla.in(e.toNameEx, set.toNameEx))): _*)))
 
     // pick `threshold` cells that will act as witnesses
     def pick(i: Int): ArenaCell = {
@@ -72,7 +72,7 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // create the inequality predicate
     val witnesses = 1.to(threshold).map(pick).toList
     (witnesses cross witnesses).filter(p => p._1.id < p._2.id).foreach(cacheEq)
-    val witnessesNotEq = OperEx(BmcOper.distinct, witnesses.map(_.toNameEx) :_*)
+    val witnessesNotEq = OperEx(BmcOper.distinct, witnesses.map(_.toNameEx): _*)
     nextState = nextState.updateArena(_.appendCell(BoolT()))
     val pred = nextState.arena.topCell
     // either the set is empty and threshold <= 0, or all witnesses are not equal to each other
