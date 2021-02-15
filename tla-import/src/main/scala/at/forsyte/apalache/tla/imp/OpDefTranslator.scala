@@ -43,10 +43,9 @@ class OpDefTranslator(
               SourceLocation(node.getBody.getLocation)
           )
           // the body still can refer to the function by its name, replace it with recFunRef
-          val replaced = ReplaceFixed(
+          val replaced = ReplaceFixed(new SaveToStoreTracker(sourceStore))(
               NameEx(nodeName),
-              recFunRef,
-              new SaveToStoreTracker(sourceStore)
+              recFunRef
           )(body)
           // store the source location
           sourceStore.addRec(replaced, SourceLocation(node.getBody.getLocation))
