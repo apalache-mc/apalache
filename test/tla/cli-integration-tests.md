@@ -116,6 +116,15 @@ EXITCODE: OK
 ...
 ```
 
+### parse Select575 succeeds
+
+```sh
+$ apalache-mc parse Select575.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+...
+```
+
 ### parse Rec12 succeeds
 
 ```sh
