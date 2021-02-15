@@ -3,6 +3,8 @@ package at.forsyte.apalache.tla.imp
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.{TlaDecl, TlaModule, TlaValue}
 
+import scala.annotation.tailrec
+
 /**
  * A unit that a context can hold, e.g., a TLA+ declaration.
  */
@@ -58,8 +60,20 @@ case class NoneUnit() extends ContextUnit {
  * @author konnov
  */
 trait Context {
+
+  /**
+   * Append a declaration unit in the context.
+   *
+   * @param unit a declaration unit
+   * @return a new context that contains the declarations of this context and the new unit
+   */
   def push(unit: ContextUnit): Context
 
+  /**
+   * Get all declarations in the context, in the same order as they were added to the context.
+   *
+   * @return a list of declaration units
+   */
   def declarations: List[ContextUnit]
 
   /**
@@ -81,6 +95,7 @@ trait Context {
 
   /**
    * Get the lookup prefix that represents the instantiation path from the root module down to the instances
+   *
    * @return the sequence of instance names
    */
   val lookupPrefix: List[String]
@@ -92,6 +107,24 @@ trait Context {
    * @param other the other context
    */
   def disjointUnion(other: Context): Context
+
+  /**
+   * Sometimes, the importer has to add a prefix to a declaration name, to guarantee the name uniqueness.
+   * For instance, when we translate a LOCAL operator as a LET-IN expression, we may introduce a name collision.
+   * Node translators may add the lookup prefix, when this flag is set to true.
+   *
+   * @param flag whether to add the lookup prefix to names.
+   * @return a new context that has the flag set to the value.
+   */
+  def setUseQualifiedNames(flag: Boolean): Context
+
+  /**
+   * Depending on the value of `useQualifiedNames`, produce either a fully qualified name, or keep the short name.
+   *
+   * @param name a non-qualified name
+   * @return either a qualified name or the passed name, depending on the value of `useQualifiedNames`
+   */
+  def mkQualifiedNameIfAsked(name: String): String
 }
 
 object Context {
@@ -100,7 +133,7 @@ object Context {
    * Create a new context, i.e., use Context().
    */
   def apply(): Context = {
-    new ContextImpl(List(), List(), Map())
+    new ContextImpl(List(), false, List(), Map())
   }
 
   def apply(mod: TlaModule): Context = {
@@ -120,8 +153,8 @@ object Context {
   }
 
   // the actual implementation that otherwise would have disclosed the implementation details via its constructor.
-  private class ContextImpl(val lookupPrefix: List[String], val revList: List[ContextUnit],
-      val unitMap: Map[String, ContextUnit])
+  private class ContextImpl(val lookupPrefix: List[String], val useQualifiedNames: Boolean,
+      val revList: List[ContextUnit], val unitMap: Map[String, ContextUnit])
       extends Context {
     // fwdList lazily stores values in the (expected) forward order, whereas revList stores the values
     // in the reverse order, which is optimized for push.
@@ -135,17 +168,11 @@ object Context {
       }
 
       val newList = decl :: revList
-      new ContextImpl(lookupPrefix, newList, unitMap + (decl.name -> decl))
+      new ContextImpl(lookupPrefix, useQualifiedNames, newList, unitMap + (decl.name -> decl))
     }
 
-    /**
-     * Find a declaration that is associated with the name. If the context is given a lookup prefix "A!B!C", then
-     * lookup("x") will try "A!B!C!x", "B!C!x", "C!x", "x", in that order.
-     *
-     * @param name a name that may be prefixed with instance names, e.g., A!B!x
-     * @return the declaration, if found
-     */
     override def lookup(name: String): ContextUnit = {
+      @tailrec
       def findRec(qname: String): ContextUnit = {
         unitMap.get(qname) match {
           case Some(u) => u
@@ -164,15 +191,8 @@ object Context {
       findRec(fullname)
     }
 
-    /**
-     * Return a copy of the context that is tuned to the lookup prefix, e.g., ["A", "B", "C"]. This lookup prefix is
-     * used for resolving declaration names, see lookup.
-     *
-     * @param prefix a sequence of instance names.
-     * @return a copy of the context
-     */
     override def setLookupPrefix(prefix: List[String]): Context = {
-      val copy = new ContextImpl(prefix, revList, unitMap)
+      val copy = new ContextImpl(prefix, useQualifiedNames, revList, unitMap)
       copy
     }
 
@@ -188,23 +208,26 @@ object Context {
       }
     }
 
-    /**
-     * Add all definitions from the other context. We assume that the keys in the both contexts do not intersect.
-     * If the keys intersect, an implementation is free to throw an IllegalStateException any time later
-     * (not necessarily in this method)...
-     *
-     * The lookup prefix is copied from the left-hand side.
-     *
-     * @param other the other context
-     */
     override def disjointUnion(other: Context): Context = {
       other match {
         case that: ContextImpl =>
-          new ContextImpl(lookupPrefix, revList ++ that.revList, unitMap ++ that.unitMap)
+          new ContextImpl(lookupPrefix, useQualifiedNames, revList ++ that.revList, unitMap ++ that.unitMap)
 
         case _ =>
           // we could have implemented it, but there is only one implementation of Context.
           throw new RuntimeException("Merging two different implementations of Context...")
+      }
+    }
+
+    override def setUseQualifiedNames(flag: Boolean): Context = {
+      new ContextImpl(lookupPrefix, flag, revList, unitMap)
+    }
+
+    override def mkQualifiedNameIfAsked(name: String): String = {
+      if (useQualifiedNames) {
+        (lookupPrefix :+ name).mkString("!")
+      } else {
+        name
       }
     }
   }

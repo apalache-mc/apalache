@@ -134,9 +134,16 @@ class OpApplTranslator(
     // Since we do not know the original location of the local operator,
     // we can only re-define it with a LET-IN expression
     // translate the declaration of the LOCAL operator
-    val decl =
-      OpDefTranslator(sourceStore, annotationStore, context).translate(opdef)
-    // translate its arguments
+
+    // BUG #576: the name of the local copy may clash with another name that is defined in the context.
+    // Solution: add a unique identifier to the declaration name.
+    val namePrefix = s"LOCAL${UID.unique}"
+    val localContext = context
+      .setLookupPrefix(namePrefix +: context.lookupPrefix)
+      .setUseQualifiedNames(true)
+    val decl = OpDefTranslator(sourceStore, annotationStore, localContext).translate(opdef)
+
+    // translate operator arguments
     val exTran = ExprOrOpArgNodeTranslator(
         sourceStore,
         annotationStore,
@@ -207,7 +214,6 @@ class OpApplTranslator(
           val args = node.getArgs.toList.map { p =>
             exTran.translate(p)
           }
-          val recParam = OperFormalParam(opcode, args.length)
           OperEx(TlaOper.apply, NameEx(opcode) +: args: _*)
 
         case _ =>

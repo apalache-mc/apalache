@@ -21,4 +21,5 @@
 
 ### Bug fixes
 
+* Fixed name collisions on LOCAL operators and LOCAL INSTANCE, see #576
 * Parser: a higher-order operator calling a higher-order operator, see #575

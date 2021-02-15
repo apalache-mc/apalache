@@ -427,6 +427,27 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     }
   }
 
+  test("LOCAL operator introducing name clashes") {
+    val text =
+      """---- MODULE localop ----
+        |LOCAL Foo(X) ==
+        |  LET A == X IN
+        |  A
+        | 
+        |User(X) ==
+        |  LET A == 1 IN  
+        |  Foo(X)
+        |================================
+      """.stripMargin
+
+    val (rootName, modules) = sanyImporter
+      .loadFromSource("localop", Source.fromString(text))
+    val mod = expectSingleModule("localop", rootName, modules)
+    assert(2 == mod.declarations.size)
+    expectSourceInfoInDefs(mod)
+    // no exceptions, all good
+  }
+
   test("empty set") {
     val text =
       """---- MODULE emptyset ----
@@ -1975,8 +1996,23 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     val bOfM = root.declarations.head
     // as "a" is LOCAL, it does not appear in the declarations, but it becomes a LET-IN definition inside b
     assert("I!b" == bOfM.name)
-    val expected = letIn(appOp("a"), TlaOperDecl("a", List(), enumSet()))
-    assert(expected == bOfM.asInstanceOf[TlaOperDecl].body)
+    // BUGFIX #576: use a unique lookup prefix to guarantee name uniqueness
+    bOfM match {
+      case TlaOperDecl(name, List(), LetInEx(OperEx(TlaOper.apply, NameEx(appliedName)), localDef)) =>
+        assert("I!b" == name)
+        assert(appliedName.startsWith("LOCAL"))
+        assert(appliedName.endsWith("!I!a"))
+        localDef match {
+          case TlaOperDecl(localName, List(), body) =>
+            assert(appliedName == localName)
+            assert(OperEx(TlaSetOper.enumSet) == body)
+
+          case _ =>
+            fail("Expected an operator definition " + appliedName)
+        }
+
+      case _ => fail("Unexpected operator structure")
+    }
   }
 
   // regression for #112

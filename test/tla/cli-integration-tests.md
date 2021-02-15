@@ -98,6 +98,24 @@ EXITCODE: OK
 
 This command parses a TLA+ specification with the SANY parser.
 
+### parse LocalDefClash576 succeeds
+
+```sh
+$ apalache-mc parse LocalDefClash576.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+...
+```
+
+### parse LocalInstanceClash576 succeeds
+
+```sh
+$ apalache-mc parse LocalInstanceClash576.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+...
+```
+
 ### parse Select575 succeeds
 
 ```sh
