@@ -22,6 +22,7 @@ class OpDefTranslator(
   def translate(node: OpDefNode): TlaOperDecl = {
     val params = node.getParams.toList map FormalParamTranslator().translate
     val nodeName = node.getName.toString.intern()
+    val qualifiedOperatorName = context.mkQualifiedNameIfAsked(nodeName)
     val isRecursive = node.getInRecursive
 
     if (!isRecursive) {
@@ -50,7 +51,7 @@ class OpDefTranslator(
           // store the source location
           sourceStore.addRec(replaced, SourceLocation(node.getBody.getLocation))
           // return the operator whose body is a recursive function
-          val operDecl = TlaOperDecl(nodeName, List(), replaced)
+          val operDecl = TlaOperDecl(qualifiedOperatorName, List(), replaced)
           operDecl.isRecursive = false
           sourceStore.add(operDecl.ID, SourceLocation(node.getLocation))
           annotationExtractor.parseAndSave(operDecl.ID, node)
@@ -59,7 +60,7 @@ class OpDefTranslator(
         case _ =>
           // non-recursive declarations are easy
           val decl = TlaOperDecl(
-              nodeName,
+              qualifiedOperatorName,
               params,
               ExprOrOpArgNodeTranslator(
                   sourceStore,
@@ -81,7 +82,7 @@ class OpDefTranslator(
             context,
             InsideRecursion()
         ).translate(node.getBody)
-      val decl = TlaOperDecl(nodeName, params, body)
+      val decl = TlaOperDecl(qualifiedOperatorName, params, body)
       decl.isRecursive = true
       sourceStore.add(decl.ID, SourceLocation(node.getLocation))
       annotationExtractor.parseAndSave(decl.ID, node)
