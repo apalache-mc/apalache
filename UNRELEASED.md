@@ -18,3 +18,8 @@
 ### Documentation
 
 * HOWTO on writing type annotations, see #571
+
+### Bug fixes
+
+* Fixed name collisions on LOCAL operators and LOCAL INSTANCE, see #576
+
