@@ -4,7 +4,7 @@ import at.forsyte.apalache.io.annotations.StandardAnnotations
 import at.forsyte.apalache.io.annotations.store.{AnnotationStore, createAnnotationStore}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TypingOper}
+import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaFunOper, TypingOper}
 import at.forsyte.apalache.tla.lir.values.TlaReal
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.typecheck._
@@ -660,6 +660,13 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     val typ = parser("(Seq(a), (a => Bool)) => Seq(a)")
     val expected = mkAppByName(Seq(typ), "s", "A")
     val ex = tla.selectseq(tla.name("s"), tla.name("A"))
+    assert(expected == gen(ex))
+  }
+
+  test("Apalache!FunAsSeq(fun, len)") {
+    val typ = parser("(Int -> a, Int) => Seq(a)")
+    val expected = mkAppByName(Seq(typ), "fun", "len")
+    val ex = OperEx(BmcOper.funAsSeq, tla.name("fun"), tla.name("len"))
     assert(expected == gen(ex))
   }
 

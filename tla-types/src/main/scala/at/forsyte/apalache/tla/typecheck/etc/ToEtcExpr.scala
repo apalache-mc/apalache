@@ -811,6 +811,13 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val opsig = OperT1(Seq(a, BoolT1()), BoolT1()) // (a, Bool) => Bool
         mkExRefApp(opsig, Seq(varName, act))
 
+      //******************************************** Apalache **************************************************
+      case wte @ OperEx(BmcOper.funAsSeq, fun, len) =>
+        val a = varPool.fresh
+        // ((Int -> a), Int) => Seq(a)
+        val opsig = OperT1(Seq(FunT1(IntT1(), a), IntT1()), SeqT1(a))
+        mkExRefApp(opsig, Seq(fun, len))
+
       //******************************************** MISC **************************************************
       case wte @ OperEx(TypingOper.withType, _*) =>
         throw new TypingInputException(

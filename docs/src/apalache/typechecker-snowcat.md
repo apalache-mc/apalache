@@ -14,8 +14,8 @@ annotations. So you can start preparing for the transition to new annotations ri
 
 ### How to write type annotations
 
-You can find syntax and detailed explanation. in
-[ADR002](../adr/002adr-types.md).
+Check the [HOWTO](../HOWTOs/howto-write-type-annotations.md).  You can find
+detailed syntax of type annotations in [ADR002](../adr/002adr-types.md). 
 
 ### How to run the type checker
 
