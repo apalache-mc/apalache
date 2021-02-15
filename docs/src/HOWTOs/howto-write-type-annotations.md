@@ -257,7 +257,8 @@ Check the example [Queens.tla][] from the repository of TLA+ examples.  It has
 sections, we annotate constants and variables:
 
 ```tla
-CONSTANT \* @type: Int;
+CONSTANT 
+         \* @type: Int;
          N
 ...         
 VARIABLES
@@ -344,4 +345,3 @@ This may change later, when the tlaplus [Issue 578][] is resolved.
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
 [Issue 401]: https://github.com/informalsystems/apalache/issues/401
 [Issue 578]: https://github.com/tlaplus/tlaplus/issues/578
-
