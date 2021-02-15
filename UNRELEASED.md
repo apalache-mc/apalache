@@ -22,4 +22,3 @@
 ### Bug fixes
 
 * Fixed name collisions on LOCAL operators and LOCAL INSTANCE, see #576
-
