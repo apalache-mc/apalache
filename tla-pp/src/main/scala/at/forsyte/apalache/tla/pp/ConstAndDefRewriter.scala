@@ -68,7 +68,7 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
     // This is needed as we distinguish the operator calls from constant and variable use.
 
     def replaceConstWithCall(mod: TlaModule, name: String): TlaModule = {
-      val xform = ReplaceFixed(NameEx(name), OperEx(TlaOper.apply, NameEx(name)), tracker)
+      val xform = ReplaceFixed(tracker)(NameEx(name), OperEx(TlaOper.apply, NameEx(name)))
       val moduleXform = ModuleByExTransformer(xform)
       moduleXform(mod)
     }

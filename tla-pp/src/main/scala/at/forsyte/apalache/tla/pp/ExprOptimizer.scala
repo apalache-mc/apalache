@@ -149,7 +149,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
   private def transformExistsOverSets: PartialFunction[TlaEx, TlaEx] = {
     case OperEx(TlaBoolOper.exists, NameEx(x), OperEx(TlaSetOper.filter, NameEx(y), s, e), g) =>
       // \E x \in {y \in S: e}: g becomes \E y \in S: e /\ g [x replaced with y]
-      val newPred = ReplaceFixed(NameEx(x), NameEx(y), tracker).apply(tla.and(e, g))
+      val newPred = ReplaceFixed(tracker)(NameEx(x), NameEx(y)).apply(tla.and(e, g))
       val result = tla.exists(tla.name(y), s, newPred)
       transformExistsOverSets.applyOrElse(result, { _: TlaEx => result }) // apply recursively to the result
 
@@ -157,7 +157,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
       // e.g., \E x \in {e: y \in S}: g becomes \E y \in S: LET tmp == e IN g [x replaced with e]
       // LET x == e IN g in the example above
       val letName = nameGen.newName()
-      val newPred = ReplaceFixed(NameEx(boundVar), tla.appOp(NameEx(letName)), tracker).apply(pred)
+      val newPred = ReplaceFixed(tracker)(NameEx(boundVar), tla.appOp(NameEx(letName))).apply(pred)
 
       val letIn: TlaEx = LetInEx(newPred, TlaOperDecl(letName, List(), mapEx))
       // \E y \in S: ... in the example above
