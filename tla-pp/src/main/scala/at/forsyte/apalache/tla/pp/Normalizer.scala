@@ -188,7 +188,6 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
         def transformDef(decl: TlaOperDecl): TlaOperDecl = {
           TlaOperDecl(decl.name, decl.formalParams, transform(decl.body))
         }
-
         LetInEx(transform(body), defs map transformDef: _*)
       }
 
@@ -239,10 +238,9 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
     val negOpers = negAppearingOpers(newBody)
 
     val replacements = negOpers map { opName =>
-      ReplaceFixed(
+      ReplaceFixed(tracker)(
           OperEx(TlaBoolOper.not, OperEx(TlaOper.apply, NameEx(opName))),
-          OperEx(TlaOper.apply, NameEx(negName(opName))),
-          tracker
+          OperEx(TlaOper.apply, NameEx(negName(opName)))
       )
     }
 

@@ -28,18 +28,18 @@ import at.forsyte.apalache.tla.lir.values.TlaInt
  * UNROLL_TIMES_Fact == 1
  * UNROLL_DEFAULT_Fact == 0
  *
- * |
- * |
- * V
+ *    |
+ *    |
+ *    V
  *
  * Unrolled_Fact(n) ==
- * IF n <= 0
- * THEN 1
- * ELSE n * (
- * IF n-1 <= 0
- * THEN 1
- * ELSE (n-1) * 0
- * )
+ *  IF n <= 0
+ *  THEN 1
+ *  ELSE n * (
+ *    IF n-1 <= 0
+ *    THEN 1
+ *    ELSE (n-1) * 0
+ *    )
  *
  * Unrolled_Fact(0) = 1, Unrolled_Fact(1) = 1, but for k > 1 Unrolled_Fact(k) = 0
  */

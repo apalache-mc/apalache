@@ -18,46 +18,6 @@ class TestTransformations extends FunSuite with TestingPredefs {
     case _                       => 1
   }
 
-  test("Test ReplaceFixed") {
-    val transformation = ReplaceFixed(n_x, NameEx("y"), new IdleTracker())
-
-    val pa1 = n_x -> n_y
-    val pa2 = n_z -> n_z
-    val pa3 = prime(n_x) -> prime(n_y)
-    val pa4 = ite(n_p, n_x, n_y) -> ite(n_p, n_y, n_y)
-    val pa5 = letIn(
-        plus(n_z, appOp(n_A)),
-        declOp("A", n_q)
-    ) -> letIn(
-        plus(n_z, appOp(n_A)),
-        declOp("A", n_q)
-    )
-    val pa6 = letIn(
-        enumSet(plus(n_x, appOp(n_A)), appOp(n_B, n_x)),
-        declOp("A", n_x),
-        declOp("B", n_p, "p")
-    ) -> letIn(
-        enumSet(plus(n_y, appOp(n_A)), appOp(n_B, n_y)),
-        declOp("A", n_y),
-        declOp("B", n_p, "p")
-    )
-
-    val expected = Seq(
-        pa1,
-        pa2,
-        pa3,
-        pa4,
-        pa5,
-        pa6
-    )
-    val cmp = expected map { case (k, v) =>
-      (v, transformation(k))
-    }
-    cmp foreach { case (ex, act) =>
-      assert(ex == act)
-    }
-  }
-
   test("Test EqualityAsContainment") {
     val transformation = PrimedEqualityToMembership(new IdleTracker())
 
