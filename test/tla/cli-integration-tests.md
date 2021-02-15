@@ -1026,6 +1026,18 @@ Type checker [OK]
 EXITCODE: OK
 ```
 
+### typecheck HourClock.tla
+
+```sh
+$ apalache-mc typecheck HourClock.tla | sed 's/[IEW]@.*//'
+...
+[HourClock.tla:6:12-6:13]: Undefined name hr. Introduce a type annotation.
+...
+Type checker [FAILED]
+...
+EXITCODE: OK
+```
+
 ### typecheck HourClockTyped.tla
 
 ```sh
@@ -1036,6 +1048,18 @@ PASS #1: TypeChecker
  > Your types are great!
 ...
 Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck Channel.tla
+
+```sh
+$ apalache-mc typecheck Channel.tla | sed 's/[IEW]@.*//'
+...
+[Channel.tla:8:20-8:23]: Undefined name chan. Introduce a type annotation.
+...
+Type checker [FAILED]
 ...
 EXITCODE: OK
 ```

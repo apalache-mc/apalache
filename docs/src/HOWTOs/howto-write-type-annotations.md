@@ -12,23 +12,18 @@ annotations. You can find the detailed syntax of type annotations in
 *Do not to write any annotations at all, until the type checker [Snowcat][] is
 asking you to write a type annotation.*
 
-Snowcat is quite smart, and it will most probably find most of the types for
-you.
+Of course, there must be an exception to this rule. You have to write type
+annotations for CONSTANTS and VARIABLES. This is because Snowcat infers types
+of declarations in isolation instead of analyzing the whole specification.
+The good news is that the type checker finds the types of many operators
+automatically. 
 
 ## Recipe 1: Recipe variables
 
 Consider the example [HourClock.tla][] from [Specifying Systems][]:
 
 ```tla
----------------------- MODULE HourClock ----------------------
-EXTENDS Naturals
-VARIABLE hr
-HCini  ==  hr \in (1 .. 12)
-HCnxt  ==  hr' = IF hr # 12 THEN hr + 1 ELSE 1
-HC  ==  HCini /\ [][HCnxt]_hr
---------------------------------------------------------------
-THEOREM  HC => []HCini
-==============================================================
+{{#include ../../../test/tla/HourClock.tla::13}}
 ```
 
 Without thinking much about the types, run the type checker:
@@ -67,28 +62,9 @@ Run the type checker again. You should see the following message:
 Consider the example [Channel.tla][] from [Specifying Systems][]:
 
 ```tla
----------------------- MODULE Channel ----------------------------
-EXTENDS Naturals
-CONSTANT Data
-VARIABLE chan 
 
-TypeInvariant  ==  chan \in [val : Data,  rdy : {0, 1},  ack : {0, 1}]
------------------------------------------------------------------------
-Init  ==  /\ TypeInvariant
-          /\ chan.ack = chan.rdy 
+{{#include ../../../test/tla/Channel.tla::28}}
 
-Send(d) ==  /\ chan.rdy = chan.ack
-            /\ chan' = [chan EXCEPT !.val = d, !.rdy = 1 - @]
-
-Rcv     ==  /\ chan.rdy # chan.ack
-            /\ chan' = [chan EXCEPT !.ack = 1 - @]
-
-Next  ==  (\E d \in Data : Send(d)) \/ Rcv
-
-Spec  ==  Init /\ [][Next]_chan
------------------------------------------------------------------------
-THEOREM Spec => []TypeInvariant
-=======================================================================```
 ```
 
 Run the type checker:
@@ -204,8 +180,9 @@ the types of constants and variables. As for constant `RM`, we opt for using
 an uninterpreted type that we call `RM`. That is:
 
 ```tla
-CONSTANT \* @type: Set(RM);
-         RM
+CONSTANT
+        \* @type: Set(RM);
+        RM
 ```
 
 By looking at the spec, it is easy to guess the types of the variables
