@@ -1444,6 +1444,10 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         |A(i, j, f(_)) == f(i \cup j)
         |B(z) == {z}
         |C == A(0, 1, B)
+        |\* regression for bug #575
+        |D(f(_)) ==
+        |  LET E(g(_)) == g(3) IN
+        |  E(f)
         |================================
         |""".stripMargin
 

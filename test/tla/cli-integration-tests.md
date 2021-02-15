@@ -98,6 +98,15 @@ EXITCODE: OK
 
 This command parses a TLA+ specification with the SANY parser.
 
+### parse Select575 succeeds
+
+```sh
+$ apalache-mc parse Select575.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+...
+```
+
 ### parse Rec12 succeeds
 
 ```sh

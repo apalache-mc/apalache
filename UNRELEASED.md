@@ -18,3 +18,7 @@
 ### Documentation
 
 * HOWTO on writing type annotations, see #571
+
+### Bug fixes
+
+* Parser: a higher-order operator calling a higher-order operator, see #575
