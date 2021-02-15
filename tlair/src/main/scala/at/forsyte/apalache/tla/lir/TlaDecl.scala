@@ -69,12 +69,6 @@ case class TlaAssumeDecl(body: TlaEx) extends TlaDecl with Serializable {
 }
 
 /**
- * A spec, given by a list of declarations and a list of expressions.
- */
-@deprecated("Use TlaModule")
-case class TlaSpec(name: String, declarations: List[TlaDecl]) extends Serializable
-
-/**
  * <p>An operator definition, e.g. A == 1 + 2, or B(x, y) == x + y, or (C(f(_, _), x, y) == f(x, y).</p>
  *
  * <p>If the operator is recursive, then the operator body contains OperEx(TlaOper.apply, NameEx(operName), ...).</p>
