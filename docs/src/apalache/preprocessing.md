@@ -10,7 +10,6 @@ preprocessing steps:
  * `Desugarer`: removes syntactic sugar like short-hand expressions in `EXCEPT`.
  * `Normalizer`: rewrites all expressions in [negation-normal form](https://en.wikipedia.org/wiki/Negation_normal_form).
  * `Keramelizer`: translates TLA+ expressions into the kernel language [KerA](./kera.md).
- * `PrimedEqualityToMembership`: replaces `x = e` with `x \in {e}` (required by `TransitionPass`)
  * `ExprOptimizer`: statically computes select expressions (e.g. record field access from a known record)
  * `ConstSimplifier`: propagates constants
 
