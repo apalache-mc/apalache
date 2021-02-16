@@ -631,7 +631,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         // fun[x \in S, y \in T |-> e] == ...
         // or, fun[<<x, y>> \in S, z \in T |-> e] == ...
         //
-        // The expected type is for a one-argument function is:
+        // The expected type for a one-argument function is:
         // (((b -> a) => (b => a)) => (b -> a)) (λ $recFun ∈ Set(c -> d). λ x ∈ Int. x)
         //
         // (The case of multiple arguments is quite complex)
