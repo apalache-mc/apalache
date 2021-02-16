@@ -1105,3 +1105,17 @@ Type checker [OK]
 EXITCODE: OK
 ```
 
+### typecheck PascalTriangle.tla
+
+```sh
+$ apalache-mc typecheck PascalTriangle.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > Running Snowcat .::.
+ > Your types are great!
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+

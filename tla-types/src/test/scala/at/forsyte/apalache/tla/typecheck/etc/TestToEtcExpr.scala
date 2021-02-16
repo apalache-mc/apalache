@@ -518,15 +518,52 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
 
   test("recursive function definition f[x \\in Int] == x") {
     // the expected expression is:
-    //   ((a -> b) => a => b) => a -> b) (λ $recFun ∈ Set(c -> d)) (λ x ∈ Set(Int). x)
-    val principal = parser("((a -> b) => (a => b)) => (a -> b)")
+    //   (((b -> a) => (b => a)) => (b -> a)) (λ $recFun ∈ Set(d -> c). (λ x ∈ Set(Int). x))
+    val principal = parser("((b -> a) => (b => a)) => (b -> a)")
     // inner lambda
     val innerLambda = mkUniqAbs(mkUniqName("x"), ("x", mkUniqConst(SetT1(IntT1()))))
     // outer lambda
-    val outerLambda = mkUniqAbs(innerLambda, (TlaFunOper.recFunRef.uniqueName, mkUniqConst(parser("Set(c -> d)"))))
-    // the resulting expression is ((a -> b), (a => b)) => (a -> b) outerLambda
+    val outerLambda = mkUniqAbs(innerLambda, (TlaFunOper.recFunRef.uniqueName, mkUniqConst(parser("Set(d -> c)"))))
+    // the resulting expression is (((b -> a), (b => a)) => (b -> a)) outerLambda
     val expected = mkUniqApp(Seq(principal), outerLambda)
     val fun = tla.recFunDef(tla.name("x"), tla.name("x"), tla.intSet())
+    assert(expected == gen(fun))
+  }
+
+  test("binary recursive function definition f[x \\in Int, y \\in Bool] == x") {
+    // the expected expression is:
+    //   (((<<b, c>> -> a) => ((b, c) => a)) => (<<b, c>> -> a))
+    //      (λ $recFun ∈ Set(<<e, f>> -> d). (λ x ∈ Set(Int), y ∈ Set(Bool). x))
+    val principal = parser("((<<b, c>> -> a) => ((b, c) => a)) => (<<b, c>> -> a)")
+    // inner lambda
+    val innerLambda =
+      mkUniqAbs(mkUniqName("x"), ("x", mkUniqConst(SetT1(IntT1()))), ("y", mkUniqConst(SetT1(BoolT1()))))
+    // outer lambda
+    val outerLambda =
+      mkUniqAbs(innerLambda, (TlaFunOper.recFunRef.uniqueName, mkUniqConst(parser("Set(<<e, f>> -> d)"))))
+    // the resulting expression is (principal outerLambda)
+    val expected = mkUniqApp(Seq(principal), outerLambda)
+    val fun = tla.recFunDef(tla.name("x"), tla.name("x"), tla.intSet(), tla.name("y"), tla.booleanSet())
+    assert(expected == gen(fun))
+  }
+
+  test("recursive function definition with tuples f[<<x, y>> \\in S] == x") {
+    // the expected expression is:
+    //   (((<<f, g>> -> e) => ((f, g) => e)) => (<<f, g>> -> e))
+    //      (λ $recFun ∈ Set(<<i, j>> -> h). (λ x ∈ Proj_x, y ∈ Proj_y. x))
+    // where Proj_x and Proj_y are projections of S on the first and second coordinates, respectively.
+    val principal = parser("((<<f, g>> -> e) => ((f, g) => e)) => (<<f, g>> -> e)")
+    // inner lambda
+    // the binding <<x, y>> \in S gives us a lambda of two arguments
+    val proj_x = mkProjection("a", "b", projFirst = true, "S")
+    val proj_y = mkProjection("c", "d", projFirst = false, "S")
+    val innerLambda = mkUniqAbs(mkUniqName("x"), ("x", proj_x), ("y", proj_y))
+    // outer lambda
+    val outerLambda =
+      mkUniqAbs(innerLambda, (TlaFunOper.recFunRef.uniqueName, mkUniqConst(parser("Set(<<i, j>> -> h)"))))
+    // the resulting expression is (principal outerLambda)
+    val expected = mkUniqApp(Seq(principal), outerLambda)
+    val fun = tla.recFunDef(tla.name("x"), tla.tuple(tla.name("x"), tla.name("y")), tla.name("S"))
     assert(expected == gen(fun))
   }
 
