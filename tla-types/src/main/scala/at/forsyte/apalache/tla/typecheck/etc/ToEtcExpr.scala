@@ -631,10 +631,8 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         // fun[x \in S, y \in T |-> e] == ...
         // or, fun[<<x, y>> \in S, z \in T |-> e] == ...
         //
-        // The expected type for a one-argument function is:
+        // We give the example for a one-argument function, as the case of multiple arguments is complex:
         // (((b -> a) => (b => a)) => (b -> a)) (λ $recFun ∈ Set(c -> d). λ x ∈ Int. x)
-        //
-        // (The case of multiple arguments is quite complex)
         val bindings =
           translateBindings(
               args
@@ -646,11 +644,11 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
                 .toSeq: _*
           )
 
-        val a = varPool.fresh
-        // start with "b", as "a" goes to the result
-        val typeVars = varPool.fresh(bindings.length)
+        val resultType = varPool.fresh
+        val argTypes = varPool.fresh(bindings.length)
 
-        val funFrom = typeVars match {
+        // wrap multiple variables into a tuple, while keeping a single variable unwrapped
+        def mkFunFrom: Seq[VarT1] => TlaType1 = {
           // With one argument, the generated function has the type b -> a, that is, no tuple is involved.
           case Seq(one) => one
           // With multiple arguments, the generated function has the type <<b, c>> -> a, that is, it accepts a tuple
@@ -658,28 +656,21 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         }
 
         // e.g., b -> a, or <<b, c>> -> a
-        val funType = FunT1(funFrom, a)
+        val funType = FunT1(mkFunFrom(argTypes), resultType)
         // e.g., b => a, or (b, c) => a
-        val operType = OperT1(typeVars, a)
+        val operType = OperT1(argTypes, resultType)
         val principal = OperT1(Seq(OperT1(Seq(funType), operType)), funType)
         // λ x ∈ S, y ∈ T. [[body]]
-        val innerLambda =
-          mkAbs(ExactRef(body.ID), this(body), bindings: _*)
+        val innerLambda = mkAbs(ExactRef(body.ID), this(body), bindings: _*)
         // create another vector of type variables for the lambda over a function
         val recFunResTypeVar = varPool.fresh
-        // similar to funFrom
-        val recFunFrom = varPool.fresh(bindings.length) match {
-          // With one argument, the generated function has the type d -> c, that is, no tuple is involved.
-          case Seq(one) => one
-          // With multiple arguments, the generated function has the type <<d, e>> -> c, that is, it accepts a tuple
-          case many => TupT1(many: _*)
-        }
+        val resFunArgTypes = mkFunFrom(varPool.fresh(bindings.length))
         val outerLambda = mkAbs(
             BlameRef(ex.ID),
             innerLambda,
             (
                 TlaFunOper.recFunRef.uniqueName,
-                mkConst(BlameRef(ex.ID), SetT1(FunT1(recFunFrom, recFunResTypeVar)))
+                mkConst(BlameRef(ex.ID), SetT1(FunT1(resFunArgTypes, recFunResTypeVar)))
             )
         )
         mkApp(ref, Seq(principal), outerLambda)
