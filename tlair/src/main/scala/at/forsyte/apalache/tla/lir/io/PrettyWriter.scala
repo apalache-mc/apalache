@@ -35,24 +35,28 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
 
   def prettyWriteDoc(doc: Doc): Unit = writer.write(pretty(doc, textWidth).layout)
 
-  def write(string: String): Unit = prettyWriteDoc(text(string))
+  def blockComment(commentStr: String): Doc = text(s"(* $commentStr *)") <> line
+  def lineComment(commentStr: String): Doc = text(s"\\* $commentStr") <> line
 
-  def writeln(string: String = ""): Unit = prettyWriteDoc(text(string) <> line)
+  def writeBlockComment(commentStr: String): Unit = prettyWriteDoc(blockComment(commentStr))
+  def writeLineComment(commentStr: String): Unit = prettyWriteDoc(lineComment(commentStr))
 
   def write(mod: TlaModule): Unit = prettyWriteDoc(toDoc(mod))
 
-  def write(decl: TlaOperDecl): Unit = prettyWriteDoc(toDoc(decl))
+  // Declarations have a trailing empty line
+  def write(decl: TlaOperDecl): Unit = prettyWriteDoc(toDoc(decl) <> line <> line)
 
-  def write(expr: TlaEx): Unit = prettyWriteDoc(toDoc((0, 0), expr))
+  def write(expr: TlaEx): Unit = prettyWriteDoc(toDoc((0, 0), expr) <> line)
 
   def moduleNameDoc(name: String, nDashes: Int = 5): Doc =
-    s"${List.fill(nDashes)("-").mkString} MODULE $name ${List.fill(nDashes)("-").mkString}" <> line
+    s"${List.fill(nDashes)("-").mkString} MODULE $name ${List.fill(nDashes)("-").mkString}" <> line <> line
 
-  def moduleTerminalDoc(nEquals: Int = 15): Doc =
+  def moduleTerminalDoc(nEquals: Int = 15): Doc = {
     s"${List.fill(nEquals)("=").mkString}" <> line
+  }
 
   def moduleExtendsDoc(moduleNamesString: String): Doc =
-    s"EXTENDS $moduleNamesString" <> line
+    s"EXTENDS $moduleNamesString" <> line <> line
 
   def toDoc(mod: TlaModule, nDashes: Int = 5, nEquals: Int = 15): Doc = {
     moduleNameDoc(mod.name, nDashes) <>

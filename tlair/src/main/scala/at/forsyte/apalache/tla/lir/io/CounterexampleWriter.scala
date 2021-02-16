@@ -2,8 +2,8 @@ package at.forsyte.apalache.tla.lir.io
 
 import java.io.{FileWriter, PrintWriter}
 import java.util.Calendar
-
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
 
@@ -52,56 +52,57 @@ object CounterexampleWriter {
 }
 
 class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
-  def printStateFormula(pretty: PrettyWriter, state: State): Unit = {
+
+  def stateToEx(state: State): TlaEx =
+    if (state.isEmpty) {
+      ValEx(TlaBool(true))
+    } else {
+      val namesAndVals = state.toSeq.sortBy(_._1).map { case (name, value) =>
+        tla.eql(NameEx(name), value)
+      }
+      tla.and(namesAndVals: _*)
+    }
+
+  def printStateFormula(pretty: PrettyWriter, state: State): Unit =
     if (state.isEmpty) {
       pretty.write(ValEx(TlaBool(true)))
-      pretty.writeln()
     } else {
+      val prefix = if (state.size == 1) "" else "/\\ "
       state.toList.sortBy(_._1).foreach { case (name, value) =>
-        pretty.write(s"/\\ $name = ")
+        writer.print(s"$prefix$name = ")
         pretty.write(value)
-        pretty.writeln()
       }
     }
-  }
 
   override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
     val pretty = new PrettyWriter(writer)
 
     pretty.prettyWriteDoc(pretty.moduleNameDoc("counterexample", 25))
-    pretty.writeln()
     pretty.prettyWriteDoc(pretty.moduleExtendsDoc(rootModule.name))
-    pretty.writeln()
 
     states.zipWithIndex.foreach {
       case (state, 0) =>
-        pretty.writeln("(* Constant initialization state *)")
-        pretty.writeln(s"\nConstInit ==")
-        printStateFormula(pretty, state._2)
-        pretty.writeln()
+        pretty.writeBlockComment("Constant initialization state")
+        val decl = tla.declOp("ConstInit", stateToEx(state._2))
+        pretty.write(decl)
       case (state, j) =>
         // Index 0 is reserved for ConstInit, but users expect State0 to
         // be the initial state, so we shift indices by 1 for print-output
         val i = j - 1
         if (i == 0) {
-          pretty.writeln("(* Initial state *)")
+          pretty.writeBlockComment("Initial state")
         } else {
-          pretty.writeln(s"(* Transition ${state._1} to State$i *)")
+          pretty.writeBlockComment(s"Transition ${state._1} to State$i")
         }
-        pretty.writeln(s"\nState$i ==")
-        printStateFormula(pretty, state._2)
-        pretty.writeln()
+        val decl = tla.declOp(s"State$i", stateToEx(state._2))
+        pretty.write(decl)
     }
-    pretty.write(s"""(* The following formula holds true in the last state and violates the invariant *)
-                    |
-                    |""".stripMargin)
+    pretty.writeBlockComment("The following formula holds true in the last state and violates the invariant")
     pretty.write(TlaOperDecl("InvariantViolation", List(), notInvariant))
 
-    pretty.writeln()
-    pretty.writeln()
     pretty.prettyWriteDoc(pretty.moduleTerminalDoc(80))
-    pretty.writeln("\\* Created by Apalache on %s".format(Calendar.getInstance().getTime))
-    pretty.writeln("\\* https://github.com/informalsystems/apalache")
+    pretty.writeLineComment("Created by Apalache on %s".format(Calendar.getInstance().getTime))
+    pretty.writeLineComment("https://github.com/informalsystems/apalache")
     pretty.close()
   }
 }
@@ -114,7 +115,7 @@ class TlcCounterexampleWriter(writer: PrintWriter) extends TlaCounterexampleWrit
 
     val pretty = new PrettyWriter(writer)
 
-    pretty.write(s"""@!@!@STARTMSG 2262:0 @!@!@
+    writer.write(s"""@!@!@STARTMSG 2262:0 @!@!@
                     |Created by Apalache on ${Calendar.getInstance().getTime}
                     |@!@!@ENDMSG 2262 @!@!@
                     |@!@!@STARTMSG 2110:1 @!@!@
@@ -128,10 +129,11 @@ class TlcCounterexampleWriter(writer: PrintWriter) extends TlaCounterexampleWrit
     states.zipWithIndex.tail.foreach { case (state, i) =>
       val prefix = if (i == 1) s"$i: <Initial predicate>" else s"$i: <Next>"
 
-      pretty.writeln(s"""@!@!@STARTMSG 2217:4 @!@!@
+      writer.println(s"""@!@!@STARTMSG 2217:4 @!@!@
                         |$prefix""".stripMargin)
+      // We still need to call PrettyWriter, since PrintWriter doesn't know how to output TlaEx
       printStateFormula(pretty, state._2)
-      pretty.writeln("""|
+      writer.println("""|
              |@!@!@ENDMSG 2217 @!@!@""".stripMargin)
     }
     pretty.close()
