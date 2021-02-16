@@ -23,3 +23,5 @@
 
 * Fixed name collisions on LOCAL operators and LOCAL INSTANCE, see #576
 * Parser: a higher-order operator calling a higher-order operator, see #575
+* Type checker: support for recursive functions of multiple arguments, see #582
+* Type checker: support for tuple unpacking in recursive functions, see #583
