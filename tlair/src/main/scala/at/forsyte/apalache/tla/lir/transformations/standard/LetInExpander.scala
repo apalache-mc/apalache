@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * <p>A transformation which replaces all occurrences of LET-IN expressions with
@@ -57,7 +58,7 @@ class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean) extend
       params.zip(args).foldLeft(lambdaBody) {
         // replace every parameter with the respective argument
         case (expr, (param, arg)) =>
-          ReplaceFixed(NameEx(param.name)(arg.typeTag), arg, tracker)(expr)
+          ReplaceFixed(tracker)(NameEx(param.name), arg)(expr)
       }
 
     // recursive processing of composite operators

@@ -22,12 +22,16 @@
     - [Five minutes of theory](./apalache/theory.md)
 - [TLC Configuration Files](./apalache/tlc-config.md)
 - [Types and Annotations](./apalache/types-and-annotations.md)
-- [Snowcat: the New Type Checker](./apalache/typechecker-snowcat.md)
+- [The Snowcat Type Checker](./apalache/typechecker-snowcat.md)
 - [Supported Features](./apalache/features.md)
 - [TLA+ Preprocessing](./apalache/preprocessing.md)
 - [Fine Tuning](./apalache/tuning.md)
 - [KerA: kernel logic of actions](./apalache/kera.md)
 - [Assignments in Apalache](./apalache/assignments.md)
+
+# HOWTOs
+
+- [How to write type annotations](./HOWTOs/howto-write-type-annotations.md)
 
 # TLA+ Language Manual for Engineers
 

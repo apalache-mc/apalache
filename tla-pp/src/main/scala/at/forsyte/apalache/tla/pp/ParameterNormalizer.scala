@@ -10,10 +10,9 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
  * Transforms a declaration A(x,y(_,_)) == e
  * into parameter-normal form, i.e.
  * A(x,y(_,_)) == LET x_new == x
- * y_new(p1, p2) == y(p1,p2)
- * IN e[ x_new/x, y_new/y ]
+ *                    y_new(p1, p2) == y(p1,p2)
+ *                IN e[ x_new/x, y_new/y ]
  * This allows us to limit the number of substitutions when inlining A.
- *
  * @param decisionFn Normal-form transformation will only be applied to operator declarations (both top-level and LET-IN),
  *                   for which `decisionFn` evaluates to true. Default: returns true for all recursive operators.
  */
@@ -59,10 +58,9 @@ class ParameterNormalizer(
         case SimpleFormalParam(name) =>
           // We replace all instances of `fParam` with `paramOperName`
           // however, since paramOperName is an operator, we have to replace with application
-          val tr = ReplaceFixed(
+          val tr = ReplaceFixed(tracker)(
               NameEx(fParam.name),
-              OperEx(TlaOper.apply, NameEx(paramOperName)),
-              tracker
+              OperEx(TlaOper.apply, NameEx(paramOperName))
           )
           val replaced = tr(partialEx)
           // if fParam is simple, the introduced operator is nullary
@@ -72,10 +70,9 @@ class ParameterNormalizer(
         case OperFormalParam(name, arity) =>
           // We again replace all instances of `fParam` with `paramOperName`
           // As both are operators, we don't need to introduce application
-          val tr = ReplaceFixed(
+          val tr = ReplaceFixed(tracker)(
               NameEx(fParam.name),
-              NameEx(paramOperName),
-              tracker
+              NameEx(paramOperName)
           )
           val replaced = tr(partialEx)
 
@@ -86,7 +83,7 @@ class ParameterNormalizer(
           // The body is just the operator applied to all the parameters
           val newBody = OperEx(
               TlaOper.apply,
-              name +: inventedParams map (NameEx(_)): _*
+              name +: inventedParams map { NameEx(_) }: _*
           )
           val letInDef = TlaOperDecl(paramOperName, inventedParams map SimpleFormalParam, newBody)
           LetInEx(replaced, letInDef)

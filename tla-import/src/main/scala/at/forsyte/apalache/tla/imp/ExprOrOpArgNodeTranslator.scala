@@ -142,8 +142,13 @@ class ExprOrOpArgNodeTranslator(
         // e.g., LET Foo(x) == e1 in Foo
         LetInEx(NameEx(name), decl)
 
-      // an operator that is passed as an argument to another operator
+      // passing an operator
       case _: OpDefNode =>
+        // simply return a reference to the operator by name
+        NameEx(name)
+
+      // passing a parameter that carries an operator
+      case _: FormalParamNode =>
         // simply return a reference to the operator by name
         NameEx(name)
 
