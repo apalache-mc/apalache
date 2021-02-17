@@ -1850,7 +1850,6 @@ preprocessing steps:</p>
 <li><code>Desugarer</code>: removes syntactic sugar like short-hand expressions in <code>EXCEPT</code>.</li>
 <li><code>Normalizer</code>: rewrites all expressions in <a href="https://en.wikipedia.org/wiki/Negation_normal_form">negation-normal form</a>.</li>
 <li><code>Keramelizer</code>: translates TLA+ expressions into the kernel language <a href="apalache/./kera.html">KerA</a>.</li>
-<li><code>PrimedEqualityToMembership</code>: replaces <code>x = e</code> with <code>x \in {e}</code> (required by <code>TransitionPass</code>)</li>
 <li><code>ExprOptimizer</code>: statically computes select expressions (e.g. record field access from a known record)</li>
 <li><code>ConstSimplifier</code>: propagates constants</li>
 </ul>
