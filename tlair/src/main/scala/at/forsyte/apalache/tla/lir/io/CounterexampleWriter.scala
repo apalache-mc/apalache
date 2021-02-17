@@ -72,18 +72,18 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
       state.toList.sortBy(_._1).foreach { case (name, value) =>
         writer.print(s"$prefix$name = ")
         pretty.write(value)
+        writer.println()
       }
     }
 
   override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
     val pretty = new PrettyWriter(writer)
 
-    pretty.prettyWriteDoc(pretty.moduleNameDoc("counterexample", 25))
-    pretty.prettyWriteDoc(pretty.moduleExtendsDoc(rootModule.name))
+    pretty.writeHeader("counterexample", List(rootModule))
 
     states.zipWithIndex.foreach {
       case (state, 0) =>
-        pretty.writeBlockComment("Constant initialization state")
+        pretty.writeComment("Constant initialization state")
         val decl = tla.declOp("ConstInit", stateToEx(state._2))
         pretty.write(decl)
       case (state, j) =>
@@ -91,19 +91,19 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
         // be the initial state, so we shift indices by 1 for print-output
         val i = j - 1
         if (i == 0) {
-          pretty.writeBlockComment("Initial state")
+          pretty.writeComment("Initial state")
         } else {
-          pretty.writeBlockComment(s"Transition ${state._1} to State$i")
+          pretty.writeComment(s"Transition ${state._1} to State$i")
         }
         val decl = tla.declOp(s"State$i", stateToEx(state._2))
         pretty.write(decl)
     }
-    pretty.writeBlockComment("The following formula holds true in the last state and violates the invariant")
+    pretty.writeComment("The following formula holds true in the last state and violates the invariant")
     pretty.write(TlaOperDecl("InvariantViolation", List(), notInvariant))
 
-    pretty.prettyWriteDoc(pretty.moduleTerminalDoc(80))
-    pretty.writeLineComment("Created by Apalache on %s".format(Calendar.getInstance().getTime))
-    pretty.writeLineComment("https://github.com/informalsystems/apalache")
+    pretty.writeFooter()
+    pretty.writeComment("Created by Apalache on %s".format(Calendar.getInstance().getTime))
+    pretty.writeComment("https://github.com/informalsystems/apalache")
     pretty.close()
   }
 }

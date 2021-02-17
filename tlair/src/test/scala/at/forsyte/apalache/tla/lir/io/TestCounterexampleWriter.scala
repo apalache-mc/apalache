@@ -18,8 +18,11 @@ class TestCounterexampleWriter extends FunSuite {
     val writer = CounterexampleWriter(kind, printWriter)
     writer.write(rootModule, notInvariant, states)
     printWriter.flush()
-    assert(stringWriter.toString.replaceFirst("Created by Apalache on .*\n",
-            "Created by Apalache on DATETIME\n") == expected)
+    val dateErasure = stringWriter.toString.replaceFirst(
+        "Created by Apalache on [A-Za-z 0-9:]*( \\*\\))?\n",
+        "Created by Apalache on DATETIME$1\n"
+    )
+    assert(dateErasure == expected)
   }
 
   test("single state") {
@@ -31,7 +34,7 @@ class TestCounterexampleWriter extends FunSuite {
             ("", Map()),
             ("", Map("x" -> int(2)))
         ),
-        """------------------------- MODULE counterexample -------------------------
+        """---------------------------- MODULE counterexample ----------------------------
         |
         |EXTENDS test
         |
@@ -45,8 +48,8 @@ class TestCounterexampleWriter extends FunSuite {
         |InvariantViolation == x > 1
         |
         |================================================================================
-        |\* Created by Apalache on DATETIME
-        |\* https://github.com/informalsystems/apalache
+        |(* Created by Apalache on DATETIME *)
+        |(* https://github.com/informalsystems/apalache *)
         |""".stripMargin
     )
   }
@@ -62,7 +65,7 @@ class TestCounterexampleWriter extends FunSuite {
             ("Trans1", Map("x" -> int(1))),
             ("Trans2", Map("x" -> int(2)))
         ),
-        """------------------------- MODULE counterexample -------------------------
+        """---------------------------- MODULE counterexample ----------------------------
           |
           |EXTENDS test
           |
@@ -82,8 +85,8 @@ class TestCounterexampleWriter extends FunSuite {
           |InvariantViolation == x > 1
           |
           |================================================================================
-          |\* Created by Apalache on DATETIME
-          |\* https://github.com/informalsystems/apalache
+          |(* Created by Apalache on DATETIME *)
+          |(* https://github.com/informalsystems/apalache *)
           |""".stripMargin
     )
   }
@@ -99,7 +102,7 @@ class TestCounterexampleWriter extends FunSuite {
             ("Trans1", Map("x" -> int(1), "y" -> int(9))),
             ("Trans2", Map("x" -> int(2), "y" -> int(10)))
         ),
-        """------------------------- MODULE counterexample -------------------------
+        """---------------------------- MODULE counterexample ----------------------------
         |
         |EXTENDS test
         |
@@ -119,8 +122,8 @@ class TestCounterexampleWriter extends FunSuite {
         |InvariantViolation == x > 1 /\ y = 10
         |
         |================================================================================
-        |\* Created by Apalache on DATETIME
-        |\* https://github.com/informalsystems/apalache
+        |(* Created by Apalache on DATETIME *)
+        |(* https://github.com/informalsystems/apalache *)
         |""".stripMargin
     )
   }

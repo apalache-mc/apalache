@@ -798,7 +798,9 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     writer.write(fDecl)
     printWriter.flush()
     val expected =
-      """A(x) == 1 + x""".stripMargin
+      """A(x) == 1 + x
+        |
+        |""".stripMargin
     assert(expected == stringWriter.toString)
   }
 
@@ -818,7 +820,9 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     printWriter.flush()
     val expected =
       """RECURSIVE A(_)
-        |A(x) == 1 + A(x)""".stripMargin
+        |A(x) == 1 + A(x)
+        |
+        |""".stripMargin
     assert(expected == stringWriter.toString)
   }
 
@@ -879,7 +883,9 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     writer.write(fDecl)
     printWriter.flush()
     val expected =
-      """f[x \in S] == 1 + f[x]""".stripMargin
+      """f[x \in S] == 1 + f[x]
+        |
+        |""".stripMargin
     assert(expected == stringWriter.toString)
   }
 
@@ -893,7 +899,9 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     writer.write(fDecl)
     printWriter.flush()
     val expected =
-      """f[x \in S, y \in S] == f[y, x]""".stripMargin
+      """f[x \in S, y \in S] == f[y, x]
+        |
+        |""".stripMargin
     assert(expected == stringWriter.toString)
   }
 
