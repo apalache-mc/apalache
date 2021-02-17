@@ -10,7 +10,6 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
-
 ### Features
 
 * Support for `FunAsSeq` conversion in the type checker, see #223
