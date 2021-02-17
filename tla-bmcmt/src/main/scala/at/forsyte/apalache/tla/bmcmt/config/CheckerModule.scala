@@ -1,15 +1,16 @@
 package at.forsyte.apalache.tla.bmcmt.config
 
-import at.forsyte.apalache.infra.{DefaultExceptionAdapter, ExceptionAdapter}
+import at.forsyte.apalache.infra.ExceptionAdapter
 import at.forsyte.apalache.infra.passes._
-import at.forsyte.apalache.io.annotations.AnnotationStoreProvider
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
+import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
 import at.forsyte.apalache.tla.assignments.passes._
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.passes._
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
+import at.forsyte.apalache.tla.lir.io.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
 import at.forsyte.apalache.tla.pp.passes._
@@ -42,6 +43,10 @@ class CheckerModule extends AbstractModule {
       .to(classOf[ExprGradeStoreImpl])
     bind(new TypeLiteral[TypeFinder[CellT]] {})
       .to(classOf[TrivialTypeFinder]) // using a trivial type finder
+
+    // writers
+    bind(classOf[TlaWriterFactory])
+      .to(classOf[PrettyWriterWithAnnotationsFactory])
 
     // transformation tracking
     // TODO: the binding of TransformationListener should disappear in the future

@@ -1,28 +1,27 @@
 package at.forsyte.apalache.tla.assignments.passes
 
-import java.io.File
-import java.nio.file.Path
-
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.assignments._
 import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.io.PrettyWriter
+import at.forsyte.apalache.tla.lir.io.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.pp.NormalizedNames
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
+import java.io.File
+import java.nio.file.Path
+
 /**
  * This pass finds symbolic transitions in Init and Next.
  */
 class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceStore, tracker: TransformationTracker,
-    changeListener: ChangeListener, incrementalRenaming: IncrementalRenaming,
+    changeListener: ChangeListener, incrementalRenaming: IncrementalRenaming, writerFactory: TlaWriterFactory,
     @Named("AfterTransitionFinder") nextPass: Pass with TlaModuleMixin)
     extends TransitionPass with LazyLogging {
 
@@ -79,7 +78,7 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
 
     // print the resulting module
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    PrettyWriter.write(outModule, new File(outdir.toFile, "out-transition.tla"))
+    writerFactory.writeModuleToFile(outModule, new File(outdir.toFile, "out-transition.tla"))
 
     setModule(outModule)
     true

@@ -1,19 +1,19 @@
 package at.forsyte.apalache.tla.pp.passes
 
-import java.io.File
-import java.nio.file.Path
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.{TlaDecl, TlaModule, TlaOperDecl}
-import at.forsyte.apalache.tla.lir.io.PrettyWriter
+import at.forsyte.apalache.tla.lir.io.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
-import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.transformations.standard._
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.{TlaDecl, TlaModule, TlaOperDecl}
 import at.forsyte.apalache.tla.pp.{Desugarer, Keramelizer, Normalizer, UniqueNameGenerator}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
+
+import java.io.File
+import java.nio.file.Path
 
 /**
  * A preprocessing pass that simplifies TLA+ expression by running multiple transformation.
@@ -25,7 +25,8 @@ import com.typesafe.scalalogging.LazyLogging
  */
 class PreproPassImpl @Inject() (
     val options: PassOptions, gen: UniqueNameGenerator, renaming: IncrementalRenaming, tracker: TransformationTracker,
-    sourceStore: SourceStore, changeListener: ChangeListener, @Named("AfterPrepro") nextPass: Pass with TlaModuleMixin
+    sourceStore: SourceStore, changeListener: ChangeListener, writerFactory: TlaWriterFactory,
+    @Named("AfterPrepro") nextPass: Pass with TlaModuleMixin
 ) extends PreproPass with LazyLogging {
 
   private var outputTlaModule: Option[TlaModule] = None
@@ -63,7 +64,7 @@ class PreproPassImpl @Inject() (
       logger.info(s"  > $name")
       val transfomed = xformer(m)
       // dump the result of preprocessing after every transformation, in case the next one fails
-      PrettyWriter.write(
+      writerFactory.writeModuleToFile(
           transfomed,
           new File(outdir.toFile, s"out-prepro-$name.tla")
       )
@@ -75,7 +76,7 @@ class PreproPassImpl @Inject() (
     val afterModule = renaming.renameInModule(preprocessed)
 
     // dump the result of preprocessing
-    PrettyWriter.write(afterModule, new File(outdir.toFile, "out-prepro.tla"))
+    writerFactory.writeModuleToFile(afterModule, new File(outdir.toFile, "out-prepro.tla"))
     outputTlaModule = Some(afterModule)
 
     if (options.getOrElse("general", "debug", false)) {

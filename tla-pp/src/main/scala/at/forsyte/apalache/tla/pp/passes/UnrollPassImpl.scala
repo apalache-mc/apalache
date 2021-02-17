@@ -2,10 +2,9 @@ package at.forsyte.apalache.tla.pp.passes
 
 import java.io.File
 import java.nio.file.Path
-
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.lir.TlaModule
-import at.forsyte.apalache.tla.lir.io.PrettyWriter
+import at.forsyte.apalache.tla.lir.io.{PrettyWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -22,7 +21,7 @@ import com.typesafe.scalalogging.LazyLogging
  * @param nextPass next pass to call
  */
 class UnrollPassImpl @Inject() (val options: PassOptions, nameGenerator: UniqueNameGenerator,
-    tracker: TransformationTracker, renaming: IncrementalRenaming,
+    tracker: TransformationTracker, renaming: IncrementalRenaming, writerFactory: TlaWriterFactory,
     @Named("AfterUnroll") nextPass: Pass with TlaModuleMixin)
     extends UnrollPass with LazyLogging {
 
@@ -63,7 +62,7 @@ class UnrollPassImpl @Inject() (val options: PassOptions, nameGenerator: UniqueN
 
     // dump the result of preprocessing
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    PrettyWriter.write(newModule, new File(outdir.toFile, "out-unroll.tla"))
+    writerFactory.writeModuleToFile(newModule, new File(outdir.toFile, "out-unroll.tla"))
 
     outputTlaModule = Some(newModule)
     true

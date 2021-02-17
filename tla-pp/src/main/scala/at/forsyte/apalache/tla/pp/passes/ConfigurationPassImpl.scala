@@ -1,22 +1,22 @@
 package at.forsyte.apalache.tla.pp.passes
 
-import java.io.{File, FileNotFoundException, FileReader}
-import java.nio.file.Path
-
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin, WriteablePassOptions}
 import at.forsyte.apalache.io.tlc.TlcConfigParserApalache
 import at.forsyte.apalache.io.tlc.config._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.io.PrettyWriter
+import at.forsyte.apalache.tla.lir.io.{PrettyWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaOper, TlaTempOper}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.pp._
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.FilenameUtils
+
+import java.io.{File, FileNotFoundException, FileReader}
+import java.nio.file.Path
 
 /**
  * The pass that collects the configuration parameters and overrides constants and definitions.
@@ -28,7 +28,7 @@ import org.apache.commons.io.FilenameUtils
  * @param nextPass next pass to call
  */
 class ConfigurationPassImpl @Inject() (
-    val options: WriteablePassOptions, tracker: TransformationTracker,
+    val options: WriteablePassOptions, tracker: TransformationTracker, writerFactory: TlaWriterFactory,
     @Named("AfterConfiguration") nextPass: Pass with TlaModuleMixin
 ) extends ConfigurationPass with LazyLogging {
 
@@ -70,7 +70,7 @@ class ConfigurationPassImpl @Inject() (
 
     // dump the configuration result
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    PrettyWriter.write(
+    writerFactory.writeModuleToFile(
         configuredModule,
         new File(outdir.toFile, "out-config.tla")
     )

@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.imp.{SanyImporter, SanyImporterException}
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{CyclicDependencyError, TlaModule}
-import at.forsyte.apalache.tla.lir.io.{JsonReader, JsonWriter, PrettyWriter}
+import at.forsyte.apalache.tla.lir.io.{JsonReader, JsonWriter, PrettyWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -23,7 +23,7 @@ import java.nio.file.Path
  */
 class SanyParserPassImpl @Inject() (
     val options: PassOptions, val sourceStore: SourceStore, val annotationStore: AnnotationStore,
-    @Named("AfterParser") val nextPass: Pass with TlaModuleMixin
+    val writerFactory: TlaWriterFactory, @Named("AfterParser") val nextPass: Pass with TlaModuleMixin
 ) extends SanyParserPass with LazyLogging {
 
   private var rootModule: Option[TlaModule] = None
@@ -73,7 +73,7 @@ class SanyParserPassImpl @Inject() (
           }
         // save the output
         val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-        PrettyWriter.write(
+        writerFactory.writeModuleToFile(
             rootModule.get,
             new File(outdir.toFile, "out-parser.tla")
         )
@@ -86,7 +86,7 @@ class SanyParserPassImpl @Inject() (
         val output = options.getOrElse("parser", "output", "")
         if (output.nonEmpty) {
           if (output.contains(".tla"))
-            PrettyWriter.write(rootModule.get, new File(output))
+            writerFactory.writeModuleToFile(rootModule.get, new File(output))
           else if (output.contains(".json"))
             JsonWriter.write(rootModule.get, new File(output))
           else

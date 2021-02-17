@@ -2,10 +2,9 @@ package at.forsyte.apalache.tla.assignments.passes
 
 import java.io.File
 import java.nio.file.Path
-
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.io.PrettyWriter
+import at.forsyte.apalache.tla.lir.io.{PrettyWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.transformations.standard._
@@ -17,7 +16,7 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * PrimingPass adds primes to the variables in state initializers and constant initializers.
  */
-class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTracker,
+class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTracker, writerFactory: TlaWriterFactory,
     @Named("AfterPriming") nextPass: Pass with TlaModuleMixin)
     extends PrimingPass with LazyLogging {
 
@@ -83,7 +82,7 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
     val newModule = new TlaModule(tlaModule.get.name, newDeclarations)
 
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    PrettyWriter.write(newModule, new File(outdir.toFile, "out-priming.tla"))
+    writerFactory.writeModuleToFile(newModule, new File(outdir.toFile, "out-priming.tla"))
 
     setModule(newModule)
     true
