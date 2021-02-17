@@ -14,6 +14,7 @@
 ### Features
 
 * Support for `FunAsSeq` conversion in the type checker, see #223
+* The parser outputs annotations, see #502
 
 ### Documentation
 
