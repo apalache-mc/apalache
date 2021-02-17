@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.lir.io
 
 import java.io.{PrintWriter, StringWriter}
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 class TestJsonWriter extends TestJson {
 

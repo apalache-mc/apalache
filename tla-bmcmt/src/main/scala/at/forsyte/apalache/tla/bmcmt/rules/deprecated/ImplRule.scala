@@ -8,10 +8,10 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 
 /**
-  * Implements an implication A => B by rewriting it to ~A \/ B.
-  *
-  * @author Igor Konnov
-  */
+ * Implements an implication A => B by rewriting it to ~A \/ B.
+ *
+ * @author Igor Konnov
+ */
 @deprecated("rewritten by Normalizer")
 class ImplRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val substRule = new SubstRule(rewriter)
@@ -20,7 +20,7 @@ class ImplRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaBoolOper.implies, _, _) => true
-      case _ => false
+      case _                                 => false
     }
   }
 

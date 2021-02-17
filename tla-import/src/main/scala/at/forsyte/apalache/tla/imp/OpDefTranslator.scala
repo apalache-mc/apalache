@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.imp.src.{SaveToStoreTracker, SourceLocation, Sour
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.io.annotations.store._
 import tla2sany.semantic.{OpApplNode, OpDefNode}
 
@@ -21,6 +22,7 @@ class OpDefTranslator(
   def translate(node: OpDefNode): TlaOperDecl = {
     val params = node.getParams.toList map FormalParamTranslator().translate
     val nodeName = node.getName.toString.intern()
+    val qualifiedOperatorName = context.mkQualifiedNameIfAsked(nodeName)
     val isRecursive = node.getInRecursive
 
     if (!isRecursive) {
@@ -41,15 +43,14 @@ class OpDefTranslator(
               SourceLocation(node.getBody.getLocation)
           )
           // the body still can refer to the function by its name, replace it with recFunRef
-          val replaced = ReplaceFixed(
+          val replaced = ReplaceFixed(new SaveToStoreTracker(sourceStore))(
               NameEx(nodeName),
-              recFunRef,
-              new SaveToStoreTracker(sourceStore)
+              recFunRef
           )(body)
           // store the source location
           sourceStore.addRec(replaced, SourceLocation(node.getBody.getLocation))
           // return the operator whose body is a recursive function
-          val operDecl = TlaOperDecl(nodeName, List(), replaced)
+          val operDecl = TlaOperDecl(qualifiedOperatorName, List(), replaced)
           operDecl.isRecursive = false
           sourceStore.add(operDecl.ID, SourceLocation(node.getLocation))
           annotationExtractor.parseAndSave(operDecl.ID, node)
@@ -58,7 +59,7 @@ class OpDefTranslator(
         case _ =>
           // non-recursive declarations are easy
           val decl = TlaOperDecl(
-              nodeName,
+              qualifiedOperatorName,
               params,
               ExprOrOpArgNodeTranslator(
                   sourceStore,
@@ -80,7 +81,7 @@ class OpDefTranslator(
             context,
             InsideRecursion()
         ).translate(node.getBody)
-      val decl = TlaOperDecl(nodeName, params, body)
+      val decl = TlaOperDecl(qualifiedOperatorName, params, body)
       decl.isRecursive = true
       sourceStore.add(decl.ID, SourceLocation(node.getLocation))
       annotationExtractor.parseAndSave(decl.ID, node)

@@ -6,16 +6,16 @@ import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
 /**
-  * This rule constructs a cell for a function set [S -> T]. Since we are not expanding function sets by default,
-  * this cell is just pointing to S as its domain and to T as its co-domain.
-  *
-  * @author Igor Konnov
-   */
+ * This rule constructs a cell for a function set [S -> T]. Since we are not expanding function sets by default,
+ * this cell is just pointing to S as its domain and to T as its co-domain.
+ *
+ * @author Igor Konnov
+ */
 class FunSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaSetOper.funSet, _, _) => true
-      case _ => false
+      case _                               => false
     }
   }
 

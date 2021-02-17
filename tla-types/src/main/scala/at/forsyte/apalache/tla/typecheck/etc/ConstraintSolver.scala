@@ -3,10 +3,10 @@ package at.forsyte.apalache.tla.typecheck.etc
 import at.forsyte.apalache.tla.typecheck.TlaType1
 
 /**
-  * A constraint solver that collects a series of equations and solves them with the type unification algorithm.
-  *
-  * @author Igor Konnov
-  */
+ * A constraint solver that collects a series of equations and solves them with the type unification algorithm.
+ *
+ * @author Igor Konnov
+ */
 class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
   private var solution: Substitution = approximateSolution
   private var constraints: List[Clause] = List.empty
@@ -30,7 +30,7 @@ class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
             typesToReport :+= (cons, solution(typ))
           case None =>
             cons match {
-              case OrClause(_@_*) =>
+              case OrClause(_ @_*) =>
                 // no solution for a disjunctive constraint:
                 // try to resolve the unit constraints and postpone the disjunctive one for later
                 postponed = postponed :+ cons
@@ -87,7 +87,7 @@ class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
         // try to solve a disjunctive clause
         eqs.flatMap(solveOne(solution, _)) match {
           case Seq(uniqueSolution) => Some(uniqueSolution)
-          case _noneOrAmbiguous => None
+          case _noneOrAmbiguous    => None
         }
     }
   }

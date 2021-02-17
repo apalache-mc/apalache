@@ -7,34 +7,36 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
 import scala.collection.immutable.HashMap
 
 /**
-  * This class contains methods that are related to renaming.
-  *
-  * @author Igor Konnov
-  */
-class Renaming (tracker: TransformationTracker) extends TlaExTransformation {
+ * This class contains methods that are related to renaming.
+ *
+ * @author Igor Konnov
+ */
+@deprecated("To be removed in #565")
+class Renaming(tracker: TransformationTracker)(implicit typeTag: TypeTag) extends TlaExTransformation {
+
   /**
-    * The names of bindings that have been seen already.
-    */
+   * The names of bindings that have been seen already.
+   */
   private var seenNames: Map[String, Int] = HashMap[String, Int]()
 
   override def apply(e: TlaEx): TlaEx = {
     renameBindingsUnique(e)
   }
 
-  def apply( decl : TlaDecl ) : TlaDecl = decl match {
-    case TlaOperDecl( name, params, body ) =>
+  def apply(decl: TlaDecl): TlaDecl = decl match {
+    case TlaOperDecl(name, params, body) =>
       val paramMap = (params map { p =>
         val pName = p.name
-        pName -> assignUniqueName( pName )
+        pName -> assignUniqueName(pName)
       }).toMap
 
       val retDecl = TlaOperDecl(
-        name,
-        params map {
-          case SimpleFormalParam( p ) => SimpleFormalParam( paramMap( p ) )
-          case OperFormalParam( p, a ) => OperFormalParam( paramMap( p ), a )
-        },
-        rename( paramMap )( body )
+          name,
+          params map {
+            case SimpleFormalParam(p)  => SimpleFormalParam(paramMap(p))
+            case OperFormalParam(p, a) => OperFormalParam(paramMap(p), a)
+          },
+          rename(paramMap)(body)
       )
 
       retDecl
@@ -58,44 +60,41 @@ class Renaming (tracker: TransformationTracker) extends TlaExTransformation {
         ex // nothing changes, so no new id is assigned
       }
 
-    case LetInEx( body, defs@_* ) =>
-      val opersAndFParamsNameMap = ( defs flatMap {
-        case TlaOperDecl( n, params, _ ) => ( n -> assignUniqueName( n ) ) +: (
-          params map { p =>
-            val pName = p.name
-            pName -> assignUniqueName( pName )
-          } )
-      } ).toMap
+    case LetInEx(body, defs @ _*) =>
+      val opersAndFParamsNameMap = (defs flatMap { case TlaOperDecl(n, params, _) =>
+        (n -> assignUniqueName(n)) +: (params map { p =>
+          val pName = p.name
+          pName -> assignUniqueName(pName)
+        })
+      }).toMap
 
       val newMap = map ++ opersAndFParamsNameMap
 
-      val newDefs = defs map {
-        case TlaOperDecl( n, ps, b ) =>
-          TlaOperDecl(
-            opersAndFParamsNameMap( n ),
+      val newDefs = defs map { case TlaOperDecl(n, ps, b) =>
+        TlaOperDecl(
+            opersAndFParamsNameMap(n),
             ps map {
-              case SimpleFormalParam( p ) => SimpleFormalParam( opersAndFParamsNameMap( p ) )
-              case OperFormalParam( p, a ) => OperFormalParam( opersAndFParamsNameMap( p ), a )
+              case SimpleFormalParam(p)  => SimpleFormalParam(opersAndFParamsNameMap(p))
+              case OperFormalParam(p, a) => OperFormalParam(opersAndFParamsNameMap(p), a)
             },
-            rename( newMap )( b )
-          )
+            rename(newMap)(b)
+        )
       }
-      val newBody = rename( newMap )( body )
-      LetInEx( newBody, newDefs : _* )
+      val newBody = rename(newMap)(body)
+      LetInEx(newBody, newDefs: _*)
 
-    case OperEx(op, NameEx(name), otherArgs@_*)
-      if op == TlaSetOper.filter
-        || op == TlaBoolOper.exists || op == TlaBoolOper.forall
-        || op == TlaOper.chooseBounded || op == TlaOper.chooseUnbounded
-        || op == TlaOper.chooseIdiom =>
-
+    case OperEx(op, NameEx(name), otherArgs @ _*)
+        if op == TlaSetOper.filter
+          || op == TlaBoolOper.exists || op == TlaBoolOper.forall
+          || op == TlaOper.chooseBounded || op == TlaOper.chooseUnbounded
+          || op == TlaOper.chooseIdiom =>
       val newName = assignUniqueName(name)
       val newMap = map + (name -> newName)
       val newArgs = otherArgs.map(e => rename(newMap)(e))
       OperEx(op, NameEx(newName) +: newArgs: _*)
 
-    case OperEx(op, result, varsAndSets@_*)
-      if op == TlaSetOper.map || op == TlaFunOper.funDef || op == TlaFunOper.recFunDef =>
+    case OperEx(op, result, varsAndSets @ _*)
+        if op == TlaSetOper.map || op == TlaFunOper.funDef || op == TlaFunOper.recFunDef =>
       val names = varsAndSets.zipWithIndex.collect { case (e @ NameEx(_), i) if i % 2 == 0 => e }
       val sets = varsAndSets.zipWithIndex.collect { case (e, i) if i % 2 == 1 => e }
 
@@ -123,7 +122,7 @@ class Renaming (tracker: TransformationTracker) extends TlaExTransformation {
       val newEx = OperEx(op, newResult +: newArgs: _*)
       newEx
 
-    case OperEx(op, args@_*) =>
+    case OperEx(op, args @ _*) =>
       val newEx = OperEx(op, args.map(e => rename(map)(e)): _*)
       newEx
 
@@ -131,17 +130,17 @@ class Renaming (tracker: TransformationTracker) extends TlaExTransformation {
   }
 
   /**
-    * <p>Rename all bindings so that the bound variable names become unique
-    * across all the code. For instance, \E x \in S: x > 1 /\ \E x \in T: x < 2
-    * becomes \E x1 \in S: x1 > 1 /\ \E x2 \in T: x2 < 2. This method
-    * does not expand operator definitions.</p>
-    *
-    * <p>WARNING: this method saves the unique names. That is, multiple calls to this method
-    * will produce expressions with unique bound variables.</p>
-    *
-    * @param expr an expression to modify
-    * @return an equivalent expression whose bound variables are uniquely renamed
-    */
+   * <p>Rename all bindings so that the bound variable names become unique
+   * across all the code. For instance, \E x \in S: x > 1 /\ \E x \in T: x < 2
+   * becomes \E x1 \in S: x1 > 1 /\ \E x2 \in T: x2 < 2. This method
+   * does not expand operator definitions.</p>
+   *
+   * <p>WARNING: this method saves the unique names. That is, multiple calls to this method
+   * will produce expressions with unique bound variables.</p>
+   *
+   * @param expr an expression to modify
+   * @return an equivalent expression whose bound variables are uniquely renamed
+   */
   def renameBindingsUnique(expr: TlaEx): TlaEx = {
     // rename the bound variables
     rename(HashMap())(expr)

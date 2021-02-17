@@ -1,15 +1,14 @@
 package at.forsyte.apalache.tla.lir.src
 
 /**
-  * A pointer to the source location, that is, the module name and the source region.
-  * It is very much like tla2tools.Location, but it is not using UniqueString. To save space, use the singleton
-  * constructor, which internalizes strings.
-  *
-  * @author Igor Konnov
-  */
+ * A pointer to the source location, that is, the module name and the source region.
+ * It is very much like tla2tools.Location, but it is not using UniqueString. To save space, use the singleton
+ * constructor, which internalizes strings.
+ *
+ * @author Igor Konnov
+ */
 class SourceLocation(val filename: String, val region: SourceRegion) {
   override def toString: String = filename + ".tla:" + region
-
 
   def canEqual(other: Any): Boolean = other.isInstanceOf[SourceLocation]
 

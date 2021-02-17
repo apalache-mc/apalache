@@ -9,10 +9,10 @@ import ch.qos.logback.core.{ConsoleAppender, FileAppender}
 import org.slf4j.LoggerFactory
 
 /**
-  * A hand-written configurator for logback, as it fails to discover logback-old.xml in some environments.
-  *
-  * @author Igor Konnov
-  */
+ * A hand-written configurator for logback, as it fails to discover logback-old.xml in some environments.
+ *
+ * @author Igor Konnov
+ */
 class LogbackConfigurator extends ContextAwareBase with Configurator {
   def configureDefaultContext(): Unit = {
     val loggerContext = LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]

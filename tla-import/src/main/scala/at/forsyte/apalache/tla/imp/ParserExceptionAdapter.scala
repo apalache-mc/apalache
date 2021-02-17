@@ -4,14 +4,13 @@ import at.forsyte.apalache.infra.{ErrorMessage, ExceptionAdapter, NormalErrorMes
 import javax.inject.{Inject, Singleton}
 
 /**
-  * The adapter for all exceptions that can be produced when running the SANY parser and TlaImporter.
-  *
-  * @author Igor Konnv
-  */
+ * The adapter for all exceptions that can be produced when running the SANY parser and TlaImporter.
+ *
+ * @author Igor Konnv
+ */
 @Singleton
-class ParserExceptionAdapter @Inject()() extends ExceptionAdapter {
-  override def toMessage: PartialFunction[Exception, ErrorMessage] = {
-    case err: SanyException =>
-      NormalErrorMessage("Error by TLA+ parser: " + err.getMessage)
+class ParserExceptionAdapter @Inject() () extends ExceptionAdapter {
+  override def toMessage: PartialFunction[Exception, ErrorMessage] = { case err: SanyException =>
+    NormalErrorMessage("Error by TLA+ parser: " + err.getMessage)
   }
 }

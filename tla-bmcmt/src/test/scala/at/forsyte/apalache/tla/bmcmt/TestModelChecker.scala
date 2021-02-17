@@ -3,18 +3,15 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.search.BfsStrategy
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
-import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.BmcOper
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
-
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfter, FunSuite}
-
-import scala.io.Source
 
 @RunWith(classOf[JUnitRunner])
 class TestModelChecker extends FunSuite with BeforeAndAfter {

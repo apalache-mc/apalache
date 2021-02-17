@@ -7,12 +7,11 @@ import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFiniteSetOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
-
 /**
-  * Implements the Cardinality operator.
-  *
-  * @author Igor Konnov
-  */
+ * Implements the Cardinality operator.
+ *
+ * @author Igor Konnov
+ */
 class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(state: SymbState): Boolean = {
     state.ex match {
@@ -57,11 +56,10 @@ class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
           // newCounter = counter if hd \notin set \/ \E c \in counted: hd = c /\ c \in set
           arena = arena.appendCell(BoolT())
           val beforePred = arena.topCell
-          val beforeEx = tla.or(tla.notin(hd, set), tla.or(counted.map(eqToOther(hd, _)) :_*))
+          val beforeEx = tla.or(tla.notin(hd, set), tla.or(counted.map(eqToOther(hd, _)): _*))
           solverAssert(tla.eql(beforePred, beforeEx))
           // newCounter = counter + 1 otherwise
-          solverAssert(tla.eql(newCounter,
-            tla.ite(beforePred, counter, tla.plus(tla.int(1), counter))))
+          solverAssert(tla.eql(newCounter, tla.ite(beforePred, counter, tla.plus(tla.int(1), counter))))
           mkEq(hd +: counted, newCounter, tl)
       }
     }

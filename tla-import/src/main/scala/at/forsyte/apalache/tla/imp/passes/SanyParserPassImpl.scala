@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir.{CyclicDependencyError, TlaModule}
 import at.forsyte.apalache.tla.lir.io.{JsonReader, JsonWriter, PrettyWriter}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging

@@ -318,7 +318,7 @@ design. Maybe it returns the first element of the set? Sets are not ordered, so
 there is no first element.
 
 Why should you use `CHOOSE`? Actually, you should not. Unless you have no other
-choice :bowtie:
+choice :ribbon:
 
 There are two common use cases, where the use of `CHOOSE` is well justified:
 

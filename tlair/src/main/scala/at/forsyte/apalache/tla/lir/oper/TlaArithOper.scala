@@ -1,33 +1,34 @@
 package at.forsyte.apalache.tla.lir.oper
 
 /**
-  * An abstract class of arithmetic operators.
-  *
-  * @author jkukovec
-  */
+ * An abstract class of arithmetic operators.
+ *
+ * @author jkukovec
+ */
 
 abstract class TlaArithOper extends TlaOper {
   override def interpretation: Interpretation.Value = Interpretation.StandardLib
 }
 
 /**
-  * <p>Arithmetic operators in TLA+ (as defined in Naturals, Integers, and Reals).
-  * Note that modules inherit operator definitions. In other words,
-  * Reals inherits definitions of + and - from Integers, which inherit definitions from Naturals.
-  * Thus, though these operators are semantically different, these operators are introduced using
-  * the same definition in TLA+ tools. We also instantiate each operator only once.</p>
-  *
-  * <p>Alternatively, we could have introduced multiple copies of each operator (for Naturals, Integers, and Reals)
-  * and use the most general operator, e.g., using addition on reals, when a module extends Reals.
-  * However, this would not give us precise type information when one mixes integer and real arithmetic.
-  * Consequently, we use just one copy per operator and hope that type analysis would be able to infer tighter types.</p>
-  *
-  * @author jkukovec, konnov
-  */
+ * <p>Arithmetic operators in TLA+ (as defined in Naturals, Integers, and Reals).
+ * Note that modules inherit operator definitions. In other words,
+ * Reals inherits definitions of + and - from Integers, which inherit definitions from Naturals.
+ * Thus, though these operators are semantically different, these operators are introduced using
+ * the same definition in TLA+ tools. We also instantiate each operator only once.</p>
+ *
+ * <p>Alternatively, we could have introduced multiple copies of each operator (for Naturals, Integers, and Reals)
+ * and use the most general operator, e.g., using addition on reals, when a module extends Reals.
+ * However, this would not give us precise type information when one mixes integer and real arithmetic.
+ * Consequently, we use just one copy per operator and hope that type analysis would be able to infer tighter types.</p>
+ *
+ * @author jkukovec, konnov
+ */
 object TlaArithOper {
+
   /**
-    * An n-ary sum, that is, Sum(x_1, ..., x_n) = x_1 + ... + x_n.
-    */
+   * An n-ary sum, that is, Sum(x_1, ..., x_n) = x_1 + ... + x_n.
+   */
   object sum extends TlaArithOper {
     override val arity = AnyArity()
     // Empty sum = 0
@@ -36,8 +37,8 @@ object TlaArithOper {
   }
 
   /**
-    * A binary addition.
-    */
+   * A binary addition.
+   */
   object plus extends TlaArithOper {
     override val arity = FixedArity(2)
     override val name = "(+)"
@@ -45,8 +46,8 @@ object TlaArithOper {
   }
 
   /**
-    * A unary minus. Note that Naturals do not have unary minus.
-    */
+   * A unary minus. Note that Naturals do not have unary minus.
+   */
   object uminus extends TlaArithOper {
     override val arity = FixedArity(1)
     override val name = "-."
@@ -54,8 +55,8 @@ object TlaArithOper {
   }
 
   /**
-    * A binary minus.
-    */
+   * A binary minus.
+   */
   object minus extends TlaArithOper {
     override val arity = FixedArity(2)
     override val name = "(-)"
@@ -63,8 +64,8 @@ object TlaArithOper {
   }
 
   /**
-    * An n-ary product of the arguments, that is, Prod(x_1, ..., x_n) = x_1 * ... * x_n.
-    */
+   * An n-ary product of the arguments, that is, Prod(x_1, ..., x_n) = x_1 * ... * x_n.
+   */
   object prod extends TlaArithOper {
     override def arity = AnyArity()
     // empty prod = 1
@@ -73,8 +74,8 @@ object TlaArithOper {
   }
 
   /**
-    * A multiplication.
-    */
+   * A multiplication.
+   */
   object mult extends TlaArithOper {
     override def arity: OperArity = FixedArity(2)
     override val name: String = "(*)"
@@ -82,8 +83,8 @@ object TlaArithOper {
   }
 
   /**
-    * Integer division.
-    */
+   * Integer division.
+   */
   object div extends TlaArithOper {
     override def arity: OperArity = FixedArity(2)
     override val name: String = "(\\div)"
@@ -91,8 +92,8 @@ object TlaArithOper {
   }
 
   /**
-    * Remainder of an integer division.
-    */
+   * Remainder of an integer division.
+   */
   object mod extends TlaArithOper {
     override def arity: OperArity = FixedArity(2)
     override val name: String = "(%)"
@@ -100,8 +101,8 @@ object TlaArithOper {
   }
 
   /**
-    * Real division.
-    */
+   * Real division.
+   */
   object realDiv extends TlaArithOper {
     override def arity: OperArity = FixedArity(2)
     override val name: String = "(/)"
@@ -109,8 +110,8 @@ object TlaArithOper {
   }
 
   /**
-    * Exponent, i.e., x^y gives us x multiplied by itself (y-1) times.
-    **/
+   * Exponent, i.e., x^y gives us x multiplied by itself (y-1) times.
+   */
   object exp extends TlaArithOper {
     override def arity: OperArity = FixedArity(2)
     override val name: String = "(^)"
@@ -118,8 +119,8 @@ object TlaArithOper {
   }
 
   /**
-    * An integer/natural range, that is, a..b = {a,...,b}
-    */
+   * An integer/natural range, that is, a..b = {a,...,b}
+   */
   object dotdot extends TlaArithOper {
     override val arity = FixedArity(2)
     override val name = "_.._"
@@ -127,8 +128,8 @@ object TlaArithOper {
   }
 
   /**
-    * Less than.
-    */
+   * Less than.
+   */
   object lt extends TlaArithOper {
     /* the number of arguments the operator has */
     override def arity: OperArity = FixedArity(2)
@@ -137,8 +138,8 @@ object TlaArithOper {
   }
 
   /**
-    * Greater than.
-    */
+   * Greater than.
+   */
   object gt extends TlaArithOper {
     /* the number of arguments the operator has */
     override def arity: OperArity = FixedArity(2)
@@ -147,8 +148,8 @@ object TlaArithOper {
   }
 
   /**
-    * Less than or equals.
-    */
+   * Less than or equals.
+   */
   object le extends TlaArithOper {
     /* the number of arguments the operator has */
     override def arity: OperArity = FixedArity(2)
@@ -157,8 +158,8 @@ object TlaArithOper {
   }
 
   /**
-    * Greater than or equals.
-    */
+   * Greater than or equals.
+   */
   object ge extends TlaArithOper {
     /* the number of arguments the operator has */
     override def arity: OperArity = FixedArity(2)

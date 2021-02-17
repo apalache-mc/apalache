@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.Arena.namePrefix
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 object ArenaCell {
   def isValidName(name: String): Boolean = {

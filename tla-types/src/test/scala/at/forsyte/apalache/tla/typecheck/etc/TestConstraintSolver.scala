@@ -8,7 +8,7 @@ import org.scalatest.easymock.EasyMockSugar
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestConstraintSolver  extends FunSuite with EasyMockSugar with EtcBuilder {
+class TestConstraintSolver extends FunSuite with EasyMockSugar with EtcBuilder {
   private val parser: Type1Parser = DefaultType1Parser
 
   test("unique solution") {

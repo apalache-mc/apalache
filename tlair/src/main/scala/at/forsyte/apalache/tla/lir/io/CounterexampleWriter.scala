@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
+import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
 
 /**
  * A printer for counterexamples, in various formats: TLA+ , as TLC output, ...

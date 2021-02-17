@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -13,8 +14,8 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
   private def emptySetWithType(elemT: CellT): TlaEx =
     tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(elemT)))
 
-  private def assertEqWhenChosen(rewriter: SymbStateRewriter, state: SymbState,
-                                 oracle: Oracle, position: Int, expected: TlaEx): SymbState = {
+  private def assertEqWhenChosen(rewriter: SymbStateRewriter, state: SymbState, oracle: Oracle, position: Int,
+      expected: TlaEx): SymbState = {
     rewriter.push()
     solverContext.assertGroundExpr(oracle.whenEqualTo(state, position))
     val ns = rewriter.rewriteUntilDone(state.setRex(tla.eql(state.ex, expected)))
@@ -105,8 +106,8 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
 
-    def mkSeq(args : Int*): ArenaCell = {
-      val tuple = tla.tuple(args map tla.int :_*)
+    def mkSeq(args: Int*): ArenaCell = {
+      val tuple = tla.tuple(args map tla.int: _*)
       val annot = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
       state = rewriter.rewriteUntilDone(state.setRex(annot))
       state.asCell
@@ -211,9 +212,8 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
       state.asCell
     }
 
-    val sets = Seq(rewriteEx(tla.enumSet(tla.enumSet(1, 2),
-      tla.enumSet(3, 4))),
-      rewriteEx(tla.enumSet(tla.enumSet(5, 6))))
+    val sets =
+      Seq(rewriteEx(tla.enumSet(tla.enumSet(1, 2), tla.enumSet(3, 4))), rewriteEx(tla.enumSet(tla.enumSet(5, 6))))
     state = new CherryPick(rewriter).pickSet(FinSetT(FinSetT(IntT())), state, oracle, sets, state.arena.cellFalse())
     assert(solverContext.sat())
 

@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 import javax.inject.Singleton
 
@@ -194,7 +195,7 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
     val subs = boundEs.foldLeft(Map[String, TlaEx]())(collectSubstitutions)
     val newMapEx = substituteNames(subs, mapEx)
     // collect the arguments back
-    newMapEx +: TlaOper.interleave(boundNames.map(NameEx), setEs)
+    newMapEx +: TlaOper.interleave(boundNames.map(NameEx(_)), setEs)
   }
 
   private def collectSubstitutions(subs: Map[String, TlaEx], ex: TlaEx): Map[String, TlaEx] = {

@@ -10,20 +10,18 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+
 ### Features
 
-* integration with Java-like annotations in comments, see #504
-* support for `Assume(...)` in the type checker
-* new command-line option for `typecheck`:
-  - enable inference of polymorphic types: `--infer-poly`
-* updates to ADR002 and the manual
-* support for parallel assignments `<<x', y'>> = <<1, 2>>`, see #531
-* always sorting declarations with topological sort (changes the order of the operator definitions), see #122
+* Support for `FunAsSeq` conversion in the type checker, see #223
 
-### Bugfixes
+### Documentation
 
-* Boolean values are now supported in TLC config files, see #512
-* Promoting Desugarer to run as the first preprocessing pass, see #531
-* Proper error on invalid type annotations, the parser is strengthened with Scalacheck, see #332
-* Fixed a parsing bug for strings that contain '-', see #539
-* Typechecking quantifiers over tuples, see #482
+* HOWTO on writing type annotations, see #571
+
+### Bug fixes
+
+* Fixed name collisions on LOCAL operators and LOCAL INSTANCE, see #576
+* Parser: a higher-order operator calling a higher-order operator, see #575
+* Type checker: support for recursive functions of multiple arguments, see #582
+* Type checker: support for tuple unpacking in recursive functions, see #583

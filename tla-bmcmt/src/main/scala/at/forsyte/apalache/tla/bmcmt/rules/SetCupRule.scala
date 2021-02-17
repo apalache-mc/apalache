@@ -7,17 +7,17 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
 /**
-  * Rewrites X \cup Y, that is, a union of two sets (not UNION).
-  * In the first encoding, we used a linear number of `in` queries.
-  * However, this happens to be unsound, and we need a quadratic number of queries.
-  *
-  * @author Igor Konnov
-  */
+ * Rewrites X \cup Y, that is, a union of two sets (not UNION).
+ * In the first encoding, we used a linear number of `in` queries.
+ * However, this happens to be unsound, and we need a quadratic number of queries.
+ *
+ * @author Igor Konnov
+ */
 class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaSetOper.cup, _*) => true
-      case _ => false
+      case _                          => false
     }
   }
 
@@ -32,15 +32,16 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val leftElems = nextState.arena.getHas(leftSetCell)
         val rightElems = nextState.arena.getHas(rightSetCell)
 
-        val common = Set(leftElems :_*).intersect(Set(rightElems :_*))
-        val onlyLeft = Set(leftElems :_*).diff(common)
-        val onlyRight = Set(rightElems :_*).diff(common)
+        val common = Set(leftElems: _*).intersect(Set(rightElems: _*))
+        val onlyLeft = Set(leftElems: _*).diff(common)
+        val onlyRight = Set(rightElems: _*).diff(common)
 
         // introduce a new set
         val newType = types.unify(leftSetCell.cellType, rightSetCell.cellType)
         if (newType.isEmpty) {
-          throw new TypeException(s"Failed to unify types ${leftSetCell.cellType}"
-            + " and ${rightSetCell.cellType} when rewriting ${state.ex}", state.ex)
+          throw new TypeException(
+              s"Failed to unify types ${leftSetCell.cellType}"
+                + " and ${rightSetCell.cellType} when rewriting ${state.ex}", state.ex)
         }
         nextState = nextState.updateArena(_.appendCell(newType.get))
         val newSetCell = nextState.arena.topCell

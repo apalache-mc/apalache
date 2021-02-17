@@ -9,26 +9,26 @@ import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 
 /**
-  * Implements the rule for conjunction. Similar to TLC, we short-circuit A /\ B as IF A THEN B ELSE FALSE.
-  * This allows us to introduce an optimization on-the-fly for the conjunctions that were marked with a hint.
-  * In this optimization, we push the context, assume A and check satisfiability of the SMT context.
-  * If the context is unsat, we immediately return FALSE. Otherwise, we pop the context and continue.
-  *
-  * @author Igor Konnov
-  */
+ * Implements the rule for conjunction. Similar to TLC, we short-circuit A /\ B as IF A THEN B ELSE FALSE.
+ * This allows us to introduce an optimization on-the-fly for the conjunctions that were marked with a hint.
+ * In this optimization, we push the context, assume A and check satisfiability of the SMT context.
+ * If the context is unsat, we immediately return FALSE. Otherwise, we pop the context and continue.
+ *
+ * @author Igor Konnov
+ */
 class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val simplifier = new ConstSimplifierForSmt()
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaBoolOper.and, _*) => true
-      case _ => false
+      case _                           => false
     }
   }
 
   override def apply(state: SymbState): SymbState = {
     simplifier.simplifyShallow(state.ex) match {
-      case OperEx(TlaBoolOper.and, args@_*) =>
+      case OperEx(TlaBoolOper.and, args @ _*) =>
         val finalState =
           if (args.isEmpty) {
             // empty conjunction is always true
@@ -37,13 +37,15 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
             // use short-circuiting on state-level expressions (like in TLC)
             def toIte(es: Seq[TlaEx]): TlaEx = {
               es match {
-                case Seq(last) => last
+                case Seq(last)  => last
                 case hd +: tail => tla.ite(hd, toIte(tail), state.arena.cellFalse().toNameEx)
               }
             }
 
-            if (rewriter.config.lazyCircuit &&
-                rewriter.formulaHintsStore.getHint(state.ex.ID).contains(FormulaHintsStore.HighAnd())) {
+            if (
+                rewriter.config.lazyCircuit &&
+                rewriter.formulaHintsStore.getHint(state.ex.ID).contains(FormulaHintsStore.HighAnd())
+            ) {
               // lazy short-circuiting: evaluate the conditions and prune them in runtime
               val level = rewriter.contextLevel
               rewriter.push()
@@ -74,7 +76,7 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
                   }
 
                   val rewrittenArgs = args map mapArg
-                  rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.and(rewrittenArgs :_*)))
+                  rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.and(rewrittenArgs: _*)))
                   nextState.setRex(pred)
                 }
               rewriter.rewriteUntilDone(newState)
@@ -83,11 +85,11 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         finalState
 
-      case e@ValEx(_) =>
+      case e @ ValEx(_) =>
         // the simplifier has rewritten the disjunction to TRUE or FALSE
         rewriter.rewriteUntilDone(state.setRex(e))
 
-      case e@_ =>
+      case e @ _ =>
         throw new RewriterException("%s is not applicable to %s".format(getClass.getSimpleName, e), e)
     }
   }

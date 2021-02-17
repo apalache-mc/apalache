@@ -1,4 +1,6 @@
 ---------------------- MODULE HourClock ----------------------
+\* This is a local copy of the example from Specifying Systems:
+\* https://github.com/tlaplus/Examples/blob/master/specifications/SpecifyingSystems/RealTime/HourClock.tla
 EXTENDS Naturals
 VARIABLE hr
 HCini  ==  hr \in (1 .. 12)

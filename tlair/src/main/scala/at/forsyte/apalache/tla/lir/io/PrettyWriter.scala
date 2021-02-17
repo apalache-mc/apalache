@@ -8,7 +8,6 @@ import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir._
 import org.bitbucket.inkytonik.kiama.output.PrettyPrinter
 
-import scala.collection.immutable.{Seq => ImmutableSeq}
 import scala.collection.immutable.HashMap
 
 /**
@@ -24,7 +23,8 @@ import scala.collection.immutable.HashMap
  *
  * @author Igor Konnov
  */
-class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) extends PrettyPrinter {
+class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2)(implicit typeTag: TypeTag)
+    extends PrettyPrinter {
   override val defaultIndent: Int = indent
 
   val REC_FUN_UNDEFINED = "recFunNameUndefined"
@@ -525,10 +525,10 @@ object PrettyWriter {
   /**
    * Write a module to a file (without appending).
    *
-   * @param module a TLA module
+   * @param module     a TLA module
    * @param outputFile an output file that will be created or overwritten
    */
-  def write(module: TlaModule, outputFile: File): Unit = {
+  def write(module: TlaModule, outputFile: File)(implicit typeTag: TypeTag): Unit = {
     val writer = new PrintWriter(new FileWriter(outputFile, false))
     try {
       new PrettyWriter(writer).write(module)
