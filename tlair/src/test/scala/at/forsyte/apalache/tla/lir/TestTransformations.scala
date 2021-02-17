@@ -18,35 +18,6 @@ class TestTransformations extends FunSuite with TestingPredefs {
     case _                       => 1
   }
 
-  test("Test EqualityAsContainment") {
-    val transformation = PrimedEqualityToMembership(new IdleTracker())
-
-    val ex1 = primeEq(n_x, n_y)
-    val ex2 = or(primeEq(n_x, n_y), ge(prime(n_x), int(0)))
-    val ex3 = ite(primeEq(n_x, n_y), primeEq(n_z, int(0)), primeEq(n_z, int(1)))
-    val ex4 = letIn(
-        appOp(n_A),
-        declOp("A", primeEq(n_x, n_y))
-    )
-
-    val expected1 = in(prime(n_x), enumSet(n_y))
-    val expected2 = or(in(prime(n_x), enumSet(n_y)), ge(prime(n_x), int(0)))
-    val expected3 = ite(
-        in(prime(n_x), enumSet(n_y)),
-        in(prime(n_z), enumSet(int(0))),
-        in(prime(n_z), enumSet(int(1)))
-    )
-    val expected4 = letIn(
-        appOp(n_A),
-        declOp("A", in(prime(n_x), enumSet(n_y)))
-    )
-
-    val exs = Seq(ex1, ex2, ex3, ex4)
-    val expected = Seq(expected1, expected2, expected3, expected4)
-    val actual = exs map transformation
-    assert(expected == actual)
-  }
-
   test("Test Inline") {
     val cDecl = declOp("C", plus(n_x, int(1)), SimpleFormalParam("x"))
     val operDecls = Seq(
