@@ -128,12 +128,6 @@ class TestSourceLocator extends FunSuite with TestingPredefs {
     testTransformation(transformation)
   }
 
-  test("Test EqualityAsContainment") {
-    val transformation = PrimedEqualityToMembership(tracker)
-
-    testTransformation(transformation)
-  }
-
   test("Test ExplicitLetIn") {
     val transformation = LetInExpander(tracker, keepNullary = false)
 
