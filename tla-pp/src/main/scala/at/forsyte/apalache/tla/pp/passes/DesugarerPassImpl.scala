@@ -2,8 +2,7 @@ package at.forsyte.apalache.tla.pp.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.lir.TlaModule
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.io.PrettyWriter
+import at.forsyte.apalache.tla.lir.io.{PrettyWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.pp.Desugarer
@@ -22,7 +21,7 @@ import java.nio.file.Path
  * @param nextPass next pass to call
  */
 class DesugarerPassImpl @Inject() (
-    val options: PassOptions, tracker: TransformationTracker,
+    val options: PassOptions, tracker: TransformationTracker, writerFactory: TlaWriterFactory,
     @Named("AfterDesugarer") nextPass: Pass with TlaModuleMixin
 ) extends DesugarerPass with LazyLogging {
 
@@ -47,7 +46,7 @@ class DesugarerPassImpl @Inject() (
 
     // dump the result of preprocessing
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    PrettyWriter.write(output, new File(outdir.toFile, "out-desugarer.tla"))
+    writerFactory.writeModuleToFile(output, new File(outdir.toFile, "out-desugarer.tla"))
     outputTlaModule = Some(output)
 
     true

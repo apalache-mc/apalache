@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.pp.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.io.PrettyWriter
+import at.forsyte.apalache.tla.lir.io.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
@@ -24,7 +24,8 @@ import java.nio.file.Path
  * @param nextPass next pass to call
  */
 class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator, renaming: IncrementalRenaming,
-    tracker: TransformationTracker, @Named("AfterInline") nextPass: Pass with TlaModuleMixin)
+    tracker: TransformationTracker, writerFactory: TlaWriterFactory,
+    @Named("AfterInline") nextPass: Pass with TlaModuleMixin)
     extends InlinePass with LazyLogging {
 
   private var outputTlaModule: Option[TlaModule] = None
@@ -87,7 +88,7 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
 
     // dump the result of preprocessing
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    PrettyWriter.write(filtered, new File(outdir.toFile, "out-inline.tla"))
+    writerFactory.writeModuleToFile(filtered, new File(outdir.toFile, "out-inline.tla"))
 
     outputTlaModule = Some(filtered)
     true
