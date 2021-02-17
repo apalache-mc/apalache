@@ -37,7 +37,7 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
   def write(mod: TlaModule): Unit = prettyWriteDoc(toDoc(mod))
 
   // Declarations have a trailing empty line
-  def write(decl: TlaOperDecl): Unit = prettyWriteDoc(toDoc(decl) <> line <> line)
+  def write(decl: TlaDecl): Unit = prettyWriteDoc(toDoc(decl) <> line <> line)
 
   def write(expr: TlaEx): Unit = prettyWriteDoc(toDoc((0, 0), expr))
 
