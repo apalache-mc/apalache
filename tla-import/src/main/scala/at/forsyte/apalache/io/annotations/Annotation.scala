@@ -35,14 +35,17 @@ case class Annotation(name: String, args: AnnotationArg*) {
 
   /**
    * A pretty string representation. When the number of arguments is different from one, it behaves as #toString.
-   * When there is one argument, it prints an annotation in the format: `@name: arg ;`
+   * When there is one argument that is a string, it prints an annotation in the format: `@name: arg ;`
+   *
    * @return
    */
   def toPrettyString: String = {
-    if (args.length != 1) {
-      this.toString
-    } else {
-      "@%s: %s;".format(name, args.head)
+    args match {
+      case Seq(AnnotationStr(text)) =>
+        "@%s: %s;".format(name, text)
+
+      case _ =>
+        this.toString
     }
   }
 }

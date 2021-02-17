@@ -23,8 +23,7 @@ import scala.collection.immutable.HashMap
  *
  * @author Igor Konnov
  */
-class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2)(implicit typeTag: TypeTag)
-    extends PrettyPrinter {
+class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) extends PrettyPrinter with TlaWriter {
   override val defaultIndent: Int = indent
 
   val REC_FUN_UNDEFINED = "recFunNameUndefined"
@@ -286,9 +285,9 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2)(im
         val doc = group(text("CASE") <> nest(space <> folddoc(pairsWithOther.toList, _ <> line <> "[]" <> space <> _)))
         wrapWithParen(parentPrecedence, prec, doc)
 
-      case OperEx(TlaControlOper.caseNoOther, guardsAndUpdates @ _*) =>
+      case opex @ OperEx(TlaControlOper.caseNoOther, guardsAndUpdates @ _*) =>
         // delegate this case to CASE with OTHER by passing NullEx
-        toDoc(parentPrecedence, OperEx(TlaControlOper.caseWithOther, NullEx +: guardsAndUpdates: _*))
+        toDoc(parentPrecedence, OperEx(TlaControlOper.caseWithOther, NullEx +: guardsAndUpdates: _*)(opex.typeTag))
 
       case OperEx(TlaFunOper.except, funEx, keysAndValues @ _*) =>
         val (ks, vs) = keysAndValues.zipWithIndex partition (_._2 % 2 == 0)
@@ -530,7 +529,7 @@ object PrettyWriter {
    * @param module     a TLA module
    * @param outputFile an output file that will be created or overwritten
    */
-  def write(module: TlaModule, outputFile: File)(implicit typeTag: TypeTag): Unit = {
+  def write(module: TlaModule, outputFile: File): Unit = {
     val writer = new PrintWriter(new FileWriter(outputFile, false))
     try {
       new PrettyWriter(writer).write(module)

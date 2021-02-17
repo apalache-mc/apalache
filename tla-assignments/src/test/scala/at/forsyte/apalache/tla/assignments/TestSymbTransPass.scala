@@ -34,8 +34,7 @@ class TestSymbTransPass extends FunSuite with TestingPredefs {
     val bodyMap = BodyMapFactory.makeFromDecls(uniqueVarDecls.operDeclarations)
     val inlined = ModuleByExTransformer(InlinerOfUserOper(bodyMap, tracker))(uniqueVarDecls)
     val explLetIn = ModuleByExTransformer(LetInExpander(tracker, keepNullary = false))(inlined)
-    val afterDesugarer = ModuleByExTransformer(Desugarer(tracker))(explLetIn)
-    val preprocessed = ModuleByExTransformer(PrimedEqualityToMembership(tracker))(afterDesugarer)
+    val preprocessed = ModuleByExTransformer(Desugarer(tracker))(explLetIn)
 
     val vars = preprocessed.varDeclarations.map(_.name)
 
@@ -99,14 +98,6 @@ class TestSymbTransPass extends FunSuite with TestingPredefs {
     val decls = Seq(TlaOperDecl("Next", List(), next), TlaVarDecl("x"), TlaVarDecl("z"))
     val trans = testFromDecls(decls)
     assert(trans.isEmpty)
-  }
-
-  ignore("Test no Next") {
-    // the new version of SymbolicTransitionExtractor accepts an expression, so nothing to test here
-    // TODO: remove this test
-    val next = bd.primeInSingleton(n_x, n_S)
-    val decls = Seq(TlaOperDecl("Next", List(), next), TlaVarDecl("x"))
-    assertThrows[AssignmentException](testFromDecls(decls, "NotNext"))
   }
 
   test("Test Selections") {

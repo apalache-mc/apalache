@@ -2,10 +2,9 @@ package at.forsyte.apalache.tla.pp.passes
 
 import java.io.File
 import java.nio.file.Path
-
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.lir.TlaModule
-import at.forsyte.apalache.tla.lir.io.PrettyWriter
+import at.forsyte.apalache.tla.lir.io.{PrettyWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -22,8 +21,8 @@ import com.typesafe.scalalogging.LazyLogging
  * @param tracker  transformation tracker
  * @param nextPass next pass to call
  */
-class OptPassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator, renaming: IncrementalRenaming,
-    tracker: TransformationTracker, @Named("AfterOpt") nextPass: Pass with TlaModuleMixin)
+class OptPassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator, tracker: TransformationTracker,
+    writerFactory: TlaWriterFactory, @Named("AfterOpt") nextPass: Pass with TlaModuleMixin)
     extends OptPass with LazyLogging {
 
   private var outputTlaModule: Option[TlaModule] = None
@@ -58,7 +57,7 @@ class OptPassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator,
 
     // dump the result of preprocessing
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    PrettyWriter.write(optimized, new File(outdir.toFile, "out-opt.tla"))
+    writerFactory.writeModuleToFile(optimized, new File(outdir.toFile, "out-opt.tla"))
 
     outputTlaModule = Some(optimized)
     true

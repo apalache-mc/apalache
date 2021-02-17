@@ -1,25 +1,24 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
-import java.io.File
-import java.nio.file.Path
-
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.bmcmt.CheckerException
 import at.forsyte.apalache.tla.bmcmt.analyses._
-import at.forsyte.apalache.tla.lir.io.PrettyWriter
+import at.forsyte.apalache.tla.lir.io.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.ModuleByExTransformer
 import at.forsyte.apalache.tla.lir.{NullEx, TlaAssumeDecl, TlaEx, TlaOperDecl}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
+
+import java.io.File
+import java.nio.file.Path
 
 /**
  * Find free-standing existential quantifiers, grade expressions, and produce hints about some formulas.
  */
 class AnalysisPassImpl @Inject() (val options: PassOptions, hintsStoreImpl: FormulaHintsStoreImpl,
-    exprGradeStoreImpl: ExprGradeStoreImpl, tracker: TransformationTracker,
+    exprGradeStoreImpl: ExprGradeStoreImpl, tracker: TransformationTracker, writerFactory: TlaWriterFactory,
     @Named("AfterAnalysis") nextPass: Pass with TlaModuleMixin)
     extends AnalysisPass with LazyLogging {
 
@@ -78,7 +77,7 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, hintsStoreImpl: Form
     nextPass.setModule(marked)
 
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    PrettyWriter.write(marked, new File(outdir.toFile, "out-analysis.tla"))
+    writerFactory.writeModuleToFile(marked, new File(outdir.toFile, "out-analysis.tla"))
 
     logger.info("  > Introduced expression grades")
     logger.info("  > Introduced %d formula hints".format(hintsStoreImpl.store.size))
