@@ -1,13 +1,12 @@
 package at.forsyte.apalache.io.json
 
+import at.forsyte.apalache.io.json.impl.TlaToUJson
 import at.forsyte.apalache.tla.lir.{TestingPredefs, TlaConstDecl, TlaDecl, TlaEx, TlaVarDecl}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
 import org.junit.runner.RunWith
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.junit.JUnitRunner
-
-import java.io.StringWriter
 
 @RunWith(classOf[JUnitRunner])
 class TestTlaToUJson extends FunSuite with BeforeAndAfterEach with TestingPredefs {
