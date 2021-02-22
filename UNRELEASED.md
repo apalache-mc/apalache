@@ -13,3 +13,4 @@
 ### Bug fixes
 
 * Parser: propagating type annotations in INSTANCES, see #592 and #596
+
