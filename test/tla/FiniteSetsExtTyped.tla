@@ -36,7 +36,7 @@ LOCAL INSTANCE Naturals
 LOCAL INSTANCE FiniteSets
 
 \* not using LOCAL until issue #543 is fixed
-(*LOCAL*) INSTANCE FunctionsTyped
+LOCAL INSTANCE FunctionsTyped
 
 
 
