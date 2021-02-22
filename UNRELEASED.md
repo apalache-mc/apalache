@@ -25,3 +25,4 @@
 * Parser: a higher-order operator calling a higher-order operator, see #575
 * Type checker: support for recursive functions of multiple arguments, see #582
 * Type checker: support for tuple unpacking in recursive functions, see #583
+* Parser: propagating type annotations in INSTANCES, see #592 and #596
