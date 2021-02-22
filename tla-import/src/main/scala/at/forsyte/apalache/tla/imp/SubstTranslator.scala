@@ -35,6 +35,7 @@ class SubstTranslator(
               sourceStore.find(d.body.ID).foreach { id =>
                 sourceStore.add(copy.body.ID, id)
               }
+              // TODO: copy the annotation!
               copy
             }
 
