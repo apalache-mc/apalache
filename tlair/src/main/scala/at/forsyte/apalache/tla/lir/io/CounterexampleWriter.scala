@@ -2,8 +2,8 @@ package at.forsyte.apalache.tla.lir.io
 
 import java.io.{FileWriter, PrintWriter}
 import java.util.Calendar
-
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
@@ -54,72 +54,90 @@ object CounterexampleWriter {
 
 class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
 
-  def printStateFormula(pretty: PrettyWriter, state: State) = {
+  def stateToEx(state: State): TlaEx =
+    if (state.isEmpty) {
+      ValEx(TlaBool(true))
+    } else {
+      val namesAndVals = state.toSeq.sortBy(_._1).map { case (name, value) =>
+        tla.eql(NameEx(name), value)
+      }
+      tla.and(namesAndVals: _*)
+    }
+
+  def printStateFormula(pretty: PrettyWriter, state: State): Unit =
     if (state.isEmpty) {
       pretty.write(ValEx(TlaBool(true)))
     } else {
+      val prefix = if (state.size == 1) "" else "/\\ "
       state.toList.sortBy(_._1).foreach { case (name, value) =>
-        writer.print(s"/\\ $name = ")
+        writer.print(s"$prefix$name = ")
         pretty.write(value)
-        writer.println
+        writer.println()
       }
     }
-  }
 
   override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
     val pretty = new PrettyWriter(writer)
 
-    writer.println("%s MODULE counterexample %s\n".format("-" * 25, "-" * 25))
-    writer.println("EXTENDS %s\n".format(rootModule.name))
+    pretty.writeHeader("counterexample", List(rootModule))
 
-    states.zipWithIndex.foreach { case (state, j) =>
-      val i = j + 1 // start counting from 1, for compatibility with TLC counterexamples
-      if (i == 1) {
-        writer.println("(* Initial state *)")
-      } else {
-        writer.println(s"(* Transition ${state._1} to State$i *)")
-      }
-      writer.println(s"\nState$i ==")
-      printStateFormula(pretty, state._2)
-      writer.println
+    states.zipWithIndex.foreach {
+      case (state, 0) =>
+        pretty.writeComment("Constant initialization state")
+        val decl = tla.declOp("ConstInit", stateToEx(state._2))
+        pretty.write(decl)
+      case (state, j) =>
+        // Index 0 is reserved for ConstInit, but users expect State0 to
+        // be the initial state, so we shift indices by 1 for print-output
+        val i = j - 1
+        if (i == 0) {
+          pretty.writeComment("Initial state")
+        } else {
+          pretty.writeComment(s"Transition ${state._1} to State$i")
+        }
+        val decl = tla.declOp(s"State$i", stateToEx(state._2))
+        pretty.write(decl)
     }
-    writer.print(s"""(* The following formula holds true in the last state and violates the invariant *)
-         |
-         |""".stripMargin)
+    pretty.writeComment("The following formula holds true in the last state and violates the invariant")
     pretty.write(TlaOperDecl("InvariantViolation", List(), notInvariant))
 
-    writer.println("\n\n%s".format("=" * 80))
-    writer.println("\\* Created by Apalache on %s".format(Calendar.getInstance().getTime))
-    writer.println("\\* https://github.com/informalsystems/apalache")
-    writer.close()
+    pretty.writeFooter()
+    pretty.writeComment("Created by Apalache on %s".format(Calendar.getInstance().getTime))
+    pretty.writeComment("https://github.com/informalsystems/apalache")
+    pretty.close()
   }
 }
 
 class TlcCounterexampleWriter(writer: PrintWriter) extends TlaCounterexampleWriter(writer) {
-
   override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
-    writer.print(s"""@!@!@STARTMSG 2262:0 @!@!@
-         |Created by Apalache on ${Calendar.getInstance().getTime}
-         |@!@!@ENDMSG 2262 @!@!@
-         |@!@!@STARTMSG 2110:1 @!@!@
-         |Invariant is violated.
-         |@!@!@ENDMSG 2110 @!@!@
-         |@!@!@STARTMSG 2121:1 @!@!@
-         |The behavior up to this point is:
-         |@!@!@ENDMSG 2121 @!@!@
-         |""".stripMargin)
+    // `states` must always contain at least 1 state: the constant initialization
+    // This makes `states.tail` safe, since we have a nonempty sequence
+    assert(states.nonEmpty)
 
-    states.zipWithIndex.foreach { case (state, j) =>
-      val i = j + 1 // start counting from 1, for compatibility with TLC counterexamples
+    val pretty = new PrettyWriter(writer)
+
+    writer.write(s"""@!@!@STARTMSG 2262:0 @!@!@
+                    |Created by Apalache on ${Calendar.getInstance().getTime}
+                    |@!@!@ENDMSG 2262 @!@!@
+                    |@!@!@STARTMSG 2110:1 @!@!@
+                    |Invariant is violated.
+                    |@!@!@ENDMSG 2110 @!@!@
+                    |@!@!@STARTMSG 2121:1 @!@!@
+                    |The behavior up to this point is:
+                    |@!@!@ENDMSG 2121 @!@!@
+                    |""".stripMargin)
+
+    states.zipWithIndex.tail.foreach { case (state, i) =>
       val prefix = if (i == 1) s"$i: <Initial predicate>" else s"$i: <Next>"
 
       writer.println(s"""@!@!@STARTMSG 2217:4 @!@!@
-           |$prefix""".stripMargin)
-      printStateFormula(new PrettyWriter(writer), state._2)
+                        |$prefix""".stripMargin)
+      // We still need to call PrettyWriter, since PrintWriter doesn't know how to output TlaEx
+      printStateFormula(pretty, state._2)
       writer.println("""|
              |@!@!@ENDMSG 2217 @!@!@""".stripMargin)
     }
-    writer.close()
+    pretty.close()
   }
 }
 
@@ -127,11 +145,15 @@ class JsonCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter
   override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
     val json = new JsonWriter(writer)
 
-    val tlaStates = states.zipWithIndex.collect { case ((tran, vars), i) =>
+    val tlaStates = states.zipWithIndex.collect { case ((_, vars), i) =>
       val state = vars.collect { case (name, value) =>
         OperEx(TlaOper.eq, NameEx(name), value)
       }
-      TlaOperDecl(s"State${i + 1}", List(), OperEx(TlaBoolOper.and, state.toList: _*))
+      val name = i match {
+        case 0 => "ConstInit"
+        case _ => s"State${i - 1}"
+      }
+      TlaOperDecl(name, List(), OperEx(TlaBoolOper.and, state.toList: _*))
 
     }
 
