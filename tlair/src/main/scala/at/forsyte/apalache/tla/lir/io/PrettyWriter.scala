@@ -32,22 +32,43 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
   // the stack of lambda declarations
   private var lambdaStack: List[TlaOperDecl] = Nil
 
-  override def write(mod: TlaModule): Unit = {
-    writer.write(pretty(toDoc(mod), textWidth).layout)
+  private def prettyWriteDoc(doc: Doc): Unit = writer.write(pretty(doc, textWidth).layout)
+
+  def write(mod: TlaModule): Unit = prettyWriteDoc(toDoc(mod))
+
+  // Declarations have a trailing empty line
+  def write(decl: TlaDecl): Unit = prettyWriteDoc(toDoc(decl) <> line <> line)
+
+  def write(expr: TlaEx): Unit = prettyWriteDoc(toDoc((0, 0), expr))
+
+  def writeComment(commentStr: String): Unit = prettyWriteDoc(toComment(commentStr))
+
+  def writeHeader(moduleName: String, extensionModuleNames: List[TlaModule] = List.empty): Unit =
+    prettyWriteDoc(
+        moduleNameDoc(moduleName) <> moduleExtendsDoc(extensionModuleNames) <> line
+    )
+
+  def writeFooter(): Unit = prettyWriteDoc(moduleTerminalDoc)
+
+  private def toComment(commentStr: String): Doc = text(s"(* $commentStr *)") <> line
+
+  private def moduleNameDoc(name: String): Doc = {
+    val middle = s" MODULE $name "
+    val nDashes = math.max(5, (textWidth - middle.length) / 2) // int div rounds down
+    s"${List.fill(nDashes)("-").mkString}$middle${List.fill(nDashes)("-").mkString}" <> line
   }
 
-  override def write(decl: TlaDecl): Unit = {
-    writer.write(pretty(toDoc(decl), textWidth).layout)
-  }
+  private def moduleExtendsDoc(moduleNames: List[TlaModule]): Doc =
+    if (moduleNames.isEmpty) emptyDoc
+    else line <> text(s"EXTENDS ${moduleNames.map(_.name).mkString(", ")}") <> line
 
-  override def write(expr: TlaEx): Unit = {
-    writer.write(pretty(toDoc((0, 0), expr), textWidth).layout)
-  }
+  private def moduleTerminalDoc: Doc =
+    s"${List.fill(textWidth)("=").mkString}" <> line
 
-  def toDoc(mod: TlaModule): Doc = {
-    s"----- MODULE ${mod.name} -----" <> line <>
-      lsep(mod.declarations.toList map toDoc, line) <> line <>
-      "===============" <> line
+  def toDoc(mod: TlaModule, extensionModuleNames: List[TlaModule] = List.empty): Doc = {
+    moduleNameDoc(mod.name) <>
+      moduleExtendsDoc(extensionModuleNames) <>
+      lsep((mod.declarations.toList map toDoc) :+ moduleTerminalDoc, line)
   }
 
   def toDoc(parentPrecedence: (Int, Int), expr: TlaEx): Doc = {
@@ -496,6 +517,8 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
       case _                => throw new IllegalStateException("Expected a string as a record key, found: " + ex)
     }
   }
+
+  def close(): Unit = writer.close()
 }
 
 object PrettyWriter {

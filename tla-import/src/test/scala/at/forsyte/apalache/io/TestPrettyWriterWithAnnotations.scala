@@ -30,7 +30,9 @@ class TestPrettyWriterWithAnnotations extends FunSuite with BeforeAndAfterEach {
     printWriter.flush()
     val expected =
       """(* @type: Int -> Bool; *)
-        |VARIABLE myFun""".stripMargin
+        |VARIABLE myFun
+        |
+        |""".stripMargin
     assert(expected == stringWriter.toString)
   }
 
@@ -45,7 +47,9 @@ class TestPrettyWriterWithAnnotations extends FunSuite with BeforeAndAfterEach {
     val expected =
       """(* @type: Int; *)
         |(* @sweet(true) *)
-        |CONSTANT N""".stripMargin
+        |CONSTANT N
+        |
+        |""".stripMargin
     assert(expected == stringWriter.toString)
   }
 
@@ -59,7 +63,9 @@ class TestPrettyWriterWithAnnotations extends FunSuite with BeforeAndAfterEach {
     printWriter.flush()
     val expected =
       """(* @type: (Int, Str) -> Bool; *)
-        |MyOper(x, y) == TRUE""".stripMargin
+        |MyOper(x, y) == TRUE
+        |
+        |""".stripMargin
     assert(expected == stringWriter.toString)
   }
 }
