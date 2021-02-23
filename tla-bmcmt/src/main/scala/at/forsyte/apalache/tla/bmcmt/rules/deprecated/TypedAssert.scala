@@ -6,14 +6,14 @@ import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 
 /**
-  * In many cases we like to introduce an assertion that fails in case of error and returns a dummy value otherwise.
-  * Unfortunately, it does not work with Tlc!Assert, as it returns a value of Boolean type.
-  * This class provides us with an implementation that returns a cell of given type.
-  *
-  * @author Igor Konnov
-  *
-  * @param rewriter a symbolic rewriter
-  */
+ * In many cases we like to introduce an assertion that fails in case of error and returns a dummy value otherwise.
+ * Unfortunately, it does not work with Tlc!Assert, as it returns a value of Boolean type.
+ * This class provides us with an implementation that returns a cell of given type.
+ *
+ * @author Igor Konnov
+ *
+ * @param rewriter a symbolic rewriter
+ */
 @deprecated("We do not have clean semantics for assert")
 class TypedAssert(rewriter: SymbStateRewriter) {
   def typedAssert(state: SymbState, targetType: CellT, arg: TlaEx, message: String): SymbState = {

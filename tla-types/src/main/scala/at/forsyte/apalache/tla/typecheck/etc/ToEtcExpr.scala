@@ -627,23 +627,50 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
           accessorsWithNewValues.flatMap(p => List(this(p._1), this(p._2)))
         mkApp(ref, disjunctiveType, this(fun) +: xargs: _*)
 
-      case OperEx(TlaFunOper.recFunDef, body, NameEx(name), bindingSet) =>
-        // the expected type is: (((a -> b) => (a => b)) => (a -> b)) (λ $recFun ∈ Set(c -> d). λ x ∈ Int. x)
-        val a = varPool.fresh
-        val b = varPool.fresh
-        val funType = FunT1(a, b)
-        val aToB = OperT1(Seq(a), b)
-        val principal = OperT1(Seq(OperT1(Seq(funType), aToB)), funType)
-        val innerLambda =
-          mkAbs(ExactRef(body.ID), this(body), (name, this(bindingSet)))
-        val c = varPool.fresh
-        val d = varPool.fresh
+      case OperEx(TlaFunOper.recFunDef, body, args @ _*) =>
+        // fun[x \in S, y \in T |-> e] == ...
+        // or, fun[<<x, y>> \in S, z \in T |-> e] == ...
+        //
+        // We give the example for a one-argument function, as the case of multiple arguments is complex:
+        // (((b -> a) => (b => a)) => (b -> a)) (λ $recFun ∈ Set(c -> d). λ x ∈ Int. x)
+        val bindings =
+          translateBindings(
+              args
+                .grouped(2)
+                .map {
+                  case Seq(varEx, setEx) => (varEx, setEx)
+                  case orphan            => throw new TypingException(s"Invalid bound variables and sets ${orphan} in: ${ex}")
+                }
+                .toSeq: _*
+          )
+
+        val resultType = varPool.fresh
+        val argTypes = varPool.fresh(bindings.length)
+
+        // wrap multiple variables into a tuple, while keeping a single variable unwrapped
+        def mkFunFrom: Seq[VarT1] => TlaType1 = {
+          // With one argument, the generated function has the type b -> a, that is, no tuple is involved.
+          case Seq(one) => one
+          // With multiple arguments, the generated function has the type <<b, c>> -> a, that is, it accepts a tuple
+          case many => TupT1(many: _*)
+        }
+
+        // e.g., b -> a, or <<b, c>> -> a
+        val funType = FunT1(mkFunFrom(argTypes), resultType)
+        // e.g., b => a, or (b, c) => a
+        val operType = OperT1(argTypes, resultType)
+        val principal = OperT1(Seq(OperT1(Seq(funType), operType)), funType)
+        // λ x ∈ S, y ∈ T. [[body]]
+        val innerLambda = mkAbs(ExactRef(body.ID), this(body), bindings: _*)
+        // create another vector of type variables for the lambda over a function
+        val recFunResTypeVar = varPool.fresh
+        val resFunArgTypes = mkFunFrom(varPool.fresh(bindings.length))
         val outerLambda = mkAbs(
             BlameRef(ex.ID),
             innerLambda,
             (
                 TlaFunOper.recFunRef.uniqueName,
-                mkConst(BlameRef(ex.ID), SetT1(FunT1(c, d)))
+                mkConst(BlameRef(ex.ID), SetT1(FunT1(resFunArgTypes, recFunResTypeVar)))
             )
         )
         mkApp(ref, Seq(principal), outerLambda)
@@ -810,6 +837,13 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val a = varPool.fresh
         val opsig = OperT1(Seq(a, BoolT1()), BoolT1()) // (a, Bool) => Bool
         mkExRefApp(opsig, Seq(varName, act))
+
+      //******************************************** Apalache **************************************************
+      case wte @ OperEx(BmcOper.funAsSeq, fun, len) =>
+        val a = varPool.fresh
+        // ((Int -> a), Int) => Seq(a)
+        val opsig = OperT1(Seq(FunT1(IntT1(), a), IntT1()), SeqT1(a))
+        mkExRefApp(opsig, Seq(fun, len))
 
       //******************************************** MISC **************************************************
       case wte @ OperEx(TypingOper.withType, _*) =>

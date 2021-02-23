@@ -3,9 +3,9 @@ package at.forsyte.apalache.tla.bmcmt
 import scala.collection.immutable.HashMap
 
 /**
-  * Binding variables to memory cells. We keep the number of methods to minimum. If you need all the Map methods,
-  * use toMap and convert the result with Binding(...).
-  */
+ * Binding variables to memory cells. We keep the number of methods to minimum. If you need all the Map methods,
+ * use toMap and convert the result with Binding(...).
+ */
 class Binding(val toMap: Map[String, ArenaCell]) extends Serializable {
   def apply(name: String): ArenaCell = {
     toMap(name)
@@ -21,8 +21,7 @@ class Binding(val toMap: Map[String, ArenaCell]) extends Serializable {
 
   // remove non-primed variables and rename primed variables to non-primed
   def shiftBinding(constants: Set[String]): Binding = {
-    Binding(forgetNonPrimed(constants).
-      toMap.map(p => (p._1.stripSuffix("'"), p._2)))
+    Binding(forgetNonPrimed(constants).toMap.map(p => (p._1.stripSuffix("'"), p._2)))
   }
 
   // remove primed variables
@@ -43,11 +42,10 @@ object Binding {
   }
 
   def apply(args: (String, ArenaCell)*): Binding = {
-    new Binding(HashMap[String, ArenaCell](args :_*))
+    new Binding(HashMap[String, ArenaCell](args: _*))
   }
 
   def apply(map: Map[String, ArenaCell]): Binding = {
-    new Binding(HashMap(map.toSeq :_*))
+    new Binding(HashMap(map.toSeq: _*))
   }
 }
-

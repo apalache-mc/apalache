@@ -9,10 +9,10 @@ import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 
 /**
-  * Implements an equivalence A <=> B by rewriting it to A = B.
-  *
-  * @author Igor Konnov
-  */
+ * Implements an equivalence A <=> B by rewriting it to A = B.
+ *
+ * @author Igor Konnov
+ */
 @deprecated("Normalizer takes care of it")
 class EquivRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val substRule = new SubstRule(rewriter)
@@ -21,7 +21,7 @@ class EquivRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaBoolOper.equiv, _, _) => true
-      case _ => false
+      case _                               => false
     }
   }
 

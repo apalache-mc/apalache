@@ -9,15 +9,15 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 
 /**
-  * Rewriting DOMAIN f, that is, translating the domain of a function, record, tuple, or sequence.
-  *
-  * @author Igor Konnov
-  */
+ * Rewriting DOMAIN f, that is, translating the domain of a function, record, tuple, or sequence.
+ *
+ * @author Igor Konnov
+ */
 class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaFunOper.domain, _) => true
-      case _ => false
+      case _                            => false
     }
   }
 
@@ -42,9 +42,10 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
           case FunT(_, _) =>
             mkFunDomain(funState, funCell)
 
-            case _ =>
-              throw new RewriterException("DOMAIN x where type(x) = %s is not implemented".format(funCell.cellType), state.ex)
-          }
+          case _ =>
+            throw new RewriterException("DOMAIN x where type(x) = %s is not implemented".format(funCell.cellType),
+                state.ex)
+        }
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
@@ -86,8 +87,7 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
     nextState = nextState.setArena(nextState.arena.appendHas(domCell, domCells: _*))
     for (pair <- state.arena.getHas(relation)) {
       val arg = getArg(pair)
-      val iff = tla.equiv(tla.in(arg, domCell),
-                          tla.in(pair, relation))
+      val iff = tla.equiv(tla.in(arg, domCell), tla.in(pair, relation))
       rewriter.solverContext.assertGroundExpr(iff)
     }
 

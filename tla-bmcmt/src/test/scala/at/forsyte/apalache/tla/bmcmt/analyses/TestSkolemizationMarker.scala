@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.BmcOper
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
@@ -37,8 +38,7 @@ class TestSkolemizationMarker extends FunSuite with BeforeAndAfterEach {
   // see the issue #148
   test("""no mark: x' <- \E y \in S: P""") {
     val input =
-      tla.assignPrime(tla.name("x"),
-        tla.exists(tla.name("y"), tla.name("S"), tla.name("P")))
+      tla.assignPrime(tla.name("x"), tla.exists(tla.name("y"), tla.name("S"), tla.name("P")))
 
     val output = marker(input)
     assert(input == output)

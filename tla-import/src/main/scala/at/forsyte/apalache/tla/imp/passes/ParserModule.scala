@@ -2,9 +2,10 @@ package at.forsyte.apalache.tla.imp.passes
 
 import at.forsyte.apalache.infra.ExceptionAdapter
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TerminalPassWithTlaModule, WriteablePassOptions}
-import at.forsyte.apalache.io.annotations.AnnotationStoreProvider
+import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.ParserExceptionAdapter
+import at.forsyte.apalache.tla.lir.io.TlaWriterFactory
 import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, TypeLiteral}
 
@@ -25,6 +26,10 @@ class ParserModule extends AbstractModule {
     // We have to use TypeLiteral, as otherwise Guice is getting confused by type erasure.
     bind(new TypeLiteral[AnnotationStore]() {})
       .toProvider(classOf[AnnotationStoreProvider])
+
+    // writers
+    bind(classOf[TlaWriterFactory])
+      .to(classOf[PrettyWriterWithAnnotationsFactory])
 
     // SanyParserPassImpl is the default implementation of SanyParserPass
     bind(classOf[SanyParserPass])

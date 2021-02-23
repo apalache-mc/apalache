@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.NameEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -44,7 +45,7 @@ class TestSymbStateRewriterTuple extends RewriterBase {
             solverContext.assertGroundExpr(tla.eql(cell.toNameEx, tla.bool(true)))
             assert(!solverContext.sat())
 
-            // we check the actual contents in the later tests that access elements
+          // we check the actual contents in the later tests that access elements
 
           case _ =>
             fail("Expected Boolean type")
@@ -115,7 +116,7 @@ class TestSymbStateRewriterTuple extends RewriterBase {
 
   // Keramelizer rewrites \X
   ignore("""SE-TUPLE-SET: {<<1, FALSE>>, <<2, FALSE>>, <<1, TRUE>>, <<2, TRUE>> = {1,2} \X  {FALSE, TRUE} ~~> $B$k""") {
-    val set12 = tla.enumSet(1 to 2 map tla.int :_*)
+    val set12 = tla.enumSet(1 to 2 map tla.int: _*)
     val setBool = tla.enumSet(tla.bool(false), tla.bool(true))
     val prod = tla.times(set12, setBool)
     def tup(i: Int, b: Boolean) = tla.tuple(tla.int(i), tla.bool(b))
@@ -134,7 +135,7 @@ class TestSymbStateRewriterTuple extends RewriterBase {
 
   test("""SE-TUPLE-DOM: DOMAIN <<2, FALSE>> = {1, 2}""") {
     val tuple = TlaFunOper.mkTuple(tla.int(2), tla.bool(false), tla.str("c"))
-    val set123 = tla.enumSet(1.to(3) map tla.int :_*)
+    val set123 = tla.enumSet(1.to(3) map tla.int: _*)
     val eq = tla.eql(tla.dom(tuple), set123)
     val state = new SymbState(eq, arena, Binding())
     val rewriter = create()

@@ -4,17 +4,18 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.lir.{NameEx, ValEx}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
-  * Rewriting BOOLEAN, Int, and Nat into predefined cells.
-  *
-  * @author Igor Konnov
-   */
+ * Rewriting BOOLEAN, Int, and Nat into predefined cells.
+ *
+ * @author Igor Konnov
+ */
 class BuiltinConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
-      case ValEx(TlaBool(false)) | ValEx(TlaBool(true))
-           | ValEx(TlaBoolSet) | ValEx(TlaNatSet) | ValEx(TlaIntSet) => true
+      case ValEx(TlaBool(false)) | ValEx(TlaBool(true)) | ValEx(TlaBoolSet) | ValEx(TlaNatSet) | ValEx(TlaIntSet) =>
+        true
       case _ => false
     }
   }

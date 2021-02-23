@@ -98,6 +98,33 @@ EXITCODE: OK
 
 This command parses a TLA+ specification with the SANY parser.
 
+### parse LocalDefClash576 succeeds
+
+```sh
+$ apalache-mc parse LocalDefClash576.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+...
+```
+
+### parse LocalInstanceClash576 succeeds
+
+```sh
+$ apalache-mc parse LocalInstanceClash576.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+...
+```
+
+### parse Select575 succeeds
+
+```sh
+$ apalache-mc parse Select575.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+...
+```
+
 ### parse Rec12 succeeds
 
 ```sh
@@ -953,23 +980,19 @@ Type checker [OK]
 EXITCODE: OK
 ```
 
-### typecheck QueensTyped.tla fails
+### typecheck QueensTyped.tla succeeds
 
-We are not currently able to typecheck this spec, since we need a way of
-coercing functions on integers into sequences, or a way to recognize the former
-as subtypes of the latter. This failing test is added to document the current limitation
-of the Etc type checkers, and we expect it will be changed into a passing test
-once the desired  functionality and added.
+We use `FunAsSeq` to convert a function to a sequence.
+This test should now pass.
 
 ```sh
 $ apalache-mc typecheck QueensTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeChecker
  > Running Snowcat .::.
-[QueensTyped.tla:42:44-42:61]: Mismatch in argument types. Expected: ((Seq(Int)) => Bool)
-[QueensTyped.tla:42:14-42:63]: Error when computing the type of Solutions
- > Snowcat asks you to fix the types. Meow.
-Type checker [FAILED]
+ > Your types are great!
+...
+Type checker [OK]
 ...
 EXITCODE: OK
 ```
@@ -1020,6 +1043,100 @@ EXITCODE: OK
 
 ```sh
 $ apalache-mc typecheck FiniteSetsExtTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > Running Snowcat .::.
+ > Your types are great!
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck HourClock.tla
+
+```sh
+$ apalache-mc typecheck HourClock.tla | sed 's/[IEW]@.*//'
+...
+[HourClock.tla:6:12-6:13]: Undefined name hr. Introduce a type annotation.
+...
+Type checker [FAILED]
+...
+EXITCODE: OK
+```
+
+### typecheck HourClockTyped.tla
+
+```sh
+$ apalache-mc typecheck HourClockTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > Running Snowcat .::.
+ > Your types are great!
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck Channel.tla
+
+```sh
+$ apalache-mc typecheck Channel.tla | sed 's/[IEW]@.*//'
+...
+[Channel.tla:8:20-8:23]: Undefined name chan. Introduce a type annotation.
+...
+Type checker [FAILED]
+...
+EXITCODE: OK
+```
+
+### typecheck ChannelTyped.tla
+
+```sh
+$ apalache-mc typecheck ChannelTyped.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > Running Snowcat .::.
+ > Your types are great!
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck PascalTriangle.tla
+
+```sh
+$ apalache-mc typecheck PascalTriangle.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > Running Snowcat .::.
+ > Your types are great!
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck AnnotationsAndInstances592.tla
+
+```sh
+$ apalache-mc typecheck AnnotationsAndInstances592.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > Running Snowcat .::.
+ > Your types are great!
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck AnnotationsAndSubstitutions596.tla
+
+```sh
+$ apalache-mc typecheck AnnotationsAndSubstitutions596.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeChecker
  > Running Snowcat .::.

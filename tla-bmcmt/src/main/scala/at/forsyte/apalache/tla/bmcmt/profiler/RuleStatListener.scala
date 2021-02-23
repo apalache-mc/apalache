@@ -3,10 +3,10 @@ package at.forsyte.apalache.tla.bmcmt.profiler
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 /**
-  * A listener that keeps a stack of rule statistics entries and updates the statistics on respective calls.
-  *
-  * @author Igor Konnov
-  */
+ * A listener that keeps a stack of rule statistics entries and updates the statistics on respective calls.
+ *
+ * @author Igor Konnov
+ */
 class RuleStatListener extends SmtListener {
   val locator = new RuleStatLocator()
   private var stack: Seq[RuleStat] = Seq()
@@ -42,7 +42,7 @@ class RuleStatListener extends SmtListener {
   private def exprSize(e: TlaEx): Int = {
     e match {
       case OperEx(_, args @ _*) => 1 + (args map exprSize).sum
-      case _ => 1
+      case _                    => 1
     }
   }
 }

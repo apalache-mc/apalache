@@ -1,32 +1,36 @@
 package at.forsyte.apalache.tla.lir
 
 /**
-  * TLA+ operators.
-  */
+ * TLA+ operators.
+ */
 package oper {
 
   /**
-    * The levels of the operators as defined in the TLA+ book:
-    * Constant (contains only primitive operations and constants), State (reasons about current state),
-    * Action (reasons about a pair of states), and Temporal (reasons about executions).
-    */
+   * The levels of the operators as defined in the TLA+ book:
+   * Constant (contains only primitive operations and constants), State (reasons about current state),
+   * Action (reasons about a pair of states), and Temporal (reasons about executions).
+   */
   object Level extends Enumeration {
     val Constant, State, Action, Temporal = Value
   }
 
   /**
-    * Interpretation shows how standard an operator is: Predefined (fixed interpretation),
-    * StandardLib (many standard interpretations), User (user-defined).
-    */
+   * Interpretation shows how standard an operator is: Predefined (fixed interpretation),
+   * StandardLib (many standard interpretations), User (user-defined).
+   */
   object Interpretation extends Enumeration {
+
     /** this operator has a fixed and the only interpretation in TLA+, e.g., \cup, \cap. */
     val Predefined: Interpretation.Value = Value
+
     /** this operator has some interpretation defined in a standard module, e.g., Integers!+, Real!+. */
     val StandardLib: Interpretation.Value = Value
+
     /** this operator is defined by the user and unknown to TLA+ */
     val User: Interpretation.Value = Value
+
     /** this operator does not have any definition but is used as a signature, e.g., f(_, _) in operator parameters */
-      // Igor (28.08.2020): this interpretation is no longer in use. Remove.
+    // Igor (28.08.2020): this interpretation is no longer in use. Remove.
     val Signature: Interpretation.Value = Value
   }
 

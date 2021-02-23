@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.types.{AnnotationParser, FinSetT, IntT, Pow
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.BmcOper
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -133,13 +134,12 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     // a regression test that failed in the previous versions
     val set = tla.enumSet(tla.int(1), tla.int(2))
     val ex =
-      OperEx(BmcOper.skolem,
-        tla.exists(tla.name("X"), tla.powSet(set), tla.bool(true)))
+      OperEx(BmcOper.skolem, tla.exists(tla.name("X"), tla.powSet(set), tla.bool(true)))
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case predEx@NameEx(name) =>
+      case predEx @ NameEx(name) =>
         rewriter.push()
         solverContext.assertGroundExpr(predEx)
         assert(solverContext.sat())
@@ -153,14 +153,13 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     // a regression test that failed in the previous versions
     val set = tla.enumSet(tla.int(1), tla.int(2))
     val ex =
-      OperEx(BmcOper.skolem,
-        tla.exists(tla.name("X"), tla.powSet(set), tla.bool(false)))
+      OperEx(BmcOper.skolem, tla.exists(tla.name("X"), tla.powSet(set), tla.bool(false)))
 
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case predEx@NameEx(name) =>
+      case predEx @ NameEx(name) =>
         rewriter.push()
         solverContext.assertGroundExpr(predEx)
         assertUnsatOrExplain(rewriter, nextState)
@@ -182,10 +181,8 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     rewriter.typeFinder.reset(rewriter.typeFinder.varTypes + (powCell.toString -> powCell.cellType))
     // check equality
     val eq = tla.eql(nextState.ex,
-      tla.enumSet(tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(IntT()))),
-        tla.enumSet(tla.int(1)),
-        tla.enumSet(tla.int(2)),
-          tla.enumSet(tla.int(1), tla.int(2))))
+        tla.enumSet(tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(IntT()))), tla.enumSet(tla.int(1)),
+            tla.enumSet(tla.int(2)), tla.enumSet(tla.int(1), tla.int(2))))
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
