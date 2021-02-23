@@ -2,6 +2,8 @@
 
 [[Back to all operators]](./standard-operators.md)
 
+**Contributors:** @konnov, @shonfeder, @Kukovec, @Alexander-N
+
 Functions are probably the second most used TLA+ data structure after sets. TLA+
 functions are not like functions in programming languages. In programming
 languages, functions contain code that calls other functions. Although it is
@@ -156,6 +158,79 @@ In this sense, the type restrictions of Apalache are similar to those for the
 generic collections of Java and Scala.  As a result, the type checker in
 Apalache rejects the three above examples.
 
+**TLA+ functions and Python dictionaries**. As we mentioned before, TLA+
+functions are similar to maps and dictionaries in programming languages. To
+demonstrate this similarity, let us compare TLA+ functions with [Python
+dictionaries][].  Consider a TLA+ function `price` that is defined as follows:
+
+```tla
+  [ meal \in { "Schnitzel", "Gulash", "Cordon bleu" } |->
+                CASE meal = "Schnitzel" -> 18
+                  [] meal = "Gulash"    -> 11
+                  OTHER                 -> 12
+  ]
+```
+
+If we had to define a similar dictionary in Python, we would normally introduce
+a Python dictionary like follows:
+
+```python
+py_price = { "Schnitzel": 18, "Gulash": 11, "Cordon bleu": 12 }
+```
+
+As long as we are using the variable `py_price` to access the dictionary, our
+approach works. For instance, we can type the following in the python shell:
+
+```python
+>>> # similar to DOMAIN price in TLA+
+>>> frozenset(py_price.keys())
+frozenset({'Schnitzel', 'Gulash', 'Cordon bleu'})
+
+>>> # similar to price["Schnitzel"] in TLA+
+>>> py_price["Schnitzel"]
+18
+```
+
+However, there is a catch! What if you like to put the function `price` in a
+set? In TLA+, this is easy: Simply construct the singleton set that contains
+the function `price`.
+
+```tla
+# TLA+: wrapping a function with a set
+{ price }
+```
+
+Unfortunately, this does not work as easy in Python:
+
+```python
+>>> # python expects hashable and immutable data structures inside sets
+>>> frozenset({py_price})
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: unhashable type: 'dict'
+```
+
+Of course, this is an implementation detail of Python and it has nothing to do
+with TLA+. This example probably demonstrates that the built-in primitives of
+TLA+ are more powerful than the standard primitives of many programming
+languages (see [this
+discussion](https://github.com/informalsystems/apalache/discussions/551)).
+
+Alternatively, we could represent a TLA+ function in Python as a set
+of pairs `(key, value)` and implement TLA+ function operators over such a
+set. Surely, this implementation would be inefficient, but this is not
+an issue for a *specification language* such as TLA+. For instance:
+
+```python
+>>> frozenset({ tuple(py_price.items()) })
+(('Schnitzel', 18), ('Gulash', 11), ('Cordon bleu', 12))
+```
+
+If we try to implement TLA+-like operators over this data structure, things
+will get complicated very quickly. For this reason, we are just using
+mutable dictionaries in the Python examples in the rest of this text.
+
+
 ----------------------------------------------------------------------------
 
 ## Operators
@@ -229,6 +304,11 @@ that are computed under such a binding.
 ```
 
 **Example in Python:**
+
+In the following code, we write `range(m, n)` instead of `frozenset(range(m,
+n))` to simplify the presentation and produce idiomatic Python code. In the
+general case, we have to iterate over a set, as the type and structure of the
+function domain is not known in advance.
 
 ```python
 # TLA: [ x \in 1..3 |-> 2 * x ]
@@ -340,6 +420,11 @@ variable.
 
 **Example in Python:**
 
+In the following code, we write `range(m, n)` instead of `frozenset(range(m,
+n))` to simplify the presentation and produce idiomatic Python code. In the
+general case, we have to iterate over a set, as the type and structure of the
+function domain is not known in advance.
+
 ```python
 # TLA: [x \in 1..10 |-> x * x]
 {x: x * x for x in range(1, 11)}[5]  # 25
@@ -443,6 +528,16 @@ This is syntax sugar for:
 
 **Example in Python:**
 
+In the following code, we write `range(m, n)` instead of `frozenset(range(m,
+n))` to simplify the presentation and produce idiomatic Python code. In the
+general case, we have to iterate over a set, as the type and structure of the
+function domain is not known in advance. Additionally, given a Python
+dictionary `f`, we write `f.items()` to quickly iterate over the pairs of keys
+and values. Had we wanted to follow the TLA+ semantics more precisely, we would
+have to enumerate over the keys in the function domain and apply the function to
+each key, in order to obtain the value that is associated with the key.  This
+code would be less efficient than the idiomatic Python code.
+
 ```python
 # TLA: [ p \in 1..3 |-> "working" ] IN
 f1 = {i: "working" for i in range(1, 4)}
@@ -506,12 +601,28 @@ error.
 
 **Example in Python:**
 
+In the following code, we write `range(m, n)` instead of `frozenset(range(m,
+n))` to simplify the presentation and produce idiomatic Python code. In the
+general case, we have to iterate over a set, as the type and structure of the
+function domain is not known in advance.
+
 ```python
 f = {x: 2 * x for x in range(1, 4)}
 f.keys()  # dict_keys([1, 2, 3])
+```
+
+In the above code, we write `f.keys()` to obtain an iterator over the
+dictionary keys, which can be used in a further python code. In a more
+principled approach that follows the semantics of TLA+, we would have to
+produce a set, that is to write:
+
+```python
+frozenset(f.keys())
 ```
 
 
 [Control Flow and Non-determinism]: ./control-and-nondeterminism.md
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html
 [Two-phase commit]: https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit/TwoPhase.tla
+[Python dictionaries]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
+[MappingProxyType]: https://docs.python.org/3/library/types.html#types.MappingProxyType
