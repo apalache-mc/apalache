@@ -1119,3 +1119,31 @@ Type checker [OK]
 EXITCODE: OK
 ```
 
+### typecheck AnnotationsAndInstances592.tla
+
+```sh
+$ apalache-mc typecheck AnnotationsAndInstances592.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > Running Snowcat .::.
+ > Your types are great!
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck AnnotationsAndSubstitutions596.tla
+
+```sh
+$ apalache-mc typecheck AnnotationsAndSubstitutions596.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeChecker
+ > Running Snowcat .::.
+ > Your types are great!
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
