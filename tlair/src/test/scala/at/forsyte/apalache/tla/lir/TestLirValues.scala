@@ -5,6 +5,8 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
+import UntypedPredefs._
+
 /**
  * Tests for the low-level intermediate representation.
  */

@@ -7,6 +7,7 @@ import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic.{InstanceNode, ModuleNode, OpDefNode}
 
 import scala.collection.JavaConverters._
+import UntypedPredefs._
 
 /**
  * Translate a tla2tools ModuleNode to a TlaModule.
