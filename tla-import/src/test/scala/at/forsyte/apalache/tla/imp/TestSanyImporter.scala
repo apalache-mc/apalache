@@ -2783,61 +2783,6 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     )
   }
 
-  test("EXTENDS Typing") {
-    val text =
-      """---- MODULE root ----
-        |EXTENDS Typing
-        |VARIABLE x, S
-        |TypeAssumptions ==
-        |  /\ AssumeType(x, "Int")
-        |  /\ AssumeType(S, "Set(Int)")
-        |
-        |Foo(y) == "(Int) -> Set(Int)" ## {y}
-        |================================
-      """.stripMargin
-
-    // We have to set TLA-Library, in order to look up Typing.tla. This is done automatically in pom.xml.
-    // If you run this test in an IDE, and the test fails, add the following line to the VM parameters
-    // (don't forget to replace <APALACHE_HOME> with the directory where you checked out the project):
-    //
-    // -DTLA-Library=<APALACHE_HOME>/src/tla
-    System.out.println(
-        "TLA-Library = %s".format(System.getProperty("TLA-Library"))
-    )
-
-    val (rootName, modules) = sanyImporter
-      .loadFromSource("root", Source.fromString(text))
-    assert(2 == modules.size) // root, Typing
-
-    val root = modules("root")
-    expectSourceInfoInDefs(root)
-    assert(4 == root.declarations.size)
-
-    def expectDecl(name: String, body: TlaEx) = {
-      findAndExpectOperDecl(root, name, List(), body)
-    }
-
-    expectDecl(
-        "TypeAssumptions",
-        OperEx(
-            TlaBoolOper.and,
-            OperEx(TypingOper.assumeType, NameEx("x"), ValEx(TlaStr("Int"))),
-            OperEx(TypingOper.assumeType, NameEx("S"), ValEx(TlaStr("Set(Int)")))
-        )
-    ) ///
-
-    findAndExpectOperDecl(
-        root,
-        "Foo",
-        List(SimpleFormalParam("y")),
-        OperEx(
-            TypingOper.withType,
-            ValEx(TlaStr("(Int) -> Set(Int)")),
-            OperEx(TlaSetOper.enumSet, NameEx("y"))
-        )
-    ) ///
-  }
-
   test("assumptions") {
     // checking that the assumptions are imported properly
     val text =
