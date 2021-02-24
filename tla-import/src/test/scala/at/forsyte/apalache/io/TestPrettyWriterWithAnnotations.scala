@@ -3,6 +3,7 @@ package at.forsyte.apalache.io
 import at.forsyte.apalache.io.annotations.{Annotation, AnnotationBool, AnnotationStr, PrettyWriterWithAnnotations}
 import at.forsyte.apalache.io.annotations.store.createAnnotationStore
 import at.forsyte.apalache.tla.lir._
+import UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner

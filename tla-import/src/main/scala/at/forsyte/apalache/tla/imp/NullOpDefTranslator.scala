@@ -14,7 +14,7 @@ class NullOpDefTranslator(sourceStore: SourceStore, context: Context) {
   def translate(node: OpDefNode): TlaOperDecl = {
     val params = node.getParams.toList map FormalParamTranslator().translate
     val nodeName = node.getName.toString.intern()
-    TlaOperDecl(nodeName, params, NullEx)
+    TlaOperDecl(nodeName, params, NullEx)(Untyped())
   }
 }
 
