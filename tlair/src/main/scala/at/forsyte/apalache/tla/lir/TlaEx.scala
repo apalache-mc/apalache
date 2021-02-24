@@ -57,12 +57,6 @@ case class NameEx(name: String)(implicit typeTag: TypeTag) extends TlaEx with Se
 case class LetInEx(body: TlaEx, decls: TlaOperDecl*)(implicit typeTag: TypeTag) extends TlaEx with Serializable {
   override def toSimpleString: String = s"LET ${decls.mkString(" ")} IN $body"
 
-  /**
-   * Make a shallow copy of the expression and set its type tag to a new value.
-   *
-   * @param newTypeTag a new type
-   * @return a shallow copy of TLA+ expression with the type tag set to newTypeTag
-   */
   override def withType(newTypeTag: TypeTag): TlaEx = LetInEx(body, decls: _*)(newTypeTag)
 }
 
