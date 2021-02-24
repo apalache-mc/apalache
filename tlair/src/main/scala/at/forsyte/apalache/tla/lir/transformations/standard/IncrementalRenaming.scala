@@ -230,7 +230,7 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
 
       // Having computed the new names, we have to change the declarations and use the precomputed new names
       def xform: TlaOperDecl => TlaOperDecl =
-        tracker.trackOperDecl { case TlaOperDecl(n, ps, b) =>
+        tracker.trackOperDecl { case d @ TlaOperDecl(n, ps, b) =>
           TlaOperDecl(
               opersAndFParamsNameMap(n),
               ps map {
@@ -240,7 +240,7 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
               // We recurse over operator bodies, because newRenamed contains parameter
               // and operator renamings
               newRenaming(b)
-          )
+          )(d.typeTag)
         }
 
       val newDefs = defs map xform
@@ -277,7 +277,7 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
       val self = shiftCounters(offsets)
 
       def xform: TlaOperDecl => TlaOperDecl =
-        tracker.trackOperDecl { case TlaOperDecl(n, params, b) =>
+        tracker.trackOperDecl { case d @ TlaOperDecl(n, params, b) =>
           TlaOperDecl(
               offsetFn(n),
               params map {
@@ -285,7 +285,7 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
                 case OperFormalParam(p, a) => OperFormalParam(offsetFn(p), a)
               },
               self(b)
-          )
+          )(d.typeTag)
         }
 
       val newDefs = defs map xform

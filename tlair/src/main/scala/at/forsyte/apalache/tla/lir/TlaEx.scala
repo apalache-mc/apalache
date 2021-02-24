@@ -7,7 +7,8 @@ import at.forsyte.apalache.tla.lir.oper.{FixedArity, TlaOper}
  * An abstract TLA+ expression. Note that the class is sealed, so we allow only a limited set of values.
  * Importantly, `TlaEx` accepts an implicit type tag.
  */
-sealed abstract class TlaEx(implicit val typeTag: TypeTag) extends Identifiable with Serializable {
+sealed abstract class TlaEx(implicit val typeTag: TypeTag)
+    extends Identifiable with Serializable with TypeTagged[TlaEx] {
 
   // TODO: introduce a type class to print expressions with a custom printer (see scala cats)
   override def toString: String = UTFPrinter(this)
@@ -24,6 +25,9 @@ sealed abstract class TlaEx(implicit val typeTag: TypeTag) extends Identifiable 
  */
 object NullEx extends TlaEx()(typeTag = Untyped()) with Serializable {
   override def toSimpleString: String = toString
+
+  // null expressions always carry the Untyped tag
+  override def withType(newTypeTag: TypeTag): TlaEx = this
 }
 
 /**
@@ -32,6 +36,8 @@ object NullEx extends TlaEx()(typeTag = Untyped()) with Serializable {
  */
 case class ValEx(value: TlaValue)(implicit typeTag: TypeTag) extends TlaEx with Serializable {
   override def toSimpleString: String = value.toString
+
+  override def withType(newTypeTag: TypeTag): TlaEx = ValEx(value)(newTypeTag)
 }
 
 /**
@@ -40,6 +46,8 @@ case class ValEx(value: TlaValue)(implicit typeTag: TypeTag) extends TlaEx with 
  */
 case class NameEx(name: String)(implicit typeTag: TypeTag) extends TlaEx with Serializable {
   override def toSimpleString: String = name
+
+  override def withType(newTypeTag: TypeTag): TlaEx = NameEx(name)(newTypeTag)
 }
 
 /*
@@ -48,6 +56,14 @@ case class NameEx(name: String)(implicit typeTag: TypeTag) extends TlaEx with Se
  */
 case class LetInEx(body: TlaEx, decls: TlaOperDecl*)(implicit typeTag: TypeTag) extends TlaEx with Serializable {
   override def toSimpleString: String = s"LET ${decls.mkString(" ")} IN $body"
+
+  /**
+   * Make a shallow copy of the expression and set its type tag to a new value.
+   *
+   * @param newTypeTag a new type
+   * @return a shallow copy of TLA+ expression with the type tag set to newTypeTag
+   */
+  override def withType(newTypeTag: TypeTag): TlaEx = LetInEx(body, decls: _*)(newTypeTag)
 }
 
 /**
@@ -76,4 +92,7 @@ case class OperEx(oper: TlaOper, args: TlaEx*)(implicit typeTag: TypeTag) extend
     }
   }
 
+  override def withType(newTypeTag: TypeTag): TlaEx = {
+    OperEx(oper, args: _*)(newTypeTag)
+  }
 }
