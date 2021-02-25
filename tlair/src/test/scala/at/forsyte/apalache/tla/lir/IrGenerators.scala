@@ -77,6 +77,11 @@ trait IrGenerators {
       TlaSetOper.setminus, TlaSetOper.subseteq, TlaSetOper.subsetProper, TlaSetOper.supseteq, TlaSetOper.supsetProper,
       TlaSetOper.times, TlaSetOper.union)
 
+  def genTypeTag: Gen[TypeTag] = for {
+    i <- arbitrary[Int]
+    tt <- oneOf(Untyped(), Typed[Int](i))
+  } yield tt
+
   /**
    * Generate an integer literal.
    *
@@ -84,7 +89,7 @@ trait IrGenerators {
    */
   def genInt: Gen[ValEx] = for {
     i <- arbitrary[Int]
-    tt <- oneOf(Untyped(), Typed[Int](i))
+    tt <- genTypeTag
   } yield ValEx(TlaInt(BigInt(i))).withType(tt)
 
   /**
@@ -94,8 +99,7 @@ trait IrGenerators {
    */
   def genBool: Gen[ValEx] = for {
     b <- arbitrary[Boolean]
-    i <- arbitrary[Int]
-    tt <- oneOf(Untyped(), Typed[Int](i))
+    tt <- genTypeTag
   } yield ValEx(TlaBool(b)).withType(tt)
 
   /**
@@ -105,8 +109,7 @@ trait IrGenerators {
    */
   def genStr: Gen[ValEx] = for {
     s <- identifier
-    i <- arbitrary[Int]
-    tt <- oneOf(Untyped(), Typed[Int](i))
+    tt <- genTypeTag
   } yield ValEx(TlaStr(s)).withType(tt)
 
   /**
@@ -124,8 +127,7 @@ trait IrGenerators {
    */
   def genNameEx: Gen[NameEx] = for {
     s <- identifier
-    i <- arbitrary[Int]
-    tt <- oneOf(Untyped(), Typed[Int](i))
+    tt <- genTypeTag
   } yield NameEx(s).withType(tt)
 
   /**
@@ -140,8 +142,7 @@ trait IrGenerators {
       decl = ctx(declNo)
       argGen = resize(size - 1, exGen(ctx))
       args <- argsByArity(argGen)(FixedArity(decl.nparams))
-      i <- arbitrary[Int]
-      tt <- oneOf(Untyped(), Typed[Int](i))
+      tt <- genTypeTag
     } yield OperEx(TlaOper.apply, NameEx(decl.name) +: args: _*).withType(tt)
   }
 
@@ -165,8 +166,7 @@ trait IrGenerators {
           ds.map(_.name).toSet.size == ds.size
         }
         body <- resize(size - 1, exGen(ctx ++ defs.map(d => UserOperSig(d.name, d.formalParams.length))))
-        i <- arbitrary[Int]
-        tt <- oneOf(Untyped(), Typed[Int](i))
+        tt <- genTypeTag
       } yield LetInEx(body, defs: _*).withType(tt)
     }
   }
@@ -189,8 +189,7 @@ trait IrGenerators {
           argGen = resize(size - 1, genTlaEx(builtInOpers)(ctx))
           oper = builtInOpers(operNo)
           args <- argsByArity(argGen)(oper.arity)
-          i <- arbitrary[Int]
-          tt <- oneOf(Untyped(), Typed[Int](i))
+          tt <- genTypeTag
           result <-
             if (ctx.nonEmpty) {
               // a value, a name,
@@ -220,8 +219,7 @@ trait IrGenerators {
       body <- exGen(ctx)
       nparams <- choose(0, maxArgs)
       params <- listOfN(nparams, identifier)
-      i <- arbitrary[Int]
-      tt <- oneOf(Untyped(), Typed[Int](i))
+      tt <- genTypeTag
     } yield TlaOperDecl(name, params map (n => SimpleFormalParam(n)), body).withType(tt)
   }
 
@@ -234,8 +232,7 @@ trait IrGenerators {
   def genTlaAssumeDecl(exGen: Gen[TlaEx]): Gen[TlaAssumeDecl] = {
     for {
       ex <- exGen
-      i <- arbitrary[Int]
-      tt <- oneOf(Untyped(), Typed[Int](i))
+      tt <- genTypeTag
     } yield TlaAssumeDecl(ex).withType(tt)
   }
 
@@ -248,8 +245,7 @@ trait IrGenerators {
   def genTlaConstDecl(ctx: UserContext): Gen[TlaConstDecl] = {
     for {
       name <- identifier suchThat (n => ctx.forall(d => d.name != n))
-      i <- arbitrary[Int]
-      tt <- oneOf(Untyped(), Typed[Int](i))
+      tt <- genTypeTag
     } yield TlaConstDecl(name).withType(tt)
   }
 
@@ -262,8 +258,7 @@ trait IrGenerators {
   def genTlaVarDecl(ctx: UserContext): Gen[TlaVarDecl] = {
     for {
       name <- identifier suchThat (n => ctx.forall(d => d.name != n))
-      i <- arbitrary[Int]
-      tt <- oneOf(Untyped(), Typed[Int](i))
+      tt <- genTypeTag
     } yield TlaVarDecl(name).withType(tt)
   }
 
