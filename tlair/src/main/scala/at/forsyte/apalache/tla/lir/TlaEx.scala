@@ -37,7 +37,7 @@ object NullEx extends TlaEx()(typeTag = Untyped()) with Serializable {
 case class ValEx(value: TlaValue)(implicit typeTag: TypeTag) extends TlaEx with Serializable {
   override def toSimpleString: String = value.toString
 
-  override def withType(newTypeTag: TypeTag): TlaEx = ValEx(value)(newTypeTag)
+  override def withType(newTypeTag: TypeTag): ValEx = ValEx(value)(newTypeTag)
 }
 
 /**
@@ -47,7 +47,7 @@ case class ValEx(value: TlaValue)(implicit typeTag: TypeTag) extends TlaEx with 
 case class NameEx(name: String)(implicit typeTag: TypeTag) extends TlaEx with Serializable {
   override def toSimpleString: String = name
 
-  override def withType(newTypeTag: TypeTag): TlaEx = NameEx(name)(newTypeTag)
+  override def withType(newTypeTag: TypeTag): NameEx = NameEx(name)(newTypeTag)
 }
 
 /*
@@ -57,7 +57,7 @@ case class NameEx(name: String)(implicit typeTag: TypeTag) extends TlaEx with Se
 case class LetInEx(body: TlaEx, decls: TlaOperDecl*)(implicit typeTag: TypeTag) extends TlaEx with Serializable {
   override def toSimpleString: String = s"LET ${decls.mkString(" ")} IN $body"
 
-  override def withType(newTypeTag: TypeTag): TlaEx = LetInEx(body, decls: _*)(newTypeTag)
+  override def withType(newTypeTag: TypeTag): LetInEx = LetInEx(body, decls: _*)(newTypeTag)
 }
 
 /**
