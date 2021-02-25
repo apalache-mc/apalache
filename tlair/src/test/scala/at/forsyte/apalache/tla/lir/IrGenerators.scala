@@ -194,7 +194,7 @@ trait IrGenerators {
               // a value, a name,
               // an application of a user-defined operator in the context, an application of a built-in operator
               oneOf(genValEx, genNameEx, genOperApply(genTlaEx(builtInOpers))(ctx),
-                  const(OperEx(oper, args: _*).withType(tt)))
+                  genLetInEx(genTlaEx(builtInOpers))(ctx), const(OperEx(oper, args: _*).withType(tt)))
             } else {
               // as above but no user-defined operators
               oneOf(genValEx, genNameEx, const(OperEx(oper, args: _*).withType(tt)))
