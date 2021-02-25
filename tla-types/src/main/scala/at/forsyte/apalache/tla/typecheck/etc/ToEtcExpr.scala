@@ -781,6 +781,80 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         logger.warn("See: https://apalache.informal.systems/docs/apalache/typechecker-snowcat.html")
         this(lhs)
 
+      //********************************************* TLC **************************************************
+      case OperEx(TlcOper.print, text, value) =>
+        val a = varPool.fresh
+        val opsig = OperT1(Seq(StrT1(), a), StrT1()) // (Str, a) => Str
+        mkExRefApp(opsig, Seq(text, value))
+
+      case OperEx(TlcOper.printT, text) =>
+        val opsig = OperT1(Seq(StrT1()), BoolT1()) // Str => Bool
+        mkExRefApp(opsig, Seq(text))
+
+      case OperEx(TlcOper.assert, value, text) =>
+        val a = varPool.fresh
+        val opsig = OperT1(Seq(a, StrT1()), BoolT1()) // (a, Str) => Bool
+        mkExRefApp(opsig, Seq(value, text))
+
+      case OperEx(TlcOper.javaTime) =>
+        val opsig = OperT1(Seq(), IntT1()) // () => Int
+        mkExRefApp(opsig, Seq())
+
+      case OperEx(TlcOper.tlcGet, index) =>
+        val a = varPool.fresh
+        val opsig = OperT1(Seq(IntT1()), a) // Int => a
+        mkExRefApp(opsig, Seq(index))
+
+      case OperEx(TlcOper.tlcSet, index, value) =>
+        val a = varPool.fresh
+        val opsig = OperT1(Seq(IntT1(), a), BoolT1()) // (Int, a) => Bool
+        mkExRefApp(opsig, Seq(index, value))
+
+      case OperEx(TlcOper.colonGreater, key, value) =>
+        val a = varPool.fresh
+        val b = varPool.fresh
+        val opsig = OperT1(Seq(a, b), FunT1(a, b)) // (a, b) => (a -> b)
+        mkExRefApp(opsig, Seq(key, value))
+
+      case OperEx(TlcOper.atat, f1, f2) =>
+        val a = varPool.fresh
+        val b = varPool.fresh
+        val opsig = OperT1(Seq(FunT1(a, b), FunT1(a, b)), FunT1(a, b)) // (a -> b, a -> b) => (a -> b)
+        mkExRefApp(opsig, Seq(f1, f2))
+
+      case OperEx(TlcOper.permutations, set) =>
+        val a = varPool.fresh
+        val opsig = OperT1(Seq(SetT1(a)), SetT1(FunT1(a, a))) // Set(a) => Set(a -> a)
+        mkExRefApp(opsig, Seq(set))
+
+      case OperEx(TlcOper.sortSeq, seq, op) =>
+        val a = varPool.fresh
+        // (Seq(a), (<<a, b>> => Bool)) => Seq(a)
+        val opsig = OperT1(Seq(SeqT1(a), OperT1(Seq(TupT1(a, a)), BoolT1())), SeqT1(a))
+        mkExRefApp(opsig, Seq(seq, op))
+
+      case OperEx(TlcOper.randomElement, set) =>
+        val a = varPool.fresh
+        val opsig = OperT1(Seq(SetT1(a)), a) // Set(a) => a
+        mkExRefApp(opsig, Seq(set))
+
+      case OperEx(TlcOper.any) =>
+        // We are adding the signature of this operator, but it is pretty useless.
+        // The type checker will most probably complain about the type variable 'a'.
+        val a = varPool.fresh
+        val opsig = OperT1(Seq(), a) // () => a
+        mkExRefApp(opsig, Seq())
+
+      case OperEx(TlcOper.tlcToString, value) =>
+        val a = varPool.fresh
+        val opsig = OperT1(Seq(a), StrT1()) // a => Str
+        mkExRefApp(opsig, Seq(value))
+
+      case OperEx(TlcOper.tlcEval, value) =>
+        val a = varPool.fresh
+        val opsig = OperT1(Seq(a), a) // a => a
+        mkExRefApp(opsig, Seq(value))
+
       // This should be unreachable
       case expr =>
         throw new IllegalArgumentException(s"Unknown TlaEx expression ${expr}")
