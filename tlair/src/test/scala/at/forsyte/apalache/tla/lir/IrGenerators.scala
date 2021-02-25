@@ -160,7 +160,9 @@ trait IrGenerators {
         ndefs <- choose(1, maxDefsPerLetIn)
         defs <- listOfN(ndefs, resize(size - 1, genTlaOperDecl(exGen)(ctx))) suchThat { ds =>
           // no new name is present in the context
-          ds.map(_.name).toSet.intersect(ctx.map(_.name).toSet).isEmpty
+          ds.map(_.name).toSet.intersect(ctx.map(_.name).toSet).isEmpty &&
+          // and all new names are mutually unique
+          ds.map(_.name).toSet.size == ds.size
         }
         body <- resize(size - 1, exGen(ctx ++ defs.map(d => UserOperSig(d.name, d.formalParams.length))))
         i <- arbitrary[Int]

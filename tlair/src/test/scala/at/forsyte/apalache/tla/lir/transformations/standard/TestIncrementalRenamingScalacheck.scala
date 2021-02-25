@@ -10,7 +10,7 @@ import org.scalatest.prop.Checkers
 import org.scalatest.{BeforeAndAfter, FunSuite}
 
 @RunWith(classOf[JUnitRunner])
-class TestIncrementalRenaming extends FunSuite with BeforeAndAfter with Checkers {
+class TestIncrementalRenamingScalacheck extends FunSuite with BeforeAndAfter with Checkers {
   type CounterMap = Map[String, Int]
 
   private val emptyCounters: CounterMap = Map.empty
@@ -40,7 +40,7 @@ class TestIncrementalRenaming extends FunSuite with BeforeAndAfter with Checkers
       }
     }
 
-    check(prop, minSuccessful(10000), sizeRange(10))
+    check(prop, minSuccessful(2500), sizeRange(8))
   }
 
   // Collect a multiset of defined names. Every name is assigned the number of times it has been defined.
