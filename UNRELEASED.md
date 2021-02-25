@@ -11,7 +11,7 @@
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Features
-* Type checker: supporting TLC operators, see #601
+ * Type checker: supporting TLC operators, see #601
 
 ### Bug fixes
 
