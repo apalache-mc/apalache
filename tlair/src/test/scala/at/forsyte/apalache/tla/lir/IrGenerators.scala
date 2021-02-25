@@ -197,7 +197,8 @@ trait IrGenerators {
                   genLetInEx(genTlaEx(builtInOpers))(ctx), const(OperEx(oper, args: _*).withType(tt)))
             } else {
               // as above but no user-defined operators
-              oneOf(genValEx, genNameEx, const(OperEx(oper, args: _*).withType(tt)))
+              oneOf(genValEx, genNameEx, genLetInEx(genTlaEx(builtInOpers))(ctx),
+                  const(OperEx(oper, args: _*).withType(tt)))
             }
         } yield result
       }

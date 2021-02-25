@@ -30,7 +30,7 @@ class TestDeepCopy extends FunSuite with BeforeAndAfter with Checkers {
       equalExCopies(lbody, rbody) &&
         l.ID != r.ID &&
         l.typeTag == r.typeTag &&
-        ldefs.length != rdefs.length &&
+        ldefs.length == rdefs.length &&
         ldefs
           .zip(rdefs)
           .forall(equalDeclCopies.tupled)
