@@ -55,12 +55,12 @@ class TlaModule(val name: String, val declarations: Seq[TlaDecl]) extends Serial
 
 /** a constant as defined by CONSTANT */
 case class TlaConstDecl(name: String)(implicit typeTag: TypeTag) extends TlaDecl with Serializable {
-  override def withType(newTypeTag: TypeTag): TlaDecl = TlaConstDecl(name)(newTypeTag)
+  override def withType(newTypeTag: TypeTag): TlaConstDecl = TlaConstDecl(name)(newTypeTag)
 }
 
 /** a variable as defined by VARIABLE */
 case class TlaVarDecl(name: String)(implicit typeTag: TypeTag) extends TlaDecl with Serializable {
-  override def withType(newTypeTag: TypeTag): TlaDecl = TlaVarDecl(name)(newTypeTag)
+  override def withType(newTypeTag: TypeTag): TlaVarDecl = TlaVarDecl(name)(newTypeTag)
 }
 
 /**
@@ -71,7 +71,7 @@ case class TlaVarDecl(name: String)(implicit typeTag: TypeTag) extends TlaDecl w
 case class TlaAssumeDecl(body: TlaEx)(implicit typeTag: TypeTag) extends TlaDecl with Serializable {
   val name: String = "ASSUME" + body.ID
 
-  override def withType(newTypeTag: TypeTag): TlaDecl = TlaAssumeDecl(body)(newTypeTag)
+  override def withType(newTypeTag: TypeTag): TlaAssumeDecl = TlaAssumeDecl(body)(newTypeTag)
 }
 
 /**
@@ -104,7 +104,7 @@ case class TlaOperDecl(name: String, formalParams: List[FormalParam], var body: 
     ret
   }
 
-  override def withType(newTypeTag: TypeTag): TlaDecl = TlaOperDecl(name, formalParams, body)(newTypeTag)
+  override def withType(newTypeTag: TypeTag): TlaOperDecl = TlaOperDecl(name, formalParams, body)(newTypeTag)
 }
 
 /**
@@ -114,5 +114,5 @@ case class TlaOperDecl(name: String, formalParams: List[FormalParam], var body: 
  * @param body theorem statement
  */
 case class TlaTheoremDecl(name: String, body: TlaEx)(implicit typeTag: TypeTag) extends TlaDecl {
-  override def withType(newTypeTag: TypeTag): TlaDecl = TlaTheoremDecl(name, body)(newTypeTag)
+  override def withType(newTypeTag: TypeTag): TlaTheoremDecl = TlaTheoremDecl(name, body)(newTypeTag)
 }

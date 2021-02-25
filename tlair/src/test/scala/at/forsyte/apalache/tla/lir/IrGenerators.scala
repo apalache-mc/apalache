@@ -14,13 +14,16 @@ import org.scalacheck.Gen.{choose, const, identifier, listOf, listOfN, lzy, oneO
  * solutions: (1) By adding preconditions to the constructors of the IR operators, or (2) by throwing
  * `MalformedTlaError`.</p>
  *
- * <p>Limitations:</p>
+ * <p>Assumptions and limitations:</p>
  *
  * <ol>
  * <li>The current implementation of the generators works best for the code that is unaware of the semantics
  * of TLA+ operators.</li>
  *
  * <li>Our generators neither produce nor apply higher-order operators.</li>
+ *
+ * <li>The generators tag the produced expressions with either Untyped() or Typed[Int](i) for a random integer value,
+ * which should be sufficient for checking that the types are correctly propagated.</li>
  * </ol>
  *
  * @author Igor Konnov
@@ -32,6 +35,11 @@ trait IrGenerators {
 
   // an internal context of the generated operator definitions
   type UserContext = Seq[UserOperSig]
+
+  /**
+   * An empty user context.
+   */
+  val emptyContext: UserContext = Seq[UserOperSig]()
 
   /**
    * The maximal number of arguments in user-defined operators and built-in operators.
@@ -76,7 +84,8 @@ trait IrGenerators {
    */
   def genInt: Gen[ValEx] = for {
     i <- arbitrary[Int]
-  } yield ValEx(TlaInt(BigInt(i)))
+    tt <- oneOf(Untyped(), Typed[Int](i))
+  } yield ValEx(TlaInt(BigInt(i))).withType(tt)
 
   /**
    * Generate a Boolean literal.
@@ -85,7 +94,9 @@ trait IrGenerators {
    */
   def genBool: Gen[ValEx] = for {
     b <- arbitrary[Boolean]
-  } yield ValEx(TlaBool(b))
+    i <- arbitrary[Int]
+    tt <- oneOf(Untyped(), Typed[Int](i))
+  } yield ValEx(TlaBool(b)).withType(tt)
 
   /**
    * Generate a string literal. We always generate identifiers.
@@ -94,7 +105,9 @@ trait IrGenerators {
    */
   def genStr: Gen[ValEx] = for {
     s <- identifier
-  } yield ValEx(TlaStr(s))
+    i <- arbitrary[Int]
+    tt <- oneOf(Untyped(), Typed[Int](i))
+  } yield ValEx(TlaStr(s)).withType(tt)
 
   /**
    * Generate a value expression.
@@ -111,7 +124,9 @@ trait IrGenerators {
    */
   def genNameEx: Gen[NameEx] = for {
     s <- identifier
-  } yield NameEx(s)
+    i <- arbitrary[Int]
+    tt <- oneOf(Untyped(), Typed[Int](i))
+  } yield NameEx(s).withType(tt)
 
   /**
    * Generate an application of a user-defined operator.
@@ -125,7 +140,9 @@ trait IrGenerators {
       decl = ctx(declNo)
       argGen = resize(size - 1, exGen(ctx))
       args <- argsByArity(argGen)(FixedArity(decl.nparams))
-    } yield OperEx(TlaOper.apply, NameEx(decl.name) +: args: _*)
+      i <- arbitrary[Int]
+      tt <- oneOf(Untyped(), Typed[Int](i))
+    } yield OperEx(TlaOper.apply, NameEx(decl.name) +: args: _*).withType(tt)
   }
 
   /**
@@ -146,7 +163,9 @@ trait IrGenerators {
           ds.map(_.name).toSet.intersect(ctx.map(_.name).toSet).isEmpty
         }
         body <- resize(size - 1, exGen(ctx ++ defs.map(d => UserOperSig(d.name, d.formalParams.length))))
-      } yield LetInEx(body, defs: _*)
+        i <- arbitrary[Int]
+        tt <- oneOf(Untyped(), Typed[Int](i))
+      } yield LetInEx(body, defs: _*).withType(tt)
     }
   }
 
@@ -168,14 +187,17 @@ trait IrGenerators {
           argGen = resize(size - 1, genTlaEx(builtInOpers)(ctx))
           oper = builtInOpers(operNo)
           args <- argsByArity(argGen)(oper.arity)
+          i <- arbitrary[Int]
+          tt <- oneOf(Untyped(), Typed[Int](i))
           result <-
             if (ctx.nonEmpty) {
               // a value, a name,
               // an application of a user-defined operator in the context, an application of a built-in operator
-              oneOf(genValEx, genNameEx, genOperApply(genTlaEx(builtInOpers))(ctx), const(OperEx(oper, args: _*)))
+              oneOf(genValEx, genNameEx, genOperApply(genTlaEx(builtInOpers))(ctx),
+                  const(OperEx(oper, args: _*).withType(tt)))
             } else {
               // as above but no user-defined operators
-              oneOf(genValEx, genNameEx, const(OperEx(oper, args: _*)))
+              oneOf(genValEx, genNameEx, const(OperEx(oper, args: _*).withType(tt)))
             }
         } yield result
       }
@@ -195,7 +217,9 @@ trait IrGenerators {
       body <- exGen(ctx)
       nparams <- choose(0, maxArgs)
       params <- listOfN(nparams, identifier)
-    } yield TlaOperDecl(name, params map (n => SimpleFormalParam(n)), body)
+      i <- arbitrary[Int]
+      tt <- oneOf(Untyped(), Typed[Int](i))
+    } yield TlaOperDecl(name, params map (n => SimpleFormalParam(n)), body).withType(tt)
   }
 
   /**
@@ -207,7 +231,9 @@ trait IrGenerators {
   def genTlaAssumeDecl(exGen: Gen[TlaEx]): Gen[TlaAssumeDecl] = {
     for {
       ex <- exGen
-    } yield TlaAssumeDecl(ex)
+      i <- arbitrary[Int]
+      tt <- oneOf(Untyped(), Typed[Int](i))
+    } yield TlaAssumeDecl(ex).withType(tt)
   }
 
   /**
@@ -219,7 +245,9 @@ trait IrGenerators {
   def genTlaConstDecl(ctx: UserContext): Gen[TlaConstDecl] = {
     for {
       name <- identifier suchThat (n => ctx.forall(d => d.name != n))
-    } yield TlaConstDecl(name)
+      i <- arbitrary[Int]
+      tt <- oneOf(Untyped(), Typed[Int](i))
+    } yield TlaConstDecl(name).withType(tt)
   }
 
   /**
@@ -231,7 +259,9 @@ trait IrGenerators {
   def genTlaVarDecl(ctx: UserContext): Gen[TlaVarDecl] = {
     for {
       name <- identifier suchThat (n => ctx.forall(d => d.name != n))
-    } yield TlaVarDecl(name)
+      i <- arbitrary[Int]
+      tt <- oneOf(Untyped(), Typed[Int](i))
+    } yield TlaVarDecl(name).withType(tt)
   }
 
   /**

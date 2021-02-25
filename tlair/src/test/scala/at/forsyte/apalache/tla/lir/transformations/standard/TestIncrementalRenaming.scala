@@ -3,10 +3,13 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
+import org.junit.runner.RunWith
 import org.scalacheck.Prop.{falsified, forAll, passed}
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.prop.Checkers
 import org.scalatest.{BeforeAndAfter, FunSuite}
 
+@RunWith(classOf[JUnitRunner])
 class TestIncrementalRenaming extends FunSuite with BeforeAndAfter with Checkers {
   type CounterMap = Map[String, Int]
 
