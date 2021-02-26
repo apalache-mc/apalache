@@ -73,11 +73,7 @@ object StandardLibrary {
         ("Apalache", "Skolem") -> BmcOper.skolem,
         ("Apalache", "Expand") -> BmcOper.expand,
         ("Apalache", "ConstCardinality") -> BmcOper.constCard,
-        ("Apalache", "FunAsSeq") -> BmcOper.funAsSeq,
-        ("Typing", "AssumeType") -> TypingOper.assumeType,
-        ("Typing", "##") -> TypingOper.withType,
-        ("Typing", "EmptySet") -> TypingOper.emptySet,
-        ("Typing", "EmptySeq") -> TypingOper.emptySeq
+        ("Apalache", "FunAsSeq") -> BmcOper.funAsSeq
     ) ////
 
   val globalOperators: Map[String, TlaOper] =

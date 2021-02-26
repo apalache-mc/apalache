@@ -2,7 +2,10 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir.{SimpleFormalParam, TlaModule}
 import at.forsyte.apalache.tla.lir.convenience._
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
+@RunWith(classOf[JUnitRunner])
 class TestFlatLanguagePred extends LanguagePredTestSuite {
   private val pred = new FlatLanguagePred
 

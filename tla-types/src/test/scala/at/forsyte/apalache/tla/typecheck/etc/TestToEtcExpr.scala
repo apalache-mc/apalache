@@ -4,7 +4,7 @@ import at.forsyte.apalache.io.annotations.StandardAnnotations
 import at.forsyte.apalache.io.annotations.store.{AnnotationStore, createAnnotationStore}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaFunOper, TypingOper}
+import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaFunOper, TlcOper}
 import at.forsyte.apalache.tla.lir.values.TlaReal
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.typecheck._
@@ -236,18 +236,6 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
   test("<<>>") {
     val expected = mkUniqConst(parser("Seq(a)"))
     val result = gen(tla.tuple())
-    assert(expected == result)
-  }
-
-  test("EmptySet(Int)") {
-    val expected = mkUniqConst(parser("Set(Int)"))
-    val result = gen(OperEx(TypingOper.emptySet, tla.str("Int")))
-    assert(expected == result)
-  }
-
-  test("EmptySeq(Int)") {
-    val expected = mkUniqConst(parser("Seq(Int)"))
-    val result = gen(OperEx(TypingOper.emptySeq, tla.str("Int")))
     assert(expected == result)
   }
 
@@ -739,5 +727,103 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     val oldTypeAnnotation = tla.enumSet(tla.intSet())
     val input = tla.withType(tla.name("e"), oldTypeAnnotation)
     assert(mkUniqName("e") == gen(input))
+  }
+
+  test("TLC!Print") {
+    val typ = parser("(Str, a) => Str")
+    val ex = OperEx(TlcOper.print, tla.name("text"), tla.name("x"))
+    val expected = mkAppByName(Seq(typ), "text", "x")
+    assert(expected == gen(ex))
+  }
+
+  test("TLC!PrintT") {
+    val typ = parser("Str => Bool")
+    val ex = OperEx(TlcOper.printT, tla.str("hello "))
+    val expected = mkAppByType(Seq(typ), StrT1())
+    assert(expected == gen(ex))
+  }
+
+  test("TLC!Assert") {
+    val typ = parser("(a, Str) => Bool")
+    val ex = OperEx(TlcOper.assert, tla.name("x"), tla.name("y"))
+    val expected = mkAppByName(Seq(typ), "x", "y")
+    assert(expected == gen(ex))
+  }
+
+  test("TLC!JavaTime") {
+    val typ = parser("() => Int")
+    val ex = OperEx(TlcOper.javaTime)
+    val expected = mkAppByName(Seq(typ))
+    assert(expected == gen(ex))
+  }
+
+  test("TLC!TLCGet") {
+    val typ = parser("Int => a")
+    val ex = OperEx(TlcOper.tlcGet, tla.int(3))
+    val expected = mkAppByType(Seq(typ), IntT1())
+    assert(expected == gen(ex))
+  }
+
+  test("TLC!TLCSet") {
+    val typ = parser("(Int, a) => Bool")
+    val ex = OperEx(TlcOper.tlcSet, tla.name("x"), tla.name("y"))
+    val expected = mkAppByName(Seq(typ), "x", "y")
+    assert(expected == gen(ex))
+  }
+
+  test("TLC!:>") {
+    val typ = parser("(a, b) => (a -> b)")
+    val ex = OperEx(TlcOper.colonGreater, tla.name("x"), tla.name("y"))
+    val expected = mkAppByName(Seq(typ), "x", "y")
+    assert(expected == gen(ex))
+  }
+
+  test("TLC!@@") {
+    val typ = parser("(a -> b, a -> b) => (a -> b)")
+    val ex = OperEx(TlcOper.atat, tla.name("f"), tla.name("g"))
+    val expected = mkAppByName(Seq(typ), "f", "g")
+    assert(expected == gen(ex))
+  }
+
+  test("TLC!Permutations") {
+    val typ = parser("Set(a) => Set(a -> a)")
+    val ex = OperEx(TlcOper.permutations, tla.name("S"))
+    val expected = mkAppByName(Seq(typ), "S")
+    assert(expected == gen(ex))
+  }
+
+  test("TLC!SortSeq") {
+    val typ = parser("(Seq(a), (<<a, a>> => Bool)) => Seq(a)")
+    val ex = OperEx(TlcOper.sortSeq, tla.name("seq"), tla.name("op"))
+    val expected = mkAppByName(Seq(typ), "seq", "op")
+    assert(expected == gen(ex))
+  }
+
+  test("TLC!RandomElement") {
+    val typ = parser("Set(a) => a")
+    val ex = OperEx(TlcOper.randomElement, tla.name("S"))
+    val expected = mkAppByName(Seq(typ), "S")
+    assert(expected == gen(ex))
+  }
+
+  test("TLC!Any") {
+    val typ = parser("() => a")
+    val ex = OperEx(TlcOper.any)
+    val expected = mkAppByName(Seq(typ))
+    assert(expected == gen(ex))
+  }
+
+  test("TLC!ToString") {
+    val typ = parser("a => Str")
+    val ex = OperEx(TlcOper.tlcToString, tla.name("x"))
+    val expected = mkAppByName(Seq(typ), "x")
+    assert(expected == gen(ex))
+  }
+
+  test("TLC!TLCEval") {
+    val typ = parser("a => a")
+    val ex = OperEx(TlcOper.tlcEval, tla.name("x"))
+    val expected = mkAppByName(Seq(typ), "x")
+    assert(expected == gen(ex))
   }
 }

@@ -68,43 +68,29 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
    * @return the translated let-in expression with inScopeEx attached
    */
   private def operDefToDecl(decl: TlaOperDecl, inScopeEx: EtcExpr): EtcExpr = {
-    if (decl.name.startsWith("TypeAssumptions")) {
-      // the special form for type annotations over state variables and constants
-      parseTypeAssumptions(decl, inScopeEx)
-    } else {
-      // The type of the lambda is what we want to see as the type of the declaration.
-      // There are two cases: (1) the definition body contains a type annotation, and (2) no type annotation
-      val paramsAndDoms = formalParamsToTypeVars(decl.formalParams).map { case (paramName, paramType) =>
-        (paramName, mkConst(BlameRef(decl.body.ID), SetT1(paramType)))
-      }
+    // The type of the lambda is what we want to see as the type of the declaration.
+    // There are two cases: (1) the definition body contains a type annotation, and (2) no type annotation
+    val paramsAndDoms = formalParamsToTypeVars(decl.formalParams).map { case (paramName, paramType) =>
+      (paramName, mkConst(BlameRef(decl.body.ID), SetT1(paramType)))
+    }
 
-      def mkLetAbs(id: UID, expr: EtcExpr, paramsAndDoms: (String, EtcConst)*) = {
-        val lambda = mkAbs(ExactRef(id), expr, paramsAndDoms: _*)
-        mkLet(BlameRef(id), decl.name, lambda, inScopeEx)
-      }
+    def mkLetAbs(id: UID, expr: EtcExpr, paramsAndDoms: (String, EtcConst)*) = {
+      val lambda = mkAbs(ExactRef(id), expr, paramsAndDoms: _*)
+      mkLet(BlameRef(id), decl.name, lambda, inScopeEx)
+    }
 
-      findAnnotation(annotationStore, decl.ID, StandardAnnotations.TYPE) match {
-        case Some(Annotation(StandardAnnotations.TYPE, AnnotationStr(annotationText))) =>
-          // case 1: the definition is annotated with a java-like annotation in a comment
-          val parsedType = parseType(decl.name, annotationText)
-          val letAbs = mkLetAbs(decl.body.ID, this(decl.body), paramsAndDoms: _*)
-          mkTypeDecl(ExactRef(decl.body.ID), decl.name, parsedType, letAbs)
+    findAnnotation(annotationStore, decl.ID, StandardAnnotations.TYPE) match {
+      case Some(Annotation(StandardAnnotations.TYPE, AnnotationStr(annotationText))) =>
+        // case 1: the definition is annotated with a java-like annotation in a comment
+        val parsedType = parseType(decl.name, annotationText)
+        val letAbs = mkLetAbs(decl.body.ID, this(decl.body), paramsAndDoms: _*)
+        mkTypeDecl(ExactRef(decl.body.ID), decl.name, parsedType, letAbs)
 
-        case Some(a) => throw new TypingInputException(s"Unexpected annotation of ${decl.name}: $a")
+      case Some(a) => throw new TypingInputException(s"Unexpected annotation of ${decl.name}: $a")
 
-        case None =>
-          decl.body match {
-            case OperEx(TypingOper.withType, ValEx(TlaStr(typeText)), body) =>
-              // case 2: the definition body contains the expression 'Typing!##'
-              val parsedType = parseType(decl.name, typeText)
-              val letAbs = mkLetAbs(body.ID, this(body), paramsAndDoms: _*)
-              mkTypeDecl(ExactRef(decl.body.ID), decl.name, parsedType, letAbs)
-
-            case _ =>
-              // case 3: no type annotation
-              mkLetAbs(decl.body.ID, this(decl.body), paramsAndDoms: _*)
-          }
-      }
+      case None =>
+        // case 2: no type annotation
+        mkLetAbs(decl.body.ID, this(decl.body), paramsAndDoms: _*)
     }
   }
 
@@ -116,40 +102,6 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
       case e: Type1ParseError =>
         throw new TypingInputException(
             s"Parser error in type annotation of $where: ${e.msg}"
-        )
-    }
-  }
-
-  // parse the type annotations inside TypeAssumptions
-  private def parseTypeAssumptions(
-      decl: TlaOperDecl, inScopeEx: EtcExpr
-  ): EtcExpr = {
-    decl.body match {
-      case OperEx(TlaBoolOper.and, args @ _*) =>
-        val annotations =
-          args.map {
-            case OperEx(TypingOper.assumeType, NameEx(name), ValEx(TlaStr(typeText))) =>
-              (name, typeText)
-            case invalidEx =>
-              throw new TypingInputException(
-                  s"""Error in ${decl.name}: Expected AssumeType(varName, "typeString") found ${invalidEx}"""
-              )
-          }
-        annotations.foldRight(inScopeEx) { case ((name, typeText), terminal) =>
-          try {
-            val tt = renameVars(type1Parser(typeText))
-            mkTypeDecl(ExactRef(decl.body.ID), name, tt, terminal)
-          } catch {
-            case e: Type1ParseError =>
-              throw new TypingInputException(
-                  s"Parser error in type annotation of $name: ${e.msg}"
-              )
-          }
-        }
-
-      case _ =>
-        throw new TypingInputException(
-            s"""Error in ${decl.name}: Expected /\ AssumeType(varName, "typeString") /\ ..."""
         )
     }
   }
@@ -211,29 +163,6 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         mkName(ref, name)
 
       case ValEx(v) => mkConst(ref, typeOfLiteralExpr(v))
-
-      //**************************************** EMPTY SETS AND SEQUENCES ***********************************************
-      case OperEx(TypingOper.emptySet, ValEx(TlaStr(elemTypeText))) =>
-        try {
-          val elemType = renameVars(type1Parser(elemTypeText))
-          mkConst(ref, SetT1(elemType))
-        } catch {
-          case e: Type1ParseError =>
-            throw new TypingInputException(
-                s"Parser error in Typing!EmptySet($elemTypeText): ${e.msg}"
-            )
-        }
-
-      case OperEx(TypingOper.emptySeq, ValEx(TlaStr(elemTypeText))) =>
-        try {
-          val elemType = renameVars(type1Parser(elemTypeText))
-          mkConst(ref, SeqT1(elemType))
-        } catch {
-          case e: Type1ParseError =>
-            throw new TypingInputException(
-                s"Parser error in Typing!EmptySeq($elemTypeText): ${e.msg}"
-            )
-        }
 
       //******************************************** GENERAL OPERATORS **************************************************
       case OperEx(op, args @ _*) if op == TlaOper.eq || op == TlaOper.ne =>
@@ -846,16 +775,85 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         mkExRefApp(opsig, Seq(fun, len))
 
       //******************************************** MISC **************************************************
-      case wte @ OperEx(TypingOper.withType, _*) =>
-        throw new TypingInputException(
-            "Found a type annotation in an unexpected place: " + wte
-        )
-
       case OperEx(BmcOper.withType, lhs, _) =>
         // Met an old type annotation. Warn the user and ignore the annotation.
         logger.warn("Met an old type annotation. Ignored: " + ex)
         logger.warn("See: https://apalache.informal.systems/docs/apalache/typechecker-snowcat.html")
         this(lhs)
+
+      //********************************************* TLC **************************************************
+      case OperEx(TlcOper.print, text, value) =>
+        val a = varPool.fresh
+        val opsig = OperT1(Seq(StrT1(), a), StrT1()) // (Str, a) => Str
+        mkExRefApp(opsig, Seq(text, value))
+
+      case OperEx(TlcOper.printT, text) =>
+        val opsig = OperT1(Seq(StrT1()), BoolT1()) // Str => Bool
+        mkExRefApp(opsig, Seq(text))
+
+      case OperEx(TlcOper.assert, value, text) =>
+        val a = varPool.fresh
+        val opsig = OperT1(Seq(a, StrT1()), BoolT1()) // (a, Str) => Bool
+        mkExRefApp(opsig, Seq(value, text))
+
+      case OperEx(TlcOper.javaTime) =>
+        val opsig = OperT1(Seq(), IntT1()) // () => Int
+        mkExRefApp(opsig, Seq())
+
+      case OperEx(TlcOper.tlcGet, index) =>
+        val a = varPool.fresh
+        val opsig = OperT1(Seq(IntT1()), a) // Int => a
+        mkExRefApp(opsig, Seq(index))
+
+      case OperEx(TlcOper.tlcSet, index, value) =>
+        val a = varPool.fresh
+        val opsig = OperT1(Seq(IntT1(), a), BoolT1()) // (Int, a) => Bool
+        mkExRefApp(opsig, Seq(index, value))
+
+      case OperEx(TlcOper.colonGreater, key, value) =>
+        val a = varPool.fresh
+        val b = varPool.fresh
+        val opsig = OperT1(Seq(a, b), FunT1(a, b)) // (a, b) => (a -> b)
+        mkExRefApp(opsig, Seq(key, value))
+
+      case OperEx(TlcOper.atat, f1, f2) =>
+        val a = varPool.fresh
+        val b = varPool.fresh
+        val opsig = OperT1(Seq(FunT1(a, b), FunT1(a, b)), FunT1(a, b)) // (a -> b, a -> b) => (a -> b)
+        mkExRefApp(opsig, Seq(f1, f2))
+
+      case OperEx(TlcOper.permutations, set) =>
+        val a = varPool.fresh
+        val opsig = OperT1(Seq(SetT1(a)), SetT1(FunT1(a, a))) // Set(a) => Set(a -> a)
+        mkExRefApp(opsig, Seq(set))
+
+      case OperEx(TlcOper.sortSeq, seq, op) =>
+        val a = varPool.fresh
+        // (Seq(a), (<<a, b>> => Bool)) => Seq(a)
+        val opsig = OperT1(Seq(SeqT1(a), OperT1(Seq(TupT1(a, a)), BoolT1())), SeqT1(a))
+        mkExRefApp(opsig, Seq(seq, op))
+
+      case OperEx(TlcOper.randomElement, set) =>
+        val a = varPool.fresh
+        val opsig = OperT1(Seq(SetT1(a)), a) // Set(a) => a
+        mkExRefApp(opsig, Seq(set))
+
+      case OperEx(TlcOper.any) =>
+        // We are adding the signature of this operator, but it is pretty useless.
+        // The type checker will most probably complain about the type variable 'a'.
+        val a = varPool.fresh
+        val opsig = OperT1(Seq(), a) // () => a
+        mkExRefApp(opsig, Seq())
+
+      case OperEx(TlcOper.tlcToString, value) =>
+        val a = varPool.fresh
+        val opsig = OperT1(Seq(a), StrT1()) // a => Str
+        mkExRefApp(opsig, Seq(value))
+
+      case OperEx(TlcOper.tlcEval, value) =>
+        val a = varPool.fresh
+        val opsig = OperT1(Seq(a), a) // a => a
+        mkExRefApp(opsig, Seq(value))
 
       // This should be unreachable
       case expr =>

@@ -6,7 +6,7 @@ package at.forsyte.apalache.tla.lir
  * TLA+ definitions, see Specifying Systems, Ch. 17.3. Unfortunately, there are
  * variable declarations and operator definitions...
  */
-abstract class TlaDecl extends Identifiable with Serializable {
+abstract class TlaDecl(implicit val typeTag: TypeTag) extends Identifiable with Serializable with TypeTagged[TlaDecl] {
   def name: String
 }
 
@@ -54,18 +54,24 @@ class TlaModule(val name: String, val declarations: Seq[TlaDecl]) extends Serial
 }
 
 /** a constant as defined by CONSTANT */
-case class TlaConstDecl(name: String) extends TlaDecl with Serializable
+case class TlaConstDecl(name: String)(implicit typeTag: TypeTag) extends TlaDecl with Serializable {
+  override def withType(newTypeTag: TypeTag): TlaConstDecl = TlaConstDecl(name)(newTypeTag)
+}
 
 /** a variable as defined by VARIABLE */
-case class TlaVarDecl(name: String) extends TlaDecl with Serializable
+case class TlaVarDecl(name: String)(implicit typeTag: TypeTag) extends TlaDecl with Serializable {
+  override def withType(newTypeTag: TypeTag): TlaVarDecl = TlaVarDecl(name)(newTypeTag)
+}
 
 /**
  * An assumption defined by ASSUME(...)
  *
  * @param body the assumption body
  */
-case class TlaAssumeDecl(body: TlaEx) extends TlaDecl with Serializable {
+case class TlaAssumeDecl(body: TlaEx)(implicit typeTag: TypeTag) extends TlaDecl with Serializable {
   val name: String = "ASSUME" + body.ID
+
+  override def withType(newTypeTag: TypeTag): TlaAssumeDecl = TlaAssumeDecl(body)(newTypeTag)
 }
 
 /**
@@ -81,7 +87,7 @@ case class TlaAssumeDecl(body: TlaEx) extends TlaDecl with Serializable {
  * @param formalParams formal parameters
  * @param body         operator definition, that is a TLA+ expression that captures the operator definition
  */
-case class TlaOperDecl(name: String, formalParams: List[FormalParam], var body: TlaEx)
+case class TlaOperDecl(name: String, formalParams: List[FormalParam], var body: TlaEx)(implicit typeTag: TypeTag)
     extends TlaDecl with Serializable {
 
   /**
@@ -93,11 +99,12 @@ case class TlaOperDecl(name: String, formalParams: List[FormalParam], var body: 
   def copy(
       name: String = this.name, formalParams: List[FormalParam] = this.formalParams, body: TlaEx = this.body
   ): TlaOperDecl = {
-    val ret = TlaOperDecl(name, formalParams, body)
+    val ret = TlaOperDecl(name, formalParams, body)(typeTag)
     ret.isRecursive = this.isRecursive
     ret
   }
 
+  override def withType(newTypeTag: TypeTag): TlaOperDecl = TlaOperDecl(name, formalParams, body)(newTypeTag)
 }
 
 /**
@@ -106,4 +113,6 @@ case class TlaOperDecl(name: String, formalParams: List[FormalParam], var body: 
  * @param name theorem name
  * @param body theorem statement
  */
-case class TlaTheoremDecl(name: String, body: TlaEx) extends TlaDecl
+case class TlaTheoremDecl(name: String, body: TlaEx)(implicit typeTag: TypeTag) extends TlaDecl {
+  override def withType(newTypeTag: TypeTag): TlaTheoremDecl = TlaTheoremDecl(name, body)(newTypeTag)
+}

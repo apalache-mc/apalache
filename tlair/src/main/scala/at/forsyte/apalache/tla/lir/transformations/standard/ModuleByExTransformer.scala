@@ -26,7 +26,7 @@ class ModuleByExTransformer(
         if (newBody.ID == body.ID) {
           d
         } else {
-          TlaAssumeDecl(newBody)
+          TlaAssumeDecl(newBody)(d.typeTag)
         }
 
       case d => d

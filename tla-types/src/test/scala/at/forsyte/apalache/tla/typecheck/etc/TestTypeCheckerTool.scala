@@ -35,13 +35,13 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
   test("the tool runs") {
     val text =
       """---- MODULE Specb -----
-        |EXTENDS Integers, Typing
-        |VARIABLES msgs
+        |EXTENDS Integers
+        |VARIABLES
+        |   \* @type: Set([type: Str, val: Int]);
+        |   msgs
         |
-        |TypeAssumptions ==
-        |  /\ AssumeType(msgs, "Set([type: Str, val: Int])")
-        |
-        |Send(m) == "[type: Str, val: Int] => Bool" ##
+        |\* @type: [type: Str, val: Int] => Bool;
+        |Send(m) ==
         |  (msgs' = msgs \cup {m})
         |
         |A(x, y) == x + y

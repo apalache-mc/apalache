@@ -3,16 +3,19 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx, IrGenerators, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.{IrGenerators, LetInEx, NameEx, OperEx, TlaEx, TlaOperDecl}
 import org.scalacheck.Prop
 import org.scalacheck.Prop.{falsified, forAll, passed}
 import org.scalatest.prop.Checkers
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfter, FunSuite}
 
 /**
  * Tests of PrimePropagation.
  */
+@RunWith(classOf[JUnitRunner])
 class TestPrimePropagation extends FunSuite with BeforeAndAfter with Checkers {
 
   import tla._
