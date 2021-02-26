@@ -36,15 +36,15 @@ trait EtcBuilder {
     mkName(BlameRef(UID.unique), name)
   }
 
-  protected def mkAbs(sourceRef: EtcRef, body: EtcExpr, paramsAndDoms: (String, EtcExpr)*): EtcAbs = {
+  protected def mkAbs(sourceRef: EtcRef, body: EtcExpr, paramsAndDoms: (EtcName, EtcExpr)*): EtcAbs = {
     EtcAbs(body, paramsAndDoms: _*)(sourceRef)
   }
 
-  protected def mkUniqAbs(body: EtcExpr, paramsAndDoms: (String, EtcExpr)*): EtcAbs = {
+  protected def mkUniqAbs(body: EtcExpr, paramsAndDoms: (EtcName, EtcExpr)*): EtcAbs = {
     mkAbs(ExactRef(UID.unique), body, paramsAndDoms: _*)
   }
 
-  protected def mkBlameAbs(body: EtcExpr, paramsAndDoms: (String, EtcExpr)*): EtcAbs = {
+  protected def mkBlameAbs(body: EtcExpr, paramsAndDoms: (EtcName, EtcExpr)*): EtcAbs = {
     mkAbs(BlameRef(UID.unique), body, paramsAndDoms: _*)
   }
 

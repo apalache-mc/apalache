@@ -51,7 +51,7 @@ case class EtcName(name: String)(val sourceRef: EtcRef) extends EtcExpr {
  * @param paramsAndDoms parameter names and type expressions that encode sets of values
  * @param sourceRef     the identifier of the TLA+ expression that resulted in this EtcExpr (ignored in equals).
  */
-case class EtcAbs(body: EtcExpr, paramsAndDoms: (String, EtcExpr)*)(val sourceRef: EtcRef) extends EtcExpr {
+case class EtcAbs(body: EtcExpr, paramsAndDoms: (EtcName, EtcExpr)*)(val sourceRef: EtcRef) extends EtcExpr {
   override def toString: String = {
     val bindings = paramsAndDoms.map(p => "%s ∈ %s".format(p._1, p._2))
     "%s@λ %s. %s".format(sourceRef, String.join(", ", bindings: _*), body)

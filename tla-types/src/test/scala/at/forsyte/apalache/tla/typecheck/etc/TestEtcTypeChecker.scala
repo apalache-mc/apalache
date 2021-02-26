@@ -266,16 +266,18 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
   test("well-typed application of unary lambda") {
     val xDomain = mkUniqConst(parser("Set(Int)"))
     val pred = mkUniqConst(parser("Bool"))
+    val xName = mkUniqName("x")
     // lambda x \in Set(Int): Bool
     val lambda = mkUniqAbs(
         pred, // this is a predicate
-        ("x", xDomain) // the scope of the variable x, which is used in the predicate
+        (xName, xDomain) // the scope of the variable x, which is used in the predicate
     ) /////
     val operType = parser("(a => Bool) => Set(a)")
     val app = mkUniqApp(Seq(operType), lambda)
     val listener = mock[TypeCheckerListener]
     val wrapper = wrapWithLet(app)
     expecting {
+      listener.onTypeFound(xName.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
       listener.onTypeFound(pred.sourceRef.asInstanceOf[ExactRef], parser("Bool")).atLeastOnce()
       listener.onTypeFound(xDomain.sourceRef.asInstanceOf[ExactRef], parser("Set(Int)")).atLeastOnce()
       listener.onTypeFound(lambda.sourceRef.asInstanceOf[ExactRef], parser("Int => Bool")).atLeastOnce()
@@ -293,17 +295,21 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     val xDomain = mkUniqConst(parser("Set(Int)"))
     val yDomain = mkUniqConst(parser("Set(Str)"))
     val pred = mkUniqConst(parser("Bool"))
+    val xName = mkUniqName("x")
+    val yName = mkUniqName("y")
     // lambda x \in Set(Int), y \in Set(Str): Bool
     val lambda = mkUniqAbs(
         pred, // this is a predicate
-        ("x", xDomain), // the scope of the variable x, which is used in the predicate
-        ("y", yDomain) // the scope of the variable y, which is used in the predicate
+        (xName, xDomain), // the scope of the variable x, which is used in the predicate
+        (yName, yDomain) // the scope of the variable y, which is used in the predicate
     ) /////
     val operType = parser("((a, b) => Bool) => Set(<<a, b>>)")
     val app = mkUniqApp(Seq(operType), lambda)
     val listener = mock[TypeCheckerListener]
     val wrapper = wrapWithLet(app)
     expecting {
+      listener.onTypeFound(xName.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
+      listener.onTypeFound(yName.sourceRef.asInstanceOf[ExactRef], parser("Str")).atLeastOnce()
       listener.onTypeFound(pred.sourceRef.asInstanceOf[ExactRef], parser("Bool")).atLeastOnce()
       listener.onTypeFound(xDomain.sourceRef.asInstanceOf[ExactRef], xDomain.polytype).atLeastOnce()
       listener.onTypeFound(yDomain.sourceRef.asInstanceOf[ExactRef], yDomain.polytype).atLeastOnce()
@@ -320,10 +326,11 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
 
   test("ill-typed application of unary lambda") {
     val domain = mkUniqConst(parser("Int"))
+    val xName = mkUniqName("x")
     // lambda x \in Int: Bool
     val lambda = mkUniqAbs(
         mkUniqConst(parser("Bool")), // this is a predicate
-        ("x", domain) // the ill-typed scope of the variable x
+        (xName, domain) // the ill-typed scope of the variable x
     ) /////
     val operType = parser("(a => Bool) => Set(a)")
     val app = mkUniqApp(Seq(operType), lambda)
@@ -343,14 +350,17 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
   test("well-typed application of let-in") {
     // let F == lambda x \in Set(Int): x in F(Int)
     val xDomain = mkUniqConst(parser("Set(Int)"))
+    val xName = mkUniqName("x")
     val xInF = mkUniqName("x")
-    val fBody = mkUniqAbs(xInF, ("x", xDomain))
+    val fBody = mkUniqAbs(xInF, (xName, xDomain))
     val fArg = mkUniqConst(IntT1())
     val fApp = mkUniqAppByName("F", fArg)
     val letIn = mkUniqLet("F", fBody, fApp)
 
     val listener = mock[TypeCheckerListener]
     expecting {
+      // the variable x has type Int
+      listener.onTypeFound(xName.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
       // the argument to F has the monotype Int
       listener.onTypeFound(fArg.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
       // the result of applying F(Int) is Int
@@ -378,14 +388,17 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
   test("inferring a let-in definition") {
     // let F == lambda x \in Set(Int): x in F(Int)
     val xDomain = mkUniqConst(parser("Set(Int)"))
+    val xName = mkUniqName("x")
     val xInF = mkUniqName("x")
-    val fBody = mkUniqAbs(xInF, ("x", xDomain))
+    val fBody = mkUniqAbs(xInF, (xName, xDomain))
     val fArg = mkUniqConst(IntT1())
     val fApp = mkUniqAppByName("F", fArg)
     val letIn = mkUniqLet("F", fBody, fApp)
 
     val listener = mock[TypeCheckerListener]
     expecting {
+      // variable x has the type Int
+      listener.onTypeFound(xName.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
       // the argument to F has the monotype Int
       listener.onTypeFound(fArg.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
       // the result of applying F(Int) is Int
@@ -414,14 +427,17 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
   test("no polymorphic let-definitions") {
     // let F == lambda x \in Set(a): x in F(Int)
     val xDomain = mkUniqConst(parser("Set(a)"))
+    val xName = mkUniqName("x")
     val xInF = mkUniqName("x")
-    val fBody = mkUniqAbs(xInF, ("x", xDomain))
+    val fBody = mkUniqAbs(xInF, (xName, xDomain))
     val fArg = mkUniqConst(IntT1())
     val fApp = mkUniqAppByName("F", fArg)
     val letIn = mkUniqLet("F", fBody, fApp)
 
     val listener = mock[TypeCheckerListener]
     expecting {
+      // variable x has the type Int
+      listener.onTypeFound(xName.sourceRef.asInstanceOf[ExactRef], parser("a")).atLeastOnce()
       // xDomain is Set(b), the type b propagates
       listener.onTypeFound(xDomain.sourceRef.asInstanceOf[ExactRef], parser("Set(a)")).atLeastOnce()
       listener.onTypeFound(fBody.sourceRef.asInstanceOf[ExactRef], parser("a => a")).atLeastOnce()
@@ -506,20 +522,22 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
 
   test("CHOOSE") {
     // (((a => Bool) => a) (λ x ∈ Set(Int). x = Int))
-    val x = mkUniqName("x")
+    val xRef = mkUniqName("x")
     val int = mkUniqConst(parser("Int"))
-    val eq = mkUniqApp(Seq(parser("(a, a) => Bool")), x, int)
+    val eq = mkUniqApp(Seq(parser("(a, a) => Bool")), xRef, int)
+    val xName = mkUniqName("x")
     val xDom = mkUniqConst(parser("Set(Int)"))
-    val lambda = mkUniqAbs(eq, ("x", xDom))
+    val lambda = mkUniqAbs(eq, (xName, xDom))
     val oper = parser("(a => Bool) => a")
     val app = mkUniqApp(Seq(oper), lambda)
     val listener = mock[TypeCheckerListener]
     val wrapper = wrapWithLet(app)
     expecting {
+      listener.onTypeFound(xName.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
       listener.onTypeFound(xDom.sourceRef.asInstanceOf[ExactRef], parser("Set(Int)")).atLeastOnce()
       listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
       listener.onTypeFound(int.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
-      listener.onTypeFound(x.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
+      listener.onTypeFound(xRef.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
       listener.onTypeFound(eq.sourceRef.asInstanceOf[ExactRef], parser("Bool")).atLeastOnce()
       listener.onTypeFound(lambda.sourceRef.asInstanceOf[ExactRef], parser("(Int) => Bool")).atLeastOnce()
       // consume any types for the wrapper and lambda
@@ -533,11 +551,12 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
 
   test("unbounded CHOOSE") {
     // (((c => Bool) => c) (λ x ∈ Set(b). x = Int))
-    val x = mkUniqName("x")
+    val xRef = mkUniqName("x")
     val int = mkUniqConst(parser("Int"))
-    val eq = mkUniqApp(Seq(parser("(a, a) => Bool")), x, int)
+    val eq = mkUniqApp(Seq(parser("(a, a) => Bool")), xRef, int)
     val xDom = mkUniqConst(SetT1(VarT1("b")))
-    val lambda = mkUniqAbs(eq, ("x", xDom))
+    val xName = mkUniqName("x")
+    val lambda = mkUniqAbs(eq, (xName, xDom))
     val oper = parser("(c => Bool) => c")
     val app = mkUniqApp(Seq(oper), lambda)
     val wrapper = wrapWithLet(app)
@@ -592,17 +611,20 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     //   (((a -> b) => (a => b)) => a -> b) (λ $recFun ∈ Set(c -> d). (λ x ∈ Set(Int). x))
     val operType = parser("((a -> b) => (a => b)) => a -> b")
     val recFunDom = mkUniqConst(parser("Set(c -> d)"))
+    val xRef = mkUniqName("x")
     val xDom = mkUniqConst(parser("Set(Int)"))
-    val x = mkUniqName("x")
-    val innerLambda = mkUniqAbs(x, ("x", xDom))
+    val xName = mkUniqName("x")
+    val innerLambda = mkUniqAbs(xRef, (xName, xDom))
     val recFun = mkUniqName("$recFun")
-    val outerLambda = mkUniqAbs(innerLambda, ("$recFun", recFunDom))
+    val outerLambda = mkUniqAbs(innerLambda, (recFun, recFunDom))
     val app = mkUniqApp(Seq(operType), outerLambda)
     val wrapper = wrapWithLet(app)
     val listener = mock[TypeCheckerListener]
     expecting {
+      listener.onTypeFound(xName.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
+      listener.onTypeFound(recFun.sourceRef.asInstanceOf[ExactRef], parser("Int -> Int")).atLeastOnce()
       listener.onTypeFound(recFunDom.sourceRef.asInstanceOf[ExactRef], parser("Set(Int -> Int)")).atLeastOnce()
-      listener.onTypeFound(x.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
+      listener.onTypeFound(xRef.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
       listener.onTypeFound(xDom.sourceRef.asInstanceOf[ExactRef], parser("Set(Int)")).atLeastOnce()
       listener.onTypeFound(innerLambda.sourceRef.asInstanceOf[ExactRef], parser("Int => Int")).atLeastOnce()
       listener

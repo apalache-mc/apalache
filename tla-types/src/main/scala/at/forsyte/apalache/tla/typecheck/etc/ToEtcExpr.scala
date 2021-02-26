@@ -71,10 +71,10 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
     // The type of the lambda is what we want to see as the type of the declaration.
     // There are two cases: (1) the definition body contains a type annotation, and (2) no type annotation
     val paramsAndDoms = formalParamsToTypeVars(decl.formalParams).map { case (paramName, paramType) =>
-      (paramName, mkConst(BlameRef(decl.body.ID), SetT1(paramType)))
+      (mkName(BlameRef(decl.ID), paramName), mkConst(BlameRef(decl.ID), SetT1(paramType)))
     }
 
-    def mkLetAbs(id: UID, expr: EtcExpr, paramsAndDoms: (String, EtcConst)*) = {
+    def mkLetAbs(id: UID, expr: EtcExpr, paramsAndDoms: (EtcName, EtcConst)*) = {
       val lambda = mkAbs(ExactRef(id), expr, paramsAndDoms: _*)
       mkLet(BlameRef(id), decl.name, lambda, inScopeEx)
     }
@@ -158,9 +158,9 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
     }
 
     ex match {
-      case NameEx(name) =>
+      case nm @ NameEx(_) =>
         // x becomes x
-        mkName(ref, name)
+        mkName(nm)
 
       case ValEx(v) => mkConst(ref, typeOfLiteralExpr(v))
 
@@ -182,7 +182,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
 
       case OperEx(
               TlaOper.chooseBounded,
-              NameEx(bindingVar),
+              bindingNameEx @ NameEx(_),
               bindingSet,
               pred
           ) =>
@@ -192,11 +192,11 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val chooseType = OperT1(Seq(OperT1(Seq(a), BoolT1())), a)
         // CHOOSE implicitly introduces a lambda abstraction: λ x ∈ S. P
         val chooseLambda =
-          mkAbs(BlameRef(ex.ID), this(pred), (bindingVar, this(bindingSet)))
+          mkAbs(BlameRef(ex.ID), this(pred), (mkName(bindingNameEx), this(bindingSet)))
         // the resulting expression is (((a => Bool) => a) (λ x ∈ S. P))
         mkApp(ref, Seq(chooseType), chooseLambda)
 
-      case OperEx(TlaOper.chooseUnbounded, NameEx(bindingVar), pred) =>
+      case OperEx(TlaOper.chooseUnbounded, bindingNameEx @ NameEx(_), pred) =>
         // CHOOSE x: P
         // the principal type of CHOOSE is (a => Bool) => a
         //
@@ -209,13 +209,14 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val chooseLambda = mkAbs(
             BlameRef(ex.ID),
             this(pred),
-            (bindingVar, mkConst(BlameRef(ex.ID), SetT1(b)))
+            (mkName(bindingNameEx), mkConst(BlameRef(ex.ID), SetT1(b)))
         )
         // the resulting expression is (((a => Bool) => a) (λ x ∈ Set(b). P))
         mkApp(ref, Seq(chooseType), chooseLambda)
 
       //******************************************** LET-IN ****************************************************
       case LetInEx(body, declarations @ _*) =>
+        // TODO: LetInEx will not be assigned a type!
         declarations.foldRight(this(body)) { case (decl, term) =>
           this(decl, term)
         }
@@ -556,7 +557,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
           accessorsWithNewValues.flatMap(p => List(this(p._1), this(p._2)))
         mkApp(ref, disjunctiveType, this(fun) +: xargs: _*)
 
-      case OperEx(TlaFunOper.recFunDef, body, args @ _*) =>
+      case funDef @ OperEx(TlaFunOper.recFunDef, body, args @ _*) =>
         // fun[x \in S, y \in T |-> e] == ...
         // or, fun[<<x, y>> \in S, z \in T |-> e] == ...
         //
@@ -594,11 +595,12 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         // create another vector of type variables for the lambda over a function
         val recFunResTypeVar = varPool.fresh
         val resFunArgTypes = mkFunFrom(varPool.fresh(bindings.length))
+        val funRefByName = mkName(BlameRef(funDef.ID), TlaFunOper.recFunRef.uniqueName)
         val outerLambda = mkAbs(
             BlameRef(ex.ID),
             innerLambda,
             (
-                TlaFunOper.recFunRef.uniqueName,
+                funRefByName,
                 mkConst(BlameRef(ex.ID), SetT1(FunT1(resFunArgTypes, recFunResTypeVar)))
             )
         )
@@ -871,7 +873,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
    */
   private def translateBindings(
       bindings: (TlaEx, TlaEx)*
-  ): Seq[(String, EtcExpr)] = {
+  ): Seq[(EtcName, EtcExpr)] = {
     // project a set of dim-tuples on the ith element (starting with 0!)
     def project(id: UID, setEx: EtcExpr, dim: Int, index: Int): EtcExpr = {
       val typeVars = varPool.fresh(dim)
@@ -884,11 +886,11 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
 
     def unpackOne(
         id: UID, target: TlaEx, set: EtcExpr
-    ): Seq[(String, EtcExpr)] = {
+    ): Seq[(EtcName, EtcExpr)] = {
       target match {
         // simplest case: name is bound to set
-        case NameEx(name) =>
-          Seq((name, set))
+        case nameEx @ NameEx(_) =>
+          Seq((mkName(nameEx), set))
 
         // advanced case: <<x, y, ..., z>> is bound to set
         case OperEx(TlaFunOper.tuple, args @ _*) =>
@@ -927,6 +929,10 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val paramType = OperT1(varPool.fresh(arity), varPool.fresh)
         (name, paramType) +: formalParamsToTypeVars(tail)
     }
+  }
+
+  private def mkName(nameEx: NameEx): EtcName = {
+    mkName(ExactRef(nameEx.ID), nameEx.name)
   }
 
   private def renameVars(tt: TlaType1): TlaType1 = {

@@ -136,7 +136,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
         val underlyingType = computeRec(extCtx, solver, scopedEx)
         // introduce a variable for lambda, in order to propagate the type to the listener
         val lambdaTypeVar = varPool.fresh
-        val varNames = binders.map { case (name, _) => extCtx(name) }
+        val varNames = binders.map { case (name, _) => extCtx(name.name) }
         val operType = OperT1(varNames, underlyingType)
         // lambdaTypeVar = (a_1, ..., a_k) => resType
         val lambdaClause = EqClause(lambdaTypeVar, operType)
@@ -172,7 +172,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
         val preCtx = new TypeContext((ctx.types + (name -> operSig)).mapValues(approxSolution(_)))
         val extCtx = translateBinders(preCtx, letInSolver, binders)
         val annotationParams = operSig.asInstanceOf[OperT1].args
-        annotationParams.zip(binders.map { case (pname, _) => (pname, extCtx(pname)) }).foreach {
+        annotationParams.zip(binders.map { case (pname, _) => (pname, extCtx(pname.name)) }).foreach {
           case (annotParam, (pname, paramVar @ VarT1(_))) =>
             val clause = EqClause(paramVar, annotParam)
               .setOnTypeError(ts => s"Mismatch in parameter $pname. Found: " + ts.head)
@@ -193,7 +193,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
 
         // compute the constraints for the operator definition
         val defBodyType = computeRec(extCtx, letInSolver, defBody)
-        val paramTypes = binders.map(p => extCtx(p._1))
+        val paramTypes = binders.map(p => extCtx(p._1.name))
         val defType = OperT1(paramTypes, defBodyType)
         // add the constraint from the annotation
         val defClause = EqClause(operVar, defType)
@@ -232,7 +232,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
 
   // produce constraints for the binders that are used in a lambda expression
   private def translateBinders(ctx: TypeContext, solver: ConstraintSolver,
-      binders: Seq[(String, EtcExpr)]): TypeContext = {
+      binders: Seq[(EtcName, EtcExpr)]): TypeContext = {
     val setTypes = binders.map(binder => computeRec(ctx, solver, binder._2))
     // introduce type variables b_1, ..., b_k for the binding sets
     val setVars = 1.to(binders.size).map(_ => varPool.fresh)
@@ -251,8 +251,13 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
         .setOnTypeError(ts => onTypeError(setEx.sourceRef, "Expected a set. Found: " + ts.head))
       solver.addConstraint(clause)
     }
+    // introduce identity constraints to retrieve the types of the names
+    binders.zip(elemVars).foreach { case ((name, _), typeVar) =>
+      val clause = EqClause(typeVar, typeVar).setOnTypeFound(onTypeFound(name.sourceRef, _))
+      solver.addConstraint(clause)
+    }
     // compute the expression in the scope, by associating the variables names with the elements of elemVars
-    new TypeContext(ctx.types ++ binders.map(_._1).zip(elemVars))
+    new TypeContext(ctx.types ++ binders.map(_._1.name).zip(elemVars))
   }
 
   private def onTypeFound(sourceRef: EtcRef, tt: TlaType1): Unit = {

@@ -43,7 +43,7 @@ class TestToEtcExprDecls extends FunSuite with BeforeAndAfterEach with EtcBuilde
     //   let Foo = λ x ∈ Set(a). ((Int, Int) => Bool) x Int in
     //   Bool // the terminal expression
     val defBody = mkUniqApp(Seq(parser("((Int, Int) => Bool)")), mkUniqName("x"), mkUniqConst(parser("Int")))
-    val positiveLambda = mkUniqAbs(defBody, ("x", mkUniqConst(SetT1(VarT1("a")))))
+    val positiveLambda = mkUniqAbs(defBody, (mkUniqName("x"), mkUniqConst(SetT1(VarT1("a")))))
     val positiveLet = mkUniqLet("Positive", positiveLambda, mkUniqConst(BoolT1()))
     val expected = mkUniqTypeDecl("Positive", parser("Int => Bool"), positiveLet)
     // Translate the declaration of positive.
