@@ -83,14 +83,14 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
       case Some(Annotation(StandardAnnotations.TYPE, AnnotationStr(annotationText))) =>
         // case 1: the definition is annotated with a java-like annotation in a comment
         val parsedType = parseType(decl.name, annotationText)
-        val letAbs = mkLetAbs(decl.body.ID, this(decl.body), paramsAndDoms: _*)
-        mkTypeDecl(ExactRef(decl.body.ID), decl.name, parsedType, letAbs)
+        val letAbs = mkLetAbs(decl.ID, this(decl.body), paramsAndDoms: _*)
+        mkTypeDecl(ExactRef(decl.ID), decl.name, parsedType, letAbs)
 
       case Some(a) => throw new TypingInputException(s"Unexpected annotation of ${decl.name}: $a")
 
       case None =>
         // case 2: no type annotation
-        mkLetAbs(decl.body.ID, this(decl.body), paramsAndDoms: _*)
+        mkLetAbs(decl.ID, this(decl.body), paramsAndDoms: _*)
     }
   }
 

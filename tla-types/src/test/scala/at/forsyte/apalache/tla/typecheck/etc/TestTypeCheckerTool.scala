@@ -2,8 +2,11 @@ package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.typecheck.{TlaType1, TypeCheckerListener, TypeCheckerTool}
+import at.forsyte.apalache.tla.typecheck.{TlaType1, Type1Parser, TypeCheckerListener, TypeCheckerTool}
 import at.forsyte.apalache.io.annotations.store._
+import at.forsyte.apalache.tla.lir.Typed
+import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
+import at.forsyte.apalache.tla.typecheck.parser.DefaultType1Parser
 import org.easymock.EasyMock
 import org.junit.runner.RunWith
 import org.scalatest.easymock.EasyMockSugar
@@ -25,38 +28,40 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
   private var sourceStore: SourceStore = _
   private var annotationStore: AnnotationStore = _
   private var sanyImporter: SanyImporter = _
+  private var parser: Type1Parser = _
 
   override def beforeEach() {
     sourceStore = new SourceStore()
     annotationStore = createAnnotationStore()
     sanyImporter = new SanyImporter(sourceStore, annotationStore)
+    parser = DefaultType1Parser
   }
 
-  test("the tool runs") {
-    val text =
-      """---- MODULE Specb -----
-        |EXTENDS Integers
-        |VARIABLES
-        |   \* @type: Set([type: Str, val: Int]);
-        |   msgs
-        |
-        |\* @type: [type: Str, val: Int] => Bool;
-        |Send(m) ==
-        |  (msgs' = msgs \cup {m})
-        |
-        |A(x, y) == x + y
-        |
-        |Init ==
-        |  msgs = {}
-        |
-        |Next ==
-        |  \E i \in 1..10:
-        |    Send([type |-> "1a", val |-> i])
-        |================================
+  private val specB =
+    """---- MODULE Specb -----
+      |EXTENDS Integers
+      |VARIABLES
+      |   \* @type: Set([type: Str, val: Int]);
+      |   msgs
+      |
+      |\* @type: [type: Str, val: Int] => Bool;
+      |Send(m) ==
+      |  (msgs' = msgs \cup {m})
+      |
+      |A(x, y) == x + y
+      |
+      |Init ==
+      |  msgs = {}
+      |
+      |Next ==
+      |  \E i \in 1..10:
+      |    Send([type |-> "1a", val |-> i])
+      |================================
       """.stripMargin
 
+  test("the tools runs and reports no type errors") {
     val (rootName, modules) =
-      sanyImporter.loadFromSource("Specb", Source.fromString(text))
+      sanyImporter.loadFromSource("Specb", Source.fromString(specB))
 
     val mod = modules(rootName)
 
@@ -73,6 +78,35 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
       val typechecker = new TypeCheckerTool(annotationStore, false)
       val isWellTyped = typechecker.check(listener, mod)
       assert(isWellTyped)
+    }
+  }
+
+  test("the tools runs and tags all expressions") {
+    val (rootName, modules) =
+      sanyImporter.loadFromSource("Specb", Source.fromString(specB))
+
+    val mod = modules(rootName)
+
+    val listener = mock[TypeCheckerListener]
+
+    expecting {
+      // lots of types found
+      listener
+        .onTypeFound(EasyMock.anyObject[ExactRef], EasyMock.anyObject[TlaType1])
+        .anyTimes()
+      // but no type errors
+    }
+    whenExecuting(listener) {
+      val typechecker = new TypeCheckerTool(annotationStore, false)
+      typechecker.checkAndTag(new IdleTracker(), listener, mod) match {
+        case None =>
+          fail("Expected the specification to be well-typed")
+
+        case Some(output) =>
+          // there was no exception, so all expressions and declarations should be tagged with a type
+          val msgsType = parser("Set([type: Str, val: Int])")
+          assert(Typed(msgsType) == output.varDeclarations.head.typeTag)
+      }
     }
   }
 }
