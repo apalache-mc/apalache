@@ -227,10 +227,12 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
 
   test("well-typed application by name") {
     val arg = mkUniqConst(IntT1())
-    val app = mkUniqAppByName("F", arg)
+    val operName = mkUniqName("F")
+    val app = mkUniqAppByName(operName, arg)
     val listener = mock[TypeCheckerListener]
     val wrapper = wrapWithLet(app)
     expecting {
+      listener.onTypeFound(operName.sourceRef.asInstanceOf[ExactRef], parser("Int => Int"))
       listener.onTypeFound(arg.sourceRef.asInstanceOf[ExactRef], parser("Int"))
       listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("Int"))
       // consume any types for the wrapper and lambda
@@ -354,11 +356,13 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     val xInF = mkUniqName("x")
     val fBody = mkUniqAbs(xInF, (xName, xDomain))
     val fArg = mkUniqConst(IntT1())
-    val fApp = mkUniqAppByName("F", fArg)
+    val fName = mkUniqName("F")
+    val fApp = mkUniqAppByName(fName, fArg)
     val letIn = mkUniqLet("F", fBody, fApp)
 
     val listener = mock[TypeCheckerListener]
     expecting {
+      listener.onTypeFound(fName.sourceRef.asInstanceOf[ExactRef], parser("Int => Int"))
       // the variable x has type Int
       listener.onTypeFound(xName.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
       // the argument to F has the monotype Int
@@ -392,11 +396,13 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     val xInF = mkUniqName("x")
     val fBody = mkUniqAbs(xInF, (xName, xDomain))
     val fArg = mkUniqConst(IntT1())
-    val fApp = mkUniqAppByName("F", fArg)
+    val fName = mkUniqName("F")
+    val fApp = mkUniqAppByName(fName, fArg)
     val letIn = mkUniqLet("F", fBody, fApp)
 
     val listener = mock[TypeCheckerListener]
     expecting {
+      listener.onTypeFound(fName.sourceRef.asInstanceOf[ExactRef], parser("Int => Int"))
       // variable x has the type Int
       listener.onTypeFound(xName.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
       // the argument to F has the monotype Int
@@ -431,7 +437,8 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     val xInF = mkUniqName("x")
     val fBody = mkUniqAbs(xInF, (xName, xDomain))
     val fArg = mkUniqConst(IntT1())
-    val fApp = mkUniqAppByName("F", fArg)
+    val fName = mkUniqName("F")
+    val fApp = mkUniqAppByName(fName, fArg)
     val letIn = mkUniqLet("F", fBody, fApp)
 
     val listener = mock[TypeCheckerListener]
@@ -458,11 +465,13 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     val recRef = mkUniqConst(recType)
     // even a nullary let-in definition requires a lambda, but this lambda has no arguments
     val fBody = mkUniqAbs(recRef)
-    val fApp = mkUniqAppByName("F")
+    val fName = mkUniqName("F")
+    val fApp = mkUniqAppByName(fName)
     val letIn = mkUniqLet("F", fBody, fApp)
 
     val listener = mock[TypeCheckerListener]
     expecting {
+      listener.onTypeFound(fName.sourceRef.asInstanceOf[ExactRef], fType)
       // the result of applying F is recType
       listener.onTypeFound(fApp.sourceRef.asInstanceOf[ExactRef], recType).atLeastOnce()
       // the type of the record
@@ -689,11 +698,13 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     val fBody = mkUniqApp(Seq(seq, tup), intT, intT)
     // for consistency of the expression language, we have to wrap the body with lambda in any case
     val lambda = mkUniqAbs(fBody)
-    val fApp = mkUniqAppByName("F")
+    val fName = mkUniqName("F")
+    val fApp = mkUniqAppByName(fName)
     val letIn = mkUniqLet("F", lambda, fApp)
 
     val listener = mock[TypeCheckerListener]
     expecting {
+      listener.onTypeFound(fName.sourceRef.asInstanceOf[ExactRef], parser("() => <<Int, Int>>"))
       listener.onTypeFound(intT.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
       listener.onTypeFound(fBody.sourceRef.asInstanceOf[ExactRef], parser("<<Int, Int>>")).atLeastOnce()
       listener.onTypeFound(lambda.sourceRef.asInstanceOf[ExactRef], parser("() => <<Int, Int>>")).atLeastOnce()

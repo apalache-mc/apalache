@@ -106,7 +106,8 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
 
   test("operator application") {
     // operator application should be just application
-    val expected2 = mkUniqAppByName("F", mkUniqConst(IntT1()), mkUniqConst(BoolT1()))
+    val fName = mkUniqName("F")
+    val expected2 = mkUniqAppByName(fName, mkUniqConst(IntT1()), mkUniqConst(BoolT1()))
 
     assert(expected2 == gen(tla.appOp(tla.name("F"), tla.int(1), tla.bool(true))))
   }

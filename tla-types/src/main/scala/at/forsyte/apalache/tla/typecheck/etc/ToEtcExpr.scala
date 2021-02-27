@@ -171,9 +171,9 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val opsig = OperT1(Seq(a, a), BoolT1())
         mkExRefApp(opsig, args)
 
-      case OperEx(TlaOper.apply, NameEx(name), args @ _*) =>
+      case OperEx(TlaOper.apply, nameEx @ NameEx(_), args @ _*) =>
         // F(e_1, ..., e_n)
-        mkAppByName(ref, name, args.map(this(_)): _*)
+        mkAppByName(ref, mkName(nameEx), args.map(this(_)): _*)
 
       case OperEx(TlaOper.apply, opName, args @ _*) =>
         throw new TypingException(

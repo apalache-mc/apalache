@@ -122,8 +122,10 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
 
       // Operator application by name. Resolve the name and pass the resolved expression to the application case.
       case EtcAppByName(name, args @ _*) =>
-        if (ctx.types.contains(name)) {
-          computeRec(ctx, solver, mkApp(ex.sourceRef, Seq(ctx.types(name)), args: _*))
+        if (ctx.types.contains(name.name)) {
+          val nameType = ctx.types(name.name)
+          onTypeFound(name.sourceRef, nameType)
+          computeRec(ctx, solver, mkApp(ex.sourceRef, Seq(nameType), args: _*))
         } else {
           onTypeError(ex.sourceRef, s"Undefined operator name $name. Introduce a type annotation.")
           throw new UnwindException
