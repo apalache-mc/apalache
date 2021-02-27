@@ -2,7 +2,8 @@ package at.forsyte.apalache.tla.typecheck.integration
 
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.typecheck.{TlaType1, TypingException}
+import at.forsyte.apalache.tla.lir.values.TlaStr
+import at.forsyte.apalache.tla.typecheck.{StrT1, TlaType1, TypingException}
 
 /**
  * This class uses the map of types to set the types of TLA+ expressions and declarations.
@@ -18,6 +19,11 @@ class TypeRewriter(tracker: TransformationTracker)(types: Map[UID, TlaType1]) {
 
       case ex @ LetInEx(body, defs @ _*) =>
         LetInEx(this(body), defs.map(applyToOperDecl): _*)(getOrThrow(ex.ID))
+
+      case ValEx(value @ TlaStr(_)) =>
+        // A record constructor uses strings to represent the field names,
+        // which are not propagated to the type checker. Hence, we bypass a query to the types map.
+        ValEx(value)(Typed(StrT1()))
 
       case ex @ ValEx(value) =>
         ValEx(value)(getOrThrow(ex.ID))
