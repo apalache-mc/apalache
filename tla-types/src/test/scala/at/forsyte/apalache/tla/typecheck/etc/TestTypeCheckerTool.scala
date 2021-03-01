@@ -54,8 +54,9 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
       |  msgs = {}
       |
       |Next ==
-      |  \E i \in 1..10:
-      |    Send([type |-> "1a", val |-> i])
+      |  /\ [type |-> "1a", val |-> 3].type = "1a"
+      |  /\ \E i \in 1..10:
+      |      Send([type |-> "1a", val |-> i])
       |================================
       """.stripMargin
 

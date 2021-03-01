@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.typecheck
 
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
-import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.{TlaModule, UID}
 import at.forsyte.apalache.tla.typecheck.etc._
 import at.forsyte.apalache.tla.typecheck.integration.{RecordingTypeCheckerListener, TypeRewriter}
@@ -29,13 +28,19 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) {
     val terminalExpr: EtcExpr = EtcConst(BoolT1())(BlameRef(UID.unique))
 
     // translate the whole TLA+ module into a long EtcExpr. Is not that cool?
-    val rootExpr =
+    val topExpr =
       module.declarations.foldRight(terminalExpr) { case (decl, inScopeEx) =>
         toEtc(decl, inScopeEx)
       }
 
+    // a hack: we wrap topExpr with LET-IN, so the type of topExpr is not overwritten
+    def uniqueRef() = BlameRef(UID.unique)
+
+    val rootExpr = EtcLet("root", EtcAbs(EtcConst(BoolT1())(uniqueRef()))(uniqueRef()), topExpr)(uniqueRef())
+
+    val typeChecker = new EtcTypeChecker(varPool, inferPolytypes = inferPoly)
     // run the type checker
-    val result = new EtcTypeChecker(varPool, inferPolytypes = inferPoly).compute(listener, TypeContext.empty, rootExpr)
+    val result = typeChecker.compute(listener, TypeContext.empty, rootExpr)
     result.isDefined
   }
 

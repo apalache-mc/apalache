@@ -37,14 +37,17 @@ class TypeRewriter(tracker: TransformationTracker)(types: Map[UID, TlaType1]) {
 
   def apply(decl: TlaDecl): TlaDecl = {
     def transform: TlaDecl => TlaDecl = tracker.trackDecl {
-      case TlaConstDecl(_) | TlaVarDecl(_) =>
-        decl.withType(getOrThrow(decl.ID))
+      case d @ TlaConstDecl(_) =>
+        decl.withType(getOrThrow(d.ID))
 
-      case TlaAssumeDecl(body) =>
-        TlaAssumeDecl(this(body))(getOrThrow(decl.ID))
+      case d @ TlaVarDecl(_) =>
+        decl.withType(getOrThrow(d.ID))
 
-      case TlaTheoremDecl(name, body) =>
-        TlaTheoremDecl(name, this(body))(getOrThrow(decl.ID))
+      case d @ TlaAssumeDecl(body) =>
+        TlaAssumeDecl(this(body))(getOrThrow(d.ID))
+
+      case d @ TlaTheoremDecl(name, body) =>
+        TlaTheoremDecl(name, this(body))(getOrThrow(d.ID))
 
       case opdef @ TlaOperDecl(_, _, _) =>
         applyToOperDecl(opdef)

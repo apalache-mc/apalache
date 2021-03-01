@@ -61,7 +61,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
         // add the constraint: x = polytype, for a fresh x
         val fresh = varPool.fresh
         val clause = EqClause(fresh, polytype)
-          .setOnTypeFound(onTypeFound(ex.sourceRef, _))
+          .setOnTypeFound(tt => onTypeFound(ex.sourceRef, tt))
           .setOnTypeError(_ => onTypeError(ex.sourceRef, "Unresolved type"))
         solver.addConstraint(clause)
         fresh
@@ -70,6 +70,11 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
       case EtcTypeDecl(name: String, declaredType: TlaType1, scopedEx: EtcExpr) =>
         // Just propagate the annotated name down the tree. It will be used in a let definition.
         val extCtx = new TypeContext(ctx.types + (name -> declaredType))
+        // to propagate the type to the listener, add the trivial constraint: a = declaredType
+        val fresh = varPool.fresh
+        val clause = EqClause(fresh, declaredType)
+          .setOnTypeFound(tt => onTypeFound(ex.sourceRef, tt))
+        solver.addConstraint(clause)
         computeRec(extCtx, solver, scopedEx)
 
       // a variable name, either an operator name, or a variable introduced by lambda (EtcAbs)

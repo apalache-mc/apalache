@@ -596,6 +596,27 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     }
   }
 
+  test("record constructor (regression)") {
+    // [x: Str, y: Int]
+    val operType = parser("(a, b) => [x: a, y: b]")
+    val arg1 = mkUniqConst(parser("Str"))
+    val arg2 = mkUniqName("y")
+    val app = mkUniqApp(Seq(operType), arg1, arg2)
+    val listener = mock[TypeCheckerListener]
+    val wrapper = wrapWithLet(app)
+    expecting {
+      listener.onTypeFound(arg1.sourceRef.asInstanceOf[ExactRef], parser("Str")).atLeastOnce()
+      listener.onTypeFound(arg2.sourceRef.asInstanceOf[ExactRef], parser("Int")).atLeastOnce()
+      listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("[x: Str, y: Int]")).atLeastOnce()
+      // consume any types for the wrapper and lambda
+      consumeWrapperTypes(listener, wrapper)
+    }
+    whenExecuting(listener) {
+      val computed = checker.compute(listener, TypeContext("y" -> IntT1()), wrapper)
+      assert(computed.contains(parser("() => [x: Str, y: Int]")))
+    }
+  }
+
   test("DOMAIN f") {
     val operTypes = Seq(parser("(a -> b) => Set(a)"), parser("Seq(a) => Set(Int)"), parser("[] => Set(Str)"),
         parser("{} => Set(Int)"))
