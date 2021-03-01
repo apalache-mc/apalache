@@ -162,7 +162,8 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         // x becomes x
         mkName(nm)
 
-      case ValEx(v) => mkConst(ref, typeOfLiteralExpr(v))
+      case ValEx(v) =>
+        mkConst(ref, typeOfLiteralExpr(v))
 
       //******************************************** GENERAL OPERATORS **************************************************
       case OperEx(op, args @ _*) if op == TlaOper.eq || op == TlaOper.ne =>
@@ -216,7 +217,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
 
       //******************************************** LET-IN ****************************************************
       case LetInEx(body, declarations @ _*) =>
-        // TODO: LetInEx will not be assigned a type!
+        // FIXME: LetInEx will not be assigned a type!
         declarations.foldRight(this(body)) { case (decl, term) =>
           this(decl, term)
         }

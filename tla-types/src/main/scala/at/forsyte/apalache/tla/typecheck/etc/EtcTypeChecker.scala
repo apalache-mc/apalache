@@ -89,7 +89,8 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
 
       // the most interesting part: the operator application
       case appEx @ EtcApp(operTypes, args @ _*) =>
-        val argTypes = args.map(arg => computeRec(ctx, solver, arg))
+        // Apply toList first, in case `args` is a stream. The reason is that `computeRec` introduces side effects
+        val argTypes = args.toList.map(arg => computeRec(ctx, solver, arg))
         val resVar = varPool.fresh
         val operVar = varPool.fresh
 
@@ -240,7 +241,8 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
   // produce constraints for the binders that are used in a lambda expression
   private def translateBinders(ctx: TypeContext, solver: ConstraintSolver,
       binders: Seq[(EtcName, EtcExpr)]): TypeContext = {
-    val setTypes = binders.map(binder => computeRec(ctx, solver, binder._2))
+    // Apply `toList` first, in case `binders` is lazy. Because `computeRec` has side effects.
+    val setTypes = binders.toList.map(binder => computeRec(ctx, solver, binder._2))
     // introduce type variables b_1, ..., b_k for the binding sets
     val setVars = 1.to(binders.size).map(_ => varPool.fresh)
     // ...and type variables a_1, ..., a_k for the set elements
