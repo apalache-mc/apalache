@@ -65,9 +65,26 @@ body=$(cat "$RELEASE_NOTES")
 # Bump the version
 "$DIR"/version-bump.sh
 
+instructions="
+# Reviewer instructions
+
+- Check the changelog to ensure the version increment is consistent with https://semver.org/.
+  - If a different version should be released, follow [the instructions](https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md#via-github).
+- Review the changeset as a sanity check.
+- Approve the PR, if it pases muster.
+- **Merge** this branch (do not squash or rebase), but **DO NOT DELETE THE BRANCH**.
+- After the release has been published to github, delete this branch.
+
+---
+
+# Release notes
+
+"
+
 # Open a pull request for the release
 # See https://hub.github.com/hub-pull-request.1.html
 hub pull-request \
     --push \
+    --message="$instructions" \
     --message="$commit_msg" --message="$body" \
     --base="unstable"
