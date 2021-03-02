@@ -37,6 +37,7 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
     parser = DefaultType1Parser
   }
 
+  // we push plenty of TLA+ constructs in this spec, to make sure that the tool goes through
   private val specB =
     """---- MODULE Specb -----
       |EXTENDS Integers
@@ -46,9 +47,11 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
       |
       |\* @type: [type: Str, val: Int] => Bool;
       |Send(m) ==
-      |  (msgs' = msgs \cup {m})
+      |  msgs' = msgs \cup {m}
       |
-      |A(x, y) == x + y
+      |A(x, y) ==
+      |  LET Plus(a, b) == a + b IN
+      |  Plus(x, y)
       |
       |Init ==
       |  msgs = {}

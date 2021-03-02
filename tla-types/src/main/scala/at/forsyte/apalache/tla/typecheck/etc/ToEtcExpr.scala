@@ -217,10 +217,14 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
 
       //******************************************** LET-IN ****************************************************
       case LetInEx(body, declarations @ _*) =>
-        // FIXME: LetInEx will not be assigned a type!
-        declarations.foldRight(this(body)) { case (decl, term) =>
-          this(decl, term)
-        }
+        val output =
+          declarations.foldRight(this(body)) { case (decl, term) =>
+            this(decl, term)
+          }
+        // to connect the uid of the LetInEx to the body, we wrap the output with an application of a nullary operator
+        val a = varPool.fresh
+        val identity = OperT1(Seq(a), a)
+        mkApp(ref, Seq(identity), output)
 
       //******************************************** BOOLEANS **************************************************
       case OperEx(op, a, b) if op == TlaBoolOper.equiv || op == TlaBoolOper.implies =>
