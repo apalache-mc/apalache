@@ -719,13 +719,6 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     assert(mkExpected(parser("(b, Bool) => Bool")) == gen(tla.SF(tla.name("x"), tla.name("A"))))
   }
 
-  test("\\EE x: A and \\AA x: A") {
-    def mkExpected(tt: TlaType1) = mkAppByName(Seq(tt), "x", "A")
-
-    assert(mkExpected(parser("(a, Bool) => Bool")) == gen(tla.AA(tla.name("x"), tla.name("A"))))
-    assert(mkExpected(parser("(b, Bool) => Bool")) == gen(tla.EE(tla.name("x"), tla.name("A"))))
-  }
-
   test("old annotations: e <: tp") {
     val oldTypeAnnotation = tla.enumSet(tla.intSet())
     val input = tla.withType(tla.name("e"), oldTypeAnnotation)

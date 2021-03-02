@@ -255,7 +255,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val typeVars = varPool.fresh(bindings.length)
         // the principal type is ((a, b) => Bool) => Bool or just (a => Bool) => Bool
         val principal = OperT1(Seq(OperT1(typeVars, BoolT1())), BoolT1())
-        // \E and \A implicitly introduce a lambda abstraction: λ x ∈ proj_x, λ x ∈ proj_y. P
+        // \E and \A implicitly introduce a lambda abstraction: λ x ∈ proj_x, y ∈ proj_y. P
         val lambda = mkAbs(BlameRef(ex.ID), this(pred), bindings: _*)
         // the resulting expression is (principal lambda)
         mkApp(ref, Seq(principal), lambda)
@@ -303,6 +303,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val opsig = OperT1(List(a, SetT1(a)), BoolT1())
         mkExRefApp(opsig, args)
 
+      // TODO: scheduled for removal, issue #615: \subset, \supset, \supseteq
       case OperEx(op, args @ _*)
           if op == TlaSetOper.subseteq || op == TlaSetOper.subsetProper
             || op == TlaSetOper.supseteq || op == TlaSetOper.supsetProper =>
@@ -628,7 +629,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
 
       case OperEx(op, args @ _*) if op == TlaControlOper.caseNoOther || op == TlaControlOper.caseWithOther =>
         // CASE p1 -> e1 [] p2 -> e2
-        // CASE p1 -> e1 [] p2 -> e2 OTHER e3
+        // CASE p1 -> e1 [] p2 -> e2 [] OTHER -> e3
         val nargs = args.length
         val nargs2 =
           (args.length / 2) * 2 // the largest even number below nargs
@@ -741,6 +742,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val opsig = OperT1(List(IntT1(), IntT1()), BoolT1())
         mkExRefApp(opsig, args)
 
+      // TODO: scheduled for removal, see issue #580
       case OperEx(op, args @ _*) if op == TlaArithOper.sum || op == TlaArithOper.prod =>
         // SUM(e_1, ..., e_n) or PROD(e_1, ..., e_n)
         val nInts = List.fill(args.length)(IntT1())
@@ -772,13 +774,8 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val opsig = OperT1(Seq(a, BoolT1()), BoolT1()) // (a, Bool) => Bool
         mkExRefApp(opsig, Seq(sub, act))
 
-      case OperEx(op, varName, act) if op == TlaTempOper.AA || op == TlaTempOper.EE =>
-        val a = varPool.fresh
-        val opsig = OperT1(Seq(a, BoolT1()), BoolT1()) // (a, Bool) => Bool
-        mkExRefApp(opsig, Seq(varName, act))
-
       //******************************************** Apalache **************************************************
-      case wte @ OperEx(BmcOper.funAsSeq, fun, len) =>
+      case OperEx(BmcOper.funAsSeq, fun, len) =>
         val a = varPool.fresh
         // ((Int -> a), Int) => Seq(a)
         val opsig = OperT1(Seq(FunT1(IntT1(), a), IntT1()), SeqT1(a))
@@ -867,7 +864,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
 
       // This should be unreachable
       case expr =>
-        throw new IllegalArgumentException(s"Unknown TlaEx expression ${expr}")
+        throw new IllegalArgumentException(s"Unsupported expression: ${expr}")
     }
   }
 
@@ -882,14 +879,18 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
   private def translateBindings(
       bindings: (TlaEx, TlaEx)*
   ): Seq[(EtcName, EtcExpr)] = {
-    // project a set of dim-tuples on the ith element (starting with 0!)
-    def project(id: UID, setEx: EtcExpr, dim: Int, index: Int): EtcExpr = {
+    // Project a tuple and a set of dim-tuples on the ith element (starting with 0!).
+    // We have to pass a tuple as well, in order to back-propagate the type later.
+    def project(id: UID, tupleId: UID, setEx: EtcExpr, dim: Int, index: Int): EtcExpr = {
       val typeVars = varPool.fresh(dim)
-      // e.g., Set(<<a, b, c>>) => Set(b)
+      val tupleType = TupT1(typeVars: _*)
+      // e.g., (<<a, b, c>>, Set(<<a, b, c>>)) => Set(b)
       val operType =
-        OperT1(Seq(SetT1(TupT1(typeVars: _*))), SetT1(typeVars(index)))
-      // (operType set)
-      mkApp(BlameRef(id), Seq(operType), setEx)
+        OperT1(Seq(tupleType, SetT1(tupleType)), SetT1(typeVars(index)))
+      // passing tupleConst is crucial, to be able to recover the type of the tuple later
+      val tupleConst = mkConst(ExactRef(tupleId), tupleType)
+      // (operType tupleType set)
+      mkApp(BlameRef(id), Seq(operType), tupleConst, setEx)
     }
 
     def unpackOne(
@@ -903,7 +904,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         // advanced case: <<x, y, ..., z>> is bound to set
         case OperEx(TlaFunOper.tuple, args @ _*) =>
           args.zipWithIndex.flatMap { case (a, i) =>
-            unpackOne(id, a, project(id, set, args.length, i))
+            unpackOne(id, a, project(id, target.ID, set, args.length, i))
           }
 
         case _ =>
@@ -911,7 +912,6 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
               s"Unexpected binding $target \\in $set"
           )
       }
-
     }
 
     // unpack x \in S, <<y, z>> \in T into x \in S, y \in project(T, 1), z \in project(T, 2)
