@@ -33,8 +33,11 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
       case d: TlaAssumeDecl =>
         // ASSUME(...)
         // Translate assume to let in. The only purpose of this let-in definition is to get checked later.
+        // To check that the body is returning a boolean value, we wrap the assumption with Bool => Bool.
+        val operType = OperT1(Seq(BoolT1()), BoolT1())
+        val application = mkUniqApp(Seq(operType), this(d.body))
         // We have to introduce a lambda abstraction, as the type checker is expecting this form.
-        mkUniqLet("__Assume_" + d.ID, mkUniqAbs(this(d.body)), inScopeEx)
+        mkLet(BlameRef(d.ID), "__Assume_" + d.ID, mkAbs(ExactRef(d.ID), application), inScopeEx)
 
       case d: TlaOperDecl =>
         // Foo(x) == ...
