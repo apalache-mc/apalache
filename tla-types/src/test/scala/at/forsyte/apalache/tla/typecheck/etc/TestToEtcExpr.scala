@@ -50,9 +50,11 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
   // produce an expression that projects a set of pairs on the set of its first (or second) components
   private def mkProjection(fst: String, snd: String, projFirst: Boolean, set: String): EtcExpr = {
     val axis = if (projFirst) fst else snd
-    // projection: depending on axis, either (Set(<<a, b>>) => Set(a)) or (Set(<<a, b>>) => Set(b))
-    val oper = OperT1(Seq(SetT1(TupT1(VarT1(fst), VarT1(snd)))), SetT1(VarT1(axis)))
-    mkUniqApp(Seq(oper), mkUniqName(set))
+    val tuple = TupT1(VarT1(fst), VarT1(snd))
+    // Projection: depending on axis, either ((<<a, b>>, Set(<<a, b>>)) => Set(a)) or ((<<a, b>>, Set(<<a, b>>)) => Set(b))
+    // We add the tuple <<a, b>> for technical reasons, in order to recover the type of the variable tuple in TypeRewriter.
+    val oper = OperT1(Seq(tuple, SetT1(tuple)), SetT1(VarT1(axis)))
+    mkUniqApp(Seq(oper), mkUniqConst(tuple), mkUniqName(set))
   }
 
   test("integer arithmetic") {
