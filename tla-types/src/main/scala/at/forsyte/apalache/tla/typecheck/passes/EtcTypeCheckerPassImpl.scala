@@ -33,7 +33,11 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
       val inferPoly = options.getOrElse("typecheck", "inferPoly", true)
       val tool = new TypeCheckerTool(annotationStore, inferPoly)
 
+      // when this flag is true by the end of type checking, we have recovered the types of all expressions
+      var isTypeCoverageComplete = true
+
       def defaultTag(uid: UID): TypeTag = {
+        isTypeCoverageComplete = false
         val locStr = sourceStore.find(uid).map(_.toString).getOrElse("Unknown location")
         val msg = s"[$locStr]: Failed to recover the expression type for uid=$uid. You may see an error later."
         logger.error(msg)
@@ -46,6 +50,7 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
       taggedModule match {
         case Some(_) =>
           logger.info(" > Your types are great!")
+          logger.info(if (isTypeCoverageComplete) " > All expressions are typed" else " > Some expressions are untyped")
           // TODO: output the module in the json format, once the PR #599 has been merged
           true
 
