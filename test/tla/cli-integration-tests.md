@@ -929,7 +929,7 @@ EXITCODE: OK
 
 ### typecheck CigaretteSmokersTyped.tla
 
-This test is broken until [issue 617](https://github.com/informalsystems/apalache/issues/617) is fixed.
+This test is broken until issue #617] is fixed.
 
 ```sh
 $ apalache-mc typecheck CigaretteSmokersTyped.tla | sed 's/[IEW]@.*//'
