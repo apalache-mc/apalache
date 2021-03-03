@@ -510,7 +510,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val accessorsWithTypeVars = accessors.zip(typeVars)
 
         // The following values are related by mutual exclusion, so we make
-        // them lazy to avoid unnecesary computations
+        // them lazy to avoid unnecessary computations
 
         lazy val recType = {
           // a record: ([foo: a, bar: b, ...], Str, a, Str, b, ...) => [foo: a, bar: b, ...]

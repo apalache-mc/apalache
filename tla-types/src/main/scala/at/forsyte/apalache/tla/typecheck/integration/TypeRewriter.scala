@@ -2,8 +2,9 @@ package at.forsyte.apalache.tla.typecheck.integration
 
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.TlaStr
-import at.forsyte.apalache.tla.typecheck.{StrT1, TlaType1, TypingException}
+import at.forsyte.apalache.tla.typecheck.{StrT1, TlaType1, TupT1, TypingException}
 
 /**
  * This class uses the map of types to set the types of TLA+ expressions and declarations.
@@ -13,13 +14,6 @@ import at.forsyte.apalache.tla.typecheck.{StrT1, TlaType1, TypingException}
 class TypeRewriter(tracker: TransformationTracker)(types: Map[UID, TlaType1]) {
   def apply(e: TlaEx): TlaEx = {
     def transform: TlaEx => TlaEx = tracker.trackEx {
-      case ex @ OperEx(oper, args @ _*) =>
-        val newArgs = args.map(this(_))
-        OperEx(oper, newArgs: _*)(Typed(getOrThrow(ex.ID)))
-
-      case ex @ LetInEx(body, defs @ _*) =>
-        LetInEx(this(body), defs.map(applyToOperDecl): _*)(getOrThrow(ex.ID))
-
       case ValEx(value @ TlaStr(_)) =>
         // A record constructor uses strings to represent the field names,
         // which are not propagated to the type checker. Hence, we bypass a query to the types map.
@@ -30,6 +24,43 @@ class TypeRewriter(tracker: TransformationTracker)(types: Map[UID, TlaType1]) {
 
       case ex @ NameEx(name) =>
         NameEx(name)(getOrThrow(ex.ID))
+
+      case ex @ OperEx(TlaFunOper.except, fun, args @ _*) =>
+        // [f EXCEPT ![e1] = e2, ![e3] = e4, ...]
+        // We provide a special treatment for this expression, as a single-argument index is always wrapped in a tuple.
+        // Alternatively, we could add this complexity to the translator `ToEtcExpr`.
+        // However, the code in `ToEtcExpr` is hard for understanding already.
+        val taggedFun = transform(fun)
+
+        def transformIndex: TlaEx => TlaEx = tracker.trackEx {
+          case OperEx(TlaFunOper.tuple, singleIndex) =>
+            val indexType = getOrThrow(singleIndex.ID)
+            val taggedIndex = transformIndex(singleIndex)
+            // The crux of having the special treatment for except:
+            // Wrap the single index with a tuple and tag the accessor with the tuple type.
+            OperEx(TlaFunOper.tuple, taggedIndex)(Typed(TupT1(indexType.myType)))
+
+          case multiIndexTuple =>
+            transform(multiIndexTuple)
+        }
+
+        val accessorsWithTaggedValues =
+          args
+            .grouped(2)
+            .flatMap {
+              case Seq(a, b) => Seq(transformIndex(a), transform(b))
+              case orphan    => throw new TypingException(s"Orphan ${orphan} in except expression: ${ex}")
+            }
+            .toList
+
+        OperEx(TlaFunOper.except, taggedFun +: accessorsWithTaggedValues: _*)(getOrThrow(ex.ID))
+
+      case ex @ OperEx(oper, args @ _*) =>
+        val newArgs = args.map(this(_))
+        OperEx(oper, newArgs: _*)(Typed(getOrThrow(ex.ID)))
+
+      case ex @ LetInEx(body, defs @ _*) =>
+        LetInEx(this(body), defs.map(applyToOperDecl): _*)(getOrThrow(ex.ID))
     }
 
     transform(e)

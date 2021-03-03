@@ -125,12 +125,14 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
       |Domain(f) == DOMAIN f
       |FunCtor == [ x \in Int |-> 2 * x ]
       |FunCtor2 == [ x \in Int, y \in BOOLEAN |-> 2 * x ]
-      |\* type: (Int -> Str) => (Int -> Str);
-      |\*FunExcept(f) == [f EXCEPT ![1] = "a"]
-      |\* type: (Int -> Str) => (Int -> Str);
-      |\*FunExcept2(f) == [f EXCEPT ![1] = "a", ![3] = "b"]
+      |\* @type: (Int -> Str) => (Int -> Str);
+      |FunExcept(f) == [f EXCEPT ![1] = "a"]
+      |\* @type: (Int -> Str) => (Int -> Str);
+      |FunExcept2(f) == [f EXCEPT ![1] = "a", ![3] = "b"]
       |\* @type: () => (Int -> Int);
       |rec[n \in Int] == IF n <= 1 THEN 1 ELSE n * rec[n - 1]
+      |\* type: () => (<<Int, Int>> -> Int);
+      |\* recTuple[m \in Int, n \in Int] == IF m + n <= 1 THEN 1 ELSE (m - 1) * recTuple[n - 1]
       |
       |\* CONTROL
       |Ite == IF TRUE THEN 2 ELSE 3
