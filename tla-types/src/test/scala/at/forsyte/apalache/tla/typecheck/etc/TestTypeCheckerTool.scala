@@ -207,8 +207,8 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
       |TlcColorGt == 1 :> "a"
       |TlcAtAt == (1 :> "a") @@ (2 :> "b")
       |TlcPermutations == Permutations({1, 2})
-      |\* type: (Seq(Int), (<<Int, Int>> => Bool)) => Seq(Int);
-      |\* TlcSortSeq(seq, F(_, _)) == SortSeq(seq, F)
+      |\* @type: (Seq(Int), ((Int, Int) => Bool)) => Seq(Int);
+      |TlcSortSeq(seq, F(_, _)) == SortSeq(seq, F)
       |TlcRandomElement == RandomElement({1, 2})
       |\* @type: () => Int;
       |TlcAny == Any

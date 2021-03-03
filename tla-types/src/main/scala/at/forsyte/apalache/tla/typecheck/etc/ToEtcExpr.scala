@@ -836,8 +836,8 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
 
       case OperEx(TlcOper.sortSeq, seq, op) =>
         val a = varPool.fresh
-        // (Seq(a), (<<a, b>> => Bool)) => Seq(a)
-        val opsig = OperT1(Seq(SeqT1(a), OperT1(Seq(TupT1(a, a)), BoolT1())), SeqT1(a))
+        // (Seq(a), ((a, a) => Bool)) => Seq(a)
+        val opsig = OperT1(Seq(SeqT1(a), OperT1(Seq(a, a), BoolT1())), SeqT1(a))
         mkExRefApp(opsig, Seq(seq, op))
 
       case OperEx(TlcOper.randomElement, set) =>
