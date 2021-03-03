@@ -487,7 +487,8 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         mkApp(ref, Seq(principal), lambda)
 
       case OperEx(TlaFunOper.except, fun, args @ _*) =>
-        // the hardest expression: [f EXCEPT ![e1] = e2, ![e3] = e4, ...]
+        // The hardest expression: [f EXCEPT ![e1] = e2, ![e3] = e4, ...]
+        // FIXME: the EXCEPT chaining syntax is broken, see: https://github.com/informalsystems/apalache/issues/617
         val accessorsWithNewValues =
           args
             .grouped(2)
