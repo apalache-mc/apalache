@@ -120,7 +120,9 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     // becomes: let Foo = λ x ∈ Set(a). x in Bool
     val fooType = mkUniqAbs(mkUniqName("x"), (mkUniqName("x"), mkUniqConst(SetT1(VarT1("a")))))
     val ex = LetInEx(tla.bool(true), foo)
-    val expected = mkUniqLet("Foo", fooType, mkUniqConst(BoolT1()))
+    val let = mkUniqLet("Foo", fooType, mkUniqConst(BoolT1()))
+    // we wrap the let-definition with an application of an identity operator, to recover the type of LetInEx later
+    val expected = mkUniqApp(Seq(parser("b => b")), let)
     assert(expected == gen(ex))
   }
 
@@ -136,7 +138,9 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     val fooType = mkUniqAbs(mkUniqName("x"), (mkUniqName("x"), mkUniqConst(SetT1(VarT1("a")))))
     val tlaLetIn = LetInEx(tla.bool(true), foo)
     val etcLet = mkUniqLet("Foo", fooType, mkUniqConst(BoolT1()))
-    val expected = mkUniqTypeDecl("Foo", parser("Int => Int"), etcLet)
+    val etcAnnotation = mkUniqTypeDecl("Foo", parser("Int => Int"), etcLet)
+    // we wrap the annotated let-definition with an application of an identity operator, to recover the type of LetInEx later
+    val expected = mkUniqApp(Seq(parser("b => b")), etcAnnotation)
     assert(expected == gen(tlaLetIn))
   }
 
@@ -146,7 +150,9 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     // becomes: let Foo = λ Bar ∈ Set(a => b). Int in Bool
     val fooType = mkUniqAbs(mkUniqConst(IntT1()), (mkUniqName("Bar"), mkUniqConst(parser("Set(a => b)"))))
     val ex = LetInEx(tla.bool(true), foo)
-    val expected = mkUniqLet("Foo", fooType, mkUniqConst(BoolT1()))
+    val let = mkUniqLet("Foo", fooType, mkUniqConst(BoolT1()))
+    // we wrap the let-definition with an application of an identity operator, to recover the type of LetInEx later
+    val expected = mkUniqApp(Seq(parser("c => c")), let)
     assert(expected == gen(ex))
   }
 
