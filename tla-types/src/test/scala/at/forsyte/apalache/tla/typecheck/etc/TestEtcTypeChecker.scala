@@ -677,6 +677,7 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     val listener = mock[TypeCheckerListener]
     expecting {
       listener.onTypeFound(scopedEx.sourceRef.asInstanceOf[ExactRef], parser("Set(Int)")).atLeastOnce()
+      listener.onTypeFound(typeDecl.sourceRef.asInstanceOf[ExactRef], parser("Set(Int)")).atLeastOnce()
       // consume any types for the wrapper and lambda
       consumeWrapperTypes(listener, wrapper)
     }
