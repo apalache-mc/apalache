@@ -11,7 +11,9 @@
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Features
- * Type checker: supporting TLC operators, see #601
+
+* Type checker: supporting TLC operators, see #601
+* Type checker: tagging all expressions with the reconstructed types, see #608
 
 ### Bug fixes
 
