@@ -87,9 +87,13 @@ class TestToEtcExprDecls extends FunSuite with BeforeAndAfterEach with EtcBuilde
     val assume = TlaAssumeDecl(tla.name("x"))
     val terminal = mkUniqConst(BoolT1())
     // becomes:
-    // let Assume1 == "x" in
+    // let Assume1 == ((Bool => Bool) "x") in
     // Bool // the terminal expression
-    val expected = mkUniqLet("__Assume_" + assume.ID, mkUniqAbs(mkUniqName("x")), terminal)
+    val assumption = mkUniqName("x")
+    // The body is wrapped with the application of an operator that has the signature Bool => Bool.
+    // This allows us to check that the assumption has Boolean type.
+    val application = mkUniqApp(Seq(parser("Bool => Bool")), assumption)
+    val expected = mkUniqLet("__Assume_" + assume.ID, mkUniqAbs(application), terminal)
     // Translate the declaration of positive.
     // We have to pass the next expression in scope, which is just TRUE in this case.
     assert(expected == gen(assume, terminal))
