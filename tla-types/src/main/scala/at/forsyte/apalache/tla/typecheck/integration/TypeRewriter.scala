@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.typecheck.{StrT1, TlaType1, TupT1, TypingExceptio
  *
  * @param types a map from unique identifiers to types
  */
-class TypeRewriter(tracker: TransformationTracker)(types: Map[UID, TlaType1]) {
+class TypeRewriter(tracker: TransformationTracker, defaultTag: UID => TypeTag)(types: Map[UID, TlaType1]) {
   def apply(e: TlaEx): TlaEx = {
     def transform: TlaEx => TlaEx = tracker.trackEx {
       case ValEx(value @ TlaStr(_)) =>
@@ -20,10 +20,10 @@ class TypeRewriter(tracker: TransformationTracker)(types: Map[UID, TlaType1]) {
         ValEx(value)(Typed(StrT1()))
 
       case ex @ ValEx(value) =>
-        ValEx(value)(getOrThrow(ex.ID))
+        ValEx(value)(getOrDefault(ex.ID))
 
       case ex @ NameEx(name) =>
-        NameEx(name)(getOrThrow(ex.ID))
+        NameEx(name)(getOrDefault(ex.ID))
 
       case ex @ OperEx(TlaFunOper.except, fun, args @ _*) =>
         // [f EXCEPT ![e1] = e2, ![e3] = e4, ...]
@@ -34,11 +34,17 @@ class TypeRewriter(tracker: TransformationTracker)(types: Map[UID, TlaType1]) {
 
         def transformIndex: TlaEx => TlaEx = tracker.trackEx {
           case OperEx(TlaFunOper.tuple, singleIndex) =>
-            val indexType = getOrThrow(singleIndex.ID)
             val taggedIndex = transformIndex(singleIndex)
-            // The crux of having the special treatment for except:
-            // Wrap the single index with a tuple and tag the accessor with the tuple type.
-            OperEx(TlaFunOper.tuple, taggedIndex)(Typed(TupT1(indexType.myType)))
+            taggedIndex.typeTag match {
+              case Typed(indexType: TlaType1) =>
+                // The crux of having the special treatment for except:
+                // Wrap the single index with a tuple and tag the accessor with the tuple type.
+                OperEx(TlaFunOper.tuple, taggedIndex)(Typed(TupT1(indexType)))
+
+              case _ =>
+                // fall back to the default behavior, which most likely produces an error message
+                OperEx(TlaFunOper.tuple, taggedIndex)(defaultTag(ex.ID))
+            }
 
           case multiIndexTuple =>
             transform(multiIndexTuple)
@@ -53,14 +59,14 @@ class TypeRewriter(tracker: TransformationTracker)(types: Map[UID, TlaType1]) {
             }
             .toList
 
-        OperEx(TlaFunOper.except, taggedFun +: accessorsWithTaggedValues: _*)(getOrThrow(ex.ID))
+        OperEx(TlaFunOper.except, taggedFun +: accessorsWithTaggedValues: _*)(getOrDefault(ex.ID))
 
       case ex @ OperEx(oper, args @ _*) =>
         val newArgs = args.map(this(_))
-        OperEx(oper, newArgs: _*)(Typed(getOrThrow(ex.ID)))
+        OperEx(oper, newArgs: _*)(Typed(getOrDefault(ex.ID)))
 
       case ex @ LetInEx(body, defs @ _*) =>
-        LetInEx(this(body), defs.map(applyToOperDecl): _*)(getOrThrow(ex.ID))
+        LetInEx(this(body), defs.map(applyToOperDecl): _*)(getOrDefault(ex.ID))
     }
 
     transform(e)
@@ -69,16 +75,16 @@ class TypeRewriter(tracker: TransformationTracker)(types: Map[UID, TlaType1]) {
   def apply(decl: TlaDecl): TlaDecl = {
     def transform: TlaDecl => TlaDecl = tracker.trackDecl {
       case d @ TlaConstDecl(_) =>
-        decl.withType(getOrThrow(d.ID))
+        decl.withType(getOrDefault(d.ID))
 
       case d @ TlaVarDecl(_) =>
-        decl.withType(getOrThrow(d.ID))
+        decl.withType(getOrDefault(d.ID))
 
       case d @ TlaAssumeDecl(body) =>
-        TlaAssumeDecl(this(body))(getOrThrow(d.ID))
+        TlaAssumeDecl(this(body))(getOrDefault(d.ID))
 
       case d @ TlaTheoremDecl(name, body) =>
-        TlaTheoremDecl(name, this(body))(getOrThrow(d.ID))
+        TlaTheoremDecl(name, this(body))(getOrDefault(d.ID))
 
       case opdef @ TlaOperDecl(_, _, _) =>
         applyToOperDecl(opdef)
@@ -88,13 +94,13 @@ class TypeRewriter(tracker: TransformationTracker)(types: Map[UID, TlaType1]) {
   }
 
   private def applyToOperDecl(decl: TlaOperDecl): TlaOperDecl = {
-    TlaOperDecl(decl.name, decl.formalParams, this(decl.body))(getOrThrow(decl.ID))
+    TlaOperDecl(decl.name, decl.formalParams, this(decl.body))(getOrDefault(decl.ID))
   }
 
-  private def getOrThrow(uid: UID): Typed[TlaType1] = {
+  private def getOrDefault(uid: UID): TypeTag = {
     types.get(uid) match {
       case Some(tt) => Typed(tt)
-      case None     => throw new TypingException("No type for uid: " + uid)
+      case None     => defaultTag(uid)
     }
   }
 }

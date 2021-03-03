@@ -2,9 +2,9 @@ package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.typecheck.{TlaType1, Type1Parser, TypeCheckerListener, TypeCheckerTool}
+import at.forsyte.apalache.tla.typecheck.{TlaType1, Type1Parser, TypeCheckerListener, TypeCheckerTool, TypingException}
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.tla.lir.Typed
+import at.forsyte.apalache.tla.lir.{Typed, UID}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.typecheck.parser.DefaultType1Parser
 import org.easymock.EasyMock
@@ -258,7 +258,12 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
     }
     whenExecuting(listener) {
       val typechecker = new TypeCheckerTool(annotationStore, false)
-      typechecker.checkAndTag(new IdleTracker(), listener, mod) match {
+
+      def defaultTag(uid: UID): Nothing = {
+        throw new TypingException("No type for UID: " + uid)
+      }
+
+      typechecker.checkAndTag(new IdleTracker(), listener, defaultTag, mod) match {
         case None =>
           fail("Expected the specification to be well-typed")
 
