@@ -132,7 +132,7 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
       |\* @type: () => (Int -> Int);
       |rec[n \in Int] == IF n <= 1 THEN 1 ELSE n * rec[n - 1]
       |\* @type: () => (<<Int, Int>> -> Int);
-      |rec2[m \in Int, n \in Int] == IF m + n <= 1 THEN 1 ELSE m * recTuple[m - 1, n - 1]
+      |rec2[m \in Int, n \in Int] == IF m + n <= 1 THEN 1 ELSE m * rec2[m - 1, n - 1]
       |
       |\* CONTROL
       |Ite == IF TRUE THEN 2 ELSE 3
