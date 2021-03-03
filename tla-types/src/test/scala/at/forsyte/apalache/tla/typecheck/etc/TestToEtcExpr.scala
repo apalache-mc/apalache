@@ -789,7 +789,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
   }
 
   test("TLC!SortSeq") {
-    val typ = parser("(Seq(a), (<<a, a>> => Bool)) => Seq(a)")
+    val typ = parser("(Seq(a), ((a, a) => Bool)) => Seq(a)")
     val ex = OperEx(TlcOper.sortSeq, tla.name("seq"), tla.name("op"))
     val expected = mkAppByName(Seq(typ), "seq", "op")
     assert(expected == gen(ex))
