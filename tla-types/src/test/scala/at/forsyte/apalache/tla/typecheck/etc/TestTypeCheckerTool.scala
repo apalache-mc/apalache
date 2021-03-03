@@ -73,13 +73,11 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
       |  Plus(x, y)
       |  
       |\* LAMBDA
-      |(*
       |B ==
-      |  LET \* type: Int => Int;
+      |  LET \* @type: (Int => Int) => Int;
       |      Foo(C(_)) == C(3)
       |  IN
       |  Foo(LAMBDA x: x + 1)
-      |*)
       |  
       |\* LOGIC
       |Equiv == FALSE <=> TRUE
