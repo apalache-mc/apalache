@@ -936,10 +936,8 @@ $ apalache-mc typecheck CigaretteSmokersTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeChecker
  > Running Snowcat .::.
+Unhandled exception
 ...
-Type checker [FAILED]
-...
-EXITCODE: OK
 ```
 
 ### typecheck GameOfLifeTyped.tla
