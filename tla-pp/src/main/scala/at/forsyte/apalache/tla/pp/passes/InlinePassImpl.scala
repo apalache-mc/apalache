@@ -56,7 +56,7 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
     val transformationSequence =
       List(
           InlinerOfUserOper(defBodyMap, tracker),
-          LetInExpander(tracker, keepNullary = true),
+          LetInExpander(tracker, keepNullary = false),
           // the second pass of Inliner may be needed, when the higher-order operators were inlined by LetInExpander
           InlinerOfUserOper(defBodyMap, tracker)
       ) ///
