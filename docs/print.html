@@ -1295,11 +1295,12 @@ operator that is defined as follows:</p>
 </code></pre>
 <p>See the <a href="apalache/./principles.html#assignments">discussion</a> on the role of assignments in Apalache.</p>
 <h1><a class="header" href="#profiling-your-specification" id="profiling-your-specification">Profiling Your Specification</a></h1>
-<p>As Apalache translates the TLA+ specification to SMT, it often defeats
-our intuition about the standard bottlenecks that one learns about when running
-TLC. For instance, whereas TLC needs a lot of time to compute the initial states
-for the following specification, Apalache can check the executions of length up
-to ten steps in seconds:</p>
+<p><strong>Warning:</strong> Profiling only works in the incremental SMT mode, that is, when the model checker is run
+with <code>--algo=incremental</code>, or without the option
+<code>--algo</code> specified.</p>
+<p>As Apalache translates the TLA+ specification to SMT, it often defeats our intuition about the standard bottlenecks that
+one learns about when running TLC. For instance, whereas TLC needs a lot of time to compute the initial states for the
+following specification, Apalache can check the executions of length up to ten steps in seconds:</p>
 <pre><code class="language-tla">---------------------------- MODULE powerset ----------------------------
 EXTENDS Integers
 VARIABLE S
