@@ -470,7 +470,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     val types = Seq(parser("((a -> b), a, b) => (a -> b)"), parser("(Seq(a), Int, a) => Seq(a)"))
 
     val expected = mkAppByName(types, "f", "e1", "e2")
-    val ex = tla.except(tla.name("f"), tla.name("e1"), tla.name("e2"))
+    val ex = tla.except(tla.name("f"), tla.tuple(tla.name("e1")), tla.name("e2"))
     assert(expected == gen(ex))
   }
 
@@ -479,7 +479,8 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     val types = Seq(parser("((a -> b), a, b, a, b) => (a -> b)"), parser("(Seq(a), Int, a, Int, a) => Seq(a)"))
 
     val expected = mkAppByName(types, "f", "e1", "e2", "e3", "e4")
-    val ex = tla.except(tla.name("f"), tla.name("e1"), tla.name("e2"), tla.name("e3"), tla.name("e4"))
+    val ex =
+      tla.except(tla.name("f"), tla.tuple(tla.name("e1")), tla.name("e2"), tla.tuple(tla.name("e3")), tla.name("e4"))
     assert(expected == gen(ex))
   }
 
@@ -488,7 +489,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     val types = Seq(parser("((a -> b), a, b) => (a -> b)"), parser("([foo: c], Str, c) => [foo: c]"))
 
     val expected = mkUniqApp(types, mkUniqName("f"), mkUniqConst(StrT1()), mkUniqName("e2"))
-    val ex = tla.except(tla.name("f"), tla.str("foo"), tla.name("e2"))
+    val ex = tla.except(tla.name("f"), tla.tuple(tla.str("foo")), tla.name("e2"))
     assert(expected == gen(ex))
   }
 
@@ -498,7 +499,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
         parser("({3: c}, Int, c) => {3: c}"))
 
     val expected = mkUniqApp(types, mkUniqName("f"), mkUniqConst(IntT1()), mkUniqName("e2"))
-    val ex = tla.except(tla.name("f"), tla.int(3), tla.name("e2"))
+    val ex = tla.except(tla.name("f"), tla.tuple(tla.int(3)), tla.name("e2"))
     assert(expected == gen(ex))
   }
 
@@ -509,7 +510,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
 
     val expected =
       mkUniqApp(types, mkUniqName("f"), mkUniqConst(IntT1()), mkUniqName("e2"), mkUniqConst(IntT1()), mkUniqName("e4"))
-    val ex = tla.except(tla.name("f"), tla.int(3), tla.name("e2"), tla.int(5), tla.name("e4"))
+    val ex = tla.except(tla.name("f"), tla.tuple(tla.int(3)), tla.name("e2"), tla.tuple(tla.int(5)), tla.name("e4"))
     assert(expected == gen(ex))
   }
 
