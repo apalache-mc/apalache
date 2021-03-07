@@ -145,6 +145,16 @@ EXITCODE: OK
 
 ## running the check command
 
+#### check factorization find a counterexample
+
+```sh
+$ apalache-mc check --length=2 --inv=Inv factorization.tla | sed 's/I@.*//'
+...
+The outcome is: Error
+Checker has found an error
+...
+```
+
 ### check Fix531.tla reports no error: regression for issue 531
 
 ```sh
