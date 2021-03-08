@@ -61,7 +61,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
         // add the constraint: x = polytype, for a fresh x
         val fresh = varPool.fresh
         val clause = EqClause(fresh, polytype)
-          .setOnTypeFound(onTypeFound(ex.sourceRef, _))
+          .setOnTypeFound(tt => onTypeFound(ex.sourceRef, tt))
           .setOnTypeError(_ => onTypeError(ex.sourceRef, "Unresolved type"))
         solver.addConstraint(clause)
         fresh
@@ -70,6 +70,11 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
       case EtcTypeDecl(name: String, declaredType: TlaType1, scopedEx: EtcExpr) =>
         // Just propagate the annotated name down the tree. It will be used in a let definition.
         val extCtx = new TypeContext(ctx.types + (name -> declaredType))
+        // to propagate the type to the listener, add the trivial constraint: a = declaredType
+        val fresh = varPool.fresh
+        val clause = EqClause(fresh, declaredType)
+          .setOnTypeFound(tt => onTypeFound(ex.sourceRef, tt))
+        solver.addConstraint(clause)
         computeRec(extCtx, solver, scopedEx)
 
       // a variable name, either an operator name, or a variable introduced by lambda (EtcAbs)
@@ -84,7 +89,8 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
 
       // the most interesting part: the operator application
       case appEx @ EtcApp(operTypes, args @ _*) =>
-        val argTypes = args.map(arg => computeRec(ctx, solver, arg))
+        // Apply toList first, in case `args` is a stream. The reason is that `computeRec` introduces side effects
+        val argTypes = args.toList.map(arg => computeRec(ctx, solver, arg))
         val resVar = varPool.fresh
         val operVar = varPool.fresh
 
@@ -122,8 +128,10 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
 
       // Operator application by name. Resolve the name and pass the resolved expression to the application case.
       case EtcAppByName(name, args @ _*) =>
-        if (ctx.types.contains(name)) {
-          computeRec(ctx, solver, mkApp(ex.sourceRef, Seq(ctx.types(name)), args: _*))
+        if (ctx.types.contains(name.name)) {
+          val nameType = ctx.types(name.name)
+          onTypeFound(name.sourceRef, nameType)
+          computeRec(ctx, solver, mkApp(ex.sourceRef, Seq(nameType), args: _*))
         } else {
           onTypeError(ex.sourceRef, s"Undefined operator name $name. Introduce a type annotation.")
           throw new UnwindException
@@ -136,7 +144,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
         val underlyingType = computeRec(extCtx, solver, scopedEx)
         // introduce a variable for lambda, in order to propagate the type to the listener
         val lambdaTypeVar = varPool.fresh
-        val varNames = binders.map { case (name, _) => extCtx(name) }
+        val varNames = binders.map { case (name, _) => extCtx(name.name) }
         val operType = OperT1(varNames, underlyingType)
         // lambdaTypeVar = (a_1, ..., a_k) => resType
         val lambdaClause = EqClause(lambdaTypeVar, operType)
@@ -172,7 +180,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
         val preCtx = new TypeContext((ctx.types + (name -> operSig)).mapValues(approxSolution(_)))
         val extCtx = translateBinders(preCtx, letInSolver, binders)
         val annotationParams = operSig.asInstanceOf[OperT1].args
-        annotationParams.zip(binders.map { case (pname, _) => (pname, extCtx(pname)) }).foreach {
+        annotationParams.zip(binders.map { case (pname, _) => (pname, extCtx(pname.name)) }).foreach {
           case (annotParam, (pname, paramVar @ VarT1(_))) =>
             val clause = EqClause(paramVar, annotParam)
               .setOnTypeError(ts => s"Mismatch in parameter $pname. Found: " + ts.head)
@@ -193,7 +201,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
 
         // compute the constraints for the operator definition
         val defBodyType = computeRec(extCtx, letInSolver, defBody)
-        val paramTypes = binders.map(p => extCtx(p._1))
+        val paramTypes = binders.map(p => extCtx(p._1.name))
         val defType = OperT1(paramTypes, defBodyType)
         // add the constraint from the annotation
         val defClause = EqClause(operVar, defType)
@@ -232,8 +240,9 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
 
   // produce constraints for the binders that are used in a lambda expression
   private def translateBinders(ctx: TypeContext, solver: ConstraintSolver,
-      binders: Seq[(String, EtcExpr)]): TypeContext = {
-    val setTypes = binders.map(binder => computeRec(ctx, solver, binder._2))
+      binders: Seq[(EtcName, EtcExpr)]): TypeContext = {
+    // Apply `toList` first, in case `binders` is lazy. Because `computeRec` has side effects.
+    val setTypes = binders.toList.map(binder => computeRec(ctx, solver, binder._2))
     // introduce type variables b_1, ..., b_k for the binding sets
     val setVars = 1.to(binders.size).map(_ => varPool.fresh)
     // ...and type variables a_1, ..., a_k for the set elements
@@ -251,8 +260,13 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
         .setOnTypeError(ts => onTypeError(setEx.sourceRef, "Expected a set. Found: " + ts.head))
       solver.addConstraint(clause)
     }
+    // introduce identity constraints to retrieve the types of the names
+    binders.zip(elemVars).foreach { case ((name, _), typeVar) =>
+      val clause = EqClause(typeVar, typeVar).setOnTypeFound(onTypeFound(name.sourceRef, _))
+      solver.addConstraint(clause)
+    }
     // compute the expression in the scope, by associating the variables names with the elements of elemVars
-    new TypeContext(ctx.types ++ binders.map(_._1).zip(elemVars))
+    new TypeContext(ctx.types ++ binders.map(_._1.name).zip(elemVars))
   }
 
   private def onTypeFound(sourceRef: EtcRef, tt: TlaType1): Unit = {

@@ -145,6 +145,16 @@ EXITCODE: OK
 
 ## running the check command
 
+#### check factorization find a counterexample
+
+```sh
+$ apalache-mc check --length=2 --inv=Inv factorization.tla | sed 's/I@.*//'
+...
+The outcome is: Error
+Checker has found an error
+...
+```
+
 ### check Fix531.tla reports no error: regression for issue 531
 
 ```sh
@@ -906,6 +916,8 @@ The outcome is: Error
 ```sh
 $ apalache-mc typecheck ExistTuple476.tla | sed 's/I@.*//'
 ...
+ > All expressions are typed
+...
 Type checker [OK]
 ...
 ```
@@ -918,6 +930,7 @@ $ apalache-mc typecheck CarTalkPuzzleTyped.tla | sed 's/[IEW]@.*//'
 PASS #1: TypeChecker
  > Running Snowcat .::.
  > Your types are great!
+ > All expressions are typed
 PASS #2: Terminal
 Type checker [OK]
 ...
@@ -926,16 +939,15 @@ EXITCODE: OK
 
 ### typecheck CigaretteSmokersTyped.tla
 
+This test is broken until issue #617] is fixed.
+
 ```sh
 $ apalache-mc typecheck CigaretteSmokersTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeChecker
  > Running Snowcat .::.
- > Your types are great!
-PASS #2: Terminal
-Type checker [OK]
+Unhandled exception
 ...
-EXITCODE: OK
 ```
 
 ### typecheck GameOfLifeTyped.tla
@@ -946,6 +958,7 @@ $ apalache-mc typecheck GameOfLifeTyped.tla | sed 's/[IEW]@.*//'
 PASS #1: TypeChecker
  > Running Snowcat .::.
  > Your types are great!
+ > All expressions are typed
 PASS #2: Terminal
 Type checker [OK]
 ...
@@ -960,6 +973,7 @@ $ apalache-mc typecheck MissionariesAndCannibalsTyped.tla | sed 's/[IEW]@.*//'
 PASS #1: TypeChecker
  > Running Snowcat .::.
  > Your types are great!
+ > All expressions are typed
 PASS #2: Terminal
 Type checker [OK]
 ...
@@ -974,6 +988,7 @@ $ apalache-mc typecheck PrisonersTyped.tla | sed 's/[IEW]@.*//'
 PASS #1: TypeChecker
  > Running Snowcat .::.
  > Your types are great!
+ > All expressions are typed
 PASS #2: Terminal
 Type checker [OK]
 ...
@@ -991,6 +1006,7 @@ $ apalache-mc typecheck QueensTyped.tla | sed 's/[IEW]@.*//'
 PASS #1: TypeChecker
  > Running Snowcat .::.
  > Your types are great!
+ > All expressions are typed
 ...
 Type checker [OK]
 ...
@@ -1005,6 +1021,7 @@ $ apalache-mc typecheck SlidingPuzzlesTyped.tla | sed 's/[IEW]@.*//'
 PASS #1: TypeChecker
  > Running Snowcat .::.
  > Your types are great!
+ > All expressions are typed
 PASS #2: Terminal
 Type checker [OK]
 ...
@@ -1019,6 +1036,7 @@ $ apalache-mc typecheck TwoPhaseTyped.tla | sed 's/[IEW]@.*//'
 PASS #1: TypeChecker
  > Running Snowcat .::.
  > Your types are great!
+ > All expressions are typed
 PASS #2: Terminal
 Type checker [OK]
 ...
@@ -1033,6 +1051,7 @@ $ apalache-mc typecheck FunctionsTyped.tla | sed 's/[IEW]@.*//'
 PASS #1: TypeChecker
  > Running Snowcat .::.
  > Your types are great!
+ > All expressions are typed
 ...
 Type checker [OK]
 ...
@@ -1047,6 +1066,7 @@ $ apalache-mc typecheck FiniteSetsExtTyped.tla | sed 's/[IEW]@.*//'
 PASS #1: TypeChecker
  > Running Snowcat .::.
  > Your types are great!
+ > All expressions are typed
 ...
 Type checker [OK]
 ...
@@ -1073,6 +1093,7 @@ $ apalache-mc typecheck HourClockTyped.tla | sed 's/[IEW]@.*//'
 PASS #1: TypeChecker
  > Running Snowcat .::.
  > Your types are great!
+ > All expressions are typed
 ...
 Type checker [OK]
 ...
@@ -1099,6 +1120,7 @@ $ apalache-mc typecheck ChannelTyped.tla | sed 's/[IEW]@.*//'
 PASS #1: TypeChecker
  > Running Snowcat .::.
  > Your types are great!
+ > All expressions are typed
 ...
 Type checker [OK]
 ...
@@ -1113,6 +1135,7 @@ $ apalache-mc typecheck PascalTriangle.tla | sed 's/[IEW]@.*//'
 PASS #1: TypeChecker
  > Running Snowcat .::.
  > Your types are great!
+ > All expressions are typed
 ...
 Type checker [OK]
 ...
@@ -1127,6 +1150,7 @@ $ apalache-mc typecheck AnnotationsAndInstances592.tla | sed 's/[IEW]@.*//'
 PASS #1: TypeChecker
  > Running Snowcat .::.
  > Your types are great!
+ > All expressions are typed
 ...
 Type checker [OK]
 ...
@@ -1141,6 +1165,7 @@ $ apalache-mc typecheck AnnotationsAndSubstitutions596.tla | sed 's/[IEW]@.*//'
 PASS #1: TypeChecker
  > Running Snowcat .::.
  > Your types are great!
+ > All expressions are typed
 ...
 Type checker [OK]
 ...

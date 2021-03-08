@@ -1,10 +1,12 @@
 # Profiling Your Specification
 
-As Apalache translates the TLA+ specification to SMT, it often defeats
-our intuition about the standard bottlenecks that one learns about when running
-TLC. For instance, whereas TLC needs a lot of time to compute the initial states
-for the following specification, Apalache can check the executions of length up
-to ten steps in seconds:
+**Warning:** Profiling only works in the incremental SMT mode, that is, when the model checker is run
+with `--algo=incremental`, or without the option
+`--algo` specified.
+
+As Apalache translates the TLA+ specification to SMT, it often defeats our intuition about the standard bottlenecks that
+one learns about when running TLC. For instance, whereas TLC needs a lot of time to compute the initial states for the
+following specification, Apalache can check the executions of length up to ten steps in seconds:
 
 ```tla
 ---------------------------- MODULE powerset ----------------------------

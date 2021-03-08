@@ -4,6 +4,8 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
+import UntypedPredefs._
+
 @RunWith(classOf[JUnitRunner])
 class TestAux extends FunSuite with TestingPredefs {
 

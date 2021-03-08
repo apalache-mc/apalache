@@ -51,7 +51,7 @@ case class EtcName(name: String)(val sourceRef: EtcRef) extends EtcExpr {
  * @param paramsAndDoms parameter names and type expressions that encode sets of values
  * @param sourceRef     the identifier of the TLA+ expression that resulted in this EtcExpr (ignored in equals).
  */
-case class EtcAbs(body: EtcExpr, paramsAndDoms: (String, EtcExpr)*)(val sourceRef: EtcRef) extends EtcExpr {
+case class EtcAbs(body: EtcExpr, paramsAndDoms: (EtcName, EtcExpr)*)(val sourceRef: EtcRef) extends EtcExpr {
   override def toString: String = {
     val bindings = paramsAndDoms.map(p => "%s ∈ %s".format(p._1, p._2))
     "%s@λ %s. %s".format(sourceRef, String.join(", ", bindings: _*), body)
@@ -76,11 +76,11 @@ case class EtcApp(operTypes: Seq[TlaType1], args: EtcExpr*)(val sourceRef: EtcRe
  * Application of an operator by its name. The operator type should be resolved with a type signature that is
  * encoded in a type context.
  *
- * @param name operator name
- * @param args operator arguments
+ * @param name      operator name
+ * @param args      operator arguments
  * @param sourceRef identifier of the TLA+ expression that resulted in this EtcExpr (ignored in equals).
  */
-case class EtcAppByName(name: String, args: EtcExpr*)(val sourceRef: EtcRef) extends EtcExpr {
+case class EtcAppByName(name: EtcName, args: EtcExpr*)(val sourceRef: EtcRef) extends EtcExpr {
   override def toString: String = {
     "%s@(%s %s)".format(sourceRef, name, String.join(" ", args.map(_.toString): _*))
   }

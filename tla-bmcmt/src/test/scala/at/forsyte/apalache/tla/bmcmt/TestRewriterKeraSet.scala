@@ -6,6 +6,8 @@ import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.pp.{Keramelizer, UniqueNameGenerator}
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 /**
  * Tests for the TLA+ operators that are deal with by rewriting into KerA+.
@@ -13,6 +15,7 @@ import at.forsyte.apalache.tla.pp.{Keramelizer, UniqueNameGenerator}
  *
  * @author Igor Konnov
  */
+@RunWith(classOf[JUnitRunner])
 class TestRewriterKeraSet extends RewriterBase with TestingPredefs {
   private var keramelizer = new Keramelizer(new UniqueNameGenerator, TrackerWithListeners())
 

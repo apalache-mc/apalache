@@ -1,8 +1,9 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.TlaOperDecl
+import at.forsyte.apalache.tla.lir.{TlaOperDecl, Typed}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
@@ -39,7 +40,8 @@ class TestExprOptimizer extends FunSuite with BeforeAndAfterEach {
   // an optimization for set comprehensions (maps)
   test("""\E x \in {foo[y]: y \in {1, 2}}: z = x ~~> \E y \in {1, 2}: LET t_1 == foo[y] IN z = t_1""") {
     val set12 = tla.enumSet(tla.int(1), tla.int(2))
-    val map = tla.map(tla.appFun(tla.name("foo"), tla.name("y")), tla.name("y"), set12)
+    val funApp = tla.appFun(tla.name("foo"), tla.name("y"))
+    val map = tla.map(funApp, tla.name("y"), set12)
     val input =
       tla.exists(tla.name("x"), map, tla.eql(tla.name("z"), tla.name("x")))
     val output = optimizer.apply(input)
@@ -58,9 +60,9 @@ class TestExprOptimizer extends FunSuite with BeforeAndAfterEach {
     val input =
       tla.exists(tla.name("x"), filter, tla.eql(tla.name("z"), tla.name("x")))
     val output = optimizer.apply(input)
-    val expected =
-      tla.exists(tla.name("y"), set12,
-          tla.and(tla.eql(tla.name("y"), tla.int(1)), tla.eql(tla.name("z"), tla.name("y"))))
+    val y_eq_1 = tla.eql(tla.name("y"), tla.int(1))
+    val z_eq_y = tla.eql(tla.name("z"), tla.name("y"))
+    val expected = tla.exists(tla.name("y"), set12, tla.and(y_eq_1, z_eq_y))
 
     assert(expected == output)
   }

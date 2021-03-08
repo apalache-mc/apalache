@@ -10,6 +10,6 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
-### Bug fixes
+### Features
 
-* Parser: propagating type annotations in INSTANCES, see #592 and #596
+* Type checker: tagging all expressions with the reconstructed types, see #608
