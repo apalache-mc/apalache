@@ -11,12 +11,5 @@
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Features
- * Type checker: supporting TLC operators, see #601
 
-### Bug fixes
-
- * Parser: propagating type annotations in INSTANCES, see #592 and #596
-
-### Removed
-
- * Type checker: removed `Typing.tla`, `AssumeType`, and `##`, see #518
+* Type checker: tagging all expressions with the reconstructed types, see #608

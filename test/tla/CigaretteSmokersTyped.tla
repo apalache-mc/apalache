@@ -60,6 +60,7 @@ stopSmoking ==
         (* the type of LAMBDA should be inferred from the types
            of ChooseOne and Ingredients *)
     /\ LET r == ChooseOne(Ingredients, LAMBDA x : smokers[x].smoking)
+       \* needs a fix: https://github.com/informalsystems/apalache/issues/617
        IN smokers' = [smokers EXCEPT ![r].smoking = FALSE] 
     /\ dealer' \in Offers
 

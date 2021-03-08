@@ -36,15 +36,15 @@ trait EtcBuilder {
     mkName(BlameRef(UID.unique), name)
   }
 
-  protected def mkAbs(sourceRef: EtcRef, body: EtcExpr, paramsAndDoms: (String, EtcExpr)*): EtcAbs = {
+  protected def mkAbs(sourceRef: EtcRef, body: EtcExpr, paramsAndDoms: (EtcName, EtcExpr)*): EtcAbs = {
     EtcAbs(body, paramsAndDoms: _*)(sourceRef)
   }
 
-  protected def mkUniqAbs(body: EtcExpr, paramsAndDoms: (String, EtcExpr)*): EtcAbs = {
+  protected def mkUniqAbs(body: EtcExpr, paramsAndDoms: (EtcName, EtcExpr)*): EtcAbs = {
     mkAbs(ExactRef(UID.unique), body, paramsAndDoms: _*)
   }
 
-  protected def mkBlameAbs(body: EtcExpr, paramsAndDoms: (String, EtcExpr)*): EtcAbs = {
+  protected def mkBlameAbs(body: EtcExpr, paramsAndDoms: (EtcName, EtcExpr)*): EtcAbs = {
     mkAbs(BlameRef(UID.unique), body, paramsAndDoms: _*)
   }
 
@@ -60,15 +60,15 @@ trait EtcBuilder {
     mkApp(BlameRef(UID.unique), operTypes, args: _*)
   }
 
-  protected def mkAppByName(sourceRef: EtcRef, name: String, args: EtcExpr*): EtcAppByName = {
+  protected def mkAppByName(sourceRef: EtcRef, name: EtcName, args: EtcExpr*): EtcAppByName = {
     EtcAppByName(name, args: _*)(sourceRef)
   }
 
-  protected def mkUniqAppByName(name: String, args: EtcExpr*): EtcAppByName = {
+  protected def mkUniqAppByName(name: EtcName, args: EtcExpr*): EtcAppByName = {
     mkAppByName(ExactRef(UID.unique), name, args: _*)
   }
 
-  protected def mkBlameAppByName(name: String, args: EtcExpr*): EtcAppByName = {
+  protected def mkBlameAppByName(name: EtcName, args: EtcExpr*): EtcAppByName = {
     mkAppByName(BlameRef(UID.unique), name, args: _*)
   }
 

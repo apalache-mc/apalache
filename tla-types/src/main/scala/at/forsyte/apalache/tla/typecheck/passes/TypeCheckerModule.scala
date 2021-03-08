@@ -6,6 +6,8 @@ import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriter
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
 import at.forsyte.apalache.tla.lir.io.TlaWriterFactory
+import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import com.google.inject.{AbstractModule, TypeLiteral}
 import com.google.inject.name.Names
 
@@ -27,6 +29,10 @@ class TypeCheckerModule extends AbstractModule {
     // writers
     bind(classOf[TlaWriterFactory])
       .to(classOf[PrettyWriterWithAnnotationsFactory])
+
+    // use the idle listener, as we do not need transformation tracking
+    bind(classOf[TransformationTracker])
+      .to(classOf[IdleTracker])
 
     // SanyParserPassImpl is the default implementation of SanyParserPass
     bind(classOf[SanyParserPass])

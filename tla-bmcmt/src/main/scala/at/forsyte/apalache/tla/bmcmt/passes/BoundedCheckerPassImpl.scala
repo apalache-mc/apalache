@@ -6,12 +6,14 @@ import at.forsyte.apalache.tla.assignments.ModuleAdapter
 import at.forsyte.apalache.tla.bmcmt.Checker.Outcome
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore}
-import at.forsyte.apalache.tla.bmcmt.rewriter.RewriterConfig
+import at.forsyte.apalache.tla.bmcmt.rewriter.{MetricProfilerListener, RewriterConfig}
 import at.forsyte.apalache.tla.bmcmt.search._
 import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
 import at.forsyte.apalache.tla.bmcmt.trex._
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
+import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.NullEx
+import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.LanguageWatchdog
 import at.forsyte.apalache.tla.lir.transformations.standard.KeraLanguagePred
 import at.forsyte.apalache.tla.pp.NormalizedNames
@@ -19,13 +21,16 @@ import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
+import java.io.File
+
 /**
  * The implementation of a bounded model checker with SMT.
  *
  * @author Igor Konnov
  */
 class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: FormulaHintsStore,
-    exprGradeStore: ExprGradeStore, @Named("AfterChecker") nextPass: Pass)
+    exprGradeStore: ExprGradeStore, sourceStore: SourceStore, changeListener: ChangeListener,
+    @Named("AfterChecker") nextPass: Pass)
     extends BoundedCheckerPass with LazyLogging {
 
   /**
@@ -89,11 +94,20 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
 
   private def runIncrementalChecker(params: ModelCheckerParams, input: CheckerInput, tuning: Map[String, String],
       solverConfig: SolverConfig): Boolean = {
-    val profile = options.getOrElse("smt", "prof", false)
     val solverContext: RecordingSolverContext = RecordingSolverContext.createZ3(None, solverConfig)
 
     val typeFinder = new TrivialTypeFinder
-    val rewriter: SymbStateRewriterImpl = new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
+    val metricProfilerListener =
+      if (solverConfig.profile) {
+        logger.info("Profiling data will be written to profile.csv")
+        Some(new MetricProfilerListener(sourceStore, changeListener, new File("profile.csv")))
+      } else {
+        None
+      }
+
+    val rewriter: SymbStateRewriterImpl =
+      new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore, metricProfilerListener)
+
     rewriter.formulaHintsStore = hintsStore
     rewriter.config = RewriterConfig(tuning)
 
@@ -112,8 +126,11 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
 
   private def runOfflineChecker(params: ModelCheckerParams, input: CheckerInput, tuning: Map[String, String],
       solverConfig: SolverConfig): Boolean = {
-    val profile = options.getOrElse("smt", "prof", false)
     val solverContext: RecordingSolverContext = RecordingSolverContext.createZ3(None, solverConfig)
+
+    if (solverConfig.profile) {
+      logger.warn("SMT profiling is enabled, but offline SMT is used. No profiling data will be written.")
+    }
 
     val typeFinder = new TrivialTypeFinder
     val rewriter: SymbStateRewriterImpl = new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
