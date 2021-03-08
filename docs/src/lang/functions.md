@@ -165,9 +165,9 @@ dictionaries][].  Consider a TLA+ function `price` that is defined as follows:
 
 ```tla
   [ meal \in { "Schnitzel", "Gulash", "Cordon bleu" } |->
-                CASE meal = "Schnitzel" -> 18
-                  [] meal = "Gulash"    -> 11
-                  OTHER                 -> 12
+                CASE meal = "Schnitzel"     -> 18
+                  [] meal = "Gulash"        -> 11
+                  [] meal = "Cordon bleu"   -> 12
   ]
 ```
 
@@ -183,9 +183,24 @@ approach works. For instance, we can type the following in the python shell:
 
 ```python
 >>> # similar to DOMAIN price in TLA+
+py_price.keys()
+```
+
+In the above example, we used `py_price.keys()`, which produces a mutable
+dictionary. In TLA+, `DOMAIN` returns a set. If we want to faithfully model the
+effect of `DOMAIN`, then we have to produce an immutable set. We use
+[`frozenset`](https://docs.python.org/3/library/stdtypes.html#frozenset), which
+is a less famous cousin of the python `set`. A frozen set can be inserted
+into another set, in contrast to the standard (mutable) set.
+
+```python
 >>> frozenset(py_price.keys())
 frozenset({'Schnitzel', 'Gulash', 'Cordon bleu'})
+```
 
+We can also apply our python dictionary similar to the TLA+ function `price`:
+
+```tla
 >>> # similar to price["Schnitzel"] in TLA+
 >>> py_price["Schnitzel"]
 18
@@ -222,7 +237,7 @@ set. Surely, this implementation would be inefficient, but this is not
 an issue for a *specification language* such as TLA+. For instance:
 
 ```python
->>> frozenset({ tuple(py_price.items()) })
+>>> { tuple(py_price.items()) }
 (('Schnitzel', 18), ('Gulash', 11), ('Cordon bleu', 12))
 ```
 
@@ -320,11 +335,9 @@ xy = {(x, y) for x in range(1, 4) for y in range(4, 7)}
 {(x, y): x + y for (x, y) in xy}
 # TLA: [ n \in 1..3 |->
 #        [ i \in 1..n |-> n + i ]]
-# We have to use frozenset to use a set as key in a dict.
 {
-    n: {frozenset(range(1, i + 1)): n + 1}
+    n: {i: n + i for i in range(1, n + 1)}
     for n in range(1, 4)
-    for i in range(1, n + 1)
 }
 ```
 
