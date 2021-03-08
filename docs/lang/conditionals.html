@@ -291,17 +291,13 @@ case expression should consistently return the same value, whenever it is
 evaluated with <code>n = 17</code>.</p>
 <p><strong>Example in Python:</strong> Consider our first example in TLA+. Similar to TLC, we
 give executable semantics for the fixed evaluation order of the predicates.</p>
-<pre><code class="language-python">  def case_example():
+<pre><code class="language-python">def case_example(n):
     if n &lt; 0:
-      return &quot;negative&quot;
-    elif n == 0 :
-      return &quot;zero&quot;
+        return &quot;negative&quot;
+    elif n == 0:
+        return &quot;zero&quot;
     elif n &gt; 0:
-      return &quot;positive&quot;
-    else:
-      assert(False)
-
-  case_example()
+        return &quot;positive&quot;
 </code></pre>
 <p><a name="caseOther"></a></p>
 <h2><a class="header" href="#deterministic-case-other" id="deterministic-case-other">Deterministic CASE-OTHER</a></h2>

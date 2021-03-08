@@ -172,6 +172,7 @@
                     <main>
                         <h1><a class="header" href="#functions" id="functions">Functions</a></h1>
 <p><a href="./standard-operators.html">[Back to all operators]</a></p>
+<p><strong>Contributors:</strong> @konnov, @shonfeder, @Kukovec, @Alexander-N</p>
 <p>Functions are probably the second most used TLA+ data structure after sets. TLA+
 functions are not like functions in programming languages. In programming
 languages, functions contain code that calls other functions. Although it is
@@ -285,10 +286,69 @@ by the type checker.</p>
 <p>In this sense, the type restrictions of Apalache are similar to those for the
 generic collections of Java and Scala.  As a result, the type checker in
 Apalache rejects the three above examples.</p>
+<p><strong>TLA+ functions and Python dictionaries</strong>. As we mentioned before, TLA+
+functions are similar to maps and dictionaries in programming languages. To
+demonstrate this similarity, let us compare TLA+ functions with <a href="https://docs.python.org/3/tutorial/datastructures.html#dictionaries">Python
+dictionaries</a>.  Consider a TLA+ function <code>price</code> that is defined as follows:</p>
+<pre><code class="language-tla">  [ meal \in { &quot;Schnitzel&quot;, &quot;Gulash&quot;, &quot;Cordon bleu&quot; } |-&gt;
+                CASE meal = &quot;Schnitzel&quot;     -&gt; 18
+                  [] meal = &quot;Gulash&quot;        -&gt; 11
+                  [] meal = &quot;Cordon bleu&quot;   -&gt; 12
+  ]
+</code></pre>
+<p>If we had to define a similar dictionary in Python, we would normally introduce
+a Python dictionary like follows:</p>
+<pre><code class="language-python">py_price = { &quot;Schnitzel&quot;: 18, &quot;Gulash&quot;: 11, &quot;Cordon bleu&quot;: 12 }
+</code></pre>
+<p>As long as we are using the variable <code>py_price</code> to access the dictionary, our
+approach works. For instance, we can type the following in the python shell:</p>
+<pre><code class="language-python">&gt;&gt;&gt; # similar to DOMAIN price in TLA+
+py_price.keys()
+</code></pre>
+<p>In the above example, we used <code>py_price.keys()</code>, which produces a mutable
+dictionary. In TLA+, <code>DOMAIN</code> returns a set. If we want to faithfully model the
+effect of <code>DOMAIN</code>, then we have to produce an immutable set. We use
+<a href="https://docs.python.org/3/library/stdtypes.html#frozenset"><code>frozenset</code></a>, which
+is a less famous cousin of the python <code>set</code>. A frozen set can be inserted
+into another set, in contrast to the standard (mutable) set.</p>
+<pre><code class="language-python">&gt;&gt;&gt; frozenset(py_price.keys())
+frozenset({'Schnitzel', 'Gulash', 'Cordon bleu'})
+</code></pre>
+<p>We can also apply our python dictionary similar to the TLA+ function <code>price</code>:</p>
+<pre><code class="language-tla">&gt;&gt;&gt; # similar to price[&quot;Schnitzel&quot;] in TLA+
+&gt;&gt;&gt; py_price[&quot;Schnitzel&quot;]
+18
+</code></pre>
+<p>However, there is a catch! What if you like to put the function <code>price</code> in a
+set? In TLA+, this is easy: Simply construct the singleton set that contains
+the function <code>price</code>.</p>
+<pre><code class="language-tla"># TLA+: wrapping a function with a set
+{ price }
+</code></pre>
+<p>Unfortunately, this does not work as easy in Python:</p>
+<pre><code class="language-python">&gt;&gt;&gt; # python expects hashable and immutable data structures inside sets
+&gt;&gt;&gt; frozenset({py_price})
+Traceback (most recent call last):
+  File &quot;&lt;stdin&gt;&quot;, line 1, in &lt;module&gt;
+TypeError: unhashable type: 'dict'
+</code></pre>
+<p>Of course, this is an implementation detail of Python and it has nothing to do
+with TLA+. This example probably demonstrates that the built-in primitives of
+TLA+ are more powerful than the standard primitives of many programming
+languages (see <a href="https://github.com/informalsystems/apalache/discussions/551">this
+discussion</a>).</p>
+<p>Alternatively, we could represent a TLA+ function in Python as a set
+of pairs <code>(key, value)</code> and implement TLA+ function operators over such a
+set. Surely, this implementation would be inefficient, but this is not
+an issue for a <em>specification language</em> such as TLA+. For instance:</p>
+<pre><code class="language-python">&gt;&gt;&gt; { tuple(py_price.items()) }
+(('Schnitzel', 18), ('Gulash', 11), ('Cordon bleu', 12))
+</code></pre>
+<p>If we try to implement TLA+-like operators over this data structure, things
+will get complicated very quickly. For this reason, we are just using
+mutable dictionaries in the Python examples in the rest of this text.</p>
 <hr />
 <h2><a class="header" href="#operators" id="operators">Operators</a></h2>
-<p><strong>NOTE</strong>: In the Python examples below we use the package <a href="https://pypi.org/project/frozendict/">frozendict</a>, to produce an
-immutable dictionary.</p>
 <hr />
 <p><a name="funCtor"></a></p>
 <h3><a class="header" href="#function-constructor" id="function-constructor">Function constructor</a></h3>
@@ -342,13 +402,23 @@ that are computed under such a binding.</p>
     \* a function that maps a number n from 1 to 3
     \* to a function from 1..n to n + i. Like an array of arrays.
 </code></pre>
-<p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
-<pre><code class="language-python">  X = frozenset({ 1, 2, 3 })
-  frozendict({ x: 2 * x for x in X })
-  frozendict({ (x, y): x * y for x in X for y in X })
-  Y = frozenset({ 4, 5, 6 })
-  XY = frozenset((x, y) for x in X for y in Y)
-  frozendict({ (x, y): x + y  for (x, y) in XY })
+<p><strong>Example in Python:</strong></p>
+<p>In the following code, we write <code>range(m, n)</code> instead of <code>frozenset(range(m, n))</code> to simplify the presentation and produce idiomatic Python code. In the
+general case, we have to iterate over a set, as the type and structure of the
+function domain is not known in advance.</p>
+<pre><code class="language-python"># TLA: [ x \in 1..3 |-&gt; 2 * x ]
+{x: 2 * x for x in range(1, 4)}
+# TLA: [ x, y \in 1..3 |-&gt; x * y ]
+{(x, y): x * y for x in range(1, 4) for y in range(1, 4)}
+# TLA: [ &lt;&lt;x, y&gt;&gt; \in (1..3) \X (4..6) |-&gt; x + y ]
+xy = {(x, y) for x in range(1, 4) for y in range(4, 7)}
+{(x, y): x + y for (x, y) in xy}
+# TLA: [ n \in 1..3 |-&gt;
+#        [ i \in 1..n |-&gt; n + i ]]
+{
+    n: {i: n + i for i in range(1, n + 1)}
+    for n in range(1, 4)
+}
 </code></pre>
 <hr />
 <p><a name="funSetCtor"></a></p>
@@ -414,23 +484,15 @@ variable.</p>
                                             \* Apalache produces some value
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">  S10 = frozenset(range(1, 10 + 1))
-  # TLA: [x \in 1..10 |-&gt; x * x]
-  f1 = frozendict({ x: x * x for x in S10 })
-  f1[5]         # 25
-  S3 = frozenset({ 1, 2, 3 })
-  # TLA: [x, y \in 1..3 |-&gt; x * y]
-  f2 = frozendict({ (x, y): x * y for x in S3 for y in S3 })
-  f2[(2, 2)]    # 4
-  # TLA: [ n \in 1..3 |-&gt; [ i \in 1..n |-&gt; n + i ]]
-  f3 = frozendict({
-    n: frozendict({
-      i: n + i
-        for i in frozenset(range(1, n + 1))
-    })
-        for n in S3
-  })
-  f3[3][2]
+<p>In the following code, we write <code>range(m, n)</code> instead of <code>frozenset(range(m, n))</code> to simplify the presentation and produce idiomatic Python code. In the
+general case, we have to iterate over a set, as the type and structure of the
+function domain is not known in advance.</p>
+<pre><code class="language-python"># TLA: [x \in 1..10 |-&gt; x * x]
+{x: x * x for x in range(1, 11)}[5]  # 25
+# TLA: [x, y \in 1..3 |-&gt; x * y]
+{(x, y): x * y for x in range(1, 4) for y in range(1, 4)}[(2, 2)]  # 4
+# TLA: [ n \in 1..3 |-&gt; [ i \in 1..n |-&gt; n + i ]]
+{n: {i: n + i for i in range(1, n + 1)} for n in range(1, 4)}[3][2]  # 5
 </code></pre>
 <hr />
 <p><a name="except"></a></p>
@@ -500,38 +562,42 @@ For example:</p>
     \*   3 to the function that maps: 1 to 4, 2 to 5, 3 to 6
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">  f1 = frozendict({ i: &quot;working&quot; for i in range(1, 3 + 1) })
-  tmp = dict(f1)
-  tmp[2] = &quot;aborted&quot;
-  g1 = frozendict(tmp)
-  # g1 is &lt;frozendict {1: 'working', 2: 'aborted', 3: 'working'}&gt;
+<p>In the following code, we write <code>range(m, n)</code> instead of <code>frozenset(range(m, n))</code> to simplify the presentation and produce idiomatic Python code. In the
+general case, we have to iterate over a set, as the type and structure of the
+function domain is not known in advance. Additionally, given a Python
+dictionary <code>f</code>, we write <code>f.items()</code> to quickly iterate over the pairs of keys
+and values. Had we wanted to follow the TLA+ semantics more precisely, we would
+have to enumerate over the keys in the function domain and apply the function to
+each key, in order to obtain the value that is associated with the key.  This
+code would be less efficient than the idiomatic Python code.</p>
+<pre><code class="language-python"># TLA: [ p \in 1..3 |-&gt; &quot;working&quot; ] IN
+f1 = {i: &quot;working&quot; for i in range(1, 4)}
+# TLA: [ f1 EXCEPT ![2] = &quot;aborted&quot; ]
+g1 = {i: status if i != 2 else &quot;aborted&quot; for i, status in f1.items()}
+# g1 is {1: 'working', 2: 'aborted', 3: 'working'}
 
-  S3 = frozenset({ 1, 2, 3 })
-  # TLA: [x, y \in 1..3 |-&gt; x * y]
-  f2 = frozendict({ (x, y): x * y for x in S3 for y in S3 })
-  tmp = dict(f2)
-  tmp[(1, 1)] = 0
-  g2 = frozendict(tmp)
-  # &lt;frozendict {(1, 1): 0, (1, 2): 2, (1, 3): 3, (2, 1): 2, (2, 2): 4,
-  #              (2, 3): 6, (3, 1): 3, (3, 2): 6, (3, 3): 9}&gt;
+# TLA: [x, y \in 1..3 |-&gt; x * y]
+f2 = {(x, y): x * y for x in range(1, 4) for y in range(1, 4)}
+# TLA: [ f2 EXCEPT ![1, 1] = 0
+g2 = {k: v if k != (1, 1) else 0 for k, v in f2.items()}
+# g2 is {
+#     (1, 1): 0,
+#     (1, 2): 2,
+#     (1, 3): 3,
+#     (2, 1): 2,
+#     (2, 2): 4,
+#     (2, 3): 6,
+#     (3, 1): 3,
+#     (3, 2): 6,
+#     (3, 3): 9,
+# }
 
-  # TLA: [ n \in 1..3 |-&gt; [ i \in 1..n |-&gt; n + i ]]
-  f3 = frozendict({
-    n: frozendict({
-      i: n + i
-        for i in frozenset(range(1, n + 1))
-    })
-        for n in S3
-  })
-  # [ f3 EXCEPT ![2][2] = 100 ]
-  tmp = dict(f3[2])
-  tmp[2] = 100
-  tmp2 = dict(f3)
-  tmp2[2] = tmp
-  g3 = frozendict(tmp2)
-  # &lt;frozendict {1: &lt;frozendict {1: 2}&gt;,
-  #              2: {1: 3, 2: 100},
-  #              3: &lt;frozendict {1: 4, 2: 5, 3: 6}&gt;}&gt;
+# TLA: [ n \in 1..3 |-&gt; [ i \in 1..n |-&gt; n + i ]]
+f3 = {n: {i: n + i for i in range(1, n + 1)} for n in range(4)}
+# TLA: [ f3 EXCEPT ![2][2] = 100 ]
+g3 = f3.copy()
+g3[2][2] = 100
+# g3 is {0: {}, 1: {1: 2}, 2: {1: 3, 2: 100}, 3: {1: 4, 2: 5, 3: 6}}
 </code></pre>
 <hr />
 <p><a name="domain"></a></p>
@@ -548,14 +614,21 @@ has been defined, see: Function constructor and Function set constructor.</p>
 if <code>f</code> is a value that does not have a domain. Apalache flags a type checking
 error.</p>
 <p><strong>Example in TLA+:</strong></p>
-<pre><code class="language-tla">  DOMAIN [ x \in 1..3 |-&gt; 2 * x ]
-  \* { 1, 2, 3 }
+<pre><code class="language-tla">  LET f == [ x \in 1..3 |-&gt; 2 * x ] IN
+  DOMAIN f \* { 1, 2, 3 }
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">  X = frozenset({ 1, 2, 3 })
-  f = frozendict({ x: 2 * x for x in X })
-  frozenset(f.keys())
-  # frozenset({1, 2, 3})
+<p>In the following code, we write <code>range(m, n)</code> instead of <code>frozenset(range(m, n))</code> to simplify the presentation and produce idiomatic Python code. In the
+general case, we have to iterate over a set, as the type and structure of the
+function domain is not known in advance.</p>
+<pre><code class="language-python">f = {x: 2 * x for x in range(1, 4)}
+f.keys()  # dict_keys([1, 2, 3])
+</code></pre>
+<p>In the above code, we write <code>f.keys()</code> to obtain an iterator over the
+dictionary keys, which can be used in a further python code. In a more
+principled approach that follows the semantics of TLA+, we would have to
+produce a set, that is to write:</p>
+<pre><code class="language-python">frozenset(f.keys())
 </code></pre>
 
                     </main>
