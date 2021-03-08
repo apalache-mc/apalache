@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.lir.oper
 
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, TypeTag}
+import at.forsyte.apalache.tla.lir.{LirError, OperEx, TlaEx, TypeTag}
 
 /**
  * Function operators.
@@ -151,11 +151,15 @@ object TlaFunOper {
    * <p>A function update, e.g., [f EXCEPT ![i_1] = e_1, ![i_2] = e_2, ..., ![i_k] = e_k].
    * The order of the arguments is as follows: (f, i_1, e_1, ..., i_k, e_k).</p>
    *
-   * <p>Note that all indices i_1, ..., i_k are tuples. For one-dimensional functions,
-   * they are singleton tuples, whereas for multidimensional functions the indices are
-   * tuples of arbitrary length. This is the design choice that comes from SANY.
-   * When you write f[<<1>>] in TLA+, expect to deal with (except (tuple (tuple 1))) here.
-   * The method `unpackIndex` maps singleton tuples to their contents.
+   * <p>Note that all indices i_1, ..., i_k are tuples. Normally,
+   * they are singleton tuples. For instance, in the expression `[f EXCEPT ![1] = 2]`, the index is `(tuple 1)`.
+   * However, multiple functions can be updated in a single shot, similar to
+   * multidimensional arrays (not Cartesian products!). For instance, the expression `[f EXCEPT ![1][2].name = "foo"]`
+   * is equivalent to: `[ f EXCEPT ![1] = [ f[1] EXCEPT ![2] = [ f[1][2] EXCEPT !.name = "foo"] ] ]`.
+   * In this case, the index is equal to `<<1, 2, "name">>`.
+   * This is the design choice that comes from SANY.
+   * When you write `[f EXCEPT ![<<1, 2>>] = 3]` in TLA+, expect to deal with `(except f (tuple (tuple 1 2)) 3)`.
+   * When you write `[f EXCEPT ![1][2] = 3]` in TLA+, expect to deal with `(except f (tuple 1 2) 3)`.
    * </p>
    */
   object except extends TlaFunOper {
@@ -166,10 +170,14 @@ object TlaFunOper {
     /**
      * SANY always packs an EXCEPT accessor in a tuple, even if the index is one-dimensional.
      * Unpack the one-dimensional index.
+     *
+     * This method should not be used at all. See the issue #617.
      */
     def unpackIndex: TlaEx => TlaEx = {
       case OperEx(TlaFunOper.tuple, one) => one
-      case e                             => e
+      case e =>
+        throw new LirError(
+            "Multi-index EXCEPT is to be implemented. See: https://github.com/informalsystems/apalache/issues/617")
     }
   }
 }
