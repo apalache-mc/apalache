@@ -85,6 +85,7 @@ instructions="
 # See https://hub.github.com/hub-pull-request.1.html
 hub pull-request \
     --push \
+    --message="$commit_msg" \
     --message="$instructions" \
-    --message="$commit_msg" --message="$body" \
+    --message="$body" \
     --base="unstable"
